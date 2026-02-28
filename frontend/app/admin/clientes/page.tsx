@@ -308,7 +308,13 @@ export default function AdminClientesPage() {
                           </div>
                         </form>
                       ) : (
-                        <div className="inline-flex gap-2">
+                        <div className="inline-flex flex-wrap gap-2">
+                          <Link
+                            href={`/admin/clientes/${client.id}/landings`}
+                            className="rounded-md border border-zinc-700 px-3 py-1 text-xs font-medium text-zinc-200 transition hover:bg-zinc-800"
+                          >
+                            Ver landings
+                          </Link>
                           <button
                             type="button"
                             onClick={() => startEditingClient(client)}

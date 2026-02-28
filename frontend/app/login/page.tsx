@@ -16,10 +16,8 @@ export default function LoginPage() {
     setError(null);
     setIsSubmitting(true);
 
-    const { error: signInError } = await supabase.auth.signInWithPassword({
-      email,
-      password,
-    });
+    const { data: signInData, error: signInError } =
+      await supabase.auth.signInWithPassword({ email, password });
 
     setIsSubmitting(false);
 
@@ -28,17 +26,34 @@ export default function LoginPage() {
       return;
     }
 
-    router.push("/admin");
+    const userId = signInData.user?.id;
+    if (!userId) {
+      router.push("/admin");
+      return;
+    }
+
+    const { data: profile } = await supabase
+      .from("profiles")
+      .select("role")
+      .eq("id", userId)
+      .maybeSingle();
+
+    const role = profile?.role ?? "client";
+    if (role === "admin") {
+      router.push("/admin");
+    } else {
+      router.push("/dashboard");
+    }
   };
 
   return (
     <div className="flex min-h-screen items-center justify-center bg-zinc-950 px-4 py-8">
       <div className="w-full max-w-md rounded-2xl border border-zinc-800 bg-zinc-950/80 p-6 shadow-xl shadow-black/40 backdrop-blur sm:p-8">
         <h1 className="mb-2 text-center text-xl font-semibold text-zinc-50 sm:text-2xl">
-          Panel administrador
+          Iniciar sesión
         </h1>
         <p className="mb-8 text-center text-sm text-zinc-400">
-          Inicia sesión con tu usuario de administrador.
+          Administradores y clientes. Serás redirigido según tu rol.
         </p>
 
         <form onSubmit={handleSubmit} className="space-y-5">

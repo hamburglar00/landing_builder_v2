@@ -44,7 +44,7 @@ function CloseIcon({ className }: { className?: string }) {
   );
 }
 
-export default function AdminLayout({
+export default function DashboardLayout({
   children,
 }: {
   children: React.ReactNode;
@@ -53,8 +53,7 @@ export default function AdminLayout({
   const pathname = usePathname();
   const [user, setUser] = useState<User | null>(null);
   const [isCheckingSession, setIsCheckingSession] = useState(true);
-  const [isAdmin, setIsAdmin] = useState<boolean | null>(null);
-  const [roleError, setRoleError] = useState<string | null>(null);
+  const [isClient, setIsClient] = useState<boolean | null>(null);
   const [sidebarOpen, setSidebarOpen] = useState(false);
 
   useEffect(() => {
@@ -68,37 +67,24 @@ export default function AdminLayout({
 
       setUser(data.user);
 
-      const { data: profile, error: profileError } = await supabase
+      const { data: profile } = await supabase
         .from("profiles")
         .select("role")
         .eq("id", data.user.id)
         .maybeSingle();
 
-      if (profileError) {
-        setRoleError("No se pudo verificar tu rol de usuario.");
-        setIsAdmin(false);
-        setIsCheckingSession(false);
+      const role = profile?.role ?? "client";
+      if (role === "admin") {
+        router.replace("/admin");
         return;
       }
 
-      if (!profile || profile.role !== "admin") {
-        setIsAdmin(false);
-        setIsCheckingSession(false);
-        return;
-      }
-
-      setIsAdmin(true);
+      setIsClient(true);
       setIsCheckingSession(false);
     };
 
     void checkSession();
   }, [router]);
-
-  useEffect(() => {
-    if (!isCheckingSession && !isAdmin && pathname === "/admin/clientes") {
-      router.replace("/admin");
-    }
-  }, [isAdmin, isCheckingSession, pathname, router]);
 
   const handleSignOut = async () => {
     await supabase.auth.signOut();
@@ -108,41 +94,17 @@ export default function AdminLayout({
   if (isCheckingSession) {
     return (
       <div className="flex min-h-screen items-center justify-center bg-zinc-950">
-        <p className="text-sm text-zinc-400">Cargando panel...</p>
+        <p className="text-sm text-zinc-400">Cargando...</p>
       </div>
     );
   }
 
-  if (!isAdmin) {
-    return (
-      <div className="flex min-h-screen items-center justify-center bg-zinc-950 px-4">
-        <div className="w-full max-w-md rounded-2xl border border-zinc-800 bg-zinc-950/80 p-6 text-center">
-          <h1 className="mb-3 text-base font-semibold text-zinc-50">
-            Acceso restringido
-          </h1>
-          <p className="mb-4 text-sm text-zinc-400">
-            Esta sección es solo para usuarios con rol de administrador.
-          </p>
-          {roleError && (
-            <p className="mb-4 text-xs text-red-400" role="alert">
-              {roleError}
-            </p>
-          )}
-          <button
-            type="button"
-            onClick={handleSignOut}
-            className="rounded-lg border border-zinc-700 px-3 py-1.5 text-xs font-medium text-zinc-200 transition hover:bg-zinc-800"
-          >
-            Volver al login
-          </button>
-        </div>
-      </div>
-    );
+  if (!isClient) {
+    return null;
   }
 
   return (
     <div className="flex min-h-screen bg-zinc-950 text-zinc-50">
-      {/* Overlay móvil cuando el menú está abierto */}
       {sidebarOpen && (
         <button
           type="button"
@@ -152,7 +114,6 @@ export default function AdminLayout({
         />
       )}
 
-      {/* Sidebar: drawer en móvil, fijo en desktop */}
       <aside
         className={`fixed inset-y-0 left-0 z-50 flex w-64 flex-col border-r border-zinc-800 bg-zinc-950 transition-transform duration-200 ease-out md:relative md:translate-x-0 md:w-56 ${
           sidebarOpen ? "translate-x-0" : "-translate-x-full"
@@ -161,7 +122,7 @@ export default function AdminLayout({
         <div className="flex items-center justify-between border-b border-zinc-800 px-4 py-4 md:block">
           <div>
             <h2 className="text-sm font-semibold text-zinc-100">
-              Panel administrador
+              Mis landings
             </h2>
             <p className="mt-0.5 truncate text-xs text-zinc-500">
               {user?.email ?? ""}
@@ -178,59 +139,26 @@ export default function AdminLayout({
         </div>
         <nav className="flex flex-1 flex-col gap-0.5 p-3">
           <Link
-            href="/admin"
+            href="/dashboard"
             onClick={() => setSidebarOpen(false)}
             className={`rounded-lg px-3 py-2 text-sm font-medium transition ${
-              pathname === "/admin"
+              pathname === "/dashboard"
                 ? "bg-zinc-800 text-zinc-50"
                 : "text-zinc-400 hover:bg-zinc-800/60 hover:text-zinc-200"
             }`}
           >
-            Inicio
+            Mis Landings
           </Link>
           <Link
-            href="/admin/clientes"
+            href="/dashboard/gerencias"
             onClick={() => setSidebarOpen(false)}
             className={`rounded-lg px-3 py-2 text-sm font-medium transition ${
-              pathname === "/admin/clientes"
-                ? "bg-zinc-800 text-zinc-50"
-                : "text-zinc-400 hover:bg-zinc-800/60 hover:text-zinc-200"
-            }`}
-          >
-            Clientes
-          </Link>
-          <Link
-            href="/admin/landings"
-            onClick={() => setSidebarOpen(false)}
-            className={`rounded-lg px-3 py-2 text-sm font-medium transition ${
-              pathname?.startsWith("/admin/landings")
-                ? "bg-zinc-800 text-zinc-50"
-                : "text-zinc-400 hover:bg-zinc-800/60 hover:text-zinc-200"
-            }`}
-          >
-            Landings
-          </Link>
-          <Link
-            href="/admin/gerencias"
-            onClick={() => setSidebarOpen(false)}
-            className={`rounded-lg px-3 py-2 text-sm font-medium transition ${
-              pathname?.startsWith("/admin/gerencias")
+              pathname?.startsWith("/dashboard/gerencias")
                 ? "bg-zinc-800 text-zinc-50"
                 : "text-zinc-400 hover:bg-zinc-800/60 hover:text-zinc-200"
             }`}
           >
             Gerencias
-          </Link>
-          <Link
-            href="/admin/settings"
-            onClick={() => setSidebarOpen(false)}
-            className={`rounded-lg px-3 py-2 text-sm font-medium transition ${
-              pathname === "/admin/settings"
-                ? "bg-zinc-800 text-zinc-50"
-                : "text-zinc-400 hover:bg-zinc-800/60 hover:text-zinc-200"
-            }`}
-          >
-            Configuración
           </Link>
         </nav>
         <div className="border-t border-zinc-800 p-3">
@@ -244,7 +172,6 @@ export default function AdminLayout({
         </div>
       </aside>
 
-      {/* Main content */}
       <div className="flex min-w-0 flex-1 flex-col">
         <header className="flex items-center justify-between gap-3 border-b border-zinc-800 px-4 py-3 sm:px-6">
           <button

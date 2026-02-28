@@ -9,8 +9,18 @@ if (!supabaseUrl || !supabaseAnonKey) {
   );
 }
 
+/**
+ * Cliente de Supabase con lock de auth desactivado para evitar
+ * "Lock broken by another request with the 'steal' option" (Navigator LockManager).
+ * Ejecutamos las operaciones de auth sin lock entre pestañas.
+ */
 export const supabase: SupabaseClient = createClient(
   supabaseUrl,
   supabaseAnonKey,
+  {
+    auth: {
+      lock: (_name, _acquireTimeout, fn) => fn(),
+    },
+  },
 );
 
