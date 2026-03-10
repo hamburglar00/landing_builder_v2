@@ -69,8 +69,9 @@ export default async function AdminDocumentacionPage() {
               li: ({ children }) => (
                 <li className="leading-relaxed">{children}</li>
               ),
-              code: ({ children, inline }) =>
-                inline ? (
+              code: (props: any) => {
+                const { children, inline } = props;
+                return inline ? (
                   <code className="rounded bg-zinc-900/70 px-1.5 py-0.5 text-[11px] text-zinc-100">
                     {children}
                   </code>
@@ -78,7 +79,8 @@ export default async function AdminDocumentacionPage() {
                   <code className="block rounded-md border border-zinc-800 bg-zinc-950/80 p-3 text-[11px] leading-relaxed text-zinc-100 overflow-auto">
                     {children}
                   </code>
-                ),
+                );
+              },
               pre: ({ children }) => <>{children}</>,
               a: ({ href, children }) => (
                 <a
