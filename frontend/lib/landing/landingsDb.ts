@@ -1,5 +1,7 @@
 import { supabase } from "@/lib/supabaseClient";
 import type { Landing, LandingThemeConfig } from "./types";
+import { DEFAULT_CONFIG } from "./mocks";
+import type { LandingConfigPayload } from "./buildLandingConfig";
 
 /** Fila tal como viene de la tabla public.landings */
 export interface LandingRow {
@@ -7,19 +9,36 @@ export interface LandingRow {
   user_id: string;
   name: string;
   pixel_id: string;
+  phone_mode: "random" | "fair";
+  phone_kind: "carga" | "ads";
+  phone_interval_start_hour: number | null;
+  phone_interval_end_hour: number | null;
+  post_url: string;
+  landing_tag: string;
   comment: string;
   config: LandingThemeConfig;
   created_at?: string;
   updated_at?: string;
+  landing_config?: LandingConfigPayload;
 }
 
 function rowToLanding(row: LandingRow): Landing {
+  const merged: LandingThemeConfig = {
+    ...DEFAULT_CONFIG,
+    ...(row.config as LandingThemeConfig),
+  };
   return {
     id: row.id,
     name: row.name,
     pixelId: row.pixel_id ?? "",
+    phoneMode: row.phone_mode ?? "random",
+    phoneKind: row.phone_kind ?? "carga",
+    phoneIntervalStartHour: row.phone_interval_start_hour ?? null,
+    phoneIntervalEndHour: row.phone_interval_end_hour ?? null,
+    postUrl: row.post_url ?? "",
+    landingTag: row.landing_tag ?? "",
     comment: row.comment,
-    config: row.config,
+    config: merged,
   };
 }
 
@@ -30,18 +49,46 @@ export async function fetchLandings(userId: string): Promise<Landing[]> {
   return fetchLandingsByUserId(userId);
 }
 
+const LANDINGS_SELECT =
+  "id, user_id, name, pixel_id, phone_mode, phone_kind, phone_interval_start_hour, phone_interval_end_hour, post_url, landing_tag, comment, config, created_at, updated_at";
+
 /**
  * Lista landings de un usuario por su id. Los admins pueden listar landings de cualquier usuario (RLS).
  */
 export async function fetchLandingsByUserId(userId: string): Promise<Landing[]> {
   const { data, error } = await supabase
     .from("landings")
-    .select("id, user_id, name, comment, config, created_at, updated_at")
+    .select(LANDINGS_SELECT)
     .eq("user_id", userId)
     .order("updated_at", { ascending: false });
 
   if (error) throw error;
-  return (data ?? []).map(rowToLanding);
+  return (data ?? []).map((r) => rowToLanding(r as LandingRow));
+}
+
+/**
+ * Para admin: lista todas las landings, propias primero y después las de los clientes.
+ * Requiere RLS "Admins can read all landings".
+ */
+export async function fetchLandingsForAdmin(adminUserId: string): Promise<{
+  mine: Landing[];
+  clients: Landing[];
+}> {
+  const { data, error } = await supabase
+    .from("landings")
+    .select(LANDINGS_SELECT)
+    .order("updated_at", { ascending: false });
+
+  if (error) throw error;
+  const rows = (data ?? []) as LandingRow[];
+  const mine: Landing[] = [];
+  const clients: Landing[] = [];
+  for (const r of rows) {
+    const landing = rowToLanding(r);
+    if (r.user_id === adminUserId) mine.push(landing);
+    else clients.push(landing);
+  }
+  return { mine, clients };
 }
 
 /**
@@ -52,23 +99,28 @@ export async function fetchLandingById(
 ): Promise<Landing | null> {
   const { data, error } = await supabase
     .from("landings")
-    .select("id, user_id, name, pixel_id, comment, config, created_at, updated_at")
+    .select(LANDINGS_SELECT)
     .eq("id", landingId)
     .maybeSingle();
 
   if (error) throw error;
-  return data ? rowToLanding(data) : null;
+  return data ? rowToLanding(data as LandingRow) : null;
 }
 
 /**
  * Crea una nueva landing para el usuario. Devuelve el id asignado.
- * El nombre debe ser único en la tabla; si no se pasa, se usa uno generado.
  */
 export async function createLanding(
   userId: string,
   payload: {
     name?: string;
     pixelId?: string;
+    phoneMode?: "random" | "fair";
+    phoneKind?: "carga" | "ads";
+    phoneIntervalStartHour?: number | null;
+    phoneIntervalEndHour?: number | null;
+    postUrl?: string;
+    landingTag?: string;
     comment: string;
     config: LandingThemeConfig;
   },
@@ -81,6 +133,12 @@ export async function createLanding(
       user_id: userId,
       name,
       pixel_id: payload.pixelId ?? "",
+      phone_mode: payload.phoneMode ?? "random",
+      phone_kind: payload.phoneKind ?? "carga",
+      phone_interval_start_hour: payload.phoneIntervalStartHour ?? null,
+      phone_interval_end_hour: payload.phoneIntervalEndHour ?? null,
+      post_url: payload.postUrl ?? "",
+      landing_tag: payload.landingTag ?? "",
       comment: payload.comment,
       config: payload.config as unknown as Record<string, unknown>,
     })
@@ -100,16 +158,36 @@ export async function updateLanding(
   payload: {
     name?: string;
     pixelId?: string;
+    phoneMode?: "random" | "fair";
+    phoneKind?: "carga" | "ads";
+    phoneIntervalStartHour?: number | null;
+    phoneIntervalEndHour?: number | null;
+    postUrl?: string;
+    landingTag?: string;
     comment?: string;
     config?: LandingThemeConfig;
+    landingConfig?: LandingConfigPayload;
   },
 ): Promise<void> {
   const body: Record<string, unknown> = {};
   if (payload.name !== undefined) body.name = payload.name;
   if (payload.pixelId !== undefined) body.pixel_id = payload.pixelId;
+  if (payload.phoneMode !== undefined) body.phone_mode = payload.phoneMode;
+  if (payload.phoneKind !== undefined) body.phone_kind = payload.phoneKind;
+  if (payload.phoneIntervalStartHour !== undefined)
+    body.phone_interval_start_hour = payload.phoneIntervalStartHour;
+  if (payload.phoneIntervalEndHour !== undefined)
+    body.phone_interval_end_hour = payload.phoneIntervalEndHour;
+  if (payload.postUrl !== undefined) body.post_url = payload.postUrl;
+  if (payload.landingTag !== undefined) body.landing_tag = payload.landingTag;
   if (payload.comment !== undefined) body.comment = payload.comment;
   if (payload.config !== undefined)
     body.config = payload.config as unknown as Record<string, unknown>;
+  if (payload.landingConfig !== undefined)
+    body.landing_config = payload.landingConfig as unknown as Record<
+      string,
+      unknown
+    >;
 
   if (Object.keys(body).length === 0) return;
 

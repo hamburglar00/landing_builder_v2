@@ -5,14 +5,16 @@ import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { supabase } from "@/lib/supabaseClient";
 import type { Landing } from "@/lib/landing/types";
-import { fetchLandings, createLanding } from "@/lib/landing/landingsDb";
+import { fetchLandingsForAdmin, createLanding } from "@/lib/landing/landingsDb";
 import { DEFAULT_CONFIG } from "@/lib/landing/mocks";
+import { LandingPreview } from "@/components/landing/LandingPreview";
 
 const BASE = "/admin/landings";
 
 export default function AdminLandingsPage() {
   const router = useRouter();
-  const [landings, setLandings] = useState<Landing[]>([]);
+  const [mineLandings, setMineLandings] = useState<Landing[]>([]);
+  const [clientLandings, setClientLandings] = useState<Landing[]>([]);
   const [userId, setUserId] = useState<string | null>(null);
   const [ready, setReady] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -33,8 +35,9 @@ export default function AdminLandingsPage() {
       setUserId(user.id);
       setError(null);
       try {
-        const list = await fetchLandings(user.id);
-        setLandings(list);
+        const { mine, clients } = await fetchLandingsForAdmin(user.id);
+        setMineLandings(mine);
+        setClientLandings(clients);
       } catch (e) {
         setError(e instanceof Error ? e.message : "Error al cargar landings");
       } finally {
@@ -65,7 +68,7 @@ export default function AdminLandingsPage() {
   if (!ready) {
     return (
       <div className="flex min-h-[40vh] items-center justify-center">
-        <p className="text-sm text-zinc-400">Cargando...</p>
+        <p className="text-sm text-[var(--color-text-muted)]">Cargando...</p>
       </div>
     );
   }
@@ -73,86 +76,146 @@ export default function AdminLandingsPage() {
   return (
     <div className="space-y-6">
       {error && (
-        <p className="rounded-lg bg-red-950/50 px-3 py-2 text-sm text-red-300" role="alert">
+        <p className="rounded-lg bg-[rgba(239,68,68,0.14)] px-3 py-2 text-sm text-[var(--color-danger)]" role="alert">
           {error}
         </p>
       )}
       <div className="flex flex-wrap items-center justify-between gap-4">
         <div>
-          <h1 className="text-xl font-semibold text-zinc-100">
-            Mis landings
+          <h1 className="text-xl font-bold text-[var(--color-text-strong)]">
+            Landings
           </h1>
-          <p className="mt-1 text-sm text-zinc-400">
-            Mismo flujo que los clientes: crea y edita tus landings.
+          <p className="mt-1 text-sm text-[var(--color-text-muted)]">
+            Crea y edita tus landings.
           </p>
         </div>
         <button
           type="button"
           onClick={() => void handleCreate()}
           disabled={creating}
-          className="rounded-lg bg-zinc-100 px-4 py-2 text-sm font-medium text-zinc-900 transition hover:bg-zinc-200 disabled:opacity-70"
+          className="cursor-pointer rounded-xl bg-[var(--color-primary)] px-4 py-2 text-sm font-semibold uppercase tracking-wide text-[var(--color-bg-0)] transition-colors duration-150 hover:bg-[var(--color-primary-hover)] active:bg-[var(--color-primary-press)] disabled:cursor-not-allowed disabled:opacity-70 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-ring-primary)]"
         >
-          {creating ? "Creando..." : "Crear landing"}
+          {creating ? "CREANDO..." : "CREAR LANDING"}
         </button>
       </div>
 
-      {landings.length === 0 ? (
-        <div className="rounded-xl border border-zinc-800 bg-zinc-900/50 p-8 text-center">
-          <p className="text-zinc-400">Aún no tienes ninguna landing.</p>
+      {mineLandings.length === 0 && clientLandings.length === 0 ? (
+        <div className="rounded-xl border border-[var(--color-border)] bg-[var(--color-bg-2)] p-8 text-center shadow-sm">
+          <p className="text-[var(--color-text-muted)]">Aún no tienes ninguna landing.</p>
           <button
             type="button"
             onClick={() => void handleCreate()}
             disabled={creating}
-            className="mt-4 rounded-lg border border-zinc-700 px-4 py-2 text-sm font-medium text-zinc-300 transition hover:bg-zinc-800 disabled:opacity-70"
+            className="mt-4 rounded-xl border border-[var(--color-border)] bg-[rgba(255,255,255,0.03)] px-4 py-2 text-sm font-medium text-[var(--color-text)] transition hover:bg-[rgba(255,255,255,0.06)] disabled:opacity-70 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-ring-neutral)]"
           >
-            {creating ? "Creando..." : "Crear la primera"}
+            {creating ? "CREANDO..." : "CREAR LA PRIMERA"}
           </button>
         </div>
       ) : (
-        <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
-          {landings.map((landing) => {
-            const thumbUrl =
-              landing.config.backgroundImages[0] || landing.config.logoUrl;
-            return (
+        <div className="space-y-8">
+          {/* Mis landings */}
+          {mineLandings.length > 0 && (
+            <section>
+              <h2 className="mb-3 text-sm font-semibold text-[var(--color-text-muted)]">
+                Mis landings
+              </h2>
+              <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
+                {mineLandings.map((landing) => (
+                  <LandingCard key={landing.id} landing={landing} />
+                ))}
+              </div>
+            </section>
+          )}
+          {/* Landings de clientes */}
+          {clientLandings.length > 0 && (
+            <section>
+              <h2 className="mb-3 text-sm font-semibold text-[var(--color-text-muted)]">
+                Landings de clientes
+              </h2>
+              <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
+                {clientLandings.map((landing) => (
+                  <LandingCard key={landing.id} landing={landing} />
+                ))}
+              </div>
+            </section>
+          )}
+        </div>
+      )}
+    </div>
+  );
+}
+
+function LandingCard({ landing }: { landing: Landing }) {
+  return (
+    <div
+      className="relative aspect-[3/4] w-full overflow-hidden rounded-2xl border border-[var(--color-border)] bg-[var(--color-bg-1)] shadow-sm"
+    >
               <Link
-                key={landing.id}
                 href={`${BASE}/${landing.id}/editar`}
-                className="group flex flex-col overflow-hidden rounded-xl border border-zinc-800 bg-zinc-900/50 transition hover:border-zinc-600 hover:bg-zinc-800/50"
+                className="absolute inset-0"
               >
-                <div className="aspect-[3/4] w-full shrink-0 overflow-hidden bg-zinc-800">
-                  {thumbUrl ? (
-                    /* eslint-disable-next-line @next/next/no-img-element */
-                    <img
-                      src={thumbUrl}
-                      alt=""
-                      className="h-full w-full object-cover transition group-hover:scale-105"
-                    />
-                  ) : (
-                    <div className="flex h-full w-full items-center justify-center text-zinc-600">
-                      <span className="text-sm">Sin imagen</span>
-                    </div>
-                  )}
+                <div className="group/img absolute inset-0 overflow-hidden">
+                  <div className="h-full w-full transition-transform duration-200 group-hover/img:scale-[1.02]">
+                    <LandingPreview config={landing.config} compact gallery />
+                  </div>
                 </div>
-                <div className="p-3">
-                  <p className="font-medium text-zinc-100 truncate">
+              </Link>
+              <div className="pointer-events-none absolute inset-x-0 bottom-0 flex flex-col gap-0.5 bg-gradient-to-t from-black/85 to-black/50 px-2.5 py-2">
+                <div className="space-y-0.5">
+                  <p className="truncate text-xs font-medium text-[var(--color-text-strong)]">
                     {landing.name}
                   </p>
-                  {landing.pixelId ? (
-                    <p className="mt-0.5 truncate text-xs text-zinc-500">
-                      Pixel: {landing.pixelId}
-                    </p>
-                  ) : null}
+                  <p className="truncate text-[10px] text-[var(--color-text-muted)]">
+                    {landing.pixelId
+                      ? `Pixel: ${landing.pixelId}`
+                      : "Pixel: sin configurar"}
+                  </p>
+                  <p className="truncate text-[10px] text-[var(--color-text-muted)]">
+                    Teléfono:{" "}
+                    {landing.phoneMode === "fair" ? "equitativo" : "aleatorio"}
+                  </p>
                   {landing.comment ? (
-                    <p className="mt-0.5 truncate text-xs text-zinc-500">
+                    <p className="truncate text-[10px] text-[var(--color-text-muted)]">
                       {landing.comment}
                     </p>
                   ) : null}
                 </div>
-              </Link>
-            );
-          })}
-        </div>
-      )}
-    </div>
+                <div className="pointer-events-auto flex items-center gap-1.5 pt-1">
+                  <a
+                    href={`${
+                      process.env.NEXT_PUBLIC_LANDING_BASE_URL ??
+                      "https://tus-lands.com"
+                    }/${landing.name}`}
+                    target="_blank"
+                    rel="noreferrer"
+                    onClick={(e) => e.stopPropagation()}
+                    className="inline-flex flex-1 items-center justify-center gap-1 rounded-lg border border-[var(--color-border)] bg-[rgba(255,255,255,0.08)] px-2 py-1 text-[10px] font-medium text-[var(--color-text)] transition hover:bg-[rgba(255,255,255,0.12)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-ring-neutral)]"
+                  >
+                    <span>Abrir landing</span>
+                    <svg
+                      aria-hidden="true"
+                      className="h-2.5 w-2.5"
+                      viewBox="0 0 24 24"
+                      fill="none"
+                      stroke="currentColor"
+                      strokeWidth={1.8}
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                    >
+                      <path d="M14 3h7v7" />
+                      <path d="M10 14L21 3" />
+                      <path d="M5 5v14h14" />
+                    </svg>
+                  </a>
+                  <Link
+                    href={`${BASE}/${landing.id}/editar`}
+                    onClick={(e) => e.stopPropagation()}
+                    className="inline-flex items-center justify-center rounded-lg border border-[var(--color-border)] bg-[rgba(255,255,255,0.06)] px-2 py-1 text-[10px] font-medium text-[var(--color-text)] transition hover:bg-[rgba(255,255,255,0.1)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-ring-neutral)]"
+                  >
+                    Editar
+                  </Link>
+                </div>
+              </div>
+            </div>
   );
 }

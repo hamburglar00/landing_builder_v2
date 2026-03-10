@@ -27,10 +27,6 @@ interface ColorSelectProps {
   id?: string;
 }
 
-/**
- * Selector de color con lista cerrada: nombre visible + mini muestra del color.
- * No usa color picker libre ni input hex manual.
- */
 export function ColorSelect({ value, onChange, label, id }: ColorSelectProps) {
   return (
     <div className="space-y-2">
@@ -42,37 +38,24 @@ export function ColorSelect({ value, onChange, label, id }: ColorSelectProps) {
           {label}
         </label>
       )}
-      <div
-        id={id}
-        className="flex flex-wrap gap-2"
-        role="listbox"
-        aria-label={label}
-      >
-        {COLOR_OPTIONS.map((option) => {
-          const hex = COLOR_MAP[option];
-          const isSelected = value === option;
-          return (
-            <button
-              key={option}
-              type="button"
-              role="option"
-              aria-selected={isSelected}
-              onClick={() => onChange(option)}
-              className={`flex items-center gap-1.5 rounded-lg border px-2 py-1.5 text-xs transition ${
-                isSelected
-                  ? "border-zinc-400 bg-zinc-800 text-zinc-50"
-                  : "border-zinc-700 bg-zinc-900 text-zinc-300 hover:border-zinc-600"
-              }`}
-            >
-              <span
-                className="h-4 w-4 shrink-0 rounded border border-zinc-600"
-                style={{ backgroundColor: hex }}
-                aria-hidden
-              />
-              <span>{LABELS[option]}</span>
-            </button>
-          );
-        })}
+      <div className="inline-flex items-center gap-2">
+        <span
+          className="h-4 w-4 shrink-0 rounded border border-zinc-600"
+          style={{ backgroundColor: COLOR_MAP[value] }}
+          aria-hidden
+        />
+        <select
+          id={id}
+          value={value}
+          onChange={(e) => onChange(e.target.value as ColorOption)}
+          className="min-w-[8rem] rounded-lg border border-zinc-700 bg-zinc-900 px-3 py-1.5 text-xs text-zinc-100"
+        >
+          {COLOR_OPTIONS.map((option) => (
+            <option key={option} value={option}>
+              {LABELS[option]}
+            </option>
+          ))}
+        </select>
       </div>
     </div>
   );

@@ -12,7 +12,7 @@ create table public.landings (
 );
 
 comment on table public.landings is 'Landings creadas por clientes; cada fila es una landing con su config de tema (plantilla fija).';
-comment on column public.landings.config is 'JSON con LandingThemeConfig: backgroundMode, backgroundImages, rotateEveryHours, logoUrl, titleLine1/2, subtitleLine1/2/3, footerBadgeText, ctaText, colores (titleColor, subtitleColor, etc.).';
+comment on column public.landings.config is 'JSON con LandingThemeConfig: template, backgroundMode, backgroundImages, rotateEveryHours, logoUrl, titleLine1/2/3, subtitleLine1/2/3, footerBadgeLine1/2/3, ctaText, tipografías (sizes/bold/fontFamily), colores (titleColor, subtitleColor, etc.) y layout (ctaPosition).';
 
 create index landings_user_id_idx on public.landings (user_id);
 create index landings_updated_at_idx on public.landings (updated_at desc);

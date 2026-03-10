@@ -19,6 +19,41 @@ export type ColorOption =
   | "gray_dark";
 
 /**
+ * Familia tipográfica seleccionable desde el constructor.
+ * La landing pública debe mapear estos tokens a font-family reales.
+ */
+export type FontFamilyOption =
+  | "pp_mori"
+  | "roboto"
+  | "poppins"
+  | "montserrat"
+  | "bebas"
+  | "alpha"
+  | "anton"
+  | "system";
+
+/**
+ * Posición del CTA dentro del layout fijo de la landing.
+ *
+ * top: inmediatamente después del logo.
+ * between_title_and_info: después del título (posición actual por defecto).
+ * between_info_and_badge: entre el bloque informativo y el badge final.
+ * bottom: al final, debajo del badge.
+ */
+export type CtaPositionOption =
+  | "top"
+  | "between_title_and_info"
+  | "between_info_and_badge"
+  | "bottom";
+
+/**
+ * Plantilla de layout disponible en el constructor.
+ * template1: layout actual (CTA + multimedia + textos).
+ * template2: futuras variantes.
+ */
+export type TemplateOption = "template1" | "template2";
+
+/**
  * Modo de fondo: una sola imagen o rotación entre varias.
  */
 export type BackgroundMode = "single" | "rotating";
@@ -34,11 +69,35 @@ export interface LandingThemeConfig {
   logoUrl: string;
   titleLine1: string;
   titleLine2: string;
+  titleLine3: string;
   subtitleLine1: string;
   subtitleLine2: string;
   subtitleLine3: string;
-  footerBadgeText: string;
+  footerBadgeLine1: string;
+  footerBadgeLine2: string;
+  footerBadgeLine3: string;
   ctaText: string;
+  /**
+   * Plantilla visual de la landing.
+   */
+  template: TemplateOption;
+  /**
+   * Tipografía y estilos de texto.
+   * Se guardan en pixeles/booleanos para que la landing pública pueda aplicarlos 1:1.
+   */
+  fontFamily: FontFamilyOption;
+  titleFontSize: number;
+  subtitleFontSize: number;
+  ctaFontSize: number;
+  badgeFontSize: number;
+  titleBold: boolean;
+  subtitleBold: boolean;
+  ctaBold: boolean;
+  badgeBold: boolean;
+  /**
+   * Posición del CTA dentro del layout fijo.
+   */
+  ctaPosition: CtaPositionOption;
   titleColor: ColorOption;
   subtitleColor: ColorOption;
   footerBadgeColor: ColorOption;
@@ -49,12 +108,22 @@ export interface LandingThemeConfig {
 
 /**
  * Entidad landing: un cliente puede tener muchas.
- * Incluye nombre, comentario, pixel id y la config del tema.
+ * Incluye nombre, comentario, tracking y la config del tema.
  */
 export interface Landing {
   id: string;
   name: string;
   pixelId: string;
+  /** Modo de selección de teléfono: 'random' (aleatorio) o 'fair' (equitativo). */
+  phoneMode: "random" | "fair";
+  /** Tipo de número de teléfono a usar: 'carga' o 'ads'. */
+  phoneKind: "carga" | "ads";
+  /** Hora de inicio (0-23) del intervalo horario en el que esta landing puede mostrar teléfonos. null = sin intervalo. */
+  phoneIntervalStartHour: number | null;
+  /** Hora de fin (0-23) del intervalo horario en el que esta landing puede mostrar teléfonos. null = sin intervalo. */
+  phoneIntervalEndHour: number | null;
+  postUrl: string;
+  landingTag: string;
   comment: string;
   config: LandingThemeConfig;
 }

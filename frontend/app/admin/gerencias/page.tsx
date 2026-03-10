@@ -6,7 +6,7 @@ import Link from "next/link";
 import { supabase } from "@/lib/supabaseClient";
 import type { Gerencia } from "@/lib/gerencias/types";
 import {
-  fetchGerencias,
+  fetchGerenciasForAdmin,
   createGerencia,
   updateGerencia,
   deleteGerencia,
@@ -39,7 +39,7 @@ export default function AdminGerenciasPage() {
       setUserId(user.id);
       setError(null);
       try {
-        const list = await fetchGerencias(user.id);
+        const list = await fetchGerenciasForAdmin(user.id);
         setGerencias(list);
       } catch (e) {
         setError(e instanceof Error ? e.message : "Error al cargar gerencias");
@@ -59,13 +59,18 @@ export default function AdminGerenciasPage() {
 
   const handleCreate = async (e: React.FormEvent) => {
     e.preventDefault();
+    const gid = parseGerenciaId(newGerenciaId);
     if (!userId || !newNombre.trim()) return;
+    if (gid === null) {
+      setError("Gerencia ID es obligatorio (número entero).");
+      return;
+    }
     setSaving(true);
     setError(null);
     try {
       const created = await createGerencia(userId, {
         nombre: newNombre.trim(),
-        gerencia_id: parseGerenciaId(newGerenciaId),
+        gerencia_id: gid,
       });
       setGerencias((prev) => [...prev, created].sort((a, b) => a.id - b.id));
       setNewNombre("");
@@ -80,7 +85,7 @@ export default function AdminGerenciasPage() {
   const startEdit = (g: Gerencia) => {
     setEditingId(g.id);
     setEditNombre(g.nombre);
-    setEditGerenciaId(g.gerencia_id != null ? String(g.gerencia_id) : "");
+    setEditGerenciaId(String(g.gerencia_id));
   };
 
   const cancelEdit = () => {
@@ -91,18 +96,22 @@ export default function AdminGerenciasPage() {
 
   const handleUpdate = async (e: React.FormEvent) => {
     e.preventDefault();
+    const gid = parseGerenciaId(editGerenciaId);
     if (editingId === null || !editNombre.trim()) return;
+    if (gid === null) {
+      setError("Gerencia ID es obligatorio (número entero).");
+      return;
+    }
     setSaving(true);
     setError(null);
     try {
       await updateGerencia(editingId, {
         nombre: editNombre.trim(),
-        gerencia_id: parseGerenciaId(editGerenciaId),
+        gerencia_id: gid,
       });
       setGerencias((prev) =>
         prev.map((x) =>
-          x.id === editingId
-            ? { ...x, nombre: editNombre.trim(), gerencia_id: parseGerenciaId(editGerenciaId) } : x,
+          x.id === editingId ? { ...x, nombre: editNombre.trim(), gerencia_id: gid } : x,
         ),
       );
       cancelEdit();
@@ -137,19 +146,15 @@ export default function AdminGerenciasPage() {
 
   return (
     <div className="space-y-6">
-      <div className="flex flex-wrap items-center gap-4">
-        <Link
-          href="/admin"
-          className="text-sm text-zinc-400 transition hover:text-zinc-200"
-        >
-          ← Inicio
-        </Link>
-      </div>
-      <div>
-        <h1 className="text-xl font-semibold text-zinc-100">Gerencias</h1>
-        <p className="mt-1 text-sm text-zinc-400">
-          Crea y edita gerencias para asignarlas a tus landings.
-        </p>
+      <div className="flex flex-wrap items-center justify-between gap-4">
+        <div className="flex flex-wrap items-center gap-4">
+          <Link
+            href="/admin"
+            className="text-sm text-[var(--color-text-muted)] transition hover:text-[var(--color-text)]"
+          >
+            ← Inicio
+          </Link>
+        </div>
       </div>
       {error && (
         <p className="rounded-lg bg-red-950/50 px-3 py-2 text-sm text-red-300" role="alert">
@@ -157,40 +162,51 @@ export default function AdminGerenciasPage() {
         </p>
       )}
 
-      <form onSubmit={handleCreate} className="flex flex-wrap items-end gap-3">
-        <div>
-          <label htmlFor="new-gerencia-nombre" className="block text-xs font-medium text-zinc-400 mb-1">
-            Nombre
-          </label>
-          <input
-            id="new-gerencia-nombre"
-            type="text"
-            value={newNombre}
-            onChange={(e) => setNewNombre(e.target.value)}
-            placeholder="Ej: Gerencia Comercial"
-            className="w-56 rounded-lg border border-zinc-700 bg-zinc-900 px-3 py-2 text-sm text-zinc-100"
-          />
+      <form onSubmit={handleCreate} className="space-y-4">
+        <div className="flex flex-wrap items-center justify-between gap-4">
+          <div>
+            <h1 className="text-xl font-bold text-[var(--color-text-strong)]">Gerencias</h1>
+            <p className="mt-1 text-sm text-[var(--color-text-muted)]">
+              Crea y edita gerencias para asignarlas a tus landings.
+            </p>
+          </div>
+          <button
+            type="submit"
+            disabled={saving || !newNombre.trim() || parseGerenciaId(newGerenciaId) === null}
+            className="cursor-pointer rounded-xl bg-[var(--color-primary)] px-4 py-2 text-sm font-semibold uppercase tracking-wide text-[var(--color-bg-0)] transition-colors duration-150 hover:bg-[var(--color-primary-hover)] active:bg-[var(--color-primary-press)] disabled:cursor-not-allowed disabled:opacity-70 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-ring-primary)]"
+          >
+            {saving ? "GUARDANDO..." : "AGREGAR GERENCIA"}
+          </button>
         </div>
-        <div>
-          <label htmlFor="new-gerencia-id" className="block text-xs font-medium text-zinc-400 mb-1">
-            Gerencia ID (entero externo)
-          </label>
-          <input
-            id="new-gerencia-id"
-            type="number"
-            value={newGerenciaId}
-            onChange={(e) => setNewGerenciaId(e.target.value)}
-            placeholder="Opcional"
-            className="w-32 rounded-lg border border-zinc-700 bg-zinc-900 px-3 py-2 text-sm text-zinc-100"
-          />
+        <div className="flex flex-wrap items-end gap-3">
+          <div>
+            <label htmlFor="new-gerencia-nombre" className="block text-xs font-medium text-zinc-400 mb-1">
+              Nombre
+            </label>
+            <input
+              id="new-gerencia-nombre"
+              type="text"
+              value={newNombre}
+              onChange={(e) => setNewNombre(e.target.value)}
+              placeholder="Ej: Nombre de la Gerencia"
+              className="w-56 rounded-lg border border-[var(--color-border)] bg-[var(--color-bg-2)] px-3 py-2 text-sm text-[var(--color-text-strong)] placeholder:text-[var(--color-text-disabled)] focus:border-[var(--color-primary)] focus:outline-none focus:ring-2 focus:ring-[var(--color-ring-primary)]"
+            />
+          </div>
+          <div>
+            <label htmlFor="new-gerencia-id" className="block text-xs font-medium text-zinc-400 mb-1">
+              Gerencia ID (entero externo) <span className="text-red-400">*</span>
+            </label>
+            <input
+              id="new-gerencia-id"
+              type="number"
+              value={newGerenciaId}
+              onChange={(e) => setNewGerenciaId(e.target.value)}
+              placeholder="Ej: 1"
+              required
+              className="w-32 rounded-lg border border-[var(--color-border)] bg-[var(--color-bg-2)] px-3 py-2 text-sm text-[var(--color-text-strong)] placeholder:text-[var(--color-text-disabled)] focus:border-[var(--color-primary)] focus:outline-none focus:ring-2 focus:ring-[var(--color-ring-primary)]"
+            />
+          </div>
         </div>
-        <button
-          type="submit"
-          disabled={saving || !newNombre.trim()}
-          className="rounded-lg bg-zinc-100 px-4 py-2 text-sm font-medium text-zinc-900 transition hover:bg-zinc-200 disabled:opacity-70"
-        >
-          {saving ? "Guardando..." : "Agregar gerencia"}
-        </button>
       </form>
 
       <div className="rounded-xl border border-zinc-800 overflow-hidden">
@@ -242,9 +258,7 @@ export default function AdminGerenciasPage() {
                     <span className="text-zinc-100">{g.nombre}</span>
                   )}
                 </td>
-                <td className="px-4 py-3 text-zinc-400">
-                  {g.gerencia_id != null ? g.gerencia_id : "—"}
-                </td>
+                <td className="px-4 py-3 text-zinc-400">{g.gerencia_id}</td>
                 <td className="px-4 py-3 text-right">
                   {editingId === g.id ? null : (
                     <>

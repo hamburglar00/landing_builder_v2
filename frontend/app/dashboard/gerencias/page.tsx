@@ -59,13 +59,18 @@ export default function DashboardGerenciasPage() {
 
   const handleCreate = async (e: React.FormEvent) => {
     e.preventDefault();
+    const gid = parseGerenciaId(newGerenciaId);
     if (!userId || !newNombre.trim()) return;
+    if (gid === null) {
+      setError("Gerencia ID es obligatorio (número entero).");
+      return;
+    }
     setSaving(true);
     setError(null);
     try {
       const created = await createGerencia(userId, {
         nombre: newNombre.trim(),
-        gerencia_id: parseGerenciaId(newGerenciaId),
+        gerencia_id: gid,
       });
       setGerencias((prev) => [...prev, created].sort((a, b) => a.id - b.id));
       setNewNombre("");
@@ -80,7 +85,7 @@ export default function DashboardGerenciasPage() {
   const startEdit = (g: Gerencia) => {
     setEditingId(g.id);
     setEditNombre(g.nombre);
-    setEditGerenciaId(g.gerencia_id != null ? String(g.gerencia_id) : "");
+    setEditGerenciaId(String(g.gerencia_id));
   };
 
   const cancelEdit = () => {
@@ -91,19 +96,22 @@ export default function DashboardGerenciasPage() {
 
   const handleUpdate = async (e: React.FormEvent) => {
     e.preventDefault();
+    const gid = parseGerenciaId(editGerenciaId);
     if (editingId === null || !editNombre.trim()) return;
+    if (gid === null) {
+      setError("Gerencia ID es obligatorio (número entero).");
+      return;
+    }
     setSaving(true);
     setError(null);
     try {
       await updateGerencia(editingId, {
         nombre: editNombre.trim(),
-        gerencia_id: parseGerenciaId(editGerenciaId),
+        gerencia_id: gid,
       });
       setGerencias((prev) =>
         prev.map((x) =>
-          x.id === editingId
-            ? { ...x, nombre: editNombre.trim(), gerencia_id: parseGerenciaId(editGerenciaId) }
-            : x,
+          x.id === editingId ? { ...x, nombre: editNombre.trim(), gerencia_id: gid } : x,
         ),
       );
       cancelEdit();
@@ -138,19 +146,15 @@ export default function DashboardGerenciasPage() {
 
   return (
     <div className="space-y-6">
-      <div className="flex flex-wrap items-center gap-4">
-        <Link
-          href="/dashboard"
-          className="text-sm text-zinc-400 transition hover:text-zinc-200"
-        >
-          ← Mis Landings
-        </Link>
-      </div>
-      <div>
-        <h1 className="text-xl font-semibold text-zinc-100">Gerencias</h1>
-        <p className="mt-1 text-sm text-zinc-400">
-          Crea y edita gerencias para asignarlas a tus landings.
-        </p>
+      <div className="flex flex-wrap items-center justify-between gap-4">
+        <div className="flex flex-wrap items-center gap-4">
+          <Link
+            href="/dashboard"
+            className="text-sm text-zinc-400 transition hover:text-zinc-200"
+          >
+            ← Landings
+          </Link>
+        </div>
       </div>
       {error && (
         <p className="rounded-lg bg-red-950/50 px-3 py-2 text-sm text-red-300" role="alert">
@@ -158,63 +162,72 @@ export default function DashboardGerenciasPage() {
         </p>
       )}
 
-      <form onSubmit={handleCreate} className="flex flex-wrap items-end gap-3">
-        <div>
-          <label htmlFor="new-gerencia-nombre" className="block text-xs font-medium text-zinc-400 mb-1">
-            Nombre
-          </label>
-          <input
-            id="new-gerencia-nombre"
-            type="text"
-            value={newNombre}
-            onChange={(e) => setNewNombre(e.target.value)}
-            placeholder="Ej: Gerencia Comercial"
-            className="w-56 rounded-lg border border-zinc-700 bg-zinc-900 px-3 py-2 text-sm text-zinc-100"
-          />
+      <form onSubmit={handleCreate} className="space-y-4">
+        <div className="flex flex-wrap items-center justify-between gap-4">
+          <div>
+            <h1 className="text-xl font-bold text-[var(--color-text-strong)]">Gerencias</h1>
+            <p className="mt-1 text-sm text-[var(--color-text-muted)]">
+              Crea y edita gerencias para asignarlas a tus landings.
+            </p>
+          </div>
+          <button
+            type="submit"
+            disabled={saving || !newNombre.trim() || parseGerenciaId(newGerenciaId) === null}
+            className="cursor-pointer rounded-xl bg-[var(--color-primary)] px-4 py-2 text-sm font-semibold uppercase tracking-wide text-[var(--color-bg-0)] transition-colors duration-150 hover:bg-[var(--color-primary-hover)] active:bg-[var(--color-primary-press)] disabled:cursor-not-allowed disabled:opacity-70 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-ring-primary)]"
+          >
+            {saving ? "GUARDANDO..." : "AGREGAR GERENCIA"}
+          </button>
         </div>
-        <div>
-          <label htmlFor="new-gerencia-id" className="block text-xs font-medium text-zinc-400 mb-1">
-            Gerencia ID (entero externo)
-          </label>
-          <input
-            id="new-gerencia-id"
-            type="number"
-            value={newGerenciaId}
-            onChange={(e) => setNewGerenciaId(e.target.value)}
-            placeholder="Opcional"
-            className="w-32 rounded-lg border border-zinc-700 bg-zinc-900 px-3 py-2 text-sm text-zinc-100"
-          />
+        <div className="flex flex-wrap items-end gap-3">
+          <div>
+            <label htmlFor="new-gerencia-nombre" className="block text-xs font-medium text-zinc-400 mb-1">
+              Nombre
+            </label>
+            <input
+              id="new-gerencia-nombre"
+              type="text"
+              value={newNombre}
+              onChange={(e) => setNewNombre(e.target.value)}
+              placeholder="Ej: Nombre de la Gerencia"
+              className="w-56 rounded-lg border border-[var(--color-border)] bg-[var(--color-bg-2)] px-3 py-2 text-sm text-[var(--color-text-strong)] placeholder:text-[var(--color-text-disabled)] focus:border-[var(--color-primary)] focus:outline-none focus:ring-2 focus:ring-[var(--color-ring-primary)]"
+            />
+          </div>
+          <div>
+            <label htmlFor="new-gerencia-id" className="block text-xs font-medium text-zinc-400 mb-1">
+              Gerencia ID (id de la gerencia en PBadmin) <span className="text-red-400">*</span>
+            </label>
+            <input
+              id="new-gerencia-id"
+              type="number"
+              value={newGerenciaId}
+              onChange={(e) => setNewGerenciaId(e.target.value)}
+              placeholder="Ej: 1"
+              required
+              className="w-32 rounded-lg border border-[var(--color-border)] bg-[var(--color-bg-2)] px-3 py-2 text-sm text-[var(--color-text-strong)] placeholder:text-[var(--color-text-disabled)] focus:border-[var(--color-primary)] focus:outline-none focus:ring-2 focus:ring-[var(--color-ring-primary)]"
+            />
+          </div>
         </div>
-        <button
-          type="submit"
-          disabled={saving || !newNombre.trim()}
-          className="rounded-lg bg-zinc-100 px-4 py-2 text-sm font-medium text-zinc-900 transition hover:bg-zinc-200 disabled:opacity-70"
-        >
-          {saving ? "Guardando..." : "Agregar gerencia"}
-        </button>
       </form>
 
-      <div className="rounded-xl border border-zinc-800 overflow-hidden">
+      <div className="rounded-xl border border-[var(--color-border)] bg-[var(--color-bg-2)] overflow-hidden shadow-sm">
         <table className="w-full text-left text-sm">
-          <thead className="bg-zinc-900/80">
+          <thead className="bg-[var(--color-bg-3)]">
             <tr>
-              <th className="px-4 py-3 font-medium text-zinc-300">ID</th>
               <th className="px-4 py-3 font-medium text-zinc-300">Nombre</th>
               <th className="px-4 py-3 font-medium text-zinc-300">Gerencia ID</th>
               <th className="px-4 py-3 text-right font-medium text-zinc-300">Acciones</th>
             </tr>
           </thead>
-          <tbody className="divide-y divide-zinc-800">
+          <tbody className="divide-y divide-[var(--color-border)]">
             {gerencias.length === 0 && (
               <tr>
-                <td colSpan={4} className="px-4 py-6 text-center text-zinc-500">
+                <td colSpan={3} className="px-4 py-6 text-center text-zinc-500">
                   Aún no tienes gerencias. Crea una arriba.
                 </td>
               </tr>
             )}
             {gerencias.map((g) => (
-              <tr key={g.id} className="bg-zinc-950/40">
-                <td className="px-4 py-3 text-zinc-400">{g.id}</td>
+              <tr key={g.id} className="bg-transparent hover:bg-[rgba(255,255,255,0.03)]">
                 <td className="px-4 py-3">
                   {editingId === g.id ? (
                     <form onSubmit={handleUpdate} className="inline-flex flex-wrap items-center gap-2">
@@ -222,7 +235,7 @@ export default function DashboardGerenciasPage() {
                         type="text"
                         value={editNombre}
                         onChange={(e) => setEditNombre(e.target.value)}
-                        className="w-48 rounded-md border border-zinc-700 bg-zinc-900 px-2 py-1 text-zinc-100"
+                        className="w-48 rounded-md border border-[var(--color-border)] bg-[var(--color-bg-2)] px-2 py-1 text-[var(--color-text-strong)] placeholder:text-[var(--color-text-disabled)] focus:border-[var(--color-primary)] focus:outline-none focus:ring-2 focus:ring-[var(--color-ring-primary)]"
                         autoFocus
                       />
                       <input
@@ -230,12 +243,12 @@ export default function DashboardGerenciasPage() {
                         value={editGerenciaId}
                         onChange={(e) => setEditGerenciaId(e.target.value)}
                         placeholder="Gerencia ID"
-                        className="w-24 rounded-md border border-zinc-700 bg-zinc-900 px-2 py-1 text-zinc-100"
+                        className="w-24 rounded-md border border-[var(--color-border)] bg-[var(--color-bg-2)] px-2 py-1 text-[var(--color-text-strong)] placeholder:text-[var(--color-text-disabled)] focus:border-[var(--color-primary)] focus:outline-none focus:ring-2 focus:ring-[var(--color-ring-primary)]"
                       />
-                      <button type="submit" disabled={saving} className="text-zinc-300 hover:text-white">
+                      <button type="submit" disabled={saving} className="text-[var(--color-text)] hover:text-[var(--color-text-strong)]">
                         Guardar
                       </button>
-                      <button type="button" onClick={cancelEdit} className="text-zinc-500 hover:text-zinc-300">
+                      <button type="button" onClick={cancelEdit} className="text-[var(--color-text-muted)] hover:text-[var(--color-text)]">
                         Cancelar
                       </button>
                     </form>
@@ -243,16 +256,14 @@ export default function DashboardGerenciasPage() {
                     <span className="text-zinc-100">{g.nombre}</span>
                   )}
                 </td>
-                <td className="px-4 py-3 text-zinc-400">
-                  {g.gerencia_id != null ? g.gerencia_id : "—"}
-                </td>
+                <td className="px-4 py-3 text-zinc-400">{g.gerencia_id}</td>
                 <td className="px-4 py-3 text-right">
                   {editingId === g.id ? null : (
                     <>
                       <button
                         type="button"
                         onClick={() => startEdit(g)}
-                        className="mr-2 rounded-md border border-zinc-700 px-2 py-1 text-xs text-zinc-300 hover:bg-zinc-800"
+                        className="mr-2 rounded-md border border-[var(--color-border)] bg-[rgba(255,255,255,0.03)] px-2 py-1 text-xs font-medium text-[var(--color-text)] transition hover:bg-[rgba(255,255,255,0.06)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-ring-neutral)]"
                       >
                         Editar
                       </button>
@@ -260,7 +271,7 @@ export default function DashboardGerenciasPage() {
                         type="button"
                         onClick={() => void handleDelete(g.id)}
                         disabled={deletingId === g.id}
-                        className="rounded-md border border-red-800 px-2 py-1 text-xs text-red-300 hover:bg-red-950/50 disabled:opacity-70"
+                        className="rounded-md border border-[rgba(239,68,68,0.25)] bg-[rgba(239,68,68,0.10)] px-2 py-1 text-xs font-medium text-[#FCA5A5] transition hover:border-[rgba(239,68,68,0.4)] hover:bg-[rgba(239,68,68,0.16)] disabled:opacity-70 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[rgba(239,68,68,0.35)]"
                       >
                         {deletingId === g.id ? "Eliminando..." : "Eliminar"}
                       </button>

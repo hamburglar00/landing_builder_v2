@@ -12,39 +12,49 @@ export async function fetchGerencias(userId: string): Promise<Gerencia[]> {
     .order("id", { ascending: true });
 
   if (error) throw error;
-  return (data ?? []).map((r) => ({
-    id: r.id,
-    nombre: r.nombre,
-    gerencia_id: (r as { gerencia_id?: number | null }).gerencia_id ?? null,
-  })) as Gerencia[];
+  return (data ?? []) as Gerencia[];
 }
 
 /**
- * Crea una gerencia. El id entero lo asigna la base.
- * Solo envía gerencia_id si viene definido, para no fallar si la columna aún no existe.
+ * Para admin: lista todas las gerencias, propias primero y después las de los clientes.
+ */
+export async function fetchGerenciasForAdmin(adminUserId: string): Promise<Gerencia[]> {
+  const { data, error } = await supabase
+    .from("gerencias")
+    .select("id, nombre, gerencia_id, user_id")
+    .order("id", { ascending: true });
+
+  if (error) throw error;
+  const list = (data ?? []) as Gerencia[];
+  const mine: Gerencia[] = [];
+  const others: Gerencia[] = [];
+  for (const g of list) {
+    if (g.user_id === adminUserId) mine.push(g);
+    else others.push(g);
+  }
+  return [...mine, ...others];
+}
+
+/**
+ * Crea una gerencia. gerencia_id es obligatorio (id para API externa de teléfonos).
  */
 export async function createGerencia(
   userId: string,
-  payload: { nombre: string; gerencia_id?: number | null },
+  payload: { nombre: string; gerencia_id: number },
 ): Promise<Gerencia> {
-  const insert: { user_id: string; nombre: string; gerencia_id?: number } = {
-    user_id: userId,
-    nombre: payload.nombre.trim(),
-  };
-  if (payload.gerencia_id != null) insert.gerencia_id = payload.gerencia_id;
-
   const { data, error } = await supabase
     .from("gerencias")
-    .insert(insert)
-    .select("id, nombre")
+    .insert({
+      id: payload.gerencia_id,
+      user_id: userId,
+      nombre: payload.nombre.trim(),
+      gerencia_id: payload.gerencia_id,
+    })
+    .select("id, nombre, gerencia_id")
     .single();
 
   if (error) throw error;
-  return {
-    id: data.id,
-    nombre: data.nombre,
-    gerencia_id: payload.gerencia_id ?? null,
-  } as Gerencia;
+  return data as Gerencia;
 }
 
 /**
@@ -52,13 +62,16 @@ export async function createGerencia(
  */
 export async function updateGerencia(
   id: number,
-  payload: { nombre: string; gerencia_id?: number | null },
+  payload: { nombre: string; gerencia_id: number },
 ): Promise<void> {
-  const body: { nombre: string; gerencia_id?: number | null } = {
-    nombre: payload.nombre.trim(),
-  };
-  if (payload.gerencia_id !== undefined) body.gerencia_id = payload.gerencia_id;
-  const { error } = await supabase.from("gerencias").update(body).eq("id", id);
+  const { error } = await supabase
+    .from("gerencias")
+    .update({
+      nombre: payload.nombre.trim(),
+      id: payload.gerencia_id,
+      gerencia_id: payload.gerencia_id,
+    })
+    .eq("id", id);
 
   if (error) throw error;
 }
@@ -72,27 +85,56 @@ export async function deleteGerencia(id: number): Promise<void> {
   if (error) throw error;
 }
 
+/** Asignación de una gerencia a una landing, con peso y configuración telefónica. */
+export interface LandingGerenciaAssignment {
+  gerencia_id: number;
+  weight: number;
+  phoneMode: "random" | "fair";
+  phoneKind: "carga" | "ads";
+  intervalStartHour: number | null;
+  intervalEndHour: number | null;
+}
+
 /**
- * Devuelve los ids de gerencias asignadas a una landing.
+ * Devuelve las gerencias asignadas a una landing con su weight.
+ */
+export async function fetchLandingGerencias(
+  landingId: string,
+): Promise<LandingGerenciaAssignment[]> {
+  const { data, error } = await supabase
+    .from("landings_gerencias")
+    .select(
+      "gerencia_id, weight, phone_mode, phone_kind, interval_start_hour, interval_end_hour",
+    )
+    .eq("landing_id", landingId);
+
+  if (error) throw error;
+  return (data ?? []).map((r) => ({
+    gerencia_id: r.gerencia_id,
+    weight: Number(r.weight) || 0,
+    phoneMode: (r.phone_mode as "random" | "fair") ?? "random",
+    phoneKind: (r.phone_kind as "carga" | "ads") ?? "carga",
+    intervalStartHour: r.interval_start_hour ?? null,
+    intervalEndHour: r.interval_end_hour ?? null,
+  }));
+}
+
+/**
+ * Devuelve solo los ids de gerencias asignadas (compatibilidad).
  */
 export async function fetchGerenciaIdsByLandingId(
   landingId: string,
 ): Promise<number[]> {
-  const { data, error } = await supabase
-    .from("landings_gerencias")
-    .select("gerencia_id")
-    .eq("landing_id", landingId);
-
-  if (error) throw error;
-  return (data ?? []).map((r) => r.gerencia_id);
+  const assignments = await fetchLandingGerencias(landingId);
+  return assignments.map((a) => a.gerencia_id);
 }
 
 /**
- * Asigna las gerencias a una landing. Reemplaza las asignaciones actuales.
+ * Asigna las gerencias a una landing con su weight. Reemplaza las asignaciones actuales.
  */
 export async function setLandingGerencias(
   landingId: string,
-  gerenciaIds: number[],
+  assignments: LandingGerenciaAssignment[],
 ): Promise<void> {
   const { error: deleteError } = await supabase
     .from("landings_gerencias")
@@ -101,12 +143,26 @@ export async function setLandingGerencias(
 
   if (deleteError) throw deleteError;
 
-  if (gerenciaIds.length === 0) return;
+  if (assignments.length === 0) return;
 
-  const rows = gerenciaIds.map((gerencia_id) => ({
-    landing_id: landingId,
-    gerencia_id,
-  }));
+  const rows = assignments.map(
+    ({
+      gerencia_id,
+      weight,
+      phoneMode,
+      phoneKind,
+      intervalStartHour,
+      intervalEndHour,
+    }) => ({
+      landing_id: landingId,
+      gerencia_id,
+      weight,
+      phone_mode: phoneMode,
+      phone_kind: phoneKind,
+      interval_start_hour: intervalStartHour,
+      interval_end_hour: intervalEndHour,
+    }),
+  );
 
   const { error: insertError } = await supabase
     .from("landings_gerencias")

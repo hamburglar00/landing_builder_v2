@@ -1,8 +1,38 @@
+@import url("https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700&family=Poppins:wght@400;500;600;700&family=Montserrat:wght@400;500;600;700&family=Bebas+Neue&family=Anton&display=swap");
 @import "tailwindcss";
 
 :root {
-  --background: #ffffff;
-  --foreground: #171717;
+  /* Core palette: Charcoal + Neon Green */
+  --color-bg-0: #0a0a0a;
+  --color-bg-1: #0f1115;
+  --color-bg-2: #141821;
+  --color-bg-3: #171c26;
+
+  --color-border: #242a36;
+  --color-border-strong: #2e3747;
+
+  --color-text-strong: #f5f7fa;
+  --color-text: #d3d8e2;
+  --color-text-muted: #9aa3b2;
+  --color-text-disabled: #6b7280;
+
+  --color-primary: #a3e635;
+  --color-primary-hover: #84cc16;
+  --color-primary-press: #65a30d;
+  --color-primary-soft-bg: rgba(163, 230, 53, 0.12);
+  --color-primary-soft-border: rgba(163, 230, 53, 0.22);
+
+  --color-success: #22c55e;
+  --color-warning: #f59e0b;
+  --color-danger: #ef4444;
+  --color-danger-hover: #dc2626;
+
+  --color-ring-primary: rgba(163, 230, 53, 0.45);
+  --color-ring-neutral: rgba(148, 163, 184, 0.35);
+
+  /* Backwards-compat tokens used by @theme and body */
+  --background: var(--color-bg-0);
+  --foreground: var(--color-text);
 }
 
 @theme inline {
@@ -12,15 +42,20 @@
   --font-mono: var(--font-geist-mono);
 }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-  }
+body {
+  background: var(--color-bg-0);
+  color: var(--color-text);
+  font-family: Arial, Helvetica, sans-serif;
 }
 
-body {
-  background: var(--background);
-  color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+/* Ocultar flechas de inputs numéricos en todos los navegadores */
+input[type="number"] {
+  appearance: textfield;
+  -moz-appearance: textfield;
+}
+
+input[type="number"]::-webkit-inner-spin-button,
+input[type="number"]::-webkit-outer-spin-button {
+  -webkit-appearance: none;
+  margin: 0;
 }
