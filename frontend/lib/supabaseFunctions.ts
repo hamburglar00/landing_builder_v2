@@ -4,7 +4,7 @@ const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
 const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
 
 export type InvokeResult<T = unknown> =
-  | { data: T; error: null }
+  | { data: T | null; error: null }
   | { data: null; error: { message: string } };
 
 /**
