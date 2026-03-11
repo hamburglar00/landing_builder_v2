@@ -6,14 +6,21 @@ const corsHeaders = {
     "authorization, x-client-info, apikey, content-type",
 };
 
-type PhoneKind = "carga" | "ads";
+type PhoneKind = "carga" | "ads" | "mkt";
 
 type ExternalResponse = {
+  load?: {
+    whatsapp?: string[];
+    telegram?: string[];
+  };
   ads?: {
     whatsapp?: string[];
   };
-  whatsapp?: string[];
-  telegram?: string[]; // ignorado
+  mkt?: {
+    whatsapp?: string[];
+  };
+  whatsapp?: string[]; // legacy: carga (por un tiempo; luego solo load.whatsapp)
+  telegram?: string[];
 };
 
 /**
@@ -186,8 +193,9 @@ Deno.serve(async (req) => {
 
       if (!json) continue;
 
+      const cargaWhatsapps = json.load?.whatsapp ?? json.whatsapp ?? [];
       const adsWhatsapps = json.ads?.whatsapp ?? [];
-      const cargaWhatsapps = json.whatsapp ?? [];
+      const mktWhatsapps = json.mkt?.whatsapp ?? [];
 
       const phoneKindMap = new Map<string, PhoneKind>();
 
@@ -199,8 +207,12 @@ Deno.serve(async (req) => {
       for (const phone of adsWhatsapps) {
         const normalized = String(phone).trim();
         if (!normalized) continue;
-        // Si un número aparece en ambos, damos prioridad a ads
         phoneKindMap.set(normalized, "ads");
+      }
+      for (const phone of mktWhatsapps) {
+        const normalized = String(phone).trim();
+        if (!normalized) continue;
+        phoneKindMap.set(normalized, "mkt");
       }
 
       const entries = Array.from(phoneKindMap.entries());

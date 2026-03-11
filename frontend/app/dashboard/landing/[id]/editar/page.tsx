@@ -419,7 +419,7 @@ export default function DashboardLandingEditarPage() {
                     <th className="px-3 py-2 font-medium text-zinc-300 w-32">
                       Modo
                     </th>
-                    <th className="px-3 py-2 font-medium text-zinc-300 w-32">
+                    <th className="px-3 py-2 font-medium text-zinc-300 min-w-[140px]">
                       Tipo
                     </th>
                     <th className="px-3 py-2 font-medium text-zinc-300 w-56">
@@ -541,8 +541,8 @@ export default function DashboardLandingEditarPage() {
                             </button>
                           </div>
                         </td>
-                        <td className="px-3 py-2">
-                          <div className="inline-flex rounded-lg border border-zinc-700 bg-zinc-900 text-[11px]">
+                        <td className="px-3 py-2 min-w-[140px]">
+                          <div className="inline-flex flex-shrink-0 rounded-lg border border-zinc-700 bg-zinc-900 text-[11px]">
                             <button
                               type="button"
                               onClick={() => {
@@ -555,7 +555,7 @@ export default function DashboardLandingEditarPage() {
                                   ),
                                 );
                               }}
-                              className={`cursor-pointer px-2 py-1 rounded-l-lg border-r border-zinc-700 ${
+                              className={`cursor-pointer shrink-0 px-2 py-1 rounded-l-lg border-r border-zinc-700 ${
                                 phoneKind === "carga"
                                   ? "bg-zinc-100 text-zinc-900"
                                   : "text-zinc-300 hover:bg-zinc-800"
@@ -575,13 +575,33 @@ export default function DashboardLandingEditarPage() {
                                   ),
                                 );
                               }}
-                              className={`cursor-pointer px-2 py-1 rounded-r-lg ${
+                              className={`cursor-pointer shrink-0 px-2 py-1 border-r border-zinc-700 ${
                                 phoneKind === "ads"
                                   ? "bg-zinc-100 text-zinc-900"
                                   : "text-zinc-300 hover:bg-zinc-800"
                               }`}
                             >
                               Ads
+                            </button>
+                            <button
+                              type="button"
+                              onClick={() => {
+                                if (!isAssigned) return;
+                                setAssignments((prev) =>
+                                  prev.map((a) =>
+                                    a.gerencia_id === g.id
+                                      ? { ...a, phoneKind: "mkt" }
+                                      : a,
+                                  ),
+                                );
+                              }}
+                              className={`cursor-pointer shrink-0 px-2 py-1 rounded-r-lg ${
+                                phoneKind === "mkt"
+                                  ? "bg-zinc-100 text-zinc-900"
+                                  : "text-zinc-300 hover:bg-zinc-800"
+                              }`}
+                            >
+                              Mkt
                             </button>
                           </div>
                         </td>

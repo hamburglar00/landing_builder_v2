@@ -10,7 +10,7 @@ export interface LandingRow {
   name: string;
   pixel_id: string;
   phone_mode: "random" | "fair";
-  phone_kind: "carga" | "ads";
+  phone_kind: "carga" | "ads" | "mkt";
   phone_interval_start_hour: number | null;
   phone_interval_end_hour: number | null;
   post_url: string;
@@ -116,7 +116,7 @@ export async function createLanding(
     name?: string;
     pixelId?: string;
     phoneMode?: "random" | "fair";
-    phoneKind?: "carga" | "ads";
+    phoneKind?: "carga" | "ads" | "mkt";
     phoneIntervalStartHour?: number | null;
     phoneIntervalEndHour?: number | null;
     postUrl?: string;
@@ -159,7 +159,7 @@ export async function updateLanding(
     name?: string;
     pixelId?: string;
     phoneMode?: "random" | "fair";
-    phoneKind?: "carga" | "ads";
+    phoneKind?: "carga" | "ads" | "mkt";
     phoneIntervalStartHour?: number | null;
     phoneIntervalEndHour?: number | null;
     postUrl?: string;

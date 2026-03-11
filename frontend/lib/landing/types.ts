@@ -116,8 +116,8 @@ export interface Landing {
   pixelId: string;
   /** Modo de selección de teléfono: 'random' (aleatorio) o 'fair' (equitativo). */
   phoneMode: "random" | "fair";
-  /** Tipo de número de teléfono a usar: 'carga' o 'ads'. */
-  phoneKind: "carga" | "ads";
+  /** Tipo de número de teléfono a usar: 'carga', 'ads' o 'mkt'. */
+  phoneKind: "carga" | "ads" | "mkt";
   /** Hora de inicio (0-23) del intervalo horario en el que esta landing puede mostrar teléfonos. null = sin intervalo. */
   phoneIntervalStartHour: number | null;
   /** Hora de fin (0-23) del intervalo horario en el que esta landing puede mostrar teléfonos. null = sin intervalo. */
