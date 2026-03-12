@@ -244,13 +244,18 @@ Deno.serve(async (req) => {
 
         totalActivePhones += activeRows.length;
 
-        // 3) Marcar como inactivos los que no vinieron en esta llamada
-        const phoneList = entries.map(([phone]) => phone);
+        // 3) Marcar como inactivos los que no vinieron en esta llamada.
+        // Supabase .not('col', 'in', ...) espera un string del tipo '(a,b,c)'.
+        const phoneList = entries.map(([phone]) => String(phone).trim());
+        const inList =
+          phoneList.length > 0
+            ? `(${phoneList.map((p) => `"${p.replace(/"/g, '""')}"`).join(",")})`
+            : "()";
         const { error: inactivateError } = await supabaseAdmin
           .from("gerencia_phones")
           .update({ status: "inactive" })
           .eq("gerencia_id", g.id)
-          .not("phone", "in", phoneList);
+          .not("phone", "in", inList);
 
         if (inactivateError) {
           console.error(
