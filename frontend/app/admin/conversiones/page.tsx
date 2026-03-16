@@ -205,6 +205,30 @@ export default function AdminConversionesPage() {
 
             {configOpen && (
               <div className="space-y-4 border-t border-zinc-800 p-4">
+                {/* Slug (client identifier for endpoint URL) */}
+                <div>
+                  <label className="block text-xs font-medium text-zinc-400 mb-1">
+                    Slug del cliente
+                  </label>
+                  <input
+                    type="text"
+                    value={config?.slug ?? ""}
+                    onChange={(e) =>
+                      setConfig((prev) =>
+                        prev
+                          ? { ...prev, slug: e.target.value.replace(/[^a-z0-9]/g, "").toLowerCase() }
+                          : prev,
+                      )
+                    }
+                    className="w-full rounded-lg border border-zinc-700 bg-zinc-900 px-3 py-2 text-sm text-zinc-100"
+                    placeholder="ej: kobe"
+                  />
+                  <p className="mt-1 text-[11px] text-zinc-500">
+                    Identificador único del cliente para la URL del endpoint.
+                    Solo minúsculas y números.
+                  </p>
+                </div>
+
                 {/* Pixel ID */}
                 <div>
                   <label className="block text-xs font-medium text-zinc-400 mb-1">
@@ -422,13 +446,13 @@ export default function AdminConversionesPage() {
             {endpointOpen && (
               <div className="space-y-3 border-t border-zinc-800 p-4">
                 <p className="text-xs text-zinc-400">
-                  Tus landings y sistemas externos deben enviar POST a esta URL
-                  (reemplazando{" "}
-                  <code className="text-zinc-300">NOMBRE_LANDING</code> por el
-                  nombre de la landing).
+                  Tus landings y sistemas externos deben enviar POST a esta URL.
                 </p>
                 {(() => {
-                  const url = `${endpointBase}/functions/v1/conversions?name=NOMBRE_LANDING`;
+                  const slug = config?.slug;
+                  const url = slug
+                    ? `${endpointBase}/functions/v1/conversions?name=${slug}`
+                    : `${endpointBase}/functions/v1/conversions?name=`;
                   return (
                     <div className="flex items-center gap-2 rounded-lg border border-zinc-800 bg-zinc-950/70 px-3 py-2">
                       <code className="flex-1 text-[11px] text-emerald-400 break-all">
@@ -437,7 +461,8 @@ export default function AdminConversionesPage() {
                       <button
                         type="button"
                         onClick={() => copyToClipboard(url)}
-                        className="shrink-0 cursor-pointer rounded p-1 text-zinc-500 transition hover:bg-zinc-800 hover:text-zinc-300"
+                        disabled={!slug}
+                        className="shrink-0 cursor-pointer rounded p-1 text-zinc-500 transition hover:bg-zinc-800 hover:text-zinc-300 disabled:opacity-30 disabled:cursor-not-allowed"
                         title="Copiar URL"
                       >
                         {copiedUrl === url ? (
@@ -449,6 +474,12 @@ export default function AdminConversionesPage() {
                     </div>
                   );
                 })()}
+                {!config?.slug && (
+                  <p className="text-[11px] text-amber-400">
+                    Configurá el slug del cliente en la sección de configuración
+                    para generar la URL.
+                  </p>
+                )}
               </div>
             )}
           </section>
@@ -461,22 +492,23 @@ export default function AdminConversionesPage() {
                 ({conversions.length})
               </span>
             </h3>
-            {conversions.length === 0 ? (
-              <p className="text-sm text-zinc-500">
-                Aún no hay conversiones registradas.
-              </p>
-            ) : (
-              <div className="overflow-x-auto rounded-lg border border-zinc-700">
-                <table className="w-full text-left text-[11px]">
-                  <thead className="bg-zinc-800/80 sticky top-0">
+            <div className="overflow-x-auto rounded-lg border border-zinc-700">
+              <table className="w-full text-left text-[11px]">
+                <thead className="bg-zinc-800/80 sticky top-0">
+                  <tr>
+                    {["phone","email","fn","ln","ct","st","zip","country","fbp","fbc","contact_event_id","contact_event_time","lead_event_id","lead_event_time","purchase_event_id","purchase_event_time","timestamp","clientIP","agentuser","estado","valor","contact_status_capi","lead_status_capi","purchase_status_capi","observaciones","external_id","utm_campaign","telefono_asignado","promo_code","device_type","geo_city","geo_region","geo_country"].map((col) => (
+                      <th key={col} className="px-2 py-2 font-medium text-zinc-300 whitespace-nowrap">{col}</th>
+                    ))}
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-zinc-800">
+                  {conversions.length === 0 ? (
                     <tr>
-                      {["phone","email","fn","ln","ct","st","zip","country","fbp","fbc","contact_event_id","contact_event_time","lead_event_id","lead_event_time","purchase_event_id","purchase_event_time","timestamp","clientIP","agentuser","estado","valor","contact_status_capi","lead_status_capi","purchase_status_capi","observaciones","external_id","utm_campaign","telefono_asignado","promo_code","device_type","geo_city","geo_region","geo_country"].map((col) => (
-                        <th key={col} className="px-2 py-2 font-medium text-zinc-300 whitespace-nowrap">{col}</th>
-                      ))}
+                      <td colSpan={33} className="px-2 py-6 text-center text-zinc-500">
+                        Aún no hay conversiones registradas.
+                      </td>
                     </tr>
-                  </thead>
-                  <tbody className="divide-y divide-zinc-800">
-                    {conversions.map((c) => {
+                  ) : conversions.map((c) => {
                       const rowColor =
                         c.estado === "purchase"
                           ? "bg-emerald-950/20"
@@ -533,7 +565,6 @@ export default function AdminConversionesPage() {
                   </tbody>
                 </table>
               </div>
-            )}
           </section>
         </>
       )}

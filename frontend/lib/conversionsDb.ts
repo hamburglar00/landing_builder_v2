@@ -4,6 +4,7 @@ import { supabase } from "@/lib/supabaseClient";
 
 export interface ConversionsConfig {
   user_id: string;
+  slug: string;
   pixel_id: string;
   meta_access_token: string;
   meta_currency: string;
@@ -68,6 +69,7 @@ export interface ConversionLogRow {
 
 const DEFAULT_CONFIG: ConversionsConfig = {
   user_id: "",
+  slug: "",
   pixel_id: "",
   meta_access_token: "",
   meta_currency: "ARS",
@@ -102,6 +104,7 @@ export async function upsertConversionsConfig(
     .upsert(
       {
         user_id: config.user_id,
+        slug: config.slug,
         pixel_id: config.pixel_id,
         meta_access_token: config.meta_access_token,
         meta_currency: config.meta_currency,

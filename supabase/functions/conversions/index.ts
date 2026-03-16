@@ -893,24 +893,40 @@ Deno.serve(async (req) => {
       auth: { autoRefreshToken: false, persistSession: false },
     });
 
-    // Lookup landing by name
-    const { data: landing, error: landingErr } = await db
+    // 1) Try lookup landing by name
+    let landing: LandingRow | null = null;
+    const { data: landingData } = await db
       .from("landings")
       .select("id, name, user_id")
       .eq("name", name)
       .maybeSingle();
+    if (landingData) landing = landingData as LandingRow;
 
-    if (landingErr || !landing) return textResponse("Landing no encontrada", 404);
+    // 2) If no landing found, try lookup by client slug in conversions_config
+    let cfg: ConversionsConfig | null = null;
+    if (!landing) {
+      const { data: configBySlug } = await db
+        .from("conversions_config")
+        .select("*")
+        .eq("slug", name)
+        .maybeSingle();
+      if (!configBySlug) return textResponse("Landing o cliente no encontrado", 404);
+      cfg = configBySlug as ConversionsConfig;
+      // Build a virtual landing row for the client-level endpoint
+      landing = { id: "", name: name, user_id: cfg.user_id };
+    }
 
-    // Lookup conversions config for the landing's owner
-    const { data: config } = await db
-      .from("conversions_config")
-      .select("*")
-      .eq("user_id", landing.user_id)
-      .maybeSingle();
+    // 3) Load config if not already loaded (landing-based lookup)
+    if (!cfg) {
+      const { data: config } = await db
+        .from("conversions_config")
+        .select("*")
+        .eq("user_id", landing.user_id)
+        .maybeSingle();
+      cfg = (config as ConversionsConfig) ?? null;
+    }
 
-    // If no config exists, use defaults
-    const cfg: ConversionsConfig = config ?? {
+    const finalCfg: ConversionsConfig = cfg ?? {
       user_id: landing.user_id,
       pixel_id: "",
       meta_access_token: "",
@@ -924,19 +940,24 @@ Deno.serve(async (req) => {
 
     const params: Params = await req.json().catch(() => ({}));
 
+    // If payload includes landing_name, override the virtual one
+    if (params.landing_name && !landingData) {
+      landing = { ...landing, name: String(params.landing_name).trim() };
+    }
+
     // Route to the correct handler
     if (!params.action && params.phone && params.amount) {
-      return handleSimplePurchase(db, params, landing as LandingRow, cfg);
+      return handleSimplePurchase(db, params, landing, finalCfg);
     }
     if (params.action === "LEAD") {
-      return handleLead(db, params, landing as LandingRow, cfg);
+      return handleLead(db, params, landing, finalCfg);
     }
     if (params.action === "PURCHASE") {
-      return handlePurchase(db, params, landing as LandingRow, cfg);
+      return handlePurchase(db, params, landing, finalCfg);
     }
 
     // Default: contact from landing
-    return handleContact(db, params, landing as LandingRow, cfg);
+    return handleContact(db, params, landing, finalCfg);
   } catch (err) {
     console.error("conversions error:", err);
     try {
