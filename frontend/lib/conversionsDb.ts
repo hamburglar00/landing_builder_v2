@@ -149,7 +149,7 @@ export async function fetchConversions(
     .range(offset, offset + limit - 1);
 
   if (error) throw error;
-  return (data ?? []) as ConversionRow[];
+  return (data ?? []) as unknown as ConversionRow[];
 }
 
 export async function fetchConversionsForAdmin(
@@ -163,7 +163,7 @@ export async function fetchConversionsForAdmin(
     .range(offset, offset + limit - 1);
 
   if (error) throw error;
-  return (data ?? []) as ConversionRow[];
+  return (data ?? []) as unknown as ConversionRow[];
 }
 
 // ─── Logs ───────────────────────────────────────────────────────────────────
@@ -184,7 +184,7 @@ export async function fetchConversionLogs(
     .range(offset, offset + limit - 1);
 
   if (error) throw error;
-  return (data ?? []) as ConversionLogRow[];
+  return (data ?? []) as unknown as ConversionLogRow[];
 }
 
 export async function fetchConversionLogsForAdmin(
@@ -198,7 +198,7 @@ export async function fetchConversionLogsForAdmin(
     .range(offset, offset + limit - 1);
 
   if (error) throw error;
-  return (data ?? []) as ConversionLogRow[];
+  return (data ?? []) as unknown as ConversionLogRow[];
 }
 
 /**
