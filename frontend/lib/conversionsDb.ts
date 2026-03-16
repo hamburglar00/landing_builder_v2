@@ -23,15 +23,46 @@ export interface ConversionRow {
   email: string;
   fn: string;
   ln: string;
+  ct: string;
+  st: string;
+  zip: string;
+  country: string;
+  fbp: string;
+  fbc: string;
+  contact_event_id: string;
+  contact_event_time: number | null;
+  lead_event_id: string;
+  lead_event_time: number | null;
+  purchase_event_id: string;
+  purchase_event_time: number | null;
+  client_ip: string;
+  agent_user: string;
+  device_type: string;
+  event_source_url: string;
   estado: string;
   valor: number;
   contact_status_capi: string;
   lead_status_capi: string;
   purchase_status_capi: string;
   observaciones: string;
-  promo_code: string;
+  external_id: string;
   utm_campaign: string;
   telefono_asignado: string;
+  promo_code: string;
+  geo_city: string;
+  geo_region: string;
+  geo_country: string;
+  created_at: string;
+}
+
+export interface ConversionLogRow {
+  id: number;
+  user_id: string;
+  conversion_id: string | null;
+  function_name: string;
+  level: string;
+  message: string;
+  detail: string;
   created_at: string;
 }
 
@@ -89,8 +120,21 @@ export async function upsertConversionsConfig(
 
 // ─── Conversions list ───────────────────────────────────────────────────────
 
-const CONVERSIONS_SELECT =
-  "id, landing_id, user_id, landing_name, phone, email, fn, ln, estado, valor, contact_status_capi, lead_status_capi, purchase_status_capi, observaciones, promo_code, utm_campaign, telefono_asignado, created_at";
+const CONVERSIONS_SELECT = `
+  id, landing_id, user_id, landing_name,
+  phone, email, fn, ln, ct, st, zip, country,
+  fbp, fbc,
+  contact_event_id, contact_event_time,
+  lead_event_id, lead_event_time,
+  purchase_event_id, purchase_event_time,
+  client_ip, agent_user, device_type, event_source_url,
+  estado, valor,
+  contact_status_capi, lead_status_capi, purchase_status_capi,
+  observaciones,
+  external_id, utm_campaign, telefono_asignado, promo_code,
+  geo_city, geo_region, geo_country,
+  created_at
+`.replace(/\s+/g, " ").trim();
 
 export async function fetchConversions(
   userId: string,
@@ -120,6 +164,41 @@ export async function fetchConversionsForAdmin(
 
   if (error) throw error;
   return (data ?? []) as ConversionRow[];
+}
+
+// ─── Logs ───────────────────────────────────────────────────────────────────
+
+const LOGS_SELECT =
+  "id, user_id, conversion_id, function_name, level, message, detail, created_at";
+
+export async function fetchConversionLogs(
+  userId: string,
+  limit = 200,
+  offset = 0,
+): Promise<ConversionLogRow[]> {
+  const { data, error } = await supabase
+    .from("conversion_logs")
+    .select(LOGS_SELECT)
+    .eq("user_id", userId)
+    .order("created_at", { ascending: false })
+    .range(offset, offset + limit - 1);
+
+  if (error) throw error;
+  return (data ?? []) as ConversionLogRow[];
+}
+
+export async function fetchConversionLogsForAdmin(
+  limit = 200,
+  offset = 0,
+): Promise<ConversionLogRow[]> {
+  const { data, error } = await supabase
+    .from("conversion_logs")
+    .select(LOGS_SELECT)
+    .order("created_at", { ascending: false })
+    .range(offset, offset + limit - 1);
+
+  if (error) throw error;
+  return (data ?? []) as ConversionLogRow[];
 }
 
 /**

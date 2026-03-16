@@ -161,6 +161,31 @@ function textResponse(msg: string, status = 200): Response {
   return new Response(msg, { status, headers: { ...corsHeaders, "Content-Type": "text/plain" } });
 }
 
+// ─── Logging ─────────────────────────────────────────────────────────────────
+
+async function writeLog(
+  db: SupabaseClient,
+  userId: string,
+  fn: string,
+  level: string,
+  message: string,
+  detail: string = "",
+  conversionId?: string,
+): Promise<void> {
+  try {
+    await db.from("conversion_logs").insert({
+      user_id: userId,
+      conversion_id: conversionId ?? null,
+      function_name: fn,
+      level,
+      message,
+      detail: detail.slice(0, 4000),
+    });
+  } catch {
+    // non-critical
+  }
+}
+
 // ─── Geo enrichment via ipapi.co ────────────────────────────────────────────
 
 async function lookupGeoByIp(rawIp: string): Promise<GeoResult | null> {
@@ -412,17 +437,21 @@ async function handleContact(
   };
 
   const { data: inserted, error } = await db.from("conversions").insert(row).select("id").single();
-  if (error || !inserted) return textResponse("Error al registrar contacto", 500);
+  if (error || !inserted) {
+    await writeLog(db, landing.user_id, "handleContact", "ERROR", "Error al insertar contacto", JSON.stringify(error));
+    return textResponse("Error al registrar contacto", 500);
+  }
   const rowId = inserted.id;
 
-  // Geo enrichment async (after insert)
   await ensureGeoOnRow(db, rowId, row.client_ip, { ct: row.ct, st: row.st, country: row.country, zip: row.zip, geo_city: row.geo_city, geo_region: row.geo_region, geo_country: row.geo_country }, config);
 
+  await writeLog(db, landing.user_id, "handleContact", "INFO", "Nuevo contacto registrado", JSON.stringify({ phone: row.phone, landing: landing.name, contact_event_id: contactEventId }), rowId);
+
   if (config.send_contact_capi) {
-    // Re-read the row to get potentially updated geo
     const { data: fresh } = await db.from("conversions").select("*").eq("id", rowId).single();
     const fullRow = (fresh ?? row) as ConversionRow;
     const ok = await sendToMetaCAPI(db, config, fullRow, rowId, "Contact", contactEventId, contactEventTime);
+    await writeLog(db, landing.user_id, "sendToMetaCAPI", ok ? "INFO" : "ERROR", ok ? "Contact CAPI enviado" : "Error Contact CAPI", JSON.stringify({ event_id: contactEventId }), rowId);
     return textResponse(ok ? "Contact registrado y enviado por CAPI" : "Contact registrado; error al enviar CAPI");
   }
 
@@ -540,11 +569,13 @@ async function handleLead(
 
   await ensureGeoOnRow(db, targetId!, row.client_ip, { ct: row.ct, st: row.st, country: row.country, zip: row.zip, geo_city: row.geo_city, geo_region: row.geo_region, geo_country: row.geo_country }, config);
 
-  // Re-read for CAPI
   const { data: fresh } = await db.from("conversions").select("*").eq("id", targetId).single();
   const fullRow = (fresh ?? row) as ConversionRow;
 
+  await writeLog(db, landing.user_id, "handleLead", "INFO", "LEAD procesado", JSON.stringify({ phone: cleanPhone, promo_code: promoCode, matched: !!targetId }), targetId!);
+
   const ok = await sendToMetaCAPI(db, config, fullRow, targetId!, "Lead", leadEventId, leadEventTime);
+  await writeLog(db, landing.user_id, "sendToMetaCAPI", ok ? "INFO" : "ERROR", ok ? "Lead CAPI enviado" : "Error Lead CAPI", JSON.stringify({ event_id: leadEventId }), targetId!);
   return textResponse(ok ? "Fila LEAD procesada" : "Error al enviar LEAD");
 }
 
@@ -675,7 +706,10 @@ async function handlePurchase(
     const fullRow = (fresh ?? row) as ConversionRow;
     const customData = { currency: config.meta_currency, value: amount };
 
+    await writeLog(db, landing.user_id, "handlePurchase", "INFO", "Primera compra procesada", JSON.stringify({ phone: cleanPhone, amount, promo_code: promoCode }), targetId!);
+
     const ok = await sendToMetaCAPI(db, config, fullRow, targetId!, "Purchase", purchaseEventId, purchaseEventTime, customData);
+    await writeLog(db, landing.user_id, "sendToMetaCAPI", ok ? "INFO" : "ERROR", ok ? "Purchase CAPI enviado" : "Error Purchase CAPI", JSON.stringify({ event_id: purchaseEventId, type: "first" }), targetId!);
     return textResponse(ok ? "Primera compra enviada (Purchase)" : "Error al enviar primera compra");
   }
 
@@ -746,7 +780,10 @@ async function handlePurchase(
   const fullRow = (fresh ?? newRow) as ConversionRow;
   const customData: Record<string, unknown> = { currency: config.meta_currency, value: amount, purchase_type: "repeat" };
 
+  await writeLog(db, landing.user_id, "handlePurchase", "INFO", "Recompra procesada", JSON.stringify({ phone: cleanPhone, amount, inherited_from: srcRow?.id }), newId);
+
   const ok = await sendToMetaCAPI(db, config, fullRow, newId, "Purchase", purchaseEventId, purchaseEventTime, customData);
+  await writeLog(db, landing.user_id, "sendToMetaCAPI", ok ? "INFO" : "ERROR", ok ? "Purchase Repeat CAPI enviado" : "Error Purchase Repeat CAPI", JSON.stringify({ event_id: purchaseEventId, type: "repeat" }), newId);
   return textResponse(ok ? "Recompra enviada (Purchase_Repeat)" : "Error al enviar recompra");
 }
 
@@ -826,7 +863,10 @@ async function handleSimplePurchase(
   const fullRow = (fresh ?? newRow) as ConversionRow;
   const customData = { currency: config.meta_currency, value: amount };
 
+  await writeLog(db, landing.user_id, "handleSimplePurchase", "INFO", "Purchase simple procesado", JSON.stringify({ phone: cleanPhone, amount, inherited_from: srcRow?.id }), newId);
+
   const ok = await sendToMetaCAPI(db, config, fullRow, newId, "Purchase", purchaseEventId, purchaseEventTime, customData);
+  await writeLog(db, landing.user_id, "sendToMetaCAPI", ok ? "INFO" : "ERROR", ok ? "Simple Purchase CAPI enviado" : "Error Simple Purchase CAPI", JSON.stringify({ event_id: purchaseEventId }), newId);
   return textResponse(ok ? "Evento Purchase enviado" : "Error al enviar Purchase");
 }
 
@@ -899,6 +939,14 @@ Deno.serve(async (req) => {
     return handleContact(db, params, landing as LandingRow, cfg);
   } catch (err) {
     console.error("conversions error:", err);
+    try {
+      const supabaseUrl = Deno.env.get("SUPABASE_URL");
+      const serviceRoleKey = Deno.env.get("SERVICE_ROLE_KEY");
+      if (supabaseUrl && serviceRoleKey) {
+        const errDb = createClient(supabaseUrl, serviceRoleKey, { auth: { autoRefreshToken: false, persistSession: false } });
+        await writeLog(errDb, "00000000-0000-0000-0000-000000000000", "main", "ERROR", "Error inesperado en handler", String(err));
+      }
+    } catch { /* ignore */ }
     return textResponse("Error inesperado", 500);
   }
 });
