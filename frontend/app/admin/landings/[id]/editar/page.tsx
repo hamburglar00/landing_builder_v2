@@ -110,7 +110,11 @@ export default function AdminLandingEditarPage() {
       return;
     }
     if (!landing.landingTag.trim()) {
-      setSaveError("Landing Tag es obligatoria.");
+      setSaveError("Landing Tag es obligatorio.");
+      return;
+    }
+    if (!/^[a-zA-Z0-9]+$/.test(landing.landingTag)) {
+      setSaveError("Landing Tag solo puede contener letras y números, sin espacios.");
       return;
     }
     if (
@@ -186,9 +190,14 @@ export default function AdminLandingEditarPage() {
       }
       router.push(BASE);
     } catch (e: unknown) {
-      const err = e as { code?: string };
+      const err = e as { code?: string; message?: string };
       if (err?.code === UNIQUE_VIOLATION_CODE) {
-        setSaveError("Ese nombre ya existe. Elige otro.");
+        const msg = err.message ?? "";
+        if (msg.includes("landing_tag")) {
+          setSaveError("Ese Landing Tag ya está en uso. Elegí otro.");
+        } else {
+          setSaveError("Ese nombre ya existe. Elegí otro.");
+        }
       } else {
         setSaveError(e instanceof Error ? e.message : "Error al guardar");
       }
@@ -341,14 +350,18 @@ export default function AdminLandingEditarPage() {
                 type="text"
                 value={landing.landingTag}
                 onChange={(e) =>
-                  setLanding((prev) => (prev ? { ...prev, landingTag: e.target.value } : prev))
+                  setLanding((prev) => {
+                    if (!prev) return prev;
+                    const cleaned = e.target.value.replace(/[^a-zA-Z0-9]/g, "");
+                    return { ...prev, landingTag: cleaned };
+                  })
                 }
                 className="w-full rounded-lg border border-zinc-700 bg-zinc-900 px-3 py-2 text-sm text-zinc-100"
-                placeholder="Etiqueta para tracking externo"
+                placeholder="ej: miLanding123"
                 required
               />
               <p className="mt-1 text-[11px] text-zinc-500">
-                Etiqueta que se utilizará para identificar la landing.
+                Identificador único de la landing. Solo letras y números, sin espacios.
               </p>
             </div>
             <div className="pt-2 border-t border-zinc-800 mt-3">
