@@ -81,6 +81,7 @@ export default function AdminConversionesPage() {
   const [config, setConfig] = useState<ConversionsConfig | null>(null);
   const [conversions, setConversions] = useState<ConversionRow[]>([]);
   const [logs, setLogs] = useState<ConversionLogRow[]>([]);
+  const [clientName, setClientName] = useState("");
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [saveMsg, setSaveMsg] = useState<string | null>(null);
@@ -107,6 +108,13 @@ export default function AdminConversionesPage() {
         setConfig(cfg);
         setConversions(rows);
         setLogs(logRows);
+
+        const { data: profile } = await supabase
+          .from("profiles")
+          .select("nombre")
+          .eq("id", user.id)
+          .maybeSingle();
+        setClientName(profile?.nombre ?? "");
       } catch (e) {
         console.error(e);
       } finally {
@@ -205,30 +213,6 @@ export default function AdminConversionesPage() {
 
             {configOpen && (
               <div className="space-y-4 border-t border-zinc-800 p-4">
-                {/* Slug (client identifier for endpoint URL) */}
-                <div>
-                  <label className="block text-xs font-medium text-zinc-400 mb-1">
-                    Slug del cliente
-                  </label>
-                  <input
-                    type="text"
-                    value={config?.slug ?? ""}
-                    onChange={(e) =>
-                      setConfig((prev) =>
-                        prev
-                          ? { ...prev, slug: e.target.value.replace(/[^a-z0-9]/g, "").toLowerCase() }
-                          : prev,
-                      )
-                    }
-                    className="w-full rounded-lg border border-zinc-700 bg-zinc-900 px-3 py-2 text-sm text-zinc-100"
-                    placeholder="ej: kobe"
-                  />
-                  <p className="mt-1 text-[11px] text-zinc-500">
-                    Identificador único del cliente para la URL del endpoint.
-                    Solo minúsculas y números.
-                  </p>
-                </div>
-
                 {/* Pixel ID */}
                 <div>
                   <label className="block text-xs font-medium text-zinc-400 mb-1">
@@ -449,11 +433,10 @@ export default function AdminConversionesPage() {
                   Tus landings y sistemas externos deben enviar POST a esta URL.
                 </p>
                 {(() => {
-                  const slug = config?.slug;
-                  const url = slug
-                    ? `${endpointBase}/functions/v1/conversions?name=${slug}`
-                    : `${endpointBase}/functions/v1/conversions?name=`;
-                  return (
+                  const url = clientName
+                    ? `${endpointBase}/functions/v1/conversions?name=${encodeURIComponent(clientName)}`
+                    : "";
+                  return clientName ? (
                     <div className="flex items-center gap-2 rounded-lg border border-zinc-800 bg-zinc-950/70 px-3 py-2">
                       <code className="flex-1 text-[11px] text-emerald-400 break-all">
                         {url}
@@ -461,8 +444,7 @@ export default function AdminConversionesPage() {
                       <button
                         type="button"
                         onClick={() => copyToClipboard(url)}
-                        disabled={!slug}
-                        className="shrink-0 cursor-pointer rounded p-1 text-zinc-500 transition hover:bg-zinc-800 hover:text-zinc-300 disabled:opacity-30 disabled:cursor-not-allowed"
+                        className="shrink-0 cursor-pointer rounded p-1 text-zinc-500 transition hover:bg-zinc-800 hover:text-zinc-300"
                         title="Copiar URL"
                       >
                         {copiedUrl === url ? (
@@ -472,14 +454,12 @@ export default function AdminConversionesPage() {
                         )}
                       </button>
                     </div>
+                  ) : (
+                    <p className="text-[11px] text-amber-400">
+                      El cliente no tiene nombre configurado en su perfil.
+                    </p>
                   );
                 })()}
-                {!config?.slug && (
-                  <p className="text-[11px] text-amber-400">
-                    Configurá el slug del cliente en la sección de configuración
-                    para generar la URL.
-                  </p>
-                )}
               </div>
             )}
           </section>

@@ -81,6 +81,7 @@ export default function DashboardConversionesPage() {
   const [config, setConfig] = useState<ConversionsConfig | null>(null);
   const [conversions, setConversions] = useState<ConversionRow[]>([]);
   const [logs, setLogs] = useState<ConversionLogRow[]>([]);
+  const [clientName, setClientName] = useState("");
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [saveMsg, setSaveMsg] = useState<string | null>(null);
@@ -107,6 +108,13 @@ export default function DashboardConversionesPage() {
         setConfig(cfg);
         setConversions(rows);
         setLogs(logRows);
+
+        const { data: profile } = await supabase
+          .from("profiles")
+          .select("nombre")
+          .eq("id", user.id)
+          .maybeSingle();
+        setClientName(profile?.nombre ?? "");
       } catch (e) {
         console.error(e);
       } finally {
@@ -405,11 +413,10 @@ export default function DashboardConversionesPage() {
                   Tus landings y sistemas externos deben enviar POST a esta URL.
                 </p>
                 {(() => {
-                  const slug = config?.slug;
-                  const url = slug
-                    ? `${endpointBase}/functions/v1/conversions?name=${slug}`
+                  const url = clientName
+                    ? `${endpointBase}/functions/v1/conversions?name=${encodeURIComponent(clientName)}`
                     : "";
-                  return slug ? (
+                  return clientName ? (
                     <div className="flex items-center gap-2 rounded-lg border border-zinc-800 bg-zinc-950/70 px-3 py-2">
                       <code className="flex-1 text-[11px] text-emerald-400 break-all">
                         {url}

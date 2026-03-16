@@ -893,41 +893,26 @@ Deno.serve(async (req) => {
       auth: { autoRefreshToken: false, persistSession: false },
     });
 
-    // 1) Try lookup landing by name
-    let landing: LandingRow | null = null;
-    const { data: landingData } = await db
-      .from("landings")
-      .select("id, name, user_id")
-      .eq("name", name)
+    // Lookup client by nombre in profiles
+    const { data: profile } = await db
+      .from("profiles")
+      .select("id, nombre")
+      .eq("nombre", name)
       .maybeSingle();
-    if (landingData) landing = landingData as LandingRow;
 
-    // 2) If no landing found, try lookup by client slug in conversions_config
-    let cfg: ConversionsConfig | null = null;
-    if (!landing) {
-      const { data: configBySlug } = await db
-        .from("conversions_config")
-        .select("*")
-        .eq("slug", name)
-        .maybeSingle();
-      if (!configBySlug) return textResponse("Landing o cliente no encontrado", 404);
-      cfg = configBySlug as ConversionsConfig;
-      // Build a virtual landing row for the client-level endpoint
-      landing = { id: "", name: name, user_id: cfg.user_id };
-    }
+    if (!profile) return textResponse("Cliente no encontrado", 404);
 
-    // 3) Load config if not already loaded (landing-based lookup)
-    if (!cfg) {
-      const { data: config } = await db
-        .from("conversions_config")
-        .select("*")
-        .eq("user_id", landing.user_id)
-        .maybeSingle();
-      cfg = (config as ConversionsConfig) ?? null;
-    }
+    const userId: string = profile.id;
 
-    const finalCfg: ConversionsConfig = cfg ?? {
-      user_id: landing.user_id,
+    // Load conversions config for this client
+    const { data: configData } = await db
+      .from("conversions_config")
+      .select("*")
+      .eq("user_id", userId)
+      .maybeSingle();
+
+    const cfg: ConversionsConfig = (configData as ConversionsConfig) ?? {
+      user_id: userId,
       pixel_id: "",
       meta_access_token: "",
       meta_currency: "ARS",
@@ -940,24 +925,25 @@ Deno.serve(async (req) => {
 
     const params: Params = await req.json().catch(() => ({}));
 
-    // If payload includes landing_name, override the virtual one
-    if (params.landing_name && !landingData) {
-      landing = { ...landing, name: String(params.landing_name).trim() };
-    }
+    // landing_name can come from the payload (to track which landing sent this)
+    const landingName = norm(params.landing_name || params.landingName || "");
+
+    // Build a virtual LandingRow representing the client endpoint
+    const landing: LandingRow = { id: "", name: landingName, user_id: userId };
 
     // Route to the correct handler
     if (!params.action && params.phone && params.amount) {
-      return handleSimplePurchase(db, params, landing, finalCfg);
+      return handleSimplePurchase(db, params, landing, cfg);
     }
     if (params.action === "LEAD") {
-      return handleLead(db, params, landing, finalCfg);
+      return handleLead(db, params, landing, cfg);
     }
     if (params.action === "PURCHASE") {
-      return handlePurchase(db, params, landing, finalCfg);
+      return handlePurchase(db, params, landing, cfg);
     }
 
     // Default: contact from landing
-    return handleContact(db, params, landing, finalCfg);
+    return handleContact(db, params, landing, cfg);
   } catch (err) {
     console.error("conversions error:", err);
     try {
