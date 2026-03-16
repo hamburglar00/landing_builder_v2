@@ -81,7 +81,6 @@ export default function DashboardConversionesPage() {
   const [config, setConfig] = useState<ConversionsConfig | null>(null);
   const [conversions, setConversions] = useState<ConversionRow[]>([]);
   const [logs, setLogs] = useState<ConversionLogRow[]>([]);
-  const [landingNames, setLandingNames] = useState<string[]>([]);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [saveMsg, setSaveMsg] = useState<string | null>(null);
@@ -108,13 +107,6 @@ export default function DashboardConversionesPage() {
         setConfig(cfg);
         setConversions(rows);
         setLogs(logRows);
-
-        const { data: landings } = await supabase
-          .from("landings")
-          .select("name")
-          .eq("user_id", user.id)
-          .order("name", { ascending: true });
-        setLandingNames((landings ?? []).map((l: { name: string }) => l.name));
       } catch (e) {
         console.error(e);
       } finally {
@@ -410,47 +402,33 @@ export default function DashboardConversionesPage() {
             {endpointOpen && (
               <div className="space-y-3 border-t border-zinc-800 p-4">
                 <p className="text-xs text-zinc-400">
-                  Tus landings y sistemas externos deben enviar POST a esta URL.
+                  Tus landings y sistemas externos deben enviar POST a esta URL
+                  (reemplazando{" "}
+                  <code className="text-zinc-300">NOMBRE_LANDING</code> por el
+                  nombre de la landing).
                 </p>
-
-                {landingNames.length > 0 ? (
-                  <div className="space-y-2">
-                    {landingNames.map((name) => {
-                      const url = `${endpointBase}/functions/v1/conversions?name=${encodeURIComponent(name)}`;
-                      return (
-                        <div
-                          key={name}
-                          className="flex items-center gap-2 rounded-lg border border-zinc-800 bg-zinc-950/70 px-3 py-2"
-                        >
-                          <span className="shrink-0 text-[11px] font-medium text-zinc-400">
-                            {name}
-                          </span>
-                          <code className="flex-1 text-[11px] text-emerald-400 break-all">
-                            {url}
-                          </code>
-                          <button
-                            type="button"
-                            onClick={() => copyToClipboard(url)}
-                            className="shrink-0 cursor-pointer rounded p-1 text-zinc-500 transition hover:bg-zinc-800 hover:text-zinc-300"
-                            title="Copiar URL"
-                          >
-                            {copiedUrl === url ? (
-                              <span className="text-[10px] text-emerald-400">✓</span>
-                            ) : (
-                              <CopyIcon />
-                            )}
-                          </button>
-                        </div>
-                      );
-                    })}
-                  </div>
-                ) : (
-                  <div className="rounded-lg border border-zinc-800 bg-zinc-950/70 px-3 py-2">
-                    <code className="text-[11px] text-emerald-400 break-all">
-                      {endpointBase}/functions/v1/conversions?name=NOMBRE_LANDING
-                    </code>
-                  </div>
-                )}
+                {(() => {
+                  const url = `${endpointBase}/functions/v1/conversions?name=NOMBRE_LANDING`;
+                  return (
+                    <div className="flex items-center gap-2 rounded-lg border border-zinc-800 bg-zinc-950/70 px-3 py-2">
+                      <code className="flex-1 text-[11px] text-emerald-400 break-all">
+                        {url}
+                      </code>
+                      <button
+                        type="button"
+                        onClick={() => copyToClipboard(url)}
+                        className="shrink-0 cursor-pointer rounded p-1 text-zinc-500 transition hover:bg-zinc-800 hover:text-zinc-300"
+                        title="Copiar URL"
+                      >
+                        {copiedUrl === url ? (
+                          <span className="text-[10px] text-emerald-400">✓</span>
+                        ) : (
+                          <CopyIcon />
+                        )}
+                      </button>
+                    </div>
+                  );
+                })()}
               </div>
             )}
           </section>
@@ -470,20 +448,11 @@ export default function DashboardConversionesPage() {
             ) : (
               <div className="overflow-x-auto rounded-lg border border-zinc-700">
                 <table className="w-full text-left text-[11px]">
-                  <thead className="bg-zinc-800/80">
+                  <thead className="bg-zinc-800/80 sticky top-0">
                     <tr>
-                      <th className="px-2 py-2 font-medium text-zinc-300 whitespace-nowrap">phone</th>
-                      <th className="px-2 py-2 font-medium text-zinc-300 whitespace-nowrap">contact_event_id</th>
-                      <th className="px-2 py-2 font-medium text-zinc-300 whitespace-nowrap">lead_event_id</th>
-                      <th className="px-2 py-2 font-medium text-zinc-300 whitespace-nowrap">purchase_event_id</th>
-                      <th className="px-2 py-2 font-medium text-zinc-300 whitespace-nowrap">timestamp</th>
-                      <th className="px-2 py-2 font-medium text-zinc-300 whitespace-nowrap">clientIP</th>
-                      <th className="px-2 py-2 font-medium text-zinc-300 whitespace-nowrap">estado</th>
-                      <th className="px-2 py-2 font-medium text-zinc-300 whitespace-nowrap">valor</th>
-                      <th className="px-2 py-2 font-medium text-zinc-300 whitespace-nowrap">contact_status_capi</th>
-                      <th className="px-2 py-2 font-medium text-zinc-300 whitespace-nowrap">lead_status_capi</th>
-                      <th className="px-2 py-2 font-medium text-zinc-300 whitespace-nowrap">purchase_status_capi</th>
-                      <th className="px-2 py-2 font-medium text-zinc-300 whitespace-nowrap">observaciones</th>
+                      {["phone","email","fn","ln","ct","st","zip","country","fbp","fbc","contact_event_id","contact_event_time","lead_event_id","lead_event_time","purchase_event_id","purchase_event_time","timestamp","clientIP","agentuser","estado","valor","contact_status_capi","lead_status_capi","purchase_status_capi","observaciones","external_id","utm_campaign","telefono_asignado","promo_code","device_type","geo_city","geo_region","geo_country"].map((col) => (
+                        <th key={col} className="px-2 py-2 font-medium text-zinc-300 whitespace-nowrap">{col}</th>
+                      ))}
                     </tr>
                   </thead>
                   <tbody className="divide-y divide-zinc-800">
@@ -494,49 +463,50 @@ export default function DashboardConversionesPage() {
                           : c.estado === "lead"
                             ? "bg-amber-950/20"
                             : "bg-zinc-950/40";
+                      const cell = "px-2 py-1.5 whitespace-nowrap";
+                      const mono = `${cell} font-mono`;
+                      const dim = `${cell} text-zinc-400`;
+                      const dimMono = `${dim} font-mono`;
                       return (
                         <tr key={c.id} className={rowColor}>
-                          <td className="px-2 py-1.5 text-zinc-200 font-mono whitespace-nowrap">
-                            {c.phone || "-"}
-                          </td>
-                          <td className="px-2 py-1.5 text-zinc-400 font-mono whitespace-nowrap" title={c.contact_event_id}>
-                            {truncateId(c.contact_event_id)}
-                          </td>
-                          <td className="px-2 py-1.5 text-zinc-400 font-mono whitespace-nowrap" title={c.lead_event_id}>
-                            {truncateId(c.lead_event_id)}
-                          </td>
-                          <td className="px-2 py-1.5 text-zinc-400 font-mono whitespace-nowrap" title={c.purchase_event_id}>
-                            {truncateId(c.purchase_event_id)}
-                          </td>
-                          <td className="px-2 py-1.5 text-zinc-400 whitespace-nowrap">
+                          <td className={`${mono} text-zinc-200`}>{c.phone || "-"}</td>
+                          <td className={dim}>{c.email || "-"}</td>
+                          <td className={dim}>{c.fn || "-"}</td>
+                          <td className={dim}>{c.ln || "-"}</td>
+                          <td className={dim}>{c.ct || "-"}</td>
+                          <td className={dim}>{c.st || "-"}</td>
+                          <td className={dim}>{c.zip || "-"}</td>
+                          <td className={dim}>{c.country || "-"}</td>
+                          <td className={dimMono}>{c.fbp ? truncateId(c.fbp, 12) : "-"}</td>
+                          <td className={dimMono}>{c.fbc ? truncateId(c.fbc, 12) : "-"}</td>
+                          <td className={dimMono} title={c.contact_event_id}>{truncateId(c.contact_event_id)}</td>
+                          <td className={dim}>{c.contact_event_time ?? "-"}</td>
+                          <td className={dimMono} title={c.lead_event_id}>{truncateId(c.lead_event_id)}</td>
+                          <td className={dim}>{c.lead_event_time ?? "-"}</td>
+                          <td className={dimMono} title={c.purchase_event_id}>{truncateId(c.purchase_event_id)}</td>
+                          <td className={dim}>{c.purchase_event_time ?? "-"}</td>
+                          <td className={dim}>
                             {new Date(c.created_at).toLocaleString("es-AR", {
-                              year: "numeric",
-                              month: "2-digit",
-                              day: "2-digit",
-                              hour: "2-digit",
-                              minute: "2-digit",
-                              second: "2-digit",
+                              year: "numeric", month: "2-digit", day: "2-digit",
+                              hour: "2-digit", minute: "2-digit", second: "2-digit",
                             })}
                           </td>
-                          <td className="px-2 py-1.5 text-zinc-400 font-mono whitespace-nowrap">
-                            {c.client_ip || "-"}
-                          </td>
-                          <td className="px-2 py-1.5">{estadoBadge(c.estado)}</td>
-                          <td className="px-2 py-1.5 text-zinc-200 whitespace-nowrap">
-                            {c.valor > 0 ? c.valor : "-"}
-                          </td>
-                          <td className="px-2 py-1.5 whitespace-nowrap">
-                            {statusText(c.contact_status_capi)}
-                          </td>
-                          <td className="px-2 py-1.5 whitespace-nowrap">
-                            {statusText(c.lead_status_capi)}
-                          </td>
-                          <td className="px-2 py-1.5 whitespace-nowrap">
-                            {statusText(c.purchase_status_capi)}
-                          </td>
-                          <td className="px-2 py-1.5 text-zinc-500 max-w-[250px] truncate" title={c.observaciones}>
-                            {c.observaciones || "-"}
-                          </td>
+                          <td className={dimMono}>{c.client_ip || "-"}</td>
+                          <td className={dim}>{c.agent_user || "-"}</td>
+                          <td className={cell}>{estadoBadge(c.estado)}</td>
+                          <td className={`${cell} text-zinc-200`}>{c.valor > 0 ? c.valor : "-"}</td>
+                          <td className={cell}>{statusText(c.contact_status_capi)}</td>
+                          <td className={cell}>{statusText(c.lead_status_capi)}</td>
+                          <td className={cell}>{statusText(c.purchase_status_capi)}</td>
+                          <td className={`${cell} text-zinc-500 max-w-[200px] truncate`} title={c.observaciones}>{c.observaciones || "-"}</td>
+                          <td className={dimMono}>{c.external_id ? truncateId(c.external_id) : "-"}</td>
+                          <td className={dim}>{c.utm_campaign || "-"}</td>
+                          <td className={dim}>{c.telefono_asignado || "-"}</td>
+                          <td className={dim}>{c.promo_code || "-"}</td>
+                          <td className={dim}>{c.device_type || "-"}</td>
+                          <td className={dim}>{c.geo_city || "-"}</td>
+                          <td className={dim}>{c.geo_region || "-"}</td>
+                          <td className={dim}>{c.geo_country || "-"}</td>
                         </tr>
                       );
                     })}
