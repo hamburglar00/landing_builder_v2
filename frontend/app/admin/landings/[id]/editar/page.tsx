@@ -101,10 +101,6 @@ export default function AdminLandingEditarPage() {
       setSaveError("El nombre no debe contener espacios.");
       return;
     }
-    if (!landing.pixelId.trim()) {
-      setSaveError("Pixel ID es obligatorio.");
-      return;
-    }
     if (!landing.postUrl.trim()) {
       setSaveError("URL Post es obligatoria.");
       return;
@@ -316,17 +312,21 @@ export default function AdminLandingEditarPage() {
           <h3 className="mb-4 text-sm font-semibold text-zinc-200">Tracking</h3>
           <div className="space-y-3">
             <div>
-              <label className="block text-xs font-medium text-zinc-400 mb-1">Pixel ID <span className="text-red-400">*</span></label>
+              <label className="block text-xs font-medium text-zinc-400 mb-1">Pixel ID</label>
               <input
                 type="text"
                 value={landing.pixelId}
-                onChange={(e) =>
-                  setLanding((prev) => (prev ? { ...prev, pixelId: e.target.value } : prev))
-                }
-                className="w-full rounded-lg border border-zinc-700 bg-zinc-900 px-3 py-2 text-sm text-zinc-100"
-                placeholder="ID del pixel"
-                required
+                disabled
+                className="w-full rounded-lg border border-zinc-700 bg-zinc-900 px-3 py-2 text-sm text-zinc-100 disabled:opacity-60 disabled:cursor-not-allowed"
+                placeholder="Sin configurar"
               />
+              <p className="mt-1 text-[11px] text-zinc-500">
+                Se configura desde{" "}
+                <a href="/admin/conversiones" className="text-zinc-300 underline hover:text-zinc-100">
+                  Conversiones
+                </a>
+                .
+              </p>
             </div>
             <div>
               <label className="block text-xs font-medium text-zinc-400 mb-1">URL Post <span className="text-red-400">*</span></label>

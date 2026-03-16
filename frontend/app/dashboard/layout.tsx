@@ -48,7 +48,7 @@ function NavIcon({
   variant,
   active,
 }: {
-  variant: "landings" | "gerencias" | "telefonos";
+  variant: "landings" | "gerencias" | "telefonos" | "conversiones";
   active: boolean;
 }) {
   const base = active
@@ -63,9 +63,13 @@ function NavIcon({
         ? active
           ? "text-sky-400"
           : "text-sky-300"
-        : active
-          ? "text-emerald-400"
-          : "text-emerald-300";
+        : variant === "conversiones"
+          ? active
+            ? "text-orange-400"
+            : "text-orange-300"
+          : active
+            ? "text-emerald-400"
+            : "text-emerald-300";
 
   if (variant === "landings") {
     return (
@@ -103,6 +107,25 @@ function NavIcon({
           <rect x="3" y="11" width="6" height="9" className={accent} />
           <rect x="10" y="7" width="6" height="13" />
           <rect x="17" y="4" width="4" height="16" />
+        </svg>
+      </span>
+    );
+  }
+
+  if (variant === "conversiones") {
+    return (
+      <span className={`${base}`}>
+        <svg
+          className="h-4 w-4"
+          viewBox="0 0 24 24"
+          fill="none"
+          stroke="currentColor"
+          strokeWidth={1.6}
+          strokeLinecap="round"
+          strokeLinejoin="round"
+        >
+          <polyline points="22 7 13.5 15.5 8.5 10.5 2 17" className={accent} />
+          <polyline points="16 7 22 7 22 13" />
         </svg>
       </span>
     );
@@ -274,6 +297,21 @@ export default function DashboardLayout({
               active={Boolean(pathname?.startsWith("/dashboard/telefonos"))}
             />
             <span>TELÉFONOS</span>
+          </Link>
+          <Link
+            href="/dashboard/conversiones"
+            onClick={() => setSidebarOpen(false)}
+            className={`flex items-center gap-2 rounded-lg px-3 py-2 text-xs font-medium tracking-[0.18em] transition ${
+              pathname?.startsWith("/dashboard/conversiones")
+                ? "bg-[var(--color-primary-soft-bg)] text-[var(--color-primary)] border border-[var(--color-primary-soft-border)]"
+                : "text-[var(--color-text-muted)] hover:bg-[var(--color-bg-3)] hover:text-[var(--color-text)]"
+            }`}
+          >
+            <NavIcon
+              variant="conversiones"
+              active={Boolean(pathname?.startsWith("/dashboard/conversiones"))}
+            />
+            <span>CONVERSIONES</span>
           </Link>
         </nav>
         <div className="border-t border-[var(--color-border)] p-3 space-y-2">

@@ -53,6 +53,7 @@ function NavIcon({
     | "landings"
     | "gerencias"
     | "telefonos"
+    | "conversiones"
     | "tests"
     | "documentacion"
     | "settings";
@@ -77,13 +78,17 @@ function NavIcon({
             ? active
               ? "text-indigo-400"
               : "text-indigo-300"
-            : variant === "tests"
+            : variant === "conversiones"
               ? active
-                ? "text-amber-400"
-                : "text-amber-300"
-              : active
-                ? "text-zinc-200"
-                : "text-zinc-400";
+                ? "text-orange-400"
+                : "text-orange-300"
+              : variant === "tests"
+                ? active
+                  ? "text-amber-400"
+                  : "text-amber-300"
+                : active
+                  ? "text-zinc-200"
+                  : "text-zinc-400";
 
   if (variant === "landings") {
     return (
@@ -171,6 +176,25 @@ function NavIcon({
           <circle cx="17" cy="8" r="2.5" />
           <path d="M3 20c0-2.8 2.2-5 5-5s5 2.2 5 5" />
           <path d="M14.5 18.5c.4-1.9 1.9-3.5 4-3.5 2.3 0 4 1.8 4 4" />
+        </svg>
+      </span>
+    );
+  }
+
+  if (variant === "conversiones") {
+    return (
+      <span className={base}>
+        <svg
+          className="h-4 w-4"
+          viewBox="0 0 24 24"
+          fill="none"
+          stroke="currentColor"
+          strokeWidth={1.6}
+          strokeLinecap="round"
+          strokeLinejoin="round"
+        >
+          <polyline points="22 7 13.5 15.5 8.5 10.5 2 17" className={accent} />
+          <polyline points="16 7 22 7 22 13" />
         </svg>
       </span>
     );
@@ -432,6 +456,21 @@ export default function AdminLayout({
               active={Boolean(pathname?.startsWith("/admin/telefonos"))}
             />
             <span>TELÉFONOS</span>
+          </Link>
+          <Link
+            href="/admin/conversiones"
+            onClick={() => setSidebarOpen(false)}
+            className={`flex items-center gap-2 rounded-lg px-3 py-2 text-xs font-medium tracking-[0.18em] transition ${
+              pathname?.startsWith("/admin/conversiones")
+                ? "bg-[var(--color-primary-soft-bg)] text-[var(--color-primary)] border border-[var(--color-primary-soft-border)]"
+                : "text-[var(--color-text-muted)] hover:bg-[var(--color-bg-3)] hover:text-[var(--color-text)]"
+            }`}
+          >
+            <NavIcon
+              variant="conversiones"
+              active={Boolean(pathname?.startsWith("/admin/conversiones"))}
+            />
+            <span>CONVERSIONES</span>
           </Link>
           <Link
             href="/admin/settings"
