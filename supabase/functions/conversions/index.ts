@@ -470,6 +470,8 @@ async function handleLead(
   if (!cleanPhone) return textResponse("Faltan parámetros: phone requerido", 400);
 
   const promoCode = norm(p.promo_code);
+  const payloadFn = norm(p.fn);
+  const payloadLn = norm(p.ln);
   const eventSourceUrl = await deriveEventSourceUrl(db, landing.name, norm(p.event_source_url));
 
   // 1) Match by promo_code
@@ -510,8 +512,8 @@ async function handleLead(
       landing_name: landing.name,
       phone: cleanPhone,
       email: "",
-      fn: "",
-      ln: "",
+      fn: payloadFn,
+      ln: payloadLn,
       ct: "",
       st: "",
       zip: "",
@@ -555,6 +557,8 @@ async function handleLead(
       lead_event_id: leadEventId,
       lead_event_time: leadEventTime,
     };
+    if (payloadFn) updates.fn = payloadFn;
+    if (payloadLn) updates.ln = payloadLn;
     // Fill promo_code if row didn't have it
     if (promoCode) {
       const { data: cur } = await db.from("conversions").select("promo_code").eq("id", targetId).single();
@@ -592,6 +596,8 @@ async function handlePurchase(
   if (!cleanPhone || isNaN(amount)) return textResponse("Faltan parámetros: phone y amount", 400);
 
   const promoCode = norm(p.promo_code);
+  const payloadFn = norm(p.fn);
+  const payloadLn = norm(p.ln);
   const eventSourceUrl = await deriveEventSourceUrl(db, landing.name, norm(p.event_source_url));
 
   // Count previous successful purchases for this phone
@@ -645,8 +651,8 @@ async function handlePurchase(
         landing_name: landing.name,
         phone: cleanPhone,
         email: "",
-        fn: "",
-        ln: "",
+        fn: payloadFn,
+        ln: payloadLn,
         ct: "",
         st: "",
         zip: "",
@@ -690,6 +696,8 @@ async function handlePurchase(
         purchase_event_id: purchaseEventId,
         purchase_event_time: purchaseEventTime,
       };
+      if (payloadFn) updates.fn = payloadFn;
+      if (payloadLn) updates.ln = payloadLn;
       if (promoCode) {
         const { data: cur } = await db.from("conversions").select("promo_code").eq("id", targetId).single();
         if (!cur?.promo_code) updates.promo_code = promoCode;
@@ -734,8 +742,8 @@ async function handlePurchase(
     landing_name: srcRow?.landing_name ?? landing.name,
     phone: cleanPhone,
     email: srcRow?.email ?? "",
-    fn: srcRow?.fn ?? "",
-    ln: srcRow?.ln ?? "",
+    fn: payloadFn || srcRow?.fn || "",
+    ln: payloadLn || srcRow?.ln || "",
     ct: srcRow?.ct ?? "",
     st: srcRow?.st ?? "",
     zip: srcRow?.zip ?? "",
