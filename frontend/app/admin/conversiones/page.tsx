@@ -76,6 +76,70 @@ function truncateId(id: string, len = 8) {
   return id.length > len ? id.slice(0, len) + "…" : id;
 }
 
+const ALL_COLUMNS = [
+  "phone","email","fn","ln","ct","st","zip","country","fbp","fbc",
+  "contact_event_id","contact_event_time","lead_event_id","lead_event_time",
+  "purchase_event_id","purchase_event_time","timestamp","clientIP","agentuser",
+  "estado","valor","contact_status_capi","lead_status_capi","purchase_status_capi",
+  "observaciones","external_id","utm_campaign","telefono_asignado","promo_code",
+  "device_type","geo_city","geo_region","geo_country",
+] as const;
+
+type ColKey = (typeof ALL_COLUMNS)[number];
+
+function cellValue(c: ConversionRow, col: ColKey): React.ReactNode {
+  const cell = "px-2 py-1.5 whitespace-nowrap";
+  const mono = `${cell} font-mono`;
+  const dim = `${cell} text-zinc-400`;
+  const dimMono = `${dim} font-mono`;
+
+  switch (col) {
+    case "phone": return <td key={col} className={`${mono} text-zinc-200`}>{c.phone || "-"}</td>;
+    case "email": return <td key={col} className={dim}>{c.email || "-"}</td>;
+    case "fn": return <td key={col} className={dim}>{c.fn || "-"}</td>;
+    case "ln": return <td key={col} className={dim}>{c.ln || "-"}</td>;
+    case "ct": return <td key={col} className={dim}>{c.ct || "-"}</td>;
+    case "st": return <td key={col} className={dim}>{c.st || "-"}</td>;
+    case "zip": return <td key={col} className={dim}>{c.zip || "-"}</td>;
+    case "country": return <td key={col} className={dim}>{c.country || "-"}</td>;
+    case "fbp": return <td key={col} className={dimMono}>{c.fbp ? truncateId(c.fbp, 12) : "-"}</td>;
+    case "fbc": return <td key={col} className={dimMono}>{c.fbc ? truncateId(c.fbc, 12) : "-"}</td>;
+    case "contact_event_id": return <td key={col} className={dimMono} title={c.contact_event_id}>{truncateId(c.contact_event_id)}</td>;
+    case "contact_event_time": return <td key={col} className={dim}>{c.contact_event_time ?? "-"}</td>;
+    case "lead_event_id": return <td key={col} className={dimMono} title={c.lead_event_id}>{truncateId(c.lead_event_id)}</td>;
+    case "lead_event_time": return <td key={col} className={dim}>{c.lead_event_time ?? "-"}</td>;
+    case "purchase_event_id": return <td key={col} className={dimMono} title={c.purchase_event_id}>{truncateId(c.purchase_event_id)}</td>;
+    case "purchase_event_time": return <td key={col} className={dim}>{c.purchase_event_time ?? "-"}</td>;
+    case "timestamp": return (
+      <td key={col} className={dim}>
+        {new Date(c.created_at).toLocaleString("es-AR", {
+          year: "numeric", month: "2-digit", day: "2-digit",
+          hour: "2-digit", minute: "2-digit", second: "2-digit",
+        })}
+      </td>
+    );
+    case "clientIP": return <td key={col} className={dimMono}>{c.client_ip || "-"}</td>;
+    case "agentuser": return <td key={col} className={dim}>{c.agent_user || "-"}</td>;
+    case "estado": return <td key={col} className={cell}>{estadoBadge(c.estado)}</td>;
+    case "valor": return <td key={col} className={`${cell} text-zinc-200`}>{c.valor > 0 ? c.valor : "-"}</td>;
+    case "contact_status_capi": return <td key={col} className={cell}>{statusText(c.contact_status_capi)}</td>;
+    case "lead_status_capi": return <td key={col} className={cell}>{statusText(c.lead_status_capi)}</td>;
+    case "purchase_status_capi": return <td key={col} className={cell}>{statusText(c.purchase_status_capi)}</td>;
+    case "observaciones": return <td key={col} className={`${cell} text-zinc-500 max-w-[200px] truncate`} title={c.observaciones}>{c.observaciones || "-"}</td>;
+    case "external_id": return <td key={col} className={dimMono}>{c.external_id ? truncateId(c.external_id) : "-"}</td>;
+    case "utm_campaign": return <td key={col} className={dim}>{c.utm_campaign || "-"}</td>;
+    case "telefono_asignado": return <td key={col} className={dim}>{c.telefono_asignado || "-"}</td>;
+    case "promo_code": return <td key={col} className={dim}>{c.promo_code || "-"}</td>;
+    case "device_type": return <td key={col} className={dim}>{c.device_type || "-"}</td>;
+    case "geo_city": return <td key={col} className={dim}>{c.geo_city || "-"}</td>;
+    case "geo_region": return <td key={col} className={dim}>{c.geo_region || "-"}</td>;
+    case "geo_country": return <td key={col} className={dim}>{c.geo_country || "-"}</td>;
+    default: return <td key={col} className={dim}>-</td>;
+  }
+}
+
+const DEFAULT_VISIBLE = new Set<ColKey>(ALL_COLUMNS);
+
 export default function AdminConversionesPage() {
   const [userId, setUserId] = useState<string | null>(null);
   const [config, setConfig] = useState<ConversionsConfig | null>(null);
@@ -91,6 +155,8 @@ export default function AdminConversionesPage() {
   const [endpointOpen, setEndpointOpen] = useState(false);
   const [copiedUrl, setCopiedUrl] = useState<string | null>(null);
   const [expandedLog, setExpandedLog] = useState<number | null>(null);
+  const [visibleCols, setVisibleCols] = useState<Set<ColKey>>(() => new Set(DEFAULT_VISIBLE));
+  const [columnsOpen, setColumnsOpen] = useState(false);
 
   useEffect(() => {
     const init = async () => {
@@ -464,6 +530,63 @@ export default function AdminConversionesPage() {
             )}
           </section>
 
+          {/* ── Column Visibility (admin only) ── */}
+          <section className="rounded-xl border border-zinc-800 bg-zinc-900/50">
+            <button
+              type="button"
+              onClick={() => setColumnsOpen((v) => !v)}
+              className="flex w-full cursor-pointer items-center gap-2 p-4"
+            >
+              <ChevronIcon open={columnsOpen} />
+              <h3 className="text-sm font-semibold text-zinc-200">
+                Columnas visibles
+              </h3>
+              <span className="ml-auto text-[11px] text-zinc-500">
+                {visibleCols.size}/{ALL_COLUMNS.length}
+              </span>
+            </button>
+            {columnsOpen && (
+              <div className="border-t border-zinc-800 p-4">
+                <div className="mb-3 flex gap-3">
+                  <button
+                    type="button"
+                    onClick={() => setVisibleCols(new Set(ALL_COLUMNS))}
+                    className="cursor-pointer text-[11px] text-zinc-400 underline hover:text-zinc-200"
+                  >
+                    Seleccionar todas
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setVisibleCols(new Set())}
+                    className="cursor-pointer text-[11px] text-zinc-400 underline hover:text-zinc-200"
+                  >
+                    Deseleccionar todas
+                  </button>
+                </div>
+                <div className="grid grid-cols-3 gap-x-4 gap-y-1 sm:grid-cols-4 md:grid-cols-6">
+                  {ALL_COLUMNS.map((col) => (
+                    <label key={col} className="flex items-center gap-1.5">
+                      <input
+                        type="checkbox"
+                        checked={visibleCols.has(col)}
+                        onChange={(e) => {
+                          setVisibleCols((prev) => {
+                            const next = new Set(prev);
+                            if (e.target.checked) next.add(col);
+                            else next.delete(col);
+                            return next;
+                          });
+                        }}
+                        className="h-3 w-3 rounded border-zinc-600 bg-zinc-900"
+                      />
+                      <span className="text-[10px] text-zinc-400">{col}</span>
+                    </label>
+                  ))}
+                </div>
+              </div>
+            )}
+          </section>
+
           {/* ── Detailed Conversions Table ── */}
           <section className="rounded-xl border border-zinc-800 bg-zinc-900/50 p-4">
             <h3 className="mb-4 text-sm font-semibold text-zinc-200">
@@ -472,79 +595,43 @@ export default function AdminConversionesPage() {
                 ({conversions.length})
               </span>
             </h3>
-            <div className="overflow-x-auto rounded-lg border border-zinc-700">
-              <table className="w-full text-left text-[11px]">
-                <thead className="bg-zinc-800/80 sticky top-0">
-                  <tr>
-                    {["phone","email","fn","ln","ct","st","zip","country","fbp","fbc","contact_event_id","contact_event_time","lead_event_id","lead_event_time","purchase_event_id","purchase_event_time","timestamp","clientIP","agentuser","estado","valor","contact_status_capi","lead_status_capi","purchase_status_capi","observaciones","external_id","utm_campaign","telefono_asignado","promo_code","device_type","geo_city","geo_region","geo_country"].map((col) => (
-                      <th key={col} className="px-2 py-2 font-medium text-zinc-300 whitespace-nowrap">{col}</th>
-                    ))}
-                  </tr>
-                </thead>
-                <tbody className="divide-y divide-zinc-800">
-                  {conversions.length === 0 ? (
-                    <tr>
-                      <td colSpan={33} className="px-2 py-6 text-center text-zinc-500">
-                        Aún no hay conversiones registradas.
-                      </td>
-                    </tr>
-                  ) : conversions.map((c) => {
-                      const rowColor =
-                        c.estado === "purchase"
-                          ? "bg-emerald-950/20"
-                          : c.estado === "lead"
-                            ? "bg-amber-950/20"
-                            : "bg-zinc-950/40";
-                      const cell = "px-2 py-1.5 whitespace-nowrap";
-                      const mono = `${cell} font-mono`;
-                      const dim = `${cell} text-zinc-400`;
-                      const dimMono = `${dim} font-mono`;
-                      return (
-                        <tr key={c.id} className={rowColor}>
-                          <td className={`${mono} text-zinc-200`}>{c.phone || "-"}</td>
-                          <td className={dim}>{c.email || "-"}</td>
-                          <td className={dim}>{c.fn || "-"}</td>
-                          <td className={dim}>{c.ln || "-"}</td>
-                          <td className={dim}>{c.ct || "-"}</td>
-                          <td className={dim}>{c.st || "-"}</td>
-                          <td className={dim}>{c.zip || "-"}</td>
-                          <td className={dim}>{c.country || "-"}</td>
-                          <td className={dimMono}>{c.fbp ? truncateId(c.fbp, 12) : "-"}</td>
-                          <td className={dimMono}>{c.fbc ? truncateId(c.fbc, 12) : "-"}</td>
-                          <td className={dimMono} title={c.contact_event_id}>{truncateId(c.contact_event_id)}</td>
-                          <td className={dim}>{c.contact_event_time ?? "-"}</td>
-                          <td className={dimMono} title={c.lead_event_id}>{truncateId(c.lead_event_id)}</td>
-                          <td className={dim}>{c.lead_event_time ?? "-"}</td>
-                          <td className={dimMono} title={c.purchase_event_id}>{truncateId(c.purchase_event_id)}</td>
-                          <td className={dim}>{c.purchase_event_time ?? "-"}</td>
-                          <td className={dim}>
-                            {new Date(c.created_at).toLocaleString("es-AR", {
-                              year: "numeric", month: "2-digit", day: "2-digit",
-                              hour: "2-digit", minute: "2-digit", second: "2-digit",
-                            })}
+            {(() => {
+              const cols = ALL_COLUMNS.filter((c) => visibleCols.has(c));
+              return (
+                <div className="overflow-x-auto rounded-lg border border-zinc-700">
+                  <table className="w-full text-left text-[11px]">
+                    <thead className="bg-zinc-800/80 sticky top-0">
+                      <tr>
+                        {cols.map((col) => (
+                          <th key={col} className="px-2 py-2 font-medium text-zinc-300 whitespace-nowrap">{col}</th>
+                        ))}
+                      </tr>
+                    </thead>
+                    <tbody className="divide-y divide-zinc-800">
+                      {conversions.length === 0 ? (
+                        <tr>
+                          <td colSpan={cols.length || 1} className="px-2 py-6 text-center text-zinc-500">
+                            Aún no hay conversiones registradas.
                           </td>
-                          <td className={dimMono}>{c.client_ip || "-"}</td>
-                          <td className={dim}>{c.agent_user || "-"}</td>
-                          <td className={cell}>{estadoBadge(c.estado)}</td>
-                          <td className={`${cell} text-zinc-200`}>{c.valor > 0 ? c.valor : "-"}</td>
-                          <td className={cell}>{statusText(c.contact_status_capi)}</td>
-                          <td className={cell}>{statusText(c.lead_status_capi)}</td>
-                          <td className={cell}>{statusText(c.purchase_status_capi)}</td>
-                          <td className={`${cell} text-zinc-500 max-w-[200px] truncate`} title={c.observaciones}>{c.observaciones || "-"}</td>
-                          <td className={dimMono}>{c.external_id ? truncateId(c.external_id) : "-"}</td>
-                          <td className={dim}>{c.utm_campaign || "-"}</td>
-                          <td className={dim}>{c.telefono_asignado || "-"}</td>
-                          <td className={dim}>{c.promo_code || "-"}</td>
-                          <td className={dim}>{c.device_type || "-"}</td>
-                          <td className={dim}>{c.geo_city || "-"}</td>
-                          <td className={dim}>{c.geo_region || "-"}</td>
-                          <td className={dim}>{c.geo_country || "-"}</td>
                         </tr>
-                      );
-                    })}
-                  </tbody>
-                </table>
-              </div>
+                      ) : conversions.map((c) => {
+                          const rowColor =
+                            c.estado === "purchase"
+                              ? "bg-emerald-950/20"
+                              : c.estado === "lead"
+                                ? "bg-amber-950/20"
+                                : "bg-zinc-950/40";
+                          return (
+                            <tr key={c.id} className={rowColor}>
+                              {cols.map((col) => cellValue(c, col))}
+                            </tr>
+                          );
+                        })}
+                    </tbody>
+                  </table>
+                </div>
+              );
+            })()}
           </section>
         </>
       )}
