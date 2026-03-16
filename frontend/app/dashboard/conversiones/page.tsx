@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState, useCallback, useMemo } from "react";
+import { useEffect, useState, useCallback } from "react";
 import { supabase } from "@/lib/supabaseClient";
 import {
   fetchConversionsConfig,
@@ -14,7 +14,6 @@ import {
   type ConversionLogRow,
   type FunnelContact,
 } from "@/lib/conversionsDb";
-import { generateDemoConversions, generateDemoFunnelContacts } from "@/lib/demoData";
 import FunnelBoard from "@/components/conversiones/FunnelBoard";
 import StatsPanel from "@/components/conversiones/StatsPanel";
 
@@ -173,14 +172,6 @@ export default function DashboardConversionesPage() {
   const [copiedUrl, setCopiedUrl] = useState<string | null>(null);
   const [expandedLog, setExpandedLog] = useState<number | null>(null);
 
-  const [demoMode, setDemoMode] = useState(false);
-
-  const demoConversions = useMemo(() => generateDemoConversions(80), []);
-  const demoFunnel = useMemo(() => generateDemoFunnelContacts(demoConversions), [demoConversions]);
-
-  const activeConversions = demoMode ? demoConversions : conversions;
-  const activeFunnel = demoMode ? demoFunnel : funnelContacts;
-
   const [configOpen, setConfigOpen] = useState(false);
   const [endpointOpen, setEndpointOpen] = useState(false);
   const [funnelConfigOpen, setFunnelConfigOpen] = useState(false);
@@ -251,26 +242,15 @@ export default function DashboardConversionesPage() {
         </p>
       )}
 
-      {/* Tabs + Demo toggle */}
-      <div className="flex items-center gap-4 flex-wrap">
-        <div className="flex gap-1 rounded-lg bg-zinc-900/80 p-1 overflow-x-auto">
-          {(Object.keys(TAB_LABELS) as Tab[]).map((t) => (
-            <button key={t} onClick={() => setTab(t)}
-              className={`cursor-pointer rounded-md px-4 py-1.5 text-xs font-medium transition whitespace-nowrap ${tab === t ? "bg-zinc-700 text-zinc-100" : "text-zinc-400 hover:text-zinc-200"}`}>
-              {TAB_LABELS[t]}
-            </button>
-          ))}
-        </div>
-        <label className="flex items-center gap-2 select-none">
-          <input type="checkbox" checked={demoMode} onChange={(e) => setDemoMode(e.target.checked)} className="h-3.5 w-3.5 rounded border-zinc-600 bg-zinc-900 accent-amber-500" />
-          <span className={`text-[11px] font-medium ${demoMode ? "text-amber-400" : "text-zinc-500"}`}>Datos demo</span>
-        </label>
+      {/* Tabs */}
+      <div className="flex gap-1 rounded-lg bg-zinc-900/80 p-1 w-fit overflow-x-auto">
+        {(Object.keys(TAB_LABELS) as Tab[]).map((t) => (
+          <button key={t} onClick={() => setTab(t)}
+            className={`cursor-pointer rounded-md px-4 py-1.5 text-xs font-medium transition whitespace-nowrap ${tab === t ? "bg-zinc-700 text-zinc-100" : "text-zinc-400 hover:text-zinc-200"}`}>
+            {TAB_LABELS[t]}
+          </button>
+        ))}
       </div>
-      {demoMode && (
-        <p className="rounded-lg bg-amber-950/40 border border-amber-800/40 px-3 py-1.5 text-[11px] text-amber-300">
-          Visualizando datos de demostración. Desactivá el toggle para ver datos reales.
-        </p>
-      )}
 
       {/* ═══════════ TAB: CONFIGURACIÓN ═══════════ */}
       {tab === "configuracion" && (
@@ -388,7 +368,7 @@ export default function DashboardConversionesPage() {
       {tab === "tabla" && (
         <section className="rounded-xl border border-zinc-800 bg-zinc-900/50 p-4">
           <h3 className="mb-4 text-sm font-semibold text-zinc-200">
-            Tabla de conversiones <span className="font-normal text-zinc-500">({activeConversions.length})</span>
+            Tabla de conversiones <span className="font-normal text-zinc-500">({conversions.length})</span>
           </h3>
           <div className="overflow-x-auto rounded-lg border border-zinc-700">
             <table className="w-full text-left text-[11px]">
@@ -400,11 +380,11 @@ export default function DashboardConversionesPage() {
                 </tr>
               </thead>
               <tbody className="divide-y divide-zinc-800">
-                {activeConversions.length === 0 ? (
+                {conversions.length === 0 ? (
                   <tr>
                     <td colSpan={ALL_COLUMNS.length} className="px-2 py-6 text-center text-zinc-500">Aún no hay conversiones registradas.</td>
                   </tr>
-                ) : activeConversions.map((c) => {
+                ) : conversions.map((c) => {
                   const rowColor = c.estado === "purchase" ? "bg-emerald-950/20" : c.estado === "lead" ? "bg-amber-950/20" : "bg-zinc-950/40";
                   return (
                     <tr key={c.id} className={rowColor}>
@@ -424,12 +404,12 @@ export default function DashboardConversionesPage() {
 
       {/* ═══════════ TAB: FUNNEL ═══════════ */}
       {tab === "funnel" && (
-        <FunnelBoard contacts={activeFunnel} premiumThreshold={config?.funnel_premium_threshold ?? 50000} />
+        <FunnelBoard contacts={funnelContacts} premiumThreshold={config?.funnel_premium_threshold ?? 50000} />
       )}
 
       {/* ═══════════ TAB: ESTADÍSTICAS ═══════════ */}
       {tab === "estadisticas" && (
-        <StatsPanel funnelContacts={activeFunnel} conversions={activeConversions} premiumThreshold={config?.funnel_premium_threshold ?? 50000} />
+        <StatsPanel funnelContacts={funnelContacts} conversions={conversions} premiumThreshold={config?.funnel_premium_threshold ?? 50000} />
       )}
 
       {/* ═══════════ TAB: LOGS ═══════════ */}

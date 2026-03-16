@@ -10,6 +10,7 @@ export default function AdminSettingsPage() {
     useState(true);
   const [revalidateSecret, setRevalidateSecret] = useState("");
   const [showSecret, setShowSecret] = useState(false);
+  const [adminNombre, setAdminNombre] = useState("");
   const [ready, setReady] = useState(false);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -28,6 +29,10 @@ export default function AdminSettingsPage() {
           s.show_client_landing_preview ?? true,
         );
         setRevalidateSecret(s.revalidate_secret ?? "");
+
+        const { data: profile } = await supabase
+          .from("profiles").select("nombre").eq("id", user.id).maybeSingle();
+        setAdminNombre(profile?.nombre ?? "");
       } catch {
         setError("No se pudo cargar la configuración.");
       } finally {
@@ -42,11 +47,15 @@ export default function AdminSettingsPage() {
     setSaving(true);
     setError(null);
     try {
+      const { data: { user } } = await supabase.auth.getUser();
       await updateSettings({
         urlBase: urlBase.trim(),
         showClientLandingPreview,
         revalidateSecret: revalidateSecret.trim(),
       });
+      if (user) {
+        await supabase.from("profiles").update({ nombre: adminNombre.trim() }).eq("id", user.id);
+      }
     } catch (e) {
       setError(e instanceof Error ? e.message : "Error al guardar");
     } finally {
@@ -76,6 +85,22 @@ export default function AdminSettingsPage() {
         </p>
       )}
       <form onSubmit={handleSubmit} className="max-w-md space-y-5">
+        <div>
+          <label htmlFor="admin_nombre" className="block text-xs font-medium text-zinc-400 mb-1">
+            Nombre del administrador
+          </label>
+          <input
+            id="admin_nombre"
+            type="text"
+            value={adminNombre}
+            onChange={(e) => setAdminNombre(e.target.value)}
+            placeholder="Tu nombre (se usa en Conversiones para la URL del endpoint)"
+            className="w-full rounded-lg border border-zinc-700 bg-zinc-900 px-3 py-2 text-sm text-zinc-100"
+          />
+          <p className="mt-2 text-[11px] text-zinc-500 leading-relaxed">
+            <strong>Para qué se usa:</strong> Se utiliza para construir la URL del endpoint de conversiones (<span className="font-mono">?name=tu-nombre</span>). También aparece como tu nombre de perfil.
+          </p>
+        </div>
         <div>
           <label htmlFor="url_base" className="block text-xs font-medium text-zinc-400 mb-1">
             URL base
