@@ -212,3 +212,14 @@ export async function fetchConversionsConfigForUser(
 ): Promise<ConversionsConfig> {
   return fetchConversionsConfig(userId);
 }
+
+export async function updateConversionEmail(
+  conversionId: string,
+  email: string,
+): Promise<void> {
+  const { error } = await supabase
+    .from("conversions")
+    .update({ email })
+    .eq("id", conversionId);
+  if (error) throw error;
+}

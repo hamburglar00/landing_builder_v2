@@ -472,6 +472,7 @@ async function handleLead(
   const promoCode = norm(p.promo_code);
   const payloadFn = norm(p.fn);
   const payloadLn = norm(p.ln);
+  const payloadEmail = norm(p.email);
   const eventSourceUrl = await deriveEventSourceUrl(db, landing.name, norm(p.event_source_url));
 
   // 1) Match by promo_code
@@ -511,7 +512,7 @@ async function handleLead(
       user_id: landing.user_id,
       landing_name: landing.name,
       phone: cleanPhone,
-      email: "",
+      email: payloadEmail,
       fn: payloadFn,
       ln: payloadLn,
       ct: "",
@@ -559,6 +560,7 @@ async function handleLead(
     };
     if (payloadFn) updates.fn = payloadFn;
     if (payloadLn) updates.ln = payloadLn;
+    if (payloadEmail) updates.email = payloadEmail;
     // Fill promo_code if row didn't have it
     if (promoCode) {
       const { data: cur } = await db.from("conversions").select("promo_code").eq("id", targetId).single();
@@ -598,6 +600,7 @@ async function handlePurchase(
   const promoCode = norm(p.promo_code);
   const payloadFn = norm(p.fn);
   const payloadLn = norm(p.ln);
+  const payloadEmail = norm(p.email);
   const eventSourceUrl = await deriveEventSourceUrl(db, landing.name, norm(p.event_source_url));
 
   // Count previous successful purchases for this phone
@@ -650,7 +653,7 @@ async function handlePurchase(
         user_id: landing.user_id,
         landing_name: landing.name,
         phone: cleanPhone,
-        email: "",
+        email: payloadEmail,
         fn: payloadFn,
         ln: payloadLn,
         ct: "",
@@ -698,6 +701,7 @@ async function handlePurchase(
       };
       if (payloadFn) updates.fn = payloadFn;
       if (payloadLn) updates.ln = payloadLn;
+      if (payloadEmail) updates.email = payloadEmail;
       if (promoCode) {
         const { data: cur } = await db.from("conversions").select("promo_code").eq("id", targetId).single();
         if (!cur?.promo_code) updates.promo_code = promoCode;
@@ -741,7 +745,7 @@ async function handlePurchase(
     user_id: landing.user_id,
     landing_name: srcRow?.landing_name ?? landing.name,
     phone: cleanPhone,
-    email: srcRow?.email ?? "",
+    email: payloadEmail || srcRow?.email || "",
     fn: payloadFn || srcRow?.fn || "",
     ln: payloadLn || srcRow?.ln || "",
     ct: srcRow?.ct ?? "",
@@ -807,6 +811,7 @@ async function handleSimplePurchase(
   const amount = parseFloat(p.amount);
   if (!cleanPhone || isNaN(amount)) return textResponse("Faltan parámetros: phone y amount", 400);
 
+  const payloadEmail = norm(p.email);
   const eventSourceUrl = await deriveEventSourceUrl(db, landing.name, norm(p.event_source_url));
 
   // Inherit from most recent row of this phone
@@ -827,7 +832,7 @@ async function handleSimplePurchase(
     user_id: landing.user_id,
     landing_name: landing.name,
     phone: cleanPhone,
-    email: srcRow?.email ?? "",
+    email: payloadEmail || srcRow?.email || "",
     fn: srcRow?.fn ?? "",
     ln: srcRow?.ln ?? "",
     ct: srcRow?.ct ?? "",

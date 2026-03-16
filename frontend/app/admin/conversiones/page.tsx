@@ -7,6 +7,7 @@ import {
   upsertConversionsConfig,
   fetchConversionsForAdmin,
   fetchConversionLogsForAdmin,
+  updateConversionEmail,
   type ConversionsConfig,
   type ConversionRow,
   type ConversionLogRow,
@@ -86,6 +87,66 @@ const ALL_COLUMNS = [
 ] as const;
 
 type ColKey = (typeof ALL_COLUMNS)[number];
+
+function EditableEmailCell({
+  row,
+  onSaved,
+}: {
+  row: ConversionRow;
+  onSaved: (id: string, email: string) => void;
+}) {
+  const [editing, setEditing] = useState(false);
+  const [value, setValue] = useState(row.email);
+  const [saving, setSaving] = useState(false);
+
+  const save = async () => {
+    const trimmed = value.trim();
+    if (trimmed === row.email) {
+      setEditing(false);
+      return;
+    }
+    setSaving(true);
+    try {
+      await updateConversionEmail(row.id, trimmed);
+      onSaved(row.id, trimmed);
+    } catch {
+      setValue(row.email);
+    } finally {
+      setSaving(false);
+      setEditing(false);
+    }
+  };
+
+  if (editing) {
+    return (
+      <td className="px-1 py-0.5">
+        <input
+          autoFocus
+          type="email"
+          value={value}
+          onChange={(e) => setValue(e.target.value)}
+          onBlur={save}
+          onKeyDown={(e) => {
+            if (e.key === "Enter") save();
+            if (e.key === "Escape") { setValue(row.email); setEditing(false); }
+          }}
+          disabled={saving}
+          className="w-full min-w-[140px] rounded border border-zinc-600 bg-zinc-900 px-1.5 py-0.5 text-[11px] text-zinc-100 outline-none focus:border-zinc-400"
+        />
+      </td>
+    );
+  }
+
+  return (
+    <td
+      className="px-2 py-1.5 whitespace-nowrap text-zinc-400 cursor-pointer hover:text-zinc-200 group"
+      onClick={() => { setValue(row.email); setEditing(true); }}
+      title="Click para editar email"
+    >
+      {row.email || <span className="text-zinc-600 group-hover:text-zinc-400">+ email</span>}
+    </td>
+  );
+}
 
 function cellValue(c: ConversionRow, col: ColKey): React.ReactNode {
   const cell = "px-2 py-1.5 whitespace-nowrap";
@@ -623,7 +684,21 @@ export default function AdminConversionesPage() {
                                 : "bg-zinc-950/40";
                           return (
                             <tr key={c.id} className={rowColor}>
-                              {cols.map((col) => cellValue(c, col))}
+                              {cols.map((col) =>
+                                col === "email" ? (
+                                  <EditableEmailCell
+                                    key={col}
+                                    row={c}
+                                    onSaved={(id, email) =>
+                                      setConversions((prev) =>
+                                        prev.map((r) => (r.id === id ? { ...r, email } : r))
+                                      )
+                                    }
+                                  />
+                                ) : (
+                                  cellValue(c, col)
+                                )
+                              )}
                             </tr>
                           );
                         })}
