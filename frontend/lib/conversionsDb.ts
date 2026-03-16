@@ -13,6 +13,7 @@ export interface ConversionsConfig {
   geo_use_ipapi: boolean;
   geo_fill_only_when_missing: boolean;
   test_event_code: string;
+  funnel_premium_threshold: number;
 }
 
 export interface ConversionRow {
@@ -67,6 +68,41 @@ export interface ConversionLogRow {
   created_at: string;
 }
 
+export interface FunnelContact {
+  user_id: string;
+  phone: string;
+  email: string | null;
+  fn: string | null;
+  ln: string | null;
+  ct: string | null;
+  st: string | null;
+  country: string | null;
+  region: string | null;
+  utm_campaign: string | null;
+  device_type: string | null;
+  landing_name: string | null;
+  total_valor: number;
+  purchase_count: number;
+  repeat_count: number;
+  lead_count: number;
+  contact_count: number;
+  last_activity: string;
+  first_contact: string;
+}
+
+export type FunnelStage = "leads" | "primera_carga" | "recurrente" | "premium";
+
+export function classifyContact(
+  c: FunnelContact,
+  premiumThreshold: number,
+): FunnelStage {
+  if (c.purchase_count > 0 && c.total_valor >= premiumThreshold)
+    return "premium";
+  if (c.repeat_count > 0) return "recurrente";
+  if (c.purchase_count > 0) return "primera_carga";
+  return "leads";
+}
+
 const DEFAULT_CONFIG: ConversionsConfig = {
   user_id: "",
   slug: "",
@@ -78,6 +114,7 @@ const DEFAULT_CONFIG: ConversionsConfig = {
   geo_use_ipapi: false,
   geo_fill_only_when_missing: false,
   test_event_code: "",
+  funnel_premium_threshold: 50000,
 };
 
 // ─── Config CRUD ────────────────────────────────────────────────────────────
@@ -93,7 +130,7 @@ export async function fetchConversionsConfig(
 
   if (error) throw error;
   if (!data) return { ...DEFAULT_CONFIG, user_id: userId };
-  return data as ConversionsConfig;
+  return data as unknown as ConversionsConfig;
 }
 
 export async function upsertConversionsConfig(
@@ -113,6 +150,7 @@ export async function upsertConversionsConfig(
         geo_use_ipapi: config.geo_use_ipapi,
         geo_fill_only_when_missing: config.geo_fill_only_when_missing,
         test_event_code: config.test_event_code,
+        funnel_premium_threshold: config.funnel_premium_threshold,
         updated_at: new Date().toISOString(),
       },
       { onConflict: "user_id" },
@@ -141,7 +179,7 @@ const CONVERSIONS_SELECT = `
 
 export async function fetchConversions(
   userId: string,
-  limit = 100,
+  limit = 200,
   offset = 0,
 ): Promise<ConversionRow[]> {
   const { data, error } = await supabase
@@ -156,7 +194,7 @@ export async function fetchConversions(
 }
 
 export async function fetchConversionsForAdmin(
-  limit = 200,
+  limit = 500,
   offset = 0,
 ): Promise<ConversionRow[]> {
   const { data, error } = await supabase
@@ -167,6 +205,38 @@ export async function fetchConversionsForAdmin(
 
   if (error) throw error;
   return (data ?? []) as unknown as ConversionRow[];
+}
+
+// ─── Funnel contacts (aggregated by phone) ──────────────────────────────────
+
+const FUNNEL_SELECT = `
+  user_id, phone, email, fn, ln, ct, st, country, region,
+  utm_campaign, device_type, landing_name,
+  total_valor, purchase_count, repeat_count, lead_count, contact_count,
+  last_activity, first_contact
+`.replace(/\s+/g, " ").trim();
+
+export async function fetchFunnelContacts(
+  userId: string,
+): Promise<FunnelContact[]> {
+  const { data, error } = await supabase
+    .from("funnel_contacts")
+    .select(FUNNEL_SELECT)
+    .eq("user_id", userId)
+    .order("last_activity", { ascending: false });
+
+  if (error) throw error;
+  return (data ?? []) as unknown as FunnelContact[];
+}
+
+export async function fetchFunnelContactsForAdmin(): Promise<FunnelContact[]> {
+  const { data, error } = await supabase
+    .from("funnel_contacts")
+    .select(FUNNEL_SELECT)
+    .order("last_activity", { ascending: false });
+
+  if (error) throw error;
+  return (data ?? []) as unknown as FunnelContact[];
 }
 
 // ─── Logs ───────────────────────────────────────────────────────────────────
@@ -204,9 +274,6 @@ export async function fetchConversionLogsForAdmin(
   return (data ?? []) as unknown as ConversionLogRow[];
 }
 
-/**
- * Obtiene la config de un usuario específico (para admin viendo la config de un cliente).
- */
 export async function fetchConversionsConfigForUser(
   userId: string,
 ): Promise<ConversionsConfig> {
