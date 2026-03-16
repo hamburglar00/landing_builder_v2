@@ -46,14 +46,40 @@ function BarCell({ value, max }: { value: number; max: number }) {
   return (
     <div className="flex items-center gap-2">
       <div className="flex-1 h-2 rounded-full bg-zinc-800 overflow-hidden">
-        <div
-          className="h-full rounded-full bg-emerald-600"
-          style={{ width: `${w}%` }}
-        />
+        <div className="h-full rounded-full bg-emerald-600" style={{ width: `${w}%` }} />
       </div>
       <span className="text-[10px] text-zinc-400 w-16 text-right font-mono">
         {formatCurrency(value)}
       </span>
+    </div>
+  );
+}
+
+function PctBar({ num, den, color = "bg-sky-500" }: { num: number; den: number; color?: string }) {
+  const w = den > 0 ? Math.round((num / den) * 100) : 0;
+  return (
+    <div className="flex items-center gap-2">
+      <div className="flex-1 h-2 rounded-full bg-zinc-800 overflow-hidden">
+        <div className={`h-full rounded-full ${color}`} style={{ width: `${w}%` }} />
+      </div>
+      <span className="text-[10px] text-zinc-400 w-10 text-right">{pct(num, den)}</span>
+    </div>
+  );
+}
+
+function SectionTitle({ children }: { children: React.ReactNode }) {
+  return (
+    <h3 className="text-sm font-semibold text-zinc-200 flex items-center gap-2">
+      {children}
+    </h3>
+  );
+}
+
+function TableCard({ title, children }: { title: string; children: React.ReactNode }) {
+  return (
+    <div className="rounded-xl border border-zinc-800 bg-zinc-900/50 p-4">
+      <h4 className="text-xs font-semibold text-zinc-200 mb-3">{title}</h4>
+      {children}
     </div>
   );
 }
@@ -69,12 +95,8 @@ export default function StatsPanel({
 }) {
   const stats = useMemo(() => {
     const total = funnelContacts.length;
-    let leads = 0,
-      primera = 0,
-      recurrente = 0,
-      premium = 0;
-    let totalRevenue = 0;
-    let totalPurchaseCount = 0;
+    let leads = 0, primera = 0, recurrente = 0, premium = 0;
+    let totalRevenue = 0, totalPurchaseCount = 0;
     const withEmail = funnelContacts.filter((c) => c.email).length;
 
     for (const c of funnelContacts) {
@@ -88,390 +110,306 @@ export default function StatsPanel({
     }
 
     const purchasers = primera + recurrente + premium;
-    const avgTicket =
-      totalPurchaseCount > 0 ? totalRevenue / totalPurchaseCount : 0;
-    const leadToPurchase = leads + purchasers > 0 ? purchasers / (leads + purchasers) : 0;
-    const recurrenceRate = purchasers > 0 ? (recurrente + premium) / purchasers : 0;
-    const avgLoadsPerPlayer =
-      purchasers > 0 ? totalPurchaseCount / purchasers : 0;
-    const emailRate = total > 0 ? withEmail / total : 0;
+    const avgTicket = totalPurchaseCount > 0 ? totalRevenue / totalPurchaseCount : 0;
+    const avgLoadsPerPlayer = purchasers > 0 ? totalPurchaseCount / purchasers : 0;
+
+    const singlePurchasers = funnelContacts.filter((c) => c.purchase_count === 1).length;
+    const multiPurchasers = funnelContacts.filter((c) => c.purchase_count > 1).length;
+
+    // CAPI
+    const capiEvents = conversions.filter((c) => c.contact_status_capi || c.lead_status_capi || c.purchase_status_capi);
+    const capiTotal = capiEvents.length;
+    const capiOk = capiEvents.filter((c) => c.contact_status_capi === "enviado" || c.lead_status_capi === "enviado" || c.purchase_status_capi === "enviado").length;
+    const capiContactOk = conversions.filter((c) => c.contact_status_capi === "enviado").length;
+    const capiContactTotal = conversions.filter((c) => c.contact_status_capi).length;
+    const capiLeadOk = conversions.filter((c) => c.lead_status_capi === "enviado").length;
+    const capiLeadTotal = conversions.filter((c) => c.lead_status_capi).length;
+    const capiPurchOk = conversions.filter((c) => c.purchase_status_capi === "enviado").length;
+    const capiPurchTotal = conversions.filter((c) => c.purchase_status_capi).length;
 
     // By region
-    const regionMap = new Map<
-      string,
-      { leads: number; purchases: number; revenue: number }
-    >();
+    const regionMap = new Map<string, { leads: number; purchases: number; revenue: number; total: number }>();
     for (const c of funnelContacts) {
       const r = c.region || c.country || "Sin región";
-      const entry = regionMap.get(r) ?? { leads: 0, purchases: 0, revenue: 0 };
+      const entry = regionMap.get(r) ?? { leads: 0, purchases: 0, revenue: 0, total: 0 };
+      entry.total++;
       const stage = classifyContact(c, premiumThreshold);
-      if (stage === "leads") entry.leads++;
-      else entry.purchases++;
+      if (stage === "leads") entry.leads++; else entry.purchases++;
       entry.revenue += c.total_valor;
       regionMap.set(r, entry);
     }
-    const byRegion = [...regionMap.entries()]
-      .map(([region, d]) => ({ region, ...d }))
-      .sort((a, b) => b.revenue - a.revenue)
-      .slice(0, 10);
+    const byRegion = [...regionMap.entries()].map(([region, d]) => ({ region, ...d })).sort((a, b) => b.revenue - a.revenue).slice(0, 10);
 
     // By campaign
-    const campaignMap = new Map<
-      string,
-      { leads: number; purchases: number; revenue: number }
-    >();
+    const campaignMap = new Map<string, { leads: number; purchases: number; revenue: number; total: number }>();
     for (const c of funnelContacts) {
       const camp = c.utm_campaign || "Sin campaña";
-      const entry = campaignMap.get(camp) ?? {
-        leads: 0,
-        purchases: 0,
-        revenue: 0,
-      };
+      const entry = campaignMap.get(camp) ?? { leads: 0, purchases: 0, revenue: 0, total: 0 };
+      entry.total++;
       const stage = classifyContact(c, premiumThreshold);
-      if (stage === "leads") entry.leads++;
-      else entry.purchases++;
+      if (stage === "leads") entry.leads++; else entry.purchases++;
       entry.revenue += c.total_valor;
       campaignMap.set(camp, entry);
     }
-    const byCampaign = [...campaignMap.entries()]
-      .map(([campaign, d]) => ({ campaign, ...d }))
-      .sort((a, b) => b.revenue - a.revenue)
-      .slice(0, 10);
+    const byCampaign = [...campaignMap.entries()].map(([campaign, d]) => ({ campaign, ...d })).sort((a, b) => b.revenue - a.revenue).slice(0, 10);
 
     // By device
-    const deviceMap = new Map<
-      string,
-      { contacts: number; revenue: number }
-    >();
+    const deviceMap = new Map<string, { contacts: number; purchases: number; revenue: number }>();
     for (const c of funnelContacts) {
       const dev = c.device_type || "Desconocido";
-      const entry = deviceMap.get(dev) ?? { contacts: 0, revenue: 0 };
+      const entry = deviceMap.get(dev) ?? { contacts: 0, purchases: 0, revenue: 0 };
       entry.contacts++;
+      if (c.purchase_count > 0) entry.purchases++;
       entry.revenue += c.total_valor;
       deviceMap.set(dev, entry);
     }
-    const byDevice = [...deviceMap.entries()]
-      .map(([device, d]) => ({ device, ...d }))
-      .sort((a, b) => b.revenue - a.revenue);
-
-    // Top contacts by revenue
-    const topContacts = [...funnelContacts]
-      .filter((c) => c.total_valor > 0)
-      .sort((a, b) => b.total_valor - a.total_valor)
-      .slice(0, 10);
+    const byDevice = [...deviceMap.entries()].map(([device, d]) => ({ device, ...d })).sort((a, b) => b.revenue - a.revenue);
 
     // By landing
-    const landingMap = new Map<string, { contacts: number; revenue: number }>();
+    const landingMap = new Map<string, { contacts: number; purchases: number; revenue: number }>();
     for (const c of funnelContacts) {
       const ln = c.landing_name || "Sin landing";
-      const entry = landingMap.get(ln) ?? { contacts: 0, revenue: 0 };
+      const entry = landingMap.get(ln) ?? { contacts: 0, purchases: 0, revenue: 0 };
       entry.contacts++;
+      if (c.purchase_count > 0) entry.purchases++;
       entry.revenue += c.total_valor;
       landingMap.set(ln, entry);
     }
-    const byLanding = [...landingMap.entries()]
-      .map(([landing, d]) => ({ landing, ...d }))
-      .sort((a, b) => b.revenue - a.revenue)
-      .slice(0, 10);
+    const byLanding = [...landingMap.entries()].map(([landing, d]) => ({ landing, ...d })).sort((a, b) => b.revenue - a.revenue).slice(0, 10);
 
-    // Single vs multiple purchases
-    const singlePurchasers = funnelContacts.filter(
-      (c) => c.purchase_count === 1,
-    ).length;
-    const multiPurchasers = funnelContacts.filter(
-      (c) => c.purchase_count > 1,
-    ).length;
-
-    // CAPI status from raw conversions
-    const capiTotal = conversions.filter(
-      (c) =>
-        c.contact_status_capi || c.lead_status_capi || c.purchase_status_capi,
-    ).length;
-    const capiOk = conversions.filter(
-      (c) =>
-        c.contact_status_capi === "enviado" ||
-        c.lead_status_capi === "enviado" ||
-        c.purchase_status_capi === "enviado",
-    ).length;
+    // Top contacts
+    const topContacts = [...funnelContacts].filter((c) => c.total_valor > 0).sort((a, b) => b.total_valor - a.total_valor).slice(0, 10);
 
     return {
-      total,
-      leads,
-      primera,
-      recurrente,
-      premium,
-      purchasers,
-      totalRevenue,
-      totalPurchaseCount,
-      avgTicket,
-      leadToPurchase,
-      recurrenceRate,
-      avgLoadsPerPlayer,
-      emailRate,
-      withEmail,
-      byRegion,
-      byCampaign,
-      byDevice,
-      topContacts,
-      byLanding,
-      singlePurchasers,
-      multiPurchasers,
-      capiTotal,
-      capiOk,
+      total, leads, primera, recurrente, premium, purchasers,
+      totalRevenue, totalPurchaseCount, avgTicket, avgLoadsPerPlayer,
+      withEmail, singlePurchasers, multiPurchasers,
+      capiTotal, capiOk, capiContactOk, capiContactTotal, capiLeadOk, capiLeadTotal, capiPurchOk, capiPurchTotal,
+      byRegion, byCampaign, byDevice, byLanding, topContacts,
     };
   }, [funnelContacts, conversions, premiumThreshold]);
 
-  const maxRegionRevenue = Math.max(...stats.byRegion.map((r) => r.revenue), 1);
-  const maxCampaignRevenue = Math.max(
-    ...stats.byCampaign.map((r) => r.revenue),
-    1,
-  );
+  const maxRegionRev = Math.max(...stats.byRegion.map((r) => r.revenue), 1);
+  const maxCampaignRev = Math.max(...stats.byCampaign.map((r) => r.revenue), 1);
 
   return (
-    <div className="space-y-6">
-      {/* KPIs */}
-      <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5">
-        <KpiCard label="Contactos únicos" value={stats.total} />
-        <KpiCard label="Leads" value={stats.leads} color="text-amber-300" />
-        <KpiCard
-          label="Primera carga"
-          value={stats.primera}
-          color="text-sky-300"
-        />
-        <KpiCard
-          label="Recurrentes"
-          value={stats.recurrente}
-          color="text-violet-300"
-        />
-        <KpiCard
-          label="Premium"
-          value={stats.premium}
-          color="text-emerald-300"
-        />
-        <KpiCard
-          label="Total cargado"
-          value={formatCurrency(stats.totalRevenue)}
-          color="text-emerald-400"
-        />
-        <KpiCard
-          label="Ticket promedio"
-          value={formatCurrency(stats.avgTicket)}
-          sub={`${stats.totalPurchaseCount} cargas totales`}
-        />
-        <KpiCard
-          label="Lead → Compra"
-          value={pct(stats.purchasers, stats.leads + stats.purchasers)}
-          sub={`${stats.purchasers} de ${stats.leads + stats.purchasers}`}
-          color="text-sky-400"
-        />
-        <KpiCard
-          label="Tasa de recurrencia"
-          value={pct(
-            stats.recurrente + stats.premium,
-            stats.purchasers,
-          )}
-          sub={`${stats.recurrente + stats.premium} de ${stats.purchasers} compradores`}
-          color="text-violet-400"
-        />
-        <KpiCard
-          label="Promedio cargas/jugador"
-          value={stats.avgLoadsPerPlayer.toFixed(1)}
-          sub={`${stats.singlePurchasers} con 1 carga · ${stats.multiPurchasers} con múltiples`}
-        />
+    <div className="space-y-8">
+
+      {/* ── RESUMEN GENERAL ── */}
+      <div>
+        <SectionTitle>Resumen general</SectionTitle>
+        <div className="mt-3 grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-5">
+          <KpiCard label="Contactos únicos" value={stats.total} />
+          <KpiCard label="Leads" value={stats.leads} color="text-amber-300" />
+          <KpiCard label="Primera carga" value={stats.primera} color="text-sky-300" />
+          <KpiCard label="Recurrentes" value={stats.recurrente} color="text-violet-300" />
+          <KpiCard label="Premium" value={stats.premium} color="text-emerald-300" />
+        </div>
       </div>
 
-      {/* Secondary KPIs */}
-      <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-4">
-        <KpiCard
-          label="Contactos con email"
-          value={pct(stats.withEmail, stats.total)}
-          sub={`${stats.withEmail} de ${stats.total}`}
-        />
-        <KpiCard
-          label="CAPI exitoso"
-          value={pct(stats.capiOk, stats.capiTotal)}
-          sub={`${stats.capiOk} de ${stats.capiTotal} envíos`}
-          color="text-emerald-400"
-        />
+      {/* ── REVENUE ── */}
+      <div>
+        <SectionTitle>Revenue</SectionTitle>
+        <div className="mt-3 grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-4">
+          <KpiCard label="Total cargado" value={formatCurrency(stats.totalRevenue)} color="text-emerald-400" />
+          <KpiCard label="Ticket promedio" value={formatCurrency(stats.avgTicket)} sub={`${stats.totalPurchaseCount} cargas totales`} />
+          <KpiCard label="Promedio cargas/jugador" value={stats.avgLoadsPerPlayer.toFixed(1)} sub={`${stats.singlePurchasers} con 1 carga · ${stats.multiPurchasers} con múltiples`} />
+          <KpiCard label="Jugadores con 1 vs múltiples" value={`${stats.singlePurchasers} / ${stats.multiPurchasers}`} sub={`${pct(stats.multiPurchasers, stats.singlePurchasers + stats.multiPurchasers)} repiten`} />
+        </div>
       </div>
 
-      {/* Breakdowns */}
-      <div className="grid gap-6 lg:grid-cols-2">
-        {/* By region */}
-        {stats.byRegion.length > 0 && (
-          <div className="rounded-xl border border-zinc-800 bg-zinc-900/50 p-4">
-            <h4 className="text-xs font-semibold text-zinc-200 mb-3">
-              Por región
-            </h4>
-            <table className="w-full text-[11px]">
-              <thead>
-                <tr className="text-zinc-500">
+      {/* ── TASAS DE CONVERSIÓN ── */}
+      <div>
+        <SectionTitle>Tasas de conversión</SectionTitle>
+        <div className="mt-3 grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-4">
+          <KpiCard label="Lead → Compra" value={pct(stats.purchasers, stats.leads + stats.purchasers)} sub={`${stats.purchasers} de ${stats.leads + stats.purchasers}`} color="text-sky-400" />
+          <KpiCard label="Tasa de recurrencia" value={pct(stats.recurrente + stats.premium, stats.purchasers)} sub={`${stats.recurrente + stats.premium} de ${stats.purchasers} compradores`} color="text-violet-400" />
+          <KpiCard label="Contactos con email" value={pct(stats.withEmail, stats.total)} sub={`${stats.withEmail} de ${stats.total}`} />
+          <KpiCard label="% Premium" value={pct(stats.premium, stats.total)} sub={`${stats.premium} de ${stats.total} contactos`} color="text-emerald-400" />
+        </div>
+      </div>
+
+      {/* ── ENVÍOS CAPI ── */}
+      <div>
+        <SectionTitle>Envíos Meta CAPI</SectionTitle>
+        <div className="mt-3 grid grid-cols-2 gap-3 sm:grid-cols-4">
+          <KpiCard label="CAPI total exitoso" value={pct(stats.capiOk, stats.capiTotal)} sub={`${stats.capiOk} de ${stats.capiTotal} envíos`} color="text-emerald-400" />
+          <KpiCard label="Contact CAPI" value={pct(stats.capiContactOk, stats.capiContactTotal)} sub={`${stats.capiContactOk} de ${stats.capiContactTotal}`} />
+          <KpiCard label="Lead CAPI" value={pct(stats.capiLeadOk, stats.capiLeadTotal)} sub={`${stats.capiLeadOk} de ${stats.capiLeadTotal}`} />
+          <KpiCard label="Purchase CAPI" value={pct(stats.capiPurchOk, stats.capiPurchTotal)} sub={`${stats.capiPurchOk} de ${stats.capiPurchTotal}`} />
+        </div>
+      </div>
+
+      {/* ── POR REGIÓN ── */}
+      {stats.byRegion.length > 0 && (
+        <div>
+          <SectionTitle>Por región</SectionTitle>
+          <div className="mt-3 grid gap-4 lg:grid-cols-2">
+            <TableCard title="Revenue y conversión por región">
+              <table className="w-full text-[11px]">
+                <thead><tr className="text-zinc-500">
                   <th className="text-left pb-2 font-medium">Región</th>
                   <th className="text-right pb-2 font-medium w-12">Leads</th>
-                  <th className="text-right pb-2 font-medium w-16">Compras</th>
+                  <th className="text-right pb-2 font-medium w-14">Compras</th>
+                  <th className="text-right pb-2 font-medium w-14">Conv.</th>
                   <th className="pb-2 font-medium w-36">Revenue</th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-zinc-800/60">
+                </tr></thead>
+                <tbody className="divide-y divide-zinc-800/60">
+                  {stats.byRegion.map((r) => (
+                    <tr key={r.region}>
+                      <td className="py-1.5 text-zinc-300">{r.region}</td>
+                      <td className="py-1.5 text-right text-zinc-400">{r.leads}</td>
+                      <td className="py-1.5 text-right text-zinc-400">{r.purchases}</td>
+                      <td className="py-1.5 text-right"><PctBar num={r.purchases} den={r.total} /></td>
+                      <td className="py-1.5"><BarCell value={r.revenue} max={maxRegionRev} /></td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </TableCard>
+            <TableCard title="% de carga por región">
+              <div className="space-y-2">
                 {stats.byRegion.map((r) => (
-                  <tr key={r.region}>
-                    <td className="py-1.5 text-zinc-300">{r.region}</td>
-                    <td className="py-1.5 text-right text-zinc-400">
-                      {r.leads}
-                    </td>
-                    <td className="py-1.5 text-right text-zinc-400">
-                      {r.purchases}
-                    </td>
-                    <td className="py-1.5">
-                      <BarCell value={r.revenue} max={maxRegionRevenue} />
-                    </td>
-                  </tr>
+                  <div key={r.region} className="flex items-center gap-2">
+                    <span className="text-[11px] text-zinc-400 w-24 truncate">{r.region}</span>
+                    <PctBar num={r.revenue} den={stats.totalRevenue} color="bg-emerald-500" />
+                  </div>
                 ))}
-              </tbody>
-            </table>
+              </div>
+            </TableCard>
           </div>
-        )}
+        </div>
+      )}
 
-        {/* By campaign */}
-        {stats.byCampaign.length > 0 && (
-          <div className="rounded-xl border border-zinc-800 bg-zinc-900/50 p-4">
-            <h4 className="text-xs font-semibold text-zinc-200 mb-3">
-              Por campaña
-            </h4>
-            <table className="w-full text-[11px]">
-              <thead>
-                <tr className="text-zinc-500">
+      {/* ── POR CAMPAÑA ── */}
+      {stats.byCampaign.length > 0 && (
+        <div>
+          <SectionTitle>Por campaña (utm_campaign)</SectionTitle>
+          <div className="mt-3 grid gap-4 lg:grid-cols-2">
+            <TableCard title="Revenue y conversión por campaña">
+              <table className="w-full text-[11px]">
+                <thead><tr className="text-zinc-500">
                   <th className="text-left pb-2 font-medium">Campaña</th>
                   <th className="text-right pb-2 font-medium w-12">Leads</th>
-                  <th className="text-right pb-2 font-medium w-16">Compras</th>
+                  <th className="text-right pb-2 font-medium w-14">Compras</th>
+                  <th className="text-right pb-2 font-medium w-14">Conv.</th>
                   <th className="pb-2 font-medium w-36">Revenue</th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-zinc-800/60">
+                </tr></thead>
+                <tbody className="divide-y divide-zinc-800/60">
+                  {stats.byCampaign.map((r) => (
+                    <tr key={r.campaign}>
+                      <td className="py-1.5 text-zinc-300 truncate max-w-[140px]">{r.campaign}</td>
+                      <td className="py-1.5 text-right text-zinc-400">{r.leads}</td>
+                      <td className="py-1.5 text-right text-zinc-400">{r.purchases}</td>
+                      <td className="py-1.5 text-right"><PctBar num={r.purchases} den={r.total} color="bg-amber-500" /></td>
+                      <td className="py-1.5"><BarCell value={r.revenue} max={maxCampaignRev} /></td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </TableCard>
+            <TableCard title="Top campañas por monto">
+              <div className="space-y-2">
                 {stats.byCampaign.map((r) => (
-                  <tr key={r.campaign}>
-                    <td className="py-1.5 text-zinc-300 truncate max-w-[160px]">
-                      {r.campaign}
-                    </td>
-                    <td className="py-1.5 text-right text-zinc-400">
-                      {r.leads}
-                    </td>
-                    <td className="py-1.5 text-right text-zinc-400">
-                      {r.purchases}
-                    </td>
-                    <td className="py-1.5">
-                      <BarCell value={r.revenue} max={maxCampaignRevenue} />
-                    </td>
-                  </tr>
+                  <div key={r.campaign} className="flex items-center gap-2">
+                    <span className="text-[11px] text-zinc-400 w-28 truncate">{r.campaign}</span>
+                    <PctBar num={r.revenue} den={stats.totalRevenue} color="bg-amber-500" />
+                  </div>
                 ))}
-              </tbody>
-            </table>
+              </div>
+            </TableCard>
           </div>
-        )}
+        </div>
+      )}
 
-        {/* By device */}
-        {stats.byDevice.length > 0 && (
-          <div className="rounded-xl border border-zinc-800 bg-zinc-900/50 p-4">
-            <h4 className="text-xs font-semibold text-zinc-200 mb-3">
-              Por dispositivo
-            </h4>
-            <table className="w-full text-[11px]">
-              <thead>
-                <tr className="text-zinc-500">
+      {/* ── POR DISPOSITIVO ── */}
+      {stats.byDevice.length > 0 && (
+        <div>
+          <SectionTitle>Por dispositivo</SectionTitle>
+          <div className="mt-3">
+            <TableCard title="Volumen y revenue por dispositivo">
+              <table className="w-full text-[11px]">
+                <thead><tr className="text-zinc-500">
                   <th className="text-left pb-2 font-medium">Dispositivo</th>
-                  <th className="text-right pb-2 font-medium w-16">
-                    Contactos
-                  </th>
+                  <th className="text-right pb-2 font-medium w-16">Contactos</th>
+                  <th className="text-right pb-2 font-medium w-16">Compradores</th>
+                  <th className="text-right pb-2 font-medium w-14">Conv.</th>
                   <th className="text-right pb-2 font-medium w-24">Revenue</th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-zinc-800/60">
-                {stats.byDevice.map((r) => (
-                  <tr key={r.device}>
-                    <td className="py-1.5 text-zinc-300">{r.device}</td>
-                    <td className="py-1.5 text-right text-zinc-400">
-                      {r.contacts}
-                    </td>
-                    <td className="py-1.5 text-right text-zinc-200 font-mono">
-                      {formatCurrency(r.revenue)}
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
+                </tr></thead>
+                <tbody className="divide-y divide-zinc-800/60">
+                  {stats.byDevice.map((r) => (
+                    <tr key={r.device}>
+                      <td className="py-1.5 text-zinc-300 capitalize">{r.device}</td>
+                      <td className="py-1.5 text-right text-zinc-400">{r.contacts}</td>
+                      <td className="py-1.5 text-right text-zinc-400">{r.purchases}</td>
+                      <td className="py-1.5 text-right"><PctBar num={r.purchases} den={r.contacts} color="bg-violet-500" /></td>
+                      <td className="py-1.5 text-right text-zinc-200 font-mono">{formatCurrency(r.revenue)}</td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </TableCard>
           </div>
-        )}
+        </div>
+      )}
 
-        {/* By landing */}
-        {stats.byLanding.length > 0 && (
-          <div className="rounded-xl border border-zinc-800 bg-zinc-900/50 p-4">
-            <h4 className="text-xs font-semibold text-zinc-200 mb-3">
-              Por landing (LTV)
-            </h4>
-            <table className="w-full text-[11px]">
-              <thead>
-                <tr className="text-zinc-500">
+      {/* ── POR LANDING ── */}
+      {stats.byLanding.length > 0 && (
+        <div>
+          <SectionTitle>Por landing (LTV)</SectionTitle>
+          <div className="mt-3">
+            <TableCard title="Contactos y revenue por landing">
+              <table className="w-full text-[11px]">
+                <thead><tr className="text-zinc-500">
                   <th className="text-left pb-2 font-medium">Landing</th>
-                  <th className="text-right pb-2 font-medium w-16">
-                    Contactos
-                  </th>
+                  <th className="text-right pb-2 font-medium w-16">Contactos</th>
+                  <th className="text-right pb-2 font-medium w-16">Compradores</th>
                   <th className="text-right pb-2 font-medium w-24">Revenue</th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-zinc-800/60">
-                {stats.byLanding.map((r) => (
-                  <tr key={r.landing}>
-                    <td className="py-1.5 text-zinc-300 truncate max-w-[160px]">
-                      {r.landing}
-                    </td>
-                    <td className="py-1.5 text-right text-zinc-400">
-                      {r.contacts}
-                    </td>
-                    <td className="py-1.5 text-right text-zinc-200 font-mono">
-                      {formatCurrency(r.revenue)}
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
+                </tr></thead>
+                <tbody className="divide-y divide-zinc-800/60">
+                  {stats.byLanding.map((r) => (
+                    <tr key={r.landing}>
+                      <td className="py-1.5 text-zinc-300 truncate max-w-[160px]">{r.landing}</td>
+                      <td className="py-1.5 text-right text-zinc-400">{r.contacts}</td>
+                      <td className="py-1.5 text-right text-zinc-400">{r.purchases}</td>
+                      <td className="py-1.5 text-right text-emerald-400 font-mono font-semibold">{formatCurrency(r.revenue)}</td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </TableCard>
           </div>
-        )}
-      </div>
+        </div>
+      )}
 
-      {/* Top contacts */}
+      {/* ── TOP CONTACTOS ── */}
       {stats.topContacts.length > 0 && (
-        <div className="rounded-xl border border-zinc-800 bg-zinc-900/50 p-4">
-          <h4 className="text-xs font-semibold text-zinc-200 mb-3">
-            Top contactos por monto
-          </h4>
-          <table className="w-full text-[11px]">
-            <thead>
-              <tr className="text-zinc-500">
-                <th className="text-left pb-2 font-medium">#</th>
-                <th className="text-left pb-2 font-medium">Teléfono</th>
-                <th className="text-left pb-2 font-medium">Nombre</th>
-                <th className="text-right pb-2 font-medium">Cargas</th>
-                <th className="text-right pb-2 font-medium">Total</th>
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-zinc-800/60">
-              {stats.topContacts.map((c, i) => (
-                <tr key={c.phone}>
-                  <td className="py-1.5 text-zinc-600">{i + 1}</td>
-                  <td className="py-1.5 text-zinc-200 font-mono">{c.phone}</td>
-                  <td className="py-1.5 text-zinc-400">
-                    {[c.fn, c.ln].filter(Boolean).join(" ") || "-"}
-                  </td>
-                  <td className="py-1.5 text-right text-zinc-400">
-                    {c.purchase_count}
-                  </td>
-                  <td className="py-1.5 text-right text-emerald-400 font-mono font-semibold">
-                    {formatCurrency(c.total_valor)}
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
+        <div>
+          <SectionTitle>Top contactos por monto</SectionTitle>
+          <div className="mt-3">
+            <TableCard title="Top 10 jugadores">
+              <table className="w-full text-[11px]">
+                <thead><tr className="text-zinc-500">
+                  <th className="text-left pb-2 font-medium w-6">#</th>
+                  <th className="text-left pb-2 font-medium">Teléfono</th>
+                  <th className="text-left pb-2 font-medium">Nombre</th>
+                  <th className="text-right pb-2 font-medium w-14">Cargas</th>
+                  <th className="text-right pb-2 font-medium w-24">Total</th>
+                </tr></thead>
+                <tbody className="divide-y divide-zinc-800/60">
+                  {stats.topContacts.map((c, i) => (
+                    <tr key={c.phone}>
+                      <td className="py-1.5 text-zinc-600">{i + 1}</td>
+                      <td className="py-1.5 text-zinc-200 font-mono">{c.phone}</td>
+                      <td className="py-1.5 text-zinc-400">{[c.fn, c.ln].filter(Boolean).join(" ") || "-"}</td>
+                      <td className="py-1.5 text-right text-zinc-400">{c.purchase_count}</td>
+                      <td className="py-1.5 text-right text-emerald-400 font-mono font-semibold">{formatCurrency(c.total_valor)}</td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </TableCard>
+          </div>
         </div>
       )}
     </div>
