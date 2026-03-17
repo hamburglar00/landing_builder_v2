@@ -166,6 +166,16 @@ export async function upsertConversionsConfig(
   if (error) throw error;
 }
 
+export async function updateAllVisibleColumns(
+  columns: string[] | null,
+): Promise<void> {
+  const { error } = await supabase
+    .from("conversions_config")
+    .update({ visible_columns: columns ?? null });
+
+  if (error) throw error;
+}
+
 // ─── Conversions list ───────────────────────────────────────────────────────
 
 const CONVERSIONS_SELECT = `

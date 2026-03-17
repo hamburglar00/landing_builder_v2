@@ -13,6 +13,7 @@ import {
   type ConversionRow,
   type ConversionLogRow,
   type FunnelContact,
+  updateAllVisibleColumns,
 } from "@/lib/conversionsDb";
 import { generateDemoConversions, generateDemoFunnelContacts } from "@/lib/demoData";
 import FunnelBoard from "@/components/conversiones/FunnelBoard";
@@ -281,7 +282,10 @@ export default function AdminConversionesPage() {
     if (!config || !userId) return;
     setSaving(true); setSaveMsg(null);
     try {
+      const cols = config.visible_columns ?? null;
       await upsertConversionsConfig({ ...config, user_id: userId });
+      // Propagar columnas visibles a todos los clientes
+      await updateAllVisibleColumns(cols);
       setSaveMsg("Configuración guardada.");
     } catch (e) {
       setSaveMsg(e instanceof Error ? e.message : "Error al guardar");

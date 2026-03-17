@@ -7,7 +7,7 @@ export default function AdminHomePage() {
   const router = useRouter();
 
   useEffect(() => {
-    router.replace("/admin/landings");
+    router.replace("/admin/inicio");
   }, [router]);
 
   return null;
