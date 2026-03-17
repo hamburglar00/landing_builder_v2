@@ -254,7 +254,7 @@ export default function DashboardConversionesPage() {
     try {
       await hideConversions(activeConversions.map((c) => c.id), userId);
       await refreshTable();
-      setClearMsg("Vista limpiada. Los registros siguen en la base de datos.");
+      setClearMsg("Vista limpiada.");
       setTimeout(() => setClearMsg(null), 4000);
     } catch (e) {
       console.error(e);
@@ -273,7 +273,7 @@ export default function DashboardConversionesPage() {
         userId,
       );
       await refreshTable();
-      setClearMsg("Vista limpiada. Los registros siguen en la base de datos.");
+      setClearMsg("Vista limpiada.");
       setTimeout(() => setClearMsg(null), 4000);
     } catch (e) {
       console.error(e);
@@ -293,7 +293,7 @@ export default function DashboardConversionesPage() {
       );
       await hideConversions(activeConversions.map((c) => c.id), userId);
       await refreshTable();
-      setClearMsg("Vista limpiada. Los registros siguen en la base de datos.");
+      setClearMsg("Vista limpiada.");
       setTimeout(() => setClearMsg(null), 4000);
     } catch (e) {
       console.error(e);

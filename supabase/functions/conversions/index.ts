@@ -363,11 +363,14 @@ async function handleContact(
   const geo = resolveGeoForPayload(p);
   const eventSourceUrl = await deriveEventSourceUrl(db, landing.name, norm(p.event_source_url));
 
+  // Usar telefono_asignado como fallback si phone viene vacío (ej. CTA que solo envía el teléfono del botón)
+  const effectivePhone = sanitizePhone(p.phone) || sanitizePhone(p.telefono_asignado);
+
   const row: Omit<ConversionRow, "id"> = {
     landing_id: landing.id?.trim() || null,
     user_id: landing.user_id,
     landing_name: landing.name,
-    phone: sanitizePhone(p.phone),
+    phone: effectivePhone,
     email: norm(p.email),
     fn: norm(p.fn),
     ln: norm(p.ln),
