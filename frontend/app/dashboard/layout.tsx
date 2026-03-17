@@ -48,7 +48,7 @@ function NavIcon({
   variant,
   active,
 }: {
-  variant: "landings" | "gerencias" | "telefonos" | "conversiones";
+  variant: "inicio" | "landings" | "gerencias" | "telefonos" | "conversiones";
   active: boolean;
 }) {
   const base = active
@@ -70,6 +70,26 @@ function NavIcon({
           : active
             ? "text-emerald-400"
             : "text-emerald-300";
+
+  if (variant === "inicio") {
+    return (
+      <span className={base}>
+        <svg
+          className="h-4 w-4"
+          viewBox="0 0 24 24"
+          fill="none"
+          stroke="currentColor"
+          strokeWidth={1.6}
+          strokeLinecap="round"
+          strokeLinejoin="round"
+        >
+          <path d="M3 11L12 3l9 8" className={accent} />
+          <path d="M5 10v10h14V10" />
+          <path d="M10 21v-6h4v6" />
+        </svg>
+      </span>
+    );
+  }
 
   if (variant === "landings") {
     return (
@@ -256,6 +276,18 @@ export default function DashboardLayout({
           </button>
         </div>
         <nav className="flex flex-1 flex-col gap-2 p-3">
+          <Link
+            href="/dashboard/inicio"
+            onClick={() => setSidebarOpen(false)}
+            className={`flex items-center gap-2 rounded-lg px-3 py-2 text-xs font-medium tracking-[0.18em] transition ${
+              pathname === "/dashboard/inicio"
+                ? "bg-[var(--color-primary-soft-bg)] text-[var(--color-primary)] border border-[var(--color-primary-soft-border)]"
+                : "text-[var(--color-text-muted)] hover:bg-[var(--color-bg-3)] hover:text-[var(--color-text)]"
+            }`}
+          >
+            <NavIcon variant="inicio" active={pathname === "/dashboard/inicio"} />
+            <span>INICIO</span>
+          </Link>
           <Link
             href="/dashboard"
             onClick={() => setSidebarOpen(false)}
