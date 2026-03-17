@@ -232,6 +232,8 @@ export default function AdminConversionesPage() {
   const [demoMode, setDemoMode] = useState(false);
   const [dateRange, setDateRange] = useState<DateRange | null>(null);
   const [tableCleared, setTableCleared] = useState(false);
+  const [funnelCleared, setFunnelCleared] = useState(false);
+  const [statsCleared, setStatsCleared] = useState(false);
   const [refreshingTable, setRefreshingTable] = useState(false);
 
   const demoConversions = useMemo(() => generateDemoConversions(80), []);
@@ -313,6 +315,8 @@ export default function AdminConversionesPage() {
   const refreshTable = useCallback(async () => {
     setRefreshingTable(true);
     setTableCleared(false);
+    setFunnelCleared(false);
+    setStatsCleared(false);
     try {
       const [rows, funnel, logRows] = await Promise.all([
         fetchConversionsForAdmin(500),
@@ -328,6 +332,14 @@ export default function AdminConversionesPage() {
 
   const clearTableDisplay = useCallback(() => {
     setTableCleared(true);
+  }, []);
+
+  const clearFunnelDisplay = useCallback(() => {
+    setFunnelCleared(true);
+  }, []);
+
+  const clearStatsDisplay = useCallback(() => {
+    setStatsCleared(true);
   }, []);
 
   if (loading) {
@@ -672,21 +684,85 @@ export default function AdminConversionesPage() {
 
       {/* ═══════════ TAB: FUNNEL ═══════════ */}
       {tab === "funnel" && (
-        <FunnelBoard
-          contacts={activeFunnel}
-          premiumThreshold={config?.funnel_premium_threshold ?? 50000}
-        />
+        <section className="rounded-xl border border-zinc-800 bg-zinc-900/50 p-4">
+          <div className="mb-4 flex flex-wrap items-center justify-between gap-2">
+            <h3 className="text-sm font-semibold text-zinc-200">Funnel</h3>
+            <div className="flex gap-2">
+              <button
+                type="button"
+                onClick={refreshTable}
+                disabled={refreshingTable}
+                className="inline-flex items-center gap-1.5 rounded-lg border border-zinc-700 bg-zinc-800/80 px-2.5 py-1.5 text-xs font-medium text-zinc-300 transition hover:bg-zinc-700 hover:text-zinc-100 disabled:opacity-60"
+                title="Actualizar datos"
+              >
+                <svg className="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+                </svg>
+                {refreshingTable ? "Actualizando…" : "Actualizar"}
+              </button>
+              <button
+                type="button"
+                onClick={clearFunnelDisplay}
+                disabled={funnelCleared || activeFunnel.length === 0}
+                className="inline-flex items-center gap-1.5 rounded-lg border border-zinc-700 bg-zinc-800/80 px-2.5 py-1.5 text-xs font-medium text-zinc-400 transition hover:bg-zinc-700 hover:text-zinc-300 disabled:opacity-50 disabled:cursor-not-allowed"
+                title="Ocultar registros de la vista (no borra de la base)"
+              >
+                Limpiar vista
+              </button>
+            </div>
+          </div>
+          {funnelCleared ? (
+            <p className="py-12 text-center text-sm text-zinc-500">Vista limpiada. Usá Actualizar para volver a cargar.</p>
+          ) : (
+            <FunnelBoard
+              contacts={activeFunnel}
+              premiumThreshold={config?.funnel_premium_threshold ?? 50000}
+            />
+          )}
+        </section>
       )}
 
       {/* ═══════════ TAB: ESTADÍSTICAS ═══════════ */}
       {tab === "estadisticas" && (
-        <StatsPanel
-          funnelContacts={activeFunnel}
-          conversions={activeConversions}
-          allConversions={rawConversions}
-          premiumThreshold={config?.funnel_premium_threshold ?? 50000}
-          dateRange={dateRange}
-        />
+        <section className="rounded-xl border border-zinc-800 bg-zinc-900/50 p-4">
+          <div className="mb-4 flex flex-wrap items-center justify-between gap-2">
+            <h3 className="text-sm font-semibold text-zinc-200">Estadísticas</h3>
+            <div className="flex gap-2">
+              <button
+                type="button"
+                onClick={refreshTable}
+                disabled={refreshingTable}
+                className="inline-flex items-center gap-1.5 rounded-lg border border-zinc-700 bg-zinc-800/80 px-2.5 py-1.5 text-xs font-medium text-zinc-300 transition hover:bg-zinc-700 hover:text-zinc-100 disabled:opacity-60"
+                title="Actualizar datos"
+              >
+                <svg className="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+                </svg>
+                {refreshingTable ? "Actualizando…" : "Actualizar"}
+              </button>
+              <button
+                type="button"
+                onClick={clearStatsDisplay}
+                disabled={statsCleared || (activeFunnel.length === 0 && activeConversions.length === 0)}
+                className="inline-flex items-center gap-1.5 rounded-lg border border-zinc-700 bg-zinc-800/80 px-2.5 py-1.5 text-xs font-medium text-zinc-400 transition hover:bg-zinc-700 hover:text-zinc-300 disabled:opacity-50 disabled:cursor-not-allowed"
+                title="Ocultar registros de la vista (no borra de la base)"
+              >
+                Limpiar vista
+              </button>
+            </div>
+          </div>
+          {statsCleared ? (
+            <p className="py-12 text-center text-sm text-zinc-500">Vista limpiada. Usá Actualizar para volver a cargar.</p>
+          ) : (
+            <StatsPanel
+              funnelContacts={activeFunnel}
+              conversions={activeConversions}
+              allConversions={rawConversions}
+              premiumThreshold={config?.funnel_premium_threshold ?? 50000}
+              dateRange={dateRange}
+            />
+          )}
+        </section>
       )}
 
       {/* ═══════════ TAB: LOGS ═══════════ */}
