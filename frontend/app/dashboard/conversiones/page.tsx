@@ -416,7 +416,7 @@ export default function DashboardConversionesPage() {
 
       {/* ═══════════ TAB: ESTADÍSTICAS ═══════════ */}
       {tab === "estadisticas" && (
-        <StatsPanel funnelContacts={activeFunnel} conversions={activeConversions} premiumThreshold={config?.funnel_premium_threshold ?? 50000} />
+        <StatsPanel funnelContacts={activeFunnel} conversions={activeConversions} premiumThreshold={config?.funnel_premium_threshold ?? 50000} dateRange={dateRange} />
       )}
 
       {/* Logs tab removed — only available for admin */}

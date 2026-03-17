@@ -558,6 +558,7 @@ export default function AdminConversionesPage() {
           funnelContacts={activeFunnel}
           conversions={activeConversions}
           premiumThreshold={config?.funnel_premium_threshold ?? 50000}
+          dateRange={dateRange}
         />
       )}
 

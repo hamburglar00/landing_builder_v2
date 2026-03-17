@@ -101,10 +101,12 @@ export default function StatsPanel({
   funnelContacts,
   conversions,
   premiumThreshold,
+  dateRange,
 }: {
   funnelContacts: FunnelContact[];
   conversions: ConversionRow[];
   premiumThreshold: number;
+  dateRange?: { start: Date; end: Date } | null;
 }) {
   const [adSpend, setAdSpend] = useState<string>("");
 
@@ -200,21 +202,66 @@ export default function StatsPanel({
       }
     }
 
-    // Daily leads vs purchases
+    // Daily leads vs purchases — refleja el rango seleccionado, mínimo 7 días
+    const MS_PER_DAY = 86400000;
+    const MIN_DAYS = 7;
+
+    let chartStart: Date;
+    let chartEnd: Date;
+    if (dateRange) {
+      chartStart = new Date(dateRange.start);
+      chartEnd = new Date(dateRange.end);
+      const spanDays = Math.ceil((chartEnd.getTime() - chartStart.getTime()) / MS_PER_DAY) + 1;
+      if (spanDays < MIN_DAYS) {
+        chartStart = new Date(chartEnd);
+        chartStart.setDate(chartStart.getDate() - MIN_DAYS + 1);
+        chartStart.setHours(0, 0, 0, 0);
+      }
+    } else {
+      const dates = conversions
+        .filter((c) => c.created_at)
+        .map((c) => new Date(c.created_at).setHours(0, 0, 0, 0));
+      if (dates.length === 0) {
+        chartEnd = new Date();
+        chartStart = new Date(chartEnd);
+        chartStart.setDate(chartStart.getDate() - MIN_DAYS + 1);
+      } else {
+        const minT = Math.min(...dates);
+        const maxT = Math.max(...dates);
+        chartStart = new Date(minT);
+        chartEnd = new Date(maxT);
+        const spanDays = Math.ceil((maxT - minT) / MS_PER_DAY) + 1;
+        if (spanDays < MIN_DAYS) {
+          chartStart = new Date(chartEnd);
+          chartStart.setDate(chartStart.getDate() - MIN_DAYS + 1);
+        }
+      }
+    }
+
     const dailyMap = new Map<string, { day: string; leads: number; cargas: number }>();
     for (const c of conversions) {
       if (!c.created_at) continue;
       const d = new Date(c.created_at);
-      const key = `${d.getDate().toString().padStart(2, "0")}/${(d.getMonth() + 1).toString().padStart(2, "0")}`;
       const dayKey = `${d.getFullYear()}-${(d.getMonth() + 1).toString().padStart(2, "0")}-${d.getDate().toString().padStart(2, "0")}`;
-      const entry = dailyMap.get(dayKey) ?? { day: key, leads: 0, cargas: 0 };
+      const entry = dailyMap.get(dayKey) ?? {
+        day: `${d.getDate().toString().padStart(2, "0")}/${(d.getMonth() + 1).toString().padStart(2, "0")}`,
+        leads: 0,
+        cargas: 0,
+      };
       if (c.estado === "lead" || c.lead_event_id) entry.leads++;
       if (c.estado === "purchase") entry.cargas++;
       dailyMap.set(dayKey, entry);
     }
-    const dailyData = [...dailyMap.entries()]
-      .sort((a, b) => a[0].localeCompare(b[0]))
-      .map(([, v]) => v);
+
+    const dailyData: { day: string; leads: number; cargas: number }[] = [];
+    const iter = new Date(chartStart);
+    while (iter <= chartEnd) {
+      const dayKey = `${iter.getFullYear()}-${(iter.getMonth() + 1).toString().padStart(2, "0")}-${iter.getDate().toString().padStart(2, "0")}`;
+      const label = `${iter.getDate().toString().padStart(2, "0")}/${(iter.getMonth() + 1).toString().padStart(2, "0")}`;
+      const entry = dailyMap.get(dayKey) ?? { day: label, leads: 0, cargas: 0 };
+      dailyData.push({ ...entry, day: label });
+      iter.setDate(iter.getDate() + 1);
+    }
 
     return {
       total, leads, primera, recurrente, premium, purchasers,
@@ -223,9 +270,9 @@ export default function StatsPanel({
       byCampaign, byDevice, byLanding, topContacts,
       hourlyBuckets, dailyData,
     };
-  }, [funnelContacts, conversions, premiumThreshold]);
+  }, [funnelContacts, conversions, premiumThreshold, dateRange]);
 
-  const parsedAdSpend = parseFloat(adSpend) || 0;
+  const parsedAdSpend = parseFloat(adSpend.replace(/\D/g, "")) || 0;
   const roasFirstPurchase = parsedAdSpend > 0 ? stats.firstPurchaseRevenue / parsedAdSpend : 0;
   const roasTotal = parsedAdSpend > 0 ? stats.totalRevenue / parsedAdSpend : 0;
 
@@ -319,13 +366,20 @@ export default function StatsPanel({
           <div className="relative max-w-[200px]">
             <span className="absolute left-2.5 top-1/2 -translate-y-1/2 text-[11px] text-zinc-600">$</span>
             <input
-              type="number"
-              min={0}
-              step={100}
+              type="text"
+              inputMode="numeric"
               value={adSpend}
-              onChange={(e) => setAdSpend(e.target.value)}
+              onChange={(e) => {
+                const raw = e.target.value.replace(/\D/g, "");
+                if (raw === "") {
+                  setAdSpend("");
+                  return;
+                }
+                const n = parseInt(raw, 10);
+                setAdSpend(n.toLocaleString("es-AR"));
+              }}
               placeholder="0"
-              className="w-full rounded-lg border border-zinc-700 bg-zinc-950 pl-6 pr-3 py-1.5 text-[12px] text-zinc-200 outline-none focus:border-zinc-500 [appearance:textfield] [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:appearance-none"
+              className="w-full rounded-lg border border-zinc-700 bg-zinc-950 pl-6 pr-3 py-1.5 text-[12px] text-zinc-200 outline-none focus:border-zinc-500"
             />
           </div>
           <p className="text-[10px] text-zinc-600">Ingresá el gasto publicitario para calcular ROAS.</p>
