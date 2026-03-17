@@ -171,6 +171,19 @@ export default function DashboardConversionesPage() {
 
   const [dateRange, setDateRange] = useState<DateRange | null>(null);
 
+  const [visibleCols, setVisibleCols] = useState<Set<ColKey>>(() => {
+    if (typeof window === "undefined") return new Set(ALL_COLUMNS);
+    try {
+      const raw = window.localStorage.getItem("conversiones_visible_columns");
+      if (!raw) return new Set(ALL_COLUMNS);
+      const parsed = JSON.parse(raw) as ColKey[];
+      const valid = parsed.filter((c) => (ALL_COLUMNS as readonly string[]).includes(c));
+      return new Set((valid.length ? valid : ALL_COLUMNS) as ColKey[]);
+    } catch {
+      return new Set(ALL_COLUMNS);
+    }
+  });
+
   const [configOpen, setConfigOpen] = useState(false);
   const [endpointOpen, setEndpointOpen] = useState(false);
   const [funnelConfigOpen, setFunnelConfigOpen] = useState(false);
@@ -396,7 +409,7 @@ export default function DashboardConversionesPage() {
             <table className="w-full text-left text-[11px]">
               <thead className="bg-zinc-800/80 sticky top-0">
                 <tr>
-                  {ALL_COLUMNS.map((col) => (
+                  {ALL_COLUMNS.filter((c) => visibleCols.has(c)).map((col) => (
                     <th key={col} className="px-2 py-2 font-medium text-zinc-300 whitespace-nowrap">{col}</th>
                   ))}
                 </tr>
@@ -407,10 +420,18 @@ export default function DashboardConversionesPage() {
                     <td colSpan={ALL_COLUMNS.length} className="px-2 py-6 text-center text-zinc-500">Aún no hay conversiones registradas.</td>
                   </tr>
                 ) : activeConversions.map((c) => {
-                  const rowColor = c.estado === "purchase" ? "bg-emerald-950/20" : c.estado === "lead" ? "bg-amber-950/20" : "bg-zinc-950/40";
+                  const isRepeat = c.estado === "purchase" && c.observaciones?.includes("REPEAT");
+                  const rowColor =
+                    c.estado === "lead"
+                      ? "bg-emerald-950/20"
+                      : c.estado === "purchase" && isRepeat
+                        ? "bg-violet-950/20"
+                        : c.estado === "purchase"
+                          ? "bg-sky-950/20"
+                          : "bg-zinc-950/40";
                   return (
                     <tr key={c.id} className={rowColor}>
-                      {ALL_COLUMNS.map((col) =>
+                      {ALL_COLUMNS.filter((col) => visibleCols.has(col)).map((col) =>
                         col === "email" ? (
                           <EditableEmailCell key={col} row={c} onSaved={(id, email) => setConversions((prev) => prev.map((r) => (r.id === id ? { ...r, email } : r)))} />
                         ) : cellValue(c, col)

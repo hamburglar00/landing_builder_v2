@@ -226,7 +226,18 @@ export default function AdminConversionesPage() {
   const [tab, setTab] = useState<Tab>("funnel");
   const [copiedUrl, setCopiedUrl] = useState<string | null>(null);
   const [expandedLog, setExpandedLog] = useState<number | null>(null);
-  const [visibleCols, setVisibleCols] = useState<Set<ColKey>>(() => new Set(DEFAULT_VISIBLE));
+  const [visibleCols, setVisibleCols] = useState<Set<ColKey>>(() => {
+    if (typeof window === "undefined") return new Set(DEFAULT_VISIBLE);
+    try {
+      const raw = window.localStorage.getItem("conversiones_visible_columns");
+      if (!raw) return new Set(DEFAULT_VISIBLE);
+      const parsed = JSON.parse(raw) as ColKey[];
+      const valid = parsed.filter((c) => (ALL_COLUMNS as readonly string[]).includes(c));
+      return new Set((valid.length ? valid : ALL_COLUMNS) as ColKey[]);
+    } catch {
+      return new Set(DEFAULT_VISIBLE);
+    }
+  });
 
   const [demoMode, setDemoMode] = useState(false);
   const [dateRange, setDateRange] = useState<DateRange | null>(null);
@@ -464,13 +475,52 @@ export default function AdminConversionesPage() {
             {columnsOpen && (
               <div className="border-t border-zinc-800 p-4">
                 <div className="mb-3 flex gap-3">
-                  <button type="button" onClick={() => setVisibleCols(new Set(ALL_COLUMNS))} className="cursor-pointer text-[11px] text-zinc-400 underline hover:text-zinc-200">Seleccionar todas</button>
-                  <button type="button" onClick={() => setVisibleCols(new Set())} className="cursor-pointer text-[11px] text-zinc-400 underline hover:text-zinc-200">Deseleccionar todas</button>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      const next = new Set(ALL_COLUMNS);
+                      setVisibleCols(next);
+                      if (typeof window !== "undefined") {
+                        window.localStorage.setItem("conversiones_visible_columns", JSON.stringify([...next]));
+                      }
+                    }}
+                    className="cursor-pointer text-[11px] text-zinc-400 underline hover:text-zinc-200"
+                  >
+                    Seleccionar todas
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      const next = new Set<ColKey>();
+                      setVisibleCols(next);
+                      if (typeof window !== "undefined") {
+                        window.localStorage.setItem("conversiones_visible_columns", JSON.stringify([...next]));
+                      }
+                    }}
+                    className="cursor-pointer text-[11px] text-zinc-400 underline hover:text-zinc-200"
+                  >
+                    Deseleccionar todas
+                  </button>
                 </div>
                 <div className="grid grid-cols-3 gap-x-4 gap-y-1 sm:grid-cols-4 md:grid-cols-6">
                   {ALL_COLUMNS.map((col) => (
                     <label key={col} className="flex items-center gap-1.5">
-                      <input type="checkbox" checked={visibleCols.has(col)} onChange={(e) => { setVisibleCols((prev) => { const next = new Set(prev); if (e.target.checked) next.add(col); else next.delete(col); return next; }); }} className="h-3 w-3 rounded border-zinc-600 bg-zinc-900" />
+                      <input
+                        type="checkbox"
+                        checked={visibleCols.has(col)}
+                        onChange={(e) => {
+                          setVisibleCols((prev) => {
+                            const next = new Set(prev);
+                            if (e.target.checked) next.add(col);
+                            else next.delete(col);
+                            if (typeof window !== "undefined") {
+                              window.localStorage.setItem("conversiones_visible_columns", JSON.stringify([...next]));
+                            }
+                            return next;
+                          });
+                        }}
+                        className="h-3 w-3 rounded border-zinc-600 bg-zinc-900"
+                      />
                       <span className="text-[10px] text-zinc-400">{col}</span>
                     </label>
                   ))}
@@ -538,7 +588,15 @@ export default function AdminConversionesPage() {
                         <td colSpan={cols.length || 1} className="px-2 py-6 text-center text-zinc-500">Aún no hay conversiones registradas.</td>
                       </tr>
                     ) : activeConversions.map((c) => {
-                      const rowColor = c.estado === "purchase" ? "bg-emerald-950/20" : c.estado === "lead" ? "bg-amber-950/20" : "bg-zinc-950/40";
+                      const isRepeat = c.estado === "purchase" && c.observaciones?.includes("REPEAT");
+                      const rowColor =
+                        c.estado === "lead"
+                          ? "bg-emerald-950/20"
+                          : c.estado === "purchase" && isRepeat
+                            ? "bg-violet-950/20"
+                            : c.estado === "purchase"
+                              ? "bg-sky-950/20"
+                              : "bg-zinc-950/40";
                       return (
                         <tr key={c.id} className={rowColor}>
                           {cols.map((col) =>
