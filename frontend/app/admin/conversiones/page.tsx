@@ -17,6 +17,11 @@ import {
 import { generateDemoConversions, generateDemoFunnelContacts } from "@/lib/demoData";
 import FunnelBoard from "@/components/conversiones/FunnelBoard";
 import StatsPanel from "@/components/conversiones/StatsPanel";
+import DateRangeFilter, {
+  type DateRange,
+  filterByDateRange,
+  filterFunnelByDateRange,
+} from "@/components/conversiones/DateRangeFilter";
 
 type Tab = "configuracion" | "tabla" | "funnel" | "estadisticas" | "logs";
 
@@ -224,12 +229,15 @@ export default function AdminConversionesPage() {
   const [visibleCols, setVisibleCols] = useState<Set<ColKey>>(() => new Set(DEFAULT_VISIBLE));
 
   const [demoMode, setDemoMode] = useState(false);
+  const [dateRange, setDateRange] = useState<DateRange | null>(null);
 
   const demoConversions = useMemo(() => generateDemoConversions(80), []);
   const demoFunnel = useMemo(() => generateDemoFunnelContacts(demoConversions), [demoConversions]);
 
-  const activeConversions = demoMode ? demoConversions : conversions;
-  const activeFunnel = demoMode ? demoFunnel : funnelContacts;
+  const rawConversions = demoMode ? demoConversions : conversions;
+  const rawFunnel = demoMode ? demoFunnel : funnelContacts;
+  const activeConversions = useMemo(() => filterByDateRange(rawConversions, dateRange), [rawConversions, dateRange]);
+  const activeFunnel = useMemo(() => filterFunnelByDateRange(rawFunnel, dateRange), [rawFunnel, dateRange]);
 
   // Collapsible states for config tab
   const [configOpen, setConfigOpen] = useState(false);
@@ -327,6 +335,13 @@ export default function AdminConversionesPage() {
           </span>
         </label>
       </div>
+
+      {/* Date filter — visible on funnel, tabla, estadisticas */}
+      {(tab === "funnel" || tab === "tabla" || tab === "estadisticas") && (
+        <div className="flex justify-end">
+          <DateRangeFilter onChange={setDateRange} />
+        </div>
+      )}
       {demoMode && (
         <p className="rounded-lg bg-amber-950/40 border border-amber-800/40 px-3 py-1.5 text-[11px] text-amber-300">
           Visualizando datos de demostración. Desactivá el toggle para ver datos reales.

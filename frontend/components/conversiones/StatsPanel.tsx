@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo } from "react";
+import { useMemo, useState } from "react";
 import {
   type FunnelContact,
   type ConversionRow,
@@ -106,6 +106,8 @@ export default function StatsPanel({
   conversions: ConversionRow[];
   premiumThreshold: number;
 }) {
+  const [adSpend, setAdSpend] = useState<string>("");
+
   const stats = useMemo(() => {
     const total = funnelContacts.length;
     let leads = 0, primera = 0, recurrente = 0, premium = 0;
@@ -119,6 +121,13 @@ export default function StatsPanel({
       else premium++;
       totalRevenue += c.total_valor;
       totalPurchaseCount += c.purchase_count;
+    }
+
+    let firstPurchaseRevenue = 0;
+    for (const c of conversions) {
+      if (c.estado === "purchase" && !c.observaciones?.includes("REPEAT")) {
+        firstPurchaseRevenue += c.valor;
+      }
     }
 
     const purchasers = primera + recurrente + premium;
@@ -210,11 +219,15 @@ export default function StatsPanel({
     return {
       total, leads, primera, recurrente, premium, purchasers,
       reachedContact, reachedLead, reachedPurchase, reachedRepeat,
-      totalRevenue, totalPurchaseCount, avgTicket, avgLoadsPerPlayer,
+      totalRevenue, firstPurchaseRevenue, totalPurchaseCount, avgTicket, avgLoadsPerPlayer,
       byCampaign, byDevice, byLanding, topContacts,
       hourlyBuckets, dailyData,
     };
   }, [funnelContacts, conversions, premiumThreshold]);
+
+  const parsedAdSpend = parseFloat(adSpend) || 0;
+  const roasFirstPurchase = parsedAdSpend > 0 ? stats.firstPurchaseRevenue / parsedAdSpend : 0;
+  const roasTotal = parsedAdSpend > 0 ? stats.totalRevenue / parsedAdSpend : 0;
 
   const maxCampaignRev = Math.max(...stats.byCampaign.map((r) => r.revenue), 1);
   const maxDeviceRev = Math.max(...stats.byDevice.map((r) => r.revenue), 1);
@@ -262,7 +275,7 @@ export default function StatsPanel({
       {/* ── INGRESOS ── */}
       <div>
         <SectionTitle>Ingresos</SectionTitle>
-        <div className="mt-3 grid grid-cols-2 gap-3 sm:grid-cols-3">
+        <div className={`mt-3 grid grid-cols-2 gap-3 ${parsedAdSpend > 0 ? "sm:grid-cols-3 lg:grid-cols-5" : "sm:grid-cols-3"}`}>
           <KpiCard
             label="Total cargado"
             value={formatCurrency(stats.totalRevenue)}
@@ -280,6 +293,42 @@ export default function StatsPanel({
             value={stats.avgLoadsPerPlayer.toFixed(1)}
             tooltip="Cantidad promedio de cargas que realiza cada jugador que cargó al menos una vez. Se calcula dividiendo el total de cargas por la cantidad de jugadores."
           />
+          {parsedAdSpend > 0 && (
+            <>
+              <KpiCard
+                label="ROAS primera carga"
+                value={`${roasFirstPurchase.toFixed(2)}x`}
+                sub={formatCurrency(stats.firstPurchaseRevenue)}
+                color="text-sky-400"
+                tooltip="Retorno sobre la inversión publicitaria considerando sólo ingresos de primeras cargas (sin recargas). Se calcula: ingresos primera carga / importe gastado."
+              />
+              <KpiCard
+                label="ROAS total"
+                value={`${roasTotal.toFixed(2)}x`}
+                sub={formatCurrency(stats.totalRevenue)}
+                color="text-amber-400"
+                tooltip="Retorno sobre la inversión publicitaria total. Se calcula: ingresos totales (incluyendo recargas) / importe gastado."
+              />
+            </>
+          )}
+        </div>
+
+        {/* Ad spend input */}
+        <div className="mt-4 flex items-center gap-3 rounded-xl border border-zinc-800 bg-zinc-900/40 p-3">
+          <label className="text-[11px] text-zinc-500 whitespace-nowrap">Importe gastado</label>
+          <div className="relative max-w-[200px]">
+            <span className="absolute left-2.5 top-1/2 -translate-y-1/2 text-[11px] text-zinc-600">$</span>
+            <input
+              type="number"
+              min={0}
+              step={100}
+              value={adSpend}
+              onChange={(e) => setAdSpend(e.target.value)}
+              placeholder="0"
+              className="w-full rounded-lg border border-zinc-700 bg-zinc-950 pl-6 pr-3 py-1.5 text-[12px] text-zinc-200 outline-none focus:border-zinc-500 [appearance:textfield] [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:appearance-none"
+            />
+          </div>
+          <p className="text-[10px] text-zinc-600">Ingresá el gasto publicitario para calcular ROAS.</p>
         </div>
       </div>
 

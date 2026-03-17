@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState, useCallback } from "react";
+import { useEffect, useState, useCallback, useMemo } from "react";
 import { supabase } from "@/lib/supabaseClient";
 import {
   fetchConversionsConfig,
@@ -14,6 +14,11 @@ import {
 } from "@/lib/conversionsDb";
 import FunnelBoard from "@/components/conversiones/FunnelBoard";
 import StatsPanel from "@/components/conversiones/StatsPanel";
+import DateRangeFilter, {
+  type DateRange,
+  filterByDateRange,
+  filterFunnelByDateRange,
+} from "@/components/conversiones/DateRangeFilter";
 
 type Tab = "funnel" | "tabla" | "estadisticas" | "configuracion";
 
@@ -164,9 +169,14 @@ export default function DashboardConversionesPage() {
   const [tab, setTab] = useState<Tab>("funnel");
   const [copiedUrl, setCopiedUrl] = useState<string | null>(null);
 
+  const [dateRange, setDateRange] = useState<DateRange | null>(null);
+
   const [configOpen, setConfigOpen] = useState(false);
   const [endpointOpen, setEndpointOpen] = useState(false);
   const [funnelConfigOpen, setFunnelConfigOpen] = useState(false);
+
+  const activeConversions = useMemo(() => filterByDateRange(conversions, dateRange), [conversions, dateRange]);
+  const activeFunnel = useMemo(() => filterFunnelByDateRange(funnelContacts, dateRange), [funnelContacts, dateRange]);
 
   useEffect(() => {
     const init = async () => {
@@ -241,6 +251,13 @@ export default function DashboardConversionesPage() {
           </button>
         ))}
       </div>
+
+      {/* Date filter — visible on funnel, tabla, estadisticas */}
+      {(tab === "funnel" || tab === "tabla" || tab === "estadisticas") && (
+        <div className="flex justify-end">
+          <DateRangeFilter onChange={setDateRange} />
+        </div>
+      )}
 
       {/* ═══════════ TAB: CONFIGURACIÓN ═══════════ */}
       {tab === "configuracion" && (
@@ -358,7 +375,7 @@ export default function DashboardConversionesPage() {
       {tab === "tabla" && (
         <section className="rounded-xl border border-zinc-800 bg-zinc-900/50 p-4">
           <h3 className="mb-4 text-sm font-semibold text-zinc-200">
-            Tabla de conversiones <span className="font-normal text-zinc-500">({conversions.length})</span>
+            Tabla de conversiones <span className="font-normal text-zinc-500">({activeConversions.length})</span>
           </h3>
           <div className="overflow-x-auto rounded-lg border border-zinc-700">
             <table className="w-full text-left text-[11px]">
@@ -370,11 +387,11 @@ export default function DashboardConversionesPage() {
                 </tr>
               </thead>
               <tbody className="divide-y divide-zinc-800">
-                {conversions.length === 0 ? (
+                {activeConversions.length === 0 ? (
                   <tr>
                     <td colSpan={ALL_COLUMNS.length} className="px-2 py-6 text-center text-zinc-500">Aún no hay conversiones registradas.</td>
                   </tr>
-                ) : conversions.map((c) => {
+                ) : activeConversions.map((c) => {
                   const rowColor = c.estado === "purchase" ? "bg-emerald-950/20" : c.estado === "lead" ? "bg-amber-950/20" : "bg-zinc-950/40";
                   return (
                     <tr key={c.id} className={rowColor}>
@@ -394,12 +411,12 @@ export default function DashboardConversionesPage() {
 
       {/* ═══════════ TAB: FUNNEL ═══════════ */}
       {tab === "funnel" && (
-        <FunnelBoard contacts={funnelContacts} premiumThreshold={config?.funnel_premium_threshold ?? 50000} />
+        <FunnelBoard contacts={activeFunnel} premiumThreshold={config?.funnel_premium_threshold ?? 50000} />
       )}
 
       {/* ═══════════ TAB: ESTADÍSTICAS ═══════════ */}
       {tab === "estadisticas" && (
-        <StatsPanel funnelContacts={funnelContacts} conversions={conversions} premiumThreshold={config?.funnel_premium_threshold ?? 50000} />
+        <StatsPanel funnelContacts={activeFunnel} conversions={activeConversions} premiumThreshold={config?.funnel_premium_threshold ?? 50000} />
       )}
 
       {/* Logs tab removed — only available for admin */}
