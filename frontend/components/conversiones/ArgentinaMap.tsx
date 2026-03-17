@@ -2,7 +2,7 @@
 
 import { useState, useMemo, useEffect } from "react";
 import { geoMercator, geoPath, type GeoPermissibleObjects } from "d3-geo";
-import type { FunnelContact } from "@/lib/conversionsDb";
+import type { FunnelContact, ConversionRow } from "@/lib/conversionsDb";
 import { classifyContact } from "@/lib/conversionsDb";
 
 /* ═══════════════════════════════════════════════════════════════════════════
@@ -11,31 +11,38 @@ import { classifyContact } from "@/lib/conversionsDb";
 
 type MapMetric =
   | "contactos"
-  | "reached_lead"
-  | "reached_purchase"
-  | "reached_repeat"
-  | "pct_lead"
-  | "pct_purchase"
-  | "pct_repeat"
+  | "leads"
+  | "primeras_cargas"
+  | "recargas"
+  | "cargas_totales"
+  | "pct_inicio"
+  | "pct_carga"
+  | "carga_promedio"
   | "total_cargado"
-  | "ticket_promedio"
-  | "premium";
+  | "roas_primera"
+  | "roas_total"
+  | "jugadores_recurrentes"
+  | "jugadores_premium";
 
 const METRIC_LABELS: Record<MapMetric, string> = {
   contactos: "Contactos",
-  reached_lead: "Reached Lead",
-  reached_purchase: "Reached Purchase",
-  reached_repeat: "Reached Repeat",
-  pct_lead: "% inicio conversaciones",
-  pct_purchase: "% de carga",
-  pct_repeat: "% de repeat",
+  leads: "Leads",
+  primeras_cargas: "Primeras cargas",
+  recargas: "Recargas",
+  cargas_totales: "Cargas totales",
+  pct_inicio: "% inicio conversaciones",
+  pct_carga: "% de carga",
+  carga_promedio: "Carga promedio",
   total_cargado: "Total cargado",
-  ticket_promedio: "Ticket promedio",
-  premium: "Jugadores premium",
+  roas_primera: "ROAS primera carga",
+  roas_total: "ROAS total",
+  jugadores_recurrentes: "Jugadores recurrentes",
+  jugadores_premium: "Jugadores premium",
 };
 
-const PCT_METRICS = new Set<MapMetric>(["pct_lead", "pct_purchase", "pct_repeat"]);
-const CURRENCY_METRICS = new Set<MapMetric>(["total_cargado", "ticket_promedio"]);
+const PCT_METRICS = new Set<MapMetric>(["pct_inicio", "pct_carga"]);
+const CURRENCY_METRICS = new Set<MapMetric>(["total_cargado", "carga_promedio"]);
+const ROAS_METRICS = new Set<MapMetric>(["roas_primera", "roas_total"]);
 
 /* ═══════════════════════════════════════════════════════════════════════════
    PROVINCE NORMALIZATION
@@ -144,53 +151,89 @@ interface ProvinceData {
   reachedLead: number;
   reachedPurchase: number;
   reachedRepeat: number;
+  primerasCargas: number;
+  recurrentes: number;
   totalCargado: number;
+  firstPurchaseRevenue: number;
   purchaseCount: number;
   premium: number;
 }
 
 function buildProvinceData(
   contacts: FunnelContact[],
+  conversions: ConversionRow[],
   premiumThreshold: number,
 ): Map<string, ProvinceData> {
   const map = new Map<string, ProvinceData>();
+
   for (const c of contacts) {
     const prov = normalizeProvince(c.region);
     if (!prov) continue;
     const d = map.get(prov) ?? {
       contactos: 0, reachedLead: 0, reachedPurchase: 0, reachedRepeat: 0,
-      totalCargado: 0, purchaseCount: 0, premium: 0,
+      primerasCargas: 0, recurrentes: 0, totalCargado: 0, firstPurchaseRevenue: 0,
+      purchaseCount: 0, premium: 0,
     };
     d.contactos++;
     if (c.reached_lead) d.reachedLead++;
     if (c.reached_purchase) d.reachedPurchase++;
     if (c.reached_repeat) d.reachedRepeat++;
+    if (c.reached_purchase && !c.reached_repeat) d.primerasCargas++;
+    if (c.reached_repeat) d.recurrentes++;
     d.totalCargado += c.total_valor;
     d.purchaseCount += c.purchase_count;
     if (classifyContact(c, premiumThreshold) === "premium") d.premium++;
     map.set(prov, d);
   }
+
+  for (const conv of conversions) {
+    if (conv.estado !== "purchase" || conv.observaciones?.includes("REPEAT")) continue;
+    const prov = normalizeProvince(conv.geo_region);
+    if (!prov) continue;
+    const d = map.get(prov);
+    if (d) d.firstPurchaseRevenue += conv.valor;
+  }
+
   return map;
 }
 
-function getMetricValue(d: ProvinceData | undefined, metric: MapMetric): number {
+function getMetricValue(
+  d: ProvinceData | undefined,
+  metric: MapMetric,
+  adSpend: number,
+  totalContacts: number,
+): number {
   if (!d) return 0;
   switch (metric) {
     case "contactos": return d.contactos;
-    case "reached_lead": return d.reachedLead;
-    case "reached_purchase": return d.reachedPurchase;
-    case "reached_repeat": return d.reachedRepeat;
-    case "pct_lead": return d.contactos > 0 ? (d.reachedLead / d.contactos) * 100 : 0;
-    case "pct_purchase": return d.reachedLead > 0 ? (d.reachedPurchase / d.reachedLead) * 100 : 0;
-    case "pct_repeat": return d.reachedPurchase > 0 ? (d.reachedRepeat / d.reachedPurchase) * 100 : 0;
+    case "leads": return d.reachedLead;
+    case "primeras_cargas": return d.primerasCargas;
+    case "recargas": return d.reachedRepeat;
+    case "cargas_totales": return d.purchaseCount;
+    case "pct_inicio": return d.contactos > 0 ? (d.reachedLead / d.contactos) * 100 : 0;
+    case "pct_carga": return d.reachedLead > 0 ? (d.reachedPurchase / d.reachedLead) * 100 : 0;
+    case "carga_promedio": return d.purchaseCount > 0 ? d.totalCargado / d.purchaseCount : 0;
     case "total_cargado": return d.totalCargado;
-    case "ticket_promedio": return d.purchaseCount > 0 ? d.totalCargado / d.purchaseCount : 0;
-    case "premium": return d.premium;
+    case "roas_primera": {
+      if (adSpend <= 0 || totalContacts === 0) return 0;
+      const share = d.contactos / totalContacts;
+      const attributedSpend = adSpend * share;
+      return attributedSpend > 0 ? d.firstPurchaseRevenue / attributedSpend : 0;
+    }
+    case "roas_total": {
+      if (adSpend <= 0 || totalContacts === 0) return 0;
+      const share = d.contactos / totalContacts;
+      const attributedSpend = adSpend * share;
+      return attributedSpend > 0 ? d.totalCargado / attributedSpend : 0;
+    }
+    case "jugadores_recurrentes": return d.recurrentes;
+    case "jugadores_premium": return d.premium;
   }
 }
 
 function formatMetricValue(value: number, metric: MapMetric): string {
   if (PCT_METRICS.has(metric)) return `${value.toFixed(1)}%`;
+  if (ROAS_METRICS.has(metric)) return `${value.toFixed(2)}x`;
   if (CURRENCY_METRICS.has(metric)) {
     return value.toLocaleString("es-AR", { style: "currency", currency: "ARS", minimumFractionDigits: 0, maximumFractionDigits: 0 });
   }
@@ -218,16 +261,25 @@ interface GeoCollection {
 
 const MAP_W = 400;
 const MAP_H = 680;
+const MAP_SCALE = 1.2;
 
 export default function ArgentinaMap({
   contacts,
+  conversions = [],
   premiumThreshold,
+  adSpend = 0,
 }: {
   contacts: FunnelContact[];
+  conversions?: ConversionRow[];
   premiumThreshold: number;
+  adSpend?: number;
 }) {
   const [metric, setMetric] = useState<MapMetric>("contactos");
   const [hovered, setHovered] = useState<string | null>(null);
+
+  useEffect(() => {
+    if (adSpend <= 0 && ROAS_METRICS.has(metric)) setMetric("contactos");
+  }, [adSpend, metric]);
   const [tooltipPos, setTooltipPos] = useState({ x: 0, y: 0 });
   const [geoData, setGeoData] = useState<GeoCollection | null>(null);
 
@@ -239,35 +291,40 @@ export default function ArgentinaMap({
   }, []);
 
   const provinceData = useMemo(
-    () => buildProvinceData(contacts, premiumThreshold),
-    [contacts, premiumThreshold],
+    () => buildProvinceData(contacts, conversions, premiumThreshold),
+    [contacts, conversions, premiumThreshold],
   );
 
-  const provinces = useMemo(() => {
-    if (!geoData) return [];
+  const totalContacts = contacts.length;
+
+  const { provinces, viewW, viewH } = useMemo(() => {
+    if (!geoData) return { provinces: [] as { key: string; path: string; name: string }[], viewW: MAP_W, viewH: MAP_H };
 
     const collection = geoData as GeoPermissibleObjects;
-    const projection = geoMercator().fitSize([MAP_W, MAP_H], collection);
+    const w = MAP_W / MAP_SCALE;
+    const h = MAP_H / MAP_SCALE;
+    const projection = geoMercator().fitSize([w, h], collection);
     const pathGen = geoPath(projection);
 
-    return geoData.features.map((f) => {
+    const provs = geoData.features.map((f) => {
       const key = normalizeKey(f.properties.nombre);
       const canonKey = GEO_REGION_ALIASES[key] ?? key;
       const d = pathGen(f.geometry);
       return { key: canonKey, path: d ?? "", name: f.properties.nombre };
     });
+    return { provinces: provs, viewW: w, viewH: h };
   }, [geoData]);
 
   const { values, max } = useMemo(() => {
     const vals = new Map<string, number>();
     let mx = 0;
     for (const p of provinces) {
-      const v = getMetricValue(provinceData.get(p.key), metric);
+      const v = getMetricValue(provinceData.get(p.key), metric, adSpend, totalContacts);
       vals.set(p.key, v);
       if (v > mx) mx = v;
     }
     return { values: vals, max: mx };
-  }, [provinces, provinceData, metric]);
+  }, [provinces, provinceData, metric, adSpend, totalContacts]);
 
   const ranking = useMemo(() => {
     return [...values.entries()]
@@ -302,25 +359,27 @@ export default function ArgentinaMap({
 
           {/* Metric selector */}
           <div className="flex flex-wrap gap-1.5 mb-5">
-            {(Object.keys(METRIC_LABELS) as MapMetric[]).map((m) => (
-              <button
-                key={m}
-                onClick={() => setMetric(m)}
-                className={`cursor-pointer rounded-lg px-2.5 py-1 text-[10px] font-medium transition-all ${
-                  metric === m
-                    ? "bg-emerald-950/60 text-emerald-300 border border-emerald-800/50"
-                    : "bg-zinc-900/60 text-zinc-500 border border-zinc-800/40 hover:text-zinc-300 hover:border-zinc-700/50"
-                }`}
-              >
-                {METRIC_LABELS[m]}
-              </button>
-            ))}
+            {(Object.keys(METRIC_LABELS) as MapMetric[])
+              .filter((m) => !ROAS_METRICS.has(m) || adSpend > 0)
+              .map((m) => (
+                <button
+                  key={m}
+                  onClick={() => setMetric(m)}
+                  className={`cursor-pointer rounded-lg px-2.5 py-1 text-[10px] font-medium transition-all ${
+                    metric === m
+                      ? "bg-emerald-950/60 text-emerald-300 border border-emerald-800/50"
+                      : "bg-zinc-900/60 text-zinc-500 border border-zinc-800/40 hover:text-zinc-300 hover:border-zinc-700/50"
+                  }`}
+                >
+                  {METRIC_LABELS[m]}
+                </button>
+              ))}
           </div>
 
           {/* SVG Map */}
           <div className="relative">
             <svg
-              viewBox={`0 0 ${MAP_W} ${MAP_H}`}
+              viewBox={`0 0 ${viewW} ${viewH}`}
               className="w-full max-w-[400px] mx-auto"
               onMouseMove={handleMouseMove}
               style={{ filter: "drop-shadow(0 0 20px rgba(16,185,129,0.04))" }}
@@ -365,7 +424,7 @@ export default function ArgentinaMap({
                     <p className="text-[9px] text-zinc-500">
                       {hoveredData.contactos} contacto{hoveredData.contactos !== 1 ? "s" : ""}
                       {" · "}
-                      {hoveredData.reachedPurchase} comprador{hoveredData.reachedPurchase !== 1 ? "es" : ""}
+                      {hoveredData.reachedPurchase} con carga{hoveredData.reachedPurchase !== 1 ? "s" : ""}
                     </p>
                     {hoveredData.totalCargado > 0 && (
                       <p className="text-[9px] text-zinc-500">

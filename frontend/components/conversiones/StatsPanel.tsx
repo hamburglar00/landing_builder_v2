@@ -418,7 +418,12 @@ export default function StatsPanel({
       <div>
         <SectionTitle>Distribución geográfica</SectionTitle>
         <div className="mt-3">
-          <ArgentinaMap contacts={funnelContacts} premiumThreshold={premiumThreshold} />
+          <ArgentinaMap
+            contacts={funnelContacts}
+            conversions={conversions}
+            premiumThreshold={premiumThreshold}
+            adSpend={parsedAdSpend}
+          />
         </div>
       </div>
 
