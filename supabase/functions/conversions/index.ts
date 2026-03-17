@@ -1,4 +1,11 @@
 import { createClient, SupabaseClient } from "https://esm.sh/@supabase/supabase-js@2";
+import {
+  buildMetaRequest,
+  type ConversionRow as SharedConversionRow,
+  type ConversionsConfig as SharedConversionsConfig,
+  generateEventId as sharedGenerateEventId,
+  toValidEventTime,
+} from "./shared.ts";
 
 // ─── CORS ───────────────────────────────────────────────────────────────────
 
@@ -127,15 +134,8 @@ function normalizeIpToMeta(rawIp: string): Record<string, string> {
   return { client_ip_address: ip };
 }
 
-function toValidEventTime(value: unknown): number {
-  const n = Number(value);
-  const now = Math.floor(Date.now() / 1000);
-  if (!isNaN(n) && n > 0) return Math.floor(n);
-  return now;
-}
-
 function generateEventId(): string {
-  return crypto.randomUUID();
+  return sharedGenerateEventId();
 }
 
 async function sha256(value: string): Promise<string> {
@@ -268,29 +268,6 @@ async function ensureGeoOnRow(
 }
 
 // ─── Meta CAPI ──────────────────────────────────────────────────────────────
-
-interface MetaUserData {
-  [key: string]: string;
-}
-
-async function buildUserData(row: ConversionRow, config: ConversionsConfig): Promise<MetaUserData> {
-  const ud: MetaUserData = {};
-  if (row.email) ud.em = await sha256(row.email);
-  if (row.phone) ud.ph = await sha256(sanitizePhone(row.phone));
-  if (row.fn) ud.fn = await sha256(row.fn);
-  if (row.ln) ud.ln = await sha256(row.ln);
-  if (row.ct) ud.ct = await sha256(row.ct);
-  if (row.st) ud.st = await sha256(row.st);
-  if (row.zip) ud.zip = await sha256(row.zip);
-  if (row.country) ud.country = await sha256(row.country);
-  if (row.fbp) ud.fbp = row.fbp;
-  if (row.fbc) ud.fbc = row.fbc;
-  if (row.client_ip) Object.assign(ud, normalizeIpToMeta(row.client_ip));
-  if (row.agent_user) ud.client_user_agent = row.agent_user;
-  if (row.external_id) ud.external_id = await sha256(row.external_id);
-  return ud;
-}
-
 async function sendToMetaCAPI(
   db: SupabaseClient,
   config: ConversionsConfig,
@@ -303,25 +280,17 @@ async function sendToMetaCAPI(
 ): Promise<boolean> {
   if (!config.meta_access_token || !config.pixel_id) return false;
 
-  const userData = await buildUserData(row, config);
-  const srcUrl = row.event_source_url || "";
-
-  // deno-lint-ignore no-explicit-any
-  const eventPayload: Record<string, any> = {
-    event_name: eventName,
-    event_time: eventTime,
-    event_id: eventId,
-    action_source: "website",
-    event_source_url: srcUrl,
-    user_data: userData,
-  };
-  if (customData) eventPayload.custom_data = customData;
-
-  // deno-lint-ignore no-explicit-any
-  const body: Record<string, any> = { data: [eventPayload] };
-  if (config.test_event_code) body.test_event_code = config.test_event_code;
-
-  const apiUrl = `https://graph.facebook.com/${config.meta_api_version}/${config.pixel_id}/events?access_token=${config.meta_access_token}`;
+  const sharedRow = row as unknown as SharedConversionRow;
+  const sharedConfig = config as unknown as SharedConversionsConfig;
+  const { apiUrl, body } = await buildMetaRequest(
+    sharedConfig,
+    sharedRow,
+    eventName,
+    eventId,
+    eventTime,
+    customData as Record<string, unknown> | undefined,
+    undefined,
+  );
 
   const statusField =
     eventName === "Contact" ? "contact_status_capi" :

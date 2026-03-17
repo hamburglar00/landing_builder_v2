@@ -100,13 +100,16 @@ Deno.serve(async (req) => {
 
   const identity = deriveEventIdentity(row, event);
 
-  const customData =
-    event === "Purchase"
-      ? {
-          currency: config.meta_currency,
-          value: row.valor || 0,
-        }
-      : undefined;
+  let customData: Record<string, unknown> | undefined;
+  if (event === "Purchase") {
+    customData = {
+      currency: config.meta_currency,
+      value: row.valor || 0,
+    };
+    if (!usedFake && (row.observaciones || "").includes("REPEAT")) {
+      customData.purchase_type = "repeat";
+    }
+  }
 
   const metaReq = await buildMetaRequest(config, row, event, identity.id, identity.time, customData, testCode);
 
@@ -130,7 +133,25 @@ Deno.serve(async (req) => {
 
   const debug = {
     event,
-    usedFake,
+    sampleRowSource: usedFake ? "fake" : "real",
+    sampleRowPreview: {
+      id: row.id ?? null,
+      phone: row.phone,
+      email: row.email,
+      estado: row.estado,
+      valor: row.valor,
+      event_source_url: row.event_source_url,
+      contact_event_id: row.contact_event_id,
+      lead_event_id: row.lead_event_id,
+      purchase_event_id: row.purchase_event_id,
+      ct: row.ct,
+      st: row.st,
+      zip: row.zip,
+      country: row.country,
+      geo_city: row.geo_city,
+      geo_region: row.geo_region,
+      geo_country: row.geo_country,
+    },
     conversionId: row.id ?? null,
     metaApiUrl: metaReq.apiUrl,
     payload: metaReq.body,
