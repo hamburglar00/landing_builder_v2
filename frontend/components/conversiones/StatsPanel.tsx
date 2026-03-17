@@ -6,6 +6,7 @@ import {
   type ConversionRow,
   classifyContact,
 } from "@/lib/conversionsDb";
+import ArgentinaMap from "./ArgentinaMap";
 
 function formatCurrency(n: number) {
   return n.toLocaleString("es-AR", {
@@ -286,6 +287,14 @@ export default function StatsPanel({
           </div>
         </div>
       )}
+
+      {/* ── MAPA DE ARGENTINA ── */}
+      <div>
+        <SectionTitle>Distribución geográfica</SectionTitle>
+        <div className="mt-3">
+          <ArgentinaMap contacts={funnelContacts} premiumThreshold={premiumThreshold} />
+        </div>
+      </div>
 
       {/* ── POR CAMPAÑA ── */}
       {stats.byCampaign.length > 0 && (
