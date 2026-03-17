@@ -23,15 +23,6 @@ const STAGE_META: Record<FunnelStage, {
 }> = {
   leads: {
     label: "Leads",
-    accent: "text-sky-300",
-    accentSoft: "text-sky-400/60",
-    amountColor: "text-sky-300/80",
-    dot: "bg-sky-400",
-    headerGlow: "from-sky-500/5 to-transparent",
-    columnBorder: "border-sky-900/30",
-  },
-  primera_carga: {
-    label: "Primera Carga",
     accent: "text-emerald-400",
     accentSoft: "text-emerald-400/60",
     amountColor: "text-emerald-400",
@@ -39,8 +30,17 @@ const STAGE_META: Record<FunnelStage, {
     headerGlow: "from-emerald-500/5 to-transparent",
     columnBorder: "border-emerald-900/30",
   },
+  primera_carga: {
+    label: "Primeras cargas",
+    accent: "text-sky-300",
+    accentSoft: "text-sky-400/60",
+    amountColor: "text-sky-300/80",
+    dot: "bg-sky-400",
+    headerGlow: "from-sky-500/5 to-transparent",
+    columnBorder: "border-sky-900/30",
+  },
   recurrente: {
-    label: "Jugador Recurrente",
+    label: "Jugadores con recargas",
     accent: "text-violet-400",
     accentSoft: "text-violet-400/60",
     amountColor: "text-violet-400",
@@ -49,7 +49,7 @@ const STAGE_META: Record<FunnelStage, {
     columnBorder: "border-violet-900/30",
   },
   premium: {
-    label: "Jugador Premium",
+    label: "Jugadores premium",
     accent: "text-amber-400",
     accentSoft: "text-amber-400/60",
     amountColor: "text-amber-300",
@@ -284,23 +284,11 @@ export default function FunnelBoard({
           </div>
         </div>
 
-        {/* KPI strip */}
-        <div className="flex flex-wrap items-stretch border-t border-zinc-800/30 divide-x divide-zinc-800/30">
-          <KpiBlock label="Leads" value={totals.leads} accent="text-sky-300" dot="bg-sky-400" />
-          <KpiBlock label="1ra Carga" value={totals.primera} accent="text-emerald-400" dot="bg-emerald-400" />
-          <KpiBlock label="Recurrentes" value={totals.recurrente} accent="text-violet-400" dot="bg-violet-400" />
-          <KpiBlock label="Premium" value={totals.premium} accent="text-amber-400" dot="bg-amber-400" />
-          <div className="flex items-center gap-3 px-5 py-2.5 ml-auto">
-            <div className="text-right min-w-0">
-              <p className="text-[9px] uppercase tracking-[0.08em] text-zinc-500 font-medium leading-none">Total cargado</p>
-              <p className="text-base font-extrabold text-zinc-50 leading-tight mt-0.5 tabular-nums">{fmtCurrency(totals.revenue)}</p>
-            </div>
-          </div>
-        </div>
+        {/* KPI strip removido para evitar redundancia con columnas del funnel */}
       </div>
 
       {/* ── SORT CONTROLS ── */}
-      <div className="flex items-center gap-2">
+      <div className="flex items-center justify-end gap-2">
         <span className="text-[11px] text-zinc-600 font-medium">Ordenar</span>
         <div className="flex items-center rounded-lg border border-zinc-800/40 bg-[#0d0d11] p-0.5">
           {(["date", "amount"] as SortKey[]).map((k) => {
