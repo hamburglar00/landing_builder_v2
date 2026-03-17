@@ -217,3 +217,21 @@ export function buildFakeConversionRow(event: MetaEventName): ConversionRow {
   };
 }
 
+// ─── Purchase helpers shared between production and tests ────────────────────
+
+export async function hasPreviousSuccessfulPurchases(
+  db: SupabaseClient,
+  userId: string,
+  phone: string,
+): Promise<boolean> {
+  const { count } = await db
+    .from("conversions")
+    .select("id", { count: "exact", head: true })
+    .eq("user_id", userId)
+    .eq("phone", phone)
+    .eq("purchase_status_capi", "enviado");
+
+  return (count ?? 0) > 0;
+}
+
+

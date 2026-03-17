@@ -5,6 +5,7 @@ import {
   type ConversionsConfig as SharedConversionsConfig,
   generateEventId as sharedGenerateEventId,
   toValidEventTime,
+  hasPreviousSuccessfulPurchases,
 } from "./shared.ts";
 
 // ─── CORS ───────────────────────────────────────────────────────────────────
@@ -575,16 +576,7 @@ async function handlePurchase(
   const payloadLn = norm(p.ln);
   const payloadEmail = norm(p.email);
   const eventSourceUrl = await deriveEventSourceUrl(db, landing.name, norm(p.event_source_url));
-
-  // Count previous successful purchases for this phone
-  const { count: prevCount } = await db
-    .from("conversions")
-    .select("id", { count: "exact", head: true })
-    .eq("user_id", landing.user_id)
-    .eq("phone", cleanPhone)
-    .eq("purchase_status_capi", "enviado");
-
-  const isRepeat = (prevCount ?? 0) > 0;
+  const isRepeat = await hasPreviousSuccessfulPurchases(db, landing.user_id, cleanPhone);
 
   if (!isRepeat) {
     // ── First purchase ──

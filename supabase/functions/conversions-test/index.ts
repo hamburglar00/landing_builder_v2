@@ -8,6 +8,7 @@ import {
   type MetaEventName,
   generateEventId,
   toValidEventTime,
+  hasPreviousSuccessfulPurchases,
 } from "../conversions/shared.ts";
 
 const corsHeaders = {
@@ -102,13 +103,12 @@ Deno.serve(async (req) => {
 
   let customData: Record<string, unknown> | undefined;
   if (event === "Purchase") {
+    const isRepeat = !usedFake && (await hasPreviousSuccessfulPurchases(db, row.user_id, row.phone));
     customData = {
       currency: config.meta_currency,
       value: row.valor || 0,
+      ...(isRepeat ? { purchase_type: "repeat" } : {}),
     };
-    if (!usedFake && (row.observaciones || "").includes("REPEAT")) {
-      customData.purchase_type = "repeat";
-    }
   }
 
   const metaReq = await buildMetaRequest(config, row, event, identity.id, identity.time, customData, testCode);
