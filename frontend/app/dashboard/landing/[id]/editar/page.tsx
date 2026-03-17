@@ -127,12 +127,18 @@ export default function DashboardLandingEditarPage() {
         ? "fair"
         : "random";
 
+      const supabaseBase = process.env.NEXT_PUBLIC_SUPABASE_URL?.replace(/\/$/, "") ?? "";
+      const conversionsUrl =
+        clientName && supabaseBase
+          ? `${supabaseBase}/functions/v1/conversions?name=${encodeURIComponent(clientName)}`
+          : landing.postUrl;
+
       const landingConfig = buildLandingConfig({
         id: landing.id,
         name: landing.name,
         comment: landing.comment,
         pixelId: landing.pixelId,
-        postUrl: landing.postUrl,
+        postUrl: conversionsUrl,
         landingTag: landing.landingTag,
         config: landing.config,
         phoneMode: effectivePhoneMode,
@@ -146,7 +152,7 @@ export default function DashboardLandingEditarPage() {
         phoneKind: landing.phoneKind,
         phoneIntervalStartHour: landing.phoneIntervalStartHour,
         phoneIntervalEndHour: landing.phoneIntervalEndHour,
-        postUrl: landing.postUrl,
+        postUrl: conversionsUrl,
         landingTag: landing.landingTag,
         comment: landing.comment,
         config: landing.config,

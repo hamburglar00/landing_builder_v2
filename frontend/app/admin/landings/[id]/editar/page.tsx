@@ -57,11 +57,12 @@ export default function AdminLandingEditarPage() {
 
       setUserId(user.id);
       try {
-        const [found, allGerencias, assigned, settings] = await Promise.all([
+        const [found, allGerencias, assigned, settings, owner] = await Promise.all([
           fetchLandingById(id),
           fetchGerenciasForAdmin(user.id),
           fetchLandingGerencias(id),
           getSettings(),
+          supabase.from("landings").select("user_id").eq("id", id).maybeSingle(),
         ]);
         if (!found) {
           router.replace(BASE);
@@ -75,6 +76,14 @@ export default function AdminLandingEditarPage() {
         setAssignments(assigned);
         setUrlBase(settings.url_base ?? null);
         setRevalidateSecret(settings.revalidate_secret || null);
+        if (owner.data?.user_id) {
+          const { data: profile } = await supabase
+            .from("profiles")
+            .select("nombre")
+            .eq("id", owner.data.user_id)
+            .maybeSingle();
+          setClientName(profile?.nombre ?? null);
+        }
       } catch {
         router.replace(BASE);
         return;
@@ -125,12 +134,18 @@ export default function AdminLandingEditarPage() {
         ? "fair"
         : "random";
 
+      const supabaseBase = process.env.NEXT_PUBLIC_SUPABASE_URL?.replace(/\/$/, "") ?? "";
+      const conversionsUrl =
+        clientName && supabaseBase
+          ? `${supabaseBase}/functions/v1/conversions?name=${encodeURIComponent(clientName)}`
+          : landing.postUrl;
+
       const landingConfig = buildLandingConfig({
         id: landing.id,
         name: landing.name,
         comment: landing.comment,
         pixelId: landing.pixelId,
-        postUrl: landing.postUrl,
+        postUrl: conversionsUrl,
         landingTag: landing.landingTag,
         config: landing.config,
         phoneMode: effectivePhoneMode,
@@ -144,7 +159,7 @@ export default function AdminLandingEditarPage() {
         phoneKind: landing.phoneKind,
         phoneIntervalStartHour: landing.phoneIntervalStartHour,
         phoneIntervalEndHour: landing.phoneIntervalEndHour,
-        postUrl: landing.postUrl,
+        postUrl: conversionsUrl,
         landingTag: landing.landingTag,
         comment: landing.comment,
         config: landing.config,
