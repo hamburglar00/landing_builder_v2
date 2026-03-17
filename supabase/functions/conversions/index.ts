@@ -364,7 +364,7 @@ async function handleContact(
   const eventSourceUrl = await deriveEventSourceUrl(db, landing.name, norm(p.event_source_url));
 
   const row: Omit<ConversionRow, "id"> = {
-    landing_id: landing.id,
+    landing_id: landing.id?.trim() || null,
     user_id: landing.user_id,
     landing_name: landing.name,
     phone: sanitizePhone(p.phone),
@@ -404,8 +404,9 @@ async function handleContact(
 
   const { data: inserted, error } = await db.from("conversions").insert(row).select("id").single();
   if (error || !inserted) {
-    await writeLog(db, landing.user_id, "handleContact", "ERROR", "Error al insertar contacto", JSON.stringify(error));
-    return textResponse("Error al registrar contacto", 500);
+    const errDetail = error ? JSON.stringify({ message: error.message, code: error.code, details: error.details }) : "sin error";
+    await writeLog(db, landing.user_id, "handleContact", "ERROR", "Error al insertar contacto", errDetail);
+    return textResponse(`Error al registrar contacto: ${error?.message ?? "unknown"}`, 500);
   }
   const rowId = inserted.id;
 
@@ -475,7 +476,7 @@ async function handleLead(
   // 3) No match -> create new row
   if (!targetId) {
     const newRow: Omit<ConversionRow, "id"> = {
-      landing_id: landing.id,
+      landing_id: landing.id?.trim() || null,
       user_id: landing.user_id,
       landing_name: landing.name,
       phone: cleanPhone,
@@ -616,7 +617,7 @@ async function handlePurchase(
     // 3) No match -> create new row
     if (!targetId) {
       const newRow: Omit<ConversionRow, "id"> = {
-        landing_id: landing.id,
+        landing_id: landing.id?.trim() || null,
         user_id: landing.user_id,
         landing_name: landing.name,
         phone: cleanPhone,
@@ -715,7 +716,7 @@ async function handlePurchase(
   const purchaseEventTime = Math.floor(Date.now() / 1000);
 
   const newRow: Omit<ConversionRow, "id"> = {
-    landing_id: srcRow?.landing_id ?? landing.id,
+    landing_id: srcRow?.landing_id ?? (landing.id?.trim() || null),
     user_id: landing.user_id,
     landing_name: srcRow?.landing_name ?? landing.name,
     phone: cleanPhone,
@@ -802,7 +803,7 @@ async function handleSimplePurchase(
   const purchaseEventTime = Math.floor(Date.now() / 1000);
 
   const newRow: Omit<ConversionRow, "id"> = {
-    landing_id: landing.id,
+    landing_id: landing.id?.trim() || null,
     user_id: landing.user_id,
     landing_name: landing.name,
     phone: cleanPhone,
