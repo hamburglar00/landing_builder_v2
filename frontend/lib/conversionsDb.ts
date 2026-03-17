@@ -172,9 +172,9 @@ export async function updateAllVisibleColumns(
   const { error } = await supabase
     .from("conversions_config")
     // PostgREST requiere un WHERE para UPDATE bajo RLS.
-    // Usamos una condición amplia sobre user_id para aplicar el cambio a todos los registros.
+    // Usamos una condición amplia sobre user_id para aplicar el cambio a todos los registros reales.
     .update({ visible_columns: columns ?? null })
-    .neq("user_id", "");
+    .not("user_id", "is", null);
 
   if (error) throw error;
 }
