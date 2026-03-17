@@ -242,7 +242,7 @@ export async function fetchConversionsFiltered(
       .range(0, limit - 1)
       .then(({ data, error }) => {
         if (error) throw error;
-        return (data ?? []) as ConversionRow[];
+        return (data ?? []) as unknown as ConversionRow[];
       }),
     fetchHiddenConversionIds(hiddenBy),
     fetchHiddenContacts(hiddenBy),
@@ -267,7 +267,7 @@ export async function fetchConversionsForAdminFiltered(
       .range(0, limit - 1)
       .then(({ data, error }) => {
         if (error) throw error;
-        return (data ?? []) as ConversionRow[];
+        return (data ?? []) as unknown as ConversionRow[];
       }),
     fetchHiddenConversionIds(hiddenBy),
     fetchHiddenContacts(hiddenBy),
@@ -325,7 +325,7 @@ export async function fetchFunnelContactsFiltered(
       .order("last_activity", { ascending: false })
       .then(({ data, error }) => {
         if (error) throw error;
-        return (data ?? []) as FunnelContact[];
+        return (data ?? []) as unknown as FunnelContact[];
       }),
     fetchHiddenContacts(hiddenBy),
   ]);
@@ -345,7 +345,7 @@ export async function fetchFunnelContactsForAdminFiltered(
       .order("last_activity", { ascending: false })
       .then(({ data, error }) => {
         if (error) throw error;
-        return (data ?? []) as FunnelContact[];
+        return (data ?? []) as unknown as FunnelContact[];
       }),
     fetchHiddenContacts(hiddenBy),
   ]);
