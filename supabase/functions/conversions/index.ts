@@ -225,8 +225,6 @@ function resolveGeoForPayload(p: Params): GeoResult {
   };
 }
 
-// Geo enrichment always runs for analytics (geo_city/geo_region/geo_country).
-// geo_fill_only_when_missing controls whether IP geo overwrites payload geo or only fills blanks.
 async function ensureGeoOnRow(
   db: SupabaseClient,
   rowId: string,
@@ -234,6 +232,7 @@ async function ensureGeoOnRow(
   currentGeo: { ct: string; st: string; country: string; zip: string; geo_city: string; geo_region: string; geo_country: string },
   config: ConversionsConfig,
 ): Promise<void> {
+  if (!config.geo_use_ipapi) return;
   const ip = sanitizeIp(clientIp);
   if (!ip || isPrivateOrReservedIp(ip)) return;
 
@@ -280,12 +279,10 @@ async function buildUserData(row: ConversionRow, config: ConversionsConfig): Pro
   if (row.phone) ud.ph = await sha256(sanitizePhone(row.phone));
   if (row.fn) ud.fn = await sha256(row.fn);
   if (row.ln) ud.ln = await sha256(row.ln);
-  if (config.geo_use_ipapi) {
-    if (row.ct) ud.ct = await sha256(row.ct);
-    if (row.st) ud.st = await sha256(row.st);
-    if (row.zip) ud.zip = await sha256(row.zip);
-    if (row.country) ud.country = await sha256(row.country);
-  }
+  if (row.ct) ud.ct = await sha256(row.ct);
+  if (row.st) ud.st = await sha256(row.st);
+  if (row.zip) ud.zip = await sha256(row.zip);
+  if (row.country) ud.country = await sha256(row.country);
   if (row.fbp) ud.fbp = row.fbp;
   if (row.fbc) ud.fbc = row.fbc;
   if (row.client_ip) Object.assign(ud, normalizeIpToMeta(row.client_ip));
@@ -473,6 +470,7 @@ async function handleLead(
   const payloadLn = norm(p.ln);
   const payloadEmail = norm(p.email);
   const eventSourceUrl = await deriveEventSourceUrl(db, landing.name, norm(p.event_source_url));
+  const geo = resolveGeoForPayload(p);
 
   // 1) Match by promo_code
   let targetId: string | null = null;
@@ -514,10 +512,10 @@ async function handleLead(
       email: payloadEmail,
       fn: payloadFn,
       ln: payloadLn,
-      ct: "",
-      st: "",
-      zip: "",
-      country: "",
+      ct: geo.ct,
+      st: geo.st,
+      zip: geo.zip,
+      country: geo.country,
       fbp: "",
       fbc: "",
       contact_event_id: "",
@@ -540,9 +538,9 @@ async function handleLead(
       utm_campaign: "",
       telefono_asignado: "",
       promo_code: promoCode,
-      geo_city: "",
-      geo_region: "",
-      geo_country: "",
+      geo_city: geo.geo_city,
+      geo_region: geo.geo_region,
+      geo_country: geo.geo_country,
     };
 
     const { data: ins, error } = await db.from("conversions").insert(newRow).select("id").single();
@@ -560,6 +558,13 @@ async function handleLead(
     if (payloadFn) updates.fn = payloadFn;
     if (payloadLn) updates.ln = payloadLn;
     if (payloadEmail) updates.email = payloadEmail;
+    if (geo.ct) updates.ct = geo.ct;
+    if (geo.st) updates.st = geo.st;
+    if (geo.zip) updates.zip = geo.zip;
+    if (geo.country) updates.country = geo.country;
+    if (geo.geo_city) updates.geo_city = geo.geo_city;
+    if (geo.geo_region) updates.geo_region = geo.geo_region;
+    if (geo.geo_country) updates.geo_country = geo.geo_country;
     // Fill promo_code if row didn't have it
     if (promoCode) {
       const { data: cur } = await db.from("conversions").select("promo_code").eq("id", targetId).single();
@@ -615,6 +620,8 @@ async function handlePurchase(
   if (!isRepeat) {
     // ── First purchase ──
 
+    const geo = resolveGeoForPayload(p);
+
     // 1) Match by promo_code
     let targetId: string | null = null;
     if (promoCode) {
@@ -655,10 +662,10 @@ async function handlePurchase(
         email: payloadEmail,
         fn: payloadFn,
         ln: payloadLn,
-        ct: "",
-        st: "",
-        zip: "",
-        country: "",
+        ct: geo.ct,
+        st: geo.st,
+        zip: geo.zip,
+        country: geo.country,
         fbp: "",
         fbc: "",
         contact_event_id: "",
@@ -681,9 +688,9 @@ async function handlePurchase(
         utm_campaign: "",
         telefono_asignado: "",
         promo_code: promoCode,
-        geo_city: "",
-        geo_region: "",
-        geo_country: "",
+        geo_city: geo.geo_city,
+        geo_region: geo.geo_region,
+        geo_country: geo.geo_country,
       };
       const { data: ins, error } = await db.from("conversions").insert(newRow).select("id").single();
       if (error || !ins) return textResponse("Error al crear fila PURCHASE", 500);
@@ -701,6 +708,13 @@ async function handlePurchase(
       if (payloadFn) updates.fn = payloadFn;
       if (payloadLn) updates.ln = payloadLn;
       if (payloadEmail) updates.email = payloadEmail;
+      if (geo.ct) updates.ct = geo.ct;
+      if (geo.st) updates.st = geo.st;
+      if (geo.zip) updates.zip = geo.zip;
+      if (geo.country) updates.country = geo.country;
+      if (geo.geo_city) updates.geo_city = geo.geo_city;
+      if (geo.geo_region) updates.geo_region = geo.geo_region;
+      if (geo.geo_country) updates.geo_country = geo.geo_country;
       if (promoCode) {
         const { data: cur } = await db.from("conversions").select("promo_code").eq("id", targetId).single();
         if (!cur?.promo_code) updates.promo_code = promoCode;

@@ -288,7 +288,17 @@ export default function AdminConversionesPage() {
       await updateAllVisibleColumns(cols);
       setSaveMsg("Configuración guardada.");
     } catch (e) {
-      setSaveMsg(e instanceof Error ? e.message : "Error al guardar");
+      // Mostrar más contexto del error para poder diagnosticar problemas de RLS o esquema en producción
+      // y loguearlo en consola del navegador.
+      // deno-lint-ignore no-explicit-any
+      console.error("Error al guardar configuración de conversiones:", e as any);
+      const msg =
+        e instanceof Error
+          ? e.message
+          : typeof e === "object"
+            ? JSON.stringify(e)
+            : String(e);
+      setSaveMsg(msg || "Error al guardar");
     } finally { setSaving(false); }
   };
 
