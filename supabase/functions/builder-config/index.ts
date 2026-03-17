@@ -100,7 +100,7 @@ Deno.serve(async (req) => {
     const { data, error } = await supabase
       .from("landings")
       .select(
-        "id, name, pixel_id, phone_mode, phone_kind, phone_interval_start_hour, phone_interval_end_hour, post_url, landing_tag, comment, config, landing_config, updated_at",
+        "id, user_id, name, pixel_id, phone_mode, phone_kind, phone_interval_start_hour, phone_interval_end_hour, post_url, landing_tag, comment, config, landing_config, updated_at",
       )
       .eq("name", name)
       .maybeSingle();
@@ -125,6 +125,26 @@ Deno.serve(async (req) => {
       );
     }
 
+    // Asegurar que post_url sea SIEMPRE el endpoint de conversiones (nunca Sheet u otra URL).
+    const supabaseBase = (Deno.env.get("SUPABASE_URL") ?? "").replace(/\/$/, "");
+    const isWrongUrl = (url: string) =>
+      !url ||
+      url.includes("script.google.com") ||
+      url.includes("docs.google.com") ||
+      !url.includes("/conversions?name=");
+    let effectivePostUrl = (data.post_url ?? "").trim();
+    if (isWrongUrl(effectivePostUrl) && supabaseBase) {
+      const { data: profile } = await supabase
+        .from("profiles")
+        .select("nombre")
+        .eq("id", data.user_id)
+        .maybeSingle();
+      const nombre = (profile?.nombre ?? "").trim();
+      if (nombre) {
+        effectivePostUrl = `${supabaseBase}/functions/v1/conversions?name=${encodeURIComponent(nombre)}`;
+      }
+    }
+
     const asAny = data as {
       landing_config?: unknown;
       updated_at?: string;
@@ -132,9 +152,7 @@ Deno.serve(async (req) => {
     };
 
     // Si ya existe landing_config persistido, lo devolvemos pero SIEMPRE inyectamos
-    // post_url desde landings.post_url (fuente de verdad). Así evitamos que la landing
-    // pública use una URL obsoleta (ej. Google Sheet) guardada en landing_config.
-    // Cache muy corto (10s) para que cambios de post_url se reflejen rápido.
+    // post_url (effectivePostUrl = conversiones, nunca Sheet).
     if (asAny.landing_config != null) {
       const cfg = asAny.landing_config as Record<string, unknown>;
       const tracking = (cfg.tracking as Record<string, unknown>) ?? {};
@@ -142,7 +160,7 @@ Deno.serve(async (req) => {
         ...cfg,
         tracking: {
           ...tracking,
-          postUrl: (data.post_url ?? tracking.postUrl ?? "") as string,
+          postUrl: effectivePostUrl,
         },
       };
       return new Response(JSON.stringify(merged), {
@@ -177,7 +195,7 @@ Deno.serve(async (req) => {
       comment: data.comment ?? "",
       tracking: {
         pixelId: data.pixel_id ?? "",
-        postUrl: data.post_url ?? "",
+        postUrl: effectivePostUrl,
         landingTag: data.landing_tag ?? "",
       },
       background: {
