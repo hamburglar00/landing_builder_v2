@@ -5,10 +5,12 @@ import { supabase } from "@/lib/supabaseClient";
 import {
   fetchConversionsConfig,
   upsertConversionsConfig,
-  fetchConversionsForAdmin,
+  fetchConversionsForAdminFiltered,
   fetchConversionLogsForAdmin,
-  fetchFunnelContactsForAdmin,
+  fetchFunnelContactsForAdminFiltered,
   updateConversionEmail,
+  hideConversions,
+  hideContacts,
   type ConversionsConfig,
   type ConversionRow,
   type ConversionLogRow,
@@ -223,6 +225,7 @@ export default function AdminConversionesPage() {
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [saveMsg, setSaveMsg] = useState<string | null>(null);
+  const [clearMsg, setClearMsg] = useState<string | null>(null);
   const [showToken, setShowToken] = useState(false);
   const [tab, setTab] = useState<Tab>("funnel");
   const [copiedUrl, setCopiedUrl] = useState<string | null>(null);
@@ -231,10 +234,10 @@ export default function AdminConversionesPage() {
 
   const [demoMode, setDemoMode] = useState(false);
   const [dateRange, setDateRange] = useState<DateRange | null>(null);
-  const [tableCleared, setTableCleared] = useState(false);
-  const [funnelCleared, setFunnelCleared] = useState(false);
-  const [statsCleared, setStatsCleared] = useState(false);
   const [refreshingTable, setRefreshingTable] = useState(false);
+  const [hidingTable, setHidingTable] = useState(false);
+  const [hidingFunnel, setHidingFunnel] = useState(false);
+  const [hidingStats, setHidingStats] = useState(false);
 
   const demoConversions = useMemo(() => generateDemoConversions(80), []);
   const demoFunnel = useMemo(() => generateDemoFunnelContacts(demoConversions), [demoConversions]);
@@ -258,8 +261,8 @@ export default function AdminConversionesPage() {
       try {
         const [cfg, rows, funnel, logRows] = await Promise.all([
           fetchConversionsConfig(user.id),
-          fetchConversionsForAdmin(500),
-          fetchFunnelContactsForAdmin(),
+          fetchConversionsForAdminFiltered(500, user.id),
+          fetchFunnelContactsForAdminFiltered(user.id),
           fetchConversionLogsForAdmin(200),
         ]);
         setConfig(cfg);
@@ -313,14 +316,12 @@ export default function AdminConversionesPage() {
   }, []);
 
   const refreshTable = useCallback(async () => {
+    if (!userId) return;
     setRefreshingTable(true);
-    setTableCleared(false);
-    setFunnelCleared(false);
-    setStatsCleared(false);
     try {
       const [rows, funnel, logRows] = await Promise.all([
-        fetchConversionsForAdmin(500),
-        fetchFunnelContactsForAdmin(),
+        fetchConversionsForAdminFiltered(500, userId),
+        fetchFunnelContactsForAdminFiltered(userId),
         fetchConversionLogsForAdmin(200),
       ]);
       setConversions(rows);
@@ -328,19 +329,62 @@ export default function AdminConversionesPage() {
       setLogs(logRows);
     } catch (e) { console.error(e); }
     finally { setRefreshingTable(false); }
-  }, []);
+  }, [userId]);
 
-  const clearTableDisplay = useCallback(() => {
-    setTableCleared(true);
-  }, []);
+  const clearTableDisplay = useCallback(async () => {
+    if (!userId || activeConversions.length === 0 || demoMode) return;
+    setHidingTable(true);
+    setClearMsg(null);
+    try {
+      await hideConversions(activeConversions.map((c) => c.id), userId);
+      await refreshTable();
+      setClearMsg("Vista limpiada. Los registros siguen en la base de datos.");
+      setTimeout(() => setClearMsg(null), 4000);
+    } catch (e) {
+      console.error(e);
+      const msg = e instanceof Error ? e.message : String(e);
+      setClearMsg(`Error al limpiar: ${msg}`);
+    } finally { setHidingTable(false); }
+  }, [userId, activeConversions, refreshTable, demoMode]);
 
-  const clearFunnelDisplay = useCallback(() => {
-    setFunnelCleared(true);
-  }, []);
+  const clearFunnelDisplay = useCallback(async () => {
+    if (!userId || activeFunnel.length === 0 || demoMode) return;
+    setHidingFunnel(true);
+    setClearMsg(null);
+    try {
+      await hideContacts(
+        activeFunnel.map((c) => ({ user_id: c.user_id, phone: c.phone })),
+        userId,
+      );
+      await refreshTable();
+      setClearMsg("Vista limpiada. Los registros siguen en la base de datos.");
+      setTimeout(() => setClearMsg(null), 4000);
+    } catch (e) {
+      console.error(e);
+      const msg = e instanceof Error ? e.message : String(e);
+      setClearMsg(`Error al limpiar: ${msg}`);
+    } finally { setHidingFunnel(false); }
+  }, [userId, activeFunnel, refreshTable, demoMode]);
 
-  const clearStatsDisplay = useCallback(() => {
-    setStatsCleared(true);
-  }, []);
+  const clearStatsDisplay = useCallback(async () => {
+    if (!userId || (activeFunnel.length === 0 && activeConversions.length === 0) || demoMode) return;
+    setHidingStats(true);
+    setClearMsg(null);
+    try {
+      await hideContacts(
+        activeFunnel.map((c) => ({ user_id: c.user_id, phone: c.phone })),
+        userId,
+      );
+      await hideConversions(activeConversions.map((c) => c.id), userId);
+      await refreshTable();
+      setClearMsg("Vista limpiada. Los registros siguen en la base de datos.");
+      setTimeout(() => setClearMsg(null), 4000);
+    } catch (e) {
+      console.error(e);
+      const msg = e instanceof Error ? e.message : String(e);
+      setClearMsg(`Error al limpiar: ${msg}`);
+    } finally { setHidingStats(false); }
+  }, [userId, activeFunnel, activeConversions, refreshTable, demoMode]);
 
   if (loading) {
     return (
@@ -364,6 +408,11 @@ export default function AdminConversionesPage() {
       {saveMsg && (
         <p className={`rounded-lg px-3 py-2 text-sm ${saveMsg.includes("Error") ? "bg-red-950/50 text-red-300" : "bg-emerald-950/50 text-emerald-300"}`} role="alert">
           {saveMsg}
+        </p>
+      )}
+      {clearMsg && (
+        <p className={`rounded-lg px-3 py-2 text-sm ${clearMsg.includes("Error") ? "bg-red-950/50 text-red-300" : "bg-emerald-950/50 text-emerald-300"}`} role="alert">
+          {clearMsg}
         </p>
       )}
 
@@ -608,7 +657,7 @@ export default function AdminConversionesPage() {
           <div className="mb-4 flex flex-wrap items-center justify-between gap-2">
             <h3 className="text-sm font-semibold text-zinc-200">
               Tabla de conversiones{" "}
-              <span className="font-normal text-zinc-500">({tableCleared ? 0 : activeConversions.length})</span>
+              <span className="font-normal text-zinc-500">({activeConversions.length})</span>
             </h3>
             <div className="flex gap-2">
               <button
@@ -626,17 +675,17 @@ export default function AdminConversionesPage() {
               <button
                 type="button"
                 onClick={clearTableDisplay}
-                disabled={tableCleared || activeConversions.length === 0}
+                disabled={hidingTable || refreshingTable || activeConversions.length === 0 || demoMode}
                 className="inline-flex items-center gap-1.5 rounded-lg border border-zinc-700 bg-zinc-800/80 px-2.5 py-1.5 text-xs font-medium text-zinc-400 transition hover:bg-zinc-700 hover:text-zinc-300 disabled:opacity-50 disabled:cursor-not-allowed"
-                title="Ocultar registros de la vista (no borra de la base)"
+                title="Ocultar registros de la vista (persistente, no borra de la base)"
               >
-                Limpiar vista
+                {hidingTable ? "Ocultando…" : "Limpiar vista"}
               </button>
             </div>
           </div>
           {(() => {
             const cols = ALL_COLUMNS.filter((c) => visibleCols.has(c));
-            const displayRows = tableCleared ? [] : activeConversions;
+            const displayRows = activeConversions;
             return (
               <div className="overflow-x-auto rounded-lg border border-zinc-700">
                 <table className="w-full text-left text-[11px]">
@@ -651,7 +700,7 @@ export default function AdminConversionesPage() {
                     {displayRows.length === 0 ? (
                       <tr>
                         <td colSpan={cols.length || 1} className="px-2 py-6 text-center text-zinc-500">
-                          {tableCleared ? "Vista limpiada. Usá Actualizar para volver a cargar." : "Aún no hay conversiones registradas."}
+                          Aún no hay conversiones registradas.
                         </td>
                       </tr>
                     ) : displayRows.map((c) => {
@@ -703,16 +752,16 @@ export default function AdminConversionesPage() {
               <button
                 type="button"
                 onClick={clearFunnelDisplay}
-                disabled={funnelCleared || activeFunnel.length === 0}
+                disabled={hidingFunnel || refreshingTable || activeFunnel.length === 0 || demoMode}
                 className="inline-flex items-center gap-1.5 rounded-lg border border-zinc-700 bg-zinc-800/80 px-2.5 py-1.5 text-xs font-medium text-zinc-400 transition hover:bg-zinc-700 hover:text-zinc-300 disabled:opacity-50 disabled:cursor-not-allowed"
-                title="Ocultar registros de la vista (no borra de la base)"
+                title="Ocultar registros de la vista (persistente, no borra de la base)"
               >
-                Limpiar vista
+                {hidingFunnel ? "Ocultando…" : "Limpiar vista"}
               </button>
             </div>
           </div>
-          {funnelCleared ? (
-            <p className="py-12 text-center text-sm text-zinc-500">Vista limpiada. Usá Actualizar para volver a cargar.</p>
+          {activeFunnel.length === 0 ? (
+            <p className="py-12 text-center text-sm text-zinc-500">Aún no hay contactos en el funnel.</p>
           ) : (
             <FunnelBoard
               contacts={activeFunnel}
@@ -743,16 +792,16 @@ export default function AdminConversionesPage() {
               <button
                 type="button"
                 onClick={clearStatsDisplay}
-                disabled={statsCleared || (activeFunnel.length === 0 && activeConversions.length === 0)}
+                disabled={hidingStats || refreshingTable || (activeFunnel.length === 0 && activeConversions.length === 0) || demoMode}
                 className="inline-flex items-center gap-1.5 rounded-lg border border-zinc-700 bg-zinc-800/80 px-2.5 py-1.5 text-xs font-medium text-zinc-400 transition hover:bg-zinc-700 hover:text-zinc-300 disabled:opacity-50 disabled:cursor-not-allowed"
-                title="Ocultar registros de la vista (no borra de la base)"
+                title="Ocultar registros de la vista (persistente, no borra de la base)"
               >
-                Limpiar vista
+                {hidingStats ? "Ocultando…" : "Limpiar vista"}
               </button>
             </div>
           </div>
-          {statsCleared ? (
-            <p className="py-12 text-center text-sm text-zinc-500">Vista limpiada. Usá Actualizar para volver a cargar.</p>
+          {activeFunnel.length === 0 && activeConversions.length === 0 ? (
+            <p className="py-12 text-center text-sm text-zinc-500">Aún no hay datos para estadísticas.</p>
           ) : (
             <StatsPanel
               funnelContacts={activeFunnel}

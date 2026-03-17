@@ -5,9 +5,11 @@ import { supabase } from "@/lib/supabaseClient";
 import {
   fetchConversionsConfig,
   upsertConversionsConfig,
-  fetchConversions,
-  fetchFunnelContacts,
+  fetchConversionsFiltered,
+  fetchFunnelContactsFiltered,
   updateConversionEmail,
+  hideConversions,
+  hideContacts,
   type ConversionsConfig,
   type ConversionRow,
   type FunnelContact,
@@ -165,15 +167,16 @@ export default function DashboardConversionesPage() {
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [saveMsg, setSaveMsg] = useState<string | null>(null);
+  const [clearMsg, setClearMsg] = useState<string | null>(null);
   const [showToken, setShowToken] = useState(false);
   const [tab, setTab] = useState<Tab>("funnel");
   const [copiedUrl, setCopiedUrl] = useState<string | null>(null);
 
   const [dateRange, setDateRange] = useState<DateRange | null>(null);
-  const [tableCleared, setTableCleared] = useState(false);
-  const [funnelCleared, setFunnelCleared] = useState(false);
-  const [statsCleared, setStatsCleared] = useState(false);
   const [refreshingTable, setRefreshingTable] = useState(false);
+  const [hidingTable, setHidingTable] = useState(false);
+  const [hidingFunnel, setHidingFunnel] = useState(false);
+  const [hidingStats, setHidingStats] = useState(false);
 
   const [configOpen, setConfigOpen] = useState(false);
   const [endpointOpen, setEndpointOpen] = useState(false);
@@ -197,8 +200,8 @@ export default function DashboardConversionesPage() {
       try {
         const [cfg, rows, funnel] = await Promise.all([
           fetchConversionsConfig(user.id),
-          fetchConversions(user.id, 200),
-          fetchFunnelContacts(user.id),
+          fetchConversionsFiltered(user.id, 200, user.id),
+          fetchFunnelContactsFiltered(user.id, user.id),
         ]);
         setConfig(cfg);
         setConversions(rows);
@@ -233,13 +236,10 @@ export default function DashboardConversionesPage() {
   const refreshTable = useCallback(async () => {
     if (!userId) return;
     setRefreshingTable(true);
-    setTableCleared(false);
-    setFunnelCleared(false);
-    setStatsCleared(false);
     try {
       const [rows, funnel] = await Promise.all([
-        fetchConversions(userId, 200),
-        fetchFunnelContacts(userId),
+        fetchConversionsFiltered(userId, 200, userId),
+        fetchFunnelContactsFiltered(userId, userId),
       ]);
       setConversions(rows);
       setFunnelContacts(funnel);
@@ -247,17 +247,60 @@ export default function DashboardConversionesPage() {
     finally { setRefreshingTable(false); }
   }, [userId]);
 
-  const clearTableDisplay = useCallback(() => {
-    setTableCleared(true);
-  }, []);
+  const clearTableDisplay = useCallback(async () => {
+    if (!userId || activeConversions.length === 0) return;
+    setHidingTable(true);
+    setClearMsg(null);
+    try {
+      await hideConversions(activeConversions.map((c) => c.id), userId);
+      await refreshTable();
+      setClearMsg("Vista limpiada. Los registros siguen en la base de datos.");
+      setTimeout(() => setClearMsg(null), 4000);
+    } catch (e) {
+      console.error(e);
+      const msg = e instanceof Error ? e.message : String(e);
+      setClearMsg(`Error al limpiar: ${msg}`);
+    } finally { setHidingTable(false); }
+  }, [userId, activeConversions, refreshTable]);
 
-  const clearFunnelDisplay = useCallback(() => {
-    setFunnelCleared(true);
-  }, []);
+  const clearFunnelDisplay = useCallback(async () => {
+    if (!userId || activeFunnel.length === 0) return;
+    setHidingFunnel(true);
+    setClearMsg(null);
+    try {
+      await hideContacts(
+        activeFunnel.map((c) => ({ user_id: c.user_id, phone: c.phone })),
+        userId,
+      );
+      await refreshTable();
+      setClearMsg("Vista limpiada. Los registros siguen en la base de datos.");
+      setTimeout(() => setClearMsg(null), 4000);
+    } catch (e) {
+      console.error(e);
+      const msg = e instanceof Error ? e.message : String(e);
+      setClearMsg(`Error al limpiar: ${msg}`);
+    } finally { setHidingFunnel(false); }
+  }, [userId, activeFunnel, refreshTable]);
 
-  const clearStatsDisplay = useCallback(() => {
-    setStatsCleared(true);
-  }, []);
+  const clearStatsDisplay = useCallback(async () => {
+    if (!userId || (activeFunnel.length === 0 && activeConversions.length === 0)) return;
+    setHidingStats(true);
+    setClearMsg(null);
+    try {
+      await hideContacts(
+        activeFunnel.map((c) => ({ user_id: c.user_id, phone: c.phone })),
+        userId,
+      );
+      await hideConversions(activeConversions.map((c) => c.id), userId);
+      await refreshTable();
+      setClearMsg("Vista limpiada. Los registros siguen en la base de datos.");
+      setTimeout(() => setClearMsg(null), 4000);
+    } catch (e) {
+      console.error(e);
+      const msg = e instanceof Error ? e.message : String(e);
+      setClearMsg(`Error al limpiar: ${msg}`);
+    } finally { setHidingStats(false); }
+  }, [userId, activeFunnel, activeConversions, refreshTable]);
 
   if (loading) {
     return (
@@ -279,6 +322,11 @@ export default function DashboardConversionesPage() {
       {saveMsg && (
         <p className={`rounded-lg px-3 py-2 text-sm ${saveMsg.includes("Error") ? "bg-red-950/50 text-red-300" : "bg-emerald-950/50 text-emerald-300"}`} role="alert">
           {saveMsg}
+        </p>
+      )}
+      {clearMsg && (
+        <p className={`rounded-lg px-3 py-2 text-sm ${clearMsg.includes("Error") ? "bg-red-950/50 text-red-300" : "bg-emerald-950/50 text-emerald-300"}`} role="alert">
+          {clearMsg}
         </p>
       )}
 
@@ -431,7 +479,7 @@ export default function DashboardConversionesPage() {
         <section className="rounded-xl border border-zinc-800 bg-zinc-900/50 p-4">
           <div className="mb-4 flex flex-wrap items-center justify-between gap-2">
             <h3 className="text-sm font-semibold text-zinc-200">
-              Tabla de conversiones <span className="font-normal text-zinc-500">({tableCleared ? 0 : activeConversions.length})</span>
+              Tabla de conversiones <span className="font-normal text-zinc-500">({activeConversions.length})</span>
             </h3>
             <div className="flex gap-2">
               <button
@@ -449,11 +497,11 @@ export default function DashboardConversionesPage() {
               <button
                 type="button"
                 onClick={clearTableDisplay}
-                disabled={tableCleared || activeConversions.length === 0}
+                disabled={hidingTable || refreshingTable || activeConversions.length === 0}
                 className="inline-flex items-center gap-1.5 rounded-lg border border-zinc-700 bg-zinc-800/80 px-2.5 py-1.5 text-xs font-medium text-zinc-400 transition hover:bg-zinc-700 hover:text-zinc-300 disabled:opacity-50 disabled:cursor-not-allowed"
-                title="Ocultar registros de la vista (no borra de la base)"
+                title="Ocultar registros de la vista (persistente, no borra de la base)"
               >
-                Limpiar vista
+                {hidingTable ? "Ocultando…" : "Limpiar vista"}
               </button>
             </div>
           </div>
@@ -467,13 +515,13 @@ export default function DashboardConversionesPage() {
                 </tr>
               </thead>
               <tbody className="divide-y divide-zinc-800">
-                {(tableCleared ? [] : activeConversions).length === 0 ? (
+                {activeConversions.length === 0 ? (
                   <tr>
                     <td colSpan={ALL_COLUMNS.length} className="px-2 py-6 text-center text-zinc-500">
-                      {tableCleared ? "Vista limpiada. Usá Actualizar para volver a cargar." : "Aún no hay conversiones registradas."}
+                      Aún no hay conversiones registradas.
                     </td>
                   </tr>
-                ) : (tableCleared ? [] : activeConversions).map((c) => {
+                ) : activeConversions.map((c) => {
                   const isRepeat = c.estado === "purchase" && c.observaciones?.includes("REPEAT");
                   const rowColor =
                     c.estado === "lead"
@@ -520,16 +568,16 @@ export default function DashboardConversionesPage() {
               <button
                 type="button"
                 onClick={clearFunnelDisplay}
-                disabled={funnelCleared || activeFunnel.length === 0}
+                disabled={hidingFunnel || refreshingTable || activeFunnel.length === 0}
                 className="inline-flex items-center gap-1.5 rounded-lg border border-zinc-700 bg-zinc-800/80 px-2.5 py-1.5 text-xs font-medium text-zinc-400 transition hover:bg-zinc-700 hover:text-zinc-300 disabled:opacity-50 disabled:cursor-not-allowed"
-                title="Ocultar registros de la vista (no borra de la base)"
+                title="Ocultar registros de la vista (persistente, no borra de la base)"
               >
-                Limpiar vista
+                {hidingFunnel ? "Ocultando…" : "Limpiar vista"}
               </button>
             </div>
           </div>
-          {funnelCleared ? (
-            <p className="py-12 text-center text-sm text-zinc-500">Vista limpiada. Usá Actualizar para volver a cargar.</p>
+          {activeFunnel.length === 0 ? (
+            <p className="py-12 text-center text-sm text-zinc-500">Aún no hay contactos en el funnel.</p>
           ) : (
             <FunnelBoard contacts={activeFunnel} premiumThreshold={config?.funnel_premium_threshold ?? 50000} />
           )}
@@ -557,16 +605,16 @@ export default function DashboardConversionesPage() {
               <button
                 type="button"
                 onClick={clearStatsDisplay}
-                disabled={statsCleared || (activeFunnel.length === 0 && activeConversions.length === 0)}
+                disabled={hidingStats || refreshingTable || (activeFunnel.length === 0 && activeConversions.length === 0)}
                 className="inline-flex items-center gap-1.5 rounded-lg border border-zinc-700 bg-zinc-800/80 px-2.5 py-1.5 text-xs font-medium text-zinc-400 transition hover:bg-zinc-700 hover:text-zinc-300 disabled:opacity-50 disabled:cursor-not-allowed"
-                title="Ocultar registros de la vista (no borra de la base)"
+                title="Ocultar registros de la vista (persistente, no borra de la base)"
               >
-                Limpiar vista
+                {hidingStats ? "Ocultando…" : "Limpiar vista"}
               </button>
             </div>
           </div>
-          {statsCleared ? (
-            <p className="py-12 text-center text-sm text-zinc-500">Vista limpiada. Usá Actualizar para volver a cargar.</p>
+          {activeFunnel.length === 0 && activeConversions.length === 0 ? (
+            <p className="py-12 text-center text-sm text-zinc-500">Aún no hay datos para estadísticas.</p>
           ) : (
             <StatsPanel
               funnelContacts={activeFunnel}

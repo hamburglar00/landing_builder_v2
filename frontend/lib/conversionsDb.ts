@@ -227,12 +227,65 @@ export async function fetchConversionsForAdmin(
   return (data ?? []) as unknown as ConversionRow[];
 }
 
+/** Fetch conversions excluyendo los ocultos por hiddenBy. */
+export async function fetchConversionsFiltered(
+  userId: string,
+  limit: number,
+  hiddenBy: string,
+): Promise<ConversionRow[]> {
+  const [rows, hiddenIds, hiddenContactKeys] = await Promise.all([
+    supabase
+      .from("conversions")
+      .select(CONVERSIONS_SELECT)
+      .eq("user_id", userId)
+      .order("created_at", { ascending: false })
+      .range(0, limit - 1)
+      .then(({ data, error }) => {
+        if (error) throw error;
+        return (data ?? []) as ConversionRow[];
+      }),
+    fetchHiddenConversionIds(hiddenBy),
+    fetchHiddenContacts(hiddenBy),
+  ]);
+  return rows.filter(
+    (r) =>
+      !hiddenIds.has(r.id) &&
+      !hiddenContactKeys.has(`${r.user_id}::${r.phone}`),
+  );
+}
+
+/** Fetch conversions for admin excluyendo los ocultos por hiddenBy. */
+export async function fetchConversionsForAdminFiltered(
+  limit: number,
+  hiddenBy: string,
+): Promise<ConversionRow[]> {
+  const [rows, hiddenIds, hiddenContactKeys] = await Promise.all([
+    supabase
+      .from("conversions")
+      .select(CONVERSIONS_SELECT)
+      .order("created_at", { ascending: false })
+      .range(0, limit - 1)
+      .then(({ data, error }) => {
+        if (error) throw error;
+        return (data ?? []) as ConversionRow[];
+      }),
+    fetchHiddenConversionIds(hiddenBy),
+    fetchHiddenContacts(hiddenBy),
+  ]);
+  return rows.filter(
+    (r) =>
+      !hiddenIds.has(r.id) &&
+      !hiddenContactKeys.has(`${r.user_id}::${r.phone}`),
+  );
+}
+
 // ─── Funnel contacts (aggregated by phone) ──────────────────────────────────
 
 const FUNNEL_SELECT = `
   user_id, phone, email, fn, ln, ct, st, country, region,
   utm_campaign, device_type, landing_name,
   total_valor, purchase_count, repeat_count, lead_count, contact_count,
+  reached_contact, reached_lead, reached_purchase, reached_repeat,
   last_activity, first_contact
 `.replace(/\s+/g, " ").trim();
 
@@ -257,6 +310,48 @@ export async function fetchFunnelContactsForAdmin(): Promise<FunnelContact[]> {
 
   if (error) throw error;
   return (data ?? []) as unknown as FunnelContact[];
+}
+
+/** Fetch funnel contacts excluyendo los ocultos por hiddenBy. */
+export async function fetchFunnelContactsFiltered(
+  userId: string,
+  hiddenBy: string,
+): Promise<FunnelContact[]> {
+  const [rows, hiddenContactKeys] = await Promise.all([
+    supabase
+      .from("funnel_contacts")
+      .select(FUNNEL_SELECT)
+      .eq("user_id", userId)
+      .order("last_activity", { ascending: false })
+      .then(({ data, error }) => {
+        if (error) throw error;
+        return (data ?? []) as FunnelContact[];
+      }),
+    fetchHiddenContacts(hiddenBy),
+  ]);
+  return rows.filter(
+    (c) => !hiddenContactKeys.has(`${c.user_id}::${c.phone}`),
+  );
+}
+
+/** Fetch funnel contacts for admin excluyendo los ocultos por hiddenBy. */
+export async function fetchFunnelContactsForAdminFiltered(
+  hiddenBy: string,
+): Promise<FunnelContact[]> {
+  const [rows, hiddenContactKeys] = await Promise.all([
+    supabase
+      .from("funnel_contacts")
+      .select(FUNNEL_SELECT)
+      .order("last_activity", { ascending: false })
+      .then(({ data, error }) => {
+        if (error) throw error;
+        return (data ?? []) as FunnelContact[];
+      }),
+    fetchHiddenContacts(hiddenBy),
+  ]);
+  return rows.filter(
+    (c) => !hiddenContactKeys.has(`${c.user_id}::${c.phone}`),
+  );
 }
 
 // ─── Logs ───────────────────────────────────────────────────────────────────
@@ -308,5 +403,68 @@ export async function updateConversionEmail(
     .from("conversions")
     .update({ email })
     .eq("id", conversionId);
+  if (error) throw error;
+}
+
+// ─── Hidden conversions / contacts (persistente en BD) ─────────────────────────
+
+export async function fetchHiddenConversionIds(
+  hiddenBy: string,
+): Promise<Set<string>> {
+  const { data, error } = await supabase
+    .from("hidden_conversions")
+    .select("conversion_id")
+    .eq("hidden_by", hiddenBy);
+  if (error) throw error;
+  return new Set((data ?? []).map((r) => r.conversion_id));
+}
+
+export async function fetchHiddenContacts(
+  hiddenBy: string,
+): Promise<Set<string>> {
+  const { data, error } = await supabase
+    .from("hidden_contacts")
+    .select("user_id, phone")
+    .eq("hidden_by", hiddenBy);
+  if (error) throw error;
+  return new Set(
+    (data ?? []).map((r) => `${r.user_id}::${r.phone}`),
+  );
+}
+
+export async function hideConversions(
+  conversionIds: string[],
+  hiddenBy: string,
+): Promise<void> {
+  if (conversionIds.length === 0) return;
+  const rows = conversionIds.map((id) => ({
+    conversion_id: id,
+    hidden_by: hiddenBy,
+  }));
+  const { error } = await supabase
+    .from("hidden_conversions")
+    .upsert(rows, {
+      onConflict: "conversion_id,hidden_by",
+      ignoreDuplicates: true,
+    });
+  if (error) throw error;
+}
+
+export async function hideContacts(
+  contacts: Array<{ user_id: string; phone: string }>,
+  hiddenBy: string,
+): Promise<void> {
+  if (contacts.length === 0) return;
+  const rows = contacts.map(({ user_id, phone }) => ({
+    user_id,
+    phone,
+    hidden_by: hiddenBy,
+  }));
+  const { error } = await supabase
+    .from("hidden_contacts")
+    .upsert(rows, {
+      onConflict: "user_id,phone,hidden_by",
+      ignoreDuplicates: true,
+    });
   if (error) throw error;
 }
