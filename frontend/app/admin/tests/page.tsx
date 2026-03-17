@@ -18,6 +18,12 @@ export default function AdminTestsPage() {
   const logIdRef = useRef(0);
   const consoleEndRef = useRef<HTMLDivElement>(null);
 
+  // Meta CAPI test state
+  const [capiEvent, setCapiEvent] = useState<"Contact" | "Lead" | "Purchase">("Contact");
+  const [capiTestCode, setCapiTestCode] = useState("");
+  const [capiLoading, setCapiLoading] = useState(false);
+  const [capiResult, setCapiResult] = useState<any | null>(null);
+
   const addLog = useCallback((level: LogLevel, message: string, data?: unknown) => {
     const id = ++logIdRef.current;
     const time = new Date().toLocaleTimeString("es-AR", { hour12: false });
@@ -162,6 +168,46 @@ export default function AdminTestsPage() {
     }
   };
 
+  const handleTestCapi = async () => {
+    setError(null);
+    setCapiResult(null);
+    setCapiLoading(true);
+    const base = process.env.NEXT_PUBLIC_SUPABASE_URL?.replace(/\/$/, "") ?? "";
+    if (!base) {
+      const msg = "Falta NEXT_PUBLIC_SUPABASE_URL en el frontend.";
+      addLog("error", msg);
+      setError(msg);
+      setCapiLoading(false);
+      return;
+    }
+    const url = `${base}/functions/v1/conversions-test`;
+    const payload = {
+      event: capiEvent,
+      test_event_code: capiTestCode.trim(),
+    };
+    addLog("info", "CAPI test: enviando payload a conversions-test", { url, payload });
+    try {
+      const res = await fetch(url, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(payload),
+      });
+      const json = await res.json().catch(() => null);
+      addLog("info", `CAPI test: respuesta ${res.status}`, json ?? "");
+      setCapiResult({
+        status: res.status,
+        ok: res.ok,
+        body: json,
+      });
+    } catch (e) {
+      const msg = "Error al probar Meta CAPI (conversions-test).";
+      addLog("error", msg, e);
+      setError(msg);
+    } finally {
+      setCapiLoading(false);
+    }
+  };
+
   const handleTestRevalidate = async () => {
     if (!landingName.trim()) return;
     setLoadingRevalidate(true);
@@ -296,6 +342,67 @@ export default function AdminTestsPage() {
                 : "Probar /api/revalidate"}
             </button>
           </div>
+        </div>
+
+        {/* Meta CAPI test card */}
+        <div className="mt-6 space-y-3 rounded-lg border border-zinc-800 bg-zinc-950/70 p-4">
+          <h2 className="text-sm font-semibold text-zinc-200">Meta CAPI — Test events</h2>
+          <p className="text-[11px] text-zinc-500">
+            Envía un evento de prueba a Meta CAPI usando la misma lógica que producción, pero forzando{" "}
+            <code className="px-1 py-0.5 rounded bg-zinc-900 text-[10px]">test_event_code</code>.
+          </p>
+          <div className="flex flex-wrap items-end gap-3">
+            <div className="flex flex-col gap-1">
+              <label className="text-xs font-medium text-zinc-400">Evento</label>
+              <select
+                value={capiEvent}
+                onChange={(e) => setCapiEvent(e.target.value as typeof capiEvent)}
+                className="rounded-lg border border-zinc-700 bg-zinc-900 px-3 py-1.5 text-xs text-zinc-100"
+              >
+                <option value="Contact">Contact</option>
+                <option value="Lead">Lead</option>
+                <option value="Purchase">Purchase</option>
+              </select>
+            </div>
+            <div className="flex flex-col gap-1 min-w-[220px] flex-1">
+              <label className="text-xs font-medium text-zinc-400">
+                test_event_code (Meta Test Events)
+              </label>
+              <input
+                type="text"
+                value={capiTestCode}
+                onChange={(e) => setCapiTestCode(e.target.value)}
+                placeholder="Ej: TEST1234"
+                className="w-full rounded-lg border border-zinc-700 bg-zinc-900 px-3 py-1.5 text-xs text-zinc-100"
+              />
+            </div>
+            <div className="flex gap-2">
+              <button
+                type="button"
+                onClick={handleTestCapi}
+                disabled={capiLoading || !capiTestCode.trim()}
+                className="rounded-lg bg-emerald-500 px-3 py-1.5 text-xs font-medium text-emerald-950 transition hover:bg-emerald-400 disabled:opacity-60"
+              >
+                {capiLoading ? "Enviando..." : "Send test event"}
+              </button>
+            </div>
+          </div>
+
+          {capiResult && (
+            <div className="mt-3 space-y-1 rounded-md bg-zinc-950/90 p-3 text-[11px] text-zinc-300">
+              <p>
+                <span className="font-medium">HTTP status:</span>{" "}
+                <span className={capiResult.ok ? "text-emerald-400" : "text-red-400"}>
+                  {capiResult.status} {capiResult.ok ? "(OK)" : "(error)"}
+                </span>
+              </p>
+              {capiResult.body && (
+                <pre className="mt-1 max-h-64 overflow-auto rounded bg-zinc-950 p-2 text-[10px] text-zinc-300">
+                  {JSON.stringify(capiResult.body, null, 2)}
+                </pre>
+              )}
+            </div>
+          )}
         </div>
 
         {error && (
