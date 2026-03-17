@@ -13,6 +13,19 @@ import {
   ResponsiveContainer,
 } from "recharts";
 
+function waLink(phone: string) {
+  return `https://wa.me/${phone.replace(/\D/g, "")}`;
+}
+
+function WaIcon({ className }: { className?: string }) {
+  return (
+    <svg viewBox="0 0 24 24" className={className} fill="currentColor">
+      <path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347z" />
+      <path d="M12 0C5.373 0 0 5.373 0 12c0 2.625.846 5.059 2.284 7.034L.789 23.492a.5.5 0 00.611.611l4.458-1.495A11.935 11.935 0 0012 24c6.627 0 12-5.373 12-12S18.627 0 12 0zm0 22a9.94 9.94 0 01-5.39-1.585l-.386-.234-2.647.887.887-2.647-.234-.386A9.94 9.94 0 012 12C2 6.486 6.486 2 12 2s10 4.486 10 10-4.486 10-10 10z" />
+    </svg>
+  );
+}
+
 function formatCurrency(n: number) {
   return n.toLocaleString("es-AR", {
     style: "currency",
@@ -143,47 +156,74 @@ export default function StatsPanel({
     const avgLoadsPerPlayer = purchasers > 0 ? totalPurchaseCount / purchasers : 0;
 
     // By campaign
-    const campaignMap = new Map<string, { leads: number; cargas: number; revenue: number; total: number }>();
+    const campaignMap = new Map<string, { leads: number; cargas: number; revenue: number; total: number; firstRevenue: number }>();
     for (const c of funnelContacts) {
       const camp = c.utm_campaign || "Sin campaña";
-      const entry = campaignMap.get(camp) ?? { leads: 0, cargas: 0, revenue: 0, total: 0 };
+      const entry = campaignMap.get(camp) ?? { leads: 0, cargas: 0, revenue: 0, total: 0, firstRevenue: 0 };
       entry.total++;
       if (c.reached_lead) entry.leads++;
       if (c.reached_purchase) entry.cargas++;
       entry.revenue += c.total_valor;
       campaignMap.set(camp, entry);
     }
+    for (const conv of conversions) {
+      if (conv.estado === "purchase" && !conv.observaciones?.includes("REPEAT")) {
+        const camp = conv.utm_campaign || "Sin campaña";
+        const entry = campaignMap.get(camp) ?? { leads: 0, cargas: 0, revenue: 0, total: 0, firstRevenue: 0 };
+        entry.firstRevenue += conv.valor;
+        campaignMap.set(camp, entry);
+      }
+    }
+
     const byCampaign = [...campaignMap.entries()]
       .map(([campaign, d]) => ({ campaign, ...d }))
       .sort((a, b) => b.revenue - a.revenue)
       .slice(0, 10);
 
     // By device
-    const deviceMap = new Map<string, { leads: number; cargas: number; revenue: number; total: number }>();
+    const deviceMap = new Map<string, { leads: number; cargas: number; revenue: number; total: number; firstRevenue: number }>();
     for (const c of funnelContacts) {
       const dev = c.device_type || "Desconocido";
-      const entry = deviceMap.get(dev) ?? { leads: 0, cargas: 0, revenue: 0, total: 0 };
+      const entry = deviceMap.get(dev) ?? { leads: 0, cargas: 0, revenue: 0, total: 0, firstRevenue: 0 };
       entry.total++;
       if (c.reached_lead) entry.leads++;
       if (c.reached_purchase) entry.cargas++;
       entry.revenue += c.total_valor;
       deviceMap.set(dev, entry);
     }
+    for (const conv of conversions) {
+      if (conv.estado === "purchase" && !conv.observaciones?.includes("REPEAT")) {
+        const dev = conv.device_type || "Desconocido";
+        const entry = deviceMap.get(dev) ?? { leads: 0, cargas: 0, revenue: 0, total: 0, firstRevenue: 0 };
+        entry.firstRevenue += conv.valor;
+        deviceMap.set(dev, entry);
+      }
+    }
+
     const byDevice = [...deviceMap.entries()]
       .map(([device, d]) => ({ device, ...d }))
       .sort((a, b) => b.revenue - a.revenue);
 
     // By landing
-    const landingMap = new Map<string, { leads: number; cargas: number; revenue: number; total: number }>();
+    const landingMap = new Map<string, { leads: number; cargas: number; revenue: number; total: number; firstRevenue: number }>();
     for (const c of funnelContacts) {
       const ln = c.landing_name || "Sin landing";
-      const entry = landingMap.get(ln) ?? { leads: 0, cargas: 0, revenue: 0, total: 0 };
+      const entry = landingMap.get(ln) ?? { leads: 0, cargas: 0, revenue: 0, total: 0, firstRevenue: 0 };
       entry.total++;
       if (c.reached_lead) entry.leads++;
       if (c.reached_purchase) entry.cargas++;
       entry.revenue += c.total_valor;
       landingMap.set(ln, entry);
     }
+    for (const conv of conversions) {
+      if (conv.estado === "purchase" && !conv.observaciones?.includes("REPEAT")) {
+        const ln = conv.landing_name || "Sin landing";
+        const entry = landingMap.get(ln) ?? { leads: 0, cargas: 0, revenue: 0, total: 0, firstRevenue: 0 };
+        entry.firstRevenue += conv.valor;
+        landingMap.set(ln, entry);
+      }
+    }
+
     const byLanding = [...landingMap.entries()]
       .map(([landing, d]) => ({ landing, ...d }))
       .sort((a, b) => b.revenue - a.revenue)
@@ -557,24 +597,40 @@ export default function StatsPanel({
           <div className="mt-3">
             <TableCard title="Leads, cargas e ingresos por campaña">
               <div className="overflow-x-auto">
-              <table className="w-full text-[11px]" style={{ minWidth: 640 }}>
+              <table className="w-full text-[11px]" style={{ minWidth: 760 }}>
                 <thead><tr className="text-zinc-500">
                   <th className="text-left pb-2 font-medium">Campaña</th>
                   <th className="text-center pb-2 font-medium w-14">Leads</th>
                   <th className="text-center pb-2 font-medium w-14">Cargas</th>
                   <th className="text-center pb-2 font-medium" style={{ width: 180 }}>% de carga</th>
                   <th className="text-center pb-2 font-medium" style={{ width: 220 }}>Ingresos</th>
+                  {parsedAdSpend > 0 && (
+                    <>
+                      <th className="text-center pb-2 font-medium w-20">ROAS 1ra</th>
+                      <th className="text-center pb-2 font-medium w-20">ROAS total</th>
+                    </>
+                  )}
                 </tr></thead>
                 <tbody className="divide-y divide-zinc-800/60">
-                  {stats.byCampaign.map((r) => (
-                    <tr key={r.campaign}>
-                      <td className="py-1.5 text-zinc-300 truncate">{r.campaign}</td>
-                      <td className="py-1.5 text-center text-zinc-400">{r.leads}</td>
-                      <td className="py-1.5 text-center text-zinc-400">{r.cargas}</td>
-                      <td className="py-1.5 px-2"><PctBar num={r.cargas} den={r.leads || 1} color="bg-amber-500" /></td>
-                      <td className="py-1.5 px-2"><BarCell value={r.revenue} max={maxCampaignRev} /></td>
-                    </tr>
-                  ))}
+                  {stats.byCampaign.map((r) => {
+                    const roas1 = parsedAdSpend > 0 ? r.firstRevenue / parsedAdSpend : 0;
+                    const roasT = parsedAdSpend > 0 ? r.revenue / parsedAdSpend : 0;
+                    return (
+                      <tr key={r.campaign}>
+                        <td className="py-1.5 text-zinc-300 truncate">{r.campaign}</td>
+                        <td className="py-1.5 text-center text-zinc-400">{r.leads}</td>
+                        <td className="py-1.5 text-center text-zinc-400">{r.cargas}</td>
+                        <td className="py-1.5 px-2"><PctBar num={r.cargas} den={r.leads || 1} color="bg-amber-500" /></td>
+                        <td className="py-1.5 px-2"><BarCell value={r.revenue} max={maxCampaignRev} /></td>
+                        {parsedAdSpend > 0 && (
+                          <>
+                            <td className="py-1.5 text-center text-zinc-300 tabular-nums">{roas1.toFixed(2)}x</td>
+                            <td className="py-1.5 text-center text-zinc-300 tabular-nums">{roasT.toFixed(2)}x</td>
+                          </>
+                        )}
+                      </tr>
+                    );
+                  })}
                 </tbody>
               </table>
               </div>
@@ -590,24 +646,40 @@ export default function StatsPanel({
           <div className="mt-3">
             <TableCard title="Leads, cargas e ingresos por dispositivo">
               <div className="overflow-x-auto">
-              <table className="w-full text-[11px]" style={{ minWidth: 640 }}>
+              <table className="w-full text-[11px]" style={{ minWidth: 760 }}>
                 <thead><tr className="text-zinc-500">
                   <th className="text-left pb-2 font-medium">Dispositivo</th>
                   <th className="text-center pb-2 font-medium w-14">Leads</th>
                   <th className="text-center pb-2 font-medium w-14">Cargas</th>
                   <th className="text-center pb-2 font-medium" style={{ width: 180 }}>% de carga</th>
                   <th className="text-center pb-2 font-medium" style={{ width: 220 }}>Ingresos</th>
+                  {parsedAdSpend > 0 && (
+                    <>
+                      <th className="text-center pb-2 font-medium w-20">ROAS 1ra</th>
+                      <th className="text-center pb-2 font-medium w-20">ROAS total</th>
+                    </>
+                  )}
                 </tr></thead>
                 <tbody className="divide-y divide-zinc-800/60">
-                  {stats.byDevice.map((r) => (
-                    <tr key={r.device}>
-                      <td className="py-1.5 text-zinc-300 capitalize truncate">{r.device}</td>
-                      <td className="py-1.5 text-center text-zinc-400">{r.leads}</td>
-                      <td className="py-1.5 text-center text-zinc-400">{r.cargas}</td>
-                      <td className="py-1.5 px-2"><PctBar num={r.cargas} den={r.leads || 1} color="bg-violet-500" /></td>
-                      <td className="py-1.5 px-2"><BarCell value={r.revenue} max={maxDeviceRev} /></td>
-                    </tr>
-                  ))}
+                  {stats.byDevice.map((r) => {
+                    const roas1 = parsedAdSpend > 0 ? r.firstRevenue / parsedAdSpend : 0;
+                    const roasT = parsedAdSpend > 0 ? r.revenue / parsedAdSpend : 0;
+                    return (
+                      <tr key={r.device}>
+                        <td className="py-1.5 text-zinc-300 capitalize truncate">{r.device}</td>
+                        <td className="py-1.5 text-center text-zinc-400">{r.leads}</td>
+                        <td className="py-1.5 text-center text-zinc-400">{r.cargas}</td>
+                        <td className="py-1.5 px-2"><PctBar num={r.cargas} den={r.leads || 1} color="bg-violet-500" /></td>
+                        <td className="py-1.5 px-2"><BarCell value={r.revenue} max={maxDeviceRev} /></td>
+                        {parsedAdSpend > 0 && (
+                          <>
+                            <td className="py-1.5 text-center text-zinc-300 tabular-nums">{roas1.toFixed(2)}x</td>
+                            <td className="py-1.5 text-center text-zinc-300 tabular-nums">{roasT.toFixed(2)}x</td>
+                          </>
+                        )}
+                      </tr>
+                    );
+                  })}
                 </tbody>
               </table>
               </div>
@@ -623,24 +695,40 @@ export default function StatsPanel({
           <div className="mt-3">
             <TableCard title="Leads, cargas e ingresos por landing">
               <div className="overflow-x-auto">
-              <table className="w-full text-[11px]" style={{ minWidth: 640 }}>
+              <table className="w-full text-[11px]" style={{ minWidth: 760 }}>
                 <thead><tr className="text-zinc-500">
                   <th className="text-left pb-2 font-medium">Landing</th>
                   <th className="text-center pb-2 font-medium w-14">Leads</th>
                   <th className="text-center pb-2 font-medium w-14">Cargas</th>
                   <th className="text-center pb-2 font-medium" style={{ width: 180 }}>% de carga</th>
                   <th className="text-center pb-2 font-medium" style={{ width: 220 }}>Ingresos</th>
+                  {parsedAdSpend > 0 && (
+                    <>
+                      <th className="text-center pb-2 font-medium w-20">ROAS 1ra</th>
+                      <th className="text-center pb-2 font-medium w-20">ROAS total</th>
+                    </>
+                  )}
                 </tr></thead>
                 <tbody className="divide-y divide-zinc-800/60">
-                  {stats.byLanding.map((r) => (
-                    <tr key={r.landing}>
-                      <td className="py-1.5 text-zinc-300 truncate">{r.landing}</td>
-                      <td className="py-1.5 text-center text-zinc-400">{r.leads}</td>
-                      <td className="py-1.5 text-center text-zinc-400">{r.cargas}</td>
-                      <td className="py-1.5 px-2"><PctBar num={r.cargas} den={r.leads || 1} color="bg-emerald-500" /></td>
-                      <td className="py-1.5 px-2"><BarCell value={r.revenue} max={maxLandingRev} /></td>
-                    </tr>
-                  ))}
+                  {stats.byLanding.map((r) => {
+                    const roas1 = parsedAdSpend > 0 ? r.firstRevenue / parsedAdSpend : 0;
+                    const roasT = parsedAdSpend > 0 ? r.revenue / parsedAdSpend : 0;
+                    return (
+                      <tr key={r.landing}>
+                        <td className="py-1.5 text-zinc-300 truncate">{r.landing}</td>
+                        <td className="py-1.5 text-center text-zinc-400">{r.leads}</td>
+                        <td className="py-1.5 text-center text-zinc-400">{r.cargas}</td>
+                        <td className="py-1.5 px-2"><PctBar num={r.cargas} den={r.leads || 1} color="bg-emerald-500" /></td>
+                        <td className="py-1.5 px-2"><BarCell value={r.revenue} max={maxLandingRev} /></td>
+                        {parsedAdSpend > 0 && (
+                          <>
+                            <td className="py-1.5 text-center text-zinc-300 tabular-nums">{roas1.toFixed(2)}x</td>
+                            <td className="py-1.5 text-center text-zinc-300 tabular-nums">{roasT.toFixed(2)}x</td>
+                          </>
+                        )}
+                      </tr>
+                    );
+                  })}
                 </tbody>
               </table>
               </div>
@@ -659,6 +747,7 @@ export default function StatsPanel({
                 <thead><tr className="text-zinc-500">
                   <th className="text-center pb-2 font-medium w-6">#</th>
                   <th className="text-left pb-2 font-medium">Teléfono</th>
+                  <th className="text-center pb-2 font-medium w-10">WA</th>
                   <th className="text-left pb-2 font-medium">Nombre</th>
                   <th className="text-center pb-2 font-medium w-16">Cargas</th>
                   <th className="text-center pb-2 font-medium w-28">Total</th>
@@ -668,6 +757,17 @@ export default function StatsPanel({
                     <tr key={c.phone}>
                       <td className="py-1.5 text-center text-zinc-600">{i + 1}</td>
                       <td className="py-1.5 text-zinc-200 font-mono">{c.phone}</td>
+                      <td className="py-1.5 text-center">
+                        <a
+                          href={waLink(c.phone)}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="inline-flex items-center justify-center rounded-md p-1 text-zinc-600 hover:text-emerald-400 hover:bg-emerald-950/40 transition-colors"
+                          title="WhatsApp"
+                        >
+                          <WaIcon className="h-3.5 w-3.5" />
+                        </a>
+                      </td>
                       <td className="py-1.5 text-zinc-400">{[c.fn, c.ln].filter(Boolean).join(" ") || "-"}</td>
                       <td className="py-1.5 text-center text-zinc-400">{c.purchase_count}</td>
                       <td className="py-1.5 text-center text-emerald-400 font-mono font-semibold">{formatCurrency(c.total_valor)}</td>

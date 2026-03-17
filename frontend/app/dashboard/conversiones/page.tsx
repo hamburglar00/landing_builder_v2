@@ -243,18 +243,33 @@ export default function DashboardConversionesPage() {
       )}
 
       {/* Tabs */}
-      <div className="flex gap-1 rounded-lg bg-zinc-900/80 p-1 w-fit overflow-x-auto">
-        {TAB_ORDER.map((t) => (
-          <button key={t} onClick={() => setTab(t)}
-            className={`cursor-pointer rounded-md px-4 py-1.5 text-xs font-medium transition whitespace-nowrap ${tab === t ? "bg-zinc-700 text-zinc-100" : "text-zinc-400 hover:text-zinc-200"}`}>
-            {TAB_LABELS[t]}
-          </button>
-        ))}
+      <div className="flex items-center justify-between gap-4 flex-wrap border-b border-zinc-800/60 pb-1">
+        <div className="flex gap-4 overflow-x-auto">
+          {TAB_ORDER.map((t) => {
+            const active = tab === t;
+            return (
+              <button
+                key={t}
+                onClick={() => setTab(t)}
+                className={`relative cursor-pointer pb-2 text-xs font-medium transition-colors whitespace-nowrap ${
+                  active ? "text-zinc-100" : "text-zinc-500 hover:text-zinc-200"
+                }`}
+              >
+                {TAB_LABELS[t]}
+                <span
+                  className={`pointer-events-none absolute inset-x-0 -bottom-[1px] h-0.5 rounded-full transition-opacity ${
+                    active ? "bg-zinc-100 opacity-100" : "bg-zinc-600 opacity-0"
+                  }`}
+                />
+              </button>
+            );
+          })}
+        </div>
       </div>
 
       {/* Date filter — visible on funnel, tabla, estadisticas */}
       {(tab === "funnel" || tab === "tabla" || tab === "estadisticas") && (
-        <div className="flex justify-end">
+        <div className="flex justify-end pt-1">
           <DateRangeFilter onChange={setDateRange} />
         </div>
       )}
