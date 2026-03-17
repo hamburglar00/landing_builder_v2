@@ -392,13 +392,14 @@ export default function StatsPanel({
           <SectionTitle>Por campaña</SectionTitle>
           <div className="mt-3">
             <TableCard title="Leads, cargas e ingresos por campaña">
-              <table className="w-full text-[11px] table-fixed">
+              <div className="overflow-x-auto">
+              <table className="w-full text-[11px]" style={{ minWidth: 640 }}>
                 <thead><tr className="text-zinc-500">
                   <th className="text-left pb-2 font-medium">Campaña</th>
-                  <th className="text-center pb-2 font-medium w-16">Leads</th>
-                  <th className="text-center pb-2 font-medium w-16">Cargas</th>
-                  <th className="text-center pb-2 font-medium w-28">% de carga</th>
-                  <th className="text-center pb-2 font-medium w-40">Ingresos</th>
+                  <th className="text-center pb-2 font-medium w-14">Leads</th>
+                  <th className="text-center pb-2 font-medium w-14">Cargas</th>
+                  <th className="text-center pb-2 font-medium" style={{ width: 180 }}>% de carga</th>
+                  <th className="text-center pb-2 font-medium" style={{ width: 220 }}>Ingresos</th>
                 </tr></thead>
                 <tbody className="divide-y divide-zinc-800/60">
                   {stats.byCampaign.map((r) => (
@@ -406,12 +407,13 @@ export default function StatsPanel({
                       <td className="py-1.5 text-zinc-300 truncate">{r.campaign}</td>
                       <td className="py-1.5 text-center text-zinc-400">{r.leads}</td>
                       <td className="py-1.5 text-center text-zinc-400">{r.cargas}</td>
-                      <td className="py-1.5 px-1"><PctBar num={r.cargas} den={r.leads || 1} color="bg-amber-500" /></td>
-                      <td className="py-1.5 px-1"><BarCell value={r.revenue} max={maxCampaignRev} /></td>
+                      <td className="py-1.5 px-2"><PctBar num={r.cargas} den={r.leads || 1} color="bg-amber-500" /></td>
+                      <td className="py-1.5 px-2"><BarCell value={r.revenue} max={maxCampaignRev} /></td>
                     </tr>
                   ))}
                 </tbody>
               </table>
+              </div>
             </TableCard>
           </div>
         </div>
@@ -423,13 +425,14 @@ export default function StatsPanel({
           <SectionTitle>Por dispositivo</SectionTitle>
           <div className="mt-3">
             <TableCard title="Leads, cargas e ingresos por dispositivo">
-              <table className="w-full text-[11px] table-fixed">
+              <div className="overflow-x-auto">
+              <table className="w-full text-[11px]" style={{ minWidth: 640 }}>
                 <thead><tr className="text-zinc-500">
                   <th className="text-left pb-2 font-medium">Dispositivo</th>
-                  <th className="text-center pb-2 font-medium w-16">Leads</th>
-                  <th className="text-center pb-2 font-medium w-16">Cargas</th>
-                  <th className="text-center pb-2 font-medium w-28">% de carga</th>
-                  <th className="text-center pb-2 font-medium w-40">Ingresos</th>
+                  <th className="text-center pb-2 font-medium w-14">Leads</th>
+                  <th className="text-center pb-2 font-medium w-14">Cargas</th>
+                  <th className="text-center pb-2 font-medium" style={{ width: 180 }}>% de carga</th>
+                  <th className="text-center pb-2 font-medium" style={{ width: 220 }}>Ingresos</th>
                 </tr></thead>
                 <tbody className="divide-y divide-zinc-800/60">
                   {stats.byDevice.map((r) => (
@@ -437,12 +440,13 @@ export default function StatsPanel({
                       <td className="py-1.5 text-zinc-300 capitalize truncate">{r.device}</td>
                       <td className="py-1.5 text-center text-zinc-400">{r.leads}</td>
                       <td className="py-1.5 text-center text-zinc-400">{r.cargas}</td>
-                      <td className="py-1.5 px-1"><PctBar num={r.cargas} den={r.leads || 1} color="bg-violet-500" /></td>
-                      <td className="py-1.5 px-1"><BarCell value={r.revenue} max={maxDeviceRev} /></td>
+                      <td className="py-1.5 px-2"><PctBar num={r.cargas} den={r.leads || 1} color="bg-violet-500" /></td>
+                      <td className="py-1.5 px-2"><BarCell value={r.revenue} max={maxDeviceRev} /></td>
                     </tr>
                   ))}
                 </tbody>
               </table>
+              </div>
             </TableCard>
           </div>
         </div>
@@ -454,13 +458,14 @@ export default function StatsPanel({
           <SectionTitle>Por landing</SectionTitle>
           <div className="mt-3">
             <TableCard title="Leads, cargas e ingresos por landing">
-              <table className="w-full text-[11px] table-fixed">
+              <div className="overflow-x-auto">
+              <table className="w-full text-[11px]" style={{ minWidth: 640 }}>
                 <thead><tr className="text-zinc-500">
                   <th className="text-left pb-2 font-medium">Landing</th>
-                  <th className="text-center pb-2 font-medium w-16">Leads</th>
-                  <th className="text-center pb-2 font-medium w-16">Cargas</th>
-                  <th className="text-center pb-2 font-medium w-28">% de carga</th>
-                  <th className="text-center pb-2 font-medium w-40">Ingresos</th>
+                  <th className="text-center pb-2 font-medium w-14">Leads</th>
+                  <th className="text-center pb-2 font-medium w-14">Cargas</th>
+                  <th className="text-center pb-2 font-medium" style={{ width: 180 }}>% de carga</th>
+                  <th className="text-center pb-2 font-medium" style={{ width: 220 }}>Ingresos</th>
                 </tr></thead>
                 <tbody className="divide-y divide-zinc-800/60">
                   {stats.byLanding.map((r) => (
@@ -468,12 +473,13 @@ export default function StatsPanel({
                       <td className="py-1.5 text-zinc-300 truncate">{r.landing}</td>
                       <td className="py-1.5 text-center text-zinc-400">{r.leads}</td>
                       <td className="py-1.5 text-center text-zinc-400">{r.cargas}</td>
-                      <td className="py-1.5 px-1"><PctBar num={r.cargas} den={r.leads || 1} color="bg-emerald-500" /></td>
-                      <td className="py-1.5 px-1"><BarCell value={r.revenue} max={maxLandingRev} /></td>
+                      <td className="py-1.5 px-2"><PctBar num={r.cargas} den={r.leads || 1} color="bg-emerald-500" /></td>
+                      <td className="py-1.5 px-2"><BarCell value={r.revenue} max={maxLandingRev} /></td>
                     </tr>
                   ))}
                 </tbody>
               </table>
+              </div>
             </TableCard>
           </div>
         </div>
