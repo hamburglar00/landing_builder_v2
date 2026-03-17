@@ -326,7 +326,7 @@ export default function AdminConversionesPage() {
 
       {/* Tabs + Demo toggle */}
       <div className="flex items-center justify-between gap-4 flex-wrap border-b border-zinc-800/60 pb-1">
-        <div className="flex gap-4 overflow-x-auto">
+        <div className="flex gap-4">
           {TAB_ORDER.map((t) => {
             const active = tab === t;
             return (
