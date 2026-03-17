@@ -170,6 +170,8 @@ export default function DashboardConversionesPage() {
   const [copiedUrl, setCopiedUrl] = useState<string | null>(null);
 
   const [dateRange, setDateRange] = useState<DateRange | null>(null);
+  const [tableCleared, setTableCleared] = useState(false);
+  const [refreshingTable, setRefreshingTable] = useState(false);
 
   const [configOpen, setConfigOpen] = useState(false);
   const [endpointOpen, setEndpointOpen] = useState(false);
@@ -224,6 +226,25 @@ export default function DashboardConversionesPage() {
     await navigator.clipboard.writeText(text);
     setCopiedUrl(text);
     setTimeout(() => setCopiedUrl(null), 2000);
+  }, []);
+
+  const refreshTable = useCallback(async () => {
+    if (!userId) return;
+    setRefreshingTable(true);
+    setTableCleared(false);
+    try {
+      const [rows, funnel] = await Promise.all([
+        fetchConversions(userId, 200),
+        fetchFunnelContacts(userId),
+      ]);
+      setConversions(rows);
+      setFunnelContacts(funnel);
+    } catch (e) { console.error(e); }
+    finally { setRefreshingTable(false); }
+  }, [userId]);
+
+  const clearTableDisplay = useCallback(() => {
+    setTableCleared(true);
   }, []);
 
   if (loading) {
@@ -396,9 +417,34 @@ export default function DashboardConversionesPage() {
       {/* ═══════════ TAB: TABLA ═══════════ */}
       {tab === "tabla" && (
         <section className="rounded-xl border border-zinc-800 bg-zinc-900/50 p-4">
-          <h3 className="mb-4 text-sm font-semibold text-zinc-200">
-            Tabla de conversiones <span className="font-normal text-zinc-500">({activeConversions.length})</span>
-          </h3>
+          <div className="mb-4 flex flex-wrap items-center justify-between gap-2">
+            <h3 className="text-sm font-semibold text-zinc-200">
+              Tabla de conversiones <span className="font-normal text-zinc-500">({tableCleared ? 0 : activeConversions.length})</span>
+            </h3>
+            <div className="flex gap-2">
+              <button
+                type="button"
+                onClick={refreshTable}
+                disabled={refreshingTable}
+                className="inline-flex items-center gap-1.5 rounded-lg border border-zinc-700 bg-zinc-800/80 px-2.5 py-1.5 text-xs font-medium text-zinc-300 transition hover:bg-zinc-700 hover:text-zinc-100 disabled:opacity-60"
+                title="Actualizar datos"
+              >
+                <svg className="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+                </svg>
+                {refreshingTable ? "Actualizando…" : "Actualizar"}
+              </button>
+              <button
+                type="button"
+                onClick={clearTableDisplay}
+                disabled={tableCleared || activeConversions.length === 0}
+                className="inline-flex items-center gap-1.5 rounded-lg border border-zinc-700 bg-zinc-800/80 px-2.5 py-1.5 text-xs font-medium text-zinc-400 transition hover:bg-zinc-700 hover:text-zinc-300 disabled:opacity-50 disabled:cursor-not-allowed"
+                title="Ocultar registros de la vista (no borra de la base)"
+              >
+                Limpiar vista
+              </button>
+            </div>
+          </div>
           <div className="overflow-x-auto rounded-lg border border-zinc-700">
             <table className="w-full text-left text-[11px]">
               <thead className="bg-zinc-800/80 sticky top-0">
@@ -409,11 +455,13 @@ export default function DashboardConversionesPage() {
                 </tr>
               </thead>
               <tbody className="divide-y divide-zinc-800">
-                {activeConversions.length === 0 ? (
+                {(tableCleared ? [] : activeConversions).length === 0 ? (
                   <tr>
-                    <td colSpan={ALL_COLUMNS.length} className="px-2 py-6 text-center text-zinc-500">Aún no hay conversiones registradas.</td>
+                    <td colSpan={ALL_COLUMNS.length} className="px-2 py-6 text-center text-zinc-500">
+                      {tableCleared ? "Vista limpiada. Usá Actualizar para volver a cargar." : "Aún no hay conversiones registradas."}
+                    </td>
                   </tr>
-                ) : activeConversions.map((c) => {
+                ) : (tableCleared ? [] : activeConversions).map((c) => {
                   const isRepeat = c.estado === "purchase" && c.observaciones?.includes("REPEAT");
                   const rowColor =
                     c.estado === "lead"
