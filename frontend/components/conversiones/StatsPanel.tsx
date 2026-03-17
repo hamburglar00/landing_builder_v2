@@ -110,6 +110,7 @@ export default function StatsPanel({
     }
 
     const purchasers = primera + recurrente + premium;
+    const reachedLead = funnelContacts.filter((c) => c.lead_count > 0 || c.purchase_count > 0).length;
     const avgTicket = totalPurchaseCount > 0 ? totalRevenue / totalPurchaseCount : 0;
     const avgLoadsPerPlayer = purchasers > 0 ? totalPurchaseCount / purchasers : 0;
 
@@ -181,7 +182,7 @@ export default function StatsPanel({
     const topContacts = [...funnelContacts].filter((c) => c.total_valor > 0).sort((a, b) => b.total_valor - a.total_valor).slice(0, 10);
 
     return {
-      total, leads, primera, recurrente, premium, purchasers,
+      total, leads, primera, recurrente, premium, purchasers, reachedLead,
       totalRevenue, totalPurchaseCount, avgTicket, avgLoadsPerPlayer,
       withEmail, singlePurchasers, multiPurchasers,
       capiTotal, capiOk, capiContactOk, capiContactTotal, capiLeadOk, capiLeadTotal, capiPurchOk, capiPurchTotal,
@@ -221,8 +222,9 @@ export default function StatsPanel({
       {/* ── TASAS DE CONVERSIÓN ── */}
       <div>
         <SectionTitle>Tasas de conversión</SectionTitle>
-        <div className="mt-3 grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-4">
-          <KpiCard label="Lead → Compra" value={pct(stats.purchasers, stats.leads + stats.purchasers)} sub={`${stats.purchasers} de ${stats.leads + stats.purchasers}`} color="text-sky-400" />
+        <div className="mt-3 grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-5">
+          <KpiCard label="Contact → Lead" value={pct(stats.reachedLead, stats.total)} sub={`${stats.reachedLead} de ${stats.total} contactos`} color="text-amber-400" />
+          <KpiCard label="Lead → Compra" value={pct(stats.purchasers, stats.reachedLead)} sub={`${stats.purchasers} de ${stats.reachedLead} leads`} color="text-sky-400" />
           <KpiCard label="Tasa de recurrencia" value={pct(stats.recurrente + stats.premium, stats.purchasers)} sub={`${stats.recurrente + stats.premium} de ${stats.purchasers} compradores`} color="text-violet-400" />
           <KpiCard label="Contactos con email" value={pct(stats.withEmail, stats.total)} sub={`${stats.withEmail} de ${stats.total}`} />
           <KpiCard label="% Premium" value={pct(stats.premium, stats.total)} sub={`${stats.premium} de ${stats.total} contactos`} color="text-emerald-400" />

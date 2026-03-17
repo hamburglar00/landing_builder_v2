@@ -213,8 +213,8 @@ async function lookupGeoByIp(rawIp: string): Promise<GeoResult | null> {
   }
 }
 
-function resolveGeoForPayload(p: Params, config: ConversionsConfig): GeoResult {
-  const payloadGeo: GeoResult = {
+function resolveGeoForPayload(p: Params): GeoResult {
+  return {
     geo_city: norm(p.geo_city || p.ct),
     geo_region: norm(p.geo_region || p.st),
     geo_country: norm(p.geo_country || p.country),
@@ -223,12 +223,10 @@ function resolveGeoForPayload(p: Params, config: ConversionsConfig): GeoResult {
     country: norm(p.country || p.geo_country),
     zip: norm(p.zip),
   };
-  // Geo enrichment is done asynchronously in ensureGeoOnRow after insert, not here during initial processing.
-  // Only return payload geo for the initial insert.
-  if (!config.geo_use_ipapi) return payloadGeo;
-  return payloadGeo;
 }
 
+// Geo enrichment always runs for analytics (geo_city/geo_region/geo_country).
+// geo_fill_only_when_missing controls whether IP geo overwrites payload geo or only fills blanks.
 async function ensureGeoOnRow(
   db: SupabaseClient,
   rowId: string,
@@ -236,7 +234,6 @@ async function ensureGeoOnRow(
   currentGeo: { ct: string; st: string; country: string; zip: string; geo_city: string; geo_region: string; geo_country: string },
   config: ConversionsConfig,
 ): Promise<void> {
-  if (!config.geo_use_ipapi) return;
   const ip = sanitizeIp(clientIp);
   if (!ip || isPrivateOrReservedIp(ip)) return;
 
@@ -277,16 +274,18 @@ interface MetaUserData {
   [key: string]: string;
 }
 
-async function buildUserData(row: ConversionRow): Promise<MetaUserData> {
+async function buildUserData(row: ConversionRow, config: ConversionsConfig): Promise<MetaUserData> {
   const ud: MetaUserData = {};
   if (row.email) ud.em = await sha256(row.email);
   if (row.phone) ud.ph = await sha256(sanitizePhone(row.phone));
   if (row.fn) ud.fn = await sha256(row.fn);
   if (row.ln) ud.ln = await sha256(row.ln);
-  if (row.ct) ud.ct = await sha256(row.ct);
-  if (row.st) ud.st = await sha256(row.st);
-  if (row.zip) ud.zip = await sha256(row.zip);
-  if (row.country) ud.country = await sha256(row.country);
+  if (config.geo_use_ipapi) {
+    if (row.ct) ud.ct = await sha256(row.ct);
+    if (row.st) ud.st = await sha256(row.st);
+    if (row.zip) ud.zip = await sha256(row.zip);
+    if (row.country) ud.country = await sha256(row.country);
+  }
   if (row.fbp) ud.fbp = row.fbp;
   if (row.fbc) ud.fbc = row.fbc;
   if (row.client_ip) Object.assign(ud, normalizeIpToMeta(row.client_ip));
@@ -307,7 +306,7 @@ async function sendToMetaCAPI(
 ): Promise<boolean> {
   if (!config.meta_access_token || !config.pixel_id) return false;
 
-  const userData = await buildUserData(row);
+  const userData = await buildUserData(row, config);
   const srcUrl = row.event_source_url || "";
 
   // deno-lint-ignore no-explicit-any
@@ -394,7 +393,7 @@ async function handleContact(
 
   const contactEventId = norm(p.contact_event_id || p.event_id) || generateEventId();
   const contactEventTime = toValidEventTime(p.contact_event_time || p.event_time || nowSec);
-  const geo = resolveGeoForPayload(p, config);
+  const geo = resolveGeoForPayload(p);
   const eventSourceUrl = await deriveEventSourceUrl(db, landing.name, norm(p.event_source_url));
 
   const row: Omit<ConversionRow, "id"> = {
