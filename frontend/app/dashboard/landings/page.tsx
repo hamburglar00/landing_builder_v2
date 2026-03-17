@@ -8,6 +8,7 @@ import type { Landing } from "@/lib/landing/types";
 import { fetchLandings, createLanding } from "@/lib/landing/landingsDb";
 import { DEFAULT_CONFIG } from "@/lib/landing/mocks";
 import { LandingPreview } from "@/components/landing/LandingPreview";
+import { getSettings } from "@/lib/settingsDb";
 
 export default function DashboardLandingsPage() {
   const router = useRouter();
@@ -16,6 +17,7 @@ export default function DashboardLandingsPage() {
   const [ready, setReady] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [creating, setCreating] = useState(false);
+  const [urlBase, setUrlBase] = useState<string | null>(null);
 
   useEffect(() => {
     const init = async () => {
@@ -32,8 +34,12 @@ export default function DashboardLandingsPage() {
       setUserId(user.id);
       setError(null);
       try {
-        const list = await fetchLandings(user.id);
+        const [list, settings] = await Promise.all([
+          fetchLandings(user.id),
+          getSettings(),
+        ]);
         setLandings(list);
+        setUrlBase(settings.url_base ?? null);
       } catch (e) {
         setError(e instanceof Error ? e.message : "Error al cargar landings");
       } finally {
@@ -110,80 +116,75 @@ export default function DashboardLandingsPage() {
       ) : (
         <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
           {landings.map((landing) => (
-            <div
-              key={landing.id}
-              className="relative aspect-[3/4] w-full overflow-hidden rounded-2xl border border-[var(--color-border)] bg-[var(--color-bg-1)] shadow-sm"
-            >
-              <Link
-                href={`/dashboard/landing/${landing.id}/editar`}
-                className="absolute inset-0"
-              >
-                <div className="group/img absolute inset-0 overflow-hidden">
-                  <div className="h-full w-full transition-transform duration-200 group-hover/img:scale-[1.02]">
-                    <LandingPreview config={landing.config} compact gallery />
-                  </div>
-                </div>
-              </Link>
-              <div className="pointer-events-none absolute inset-x-0 bottom-0 flex flex-col gap-0.5 bg-gradient-to-t from-black/85 to-black/50 px-2.5 py-2">
-                <div className="space-y-0.5">
-                  <p className="truncate text-xs font-medium text-[var(--color-text-strong)]">
-                    {landing.name}
-                  </p>
-                  <p className="truncate text-[10px] text-[var(--color-text-muted)]">
-                    {landing.pixelId
-                      ? `Pixel: ${landing.pixelId}`
-                      : "Pixel: sin configurar"}
-                  </p>
-                  <p className="truncate text-[10px] text-[var(--color-text-muted)]">
-                    Teléfono:{" "}
-                    {landing.phoneMode === "fair" ? "equitativo" : "aleatorio"}
-                  </p>
-                  {landing.comment ? (
-                    <p className="truncate text-[10px] text-[var(--color-text-muted)]">
-                      {landing.comment}
-                    </p>
-                  ) : null}
-                </div>
-                <div className="pointer-events-auto flex items-center gap-1.5 pt-1">
-                  <a
-                    href={`${
-                      process.env.NEXT_PUBLIC_LANDING_BASE_URL ??
-                      "https://tus-lands.com"
-                    }/${landing.name}`}
-                    target="_blank"
-                    rel="noreferrer"
-                    onClick={(e) => e.stopPropagation()}
-                    className="inline-flex flex-1 items-center justify-center gap-1 rounded-lg border border-[var(--color-border)] bg-[rgba(255,255,255,0.08)] px-2 py-1 text-[10px] font-medium text-[var(--color-text)] transition hover:bg-[rgba(255,255,255,0.12)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-ring-neutral)]"
-                  >
-                    <span>Abrir landing</span>
-                    <svg
-                      aria-hidden="true"
-                      className="h-2.5 w-2.5"
-                      viewBox="0 0 24 24"
-                      fill="none"
-                      stroke="currentColor"
-                      strokeWidth={1.8}
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                    >
-                      <path d="M14 3h7v7" />
-                      <path d="M10 14L21 3" />
-                      <path d="M5 5v14h14" />
-                    </svg>
-                  </a>
-                  <Link
-                    href={`/dashboard/landing/${landing.id}/editar`}
-                    onClick={(e) => e.stopPropagation()}
-                    className="inline-flex items-center justify-center rounded-lg border border-[var(--color-border)] bg-[rgba(255,255,255,0.06)] px-2 py-1 text-[10px] font-medium text-[var(--color-text)] transition hover:bg-[rgba(255,255,255,0.1)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-ring-neutral)]"
-                  >
-                    Editar
-                  </Link>
-                </div>
-              </div>
-            </div>
+            <LandingCard key={landing.id} landing={landing} urlBase={urlBase} />
           ))}
         </div>
       )}
+    </div>
+  );
+}
+
+function LandingCard({ landing, urlBase }: { landing: Landing; urlBase: string | null }) {
+  return (
+    <div
+      key={landing.id}
+      className="relative aspect-[3/4] w-full overflow-hidden rounded-2xl border border-[var(--color-border)] bg-[var(--color-bg-1)] shadow-sm"
+    >
+      <Link href={`/dashboard/landing/${landing.id}/editar`} className="absolute inset-0">
+        <div className="group/img absolute inset-0 overflow-hidden">
+          <div className="h-full w-full transition-transform duration-200 group-hover/img:scale-[1.02]">
+            <LandingPreview config={landing.config} compact gallery />
+          </div>
+        </div>
+      </Link>
+      <div className="pointer-events-none absolute inset-x-0 bottom-0 flex flex-col gap-0.5 bg-gradient-to-t from-black/85 to-black/50 px-2.5 py-2">
+        <div className="space-y-0.5">
+          <p className="truncate text-xs font-medium text-[var(--color-text-strong)]">
+            {landing.name}
+          </p>
+          <p className="truncate text-[10px] text-[var(--color-text-muted)]">
+            {landing.pixelId ? `Pixel: ${landing.pixelId}` : "Pixel: sin configurar"}
+          </p>
+          <p className="truncate text-[10px] text-[var(--color-text-muted)]">
+            Teléfono: {landing.phoneMode === "fair" ? "equitativo" : "aleatorio"}
+          </p>
+          {landing.comment ? (
+            <p className="truncate text-[10px] text-[var(--color-text-muted)]">{landing.comment}</p>
+          ) : null}
+        </div>
+        <div className="pointer-events-auto flex items-center gap-1.5 pt-1">
+          <a
+            href={urlBase ? `${urlBase.replace(/\/$/, "")}/${landing.name}` : "#"}
+            target="_blank"
+            rel="noreferrer"
+            onClick={(e) => e.stopPropagation()}
+            className="inline-flex flex-1 items-center justify-center gap-1 rounded-lg border border-[var(--color-border)] bg-[rgba(255,255,255,0.08)] px-2 py-1 text-[10px] font-medium text-[var(--color-text)] transition hover:bg-[rgba(255,255,255,0.12)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-ring-neutral)]"
+          >
+            <span>Abrir landing</span>
+            <svg
+              aria-hidden="true"
+              className="h-2.5 w-2.5"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              strokeWidth={1.8}
+              strokeLinecap="round"
+              strokeLinejoin="round"
+            >
+              <path d="M14 3h7v7" />
+              <path d="M10 14L21 3" />
+              <path d="M5 5v14h14" />
+            </svg>
+          </a>
+          <Link
+            href={`/dashboard/landing/${landing.id}/editar`}
+            onClick={(e) => e.stopPropagation()}
+            className="inline-flex items-center justify-center rounded-lg border border-[var(--color-border)] bg-[rgba(255,255,255,0.06)] px-2 py-1 text-[10px] font-medium text-[var(--color-text)] transition hover:bg-[rgba(255,255,255,0.1)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-ring-neutral)]"
+          >
+            Editar
+          </Link>
+        </div>
+      </div>
     </div>
   );
 }

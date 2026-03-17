@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { supabase } from "@/lib/supabaseClient";
+import { getSettings } from "@/lib/settingsDb";
 import type { Landing } from "@/lib/landing/types";
 import { fetchLandingsForAdmin, createLanding } from "@/lib/landing/landingsDb";
 import { DEFAULT_CONFIG } from "@/lib/landing/mocks";
@@ -19,6 +20,7 @@ export default function AdminLandingsPage() {
   const [ready, setReady] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [creating, setCreating] = useState(false);
+  const [urlBase, setUrlBase] = useState<string | null>(null);
 
   useEffect(() => {
     const init = async () => {
@@ -35,9 +37,13 @@ export default function AdminLandingsPage() {
       setUserId(user.id);
       setError(null);
       try {
-        const { mine, clients } = await fetchLandingsForAdmin(user.id);
+        const [{ mine, clients }, settings] = await Promise.all([
+          fetchLandingsForAdmin(user.id),
+          getSettings(),
+        ]);
         setMineLandings(mine);
         setClientLandings(clients);
+        setUrlBase(settings.url_base ?? null);
       } catch (e) {
         setError(e instanceof Error ? e.message : "Error al cargar landings");
       } finally {
@@ -121,7 +127,7 @@ export default function AdminLandingsPage() {
               </h2>
               <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
                 {mineLandings.map((landing) => (
-                  <LandingCard key={landing.id} landing={landing} />
+                  <LandingCard key={landing.id} landing={landing} urlBase={urlBase} />
                 ))}
               </div>
             </section>
@@ -134,7 +140,7 @@ export default function AdminLandingsPage() {
               </h2>
               <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
                 {clientLandings.map((landing) => (
-                  <LandingCard key={landing.id} landing={landing} />
+                  <LandingCard key={landing.id} landing={landing} urlBase={urlBase} />
                 ))}
               </div>
             </section>
@@ -145,7 +151,7 @@ export default function AdminLandingsPage() {
   );
 }
 
-function LandingCard({ landing }: { landing: Landing }) {
+function LandingCard({ landing, urlBase }: { landing: Landing; urlBase: string | null }) {
   return (
     <div
       className="relative aspect-[3/4] w-full overflow-hidden rounded-2xl border border-[var(--color-border)] bg-[var(--color-bg-1)] shadow-sm"
@@ -182,10 +188,11 @@ function LandingCard({ landing }: { landing: Landing }) {
                 </div>
                 <div className="pointer-events-auto flex items-center gap-1.5 pt-1">
                   <a
-                    href={`${
-                      process.env.NEXT_PUBLIC_LANDING_BASE_URL ??
-                      "https://tus-lands.com"
-                    }/${landing.name}`}
+                    href={
+                      urlBase
+                        ? `${urlBase.replace(/\/$/, "")}/${landing.name}`
+                        : "#"
+                    }
                     target="_blank"
                     rel="noreferrer"
                     onClick={(e) => e.stopPropagation()}
