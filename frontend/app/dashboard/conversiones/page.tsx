@@ -6,25 +6,24 @@ import {
   fetchConversionsConfig,
   upsertConversionsConfig,
   fetchConversions,
-  fetchConversionLogs,
   fetchFunnelContacts,
   updateConversionEmail,
   type ConversionsConfig,
   type ConversionRow,
-  type ConversionLogRow,
   type FunnelContact,
 } from "@/lib/conversionsDb";
 import FunnelBoard from "@/components/conversiones/FunnelBoard";
 import StatsPanel from "@/components/conversiones/StatsPanel";
 
-type Tab = "configuracion" | "tabla" | "funnel" | "estadisticas" | "logs";
+type Tab = "funnel" | "tabla" | "estadisticas" | "configuracion";
+
+const TAB_ORDER: Tab[] = ["funnel", "tabla", "estadisticas", "configuracion"];
 
 const TAB_LABELS: Record<Tab, string> = {
-  configuracion: "Configuración",
-  tabla: "Tabla",
   funnel: "Funnel",
+  tabla: "Tabla",
   estadisticas: "Estadísticas",
-  logs: "Logs",
+  configuracion: "Configuración",
 };
 
 function ChevronIcon({ open }: { open: boolean }) {
@@ -56,11 +55,6 @@ function statusText(status: string) {
   if (status === "enviado") return <span className="text-emerald-400">enviado</span>;
   if (status === "error") return <span className="text-red-400">error</span>;
   return <span className="text-zinc-600">-</span>;
-}
-
-function levelBadge(level: string) {
-  const cls = level === "ERROR" ? "bg-red-950 text-red-300" : level === "DEBUG" ? "bg-zinc-800 text-zinc-500" : "bg-blue-950 text-blue-300";
-  return <span className={`inline-block rounded-full px-2 py-0.5 text-[10px] font-medium ${cls}`}>{level}</span>;
 }
 
 function truncateId(id: string, len = 8) {
@@ -162,7 +156,6 @@ export default function DashboardConversionesPage() {
   const [config, setConfig] = useState<ConversionsConfig | null>(null);
   const [conversions, setConversions] = useState<ConversionRow[]>([]);
   const [funnelContacts, setFunnelContacts] = useState<FunnelContact[]>([]);
-  const [logs, setLogs] = useState<ConversionLogRow[]>([]);
   const [clientName, setClientName] = useState("");
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
@@ -170,7 +163,6 @@ export default function DashboardConversionesPage() {
   const [showToken, setShowToken] = useState(false);
   const [tab, setTab] = useState<Tab>("funnel");
   const [copiedUrl, setCopiedUrl] = useState<string | null>(null);
-  const [expandedLog, setExpandedLog] = useState<number | null>(null);
 
   const [configOpen, setConfigOpen] = useState(false);
   const [endpointOpen, setEndpointOpen] = useState(false);
@@ -182,16 +174,14 @@ export default function DashboardConversionesPage() {
       if (!user) return;
       setUserId(user.id);
       try {
-        const [cfg, rows, funnel, logRows] = await Promise.all([
+        const [cfg, rows, funnel] = await Promise.all([
           fetchConversionsConfig(user.id),
           fetchConversions(user.id, 200),
           fetchFunnelContacts(user.id),
-          fetchConversionLogs(user.id, 200),
         ]);
         setConfig(cfg);
         setConversions(rows);
         setFunnelContacts(funnel);
-        setLogs(logRows);
 
         const { data: profile } = await supabase
           .from("profiles").select("nombre").eq("id", user.id).maybeSingle();
@@ -244,7 +234,7 @@ export default function DashboardConversionesPage() {
 
       {/* Tabs */}
       <div className="flex gap-1 rounded-lg bg-zinc-900/80 p-1 w-fit overflow-x-auto">
-        {(Object.keys(TAB_LABELS) as Tab[]).map((t) => (
+        {TAB_ORDER.map((t) => (
           <button key={t} onClick={() => setTab(t)}
             className={`cursor-pointer rounded-md px-4 py-1.5 text-xs font-medium transition whitespace-nowrap ${tab === t ? "bg-zinc-700 text-zinc-100" : "text-zinc-400 hover:text-zinc-200"}`}>
             {TAB_LABELS[t]}
@@ -412,55 +402,7 @@ export default function DashboardConversionesPage() {
         <StatsPanel funnelContacts={funnelContacts} conversions={conversions} premiumThreshold={config?.funnel_premium_threshold ?? 50000} />
       )}
 
-      {/* ═══════════ TAB: LOGS ═══════════ */}
-      {tab === "logs" && (
-        <section className="rounded-xl border border-zinc-800 bg-zinc-900/50 p-4">
-          <h3 className="mb-4 text-sm font-semibold text-zinc-200">
-            Logs de conversiones <span className="font-normal text-zinc-500">({logs.length})</span>
-          </h3>
-          {logs.length === 0 ? (
-            <p className="text-sm text-zinc-500">Aún no hay logs registrados.</p>
-          ) : (
-            <div className="overflow-x-auto rounded-lg border border-zinc-700">
-              <table className="w-full text-left text-[11px]">
-                <thead className="bg-zinc-800/80">
-                  <tr>
-                    <th className="px-2 py-2 font-medium text-zinc-300 whitespace-nowrap">Fecha</th>
-                    <th className="px-2 py-2 font-medium text-zinc-300 whitespace-nowrap">Nivel</th>
-                    <th className="px-2 py-2 font-medium text-zinc-300 whitespace-nowrap">Función</th>
-                    <th className="px-2 py-2 font-medium text-zinc-300 whitespace-nowrap">Mensaje</th>
-                    <th className="px-2 py-2 font-medium text-zinc-300 whitespace-nowrap">Detalle</th>
-                  </tr>
-                </thead>
-                <tbody className="divide-y divide-zinc-800">
-                  {logs.map((log) => (
-                    <tr key={log.id} className="bg-zinc-950/40">
-                      <td className="px-2 py-1.5 text-zinc-400 whitespace-nowrap">
-                        {new Date(log.created_at).toLocaleString("es-AR", { month: "2-digit", day: "2-digit", hour: "2-digit", minute: "2-digit", second: "2-digit" })}
-                      </td>
-                      <td className="px-2 py-1.5">{levelBadge(log.level)}</td>
-                      <td className="px-2 py-1.5 text-zinc-300 font-mono whitespace-nowrap">{log.function_name}</td>
-                      <td className="px-2 py-1.5 text-zinc-200">{log.message}</td>
-                      <td className="px-2 py-1.5 text-zinc-500">
-                        {log.detail ? (
-                          <button type="button" onClick={() => setExpandedLog(expandedLog === log.id ? null : log.id)} className="cursor-pointer text-zinc-400 underline hover:text-zinc-200">
-                            {expandedLog === log.id ? "ocultar" : "ver"}
-                          </button>
-                        ) : "-"}
-                        {expandedLog === log.id && log.detail && (
-                          <pre className="mt-1 max-w-[500px] overflow-x-auto rounded bg-zinc-900 p-2 text-[10px] text-zinc-400">
-                            {(() => { try { return JSON.stringify(JSON.parse(log.detail), null, 2); } catch { return log.detail; } })()}
-                          </pre>
-                        )}
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
-          )}
-        </section>
-      )}
+      {/* Logs tab removed — only available for admin */}
     </div>
   );
 }

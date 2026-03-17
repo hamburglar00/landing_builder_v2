@@ -20,11 +20,13 @@ import StatsPanel from "@/components/conversiones/StatsPanel";
 
 type Tab = "configuracion" | "tabla" | "funnel" | "estadisticas" | "logs";
 
+const TAB_ORDER: Tab[] = ["funnel", "tabla", "estadisticas", "configuracion", "logs"];
+
 const TAB_LABELS: Record<Tab, string> = {
-  configuracion: "Configuración",
-  tabla: "Tabla",
   funnel: "Funnel",
+  tabla: "Tabla",
   estadisticas: "Estadísticas",
+  configuracion: "Configuración",
   logs: "Logs",
 };
 
@@ -306,7 +308,7 @@ export default function AdminConversionesPage() {
       {/* Tabs + Demo toggle */}
       <div className="flex items-center gap-4 flex-wrap">
         <div className="flex gap-1 rounded-lg bg-zinc-900/80 p-1 overflow-x-auto">
-          {(Object.keys(TAB_LABELS) as Tab[]).map((t) => (
+          {TAB_ORDER.map((t) => (
             <button
               key={t}
               onClick={() => setTab(t)}

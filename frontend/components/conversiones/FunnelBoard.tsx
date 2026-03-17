@@ -8,6 +8,7 @@ import {
 } from "@/lib/conversionsDb";
 
 type SortKey = "date" | "amount";
+type SortDir = "asc" | "desc";
 
 const STAGES: FunnelStage[] = ["leads", "primera_carga", "recurrente", "premium"];
 
@@ -128,12 +129,11 @@ function ContactCard({ c, stage }: { c: FunnelContact; stage: FunnelStage }) {
         </a>
       </div>
 
-      {/* Row 2: Name + Email (secondary) */}
+      {/* Row 2: Name + Email (stacked) */}
       {(name || c.email) && (
-        <div className="mt-1 flex items-center gap-1.5 text-[11px] text-zinc-500 leading-none truncate">
-          {name && <span className="truncate">{name}</span>}
-          {name && c.email && <span className="text-zinc-700">·</span>}
-          {c.email && <span className="truncate">{c.email}</span>}
+        <div className="mt-1 space-y-0.5">
+          {name && <p className="text-[11px] text-zinc-400 truncate leading-none">{name}</p>}
+          {c.email && <p className="text-[11px] text-zinc-500 truncate leading-none">{c.email}</p>}
         </div>
       )}
 
@@ -198,8 +198,18 @@ export default function FunnelBoard({
   contacts: FunnelContact[];
   premiumThreshold: number;
 }) {
-  const [sort, setSort] = useState<SortKey>("date");
+  const [sortKey, setSortKey] = useState<SortKey>("date");
+  const [sortDir, setSortDir] = useState<SortDir>("desc");
   const [search, setSearch] = useState("");
+
+  const toggleSort = (key: SortKey) => {
+    if (sortKey === key) {
+      setSortDir((d) => (d === "desc" ? "asc" : "desc"));
+    } else {
+      setSortKey(key);
+      setSortDir("desc");
+    }
+  };
 
   const { grouped, totals } = useMemo(() => {
     const g: Record<FunnelStage, FunnelContact[]> = {
@@ -223,10 +233,11 @@ export default function FunnelBoard({
       totalRevenue += c.total_valor;
     }
 
+    const dir = sortDir === "desc" ? 1 : -1;
     const sortFn = (a: FunnelContact, b: FunnelContact) =>
-      sort === "amount"
-        ? b.total_valor - a.total_valor
-        : new Date(b.last_activity).getTime() - new Date(a.last_activity).getTime();
+      sortKey === "amount"
+        ? (b.total_valor - a.total_valor) * dir
+        : (new Date(b.last_activity).getTime() - new Date(a.last_activity).getTime()) * dir;
 
     for (const s of STAGES) g[s].sort(sortFn);
 
@@ -242,7 +253,7 @@ export default function FunnelBoard({
         revenue: totalRevenue,
       },
     };
-  }, [contacts, premiumThreshold, sort, search]);
+  }, [contacts, premiumThreshold, sortKey, sortDir, search]);
 
   const stageRevenue = useMemo(() => {
     const rev: Record<FunnelStage, number> = { leads: 0, primera_carga: 0, recurrente: 0, premium: 0 };
@@ -281,7 +292,7 @@ export default function FunnelBoard({
           <KpiBlock label="Premium" value={totals.premium} accent="text-amber-400" dot="bg-amber-400" />
           <div className="flex items-center gap-3 px-5 py-2.5 ml-auto">
             <div className="text-right min-w-0">
-              <p className="text-[9px] uppercase tracking-[0.08em] text-zinc-500 font-medium leading-none">Revenue</p>
+              <p className="text-[9px] uppercase tracking-[0.08em] text-zinc-500 font-medium leading-none">Total cargado</p>
               <p className="text-base font-extrabold text-zinc-50 leading-tight mt-0.5 tabular-nums">{fmtCurrency(totals.revenue)}</p>
             </div>
           </div>
@@ -292,19 +303,26 @@ export default function FunnelBoard({
       <div className="flex items-center gap-2">
         <span className="text-[11px] text-zinc-600 font-medium">Ordenar</span>
         <div className="flex items-center rounded-lg border border-zinc-800/40 bg-[#0d0d11] p-0.5">
-          {(["date", "amount"] as SortKey[]).map((k) => (
-            <button
-              key={k}
-              onClick={() => setSort(k)}
-              className={`cursor-pointer rounded-md px-3 py-1 text-[11px] font-medium transition-all ${
-                sort === k
-                  ? "bg-zinc-800 text-zinc-200 shadow-sm"
-                  : "text-zinc-600 hover:text-zinc-300"
-              }`}
-            >
-              {k === "date" ? "Fecha" : "Monto"}
-            </button>
-          ))}
+          {(["date", "amount"] as SortKey[]).map((k) => {
+            const active = sortKey === k;
+            return (
+              <button
+                key={k}
+                onClick={() => toggleSort(k)}
+                className={`cursor-pointer rounded-md px-3 py-1 text-[11px] font-medium transition-all flex items-center gap-1 ${
+                  active
+                    ? "bg-zinc-800 text-zinc-200 shadow-sm"
+                    : "text-zinc-600 hover:text-zinc-300"
+                }`}
+              >
+                {k === "date" ? "Fecha" : "Monto"}
+                <svg viewBox="0 0 10 14" className={`h-3 w-2.5 flex-shrink-0 ${active ? "" : "opacity-30"}`}>
+                  <path d="M5 0L9.5 5H0.5L5 0Z" fill={active && sortDir === "asc" ? "currentColor" : "currentColor"} opacity={active && sortDir === "asc" ? 1 : 0.25} />
+                  <path d="M5 14L0.5 9H9.5L5 14Z" fill={active && sortDir === "desc" ? "currentColor" : "currentColor"} opacity={active && sortDir === "desc" ? 1 : 0.25} />
+                </svg>
+              </button>
+            );
+          })}
         </div>
       </div>
 

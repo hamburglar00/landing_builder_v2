@@ -214,7 +214,7 @@ export default function StatsPanel({
 
       {/* ── REVENUE ── */}
       <div>
-        <SectionTitle>Revenue</SectionTitle>
+        <SectionTitle>Ingresos</SectionTitle>
         <div className="mt-3 grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-4">
           <KpiCard label="Total cargado" value={formatCurrency(stats.totalRevenue)} color="text-emerald-400" />
           <KpiCard label="Ticket promedio" value={formatCurrency(stats.avgTicket)} sub={`${stats.totalPurchaseCount} cargas totales`} />
@@ -251,14 +251,14 @@ export default function StatsPanel({
         <div>
           <SectionTitle>Por región</SectionTitle>
           <div className="mt-3 grid gap-4 lg:grid-cols-2">
-            <TableCard title="Revenue y conversión por región">
+            <TableCard title="Ingresos y conversión por región">
               <table className="w-full text-[11px]">
                 <thead><tr className="text-zinc-500">
                   <th className="text-left pb-2 font-medium">Región</th>
                   <th className="text-right pb-2 font-medium w-12">Leads</th>
                   <th className="text-right pb-2 font-medium w-14">Compras</th>
                   <th className="text-right pb-2 font-medium w-14">Conv.</th>
-                  <th className="pb-2 font-medium w-36">Revenue</th>
+                  <th className="pb-2 font-medium w-36">Ingresos</th>
                 </tr></thead>
                 <tbody className="divide-y divide-zinc-800/60">
                   {stats.byRegion.map((r) => (
@@ -292,14 +292,14 @@ export default function StatsPanel({
         <div>
           <SectionTitle>Por campaña (utm_campaign)</SectionTitle>
           <div className="mt-3 grid gap-4 lg:grid-cols-2">
-            <TableCard title="Revenue y conversión por campaña">
+            <TableCard title="Ingresos y conversión por campaña">
               <table className="w-full text-[11px]">
                 <thead><tr className="text-zinc-500">
                   <th className="text-left pb-2 font-medium">Campaña</th>
                   <th className="text-right pb-2 font-medium w-12">Leads</th>
                   <th className="text-right pb-2 font-medium w-14">Compras</th>
                   <th className="text-right pb-2 font-medium w-14">Conv.</th>
-                  <th className="pb-2 font-medium w-36">Revenue</th>
+                  <th className="pb-2 font-medium w-36">Ingresos</th>
                 </tr></thead>
                 <tbody className="divide-y divide-zinc-800/60">
                   {stats.byCampaign.map((r) => (
@@ -333,14 +333,14 @@ export default function StatsPanel({
         <div>
           <SectionTitle>Por dispositivo</SectionTitle>
           <div className="mt-3">
-            <TableCard title="Volumen y revenue por dispositivo">
+            <TableCard title="Volumen e ingresos por dispositivo">
               <table className="w-full text-[11px]">
                 <thead><tr className="text-zinc-500">
                   <th className="text-left pb-2 font-medium">Dispositivo</th>
                   <th className="text-right pb-2 font-medium w-16">Contactos</th>
                   <th className="text-right pb-2 font-medium w-16">Compradores</th>
                   <th className="text-right pb-2 font-medium w-14">Conv.</th>
-                  <th className="text-right pb-2 font-medium w-24">Revenue</th>
+                  <th className="text-right pb-2 font-medium w-24">Ingresos</th>
                 </tr></thead>
                 <tbody className="divide-y divide-zinc-800/60">
                   {stats.byDevice.map((r) => (
@@ -364,13 +364,13 @@ export default function StatsPanel({
         <div>
           <SectionTitle>Por landing (LTV)</SectionTitle>
           <div className="mt-3">
-            <TableCard title="Contactos y revenue por landing">
+            <TableCard title="Contactos e ingresos por landing">
               <table className="w-full text-[11px]">
                 <thead><tr className="text-zinc-500">
                   <th className="text-left pb-2 font-medium">Landing</th>
                   <th className="text-right pb-2 font-medium w-16">Contactos</th>
                   <th className="text-right pb-2 font-medium w-16">Compradores</th>
-                  <th className="text-right pb-2 font-medium w-24">Revenue</th>
+                  <th className="text-right pb-2 font-medium w-24">Ingresos</th>
                 </tr></thead>
                 <tbody className="divide-y divide-zinc-800/60">
                   {stats.byLanding.map((r) => (
