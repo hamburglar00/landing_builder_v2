@@ -148,6 +148,21 @@ Deno.serve(async (req) => {
     const nombre =
       payload.nombre !== undefined ? (payload.nombre?.trim() || null) : undefined;
 
+    if (nombre !== undefined && !nombre) {
+      return new Response(
+        JSON.stringify({
+          error: "Nombre no puede quedar vacío. Es obligatorio para el endpoint de conversiones.",
+        }),
+        {
+          status: 400,
+          headers: {
+            ...corsHeaders,
+            "Content-Type": "application/json",
+          },
+        },
+      );
+    }
+
     if (
       !attributes.email &&
       !attributes.password &&

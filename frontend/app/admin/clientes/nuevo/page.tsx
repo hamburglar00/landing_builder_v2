@@ -24,7 +24,7 @@ export default function NuevoClientePage() {
       "create-client",
       {
         body: {
-          nombre: nombre.trim() || undefined,
+          nombre: nombre.trim(),
           email,
           password,
         },
@@ -70,17 +70,21 @@ export default function NuevoClientePage() {
               htmlFor="new-client-nombre"
               className="block text-xs font-medium text-zinc-200"
             >
-              Nombre
+              Nombre <span className="text-red-400">*</span>
             </label>
             <input
               id="new-client-nombre"
               type="text"
+              required
               autoComplete="off"
               value={nombre}
               onChange={(e) => setNombre(e.target.value)}
               className="w-full rounded-lg border border-zinc-800 bg-zinc-900 px-3 py-2 text-xs text-zinc-50 outline-none ring-0 transition focus:border-zinc-500 focus:ring-2 focus:ring-zinc-500/60"
-              placeholder="Nombre del cliente"
+              placeholder="ej: koben (solo minúsculas y números, para la URL de conversiones)"
             />
+            <p className="text-[11px] text-zinc-500">
+              Identificador único del cliente. Se usa en el endpoint de conversiones.
+            </p>
           </div>
           <div className="space-y-2">
             <label

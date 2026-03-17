@@ -90,6 +90,10 @@ export default function AdminClientesPage() {
     event.preventDefault();
 
     if (!editingClientId) return;
+    if (!editingClientNombre.trim()) {
+      setClientsError("El nombre es obligatorio.");
+      return;
+    }
 
     setIsUpdatingClient(true);
     setClientsError(null);
@@ -242,7 +246,7 @@ export default function AdminClientesPage() {
                           onChange={(event) =>
                             setEditingClientNombre(event.target.value)
                           }
-                          placeholder="Nombre"
+                          placeholder="Nombre (obligatorio)"
                           className="w-full rounded-md border border-zinc-700 bg-zinc-900 px-2 py-1 text-xs text-zinc-50 outline-none ring-0 focus:border-zinc-500 focus:ring-1 focus:ring-zinc-500/70"
                         />
                       ) : (

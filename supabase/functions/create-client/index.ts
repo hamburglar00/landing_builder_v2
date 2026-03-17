@@ -153,6 +153,21 @@ Deno.serve(async (req) => {
       );
     }
 
+    if (!nombre) {
+      return new Response(
+        JSON.stringify({
+          error: "Nombre es obligatorio. Se usa como identificador para el endpoint de conversiones.",
+        }),
+        {
+          status: 400,
+          headers: {
+            ...corsHeaders,
+            "Content-Type": "application/json",
+          },
+        },
+      );
+    }
+
     const { data: created, error: createError } =
       await supabaseAdmin.auth.admin.createUser({
         email,
