@@ -86,6 +86,10 @@ export interface FunnelContact {
   repeat_count: number;
   lead_count: number;
   contact_count: number;
+  reached_contact: boolean;
+  reached_lead: boolean;
+  reached_purchase: boolean;
+  reached_repeat: boolean;
   last_activity: string;
   first_contact: string;
 }

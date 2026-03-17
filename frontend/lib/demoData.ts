@@ -154,6 +154,10 @@ export function generateDemoFunnelContacts(conversions: ConversionRow[]): Funnel
       repeat_count: repeats.length,
       lead_count: leads.length,
       contact_count: contactRows.length,
+      reached_contact: rows.some((r) => r.contact_event_id !== ""),
+      reached_lead: rows.some((r) => r.lead_event_id !== ""),
+      reached_purchase: rows.some((r) => r.purchase_event_id !== ""),
+      reached_repeat: repeats.length > 0,
       last_activity: latest.created_at,
       first_contact: earliest.created_at,
     });
