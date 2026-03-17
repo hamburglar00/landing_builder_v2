@@ -390,6 +390,9 @@ s3_secret_key = "env(S3_SECRET_KEY)"
 [functions.builder-config]
 verify_jwt = false
 
+[functions.conversions]
+verify_jwt = false
+
 [functions.landing-phone]
 verify_jwt = false
 
