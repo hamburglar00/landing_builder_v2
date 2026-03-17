@@ -26,18 +26,25 @@ function KpiCard({
   label,
   value,
   sub,
+  tooltip,
   color = "text-zinc-100",
 }: {
   label: string;
   value: string | number;
   sub?: string;
+  tooltip?: string;
   color?: string;
 }) {
   return (
-    <div className="rounded-xl border border-zinc-800 bg-zinc-900/60 p-4">
+    <div className="rounded-xl border border-zinc-800 bg-zinc-900/60 p-4 group relative">
       <p className="text-[11px] text-zinc-500 mb-1">{label}</p>
       <p className={`text-xl font-bold ${color}`}>{value}</p>
       {sub && <p className="text-[10px] text-zinc-500 mt-1">{sub}</p>}
+      {tooltip && (
+        <div className="pointer-events-none absolute left-1/2 -translate-x-1/2 bottom-full mb-2 w-56 rounded-lg border border-zinc-700/60 bg-zinc-900/95 backdrop-blur-sm px-3 py-2 shadow-xl opacity-0 group-hover:opacity-100 transition-opacity duration-150 z-50">
+          <p className="text-[10px] text-zinc-400 leading-relaxed">{tooltip}</p>
+        </div>
+      )}
     </div>
   );
 }
@@ -98,7 +105,6 @@ export default function StatsPanel({
     const total = funnelContacts.length;
     let leads = 0, primera = 0, recurrente = 0, premium = 0;
     let totalRevenue = 0, totalPurchaseCount = 0;
-    const withEmail = funnelContacts.filter((c) => c.email).length;
 
     for (const c of funnelContacts) {
       const stage = classifyContact(c, premiumThreshold);
@@ -118,85 +124,70 @@ export default function StatsPanel({
     const avgTicket = totalPurchaseCount > 0 ? totalRevenue / totalPurchaseCount : 0;
     const avgLoadsPerPlayer = purchasers > 0 ? totalPurchaseCount / purchasers : 0;
 
-    const singlePurchasers = funnelContacts.filter((c) => c.purchase_count === 1).length;
-    const multiPurchasers = funnelContacts.filter((c) => c.purchase_count > 1).length;
-
-    // CAPI
-    const capiEvents = conversions.filter((c) => c.contact_status_capi || c.lead_status_capi || c.purchase_status_capi);
-    const capiTotal = capiEvents.length;
-    const capiOk = capiEvents.filter((c) => c.contact_status_capi === "enviado" || c.lead_status_capi === "enviado" || c.purchase_status_capi === "enviado").length;
-    const capiContactOk = conversions.filter((c) => c.contact_status_capi === "enviado").length;
-    const capiContactTotal = conversions.filter((c) => c.contact_status_capi).length;
-    const capiLeadOk = conversions.filter((c) => c.lead_status_capi === "enviado").length;
-    const capiLeadTotal = conversions.filter((c) => c.lead_status_capi).length;
-    const capiPurchOk = conversions.filter((c) => c.purchase_status_capi === "enviado").length;
-    const capiPurchTotal = conversions.filter((c) => c.purchase_status_capi).length;
-
-    // By region
-    const regionMap = new Map<string, { leads: number; purchases: number; revenue: number; total: number }>();
-    for (const c of funnelContacts) {
-      const r = c.region || c.country || "Sin región";
-      const entry = regionMap.get(r) ?? { leads: 0, purchases: 0, revenue: 0, total: 0 };
-      entry.total++;
-      const stage = classifyContact(c, premiumThreshold);
-      if (stage === "leads") entry.leads++; else entry.purchases++;
-      entry.revenue += c.total_valor;
-      regionMap.set(r, entry);
-    }
-    const byRegion = [...regionMap.entries()].map(([region, d]) => ({ region, ...d })).sort((a, b) => b.revenue - a.revenue).slice(0, 10);
-
     // By campaign
-    const campaignMap = new Map<string, { leads: number; purchases: number; revenue: number; total: number }>();
+    const campaignMap = new Map<string, { leads: number; cargas: number; revenue: number; total: number }>();
     for (const c of funnelContacts) {
       const camp = c.utm_campaign || "Sin campaña";
-      const entry = campaignMap.get(camp) ?? { leads: 0, purchases: 0, revenue: 0, total: 0 };
+      const entry = campaignMap.get(camp) ?? { leads: 0, cargas: 0, revenue: 0, total: 0 };
       entry.total++;
-      const stage = classifyContact(c, premiumThreshold);
-      if (stage === "leads") entry.leads++; else entry.purchases++;
+      if (c.reached_lead) entry.leads++;
+      if (c.reached_purchase) entry.cargas++;
       entry.revenue += c.total_valor;
       campaignMap.set(camp, entry);
     }
-    const byCampaign = [...campaignMap.entries()].map(([campaign, d]) => ({ campaign, ...d })).sort((a, b) => b.revenue - a.revenue).slice(0, 10);
+    const byCampaign = [...campaignMap.entries()]
+      .map(([campaign, d]) => ({ campaign, ...d }))
+      .sort((a, b) => b.revenue - a.revenue)
+      .slice(0, 10);
 
     // By device
-    const deviceMap = new Map<string, { contacts: number; purchases: number; revenue: number }>();
+    const deviceMap = new Map<string, { leads: number; cargas: number; revenue: number; total: number }>();
     for (const c of funnelContacts) {
       const dev = c.device_type || "Desconocido";
-      const entry = deviceMap.get(dev) ?? { contacts: 0, purchases: 0, revenue: 0 };
-      entry.contacts++;
-      if (c.purchase_count > 0) entry.purchases++;
+      const entry = deviceMap.get(dev) ?? { leads: 0, cargas: 0, revenue: 0, total: 0 };
+      entry.total++;
+      if (c.reached_lead) entry.leads++;
+      if (c.reached_purchase) entry.cargas++;
       entry.revenue += c.total_valor;
       deviceMap.set(dev, entry);
     }
-    const byDevice = [...deviceMap.entries()].map(([device, d]) => ({ device, ...d })).sort((a, b) => b.revenue - a.revenue);
+    const byDevice = [...deviceMap.entries()]
+      .map(([device, d]) => ({ device, ...d }))
+      .sort((a, b) => b.revenue - a.revenue);
 
     // By landing
-    const landingMap = new Map<string, { contacts: number; purchases: number; revenue: number }>();
+    const landingMap = new Map<string, { leads: number; cargas: number; revenue: number; total: number }>();
     for (const c of funnelContacts) {
       const ln = c.landing_name || "Sin landing";
-      const entry = landingMap.get(ln) ?? { contacts: 0, purchases: 0, revenue: 0 };
-      entry.contacts++;
-      if (c.purchase_count > 0) entry.purchases++;
+      const entry = landingMap.get(ln) ?? { leads: 0, cargas: 0, revenue: 0, total: 0 };
+      entry.total++;
+      if (c.reached_lead) entry.leads++;
+      if (c.reached_purchase) entry.cargas++;
       entry.revenue += c.total_valor;
       landingMap.set(ln, entry);
     }
-    const byLanding = [...landingMap.entries()].map(([landing, d]) => ({ landing, ...d })).sort((a, b) => b.revenue - a.revenue).slice(0, 10);
+    const byLanding = [...landingMap.entries()]
+      .map(([landing, d]) => ({ landing, ...d }))
+      .sort((a, b) => b.revenue - a.revenue)
+      .slice(0, 10);
 
     // Top contacts
-    const topContacts = [...funnelContacts].filter((c) => c.total_valor > 0).sort((a, b) => b.total_valor - a.total_valor).slice(0, 10);
+    const topContacts = [...funnelContacts]
+      .filter((c) => c.total_valor > 0)
+      .sort((a, b) => b.total_valor - a.total_valor)
+      .slice(0, 10);
 
     return {
       total, leads, primera, recurrente, premium, purchasers,
       reachedContact, reachedLead, reachedPurchase, reachedRepeat,
       totalRevenue, totalPurchaseCount, avgTicket, avgLoadsPerPlayer,
-      withEmail, singlePurchasers, multiPurchasers,
-      capiTotal, capiOk, capiContactOk, capiContactTotal, capiLeadOk, capiLeadTotal, capiPurchOk, capiPurchTotal,
-      byRegion, byCampaign, byDevice, byLanding, topContacts,
+      byCampaign, byDevice, byLanding, topContacts,
     };
   }, [funnelContacts, conversions, premiumThreshold]);
 
-  const maxRegionRev = Math.max(...stats.byRegion.map((r) => r.revenue), 1);
   const maxCampaignRev = Math.max(...stats.byCampaign.map((r) => r.revenue), 1);
+  const maxDeviceRev = Math.max(...stats.byDevice.map((r) => r.revenue), 1);
+  const maxLandingRev = Math.max(...stats.byLanding.map((r) => r.revenue), 1);
 
   return (
     <div className="space-y-8">
@@ -205,88 +196,89 @@ export default function StatsPanel({
       <div>
         <SectionTitle>Resumen general</SectionTitle>
         <div className="mt-3 grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-5">
-          <KpiCard label="Contactos únicos" value={stats.total} />
-          <KpiCard label="Leads" value={stats.leads} color="text-amber-300" />
-          <KpiCard label="Primera carga" value={stats.primera} color="text-sky-300" />
-          <KpiCard label="Recurrentes" value={stats.recurrente} color="text-violet-300" />
-          <KpiCard label="Premium" value={stats.premium} color="text-emerald-300" />
+          <KpiCard
+            label="Contactos únicos"
+            value={stats.total}
+            tooltip="Cantidad de teléfonos únicos registrados en el sistema. Cada teléfono representa un contacto consolidado."
+          />
+          <KpiCard
+            label="Leads"
+            value={stats.leads}
+            color="text-amber-300"
+            tooltip="Contactos que iniciaron una conversación (acción LEAD) pero aún no realizaron ninguna carga."
+          />
+          <KpiCard
+            label="Primera carga"
+            value={stats.primera}
+            color="text-sky-300"
+            tooltip="Contactos que realizaron su primera carga pero no tienen recargas."
+          />
+          <KpiCard
+            label="Recurrentes"
+            value={stats.recurrente}
+            color="text-violet-300"
+            tooltip="Contactos que realizaron más de una carga pero cuyo monto total acumulado no alcanza el umbral premium."
+          />
+          <KpiCard
+            label="Premium"
+            value={stats.premium}
+            color="text-emerald-300"
+            tooltip={`Contactos cuyo monto total acumulado de cargas es igual o superior al umbral premium configurado ($${premiumThreshold.toLocaleString("es-AR")}).`}
+          />
         </div>
       </div>
 
-      {/* ── REVENUE ── */}
+      {/* ── INGRESOS ── */}
       <div>
         <SectionTitle>Ingresos</SectionTitle>
-        <div className="mt-3 grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-4">
-          <KpiCard label="Total cargado" value={formatCurrency(stats.totalRevenue)} color="text-emerald-400" />
-          <KpiCard label="Ticket promedio" value={formatCurrency(stats.avgTicket)} sub={`${stats.totalPurchaseCount} cargas totales`} />
-          <KpiCard label="Promedio cargas/jugador" value={stats.avgLoadsPerPlayer.toFixed(1)} sub={`${stats.singlePurchasers} con 1 carga · ${stats.multiPurchasers} con múltiples`} />
-          <KpiCard label="Jugadores con 1 vs múltiples" value={`${stats.singlePurchasers} / ${stats.multiPurchasers}`} sub={`${pct(stats.multiPurchasers, stats.singlePurchasers + stats.multiPurchasers)} repiten`} />
+        <div className="mt-3 grid grid-cols-2 gap-3 sm:grid-cols-3">
+          <KpiCard
+            label="Total cargado"
+            value={formatCurrency(stats.totalRevenue)}
+            color="text-emerald-400"
+            tooltip="Suma total del valor de todas las cargas realizadas por todos los contactos."
+          />
+          <KpiCard
+            label="Carga promedio"
+            value={formatCurrency(stats.avgTicket)}
+            sub={`${stats.totalPurchaseCount} cargas totales`}
+            tooltip="Monto promedio por carga individual. Se calcula dividiendo el total cargado por la cantidad de cargas realizadas."
+          />
+          <KpiCard
+            label="Promedio de cargas por jugador"
+            value={stats.avgLoadsPerPlayer.toFixed(1)}
+            tooltip="Cantidad promedio de cargas que realiza cada jugador que cargó al menos una vez. Se calcula dividiendo el total de cargas por la cantidad de jugadores."
+          />
         </div>
       </div>
 
-      {/* ── EMBUDO DE CONVERSIÓN (histórico) ── */}
+      {/* ── EMBUDO DE CONVERSIÓN ── */}
       <div>
         <SectionTitle>Embudo de conversión</SectionTitle>
-        <div className="mt-3 grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-5">
-          <KpiCard label="Contact → Lead" value={pct(stats.reachedLead, stats.reachedContact || stats.total)} sub={`${stats.reachedLead} de ${stats.reachedContact || stats.total} contactos`} color="text-amber-400" />
-          <KpiCard label="Lead → Compra" value={pct(stats.reachedPurchase, stats.reachedLead)} sub={`${stats.reachedPurchase} de ${stats.reachedLead} leads`} color="text-sky-400" />
-          <KpiCard label="Compra → Repeat" value={pct(stats.reachedRepeat, stats.reachedPurchase)} sub={`${stats.reachedRepeat} de ${stats.reachedPurchase} compradores`} color="text-violet-400" />
-          <KpiCard label="Contactos con email" value={pct(stats.withEmail, stats.total)} sub={`${stats.withEmail} de ${stats.total}`} />
-          <KpiCard label="% Premium" value={pct(stats.premium, stats.total)} sub={`${stats.premium} de ${stats.total} contactos`} color="text-emerald-400" />
+        <div className="mt-3 grid grid-cols-1 gap-3 sm:grid-cols-3">
+          <KpiCard
+            label="Porcentaje de inicio de conversación"
+            value={pct(stats.reachedLead, stats.reachedContact || stats.total)}
+            sub={`${stats.reachedLead} de ${stats.reachedContact || stats.total} contactos`}
+            color="text-amber-400"
+            tooltip="Porcentaje de contactos que iniciaron una conversación (alcanzaron la etapa Lead). Se calcula: leads alcanzados / contactos totales."
+          />
+          <KpiCard
+            label="Porcentaje de carga"
+            value={pct(stats.reachedPurchase, stats.reachedLead)}
+            sub={`${stats.reachedPurchase} de ${stats.reachedLead} leads`}
+            color="text-sky-400"
+            tooltip="Porcentaje de leads que realizaron al menos una carga. Se calcula: contactos que cargaron / leads alcanzados."
+          />
+          <KpiCard
+            label="Porcentaje de recarga"
+            value={pct(stats.reachedRepeat, stats.reachedPurchase)}
+            sub={`${stats.reachedRepeat} de ${stats.reachedPurchase} jugadores`}
+            color="text-violet-400"
+            tooltip="Porcentaje de jugadores que volvieron a cargar después de su primera carga. Se calcula: jugadores con recarga / jugadores que cargaron."
+          />
         </div>
       </div>
-
-      {/* ── ENVÍOS CAPI ── */}
-      <div>
-        <SectionTitle>Envíos Meta CAPI</SectionTitle>
-        <div className="mt-3 grid grid-cols-2 gap-3 sm:grid-cols-4">
-          <KpiCard label="CAPI total exitoso" value={pct(stats.capiOk, stats.capiTotal)} sub={`${stats.capiOk} de ${stats.capiTotal} envíos`} color="text-emerald-400" />
-          <KpiCard label="Contact CAPI" value={pct(stats.capiContactOk, stats.capiContactTotal)} sub={`${stats.capiContactOk} de ${stats.capiContactTotal}`} />
-          <KpiCard label="Lead CAPI" value={pct(stats.capiLeadOk, stats.capiLeadTotal)} sub={`${stats.capiLeadOk} de ${stats.capiLeadTotal}`} />
-          <KpiCard label="Purchase CAPI" value={pct(stats.capiPurchOk, stats.capiPurchTotal)} sub={`${stats.capiPurchOk} de ${stats.capiPurchTotal}`} />
-        </div>
-      </div>
-
-      {/* ── POR REGIÓN ── */}
-      {stats.byRegion.length > 0 && (
-        <div>
-          <SectionTitle>Por región</SectionTitle>
-          <div className="mt-3 grid gap-4 lg:grid-cols-2">
-            <TableCard title="Ingresos y conversión por región">
-              <table className="w-full text-[11px]">
-                <thead><tr className="text-zinc-500">
-                  <th className="text-left pb-2 font-medium">Región</th>
-                  <th className="text-right pb-2 font-medium w-12">Leads</th>
-                  <th className="text-right pb-2 font-medium w-14">Compras</th>
-                  <th className="text-right pb-2 font-medium w-14">Conv.</th>
-                  <th className="pb-2 font-medium w-36">Ingresos</th>
-                </tr></thead>
-                <tbody className="divide-y divide-zinc-800/60">
-                  {stats.byRegion.map((r) => (
-                    <tr key={r.region}>
-                      <td className="py-1.5 text-zinc-300">{r.region}</td>
-                      <td className="py-1.5 text-right text-zinc-400">{r.leads}</td>
-                      <td className="py-1.5 text-right text-zinc-400">{r.purchases}</td>
-                      <td className="py-1.5 text-right"><PctBar num={r.purchases} den={r.total} /></td>
-                      <td className="py-1.5"><BarCell value={r.revenue} max={maxRegionRev} /></td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </TableCard>
-            <TableCard title="% de carga por región">
-              <div className="space-y-2">
-                {stats.byRegion.map((r) => (
-                  <div key={r.region} className="flex items-center gap-2">
-                    <span className="text-[11px] text-zinc-400 w-24 truncate">{r.region}</span>
-                    <PctBar num={r.revenue} den={stats.totalRevenue} color="bg-emerald-500" />
-                  </div>
-                ))}
-              </div>
-            </TableCard>
-          </div>
-        </div>
-      )}
 
       {/* ── MAPA DE ARGENTINA ── */}
       <div>
@@ -299,15 +291,15 @@ export default function StatsPanel({
       {/* ── POR CAMPAÑA ── */}
       {stats.byCampaign.length > 0 && (
         <div>
-          <SectionTitle>Por campaña (utm_campaign)</SectionTitle>
-          <div className="mt-3 grid gap-4 lg:grid-cols-2">
-            <TableCard title="Ingresos y conversión por campaña">
+          <SectionTitle>Por campaña</SectionTitle>
+          <div className="mt-3">
+            <TableCard title="Leads, cargas e ingresos por campaña">
               <table className="w-full text-[11px]">
                 <thead><tr className="text-zinc-500">
                   <th className="text-left pb-2 font-medium">Campaña</th>
                   <th className="text-right pb-2 font-medium w-12">Leads</th>
-                  <th className="text-right pb-2 font-medium w-14">Compras</th>
-                  <th className="text-right pb-2 font-medium w-14">Conv.</th>
+                  <th className="text-right pb-2 font-medium w-14">Cargas</th>
+                  <th className="text-right pb-2 font-medium w-20">% de carga</th>
                   <th className="pb-2 font-medium w-36">Ingresos</th>
                 </tr></thead>
                 <tbody className="divide-y divide-zinc-800/60">
@@ -315,23 +307,13 @@ export default function StatsPanel({
                     <tr key={r.campaign}>
                       <td className="py-1.5 text-zinc-300 truncate max-w-[140px]">{r.campaign}</td>
                       <td className="py-1.5 text-right text-zinc-400">{r.leads}</td>
-                      <td className="py-1.5 text-right text-zinc-400">{r.purchases}</td>
-                      <td className="py-1.5 text-right"><PctBar num={r.purchases} den={r.total} color="bg-amber-500" /></td>
+                      <td className="py-1.5 text-right text-zinc-400">{r.cargas}</td>
+                      <td className="py-1.5 text-right"><PctBar num={r.cargas} den={r.leads || 1} color="bg-amber-500" /></td>
                       <td className="py-1.5"><BarCell value={r.revenue} max={maxCampaignRev} /></td>
                     </tr>
                   ))}
                 </tbody>
               </table>
-            </TableCard>
-            <TableCard title="Top campañas por monto">
-              <div className="space-y-2">
-                {stats.byCampaign.map((r) => (
-                  <div key={r.campaign} className="flex items-center gap-2">
-                    <span className="text-[11px] text-zinc-400 w-28 truncate">{r.campaign}</span>
-                    <PctBar num={r.revenue} den={stats.totalRevenue} color="bg-amber-500" />
-                  </div>
-                ))}
-              </div>
             </TableCard>
           </div>
         </div>
@@ -342,23 +324,23 @@ export default function StatsPanel({
         <div>
           <SectionTitle>Por dispositivo</SectionTitle>
           <div className="mt-3">
-            <TableCard title="Volumen e ingresos por dispositivo">
+            <TableCard title="Leads, cargas e ingresos por dispositivo">
               <table className="w-full text-[11px]">
                 <thead><tr className="text-zinc-500">
                   <th className="text-left pb-2 font-medium">Dispositivo</th>
-                  <th className="text-right pb-2 font-medium w-16">Contactos</th>
-                  <th className="text-right pb-2 font-medium w-16">Compradores</th>
-                  <th className="text-right pb-2 font-medium w-14">Conv.</th>
-                  <th className="text-right pb-2 font-medium w-24">Ingresos</th>
+                  <th className="text-right pb-2 font-medium w-12">Leads</th>
+                  <th className="text-right pb-2 font-medium w-14">Cargas</th>
+                  <th className="text-right pb-2 font-medium w-20">% de carga</th>
+                  <th className="pb-2 font-medium w-36">Ingresos</th>
                 </tr></thead>
                 <tbody className="divide-y divide-zinc-800/60">
                   {stats.byDevice.map((r) => (
                     <tr key={r.device}>
                       <td className="py-1.5 text-zinc-300 capitalize">{r.device}</td>
-                      <td className="py-1.5 text-right text-zinc-400">{r.contacts}</td>
-                      <td className="py-1.5 text-right text-zinc-400">{r.purchases}</td>
-                      <td className="py-1.5 text-right"><PctBar num={r.purchases} den={r.contacts} color="bg-violet-500" /></td>
-                      <td className="py-1.5 text-right text-zinc-200 font-mono">{formatCurrency(r.revenue)}</td>
+                      <td className="py-1.5 text-right text-zinc-400">{r.leads}</td>
+                      <td className="py-1.5 text-right text-zinc-400">{r.cargas}</td>
+                      <td className="py-1.5 text-right"><PctBar num={r.cargas} den={r.leads || 1} color="bg-violet-500" /></td>
+                      <td className="py-1.5"><BarCell value={r.revenue} max={maxDeviceRev} /></td>
                     </tr>
                   ))}
                 </tbody>
@@ -371,23 +353,25 @@ export default function StatsPanel({
       {/* ── POR LANDING ── */}
       {stats.byLanding.length > 0 && (
         <div>
-          <SectionTitle>Por landing (LTV)</SectionTitle>
+          <SectionTitle>Por landing</SectionTitle>
           <div className="mt-3">
-            <TableCard title="Contactos e ingresos por landing">
+            <TableCard title="Leads, cargas e ingresos por landing">
               <table className="w-full text-[11px]">
                 <thead><tr className="text-zinc-500">
                   <th className="text-left pb-2 font-medium">Landing</th>
-                  <th className="text-right pb-2 font-medium w-16">Contactos</th>
-                  <th className="text-right pb-2 font-medium w-16">Compradores</th>
-                  <th className="text-right pb-2 font-medium w-24">Ingresos</th>
+                  <th className="text-right pb-2 font-medium w-12">Leads</th>
+                  <th className="text-right pb-2 font-medium w-14">Cargas</th>
+                  <th className="text-right pb-2 font-medium w-20">% de carga</th>
+                  <th className="pb-2 font-medium w-36">Ingresos</th>
                 </tr></thead>
                 <tbody className="divide-y divide-zinc-800/60">
                   {stats.byLanding.map((r) => (
                     <tr key={r.landing}>
                       <td className="py-1.5 text-zinc-300 truncate max-w-[160px]">{r.landing}</td>
-                      <td className="py-1.5 text-right text-zinc-400">{r.contacts}</td>
-                      <td className="py-1.5 text-right text-zinc-400">{r.purchases}</td>
-                      <td className="py-1.5 text-right text-emerald-400 font-mono font-semibold">{formatCurrency(r.revenue)}</td>
+                      <td className="py-1.5 text-right text-zinc-400">{r.leads}</td>
+                      <td className="py-1.5 text-right text-zinc-400">{r.cargas}</td>
+                      <td className="py-1.5 text-right"><PctBar num={r.cargas} den={r.leads || 1} color="bg-emerald-500" /></td>
+                      <td className="py-1.5"><BarCell value={r.revenue} max={maxLandingRev} /></td>
                     </tr>
                   ))}
                 </tbody>
