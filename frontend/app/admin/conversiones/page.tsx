@@ -226,18 +226,7 @@ export default function AdminConversionesPage() {
   const [tab, setTab] = useState<Tab>("funnel");
   const [copiedUrl, setCopiedUrl] = useState<string | null>(null);
   const [expandedLog, setExpandedLog] = useState<number | null>(null);
-  const [visibleCols, setVisibleCols] = useState<Set<ColKey>>(() => {
-    if (typeof window === "undefined") return new Set(DEFAULT_VISIBLE);
-    try {
-      const raw = window.localStorage.getItem("conversiones_visible_columns");
-      if (!raw) return new Set(DEFAULT_VISIBLE);
-      const parsed = JSON.parse(raw) as ColKey[];
-      const valid = parsed.filter((c) => (ALL_COLUMNS as readonly string[]).includes(c));
-      return new Set((valid.length ? valid : ALL_COLUMNS) as ColKey[]);
-    } catch {
-      return new Set(DEFAULT_VISIBLE);
-    }
-  });
+  const [visibleCols, setVisibleCols] = useState<Set<ColKey>>(() => new Set(DEFAULT_VISIBLE));
 
   const [demoMode, setDemoMode] = useState(false);
   const [dateRange, setDateRange] = useState<DateRange | null>(null);
@@ -269,6 +258,12 @@ export default function AdminConversionesPage() {
           fetchConversionLogsForAdmin(200),
         ]);
         setConfig(cfg);
+        if (cfg.visible_columns && cfg.visible_columns.length) {
+          const valid = cfg.visible_columns.filter((c) => (ALL_COLUMNS as readonly string[]).includes(c)) as ColKey[];
+          setVisibleCols(new Set(valid.length ? valid : DEFAULT_VISIBLE));
+        } else {
+          setVisibleCols(new Set(DEFAULT_VISIBLE));
+        }
         setConversions(rows);
         setFunnelContacts(funnel);
         setLogs(logRows);
@@ -475,9 +470,7 @@ export default function AdminConversionesPage() {
                     onClick={() => {
                       const next = new Set(ALL_COLUMNS);
                       setVisibleCols(next);
-                      if (typeof window !== "undefined") {
-                        window.localStorage.setItem("conversiones_visible_columns", JSON.stringify([...next]));
-                      }
+                      setConfig((prev) => prev ? { ...prev, visible_columns: [...ALL_COLUMNS] } : prev);
                     }}
                     className="cursor-pointer text-[11px] text-zinc-400 underline hover:text-zinc-200"
                   >
@@ -488,9 +481,7 @@ export default function AdminConversionesPage() {
                     onClick={() => {
                       const next = new Set<ColKey>();
                       setVisibleCols(next);
-                      if (typeof window !== "undefined") {
-                        window.localStorage.setItem("conversiones_visible_columns", JSON.stringify([...next]));
-                      }
+                      setConfig((prev) => prev ? { ...prev, visible_columns: [] } : prev);
                     }}
                     className="cursor-pointer text-[11px] text-zinc-400 underline hover:text-zinc-200"
                   >
@@ -508,9 +499,8 @@ export default function AdminConversionesPage() {
                             const next = new Set(prev);
                             if (e.target.checked) next.add(col);
                             else next.delete(col);
-                            if (typeof window !== "undefined") {
-                              window.localStorage.setItem("conversiones_visible_columns", JSON.stringify([...next]));
-                            }
+                            const arr = [...next] as ColKey[];
+                            setConfig((prev) => prev ? { ...prev, visible_columns: arr } : prev);
                             return next;
                           });
                         }}

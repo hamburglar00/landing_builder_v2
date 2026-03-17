@@ -171,25 +171,19 @@ export default function DashboardConversionesPage() {
 
   const [dateRange, setDateRange] = useState<DateRange | null>(null);
 
-  const [visibleCols, setVisibleCols] = useState<Set<ColKey>>(() => {
-    if (typeof window === "undefined") return new Set(ALL_COLUMNS);
-    try {
-      const raw = window.localStorage.getItem("conversiones_visible_columns");
-      if (!raw) return new Set(ALL_COLUMNS);
-      const parsed = JSON.parse(raw) as ColKey[];
-      const valid = parsed.filter((c) => (ALL_COLUMNS as readonly string[]).includes(c));
-      return new Set((valid.length ? valid : ALL_COLUMNS) as ColKey[]);
-    } catch {
-      return new Set(ALL_COLUMNS);
-    }
-  });
-
   const [configOpen, setConfigOpen] = useState(false);
   const [endpointOpen, setEndpointOpen] = useState(false);
   const [funnelConfigOpen, setFunnelConfigOpen] = useState(false);
 
   const activeConversions = useMemo(() => filterByDateRange(conversions, dateRange), [conversions, dateRange]);
   const activeFunnel = useMemo(() => filterFunnelByDateRange(funnelContacts, dateRange), [funnelContacts, dateRange]);
+
+  const visibleCols = useMemo(() => {
+    const cols = config?.visible_columns;
+    if (!cols || cols.length === 0) return new Set<ColKey>(ALL_COLUMNS);
+    const valid = cols.filter((c): c is ColKey => (ALL_COLUMNS as readonly string[]).includes(c));
+    return new Set<ColKey>(valid.length ? valid : ALL_COLUMNS);
+  }, [config]);
 
   useEffect(() => {
     const init = async () => {
