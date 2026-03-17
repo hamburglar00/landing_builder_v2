@@ -131,9 +131,20 @@ Deno.serve(async (req) => {
       phone_mode?: "random" | "fair" | null;
     };
 
-    // Si ya existe landing_config persistido, lo devolvemos tal cual sin modificarlo.
+    // Si ya existe landing_config persistido, lo devolvemos pero SIEMPRE inyectamos
+    // post_url desde landings.post_url (fuente de verdad). Así evitamos que la landing
+    // pública use una URL obsoleta (ej. Google Sheet) guardada en landing_config.
     if (asAny.landing_config != null) {
-      return new Response(JSON.stringify(asAny.landing_config), {
+      const cfg = asAny.landing_config as Record<string, unknown>;
+      const tracking = (cfg.tracking as Record<string, unknown>) ?? {};
+      const merged = {
+        ...cfg,
+        tracking: {
+          ...tracking,
+          postUrl: data.post_url ?? tracking.postUrl ?? "",
+        },
+      };
+      return new Response(JSON.stringify(merged), {
         status: 200,
         headers: {
           ...corsHeaders,
