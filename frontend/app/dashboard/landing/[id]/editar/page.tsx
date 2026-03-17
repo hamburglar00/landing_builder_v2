@@ -40,6 +40,7 @@ export default function DashboardLandingEditarPage() {
   const [showPreview, setShowPreview] = useState(true);
   const [urlBase, setUrlBase] = useState<string | null>(null);
   const [revalidateSecret, setRevalidateSecret] = useState<string | null>(null);
+  const [clientName, setClientName] = useState<string | null>(null);
 
   useEffect(() => {
     const init = async () => {
@@ -55,11 +56,12 @@ export default function DashboardLandingEditarPage() {
 
       setUserId(user.id);
       try {
-        const [found, userGerencias, assigned, settings] = await Promise.all([
+        const [found, userGerencias, assigned, settings, profile] = await Promise.all([
           fetchLandingById(id),
           fetchGerencias(user.id),
           fetchLandingGerencias(id),
           getSettings(),
+          supabase.from("profiles").select("nombre").eq("id", user.id).maybeSingle(),
         ]);
         if (!found) {
           router.replace("/dashboard");
@@ -74,6 +76,7 @@ export default function DashboardLandingEditarPage() {
         setShowPreview(settings.show_client_landing_preview ?? true);
         setUrlBase(settings.url_base ?? null);
         setRevalidateSecret(settings.revalidate_secret || null);
+        setClientName(profile.data?.nombre ?? null);
       } catch {
         router.replace("/dashboard");
         return;
@@ -99,10 +102,6 @@ export default function DashboardLandingEditarPage() {
     setSaveError(null);
     if (/\s/.test(landing.name)) {
       setSaveError("El nombre no debe contener espacios.");
-      return;
-    }
-    if (!landing.postUrl.trim()) {
-      setSaveError("URL Post es obligatoria.");
       return;
     }
     if (!landing.landingTag.trim()) {
@@ -345,22 +344,24 @@ export default function DashboardLandingEditarPage() {
             </div>
             <div>
               <label className="block text-xs font-medium text-zinc-400 mb-1">
-                URL Post <span className="text-red-400">*</span>
+                URL Post
               </label>
               <input
-                type="url"
-                value={landing.postUrl}
-                onChange={(e) =>
-                  setLanding((prev) =>
-                    prev ? { ...prev, postUrl: e.target.value } : prev,
-                  )
+                type="text"
+                value={
+                  clientName
+                    ? `${process.env.NEXT_PUBLIC_SUPABASE_URL?.replace(/\/$/, "") ?? ""}/functions/v1/conversions?name=${encodeURIComponent(
+                        clientName,
+                      )}`
+                    : landing.postUrl
                 }
-                className="w-full rounded-lg border border-zinc-700 bg-zinc-900 px-3 py-2 text-sm text-zinc-100"
-                placeholder="https://..."
-                required
+                disabled
+                className="w-full rounded-lg border border-zinc-700 bg-zinc-900 px-3 py-2 text-sm text-zinc-100 disabled:opacity-60 disabled:cursor-not-allowed"
+                placeholder="Se completa automáticamente según tu perfil"
               />
               <p className="mt-1 text-[11px] text-zinc-500">
-                URL de tu backend que recibirá los datos de la landing (método POST).
+                URL única de conversiones (Meta CAPI) para este cliente. Se configura automáticamente
+                a partir de tu nombre de perfil y no requiere edición manual.
               </p>
             </div>
             <div>
