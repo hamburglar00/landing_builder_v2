@@ -430,11 +430,6 @@ export default function AdminConversionesPage() {
                     </label>
                   )}
                 </div>
-                <div className="flex gap-3 border-t border-zinc-800 pt-4">
-                  <button type="button" onClick={handleSave} disabled={saving} className="cursor-pointer rounded-lg bg-zinc-100 px-4 py-2 text-sm font-medium text-zinc-900 transition hover:bg-zinc-200 active:scale-95 disabled:opacity-60">
-                    {saving ? "Guardando..." : "Guardar configuración"}
-                  </button>
-                </div>
               </div>
             )}
           </section>
@@ -552,14 +547,20 @@ export default function AdminConversionesPage() {
                     Contactos cuya sumatoria total de cargas sea igual o mayor a este monto se clasifican como Jugador Premium.
                   </p>
                 </div>
-                <div className="flex gap-3 border-t border-zinc-800 pt-4">
-                  <button type="button" onClick={handleSave} disabled={saving} className="cursor-pointer rounded-lg bg-zinc-100 px-4 py-2 text-sm font-medium text-zinc-900 transition hover:bg-zinc-200 active:scale-95 disabled:opacity-60">
-                    {saving ? "Guardando..." : "Guardar"}
-                  </button>
-                </div>
               </div>
             )}
           </section>
+
+          <div className="flex justify-end pt-2">
+            <button
+              type="button"
+              onClick={handleSave}
+              disabled={saving}
+              className="cursor-pointer rounded-lg bg-zinc-100 px-5 py-2 text-sm font-medium text-zinc-900 transition hover:bg-zinc-200 active:scale-95 disabled:opacity-60"
+            >
+              {saving ? "Guardando..." : "Guardar configuración"}
+            </button>
+          </div>
         </div>
       )}
 
