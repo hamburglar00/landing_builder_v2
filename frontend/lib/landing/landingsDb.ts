@@ -127,6 +127,21 @@ export async function createLanding(
 ): Promise<{ id: string }> {
   const name =
     payload.name ?? `Nueva-landing-${crypto.randomUUID().slice(0, 8)}`;
+  const base =
+    process.env.NEXT_PUBLIC_SUPABASE_URL?.replace(/\/$/, "") ?? "";
+  let postUrl = payload.postUrl ?? "";
+  if (base) {
+    const { data: profile } = await supabase
+      .from("profiles")
+      .select("nombre")
+      .eq("id", userId)
+      .maybeSingle();
+    if (profile?.nombre) {
+      postUrl = `${base}/functions/v1/conversions?name=${encodeURIComponent(
+        profile.nombre,
+      )}`;
+    }
+  }
   const { data, error } = await supabase
     .from("landings")
     .insert({
@@ -137,7 +152,7 @@ export async function createLanding(
       phone_kind: payload.phoneKind ?? "carga",
       phone_interval_start_hour: payload.phoneIntervalStartHour ?? null,
       phone_interval_end_hour: payload.phoneIntervalEndHour ?? null,
-      post_url: payload.postUrl ?? "",
+      post_url: postUrl,
       landing_tag: payload.landingTag ?? "",
       comment: payload.comment,
       config: payload.config as unknown as Record<string, unknown>,
