@@ -314,7 +314,7 @@ export default function AdminConversionesPage() {
       <div>
         <h1 className="text-xl font-semibold text-zinc-100">Conversiones</h1>
         <p className="mt-1 text-sm text-zinc-400">
-          Panel completo de conversiones, funnel y estadísticas.
+          Tu pipeline de leads, cargas y estadísticas.
         </p>
       </div>
 

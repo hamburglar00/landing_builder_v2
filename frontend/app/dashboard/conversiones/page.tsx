@@ -246,7 +246,7 @@ export default function DashboardConversionesPage() {
     <div className="space-y-6 pb-8">
       <div>
         <h1 className="text-xl font-semibold text-zinc-100">Conversiones</h1>
-        <p className="mt-1 text-sm text-zinc-400">Tu pipeline de contactos, cargas y estadísticas.</p>
+        <p className="mt-1 text-sm text-zinc-400">Tu pipeline de leads, cargas y estadísticas.</p>
       </div>
 
       {saveMsg && (
