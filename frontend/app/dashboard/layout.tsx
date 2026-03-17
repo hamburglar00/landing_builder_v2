@@ -289,15 +289,15 @@ export default function DashboardLayout({
             <span>INICIO</span>
           </Link>
           <Link
-            href="/dashboard"
+            href="/dashboard/landings"
             onClick={() => setSidebarOpen(false)}
             className={`flex items-center gap-2 rounded-lg px-3 py-2 text-xs font-medium tracking-[0.18em] transition ${
-              pathname === "/dashboard"
+              pathname?.startsWith("/dashboard/landings")
                 ? "bg-[var(--color-primary-soft-bg)] text-[var(--color-primary)] border border-[var(--color-primary-soft-border)]"
                 : "text-[var(--color-text-muted)] hover:bg-[var(--color-bg-3)] hover:text-[var(--color-text)]"
             }`}
           >
-            <NavIcon variant="landings" active={pathname === "/dashboard"} />
+            <NavIcon variant="landings" active={Boolean(pathname?.startsWith("/dashboard/landings"))} />
             <span>LANDINGS</span>
           </Link>
           <Link
