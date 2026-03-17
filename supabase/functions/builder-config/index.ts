@@ -134,6 +134,7 @@ Deno.serve(async (req) => {
     // Si ya existe landing_config persistido, lo devolvemos pero SIEMPRE inyectamos
     // post_url desde landings.post_url (fuente de verdad). Así evitamos que la landing
     // pública use una URL obsoleta (ej. Google Sheet) guardada en landing_config.
+    // Cache muy corto (10s) para que cambios de post_url se reflejen rápido.
     if (asAny.landing_config != null) {
       const cfg = asAny.landing_config as Record<string, unknown>;
       const tracking = (cfg.tracking as Record<string, unknown>) ?? {};
@@ -141,7 +142,7 @@ Deno.serve(async (req) => {
         ...cfg,
         tracking: {
           ...tracking,
-          postUrl: data.post_url ?? tracking.postUrl ?? "",
+          postUrl: (data.post_url ?? tracking.postUrl ?? "") as string,
         },
       };
       return new Response(JSON.stringify(merged), {
@@ -149,7 +150,7 @@ Deno.serve(async (req) => {
         headers: {
           ...corsHeaders,
           "Content-Type": "application/json",
-          "Cache-Control": "public, max-age=60",
+          "Cache-Control": "public, max-age=10, must-revalidate",
         },
       });
     }

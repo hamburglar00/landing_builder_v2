@@ -24,6 +24,10 @@ export default function AdminTestsPage() {
   const [capiLoading, setCapiLoading] = useState(false);
   const [capiResult, setCapiResult] = useState<any | null>(null);
 
+  // Test contact (conversions endpoint)
+  const [clientName, setClientName] = useState("");
+  const [loadingContact, setLoadingContact] = useState(false);
+
   const addLog = useCallback((level: LogLevel, message: string, data?: unknown) => {
     const id = ++logIdRef.current;
     const time = new Date().toLocaleTimeString("es-AR", { hour12: false });
@@ -64,6 +68,14 @@ export default function AdminTestsPage() {
       });
       const text = await res.text();
       if (res.ok) {
+        try {
+          const json = JSON.parse(text) as { tracking?: { postUrl?: string } };
+          const postUrl = json?.tracking?.postUrl ?? "(no definido)";
+          const isConversions = String(postUrl).includes("/conversions?name=");
+          addLog("info", `tracking.postUrl: ${postUrl} ${isConversions ? "✓ (conversiones)" : "⚠ NO es endpoint de conversiones"}`);
+        } catch {
+          // ignore parse error
+        }
         addLog("info", `builder-config OK (${res.status})`, text);
       } else {
         addLog("error", `builder-config ${res.status} ${res.statusText}`, text);
@@ -273,6 +285,46 @@ export default function AdminTestsPage() {
     }
   };
 
+  const handleTestContact = async () => {
+    const name = clientName.trim();
+    if (!name) return;
+    setLoadingContact(true);
+    setError(null);
+    addLog("info", `conversions (contact): POST ?name=${name}`);
+    try {
+      const base =
+        process.env.NEXT_PUBLIC_SUPABASE_URL?.replace(/\/$/, "") ?? "";
+      if (!base) {
+        addLog("error", "Falta NEXT_PUBLIC_SUPABASE_URL.");
+        setError("Falta NEXT_PUBLIC_SUPABASE_URL.");
+        return;
+      }
+      const url = `${base}/functions/v1/conversions?name=${encodeURIComponent(name)}`;
+      const payload = {
+        phone: "5491112345678",
+        landing_name: landingName.trim() || "kobe",
+      };
+      const res = await fetch(url, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(payload),
+      });
+      const text = await res.text();
+      if (res.ok) {
+        addLog("info", `conversions OK (${res.status}) - Revisá CONVERSIONES > Tabla`, text);
+      } else {
+        addLog("error", `conversions ${res.status} ${res.statusText}`, text);
+        setError(`Error conversions: ${res.status} ${text}`);
+      }
+    } catch (e) {
+      const msg = e instanceof Error ? e.message : "Error al enviar contacto de prueba";
+      addLog("error", msg, e);
+      setError(msg);
+    } finally {
+      setLoadingContact(false);
+    }
+  };
+
   return (
     <div className="space-y-6">
       <div>
@@ -340,6 +392,34 @@ export default function AdminTestsPage() {
               {loadingRevalidate
                 ? "Revalidando..."
                 : "Probar /api/revalidate"}
+            </button>
+          </div>
+        </div>
+
+        {/* Test contact (conversions) */}
+        <div className="mt-6 space-y-3 rounded-lg border border-zinc-800 bg-zinc-950/70 p-4">
+          <h2 className="text-sm font-semibold text-zinc-200">Conversiones — Simular contacto</h2>
+          <p className="text-[11px] text-zinc-500">
+            Envía un POST de contacto al endpoint de conversiones. Usa el <strong>nombre del cliente</strong> (profiles.nombre, ej. koben), no el nombre de la landing.
+          </p>
+          <div className="flex flex-wrap items-end gap-3">
+            <div className="flex flex-col gap-1 min-w-[180px]">
+              <label className="text-xs font-medium text-zinc-400">Nombre cliente (profiles.nombre)</label>
+              <input
+                type="text"
+                value={clientName}
+                onChange={(e) => setClientName(e.target.value)}
+                placeholder="Ej: koben"
+                className="w-full rounded-lg border border-zinc-700 bg-zinc-900 px-3 py-1.5 text-xs text-zinc-100"
+              />
+            </div>
+            <button
+              type="button"
+              onClick={handleTestContact}
+              disabled={loadingContact || !clientName.trim()}
+              className="rounded-lg bg-amber-600 px-3 py-1.5 text-xs font-medium text-amber-50 transition hover:bg-amber-500 disabled:opacity-60"
+            >
+              {loadingContact ? "Enviando..." : "Simular contacto"}
             </button>
           </div>
         </div>
