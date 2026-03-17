@@ -7,6 +7,11 @@ import {
   classifyContact,
 } from "@/lib/conversionsDb";
 import ArgentinaMap from "./ArgentinaMap";
+import {
+  BarChart, Bar, LineChart, Line,
+  XAxis, YAxis, CartesianGrid, Tooltip, Legend,
+  ResponsiveContainer,
+} from "recharts";
 
 function formatCurrency(n: number) {
   return n.toLocaleString("es-AR", {
@@ -177,11 +182,37 @@ export default function StatsPanel({
       .sort((a, b) => b.total_valor - a.total_valor)
       .slice(0, 10);
 
+    // Hourly distribution of purchases
+    const hourlyBuckets = Array.from({ length: 24 }, (_, h) => ({ hour: `${h}`, cargas: 0 }));
+    for (const c of conversions) {
+      if (c.estado === "purchase" && c.created_at) {
+        const h = new Date(c.created_at).getHours();
+        hourlyBuckets[h].cargas++;
+      }
+    }
+
+    // Daily leads vs purchases
+    const dailyMap = new Map<string, { day: string; leads: number; cargas: number }>();
+    for (const c of conversions) {
+      if (!c.created_at) continue;
+      const d = new Date(c.created_at);
+      const key = `${d.getDate().toString().padStart(2, "0")}/${(d.getMonth() + 1).toString().padStart(2, "0")}`;
+      const dayKey = `${d.getFullYear()}-${(d.getMonth() + 1).toString().padStart(2, "0")}-${d.getDate().toString().padStart(2, "0")}`;
+      const entry = dailyMap.get(dayKey) ?? { day: key, leads: 0, cargas: 0 };
+      if (c.estado === "lead" || c.lead_event_id) entry.leads++;
+      if (c.estado === "purchase") entry.cargas++;
+      dailyMap.set(dayKey, entry);
+    }
+    const dailyData = [...dailyMap.entries()]
+      .sort((a, b) => a[0].localeCompare(b[0]))
+      .map(([, v]) => v);
+
     return {
       total, leads, primera, recurrente, premium, purchasers,
       reachedContact, reachedLead, reachedPurchase, reachedRepeat,
       totalRevenue, totalPurchaseCount, avgTicket, avgLoadsPerPlayer,
       byCampaign, byDevice, byLanding, topContacts,
+      hourlyBuckets, dailyData,
     };
   }, [funnelContacts, conversions, premiumThreshold]);
 
@@ -285,6 +316,73 @@ export default function StatsPanel({
         <SectionTitle>Distribución geográfica</SectionTitle>
         <div className="mt-3">
           <ArgentinaMap contacts={funnelContacts} premiumThreshold={premiumThreshold} />
+        </div>
+      </div>
+
+      {/* ── GRÁFICOS TEMPORALES ── */}
+      <div className="grid gap-4 lg:grid-cols-2">
+        {/* Cargas por hora */}
+        <div className="rounded-xl border border-zinc-800 bg-zinc-900/50 p-4">
+          <h4 className="text-xs font-semibold text-zinc-200 mb-4">Cargas por hora del día</h4>
+          <ResponsiveContainer width="100%" height={240}>
+            <BarChart data={stats.hourlyBuckets} margin={{ top: 4, right: 8, bottom: 0, left: -16 }}>
+              <CartesianGrid strokeDasharray="3 3" stroke="#27272a" />
+              <XAxis
+                dataKey="hour"
+                tick={{ fill: "#71717a", fontSize: 10 }}
+                axisLine={{ stroke: "#3f3f46" }}
+                tickLine={false}
+                interval={1}
+              />
+              <YAxis
+                tick={{ fill: "#71717a", fontSize: 10 }}
+                axisLine={false}
+                tickLine={false}
+                allowDecimals={false}
+              />
+              <Tooltip
+                contentStyle={{ backgroundColor: "#18181b", border: "1px solid #3f3f46", borderRadius: 8, fontSize: 11 }}
+                labelStyle={{ color: "#a1a1aa" }}
+                itemStyle={{ color: "#34d399" }}
+                labelFormatter={(v) => `${v}:00 hs`}
+              />
+              <Bar dataKey="cargas" name="Cargas" fill="#34d399" radius={[3, 3, 0, 0]} maxBarSize={20} />
+            </BarChart>
+          </ResponsiveContainer>
+        </div>
+
+        {/* Leads vs Cargas por día */}
+        <div className="rounded-xl border border-zinc-800 bg-zinc-900/50 p-4">
+          <h4 className="text-xs font-semibold text-zinc-200 mb-4">Leads y cargas por día</h4>
+          <ResponsiveContainer width="100%" height={240}>
+            <LineChart data={stats.dailyData} margin={{ top: 4, right: 8, bottom: 0, left: -16 }}>
+              <CartesianGrid strokeDasharray="3 3" stroke="#27272a" />
+              <XAxis
+                dataKey="day"
+                tick={{ fill: "#71717a", fontSize: 10 }}
+                axisLine={{ stroke: "#3f3f46" }}
+                tickLine={false}
+                angle={-35}
+                textAnchor="end"
+                height={48}
+              />
+              <YAxis
+                tick={{ fill: "#71717a", fontSize: 10 }}
+                axisLine={false}
+                tickLine={false}
+                allowDecimals={false}
+              />
+              <Tooltip
+                contentStyle={{ backgroundColor: "#18181b", border: "1px solid #3f3f46", borderRadius: 8, fontSize: 11 }}
+                labelStyle={{ color: "#a1a1aa" }}
+              />
+              <Legend
+                wrapperStyle={{ fontSize: 10, color: "#a1a1aa" }}
+              />
+              <Line type="monotone" dataKey="leads" name="Leads" stroke="#fbbf24" strokeWidth={2} dot={{ r: 2, fill: "#fbbf24" }} activeDot={{ r: 4 }} />
+              <Line type="monotone" dataKey="cargas" name="Cargas" stroke="#34d399" strokeWidth={2} dot={{ r: 2, fill: "#34d399" }} activeDot={{ r: 4 }} />
+            </LineChart>
+          </ResponsiveContainer>
         </div>
       </div>
 
