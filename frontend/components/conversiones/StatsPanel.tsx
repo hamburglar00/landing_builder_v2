@@ -126,7 +126,16 @@ export default function StatsPanel({
   const [adSpend, setAdSpend] = useState<string>("");
 
   const stats = useMemo(() => {
-    const total = funnelContacts.length;
+    // Contactos únicos: filas que representan primera entrada al funnel (estado contact, lead, o purchase sin REPEAT).
+    // Las filas REPEAT son recargas y ya están contadas en la fila original.
+    const uniqueContacts = conversions.filter(
+      (c) =>
+        c.estado === "contact" ||
+        c.estado === "lead" ||
+        (c.estado === "purchase" && !c.observaciones?.includes("REPEAT")),
+    ).length;
+
+    const total = uniqueContacts;
     let leads = 0, primera = 0, recurrente = 0, premium = 0;
     let totalRevenue = 0, totalPurchaseCount = 0;
 
@@ -148,9 +157,15 @@ export default function StatsPanel({
     }
 
     const purchasers = primera + recurrente + premium;
-    const reachedContact = funnelContacts.filter((c) => c.reached_contact).length;
-    const reachedLead = funnelContacts.filter((c) => c.reached_lead).length;
-    const reachedPurchase = funnelContacts.filter((c) => c.reached_purchase).length;
+    // reachedContact = contactos únicos (misma lógica que total)
+    const reachedContact = uniqueContacts;
+    // reachedLead/reachedPurchase: desde conversions para incluir contactos sin phone
+    const reachedLead = conversions.filter(
+      (c) => c.lead_event_id && !(c.estado === "purchase" && c.observaciones?.includes("REPEAT")),
+    ).length;
+    const reachedPurchase = conversions.filter(
+      (c) => c.purchase_event_id && !(c.estado === "purchase" && c.observaciones?.includes("REPEAT")),
+    ).length;
     const reachedRepeat = funnelContacts.filter((c) => c.reached_repeat).length;
     const avgTicket = totalPurchaseCount > 0 ? totalRevenue / totalPurchaseCount : 0;
     const avgLoadsPerPlayer = purchasers > 0 ? totalPurchaseCount / purchasers : 0;
