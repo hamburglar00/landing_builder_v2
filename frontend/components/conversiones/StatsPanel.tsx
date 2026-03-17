@@ -100,11 +100,13 @@ function TableCard({ title, children }: { title: string; children: React.ReactNo
 export default function StatsPanel({
   funnelContacts,
   conversions,
+  allConversions,
   premiumThreshold,
   dateRange,
 }: {
   funnelContacts: FunnelContact[];
   conversions: ConversionRow[];
+  allConversions: ConversionRow[];
   premiumThreshold: number;
   dateRange?: { start: Date; end: Date } | null;
 }) {
@@ -263,14 +265,61 @@ export default function StatsPanel({
       iter.setDate(iter.getDate() + 1);
     }
 
+    // Retención activa 30d (rolling, independiente del filtro de fechas):
+    // jugadores que hicieron >= 4 cargas en los últimos 30 días
+    // y cuya primera carga histórica fue hace al menos 7 días.
+    const now = new Date();
+    const cutoff30 = new Date(now.getTime() - 30 * 86400000);
+    const cutoff7 = new Date(now.getTime() - 7 * 86400000);
+
+    interface PhoneRetention {
+      firstPurchase: Date | null;
+      recentCount: number;
+    }
+
+    const phoneMap = new Map<string, PhoneRetention>();
+    for (const c of allConversions) {
+      if (c.estado !== "purchase" || !c.created_at || !c.phone) continue;
+      const d = new Date(c.created_at);
+      const rec = phoneMap.get(c.phone) ?? { firstPurchase: null, recentCount: 0 };
+      if (!rec.firstPurchase || d < rec.firstPurchase) rec.firstPurchase = d;
+      if (d >= cutoff30) rec.recentCount++;
+      phoneMap.set(c.phone, rec);
+    }
+
+    let retencionActiva30d = 0;
+    for (const rec of phoneMap.values()) {
+      if (!rec.firstPurchase) continue;
+      if (rec.recentCount >= 4 && rec.firstPurchase <= cutoff7) {
+        retencionActiva30d++;
+      }
+    }
+
     return {
-      total, leads, primera, recurrente, premium, purchasers,
-      reachedContact, reachedLead, reachedPurchase, reachedRepeat,
-      totalRevenue, firstPurchaseRevenue, totalPurchaseCount, avgTicket, avgLoadsPerPlayer,
-      byCampaign, byDevice, byLanding, topContacts,
-      hourlyBuckets, dailyData,
+      total,
+      leads,
+      primera,
+      recurrente,
+      premium,
+      purchasers,
+      reachedContact,
+      reachedLead,
+      reachedPurchase,
+      reachedRepeat,
+      totalRevenue,
+      firstPurchaseRevenue,
+      totalPurchaseCount,
+      avgTicket,
+      avgLoadsPerPlayer,
+      byCampaign,
+      byDevice,
+      byLanding,
+      topContacts,
+      hourlyBuckets,
+      dailyData,
+      retencionActiva30d,
     };
-  }, [funnelContacts, conversions, premiumThreshold, dateRange]);
+  }, [funnelContacts, conversions, allConversions, premiumThreshold, dateRange]);
 
   const parsedAdSpend = parseFloat(adSpend.replace(/\D/g, "")) || 0;
   const roasFirstPurchase = parsedAdSpend > 0 ? stats.firstPurchaseRevenue / parsedAdSpend : 0;
@@ -286,7 +335,7 @@ export default function StatsPanel({
       {/* ── RESUMEN GENERAL ── */}
       <div>
         <SectionTitle>Resumen general</SectionTitle>
-        <div className="mt-3 grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-5">
+        <div className="mt-3 grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-6">
           <KpiCard
             label="Contactos únicos"
             value={stats.total}
@@ -315,6 +364,12 @@ export default function StatsPanel({
             value={stats.premium}
             color="text-emerald-300"
             tooltip={`Contactos cuyo monto total acumulado de cargas es igual o superior al umbral premium configurado ($${premiumThreshold.toLocaleString("es-AR")}).`}
+          />
+          <KpiCard
+            label="Retención activa 30d"
+            value={stats.retencionActiva30d}
+            color="text-emerald-400"
+            tooltip="Jugadores que hicieron al menos 4 cargas en los últimos 30 días y cuya primera carga fue hace al menos 7 días. Métrica calculada siempre sobre los últimos 30 días, sin aplicar el filtro de fechas."
           />
         </div>
       </div>
@@ -421,6 +476,7 @@ export default function StatsPanel({
           <ArgentinaMap
             contacts={funnelContacts}
             conversions={conversions}
+            allConversions={allConversions}
             premiumThreshold={premiumThreshold}
             adSpend={parsedAdSpend}
           />

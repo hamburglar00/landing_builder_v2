@@ -557,6 +557,7 @@ export default function AdminConversionesPage() {
         <StatsPanel
           funnelContacts={activeFunnel}
           conversions={activeConversions}
+          allConversions={rawConversions}
           premiumThreshold={config?.funnel_premium_threshold ?? 50000}
           dateRange={dateRange}
         />

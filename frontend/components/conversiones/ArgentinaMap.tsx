@@ -22,7 +22,8 @@ type MapMetric =
   | "roas_primera"
   | "roas_total"
   | "jugadores_recurrentes"
-  | "jugadores_premium";
+  | "jugadores_premium"
+  | "retencion_activa_30d";
 
 const METRIC_LABELS: Record<MapMetric, string> = {
   contactos: "Contactos",
@@ -38,6 +39,7 @@ const METRIC_LABELS: Record<MapMetric, string> = {
   roas_total: "ROAS total",
   jugadores_recurrentes: "Jugadores recurrentes",
   jugadores_premium: "Jugadores premium",
+  retencion_activa_30d: "Retención activa 30d",
 };
 
 const PCT_METRICS = new Set<MapMetric>(["pct_inicio", "pct_carga"]);
@@ -157,11 +159,13 @@ interface ProvinceData {
   firstPurchaseRevenue: number;
   purchaseCount: number;
   premium: number;
+   retencionActiva30d: number;
 }
 
 function buildProvinceData(
   contacts: FunnelContact[],
   conversions: ConversionRow[],
+  allConversions: ConversionRow[],
   premiumThreshold: number,
 ): Map<string, ProvinceData> {
   const map = new Map<string, ProvinceData>();
@@ -172,7 +176,7 @@ function buildProvinceData(
     const d = map.get(prov) ?? {
       contactos: 0, reachedLead: 0, reachedPurchase: 0, reachedRepeat: 0,
       primerasCargas: 0, recurrentes: 0, totalCargado: 0, firstPurchaseRevenue: 0,
-      purchaseCount: 0, premium: 0,
+      purchaseCount: 0, premium: 0, retencionActiva30d: 0,
     };
     d.contactos++;
     if (c.reached_lead) d.reachedLead++;
@@ -192,6 +196,50 @@ function buildProvinceData(
     if (!prov) continue;
     const d = map.get(prov);
     if (d) d.firstPurchaseRevenue += conv.valor;
+  }
+
+  // Retención activa 30d por provincia (rolling sobre todo el histórico, independiente del filtro de fechas)
+  const now = new Date();
+  const cutoff30 = new Date(now.getTime() - 30 * 86400000);
+  const cutoff7 = new Date(now.getTime() - 7 * 86400000);
+
+  interface PhoneAgg {
+    firstPurchase: Date | null;
+    recentCount: number;
+    province: string | null;
+  }
+
+  const phoneMap = new Map<string, PhoneAgg>();
+  for (const conv of allConversions) {
+    if (conv.estado !== "purchase" || !conv.created_at || !conv.phone) continue;
+    const d = new Date(conv.created_at);
+    const prov = normalizeProvince(conv.geo_region);
+    const rec = phoneMap.get(conv.phone) ?? { firstPurchase: null, recentCount: 0, province: prov };
+    if (!rec.firstPurchase || d < rec.firstPurchase) rec.firstPurchase = d;
+    if (d >= cutoff30) rec.recentCount++;
+    if (!rec.province && prov) rec.province = prov;
+    phoneMap.set(conv.phone, rec);
+  }
+
+  for (const rec of phoneMap.values()) {
+    if (!rec.firstPurchase || !rec.province) continue;
+    if (rec.recentCount >= 4 && rec.firstPurchase <= cutoff7) {
+      const d = map.get(rec.province) ?? {
+        contactos: 0,
+        reachedLead: 0,
+        reachedPurchase: 0,
+        reachedRepeat: 0,
+        primerasCargas: 0,
+        recurrentes: 0,
+        totalCargado: 0,
+        firstPurchaseRevenue: 0,
+        purchaseCount: 0,
+        premium: 0,
+        retencionActiva30d: 0,
+      };
+      d.retencionActiva30d++;
+      map.set(rec.province, d);
+    }
   }
 
   return map;
@@ -228,6 +276,7 @@ function getMetricValue(
     }
     case "jugadores_recurrentes": return d.recurrentes;
     case "jugadores_premium": return d.premium;
+    case "retencion_activa_30d": return d.retencionActiva30d;
   }
 }
 
@@ -261,16 +310,18 @@ interface GeoCollection {
 
 const MAP_W = 400;
 const MAP_H = 680;
-const MAP_SCALE = 1.2;
+const MAP_SCALE = 1.3;
 
 export default function ArgentinaMap({
   contacts,
   conversions = [],
+  allConversions = [],
   premiumThreshold,
   adSpend = 0,
 }: {
   contacts: FunnelContact[];
   conversions?: ConversionRow[];
+  allConversions?: ConversionRow[];
   premiumThreshold: number;
   adSpend?: number;
 }) {
@@ -291,8 +342,8 @@ export default function ArgentinaMap({
   }, []);
 
   const provinceData = useMemo(
-    () => buildProvinceData(contacts, conversions, premiumThreshold),
-    [contacts, conversions, premiumThreshold],
+    () => buildProvinceData(contacts, conversions, allConversions, premiumThreshold),
+    [contacts, conversions, allConversions, premiumThreshold],
   );
 
   const totalContacts = contacts.length;
