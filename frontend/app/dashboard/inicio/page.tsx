@@ -5,8 +5,9 @@ import { useRouter } from "next/navigation";
 import { supabase } from "@/lib/supabaseClient";
 import type { FunnelContact, ConversionRow } from "@/lib/conversionsDb";
 import {
-  fetchFunnelContacts,
-  fetchConversions,
+  fetchConversionsConfig,
+  fetchFunnelContactsFiltered,
+  fetchConversionsFiltered,
 } from "@/lib/conversionsDb";
 import { fetchLandings } from "@/lib/landing/landingsDb";
 import { HomeOverview } from "@/components/conversiones/HomeOverview";
@@ -18,6 +19,7 @@ export default function DashboardInicioPage() {
   const [landingsCount, setLandingsCount] = useState(0);
   const [funnelContacts, setFunnelContacts] = useState<FunnelContact[]>([]);
   const [conversions, setConversions] = useState<ConversionRow[]>([]);
+  const [premiumThreshold, setPremiumThreshold] = useState(50000);
 
   useEffect(() => {
     const init = async () => {
@@ -33,15 +35,17 @@ export default function DashboardInicioPage() {
           return;
         }
 
-        const [landings, funnel, convs] = await Promise.all([
+        const [landings, funnel, convs, cfg] = await Promise.all([
           fetchLandings(user.id),
-          fetchFunnelContacts(user.id),
-          fetchConversions(user.id, 500),
+          fetchFunnelContactsFiltered(user.id, user.id),
+          fetchConversionsFiltered(user.id, 500, user.id),
+          fetchConversionsConfig(user.id),
         ]);
 
         setLandingsCount(landings.length);
         setFunnelContacts(funnel);
         setConversions(convs);
+        setPremiumThreshold(cfg?.funnel_premium_threshold ?? 50000);
       } catch (e) {
         setError(e instanceof Error ? e.message : "Error al cargar estadísticas");
       } finally {
@@ -76,7 +80,7 @@ export default function DashboardInicioPage() {
       landingsCount={landingsCount}
       funnelContacts={funnelContacts}
       conversions={conversions}
-      premiumThreshold={50000}
+      premiumThreshold={premiumThreshold}
     />
   );
 }

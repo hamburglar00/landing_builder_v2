@@ -57,41 +57,44 @@ export function HomeOverview({
   premiumThreshold: number;
 }) {
   const stats = useMemo(() => {
+    const isNotRepeat = (c: ConversionRow) =>
+      !(c.estado === "purchase" && c.observaciones?.includes("REPEAT"));
+
+    const uniqueLeads = conversions.filter(
+      (c) => (c.lead_event_id ?? "") !== "" && isNotRepeat(c),
+    ).length;
+
+    const purchaseRows = conversions.filter(
+      (c) => c.estado === "purchase" && (c.purchase_event_id ?? "") !== "",
+    );
+    const phoneToFirstPurchase = new Map<string, ConversionRow>();
+    for (const c of purchaseRows) {
+      const key = `${c.user_id}::${c.phone}`;
+      const existing = phoneToFirstPurchase.get(key);
+      if (!existing || new Date(c.created_at) < new Date(existing.created_at)) {
+        phoneToFirstPurchase.set(key, c);
+      }
+    }
+    const uniquePurchases = phoneToFirstPurchase.size;
+
+    let totalCargado = 0;
+    let totalCargas = 0;
+    let premium = 0;
+
+    for (const c of funnelContacts) {
+      totalCargado += c.total_valor;
+      totalCargas += c.purchase_count;
+      if (classifyContact(c, premiumThreshold) === "premium") premium++;
+    }
+
+    const porcentajeCarga = uniqueLeads
+      ? (uniquePurchases / uniqueLeads) * 100
+      : 0;
+    const cargaPromedio = totalCargas > 0 ? totalCargado / totalCargas : 0;
+
     const now = new Date();
     const cutoff30 = new Date(now.getTime() - 30 * 86400000);
     const cutoff7 = new Date(now.getTime() - 7 * 86400000);
-
-    const conv30 = conversions.filter(
-      (c) => c.created_at && new Date(c.created_at) >= cutoff30,
-    );
-
-    const leadsPhones = new Set<string>();
-    const purchasePhones = new Set<string>();
-    let totalCargado30 = 0;
-    let cargas30 = 0;
-
-    for (const c of conv30) {
-      if (!c.phone) continue;
-      if (c.estado === "lead" || c.lead_event_id) leadsPhones.add(c.phone);
-      if (c.estado === "purchase" || c.purchase_event_id) {
-        purchasePhones.add(c.phone);
-        if (c.valor > 0) {
-          totalCargado30 += c.valor;
-          cargas30++;
-        }
-      }
-    }
-
-    const porcentajeCarga = leadsPhones.size
-      ? (purchasePhones.size / leadsPhones.size) * 100
-      : 0;
-    const cargaPromedio = cargas30 > 0 ? totalCargado30 / cargas30 : 0;
-
-    const premiumActivos = funnelContacts.filter((c) => {
-      const last = new Date(c.last_activity);
-      if (last < cutoff30) return false;
-      return classifyContact(c, premiumThreshold) === "premium";
-    }).length;
 
     interface PhoneRetention {
       firstPurchase: Date | null;
@@ -120,21 +123,21 @@ export function HomeOverview({
       landings: landingsCount,
       porcentajeCarga,
       cargaPromedio,
-      totalCargado30,
-      premiumActivos,
+      totalCargado,
+      premium,
       retencionActiva30d,
     };
   }, [landingsCount, funnelContacts, conversions, premiumThreshold]);
 
   const scopeLabel =
-    role === "admin" ? "últimos 30 días (todos los clientes)" : "últimos 30 días";
+    role === "admin" ? "vista consolidada (todos los clientes)" : "vista consolidada";
 
   return (
     <div className="space-y-6">
       <div>
         <h1 className="text-xl font-semibold text-zinc-100">Inicio</h1>
         <p className="mt-1 text-sm text-zinc-400">
-          Resumen ejecutivo de landings y conversiones — {scopeLabel}.
+          Resumen ejecutivo de landings y conversiones - {scopeLabel}.
         </p>
       </div>
 
@@ -155,7 +158,7 @@ export function HomeOverview({
         <Card
           title="Porcentaje de carga"
           value={pct(stats.porcentajeCarga, 100)}
-          subtitle="Contactos que llegaron a cargar al menos una vez."
+          subtitle="Leads unicos que llegaron a cargar al menos una vez."
           icon={
             <svg viewBox="0 0 24 24" className="h-4 w-4" fill="none" stroke="currentColor" strokeWidth={1.6}>
               <path d="M4 4h4l2 6 3-10 3 8 2-4h2" className="text-emerald-400" />
@@ -166,7 +169,7 @@ export function HomeOverview({
         <Card
           title="Carga promedio"
           value={formatCurrency(stats.cargaPromedio)}
-          subtitle="Monto promedio por carga en los últimos 30 días."
+          subtitle="Monto promedio por carga."
           icon={
             <svg viewBox="0 0 24 24" className="h-4 w-4" fill="none" stroke="currentColor" strokeWidth={1.6}>
               <circle cx="12" cy="12" r="8" className="text-amber-400" />
@@ -176,9 +179,9 @@ export function HomeOverview({
           }
         />
         <Card
-          title="Total cargado 30d"
-          value={formatCurrency(stats.totalCargado30)}
-          subtitle="Ingresos totales de cargas en los últimos 30 días."
+          title="Total cargado"
+          value={formatCurrency(stats.totalCargado)}
+          subtitle="Ingresos totales de cargas."
           icon={
             <svg viewBox="0 0 24 24" className="h-4 w-4" fill="none" stroke="currentColor" strokeWidth={1.6}>
               <rect x="3" y="5" width="18" height="14" rx="2" className="text-emerald-400" />
@@ -189,9 +192,9 @@ export function HomeOverview({
           }
         />
         <Card
-          title="Jugadores premium activos"
-          value={stats.premiumActivos.toString()}
-          subtitle="Contactos premium con actividad en los últimos 30 días."
+          title="Jugadores premium"
+          value={stats.premium.toString()}
+          subtitle="Contactos premium segun umbral configurado."
           icon={
             <svg viewBox="0 0 24 24" className="h-4 w-4" fill="none" stroke="currentColor" strokeWidth={1.6}>
               <path
@@ -202,9 +205,9 @@ export function HomeOverview({
           }
         />
         <Card
-          title="Retención activa 30d"
+          title="Retencion activa 30d"
           value={stats.retencionActiva30d.toString()}
-          subtitle="Jugadores con ≥4 cargas en 30d y primera carga ≥7d."
+          subtitle="Jugadores con >=4 cargas en 30d y primera carga >=7d."
           icon={
             <svg viewBox="0 0 24 24" className="h-4 w-4" fill="none" stroke="currentColor" strokeWidth={1.6}>
               <circle cx="12" cy="12" r="8" className="text-violet-400" />
@@ -217,4 +220,3 @@ export function HomeOverview({
     </div>
   );
 }
-

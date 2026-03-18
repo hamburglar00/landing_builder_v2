@@ -4,8 +4,9 @@ import { useEffect, useState } from "react";
 import { supabase } from "@/lib/supabaseClient";
 import type { FunnelContact, ConversionRow } from "@/lib/conversionsDb";
 import {
-  fetchConversionsForAdmin,
-  fetchFunnelContactsForAdmin,
+  fetchConversionsConfig,
+  fetchConversionsForAdminFiltered,
+  fetchFunnelContactsForAdminFiltered,
 } from "@/lib/conversionsDb";
 import { fetchLandingsForAdmin } from "@/lib/landing/landingsDb";
 import { HomeOverview } from "@/components/conversiones/HomeOverview";
@@ -16,6 +17,7 @@ export default function AdminInicioPage() {
   const [landingsCount, setLandingsCount] = useState(0);
   const [funnelContacts, setFunnelContacts] = useState<FunnelContact[]>([]);
   const [conversions, setConversions] = useState<ConversionRow[]>([]);
+  const [premiumThreshold, setPremiumThreshold] = useState(50000);
 
   useEffect(() => {
     const init = async () => {
@@ -30,15 +32,17 @@ export default function AdminInicioPage() {
           return;
         }
 
-        const [{ mine, clients }, funnel, convs] = await Promise.all([
+        const [{ mine, clients }, funnel, convs, cfg] = await Promise.all([
           fetchLandingsForAdmin(user.id),
-          fetchFunnelContactsForAdmin(),
-          fetchConversionsForAdmin(500),
+          fetchFunnelContactsForAdminFiltered(user.id),
+          fetchConversionsForAdminFiltered(500, user.id),
+          fetchConversionsConfig(user.id),
         ]);
 
         setLandingsCount(mine.length + clients.length);
         setFunnelContacts(funnel);
         setConversions(convs);
+        setPremiumThreshold(cfg?.funnel_premium_threshold ?? 50000);
       } catch (e) {
         setError(e instanceof Error ? e.message : "Error al cargar estadísticas");
       } finally {
@@ -73,7 +77,7 @@ export default function AdminInicioPage() {
       landingsCount={landingsCount}
       funnelContacts={funnelContacts}
       conversions={conversions}
-      premiumThreshold={50000}
+      premiumThreshold={premiumThreshold}
     />
   );
 }
