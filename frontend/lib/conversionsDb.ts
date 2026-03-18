@@ -103,7 +103,7 @@ export function classifyContact(
 ): FunnelStage {
   if (c.purchase_count > 0 && c.total_valor >= premiumThreshold)
     return "premium";
-  if (c.repeat_count > 0) return "recurrente";
+  if (c.purchase_count > 1) return "recurrente"; // recargas = más de 1 compra
   if (c.purchase_count > 0) return "primera_carga";
   return "leads";
 }
