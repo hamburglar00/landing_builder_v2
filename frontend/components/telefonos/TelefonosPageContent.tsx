@@ -396,34 +396,41 @@ export function TelefonosPageContent({
       )}
 
       {/* Botones globales */}
-      <div className="flex flex-wrap gap-2 rounded-xl border border-zinc-800 bg-zinc-900/50 p-4">
-        <span className="mr-2 self-center text-xs font-medium text-zinc-400">
-          Todas las gerencias:
-        </span>
-        <button
-          type="button"
-          onClick={() => void handleSync(null)}
-          disabled={globalSyncing || !gerencias.length}
-          className="rounded-lg border border-zinc-700 bg-zinc-800 px-3 py-1.5 text-xs font-medium text-zinc-200 transition hover:bg-zinc-700 disabled:opacity-60"
-        >
-          {globalSyncing ? "Sincronizando..." : "Sincronizar"}
-        </button>
-        <button
-          type="button"
-          onClick={() => void handleReset(null)}
-          disabled={globalResetting || !gerencias.length}
-          className="rounded-lg border border-zinc-700 bg-zinc-800 px-3 py-1.5 text-xs font-medium text-zinc-200 transition hover:bg-zinc-700 disabled:opacity-60"
-        >
-          {globalResetting ? "Reiniciando..." : "Reiniciar contadores"}
-        </button>
-        <button
-          type="button"
-          onClick={() => void handleDelete(null)}
-          disabled={globalDeleting || !gerencias.length}
-          className="rounded-lg border border-red-900/60 bg-red-950/30 px-3 py-1.5 text-xs font-medium text-red-300 transition hover:bg-red-950/50 disabled:opacity-60"
-        >
-          {globalDeleting ? "Borrando..." : "Borrar registros"}
-        </button>
+      <div className="rounded-xl border border-zinc-800 bg-zinc-900/50 p-4">
+        <div className="flex flex-wrap items-center justify-between gap-2">
+          <span className="text-xs font-medium text-zinc-400">
+            Todas las gerencias:
+          </span>
+          <div className="ml-auto flex flex-wrap items-center gap-2">
+            <button
+              type="button"
+              onClick={() => void handleSync(null)}
+              disabled={globalSyncing || !gerencias.length}
+              title="Trae/actualiza los teléfonos desde la API externa para todas las gerencias."
+              className="rounded-lg border border-zinc-700 bg-zinc-800 px-3 py-1.5 text-xs font-medium text-zinc-200 transition hover:bg-zinc-700 disabled:opacity-60"
+            >
+              {globalSyncing ? "Sincronizando..." : "Sincronizar"}
+            </button>
+            <button
+              type="button"
+              onClick={() => void handleReset(null)}
+              disabled={globalResetting || !gerencias.length}
+              title="Reinicia a 0 el contador de uso de teléfonos en todas las gerencias."
+              className="rounded-lg border border-zinc-700 bg-zinc-800 px-3 py-1.5 text-xs font-medium text-zinc-200 transition hover:bg-zinc-700 disabled:opacity-60"
+            >
+              {globalResetting ? "Reiniciando..." : "Reiniciar contadores"}
+            </button>
+            <button
+              type="button"
+              onClick={() => void handleDelete(null)}
+              disabled={globalDeleting || !gerencias.length}
+              title="Limpia los registros de esta vista para todas las gerencias (no borra datos en Supabase)."
+              className="rounded-lg border border-red-900/60 bg-red-950/30 px-3 py-1.5 text-xs font-medium text-red-300 transition hover:bg-red-950/50 disabled:opacity-60"
+            >
+              {globalDeleting ? "Borrando..." : "Borrar registros"}
+            </button>
+          </div>
+        </div>
       </div>
 
       {gerencias.length === 0 ? (
@@ -466,13 +473,15 @@ export function TelefonosPageContent({
                   }
                   className="flex w-full items-center justify-between gap-2 px-4 py-3 text-left hover:bg-zinc-800/50"
                 >
-                  <span className="font-medium text-zinc-200">
-                    {g.nombre} (ID {g.gerencia_id})
-                  </span>
-                  <div className="flex items-center gap-4 text-xs text-zinc-500">
-                    <span>
+                  <div className="flex items-center gap-3">
+                    <span className="font-medium text-zinc-200">
+                      {g.nombre} (ID {g.gerencia_id})
+                    </span>
+                    <span className="text-xs text-zinc-500">
                       {phones.length} registro{phones.length !== 1 ? "s" : ""}
                     </span>
+                  </div>
+                  <div className="flex items-center gap-4 text-xs text-zinc-500">
                     <span>Contador: {totalUsage}</span>
                     <span>Mensajes recibidos: {totalMessages}</span>
                   </div>
@@ -492,32 +501,6 @@ export function TelefonosPageContent({
                 </button>
                 {isOpen && (
                   <div className="border-t border-zinc-800 px-4 pb-4 pt-2">
-                    <div className="mb-3 flex flex-wrap gap-2">
-                      <button
-                        type="button"
-                        onClick={() => void handleSync(g.id)}
-                        disabled={syncing}
-                        className="rounded-lg border border-zinc-700 bg-zinc-800 px-2 py-1 text-xs font-medium text-zinc-200 transition hover:bg-zinc-700 disabled:opacity-60"
-                      >
-                        {syncing ? "Sincronizando..." : "Sincronizar"}
-                      </button>
-                      <button
-                        type="button"
-                        onClick={() => void handleReset(g.id)}
-                        disabled={resetting}
-                        className="rounded-lg border border-zinc-700 bg-zinc-800 px-2 py-1 text-xs font-medium text-zinc-200 transition hover:bg-zinc-700 disabled:opacity-60"
-                      >
-                        {resetting ? "Reiniciando..." : "Reiniciar contador"}
-                      </button>
-                      <button
-                        type="button"
-                        onClick={() => void handleDelete(g.id)}
-                        disabled={deleting}
-                        className="rounded-lg border border-red-900/60 bg-red-950/30 px-2 py-1 text-xs font-medium text-red-300 transition hover:bg-red-950/50 disabled:opacity-60"
-                      >
-                        {deleting ? "Borrando..." : "Borrar registros"}
-                      </button>
-                    </div>
                     <div className="mb-3 flex flex-wrap items-center gap-2 rounded-lg border border-zinc-800 bg-zinc-900/50 px-3 py-2">
                       <span className="text-[11px] text-zinc-400">
                         Equitativo por:
@@ -550,6 +533,35 @@ export function TelefonosPageContent({
                       >
                         Mensajes recibidos
                       </button>
+                      <div className="ml-auto flex flex-wrap gap-2">
+                        <button
+                          type="button"
+                          onClick={() => void handleSync(g.id)}
+                          disabled={syncing}
+                          title="Trae/actualiza los teléfonos desde la API externa para esta gerencia."
+                          className="rounded-lg border border-zinc-700 bg-zinc-800 px-2 py-1 text-xs font-medium text-zinc-200 transition hover:bg-zinc-700 disabled:opacity-60"
+                        >
+                          {syncing ? "Sincronizando..." : "Sincronizar"}
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => void handleReset(g.id)}
+                          disabled={resetting}
+                          title="Reinicia a 0 el contador de uso de teléfonos de esta gerencia."
+                          className="rounded-lg border border-zinc-700 bg-zinc-800 px-2 py-1 text-xs font-medium text-zinc-200 transition hover:bg-zinc-700 disabled:opacity-60"
+                        >
+                          {resetting ? "Reiniciando..." : "Reiniciar contador"}
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => void handleDelete(g.id)}
+                          disabled={deleting}
+                          title="Limpia los registros de esta vista para esta gerencia (no borra datos en Supabase)."
+                          className="rounded-lg border border-red-900/60 bg-red-950/30 px-2 py-1 text-xs font-medium text-red-300 transition hover:bg-red-950/50 disabled:opacity-60"
+                        >
+                          {deleting ? "Borrando..." : "Borrar registros"}
+                        </button>
+                      </div>
                     </div>
                     <div className="overflow-x-auto rounded-lg border border-zinc-700">
                       <table className="w-full text-left text-sm">
