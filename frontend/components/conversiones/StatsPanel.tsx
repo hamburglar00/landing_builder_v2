@@ -66,14 +66,17 @@ function RevenueTrendBadge({
   const isUp = trend === "up";
   const color = isUp ? "text-emerald-400" : "text-red-400";
   const pctStr =
-    pctChange === Infinity || pctChange >= 999
+    pctChange === Infinity
       ? isUp ? "+∞" : "∞"
       : isUp
         ? `+${pctChange.toFixed(1)}%`
         : `-${Math.abs(pctChange).toFixed(1)}%`;
-  const tooltip = isUp
-    ? `Ingresos de hoy ($${revenueToday.toLocaleString("es-AR")}) son ${pctStr} mayores que ayer ($${revenueYesterday.toLocaleString("es-AR")}).`
-    : `Ingresos de hoy ($${revenueToday.toLocaleString("es-AR")}) son ${pctStr} menores que ayer ($${revenueYesterday.toLocaleString("es-AR")}).`;
+  const tooltip =
+    pctChange === Infinity
+      ? `Ayer no hubo ingresos. Hoy: $${revenueToday.toLocaleString("es-AR")}.`
+      : isUp
+        ? `Ingresos de hoy ($${revenueToday.toLocaleString("es-AR")}) son ${pctStr} mayores que ayer ($${revenueYesterday.toLocaleString("es-AR")}).`
+        : `Ingresos de hoy ($${revenueToday.toLocaleString("es-AR")}) son ${pctStr} menores que ayer ($${revenueYesterday.toLocaleString("es-AR")}).`;
 
   return (
     <span
@@ -443,7 +446,7 @@ export default function StatsPanel({
       revenueTrend && revenueYesterday > 0
         ? ((revenueToday - revenueYesterday) / revenueYesterday) * 100
         : revenueTrend && revenueToday > 0 && revenueYesterday === 0
-          ? 100
+          ? Infinity
           : undefined;
 
     return {
