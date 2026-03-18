@@ -40,20 +40,49 @@ function pct(num: number, den: number) {
   return `${((num / den) * 100).toFixed(1)}%`;
 }
 
-function TrendArrow({ trend }: { trend: "up" | "down" }) {
+function TrendArrow({ trend, className = "w-3 h-3" }: { trend: "up" | "down"; className?: string }) {
+  return (
+    <svg viewBox="0 0 24 24" className={className} fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+      {trend === "up" ? (
+        <path d="M4 20L10 14H14L20 8" />
+      ) : (
+        <path d="M4 4L10 10H14L20 16" />
+      )}
+    </svg>
+  );
+}
+
+function RevenueTrendBadge({
+  trend,
+  pctChange,
+  revenueToday,
+  revenueYesterday,
+}: {
+  trend: "up" | "down";
+  pctChange: number;
+  revenueToday: number;
+  revenueYesterday: number;
+}) {
   const isUp = trend === "up";
+  const color = isUp ? "text-emerald-400" : "text-red-400";
+  const pctStr =
+    pctChange === Infinity || pctChange >= 999
+      ? isUp ? "+∞" : "∞"
+      : isUp
+        ? `+${pctChange.toFixed(1)}%`
+        : `-${Math.abs(pctChange).toFixed(1)}%`;
+  const tooltip = isUp
+    ? `Ingresos de hoy ($${revenueToday.toLocaleString("es-AR")}) son ${pctStr} mayores que ayer ($${revenueYesterday.toLocaleString("es-AR")}).`
+    : `Ingresos de hoy ($${revenueToday.toLocaleString("es-AR")}) son ${pctStr} menores que ayer ($${revenueYesterday.toLocaleString("es-AR")}).`;
+
   return (
     <span
-      className={`inline-flex ml-1 ${isUp ? "text-emerald-400" : "text-red-400"}`}
-      title={isUp ? "Mayor que ayer" : "Menor que ayer"}
+      className={`inline-flex items-center ml-1 font-semibold self-start -mt-1 ${color}`}
+      style={{ fontSize: "0.6em" }}
+      title={tooltip}
     >
-      <svg viewBox="0 0 24 24" className="w-4 h-4" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-        {isUp ? (
-          <path d="M7 17l10-10M17 7v6h-6" />
-        ) : (
-          <path d="M7 7l10 10M7 17V11h6" />
-        )}
-      </svg>
+      <TrendArrow trend={trend} className="w-3 h-3 shrink-0" />
+      <span className="ml-0.5">{pctStr}</span>
     </span>
   );
 }
@@ -64,21 +93,28 @@ function KpiCard({
   sub,
   tooltip,
   color = "text-zinc-100",
-  trend,
+  trendInfo,
 }: {
   label: string;
   value: string | number;
   sub?: string;
   tooltip?: string;
   color?: string;
-  trend?: "up" | "down";
+  trendInfo?: { trend: "up" | "down"; pctChange: number; revenueToday: number; revenueYesterday: number };
 }) {
   return (
     <div className="rounded-xl border border-zinc-800 bg-zinc-900/60 p-4 group relative">
       <p className="text-[11px] text-zinc-500 mb-1">{label}</p>
-      <p className={`text-xl font-bold ${color} flex items-center`}>
+      <p className={`text-xl font-bold ${color} flex items-baseline flex-wrap`}>
         {value}
-        {trend && <TrendArrow trend={trend} />}
+        {trendInfo && (
+          <RevenueTrendBadge
+            trend={trendInfo.trend}
+            pctChange={trendInfo.pctChange}
+            revenueToday={trendInfo.revenueToday}
+            revenueYesterday={trendInfo.revenueYesterday}
+          />
+        )}
       </p>
       {sub && <p className="text-[10px] text-zinc-500 mt-1">{sub}</p>}
       {tooltip && (
@@ -403,6 +439,13 @@ export default function StatsPanel({
             : undefined
         : undefined;
 
+    const revenuePctChange =
+      revenueTrend && revenueYesterday > 0
+        ? ((revenueToday - revenueYesterday) / revenueYesterday) * 100
+        : revenueTrend && revenueToday > 0 && revenueYesterday === 0
+          ? 100
+          : undefined;
+
     return {
       uniqueContacts,
       uniqueLeads,
@@ -427,6 +470,9 @@ export default function StatsPanel({
       dailyData,
       retencionActiva30d,
       revenueTrend,
+      revenuePctChange,
+      revenueToday,
+      revenueYesterday,
     };
   }, [funnelContacts, conversions, allConversions, premiumThreshold, dateRange]);
 
@@ -497,7 +543,16 @@ export default function StatsPanel({
             label="Total cargado"
             value={formatCurrency(stats.totalRevenue)}
             color="text-emerald-400"
-            trend={stats.revenueTrend}
+            trendInfo={
+              stats.revenueTrend && stats.revenuePctChange !== undefined
+                ? {
+                    trend: stats.revenueTrend,
+                    pctChange: stats.revenuePctChange,
+                    revenueToday: stats.revenueToday,
+                    revenueYesterday: stats.revenueYesterday,
+                  }
+                : undefined
+            }
             tooltip={compactTooltips ? "Suma total del valor de todas las cargas." : "Suma total del valor de todas las cargas realizadas por todos los contactos."}
           />
           <KpiCard
