@@ -138,9 +138,19 @@ export default function StatsPanel({
       (c) => (c.lead_event_id ?? "") !== "" && isNotRepeat(c),
     ).length;
 
-    const uniquePurchases = conversions.filter(
-      (c) => (c.purchase_event_id ?? "") !== "" && isNotRepeat(c),
-    ).length;
+    // Purchase único = 1 por teléfono (la primera). Si un phone tiene N purchases, 1 es único y N-1 son repeat.
+    const purchaseRows = conversions.filter(
+      (c) => c.estado === "purchase" && (c.purchase_event_id ?? "") !== "",
+    );
+    const phoneToFirstPurchase = new Map<string, ConversionRow>();
+    for (const c of purchaseRows) {
+      const key = `${c.user_id}::${c.phone}`;
+      const existing = phoneToFirstPurchase.get(key);
+      if (!existing || new Date(c.created_at) < new Date(existing.created_at)) {
+        phoneToFirstPurchase.set(key, c);
+      }
+    }
+    const uniquePurchases = phoneToFirstPurchase.size;
 
     const totalPurchases = conversions.filter((c) => c.estado === "purchase").length;
 
@@ -158,10 +168,8 @@ export default function StatsPanel({
     }
 
     let firstPurchaseRevenue = 0;
-    for (const c of conversions) {
-      if (c.estado === "purchase" && isNotRepeat(c)) {
-        firstPurchaseRevenue += c.valor;
-      }
+    for (const c of phoneToFirstPurchase.values()) {
+      firstPurchaseRevenue += c.valor;
     }
 
     const purchasers = primera + recurrente + premium;
@@ -180,13 +188,11 @@ export default function StatsPanel({
       entry.revenue += c.total_valor;
       campaignMap.set(camp, entry);
     }
-    for (const conv of conversions) {
-      if (conv.estado === "purchase" && !conv.observaciones?.includes("REPEAT")) {
-        const camp = conv.utm_campaign || "Sin campaña";
-        const entry = campaignMap.get(camp) ?? { leads: 0, cargas: 0, revenue: 0, total: 0, firstRevenue: 0 };
-        entry.firstRevenue += conv.valor;
-        campaignMap.set(camp, entry);
-      }
+    for (const conv of phoneToFirstPurchase.values()) {
+      const camp = conv.utm_campaign || "Sin campaña";
+      const entry = campaignMap.get(camp) ?? { leads: 0, cargas: 0, revenue: 0, total: 0, firstRevenue: 0 };
+      entry.firstRevenue += conv.valor;
+      campaignMap.set(camp, entry);
     }
 
     const byCampaign = [...campaignMap.entries()]
@@ -205,13 +211,11 @@ export default function StatsPanel({
       entry.revenue += c.total_valor;
       deviceMap.set(dev, entry);
     }
-    for (const conv of conversions) {
-      if (conv.estado === "purchase" && !conv.observaciones?.includes("REPEAT")) {
-        const dev = conv.device_type || "Desconocido";
-        const entry = deviceMap.get(dev) ?? { leads: 0, cargas: 0, revenue: 0, total: 0, firstRevenue: 0 };
-        entry.firstRevenue += conv.valor;
-        deviceMap.set(dev, entry);
-      }
+    for (const conv of phoneToFirstPurchase.values()) {
+      const dev = conv.device_type || "Desconocido";
+      const entry = deviceMap.get(dev) ?? { leads: 0, cargas: 0, revenue: 0, total: 0, firstRevenue: 0 };
+      entry.firstRevenue += conv.valor;
+      deviceMap.set(dev, entry);
     }
 
     const byDevice = [...deviceMap.entries()]
@@ -229,13 +233,11 @@ export default function StatsPanel({
       entry.revenue += c.total_valor;
       landingMap.set(ln, entry);
     }
-    for (const conv of conversions) {
-      if (conv.estado === "purchase" && !conv.observaciones?.includes("REPEAT")) {
-        const ln = conv.landing_name || "Sin landing";
-        const entry = landingMap.get(ln) ?? { leads: 0, cargas: 0, revenue: 0, total: 0, firstRevenue: 0 };
-        entry.firstRevenue += conv.valor;
-        landingMap.set(ln, entry);
-      }
+    for (const conv of phoneToFirstPurchase.values()) {
+      const ln = conv.landing_name || "Sin landing";
+      const entry = landingMap.get(ln) ?? { leads: 0, cargas: 0, revenue: 0, total: 0, firstRevenue: 0 };
+      entry.firstRevenue += conv.valor;
+      landingMap.set(ln, entry);
     }
 
     const byLanding = [...landingMap.entries()]

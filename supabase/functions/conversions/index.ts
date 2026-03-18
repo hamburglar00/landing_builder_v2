@@ -759,8 +759,8 @@ async function handlePurchase(
     contact_status_capi: "",
     lead_status_capi: "",
     purchase_status_capi: "",
-    // DO NOT inherit observaciones
-    observaciones: "",
+    // Marcar como repeat para que estadísticas no lo cuente como purchase único
+    observaciones: "REPEAT",
     external_id: srcRow?.external_id ?? "",
     utm_campaign: srcRow?.utm_campaign ?? "",
     telefono_asignado: srcRow?.telefono_asignado ?? "",
