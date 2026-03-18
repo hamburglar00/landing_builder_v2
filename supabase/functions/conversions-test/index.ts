@@ -1,4 +1,4 @@
-import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
+import { createClient, type SupabaseClient } from "https://esm.sh/@supabase/supabase-js@2";
 import {
   buildFakeConversionRow,
   buildMetaRequest,
@@ -28,7 +28,7 @@ interface TestRequestBody {
   test_event_code: string;
 }
 
-async function loadAnyConfig(db: ReturnType<typeof createClient>): Promise<ConversionsConfig | null> {
+async function loadAnyConfig(db: SupabaseClient): Promise<ConversionsConfig | null> {
   const { data, error } = await db
     .from("conversions_config")
     .select("*")

@@ -328,9 +328,6 @@ export default function ArgentinaMap({
   const [metric, setMetric] = useState<MapMetric>("contactos");
   const [hovered, setHovered] = useState<string | null>(null);
 
-  useEffect(() => {
-    if (adSpend <= 0 && ROAS_METRICS.has(metric)) setMetric("contactos");
-  }, [adSpend, metric]);
   const [tooltipPos, setTooltipPos] = useState({ x: 0, y: 0 });
   const [geoData, setGeoData] = useState<GeoCollection | null>(null);
 

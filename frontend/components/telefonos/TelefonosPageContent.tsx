@@ -1,7 +1,8 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import Link from "next/link";
+import Image from "next/image";
 import { supabase } from "@/lib/supabaseClient";
 import type { Gerencia } from "@/lib/gerencias/types";
 import { fetchGerencias, fetchGerenciasForAdmin } from "@/lib/gerencias/gerenciasDb";
@@ -89,7 +90,7 @@ export function TelefonosPageContent({
     process.env.NEXT_PUBLIC_SUPABASE_URL?.replace(/\/$/, "") ?? "";
   const apiKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY ?? "";
 
-  const loadData = async (uid: string) => {
+  const loadData = useCallback(async (uid: string) => {
     const list = isAdmin
       ? await fetchGerenciasForAdmin(uid)
       : await fetchGerencias(uid);
@@ -116,7 +117,7 @@ export function TelefonosPageContent({
       byGerencia[p.gerencia_id].push(p as GerenciaPhoneRow);
     }
     setPhonesByGerencia(byGerencia);
-  };
+  }, [isAdmin]);
 
   useEffect(() => {
     const init = async () => {
@@ -136,7 +137,7 @@ export function TelefonosPageContent({
       }
     };
     void init();
-  }, []);
+  }, [loadData]);
 
   // Cuenta regresiva hasta la próxima ejecución real del cron (*/5 en UTC: :00, :05, :10, …)
   // Cuando llega a 00:00 se recargan los datos para mostrar los teléfonos actualizados por el cron.
@@ -191,7 +192,7 @@ export function TelefonosPageContent({
     update();
     const t = setInterval(update, 1000);
     return () => clearInterval(t);
-  }, []);
+  }, [loadData]);
 
   const handleSync = async (gerenciaId: number | null) => {
     if (!userId || !base) return;
@@ -487,9 +488,11 @@ export function TelefonosPageContent({
                                       className="inline-flex shrink-0 rounded transition hover:opacity-80"
                                       title="Abrir en WhatsApp"
                                     >
-                                      <img
+                                      <Image
                                         src="/whatsapp-icon.png"
                                         alt="WhatsApp"
+                                        width={15}
+                                        height={15}
                                         className="h-[15px] w-[15px]"
                                       />
                                     </a>

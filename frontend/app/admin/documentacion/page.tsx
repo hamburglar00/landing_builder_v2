@@ -2,6 +2,7 @@ import fs from "fs";
 import path from "path";
 import Link from "next/link";
 import ReactMarkdown from "react-markdown";
+import type { ComponentPropsWithoutRef } from "react";
 import remarkGfm from "remark-gfm";
 
 export default async function AdminDocumentacionPage() {
@@ -69,7 +70,7 @@ export default async function AdminDocumentacionPage() {
               li: ({ children }) => (
                 <li className="leading-relaxed">{children}</li>
               ),
-              code: (props: any) => {
+              code: (props: ComponentPropsWithoutRef<"code"> & { inline?: boolean }) => {
                 const { children, inline } = props;
                 return inline ? (
                   <code className="rounded bg-zinc-900/70 px-1.5 py-0.5 text-[11px] text-zinc-100">

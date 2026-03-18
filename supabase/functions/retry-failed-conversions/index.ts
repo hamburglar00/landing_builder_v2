@@ -1,4 +1,5 @@
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
+import { buildMetaRequest, type ConversionRow, type ConversionsConfig } from "../conversions/shared.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -131,57 +132,75 @@ Deno.serve(async (req) => {
 
       const isRepeat = (prevCount ?? 0) > 0;
 
-      // Build user_data
-      const userData: Record<string, string> = {};
-      const hashField = async (v: string) => {
-        const data = new TextEncoder().encode(v.trim().toLowerCase());
-        const hash = await crypto.subtle.digest("SHA-256", data);
-        return Array.from(new Uint8Array(hash)).map((b) => b.toString(16).padStart(2, "0")).join("");
-      };
-      if (row.email) userData.em = await hashField(row.email);
-      if (row.phone) userData.ph = await hashField(row.phone.replace(/\D/g, ""));
-      if (row.fn) userData.fn = await hashField(row.fn);
-      if (row.ln) userData.ln = await hashField(row.ln);
-      if (row.ct) userData.ct = await hashField(row.ct);
-      if (row.st) userData.st = await hashField(row.st);
-      if (row.zip) userData.zip = await hashField(row.zip);
-      if (row.country) userData.country = await hashField(row.country);
-      if (row.fbp) userData.fbp = row.fbp;
-      if (row.fbc) userData.fbc = row.fbc;
-      if (row.client_ip) {
-        let ip = String(row.client_ip).trim();
-        if (ip.includes(",")) ip = ip.split(",")[0].trim();
-        if (ip) userData.client_ip_address = ip;
-      }
-      if (row.agent_user) userData.client_user_agent = row.agent_user;
-      if (row.external_id) userData.external_id = await hashField(row.external_id);
-
       const customData: Record<string, unknown> = { currency, value: amount };
       if (isRepeat) customData.purchase_type = "repeat";
-
-      // deno-lint-ignore no-explicit-any
-      const payload: Record<string, any> = {
-        data: [{
-          event_name: "Purchase",
-          event_time: eventTime,
-          event_id: eventId,
-          action_source: "website",
-          event_source_url: row.event_source_url || "",
-          user_data: userData,
-          custom_data: customData,
-        }],
+      const conversionRow: ConversionRow = {
+        landing_id: null,
+        user_id: row.user_id,
+        landing_name: "",
+        phone: row.phone ?? "",
+        email: row.email ?? "",
+        fn: row.fn ?? "",
+        ln: row.ln ?? "",
+        ct: row.ct ?? "",
+        st: row.st ?? "",
+        zip: row.zip ?? "",
+        country: row.country ?? "",
+        fbp: row.fbp ?? "",
+        fbc: row.fbc ?? "",
+        contact_event_id: "",
+        contact_event_time: null,
+        lead_event_id: "",
+        lead_event_time: null,
+        purchase_event_id: eventId,
+        purchase_event_time: eventTime,
+        client_ip: row.client_ip ?? "",
+        agent_user: row.agent_user ?? "",
+        device_type: "",
+        event_source_url: row.event_source_url ?? "",
+        estado: "purchase",
+        valor: amount,
+        contact_status_capi: "",
+        lead_status_capi: "",
+        purchase_status_capi: "",
+        observaciones: row.observaciones ?? "",
+        external_id: row.external_id ?? "",
+        utm_campaign: "",
+        telefono_asignado: "",
+        promo_code: "",
+        geo_city: "",
+        geo_region: "",
+        geo_country: "",
       };
-      if (testEventCode) payload.test_event_code = testEventCode;
 
-      const apiUrl = `https://graph.facebook.com/${apiVersion}/${pixelId}/events?access_token=${accessToken}`;
+      const cfgObj: ConversionsConfig = {
+        user_id: row.user_id,
+        pixel_id: pixelId,
+        meta_access_token: accessToken,
+        meta_currency: currency,
+        meta_api_version: apiVersion,
+        send_contact_capi: false,
+        geo_use_ipapi: false,
+        geo_fill_only_when_missing: false,
+        test_event_code: testEventCode,
+      };
+
+      const metaReq = await buildMetaRequest(
+        cfgObj,
+        conversionRow,
+        "Purchase",
+        eventId,
+        eventTime,
+        customData,
+      );
 
       retried++;
 
       try {
-        const res = await fetch(apiUrl, {
+        const res = await fetch(metaReq.apiUrl, {
           method: "POST",
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify(payload),
+          body: JSON.stringify(metaReq.body),
         });
 
         const successMsg = isRepeat ? "✅ PURCHASE REPEAT OK" : "✅ PURCHASE OK";

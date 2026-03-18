@@ -59,8 +59,6 @@ export interface MetaUserData {
   [key: string]: string;
 }
 
-const norm = (s: unknown): string => String(s ?? "").trim();
-
 export function sanitizePhone(v: unknown): string {
   return String(v ?? "").replace(/\D/g, "");
 }
@@ -94,24 +92,127 @@ export async function sha256(value: string): Promise<string> {
     .join("");
 }
 
-/** Normaliza según requisitos Meta: city sin espacios, zip sin espacios ni guiones. */
-function normalizeForMetaHash(value: string, field: "ct" | "zp"): string {
-  let s = value.trim().toLowerCase();
-  if (field === "zp") s = s.replace(/[\s-]/g, "");
-  if (field === "ct") s = s.replace(/\s/g, "");
+function normalizeBase(value: string): string {
+  return value
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .toLowerCase()
+    .trim();
+}
+
+function normalizeCity(value: string): string {
+  return normalizeBase(value).replace(/\s+/g, "");
+}
+
+function normalizePostalCode(value: string): string {
+  return normalizeBase(value).replace(/[\s-]/g, "");
+}
+
+function normalizeCountry(value: string): string {
+  const s = normalizeBase(value).replace(/[^a-z]/g, "");
+  if (s.length === 2) return s;
+  const known: Record<string, string> = {
+    argentina: "ar",
+    mexico: "mx",
+    uruguay: "uy",
+    paraguay: "py",
+    chile: "cl",
+    bolivia: "bo",
+    peru: "pe",
+    colombia: "co",
+    brasil: "br",
+    brazil: "br",
+    espana: "es",
+    spain: "es",
+    usa: "us",
+    eeuu: "us",
+    estadosunidos: "us",
+    unitedstates: "us",
+  };
+  return known[s] ?? s;
+}
+
+function normalizeState(value: string, countryRaw: string): string {
+  const country = normalizeCountry(countryRaw);
+  let s = normalizeBase(value).replace(/[^\p{L}\p{N}\s]/gu, "");
+  s = s.replace(/\s+/g, "");
+
+  if (country === "us") {
+    const us: Record<string, string> = {
+      california: "ca",
+      texas: "tx",
+      florida: "fl",
+      newyork: "ny",
+      illinois: "il",
+      pennsylvania: "pa",
+      ohio: "oh",
+      georgia: "ga",
+      northcarolina: "nc",
+      michigan: "mi",
+      newjersey: "nj",
+      virginia: "va",
+      washington: "wa",
+      arizona: "az",
+      massachusetts: "ma",
+      tennessee: "tn",
+      indiana: "in",
+      missouri: "mo",
+      maryland: "md",
+      wisconsin: "wi",
+      colorado: "co",
+      minnesota: "mn",
+      southcarolina: "sc",
+      alabama: "al",
+      louisiana: "la",
+      kentucky: "ky",
+      oregon: "or",
+      oklahoma: "ok",
+      connecticut: "ct",
+      utah: "ut",
+      iowa: "ia",
+      nevada: "nv",
+      arkansas: "ar",
+      mississippi: "ms",
+      kansas: "ks",
+      newmexico: "nm",
+      nebraska: "ne",
+      idaho: "id",
+      westvirginia: "wv",
+      hawaii: "hi",
+      newhampshire: "nh",
+      maine: "me",
+      montana: "mt",
+      rhodeisland: "ri",
+      delaware: "de",
+      southdakota: "sd",
+      northdakota: "nd",
+      alaska: "ak",
+      districtofcolumbia: "dc",
+      vermont: "vt",
+      wyoming: "wy",
+    };
+    if (s.length === 2) return s;
+    return us[s] ?? s;
+  }
+
   return s;
 }
 
 export async function buildUserData(row: ConversionRow): Promise<MetaUserData> {
   const ud: MetaUserData = {};
+  const normalizedCountry = normalizeCountry(row.country);
+  const normalizedState = normalizeState(row.st, row.country);
+  const normalizedCity = normalizeCity(row.ct);
+  const normalizedZip = normalizePostalCode(row.zip);
+
   if (row.email) ud.em = await sha256(row.email);
   if (row.phone) ud.ph = await sha256(sanitizePhone(row.phone));
   if (row.fn) ud.fn = await sha256(row.fn);
   if (row.ln) ud.ln = await sha256(row.ln);
-  if (row.ct) ud.ct = await sha256(normalizeForMetaHash(row.ct, "ct"));
-  if (row.st) ud.st = await sha256(row.st);
-  if (row.zip) ud.zp = await sha256(normalizeForMetaHash(row.zip, "zp"));
-  if (row.country) ud.country = await sha256(row.country);
+  if (row.ct) ud.ct = await sha256(normalizedCity);
+  if (row.st) ud.st = await sha256(normalizedState);
+  if (row.zip) ud.zp = await sha256(normalizedZip);
+  if (row.country) ud.country = await sha256(normalizedCountry);
   if (row.fbp) ud.fbp = row.fbp;
   if (row.fbc) ud.fbc = row.fbc;
   if (row.client_ip) Object.assign(ud, normalizeIpToMeta(row.client_ip));
@@ -143,7 +244,7 @@ export async function buildMetaRequest(
     event_name: eventName,
     event_time: eventTime,
     event_id: eventId,
-    action_source: "website",
+    action_source: eventName === "Contact" ? "website" : "business_messaging",
     event_source_url: srcUrl,
     user_data: userData,
   };
@@ -184,7 +285,6 @@ export async function pickRandomConversionRow(
 }
 
 export function buildFakeConversionRow(event: MetaEventName): ConversionRow {
-  const now = Math.floor(Date.now() / 1000);
   return {
     landing_id: null,
     user_id: "00000000-0000-0000-0000-000000000000",
@@ -192,7 +292,7 @@ export function buildFakeConversionRow(event: MetaEventName): ConversionRow {
     phone: "5491160000000",
     email: "test@example.com",
     fn: "Juan",
-    ln: "Pérez",
+    ln: "Perez",
     ct: "Buenos Aires",
     st: "Buenos Aires",
     zip: "1000",
@@ -225,9 +325,9 @@ export function buildFakeConversionRow(event: MetaEventName): ConversionRow {
   };
 }
 
-// ─── Purchase helpers shared between production and tests ────────────────────
+// Purchase helpers shared between production and tests
 
-/** Indica si el teléfono ya tiene al menos una compra registrada (para detectar recargas).
+/** Indica si el telefono ya tiene al menos una compra registrada (para detectar recargas).
  * No depende de purchase_status_capi: una compra cuenta aunque Meta CAPI haya fallado. */
 export async function hasPreviousSuccessfulPurchases(
   db: SupabaseClient,
@@ -243,5 +343,3 @@ export async function hasPreviousSuccessfulPurchases(
 
   return (count ?? 0) > 0;
 }
-
-

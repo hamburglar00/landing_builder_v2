@@ -176,18 +176,6 @@ function ContactCard({ c, stage }: { c: FunnelContact; stage: FunnelStage }) {
 /* ═══════════════════════════════════════════════════════════════════════════
    KPI BLOCK — Summary bar metric
    ═══════════════════════════════════════════════════════════════════════════ */
-function KpiBlock({ label, value, accent, dot }: { label: string; value: string | number; accent: string; dot: string }) {
-  return (
-    <div className="flex items-center gap-3 px-4 py-2.5">
-      <span className={`h-1.5 w-1.5 rounded-full ${dot} ring-2 ring-current/10`} />
-      <div className="min-w-0">
-        <p className="text-[9px] uppercase tracking-[0.08em] text-zinc-500 font-medium leading-none">{label}</p>
-        <p className={`text-base font-extrabold ${accent} leading-tight mt-0.5 tabular-nums`}>{value}</p>
-      </div>
-    </div>
-  );
-}
-
 /* ═══════════════════════════════════════════════════════════════════════════
    FUNNEL BOARD
    ═══════════════════════════════════════════════════════════════════════════ */

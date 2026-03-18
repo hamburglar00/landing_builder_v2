@@ -6,6 +6,7 @@ import { getSettings } from "@/lib/settingsDb";
 
 type LogLevel = "info" | "warn" | "error";
 type LogEntry = { id: number; time: string; level: LogLevel; message: string; data?: unknown };
+type CapiResult = { status: number; ok: boolean; body: unknown };
 
 export default function AdminTestsPage() {
   const [landingName, setLandingName] = useState("");
@@ -22,7 +23,7 @@ export default function AdminTestsPage() {
   const [capiEvent, setCapiEvent] = useState<"Contact" | "Lead" | "Purchase">("Contact");
   const [capiTestCode, setCapiTestCode] = useState("");
   const [capiLoading, setCapiLoading] = useState(false);
-  const [capiResult, setCapiResult] = useState<any | null>(null);
+  const [capiResult, setCapiResult] = useState<CapiResult | null>(null);
 
   // Test contact (conversions endpoint)
   const [clientName, setClientName] = useState("");
@@ -549,4 +550,3 @@ export default function AdminTestsPage() {
     </div>
   );
 }
-

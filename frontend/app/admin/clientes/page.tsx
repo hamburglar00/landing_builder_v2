@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import Link from "next/link";
 import { invokeFunction } from "@/lib/supabaseFunctions";
 import { supabase } from "@/lib/supabaseClient";
@@ -35,7 +35,7 @@ export default function AdminClientesPage() {
     );
   }, [clients, searchQuery]);
 
-  const fetchClients = async () => {
+  const fetchClients = useCallback(async () => {
     setIsLoadingClients(true);
     setClientsError(null);
 
@@ -66,11 +66,14 @@ export default function AdminClientesPage() {
         last_sign_in_at: u.last_sign_in_at,
       })),
     );
-  };
+  }, []);
 
   useEffect(() => {
-    void fetchClients();
-  }, []);
+    const timer = setTimeout(() => {
+      void fetchClients();
+    }, 0);
+    return () => clearTimeout(timer);
+  }, [fetchClients]);
 
   const startEditingClient = (client: ClientUser) => {
     setEditingClientId(client.id);

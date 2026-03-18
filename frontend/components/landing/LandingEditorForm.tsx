@@ -38,12 +38,10 @@ function updateConfig(
 }
 
 function CollapsibleSection({
-  id,
   title,
   defaultOpen,
   children,
 }: {
-  id: string;
   title: string;
   defaultOpen?: boolean;
   children: React.ReactNode;
@@ -194,7 +192,7 @@ export function LandingEditorForm({
         onSave();
       }}
     >
-      <CollapsibleSection id="plantilla" title="Plantilla" defaultOpen>
+      <CollapsibleSection title="Plantilla" defaultOpen>
         <div className="space-y-3">
           <p className="text-xs text-zinc-400">
             Elegí la plantilla de layout que define qué secciones se configuran.
@@ -222,7 +220,7 @@ export function LandingEditorForm({
         </div>
       </CollapsibleSection>
 
-      <CollapsibleSection id="cta" title="CTA">
+      <CollapsibleSection title="CTA">
         <div className="space-y-3">
           <div>
             <label className="block text-xs font-medium text-zinc-400 mb-1">
@@ -345,7 +343,7 @@ export function LandingEditorForm({
         </div>
       </CollapsibleSection>
 
-      <CollapsibleSection id="multimedia" title="Multimedia">
+      <CollapsibleSection title="Multimedia">
         <div className="space-y-6">
           <div className="space-y-4">
             <div>
@@ -432,7 +430,7 @@ export function LandingEditorForm({
         </div>
       </CollapsibleSection>
 
-      <CollapsibleSection id="textos" title="Textos">
+      <CollapsibleSection title="Textos">
         <div className="space-y-6">
           <div className="space-y-3">
             <span className="block text-xs font-medium text-zinc-400 mb-1">

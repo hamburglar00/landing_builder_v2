@@ -297,8 +297,8 @@ export default function AdminConversionesPage() {
     } catch (e) {
       // Mostrar más contexto del error para poder diagnosticar problemas de RLS o esquema en producción
       // y loguearlo en consola del navegador.
-      // deno-lint-ignore no-explicit-any
-      console.error("Error al guardar configuración de conversiones:", e as any);
+
+      console.error("Error al guardar configuración de conversiones:", e);
       const msg =
         e instanceof Error
           ? e.message

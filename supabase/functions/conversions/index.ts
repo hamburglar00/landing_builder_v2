@@ -474,7 +474,7 @@ async function handleLead(
   }
 
   const leadEventId = generateEventId();
-  const leadEventTime = Math.floor(Date.now() / 1000);
+  const leadEventTime = toValidEventTime(p.lead_event_time || p.event_time || Math.floor(Date.now() / 1000));
 
   // 3) No match -> create new row
   if (!targetId) {
@@ -615,7 +615,7 @@ async function handlePurchase(
     }
 
     const purchaseEventId = generateEventId();
-    const purchaseEventTime = Math.floor(Date.now() / 1000);
+    const purchaseEventTime = toValidEventTime(p.purchase_event_time || p.event_time || Math.floor(Date.now() / 1000));
 
     // 3) No match -> create new row
     if (!targetId) {
@@ -726,7 +726,7 @@ async function handlePurchase(
     .maybeSingle();
 
   const purchaseEventId = generateEventId();
-  const purchaseEventTime = Math.floor(Date.now() / 1000);
+  const purchaseEventTime = toValidEventTime(p.purchase_event_time || p.event_time || Math.floor(Date.now() / 1000));
 
   const newRow: Omit<ConversionRow, "id"> = {
     landing_id: srcRow?.landing_id ?? (landing.id?.trim() || null),
@@ -813,7 +813,7 @@ async function handleSimplePurchase(
     .maybeSingle();
 
   const purchaseEventId = generateEventId();
-  const purchaseEventTime = Math.floor(Date.now() / 1000);
+  const purchaseEventTime = toValidEventTime(p.purchase_event_time || p.event_time || Math.floor(Date.now() / 1000));
 
   const newRow: Omit<ConversionRow, "id"> = {
     landing_id: landing.id?.trim() || null,
