@@ -51,6 +51,8 @@ const formatStatus = (status: string) => {
   return status;
 };
 
+const onlyDigits = (raw: string) => raw.replace(/\D/g, "");
+
 export function TelefonosPageContent({
   backLink,
   backLabel,
@@ -60,6 +62,9 @@ export function TelefonosPageContent({
   const [gerencias, setGerencias] = useState<Gerencia[]>([]);
   const [phonesByGerencia, setPhonesByGerencia] = useState<
     Record<number, GerenciaPhoneRow[]>
+  >({});
+  const [leadUniqueByAssignedPhone, setLeadUniqueByAssignedPhone] = useState<
+    Record<string, number>
   >({});
   const [userId, setUserId] = useState<string | null>(null);
   const [ready, setReady] = useState(false);
@@ -117,6 +122,34 @@ export function TelefonosPageContent({
       byGerencia[p.gerencia_id].push(p as GerenciaPhoneRow);
     }
     setPhonesByGerencia(byGerencia);
+
+    const leadQuery = supabase
+      .from("conversions")
+      .select("telefono_asignado, phone, estado, lead_event_id")
+      .neq("telefono_asignado", "")
+      .neq("phone", "");
+
+    const { data: leadRows, error: leadsError } = await (isAdmin
+      ? leadQuery
+      : leadQuery.eq("user_id", uid));
+
+    if (leadsError) throw leadsError;
+
+    const countsByAssigned: Record<string, number> = {};
+
+    for (const row of leadRows ?? []) {
+      const leadEventId = typeof row.lead_event_id === "string"
+        ? row.lead_event_id.trim()
+        : "";
+      if (!leadEventId) continue;
+
+      const assignedDigits = onlyDigits(row.telefono_asignado ?? "");
+      if (!assignedDigits) continue;
+
+      countsByAssigned[assignedDigits] = (countsByAssigned[assignedDigits] ?? 0) + 1;
+    }
+
+    setLeadUniqueByAssignedPhone(countsByAssigned);
   }, [isAdmin]);
 
   useEffect(() => {
@@ -458,6 +491,9 @@ export function TelefonosPageContent({
                               Contador
                             </th>
                             <th className="px-3 py-2 font-medium text-zinc-300">
+                              Mensajes recibidos
+                            </th>
+                            <th className="px-3 py-2 font-medium text-zinc-300">
                               Última sincronización
                             </th>
                           </tr>
@@ -466,7 +502,7 @@ export function TelefonosPageContent({
                           {phones.length === 0 ? (
                             <tr>
                               <td
-                                colSpan={5}
+                                colSpan={6}
                                 className="px-3 py-4 text-center text-zinc-500"
                               >
                                 Sin registros. Usa Sincronizar para traer números.
@@ -515,6 +551,9 @@ export function TelefonosPageContent({
                                 <td className="px-3 py-2 text-zinc-300">
                                   {p.usage_count}
                                 </td>
+                                <td className="px-3 py-2 text-zinc-300">
+                                  {leadUniqueByAssignedPhone[onlyDigits(p.phone)] ?? 0}
+                                </td>
                                 <td className="px-3 py-2 text-xs text-zinc-500">
                                   {p.last_seen_at
                                     ? new Date(p.last_seen_at).toLocaleString()
@@ -536,3 +575,4 @@ export function TelefonosPageContent({
     </div>
   );
 }
+
