@@ -126,16 +126,27 @@ export default function StatsPanel({
   const [adSpend, setAdSpend] = useState<string>("");
 
   const stats = useMemo(() => {
-    // Contactos únicos: filas que representan primera entrada al funnel (estado contact, lead, o purchase sin REPEAT).
-    // Las filas REPEAT son recargas y ya están contadas en la fila original.
+    // Métricas básicas desde conversions (por estado, no por phone).
+    // Flujo Meta Ads: clic CTA → contacto → (opcional) mensaje → lead → (opcional) carga → purchase → (opcional) recarga.
+    const isNotRepeat = (c: ConversionRow) => !(c.estado === "purchase" && c.observaciones?.includes("REPEAT"));
+
     const uniqueContacts = conversions.filter(
       (c) =>
         c.estado === "contact" ||
         c.estado === "lead" ||
-        (c.estado === "purchase" && !c.observaciones?.includes("REPEAT")),
+        (c.estado === "purchase" && isNotRepeat(c)),
     ).length;
 
-    const total = uniqueContacts;
+    const uniqueLeads = conversions.filter(
+      (c) => (c.estado === "lead" || (c.estado === "purchase" && isNotRepeat(c))),
+    ).length;
+
+    const uniquePurchases = conversions.filter(
+      (c) => c.estado === "purchase" && isNotRepeat(c),
+    ).length;
+
+    const totalPurchases = conversions.filter((c) => c.estado === "purchase").length;
+
     let leads = 0, primera = 0, recurrente = 0, premium = 0;
     let totalRevenue = 0, totalPurchaseCount = 0;
 
@@ -151,21 +162,12 @@ export default function StatsPanel({
 
     let firstPurchaseRevenue = 0;
     for (const c of conversions) {
-      if (c.estado === "purchase" && !c.observaciones?.includes("REPEAT")) {
+      if (c.estado === "purchase" && isNotRepeat(c)) {
         firstPurchaseRevenue += c.valor;
       }
     }
 
     const purchasers = primera + recurrente + premium;
-    // reachedContact = contactos únicos (misma lógica que total)
-    const reachedContact = uniqueContacts;
-    // reachedLead/reachedPurchase: desde conversions para incluir contactos sin phone
-    const reachedLead = conversions.filter(
-      (c) => c.lead_event_id && !(c.estado === "purchase" && c.observaciones?.includes("REPEAT")),
-    ).length;
-    const reachedPurchase = conversions.filter(
-      (c) => c.purchase_event_id && !(c.estado === "purchase" && c.observaciones?.includes("REPEAT")),
-    ).length;
     const reachedRepeat = funnelContacts.filter((c) => c.reached_repeat).length;
     const avgTicket = totalPurchaseCount > 0 ? totalRevenue / totalPurchaseCount : 0;
     const avgLoadsPerPlayer = purchasers > 0 ? totalPurchaseCount / purchasers : 0;
@@ -351,15 +353,15 @@ export default function StatsPanel({
     }
 
     return {
-      total,
+      uniqueContacts,
+      uniqueLeads,
+      uniquePurchases,
+      totalPurchases,
       leads,
       primera,
       recurrente,
       premium,
       purchasers,
-      reachedContact,
-      reachedLead,
-      reachedPurchase,
       reachedRepeat,
       totalRevenue,
       firstPurchaseRevenue,
@@ -390,23 +392,29 @@ export default function StatsPanel({
       {/* ── RESUMEN GENERAL ── */}
       <div>
         <SectionTitle>Resumen general</SectionTitle>
-        <div className="mt-3 grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-6">
+        <div className="mt-3 grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-7">
           <KpiCard
             label="Contactos únicos"
-            value={stats.total}
-            tooltip="Cantidad de teléfonos únicos registrados en el sistema. Cada teléfono representa un contacto consolidado."
+            value={stats.uniqueContacts}
+            tooltip="Personas que hicieron clic en el CTA (contact + lead + purchase sin recarga)."
           />
           <KpiCard
-            label="Leads"
-            value={stats.leads}
+            label="Leads únicos"
+            value={stats.uniqueLeads}
             color="text-amber-300"
-            tooltip="Contactos que iniciaron una conversación (acción LEAD) pero aún no realizaron ninguna carga."
+            tooltip="Personas que enviaron mensaje (lead + purchase sin recarga)."
           />
           <KpiCard
-            label="Primera carga"
-            value={stats.primera}
+            label="Purchase únicos"
+            value={stats.uniquePurchases}
             color="text-sky-300"
-            tooltip="Contactos que realizaron su primera carga pero no tienen recargas."
+            tooltip="Personas que realizaron al menos una carga (purchase sin recarga)."
+          />
+          <KpiCard
+            label="Purchase totales"
+            value={stats.totalPurchases}
+            color="text-sky-400"
+            tooltip="Total de cargas registradas (primera carga + recargas)."
           />
           <KpiCard
             label="Recurrentes"
@@ -502,22 +510,22 @@ export default function StatsPanel({
         <div className="mt-3 grid grid-cols-1 gap-3 sm:grid-cols-3">
           <KpiCard
             label="Porcentaje de inicio de conversación"
-            value={pct(stats.reachedLead, stats.reachedContact || stats.total)}
-            sub={`${stats.reachedLead} de ${stats.reachedContact || stats.total} contactos`}
+            value={pct(stats.uniqueLeads, stats.uniqueContacts)}
+            sub={`${stats.uniqueLeads} de ${stats.uniqueContacts} contactos`}
             color="text-amber-400"
-            tooltip="Porcentaje de contactos que iniciaron una conversación (alcanzaron la etapa Lead). Se calcula: leads alcanzados / contactos totales."
+            tooltip="De las personas que hicieron clic en el CTA, ¿cuántas enviaron mensaje? leads únicos / contactos únicos."
           />
           <KpiCard
             label="Porcentaje de carga"
-            value={pct(stats.reachedPurchase, stats.reachedLead)}
-            sub={`${stats.reachedPurchase} de ${stats.reachedLead} leads`}
+            value={pct(stats.uniquePurchases, stats.uniqueLeads)}
+            sub={`${stats.uniquePurchases} de ${stats.uniqueLeads} leads`}
             color="text-sky-400"
-            tooltip="Porcentaje de leads que realizaron al menos una carga. Se calcula: contactos que cargaron / leads alcanzados."
+            tooltip="De las personas que escribieron (leads), ¿cuántas cargaron? purchase únicos / leads únicos."
           />
           <KpiCard
             label="Porcentaje de recarga"
-            value={pct(stats.reachedRepeat, stats.reachedPurchase)}
-            sub={`${stats.reachedRepeat} de ${stats.reachedPurchase} jugadores`}
+            value={pct(stats.reachedRepeat, stats.uniquePurchases)}
+            sub={`${stats.reachedRepeat} de ${stats.uniquePurchases} jugadores`}
             color="text-violet-400"
             tooltip="Porcentaje de jugadores que volvieron a cargar después de su primera carga. Se calcula: jugadores con recarga / jugadores que cargaron."
           />
