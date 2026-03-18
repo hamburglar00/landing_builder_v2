@@ -332,18 +332,20 @@ export function TelefonosPageContent({
   ) => {
     setSwitchingGerenciaId(gerenciaId);
     setError(null);
+    const previous = gerencias;
+    setGerencias((prev) =>
+      prev.map((g) =>
+        g.id === gerenciaId ? { ...g, fair_criterion: criterion } : g,
+      ),
+    );
     try {
       const { error: updateError } = await supabase
         .from("gerencias")
         .update({ fair_criterion: criterion })
         .eq("id", gerenciaId);
       if (updateError) throw updateError;
-      setGerencias((prev) =>
-        prev.map((g) =>
-          g.id === gerenciaId ? { ...g, fair_criterion: criterion } : g,
-        ),
-      );
     } catch (e) {
+      setGerencias(previous);
       setError(
         e instanceof Error
           ? e.message
@@ -406,7 +408,7 @@ export function TelefonosPageContent({
               type="button"
               onClick={() => void handleSync(null)}
               disabled={globalSyncing || !gerencias.length}
-              title="Trae/actualiza los teléfonos desde la API externa para todas las gerencias."
+              title="Trae/actualiza los teléfonos disponibles desde el panel de PB admin para todas las gerencias."
               className="rounded-lg border border-zinc-700 bg-zinc-800 px-3 py-1.5 text-xs font-medium text-zinc-200 transition hover:bg-zinc-700 disabled:opacity-60"
             >
               {globalSyncing ? "Sincronizando..." : "Sincronizar"}
@@ -424,7 +426,7 @@ export function TelefonosPageContent({
               type="button"
               onClick={() => void handleDelete(null)}
               disabled={globalDeleting || !gerencias.length}
-              title="Limpia los registros de esta vista para todas las gerencias (no borra datos en Supabase)."
+              title="Limpia los registros de esta vista para todas las gerencias."
               className="rounded-lg border border-red-900/60 bg-red-950/30 px-3 py-1.5 text-xs font-medium text-red-300 transition hover:bg-red-950/50 disabled:opacity-60"
             >
               {globalDeleting ? "Borrando..." : "Borrar registros"}
@@ -511,6 +513,7 @@ export function TelefonosPageContent({
                           void handleFairCriterionChange(g.id, "usage_count")
                         }
                         disabled={switchingGerenciaId === g.id}
+                        title="La distribución equitativa toma como criterio de reparto el contador por número."
                         className={`rounded-lg border px-2 py-1 text-xs font-medium transition disabled:opacity-60 ${
                           (g.fair_criterion ?? "usage_count") === "usage_count"
                             ? "border-zinc-600 bg-zinc-700 text-zinc-100"
@@ -525,6 +528,7 @@ export function TelefonosPageContent({
                           void handleFairCriterionChange(g.id, "messages_received")
                         }
                         disabled={switchingGerenciaId === g.id}
+                        title="La distribución equitativa toma como criterio de reparto los mensajes recibidos por número."
                         className={`rounded-lg border px-2 py-1 text-xs font-medium transition disabled:opacity-60 ${
                           (g.fair_criterion ?? "usage_count") === "messages_received"
                             ? "border-zinc-600 bg-zinc-700 text-zinc-100"
@@ -538,7 +542,7 @@ export function TelefonosPageContent({
                           type="button"
                           onClick={() => void handleSync(g.id)}
                           disabled={syncing}
-                          title="Trae/actualiza los teléfonos desde la API externa para esta gerencia."
+                          title="Trae/actualiza los teléfonos disponibles desde el panel de PB admin para esta gerencia."
                           className="rounded-lg border border-zinc-700 bg-zinc-800 px-2 py-1 text-xs font-medium text-zinc-200 transition hover:bg-zinc-700 disabled:opacity-60"
                         >
                           {syncing ? "Sincronizando..." : "Sincronizar"}
@@ -556,7 +560,7 @@ export function TelefonosPageContent({
                           type="button"
                           onClick={() => void handleDelete(g.id)}
                           disabled={deleting}
-                          title="Limpia los registros de esta vista para esta gerencia (no borra datos en Supabase)."
+                          title="Limpia los registros de esta vista para esta gerencia."
                           className="rounded-lg border border-red-900/60 bg-red-950/30 px-2 py-1 text-xs font-medium text-red-300 transition hover:bg-red-950/50 disabled:opacity-60"
                         >
                           {deleting ? "Borrando..." : "Borrar registros"}
