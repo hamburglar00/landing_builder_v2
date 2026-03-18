@@ -622,6 +622,7 @@ export default function DashboardConversionesPage() {
               allConversions={conversions}
               premiumThreshold={config?.funnel_premium_threshold ?? 50000}
               dateRange={dateRange}
+              compactTooltips
             />
           )}
         </section>

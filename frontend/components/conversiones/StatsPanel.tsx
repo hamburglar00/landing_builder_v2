@@ -40,23 +40,46 @@ function pct(num: number, den: number) {
   return `${((num / den) * 100).toFixed(1)}%`;
 }
 
+function TrendArrow({ trend }: { trend: "up" | "down" }) {
+  const isUp = trend === "up";
+  return (
+    <span
+      className={`inline-flex ml-1 ${isUp ? "text-emerald-400" : "text-red-400"}`}
+      title={isUp ? "Mayor que ayer" : "Menor que ayer"}
+    >
+      <svg viewBox="0 0 24 24" className="w-4 h-4" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+        {isUp ? (
+          <path d="M7 17l10-10M17 7v6h-6" />
+        ) : (
+          <path d="M7 7l10 10M7 17V11h6" />
+        )}
+      </svg>
+    </span>
+  );
+}
+
 function KpiCard({
   label,
   value,
   sub,
   tooltip,
   color = "text-zinc-100",
+  trend,
 }: {
   label: string;
   value: string | number;
   sub?: string;
   tooltip?: string;
   color?: string;
+  trend?: "up" | "down";
 }) {
   return (
     <div className="rounded-xl border border-zinc-800 bg-zinc-900/60 p-4 group relative">
       <p className="text-[11px] text-zinc-500 mb-1">{label}</p>
-      <p className={`text-xl font-bold ${color}`}>{value}</p>
+      <p className={`text-xl font-bold ${color} flex items-center`}>
+        {value}
+        {trend && <TrendArrow trend={trend} />}
+      </p>
       {sub && <p className="text-[10px] text-zinc-500 mt-1">{sub}</p>}
       {tooltip && (
         <div className="pointer-events-none absolute left-1/2 -translate-x-1/2 bottom-full mb-2 w-56 rounded-lg border border-zinc-700/60 bg-zinc-900/95 backdrop-blur-sm px-3 py-2 shadow-xl opacity-0 group-hover:opacity-100 transition-opacity duration-150 z-50">
@@ -116,12 +139,14 @@ export default function StatsPanel({
   allConversions,
   premiumThreshold,
   dateRange,
+  compactTooltips = false,
 }: {
   funnelContacts: FunnelContact[];
   conversions: ConversionRow[];
   allConversions: ConversionRow[];
   premiumThreshold: number;
   dateRange?: { start: Date; end: Date } | null;
+  compactTooltips?: boolean;
 }) {
   const [adSpend, setAdSpend] = useState<string>("");
 
@@ -351,6 +376,33 @@ export default function StatsPanel({
       }
     }
 
+    // Ingresos hoy vs ayer (para flecha de tendencia)
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    const todayEnd = new Date(today);
+    todayEnd.setHours(23, 59, 59, 999);
+    const yesterday = new Date(today);
+    yesterday.setDate(yesterday.getDate() - 1);
+    const yesterdayEnd = new Date(yesterday);
+    yesterdayEnd.setHours(23, 59, 59, 999);
+
+    let revenueToday = 0;
+    let revenueYesterday = 0;
+    for (const c of allConversions) {
+      if (c.estado !== "purchase" || !c.created_at) continue;
+      const d = new Date(c.created_at).getTime();
+      if (d >= today.getTime() && d <= todayEnd.getTime()) revenueToday += c.valor;
+      if (d >= yesterday.getTime() && d <= yesterdayEnd.getTime()) revenueYesterday += c.valor;
+    }
+    const revenueTrend: "up" | "down" | undefined =
+      revenueYesterday > 0 || revenueToday > 0
+        ? revenueToday > revenueYesterday
+          ? "up"
+          : revenueToday < revenueYesterday
+            ? "down"
+            : undefined
+        : undefined;
+
     return {
       uniqueContacts,
       uniqueLeads,
@@ -374,6 +426,7 @@ export default function StatsPanel({
       hourlyBuckets,
       dailyData,
       retencionActiva30d,
+      revenueTrend,
     };
   }, [funnelContacts, conversions, allConversions, premiumThreshold, dateRange]);
 
@@ -395,43 +448,43 @@ export default function StatsPanel({
           <KpiCard
             label="Contactos únicos"
             value={stats.uniqueContacts}
-            tooltip="Personas que hicieron clic en el CTA (contact + lead + purchase sin recarga)."
+            tooltip={compactTooltips ? "Personas que hicieron clic en el CTA." : "Personas que hicieron clic en el CTA (contact + lead + purchase sin recarga)."}
           />
           <KpiCard
             label="Leads únicos"
             value={stats.uniqueLeads}
             color="text-amber-300"
-            tooltip="Personas que enviaron mensaje (lead + purchase sin recarga)."
+            tooltip={compactTooltips ? "Personas que enviaron mensaje." : "Personas que enviaron mensaje (lead + purchase sin recarga)."}
           />
           <KpiCard
             label="Purchase únicos"
             value={stats.uniquePurchases}
             color="text-sky-300"
-            tooltip="Personas que realizaron al menos una carga (purchase sin recarga)."
+            tooltip={compactTooltips ? "Personas que realizaron al menos una carga." : "Personas que realizaron al menos una carga (purchase sin recarga)."}
           />
           <KpiCard
             label="Purchase totales"
             value={stats.totalPurchases}
             color="text-sky-400"
-            tooltip="Total de cargas registradas (primera carga + recargas)."
+            tooltip={compactTooltips ? "Total de cargas registradas." : "Total de cargas registradas (primera carga + recargas)."}
           />
           <KpiCard
             label="Recurrentes"
             value={stats.recurrente}
             color="text-violet-300"
-            tooltip="Contactos que realizaron más de una carga pero cuyo monto total acumulado no alcanza el umbral premium."
+            tooltip={compactTooltips ? "Contactos que realizaron más de una carga." : "Contactos que realizaron más de una carga pero cuyo monto total acumulado no alcanza el umbral premium."}
           />
           <KpiCard
             label="Premium"
             value={stats.premium}
             color="text-emerald-300"
-            tooltip={`Contactos cuyo monto total acumulado de cargas es igual o superior al umbral premium configurado ($${premiumThreshold.toLocaleString("es-AR")}).`}
+            tooltip={compactTooltips ? `Contactos con monto total acumulado ≥ $${premiumThreshold.toLocaleString("es-AR")}.` : `Contactos cuyo monto total acumulado de cargas es igual o superior al umbral premium configurado ($${premiumThreshold.toLocaleString("es-AR")}).`}
           />
           <KpiCard
             label="Retención activa 30d"
             value={stats.retencionActiva30d}
             color="text-emerald-400"
-            tooltip="Jugadores que hicieron al menos 4 cargas en los últimos 30 días y cuya primera carga fue hace al menos 7 días. Métrica calculada siempre sobre los últimos 30 días, sin aplicar el filtro de fechas."
+            tooltip={compactTooltips ? "Jugadores que hicieron al menos 4 cargas en los últimos 30 días." : "Jugadores que hicieron al menos 4 cargas en los últimos 30 días y cuya primera carga fue hace al menos 7 días. Métrica calculada siempre sobre los últimos 30 días, sin aplicar el filtro de fechas."}
           />
         </div>
       </div>
@@ -444,18 +497,19 @@ export default function StatsPanel({
             label="Total cargado"
             value={formatCurrency(stats.totalRevenue)}
             color="text-emerald-400"
-            tooltip="Suma total del valor de todas las cargas realizadas por todos los contactos."
+            trend={stats.revenueTrend}
+            tooltip={compactTooltips ? "Suma total del valor de todas las cargas." : "Suma total del valor de todas las cargas realizadas por todos los contactos."}
           />
           <KpiCard
             label="Carga promedio"
             value={formatCurrency(stats.avgTicket)}
             sub={`${stats.totalPurchaseCount} cargas totales`}
-            tooltip="Monto promedio por carga individual. Se calcula dividiendo el total cargado por la cantidad de cargas realizadas."
+            tooltip={compactTooltips ? "Monto promedio por carga individual." : "Monto promedio por carga individual. Se calcula dividiendo el total cargado por la cantidad de cargas realizadas."}
           />
           <KpiCard
             label="Promedio de cargas por jugador"
             value={stats.avgLoadsPerPlayer.toFixed(1)}
-            tooltip="Cantidad promedio de cargas que realiza cada jugador que cargó al menos una vez. Se calcula dividiendo el total de cargas por la cantidad de jugadores."
+            tooltip={compactTooltips ? "Cantidad promedio de cargas por jugador." : "Cantidad promedio de cargas que realiza cada jugador que cargó al menos una vez. Se calcula dividiendo el total de cargas por la cantidad de jugadores."}
           />
           {parsedAdSpend > 0 && (
             <>
@@ -464,14 +518,14 @@ export default function StatsPanel({
                 value={`${roasFirstPurchase.toFixed(2)}x`}
                 sub={formatCurrency(stats.firstPurchaseRevenue)}
                 color="text-sky-400"
-                tooltip="Retorno sobre la inversión publicitaria considerando sólo ingresos de primeras cargas (sin recargas). Se calcula: ingresos primera carga / importe gastado."
+                tooltip={compactTooltips ? "Retorno sobre la inversión publicitaria (solo primeras cargas)." : "Retorno sobre la inversión publicitaria considerando sólo ingresos de primeras cargas (sin recargas). Se calcula: ingresos primera carga / importe gastado."}
               />
               <KpiCard
                 label="ROAS total"
                 value={`${roasTotal.toFixed(2)}x`}
                 sub={formatCurrency(stats.totalRevenue)}
                 color="text-amber-400"
-                tooltip="Retorno sobre la inversión publicitaria total. Se calcula: ingresos totales (incluyendo recargas) / importe gastado."
+                tooltip={compactTooltips ? "Retorno sobre la inversión publicitaria total." : "Retorno sobre la inversión publicitaria total. Se calcula: ingresos totales (incluyendo recargas) / importe gastado."}
               />
             </>
           )}
@@ -512,21 +566,21 @@ export default function StatsPanel({
             value={pct(stats.uniqueLeads, stats.uniqueContacts)}
             sub={`${stats.uniqueLeads} de ${stats.uniqueContacts} contactos`}
             color="text-amber-400"
-            tooltip="De las personas que hicieron clic en el CTA, ¿cuántas enviaron mensaje? leads únicos / contactos únicos."
+            tooltip={compactTooltips ? "De las personas que hicieron clic en el CTA, ¿cuántas enviaron mensaje?" : "De las personas que hicieron clic en el CTA, ¿cuántas enviaron mensaje? leads únicos / contactos únicos."}
           />
           <KpiCard
             label="Porcentaje de carga"
             value={pct(stats.uniquePurchases, stats.uniqueLeads)}
             sub={`${stats.uniquePurchases} de ${stats.uniqueLeads} leads`}
             color="text-sky-400"
-            tooltip="De las personas que escribieron (leads), ¿cuántas cargaron? purchase únicos / leads únicos."
+            tooltip={compactTooltips ? "De las personas que escribieron (leads), ¿cuántas cargaron?" : "De las personas que escribieron (leads), ¿cuántas cargaron? purchase únicos / leads únicos."}
           />
           <KpiCard
             label="Porcentaje de recarga"
             value={pct(stats.reachedRepeat, stats.uniquePurchases)}
             sub={`${stats.reachedRepeat} de ${stats.uniquePurchases} jugadores`}
             color="text-violet-400"
-            tooltip="Porcentaje de jugadores que volvieron a cargar después de su primera carga. Se calcula: jugadores con recarga / jugadores que cargaron."
+            tooltip={compactTooltips ? "Porcentaje de jugadores que volvieron a cargar después de su primera carga." : "Porcentaje de jugadores que volvieron a cargar después de su primera carga. Se calcula: jugadores con recarga / jugadores que cargaron."}
           />
         </div>
       </div>
