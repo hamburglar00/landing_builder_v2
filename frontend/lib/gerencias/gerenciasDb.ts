@@ -7,7 +7,7 @@ import type { Gerencia } from "./types";
 export async function fetchGerencias(userId: string): Promise<Gerencia[]> {
   const { data, error } = await supabase
     .from("gerencias")
-    .select("id, nombre, gerencia_id")
+    .select("id, nombre, gerencia_id, fair_criterion")
     .eq("user_id", userId)
     .order("id", { ascending: true });
 
@@ -21,7 +21,7 @@ export async function fetchGerencias(userId: string): Promise<Gerencia[]> {
 export async function fetchGerenciasForAdmin(adminUserId: string): Promise<Gerencia[]> {
   const { data, error } = await supabase
     .from("gerencias")
-    .select("id, nombre, gerencia_id, user_id")
+    .select("id, nombre, gerencia_id, fair_criterion, user_id")
     .order("id", { ascending: true });
 
   if (error) throw error;

@@ -6,5 +6,6 @@ export interface Gerencia {
   id: number;
   nombre: string;
   gerencia_id: number;
+  fair_criterion?: "usage_count" | "messages_received";
   user_id?: string;
 }
