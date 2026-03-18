@@ -477,11 +477,11 @@ export default function AdminTestsPage() {
                   {capiResult.status} {capiResult.ok ? "(OK)" : "(error)"}
                 </span>
               </p>
-              {capiResult.body && (
+              {capiResult.body != null ? (
                 <pre className="mt-1 max-h-64 overflow-auto rounded bg-zinc-950 p-2 text-[10px] text-zinc-300">
                   {JSON.stringify(capiResult.body, null, 2)}
                 </pre>
-              )}
+              ) : null}
             </div>
           )}
         </div>
