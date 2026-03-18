@@ -230,20 +230,37 @@ export async function fetchConversionsForAdmin(
 /** Fetch conversions excluyendo los ocultos por hiddenBy. */
 export async function fetchConversionsFiltered(
   userId: string,
-  limit: number,
   hiddenBy: string,
+  limit?: number,
 ): Promise<ConversionRow[]> {
-  const [rows, hiddenIds, hiddenContactKeys] = await Promise.all([
-    supabase
+  const pageSize = 1000;
+  const rows: ConversionRow[] = [];
+  let offset = 0;
+
+  while (true) {
+    const query = supabase
       .from("conversions")
       .select(CONVERSIONS_SELECT)
       .eq("user_id", userId)
-      .order("created_at", { ascending: false })
-      .range(0, limit - 1)
-      .then(({ data, error }) => {
-        if (error) throw error;
-        return (data ?? []) as unknown as ConversionRow[];
-      }),
+      .order("created_at", { ascending: false });
+
+    const chunkSize = typeof limit === "number"
+      ? Math.min(pageSize, Math.max(limit - offset, 0))
+      : pageSize;
+
+    if (chunkSize <= 0) break;
+
+    const { data, error } = await query.range(offset, offset + chunkSize - 1);
+    if (error) throw error;
+
+    const chunk = (data ?? []) as unknown as ConversionRow[];
+    rows.push(...chunk);
+
+    if (chunk.length < chunkSize) break;
+    offset += chunkSize;
+  }
+
+  const [hiddenIds, hiddenContactKeys] = await Promise.all([
     fetchHiddenConversionIds(hiddenBy),
     fetchHiddenContacts(hiddenBy),
   ]);
@@ -256,19 +273,36 @@ export async function fetchConversionsFiltered(
 
 /** Fetch conversions for admin excluyendo los ocultos por hiddenBy. */
 export async function fetchConversionsForAdminFiltered(
-  limit: number,
   hiddenBy: string,
+  limit?: number,
 ): Promise<ConversionRow[]> {
-  const [rows, hiddenIds, hiddenContactKeys] = await Promise.all([
-    supabase
+  const pageSize = 1000;
+  const rows: ConversionRow[] = [];
+  let offset = 0;
+
+  while (true) {
+    const query = supabase
       .from("conversions")
       .select(CONVERSIONS_SELECT)
-      .order("created_at", { ascending: false })
-      .range(0, limit - 1)
-      .then(({ data, error }) => {
-        if (error) throw error;
-        return (data ?? []) as unknown as ConversionRow[];
-      }),
+      .order("created_at", { ascending: false });
+
+    const chunkSize = typeof limit === "number"
+      ? Math.min(pageSize, Math.max(limit - offset, 0))
+      : pageSize;
+
+    if (chunkSize <= 0) break;
+
+    const { data, error } = await query.range(offset, offset + chunkSize - 1);
+    if (error) throw error;
+
+    const chunk = (data ?? []) as unknown as ConversionRow[];
+    rows.push(...chunk);
+
+    if (chunk.length < chunkSize) break;
+    offset += chunkSize;
+  }
+
+  const [hiddenIds, hiddenContactKeys] = await Promise.all([
     fetchHiddenConversionIds(hiddenBy),
     fetchHiddenContacts(hiddenBy),
   ]);

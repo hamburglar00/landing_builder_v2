@@ -200,7 +200,7 @@ export default function DashboardConversionesPage() {
       try {
         const [cfg, rows, funnel] = await Promise.all([
           fetchConversionsConfig(user.id),
-          fetchConversionsFiltered(user.id, 200, user.id),
+          fetchConversionsFiltered(user.id, user.id),
           fetchFunnelContactsFiltered(user.id, user.id),
         ]);
         setConfig(cfg);
@@ -238,7 +238,7 @@ export default function DashboardConversionesPage() {
     setRefreshingTable(true);
     try {
       const [rows, funnel] = await Promise.all([
-        fetchConversionsFiltered(userId, 200, userId),
+        fetchConversionsFiltered(userId, userId),
         fetchFunnelContactsFiltered(userId, userId),
       ]);
       setConversions(rows);

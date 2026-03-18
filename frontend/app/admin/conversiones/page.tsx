@@ -261,7 +261,7 @@ export default function AdminConversionesPage() {
       try {
         const [cfg, rows, funnel, logRows] = await Promise.all([
           fetchConversionsConfig(user.id),
-          fetchConversionsForAdminFiltered(500, user.id),
+          fetchConversionsForAdminFiltered(user.id),
           fetchFunnelContactsForAdminFiltered(user.id),
           fetchConversionLogsForAdmin(200),
         ]);
@@ -320,7 +320,7 @@ export default function AdminConversionesPage() {
     setRefreshingTable(true);
     try {
       const [rows, funnel, logRows] = await Promise.all([
-        fetchConversionsForAdminFiltered(500, userId),
+        fetchConversionsForAdminFiltered(userId),
         fetchFunnelContactsForAdminFiltered(userId),
         fetchConversionLogsForAdmin(200),
       ]);

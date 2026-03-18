@@ -35,7 +35,7 @@ export default function AdminInicioPage() {
         const [{ mine, clients }, funnel, convs, cfg] = await Promise.all([
           fetchLandingsForAdmin(user.id),
           fetchFunnelContactsForAdminFiltered(user.id),
-          fetchConversionsForAdminFiltered(500, user.id),
+          fetchConversionsForAdminFiltered(user.id, 500),
           fetchConversionsConfig(user.id),
         ]);
 
