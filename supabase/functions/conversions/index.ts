@@ -661,7 +661,13 @@ async function handlePurchase(
       if (error || !ins) return textResponse("Error al crear fila PURCHASE", 500);
       targetId = ins.id;
     } else {
-      // 4) Update existing row
+      // 4) Update existing row — preservar lead_event_id/lead_event_time si ya existen
+      const { data: existing } = await db
+        .from("conversions")
+        .select("lead_event_id, lead_event_time")
+        .eq("id", targetId)
+        .single();
+
       const updates: Record<string, unknown> = {
         phone: cleanPhone,
         estado: "purchase",
@@ -670,6 +676,10 @@ async function handlePurchase(
         purchase_event_id: purchaseEventId,
         purchase_event_time: purchaseEventTime,
       };
+      if (existing?.lead_event_id) {
+        updates.lead_event_id = existing.lead_event_id;
+        if (existing.lead_event_time) updates.lead_event_time = existing.lead_event_time;
+      }
       if (payloadFn) updates.fn = payloadFn;
       if (payloadLn) updates.ln = payloadLn;
       if (payloadEmail) updates.email = payloadEmail;

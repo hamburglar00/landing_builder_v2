@@ -227,6 +227,8 @@ export function buildFakeConversionRow(event: MetaEventName): ConversionRow {
 
 // ─── Purchase helpers shared between production and tests ────────────────────
 
+/** Indica si el teléfono ya tiene al menos una compra registrada (para detectar recargas).
+ * No depende de purchase_status_capi: una compra cuenta aunque Meta CAPI haya fallado. */
 export async function hasPreviousSuccessfulPurchases(
   db: SupabaseClient,
   userId: string,
@@ -237,7 +239,7 @@ export async function hasPreviousSuccessfulPurchases(
     .select("id", { count: "exact", head: true })
     .eq("user_id", userId)
     .eq("phone", phone)
-    .eq("purchase_status_capi", "enviado");
+    .eq("estado", "purchase");
 
   return (count ?? 0) > 0;
 }
