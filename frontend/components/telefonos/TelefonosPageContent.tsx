@@ -19,6 +19,8 @@ export type GerenciaPhoneRow = {
   updated_at: string;
 };
 
+type FairCriterion = "usage_count" | "messages_received";
+
 type Props = {
   backLink: string;
   backLabel: string;
@@ -81,6 +83,7 @@ export function TelefonosPageContent({
   const [globalSyncing, setGlobalSyncing] = useState(false);
   const [globalResetting, setGlobalResetting] = useState(false);
   const [globalDeleting, setGlobalDeleting] = useState(false);
+  const [switchingGerenciaId, setSwitchingGerenciaId] = useState<number | null>(null);
   const [openGerenciaId, setOpenGerenciaId] = useState<number | null>(null);
   const [nextSyncCountdown, setNextSyncCountdown] = useState<string>("--:--");
   const userIdRef = useRef<string | null>(null);
@@ -323,6 +326,34 @@ export function TelefonosPageContent({
     }
   };
 
+  const handleFairCriterionChange = async (
+    gerenciaId: number,
+    criterion: FairCriterion,
+  ) => {
+    setSwitchingGerenciaId(gerenciaId);
+    setError(null);
+    try {
+      const { error: updateError } = await supabase
+        .from("gerencias")
+        .update({ fair_criterion: criterion })
+        .eq("id", gerenciaId);
+      if (updateError) throw updateError;
+      setGerencias((prev) =>
+        prev.map((g) =>
+          g.id === gerenciaId ? { ...g, fair_criterion: criterion } : g,
+        ),
+      );
+    } catch (e) {
+      setError(
+        e instanceof Error
+          ? e.message
+          : "Error al actualizar criterio de equidad",
+      );
+    } finally {
+      setSwitchingGerenciaId(null);
+    }
+  };
+
   if (!ready) {
     return (
       <div className="flex min-h-[40vh] items-center justify-center">
@@ -410,6 +441,15 @@ export function TelefonosPageContent({
         <div className="space-y-2">
           {gerencias.map((g) => {
             const phones = phonesByGerencia[g.id] ?? [];
+            const totalUsage = phones.reduce(
+              (acc, p) => acc + (Number(p.usage_count) || 0),
+              0,
+            );
+            const totalMessages = phones.reduce(
+              (acc, p) =>
+                acc + (leadUniqueByAssignedPhone[onlyDigits(p.phone)] ?? 0),
+              0,
+            );
             const isOpen = openGerenciaId === g.id;
             const syncing = syncingGerenciaId === g.id;
             const resetting = resettingGerenciaId === g.id;
@@ -429,9 +469,13 @@ export function TelefonosPageContent({
                   <span className="font-medium text-zinc-200">
                     {g.nombre} (ID {g.gerencia_id})
                   </span>
-                  <span className="text-xs text-zinc-500">
-                    {phones.length} registro{phones.length !== 1 ? "s" : ""}
-                  </span>
+                  <div className="flex items-center gap-4 text-xs text-zinc-500">
+                    <span>
+                      {phones.length} registro{phones.length !== 1 ? "s" : ""}
+                    </span>
+                    <span>Contador: {totalUsage}</span>
+                    <span>Mensajes recibidos: {totalMessages}</span>
+                  </div>
                   <svg
                     className={`h-4 w-4 shrink-0 text-zinc-400 transition-transform ${isOpen ? "rotate-180" : ""}`}
                     fill="none"
@@ -472,6 +516,39 @@ export function TelefonosPageContent({
                         className="rounded-lg border border-red-900/60 bg-red-950/30 px-2 py-1 text-xs font-medium text-red-300 transition hover:bg-red-950/50 disabled:opacity-60"
                       >
                         {deleting ? "Borrando..." : "Borrar registros"}
+                      </button>
+                    </div>
+                    <div className="mb-3 flex flex-wrap items-center gap-2 rounded-lg border border-zinc-800 bg-zinc-900/50 px-3 py-2">
+                      <span className="text-[11px] text-zinc-400">
+                        Equitativo por:
+                      </span>
+                      <button
+                        type="button"
+                        onClick={() =>
+                          void handleFairCriterionChange(g.id, "usage_count")
+                        }
+                        disabled={switchingGerenciaId === g.id}
+                        className={`rounded-md px-2 py-1 text-[11px] transition ${
+                          (g.fair_criterion ?? "usage_count") === "usage_count"
+                            ? "bg-zinc-700 text-zinc-100"
+                            : "bg-zinc-900 text-zinc-400 hover:text-zinc-200"
+                        }`}
+                      >
+                        Contador
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() =>
+                          void handleFairCriterionChange(g.id, "messages_received")
+                        }
+                        disabled={switchingGerenciaId === g.id}
+                        className={`rounded-md px-2 py-1 text-[11px] transition ${
+                          (g.fair_criterion ?? "usage_count") === "messages_received"
+                            ? "bg-zinc-700 text-zinc-100"
+                            : "bg-zinc-900 text-zinc-400 hover:text-zinc-200"
+                        }`}
+                      >
+                        Mensajes recibidos
                       </button>
                     </div>
                     <div className="overflow-x-auto rounded-lg border border-zinc-700">
