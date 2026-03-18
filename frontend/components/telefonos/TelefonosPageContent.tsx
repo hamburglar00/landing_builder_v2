@@ -511,10 +511,10 @@ export function TelefonosPageContent({
                           void handleFairCriterionChange(g.id, "usage_count")
                         }
                         disabled={switchingGerenciaId === g.id}
-                        className={`rounded-md px-2 py-1 text-[11px] transition ${
+                        className={`rounded-lg border px-2 py-1 text-xs font-medium transition disabled:opacity-60 ${
                           (g.fair_criterion ?? "usage_count") === "usage_count"
-                            ? "bg-zinc-700 text-zinc-100"
-                            : "bg-zinc-900 text-zinc-400 hover:text-zinc-200"
+                            ? "border-zinc-600 bg-zinc-700 text-zinc-100"
+                            : "border-zinc-700 bg-zinc-800 text-zinc-200 hover:bg-zinc-700"
                         }`}
                       >
                         Contador
@@ -525,10 +525,10 @@ export function TelefonosPageContent({
                           void handleFairCriterionChange(g.id, "messages_received")
                         }
                         disabled={switchingGerenciaId === g.id}
-                        className={`rounded-md px-2 py-1 text-[11px] transition ${
+                        className={`rounded-lg border px-2 py-1 text-xs font-medium transition disabled:opacity-60 ${
                           (g.fair_criterion ?? "usage_count") === "messages_received"
-                            ? "bg-zinc-700 text-zinc-100"
-                            : "bg-zinc-900 text-zinc-400 hover:text-zinc-200"
+                            ? "border-zinc-600 bg-zinc-700 text-zinc-100"
+                            : "border-zinc-700 bg-zinc-800 text-zinc-200 hover:bg-zinc-700"
                         }`}
                       >
                         Mensajes recibidos
