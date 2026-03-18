@@ -126,23 +126,20 @@ export default function StatsPanel({
   const [adSpend, setAdSpend] = useState<string>("");
 
   const stats = useMemo(() => {
-    // Métricas básicas desde conversions (por estado, no por phone).
-    // Flujo Meta Ads: clic CTA → contacto → (opcional) mensaje → lead → (opcional) carga → purchase → (opcional) recarga.
+    // Métricas por event IDs (lo que llegó explícitamente), no por estado.
+    // No inventar: un PURCHASE sin match crea fila solo con purchase_event_id.
     const isNotRepeat = (c: ConversionRow) => !(c.estado === "purchase" && c.observaciones?.includes("REPEAT"));
 
     const uniqueContacts = conversions.filter(
-      (c) =>
-        c.estado === "contact" ||
-        c.estado === "lead" ||
-        (c.estado === "purchase" && isNotRepeat(c)),
+      (c) => (c.contact_event_id ?? "") !== "" && isNotRepeat(c),
     ).length;
 
     const uniqueLeads = conversions.filter(
-      (c) => (c.estado === "lead" || (c.estado === "purchase" && isNotRepeat(c))),
+      (c) => (c.lead_event_id ?? "") !== "" && isNotRepeat(c),
     ).length;
 
     const uniquePurchases = conversions.filter(
-      (c) => c.estado === "purchase" && isNotRepeat(c),
+      (c) => (c.purchase_event_id ?? "") !== "" && isNotRepeat(c),
     ).length;
 
     const totalPurchases = conversions.filter((c) => c.estado === "purchase").length;

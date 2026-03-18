@@ -94,15 +94,23 @@ export async function sha256(value: string): Promise<string> {
     .join("");
 }
 
+/** Normaliza según requisitos Meta: city sin espacios, zip sin espacios ni guiones. */
+function normalizeForMetaHash(value: string, field: "ct" | "zp"): string {
+  let s = value.trim().toLowerCase();
+  if (field === "zp") s = s.replace(/[\s-]/g, "");
+  if (field === "ct") s = s.replace(/\s/g, "");
+  return s;
+}
+
 export async function buildUserData(row: ConversionRow): Promise<MetaUserData> {
   const ud: MetaUserData = {};
   if (row.email) ud.em = await sha256(row.email);
   if (row.phone) ud.ph = await sha256(sanitizePhone(row.phone));
   if (row.fn) ud.fn = await sha256(row.fn);
   if (row.ln) ud.ln = await sha256(row.ln);
-  if (row.ct) ud.ct = await sha256(row.ct);
+  if (row.ct) ud.ct = await sha256(normalizeForMetaHash(row.ct, "ct"));
   if (row.st) ud.st = await sha256(row.st);
-  if (row.zip) ud.zip = await sha256(row.zip);
+  if (row.zip) ud.zp = await sha256(normalizeForMetaHash(row.zip, "zp"));
   if (row.country) ud.country = await sha256(row.country);
   if (row.fbp) ud.fbp = row.fbp;
   if (row.fbc) ud.fbc = row.fbc;
