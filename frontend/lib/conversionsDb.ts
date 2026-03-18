@@ -120,7 +120,7 @@ const DEFAULT_CONFIG: ConversionsConfig = {
   geo_fill_only_when_missing: false,
   test_event_code: "",
   funnel_premium_threshold: 50000,
-  visible_columns: null,
+  visible_columns: [],
 };
 
 // ─── Config CRUD ────────────────────────────────────────────────────────────
@@ -157,7 +157,7 @@ export async function upsertConversionsConfig(
         geo_fill_only_when_missing: config.geo_fill_only_when_missing,
         test_event_code: config.test_event_code,
         funnel_premium_threshold: config.funnel_premium_threshold,
-        visible_columns: config.visible_columns ?? null,
+        visible_columns: config.visible_columns ?? [],
         updated_at: new Date().toISOString(),
       },
       { onConflict: "user_id" },
@@ -173,7 +173,7 @@ export async function updateAllVisibleColumns(
     .from("conversions_config")
     // PostgREST requiere un WHERE para UPDATE bajo RLS.
     // Usamos una condición amplia sobre user_id para aplicar el cambio a todos los registros reales.
-    .update({ visible_columns: columns ?? null })
+    .update({ visible_columns: columns ?? [] })
     .not("user_id", "is", null);
 
   if (error) throw error;

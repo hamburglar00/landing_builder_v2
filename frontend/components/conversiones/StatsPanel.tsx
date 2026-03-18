@@ -533,7 +533,7 @@ export default function StatsPanel({
             label="Retención activa 30d"
             value={stats.retencionActiva30d}
             color="text-emerald-400"
-            tooltip={compactTooltips ? "Jugadores que hicieron al menos 4 cargas en los últimos 30 días." : "Jugadores que hicieron al menos 4 cargas en los últimos 30 días y cuya primera carga fue hace al menos 7 días. Métrica calculada siempre sobre los últimos 30 días, sin aplicar el filtro de fechas."}
+            tooltip={compactTooltips ? "Jugadores que hicieron al menos 4 cargas en los últimos 30 días y cuya primera carga fue hace al menos 7 días." : "Jugadores que hicieron al menos 4 cargas en los últimos 30 días y cuya primera carga fue hace al menos 7 días. Métrica calculada siempre sobre los últimos 30 días, sin aplicar el filtro de fechas."}
           />
         </div>
       </div>
