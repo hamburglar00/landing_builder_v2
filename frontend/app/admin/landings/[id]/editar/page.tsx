@@ -155,6 +155,8 @@ export default function AdminLandingEditarPage() {
       await updateLanding(landing.id, {
         name: landing.name,
         pixelId: landing.pixelId,
+        gerenciaSelectionMode: landing.gerenciaSelectionMode,
+        gerenciaFairCriterion: landing.gerenciaFairCriterion,
         phoneMode: effectivePhoneMode,
         phoneKind: landing.phoneKind,
         phoneIntervalStartHour: landing.phoneIntervalStartHour,
@@ -401,11 +403,70 @@ export default function AdminLandingEditarPage() {
         </section>
         <section className="rounded-xl border border-zinc-800 bg-zinc-900/50 p-4">
           <h3 className="mb-1 text-sm font-semibold text-zinc-200">Redirección</h3>
+          <div className="mb-3 rounded-lg border border-zinc-700 bg-zinc-900/70 p-3">
+            <p className="mb-2 text-xs font-medium text-zinc-300">Selecci�n de gerencias</p>
+            <div className="flex flex-wrap items-center gap-3">
+              <div className="inline-flex rounded-lg border border-zinc-700 bg-zinc-900 text-[11px]">
+                <button
+                  type="button"
+                  onClick={() =>
+                    setLanding((prev) =>
+                      prev ? { ...prev, gerenciaSelectionMode: "weighted_random" } : prev,
+                    )
+                  }
+                  className="cursor-pointer px-2 py-1 rounded-l-lg border-r border-zinc-700 text-zinc-300 hover:bg-zinc-800"
+                  title="Aleatorio por peso de gerencia"
+                >
+                  Aleatoria (peso)
+                </button>
+                <button
+                  type="button"
+                  onClick={() =>
+                    setLanding((prev) =>
+                      prev ? { ...prev, gerenciaSelectionMode: "fair" } : prev,
+                    )
+                  }
+                  className="cursor-pointer px-2 py-1 rounded-r-lg text-zinc-300 hover:bg-zinc-800"
+                  title="Equitativo entre gerencias (ignora peso)"
+                >
+                  Equitativa
+                </button>
+              </div>
+              {landing.gerenciaSelectionMode === "fair" && (
+                <div className="inline-flex rounded-lg border border-zinc-700 bg-zinc-900 text-[11px]">
+                  <button
+                    type="button"
+                    onClick={() =>
+                      setLanding((prev) =>
+                        prev ? { ...prev, gerenciaFairCriterion: "usage_count" } : prev,
+                      )
+                    }
+                    className="cursor-pointer px-2 py-1 rounded-l-lg border-r border-zinc-700 text-zinc-300 hover:bg-zinc-800"
+                    title="Equitativo por sumatoria de contador"
+                  >
+                    Por contador
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() =>
+                      setLanding((prev) =>
+                        prev ? { ...prev, gerenciaFairCriterion: "messages_received" } : prev,
+                      )
+                    }
+                    className="cursor-pointer px-2 py-1 rounded-r-lg text-zinc-300 hover:bg-zinc-800"
+                    title="Equitativo por sumatoria de mensajes recibidos"
+                  >
+                    Mensajes recibidos
+                  </button>
+                </div>
+              )}
+            </div>
+          </div>
           <p className="mb-3 text-xs text-zinc-400">
             Configura a donde re dirigirá el CTA de tu landing page.
           </p>
           <p className="mb-3 text-xs text-zinc-500">
-            Marque <strong>Asignar</strong> para incluir la gerencia; edite el <strong>Peso</strong>. Elija modo (carga/ads), tipo de elección (aleatorio/equitativo) y opcionalmente un intervalo de tiempo. Crea gerencias en el menú Gerencias si no tienes.
+            Marque <strong>Asignar</strong> para incluir la gerencia; edite el <strong>Peso</strong> para definir la probabilidad de elección. Elija modo (carga/ads/mkt), tipo de elección de teléfono (aleatorio/equitativo) y opcionalmente un intervalo de tiempo. Crea gerencias en el menú Gerencias si no tienes.
           </p>
           {gerencias.length === 0 ? (
             <p className="text-sm text-zinc-500">
@@ -791,3 +852,4 @@ export default function AdminLandingEditarPage() {
     </div>
   );
 }
+

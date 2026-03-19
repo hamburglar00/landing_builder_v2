@@ -114,7 +114,11 @@ export interface Landing {
   id: string;
   name: string;
   pixelId: string;
-  /** Modo de selección de teléfono: 'random' (aleatorio) o 'fair' (equitativo). */
+  /** Modo de selecci�n de gerencias: 'weighted_random' (aleatorio por peso) o 'fair' (equitativo). */
+  gerenciaSelectionMode: "weighted_random" | "fair";
+  /** Criterio para reparto equitativo de gerencias: por contador o por mensajes recibidos. */
+  gerenciaFairCriterion: "usage_count" | "messages_received";
+  /** Modo de selecci?n de tel?fono: 'random' (aleatorio) o 'fair' (equitativo). */
   phoneMode: "random" | "fair";
   /** Tipo de número de teléfono a usar: 'carga', 'ads' o 'mkt'. */
   phoneKind: "carga" | "ads" | "mkt";
@@ -127,3 +131,5 @@ export interface Landing {
   comment: string;
   config: LandingThemeConfig;
 }
+
+

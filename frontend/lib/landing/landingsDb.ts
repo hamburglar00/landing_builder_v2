@@ -9,6 +9,8 @@ export interface LandingRow {
   user_id: string;
   name: string;
   pixel_id: string;
+  gerencia_selection_mode: "weighted_random" | "fair";
+  gerencia_fair_criterion: "usage_count" | "messages_received";
   phone_mode: "random" | "fair";
   phone_kind: "carga" | "ads" | "mkt";
   phone_interval_start_hour: number | null;
@@ -31,6 +33,8 @@ function rowToLanding(row: LandingRow): Landing {
     id: row.id,
     name: row.name,
     pixelId: row.pixel_id ?? "",
+    gerenciaSelectionMode: row.gerencia_selection_mode ?? "weighted_random",
+    gerenciaFairCriterion: row.gerencia_fair_criterion ?? "usage_count",
     phoneMode: row.phone_mode ?? "random",
     phoneKind: row.phone_kind ?? "carga",
     phoneIntervalStartHour: row.phone_interval_start_hour ?? null,
@@ -50,7 +54,7 @@ export async function fetchLandings(userId: string): Promise<Landing[]> {
 }
 
 const LANDINGS_SELECT =
-  "id, user_id, name, pixel_id, phone_mode, phone_kind, phone_interval_start_hour, phone_interval_end_hour, post_url, landing_tag, comment, config, created_at, updated_at";
+  "id, user_id, name, pixel_id, gerencia_selection_mode, gerencia_fair_criterion, phone_mode, phone_kind, phone_interval_start_hour, phone_interval_end_hour, post_url, landing_tag, comment, config, created_at, updated_at";
 
 /**
  * Lista landings de un usuario por su id. Los admins pueden listar landings de cualquier usuario (RLS).
@@ -115,6 +119,8 @@ export async function createLanding(
   payload: {
     name?: string;
     pixelId?: string;
+    gerenciaSelectionMode?: "weighted_random" | "fair";
+    gerenciaFairCriterion?: "usage_count" | "messages_received";
     phoneMode?: "random" | "fair";
     phoneKind?: "carga" | "ads" | "mkt";
     phoneIntervalStartHour?: number | null;
@@ -148,6 +154,8 @@ export async function createLanding(
       user_id: userId,
       name,
       pixel_id: payload.pixelId ?? "",
+      gerencia_selection_mode: payload.gerenciaSelectionMode ?? "weighted_random",
+      gerencia_fair_criterion: payload.gerenciaFairCriterion ?? "usage_count",
       phone_mode: payload.phoneMode ?? "random",
       phone_kind: payload.phoneKind ?? "carga",
       phone_interval_start_hour: payload.phoneIntervalStartHour ?? null,
@@ -173,6 +181,8 @@ export async function updateLanding(
   payload: {
     name?: string;
     pixelId?: string;
+    gerenciaSelectionMode?: "weighted_random" | "fair";
+    gerenciaFairCriterion?: "usage_count" | "messages_received";
     phoneMode?: "random" | "fair";
     phoneKind?: "carga" | "ads" | "mkt";
     phoneIntervalStartHour?: number | null;
@@ -187,6 +197,10 @@ export async function updateLanding(
   const body: Record<string, unknown> = {};
   if (payload.name !== undefined) body.name = payload.name;
   if (payload.pixelId !== undefined) body.pixel_id = payload.pixelId;
+  if (payload.gerenciaSelectionMode !== undefined)
+    body.gerencia_selection_mode = payload.gerenciaSelectionMode;
+  if (payload.gerenciaFairCriterion !== undefined)
+    body.gerencia_fair_criterion = payload.gerenciaFairCriterion;
   if (payload.phoneMode !== undefined) body.phone_mode = payload.phoneMode;
   if (payload.phoneKind !== undefined) body.phone_kind = payload.phoneKind;
   if (payload.phoneIntervalStartHour !== undefined)
