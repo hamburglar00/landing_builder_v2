@@ -404,7 +404,7 @@ export default function AdminLandingEditarPage() {
         <section className="rounded-xl border border-zinc-800 bg-zinc-900/50 p-4">
           <h3 className="mb-1 text-sm font-semibold text-zinc-200">Redirección</h3>
           <div className="mb-3 rounded-lg border border-zinc-700 bg-zinc-900/70 p-3">
-            <p className="mb-2 text-xs font-medium text-zinc-300">Selecci�n de gerencias</p>
+            <p className="mb-2 text-xs font-medium text-zinc-300">Selección de gerencias</p>
             <div className="flex flex-wrap items-center gap-3">
               <div className="inline-flex rounded-lg border border-zinc-700 bg-zinc-900 text-[11px]">
                 <button
@@ -414,7 +414,11 @@ export default function AdminLandingEditarPage() {
                       prev ? { ...prev, gerenciaSelectionMode: "weighted_random" } : prev,
                     )
                   }
-                  className="cursor-pointer px-2 py-1 rounded-l-lg border-r border-zinc-700 text-zinc-300 hover:bg-zinc-800"
+                  className={`rounded-lg border px-2 py-1 text-xs font-medium transition ${
+                    landing.gerenciaSelectionMode === "weighted_random"
+                      ? "border-zinc-600 bg-zinc-700 text-zinc-100"
+                      : "border-zinc-700 bg-zinc-800 text-zinc-200 hover:bg-zinc-700"
+                  }`}
                   title="Aleatorio por peso de gerencia"
                 >
                   Aleatoria (peso)
@@ -426,7 +430,11 @@ export default function AdminLandingEditarPage() {
                       prev ? { ...prev, gerenciaSelectionMode: "fair" } : prev,
                     )
                   }
-                  className="cursor-pointer px-2 py-1 rounded-r-lg text-zinc-300 hover:bg-zinc-800"
+                  className={`rounded-lg border px-2 py-1 text-xs font-medium transition ${
+                    landing.gerenciaSelectionMode === "fair"
+                      ? "border-zinc-600 bg-zinc-700 text-zinc-100"
+                      : "border-zinc-700 bg-zinc-800 text-zinc-200 hover:bg-zinc-700"
+                  }`}
                   title="Equitativo entre gerencias (ignora peso)"
                 >
                   Equitativa
@@ -441,7 +449,11 @@ export default function AdminLandingEditarPage() {
                         prev ? { ...prev, gerenciaFairCriterion: "usage_count" } : prev,
                       )
                     }
-                    className="cursor-pointer px-2 py-1 rounded-l-lg border-r border-zinc-700 text-zinc-300 hover:bg-zinc-800"
+                    className={`rounded-lg border px-2 py-1 text-xs font-medium transition ${
+                      landing.gerenciaFairCriterion === "usage_count"
+                        ? "border-zinc-600 bg-zinc-700 text-zinc-100"
+                        : "border-zinc-700 bg-zinc-800 text-zinc-200 hover:bg-zinc-700"
+                    }`}
                     title="Equitativo por sumatoria de contador"
                   >
                     Por contador
@@ -453,7 +465,11 @@ export default function AdminLandingEditarPage() {
                         prev ? { ...prev, gerenciaFairCriterion: "messages_received" } : prev,
                       )
                     }
-                    className="cursor-pointer px-2 py-1 rounded-r-lg text-zinc-300 hover:bg-zinc-800"
+                    className={`rounded-lg border px-2 py-1 text-xs font-medium transition ${
+                      landing.gerenciaFairCriterion === "messages_received"
+                        ? "border-zinc-600 bg-zinc-700 text-zinc-100"
+                        : "border-zinc-700 bg-zinc-800 text-zinc-200 hover:bg-zinc-700"
+                    }`}
                     title="Equitativo por sumatoria de mensajes recibidos"
                   >
                     Mensajes recibidos
