@@ -51,11 +51,9 @@ export async function invokeFunction<T = unknown>(
 
   const url = `${supabaseUrl}/functions/v1/${name}`;
   const method = options.method ?? "POST";
-  const accessToken = session.access_token;
 
-  let res: Response;
-  try {
-    res = await fetch(url, {
+  const sendRequest = async (accessToken: string): Promise<Response> =>
+    fetch(url, {
       method,
       headers: {
         "Content-Type": "application/json",
@@ -64,6 +62,10 @@ export async function invokeFunction<T = unknown>(
       },
       body: options.body ? JSON.stringify(options.body) : undefined,
     });
+
+  let res: Response;
+  try {
+    res = await sendRequest(session.access_token);
   } catch (err) {
     const msg =
       err && typeof err === "object" && "message" in err
@@ -87,6 +89,39 @@ export async function invokeFunction<T = unknown>(
     if (rawText) data = JSON.parse(rawText) as T;
   } catch {
     // body no es JSON
+  }
+
+  // Algunos entornos quedan con token desfasado y la Edge devuelve "Invalid JWT".
+  // Reintentamos una sola vez tras refresh de sesión.
+  if (!res.ok) {
+    const looksLikeInvalidJwt =
+      rawText.toLowerCase().includes("invalid jwt") ||
+      rawText.toLowerCase().includes("jwt malformed");
+
+    if (looksLikeInvalidJwt) {
+      const refreshed = await supabase.auth.refreshSession();
+      const retriedToken = refreshed.data.session?.access_token;
+      if (retriedToken) {
+        try {
+          const retryRes = await sendRequest(retriedToken);
+          const retryText = await retryRes.text();
+          let retryData: T | null = null;
+          try {
+            retryData = retryText ? (JSON.parse(retryText) as T) : null;
+          } catch {
+            // body no es JSON
+          }
+          if (retryRes.ok) {
+            return { data: retryData, error: null };
+          }
+          res = retryRes;
+          data = retryData;
+          rawText = retryText;
+        } catch {
+          // Si falla el retry, dejamos manejar error normal abajo.
+        }
+      }
+    }
   }
 
   if (!res.ok) {
