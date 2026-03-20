@@ -26,18 +26,25 @@ export async function invokeFunction<T = unknown>(
     };
   }
 
-  // Refrescar la sesión para enviar un access_token válido (evita "Invalid JWT" en Edge Functions)
-  const {
+  // Evita refrescar siempre: con lock de auth desactivado pueden darse carreras
+  // entre refresh concurrentes y terminar en "Invalid JWT".
+  let {
     data: { session },
     error: sessionError,
-  } = await supabase.auth.refreshSession();
+  } = await supabase.auth.getSession();
+
+  if (!session?.access_token) {
+    const refreshed = await supabase.auth.refreshSession();
+    session = refreshed.data.session;
+    sessionError = refreshed.error;
+  }
 
   if (sessionError || !session?.access_token) {
     return {
       data: null,
       error: {
         message:
-          "Sesión expirada o inválida. Cierra sesión y vuelve a iniciar sesión.",
+          "SesiÃ³n expirada o invÃ¡lida. Cierra sesiÃ³n y vuelve a iniciar sesiÃ³n.",
       },
     };
   }
@@ -67,7 +74,7 @@ export async function invokeFunction<T = unknown>(
       error: {
         message:
           msg === "Failed to fetch" || msg.includes("fetch")
-            ? "No se pudo conectar con el servidor. Prueba de nuevo; si sigue fallando, revisa la consola (F12 → Network) y tu conexión."
+            ? "No se pudo conectar con el servidor. Prueba de nuevo; si sigue fallando, revisa la consola (F12 â†’ Network) y tu conexiÃ³n."
             : msg,
       },
     };
@@ -91,7 +98,7 @@ export async function invokeFunction<T = unknown>(
     if (!serverMessage) {
       serverMessage = res.statusText || `Error del servidor (${res.status})`;
       if (rawText && rawText.length < 500) serverMessage += `: ${rawText}`;
-      else if (rawText) serverMessage += `: ${rawText.slice(0, 200)}…`;
+      else if (rawText) serverMessage += `: ${rawText.slice(0, 200)}â€¦`;
     }
     return { data: null, error: { message: serverMessage } };
   }
