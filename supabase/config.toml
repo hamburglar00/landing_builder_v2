@@ -402,3 +402,14 @@ verify_jwt = false
 [functions.reset-phone-counters]
 verify_jwt = false
 
+[functions.list-clients]
+verify_jwt = false
+
+[functions.create-client]
+verify_jwt = false
+
+[functions.update-client]
+verify_jwt = false
+
+[functions.delete-client]
+verify_jwt = false
