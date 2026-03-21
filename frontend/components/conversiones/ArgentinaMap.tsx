@@ -18,6 +18,8 @@ type MapMetric =
   | "pct_inicio"
   | "pct_carga"
   | "carga_promedio"
+  | "carga_mediana"
+  | "tiempo_lead_purchase_prom"
   | "total_cargado"
   | "roas_primera"
   | "roas_total"
@@ -34,6 +36,8 @@ const METRIC_LABELS: Record<MapMetric, string> = {
   pct_inicio: "% inicio conversaciones",
   pct_carga: "% de carga",
   carga_promedio: "Carga promedio",
+  carga_mediana: "Carga mediana",
+  tiempo_lead_purchase_prom: "Tiempo lead->purchase (prom.)",
   total_cargado: "Total cargado",
   roas_primera: "ROAS primera carga",
   roas_total: "ROAS total",
@@ -45,6 +49,7 @@ const METRIC_LABELS: Record<MapMetric, string> = {
 const PCT_METRICS = new Set<MapMetric>(["pct_inicio", "pct_carga"]);
 const CURRENCY_METRICS = new Set<MapMetric>(["total_cargado", "carga_promedio"]);
 const ROAS_METRICS = new Set<MapMetric>(["roas_primera", "roas_total"]);
+const TIME_METRICS = new Set<MapMetric>(["tiempo_lead_purchase_prom"]);
 
 /* ═══════════════════════════════════════════════════════════════════════════
    PROVINCE NORMALIZATION
@@ -159,7 +164,18 @@ interface ProvinceData {
   firstPurchaseRevenue: number;
   purchaseCount: number;
   premium: number;
-   retencionActiva30d: number;
+  retencionActiva30d: number;
+  cargaMediana: number;
+  leadToPurchaseAvgHours: number;
+}
+
+function median(values: number[]): number {
+  if (values.length === 0) return 0;
+  const sorted = [...values].sort((a, b) => a - b);
+  const mid = Math.floor(sorted.length / 2);
+  return sorted.length % 2 === 0
+    ? (sorted[mid - 1] + sorted[mid]) / 2
+    : sorted[mid];
 }
 
 function buildProvinceData(
@@ -169,6 +185,8 @@ function buildProvinceData(
   premiumThreshold: number,
 ): Map<string, ProvinceData> {
   const map = new Map<string, ProvinceData>();
+  const purchaseValuesByProvince = new Map<string, number[]>();
+  const leadToPurchaseHoursByProvince = new Map<string, number[]>();
 
   for (const c of contacts) {
     const prov = normalizeProvince(c.region);
@@ -176,7 +194,7 @@ function buildProvinceData(
     const d = map.get(prov) ?? {
       contactos: 0, reachedLead: 0, reachedPurchase: 0, reachedRepeat: 0,
       primerasCargas: 0, recurrentes: 0, totalCargado: 0, firstPurchaseRevenue: 0,
-      purchaseCount: 0, premium: 0, retencionActiva30d: 0,
+      purchaseCount: 0, premium: 0, retencionActiva30d: 0, cargaMediana: 0, leadToPurchaseAvgHours: 0,
     };
     d.contactos++;
     if (c.reached_lead) d.reachedLead++;
@@ -191,11 +209,32 @@ function buildProvinceData(
   }
 
   for (const conv of conversions) {
-    if (conv.estado !== "purchase" || conv.observaciones?.includes("REPEAT")) continue;
     const prov = normalizeProvince(conv.geo_region);
     if (!prov) continue;
     const d = map.get(prov);
-    if (d) d.firstPurchaseRevenue += conv.valor;
+    if (!d) continue;
+
+    if (conv.estado === "purchase") {
+      const amount = Number(conv.valor);
+      if (Number.isFinite(amount) && amount > 0) {
+        const arr = purchaseValuesByProvince.get(prov) ?? [];
+        arr.push(amount);
+        purchaseValuesByProvince.set(prov, arr);
+      }
+    }
+
+    const leadT = Number(conv.lead_event_time ?? 0);
+    const purchaseT = Number(conv.purchase_event_time ?? 0);
+    if (leadT > 0 && purchaseT > 0 && purchaseT >= leadT) {
+      const hours = (purchaseT - leadT) / 3600;
+      const arr = leadToPurchaseHoursByProvince.get(prov) ?? [];
+      arr.push(hours);
+      leadToPurchaseHoursByProvince.set(prov, arr);
+    }
+
+    if (conv.estado === "purchase" && !conv.observaciones?.includes("REPEAT")) {
+      d.firstPurchaseRevenue += conv.valor;
+    }
   }
 
   // Retención activa 30d por provincia (rolling sobre todo el histórico, independiente del filtro de fechas)
@@ -236,10 +275,22 @@ function buildProvinceData(
         purchaseCount: 0,
         premium: 0,
         retencionActiva30d: 0,
+        cargaMediana: 0,
+        leadToPurchaseAvgHours: 0,
       };
       d.retencionActiva30d++;
       map.set(rec.province, d);
     }
+  }
+
+  for (const [prov, d] of map.entries()) {
+    const purchaseVals = purchaseValuesByProvince.get(prov) ?? [];
+    const lpHours = leadToPurchaseHoursByProvince.get(prov) ?? [];
+    d.cargaMediana = median(purchaseVals);
+    d.leadToPurchaseAvgHours = lpHours.length > 0
+      ? lpHours.reduce((acc, n) => acc + n, 0) / lpHours.length
+      : 0;
+    map.set(prov, d);
   }
 
   return map;
@@ -261,6 +312,8 @@ function getMetricValue(
     case "pct_inicio": return d.contactos > 0 ? (d.reachedLead / d.contactos) * 100 : 0;
     case "pct_carga": return d.reachedLead > 0 ? (d.reachedPurchase / d.reachedLead) * 100 : 0;
     case "carga_promedio": return d.purchaseCount > 0 ? d.totalCargado / d.purchaseCount : 0;
+    case "carga_mediana": return d.cargaMediana;
+    case "tiempo_lead_purchase_prom": return d.leadToPurchaseAvgHours;
     case "total_cargado": return d.totalCargado;
     case "roas_primera": {
       if (adSpend <= 0 || totalContacts === 0) return 0;
@@ -282,6 +335,11 @@ function getMetricValue(
 
 function formatMetricValue(value: number, metric: MapMetric): string {
   if (PCT_METRICS.has(metric)) return `${value.toFixed(1)}%`;
+  if (TIME_METRICS.has(metric)) {
+    if (value <= 0) return "0 h";
+    if (value < 1) return `${Math.round(value * 60)} min`;
+    return `${value.toFixed(1)} h`;
+  }
   if (ROAS_METRICS.has(metric)) return `${value.toFixed(2)}x`;
   if (CURRENCY_METRICS.has(metric)) {
     return value.toLocaleString("es-AR", { style: "currency", currency: "ARS", minimumFractionDigits: 0, maximumFractionDigits: 0 });
@@ -344,6 +402,53 @@ export default function ArgentinaMap({
   );
 
   const totalContacts = contacts.length;
+  const globalMetricValue = useMemo(() => {
+    const uniqueLeads = contacts.filter((c) => c.reached_lead).length;
+    const uniquePurchases = contacts.filter((c) => c.reached_purchase).length;
+    const reachedRepeat = contacts.filter((c) => c.reached_repeat).length;
+    const primerasCargas = contacts.filter((c) => c.reached_purchase && !c.reached_repeat).length;
+    const totalCargado = contacts.reduce((sum, c) => sum + c.total_valor, 0);
+    const totalPurchaseCount = contacts.reduce((sum, c) => sum + c.purchase_count, 0);
+    const premium = contacts.filter((c) => classifyContact(c, premiumThreshold) === "premium").length;
+    const retencionActiva30d = [...provinceData.values()].reduce((sum, d) => sum + d.retencionActiva30d, 0);
+    const firstPurchaseRevenue = conversions
+      .filter((c) => c.estado === "purchase" && !c.observaciones?.includes("REPEAT"))
+      .reduce((sum, c) => sum + c.valor, 0);
+    const purchaseValues = conversions
+      .filter((c) => c.estado === "purchase")
+      .map((c) => Number(c.valor))
+      .filter((n) => Number.isFinite(n) && n > 0);
+    const leadPurchaseHours = conversions
+      .map((c) => {
+        const leadT = Number(c.lead_event_time ?? 0);
+        const purchaseT = Number(c.purchase_event_time ?? 0);
+        if (leadT > 0 && purchaseT > 0 && purchaseT >= leadT) return (purchaseT - leadT) / 3600;
+        return null;
+      })
+      .filter((v): v is number => v !== null);
+
+    switch (metric) {
+      case "contactos": return totalContacts;
+      case "leads": return uniqueLeads;
+      case "primeras_cargas": return primerasCargas;
+      case "recargas": return reachedRepeat;
+      case "cargas_totales": return totalPurchaseCount;
+      case "pct_inicio": return totalContacts > 0 ? (uniqueLeads / totalContacts) * 100 : 0;
+      case "pct_carga": return uniqueLeads > 0 ? (uniquePurchases / uniqueLeads) * 100 : 0;
+      case "carga_promedio": return totalPurchaseCount > 0 ? totalCargado / totalPurchaseCount : 0;
+      case "carga_mediana": return median(purchaseValues);
+      case "tiempo_lead_purchase_prom":
+        return leadPurchaseHours.length > 0
+          ? leadPurchaseHours.reduce((acc, n) => acc + n, 0) / leadPurchaseHours.length
+          : 0;
+      case "total_cargado": return totalCargado;
+      case "roas_primera": return adSpend > 0 ? firstPurchaseRevenue / adSpend : 0;
+      case "roas_total": return adSpend > 0 ? totalCargado / adSpend : 0;
+      case "jugadores_recurrentes": return reachedRepeat;
+      case "jugadores_premium": return premium;
+      case "retencion_activa_30d": return retencionActiva30d;
+    }
+  }, [contacts, conversions, provinceData, premiumThreshold, adSpend, metric, totalContacts]);
 
   const { provinces, viewW, viewH } = useMemo(() => {
     if (!geoData) return { provinces: [] as { key: string; path: string; name: string }[], viewW: MAP_W, viewH: MAP_H };
@@ -537,6 +642,16 @@ export default function ArgentinaMap({
               })}
             </div>
           )}
+
+          <div className="mt-4 rounded-lg border border-zinc-800/60 bg-zinc-900/40 px-3 py-2.5">
+            <p className="text-[10px] uppercase tracking-wide text-zinc-500 mb-1">
+              Argentina total
+            </p>
+            <p className="text-sm font-semibold text-zinc-100 tabular-nums">
+              {formatMetricValue(globalMetricValue, metric)}
+            </p>
+            <p className="text-[10px] text-zinc-600 mt-0.5">{METRIC_LABELS[metric]}</p>
+          </div>
 
           {(() => {
             const sinProv = contacts.filter((c) => !normalizeProvince(c.region)).length;
