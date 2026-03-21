@@ -342,7 +342,7 @@ export default function DashboardLandingEditarPage() {
           <div className="space-y-3">
             <div>
               <label className="block text-xs font-medium text-zinc-400 mb-1">
-                Pixel ID
+                Pixel ID <span className="text-red-400">*</span>
               </label>
               <input
                 type="text"
@@ -421,10 +421,10 @@ export default function DashboardLandingEditarPage() {
                       prev ? { ...prev, gerenciaSelectionMode: "weighted_random" } : prev,
                     )
                   }
-                  className={`rounded-lg border px-2 py-1 text-xs font-medium transition ${
+                  className={`cursor-pointer px-2 py-1 rounded-l-lg border-r border-zinc-700 ${
                     landing.gerenciaSelectionMode === "weighted_random"
-                      ? "border-zinc-600 bg-zinc-700 text-zinc-100"
-                      : "border-zinc-700 bg-zinc-800 text-zinc-200 hover:bg-zinc-700"
+                      ? "bg-zinc-100 text-zinc-900"
+                      : "text-zinc-300 hover:bg-zinc-800"
                   }`}
                   title="Aleatorio por peso de gerencia"
                 >
@@ -437,10 +437,10 @@ export default function DashboardLandingEditarPage() {
                       prev ? { ...prev, gerenciaSelectionMode: "fair" } : prev,
                     )
                   }
-                  className={`rounded-lg border px-2 py-1 text-xs font-medium transition ${
+                  className={`cursor-pointer px-2 py-1 rounded-r-lg ${
                     landing.gerenciaSelectionMode === "fair"
-                      ? "border-zinc-600 bg-zinc-700 text-zinc-100"
-                      : "border-zinc-700 bg-zinc-800 text-zinc-200 hover:bg-zinc-700"
+                      ? "bg-zinc-100 text-zinc-900"
+                      : "text-zinc-300 hover:bg-zinc-800"
                   }`}
                   title="Equitativo entre gerencias (ignora peso)"
                 >
@@ -456,10 +456,10 @@ export default function DashboardLandingEditarPage() {
                         prev ? { ...prev, gerenciaFairCriterion: "usage_count" } : prev,
                       )
                     }
-                    className={`rounded-lg border px-2 py-1 text-xs font-medium transition ${
+                    className={`cursor-pointer px-2 py-1 rounded-l-lg border-r border-zinc-700 ${
                       landing.gerenciaFairCriterion === "usage_count"
-                        ? "border-zinc-600 bg-zinc-700 text-zinc-100"
-                        : "border-zinc-700 bg-zinc-800 text-zinc-200 hover:bg-zinc-700"
+                        ? "bg-zinc-100 text-zinc-900"
+                        : "text-zinc-300 hover:bg-zinc-800"
                     }`}
                     title="Equitativo por sumatoria de contador"
                   >
@@ -472,10 +472,10 @@ export default function DashboardLandingEditarPage() {
                         prev ? { ...prev, gerenciaFairCriterion: "messages_received" } : prev,
                       )
                     }
-                    className={`rounded-lg border px-2 py-1 text-xs font-medium transition ${
+                    className={`cursor-pointer px-2 py-1 rounded-r-lg ${
                       landing.gerenciaFairCriterion === "messages_received"
-                        ? "border-zinc-600 bg-zinc-700 text-zinc-100"
-                        : "border-zinc-700 bg-zinc-800 text-zinc-200 hover:bg-zinc-700"
+                        ? "bg-zinc-100 text-zinc-900"
+                        : "text-zinc-300 hover:bg-zinc-800"
                     }`}
                     title="Equitativo por sumatoria de mensajes recibidos"
                   >
@@ -489,7 +489,7 @@ export default function DashboardLandingEditarPage() {
             Configura a donde re dirigirá el CTA de tu landing page.
           </p>
           <p className="mb-3 text-xs text-zinc-500">
-            Marque <strong>Asignar</strong> para incluir la gerencia; edite el <strong>Peso</strong> para definir la probabilidad de elección. Elija modo (carga/ads/mkt), tipo de elección de teléfono (aleatorio/equitativo) y opcionalmente un intervalo de tiempo. Crea gerencias en el menú Gerencias si no tienes.
+            Marque <strong>Asignar</strong> para incluir la gerencia; en selección <strong>Aleatoria (peso)</strong> puede editar el <strong>Peso</strong> para definir probabilidad. Elija modo (carga/ads/mkt), tipo de elección de teléfono (aleatorio/equitativo) y opcionalmente un intervalo de tiempo. Crea gerencias en el menú Gerencias si no tienes.
           </p>
           {gerencias.length === 0 ? (
             <p className="text-sm text-zinc-500">
@@ -515,9 +515,11 @@ export default function DashboardLandingEditarPage() {
                     <th className="px-3 py-2 font-medium text-zinc-300 w-20 text-center">
                       Asignar
                     </th>
-                    <th className="px-3 py-2 font-medium text-zinc-300 w-20">
-                      Peso
-                    </th>
+                    {landing.gerenciaSelectionMode === "weighted_random" && (
+                      <th className="px-3 py-2 font-medium text-zinc-300 w-20">
+                        Peso
+                      </th>
+                    )}
                     <th className="px-3 py-2 font-medium text-zinc-300 w-32">
                       Modo
                     </th>
@@ -573,32 +575,34 @@ export default function DashboardLandingEditarPage() {
                             className="rounded border-zinc-600"
                           />
                         </td>
-                        <td className="px-3 py-2">
-                          <input
-                            type="number"
-                            min={0}
-                            value={weight}
-                            onChange={(e) => {
-                              if (!isAssigned) return;
-                              const v = parseInt(e.target.value, 10);
-                              const next = Number.isNaN(v) ? 0 : Math.max(0, v);
-                              setAssignments((prev) =>
-                                prev.map((a) =>
-                                  a.gerencia_id === g.id
-                                    ? { ...a, weight: next }
-                                    : a,
-                                ),
-                              );
-                            }}
-                            disabled={!isAssigned}
-                            title={
-                              isAssigned
-                                ? "Peso de esta gerencia en esta landing"
-                                : "Marque Asignar para poder editar el peso"
-                            }
-                            className="w-20 rounded border border-zinc-700 bg-zinc-900 px-2 py-1 text-zinc-100 disabled:cursor-not-allowed disabled:opacity-50 [appearance:textfield] [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:appearance-none"
-                          />
-                        </td>
+                        {landing.gerenciaSelectionMode === "weighted_random" && (
+                          <td className="px-3 py-2">
+                            <input
+                              type="number"
+                              min={0}
+                              value={weight}
+                              onChange={(e) => {
+                                if (!isAssigned) return;
+                                const v = parseInt(e.target.value, 10);
+                                const next = Number.isNaN(v) ? 0 : Math.max(0, v);
+                                setAssignments((prev) =>
+                                  prev.map((a) =>
+                                    a.gerencia_id === g.id
+                                      ? { ...a, weight: next }
+                                      : a,
+                                  ),
+                                );
+                              }}
+                              disabled={!isAssigned}
+                              title={
+                                isAssigned
+                                  ? "Peso de esta gerencia en esta landing"
+                                  : "Marque Asignar para poder editar el peso"
+                              }
+                              className="w-20 rounded border border-zinc-700 bg-zinc-900 px-2 py-1 text-zinc-100 disabled:cursor-not-allowed disabled:opacity-50 [appearance:textfield] [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:appearance-none"
+                            />
+                          </td>
+                        )}
                         <td className="px-3 py-2">
                           <div className="inline-flex rounded-lg border border-zinc-700 bg-zinc-900 text-[11px]">
                             <button
