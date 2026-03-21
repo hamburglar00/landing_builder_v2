@@ -689,7 +689,7 @@ export default function AdminConversionesPage() {
             </div>
           </div>
           {(() => {
-            const cols = ALL_COLUMNS.filter((c) => visibleCols.has(c));
+            const cols = ALL_COLUMNS;
             const displayRows = activeConversions;
             return (
               <div className="overflow-x-auto rounded-lg border border-zinc-700">
