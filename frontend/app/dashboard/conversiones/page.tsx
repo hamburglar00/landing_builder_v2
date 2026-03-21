@@ -66,7 +66,12 @@ function statusText(status: string) {
 
 function truncateId(id: string, len = 8) {
   if (!id) return "-";
-  return id.length > len ? id.slice(0, len) + "…" : id;
+  return id.length > len ? id.slice(0, len) + "..." : id;
+}
+
+function truncateText(value: string, len = 35) {
+  if (!value) return "-";
+  return value.length > len ? value.slice(0, len) + "..." : value;
 }
 
 const ALL_COLUMNS = [
@@ -139,7 +144,7 @@ function cellValue(c: ConversionRow, col: ColKey): React.ReactNode {
     case "purchase_event_time": return <td key={col} className={dim}>{c.purchase_event_time ?? "-"}</td>;
     case "timestamp": return <td key={col} className={dim}>{new Date(c.created_at).toLocaleString("es-AR", { year: "numeric", month: "2-digit", day: "2-digit", hour: "2-digit", minute: "2-digit", second: "2-digit" })}</td>;
     case "clientIP": return <td key={col} className={dimMono}>{c.client_ip || "-"}</td>;
-    case "agentuser": return <td key={col} className={dim}>{c.agent_user || "-"}</td>;
+    case "agentuser": return <td key={col} className={dim} title={c.agent_user || "-"}>{truncateText(c.agent_user || "-", 35)}</td>;
     case "estado": return <td key={col} className={cell}>{estadoBadge(c.estado)}</td>;
     case "valor": return <td key={col} className={`${cell} text-zinc-200`}>{c.valor > 0 ? c.valor : "-"}</td>;
     case "contact_status_capi": return <td key={col} className={cell}>{statusText(c.contact_status_capi)}</td>;
@@ -186,11 +191,16 @@ export default function DashboardConversionesPage() {
   const activeFunnel = useMemo(() => filterFunnelByDateRange(funnelContacts, dateRange), [funnelContacts, dateRange]);
 
   const visibleCols = useMemo(() => {
-    const cols = config?.visible_columns;
-    if (!cols || cols.length === 0) return new Set<ColKey>(ALL_COLUMNS);
-    const valid = cols.filter((c): c is ColKey => (ALL_COLUMNS as readonly string[]).includes(c));
-    return new Set<ColKey>(valid.length ? valid : ALL_COLUMNS);
+    const cols = config?.visible_columns ?? [];
+    const valid = cols.filter((c): c is ColKey =>
+      (ALL_COLUMNS as readonly string[]).includes(c),
+    );
+    return new Set<ColKey>(valid);
   }, [config]);
+  const displayedCols = useMemo(
+    () => ALL_COLUMNS.filter((c) => visibleCols.has(c)),
+    [visibleCols],
+  );
 
   useEffect(() => {
     const init = async () => {
@@ -509,15 +519,21 @@ export default function DashboardConversionesPage() {
             <table className="w-full text-left text-[11px]">
               <thead className="bg-zinc-800/80 sticky top-0">
                 <tr>
-                  {ALL_COLUMNS.filter((c) => visibleCols.has(c)).map((col) => (
+                  {displayedCols.map((col) => (
                     <th key={col} className="px-2 py-2 font-medium text-zinc-300 whitespace-nowrap">{col}</th>
                   ))}
                 </tr>
               </thead>
               <tbody className="divide-y divide-zinc-800">
-                {activeConversions.length === 0 ? (
+                {displayedCols.length === 0 ? (
                   <tr>
-                    <td colSpan={ALL_COLUMNS.length} className="px-2 py-6 text-center text-zinc-500">
+                    <td colSpan={1} className="px-2 py-6 text-center text-zinc-500">
+                      Tu administrador todavia no definio columnas visibles para esta tabla.
+                    </td>
+                  </tr>
+                ) : activeConversions.length === 0 ? (
+                  <tr>
+                    <td colSpan={displayedCols.length} className="px-2 py-6 text-center text-zinc-500">
                       Aún no hay conversiones registradas.
                     </td>
                   </tr>
@@ -533,7 +549,7 @@ export default function DashboardConversionesPage() {
                           : "bg-zinc-950/40";
                   return (
                     <tr key={c.id} className={rowColor}>
-                      {ALL_COLUMNS.filter((col) => visibleCols.has(col)).map((col) =>
+                      {displayedCols.map((col) =>
                         col === "email" ? (
                           <EditableEmailCell key={col} row={c} onSaved={(id, email) => setConversions((prev) => prev.map((r) => (r.id === id ? { ...r, email } : r)))} />
                         ) : cellValue(c, col)

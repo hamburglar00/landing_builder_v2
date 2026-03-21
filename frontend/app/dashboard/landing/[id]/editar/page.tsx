@@ -112,6 +112,19 @@ export default function DashboardLandingEditarPage() {
       setSaveError("Landing Tag solo puede contener letras y números, sin espacios.");
       return;
     }
+    let pixelIdToSave = landing.pixelId.trim();
+    if (!pixelIdToSave) {
+      const entered = window.prompt(
+        "El Pixel ID es obligatorio para guardar la landing. Ingresalo para continuar:",
+        "",
+      );
+      pixelIdToSave = (entered ?? "").trim();
+      if (!pixelIdToSave) {
+        setSaveError("No se puede guardar sin Pixel ID.");
+        return;
+      }
+      setLanding((prev) => (prev ? { ...prev, pixelId: pixelIdToSave } : prev));
+    }
     if (
       initialName &&
       initialName.startsWith("Nueva-landing-") &&
@@ -137,7 +150,7 @@ export default function DashboardLandingEditarPage() {
         id: landing.id,
         name: landing.name,
         comment: landing.comment,
-        pixelId: landing.pixelId,
+        pixelId: pixelIdToSave,
         postUrl: conversionsUrl,
         landingTag: landing.landingTag,
         config: landing.config,
@@ -147,7 +160,7 @@ export default function DashboardLandingEditarPage() {
 
       await updateLanding(landing.id, {
         name: landing.name,
-        pixelId: landing.pixelId,
+        pixelId: pixelIdToSave,
         gerenciaSelectionMode: landing.gerenciaSelectionMode,
         gerenciaFairCriterion: landing.gerenciaFairCriterion,
         phoneMode: effectivePhoneMode,

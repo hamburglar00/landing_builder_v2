@@ -97,7 +97,12 @@ function levelBadge(level: string) {
 
 function truncateId(id: string, len = 8) {
   if (!id) return "-";
-  return id.length > len ? id.slice(0, len) + "…" : id;
+  return id.length > len ? id.slice(0, len) + "..." : id;
+}
+
+function truncateText(value: string, len = 35) {
+  if (!value) return "-";
+  return value.length > len ? value.slice(0, len) + "..." : value;
 }
 
 const ALL_COLUMNS = [
@@ -194,7 +199,7 @@ function cellValue(c: ConversionRow, col: ColKey): React.ReactNode {
       </td>
     );
     case "clientIP": return <td key={col} className={dimMono}>{c.client_ip || "-"}</td>;
-    case "agentuser": return <td key={col} className={dim}>{c.agent_user || "-"}</td>;
+    case "agentuser": return <td key={col} className={dim} title={c.agent_user || "-"}>{truncateText(c.agent_user || "-", 35)}</td>;
     case "estado": return <td key={col} className={cell}>{estadoBadge(c.estado)}</td>;
     case "valor": return <td key={col} className={`${cell} text-zinc-200`}>{c.valor > 0 ? c.valor : "-"}</td>;
     case "contact_status_capi": return <td key={col} className={cell}>{statusText(c.contact_status_capi)}</td>;
