@@ -279,7 +279,25 @@ async function sendToMetaCAPI(
   eventTime: number,
   customData?: Record<string, unknown>,
 ): Promise<boolean> {
-  if (!config.meta_access_token || !config.pixel_id) return false;
+  if (!config.meta_access_token || !config.pixel_id) {
+    const statusField =
+      eventName === "Contact" ? "contact_status_capi" :
+      eventName === "Lead" ? "lead_status_capi" :
+      "purchase_status_capi";
+    const missingCfgMsg =
+      eventName === "Contact" ? "ERROR CONTACT NO CONFIG" :
+      eventName === "Lead" ? "ERROR LEAD NO CONFIG" :
+      "ERROR PURCHASE NO CONFIG";
+    const { data: current } = await db.from("conversions").select("observaciones").eq("id", rowId).single();
+    const obs = appendObservation(current?.observaciones ?? "", missingCfgMsg);
+    await db.from("conversions").update({ [statusField]: "error", observaciones: obs }).eq("id", rowId);
+    await writeLog(db, row.user_id, "sendToMetaCAPI", "ERROR", "Meta CAPI no configurado", JSON.stringify({
+      has_token: !!config.meta_access_token,
+      has_pixel: !!config.pixel_id,
+      event_name: eventName,
+    }), rowId);
+    return false;
+  }
 
   const sharedRow = row as unknown as SharedConversionRow;
   const sharedConfig = config as unknown as SharedConversionsConfig;
@@ -317,6 +335,30 @@ async function sendToMetaCAPI(
 
     const resText = await res.text();
     if (res.status === 200) {
+      let responseJson: Record<string, unknown> | null = null;
+      try {
+        responseJson = resText ? JSON.parse(resText) as Record<string, unknown> : null;
+      } catch {
+        responseJson = null;
+      }
+
+      const hasErrorObject = !!(responseJson && typeof responseJson === "object" && "error" in responseJson);
+      const eventsReceivedRaw = responseJson && typeof responseJson === "object"
+        ? (responseJson as Record<string, unknown>).events_received
+        : undefined;
+      const eventsReceived = typeof eventsReceivedRaw === "number"
+        ? eventsReceivedRaw
+        : Number(eventsReceivedRaw);
+      const hasZeroEventsReceived = Number.isFinite(eventsReceived) && eventsReceived <= 0;
+
+      if (hasErrorObject || hasZeroEventsReceived) {
+        const { data: current } = await db.from("conversions").select("observaciones").eq("id", rowId).single();
+        const obs = appendObservation(current?.observaciones ?? "", errMsg);
+        await db.from("conversions").update({ [statusField]: "error", observaciones: obs }).eq("id", rowId);
+        await writeLog(db, row.user_id, "sendToMetaCAPI", "ERROR", "Meta API 200 con payload inconsistente", resText, rowId);
+        return false;
+      }
+
       const { data: current } = await db.from("conversions").select("observaciones").eq("id", rowId).single();
       const obs = appendObservation(current?.observaciones ?? "", okMsg);
       await db.from("conversions").update({ [statusField]: "enviado", observaciones: obs }).eq("id", rowId);

@@ -204,20 +204,25 @@ export async function buildUserData(row: ConversionRow): Promise<MetaUserData> {
   const normalizedState = normalizeState(row.st, row.country);
   const normalizedCity = normalizeCity(row.ct);
   const normalizedZip = normalizePostalCode(row.zip);
+  const email = String(row.email ?? "").trim();
+  const phone = sanitizePhone(row.phone);
+  const firstName = String(row.fn ?? "").trim();
+  const lastName = String(row.ln ?? "").trim();
+  const externalId = String(row.external_id ?? "").trim();
 
-  if (row.email) ud.em = await sha256(row.email);
-  if (row.phone) ud.ph = await sha256(sanitizePhone(row.phone));
-  if (row.fn) ud.fn = await sha256(row.fn);
-  if (row.ln) ud.ln = await sha256(row.ln);
-  if (row.ct) ud.ct = await sha256(normalizedCity);
-  if (row.st) ud.st = await sha256(normalizedState);
-  if (row.zip) ud.zp = await sha256(normalizedZip);
-  if (row.country) ud.country = await sha256(normalizedCountry);
+  if (email) ud.em = await sha256(email);
+  if (phone) ud.ph = await sha256(phone);
+  if (firstName) ud.fn = await sha256(firstName);
+  if (lastName) ud.ln = await sha256(lastName);
+  if (normalizedCity) ud.ct = await sha256(normalizedCity);
+  if (normalizedState) ud.st = await sha256(normalizedState);
+  if (normalizedZip) ud.zp = await sha256(normalizedZip);
+  if (normalizedCountry) ud.country = await sha256(normalizedCountry);
   if (row.fbp) ud.fbp = row.fbp;
   if (row.fbc) ud.fbc = row.fbc;
   if (row.client_ip) Object.assign(ud, normalizeIpToMeta(row.client_ip));
   if (row.agent_user) ud.client_user_agent = row.agent_user;
-  if (row.external_id) ud.external_id = await sha256(row.external_id);
+  if (externalId) ud.external_id = await sha256(externalId);
   return ud;
 }
 
