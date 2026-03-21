@@ -459,6 +459,20 @@ async function handleContact(
 
   await writeLog(db, landing.user_id, "handleContact", "INFO", "Nuevo contacto registrado", JSON.stringify({ phone: row.phone, landing: landing.name, contact_event_id: contactEventId }), rowId);
 
+  // Métrica de UX (landing pública): tiempo desde tap en CTA hasta redirección a WhatsApp.
+  const ctaTapToRedirectMs = Number(p.cta_tap_to_redirect_ms);
+  if (Number.isFinite(ctaTapToRedirectMs) && ctaTapToRedirectMs >= 0) {
+    await writeLog(
+      db,
+      landing.user_id,
+      "handleContact",
+      "INFO",
+      "CTA tap->redirect latency",
+      JSON.stringify({ cta_tap_to_redirect_ms: Math.round(ctaTapToRedirectMs) }),
+      rowId,
+    );
+  }
+
   if (config.send_contact_capi) {
     const { data: fresh } = await db.from("conversions").select("*").eq("id", rowId).single();
     const fullRow = (fresh ?? row) as ConversionRow;
