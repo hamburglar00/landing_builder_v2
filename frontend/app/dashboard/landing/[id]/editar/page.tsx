@@ -175,10 +175,6 @@ export default function DashboardLandingEditarPage() {
               secret: revalidateSecret,
             }),
           });
-          // Warm: simula una visita para regenerar y dejar cacheada la página.
-          await fetch(
-            `${base}/${encodeURIComponent(landing.name)}?warm=1`,
-          ).catch(() => {});
           // Calentar la Edge Function builder-config para que la primera visita a la landing no pague cold start.
           const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL?.replace(/\/$/, "");
           const anonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY ?? "";
