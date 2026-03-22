@@ -15,38 +15,40 @@ type MapMetric =
   | "primeras_cargas"
   | "recargas"
   | "cargas_totales"
-  | "pct_inicio"
-  | "pct_carga"
   | "carga_promedio"
   | "carga_mediana"
-  | "tiempo_lead_purchase_prom"
   | "total_cargado"
   | "roas_primera"
   | "roas_total"
+  | "pct_inicio"
+  | "pct_carga"
+  | "pct_recarga"
+  | "tiempo_lead_purchase_prom"
   | "jugadores_recurrentes"
   | "jugadores_premium"
   | "retencion_activa_30d";
 
 const METRIC_LABELS: Record<MapMetric, string> = {
-  contactos: "Contactos",
-  leads: "Leads",
+  contactos: "Clics en CTA",
+  leads: "Mensajes recibidos",
   primeras_cargas: "Primeras cargas",
   recargas: "Recargas",
   cargas_totales: "Cargas totales",
-  pct_inicio: "% inicio conversaciones",
-  pct_carga: "% de carga",
   carga_promedio: "Carga promedio",
-  carga_mediana: "Carga mediana",
-  tiempo_lead_purchase_prom: "Tiempo lead->purchase (prom.)",
+  carga_mediana: "Carga media",
   total_cargado: "Total cargado",
   roas_primera: "ROAS primera carga",
   roas_total: "ROAS total",
+  pct_inicio: "% de inicio de conversacion",
+  pct_carga: "% de carga",
+  pct_recarga: "% de recarga",
+  tiempo_lead_purchase_prom: "Tiempo lead-purchase",
   jugadores_recurrentes: "Jugadores recurrentes",
   jugadores_premium: "Jugadores premium",
-  retencion_activa_30d: "Retención activa 30d",
+  retencion_activa_30d: "Retencion activa 30d",
 };
 
-const PCT_METRICS = new Set<MapMetric>(["pct_inicio", "pct_carga"]);
+const PCT_METRICS = new Set<MapMetric>(["pct_inicio", "pct_carga", "pct_recarga"]);
 const CURRENCY_METRICS = new Set<MapMetric>(["total_cargado", "carga_promedio"]);
 const ROAS_METRICS = new Set<MapMetric>(["roas_primera", "roas_total"]);
 const TIME_METRICS = new Set<MapMetric>(["tiempo_lead_purchase_prom"]);
@@ -158,6 +160,7 @@ interface ProvinceData {
   reachedLead: number;
   reachedPurchase: number;
   reachedRepeat: number;
+  repeatFromFirstInRange: number;
   primerasCargas: number;
   recurrentes: number;
   totalCargado: number;
@@ -195,6 +198,7 @@ function buildProvinceData(
       reachedLead: core.uniqueLeads,
       reachedPurchase: core.firstLoadPurchasers,
       reachedRepeat: core.purchaseRepeat,
+      repeatFromFirstInRange: core.repeatFromFirstInRange,
       primerasCargas: core.firstLoadPlayers,
       recurrentes: core.repeatPlayers,
       totalCargado: core.totalRevenue,
@@ -225,6 +229,7 @@ function getMetricValue(
     case "cargas_totales": return d.purchaseCount;
     case "pct_inicio": return d.contactos > 0 ? (d.reachedLead / d.contactos) * 100 : 0;
     case "pct_carga": return d.reachedLead > 0 ? (d.reachedPurchase / d.reachedLead) * 100 : 0;
+    case "pct_recarga": return d.reachedPurchase > 0 ? (d.repeatFromFirstInRange / d.reachedPurchase) * 100 : 0;
     case "carga_promedio": return d.purchaseCount > 0 ? d.totalCargado / d.purchaseCount : 0;
     case "carga_mediana": return d.cargaMediana;
     case "tiempo_lead_purchase_prom": return d.leadToPurchaseAvgHours;
@@ -330,6 +335,7 @@ export default function ArgentinaMap({
       case "cargas_totales": return core.totalPurchases;
       case "pct_inicio": return core.uniqueContacts > 0 ? (core.uniqueLeads / core.uniqueContacts) * 100 : 0;
       case "pct_carga": return core.uniqueLeads > 0 ? (core.firstLoadPurchasers / core.uniqueLeads) * 100 : 0;
+      case "pct_recarga": return core.firstLoadPurchasers > 0 ? (core.repeatFromFirstInRange / core.firstLoadPurchasers) * 100 : 0;
       case "carga_promedio": return core.totalPurchases > 0 ? core.totalRevenue / core.totalPurchases : 0;
       case "carga_mediana": return median(core.purchaseValues);
       case "tiempo_lead_purchase_prom": return leadToPurchaseAvgHours;

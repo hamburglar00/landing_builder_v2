@@ -210,12 +210,6 @@ export default function StatsPanel({
       if (c.purchase_type === "repeat") return false;
       return !(c.observaciones ?? "").includes("REPEAT");
     };
-    const isRepeatPurchase = (c: ConversionRow) => {
-      if ((c.purchase_event_id ?? "") === "") return false;
-      if (c.purchase_type === "repeat") return true;
-      if (c.purchase_type === "first") return false;
-      return (c.observaciones ?? "").includes("REPEAT");
-    };
     const purchaseRows = conversions.filter(
       (c) => (c.purchase_event_id ?? "") !== "",
     );
@@ -231,13 +225,6 @@ export default function StatsPanel({
     const purchasers = firstLoadPurchasers;
     const avgTicket = totalPurchaseCount > 0 ? totalRevenue / totalPurchaseCount : 0;
     const avgLoadsPerPlayer = purchasers > 0 ? totalPurchaseCount / purchasers : 0;
-    const firstPhones = new Set(
-      purchaseRows.filter(isFirstPurchase).map((c) => `${c.user_id}::${c.phone}`),
-    );
-    const repeatPhones = new Set(
-      purchaseRows.filter(isRepeatPurchase).map((c) => `${c.user_id}::${c.phone}`),
-    );
-    const repeatFromFirstInRange = [...repeatPhones].filter((k) => firstPhones.has(k)).length;
 
     // By campaign
     const campaignMap = new Map<string, { leads: number; cargas: number; revenue: number; total: number; firstRevenue: number }>();
@@ -428,7 +415,7 @@ export default function StatsPanel({
       premium,
       purchasers,
       reachedRepeat,
-      repeatFromFirstInRange,
+      repeatFromFirstInRange: core.repeatFromFirstInRange,
       totalRevenue,
       firstPurchaseRevenue,
       totalPurchaseCount,

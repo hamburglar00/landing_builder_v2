@@ -7,6 +7,7 @@ export interface CoreStats {
   firstLoadPurchasers: number;
   totalPurchases: number;
   purchaseRepeat: number;
+  repeatFromFirstInRange: number;
   firstLoadPlayers: number;
   repeatPlayers: number;
   premiumPlayers: number;
@@ -76,6 +77,13 @@ export function computeCoreStats(
 
   const totalPurchases = purchaseRows.length;
   const purchaseRepeat = dedupeByUserPhone(repeatPurchaseRows).size;
+  const firstPhones = new Set(
+    firstPurchaseRows.map((c) => `${c.user_id}::${c.phone}`),
+  );
+  const repeatPhones = new Set(
+    repeatPurchaseRows.map((c) => `${c.user_id}::${c.phone}`),
+  );
+  const repeatFromFirstInRange = [...repeatPhones].filter((k) => firstPhones.has(k)).length;
 
   let firstLoadPlayers = 0;
   let repeatPlayers = 0;
@@ -139,6 +147,7 @@ export function computeCoreStats(
     firstLoadPurchasers,
     totalPurchases,
     purchaseRepeat,
+    repeatFromFirstInRange,
     firstLoadPlayers,
     repeatPlayers,
     premiumPlayers,
