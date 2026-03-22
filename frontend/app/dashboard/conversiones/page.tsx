@@ -392,7 +392,7 @@ export default function DashboardConversionesPage() {
               <div className="space-y-4 border-t border-zinc-800 p-4">
                 <div>
                   <label className="block text-xs font-medium text-zinc-400 mb-1">Pixel ID</label>
-                  <input type="text" value={config?.pixel_id ?? ""} onChange={(e) => setConfig((p) => p ? { ...p, pixel_id: e.target.value } : p)} className="w-full rounded-lg border border-zinc-700 bg-zinc-900 px-3 py-2 text-sm text-zinc-100" placeholder="Ej: 880464554785896" />
+                  <input type="text" value={config?.pixel_id ?? ""} onChange={(e) => setConfig((p) => p ? { ...p, pixel_id: e.target.value.replace(/\D/g, "") } : p)} className="w-full rounded-lg border border-zinc-700 bg-zinc-900 px-3 py-2 text-sm text-zinc-100" placeholder="Ej: 880464554785896" />
                   <p className="mt-1 text-[11px] text-zinc-500">Se sincronizará automáticamente a todas tus landings al guardar.</p>
                 </div>
                 <div>

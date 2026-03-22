@@ -1,5 +1,9 @@
 import { supabase } from "@/lib/supabaseClient";
 
+function normalizePixelId(value: string): string {
+  return String(value ?? "").replace(/\D/g, "");
+}
+
 // ─── Types ──────────────────────────────────────────────────────────────────
 
 export interface ConversionsConfig {
@@ -156,7 +160,7 @@ export async function upsertConversionsConfig(
       {
         user_id: config.user_id,
         slug: config.slug,
-        pixel_id: config.pixel_id,
+        pixel_id: normalizePixelId(config.pixel_id),
         meta_access_token: config.meta_access_token,
         meta_currency: config.meta_currency,
         meta_api_version: config.meta_api_version,

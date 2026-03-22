@@ -137,12 +137,16 @@ export default function AdminLandingEditarPage() {
         "El Pixel ID es obligatorio para guardar la landing. Ingresalo para continuar:",
         "",
       );
-      pixelIdToSave = (entered ?? "").trim();
+      pixelIdToSave = (entered ?? "").replace(/\D/g, "");
       if (!pixelIdToSave) {
         setSaveError("No se puede guardar sin Pixel ID.");
         return;
       }
       setLanding((prev) => (prev ? { ...prev, pixelId: pixelIdToSave } : prev));
+    }
+    if (!/^\d+$/.test(pixelIdToSave)) {
+      setSaveError("Pixel ID inválido. Debe contener solo números.");
+      return;
     }
     if (
       initialName &&

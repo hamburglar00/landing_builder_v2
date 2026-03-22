@@ -3,6 +3,10 @@ import type { Landing, LandingThemeConfig } from "./types";
 import { DEFAULT_CONFIG } from "./mocks";
 import type { LandingConfigPayload } from "./buildLandingConfig";
 
+function normalizePixelId(value: string): string {
+  return String(value ?? "").replace(/\D/g, "");
+}
+
 /** Fila tal como viene de la tabla public.landings */
 export interface LandingRow {
   id: string;
@@ -135,14 +139,14 @@ export async function createLanding(
     payload.name ?? `Nueva-landing-${crypto.randomUUID().slice(0, 8)}`;
   const base =
     process.env.NEXT_PUBLIC_SUPABASE_URL?.replace(/\/$/, "") ?? "";
-  let pixelId = (payload.pixelId ?? "").trim();
+  let pixelId = normalizePixelId(payload.pixelId ?? "");
   let postUrl = payload.postUrl ?? "";
   const [{ data: profile }, { data: config }] = await Promise.all([
     supabase.from("profiles").select("nombre").eq("id", userId).maybeSingle(),
     supabase.from("conversions_config").select("pixel_id").eq("user_id", userId).maybeSingle(),
   ]);
   if (!pixelId) {
-    pixelId = String(config?.pixel_id ?? "").trim();
+    pixelId = normalizePixelId(String(config?.pixel_id ?? ""));
   }
   if (base && profile?.nombre) {
     postUrl = `${base}/functions/v1/conversions?name=${encodeURIComponent(
@@ -197,7 +201,7 @@ export async function updateLanding(
 ): Promise<void> {
   const body: Record<string, unknown> = {};
   if (payload.name !== undefined) body.name = payload.name;
-  if (payload.pixelId !== undefined) body.pixel_id = payload.pixelId;
+  if (payload.pixelId !== undefined) body.pixel_id = normalizePixelId(payload.pixelId);
   if (payload.gerenciaSelectionMode !== undefined)
     body.gerencia_selection_mode = payload.gerenciaSelectionMode;
   if (payload.gerenciaFairCriterion !== undefined)
