@@ -193,6 +193,7 @@ export default function DashboardConversionesPage() {
   const [configOpen, setConfigOpen] = useState(false);
   const [endpointOpen, setEndpointOpen] = useState(false);
   const [funnelConfigOpen, setFunnelConfigOpen] = useState(false);
+  const [sensitiveEditEnabled, setSensitiveEditEnabled] = useState(false);
 
   const activeConversions = useMemo(() => filterByDateRange(conversions, dateRange), [conversions, dateRange]);
   const activeFunnel = useMemo(() => filterFunnelByDateRange(funnelContacts, dateRange), [funnelContacts, dateRange]);
@@ -389,17 +390,15 @@ export default function DashboardConversionesPage() {
               <h3 className="text-sm font-semibold text-zinc-200">Configuración Meta CAPI</h3>
             </button>
             {configOpen && (
-              <div className="space-y-4 border-t border-zinc-800 p-4">
-                <div>
-                  <label className="block text-xs font-medium text-zinc-400 mb-1">Pixel ID</label>
-                  <input type="text" value={config?.pixel_id ?? ""} onChange={(e) => setConfig((p) => p ? { ...p, pixel_id: e.target.value.replace(/\D/g, "") } : p)} className="w-full rounded-lg border border-zinc-700 bg-zinc-900 px-3 py-2 text-sm text-zinc-100" placeholder="Ej: 880464554785896" />
+              <div className="space-y-4 border-t border-zinc-800 p-4">`r`n                <div className="flex items-center justify-between gap-2 rounded-lg border border-zinc-800 bg-zinc-950/60 px-3 py-2">`r`n                  <p className="text-[11px] text-zinc-400">Pixel ID y Access Token estan bloqueados para evitar cambios accidentales.</p>`r`n                  <button type="button" onClick={() => setSensitiveEditEnabled((v) => !v)} className="cursor-pointer rounded-lg border border-zinc-700 px-3 py-1.5 text-[11px] font-medium text-zinc-300 transition hover:bg-zinc-800">`r`n                    {sensitiveEditEnabled ? "Bloquear credenciales" : "Editar credenciales"}`r`n                  </button>`r`n                </div>`r`n                <div>`r`n                  <label className="block text-xs font-medium text-zinc-400 mb-1">Pixel ID</label>
+                  <input type="text" disabled={!sensitiveEditEnabled} value={config?.pixel_id ?? ""} onChange={(e) => setConfig((p) => p ? { ...p, pixel_id: e.target.value.replace(/\D/g, "") } : p)} className="w-full rounded-lg border border-zinc-700 bg-zinc-900 px-3 py-2 text-sm text-zinc-100 disabled:cursor-not-allowed disabled:opacity-60" placeholder="Ej: 880464554785896" />
                   <p className="mt-1 text-[11px] text-zinc-500">Se sincronizará automáticamente a todas tus landings al guardar.</p>
                 </div>
                 <div>
                   <label className="block text-xs font-medium text-zinc-400 mb-1">Access Token</label>
                   <div className="flex gap-2">
-                    <input type={showToken ? "text" : "password"} value={config?.meta_access_token ?? ""} onChange={(e) => setConfig((p) => p ? { ...p, meta_access_token: e.target.value } : p)} className="flex-1 rounded-lg border border-zinc-700 bg-zinc-900 px-3 py-2 text-sm text-zinc-100" placeholder="Token de Meta Conversions API" />
-                    <button type="button" onClick={() => setShowToken((v) => !v)} className="cursor-pointer rounded-lg border border-zinc-700 px-3 py-2 text-xs text-zinc-400 hover:bg-zinc-800">{showToken ? "Ocultar" : "Ver"}</button>
+                    <input type={showToken ? "text" : "password"} disabled={!sensitiveEditEnabled} value={config?.meta_access_token ?? ""} onChange={(e) => setConfig((p) => p ? { ...p, meta_access_token: e.target.value } : p)} className="flex-1 rounded-lg border border-zinc-700 bg-zinc-900 px-3 py-2 text-sm text-zinc-100 disabled:cursor-not-allowed disabled:opacity-60" placeholder="Token de Meta Conversions API" />
+                    <button type="button" disabled={!sensitiveEditEnabled} onClick={() => setShowToken((v) => !v)} className="cursor-pointer rounded-lg border border-zinc-700 px-3 py-2 text-xs text-zinc-400 hover:bg-zinc-800 disabled:cursor-not-allowed disabled:opacity-60">{showToken ? "Ocultar" : "Ver"}</button>
                   </div>
                 </div>
                 <div>
@@ -663,3 +662,5 @@ export default function DashboardConversionesPage() {
     </div>
   );
 }
+
+
