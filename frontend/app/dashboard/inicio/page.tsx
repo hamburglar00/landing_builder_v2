@@ -6,8 +6,8 @@ import { supabase } from "@/lib/supabaseClient";
 import type { FunnelContact, ConversionRow } from "@/lib/conversionsDb";
 import {
   fetchConversionsConfig,
-  fetchFunnelContactsFiltered,
   fetchConversionsFiltered,
+  buildFunnelContactsFromConversions,
 } from "@/lib/conversionsDb";
 import { fetchLandings } from "@/lib/landing/landingsDb";
 import { HomeOverview } from "@/components/conversiones/HomeOverview";
@@ -35,15 +35,14 @@ export default function DashboardInicioPage() {
           return;
         }
 
-        const [landings, funnel, convs, cfg] = await Promise.all([
+        const [landings, convs, cfg] = await Promise.all([
           fetchLandings(user.id),
-          fetchFunnelContactsFiltered(user.id, user.id),
           fetchConversionsFiltered(user.id, user.id, 500),
           fetchConversionsConfig(user.id),
         ]);
 
         setLandingsCount(landings.length);
-        setFunnelContacts(funnel);
+        setFunnelContacts(buildFunnelContactsFromConversions(convs));
         setConversions(convs);
         setPremiumThreshold(cfg?.funnel_premium_threshold ?? 50000);
       } catch (e) {

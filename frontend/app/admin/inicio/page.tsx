@@ -6,7 +6,7 @@ import type { FunnelContact, ConversionRow } from "@/lib/conversionsDb";
 import {
   fetchConversionsConfig,
   fetchConversionsForAdminFiltered,
-  fetchFunnelContactsForAdminFiltered,
+  buildFunnelContactsFromConversions,
 } from "@/lib/conversionsDb";
 import { fetchLandingsForAdmin } from "@/lib/landing/landingsDb";
 import { HomeOverview } from "@/components/conversiones/HomeOverview";
@@ -32,15 +32,14 @@ export default function AdminInicioPage() {
           return;
         }
 
-        const [{ mine, clients }, funnel, convs, cfg] = await Promise.all([
+        const [{ mine, clients }, convs, cfg] = await Promise.all([
           fetchLandingsForAdmin(user.id),
-          fetchFunnelContactsForAdminFiltered(user.id),
           fetchConversionsForAdminFiltered(user.id, 500),
           fetchConversionsConfig(user.id),
         ]);
 
         setLandingsCount(mine.length + clients.length);
-        setFunnelContacts(funnel);
+        setFunnelContacts(buildFunnelContactsFromConversions(convs));
         setConversions(convs);
         setPremiumThreshold(cfg?.funnel_premium_threshold ?? 50000);
       } catch (e) {

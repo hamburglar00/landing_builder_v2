@@ -330,7 +330,7 @@ function derivePurchaseType(row: ConversionRow): "first" | "repeat" | null {
   return (row.observaciones ?? "").includes("REPEAT") ? "repeat" : "first";
 }
 
-function buildFunnelContactsFromConversions(rows: ConversionRow[]): FunnelContact[] {
+export function buildFunnelContactsFromConversions(rows: ConversionRow[]): FunnelContact[] {
   const grouped = new Map<string, ConversionRow[]>();
   for (const row of rows) {
     const key = `${row.user_id}::${row.phone}`;
