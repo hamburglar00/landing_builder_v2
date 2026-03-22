@@ -3,7 +3,7 @@
 import { useState, useMemo, useEffect } from "react";
 import { geoMercator, geoPath, type GeoPermissibleObjects } from "d3-geo";
 import type { FunnelContact, ConversionRow } from "@/lib/conversionsDb";
-import { classifyContact } from "@/lib/conversionsDb";
+import { computeCoreStats, median } from "@/lib/conversionStats";
 
 /* ═══════════════════════════════════════════════════════════════════════════
    METRIC DEFINITIONS
@@ -169,15 +169,6 @@ interface ProvinceData {
   leadToPurchaseAvgHours: number;
 }
 
-function median(values: number[]): number {
-  if (values.length === 0) return 0;
-  const sorted = [...values].sort((a, b) => a - b);
-  const mid = Math.floor(sorted.length / 2);
-  return sorted.length % 2 === 0
-    ? (sorted[mid - 1] + sorted[mid]) / 2
-    : sorted[mid];
-}
-
 function buildProvinceData(
   contacts: FunnelContact[],
   conversions: ConversionRow[],
@@ -185,112 +176,35 @@ function buildProvinceData(
   premiumThreshold: number,
 ): Map<string, ProvinceData> {
   const map = new Map<string, ProvinceData>();
-  const purchaseValuesByProvince = new Map<string, number[]>();
-  const leadToPurchaseHoursByProvince = new Map<string, number[]>();
+  const allProvinces = new Set<string>([
+    ...contacts.map((c) => normalizeProvince(c.region)).filter((v): v is string => !!v),
+    ...conversions.map((c) => normalizeProvince(c.geo_region)).filter((v): v is string => !!v),
+    ...allConversions.map((c) => normalizeProvince(c.geo_region)).filter((v): v is string => !!v),
+  ]);
 
-  for (const c of contacts) {
-    const prov = normalizeProvince(c.region);
-    if (!prov) continue;
-    const d = map.get(prov) ?? {
-      contactos: 0, reachedLead: 0, reachedPurchase: 0, reachedRepeat: 0,
-      primerasCargas: 0, recurrentes: 0, totalCargado: 0, firstPurchaseRevenue: 0,
-      purchaseCount: 0, premium: 0, retencionActiva30d: 0, cargaMediana: 0, leadToPurchaseAvgHours: 0,
-    };
-    d.contactos++;
-    if (c.reached_lead) d.reachedLead++;
-    if (c.reached_purchase) d.reachedPurchase++;
-    if (c.reached_repeat) d.reachedRepeat++;
-    if (c.reached_purchase && !c.reached_repeat) d.primerasCargas++;
-    if (c.reached_repeat) d.recurrentes++;
-    d.totalCargado += c.total_valor;
-    d.purchaseCount += c.purchase_count;
-    if (classifyContact(c, premiumThreshold) === "premium") d.premium++;
-    map.set(prov, d);
-  }
-
-  for (const conv of conversions) {
-    const prov = normalizeProvince(conv.geo_region);
-    if (!prov) continue;
-    const d = map.get(prov);
-    if (!d) continue;
-
-    if (conv.estado === "purchase") {
-      const amount = Number(conv.valor);
-      if (Number.isFinite(amount) && amount > 0) {
-        const arr = purchaseValuesByProvince.get(prov) ?? [];
-        arr.push(amount);
-        purchaseValuesByProvince.set(prov, arr);
-      }
-    }
-
-    const leadT = Number(conv.lead_event_time ?? 0);
-    const purchaseT = Number(conv.purchase_event_time ?? 0);
-    if (leadT > 0 && purchaseT > 0 && purchaseT >= leadT) {
-      const hours = (purchaseT - leadT) / 3600;
-      const arr = leadToPurchaseHoursByProvince.get(prov) ?? [];
-      arr.push(hours);
-      leadToPurchaseHoursByProvince.set(prov, arr);
-    }
-
-    if (conv.estado === "purchase" && !conv.observaciones?.includes("REPEAT")) {
-      d.firstPurchaseRevenue += conv.valor;
-    }
-  }
-
-  // Retención activa 30d por provincia (rolling sobre todo el histórico, independiente del filtro de fechas)
-  const now = new Date();
-  const cutoff30 = new Date(now.getTime() - 30 * 86400000);
-  const cutoff7 = new Date(now.getTime() - 7 * 86400000);
-
-  interface PhoneAgg {
-    firstPurchase: Date | null;
-    recentCount: number;
-    province: string | null;
-  }
-
-  const phoneMap = new Map<string, PhoneAgg>();
-  for (const conv of allConversions) {
-    if (conv.estado !== "purchase" || !conv.created_at || !conv.phone) continue;
-    const d = new Date(conv.created_at);
-    const prov = normalizeProvince(conv.geo_region);
-    const rec = phoneMap.get(conv.phone) ?? { firstPurchase: null, recentCount: 0, province: prov };
-    if (!rec.firstPurchase || d < rec.firstPurchase) rec.firstPurchase = d;
-    if (d >= cutoff30) rec.recentCount++;
-    if (!rec.province && prov) rec.province = prov;
-    phoneMap.set(conv.phone, rec);
-  }
-
-  for (const rec of phoneMap.values()) {
-    if (!rec.firstPurchase || !rec.province) continue;
-    if (rec.recentCount >= 4 && rec.firstPurchase <= cutoff7) {
-      const d = map.get(rec.province) ?? {
-        contactos: 0,
-        reachedLead: 0,
-        reachedPurchase: 0,
-        reachedRepeat: 0,
-        primerasCargas: 0,
-        recurrentes: 0,
-        totalCargado: 0,
-        firstPurchaseRevenue: 0,
-        purchaseCount: 0,
-        premium: 0,
-        retencionActiva30d: 0,
-        cargaMediana: 0,
-        leadToPurchaseAvgHours: 0,
-      };
-      d.retencionActiva30d++;
-      map.set(rec.province, d);
-    }
-  }
-
-  for (const [prov, d] of map.entries()) {
-    const purchaseVals = purchaseValuesByProvince.get(prov) ?? [];
-    const lpHours = leadToPurchaseHoursByProvince.get(prov) ?? [];
-    d.cargaMediana = median(purchaseVals);
-    d.leadToPurchaseAvgHours = lpHours.length > 0
-      ? lpHours.reduce((acc, n) => acc + n, 0) / lpHours.length
+  for (const prov of allProvinces) {
+    const contactsProv = contacts.filter((c) => normalizeProvince(c.region) === prov);
+    const conversionsProv = conversions.filter((c) => normalizeProvince(c.geo_region) === prov);
+    const allConvProv = allConversions.filter((c) => normalizeProvince(c.geo_region) === prov);
+    const core = computeCoreStats(conversionsProv, contactsProv, allConvProv, premiumThreshold);
+    const leadToPurchaseAvgHours = core.leadPurchaseHours.length > 0
+      ? core.leadPurchaseHours.reduce((acc, n) => acc + n, 0) / core.leadPurchaseHours.length
       : 0;
-    map.set(prov, d);
+    map.set(prov, {
+      contactos: core.uniqueContacts,
+      reachedLead: core.uniqueLeads,
+      reachedPurchase: core.firstLoadPurchasers,
+      reachedRepeat: core.purchaseRepeat,
+      primerasCargas: core.firstLoadPlayers,
+      recurrentes: core.repeatPlayers,
+      totalCargado: core.totalRevenue,
+      firstPurchaseRevenue: core.firstPurchaseRevenue,
+      purchaseCount: core.totalPurchases,
+      premium: core.premiumPlayers,
+      retencionActiva30d: core.activeRetention30d,
+      cargaMediana: median(core.purchaseValues),
+      leadToPurchaseAvgHours,
+    });
   }
 
   return map;
@@ -403,52 +317,30 @@ export default function ArgentinaMap({
 
   const totalContacts = contacts.length;
   const globalMetricValue = useMemo(() => {
-    const uniqueLeads = contacts.filter((c) => c.reached_lead).length;
-    const uniquePurchases = contacts.filter((c) => c.reached_purchase).length;
-    const reachedRepeat = contacts.filter((c) => c.reached_repeat).length;
-    const primerasCargas = contacts.filter((c) => c.reached_purchase && !c.reached_repeat).length;
-    const totalCargado = contacts.reduce((sum, c) => sum + c.total_valor, 0);
-    const totalPurchaseCount = contacts.reduce((sum, c) => sum + c.purchase_count, 0);
-    const premium = contacts.filter((c) => classifyContact(c, premiumThreshold) === "premium").length;
-    const retencionActiva30d = [...provinceData.values()].reduce((sum, d) => sum + d.retencionActiva30d, 0);
-    const firstPurchaseRevenue = conversions
-      .filter((c) => c.estado === "purchase" && !c.observaciones?.includes("REPEAT"))
-      .reduce((sum, c) => sum + c.valor, 0);
-    const purchaseValues = conversions
-      .filter((c) => c.estado === "purchase")
-      .map((c) => Number(c.valor))
-      .filter((n) => Number.isFinite(n) && n > 0);
-    const leadPurchaseHours = conversions
-      .map((c) => {
-        const leadT = Number(c.lead_event_time ?? 0);
-        const purchaseT = Number(c.purchase_event_time ?? 0);
-        if (leadT > 0 && purchaseT > 0 && purchaseT >= leadT) return (purchaseT - leadT) / 3600;
-        return null;
-      })
-      .filter((v): v is number => v !== null);
+    const core = computeCoreStats(conversions, contacts, allConversions, premiumThreshold);
+    const leadToPurchaseAvgHours = core.leadPurchaseHours.length > 0
+      ? core.leadPurchaseHours.reduce((acc, n) => acc + n, 0) / core.leadPurchaseHours.length
+      : 0;
 
     switch (metric) {
-      case "contactos": return totalContacts;
-      case "leads": return uniqueLeads;
-      case "primeras_cargas": return primerasCargas;
-      case "recargas": return reachedRepeat;
-      case "cargas_totales": return totalPurchaseCount;
-      case "pct_inicio": return totalContacts > 0 ? (uniqueLeads / totalContacts) * 100 : 0;
-      case "pct_carga": return uniqueLeads > 0 ? (uniquePurchases / uniqueLeads) * 100 : 0;
-      case "carga_promedio": return totalPurchaseCount > 0 ? totalCargado / totalPurchaseCount : 0;
-      case "carga_mediana": return median(purchaseValues);
-      case "tiempo_lead_purchase_prom":
-        return leadPurchaseHours.length > 0
-          ? leadPurchaseHours.reduce((acc, n) => acc + n, 0) / leadPurchaseHours.length
-          : 0;
-      case "total_cargado": return totalCargado;
-      case "roas_primera": return adSpend > 0 ? firstPurchaseRevenue / adSpend : 0;
-      case "roas_total": return adSpend > 0 ? totalCargado / adSpend : 0;
-      case "jugadores_recurrentes": return reachedRepeat;
-      case "jugadores_premium": return premium;
-      case "retencion_activa_30d": return retencionActiva30d;
+      case "contactos": return core.uniqueContacts;
+      case "leads": return core.uniqueLeads;
+      case "primeras_cargas": return core.firstLoadPlayers;
+      case "recargas": return core.purchaseRepeat;
+      case "cargas_totales": return core.totalPurchases;
+      case "pct_inicio": return core.uniqueContacts > 0 ? (core.uniqueLeads / core.uniqueContacts) * 100 : 0;
+      case "pct_carga": return core.uniqueLeads > 0 ? (core.firstLoadPurchasers / core.uniqueLeads) * 100 : 0;
+      case "carga_promedio": return core.totalPurchases > 0 ? core.totalRevenue / core.totalPurchases : 0;
+      case "carga_mediana": return median(core.purchaseValues);
+      case "tiempo_lead_purchase_prom": return leadToPurchaseAvgHours;
+      case "total_cargado": return core.totalRevenue;
+      case "roas_primera": return adSpend > 0 ? core.firstPurchaseRevenue / adSpend : 0;
+      case "roas_total": return adSpend > 0 ? core.totalRevenue / adSpend : 0;
+      case "jugadores_recurrentes": return core.purchaseRepeat;
+      case "jugadores_premium": return core.premiumPlayers;
+      case "retencion_activa_30d": return core.activeRetention30d;
     }
-  }, [contacts, conversions, provinceData, premiumThreshold, adSpend, metric, totalContacts]);
+  }, [contacts, conversions, allConversions, premiumThreshold, adSpend, metric]);
 
   const { provinces, viewW, viewH } = useMemo(() => {
     if (!geoData) return { provinces: [] as { key: string; path: string; name: string }[], viewW: MAP_W, viewH: MAP_H };

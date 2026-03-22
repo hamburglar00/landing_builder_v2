@@ -2,7 +2,7 @@
 
 import { useMemo } from "react";
 import type { FunnelContact, ConversionRow } from "@/lib/conversionsDb";
-import { classifyContact } from "@/lib/conversionsDb";
+import { computeCoreStats } from "@/lib/conversionStats";
 
 function formatCurrency(n: number) {
   return n.toLocaleString("es-AR", {
@@ -57,75 +57,20 @@ export function HomeOverview({
   premiumThreshold: number;
 }) {
   const stats = useMemo(() => {
-    const isNotRepeat = (c: ConversionRow) =>
-      !(c.estado === "purchase" && c.observaciones?.includes("REPEAT"));
+    const core = computeCoreStats(conversions, funnelContacts, conversions, premiumThreshold);
 
-    const uniqueLeads = conversions.filter(
-      (c) => (c.lead_event_id ?? "") !== "" && isNotRepeat(c),
-    ).length;
-
-    const purchaseRows = conversions.filter(
-      (c) => c.estado === "purchase" && (c.purchase_event_id ?? "") !== "",
-    );
-    const phoneToFirstPurchase = new Map<string, ConversionRow>();
-    for (const c of purchaseRows) {
-      const key = `${c.user_id}::${c.phone}`;
-      const existing = phoneToFirstPurchase.get(key);
-      if (!existing || new Date(c.created_at) < new Date(existing.created_at)) {
-        phoneToFirstPurchase.set(key, c);
-      }
-    }
-    const uniquePurchases = phoneToFirstPurchase.size;
-
-    let totalCargado = 0;
-    let totalCargas = 0;
-    let premium = 0;
-
-    for (const c of funnelContacts) {
-      totalCargado += c.total_valor;
-      totalCargas += c.purchase_count;
-      if (classifyContact(c, premiumThreshold) === "premium") premium++;
-    }
-
-    const porcentajeCarga = uniqueLeads
-      ? (uniquePurchases / uniqueLeads) * 100
+    const porcentajeCarga = core.uniqueLeads
+      ? (core.firstLoadPurchasers / core.uniqueLeads) * 100
       : 0;
-    const cargaPromedio = totalCargas > 0 ? totalCargado / totalCargas : 0;
-
-    const now = new Date();
-    const cutoff30 = new Date(now.getTime() - 30 * 86400000);
-    const cutoff7 = new Date(now.getTime() - 7 * 86400000);
-
-    interface PhoneRetention {
-      firstPurchase: Date | null;
-      recentCount: number;
-    }
-
-    const phoneMap = new Map<string, PhoneRetention>();
-    for (const c of conversions) {
-      if (c.estado !== "purchase" || !c.created_at || !c.phone) continue;
-      const d = new Date(c.created_at);
-      const rec = phoneMap.get(c.phone) ?? { firstPurchase: null, recentCount: 0 };
-      if (!rec.firstPurchase || d < rec.firstPurchase) rec.firstPurchase = d;
-      if (d >= cutoff30) rec.recentCount++;
-      phoneMap.set(c.phone, rec);
-    }
-
-    let retencionActiva30d = 0;
-    for (const rec of phoneMap.values()) {
-      if (!rec.firstPurchase) continue;
-      if (rec.recentCount >= 4 && rec.firstPurchase <= cutoff7) {
-        retencionActiva30d++;
-      }
-    }
+    const cargaPromedio = core.totalPurchaseCount > 0 ? core.totalRevenue / core.totalPurchaseCount : 0;
 
     return {
       landings: landingsCount,
       porcentajeCarga,
       cargaPromedio,
-      totalCargado,
-      premium,
-      retencionActiva30d,
+      totalCargado: core.totalRevenue,
+      premium: core.premiumPlayers,
+      retencionActiva30d: core.activeRetention30d,
     };
   }, [landingsCount, funnelContacts, conversions, premiumThreshold]);
 

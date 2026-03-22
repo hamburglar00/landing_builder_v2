@@ -78,7 +78,7 @@ const ALL_COLUMNS = [
   "phone","email","fn","ln","ct","st","zip","country","fbp","fbc",
   "contact_event_id","contact_event_time","lead_event_id","lead_event_time",
   "purchase_event_id","purchase_event_time","timestamp","clientIP","agentuser",
-  "estado","valor","contact_status_capi","lead_status_capi","purchase_status_capi",
+  "estado","valor","purchase_type","contact_status_capi","lead_status_capi","purchase_status_capi",
   "observaciones","external_id","utm_campaign","telefono_asignado","promo_code",
   "device_type","geo_city","geo_region","geo_country",
 ] as const;
@@ -147,6 +147,7 @@ function cellValue(c: ConversionRow, col: ColKey): React.ReactNode {
     case "agentuser": return <td key={col} className={dim} title={c.agent_user || "-"}>{truncateText(c.agent_user || "-", 35)}</td>;
     case "estado": return <td key={col} className={cell}>{estadoBadge(c.estado)}</td>;
     case "valor": return <td key={col} className={`${cell} text-zinc-200`}>{c.valor > 0 ? c.valor : "-"}</td>;
+    case "purchase_type": return <td key={col} className={dim}>{c.purchase_type || "-"}</td>;
     case "contact_status_capi": return <td key={col} className={cell}>{statusText(c.contact_status_capi)}</td>;
     case "lead_status_capi": return <td key={col} className={cell}>{statusText(c.lead_status_capi)}</td>;
     case "purchase_status_capi": return <td key={col} className={cell}>{statusText(c.purchase_status_capi)}</td>;

@@ -38,6 +38,7 @@ export interface ConversionRow {
   lead_event_time: number | null;
   purchase_event_id: string;
   purchase_event_time: number | null;
+  purchase_type?: "first" | "repeat" | null;
   client_ip: string;
   agent_user: string;
   device_type: string;
@@ -93,6 +94,8 @@ export interface FunnelContact {
   reached_repeat: boolean;
   last_activity: string;
   first_contact: string;
+  current_status?: "lead" | "purchase" | string | null;
+  current_purchase_type?: "first" | "repeat" | null;
 }
 
 export type FunnelStage = "leads" | "primera_carga" | "recurrente" | "premium";
@@ -101,9 +104,14 @@ export function classifyContact(
   c: FunnelContact,
   premiumThreshold: number,
 ): FunnelStage {
-  if (c.purchase_count > 0 && c.total_valor >= premiumThreshold)
-    return "premium";
-  if (c.purchase_count > 1) return "recurrente"; // recargas = más de 1 compra
+  if (c.current_status === "purchase") {
+    if (c.total_valor >= premiumThreshold) return "premium";
+    if (c.current_purchase_type === "repeat") return "recurrente";
+    if (c.current_purchase_type === "first") return "primera_carga";
+  }
+  if (c.current_status === "lead") return "leads";
+  if (c.purchase_count > 0 && c.total_valor >= premiumThreshold) return "premium";
+  if (c.purchase_count > 1) return "recurrente";
   if (c.purchase_count > 0) return "primera_carga";
   return "leads";
 }
@@ -188,6 +196,7 @@ const CONVERSIONS_SELECT = `
   contact_event_id, contact_event_time,
   lead_event_id, lead_event_time,
   purchase_event_id, purchase_event_time,
+  purchase_type,
   client_ip, agent_user, device_type, event_source_url,
   estado, valor,
   contact_status_capi, lead_status_capi, purchase_status_capi,
@@ -315,35 +324,76 @@ export async function fetchConversionsForAdminFiltered(
 
 // ─── Funnel contacts (aggregated by phone) ──────────────────────────────────
 
-const FUNNEL_SELECT = `
-  user_id, phone, email, fn, ln, ct, st, country, region,
-  utm_campaign, device_type, landing_name,
-  total_valor, purchase_count, repeat_count, lead_count, contact_count,
-  reached_contact, reached_lead, reached_purchase, reached_repeat,
-  last_activity, first_contact
-`.replace(/\s+/g, " ").trim();
+function derivePurchaseType(row: ConversionRow): "first" | "repeat" | null {
+  if (!row.purchase_event_id) return null;
+  if (row.purchase_type === "first" || row.purchase_type === "repeat") return row.purchase_type;
+  return (row.observaciones ?? "").includes("REPEAT") ? "repeat" : "first";
+}
+
+function buildFunnelContactsFromConversions(rows: ConversionRow[]): FunnelContact[] {
+  const grouped = new Map<string, ConversionRow[]>();
+  for (const row of rows) {
+    const key = `${row.user_id}::${row.phone}`;
+    const bucket = grouped.get(key) ?? [];
+    bucket.push(row);
+    grouped.set(key, bucket);
+  }
+
+  const funnel: FunnelContact[] = [];
+  for (const group of grouped.values()) {
+    const sorted = [...group].sort((a, b) => new Date(a.created_at).getTime() - new Date(b.created_at).getTime());
+    const latest = sorted[sorted.length - 1];
+    const currentStatus = (latest.estado ?? "") as "lead" | "purchase" | string;
+    const currentPurchaseType = derivePurchaseType(latest);
+    if (currentStatus !== "lead" && currentStatus !== "purchase") continue;
+
+    const purchaseRows = sorted.filter((r) => (r.purchase_event_id ?? "") !== "");
+    const repeatRows = purchaseRows.filter((r) => derivePurchaseType(r) === "repeat");
+    const leadRows = sorted.filter((r) => (r.lead_event_id ?? "") !== "");
+    const contactRows = sorted.filter((r) => (r.contact_event_id ?? "") !== "");
+
+    funnel.push({
+      user_id: latest.user_id,
+      phone: latest.phone,
+      email: latest.email || null,
+      fn: latest.fn || null,
+      ln: latest.ln || null,
+      ct: latest.ct || null,
+      st: latest.st || null,
+      country: latest.country || null,
+      region: latest.geo_region || latest.st || null,
+      utm_campaign: latest.utm_campaign || null,
+      device_type: latest.device_type || null,
+      landing_name: latest.landing_name || null,
+      total_valor: purchaseRows.reduce((sum, r) => sum + (Number(r.valor) || 0), 0),
+      purchase_count: purchaseRows.length,
+      repeat_count: repeatRows.length,
+      lead_count: leadRows.length,
+      contact_count: contactRows.length,
+      reached_contact: contactRows.length > 0,
+      reached_lead: leadRows.length > 0,
+      reached_purchase: purchaseRows.length > 0,
+      reached_repeat: repeatRows.length > 0,
+      last_activity: latest.created_at,
+      first_contact: sorted[0]?.created_at ?? latest.created_at,
+      current_status: currentStatus,
+      current_purchase_type: currentPurchaseType,
+    });
+  }
+
+  return funnel.sort((a, b) => new Date(b.last_activity).getTime() - new Date(a.last_activity).getTime());
+}
 
 export async function fetchFunnelContacts(
   userId: string,
 ): Promise<FunnelContact[]> {
-  const { data, error } = await supabase
-    .from("funnel_contacts")
-    .select(FUNNEL_SELECT)
-    .eq("user_id", userId)
-    .order("last_activity", { ascending: false });
-
-  if (error) throw error;
-  return (data ?? []) as unknown as FunnelContact[];
+  const rows = await fetchConversionsFiltered(userId, userId);
+  return buildFunnelContactsFromConversions(rows);
 }
 
 export async function fetchFunnelContactsForAdmin(): Promise<FunnelContact[]> {
-  const { data, error } = await supabase
-    .from("funnel_contacts")
-    .select(FUNNEL_SELECT)
-    .order("last_activity", { ascending: false });
-
-  if (error) throw error;
-  return (data ?? []) as unknown as FunnelContact[];
+  const rows = await fetchConversionsForAdminFiltered("admin");
+  return buildFunnelContactsFromConversions(rows);
 }
 
 /** Fetch funnel contacts excluyendo los ocultos por hiddenBy. */
@@ -351,41 +401,16 @@ export async function fetchFunnelContactsFiltered(
   userId: string,
   hiddenBy: string,
 ): Promise<FunnelContact[]> {
-  const [rows, hiddenContactKeys] = await Promise.all([
-    supabase
-      .from("funnel_contacts")
-      .select(FUNNEL_SELECT)
-      .eq("user_id", userId)
-      .order("last_activity", { ascending: false })
-      .then(({ data, error }) => {
-        if (error) throw error;
-        return (data ?? []) as unknown as FunnelContact[];
-      }),
-    fetchHiddenContacts(hiddenBy),
-  ]);
-  return rows.filter(
-    (c) => !hiddenContactKeys.has(`${c.user_id}::${c.phone}`),
-  );
+  const rows = await fetchConversionsFiltered(userId, hiddenBy);
+  return buildFunnelContactsFromConversions(rows);
 }
 
 /** Fetch funnel contacts for admin excluyendo los ocultos por hiddenBy. */
 export async function fetchFunnelContactsForAdminFiltered(
   hiddenBy: string,
 ): Promise<FunnelContact[]> {
-  const [rows, hiddenContactKeys] = await Promise.all([
-    supabase
-      .from("funnel_contacts")
-      .select(FUNNEL_SELECT)
-      .order("last_activity", { ascending: false })
-      .then(({ data, error }) => {
-        if (error) throw error;
-        return (data ?? []) as unknown as FunnelContact[];
-      }),
-    fetchHiddenContacts(hiddenBy),
-  ]);
-  return rows.filter(
-    (c) => !hiddenContactKeys.has(`${c.user_id}::${c.phone}`),
-  );
+  const rows = await fetchConversionsForAdminFiltered(hiddenBy);
+  return buildFunnelContactsFromConversions(rows);
 }
 
 // ─── Logs ───────────────────────────────────────────────────────────────────

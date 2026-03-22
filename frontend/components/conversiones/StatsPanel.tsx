@@ -6,6 +6,7 @@ import {
   type ConversionRow,
   classifyContact,
 } from "@/lib/conversionsDb";
+import { computeCoreStats } from "@/lib/conversionStats";
 import ArgentinaMap from "./ArgentinaMap";
 import {
   BarChart, Bar, LineChart, Line,
@@ -190,54 +191,38 @@ export default function StatsPanel({
   const [adSpend, setAdSpend] = useState<string>("");
 
   const stats = useMemo(() => {
-    // Métricas por event IDs (lo que llegó explícitamente), no por estado.
-    // No inventar: un PURCHASE sin match crea fila solo con purchase_event_id.
-    const isNotRepeat = (c: ConversionRow) => !(c.estado === "purchase" && c.observaciones?.includes("REPEAT"));
-
-    const uniqueContacts = conversions.filter(
-      (c) => (c.contact_event_id ?? "") !== "" && isNotRepeat(c),
-    ).length;
-
-    const uniqueLeads = conversions.filter(
-      (c) => (c.lead_event_id ?? "") !== "" && isNotRepeat(c),
-    ).length;
-
-    // Purchase único = 1 por teléfono (la primera). Si un phone tiene N purchases, 1 es único y N-1 son repeat.
+    const core = computeCoreStats(conversions, funnelContacts, allConversions, premiumThreshold);
+    const uniqueContacts = core.uniqueContacts;
+    const uniqueLeads = core.uniqueLeads;
+    const firstLoadPurchasers = core.firstLoadPurchasers;
+    const totalPurchases = core.totalPurchases;
+    const primera = core.firstLoadPlayers;
+    const recurrente = core.repeatPlayers;
+    const premium = core.premiumPlayers;
+    const totalRevenue = core.totalRevenue;
+    const totalPurchaseCount = core.totalPurchaseCount;
+    const firstPurchaseRevenue = core.firstPurchaseRevenue;
+    const reachedRepeat = core.purchaseRepeat;
+    const leads = funnelContacts.filter((c) => classifyContact(c, premiumThreshold) === "leads").length;
+    const isFirstPurchase = (c: ConversionRow) => {
+      if ((c.purchase_event_id ?? "") === "") return false;
+      if (c.purchase_type === "first") return true;
+      if (c.purchase_type === "repeat") return false;
+      return !(c.observaciones ?? "").includes("REPEAT");
+    };
     const purchaseRows = conversions.filter(
-      (c) => c.estado === "purchase" && (c.purchase_event_id ?? "") !== "",
+      (c) => (c.purchase_event_id ?? "") !== "",
     );
     const phoneToFirstPurchase = new Map<string, ConversionRow>();
-    for (const c of purchaseRows) {
+    for (const c of purchaseRows.filter(isFirstPurchase)) {
       const key = `${c.user_id}::${c.phone}`;
       const existing = phoneToFirstPurchase.get(key);
       if (!existing || new Date(c.created_at) < new Date(existing.created_at)) {
         phoneToFirstPurchase.set(key, c);
       }
     }
-    const uniquePurchases = phoneToFirstPurchase.size;
-
-    const totalPurchases = conversions.filter((c) => c.estado === "purchase").length;
-
-    let leads = 0, primera = 0, recurrente = 0, premium = 0;
-    let totalRevenue = 0, totalPurchaseCount = 0;
-
-    for (const c of funnelContacts) {
-      const stage = classifyContact(c, premiumThreshold);
-      if (stage === "leads") leads++;
-      else if (stage === "primera_carga") primera++;
-      else if (stage === "recurrente") recurrente++;
-      else premium++;
-      totalRevenue += c.total_valor;
-      totalPurchaseCount += c.purchase_count;
-    }
-
-    let firstPurchaseRevenue = 0;
-    for (const c of phoneToFirstPurchase.values()) {
-      firstPurchaseRevenue += c.valor;
-    }
 
     const purchasers = primera + recurrente + premium;
-    const reachedRepeat = funnelContacts.filter((c) => c.reached_repeat).length;
     const avgTicket = totalPurchaseCount > 0 ? totalRevenue / totalPurchaseCount : 0;
     const avgLoadsPerPlayer = purchasers > 0 ? totalPurchaseCount / purchasers : 0;
 
@@ -318,7 +303,7 @@ export default function StatsPanel({
     // Hourly distribution of purchases
     const hourlyBuckets = Array.from({ length: 24 }, (_, h) => ({ hour: `${h}`, cargas: 0 }));
     for (const c of conversions) {
-      if (c.estado === "purchase" && c.created_at) {
+      if ((c.purchase_event_id ?? "") !== "" && c.created_at) {
         const h = new Date(c.created_at).getHours();
         hourlyBuckets[h].cargas++;
       }
@@ -371,7 +356,7 @@ export default function StatsPanel({
         cargas: 0,
       };
       if (c.estado === "lead" || c.lead_event_id) entry.leads++;
-      if (c.estado === "purchase") entry.cargas++;
+      if ((c.purchase_event_id ?? "") !== "") entry.cargas++;
       dailyMap.set(dayKey, entry);
     }
 
@@ -383,36 +368,6 @@ export default function StatsPanel({
       const entry = dailyMap.get(dayKey) ?? { day: label, leads: 0, cargas: 0 };
       dailyData.push({ ...entry, day: label });
       iter.setDate(iter.getDate() + 1);
-    }
-
-    // Retención activa 30d (rolling, independiente del filtro de fechas):
-    // jugadores que hicieron >= 4 cargas en los últimos 30 días
-    // y cuya primera carga histórica fue hace al menos 7 días.
-    const now = new Date();
-    const cutoff30 = new Date(now.getTime() - 30 * 86400000);
-    const cutoff7 = new Date(now.getTime() - 7 * 86400000);
-
-    interface PhoneRetention {
-      firstPurchase: Date | null;
-      recentCount: number;
-    }
-
-    const phoneMap = new Map<string, PhoneRetention>();
-    for (const c of allConversions) {
-      if (c.estado !== "purchase" || !c.created_at || !c.phone) continue;
-      const d = new Date(c.created_at);
-      const rec = phoneMap.get(c.phone) ?? { firstPurchase: null, recentCount: 0 };
-      if (!rec.firstPurchase || d < rec.firstPurchase) rec.firstPurchase = d;
-      if (d >= cutoff30) rec.recentCount++;
-      phoneMap.set(c.phone, rec);
-    }
-
-    let retencionActiva30d = 0;
-    for (const rec of phoneMap.values()) {
-      if (!rec.firstPurchase) continue;
-      if (rec.recentCount >= 4 && rec.firstPurchase <= cutoff7) {
-        retencionActiva30d++;
-      }
     }
 
     // Ingresos hoy vs ayer (para flecha de tendencia)
@@ -428,7 +383,7 @@ export default function StatsPanel({
     let revenueToday = 0;
     let revenueYesterday = 0;
     for (const c of allConversions) {
-      if (c.estado !== "purchase" || !c.created_at) continue;
+      if ((c.purchase_event_id ?? "") === "" || !c.created_at) continue;
       const d = new Date(c.created_at).getTime();
       if (d >= today.getTime() && d <= todayEnd.getTime()) revenueToday += c.valor;
       if (d >= yesterday.getTime() && d <= yesterdayEnd.getTime()) revenueYesterday += c.valor;
@@ -452,7 +407,7 @@ export default function StatsPanel({
     return {
       uniqueContacts,
       uniqueLeads,
-      uniquePurchases,
+      firstLoadPurchasers,
       totalPurchases,
       leads,
       primera,
@@ -471,7 +426,7 @@ export default function StatsPanel({
       topContacts,
       hourlyBuckets,
       dailyData,
-      retencionActiva30d,
+      retencionActiva30d: core.activeRetention30d,
       revenueTrend,
       revenuePctChange,
       revenueToday,
@@ -507,7 +462,7 @@ export default function StatsPanel({
           />
           <KpiCard
             label="Purchase únicos"
-            value={stats.uniquePurchases}
+            value={stats.firstLoadPurchasers}
             color="text-sky-300"
             tooltip={compactTooltips ? "Personas que realizaron al menos una carga." : "Personas que realizaron al menos una carga (purchase sin recarga)."}
           />
@@ -628,15 +583,15 @@ export default function StatsPanel({
           />
           <KpiCard
             label="Porcentaje de carga"
-            value={pct(stats.uniquePurchases, stats.uniqueLeads)}
-            sub={`${stats.uniquePurchases} de ${stats.uniqueLeads} leads`}
+            value={pct(stats.firstLoadPurchasers, stats.uniqueLeads)}
+            sub={`${stats.firstLoadPurchasers} de ${stats.uniqueLeads} leads`}
             color="text-sky-400"
             tooltip={compactTooltips ? "De las personas que escribieron (leads), ¿cuántas cargaron?" : "De las personas que escribieron (leads), ¿cuántas cargaron? purchase únicos / leads únicos."}
           />
           <KpiCard
             label="Porcentaje de recarga"
-            value={pct(stats.reachedRepeat, stats.uniquePurchases)}
-            sub={`${stats.reachedRepeat} de ${stats.uniquePurchases} jugadores`}
+            value={pct(stats.reachedRepeat, stats.firstLoadPurchasers)}
+            sub={`${stats.reachedRepeat} de ${stats.firstLoadPurchasers} jugadores`}
             color="text-violet-400"
             tooltip={compactTooltips ? "Porcentaje de jugadores que volvieron a cargar después de su primera carga." : "Porcentaje de jugadores que volvieron a cargar después de su primera carga. Se calcula: jugadores con recarga / jugadores que cargaron."}
           />

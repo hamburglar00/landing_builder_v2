@@ -57,6 +57,7 @@ interface ConversionRow {
   lead_event_time: number | null;
   purchase_event_id: string;
   purchase_event_time: number | null;
+  purchase_type?: "first" | "repeat" | null;
   client_ip: string;
   agent_user: string;
   device_type: string;
@@ -695,6 +696,7 @@ async function handlePurchase(
         lead_event_time: null,
         purchase_event_id: purchaseEventId,
         purchase_event_time: purchaseEventTime,
+        purchase_type: "first",
         client_ip: "",
         agent_user: "",
         device_type: "",
@@ -731,6 +733,7 @@ async function handlePurchase(
         event_source_url: eventSourceUrl,
         purchase_event_id: purchaseEventId,
         purchase_event_time: purchaseEventTime,
+        purchase_type: "first",
       };
       if (existing?.lead_event_id) {
         updates.lead_event_id = existing.lead_event_id;
@@ -805,6 +808,7 @@ async function handlePurchase(
     lead_event_time: null,
     purchase_event_id: purchaseEventId,
     purchase_event_time: purchaseEventTime,
+    purchase_type: "repeat",
     client_ip: srcRow?.client_ip ?? "",
     agent_user: srcRow?.agent_user ?? "",
     device_type: srcRow?.device_type ?? "",
@@ -857,6 +861,7 @@ async function handleSimplePurchase(
 
   const payloadEmail = norm(p.email);
   const eventSourceUrl = await deriveEventSourceUrl(db, landing.name, norm(p.event_source_url));
+  const isRepeatSimple = await hasPreviousSuccessfulPurchases(db, landing.user_id, cleanPhone);
 
   // Inherit from most recent row of this phone
   const { data: srcRow } = await db
@@ -891,6 +896,7 @@ async function handleSimplePurchase(
     lead_event_time: null,
     purchase_event_id: purchaseEventId,
     purchase_event_time: purchaseEventTime,
+    purchase_type: isRepeatSimple ? "repeat" : "first",
     client_ip: srcRow?.client_ip ?? "",
     agent_user: srcRow?.agent_user ?? "",
     device_type: srcRow?.device_type ?? "",
