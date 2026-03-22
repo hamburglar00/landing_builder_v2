@@ -50,12 +50,17 @@ function daysAgo(d: number): string {
 export function generateDemoConversions(count = 80): ConversionRow[] {
   const phones = Array.from({ length: 25 }, randPhone);
   const rows: ConversionRow[] = [];
+  const phoneHasFirstPurchase = new Set<string>();
 
   for (let i = 0; i < count; i++) {
     const phone = rand(phones);
     const name = rand(NAMES);
     const estado = rand(STATES);
-    const isRepeat = estado === "purchase" && Math.random() > 0.5;
+    const purchaseType =
+      estado === "purchase"
+        ? (phoneHasFirstPurchase.has(phone) ? "repeat" : "first")
+        : null;
+    const isRepeat = purchaseType === "repeat";
     const valor = estado === "purchase" ? Math.round(5000 + Math.random() * 95000) : 0;
     const region = rand(REGIONS);
     const campaign = rand(CAMPAIGNS);
@@ -89,6 +94,7 @@ export function generateDemoConversions(count = 80): ConversionRow[] {
       lead_event_time: leadEvId ? ts + 3600 : null,
       purchase_event_id: purchEvId,
       purchase_event_time: purchEvId ? ts + 7200 : null,
+      purchase_type: purchaseType,
       client_ip: `${100 + Math.floor(Math.random() * 155)}.${Math.floor(Math.random() * 256)}.${Math.floor(Math.random() * 256)}.${Math.floor(Math.random() * 256)}`,
       agent_user: `Mozilla/5.0 (${rand(["Linux", "Windows NT 10.0", "Macintosh"])})`,
       device_type: device,
@@ -108,6 +114,10 @@ export function generateDemoConversions(count = 80): ConversionRow[] {
       geo_country: rand(COUNTRIES),
       created_at: created,
     });
+
+    if (estado === "purchase" && purchaseType === "first") {
+      phoneHasFirstPurchase.add(phone);
+    }
   }
 
   return rows.sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime());
@@ -127,7 +137,10 @@ export function generateDemoFunnelContacts(conversions: ConversionRow[]): Funnel
     const purchases = rows.filter((r) => r.estado === "purchase");
     const leads = rows.filter((r) => r.estado === "lead");
     const contactRows = rows.filter((r) => r.estado === "contact");
-    const repeats = rows.filter((r) => r.observaciones.includes("REPEAT"));
+    const repeats = rows.filter((r) =>
+      (r.purchase_event_id !== "") &&
+      (r.purchase_type === "repeat" || (r.purchase_type == null && r.observaciones.includes("REPEAT")))
+    );
 
     const latest = rows.sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime())[0];
     const earliest = rows.sort((a, b) => new Date(a.created_at).getTime() - new Date(b.created_at).getTime())[0];

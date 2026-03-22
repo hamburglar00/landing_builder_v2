@@ -210,6 +210,12 @@ export default function StatsPanel({
       if (c.purchase_type === "repeat") return false;
       return !(c.observaciones ?? "").includes("REPEAT");
     };
+    const isRepeatPurchase = (c: ConversionRow) => {
+      if ((c.purchase_event_id ?? "") === "") return false;
+      if (c.purchase_type === "repeat") return true;
+      if (c.purchase_type === "first") return false;
+      return (c.observaciones ?? "").includes("REPEAT");
+    };
     const purchaseRows = conversions.filter(
       (c) => (c.purchase_event_id ?? "") !== "",
     );
@@ -225,6 +231,13 @@ export default function StatsPanel({
     const purchasers = firstLoadPurchasers;
     const avgTicket = totalPurchaseCount > 0 ? totalRevenue / totalPurchaseCount : 0;
     const avgLoadsPerPlayer = purchasers > 0 ? totalPurchaseCount / purchasers : 0;
+    const firstPhones = new Set(
+      purchaseRows.filter(isFirstPurchase).map((c) => `${c.user_id}::${c.phone}`),
+    );
+    const repeatPhones = new Set(
+      purchaseRows.filter(isRepeatPurchase).map((c) => `${c.user_id}::${c.phone}`),
+    );
+    const repeatFromFirstInRange = [...repeatPhones].filter((k) => firstPhones.has(k)).length;
 
     // By campaign
     const campaignMap = new Map<string, { leads: number; cargas: number; revenue: number; total: number; firstRevenue: number }>();
@@ -415,6 +428,7 @@ export default function StatsPanel({
       premium,
       purchasers,
       reachedRepeat,
+      repeatFromFirstInRange,
       totalRevenue,
       firstPurchaseRevenue,
       totalPurchaseCount,
@@ -596,8 +610,8 @@ export default function StatsPanel({
           />
           <KpiCard
             label="Porcentaje de recarga"
-            value={pct(stats.reachedRepeat, stats.firstLoadPurchasers)}
-            sub={`${stats.reachedRepeat} de ${stats.firstLoadPurchasers} jugadores`}
+            value={pct(stats.repeatFromFirstInRange, stats.firstLoadPurchasers)}
+            sub={`${stats.repeatFromFirstInRange} de ${stats.firstLoadPurchasers} jugadores`}
             color="text-violet-400"
             tooltip={compactTooltips ? "Porcentaje de jugadores que volvieron a cargar después de su primera carga." : "Porcentaje de jugadores que volvieron a cargar después de su primera carga. Se calcula: jugadores con recarga / jugadores que cargaron."}
           />
