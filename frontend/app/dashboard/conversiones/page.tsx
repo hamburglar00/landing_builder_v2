@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 import { useEffect, useState, useCallback, useMemo } from "react";
 import { supabase } from "@/lib/supabaseClient";
@@ -29,8 +29,8 @@ const TAB_ORDER: Tab[] = ["funnel", "tabla", "estadisticas", "configuracion"];
 const TAB_LABELS: Record<Tab, string> = {
   funnel: "Funnel",
   tabla: "Tabla",
-  estadisticas: "Estadísticas",
-  configuracion: "Configuración",
+  estadisticas: "EstadÃ­sticas",
+  configuracion: "ConfiguraciÃ³n",
 };
 
 function ChevronIcon({ open }: { open: boolean }) {
@@ -180,7 +180,6 @@ export default function DashboardConversionesPage() {
   const [saving, setSaving] = useState(false);
   const [saveMsg, setSaveMsg] = useState<string | null>(null);
   const [clearMsg, setClearMsg] = useState<string | null>(null);
-  const [showToken, setShowToken] = useState(false);
   const [tab, setTab] = useState<Tab>("funnel");
   const [copiedUrl, setCopiedUrl] = useState<string | null>(null);
 
@@ -193,7 +192,8 @@ export default function DashboardConversionesPage() {
   const [configOpen, setConfigOpen] = useState(false);
   const [endpointOpen, setEndpointOpen] = useState(false);
   const [funnelConfigOpen, setFunnelConfigOpen] = useState(false);
-  const [sensitiveEditEnabled, setSensitiveEditEnabled] = useState(false);
+  const [editPixelId, setEditPixelId] = useState(false);
+  const [editAccessToken, setEditAccessToken] = useState(false);
 
   const activeConversions = useMemo(() => filterByDateRange(conversions, dateRange), [conversions, dateRange]);
   const activeFunnel = useMemo(() => filterFunnelByDateRange(funnelContacts, dateRange), [funnelContacts, dateRange]);
@@ -239,7 +239,7 @@ export default function DashboardConversionesPage() {
     setSaving(true); setSaveMsg(null);
     try {
       await upsertConversionsConfig({ ...config, user_id: userId });
-      setSaveMsg("Configuración guardada.");
+      setSaveMsg("ConfiguraciÃ³n guardada.");
     } catch (e) {
       setSaveMsg(e instanceof Error ? e.message : "Error al guardar");
     } finally { setSaving(false); }
@@ -334,7 +334,7 @@ export default function DashboardConversionesPage() {
     <div className="space-y-6 pb-8">
       <div>
         <h1 className="text-xl font-semibold text-zinc-100">Conversiones</h1>
-        <p className="mt-1 text-sm text-zinc-400">Tu pipeline de leads, cargas y estadísticas.</p>
+        <p className="mt-1 text-sm text-zinc-400">Tu pipeline de leads, cargas y estadÃ­sticas.</p>
       </div>
 
       {saveMsg && (
@@ -373,33 +373,64 @@ export default function DashboardConversionesPage() {
         </div>
       </div>
 
-      {/* Date filter — visible on funnel, tabla, estadisticas */}
+      {/* Date filter â€” visible on funnel, tabla, estadisticas */}
       {(tab === "funnel" || tab === "tabla" || tab === "estadisticas") && (
         <div className="flex justify-end pt-1">
           <DateRangeFilter onChange={setDateRange} />
         </div>
       )}
 
-      {/* ═══════════ TAB: CONFIGURACIÓN ═══════════ */}
+      {/* â•â•â•â•â•â•â•â•â•â•â• TAB: CONFIGURACIÃ“N â•â•â•â•â•â•â•â•â•â•â• */}
       {tab === "configuracion" && (
         <div className="space-y-4">
           {/* Meta CAPI */}
           <section className="rounded-xl border border-zinc-800 bg-zinc-900/50">
             <button type="button" onClick={() => setConfigOpen((v) => !v)} className="flex w-full cursor-pointer items-center gap-2 p-4">
               <ChevronIcon open={configOpen} />
-              <h3 className="text-sm font-semibold text-zinc-200">Configuración Meta CAPI</h3>
+              <h3 className="text-sm font-semibold text-zinc-200">ConfiguraciÃ³n Meta CAPI</h3>
             </button>
             {configOpen && (
-              <div className="space-y-4 border-t border-zinc-800 p-4">`r`n                <div className="flex items-center justify-between gap-2 rounded-lg border border-zinc-800 bg-zinc-950/60 px-3 py-2">`r`n                  <p className="text-[11px] text-zinc-400">Pixel ID y Access Token estan bloqueados para evitar cambios accidentales.</p>`r`n                  <button type="button" onClick={() => setSensitiveEditEnabled((v) => !v)} className="cursor-pointer rounded-lg border border-zinc-700 px-3 py-1.5 text-[11px] font-medium text-zinc-300 transition hover:bg-zinc-800">`r`n                    {sensitiveEditEnabled ? "Bloquear credenciales" : "Editar credenciales"}`r`n                  </button>`r`n                </div>`r`n                <div>`r`n                  <label className="block text-xs font-medium text-zinc-400 mb-1">Pixel ID</label>
-                  <input type="text" disabled={!sensitiveEditEnabled} value={config?.pixel_id ?? ""} onChange={(e) => setConfig((p) => p ? { ...p, pixel_id: e.target.value.replace(/\D/g, "") } : p)} className="w-full rounded-lg border border-zinc-700 bg-zinc-900 px-3 py-2 text-sm text-zinc-100 disabled:cursor-not-allowed disabled:opacity-60" placeholder="Ej: 880464554785896" />
-                  <p className="mt-1 text-[11px] text-zinc-500">Se sincronizará automáticamente a todas tus landings al guardar.</p>
+              <div className="space-y-4 border-t border-zinc-800 p-4">
+                <div>
+                  <div className="mb-1 flex items-center justify-between gap-2">
+                    <label className="block text-xs font-medium text-zinc-400">Pixel ID</label>
+                    <button
+                      type="button"
+                      onClick={() => setEditPixelId((v) => !v)}
+                      className="cursor-pointer rounded-lg border border-zinc-700 px-2.5 py-1 text-[11px] text-zinc-300 transition hover:bg-zinc-800"
+                    >
+                      {editPixelId ? "Bloquear" : "Editar"}
+                    </button>
+                  </div>
+                  <input
+                    type="text"
+                    disabled={!editPixelId}
+                    value={config?.pixel_id ?? ""}
+                    onChange={(e) => setConfig((p) => p ? { ...p, pixel_id: e.target.value.replace(/\D/g, "") } : p)}
+                    className="w-full rounded-lg border border-zinc-700 bg-zinc-900 px-3 py-2 text-sm text-zinc-100 disabled:cursor-not-allowed disabled:opacity-60"
+                    placeholder="Ej: 880464554785896"
+                  />
+                  <p className="mt-1 text-[11px] text-zinc-500">Se sincronizara automaticamente a todas tus landings al guardar.</p>
                 </div>
                 <div>
-                  <label className="block text-xs font-medium text-zinc-400 mb-1">Access Token</label>
-                  <div className="flex gap-2">
-                    <input type={showToken ? "text" : "password"} disabled={!sensitiveEditEnabled} value={config?.meta_access_token ?? ""} onChange={(e) => setConfig((p) => p ? { ...p, meta_access_token: e.target.value } : p)} className="flex-1 rounded-lg border border-zinc-700 bg-zinc-900 px-3 py-2 text-sm text-zinc-100 disabled:cursor-not-allowed disabled:opacity-60" placeholder="Token de Meta Conversions API" />
-                    <button type="button" disabled={!sensitiveEditEnabled} onClick={() => setShowToken((v) => !v)} className="cursor-pointer rounded-lg border border-zinc-700 px-3 py-2 text-xs text-zinc-400 hover:bg-zinc-800 disabled:cursor-not-allowed disabled:opacity-60">{showToken ? "Ocultar" : "Ver"}</button>
+                  <div className="mb-1 flex items-center justify-between gap-2">
+                    <label className="block text-xs font-medium text-zinc-400">Access Token</label>
+                    <button
+                      type="button"
+                      onClick={() => setEditAccessToken((v) => !v)}
+                      className="cursor-pointer rounded-lg border border-zinc-700 px-2.5 py-1 text-[11px] text-zinc-300 transition hover:bg-zinc-800"
+                    >
+                      {editAccessToken ? "Bloquear" : "Editar"}
+                    </button>
                   </div>
+                  <input
+                    type="text"
+                    disabled={!editAccessToken}
+                    value={config?.meta_access_token ?? ""}
+                    onChange={(e) => setConfig((p) => p ? { ...p, meta_access_token: e.target.value } : p)}
+                    className="w-full rounded-lg border border-zinc-700 bg-zinc-900 px-3 py-2 text-sm text-zinc-100 disabled:cursor-not-allowed disabled:opacity-60"
+                    placeholder="Token de Meta Conversions API"
+                  />
                 </div>
                 <div>
                   <label className="block text-xs font-medium text-zinc-400 mb-1">Moneda</label>
@@ -410,7 +441,7 @@ export default function DashboardConversionesPage() {
                 <div>
                   <label className="block text-xs font-medium text-zinc-400 mb-1">Test Event Code <span className="font-normal text-zinc-500">(opcional)</span></label>
                   <input type="text" value={config?.test_event_code ?? ""} onChange={(e) => setConfig((p) => p ? { ...p, test_event_code: e.target.value } : p)} className="w-full rounded-lg border border-zinc-700 bg-zinc-900 px-3 py-2 text-sm text-zinc-100" placeholder="TEST12345" />
-                  <p className="mt-1 text-[11px] text-zinc-500">Si tiene valor, los eventos se envían en modo test. Dejalo vacío para producción.</p>
+                  <p className="mt-1 text-[11px] text-zinc-500">Si tiene valor, los eventos se envÃ­an en modo test. Dejalo vacÃ­o para producciÃ³n.</p>
                 </div>
                 <div className="space-y-3 border-t border-zinc-800 pt-4">
                   <label className="flex items-center gap-2">
@@ -447,11 +478,11 @@ export default function DashboardConversionesPage() {
                     <div className="flex items-center gap-2 rounded-lg border border-zinc-800 bg-zinc-950/70 px-3 py-2">
                       <code className="flex-1 text-[11px] text-emerald-400 break-all">{url}</code>
                       <button type="button" onClick={() => copyToClipboard(url)} className="shrink-0 cursor-pointer rounded p-1 text-zinc-500 transition hover:bg-zinc-800 hover:text-zinc-300" title="Copiar URL">
-                        {copiedUrl === url ? <span className="text-[10px] text-emerald-400">✓</span> : <CopyIcon />}
+                        {copiedUrl === url ? <span className="text-[10px] text-emerald-400">âœ“</span> : <CopyIcon />}
                       </button>
                     </div>
                   ) : (
-                    <p className="text-[11px] text-amber-400">Tu URL aún no fue configurada. Contactá al administrador.</p>
+                    <p className="text-[11px] text-amber-400">Tu URL aÃºn no fue configurada. ContactÃ¡ al administrador.</p>
                   );
                 })()}
               </div>
@@ -462,12 +493,12 @@ export default function DashboardConversionesPage() {
           <section className="rounded-xl border border-zinc-800 bg-zinc-900/50">
             <button type="button" onClick={() => setFunnelConfigOpen((v) => !v)} className="flex w-full cursor-pointer items-center gap-2 p-4">
               <ChevronIcon open={funnelConfigOpen} />
-              <h3 className="text-sm font-semibold text-zinc-200">Personalización del funnel</h3>
+              <h3 className="text-sm font-semibold text-zinc-200">PersonalizaciÃ³n del funnel</h3>
             </button>
             {funnelConfigOpen && (
               <div className="space-y-4 border-t border-zinc-800 p-4">
                 <div>
-                  <label className="block text-xs font-medium text-zinc-400 mb-1">Monto mínimo para Jugador Premium</label>
+                  <label className="block text-xs font-medium text-zinc-400 mb-1">Monto mÃ­nimo para Jugador Premium</label>
                   <input
                     type="text"
                     inputMode="numeric"
@@ -492,13 +523,13 @@ export default function DashboardConversionesPage() {
               disabled={saving}
               className="cursor-pointer rounded-lg bg-zinc-100 px-4 py-2 text-sm font-medium text-zinc-900 transition hover:bg-zinc-200 active:scale-95 disabled:opacity-60"
             >
-              {saving ? "Guardando..." : "Guardar configuración"}
+              {saving ? "Guardando..." : "Guardar configuraciÃ³n"}
             </button>
           </div>
         </div>
       )}
 
-      {/* ═══════════ TAB: TABLA ═══════════ */}
+      {/* â•â•â•â•â•â•â•â•â•â•â• TAB: TABLA â•â•â•â•â•â•â•â•â•â•â• */}
       {tab === "tabla" && (
         <section className="rounded-xl border border-zinc-800 bg-zinc-900/50 p-4">
           <div className="mb-4 flex flex-wrap items-center justify-between gap-2">
@@ -516,7 +547,7 @@ export default function DashboardConversionesPage() {
                 <svg className="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
                   <path strokeLinecap="round" strokeLinejoin="round" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
                 </svg>
-                {refreshingTable ? "Actualizando…" : "Actualizar"}
+                {refreshingTable ? "Actualizandoâ€¦" : "Actualizar"}
               </button>
               <button
                 type="button"
@@ -525,7 +556,7 @@ export default function DashboardConversionesPage() {
                 className="inline-flex items-center gap-1.5 rounded-lg border border-zinc-700 bg-zinc-800/80 px-2.5 py-1.5 text-xs font-medium text-zinc-400 transition hover:bg-zinc-700 hover:text-zinc-300 disabled:opacity-50 disabled:cursor-not-allowed"
                 title="Ocultar registros de la vista (persistente, no borra de la base)"
               >
-                {hidingTable ? "Ocultando…" : "Limpiar vista"}
+                {hidingTable ? "Ocultandoâ€¦" : "Limpiar vista"}
               </button>
             </div>
           </div>
@@ -548,7 +579,7 @@ export default function DashboardConversionesPage() {
                 ) : activeConversions.length === 0 ? (
                   <tr>
                     <td colSpan={displayedCols.length} className="px-2 py-6 text-center text-zinc-500">
-                      Aún no hay conversiones registradas.
+                      AÃºn no hay conversiones registradas.
                     </td>
                   </tr>
                 ) : activeConversions.map((c) => {
@@ -577,7 +608,7 @@ export default function DashboardConversionesPage() {
         </section>
       )}
 
-      {/* ═══════════ TAB: FUNNEL ═══════════ */}
+      {/* â•â•â•â•â•â•â•â•â•â•â• TAB: FUNNEL â•â•â•â•â•â•â•â•â•â•â• */}
       {tab === "funnel" && (
         <section className="rounded-xl border border-zinc-800 bg-zinc-900/50 p-4">
           <div className="mb-4 flex flex-wrap items-center justify-between gap-2">
@@ -593,7 +624,7 @@ export default function DashboardConversionesPage() {
                 <svg className="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
                   <path strokeLinecap="round" strokeLinejoin="round" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
                 </svg>
-                {refreshingTable ? "Actualizando…" : "Actualizar"}
+                {refreshingTable ? "Actualizandoâ€¦" : "Actualizar"}
               </button>
               <button
                 type="button"
@@ -602,23 +633,23 @@ export default function DashboardConversionesPage() {
                 className="inline-flex items-center gap-1.5 rounded-lg border border-zinc-700 bg-zinc-800/80 px-2.5 py-1.5 text-xs font-medium text-zinc-400 transition hover:bg-zinc-700 hover:text-zinc-300 disabled:opacity-50 disabled:cursor-not-allowed"
                 title="Ocultar registros de la vista (persistente, no borra de la base)"
               >
-                {hidingFunnel ? "Ocultando…" : "Limpiar vista"}
+                {hidingFunnel ? "Ocultandoâ€¦" : "Limpiar vista"}
               </button>
             </div>
           </div>
           {activeFunnel.length === 0 ? (
-            <p className="py-12 text-center text-sm text-zinc-500">Aún no hay contactos en el funnel.</p>
+            <p className="py-12 text-center text-sm text-zinc-500">AÃºn no hay contactos en el funnel.</p>
           ) : (
             <FunnelBoard contacts={activeFunnel} premiumThreshold={config?.funnel_premium_threshold ?? 50000} />
           )}
         </section>
       )}
 
-      {/* ═══════════ TAB: ESTADÍSTICAS ═══════════ */}
+      {/* â•â•â•â•â•â•â•â•â•â•â• TAB: ESTADÃSTICAS â•â•â•â•â•â•â•â•â•â•â• */}
       {tab === "estadisticas" && (
         <section className="rounded-xl border border-zinc-800 bg-zinc-900/50 p-4">
           <div className="mb-4 flex flex-wrap items-center justify-between gap-2">
-            <h3 className="text-sm font-semibold text-zinc-200">Estadísticas</h3>
+            <h3 className="text-sm font-semibold text-zinc-200">EstadÃ­sticas</h3>
             <div className="flex gap-2">
               <button
                 type="button"
@@ -630,7 +661,7 @@ export default function DashboardConversionesPage() {
                 <svg className="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
                   <path strokeLinecap="round" strokeLinejoin="round" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
                 </svg>
-                {refreshingTable ? "Actualizando…" : "Actualizar"}
+                {refreshingTable ? "Actualizandoâ€¦" : "Actualizar"}
               </button>
               <button
                 type="button"
@@ -639,12 +670,12 @@ export default function DashboardConversionesPage() {
                 className="inline-flex items-center gap-1.5 rounded-lg border border-zinc-700 bg-zinc-800/80 px-2.5 py-1.5 text-xs font-medium text-zinc-400 transition hover:bg-zinc-700 hover:text-zinc-300 disabled:opacity-50 disabled:cursor-not-allowed"
                 title="Ocultar registros de la vista (persistente, no borra de la base)"
               >
-                {hidingStats ? "Ocultando…" : "Limpiar vista"}
+                {hidingStats ? "Ocultandoâ€¦" : "Limpiar vista"}
               </button>
             </div>
           </div>
           {activeFunnel.length === 0 && activeConversions.length === 0 ? (
-            <p className="py-12 text-center text-sm text-zinc-500">Aún no hay datos para estadísticas.</p>
+            <p className="py-12 text-center text-sm text-zinc-500">AÃºn no hay datos para estadÃ­sticas.</p>
           ) : (
             <StatsPanel
               funnelContacts={activeFunnel}
@@ -658,9 +689,10 @@ export default function DashboardConversionesPage() {
         </section>
       )}
 
-      {/* Logs tab removed — only available for admin */}
+      {/* Logs tab removed â€” only available for admin */}
     </div>
   );
 }
+
 
 

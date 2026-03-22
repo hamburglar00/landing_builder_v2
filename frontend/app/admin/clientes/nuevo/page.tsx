@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 import { useState } from "react";
 import Link from "next/link";
@@ -83,7 +83,7 @@ export default function NuevoClientePage() {
               placeholder="ej: koben (solo minúsculas y números, para la URL de conversiones)"
             />
             <p className="text-[11px] text-zinc-500">
-              Identificador único del cliente. Se usa en el endpoint de conversiones.
+              Identificador Ãºnico del cliente. Se usa en el endpoint de conversiones.
             </p>
           </div>
           <div className="space-y-2">
@@ -109,17 +109,17 @@ export default function NuevoClientePage() {
               htmlFor="new-client-password"
               className="block text-xs font-medium text-zinc-200"
             >
-              Contraseña
+              ContraseÃ±a
             </label>
             <input
               id="new-client-password"
-              type="password"
+              type="text"
               required
               autoComplete="new-password"
               value={password}
               onChange={(e) => setPassword(e.target.value)}
               className="w-full rounded-lg border border-zinc-800 bg-zinc-900 px-3 py-2 text-xs text-zinc-50 outline-none ring-0 transition focus:border-zinc-500 focus:ring-2 focus:ring-zinc-500/60"
-              placeholder="••••••••"
+              placeholder="Ingresa la contraseña"
             />
           </div>
 
@@ -149,3 +149,4 @@ export default function NuevoClientePage() {
     </div>
   );
 }
+
