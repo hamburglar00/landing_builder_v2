@@ -342,7 +342,7 @@ export default function ArgentinaMap({
       case "total_cargado": return core.totalRevenue;
       case "roas_primera": return adSpend > 0 ? core.firstPurchaseRevenue / adSpend : 0;
       case "roas_total": return adSpend > 0 ? core.totalRevenue / adSpend : 0;
-      case "jugadores_recurrentes": return core.purchaseRepeat;
+      case "jugadores_recurrentes": return core.repeatPlayers;
       case "jugadores_premium": return core.premiumPlayers;
       case "retencion_activa_30d": return core.activeRetention30d;
     }
