@@ -29,8 +29,8 @@ const TAB_ORDER: Tab[] = ["funnel", "tabla", "estadisticas", "configuracion"];
 const TAB_LABELS: Record<Tab, string> = {
   funnel: "Funnel",
   tabla: "Tabla",
-  estadisticas: "EstadÃ­sticas",
-  configuracion: "ConfiguraciÃ³n",
+  estadisticas: "Estadísticas",
+  configuracion: "Configuración",
 };
 
 function ChevronIcon({ open }: { open: boolean }) {
@@ -239,7 +239,7 @@ export default function DashboardConversionesPage() {
     setSaving(true); setSaveMsg(null);
     try {
       await upsertConversionsConfig({ ...config, user_id: userId });
-      setSaveMsg("ConfiguraciÃ³n guardada.");
+      setSaveMsg("Configuración guardada.");
     } catch (e) {
       setSaveMsg(e instanceof Error ? e.message : "Error al guardar");
     } finally { setSaving(false); }
@@ -334,7 +334,7 @@ export default function DashboardConversionesPage() {
     <div className="space-y-6 pb-8">
       <div>
         <h1 className="text-xl font-semibold text-zinc-100">Conversiones</h1>
-        <p className="mt-1 text-sm text-zinc-400">Tu pipeline de leads, cargas y estadÃ­sticas.</p>
+        <p className="mt-1 text-sm text-zinc-400">Tu pipeline de leads, cargas y estadísticas.</p>
       </div>
 
       {saveMsg && (
@@ -380,14 +380,14 @@ export default function DashboardConversionesPage() {
         </div>
       )}
 
-      {/* â•â•â•â•â•â•â•â•â•â•â• TAB: CONFIGURACIÃ“N â•â•â•â•â•â•â•â•â•â•â• */}
+      {/* TAB: CONFIGURACIÓN */}
       {tab === "configuracion" && (
         <div className="space-y-4">
           {/* Meta CAPI */}
           <section className="rounded-xl border border-zinc-800 bg-zinc-900/50">
             <button type="button" onClick={() => setConfigOpen((v) => !v)} className="flex w-full cursor-pointer items-center gap-2 p-4">
               <ChevronIcon open={configOpen} />
-              <h3 className="text-sm font-semibold text-zinc-200">ConfiguraciÃ³n Meta CAPI</h3>
+              <h3 className="text-sm font-semibold text-zinc-200">Configuración Meta CAPI</h3>
             </button>
             {configOpen && (
               <div className="space-y-4 border-t border-zinc-800 p-4">
@@ -441,7 +441,7 @@ export default function DashboardConversionesPage() {
                 <div>
                   <label className="block text-xs font-medium text-zinc-400 mb-1">Test Event Code <span className="font-normal text-zinc-500">(opcional)</span></label>
                   <input type="text" value={config?.test_event_code ?? ""} onChange={(e) => setConfig((p) => p ? { ...p, test_event_code: e.target.value } : p)} className="w-full rounded-lg border border-zinc-700 bg-zinc-900 px-3 py-2 text-sm text-zinc-100" placeholder="TEST12345" />
-                  <p className="mt-1 text-[11px] text-zinc-500">Si tiene valor, los eventos se envÃ­an en modo test. Dejalo vacÃ­o para producciÃ³n.</p>
+                  <p className="mt-1 text-[11px] text-zinc-500">Si tiene valor, los eventos se envían en modo test. Dejalo vacío para producción.</p>
                 </div>
                 <div className="space-y-3 border-t border-zinc-800 pt-4">
                   <label className="flex items-center gap-2">
@@ -478,11 +478,11 @@ export default function DashboardConversionesPage() {
                     <div className="flex items-center gap-2 rounded-lg border border-zinc-800 bg-zinc-950/70 px-3 py-2">
                       <code className="flex-1 text-[11px] text-emerald-400 break-all">{url}</code>
                       <button type="button" onClick={() => copyToClipboard(url)} className="shrink-0 cursor-pointer rounded p-1 text-zinc-500 transition hover:bg-zinc-800 hover:text-zinc-300" title="Copiar URL">
-                        {copiedUrl === url ? <span className="text-[10px] text-emerald-400">âœ“</span> : <CopyIcon />}
+                        {copiedUrl === url ? <span className="text-[10px] text-emerald-400">OK</span> : <CopyIcon />}
                       </button>
                     </div>
                   ) : (
-                    <p className="text-[11px] text-amber-400">Tu URL aÃºn no fue configurada. ContactÃ¡ al administrador.</p>
+                    <p className="text-[11px] text-amber-400">Tu URL aún no fue configurada. Contactá al administrador.</p>
                   );
                 })()}
               </div>
@@ -493,12 +493,12 @@ export default function DashboardConversionesPage() {
           <section className="rounded-xl border border-zinc-800 bg-zinc-900/50">
             <button type="button" onClick={() => setFunnelConfigOpen((v) => !v)} className="flex w-full cursor-pointer items-center gap-2 p-4">
               <ChevronIcon open={funnelConfigOpen} />
-              <h3 className="text-sm font-semibold text-zinc-200">PersonalizaciÃ³n del funnel</h3>
+              <h3 className="text-sm font-semibold text-zinc-200">Personalización del funnel</h3>
             </button>
             {funnelConfigOpen && (
               <div className="space-y-4 border-t border-zinc-800 p-4">
                 <div>
-                  <label className="block text-xs font-medium text-zinc-400 mb-1">Monto mÃ­nimo para Jugador Premium</label>
+                  <label className="block text-xs font-medium text-zinc-400 mb-1">Monto mínimo para Jugador Premium</label>
                   <input
                     type="text"
                     inputMode="numeric"
@@ -523,13 +523,13 @@ export default function DashboardConversionesPage() {
               disabled={saving}
               className="cursor-pointer rounded-lg bg-zinc-100 px-4 py-2 text-sm font-medium text-zinc-900 transition hover:bg-zinc-200 active:scale-95 disabled:opacity-60"
             >
-              {saving ? "Guardando..." : "Guardar configuraciÃ³n"}
+              {saving ? "Guardando..." : "Guardar configuración"}
             </button>
           </div>
         </div>
       )}
 
-      {/* â•â•â•â•â•â•â•â•â•â•â• TAB: TABLA â•â•â•â•â•â•â•â•â•â•â• */}
+      {/* TAB: TABLA */}
       {tab === "tabla" && (
         <section className="rounded-xl border border-zinc-800 bg-zinc-900/50 p-4">
           <div className="mb-4 flex flex-wrap items-center justify-between gap-2">
@@ -579,7 +579,7 @@ export default function DashboardConversionesPage() {
                 ) : activeConversions.length === 0 ? (
                   <tr>
                     <td colSpan={displayedCols.length} className="px-2 py-6 text-center text-zinc-500">
-                      AÃºn no hay conversiones registradas.
+                      Aún no hay conversiones registradas.
                     </td>
                   </tr>
                 ) : activeConversions.map((c) => {
@@ -608,7 +608,7 @@ export default function DashboardConversionesPage() {
         </section>
       )}
 
-      {/* â•â•â•â•â•â•â•â•â•â•â• TAB: FUNNEL â•â•â•â•â•â•â•â•â•â•â• */}
+      {/* TAB: FUNNEL */}
       {tab === "funnel" && (
         <section className="rounded-xl border border-zinc-800 bg-zinc-900/50 p-4">
           <div className="mb-4 flex flex-wrap items-center justify-between gap-2">
@@ -638,18 +638,18 @@ export default function DashboardConversionesPage() {
             </div>
           </div>
           {activeFunnel.length === 0 ? (
-            <p className="py-12 text-center text-sm text-zinc-500">AÃºn no hay contactos en el funnel.</p>
+            <p className="py-12 text-center text-sm text-zinc-500">Aún no hay contactos en el funnel.</p>
           ) : (
             <FunnelBoard contacts={activeFunnel} premiumThreshold={config?.funnel_premium_threshold ?? 50000} />
           )}
         </section>
       )}
 
-      {/* â•â•â•â•â•â•â•â•â•â•â• TAB: ESTADÃSTICAS â•â•â•â•â•â•â•â•â•â•â• */}
+      {/* TAB: ESTADÍSTICAS */}
       {tab === "estadisticas" && (
         <section className="rounded-xl border border-zinc-800 bg-zinc-900/50 p-4">
           <div className="mb-4 flex flex-wrap items-center justify-between gap-2">
-            <h3 className="text-sm font-semibold text-zinc-200">EstadÃ­sticas</h3>
+            <h3 className="text-sm font-semibold text-zinc-200">Estadísticas</h3>
             <div className="flex gap-2">
               <button
                 type="button"
@@ -675,7 +675,7 @@ export default function DashboardConversionesPage() {
             </div>
           </div>
           {activeFunnel.length === 0 && activeConversions.length === 0 ? (
-            <p className="py-12 text-center text-sm text-zinc-500">AÃºn no hay datos para estadÃ­sticas.</p>
+            <p className="py-12 text-center text-sm text-zinc-500">Aún no hay datos para estadísticas.</p>
           ) : (
             <StatsPanel
               funnelContacts={activeFunnel}

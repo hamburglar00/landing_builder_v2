@@ -83,7 +83,7 @@ export default function NuevoClientePage() {
               placeholder="ej: koben (solo minúsculas y números, para la URL de conversiones)"
             />
             <p className="text-[11px] text-zinc-500">
-              Identificador Ãºnico del cliente. Se usa en el endpoint de conversiones.
+              Identificador único del cliente. Se usa en el endpoint de conversiones.
             </p>
           </div>
           <div className="space-y-2">
@@ -109,7 +109,7 @@ export default function NuevoClientePage() {
               htmlFor="new-client-password"
               className="block text-xs font-medium text-zinc-200"
             >
-              ContraseÃ±a
+              Contraseña
             </label>
             <input
               id="new-client-password"
