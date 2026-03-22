@@ -151,16 +151,34 @@ Deno.serve(async (req) => {
       phone_mode?: "random" | "fair" | null;
     };
 
+    const rawConfig = (data.config ?? {}) as Record<string, unknown>;
+
     // Si ya existe landing_config persistido, lo devolvemos pero SIEMPRE inyectamos
-    // post_url (effectivePostUrl = conversiones, nunca Sheet).
+    // post_url (effectivePostUrl = conversiones, nunca Sheet) y refrescamos
+    // algunos campos desde config para evitar drift de versiones viejas.
     if (asAny.landing_config != null) {
       const cfg = asAny.landing_config as Record<string, unknown>;
       const tracking = (cfg.tracking as Record<string, unknown>) ?? {};
+      const typography = (cfg.typography as Record<string, unknown>) ?? {};
+      const ctaTypography = (typography.cta as Record<string, unknown>) ?? {};
       const merged = {
         ...cfg,
         tracking: {
           ...tracking,
           postUrl: effectivePostUrl,
+        },
+        typography: {
+          ...typography,
+          cta: {
+            ...ctaTypography,
+            sizePx: (rawConfig.ctaFontSize as number) ?? (ctaTypography.sizePx as number) ?? 18,
+            weight:
+              (rawConfig.ctaBold as boolean | undefined)
+                ? 700
+                : ((rawConfig.ctaBold as boolean | undefined) === false
+                  ? 500
+                  : ((ctaTypography.weight as number) ?? 500)),
+          },
         },
       };
       return new Response(JSON.stringify(merged), {
@@ -172,8 +190,6 @@ Deno.serve(async (req) => {
         },
       });
     }
-
-    const rawConfig = (data.config ?? {}) as Record<string, unknown>;
 
     const themeWithHex = {
       ...rawConfig,

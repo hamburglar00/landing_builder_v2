@@ -274,27 +274,28 @@ export function LandingEditorForm({
               </label>
             </div>
           </div>
-          <div>
-            <label className="block text-xs font-medium text-zinc-400 mb-1">
-              Posición del CTA
-            </label>
-            <select
-              disabled={config.template === "template2"}
-              value={config.ctaPosition}
-              onChange={(e) =>
-                updateConfig(setConfig, {
-                  ctaPosition: e.target.value as CtaPositionOption,
-                })
-              }
-              className="w-full rounded-lg border border-zinc-700 bg-zinc-900 px-2 py-1.5 text-xs text-zinc-100 disabled:cursor-not-allowed disabled:opacity-60"
-            >
-              {ctaPositionOptions.map((opt) => (
-                <option key={opt.value} value={opt.value}>
-                  {opt.label}
-                </option>
-              ))}
-            </select>
-          </div>
+          {config.template !== "template2" && (
+            <div>
+              <label className="block text-xs font-medium text-zinc-400 mb-1">
+                Posici?n del CTA
+              </label>
+              <select
+                value={config.ctaPosition}
+                onChange={(e) =>
+                  updateConfig(setConfig, {
+                    ctaPosition: e.target.value as CtaPositionOption,
+                  })
+                }
+                className="w-full rounded-lg border border-zinc-700 bg-zinc-900 px-2 py-1.5 text-xs text-zinc-100"
+              >
+                {ctaPositionOptions.map((opt) => (
+                  <option key={opt.value} value={opt.value}>
+                    {opt.label}
+                  </option>
+                ))}
+              </select>
+            </div>
+          )}
           <ColorSelect
             label="Color del texto del CTA"
             value={config.ctaTextColor}
@@ -309,13 +310,15 @@ export function LandingEditorForm({
               updateConfig(setConfig, { ctaBackgroundColor })
             }
           />
-          <ColorSelect
-            label="Color del brillo del CTA"
-            value={config.ctaGlowColor}
-            onChange={(ctaGlowColor) =>
-              updateConfig(setConfig, { ctaGlowColor })
-            }
-          />
+          {config.template !== "template2" && (
+            <ColorSelect
+              label="Color del brillo del CTA"
+              value={config.ctaGlowColor}
+              onChange={(ctaGlowColor) =>
+                updateConfig(setConfig, { ctaGlowColor })
+              }
+            />
+          )}
           {getPhoneForPreview && (
             <div className="mt-3 space-y-2 rounded-lg border border-zinc-800 bg-zinc-950/40 px-3 py-3">
               <div className="flex flex-wrap items-center justify-between gap-3">

@@ -211,7 +211,7 @@ export default function DashboardLandingEditarPage() {
           // No bloqueamos el guardado si falla la revalidación.
         }
       }
-      router.push("/dashboard");
+      router.push("/dashboard/landings");
     } catch (e: unknown) {
       const err = e as { code?: string; message?: string };
       if (err?.code === UNIQUE_VIOLATION_CODE) {
