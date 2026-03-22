@@ -194,6 +194,7 @@ export default function StatsPanel({
     const core = computeCoreStats(conversions, funnelContacts, allConversions, premiumThreshold);
     const uniqueContacts = core.uniqueContacts;
     const uniqueLeads = core.uniqueLeads;
+    const uniquePurchasers = core.uniquePurchasers;
     const firstLoadPurchasers = core.firstLoadPurchasers;
     const totalPurchases = core.totalPurchases;
     const primera = core.firstLoadPlayers;
@@ -407,6 +408,7 @@ export default function StatsPanel({
     return {
       uniqueContacts,
       uniqueLeads,
+      uniquePurchasers,
       firstLoadPurchasers,
       totalPurchases,
       leads,
@@ -448,7 +450,7 @@ export default function StatsPanel({
       {/* ── RESUMEN GENERAL ── */}
       <div>
         <SectionTitle>Resumen general</SectionTitle>
-        <div className="mt-3 grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-7">
+        <div className="mt-3 grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-8">
           <KpiCard
             label="Contactos únicos"
             value={stats.uniqueContacts}
@@ -467,6 +469,11 @@ export default function StatsPanel({
             tooltip={compactTooltips ? "Personas que realizaron al menos una carga." : "Personas que realizaron al menos una carga (purchase sin recarga)."}
           />
           <KpiCard
+            label="Purchase repeat únicos"
+            value={stats.reachedRepeat}
+            color="text-violet-300"
+            tooltip={compactTooltips ? "Jugadores que recargaron al menos una vez." : "Jugadores únicos que realizaron al menos una recarga (purchase_type = repeat)."}
+          />          <KpiCard
             label="Purchase totales"
             value={stats.totalPurchases}
             color="text-sky-400"
@@ -590,8 +597,8 @@ export default function StatsPanel({
           />
           <KpiCard
             label="Porcentaje de recarga"
-            value={pct(stats.reachedRepeat, stats.firstLoadPurchasers)}
-            sub={`${stats.reachedRepeat} de ${stats.firstLoadPurchasers} jugadores`}
+            value={pct(stats.reachedRepeat, stats.uniquePurchasers)}
+            sub={`${stats.reachedRepeat} de ${stats.uniquePurchasers} jugadores`}
             color="text-violet-400"
             tooltip={compactTooltips ? "Porcentaje de jugadores que volvieron a cargar después de su primera carga." : "Porcentaje de jugadores que volvieron a cargar después de su primera carga. Se calcula: jugadores con recarga / jugadores que cargaron."}
           />
