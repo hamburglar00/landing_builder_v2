@@ -12,6 +12,43 @@ type CreateClientPayload = {
   nombre?: string;
 };
 
+const FALLBACK_VISIBLE_COLUMNS = [
+  "phone",
+  "email",
+  "fn",
+  "ln",
+  "ct",
+  "st",
+  "zip",
+  "country",
+  "fbp",
+  "fbc",
+  "contact_event_id",
+  "contact_event_time",
+  "lead_event_id",
+  "lead_event_time",
+  "purchase_event_id",
+  "purchase_event_time",
+  "timestamp",
+  "clientIP",
+  "agentuser",
+  "estado",
+  "valor",
+  "purchase_type",
+  "contact_status_capi",
+  "lead_status_capi",
+  "purchase_status_capi",
+  "observaciones",
+  "external_id",
+  "utm_campaign",
+  "telefono_asignado",
+  "promo_code",
+  "device_type",
+  "geo_city",
+  "geo_region",
+  "geo_country",
+];
+
 Deno.serve(async (req) => {
   if (req.method === "OPTIONS") {
     return new Response("ok", {
@@ -197,6 +234,41 @@ Deno.serve(async (req) => {
         .from("profiles")
         .update({ nombre })
         .eq("id", created.user.id);
+    }
+
+    // Inicializar conversions_config del cliente para que no arranque con columnas vacías.
+    // Hereda columnas visibles y umbral premium desde el admin creador.
+    const { data: adminCfg } = await supabaseAdmin
+      .from("conversions_config")
+      .select("visible_columns, funnel_premium_threshold")
+      .eq("user_id", user.id)
+      .maybeSingle();
+
+    const inheritedVisibleColumns = Array.isArray(adminCfg?.visible_columns) &&
+        adminCfg.visible_columns.length > 0
+      ? adminCfg.visible_columns
+      : FALLBACK_VISIBLE_COLUMNS;
+
+    const premiumThreshold = Number(adminCfg?.funnel_premium_threshold);
+
+    const { error: cfgError } = await supabaseAdmin
+      .from("conversions_config")
+      .upsert(
+        {
+          user_id: created.user.id,
+          slug: nombre.toLowerCase().replace(/[^a-z0-9]/g, ""),
+          visible_columns: inheritedVisibleColumns,
+          funnel_premium_threshold: Number.isFinite(premiumThreshold)
+            ? premiumThreshold
+            : 50000,
+          updated_at: new Date().toISOString(),
+        },
+        { onConflict: "user_id" },
+      );
+
+    if (cfgError) {
+      // No fallar la creación del cliente si solo falla la inicialización de configuración.
+      console.error("Error inicializando conversions_config para cliente:", cfgError);
     }
 
     return new Response(
