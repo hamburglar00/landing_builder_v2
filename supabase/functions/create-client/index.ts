@@ -256,7 +256,6 @@ Deno.serve(async (req) => {
       .upsert(
         {
           user_id: created.user.id,
-          slug: nombre.toLowerCase().replace(/[^a-z0-9]/g, ""),
           visible_columns: inheritedVisibleColumns,
           funnel_premium_threshold: Number.isFinite(premiumThreshold)
             ? premiumThreshold
