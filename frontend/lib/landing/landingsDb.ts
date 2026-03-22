@@ -135,25 +135,26 @@ export async function createLanding(
     payload.name ?? `Nueva-landing-${crypto.randomUUID().slice(0, 8)}`;
   const base =
     process.env.NEXT_PUBLIC_SUPABASE_URL?.replace(/\/$/, "") ?? "";
+  let pixelId = (payload.pixelId ?? "").trim();
   let postUrl = payload.postUrl ?? "";
-  if (base) {
-    const { data: profile } = await supabase
-      .from("profiles")
-      .select("nombre")
-      .eq("id", userId)
-      .maybeSingle();
-    if (profile?.nombre) {
-      postUrl = `${base}/functions/v1/conversions?name=${encodeURIComponent(
-        profile.nombre,
-      )}`;
-    }
+  const [{ data: profile }, { data: config }] = await Promise.all([
+    supabase.from("profiles").select("nombre").eq("id", userId).maybeSingle(),
+    supabase.from("conversions_config").select("pixel_id").eq("user_id", userId).maybeSingle(),
+  ]);
+  if (!pixelId) {
+    pixelId = String(config?.pixel_id ?? "").trim();
+  }
+  if (base && profile?.nombre) {
+    postUrl = `${base}/functions/v1/conversions?name=${encodeURIComponent(
+      profile.nombre,
+    )}`;
   }
   const { data, error } = await supabase
     .from("landings")
     .insert({
       user_id: userId,
       name,
-      pixel_id: payload.pixelId ?? "",
+      pixel_id: pixelId,
       gerencia_selection_mode: payload.gerenciaSelectionMode ?? "weighted_random",
       gerencia_fair_criterion: payload.gerenciaFairCriterion ?? "usage_count",
       phone_mode: payload.phoneMode ?? "random",

@@ -74,6 +74,12 @@ function truncateText(value: string, len = 35) {
   return value.length > len ? value.slice(0, len) + "..." : value;
 }
 
+function formatIntegerWithThousands(value: number) {
+  return new Intl.NumberFormat("es-AR", { maximumFractionDigits: 0 }).format(
+    Math.max(0, Math.trunc(value || 0)),
+  );
+}
+
 const ALL_COLUMNS = [
   "phone","email","fn","ln","ct","st","zip","country","fbp","fbc",
   "contact_event_id","contact_event_time","lead_event_id","lead_event_time",
@@ -463,10 +469,18 @@ export default function DashboardConversionesPage() {
               <div className="space-y-4 border-t border-zinc-800 p-4">
                 <div>
                   <label className="block text-xs font-medium text-zinc-400 mb-1">Monto mínimo para Jugador Premium</label>
-                  <input type="number" min={0} step={1000}
-                    value={config?.funnel_premium_threshold ?? 50000}
-                    onChange={(e) => setConfig((p) => p ? { ...p, funnel_premium_threshold: parseFloat(e.target.value) || 0 } : p)}
-                    className="w-full max-w-xs rounded-lg border border-zinc-700 bg-zinc-900 px-3 py-2 text-sm text-zinc-100" placeholder="50000" />
+                  <input
+                    type="text"
+                    inputMode="numeric"
+                    value={formatIntegerWithThousands(config?.funnel_premium_threshold ?? 50000)}
+                    onChange={(e) => {
+                      const raw = e.target.value.replace(/[^\d]/g, "");
+                      const parsed = raw ? Number.parseInt(raw, 10) : 0;
+                      setConfig((p) => (p ? { ...p, funnel_premium_threshold: parsed } : p));
+                    }}
+                    className="w-full max-w-xs rounded-lg border border-zinc-700 bg-zinc-900 px-3 py-2 text-sm text-zinc-100"
+                    placeholder="50.000"
+                  />
                   <p className="mt-1 text-[11px] text-zinc-500">Contactos cuya sumatoria total de cargas sea igual o mayor a este monto se clasifican como Jugador Premium.</p>
                 </div>
               </div>

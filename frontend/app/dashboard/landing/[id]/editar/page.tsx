@@ -114,6 +114,16 @@ export default function DashboardLandingEditarPage() {
     }
     let pixelIdToSave = landing.pixelId.trim();
     if (!pixelIdToSave) {
+      if (userId) {
+        const { data: cfg } = await supabase
+          .from("conversions_config")
+          .select("pixel_id")
+          .eq("user_id", userId)
+          .maybeSingle();
+        pixelIdToSave = String(cfg?.pixel_id ?? "").trim();
+      }
+    }
+    if (!pixelIdToSave) {
       const entered = window.prompt(
         "El Pixel ID es obligatorio para guardar la landing. Ingresalo para continuar:",
         "",

@@ -108,7 +108,7 @@ export default function DashboardLandingsPage() {
             type="button"
             onClick={() => void handleCreate()}
             disabled={creating}
-            className="mt-4 rounded-xl border border-[var(--color-border)] bg-[rgba(255,255,255,0.03)] px-4 py-2 text-sm font-medium text-[var(--color-text)] transition hover:bg-[rgba(255,255,255,0.06)] disabled:opacity-70 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-ring-neutral)]"
+            className="mt-4 cursor-pointer rounded-xl bg-[var(--color-primary)] px-4 py-2 text-sm font-semibold uppercase tracking-wide text-[var(--color-bg-0)] transition-colors duration-150 hover:bg-[var(--color-primary-hover)] active:bg-[var(--color-primary-press)] disabled:cursor-not-allowed disabled:opacity-70 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-ring-primary)]"
           >
             {creating ? "CREANDO..." : "CREAR LA PRIMERA"}
           </button>

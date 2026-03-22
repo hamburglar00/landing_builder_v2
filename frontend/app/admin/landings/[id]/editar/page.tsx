@@ -42,6 +42,7 @@ export default function AdminLandingEditarPage() {
   const [urlBase, setUrlBase] = useState<string | null>(null);
   const [revalidateSecret, setRevalidateSecret] = useState<string | null>(null);
   const [clientName, setClientName] = useState<string | null>(null);
+  const [ownerUserId, setOwnerUserId] = useState<string | null>(null);
 
   useEffect(() => {
     const init = async () => {
@@ -77,6 +78,7 @@ export default function AdminLandingEditarPage() {
         setUrlBase(settings.url_base ?? null);
         setRevalidateSecret(settings.revalidate_secret || null);
         if (owner.data?.user_id) {
+          setOwnerUserId(owner.data.user_id);
           const { data: profile } = await supabase
             .from("profiles")
             .select("nombre")
@@ -120,6 +122,16 @@ export default function AdminLandingEditarPage() {
       return;
     }
     let pixelIdToSave = landing.pixelId.trim();
+    if (!pixelIdToSave) {
+      if (ownerUserId) {
+        const { data: cfg } = await supabase
+          .from("conversions_config")
+          .select("pixel_id")
+          .eq("user_id", ownerUserId)
+          .maybeSingle();
+        pixelIdToSave = String(cfg?.pixel_id ?? "").trim();
+      }
+    }
     if (!pixelIdToSave) {
       const entered = window.prompt(
         "El Pixel ID es obligatorio para guardar la landing. Ingresalo para continuar:",
