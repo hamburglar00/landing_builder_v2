@@ -108,8 +108,8 @@ function KpiCard({
 }) {
   return (
     <div className="rounded-xl border border-zinc-800 bg-zinc-900/60 p-4 group relative">
-      <p className="text-[11px] text-zinc-500 mb-1">{label}</p>
-      <p className={`text-xl font-bold ${color} flex items-baseline flex-wrap`}>
+      <p className="text-[11px] text-zinc-500 mb-1 min-h-[2.5rem] leading-snug">{label}</p>
+      <p className={`text-xl font-bold ${color} flex min-h-[2rem] items-baseline flex-wrap`}>
         {value}
         {trendInfo && (
           <RevenueTrendBadge
@@ -194,7 +194,6 @@ export default function StatsPanel({
     const core = computeCoreStats(conversions, funnelContacts, allConversions, premiumThreshold);
     const uniqueContacts = core.uniqueContacts;
     const uniqueLeads = core.uniqueLeads;
-    const uniquePurchasers = core.uniquePurchasers;
     const firstLoadPurchasers = core.firstLoadPurchasers;
     const totalPurchases = core.totalPurchases;
     const primera = core.firstLoadPlayers;
@@ -223,7 +222,7 @@ export default function StatsPanel({
       }
     }
 
-    const purchasers = primera + recurrente + premium;
+    const purchasers = firstLoadPurchasers;
     const avgTicket = totalPurchaseCount > 0 ? totalRevenue / totalPurchaseCount : 0;
     const avgLoadsPerPlayer = purchasers > 0 ? totalPurchaseCount / purchasers : 0;
 
@@ -408,7 +407,6 @@ export default function StatsPanel({
     return {
       uniqueContacts,
       uniqueLeads,
-      uniquePurchasers,
       firstLoadPurchasers,
       totalPurchases,
       leads,
@@ -452,29 +450,30 @@ export default function StatsPanel({
         <SectionTitle>Resumen general</SectionTitle>
         <div className="mt-3 grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-8">
           <KpiCard
-            label="Contactos únicos"
+            label="Clics en CTA"
             value={stats.uniqueContacts}
             tooltip={compactTooltips ? "Personas que hicieron clic en el CTA." : "Personas que hicieron clic en el CTA (contact + lead + purchase sin recarga)."}
           />
           <KpiCard
-            label="Leads únicos"
+            label="Mensajes recibidos"
             value={stats.uniqueLeads}
             color="text-amber-300"
             tooltip={compactTooltips ? "Personas que enviaron mensaje." : "Personas que enviaron mensaje (lead + purchase sin recarga)."}
           />
           <KpiCard
-            label="Purchase únicos"
+            label="Primeras cargas"
             value={stats.firstLoadPurchasers}
             color="text-sky-300"
             tooltip={compactTooltips ? "Personas que realizaron al menos una carga." : "Personas que realizaron al menos una carga (purchase sin recarga)."}
           />
           <KpiCard
-            label="Purchase repeat únicos"
+            label="Recargas"
             value={stats.reachedRepeat}
             color="text-violet-300"
             tooltip={compactTooltips ? "Jugadores que recargaron al menos una vez." : "Jugadores únicos que realizaron al menos una recarga (purchase_type = repeat)."}
-          />          <KpiCard
-            label="Purchase totales"
+          />
+          <KpiCard
+            label="Cargas totales"
             value={stats.totalPurchases}
             color="text-sky-400"
             tooltip={compactTooltips ? "Total de cargas registradas." : "Total de cargas registradas (primera carga + recargas)."}
@@ -597,8 +596,8 @@ export default function StatsPanel({
           />
           <KpiCard
             label="Porcentaje de recarga"
-            value={pct(stats.reachedRepeat, stats.uniquePurchasers)}
-            sub={`${stats.reachedRepeat} de ${stats.uniquePurchasers} jugadores`}
+            value={pct(stats.reachedRepeat, stats.firstLoadPurchasers)}
+            sub={`${stats.reachedRepeat} de ${stats.firstLoadPurchasers} jugadores`}
             color="text-violet-400"
             tooltip={compactTooltips ? "Porcentaje de jugadores que volvieron a cargar después de su primera carga." : "Porcentaje de jugadores que volvieron a cargar después de su primera carga. Se calcula: jugadores con recarga / jugadores que cargaron."}
           />

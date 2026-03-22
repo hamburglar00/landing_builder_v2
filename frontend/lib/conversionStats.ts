@@ -4,7 +4,6 @@ import { classifyContact } from "@/lib/conversionsDb";
 export interface CoreStats {
   uniqueContacts: number;
   uniqueLeads: number;
-  uniquePurchasers: number;
   firstLoadPurchasers: number;
   totalPurchases: number;
   purchaseRepeat: number;
@@ -72,7 +71,6 @@ export function computeCoreStats(
   );
   const firstPurchaseRows = purchaseRows.filter(isFirstPurchase);
   const repeatPurchaseRows = purchaseRows.filter(isRepeatPurchase);
-  const uniquePurchasers = dedupeByUserPhone(purchaseRows).size;
   const phoneToFirstPurchase = dedupeByUserPhone(firstPurchaseRows);
   const firstLoadPurchasers = phoneToFirstPurchase.size;
 
@@ -138,7 +136,6 @@ export function computeCoreStats(
   return {
     uniqueContacts,
     uniqueLeads,
-    uniquePurchasers,
     firstLoadPurchasers,
     totalPurchases,
     purchaseRepeat,
