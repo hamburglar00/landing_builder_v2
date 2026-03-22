@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
@@ -46,7 +46,13 @@ export default function DashboardInicioPage() {
         setConversions(convs);
         setPremiumThreshold(cfg?.funnel_premium_threshold ?? 50000);
       } catch (e) {
-        setError(e instanceof Error ? e.message : "Error al cargar estadísticas");
+        const msg =
+          e instanceof Error
+            ? e.message
+            : (typeof e === "object" && e && "message" in e && typeof (e as { message?: unknown }).message === "string"
+                ? (e as { message: string }).message
+                : "Error al cargar estadísticas");
+        setError(msg);
       } finally {
         setReady(true);
       }
@@ -83,4 +89,3 @@ export default function DashboardInicioPage() {
     />
   );
 }
-

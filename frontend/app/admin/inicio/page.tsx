@@ -5,7 +5,7 @@ import { supabase } from "@/lib/supabaseClient";
 import type { FunnelContact, ConversionRow } from "@/lib/conversionsDb";
 import {
   fetchConversionsConfig,
-  fetchConversionsForAdminFiltered,
+  fetchConversionsForAdmin,
   buildFunnelContactsFromConversions,
 } from "@/lib/conversionsDb";
 import { fetchLandingsForAdmin } from "@/lib/landing/landingsDb";
@@ -34,7 +34,7 @@ export default function AdminInicioPage() {
 
         const [{ mine, clients }, convs, cfg] = await Promise.all([
           fetchLandingsForAdmin(user.id),
-          fetchConversionsForAdminFiltered(user.id, 500),
+          fetchConversionsForAdmin(500),
           fetchConversionsConfig(user.id),
         ]);
 
@@ -43,7 +43,13 @@ export default function AdminInicioPage() {
         setConversions(convs);
         setPremiumThreshold(cfg?.funnel_premium_threshold ?? 50000);
       } catch (e) {
-        setError(e instanceof Error ? e.message : "Error al cargar estadísticas");
+        const msg =
+          e instanceof Error
+            ? e.message
+            : (typeof e === "object" && e && "message" in e && typeof (e as { message?: unknown }).message === "string"
+                ? (e as { message: string }).message
+                : "Error al cargar estadísticas");
+        setError(msg);
       } finally {
         setReady(true);
       }
