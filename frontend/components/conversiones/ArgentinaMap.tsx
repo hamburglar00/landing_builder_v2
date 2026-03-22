@@ -246,7 +246,6 @@ function getMetricValue(
       const attributedSpend = adSpend * share;
       return attributedSpend > 0 ? d.totalCargado / attributedSpend : 0;
     }
-    case "jugadores_recurrentes": return d.recurrentes;
     case "jugadores_premium": return d.premium;
     case "retencion_activa_30d": return d.retencionActiva30d;
   }

@@ -449,7 +449,7 @@ export default function StatsPanel({
       {/* ── RESUMEN GENERAL ── */}
       <div>
         <SectionTitle>Resumen general</SectionTitle>
-        <div className="mt-3 grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-8">
+        <div className="mt-3 grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-7">
           <KpiCard
             label="Clics en CTA"
             value={stats.uniqueContacts}
@@ -478,14 +478,7 @@ export default function StatsPanel({
             value={stats.totalPurchases}
             color="text-sky-400"
             tooltip={compactTooltips ? "Total de cargas registradas." : "Total de cargas registradas (primera carga + recargas)."}
-          />
-          <KpiCard
-            label="Recurrentes"
-            value={stats.recurrente}
-            color="text-violet-300"
-            tooltip={compactTooltips ? "Contactos que realizaron más de una carga." : "Contactos que realizaron más de una carga pero cuyo monto total acumulado no alcanza el umbral premium."}
-          />
-          <KpiCard
+          />          <KpiCard
             label="Premium"
             value={stats.premium}
             color="text-emerald-300"
