@@ -249,6 +249,7 @@ function getMetricValue(
     case "jugadores_premium": return d.premium;
     case "retencion_activa_30d": return d.retencionActiva30d;
   }
+  return 0;
 }
 
 function formatMetricValue(value: number, metric: MapMetric): string {
@@ -345,6 +346,7 @@ export default function ArgentinaMap({
       case "jugadores_premium": return core.premiumPlayers;
       case "retencion_activa_30d": return core.activeRetention30d;
     }
+    return 0;
   }, [contacts, conversions, allConversions, premiumThreshold, adSpend, metric]);
 
   const { provinces, viewW, viewH } = useMemo(() => {
