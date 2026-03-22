@@ -199,7 +199,7 @@ function buildProvinceData(
       reachedPurchase: core.firstLoadPurchasers,
       reachedRepeat: core.purchaseRepeat,
       repeatFromFirstInRange: core.repeatFromFirstInRange,
-      primerasCargas: core.firstLoadPlayers,
+      primerasCargas: core.firstLoadPurchasers,
       recurrentes: core.repeatPlayers,
       totalCargado: core.totalRevenue,
       firstPurchaseRevenue: core.firstPurchaseRevenue,
@@ -330,7 +330,7 @@ export default function ArgentinaMap({
     switch (metric) {
       case "contactos": return core.uniqueContacts;
       case "leads": return core.uniqueLeads;
-      case "primeras_cargas": return core.firstLoadPlayers;
+      case "primeras_cargas": return core.firstLoadPurchasers;
       case "recargas": return core.purchaseRepeat;
       case "cargas_totales": return core.totalPurchases;
       case "pct_inicio": return core.uniqueContacts > 0 ? (core.uniqueLeads / core.uniqueContacts) * 100 : 0;
