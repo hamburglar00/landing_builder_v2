@@ -178,51 +178,50 @@ function cellValue(c: ConversionRow, col: ColKey): React.ReactNode {
   const mono = `${cell} font-mono`;
   const dim = `${cell} text-zinc-400`;
   const dimMono = `${dim} font-mono`;
+  const tip = (v: unknown) => String(v ?? "-") || "-";
+  const timestampText = new Date(c.created_at).toLocaleString("es-AR", {
+    year: "numeric", month: "2-digit", day: "2-digit",
+    hour: "2-digit", minute: "2-digit", second: "2-digit",
+    hour12: false,
+  });
 
   switch (col) {
-    case "phone": return <td key={col} className={`${mono} text-zinc-200`}>{c.phone || "-"}</td>;
-    case "email": return <td key={col} className={dim}>{c.email || "-"}</td>;
-    case "fn": return <td key={col} className={dim}>{c.fn || "-"}</td>;
-    case "ln": return <td key={col} className={dim}>{c.ln || "-"}</td>;
-    case "ct": return <td key={col} className={dim}>{c.ct || "-"}</td>;
-    case "st": return <td key={col} className={dim}>{c.st || "-"}</td>;
-    case "zip": return <td key={col} className={dim}>{c.zip || "-"}</td>;
-    case "country": return <td key={col} className={dim}>{c.country || "-"}</td>;
-    case "fbp": return <td key={col} className={dimMono}>{c.fbp ? truncateId(c.fbp, 12) : "-"}</td>;
-    case "fbc": return <td key={col} className={dimMono}>{c.fbc ? truncateId(c.fbc, 12) : "-"}</td>;
+    case "phone": return <td key={col} className={`${mono} text-zinc-200`} title={tip(c.phone)}>{c.phone || "-"}</td>;
+    case "email": return <td key={col} className={dim} title={tip(c.email)}>{c.email || "-"}</td>;
+    case "fn": return <td key={col} className={dim} title={tip(c.fn)}>{c.fn || "-"}</td>;
+    case "ln": return <td key={col} className={dim} title={tip(c.ln)}>{c.ln || "-"}</td>;
+    case "ct": return <td key={col} className={dim} title={tip(c.ct)}>{c.ct || "-"}</td>;
+    case "st": return <td key={col} className={dim} title={tip(c.st)}>{c.st || "-"}</td>;
+    case "zip": return <td key={col} className={dim} title={tip(c.zip)}>{c.zip || "-"}</td>;
+    case "country": return <td key={col} className={dim} title={tip(c.country)}>{c.country || "-"}</td>;
+    case "fbp": return <td key={col} className={dimMono} title={tip(c.fbp)}>{c.fbp ? truncateId(c.fbp, 12) : "-"}</td>;
+    case "fbc": return <td key={col} className={dimMono} title={tip(c.fbc)}>{c.fbc ? truncateId(c.fbc, 12) : "-"}</td>;
     case "contact_event_id": return <td key={col} className={dimMono} title={c.contact_event_id}>{truncateId(c.contact_event_id)}</td>;
-    case "contact_event_time": return <td key={col} className={dim}>{c.contact_event_time ?? "-"}</td>;
+    case "contact_event_time": return <td key={col} className={dim} title={tip(c.contact_event_time)}>{c.contact_event_time ?? "-"}</td>;
     case "lead_event_id": return <td key={col} className={dimMono} title={c.lead_event_id}>{truncateId(c.lead_event_id)}</td>;
-    case "lead_event_time": return <td key={col} className={dim}>{c.lead_event_time ?? "-"}</td>;
+    case "lead_event_time": return <td key={col} className={dim} title={tip(c.lead_event_time)}>{c.lead_event_time ?? "-"}</td>;
     case "purchase_event_id": return <td key={col} className={dimMono} title={c.purchase_event_id}>{truncateId(c.purchase_event_id)}</td>;
-    case "purchase_event_time": return <td key={col} className={dim}>{c.purchase_event_time ?? "-"}</td>;
-    case "test_event_code": return <td key={col} className={dimMono}>{c.test_event_code || "-"}</td>;
-    case "timestamp": return (
-      <td key={col} className={dim}>
-        {new Date(c.created_at).toLocaleString("es-AR", {
-          year: "numeric", month: "2-digit", day: "2-digit",
-          hour: "2-digit", minute: "2-digit", second: "2-digit",
-        })}
-      </td>
-    );
-    case "clientIP": return <td key={col} className={dimMono}>{c.client_ip || "-"}</td>;
+    case "purchase_event_time": return <td key={col} className={dim} title={tip(c.purchase_event_time)}>{c.purchase_event_time ?? "-"}</td>;
+    case "test_event_code": return <td key={col} className={dimMono} title={tip(c.test_event_code)}>{c.test_event_code || "-"}</td>;
+    case "timestamp": return <td key={col} className={dim} title={timestampText}>{timestampText}</td>;
+    case "clientIP": return <td key={col} className={dimMono} title={tip(c.client_ip)}>{c.client_ip || "-"}</td>;
     case "agentuser": return <td key={col} className={dim} title={c.agent_user || "-"}>{truncateText(c.agent_user || "-", 35)}</td>;
     case "estado": return <td key={col} className={cell}>{estadoBadge(c.estado)}</td>;
-    case "valor": return <td key={col} className={`${cell} text-zinc-200`}>{c.valor > 0 ? c.valor : "-"}</td>;
-    case "purchase_type": return <td key={col} className={dim}>{c.purchase_type || "-"}</td>;
-    case "contact_status_capi": return <td key={col} className={cell}>{statusText(c.contact_status_capi)}</td>;
-    case "lead_status_capi": return <td key={col} className={cell}>{statusText(c.lead_status_capi)}</td>;
-    case "purchase_status_capi": return <td key={col} className={cell}>{statusText(c.purchase_status_capi)}</td>;
+    case "valor": return <td key={col} className={`${cell} text-zinc-200`} title={tip(c.valor)}>{c.valor > 0 ? c.valor : "-"}</td>;
+    case "purchase_type": return <td key={col} className={dim} title={tip(c.purchase_type)}>{c.purchase_type || "-"}</td>;
+    case "contact_status_capi": return <td key={col} className={cell} title={tip(c.contact_status_capi)}>{statusText(c.contact_status_capi)}</td>;
+    case "lead_status_capi": return <td key={col} className={cell} title={tip(c.lead_status_capi)}>{statusText(c.lead_status_capi)}</td>;
+    case "purchase_status_capi": return <td key={col} className={cell} title={tip(c.purchase_status_capi)}>{statusText(c.purchase_status_capi)}</td>;
     case "observaciones": return <td key={col} className={`${cell} text-zinc-500 max-w-[200px] truncate`} title={c.observaciones}>{c.observaciones || "-"}</td>;
-    case "external_id": return <td key={col} className={dimMono}>{c.external_id ? truncateId(c.external_id) : "-"}</td>;
-    case "utm_campaign": return <td key={col} className={dim}>{c.utm_campaign || "-"}</td>;
-    case "telefono_asignado": return <td key={col} className={dim}>{c.telefono_asignado || "-"}</td>;
-    case "promo_code": return <td key={col} className={dim}>{c.promo_code || "-"}</td>;
-    case "device_type": return <td key={col} className={dim}>{c.device_type || "-"}</td>;
-    case "geo_city": return <td key={col} className={dim}>{c.geo_city || "-"}</td>;
-    case "geo_region": return <td key={col} className={dim}>{c.geo_region || "-"}</td>;
-    case "geo_country": return <td key={col} className={dim}>{c.geo_country || "-"}</td>;
-    default: return <td key={col} className={dim}>-</td>;
+    case "external_id": return <td key={col} className={dimMono} title={tip(c.external_id)}>{c.external_id ? truncateId(c.external_id) : "-"}</td>;
+    case "utm_campaign": return <td key={col} className={dim} title={tip(c.utm_campaign)}>{c.utm_campaign || "-"}</td>;
+    case "telefono_asignado": return <td key={col} className={dim} title={tip(c.telefono_asignado)}>{c.telefono_asignado || "-"}</td>;
+    case "promo_code": return <td key={col} className={dim} title={tip(c.promo_code)}>{c.promo_code || "-"}</td>;
+    case "device_type": return <td key={col} className={dim} title={tip(c.device_type)}>{c.device_type || "-"}</td>;
+    case "geo_city": return <td key={col} className={dim} title={tip(c.geo_city)}>{c.geo_city || "-"}</td>;
+    case "geo_region": return <td key={col} className={dim} title={tip(c.geo_region)}>{c.geo_region || "-"}</td>;
+    case "geo_country": return <td key={col} className={dim} title={tip(c.geo_country)}>{c.geo_country || "-"}</td>;
+    default: return <td key={col} className={dim} title="-">-</td>;
   }
 }
 
