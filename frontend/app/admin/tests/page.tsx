@@ -200,9 +200,18 @@ export default function AdminTestsPage() {
     };
     addLog("info", "CAPI test: enviando payload a conversions-test", { url, payload });
     try {
+      const [{ data: sessionData }, anonKey] = await Promise.all([
+        supabase.auth.getSession(),
+        Promise.resolve(process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY ?? ""),
+      ]);
+      const accessToken = sessionData.session?.access_token ?? "";
       const res = await fetch(url, {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
+        headers: {
+          "Content-Type": "application/json",
+          ...(anonKey ? { apikey: anonKey } : {}),
+          ...(accessToken ? { Authorization: `Bearer ${accessToken}` } : {}),
+        },
         body: JSON.stringify(payload),
       });
       const json = await res.json().catch(() => null);
