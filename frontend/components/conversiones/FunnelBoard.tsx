@@ -155,7 +155,11 @@ function ContactCard({ c, stage }: { c: FunnelContact; stage: FunnelStage }) {
 
       {/* Row 4: Footer metadata */}
       <div className="mt-1.5 flex items-center gap-1.5 text-[10px] text-zinc-700 leading-none">
-        <span>{relDate(c.last_activity)}</span>
+        <span
+          title="Tiempo desde la última actividad del contacto (último cambio de estado registrado)."
+        >
+          {relDate(c.last_activity)}
+        </span>
         {c.region && (
           <>
             <span className="text-zinc-800">·</span>
