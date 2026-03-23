@@ -249,7 +249,7 @@ export async function buildMetaRequest(
     event_name: eventName,
     event_time: eventTime,
     event_id: eventId,
-    action_source: eventName === "Contact" ? "website" : "business_messaging",
+    action_source: "website",
     event_source_url: srcUrl,
     user_data: userData,
   };
