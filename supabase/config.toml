@@ -413,3 +413,6 @@ verify_jwt = false
 
 [functions.delete-client]
 verify_jwt = false
+
+[functions.conversions-test]
+verify_jwt = false
