@@ -496,8 +496,14 @@ async function handleContact(
   return textResponse("Success");
 }
 
-// ─── B1) ACTION: LEAD ───────────────────────────────────────────────────────
-
+async function handleLead(
+  db: SupabaseClient,
+  p: Params,
+  landing: LandingRow,
+  config: ConversionsConfig,
+): Promise<Response> {
+  const cleanPhone = sanitizePhone(p.phone);
+  if (!cleanPhone) return textResponse("Faltan parámetros: phone requerido", 400);
   const testEventCode = norm(p.test_event_code);
 
   const promoCode = norm(p.promo_code);
@@ -624,8 +630,15 @@ async function handleContact(
   return textResponse(ok ? "Fila LEAD procesada" : "LEAD procesado. Error al enviar a Meta CAPI (revisar token, pixel o pestaña Logs).");
 }
 
-// ─── B2) ACTION: PURCHASE ───────────────────────────────────────────────────
-
+async function handlePurchase(
+  db: SupabaseClient,
+  p: Params,
+  landing: LandingRow,
+  config: ConversionsConfig,
+): Promise<Response> {
+  const cleanPhone = sanitizePhone(p.phone);
+  const amount = parseFloat(p.amount);
+  if (!cleanPhone || isNaN(amount)) return textResponse("Faltan parámetros: phone y amount", 400);
   const testEventCode = norm(p.test_event_code);
 
   const promoCode = norm(p.promo_code);
@@ -843,8 +856,15 @@ async function handleContact(
   return textResponse(ok ? "Recompra enviada (Purchase_Repeat)" : "Recompra procesada. Error al enviar a Meta CAPI (revisar token, pixel o Logs).");
 }
 
-// ─── C) Simple purchase { phone, amount } ───────────────────────────────────
-
+async function handleSimplePurchase(
+  db: SupabaseClient,
+  p: Params,
+  landing: LandingRow,
+  config: ConversionsConfig,
+): Promise<Response> {
+  const cleanPhone = sanitizePhone(p.phone);
+  const amount = parseFloat(p.amount);
+  if (!cleanPhone || isNaN(amount)) return textResponse("Faltan parámetros: phone y amount", 400);
   const testEventCode = norm(p.test_event_code);
 
   const payloadEmail = norm(p.email);
@@ -1007,6 +1027,8 @@ Deno.serve(async (req) => {
     return textResponse("Error inesperado", 500);
   }
 });
+
+
 
 
 
