@@ -278,6 +278,7 @@ async function sendToMetaCAPI(
   eventId: string,
   eventTime: number,
   customData?: Record<string, unknown>,
+  overrideTestEventCode?: string,
 ): Promise<boolean> {
   if (!config.meta_access_token || !config.pixel_id) {
     const statusField =
@@ -308,7 +309,7 @@ async function sendToMetaCAPI(
     eventId,
     eventTime,
     customData as Record<string, unknown> | undefined,
-    undefined,
+    overrideTestEventCode,
   );
 
   const statusField =
@@ -405,6 +406,7 @@ async function handleContact(
 
   const contactEventId = norm(p.contact_event_id || p.event_id) || generateEventId();
   const contactEventTime = toValidEventTime(p.contact_event_time || p.event_time || nowSec);
+  const testEventCode = norm(p.test_event_code);
   const geo = resolveGeoForPayload(p);
   const eventSourceUrl = await deriveEventSourceUrl(db, landing.name, norm(p.event_source_url));
 
@@ -476,7 +478,17 @@ async function handleContact(
   if (config.send_contact_capi) {
     const { data: fresh } = await db.from("conversions").select("*").eq("id", rowId).single();
     const fullRow = (fresh ?? row) as ConversionRow;
-    const ok = await sendToMetaCAPI(db, config, fullRow, rowId, "Contact", contactEventId, contactEventTime);
+    const ok = await sendToMetaCAPI(
+      db,
+      config,
+      fullRow,
+      rowId,
+      "Contact",
+      contactEventId,
+      contactEventTime,
+      undefined,
+      testEventCode || undefined,
+    );
     await writeLog(db, landing.user_id, "sendToMetaCAPI", ok ? "INFO" : "ERROR", ok ? "Contact CAPI enviado" : "Error Contact CAPI", JSON.stringify({ event_id: contactEventId }), rowId);
     return textResponse(ok ? "Contact registrado y enviado por CAPI" : "Contact registrado; error al enviar CAPI");
   }
@@ -486,14 +498,7 @@ async function handleContact(
 
 // ─── B1) ACTION: LEAD ───────────────────────────────────────────────────────
 
-async function handleLead(
-  db: SupabaseClient,
-  p: Params,
-  landing: LandingRow,
-  config: ConversionsConfig,
-): Promise<Response> {
-  const cleanPhone = sanitizePhone(p.phone);
-  if (!cleanPhone) return textResponse("Faltan parámetros: phone requerido", 400);
+  const testEventCode = norm(p.test_event_code);
 
   const promoCode = norm(p.promo_code);
   const payloadFn = norm(p.fn);
@@ -614,22 +619,14 @@ async function handleLead(
 
   await writeLog(db, landing.user_id, "handleLead", "INFO", "LEAD procesado", JSON.stringify({ phone: cleanPhone, promo_code: promoCode, matched: !!targetId }), targetId!);
 
-  const ok = await sendToMetaCAPI(db, config, fullRow, targetId!, "Lead", leadEventId, leadEventTime);
+  const ok = await sendToMetaCAPI(db, config, fullRow, targetId!, "Lead", leadEventId, leadEventTime, undefined, testEventCode || undefined);
   await writeLog(db, landing.user_id, "sendToMetaCAPI", ok ? "INFO" : "ERROR", ok ? "Lead CAPI enviado" : "Error Lead CAPI", JSON.stringify({ event_id: leadEventId }), targetId!);
   return textResponse(ok ? "Fila LEAD procesada" : "LEAD procesado. Error al enviar a Meta CAPI (revisar token, pixel o pestaña Logs).");
 }
 
 // ─── B2) ACTION: PURCHASE ───────────────────────────────────────────────────
 
-async function handlePurchase(
-  db: SupabaseClient,
-  p: Params,
-  landing: LandingRow,
-  config: ConversionsConfig,
-): Promise<Response> {
-  const cleanPhone = sanitizePhone(p.phone);
-  const amount = parseFloat(p.amount);
-  if (!cleanPhone || isNaN(amount)) return textResponse("Faltan parámetros: phone y amount", 400);
+  const testEventCode = norm(p.test_event_code);
 
   const promoCode = norm(p.promo_code);
   const payloadFn = norm(p.fn);
@@ -766,7 +763,7 @@ async function handlePurchase(
 
     await writeLog(db, landing.user_id, "handlePurchase", "INFO", "Primera compra procesada", JSON.stringify({ phone: cleanPhone, amount, promo_code: promoCode }), targetId!);
 
-    const ok = await sendToMetaCAPI(db, config, fullRow, targetId!, "Purchase", purchaseEventId, purchaseEventTime, customData);
+    const ok = await sendToMetaCAPI(db, config, fullRow, targetId!, "Purchase", purchaseEventId, purchaseEventTime, customData, testEventCode || undefined);
     await writeLog(db, landing.user_id, "sendToMetaCAPI", ok ? "INFO" : "ERROR", ok ? "Purchase CAPI enviado" : "Error Purchase CAPI", JSON.stringify({ event_id: purchaseEventId, type: "first" }), targetId!);
     return textResponse(ok ? "Primera compra enviada (Purchase)" : "Purchase procesado. Error al enviar a Meta CAPI (revisar token, pixel o Logs).");
   }
@@ -841,22 +838,14 @@ async function handlePurchase(
 
   await writeLog(db, landing.user_id, "handlePurchase", "INFO", "Recompra procesada", JSON.stringify({ phone: cleanPhone, amount, inherited_from: srcRow?.id }), newId);
 
-  const ok = await sendToMetaCAPI(db, config, fullRow, newId, "Purchase", purchaseEventId, purchaseEventTime, customData);
+  const ok = await sendToMetaCAPI(db, config, fullRow, newId, "Purchase", purchaseEventId, purchaseEventTime, customData, testEventCode || undefined);
   await writeLog(db, landing.user_id, "sendToMetaCAPI", ok ? "INFO" : "ERROR", ok ? "Purchase Repeat CAPI enviado" : "Error Purchase Repeat CAPI", JSON.stringify({ event_id: purchaseEventId, type: "repeat" }), newId);
   return textResponse(ok ? "Recompra enviada (Purchase_Repeat)" : "Recompra procesada. Error al enviar a Meta CAPI (revisar token, pixel o Logs).");
 }
 
 // ─── C) Simple purchase { phone, amount } ───────────────────────────────────
 
-async function handleSimplePurchase(
-  db: SupabaseClient,
-  p: Params,
-  landing: LandingRow,
-  config: ConversionsConfig,
-): Promise<Response> {
-  const cleanPhone = sanitizePhone(p.phone);
-  const amount = parseFloat(p.amount);
-  if (!cleanPhone || isNaN(amount)) return textResponse("Faltan parámetros: phone y amount", 400);
+  const testEventCode = norm(p.test_event_code);
 
   const payloadEmail = norm(p.email);
   const eventSourceUrl = await deriveEventSourceUrl(db, landing.name, norm(p.event_source_url));
@@ -927,7 +916,7 @@ async function handleSimplePurchase(
 
   await writeLog(db, landing.user_id, "handleSimplePurchase", "INFO", "Purchase simple procesado", JSON.stringify({ phone: cleanPhone, amount, inherited_from: srcRow?.id }), newId);
 
-  const ok = await sendToMetaCAPI(db, config, fullRow, newId, "Purchase", purchaseEventId, purchaseEventTime, customData);
+  const ok = await sendToMetaCAPI(db, config, fullRow, newId, "Purchase", purchaseEventId, purchaseEventTime, customData, testEventCode || undefined);
   await writeLog(db, landing.user_id, "sendToMetaCAPI", ok ? "INFO" : "ERROR", ok ? "Simple Purchase CAPI enviado" : "Error Simple Purchase CAPI", JSON.stringify({ event_id: purchaseEventId }), newId);
   return textResponse(ok ? "Evento Purchase enviado" : "Purchase procesado. Error al enviar a Meta CAPI (revisar token, pixel o Logs).");
 }
@@ -1018,3 +1007,6 @@ Deno.serve(async (req) => {
     return textResponse("Error inesperado", 500);
   }
 });
+
+
+
