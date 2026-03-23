@@ -56,6 +56,7 @@ interface ConversionRow {
   lead_event_time: number | null;
   purchase_event_id: string;
   purchase_event_time: number | null;
+  test_event_code?: string;
   purchase_type?: "first" | "repeat" | null;
   client_ip: string;
   agent_user: string;
@@ -430,6 +431,7 @@ async function handleContact(
     lead_event_time: null,
     purchase_event_id: "",
     purchase_event_time: null,
+    test_event_code: testEventCode,
     client_ip: norm(p.clientIP),
     agent_user: norm(p.agentuser),
     device_type: norm(p.device_type),
@@ -565,6 +567,7 @@ async function handleLead(
       lead_event_time: leadEventTime,
       purchase_event_id: "",
       purchase_event_time: null,
+      test_event_code: testEventCode,
       client_ip: "",
       agent_user: "",
       device_type: "",
@@ -596,6 +599,7 @@ async function handleLead(
       lead_event_id: leadEventId,
       lead_event_time: leadEventTime,
     };
+    if (testEventCode) updates.test_event_code = testEventCode;
     if (payloadFn) updates.fn = payloadFn;
     if (payloadLn) updates.ln = payloadLn;
     if (payloadEmail) updates.email = payloadEmail;
@@ -705,6 +709,7 @@ async function handlePurchase(
         lead_event_time: null,
         purchase_event_id: purchaseEventId,
         purchase_event_time: purchaseEventTime,
+        test_event_code: testEventCode,
         purchase_type: "first",
         client_ip: "",
         agent_user: "",
@@ -744,6 +749,7 @@ async function handlePurchase(
         purchase_event_time: purchaseEventTime,
         purchase_type: "first",
       };
+      if (testEventCode) updates.test_event_code = testEventCode;
       if (existing?.lead_event_id) {
         updates.lead_event_id = existing.lead_event_id;
         if (existing.lead_event_time) updates.lead_event_time = existing.lead_event_time;
@@ -817,6 +823,7 @@ async function handlePurchase(
     lead_event_time: null,
     purchase_event_id: purchaseEventId,
     purchase_event_time: purchaseEventTime,
+    test_event_code: testEventCode,
     purchase_type: "repeat",
     client_ip: srcRow?.client_ip ?? "",
     agent_user: srcRow?.agent_user ?? "",
@@ -904,6 +911,7 @@ async function handleSimplePurchase(
     lead_event_time: null,
     purchase_event_id: purchaseEventId,
     purchase_event_time: purchaseEventTime,
+    test_event_code: testEventCode,
     purchase_type: isRepeatSimple ? "repeat" : "first",
     client_ip: srcRow?.client_ip ?? "",
     agent_user: srcRow?.agent_user ?? "",

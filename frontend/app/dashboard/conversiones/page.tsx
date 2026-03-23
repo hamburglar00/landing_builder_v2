@@ -83,7 +83,7 @@ function formatIntegerWithThousands(value: number) {
 const ALL_COLUMNS = [
   "phone","email","fn","ln","ct","st","zip","country","fbp","fbc",
   "contact_event_id","contact_event_time","lead_event_id","lead_event_time",
-  "purchase_event_id","purchase_event_time","timestamp","clientIP","agentuser",
+  "purchase_event_id","purchase_event_time","test_event_code","timestamp","clientIP","agentuser",
   "estado","valor","purchase_type","contact_status_capi","lead_status_capi","purchase_status_capi",
   "observaciones","external_id","utm_campaign","telefono_asignado","promo_code",
   "device_type","geo_city","geo_region","geo_country",
@@ -148,6 +148,7 @@ function cellValue(c: ConversionRow, col: ColKey): React.ReactNode {
     case "lead_event_time": return <td key={col} className={dim}>{c.lead_event_time ?? "-"}</td>;
     case "purchase_event_id": return <td key={col} className={dimMono} title={c.purchase_event_id}>{truncateId(c.purchase_event_id)}</td>;
     case "purchase_event_time": return <td key={col} className={dim}>{c.purchase_event_time ?? "-"}</td>;
+    case "test_event_code": return <td key={col} className={dimMono}>{c.test_event_code || "-"}</td>;
     case "timestamp": return <td key={col} className={dim}>{new Date(c.created_at).toLocaleString("es-AR", { year: "numeric", month: "2-digit", day: "2-digit", hour: "2-digit", minute: "2-digit", second: "2-digit" })}</td>;
     case "clientIP": return <td key={col} className={dimMono}>{c.client_ip || "-"}</td>;
     case "agentuser": return <td key={col} className={dim} title={c.agent_user || "-"}>{truncateText(c.agent_user || "-", 35)}</td>;
