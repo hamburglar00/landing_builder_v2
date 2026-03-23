@@ -440,20 +440,45 @@ export default function DashboardConversionesPage() {
                   </select>
                 </div>
                 <div className="space-y-3 border-t border-zinc-800 pt-4">
-                  <label className="flex items-center gap-2">
-                    <input type="checkbox" checked={config?.send_contact_capi ?? false} onChange={(e) => setConfig((p) => p ? { ...p, send_contact_capi: e.target.checked } : p)} className="h-4 w-4 rounded border-zinc-600 bg-zinc-900" />
-                    <span className="text-xs text-zinc-300">Enviar evento Contact por CAPI al recibir contacto de la landing</span>
+                  <label className="group flex items-center gap-3 rounded-lg border border-zinc-800 bg-zinc-900/70 px-3 py-2 transition hover:border-zinc-700">
+                    <input
+                      type="checkbox"
+                      checked={config?.send_contact_capi ?? false}
+                      onChange={(e) => setConfig((p) => p ? { ...p, send_contact_capi: e.target.checked } : p)}
+                      className="h-4 w-4 rounded border-zinc-600 bg-zinc-900 accent-emerald-500"
+                    />
+                    <span className="text-xs text-zinc-300">Enviar evento Contact por CAPI</span>
                   </label>
-                  <label className="flex items-center gap-2">
-                    <input type="checkbox" checked={config?.geo_use_ipapi ?? false} onChange={(e) => setConfig((p) => p ? { ...p, geo_use_ipapi: e.target.checked } : p)} className="h-4 w-4 rounded border-zinc-600 bg-zinc-900" />
+                  <label className="group flex items-center gap-3 rounded-lg border border-zinc-800 bg-zinc-900/70 px-3 py-2 transition hover:border-zinc-700">
+                    <input
+                      type="checkbox"
+                      checked={config?.geo_use_ipapi ?? false}
+                      onChange={(e) => setConfig((p) => p ? { ...p, geo_use_ipapi: e.target.checked } : p)}
+                      className="h-4 w-4 rounded border-zinc-600 bg-zinc-900 accent-emerald-500"
+                    />
                     <span className="text-xs text-zinc-300">Enviar geo</span>
                   </label>
                   {config?.geo_use_ipapi && (
                     <label className="ml-6 flex items-center gap-2">
-                      <input type="checkbox" checked={config?.geo_fill_only_when_missing ?? false} onChange={(e) => setConfig((p) => p ? { ...p, geo_fill_only_when_missing: e.target.checked } : p)} className="h-4 w-4 rounded border-zinc-600 bg-zinc-900" />
+                      <input type="checkbox" checked={config?.geo_fill_only_when_missing ?? false} onChange={(e) => setConfig((p) => p ? { ...p, geo_fill_only_when_missing: e.target.checked } : p)} className="h-4 w-4 rounded border-zinc-600 bg-zinc-900 accent-emerald-500" />
                       <span className="text-xs text-zinc-300">Solo completar geo faltante (no pisar datos del payload)</span>
                     </label>
                   )}
+                  <div className="mt-3 rounded-lg border border-amber-700/40 bg-amber-950/30 p-3 text-[11px] text-amber-200">
+                    <p className="font-semibold">¡Confirmá que tus eventos estén llegando a Meta!</p>
+                    <p className="mt-1">
+                      Ingresá al Administrador de eventos, seleccioná tu píxel y dirigite a la sección “Probar eventos”.
+                    </p>
+                    <p className="mt-1">
+                      Copiá tu <code className="rounded bg-zinc-900 px-1 py-0.5 text-[10px]">test_event_code</code> y luego probá tu URL con este formato:
+                    </p>
+                    <code className="mt-2 block break-all rounded bg-zinc-950 px-2 py-1 text-[10px] text-emerald-300">
+                      https://landing.panelbotadmin.com/TU_NOMBRE/?test_event_code=TU_CODIGO_TEST
+                    </code>
+                    <p className="mt-2">
+                      Así vas a poder verificar en tiempo real si los eventos se están enviando correctamente a Meta.
+                    </p>
+                  </div>
                 </div>
               </div>
             )}
