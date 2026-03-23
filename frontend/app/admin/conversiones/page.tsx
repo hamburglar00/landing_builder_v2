@@ -114,9 +114,9 @@ function formatIntegerWithThousands(value: number) {
 const ALL_COLUMNS = [
   "phone","email","fn","ln","ct","st","zip","country","fbp","fbc",
   "contact_event_id","contact_event_time","lead_event_id","lead_event_time",
-  "purchase_event_id","purchase_event_time","test_event_code","timestamp","clientIP","agentuser",
+  "purchase_event_id","purchase_event_time","timestamp","clientIP","agentuser",
   "estado","valor","purchase_type","contact_status_capi","lead_status_capi","purchase_status_capi",
-  "observaciones","external_id","utm_campaign","telefono_asignado","promo_code",
+  "observaciones","external_id","test_event_code","utm_campaign","telefono_asignado","promo_code",
   "device_type","geo_city","geo_region","geo_country",
 ] as const;
 
