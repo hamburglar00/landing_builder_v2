@@ -132,8 +132,8 @@ function ContactCard({ c, stage }: { c: FunnelContact; stage: FunnelStage }) {
       {/* Row 2: Name + Email (stacked) */}
       {(name || c.email) && (
         <div className="mt-1 space-y-0.5">
-          {name && <p className="text-[11px] text-zinc-400 truncate leading-none">{name}</p>}
-          {c.email && <p className="text-[11px] text-zinc-500 truncate leading-none">{c.email}</p>}
+          {name && <p className="text-[11px] text-zinc-400 truncate leading-none" title={name}>{name}</p>}
+          {c.email && <p className="text-[11px] text-zinc-500 truncate leading-none" title={c.email}>{c.email}</p>}
         </div>
       )}
 
@@ -159,13 +159,13 @@ function ContactCard({ c, stage }: { c: FunnelContact; stage: FunnelStage }) {
         {c.region && (
           <>
             <span className="text-zinc-800">·</span>
-            <span className="truncate">{c.region}</span>
+            <span className="truncate" title={c.region}>{c.region}</span>
           </>
         )}
         {c.utm_campaign && (
           <>
             <span className="text-zinc-800">·</span>
-            <span className="truncate max-w-[70px]">{c.utm_campaign}</span>
+            <span className="truncate max-w-[70px]" title={c.utm_campaign}>{c.utm_campaign}</span>
           </>
         )}
       </div>
