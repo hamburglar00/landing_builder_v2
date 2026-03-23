@@ -110,7 +110,6 @@ Deno.serve(async (req) => {
       const pixelId = String(cfg.pixel_id ?? "");
       const apiVersion = String(cfg.meta_api_version ?? "v25.0");
       const currency = String(cfg.meta_currency ?? "ARS");
-      const testEventCode = String(cfg.test_event_code ?? "");
 
       if (!accessToken || !pixelId) continue;
 
@@ -182,7 +181,6 @@ Deno.serve(async (req) => {
         send_contact_capi: false,
         geo_use_ipapi: false,
         geo_fill_only_when_missing: false,
-        test_event_code: testEventCode,
       };
 
       const metaReq = await buildMetaRequest(

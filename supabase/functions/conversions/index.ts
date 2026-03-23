@@ -27,7 +27,6 @@ interface ConversionsConfig {
   send_contact_capi: boolean;
   geo_use_ipapi: boolean;
   geo_fill_only_when_missing: boolean;
-  test_event_code: string;
 }
 
 interface LandingRow {
@@ -983,7 +982,6 @@ Deno.serve(async (req) => {
       send_contact_capi: false,
       geo_use_ipapi: false,
       geo_fill_only_when_missing: false,
-      test_event_code: "",
     };
 
     const params: Params = await req.json().catch(() => ({}));

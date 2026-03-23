@@ -10,7 +10,6 @@ export interface ConversionsConfig {
   send_contact_capi: boolean;
   geo_use_ipapi: boolean;
   geo_fill_only_when_missing: boolean;
-  test_event_code: string;
 }
 
 export interface ConversionRow {
@@ -258,7 +257,7 @@ export async function buildMetaRequest(
 
   // deno-lint-ignore no-explicit-any
   const body: Record<string, any> = { data: [eventPayload] };
-  const testCode = overrideTestEventCode ?? config.test_event_code;
+  const testCode = overrideTestEventCode;
   if (testCode) body.test_event_code = testCode;
 
   const apiUrl = `https://graph.facebook.com/${config.meta_api_version}/${config.pixel_id}/events?access_token=${config.meta_access_token}`;

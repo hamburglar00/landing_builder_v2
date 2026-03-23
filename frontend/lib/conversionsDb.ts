@@ -16,7 +16,6 @@ export interface ConversionsConfig {
   send_contact_capi: boolean;
   geo_use_ipapi: boolean;
   geo_fill_only_when_missing: boolean;
-  test_event_code: string;
   funnel_premium_threshold: number;
   visible_columns?: string[] | null;
 }
@@ -130,7 +129,6 @@ const DEFAULT_CONFIG: ConversionsConfig = {
   send_contact_capi: false,
   geo_use_ipapi: false,
   geo_fill_only_when_missing: false,
-  test_event_code: "",
   funnel_premium_threshold: 50000,
   visible_columns: [],
 };
@@ -167,9 +165,6 @@ export async function upsertConversionsConfig(
         send_contact_capi: config.send_contact_capi,
         geo_use_ipapi: config.geo_use_ipapi,
         geo_fill_only_when_missing: config.geo_fill_only_when_missing,
-        // Se fuerza vacío: el test_event_code se manejará solo en pruebas puntuales (URL/tests),
-        // nunca como configuración persistente para evitar contaminación de producción.
-        test_event_code: "",
         funnel_premium_threshold: config.funnel_premium_threshold,
         visible_columns: config.visible_columns ?? [],
         updated_at: new Date().toISOString(),
