@@ -2,12 +2,10 @@ import { createClient, type SupabaseClient } from "https://esm.sh/@supabase/supa
 import {
   buildFakeConversionRow,
   buildMetaRequest,
-  pickRandomConversionRow,
   type ConversionRow,
   type ConversionsConfig,
   type MetaEventName,
   generateEventId,
-  toValidEventTime,
   hasPreviousSuccessfulPurchases,
 } from "../conversions/shared.ts";
 
@@ -28,15 +26,29 @@ interface TestRequestBody {
   test_event_code: string;
 }
 
-async function loadAnyConfig(db: SupabaseClient): Promise<ConversionsConfig | null> {
+async function loadConfigByUserId(db: SupabaseClient, userId: string): Promise<ConversionsConfig | null> {
   const { data, error } = await db
     .from("conversions_config")
     .select("*")
+    .eq("user_id", userId)
+    .maybeSingle();
+  if (error || !data) return null;
+  return data as unknown as ConversionsConfig;
+}
+
+async function pickRandomConversionRowByUser(
+  db: SupabaseClient,
+  userId: string,
+): Promise<ConversionRow | null> {
+  const { data, error } = await db
+    .from("conversions")
+    .select("*")
+    .eq("user_id", userId)
     .order("created_at", { ascending: false })
-    .limit(1);
+    .limit(50);
   if (error || !data || data.length === 0) return null;
-  // deno-lint-ignore no-explicit-any
-  return data[0] as any as ConversionsConfig;
+  const idx = Math.floor(Math.random() * data.length);
+  return data[idx] as unknown as ConversionRow;
 }
 
 function deriveEventIdentity(row: ConversionRow, event: MetaEventName): { id: string; time: number } {
@@ -51,7 +63,6 @@ function deriveEventIdentity(row: ConversionRow, event: MetaEventName): { id: st
     const time = row.lead_event_time ?? nowSec;
     return { id, time };
   }
-  // Purchase
   const id = row.purchase_event_id || generateEventId();
   const time = row.purchase_event_time ?? nowSec;
   return { id, time };
@@ -71,6 +82,18 @@ Deno.serve(async (req) => {
   const supabaseKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") ?? "";
   const db = createClient(supabaseUrl, supabaseKey, { auth: { persistSession: false } });
 
+  const authHeader = req.headers.get("authorization") ?? req.headers.get("Authorization") ?? "";
+  const token = authHeader.replace(/^Bearer\s+/i, "").trim();
+  if (!token) {
+    return jsonResponse({ error: "Missing authorization header" }, 401);
+  }
+
+  const { data: userData, error: userErr } = await db.auth.getUser(token);
+  const userId = userData.user?.id ?? "";
+  if (userErr || !userId) {
+    return jsonResponse({ error: "Invalid JWT" }, 401);
+  }
+
   let body: TestRequestBody;
   try {
     body = (await req.json()) as TestRequestBody;
@@ -87,15 +110,16 @@ Deno.serve(async (req) => {
     return jsonResponse({ error: "test_event_code is required" }, 400);
   }
 
-  const config = await loadAnyConfig(db);
+  const config = await loadConfigByUserId(db, userId);
   if (!config || !config.pixel_id || !config.meta_access_token) {
-    return jsonResponse({ error: "No hay configuración válida de Meta CAPI (conversions_config)" }, 400);
+    return jsonResponse({ error: "No hay configuracion valida de Meta CAPI (conversions_config)" }, 400);
   }
 
-  let row: ConversionRow | null = await pickRandomConversionRow(db);
+  let row: ConversionRow | null = await pickRandomConversionRowByUser(db, userId);
   let usedFake = false;
   if (!row) {
     row = buildFakeConversionRow(event);
+    row.user_id = userId;
     usedFake = true;
   }
 
@@ -132,6 +156,7 @@ Deno.serve(async (req) => {
   }
 
   const debug = {
+    userId,
     event,
     sampleRowSource: usedFake ? "fake" : "real",
     sampleRowPreview: {
@@ -166,9 +191,7 @@ Deno.serve(async (req) => {
       : null,
   };
 
-  // También logueamos en el entorno de la función para inspección en Supabase.
   console.log("[conversions-test] Debug:", debug);
 
   return jsonResponse(debug, ok ? 200 : 500);
 });
-
