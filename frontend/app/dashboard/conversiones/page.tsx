@@ -438,11 +438,6 @@ export default function DashboardConversionesPage() {
                     {["ARS","USD","EUR","BRL","CLP","MXN","COP"].map((c) => <option key={c} value={c}>{c}</option>)}
                   </select>
                 </div>
-                <div>
-                  <label className="block text-xs font-medium text-zinc-400 mb-1">Test Event Code <span className="font-normal text-zinc-500">(opcional)</span></label>
-                  <input type="text" value={config?.test_event_code ?? ""} onChange={(e) => setConfig((p) => p ? { ...p, test_event_code: e.target.value } : p)} className="w-full rounded-lg border border-zinc-700 bg-zinc-900 px-3 py-2 text-sm text-zinc-100" placeholder="TEST12345" />
-                  <p className="mt-1 text-[11px] text-zinc-500">Si tiene valor, los eventos se envían en modo test. Dejalo vacío para producción.</p>
-                </div>
                 <div className="space-y-3 border-t border-zinc-800 pt-4">
                   <label className="flex items-center gap-2">
                     <input type="checkbox" checked={config?.send_contact_capi ?? false} onChange={(e) => setConfig((p) => p ? { ...p, send_contact_capi: e.target.checked } : p)} className="h-4 w-4 rounded border-zinc-600 bg-zinc-900" />

@@ -200,11 +200,17 @@ export default function AdminTestsPage() {
     };
     addLog("info", "CAPI test: enviando payload a conversions-test", { url, payload });
     try {
-      const [{ data: sessionData }, anonKey] = await Promise.all([
-        supabase.auth.getSession(),
-        Promise.resolve(process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY ?? ""),
-      ]);
+      const anonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY ?? "";
+      // Forzar refresh para evitar JWT vencido/invalidado en sesión vieja.
+      await supabase.auth.refreshSession();
+      const { data: sessionData } = await supabase.auth.getSession();
       const accessToken = sessionData.session?.access_token ?? "";
+      if (!accessToken) {
+        const msg = "No hay sesión válida. Cerrá sesión y volvé a ingresar.";
+        addLog("error", msg);
+        setError(msg);
+        return;
+      }
       const res = await fetch(url, {
         method: "POST",
         headers: {
