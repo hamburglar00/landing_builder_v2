@@ -303,6 +303,7 @@ async function sendToMetaCAPI(
 
   const sharedRow = row as unknown as SharedConversionRow;
   const sharedConfig = config as unknown as SharedConversionsConfig;
+  const effectiveTestEventCode = overrideTestEventCode || norm(row.test_event_code);
   const { apiUrl, body } = await buildMetaRequest(
     sharedConfig,
     sharedRow,
@@ -310,7 +311,7 @@ async function sendToMetaCAPI(
     eventId,
     eventTime,
     customData as Record<string, unknown> | undefined,
-    overrideTestEventCode,
+    effectiveTestEventCode || undefined,
   );
 
   const statusField =
