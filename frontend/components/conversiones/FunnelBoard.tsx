@@ -165,14 +165,7 @@ function ContactCard({ c, stage }: { c: FunnelContact; stage: FunnelStage }) {
             <span className="text-zinc-800">·</span>
             <span className="truncate" title={c.region}>{c.region}</span>
           </>
-        )}
-        {c.utm_campaign && (
-          <>
-            <span className="text-zinc-800">·</span>
-            <span className="truncate max-w-[70px]" title={c.utm_campaign}>{c.utm_campaign}</span>
-          </>
-        )}
-      </div>
+        )}`r`n      </div>
     </div>
   );
 }
@@ -352,3 +345,4 @@ export default function FunnelBoard({
     </div>
   );
 }
+
