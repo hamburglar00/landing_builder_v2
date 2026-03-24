@@ -17,6 +17,10 @@ const STAGE_META: Record<FunnelStage, {
   accent: string;
   accentSoft: string;
   amountColor: string;
+  chipClass: string;
+  cardGlow: string;
+  cardBorder: string;
+  cardRing: string;
   dot: string;
   headerGlow: string;
   columnBorder: string;
@@ -26,6 +30,10 @@ const STAGE_META: Record<FunnelStage, {
     accent: "text-emerald-400",
     accentSoft: "text-emerald-400/60",
     amountColor: "text-emerald-400",
+    chipClass: "border-emerald-500/30 bg-emerald-500/10 text-emerald-300",
+    cardGlow: "from-emerald-500/12 via-emerald-500/3 to-transparent",
+    cardBorder: "border-emerald-900/35",
+    cardRing: "hover:ring-emerald-500/20",
     dot: "bg-emerald-400",
     headerGlow: "from-emerald-500/5 to-transparent",
     columnBorder: "border-emerald-900/30",
@@ -35,6 +43,10 @@ const STAGE_META: Record<FunnelStage, {
     accent: "text-sky-300",
     accentSoft: "text-sky-400/60",
     amountColor: "text-sky-300/80",
+    chipClass: "border-sky-500/30 bg-sky-500/10 text-sky-300",
+    cardGlow: "from-sky-500/12 via-sky-500/3 to-transparent",
+    cardBorder: "border-sky-900/35",
+    cardRing: "hover:ring-sky-500/20",
     dot: "bg-sky-400",
     headerGlow: "from-sky-500/5 to-transparent",
     columnBorder: "border-sky-900/30",
@@ -44,6 +56,10 @@ const STAGE_META: Record<FunnelStage, {
     accent: "text-violet-400",
     accentSoft: "text-violet-400/60",
     amountColor: "text-violet-400",
+    chipClass: "border-violet-500/30 bg-violet-500/10 text-violet-300",
+    cardGlow: "from-violet-500/12 via-violet-500/3 to-transparent",
+    cardBorder: "border-violet-900/35",
+    cardRing: "hover:ring-violet-500/20",
     dot: "bg-violet-400",
     headerGlow: "from-violet-500/5 to-transparent",
     columnBorder: "border-violet-900/30",
@@ -53,6 +69,10 @@ const STAGE_META: Record<FunnelStage, {
     accent: "text-amber-400",
     accentSoft: "text-amber-400/60",
     amountColor: "text-amber-300",
+    chipClass: "border-amber-500/30 bg-amber-500/10 text-amber-300",
+    cardGlow: "from-amber-500/14 via-amber-500/4 to-transparent",
+    cardBorder: "border-amber-900/40",
+    cardRing: "hover:ring-amber-500/20",
     dot: "bg-amber-400",
     headerGlow: "from-amber-500/6 to-transparent",
     columnBorder: "border-amber-800/30",
@@ -86,7 +106,7 @@ function relDate(iso: string): string {
   return `${Math.floor(days / 30)}mes`;
 }
 
-/* ── Icons ── */
+/* â”€â”€ Icons â”€â”€ */
 function SearchIcon({ className }: { className?: string }) {
   return (
     <svg viewBox="0 0 20 20" fill="currentColor" className={className}>
@@ -104,79 +124,117 @@ function WaIcon({ className }: { className?: string }) {
   );
 }
 
-/* ═══════════════════════════════════════════════════════════════════════════
+/* â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
    CONTACT CARD
-   ═══════════════════════════════════════════════════════════════════════════ */
+   â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â• */
+function StatusBadge({
+  label,
+  className,
+}: {
+  label: string;
+  className: string;
+}) {
+  return (
+    <span
+      className={`inline-flex items-center rounded-full border px-2.5 py-1 text-[10px] font-semibold tracking-wide ${className}`}
+      title={label}
+    >
+      {label}
+    </span>
+  );
+}
+
 function ContactCard({ c, stage }: { c: FunnelContact; stage: FunnelStage }) {
   const meta = STAGE_META[stage];
   const name = [c.fn, c.ln].filter(Boolean).join(" ");
+  const hasPurchases = c.purchase_count > 0;
+  const statusLabel = hasPurchases
+    ? `${c.purchase_count} carga${c.purchase_count !== 1 ? "s" : ""}`
+    : "Sin cargas";
+  const stageBadgeLabel =
+    stage === "premium"
+      ? "Premium"
+      : stage === "recurrente"
+        ? "Recargo"
+        : stage === "primera_carga"
+          ? "Primera carga"
+          : "Lead";
 
   return (
-    <div className="group rounded-[10px] border border-zinc-800/60 bg-zinc-900/70 px-3 py-2.5 transition-all duration-150 hover:border-zinc-700/70 hover:bg-zinc-800/50">
-      {/* Row 1: Phone ← → WA */}
-      <div className="flex items-center justify-between gap-2">
-        <p className="text-[14px] font-bold text-zinc-50 font-mono tracking-tight leading-none">
-          {c.phone}
-        </p>
+    <div
+      className={`group relative overflow-hidden rounded-xl border ${meta.cardBorder} bg-zinc-900/90 px-4 py-3.5 shadow-[0_10px_30px_rgba(0,0,0,0.3)] ring-1 ring-white/5 transition-all duration-200 hover:-translate-y-0.5 hover:border-zinc-600/80 hover:shadow-[0_16px_38px_rgba(0,0,0,0.4)] ${meta.cardRing}`}
+    >
+      <div className={`pointer-events-none absolute inset-0 bg-gradient-to-br ${meta.cardGlow}`} />
+      <div className="pointer-events-none absolute inset-x-0 top-0 h-[1px] bg-white/10" />
+      <div className={`pointer-events-none absolute inset-y-0 left-0 w-[3px] ${meta.dot} opacity-80`} />
+
+      <div className="relative z-10 flex items-start justify-between gap-3">
+        <div className="min-w-0 space-y-1.5">
+          <p
+            className="truncate text-[16px] font-extrabold text-zinc-50 font-mono tracking-tight leading-none"
+            title={c.phone}
+          >
+            {c.phone}
+          </p>
+          <div className="flex flex-wrap items-center gap-1.5">
+            <StatusBadge label={stageBadgeLabel} className={meta.chipClass} />
+            <StatusBadge label={statusLabel} className="border-zinc-700/70 bg-zinc-800/70 text-zinc-200" />
+          </div>
+        </div>
         <a
           href={waLink(c.phone)}
           target="_blank"
           rel="noopener noreferrer"
-          className="flex-shrink-0 rounded-md p-1 text-zinc-700 transition-colors group-hover:text-zinc-500 hover:!text-emerald-400 hover:!bg-emerald-950/40"
-          title="WhatsApp"
+          className="inline-flex h-8 w-8 flex-shrink-0 items-center justify-center rounded-full border border-zinc-700/80 bg-zinc-900/95 text-zinc-400 shadow-[inset_0_1px_0_rgba(255,255,255,0.08)] transition-all duration-200 hover:border-emerald-500/50 hover:bg-emerald-950/35 hover:text-emerald-300 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-500/40"
+          title="Abrir WhatsApp"
+          aria-label={`Abrir WhatsApp para ${c.phone}`}
         >
           <WaIcon className="h-3.5 w-3.5" />
         </a>
       </div>
 
-      {/* Row 2: Name + Email (stacked) */}
       {(name || c.email) && (
-        <div className="mt-1 space-y-0.5">
-          {name && <p className="text-[11px] text-zinc-400 truncate leading-none" title={name}>{name}</p>}
-          {c.email && <p className="text-[11px] text-zinc-500 truncate leading-none" title={c.email}>{c.email}</p>}
+        <div className="relative z-10 mt-3 space-y-1 border-t border-zinc-800/70 pt-2.5">
+          {name && (
+            <p className="truncate text-[11px] font-medium text-zinc-300/85 leading-none" title={name}>
+              {name}
+            </p>
+          )}
+          {c.email && (
+            <p className="text-[11px] text-zinc-500 truncate leading-none" title={c.email}>
+              {c.email}
+            </p>
+          )}
         </div>
       )}
 
-      {/* Row 3: Amount + Purchases */}
-      {c.purchase_count > 0 ? (
-        <div className="mt-2 flex items-baseline gap-2">
-          <span className={`text-[16px] font-extrabold tracking-tight leading-none ${meta.amountColor}`}>
-            {fmtCurrency(c.total_valor)}
-          </span>
-          <span className="text-[10px] text-zinc-600 leading-none">
-            {c.purchase_count} carga{c.purchase_count !== 1 ? "s" : ""}
-          </span>
-        </div>
-      ) : (
-        <div className="mt-2">
-          <span className="text-[10px] text-zinc-700 leading-none">Sin cargas</span>
+      {hasPurchases && (
+        <div className="relative z-10 mt-3 border-t border-zinc-800/70 pt-2.5">
+          <div className="flex items-end justify-between gap-2">
+            <span className={`text-[28px] font-black tracking-tight leading-none tabular-nums ${meta.amountColor}`}>
+              {fmtCurrency(c.total_valor)}
+            </span>
+            <span className="text-[10px] font-medium text-zinc-500">
+              {c.purchase_count} carga{c.purchase_count !== 1 ? "s" : ""}
+            </span>
+          </div>
         </div>
       )}
 
-      {/* Row 4: Footer metadata */}
-      <div className="mt-1.5 flex items-center gap-1.5 text-[10px] text-zinc-700 leading-none">
-        <span
-          title="Tiempo desde la última actividad del contacto (último cambio de estado registrado)."
-        >
+      <div className="relative z-10 mt-3 flex items-center gap-1.5 border-t border-zinc-800/70 pt-2.5 text-[10px] text-zinc-600 leading-none">
+        <span title="Tiempo desde la ultima actividad del contacto (ultimo cambio de estado registrado).">
           {relDate(c.last_activity)}
         </span>
         {c.region && (
           <>
             <span className="text-zinc-800">·</span>
-            <span className="truncate" title={c.region}>{c.region}</span>
+            <span className="truncate text-zinc-500" title={c.region}>{c.region}</span>
           </>
         )}
       </div>
     </div>
   );
 }
-
-/* ═══════════════════════════════════════════════════════════════════════════
-   KPI BLOCK — Summary bar metric
-   ═══════════════════════════════════════════════════════════════════════════ */
-/* ═══════════════════════════════════════════════════════════════════════════
-   FUNNEL BOARD
-   ═══════════════════════════════════════════════════════════════════════════ */
 export default function FunnelBoard({
   contacts,
   premiumThreshold,
@@ -250,7 +308,7 @@ export default function FunnelBoard({
   return (
     <div className="space-y-4">
 
-      {/* ── COMMAND BAR: Search + KPIs ── */}
+      {/* â”€â”€ COMMAND BAR: Search + KPIs â”€â”€ */}
       <div className="rounded-2xl border border-zinc-800/40 bg-[#0d0d11]">
 
         {/* Search row */}
@@ -261,7 +319,7 @@ export default function FunnelBoard({
               type="text"
               value={search}
               onChange={(e) => setSearch(e.target.value)}
-              placeholder="Buscar por teléfono, nombre o email..."
+              placeholder="Buscar por telÃ©fono, nombre o email..."
               className="h-10 w-full rounded-xl border border-zinc-800/50 bg-zinc-900/60 pl-10 pr-4 text-sm text-zinc-200 placeholder:text-zinc-600 outline-none transition-all focus:border-zinc-700 focus:bg-zinc-900/90 focus:ring-1 focus:ring-zinc-700/50"
             />
             <span className="absolute right-3.5 top-1/2 -translate-y-1/2 text-[11px] text-zinc-600 tabular-nums">
@@ -273,7 +331,7 @@ export default function FunnelBoard({
         {/* KPI strip removido para evitar redundancia con columnas del funnel */}
       </div>
 
-      {/* ── SORT CONTROLS ── */}
+      {/* â”€â”€ SORT CONTROLS â”€â”€ */}
       <div className="flex items-center justify-end gap-2">
         <span className="text-[11px] text-zinc-600 font-medium">Ordenar</span>
         <div className="flex items-center rounded-lg border border-zinc-800/40 bg-[#0d0d11] p-0.5">
@@ -300,7 +358,7 @@ export default function FunnelBoard({
         </div>
       </div>
 
-      {/* ── KANBAN COLUMNS ── */}
+      {/* â”€â”€ KANBAN COLUMNS â”€â”€ */}
       <div className="grid grid-cols-1 gap-3 md:grid-cols-2 xl:grid-cols-4">
         {STAGES.map((stage) => {
           const meta = STAGE_META[stage];
@@ -346,6 +404,8 @@ export default function FunnelBoard({
     </div>
   );
 }
+
+
 
 
 
