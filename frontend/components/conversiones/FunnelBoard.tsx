@@ -30,10 +30,10 @@ const STAGE_META: Record<FunnelStage, {
     accent: "text-emerald-400",
     accentSoft: "text-emerald-400/60",
     amountColor: "text-emerald-400",
-    chipClass: "border-emerald-500/30 bg-emerald-500/10 text-emerald-300",
-    cardGlow: "from-emerald-500/12 via-emerald-500/3 to-transparent",
-    cardBorder: "border-emerald-900/35",
-    cardRing: "hover:ring-emerald-500/20",
+    chipClass: "border-emerald-500/20 bg-emerald-500/7 text-emerald-300/90",
+    cardGlow: "from-emerald-500/8 via-emerald-500/2 to-transparent",
+    cardBorder: "border-emerald-900/25",
+    cardRing: "hover:ring-emerald-500/12",
     dot: "bg-emerald-400",
     headerGlow: "from-emerald-500/5 to-transparent",
     columnBorder: "border-emerald-900/30",
@@ -43,10 +43,10 @@ const STAGE_META: Record<FunnelStage, {
     accent: "text-sky-300",
     accentSoft: "text-sky-400/60",
     amountColor: "text-sky-300/80",
-    chipClass: "border-sky-500/30 bg-sky-500/10 text-sky-300",
-    cardGlow: "from-sky-500/12 via-sky-500/3 to-transparent",
-    cardBorder: "border-sky-900/35",
-    cardRing: "hover:ring-sky-500/20",
+    chipClass: "border-sky-500/20 bg-sky-500/7 text-sky-300/90",
+    cardGlow: "from-sky-500/8 via-sky-500/2 to-transparent",
+    cardBorder: "border-sky-900/25",
+    cardRing: "hover:ring-sky-500/12",
     dot: "bg-sky-400",
     headerGlow: "from-sky-500/5 to-transparent",
     columnBorder: "border-sky-900/30",
@@ -56,10 +56,10 @@ const STAGE_META: Record<FunnelStage, {
     accent: "text-violet-400",
     accentSoft: "text-violet-400/60",
     amountColor: "text-violet-400",
-    chipClass: "border-violet-500/30 bg-violet-500/10 text-violet-300",
-    cardGlow: "from-violet-500/12 via-violet-500/3 to-transparent",
-    cardBorder: "border-violet-900/35",
-    cardRing: "hover:ring-violet-500/20",
+    chipClass: "border-violet-500/20 bg-violet-500/7 text-violet-300/90",
+    cardGlow: "from-violet-500/8 via-violet-500/2 to-transparent",
+    cardBorder: "border-violet-900/25",
+    cardRing: "hover:ring-violet-500/12",
     dot: "bg-violet-400",
     headerGlow: "from-violet-500/5 to-transparent",
     columnBorder: "border-violet-900/30",
@@ -69,10 +69,10 @@ const STAGE_META: Record<FunnelStage, {
     accent: "text-amber-400",
     accentSoft: "text-amber-400/60",
     amountColor: "text-amber-300",
-    chipClass: "border-amber-500/30 bg-amber-500/10 text-amber-300",
-    cardGlow: "from-amber-500/14 via-amber-500/4 to-transparent",
-    cardBorder: "border-amber-900/40",
-    cardRing: "hover:ring-amber-500/20",
+    chipClass: "border-amber-500/20 bg-amber-500/8 text-amber-300/90",
+    cardGlow: "from-amber-500/10 via-amber-500/2 to-transparent",
+    cardBorder: "border-amber-900/28",
+    cardRing: "hover:ring-amber-500/12",
     dot: "bg-amber-400",
     headerGlow: "from-amber-500/6 to-transparent",
     columnBorder: "border-amber-800/30",
@@ -106,7 +106,7 @@ function relDate(iso: string): string {
   return `${Math.floor(days / 30)}mes`;
 }
 
-/* â”€â”€ Icons â”€â”€ */
+/* Ã¢â€â‚¬Ã¢â€â‚¬ Icons Ã¢â€â‚¬Ã¢â€â‚¬ */
 function SearchIcon({ className }: { className?: string }) {
   return (
     <svg viewBox="0 0 20 20" fill="currentColor" className={className}>
@@ -124,9 +124,9 @@ function WaIcon({ className }: { className?: string }) {
   );
 }
 
-/* â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
+/* Ã¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢Â
    CONTACT CARD
-   â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â• */
+   Ã¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢Â */
 function StatusBadge({
   label,
   className,
@@ -162,11 +162,11 @@ function ContactCard({ c, stage }: { c: FunnelContact; stage: FunnelStage }) {
 
   return (
     <div
-      className={`group relative overflow-hidden rounded-xl border ${meta.cardBorder} bg-zinc-900/90 px-4 py-3.5 shadow-[0_10px_30px_rgba(0,0,0,0.3)] ring-1 ring-white/5 transition-all duration-200 hover:-translate-y-0.5 hover:border-zinc-600/80 hover:shadow-[0_16px_38px_rgba(0,0,0,0.4)] ${meta.cardRing}`}
+      className={`group relative overflow-hidden rounded-xl border ${meta.cardBorder} bg-zinc-900/88 px-4 py-4 shadow-[0_8px_24px_rgba(0,0,0,0.28)] ring-1 ring-white/5 transition-all duration-200 hover:-translate-y-0.5 hover:border-zinc-700/70 hover:shadow-[0_12px_30px_rgba(0,0,0,0.32)] ${meta.cardRing}`}
     >
       <div className={`pointer-events-none absolute inset-0 bg-gradient-to-br ${meta.cardGlow}`} />
-      <div className="pointer-events-none absolute inset-x-0 top-0 h-[1px] bg-white/10" />
-      <div className={`pointer-events-none absolute inset-y-0 left-0 w-[3px] ${meta.dot} opacity-80`} />
+      <div className="pointer-events-none absolute inset-x-0 top-0 h-[1px] bg-white/7" />
+      <div className={`pointer-events-none absolute inset-y-0 left-0 w-[2px] ${meta.dot} opacity-55`} />
 
       <div className="relative z-10 flex items-start justify-between gap-3">
         <div className="min-w-0 space-y-1.5">
@@ -177,15 +177,19 @@ function ContactCard({ c, stage }: { c: FunnelContact; stage: FunnelStage }) {
             {c.phone}
           </p>
           <div className="flex flex-wrap items-center gap-1.5">
-            <StatusBadge label={stageBadgeLabel} className={meta.chipClass} />
-            <StatusBadge label={statusLabel} className="border-zinc-700/70 bg-zinc-800/70 text-zinc-200" />
+            {(stage === "recurrente" || stage === "premium") && (
+              <StatusBadge label={stageBadgeLabel} className={meta.chipClass} />
+            )}
+            {!hasPurchases && (
+              <StatusBadge label={statusLabel} className="border-zinc-700/70 bg-zinc-800/70 text-zinc-200" />
+            )}
           </div>
         </div>
         <a
           href={waLink(c.phone)}
           target="_blank"
           rel="noopener noreferrer"
-          className="inline-flex h-8 w-8 flex-shrink-0 items-center justify-center rounded-full border border-zinc-700/80 bg-zinc-900/95 text-zinc-400 shadow-[inset_0_1px_0_rgba(255,255,255,0.08)] transition-all duration-200 hover:border-emerald-500/50 hover:bg-emerald-950/35 hover:text-emerald-300 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-500/40"
+          className="inline-flex h-8 w-8 flex-shrink-0 items-center justify-center rounded-full border border-zinc-700/60 bg-zinc-900/80 text-zinc-500 shadow-[inset_0_1px_0_rgba(255,255,255,0.04)] transition-all duration-200 hover:border-zinc-500/70 hover:bg-zinc-800/70 hover:text-emerald-300 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-zinc-500/35"
           title="Abrir WhatsApp"
           aria-label={`Abrir WhatsApp para ${c.phone}`}
         >
@@ -194,7 +198,7 @@ function ContactCard({ c, stage }: { c: FunnelContact; stage: FunnelStage }) {
       </div>
 
       {(name || c.email) && (
-        <div className="relative z-10 mt-3 space-y-1 border-t border-zinc-800/70 pt-2.5">
+        <div className="relative z-10 mt-3.5 space-y-1 border-t border-zinc-800/35 pt-3">
           {name && (
             <p className="truncate text-[11px] font-medium text-zinc-300/85 leading-none" title={name}>
               {name}
@@ -209,26 +213,29 @@ function ContactCard({ c, stage }: { c: FunnelContact; stage: FunnelStage }) {
       )}
 
       {hasPurchases && (
-        <div className="relative z-10 mt-3 border-t border-zinc-800/70 pt-2.5">
-          <div className="flex items-end justify-between gap-2">
+        <div className="relative z-10 mt-3.5 border-t border-zinc-800/35 pt-3">
+          <div className="flex items-baseline justify-between gap-2">
             <span className={`text-[28px] font-black tracking-tight leading-none tabular-nums ${meta.amountColor}`}>
               {fmtCurrency(c.total_valor)}
             </span>
-            <span className="text-[10px] font-medium text-zinc-500">
+            <span className="text-[10px] font-medium text-zinc-500/80">
               {c.purchase_count} carga{c.purchase_count !== 1 ? "s" : ""}
             </span>
           </div>
         </div>
       )}
 
-      <div className="relative z-10 mt-3 flex items-center gap-1.5 border-t border-zinc-800/70 pt-2.5 text-[10px] text-zinc-600 leading-none">
-        <span title="Tiempo desde la ultima actividad del contacto (ultimo cambio de estado registrado).">
+      <div className="relative z-10 mt-3.5 flex items-center gap-1.5 border-t border-zinc-800/30 pt-3 text-[10px] leading-none">
+        <span
+          className="text-zinc-400/95 font-medium"
+          title="Tiempo desde la ultima actividad del contacto (ultimo cambio de estado registrado)."
+        >
           {relDate(c.last_activity)}
         </span>
         {c.region && (
           <>
-            <span className="text-zinc-800">·</span>
-            <span className="truncate text-zinc-500" title={c.region}>{c.region}</span>
+            <span className="text-zinc-700">·</span>
+            <span className="truncate text-zinc-600" title={c.region}>{c.region}</span>
           </>
         )}
       </div>
@@ -308,7 +315,7 @@ export default function FunnelBoard({
   return (
     <div className="space-y-4">
 
-      {/* â”€â”€ COMMAND BAR: Search + KPIs â”€â”€ */}
+      {/* Ã¢â€â‚¬Ã¢â€â‚¬ COMMAND BAR: Search + KPIs Ã¢â€â‚¬Ã¢â€â‚¬ */}
       <div className="rounded-2xl border border-zinc-800/40 bg-[#0d0d11]">
 
         {/* Search row */}
@@ -319,7 +326,7 @@ export default function FunnelBoard({
               type="text"
               value={search}
               onChange={(e) => setSearch(e.target.value)}
-              placeholder="Buscar por telÃ©fono, nombre o email..."
+              placeholder="Buscar por telÃƒÂ©fono, nombre o email..."
               className="h-10 w-full rounded-xl border border-zinc-800/50 bg-zinc-900/60 pl-10 pr-4 text-sm text-zinc-200 placeholder:text-zinc-600 outline-none transition-all focus:border-zinc-700 focus:bg-zinc-900/90 focus:ring-1 focus:ring-zinc-700/50"
             />
             <span className="absolute right-3.5 top-1/2 -translate-y-1/2 text-[11px] text-zinc-600 tabular-nums">
@@ -331,7 +338,7 @@ export default function FunnelBoard({
         {/* KPI strip removido para evitar redundancia con columnas del funnel */}
       </div>
 
-      {/* â”€â”€ SORT CONTROLS â”€â”€ */}
+      {/* Ã¢â€â‚¬Ã¢â€â‚¬ SORT CONTROLS Ã¢â€â‚¬Ã¢â€â‚¬ */}
       <div className="flex items-center justify-end gap-2">
         <span className="text-[11px] text-zinc-600 font-medium">Ordenar</span>
         <div className="flex items-center rounded-lg border border-zinc-800/40 bg-[#0d0d11] p-0.5">
@@ -358,7 +365,7 @@ export default function FunnelBoard({
         </div>
       </div>
 
-      {/* â”€â”€ KANBAN COLUMNS â”€â”€ */}
+      {/* Ã¢â€â‚¬Ã¢â€â‚¬ KANBAN COLUMNS Ã¢â€â‚¬Ã¢â€â‚¬ */}
       <div className="grid grid-cols-1 gap-3 md:grid-cols-2 xl:grid-cols-4">
         {STAGES.map((stage) => {
           const meta = STAGE_META[stage];
@@ -368,7 +375,7 @@ export default function FunnelBoard({
           return (
             <div key={stage} className={`flex flex-col rounded-2xl border ${meta.columnBorder} bg-[#0d0d11] overflow-hidden`}>
               {/* Column Header */}
-              <div className={`bg-gradient-to-b ${meta.headerGlow} px-4 pt-3.5 pb-3 border-b border-zinc-800/30`}>
+              <div className={`sticky top-0 z-10 bg-[#0d0d11]/95 backdrop-blur-[2px] bg-gradient-to-b ${meta.headerGlow} px-4 pt-3.5 pb-3 border-b border-zinc-800/30`}>
                 <div className="flex items-center justify-between">
                   <div className="flex items-center gap-2">
                     <span className={`h-2 w-2 rounded-full ${meta.dot}`} />
@@ -388,7 +395,7 @@ export default function FunnelBoard({
               </div>
 
               {/* Cards */}
-              <div className="flex-1 overflow-y-auto p-2 space-y-1.5 max-h-[66vh]">
+              <div className="flex-1 p-2 space-y-1.5">
                 {list.length === 0 ? (
                   <div className="flex items-center justify-center py-12">
                     <p className="text-[11px] text-zinc-800">Sin contactos</p>
