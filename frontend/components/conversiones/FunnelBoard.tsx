@@ -151,39 +151,23 @@ function ContactCard({ c, stage }: { c: FunnelContact; stage: FunnelStage }) {
   const statusLabel = hasPurchases
     ? `${c.purchase_count} carga${c.purchase_count !== 1 ? "s" : ""}`
     : "Sin cargas";
-  const stageBadgeLabel =
-    stage === "premium"
-      ? "Premium"
-      : stage === "recurrente"
-        ? "Recargo"
-        : stage === "primera_carga"
-          ? "Primera carga"
-          : "Lead";
 
   return (
     <div
-      className={`group relative overflow-hidden rounded-xl border ${meta.cardBorder} bg-zinc-900/88 px-4 py-4 shadow-[0_8px_24px_rgba(0,0,0,0.28)] ring-1 ring-white/5 transition-all duration-200 hover:-translate-y-0.5 hover:border-zinc-700/70 hover:shadow-[0_12px_30px_rgba(0,0,0,0.32)] ${meta.cardRing}`}
+      className={`group relative overflow-hidden rounded-xl border ${meta.cardBorder} bg-zinc-900/88 px-4 py-3.2 shadow-[0_8px_24px_rgba(0,0,0,0.28)] ring-1 ring-white/5 transition-all duration-200 hover:-translate-y-0.5 hover:border-zinc-700/70 hover:shadow-[0_12px_30px_rgba(0,0,0,0.32)] ${meta.cardRing}`}
     >
       <div className={`pointer-events-none absolute inset-0 bg-gradient-to-br ${meta.cardGlow}`} />
       <div className="pointer-events-none absolute inset-x-0 top-0 h-[1px] bg-white/7" />
       <div className={`pointer-events-none absolute inset-y-0 left-0 w-[2px] ${meta.dot} opacity-55`} />
 
       <div className="relative z-10 flex items-start justify-between gap-3">
-        <div className="min-w-0 space-y-1.5">
+        <div className="min-w-0">
           <p
             className="truncate text-[16px] font-extrabold text-zinc-50 font-mono tracking-tight leading-none"
             title={c.phone}
           >
             {c.phone}
           </p>
-          <div className="flex flex-wrap items-center gap-1.5">
-            {(stage === "recurrente" || stage === "premium") && (
-              <StatusBadge label={stageBadgeLabel} className={meta.chipClass} />
-            )}
-            {!hasPurchases && (
-              <StatusBadge label={statusLabel} className="border-zinc-700/70 bg-zinc-800/70 text-zinc-200" />
-            )}
-          </div>
         </div>
         <a
           href={waLink(c.phone)}
@@ -198,7 +182,7 @@ function ContactCard({ c, stage }: { c: FunnelContact; stage: FunnelStage }) {
       </div>
 
       {(name || c.email) && (
-        <div className="relative z-10 mt-3.5 space-y-1 border-t border-zinc-800/35 pt-3">
+        <div className="relative z-10 mt-2.5 space-y-1 border-t border-zinc-800/35 pt-2">
           {name && (
             <p className="truncate text-[11px] font-medium text-zinc-300/85 leading-none" title={name}>
               {name}
@@ -213,9 +197,9 @@ function ContactCard({ c, stage }: { c: FunnelContact; stage: FunnelStage }) {
       )}
 
       {hasPurchases && (
-        <div className="relative z-10 mt-3.5 border-t border-zinc-800/35 pt-3">
+        <div className="relative z-10 mt-2.5 border-t border-zinc-800/35 pt-2">
           <div className="flex items-baseline justify-between gap-2">
-            <span className={`text-[28px] font-black tracking-tight leading-none tabular-nums ${meta.amountColor}`}>
+            <span className={`text-[16px] font-extrabold tracking-tight leading-none tabular-nums ${meta.amountColor}`}>
               {fmtCurrency(c.total_valor)}
             </span>
             <span className="text-[10px] font-medium text-zinc-500/80">
@@ -225,13 +209,19 @@ function ContactCard({ c, stage }: { c: FunnelContact; stage: FunnelStage }) {
         </div>
       )}
 
-      <div className="relative z-10 mt-3.5 flex items-center gap-1.5 border-t border-zinc-800/30 pt-3 text-[10px] leading-none">
+      <div className="relative z-10 mt-2.5 flex items-center gap-1.5 border-t border-zinc-800/30 pt-2 text-[10px] leading-none">
         <span
           className="text-zinc-400/95 font-medium"
           title="Tiempo desde la ultima actividad del contacto (ultimo cambio de estado registrado)."
         >
           {relDate(c.last_activity)}
         </span>
+        {!hasPurchases && (
+          <>
+            <span className="text-zinc-700">·</span>
+            <span className="text-zinc-500">{statusLabel}</span>
+          </>
+        )}
         {c.region && (
           <>
             <span className="text-zinc-700">·</span>
@@ -378,8 +368,7 @@ export default function FunnelBoard({
               <div className={`sticky top-0 z-10 bg-[#0d0d11]/95 backdrop-blur-[2px] bg-gradient-to-b ${meta.headerGlow} px-4 pt-3.5 pb-3 border-b border-zinc-800/30`}>
                 <div className="flex items-center justify-between">
                   <div className="flex items-center gap-2">
-                    <span className={`h-2 w-2 rounded-full ${meta.dot}`} />
-                    <h4 className={`text-[13px] font-bold ${meta.accent} leading-none`}>
+                    <h4 className={`text-[13px] font-bold uppercase tracking-wide ${meta.accent} leading-none`}>
                       {meta.label}
                     </h4>
                   </div>
