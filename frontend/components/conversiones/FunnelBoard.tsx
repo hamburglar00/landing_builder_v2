@@ -154,7 +154,7 @@ function ContactCard({ c, stage }: { c: FunnelContact; stage: FunnelStage }) {
 
   return (
     <div
-      className={`group relative overflow-hidden rounded-xl border ${meta.cardBorder} bg-zinc-900/88 px-4 py-3.2 shadow-[0_8px_24px_rgba(0,0,0,0.28)] ring-1 ring-white/5 transition-all duration-200 hover:-translate-y-0.5 hover:border-zinc-700/70 hover:shadow-[0_12px_30px_rgba(0,0,0,0.32)] ${meta.cardRing}`}
+      className={`group relative overflow-hidden rounded-xl border ${meta.cardBorder} bg-zinc-900/88 px-3.5 py-3 shadow-[0_8px_24px_rgba(0,0,0,0.28)] ring-1 ring-white/5 transition-all duration-200 hover:-translate-y-0.5 hover:border-zinc-700/70 hover:shadow-[0_12px_30px_rgba(0,0,0,0.32)] ${meta.cardRing}`}
     >
       <div className={`pointer-events-none absolute inset-0 bg-gradient-to-br ${meta.cardGlow}`} />
       <div className="pointer-events-none absolute inset-x-0 top-0 h-[1px] bg-white/7" />
@@ -182,7 +182,7 @@ function ContactCard({ c, stage }: { c: FunnelContact; stage: FunnelStage }) {
       </div>
 
       {(name || c.email) && (
-        <div className="relative z-10 mt-2.5 space-y-1 border-t border-zinc-800/35 pt-2">
+        <div className="relative z-10 mt-2 space-y-1 border-t border-zinc-800/35 pt-1.5">
           {name && (
             <p className="truncate text-[11px] font-medium text-zinc-300/85 leading-none" title={name}>
               {name}
@@ -197,7 +197,7 @@ function ContactCard({ c, stage }: { c: FunnelContact; stage: FunnelStage }) {
       )}
 
       {hasPurchases && (
-        <div className="relative z-10 mt-2.5 border-t border-zinc-800/35 pt-2">
+        <div className="relative z-10 mt-2 border-t border-zinc-800/35 pt-1.5">
           <div className="flex items-baseline justify-between gap-2">
             <span className={`text-[16px] font-extrabold tracking-tight leading-none tabular-nums ${meta.amountColor}`}>
               {fmtCurrency(c.total_valor)}
@@ -209,7 +209,7 @@ function ContactCard({ c, stage }: { c: FunnelContact; stage: FunnelStage }) {
         </div>
       )}
 
-      <div className="relative z-10 mt-2.5 flex items-center gap-1.5 border-t border-zinc-800/30 pt-2 text-[10px] leading-none">
+      <div className="relative z-10 mt-2 flex min-w-0 items-center gap-1.5 border-t border-zinc-800/30 pt-1.5 text-[10px] leading-none">
         <span
           className="text-zinc-400/95 font-medium"
           title="Tiempo desde la ultima actividad del contacto (ultimo cambio de estado registrado)."
@@ -225,7 +225,7 @@ function ContactCard({ c, stage }: { c: FunnelContact; stage: FunnelStage }) {
         {c.region && (
           <>
             <span className="text-zinc-700">·</span>
-            <span className="truncate text-zinc-600" title={c.region}>{c.region}</span>
+            <span className="min-w-0 truncate text-zinc-600" title={c.region}>{c.region}</span>
           </>
         )}
       </div>
