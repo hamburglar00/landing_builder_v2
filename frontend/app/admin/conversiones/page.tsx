@@ -346,6 +346,10 @@ export default function AdminConversionesPage() {
 
   const clearTableDisplay = useCallback(async () => {
     if (!userId || activeConversions.length === 0 || demoMode) return;
+    const ok = window.confirm(
+      "¿Seguro que querés limpiar la vista?\n\nSi limpiás la vista, perderás los registros visibles y las estadísticas volverán a cero.",
+    );
+    if (!ok) return;
     setHidingTable(true);
     setClearMsg(null);
     try {
@@ -362,6 +366,10 @@ export default function AdminConversionesPage() {
 
   const clearFunnelDisplay = useCallback(async () => {
     if (!userId || activeFunnel.length === 0 || demoMode) return;
+    const ok = window.confirm(
+      "¿Seguro que querés limpiar la vista?\n\nSi limpiás la vista, perderás los registros visibles y las estadísticas volverán a cero.",
+    );
+    if (!ok) return;
     setHidingFunnel(true);
     setClearMsg(null);
     try {
@@ -381,6 +389,10 @@ export default function AdminConversionesPage() {
 
   const clearStatsDisplay = useCallback(async () => {
     if (!userId || (activeFunnel.length === 0 && activeConversions.length === 0) || demoMode) return;
+    const ok = window.confirm(
+      "¿Seguro que querés limpiar la vista?\n\nSi limpiás la vista, perderás los registros visibles y las estadísticas volverán a cero.",
+    );
+    if (!ok) return;
     setHidingStats(true);
     setClearMsg(null);
     try {
