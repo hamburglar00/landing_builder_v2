@@ -165,7 +165,8 @@ function ContactCard({ c, stage }: { c: FunnelContact; stage: FunnelStage }) {
             <span className="text-zinc-800">·</span>
             <span className="truncate" title={c.region}>{c.region}</span>
           </>
-        )}`r`n      </div>
+        )}
+      </div>
     </div>
   );
 }
@@ -345,5 +346,6 @@ export default function FunnelBoard({
     </div>
   );
 }
+
 
 
