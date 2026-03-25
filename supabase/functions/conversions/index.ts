@@ -565,7 +565,6 @@ async function handleContact(
       undefined,
       testEventCode || undefined,
     );
-    await writeLog(db, landing.user_id, "sendToMetaCAPI", ok ? "INFO" : "ERROR", ok ? "Contact CAPI enviado" : "Error Contact CAPI", JSON.stringify({ event_id: contactEventId }), rowId);
     return textResponse(ok ? "Contact registrado y enviado por CAPI" : "Contact registrado; error al enviar CAPI");
   }
 
@@ -1135,7 +1134,6 @@ Deno.serve(async (req) => {
     return textResponse("Error inesperado", 500);
   }
 });
-
 
 
 
