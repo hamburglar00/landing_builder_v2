@@ -44,7 +44,7 @@ export async function invokeFunction<T = unknown>(
       data: null,
       error: {
         message:
-          "SesiÃ³n expirada o invÃ¡lida. Cierra sesiÃ³n y vuelve a iniciar sesiÃ³n.",
+          "Sesion expirada o invalida. Cierra sesion y vuelve a iniciar sesion.",
       },
     };
   }
@@ -76,7 +76,7 @@ export async function invokeFunction<T = unknown>(
       error: {
         message:
           msg === "Failed to fetch" || msg.includes("fetch")
-            ? "No se pudo conectar con el servidor. Prueba de nuevo; si sigue fallando, revisa la consola (F12 â†’ Network) y tu conexiÃ³n."
+            ? "No se pudo conectar con el servidor. Prueba de nuevo; si sigue fallando, revisa la consola (F12   Network) y tu conexion."
             : msg,
       },
     };
@@ -92,7 +92,7 @@ export async function invokeFunction<T = unknown>(
   }
 
   // Algunos entornos quedan con token desfasado y la Edge devuelve "Invalid JWT".
-  // Reintentamos una sola vez tras refresh de sesión.
+  // Reintentamos una sola vez tras refresh de sesin.
   if (!res.ok) {
     const looksLikeInvalidJwt =
       rawText.toLowerCase().includes("invalid jwt") ||
@@ -133,7 +133,7 @@ export async function invokeFunction<T = unknown>(
     if (!serverMessage) {
       serverMessage = res.statusText || `Error del servidor (${res.status})`;
       if (rawText && rawText.length < 500) serverMessage += `: ${rawText}`;
-      else if (rawText) serverMessage += `: ${rawText.slice(0, 200)}â€¦`;
+      else if (rawText) serverMessage += `: ${rawText.slice(0, 200)}`;
     }
     return { data: null, error: { message: serverMessage } };
   }

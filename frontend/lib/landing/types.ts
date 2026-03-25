@@ -19,8 +19,8 @@ export type ColorOption =
   | "gray_dark";
 
 /**
- * Familia tipográfica seleccionable desde el constructor.
- * La landing pública debe mapear estos tokens a font-family reales.
+ * Familia tipogrfica seleccionable desde el constructor.
+ * La landing pblica debe mapear estos tokens a font-family reales.
  */
 export type FontFamilyOption =
   | "pp_mori"
@@ -33,10 +33,10 @@ export type FontFamilyOption =
   | "system";
 
 /**
- * Posición del CTA dentro del layout fijo de la landing.
+ * Posicin del CTA dentro del layout fijo de la landing.
  *
- * top: inmediatamente después del logo.
- * between_title_and_info: después del título (posición actual por defecto).
+ * top: inmediatamente despus del logo.
+ * between_title_and_info: despus del ttulo (posicin actual por defecto).
  * between_info_and_badge: entre el bloque informativo y el badge final.
  * bottom: al final, debajo del badge.
  */
@@ -54,12 +54,12 @@ export type CtaPositionOption =
 export type TemplateOption = "template1" | "template2";
 
 /**
- * Modo de fondo: una sola imagen o rotación entre varias.
+ * Modo de fondo: una sola imagen o rotacin entre varias.
  */
 export type BackgroundMode = "single" | "rotating";
 
 /**
- * Configuración completa del tema de la landing (plantilla fija).
+ * Configuracin completa del tema de la landing (plantilla fija).
  * El usuario solo puede editar estos campos; no puede mover elementos ni cambiar layout.
  */
 export interface LandingThemeConfig {
@@ -82,8 +82,8 @@ export interface LandingThemeConfig {
    */
   template: TemplateOption;
   /**
-   * Tipografía y estilos de texto.
-   * Se guardan en pixeles/booleanos para que la landing pública pueda aplicarlos 1:1.
+   * Tipografa y estilos de texto.
+   * Se guardan en pixeles/booleanos para que la landing pblica pueda aplicarlos 1:1.
    */
   fontFamily: FontFamilyOption;
   titleFontSize: number;
@@ -95,7 +95,7 @@ export interface LandingThemeConfig {
   ctaBold: boolean;
   badgeBold: boolean;
   /**
-   * Posición del CTA dentro del layout fijo.
+   * Posicin del CTA dentro del layout fijo.
    */
   ctaPosition: CtaPositionOption;
   titleColor: ColorOption;
@@ -114,17 +114,17 @@ export interface Landing {
   id: string;
   name: string;
   pixelId: string;
-  /** Modo de selecci�n de gerencias: 'weighted_random' (aleatorio por peso) o 'fair' (equitativo). */
+  /** Modo de seleccin de gerencias: 'weighted_random' (aleatorio por peso) o 'fair' (equitativo). */
   gerenciaSelectionMode: "weighted_random" | "fair";
   /** Criterio para reparto equitativo de gerencias: por contador o por mensajes recibidos. */
   gerenciaFairCriterion: "usage_count" | "messages_received";
-  /** Modo de selecci?n de tel?fono: 'random' (aleatorio) o 'fair' (equitativo). */
+  /** Modo de seleccion de tel?fono: 'random' (aleatorio) o 'fair' (equitativo). */
   phoneMode: "random" | "fair";
-  /** Tipo de número de teléfono a usar: 'carga', 'ads' o 'mkt'. */
+  /** Tipo de nmero de telfono a usar: 'carga', 'ads' o 'mkt'. */
   phoneKind: "carga" | "ads" | "mkt";
-  /** Hora de inicio (0-23) del intervalo horario en el que esta landing puede mostrar teléfonos. null = sin intervalo. */
+  /** Hora de inicio (0-23) del intervalo horario en el que esta landing puede mostrar telfonos. null = sin intervalo. */
   phoneIntervalStartHour: number | null;
-  /** Hora de fin (0-23) del intervalo horario en el que esta landing puede mostrar teléfonos. null = sin intervalo. */
+  /** Hora de fin (0-23) del intervalo horario en el que esta landing puede mostrar telfonos. null = sin intervalo. */
   phoneIntervalEndHour: number | null;
   postUrl: string;
   landingTag: string;

@@ -106,7 +106,7 @@ function relDate(iso: string): string {
   return `${Math.floor(days / 30)}mes`;
 }
 
-/* Ã¢â€â‚¬Ã¢â€â‚¬ Icons Ã¢â€â‚¬Ã¢â€â‚¬ */
+/* aa Icons aa */
 function SearchIcon({ className }: { className?: string }) {
   return (
     <svg viewBox="0 0 20 20" fill="currentColor" className={className}>
@@ -124,26 +124,9 @@ function WaIcon({ className }: { className?: string }) {
   );
 }
 
-/* Ã¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢Â
+/* aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa
    CONTACT CARD
-   Ã¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢ÂÃ¢â€¢Â */
-function StatusBadge({
-  label,
-  className,
-}: {
-  label: string;
-  className: string;
-}) {
-  return (
-    <span
-      className={`inline-flex items-center rounded-full border px-2.5 py-1 text-[10px] font-semibold tracking-wide ${className}`}
-      title={label}
-    >
-      {label}
-    </span>
-  );
-}
-
+   aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa */
 function ContactCard({ c, stage }: { c: FunnelContact; stage: FunnelStage }) {
   const meta = STAGE_META[stage];
   const name = [c.fn, c.ln].filter(Boolean).join(" ");
@@ -218,13 +201,13 @@ function ContactCard({ c, stage }: { c: FunnelContact; stage: FunnelStage }) {
         </span>
         {!hasPurchases && (
           <>
-            <span className="text-zinc-700">·</span>
+            <span className="text-zinc-700"></span>
             <span className="text-zinc-500">{statusLabel}</span>
           </>
         )}
         {c.region && (
           <>
-            <span className="text-zinc-700">·</span>
+            <span className="text-zinc-700"></span>
             <span className="min-w-0 truncate text-zinc-600" title={c.region}>{c.region}</span>
           </>
         )}
@@ -305,7 +288,7 @@ export default function FunnelBoard({
   return (
     <div className="space-y-4">
 
-      {/* Ã¢â€â‚¬Ã¢â€â‚¬ COMMAND BAR: Search + KPIs Ã¢â€â‚¬Ã¢â€â‚¬ */}
+      {/* aa COMMAND BAR: Search + KPIs aa */}
       <div className="rounded-2xl border border-zinc-800/40 bg-[#0d0d11]">
 
         {/* Search row */}
@@ -316,7 +299,7 @@ export default function FunnelBoard({
               type="text"
               value={search}
               onChange={(e) => setSearch(e.target.value)}
-              placeholder="Buscar por telÃƒÂ©fono, nombre o email..."
+              placeholder="Buscar por telOfono, nombre o email..."
               className="h-10 w-full rounded-xl border border-zinc-800/50 bg-zinc-900/60 pl-10 pr-4 text-sm text-zinc-200 placeholder:text-zinc-600 outline-none transition-all focus:border-zinc-700 focus:bg-zinc-900/90 focus:ring-1 focus:ring-zinc-700/50"
             />
             <span className="absolute right-3.5 top-1/2 -translate-y-1/2 text-[11px] text-zinc-600 tabular-nums">
@@ -328,7 +311,7 @@ export default function FunnelBoard({
         {/* KPI strip removido para evitar redundancia con columnas del funnel */}
       </div>
 
-      {/* Ã¢â€â‚¬Ã¢â€â‚¬ SORT CONTROLS Ã¢â€â‚¬Ã¢â€â‚¬ */}
+      {/* aa SORT CONTROLS aa */}
       <div className="flex items-center justify-end gap-2">
         <span className="text-[11px] text-zinc-600 font-medium">Ordenar</span>
         <div className="flex items-center rounded-lg border border-zinc-800/40 bg-[#0d0d11] p-0.5">
@@ -355,7 +338,7 @@ export default function FunnelBoard({
         </div>
       </div>
 
-      {/* Ã¢â€â‚¬Ã¢â€â‚¬ KANBAN COLUMNS Ã¢â€â‚¬Ã¢â€â‚¬ */}
+      {/* aa KANBAN COLUMNS aa */}
       <div className="grid grid-cols-1 gap-3 md:grid-cols-2 xl:grid-cols-4">
         {STAGES.map((stage) => {
           const meta = STAGE_META[stage];
