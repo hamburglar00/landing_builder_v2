@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 import { useEffect, useState, useCallback, useMemo } from "react";
 import { supabase } from "@/lib/supabaseClient";
@@ -515,7 +515,7 @@ export default function DashboardConversionesPage() {
                   <div className="mt-3 rounded-lg border border-amber-700/40 bg-amber-950/30 p-3 text-[11px] text-amber-200">
                     <p className="font-semibold">Confirma que tus eventos estan llegando a Meta!</p>
                     <p className="mt-1">
-                      Ingresa al Administrador de eventos, selecciona tu pixel y dirigite a la seccion "Probar eventos".
+                      Ingresa al Administrador de eventos, selecciona tu pixel y dirigite a la seccion &quot;Probar eventos&quot;.
                     </p>
                     <p className="mt-1">
                       Copi tu <code className="rounded bg-zinc-900 px-1 py-0.5 text-[10px]">test_event_code</code> y luego prob tu URL con este formato:
@@ -817,6 +817,7 @@ export default function DashboardConversionesPage() {
     </div>
   );
 }
+
 
 
 
