@@ -31,8 +31,8 @@ const TAB_ORDER: Tab[] = ["funnel", "tabla", "estadisticas", "configuracion", "l
 const TAB_LABELS: Record<Tab, string> = {
   funnel: "Funnel",
   tabla: "Tabla",
-  estadisticas: "EstadÃ­sticas",
-  configuracion: "ConfiguraciÃ³n",
+  estadisticas: "Estadisticas",
+  configuracion: "Configuracion",
   logs: "Logs",
 };
 
@@ -274,7 +274,7 @@ export default function DashboardConversionesPage() {
     setSaving(true); setSaveMsg(null);
     try {
       await upsertConversionsConfig({ ...config, user_id: userId });
-      setSaveMsg("ConfiguraciÃ³n guardada.");
+      setSaveMsg("Configuracion guardada.");
     } catch (e) {
       setSaveMsg(e instanceof Error ? e.message : "Error al guardar");
     } finally { setSaving(false); }
@@ -305,7 +305,7 @@ export default function DashboardConversionesPage() {
   const clearTableDisplay = useCallback(async () => {
     if (!userId || activeConversions.length === 0) return;
     const ok = window.confirm(
-      "Â¿Seguro que querÃ©s limpiar la vista?\n\nSi limpiÃ¡s la vista, perderÃ¡s los registros visibles y las estadÃ­sticas volverÃ¡n a cero.",
+      "Seguro que queres limpiar la vista?\n\nSi limpias la vista, perderas los registros visibles y las estadsticas volveran a cero.",
     );
     if (!ok) return;
     setHidingTable(true);
@@ -325,7 +325,7 @@ export default function DashboardConversionesPage() {
   const clearFunnelDisplay = useCallback(async () => {
     if (!userId || activeFunnel.length === 0) return;
     const ok = window.confirm(
-      "Â¿Seguro que querÃ©s limpiar la vista?\n\nSi limpiÃ¡s la vista, perderÃ¡s los registros visibles y las estadÃ­sticas volverÃ¡n a cero.",
+      "Seguro que queres limpiar la vista?\n\nSi limpias la vista, perderas los registros visibles y las estadsticas volveran a cero.",
     );
     if (!ok) return;
     setHidingFunnel(true);
@@ -348,7 +348,7 @@ export default function DashboardConversionesPage() {
   const clearStatsDisplay = useCallback(async () => {
     if (!userId || (activeFunnel.length === 0 && activeConversions.length === 0)) return;
     const ok = window.confirm(
-      "Â¿Seguro que querÃ©s limpiar la vista?\n\nSi limpiÃ¡s la vista, perderÃ¡s los registros visibles y las estadÃ­sticas volverÃ¡n a cero.",
+      "Seguro que queres limpiar la vista?\n\nSi limpias la vista, perderas los registros visibles y las estadsticas volveran a cero.",
     );
     if (!ok) return;
     setHidingStats(true);
@@ -383,7 +383,7 @@ export default function DashboardConversionesPage() {
     <div className="space-y-6 pb-8">
       <div>
         <h1 className="text-xl font-semibold text-zinc-100">Conversiones</h1>
-        <p className="mt-1 text-sm text-zinc-400">Tu pipeline de leads, cargas y estadÃ­sticas.</p>
+        <p className="mt-1 text-sm text-zinc-400">Tu pipeline de leads, cargas y estadsticas.</p>
       </div>
 
       {saveMsg && (
@@ -422,21 +422,21 @@ export default function DashboardConversionesPage() {
         </div>
       </div>
 
-      {/* Date filter Ã¢â‚¬â€ visible on funnel, tabla, estadisticas */}
+      {/* Date filter  visible on funnel, tabla, estadisticas */}
       {(tab === "funnel" || tab === "tabla" || tab === "estadisticas") && (
         <div className="flex justify-end pt-1">
           <DateRangeFilter onChange={setDateRange} />
         </div>
       )}
 
-      {/* TAB: CONFIGURACIÃ“N */}
+      {/* TAB: CONFIGURACIN */}
       {tab === "configuracion" && (
         <div className="space-y-4">
           {/* Meta CAPI */}
           <section className="rounded-xl border border-zinc-800 bg-zinc-900/50">
             <button type="button" onClick={() => setConfigOpen((v) => !v)} className="flex w-full cursor-pointer items-center gap-2 p-4">
               <ChevronIcon open={configOpen} />
-              <h3 className="text-sm font-semibold text-zinc-200">ConfiguraciÃ³n Meta CAPI</h3>
+              <h3 className="text-sm font-semibold text-zinc-200">Configuracion Meta CAPI</h3>
             </button>
             {configOpen && (
               <div className="space-y-4 border-t border-zinc-800 p-4">
@@ -513,18 +513,18 @@ export default function DashboardConversionesPage() {
                     </label>
                   )}
                   <div className="mt-3 rounded-lg border border-amber-700/40 bg-amber-950/30 p-3 text-[11px] text-amber-200">
-                    <p className="font-semibold">Â¡ConfirmÃ¡ que tus eventos estÃ©n llegando a Meta!</p>
+                    <p className="font-semibold">Confirma que tus eventos estan llegando a Meta!</p>
                     <p className="mt-1">
-                      IngresÃ¡ al Administrador de eventos, seleccionÃ¡ tu pÃ­xel y dirigite a la secciÃ³n â€œProbar eventosâ€.
+                      Ingresa al Administrador de eventos, selecciona tu pixel y dirigite a la seccion "Probar eventos".
                     </p>
                     <p className="mt-1">
-                      CopiÃ¡ tu <code className="rounded bg-zinc-900 px-1 py-0.5 text-[10px]">test_event_code</code> y luego probÃ¡ tu URL con este formato:
+                      Copi tu <code className="rounded bg-zinc-900 px-1 py-0.5 text-[10px]">test_event_code</code> y luego prob tu URL con este formato:
                     </p>
                     <code className="mt-2 block break-all rounded bg-zinc-950 px-2 py-1 text-[10px] text-emerald-300">
                       https://landing.panelbotadmin.com/TU_NOMBRE/?test_event_code=TU_CODIGO_TEST
                     </code>
                     <p className="mt-2">
-                      AsÃ­ vas a poder verificar en tiempo real si los eventos se estÃ¡n enviando correctamente a Meta.
+                      Asi vas a poder verificar en tiempo real si los eventos se estan enviando correctamente a Meta.
                     </p>
                   </div>
                 </div>
@@ -551,7 +551,7 @@ export default function DashboardConversionesPage() {
                       </button>
                     </div>
                   ) : (
-                    <p className="text-[11px] text-amber-400">Tu URL aÃºn no fue configurada. ContactÃ¡ al administrador.</p>
+                    <p className="text-[11px] text-amber-400">Tu URL an no fue configurada. Contact al administrador.</p>
                   );
                 })()}
               </div>
@@ -562,12 +562,12 @@ export default function DashboardConversionesPage() {
           <section className="rounded-xl border border-zinc-800 bg-zinc-900/50">
             <button type="button" onClick={() => setFunnelConfigOpen((v) => !v)} className="flex w-full cursor-pointer items-center gap-2 p-4">
               <ChevronIcon open={funnelConfigOpen} />
-              <h3 className="text-sm font-semibold text-zinc-200">PersonalizaciÃ³n del funnel</h3>
+              <h3 className="text-sm font-semibold text-zinc-200">Personalizacin del funnel</h3>
             </button>
             {funnelConfigOpen && (
               <div className="space-y-4 border-t border-zinc-800 p-4">
                 <div>
-                  <label className="block text-xs font-medium text-zinc-400 mb-1">Monto mÃ­nimo para Jugador Premium</label>
+                  <label className="block text-xs font-medium text-zinc-400 mb-1">Monto mnimo para Jugador Premium</label>
                   <input
                     type="text"
                     inputMode="numeric"
@@ -592,7 +592,7 @@ export default function DashboardConversionesPage() {
               disabled={saving}
               className="cursor-pointer rounded-lg bg-zinc-100 px-4 py-2 text-sm font-medium text-zinc-900 transition hover:bg-zinc-200 active:scale-95 disabled:opacity-60"
             >
-              {saving ? "Guardando..." : "Guardar configuraciÃ³n"}
+              {saving ? "Guardando..." : "Guardar configuracin"}
             </button>
           </div>
         </div>
@@ -616,7 +616,7 @@ export default function DashboardConversionesPage() {
                 <svg className="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
                   <path strokeLinecap="round" strokeLinejoin="round" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
                 </svg>
-                {refreshingTable ? "ActualizandoÃ¢â‚¬Â¦" : "Actualizar"}
+                {refreshingTable ? "Actualizando..." : "Actualizar"}
               </button>
               <button
                 type="button"
@@ -625,7 +625,7 @@ export default function DashboardConversionesPage() {
                 className="inline-flex items-center gap-1.5 rounded-lg border border-zinc-700 bg-zinc-800/80 px-2.5 py-1.5 text-xs font-medium text-zinc-400 transition hover:bg-zinc-700 hover:text-zinc-300 disabled:opacity-50 disabled:cursor-not-allowed"
                 title="Ocultar registros de la vista (persistente, no borra de la base)"
               >
-                {hidingTable ? "OcultandoÃ¢â‚¬Â¦" : "Limpiar vista"}
+                {hidingTable ? "Ocultando..." : "Limpiar vista"}
               </button>
             </div>
           </div>
@@ -633,7 +633,7 @@ export default function DashboardConversionesPage() {
             <table className="w-full text-left text-[11px]">
               <thead className="bg-zinc-800/80 sticky top-0">
                 <tr>
-                  <th className="px-2 py-2 font-medium text-zinc-300 whitespace-nowrap">id_interno</th>
+                  <th className="px-2 py-2 font-medium text-zinc-300 whitespace-nowrap">ID</th>
                   {displayedCols.map((col) => (
                     <th key={col} className="px-2 py-2 font-medium text-zinc-300 whitespace-nowrap">{col}</th>
                   ))}
@@ -649,7 +649,7 @@ export default function DashboardConversionesPage() {
                 ) : activeConversions.length === 0 ? (
                   <tr>
                     <td colSpan={displayedCols.length + 1} className="px-2 py-6 text-center text-zinc-500">
-                      AÃºn no hay conversiones registradas.
+                      An no hay conversiones registradas.
                     </td>
                   </tr>
                 ) : activeConversions.map((c, idx) => {
@@ -695,7 +695,7 @@ export default function DashboardConversionesPage() {
                 <svg className="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
                   <path strokeLinecap="round" strokeLinejoin="round" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
                 </svg>
-                {refreshingTable ? "ActualizandoÃ¢â‚¬Â¦" : "Actualizar"}
+                {refreshingTable ? "Actualizando..." : "Actualizar"}
               </button>
               <button
                 type="button"
@@ -704,23 +704,23 @@ export default function DashboardConversionesPage() {
                 className="inline-flex items-center gap-1.5 rounded-lg border border-zinc-700 bg-zinc-800/80 px-2.5 py-1.5 text-xs font-medium text-zinc-400 transition hover:bg-zinc-700 hover:text-zinc-300 disabled:opacity-50 disabled:cursor-not-allowed"
                 title="Ocultar registros de la vista (persistente, no borra de la base)"
               >
-                {hidingFunnel ? "OcultandoÃ¢â‚¬Â¦" : "Limpiar vista"}
+                {hidingFunnel ? "Ocultando..." : "Limpiar vista"}
               </button>
             </div>
           </div>
           {activeFunnel.length === 0 ? (
-            <p className="py-12 text-center text-sm text-zinc-500">AÃºn no hay contactos en el funnel.</p>
+            <p className="py-12 text-center text-sm text-zinc-500">An no hay contactos en el funnel.</p>
           ) : (
             <FunnelBoard contacts={activeFunnel} premiumThreshold={config?.funnel_premium_threshold ?? 50000} />
           )}
         </section>
       )}
 
-      {/* TAB: ESTADÃSTICAS */}
+      {/* TAB: ESTADSTICAS */}
       {tab === "estadisticas" && (
         <section className="rounded-xl border border-zinc-800 bg-zinc-900/50 p-4">
           <div className="mb-4 flex flex-wrap items-center justify-between gap-2">
-            <h3 className="text-sm font-semibold text-zinc-200">EstadÃ­sticas</h3>
+            <h3 className="text-sm font-semibold text-zinc-200">Estadisticas</h3>
             <div className="flex gap-2">
               <button
                 type="button"
@@ -732,7 +732,7 @@ export default function DashboardConversionesPage() {
                 <svg className="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
                   <path strokeLinecap="round" strokeLinejoin="round" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
                 </svg>
-                {refreshingTable ? "ActualizandoÃ¢â‚¬Â¦" : "Actualizar"}
+                {refreshingTable ? "Actualizando..." : "Actualizar"}
               </button>
               <button
                 type="button"
@@ -741,12 +741,12 @@ export default function DashboardConversionesPage() {
                 className="inline-flex items-center gap-1.5 rounded-lg border border-zinc-700 bg-zinc-800/80 px-2.5 py-1.5 text-xs font-medium text-zinc-400 transition hover:bg-zinc-700 hover:text-zinc-300 disabled:opacity-50 disabled:cursor-not-allowed"
                 title="Ocultar registros de la vista (persistente, no borra de la base)"
               >
-                {hidingStats ? "OcultandoÃ¢â‚¬Â¦" : "Limpiar vista"}
+                {hidingStats ? "Ocultando..." : "Limpiar vista"}
               </button>
             </div>
           </div>
           {activeFunnel.length === 0 && activeConversions.length === 0 ? (
-            <p className="py-12 text-center text-sm text-zinc-500">AÃºn no hay datos para estadÃ­sticas.</p>
+            <p className="py-12 text-center text-sm text-zinc-500">An no hay datos para estadsticas.</p>
           ) : (
             <StatsPanel
               funnelContacts={activeFunnel}
@@ -768,16 +768,16 @@ export default function DashboardConversionesPage() {
             <span className="font-normal text-zinc-500">({logs.length})</span>
           </h3>
           {logs.length === 0 ? (
-            <p className="text-sm text-zinc-500">AÃºn no hay logs registrados.</p>
+            <p className="text-sm text-zinc-500">An no hay logs registrados.</p>
           ) : (
             <div className="overflow-x-auto rounded-lg border border-zinc-700">
               <table className="w-full text-left text-[11px]">
                 <thead className="bg-zinc-800/80">
                   <tr>
-                    <th className="px-2 py-2 font-medium text-zinc-300 whitespace-nowrap">id_interno</th>
+                    <th className="px-2 py-2 font-medium text-zinc-300 whitespace-nowrap">ID</th>
                     <th className="px-2 py-2 font-medium text-zinc-300 whitespace-nowrap">Fecha</th>
                     <th className="px-2 py-2 font-medium text-zinc-300 whitespace-nowrap">Nivel</th>
-                    <th className="px-2 py-2 font-medium text-zinc-300 whitespace-nowrap">FunciÃ³n</th>
+                    <th className="px-2 py-2 font-medium text-zinc-300 whitespace-nowrap">Funcion</th>
                     <th className="px-2 py-2 font-medium text-zinc-300 whitespace-nowrap">Mensaje</th>
                     <th className="px-2 py-2 font-medium text-zinc-300 whitespace-nowrap">Detalle</th>
                   </tr>
