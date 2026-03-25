@@ -768,7 +768,7 @@ export default function DashboardConversionesPage() {
             <span className="font-normal text-zinc-500">({logs.length})</span>
           </h3>
           {logs.length === 0 ? (
-            <p className="text-sm text-zinc-500">An no hay logs registrados.</p>
+            <p className="text-sm text-zinc-500">Aun no hay logs registrados.</p>
           ) : (
             <div className="overflow-x-auto rounded-lg border border-zinc-700">
               <table className="w-full text-left text-[11px]">
@@ -780,6 +780,8 @@ export default function DashboardConversionesPage() {
                     <th className="px-2 py-2 font-medium text-zinc-300 whitespace-nowrap">Funcion</th>
                     <th className="px-2 py-2 font-medium text-zinc-300 whitespace-nowrap">Mensaje</th>
                     <th className="px-2 py-2 font-medium text-zinc-300 whitespace-nowrap">Detalle</th>
+                    <th className="px-2 py-2 font-medium text-zinc-300 whitespace-nowrap">Payload Meta</th>
+                    <th className="px-2 py-2 font-medium text-zinc-300 whitespace-nowrap">Respuesta Meta</th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-zinc-800">
@@ -803,6 +805,30 @@ export default function DashboardConversionesPage() {
                         {expandedLog === log.id && log.detail && (
                           <pre className="mt-1 max-w-[500px] overflow-x-auto rounded bg-zinc-900 p-2 text-[10px] text-zinc-400">
                             {(() => { try { return JSON.stringify(JSON.parse(log.detail), null, 2); } catch { return log.detail; } })()}
+                          </pre>
+                        )}
+                      </td>
+                      <td className="px-2 py-1.5 text-zinc-500">
+                        {log.payload_meta ? (
+                          <button type="button" onClick={() => setExpandedLog(expandedLog === log.id ? null : log.id)} className="cursor-pointer text-zinc-400 underline hover:text-zinc-200">
+                            {expandedLog === log.id ? "ocultar" : "ver"}
+                          </button>
+                        ) : "-"}
+                        {expandedLog === log.id && log.payload_meta && (
+                          <pre className="mt-1 max-w-[500px] overflow-x-auto rounded bg-zinc-900 p-2 text-[10px] text-zinc-400">
+                            {(() => { try { return JSON.stringify(JSON.parse(log.payload_meta), null, 2); } catch { return log.payload_meta; } })()}
+                          </pre>
+                        )}
+                      </td>
+                      <td className="px-2 py-1.5 text-zinc-500">
+                        {log.response_meta ? (
+                          <button type="button" onClick={() => setExpandedLog(expandedLog === log.id ? null : log.id)} className="cursor-pointer text-zinc-400 underline hover:text-zinc-200">
+                            {expandedLog === log.id ? "ocultar" : "ver"}
+                          </button>
+                        ) : "-"}
+                        {expandedLog === log.id && log.response_meta && (
+                          <pre className="mt-1 max-w-[500px] overflow-x-auto rounded bg-zinc-900 p-2 text-[10px] text-zinc-400">
+                            {(() => { try { return JSON.stringify(JSON.parse(log.response_meta), null, 2); } catch { return log.response_meta; } })()}
                           </pre>
                         )}
                       </td>

@@ -179,6 +179,8 @@ async function writeLog(
   message: string,
   detail: string = "",
   conversionId?: string,
+  payloadMeta?: string,
+  responseMeta?: string,
 ): Promise<void> {
   try {
     await db.from("conversion_logs").insert({
@@ -188,6 +190,8 @@ async function writeLog(
       level,
       message,
       detail: detail.slice(0, 4000),
+      payload_meta: (payloadMeta ?? "").slice(0, 20000),
+      response_meta: (responseMeta ?? "").slice(0, 20000),
     });
   } catch {
     // non-critical
@@ -335,12 +339,23 @@ async function sendToMetaCAPI(
 
   const maxAttempts = 3;
   const baseDelayMs = 500;
+  const metaPayloadRaw = JSON.stringify(body);
 
-  const persistError = async (detail: string) => {
+  const persistError = async (detail: string, responseRaw = "") => {
     const { data: current } = await db.from("conversions").select("observaciones").eq("id", rowId).single();
     const obs = appendObservation(current?.observaciones ?? "", errMsg);
     await db.from("conversions").update({ [statusField]: "error", observaciones: obs }).eq("id", rowId);
-    await writeLog(db, row.user_id, "sendToMetaCAPI", "ERROR", "Meta CAPI fallo", detail, rowId);
+    await writeLog(
+      db,
+      row.user_id,
+      "sendToMetaCAPI",
+      "ERROR",
+      "Meta CAPI fallo",
+      detail,
+      rowId,
+      metaPayloadRaw,
+      responseRaw,
+    );
   };
 
   for (let attempt = 1; attempt <= maxAttempts; attempt++) {
@@ -372,13 +387,24 @@ async function sendToMetaCAPI(
         const hasZeroEventsReceived = Number.isFinite(eventsReceived) && eventsReceived <= 0;
 
         if (hasErrorObject || hasZeroEventsReceived) {
-          await persistError(`HTTP 200 inconsistente (attempt ${attempt}/${maxAttempts}): ${resText}`);
+          await persistError(`HTTP 200 inconsistente (attempt ${attempt}/${maxAttempts}): ${resText}`, resText);
           return false;
         }
 
         const { data: current } = await db.from("conversions").select("observaciones").eq("id", rowId).single();
         const obs = appendObservation(current?.observaciones ?? "", okMsg);
         await db.from("conversions").update({ [statusField]: "enviado", observaciones: obs }).eq("id", rowId);
+        await writeLog(
+          db,
+          row.user_id,
+          "sendToMetaCAPI",
+          "INFO",
+          "Meta CAPI respuesta",
+          `HTTP 200 (attempt ${attempt}/${maxAttempts})`,
+          rowId,
+          metaPayloadRaw,
+          resText,
+        );
         if (attempt > 1) {
           await writeLog(
             db,
@@ -394,7 +420,7 @@ async function sendToMetaCAPI(
       }
 
       if (!isTransientHttp || attempt === maxAttempts) {
-        await persistError(`HTTP ${res.status} (attempt ${attempt}/${maxAttempts}): ${resText}`);
+        await persistError(`HTTP ${res.status} (attempt ${attempt}/${maxAttempts}): ${resText}`, resText);
         return false;
       }
 
@@ -1109,7 +1135,6 @@ Deno.serve(async (req) => {
     return textResponse("Error inesperado", 500);
   }
 });
-
 
 
 
