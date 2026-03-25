@@ -31,8 +31,10 @@ export interface ConversionRow {
   contact_event_time: number | null;
   lead_event_id: string;
   lead_event_time: number | null;
+  lead_payload_raw: string;
   purchase_event_id: string;
   purchase_event_time: number | null;
+  purchase_payload_raw: string;
   purchase_type?: "first" | "repeat" | null;
   client_ip: string;
   agent_user: string;
@@ -308,8 +310,10 @@ export function buildFakeConversionRow(event: MetaEventName): ConversionRow {
     contact_event_time: null,
     lead_event_id: "",
     lead_event_time: null,
+    lead_payload_raw: "",
     purchase_event_id: "",
     purchase_event_time: null,
+    purchase_payload_raw: "",
     purchase_type: null,
     client_ip: "201.213.0.10",
     agent_user: "Mozilla/5.0 (Windows NT 10.0; Win64; x64)",

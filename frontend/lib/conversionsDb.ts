@@ -39,8 +39,10 @@ export interface ConversionRow {
   contact_event_time: number | null;
   lead_event_id: string;
   lead_event_time: number | null;
+  lead_payload_raw: string;
   purchase_event_id: string;
   purchase_event_time: number | null;
+  purchase_payload_raw: string;
   test_event_code?: string;
   purchase_type?: "first" | "repeat" | null;
   client_ip: string;
@@ -196,8 +198,8 @@ const CONVERSIONS_SELECT = `
   phone, email, fn, ln, ct, st, zip, country,
   fbp, fbc,
   contact_event_id, contact_event_time,
-  lead_event_id, lead_event_time,
-  purchase_event_id, purchase_event_time,
+  lead_event_id, lead_event_time, lead_payload_raw,
+  purchase_event_id, purchase_event_time, purchase_payload_raw,
   test_event_code,
   purchase_type,
   client_ip, agent_user, device_type, event_source_url,

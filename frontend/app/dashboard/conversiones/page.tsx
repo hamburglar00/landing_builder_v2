@@ -1,4 +1,4 @@
-﻿"use client";
+"use client";
 
 import { useEffect, useState, useCallback, useMemo } from "react";
 import { supabase } from "@/lib/supabaseClient";
@@ -29,8 +29,8 @@ const TAB_ORDER: Tab[] = ["funnel", "tabla", "estadisticas", "configuracion"];
 const TAB_LABELS: Record<Tab, string> = {
   funnel: "Funnel",
   tabla: "Tabla",
-  estadisticas: "Estadísticas",
-  configuracion: "Configuración",
+  estadisticas: "EstadÃ­sticas",
+  configuracion: "ConfiguraciÃ³n",
 };
 
 function ChevronIcon({ open }: { open: boolean }) {
@@ -82,8 +82,8 @@ function formatIntegerWithThousands(value: number) {
 
 const ALL_COLUMNS = [
   "phone","email","fn","ln","ct","st","zip","country","fbp","fbc",
-  "contact_event_id","contact_event_time","lead_event_id","lead_event_time",
-  "purchase_event_id","purchase_event_time","timestamp","clientIP","agentuser",
+  "contact_event_id","contact_event_time","lead_event_id","lead_event_time","lead_payload_raw",
+  "purchase_event_id","purchase_event_time","purchase_payload_raw","timestamp","clientIP","agentuser",
   "estado","valor","purchase_type","contact_status_capi","lead_status_capi","purchase_status_capi",
   "observaciones","external_id","test_event_code","utm_campaign","telefono_asignado","promo_code",
   "device_type","geo_city","geo_region","geo_country",
@@ -131,6 +131,11 @@ function cellValue(c: ConversionRow, col: ColKey): React.ReactNode {
   const dim = `${cell} text-zinc-400`;
   const dimMono = `${dim} font-mono`;
   const tip = (v: unknown) => String(v ?? "-") || "-";
+  const tipRawJson = (v: unknown) => {
+    const s = String(v ?? "").trim();
+    if (!s) return "-";
+    try { return JSON.stringify(JSON.parse(s), null, 2); } catch { return s; }
+  };
   const timestampText = new Date(c.created_at).toLocaleString("es-AR", {
     year: "numeric", month: "2-digit", day: "2-digit",
     hour: "2-digit", minute: "2-digit", second: "2-digit",
@@ -152,8 +157,10 @@ function cellValue(c: ConversionRow, col: ColKey): React.ReactNode {
     case "contact_event_time": return <td key={col} className={dim} title={tip(c.contact_event_time)}>{c.contact_event_time ?? "-"}</td>;
     case "lead_event_id": return <td key={col} className={dimMono} title={c.lead_event_id}>{truncateId(c.lead_event_id)}</td>;
     case "lead_event_time": return <td key={col} className={dim} title={tip(c.lead_event_time)}>{c.lead_event_time ?? "-"}</td>;
+    case "lead_payload_raw": return <td key={col} className={`${dim} max-w-[220px] truncate`} title={tipRawJson(c.lead_payload_raw)}>{truncateText(c.lead_payload_raw || "-", 35)}</td>;
     case "purchase_event_id": return <td key={col} className={dimMono} title={c.purchase_event_id}>{truncateId(c.purchase_event_id)}</td>;
     case "purchase_event_time": return <td key={col} className={dim} title={tip(c.purchase_event_time)}>{c.purchase_event_time ?? "-"}</td>;
+    case "purchase_payload_raw": return <td key={col} className={`${dim} max-w-[220px] truncate`} title={tipRawJson(c.purchase_payload_raw)}>{truncateText(c.purchase_payload_raw || "-", 35)}</td>;
     case "test_event_code": return <td key={col} className={dimMono} title={tip(c.test_event_code)}>{c.test_event_code || "-"}</td>;
     case "timestamp": return <td key={col} className={dim} title={timestampText}>{timestampText}</td>;
     case "clientIP": return <td key={col} className={dimMono} title={tip(c.client_ip)}>{c.client_ip || "-"}</td>;
@@ -246,7 +253,7 @@ export default function DashboardConversionesPage() {
     setSaving(true); setSaveMsg(null);
     try {
       await upsertConversionsConfig({ ...config, user_id: userId });
-      setSaveMsg("Configuración guardada.");
+      setSaveMsg("ConfiguraciÃ³n guardada.");
     } catch (e) {
       setSaveMsg(e instanceof Error ? e.message : "Error al guardar");
     } finally { setSaving(false); }
@@ -275,7 +282,7 @@ export default function DashboardConversionesPage() {
   const clearTableDisplay = useCallback(async () => {
     if (!userId || activeConversions.length === 0) return;
     const ok = window.confirm(
-      "¿Seguro que querés limpiar la vista?\n\nSi limpiás la vista, perderás los registros visibles y las estadísticas volverán a cero.",
+      "Â¿Seguro que querÃ©s limpiar la vista?\n\nSi limpiÃ¡s la vista, perderÃ¡s los registros visibles y las estadÃ­sticas volverÃ¡n a cero.",
     );
     if (!ok) return;
     setHidingTable(true);
@@ -295,7 +302,7 @@ export default function DashboardConversionesPage() {
   const clearFunnelDisplay = useCallback(async () => {
     if (!userId || activeFunnel.length === 0) return;
     const ok = window.confirm(
-      "¿Seguro que querés limpiar la vista?\n\nSi limpiás la vista, perderás los registros visibles y las estadísticas volverán a cero.",
+      "Â¿Seguro que querÃ©s limpiar la vista?\n\nSi limpiÃ¡s la vista, perderÃ¡s los registros visibles y las estadÃ­sticas volverÃ¡n a cero.",
     );
     if (!ok) return;
     setHidingFunnel(true);
@@ -318,7 +325,7 @@ export default function DashboardConversionesPage() {
   const clearStatsDisplay = useCallback(async () => {
     if (!userId || (activeFunnel.length === 0 && activeConversions.length === 0)) return;
     const ok = window.confirm(
-      "¿Seguro que querés limpiar la vista?\n\nSi limpiás la vista, perderás los registros visibles y las estadísticas volverán a cero.",
+      "Â¿Seguro que querÃ©s limpiar la vista?\n\nSi limpiÃ¡s la vista, perderÃ¡s los registros visibles y las estadÃ­sticas volverÃ¡n a cero.",
     );
     if (!ok) return;
     setHidingStats(true);
@@ -353,7 +360,7 @@ export default function DashboardConversionesPage() {
     <div className="space-y-6 pb-8">
       <div>
         <h1 className="text-xl font-semibold text-zinc-100">Conversiones</h1>
-        <p className="mt-1 text-sm text-zinc-400">Tu pipeline de leads, cargas y estadísticas.</p>
+        <p className="mt-1 text-sm text-zinc-400">Tu pipeline de leads, cargas y estadÃ­sticas.</p>
       </div>
 
       {saveMsg && (
@@ -392,21 +399,21 @@ export default function DashboardConversionesPage() {
         </div>
       </div>
 
-      {/* Date filter â€” visible on funnel, tabla, estadisticas */}
+      {/* Date filter Ã¢â‚¬â€ visible on funnel, tabla, estadisticas */}
       {(tab === "funnel" || tab === "tabla" || tab === "estadisticas") && (
         <div className="flex justify-end pt-1">
           <DateRangeFilter onChange={setDateRange} />
         </div>
       )}
 
-      {/* TAB: CONFIGURACIÓN */}
+      {/* TAB: CONFIGURACIÃ“N */}
       {tab === "configuracion" && (
         <div className="space-y-4">
           {/* Meta CAPI */}
           <section className="rounded-xl border border-zinc-800 bg-zinc-900/50">
             <button type="button" onClick={() => setConfigOpen((v) => !v)} className="flex w-full cursor-pointer items-center gap-2 p-4">
               <ChevronIcon open={configOpen} />
-              <h3 className="text-sm font-semibold text-zinc-200">Configuración Meta CAPI</h3>
+              <h3 className="text-sm font-semibold text-zinc-200">ConfiguraciÃ³n Meta CAPI</h3>
             </button>
             {configOpen && (
               <div className="space-y-4 border-t border-zinc-800 p-4">
@@ -483,18 +490,18 @@ export default function DashboardConversionesPage() {
                     </label>
                   )}
                   <div className="mt-3 rounded-lg border border-amber-700/40 bg-amber-950/30 p-3 text-[11px] text-amber-200">
-                    <p className="font-semibold">¡Confirmá que tus eventos estén llegando a Meta!</p>
+                    <p className="font-semibold">Â¡ConfirmÃ¡ que tus eventos estÃ©n llegando a Meta!</p>
                     <p className="mt-1">
-                      Ingresá al Administrador de eventos, seleccioná tu píxel y dirigite a la sección “Probar eventos”.
+                      IngresÃ¡ al Administrador de eventos, seleccionÃ¡ tu pÃ­xel y dirigite a la secciÃ³n â€œProbar eventosâ€.
                     </p>
                     <p className="mt-1">
-                      Copiá tu <code className="rounded bg-zinc-900 px-1 py-0.5 text-[10px]">test_event_code</code> y luego probá tu URL con este formato:
+                      CopiÃ¡ tu <code className="rounded bg-zinc-900 px-1 py-0.5 text-[10px]">test_event_code</code> y luego probÃ¡ tu URL con este formato:
                     </p>
                     <code className="mt-2 block break-all rounded bg-zinc-950 px-2 py-1 text-[10px] text-emerald-300">
                       https://landing.panelbotadmin.com/TU_NOMBRE/?test_event_code=TU_CODIGO_TEST
                     </code>
                     <p className="mt-2">
-                      Así vas a poder verificar en tiempo real si los eventos se están enviando correctamente a Meta.
+                      AsÃ­ vas a poder verificar en tiempo real si los eventos se estÃ¡n enviando correctamente a Meta.
                     </p>
                   </div>
                 </div>
@@ -521,7 +528,7 @@ export default function DashboardConversionesPage() {
                       </button>
                     </div>
                   ) : (
-                    <p className="text-[11px] text-amber-400">Tu URL aún no fue configurada. Contactá al administrador.</p>
+                    <p className="text-[11px] text-amber-400">Tu URL aÃºn no fue configurada. ContactÃ¡ al administrador.</p>
                   );
                 })()}
               </div>
@@ -532,12 +539,12 @@ export default function DashboardConversionesPage() {
           <section className="rounded-xl border border-zinc-800 bg-zinc-900/50">
             <button type="button" onClick={() => setFunnelConfigOpen((v) => !v)} className="flex w-full cursor-pointer items-center gap-2 p-4">
               <ChevronIcon open={funnelConfigOpen} />
-              <h3 className="text-sm font-semibold text-zinc-200">Personalización del funnel</h3>
+              <h3 className="text-sm font-semibold text-zinc-200">PersonalizaciÃ³n del funnel</h3>
             </button>
             {funnelConfigOpen && (
               <div className="space-y-4 border-t border-zinc-800 p-4">
                 <div>
-                  <label className="block text-xs font-medium text-zinc-400 mb-1">Monto mínimo para Jugador Premium</label>
+                  <label className="block text-xs font-medium text-zinc-400 mb-1">Monto mÃ­nimo para Jugador Premium</label>
                   <input
                     type="text"
                     inputMode="numeric"
@@ -562,7 +569,7 @@ export default function DashboardConversionesPage() {
               disabled={saving}
               className="cursor-pointer rounded-lg bg-zinc-100 px-4 py-2 text-sm font-medium text-zinc-900 transition hover:bg-zinc-200 active:scale-95 disabled:opacity-60"
             >
-              {saving ? "Guardando..." : "Guardar configuración"}
+              {saving ? "Guardando..." : "Guardar configuraciÃ³n"}
             </button>
           </div>
         </div>
@@ -586,7 +593,7 @@ export default function DashboardConversionesPage() {
                 <svg className="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
                   <path strokeLinecap="round" strokeLinejoin="round" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
                 </svg>
-                {refreshingTable ? "Actualizandoâ€¦" : "Actualizar"}
+                {refreshingTable ? "ActualizandoÃ¢â‚¬Â¦" : "Actualizar"}
               </button>
               <button
                 type="button"
@@ -595,7 +602,7 @@ export default function DashboardConversionesPage() {
                 className="inline-flex items-center gap-1.5 rounded-lg border border-zinc-700 bg-zinc-800/80 px-2.5 py-1.5 text-xs font-medium text-zinc-400 transition hover:bg-zinc-700 hover:text-zinc-300 disabled:opacity-50 disabled:cursor-not-allowed"
                 title="Ocultar registros de la vista (persistente, no borra de la base)"
               >
-                {hidingTable ? "Ocultandoâ€¦" : "Limpiar vista"}
+                {hidingTable ? "OcultandoÃ¢â‚¬Â¦" : "Limpiar vista"}
               </button>
             </div>
           </div>
@@ -618,7 +625,7 @@ export default function DashboardConversionesPage() {
                 ) : activeConversions.length === 0 ? (
                   <tr>
                     <td colSpan={displayedCols.length} className="px-2 py-6 text-center text-zinc-500">
-                      Aún no hay conversiones registradas.
+                      AÃºn no hay conversiones registradas.
                     </td>
                   </tr>
                 ) : activeConversions.map((c) => {
@@ -663,7 +670,7 @@ export default function DashboardConversionesPage() {
                 <svg className="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
                   <path strokeLinecap="round" strokeLinejoin="round" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
                 </svg>
-                {refreshingTable ? "Actualizandoâ€¦" : "Actualizar"}
+                {refreshingTable ? "ActualizandoÃ¢â‚¬Â¦" : "Actualizar"}
               </button>
               <button
                 type="button"
@@ -672,23 +679,23 @@ export default function DashboardConversionesPage() {
                 className="inline-flex items-center gap-1.5 rounded-lg border border-zinc-700 bg-zinc-800/80 px-2.5 py-1.5 text-xs font-medium text-zinc-400 transition hover:bg-zinc-700 hover:text-zinc-300 disabled:opacity-50 disabled:cursor-not-allowed"
                 title="Ocultar registros de la vista (persistente, no borra de la base)"
               >
-                {hidingFunnel ? "Ocultandoâ€¦" : "Limpiar vista"}
+                {hidingFunnel ? "OcultandoÃ¢â‚¬Â¦" : "Limpiar vista"}
               </button>
             </div>
           </div>
           {activeFunnel.length === 0 ? (
-            <p className="py-12 text-center text-sm text-zinc-500">Aún no hay contactos en el funnel.</p>
+            <p className="py-12 text-center text-sm text-zinc-500">AÃºn no hay contactos en el funnel.</p>
           ) : (
             <FunnelBoard contacts={activeFunnel} premiumThreshold={config?.funnel_premium_threshold ?? 50000} />
           )}
         </section>
       )}
 
-      {/* TAB: ESTADÍSTICAS */}
+      {/* TAB: ESTADÃSTICAS */}
       {tab === "estadisticas" && (
         <section className="rounded-xl border border-zinc-800 bg-zinc-900/50 p-4">
           <div className="mb-4 flex flex-wrap items-center justify-between gap-2">
-            <h3 className="text-sm font-semibold text-zinc-200">Estadísticas</h3>
+            <h3 className="text-sm font-semibold text-zinc-200">EstadÃ­sticas</h3>
             <div className="flex gap-2">
               <button
                 type="button"
@@ -700,7 +707,7 @@ export default function DashboardConversionesPage() {
                 <svg className="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
                   <path strokeLinecap="round" strokeLinejoin="round" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
                 </svg>
-                {refreshingTable ? "Actualizandoâ€¦" : "Actualizar"}
+                {refreshingTable ? "ActualizandoÃ¢â‚¬Â¦" : "Actualizar"}
               </button>
               <button
                 type="button"
@@ -709,12 +716,12 @@ export default function DashboardConversionesPage() {
                 className="inline-flex items-center gap-1.5 rounded-lg border border-zinc-700 bg-zinc-800/80 px-2.5 py-1.5 text-xs font-medium text-zinc-400 transition hover:bg-zinc-700 hover:text-zinc-300 disabled:opacity-50 disabled:cursor-not-allowed"
                 title="Ocultar registros de la vista (persistente, no borra de la base)"
               >
-                {hidingStats ? "Ocultandoâ€¦" : "Limpiar vista"}
+                {hidingStats ? "OcultandoÃ¢â‚¬Â¦" : "Limpiar vista"}
               </button>
             </div>
           </div>
           {activeFunnel.length === 0 && activeConversions.length === 0 ? (
-            <p className="py-12 text-center text-sm text-zinc-500">Aún no hay datos para estadísticas.</p>
+            <p className="py-12 text-center text-sm text-zinc-500">AÃºn no hay datos para estadÃ­sticas.</p>
           ) : (
             <StatsPanel
               funnelContacts={activeFunnel}
@@ -728,7 +735,7 @@ export default function DashboardConversionesPage() {
         </section>
       )}
 
-      {/* Logs tab removed â€” only available for admin */}
+      {/* Logs tab removed Ã¢â‚¬â€ only available for admin */}
     </div>
   );
 }
