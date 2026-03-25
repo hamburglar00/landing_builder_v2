@@ -7,11 +7,13 @@ import {
   upsertConversionsConfig,
   fetchConversionsFiltered,
   fetchFunnelContactsFiltered,
+  fetchConversionLogs,
   updateConversionEmail,
   hideConversions,
   hideContacts,
   type ConversionsConfig,
   type ConversionRow,
+  type ConversionLogRow,
   type FunnelContact,
 } from "@/lib/conversionsDb";
 import FunnelBoard from "@/components/conversiones/FunnelBoard";
@@ -22,15 +24,16 @@ import DateRangeFilter, {
   filterFunnelByDateRange,
 } from "@/components/conversiones/DateRangeFilter";
 
-type Tab = "funnel" | "tabla" | "estadisticas" | "configuracion";
+type Tab = "funnel" | "tabla" | "estadisticas" | "configuracion" | "logs";
 
-const TAB_ORDER: Tab[] = ["funnel", "tabla", "estadisticas", "configuracion"];
+const TAB_ORDER: Tab[] = ["funnel", "tabla", "estadisticas", "configuracion", "logs"];
 
 const TAB_LABELS: Record<Tab, string> = {
   funnel: "Funnel",
   tabla: "Tabla",
   estadisticas: "EstadÃ­sticas",
   configuracion: "ConfiguraciÃ³n",
+  logs: "Logs",
 };
 
 function ChevronIcon({ open }: { open: boolean }) {
@@ -62,6 +65,16 @@ function statusText(status: string) {
   if (status === "enviado") return <span className="text-emerald-400">enviado</span>;
   if (status === "error") return <span className="text-red-400">error</span>;
   return <span className="text-zinc-600">-</span>;
+}
+
+function levelBadge(level: string) {
+  const cls =
+    level === "ERROR"
+      ? "bg-red-950 text-red-300"
+      : level === "DEBUG"
+        ? "bg-zinc-800 text-zinc-500"
+        : "bg-blue-950 text-blue-300";
+  return <span className={`inline-block rounded-full px-2 py-0.5 text-[10px] font-medium ${cls}`}>{level}</span>;
 }
 
 function truncateId(id: string, len = 8) {
@@ -189,6 +202,7 @@ export default function DashboardConversionesPage() {
   const [config, setConfig] = useState<ConversionsConfig | null>(null);
   const [conversions, setConversions] = useState<ConversionRow[]>([]);
   const [funnelContacts, setFunnelContacts] = useState<FunnelContact[]>([]);
+  const [logs, setLogs] = useState<ConversionLogRow[]>([]);
   const [clientName, setClientName] = useState("");
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
@@ -196,6 +210,7 @@ export default function DashboardConversionesPage() {
   const [clearMsg, setClearMsg] = useState<string | null>(null);
   const [tab, setTab] = useState<Tab>("funnel");
   const [copiedUrl, setCopiedUrl] = useState<string | null>(null);
+  const [expandedLog, setExpandedLog] = useState<number | null>(null);
 
   const [dateRange, setDateRange] = useState<DateRange | null>(null);
   const [refreshingTable, setRefreshingTable] = useState(false);
@@ -223,6 +238,10 @@ export default function DashboardConversionesPage() {
     () => ALL_COLUMNS.filter((c) => visibleCols.has(c)),
     [visibleCols],
   );
+  const internalIdByConversionId = useMemo(
+    () => new Map(activeConversions.map((c, idx) => [c.id, idx + 1])),
+    [activeConversions],
+  );
 
   useEffect(() => {
     const init = async () => {
@@ -230,14 +249,16 @@ export default function DashboardConversionesPage() {
       if (!user) return;
       setUserId(user.id);
       try {
-        const [cfg, rows, funnel] = await Promise.all([
+        const [cfg, rows, funnel, logRows] = await Promise.all([
           fetchConversionsConfig(user.id),
           fetchConversionsFiltered(user.id, user.id),
           fetchFunnelContactsFiltered(user.id, user.id),
+          fetchConversionLogs(user.id, 200),
         ]);
         setConfig(cfg);
         setConversions(rows);
         setFunnelContacts(funnel);
+        setLogs(logRows);
 
         const { data: profile } = await supabase
           .from("profiles").select("nombre").eq("id", user.id).maybeSingle();
@@ -269,12 +290,14 @@ export default function DashboardConversionesPage() {
     if (!userId) return;
     setRefreshingTable(true);
     try {
-      const [rows, funnel] = await Promise.all([
+      const [rows, funnel, logRows] = await Promise.all([
         fetchConversionsFiltered(userId, userId),
         fetchFunnelContactsFiltered(userId, userId),
+        fetchConversionLogs(userId, 200),
       ]);
       setConversions(rows);
       setFunnelContacts(funnel);
+      setLogs(logRows);
     } catch (e) { console.error(e); }
     finally { setRefreshingTable(false); }
   }, [userId]);
@@ -610,6 +633,7 @@ export default function DashboardConversionesPage() {
             <table className="w-full text-left text-[11px]">
               <thead className="bg-zinc-800/80 sticky top-0">
                 <tr>
+                  <th className="px-2 py-2 font-medium text-zinc-300 whitespace-nowrap">id_interno</th>
                   {displayedCols.map((col) => (
                     <th key={col} className="px-2 py-2 font-medium text-zinc-300 whitespace-nowrap">{col}</th>
                   ))}
@@ -618,17 +642,17 @@ export default function DashboardConversionesPage() {
               <tbody className="divide-y divide-zinc-800">
                 {displayedCols.length === 0 ? (
                   <tr>
-                    <td colSpan={1} className="px-2 py-6 text-center text-zinc-500">
+                    <td colSpan={2} className="px-2 py-6 text-center text-zinc-500">
                       Tu administrador todavia no definio columnas visibles para esta tabla.
                     </td>
                   </tr>
                 ) : activeConversions.length === 0 ? (
                   <tr>
-                    <td colSpan={displayedCols.length} className="px-2 py-6 text-center text-zinc-500">
+                    <td colSpan={displayedCols.length + 1} className="px-2 py-6 text-center text-zinc-500">
                       AÃºn no hay conversiones registradas.
                     </td>
                   </tr>
-                ) : activeConversions.map((c) => {
+                ) : activeConversions.map((c, idx) => {
                   const isRepeat = c.estado === "purchase" && c.observaciones?.includes("REPEAT");
                   const rowColor =
                     c.estado === "lead"
@@ -640,6 +664,7 @@ export default function DashboardConversionesPage() {
                           : "bg-zinc-950/40";
                   return (
                     <tr key={c.id} className={rowColor}>
+                      <td className="px-2 py-1.5 whitespace-nowrap text-zinc-500 font-mono">{idx + 1}</td>
                       {displayedCols.map((col) =>
                         col === "email" ? (
                           <EditableEmailCell key={col} row={c} onSaved={(id, email) => setConversions((prev) => prev.map((r) => (r.id === id ? { ...r, email } : r)))} />
@@ -735,10 +760,69 @@ export default function DashboardConversionesPage() {
         </section>
       )}
 
-      {/* Logs tab removed Ã¢â‚¬â€ only available for admin */}
+            {/* TAB: LOGS */}
+      {tab === "logs" && (
+        <section className="rounded-xl border border-zinc-800 bg-zinc-900/50 p-4">
+          <h3 className="mb-4 text-sm font-semibold text-zinc-200">
+            Logs de conversiones{" "}
+            <span className="font-normal text-zinc-500">({logs.length})</span>
+          </h3>
+          {logs.length === 0 ? (
+            <p className="text-sm text-zinc-500">AÃºn no hay logs registrados.</p>
+          ) : (
+            <div className="overflow-x-auto rounded-lg border border-zinc-700">
+              <table className="w-full text-left text-[11px]">
+                <thead className="bg-zinc-800/80">
+                  <tr>
+                    <th className="px-2 py-2 font-medium text-zinc-300 whitespace-nowrap">id_interno</th>
+                    <th className="px-2 py-2 font-medium text-zinc-300 whitespace-nowrap">Fecha</th>
+                    <th className="px-2 py-2 font-medium text-zinc-300 whitespace-nowrap">Nivel</th>
+                    <th className="px-2 py-2 font-medium text-zinc-300 whitespace-nowrap">FunciÃ³n</th>
+                    <th className="px-2 py-2 font-medium text-zinc-300 whitespace-nowrap">Mensaje</th>
+                    <th className="px-2 py-2 font-medium text-zinc-300 whitespace-nowrap">Detalle</th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-zinc-800">
+                  {logs.map((log) => (
+                    <tr key={log.id} className="bg-zinc-950/40">
+                      <td className="px-2 py-1.5 text-zinc-500 font-mono whitespace-nowrap">
+                        {log.conversion_id ? (internalIdByConversionId.get(log.conversion_id) ?? "-") : "-"}
+                      </td>
+                      <td className="px-2 py-1.5 text-zinc-400 whitespace-nowrap">
+                        {new Date(log.created_at).toLocaleString("es-AR", { month: "2-digit", day: "2-digit", hour: "2-digit", minute: "2-digit", second: "2-digit", hour12: false })}
+                      </td>
+                      <td className="px-2 py-1.5">{levelBadge(log.level)}</td>
+                      <td className="px-2 py-1.5 text-zinc-300 font-mono whitespace-nowrap">{log.function_name}</td>
+                      <td className="px-2 py-1.5 text-zinc-200">{log.message}</td>
+                      <td className="px-2 py-1.5 text-zinc-500">
+                        {log.detail ? (
+                          <button type="button" onClick={() => setExpandedLog(expandedLog === log.id ? null : log.id)} className="cursor-pointer text-zinc-400 underline hover:text-zinc-200">
+                            {expandedLog === log.id ? "ocultar" : "ver"}
+                          </button>
+                        ) : "-"}
+                        {expandedLog === log.id && log.detail && (
+                          <pre className="mt-1 max-w-[500px] overflow-x-auto rounded bg-zinc-900 p-2 text-[10px] text-zinc-400">
+                            {(() => { try { return JSON.stringify(JSON.parse(log.detail), null, 2); } catch { return log.detail; } })()}
+                          </pre>
+                        )}
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          )}
+        </section>
+      )}
     </div>
   );
 }
+
+
+
+
+
+
 
 
 

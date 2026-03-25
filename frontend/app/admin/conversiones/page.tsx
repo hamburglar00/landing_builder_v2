@@ -264,6 +264,10 @@ export default function AdminConversionesPage() {
   const rawFunnel = demoMode ? demoFunnel : funnelContacts;
   const activeConversions = useMemo(() => filterByDateRange(rawConversions, dateRange), [rawConversions, dateRange]);
   const activeFunnel = useMemo(() => filterFunnelByDateRange(rawFunnel, dateRange), [rawFunnel, dateRange]);
+  const internalIdByConversionId = useMemo(
+    () => new Map(activeConversions.map((c, idx) => [c.id, idx + 1])),
+    [activeConversions],
+  );
 
   // Collapsible states for config tab
   const [configOpen, setConfigOpen] = useState(false);
@@ -775,6 +779,7 @@ export default function AdminConversionesPage() {
                 <table className="w-full text-left text-[11px]">
                   <thead className="bg-zinc-800/80 sticky top-0">
                     <tr>
+                      <th className="px-2 py-2 font-medium text-zinc-300 whitespace-nowrap">id_interno</th>
                       {cols.map((col) => (
                         <th key={col} className="px-2 py-2 font-medium text-zinc-300 whitespace-nowrap">{col}</th>
                       ))}
@@ -783,11 +788,11 @@ export default function AdminConversionesPage() {
                   <tbody className="divide-y divide-zinc-800">
                     {displayRows.length === 0 ? (
                       <tr>
-                        <td colSpan={cols.length || 1} className="px-2 py-6 text-center text-zinc-500">
+                        <td colSpan={(cols.length || 1) + 1} className="px-2 py-6 text-center text-zinc-500">
                           AÃºn no hay conversiones registradas.
                         </td>
                       </tr>
-                    ) : displayRows.map((c) => {
+                    ) : displayRows.map((c, idx) => {
                       const isRepeat = c.estado === "purchase" && c.observaciones?.includes("REPEAT");
                       const rowColor =
                         c.estado === "lead"
@@ -799,6 +804,7 @@ export default function AdminConversionesPage() {
                               : "bg-zinc-950/40";
                       return (
                         <tr key={c.id} className={rowColor}>
+                          <td className="px-2 py-1.5 whitespace-nowrap text-zinc-500 font-mono">{idx + 1}</td>
                           {cols.map((col) =>
                             col === "email" ? (
                               <EditableEmailCell key={col} row={c} onSaved={(id, email) => setConversions((prev) => prev.map((r) => (r.id === id ? { ...r, email } : r)))} />
@@ -912,6 +918,7 @@ export default function AdminConversionesPage() {
               <table className="w-full text-left text-[11px]">
                 <thead className="bg-zinc-800/80">
                   <tr>
+                    <th className="px-2 py-2 font-medium text-zinc-300 whitespace-nowrap">id_interno</th>
                     <th className="px-2 py-2 font-medium text-zinc-300 whitespace-nowrap">Fecha</th>
                     <th className="px-2 py-2 font-medium text-zinc-300 whitespace-nowrap">Nivel</th>
                     <th className="px-2 py-2 font-medium text-zinc-300 whitespace-nowrap">FunciÃ³n</th>
@@ -922,6 +929,9 @@ export default function AdminConversionesPage() {
                 <tbody className="divide-y divide-zinc-800">
                   {logs.map((log) => (
                     <tr key={log.id} className="bg-zinc-950/40">
+                      <td className="px-2 py-1.5 text-zinc-500 font-mono whitespace-nowrap">
+                        {log.conversion_id ? (internalIdByConversionId.get(log.conversion_id) ?? "-") : "-"}
+                      </td>
                       <td className="px-2 py-1.5 text-zinc-400 whitespace-nowrap">
                         {new Date(log.created_at).toLocaleString("es-AR", { month: "2-digit", day: "2-digit", hour: "2-digit", minute: "2-digit", second: "2-digit" })}
                       </td>
@@ -951,6 +961,5 @@ export default function AdminConversionesPage() {
     </div>
   );
 }
-
 
 
