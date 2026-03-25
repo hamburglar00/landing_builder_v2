@@ -330,9 +330,9 @@ async function sendToMetaCAPI(
     "purchase_status_capi";
 
   const okMsg =
-    eventName === "Contact" ? "ÃƒÂ¢Ã…â€œÃ¢â‚¬Â¦ CONTACT OK" :
-    eventName === "Lead" ? "ÃƒÂ¢Ã…â€œÃ¢â‚¬Â¦ LEAD OK" :
-    customData?.purchase_type === "repeat" ? "ÃƒÂ¢Ã…â€œÃ¢â‚¬Â¦ PURCHASE REPEAT OK" : "ÃƒÂ¢Ã…â€œÃ¢â‚¬Â¦ PURCHASE OK";
+    eventName === "Contact" ? "CONTACT OK" :
+    eventName === "Lead" ? "LEAD OK" :
+    customData?.purchase_type === "repeat" ? "PURCHASE REPEAT OK" : "PURCHASE OK";
 
   const errMsg =
     eventName === "Contact" ? "ERROR CONTACT" :
@@ -518,7 +518,10 @@ async function handleLead(
   config: ConversionsConfig,
 ): Promise<Response> {
   const cleanPhone = sanitizePhone(p.phone);
-  if (!cleanPhone) return textResponse("Faltan parÃƒÆ’Ã‚Â¡metros: phone requerido", 400);
+  if (!cleanPhone) {
+    await writeLog(db, landing.user_id, "handleLead", "ERROR", "LEAD rechazado: falta phone", safePayloadRaw(p));
+    return textResponse("Faltan parámetros: phone requerido", 400);
+  }
   const testEventCode = norm(p.test_event_code);
   const purchasePayloadRaw = safePayloadRaw(p);
 
@@ -659,7 +662,10 @@ async function handlePurchase(
 ): Promise<Response> {
   const cleanPhone = sanitizePhone(p.phone);
   const amount = parseFloat(p.amount);
-  if (!cleanPhone || isNaN(amount)) return textResponse("Faltan parÃƒÆ’Ã‚Â¡metros: phone y amount", 400);
+  if (!cleanPhone || isNaN(amount)) {
+    await writeLog(db, landing.user_id, "handlePurchase", "ERROR", "PURCHASE rechazado: falta phone o amount", safePayloadRaw(p));
+    return textResponse("Faltan parámetros: phone y amount", 400);
+  }
   const testEventCode = norm(p.test_event_code);
   const purchasePayloadRaw = safePayloadRaw(p);
 
@@ -1033,15 +1039,28 @@ Deno.serve(async (req) => {
     // Build a virtual LandingRow representing the client endpoint
     const landing: LandingRow = { id: "", name: landingName, user_id: userId };
 
+    const action = norm(params.action).toUpperCase();
+
     // Route to the correct handler
-    if (!params.action && params.phone && params.amount) {
+    if (!action && params.phone && params.amount) {
       return handleSimplePurchase(db, params, landing, cfg);
     }
-    if (params.action === "LEAD") {
+    if (action === "LEAD") {
       return handleLead(db, params, landing, cfg);
     }
-    if (params.action === "PURCHASE") {
+    if (action === "PURCHASE") {
       return handlePurchase(db, params, landing, cfg);
+    }
+
+    if (action) {
+      await writeLog(
+        db,
+        landing.user_id,
+        "main",
+        "ERROR",
+        "Action desconocida recibida",
+        JSON.stringify({ action, payload: safePayloadRaw(params) }),
+      );
     }
 
     // Default: contact from landing
