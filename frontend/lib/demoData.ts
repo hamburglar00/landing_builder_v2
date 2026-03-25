@@ -75,6 +75,7 @@ export function generateDemoConversions(count = 80): ConversionRow[] {
 
     rows.push({
       id: uuid(),
+      internal_id: i + 1,
       landing_id: uuid(),
       user_id: "demo",
       landing_name: landing,
