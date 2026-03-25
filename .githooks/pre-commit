@@ -1,0 +1,6 @@
+#!/usr/bin/env sh
+set -eu
+
+echo "[pre-commit] Running encoding guard..."
+node scripts/check-encoding.js --changed
+
