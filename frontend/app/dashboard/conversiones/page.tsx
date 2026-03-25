@@ -239,8 +239,8 @@ export default function DashboardConversionesPage() {
     [visibleCols],
   );
   const internalIdByConversionId = useMemo(
-    () => new Map(activeConversions.map((c, idx) => [c.id, idx + 1])),
-    [activeConversions],
+    () => new Map(conversions.map((c) => [c.id, c.internal_id])),
+    [conversions],
   );
 
   useEffect(() => {
@@ -664,7 +664,7 @@ export default function DashboardConversionesPage() {
                           : "bg-zinc-950/40";
                   return (
                     <tr key={c.id} className={rowColor}>
-                      <td className="px-2 py-1.5 whitespace-nowrap text-zinc-500 font-mono">{idx + 1}</td>
+                      <td className="px-2 py-1.5 whitespace-nowrap text-zinc-500 font-mono">{c.internal_id ?? idx + 1}</td>
                       {displayedCols.map((col) =>
                         col === "email" ? (
                           <EditableEmailCell key={col} row={c} onSaved={(id, email) => setConversions((prev) => prev.map((r) => (r.id === id ? { ...r, email } : r)))} />

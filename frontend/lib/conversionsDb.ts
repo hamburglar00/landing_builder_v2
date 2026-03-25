@@ -22,6 +22,7 @@ export interface ConversionsConfig {
 
 export interface ConversionRow {
   id: string;
+  internal_id: number | null;
   landing_id: string | null;
   user_id: string;
   landing_name: string;
@@ -196,7 +197,7 @@ export async function updateAllVisibleColumns(
 // ─── Conversions list ───────────────────────────────────────────────────────
 
 const CONVERSIONS_SELECT = `
-  id, landing_id, user_id, landing_name,
+  id, internal_id, landing_id, user_id, landing_name,
   phone, email, fn, ln, ct, st, zip, country,
   fbp, fbc,
   contact_event_id, contact_event_time,
