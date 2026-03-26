@@ -237,16 +237,16 @@ export default function DashboardGerenciasPage() {
         </div>
       )}
 
-      <div className="rounded-xl border border-[var(--color-border)] bg-[var(--color-bg-2)] overflow-hidden shadow-sm">
+      <div className="rounded-xl border border-zinc-800 overflow-hidden">
         <table className="w-full text-left text-sm">
-          <thead className="bg-[var(--color-bg-3)]">
+          <thead className="bg-zinc-900/80">
             <tr>
               <th className="px-4 py-3 font-medium text-zinc-300">Nombre</th>
               <th className="px-4 py-3 font-medium text-zinc-300">Gerencia ID</th>
               <th className="px-4 py-3 text-right font-medium text-zinc-300">Acciones</th>
             </tr>
           </thead>
-          <tbody className="divide-y divide-[var(--color-border)]">
+          <tbody className="divide-y divide-zinc-800">
             {gerencias.length === 0 && (
               <tr>
                 <td colSpan={3} className="px-4 py-6 text-center text-zinc-500">
@@ -255,7 +255,7 @@ export default function DashboardGerenciasPage() {
               </tr>
             )}
             {gerencias.map((g) => (
-              <tr key={g.id} className="bg-transparent hover:bg-[rgba(255,255,255,0.03)]">
+              <tr key={g.id} className="bg-zinc-950/40">
                 <td className="px-4 py-3">
                   {editingId === g.id ? (
                     <form onSubmit={handleUpdate} className="inline-flex flex-wrap items-center gap-2">
@@ -291,7 +291,7 @@ export default function DashboardGerenciasPage() {
                       <button
                         type="button"
                         onClick={() => startEdit(g)}
-                        className="mr-2 rounded-md border border-[var(--color-border)] bg-[rgba(255,255,255,0.03)] px-2 py-1 text-xs font-medium text-[var(--color-text)] transition hover:bg-[rgba(255,255,255,0.06)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-ring-neutral)]"
+                        className="mr-2 rounded-md border border-zinc-700 px-2 py-1 text-xs text-zinc-300 hover:bg-zinc-800"
                       >
                         Editar
                       </button>
@@ -299,7 +299,7 @@ export default function DashboardGerenciasPage() {
                         type="button"
                         onClick={() => void handleDelete(g.id)}
                         disabled={deletingId === g.id}
-                        className="rounded-md border border-[rgba(239,68,68,0.25)] bg-[rgba(239,68,68,0.10)] px-2 py-1 text-xs font-medium text-[#FCA5A5] transition hover:border-[rgba(239,68,68,0.4)] hover:bg-[rgba(239,68,68,0.16)] disabled:opacity-70 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[rgba(239,68,68,0.35)]"
+                        className="rounded-md border border-red-800 px-2 py-1 text-xs text-red-300 hover:bg-red-950/50 disabled:opacity-70"
                       >
                         {deletingId === g.id ? "Eliminando..." : "Eliminar"}
                       </button>
