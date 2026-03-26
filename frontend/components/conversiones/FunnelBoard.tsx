@@ -106,15 +106,6 @@ function relDate(iso: string): string {
   return `${Math.floor(days / 30)}mes`;
 }
 
-/* aa Icons aa */
-function SearchIcon({ className }: { className?: string }) {
-  return (
-    <svg viewBox="0 0 20 20" fill="currentColor" className={className}>
-      <path fillRule="evenodd" d="M9 3.5a5.5 5.5 0 100 11 5.5 5.5 0 000-11zM2 9a7 7 0 1112.452 4.391l3.328 3.329a.75.75 0 11-1.06 1.06l-3.329-3.328A7 7 0 012 9z" clipRule="evenodd" />
-    </svg>
-  );
-}
-
 function WaIcon({ className }: { className?: string }) {
   return (
     <svg viewBox="0 0 24 24" className={className} fill="currentColor">
@@ -224,7 +215,6 @@ export default function FunnelBoard({
 }) {
   const [sortKey, setSortKey] = useState<SortKey>("date");
   const [sortDir, setSortDir] = useState<SortDir>("desc");
-  const [search, setSearch] = useState("");
 
   const toggleSort = (key: SortKey) => {
     if (sortKey === key) {
@@ -235,26 +225,14 @@ export default function FunnelBoard({
     }
   };
 
-  const { grouped, totals } = useMemo(() => {
+  const grouped = useMemo(() => {
     const g: Record<FunnelStage, FunnelContact[]> = {
       leads: [], primera_carga: [], recurrente: [], premium: [],
     };
 
-    let totalRevenue = 0;
-    const q = search.toLowerCase().trim();
-
     for (const c of contacts) {
-      if (q) {
-        const phoneClean = c.phone.replace(/\D/g, "");
-        const qClean = q.replace(/\D/g, "");
-        const matchPhone = qClean && phoneClean.includes(qClean);
-        const matchName = (c.fn ?? "").toLowerCase().includes(q) || (c.ln ?? "").toLowerCase().includes(q);
-        const matchEmail = (c.email ?? "").toLowerCase().includes(q);
-        if (!matchPhone && !matchName && !matchEmail) continue;
-      }
       const stage = classifyContact(c, premiumThreshold);
       g[stage].push(c);
-      totalRevenue += c.total_valor;
     }
 
     const dir = sortDir === "desc" ? 1 : -1;
@@ -265,19 +243,8 @@ export default function FunnelBoard({
 
     for (const s of STAGES) g[s].sort(sortFn);
 
-    const total = g.leads.length + g.primera_carga.length + g.recurrente.length + g.premium.length;
-    return {
-      grouped: g,
-      totals: {
-        all: total,
-        leads: g.leads.length,
-        primera: g.primera_carga.length,
-        recurrente: g.recurrente.length,
-        premium: g.premium.length,
-        revenue: totalRevenue,
-      },
-    };
-  }, [contacts, premiumThreshold, sortKey, sortDir, search]);
+    return g;
+  }, [contacts, premiumThreshold, sortKey, sortDir]);
 
   const stageRevenue = useMemo(() => {
     const rev: Record<FunnelStage, number> = { leads: 0, primera_carga: 0, recurrente: 0, premium: 0 };
@@ -287,29 +254,6 @@ export default function FunnelBoard({
 
   return (
     <div className="space-y-4">
-
-      {/* aa COMMAND BAR: Search + KPIs aa */}
-      <div className="rounded-2xl border border-zinc-800/40 bg-[#0d0d11]">
-
-        {/* Search row */}
-        <div className="px-4 pt-4 pb-3">
-          <div className="relative">
-            <SearchIcon className="pointer-events-none absolute left-3.5 top-1/2 h-4 w-4 -translate-y-1/2 text-zinc-600" />
-            <input
-              type="text"
-              value={search}
-              onChange={(e) => setSearch(e.target.value)}
-              placeholder="Buscar por telOfono, nombre o email..."
-              className="h-10 w-full rounded-xl border border-zinc-800/50 bg-zinc-900/60 pl-10 pr-4 text-sm text-zinc-200 placeholder:text-zinc-600 outline-none transition-all focus:border-zinc-700 focus:bg-zinc-900/90 focus:ring-1 focus:ring-zinc-700/50"
-            />
-            <span className="absolute right-3.5 top-1/2 -translate-y-1/2 text-[11px] text-zinc-600 tabular-nums">
-              {totals.all}{search ? ` resultado${totals.all !== 1 ? "s" : ""}` : ` contacto${totals.all !== 1 ? "s" : ""}`}
-            </span>
-          </div>
-        </div>
-
-        {/* KPI strip removido para evitar redundancia con columnas del funnel */}
-      </div>
 
       {/* aa SORT CONTROLS aa */}
       <div className="flex items-center justify-end gap-2">
