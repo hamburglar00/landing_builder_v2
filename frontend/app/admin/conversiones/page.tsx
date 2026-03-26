@@ -64,7 +64,7 @@ function CopyIcon() {
 
 function FunnelTabIcon() {
   return (
-    <svg className="h-3.5 w-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2}>
+    <svg className="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2.25}>
       <path strokeLinecap="round" strokeLinejoin="round" d="M3 5h18l-7 8v5l-4 2v-7L3 5z" />
     </svg>
   );
@@ -72,21 +72,29 @@ function FunnelTabIcon() {
 
 function TrackingTabIcon() {
   return (
-    <svg className="h-3.5 w-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2}>
-      <path strokeLinecap="round" strokeLinejoin="round" d="M4 19h16M7 16l3-3 3 2 4-5" />
-      <circle cx="7" cy="16" r="1" />
-      <circle cx="10" cy="13" r="1" />
-      <circle cx="13" cy="15" r="1" />
-      <circle cx="17" cy="10" r="1" />
+    <svg className="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2.25}>
+      <path strokeLinecap="round" strokeLinejoin="round" d="M4 19h16M7 15l3-3 3 2 4-5" />
+      <path strokeLinecap="round" strokeLinejoin="round" d="M17 10h2v2" />
     </svg>
   );
 }
 
 function TableTabIcon() {
   return (
-    <svg className="h-3.5 w-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2}>
+    <svg className="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2.25}>
       <rect x="3" y="5" width="18" height="14" rx="2" />
       <path d="M3 10h18M9 5v14M15 5v14" />
+    </svg>
+  );
+}
+
+function StatsTabIcon() {
+  return (
+    <svg className="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2.25}>
+      <path strokeLinecap="round" strokeLinejoin="round" d="M4 19h16" />
+      <rect x="6" y="11" width="3" height="6" rx="1" />
+      <rect x="11" y="8" width="3" height="9" rx="1" />
+      <rect x="16" y="5" width="3" height="12" rx="1" />
     </svg>
   );
 }
@@ -102,7 +110,7 @@ function GearTabIcon() {
 
 function LogsTabIcon() {
   return (
-    <svg className="h-3.5 w-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2}>
+    <svg className="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2.25}>
       <path strokeLinecap="round" strokeLinejoin="round" d="M9 17h6M9 13h6M9 9h6" />
       <path strokeLinecap="round" strokeLinejoin="round" d="M7 3h8l4 4v14H7a2 2 0 01-2-2V5a2 2 0 012-2z" />
     </svg>
@@ -561,7 +569,7 @@ export default function AdminConversionesPage() {
                 }`}
               >
                 <span className="inline-flex items-center gap-1.5">
-                  {t === "funnel" ? <FunnelTabIcon /> : t === "seguimiento" ? <TrackingTabIcon /> : t === "tabla" ? <TableTabIcon /> : null}
+                  {t === "funnel" ? <FunnelTabIcon /> : t === "seguimiento" ? <TrackingTabIcon /> : t === "tabla" ? <TableTabIcon /> : t === "estadisticas" ? <StatsTabIcon /> : null}
                   {TAB_LABELS[t]}
                 </span>
                 <span
