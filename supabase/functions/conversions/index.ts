@@ -506,7 +506,7 @@ async function handleContact(
     purchase_event_id: "",
     purchase_event_time: null,
     purchase_payload_raw: "",
-    test_event_code: testEventCode,
+    test_event_code: testEventCode || srcRow?.test_event_code || "",
     client_ip: norm(p.clientIP),
     agent_user: norm(p.agentuser),
     device_type: norm(p.device_type),
@@ -861,7 +861,7 @@ async function handlePurchase(
     purchase_event_id: purchaseEventId,
     purchase_event_time: purchaseEventTime,
     purchase_payload_raw: purchasePayloadRaw,
-    test_event_code: testEventCode,
+    test_event_code: testEventCode || srcRow?.test_event_code || "",
     purchase_type: "repeat",
     client_ip: srcRow?.client_ip ?? "",
     agent_user: srcRow?.agent_user ?? "",
@@ -1085,5 +1085,4 @@ Deno.serve(async (req) => {
     return textResponse("Error inesperado", 500);
   }
 });
-
 
