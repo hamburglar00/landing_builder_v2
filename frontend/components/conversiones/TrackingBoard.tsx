@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import type {
   ConversionRow,
   TrackingRankingConfig,
@@ -19,15 +19,16 @@ type TrackingRow = {
 };
 
 const DEFAULT_RULES: RankRule[] = [
-  { id: "r1", indicator: "??", maxTotal: 1000 },
-  { id: "r2", indicator: "??", maxTotal: 5000 },
-  { id: "r3", indicator: "??", maxTotal: 10000 },
-  { id: "r4", indicator: "??", maxTotal: 50000 },
-  { id: "r5", indicator: "??", maxTotal: 100000 },
-  { id: "r6", indicator: "?", maxTotal: 300000 },
-  { id: "r7", indicator: "??", maxTotal: 500000 },
+  { id: "r1", indicator: "\u{1F4A9}", maxTotal: 1000 },
+  { id: "r2", indicator: "\u{1F7E2}", maxTotal: 5000 },
+  { id: "r3", indicator: "\u{1F7E1}", maxTotal: 10000 },
+  { id: "r4", indicator: "\u{1F7E0}", maxTotal: 50000 },
+  { id: "r5", indicator: "\u{1F534}", maxTotal: 100000 },
+  { id: "r6", indicator: "\u{26AB}", maxTotal: 300000 },
+  { id: "r7", indicator: "\u{1F525}", maxTotal: 500000 },
 ];
-const DEFAULT_OVERFLOW = "??";
+const DEFAULT_OVERFLOW = "\u{1F4A3}";
+const LEAD_INDICATOR = "\u{1F4F2}";
 const DEFAULT_SORT: SortMode = "last_active_desc";
 
 function formatThousands(n: number) {
@@ -83,28 +84,33 @@ export default function TrackingBoard({
   rankingConfig?: TrackingRankingConfig | null;
   onRankingConfigChange?: (cfg: TrackingRankingConfig) => void;
 }) {
-  const [rules, setRules] = useState<RankRule[]>(
-    rankingConfig?.rules?.length ? rankingConfig.rules : DEFAULT_RULES,
-  );
-  const [overflowIndicator, setOverflowIndicator] = useState(
-    rankingConfig?.overflowIndicator || DEFAULT_OVERFLOW,
-  );
-  const [sortMode, setSortMode] = useState<SortMode>(
-    rankingConfig?.sortMode || DEFAULT_SORT,
-  );
+  const initialRules = rankingConfig?.rules?.length ? rankingConfig.rules : DEFAULT_RULES;
+  const initialOverflow = rankingConfig?.overflowIndicator || DEFAULT_OVERFLOW;
+  const initialSort = rankingConfig?.sortMode || DEFAULT_SORT;
+
+  const [rules, setRules] = useState<RankRule[]>(initialRules);
+  const [overflowIndicator, setOverflowIndicator] = useState(initialOverflow);
+  const [sortMode, setSortMode] = useState<SortMode>(initialSort);
+
+  const [draftRules, setDraftRules] = useState<RankRule[]>(initialRules);
+  const [draftOverflowIndicator, setDraftOverflowIndicator] = useState(initialOverflow);
+  const [draftSortMode, setDraftSortMode] = useState<SortMode>(initialSort);
+
   const [openConfig, setOpenConfig] = useState(false);
 
-  const pushConfig = (
-    nextRules: RankRule[],
-    nextOverflow: string,
-    nextSort: SortMode,
-  ) => {
-    onRankingConfigChange?.({
-      rules: nextRules,
-      overflowIndicator: nextOverflow,
-      sortMode: nextSort,
-    });
-  };
+  useEffect(() => {
+    const nextRules = rankingConfig?.rules?.length ? rankingConfig.rules : DEFAULT_RULES;
+    const nextOverflow = rankingConfig?.overflowIndicator || DEFAULT_OVERFLOW;
+    const nextSort = rankingConfig?.sortMode || DEFAULT_SORT;
+    setRules(nextRules);
+    setOverflowIndicator(nextOverflow);
+    setSortMode(nextSort);
+    if (!openConfig) {
+      setDraftRules(nextRules);
+      setDraftOverflowIndicator(nextOverflow);
+      setDraftSortMode(nextSort);
+    }
+  }, [rankingConfig, openConfig]);
 
   const rows = useMemo<TrackingRow[]>(() => {
     const byPhone = new Map<string, ConversionRow[]>();
@@ -157,16 +163,35 @@ export default function TrackingBoard({
     return overflowIndicator || "-";
   };
 
+  const openConfigModal = () => {
+    setDraftRules(rules);
+    setDraftOverflowIndicator(overflowIndicator);
+    setDraftSortMode(sortMode);
+    setOpenConfig(true);
+  };
+
+  const saveConfig = () => {
+    setRules(draftRules);
+    setOverflowIndicator(draftOverflowIndicator);
+    setSortMode(draftSortMode);
+    onRankingConfigChange?.({
+      rules: draftRules,
+      overflowIndicator: draftOverflowIndicator,
+      sortMode: draftSortMode,
+    });
+    setOpenConfig(false);
+  };
+
   return (
-    <section className="rounded-xl border border-zinc-800 bg-zinc-900/50 p-4">
-      <div className="mb-4 flex flex-wrap items-center justify-between gap-2">
+    <section className="rounded-xl border border-zinc-800 bg-zinc-900/50 p-3 sm:p-4">
+      <div className="mb-4 flex flex-col gap-2 sm:flex-row sm:flex-wrap sm:items-center sm:justify-between">
         <h3 className="text-sm font-semibold text-zinc-200">Seguimiento</h3>
-        <div className="ml-auto flex items-center gap-2">
+        <div className="flex w-full items-center gap-2 sm:ml-auto sm:w-auto">
           <button
             type="button"
             onClick={onRefresh}
             disabled={!onRefresh || refreshing}
-            className="inline-flex items-center gap-1.5 rounded-lg border border-zinc-700 bg-zinc-800/80 px-2.5 py-1.5 text-xs font-medium text-zinc-300 transition hover:bg-zinc-700 hover:text-zinc-100 disabled:opacity-60"
+            className="inline-flex flex-1 items-center justify-center gap-1.5 rounded-lg border border-zinc-700 bg-zinc-800/80 px-2.5 py-1.5 text-xs font-medium text-zinc-300 transition hover:bg-zinc-700 hover:text-zinc-100 disabled:opacity-60 sm:flex-none"
           >
             <svg className="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
               <path strokeLinecap="round" strokeLinejoin="round" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
@@ -175,19 +200,20 @@ export default function TrackingBoard({
           </button>
           <button
             type="button"
-            onClick={() => setOpenConfig(true)}
-            className="inline-flex items-center gap-1.5 rounded-lg border border-zinc-700 bg-zinc-800/80 px-2.5 py-1.5 text-xs font-medium text-zinc-300 transition hover:bg-zinc-700 hover:text-zinc-100"
+            onClick={openConfigModal}
+            className="inline-flex flex-1 items-center justify-center gap-1.5 rounded-lg border border-zinc-700 bg-zinc-800/80 px-2.5 py-1.5 text-xs font-medium text-zinc-300 transition hover:bg-zinc-700 hover:text-zinc-100 sm:flex-none"
           >
             Configurar ranking
           </button>
         </div>
       </div>
+
       <p className="mb-3 rounded-lg border border-zinc-800 bg-zinc-900/70 px-3 py-2 text-xs text-zinc-400">
         Abre WhatsApp Web en tu navegador e inicia sesion con el WhatsApp de soporte para que puedas contactar a tus jugadores y realizar un seguimiento.
       </p>
 
       <div className="overflow-x-auto rounded-lg border border-zinc-700">
-        <table className="w-full text-left text-[11px]">
+        <table className="min-w-[760px] w-full text-left text-[11px]">
           <thead className="bg-zinc-800/95">
             <tr>
               <th className="px-2 py-2 font-medium text-zinc-300 whitespace-nowrap">Ranking</th>
@@ -210,7 +236,7 @@ export default function TrackingBoard({
               sortedRows.map((r) => (
                 <tr key={r.phone} className="bg-zinc-950/40">
                   <td className="px-2 py-1.5 text-base" title={`Total: ${formatThousands(r.totalLoaded)}`}>
-                    {indicatorFor(r.totalLoaded)}
+                    {r.loads === 0 ? LEAD_INDICATOR : indicatorFor(r.totalLoaded)}
                   </td>
                   <td className="px-2 py-1.5 whitespace-nowrap text-zinc-200 font-mono">{r.phone}</td>
                   <td className="px-2 py-1.5 whitespace-nowrap">
@@ -238,29 +264,34 @@ export default function TrackingBoard({
       </div>
 
       {openConfig && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-4">
-          <div className="w-full max-w-3xl rounded-xl border border-zinc-700 bg-zinc-900 p-4 shadow-2xl">
-            <div className="mb-3 flex items-center justify-between">
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-3 sm:p-4">
+          <div className="w-full max-w-3xl max-h-[88vh] overflow-y-auto rounded-xl border border-zinc-700 bg-zinc-900 p-3 sm:p-4 shadow-2xl">
+            <div className="mb-3 flex items-center justify-between gap-2">
               <h4 className="text-sm font-semibold text-zinc-100">Configuracion de ranking</h4>
-              <button
-                type="button"
-                onClick={() => setOpenConfig(false)}
-                className="rounded-lg border border-zinc-700 px-2 py-1 text-xs text-zinc-300 hover:bg-zinc-800"
-              >
-                Cerrar
-              </button>
+              <div className="flex items-center gap-2">
+                <button
+                  type="button"
+                  onClick={() => setOpenConfig(false)}
+                  className="rounded-lg border border-zinc-700 px-2 py-1 text-xs text-zinc-300 hover:bg-zinc-800"
+                >
+                  Cerrar
+                </button>
+                <button
+                  type="button"
+                  onClick={saveConfig}
+                  className="rounded-lg border border-zinc-700 bg-zinc-100 px-2 py-1 text-xs text-zinc-900 hover:bg-zinc-200"
+                >
+                  Guardar
+                </button>
+              </div>
             </div>
 
-            <div className="mb-3 flex items-center gap-2">
+            <div className="mb-3 flex flex-col items-start gap-2 sm:flex-row sm:items-center">
               <label className="text-xs text-zinc-400">Criterio de sort</label>
               <select
-                value={sortMode}
-                onChange={(e) => {
-                  const next = e.target.value as SortMode;
-                  setSortMode(next);
-                  pushConfig(rules, overflowIndicator, next);
-                }}
-                className="rounded-lg border border-zinc-700 bg-zinc-900 px-2 py-1.5 text-xs text-zinc-100"
+                value={draftSortMode}
+                onChange={(e) => setDraftSortMode(e.target.value as SortMode)}
+                className="w-full sm:w-auto rounded-lg border border-zinc-700 bg-zinc-900 px-2 py-1.5 text-xs text-zinc-100"
               >
                 <option value="last_active_desc">Ultima vez activo</option>
                 <option value="total_loaded_desc">Total cargado</option>
@@ -270,7 +301,7 @@ export default function TrackingBoard({
             </div>
 
             <div className="overflow-x-auto rounded-lg border border-zinc-800">
-              <table className="w-full text-left text-xs">
+              <table className="min-w-[640px] w-full text-left text-xs">
                 <thead className="bg-zinc-800/95">
                   <tr>
                     <th className="px-2 py-2 text-zinc-300">Indicador</th>
@@ -280,17 +311,16 @@ export default function TrackingBoard({
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-zinc-800">
-                  {rules.map((r) => (
+                  {draftRules.map((r) => (
                     <tr key={r.id}>
                       <td className="px-2 py-2">
                         <input
                           value={r.indicator}
                           onChange={(e) => {
-                            const next = rules.map((x) =>
+                            const next = draftRules.map((x) =>
                               x.id === r.id ? { ...x, indicator: e.target.value } : x,
                             );
-                            setRules(next);
-                            pushConfig(next, overflowIndicator, sortMode);
+                            setDraftRules(next);
                           }}
                           className="w-full rounded border border-zinc-700 bg-zinc-900 px-2 py-1.5 text-zinc-100"
                         />
@@ -300,18 +330,11 @@ export default function TrackingBoard({
                         <input
                           value={formatThousands(r.maxTotal)}
                           onChange={(e) => {
-                            const n = Number(
-                              String(e.target.value)
-                                .replace(/\./g, "")
-                                .replace(/\D/g, ""),
+                            const n = Number(String(e.target.value).replace(/\./g, "").replace(/\D/g, ""));
+                            const next = draftRules.map((x) =>
+                              x.id === r.id ? { ...x, maxTotal: Number.isFinite(n) ? n : 0 } : x,
                             );
-                            const next = rules.map((x) =>
-                              x.id === r.id
-                                ? { ...x, maxTotal: Number.isFinite(n) ? n : 0 }
-                                : x,
-                            );
-                            setRules(next);
-                            pushConfig(next, overflowIndicator, sortMode);
+                            setDraftRules(next);
                           }}
                           className="w-full rounded border border-zinc-700 bg-zinc-900 px-2 py-1.5 text-zinc-100"
                         />
@@ -319,11 +342,7 @@ export default function TrackingBoard({
                       <td className="px-2 py-2 text-right">
                         <button
                           type="button"
-                          onClick={() => {
-                            const next = rules.filter((x) => x.id !== r.id);
-                            setRules(next);
-                            pushConfig(next, overflowIndicator, sortMode);
-                          }}
+                          onClick={() => setDraftRules((prev) => prev.filter((x) => x.id !== r.id))}
                           className="rounded border border-zinc-700 px-2 py-1 text-[11px] text-zinc-300 hover:bg-zinc-800"
                         >
                           Quitar
@@ -335,58 +354,45 @@ export default function TrackingBoard({
               </table>
             </div>
 
-            <div className="mt-3 flex flex-wrap items-center gap-2">
+            <div className="mt-3 flex flex-col gap-2 sm:flex-row sm:items-center">
               <button
                 type="button"
                 onClick={() => {
-                  const next = [
-                    ...rules,
+                  setDraftRules((prev) => [
+                    ...prev,
                     {
                       id: `r${Date.now()}`,
-                      indicator: "?",
-                      maxTotal: rules[rules.length - 1]?.maxTotal + 1000 || 1000,
+                      indicator: "\u{2B50}",
+                      maxTotal: prev[prev.length - 1]?.maxTotal + 1000 || 1000,
                     },
-                  ];
-                  setRules(next);
-                  pushConfig(next, overflowIndicator, sortMode);
+                  ]);
                 }}
                 className="rounded-lg border border-zinc-700 px-3 py-1.5 text-xs text-zinc-200 hover:bg-zinc-800"
               >
                 Agregar regla
               </button>
 
-              <div className="ml-auto flex items-center gap-2">
+              <div className="flex items-center gap-2 sm:ml-auto">
                 <label className="text-xs text-zinc-400">Indicador final ({">="} ultimo rango)</label>
                 <input
-                  value={overflowIndicator}
-                  onChange={(e) => {
-                    setOverflowIndicator(e.target.value);
-                    pushConfig(rules, e.target.value, sortMode);
-                  }}
-                  className="w-28 rounded border border-zinc-700 bg-zinc-900 px-2 py-1.5 text-zinc-100"
+                  value={draftOverflowIndicator}
+                  onChange={(e) => setDraftOverflowIndicator(e.target.value)}
+                  className="w-24 rounded border border-zinc-700 bg-zinc-900 px-2 py-1.5 text-zinc-100"
                 />
               </div>
             </div>
 
-            <div className="mt-4 flex justify-end gap-2">
+            <div className="mt-4 flex flex-wrap justify-end gap-2">
               <button
                 type="button"
                 onClick={() => {
-                  setRules(DEFAULT_RULES);
-                  setOverflowIndicator(DEFAULT_OVERFLOW);
-                  setSortMode(DEFAULT_SORT);
-                  pushConfig(DEFAULT_RULES, DEFAULT_OVERFLOW, DEFAULT_SORT);
+                  setDraftRules(DEFAULT_RULES);
+                  setDraftOverflowIndicator(DEFAULT_OVERFLOW);
+                  setDraftSortMode(DEFAULT_SORT);
                 }}
                 className="rounded-lg border border-zinc-700 px-3 py-1.5 text-xs text-zinc-300 hover:bg-zinc-800"
               >
                 Restaurar default
-              </button>
-              <button
-                type="button"
-                onClick={() => setOpenConfig(false)}
-                className="rounded-lg border border-zinc-700 bg-zinc-100 px-3 py-1.5 text-xs text-zinc-900 hover:bg-zinc-200"
-              >
-                Listo
               </button>
             </div>
           </div>
