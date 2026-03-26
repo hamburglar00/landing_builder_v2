@@ -187,11 +187,8 @@ export default function NotificationsPageContent({
             </select>
           </label>
           <label className="flex flex-col gap-1">
-            <span className="min-h-[2.5rem] text-xs leading-5 text-zinc-400">Hora de envio (08-22, Buenos Aires)</span>
-            <input
-              type="number"
-              min={8}
-              max={22}
+            <span className="min-h-[2.5rem] text-xs leading-5 text-zinc-400">Recibir notificaciones a las:</span>
+            <select
               value={cfg.notify_hour}
               onChange={(e) =>
                 setCfg((prev) =>
@@ -199,7 +196,13 @@ export default function NotificationsPageContent({
                 )
               }
               className="w-full rounded-lg border border-zinc-700 bg-zinc-950 px-3 py-2 text-sm text-zinc-100 outline-none focus:border-zinc-500"
-            />
+            >
+              {Array.from({ length: 15 }, (_, idx) => 8 + idx).map((hour) => (
+                <option key={hour} value={hour}>
+                  {String(hour).padStart(2, "0")}:00
+                </option>
+              ))}
+            </select>
           </label>
           <label className="flex flex-col gap-1">
             <span className="min-h-[2.5rem] text-xs leading-5 text-zinc-400">Notificar si la inactividad de un contacto es mayor a (dias):</span>
