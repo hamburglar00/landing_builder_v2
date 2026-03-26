@@ -1,6 +1,7 @@
 ﻿"use client";
 
 import { useEffect, useState, useCallback, useMemo } from "react";
+import { useSearchParams } from "next/navigation";
 import { supabase } from "@/lib/supabaseClient";
 import {
   fetchConversionsConfig,
@@ -28,7 +29,7 @@ import DateRangeFilter, {
 
 type Tab = "configuracion" | "tabla" | "funnel" | "seguimiento" | "estadisticas" | "logs";
 
-const TAB_ORDER: Tab[] = ["funnel", "seguimiento", "tabla", "estadisticas", "configuracion", "logs"];
+const TAB_ORDER: Tab[] = ["funnel", "tabla", "estadisticas", "configuracion", "logs"];
 
 const TAB_LABELS: Record<Tab, string> = {
   funnel: "Funnel",
@@ -301,6 +302,7 @@ function cellValue(c: ConversionRow, col: ColKey): React.ReactNode {
 
 
 export default function AdminConversionesPage() {
+  const searchParams = useSearchParams();
   const [userId, setUserId] = useState<string | null>(null);
   const [config, setConfig] = useState<ConversionsConfig | null>(null);
   const [conversions, setConversions] = useState<ConversionRow[]>([]);
@@ -323,6 +325,13 @@ export default function AdminConversionesPage() {
   const [hidingFunnel, setHidingFunnel] = useState(false);
   const [hidingStats, setHidingStats] = useState(false);
   const [hidingLogs, setHidingLogs] = useState(false);
+
+  useEffect(() => {
+    const view = (searchParams.get("view") || "").toLowerCase();
+    if (view === "seguimiento") {
+      setTab("seguimiento");
+    }
+  }, [searchParams]);
 
   const demoConversions = useMemo(() => generateDemoConversions(80), []);
   const demoFunnel = useMemo(() => generateDemoFunnelContacts(demoConversions), [demoConversions]);

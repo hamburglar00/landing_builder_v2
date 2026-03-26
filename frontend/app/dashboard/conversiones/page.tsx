@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState, useCallback, useMemo } from "react";
+import { useSearchParams } from "next/navigation";
 import { supabase } from "@/lib/supabaseClient";
 import {
   fetchConversionsConfig,
@@ -27,7 +28,7 @@ import DateRangeFilter, {
 
 type Tab = "funnel" | "seguimiento" | "tabla" | "estadisticas" | "configuracion" | "logs";
 
-const TAB_ORDER_BASE: Tab[] = ["funnel", "seguimiento", "tabla", "estadisticas", "configuracion"];
+const TAB_ORDER_BASE: Tab[] = ["funnel", "tabla", "estadisticas", "configuracion"];
 
 const TAB_LABELS: Record<Tab, string> = {
   funnel: "Funnel",
@@ -271,6 +272,7 @@ function cellValue(c: ConversionRow, col: ColKey): React.ReactNode {
 }
 
 export default function DashboardConversionesPage() {
+  const searchParams = useSearchParams();
   const [userId, setUserId] = useState<string | null>(null);
   const [config, setConfig] = useState<ConversionsConfig | null>(null);
   const [conversions, setConversions] = useState<ConversionRow[]>([]);
@@ -292,6 +294,13 @@ export default function DashboardConversionesPage() {
   const [hidingFunnel, setHidingFunnel] = useState(false);
   const [hidingStats, setHidingStats] = useState(false);
   const [hidingLogs, setHidingLogs] = useState(false);
+
+  useEffect(() => {
+    const view = (searchParams.get("view") || "").toLowerCase();
+    if (view === "seguimiento") {
+      setTab("seguimiento");
+    }
+  }, [searchParams]);
 
   const [configOpen, setConfigOpen] = useState(false);
   const [endpointOpen, setEndpointOpen] = useState(false);
