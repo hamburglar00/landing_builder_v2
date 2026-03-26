@@ -49,18 +49,23 @@ export async function fetchNotificationBotUsernamePublic(): Promise<string> {
 }
 
 export async function upsertNotificationBotConfig(cfg: NotificationBotConfig): Promise<void> {
-  const { error } = await supabase
+  const payload = {
+    telegram_bot_token: cfg.telegram_bot_token.trim(),
+    telegram_bot_username: cfg.telegram_bot_username.trim().replace(/^@/, ""),
+    updated_at: new Date().toISOString(),
+  };
+
+  const { error: updateError } = await supabase
     .from("notification_bot_config")
-    .upsert(
-      {
-        id: 1,
-        telegram_bot_token: cfg.telegram_bot_token.trim(),
-        telegram_bot_username: cfg.telegram_bot_username.trim().replace(/^@/, ""),
-        updated_at: new Date().toISOString(),
-      },
-      { onConflict: "id" },
-    );
-  if (error) throw error;
+    .update(payload)
+    .eq("id", 1);
+  if (!updateError) return;
+
+  // Fallback defensivo por si no existiera la fila singleton.
+  const { error: insertError } = await supabase
+    .from("notification_bot_config")
+    .insert({ id: 1, ...payload });
+  if (insertError) throw insertError;
 }
 
 export async function fetchNotificationSettings(userId: string): Promise<NotificationSettings> {

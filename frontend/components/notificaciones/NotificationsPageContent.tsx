@@ -121,10 +121,16 @@ export default function NotificationsPageContent({
               type="button"
               disabled={saving || !botEditable}
               onClick={async () => {
-                await onSaveBot(bot);
-                setBotEditable(false);
-                setMsg("Bot guardado.");
-                setTimeout(() => setMsg(null), 3000);
+                try {
+                  await onSaveBot(bot);
+                  setBotEditable(false);
+                  setMsg("Bot guardado.");
+                } catch (e) {
+                  console.error(e);
+                  setMsg("No se pudo guardar el bot. Revisa permisos o intenta nuevamente.");
+                } finally {
+                  setTimeout(() => setMsg(null), 3000);
+                }
               }}
               className="rounded-lg border border-zinc-700 bg-zinc-100 px-3 py-1.5 text-xs font-medium text-zinc-900 hover:bg-zinc-200 disabled:opacity-50"
             >
