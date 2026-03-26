@@ -60,6 +60,24 @@ function CopyIcon() {
   );
 }
 
+function GearTabIcon() {
+  return (
+    <svg className="h-3.5 w-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2}>
+      <path strokeLinecap="round" strokeLinejoin="round" d="M10.325 4.317a1 1 0 011.35-.936l.916.4a1 1 0 00.818 0l.916-.4a1 1 0 011.35.936l.098.995a1 1 0 00.506.784l.86.497a1 1 0 01.366 1.366l-.5.866a1 1 0 000 .818l.5.866a1 1 0 01-.366 1.366l-.86.497a1 1 0 00-.506.784l-.098.995a1 1 0 01-1.35.936l-.916-.4a1 1 0 00-.818 0l-.916.4a1 1 0 01-1.35-.936l-.098-.995a1 1 0 00-.506-.784l-.86-.497a1 1 0 01-.366-1.366l.5-.866a1 1 0 000-.818l-.5-.866a1 1 0 01.366-1.366l.86-.497a1 1 0 00.506-.784l.098-.995z" />
+      <circle cx="12" cy="12" r="3" />
+    </svg>
+  );
+}
+
+function LogsTabIcon() {
+  return (
+    <svg className="h-3.5 w-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2}>
+      <path strokeLinecap="round" strokeLinejoin="round" d="M9 17h6M9 13h6M9 9h6" />
+      <path strokeLinecap="round" strokeLinejoin="round" d="M7 3h8l4 4v14H7a2 2 0 01-2-2V5a2 2 0 012-2z" />
+    </svg>
+  );
+}
+
 function estadoBadge(estado: string, isRepeat = false) {
   const cls =
     estado === "purchase" && isRepeat
@@ -501,7 +519,7 @@ export default function AdminConversionesPage() {
       {/* Tabs + Demo toggle */}
       <div className="flex items-center justify-between gap-4 flex-wrap border-b border-zinc-800/60 pb-1">
         <div className="flex gap-4">
-          {TAB_ORDER.map((t) => {
+          {TAB_ORDER.filter((t) => t !== "configuracion" && t !== "logs").map((t) => {
             const active = tab === t;
             return (
               <button
@@ -521,17 +539,41 @@ export default function AdminConversionesPage() {
             );
           })}
         </div>
-        <label className="flex items-center gap-2 select-none">
-          <input
-            type="checkbox"
-            checked={demoMode}
-            onChange={(e) => setDemoMode(e.target.checked)}
-            className="h-3.5 w-3.5 rounded border-zinc-600 bg-zinc-900 accent-amber-500"
-          />
-          <span className={`text-[11px] font-medium ${demoMode ? "text-amber-400" : "text-zinc-500"}`}>
-            Datos demo
-          </span>
-        </label>
+        <div className="ml-auto flex items-center gap-4">
+          {TAB_ORDER.filter((t) => t === "configuracion" || t === "logs").map((t) => {
+            const active = tab === t;
+            return (
+              <button
+                key={t}
+                onClick={() => setTab(t)}
+                className={`relative cursor-pointer pb-2 text-xs font-medium transition-colors whitespace-nowrap ${
+                  active ? "text-zinc-100" : "text-zinc-500 hover:text-zinc-200"
+                }`}
+              >
+                <span className="inline-flex items-center gap-1.5">
+                  {t === "configuracion" ? <GearTabIcon /> : <LogsTabIcon />}
+                  {TAB_LABELS[t]}
+                </span>
+                <span
+                  className={`pointer-events-none absolute inset-x-0 -bottom-[1px] h-0.5 rounded-full transition-opacity ${
+                    active ? "bg-zinc-100 opacity-100" : "bg-zinc-600 opacity-0"
+                  }`}
+                />
+              </button>
+            );
+          })}
+          <label className="flex items-center gap-2 select-none">
+            <input
+              type="checkbox"
+              checked={demoMode}
+              onChange={(e) => setDemoMode(e.target.checked)}
+              className="h-3.5 w-3.5 rounded border-zinc-600 bg-zinc-900 accent-amber-500"
+            />
+            <span className={`text-[11px] font-medium ${demoMode ? "text-amber-400" : "text-zinc-500"}`}>
+              Datos demo
+            </span>
+          </label>
+        </div>
       </div>
 
       {/* Date filter  visible on funnel, tabla, estadisticas */}
