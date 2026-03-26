@@ -134,6 +134,9 @@ export default function TrackingBoard({ conversions }: { conversions: Conversion
           Configurar ranking
         </button>
       </div>
+      <p className="mb-3 rounded-lg border border-zinc-800 bg-zinc-900/70 px-3 py-2 text-xs text-zinc-400">
+        Abre WhatsApp Web en tu navegador e inicia sesion con el WhatsApp de soporte para que puedas contactar a tus jugadores y realizar un seguimiento.
+      </p>
 
       <div className="overflow-x-auto rounded-lg border border-zinc-700">
         <table className="w-full text-left text-[11px]">
