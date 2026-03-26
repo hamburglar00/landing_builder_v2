@@ -18,6 +18,7 @@ import {
 } from "@/lib/conversionsDb";
 import { generateDemoConversions, generateDemoFunnelContacts } from "@/lib/demoData";
 import FunnelBoard from "@/components/conversiones/FunnelBoard";
+import TrackingBoard from "@/components/conversiones/TrackingBoard";
 import StatsPanel from "@/components/conversiones/StatsPanel";
 import DateRangeFilter, {
   type DateRange,
@@ -25,12 +26,13 @@ import DateRangeFilter, {
   filterFunnelByDateRange,
 } from "@/components/conversiones/DateRangeFilter";
 
-type Tab = "configuracion" | "tabla" | "funnel" | "estadisticas" | "logs";
+type Tab = "configuracion" | "tabla" | "funnel" | "seguimiento" | "estadisticas" | "logs";
 
-const TAB_ORDER: Tab[] = ["funnel", "tabla", "estadisticas", "configuracion", "logs"];
+const TAB_ORDER: Tab[] = ["funnel", "seguimiento", "tabla", "estadisticas", "configuracion", "logs"];
 
 const TAB_LABELS: Record<Tab, string> = {
   funnel: "Funnel",
+  seguimiento: "Seguimiento",
   tabla: "Tabla",
   estadisticas: "Estadisticas",
   configuracion: "Configuracion",
@@ -56,6 +58,35 @@ function CopyIcon() {
     <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
       <rect x="9" y="9" width="13" height="13" rx="2" ry="2" />
       <path d="M5 15H4a2 2 0 01-2-2V4a2 2 0 012-2h9a2 2 0 012 2v1" />
+    </svg>
+  );
+}
+
+function FunnelTabIcon() {
+  return (
+    <svg className="h-3.5 w-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2}>
+      <path strokeLinecap="round" strokeLinejoin="round" d="M3 5h18l-7 8v5l-4 2v-7L3 5z" />
+    </svg>
+  );
+}
+
+function TrackingTabIcon() {
+  return (
+    <svg className="h-3.5 w-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2}>
+      <path strokeLinecap="round" strokeLinejoin="round" d="M4 19h16M7 16l3-3 3 2 4-5" />
+      <circle cx="7" cy="16" r="1" />
+      <circle cx="10" cy="13" r="1" />
+      <circle cx="13" cy="15" r="1" />
+      <circle cx="17" cy="10" r="1" />
+    </svg>
+  );
+}
+
+function TableTabIcon() {
+  return (
+    <svg className="h-3.5 w-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2}>
+      <rect x="3" y="5" width="18" height="14" rx="2" />
+      <path d="M3 10h18M9 5v14M15 5v14" />
     </svg>
   );
 }
@@ -529,7 +560,10 @@ export default function AdminConversionesPage() {
                   active ? "text-zinc-100" : "text-zinc-500 hover:text-zinc-200"
                 }`}
               >
-                {TAB_LABELS[t]}
+                <span className="inline-flex items-center gap-1.5">
+                  {t === "funnel" ? <FunnelTabIcon /> : t === "seguimiento" ? <TrackingTabIcon /> : t === "tabla" ? <TableTabIcon /> : null}
+                  {TAB_LABELS[t]}
+                </span>
                 <span
                   className={`pointer-events-none absolute inset-x-0 -bottom-[1px] h-0.5 rounded-full transition-opacity ${
                     active ? "bg-zinc-100 opacity-100" : "bg-zinc-600 opacity-0"
@@ -576,8 +610,8 @@ export default function AdminConversionesPage() {
         </div>
       </div>
 
-      {/* Date filter  visible on funnel, tabla, estadisticas */}
-      {(tab === "funnel" || tab === "tabla" || tab === "estadisticas") && (
+      {/* Date filter  visible on funnel, seguimiento, tabla, estadisticas */}
+      {(tab === "funnel" || tab === "seguimiento" || tab === "tabla" || tab === "estadisticas") && (
         <div className="flex justify-end pt-1">
           <DateRangeFilter onChange={setDateRange} />
         </div>
@@ -899,6 +933,13 @@ export default function AdminConversionesPage() {
             />
           )}
         </section>
+      )}
+
+      {/* TAB: SEGUIMIENTO */}
+      {tab === "seguimiento" && (
+        <TrackingBoard
+          conversions={activeConversions.filter((r) => !String(r.test_event_code ?? "").trim())}
+        />
       )}
 
       {/* TAB: ESTADSTICAS */}
