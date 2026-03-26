@@ -23,6 +23,7 @@ export default function AdminGerenciasPage() {
   const [editGerenciaId, setEditGerenciaId] = useState<string>("");
   const [newNombre, setNewNombre] = useState("");
   const [newGerenciaId, setNewGerenciaId] = useState<string>("");
+  const [showCreateModal, setShowCreateModal] = useState(false);
   const [saving, setSaving] = useState(false);
   const [deletingId, setDeletingId] = useState<number | null>(null);
 
@@ -75,6 +76,7 @@ export default function AdminGerenciasPage() {
       setGerencias((prev) => [...prev, created].sort((a, b) => a.id - b.id));
       setNewNombre("");
       setNewGerenciaId("");
+      setShowCreateModal(false);
     } catch (e) {
       setError(e instanceof Error ? e.message : "Error al crear");
     } finally {
@@ -162,7 +164,7 @@ export default function AdminGerenciasPage() {
         </p>
       )}
 
-      <form onSubmit={handleCreate} className="space-y-4">
+      <div className="space-y-4">
         <div className="flex flex-wrap items-center justify-between gap-4">
           <div>
             <h1 className="text-xl font-bold text-[var(--color-text-strong)]">GERENCIAS</h1>
@@ -171,43 +173,69 @@ export default function AdminGerenciasPage() {
             </p>
           </div>
           <button
-            type="submit"
-            disabled={saving || !newNombre.trim() || parseGerenciaId(newGerenciaId) === null}
-            className="cursor-pointer rounded-xl bg-[var(--color-primary)] px-4 py-2 text-sm font-semibold uppercase tracking-wide text-[var(--color-bg-0)] transition-colors duration-150 hover:bg-[var(--color-primary-hover)] active:bg-[var(--color-primary-press)] disabled:cursor-not-allowed disabled:opacity-70 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-ring-primary)]"
+            type="button"
+            onClick={() => setShowCreateModal(true)}
+            className="cursor-pointer rounded-xl bg-[var(--color-primary)] px-4 py-2 text-sm font-semibold uppercase tracking-wide text-[var(--color-bg-0)] transition-colors duration-150 hover:bg-[var(--color-primary-hover)] active:bg-[var(--color-primary-press)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-ring-primary)]"
           >
-            {saving ? "GUARDANDO..." : "AGREGAR GERENCIA"}
+            AGREGAR GERENCIA
           </button>
         </div>
-        <div className="flex flex-wrap items-end gap-3">
-          <div>
-            <label htmlFor="new-gerencia-nombre" className="block text-xs font-medium text-zinc-400 mb-1">
-              Nombre
-            </label>
-            <input
-              id="new-gerencia-nombre"
-              type="text"
-              value={newNombre}
-              onChange={(e) => setNewNombre(e.target.value)}
-              placeholder="Ej: Nombre de la Gerencia"
-              className="w-56 rounded-lg border border-[var(--color-border)] bg-[var(--color-bg-2)] px-3 py-2 text-sm text-[var(--color-text-strong)] placeholder:text-[var(--color-text-disabled)] focus:border-[var(--color-primary)] focus:outline-none focus:ring-2 focus:ring-[var(--color-ring-primary)]"
-            />
-          </div>
-          <div>
-            <label htmlFor="new-gerencia-id" className="block text-xs font-medium text-zinc-400 mb-1">
-              Gerencia ID (entero externo) <span className="text-red-400">*</span>
-            </label>
-            <input
-              id="new-gerencia-id"
-              type="number"
-              value={newGerenciaId}
-              onChange={(e) => setNewGerenciaId(e.target.value)}
-              placeholder="Ej: 1"
-              required
-              className="w-32 rounded-lg border border-[var(--color-border)] bg-[var(--color-bg-2)] px-3 py-2 text-sm text-[var(--color-text-strong)] placeholder:text-[var(--color-text-disabled)] focus:border-[var(--color-primary)] focus:outline-none focus:ring-2 focus:ring-[var(--color-ring-primary)]"
-            />
+      </div>
+
+      {showCreateModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 px-4">
+          <div className="w-full max-w-lg rounded-xl border border-[var(--color-border)] bg-[var(--color-bg-2)] p-5 shadow-2xl">
+            <div className="mb-4 flex items-center justify-between">
+              <h2 className="text-base font-semibold text-[var(--color-text-strong)]">Nueva gerencia</h2>
+              <button
+                type="button"
+                onClick={() => setShowCreateModal(false)}
+                className="rounded-md border border-[var(--color-border)] px-2 py-1 text-xs text-[var(--color-text)] transition hover:bg-[rgba(255,255,255,0.06)]"
+              >
+                Cerrar
+              </button>
+            </div>
+            <form onSubmit={handleCreate} className="space-y-4">
+              <div>
+                <label htmlFor="new-gerencia-nombre" className="mb-1 block text-xs font-medium text-zinc-400">
+                  Nombre
+                </label>
+                <input
+                  id="new-gerencia-nombre"
+                  type="text"
+                  value={newNombre}
+                  onChange={(e) => setNewNombre(e.target.value)}
+                  placeholder="Ej: Nombre de la Gerencia"
+                  className="w-full rounded-lg border border-[var(--color-border)] bg-[var(--color-bg-2)] px-3 py-2 text-sm text-[var(--color-text-strong)] placeholder:text-[var(--color-text-disabled)] focus:border-[var(--color-primary)] focus:outline-none focus:ring-2 focus:ring-[var(--color-ring-primary)]"
+                />
+              </div>
+              <div>
+                <label htmlFor="new-gerencia-id" className="mb-1 block text-xs font-medium text-zinc-400">
+                  Gerencia ID (entero externo) <span className="text-red-400">*</span>
+                </label>
+                <input
+                  id="new-gerencia-id"
+                  type="number"
+                  value={newGerenciaId}
+                  onChange={(e) => setNewGerenciaId(e.target.value)}
+                  placeholder="Ej: 1"
+                  required
+                  className="w-full rounded-lg border border-[var(--color-border)] bg-[var(--color-bg-2)] px-3 py-2 text-sm text-[var(--color-text-strong)] placeholder:text-[var(--color-text-disabled)] focus:border-[var(--color-primary)] focus:outline-none focus:ring-2 focus:ring-[var(--color-ring-primary)]"
+                />
+              </div>
+              <div className="flex justify-end">
+                <button
+                  type="submit"
+                  disabled={saving || !newNombre.trim() || parseGerenciaId(newGerenciaId) === null}
+                  className="cursor-pointer rounded-xl bg-[var(--color-primary)] px-4 py-2 text-sm font-semibold uppercase tracking-wide text-[var(--color-bg-0)] transition-colors duration-150 hover:bg-[var(--color-primary-hover)] active:bg-[var(--color-primary-press)] disabled:cursor-not-allowed disabled:opacity-70 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-ring-primary)]"
+                >
+                  {saving ? "GUARDANDO..." : "CREAR"}
+                </button>
+              </div>
+            </form>
           </div>
         </div>
-      </form>
+      )}
 
       <div className="rounded-xl border border-zinc-800 overflow-hidden">
         <table className="w-full text-left text-sm">

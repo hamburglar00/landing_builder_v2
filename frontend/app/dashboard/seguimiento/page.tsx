@@ -92,7 +92,9 @@ export default function DashboardSeguimientoPage() {
         </p>
       </div>
 
-      <DateRangeFilter onChange={setDateRange} />
+      <div className="flex justify-end">
+        <DateRangeFilter onChange={setDateRange} />
+      </div>
 
       <TrackingBoard
         conversions={activeConversions}
