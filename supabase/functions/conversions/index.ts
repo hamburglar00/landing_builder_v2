@@ -582,10 +582,14 @@ async function handleLead(
     await writeLog(db, landing.user_id, "handleLead", "ERROR", "LEAD rechazado: falta phone", safePayloadRaw(p));
     return textResponse("Faltan parámetros: phone requerido", 400);
   }
+  const promoCode = norm(p.promo_code);
+  if (!promoCode) {
+    await writeLog(db, landing.user_id, "handleLead", "ERROR", "LEAD rechazado: falta promo_code", safePayloadRaw(p));
+    return textResponse("Faltan parámetros: promo_code requerido", 400);
+  }
   const testEventCode = norm(p.test_event_code);
   const leadPayloadRaw = safePayloadRaw(p);
 
-  const promoCode = norm(p.promo_code);
   const payloadFn = norm(p.fn);
   const payloadLn = norm(p.ln);
   const payloadEmail = norm(p.email);
@@ -606,69 +610,20 @@ async function handleLead(
     if (data) targetId = data.id;
   }
 
-  // 2) Match by phone (most recent)
-  if (!targetId && cleanPhone) {
-    const { data } = await db
-      .from("conversions")
-      .select("id")
-      .eq("user_id", landing.user_id)
-      .eq("phone", cleanPhone)
-      .order("created_at", { ascending: false })
-      .limit(1)
-      .maybeSingle();
-    if (data) targetId = data.id;
-  }
-
   const leadEventId = generateEventId();
   const leadEventTime = toValidEventTime(p.lead_event_time || p.event_time || Math.floor(Date.now() / 1000));
 
-  // 3) No match -> create new row
+  // 2) No match -> stop (promo_code should exist)
   if (!targetId) {
-    const newRow: Omit<ConversionRow, "id"> = {
-      landing_id: landing.id?.trim() || null,
-      user_id: landing.user_id,
-      landing_name: landing.name,
-      phone: cleanPhone,
-      email: payloadEmail,
-      fn: payloadFn,
-      ln: payloadLn,
-      ct: geo.ct,
-      st: geo.st,
-      zip: geo.zip,
-      country: geo.country,
-      fbp: "",
-      fbc: "",
-      contact_event_id: "",
-      contact_event_time: null,
-      lead_event_id: leadEventId,
-      lead_event_time: leadEventTime,
-      lead_payload_raw: leadPayloadRaw,
-      purchase_event_id: "",
-      purchase_event_time: null,
-      purchase_payload_raw: "",
-      test_event_code: testEventCode,
-      client_ip: "",
-      agent_user: "",
-      device_type: "",
-      event_source_url: eventSourceUrl,
-      estado: "lead",
-      valor: 0,
-      contact_status_capi: "",
-      lead_status_capi: "",
-      purchase_status_capi: "",
-      observaciones: "",
-      external_id: "",
-      utm_campaign: "",
-      telefono_asignado: "",
-      promo_code: promoCode,
-      geo_city: geo.geo_city,
-      geo_region: geo.geo_region,
-      geo_country: geo.geo_country,
-    };
-
-    const { data: ins, error } = await db.from("conversions").insert(newRow).select("id").single();
-    if (error || !ins) return textResponse("Error al crear fila LEAD", 500);
-    targetId = ins.id;
+    await writeLog(
+      db,
+      landing.user_id,
+      "handleLead",
+      "ERROR",
+      "LEAD sin match por promo_code",
+      JSON.stringify({ promo_code: promoCode, phone: cleanPhone }),
+    );
+    return textResponse("No se encontro fila para promo_code", 404);
   } else {
     // 4) Update existing row
     const updates: Record<string, unknown> = {
@@ -1134,7 +1089,6 @@ Deno.serve(async (req) => {
     return textResponse("Error inesperado", 500);
   }
 });
-
 
 
 
