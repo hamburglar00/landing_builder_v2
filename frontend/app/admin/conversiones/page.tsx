@@ -538,7 +538,7 @@ export default function AdminConversionesPage() {
   return (
     <div className="space-y-6 pb-8">
       <div>
-        <h1 className="text-xl font-semibold text-zinc-100">Conversiones</h1>
+        <h1 className="text-xl font-semibold text-zinc-100">CONVERSIONES</h1>
         <p className="mt-1 text-sm text-zinc-400">
           Tu pipeline de leads, cargas y estadsticas.
         </p>
