@@ -82,16 +82,22 @@ function statusText(status: string) {
   return <span className="text-zinc-600">-</span>;
 }
 
-function levelBadge(level: string) {
+function levelBadge(level: string, message?: string) {
   const cls =
     level === "ERROR"
       ? "bg-red-950 text-red-300"
       : level === "DEBUG"
         ? "bg-zinc-800 text-zinc-500"
         : "bg-blue-950 text-blue-300";
+  const msg = String(message ?? "").toLowerCase();
+  const event =
+    msg.includes("contact") ? "CONTACT" :
+    msg.includes("lead") ? "LEAD" :
+    msg.includes("purchase") || msg.includes("compra") || msg.includes("recarga") ? "PURCHASE" :
+    null;
   return (
     <span className={`inline-block rounded-full px-2 py-0.5 text-[10px] font-medium ${cls}`}>
-      {level}
+      {event ? `${level} / ${event}` : level}
     </span>
   );
 }
@@ -759,7 +765,7 @@ export default function AdminConversionesPage() {
             return (
               <div className="overflow-x-auto rounded-lg border border-zinc-700">
                 <table className="w-full text-left text-[11px]">
-                  <thead className="bg-zinc-800/80 sticky top-0">
+                  <thead className="sticky top-0 z-20 bg-zinc-800/95">
                     <tr>
                       <th className="px-2 py-2 font-medium text-zinc-300 whitespace-nowrap">ID</th>
                       <th className="px-2 py-2 font-medium text-zinc-300 whitespace-nowrap">timestamp</th>
@@ -948,7 +954,7 @@ export default function AdminConversionesPage() {
                       <td className="px-2 py-1.5 text-zinc-400 whitespace-nowrap">
                         {new Date(log.created_at).toLocaleString("es-AR", { month: "2-digit", day: "2-digit", hour: "2-digit", minute: "2-digit", second: "2-digit" })}
                       </td>
-                      <td className="px-2 py-1.5">{levelBadge(log.level)}</td>
+                      <td className="px-2 py-1.5">{levelBadge(log.level, log.message)}</td>
                       <td className="px-2 py-1.5 text-zinc-300 font-mono whitespace-nowrap">{log.function_name}</td>
                       <td className="px-2 py-1.5 text-zinc-200">{log.message}</td>
                       <td className="px-2 py-1.5 text-zinc-500">
