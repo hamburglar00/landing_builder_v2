@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import type {
   NotificationBotConfig,
   NotificationSettings,
@@ -33,6 +33,20 @@ export default function NotificationsPageContent({
   );
   const [cfg, setCfg] = useState<NotificationSettings | null>(settings);
   const [msg, setMsg] = useState<string | null>(null);
+  const [botEditable, setBotEditable] = useState(false);
+
+  useEffect(() => {
+    setBot(botConfig ?? { telegram_bot_token: "", telegram_bot_username: "" });
+    const hasSavedBot = Boolean(
+      String(botConfig?.telegram_bot_token ?? "").trim() ||
+      String(botConfig?.telegram_bot_username ?? "").trim(),
+    );
+    setBotEditable(!hasSavedBot);
+  }, [botConfig]);
+
+  useEffect(() => {
+    setCfg(settings);
+  }, [settings]);
 
   const connectUrl = useMemo(() => {
     const username = String(bot.telegram_bot_username || "").trim().replace(/^@/, "");
@@ -75,6 +89,7 @@ export default function NotificationsPageContent({
                 onChange={(e) =>
                   setBot((prev) => ({ ...prev, telegram_bot_token: e.target.value }))
                 }
+                disabled={!botEditable}
                 className="w-full rounded-lg border border-zinc-700 bg-zinc-950 px-3 py-2 text-sm text-zinc-100 outline-none focus:border-zinc-500"
                 placeholder="123456:AA..."
               />
@@ -86,17 +101,28 @@ export default function NotificationsPageContent({
                 onChange={(e) =>
                   setBot((prev) => ({ ...prev, telegram_bot_username: e.target.value }))
                 }
+                disabled={!botEditable}
                 className="w-full rounded-lg border border-zinc-700 bg-zinc-950 px-3 py-2 text-sm text-zinc-100 outline-none focus:border-zinc-500"
                 placeholder="@Geraldina_bot"
               />
             </label>
           </div>
           <div className="mt-3 flex justify-end">
+            <div className="flex items-center gap-2">
+              <button
+                type="button"
+                disabled={saving}
+                onClick={() => setBotEditable((prev) => !prev)}
+                className="rounded-lg border border-zinc-700 bg-zinc-900 px-3 py-1.5 text-xs font-medium text-zinc-100 hover:bg-zinc-800 disabled:opacity-50"
+              >
+                {botEditable ? "Bloquear" : "Editar"}
+              </button>
             <button
               type="button"
-              disabled={saving}
+              disabled={saving || !botEditable}
               onClick={async () => {
                 await onSaveBot(bot);
+                setBotEditable(false);
                 setMsg("Bot guardado.");
                 setTimeout(() => setMsg(null), 3000);
               }}
@@ -104,6 +130,7 @@ export default function NotificationsPageContent({
             >
               Guardar bot
             </button>
+            </div>
           </div>
         </section>
       )}
@@ -144,8 +171,8 @@ export default function NotificationsPageContent({
       <section className="rounded-xl border border-zinc-800 bg-zinc-900/50 p-4">
         <h3 className="mb-3 text-sm font-semibold text-zinc-200">Seguimiento</h3>
         <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
-          <label className="space-y-1">
-            <span className="text-xs text-zinc-400">Activar notificaciones</span>
+          <label className="flex flex-col gap-1">
+            <span className="min-h-[2.5rem] text-xs leading-5 text-zinc-400">Activar notificaciones</span>
             <select
               value={cfg.enabled ? "on" : "off"}
               onChange={(e) =>
@@ -159,8 +186,8 @@ export default function NotificationsPageContent({
               <option value="off">Desactivadas</option>
             </select>
           </label>
-          <label className="space-y-1">
-            <span className="text-xs text-zinc-400">Hora de envio (08-22, Buenos Aires)</span>
+          <label className="flex flex-col gap-1">
+            <span className="min-h-[2.5rem] text-xs leading-5 text-zinc-400">Hora de envio (08-22, Buenos Aires)</span>
             <input
               type="number"
               min={8}
@@ -174,8 +201,8 @@ export default function NotificationsPageContent({
               className="w-full rounded-lg border border-zinc-700 bg-zinc-950 px-3 py-2 text-sm text-zinc-100 outline-none focus:border-zinc-500"
             />
           </label>
-          <label className="space-y-1">
-            <span className="text-xs text-zinc-400">Notificar si la inactividad de un contacto es mayor a (dias):</span>
+          <label className="flex flex-col gap-1">
+            <span className="min-h-[2.5rem] text-xs leading-5 text-zinc-400">Notificar si la inactividad de un contacto es mayor a (dias):</span>
             <input
               type="number"
               min={1}
@@ -189,8 +216,8 @@ export default function NotificationsPageContent({
               className="w-full rounded-lg border border-zinc-700 bg-zinc-950 px-3 py-2 text-sm text-zinc-100 outline-none focus:border-zinc-500"
             />
           </label>
-          <label className="space-y-1">
-            <span className="text-xs text-zinc-400">Si el contacto sigue inactivo re notificar cada (dias):</span>
+          <label className="flex flex-col gap-1">
+            <span className="min-h-[2.5rem] text-xs leading-5 text-zinc-400">Si el contacto sigue inactivo re notificar cada (dias):</span>
             <input
               type="number"
               min={1}
