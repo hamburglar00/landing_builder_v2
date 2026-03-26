@@ -160,7 +160,7 @@ export default function NotificationsPageContent({
             </select>
           </label>
           <label className="space-y-1">
-            <span className="text-xs text-zinc-400">Horario (08-22)</span>
+            <span className="text-xs text-zinc-400">Hora de envio (08-22, Buenos Aires)</span>
             <input
               type="number"
               min={8}
@@ -175,7 +175,7 @@ export default function NotificationsPageContent({
             />
           </label>
           <label className="space-y-1">
-            <span className="text-xs text-zinc-400">Inactividad mayor a X días</span>
+            <span className="text-xs text-zinc-400">Notificar si la inactividad de un contacto es mayor a (dias):</span>
             <input
               type="number"
               min={1}
@@ -190,7 +190,7 @@ export default function NotificationsPageContent({
             />
           </label>
           <label className="space-y-1">
-            <span className="text-xs text-zinc-400">Re-notificar cada X días</span>
+            <span className="text-xs text-zinc-400">Si el contacto sigue inactivo re notificar cada (dias):</span>
             <input
               type="number"
               min={1}
@@ -206,7 +206,7 @@ export default function NotificationsPageContent({
           </label>
         </div>
         <p className="mt-3 text-xs text-zinc-500">
-          Mensaje agrupado de hasta 10 contactos por envío. Zona horaria fija: Buenos Aires.
+          Recibiras un resumen de tus contactos inactivos por Telegram para que puedas hacerles seguimiento y fidelizarlos.
         </p>
         <div className="mt-3 flex justify-end">
           <button
@@ -226,4 +226,5 @@ export default function NotificationsPageContent({
     </div>
   );
 }
+
 
