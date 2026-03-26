@@ -75,8 +75,25 @@ export async function fetchNotificationSettings(userId: string): Promise<Notific
     .eq("user_id", userId)
     .maybeSingle();
   if (error) throw error;
-  if (!data) return { ...DEFAULT_SETTINGS, user_id: userId };
-  return data as NotificationSettings;
+  if (data) return data as NotificationSettings;
+
+  // Cliente nuevo: inicializa fila para generar telegram_start_token y defaults.
+  const { error: ensureError } = await supabase
+    .from("notification_settings")
+    .upsert(
+      { user_id: userId },
+      { onConflict: "user_id", ignoreDuplicates: true },
+    );
+  if (ensureError) throw ensureError;
+
+  const { data: created, error: createdError } = await supabase
+    .from("notification_settings")
+    .select("*")
+    .eq("user_id", userId)
+    .maybeSingle();
+  if (createdError) throw createdError;
+  if (!created) return { ...DEFAULT_SETTINGS, user_id: userId };
+  return created as NotificationSettings;
 }
 
 export async function upsertNotificationSettings(settings: NotificationSettings): Promise<void> {
