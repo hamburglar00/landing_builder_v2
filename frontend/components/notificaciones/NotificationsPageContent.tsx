@@ -33,6 +33,7 @@ export default function NotificationsPageContent({
   );
   const [cfg, setCfg] = useState<NotificationSettings | null>(settings);
   const [msg, setMsg] = useState<string | null>(null);
+  const [msgType, setMsgType] = useState<"success" | "error">("success");
   const [botEditable, setBotEditable] = useState(false);
 
   useEffect(() => {
@@ -73,9 +74,14 @@ export default function NotificationsPageContent({
       </div>
 
       {msg && (
-        <div className="rounded-lg border border-zinc-700 bg-zinc-900/70 px-3 py-2 text-xs text-zinc-300">
+        <p
+          className={`rounded-lg px-3 py-2 text-sm ${
+            msgType === "error" ? "bg-red-950/50 text-red-300" : "bg-emerald-950/50 text-emerald-300"
+          }`}
+          role="alert"
+        >
           {msg}
-        </div>
+        </p>
       )}
 
       {isAdmin && (
@@ -124,9 +130,11 @@ export default function NotificationsPageContent({
                 try {
                   await onSaveBot(bot);
                   setBotEditable(false);
+                  setMsgType("success");
                   setMsg("Bot guardado.");
                 } catch (e) {
                   console.error(e);
+                  setMsgType("error");
                   setMsg("No se pudo guardar el bot. Revisa permisos o intenta nuevamente.");
                 } finally {
                   setTimeout(() => setMsg(null), 3000);
@@ -250,6 +258,7 @@ export default function NotificationsPageContent({
             disabled={saving}
             onClick={async () => {
               await onSaveSettings(cfg);
+              setMsgType("success");
               setMsg("Configuración de notificaciones guardada.");
               setTimeout(() => setMsg(null), 3000);
             }}
@@ -262,5 +271,6 @@ export default function NotificationsPageContent({
     </div>
   );
 }
+
 
 
