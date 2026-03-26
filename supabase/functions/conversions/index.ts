@@ -506,7 +506,7 @@ async function handleContact(
     purchase_event_id: "",
     purchase_event_time: null,
     purchase_payload_raw: "",
-    test_event_code: testEventCode || srcRow?.test_event_code || "",
+    test_event_code: testEventCode,
     client_ip: norm(p.clientIP),
     agent_user: norm(p.agentuser),
     device_type: norm(p.device_type),
@@ -1085,4 +1085,3 @@ Deno.serve(async (req) => {
     return textResponse("Error inesperado", 500);
   }
 });
-
