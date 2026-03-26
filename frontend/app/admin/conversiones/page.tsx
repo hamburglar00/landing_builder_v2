@@ -262,6 +262,7 @@ export default function AdminConversionesPage() {
   const [hidingTable, setHidingTable] = useState(false);
   const [hidingFunnel, setHidingFunnel] = useState(false);
   const [hidingStats, setHidingStats] = useState(false);
+  const [hidingLogs, setHidingLogs] = useState(false);
 
   const demoConversions = useMemo(() => generateDemoConversions(80), []);
   const demoFunnel = useMemo(() => generateDemoFunnelContacts(demoConversions), [demoConversions]);
@@ -446,6 +447,25 @@ export default function AdminConversionesPage() {
       setClearMsg(`Error al limpiar: ${msg}`);
     } finally { setHidingStats(false); }
   }, [userId, activeFunnel, activeConversions, refreshTable, demoMode]);
+
+  const clearLogsDisplay = useCallback(async () => {
+    if (!userId || logs.length === 0 || demoMode) return;
+    const ok = window.confirm(
+      "Seguro que queres limpiar la vista?\n\nSi limpias la vista, perderas los registros visibles y las estadsticas volveran a cero.",
+    );
+    if (!ok) return;
+    setHidingLogs(true);
+    setClearMsg(null);
+    try {
+      setLogs([]);
+      setClearMsg("Vista limpiada. Los registros siguen en la base de datos.");
+      setTimeout(() => setClearMsg(null), 4000);
+    } catch (e) {
+      console.error(e);
+      const msg = e instanceof Error ? e.message : String(e);
+      setClearMsg(`Error al limpiar: ${msg}`);
+    } finally { setHidingLogs(false); }
+  }, [userId, logs.length, demoMode]);
 
   if (loading) {
     return (
@@ -943,10 +963,21 @@ export default function AdminConversionesPage() {
       {/* TAB: LOGS */}
       {tab === "logs" && (
         <section className="rounded-xl border border-zinc-800 bg-zinc-900/50 p-4">
-          <h3 className="mb-4 text-sm font-semibold text-zinc-200">
-            Logs de conversiones{" "}
-            <span className="font-normal text-zinc-500">({logs.length})</span>
-          </h3>
+          <div className="mb-4 flex flex-wrap items-center justify-between gap-2">
+            <h3 className="text-sm font-semibold text-zinc-200">
+              Logs de conversiones{" "}
+              <span className="font-normal text-zinc-500">({logs.length})</span>
+            </h3>
+            <button
+              type="button"
+              onClick={clearLogsDisplay}
+              disabled={hidingLogs || logs.length === 0 || demoMode}
+              className="inline-flex items-center gap-1.5 rounded-lg border border-zinc-700 bg-zinc-800/80 px-2.5 py-1.5 text-xs font-medium text-zinc-400 transition hover:bg-zinc-700 hover:text-zinc-300 disabled:opacity-50 disabled:cursor-not-allowed"
+              title="Ocultar logs de la vista (no borra de la base)"
+            >
+              {hidingLogs ? "Ocultando..." : "Limpiar vista"}
+            </button>
+          </div>
           {logs.length === 0 ? (
             <p className="text-sm text-zinc-500">Aun no hay logs registrados.</p>
           ) : (
