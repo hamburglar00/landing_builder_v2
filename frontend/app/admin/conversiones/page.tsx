@@ -729,7 +729,7 @@ export default function AdminConversionesPage() {
       {/* TAB: TABLA */}
       {tab === "tabla" && (
         <section className="rounded-xl border border-zinc-800 bg-zinc-900/50 p-4">
-          <div className="mb-4 flex flex-wrap items-center justify-between gap-2">
+          <div className="sticky top-0 z-30 mb-4 flex flex-wrap items-center justify-between gap-2 rounded-lg bg-zinc-950/95 py-2 backdrop-blur">
             <h3 className="text-sm font-semibold text-zinc-200">
               Tabla de conversiones{" "}
               <span className="font-normal text-zinc-500">({filteredConversions.length})</span>
@@ -773,7 +773,7 @@ export default function AdminConversionesPage() {
             return (
               <div className="overflow-x-auto rounded-lg border border-zinc-700">
                 <table className="w-full text-left text-[11px]">
-                  <thead className="sticky top-0 z-20 bg-zinc-800/95">
+                  <thead className="sticky top-[56px] z-20 bg-zinc-800/95">
                     <tr>
                       <th className="px-2 py-2 font-medium text-zinc-300 whitespace-nowrap">ID</th>
                       <th className="px-2 py-2 font-medium text-zinc-300 whitespace-nowrap">timestamp</th>
