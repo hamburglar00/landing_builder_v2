@@ -417,9 +417,6 @@ export function LandingEditorForm({
             </div>
           </div>
           <div className="border-t border-zinc-800 pt-4">
-            <span className="block text-xs font-medium text-zinc-400 mb-2">
-              Logo
-            </span>
             <ImageUploader
               label="Logo"
               multiple={false}
