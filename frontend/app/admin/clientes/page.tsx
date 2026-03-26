@@ -111,9 +111,9 @@ export default function AdminClientesPage() {
         </div>
         <Link
           href="/admin/clientes/nuevo"
-          className="inline-flex w-fit items-center justify-center rounded-lg bg-zinc-50 px-4 py-2 text-xs font-semibold text-zinc-950 transition hover:bg-zinc-200"
+          className="inline-flex w-fit cursor-pointer items-center justify-center rounded-xl bg-[var(--color-primary)] px-4 py-2 text-sm font-semibold uppercase tracking-wide text-[var(--color-bg-0)] transition-colors duration-150 hover:bg-[var(--color-primary-hover)] active:bg-[var(--color-primary-press)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-ring-primary)]"
         >
-          Crear cliente
+          CREAR CLIENTE
         </Link>
       </div>
 
