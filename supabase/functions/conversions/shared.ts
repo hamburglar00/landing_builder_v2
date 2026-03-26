@@ -69,6 +69,11 @@ export function sanitizeIp(v: unknown): string {
   let ip = String(v ?? "").trim();
   if (!ip) return "";
   if (ip.includes(",")) ip = ip.split(",")[0].trim();
+  ip = ip.replace(/^\[|\]$/g, "");
+  ip = ip.replace(/%.+$/, "");
+  if (/^\d{1,3}(?:\.\d{1,3}){3}:\d+$/.test(ip)) {
+    ip = ip.split(":")[0];
+  }
   ip = ip.replace(/[^\dA-Fa-f:.]/g, "");
   return ip;
 }

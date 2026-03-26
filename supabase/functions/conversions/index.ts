@@ -109,8 +109,31 @@ function sanitizeIp(v: unknown): string {
   let ip = String(v ?? "").trim();
   if (!ip) return "";
   if (ip.includes(",")) ip = ip.split(",")[0].trim();
+  // Strip brackets and IPv6 zone-id if present.
+  ip = ip.replace(/^\[|\]$/g, "");
+  ip = ip.replace(/%.+$/, "");
+  // IPv4 with port (e.g. 1.2.3.4:5678) -> keep only host.
+  if (/^\d{1,3}(?:\.\d{1,3}){3}:\d+$/.test(ip)) {
+    ip = ip.split(":")[0];
+  }
   ip = ip.replace(/[^\dA-Fa-f:.]/g, "");
   return ip;
+}
+
+function extractClientIpFromHeaders(req: Request): string {
+  const candidates = [
+    req.headers.get("cf-connecting-ip"),
+    req.headers.get("x-real-ip"),
+    req.headers.get("x-forwarded-for"),
+    req.headers.get("x-vercel-forwarded-for"),
+    req.headers.get("fly-client-ip"),
+  ];
+
+  for (const c of candidates) {
+    const ip = sanitizeIp(c);
+    if (ip) return ip;
+  }
+  return "";
 }
 
 function isPrivateOrReservedIp(ip: string): boolean {
@@ -1039,6 +1062,10 @@ Deno.serve(async (req) => {
     };
 
     const params: Params = await req.json().catch(() => ({}));
+    // Prefer payload IP when present; otherwise fall back to request headers.
+    const payloadIp = sanitizeIp(params.clientIP ?? params.client_ip ?? "");
+    const headerIp = extractClientIpFromHeaders(req);
+    params.clientIP = payloadIp || headerIp || "";
 
     // landing_name can come from the payload (to track which landing sent this)
     const landingName = norm(params.landing_name || params.landingName || "");
