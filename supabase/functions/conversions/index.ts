@@ -665,7 +665,6 @@ async function handleLead(
   await writeLog(db, landing.user_id, "handleLead", "INFO", "LEAD procesado", JSON.stringify({ phone: cleanPhone, promo_code: promoCode, matched: !!targetId }), targetId!);
 
   const ok = await sendToMetaCAPI(db, config, fullRow, targetId!, "Lead", leadEventId, leadEventTime, undefined, testEventCode || undefined);
-  await writeLog(db, landing.user_id, "sendToMetaCAPI", ok ? "INFO" : "ERROR", ok ? "Lead CAPI enviado" : "Error Lead CAPI", JSON.stringify({ event_id: leadEventId }), targetId!);
   return textResponse(ok ? "Fila LEAD procesada" : "LEAD procesado. Error al enviar a Meta CAPI (revisar token, pixel o pestana Logs).");
 }
 
@@ -822,7 +821,6 @@ async function handlePurchase(
     await writeLog(db, landing.user_id, "handlePurchase", "INFO", "Primera compra procesada", JSON.stringify({ phone: cleanPhone, amount, promo_code: promoCode }), targetId!);
 
     const ok = await sendToMetaCAPI(db, config, fullRow, targetId!, "Purchase", purchaseEventId, purchaseEventTime, customData, testEventCode || undefined);
-    await writeLog(db, landing.user_id, "sendToMetaCAPI", ok ? "INFO" : "ERROR", ok ? "Purchase CAPI enviado" : "Error Purchase CAPI", JSON.stringify({ event_id: purchaseEventId, type: "first" }), targetId!);
     return textResponse(ok ? "Primera compra enviada (Purchase)" : "Purchase procesado. Error al enviar a Meta CAPI (revisar token, pixel o Logs).");
   }
 
@@ -898,7 +896,6 @@ async function handlePurchase(
   await writeLog(db, landing.user_id, "handlePurchase", "INFO", "Recompra procesada", JSON.stringify({ phone: cleanPhone, amount, inherited_from: srcRow?.id }), newId);
 
   const ok = await sendToMetaCAPI(db, config, fullRow, newId, "Purchase", purchaseEventId, purchaseEventTime, customData, testEventCode || undefined);
-  await writeLog(db, landing.user_id, "sendToMetaCAPI", ok ? "INFO" : "ERROR", ok ? "Purchase Repeat CAPI enviado" : "Error Purchase Repeat CAPI", JSON.stringify({ event_id: purchaseEventId, type: "repeat" }), newId);
   return textResponse(ok ? "Recompra enviada (Purchase_Repeat)" : "Recompra procesada. Error al enviar a Meta CAPI (revisar token, pixel o Logs).");
 }
 
@@ -987,7 +984,6 @@ async function handleSimplePurchase(
   await writeLog(db, landing.user_id, "handleSimplePurchase", "INFO", "Purchase simple procesado", JSON.stringify({ phone: cleanPhone, amount, inherited_from: srcRow?.id }), newId);
 
   const ok = await sendToMetaCAPI(db, config, fullRow, newId, "Purchase", purchaseEventId, purchaseEventTime, customData, testEventCode || undefined);
-  await writeLog(db, landing.user_id, "sendToMetaCAPI", ok ? "INFO" : "ERROR", ok ? "Simple Purchase CAPI enviado" : "Error Simple Purchase CAPI", JSON.stringify({ event_id: purchaseEventId }), newId);
   return textResponse(ok ? "Evento Purchase enviado" : "Purchase procesado. Error al enviar a Meta CAPI (revisar token, pixel o Logs).");
 }
 
@@ -1089,6 +1085,5 @@ Deno.serve(async (req) => {
     return textResponse("Error inesperado", 500);
   }
 });
-
 
 

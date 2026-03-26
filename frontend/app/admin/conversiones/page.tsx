@@ -997,7 +997,23 @@ export default function AdminConversionesPage() {
                 </thead>
                 <tbody className="divide-y divide-zinc-800">
                   {logs.map((log) => (
-                    <tr key={log.id} className="bg-zinc-950/40">
+                    <tr
+                      key={log.id}
+                      className={(() => {
+                        const isMetaResponse = log.function_name === "sendToMetaCAPI" && log.message === "Meta CAPI respuesta";
+                        if (!isMetaResponse || !log.response_meta) return "bg-zinc-950/40";
+                        try {
+                          const parsed = JSON.parse(log.response_meta) as { error?: unknown; events_received?: number | string };
+                          const eventsReceived = typeof parsed.events_received === "number"
+                            ? parsed.events_received
+                            : Number(parsed.events_received ?? 0);
+                          const ok = !parsed.error && Number.isFinite(eventsReceived) && eventsReceived > 0;
+                          return ok ? "bg-emerald-950/25 border-l-2 border-emerald-400/60" : "bg-zinc-950/40";
+                        } catch {
+                          return "bg-zinc-950/40";
+                        }
+                      })()}
+                    >
                       <td className="px-2 py-1.5 text-zinc-500 font-mono whitespace-nowrap">
                         {log.conversion_id ? (internalIdByConversionId.get(log.conversion_id) ?? "-") : "-"}
                       </td>
