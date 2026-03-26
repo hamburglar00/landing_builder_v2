@@ -67,7 +67,15 @@ function WaIcon({ className }: { className?: string }) {
   );
 }
 
-export default function TrackingBoard({ conversions }: { conversions: ConversionRow[] }) {
+export default function TrackingBoard({
+  conversions,
+  onRefresh,
+  refreshing = false,
+}: {
+  conversions: ConversionRow[];
+  onRefresh?: () => void;
+  refreshing?: boolean;
+}) {
   const [rules, setRules] = useState<RankRule[]>(DEFAULT_RULES);
   const [overflowIndicator, setOverflowIndicator] = useState("💣");
   const [sortMode, setSortMode] = useState<SortMode>("last_active_desc");
@@ -126,13 +134,26 @@ export default function TrackingBoard({ conversions }: { conversions: Conversion
     <section className="rounded-xl border border-zinc-800 bg-zinc-900/50 p-4">
       <div className="mb-4 flex flex-wrap items-center justify-between gap-2">
         <h3 className="text-sm font-semibold text-zinc-200">Seguimiento</h3>
-        <button
-          type="button"
-          onClick={() => setOpenConfig(true)}
-          className="inline-flex items-center gap-1.5 rounded-lg border border-zinc-700 bg-zinc-800/80 px-2.5 py-1.5 text-xs font-medium text-zinc-300 transition hover:bg-zinc-700 hover:text-zinc-100"
-        >
-          Configurar ranking
-        </button>
+        <div className="ml-auto flex items-center gap-2">
+          <button
+            type="button"
+            onClick={onRefresh}
+            disabled={!onRefresh || refreshing}
+            className="inline-flex items-center gap-1.5 rounded-lg border border-zinc-700 bg-zinc-800/80 px-2.5 py-1.5 text-xs font-medium text-zinc-300 transition hover:bg-zinc-700 hover:text-zinc-100 disabled:opacity-60"
+          >
+            <svg className="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+              <path strokeLinecap="round" strokeLinejoin="round" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+            </svg>
+            {refreshing ? "Actualizando..." : "Actualizar"}
+          </button>
+          <button
+            type="button"
+            onClick={() => setOpenConfig(true)}
+            className="inline-flex items-center gap-1.5 rounded-lg border border-zinc-700 bg-zinc-800/80 px-2.5 py-1.5 text-xs font-medium text-zinc-300 transition hover:bg-zinc-700 hover:text-zinc-100"
+          >
+            Configurar ranking
+          </button>
+        </div>
       </div>
       <p className="mb-3 rounded-lg border border-zinc-800 bg-zinc-900/70 px-3 py-2 text-xs text-zinc-400">
         Abre WhatsApp Web en tu navegador e inicia sesion con el WhatsApp de soporte para que puedas contactar a tus jugadores y realizar un seguimiento.

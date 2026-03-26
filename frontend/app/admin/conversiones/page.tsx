@@ -947,6 +947,8 @@ export default function AdminConversionesPage() {
       {tab === "seguimiento" && (
         <TrackingBoard
           conversions={activeConversions.filter((r) => !String(r.test_event_code ?? "").trim())}
+          onRefresh={refreshTable}
+          refreshing={refreshingTable}
         />
       )}
 
