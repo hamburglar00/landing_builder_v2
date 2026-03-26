@@ -7,7 +7,8 @@ export default function DashboardTelefonosPage() {
     <TelefonosPageContent
       backLink="/dashboard"
       backLabel="Mis Landings"
-      title="Teléfonos"
+      title="TELEFONOS"
     />
   );
 }
+

@@ -26,7 +26,7 @@ export default async function AdminDocumentacionPage() {
       </div>
       <div>
         <h1 className="text-xl font-semibold text-zinc-100">
-          Documentación
+          DOCUMENTACION
         </h1>
         <p className="mt-1 text-sm text-zinc-400">
           README del proyecto.
@@ -102,3 +102,4 @@ export default async function AdminDocumentacionPage() {
     </div>
   );
 }
+

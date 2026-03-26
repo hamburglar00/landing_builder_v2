@@ -165,7 +165,7 @@ export default function DashboardGerenciasPage() {
       <form onSubmit={handleCreate} className="space-y-4">
         <div className="flex flex-wrap items-center justify-between gap-4">
           <div>
-            <h1 className="text-xl font-bold text-[var(--color-text-strong)]">Gerencias</h1>
+            <h1 className="text-xl font-bold text-[var(--color-text-strong)]">GERENCIAS</h1>
             <p className="mt-1 text-sm text-[var(--color-text-muted)]">
               Crea y edita gerencias para asignarlas a tus landings.
             </p>

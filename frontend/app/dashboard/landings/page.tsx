@@ -85,7 +85,7 @@ export default function DashboardLandingsPage() {
       <div className="flex flex-wrap items-center justify-between gap-4">
         <div>
           <h1 className="text-xl font-bold text-[var(--color-text-strong)]">
-            Mis landings
+            LANDINGS
           </h1>
           <p className="mt-1 text-sm text-[var(--color-text-muted)]">
             Crea y edita tus landings.

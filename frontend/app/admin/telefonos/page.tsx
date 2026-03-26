@@ -7,8 +7,9 @@ export default function AdminTelefonosPage() {
     <TelefonosPageContent
       backLink="/admin/landings"
       backLabel="Listado"
-      title="Teléfonos"
+      title="TELEFONOS"
       isAdmin
     />
   );
 }
+

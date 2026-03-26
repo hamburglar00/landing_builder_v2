@@ -74,7 +74,7 @@ export default function AdminSettingsPage() {
   return (
     <div className="space-y-6">
       <div>
-        <h1 className="text-xl font-semibold text-zinc-100">Configuración</h1>
+        <h1 className="text-xl font-semibold text-zinc-100">CONFIGURACION</h1>
         <p className="mt-1 text-sm text-zinc-400">
           Solo administradores. Configuración global de la aplicación.
         </p>
@@ -178,3 +178,4 @@ export default function AdminSettingsPage() {
     </div>
   );
 }
+
