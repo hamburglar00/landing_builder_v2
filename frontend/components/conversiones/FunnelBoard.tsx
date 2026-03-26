@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useMemo } from "react";
+import { useState, useMemo, type ReactNode } from "react";
 import {
   type FunnelContact,
   type FunnelStage,
@@ -209,9 +209,11 @@ function ContactCard({ c, stage }: { c: FunnelContact; stage: FunnelStage }) {
 export default function FunnelBoard({
   contacts,
   premiumThreshold,
+  headerSlot,
 }: {
   contacts: FunnelContact[];
   premiumThreshold: number;
+  headerSlot?: ReactNode;
 }) {
   const [sortKey, setSortKey] = useState<SortKey>("date");
   const [sortDir, setSortDir] = useState<SortDir>("desc");
@@ -254,11 +256,11 @@ export default function FunnelBoard({
 
   return (
     <div className="space-y-4">
-
-      {/* aa SORT CONTROLS aa */}
-      <div className="flex items-center justify-end gap-2">
-        <span className="text-[11px] text-zinc-600 font-medium">Ordenar</span>
-        <div className="flex items-center rounded-lg border border-zinc-800/40 bg-[#0d0d11] p-0.5">
+      <div className="flex flex-wrap items-center justify-between gap-2">
+        <div>{headerSlot}</div>
+        <div className="flex items-center gap-2">
+          <span className="text-[11px] text-zinc-600 font-medium">Ordenar</span>
+          <div className="flex items-center rounded-lg border border-zinc-800/40 bg-[#0d0d11] p-0.5">
           {(["date", "amount"] as SortKey[]).map((k) => {
             const active = sortKey === k;
             return (
@@ -279,6 +281,7 @@ export default function FunnelBoard({
               </button>
             );
           })}
+          </div>
         </div>
       </div>
 
