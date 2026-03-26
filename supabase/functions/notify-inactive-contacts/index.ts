@@ -20,6 +20,7 @@ type NotificationSettings = {
   channel: string;
   telegram_chat_id: string;
   telegram_start_token: string;
+  telegram_welcome_sent_at: string | null;
   inactive_days: number;
   renotify_days: number;
   notify_hour: number;
@@ -79,6 +80,9 @@ async function sendTelegramMessage(token: string, chatId: string, text: string) 
   const body = await res.text();
   return { ok: res.ok, body };
 }
+
+const WELCOME_MESSAGE =
+  "🔔 ¡Felicidades! Has activado las notificaciones de seguimiento. Recibirás un resumen diario de tus contactos inactivos.";
 
 function relTimeFromDays(days: number): string {
   if (days <= 1) return "1 dia";
@@ -147,10 +151,22 @@ Deno.serve(async (req) => {
         const payload = extractStartPayload(text);
         const chatId = String(u?.message?.chat?.id || "");
         if (!payload || !chatId) continue;
-        await db
+        const nowIso = new Date().toISOString();
+        const { data: linked } = await db
           .from("notification_settings")
-          .update({ telegram_chat_id: chatId, updated_at: new Date().toISOString() })
-          .eq("telegram_start_token", payload);
+          .update({ telegram_chat_id: chatId, updated_at: nowIso })
+          .eq("telegram_start_token", payload)
+          .select("user_id, telegram_welcome_sent_at")
+          .maybeSingle();
+        if (linked?.user_id && !linked.telegram_welcome_sent_at) {
+          const welcome = await sendTelegramMessage(botRow.telegram_bot_token, chatId, WELCOME_MESSAGE);
+          if (welcome.ok) {
+            await db
+              .from("notification_settings")
+              .update({ telegram_welcome_sent_at: nowIso, updated_at: nowIso })
+              .eq("user_id", linked.user_id);
+          }
+        }
       }
       await db
         .from("notification_bot_config")
@@ -168,6 +184,21 @@ Deno.serve(async (req) => {
       .eq("channel", "telegram");
 
     const settings = (settingsRows ?? []) as NotificationSettings[];
+
+    // Backfill armonizado: enviar bienvenida una sola vez a clientes ya conectados.
+    for (const s of settings) {
+      if (!s.telegram_chat_id || s.telegram_welcome_sent_at) continue;
+      const nowIso = new Date().toISOString();
+      const welcome = await sendTelegramMessage(botRow.telegram_bot_token, s.telegram_chat_id, WELCOME_MESSAGE);
+      if (welcome.ok) {
+        await db
+          .from("notification_settings")
+          .update({ telegram_welcome_sent_at: nowIso, updated_at: nowIso })
+          .eq("user_id", s.user_id);
+        s.telegram_welcome_sent_at = nowIso;
+      }
+    }
+
     let sentUsers = 0;
     let sentMessages = 0;
 
@@ -300,4 +331,3 @@ Deno.serve(async (req) => {
     });
   }
 });
-
