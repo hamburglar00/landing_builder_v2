@@ -37,7 +37,6 @@ export default function AdminClientManagePage() {
 
   const [nombre, setNombre] = useState("");
   const [email, setEmail] = useState("");
-  const [password, setPassword] = useState("");
   const [resetPassword, setResetPassword] = useState("");
   const [resettingPassword, setResettingPassword] = useState(false);
   const [showLogs, setShowLogs] = useState(true);
@@ -112,7 +111,6 @@ export default function AdminClientManagePage() {
     };
 
     if (email.trim()) payload.email = email.trim();
-    if (password.trim()) payload.password = password.trim();
 
     const { error } = await invokeFunction<{ id?: string }>(
       supabase,
@@ -125,7 +123,6 @@ export default function AdminClientManagePage() {
       setError(error.message);
       return;
     }
-    setPassword("");
     setOkMsg("Configuracion guardada.");
     setTimeout(() => setOkMsg(null), 2500);
   };
@@ -214,17 +211,6 @@ export default function AdminClientManagePage() {
               className="w-full rounded-lg border border-zinc-800 bg-zinc-900 px-3 py-2 text-xs text-zinc-50 outline-none focus:border-zinc-500"
             />
           </div>
-        </div>
-
-        <div className="space-y-2">
-          <label className="block text-xs font-medium text-zinc-300">Nueva clave (opcional)</label>
-          <input
-            type="text"
-            value={password}
-            onChange={(e) => setPassword(e.target.value)}
-            placeholder="Dejar vacio para no cambiar"
-            className="w-full max-w-sm rounded-lg border border-zinc-800 bg-zinc-900 px-3 py-2 text-xs text-zinc-50 outline-none focus:border-zinc-500"
-          />
         </div>
 
         <section className="rounded-lg border border-zinc-800 bg-zinc-900/40 p-3">
