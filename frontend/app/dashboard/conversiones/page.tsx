@@ -211,6 +211,7 @@ export default function DashboardConversionesPage() {
   const [tab, setTab] = useState<Tab>("funnel");
   const [copiedUrl, setCopiedUrl] = useState<string | null>(null);
   const [expandedLog, setExpandedLog] = useState<number | null>(null);
+  const [tableSearch, setTableSearch] = useState("");
 
   const [dateRange, setDateRange] = useState<DateRange | null>(null);
   const [refreshingTable, setRefreshingTable] = useState(false);
@@ -226,6 +227,25 @@ export default function DashboardConversionesPage() {
 
   const activeConversions = useMemo(() => filterByDateRange(conversions, dateRange), [conversions, dateRange]);
   const activeFunnel = useMemo(() => filterFunnelByDateRange(funnelContacts, dateRange), [funnelContacts, dateRange]);
+  const filteredConversions = useMemo(() => {
+    const q = tableSearch.trim().toLowerCase();
+    if (!q) return activeConversions;
+    return activeConversions.filter((c) => {
+      const hay = [
+        c.phone,
+        c.email,
+        c.promo_code,
+        c.external_id,
+        c.utm_campaign,
+        c.telefono_asignado,
+        c.landing_name,
+      ]
+        .filter(Boolean)
+        .join(" ")
+        .toLowerCase();
+      return hay.includes(q);
+    });
+  }, [activeConversions, tableSearch]);
 
   const visibleCols = useMemo(() => {
     const cols = config?.visible_columns ?? [];
@@ -237,6 +257,10 @@ export default function DashboardConversionesPage() {
   const displayedCols = useMemo(
     () => ALL_COLUMNS.filter((c) => visibleCols.has(c)),
     [visibleCols],
+  );
+  const displayedColsWithoutTimestamp = useMemo(
+    () => displayedCols.filter((c) => c !== "timestamp"),
+    [displayedCols],
   );
   const internalIdByConversionId = useMemo(
     () => new Map(conversions.map((c) => [c.id, c.internal_id])),
@@ -603,9 +627,16 @@ export default function DashboardConversionesPage() {
         <section className="rounded-xl border border-zinc-800 bg-zinc-900/50 p-4">
           <div className="mb-4 flex flex-wrap items-center justify-between gap-2">
             <h3 className="text-sm font-semibold text-zinc-200">
-              Tabla de conversiones <span className="font-normal text-zinc-500">({activeConversions.length})</span>
+              Tabla de conversiones <span className="font-normal text-zinc-500">({filteredConversions.length})</span>
             </h3>
-            <div className="flex gap-2">
+            <div className="flex items-center gap-2">
+              <input
+                value={tableSearch}
+                onChange={(e) => setTableSearch(e.target.value)}
+                placeholder="Buscar por phone, email, promo, utm..."
+                className="h-8 w-64 rounded-lg border border-zinc-700 bg-zinc-900 px-3 text-xs text-zinc-100 placeholder:text-zinc-500"
+              />
+              <div className="flex gap-2">
               <button
                 type="button"
                 onClick={refreshTable}
@@ -621,12 +652,13 @@ export default function DashboardConversionesPage() {
               <button
                 type="button"
                 onClick={clearTableDisplay}
-                disabled={hidingTable || refreshingTable || activeConversions.length === 0}
+                disabled={hidingTable || refreshingTable || filteredConversions.length === 0}
                 className="inline-flex items-center gap-1.5 rounded-lg border border-zinc-700 bg-zinc-800/80 px-2.5 py-1.5 text-xs font-medium text-zinc-400 transition hover:bg-zinc-700 hover:text-zinc-300 disabled:opacity-50 disabled:cursor-not-allowed"
                 title="Ocultar registros de la vista (persistente, no borra de la base)"
               >
                 {hidingTable ? "Ocultando..." : "Limpiar vista"}
               </button>
+            </div>
             </div>
           </div>
           <div className="overflow-x-auto rounded-lg border border-zinc-700">
@@ -634,25 +666,26 @@ export default function DashboardConversionesPage() {
               <thead className="bg-zinc-800/80 sticky top-0">
                 <tr>
                   <th className="px-2 py-2 font-medium text-zinc-300 whitespace-nowrap">ID</th>
-                  {displayedCols.map((col) => (
+                  <th className="px-2 py-2 font-medium text-zinc-300 whitespace-nowrap">timestamp</th>
+                  {displayedColsWithoutTimestamp.map((col) => (
                     <th key={col} className="px-2 py-2 font-medium text-zinc-300 whitespace-nowrap">{col}</th>
                   ))}
                 </tr>
               </thead>
               <tbody className="divide-y divide-zinc-800">
-                {displayedCols.length === 0 ? (
+                {displayedColsWithoutTimestamp.length === 0 ? (
                   <tr>
-                    <td colSpan={2} className="px-2 py-6 text-center text-zinc-500">
+                    <td colSpan={3} className="px-2 py-6 text-center text-zinc-500">
                       Tu administrador todavia no definio columnas visibles para esta tabla.
                     </td>
                   </tr>
-                ) : activeConversions.length === 0 ? (
+                ) : filteredConversions.length === 0 ? (
                   <tr>
-                    <td colSpan={displayedCols.length + 1} className="px-2 py-6 text-center text-zinc-500">
-                      An no hay conversiones registradas.
+                    <td colSpan={displayedColsWithoutTimestamp.length + 2} className="px-2 py-6 text-center text-zinc-500">
+                      Aun no hay conversiones registradas.
                     </td>
                   </tr>
-                ) : activeConversions.map((c, idx) => {
+                ) : filteredConversions.map((c, idx) => {
                   const isRepeat = c.estado === "purchase" && c.observaciones?.includes("REPEAT");
                   const rowColor =
                     c.estado === "lead"
@@ -665,7 +698,8 @@ export default function DashboardConversionesPage() {
                   return (
                     <tr key={c.id} className={rowColor}>
                       <td className="px-2 py-1.5 whitespace-nowrap text-zinc-500 font-mono">{c.internal_id ?? idx + 1}</td>
-                      {displayedCols.map((col) =>
+                      {cellValue(c, "timestamp")}
+                      {displayedColsWithoutTimestamp.map((col) =>
                         col === "email" ? (
                           <EditableEmailCell key={col} row={c} onSaved={(id, email) => setConversions((prev) => prev.map((r) => (r.id === id ? { ...r, email } : r)))} />
                         ) : cellValue(c, col)
