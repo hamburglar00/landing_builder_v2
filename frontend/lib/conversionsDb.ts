@@ -344,6 +344,8 @@ function derivePurchaseType(row: ConversionRow): "first" | "repeat" | null {
 export function buildFunnelContactsFromConversions(rows: ConversionRow[]): FunnelContact[] {
   const grouped = new Map<string, ConversionRow[]>();
   for (const row of rows) {
+    // Excluir eventos de prueba para no ensuciar el funnel.
+    if (String(row.test_event_code ?? "").trim()) continue;
     const key = `${row.user_id}::${row.phone}`;
     const bucket = grouped.get(key) ?? [];
     bucket.push(row);

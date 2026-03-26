@@ -244,6 +244,14 @@ export default function DashboardConversionesPage() {
 
   const activeConversions = useMemo(() => filterByDateRange(conversions, dateRange), [conversions, dateRange]);
   const activeFunnel = useMemo(() => filterFunnelByDateRange(funnelContacts, dateRange), [funnelContacts, dateRange]);
+  const statsConversions = useMemo(
+    () => activeConversions.filter((r) => !String(r.test_event_code ?? "").trim()),
+    [activeConversions],
+  );
+  const statsAllConversions = useMemo(
+    () => conversions.filter((r) => !String(r.test_event_code ?? "").trim()),
+    [conversions],
+  );
   const filteredConversions = useMemo(() => {
     const q = tableSearch.trim().toLowerCase();
     if (!q) return activeConversions;
@@ -820,7 +828,7 @@ export default function DashboardConversionesPage() {
               <button
                 type="button"
                 onClick={clearStatsDisplay}
-                disabled={hidingStats || refreshingTable || (activeFunnel.length === 0 && activeConversions.length === 0)}
+                disabled={hidingStats || refreshingTable || (activeFunnel.length === 0 && statsConversions.length === 0)}
                 className="inline-flex items-center gap-1.5 rounded-lg border border-zinc-700 bg-zinc-800/80 px-2.5 py-1.5 text-xs font-medium text-zinc-400 transition hover:bg-zinc-700 hover:text-zinc-300 disabled:opacity-50 disabled:cursor-not-allowed"
                 title="Ocultar registros de la vista (persistente, no borra de la base)"
               >
@@ -828,13 +836,13 @@ export default function DashboardConversionesPage() {
               </button>
             </div>
           </div>
-          {activeFunnel.length === 0 && activeConversions.length === 0 ? (
+          {activeFunnel.length === 0 && statsConversions.length === 0 ? (
             <p className="py-12 text-center text-sm text-zinc-500">An no hay datos para estadsticas.</p>
           ) : (
             <StatsPanel
               funnelContacts={activeFunnel}
-              conversions={activeConversions}
-              allConversions={conversions}
+              conversions={statsConversions}
+              allConversions={statsAllConversions}
               premiumThreshold={config?.funnel_premium_threshold ?? 50000}
               dateRange={dateRange}
               compactTooltips
