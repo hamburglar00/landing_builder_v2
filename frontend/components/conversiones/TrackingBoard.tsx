@@ -1,15 +1,14 @@
 "use client";
 
 import { useMemo, useState } from "react";
-import type { ConversionRow } from "@/lib/conversionsDb";
+import type {
+  ConversionRow,
+  TrackingRankingConfig,
+  TrackingRankingRule,
+} from "@/lib/conversionsDb";
 
-type SortMode = "last_active_desc" | "total_loaded_desc" | "loads_desc" | "avg_load_desc";
-
-type RankRule = {
-  id: string;
-  indicator: string;
-  maxTotal: number;
-};
+type SortMode = TrackingRankingConfig["sortMode"];
+type RankRule = TrackingRankingRule;
 
 type TrackingRow = {
   phone: string;
@@ -20,17 +19,21 @@ type TrackingRow = {
 };
 
 const DEFAULT_RULES: RankRule[] = [
-  { id: "r1", indicator: "💩", maxTotal: 1000 },
-  { id: "r2", indicator: "🟢", maxTotal: 5000 },
-  { id: "r3", indicator: "🟡", maxTotal: 10000 },
-  { id: "r4", indicator: "🟠", maxTotal: 50000 },
-  { id: "r5", indicator: "🔴", maxTotal: 100000 },
-  { id: "r6", indicator: "⚫", maxTotal: 300000 },
-  { id: "r7", indicator: "🔥", maxTotal: 500000 },
+  { id: "r1", indicator: "??", maxTotal: 1000 },
+  { id: "r2", indicator: "??", maxTotal: 5000 },
+  { id: "r3", indicator: "??", maxTotal: 10000 },
+  { id: "r4", indicator: "??", maxTotal: 50000 },
+  { id: "r5", indicator: "??", maxTotal: 100000 },
+  { id: "r6", indicator: "?", maxTotal: 300000 },
+  { id: "r7", indicator: "??", maxTotal: 500000 },
 ];
+const DEFAULT_OVERFLOW = "??";
+const DEFAULT_SORT: SortMode = "last_active_desc";
 
 function formatThousands(n: number) {
-  return new Intl.NumberFormat("es-AR", { maximumFractionDigits: 0 }).format(Math.max(0, Math.trunc(n || 0)));
+  return new Intl.NumberFormat("es-AR", { maximumFractionDigits: 0 }).format(
+    Math.max(0, Math.trunc(n || 0)),
+  );
 }
 
 function formatCurrency(n: number) {
@@ -71,15 +74,37 @@ export default function TrackingBoard({
   conversions,
   onRefresh,
   refreshing = false,
+  rankingConfig,
+  onRankingConfigChange,
 }: {
   conversions: ConversionRow[];
   onRefresh?: () => void;
   refreshing?: boolean;
+  rankingConfig?: TrackingRankingConfig | null;
+  onRankingConfigChange?: (cfg: TrackingRankingConfig) => void;
 }) {
-  const [rules, setRules] = useState<RankRule[]>(DEFAULT_RULES);
-  const [overflowIndicator, setOverflowIndicator] = useState("💣");
-  const [sortMode, setSortMode] = useState<SortMode>("last_active_desc");
+  const [rules, setRules] = useState<RankRule[]>(
+    rankingConfig?.rules?.length ? rankingConfig.rules : DEFAULT_RULES,
+  );
+  const [overflowIndicator, setOverflowIndicator] = useState(
+    rankingConfig?.overflowIndicator || DEFAULT_OVERFLOW,
+  );
+  const [sortMode, setSortMode] = useState<SortMode>(
+    rankingConfig?.sortMode || DEFAULT_SORT,
+  );
   const [openConfig, setOpenConfig] = useState(false);
+
+  const pushConfig = (
+    nextRules: RankRule[],
+    nextOverflow: string,
+    nextSort: SortMode,
+  ) => {
+    onRankingConfigChange?.({
+      rules: nextRules,
+      overflowIndicator: nextOverflow,
+      sortMode: nextSort,
+    });
+  };
 
   const rows = useMemo<TrackingRow[]>(() => {
     const byPhone = new Map<string, ConversionRow[]>();
@@ -95,7 +120,9 @@ export default function TrackingBoard({
     for (const [phone, group] of byPhone.entries()) {
       const lastActive = group.reduce((acc, cur) => {
         if (!acc) return cur.created_at;
-        return new Date(cur.created_at).getTime() > new Date(acc).getTime() ? cur.created_at : acc;
+        return new Date(cur.created_at).getTime() > new Date(acc).getTime()
+          ? cur.created_at
+          : acc;
       }, "");
       const purchaseRows = group.filter((g) => (g.purchase_event_id ?? "") !== "");
       const loads = purchaseRows.length;
@@ -228,7 +255,11 @@ export default function TrackingBoard({
               <label className="text-xs text-zinc-400">Criterio de sort</label>
               <select
                 value={sortMode}
-                onChange={(e) => setSortMode(e.target.value as SortMode)}
+                onChange={(e) => {
+                  const next = e.target.value as SortMode;
+                  setSortMode(next);
+                  pushConfig(rules, overflowIndicator, next);
+                }}
                 className="rounded-lg border border-zinc-700 bg-zinc-900 px-2 py-1.5 text-xs text-zinc-100"
               >
                 <option value="last_active_desc">Ultima vez activo</option>
@@ -254,11 +285,14 @@ export default function TrackingBoard({
                       <td className="px-2 py-2">
                         <input
                           value={r.indicator}
-                          onChange={(e) =>
-                            setRules((prev) => prev.map((x) => (x.id === r.id ? { ...x, indicator: e.target.value } : x)))
-                          }
+                          onChange={(e) => {
+                            const next = rules.map((x) =>
+                              x.id === r.id ? { ...x, indicator: e.target.value } : x,
+                            );
+                            setRules(next);
+                            pushConfig(next, overflowIndicator, sortMode);
+                          }}
                           className="w-full rounded border border-zinc-700 bg-zinc-900 px-2 py-1.5 text-zinc-100"
-                          placeholder="Emoji / Nro / Letra"
                         />
                       </td>
                       <td className="px-2 py-2 text-zinc-400">menor que</td>
@@ -266,19 +300,31 @@ export default function TrackingBoard({
                         <input
                           value={formatThousands(r.maxTotal)}
                           onChange={(e) => {
-                            const raw = e.target.value.replace(/[^\d]/g, "");
-                            const n = raw ? Number.parseInt(raw, 10) : 0;
-                            setRules((prev) => prev.map((x) => (x.id === r.id ? { ...x, maxTotal: n } : x)));
+                            const n = Number(
+                              String(e.target.value)
+                                .replace(/\./g, "")
+                                .replace(/\D/g, ""),
+                            );
+                            const next = rules.map((x) =>
+                              x.id === r.id
+                                ? { ...x, maxTotal: Number.isFinite(n) ? n : 0 }
+                                : x,
+                            );
+                            setRules(next);
+                            pushConfig(next, overflowIndicator, sortMode);
                           }}
                           className="w-full rounded border border-zinc-700 bg-zinc-900 px-2 py-1.5 text-zinc-100"
-                          placeholder="0"
                         />
                       </td>
-                      <td className="px-2 py-2">
+                      <td className="px-2 py-2 text-right">
                         <button
                           type="button"
-                          onClick={() => setRules((prev) => prev.filter((x) => x.id !== r.id))}
-                          className="rounded border border-red-700 px-2 py-1 text-red-300 hover:bg-red-950/40"
+                          onClick={() => {
+                            const next = rules.filter((x) => x.id !== r.id);
+                            setRules(next);
+                            pushConfig(next, overflowIndicator, sortMode);
+                          }}
+                          className="rounded border border-zinc-700 px-2 py-1 text-[11px] text-zinc-300 hover:bg-zinc-800"
                         >
                           Quitar
                         </button>
@@ -289,25 +335,59 @@ export default function TrackingBoard({
               </table>
             </div>
 
-            <div className="mt-3 flex flex-wrap items-center justify-between gap-2">
+            <div className="mt-3 flex flex-wrap items-center gap-2">
               <button
                 type="button"
-                onClick={() =>
-                  setRules((prev) => [...prev, { id: `r${Date.now()}`, indicator: "*", maxTotal: 0 }])
-                }
-                className="rounded-lg border border-zinc-700 px-2.5 py-1.5 text-xs text-zinc-300 hover:bg-zinc-800"
+                onClick={() => {
+                  const next = [
+                    ...rules,
+                    {
+                      id: `r${Date.now()}`,
+                      indicator: "?",
+                      maxTotal: rules[rules.length - 1]?.maxTotal + 1000 || 1000,
+                    },
+                  ];
+                  setRules(next);
+                  pushConfig(next, overflowIndicator, sortMode);
+                }}
+                className="rounded-lg border border-zinc-700 px-3 py-1.5 text-xs text-zinc-200 hover:bg-zinc-800"
               >
-                Agregar fila
+                Agregar regla
               </button>
-              <div className="flex items-center gap-2">
-                <span className="text-xs text-zinc-400">Indicador final (&gt;= ultimo tope)</span>
+
+              <div className="ml-auto flex items-center gap-2">
+                <label className="text-xs text-zinc-400">Indicador final ({">="} ultimo rango)</label>
                 <input
                   value={overflowIndicator}
-                  onChange={(e) => setOverflowIndicator(e.target.value)}
-                  className="w-24 rounded border border-zinc-700 bg-zinc-900 px-2 py-1.5 text-zinc-100"
-                  placeholder="TOP"
+                  onChange={(e) => {
+                    setOverflowIndicator(e.target.value);
+                    pushConfig(rules, e.target.value, sortMode);
+                  }}
+                  className="w-28 rounded border border-zinc-700 bg-zinc-900 px-2 py-1.5 text-zinc-100"
                 />
               </div>
+            </div>
+
+            <div className="mt-4 flex justify-end gap-2">
+              <button
+                type="button"
+                onClick={() => {
+                  setRules(DEFAULT_RULES);
+                  setOverflowIndicator(DEFAULT_OVERFLOW);
+                  setSortMode(DEFAULT_SORT);
+                  pushConfig(DEFAULT_RULES, DEFAULT_OVERFLOW, DEFAULT_SORT);
+                }}
+                className="rounded-lg border border-zinc-700 px-3 py-1.5 text-xs text-zinc-300 hover:bg-zinc-800"
+              >
+                Restaurar default
+              </button>
+              <button
+                type="button"
+                onClick={() => setOpenConfig(false)}
+                className="rounded-lg border border-zinc-700 bg-zinc-100 px-3 py-1.5 text-xs text-zinc-900 hover:bg-zinc-200"
+              >
+                Listo
+              </button>
             </div>
           </div>
         </div>

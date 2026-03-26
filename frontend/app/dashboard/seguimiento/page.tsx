@@ -4,6 +4,10 @@ import { useCallback, useEffect, useMemo, useState } from "react";
 import { supabase } from "@/lib/supabaseClient";
 import {
   fetchConversionsFiltered,
+  fetchConversionsConfig,
+  upsertConversionsConfig,
+  type ConversionsConfig,
+  type TrackingRankingConfig,
   type ConversionRow,
 } from "@/lib/conversionsDb";
 import TrackingBoard from "@/components/conversiones/TrackingBoard";
@@ -15,6 +19,7 @@ import DateRangeFilter, {
 export default function DashboardSeguimientoPage() {
   const [userId, setUserId] = useState<string | null>(null);
   const [conversions, setConversions] = useState<ConversionRow[]>([]);
+  const [config, setConfig] = useState<ConversionsConfig | null>(null);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
   const [dateRange, setDateRange] = useState<DateRange | null>(null);
@@ -43,14 +48,32 @@ export default function DashboardSeguimientoPage() {
       if (!user) return;
       setUserId(user.id);
       try {
-        const rows = await fetchConversionsFiltered(user.id, user.id);
+        const [rows, cfg] = await Promise.all([
+          fetchConversionsFiltered(user.id, user.id),
+          fetchConversionsConfig(user.id),
+        ]);
         setConversions(rows);
+        setConfig(cfg);
       } finally {
         setLoading(false);
       }
     };
     void init();
   }, []);
+
+  const handleRankingConfigChange = useCallback(
+    async (rankingConfig: TrackingRankingConfig) => {
+      if (!userId || !config) return;
+      const next = { ...config, tracking_ranking_config: rankingConfig };
+      setConfig(next);
+      try {
+        await upsertConversionsConfig(next);
+      } catch (e) {
+        console.error(e);
+      }
+    },
+    [userId, config],
+  );
 
   if (loading) {
     return (
@@ -75,6 +98,8 @@ export default function DashboardSeguimientoPage() {
         conversions={activeConversions}
         onRefresh={refreshTable}
         refreshing={refreshing}
+        rankingConfig={config?.tracking_ranking_config ?? null}
+        onRankingConfigChange={handleRankingConfigChange}
       />
     </div>
   );
