@@ -1,0 +1,229 @@
+"use client";
+
+import { useMemo, useState } from "react";
+import type {
+  NotificationBotConfig,
+  NotificationSettings,
+} from "@/lib/notificationsDb";
+
+function normalizeHour(v: number) {
+  if (!Number.isFinite(v)) return 10;
+  return Math.min(22, Math.max(8, Math.round(v)));
+}
+
+type Props = {
+  isAdmin: boolean;
+  botConfig: NotificationBotConfig | null;
+  settings: NotificationSettings | null;
+  saving: boolean;
+  onSaveBot: (cfg: NotificationBotConfig) => Promise<void>;
+  onSaveSettings: (cfg: NotificationSettings) => Promise<void>;
+};
+
+export default function NotificationsPageContent({
+  isAdmin,
+  botConfig,
+  settings,
+  saving,
+  onSaveBot,
+  onSaveSettings,
+}: Props) {
+  const [bot, setBot] = useState<NotificationBotConfig>(
+    botConfig ?? { telegram_bot_token: "", telegram_bot_username: "" },
+  );
+  const [cfg, setCfg] = useState<NotificationSettings | null>(settings);
+  const [msg, setMsg] = useState<string | null>(null);
+
+  const connectUrl = useMemo(() => {
+    const username = String(bot.telegram_bot_username || "").trim().replace(/^@/, "");
+    const token = String(cfg?.telegram_start_token || "").trim();
+    if (!username || !token) return "";
+    return `https://t.me/${username}?start=${token}`;
+  }, [bot.telegram_bot_username, cfg?.telegram_start_token]);
+
+  if (!cfg) {
+    return (
+      <div className="flex min-h-[40vh] items-center justify-center">
+        <p className="text-sm text-zinc-400">Cargando...</p>
+      </div>
+    );
+  }
+
+  return (
+    <div className="space-y-6 pb-8">
+      <div>
+        <h1 className="text-xl font-semibold text-zinc-100">NOTIFICACIONES</h1>
+        <p className="mt-1 text-sm text-zinc-400">
+          Configura alertas automáticas por inactividad en Telegram.
+        </p>
+      </div>
+
+      {msg && (
+        <div className="rounded-lg border border-zinc-700 bg-zinc-900/70 px-3 py-2 text-xs text-zinc-300">
+          {msg}
+        </div>
+      )}
+
+      {isAdmin && (
+        <section className="rounded-xl border border-zinc-800 bg-zinc-900/50 p-4">
+          <h3 className="mb-3 text-sm font-semibold text-zinc-200">Conectar bot</h3>
+          <div className="grid gap-3 sm:grid-cols-2">
+            <label className="space-y-1">
+              <span className="text-xs text-zinc-400">Token del bot</span>
+              <input
+                value={bot.telegram_bot_token}
+                onChange={(e) =>
+                  setBot((prev) => ({ ...prev, telegram_bot_token: e.target.value }))
+                }
+                className="w-full rounded-lg border border-zinc-700 bg-zinc-950 px-3 py-2 text-sm text-zinc-100 outline-none focus:border-zinc-500"
+                placeholder="123456:AA..."
+              />
+            </label>
+            <label className="space-y-1">
+              <span className="text-xs text-zinc-400">@nombre_bot</span>
+              <input
+                value={bot.telegram_bot_username}
+                onChange={(e) =>
+                  setBot((prev) => ({ ...prev, telegram_bot_username: e.target.value }))
+                }
+                className="w-full rounded-lg border border-zinc-700 bg-zinc-950 px-3 py-2 text-sm text-zinc-100 outline-none focus:border-zinc-500"
+                placeholder="@Geraldina_bot"
+              />
+            </label>
+          </div>
+          <div className="mt-3 flex justify-end">
+            <button
+              type="button"
+              disabled={saving}
+              onClick={async () => {
+                await onSaveBot(bot);
+                setMsg("Bot guardado.");
+                setTimeout(() => setMsg(null), 3000);
+              }}
+              className="rounded-lg border border-zinc-700 bg-zinc-100 px-3 py-1.5 text-xs font-medium text-zinc-900 hover:bg-zinc-200 disabled:opacity-50"
+            >
+              Guardar bot
+            </button>
+          </div>
+        </section>
+      )}
+
+      <section className="rounded-xl border border-zinc-800 bg-zinc-900/50 p-4">
+        <h3 className="mb-3 text-sm font-semibold text-zinc-200">
+          Seleccione canal de Notificaciones
+        </h3>
+        <div className="flex flex-col gap-3 sm:flex-row sm:items-end">
+          <label className="space-y-1">
+            <span className="text-xs text-zinc-400">Canal</span>
+            <select
+              value="telegram"
+              disabled
+              className="w-full rounded-lg border border-zinc-700 bg-zinc-950 px-3 py-2 text-sm text-zinc-100"
+            >
+              <option value="telegram">Telegram</option>
+            </select>
+          </label>
+          <a
+            href={connectUrl || "#"}
+            target="_blank"
+            rel="noopener noreferrer"
+            className={`inline-flex items-center justify-center rounded-lg border px-3 py-2 text-xs font-medium ${
+              connectUrl
+                ? "border-zinc-700 bg-zinc-800 text-zinc-100 hover:bg-zinc-700"
+                : "border-zinc-800 bg-zinc-900 text-zinc-500 pointer-events-none"
+            }`}
+          >
+            Conectar Telegram
+          </a>
+        </div>
+        <p className="mt-2 text-xs text-zinc-500">
+          Después de abrir Telegram, presiona Start para vincular tu chat privado.
+        </p>
+      </section>
+
+      <section className="rounded-xl border border-zinc-800 bg-zinc-900/50 p-4">
+        <h3 className="mb-3 text-sm font-semibold text-zinc-200">Seguimiento</h3>
+        <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
+          <label className="space-y-1">
+            <span className="text-xs text-zinc-400">Activar notificaciones</span>
+            <select
+              value={cfg.enabled ? "on" : "off"}
+              onChange={(e) =>
+                setCfg((prev) =>
+                  prev ? { ...prev, enabled: e.target.value === "on" } : prev,
+                )
+              }
+              className="w-full rounded-lg border border-zinc-700 bg-zinc-950 px-3 py-2 text-sm text-zinc-100"
+            >
+              <option value="on">Activadas</option>
+              <option value="off">Desactivadas</option>
+            </select>
+          </label>
+          <label className="space-y-1">
+            <span className="text-xs text-zinc-400">Horario (08-22)</span>
+            <input
+              type="number"
+              min={8}
+              max={22}
+              value={cfg.notify_hour}
+              onChange={(e) =>
+                setCfg((prev) =>
+                  prev ? { ...prev, notify_hour: normalizeHour(Number(e.target.value)) } : prev,
+                )
+              }
+              className="w-full rounded-lg border border-zinc-700 bg-zinc-950 px-3 py-2 text-sm text-zinc-100 outline-none focus:border-zinc-500"
+            />
+          </label>
+          <label className="space-y-1">
+            <span className="text-xs text-zinc-400">Inactividad mayor a X días</span>
+            <input
+              type="number"
+              min={1}
+              max={90}
+              value={cfg.inactive_days}
+              onChange={(e) =>
+                setCfg((prev) =>
+                  prev ? { ...prev, inactive_days: Math.max(1, Math.min(90, Number(e.target.value) || 1)) } : prev,
+                )
+              }
+              className="w-full rounded-lg border border-zinc-700 bg-zinc-950 px-3 py-2 text-sm text-zinc-100 outline-none focus:border-zinc-500"
+            />
+          </label>
+          <label className="space-y-1">
+            <span className="text-xs text-zinc-400">Re-notificar cada X días</span>
+            <input
+              type="number"
+              min={1}
+              max={90}
+              value={cfg.renotify_days}
+              onChange={(e) =>
+                setCfg((prev) =>
+                  prev ? { ...prev, renotify_days: Math.max(1, Math.min(90, Number(e.target.value) || 5)) } : prev,
+                )
+              }
+              className="w-full rounded-lg border border-zinc-700 bg-zinc-950 px-3 py-2 text-sm text-zinc-100 outline-none focus:border-zinc-500"
+            />
+          </label>
+        </div>
+        <p className="mt-3 text-xs text-zinc-500">
+          Mensaje agrupado de hasta 10 contactos por envío. Zona horaria fija: Buenos Aires.
+        </p>
+        <div className="mt-3 flex justify-end">
+          <button
+            type="button"
+            disabled={saving}
+            onClick={async () => {
+              await onSaveSettings(cfg);
+              setMsg("Configuración de notificaciones guardada.");
+              setTimeout(() => setMsg(null), 3000);
+            }}
+            className="rounded-lg border border-zinc-700 bg-zinc-100 px-3 py-1.5 text-xs font-medium text-zinc-900 hover:bg-zinc-200 disabled:opacity-50"
+          >
+            Guardar seguimiento
+          </button>
+        </div>
+      </section>
+    </div>
+  );
+}
+

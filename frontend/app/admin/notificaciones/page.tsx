@@ -1,0 +1,70 @@
+"use client";
+
+import { useEffect, useState } from "react";
+import { supabase } from "@/lib/supabaseClient";
+import NotificationsPageContent from "@/components/notificaciones/NotificationsPageContent";
+import {
+  fetchNotificationBotConfig,
+  fetchNotificationSettings,
+  upsertNotificationBotConfig,
+  upsertNotificationSettings,
+  type NotificationBotConfig,
+  type NotificationSettings,
+} from "@/lib/notificationsDb";
+
+export default function AdminNotificacionesPage() {
+  const [loading, setLoading] = useState(true);
+  const [saving, setSaving] = useState(false);
+  const [botConfig, setBotConfig] = useState<NotificationBotConfig | null>(null);
+  const [settings, setSettings] = useState<NotificationSettings | null>(null);
+
+  useEffect(() => {
+    const load = async () => {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) return;
+      try {
+        const [bot, cfg] = await Promise.all([
+          fetchNotificationBotConfig(),
+          fetchNotificationSettings(user.id),
+        ]);
+        setBotConfig(bot);
+        setSettings(cfg);
+      } finally {
+        setLoading(false);
+      }
+    };
+    void load();
+  }, []);
+
+  if (loading) {
+    return <div className="text-sm text-zinc-400">Cargando...</div>;
+  }
+
+  return (
+    <NotificationsPageContent
+      isAdmin
+      botConfig={botConfig}
+      settings={settings}
+      saving={saving}
+      onSaveBot={async (cfg) => {
+        setSaving(true);
+        try {
+          await upsertNotificationBotConfig(cfg);
+          setBotConfig(cfg);
+        } finally {
+          setSaving(false);
+        }
+      }}
+      onSaveSettings={async (cfg) => {
+        setSaving(true);
+        try {
+          await upsertNotificationSettings(cfg);
+          setSettings(cfg);
+        } finally {
+          setSaving(false);
+        }
+      }}
+    />
+  );
+}
+

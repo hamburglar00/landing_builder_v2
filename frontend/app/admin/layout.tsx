@@ -56,6 +56,7 @@ function NavIcon({
     | "telefonos"
     | "conversiones"
     | "seguimiento"
+    | "notificaciones"
     | "tests"
     | "documentacion"
     | "settings";
@@ -88,6 +89,10 @@ function NavIcon({
                 ? active
                   ? "text-amber-300"
                   : "text-amber-200"
+                : variant === "notificaciones"
+                  ? active
+                    ? "text-yellow-300"
+                    : "text-yellow-200"
               : variant === "tests"
                 ? active
                   ? "text-amber-400"
@@ -242,6 +247,25 @@ function NavIcon({
           <path d="M5 9.5l10-4v13l-10-4z" className={accent} />
           <path d="M15 9l4-2.5v11L15 15" />
           <path d="M7.5 15.5v2.2a1.8 1.8 0 0 0 1.8 1.8h.2" />
+        </svg>
+      </span>
+    );
+  }
+
+  if (variant === "notificaciones") {
+    return (
+      <span className={base}>
+        <svg
+          className="h-4 w-4"
+          viewBox="0 0 24 24"
+          fill="none"
+          stroke="currentColor"
+          strokeWidth={1.7}
+          strokeLinecap="round"
+          strokeLinejoin="round"
+        >
+          <path d="M15 17h5l-1.4-1.4a2 2 0 0 1-.6-1.4V10a6 6 0 1 0-12 0v4.2a2 2 0 0 1-.6 1.4L4 17h5" className={accent} />
+          <path d="M10 17a2 2 0 0 0 4 0" />
         </svg>
       </span>
     );
@@ -548,6 +572,21 @@ export default function AdminLayout({
               active={Boolean(pathname?.startsWith("/admin/seguimiento"))}
             />
             <span>SEGUIMIENTO</span>
+          </Link>
+          <Link
+            href="/admin/notificaciones"
+            onClick={() => setSidebarOpen(false)}
+            className={`flex items-center gap-2 rounded-lg px-3 py-2 text-xs font-medium tracking-[0.18em] transition ${
+              pathname?.startsWith("/admin/notificaciones")
+                ? "bg-[var(--color-primary-soft-bg)] text-[var(--color-primary)] border border-[var(--color-primary-soft-border)]"
+                : "text-[var(--color-text-muted)] hover:bg-[var(--color-bg-3)] hover:text-[var(--color-text)]"
+            }`}
+          >
+            <NavIcon
+              variant="notificaciones"
+              active={Boolean(pathname?.startsWith("/admin/notificaciones"))}
+            />
+            <span>NOTIFICACIONES</span>
           </Link>
           <Link
             href="/admin/settings"
