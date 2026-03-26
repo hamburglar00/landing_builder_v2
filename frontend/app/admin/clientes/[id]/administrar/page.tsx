@@ -38,6 +38,8 @@ export default function AdminClientManagePage() {
   const [nombre, setNombre] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [resetPassword, setResetPassword] = useState("");
+  const [resettingPassword, setResettingPassword] = useState(false);
   const [showLogs, setShowLogs] = useState(true);
   const [visibleCols, setVisibleCols] = useState<Set<ColKey>>(new Set(ALL_COLUMNS));
 
@@ -128,6 +130,38 @@ export default function AdminClientManagePage() {
     setTimeout(() => setOkMsg(null), 2500);
   };
 
+  const onResetPassword = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!clientId) return;
+    if (!resetPassword.trim()) {
+      setError("Ingresa una nueva clave para resetear.");
+      return;
+    }
+    setResettingPassword(true);
+    setError(null);
+    setOkMsg(null);
+
+    const { error } = await invokeFunction<{ id?: string }>(
+      supabase,
+      "update-client",
+      {
+        body: {
+          userId: clientId,
+          password: resetPassword.trim(),
+        },
+      },
+    );
+
+    setResettingPassword(false);
+    if (error) {
+      setError(error.message);
+      return;
+    }
+    setResetPassword("");
+    setOkMsg("Clave reseteada correctamente.");
+    setTimeout(() => setOkMsg(null), 2500);
+  };
+
   if (loading) {
     return <p className="text-sm text-zinc-400">Cargando...</p>;
   }
@@ -193,6 +227,29 @@ export default function AdminClientManagePage() {
           />
         </div>
 
+        <section className="rounded-lg border border-zinc-800 bg-zinc-900/40 p-3">
+          <h3 className="mb-2 text-xs font-semibold text-zinc-200">Resetear contraseña</h3>
+          <p className="mb-3 text-[11px] text-zinc-500">
+            Si el cliente olvidó su clave, define una nueva aquí y se actualiza de inmediato.
+          </p>
+          <form onSubmit={onResetPassword} className="flex flex-wrap items-center gap-2">
+            <input
+              type="text"
+              value={resetPassword}
+              onChange={(e) => setResetPassword(e.target.value)}
+              placeholder="Nueva clave"
+              className="w-full max-w-sm rounded-lg border border-zinc-800 bg-zinc-900 px-3 py-2 text-xs text-zinc-50 outline-none focus:border-zinc-500"
+            />
+            <button
+              type="submit"
+              disabled={resettingPassword}
+              className="rounded-lg border border-zinc-700 px-3 py-2 text-xs font-medium text-zinc-200 hover:bg-zinc-800 disabled:opacity-60"
+            >
+              {resettingPassword ? "Reseteando..." : "Resetear contraseña"}
+            </button>
+          </form>
+        </section>
+
         <div className="rounded-lg border border-zinc-800 bg-zinc-900/50 p-3">
           <label className="inline-flex items-center gap-2 text-xs text-zinc-200">
             <input
@@ -255,4 +312,3 @@ export default function AdminClientManagePage() {
     </div>
   );
 }
-
