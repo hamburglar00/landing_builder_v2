@@ -1,4 +1,4 @@
-﻿"use client";
+"use client";
 
 import { useEffect, useState, useCallback, useMemo } from "react";
 import { supabase } from "@/lib/supabaseClient";
@@ -26,7 +26,7 @@ import DateRangeFilter, {
 
 type Tab = "funnel" | "tabla" | "estadisticas" | "configuracion" | "logs";
 
-const TAB_ORDER: Tab[] = ["funnel", "tabla", "estadisticas", "configuracion", "logs"];
+const TAB_ORDER_BASE: Tab[] = ["funnel", "tabla", "estadisticas", "configuracion"];
 
 const TAB_LABELS: Record<Tab, string> = {
   funnel: "Funnel",
@@ -277,6 +277,16 @@ export default function DashboardConversionesPage() {
     () => new Map(conversions.map((c) => [c.id, c.internal_id])),
     [conversions],
   );
+  const tabOrder = useMemo<Tab[]>(
+    () => (config?.show_logs === false ? TAB_ORDER_BASE : [...TAB_ORDER_BASE, "logs"]),
+    [config?.show_logs],
+  );
+
+  useEffect(() => {
+    if (config?.show_logs === false && tab === "logs") {
+      setTab("funnel");
+    }
+  }, [config?.show_logs, tab]);
 
   useEffect(() => {
     const init = async () => {
@@ -454,7 +464,7 @@ export default function DashboardConversionesPage() {
       {/* Tabs */}
       <div className="flex items-center justify-between gap-4 flex-wrap border-b border-zinc-800/60 pb-1">
         <div className="flex gap-4">
-          {TAB_ORDER.map((t) => {
+          {tabOrder.map((t) => {
             const active = tab === t;
             return (
               <button
@@ -937,13 +947,3 @@ export default function DashboardConversionesPage() {
     </div>
   );
 }
-
-
-
-
-
-
-
-
-
-

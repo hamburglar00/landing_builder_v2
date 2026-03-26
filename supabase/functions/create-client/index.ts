@@ -12,6 +12,10 @@ type CreateClientPayload = {
   nombre?: string;
 };
 
+function isValidClientName(value: string): boolean {
+  return /^[a-z0-9]+$/i.test(value);
+}
+
 const FALLBACK_VISIBLE_COLUMNS = [
   "phone",
   "email",
@@ -175,7 +179,8 @@ Deno.serve(async (req) => {
 
     const email = payload.email?.trim().toLowerCase();
     const password = payload.password;
-    const nombre = payload.nombre?.trim() || null;
+    const nombreRaw = payload.nombre?.trim() || null;
+    const nombre = nombreRaw ? nombreRaw.toLowerCase() : null;
 
     if (!email || !password) {
       return new Response(
@@ -238,6 +243,22 @@ Deno.serve(async (req) => {
         .eq("id", created.user.id);
     }
 
+    if (!isValidClientName(nombre)) {
+      return new Response(
+        JSON.stringify({
+          error:
+            "Nombre inválido. Solo letras y números, sin espacios ni caracteres especiales.",
+        }),
+        {
+          status: 400,
+          headers: {
+            ...corsHeaders,
+            "Content-Type": "application/json",
+          },
+        },
+      );
+    }
+
     // Inicializar conversions_config del cliente para que no arranque con columnas vacías.
     // Hereda columnas visibles y umbral premium desde el admin creador.
     const { data: adminCfg } = await supabaseAdmin
@@ -262,6 +283,7 @@ Deno.serve(async (req) => {
           funnel_premium_threshold: Number.isFinite(premiumThreshold)
             ? premiumThreshold
             : 50000,
+          show_logs: true,
           updated_at: new Date().toISOString(),
         },
         { onConflict: "user_id" },

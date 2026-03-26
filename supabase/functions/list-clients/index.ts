@@ -161,8 +161,19 @@ Deno.serve(async (req) => {
       .select("id, nombre")
       .in("id", ids);
 
+    const { data: cfgRows } = await supabaseAdmin
+      .from("conversions_config")
+      .select("user_id, visible_columns, show_logs")
+      .in("user_id", ids);
+
     const nombreById = new Map(
       (profiles ?? []).map((p) => [p.id, p.nombre ?? null]),
+    );
+    const cfgByUserId = new Map(
+      (cfgRows ?? []).map((r) => [r.user_id, {
+        visible_columns: r.visible_columns ?? [],
+        show_logs: r.show_logs ?? true,
+      }]),
     );
 
     return new Response(
@@ -171,6 +182,8 @@ Deno.serve(async (req) => {
           id: u.id,
           email: u.email,
           nombre: nombreById.get(u.id) ?? null,
+          visible_columns: cfgByUserId.get(u.id)?.visible_columns ?? [],
+          show_logs: cfgByUserId.get(u.id)?.show_logs ?? true,
           created_at: u.created_at,
           last_sign_in_at: u.last_sign_in_at,
         })),

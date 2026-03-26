@@ -11,17 +11,14 @@ type ClientUser = {
   nombre: string | null;
   created_at: string | null;
   last_sign_in_at: string | null;
+  visible_columns?: string[];
+  show_logs?: boolean;
 };
 
 export default function AdminClientesPage() {
   const [clients, setClients] = useState<ClientUser[]>([]);
   const [isLoadingClients, setIsLoadingClients] = useState(false);
   const [clientsError, setClientsError] = useState<string | null>(null);
-  const [editingClientId, setEditingClientId] = useState<string | null>(null);
-  const [editingClientNombre, setEditingClientNombre] = useState("");
-  const [editingClientEmail, setEditingClientEmail] = useState("");
-  const [editingClientPassword, setEditingClientPassword] = useState("");
-  const [isUpdatingClient, setIsUpdatingClient] = useState(false);
   const [deletingClientId, setDeletingClientId] = useState<string | null>(null);
   const [searchQuery, setSearchQuery] = useState("");
 
@@ -62,6 +59,8 @@ export default function AdminClientesPage() {
         id: u.id,
         email: u.email,
         nombre: u.nombre ?? null,
+        visible_columns: Array.isArray(u.visible_columns) ? u.visible_columns : [],
+        show_logs: typeof u.show_logs === "boolean" ? u.show_logs : true,
         created_at: u.created_at,
         last_sign_in_at: u.last_sign_in_at,
       })),
@@ -75,69 +74,8 @@ export default function AdminClientesPage() {
     return () => clearTimeout(timer);
   }, [fetchClients]);
 
-  const startEditingClient = (client: ClientUser) => {
-    setEditingClientId(client.id);
-    setEditingClientNombre(client.nombre ?? "");
-    setEditingClientEmail(client.email ?? "");
-    setEditingClientPassword("");
-  };
-
-  const cancelEditingClient = () => {
-    setEditingClientId(null);
-    setEditingClientNombre("");
-    setEditingClientEmail("");
-    setEditingClientPassword("");
-  };
-
-  const handleUpdateClient = async (event: React.FormEvent) => {
-    event.preventDefault();
-
-    if (!editingClientId) return;
-    if (!editingClientNombre.trim()) {
-      setClientsError("El nombre es obligatorio.");
-      return;
-    }
-
-    setIsUpdatingClient(true);
-    setClientsError(null);
-
-    const payload: {
-      userId: string;
-      email?: string;
-      password?: string;
-      nombre?: string;
-    } = { userId: editingClientId };
-
-    if (editingClientEmail.trim()) {
-      payload.email = editingClientEmail.trim();
-    }
-    if (editingClientPassword.trim()) {
-      payload.password = editingClientPassword;
-    }
-    payload.nombre = editingClientNombre.trim();
-
-    const { data, error } = await invokeFunction<{ id?: string }>(
-      supabase,
-      "update-client",
-      { body: payload },
-    );
-
-    setIsUpdatingClient(false);
-
-    if (error) {
-      setClientsError(error.message);
-      return;
-    }
-
-    if (data?.id) {
-      void fetchClients();
-    }
-
-    cancelEditingClient();
-  };
-
   const handleDeleteClient = async (clientId: string) => {
-    if (!window.confirm("¿Seguro que quieres eliminar este cliente?")) {
+    if (!window.confirm("Seguro que quieres eliminar este cliente?")) {
       return;
     }
 
@@ -168,7 +106,7 @@ export default function AdminClientesPage() {
             Clientes
           </h1>
           <p className="mt-1 text-xs text-zinc-400">
-            Gestión de usuarios clientes (Supabase Auth).
+            Gestion de usuarios clientes (Supabase Auth).
           </p>
         </div>
         <Link
@@ -214,12 +152,8 @@ export default function AdminClientesPage() {
                 <th className="px-4 py-2 font-medium text-zinc-300">Nombre</th>
                 <th className="px-4 py-2 font-medium text-zinc-300">Email</th>
                 <th className="px-4 py-2 font-medium text-zinc-300">Creado</th>
-                <th className="px-4 py-2 font-medium text-zinc-300">
-                  Último acceso
-                </th>
-                <th className="px-4 py-2 text-right font-medium text-zinc-300">
-                  Acciones
-                </th>
+                <th className="px-4 py-2 font-medium text-zinc-300">Ultimo acceso</th>
+                <th className="px-4 py-2 text-right font-medium text-zinc-300">Acciones</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-zinc-800 bg-zinc-950/40">
@@ -230,121 +164,58 @@ export default function AdminClientesPage() {
                     className="px-4 py-6 text-center text-xs text-zinc-500"
                   >
                     {searchQuery.trim()
-                      ? "Ningún cliente coincide con la búsqueda."
-                      : "Todavía no hay clientes creados."}
+                      ? "Ningun cliente coincide con la busqueda."
+                      : "Todavia no hay clientes creados."}
                   </td>
                 </tr>
               )}
 
-              {filteredClients.map((client) => {
-                const isEditing = editingClientId === client.id;
-
-                return (
-                  <tr key={client.id}>
-                    <td className="px-4 py-3 align-top text-xs text-zinc-50">
-                      {isEditing ? (
-                        <input
-                          type="text"
-                          value={editingClientNombre}
-                          onChange={(event) =>
-                            setEditingClientNombre(event.target.value)
-                          }
-                          placeholder="Nombre (obligatorio)"
-                          className="w-full rounded-md border border-zinc-700 bg-zinc-900 px-2 py-1 text-xs text-zinc-50 outline-none ring-0 focus:border-zinc-500 focus:ring-1 focus:ring-zinc-500/70"
-                        />
-                      ) : (
-                        client.nombre ?? "—"
-                      )}
-                    </td>
-                    <td className="px-4 py-3 align-top text-xs text-zinc-50">
-                      {isEditing ? (
-                        <input
-                          type="email"
-                          value={editingClientEmail}
-                          onChange={(event) =>
-                            setEditingClientEmail(event.target.value)
-                          }
-                          className="w-full rounded-md border border-zinc-700 bg-zinc-900 px-2 py-1 text-xs text-zinc-50 outline-none ring-0 focus:border-zinc-500 focus:ring-1 focus:ring-zinc-500/70"
-                        />
-                      ) : (
-                        client.email ?? "—"
-                      )}
-                    </td>
-                    <td className="px-4 py-3 align-top text-xs text-zinc-400">
-                      {client.created_at
-                        ? new Date(client.created_at).toLocaleString()
-                        : "—"}
-                    </td>
-                    <td className="px-4 py-3 align-top text-xs text-zinc-400">
-                      {client.last_sign_in_at
-                        ? new Date(
-                            client.last_sign_in_at,
-                          ).toLocaleString()
-                        : "Nunca"}
-                    </td>
-                    <td className="whitespace-nowrap px-3 py-3 align-top text-right text-xs sm:px-4">
-                      {isEditing ? (
-                        <form
-                          onSubmit={handleUpdateClient}
-                          className="inline-flex flex-col items-stretch gap-2 sm:flex-row sm:items-center sm:justify-end"
-                        >
-                          <input
-                            type="password"
-                            value={editingClientPassword}
-                            onChange={(event) =>
-                              setEditingClientPassword(event.target.value)
-                            }
-                            placeholder="Nueva contraseña (opcional)"
-                            className="w-40 rounded-md border border-zinc-700 bg-zinc-900 px-2 py-1 text-xs text-zinc-50 outline-none ring-0 focus:border-zinc-500 focus:ring-1 focus:ring-zinc-500/70"
-                          />
-                          <div className="flex gap-2">
-                            <button
-                              type="submit"
-                              disabled={isUpdatingClient}
-                              className="rounded-md bg-zinc-50 px-3 py-1 text-xs font-semibold text-zinc-950 transition hover:bg-zinc-200 disabled:cursor-not-allowed disabled:opacity-70"
-                            >
-                              Guardar
-                            </button>
-                            <button
-                              type="button"
-                              onClick={cancelEditingClient}
-                              className="rounded-md border border-zinc-700 px-3 py-1 text-xs font-medium text-zinc-200 transition hover:bg-zinc-800"
-                            >
-                              Cancelar
-                            </button>
-                          </div>
-                        </form>
-                      ) : (
-                        <div className="inline-flex flex-wrap gap-2">
-                          <Link
-                            href={`/admin/clientes/${client.id}/landings`}
-                            className="rounded-md border border-zinc-700 px-3 py-1 text-xs font-medium text-zinc-200 transition hover:bg-zinc-800"
-                          >
-                            Ver landings
-                          </Link>
-                          <button
-                            type="button"
-                            onClick={() => startEditingClient(client)}
-                            className="rounded-md border border-zinc-700 px-3 py-1 text-xs font-medium text-zinc-200 transition hover:bg-zinc-800"
-                          >
-                            Editar
-                          </button>
-                          <button
-                            type="button"
-                            onClick={() => void handleDeleteClient(client.id)}
-                            disabled={deletingClientId === client.id}
-                            className="rounded-md border border-red-700 px-3 py-1 text-xs font-medium text-red-300 transition hover:bg-red-800/60 disabled:cursor-not-allowed disabled:opacity-70"
-                          >
-                            {deletingClientId === client.id
-                              ? "Eliminando..."
-                              : "Eliminar"}
-                          </button>
-                        </div>
-                      )}
-                    </td>
-                  </tr>
-                );
-              })}
+              {filteredClients.map((client) => (
+                <tr key={client.id}>
+                  <td className="px-4 py-3 align-top text-xs text-zinc-50">
+                    {client.nombre ?? "-"}
+                  </td>
+                  <td className="px-4 py-3 align-top text-xs text-zinc-50">
+                    {client.email ?? "-"}
+                  </td>
+                  <td className="px-4 py-3 align-top text-xs text-zinc-400">
+                    {client.created_at
+                      ? new Date(client.created_at).toLocaleString()
+                      : "-"}
+                  </td>
+                  <td className="px-4 py-3 align-top text-xs text-zinc-400">
+                    {client.last_sign_in_at
+                      ? new Date(client.last_sign_in_at).toLocaleString()
+                      : "Nunca"}
+                  </td>
+                  <td className="whitespace-nowrap px-3 py-3 align-top text-right text-xs sm:px-4">
+                    <div className="inline-flex flex-wrap gap-2">
+                      <Link
+                        href={`/admin/clientes/${client.id}/landings`}
+                        className="rounded-md border border-zinc-700 px-3 py-1 text-xs font-medium text-zinc-200 transition hover:bg-zinc-800"
+                      >
+                        Ver landings
+                      </Link>
+                      <Link
+                        href={`/admin/clientes/${client.id}/administrar`}
+                        className="rounded-md border border-zinc-700 px-3 py-1 text-xs font-medium text-zinc-200 transition hover:bg-zinc-800"
+                      >
+                        Administrar
+                      </Link>
+                      <button
+                        type="button"
+                        onClick={() => void handleDeleteClient(client.id)}
+                        disabled={deletingClientId === client.id}
+                        className="rounded-md border border-red-700 px-3 py-1 text-xs font-medium text-red-300 transition hover:bg-red-800/60 disabled:cursor-not-allowed disabled:opacity-70"
+                      >
+                        {deletingClientId === client.id
+                          ? "Eliminando..."
+                          : "Eliminar"}
+                      </button>
+                    </div>
+                  </td>
+                </tr>
+              ))}
             </tbody>
           </table>
         </div>

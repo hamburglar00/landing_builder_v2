@@ -15,7 +15,6 @@ import {
   type ConversionRow,
   type ConversionLogRow,
   type FunnelContact,
-  updateAllVisibleColumns,
 } from "@/lib/conversionsDb";
 import { generateDemoConversions, generateDemoFunnelContacts } from "@/lib/demoData";
 import FunnelBoard from "@/components/conversiones/FunnelBoard";
@@ -237,7 +236,6 @@ function cellValue(c: ConversionRow, col: ColKey): React.ReactNode {
   }
 }
 
-const DEFAULT_VISIBLE = new Set<ColKey>(ALL_COLUMNS);
 
 export default function AdminConversionesPage() {
   const [userId, setUserId] = useState<string | null>(null);
@@ -254,7 +252,6 @@ export default function AdminConversionesPage() {
   const [copiedUrl, setCopiedUrl] = useState<string | null>(null);
   const [expandedLog, setExpandedLog] = useState<number | null>(null);
   const [tableSearch, setTableSearch] = useState("");
-  const [visibleCols, setVisibleCols] = useState<Set<ColKey>>(() => new Set(DEFAULT_VISIBLE));
 
   const [demoMode, setDemoMode] = useState(false);
   const [dateRange, setDateRange] = useState<DateRange | null>(null);
@@ -298,7 +295,6 @@ export default function AdminConversionesPage() {
   // Collapsible states for config tab
   const [configOpen, setConfigOpen] = useState(false);
   const [endpointOpen, setEndpointOpen] = useState(false);
-  const [columnsOpen, setColumnsOpen] = useState(false);
   const [funnelConfigOpen, setFunnelConfigOpen] = useState(false);
   const [editPixelId, setEditPixelId] = useState(false);
   const [editAccessToken, setEditAccessToken] = useState(false);
@@ -316,12 +312,6 @@ export default function AdminConversionesPage() {
           fetchConversionLogsForAdmin(200),
         ]);
         setConfig(cfg);
-        if (cfg.visible_columns && cfg.visible_columns.length) {
-          const valid = cfg.visible_columns.filter((c) => (ALL_COLUMNS as readonly string[]).includes(c)) as ColKey[];
-          setVisibleCols(new Set(valid.length ? valid : DEFAULT_VISIBLE));
-        } else {
-          setVisibleCols(new Set(DEFAULT_VISIBLE));
-        }
         setConversions(rows);
         setFunnelContacts(funnel);
         setLogs(logRows);
@@ -339,10 +329,7 @@ export default function AdminConversionesPage() {
     if (!config || !userId) return;
     setSaving(true); setSaveMsg(null);
     try {
-      const cols = config.visible_columns ?? null;
       await upsertConversionsConfig({ ...config, user_id: userId });
-      // Propagar columnas visibles a todos los clientes
-      await updateAllVisibleColumns(cols);
       setSaveMsg("Configuracion guardada.");
     } catch (e) {
       // Mostrar ms contexto del error para poder diagnosticar problemas de RLS o esquema en produccin
@@ -678,65 +665,6 @@ export default function AdminConversionesPage() {
                     <p className="text-[11px] text-amber-400">El cliente no tiene nombre configurado en su perfil.</p>
                   );
                 })()}
-              </div>
-            )}
-          </section>
-
-          {/* Column Visibility (admin only) */}
-          <section className="rounded-xl border border-zinc-800 bg-zinc-900/50">
-            <button type="button" onClick={() => setColumnsOpen((v) => !v)} className="flex w-full cursor-pointer items-center gap-2 p-4">
-              <ChevronIcon open={columnsOpen} />
-              <h3 className="text-sm font-semibold text-zinc-200">Columnas visibles</h3>
-              <span className="ml-auto text-[11px] text-zinc-500">{visibleCols.size}/{ALL_COLUMNS.length}</span>
-            </button>
-            {columnsOpen && (
-              <div className="border-t border-zinc-800 p-4">
-                <div className="mb-3 flex gap-3">
-                  <button
-                    type="button"
-                    onClick={() => {
-                      const next = new Set(ALL_COLUMNS);
-                      setVisibleCols(next);
-                      setConfig((prev) => prev ? { ...prev, visible_columns: [...ALL_COLUMNS] } : prev);
-                    }}
-                    className="cursor-pointer text-[11px] text-zinc-400 underline hover:text-zinc-200"
-                  >
-                    Seleccionar todas
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => {
-                      const next = new Set<ColKey>();
-                      setVisibleCols(next);
-                      setConfig((prev) => prev ? { ...prev, visible_columns: [] } : prev);
-                    }}
-                    className="cursor-pointer text-[11px] text-zinc-400 underline hover:text-zinc-200"
-                  >
-                    Deseleccionar todas
-                  </button>
-                </div>
-                <div className="grid grid-cols-3 gap-x-4 gap-y-1 sm:grid-cols-4 md:grid-cols-6">
-                  {ALL_COLUMNS.map((col) => (
-                    <label key={col} className="flex items-center gap-1.5">
-                      <input
-                        type="checkbox"
-                        checked={visibleCols.has(col)}
-                        onChange={(e) => {
-                          setVisibleCols((prev) => {
-                            const next = new Set(prev);
-                            if (e.target.checked) next.add(col);
-                            else next.delete(col);
-                            const arr = [...next] as ColKey[];
-                            setConfig((prev) => prev ? { ...prev, visible_columns: arr } : prev);
-                            return next;
-                          });
-                        }}
-                        className="h-3 w-3 rounded border-zinc-600 bg-zinc-900"
-                      />
-                      <span className="text-[10px] text-zinc-400">{col}</span>
-                    </label>
-                  ))}
-                </div>
               </div>
             )}
           </section>

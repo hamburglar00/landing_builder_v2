@@ -18,6 +18,7 @@ export interface ConversionsConfig {
   geo_fill_only_when_missing: boolean;
   funnel_premium_threshold: number;
   visible_columns?: string[] | null;
+  show_logs?: boolean;
 }
 
 export interface ConversionRow {
@@ -137,6 +138,7 @@ const DEFAULT_CONFIG: ConversionsConfig = {
   geo_fill_only_when_missing: false,
   funnel_premium_threshold: 50000,
   visible_columns: [],
+  show_logs: true,
 };
 
 // ─── Config CRUD ────────────────────────────────────────────────────────────
@@ -173,6 +175,7 @@ export async function upsertConversionsConfig(
         geo_fill_only_when_missing: config.geo_fill_only_when_missing,
         funnel_premium_threshold: config.funnel_premium_threshold,
         visible_columns: config.visible_columns ?? [],
+        show_logs: config.show_logs ?? true,
         updated_at: new Date().toISOString(),
       },
       { onConflict: "user_id" },

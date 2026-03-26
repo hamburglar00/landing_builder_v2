@@ -10,7 +10,8 @@ type UpdateClientPayload = {
   userId?: string;
   email?: string;
   password?: string;
-  nombre?: string;
+  visibleColumns?: string[] | null;
+  showLogs?: boolean;
 };
 
 Deno.serve(async (req) => {
@@ -22,7 +23,7 @@ Deno.serve(async (req) => {
   }
 
   if (req.method !== "POST" && req.method !== "PATCH") {
-    return new Response(JSON.stringify({ error: "Método no permitido" }), {
+    return new Response(JSON.stringify({ error: "Metodo no permitido" }), {
       status: 405,
       headers: {
         ...corsHeaders,
@@ -145,33 +146,20 @@ Deno.serve(async (req) => {
       attributes.password = payload.password;
     }
 
-    const nombre =
-      payload.nombre !== undefined ? (payload.nombre?.trim() || null) : undefined;
-
-    if (nombre !== undefined && !nombre) {
-      return new Response(
-        JSON.stringify({
-          error: "Nombre no puede quedar vacío. Es obligatorio para el endpoint de conversiones.",
-        }),
-        {
-          status: 400,
-          headers: {
-            ...corsHeaders,
-            "Content-Type": "application/json",
-          },
-        },
-      );
-    }
+    const visibleColumns =
+      payload.visibleColumns === undefined ? undefined : (payload.visibleColumns ?? []);
+    const showLogs = payload.showLogs === undefined ? undefined : Boolean(payload.showLogs);
 
     if (
       !attributes.email &&
       !attributes.password &&
-      nombre === undefined
+      visibleColumns === undefined &&
+      showLogs === undefined
     ) {
       return new Response(
         JSON.stringify({
           error:
-            "Debes enviar al menos email, password o nombre para actualizar.",
+            "Debes enviar al menos email, password o configuracion para actualizar.",
         }),
         {
           status: 400,
@@ -205,16 +193,33 @@ Deno.serve(async (req) => {
       }
     }
 
-    if (nombre !== undefined) {
-      await supabaseAdmin
-        .from("profiles")
-        .update({ nombre })
-        .eq("id", userId);
+    if (visibleColumns !== undefined || showLogs !== undefined) {
+      const upsertPayload: Record<string, unknown> = {
+        user_id: userId,
+        updated_at: new Date().toISOString(),
+      };
+      if (visibleColumns !== undefined) upsertPayload.visible_columns = visibleColumns;
+      if (showLogs !== undefined) upsertPayload.show_logs = showLogs;
+
+      const { error: cfgError } = await supabaseAdmin
+        .from("conversions_config")
+        .upsert(upsertPayload, { onConflict: "user_id" });
+
+      if (cfgError) {
+        return new Response(
+          JSON.stringify({ error: cfgError.message || "No se pudo actualizar conversions_config." }),
+          {
+            status: 400,
+            headers: {
+              ...corsHeaders,
+              "Content-Type": "application/json",
+            },
+          },
+        );
+      }
     }
 
-    const { data: updatedUser } = await supabaseAdmin.auth.admin.getUserById(
-      userId,
-    );
+    const { data: updatedUser } = await supabaseAdmin.auth.admin.getUserById(userId);
     const { data: profileRow } = await supabaseAdmin
       .from("profiles")
       .select("nombre")
@@ -253,4 +258,3 @@ Deno.serve(async (req) => {
     );
   }
 });
-

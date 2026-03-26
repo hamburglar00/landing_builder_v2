@@ -17,6 +17,11 @@ export default function NuevoClientePage() {
   const handleSubmit = async (event: React.FormEvent) => {
     event.preventDefault();
     setError(null);
+    const normalizedName = nombre.trim().toLowerCase();
+    if (!/^[a-z0-9]+$/.test(normalizedName)) {
+      setError("Nombre invalido. Solo letras y numeros, sin espacios.");
+      return;
+    }
     setIsSubmitting(true);
 
     const { data, error: invokeError } = await invokeFunction<{ id?: string }>(
@@ -24,7 +29,7 @@ export default function NuevoClientePage() {
       "create-client",
       {
         body: {
-          nombre: nombre.trim(),
+          nombre: normalizedName,
           email,
           password,
         },
@@ -83,7 +88,7 @@ export default function NuevoClientePage() {
               placeholder="ej: koben (solo minúsculas y números, para la URL de conversiones)"
             />
             <p className="text-[11px] text-zinc-500">
-              Identificador único del cliente. Se usa en el endpoint de conversiones.
+              Identificador unico e inmutable. Solo letras y numeros (sin espacios). Se usa en el endpoint de conversiones.
             </p>
           </div>
           <div className="space-y-2">
