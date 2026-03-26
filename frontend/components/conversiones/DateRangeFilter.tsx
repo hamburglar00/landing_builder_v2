@@ -107,12 +107,12 @@ export default function DateRangeFilter({
 
   return (
     <div ref={ref} className="relative">
-      <div className="flex items-center gap-1 rounded-lg border border-zinc-800/50 bg-[#0d0d11] p-0.5">
+      <div className="flex flex-wrap items-center gap-1 rounded-lg border border-zinc-800/50 bg-[#0d0d11] p-0.5 sm:flex-nowrap">
         {(Object.keys(PRESET_LABELS) as Preset[]).map((p) => (
           <button
             key={p}
             onClick={() => handlePreset(p)}
-            className={`cursor-pointer rounded-md px-2.5 py-1 text-[10px] font-medium transition-all whitespace-nowrap ${
+            className={`cursor-pointer rounded-md px-2 py-1 text-[10px] font-medium transition-all whitespace-nowrap sm:px-2.5 ${
               preset === p
                 ? "bg-zinc-800 text-zinc-200 shadow-sm"
                 : "text-zinc-600 hover:text-zinc-300"
@@ -124,7 +124,7 @@ export default function DateRangeFilter({
       </div>
 
       {showCustom && (
-        <div className="absolute right-0 top-full mt-2 z-50 rounded-xl border border-zinc-700/60 bg-zinc-900/95 backdrop-blur-sm p-4 shadow-xl min-w-[280px]">
+        <div className="absolute right-0 top-full mt-2 z-50 w-[92vw] max-w-[320px] rounded-xl border border-zinc-700/60 bg-zinc-900/95 p-4 shadow-xl backdrop-blur-sm sm:w-auto sm:min-w-[280px]">
           <p className="text-[11px] text-zinc-400 mb-3 font-medium">Rango personalizado</p>
           <div className="grid grid-cols-2 gap-3">
             <div>

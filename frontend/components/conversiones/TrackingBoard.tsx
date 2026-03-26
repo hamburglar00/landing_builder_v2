@@ -213,16 +213,25 @@ export default function TrackingBoard({
       </p>
 
       <div className="overflow-x-auto rounded-lg border border-zinc-700">
-        <table className="min-w-[760px] w-full text-left text-[11px]">
+        <table className="w-full text-left text-[11px] sm:min-w-[760px]">
           <thead className="bg-zinc-800/95">
             <tr>
               <th className="px-2 py-2 font-medium text-zinc-300 whitespace-nowrap">Ranking</th>
               <th className="px-2 py-2 font-medium text-zinc-300 whitespace-nowrap">Numero de telefono</th>
               <th className="px-2 py-2 font-medium text-zinc-300 whitespace-nowrap">Whatsapp</th>
-              <th className="px-2 py-2 font-medium text-zinc-300 whitespace-nowrap">Ultima vez activo</th>
-              <th className="px-2 py-2 font-medium text-zinc-300 whitespace-nowrap">Cargas</th>
-              <th className="px-2 py-2 font-medium text-zinc-300 whitespace-nowrap">Carga promedio</th>
-              <th className="px-2 py-2 font-medium text-zinc-300 whitespace-nowrap">Total cargado</th>
+              <th className="px-2 py-2 font-medium text-zinc-300 whitespace-nowrap">
+                <span className="hidden sm:inline">Ultima vez activo</span>
+                <span className="inline sm:hidden">Ultima vez<br />activo</span>
+              </th>
+              <th className="hidden sm:table-cell px-2 py-2 font-medium text-zinc-300 whitespace-nowrap">Cargas</th>
+              <th className="px-2 py-2 font-medium text-zinc-300 whitespace-nowrap">
+                <span className="hidden sm:inline">Carga promedio</span>
+                <span className="inline sm:hidden">Carga<br />promedio</span>
+              </th>
+              <th className="px-2 py-2 font-medium text-zinc-300 whitespace-nowrap">
+                <span className="hidden sm:inline">Total cargado</span>
+                <span className="inline sm:hidden">Total<br />cargado</span>
+              </th>
             </tr>
           </thead>
           <tbody className="divide-y divide-zinc-800">
@@ -253,7 +262,7 @@ export default function TrackingBoard({
                   <td className="px-2 py-1.5 whitespace-nowrap text-zinc-400" title={new Date(r.lastActive).toLocaleString("es-AR")}>
                     {relDate(r.lastActive)}
                   </td>
-                  <td className="px-2 py-1.5 whitespace-nowrap text-zinc-300">{r.loads}</td>
+                  <td className="hidden sm:table-cell px-2 py-1.5 whitespace-nowrap text-zinc-300">{r.loads}</td>
                   <td className="px-2 py-1.5 whitespace-nowrap text-zinc-300">{formatCurrency(r.avgLoad)}</td>
                   <td className="px-2 py-1.5 whitespace-nowrap text-zinc-100 font-semibold">{formatCurrency(r.totalLoaded)}</td>
                 </tr>
