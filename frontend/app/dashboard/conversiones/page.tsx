@@ -56,9 +56,16 @@ function CopyIcon() {
   );
 }
 
-function estadoBadge(estado: string) {
-  const cls = estado === "purchase" ? "bg-emerald-950 text-emerald-300" : estado === "lead" ? "bg-amber-950 text-amber-300" : "bg-zinc-800 text-zinc-400";
-  return <span className={`inline-block rounded-full px-2 py-0.5 text-[10px] font-medium whitespace-nowrap ${cls}`}>{estado}</span>;
+function estadoBadge(estado: string, isRepeat = false) {
+  const cls =
+    estado === "purchase" && isRepeat
+      ? "bg-violet-950 text-violet-300"
+      : estado === "purchase"
+        ? "bg-rose-950 text-rose-300"
+        : estado === "lead"
+          ? "bg-amber-950 text-amber-300"
+          : "bg-zinc-800 text-zinc-400";
+  return <span className={`inline-block rounded-full px-2 py-0.5 text-[10px] font-medium whitespace-nowrap ${cls}`}>{estado === "purchase" && isRepeat ? "purchase repeat" : estado}</span>;
 }
 
 function statusText(status: string) {
@@ -178,7 +185,10 @@ function cellValue(c: ConversionRow, col: ColKey): React.ReactNode {
     case "timestamp": return <td key={col} className={dim} title={timestampText}>{timestampText}</td>;
     case "clientIP": return <td key={col} className={dimMono} title={tip(c.client_ip)}>{c.client_ip || "-"}</td>;
     case "agentuser": return <td key={col} className={dim} title={c.agent_user || "-"}>{truncateText(c.agent_user || "-", 35)}</td>;
-    case "estado": return <td key={col} className={cell}>{estadoBadge(c.estado)}</td>;
+    case "estado": {
+      const isRepeat = c.estado === "purchase" && c.observaciones?.includes("REPEAT");
+      return <td key={col} className={cell}>{estadoBadge(c.estado, isRepeat)}</td>;
+    }
     case "valor": return <td key={col} className={`${cell} text-zinc-200`} title={tip(c.valor)}>{c.valor > 0 ? c.valor : "-"}</td>;
     case "purchase_type": return <td key={col} className={dim} title={tip(c.purchase_type)}>{c.purchase_type || "-"}</td>;
     case "contact_status_capi": return <td key={col} className={cell} title={tip(c.contact_status_capi)}>{statusText(c.contact_status_capi)}</td>;
@@ -689,11 +699,11 @@ export default function DashboardConversionesPage() {
                   const isRepeat = c.estado === "purchase" && c.observaciones?.includes("REPEAT");
                   const rowColor =
                     c.estado === "lead"
-                      ? "bg-emerald-950/20"
+                      ? "bg-amber-950/18"
                       : c.estado === "purchase" && isRepeat
                         ? "bg-violet-950/20"
                         : c.estado === "purchase"
-                          ? "bg-sky-950/20"
+                          ? "bg-rose-950/18"
                           : "bg-zinc-950/40";
                   return (
                     <tr key={c.id} className={rowColor}>
