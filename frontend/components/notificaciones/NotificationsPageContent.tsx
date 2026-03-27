@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 import { useEffect, useMemo, useState } from "react";
 import type {
@@ -55,6 +55,11 @@ export default function NotificationsPageContent({
     if (!username || !token) return "";
     return `https://t.me/${username}?start=${token}`;
   }, [bot.telegram_bot_username, cfg?.telegram_start_token]);
+  const isTelegramConnected = Boolean(String(cfg.telegram_chat_id || "").trim());
+  const tokenValue = String(cfg.telegram_start_token || "").trim();
+  const shortTokenView = tokenValue
+    ? `${tokenValue.slice(0, 6)}...${tokenValue.slice(-6)}`
+    : "-";
 
   if (!cfg) {
     return (
@@ -69,7 +74,7 @@ export default function NotificationsPageContent({
       <div>
         <h1 className="text-xl font-semibold text-zinc-100">NOTIFICACIONES</h1>
         <p className="mt-1 text-sm text-zinc-400">
-          Configura alertas automáticas por inactividad en Telegram.
+          Configura alertas automaticas por inactividad en Telegram.
         </p>
       </div>
 
@@ -178,8 +183,20 @@ export default function NotificationsPageContent({
           </a>
         </div>
         <p className="mt-2 text-xs text-zinc-500">
-          Después de abrir Telegram, presiona Start para vincular tu chat privado.
+          Despues de abrir Telegram, presiona Start para vincular tu chat privado.
         </p>
+        <div className="mt-2 flex flex-wrap items-center gap-2 text-xs">
+          <span
+            className={`inline-flex items-center rounded-md px-2 py-1 font-medium ${
+              isTelegramConnected
+                ? "bg-emerald-950/50 text-emerald-300"
+                : "bg-zinc-800 text-zinc-300"
+            }`}
+          >
+            Telegram conectado: {isTelegramConnected ? "Si" : "No"}
+          </span>
+          <span className="text-zinc-500">Token: {shortTokenView}</span>
+        </div>
       </section>
 
       <section className="rounded-xl border border-zinc-800 bg-zinc-900/50 p-4">
@@ -259,7 +276,7 @@ export default function NotificationsPageContent({
             onClick={async () => {
               await onSaveSettings(cfg);
               setMsgType("success");
-              setMsg("Configuración de notificaciones guardada.");
+              setMsg("Configuracion de notificaciones guardada.");
               setTimeout(() => setMsg(null), 3000);
             }}
             className="rounded-lg border border-zinc-700 bg-zinc-100 px-3 py-1.5 text-xs font-medium text-zinc-900 hover:bg-zinc-200 disabled:opacity-50"
@@ -271,6 +288,10 @@ export default function NotificationsPageContent({
     </div>
   );
 }
+
+
+
+
 
 
 
