@@ -196,7 +196,7 @@ export default function NotificationsPageContent({
             <select
               value="telegram"
               onChange={() => {}}
-              className="h-[36px] min-w-[96px] rounded-lg border border-zinc-700 bg-zinc-950 px-2.5 text-sm text-zinc-100 outline-none focus:border-zinc-500"
+              className="h-[32px] min-w-[82px] rounded-lg border border-zinc-700 bg-zinc-950 px-2 text-xs text-zinc-100 outline-none focus:border-zinc-500"
             >
               <option value="telegram">Telegram</option>
             </select>
@@ -325,49 +325,17 @@ export default function NotificationsPageContent({
 
             <div className="mt-4 flex justify-center">
               <a
-                href={connectUrl || "#"}
+                href={connectWithCommandUrl || "#"}
                 target="_blank"
                 rel="noopener noreferrer"
                 className={`inline-flex items-center justify-center rounded-lg border px-3 py-2 text-xs font-medium ${
-                  connectUrl
+                  connectWithCommandUrl
                     ? "border-zinc-700 bg-zinc-100 text-zinc-900 hover:bg-zinc-200"
                     : "pointer-events-none border-zinc-800 bg-zinc-900 text-zinc-500"
                 }`}
               >
                 Abrir Telegram
               </a>
-            </div>
-            <div className="mt-2 flex flex-wrap items-center justify-center gap-2">
-              <a
-                href={connectWithCommandUrl || "#"}
-                target="_blank"
-                rel="noopener noreferrer"
-                className={`inline-flex items-center justify-center rounded-lg border px-3 py-2 text-xs font-medium ${
-                  connectWithCommandUrl
-                    ? "border-zinc-700 bg-zinc-800 text-zinc-100 hover:bg-zinc-700"
-                    : "pointer-events-none border-zinc-800 bg-zinc-900 text-zinc-500"
-                }`}
-              >
-                Abrir Telegram con comando
-              </a>
-              <button
-                type="button"
-                onClick={async () => {
-                  try {
-                    await navigator.clipboard.writeText(startCommand);
-                    setMsgType("success");
-                    setMsg("Comando copiado. Pegalo en el chat del bot.");
-                  } catch {
-                    setMsgType("error");
-                    setMsg("No se pudo copiar el comando.");
-                  } finally {
-                    setTimeout(() => setMsg(null), 2500);
-                  }
-                }}
-                className="inline-flex items-center justify-center rounded-lg border border-zinc-700 bg-zinc-900 px-3 py-2 text-xs font-medium text-zinc-100 hover:bg-zinc-800"
-              >
-                Copiar comando
-              </button>
             </div>
           </div>
         </div>
