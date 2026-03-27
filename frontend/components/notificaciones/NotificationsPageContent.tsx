@@ -43,6 +43,7 @@ export default function NotificationsPageContent({
   const [msgType, setMsgType] = useState<"success" | "error">("success");
   const [botEditable, setBotEditable] = useState(false);
   const [showConnectModal, setShowConnectModal] = useState(false);
+  const [copyOk, setCopyOk] = useState(false);
 
   useEffect(() => {
     setBot(botConfig ?? { telegram_bot_token: "", telegram_bot_username: "" });
@@ -72,6 +73,7 @@ export default function NotificationsPageContent({
     [cfg?.telegram_start_token],
   );
   const connectWithCommandUrl = useMemo(() => connectUrl, [connectUrl]);
+  const fullStartToken = String(cfg?.telegram_start_token || "").trim();
   const hasLegacyChat = Boolean(String(cfg?.telegram_chat_id || "").trim());
   const isTelegramConnected = destinations.length > 0 || hasLegacyChat;
 
@@ -221,6 +223,26 @@ export default function NotificationsPageContent({
             }`}
           >
             Telegram conectado: {isTelegramConnected ? "Si" : "No"}
+          </span>
+          <span className="inline-flex items-center gap-2 rounded-md bg-zinc-800 px-2 py-1 text-zinc-300">
+            Token: <span className="font-mono text-zinc-100">{fullStartToken || "-"}</span>
+            <button
+              type="button"
+              onClick={async () => {
+                if (!fullStartToken) return;
+                try {
+                  await navigator.clipboard.writeText(fullStartToken);
+                  setCopyOk(true);
+                  setTimeout(() => setCopyOk(false), 1200);
+                } catch {
+                  setCopyOk(false);
+                }
+              }}
+              className="rounded border border-zinc-600 px-1.5 py-0.5 text-[10px] text-zinc-200 hover:bg-zinc-700"
+              title="Copiar token"
+            >
+              {copyOk ? "Copiado" : "Copiar"}
+            </button>
           </span>
         </div>
         <div className="mt-3 rounded-lg border border-zinc-800 bg-zinc-950/50 p-3">

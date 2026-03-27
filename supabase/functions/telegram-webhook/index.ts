@@ -106,6 +106,30 @@ async function upsertDestination(
   return data as TelegramDestination;
 }
 
+async function resolveUserIdByTokenOrName(
+  db: ReturnType<typeof createClient>,
+  payload: string,
+): Promise<string | null> {
+  const clean = String(payload || "").trim();
+  if (!clean) return null;
+
+  const { data: byToken } = await db
+    .from("notification_settings")
+    .select("user_id")
+    .eq("telegram_start_token", clean)
+    .maybeSingle();
+  if (byToken?.user_id) return String(byToken.user_id);
+
+  const { data: byName } = await db
+    .from("profiles")
+    .select("id")
+    .eq("nombre", clean)
+    .maybeSingle();
+  if (byName?.id) return String(byName.id);
+
+  return null;
+}
+
 Deno.serve(async (req) => {
   if (req.method === "OPTIONS") return new Response("ok", { status: 200, headers: corsHeaders });
   if (req.method !== "POST") return new Response("Only POST", { status: 405, headers: corsHeaders });
@@ -156,18 +180,14 @@ Deno.serve(async (req) => {
     }
 
     if (payload) {
-      const { data: linkedUser } = await db
-        .from("notification_settings")
-        .select("user_id")
-        .eq("telegram_start_token", payload)
-        .maybeSingle();
+      const linkedUserId = await resolveUserIdByTokenOrName(db, payload);
 
-      if (linkedUser?.user_id) {
-        const dest = await upsertDestination(db, linkedUser.user_id, fromDest, nowIso);
+      if (linkedUserId) {
+        const dest = await upsertDestination(db, linkedUserId, fromDest, nowIso);
         await db
           .from("notification_settings")
           .update({ telegram_chat_id: fromDest.chatId, updated_at: nowIso })
-          .eq("user_id", linkedUser.user_id);
+          .eq("user_id", linkedUserId);
 
         // enrich identity if still missing from the update
         if (dest) {
@@ -200,6 +220,10 @@ Deno.serve(async (req) => {
     }
 
     if (isPlainStart(text)) {
+      const plainStartHelp =
+        "Para vincular tu chat, envia: /start TU_TOKEN o /start TU_NOMBRE_CLIENTE (por ejemplo: /start ngp).";
+      await sendTelegramMessage(botRow.telegram_bot_token, fromDest.chatId, plainStartHelp);
+
       const { data: linkedRows } = await db
         .from("notification_telegram_destinations")
         .select("id, welcome_sent_at")
