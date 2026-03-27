@@ -17,14 +17,9 @@ const WELCOME_MESSAGE =
 
 function extractStartPayload(text: string): string | null {
   const t = (text || "").trim();
-  const lower = t.toLowerCase();
-  if (lower.startsWith("/start ")) {
-    const parts = t.split(" ");
-    if (parts.length < 2) return null;
-    return parts.slice(1).join(" ").trim();
-  }
-  if (lower.startsWith("/start=")) return t.slice("/start=".length).trim() || null;
-  if (lower.startsWith("start=")) return t.slice("start=".length).trim() || null;
+  const m = t.match(/^\/start(?:@\w+)?(?:\s+|=)(.+)$/i);
+  if (m?.[1]) return m[1].trim() || null;
+  if (/^start=/i.test(t)) return t.slice("start=".length).trim() || null;
   return null;
 }
 
@@ -33,7 +28,7 @@ function normalizeTokenCandidate(text: string): string {
 }
 
 function isPlainStart(text: string): boolean {
-  return String(text || "").trim().toLowerCase() === "/start";
+  return /^\/start(?:@\w+)?$/i.test(String(text || "").trim());
 }
 
 function getDestinationFromUpdate(update: any) {
