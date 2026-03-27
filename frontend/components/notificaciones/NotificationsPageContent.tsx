@@ -181,6 +181,15 @@ export default function NotificationsPageContent({
             </button>
             </div>
           </div>
+          <div className="mt-4 rounded-lg border border-zinc-800 bg-zinc-950/50 p-3 text-xs text-zinc-400">
+            <p className="font-medium text-zinc-300">Nota tecnica (solo administrador)</p>
+            <p className="mt-1">
+              Cada cliente tiene un token unico de vinculacion. Cuando el cliente envia ese token al chat del bot,
+              nuestro webhook recibe el mensaje, obtiene el <span className="font-mono">chat_id</span> y busca a que
+              cliente pertenece ese token. Si coincide, vinculamos ese <span className="font-mono">chat_id</span> con
+              ese cliente y desde ese momento las notificaciones se envian a ese chat.
+            </p>
+          </div>
         </section>
       )}
 
