@@ -21,6 +21,7 @@ type Props = {
   onSaveBot: (cfg: NotificationBotConfig) => Promise<void>;
   onSaveSettings: (cfg: NotificationSettings) => Promise<void>;
   onDisconnectDestination: (destinationId: number) => Promise<void>;
+  onDisconnectLegacy: () => Promise<void>;
 };
 
 export default function NotificationsPageContent({
@@ -32,6 +33,7 @@ export default function NotificationsPageContent({
   onSaveBot,
   onSaveSettings,
   onDisconnectDestination,
+  onDisconnectLegacy,
 }: Props) {
   const [bot, setBot] = useState<NotificationBotConfig>(
     botConfig ?? { telegram_bot_token: "", telegram_bot_username: "" },
@@ -248,8 +250,28 @@ export default function NotificationsPageContent({
                 </li>
               ))}
               {destinations.length === 0 && hasLegacyChat ? (
-                <li className="text-xs text-zinc-300">
-                  - Chat conectado (legado): {String(cfg.telegram_chat_id)}
+                <li className="flex items-center justify-between gap-3 text-xs text-zinc-300">
+                  <span>- Chat conectado (legado): {String(cfg.telegram_chat_id)}</span>
+                  <button
+                    type="button"
+                    disabled={saving}
+                    onClick={async () => {
+                      try {
+                        await onDisconnectLegacy();
+                        setMsgType("success");
+                        setMsg("Telegram desconectado.");
+                      } catch (e) {
+                        console.error(e);
+                        setMsgType("error");
+                        setMsg("No se pudo desconectar el Telegram.");
+                      } finally {
+                        setTimeout(() => setMsg(null), 2500);
+                      }
+                    }}
+                    className="rounded-md border border-red-700/60 px-2 py-1 text-[11px] font-medium text-red-300 hover:bg-red-950/40 disabled:opacity-50"
+                  >
+                    Desconectar
+                  </button>
                 </li>
               ) : null}
             </ul>

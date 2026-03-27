@@ -162,14 +162,22 @@ export async function fetchNotificationTelegramDestinations(
   return (data ?? []) as NotificationTelegramDestination[];
 }
 
-export async function deactivateNotificationTelegramDestination(
+export async function removeNotificationTelegramDestination(
   userId: string,
   destinationId: number,
 ): Promise<void> {
   const { error } = await supabase
     .from("notification_telegram_destinations")
-    .update({ is_active: false, updated_at: new Date().toISOString() })
+    .delete()
     .eq("id", destinationId)
+    .eq("user_id", userId);
+  if (error) throw error;
+}
+
+export async function clearLegacyNotificationTelegramChat(userId: string): Promise<void> {
+  const { error } = await supabase
+    .from("notification_settings")
+    .update({ telegram_chat_id: "", updated_at: new Date().toISOString() })
     .eq("user_id", userId);
   if (error) throw error;
 }

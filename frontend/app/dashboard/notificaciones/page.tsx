@@ -4,10 +4,11 @@ import { useEffect, useState } from "react";
 import { supabase } from "@/lib/supabaseClient";
 import NotificationsPageContent from "@/components/notificaciones/NotificationsPageContent";
 import {
-  deactivateNotificationTelegramDestination,
+  clearLegacyNotificationTelegramChat,
   fetchNotificationBotUsernamePublic,
   fetchNotificationTelegramDestinations,
   fetchNotificationSettings,
+  removeNotificationTelegramDestination,
   upsertNotificationSettings,
   type NotificationBotConfig,
   type NotificationTelegramDestination,
@@ -75,7 +76,20 @@ export default function DashboardNotificacionesPage() {
         if (!user) return;
         setSaving(true);
         try {
-          await deactivateNotificationTelegramDestination(user.id, destinationId);
+          await removeNotificationTelegramDestination(user.id, destinationId);
+          setDestinations(await fetchNotificationTelegramDestinations(user.id));
+          setSettings(await fetchNotificationSettings(user.id));
+        } finally {
+          setSaving(false);
+        }
+      }}
+      onDisconnectLegacy={async () => {
+        const { data: { user } } = await supabase.auth.getUser();
+        if (!user) return;
+        setSaving(true);
+        try {
+          await clearLegacyNotificationTelegramChat(user.id);
+          setSettings(await fetchNotificationSettings(user.id));
           setDestinations(await fetchNotificationTelegramDestinations(user.id));
         } finally {
           setSaving(false);
