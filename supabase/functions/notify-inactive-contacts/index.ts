@@ -59,10 +59,19 @@ async function fetchTelegramUpdates(token: string, offset: number) {
 
 function extractStartPayload(text: string): string | null {
   const t = (text || "").trim();
-  if (!t.toLowerCase().startsWith("/start")) return null;
-  const parts = t.split(" ");
-  if (parts.length < 2) return null;
-  return parts.slice(1).join(" ").trim();
+  const lower = t.toLowerCase();
+  if (lower.startsWith("/start ")) {
+    const parts = t.split(" ");
+    if (parts.length < 2) return null;
+    return parts.slice(1).join(" ").trim();
+  }
+  if (lower.startsWith("/start=")) {
+    return t.slice("/start=".length).trim() || null;
+  }
+  if (lower.startsWith("start=")) {
+    return t.slice("start=".length).trim() || null;
+  }
+  return null;
 }
 
 function isPlainStart(text: string): boolean {
