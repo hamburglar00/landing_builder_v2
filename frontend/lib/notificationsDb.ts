@@ -29,6 +29,13 @@ const DEFAULT_SETTINGS: NotificationSettings = {
   timezone: "America/Argentina/Buenos_Aires",
 };
 
+function generateStartToken(): string {
+  if (typeof crypto !== "undefined" && "randomUUID" in crypto) {
+    return crypto.randomUUID().replace(/-/g, "");
+  }
+  return `${Date.now()}${Math.random().toString(36).slice(2, 12)}`;
+}
+
 export async function fetchNotificationBotConfig(): Promise<NotificationBotConfig> {
   const { data, error } = await supabase
     .from("notification_bot_config")
@@ -75,7 +82,17 @@ export async function fetchNotificationSettings(userId: string): Promise<Notific
     .eq("user_id", userId)
     .maybeSingle();
   if (error) throw error;
-  if (data) return data as NotificationSettings;
+  if (data) {
+    const row = data as NotificationSettings;
+    if (String(row.telegram_start_token || "").trim()) return row;
+    const fixedToken = generateStartToken();
+    const { error: fixError } = await supabase
+      .from("notification_settings")
+      .update({ telegram_start_token: fixedToken, updated_at: new Date().toISOString() })
+      .eq("user_id", userId);
+    if (fixError) throw fixError;
+    return { ...row, telegram_start_token: fixedToken };
+  }
 
   // Cliente nuevo: inicializa fila para generar telegram_start_token y defaults.
   const { error: ensureError } = await supabase
@@ -97,6 +114,7 @@ export async function fetchNotificationSettings(userId: string): Promise<Notific
 }
 
 export async function upsertNotificationSettings(settings: NotificationSettings): Promise<void> {
+  const startToken = String(settings.telegram_start_token || "").trim() || generateStartToken();
   const { error } = await supabase
     .from("notification_settings")
     .upsert(
@@ -105,7 +123,7 @@ export async function upsertNotificationSettings(settings: NotificationSettings)
         enabled: settings.enabled,
         channel: "telegram",
         telegram_chat_id: settings.telegram_chat_id ?? "",
-        telegram_start_token: settings.telegram_start_token,
+        telegram_start_token: startToken,
         inactive_days: settings.inactive_days,
         renotify_days: settings.renotify_days,
         notify_hour: settings.notify_hour,
