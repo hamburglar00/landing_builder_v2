@@ -67,6 +67,25 @@ export default function DashboardLandingsPage() {
     }
   };
 
+  const handleConnectExisting = async () => {
+    if (!userId) return;
+    setCreating(true);
+    setError(null);
+    try {
+      const { id } = await createLanding(userId, {
+        landingType: "external",
+        externalDomain: "",
+        comment: "",
+        config: { ...DEFAULT_CONFIG },
+      });
+      router.push(`/dashboard/landing/${id}/editar`);
+    } catch (e) {
+      setError(e instanceof Error ? e.message : "Error al conectar landing existente");
+    } finally {
+      setCreating(false);
+    }
+  };
+
   if (!ready) {
     return (
       <div className="flex min-h-[40vh] items-center justify-center">
@@ -91,14 +110,24 @@ export default function DashboardLandingsPage() {
             Crea y edita tus landings.
           </p>
         </div>
-        <button
-          type="button"
-          onClick={() => void handleCreate()}
-          disabled={creating}
-          className="cursor-pointer rounded-xl bg-[var(--color-primary)] px-4 py-2 text-sm font-semibold uppercase tracking-wide text-[var(--color-bg-0)] transition-colors duration-150 hover:bg-[var(--color-primary-hover)] active:bg-[var(--color-primary-press)] disabled:cursor-not-allowed disabled:opacity-70 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-ring-primary)]"
-        >
-          {creating ? "CREANDO..." : "CREAR LANDING"}
-        </button>
+        <div className="flex items-center gap-2">
+          <button
+            type="button"
+            onClick={() => void handleConnectExisting()}
+            disabled={creating}
+            className="cursor-pointer rounded-xl border border-zinc-700 bg-zinc-900 px-4 py-2 text-sm font-semibold uppercase tracking-wide text-zinc-100 transition-colors duration-150 hover:bg-zinc-800 active:bg-zinc-700 disabled:cursor-not-allowed disabled:opacity-70 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-zinc-500"
+          >
+            {creating ? "CREANDO..." : "CONECTAR EXISTENTE"}
+          </button>
+          <button
+            type="button"
+            onClick={() => void handleCreate()}
+            disabled={creating}
+            className="cursor-pointer rounded-xl bg-[var(--color-primary)] px-4 py-2 text-sm font-semibold uppercase tracking-wide text-[var(--color-bg-0)] transition-colors duration-150 hover:bg-[var(--color-primary-hover)] active:bg-[var(--color-primary-press)] disabled:cursor-not-allowed disabled:opacity-70 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-ring-primary)]"
+          >
+            {creating ? "CREANDO..." : "CREAR LANDING"}
+          </button>
+        </div>
       </div>
 
       {landings.length === 0 ? (

@@ -11,6 +11,8 @@ function normalizePixelId(value: string): string {
 export interface LandingRow {
   id: string;
   user_id: string;
+  landing_type: "internal" | "external";
+  external_domain: string;
   name: string;
   pixel_id: string;
   gerencia_selection_mode: "weighted_random" | "fair";
@@ -35,6 +37,8 @@ function rowToLanding(row: LandingRow): Landing {
   };
   return {
     id: row.id,
+    landingType: row.landing_type ?? "internal",
+    externalDomain: row.external_domain ?? "",
     name: row.name,
     pixelId: row.pixel_id ?? "",
     gerenciaSelectionMode: row.gerencia_selection_mode ?? "weighted_random",
@@ -58,7 +62,7 @@ export async function fetchLandings(userId: string): Promise<Landing[]> {
 }
 
 const LANDINGS_SELECT =
-  "id, user_id, name, pixel_id, gerencia_selection_mode, gerencia_fair_criterion, phone_mode, phone_kind, phone_interval_start_hour, phone_interval_end_hour, post_url, landing_tag, comment, config, created_at, updated_at";
+  "id, user_id, landing_type, external_domain, name, pixel_id, gerencia_selection_mode, gerencia_fair_criterion, phone_mode, phone_kind, phone_interval_start_hour, phone_interval_end_hour, post_url, landing_tag, comment, config, created_at, updated_at";
 
 /**
  * Lista landings de un usuario por su id. Los admins pueden listar landings de cualquier usuario (RLS).
@@ -121,6 +125,8 @@ export async function fetchLandingById(
 export async function createLanding(
   userId: string,
   payload: {
+    landingType?: "internal" | "external";
+    externalDomain?: string;
     name?: string;
     pixelId?: string;
     gerenciaSelectionMode?: "weighted_random" | "fair";
@@ -157,6 +163,8 @@ export async function createLanding(
     .from("landings")
     .insert({
       user_id: userId,
+      landing_type: payload.landingType ?? "internal",
+      external_domain: payload.externalDomain ?? "",
       name,
       pixel_id: pixelId,
       gerencia_selection_mode: payload.gerenciaSelectionMode ?? "weighted_random",
@@ -184,6 +192,8 @@ export async function createLanding(
 export async function updateLanding(
   landingId: string,
   payload: {
+    landingType?: "internal" | "external";
+    externalDomain?: string;
     name?: string;
     pixelId?: string;
     gerenciaSelectionMode?: "weighted_random" | "fair";
@@ -200,6 +210,8 @@ export async function updateLanding(
   },
 ): Promise<void> {
   const body: Record<string, unknown> = {};
+  if (payload.landingType !== undefined) body.landing_type = payload.landingType;
+  if (payload.externalDomain !== undefined) body.external_domain = payload.externalDomain;
   if (payload.name !== undefined) body.name = payload.name;
   if (payload.pixelId !== undefined) body.pixel_id = normalizePixelId(payload.pixelId);
   if (payload.gerenciaSelectionMode !== undefined)

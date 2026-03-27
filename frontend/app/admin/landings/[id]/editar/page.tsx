@@ -121,6 +121,18 @@ export default function AdminLandingEditarPage() {
       setSaveError("Landing Tag solo puede contener letras y números, sin espacios.");
       return;
     }
+    if (landing.landingType === "external") {
+      const domain = landing.externalDomain.trim().toLowerCase();
+      if (!domain) {
+        setSaveError("El dominio de la landing externa es obligatorio.");
+        return;
+      }
+      const cleaned = domain.replace(/^https?:\/\//, "").replace(/\/+$/, "");
+      if (!/^[a-z0-9.-]+$/.test(cleaned)) {
+        setSaveError("Dominio externo inválido. Usá solo dominio (ej: mi-landing.com).");
+        return;
+      }
+    }
     let pixelIdToSave = landing.pixelId.trim();
     if (!pixelIdToSave) {
       if (ownerUserId) {
@@ -182,6 +194,12 @@ export default function AdminLandingEditarPage() {
       });
 
       await updateLanding(landing.id, {
+        landingType: landing.landingType,
+        externalDomain: landing.externalDomain
+          .trim()
+          .toLowerCase()
+          .replace(/^https?:\/\//, "")
+          .replace(/\/+$/, ""),
         name: landing.name,
         pixelId: pixelIdToSave,
         gerenciaSelectionMode: landing.gerenciaSelectionMode,
@@ -345,8 +363,46 @@ export default function AdminLandingEditarPage() {
                 className="w-full rounded-lg border border-zinc-700 bg-zinc-900 px-3 py-2 text-sm text-zinc-100"
               />
             </div>
+            <div>
+              <label className="block text-xs font-medium text-zinc-400 mb-1">
+                Tipo
+              </label>
+              <input
+                type="text"
+                value={landing.landingType === "external" ? "Externa (conectada)" : "Interna"}
+                disabled
+                className="w-full rounded-lg border border-zinc-700 bg-zinc-900 px-3 py-2 text-sm text-zinc-100 disabled:opacity-70 disabled:cursor-not-allowed"
+              />
+            </div>
           </div>
         </section>
+
+        {landing.landingType === "external" && (
+          <section className="rounded-xl border border-zinc-800 bg-zinc-900/50 p-4">
+            <h3 className="mb-4 text-sm font-semibold text-zinc-200">
+              Dominio externo
+            </h3>
+            <div>
+              <label className="block text-xs font-medium text-zinc-400 mb-1">
+                Dominio permitido <span className="text-red-400">*</span>
+              </label>
+              <input
+                type="text"
+                value={landing.externalDomain}
+                onChange={(e) =>
+                  setLanding((prev) =>
+                    prev ? { ...prev, externalDomain: e.target.value } : prev,
+                  )
+                }
+                className="w-full rounded-lg border border-zinc-700 bg-zinc-900 px-3 py-2 text-sm text-zinc-100"
+                placeholder="ej: landing.tercero.com"
+              />
+              <p className="mt-1 text-[11px] text-zinc-500">
+                Ingresá solo el dominio (sin https:// ni rutas). Se usa para validar el origen de la landing externa.
+              </p>
+            </div>
+          </section>
+        )}
 
         <section className="rounded-xl border border-zinc-800 bg-zinc-900/50 p-4">
           <h3 className="mb-4 text-sm font-semibold text-zinc-200">Tracking</h3>
@@ -834,57 +890,59 @@ export default function AdminLandingEditarPage() {
             </div>
           )}
         </section>
-        <LandingEditorForm
-          config={landing.config}
-          setConfig={setConfig}
-          onSave={handleSave}
-          onReset={handleReset}
-          uploadImage={
-            userId ? (file) => uploadLandingImage(supabase, userId, file) : undefined
-          }
-          landingId={landing.id}
-          landingName={landing.name}
-          comment={landing.comment}
-          pixelId={landing.pixelId}
-          postUrl={landing.postUrl}
-          landingTag={landing.landingTag}
-          getPhoneForPreview={async () => {
-            try {
-              const base =
-                process.env.NEXT_PUBLIC_SUPABASE_URL?.replace(/\/$/, "") ?? "";
-              const apiKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY ?? "";
-              if (!base) return null;
-              const url = `${base}/functions/v1/landing-phone?name=${encodeURIComponent(
-                landing.name,
-              )}`;
-              const res = await fetch(url, {
-                headers: apiKey
-                  ? {
-                      apikey: apiKey,
-                      Authorization: `Bearer ${apiKey}`,
-                    }
-                  : undefined,
-              });
-              if (!res.ok) return null;
-              const j = await res.json();
-              const phone = j?.phone;
-              return typeof phone === "string" ? phone : null;
-            } catch {
-              return null;
+        {landing.landingType !== "external" && (
+          <LandingEditorForm
+            config={landing.config}
+            setConfig={setConfig}
+            onSave={handleSave}
+            onReset={handleReset}
+            uploadImage={
+              userId ? (file) => uploadLandingImage(supabase, userId, file) : undefined
             }
-          }}
-        />
+            landingId={landing.id}
+            landingName={landing.name}
+            comment={landing.comment}
+            pixelId={landing.pixelId}
+            postUrl={landing.postUrl}
+            landingTag={landing.landingTag}
+            getPhoneForPreview={async () => {
+              try {
+                const base =
+                  process.env.NEXT_PUBLIC_SUPABASE_URL?.replace(/\/$/, "") ?? "";
+                const apiKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY ?? "";
+                if (!base) return null;
+                const url = `${base}/functions/v1/landing-phone?name=${encodeURIComponent(
+                  landing.name,
+                )}`;
+                const res = await fetch(url, {
+                  headers: apiKey
+                    ? {
+                        apikey: apiKey,
+                        Authorization: `Bearer ${apiKey}`,
+                      }
+                    : undefined,
+                });
+                if (!res.ok) return null;
+                const j = await res.json();
+                const phone = j?.phone;
+                return typeof phone === "string" ? phone : null;
+              } catch {
+                return null;
+              }
+            }}
+          />
+        )}
       </div>
       {/* Mobile / tablet: preview al final, con scroll normal */}
-      <div className="mt-8 w-full max-w-[380px] lg:hidden">
+      {landing.landingType !== "external" && <div className="mt-8 w-full max-w-[380px] lg:hidden">
         <p className="mb-3 text-xs font-medium text-zinc-500">Vista previa</p>
         <LandingPreview config={landing.config} />
         <p className="mt-2 w-full text-[11px] text-zinc-500">
           La vista previa es aproximada. Para una vista certera, abrí el enlace de la landing.
         </p>
-      </div>
+      </div>}
       {/* Desktop: preview fijo que acompaña el scroll y siempre queda visible */}
-      <div className="pointer-events-none fixed right-6 top-16 z-20 hidden w-[360px] max-w-[40vw] lg:block">
+      {landing.landingType !== "external" && <div className="pointer-events-none fixed right-6 top-16 z-20 hidden w-[360px] max-w-[40vw] lg:block">
         <p className="mb-3 text-xs font-medium text-zinc-500">Vista previa</p>
         <div className="pointer-events-auto w-full">
           <div className="scale-[0.7] origin-top">
@@ -894,7 +952,7 @@ export default function AdminLandingEditarPage() {
         <p className="mt-2 w-full text-[11px] text-zinc-500">
           La vista previa es aproximada. Para una vista certera, abrí el enlace de la landing.
         </p>
-      </div>
+      </div>}
     </div>
   );
 }

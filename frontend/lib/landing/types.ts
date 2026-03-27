@@ -112,6 +112,8 @@ export interface LandingThemeConfig {
  */
 export interface Landing {
   id: string;
+  landingType: "internal" | "external";
+  externalDomain: string;
   name: string;
   pixelId: string;
   /** Modo de seleccin de gerencias: 'weighted_random' (aleatorio por peso) o 'fair' (equitativo). */
