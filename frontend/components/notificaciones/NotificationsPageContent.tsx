@@ -55,8 +55,8 @@ export default function NotificationsPageContent({
     if (!username || !token) return "";
     return `https://t.me/${username}?start=${token}`;
   }, [bot.telegram_bot_username, cfg?.telegram_start_token]);
-  const isTelegramConnected = Boolean(String(cfg.telegram_chat_id || "").trim());
-  const tokenValue = String(cfg.telegram_start_token || "").trim();
+  const isTelegramConnected = Boolean(String(cfg?.telegram_chat_id || "").trim());
+  const tokenValue = String(cfg?.telegram_start_token || "").trim();
   const shortTokenView = tokenValue
     ? `${tokenValue.slice(0, 6)}...${tokenValue.slice(-6)}`
     : "-";
