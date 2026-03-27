@@ -3,7 +3,7 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { supabase } from "@/lib/supabaseClient";
 import {
-  fetchConversionsForAdminFiltered,
+  fetchConversionsForAdmin,
   fetchConversionsConfig,
   upsertConversionsConfig,
   type ConversionsConfig,
@@ -33,7 +33,7 @@ export default function AdminSeguimientoPage() {
     if (!userId) return;
     setRefreshing(true);
     try {
-      const rows = await fetchConversionsForAdminFiltered(userId);
+      const rows = await fetchConversionsForAdmin();
       setConversions(rows);
     } finally {
       setRefreshing(false);
@@ -49,7 +49,7 @@ export default function AdminSeguimientoPage() {
       setUserId(user.id);
       try {
         const [rows, cfg] = await Promise.all([
-          fetchConversionsForAdminFiltered(user.id),
+          fetchConversionsForAdmin(),
           fetchConversionsConfig(user.id),
         ]);
         setConversions(rows);
