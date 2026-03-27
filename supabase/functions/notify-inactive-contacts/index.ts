@@ -121,12 +121,6 @@ Deno.serve(async (req) => {
     }
 
     const currentHour = getCurrentBAHour();
-    if (currentHour < 8 || currentHour > 22) {
-      return new Response(JSON.stringify({ ok: true, skipped: "outside-window" }), {
-        status: 200,
-        headers: { ...corsHeaders, "Content-Type": "application/json" },
-      });
-    }
 
     const { data: botRow } = await db
       .from("notification_bot_config")
@@ -204,6 +198,17 @@ Deno.serve(async (req) => {
 
     let sentUsers = 0;
     let sentMessages = 0;
+
+    // Solo el resumen de inactividad respeta ventana horaria.
+    if (currentHour < 8 || currentHour > 22) {
+      return new Response(
+        JSON.stringify({ ok: true, skipped: "outside-window", sentUsers, sentMessages }),
+        {
+          status: 200,
+          headers: { ...corsHeaders, "Content-Type": "application/json" },
+        },
+      );
+    }
 
     for (const s of settings) {
       if (!s.telegram_chat_id) continue;
