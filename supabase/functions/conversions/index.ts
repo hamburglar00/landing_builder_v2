@@ -87,6 +87,8 @@ interface GeoResult {
   zip: string;
 }
 
+type InboundStatus = "received" | "processed" | "error";
+
 // deno-lint-ignore no-explicit-any
 type Params = Record<string, any>;
 
@@ -191,6 +193,47 @@ function appendObservation(current: string, token: string): string {
 
 function textResponse(msg: string, status = 200): Response {
   return new Response(msg, { status, headers: { ...corsHeaders, "Content-Type": "text/plain" } });
+}
+
+async function insertInboundEvent(
+  db: SupabaseClient,
+  userId: string,
+  landingName: string,
+  action: string,
+  payload: Params,
+): Promise<string | null> {
+  const { data } = await db
+    .from("conversion_inbox")
+    .insert({
+      user_id: userId,
+      landing_name: landingName,
+      action,
+      promo_code: norm(payload.promo_code),
+      phone: sanitizePhone(payload.phone),
+      payload_raw: safePayloadRaw(payload),
+      status: "received",
+    })
+    .select("id")
+    .single();
+  return data?.id ?? null;
+}
+
+async function finalizeInboundEvent(
+  db: SupabaseClient,
+  inboxId: string | null,
+  status: InboundStatus,
+  httpStatus: number,
+  responseBody: string,
+  conversionId?: string,
+): Promise<void> {
+  if (!inboxId) return;
+  await db.from("conversion_inbox").update({
+    status,
+    http_status: httpStatus,
+    response_body: (responseBody ?? "").slice(0, 4000),
+    conversion_id: conversionId ?? null,
+    processed_at: new Date().toISOString(),
+  }).eq("id", inboxId);
 }
 
 
@@ -1073,32 +1116,42 @@ Deno.serve(async (req) => {
     // Build a virtual LandingRow representing the client endpoint
     const landing: LandingRow = { id: "", name: landingName, user_id: userId };
 
-    const action = norm(params.action).toUpperCase();
+    const rawAction = norm(params.action).toUpperCase();
+    const inboxAction = rawAction || "CONTACT";
+    const inboxId = await insertInboundEvent(db, userId, landingName, inboxAction, params);
+
+    const runAndFinalize = async (runner: () => Promise<Response>) => {
+      const response = await runner();
+      const bodyText = await response.clone().text().catch(() => "");
+      const finalStatus: InboundStatus = response.status >= 200 && response.status < 400 ? "processed" : "error";
+      await finalizeInboundEvent(db, inboxId, finalStatus, response.status, bodyText);
+      return response;
+    };
 
     // Route to the correct handler
-    if (!action && params.phone && params.amount) {
-      return handleSimplePurchase(db, params, landing, cfg);
+    if (!rawAction && params.phone && params.amount) {
+      return runAndFinalize(() => handleSimplePurchase(db, params, landing, cfg));
     }
-    if (action === "LEAD") {
-      return handleLead(db, params, landing, cfg);
+    if (rawAction === "LEAD") {
+      return runAndFinalize(() => handleLead(db, params, landing, cfg));
     }
-    if (action === "PURCHASE") {
-      return handlePurchase(db, params, landing, cfg);
+    if (rawAction === "PURCHASE") {
+      return runAndFinalize(() => handlePurchase(db, params, landing, cfg));
     }
 
-    if (action) {
+    if (rawAction) {
       await writeLog(
         db,
         landing.user_id,
         "main",
         "ERROR",
         "Action desconocida recibida",
-        JSON.stringify({ action, payload: safePayloadRaw(params) }),
+        JSON.stringify({ action: rawAction, payload: safePayloadRaw(params) }),
       );
     }
 
     // Default: contact from landing
-    return handleContact(db, params, landing, cfg);
+    return runAndFinalize(() => handleContact(db, params, landing, cfg));
   } catch (err) {
     console.error("conversions error:", err);
     try {
