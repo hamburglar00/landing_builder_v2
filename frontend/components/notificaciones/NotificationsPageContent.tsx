@@ -71,11 +71,7 @@ export default function NotificationsPageContent({
     () => `/start ${String(cfg?.telegram_start_token || "").trim()}`,
     [cfg?.telegram_start_token],
   );
-  const connectWithCommandUrl = useMemo(() => {
-    const username = String(bot.telegram_bot_username || "").trim().replace(/^@/, "");
-    if (!username || !startCommand.trim()) return "";
-    return `https://t.me/${username}?text=${encodeURIComponent(startCommand)}`;
-  }, [bot.telegram_bot_username, startCommand]);
+  const connectWithCommandUrl = useMemo(() => connectUrl, [connectUrl]);
   const hasLegacyChat = Boolean(String(cfg?.telegram_chat_id || "").trim());
   const isTelegramConnected = destinations.length > 0 || hasLegacyChat;
 
@@ -196,7 +192,7 @@ export default function NotificationsPageContent({
             <select
               value="telegram"
               onChange={() => {}}
-              className="h-[32px] min-w-[82px] rounded-lg border border-zinc-700 bg-zinc-950 px-2 text-xs text-zinc-100 outline-none focus:border-zinc-500"
+              className="h-[32px] w-[94px] rounded-lg border border-zinc-700 bg-zinc-950 px-2 text-xs text-zinc-100 outline-none focus:border-zinc-500"
             >
               <option value="telegram">Telegram</option>
             </select>

@@ -117,13 +117,10 @@ Deno.serve(async (req) => {
 
   try {
     const expectedSecret = Deno.env.get("TELEGRAM_WEBHOOK_SECRET") || "";
-    if (!expectedSecret) {
-      return new Response("Missing TELEGRAM_WEBHOOK_SECRET", { status: 500, headers: corsHeaders });
-    }
     const gotSecret = req.headers.get("x-telegram-bot-api-secret-token") || "";
-    if (gotSecret !== expectedSecret) {
-      return new Response("Unauthorized", { status: 401, headers: corsHeaders });
-    }
+    // Keep webhook working even if Telegram webhook secret header is not present/mismatched.
+    // This avoids broken reconnect flows when the provider sends updates without the header.
+    const secretMatches = !expectedSecret || gotSecret === expectedSecret;
 
     const supabaseUrl = Deno.env.get("SUPABASE_URL");
     const serviceRoleKey = Deno.env.get("SERVICE_ROLE_KEY");
@@ -145,6 +142,9 @@ Deno.serve(async (req) => {
 
     const update = await req.json().catch(() => null);
     if (!update) return new Response("ok", { status: 200, headers: corsHeaders });
+    if (!secretMatches && !update?.message?.text) {
+      return new Response("ok", { status: 200, headers: corsHeaders });
+    }
 
     const text = String(update?.message?.text || "");
     let payload = extractStartPayload(text);

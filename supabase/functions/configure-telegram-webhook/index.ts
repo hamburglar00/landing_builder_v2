@@ -47,9 +47,23 @@ Deno.serve(async (req) => {
         drop_pending_updates: false,
       }),
     });
-    const tgBody = await tgRes.text();
+    const setWebhookBody = await tgRes.text();
 
-    return new Response(tgBody, {
+    const infoRes = await fetch(`https://api.telegram.org/bot${token}/getWebhookInfo`, {
+      method: "GET",
+    });
+    const webhookInfoBody = await infoRes.text();
+
+    const merged = JSON.stringify({
+      setWebhook: (() => {
+        try { return JSON.parse(setWebhookBody); } catch { return setWebhookBody; }
+      })(),
+      getWebhookInfo: (() => {
+        try { return JSON.parse(webhookInfoBody); } catch { return webhookInfoBody; }
+      })(),
+    });
+
+    return new Response(merged, {
       status: tgRes.ok ? 200 : 500,
       headers: { ...corsHeaders, "Content-Type": "application/json" },
     });
@@ -60,4 +74,3 @@ Deno.serve(async (req) => {
     });
   }
 });
-
