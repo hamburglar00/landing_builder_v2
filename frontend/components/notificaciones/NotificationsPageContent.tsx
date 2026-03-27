@@ -380,7 +380,7 @@ export default function NotificationsPageContent({
                   prev ? { ...prev, enabled: e.target.value === "on" } : prev,
                 )
               }
-              className="w-full rounded-lg border border-zinc-700 bg-zinc-950 px-3 py-2 text-sm text-zinc-100"
+              className="h-10 w-full rounded-lg border border-zinc-700 bg-zinc-950 px-3 text-sm text-zinc-100"
             >
               <option value="on">Activadas</option>
               <option value="off">Desactivadas</option>
@@ -395,7 +395,7 @@ export default function NotificationsPageContent({
                   prev ? { ...prev, notify_hour: normalizeHour(Number(e.target.value)) } : prev,
                 )
               }
-              className="w-full rounded-lg border border-zinc-700 bg-zinc-950 px-3 py-2 text-sm text-zinc-100 outline-none focus:border-zinc-500"
+              className="h-10 w-full rounded-lg border border-zinc-700 bg-zinc-950 px-3 text-sm text-zinc-100 outline-none focus:border-zinc-500"
             >
               {Array.from({ length: 15 }, (_, idx) => 8 + idx).map((hour) => (
                 <option key={hour} value={hour}>
@@ -416,7 +416,7 @@ export default function NotificationsPageContent({
                   prev ? { ...prev, inactive_days: Math.max(1, Math.min(90, Number(e.target.value) || 1)) } : prev,
                 )
               }
-              className="w-full rounded-lg border border-zinc-700 bg-zinc-950 px-3 py-2 text-sm text-zinc-100 outline-none focus:border-zinc-500"
+              className="h-10 w-full rounded-lg border border-zinc-700 bg-zinc-950 px-3 text-sm text-zinc-100 outline-none focus:border-zinc-500"
             />
           </label>
           <label className="flex flex-col gap-1">
@@ -431,7 +431,7 @@ export default function NotificationsPageContent({
                   prev ? { ...prev, renotify_days: Math.max(1, Math.min(90, Number(e.target.value) || 5)) } : prev,
                 )
               }
-              className="w-full rounded-lg border border-zinc-700 bg-zinc-950 px-3 py-2 text-sm text-zinc-100 outline-none focus:border-zinc-500"
+              className="h-10 w-full rounded-lg border border-zinc-700 bg-zinc-950 px-3 text-sm text-zinc-100 outline-none focus:border-zinc-500"
             />
           </label>
         </div>
