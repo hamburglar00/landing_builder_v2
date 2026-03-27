@@ -17,6 +17,18 @@ export interface NotificationSettings {
   timezone: string;
 }
 
+export interface NotificationTelegramDestination {
+  id: number;
+  user_id: string;
+  telegram_chat_id: string;
+  telegram_username: string;
+  telegram_first_name: string;
+  telegram_last_name: string;
+  telegram_phone: string;
+  is_active: boolean;
+  linked_at: string;
+}
+
 const DEFAULT_SETTINGS: NotificationSettings = {
   user_id: "",
   enabled: true,
@@ -133,4 +145,19 @@ export async function upsertNotificationSettings(settings: NotificationSettings)
       { onConflict: "user_id" },
     );
   if (error) throw error;
+}
+
+export async function fetchNotificationTelegramDestinations(
+  userId: string,
+): Promise<NotificationTelegramDestination[]> {
+  const { data, error } = await supabase
+    .from("notification_telegram_destinations")
+    .select(
+      "id, user_id, telegram_chat_id, telegram_username, telegram_first_name, telegram_last_name, telegram_phone, is_active, linked_at",
+    )
+    .eq("user_id", userId)
+    .eq("is_active", true)
+    .order("linked_at", { ascending: false });
+  if (error) throw error;
+  return (data ?? []) as NotificationTelegramDestination[];
 }

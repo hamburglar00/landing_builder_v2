@@ -1,4 +1,4 @@
-import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
+﻿import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -25,6 +25,18 @@ type NotificationSettings = {
   renotify_days: number;
   notify_hour: number;
   timezone: string;
+};
+
+type TelegramDestination = {
+  id: number;
+  user_id: string;
+  telegram_chat_id: string;
+  telegram_username: string;
+  telegram_first_name: string;
+  telegram_last_name: string;
+  telegram_phone: string;
+  is_active: boolean;
+  welcome_sent_at: string | null;
 };
 
 type ConversionRow = {
@@ -94,12 +106,52 @@ async function sendTelegramMessage(token: string, chatId: string, text: string) 
   return { ok: res.ok, body };
 }
 
-const WELCOME_MESSAGE =
-  "🔔 ¡Felicidades! Has activado las notificaciones de seguimiento. Recibirás un resumen diario de tus contactos inactivos.";
+const WELCOME_MESSAGE = "Felicitaciones! Has activado las notificaciones de seguimiento. Recibiras un resumen diario de tus contactos inactivos.";
 
 function relTimeFromDays(days: number): string {
   if (days <= 1) return "1 dia";
   return `${days} dias`;
+}
+
+function getDestinationFromUpdate(update: any) {
+  const chatId = String(update?.message?.chat?.id || "").trim();
+  const from = update?.message?.from || {};
+  const contact = update?.message?.contact || {};
+  return {
+    chatId,
+    username: String(from?.username || "").trim(),
+    firstName: String(from?.first_name || "").trim(),
+    lastName: String(from?.last_name || "").trim(),
+    phone: String(contact?.phone_number || "").trim(),
+  };
+}
+
+async function upsertDestination(
+  db: ReturnType<typeof createClient>,
+  userId: string,
+  d: { chatId: string; username: string; firstName: string; lastName: string; phone: string },
+  nowIso: string,
+): Promise<TelegramDestination | null> {
+  if (!d.chatId) return null;
+  const { data, error } = await db
+    .from("notification_telegram_destinations")
+    .upsert(
+      {
+        user_id: userId,
+        telegram_chat_id: d.chatId,
+        telegram_username: d.username,
+        telegram_first_name: d.firstName,
+        telegram_last_name: d.lastName,
+        telegram_phone: d.phone,
+        is_active: true,
+        updated_at: nowIso,
+      },
+      { onConflict: "user_id,telegram_chat_id" },
+    )
+    .select("id, user_id, telegram_chat_id, telegram_username, telegram_first_name, telegram_last_name, telegram_phone, is_active, welcome_sent_at")
+    .single();
+  if (error) return null;
+  return data as TelegramDestination;
 }
 
 Deno.serve(async (req) => {
@@ -157,50 +209,64 @@ Deno.serve(async (req) => {
       for (const u of updates.results) {
         const updateId = Number(u?.update_id || 0);
         if (updateId >= nextOffset) nextOffset = updateId + 1;
+
         const text = String(u?.message?.text || "");
         const payload = extractStartPayload(text);
-        const chatId = String(u?.message?.chat?.id || "");
-        if (!chatId) continue;
+        const fromDest = getDestinationFromUpdate(u);
         const nowIso = new Date().toISOString();
 
-        // Caso principal: deep-link con token (/start <token>)
+        if (!fromDest.chatId) continue;
+
+        // Main: deep-link with token
         if (payload) {
           const { data: linked } = await db
             .from("notification_settings")
-            .update({ telegram_chat_id: chatId, updated_at: nowIso })
+            .select("user_id")
             .eq("telegram_start_token", payload)
-            .select("user_id, telegram_welcome_sent_at")
             .maybeSingle();
-          if (linked?.user_id && !linked.telegram_welcome_sent_at) {
-            const welcome = await sendTelegramMessage(botRow.telegram_bot_token, chatId, WELCOME_MESSAGE);
-            if (welcome.ok) {
-              await db
-                .from("notification_settings")
-                .update({ telegram_welcome_sent_at: nowIso, updated_at: nowIso })
-                .eq("user_id", linked.user_id);
+
+          if (linked?.user_id) {
+            const dest = await upsertDestination(db, linked.user_id, fromDest, nowIso);
+            // compatibility with old single-chat field
+            await db
+              .from("notification_settings")
+              .update({ telegram_chat_id: fromDest.chatId, updated_at: nowIso })
+              .eq("user_id", linked.user_id);
+
+            if (dest && !dest.welcome_sent_at) {
+              const welcome = await sendTelegramMessage(botRow.telegram_bot_token, fromDest.chatId, WELCOME_MESSAGE);
+              if (welcome.ok) {
+                await db
+                  .from("notification_telegram_destinations")
+                  .update({ welcome_sent_at: nowIso, updated_at: nowIso })
+                  .eq("id", dest.id);
+              }
             }
           }
           continue;
         }
 
-        // Fallback: /start sin token en chat ya vinculado.
+        // Fallback: /start in already linked chat
         if (isPlainStart(text)) {
           const { data: linkedRows } = await db
-            .from("notification_settings")
-            .select("user_id, telegram_welcome_sent_at")
-            .eq("telegram_chat_id", chatId);
+            .from("notification_telegram_destinations")
+            .select("id, user_id, welcome_sent_at")
+            .eq("telegram_chat_id", fromDest.chatId)
+            .eq("is_active", true);
+
           for (const linked of linkedRows ?? []) {
-            if (linked.telegram_welcome_sent_at) continue;
-            const welcome = await sendTelegramMessage(botRow.telegram_bot_token, chatId, WELCOME_MESSAGE);
+            if (linked.welcome_sent_at) continue;
+            const welcome = await sendTelegramMessage(botRow.telegram_bot_token, fromDest.chatId, WELCOME_MESSAGE);
             if (welcome.ok) {
               await db
-                .from("notification_settings")
-                .update({ telegram_welcome_sent_at: nowIso, updated_at: nowIso })
-                .eq("user_id", linked.user_id);
+                .from("notification_telegram_destinations")
+                .update({ welcome_sent_at: nowIso, updated_at: nowIso })
+                .eq("id", linked.id);
             }
           }
         }
       }
+
       await db
         .from("notification_bot_config")
         .update({
@@ -218,24 +284,29 @@ Deno.serve(async (req) => {
 
     const settings = (settingsRows ?? []) as NotificationSettings[];
 
-    // Backfill armonizado: enviar bienvenida una sola vez a clientes ya conectados.
+    // One-time welcome for already connected destinations
     for (const s of settings) {
-      if (!s.telegram_chat_id || s.telegram_welcome_sent_at) continue;
       const nowIso = new Date().toISOString();
-      const welcome = await sendTelegramMessage(botRow.telegram_bot_token, s.telegram_chat_id, WELCOME_MESSAGE);
-      if (welcome.ok) {
-        await db
-          .from("notification_settings")
-          .update({ telegram_welcome_sent_at: nowIso, updated_at: nowIso })
-          .eq("user_id", s.user_id);
-        s.telegram_welcome_sent_at = nowIso;
+      const { data: dests } = await db
+        .from("notification_telegram_destinations")
+        .select("id, telegram_chat_id, welcome_sent_at")
+        .eq("user_id", s.user_id)
+        .eq("is_active", true);
+      for (const d of dests ?? []) {
+        if (!d.telegram_chat_id || d.welcome_sent_at) continue;
+        const welcome = await sendTelegramMessage(botRow.telegram_bot_token, d.telegram_chat_id, WELCOME_MESSAGE);
+        if (welcome.ok) {
+          await db
+            .from("notification_telegram_destinations")
+            .update({ welcome_sent_at: nowIso, updated_at: nowIso })
+            .eq("id", d.id);
+        }
       }
     }
 
     let sentUsers = 0;
     let sentMessages = 0;
 
-    // Solo el resumen de inactividad respeta ventana horaria.
     if (currentHour < 8 || currentHour > 22) {
       return new Response(
         JSON.stringify({ ok: true, skipped: "outside-window", sentUsers, sentMessages }),
@@ -247,8 +318,15 @@ Deno.serve(async (req) => {
     }
 
     for (const s of settings) {
-      if (!s.telegram_chat_id) continue;
       if (s.notify_hour !== currentHour) continue;
+
+      const { data: destinationsRows } = await db
+        .from("notification_telegram_destinations")
+        .select("id, telegram_chat_id")
+        .eq("user_id", s.user_id)
+        .eq("is_active", true);
+      const destinations = destinationsRows ?? [];
+      if (!destinations.length) continue;
 
       const { data: rows } = await db
         .from("conversions")
@@ -338,14 +416,23 @@ Deno.serve(async (req) => {
           return `- <a href="${wa}">${c.phone}</a>: inactivo hace ${relTimeFromDays(inactiveDays)}. Carga promedio: $${Math.round(c.avg)}. Total cargado: $${Math.round(c.total)}.`;
         });
         const text = [
-          "🔔 <b>Resumen de inactividad</b>",
+          "?? <b>Resumen de inactividad</b>",
           `Contactos detectados: ${chunk.length}`,
           "",
           ...lines,
         ].join("\n");
-        const sent = await sendTelegramMessage(botRow.telegram_bot_token, s.telegram_chat_id, text);
-        if (!sent.ok) continue;
-        sentMessages += 1;
+
+        let delivered = false;
+        for (const destination of destinations) {
+          if (!destination.telegram_chat_id) continue;
+          const sent = await sendTelegramMessage(botRow.telegram_bot_token, destination.telegram_chat_id, text);
+          if (sent.ok) {
+            sentMessages += 1;
+            delivered = true;
+          }
+        }
+
+        if (!delivered) continue;
 
         for (const c of chunk) {
           await db
@@ -375,3 +462,4 @@ Deno.serve(async (req) => {
     });
   }
 });
+

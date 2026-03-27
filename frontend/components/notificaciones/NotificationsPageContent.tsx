@@ -3,6 +3,7 @@
 import { useEffect, useMemo, useState } from "react";
 import type {
   NotificationBotConfig,
+  NotificationTelegramDestination,
   NotificationSettings,
 } from "@/lib/notificationsDb";
 
@@ -15,6 +16,7 @@ type Props = {
   isAdmin: boolean;
   botConfig: NotificationBotConfig | null;
   settings: NotificationSettings | null;
+  destinations: NotificationTelegramDestination[];
   saving: boolean;
   onSaveBot: (cfg: NotificationBotConfig) => Promise<void>;
   onSaveSettings: (cfg: NotificationSettings) => Promise<void>;
@@ -24,6 +26,7 @@ export default function NotificationsPageContent({
   isAdmin,
   botConfig,
   settings,
+  destinations,
   saving,
   onSaveBot,
   onSaveSettings,
@@ -55,11 +58,25 @@ export default function NotificationsPageContent({
     if (!username || !token) return "";
     return `https://t.me/${username}?start=${token}`;
   }, [bot.telegram_bot_username, cfg?.telegram_start_token]);
-  const isTelegramConnected = Boolean(String(cfg?.telegram_chat_id || "").trim());
+  const isTelegramConnected = destinations.length > 0;
   const tokenValue = String(cfg?.telegram_start_token || "").trim();
   const shortTokenView = tokenValue
     ? `${tokenValue.slice(0, 6)}...${tokenValue.slice(-6)}`
     : "-";
+
+  const renderDestinationLabel = (d: NotificationTelegramDestination) => {
+    const username = String(d.telegram_username || "").trim();
+    const firstName = String(d.telegram_first_name || "").trim();
+    const lastName = String(d.telegram_last_name || "").trim();
+    const phone = String(d.telegram_phone || "").trim();
+
+    const parts: string[] = [];
+    if (username) parts.push(`@${username.replace(/^@/, "")}`);
+    if (firstName || lastName) parts.push(`${firstName} ${lastName}`.trim());
+    if (phone) parts.push(phone);
+    if (!parts.length) parts.push(`chat ${d.telegram_chat_id}`);
+    return parts.join(" | ");
+  };
 
   if (!cfg) {
     return (
@@ -196,6 +213,20 @@ export default function NotificationsPageContent({
             Telegram conectado: {isTelegramConnected ? "Si" : "No"}
           </span>
           <span className="text-zinc-500">Token: {shortTokenView}</span>
+        </div>
+        <div className="mt-3 rounded-lg border border-zinc-800 bg-zinc-950/50 p-3">
+          <p className="text-xs font-medium text-zinc-300">Telegram(s) conectado(s)</p>
+          {destinations.length === 0 ? (
+            <p className="mt-2 text-xs text-zinc-500">Aun no hay chats vinculados.</p>
+          ) : (
+            <ul className="mt-2 space-y-1">
+              {destinations.map((d) => (
+                <li key={d.id} className="text-xs text-zinc-300">
+                  - {renderDestinationLabel(d)}
+                </li>
+              ))}
+            </ul>
+          )}
         </div>
       </section>
 

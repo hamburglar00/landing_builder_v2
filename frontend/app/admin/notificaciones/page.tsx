@@ -5,10 +5,12 @@ import { supabase } from "@/lib/supabaseClient";
 import NotificationsPageContent from "@/components/notificaciones/NotificationsPageContent";
 import {
   fetchNotificationBotConfig,
+  fetchNotificationTelegramDestinations,
   fetchNotificationSettings,
   upsertNotificationBotConfig,
   upsertNotificationSettings,
   type NotificationBotConfig,
+  type NotificationTelegramDestination,
   type NotificationSettings,
 } from "@/lib/notificationsDb";
 
@@ -17,18 +19,21 @@ export default function AdminNotificacionesPage() {
   const [saving, setSaving] = useState(false);
   const [botConfig, setBotConfig] = useState<NotificationBotConfig | null>(null);
   const [settings, setSettings] = useState<NotificationSettings | null>(null);
+  const [destinations, setDestinations] = useState<NotificationTelegramDestination[]>([]);
 
   useEffect(() => {
     const load = async () => {
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) return;
       try {
-        const [bot, cfg] = await Promise.all([
+        const [bot, cfg, dest] = await Promise.all([
           fetchNotificationBotConfig(),
           fetchNotificationSettings(user.id),
+          fetchNotificationTelegramDestinations(user.id),
         ]);
         setBotConfig(bot);
         setSettings(cfg);
+        setDestinations(dest);
       } finally {
         setLoading(false);
       }
@@ -45,6 +50,7 @@ export default function AdminNotificacionesPage() {
       isAdmin
       botConfig={botConfig}
       settings={settings}
+      destinations={destinations}
       saving={saving}
       onSaveBot={async (cfg) => {
         setSaving(true);
@@ -60,6 +66,10 @@ export default function AdminNotificacionesPage() {
         try {
           await upsertNotificationSettings(cfg);
           setSettings(cfg);
+          const { data: { user } } = await supabase.auth.getUser();
+          if (user) {
+            setDestinations(await fetchNotificationTelegramDestinations(user.id));
+          }
         } finally {
           setSaving(false);
         }
@@ -67,4 +77,3 @@ export default function AdminNotificacionesPage() {
     />
   );
 }
-
