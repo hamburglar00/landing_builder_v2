@@ -113,7 +113,10 @@ Deno.serve(async (req) => {
       .select("value")
       .eq("key", "sync_phones_cron_secret")
       .maybeSingle();
-    if (!cronSecret?.value || body?.cron_secret !== cronSecret.value) {
+    const expectedBootstrap = Deno.env.get("BOOTSTRAP_SECRET") || "";
+    const cronOk = !!cronSecret?.value && body?.cron_secret === cronSecret.value;
+    const bootstrapOk = !!expectedBootstrap && body?.bootstrap_secret === expectedBootstrap;
+    if (!cronOk && !bootstrapOk) {
       return new Response("Unauthorized", { status: 401, headers: corsHeaders });
     }
 
