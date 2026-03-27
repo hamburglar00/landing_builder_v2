@@ -40,6 +40,7 @@ export default function NotificationsPageContent({
   const [msg, setMsg] = useState<string | null>(null);
   const [msgType, setMsgType] = useState<"success" | "error">("success");
   const [botEditable, setBotEditable] = useState(false);
+  const [showConnectModal, setShowConnectModal] = useState(false);
 
   useEffect(() => {
     setBot(botConfig ?? { telegram_bot_token: "", telegram_bot_username: "" });
@@ -60,6 +61,10 @@ export default function NotificationsPageContent({
     if (!username || !token) return "";
     return `https://t.me/${username}?start=${token}`;
   }, [bot.telegram_bot_username, cfg?.telegram_start_token]);
+  const connectQrUrl = useMemo(() => {
+    if (!connectUrl) return "";
+    return `https://api.qrserver.com/v1/create-qr-code/?size=240x240&data=${encodeURIComponent(connectUrl)}`;
+  }, [connectUrl]);
   const hasLegacyChat = Boolean(String(cfg?.telegram_chat_id || "").trim());
   const isTelegramConnected = destinations.length > 0 || hasLegacyChat;
 
@@ -185,10 +190,9 @@ export default function NotificationsPageContent({
               <option value="telegram">Telegram</option>
             </select>
           </label>
-          <a
-            href={connectUrl || "#"}
-            target="_blank"
-            rel="noopener noreferrer"
+          <button
+            type="button"
+            onClick={() => setShowConnectModal(true)}
             className={`inline-flex items-center justify-center rounded-lg border px-3 py-2 text-xs font-medium ${
               connectUrl
                 ? "border-zinc-700 bg-zinc-800 text-zinc-100 hover:bg-zinc-700"
@@ -196,7 +200,7 @@ export default function NotificationsPageContent({
             }`}
           >
             Conectar Telegram
-          </a>
+          </button>
         </div>
         <p className="mt-2 text-xs text-zinc-500">
           Despues de abrir Telegram, presiona Start para vincular tu chat privado.
@@ -252,6 +256,56 @@ export default function NotificationsPageContent({
           )}
         </div>
       </section>
+
+      {showConnectModal && (
+        <div className="fixed inset-0 z-[120] flex items-center justify-center bg-black/70 px-4">
+          <div className="w-full max-w-md rounded-xl border border-zinc-700 bg-zinc-900 p-4">
+            <div className="mb-3 flex items-center justify-between">
+              <h4 className="text-sm font-semibold text-zinc-100">Conectar Telegram</h4>
+              <button
+                type="button"
+                onClick={() => setShowConnectModal(false)}
+                className="rounded-md border border-zinc-700 px-2 py-1 text-xs text-zinc-300 hover:bg-zinc-800"
+              >
+                Cerrar
+              </button>
+            </div>
+
+            <p className="text-xs text-zinc-400">
+              Escanea el QR desde tu celular o abre Telegram directamente.
+            </p>
+
+            <div className="mt-4 flex justify-center">
+              {connectQrUrl ? (
+                <img
+                  src={connectQrUrl}
+                  alt="QR para conectar Telegram"
+                  className="h-56 w-56 rounded-lg border border-zinc-700 bg-white p-2"
+                />
+              ) : (
+                <div className="flex h-56 w-56 items-center justify-center rounded-lg border border-zinc-800 text-xs text-zinc-500">
+                  Completa primero el bot y token de conexion.
+                </div>
+              )}
+            </div>
+
+            <div className="mt-4 flex justify-center">
+              <a
+                href={connectUrl || "#"}
+                target="_blank"
+                rel="noopener noreferrer"
+                className={`inline-flex items-center justify-center rounded-lg border px-3 py-2 text-xs font-medium ${
+                  connectUrl
+                    ? "border-zinc-700 bg-zinc-100 text-zinc-900 hover:bg-zinc-200"
+                    : "pointer-events-none border-zinc-800 bg-zinc-900 text-zinc-500"
+                }`}
+              >
+                Abrir Telegram
+              </a>
+            </div>
+          </div>
+        </div>
+      )}
 
       <section className="rounded-xl border border-zinc-800 bg-zinc-900/50 p-4">
         <h3 className="mb-3 text-sm font-semibold text-zinc-200">Seguimiento</h3>
