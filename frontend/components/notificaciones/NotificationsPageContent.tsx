@@ -62,10 +62,6 @@ export default function NotificationsPageContent({
   }, [bot.telegram_bot_username, cfg?.telegram_start_token]);
   const hasLegacyChat = Boolean(String(cfg?.telegram_chat_id || "").trim());
   const isTelegramConnected = destinations.length > 0 || hasLegacyChat;
-  const tokenValue = String(cfg?.telegram_start_token || "").trim();
-  const shortTokenView = tokenValue
-    ? `${tokenValue.slice(0, 6)}...${tokenValue.slice(-6)}`
-    : "-";
 
   const renderDestinationLabel = (d: NotificationTelegramDestination) => {
     const username = String(d.telegram_username || "").trim();
@@ -215,7 +211,6 @@ export default function NotificationsPageContent({
           >
             Telegram conectado: {isTelegramConnected ? "Si" : "No"}
           </span>
-          <span className="text-zinc-500">Token: {shortTokenView}</span>
         </div>
         <div className="mt-3 rounded-lg border border-zinc-800 bg-zinc-950/50 p-3">
           <p className="text-xs font-medium text-zinc-300">Telegram(s) conectado(s)</p>

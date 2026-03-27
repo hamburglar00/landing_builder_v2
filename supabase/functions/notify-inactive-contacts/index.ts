@@ -106,6 +106,24 @@ async function sendTelegramMessage(token: string, chatId: string, text: string) 
   return { ok: res.ok, body };
 }
 
+async function fetchTelegramChatInfo(token: string, chatId: string) {
+  const url = `https://api.telegram.org/bot${token}/getChat`;
+  const res = await fetch(url, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ chat_id: chatId }),
+  });
+  if (!res.ok) return null;
+  const data = await res.json().catch(() => null);
+  const result = data?.result;
+  if (!result) return null;
+  return {
+    username: String(result.username || "").trim(),
+    firstName: String(result.first_name || "").trim(),
+    lastName: String(result.last_name || "").trim(),
+  };
+}
+
 const WELCOME_MESSAGE = "Felicitaciones! Has activado las notificaciones de seguimiento. Recibiras un resumen diario de tus contactos inactivos.";
 
 function relTimeFromDays(days: number): string {
@@ -289,10 +307,29 @@ Deno.serve(async (req) => {
       const nowIso = new Date().toISOString();
       const { data: dests } = await db
         .from("notification_telegram_destinations")
-        .select("id, telegram_chat_id, welcome_sent_at")
+        .select("id, telegram_chat_id, welcome_sent_at, telegram_username, telegram_first_name, telegram_last_name")
         .eq("user_id", s.user_id)
         .eq("is_active", true);
       for (const d of dests ?? []) {
+        const missingIdentity =
+          !String(d.telegram_username || "").trim() &&
+          !String(d.telegram_first_name || "").trim() &&
+          !String(d.telegram_last_name || "").trim();
+        if (missingIdentity && d.telegram_chat_id) {
+          const chatInfo = await fetchTelegramChatInfo(botRow.telegram_bot_token, d.telegram_chat_id);
+          if (chatInfo) {
+            await db
+              .from("notification_telegram_destinations")
+              .update({
+                telegram_username: chatInfo.username,
+                telegram_first_name: chatInfo.firstName,
+                telegram_last_name: chatInfo.lastName,
+                updated_at: nowIso,
+              })
+              .eq("id", d.id);
+          }
+        }
+
         if (!d.telegram_chat_id || d.welcome_sent_at) continue;
         const welcome = await sendTelegramMessage(botRow.telegram_bot_token, d.telegram_chat_id, WELCOME_MESSAGE);
         if (welcome.ok) {
