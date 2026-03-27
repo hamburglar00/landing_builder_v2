@@ -67,6 +67,15 @@ export default function NotificationsPageContent({
     if (!connectUrl) return "";
     return `https://api.qrserver.com/v1/create-qr-code/?size=240x240&data=${encodeURIComponent(connectUrl)}`;
   }, [connectUrl]);
+  const startCommand = useMemo(
+    () => `/start ${String(cfg?.telegram_start_token || "").trim()}`,
+    [cfg?.telegram_start_token],
+  );
+  const connectWithCommandUrl = useMemo(() => {
+    const username = String(bot.telegram_bot_username || "").trim().replace(/^@/, "");
+    if (!username || !startCommand.trim()) return "";
+    return `https://t.me/${username}?text=${encodeURIComponent(startCommand)}`;
+  }, [bot.telegram_bot_username, startCommand]);
   const hasLegacyChat = Boolean(String(cfg?.telegram_chat_id || "").trim());
   const isTelegramConnected = destinations.length > 0 || hasLegacyChat;
 
@@ -327,6 +336,38 @@ export default function NotificationsPageContent({
               >
                 Abrir Telegram
               </a>
+            </div>
+            <div className="mt-2 flex flex-wrap items-center justify-center gap-2">
+              <a
+                href={connectWithCommandUrl || "#"}
+                target="_blank"
+                rel="noopener noreferrer"
+                className={`inline-flex items-center justify-center rounded-lg border px-3 py-2 text-xs font-medium ${
+                  connectWithCommandUrl
+                    ? "border-zinc-700 bg-zinc-800 text-zinc-100 hover:bg-zinc-700"
+                    : "pointer-events-none border-zinc-800 bg-zinc-900 text-zinc-500"
+                }`}
+              >
+                Abrir Telegram con comando
+              </a>
+              <button
+                type="button"
+                onClick={async () => {
+                  try {
+                    await navigator.clipboard.writeText(startCommand);
+                    setMsgType("success");
+                    setMsg("Comando copiado. Pegalo en el chat del bot.");
+                  } catch {
+                    setMsgType("error");
+                    setMsg("No se pudo copiar el comando.");
+                  } finally {
+                    setTimeout(() => setMsg(null), 2500);
+                  }
+                }}
+                className="inline-flex items-center justify-center rounded-lg border border-zinc-700 bg-zinc-900 px-3 py-2 text-xs font-medium text-zinc-100 hover:bg-zinc-800"
+              >
+                Copiar comando
+              </button>
             </div>
           </div>
         </div>
