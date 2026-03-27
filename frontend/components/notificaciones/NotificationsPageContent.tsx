@@ -60,7 +60,8 @@ export default function NotificationsPageContent({
     if (!username || !token) return "";
     return `https://t.me/${username}?start=${token}`;
   }, [bot.telegram_bot_username, cfg?.telegram_start_token]);
-  const isTelegramConnected = destinations.length > 0;
+  const hasLegacyChat = Boolean(String(cfg?.telegram_chat_id || "").trim());
+  const isTelegramConnected = destinations.length > 0 || hasLegacyChat;
   const tokenValue = String(cfg?.telegram_start_token || "").trim();
   const shortTokenView = tokenValue
     ? `${tokenValue.slice(0, 6)}...${tokenValue.slice(-6)}`
@@ -218,7 +219,7 @@ export default function NotificationsPageContent({
         </div>
         <div className="mt-3 rounded-lg border border-zinc-800 bg-zinc-950/50 p-3">
           <p className="text-xs font-medium text-zinc-300">Telegram(s) conectado(s)</p>
-          {destinations.length === 0 ? (
+          {destinations.length === 0 && !hasLegacyChat ? (
             <p className="mt-2 text-xs text-zinc-500">Aun no hay chats vinculados.</p>
           ) : (
             <ul className="mt-2 space-y-1">
@@ -247,6 +248,11 @@ export default function NotificationsPageContent({
                   </button>
                 </li>
               ))}
+              {destinations.length === 0 && hasLegacyChat ? (
+                <li className="text-xs text-zinc-300">
+                  - Chat conectado (legado): {String(cfg.telegram_chat_id)}
+                </li>
+              ) : null}
             </ul>
           )}
         </div>
