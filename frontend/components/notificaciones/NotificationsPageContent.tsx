@@ -296,6 +296,9 @@ export default function NotificationsPageContent({
             <p className="text-xs text-zinc-400">
               Escanea el QR desde tu celular o abre Telegram directamente.
             </p>
+            <p className="mt-1 text-xs text-zinc-500">
+              Si ya tenias el chat abierto, envia: <span className="font-mono">/start {String(cfg.telegram_start_token || "").trim()}</span>
+            </p>
 
             <div className="mt-4 flex justify-center">
               {connectQrUrl ? (

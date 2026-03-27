@@ -46,6 +46,10 @@ function extractStartPayload(text: string): string | null {
   return null;
 }
 
+function normalizeTokenCandidate(text: string): string {
+  return String(text || "").trim().replace(/^\/+/, "").replace(/^start=/i, "").replace(/^start\s+/i, "");
+}
+
 function isPlainStart(text: string): boolean {
   return String(text || "").trim().toLowerCase() === "/start";
 }
@@ -177,10 +181,17 @@ Deno.serve(async (req) => {
         if (updateId >= nextOffset) nextOffset = updateId + 1;
 
         const text = String(u?.message?.text || "");
-        const payload = extractStartPayload(text);
+        let payload = extractStartPayload(text);
         const fromDest = getDestinationFromUpdate(u);
         const nowIso = new Date().toISOString();
         if (!fromDest.chatId) continue;
+
+        if (!payload) {
+          const candidate = normalizeTokenCandidate(text);
+          if (/^[a-f0-9]{20,}$/i.test(candidate)) {
+            payload = candidate;
+          }
+        }
 
         if (payload) {
           const { data: linkedUser } = await db

@@ -28,6 +28,10 @@ function extractStartPayload(text: string): string | null {
   return null;
 }
 
+function normalizeTokenCandidate(text: string): string {
+  return String(text || "").trim().replace(/^\/+/, "").replace(/^start=/i, "").replace(/^start\s+/i, "");
+}
+
 function isPlainStart(text: string): boolean {
   return String(text || "").trim().toLowerCase() === "/start";
 }
@@ -143,11 +147,18 @@ Deno.serve(async (req) => {
     if (!update) return new Response("ok", { status: 200, headers: corsHeaders });
 
     const text = String(update?.message?.text || "");
-    const payload = extractStartPayload(text);
+    let payload = extractStartPayload(text);
     const fromDest = getDestinationFromUpdate(update);
     const nowIso = new Date().toISOString();
 
     if (!fromDest.chatId) return new Response("ok", { status: 200, headers: corsHeaders });
+
+    if (!payload) {
+      const candidate = normalizeTokenCandidate(text);
+      if (/^[a-f0-9]{20,}$/i.test(candidate)) {
+        payload = candidate;
+      }
+    }
 
     if (payload) {
       const { data: linkedUser } = await db
@@ -218,4 +229,3 @@ Deno.serve(async (req) => {
     return new Response("ok", { status: 200, headers: corsHeaders });
   }
 });
-
