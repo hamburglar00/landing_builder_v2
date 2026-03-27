@@ -184,8 +184,8 @@ export default function NotificationsPageContent({
         <div className="flex flex-col gap-3 sm:flex-row sm:items-end">
           <label className="space-y-1">
             <span className="text-xs text-zinc-400">Canal</span>
-            <div className="inline-flex h-[42px] min-w-[120px] items-center rounded-lg border border-zinc-700 bg-zinc-950 px-3 text-sm text-zinc-100">
-              Telegram
+            <div className="inline-flex h-[42px] min-w-[120px] items-center text-sm font-medium text-zinc-200">
+              Telegram (fijo)
             </div>
           </label>
           <button
