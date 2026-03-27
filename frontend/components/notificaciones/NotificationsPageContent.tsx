@@ -187,7 +187,7 @@ export default function NotificationsPageContent({
             <select
               value="telegram"
               onChange={() => {}}
-              className="h-[42px] min-w-[120px] rounded-lg border border-zinc-700 bg-zinc-950 px-3 text-sm text-zinc-100 outline-none focus:border-zinc-500"
+              className="h-[36px] min-w-[96px] rounded-lg border border-zinc-700 bg-zinc-950 px-2.5 text-sm text-zinc-100 outline-none focus:border-zinc-500"
             >
               <option value="telegram">Telegram</option>
             </select>
