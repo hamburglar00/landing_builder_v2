@@ -65,6 +65,10 @@ function extractStartPayload(text: string): string | null {
   return parts.slice(1).join(" ").trim();
 }
 
+function isPlainStart(text: string): boolean {
+  return String(text || "").trim().toLowerCase() === "/start";
+}
+
 async function sendTelegramMessage(token: string, chatId: string, text: string) {
   const url = `https://api.telegram.org/bot${token}/sendMessage`;
   const res = await fetch(url, {
@@ -147,21 +151,44 @@ Deno.serve(async (req) => {
         const text = String(u?.message?.text || "");
         const payload = extractStartPayload(text);
         const chatId = String(u?.message?.chat?.id || "");
-        if (!payload || !chatId) continue;
+        if (!chatId) continue;
         const nowIso = new Date().toISOString();
-        const { data: linked } = await db
-          .from("notification_settings")
-          .update({ telegram_chat_id: chatId, updated_at: nowIso })
-          .eq("telegram_start_token", payload)
-          .select("user_id, telegram_welcome_sent_at")
-          .maybeSingle();
-        if (linked?.user_id && !linked.telegram_welcome_sent_at) {
-          const welcome = await sendTelegramMessage(botRow.telegram_bot_token, chatId, WELCOME_MESSAGE);
-          if (welcome.ok) {
-            await db
-              .from("notification_settings")
-              .update({ telegram_welcome_sent_at: nowIso, updated_at: nowIso })
-              .eq("user_id", linked.user_id);
+
+        // Caso principal: deep-link con token (/start <token>)
+        if (payload) {
+          const { data: linked } = await db
+            .from("notification_settings")
+            .update({ telegram_chat_id: chatId, updated_at: nowIso })
+            .eq("telegram_start_token", payload)
+            .select("user_id, telegram_welcome_sent_at")
+            .maybeSingle();
+          if (linked?.user_id && !linked.telegram_welcome_sent_at) {
+            const welcome = await sendTelegramMessage(botRow.telegram_bot_token, chatId, WELCOME_MESSAGE);
+            if (welcome.ok) {
+              await db
+                .from("notification_settings")
+                .update({ telegram_welcome_sent_at: nowIso, updated_at: nowIso })
+                .eq("user_id", linked.user_id);
+            }
+          }
+          continue;
+        }
+
+        // Fallback: /start sin token en chat ya vinculado.
+        if (isPlainStart(text)) {
+          const { data: linkedRows } = await db
+            .from("notification_settings")
+            .select("user_id, telegram_welcome_sent_at")
+            .eq("telegram_chat_id", chatId);
+          for (const linked of linkedRows ?? []) {
+            if (linked.telegram_welcome_sent_at) continue;
+            const welcome = await sendTelegramMessage(botRow.telegram_bot_token, chatId, WELCOME_MESSAGE);
+            if (welcome.ok) {
+              await db
+                .from("notification_settings")
+                .update({ telegram_welcome_sent_at: nowIso, updated_at: nowIso })
+                .eq("user_id", linked.user_id);
+            }
           }
         }
       }
