@@ -20,6 +20,7 @@ type Props = {
   saving: boolean;
   onSaveBot: (cfg: NotificationBotConfig) => Promise<void>;
   onSaveSettings: (cfg: NotificationSettings) => Promise<void>;
+  onDisconnectDestination: (destinationId: number) => Promise<void>;
 };
 
 export default function NotificationsPageContent({
@@ -30,6 +31,7 @@ export default function NotificationsPageContent({
   saving,
   onSaveBot,
   onSaveSettings,
+  onDisconnectDestination,
 }: Props) {
   const [bot, setBot] = useState<NotificationBotConfig>(
     botConfig ?? { telegram_bot_token: "", telegram_bot_username: "" },
@@ -221,8 +223,28 @@ export default function NotificationsPageContent({
           ) : (
             <ul className="mt-2 space-y-1">
               {destinations.map((d) => (
-                <li key={d.id} className="text-xs text-zinc-300">
-                  - {renderDestinationLabel(d)}
+                <li key={d.id} className="flex items-center justify-between gap-3 text-xs text-zinc-300">
+                  <span>- {renderDestinationLabel(d)}</span>
+                  <button
+                    type="button"
+                    disabled={saving}
+                    onClick={async () => {
+                      try {
+                        await onDisconnectDestination(d.id);
+                        setMsgType("success");
+                        setMsg("Telegram desconectado.");
+                      } catch (e) {
+                        console.error(e);
+                        setMsgType("error");
+                        setMsg("No se pudo desconectar el Telegram.");
+                      } finally {
+                        setTimeout(() => setMsg(null), 2500);
+                      }
+                    }}
+                    className="rounded-md border border-red-700/60 px-2 py-1 text-[11px] font-medium text-red-300 hover:bg-red-950/40 disabled:opacity-50"
+                  >
+                    Desconectar
+                  </button>
                 </li>
               ))}
             </ul>

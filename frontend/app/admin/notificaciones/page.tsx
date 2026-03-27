@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import { supabase } from "@/lib/supabaseClient";
 import NotificationsPageContent from "@/components/notificaciones/NotificationsPageContent";
 import {
+  deactivateNotificationTelegramDestination,
   fetchNotificationBotConfig,
   fetchNotificationTelegramDestinations,
   fetchNotificationSettings,
@@ -70,6 +71,17 @@ export default function AdminNotificacionesPage() {
           if (user) {
             setDestinations(await fetchNotificationTelegramDestinations(user.id));
           }
+        } finally {
+          setSaving(false);
+        }
+      }}
+      onDisconnectDestination={async (destinationId) => {
+        const { data: { user } } = await supabase.auth.getUser();
+        if (!user) return;
+        setSaving(true);
+        try {
+          await deactivateNotificationTelegramDestination(user.id, destinationId);
+          setDestinations(await fetchNotificationTelegramDestinations(user.id));
         } finally {
           setSaving(false);
         }

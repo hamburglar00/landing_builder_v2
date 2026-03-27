@@ -161,3 +161,15 @@ export async function fetchNotificationTelegramDestinations(
   if (error) throw error;
   return (data ?? []) as NotificationTelegramDestination[];
 }
+
+export async function deactivateNotificationTelegramDestination(
+  userId: string,
+  destinationId: number,
+): Promise<void> {
+  const { error } = await supabase
+    .from("notification_telegram_destinations")
+    .update({ is_active: false, updated_at: new Date().toISOString() })
+    .eq("id", destinationId)
+    .eq("user_id", userId);
+  if (error) throw error;
+}
