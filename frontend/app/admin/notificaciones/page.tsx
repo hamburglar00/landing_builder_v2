@@ -27,13 +27,13 @@ export default function AdminNotificacionesPage() {
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) return;
       try {
-        const [bot, cfg, dest] = await Promise.all([
-          fetchNotificationBotConfig(),
-          fetchNotificationSettings(user.id),
-          fetchNotificationTelegramDestinations(user.id),
-        ]);
+        const bot = await fetchNotificationBotConfig();
         setBotConfig(bot);
+
+        const cfg = await fetchNotificationSettings(user.id);
         setSettings(cfg);
+
+        const dest = await fetchNotificationTelegramDestinations(user.id).catch(() => []);
         setDestinations(dest);
       } finally {
         setLoading(false);

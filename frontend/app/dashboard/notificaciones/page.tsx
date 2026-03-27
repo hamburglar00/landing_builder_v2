@@ -26,15 +26,15 @@ export default function DashboardNotificacionesPage() {
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) return;
       try {
-        const [bot, cfg, dest] = await Promise.all([
-          fetchNotificationBotUsernamePublic()
-            .then((username) => ({ telegram_bot_token: "", telegram_bot_username: username }))
-            .catch(() => ({ telegram_bot_token: "", telegram_bot_username: "" })),
-          fetchNotificationSettings(user.id),
-          fetchNotificationTelegramDestinations(user.id),
-        ]);
+        const bot = await fetchNotificationBotUsernamePublic()
+          .then((username) => ({ telegram_bot_token: "", telegram_bot_username: username }))
+          .catch(() => ({ telegram_bot_token: "", telegram_bot_username: "" }));
         setBotConfig(bot);
+
+        const cfg = await fetchNotificationSettings(user.id);
         setSettings(cfg);
+
+        const dest = await fetchNotificationTelegramDestinations(user.id).catch(() => []);
         setDestinations(dest);
       } finally {
         setLoading(false);
