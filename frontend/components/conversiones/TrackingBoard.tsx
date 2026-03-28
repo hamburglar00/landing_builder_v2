@@ -157,6 +157,14 @@ export default function TrackingBoard({
     return [...withLoads, ...leads];
   }, [rows, sortMode]);
 
+  const indicatorFor = (total: number) => {
+    const sorted = [...rules].sort((a, b) => a.maxTotal - b.maxTotal);
+    for (const r of sorted) {
+      if (total < r.maxTotal) return r.indicator || "-";
+    }
+    return overflowIndicator || "-";
+  };
+
   const filteredRows = useMemo(() => {
     const q = search.trim().toLowerCase();
     if (!q) return sortedRows;
@@ -179,14 +187,6 @@ export default function TrackingBoard({
     const start = (page - 1) * pageSize;
     return filteredRows.slice(start, start + pageSize);
   }, [filteredRows, page]);
-
-  const indicatorFor = (total: number) => {
-    const sorted = [...rules].sort((a, b) => a.maxTotal - b.maxTotal);
-    for (const r of sorted) {
-      if (total < r.maxTotal) return r.indicator || "-";
-    }
-    return overflowIndicator || "-";
-  };
 
   const openConfigModal = () => {
     setDraftRules(rules);
