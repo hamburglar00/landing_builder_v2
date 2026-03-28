@@ -95,6 +95,8 @@ export default function TrackingBoard({
   const [draftRules, setDraftRules] = useState<RankRule[]>(initialRules);
   const [draftOverflowIndicator, setDraftOverflowIndicator] = useState(initialOverflow);
   const [draftSortMode, setDraftSortMode] = useState<SortMode>(initialSort);
+  const [search, setSearch] = useState("");
+  const [page, setPage] = useState(1);
 
   const [openConfig, setOpenConfig] = useState(false);
 
@@ -155,6 +157,29 @@ export default function TrackingBoard({
     return [...withLoads, ...leads];
   }, [rows, sortMode]);
 
+  const filteredRows = useMemo(() => {
+    const q = search.trim().toLowerCase();
+    if (!q) return sortedRows;
+    return sortedRows.filter((r) => {
+      const rank = r.loads === 0 ? LEAD_INDICATOR : indicatorFor(r.totalLoaded);
+      return (
+        String(rank).toLowerCase().includes(q) ||
+        String(r.phone).toLowerCase().includes(q) ||
+        String(r.loads).toLowerCase().includes(q) ||
+        formatCurrency(r.avgLoad).toLowerCase().includes(q) ||
+        formatCurrency(r.totalLoaded).toLowerCase().includes(q) ||
+        formatThousands(r.totalLoaded).toLowerCase().includes(q)
+      );
+    });
+  }, [sortedRows, search, rules, overflowIndicator]);
+
+  const pageSize = 20;
+  const totalPages = Math.max(1, Math.ceil(filteredRows.length / pageSize));
+  const pagedRows = useMemo(() => {
+    const start = (page - 1) * pageSize;
+    return filteredRows.slice(start, start + pageSize);
+  }, [filteredRows, page]);
+
   const indicatorFor = (total: number) => {
     const sorted = [...rules].sort((a, b) => a.maxTotal - b.maxTotal);
     for (const r of sorted) {
@@ -182,11 +207,25 @@ export default function TrackingBoard({
     setOpenConfig(false);
   };
 
+  useEffect(() => {
+    setPage(1);
+  }, [search, sortMode, conversions.length]);
+
+  useEffect(() => {
+    if (page > totalPages) setPage(totalPages);
+  }, [page, totalPages]);
+
   return (
     <section className="rounded-xl border border-zinc-800 bg-zinc-900/50 p-3 sm:p-4">
       <div className="mb-4 flex flex-col gap-2 sm:flex-row sm:flex-wrap sm:items-center sm:justify-between">
         <h3 className="text-sm font-semibold text-zinc-200">Seguimiento</h3>
         <div className="flex w-full items-center gap-2 sm:ml-auto sm:w-auto">
+          <input
+            value={search}
+            onChange={(e) => setSearch(e.target.value)}
+            placeholder="Buscar por ranking, telefono, cargas..."
+            className="h-8 w-full rounded-lg border border-zinc-700 bg-zinc-950 px-2.5 text-xs text-zinc-100 outline-none focus:border-zinc-500 sm:w-[280px]"
+          />
           <button
             type="button"
             onClick={onRefresh}
@@ -235,14 +274,14 @@ export default function TrackingBoard({
             </tr>
           </thead>
           <tbody className="divide-y divide-zinc-800">
-            {sortedRows.length === 0 ? (
+            {filteredRows.length === 0 ? (
               <tr>
                 <td colSpan={7} className="px-2 py-6 text-center text-zinc-500">
                   Aun no hay datos para seguimiento.
                 </td>
               </tr>
             ) : (
-              sortedRows.map((r) => (
+              pagedRows.map((r) => (
                 <tr key={r.phone} className="bg-zinc-950/40">
                   <td className="px-2 py-1.5 text-base" title={`Total: ${formatThousands(r.totalLoaded)}`}>
                     {r.loads === 0 ? LEAD_INDICATOR : indicatorFor(r.totalLoaded)}
@@ -271,6 +310,34 @@ export default function TrackingBoard({
           </tbody>
         </table>
       </div>
+      {filteredRows.length > pageSize && (
+        <div className="mt-3 flex items-center justify-between text-xs text-zinc-400">
+          <span>
+            Mostrando {(page - 1) * pageSize + 1}-{Math.min(page * pageSize, filteredRows.length)} de {filteredRows.length}
+          </span>
+          <div className="flex items-center gap-2">
+            <button
+              type="button"
+              disabled={page <= 1}
+              onClick={() => setPage((p) => Math.max(1, p - 1))}
+              className="rounded border border-zinc-700 px-2 py-1 text-zinc-300 hover:bg-zinc-800 disabled:opacity-40"
+            >
+              Anterior
+            </button>
+            <span>
+              {page}/{totalPages}
+            </span>
+            <button
+              type="button"
+              disabled={page >= totalPages}
+              onClick={() => setPage((p) => Math.min(totalPages, p + 1))}
+              className="rounded border border-zinc-700 px-2 py-1 text-zinc-300 hover:bg-zinc-800 disabled:opacity-40"
+            >
+              Siguiente
+            </button>
+          </div>
+        </div>
+      )}
 
       {openConfig && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-3 sm:p-4">
