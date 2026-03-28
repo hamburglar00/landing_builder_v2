@@ -560,6 +560,7 @@ async function handleContact(
   p: Params,
   landing: LandingRow,
   config: ConversionsConfig,
+  fallbackClientIp: string,
 ): Promise<Response> {
   const nowIso = new Date().toISOString();
   const nowSec = Math.floor(Date.now() / 1000);
@@ -593,7 +594,7 @@ async function handleContact(
     purchase_event_time: null,
     purchase_payload_raw: "",
     test_event_code: testEventCode,
-    client_ip: norm(p.clientIP),
+    client_ip: norm(p.clientIP || fallbackClientIp),
     agent_user: norm(p.agentuser),
     device_type: norm(p.device_type),
     event_source_url: eventSourceUrl,
@@ -1125,10 +1126,10 @@ Deno.serve(async (req) => {
     };
 
     const params: Params = await req.json().catch(() => ({}));
-    // Prefer payload IP when present; otherwise fall back to request headers.
+    // Keep raw LEAD/PURCHASE payload untouched; fallback IP is applied only for CONTACT rows.
     const payloadIp = sanitizeIp(params.clientIP ?? params.client_ip ?? "");
     const headerIp = extractClientIpFromHeaders(req);
-    params.clientIP = payloadIp || headerIp || "";
+    const contactFallbackIp = payloadIp || headerIp || "";
 
     // landing_name can come from the payload (to track which landing sent this)
     const landingName = norm(params.landing_name || params.landingName || "");
@@ -1183,7 +1184,7 @@ Deno.serve(async (req) => {
     }
 
     // Default: contact from landing
-    return runAndFinalize(() => handleContact(db, params, landing, cfg));
+    return runAndFinalize(() => handleContact(db, params, landing, cfg, contactFallbackIp));
   } catch (err) {
     console.error("conversions error:", err);
     try {
