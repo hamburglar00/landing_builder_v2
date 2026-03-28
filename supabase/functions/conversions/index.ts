@@ -208,6 +208,7 @@ async function insertInboundEvent(
       user_id: userId,
       landing_name: landingName,
       action,
+      action_event_id: norm(payload.action_event_id),
       promo_code: norm(payload.promo_code),
       phone: sanitizePhone(payload.phone),
       payload_raw: safePayloadRaw(payload),
@@ -216,6 +217,25 @@ async function insertInboundEvent(
     .select("id")
     .single();
   return data?.id ?? null;
+}
+
+async function findInboundByActionEventId(
+  db: SupabaseClient,
+  userId: string,
+  action: string,
+  actionEventId: string,
+): Promise<{ id: string; status: InboundStatus; http_status: number | null; response_body: string } | null> {
+  if (!actionEventId) return null;
+  const { data } = await db
+    .from("conversion_inbox")
+    .select("id, status, http_status, response_body")
+    .eq("user_id", userId)
+    .eq("action", action)
+    .eq("action_event_id", actionEventId)
+    .order("created_at", { ascending: false })
+    .limit(1)
+    .maybeSingle();
+  return (data as { id: string; status: InboundStatus; http_status: number | null; response_body: string } | null) ?? null;
 }
 
 async function finalizeInboundEvent(
@@ -1117,7 +1137,19 @@ Deno.serve(async (req) => {
     const landing: LandingRow = { id: "", name: landingName, user_id: userId };
 
     const rawAction = norm(params.action).toUpperCase();
+    const actionEventId = norm(params.action_event_id);
     const inboxAction = rawAction || "CONTACT";
+
+    if (
+      actionEventId &&
+      (rawAction === "LEAD" || rawAction === "PURCHASE")
+    ) {
+      const existing = await findInboundByActionEventId(db, userId, rawAction, actionEventId);
+      if (existing) {
+        return textResponse("Duplicado ignorado (action_event_id ya procesado)", 200);
+      }
+    }
+
     const inboxId = await insertInboundEvent(db, userId, landingName, inboxAction, params);
 
     const runAndFinalize = async (runner: () => Promise<Response>) => {
