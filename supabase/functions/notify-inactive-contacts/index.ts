@@ -230,10 +230,12 @@ Deno.serve(async (req) => {
         });
 
         const text = [
-          "<b>Resumen de inactividad</b>",
-          `Contactos detectados: ${chunk.length}`,
+          "<b>RESUMEN DE INACTIVIDAD</b> 🔔",
+          `📌 Contactos detectados: ${chunk.length}`,
           "",
-          ...lines,
+          lines.join("\n\n"),
+          "",
+          "🤝 Recordatorio: escribiles desde Seguimiento para reactivar.",
         ].join("\n");
 
         let delivered = false;
