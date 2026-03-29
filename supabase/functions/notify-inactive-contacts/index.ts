@@ -114,16 +114,6 @@ Deno.serve(async (req) => {
     let usersSkippedNoConversions = 0;
     let usersSkippedNoCandidates = 0;
 
-    if (currentHour < 8 || currentHour > 22) {
-      return new Response(
-        JSON.stringify({ ok: true, skipped: "outside-window", sentUsers, sentMessages }),
-        {
-          status: 200,
-          headers: { ...corsHeaders, "Content-Type": "application/json" },
-        },
-      );
-    }
-
     const { data: settingsRows } = await db
       .from("notification_settings")
       .select("*")
