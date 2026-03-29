@@ -18,7 +18,7 @@ type NotificationSettings = {
   channel: string;
   inactive_days: number;
   renotify_days: number;
-  notify_hour: number;
+  notify_hour: number | string | null;
 };
 
 type ConversionRow = {
@@ -28,6 +28,7 @@ type ConversionRow = {
   created_at: string;
   valor: number;
   purchase_event_id: string;
+  test_event_code?: string | null;
 };
 
 function getCurrentBAHour(): number {
@@ -107,6 +108,11 @@ Deno.serve(async (req) => {
 
     let sentUsers = 0;
     let sentMessages = 0;
+    let usersTotal = 0;
+    let usersSkippedBeforeHour = 0;
+    let usersSkippedNoDestinations = 0;
+    let usersSkippedNoConversions = 0;
+    let usersSkippedNoCandidates = 0;
 
     if (currentHour < 8 || currentHour > 22) {
       return new Response(
@@ -127,7 +133,12 @@ Deno.serve(async (req) => {
     const settings = (settingsRows ?? []) as NotificationSettings[];
 
     for (const s of settings) {
-      if (s.notify_hour !== currentHour) continue;
+      usersTotal += 1;
+      const notifyHour = Number(s.notify_hour ?? 0);
+      if (!Number.isFinite(notifyHour) || currentHour < notifyHour) {
+        usersSkippedBeforeHour += 1;
+        continue;
+      }
 
       const { data: destinationsRows } = await db
         .from("notification_telegram_destinations")
@@ -135,15 +146,21 @@ Deno.serve(async (req) => {
         .eq("user_id", s.user_id)
         .eq("is_active", true);
       const destinations = destinationsRows ?? [];
-      if (!destinations.length) continue;
+      if (!destinations.length) {
+        usersSkippedNoDestinations += 1;
+        continue;
+      }
 
       const { data: rows } = await db
         .from("conversions")
-        .select("user_id, phone, estado, created_at, valor, purchase_event_id")
+        .select("user_id, phone, estado, created_at, valor, purchase_event_id, test_event_code")
         .eq("user_id", s.user_id)
         .order("created_at", { ascending: false });
-      const conv = (rows ?? []) as ConversionRow[];
-      if (!conv.length) continue;
+      const conv = (rows ?? []).filter((r) => !String(r.test_event_code ?? "").trim()) as ConversionRow[];
+      if (!conv.length) {
+        usersSkippedNoConversions += 1;
+        continue;
+      }
 
       const byPhone = new Map<string, ConversionRow[]>();
       for (const r of conv) {
@@ -198,7 +215,10 @@ Deno.serve(async (req) => {
         candidates.push({ phone, lastActivity, isLead, avg, total });
       }
 
-      if (!candidates.length) continue;
+      if (!candidates.length) {
+        usersSkippedNoCandidates += 1;
+        continue;
+      }
       sentUsers += 1;
 
       const chunks: typeof candidates[] = [];
@@ -255,7 +275,19 @@ Deno.serve(async (req) => {
       }
     }
 
-    return new Response(JSON.stringify({ ok: true, sentUsers, sentMessages }), {
+    return new Response(JSON.stringify({
+      ok: true,
+      sentUsers,
+      sentMessages,
+      diagnostics: {
+        currentHour,
+        usersTotal,
+        usersSkippedBeforeHour,
+        usersSkippedNoDestinations,
+        usersSkippedNoConversions,
+        usersSkippedNoCandidates,
+      },
+    }), {
       status: 200,
       headers: { ...corsHeaders, "Content-Type": "application/json" },
     });
