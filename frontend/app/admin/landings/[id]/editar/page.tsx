@@ -468,6 +468,29 @@ export default function AdminLandingEditarPage() {
           </section>
         )}
 
+        {landing.landingType === "external" && (
+          <section className="rounded-xl border border-zinc-800 bg-zinc-900/50 p-4">
+            <h3 className="text-sm font-semibold text-zinc-100">
+              Instrucciones para integrar una landing externa
+            </h3>
+            <div className="mt-3 space-y-2">
+              {EXTERNAL_INTEGRATION_STEPS.map((step) => (
+                <div key={step.title} className="rounded-lg border border-zinc-800 bg-zinc-950/40 px-3 py-2">
+                  <p className="text-xs font-medium text-zinc-200">{step.title}</p>
+                  <p className="mt-1 text-[11px] text-zinc-400">{step.desc}</p>
+                </div>
+              ))}
+            </div>
+            <button
+              type="button"
+              onClick={handleDownloadExternalGuide}
+              className="mt-4 inline-flex items-center rounded-lg border border-zinc-700 px-3 py-2 text-xs font-medium text-zinc-200 transition hover:bg-zinc-800"
+            >
+              Descargar indicaciones
+            </button>
+          </section>
+        )}
+
         <section className="rounded-xl border border-zinc-800 bg-zinc-900/50 p-4">
           <h3 className="mb-4 text-sm font-semibold text-zinc-200">Tracking</h3>
           <div className="space-y-3">
@@ -1017,51 +1040,6 @@ export default function AdminLandingEditarPage() {
           La vista previa es aproximada. Para una vista certera, abrí el enlace de la landing.
         </p>
       </div>}
-      {landing.landingType === "external" && <>
-        <section className="mt-8 rounded-xl border border-zinc-800 bg-zinc-900/50 p-4 lg:hidden">
-          <h3 className="text-sm font-semibold text-zinc-100">
-            Instrucciones para integrar una landing externa
-          </h3>
-          <div className="mt-3 space-y-2">
-            {EXTERNAL_INTEGRATION_STEPS.map((step) => (
-              <div key={step.title} className="rounded-lg border border-zinc-800 bg-zinc-950/40 px-3 py-2">
-                <p className="text-xs font-medium text-zinc-200">{step.title}</p>
-                <p className="mt-1 text-[11px] text-zinc-400">{step.desc}</p>
-              </div>
-            ))}
-          </div>
-          <button
-            type="button"
-            onClick={handleDownloadExternalGuide}
-            className="mt-4 inline-flex items-center rounded-lg border border-zinc-700 px-3 py-2 text-xs font-medium text-zinc-200 transition hover:bg-zinc-800"
-          >
-            Descargar indicaciones
-          </button>
-        </section>
-
-        <aside className="pointer-events-none fixed right-6 top-16 z-20 hidden w-[360px] max-w-[40vw] lg:block">
-          <div className="pointer-events-auto rounded-xl border border-zinc-800 bg-zinc-900/70 p-4">
-            <h3 className="text-sm font-semibold text-zinc-100">
-              Instrucciones para integrar una landing externa
-            </h3>
-            <div className="mt-3 space-y-2">
-              {EXTERNAL_INTEGRATION_STEPS.map((step) => (
-                <div key={step.title} className="rounded-lg border border-zinc-800 bg-zinc-950/40 px-3 py-2">
-                  <p className="text-xs font-medium text-zinc-200">{step.title}</p>
-                  <p className="mt-1 text-[11px] text-zinc-400">{step.desc}</p>
-                </div>
-              ))}
-            </div>
-            <button
-              type="button"
-              onClick={handleDownloadExternalGuide}
-              className="mt-4 inline-flex items-center rounded-lg border border-zinc-700 px-3 py-2 text-xs font-medium text-zinc-200 transition hover:bg-zinc-800"
-            >
-              Descargar indicaciones
-            </button>
-          </div>
-        </aside>
-      </>}
     </div>
   );
 }
