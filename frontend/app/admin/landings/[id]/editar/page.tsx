@@ -26,6 +26,57 @@ import {
 import { getSettings } from "@/lib/settingsDb";
 
 const BASE = "/admin/landings";
+const EXTERNAL_INTEGRATION_STEPS: Array<{ title: string; desc: string }> = [
+  { title: "1. Endpoint de conversiones", desc: "Enviar Contact al endpoint /functions/v1/conversions?name=CLIENTE." },
+  { title: "2. Obtener telefono", desc: "Pedir telefono a landing-phone y guardarlo como telefono_asignado para el CTA." },
+  { title: "3. Identificadores", desc: "Generar event_id por click, promo_code unico y external_id persistente." },
+  { title: "4. Payload completo", desc: "Enviar Contact con fbp/fbc, utm, external_id, promo_code y event_source_url." },
+  { title: "5. Redirect WhatsApp", desc: "Redirigir a wa.me usando telefono_asignado sin bloquear la UX." },
+  { title: "6. Deduplicacion", desc: "Aplicar lock anti-rafaga en CTA para evitar eventos duplicados." },
+  { title: "7. Pixel + CAPI", desc: "Si usan Pixel Contact, enviar el mismo event_id para deduplicar en Meta." },
+];
+
+function buildExternalIntegrationGuide(): string {
+  return [
+    "INSTRUCCIONES PARA INTEGRAR UNA LANDING EXTERNA CON EL CONSTRUCTOR",
+    "",
+    "1) Objetivo",
+    "- Obtener un telefono con nuestra utilidad de asignacion.",
+    "- Enviar Contact al endpoint de conversiones al tocar CTA.",
+    "- (Opcional recomendado) Disparar Pixel Contact con el mismo event_id.",
+    "",
+    "2) Obtener telefono asignado",
+    "- Consultar landing-phone antes del CTA.",
+    "- Guardar el resultado en telefono_asignado.",
+    "- Usarlo para la redireccion a WhatsApp y para el payload.",
+    "",
+    "3) Identificadores al cargar",
+    "- external_id persistente por usuario/navegador.",
+    "- promo_code unico por click/contacto.",
+    "- event_id unico por click Contact.",
+    "",
+    "4) Enviar Contact al Constructor",
+    "- POST a: /functions/v1/conversions?name=<cliente>",
+    "- Incluir: event_name, event_id, event_time, external_id, event_source_url,",
+    "  email/phone/fn/ln si existen, ct/st/zip/country si existen,",
+    "  utm_campaign, fbp, fbc, promo_code, telefono_asignado, landing_name,",
+    "  device_type, clientIP, agentuser y test_event_code (opcional).",
+    "",
+    "5) Redireccion a WhatsApp",
+    "- Luego del envio, redirigir con wa.me/<telefono_asignado>?text=...",
+    "",
+    "6) Anti-duplicados recomendados",
+    "- Lock de CTA al primer click.",
+    "- Estado visual Abriendo... y boton deshabilitado.",
+    "- Deduplicacion temporal local (ej. 5 min por external_id + slug).",
+    "",
+    "7) Compatibilidad Pixel + CAPI",
+    "- Si envian Contact por Pixel, usar el mismo event_id en el payload al Constructor.",
+    "- Meta deduplicara Pixel + CAPI correctamente.",
+    "",
+    "Fin de guia.",
+  ].join("\n");
+}
 
 export default function AdminLandingEditarPage() {
   const router = useRouter();
@@ -278,6 +329,19 @@ export default function AdminLandingEditarPage() {
     setLanding((prev) =>
       prev ? { ...prev, config: { ...DEFAULT_CONFIG } } : prev,
     );
+  };
+
+  const handleDownloadExternalGuide = () => {
+    const content = buildExternalIntegrationGuide();
+    const blob = new Blob([content], { type: "text/plain;charset=utf-8" });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement("a");
+    link.href = url;
+    link.download = "instrucciones-landing-externa.txt";
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    URL.revokeObjectURL(url);
   };
 
   if (!ready || !landing) {
@@ -953,6 +1017,51 @@ export default function AdminLandingEditarPage() {
           La vista previa es aproximada. Para una vista certera, abrí el enlace de la landing.
         </p>
       </div>}
+      {landing.landingType === "external" && <>
+        <section className="mt-8 rounded-xl border border-zinc-800 bg-zinc-900/50 p-4 lg:hidden">
+          <h3 className="text-sm font-semibold text-zinc-100">
+            Instrucciones para integrar una landing externa
+          </h3>
+          <div className="mt-3 space-y-2">
+            {EXTERNAL_INTEGRATION_STEPS.map((step) => (
+              <div key={step.title} className="rounded-lg border border-zinc-800 bg-zinc-950/40 px-3 py-2">
+                <p className="text-xs font-medium text-zinc-200">{step.title}</p>
+                <p className="mt-1 text-[11px] text-zinc-400">{step.desc}</p>
+              </div>
+            ))}
+          </div>
+          <button
+            type="button"
+            onClick={handleDownloadExternalGuide}
+            className="mt-4 inline-flex items-center rounded-lg border border-zinc-700 px-3 py-2 text-xs font-medium text-zinc-200 transition hover:bg-zinc-800"
+          >
+            Descargar indicaciones
+          </button>
+        </section>
+
+        <aside className="pointer-events-none fixed right-6 top-16 z-20 hidden w-[360px] max-w-[40vw] lg:block">
+          <div className="pointer-events-auto rounded-xl border border-zinc-800 bg-zinc-900/70 p-4">
+            <h3 className="text-sm font-semibold text-zinc-100">
+              Instrucciones para integrar una landing externa
+            </h3>
+            <div className="mt-3 space-y-2">
+              {EXTERNAL_INTEGRATION_STEPS.map((step) => (
+                <div key={step.title} className="rounded-lg border border-zinc-800 bg-zinc-950/40 px-3 py-2">
+                  <p className="text-xs font-medium text-zinc-200">{step.title}</p>
+                  <p className="mt-1 text-[11px] text-zinc-400">{step.desc}</p>
+                </div>
+              ))}
+            </div>
+            <button
+              type="button"
+              onClick={handleDownloadExternalGuide}
+              className="mt-4 inline-flex items-center rounded-lg border border-zinc-700 px-3 py-2 text-xs font-medium text-zinc-200 transition hover:bg-zinc-800"
+            >
+              Descargar indicaciones
+            </button>
+          </div>
+        </aside>
+      </>}
     </div>
   );
 }
