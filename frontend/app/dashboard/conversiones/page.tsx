@@ -8,6 +8,7 @@ import {
   upsertConversionsConfig,
   fetchPixelConfigs,
   upsertPixelConfig,
+  deletePixelConfig,
   fetchConversionsFiltered,
   fetchFunnelContactsFiltered,
   fetchConversionLogs,
@@ -311,6 +312,7 @@ export default function DashboardConversionesPage() {
   const [configOpen, setConfigOpen] = useState(false);
   const [endpointOpen, setEndpointOpen] = useState(false);
   const [funnelConfigOpen, setFunnelConfigOpen] = useState(false);
+  const [editingPixelId, setEditingPixelId] = useState<string | null>(null);
   const [editPixelId, setEditPixelId] = useState(false);
   const [editAccessToken, setEditAccessToken] = useState(false);
   const [quickPixelOpen, setQuickPixelOpen] = useState(false);
@@ -453,6 +455,8 @@ export default function DashboardConversionesPage() {
         });
         const pixels = await fetchPixelConfigs(userId);
         setPixelConfigs(pixels);
+        const current = pixels.find((p) => p.pixel_id === pixel);
+        if (current) setEditingPixelId(current.id);
       }
       setSaveMsg("Configuracion guardada.");
     } catch (e) {
@@ -497,6 +501,8 @@ export default function DashboardConversionesPage() {
       });
       const pixels = await fetchPixelConfigs(userId);
       setPixelConfigs(pixels);
+      const current = pixels.find((p) => p.pixel_id === pixel);
+      if (current) setEditingPixelId(current.id);
 
       // Backward compatibility: first pixel becomes legacy default config too.
       if (!hasAny) {
@@ -522,6 +528,70 @@ export default function DashboardConversionesPage() {
       setSaving(false);
     }
   };
+
+  const handlePixelEdit = useCallback((px: PixelConfig) => {
+    setConfig((prev) => prev ? {
+      ...prev,
+      pixel_id: px.pixel_id,
+      meta_access_token: px.meta_access_token,
+      meta_currency: px.meta_currency || prev.meta_currency,
+      meta_api_version: px.meta_api_version || prev.meta_api_version,
+    } : prev);
+    setEditingPixelId(px.id);
+    setEditPixelId(false);
+    setEditAccessToken(false);
+  }, []);
+
+  const handlePixelDelete = useCallback(async (px: PixelConfig) => {
+    if (!userId || !config) return;
+    const ok = window.confirm(`Eliminar pixel ${px.pixel_id}?\n\nSe eliminara de la vista y de la base de datos.`);
+    if (!ok) return;
+    setSaving(true);
+    setSaveMsg(null);
+    try {
+      await deletePixelConfig(userId, px.pixel_id);
+      let pixels = await fetchPixelConfigs(userId);
+      if (pixels.length > 0 && !pixels.some((p) => p.is_default)) {
+        const first = pixels[0];
+        await upsertPixelConfig({
+          user_id: userId,
+          pixel_id: first.pixel_id,
+          meta_access_token: first.meta_access_token,
+          meta_currency: first.meta_currency || "ARS",
+          meta_api_version: first.meta_api_version || "v25.0",
+          is_default: true,
+        });
+        pixels = await fetchPixelConfigs(userId);
+      }
+      setPixelConfigs(pixels);
+
+      if (config.pixel_id === px.pixel_id) {
+        const next = pixels[0];
+        if (next) {
+          setConfig((prev) => prev ? {
+            ...prev,
+            pixel_id: next.pixel_id,
+            meta_access_token: next.meta_access_token,
+            meta_currency: next.meta_currency || prev.meta_currency,
+            meta_api_version: next.meta_api_version || prev.meta_api_version,
+          } : prev);
+          setEditingPixelId(next.id);
+        } else {
+          setConfig((prev) => prev ? {
+            ...prev,
+            pixel_id: "",
+            meta_access_token: "",
+          } : prev);
+          setEditingPixelId(null);
+        }
+      }
+      setSaveMsg("Pixel eliminado.");
+    } catch (e) {
+      setSaveMsg(e instanceof Error ? e.message : "Error al eliminar pixel");
+    } finally {
+      setSaving(false);
+    }
+  }, [userId, config]);
 
   const copyToClipboard = useCallback(async (text: string) => {
     await navigator.clipboard.writeText(text);
@@ -828,88 +898,106 @@ export default function DashboardConversionesPage() {
                           ? `${token.slice(0, 8)}...${token.slice(-6)}`
                           : token || "-";
                         return (
-                          <button
+                          <div
                             key={px.id}
-                            type="button"
-                            onClick={() => {
-                              setConfig((prev) => prev ? {
-                                ...prev,
-                                pixel_id: px.pixel_id,
-                                meta_access_token: px.meta_access_token,
-                                meta_currency: px.meta_currency || prev.meta_currency,
-                                meta_api_version: px.meta_api_version || prev.meta_api_version,
-                              } : prev);
-                              setEditPixelId(false);
-                              setEditAccessToken(false);
-                            }}
-                            className="flex w-full cursor-pointer items-center justify-between rounded-lg border border-zinc-800 bg-zinc-900/60 px-3 py-2 text-left transition hover:border-zinc-700 hover:bg-zinc-900"
-                            title="Cargar en el formulario"
+                            className="flex w-full items-center justify-between rounded-lg border border-zinc-800 bg-zinc-900/60 px-3 py-2"
                           >
                             <div className="min-w-0">
                               <p className="font-mono text-xs text-zinc-200">{px.pixel_id}</p>
                               <p className="truncate text-[11px] text-zinc-500">{tokenMasked}</p>
                             </div>
-                            <div className="ml-3 flex items-center gap-2">
-                              <span className="rounded border border-zinc-700 px-1.5 py-0.5 text-[10px] text-zinc-300">{px.meta_currency || "ARS"}</span>
+                            <div className="ml-3 flex items-center justify-end gap-2">
                               {px.is_default && (
                                 <span className="rounded border border-emerald-700/70 bg-emerald-950/40 px-1.5 py-0.5 text-[10px] text-emerald-300">
-                                  default
+                                  Default
                                 </span>
                               )}
+                              <button
+                                type="button"
+                                onClick={() => handlePixelEdit(px)}
+                                className="cursor-pointer rounded-lg border border-zinc-700 px-2 py-1 text-[10px] text-zinc-300 transition hover:bg-zinc-800"
+                              >
+                                Editar
+                              </button>
+                              <button
+                                type="button"
+                                onClick={() => void handlePixelDelete(px)}
+                                className="cursor-pointer rounded-lg border border-red-700/80 px-2 py-1 text-[10px] text-red-300 transition hover:bg-red-950/30"
+                              >
+                                Eliminar
+                              </button>
                             </div>
-                          </button>
+                          </div>
                         );
                       })}
                     </div>
                   )}
                 </div>
-                <div>
-                  <div className="mb-1 flex items-center justify-between gap-2">
-                    <label className="block text-xs font-medium text-zinc-400">Pixel ID</label>
-                    <button
-                      type="button"
-                      onClick={() => setEditPixelId((v) => !v)}
-                      className="cursor-pointer rounded-lg border border-zinc-700 px-2.5 py-1 text-[11px] text-zinc-300 transition hover:bg-zinc-800"
-                    >
-                      {editPixelId ? "Bloquear" : "Editar"}
-                    </button>
-                  </div>
-                  <input
-                    type="text"
-                    disabled={!editPixelId}
-                    value={config?.pixel_id ?? ""}
-                    onChange={(e) => setConfig((p) => p ? { ...p, pixel_id: e.target.value.replace(/\D/g, "") } : p)}
-                    className="w-full rounded-lg border border-zinc-700 bg-zinc-900 px-3 py-2 text-sm text-zinc-100 disabled:cursor-not-allowed disabled:opacity-60"
-                    placeholder="Ej: 880464554785896"
-                  />
-                  <p className="mt-1 text-[11px] text-zinc-500">Se sincronizara automaticamente a todas tus landings al guardar.</p>
-                </div>
-                <div>
-                  <div className="mb-1 flex items-center justify-between gap-2">
-                    <label className="block text-xs font-medium text-zinc-400">Access Token</label>
-                    <button
-                      type="button"
-                      onClick={() => setEditAccessToken((v) => !v)}
-                      className="cursor-pointer rounded-lg border border-zinc-700 px-2.5 py-1 text-[11px] text-zinc-300 transition hover:bg-zinc-800"
-                    >
-                      {editAccessToken ? "Bloquear" : "Editar"}
-                    </button>
-                  </div>
-                  <input
-                    type="text"
-                    disabled={!editAccessToken}
-                    value={config?.meta_access_token ?? ""}
-                    onChange={(e) => setConfig((p) => p ? { ...p, meta_access_token: e.target.value } : p)}
-                    className="w-full rounded-lg border border-zinc-700 bg-zinc-900 px-3 py-2 text-sm text-zinc-100 disabled:cursor-not-allowed disabled:opacity-60"
-                    placeholder="Token de Meta Conversions API"
-                  />
-                </div>
-                <div>
-                  <label className="block text-xs font-medium text-zinc-400 mb-1">Moneda</label>
-                  <select value={config?.meta_currency ?? "ARS"} onChange={(e) => setConfig((p) => p ? { ...p, meta_currency: e.target.value } : p)} className="w-full rounded-lg border border-zinc-700 bg-zinc-900 px-2 py-2 text-sm text-zinc-100">
-                    {["ARS","USD","EUR","BRL","CLP","MXN","COP"].map((c) => <option key={c} value={c}>{c}</option>)}
-                  </select>
-                </div>
+                {editingPixelId ? (
+                  <>
+                    <div className="flex items-center justify-between">
+                      <p className="text-xs text-zinc-400">Editando configuracion del pixel seleccionado.</p>
+                      <button
+                        type="button"
+                        onClick={() => setEditingPixelId(null)}
+                        className="cursor-pointer rounded-lg border border-zinc-700 px-2.5 py-1 text-[11px] text-zinc-300 transition hover:bg-zinc-800"
+                      >
+                        Cerrar
+                      </button>
+                    </div>
+                    <div>
+                      <div className="mb-1 flex items-center justify-between gap-2">
+                        <label className="block text-xs font-medium text-zinc-400">Pixel ID</label>
+                        <button
+                          type="button"
+                          onClick={() => setEditPixelId((v) => !v)}
+                          className="cursor-pointer rounded-lg border border-zinc-700 px-2.5 py-1 text-[11px] text-zinc-300 transition hover:bg-zinc-800"
+                        >
+                          {editPixelId ? "Bloquear" : "Editar"}
+                        </button>
+                      </div>
+                      <input
+                        type="text"
+                        disabled={!editPixelId}
+                        value={config?.pixel_id ?? ""}
+                        onChange={(e) => setConfig((p) => p ? { ...p, pixel_id: e.target.value.replace(/\D/g, "") } : p)}
+                        className="w-full rounded-lg border border-zinc-700 bg-zinc-900 px-3 py-2 text-sm text-zinc-100 disabled:cursor-not-allowed disabled:opacity-60"
+                        placeholder="Ej: 880464554785896"
+                      />
+                      <p className="mt-1 text-[11px] text-zinc-500">Se sincronizara automaticamente a todas tus landings al guardar.</p>
+                    </div>
+                    <div>
+                      <div className="mb-1 flex items-center justify-between gap-2">
+                        <label className="block text-xs font-medium text-zinc-400">Access Token</label>
+                        <button
+                          type="button"
+                          onClick={() => setEditAccessToken((v) => !v)}
+                          className="cursor-pointer rounded-lg border border-zinc-700 px-2.5 py-1 text-[11px] text-zinc-300 transition hover:bg-zinc-800"
+                        >
+                          {editAccessToken ? "Bloquear" : "Editar"}
+                        </button>
+                      </div>
+                      <input
+                        type="text"
+                        disabled={!editAccessToken}
+                        value={config?.meta_access_token ?? ""}
+                        onChange={(e) => setConfig((p) => p ? { ...p, meta_access_token: e.target.value } : p)}
+                        className="w-full rounded-lg border border-zinc-700 bg-zinc-900 px-3 py-2 text-sm text-zinc-100 disabled:cursor-not-allowed disabled:opacity-60"
+                        placeholder="Token de Meta Conversions API"
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-xs font-medium text-zinc-400 mb-1">Moneda</label>
+                      <select value={config?.meta_currency ?? "ARS"} onChange={(e) => setConfig((p) => p ? { ...p, meta_currency: e.target.value } : p)} className="w-full rounded-lg border border-zinc-700 bg-zinc-900 px-2 py-2 text-sm text-zinc-100">
+                        {["ARS","USD","EUR","BRL","CLP","MXN","COP"].map((c) => <option key={c} value={c}>{c}</option>)}
+                      </select>
+                    </div>
+                  </>
+                ) : (
+                  <p className="rounded-lg border border-zinc-800 bg-zinc-900/40 px-3 py-2 text-[11px] text-zinc-500">
+                    Selecciona <span className="text-zinc-300">Editar</span> en un pixel para ver y modificar su configuracion.
+                  </p>
+                )}
                 <div className="space-y-3 border-t border-zinc-800 pt-4">
                   <label className="group flex items-center gap-3 rounded-lg border border-zinc-800 bg-zinc-900/70 px-3 py-2 transition hover:border-zinc-700">
                     <input

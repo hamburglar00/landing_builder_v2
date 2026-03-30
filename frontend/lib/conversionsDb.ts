@@ -250,6 +250,19 @@ export async function upsertPixelConfig(input: {
   if (error) throw error;
 }
 
+export async function deletePixelConfig(
+  userId: string,
+  pixelId: string,
+): Promise<void> {
+  const normalizedPixel = normalizePixelId(pixelId);
+  const { error } = await supabase
+    .from("conversions_pixel_configs")
+    .delete()
+    .eq("user_id", userId)
+    .eq("pixel_id", normalizedPixel);
+  if (error) throw error;
+}
+
 export async function updateAllVisibleColumns(
   columns: string[] | null,
 ): Promise<void> {

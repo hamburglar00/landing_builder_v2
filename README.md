@@ -104,6 +104,7 @@ Funciones clave en `supabase/functions/`:
 Tablas principales:
 - `conversions`: eventos/filas de conversion por cliente.
 - `conversions_config`: config por cliente (Meta, columnas visibles, logs, umbrales).
+- `conversions_pixel_configs`: configuraciones Meta CAPI por pixel (multi-pixel por cliente).
 - `conversion_logs`: log tecnico y respuesta Meta.
 - `conversion_inbox`: dedupe de `action_event_id` y trazabilidad de eventos entrantes.
 - `notification_settings`: reglas de notificacion.
@@ -159,11 +160,50 @@ sequenceDiagram
 - Si llega `action_event_id` y ya fue procesado:
   - se ignora el duplicado,
   - se responde sin reprocesar,
-  - queda trazabilidad en inbox/log.
+- queda trazabilidad en inbox/log.
 
 ---
 
-## 7. Envio a Meta CAPI (compatibilidad y buenas practicas)
+## 7. Multi-pixel (implementacion actual)
+
+### 7.1 Objetivo
+Permitir que **un mismo cliente** tenga **uno o mas pixeles Meta** y que cada evento CAPI salga por el pixel correcto segun la conversion.
+
+### 7.2 Tabla de configuracion
+- `public.conversions_pixel_configs`
+  - `user_id`
+  - `pixel_id`
+  - `meta_access_token`
+  - `meta_currency`
+  - `meta_api_version`
+  - `is_default`
+
+Reglas:
+- Unicidad por cliente+pixel (`user_id`, `pixel_id`).
+- Un unico pixel `default` por cliente.
+- Backfill automatico desde `conversions_config` (legacy) al crear la estructura multi-pixel.
+
+### 7.3 Resolucion de pixel/token al enviar CAPI
+Para cada envio (`Contact`, `Lead`, `Purchase`) el backend resuelve asi:
+1. Pixel de la fila de conversion (`conversions.pixel_id`) si existe y esta configurado en `conversions_pixel_configs`.
+2. Si no encuentra match, usa el pixel marcado como `is_default=true`.
+3. Fallback final a `conversions_config` (compatibilidad retroactiva).
+
+Esto se aplica tanto en:
+- `supabase/functions/conversions`
+- `supabase/functions/retry-failed-conversions`
+
+### 7.4 Trazabilidad
+- `conversions.pixel_id` (columna de tabla/UI) permite auditar por que pixel se proceso el evento.
+- `conversion_logs` guarda payload/respuesta Meta para diagnostico por evento.
+
+### 7.5 Compatibilidad
+- No rompe clientes viejos: si solo existe config legacy, sigue funcionando.
+- Si la landing manda `pixel_id` en Contact, ese valor queda atado a la conversion para envios posteriores.
+
+---
+
+## 8. Envio a Meta CAPI (compatibilidad y buenas practicas)
 
 La logica actual:
 1. Recibe payload.
@@ -183,7 +223,7 @@ Notas:
 
 ---
 
-## 8. Dashboard de Conversiones
+## 9. Dashboard de Conversiones
 
 Tabs principales:
 - `Funnel`
@@ -192,23 +232,23 @@ Tabs principales:
 - `Configuracion`
 - `Logs` (si habilitado)
 
-### 8.1 Tabla
+### 9.1 Tabla
 - Muestra filas de `conversions`.
 - Soporta columnas configurables por cliente/admin.
 - Incluye payloads raw (`contact/lead/purchase`) para trazabilidad.
 
-### 8.2 Logs
+### 9.2 Logs
 - Muestra entradas de `conversion_logs`.
 - Incluye payload enviado a Meta y respuesta recibida (cuando aplica).
 
-### 8.3 Estadisticas
+### 9.3 Estadisticas
 - Filtro de fecha.
 - Filtro por landing (visualizacion, no altera datos).
 - Excluye filas de prueba (`test_event_code`) donde corresponda.
 
 ---
 
-## 9. Seguimiento
+## 10. Seguimiento
 
 Vista operativa para contacto de jugadores:
 - Ranking configurable por reglas (indicador por total cargado).
@@ -219,7 +259,7 @@ Vista operativa para contacto de jugadores:
 
 ---
 
-## 10. Notificaciones Telegram
+## 11. Notificaciones Telegram
 
 Componentes:
 - Configuracion de canal y reglas de envio.
@@ -246,7 +286,7 @@ flowchart TD
 
 ---
 
-## 11. Landings internas y externas
+## 12. Landings internas y externas
 
 Tipos:
 - `interna`: renderizada/gestionada completamente por el constructor.
@@ -259,7 +299,7 @@ Para landing externa:
 
 ---
 
-## 12. Operacion, cron y retries
+## 13. Operacion, cron y retries
 
 Automatizaciones principales:
 - `retry-failed-conversions`: reintenta envios CAPI fallidos.
@@ -273,7 +313,7 @@ Recomendacion:
 
 ---
 
-## 13. Setup local
+## 14. Setup local
 
 ### 13.1 Frontend
 ```bash
@@ -291,11 +331,12 @@ npm run dev
 supabase --version
 supabase db push
 supabase functions deploy conversions
+supabase functions deploy retry-failed-conversions
 ```
 
 ---
 
-## 14. Deploy
+## 15. Deploy
 
 - Frontend: Vercel (`main`).
 - Backend: Supabase Edge Functions.
@@ -310,7 +351,7 @@ Checklist de release:
 
 ---
 
-## 15. Calidad y seguridad de texto (anti-mojibake)
+## 16. Calidad y seguridad de texto (anti-mojibake)
 
 Incluye:
 - `.editorconfig` (`charset=utf-8`)
@@ -330,11 +371,12 @@ sh scripts/install-git-hooks.sh
 
 ---
 
-## 16. Troubleshooting rapido
+## 17. Troubleshooting rapido
 
 - **No llega evento a Meta**:
   - revisar `conversion_logs` (`payload_meta`, `response_meta`)
-  - validar token/pixel/api version en `conversions_config`
+  - validar configuracion en `conversions_pixel_configs` (y fallback legacy `conversions_config`)
+  - validar que `conversions.pixel_id` tenga match con un pixel configurado
   - revisar status HTTP en logs
 
 - **No llegan notificaciones Telegram**:
@@ -348,7 +390,7 @@ sh scripts/install-git-hooks.sh
 
 ---
 
-## 17. Documentacion complementaria
+## 18. Documentacion complementaria
 
 - [frontend/README.md](frontend/README.md)
 - [CRON-SETUP.md](CRON-SETUP.md)
@@ -357,10 +399,11 @@ sh scripts/install-git-hooks.sh
 
 ---
 
-## 18. Estado actual
+## 19. Estado actual
 
 El proyecto esta preparado para:
 - Operacion multi-cliente.
+- Operacion multi-pixel por cliente, con seleccion de pixel por evento.
 - Trazabilidad completa de conversiones.
 - Robustez de ingestion + retries + logs.
 - Envio Meta CAPI con normalizacion consistente.
