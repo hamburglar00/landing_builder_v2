@@ -1,45 +1,76 @@
-﻿# Landing Builder
+﻿# Landing Builder v2
 
-Constructor de landings multi-tenant (admin + clientes) con Next.js y Supabase.
+Constructor multi-tenant de landings y conversiones (admin + clientes), con Next.js + Supabase.
+
+## Estado actual (resumen)
+
+- Paneles separados para `CONVERSIONES`, `SEGUIMIENTO` y `NOTIFICACIONES`.
+- Soporte de landings `internas` y `externas (conectadas)`.
+- Flujo de conversiones por endpoint:
+  - `Contact` desde landing.
+  - `LEAD` / `PURCHASE` por JSON de backend externo.
+- Logs de conversiones en DB (`conversion_logs`) visibles en UI.
+- Notificaciones de inactividad por Telegram con webhook y destinos multiples por cliente.
+- Filtros de fecha y filtro por `landing` en Estadisticas (solo visualizacion).
+- Guard anti-mojibake activo (hooks + CI).
+
+## Estructura principal
+
+- `frontend/`: aplicacion Next.js (UI admin/cliente).
+- `supabase/functions/`: Edge Functions (conversions, notify-inactive-contacts, telegram-webhook, etc.).
+- `supabase/migrations/`: esquema y evolucion de base de datos.
+- `scripts/`: utilidades locales (encoding check, instalacion de hooks).
 
 ## Documentacion
 
-- **Tecnica (arquitectura, flujos, APIs):** [frontend/README.md](frontend/README.md)  
-  Tambien visible en **Admin -> Documentacion** cuando el proyecto se ejecuta desde `frontend/`.
-
-- **Cron de telefonos (sync cada 5 min):** [CRON-SETUP.md](CRON-SETUP.md)
-
-- **Migraciones y cron warm:** [supabase/migrations/README.md](supabase/migrations/README.md)
+- Tecnica de frontend, arquitectura y despliegue:
+  - [frontend/README.md](frontend/README.md)
+- Cron y consideraciones operativas:
+  - [CRON-SETUP.md](CRON-SETUP.md)
+- Migraciones:
+  - [supabase/migrations/README.md](supabase/migrations/README.md)
 
 ## Arranque rapido
 
 ```bash
-cd frontend && npm install && npm run dev
+cd frontend
+npm install
+npm run dev
 ```
 
-Variables de entorno en `frontend/.env.local`: `NEXT_PUBLIC_SUPABASE_URL`, `NEXT_PUBLIC_SUPABASE_ANON_KEY`.
+Variables minimas en `frontend/.env.local`:
 
-Edge Functions: ver lista de deploy en [frontend/README.md](frontend/README.md#despliegue-y-entorno).
+- `NEXT_PUBLIC_SUPABASE_URL`
+- `NEXT_PUBLIC_SUPABASE_ANON_KEY`
+
+## Deploy y operaciones
+
+- Frontend: Vercel (branch `main`).
+- Edge Functions: Supabase CLI (`supabase functions deploy ...`).
+- Cron jobs: `pg_cron` + `pg_net` en Supabase.
+
+Para funciones y entorno exacto, ver:
+[frontend/README.md#despliegue-y-entorno](frontend/README.md#despliegue-y-entorno)
 
 ## Guard de encoding (anti-mojibake)
 
-Este repo incluye:
+Incluye:
 
-- `.editorconfig` con `charset = utf-8`
-- `.gitattributes` con `text=auto eol=lf`
-- script `scripts/check-encoding.js`
+- `.editorconfig` (`charset = utf-8`)
+- `.gitattributes` (`text=auto eol=lf`)
+- `scripts/check-encoding.js`
 - workflow CI `encoding-check.yml`
 
-Para activar el bloqueo local antes de cada commit:
+Activar hooks locales:
 
 ```bash
 powershell -ExecutionPolicy Bypass -File scripts/install-git-hooks.ps1
 ```
 
-o en Linux/macOS:
+Linux/macOS:
 
 ```bash
 sh scripts/install-git-hooks.sh
 ```
 
-Esto configura `core.hooksPath=.githooks` y ejecuta `check-encoding --changed` en cada commit.
+Esto configura `core.hooksPath=.githooks` y ejecuta `check-encoding --changed` antes de cada commit.
