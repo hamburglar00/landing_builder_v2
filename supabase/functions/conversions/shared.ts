@@ -78,7 +78,10 @@ function nowMetaTs(): string {
 function normalizeFbp(raw: unknown): string {
   const value = normalizeMetaParamValue(raw);
   if (!value) return "";
-  if (/^fb\.1\.\d+\.[A-Za-z0-9_-]+$/.test(value)) return value;
+  // Accept legacy and extended variants:
+  // - fb.1.<creation_time>.<random_number>
+  // - fb.1.<creation_time>.<random_number>.<appendix>
+  if (/^fb\.1\.\d+\.[A-Za-z0-9_-]+(?:\.[A-Za-z0-9_-]+)?$/.test(value)) return value;
 
   // If only the last token/random piece arrives, wrap it into a valid fbp shape.
   if (/^[A-Za-z0-9_-]{6,}$/.test(value)) {
@@ -92,7 +95,10 @@ function normalizeFbp(raw: unknown): string {
 function normalizeFbc(raw: unknown): string {
   const value = normalizeMetaParamValue(raw);
   if (!value) return "";
-  if (/^fb\.1\.\d+\.[A-Za-z0-9_-]+$/.test(value)) return value;
+  // Accept legacy and extended variants:
+  // - fb.1.<creation_time>.<fbclid>
+  // - fb.1.<creation_time>.<fbclid>.<appendix>
+  if (/^fb\.1\.\d+\.[A-Za-z0-9_-]+(?:\.[A-Za-z0-9_-]+)?$/.test(value)) return value;
 
   // If we receive fbclid directly, convert to fbc.
   if (/^[A-Za-z0-9_-]{8,}$/.test(value)) {
