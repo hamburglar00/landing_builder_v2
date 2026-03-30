@@ -29,6 +29,7 @@ const FALLBACK_VISIBLE_COLUMNS = [
   "fbc",
   "contact_event_id",
   "contact_event_time",
+  "contact_payload_raw",
   "lead_event_id",
   "lead_event_time",
   "lead_payload_raw",

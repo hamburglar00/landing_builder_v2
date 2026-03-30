@@ -52,6 +52,7 @@ export interface ConversionRow {
   fbc: string;
   contact_event_id: string;
   contact_event_time: number | null;
+  contact_payload_raw: string;
   lead_event_id: string;
   lead_event_time: number | null;
   lead_payload_raw: string;
@@ -218,7 +219,7 @@ const CONVERSIONS_SELECT = `
   id, internal_id, landing_id, user_id, landing_name,
   phone, email, fn, ln, ct, st, zip, country,
   fbp, fbc,
-  contact_event_id, contact_event_time,
+  contact_event_id, contact_event_time, contact_payload_raw,
   lead_event_id, lead_event_time, lead_payload_raw,
   purchase_event_id, purchase_event_time, purchase_payload_raw,
   test_event_code,

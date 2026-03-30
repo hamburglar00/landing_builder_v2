@@ -29,6 +29,7 @@ export interface ConversionRow {
   fbc: string;
   contact_event_id: string;
   contact_event_time: number | null;
+  contact_payload_raw: string;
   lead_event_id: string;
   lead_event_time: number | null;
   lead_payload_raw: string;
@@ -63,6 +64,42 @@ export interface MetaUserData {
 
 export function sanitizePhone(v: unknown): string {
   return String(v ?? "").replace(/\D/g, "");
+}
+
+function normalizeMetaParamValue(v: unknown): string {
+  return String(v ?? "").trim();
+}
+
+function nowMetaTs(): string {
+  return String(Math.floor(Date.now() / 1000));
+}
+
+// Meta _fbp expected: fb.1.<timestamp>.<random>
+function normalizeFbp(raw: unknown): string {
+  const value = normalizeMetaParamValue(raw);
+  if (!value) return "";
+  if (/^fb\.1\.\d+\.[A-Za-z0-9_-]+$/.test(value)) return value;
+
+  // If only the last token/random piece arrives, wrap it into a valid fbp shape.
+  if (/^[A-Za-z0-9_-]{6,}$/.test(value)) {
+    return `fb.1.${nowMetaTs()}.${value}`;
+  }
+
+  return "";
+}
+
+// Meta _fbc expected: fb.1.<timestamp>.<fbclid>
+function normalizeFbc(raw: unknown): string {
+  const value = normalizeMetaParamValue(raw);
+  if (!value) return "";
+  if (/^fb\.1\.\d+\.[A-Za-z0-9_-]+$/.test(value)) return value;
+
+  // If we receive fbclid directly, convert to fbc.
+  if (/^[A-Za-z0-9_-]{8,}$/.test(value)) {
+    return `fb.1.${nowMetaTs()}.${value}`;
+  }
+
+  return "";
 }
 
 export function sanitizeIp(v: unknown): string {
@@ -105,6 +142,29 @@ function normalizeBase(value: string): string {
     .replace(/[\u0300-\u036f]/g, "")
     .toLowerCase()
     .trim();
+}
+
+function normalizeEmail(value: string): string {
+  return normalizeBase(value).replace(/\s+/g, "");
+}
+
+function normalizePhoneForMeta(value: string): string {
+  let phone = String(value ?? "").trim().replace(/[^\d]/g, "");
+  if (!phone) return "";
+  // Common cleanup for intl prefix typed as 00...
+  if (phone.startsWith("00")) phone = phone.slice(2);
+  return phone;
+}
+
+function normalizeName(value: string): string {
+  // Meta recommends lowercase and removing punctuation/symbols.
+  return normalizeBase(value)
+    .replace(/[^\p{L}\s]/gu, "")
+    .replace(/\s+/g, "");
+}
+
+function normalizeExternalId(value: string): string {
+  return normalizeBase(value).replace(/\s+/g, "");
 }
 
 function normalizeCity(value: string): string {
@@ -211,11 +271,11 @@ export async function buildUserData(row: ConversionRow): Promise<MetaUserData> {
   const normalizedState = normalizeState(row.st, row.country);
   const normalizedCity = normalizeCity(row.ct);
   const normalizedZip = normalizePostalCode(row.zip);
-  const email = String(row.email ?? "").trim();
-  const phone = sanitizePhone(row.phone);
-  const firstName = String(row.fn ?? "").trim();
-  const lastName = String(row.ln ?? "").trim();
-  const externalId = String(row.external_id ?? "").trim();
+  const email = normalizeEmail(String(row.email ?? ""));
+  const phone = normalizePhoneForMeta(String(row.phone ?? ""));
+  const firstName = normalizeName(String(row.fn ?? ""));
+  const lastName = normalizeName(String(row.ln ?? ""));
+  const externalId = normalizeExternalId(String(row.external_id ?? ""));
 
   if (email) ud.em = await sha256(email);
   if (phone) ud.ph = await sha256(phone);
@@ -225,8 +285,10 @@ export async function buildUserData(row: ConversionRow): Promise<MetaUserData> {
   if (normalizedState) ud.st = await sha256(normalizedState);
   if (normalizedZip) ud.zp = await sha256(normalizedZip);
   if (normalizedCountry) ud.country = await sha256(normalizedCountry);
-  if (row.fbp) ud.fbp = row.fbp;
-  if (row.fbc) ud.fbc = row.fbc;
+  const normalizedFbp = normalizeFbp(row.fbp);
+  const normalizedFbc = normalizeFbc(row.fbc);
+  if (normalizedFbp) ud.fbp = normalizedFbp;
+  if (normalizedFbc) ud.fbc = normalizedFbc;
   if (row.client_ip) Object.assign(ud, normalizeIpToMeta(row.client_ip));
   if (row.agent_user) ud.client_user_agent = row.agent_user;
   if (externalId) ud.external_id = await sha256(externalId);
@@ -313,6 +375,7 @@ export function buildFakeConversionRow(event: MetaEventName): ConversionRow {
     fbc: "fb.1.1699999999.AbCdEfGhIj",
     contact_event_id: "",
     contact_event_time: null,
+    contact_payload_raw: "",
     lead_event_id: "",
     lead_event_time: null,
     lead_payload_raw: "",

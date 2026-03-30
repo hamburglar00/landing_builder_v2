@@ -50,6 +50,7 @@ interface ConversionRow {
   fbc: string;
   contact_event_id: string;
   contact_event_time: number | null;
+  contact_payload_raw: string;
   lead_event_id: string;
   lead_event_time: number | null;
   lead_payload_raw: string;
@@ -586,6 +587,7 @@ async function handleContact(
     fbc: norm(p.fbc),
     contact_event_id: contactEventId,
     contact_event_time: contactEventTime,
+    contact_payload_raw: safePayloadRaw(p),
     lead_event_id: "",
     lead_event_time: null,
     lead_payload_raw: "",
@@ -828,8 +830,10 @@ async function handlePurchase(
         fbc: "",
         contact_event_id: "",
         contact_event_time: null,
+        contact_payload_raw: "",
         lead_event_id: "",
         lead_event_time: null,
+        lead_payload_raw: "",
         purchase_event_id: purchaseEventId,
         purchase_event_time: purchaseEventTime,
         purchase_payload_raw: purchasePayloadRaw,
@@ -941,6 +945,7 @@ async function handlePurchase(
     // DO NOT inherit event IDs
     contact_event_id: "",
     contact_event_time: null,
+    contact_payload_raw: "",
     lead_event_id: "",
     lead_event_time: null,
     lead_payload_raw: "",
@@ -1030,6 +1035,7 @@ async function handleSimplePurchase(
     fbc: srcRow?.fbc ?? "",
     contact_event_id: "",
     contact_event_time: null,
+    contact_payload_raw: "",
     lead_event_id: "",
     lead_event_time: null,
     lead_payload_raw: "",

@@ -91,6 +91,7 @@ export function generateDemoConversions(count = 80): ConversionRow[] {
       fbc: Math.random() > 0.7 ? `fb.1.${Date.now()}.${uuid()}` : "",
       contact_event_id: contactEvId,
       contact_event_time: ts,
+      contact_payload_raw: "",
       lead_event_id: leadEvId,
       lead_event_time: leadEvId ? ts + 3600 : null,
       lead_payload_raw: "",

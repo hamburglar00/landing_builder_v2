@@ -166,7 +166,7 @@ function formatIntegerWithThousands(value: number) {
 
 const ALL_COLUMNS = [
   "phone","email","fn","ln","ct","st","zip","country","fbp","fbc",
-  "contact_event_id","contact_event_time","lead_event_id","lead_event_time","lead_payload_raw",
+  "contact_event_id","contact_event_time","contact_payload_raw","lead_event_id","lead_event_time","lead_payload_raw",
   "purchase_event_id","purchase_event_time","purchase_payload_raw","timestamp","clientIP","agentuser",
   "estado","valor","purchase_type","contact_status_capi","lead_status_capi","purchase_status_capi",
   "observaciones","external_id","test_event_code","utm_campaign","telefono_asignado","promo_code",
@@ -239,6 +239,7 @@ function cellValue(c: ConversionRow, col: ColKey): React.ReactNode {
     case "fbc": return <td key={col} className={dimMono} title={tip(c.fbc)}>{c.fbc ? truncateId(c.fbc, 12) : "-"}</td>;
     case "contact_event_id": return <td key={col} className={dimMono} title={c.contact_event_id}>{truncateId(c.contact_event_id)}</td>;
     case "contact_event_time": return <td key={col} className={dim} title={tip(c.contact_event_time)}>{c.contact_event_time ?? "-"}</td>;
+    case "contact_payload_raw": return <td key={col} className={`${dim} max-w-[220px] truncate`} title={tipRawJson(c.contact_payload_raw)}>{truncateText(c.contact_payload_raw || "-", 35)}</td>;
     case "lead_event_id": return <td key={col} className={dimMono} title={c.lead_event_id}>{truncateId(c.lead_event_id)}</td>;
     case "lead_event_time": return <td key={col} className={dim} title={tip(c.lead_event_time)}>{c.lead_event_time ?? "-"}</td>;
     case "lead_payload_raw": return <td key={col} className={`${dim} max-w-[220px] truncate`} title={tipRawJson(c.lead_payload_raw)}>{truncateText(c.lead_payload_raw || "-", 35)}</td>;
