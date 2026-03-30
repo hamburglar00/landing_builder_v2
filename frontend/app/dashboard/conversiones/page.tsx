@@ -287,6 +287,7 @@ export default function DashboardConversionesPage() {
   const [copiedUrl, setCopiedUrl] = useState<string | null>(null);
   const [expandedLog, setExpandedLog] = useState<number | null>(null);
   const [tableSearch, setTableSearch] = useState("");
+  const [statsLandingFilter, setStatsLandingFilter] = useState<string>("__all__");
 
   const [dateRange, setDateRange] = useState<DateRange | null>(null);
   const [refreshingTable, setRefreshingTable] = useState(false);
@@ -318,6 +319,31 @@ export default function DashboardConversionesPage() {
     () => conversions.filter((r) => !String(r.test_event_code ?? "").trim()),
     [conversions],
   );
+  const statsLandingOptions = useMemo(() => {
+    const set = new Set<string>();
+    for (const r of statsAllConversions) {
+      const name = String(r.landing_name ?? "").trim();
+      if (name) set.add(name);
+    }
+    return Array.from(set).sort((a, b) => a.localeCompare(b, "es"));
+  }, [statsAllConversions]);
+  useEffect(() => {
+    if (statsLandingFilter !== "__all__" && !statsLandingOptions.includes(statsLandingFilter)) {
+      setStatsLandingFilter("__all__");
+    }
+  }, [statsLandingFilter, statsLandingOptions]);
+  const statsConversionsFilteredByLanding = useMemo(() => {
+    if (statsLandingFilter === "__all__") return statsConversions;
+    return statsConversions.filter((r) => String(r.landing_name ?? "").trim() === statsLandingFilter);
+  }, [statsConversions, statsLandingFilter]);
+  const statsAllConversionsFilteredByLanding = useMemo(() => {
+    if (statsLandingFilter === "__all__") return statsAllConversions;
+    return statsAllConversions.filter((r) => String(r.landing_name ?? "").trim() === statsLandingFilter);
+  }, [statsAllConversions, statsLandingFilter]);
+  const activeFunnelFilteredByLanding = useMemo(() => {
+    if (statsLandingFilter === "__all__") return activeFunnel;
+    return activeFunnel.filter((r) => String(r.landing_name ?? "").trim() === statsLandingFilter);
+  }, [activeFunnel, statsLandingFilter]);
   const filteredConversions = useMemo(() => {
     const q = tableSearch.trim().toLowerCase();
     if (!q) return activeConversions;
@@ -595,7 +621,20 @@ export default function DashboardConversionesPage() {
 
       {/* Date filter  visible on funnel, seguimiento, tabla, estadisticas */}
       {(tab === "funnel" || tab === "seguimiento" || tab === "tabla" || tab === "estadisticas") && (
-        <div className="flex justify-end pt-1">
+        <div className="flex items-center justify-end gap-2 pt-1">
+          {tab === "estadisticas" && (
+            <select
+              value={statsLandingFilter}
+              onChange={(e) => setStatsLandingFilter(e.target.value)}
+              className="h-8 rounded-lg border border-zinc-700 bg-zinc-900 px-2.5 text-xs text-zinc-100"
+              title="Filtrar estadisticas por landing"
+            >
+              <option value="__all__">Todas las landings</option>
+              {statsLandingOptions.map((name) => (
+                <option key={name} value={name}>{name}</option>
+              ))}
+            </select>
+          )}
           <DateRangeFilter onChange={setDateRange} />
         </div>
       )}
@@ -938,13 +977,13 @@ export default function DashboardConversionesPage() {
               </button>
             </div>
           </div>
-          {activeFunnel.length === 0 && statsConversions.length === 0 ? (
+          {activeFunnelFilteredByLanding.length === 0 && statsConversionsFilteredByLanding.length === 0 ? (
             <p className="py-12 text-center text-sm text-zinc-500">An no hay datos para estadsticas.</p>
           ) : (
             <StatsPanel
-              funnelContacts={activeFunnel}
-              conversions={statsConversions}
-              allConversions={statsAllConversions}
+              funnelContacts={activeFunnelFilteredByLanding}
+              conversions={statsConversionsFilteredByLanding}
+              allConversions={statsAllConversionsFilteredByLanding}
               premiumThreshold={config?.funnel_premium_threshold ?? 50000}
               dateRange={dateRange}
               compactTooltips
