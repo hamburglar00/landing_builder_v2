@@ -29,6 +29,9 @@ export interface PixelConfig {
   meta_access_token: string;
   meta_currency: string;
   meta_api_version: string;
+  send_contact_capi: boolean;
+  geo_use_ipapi: boolean;
+  geo_fill_only_when_missing: boolean;
   is_default: boolean;
   created_at: string;
   updated_at: string;
@@ -230,6 +233,9 @@ export async function upsertPixelConfig(input: {
   meta_access_token: string;
   meta_currency?: string;
   meta_api_version?: string;
+  send_contact_capi?: boolean;
+  geo_use_ipapi?: boolean;
+  geo_fill_only_when_missing?: boolean;
   is_default?: boolean;
 }): Promise<void> {
   const pixelId = normalizePixelId(input.pixel_id);
@@ -242,6 +248,9 @@ export async function upsertPixelConfig(input: {
         meta_access_token: input.meta_access_token,
         meta_currency: input.meta_currency ?? "ARS",
         meta_api_version: input.meta_api_version ?? "v25.0",
+        send_contact_capi: !!input.send_contact_capi,
+        geo_use_ipapi: !!input.geo_use_ipapi,
+        geo_fill_only_when_missing: !!input.geo_fill_only_when_missing,
         is_default: !!input.is_default,
         updated_at: new Date().toISOString(),
       },

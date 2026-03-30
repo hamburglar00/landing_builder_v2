@@ -451,6 +451,9 @@ export default function DashboardConversionesPage() {
           meta_access_token: token,
           meta_currency: currency,
           meta_api_version: config.meta_api_version || "v25.0",
+          send_contact_capi: !!config.send_contact_capi,
+          geo_use_ipapi: !!config.geo_use_ipapi,
+          geo_fill_only_when_missing: !!config.geo_fill_only_when_missing,
           is_default: existing ? existing.is_default : pixelConfigs.length === 0,
         });
         const pixels = await fetchPixelConfigs(userId);
@@ -497,6 +500,9 @@ export default function DashboardConversionesPage() {
         meta_access_token: token,
         meta_currency: currency,
         meta_api_version: config.meta_api_version || "v25.0",
+        send_contact_capi: false,
+        geo_use_ipapi: false,
+        geo_fill_only_when_missing: false,
         is_default: !hasAny,
       });
       const pixels = await fetchPixelConfigs(userId);
@@ -536,6 +542,9 @@ export default function DashboardConversionesPage() {
       meta_access_token: px.meta_access_token,
       meta_currency: px.meta_currency || prev.meta_currency,
       meta_api_version: px.meta_api_version || prev.meta_api_version,
+      send_contact_capi: !!px.send_contact_capi,
+      geo_use_ipapi: !!px.geo_use_ipapi,
+      geo_fill_only_when_missing: !!px.geo_fill_only_when_missing,
     } : prev);
     setEditingPixelId(px.id);
     setEditPixelId(false);
@@ -559,6 +568,9 @@ export default function DashboardConversionesPage() {
           meta_access_token: first.meta_access_token,
           meta_currency: first.meta_currency || "ARS",
           meta_api_version: first.meta_api_version || "v25.0",
+          send_contact_capi: !!first.send_contact_capi,
+          geo_use_ipapi: !!first.geo_use_ipapi,
+          geo_fill_only_when_missing: !!first.geo_fill_only_when_missing,
           is_default: true,
         });
         pixels = await fetchPixelConfigs(userId);
@@ -574,6 +586,9 @@ export default function DashboardConversionesPage() {
             meta_access_token: next.meta_access_token,
             meta_currency: next.meta_currency || prev.meta_currency,
             meta_api_version: next.meta_api_version || prev.meta_api_version,
+            send_contact_capi: !!next.send_contact_capi,
+            geo_use_ipapi: !!next.geo_use_ipapi,
+            geo_fill_only_when_missing: !!next.geo_fill_only_when_missing,
           } : prev);
           setEditingPixelId(next.id);
         } else {
@@ -998,6 +1013,7 @@ export default function DashboardConversionesPage() {
                     Selecciona <span className="text-zinc-300">Editar</span> en un pixel para ver y modificar su configuracion.
                   </p>
                 )}
+                {editingPixelId && (
                 <div className="space-y-3 border-t border-zinc-800 pt-4">
                   <label className="group flex items-center gap-3 rounded-lg border border-zinc-800 bg-zinc-900/70 px-3 py-2 transition hover:border-zinc-700">
                     <input
@@ -1039,6 +1055,7 @@ export default function DashboardConversionesPage() {
                     </p>
                   </div>
                 </div>
+                )}
               </div>
             )}
           </section>

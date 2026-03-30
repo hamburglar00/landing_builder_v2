@@ -33,6 +33,9 @@ interface PixelConfigRow {
   meta_access_token: string;
   meta_currency: string;
   meta_api_version: string;
+  send_contact_capi: boolean;
+  geo_use_ipapi: boolean;
+  geo_fill_only_when_missing: boolean;
   is_default: boolean;
 }
 
@@ -375,6 +378,31 @@ async function ensureGeoOnRow(
   await db.from("conversions").update(finalGeo).eq("id", rowId);
 }
 
+function resolveEffectiveConfigForPixel(
+  baseConfig: ConversionsConfig,
+  pixelConfigs: PixelConfigRow[],
+  preferredPixelId?: string,
+): ConversionsConfig {
+  const preferred = norm(preferredPixelId);
+  const byPixel = preferred
+    ? pixelConfigs.find((pc) => norm(pc.pixel_id) === preferred)
+    : null;
+  const byDefault = pixelConfigs.find((pc) => pc.is_default);
+  const picked = byPixel ?? byDefault ?? null;
+  if (!picked) return baseConfig;
+
+  return {
+    ...baseConfig,
+    pixel_id: norm(picked.pixel_id) || baseConfig.pixel_id,
+    meta_access_token: norm(picked.meta_access_token) || baseConfig.meta_access_token,
+    meta_currency: norm(picked.meta_currency) || baseConfig.meta_currency,
+    meta_api_version: norm(picked.meta_api_version) || baseConfig.meta_api_version,
+    send_contact_capi: Boolean(picked.send_contact_capi),
+    geo_use_ipapi: Boolean(picked.geo_use_ipapi),
+    geo_fill_only_when_missing: Boolean(picked.geo_fill_only_when_missing),
+  };
+}
+
 async function sendToMetaCAPI(
   db: SupabaseClient,
   config: ConversionsConfig,
@@ -387,25 +415,7 @@ async function sendToMetaCAPI(
   customData?: Record<string, unknown>,
   overrideTestEventCode?: string,
 ): Promise<boolean> {
-  const resolveConfigForRow = (): ConversionsConfig => {
-    const targetPixel = norm(row.pixel_id);
-    const byPixel = targetPixel
-      ? pixelConfigs.find((pc) => norm(pc.pixel_id) === targetPixel)
-      : null;
-    const byDefault = pixelConfigs.find((pc) => pc.is_default);
-    const picked = byPixel ?? byDefault ?? null;
-
-    if (!picked) return config;
-    return {
-      ...config,
-      pixel_id: norm(picked.pixel_id),
-      meta_access_token: norm(picked.meta_access_token),
-      meta_currency: norm(picked.meta_currency) || config.meta_currency,
-      meta_api_version: norm(picked.meta_api_version) || config.meta_api_version,
-    };
-  };
-
-  const effectiveConfig = resolveConfigForRow();
+  const effectiveConfig = resolveEffectiveConfigForPixel(config, pixelConfigs, row.pixel_id);
 
   if (!effectiveConfig.meta_access_token || !effectiveConfig.pixel_id) {
     const statusField =
@@ -656,7 +666,8 @@ async function handleContact(
   }
   const rowId = inserted.id;
 
-  await ensureGeoOnRow(db, rowId, row.client_ip, { ct: row.ct, st: row.st, country: row.country, zip: row.zip, geo_city: row.geo_city, geo_region: row.geo_region, geo_country: row.geo_country }, config);
+  const effectiveConfig = resolveEffectiveConfigForPixel(config, pixelConfigs, row.pixel_id);
+  await ensureGeoOnRow(db, rowId, row.client_ip, { ct: row.ct, st: row.st, country: row.country, zip: row.zip, geo_city: row.geo_city, geo_region: row.geo_region, geo_country: row.geo_country }, effectiveConfig);
 
   await writeLog(db, landing.user_id, "handleContact", "INFO", "Nuevo contacto registrado", JSON.stringify({ phone: row.phone, landing: landing.name, contact_event_id: contactEventId }), rowId);
 
@@ -673,12 +684,12 @@ async function handleContact(
     );
   }
 
-  if (config.send_contact_capi) {
+  if (effectiveConfig.send_contact_capi) {
     const { data: fresh } = await db.from("conversions").select("*").eq("id", rowId).single();
     const fullRow = (fresh ?? row) as ConversionRow;
     const ok = await sendToMetaCAPI(
       db,
-      config,
+      effectiveConfig,
       pixelConfigs,
       fullRow,
       rowId,
@@ -781,14 +792,15 @@ async function handleLead(
   const { data: row } = await db.from("conversions").select("*").eq("id", targetId).single();
   if (!row) return textResponse("Error al leer fila LEAD", 500);
 
-  await ensureGeoOnRow(db, targetId!, row.client_ip, { ct: row.ct, st: row.st, country: row.country, zip: row.zip, geo_city: row.geo_city, geo_region: row.geo_region, geo_country: row.geo_country }, config);
+  const effectiveConfig = resolveEffectiveConfigForPixel(config, pixelConfigs, row.pixel_id);
+  await ensureGeoOnRow(db, targetId!, row.client_ip, { ct: row.ct, st: row.st, country: row.country, zip: row.zip, geo_city: row.geo_city, geo_region: row.geo_region, geo_country: row.geo_country }, effectiveConfig);
 
   const { data: fresh } = await db.from("conversions").select("*").eq("id", targetId).single();
   const fullRow = (fresh ?? row) as ConversionRow;
 
   await writeLog(db, landing.user_id, "handleLead", "INFO", "LEAD procesado", JSON.stringify({ phone: cleanPhone, promo_code: promoCode, matched: !!targetId }), targetId!);
 
-  const ok = await sendToMetaCAPI(db, config, pixelConfigs, fullRow, targetId!, "Lead", leadEventId, leadEventTime, undefined, testEventCode || undefined);
+  const ok = await sendToMetaCAPI(db, effectiveConfig, pixelConfigs, fullRow, targetId!, "Lead", leadEventId, leadEventTime, undefined, testEventCode || undefined);
   return textResponse(ok ? "Fila LEAD procesada" : "LEAD procesado. Error al enviar a Meta CAPI (revisar token, pixel o pestana Logs).");
 }
 
@@ -940,15 +952,16 @@ async function handlePurchase(
     // Geo + send
     const { data: row } = await db.from("conversions").select("*").eq("id", targetId).single();
     if (!row) return textResponse("Error al leer fila PURCHASE", 500);
-    await ensureGeoOnRow(db, targetId!, row.client_ip, { ct: row.ct, st: row.st, country: row.country, zip: row.zip, geo_city: row.geo_city, geo_region: row.geo_region, geo_country: row.geo_country }, config);
+    const effectiveConfig = resolveEffectiveConfigForPixel(config, pixelConfigs, row.pixel_id);
+    await ensureGeoOnRow(db, targetId!, row.client_ip, { ct: row.ct, st: row.st, country: row.country, zip: row.zip, geo_city: row.geo_city, geo_region: row.geo_region, geo_country: row.geo_country }, effectiveConfig);
 
     const { data: fresh } = await db.from("conversions").select("*").eq("id", targetId).single();
     const fullRow = (fresh ?? row) as ConversionRow;
-    const customData = { currency: config.meta_currency, value: amount };
+    const customData = { currency: effectiveConfig.meta_currency, value: amount };
 
     await writeLog(db, landing.user_id, "handlePurchase", "INFO", "Primera compra procesada", JSON.stringify({ phone: cleanPhone, amount, promo_code: promoCode }), targetId!);
 
-    const ok = await sendToMetaCAPI(db, config, pixelConfigs, fullRow, targetId!, "Purchase", purchaseEventId, purchaseEventTime, customData, testEventCode || undefined);
+    const ok = await sendToMetaCAPI(db, effectiveConfig, pixelConfigs, fullRow, targetId!, "Purchase", purchaseEventId, purchaseEventTime, customData, testEventCode || undefined);
     return textResponse(ok ? "Primera compra enviada (Purchase)" : "Purchase procesado. Error al enviar a Meta CAPI (revisar token, pixel o Logs).");
   }
 
@@ -1017,15 +1030,16 @@ async function handlePurchase(
   if (error || !ins) return textResponse("Error al crear fila recompra", 500);
   const newId = ins.id;
 
-  await ensureGeoOnRow(db, newId, newRow.client_ip, { ct: newRow.ct, st: newRow.st, country: newRow.country, zip: newRow.zip, geo_city: newRow.geo_city, geo_region: newRow.geo_region, geo_country: newRow.geo_country }, config);
+  const effectiveRepeatConfig = resolveEffectiveConfigForPixel(config, pixelConfigs, newRow.pixel_id);
+  await ensureGeoOnRow(db, newId, newRow.client_ip, { ct: newRow.ct, st: newRow.st, country: newRow.country, zip: newRow.zip, geo_city: newRow.geo_city, geo_region: newRow.geo_region, geo_country: newRow.geo_country }, effectiveRepeatConfig);
 
   const { data: fresh } = await db.from("conversions").select("*").eq("id", newId).single();
   const fullRow = (fresh ?? newRow) as ConversionRow;
-  const customData: Record<string, unknown> = { currency: config.meta_currency, value: amount, purchase_type: "repeat" };
+  const customData: Record<string, unknown> = { currency: effectiveRepeatConfig.meta_currency, value: amount, purchase_type: "repeat" };
 
   await writeLog(db, landing.user_id, "handlePurchase", "INFO", "Recompra procesada", JSON.stringify({ phone: cleanPhone, amount, inherited_from: srcRow?.id }), newId);
 
-  const ok = await sendToMetaCAPI(db, config, pixelConfigs, fullRow, newId, "Purchase", purchaseEventId, purchaseEventTime, customData, testEventCode || undefined);
+  const ok = await sendToMetaCAPI(db, effectiveRepeatConfig, pixelConfigs, fullRow, newId, "Purchase", purchaseEventId, purchaseEventTime, customData, testEventCode || undefined);
   return textResponse(ok ? "Recompra enviada (Purchase_Repeat)" : "Recompra procesada. Error al enviar a Meta CAPI (revisar token, pixel o Logs).");
 }
 
@@ -1108,15 +1122,16 @@ async function handleSimplePurchase(
   if (error || !ins) return textResponse("Error al crear fila purchase simple", 500);
   const newId = ins.id;
 
-  await ensureGeoOnRow(db, newId, newRow.client_ip, { ct: newRow.ct, st: newRow.st, country: newRow.country, zip: newRow.zip, geo_city: newRow.geo_city, geo_region: newRow.geo_region, geo_country: newRow.geo_country }, config);
+  const effectiveSimpleConfig = resolveEffectiveConfigForPixel(config, pixelConfigs, newRow.pixel_id);
+  await ensureGeoOnRow(db, newId, newRow.client_ip, { ct: newRow.ct, st: newRow.st, country: newRow.country, zip: newRow.zip, geo_city: newRow.geo_city, geo_region: newRow.geo_region, geo_country: newRow.geo_country }, effectiveSimpleConfig);
 
   const { data: fresh } = await db.from("conversions").select("*").eq("id", newId).single();
   const fullRow = (fresh ?? newRow) as ConversionRow;
-  const customData = { currency: config.meta_currency, value: amount };
+  const customData = { currency: effectiveSimpleConfig.meta_currency, value: amount };
 
   await writeLog(db, landing.user_id, "handleSimplePurchase", "INFO", "Purchase simple procesado", JSON.stringify({ phone: cleanPhone, amount, inherited_from: srcRow?.id }), newId);
 
-  const ok = await sendToMetaCAPI(db, config, pixelConfigs, fullRow, newId, "Purchase", purchaseEventId, purchaseEventTime, customData, testEventCode || undefined);
+  const ok = await sendToMetaCAPI(db, effectiveSimpleConfig, pixelConfigs, fullRow, newId, "Purchase", purchaseEventId, purchaseEventTime, customData, testEventCode || undefined);
   return textResponse(ok ? "Evento Purchase enviado" : "Purchase procesado. Error al enviar a Meta CAPI (revisar token, pixel o Logs).");
 }
 
@@ -1173,7 +1188,7 @@ Deno.serve(async (req) => {
 
     const { data: pixelConfigsData } = await db
       .from("conversions_pixel_configs")
-      .select("user_id, pixel_id, meta_access_token, meta_currency, meta_api_version, is_default")
+      .select("user_id, pixel_id, meta_access_token, meta_currency, meta_api_version, send_contact_capi, geo_use_ipapi, geo_fill_only_when_missing, is_default")
       .eq("user_id", userId);
     const pixelConfigs: PixelConfigRow[] = (pixelConfigsData ?? []) as PixelConfigRow[];
 
