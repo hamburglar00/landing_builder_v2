@@ -89,6 +89,7 @@ export function generateDemoConversions(count = 80): ConversionRow[] {
       country: rand(COUNTRIES),
       fbp: Math.random() > 0.3 ? `fb.1.${Date.now()}.${Math.floor(Math.random() * 1e9)}` : "",
       fbc: Math.random() > 0.7 ? `fb.1.${Date.now()}.${uuid()}` : "",
+      pixel_id: "",
       contact_event_id: contactEvId,
       contact_event_time: ts,
       contact_payload_raw: "",

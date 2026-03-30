@@ -48,6 +48,7 @@ interface ConversionRow {
   country: string;
   fbp: string;
   fbc: string;
+  pixel_id: string;
   contact_event_id: string;
   contact_event_time: number | null;
   contact_payload_raw: string;
@@ -585,6 +586,7 @@ async function handleContact(
     country: norm(geo.country),
     fbp: norm(p.fbp),
     fbc: norm(p.fbc),
+    pixel_id: norm(p.pixel_id),
     contact_event_id: contactEventId,
     contact_event_time: contactEventTime,
     contact_payload_raw: safePayloadRaw(p),
@@ -828,6 +830,7 @@ async function handlePurchase(
         country: geo.country,
         fbp: "",
         fbc: "",
+        pixel_id: norm(p.pixel_id),
         contact_event_id: "",
         contact_event_time: null,
         contact_payload_raw: "",
@@ -942,6 +945,7 @@ async function handlePurchase(
     country: srcRow?.country ?? "",
     fbp: srcRow?.fbp ?? "",
     fbc: srcRow?.fbc ?? "",
+    pixel_id: srcRow?.pixel_id ?? norm(p.pixel_id),
     // DO NOT inherit event IDs
     contact_event_id: "",
     contact_event_time: null,
@@ -1033,6 +1037,7 @@ async function handleSimplePurchase(
     country: srcRow?.country ?? "",
     fbp: srcRow?.fbp ?? "",
     fbc: srcRow?.fbc ?? "",
+    pixel_id: srcRow?.pixel_id ?? norm(p.pixel_id),
     contact_event_id: "",
     contact_event_time: null,
     contact_payload_raw: "",

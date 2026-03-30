@@ -27,6 +27,7 @@ const FALLBACK_VISIBLE_COLUMNS = [
   "country",
   "fbp",
   "fbc",
+  "pixel_id",
   "contact_event_id",
   "contact_event_time",
   "contact_payload_raw",

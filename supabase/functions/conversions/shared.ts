@@ -27,6 +27,7 @@ export interface ConversionRow {
   country: string;
   fbp: string;
   fbc: string;
+  pixel_id: string;
   contact_event_id: string;
   contact_event_time: number | null;
   contact_payload_raw: string;
@@ -379,6 +380,7 @@ export function buildFakeConversionRow(event: MetaEventName): ConversionRow {
     country: "AR",
     fbp: "fb.1.1699999999.1234567890",
     fbc: "fb.1.1699999999.AbCdEfGhIj",
+    pixel_id: "",
     contact_event_id: "",
     contact_event_time: null,
     contact_payload_raw: "",

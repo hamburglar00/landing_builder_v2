@@ -147,6 +147,7 @@ Deno.serve(async (req) => {
         country: row.country ?? "",
         fbp: row.fbp ?? "",
         fbc: row.fbc ?? "",
+        pixel_id: "",
         contact_event_id: "",
         contact_event_time: null,
         contact_payload_raw: "",
