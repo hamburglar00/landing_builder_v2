@@ -310,6 +310,11 @@ export default function DashboardConversionesPage() {
   const [funnelConfigOpen, setFunnelConfigOpen] = useState(false);
   const [editPixelId, setEditPixelId] = useState(false);
   const [editAccessToken, setEditAccessToken] = useState(false);
+  const [quickPixelOpen, setQuickPixelOpen] = useState(false);
+  const [quickPixelId, setQuickPixelId] = useState("");
+  const [quickPixelToken, setQuickPixelToken] = useState("");
+  const [quickPixelCurrency, setQuickPixelCurrency] = useState("ARS");
+  const [quickPixelError, setQuickPixelError] = useState<string | null>(null);
 
   const activeConversions = useMemo(() => filterByDateRange(conversions, dateRange), [conversions, dateRange]);
   const activeFunnel = useMemo(() => filterFunnelByDateRange(funnelContacts, dateRange), [funnelContacts, dateRange]);
@@ -433,6 +438,54 @@ export default function DashboardConversionesPage() {
     } finally { setSaving(false); }
   };
 
+  const openQuickPixelModal = useCallback(() => {
+    setQuickPixelId(config?.pixel_id ?? "");
+    setQuickPixelToken(config?.meta_access_token ?? "");
+    setQuickPixelCurrency(config?.meta_currency ?? "ARS");
+    setQuickPixelError(null);
+    setQuickPixelOpen(true);
+  }, [config]);
+
+  const handleQuickPixelSave = async () => {
+    if (!config || !userId) return;
+    const pixel = quickPixelId.replace(/\D/g, "").trim();
+    const token = quickPixelToken.trim();
+    const currency = quickPixelCurrency.trim() || "ARS";
+    if (!pixel) {
+      setQuickPixelError("Pixel ID es obligatorio.");
+      return;
+    }
+    if (!token) {
+      setQuickPixelError("Token es obligatorio.");
+      return;
+    }
+
+    setSaving(true);
+    setQuickPixelError(null);
+    setSaveMsg(null);
+    try {
+      const nextConfig = {
+        ...config,
+        user_id: userId,
+        pixel_id: pixel,
+        meta_access_token: token,
+        meta_currency: currency,
+      };
+      await upsertConversionsConfig(nextConfig);
+      setConfig(nextConfig);
+      setEditPixelId(false);
+      setEditAccessToken(false);
+      setQuickPixelOpen(false);
+      setSaveMsg("Configuracion guardada.");
+    } catch (e) {
+      const msg = e instanceof Error ? e.message : "Error al guardar";
+      setQuickPixelError(msg);
+      setSaveMsg(msg);
+    } finally {
+      setSaving(false);
+    }
+  };
+
   const copyToClipboard = useCallback(async (text: string) => {
     await navigator.clipboard.writeText(text);
     setCopiedUrl(text);
@@ -553,9 +606,18 @@ export default function DashboardConversionesPage() {
 
   return (
     <div className="space-y-6 pb-8">
-      <div>
-        <h1 className="text-xl font-semibold text-zinc-100">CONVERSIONES</h1>
-        <p className="mt-1 text-sm text-zinc-400">Tu pipeline de leads, cargas y estadsticas.</p>
+      <div className="flex items-start justify-between gap-4">
+        <div>
+          <h1 className="text-xl font-semibold text-zinc-100">CONVERSIONES</h1>
+          <p className="mt-1 text-sm text-zinc-400">Tu pipeline de leads, cargas y estadsticas.</p>
+        </div>
+        <button
+          type="button"
+          onClick={openQuickPixelModal}
+          className="inline-flex shrink-0 cursor-pointer items-center rounded-xl bg-lime-400 px-4 py-2 text-sm font-semibold text-black transition hover:bg-lime-300"
+        >
+          AÑADIR PIXEL
+        </button>
       </div>
 
       {saveMsg && (
@@ -567,6 +629,68 @@ export default function DashboardConversionesPage() {
         <p className={`rounded-lg px-3 py-2 text-sm ${clearMsg.includes("Error") ? "bg-red-950/50 text-red-300" : "bg-emerald-950/50 text-emerald-300"}`} role="alert">
           {clearMsg}
         </p>
+      )}
+
+      {quickPixelOpen && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 p-4">
+          <div className="w-full max-w-lg rounded-xl border border-zinc-700 bg-zinc-950 p-4">
+            <div className="mb-4 flex items-center justify-between gap-3">
+              <h3 className="text-sm font-semibold text-zinc-100">Añadir pixel</h3>
+              <button
+                type="button"
+                onClick={() => setQuickPixelOpen(false)}
+                className="cursor-pointer rounded-lg border border-zinc-700 px-3 py-1 text-xs text-zinc-300 hover:bg-zinc-800"
+              >
+                Cerrar
+              </button>
+            </div>
+            <div className="space-y-3">
+              <div>
+                <label className="mb-1 block text-xs font-medium text-zinc-400">Pixel ID (obligatorio)</label>
+                <input
+                  type="text"
+                  value={quickPixelId}
+                  onChange={(e) => setQuickPixelId(e.target.value.replace(/\D/g, ""))}
+                  placeholder="Ej: 880464554785896"
+                  className="w-full rounded-lg border border-zinc-700 bg-zinc-900 px-3 py-2 text-sm text-zinc-100"
+                />
+              </div>
+              <div>
+                <label className="mb-1 block text-xs font-medium text-zinc-400">Token (obligatorio)</label>
+                <input
+                  type="text"
+                  value={quickPixelToken}
+                  onChange={(e) => setQuickPixelToken(e.target.value)}
+                  placeholder="Token de Meta Conversions API"
+                  className="w-full rounded-lg border border-zinc-700 bg-zinc-900 px-3 py-2 text-sm text-zinc-100"
+                />
+              </div>
+              <div>
+                <label className="mb-1 block text-xs font-medium text-zinc-400">Moneda</label>
+                <select
+                  value={quickPixelCurrency}
+                  onChange={(e) => setQuickPixelCurrency(e.target.value)}
+                  className="w-full rounded-lg border border-zinc-700 bg-zinc-900 px-2 py-2 text-sm text-zinc-100"
+                >
+                  {["ARS","USD","EUR","BRL","CLP","MXN","COP"].map((c) => <option key={c} value={c}>{c}</option>)}
+                </select>
+              </div>
+              {quickPixelError && (
+                <p className="rounded-lg bg-red-950/50 px-3 py-2 text-xs text-red-300">{quickPixelError}</p>
+              )}
+              <div className="flex justify-end pt-1">
+                <button
+                  type="button"
+                  onClick={handleQuickPixelSave}
+                  disabled={saving}
+                  className="cursor-pointer rounded-xl bg-lime-400 px-4 py-2 text-sm font-semibold text-black transition hover:bg-lime-300 disabled:cursor-not-allowed disabled:opacity-60"
+                >
+                  {saving ? "Guardando..." : "Guardar"}
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
       )}
 
       {/* Tabs */}
