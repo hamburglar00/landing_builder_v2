@@ -438,6 +438,22 @@ export default function DashboardConversionesPage() {
     setSaving(true); setSaveMsg(null);
     try {
       await upsertConversionsConfig({ ...config, user_id: userId });
+      const pixel = String(config.pixel_id ?? "").replace(/\D/g, "");
+      const token = String(config.meta_access_token ?? "").trim();
+      const currency = String(config.meta_currency ?? "ARS").trim() || "ARS";
+      if (pixel && token) {
+        const existing = pixelConfigs.find((p) => p.pixel_id === pixel);
+        await upsertPixelConfig({
+          user_id: userId,
+          pixel_id: pixel,
+          meta_access_token: token,
+          meta_currency: currency,
+          meta_api_version: config.meta_api_version || "v25.0",
+          is_default: existing ? existing.is_default : pixelConfigs.length === 0,
+        });
+        const pixels = await fetchPixelConfigs(userId);
+        setPixelConfigs(pixels);
+      }
       setSaveMsg("Configuracion guardada.");
     } catch (e) {
       setSaveMsg(e instanceof Error ? e.message : "Error al guardar");
@@ -797,6 +813,56 @@ export default function DashboardConversionesPage() {
             </button>
             {configOpen && (
               <div className="space-y-4 border-t border-zinc-800 p-4">
+                <div className="rounded-lg border border-zinc-800 bg-zinc-950/40 p-3">
+                  <div className="mb-2 flex items-center justify-between gap-2">
+                    <h4 className="text-xs font-semibold text-zinc-300">Pixeles configurados</h4>
+                    <span className="text-[11px] text-zinc-500">{pixelConfigs.length}</span>
+                  </div>
+                  {pixelConfigs.length === 0 ? (
+                    <p className="text-[11px] text-zinc-500">No hay pixeles cargados.</p>
+                  ) : (
+                    <div className="space-y-1.5">
+                      {pixelConfigs.map((px) => {
+                        const token = px.meta_access_token || "";
+                        const tokenMasked = token.length > 14
+                          ? `${token.slice(0, 8)}...${token.slice(-6)}`
+                          : token || "-";
+                        return (
+                          <button
+                            key={px.id}
+                            type="button"
+                            onClick={() => {
+                              setConfig((prev) => prev ? {
+                                ...prev,
+                                pixel_id: px.pixel_id,
+                                meta_access_token: px.meta_access_token,
+                                meta_currency: px.meta_currency || prev.meta_currency,
+                                meta_api_version: px.meta_api_version || prev.meta_api_version,
+                              } : prev);
+                              setEditPixelId(false);
+                              setEditAccessToken(false);
+                            }}
+                            className="flex w-full cursor-pointer items-center justify-between rounded-lg border border-zinc-800 bg-zinc-900/60 px-3 py-2 text-left transition hover:border-zinc-700 hover:bg-zinc-900"
+                            title="Cargar en el formulario"
+                          >
+                            <div className="min-w-0">
+                              <p className="font-mono text-xs text-zinc-200">{px.pixel_id}</p>
+                              <p className="truncate text-[11px] text-zinc-500">{tokenMasked}</p>
+                            </div>
+                            <div className="ml-3 flex items-center gap-2">
+                              <span className="rounded border border-zinc-700 px-1.5 py-0.5 text-[10px] text-zinc-300">{px.meta_currency || "ARS"}</span>
+                              {px.is_default && (
+                                <span className="rounded border border-emerald-700/70 bg-emerald-950/40 px-1.5 py-0.5 text-[10px] text-emerald-300">
+                                  default
+                                </span>
+                              )}
+                            </div>
+                          </button>
+                        );
+                      })}
+                    </div>
+                  )}
+                </div>
                 <div>
                   <div className="mb-1 flex items-center justify-between gap-2">
                     <label className="block text-xs font-medium text-zinc-400">Pixel ID</label>
