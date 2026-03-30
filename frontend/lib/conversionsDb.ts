@@ -22,6 +22,18 @@ export interface ConversionsConfig {
   tracking_ranking_config?: TrackingRankingConfig | null;
 }
 
+export interface PixelConfig {
+  id: string;
+  user_id: string;
+  pixel_id: string;
+  meta_access_token: string;
+  meta_currency: string;
+  meta_api_version: string;
+  is_default: boolean;
+  created_at: string;
+  updated_at: string;
+}
+
 export interface TrackingRankingRule {
   id: string;
   indicator: string;
@@ -198,6 +210,43 @@ export async function upsertConversionsConfig(
       { onConflict: "user_id" },
     );
 
+  if (error) throw error;
+}
+
+export async function fetchPixelConfigs(userId: string): Promise<PixelConfig[]> {
+  const { data, error } = await supabase
+    .from("conversions_pixel_configs")
+    .select("*")
+    .eq("user_id", userId)
+    .order("is_default", { ascending: false })
+    .order("created_at", { ascending: true });
+  if (error) throw error;
+  return (data ?? []) as PixelConfig[];
+}
+
+export async function upsertPixelConfig(input: {
+  user_id: string;
+  pixel_id: string;
+  meta_access_token: string;
+  meta_currency?: string;
+  meta_api_version?: string;
+  is_default?: boolean;
+}): Promise<void> {
+  const pixelId = normalizePixelId(input.pixel_id);
+  const { error } = await supabase
+    .from("conversions_pixel_configs")
+    .upsert(
+      {
+        user_id: input.user_id,
+        pixel_id: pixelId,
+        meta_access_token: input.meta_access_token,
+        meta_currency: input.meta_currency ?? "ARS",
+        meta_api_version: input.meta_api_version ?? "v25.0",
+        is_default: !!input.is_default,
+        updated_at: new Date().toISOString(),
+      },
+      { onConflict: "user_id,pixel_id" },
+    );
   if (error) throw error;
 }
 

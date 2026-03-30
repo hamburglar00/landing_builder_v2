@@ -66,7 +66,7 @@ Deno.serve(async (req) => {
     // Find purchases that need retry
     const { data: rows, error } = await db
       .from("conversions")
-      .select("id, user_id, phone, purchase_event_id, purchase_event_time, valor, event_source_url, email, fn, ln, ct, st, zip, country, fbp, fbc, client_ip, agent_user, external_id, observaciones")
+      .select("id, user_id, phone, pixel_id, purchase_event_id, purchase_event_time, valor, event_source_url, email, fn, ln, ct, st, zip, country, fbp, fbc, client_ip, agent_user, external_id, observaciones")
       .eq("estado", "purchase")
       .neq("purchase_status_capi", "enviado")
       .gt("valor", 0)
@@ -87,16 +87,26 @@ Deno.serve(async (req) => {
       });
     }
 
-    // Group by user to get their configs
+    // Group by user to get their legacy and per-pixel configs
     const userIds = [...new Set(rows.map((r) => r.user_id))];
     const { data: configs } = await db
       .from("conversions_config")
       .select("*")
       .in("user_id", userIds);
+    const { data: pixelConfigs } = await db
+      .from("conversions_pixel_configs")
+      .select("user_id, pixel_id, meta_access_token, meta_currency, meta_api_version, is_default")
+      .in("user_id", userIds);
 
     const configMap = new Map<string, Record<string, unknown>>();
     for (const c of configs ?? []) {
       configMap.set(c.user_id, c);
+    }
+    const pixelConfigMap = new Map<string, Array<Record<string, unknown>>>();
+    for (const pc of pixelConfigs ?? []) {
+      const list = pixelConfigMap.get(String(pc.user_id)) ?? [];
+      list.push(pc as Record<string, unknown>);
+      pixelConfigMap.set(String(pc.user_id), list);
     }
 
     let retried = 0;
@@ -106,10 +116,26 @@ Deno.serve(async (req) => {
       const cfg = configMap.get(row.user_id);
       if (!cfg) continue;
 
-      const accessToken = String(cfg.meta_access_token ?? "");
-      const pixelId = String(cfg.pixel_id ?? "");
-      const apiVersion = String(cfg.meta_api_version ?? "v25.0");
-      const currency = String(cfg.meta_currency ?? "ARS");
+      const rowPixel = String(row.pixel_id ?? "").trim();
+      const userPixelConfigs = pixelConfigMap.get(String(row.user_id)) ?? [];
+      const matchedPixelCfg = rowPixel
+        ? userPixelConfigs.find((pc) => String(pc.pixel_id ?? "").trim() === rowPixel)
+        : null;
+      const defaultPixelCfg = userPixelConfigs.find((pc) => Boolean(pc.is_default));
+      const selected = matchedPixelCfg ?? defaultPixelCfg ?? null;
+
+      const accessToken = selected
+        ? String(selected.meta_access_token ?? "")
+        : String(cfg.meta_access_token ?? "");
+      const pixelId = selected
+        ? String(selected.pixel_id ?? "")
+        : String(cfg.pixel_id ?? "");
+      const apiVersion = selected
+        ? String(selected.meta_api_version ?? "v25.0")
+        : String(cfg.meta_api_version ?? "v25.0");
+      const currency = selected
+        ? String(selected.meta_currency ?? "ARS")
+        : String(cfg.meta_currency ?? "ARS");
 
       if (!accessToken || !pixelId) continue;
 
@@ -147,7 +173,7 @@ Deno.serve(async (req) => {
         country: row.country ?? "",
         fbp: row.fbp ?? "",
         fbc: row.fbc ?? "",
-        pixel_id: "",
+        pixel_id: row.pixel_id ?? "",
         contact_event_id: "",
         contact_event_time: null,
         contact_payload_raw: "",

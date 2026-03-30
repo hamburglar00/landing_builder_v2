@@ -27,6 +27,15 @@ interface ConversionsConfig {
   geo_fill_only_when_missing: boolean;
 }
 
+interface PixelConfigRow {
+  user_id: string;
+  pixel_id: string;
+  meta_access_token: string;
+  meta_currency: string;
+  meta_api_version: string;
+  is_default: boolean;
+}
+
 interface LandingRow {
   id: string;
   name: string;
@@ -369,6 +378,7 @@ async function ensureGeoOnRow(
 async function sendToMetaCAPI(
   db: SupabaseClient,
   config: ConversionsConfig,
+  pixelConfigs: PixelConfigRow[],
   row: ConversionRow,
   rowId: string,
   eventName: "Contact" | "Lead" | "Purchase",
@@ -377,7 +387,27 @@ async function sendToMetaCAPI(
   customData?: Record<string, unknown>,
   overrideTestEventCode?: string,
 ): Promise<boolean> {
-  if (!config.meta_access_token || !config.pixel_id) {
+  const resolveConfigForRow = (): ConversionsConfig => {
+    const targetPixel = norm(row.pixel_id);
+    const byPixel = targetPixel
+      ? pixelConfigs.find((pc) => norm(pc.pixel_id) === targetPixel)
+      : null;
+    const byDefault = pixelConfigs.find((pc) => pc.is_default);
+    const picked = byPixel ?? byDefault ?? null;
+
+    if (!picked) return config;
+    return {
+      ...config,
+      pixel_id: norm(picked.pixel_id),
+      meta_access_token: norm(picked.meta_access_token),
+      meta_currency: norm(picked.meta_currency) || config.meta_currency,
+      meta_api_version: norm(picked.meta_api_version) || config.meta_api_version,
+    };
+  };
+
+  const effectiveConfig = resolveConfigForRow();
+
+  if (!effectiveConfig.meta_access_token || !effectiveConfig.pixel_id) {
     const statusField =
       eventName === "Contact" ? "contact_status_capi" :
       eventName === "Lead" ? "lead_status_capi" :
@@ -390,15 +420,16 @@ async function sendToMetaCAPI(
     const obs = appendObservation(current?.observaciones ?? "", missingCfgMsg);
     await db.from("conversions").update({ [statusField]: "error", observaciones: obs }).eq("id", rowId);
     await writeLog(db, row.user_id, "sendToMetaCAPI", "ERROR", "Meta CAPI no configurado", JSON.stringify({
-      has_token: !!config.meta_access_token,
-      has_pixel: !!config.pixel_id,
+      has_token: !!effectiveConfig.meta_access_token,
+      has_pixel: !!effectiveConfig.pixel_id,
       event_name: eventName,
+      row_pixel_id: row.pixel_id ?? "",
     }), rowId);
     return false;
   }
 
   const sharedRow = row as unknown as SharedConversionRow;
-  const sharedConfig = config as unknown as SharedConversionsConfig;
+  const sharedConfig = effectiveConfig as unknown as SharedConversionsConfig;
   const effectiveTestEventCode = overrideTestEventCode || norm(row.test_event_code);
   const { apiUrl, body } = await buildMetaRequest(
     sharedConfig,
@@ -562,6 +593,7 @@ async function handleContact(
   p: Params,
   landing: LandingRow,
   config: ConversionsConfig,
+  pixelConfigs: PixelConfigRow[],
 ): Promise<Response> {
   const nowIso = new Date().toISOString();
   const nowSec = Math.floor(Date.now() / 1000);
@@ -647,6 +679,7 @@ async function handleContact(
     const ok = await sendToMetaCAPI(
       db,
       config,
+      pixelConfigs,
       fullRow,
       rowId,
       "Contact",
@@ -666,6 +699,7 @@ async function handleLead(
   p: Params,
   landing: LandingRow,
   config: ConversionsConfig,
+  pixelConfigs: PixelConfigRow[],
 ): Promise<Response> {
   const cleanPhone = sanitizePhone(p.phone);
   if (!cleanPhone) {
@@ -754,7 +788,7 @@ async function handleLead(
 
   await writeLog(db, landing.user_id, "handleLead", "INFO", "LEAD procesado", JSON.stringify({ phone: cleanPhone, promo_code: promoCode, matched: !!targetId }), targetId!);
 
-  const ok = await sendToMetaCAPI(db, config, fullRow, targetId!, "Lead", leadEventId, leadEventTime, undefined, testEventCode || undefined);
+  const ok = await sendToMetaCAPI(db, config, pixelConfigs, fullRow, targetId!, "Lead", leadEventId, leadEventTime, undefined, testEventCode || undefined);
   return textResponse(ok ? "Fila LEAD procesada" : "LEAD procesado. Error al enviar a Meta CAPI (revisar token, pixel o pestana Logs).");
 }
 
@@ -763,6 +797,7 @@ async function handlePurchase(
   p: Params,
   landing: LandingRow,
   config: ConversionsConfig,
+  pixelConfigs: PixelConfigRow[],
 ): Promise<Response> {
   const cleanPhone = sanitizePhone(p.phone);
   const amount = parseFloat(p.amount);
@@ -913,7 +948,7 @@ async function handlePurchase(
 
     await writeLog(db, landing.user_id, "handlePurchase", "INFO", "Primera compra procesada", JSON.stringify({ phone: cleanPhone, amount, promo_code: promoCode }), targetId!);
 
-    const ok = await sendToMetaCAPI(db, config, fullRow, targetId!, "Purchase", purchaseEventId, purchaseEventTime, customData, testEventCode || undefined);
+    const ok = await sendToMetaCAPI(db, config, pixelConfigs, fullRow, targetId!, "Purchase", purchaseEventId, purchaseEventTime, customData, testEventCode || undefined);
     return textResponse(ok ? "Primera compra enviada (Purchase)" : "Purchase procesado. Error al enviar a Meta CAPI (revisar token, pixel o Logs).");
   }
 
@@ -990,7 +1025,7 @@ async function handlePurchase(
 
   await writeLog(db, landing.user_id, "handlePurchase", "INFO", "Recompra procesada", JSON.stringify({ phone: cleanPhone, amount, inherited_from: srcRow?.id }), newId);
 
-  const ok = await sendToMetaCAPI(db, config, fullRow, newId, "Purchase", purchaseEventId, purchaseEventTime, customData, testEventCode || undefined);
+  const ok = await sendToMetaCAPI(db, config, pixelConfigs, fullRow, newId, "Purchase", purchaseEventId, purchaseEventTime, customData, testEventCode || undefined);
   return textResponse(ok ? "Recompra enviada (Purchase_Repeat)" : "Recompra procesada. Error al enviar a Meta CAPI (revisar token, pixel o Logs).");
 }
 
@@ -999,6 +1034,7 @@ async function handleSimplePurchase(
   p: Params,
   landing: LandingRow,
   config: ConversionsConfig,
+  pixelConfigs: PixelConfigRow[],
 ): Promise<Response> {
   const cleanPhone = sanitizePhone(p.phone);
   const amount = parseFloat(p.amount);
@@ -1080,7 +1116,7 @@ async function handleSimplePurchase(
 
   await writeLog(db, landing.user_id, "handleSimplePurchase", "INFO", "Purchase simple procesado", JSON.stringify({ phone: cleanPhone, amount, inherited_from: srcRow?.id }), newId);
 
-  const ok = await sendToMetaCAPI(db, config, fullRow, newId, "Purchase", purchaseEventId, purchaseEventTime, customData, testEventCode || undefined);
+  const ok = await sendToMetaCAPI(db, config, pixelConfigs, fullRow, newId, "Purchase", purchaseEventId, purchaseEventTime, customData, testEventCode || undefined);
   return textResponse(ok ? "Evento Purchase enviado" : "Purchase procesado. Error al enviar a Meta CAPI (revisar token, pixel o Logs).");
 }
 
@@ -1135,6 +1171,12 @@ Deno.serve(async (req) => {
       geo_fill_only_when_missing: false,
     };
 
+    const { data: pixelConfigsData } = await db
+      .from("conversions_pixel_configs")
+      .select("user_id, pixel_id, meta_access_token, meta_currency, meta_api_version, is_default")
+      .eq("user_id", userId);
+    const pixelConfigs: PixelConfigRow[] = (pixelConfigsData ?? []) as PixelConfigRow[];
+
     const params: Params = await req.json().catch(() => ({}));
     // Keep payload exactly as sent by emitter; do not infer client IP from request headers.
 
@@ -1170,13 +1212,13 @@ Deno.serve(async (req) => {
 
     // Route to the correct handler
     if (!rawAction && params.phone && params.amount) {
-      return runAndFinalize(() => handleSimplePurchase(db, params, landing, cfg));
+      return runAndFinalize(() => handleSimplePurchase(db, params, landing, cfg, pixelConfigs));
     }
     if (rawAction === "LEAD") {
-      return runAndFinalize(() => handleLead(db, params, landing, cfg));
+      return runAndFinalize(() => handleLead(db, params, landing, cfg, pixelConfigs));
     }
     if (rawAction === "PURCHASE") {
-      return runAndFinalize(() => handlePurchase(db, params, landing, cfg));
+      return runAndFinalize(() => handlePurchase(db, params, landing, cfg, pixelConfigs));
     }
 
     if (rawAction) {
@@ -1191,7 +1233,7 @@ Deno.serve(async (req) => {
     }
 
     // Default: contact from landing
-    return runAndFinalize(() => handleContact(db, params, landing, cfg));
+    return runAndFinalize(() => handleContact(db, params, landing, cfg, pixelConfigs));
   } catch (err) {
     console.error("conversions error:", err);
     try {

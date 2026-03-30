@@ -6,6 +6,8 @@ import { supabase } from "@/lib/supabaseClient";
 import {
   fetchConversionsConfig,
   upsertConversionsConfig,
+  fetchPixelConfigs,
+  upsertPixelConfig,
   fetchConversionsForAdminFiltered,
   fetchConversionLogsForAdmin,
   fetchFunnelContactsForAdminFiltered,
@@ -13,6 +15,7 @@ import {
   hideConversions,
   hideContacts,
   type ConversionsConfig,
+  type PixelConfig,
   type ConversionRow,
   type ConversionLogRow,
   type FunnelContact,
@@ -411,6 +414,7 @@ export default function AdminConversionesPage() {
   const [quickPixelToken, setQuickPixelToken] = useState("");
   const [quickPixelCurrency, setQuickPixelCurrency] = useState("ARS");
   const [quickPixelError, setQuickPixelError] = useState<string | null>(null);
+  const [pixelConfigs, setPixelConfigs] = useState<PixelConfig[]>([]);
 
   useEffect(() => {
     const init = async () => {
@@ -418,16 +422,18 @@ export default function AdminConversionesPage() {
       if (!user) return;
       setUserId(user.id);
       try {
-        const [cfg, rows, funnel, logRows] = await Promise.all([
+        const [cfg, rows, funnel, logRows, pixels] = await Promise.all([
           fetchConversionsConfig(user.id),
           fetchConversionsForAdminFiltered(user.id),
           fetchFunnelContactsForAdminFiltered(user.id),
           fetchConversionLogsForAdmin(200),
+          fetchPixelConfigs(user.id),
         ]);
         setConfig(cfg);
         setConversions(rows);
         setFunnelContacts(funnel);
         setLogs(logRows);
+        setPixelConfigs(pixels);
 
         const { data: profile } = await supabase
           .from("profiles").select("nombre").eq("id", user.id).maybeSingle();
@@ -485,19 +491,34 @@ export default function AdminConversionesPage() {
     setQuickPixelError(null);
     setSaveMsg(null);
     try {
-      const nextConfig = {
-        ...config,
+      const hasAny = pixelConfigs.length > 0;
+      await upsertPixelConfig({
         user_id: userId,
         pixel_id: pixel,
         meta_access_token: token,
         meta_currency: currency,
-      };
-      await upsertConversionsConfig(nextConfig);
-      setConfig(nextConfig);
+        meta_api_version: config.meta_api_version || "v25.0",
+        is_default: !hasAny,
+      });
+      const pixels = await fetchPixelConfigs(userId);
+      setPixelConfigs(pixels);
+
+      // Backward compatibility: first pixel becomes legacy default config too.
+      if (!hasAny) {
+        const nextConfig = {
+          ...config,
+          user_id: userId,
+          pixel_id: pixel,
+          meta_access_token: token,
+          meta_currency: currency,
+        };
+        await upsertConversionsConfig(nextConfig);
+        setConfig(nextConfig);
+      }
       setEditPixelId(false);
       setEditAccessToken(false);
       setQuickPixelOpen(false);
-      setSaveMsg("Configuracion guardada.");
+      setSaveMsg("Pixel guardado.");
     } catch (e) {
       const msg = e instanceof Error ? e.message : "Error al guardar";
       setQuickPixelError(msg);

@@ -6,6 +6,8 @@ import { supabase } from "@/lib/supabaseClient";
 import {
   fetchConversionsConfig,
   upsertConversionsConfig,
+  fetchPixelConfigs,
+  upsertPixelConfig,
   fetchConversionsFiltered,
   fetchFunnelContactsFiltered,
   fetchConversionLogs,
@@ -13,6 +15,7 @@ import {
   hideConversions,
   hideContacts,
   type ConversionsConfig,
+  type PixelConfig,
   type ConversionRow,
   type ConversionLogRow,
   type FunnelContact,
@@ -315,6 +318,7 @@ export default function DashboardConversionesPage() {
   const [quickPixelToken, setQuickPixelToken] = useState("");
   const [quickPixelCurrency, setQuickPixelCurrency] = useState("ARS");
   const [quickPixelError, setQuickPixelError] = useState<string | null>(null);
+  const [pixelConfigs, setPixelConfigs] = useState<PixelConfig[]>([]);
 
   const activeConversions = useMemo(() => filterByDateRange(conversions, dateRange), [conversions, dateRange]);
   const activeFunnel = useMemo(() => filterFunnelByDateRange(funnelContacts, dateRange), [funnelContacts, dateRange]);
@@ -407,16 +411,18 @@ export default function DashboardConversionesPage() {
       if (!user) return;
       setUserId(user.id);
       try {
-        const [cfg, rows, funnel, logRows] = await Promise.all([
+        const [cfg, rows, funnel, logRows, pixels] = await Promise.all([
           fetchConversionsConfig(user.id),
           fetchConversionsFiltered(user.id, user.id),
           fetchFunnelContactsFiltered(user.id, user.id),
           fetchConversionLogs(user.id, 200),
+          fetchPixelConfigs(user.id),
         ]);
         setConfig(cfg);
         setConversions(rows);
         setFunnelContacts(funnel);
         setLogs(logRows);
+        setPixelConfigs(pixels);
 
         const { data: profile } = await supabase
           .from("profiles").select("nombre").eq("id", user.id).maybeSingle();
@@ -464,19 +470,34 @@ export default function DashboardConversionesPage() {
     setQuickPixelError(null);
     setSaveMsg(null);
     try {
-      const nextConfig = {
-        ...config,
+      const hasAny = pixelConfigs.length > 0;
+      await upsertPixelConfig({
         user_id: userId,
         pixel_id: pixel,
         meta_access_token: token,
         meta_currency: currency,
-      };
-      await upsertConversionsConfig(nextConfig);
-      setConfig(nextConfig);
+        meta_api_version: config.meta_api_version || "v25.0",
+        is_default: !hasAny,
+      });
+      const pixels = await fetchPixelConfigs(userId);
+      setPixelConfigs(pixels);
+
+      // Backward compatibility: first pixel becomes legacy default config too.
+      if (!hasAny) {
+        const nextConfig = {
+          ...config,
+          user_id: userId,
+          pixel_id: pixel,
+          meta_access_token: token,
+          meta_currency: currency,
+        };
+        await upsertConversionsConfig(nextConfig);
+        setConfig(nextConfig);
+      }
       setEditPixelId(false);
       setEditAccessToken(false);
       setQuickPixelOpen(false);
-      setSaveMsg("Configuracion guardada.");
+      setSaveMsg("Pixel guardado.");
     } catch (e) {
       const msg = e instanceof Error ? e.message : "Error al guardar";
       setQuickPixelError(msg);
