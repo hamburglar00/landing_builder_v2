@@ -10,6 +10,7 @@ import {
   createGerencia,
   updateGerencia,
   deleteGerencia,
+  formatGerenciaError,
 } from "@/lib/gerencias/gerenciasDb";
 
 export default function AdminGerenciasPage() {
@@ -78,7 +79,7 @@ export default function AdminGerenciasPage() {
       setNewGerenciaId("");
       setShowCreateModal(false);
     } catch (e) {
-      setError(e instanceof Error ? e.message : "Error al crear");
+      setError(formatGerenciaError(e, "Error al crear"));
     } finally {
       setSaving(false);
     }
@@ -118,7 +119,7 @@ export default function AdminGerenciasPage() {
       );
       cancelEdit();
     } catch (e) {
-      setError(e instanceof Error ? e.message : "Error al actualizar");
+      setError(formatGerenciaError(e, "Error al actualizar"));
     } finally {
       setSaving(false);
     }
@@ -132,7 +133,7 @@ export default function AdminGerenciasPage() {
       await deleteGerencia(id);
       setGerencias((prev) => prev.filter((x) => x.id !== id));
     } catch (e) {
-      setError(e instanceof Error ? e.message : "Error al eliminar");
+      setError(formatGerenciaError(e, "Error al eliminar"));
     } finally {
       setDeletingId(null);
     }

@@ -1,6 +1,42 @@
 import { supabase } from "@/lib/supabaseClient";
 import type { Gerencia } from "./types";
 
+type DbErrorLike = {
+  code?: string;
+  message?: string;
+  details?: string;
+  hint?: string;
+};
+
+export function formatGerenciaError(error: unknown, fallback: string): string {
+  if (!error || typeof error !== "object") return fallback;
+  const e = error as DbErrorLike;
+  const msg = String(e.message ?? "");
+  const details = String(e.details ?? "");
+
+  // Postgres unique_violation
+  if (e.code === "23505") {
+    if (msg.includes("gerencias_pkey") || msg.includes("gerencias_gerencia_id_unique")) {
+      return "No se puede crear: ese Gerencia ID ya existe en el sistema.";
+    }
+    return "No se puede crear: ya existe un registro con esos datos.";
+  }
+
+  // RLS / permisos
+  if (e.code === "42501") {
+    return "No tienes permisos para realizar esta accion.";
+  }
+
+  // FKs/check constraints
+  if (e.code === "23503" || e.code === "23514") {
+    return "No se pudo guardar por una restriccion de datos. Revisa el Gerencia ID.";
+  }
+
+  if (details) return `${fallback}: ${details}`;
+  if (msg) return `${fallback}: ${msg}`;
+  return fallback;
+}
+
 /**
  * Lista las gerencias del usuario.
  */
