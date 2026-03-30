@@ -335,6 +335,7 @@ export default function AdminConversionesPage() {
   const [expandedLog, setExpandedLog] = useState<number | null>(null);
   const [tableSearch, setTableSearch] = useState("");
   const [statsLandingFilter, setStatsLandingFilter] = useState<string>("__all__");
+  const [statsPixelFilter, setStatsPixelFilter] = useState<string>("__all__");
 
   const [demoMode, setDemoMode] = useState(false);
   const [dateRange, setDateRange] = useState<DateRange | null>(null);
@@ -374,23 +375,54 @@ export default function AdminConversionesPage() {
     }
     return Array.from(set).sort((a, b) => a.localeCompare(b, "es"));
   }, [statsAllConversions]);
+  const statsPixelOptions = useMemo(() => {
+    const set = new Set<string>();
+    for (const r of statsAllConversions) {
+      const px = String(r.pixel_id ?? "").trim();
+      if (px) set.add(px);
+    }
+    return Array.from(set).sort((a, b) => a.localeCompare(b));
+  }, [statsAllConversions]);
   useEffect(() => {
     if (statsLandingFilter !== "__all__" && !statsLandingOptions.includes(statsLandingFilter)) {
       setStatsLandingFilter("__all__");
     }
   }, [statsLandingFilter, statsLandingOptions]);
-  const statsConversionsFilteredByLanding = useMemo(() => {
-    if (statsLandingFilter === "__all__") return statsConversions;
-    return statsConversions.filter((r) => String(r.landing_name ?? "").trim() === statsLandingFilter);
-  }, [statsConversions, statsLandingFilter]);
-  const statsAllConversionsFilteredByLanding = useMemo(() => {
-    if (statsLandingFilter === "__all__") return statsAllConversions;
-    return statsAllConversions.filter((r) => String(r.landing_name ?? "").trim() === statsLandingFilter);
-  }, [statsAllConversions, statsLandingFilter]);
-  const activeFunnelFilteredByLanding = useMemo(() => {
-    if (statsLandingFilter === "__all__") return activeFunnel;
-    return activeFunnel.filter((r) => String(r.landing_name ?? "").trim() === statsLandingFilter);
-  }, [activeFunnel, statsLandingFilter]);
+  useEffect(() => {
+    if (statsPixelFilter !== "__all__" && !statsPixelOptions.includes(statsPixelFilter)) {
+      setStatsPixelFilter("__all__");
+    }
+  }, [statsPixelFilter, statsPixelOptions]);
+  const statsConversionsFiltered = useMemo(() => {
+    return statsConversions.filter((r) => {
+      const byLanding = statsLandingFilter === "__all__" || String(r.landing_name ?? "").trim() === statsLandingFilter;
+      const byPixel = statsPixelFilter === "__all__" || String(r.pixel_id ?? "").trim() === statsPixelFilter;
+      return byLanding && byPixel;
+    });
+  }, [statsConversions, statsLandingFilter, statsPixelFilter]);
+  const statsAllConversionsFiltered = useMemo(() => {
+    return statsAllConversions.filter((r) => {
+      const byLanding = statsLandingFilter === "__all__" || String(r.landing_name ?? "").trim() === statsLandingFilter;
+      const byPixel = statsPixelFilter === "__all__" || String(r.pixel_id ?? "").trim() === statsPixelFilter;
+      return byLanding && byPixel;
+    });
+  }, [statsAllConversions, statsLandingFilter, statsPixelFilter]);
+  const activeFunnelFiltered = useMemo(() => {
+    if (statsPixelFilter === "__all__") {
+      if (statsLandingFilter === "__all__") return activeFunnel;
+      return activeFunnel.filter((r) => String(r.landing_name ?? "").trim() === statsLandingFilter);
+    }
+    const phones = new Set(
+      statsAllConversionsFiltered
+        .map((r) => String(r.phone ?? "").trim())
+        .filter(Boolean),
+    );
+    return activeFunnel.filter((r) => {
+      const byLanding = statsLandingFilter === "__all__" || String(r.landing_name ?? "").trim() === statsLandingFilter;
+      const byPhone = phones.has(String(r.phone ?? "").trim());
+      return byLanding && byPhone;
+    });
+  }, [activeFunnel, statsLandingFilter, statsPixelFilter, statsAllConversionsFiltered]);
   const filteredConversions = useMemo(() => {
     const q = tableSearch.trim().toLowerCase();
     if (!q) return activeConversions;
@@ -1082,17 +1114,30 @@ export default function AdminConversionesPage() {
       {(tab === "funnel" || tab === "seguimiento" || tab === "tabla" || tab === "estadisticas") && (
         <div className="flex items-center justify-end gap-2 pt-1">
           {tab === "estadisticas" && (
-            <select
-              value={statsLandingFilter}
-              onChange={(e) => setStatsLandingFilter(e.target.value)}
-              className="mr-auto h-7 rounded-lg border border-zinc-700 bg-zinc-900 px-2 text-[11px] text-zinc-100"
-              title="Filtrar estadisticas por landing"
-            >
-              <option value="__all__">Todas las landings</option>
-              {statsLandingOptions.map((name) => (
-                <option key={name} value={name}>{name}</option>
-              ))}
-            </select>
+            <div className="mr-auto flex items-center gap-2">
+              <select
+                value={statsLandingFilter}
+                onChange={(e) => setStatsLandingFilter(e.target.value)}
+                className="h-7 rounded-lg border border-zinc-700 bg-zinc-900 px-2 text-[11px] text-zinc-100"
+                title="Filtrar estadisticas por landing"
+              >
+                <option value="__all__">Todas las landings</option>
+                {statsLandingOptions.map((name) => (
+                  <option key={name} value={name}>{name}</option>
+                ))}
+              </select>
+              <select
+                value={statsPixelFilter}
+                onChange={(e) => setStatsPixelFilter(e.target.value)}
+                className="h-7 rounded-lg border border-zinc-700 bg-zinc-900 px-2 text-[11px] text-zinc-100"
+                title="Filtrar estadisticas por pixel"
+              >
+                <option value="__all__">Todos los pixeles</option>
+                {statsPixelOptions.map((px) => (
+                  <option key={px} value={px}>{px}</option>
+                ))}
+              </select>
+            </div>
           )}
           <DateRangeFilter onChange={setDateRange} />
         </div>
@@ -1167,6 +1212,21 @@ export default function AdminConversionesPage() {
                 <p className="rounded-lg border border-zinc-800 bg-zinc-900/40 px-3 py-2 text-[11px] text-zinc-500">
                   Selecciona <span className="text-zinc-300">Editar</span> en un pixel para abrir la configuracion en ventana emergente.
                 </p>
+                <div className="rounded-lg border border-amber-700/40 bg-amber-950/30 p-3 text-[11px] text-amber-200">
+                  <p className="font-semibold">Confirma que tus eventos estan llegando a Meta!</p>
+                  <p className="mt-1">
+                    Ingresa al Administrador de eventos, selecciona tu pixel y dirigite a la seccion &quot;Probar eventos&quot;.
+                  </p>
+                  <p className="mt-1">
+                    Copi tu <code className="rounded bg-zinc-900 px-1 py-0.5 text-[10px]">test_event_code</code> y luego prob tu URL con este formato:
+                  </p>
+                  <code className="mt-2 block break-all rounded bg-zinc-950 px-2 py-1 text-[10px] text-emerald-300">
+                    https://landing.panelbotadmin.com/TU_NOMBRE/?test_event_code=TU_CODIGO_TEST
+                  </code>
+                  <p className="mt-2">
+                    Asi vas a poder verificar en tiempo real si los eventos se estan enviando correctamente a Meta.
+                  </p>
+                </div>
               </div>
             )}
           </section>
@@ -1403,7 +1463,7 @@ export default function AdminConversionesPage() {
               <button
                 type="button"
                 onClick={clearStatsDisplay}
-                disabled={hidingStats || refreshingTable || (activeFunnelFilteredByLanding.length === 0 && statsConversionsFilteredByLanding.length === 0) || demoMode}
+                disabled={hidingStats || refreshingTable || (activeFunnelFiltered.length === 0 && statsConversionsFiltered.length === 0) || demoMode}
                 className="inline-flex items-center gap-1.5 rounded-lg border border-zinc-700 bg-zinc-800/80 px-2.5 py-1.5 text-xs font-medium text-zinc-400 transition hover:bg-zinc-700 hover:text-zinc-300 disabled:opacity-50 disabled:cursor-not-allowed"
                 title="Ocultar registros de la vista (persistente, no borra de la base)"
               >
@@ -1411,13 +1471,13 @@ export default function AdminConversionesPage() {
               </button>
             </div>
           </div>
-          {activeFunnelFilteredByLanding.length === 0 && statsConversionsFilteredByLanding.length === 0 ? (
+          {activeFunnelFiltered.length === 0 && statsConversionsFiltered.length === 0 ? (
             <p className="py-12 text-center text-sm text-zinc-500">An no hay datos para estadsticas.</p>
           ) : (
             <StatsPanel
-              funnelContacts={activeFunnelFilteredByLanding}
-              conversions={statsConversionsFilteredByLanding}
-              allConversions={statsAllConversionsFilteredByLanding}
+              funnelContacts={activeFunnelFiltered}
+              conversions={statsConversionsFiltered}
+              allConversions={statsAllConversionsFiltered}
               premiumThreshold={config?.funnel_premium_threshold ?? 50000}
               dateRange={dateRange}
             />
