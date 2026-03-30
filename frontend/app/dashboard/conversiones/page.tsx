@@ -626,7 +626,7 @@ export default function DashboardConversionesPage() {
             <select
               value={statsLandingFilter}
               onChange={(e) => setStatsLandingFilter(e.target.value)}
-              className="h-8 rounded-lg border border-zinc-700 bg-zinc-900 px-2.5 text-xs text-zinc-100"
+              className="mr-auto h-7 rounded-lg border border-zinc-700 bg-zinc-900 px-2 text-[11px] text-zinc-100"
               title="Filtrar estadisticas por landing"
             >
               <option value="__all__">Todas las landings</option>
