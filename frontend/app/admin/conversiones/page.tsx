@@ -32,6 +32,17 @@ import DateRangeFilter, {
 } from "@/components/conversiones/DateRangeFilter";
 
 type Tab = "configuracion" | "tabla" | "funnel" | "seguimiento" | "estadisticas" | "logs";
+type PixelEditDraft = {
+  id: string;
+  pixel_id: string;
+  meta_access_token: string;
+  meta_currency: string;
+  meta_api_version: string;
+  send_contact_capi: boolean;
+  geo_use_ipapi: boolean;
+  geo_fill_only_when_missing: boolean;
+  is_default: boolean;
+};
 
 const TAB_ORDER: Tab[] = ["funnel", "tabla", "estadisticas", "configuracion", "logs"];
 
@@ -409,6 +420,8 @@ export default function AdminConversionesPage() {
   const [endpointOpen, setEndpointOpen] = useState(false);
   const [funnelConfigOpen, setFunnelConfigOpen] = useState(false);
   const [editingPixelId, setEditingPixelId] = useState<string | null>(null);
+  const [pixelEditOpen, setPixelEditOpen] = useState(false);
+  const [pixelEditDraft, setPixelEditDraft] = useState<PixelEditDraft | null>(null);
   const [editPixelId, setEditPixelId] = useState(false);
   const [editAccessToken, setEditAccessToken] = useState(false);
   const [quickPixelOpen, setQuickPixelOpen] = useState(false);
@@ -557,20 +570,74 @@ export default function AdminConversionesPage() {
   };
 
   const handlePixelEdit = useCallback((px: PixelConfig) => {
-    setConfig((prev) => prev ? {
-      ...prev,
+    setPixelEditDraft({
+      id: px.id,
       pixel_id: px.pixel_id,
       meta_access_token: px.meta_access_token,
-      meta_currency: px.meta_currency || prev.meta_currency,
-      meta_api_version: px.meta_api_version || prev.meta_api_version,
+      meta_currency: px.meta_currency || "ARS",
+      meta_api_version: px.meta_api_version || "v25.0",
       send_contact_capi: !!px.send_contact_capi,
       geo_use_ipapi: !!px.geo_use_ipapi,
       geo_fill_only_when_missing: !!px.geo_fill_only_when_missing,
-    } : prev);
+      is_default: !!px.is_default,
+    });
+    setPixelEditOpen(true);
     setEditingPixelId(px.id);
     setEditPixelId(false);
     setEditAccessToken(false);
   }, []);
+
+  const handlePixelModalSave = useCallback(async () => {
+    if (!userId || !pixelEditDraft) return;
+    const pixel = pixelEditDraft.pixel_id.replace(/\D/g, "").trim();
+    const token = pixelEditDraft.meta_access_token.trim();
+    if (!pixel) {
+      setSaveMsg("Error: Pixel ID es obligatorio.");
+      return;
+    }
+    if (!token) {
+      setSaveMsg("Error: Token es obligatorio.");
+      return;
+    }
+
+    setSaving(true);
+    setSaveMsg(null);
+    try {
+      await upsertPixelConfig({
+        user_id: userId,
+        pixel_id: pixel,
+        meta_access_token: token,
+        meta_currency: pixelEditDraft.meta_currency || "ARS",
+        meta_api_version: pixelEditDraft.meta_api_version || "v25.0",
+        send_contact_capi: !!pixelEditDraft.send_contact_capi,
+        geo_use_ipapi: !!pixelEditDraft.geo_use_ipapi,
+        geo_fill_only_when_missing: !!pixelEditDraft.geo_fill_only_when_missing,
+        is_default: !!pixelEditDraft.is_default,
+      });
+      const pixels = await fetchPixelConfigs(userId);
+      setPixelConfigs(pixels);
+      const current = pixels.find((p) => p.id === pixelEditDraft.id) || pixels.find((p) => p.pixel_id === pixel);
+      if (current) {
+        setConfig((prev) => prev ? {
+          ...prev,
+          pixel_id: current.pixel_id,
+          meta_access_token: current.meta_access_token,
+          meta_currency: current.meta_currency || prev.meta_currency,
+          meta_api_version: current.meta_api_version || prev.meta_api_version,
+          send_contact_capi: !!current.send_contact_capi,
+          geo_use_ipapi: !!current.geo_use_ipapi,
+          geo_fill_only_when_missing: !!current.geo_fill_only_when_missing,
+        } : prev);
+      }
+      setPixelEditOpen(false);
+      setPixelEditDraft(null);
+      setSaveMsg("Pixel actualizado.");
+    } catch (e) {
+      setSaveMsg(e instanceof Error ? `Error: ${e.message}` : "Error al guardar pixel");
+    } finally {
+      setSaving(false);
+    }
+  }, [userId, pixelEditDraft]);
 
   const handlePixelDelete = useCallback(async (px: PixelConfig) => {
     if (!userId || !config) return;
@@ -838,6 +905,116 @@ export default function AdminConversionesPage() {
         </div>
       )}
 
+      {pixelEditOpen && pixelEditDraft && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 p-4">
+          <div className="w-full max-w-2xl rounded-xl border border-zinc-700 bg-zinc-950 p-4">
+            <div className="mb-4 flex items-center justify-between gap-3">
+              <h3 className="text-sm font-semibold text-zinc-100">Editar pixel</h3>
+              <button
+                type="button"
+                onClick={() => { setPixelEditOpen(false); setPixelEditDraft(null); }}
+                className="cursor-pointer rounded-lg border border-zinc-700 px-3 py-1 text-xs text-zinc-300 hover:bg-zinc-800"
+              >
+                Cerrar
+              </button>
+            </div>
+
+            <div className="space-y-3">
+              <div>
+                <label className="mb-1 block text-xs font-medium text-zinc-400">Pixel ID</label>
+                <input
+                  type="text"
+                  value={pixelEditDraft.pixel_id}
+                  onChange={(e) => setPixelEditDraft((p) => p ? { ...p, pixel_id: e.target.value.replace(/\D/g, "") } : p)}
+                  className="w-full rounded-lg border border-zinc-700 bg-zinc-900 px-3 py-2 text-sm text-zinc-100"
+                />
+              </div>
+              <div>
+                <label className="mb-1 block text-xs font-medium text-zinc-400">Access Token</label>
+                <input
+                  type="text"
+                  value={pixelEditDraft.meta_access_token}
+                  onChange={(e) => setPixelEditDraft((p) => p ? { ...p, meta_access_token: e.target.value } : p)}
+                  className="w-full rounded-lg border border-zinc-700 bg-zinc-900 px-3 py-2 text-sm text-zinc-100"
+                />
+              </div>
+              <div className="grid gap-3 sm:grid-cols-2">
+                <div>
+                  <label className="mb-1 block text-xs font-medium text-zinc-400">Moneda</label>
+                  <select
+                    value={pixelEditDraft.meta_currency}
+                    onChange={(e) => setPixelEditDraft((p) => p ? { ...p, meta_currency: e.target.value } : p)}
+                    className="w-full rounded-lg border border-zinc-700 bg-zinc-900 px-2 py-2 text-sm text-zinc-100"
+                  >
+                    {["ARS","USD","EUR","BRL","CLP","MXN","COP"].map((c) => <option key={c} value={c}>{c}</option>)}
+                  </select>
+                </div>
+                <div>
+                  <label className="mb-1 block text-xs font-medium text-zinc-400">API Version</label>
+                  <select
+                    value={pixelEditDraft.meta_api_version}
+                    onChange={(e) => setPixelEditDraft((p) => p ? { ...p, meta_api_version: e.target.value } : p)}
+                    className="w-full rounded-lg border border-zinc-700 bg-zinc-900 px-2 py-2 text-sm text-zinc-100"
+                  >
+                    <option value="v25.0">v25.0</option>
+                  </select>
+                </div>
+              </div>
+
+              <div className="space-y-2 rounded-lg border border-zinc-800 bg-zinc-900/50 p-3">
+                <label className="flex items-center gap-2 text-xs text-zinc-300">
+                  <input
+                    type="checkbox"
+                    checked={pixelEditDraft.send_contact_capi}
+                    onChange={(e) => setPixelEditDraft((p) => p ? { ...p, send_contact_capi: e.target.checked } : p)}
+                    className="h-4 w-4 rounded border-zinc-600 bg-zinc-900 accent-emerald-500"
+                  />
+                  Enviar evento Contact por CAPI
+                </label>
+                <label className="flex items-center gap-2 text-xs text-zinc-300">
+                  <input
+                    type="checkbox"
+                    checked={pixelEditDraft.geo_use_ipapi}
+                    onChange={(e) => setPixelEditDraft((p) => p ? { ...p, geo_use_ipapi: e.target.checked } : p)}
+                    className="h-4 w-4 rounded border-zinc-600 bg-zinc-900 accent-emerald-500"
+                  />
+                  Enviar geo
+                </label>
+                {pixelEditDraft.geo_use_ipapi && (
+                  <label className="ml-6 flex items-center gap-2 text-xs text-zinc-300">
+                    <input
+                      type="checkbox"
+                      checked={pixelEditDraft.geo_fill_only_when_missing}
+                      onChange={(e) => setPixelEditDraft((p) => p ? { ...p, geo_fill_only_when_missing: e.target.checked } : p)}
+                      className="h-4 w-4 rounded border-zinc-600 bg-zinc-900 accent-emerald-500"
+                    />
+                    Solo completar geo faltante (no pisar datos del payload)
+                  </label>
+                )}
+              </div>
+            </div>
+
+            <div className="mt-4 flex justify-end gap-2">
+              <button
+                type="button"
+                onClick={() => { setPixelEditOpen(false); setPixelEditDraft(null); }}
+                className="cursor-pointer rounded-lg border border-zinc-700 px-3 py-2 text-xs text-zinc-300 hover:bg-zinc-800"
+              >
+                Cancelar
+              </button>
+              <button
+                type="button"
+                onClick={() => void handlePixelModalSave()}
+                disabled={saving}
+                className="cursor-pointer rounded-lg bg-lime-400 px-3 py-2 text-xs font-semibold text-black transition hover:bg-lime-300 disabled:opacity-60"
+              >
+                {saving ? "Guardando..." : "Guardar"}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
       {/* Tabs + Demo toggle */}
       <div className="flex items-center justify-between gap-4 flex-wrap border-b border-zinc-800/60 pb-1">
         <div className="flex gap-4">
@@ -987,122 +1164,9 @@ export default function AdminConversionesPage() {
                     </div>
                   )}
                 </div>
-                {editingPixelId ? (
-                  <>
-                    <div className="flex items-center justify-between">
-                      <p className="text-xs text-zinc-400">Editando configuracion del pixel seleccionado.</p>
-                      <button
-                        type="button"
-                        onClick={() => setEditingPixelId(null)}
-                        className="cursor-pointer rounded-lg border border-zinc-700 px-2.5 py-1 text-[11px] text-zinc-300 transition hover:bg-zinc-800"
-                      >
-                        Cerrar
-                      </button>
-                    </div>
-                    <div>
-                      <div className="mb-1 flex items-center justify-between gap-2">
-                        <label className="block text-xs font-medium text-zinc-400">Pixel ID</label>
-                        <button
-                          type="button"
-                          onClick={() => setEditPixelId((v) => !v)}
-                          className="cursor-pointer rounded-lg border border-zinc-700 px-2.5 py-1 text-[11px] text-zinc-300 transition hover:bg-zinc-800"
-                        >
-                          {editPixelId ? "Bloquear" : "Editar"}
-                        </button>
-                      </div>
-                      <input
-                        type="text"
-                        disabled={!editPixelId}
-                        value={config?.pixel_id ?? ""}
-                        onChange={(e) => setConfig((p) => p ? { ...p, pixel_id: e.target.value.replace(/\D/g, "") } : p)}
-                        className="w-full rounded-lg border border-zinc-700 bg-zinc-900 px-3 py-2 text-sm text-zinc-100 disabled:cursor-not-allowed disabled:opacity-60"
-                        placeholder="Ej: 880464554785896"
-                      />
-                      <p className="mt-1 text-[11px] text-zinc-500">Se sincronizara automaticamente a todas tus landings al guardar.</p>
-                    </div>
-                    <div>
-                      <div className="mb-1 flex items-center justify-between gap-2">
-                        <label className="block text-xs font-medium text-zinc-400">Access Token</label>
-                        <button
-                          type="button"
-                          onClick={() => setEditAccessToken((v) => !v)}
-                          className="cursor-pointer rounded-lg border border-zinc-700 px-2.5 py-1 text-[11px] text-zinc-300 transition hover:bg-zinc-800"
-                        >
-                          {editAccessToken ? "Bloquear" : "Editar"}
-                        </button>
-                      </div>
-                      <input
-                        type="text"
-                        disabled={!editAccessToken}
-                        value={config?.meta_access_token ?? ""}
-                        onChange={(e) => setConfig((p) => p ? { ...p, meta_access_token: e.target.value } : p)}
-                        className="w-full rounded-lg border border-zinc-700 bg-zinc-900 px-3 py-2 text-sm text-zinc-100 disabled:cursor-not-allowed disabled:opacity-60"
-                        placeholder="Token de Meta Conversions API"
-                      />
-                    </div>
-                    <div className="grid gap-4 sm:grid-cols-2">
-                      <div>
-                        <label className="block text-xs font-medium text-zinc-400 mb-1">Moneda</label>
-                        <select value={config?.meta_currency ?? "ARS"} onChange={(e) => setConfig((p) => p ? { ...p, meta_currency: e.target.value } : p)} className="w-full rounded-lg border border-zinc-700 bg-zinc-900 px-2 py-2 text-sm text-zinc-100">
-                          {["ARS","USD","EUR","BRL","CLP","MXN","COP"].map((c) => <option key={c} value={c}>{c}</option>)}
-                        </select>
-                      </div>
-                      <div>
-                        <label className="block text-xs font-medium text-zinc-400 mb-1">API Version</label>
-                        <select value={config?.meta_api_version ?? "v25.0"} onChange={(e) => setConfig((p) => p ? { ...p, meta_api_version: e.target.value } : p)} className="w-full rounded-lg border border-zinc-700 bg-zinc-900 px-2 py-2 text-sm text-zinc-100">
-                          <option value="v25.0">v25.0</option>
-                        </select>
-                      </div>
-                    </div>
-                  </>
-                ) : (
-                  <p className="rounded-lg border border-zinc-800 bg-zinc-900/40 px-3 py-2 text-[11px] text-zinc-500">
-                    Selecciona <span className="text-zinc-300">Editar</span> en un pixel para ver y modificar su configuracion.
-                  </p>
-                )}
-                {editingPixelId && (
-                <div className="space-y-3 border-t border-zinc-800 pt-4">
-                  <label className="group flex items-center gap-3 rounded-lg border border-zinc-800 bg-zinc-900/70 px-3 py-2 transition hover:border-zinc-700">
-                    <input
-                      type="checkbox"
-                      checked={config?.send_contact_capi ?? false}
-                      onChange={(e) => setConfig((p) => p ? { ...p, send_contact_capi: e.target.checked } : p)}
-                      className="h-4 w-4 rounded border-zinc-600 bg-zinc-900 accent-emerald-500"
-                    />
-                    <span className="text-xs text-zinc-300">Enviar evento Contact por CAPI</span>
-                  </label>
-                  <label className="group flex items-center gap-3 rounded-lg border border-zinc-800 bg-zinc-900/70 px-3 py-2 transition hover:border-zinc-700">
-                    <input
-                      type="checkbox"
-                      checked={config?.geo_use_ipapi ?? false}
-                      onChange={(e) => setConfig((p) => p ? { ...p, geo_use_ipapi: e.target.checked } : p)}
-                      className="h-4 w-4 rounded border-zinc-600 bg-zinc-900 accent-emerald-500"
-                    />
-                    <span className="text-xs text-zinc-300">Enviar geo</span>
-                  </label>
-                  {config?.geo_use_ipapi && (
-                    <label className="ml-6 flex items-center gap-2">
-                      <input type="checkbox" checked={config?.geo_fill_only_when_missing ?? false} onChange={(e) => setConfig((p) => p ? { ...p, geo_fill_only_when_missing: e.target.checked } : p)} className="h-4 w-4 rounded border-zinc-600 bg-zinc-900 accent-emerald-500" />
-                      <span className="text-xs text-zinc-300">Solo completar geo faltante (no pisar datos del payload)</span>
-                    </label>
-                  )}
-                  <div className="mt-3 rounded-lg border border-amber-700/40 bg-amber-950/30 p-3 text-[11px] text-amber-200">
-                    <p className="font-semibold">Confirma que tus eventos estan llegando a Meta!</p>
-                    <p className="mt-1">
-                      Ingresa al Administrador de eventos, selecciona tu pixel y dirigite a la seccion &quot;Probar eventos&quot;.
-                    </p>
-                    <p className="mt-1">
-                      Copi tu <code className="rounded bg-zinc-900 px-1 py-0.5 text-[10px]">test_event_code</code> y luego prob tu URL con este formato:
-                    </p>
-                    <code className="mt-2 block break-all rounded bg-zinc-950 px-2 py-1 text-[10px] text-emerald-300">
-                      https://landing.panelbotadmin.com/TU_NOMBRE/?test_event_code=TU_CODIGO_TEST
-                    </code>
-                    <p className="mt-2">
-                      Asi vas a poder verificar en tiempo real si los eventos se estan enviando correctamente a Meta.
-                    </p>
-                  </div>
-                </div>
-                )}
+                <p className="rounded-lg border border-zinc-800 bg-zinc-900/40 px-3 py-2 text-[11px] text-zinc-500">
+                  Selecciona <span className="text-zinc-300">Editar</span> en un pixel para abrir la configuracion en ventana emergente.
+                </p>
               </div>
             )}
           </section>
