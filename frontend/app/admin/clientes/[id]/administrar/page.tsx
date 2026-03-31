@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 import { useEffect, useMemo, useState } from "react";
 import Link from "next/link";
@@ -127,11 +127,14 @@ export default function AdminClientManagePage() {
     setTimeout(() => setOkMsg(null), 2500);
   };
 
-  const onResetPassword = async (e: React.FormEvent) => {
-    e.preventDefault();
+  const onResetPassword = async () => {
     if (!clientId) return;
     if (!resetPassword.trim()) {
       setError("Ingresa una nueva clave para resetear.");
+      return;
+    }
+    if (resetPassword.trim().length < 6) {
+      setError("La clave debe tener al menos 6 caracteres.");
       return;
     }
     setResettingPassword(true);
@@ -218,7 +221,7 @@ export default function AdminClientManagePage() {
           <p className="mb-3 text-[11px] text-zinc-500">
             Si el cliente olvidó su clave, define una nueva aquí y se actualiza de inmediato.
           </p>
-          <form onSubmit={onResetPassword} className="flex flex-wrap items-center gap-2">
+          <div className="flex flex-wrap items-center gap-2">
             <input
               type="text"
               value={resetPassword}
@@ -227,13 +230,14 @@ export default function AdminClientManagePage() {
               className="w-full max-w-sm rounded-lg border border-zinc-800 bg-zinc-900 px-3 py-2 text-xs text-zinc-50 outline-none focus:border-zinc-500"
             />
             <button
-              type="submit"
+              type="button"
+              onClick={() => void onResetPassword()}
               disabled={resettingPassword}
               className="rounded-lg border border-zinc-700 px-3 py-2 text-xs font-medium text-zinc-200 hover:bg-zinc-800 disabled:opacity-60"
             >
               {resettingPassword ? "Reseteando..." : "Resetear contraseña"}
             </button>
-          </form>
+          </div>
         </section>
 
         <div className="rounded-lg border border-zinc-800 bg-zinc-900/50 p-3">
@@ -298,3 +302,5 @@ export default function AdminClientManagePage() {
     </div>
   );
 }
+
+
