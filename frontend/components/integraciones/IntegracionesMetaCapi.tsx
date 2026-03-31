@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { supabase } from "@/lib/supabaseClient";
@@ -41,7 +41,7 @@ export default function IntegracionesMetaCapi() {
 
   const [editOpen, setEditOpen] = useState(false);
   const [draft, setDraft] = useState<PixelEditDraft | null>(null);
-  const [metaCapiOpen, setMetaCapiOpen] = useState(false);
+  const [activeIntegration, setActiveIntegration] = useState<"menu" | "meta">("menu");
 
   const endpointBase = process.env.NEXT_PUBLIC_SUPABASE_URL ?? "";
   const endpointUrl = useMemo(
@@ -267,13 +267,6 @@ export default function IntegracionesMetaCapi() {
           <h1 className="text-xl font-semibold text-zinc-100">INTEGRACIONES</h1>
           <p className="mt-1 text-sm text-zinc-400">Conecta y administra integraciones de eventos.</p>
         </div>
-        <button
-          type="button"
-          onClick={openQuickModal}
-          className="rounded-xl bg-lime-400 px-4 py-2 text-xs font-bold uppercase tracking-wide text-zinc-900 transition hover:bg-lime-300"
-        >
-          Añadir pixel
-        </button>
       </div>
 
       {saveMsg && (
@@ -282,35 +275,49 @@ export default function IntegracionesMetaCapi() {
         </div>
       )}
 
-      <button
-        type="button"
-        onClick={() => setMetaCapiOpen((v) => !v)}
-        className={`w-full rounded-xl border px-4 py-3 text-left transition active:scale-[0.99] ${
-          metaCapiOpen
-            ? "border-emerald-700/50 bg-emerald-950/20"
-            : "border-zinc-800 bg-zinc-900/50 hover:bg-zinc-900"
-        }`}
-      >
-        <span className="flex items-center justify-between gap-3">
-          <span className="inline-flex items-center gap-2 text-sm font-semibold text-zinc-200">
-            <svg className="h-4 w-6 text-[#0081FB]" viewBox="0 0 64 32" fill="none" aria-hidden="true">
-              <path
-                d="M2 24c0-10 7-16 14-16 6 0 10 4 16 12 5-8 9-12 15-12 7 0 15 6 15 16 0 4-3 6-7 6-3 0-6-1-9-5l-8-11-8 11c-3 4-6 5-9 5-4 0-7-2-7-6Z"
-                stroke="currentColor"
-                strokeWidth="3"
-                strokeLinecap="round"
-                strokeLinejoin="round"
-              />
-            </svg>
-            Integración con meta CAPI
+      {activeIntegration === "menu" ? (
+        <button
+          type="button"
+          onClick={() => setActiveIntegration("meta")}
+          className="w-full rounded-xl border border-zinc-800 bg-zinc-900/50 px-4 py-3 text-left transition active:scale-[0.99] hover:bg-zinc-900"
+        >
+          <span className="flex items-center justify-between gap-3">
+            <span className="inline-flex items-center gap-2 text-sm font-semibold text-zinc-200">
+              <svg className="h-[18px] w-[36px] text-[#0866FF]" viewBox="0 0 128 64" fill="none" preserveAspectRatio="xMidYMid meet" aria-hidden="true">
+                <path
+                  d="M8 48c0-18 12-32 28-32 11 0 19 7 30 23 11-16 19-23 30-23 16 0 28 14 28 32 0 9-6 16-16 16-8 0-14-3-20-12L96 27 76 52c-6 9-12 12-20 12-10 0-16-7-16-16Z"
+                  stroke="currentColor"
+                  strokeWidth="6"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                />
+              </svg>
+              Integración con Meta CAPI
+            </span>
+            <span className="text-xs text-zinc-400">Ingresar</span>
           </span>
-          <span className="text-xs text-zinc-400">{metaCapiOpen ? "Ocultar" : "Abrir"}</span>
-        </span>
-      </button>
-
-      {metaCapiOpen && (
+        </button>
+      ) : (
       <section className="rounded-xl border border-zinc-800 bg-zinc-900/50 p-4">
-        <h3 className="text-sm font-semibold text-zinc-200">Configuracion Meta CAPI</h3>
+        <div className="mb-3 flex items-center justify-between gap-2">
+          <h3 className="text-sm font-semibold text-zinc-200">Configuración Meta CAPI</h3>
+          <div className="flex items-center gap-2">
+            <button
+              type="button"
+              onClick={openQuickModal}
+              className="rounded-xl bg-lime-400 px-4 py-2 text-xs font-bold uppercase tracking-wide text-zinc-900 transition hover:bg-lime-300"
+            >
+              AÑADIR PIXEL
+            </button>
+            <button
+              type="button"
+              onClick={() => setActiveIntegration("menu")}
+              className="rounded-lg border border-zinc-700 px-3 py-1.5 text-xs text-zinc-300 hover:bg-zinc-800"
+            >
+              Volver
+            </button>
+          </div>
+        </div>
         <div className="mt-3 rounded-lg border border-zinc-800 bg-zinc-950/40 p-3">
           <div className="mb-2 flex items-center justify-between gap-2">
             <h4 className="text-xs font-semibold text-zinc-300">Pixeles configurados</h4>
@@ -421,3 +428,4 @@ export default function IntegracionesMetaCapi() {
     </div>
   );
 }
+
