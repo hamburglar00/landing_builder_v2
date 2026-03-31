@@ -43,7 +43,7 @@ type PixelEditDraft = {
   is_default: boolean;
 };
 
-const TAB_ORDER_BASE: Tab[] = ["funnel", "tabla", "estadisticas"];
+const TAB_ORDER_BASE: Tab[] = ["funnel", "tabla", "estadisticas", "configuracion"];
 
 const TAB_LABELS: Record<Tab, string> = {
   funnel: "Funnel",
@@ -337,11 +337,6 @@ export default function DashboardConversionesPage() {
   const [pixelEditDraft, setPixelEditDraft] = useState<PixelEditDraft | null>(null);
   const [editPixelId, setEditPixelId] = useState(false);
   const [editAccessToken, setEditAccessToken] = useState(false);
-  const [quickPixelOpen, setQuickPixelOpen] = useState(false);
-  const [quickPixelId, setQuickPixelId] = useState("");
-  const [quickPixelToken, setQuickPixelToken] = useState("");
-  const [quickPixelCurrency, setQuickPixelCurrency] = useState("ARS");
-  const [quickPixelError, setQuickPixelError] = useState<string | null>(null);
   const [pixelConfigs, setPixelConfigs] = useState<PixelConfig[]>([]);
 
   const activeConversions = useMemo(() => filterByDateRange(conversions, dateRange), [conversions, dateRange]);
@@ -518,74 +513,6 @@ export default function DashboardConversionesPage() {
     } catch (e) {
       setSaveMsg(e instanceof Error ? e.message : "Error al guardar");
     } finally { setSaving(false); }
-  };
-
-  const openQuickPixelModal = useCallback(() => {
-    setQuickPixelId(config?.pixel_id ?? "");
-    setQuickPixelToken(config?.meta_access_token ?? "");
-    setQuickPixelCurrency(config?.meta_currency ?? "ARS");
-    setQuickPixelError(null);
-    setQuickPixelOpen(true);
-  }, [config]);
-
-  const handleQuickPixelSave = async () => {
-    if (!config || !userId) return;
-    const pixel = quickPixelId.replace(/\D/g, "").trim();
-    const token = quickPixelToken.trim();
-    const currency = quickPixelCurrency.trim() || "ARS";
-    if (!pixel) {
-      setQuickPixelError("Pixel ID es obligatorio.");
-      return;
-    }
-    if (!token) {
-      setQuickPixelError("Token es obligatorio.");
-      return;
-    }
-
-    setSaving(true);
-    setQuickPixelError(null);
-    setSaveMsg(null);
-    try {
-      const hasAny = pixelConfigs.length > 0;
-      await upsertPixelConfig({
-        user_id: userId,
-        pixel_id: pixel,
-        meta_access_token: token,
-        meta_currency: currency,
-        meta_api_version: config.meta_api_version || "v25.0",
-        send_contact_capi: false,
-        geo_use_ipapi: false,
-        geo_fill_only_when_missing: false,
-        is_default: !hasAny,
-      });
-      const pixels = await fetchPixelConfigs(userId);
-      setPixelConfigs(pixels);
-      const current = pixels.find((p) => p.pixel_id === pixel);
-      if (current) setEditingPixelId(current.id);
-
-      // Backward compatibility: first pixel becomes legacy default config too.
-      if (!hasAny) {
-        const nextConfig = {
-          ...config,
-          user_id: userId,
-          pixel_id: pixel,
-          meta_access_token: token,
-          meta_currency: currency,
-        };
-        await upsertConversionsConfig(nextConfig);
-        setConfig(nextConfig);
-      }
-      setEditPixelId(false);
-      setEditAccessToken(false);
-      setQuickPixelOpen(false);
-      setSaveMsg("Pixel guardado.");
-    } catch (e) {
-      const msg = e instanceof Error ? e.message : "Error al guardar";
-      setQuickPixelError(msg);
-      setSaveMsg(msg);
-    } finally {
-      setSaving(false);
-    }
   };
 
   const handlePixelEdit = useCallback((px: PixelConfig) => {
@@ -840,13 +767,6 @@ export default function DashboardConversionesPage() {
           <h1 className="text-xl font-semibold text-zinc-100">CONVERSIONES</h1>
           <p className="mt-1 text-sm text-zinc-400">Tu pipeline de leads, cargas y estadsticas.</p>
         </div>
-        <button
-          type="button"
-          onClick={openQuickPixelModal}
-          className="inline-flex shrink-0 cursor-pointer items-center rounded-xl bg-lime-400 px-4 py-2 text-sm font-semibold text-black transition hover:bg-lime-300"
-        >
-          AÑADIR PIXEL
-        </button>
       </div>
 
       {saveMsg && (
@@ -858,68 +778,6 @@ export default function DashboardConversionesPage() {
         <p className={`rounded-lg px-3 py-2 text-sm ${clearMsg.includes("Error") ? "bg-red-950/50 text-red-300" : "bg-emerald-950/50 text-emerald-300"}`} role="alert">
           {clearMsg}
         </p>
-      )}
-
-      {quickPixelOpen && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 p-4">
-          <div className="w-full max-w-lg rounded-xl border border-zinc-700 bg-zinc-950 p-4">
-            <div className="mb-4 flex items-center justify-between gap-3">
-              <h3 className="text-sm font-semibold text-zinc-100">Añadir pixel</h3>
-              <button
-                type="button"
-                onClick={() => setQuickPixelOpen(false)}
-                className="cursor-pointer rounded-lg border border-zinc-700 px-3 py-1 text-xs text-zinc-300 hover:bg-zinc-800"
-              >
-                Cerrar
-              </button>
-            </div>
-            <div className="space-y-3">
-              <div>
-                <label className="mb-1 block text-xs font-medium text-zinc-400">Pixel ID (obligatorio)</label>
-                <input
-                  type="text"
-                  value={quickPixelId}
-                  onChange={(e) => setQuickPixelId(e.target.value.replace(/\D/g, ""))}
-                  placeholder="Ej: 880464554785896"
-                  className="w-full rounded-lg border border-zinc-700 bg-zinc-900 px-3 py-2 text-sm text-zinc-100"
-                />
-              </div>
-              <div>
-                <label className="mb-1 block text-xs font-medium text-zinc-400">Token (obligatorio)</label>
-                <input
-                  type="text"
-                  value={quickPixelToken}
-                  onChange={(e) => setQuickPixelToken(e.target.value)}
-                  placeholder="Token de Meta Conversions API"
-                  className="w-full rounded-lg border border-zinc-700 bg-zinc-900 px-3 py-2 text-sm text-zinc-100"
-                />
-              </div>
-              <div>
-                <label className="mb-1 block text-xs font-medium text-zinc-400">Moneda</label>
-                <select
-                  value={quickPixelCurrency}
-                  onChange={(e) => setQuickPixelCurrency(e.target.value)}
-                  className="w-full rounded-lg border border-zinc-700 bg-zinc-900 px-2 py-2 text-sm text-zinc-100"
-                >
-                  {["ARS","USD","EUR","BRL","CLP","MXN","COP"].map((c) => <option key={c} value={c}>{c}</option>)}
-                </select>
-              </div>
-              {quickPixelError && (
-                <p className="rounded-lg bg-red-950/50 px-3 py-2 text-xs text-red-300">{quickPixelError}</p>
-              )}
-              <div className="flex justify-end pt-1">
-                <button
-                  type="button"
-                  onClick={handleQuickPixelSave}
-                  disabled={saving}
-                  className="cursor-pointer rounded-xl bg-lime-400 px-4 py-2 text-sm font-semibold text-black transition hover:bg-lime-300 disabled:cursor-not-allowed disabled:opacity-60"
-                >
-                  {saving ? "Guardando..." : "Guardar"}
-                </button>
-              </div>
-            </div>
-          </div>
-        </div>
       )}
 
       {pixelEditOpen && pixelEditDraft && (
@@ -1059,7 +917,7 @@ export default function DashboardConversionesPage() {
           })}
         </div>
         <div className="ml-auto flex items-center gap-4">
-          {tabOrder.filter((t) => t === "logs").map((t) => {
+          {tabOrder.filter((t) => t === "configuracion" || t === "logs").map((t) => {
             const active = tab === t;
             return (
               <button
@@ -1070,7 +928,7 @@ export default function DashboardConversionesPage() {
                 }`}
               >
                 <span className="inline-flex items-center gap-1.5">
-                  <LogsTabIcon />
+                  {t === "configuracion" ? <GearTabIcon /> : <LogsTabIcon />}
                   {TAB_LABELS[t]}
                 </span>
                 <span
@@ -1120,86 +978,6 @@ export default function DashboardConversionesPage() {
       {/* TAB: CONFIGURACIN */}
       {tab === "configuracion" && (
         <div className="space-y-4">
-          {/* Meta CAPI */}
-          <section className="rounded-xl border border-zinc-800 bg-zinc-900/50">
-            <button type="button" onClick={() => setConfigOpen((v) => !v)} className="flex w-full cursor-pointer items-center gap-2 p-4">
-              <ChevronIcon open={configOpen} />
-              <h3 className="text-sm font-semibold text-zinc-200">Configuracion Meta CAPI</h3>
-            </button>
-            {configOpen && (
-              <div className="space-y-4 border-t border-zinc-800 p-4">
-                <div className="rounded-lg border border-zinc-800 bg-zinc-950/40 p-3">
-                  <div className="mb-2 flex items-center justify-between gap-2">
-                    <h4 className="text-xs font-semibold text-zinc-300">Pixeles configurados</h4>
-                    <span className="text-[11px] text-zinc-500">{pixelConfigs.length}</span>
-                  </div>
-                  {pixelConfigs.length === 0 ? (
-                    <p className="text-[11px] text-zinc-500">No hay pixeles cargados.</p>
-                  ) : (
-                    <div className="space-y-1.5">
-                      {pixelConfigs.map((px) => {
-                        const token = px.meta_access_token || "";
-                        const tokenMasked = token.length > 14
-                          ? `${token.slice(0, 8)}...${token.slice(-6)}`
-                          : token || "-";
-                        return (
-                          <div
-                            key={px.id}
-                            className="flex w-full items-center justify-between rounded-lg border border-zinc-800 bg-zinc-900/60 px-3 py-2"
-                          >
-                            <div className="min-w-0">
-                              <p className="font-mono text-xs text-zinc-200">{px.pixel_id}</p>
-                              <p className="truncate text-[11px] text-zinc-500">{tokenMasked}</p>
-                            </div>
-                            <div className="ml-3 flex items-center justify-end gap-2">
-                              {px.is_default && (
-                                <span className="rounded border border-emerald-700/70 bg-emerald-950/40 px-1.5 py-0.5 text-[10px] text-emerald-300">
-                                  Default
-                                </span>
-                              )}
-                              <button
-                                type="button"
-                                onClick={() => handlePixelEdit(px)}
-                                className="cursor-pointer rounded-lg border border-zinc-700 px-2 py-1 text-[10px] text-zinc-300 transition hover:bg-zinc-800"
-                              >
-                                Editar
-                              </button>
-                              <button
-                                type="button"
-                                onClick={() => void handlePixelDelete(px)}
-                                className="cursor-pointer rounded-lg border border-red-700/80 px-2 py-1 text-[10px] text-red-300 transition hover:bg-red-950/30"
-                              >
-                                Eliminar
-                              </button>
-                            </div>
-                          </div>
-                        );
-                      })}
-                    </div>
-                  )}
-                </div>
-                <p className="rounded-lg border border-zinc-800 bg-zinc-900/40 px-3 py-2 text-[11px] text-zinc-500">
-                  Selecciona <span className="text-zinc-300">Editar</span> en un pixel para abrir la configuracion en ventana emergente.
-                </p>
-                <div className="rounded-lg border border-amber-700/40 bg-amber-950/30 p-3 text-[11px] text-amber-200">
-                  <p className="font-semibold">Confirma que tus eventos estan llegando a Meta!</p>
-                  <p className="mt-1">
-                    Ingresa al Administrador de eventos, selecciona tu pixel y dirigite a la seccion &quot;Probar eventos&quot;.
-                  </p>
-                  <p className="mt-1">
-                    Copi tu <code className="rounded bg-zinc-900 px-1 py-0.5 text-[10px]">test_event_code</code> y luego prob tu URL con este formato:
-                  </p>
-                  <code className="mt-2 block break-all rounded bg-zinc-950 px-2 py-1 text-[10px] text-emerald-300">
-                    https://landing.panelbotadmin.com/TU_NOMBRE/?test_event_code=TU_CODIGO_TEST
-                  </code>
-                  <p className="mt-2">
-                    Asi vas a poder verificar en tiempo real si los eventos se estan enviando correctamente a Meta.
-                  </p>
-                </div>
-              </div>
-            )}
-          </section>
-
           {/* Endpoint */}
           <section className="rounded-xl border border-zinc-800 bg-zinc-900/50">
             <button type="button" onClick={() => setEndpointOpen((v) => !v)} className="flex w-full cursor-pointer items-center gap-2 p-4">
@@ -1560,3 +1338,5 @@ export default function DashboardConversionesPage() {
     </div>
   );
 }
+
+
