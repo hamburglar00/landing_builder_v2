@@ -334,9 +334,9 @@ export default function IntegracionesMetaCapi() {
             <span className="flex items-center justify-between gap-3">
               <span className="inline-flex items-center gap-3 text-sm font-semibold text-zinc-200">
                 <svg className="h-6 w-6 shrink-0" viewBox="0 0 24 24" aria-hidden="true">
-                  <rect x="0" y="0" width="24" height="24" rx="6" fill="#151A33" />
-                  <path d="M4 7.5A2.5 2.5 0 0 1 6.5 5H11l-5.6 6.1A2 2 0 0 0 5 12.4V17H4V7.5Z" fill="#F6F7FF" />
-                  <path d="M9.2 12.2 14.8 6h5.2l-6.4 7.1L20 18h-5.1l-4.5-3.9a1.3 1.3 0 0 1-.4-1.9Z" fill="#F6F7FF" />
+                  <rect x="0.75" y="0.75" width="22.5" height="22.5" rx="5" fill="#FFFFFF" stroke="#E5E7EB" strokeWidth="1.5" />
+                  <path d="M4 7.8A2.8 2.8 0 0 1 6.8 5h5.4l-5.7 6.2A2.2 2.2 0 0 0 6 12.7V19H4V7.8Z" fill="#1B2140" />
+                  <path d="M10 12.1 15.7 5H20l-6.3 7.1L20 19h-4.2l-5.6-5.9a1 1 0 0 1-.2-1Z" fill="#1B2140" />
                 </svg>
                 Integración con CRM Kommo
               </span>
