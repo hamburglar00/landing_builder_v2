@@ -41,6 +41,7 @@ export default function IntegracionesMetaCapi() {
 
   const [editOpen, setEditOpen] = useState(false);
   const [draft, setDraft] = useState<PixelEditDraft | null>(null);
+  const [metaCapiOpen, setMetaCapiOpen] = useState(false);
 
   const endpointBase = process.env.NEXT_PUBLIC_SUPABASE_URL ?? "";
   const endpointUrl = useMemo(
@@ -281,6 +282,22 @@ export default function IntegracionesMetaCapi() {
         </div>
       )}
 
+      <button
+        type="button"
+        onClick={() => setMetaCapiOpen((v) => !v)}
+        className={`w-full rounded-xl border px-4 py-3 text-left transition active:scale-[0.99] ${
+          metaCapiOpen
+            ? "border-emerald-700/50 bg-emerald-950/20"
+            : "border-zinc-800 bg-zinc-900/50 hover:bg-zinc-900"
+        }`}
+      >
+        <span className="flex items-center justify-between gap-3">
+          <span className="text-sm font-semibold text-zinc-200">Integración con meta CAPI</span>
+          <span className="text-xs text-zinc-400">{metaCapiOpen ? "Ocultar" : "Abrir"}</span>
+        </span>
+      </button>
+
+      {metaCapiOpen && (
       <section className="rounded-xl border border-zinc-800 bg-zinc-900/50 p-4">
         <h3 className="text-sm font-semibold text-zinc-200">Configuracion Meta CAPI</h3>
         <div className="mt-3 rounded-lg border border-zinc-800 bg-zinc-950/40 p-3">
@@ -347,6 +364,7 @@ export default function IntegracionesMetaCapi() {
           </code>
         </div>
       </section>
+      )}
 
       {quickOpen && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 px-3">
