@@ -84,8 +84,8 @@ export default function IntegracionesMetaCapi() {
   }, [loadAll]);
 
   const openQuickModal = useCallback(() => {
-    setQuickPixelId(config?.pixel_id ?? "");
-    setQuickToken(config?.meta_access_token ?? "");
+    setQuickPixelId("");
+    setQuickToken("");
     setQuickCurrency(config?.meta_currency ?? "ARS");
     setQuickErr(null);
     setQuickOpen(true);
@@ -354,7 +354,9 @@ export default function IntegracionesMetaCapi() {
             <h3 className="text-sm font-semibold text-zinc-100">Añadir pixel</h3>
             <div className="mt-3 grid gap-3 sm:grid-cols-2">
               <input value={quickPixelId} onChange={(e) => setQuickPixelId(e.target.value.replace(/\D/g, ""))} placeholder="Pixel ID" className="h-9 rounded-lg border border-zinc-700 bg-zinc-900 px-3 text-sm text-zinc-100" />
-              <input value={quickCurrency} onChange={(e) => setQuickCurrency(e.target.value.toUpperCase())} placeholder="Moneda (ARS)" className="h-9 rounded-lg border border-zinc-700 bg-zinc-900 px-3 text-sm text-zinc-100" />
+              <select value={quickCurrency} onChange={(e) => setQuickCurrency(e.target.value)} className="h-9 rounded-lg border border-zinc-700 bg-zinc-900 px-3 text-sm text-zinc-100">
+                {["ARS","USD","EUR","BRL","CLP","MXN","COP"].map((c) => <option key={c} value={c}>{c}</option>)}
+              </select>
               <input value={quickToken} onChange={(e) => setQuickToken(e.target.value)} placeholder="Access token" className="h-9 rounded-lg border border-zinc-700 bg-zinc-900 px-3 text-sm text-zinc-100 sm:col-span-2" />
             </div>
             {quickErr && <p className="mt-2 text-xs text-red-400">{quickErr}</p>}
@@ -390,4 +392,3 @@ export default function IntegracionesMetaCapi() {
     </div>
   );
 }
-
