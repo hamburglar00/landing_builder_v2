@@ -333,11 +333,12 @@ export default function IntegracionesMetaCapi() {
           >
             <span className="flex items-center justify-between gap-3">
               <span className="inline-flex items-center gap-3 text-sm font-semibold text-zinc-200">
-                <svg className="h-6 w-6 shrink-0" viewBox="0 0 24 24" aria-hidden="true">
-                  <rect x="0.75" y="0.75" width="22.5" height="22.5" rx="5" fill="#FFFFFF" stroke="#E5E7EB" strokeWidth="1.5" />
-                  <path d="M4 7.8A2.8 2.8 0 0 1 6.8 5h5.4l-5.7 6.2A2.2 2.2 0 0 0 6 12.7V19H4V7.8Z" fill="#1B2140" />
-                  <path d="M10 12.1 15.7 5H20l-6.3 7.1L20 19h-4.2l-5.6-5.9a1 1 0 0 1-.2-1Z" fill="#1B2140" />
-                </svg>
+                <img
+                  src="/kommo-logo.png"
+                  alt=""
+                  aria-hidden="true"
+                  className="h-6 w-6 shrink-0 rounded-sm object-cover"
+                />
                 Integración con CRM Kommo
               </span>
               <span className="text-xs text-zinc-400">Entrar</span>
