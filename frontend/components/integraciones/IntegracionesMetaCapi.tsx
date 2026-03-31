@@ -292,7 +292,18 @@ export default function IntegracionesMetaCapi() {
         }`}
       >
         <span className="flex items-center justify-between gap-3">
-          <span className="text-sm font-semibold text-zinc-200">Integración con meta CAPI</span>
+          <span className="inline-flex items-center gap-2 text-sm font-semibold text-zinc-200">
+            <svg className="h-4 w-6 text-[#0081FB]" viewBox="0 0 64 32" fill="none" aria-hidden="true">
+              <path
+                d="M2 24c0-10 7-16 14-16 6 0 10 4 16 12 5-8 9-12 15-12 7 0 15 6 15 16 0 4-3 6-7 6-3 0-6-1-9-5l-8-11-8 11c-3 4-6 5-9 5-4 0-7-2-7-6Z"
+                stroke="currentColor"
+                strokeWidth="3"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+              />
+            </svg>
+            Integración con meta CAPI
+          </span>
           <span className="text-xs text-zinc-400">{metaCapiOpen ? "Ocultar" : "Abrir"}</span>
         </span>
       </button>
