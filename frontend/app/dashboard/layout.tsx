@@ -48,7 +48,7 @@ function NavIcon({
   variant,
   active,
 }: {
-  variant: "inicio" | "landings" | "gerencias" | "telefonos" | "conversiones" | "seguimiento" | "notificaciones";
+  variant: "inicio" | "landings" | "gerencias" | "telefonos" | "conversiones" | "integraciones" | "seguimiento" | "notificaciones";
   active: boolean;
 }) {
   const base = active
@@ -67,6 +67,10 @@ function NavIcon({
           ? active
             ? "text-orange-400"
             : "text-orange-300"
+          : variant === "integraciones"
+            ? active
+              ? "text-cyan-400"
+              : "text-cyan-300"
           : variant === "seguimiento"
             ? active
               ? "text-amber-300"
@@ -154,6 +158,26 @@ function NavIcon({
         >
           <polyline points="22 7 13.5 15.5 8.5 10.5 2 17" className={accent} />
           <polyline points="16 7 22 7 22 13" />
+        </svg>
+      </span>
+    );
+  }
+
+  if (variant === "integraciones") {
+    return (
+      <span className={`${base}`}>
+        <svg
+          className="h-4 w-4"
+          viewBox="0 0 24 24"
+          fill="none"
+          stroke="currentColor"
+          strokeWidth={1.6}
+          strokeLinecap="round"
+          strokeLinejoin="round"
+        >
+          <path d="M8 12h8" className={accent} />
+          <path d="M12 8v8" />
+          <circle cx="12" cy="12" r="8" />
         </svg>
       </span>
     );
@@ -392,6 +416,21 @@ export default function DashboardLayout({
               active={Boolean(pathname?.startsWith("/dashboard/conversiones"))}
             />
             <span>CONVERSIONES</span>
+          </Link>
+          <Link
+            href="/dashboard/integraciones"
+            onClick={() => setSidebarOpen(false)}
+            className={`flex items-center gap-2 rounded-lg px-3 py-2 text-xs font-medium tracking-[0.18em] transition ${
+              pathname?.startsWith("/dashboard/integraciones")
+                ? "bg-[var(--color-primary-soft-bg)] text-[var(--color-primary)] border border-[var(--color-primary-soft-border)]"
+                : "text-[var(--color-text-muted)] hover:bg-[var(--color-bg-3)] hover:text-[var(--color-text)]"
+            }`}
+          >
+            <NavIcon
+              variant="integraciones"
+              active={Boolean(pathname?.startsWith("/dashboard/integraciones"))}
+            />
+            <span>INTEGRACIONES</span>
           </Link>
           <Link
             href="/dashboard/seguimiento"

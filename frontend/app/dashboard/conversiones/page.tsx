@@ -43,7 +43,7 @@ type PixelEditDraft = {
   is_default: boolean;
 };
 
-const TAB_ORDER_BASE: Tab[] = ["funnel", "tabla", "estadisticas", "configuracion"];
+const TAB_ORDER_BASE: Tab[] = ["funnel", "tabla", "estadisticas"];
 
 const TAB_LABELS: Record<Tab, string> = {
   funnel: "Funnel",
@@ -319,6 +319,11 @@ export default function DashboardConversionesPage() {
 
   useEffect(() => {
     const view = (searchParams.get("view") || "").toLowerCase();
+    const tabParam = (searchParams.get("tab") || "").toLowerCase();
+    if (tabParam === "configuracion") {
+      setTab("configuracion");
+      return;
+    }
     if (view === "seguimiento") {
       setTab("seguimiento");
     }
@@ -1054,7 +1059,7 @@ export default function DashboardConversionesPage() {
           })}
         </div>
         <div className="ml-auto flex items-center gap-4">
-          {tabOrder.filter((t) => t === "configuracion" || t === "logs").map((t) => {
+          {tabOrder.filter((t) => t === "logs").map((t) => {
             const active = tab === t;
             return (
               <button
@@ -1065,7 +1070,7 @@ export default function DashboardConversionesPage() {
                 }`}
               >
                 <span className="inline-flex items-center gap-1.5">
-                  {t === "configuracion" ? <GearTabIcon /> : <LogsTabIcon />}
+                  <LogsTabIcon />
                   {TAB_LABELS[t]}
                 </span>
                 <span
