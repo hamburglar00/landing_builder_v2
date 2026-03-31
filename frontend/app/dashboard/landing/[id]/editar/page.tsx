@@ -43,7 +43,7 @@ function buildExternalIntegrationGuide(): string {
     "",
     "1) ENDPOINT DE CONVERSIONES",
     "- Toda landing externa debe enviar Contact a:",
-    "  https://<tu-proyecto>.supabase.co/functions/v1/conversions?name=<nombre_cliente>",
+    "  <URL de conversiones del Constructor>/functions/v1/conversions?name=<nombre_cliente>",
     "- <nombre_cliente> debe ser exactamente el nombre del cliente en el Constructor.",
     "",
     "2) OBTENER TELEFONO PARA WHATSAPP",

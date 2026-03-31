@@ -587,7 +587,7 @@ export default function DashboardConversionesPage() {
 
   const handlePixelDelete = useCallback(async (px: PixelConfig) => {
     if (!userId || !config) return;
-    const ok = window.confirm(`Eliminar pixel ${px.pixel_id}?\n\nSe eliminara de la vista y de la base de datos.`);
+    const ok = window.confirm(`Eliminar pixel ${px.pixel_id}?\n\nSe eliminará de tu configuración.`);
     if (!ok) return;
     setSaving(true);
     setSaveMsg(null);
@@ -741,7 +741,7 @@ export default function DashboardConversionesPage() {
     setClearMsg(null);
     try {
       setLogs([]);
-      setClearMsg("Vista limpiada. Los registros siguen en la base de datos.");
+      setClearMsg("Vista limpiada. Puedes volver a ver registros al actualizar.");
       setTimeout(() => setClearMsg(null), 4000);
     } catch (e) {
       console.error(e);
