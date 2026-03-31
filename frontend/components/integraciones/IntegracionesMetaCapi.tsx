@@ -42,7 +42,7 @@ export default function IntegracionesMetaCapi() {
 
   const [editOpen, setEditOpen] = useState(false);
   const [draft, setDraft] = useState<PixelEditDraft | null>(null);
-  const [activeIntegration, setActiveIntegration] = useState<"menu" | "meta">("menu");
+  const [activeIntegration, setActiveIntegration] = useState<"menu" | "meta" | "kommo">("menu");
 
   const endpointBase = process.env.NEXT_PUBLIC_SUPABASE_URL ?? "";
   const endpointUrl = useMemo(
@@ -273,11 +273,17 @@ export default function IntegracionesMetaCapi() {
       <div className="flex items-center justify-between gap-3">
         <div>
           <h1 className="text-xl font-semibold text-zinc-100">
-            {activeIntegration === "meta" ? "INTEGRACIONES > Integración con Meta CAPI" : "INTEGRACIONES"}
+            {activeIntegration === "meta"
+              ? "INTEGRACIONES > Integración con Meta CAPI"
+              : activeIntegration === "kommo"
+              ? "INTEGRACIONES > Integración con CRM Kommo"
+              : "INTEGRACIONES"}
           </h1>
           <p className="mt-1 text-sm text-zinc-400">
             {activeIntegration === "meta"
               ? "Administra la configuración de Meta CAPI."
+              : activeIntegration === "kommo"
+              ? "Guía rápida para conectar Kommo con tu endpoint."
               : "Conecta y administra integraciones de eventos."}
           </p>
         </div>
@@ -290,27 +296,93 @@ export default function IntegracionesMetaCapi() {
       )}
 
       {activeIntegration === "menu" ? (
-        <button
-          type="button"
-          onClick={() => setActiveIntegration("meta")}
-          className="w-full rounded-xl border border-zinc-800 bg-zinc-900/50 px-4 py-4 text-left transition active:scale-[0.99] hover:bg-zinc-900"
-        >
-          <span className="flex items-center justify-between gap-3">
-            <span className="inline-flex items-center gap-3 text-sm font-semibold text-zinc-200">
-              <svg className="h-[16px] w-[32px] shrink-0 text-[#0866FF]" viewBox="0 0 36 18" fill="none" aria-hidden="true">
-                <path
-                  d="M2 9c0-4 2.8-7 6.2-7 3 0 5.1 2.6 8 7.4 3-4.8 5-7.4 8-7.4 3.4 0 6.2 3 6.2 7s-2.7 7-6 7c-2.6 0-4.4-1.8-8.2-8-3.8 6.2-5.6 8-8.2 8C4.7 16 2 13 2 9Z"
-                  stroke="currentColor"
-                  strokeWidth="2.3"
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                />
-              </svg>
-              Integración con Meta CAPI
+        <div className="space-y-3">
+          <button
+            type="button"
+            onClick={() => setActiveIntegration("meta")}
+            className="w-full rounded-xl border border-zinc-800 bg-zinc-900/50 px-4 py-4 text-left transition active:scale-[0.99] hover:bg-zinc-900"
+          >
+            <span className="flex items-center justify-between gap-3">
+              <span className="inline-flex items-center gap-3 text-sm font-semibold text-zinc-200">
+                <svg className="h-[16px] w-[32px] shrink-0 text-[#0866FF]" viewBox="0 0 36 18" fill="none" aria-hidden="true">
+                  <path
+                    d="M2 9c0-4 2.8-7 6.2-7 3 0 5.1 2.6 8 7.4 3-4.8 5-7.4 8-7.4 3.4 0 6.2 3 6.2 7s-2.7 7-6 7c-2.6 0-4.4-1.8-8.2-8-3.8 6.2-5.6 8-8.2 8C4.7 16 2 13 2 9Z"
+                    stroke="currentColor"
+                    strokeWidth="2.3"
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                  />
+                </svg>
+                Integración con Meta CAPI
+              </span>
+              <span className="text-xs text-zinc-400">Entrar</span>
             </span>
-            <span className="text-xs text-zinc-400">Entrar</span>
-          </span>
-        </button>
+          </button>
+
+          <button
+            type="button"
+            onClick={() => setActiveIntegration("kommo")}
+            className="w-full rounded-xl border border-zinc-800 bg-zinc-900/50 px-4 py-4 text-left transition active:scale-[0.99] hover:bg-zinc-900"
+          >
+            <span className="flex items-center justify-between gap-3">
+              <span className="inline-flex items-center gap-3 text-sm font-semibold text-zinc-200">
+                <span className="inline-flex h-6 w-6 items-center justify-center rounded-md bg-[#FF6F00] text-[11px] font-bold text-white">
+                  K
+                </span>
+                Integración con CRM Kommo
+              </span>
+              <span className="text-xs text-zinc-400">Entrar</span>
+            </span>
+          </button>
+        </div>
+      ) : (
+      activeIntegration === "kommo" ? (
+      <section className="rounded-xl border border-zinc-800 bg-zinc-900/50 p-4">
+        <div className="mb-4 flex items-center justify-between gap-2">
+          <h3 className="text-sm font-semibold text-zinc-200">Instructivo de integración con Kommo</h3>
+          <button
+            type="button"
+            onClick={() => setActiveIntegration("menu")}
+            className="rounded-lg border border-zinc-700 px-3 py-1.5 text-xs text-zinc-300 hover:bg-zinc-800"
+          >
+            Volver
+          </button>
+        </div>
+
+        <div className="space-y-4 text-sm text-zinc-300">
+          <div className="rounded-lg border border-zinc-800 bg-zinc-950/40 p-3">
+            <p className="font-semibold text-zinc-100">A) Alta de webhook (envío de eventos)</p>
+            <ol className="mt-2 list-decimal space-y-1 pl-5 text-zinc-300">
+              <li>Ingresar a Kommo.</li>
+              <li>Ir a <span className="font-medium">Ajustes → Centro de integraciones</span>.</li>
+              <li>Abrir <span className="font-medium">Webhooks</span>.</li>
+              <li>En URL, configurar por ejemplo:</li>
+            </ol>
+            <code className="mt-2 block break-all rounded bg-zinc-900 px-2 py-1 text-xs text-emerald-300">
+              https://intermediario-kommo.vercel.app/api/kommo/webhook?name=ngp
+            </code>
+            <ol className="mt-2 list-decimal space-y-1 pl-5 text-zinc-300" start={5}>
+              <li>En tipo de evento, dejar solo: <span className="font-medium">Mensaje entrante recibido</span>.</li>
+              <li>Guardar.</li>
+            </ol>
+            <p className="mt-2 text-xs text-zinc-400">
+              Con esto, Kommo empieza a enviar eventos de mensajes entrantes al constructor.
+            </p>
+          </div>
+
+          <div className="rounded-lg border border-zinc-800 bg-zinc-950/40 p-3">
+            <p className="font-semibold text-zinc-100">B) Crear integración para obtener token Kommo</p>
+            <ol className="mt-2 list-decimal space-y-1 pl-5 text-zinc-300">
+              <li>En Kommo ir a <span className="font-medium">Ajustes → Centro de integraciones</span>.</li>
+              <li>Crear una nueva integración (custom/private).</li>
+              <li>Completar datos básicos (nombre/descripcion) y guardar.</li>
+              <li>Abrir la integración creada e ir a <span className="font-medium">Llaves y alcances</span>.</li>
+              <li>Generar <span className="font-medium">Token de larga duración</span>.</li>
+              <li>Copiar el token de larga duración.</li>
+            </ol>
+          </div>
+        </div>
+      </section>
       ) : (
       <section className="rounded-xl border border-zinc-800 bg-zinc-900/50 p-4">
         <div className="mb-3 flex items-center justify-between gap-2">
@@ -396,6 +468,7 @@ export default function IntegracionesMetaCapi() {
           </code>
         </div>
       </section>
+      )
       )}
 
       {quickOpen && (
