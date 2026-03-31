@@ -365,7 +365,7 @@ export default function IntegracionesMetaCapi() {
               <li>Ingresar a Kommo.</li>
               <li>Ir a <span className="font-medium">Ajustes → Centro de integraciones</span>.</li>
               <li>Abrir <span className="font-medium">Webhooks</span>.</li>
-              <li>En URL, configurar por ejemplo:</li>
+              <li>En URL, ingresar:</li>
             </ol>
             <code className="mt-2 block break-all rounded bg-zinc-900 px-2 py-1 text-xs text-emerald-300">
               {kommoWebhookUrl || "https://intermediario-kommo.vercel.app/api/kommo/webhook?name=<nombre_cliente>"}
