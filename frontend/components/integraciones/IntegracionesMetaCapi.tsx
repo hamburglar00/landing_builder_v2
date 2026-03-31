@@ -26,6 +26,7 @@ type PixelEditDraft = {
 
 export default function IntegracionesMetaCapi() {
   const [userId, setUserId] = useState<string | null>(null);
+  const [isAdmin, setIsAdmin] = useState(false);
   const [clientName, setClientName] = useState("");
   const [config, setConfig] = useState<ConversionsConfig | null>(null);
   const [pixelConfigs, setPixelConfigs] = useState<PixelConfig[]>([]);
@@ -61,10 +62,11 @@ export default function IntegracionesMetaCapi() {
     setPixelConfigs(pixels);
     const { data: p } = await supabase
       .from("profiles")
-      .select("nombre")
+      .select("nombre, role")
       .eq("id", uid)
       .maybeSingle();
     setClientName(String(p?.nombre ?? ""));
+    setIsAdmin(String(p?.role ?? "") === "admin");
   }, []);
 
   useEffect(() => {
@@ -103,12 +105,13 @@ export default function IntegracionesMetaCapi() {
     setQuickErr(null);
     try {
       const hasAny = pixelConfigs.length > 0;
+      const apiVersionToSave = (config.meta_api_version || "v25.0").trim() || "v25.0";
       await upsertPixelConfig({
         user_id: userId,
         pixel_id: pixel,
         meta_access_token: token,
         meta_currency: quickCurrency || "ARS",
-        meta_api_version: config.meta_api_version || "v25.0",
+        meta_api_version: apiVersionToSave,
         send_contact_capi: false,
         geo_use_ipapi: false,
         geo_fill_only_when_missing: false,
@@ -162,12 +165,17 @@ export default function IntegracionesMetaCapi() {
     setSaving(true);
     setSaveMsg(null);
     try {
+      const persistedCurrent = pixelConfigs.find((px) => px.id === draft.id);
+      const apiVersionToSave = isAdmin
+        ? ((draft.meta_api_version || "v25.0").trim() || "v25.0")
+        : (persistedCurrent?.meta_api_version || "v25.0");
+
       await upsertPixelConfig({
         user_id: userId,
         pixel_id: pixel,
         meta_access_token: token,
         meta_currency: draft.meta_currency || "ARS",
-        meta_api_version: draft.meta_api_version || "v25.0",
+        meta_api_version: apiVersionToSave,
         send_contact_capi: !!draft.send_contact_capi,
         geo_use_ipapi: !!draft.geo_use_ipapi,
         geo_fill_only_when_missing: !!draft.geo_fill_only_when_missing,
@@ -181,7 +189,7 @@ export default function IntegracionesMetaCapi() {
           pixel_id: pixel,
           meta_access_token: token,
           meta_currency: draft.meta_currency || "ARS",
-          meta_api_version: draft.meta_api_version || "v25.0",
+          meta_api_version: apiVersionToSave,
           send_contact_capi: !!draft.send_contact_capi,
           geo_use_ipapi: !!draft.geo_use_ipapi,
           geo_fill_only_when_missing: !!draft.geo_fill_only_when_missing,
@@ -199,7 +207,7 @@ export default function IntegracionesMetaCapi() {
     } finally {
       setSaving(false);
     }
-  }, [userId, draft, config, loadAll]);
+  }, [userId, draft, config, loadAll, isAdmin, pixelConfigs]);
 
   const handleSetDefault = useCallback(async (px: PixelConfig) => {
     if (!userId || !config) return;
@@ -417,7 +425,18 @@ export default function IntegracionesMetaCapi() {
             <div className="mt-3 grid gap-3 sm:grid-cols-2">
               <input value={draft.pixel_id} onChange={(e) => setDraft((p) => (p ? { ...p, pixel_id: e.target.value.replace(/\D/g, "") } : p))} placeholder="Pixel ID" className="h-9 rounded-lg border border-zinc-700 bg-zinc-900 px-3 text-sm text-zinc-100" />
               <input value={draft.meta_currency} onChange={(e) => setDraft((p) => (p ? { ...p, meta_currency: e.target.value.toUpperCase() } : p))} placeholder="Moneda" className="h-9 rounded-lg border border-zinc-700 bg-zinc-900 px-3 text-sm text-zinc-100" />
-              <input value={draft.meta_api_version} onChange={(e) => setDraft((p) => (p ? { ...p, meta_api_version: e.target.value } : p))} placeholder="API Version" className="h-9 rounded-lg border border-zinc-700 bg-zinc-900 px-3 text-sm text-zinc-100" />
+              {isAdmin ? (
+                <input
+                  value={draft.meta_api_version}
+                  onChange={(e) => setDraft((p) => (p ? { ...p, meta_api_version: e.target.value } : p))}
+                  placeholder="API Version"
+                  className="h-9 rounded-lg border border-zinc-700 bg-zinc-900 px-3 text-sm text-zinc-100"
+                />
+              ) : (
+                <div className="rounded-lg border border-zinc-800 bg-zinc-950 px-3 py-2 text-xs text-zinc-400">
+                  API Version: <span className="font-mono text-zinc-300">{draft.meta_api_version || "v25.0"}</span>
+                </div>
+              )}
               <label className="inline-flex items-center gap-2 text-xs text-zinc-300"><input type="checkbox" checked={draft.is_default} onChange={(e) => setDraft((p) => (p ? { ...p, is_default: e.target.checked } : p))} /> Default</label>
               <input value={draft.meta_access_token} onChange={(e) => setDraft((p) => (p ? { ...p, meta_access_token: e.target.value } : p))} placeholder="Access token" className="h-9 rounded-lg border border-zinc-700 bg-zinc-900 px-3 text-sm text-zinc-100 sm:col-span-2" />
               <label className="inline-flex items-center gap-2 text-xs text-zinc-300"><input type="checkbox" checked={draft.send_contact_capi} onChange={(e) => setDraft((p) => (p ? { ...p, send_contact_capi: e.target.checked } : p))} /> Enviar Contact por CAPI</label>
