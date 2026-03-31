@@ -1,6 +1,5 @@
-import { redirect } from "next/navigation";
+import IntegracionesMetaCapi from "@/components/integraciones/IntegracionesMetaCapi";
 
 export default function AdminIntegracionesPage() {
-  redirect("/admin/conversiones?tab=configuracion");
+  return <IntegracionesMetaCapi />;
 }
-
