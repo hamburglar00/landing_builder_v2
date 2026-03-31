@@ -264,8 +264,14 @@ export default function IntegracionesMetaCapi() {
     <div className="space-y-4">
       <div className="flex items-center justify-between gap-3">
         <div>
-          <h1 className="text-xl font-semibold text-zinc-100">INTEGRACIONES</h1>
-          <p className="mt-1 text-sm text-zinc-400">Conecta y administra integraciones de eventos.</p>
+          <h1 className="text-xl font-semibold text-zinc-100">
+            {activeIntegration === "meta" ? "INTEGRACIONES > Integración con Meta CAPI" : "INTEGRACIONES"}
+          </h1>
+          <p className="mt-1 text-sm text-zinc-400">
+            {activeIntegration === "meta"
+              ? "Administra la configuración de Meta CAPI."
+              : "Conecta y administra integraciones de eventos."}
+          </p>
         </div>
       </div>
 
@@ -279,22 +285,22 @@ export default function IntegracionesMetaCapi() {
         <button
           type="button"
           onClick={() => setActiveIntegration("meta")}
-          className="w-full rounded-xl border border-zinc-800 bg-zinc-900/50 px-4 py-3 text-left transition active:scale-[0.99] hover:bg-zinc-900"
+          className="w-full rounded-xl border border-zinc-800 bg-zinc-900/50 px-4 py-4 text-left transition active:scale-[0.99] hover:bg-zinc-900"
         >
           <span className="flex items-center justify-between gap-3">
-            <span className="inline-flex items-center gap-2 text-sm font-semibold text-zinc-200">
-              <svg className="h-[18px] w-[36px] text-[#0866FF]" viewBox="0 0 128 64" fill="none" preserveAspectRatio="xMidYMid meet" aria-hidden="true">
+            <span className="inline-flex items-center gap-3 text-sm font-semibold text-zinc-200">
+              <svg className="h-[16px] w-[32px] shrink-0 text-[#0866FF]" viewBox="0 0 36 18" fill="none" aria-hidden="true">
                 <path
-                  d="M8 48c0-18 12-32 28-32 11 0 19 7 30 23 11-16 19-23 30-23 16 0 28 14 28 32 0 9-6 16-16 16-8 0-14-3-20-12L96 27 76 52c-6 9-12 12-20 12-10 0-16-7-16-16Z"
+                  d="M2 9c0-4 2.8-7 6.2-7 3 0 5.1 2.6 8 7.4 3-4.8 5-7.4 8-7.4 3.4 0 6.2 3 6.2 7s-2.7 7-6 7c-2.6 0-4.4-1.8-8.2-8-3.8 6.2-5.6 8-8.2 8C4.7 16 2 13 2 9Z"
                   stroke="currentColor"
-                  strokeWidth="6"
+                  strokeWidth="2.3"
                   strokeLinecap="round"
                   strokeLinejoin="round"
                 />
               </svg>
               Integración con Meta CAPI
             </span>
-            <span className="text-xs text-zinc-400">Ingresar</span>
+            <span className="text-xs text-zinc-400">Entrar</span>
           </span>
         </button>
       ) : (
