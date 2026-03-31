@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 import { useCallback, useEffect, useRef, useState } from "react";
 import Link from "next/link";
@@ -175,7 +175,7 @@ export function TelefonosPageContent({
     void init();
   }, [loadData]);
 
-  // Cuenta regresiva hasta la próxima ejecución real del cron (*/5 en UTC: :00, :05, :10, …)
+  // Cuenta regresiva hasta la próxima ejecución real del cron (*/5 en UTC: :00, :05, :10, ...)
   // Cuando llega a 00:00 se recargan los datos para mostrar los teléfonos actualizados por el cron.
   useEffect(() => {
     const update = () => {
@@ -249,7 +249,7 @@ export function TelefonosPageContent({
       });
       const text = await res.text();
       if (!res.ok) {
-        setError(`Sync: ${res.status} – ${text}`);
+        setError(`Sync: ${res.status} â€“ ${text}`);
       } else {
         await loadData(userId);
       }
@@ -280,7 +280,7 @@ export function TelefonosPageContent({
       });
       const text = await res.text();
       if (!res.ok) {
-        setError(`Reset: ${res.status} – ${text}`);
+        setError(`Reset: ${res.status} â€“ ${text}`);
       } else {
         await loadData(userId);
       }
@@ -299,7 +299,7 @@ export function TelefonosPageContent({
         : "todas las gerencias";
     if (
       !window.confirm(
-        `¿Limpiar los registros de teléfonos de ${scope} en esta vista? Esto no borra datos en Supabase y se volverán a ver al sincronizar.`,
+        `Limpiar los registros de telefonos de ${scope} en esta vista? Esta accion solo limpia la vista y los registros volveran a mostrarse al sincronizar.`,
       )
     )
       return;
@@ -371,7 +371,7 @@ export function TelefonosPageContent({
           href={backLink}
           className="text-sm text-zinc-400 transition hover:text-zinc-200"
         >
-          ← {backLabel}
+          â† {backLabel}
         </Link>
       </div>
       <div>
@@ -650,7 +650,7 @@ export function TelefonosPageContent({
                                 <td className="px-3 py-2 text-xs text-zinc-500">
                                   {p.last_seen_at
                                     ? new Date(p.last_seen_at).toLocaleString()
-                                    : "—"}
+                                    : "â€”"}
                                 </td>
                               </tr>
                             ))
@@ -668,4 +668,5 @@ export function TelefonosPageContent({
     </div>
   );
 }
+
 
