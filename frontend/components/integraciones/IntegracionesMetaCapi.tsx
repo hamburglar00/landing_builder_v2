@@ -52,6 +52,13 @@ export default function IntegracionesMetaCapi() {
         : "",
     [clientName, endpointBase],
   );
+  const kommoWebhookUrl = useMemo(
+    () =>
+      clientName
+        ? `https://intermediario-kommo.vercel.app/api/kommo/webhook?name=${encodeURIComponent(clientName)}`
+        : "",
+    [clientName],
+  );
 
   const loadAll = useCallback(async (uid: string) => {
     const [cfg, pixels] = await Promise.all([
@@ -359,7 +366,7 @@ export default function IntegracionesMetaCapi() {
               <li>En URL, configurar por ejemplo:</li>
             </ol>
             <code className="mt-2 block break-all rounded bg-zinc-900 px-2 py-1 text-xs text-emerald-300">
-              https://intermediario-kommo.vercel.app/api/kommo/webhook?name=ngp
+              {kommoWebhookUrl || "https://intermediario-kommo.vercel.app/api/kommo/webhook?name=<nombre_cliente>"}
             </code>
             <ol className="mt-2 list-decimal space-y-1 pl-5 text-zinc-300" start={5}>
               <li>En tipo de evento, dejar solo: <span className="font-medium">Mensaje entrante recibido</span>.</li>
