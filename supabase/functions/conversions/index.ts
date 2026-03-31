@@ -60,6 +60,7 @@ interface ConversionRow {
   country: string;
   fbp: string;
   fbc: string;
+  meta_pixel_id: string;
   pixel_id: string;
   contact_event_id: string;
   contact_event_time: number | null;
@@ -607,6 +608,7 @@ async function handleContact(
 ): Promise<Response> {
   const nowIso = new Date().toISOString();
   const nowSec = Math.floor(Date.now() / 1000);
+  const inboundMetaPixelId = norm(p.meta_pixel_id || p.pixel_id);
 
   const contactEventId = norm(p.contact_event_id || p.event_id) || generateEventId();
   const contactEventTime = toValidEventTime(p.contact_event_time || p.event_time || nowSec);
@@ -628,7 +630,8 @@ async function handleContact(
     country: norm(geo.country),
     fbp: norm(p.fbp),
     fbc: norm(p.fbc),
-    pixel_id: norm(p.pixel_id),
+    meta_pixel_id: inboundMetaPixelId,
+    pixel_id: inboundMetaPixelId,
     contact_event_id: contactEventId,
     contact_event_time: contactEventTime,
     contact_payload_raw: safePayloadRaw(p),
@@ -713,6 +716,7 @@ async function handleLead(
   pixelConfigs: PixelConfigRow[],
 ): Promise<Response> {
   const cleanPhone = sanitizePhone(p.phone);
+  const inboundMetaPixelId = norm(p.meta_pixel_id || p.pixel_id);
   if (!cleanPhone) {
     await writeLog(db, landing.user_id, "handleLead", "ERROR", "LEAD rechazado: falta phone", safePayloadRaw(p));
     return textResponse("Faltan parámetros: phone requerido", 400);
@@ -769,6 +773,10 @@ async function handleLead(
       lead_event_time: leadEventTime,
       lead_payload_raw: leadPayloadRaw,
     };
+    if (inboundMetaPixelId) {
+      updates.meta_pixel_id = inboundMetaPixelId;
+      updates.pixel_id = inboundMetaPixelId;
+    }
     if (testEventCode) updates.test_event_code = testEventCode;
     if (payloadFn) updates.fn = payloadFn;
     if (payloadLn) updates.ln = payloadLn;
@@ -812,6 +820,7 @@ async function handlePurchase(
   pixelConfigs: PixelConfigRow[],
 ): Promise<Response> {
   const cleanPhone = sanitizePhone(p.phone);
+  const inboundMetaPixelId = norm(p.meta_pixel_id || p.pixel_id);
   const amount = parseFloat(p.amount);
   if (!cleanPhone || isNaN(amount)) {
     await writeLog(db, landing.user_id, "handlePurchase", "ERROR", "PURCHASE rechazado: falta phone o amount", safePayloadRaw(p));
@@ -877,7 +886,8 @@ async function handlePurchase(
         country: geo.country,
         fbp: "",
         fbc: "",
-        pixel_id: norm(p.pixel_id),
+        meta_pixel_id: inboundMetaPixelId,
+        pixel_id: inboundMetaPixelId,
         contact_event_id: "",
         contact_event_time: null,
         contact_payload_raw: "",
@@ -927,6 +937,10 @@ async function handlePurchase(
         purchase_payload_raw: purchasePayloadRaw,
         purchase_type: "first",
       };
+      if (inboundMetaPixelId) {
+        updates.meta_pixel_id = inboundMetaPixelId;
+        updates.pixel_id = inboundMetaPixelId;
+      }
       if (testEventCode) updates.test_event_code = testEventCode;
       if (existing?.lead_event_id) {
         updates.lead_event_id = existing.lead_event_id;
@@ -993,7 +1007,8 @@ async function handlePurchase(
     country: srcRow?.country ?? "",
     fbp: srcRow?.fbp ?? "",
     fbc: srcRow?.fbc ?? "",
-    pixel_id: srcRow?.pixel_id ?? norm(p.pixel_id),
+    meta_pixel_id: srcRow?.meta_pixel_id ?? srcRow?.pixel_id ?? inboundMetaPixelId,
+    pixel_id: srcRow?.pixel_id ?? inboundMetaPixelId,
     // DO NOT inherit event IDs
     contact_event_id: "",
     contact_event_time: null,
@@ -1051,6 +1066,7 @@ async function handleSimplePurchase(
   pixelConfigs: PixelConfigRow[],
 ): Promise<Response> {
   const cleanPhone = sanitizePhone(p.phone);
+  const inboundMetaPixelId = norm(p.meta_pixel_id || p.pixel_id);
   const amount = parseFloat(p.amount);
   if (!cleanPhone || isNaN(amount)) return textResponse("Faltan parametros: phone y amount", 400);
   const testEventCode = norm(p.test_event_code);
@@ -1087,7 +1103,8 @@ async function handleSimplePurchase(
     country: srcRow?.country ?? "",
     fbp: srcRow?.fbp ?? "",
     fbc: srcRow?.fbc ?? "",
-    pixel_id: srcRow?.pixel_id ?? norm(p.pixel_id),
+    meta_pixel_id: srcRow?.meta_pixel_id ?? srcRow?.pixel_id ?? inboundMetaPixelId,
+    pixel_id: srcRow?.pixel_id ?? inboundMetaPixelId,
     contact_event_id: "",
     contact_event_time: null,
     contact_payload_raw: "",
