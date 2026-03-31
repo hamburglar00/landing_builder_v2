@@ -38,6 +38,7 @@ export default function AdminClientManagePage() {
   const [nombre, setNombre] = useState("");
   const [email, setEmail] = useState("");
   const [resetPassword, setResetPassword] = useState("");
+  const [showResetPassword, setShowResetPassword] = useState(false);
   const [resettingPassword, setResettingPassword] = useState(false);
   const [showLogs, setShowLogs] = useState(true);
   const [visibleCols, setVisibleCols] = useState<Set<ColKey>>(new Set(ALL_COLUMNS));
@@ -223,12 +224,19 @@ export default function AdminClientManagePage() {
           </p>
           <div className="flex flex-wrap items-center gap-2">
             <input
-              type="text"
+              type={showResetPassword ? "text" : "password"}
               value={resetPassword}
               onChange={(e) => setResetPassword(e.target.value)}
               placeholder="Nueva clave"
               className="w-full max-w-sm rounded-lg border border-zinc-800 bg-zinc-900 px-3 py-2 text-xs text-zinc-50 outline-none focus:border-zinc-500"
             />
+            <button
+              type="button"
+              onClick={() => setShowResetPassword((v) => !v)}
+              className="rounded-lg border border-zinc-700 px-3 py-2 text-xs font-medium text-zinc-200 hover:bg-zinc-800"
+            >
+              {showResetPassword ? "Ocultar clave" : "Ver clave"}
+            </button>
             <button
               type="button"
               onClick={() => void onResetPassword()}
@@ -238,6 +246,9 @@ export default function AdminClientManagePage() {
               {resettingPassword ? "Reseteando..." : "Resetear contraseña"}
             </button>
           </div>
+          <p className="mt-2 text-[11px] text-zinc-500">
+            Nota: por seguridad no se puede ver la clave actual del cliente, solo definir una nueva.
+          </p>
         </section>
 
         <div className="rounded-lg border border-zinc-800 bg-zinc-900/50 p-3">
