@@ -53,12 +53,15 @@ export default function DashboardSeguimientoPage() {
         .eq("phone", cleanPhone);
       if (delConvError) throw delConvError;
 
+      // Best effort: si falla por permisos/RLS no debe bloquear el borrado principal.
       const { error: delAlertsError } = await supabase
         .from("notification_contact_alerts")
         .delete()
         .eq("user_id", userId)
         .eq("phone", cleanPhone);
-      if (delAlertsError) throw delAlertsError;
+      if (delAlertsError) {
+        console.warn("No se pudo limpiar notification_contact_alerts:", delAlertsError.message);
+      }
 
       await refreshTable();
     },
