@@ -79,6 +79,20 @@ export async function createGerencia(
   payload: { nombre: string; source_type: "pbadmin" | "manual"; gerencia_id?: number | null },
 ): Promise<Gerencia> {
   const isPbAdmin = payload.source_type === "pbadmin";
+  let generatedId: number | null = null;
+
+  if (!isPbAdmin) {
+    const { data: lastRow, error: lastError } = await supabase
+      .from("gerencias")
+      .select("id")
+      .order("id", { ascending: false })
+      .limit(1)
+      .maybeSingle();
+
+    if (lastError) throw lastError;
+    generatedId = Number(lastRow?.id ?? 0) + 1;
+  }
+
   const { data, error } = await supabase
     .from("gerencias")
     .insert({
@@ -91,6 +105,7 @@ export async function createGerencia(
             gerencia_id: payload.gerencia_id,
           }
         : {
+            id: generatedId,
             gerencia_id: null,
           }),
     })
