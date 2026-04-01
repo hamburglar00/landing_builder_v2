@@ -21,6 +21,23 @@ type NotificationSettings = {
   notify_hour: number | string | null;
 };
 
+type RankingRule = {
+  indicator: string;
+  maxTotal: number;
+};
+
+const DEFAULT_RANKING_RULES: RankingRule[] = [
+  { indicator: "\u{1F4A9}", maxTotal: 1000 },
+  { indicator: "\u{1F7E2}", maxTotal: 5000 },
+  { indicator: "\u{1F7E1}", maxTotal: 10000 },
+  { indicator: "\u{1F7E0}", maxTotal: 50000 },
+  { indicator: "\u{1F534}", maxTotal: 100000 },
+  { indicator: "\u{26AB}", maxTotal: 300000 },
+  { indicator: "\u{1F525}", maxTotal: 500000 },
+];
+const DEFAULT_OVERFLOW_INDICATOR = "\u{1F4A3}";
+const LEAD_INDICATOR = "\u{1F4F2}";
+
 type ConversionRow = {
   user_id: string;
   phone: string;
@@ -59,6 +76,14 @@ async function sendTelegramMessage(token: string, chatId: string, text: string) 
 function relTimeFromDays(days: number): string {
   if (days <= 1) return "1 dia";
   return `${days} dias`;
+}
+
+function indicatorFor(total: number, rules: RankingRule[], overflow: string): string {
+  const ordered = [...rules].sort((a, b) => a.maxTotal - b.maxTotal);
+  for (const r of ordered) {
+    if (total < r.maxTotal) return r.indicator || "-";
+  }
+  return overflow || "-";
 }
 
 Deno.serve(async (req) => {
@@ -179,6 +204,24 @@ Deno.serve(async (req) => {
 
       const candidates: Array<{ phone: string; lastActivity: Date; isLead: boolean; avg: number; total: number }> = [];
 
+      const { data: cfg } = await db
+        .from("conversions_config")
+        .select("tracking_ranking_config")
+        .eq("user_id", s.user_id)
+        .maybeSingle();
+      const cfgAny = (cfg as Record<string, unknown> | null)?.tracking_ranking_config as Record<string, unknown> | null;
+      const rankingRules = Array.isArray(cfgAny?.rules)
+        ? (cfgAny?.rules as Array<Record<string, unknown>>)
+            .map((r) => ({
+              indicator: String(r.indicator ?? ""),
+              maxTotal: Number(r.maxTotal ?? 0),
+            }))
+            .filter((r) => r.maxTotal > 0 && r.indicator)
+        : DEFAULT_RANKING_RULES;
+      const overflowIndicator = typeof cfgAny?.overflowIndicator === "string" && cfgAny.overflowIndicator.trim()
+        ? cfgAny.overflowIndicator
+        : DEFAULT_OVERFLOW_INDICATOR;
+
       for (const [phone, group] of byPhone.entries()) {
         const sorted = [...group].sort((a, b) =>
           new Date(b.created_at).getTime() - new Date(a.created_at).getTime(),
@@ -223,15 +266,16 @@ Deno.serve(async (req) => {
             1,
             Math.floor((now.getTime() - c.lastActivity.getTime()) / (24 * 60 * 60 * 1000)),
           );
+          const rank = c.isLead ? LEAD_INDICATOR : indicatorFor(c.total, rankingRules, overflowIndicator);
           if (c.isLead) {
-            return `- <a href="${wa}">${c.phone}</a>: inactivo hace ${relTimeFromDays(inactiveDays)}. Aun no realizo una carga.`;
+            return `• ${rank} <a href="${wa}">${c.phone}</a>\n⏳ Inactivo hace ${relTimeFromDays(inactiveDays)}.\n📭 Aun no realizo una carga.`;
           }
-          return `- <a href="${wa}">${c.phone}</a>: inactivo hace ${relTimeFromDays(inactiveDays)}. Carga promedio: $${Math.round(c.avg)}. Total cargado: $${Math.round(c.total)}.`;
+          return `• ${rank} <a href="${wa}">${c.phone}</a>\n⏳ Inactivo hace ${relTimeFromDays(inactiveDays)}.\n💵 Carga promedio: $${Math.round(c.avg)}.\n🏦 Total cargado: $${Math.round(c.total)}.`;
         });
 
         const text = [
           "<b>RESUMEN DE INACTIVIDAD</b> 🔔",
-          `📌 Contactos detectados: ${chunk.length}`,
+          `📊 Contactos inactivos: ${chunk.length}/${candidates.length}`,
           "",
           lines.join("\n\n"),
           "",
