@@ -77,12 +77,8 @@ export function TelefonosPageContent({
   const [resettingGerenciaId, setResettingGerenciaId] = useState<number | null>(
     null,
   );
-  const [deletingGerenciaId, setDeletingGerenciaId] = useState<number | null>(
-    null,
-  );
   const [globalSyncing, setGlobalSyncing] = useState(false);
   const [globalResetting, setGlobalResetting] = useState(false);
-  const [globalDeleting, setGlobalDeleting] = useState(false);
   const [switchingGerenciaId, setSwitchingGerenciaId] = useState<number | null>(null);
   const [openGerenciaId, setOpenGerenciaId] = useState<number | null>(null);
   const [nextSyncCountdown, setNextSyncCountdown] = useState<string>("--:--");
@@ -296,40 +292,6 @@ export function TelefonosPageContent({
     }
   };
 
-  const handleDelete = (gerenciaId: number | null) => {
-    const scope =
-      gerenciaId !== null
-        ? `esta gerencia (${gerencias.find((g) => g.id === gerenciaId)?.nombre ?? gerenciaId})`
-        : "todas las gerencias";
-    if (
-      !window.confirm(
-        `Limpiar los registros de telefonos de ${scope} en esta vista? Esta accion solo limpia la vista y los registros volveran a mostrarse al sincronizar.`,
-      )
-    )
-      return;
-
-    setError(null);
-    if (gerenciaId !== null) {
-      setDeletingGerenciaId(gerenciaId);
-      setPhonesByGerencia((prev) => {
-        const next = { ...prev };
-        next[gerenciaId] = [];
-        return next;
-      });
-      setDeletingGerenciaId(null);
-    } else {
-      setGlobalDeleting(true);
-      setPhonesByGerencia((prev) => {
-        const next: Record<number, GerenciaPhoneRow[]> = {};
-        for (const key of Object.keys(prev)) {
-          next[Number(key)] = [];
-        }
-        return next;
-      });
-      setGlobalDeleting(false);
-    }
-  };
-
   const handleFairCriterionChange = async (
     gerenciaId: number,
     criterion: FairCriterion,
@@ -465,15 +427,6 @@ export function TelefonosPageContent({
             >
               {globalResetting ? "Reiniciando..." : "Reiniciar contadores"}
             </button>
-            <button
-              type="button"
-              onClick={() => void handleDelete(null)}
-              disabled={globalDeleting || !gerencias.length}
-              title="Limpia los registros de esta vista para todas las gerencias."
-              className="rounded-lg border border-red-900/60 bg-red-950/30 px-3 py-1.5 text-xs font-medium text-red-300 transition hover:bg-red-950/50 disabled:opacity-60"
-            >
-              {globalDeleting ? "Borrando..." : "Borrar registros"}
-            </button>
           </div>
             );
           })()}
@@ -507,7 +460,6 @@ export function TelefonosPageContent({
             const isOpen = openGerenciaId === g.id;
             const syncing = syncingGerenciaId === g.id;
             const resetting = resettingGerenciaId === g.id;
-            const deleting = deletingGerenciaId === g.id;
             return (
               <div
                 key={g.id}
@@ -605,15 +557,6 @@ export function TelefonosPageContent({
                           className="rounded-lg border border-zinc-700 bg-zinc-800 px-2 py-1 text-xs font-medium text-zinc-200 transition hover:bg-zinc-700 disabled:opacity-60"
                         >
                           {resetting ? "Reiniciando..." : "Reiniciar contador"}
-                        </button>
-                        <button
-                          type="button"
-                          onClick={() => void handleDelete(g.id)}
-                          disabled={deleting}
-                          title="Limpia los registros de esta vista para esta gerencia."
-                          className="rounded-lg border border-red-900/60 bg-red-950/30 px-2 py-1 text-xs font-medium text-red-300 transition hover:bg-red-950/50 disabled:opacity-60"
-                        >
-                          {deleting ? "Borrando..." : "Borrar registros"}
                         </button>
                       </div>
                     </div>
