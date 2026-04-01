@@ -472,14 +472,14 @@ export function TelefonosPageContent({
                   }
                   className="grid w-full grid-cols-1 items-center gap-2 px-4 py-3 text-left hover:bg-zinc-800/50 md:grid-cols-[minmax(320px,1fr)_180px_220px_20px]"
                 >
-                  <div className="flex items-center gap-3 md:min-w-[320px]">
+                  <div className="grid items-center gap-3 md:min-w-[320px] md:grid-cols-[minmax(170px,1fr)_90px_90px]">
                     <span className="font-medium text-zinc-200">
                       {g.nombre} {g.gerencia_id ? `(ID ${g.gerencia_id})` : ""}
                     </span>
-                    <span className="rounded border border-zinc-700 px-1.5 py-0.5 text-[10px] text-zinc-300">
+                    <span className="inline-flex w-fit rounded border border-zinc-700 px-1.5 py-0.5 text-[10px] text-zinc-300">
                       {(g.source_type ?? "pbadmin") === "manual" ? "Manual" : "PBadmin"}
                     </span>
-                    <span className="text-xs text-zinc-500">
+                    <span className="text-xs text-zinc-500 md:text-right">
                       {phones.length} registro{phones.length !== 1 ? "s" : ""}
                     </span>
                   </div>
