@@ -86,9 +86,10 @@ export function TelefonosPageContent({
   const [switchingGerenciaId, setSwitchingGerenciaId] = useState<number | null>(null);
   const [openGerenciaId, setOpenGerenciaId] = useState<number | null>(null);
   const [nextSyncCountdown, setNextSyncCountdown] = useState<string>("--:--");
-  const [manualPhonesInput, setManualPhonesInput] = useState<Record<number, string>>({});
+  const [manualPhoneInput, setManualPhoneInput] = useState<Record<number, string>>({});
   const [manualPhoneKind, setManualPhoneKind] = useState<Record<number, "carga" | "ads" | "mkt">>({});
   const [manualSavingGerenciaId, setManualSavingGerenciaId] = useState<number | null>(null);
+  const [manualModalGerenciaId, setManualModalGerenciaId] = useState<number | null>(null);
   const userIdRef = useRef<string | null>(null);
   const lastAutoReloadAt = useRef<number>(0);
   const reloadScheduledRef = useRef<boolean>(false);
@@ -359,41 +360,37 @@ export function TelefonosPageContent({
     }
   };
 
-  const parseManualPhones = (raw: string): string[] => {
-    const tokens = raw
-      .split(/[\s,;|\n\r\t]+/g)
-      .map((x) => onlyDigits(x))
-      .filter(Boolean);
-    return Array.from(new Set(tokens));
-  };
-
-  const handleAddManualPhones = async (gerenciaId: number) => {
+  const handleAddManualPhone = async (gerenciaId: number) => {
     if (!userId) return;
-    const input = manualPhonesInput[gerenciaId] ?? "";
-    const list = parseManualPhones(input);
-    if (list.length === 0) {
-      setError("Ingresa al menos un telefono valido.");
+    const phone = onlyDigits(manualPhoneInput[gerenciaId] ?? "");
+    if (!phone) {
+      setError("Ingresa un telefono valido.");
+      return;
+    }
+    if (!phone.startsWith("549")) {
+      setError("El telefono debe comenzar con 549.");
       return;
     }
     setManualSavingGerenciaId(gerenciaId);
     setError(null);
     try {
       const kind = manualPhoneKind[gerenciaId] ?? "carga";
-      const rows = list.map((phone) => ({
+      const rows = [{
         gerencia_id: gerenciaId,
         phone,
         status: "active",
         kind,
         last_seen_at: new Date().toISOString(),
-      }));
+      }];
       const { error: upsertError } = await supabase
         .from("gerencia_phones")
         .upsert(rows, { onConflict: "gerencia_id,phone" });
       if (upsertError) throw upsertError;
-      setManualPhonesInput((prev) => ({ ...prev, [gerenciaId]: "" }));
+      setManualPhoneInput((prev) => ({ ...prev, [gerenciaId]: "" }));
+      setManualModalGerenciaId(null);
       await loadData(userId);
     } catch (e) {
-      setError(e instanceof Error ? e.message : "Error al cargar telefonos manuales.");
+      setError(e instanceof Error ? e.message : "Error al cargar telefono manual.");
     } finally {
       setManualSavingGerenciaId(null);
     }
@@ -621,40 +618,14 @@ export function TelefonosPageContent({
                       </div>
                     </div>
                     {(g.source_type ?? "pbadmin") === "manual" ? (
-                      <div className="mb-3 rounded-lg border border-zinc-800 bg-zinc-900/50 p-3">
-                        <p className="mb-2 text-xs text-zinc-300">Cargar telefonos manualmente</p>
-                        <div className="flex flex-wrap items-end gap-2">
-                          <textarea
-                            value={manualPhonesInput[g.id] ?? ""}
-                            onChange={(e) =>
-                              setManualPhonesInput((prev) => ({ ...prev, [g.id]: e.target.value }))
-                            }
-                            placeholder="Pega telefonos separados por coma, espacio o salto de linea"
-                            className="min-h-[72px] flex-1 rounded-lg border border-zinc-700 bg-zinc-900 px-3 py-2 text-xs text-zinc-100"
-                          />
-                          <select
-                            value={manualPhoneKind[g.id] ?? "carga"}
-                            onChange={(e) =>
-                              setManualPhoneKind((prev) => ({
-                                ...prev,
-                                [g.id]: e.target.value as "carga" | "ads" | "mkt",
-                              }))
-                            }
-                            className="h-9 rounded-lg border border-zinc-700 bg-zinc-900 px-2 text-xs text-zinc-100"
-                          >
-                            <option value="carga">carga</option>
-                            <option value="ads">ads</option>
-                            <option value="mkt">mkt</option>
-                          </select>
-                          <button
-                            type="button"
-                            onClick={() => void handleAddManualPhones(g.id)}
-                            disabled={manualSavingGerenciaId === g.id}
-                            className="h-9 rounded-lg border border-emerald-700 bg-emerald-900/20 px-3 text-xs font-semibold text-emerald-300 disabled:opacity-60"
-                          >
-                            {manualSavingGerenciaId === g.id ? "Guardando..." : "Guardar telefonos"}
-                          </button>
-                        </div>
+                      <div className="mb-3 flex justify-end">
+                        <button
+                          type="button"
+                          onClick={() => setManualModalGerenciaId(g.id)}
+                          className="rounded-lg border border-emerald-700 bg-emerald-900/20 px-3 py-1.5 text-xs font-semibold text-emerald-300 transition hover:bg-emerald-900/35"
+                        >
+                          AÑADIR TELÉFONOS
+                        </button>
                       </div>
                     ) : null}
                     <div className="overflow-x-auto rounded-lg border border-zinc-700">
@@ -753,6 +724,71 @@ export function TelefonosPageContent({
               </div>
             );
           })}
+        </div>
+      )}
+
+      {manualModalGerenciaId !== null && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 px-4">
+          <div className="w-full max-w-md rounded-xl border border-zinc-700 bg-zinc-900 p-4 shadow-2xl">
+            <div className="mb-4 flex items-center justify-between">
+              <h3 className="text-sm font-semibold text-zinc-100">Añadir teléfonos</h3>
+              <button
+                type="button"
+                onClick={() => setManualModalGerenciaId(null)}
+                className="rounded-md border border-zinc-700 px-2 py-1 text-xs text-zinc-300 hover:bg-zinc-800"
+              >
+                Cerrar
+              </button>
+            </div>
+
+            <div className="space-y-3">
+              <div>
+                <label className="mb-1 block text-xs text-zinc-400">Teléfono (debe iniciar con 549)</label>
+                <input
+                  type="text"
+                  inputMode="numeric"
+                  value={manualPhoneInput[manualModalGerenciaId] ?? ""}
+                  onChange={(e) =>
+                    setManualPhoneInput((prev) => ({
+                      ...prev,
+                      [manualModalGerenciaId]: e.target.value,
+                    }))
+                  }
+                  placeholder="5493511234567"
+                  className="w-full rounded-lg border border-zinc-700 bg-zinc-900 px-3 py-2 text-sm text-zinc-100"
+                />
+              </div>
+
+              <div>
+                <label className="mb-1 block text-xs text-zinc-400">Tipo</label>
+                <select
+                  value={manualPhoneKind[manualModalGerenciaId] ?? "carga"}
+                  onChange={(e) =>
+                    setManualPhoneKind((prev) => ({
+                      ...prev,
+                      [manualModalGerenciaId]: e.target.value as "carga" | "ads" | "mkt",
+                    }))
+                  }
+                  className="w-full rounded-lg border border-zinc-700 bg-zinc-900 px-3 py-2 text-sm text-zinc-100"
+                >
+                  <option value="carga">carga</option>
+                  <option value="ads">ads</option>
+                  <option value="mkt">mkt</option>
+                </select>
+              </div>
+
+              <div className="flex justify-end">
+                <button
+                  type="button"
+                  onClick={() => void handleAddManualPhone(manualModalGerenciaId)}
+                  disabled={manualSavingGerenciaId === manualModalGerenciaId}
+                  className="rounded-lg border border-emerald-700 bg-emerald-900/20 px-3 py-2 text-xs font-semibold text-emerald-300 disabled:opacity-60"
+                >
+                  {manualSavingGerenciaId === manualModalGerenciaId ? "Guardando..." : "Guardar teléfono"}
+                </button>
+              </div>
+            </div>
+          </div>
         </div>
       )}
     </div>
