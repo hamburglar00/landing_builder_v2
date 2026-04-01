@@ -40,6 +40,31 @@ export default function DashboardSeguimientoPage() {
     }
   }, [userId]);
 
+  const handleDeletePhone = useCallback(
+    async (phone: string) => {
+      if (!userId) return;
+      const cleanPhone = String(phone || "").replace(/\D/g, "");
+      if (!cleanPhone) return;
+
+      const { error: delConvError } = await supabase
+        .from("conversions")
+        .delete()
+        .eq("user_id", userId)
+        .eq("phone", cleanPhone);
+      if (delConvError) throw delConvError;
+
+      const { error: delAlertsError } = await supabase
+        .from("notification_contact_alerts")
+        .delete()
+        .eq("user_id", userId)
+        .eq("phone", cleanPhone);
+      if (delAlertsError) throw delAlertsError;
+
+      await refreshTable();
+    },
+    [userId, refreshTable],
+  );
+
   useEffect(() => {
     const init = async () => {
       const {
@@ -102,6 +127,7 @@ export default function DashboardSeguimientoPage() {
         refreshing={refreshing}
         rankingConfig={config?.tracking_ranking_config ?? null}
         onRankingConfigChange={handleRankingConfigChange}
+        onDeletePhone={handleDeletePhone}
       />
     </div>
   );

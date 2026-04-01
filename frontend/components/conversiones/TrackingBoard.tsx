@@ -77,12 +77,14 @@ export default function TrackingBoard({
   refreshing = false,
   rankingConfig,
   onRankingConfigChange,
+  onDeletePhone,
 }: {
   conversions: ConversionRow[];
   onRefresh?: () => void;
   refreshing?: boolean;
   rankingConfig?: TrackingRankingConfig | null;
   onRankingConfigChange?: (cfg: TrackingRankingConfig) => void;
+  onDeletePhone?: (phone: string) => Promise<void> | void;
 }) {
   const initialRules = rankingConfig?.rules?.length ? rankingConfig.rules : DEFAULT_RULES;
   const initialOverflow = rankingConfig?.overflowIndicator || DEFAULT_OVERFLOW;
@@ -97,6 +99,7 @@ export default function TrackingBoard({
   const [draftSortMode, setDraftSortMode] = useState<SortMode>(initialSort);
   const [search, setSearch] = useState("");
   const [page, setPage] = useState(1);
+  const [deletingPhone, setDeletingPhone] = useState<string | null>(null);
 
   const [openConfig, setOpenConfig] = useState(false);
 
@@ -207,6 +210,21 @@ export default function TrackingBoard({
     setOpenConfig(false);
   };
 
+  const handleDelete = async (phone: string) => {
+    if (!onDeletePhone) return;
+    const ok = window.confirm(`Eliminar jugador ${phone} y su historial?`);
+    if (!ok) return;
+    try {
+      setDeletingPhone(phone);
+      await onDeletePhone(phone);
+    } catch (e) {
+      const msg = e instanceof Error ? e.message : "No se pudo eliminar el jugador.";
+      window.alert(msg);
+    } finally {
+      setDeletingPhone(null);
+    }
+  };
+
   useEffect(() => {
     setPage(1);
   }, [search, sortMode, conversions.length]);
@@ -218,7 +236,7 @@ export default function TrackingBoard({
   return (
     <section className="rounded-xl border border-zinc-800 bg-zinc-900/50 p-3 sm:p-4">
       <div className="mb-4 flex flex-col gap-2 sm:flex-row sm:flex-wrap sm:items-center sm:justify-between">
-        <h3 className="text-sm font-semibold text-zinc-200">Seguimiento</h3>
+        <h3 className="text-sm font-semibold text-zinc-200">Seguimiento ({filteredRows.length})</h3>
         <div className="flex w-full items-center gap-2 sm:ml-auto sm:w-auto">
           <input
             value={search}
@@ -252,7 +270,7 @@ export default function TrackingBoard({
       </p>
 
       <div className="overflow-x-auto rounded-lg border border-zinc-700">
-        <table className="w-full text-left text-[11px] sm:min-w-[760px]">
+        <table className="w-full text-left text-[11px] sm:min-w-[840px]">
           <thead className="bg-zinc-800/95">
             <tr>
               <th className="px-2 py-2 font-medium text-zinc-300 whitespace-nowrap">Ranking</th>
@@ -271,12 +289,15 @@ export default function TrackingBoard({
                 <span className="hidden sm:inline">Total cargado</span>
                 <span className="inline sm:hidden">Total<br />cargado</span>
               </th>
+              {onDeletePhone && (
+                <th className="px-2 py-2 font-medium text-zinc-300 whitespace-nowrap text-right">Acciones</th>
+              )}
             </tr>
           </thead>
           <tbody className="divide-y divide-zinc-800">
             {filteredRows.length === 0 ? (
               <tr>
-                <td colSpan={7} className="px-2 py-6 text-center text-zinc-500">
+                <td colSpan={onDeletePhone ? 8 : 7} className="px-2 py-6 text-center text-zinc-500">
                   Aun no hay datos para seguimiento.
                 </td>
               </tr>
@@ -304,6 +325,18 @@ export default function TrackingBoard({
                   <td className="hidden sm:table-cell px-2 py-1.5 whitespace-nowrap text-zinc-300">{r.loads}</td>
                   <td className="px-2 py-1.5 whitespace-nowrap text-zinc-300">{formatCurrency(r.avgLoad)}</td>
                   <td className="px-2 py-1.5 whitespace-nowrap text-zinc-100 font-semibold">{formatCurrency(r.totalLoaded)}</td>
+                  {onDeletePhone && (
+                    <td className="px-2 py-1.5 whitespace-nowrap text-right">
+                      <button
+                        type="button"
+                        onClick={() => void handleDelete(r.phone)}
+                        disabled={deletingPhone === r.phone}
+                        className="rounded border border-red-900/70 bg-red-950/30 px-2 py-1 text-[11px] text-red-300 hover:bg-red-950/50 disabled:opacity-60"
+                      >
+                        {deletingPhone === r.phone ? "Eliminando..." : "Eliminar"}
+                      </button>
+                    </td>
+                  )}
                 </tr>
               ))
             )}
