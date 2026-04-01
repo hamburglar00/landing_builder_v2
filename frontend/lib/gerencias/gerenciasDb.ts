@@ -106,7 +106,7 @@ export async function createGerencia(
           }
         : {
             id: generatedId,
-            gerencia_id: null,
+            gerencia_id: generatedId,
           }),
     })
     .select("id, nombre, gerencia_id, source_type")
@@ -135,7 +135,7 @@ export async function updateGerencia(
             gerencia_id: payload.gerencia_id,
           }
         : {
-            gerencia_id: null,
+            gerencia_id: id,
           }),
     })
     .eq("id", id);
