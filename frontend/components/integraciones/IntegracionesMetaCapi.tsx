@@ -612,9 +612,6 @@ export default function IntegracionesMetaCapi() {
             {kommoConfig?.sync_error ? (
               <p className="mt-2 break-all text-[11px] text-red-400">{kommoConfig.sync_error}</p>
             ) : null}
-            <p className="mt-2 text-[11px] text-zinc-500">
-              Token actual: <span className="font-mono">{maskToken(kommoToken || kommoConfig?.kommo_access_token || "")}</span>
-            </p>
             <div className="mt-3 flex flex-wrap items-center justify-end gap-2">
               <button
                 type="button"
