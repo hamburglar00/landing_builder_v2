@@ -540,7 +540,7 @@ export default function IntegracionesMetaCapi() {
                 <input
                   value={kommoBaseUrl}
                   onChange={(e) => setKommoBaseUrl(e.target.value)}
-                  placeholder="https://onlinerds3.kommo.com"
+                  placeholder="https://TU_USUARIO.kommo.com"
                   className="h-9 w-full rounded-lg border border-zinc-700 bg-zinc-900 px-3 text-sm text-zinc-100"
                 />
               </div>
