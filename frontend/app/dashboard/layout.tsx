@@ -360,6 +360,7 @@ export default function DashboardLayout({
             <NavIcon variant="inicio" active={pathname === "/dashboard/inicio"} />
             <span>INICIO</span>
           </Link>
+
           <Link
             href="/dashboard/landings"
             onClick={() => setSidebarOpen(false)}
@@ -372,36 +373,7 @@ export default function DashboardLayout({
             <NavIcon variant="landings" active={Boolean(pathname?.startsWith("/dashboard/landings"))} />
             <span>LANDINGS</span>
           </Link>
-          <Link
-            href="/dashboard/gerencias"
-            onClick={() => setSidebarOpen(false)}
-            className={`flex items-center gap-2 rounded-lg px-3 py-2 text-xs font-medium tracking-[0.18em] transition ${
-              pathname?.startsWith("/dashboard/gerencias")
-                ? "bg-[var(--color-primary-soft-bg)] text-[var(--color-primary)] border border-[var(--color-primary-soft-border)]"
-                : "text-[var(--color-text-muted)] hover:bg-[var(--color-bg-3)] hover:text-[var(--color-text)]"
-            }`}
-          >
-            <NavIcon
-              variant="gerencias"
-              active={Boolean(pathname?.startsWith("/dashboard/gerencias"))}
-            />
-            <span>GERENCIAS</span>
-          </Link>
-          <Link
-            href="/dashboard/telefonos"
-            onClick={() => setSidebarOpen(false)}
-            className={`flex items-center gap-2 rounded-lg px-3 py-2 text-xs font-medium tracking-[0.18em] transition ${
-              pathname?.startsWith("/dashboard/telefonos")
-                ? "bg-[var(--color-primary-soft-bg)] text-[var(--color-primary)] border border-[var(--color-primary-soft-border)]"
-                : "text-[var(--color-text-muted)] hover:bg-[var(--color-bg-3)] hover:text-[var(--color-text)]"
-            }`}
-          >
-            <NavIcon
-              variant="telefonos"
-              active={Boolean(pathname?.startsWith("/dashboard/telefonos"))}
-            />
-            <span>TELÉFONOS</span>
-          </Link>
+
           <Link
             href="/dashboard/conversiones"
             onClick={() => setSidebarOpen(false)}
@@ -417,6 +389,55 @@ export default function DashboardLayout({
             />
             <span>CONVERSIONES</span>
           </Link>
+
+          <Link
+            href="/dashboard/seguimiento"
+            onClick={() => setSidebarOpen(false)}
+            className={`flex items-center gap-2 rounded-lg px-3 py-2 text-xs font-medium tracking-[0.18em] transition ${
+              pathname?.startsWith("/dashboard/seguimiento")
+                ? "bg-[var(--color-primary-soft-bg)] text-[var(--color-primary)] border border-[var(--color-primary-soft-border)]"
+                : "text-[var(--color-text-muted)] hover:bg-[var(--color-bg-3)] hover:text-[var(--color-text)]"
+            }`}
+          >
+            <NavIcon
+              variant="seguimiento"
+              active={Boolean(pathname?.startsWith("/dashboard/seguimiento"))}
+            />
+            <span>SEGUIMIENTOS</span>
+          </Link>
+
+          <Link
+            href="/dashboard/gerencias"
+            onClick={() => setSidebarOpen(false)}
+            className={`flex items-center gap-2 rounded-lg px-3 py-2 text-xs font-medium tracking-[0.18em] transition ${
+              pathname?.startsWith("/dashboard/gerencias")
+                ? "bg-[var(--color-primary-soft-bg)] text-[var(--color-primary)] border border-[var(--color-primary-soft-border)]"
+                : "text-[var(--color-text-muted)] hover:bg-[var(--color-bg-3)] hover:text-[var(--color-text)]"
+            }`}
+          >
+            <NavIcon
+              variant="gerencias"
+              active={Boolean(pathname?.startsWith("/dashboard/gerencias"))}
+            />
+            <span>GERENCIAS</span>
+          </Link>
+
+          <Link
+            href="/dashboard/telefonos"
+            onClick={() => setSidebarOpen(false)}
+            className={`flex items-center gap-2 rounded-lg px-3 py-2 text-xs font-medium tracking-[0.18em] transition ${
+              pathname?.startsWith("/dashboard/telefonos")
+                ? "bg-[var(--color-primary-soft-bg)] text-[var(--color-primary)] border border-[var(--color-primary-soft-border)]"
+                : "text-[var(--color-text-muted)] hover:bg-[var(--color-bg-3)] hover:text-[var(--color-text)]"
+            }`}
+          >
+            <NavIcon
+              variant="telefonos"
+              active={Boolean(pathname?.startsWith("/dashboard/telefonos"))}
+            />
+            <span>TELÉFONOS</span>
+          </Link>
+
           <Link
             href="/dashboard/integraciones"
             onClick={() => setSidebarOpen(false)}
@@ -432,21 +453,7 @@ export default function DashboardLayout({
             />
             <span>INTEGRACIONES</span>
           </Link>
-          <Link
-            href="/dashboard/seguimiento"
-            onClick={() => setSidebarOpen(false)}
-            className={`flex items-center gap-2 rounded-lg px-3 py-2 text-xs font-medium tracking-[0.18em] transition ${
-              pathname?.startsWith("/dashboard/seguimiento")
-                ? "bg-[var(--color-primary-soft-bg)] text-[var(--color-primary)] border border-[var(--color-primary-soft-border)]"
-                : "text-[var(--color-text-muted)] hover:bg-[var(--color-bg-3)] hover:text-[var(--color-text)]"
-            }`}
-          >
-            <NavIcon
-              variant="seguimiento"
-              active={Boolean(pathname?.startsWith("/dashboard/seguimiento"))}
-            />
-            <span>SEGUIMIENTO</span>
-          </Link>
+
           <Link
             href="/dashboard/notificaciones"
             onClick={() => setSidebarOpen(false)}
@@ -462,6 +469,7 @@ export default function DashboardLayout({
             />
             <span>NOTIFICACIONES</span>
           </Link>
+
         </nav>
         <div className="border-t border-[var(--color-border)] p-3 space-y-2">
           <p className="truncate px-1 text-[11px] text-[var(--color-text-muted)]" title={user?.email ?? undefined}>

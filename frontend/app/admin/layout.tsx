@@ -508,6 +508,7 @@ export default function AdminLayout({
             />
             <span>INICIO</span>
           </Link>
+
           <Link
             href="/admin/clientes"
             onClick={() => setSidebarOpen(false)}
@@ -523,6 +524,7 @@ export default function AdminLayout({
             />
             <span>CLIENTES</span>
           </Link>
+
           <Link
             href="/admin/landings"
             onClick={() => setSidebarOpen(false)}
@@ -538,36 +540,7 @@ export default function AdminLayout({
             />
             <span>LANDINGS</span>
           </Link>
-          <Link
-            href="/admin/gerencias"
-            onClick={() => setSidebarOpen(false)}
-            className={`flex items-center gap-2 rounded-lg px-3 py-2 text-xs font-medium tracking-[0.18em] transition ${
-              pathname?.startsWith("/admin/gerencias")
-                ? "bg-[var(--color-primary-soft-bg)] text-[var(--color-primary)] border border-[var(--color-primary-soft-border)]"
-                : "text-[var(--color-text-muted)] hover:bg-[var(--color-bg-3)] hover:text-[var(--color-text)]"
-            }`}
-          >
-            <NavIcon
-              variant="gerencias"
-              active={Boolean(pathname?.startsWith("/admin/gerencias"))}
-            />
-            <span>GERENCIAS</span>
-          </Link>
-          <Link
-            href="/admin/telefonos"
-            onClick={() => setSidebarOpen(false)}
-            className={`flex items-center gap-2 rounded-lg px-3 py-2 text-xs font-medium tracking-[0.18em] transition ${
-              pathname?.startsWith("/admin/telefonos")
-                ? "bg-[var(--color-primary-soft-bg)] text-[var(--color-primary)] border border-[var(--color-primary-soft-border)]"
-                : "text-[var(--color-text-muted)] hover:bg-[var(--color-bg-3)] hover:text-[var(--color-text)]"
-            }`}
-          >
-            <NavIcon
-              variant="telefonos"
-              active={Boolean(pathname?.startsWith("/admin/telefonos"))}
-            />
-            <span>TELÉFONOS</span>
-          </Link>
+
           <Link
             href="/admin/conversiones"
             onClick={() => setSidebarOpen(false)}
@@ -583,6 +556,55 @@ export default function AdminLayout({
             />
             <span>CONVERSIONES</span>
           </Link>
+
+          <Link
+            href="/admin/seguimiento"
+            onClick={() => setSidebarOpen(false)}
+            className={`flex items-center gap-2 rounded-lg px-3 py-2 text-xs font-medium tracking-[0.18em] transition ${
+              pathname?.startsWith("/admin/seguimiento")
+                ? "bg-[var(--color-primary-soft-bg)] text-[var(--color-primary)] border border-[var(--color-primary-soft-border)]"
+                : "text-[var(--color-text-muted)] hover:bg-[var(--color-bg-3)] hover:text-[var(--color-text)]"
+            }`}
+          >
+            <NavIcon
+              variant="seguimiento"
+              active={Boolean(pathname?.startsWith("/admin/seguimiento"))}
+            />
+            <span>SEGUIMIENTOS</span>
+          </Link>
+
+          <Link
+            href="/admin/gerencias"
+            onClick={() => setSidebarOpen(false)}
+            className={`flex items-center gap-2 rounded-lg px-3 py-2 text-xs font-medium tracking-[0.18em] transition ${
+              pathname?.startsWith("/admin/gerencias")
+                ? "bg-[var(--color-primary-soft-bg)] text-[var(--color-primary)] border border-[var(--color-primary-soft-border)]"
+                : "text-[var(--color-text-muted)] hover:bg-[var(--color-bg-3)] hover:text-[var(--color-text)]"
+            }`}
+          >
+            <NavIcon
+              variant="gerencias"
+              active={Boolean(pathname?.startsWith("/admin/gerencias"))}
+            />
+            <span>GERENCIAS</span>
+          </Link>
+
+          <Link
+            href="/admin/telefonos"
+            onClick={() => setSidebarOpen(false)}
+            className={`flex items-center gap-2 rounded-lg px-3 py-2 text-xs font-medium tracking-[0.18em] transition ${
+              pathname?.startsWith("/admin/telefonos")
+                ? "bg-[var(--color-primary-soft-bg)] text-[var(--color-primary)] border border-[var(--color-primary-soft-border)]"
+                : "text-[var(--color-text-muted)] hover:bg-[var(--color-bg-3)] hover:text-[var(--color-text)]"
+            }`}
+          >
+            <NavIcon
+              variant="telefonos"
+              active={Boolean(pathname?.startsWith("/admin/telefonos"))}
+            />
+            <span>TELÉFONOS</span>
+          </Link>
+
           <Link
             href="/admin/integraciones"
             onClick={() => setSidebarOpen(false)}
@@ -598,21 +620,7 @@ export default function AdminLayout({
             />
             <span>INTEGRACIONES</span>
           </Link>
-          <Link
-            href="/admin/seguimiento"
-            onClick={() => setSidebarOpen(false)}
-            className={`flex items-center gap-2 rounded-lg px-3 py-2 text-xs font-medium tracking-[0.18em] transition ${
-              pathname?.startsWith("/admin/seguimiento")
-                ? "bg-[var(--color-primary-soft-bg)] text-[var(--color-primary)] border border-[var(--color-primary-soft-border)]"
-                : "text-[var(--color-text-muted)] hover:bg-[var(--color-bg-3)] hover:text-[var(--color-text)]"
-            }`}
-          >
-            <NavIcon
-              variant="seguimiento"
-              active={Boolean(pathname?.startsWith("/admin/seguimiento"))}
-            />
-            <span>SEGUIMIENTO</span>
-          </Link>
+
           <Link
             href="/admin/notificaciones"
             onClick={() => setSidebarOpen(false)}
@@ -628,6 +636,7 @@ export default function AdminLayout({
             />
             <span>NOTIFICACIONES</span>
           </Link>
+
           <Link
             href="/admin/settings"
             onClick={() => setSidebarOpen(false)}
@@ -643,6 +652,7 @@ export default function AdminLayout({
             />
             <span>CONFIGURACIÓN</span>
           </Link>
+
           <Link
             href="/admin/tests"
             onClick={() => setSidebarOpen(false)}
@@ -655,6 +665,7 @@ export default function AdminLayout({
             <NavIcon variant="tests" active={pathname === "/admin/tests"} />
             <span>TESTS</span>
           </Link>
+
           <Link
             href="/admin/documentacion"
             onClick={() => setSidebarOpen(false)}
@@ -670,6 +681,7 @@ export default function AdminLayout({
             />
             <span>DOCUMENTACIÓN</span>
           </Link>
+
         </nav>
         <div className="border-t border-[var(--color-border)] p-3 space-y-2">
           <p className="truncate px-1 text-[11px] text-[var(--color-text-muted)]" title={user?.email ?? undefined}>
