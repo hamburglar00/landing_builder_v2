@@ -379,8 +379,8 @@ export function TelefonosPageContent({
       <div>
         <h1 className="text-xl font-semibold text-zinc-100">{title}</h1>
         <p className="mt-1 text-sm text-zinc-400">
-          Historial de teléfonos por gerencia. Sincroniza, reinicia contadores o
-          borra registros por gerencia o en bloque.
+          Historial de teléfonos por gerencia. Sincroniza y reinicia contadores por
+          gerencia o en bloque.
         </p>
         <p className="mt-1 text-xs text-zinc-500">
           {isAdmin
@@ -470,9 +470,9 @@ export function TelefonosPageContent({
                   onClick={() =>
                     setOpenGerenciaId((prev) => (prev === g.id ? null : g.id))
                   }
-                  className="flex w-full items-center justify-between gap-2 px-4 py-3 text-left hover:bg-zinc-800/50"
+                  className="grid w-full grid-cols-1 items-center gap-2 px-4 py-3 text-left hover:bg-zinc-800/50 md:grid-cols-[minmax(320px,1fr)_180px_220px_20px]"
                 >
-                  <div className="flex items-center gap-3">
+                  <div className="flex items-center gap-3 md:min-w-[320px]">
                     <span className="font-medium text-zinc-200">
                       {g.nombre} {g.gerencia_id ? `(ID ${g.gerencia_id})` : ""}
                     </span>
@@ -483,12 +483,14 @@ export function TelefonosPageContent({
                       {phones.length} registro{phones.length !== 1 ? "s" : ""}
                     </span>
                   </div>
-                  <div className="flex items-center gap-4 text-xs text-zinc-500">
-                    <span>Contador: {totalUsage}</span>
-                    <span>Mensajes recibidos: {totalMessages}</span>
+                  <div className="text-xs text-zinc-500 md:text-right">
+                    Contador: {totalUsage}
+                  </div>
+                  <div className="text-xs text-zinc-500 md:text-right">
+                    Mensajes recibidos: {totalMessages}
                   </div>
                   <svg
-                    className={`h-4 w-4 shrink-0 text-zinc-400 transition-transform ${isOpen ? "rotate-180" : ""}`}
+                    className={`h-4 w-4 shrink-0 text-zinc-400 transition-transform md:justify-self-end ${isOpen ? "rotate-180" : ""}`}
                     fill="none"
                     stroke="currentColor"
                     viewBox="0 0 24 24"
