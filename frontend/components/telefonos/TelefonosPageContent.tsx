@@ -14,6 +14,7 @@ export type GerenciaPhoneRow = {
   status: string;
   usage_count: number;
   kind: string;
+  comment: string;
   last_seen_at: string;
   created_at: string;
   updated_at: string;
@@ -111,7 +112,7 @@ export function TelefonosPageContent({
     const { data: phones, error: phonesError } = await supabase
       .from("gerencia_phones")
       .select(
-        "id, gerencia_id, phone, status, usage_count, kind, last_seen_at, created_at, updated_at",
+        "id, gerencia_id, phone, status, usage_count, kind, comment, last_seen_at, created_at, updated_at",
       )
       .in("gerencia_id", ids)
       .order("gerencia_id", { ascending: true })
@@ -342,6 +343,7 @@ export function TelefonosPageContent({
         phone,
         status: "active",
         kind,
+        comment: "",
         last_seen_at: new Date().toISOString(),
       }];
       const { error: upsertError } = await supabase
@@ -356,6 +358,51 @@ export function TelefonosPageContent({
     } finally {
       setManualSavingGerenciaId(null);
     }
+  };
+
+  const handleManualStatusToggle = async (row: GerenciaPhoneRow) => {
+    const nextStatus = row.status === "active" ? "inactive" : "active";
+    setError(null);
+    const { error: updateError } = await supabase
+      .from("gerencia_phones")
+      .update({ status: nextStatus })
+      .eq("id", row.id);
+    if (updateError) {
+      setError(updateError.message);
+      return;
+    }
+    setPhonesByGerencia((prev) => {
+      const list = prev[row.gerencia_id] ?? [];
+      return {
+        ...prev,
+        [row.gerencia_id]: list.map((x) =>
+          x.id === row.id ? { ...x, status: nextStatus } : x,
+        ),
+      };
+    });
+  };
+
+  const handleManualCommentSave = async (row: GerenciaPhoneRow, value: string) => {
+    const trimmed = value.trim();
+    if ((row.comment ?? "") === trimmed) return;
+    setError(null);
+    const { error: updateError } = await supabase
+      .from("gerencia_phones")
+      .update({ comment: trimmed })
+      .eq("id", row.id);
+    if (updateError) {
+      setError(updateError.message);
+      return;
+    }
+    setPhonesByGerencia((prev) => {
+      const list = prev[row.gerencia_id] ?? [];
+      return {
+        ...prev,
+        [row.gerencia_id]: list.map((x) =>
+          x.id === row.id ? { ...x, comment: trimmed } : x,
+        ),
+      };
+    });
   };
 
   if (!ready) {
@@ -470,9 +517,9 @@ export function TelefonosPageContent({
                   onClick={() =>
                     setOpenGerenciaId((prev) => (prev === g.id ? null : g.id))
                   }
-                  className="grid w-full grid-cols-1 items-center gap-2 px-4 py-3 text-left hover:bg-zinc-800/50 md:grid-cols-[minmax(320px,1fr)_180px_220px_20px]"
+                  className="grid w-full grid-cols-1 items-center gap-2 px-4 py-3 text-left hover:bg-zinc-800/50 md:grid-cols-[420px_180px_220px_20px]"
                 >
-                  <div className="grid items-center gap-2 md:min-w-[320px] md:grid-cols-[minmax(170px,1fr)_72px_78px]">
+                  <div className="grid items-center gap-2 md:w-[420px] md:grid-cols-[260px_68px_74px]">
                     <span className="font-medium text-zinc-200">
                       {g.nombre} {g.gerencia_id ? `(ID ${g.gerencia_id})` : ""}
                     </span>
@@ -593,7 +640,7 @@ export function TelefonosPageContent({
                               Mensajes recibidos
                             </th>
                             <th className="px-3 py-2 font-medium text-zinc-300">
-                              Última sincronización
+                              {(g.source_type ?? "pbadmin") === "manual" ? "Comentario" : "Última sincronización"}
                             </th>
                           </tr>
                         </thead>
@@ -604,7 +651,9 @@ export function TelefonosPageContent({
                                 colSpan={6}
                                 className="px-3 py-4 text-center text-zinc-500"
                               >
-                                Sin registros. Usa Sincronizar para traer números.
+                                {(g.source_type ?? "pbadmin") === "manual"
+                                  ? "Sin registros. Usa AÑADIR TELÉFONOS para cargar números."
+                                  : "Sin registros. Usa Sincronizar para traer números."}
                               </td>
                             </tr>
                           ) : (
@@ -634,15 +683,32 @@ export function TelefonosPageContent({
                                   </span>
                                 </td>
                                 <td className="px-3 py-2">
-                                  <span
-                                    className={
-                                      p.status === "active"
-                                        ? "text-emerald-400"
-                                        : "text-zinc-500"
-                                    }
-                                  >
-                                    {formatStatus(p.status)}
-                                  </span>
+                                  {(g.source_type ?? "pbadmin") === "manual" ? (
+                                    <button
+                                      type="button"
+                                      onClick={() => void handleManualStatusToggle(p)}
+                                      className={`relative inline-flex h-5 w-10 items-center rounded-full transition ${
+                                        p.status === "active" ? "bg-emerald-500/70" : "bg-zinc-700"
+                                      }`}
+                                      title={p.status === "active" ? "Activo (visible en landing)" : "Inactivo (oculto en landing)"}
+                                    >
+                                      <span
+                                        className={`inline-block h-4 w-4 transform rounded-full bg-white transition ${
+                                          p.status === "active" ? "translate-x-5" : "translate-x-1"
+                                        }`}
+                                      />
+                                    </button>
+                                  ) : (
+                                    <span
+                                      className={
+                                        p.status === "active"
+                                          ? "text-emerald-400"
+                                          : "text-zinc-500"
+                                      }
+                                    >
+                                      {formatStatus(p.status)}
+                                    </span>
+                                  )}
                                 </td>
                                 <td className="px-3 py-2 text-zinc-300">
                                   {p.kind}
@@ -654,9 +720,19 @@ export function TelefonosPageContent({
                                   {leadUniqueByAssignedPhone[onlyDigits(p.phone)] ?? 0}
                                 </td>
                                 <td className="px-3 py-2 text-xs text-zinc-500">
-                                  {p.last_seen_at
-                                    ? new Date(p.last_seen_at).toLocaleString()
-                                    : "â€”"}
+                                  {(g.source_type ?? "pbadmin") === "manual" ? (
+                                    <input
+                                      type="text"
+                                      defaultValue={p.comment ?? ""}
+                                      onBlur={(e) => void handleManualCommentSave(p, e.target.value)}
+                                      placeholder="Comentario"
+                                      className="w-full rounded border border-zinc-700 bg-zinc-900 px-2 py-1 text-xs text-zinc-100"
+                                    />
+                                  ) : p.last_seen_at ? (
+                                    new Date(p.last_seen_at).toLocaleString()
+                                  ) : (
+                                    "â€”"
+                                  )}
                                 </td>
                               </tr>
                             ))
