@@ -537,7 +537,7 @@ export function TelefonosPageContent({
                     Mensajes recibidos: {totalMessages}
                   </div>
                   <svg
-                    className={`h-4 w-4 shrink-0 text-zinc-400 transition-transform md:justify-self-end ${isOpen ? "rotate-180" : ""}`}
+                    className={`h-4 w-4 shrink-0 text-zinc-400 transition-transform justify-self-end ml-auto ${isOpen ? "rotate-180" : ""}`}
                     fill="none"
                     stroke="currentColor"
                     viewBox="0 0 24 24"
