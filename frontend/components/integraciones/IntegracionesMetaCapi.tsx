@@ -11,6 +11,11 @@ import {
   upsertConversionsConfig,
   upsertPixelConfig,
 } from "@/lib/conversionsDb";
+import {
+  fetchKommoClientConfig,
+  type KommoClientConfig,
+  upsertKommoClientConfig,
+} from "@/lib/kommoDb";
 
 type PixelEditDraft = {
   id: string;
@@ -43,6 +48,12 @@ export default function IntegracionesMetaCapi() {
   const [editOpen, setEditOpen] = useState(false);
   const [draft, setDraft] = useState<PixelEditDraft | null>(null);
   const [activeIntegration, setActiveIntegration] = useState<"menu" | "meta" | "kommo">("menu");
+  const [kommoConfig, setKommoConfig] = useState<KommoClientConfig | null>(null);
+  const [kommoBaseUrl, setKommoBaseUrl] = useState("");
+  const [kommoToken, setKommoToken] = useState("");
+  const [kommoActive, setKommoActive] = useState(true);
+  const [kommoSaving, setKommoSaving] = useState(false);
+  const [kommoMsg, setKommoMsg] = useState<string | null>(null);
 
   const endpointBase = process.env.NEXT_PUBLIC_SUPABASE_URL ?? "";
   const endpointUrl = useMemo(
@@ -61,12 +72,17 @@ export default function IntegracionesMetaCapi() {
   );
 
   const loadAll = useCallback(async (uid: string) => {
-    const [cfg, pixels] = await Promise.all([
+    const [cfg, pixels, kommo] = await Promise.all([
       fetchConversionsConfig(uid),
       fetchPixelConfigs(uid),
+      fetchKommoClientConfig(uid),
     ]);
     setConfig(cfg);
     setPixelConfigs(pixels);
+    setKommoConfig(kommo);
+    setKommoBaseUrl(kommo?.kommo_api_base_url ?? "");
+    setKommoToken(kommo?.kommo_access_token ?? "");
+    setKommoActive(kommo?.active ?? true);
     const { data: p } = await supabase
       .from("profiles")
       .select("nombre, role")
@@ -75,6 +91,145 @@ export default function IntegracionesMetaCapi() {
     setClientName(String(p?.nombre ?? ""));
     setIsAdmin(String(p?.role ?? "") === "admin");
   }, []);
+
+  const maskToken = useCallback((value: string) => {
+    const v = String(value ?? "");
+    if (!v) return "-";
+    if (v.length <= 12) return `${v.slice(0, 4)}...`;
+    return `${v.slice(0, 6)}...${v.slice(-6)}`;
+  }, []);
+
+  const validateKommoInput = useCallback((): string | null => {
+    const name = clientName.trim();
+    if (!name || !/^[a-z0-9-]+$/.test(name)) {
+      return "Name de cliente inválido.";
+    }
+    if (!/^https:\/\/[a-zA-Z0-9.-]+(?:\/.*)?$/.test(kommoBaseUrl.trim())) {
+      return "URL base de Kommo inválida (debe iniciar con https://).";
+    }
+    if (!kommoToken.trim()) {
+      return "Token de Kommo requerido.";
+    }
+    return null;
+  }, [clientName, kommoBaseUrl, kommoToken]);
+
+  const syncKommoRemote = useCallback(async (payload: {
+    name: string;
+    kommo_api_base_url: string;
+    kommo_access_token: string;
+    active: boolean;
+  }): Promise<{ ok: boolean; detail?: string }> => {
+    const { data: sessionData } = await supabase.auth.getSession();
+    const accessToken = sessionData.session?.access_token ?? "";
+    if (!accessToken) return { ok: false, detail: "Sesión inválida para sincronizar." };
+
+    const res = await fetch("/api/integrations/kommo/sync", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${accessToken}`,
+      },
+      body: JSON.stringify(payload),
+    });
+    const text = await res.text();
+    if (!res.ok) return { ok: false, detail: text || `HTTP ${res.status}` };
+    return { ok: true };
+  }, []);
+
+  const handleKommoSave = useCallback(async () => {
+    if (!userId) return;
+    setKommoMsg(null);
+    const validationErr = validateKommoInput();
+    if (validationErr) {
+      setKommoMsg(validationErr);
+      return;
+    }
+    const payload = {
+      name: clientName.trim(),
+      kommo_api_base_url: kommoBaseUrl.trim(),
+      kommo_access_token: kommoToken.trim(),
+      active: kommoActive,
+    };
+
+    setKommoSaving(true);
+    try {
+      await upsertKommoClientConfig({
+        user_id: userId,
+        ...payload,
+        sync_status: "pending",
+        sync_error: null,
+      });
+
+      const sync = await syncKommoRemote(payload);
+      if (sync.ok) {
+        await upsertKommoClientConfig({
+          user_id: userId,
+          ...payload,
+          sync_status: "synced",
+          sync_error: null,
+          last_synced_at: new Date().toISOString(),
+        });
+        setKommoMsg("Configuración de Kommo guardada y sincronizada.");
+      } else {
+        await upsertKommoClientConfig({
+          user_id: userId,
+          ...payload,
+          sync_status: "error",
+          sync_error: (sync.detail ?? "").slice(0, 500),
+        });
+        setKommoMsg("Guardado local OK. Falló sincronización con Intermediario. Reintenta manualmente.");
+      }
+
+      await loadAll(userId);
+    } catch (e) {
+      setKommoMsg(e instanceof Error ? e.message : "Error al guardar Kommo.");
+    } finally {
+      setKommoSaving(false);
+    }
+  }, [userId, clientName, kommoBaseUrl, kommoToken, kommoActive, validateKommoInput, syncKommoRemote, loadAll]);
+
+  const handleKommoRetrySync = useCallback(async () => {
+    if (!userId) return;
+    const validationErr = validateKommoInput();
+    if (validationErr) {
+      setKommoMsg(validationErr);
+      return;
+    }
+    setKommoSaving(true);
+    setKommoMsg(null);
+    try {
+      const payload = {
+        name: clientName.trim(),
+        kommo_api_base_url: kommoBaseUrl.trim(),
+        kommo_access_token: kommoToken.trim(),
+        active: kommoActive,
+      };
+      const sync = await syncKommoRemote(payload);
+      if (sync.ok) {
+        await upsertKommoClientConfig({
+          user_id: userId,
+          ...payload,
+          sync_status: "synced",
+          sync_error: null,
+          last_synced_at: new Date().toISOString(),
+        });
+        setKommoMsg("Sincronización Kommo OK.");
+      } else {
+        await upsertKommoClientConfig({
+          user_id: userId,
+          ...payload,
+          sync_status: "error",
+          sync_error: (sync.detail ?? "").slice(0, 500),
+        });
+        setKommoMsg("Sigue fallando la sincronización con Intermediario.");
+      }
+      await loadAll(userId);
+    } catch (e) {
+      setKommoMsg(e instanceof Error ? e.message : "Error al reintentar.");
+    } finally {
+      setKommoSaving(false);
+    }
+  }, [userId, clientName, kommoBaseUrl, kommoToken, kommoActive, validateKommoInput, syncKommoRemote, loadAll]);
 
   useEffect(() => {
     const run = async () => {
@@ -357,6 +512,101 @@ export default function IntegracionesMetaCapi() {
         </div>
 
         <div className="space-y-4 text-sm text-zinc-300">
+          {kommoMsg && (
+            <div
+              className={`rounded-lg border px-3 py-2 text-xs ${
+                kommoMsg.toLowerCase().includes("error") || kommoMsg.toLowerCase().includes("fall")
+                  ? "border-amber-800 bg-amber-950/40 text-amber-300"
+                  : "border-emerald-800 bg-emerald-950/40 text-emerald-300"
+              }`}
+            >
+              {kommoMsg}
+            </div>
+          )}
+
+          <div className="rounded-lg border border-zinc-800 bg-zinc-950/40 p-3">
+            <p className="font-semibold text-zinc-100">Configuración guardada en Constructor</p>
+            <div className="mt-3 grid gap-3 sm:grid-cols-2">
+              <div className="sm:col-span-2">
+                <label className="mb-1 block text-[11px] text-zinc-400">Name del cliente</label>
+                <input
+                  value={clientName}
+                  disabled
+                  className="h-9 w-full rounded-lg border border-zinc-700 bg-zinc-900 px-3 text-sm text-zinc-300"
+                />
+              </div>
+              <div className="sm:col-span-2">
+                <label className="mb-1 block text-[11px] text-zinc-400">Kommo API Base URL</label>
+                <input
+                  value={kommoBaseUrl}
+                  onChange={(e) => setKommoBaseUrl(e.target.value)}
+                  placeholder="https://onlinerds3.kommo.com"
+                  className="h-9 w-full rounded-lg border border-zinc-700 bg-zinc-900 px-3 text-sm text-zinc-100"
+                />
+              </div>
+              <div className="sm:col-span-2">
+                <label className="mb-1 block text-[11px] text-zinc-400">Token de larga duración</label>
+                <input
+                  value={kommoToken}
+                  onChange={(e) => setKommoToken(e.target.value)}
+                  placeholder="Pegar token de Kommo"
+                  className="h-9 w-full rounded-lg border border-zinc-700 bg-zinc-900 px-3 text-sm text-zinc-100"
+                />
+              </div>
+              <label className="inline-flex items-center gap-2 text-xs text-zinc-300">
+                <input
+                  type="checkbox"
+                  checked={kommoActive}
+                  onChange={(e) => setKommoActive(e.target.checked)}
+                />
+                Activa
+              </label>
+              <div className="text-xs text-zinc-400">
+                Estado sync:{" "}
+                <span
+                  className={`font-semibold ${
+                    kommoConfig?.sync_status === "synced"
+                      ? "text-emerald-400"
+                      : kommoConfig?.sync_status === "error"
+                      ? "text-red-400"
+                      : "text-amber-300"
+                  }`}
+                >
+                  {kommoConfig?.sync_status ?? "pending"}
+                </span>
+                {kommoConfig?.last_synced_at ? (
+                  <span className="ml-2 text-zinc-500">
+                    ({new Date(kommoConfig.last_synced_at).toLocaleString("es-AR")})
+                  </span>
+                ) : null}
+              </div>
+            </div>
+            {kommoConfig?.sync_error ? (
+              <p className="mt-2 break-all text-[11px] text-red-400">{kommoConfig.sync_error}</p>
+            ) : null}
+            <p className="mt-2 text-[11px] text-zinc-500">
+              Token actual: <span className="font-mono">{maskToken(kommoToken || kommoConfig?.kommo_access_token || "")}</span>
+            </p>
+            <div className="mt-3 flex flex-wrap items-center justify-end gap-2">
+              <button
+                type="button"
+                disabled={kommoSaving}
+                onClick={() => void handleKommoRetrySync()}
+                className="rounded-lg border border-zinc-700 px-3 py-1.5 text-xs text-zinc-300 disabled:opacity-60"
+              >
+                Reintentar sincronización
+              </button>
+              <button
+                type="button"
+                disabled={kommoSaving}
+                onClick={() => void handleKommoSave()}
+                className="rounded-lg bg-emerald-500 px-3 py-1.5 text-xs font-semibold text-zinc-900 disabled:opacity-60"
+              >
+                {kommoSaving ? "Guardando..." : "Guardar configuración"}
+              </button>
+            </div>
+          </div>
+
           <div className="rounded-lg border border-zinc-800 bg-zinc-950/40 p-3">
             <p className="font-semibold text-zinc-100">A) Alta de webhook (envío de eventos)</p>
             <ol className="mt-2 list-decimal space-y-1 pl-5 text-zinc-300">
