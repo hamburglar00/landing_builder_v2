@@ -472,7 +472,7 @@ export function TelefonosPageContent({
                   }
                   className="grid w-full grid-cols-1 items-center gap-2 px-4 py-3 text-left hover:bg-zinc-800/50 md:grid-cols-[minmax(320px,1fr)_180px_220px_20px]"
                 >
-                  <div className="grid items-center gap-3 md:min-w-[320px] md:grid-cols-[minmax(170px,1fr)_90px_90px]">
+                  <div className="grid items-center gap-2 md:min-w-[320px] md:grid-cols-[minmax(170px,1fr)_72px_78px]">
                     <span className="font-medium text-zinc-200">
                       {g.nombre} {g.gerencia_id ? `(ID ${g.gerencia_id})` : ""}
                     </span>
