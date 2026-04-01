@@ -238,21 +238,22 @@ export default function AdminGerenciasPage() {
                   className="w-full rounded-lg border border-[var(--color-border)] bg-[var(--color-bg-2)] px-3 py-2 text-sm text-[var(--color-text-strong)] placeholder:text-[var(--color-text-disabled)] focus:border-[var(--color-primary)] focus:outline-none focus:ring-2 focus:ring-[var(--color-ring-primary)]"
                 />
               </div>
-              <div>
-                <label htmlFor="new-gerencia-id" className="mb-1 block text-xs font-medium text-zinc-400">
-                  Gerencia ID (entero externo) <span className="text-red-400">*</span>
-                </label>
-                <input
-                  id="new-gerencia-id"
-                  type="number"
-                  value={newGerenciaId}
-                  onChange={(e) => setNewGerenciaId(e.target.value)}
-                  placeholder="Ej: 1"
-                  required={newSourceType === "pbadmin"}
-                  disabled={newSourceType !== "pbadmin"}
-                  className="w-full rounded-lg border border-[var(--color-border)] bg-[var(--color-bg-2)] px-3 py-2 text-sm text-[var(--color-text-strong)] placeholder:text-[var(--color-text-disabled)] focus:border-[var(--color-primary)] focus:outline-none focus:ring-2 focus:ring-[var(--color-ring-primary)]"
-                />
-              </div>
+              {newSourceType === "pbadmin" && (
+                <div>
+                  <label htmlFor="new-gerencia-id" className="mb-1 block text-xs font-medium text-zinc-400">
+                    Gerencia ID (entero externo) <span className="text-red-400">*</span>
+                  </label>
+                  <input
+                    id="new-gerencia-id"
+                    type="number"
+                    value={newGerenciaId}
+                    onChange={(e) => setNewGerenciaId(e.target.value)}
+                    placeholder="Ej: 1"
+                    required
+                    className="w-full rounded-lg border border-[var(--color-border)] bg-[var(--color-bg-2)] px-3 py-2 text-sm text-[var(--color-text-strong)] placeholder:text-[var(--color-text-disabled)] focus:border-[var(--color-primary)] focus:outline-none focus:ring-2 focus:ring-[var(--color-ring-primary)]"
+                  />
+                </div>
+              )}
               <div className="flex justify-end">
                 <button
                   type="submit"
@@ -299,14 +300,15 @@ export default function AdminGerenciasPage() {
                         className="w-48 rounded-md border border-zinc-700 bg-zinc-900 px-2 py-1 text-zinc-100"
                         autoFocus
                       />
-                      <input
-                        type="number"
-                        value={editGerenciaId}
-                        onChange={(e) => setEditGerenciaId(e.target.value)}
-                        placeholder="Gerencia ID"
-                        disabled={editSourceType !== "pbadmin"}
-                        className="w-24 rounded-md border border-zinc-700 bg-zinc-900 px-2 py-1 text-zinc-100"
-                      />
+                      {editSourceType === "pbadmin" && (
+                        <input
+                          type="number"
+                          value={editGerenciaId}
+                          onChange={(e) => setEditGerenciaId(e.target.value)}
+                          placeholder="Gerencia ID"
+                          className="w-24 rounded-md border border-zinc-700 bg-zinc-900 px-2 py-1 text-zinc-100"
+                        />
+                      )}
                       <select
                         value={editSourceType}
                         onChange={(e) => setEditSourceType(e.target.value as "pbadmin" | "manual")}
