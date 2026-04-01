@@ -54,6 +54,8 @@ export default function IntegracionesMetaCapi() {
   const [kommoActive, setKommoActive] = useState(true);
   const [kommoSaving, setKommoSaving] = useState(false);
   const [kommoMsg, setKommoMsg] = useState<string | null>(null);
+  const [editKommoUrl, setEditKommoUrl] = useState(false);
+  const [editKommoToken, setEditKommoToken] = useState(false);
 
   const endpointBase = process.env.NEXT_PUBLIC_SUPABASE_URL ?? "";
   const endpointUrl = useMemo(
@@ -83,6 +85,8 @@ export default function IntegracionesMetaCapi() {
     setKommoBaseUrl(kommo?.kommo_api_base_url ?? "");
     setKommoToken(kommo?.kommo_access_token ?? "");
     setKommoActive(kommo?.active ?? true);
+    setEditKommoUrl(!kommo);
+    setEditKommoToken(!kommo);
     const { data: p } = await supabase
       .from("profiles")
       .select("nombre, role")
@@ -170,6 +174,8 @@ export default function IntegracionesMetaCapi() {
           last_synced_at: new Date().toISOString(),
         });
         setKommoMsg("Configuración de Kommo guardada y sincronizada.");
+        setEditKommoUrl(false);
+        setEditKommoToken(false);
       } else {
         await upsertKommoClientConfig({
           user_id: userId,
@@ -178,6 +184,8 @@ export default function IntegracionesMetaCapi() {
           sync_error: (sync.detail ?? "").slice(0, 500),
         });
         setKommoMsg("Guardado local OK. Falló sincronización con Intermediario. Reintenta manualmente.");
+        setEditKommoUrl(false);
+        setEditKommoToken(false);
       }
 
       await loadAll(userId);
@@ -536,21 +544,41 @@ export default function IntegracionesMetaCapi() {
                 />
               </div>
               <div className="sm:col-span-2">
-                <label className="mb-1 block text-[11px] text-zinc-400">Kommo API Base URL</label>
+                <div className="mb-1 flex items-center justify-between gap-2">
+                  <label className="block text-[11px] text-zinc-400">Kommo API Base URL</label>
+                  <button
+                    type="button"
+                    onClick={() => setEditKommoUrl(true)}
+                    className="rounded border border-zinc-700 px-2 py-0.5 text-[10px] text-zinc-300 hover:bg-zinc-800"
+                  >
+                    Editar
+                  </button>
+                </div>
                 <input
                   value={kommoBaseUrl}
                   onChange={(e) => setKommoBaseUrl(e.target.value)}
                   placeholder="https://TU_USUARIO.kommo.com"
-                  className="h-9 w-full rounded-lg border border-zinc-700 bg-zinc-900 px-3 text-sm text-zinc-100"
+                  disabled={!editKommoUrl}
+                  className="h-9 w-full rounded-lg border border-zinc-700 bg-zinc-900 px-3 text-sm text-zinc-100 disabled:cursor-not-allowed disabled:opacity-70"
                 />
               </div>
               <div className="sm:col-span-2">
-                <label className="mb-1 block text-[11px] text-zinc-400">Token de larga duración</label>
+                <div className="mb-1 flex items-center justify-between gap-2">
+                  <label className="block text-[11px] text-zinc-400">Token de larga duración</label>
+                  <button
+                    type="button"
+                    onClick={() => setEditKommoToken(true)}
+                    className="rounded border border-zinc-700 px-2 py-0.5 text-[10px] text-zinc-300 hover:bg-zinc-800"
+                  >
+                    Editar
+                  </button>
+                </div>
                 <input
                   value={kommoToken}
                   onChange={(e) => setKommoToken(e.target.value)}
                   placeholder="Pegar token de Kommo"
-                  className="h-9 w-full rounded-lg border border-zinc-700 bg-zinc-900 px-3 text-sm text-zinc-100"
+                  disabled={!editKommoToken}
+                  className="h-9 w-full rounded-lg border border-zinc-700 bg-zinc-900 px-3 text-sm text-zinc-100 disabled:cursor-not-allowed disabled:opacity-70"
                 />
               </div>
               <label className="inline-flex items-center gap-2 text-xs text-zinc-300">
@@ -634,7 +662,7 @@ export default function IntegracionesMetaCapi() {
               <li>Crear una nueva integración (custom/private).</li>
               <li>Completar datos básicos (nombre/descripcion) y guardar.</li>
               <li>Abrir la integración creada e ir a <span className="font-medium">Llaves y alcances</span>.</li>
-              <li>Generar <span className="font-medium">Token de larga duración</span>.</li>
+              <li>Generar <span className="font-medium">Token de larga duración (seleccionar fecha máxima)</span>.</li>
               <li>Copiar el token de larga duración.</li>
             </ol>
           </div>
