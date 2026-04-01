@@ -311,11 +311,13 @@ export default function IntegracionesMetaCapi() {
           >
             <span className="flex items-center justify-between gap-3">
               <span className="inline-flex items-center gap-3 text-sm font-semibold text-zinc-200">
-                <svg className="h-[16px] w-[32px] shrink-0 text-[#0866FF]" viewBox="0 0 36 18" fill="none" aria-hidden="true">
+                <svg className="h-8 w-8 shrink-0 rounded-sm" viewBox="0 0 64 64" aria-hidden="true">
+                  <rect width="64" height="64" fill="#EAEAEA" />
                   <path
-                    d="M2 9c0-4 2.8-7 6.2-7 3 0 5.1 2.6 8 7.4 3-4.8 5-7.4 8-7.4 3.4 0 6.2 3 6.2 7s-2.7 7-6 7c-2.6 0-4.4-1.8-8.2-8-3.8 6.2-5.6 8-8.2 8C4.7 16 2 13 2 9Z"
-                    stroke="currentColor"
-                    strokeWidth="2.3"
+                    d="M8 35c0-11 7-19 14-19 7 0 12 5 18 16 6-11 11-16 18-16 7 0 14 8 14 19s-7 19-14 19c-7 0-12-5-18-16-6 11-11 16-18 16-7 0-14-8-14-19Z"
+                    fill="none"
+                    stroke="#1877F2"
+                    strokeWidth="6"
                     strokeLinecap="round"
                     strokeLinejoin="round"
                   />
@@ -333,12 +335,13 @@ export default function IntegracionesMetaCapi() {
           >
             <span className="flex items-center justify-between gap-3">
               <span className="inline-flex items-center gap-3 text-sm font-semibold text-zinc-200">
-                <img
-                  src="/kommo-logo.png"
-                  alt=""
-                  aria-hidden="true"
-                  className="h-6 w-6 shrink-0 rounded-sm object-cover"
-                />
+                <svg className="h-8 w-8 shrink-0 rounded-sm" viewBox="0 0 64 64" aria-hidden="true">
+                  <rect width="64" height="64" fill="#EAEAEA" />
+                  <path
+                    d="M18 48c-1.7 0-3-1.3-3-3V30.5C15 20.8 22.8 13 32.5 13h3.8l-11.5 16h4.9L42.3 13H47c1.8 0 2.8 2 1.7 3.4L36.3 33.9l13 15.8c1.1 1.4.1 3.3-1.7 3.3h-5.3L29.2 37.5c-.8-1-2.3-.4-2.3.8V45c0 1.7-1.3 3-3 3H18Z"
+                    fill="#19164A"
+                  />
+                </svg>
                 Integración con CRM Kommo
               </span>
               <span className="text-xs text-zinc-400">Entrar</span>
