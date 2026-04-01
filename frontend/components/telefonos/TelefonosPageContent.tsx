@@ -86,6 +86,9 @@ export function TelefonosPageContent({
   const [switchingGerenciaId, setSwitchingGerenciaId] = useState<number | null>(null);
   const [openGerenciaId, setOpenGerenciaId] = useState<number | null>(null);
   const [nextSyncCountdown, setNextSyncCountdown] = useState<string>("--:--");
+  const [manualPhonesInput, setManualPhonesInput] = useState<Record<number, string>>({});
+  const [manualPhoneKind, setManualPhoneKind] = useState<Record<number, "carga" | "ads" | "mkt">>({});
+  const [manualSavingGerenciaId, setManualSavingGerenciaId] = useState<number | null>(null);
   const userIdRef = useRef<string | null>(null);
   const lastAutoReloadAt = useRef<number>(0);
   const reloadScheduledRef = useRef<boolean>(false);
@@ -356,6 +359,46 @@ export function TelefonosPageContent({
     }
   };
 
+  const parseManualPhones = (raw: string): string[] => {
+    const tokens = raw
+      .split(/[\s,;|\n\r\t]+/g)
+      .map((x) => onlyDigits(x))
+      .filter(Boolean);
+    return Array.from(new Set(tokens));
+  };
+
+  const handleAddManualPhones = async (gerenciaId: number) => {
+    if (!userId) return;
+    const input = manualPhonesInput[gerenciaId] ?? "";
+    const list = parseManualPhones(input);
+    if (list.length === 0) {
+      setError("Ingresa al menos un telefono valido.");
+      return;
+    }
+    setManualSavingGerenciaId(gerenciaId);
+    setError(null);
+    try {
+      const kind = manualPhoneKind[gerenciaId] ?? "carga";
+      const rows = list.map((phone) => ({
+        gerencia_id: gerenciaId,
+        phone,
+        status: "active",
+        kind,
+        last_seen_at: new Date().toISOString(),
+      }));
+      const { error: upsertError } = await supabase
+        .from("gerencia_phones")
+        .upsert(rows, { onConflict: "gerencia_id,phone" });
+      if (upsertError) throw upsertError;
+      setManualPhonesInput((prev) => ({ ...prev, [gerenciaId]: "" }));
+      await loadData(userId);
+    } catch (e) {
+      setError(e instanceof Error ? e.message : "Error al cargar telefonos manuales.");
+    } finally {
+      setManualSavingGerenciaId(null);
+    }
+  };
+
   if (!ready) {
     return (
       <div className="flex min-h-[40vh] items-center justify-center">
@@ -403,11 +446,14 @@ export function TelefonosPageContent({
           <span className="text-xs font-medium text-zinc-400">
             Todas las gerencias:
           </span>
+          {(() => {
+            const hasPbadmin = gerencias.some((g) => (g.source_type ?? "pbadmin") === "pbadmin");
+            return (
           <div className="ml-auto flex flex-wrap items-center gap-2">
             <button
               type="button"
               onClick={() => void handleSync(null)}
-              disabled={globalSyncing || !gerencias.length}
+              disabled={globalSyncing || !hasPbadmin}
               title="Trae/actualiza los teléfonos disponibles desde el panel de PB admin para todas las gerencias."
               className="rounded-lg border border-zinc-700 bg-zinc-800 px-3 py-1.5 text-xs font-medium text-zinc-200 transition hover:bg-zinc-700 disabled:opacity-60"
             >
@@ -432,6 +478,8 @@ export function TelefonosPageContent({
               {globalDeleting ? "Borrando..." : "Borrar registros"}
             </button>
           </div>
+            );
+          })()}
         </div>
       </div>
 
@@ -477,7 +525,10 @@ export function TelefonosPageContent({
                 >
                   <div className="flex items-center gap-3">
                     <span className="font-medium text-zinc-200">
-                      {g.nombre} (ID {g.gerencia_id})
+                      {g.nombre} {g.gerencia_id ? `(ID ${g.gerencia_id})` : ""}
+                    </span>
+                    <span className="rounded border border-zinc-700 px-1.5 py-0.5 text-[10px] text-zinc-300">
+                      {(g.source_type ?? "pbadmin") === "manual" ? "Manual" : "PBadmin"}
                     </span>
                     <span className="text-xs text-zinc-500">
                       {phones.length} registro{phones.length !== 1 ? "s" : ""}
@@ -538,15 +589,17 @@ export function TelefonosPageContent({
                         Mensajes recibidos
                       </button>
                       <div className="ml-auto flex flex-wrap gap-2">
-                        <button
-                          type="button"
-                          onClick={() => void handleSync(g.id)}
-                          disabled={syncing}
-                          title="Trae/actualiza los teléfonos disponibles desde el panel de PB admin para esta gerencia."
-                          className="rounded-lg border border-zinc-700 bg-zinc-800 px-2 py-1 text-xs font-medium text-zinc-200 transition hover:bg-zinc-700 disabled:opacity-60"
-                        >
-                          {syncing ? "Sincronizando..." : "Sincronizar"}
-                        </button>
+                        {(g.source_type ?? "pbadmin") === "pbadmin" ? (
+                          <button
+                            type="button"
+                            onClick={() => void handleSync(g.id)}
+                            disabled={syncing}
+                            title="Trae/actualiza los teléfonos disponibles desde el panel de PB admin para esta gerencia."
+                            className="rounded-lg border border-zinc-700 bg-zinc-800 px-2 py-1 text-xs font-medium text-zinc-200 transition hover:bg-zinc-700 disabled:opacity-60"
+                          >
+                            {syncing ? "Sincronizando..." : "Sincronizar"}
+                          </button>
+                        ) : null}
                         <button
                           type="button"
                           onClick={() => void handleReset(g.id)}
@@ -567,6 +620,43 @@ export function TelefonosPageContent({
                         </button>
                       </div>
                     </div>
+                    {(g.source_type ?? "pbadmin") === "manual" ? (
+                      <div className="mb-3 rounded-lg border border-zinc-800 bg-zinc-900/50 p-3">
+                        <p className="mb-2 text-xs text-zinc-300">Cargar telefonos manualmente</p>
+                        <div className="flex flex-wrap items-end gap-2">
+                          <textarea
+                            value={manualPhonesInput[g.id] ?? ""}
+                            onChange={(e) =>
+                              setManualPhonesInput((prev) => ({ ...prev, [g.id]: e.target.value }))
+                            }
+                            placeholder="Pega telefonos separados por coma, espacio o salto de linea"
+                            className="min-h-[72px] flex-1 rounded-lg border border-zinc-700 bg-zinc-900 px-3 py-2 text-xs text-zinc-100"
+                          />
+                          <select
+                            value={manualPhoneKind[g.id] ?? "carga"}
+                            onChange={(e) =>
+                              setManualPhoneKind((prev) => ({
+                                ...prev,
+                                [g.id]: e.target.value as "carga" | "ads" | "mkt",
+                              }))
+                            }
+                            className="h-9 rounded-lg border border-zinc-700 bg-zinc-900 px-2 text-xs text-zinc-100"
+                          >
+                            <option value="carga">carga</option>
+                            <option value="ads">ads</option>
+                            <option value="mkt">mkt</option>
+                          </select>
+                          <button
+                            type="button"
+                            onClick={() => void handleAddManualPhones(g.id)}
+                            disabled={manualSavingGerenciaId === g.id}
+                            className="h-9 rounded-lg border border-emerald-700 bg-emerald-900/20 px-3 text-xs font-semibold text-emerald-300 disabled:opacity-60"
+                          >
+                            {manualSavingGerenciaId === g.id ? "Guardando..." : "Guardar telefonos"}
+                          </button>
+                        </div>
+                      </div>
+                    ) : null}
                     <div className="overflow-x-auto rounded-lg border border-zinc-700">
                       <table className="w-full text-left text-sm">
                         <thead className="bg-zinc-800/80">

@@ -43,7 +43,7 @@ export function formatGerenciaError(error: unknown, fallback: string): string {
 export async function fetchGerencias(userId: string): Promise<Gerencia[]> {
   const { data, error } = await supabase
     .from("gerencias")
-    .select("id, nombre, gerencia_id, fair_criterion")
+    .select("id, nombre, gerencia_id, source_type, fair_criterion")
     .eq("user_id", userId)
     .order("id", { ascending: true });
 
@@ -57,7 +57,7 @@ export async function fetchGerencias(userId: string): Promise<Gerencia[]> {
 export async function fetchGerenciasForAdmin(adminUserId: string): Promise<Gerencia[]> {
   const { data, error } = await supabase
     .from("gerencias")
-    .select("id, nombre, gerencia_id, fair_criterion, user_id")
+    .select("id, nombre, gerencia_id, source_type, fair_criterion, user_id")
     .order("id", { ascending: true });
 
   if (error) throw error;
@@ -76,17 +76,25 @@ export async function fetchGerenciasForAdmin(adminUserId: string): Promise<Geren
  */
 export async function createGerencia(
   userId: string,
-  payload: { nombre: string; gerencia_id: number },
+  payload: { nombre: string; source_type: "pbadmin" | "manual"; gerencia_id?: number | null },
 ): Promise<Gerencia> {
+  const isPbAdmin = payload.source_type === "pbadmin";
   const { data, error } = await supabase
     .from("gerencias")
     .insert({
-      id: payload.gerencia_id,
       user_id: userId,
       nombre: payload.nombre.trim(),
-      gerencia_id: payload.gerencia_id,
+      source_type: payload.source_type,
+      ...(isPbAdmin
+        ? {
+            id: payload.gerencia_id,
+            gerencia_id: payload.gerencia_id,
+          }
+        : {
+            gerencia_id: null,
+          }),
     })
-    .select("id, nombre, gerencia_id")
+    .select("id, nombre, gerencia_id, source_type")
     .single();
 
   if (error) throw error;
@@ -98,14 +106,22 @@ export async function createGerencia(
  */
 export async function updateGerencia(
   id: number,
-  payload: { nombre: string; gerencia_id: number },
+  payload: { nombre: string; source_type: "pbadmin" | "manual"; gerencia_id?: number | null },
 ): Promise<void> {
+  const isPbAdmin = payload.source_type === "pbadmin";
   const { error } = await supabase
     .from("gerencias")
     .update({
       nombre: payload.nombre.trim(),
-      id: payload.gerencia_id,
-      gerencia_id: payload.gerencia_id,
+      source_type: payload.source_type,
+      ...(isPbAdmin
+        ? {
+            id: payload.gerencia_id,
+            gerencia_id: payload.gerencia_id,
+          }
+        : {
+            gerencia_id: null,
+          }),
     })
     .eq("id", id);
 

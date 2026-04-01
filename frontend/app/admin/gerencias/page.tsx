@@ -22,8 +22,10 @@ export default function AdminGerenciasPage() {
   const [editingId, setEditingId] = useState<number | null>(null);
   const [editNombre, setEditNombre] = useState("");
   const [editGerenciaId, setEditGerenciaId] = useState<string>("");
+  const [editSourceType, setEditSourceType] = useState<"pbadmin" | "manual">("pbadmin");
   const [newNombre, setNewNombre] = useState("");
   const [newGerenciaId, setNewGerenciaId] = useState<string>("");
+  const [newSourceType, setNewSourceType] = useState<"pbadmin" | "manual">("pbadmin");
   const [showCreateModal, setShowCreateModal] = useState(false);
   const [saving, setSaving] = useState(false);
   const [deletingId, setDeletingId] = useState<number | null>(null);
@@ -63,7 +65,7 @@ export default function AdminGerenciasPage() {
     e.preventDefault();
     const gid = parseGerenciaId(newGerenciaId);
     if (!userId || !newNombre.trim()) return;
-    if (gid === null) {
+    if (newSourceType === "pbadmin" && gid === null) {
       setError("Gerencia ID es obligatorio (número entero).");
       return;
     }
@@ -72,11 +74,13 @@ export default function AdminGerenciasPage() {
     try {
       const created = await createGerencia(userId, {
         nombre: newNombre.trim(),
+        source_type: newSourceType,
         gerencia_id: gid,
       });
       setGerencias((prev) => [...prev, created].sort((a, b) => a.id - b.id));
       setNewNombre("");
       setNewGerenciaId("");
+      setNewSourceType("pbadmin");
       setShowCreateModal(false);
     } catch (e) {
       setError(formatGerenciaError(e, "Error al crear"));
@@ -88,20 +92,22 @@ export default function AdminGerenciasPage() {
   const startEdit = (g: Gerencia) => {
     setEditingId(g.id);
     setEditNombre(g.nombre);
-    setEditGerenciaId(String(g.gerencia_id));
+    setEditGerenciaId(g.gerencia_id == null ? "" : String(g.gerencia_id));
+    setEditSourceType(g.source_type ?? "pbadmin");
   };
 
   const cancelEdit = () => {
     setEditingId(null);
     setEditNombre("");
     setEditGerenciaId("");
+    setEditSourceType("pbadmin");
   };
 
   const handleUpdate = async (e: React.FormEvent) => {
     e.preventDefault();
     const gid = parseGerenciaId(editGerenciaId);
     if (editingId === null || !editNombre.trim()) return;
-    if (gid === null) {
+    if (editSourceType === "pbadmin" && gid === null) {
       setError("Gerencia ID es obligatorio (número entero).");
       return;
     }
@@ -110,11 +116,19 @@ export default function AdminGerenciasPage() {
     try {
       await updateGerencia(editingId, {
         nombre: editNombre.trim(),
+        source_type: editSourceType,
         gerencia_id: gid,
       });
       setGerencias((prev) =>
         prev.map((x) =>
-          x.id === editingId ? { ...x, nombre: editNombre.trim(), gerencia_id: gid } : x,
+          x.id === editingId
+            ? {
+                ...x,
+                nombre: editNombre.trim(),
+                source_type: editSourceType,
+                gerencia_id: editSourceType === "pbadmin" ? gid : null,
+              }
+            : x,
         ),
       );
       cancelEdit();
@@ -198,6 +212,20 @@ export default function AdminGerenciasPage() {
             </div>
             <form onSubmit={handleCreate} className="space-y-4">
               <div>
+                <label htmlFor="new-gerencia-type" className="mb-1 block text-xs font-medium text-zinc-400">
+                  Tipo de gerencia
+                </label>
+                <select
+                  id="new-gerencia-type"
+                  value={newSourceType}
+                  onChange={(e) => setNewSourceType(e.target.value as "pbadmin" | "manual")}
+                  className="w-full rounded-lg border border-[var(--color-border)] bg-[var(--color-bg-2)] px-3 py-2 text-sm text-[var(--color-text-strong)] focus:border-[var(--color-primary)] focus:outline-none focus:ring-2 focus:ring-[var(--color-ring-primary)]"
+                >
+                  <option value="pbadmin">Gerencia PBadmin</option>
+                  <option value="manual">Gerencia Manual</option>
+                </select>
+              </div>
+              <div>
                 <label htmlFor="new-gerencia-nombre" className="mb-1 block text-xs font-medium text-zinc-400">
                   Nombre
                 </label>
@@ -220,14 +248,15 @@ export default function AdminGerenciasPage() {
                   value={newGerenciaId}
                   onChange={(e) => setNewGerenciaId(e.target.value)}
                   placeholder="Ej: 1"
-                  required
+                  required={newSourceType === "pbadmin"}
+                  disabled={newSourceType !== "pbadmin"}
                   className="w-full rounded-lg border border-[var(--color-border)] bg-[var(--color-bg-2)] px-3 py-2 text-sm text-[var(--color-text-strong)] placeholder:text-[var(--color-text-disabled)] focus:border-[var(--color-primary)] focus:outline-none focus:ring-2 focus:ring-[var(--color-ring-primary)]"
                 />
               </div>
               <div className="flex justify-end">
                 <button
                   type="submit"
-                  disabled={saving || !newNombre.trim() || parseGerenciaId(newGerenciaId) === null}
+                  disabled={saving || !newNombre.trim() || (newSourceType === "pbadmin" && parseGerenciaId(newGerenciaId) === null)}
                   className="cursor-pointer rounded-xl bg-[var(--color-primary)] px-4 py-2 text-sm font-semibold uppercase tracking-wide text-[var(--color-bg-0)] transition-colors duration-150 hover:bg-[var(--color-primary-hover)] active:bg-[var(--color-primary-press)] disabled:cursor-not-allowed disabled:opacity-70 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-ring-primary)]"
                 >
                   {saving ? "GUARDANDO..." : "CREAR"}
@@ -244,6 +273,7 @@ export default function AdminGerenciasPage() {
             <tr>
               <th className="px-4 py-3 font-medium text-zinc-300">ID</th>
               <th className="px-4 py-3 font-medium text-zinc-300">Nombre</th>
+              <th className="px-4 py-3 font-medium text-zinc-300">Tipo</th>
               <th className="px-4 py-3 font-medium text-zinc-300">Gerencia ID</th>
               <th className="px-4 py-3 text-right font-medium text-zinc-300">Acciones</th>
             </tr>
@@ -251,7 +281,7 @@ export default function AdminGerenciasPage() {
           <tbody className="divide-y divide-zinc-800">
             {gerencias.length === 0 && (
               <tr>
-                <td colSpan={4} className="px-4 py-6 text-center text-zinc-500">
+                <td colSpan={5} className="px-4 py-6 text-center text-zinc-500">
                   Aún no tienes gerencias. Crea una arriba.
                 </td>
               </tr>
@@ -274,8 +304,17 @@ export default function AdminGerenciasPage() {
                         value={editGerenciaId}
                         onChange={(e) => setEditGerenciaId(e.target.value)}
                         placeholder="Gerencia ID"
+                        disabled={editSourceType !== "pbadmin"}
                         className="w-24 rounded-md border border-zinc-700 bg-zinc-900 px-2 py-1 text-zinc-100"
                       />
+                      <select
+                        value={editSourceType}
+                        onChange={(e) => setEditSourceType(e.target.value as "pbadmin" | "manual")}
+                        className="w-36 rounded-md border border-zinc-700 bg-zinc-900 px-2 py-1 text-zinc-100"
+                      >
+                        <option value="pbadmin">Gerencia PBadmin</option>
+                        <option value="manual">Gerencia Manual</option>
+                      </select>
                       <button type="submit" disabled={saving} className="text-zinc-300 hover:text-white">
                         Guardar
                       </button>
@@ -287,7 +326,10 @@ export default function AdminGerenciasPage() {
                     <span className="text-zinc-100">{g.nombre}</span>
                   )}
                 </td>
-                <td className="px-4 py-3 text-zinc-400">{g.gerencia_id}</td>
+                <td className="px-4 py-3 text-zinc-300">
+                  {(g.source_type ?? "pbadmin") === "manual" ? "Gerencia Manual" : "Gerencia PBadmin"}
+                </td>
+                <td className="px-4 py-3 text-zinc-400">{g.gerencia_id ?? "—"}</td>
                 <td className="px-4 py-3 text-right">
                   {editingId === g.id ? null : (
                     <>

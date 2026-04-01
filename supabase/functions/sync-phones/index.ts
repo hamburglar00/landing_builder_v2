@@ -116,7 +116,10 @@ Deno.serve(async (req) => {
     }
 
     // 1) Obtener gerencias: cron = todas; si no, del usuario (o solo la indicada)
-    let query = supabaseAdmin.from("gerencias").select("id, gerencia_id");
+    let query = supabaseAdmin
+      .from("gerencias")
+      .select("id, gerencia_id, source_type")
+      .eq("source_type", "pbadmin");
     if (!isCronMode) {
       query = query.eq("user_id", userId!);
       if (singleGerenciaId != null) {
@@ -303,4 +306,3 @@ Deno.serve(async (req) => {
     );
   }
 });
-

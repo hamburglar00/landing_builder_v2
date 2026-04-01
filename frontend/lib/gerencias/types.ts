@@ -5,7 +5,8 @@
 export interface Gerencia {
   id: number;
   nombre: string;
-  gerencia_id: number;
+  gerencia_id: number | null;
+  source_type?: "pbadmin" | "manual";
   fair_criterion?: "usage_count" | "messages_received";
   user_id?: string;
 }

@@ -740,7 +740,7 @@ export default function DashboardLandingEditarPage() {
                     return (
                       <tr key={g.id} className="bg-zinc-950/40">
                         <td className="px-3 py-2 text-zinc-300">
-                          {g.gerencia_id}
+                          {g.gerencia_id ?? "MANUAL"}
                         </td>
                         <td className="px-3 py-2 text-zinc-200">{g.nombre}</td>
                         <td className="px-3 py-2 text-center">
