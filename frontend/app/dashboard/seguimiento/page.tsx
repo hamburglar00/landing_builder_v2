@@ -46,11 +46,23 @@ export default function DashboardSeguimientoPage() {
       const cleanPhone = String(phone || "").replace(/\D/g, "");
       if (!cleanPhone) return;
 
+      const { data: ownRows, error: ownRowsError } = await supabase
+        .from("conversions")
+        .select("id, phone")
+        .eq("user_id", userId);
+      if (ownRowsError) throw ownRowsError;
+
+      const idsToDelete = (ownRows ?? [])
+        .filter((r) => String(r.phone ?? "").replace(/\D/g, "") === cleanPhone)
+        .map((r) => r.id)
+        .filter(Boolean);
+
+      if (idsToDelete.length === 0) return;
+
       const { error: delConvError } = await supabase
         .from("conversions")
         .delete()
-        .eq("user_id", userId)
-        .eq("phone", cleanPhone);
+        .in("id", idsToDelete);
       if (delConvError) throw delConvError;
 
       // Best effort: si falla por permisos/RLS no debe bloquear el borrado principal.
