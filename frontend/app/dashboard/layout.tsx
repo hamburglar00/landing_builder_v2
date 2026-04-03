@@ -263,7 +263,6 @@ export default function DashboardLayout({
   const [isClient, setIsClient] = useState<boolean | null>(null);
   const [isPlanBlocked, setIsPlanBlocked] = useState(false);
   const [blockedReason, setBlockedReason] = useState<string | null>(null);
-  const [planInfoOpen, setPlanInfoOpen] = useState(false);
   const [planCode, setPlanCode] = useState<"starter" | "plus" | "pro" | "premium" | "scale">("starter");
   const [planStartsAt, setPlanStartsAt] = useState<string | null>(null);
   const [planExpiresAt, setPlanExpiresAt] = useState<string | null>(null);
@@ -560,20 +559,15 @@ export default function DashboardLayout({
           <p className="truncate px-1 text-[11px] text-[var(--color-text-muted)]" title={user?.email ?? undefined}>
             {user?.email}
           </p>
-          <button
-            type="button"
-            onClick={() => setPlanInfoOpen((v) => !v)}
-            className={`w-full rounded-lg border px-3 py-2 text-xs font-semibold transition hover:opacity-90 ${planClass(planCode)}`}
+          <Link
+            href="/dashboard/plan"
+            onClick={() => setSidebarOpen(false)}
+            className={`block w-full rounded-lg border px-3 py-2 text-center text-xs font-semibold transition hover:opacity-90 ${planClass(planCode)} ${
+              pathname?.startsWith("/dashboard/plan") ? "ring-2 ring-zinc-500/60" : ""
+            }`}
           >
             Plan {planLabel(planCode)}
-          </button>
-          {planInfoOpen && (
-            <div className="rounded-lg border border-[var(--color-border)] bg-[var(--color-bg-2)] p-2 text-[11px] text-[var(--color-text-muted)]">
-              <p><span className="text-[var(--color-text-strong)]">Alta:</span> {planStartsAt ? new Date(planStartsAt).toLocaleDateString() : "-"}</p>
-              <p><span className="text-[var(--color-text-strong)]">Vence:</span> {planExpiresAt ? new Date(planExpiresAt).toLocaleDateString() : "Sin venc."}</p>
-              <p><span className="text-[var(--color-text-strong)]">Incluye:</span> {planMaxLandings} landings · {planMaxPhones} teléfonos</p>
-            </div>
-          )}
+          </Link>
           <button
             type="button"
             onClick={handleSignOut}
@@ -617,3 +611,4 @@ export default function DashboardLayout({
     </div>
   );
 }
+
