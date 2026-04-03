@@ -117,8 +117,15 @@ export default function TrackingBoard({
   const [search, setSearch] = useState("");
   const [page, setPage] = useState(1);
   const [deletingPhone, setDeletingPhone] = useState<string | null>(null);
+  const [exportOpen, setExportOpen] = useState(false);
+  const [copiedExport, setCopiedExport] = useState(false);
 
   const [openConfig, setOpenConfig] = useState(false);
+
+  const stripArPrefix = (phone: string) => {
+    const digits = String(phone || "").replace(/\D/g, "");
+    return digits.startsWith("549") ? digits.slice(3) : digits;
+  };
 
   useEffect(() => {
     const nextRules = rankingConfig?.rules?.length
@@ -279,6 +286,34 @@ export default function TrackingBoard({
     }
   };
 
+  const exportMessage = useMemo(() => {
+    if (filteredRows.length === 0) return "No hay jugadores en el filtro actual.";
+    const lines: string[] = [];
+    lines.push("📌 RESUMEN DE JUGADORES");
+    lines.push("");
+    lines.push(`📊 Jugadores en filtro: ${filteredRows.length}`);
+    lines.push("");
+    for (const r of filteredRows) {
+      const rank = r.loads === 0 ? LEAD_INDICATOR : indicatorFor(r.totalLoaded);
+      lines.push(`• ${rank} ${stripArPrefix(r.phone)}`);
+      lines.push(`⏳ Última actividad: ${relDate(r.lastActive)}`);
+      lines.push(`💸 Carga promedio: ${formatCurrency(r.avgLoad)}`);
+      lines.push(`🏦 Total cargado: ${formatCurrency(r.totalLoaded)}`);
+      lines.push("");
+    }
+    return lines.join("\n").trim();
+  }, [filteredRows, overflowIndicator, rules]);
+
+  const handleCopyExport = async () => {
+    try {
+      await navigator.clipboard.writeText(exportMessage);
+      setCopiedExport(true);
+      setTimeout(() => setCopiedExport(false), 1800);
+    } catch {
+      setCopiedExport(false);
+    }
+  };
+
   useEffect(() => {
     setPage(1);
   }, [search, sortMode, gerenciaFilter, conversions.length]);
@@ -422,6 +457,45 @@ export default function TrackingBoard({
             >
               Siguiente
             </button>
+          </div>
+        </div>
+      )}
+
+      <div className="mt-3 flex justify-end">
+        <button
+          type="button"
+          onClick={() => setExportOpen(true)}
+          className="rounded-lg border border-zinc-700 bg-zinc-800/80 px-3 py-1.5 text-xs font-medium text-zinc-200 transition hover:bg-zinc-700"
+        >
+          Exportar jugadores
+        </button>
+      </div>
+
+      {exportOpen && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-3 sm:p-4">
+          <div className="w-full max-w-2xl rounded-xl border border-zinc-700 bg-zinc-900 p-3 sm:p-4 shadow-2xl">
+            <div className="mb-3 flex items-center justify-between gap-2">
+              <h4 className="text-sm font-semibold text-zinc-100">Exportar jugadores (filtro actual)</h4>
+              <button
+                type="button"
+                onClick={() => setExportOpen(false)}
+                className="rounded-lg border border-zinc-700 px-2 py-1 text-xs text-zinc-300 hover:bg-zinc-800"
+              >
+                Cerrar
+              </button>
+            </div>
+            <div className="max-h-[50vh] overflow-y-auto rounded-lg border border-zinc-800 bg-zinc-950/70 p-3">
+              <pre className="whitespace-pre-wrap break-words text-xs text-zinc-200">{exportMessage}</pre>
+            </div>
+            <div className="mt-3 flex justify-end">
+              <button
+                type="button"
+                onClick={() => void handleCopyExport()}
+                className="rounded-lg bg-lime-400 px-3 py-1.5 text-xs font-semibold text-black transition hover:bg-lime-300"
+              >
+                {copiedExport ? "Copiado" : "Copiar mensaje"}
+              </button>
+            </div>
           </div>
         </div>
       )}
