@@ -57,6 +57,19 @@ export default function DashboardLandingsPage() {
     setCreating(true);
     setError(null);
     try {
+      const { data: sub } = await supabase
+        .from("client_subscriptions")
+        .select("max_landings, plan_code")
+        .eq("user_id", userId)
+        .maybeSingle();
+      const maxLandings = Number(sub?.max_landings ?? 2);
+      if (Number.isFinite(maxLandings) && landings.length >= maxLandings) {
+        setPlanLimitModalText(
+          `No puedes crear esta landing porque alcanzaste el máximo de tu plan actual (${maxLandings} landings).`,
+        );
+        setPlanLimitModalOpen(true);
+        return;
+      }
       const { id } = await createLanding(userId, {
         comment: "",
         config: { ...DEFAULT_CONFIG },
@@ -82,6 +95,19 @@ export default function DashboardLandingsPage() {
     setCreating(true);
     setError(null);
     try {
+      const { data: sub } = await supabase
+        .from("client_subscriptions")
+        .select("max_landings, plan_code")
+        .eq("user_id", userId)
+        .maybeSingle();
+      const maxLandings = Number(sub?.max_landings ?? 2);
+      if (Number.isFinite(maxLandings) && landings.length >= maxLandings) {
+        setPlanLimitModalText(
+          `No puedes conectar otra landing porque alcanzaste el máximo de tu plan actual (${maxLandings} landings).`,
+        );
+        setPlanLimitModalOpen(true);
+        return;
+      }
       const { id } = await createLanding(userId, {
         landingType: "external",
         externalDomain: "",

@@ -204,17 +204,19 @@ export default function AdminClientesPage() {
                       </div>
                     ) : (
                       <div className="flex flex-col gap-1">
-                        <span className={`inline-flex w-fit rounded-md border px-2 py-0.5 text-[11px] uppercase ${planBadgeClass(client.plan_code)}`}>
-                          {client.plan_code ?? "starter"}
-                        </span>
-                        <span className="inline-flex w-fit items-center gap-1 rounded-md border border-zinc-700 px-2 py-0.5 text-[10px] uppercase text-zinc-200">
-                          <span
-                            className={`h-2 w-2 rounded-full ${
-                              client.plan_status_effective === "expired" ? "bg-red-500" : "bg-emerald-500"
-                            }`}
-                          />
-                          {client.plan_status_effective === "expired" ? "Vencido" : "Activo"}
-                        </span>
+                        <div className="flex flex-wrap items-center gap-2">
+                          <span className={`inline-flex w-fit rounded-md border px-2 py-0.5 text-[11px] uppercase ${planBadgeClass(client.plan_code)}`}>
+                            {client.plan_code ?? "starter"}
+                          </span>
+                          <span className="inline-flex items-center gap-1 text-[10px] uppercase text-zinc-200">
+                            <span
+                              className={`h-2 w-2 rounded-full ${
+                                client.plan_status_effective === "expired" ? "bg-red-500" : "bg-emerald-500"
+                              }`}
+                            />
+                            {client.plan_status_effective === "expired" ? "Vencido" : "Activo"}
+                          </span>
+                        </div>
                         <span className="text-[11px] text-zinc-500">
                           {client.max_landings ?? 2} landings · {client.max_phones ?? 5} telefonos
                         </span>
@@ -280,4 +282,3 @@ const planBadgeClass = (plan?: string) => {
       return "border-zinc-700 text-zinc-200 bg-zinc-900/40";
   }
 };
-
