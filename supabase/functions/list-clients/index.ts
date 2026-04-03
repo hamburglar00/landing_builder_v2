@@ -174,7 +174,7 @@ Deno.serve(async (req) => {
 
     const { data: profiles } = await supabaseAdmin
       .from("profiles")
-      .select("id, nombre")
+      .select("id, nombre, role")
       .in("id", ids);
 
     const { data: cfgRows } = await supabaseAdmin
@@ -186,8 +186,8 @@ Deno.serve(async (req) => {
       .select("user_id, plan_code, max_landings, max_phones, status, expires_at, grace_days")
       .in("user_id", ids);
 
-    const nombreById = new Map(
-      (profiles ?? []).map((p) => [p.id, p.nombre ?? null]),
+    const profileById = new Map(
+      (profiles ?? []).map((p) => [p.id, { nombre: p.nombre ?? null, role: p.role ?? "cliente" }]),
     );
     const cfgByUserId = new Map(
       (cfgRows ?? []).map((r) => [r.user_id, {
@@ -204,7 +204,8 @@ Deno.serve(async (req) => {
         users: clientUsers.map((u) => ({
           id: u.id,
           email: u.email,
-          nombre: nombreById.get(u.id) ?? null,
+          nombre: profileById.get(u.id)?.nombre ?? null,
+          role: profileById.get(u.id)?.role ?? "cliente",
           visible_columns: cfgByUserId.get(u.id)?.visible_columns ?? [],
           show_logs: cfgByUserId.get(u.id)?.show_logs ?? true,
           plan_code: subsByUserId.get(u.id)?.plan_code ?? "starter",

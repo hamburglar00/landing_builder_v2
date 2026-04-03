@@ -9,6 +9,7 @@ type ClientUser = {
   id: string;
   email: string | null;
   nombre: string | null;
+  role?: string;
   created_at: string | null;
   last_sign_in_at: string | null;
   visible_columns?: string[];
@@ -66,6 +67,7 @@ export default function AdminClientesPage() {
         id: u.id,
         email: u.email,
         nombre: u.nombre ?? null,
+        role: u.role ?? "cliente",
         visible_columns: Array.isArray(u.visible_columns) ? u.visible_columns : [],
         show_logs: typeof u.show_logs === "boolean" ? u.show_logs : true,
         plan_code: u.plan_code ?? "starter",
@@ -160,12 +162,11 @@ export default function AdminClientesPage() {
         </div>
 
         <div className="overflow-x-auto rounded-xl border border-zinc-800">
-          <table className="min-w-[600px] divide-y divide-zinc-800 text-left text-xs sm:min-w-full">
+          <table className="min-w-[560px] divide-y divide-zinc-800 text-left text-xs sm:min-w-full">
             <thead className="bg-zinc-900/80">
               <tr>
                 <th className="px-4 py-2 font-medium text-zinc-300">Nombre</th>
                 <th className="px-4 py-2 font-medium text-zinc-300">Email</th>
-                <th className="px-4 py-2 font-medium text-zinc-300">Creado</th>
                 <th className="px-4 py-2 font-medium text-zinc-300">Plan actual</th>
                 <th className="px-4 py-2 font-medium text-zinc-300">Vencimiento</th>
                 <th className="px-4 py-2 text-right font-medium text-zinc-300">Acciones</th>
@@ -175,7 +176,7 @@ export default function AdminClientesPage() {
               {filteredClients.length === 0 && !isLoadingClients && (
                 <tr>
                   <td
-                    colSpan={6}
+                    colSpan={5}
                     className="px-4 py-6 text-center text-xs text-zinc-500"
                   >
                     {searchQuery.trim()
@@ -193,45 +194,42 @@ export default function AdminClientesPage() {
                   <td className="px-4 py-3 align-top text-xs text-zinc-50">
                     {client.email ?? "-"}
                   </td>
-                  <td className="px-4 py-3 align-top text-xs text-zinc-400">
-                    {client.created_at
-                      ? new Date(client.created_at).toLocaleString()
-                      : "-"}
-                  </td>
                   <td className="px-4 py-3 align-top text-xs text-zinc-200">
-                    <div className="flex flex-col gap-1">
-                      <span className={`inline-flex w-fit rounded-md border px-2 py-0.5 text-[11px] uppercase ${planBadgeClass(client.plan_code)}`}>
-                        {client.plan_code ?? "starter"}
-                      </span>
-                      <span className={`inline-flex w-fit rounded-md border px-2 py-0.5 text-[10px] uppercase ${
-                        client.plan_status_effective === "expired"
-                          ? "border-red-700 text-red-300"
-                          : client.plan_status_effective === "paused"
-                            ? "border-amber-700 text-amber-300"
-                            : "border-emerald-700 text-emerald-300"
-                      }`}>
-                        {client.plan_status_effective === "expired"
-                          ? "Vencido"
-                          : client.plan_status_effective === "paused"
-                            ? "Pausado"
-                            : "Activo"}
-                      </span>
-                      <span className="text-[11px] text-zinc-500">
-                        {client.max_landings ?? 2} landings · {client.max_phones ?? 5} telefonos
-                      </span>
-                    </div>
+                    {client.role === "admin" ? (
+                      <div className="flex flex-col gap-1">
+                        <span className="inline-flex w-fit rounded-md border border-sky-700 bg-sky-950/40 px-2 py-0.5 text-[11px] uppercase text-sky-200">
+                          ADMIN
+                        </span>
+                        <span className="text-[11px] text-zinc-500">Sin plan</span>
+                      </div>
+                    ) : (
+                      <div className="flex flex-col gap-1">
+                        <span className={`inline-flex w-fit rounded-md border px-2 py-0.5 text-[11px] uppercase ${planBadgeClass(client.plan_code)}`}>
+                          {client.plan_code ?? "starter"}
+                        </span>
+                        <span className="inline-flex w-fit items-center gap-1 rounded-md border border-zinc-700 px-2 py-0.5 text-[10px] uppercase text-zinc-200">
+                          <span
+                            className={`h-2 w-2 rounded-full ${
+                              client.plan_status_effective === "expired" ? "bg-red-500" : "bg-emerald-500"
+                            }`}
+                          />
+                          {client.plan_status_effective === "expired" ? "Vencido" : "Activo"}
+                        </span>
+                        <span className="text-[11px] text-zinc-500">
+                          {client.max_landings ?? 2} landings · {client.max_phones ?? 5} telefonos
+                        </span>
+                      </div>
+                    )}
                   </td>
                   <td className="px-4 py-3 align-top text-xs text-zinc-400">
-                    {client.expires_at ? new Date(client.expires_at).toLocaleDateString() : "Sin venc."}
+                    {client.role === "admin"
+                      ? "No aplica"
+                      : client.expires_at
+                        ? new Date(client.expires_at).toLocaleDateString()
+                        : "Sin venc."}
                   </td>
                   <td className="whitespace-nowrap px-3 py-3 align-top text-right text-xs sm:px-4">
                     <div className="inline-flex gap-2 whitespace-nowrap">
-                      <Link
-                        href={`/admin/clientes/${client.id}/landings`}
-                        className="rounded-md border border-zinc-700 px-3 py-1 text-xs font-medium text-zinc-200 transition hover:bg-zinc-800"
-                      >
-                        Ver landings
-                      </Link>
                       <Link
                         href={`/admin/clientes/${client.id}/administrar`}
                         className="rounded-md border border-zinc-700 px-3 py-1 text-xs font-medium text-zinc-200 transition hover:bg-zinc-800"
@@ -265,19 +263,21 @@ export default function AdminClientesPage() {
     </div>
   );
 }
-  const planBadgeClass = (plan?: string) => {
-    switch ((plan ?? "").toLowerCase()) {
-      case "starter":
-        return "border-slate-600 text-slate-200 bg-slate-900/40";
-      case "plus":
-        return "border-sky-600 text-sky-200 bg-sky-950/40";
-      case "pro":
-        return "border-violet-600 text-violet-200 bg-violet-950/40";
-      case "premium":
-        return "border-amber-600 text-amber-200 bg-amber-950/40";
-      case "scale":
-        return "border-emerald-600 text-emerald-200 bg-emerald-950/40";
-      default:
-        return "border-zinc-700 text-zinc-200 bg-zinc-900/40";
-    }
-  };
+
+const planBadgeClass = (plan?: string) => {
+  switch ((plan ?? "").toLowerCase()) {
+    case "starter":
+      return "border-emerald-700 text-emerald-200 bg-emerald-950/40";
+    case "plus":
+      return "border-yellow-700 text-yellow-200 bg-yellow-950/40";
+    case "pro":
+      return "border-orange-700 text-orange-200 bg-orange-950/40";
+    case "premium":
+      return "border-purple-700 text-purple-200 bg-purple-950/40";
+    case "scale":
+      return "border-zinc-500 text-zinc-200 bg-zinc-800/50";
+    default:
+      return "border-zinc-700 text-zinc-200 bg-zinc-900/40";
+  }
+};
+

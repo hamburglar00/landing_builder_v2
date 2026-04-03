@@ -280,6 +280,21 @@ export default function AdminClientManagePage() {
       {error && <p className="text-xs text-red-400">{error}</p>}
       {okMsg && <p className="text-xs text-emerald-400">{okMsg}</p>}
 
+      <section className="rounded-xl border border-zinc-800 bg-zinc-950/60 p-4">
+        <h2 className="text-sm font-semibold text-zinc-100">Landings del cliente</h2>
+        <p className="mt-1 text-xs text-zinc-400">
+          Accede al listado de landings de este cliente desde aquí.
+        </p>
+        <div className="mt-3">
+          <Link
+            href={`/admin/clientes/${clientId}/landings`}
+            className="inline-flex rounded-md border border-zinc-700 px-3 py-1.5 text-xs font-medium text-zinc-200 transition hover:bg-zinc-800"
+          >
+            Ver landings
+          </Link>
+        </div>
+      </section>
+
       <form onSubmit={onSave} className="space-y-5 rounded-xl border border-zinc-800 bg-zinc-950/60 p-5">
         <div className="grid gap-4 sm:grid-cols-2">
           <div className="space-y-2">
