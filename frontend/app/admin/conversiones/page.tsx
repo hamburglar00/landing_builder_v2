@@ -1091,7 +1091,7 @@ export default function AdminConversionesPage() {
                 title="Abrir multifiltro de estadisticas"
               >
                 <svg className="h-3.5 w-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2}>
-                  <path strokeLinecap="round" strokeLinejoin="round" d="M3 5h18l-7 8v5l-4 2v-7L3 5z" />
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M4 6h16M7 12h10M10 18h4" />
                 </svg>
                 Aplicar filtros
               </button>
