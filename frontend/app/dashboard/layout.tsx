@@ -270,6 +270,7 @@ export default function DashboardLayout({
   const [planMaxLandings, setPlanMaxLandings] = useState<number>(2);
   const [planMaxPhones, setPlanMaxPhones] = useState<number>(5);
   const [planGraceDays, setPlanGraceDays] = useState<number>(5);
+  const [showPlanExpiryWarning, setShowPlanExpiryWarning] = useState(true);
   const [sidebarOpen, setSidebarOpen] = useState(false);
 
   useEffect(() => {
@@ -382,6 +383,17 @@ export default function DashboardLayout({
         return "border-zinc-700 text-zinc-200 bg-zinc-900/50";
     }
   };
+  const isExpiringSoon = (() => {
+    if (!planExpiresAt) return false;
+    const exp = new Date(planExpiresAt).getTime();
+    const diffDays = Math.ceil((exp - Date.now()) / (1000 * 60 * 60 * 24));
+    return diffDays >= 0 && diffDays <= 5;
+  })();
+  const expiresInDays = (() => {
+    if (!planExpiresAt) return null;
+    const exp = new Date(planExpiresAt).getTime();
+    return Math.ceil((exp - Date.now()) / (1000 * 60 * 60 * 24));
+  })();
 
   return (
     <div className="flex min-h-screen bg-[var(--color-bg-0)] text-[var(--color-text)]">
@@ -545,6 +557,9 @@ export default function DashboardLayout({
 
         </nav>
         <div className="border-t border-[var(--color-border)] p-3 space-y-2">
+          <p className="truncate px-1 text-[11px] text-[var(--color-text-muted)]" title={user?.email ?? undefined}>
+            {user?.email}
+          </p>
           <button
             type="button"
             onClick={() => setPlanInfoOpen((v) => !v)}
@@ -557,12 +572,8 @@ export default function DashboardLayout({
               <p><span className="text-[var(--color-text-strong)]">Alta:</span> {planStartsAt ? new Date(planStartsAt).toLocaleDateString() : "-"}</p>
               <p><span className="text-[var(--color-text-strong)]">Vence:</span> {planExpiresAt ? new Date(planExpiresAt).toLocaleDateString() : "Sin venc."}</p>
               <p><span className="text-[var(--color-text-strong)]">Incluye:</span> {planMaxLandings} landings · {planMaxPhones} teléfonos</p>
-              <p><span className="text-[var(--color-text-strong)]">Gracia:</span> {planGraceDays} días</p>
             </div>
           )}
-          <p className="truncate px-1 text-[11px] text-[var(--color-text-muted)]" title={user?.email ?? undefined}>
-            {user?.email}
-          </p>
           <button
             type="button"
             onClick={handleSignOut}
@@ -584,6 +595,20 @@ export default function DashboardLayout({
           >
             <MenuIcon className="h-6 w-6" />
           </button>
+          {showPlanExpiryWarning && isExpiringSoon && (
+            <div className="ml-2 flex items-center gap-2 rounded-lg border border-amber-700/70 bg-amber-950/40 px-3 py-1.5 text-[11px] text-amber-200">
+              <span>
+                Tu plan vence {expiresInDays === 0 ? "hoy" : `en ${expiresInDays} día(s)`}.
+              </span>
+              <button
+                type="button"
+                onClick={() => setShowPlanExpiryWarning(false)}
+                className="rounded border border-amber-700/60 px-1.5 py-0.5 text-[10px] hover:bg-amber-900/40"
+              >
+                Cerrar
+              </button>
+            </div>
+          )}
         </header>
         <main className="min-h-0 flex-1 overflow-auto px-4 py-6 sm:px-6 sm:py-8 lg:px-10">
           {children}

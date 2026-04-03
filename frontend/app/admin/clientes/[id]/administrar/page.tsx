@@ -70,6 +70,7 @@ export default function AdminClientManagePage() {
   const [planStatus, setPlanStatus] = useState<"active" | "paused" | "expired">("active");
   const [expiresAt, setExpiresAt] = useState("");
   const [graceDays, setGraceDays] = useState(5);
+  const [renewing, setRenewing] = useState(false);
 
   const visibleCount = useMemo(() => visibleCols.size, [visibleCols]);
 
@@ -173,6 +174,40 @@ export default function AdminClientManagePage() {
       return;
     }
     setOkMsg("Configuracion guardada.");
+    setTimeout(() => setOkMsg(null), 2500);
+  };
+
+  const handleRenewOneMonth = async () => {
+    if (!clientId) return;
+    setRenewing(true);
+    setError(null);
+    setOkMsg(null);
+    const base = expiresAt ? new Date(`${expiresAt}T00:00:00`) : new Date();
+    const anchor = base.getTime() > Date.now() ? base : new Date();
+    const renewed = new Date(anchor);
+    renewed.setMonth(renewed.getMonth() + 1);
+    const renewedIso = renewed.toISOString().slice(0, 10);
+
+    const { error } = await invokeFunction<{ id?: string }>(
+      supabase,
+      "update-client",
+      {
+        body: {
+          userId: clientId,
+          expiresAt: renewedIso,
+          planStatus: "active",
+        },
+      },
+    );
+
+    setRenewing(false);
+    if (error) {
+      setError(error.message);
+      return;
+    }
+    setExpiresAt(renewedIso);
+    setPlanStatus("active");
+    setOkMsg(`Plan renovado hasta ${new Date(`${renewedIso}T00:00:00`).toLocaleDateString()}.`);
     setTimeout(() => setOkMsg(null), 2500);
   };
 
@@ -311,23 +346,27 @@ export default function AdminClientManagePage() {
             </div>
             <div className="space-y-1">
               <label className="block text-[11px] text-zinc-400">Max. landings</label>
-              <input
-                type="number"
-                min={1}
+              <select
                 value={maxLandings}
                 onChange={(e) => setMaxLandings(Number(e.target.value || 1))}
                 className="w-full rounded-lg border border-zinc-800 bg-zinc-900 px-2 py-2 text-xs text-zinc-50 outline-none focus:border-zinc-500"
-              />
+              >
+                {Array.from({ length: Math.max(1, getPlanDefaults(planCode).maxLandings) }, (_, i) => i + 1).map((n) => (
+                  <option key={`max-landings-${n}`} value={n}>{n}</option>
+                ))}
+              </select>
             </div>
             <div className="space-y-1">
               <label className="block text-[11px] text-zinc-400">Max. telefonos</label>
-              <input
-                type="number"
-                min={1}
+              <select
                 value={maxPhones}
                 onChange={(e) => setMaxPhones(Number(e.target.value || 1))}
                 className="w-full rounded-lg border border-zinc-800 bg-zinc-900 px-2 py-2 text-xs text-zinc-50 outline-none focus:border-zinc-500"
-              />
+              >
+                {Array.from({ length: Math.max(1, getPlanDefaults(planCode).maxPhones) }, (_, i) => i + 1).map((n) => (
+                  <option key={`max-phones-${n}`} value={n}>{n}</option>
+                ))}
+              </select>
             </div>
             <div className="space-y-1">
               <label className="block text-[11px] text-zinc-400">Gracia (dias)</label>
@@ -340,6 +379,16 @@ export default function AdminClientManagePage() {
                 className="w-full rounded-lg border border-zinc-800 bg-zinc-900 px-2 py-2 text-xs text-zinc-50 outline-none focus:border-zinc-500"
               />
             </div>
+          </div>
+          <div className="mt-3 flex items-center justify-end gap-2">
+            <button
+              type="button"
+              onClick={() => void handleRenewOneMonth()}
+              disabled={renewing}
+              className="rounded-lg border border-emerald-700 px-3 py-2 text-xs font-medium text-emerald-300 hover:bg-emerald-900/30 disabled:opacity-60"
+            >
+              {renewing ? "Renovando..." : "Renovar 1 mes"}
+            </button>
           </div>
         </section>
 
