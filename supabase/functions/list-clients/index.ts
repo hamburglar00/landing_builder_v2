@@ -11,6 +11,22 @@ type ListClientsQuery = {
   perPage?: number;
 };
 
+function computeEffectivePlanStatus(input: {
+  status?: string | null;
+  expires_at?: string | null;
+  grace_days?: number | null;
+}): "active" | "paused" | "expired" {
+  const base = (input.status ?? "active").toLowerCase();
+  if (base === "paused") return "paused";
+  if (base === "expired") return "expired";
+  if (!input.expires_at) return "active";
+  const expMs = new Date(input.expires_at).getTime();
+  if (!Number.isFinite(expMs)) return "active";
+  const graceDays = Number(input.grace_days ?? 5);
+  const blockedAt = expMs + graceDays * 24 * 60 * 60 * 1000;
+  return Date.now() > blockedAt ? "expired" : "active";
+}
+
 Deno.serve(async (req) => {
   if (req.method === "OPTIONS") {
     return new Response("ok", {
@@ -195,6 +211,11 @@ Deno.serve(async (req) => {
           max_landings: subsByUserId.get(u.id)?.max_landings ?? 2,
           max_phones: subsByUserId.get(u.id)?.max_phones ?? 5,
           plan_status: subsByUserId.get(u.id)?.status ?? "active",
+          plan_status_effective: computeEffectivePlanStatus({
+            status: subsByUserId.get(u.id)?.status ?? "active",
+            expires_at: subsByUserId.get(u.id)?.expires_at ?? null,
+            grace_days: subsByUserId.get(u.id)?.grace_days ?? 5,
+          }),
           expires_at: subsByUserId.get(u.id)?.expires_at ?? null,
           grace_days: subsByUserId.get(u.id)?.grace_days ?? 5,
           created_at: u.created_at,

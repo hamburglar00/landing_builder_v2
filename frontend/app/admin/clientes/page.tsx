@@ -17,6 +17,7 @@ type ClientUser = {
   max_landings?: number;
   max_phones?: number;
   plan_status?: string;
+  plan_status_effective?: "active" | "paused" | "expired";
   expires_at?: string | null;
   grace_days?: number;
 };
@@ -71,6 +72,7 @@ export default function AdminClientesPage() {
         max_landings: Number(u.max_landings ?? 2),
         max_phones: Number(u.max_phones ?? 5),
         plan_status: u.plan_status ?? "active",
+        plan_status_effective: u.plan_status_effective ?? "active",
         expires_at: u.expires_at ?? null,
         grace_days: Number(u.grace_days ?? 5),
         created_at: u.created_at,
@@ -200,6 +202,19 @@ export default function AdminClientesPage() {
                     <div className="flex flex-col gap-1">
                       <span className={`inline-flex w-fit rounded-md border px-2 py-0.5 text-[11px] uppercase ${planBadgeClass(client.plan_code)}`}>
                         {client.plan_code ?? "starter"}
+                      </span>
+                      <span className={`inline-flex w-fit rounded-md border px-2 py-0.5 text-[10px] uppercase ${
+                        client.plan_status_effective === "expired"
+                          ? "border-red-700 text-red-300"
+                          : client.plan_status_effective === "paused"
+                            ? "border-amber-700 text-amber-300"
+                            : "border-emerald-700 text-emerald-300"
+                      }`}>
+                        {client.plan_status_effective === "expired"
+                          ? "Vencido"
+                          : client.plan_status_effective === "paused"
+                            ? "Pausado"
+                            : "Activo"}
                       </span>
                       <span className="text-[11px] text-zinc-500">
                         {client.max_landings ?? 2} landings · {client.max_phones ?? 5} telefonos

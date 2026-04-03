@@ -16,6 +16,7 @@ type ClientUser = {
   max_landings?: number;
   max_phones?: number;
   plan_status?: "active" | "paused" | "expired";
+  plan_status_effective?: "active" | "paused" | "expired";
   expires_at?: string | null;
   grace_days?: number;
 };
@@ -103,7 +104,7 @@ export default function AdminClientManagePage() {
       setPlanCode(found.plan_code ?? "starter");
       setMaxLandings(Number(found.max_landings ?? 2));
       setMaxPhones(Number(found.max_phones ?? 5));
-      setPlanStatus(found.plan_status ?? "active");
+      setPlanStatus(found.plan_status_effective ?? found.plan_status ?? "active");
       setExpiresAt(
         found.expires_at ? new Date(found.expires_at).toISOString().slice(0, 10) : "",
       );
