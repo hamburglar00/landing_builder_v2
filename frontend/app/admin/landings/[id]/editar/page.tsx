@@ -130,6 +130,7 @@ export default function AdminLandingEditarPage() {
   const [revalidateSecret, setRevalidateSecret] = useState<string | null>(null);
   const [clientName, setClientName] = useState<string | null>(null);
   const [ownerUserId, setOwnerUserId] = useState<string | null>(null);
+  const [pixelOptions, setPixelOptions] = useState<string[]>([]);
 
   useEffect(() => {
     const init = async () => {
@@ -172,6 +173,16 @@ export default function AdminLandingEditarPage() {
             .eq("id", owner.data.user_id)
             .maybeSingle();
           setClientName(profile?.nombre ?? null);
+          const { data: pixels } = await supabase
+            .from("conversions_pixel_configs")
+            .select("pixel_id")
+            .eq("user_id", owner.data.user_id)
+            .order("is_default", { ascending: false })
+            .order("created_at", { ascending: true });
+          const options = (pixels ?? [])
+            .map((p) => String(p.pixel_id ?? "").trim())
+            .filter(Boolean);
+          setPixelOptions(options);
         }
       } catch {
         router.replace(BASE);
@@ -532,17 +543,26 @@ export default function AdminLandingEditarPage() {
           <div className="space-y-3">
             <div>
               <label className="block text-xs font-medium text-zinc-400 mb-1">Pixel ID <span className="text-red-400">*</span></label>
-              <input
-                type="text"
+              <select
                 value={landing.pixelId}
-                disabled
-                className="w-full rounded-lg border border-zinc-700 bg-zinc-900 px-3 py-2 text-sm text-zinc-100 disabled:opacity-60 disabled:cursor-not-allowed"
-                placeholder="Sin configurar"
-              />
+                onChange={(e) =>
+                  setLanding((prev) =>
+                    prev ? { ...prev, pixelId: e.target.value } : prev,
+                  )
+                }
+                className="w-full rounded-lg border border-zinc-700 bg-zinc-900 px-3 py-2 text-sm text-zinc-100"
+              >
+                <option value="">Seleccionar pixel</option>
+                {[...(pixelOptions.includes(landing.pixelId) || !landing.pixelId ? pixelOptions : [landing.pixelId, ...pixelOptions])].map((pid) => (
+                  <option key={pid} value={pid}>
+                    {pid}
+                  </option>
+                ))}
+              </select>
               <p className="mt-1 text-[11px] text-zinc-500">
                 Se configura desde{" "}
-                <a href="/admin/conversiones" className="text-zinc-300 underline hover:text-zinc-100">
-                  Conversiones
+                <a href="/admin/integraciones" className="text-zinc-300 underline hover:text-zinc-100">
+                  Integraciones
                 </a>
                 .
               </p>
@@ -560,11 +580,11 @@ export default function AdminLandingEditarPage() {
                 }
                 disabled
                 className="w-full rounded-lg border border-zinc-700 bg-zinc-900 px-3 py-2 text-sm text-zinc-100 disabled:opacity-60 disabled:cursor-not-allowed"
-                placeholder="Se completa automáticamente desde Conversiones"
+                placeholder="Se completa automáticamente desde Integraciones"
               />
               <p className="mt-1 text-[11px] text-zinc-500">
                 URL única de conversiones (Meta CAPI) para este cliente. Se completa automáticamente desde el
-                módulo Conversiones y no requiere edición manual.
+                módulo Integraciones y no requiere edición manual.
               </p>
             </div>
             <div>
