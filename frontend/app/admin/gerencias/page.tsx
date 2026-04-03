@@ -2,7 +2,6 @@
 
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
-import Link from "next/link";
 import { supabase } from "@/lib/supabaseClient";
 import type { Gerencia } from "@/lib/gerencias/types";
 import {
@@ -163,16 +162,6 @@ export default function AdminGerenciasPage() {
 
   return (
     <div className="space-y-6">
-      <div className="flex flex-wrap items-center justify-between gap-4">
-        <div className="flex flex-wrap items-center gap-4">
-          <Link
-            href="/admin"
-            className="text-sm text-[var(--color-text-muted)] transition hover:text-[var(--color-text)]"
-          >
-            ← Inicio
-          </Link>
-        </div>
-      </div>
       {error && (
         <p className="rounded-lg bg-red-950/50 px-3 py-2 text-sm text-red-300" role="alert">
           {error}
@@ -361,3 +350,4 @@ export default function AdminGerenciasPage() {
     </div>
   );
 }
+

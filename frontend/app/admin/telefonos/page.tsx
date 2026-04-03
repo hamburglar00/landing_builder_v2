@@ -5,8 +5,6 @@ import { TelefonosPageContent } from "@/components/telefonos/TelefonosPageConten
 export default function AdminTelefonosPage() {
   return (
     <TelefonosPageContent
-      backLink="/admin/landings"
-      backLabel="Listado"
       title="TELEFONOS"
       isAdmin
     />

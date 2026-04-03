@@ -23,8 +23,8 @@ export type GerenciaPhoneRow = {
 type FairCriterion = "usage_count" | "messages_received";
 
 type Props = {
-  backLink: string;
-  backLabel: string;
+  backLink?: string;
+  backLabel?: string;
   title?: string;
   /** Si true, se listan todas las gerencias (admin): propias primero, luego de clientes. */
   isAdmin?: boolean;
@@ -484,14 +484,16 @@ export function TelefonosPageContent({
 
   return (
     <div className="space-y-6">
-      <div className="flex flex-wrap items-center justify-between gap-4">
-        <Link
-          href={backLink}
-          className="text-sm text-zinc-400 transition hover:text-zinc-200"
-        >
-          â† {backLabel}
-        </Link>
-      </div>
+      {backLink && backLabel ? (
+        <div className="flex flex-wrap items-center justify-between gap-4">
+          <a
+            href={backLink}
+            className="text-sm text-zinc-400 transition hover:text-zinc-200"
+          >
+            â† {backLabel}
+          </a>
+        </div>
+      ) : null}
       <div>
         <h1 className="text-xl font-semibold text-zinc-100">{title}</h1>
         <p className="mt-1 text-sm text-zinc-400">
@@ -553,7 +555,7 @@ export function TelefonosPageContent({
         <p className="text-sm text-zinc-500">
           No tienes gerencias. Crea una en{" "}
           <Link
-            href={backLink.includes("admin") ? "/admin/gerencias" : "/dashboard/gerencias"}
+            href={(backLink ?? "").includes("admin") ? "/admin/gerencias" : "/dashboard/gerencias"}
             className="text-zinc-300 underline hover:text-zinc-100"
           >
             Gerencias
