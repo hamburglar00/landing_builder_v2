@@ -263,6 +263,13 @@ export default function DashboardLayout({
   const [isClient, setIsClient] = useState<boolean | null>(null);
   const [isPlanBlocked, setIsPlanBlocked] = useState(false);
   const [blockedReason, setBlockedReason] = useState<string | null>(null);
+  const [planInfoOpen, setPlanInfoOpen] = useState(false);
+  const [planCode, setPlanCode] = useState<"starter" | "plus" | "pro" | "premium" | "scale">("starter");
+  const [planStartsAt, setPlanStartsAt] = useState<string | null>(null);
+  const [planExpiresAt, setPlanExpiresAt] = useState<string | null>(null);
+  const [planMaxLandings, setPlanMaxLandings] = useState<number>(2);
+  const [planMaxPhones, setPlanMaxPhones] = useState<number>(5);
+  const [planGraceDays, setPlanGraceDays] = useState<number>(5);
   const [sidebarOpen, setSidebarOpen] = useState(false);
 
   useEffect(() => {
@@ -289,9 +296,15 @@ export default function DashboardLayout({
       }
       const { data: sub } = await supabase
         .from("client_subscriptions")
-        .select("status, expires_at, grace_days")
+        .select("plan_code, status, starts_at, expires_at, grace_days, max_landings, max_phones")
         .eq("user_id", data.user.id)
         .maybeSingle();
+      setPlanCode((sub?.plan_code as typeof planCode) ?? "starter");
+      setPlanStartsAt(sub?.starts_at ?? null);
+      setPlanExpiresAt(sub?.expires_at ?? null);
+      setPlanGraceDays(Number(sub?.grace_days ?? 5));
+      setPlanMaxLandings(Number(sub?.max_landings ?? 2));
+      setPlanMaxPhones(Number(sub?.max_phones ?? 5));
       const status = sub?.status ?? "active";
       const expiresAt = sub?.expires_at ? new Date(sub.expires_at) : null;
       const graceDays = Number(sub?.grace_days ?? 5);
@@ -351,6 +364,24 @@ export default function DashboardLayout({
       </div>
     );
   }
+
+  const planLabel = (code: string) => code.toUpperCase();
+  const planClass = (code: string) => {
+    switch (code) {
+      case "starter":
+        return "border-slate-600 text-slate-200 bg-slate-900/50";
+      case "plus":
+        return "border-sky-600 text-sky-200 bg-sky-950/50";
+      case "pro":
+        return "border-violet-600 text-violet-200 bg-violet-950/50";
+      case "premium":
+        return "border-amber-600 text-amber-200 bg-amber-950/50";
+      case "scale":
+        return "border-emerald-600 text-emerald-200 bg-emerald-950/50";
+      default:
+        return "border-zinc-700 text-zinc-200 bg-zinc-900/50";
+    }
+  };
 
   return (
     <div className="flex min-h-screen bg-[var(--color-bg-0)] text-[var(--color-text)]">
@@ -514,6 +545,21 @@ export default function DashboardLayout({
 
         </nav>
         <div className="border-t border-[var(--color-border)] p-3 space-y-2">
+          <button
+            type="button"
+            onClick={() => setPlanInfoOpen((v) => !v)}
+            className={`w-full rounded-lg border px-3 py-2 text-xs font-semibold transition hover:opacity-90 ${planClass(planCode)}`}
+          >
+            Plan {planLabel(planCode)}
+          </button>
+          {planInfoOpen && (
+            <div className="rounded-lg border border-[var(--color-border)] bg-[var(--color-bg-2)] p-2 text-[11px] text-[var(--color-text-muted)]">
+              <p><span className="text-[var(--color-text-strong)]">Alta:</span> {planStartsAt ? new Date(planStartsAt).toLocaleDateString() : "-"}</p>
+              <p><span className="text-[var(--color-text-strong)]">Vence:</span> {planExpiresAt ? new Date(planExpiresAt).toLocaleDateString() : "Sin venc."}</p>
+              <p><span className="text-[var(--color-text-strong)]">Incluye:</span> {planMaxLandings} landings · {planMaxPhones} teléfonos</p>
+              <p><span className="text-[var(--color-text-strong)]">Gracia:</span> {planGraceDays} días</p>
+            </div>
+          )}
           <p className="truncate px-1 text-[11px] text-[var(--color-text-muted)]" title={user?.email ?? undefined}>
             {user?.email}
           </p>

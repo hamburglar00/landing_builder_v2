@@ -164,7 +164,6 @@ export default function AdminClientesPage() {
                 <th className="px-4 py-2 font-medium text-zinc-300">Nombre</th>
                 <th className="px-4 py-2 font-medium text-zinc-300">Email</th>
                 <th className="px-4 py-2 font-medium text-zinc-300">Creado</th>
-                <th className="px-4 py-2 font-medium text-zinc-300">Ultimo acceso</th>
                 <th className="px-4 py-2 font-medium text-zinc-300">Plan actual</th>
                 <th className="px-4 py-2 font-medium text-zinc-300">Vencimiento</th>
                 <th className="px-4 py-2 text-right font-medium text-zinc-300">Acciones</th>
@@ -174,7 +173,7 @@ export default function AdminClientesPage() {
               {filteredClients.length === 0 && !isLoadingClients && (
                 <tr>
                   <td
-                    colSpan={7}
+                    colSpan={6}
                     className="px-4 py-6 text-center text-xs text-zinc-500"
                   >
                     {searchQuery.trim()
@@ -197,14 +196,9 @@ export default function AdminClientesPage() {
                       ? new Date(client.created_at).toLocaleString()
                       : "-"}
                   </td>
-                  <td className="px-4 py-3 align-top text-xs text-zinc-400">
-                    {client.last_sign_in_at
-                      ? new Date(client.last_sign_in_at).toLocaleString()
-                      : "Nunca"}
-                  </td>
                   <td className="px-4 py-3 align-top text-xs text-zinc-200">
                     <div className="flex flex-col gap-1">
-                      <span className="inline-flex w-fit rounded-md border border-zinc-700 px-2 py-0.5 text-[11px] uppercase">
+                      <span className={`inline-flex w-fit rounded-md border px-2 py-0.5 text-[11px] uppercase ${planBadgeClass(client.plan_code)}`}>
                         {client.plan_code ?? "starter"}
                       </span>
                       <span className="text-[11px] text-zinc-500">
@@ -216,7 +210,7 @@ export default function AdminClientesPage() {
                     {client.expires_at ? new Date(client.expires_at).toLocaleDateString() : "Sin venc."}
                   </td>
                   <td className="whitespace-nowrap px-3 py-3 align-top text-right text-xs sm:px-4">
-                    <div className="inline-flex flex-wrap gap-2">
+                    <div className="inline-flex gap-2 whitespace-nowrap">
                       <Link
                         href={`/admin/clientes/${client.id}/landings`}
                         className="rounded-md border border-zinc-700 px-3 py-1 text-xs font-medium text-zinc-200 transition hover:bg-zinc-800"
@@ -256,3 +250,19 @@ export default function AdminClientesPage() {
     </div>
   );
 }
+  const planBadgeClass = (plan?: string) => {
+    switch ((plan ?? "").toLowerCase()) {
+      case "starter":
+        return "border-slate-600 text-slate-200 bg-slate-900/40";
+      case "plus":
+        return "border-sky-600 text-sky-200 bg-sky-950/40";
+      case "pro":
+        return "border-violet-600 text-violet-200 bg-violet-950/40";
+      case "premium":
+        return "border-amber-600 text-amber-200 bg-amber-950/40";
+      case "scale":
+        return "border-emerald-600 text-emerald-200 bg-emerald-950/40";
+      default:
+        return "border-zinc-700 text-zinc-200 bg-zinc-900/40";
+    }
+  };

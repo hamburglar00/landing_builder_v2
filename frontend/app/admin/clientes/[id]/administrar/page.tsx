@@ -31,6 +31,22 @@ const ALL_COLUMNS = [
 
 type ColKey = (typeof ALL_COLUMNS)[number];
 
+function getPlanDefaults(planCode: "starter" | "plus" | "pro" | "premium" | "scale") {
+  switch (planCode) {
+    case "plus":
+      return { maxLandings: 4, maxPhones: 10 };
+    case "pro":
+      return { maxLandings: 8, maxPhones: 20 };
+    case "premium":
+      return { maxLandings: 12, maxPhones: 50 };
+    case "scale":
+      return { maxLandings: 999, maxPhones: 999 };
+    case "starter":
+    default:
+      return { maxLandings: 2, maxPhones: 5 };
+  }
+}
+
 export default function AdminClientManagePage() {
   const params = useParams<{ id: string }>();
   const router = useRouter();
@@ -256,7 +272,13 @@ export default function AdminClientManagePage() {
               <label className="block text-[11px] text-zinc-400">Plan</label>
               <select
                 value={planCode}
-                onChange={(e) => setPlanCode(e.target.value as typeof planCode)}
+                onChange={(e) => {
+                  const next = e.target.value as typeof planCode;
+                  setPlanCode(next);
+                  const d = getPlanDefaults(next);
+                  setMaxLandings(d.maxLandings);
+                  setMaxPhones(d.maxPhones);
+                }}
                 className="w-full rounded-lg border border-zinc-800 bg-zinc-900 px-2 py-2 text-xs text-zinc-50 outline-none focus:border-zinc-500"
               >
                 <option value="starter">Starter</option>
