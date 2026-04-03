@@ -18,6 +18,8 @@ export default function DashboardLandingsPage() {
   const [error, setError] = useState<string | null>(null);
   const [creating, setCreating] = useState(false);
   const [urlBase, setUrlBase] = useState<string | null>(null);
+  const [planLimitModalOpen, setPlanLimitModalOpen] = useState(false);
+  const [planLimitModalText, setPlanLimitModalText] = useState("");
 
   useEffect(() => {
     const init = async () => {
@@ -62,11 +64,14 @@ export default function DashboardLandingsPage() {
       router.push(`/dashboard/landing/${id}/editar`);
     } catch (e) {
       const msg = e instanceof Error ? e.message : "Error al crear la landing";
-      setError(
-        msg.includes("PLAN_LIMIT_LANDINGS")
-          ? "Limite del plan alcanzado para landings. Actualiza tu plan para crear mas."
-          : msg,
-      );
+      if (msg.includes("PLAN_LIMIT_LANDINGS")) {
+        setPlanLimitModalText(
+          "No puedes crear esta landing porque alcanzaste el límite de tu plan actual. En Starter puedes tener hasta 2 landings activas.",
+        );
+        setPlanLimitModalOpen(true);
+      } else {
+        setError(msg);
+      }
     } finally {
       setCreating(false);
     }
@@ -86,11 +91,14 @@ export default function DashboardLandingsPage() {
       router.push(`/dashboard/landing/${id}/editar`);
     } catch (e) {
       const msg = e instanceof Error ? e.message : "Error al conectar landing existente";
-      setError(
-        msg.includes("PLAN_LIMIT_LANDINGS")
-          ? "Limite del plan alcanzado para landings. Actualiza tu plan para crear mas."
-          : msg,
-      );
+      if (msg.includes("PLAN_LIMIT_LANDINGS")) {
+        setPlanLimitModalText(
+          "No puedes conectar otra landing porque alcanzaste el límite de tu plan actual. En Starter puedes tener hasta 2 landings activas.",
+        );
+        setPlanLimitModalOpen(true);
+      } else {
+        setError(msg);
+      }
     } finally {
       setCreating(false);
     }
@@ -159,6 +167,28 @@ export default function DashboardLandingsPage() {
           ))}
         </div>
       )}
+
+      {planLimitModalOpen ? (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 px-4">
+          <div className="w-full max-w-lg rounded-2xl border border-zinc-700 bg-zinc-900 p-5 shadow-2xl">
+            <h3 className="text-base font-semibold text-zinc-100">
+              Límite del plan alcanzado
+            </h3>
+            <p className="mt-2 text-sm text-zinc-300">
+              {planLimitModalText}
+            </p>
+            <div className="mt-5 flex justify-end">
+              <button
+                type="button"
+                onClick={() => setPlanLimitModalOpen(false)}
+                className="rounded-lg border border-zinc-600 px-3 py-1.5 text-sm text-zinc-100 hover:bg-zinc-800"
+              >
+                Cerrar
+              </button>
+            </div>
+          </div>
+        </div>
+      ) : null}
     </div>
   );
 }

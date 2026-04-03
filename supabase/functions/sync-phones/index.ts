@@ -287,6 +287,11 @@ Deno.serve(async (req) => {
     }
 
     // Respetar limite de telefonos activos por plan de cada cliente.
+    const capResultsByUser = new Map<
+      string,
+      { attempted: number; allowed: number; deactivated: number }
+    >();
+
     for (const uid of touchedUserIds) {
       const { data: sub } = await supabaseAdmin
         .from("client_subscriptions")
@@ -313,6 +318,7 @@ Deno.serve(async (req) => {
         .order("id", { ascending: true });
 
       const rows = activeRows ?? [];
+      let deactivated = 0;
       if (rows.length > maxPhones) {
         const overflowIds = rows.slice(maxPhones).map((r) => r.id);
         if (overflowIds.length > 0) {
@@ -320,15 +326,32 @@ Deno.serve(async (req) => {
             .from("gerencia_phones")
             .update({ status: "inactive" })
             .in("id", overflowIds);
+          deactivated = overflowIds.length;
         }
       }
+
+      capResultsByUser.set(uid, {
+        attempted: rows.length,
+        allowed: maxPhones,
+        deactivated,
+      });
     }
+
+    const capResultForRequester = userId ? capResultsByUser.get(userId) : null;
 
     return new Response(
       JSON.stringify({
         success: true,
         processed_gerencias: processedGerencias,
         total_active_phones: totalActivePhones,
+        plan_cap: capResultForRequester
+          ? {
+              attempted_active: capResultForRequester.attempted,
+              allowed_active: capResultForRequester.allowed,
+              deactivated_by_cap: capResultForRequester.deactivated,
+              capped: capResultForRequester.deactivated > 0,
+            }
+          : null,
       }),
       {
         status: 200,

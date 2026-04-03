@@ -88,6 +88,11 @@ export function TelefonosPageContent({
   const [manualSavingGerenciaId, setManualSavingGerenciaId] = useState<number | null>(null);
   const [manualModalGerenciaId, setManualModalGerenciaId] = useState<number | null>(null);
   const [maxPhonesAllowed, setMaxPhonesAllowed] = useState<number | null>(null);
+  const [planCapModal, setPlanCapModal] = useState<{
+    open: boolean;
+    attempted: number;
+    allowed: number;
+  }>({ open: false, attempted: 0, allowed: 0 });
   const userIdRef = useRef<string | null>(null);
   const lastAutoReloadAt = useRef<number>(0);
   const reloadScheduledRef = useRef<boolean>(false);
@@ -270,6 +275,25 @@ export function TelefonosPageContent({
       if (!res.ok) {
         setError(`Sync: ${res.status} â€“ ${text}`);
       } else {
+        try {
+          const json = JSON.parse(text) as {
+            plan_cap?: {
+              attempted_active?: number;
+              allowed_active?: number;
+              capped?: boolean;
+            } | null;
+          };
+          const cap = json?.plan_cap;
+          if (cap?.capped && Number(cap.attempted_active) > Number(cap.allowed_active)) {
+            setPlanCapModal({
+              open: true,
+              attempted: Number(cap.attempted_active),
+              allowed: Number(cap.allowed_active),
+            });
+          }
+        } catch {
+          // ignore parse errors and continue normal flow
+        }
         await loadData(userId);
       }
     } catch (e) {
@@ -847,6 +871,28 @@ export function TelefonosPageContent({
           </div>
         </div>
       )}
+
+      {planCapModal.open ? (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 px-4">
+          <div className="w-full max-w-xl rounded-2xl border border-zinc-700 bg-zinc-900 p-5 shadow-2xl">
+            <h3 className="text-base font-semibold text-zinc-100">Límite de teléfonos del plan</h3>
+            <p className="mt-2 text-sm text-zinc-300">
+              Intentaste sincronizar <span className="font-semibold">{planCapModal.attempted}</span> teléfonos activos,
+              pero tu plan permite <span className="font-semibold">{planCapModal.allowed}</span>. Se mantuvieron activos
+              solo los permitidos por plan y el resto quedó inactivo.
+            </p>
+            <div className="mt-5 flex justify-end">
+              <button
+                type="button"
+                onClick={() => setPlanCapModal({ open: false, attempted: 0, allowed: 0 })}
+                className="rounded-lg border border-zinc-600 px-3 py-1.5 text-sm text-zinc-100 hover:bg-zinc-800"
+              >
+                Entendido
+              </button>
+            </div>
+          </div>
+        </div>
+      ) : null}
     </div>
   );
 }
