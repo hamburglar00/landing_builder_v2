@@ -40,4 +40,5 @@ export const DEFAULT_CONFIG: LandingThemeConfig = {
   ctaTextColor: "black",
   ctaBackgroundColor: "gold",
   ctaGlowColor: "gold",
+  sendContactPixel: true,
 };

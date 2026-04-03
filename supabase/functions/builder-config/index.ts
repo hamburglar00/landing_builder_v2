@@ -166,6 +166,10 @@ Deno.serve(async (req) => {
         tracking: {
           ...tracking,
           postUrl: effectivePostUrl,
+          sendContactPixel:
+            typeof tracking.sendContactPixel === "boolean"
+              ? tracking.sendContactPixel
+              : ((rawConfig.sendContactPixel as boolean | undefined) ?? true),
         },
         typography: {
           ...typography,
@@ -213,6 +217,7 @@ Deno.serve(async (req) => {
         pixelId: data.pixel_id ?? "",
         postUrl: effectivePostUrl,
         landingTag: data.landing_tag ?? "",
+        sendContactPixel: (rawConfig.sendContactPixel as boolean | undefined) ?? true,
       },
       background: {
         mode: (themeWithHex.backgroundMode as string) ?? "single",

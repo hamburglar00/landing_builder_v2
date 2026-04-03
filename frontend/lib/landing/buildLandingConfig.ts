@@ -11,6 +11,7 @@ export interface LandingConfigPayload {
     pixelId: string;
     postUrl: string;
     landingTag: string;
+    sendContactPixel: boolean;
   };
   background: {
     mode: LandingThemeConfig["backgroundMode"];
@@ -91,6 +92,7 @@ export function buildLandingConfig({
       pixelId,
       postUrl,
       landingTag,
+      sendContactPixel: config.sendContactPixel,
     },
     background: {
       mode: themeWithHex.backgroundMode,

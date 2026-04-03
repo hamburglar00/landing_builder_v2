@@ -573,6 +573,45 @@ export default function DashboardLandingEditarPage() {
                 .
               </p>
             </div>
+            <div className="rounded-lg border border-zinc-800 bg-zinc-950/30 px-3 py-2">
+              <div className="flex items-center justify-between gap-3">
+                <div>
+                  <p className="text-xs font-medium text-zinc-300">Enviar Contact via Pixel</p>
+                  <p className="mt-0.5 text-[11px] text-zinc-500">
+                    Controla si la landing publica envia el evento Contact por Pixel del navegador.
+                  </p>
+                </div>
+                <button
+                  type="button"
+                  role="switch"
+                  aria-checked={landing.config.sendContactPixel}
+                  onClick={() =>
+                    setLanding((prev) =>
+                      prev
+                        ? {
+                            ...prev,
+                            config: {
+                              ...prev.config,
+                              sendContactPixel: !prev.config.sendContactPixel,
+                            },
+                          }
+                        : prev,
+                    )
+                  }
+                  className={`relative inline-flex h-6 w-11 items-center rounded-full border transition ${
+                    landing.config.sendContactPixel
+                      ? "border-emerald-500/60 bg-emerald-500/30"
+                      : "border-zinc-700 bg-zinc-800"
+                  }`}
+                >
+                  <span
+                    className={`inline-block h-5 w-5 transform rounded-full bg-white transition ${
+                      landing.config.sendContactPixel ? "translate-x-5" : "translate-x-0.5"
+                    }`}
+                  />
+                </button>
+              </div>
+            </div>
             <div>
               <label className="block text-xs font-medium text-zinc-400 mb-1">
                 URL Post

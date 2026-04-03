@@ -104,6 +104,11 @@ export interface LandingThemeConfig {
   ctaTextColor: ColorOption;
   ctaBackgroundColor: ColorOption;
   ctaGlowColor: ColorOption;
+  /**
+   * Si es true, la landing publica envia Contact via Pixel (browser).
+   * Si es false, solo envia al endpoint de conversiones/CAPI.
+   */
+  sendContactPixel: boolean;
 }
 
 /**
