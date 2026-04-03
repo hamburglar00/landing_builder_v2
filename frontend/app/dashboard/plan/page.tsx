@@ -201,19 +201,19 @@ export default function DashboardPlanPage() {
                 <li>• {plan.landings}</li>
                 <li>• {plan.phones}</li>
               </ul>
-              <div className="mt-4 space-y-2 text-xs text-zinc-200">
-                <p>
-                  <span className="font-semibold">Conversiones:</span>{" "}
-                  {plan.conversiones}
-                </p>
-                <p>
-                  <span className="font-semibold">Seguimientos:</span>{" "}
-                  {plan.seguimientos}
-                </p>
-                <p>
-                  <span className="font-semibold">Notificaciones:</span>{" "}
-                  {plan.notificaciones}
-                </p>
+              <div className="mt-8 space-y-3 text-xs text-zinc-200">
+                <div>
+                  <p className="font-semibold uppercase">CONVERSIONES:</p>
+                  <p>{plan.conversiones}</p>
+                </div>
+                <div>
+                  <p className="font-semibold uppercase">SEGUIMIENTOS:</p>
+                  <p>{plan.seguimientos}</p>
+                </div>
+                <div>
+                  <p className="font-semibold uppercase">NOTIFICACIONES:</p>
+                  <p>{plan.notificaciones}</p>
+                </div>
               </div>
             </article>
           ))}
@@ -222,4 +222,3 @@ export default function DashboardPlanPage() {
     </div>
   );
 }
-
