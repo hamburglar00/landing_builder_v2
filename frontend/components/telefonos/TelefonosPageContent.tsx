@@ -93,6 +93,10 @@ export function TelefonosPageContent({
     attempted: number;
     allowed: number;
   }>({ open: false, attempted: 0, allowed: 0 });
+  const [planLimitModal, setPlanLimitModal] = useState<{
+    open: boolean;
+    message: string;
+  }>({ open: false, message: "" });
   const userIdRef = useRef<string | null>(null);
   const lastAutoReloadAt = useRef<number>(0);
   const reloadScheduledRef = useRef<boolean>(false);
@@ -382,7 +386,10 @@ export function TelefonosPageContent({
         (p) => onlyDigits(p.phone) === phone && p.status === "active",
       );
       if (!alreadyActive && currentActive >= maxPhonesAllowed) {
-        setError(`Limite del plan alcanzado: maximo ${maxPhonesAllowed} telefonos activos.`);
+        setPlanLimitModal({
+          open: true,
+          message: `No se puede activar/agregar el teléfono porque alcanzaste el límite de tu plan (${maxPhonesAllowed} teléfonos activos).`,
+        });
         return;
       }
     }
@@ -417,7 +424,10 @@ export function TelefonosPageContent({
     if (!isAdmin && nextStatus === "active" && maxPhonesAllowed != null) {
       const currentActive = getActivePhonesCount();
       if (currentActive >= maxPhonesAllowed) {
-        setError(`Limite del plan alcanzado: maximo ${maxPhonesAllowed} telefonos activos.`);
+        setPlanLimitModal({
+          open: true,
+          message: `No se puede activar el teléfono porque alcanzaste el límite de tu plan (${maxPhonesAllowed} teléfonos activos).`,
+        });
         return;
       }
     }
@@ -885,6 +895,24 @@ export function TelefonosPageContent({
               <button
                 type="button"
                 onClick={() => setPlanCapModal({ open: false, attempted: 0, allowed: 0 })}
+                className="rounded-lg border border-zinc-600 px-3 py-1.5 text-sm text-zinc-100 hover:bg-zinc-800"
+              >
+                Entendido
+              </button>
+            </div>
+          </div>
+        </div>
+      ) : null}
+
+      {planLimitModal.open ? (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 px-4">
+          <div className="w-full max-w-xl rounded-2xl border border-zinc-700 bg-zinc-900 p-5 shadow-2xl">
+            <h3 className="text-base font-semibold text-zinc-100">Límite de teléfonos del plan</h3>
+            <p className="mt-2 text-sm text-zinc-300">{planLimitModal.message}</p>
+            <div className="mt-5 flex justify-end">
+              <button
+                type="button"
+                onClick={() => setPlanLimitModal({ open: false, message: "" })}
                 className="rounded-lg border border-zinc-600 px-3 py-1.5 text-sm text-zinc-100 hover:bg-zinc-800"
               >
                 Entendido

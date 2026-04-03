@@ -269,7 +269,7 @@ export default function AdminClientesPage() {
 const planBadgeClass = (plan?: string) => {
   switch ((plan ?? "").toLowerCase()) {
     case "starter":
-      return "border-emerald-700 text-emerald-200 bg-emerald-950/40";
+      return "border-zinc-700 text-zinc-200 bg-zinc-900/40";
     case "plus":
       return "border-yellow-700 text-yellow-200 bg-yellow-950/40";
     case "pro":
@@ -277,7 +277,7 @@ const planBadgeClass = (plan?: string) => {
     case "premium":
       return "border-purple-700 text-purple-200 bg-purple-950/40";
     case "scale":
-      return "border-zinc-500 text-zinc-200 bg-zinc-800/50";
+      return "border-black text-zinc-100 bg-black";
     default:
       return "border-zinc-700 text-zinc-200 bg-zinc-900/40";
   }
