@@ -47,6 +47,7 @@ export interface TrackingRankingConfig {
   rules: TrackingRankingRule[];
   overflowIndicator: string;
   sortMode: "last_active_desc" | "total_loaded_desc" | "loads_desc" | "avg_load_desc";
+  gerenciaFilter?: string;
 }
 
 export interface ConversionRow {

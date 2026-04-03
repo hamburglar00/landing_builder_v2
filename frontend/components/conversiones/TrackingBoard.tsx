@@ -16,6 +16,12 @@ type TrackingRow = {
   loads: number;
   totalLoaded: number;
   avgLoad: number;
+  gerenciaIds: number[];
+};
+
+type GerenciaOption = {
+  id: number;
+  label: string;
 };
 
 const DEFAULT_RULES: RankRule[] = [
@@ -78,6 +84,8 @@ export default function TrackingBoard({
   rankingConfig,
   onRankingConfigChange,
   onDeletePhone,
+  gerenciaOptions = [],
+  assignedPhoneToGerenciaId = {},
 }: {
   conversions: ConversionRow[];
   onRefresh?: () => void;
@@ -85,18 +93,27 @@ export default function TrackingBoard({
   rankingConfig?: TrackingRankingConfig | null;
   onRankingConfigChange?: (cfg: TrackingRankingConfig) => void;
   onDeletePhone?: (phone: string) => Promise<void> | void;
+  gerenciaOptions?: GerenciaOption[];
+  assignedPhoneToGerenciaId?: Record<string, number>;
 }) {
   const initialRules = rankingConfig?.rules?.length ? rankingConfig.rules : DEFAULT_RULES;
   const initialOverflow = rankingConfig?.overflowIndicator || DEFAULT_OVERFLOW;
   const initialSort = rankingConfig?.sortMode || DEFAULT_SORT;
+  const initialGerenciaFilter = rankingConfig?.gerenciaFilter || "";
 
   const [rules, setRules] = useState<RankRule[]>(initialRules);
   const [overflowIndicator, setOverflowIndicator] = useState(initialOverflow);
   const [sortMode, setSortMode] = useState<SortMode>(initialSort);
+  const [gerenciaFilter, setGerenciaFilter] = useState<string>(
+    initialGerenciaFilter,
+  );
 
   const [draftRules, setDraftRules] = useState<RankRule[]>(initialRules);
   const [draftOverflowIndicator, setDraftOverflowIndicator] = useState(initialOverflow);
   const [draftSortMode, setDraftSortMode] = useState<SortMode>(initialSort);
+  const [draftGerenciaFilter, setDraftGerenciaFilter] = useState<string>(
+    initialGerenciaFilter,
+  );
   const [search, setSearch] = useState("");
   const [page, setPage] = useState(1);
   const [deletingPhone, setDeletingPhone] = useState<string | null>(null);
@@ -109,15 +126,18 @@ export default function TrackingBoard({
       : DEFAULT_RULES;
     const nextOverflow = rankingConfig?.overflowIndicator || DEFAULT_OVERFLOW;
     const nextSort = rankingConfig?.sortMode || DEFAULT_SORT;
+    const nextGerenciaFilter = rankingConfig?.gerenciaFilter || "";
 
     // Sincroniza estado persistido desde config, sin depender de abrir/cerrar modal.
     // Evita pisar el sort recién guardado al cerrar la ventana.
     setRules(nextRules);
     setOverflowIndicator(nextOverflow);
     setSortMode(nextSort);
+    setGerenciaFilter(nextGerenciaFilter);
     setDraftRules(nextRules);
     setDraftOverflowIndicator(nextOverflow);
     setDraftSortMode(nextSort);
+    setDraftGerenciaFilter(nextGerenciaFilter);
   }, [rankingConfig]);
 
   const rows = useMemo<TrackingRow[]>(() => {
@@ -142,10 +162,24 @@ export default function TrackingBoard({
       const loads = purchaseRows.length;
       const totalLoaded = purchaseRows.reduce((s, r) => s + Number(r.valor || 0), 0);
       const avgLoad = loads > 0 ? totalLoaded / loads : 0;
-      out.push({ phone, lastActive, loads, totalLoaded, avgLoad });
+      const gerenciaSet = new Set<number>();
+      for (const row of group) {
+        const assignedDigits = String(row.telefono_asignado ?? "").replace(/\D/g, "");
+        if (!assignedDigits) continue;
+        const gid = assignedPhoneToGerenciaId[assignedDigits];
+        if (Number.isFinite(gid)) gerenciaSet.add(gid);
+      }
+      out.push({
+        phone,
+        lastActive,
+        loads,
+        totalLoaded,
+        avgLoad,
+        gerenciaIds: Array.from(gerenciaSet),
+      });
     }
     return out;
-  }, [conversions]);
+  }, [conversions, assignedPhoneToGerenciaId]);
 
   const sortedRows = useMemo(() => {
     const byLastActiveDesc = (a: TrackingRow, b: TrackingRow) =>
@@ -180,9 +214,15 @@ export default function TrackingBoard({
   };
 
   const filteredRows = useMemo(() => {
+    const selectedGerencia = Number(gerenciaFilter || 0);
+    const baseRows =
+      selectedGerencia > 0
+        ? sortedRows.filter((r) => r.gerenciaIds.includes(selectedGerencia))
+        : sortedRows;
+
     const q = search.trim().toLowerCase();
-    if (!q) return sortedRows;
-    return sortedRows.filter((r) => {
+    if (!q) return baseRows;
+    return baseRows.filter((r) => {
       const rank = r.loads === 0 ? LEAD_INDICATOR : indicatorFor(r.totalLoaded);
       return (
         String(rank).toLowerCase().includes(q) ||
@@ -193,7 +233,7 @@ export default function TrackingBoard({
         formatThousands(r.totalLoaded).toLowerCase().includes(q)
       );
     });
-  }, [sortedRows, search, rules, overflowIndicator]);
+  }, [sortedRows, search, rules, overflowIndicator, gerenciaFilter]);
 
   const pageSize = 20;
   const totalPages = Math.max(1, Math.ceil(filteredRows.length / pageSize));
@@ -206,6 +246,7 @@ export default function TrackingBoard({
     setDraftRules(rules);
     setDraftOverflowIndicator(overflowIndicator);
     setDraftSortMode(sortMode);
+    setDraftGerenciaFilter(gerenciaFilter);
     setOpenConfig(true);
   };
 
@@ -213,10 +254,12 @@ export default function TrackingBoard({
     setRules(draftRules);
     setOverflowIndicator(draftOverflowIndicator);
     setSortMode(draftSortMode);
+    setGerenciaFilter(draftGerenciaFilter);
     onRankingConfigChange?.({
       rules: draftRules,
       overflowIndicator: draftOverflowIndicator,
       sortMode: draftSortMode,
+      gerenciaFilter: draftGerenciaFilter,
     });
     setOpenConfig(false);
   };
@@ -238,7 +281,7 @@ export default function TrackingBoard({
 
   useEffect(() => {
     setPage(1);
-  }, [search, sortMode, conversions.length]);
+  }, [search, sortMode, gerenciaFilter, conversions.length]);
 
   useEffect(() => {
     if (page > totalPages) setPage(totalPages);
@@ -420,6 +463,22 @@ export default function TrackingBoard({
               </select>
             </div>
 
+            <div className="mb-3 flex flex-col items-start gap-2 sm:flex-row sm:items-center">
+              <label className="text-xs text-zinc-400">Filtrar por gerencia</label>
+              <select
+                value={draftGerenciaFilter}
+                onChange={(e) => setDraftGerenciaFilter(e.target.value)}
+                className="w-full sm:w-auto rounded-lg border border-zinc-700 bg-zinc-900 px-2 py-1.5 text-xs text-zinc-100"
+              >
+                <option value="">Todas</option>
+                {gerenciaOptions.map((g) => (
+                  <option key={g.id} value={String(g.id)}>
+                    {g.label}
+                  </option>
+                ))}
+              </select>
+            </div>
+
             <div className="overflow-x-auto rounded-lg border border-zinc-800">
               <table className="min-w-[640px] w-full text-left text-xs">
                 <thead className="bg-zinc-800/95">
@@ -509,6 +568,7 @@ export default function TrackingBoard({
                   setDraftRules(DEFAULT_RULES);
                   setDraftOverflowIndicator(DEFAULT_OVERFLOW);
                   setDraftSortMode(DEFAULT_SORT);
+                  setDraftGerenciaFilter("");
                 }}
                 className="rounded-lg border border-zinc-700 px-3 py-1.5 text-xs text-zinc-300 hover:bg-zinc-800"
               >

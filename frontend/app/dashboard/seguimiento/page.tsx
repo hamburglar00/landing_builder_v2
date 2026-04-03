@@ -23,6 +23,12 @@ export default function DashboardSeguimientoPage() {
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
   const [dateRange, setDateRange] = useState<DateRange | null>(null);
+  const [gerenciaOptions, setGerenciaOptions] = useState<
+    { id: number; label: string }[]
+  >([]);
+  const [assignedPhoneToGerenciaId, setAssignedPhoneToGerenciaId] = useState<
+    Record<string, number>
+  >({});
 
   const activeConversions = useMemo(
     () => filterByDateRange(conversions, dateRange),
@@ -94,6 +100,34 @@ export default function DashboardSeguimientoPage() {
         ]);
         setConversions(rows);
         setConfig(cfg);
+
+        const { data: gerencias } = await supabase
+          .from("gerencias")
+          .select("id, nombre, gerencia_id")
+          .eq("user_id", user.id)
+          .order("nombre", { ascending: true });
+        const options = (gerencias ?? []).map((g) => ({
+          id: Number(g.id),
+          label: `${g.nombre} (ID ${g.gerencia_id})`,
+        }));
+        setGerenciaOptions(options);
+
+        const gerenciaIds = (gerencias ?? []).map((g) => Number(g.id)).filter(Boolean);
+        if (gerenciaIds.length > 0) {
+          const { data: phones } = await supabase
+            .from("gerencia_phones")
+            .select("gerencia_id, phone")
+            .in("gerencia_id", gerenciaIds);
+          const map: Record<string, number> = {};
+          for (const p of phones ?? []) {
+            const digits = String(p.phone ?? "").replace(/\D/g, "");
+            if (!digits) continue;
+            map[digits] = Number(p.gerencia_id);
+          }
+          setAssignedPhoneToGerenciaId(map);
+        } else {
+          setAssignedPhoneToGerenciaId({});
+        }
       } finally {
         setLoading(false);
       }
@@ -143,6 +177,8 @@ export default function DashboardSeguimientoPage() {
         rankingConfig={config?.tracking_ranking_config ?? null}
         onRankingConfigChange={handleRankingConfigChange}
         onDeletePhone={handleDeletePhone}
+        gerenciaOptions={gerenciaOptions}
+        assignedPhoneToGerenciaId={assignedPhoneToGerenciaId}
       />
     </div>
   );
