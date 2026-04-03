@@ -204,11 +204,11 @@ export default function AdminClientesPage() {
                       </div>
                     ) : (
                       <div className="flex flex-col gap-1">
-                        <div className="flex flex-wrap items-center gap-2">
-                          <span className={`inline-flex w-fit rounded-md border px-2 py-0.5 text-[11px] uppercase ${planBadgeClass(client.plan_code)}`}>
+                        <div className="grid grid-cols-[84px_72px] items-center gap-2">
+                          <span className={`inline-flex h-6 w-[84px] items-center justify-center rounded-md border px-2 py-0.5 text-[11px] uppercase ${planBadgeClass(client.plan_code)}`}>
                             {client.plan_code ?? "starter"}
                           </span>
-                          <span className="inline-flex items-center gap-1 text-[10px] uppercase text-zinc-200">
+                          <span className="inline-flex h-6 items-center gap-1 text-[10px] uppercase text-zinc-200">
                             <span
                               className={`h-2 w-2 rounded-full ${
                                 client.plan_status_effective === "expired" ? "bg-red-500" : "bg-emerald-500"
