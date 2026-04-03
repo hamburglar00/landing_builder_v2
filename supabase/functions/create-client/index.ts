@@ -12,8 +12,26 @@ type CreateClientPayload = {
   nombre?: string;
 };
 
+type PlanCode = "starter" | "plus" | "pro" | "premium" | "scale";
+
 function isValidClientName(value: string): boolean {
   return /^[a-z0-9]+$/i.test(value);
+}
+
+function getPlanDefaults(planCode: PlanCode): { maxLandings: number; maxPhones: number } {
+  switch (planCode) {
+    case "plus":
+      return { maxLandings: 4, maxPhones: 10 };
+    case "pro":
+      return { maxLandings: 8, maxPhones: 20 };
+    case "premium":
+      return { maxLandings: 12, maxPhones: 50 };
+    case "scale":
+      return { maxLandings: 999, maxPhones: 999 };
+    case "starter":
+    default:
+      return { maxLandings: 2, maxPhones: 5 };
+  }
 }
 
 const FALLBACK_VISIBLE_COLUMNS = [
@@ -27,7 +45,7 @@ const FALLBACK_VISIBLE_COLUMNS = [
   "country",
   "fbp",
   "fbc",
-  "pixel_id",
+  "meta_pixel_id",
   "contact_event_id",
   "contact_event_time",
   "contact_payload_raw",
@@ -66,7 +84,7 @@ Deno.serve(async (req) => {
   }
 
   if (req.method !== "POST") {
-    return new Response(JSON.stringify({ error: "Método no permitido" }), {
+    return new Response(JSON.stringify({ error: "Metodo no permitido" }), {
       status: 405,
       headers: {
         ...corsHeaders,
@@ -168,7 +186,7 @@ Deno.serve(async (req) => {
       payload = (await req.json()) as CreateClientPayload;
     } catch {
       return new Response(
-        JSON.stringify({ error: "Cuerpo de la petición inválido (JSON)." }),
+        JSON.stringify({ error: "Cuerpo de la peticion invalido (JSON)." }),
         {
           status: 400,
           headers: {
@@ -202,7 +220,24 @@ Deno.serve(async (req) => {
     if (!nombre) {
       return new Response(
         JSON.stringify({
-          error: "Nombre es obligatorio. Se usa como identificador para el endpoint de conversiones.",
+          error:
+            "Nombre es obligatorio. Se usa como identificador para el endpoint de conversiones.",
+        }),
+        {
+          status: 400,
+          headers: {
+            ...corsHeaders,
+            "Content-Type": "application/json",
+          },
+        },
+      );
+    }
+
+    if (!isValidClientName(nombre)) {
+      return new Response(
+        JSON.stringify({
+          error:
+            "Nombre invalido. Solo letras y numeros, sin espacios ni caracteres especiales.",
         }),
         {
           status: 400,
@@ -238,31 +273,11 @@ Deno.serve(async (req) => {
       );
     }
 
-    if (nombre) {
-      await supabaseAdmin
-        .from("profiles")
-        .update({ nombre })
-        .eq("id", created.user.id);
-    }
+    await supabaseAdmin
+      .from("profiles")
+      .update({ nombre })
+      .eq("id", created.user.id);
 
-    if (!isValidClientName(nombre)) {
-      return new Response(
-        JSON.stringify({
-          error:
-            "Nombre inválido. Solo letras y números, sin espacios ni caracteres especiales.",
-        }),
-        {
-          status: 400,
-          headers: {
-            ...corsHeaders,
-            "Content-Type": "application/json",
-          },
-        },
-      );
-    }
-
-    // Inicializar conversions_config del cliente para que no arranque con columnas vacías.
-    // Hereda columnas visibles y umbral premium desde el admin creador.
     const { data: adminCfg } = await supabaseAdmin
       .from("conversions_config")
       .select("visible_columns, funnel_premium_threshold")
@@ -292,15 +307,35 @@ Deno.serve(async (req) => {
       );
 
     if (cfgError) {
-      // No fallar la creación del cliente si solo falla la inicialización de configuración.
       console.error("Error inicializando conversions_config para cliente:", cfgError);
+    }
+
+    const defaults = getPlanDefaults("starter");
+    const { error: subError } = await supabaseAdmin
+      .from("client_subscriptions")
+      .upsert(
+        {
+          user_id: created.user.id,
+          plan_code: "starter",
+          max_landings: defaults.maxLandings,
+          max_phones: defaults.maxPhones,
+          status: "active",
+          starts_at: new Date().toISOString(),
+          expires_at: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString(),
+          grace_days: 5,
+        },
+        { onConflict: "user_id" },
+      );
+
+    if (subError) {
+      console.error("Error inicializando client_subscriptions para cliente:", subError);
     }
 
     return new Response(
       JSON.stringify({
         id: created.user.id,
         email: created.user.email,
-        nombre: nombre ?? null,
+        nombre,
         created_at: created.user.created_at,
       }),
       {
@@ -328,4 +363,3 @@ Deno.serve(async (req) => {
     );
   }
 });
-

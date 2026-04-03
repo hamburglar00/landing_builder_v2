@@ -118,7 +118,7 @@ Deno.serve(async (req) => {
     // 1) Obtener gerencias: cron = todas; si no, del usuario (o solo la indicada)
     let query = supabaseAdmin
       .from("gerencias")
-      .select("id, gerencia_id, source_type")
+      .select("id, user_id, gerencia_id, source_type")
       .eq("source_type", "pbadmin");
     if (!isCronMode) {
       query = query.eq("user_id", userId!);
@@ -172,8 +172,10 @@ Deno.serve(async (req) => {
 
     let processedGerencias = 0;
     let totalActivePhones = 0;
+    const touchedUserIds = new Set<string>();
 
     for (const g of gerenciaRows) {
+      if (g.user_id) touchedUserIds.add(g.user_id);
       const externalId = g.gerencia_id;
       if (externalId == null) continue;
 
@@ -282,6 +284,44 @@ Deno.serve(async (req) => {
       }
 
       processedGerencias += 1;
+    }
+
+    // Respetar limite de telefonos activos por plan de cada cliente.
+    for (const uid of touchedUserIds) {
+      const { data: sub } = await supabaseAdmin
+        .from("client_subscriptions")
+        .select("max_phones")
+        .eq("user_id", uid)
+        .maybeSingle();
+      const maxPhones = Number(sub?.max_phones ?? 0);
+      if (!Number.isFinite(maxPhones) || maxPhones <= 0) continue;
+
+      const { data: activeRows } = await supabaseAdmin
+        .from("gerencia_phones")
+        .select("id")
+        .eq("status", "active")
+        .in(
+          "gerencia_id",
+          (
+            await supabaseAdmin
+              .from("gerencias")
+              .select("id")
+              .eq("user_id", uid)
+          ).data?.map((x) => x.id) ?? [],
+        )
+        .order("created_at", { ascending: true })
+        .order("id", { ascending: true });
+
+      const rows = activeRows ?? [];
+      if (rows.length > maxPhones) {
+        const overflowIds = rows.slice(maxPhones).map((r) => r.id);
+        if (overflowIds.length > 0) {
+          await supabaseAdmin
+            .from("gerencia_phones")
+            .update({ status: "inactive" })
+            .in("id", overflowIds);
+        }
+      }
     }
 
     return new Response(

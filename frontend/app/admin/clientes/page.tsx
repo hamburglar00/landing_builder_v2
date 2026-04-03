@@ -13,6 +13,12 @@ type ClientUser = {
   last_sign_in_at: string | null;
   visible_columns?: string[];
   show_logs?: boolean;
+  plan_code?: string;
+  max_landings?: number;
+  max_phones?: number;
+  plan_status?: string;
+  expires_at?: string | null;
+  grace_days?: number;
 };
 
 export default function AdminClientesPage() {
@@ -61,6 +67,12 @@ export default function AdminClientesPage() {
         nombre: u.nombre ?? null,
         visible_columns: Array.isArray(u.visible_columns) ? u.visible_columns : [],
         show_logs: typeof u.show_logs === "boolean" ? u.show_logs : true,
+        plan_code: u.plan_code ?? "starter",
+        max_landings: Number(u.max_landings ?? 2),
+        max_phones: Number(u.max_phones ?? 5),
+        plan_status: u.plan_status ?? "active",
+        expires_at: u.expires_at ?? null,
+        grace_days: Number(u.grace_days ?? 5),
         created_at: u.created_at,
         last_sign_in_at: u.last_sign_in_at,
       })),
@@ -153,6 +165,8 @@ export default function AdminClientesPage() {
                 <th className="px-4 py-2 font-medium text-zinc-300">Email</th>
                 <th className="px-4 py-2 font-medium text-zinc-300">Creado</th>
                 <th className="px-4 py-2 font-medium text-zinc-300">Ultimo acceso</th>
+                <th className="px-4 py-2 font-medium text-zinc-300">Plan actual</th>
+                <th className="px-4 py-2 font-medium text-zinc-300">Vencimiento</th>
                 <th className="px-4 py-2 text-right font-medium text-zinc-300">Acciones</th>
               </tr>
             </thead>
@@ -160,7 +174,7 @@ export default function AdminClientesPage() {
               {filteredClients.length === 0 && !isLoadingClients && (
                 <tr>
                   <td
-                    colSpan={5}
+                    colSpan={7}
                     className="px-4 py-6 text-center text-xs text-zinc-500"
                   >
                     {searchQuery.trim()
@@ -187,6 +201,19 @@ export default function AdminClientesPage() {
                     {client.last_sign_in_at
                       ? new Date(client.last_sign_in_at).toLocaleString()
                       : "Nunca"}
+                  </td>
+                  <td className="px-4 py-3 align-top text-xs text-zinc-200">
+                    <div className="flex flex-col gap-1">
+                      <span className="inline-flex w-fit rounded-md border border-zinc-700 px-2 py-0.5 text-[11px] uppercase">
+                        {client.plan_code ?? "starter"}
+                      </span>
+                      <span className="text-[11px] text-zinc-500">
+                        {client.max_landings ?? 2} landings · {client.max_phones ?? 5} telefonos
+                      </span>
+                    </div>
+                  </td>
+                  <td className="px-4 py-3 align-top text-xs text-zinc-400">
+                    {client.expires_at ? new Date(client.expires_at).toLocaleDateString() : "Sin venc."}
                   </td>
                   <td className="whitespace-nowrap px-3 py-3 align-top text-right text-xs sm:px-4">
                     <div className="inline-flex flex-wrap gap-2">

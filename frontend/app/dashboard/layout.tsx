@@ -261,6 +261,8 @@ export default function DashboardLayout({
   const [user, setUser] = useState<User | null>(null);
   const [isCheckingSession, setIsCheckingSession] = useState(true);
   const [isClient, setIsClient] = useState<boolean | null>(null);
+  const [isPlanBlocked, setIsPlanBlocked] = useState(false);
+  const [blockedReason, setBlockedReason] = useState<string | null>(null);
   const [sidebarOpen, setSidebarOpen] = useState(false);
 
   useEffect(() => {
@@ -285,6 +287,26 @@ export default function DashboardLayout({
         router.replace("/admin");
         return;
       }
+      const { data: sub } = await supabase
+        .from("client_subscriptions")
+        .select("status, expires_at, grace_days")
+        .eq("user_id", data.user.id)
+        .maybeSingle();
+      const status = sub?.status ?? "active";
+      const expiresAt = sub?.expires_at ? new Date(sub.expires_at) : null;
+      const graceDays = Number(sub?.grace_days ?? 5);
+      const blockedByStatus = status === "paused" || status === "expired";
+      const blockedByDate = expiresAt
+        ? Date.now() > (expiresAt.getTime() + graceDays * 24 * 60 * 60 * 1000)
+        : false;
+      if (blockedByStatus || blockedByDate) {
+        setIsPlanBlocked(true);
+        setBlockedReason(
+          blockedByStatus
+            ? "Tu plan esta pausado o vencido. Contacta soporte para reactivarlo."
+            : "Tu plan vencio y finalizo el periodo de gracia.",
+        );
+      }
 
       setIsClient(true);
       setIsCheckingSession(false);
@@ -308,6 +330,26 @@ export default function DashboardLayout({
 
   if (!isClient) {
     return null;
+  }
+
+  if (isPlanBlocked) {
+    return (
+      <div className="flex min-h-screen items-center justify-center bg-[var(--color-bg-0)] p-6">
+        <div className="w-full max-w-lg rounded-2xl border border-zinc-800 bg-zinc-950/70 p-6 text-center">
+          <h1 className="text-lg font-semibold text-zinc-50">Acceso bloqueado por plan</h1>
+          <p className="mt-2 text-sm text-zinc-400">
+            {blockedReason ?? "Tu suscripcion no permite acceso en este momento."}
+          </p>
+          <button
+            type="button"
+            onClick={() => void handleSignOut()}
+            className="mt-4 rounded-lg border border-zinc-700 px-4 py-2 text-xs text-zinc-200 hover:bg-zinc-800"
+          >
+            Cerrar sesion
+          </button>
+        </div>
+      </div>
+    );
   }
 
   return (

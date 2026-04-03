@@ -165,6 +165,10 @@ Deno.serve(async (req) => {
       .from("conversions_config")
       .select("user_id, visible_columns, show_logs")
       .in("user_id", ids);
+    const { data: subsRows } = await supabaseAdmin
+      .from("client_subscriptions")
+      .select("user_id, plan_code, max_landings, max_phones, status, expires_at, grace_days")
+      .in("user_id", ids);
 
     const nombreById = new Map(
       (profiles ?? []).map((p) => [p.id, p.nombre ?? null]),
@@ -175,6 +179,9 @@ Deno.serve(async (req) => {
         show_logs: r.show_logs ?? true,
       }]),
     );
+    const subsByUserId = new Map(
+      (subsRows ?? []).map((r) => [r.user_id, r]),
+    );
 
     return new Response(
       JSON.stringify({
@@ -184,6 +191,12 @@ Deno.serve(async (req) => {
           nombre: nombreById.get(u.id) ?? null,
           visible_columns: cfgByUserId.get(u.id)?.visible_columns ?? [],
           show_logs: cfgByUserId.get(u.id)?.show_logs ?? true,
+          plan_code: subsByUserId.get(u.id)?.plan_code ?? "starter",
+          max_landings: subsByUserId.get(u.id)?.max_landings ?? 2,
+          max_phones: subsByUserId.get(u.id)?.max_phones ?? 5,
+          plan_status: subsByUserId.get(u.id)?.status ?? "active",
+          expires_at: subsByUserId.get(u.id)?.expires_at ?? null,
+          grace_days: subsByUserId.get(u.id)?.grace_days ?? 5,
           created_at: u.created_at,
           last_sign_in_at: u.last_sign_in_at,
         })),

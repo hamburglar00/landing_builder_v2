@@ -87,6 +87,7 @@ export function TelefonosPageContent({
   const [manualPhoneKind, setManualPhoneKind] = useState<Record<number, "carga" | "ads" | "mkt">>({});
   const [manualSavingGerenciaId, setManualSavingGerenciaId] = useState<number | null>(null);
   const [manualModalGerenciaId, setManualModalGerenciaId] = useState<number | null>(null);
+  const [maxPhonesAllowed, setMaxPhonesAllowed] = useState<number | null>(null);
   const userIdRef = useRef<string | null>(null);
   const lastAutoReloadAt = useRef<number>(0);
   const reloadScheduledRef = useRef<boolean>(false);
@@ -100,6 +101,17 @@ export function TelefonosPageContent({
   const apiKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY ?? "";
 
   const loadData = useCallback(async (uid: string) => {
+    if (!isAdmin) {
+      const { data: sub } = await supabase
+        .from("client_subscriptions")
+        .select("max_phones")
+        .eq("user_id", uid)
+        .maybeSingle();
+      setMaxPhonesAllowed(Number.isFinite(Number(sub?.max_phones)) ? Number(sub?.max_phones) : null);
+    } else {
+      setMaxPhonesAllowed(null);
+    }
+
     const list = isAdmin
       ? await fetchGerenciasForAdmin(uid)
       : await fetchGerencias(uid);
@@ -155,6 +167,12 @@ export function TelefonosPageContent({
 
     setLeadUniqueByAssignedPhone(countsByAssigned);
   }, [isAdmin]);
+
+  const getActivePhonesCount = useCallback(() => {
+    return Object.values(phonesByGerencia).reduce((acc, list) => {
+      return acc + list.filter((p) => p.status === "active").length;
+    }, 0);
+  }, [phonesByGerencia]);
 
   useEffect(() => {
     const init = async () => {
@@ -334,6 +352,16 @@ export function TelefonosPageContent({
       setError("El telefono debe comenzar con 549.");
       return;
     }
+    if (!isAdmin && maxPhonesAllowed != null) {
+      const currentActive = getActivePhonesCount();
+      const alreadyActive = (phonesByGerencia[gerenciaId] ?? []).some(
+        (p) => onlyDigits(p.phone) === phone && p.status === "active",
+      );
+      if (!alreadyActive && currentActive >= maxPhonesAllowed) {
+        setError(`Limite del plan alcanzado: maximo ${maxPhonesAllowed} telefonos activos.`);
+        return;
+      }
+    }
     setManualSavingGerenciaId(gerenciaId);
     setError(null);
     try {
@@ -362,6 +390,13 @@ export function TelefonosPageContent({
 
   const handleManualStatusToggle = async (row: GerenciaPhoneRow) => {
     const nextStatus = row.status === "active" ? "inactive" : "active";
+    if (!isAdmin && nextStatus === "active" && maxPhonesAllowed != null) {
+      const currentActive = getActivePhonesCount();
+      if (currentActive >= maxPhonesAllowed) {
+        setError(`Limite del plan alcanzado: maximo ${maxPhonesAllowed} telefonos activos.`);
+        return;
+      }
+    }
     setError(null);
     const { error: updateError } = await supabase
       .from("gerencia_phones")

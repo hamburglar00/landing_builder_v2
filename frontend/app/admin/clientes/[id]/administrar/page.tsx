@@ -12,6 +12,12 @@ type ClientUser = {
   nombre: string | null;
   visible_columns?: string[];
   show_logs?: boolean;
+  plan_code?: "starter" | "plus" | "pro" | "premium" | "scale";
+  max_landings?: number;
+  max_phones?: number;
+  plan_status?: "active" | "paused" | "expired";
+  expires_at?: string | null;
+  grace_days?: number;
 };
 
 const ALL_COLUMNS = [
@@ -42,6 +48,12 @@ export default function AdminClientManagePage() {
   const [resettingPassword, setResettingPassword] = useState(false);
   const [showLogs, setShowLogs] = useState(true);
   const [visibleCols, setVisibleCols] = useState<Set<ColKey>>(new Set(ALL_COLUMNS));
+  const [planCode, setPlanCode] = useState<"starter" | "plus" | "pro" | "premium" | "scale">("starter");
+  const [maxLandings, setMaxLandings] = useState(2);
+  const [maxPhones, setMaxPhones] = useState(5);
+  const [planStatus, setPlanStatus] = useState<"active" | "paused" | "expired">("active");
+  const [expiresAt, setExpiresAt] = useState("");
+  const [graceDays, setGraceDays] = useState(5);
 
   const visibleCount = useMemo(() => visibleCols.size, [visibleCols]);
 
@@ -71,6 +83,14 @@ export default function AdminClientManagePage() {
       setNombre(found.nombre ?? "");
       setEmail(found.email ?? "");
       setShowLogs(typeof found.show_logs === "boolean" ? found.show_logs : true);
+      setPlanCode(found.plan_code ?? "starter");
+      setMaxLandings(Number(found.max_landings ?? 2));
+      setMaxPhones(Number(found.max_phones ?? 5));
+      setPlanStatus(found.plan_status ?? "active");
+      setExpiresAt(
+        found.expires_at ? new Date(found.expires_at).toISOString().slice(0, 10) : "",
+      );
+      setGraceDays(Number(found.grace_days ?? 5));
       const cols = Array.isArray(found.visible_columns) && found.visible_columns.length > 0
         ? found.visible_columns.filter((c): c is ColKey => (ALL_COLUMNS as readonly string[]).includes(c))
         : [...ALL_COLUMNS];
@@ -105,10 +125,22 @@ export default function AdminClientManagePage() {
       password?: string;
       visibleColumns: string[];
       showLogs: boolean;
+      planCode: "starter" | "plus" | "pro" | "premium" | "scale";
+      maxLandings: number;
+      maxPhones: number;
+      planStatus: "active" | "paused" | "expired";
+      expiresAt: string | null;
+      graceDays: number;
     } = {
       userId: clientId,
       visibleColumns: [...visibleCols],
       showLogs,
+      planCode,
+      maxLandings,
+      maxPhones,
+      planStatus,
+      expiresAt: expiresAt || null,
+      graceDays,
     };
 
     if (email.trim()) payload.email = email.trim();
@@ -216,6 +248,78 @@ export default function AdminClientManagePage() {
             />
           </div>
         </div>
+
+        <section className="rounded-lg border border-zinc-800 bg-zinc-900/40 p-3">
+          <h3 className="mb-3 text-xs font-semibold text-zinc-200">Plan y vencimiento</h3>
+          <div className="grid gap-3 md:grid-cols-3">
+            <div className="space-y-1">
+              <label className="block text-[11px] text-zinc-400">Plan</label>
+              <select
+                value={planCode}
+                onChange={(e) => setPlanCode(e.target.value as typeof planCode)}
+                className="w-full rounded-lg border border-zinc-800 bg-zinc-900 px-2 py-2 text-xs text-zinc-50 outline-none focus:border-zinc-500"
+              >
+                <option value="starter">Starter</option>
+                <option value="plus">Plus</option>
+                <option value="pro">Pro</option>
+                <option value="premium">Premium</option>
+                <option value="scale">Scale</option>
+              </select>
+            </div>
+            <div className="space-y-1">
+              <label className="block text-[11px] text-zinc-400">Estado</label>
+              <select
+                value={planStatus}
+                onChange={(e) => setPlanStatus(e.target.value as typeof planStatus)}
+                className="w-full rounded-lg border border-zinc-800 bg-zinc-900 px-2 py-2 text-xs text-zinc-50 outline-none focus:border-zinc-500"
+              >
+                <option value="active">Activo</option>
+                <option value="paused">Pausado</option>
+                <option value="expired">Vencido</option>
+              </select>
+            </div>
+            <div className="space-y-1">
+              <label className="block text-[11px] text-zinc-400">Vence el</label>
+              <input
+                type="date"
+                value={expiresAt}
+                onChange={(e) => setExpiresAt(e.target.value)}
+                className="w-full rounded-lg border border-zinc-800 bg-zinc-900 px-2 py-2 text-xs text-zinc-50 outline-none focus:border-zinc-500"
+              />
+            </div>
+            <div className="space-y-1">
+              <label className="block text-[11px] text-zinc-400">Max. landings</label>
+              <input
+                type="number"
+                min={1}
+                value={maxLandings}
+                onChange={(e) => setMaxLandings(Number(e.target.value || 1))}
+                className="w-full rounded-lg border border-zinc-800 bg-zinc-900 px-2 py-2 text-xs text-zinc-50 outline-none focus:border-zinc-500"
+              />
+            </div>
+            <div className="space-y-1">
+              <label className="block text-[11px] text-zinc-400">Max. telefonos</label>
+              <input
+                type="number"
+                min={1}
+                value={maxPhones}
+                onChange={(e) => setMaxPhones(Number(e.target.value || 1))}
+                className="w-full rounded-lg border border-zinc-800 bg-zinc-900 px-2 py-2 text-xs text-zinc-50 outline-none focus:border-zinc-500"
+              />
+            </div>
+            <div className="space-y-1">
+              <label className="block text-[11px] text-zinc-400">Gracia (dias)</label>
+              <input
+                type="number"
+                min={0}
+                max={30}
+                value={graceDays}
+                onChange={(e) => setGraceDays(Number(e.target.value || 0))}
+                className="w-full rounded-lg border border-zinc-800 bg-zinc-900 px-2 py-2 text-xs text-zinc-50 outline-none focus:border-zinc-500"
+              />
+            </div>
+          </div>
+        </section>
 
         <section className="rounded-lg border border-zinc-800 bg-zinc-900/40 p-3">
           <h3 className="mb-2 text-xs font-semibold text-zinc-200">Resetear contraseña</h3>

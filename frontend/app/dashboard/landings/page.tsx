@@ -61,7 +61,12 @@ export default function DashboardLandingsPage() {
       });
       router.push(`/dashboard/landing/${id}/editar`);
     } catch (e) {
-      setError(e instanceof Error ? e.message : "Error al crear la landing");
+      const msg = e instanceof Error ? e.message : "Error al crear la landing";
+      setError(
+        msg.includes("PLAN_LIMIT_LANDINGS")
+          ? "Limite del plan alcanzado para landings. Actualiza tu plan para crear mas."
+          : msg,
+      );
     } finally {
       setCreating(false);
     }
@@ -80,7 +85,12 @@ export default function DashboardLandingsPage() {
       });
       router.push(`/dashboard/landing/${id}/editar`);
     } catch (e) {
-      setError(e instanceof Error ? e.message : "Error al conectar landing existente");
+      const msg = e instanceof Error ? e.message : "Error al conectar landing existente";
+      setError(
+        msg.includes("PLAN_LIMIT_LANDINGS")
+          ? "Limite del plan alcanzado para landings. Actualiza tu plan para crear mas."
+          : msg,
+      );
     } finally {
       setCreating(false);
     }
