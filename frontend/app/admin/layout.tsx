@@ -687,6 +687,17 @@ export default function AdminLayout({
           <p className="truncate px-1 text-[11px] text-[var(--color-text-muted)]" title={user?.email ?? undefined}>
             {user?.email}
           </p>
+          <Link
+            href="/admin/plan"
+            onClick={() => setSidebarOpen(false)}
+            className={`block w-full rounded-lg border px-3 py-2 text-center text-xs font-semibold transition hover:bg-[var(--color-bg-3)] ${
+              pathname?.startsWith("/admin/plan")
+                ? "border-[var(--color-primary-soft-border)] bg-[var(--color-primary-soft-bg)] text-[var(--color-primary)]"
+                : "border-[var(--color-border)] text-[var(--color-text-muted)]"
+            }`}
+          >
+            Ver planes
+          </Link>
           <button
             type="button"
             onClick={handleSignOut}
