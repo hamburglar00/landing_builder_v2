@@ -110,6 +110,35 @@ type Params = Record<string, any>;
 
 const norm = (s: unknown): string => String(s ?? "").trim();
 
+function deriveNameFromPayload(p: Params): { fn: string; ln: string } {
+  const explicitFn = norm(p.fn);
+  const explicitLn = norm(p.ln);
+  if (explicitFn || explicitLn) {
+    return { fn: explicitFn, ln: explicitLn };
+  }
+
+  const fullName = norm(p.full_name);
+  if (!fullName) return { fn: "", ln: "" };
+
+  // Preferred format: "Apellido, Nombre"
+  if (fullName.includes(",")) {
+    const [left, ...rest] = fullName.split(",");
+    const ln = norm(left);
+    const fn = norm(rest.join(","));
+    return { fn, ln };
+  }
+
+  // Fallback format: "Nombre(s) Apellido(s)" -> last token as ln.
+  const parts = fullName.split(/\s+/).map((x) => x.trim()).filter(Boolean);
+  if (parts.length === 1) {
+    return { fn: parts[0], ln: "" };
+  }
+
+  const ln = parts[parts.length - 1];
+  const fn = parts.slice(0, -1).join(" ");
+  return { fn, ln };
+}
+
 function safePayloadRaw(payload: Params): string {
   try {
     return JSON.stringify(payload).slice(0, 4000);
@@ -729,8 +758,7 @@ async function handleLead(
   const testEventCode = norm(p.test_event_code);
   const leadPayloadRaw = safePayloadRaw(p);
 
-  const payloadFn = norm(p.fn);
-  const payloadLn = norm(p.ln);
+  const { fn: payloadFn, ln: payloadLn } = deriveNameFromPayload(p);
   const payloadEmail = norm(p.email);
   const eventSourceUrl = await deriveEventSourceUrl(db, landing.name, norm(p.event_source_url));
   const geo = resolveGeoForPayload(p);
@@ -830,8 +858,7 @@ async function handlePurchase(
   const purchasePayloadRaw = safePayloadRaw(p);
 
   const promoCode = norm(p.promo_code);
-  const payloadFn = norm(p.fn);
-  const payloadLn = norm(p.ln);
+  const { fn: payloadFn, ln: payloadLn } = deriveNameFromPayload(p);
   const payloadEmail = norm(p.email);
   const eventSourceUrl = await deriveEventSourceUrl(db, landing.name, norm(p.event_source_url));
   const isRepeat = await hasPreviousSuccessfulPurchases(db, landing.user_id, cleanPhone);
@@ -1073,6 +1100,7 @@ async function handleSimplePurchase(
   const purchasePayloadRaw = safePayloadRaw(p);
 
   const payloadEmail = norm(p.email);
+  const { fn: payloadFn, ln: payloadLn } = deriveNameFromPayload(p);
   const eventSourceUrl = await deriveEventSourceUrl(db, landing.name, norm(p.event_source_url));
   const isRepeatSimple = await hasPreviousSuccessfulPurchases(db, landing.user_id, cleanPhone);
 
@@ -1095,8 +1123,8 @@ async function handleSimplePurchase(
     landing_name: landing.name,
     phone: cleanPhone,
     email: payloadEmail || srcRow?.email || "",
-    fn: srcRow?.fn ?? "",
-    ln: srcRow?.ln ?? "",
+    fn: payloadFn || srcRow?.fn || "",
+    ln: payloadLn || srcRow?.ln || "",
     ct: srcRow?.ct ?? "",
     st: srcRow?.st ?? "",
     zip: srcRow?.zip ?? "",
