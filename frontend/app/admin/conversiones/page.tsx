@@ -191,6 +191,10 @@ function formatIntegerWithThousands(value: number) {
   );
 }
 
+function normalizePhone(value: string | null | undefined): string {
+  return String(value ?? "").replace(/\D/g, "");
+}
+
 const ALL_COLUMNS = [
   "phone","email","fn","ln","ct","st","zip","country","fbp","fbc","meta_pixel_id",
   "contact_event_id","contact_event_time","contact_payload_raw","lead_event_id","lead_event_time","lead_payload_raw",
@@ -339,6 +343,9 @@ export default function AdminConversionesPage() {
   const [tableSearch, setTableSearch] = useState("");
   const [statsLandingFilter, setStatsLandingFilter] = useState<string>("__all__");
   const [statsPixelFilter, setStatsPixelFilter] = useState<string>("__all__");
+  const [statsGerenciaFilter, setStatsGerenciaFilter] = useState<string>("__all__");
+  const [statsTelefonoFilter, setStatsTelefonoFilter] = useState<string>("__all__");
+  const [gerenciaByPhone, setGerenciaByPhone] = useState<Record<string, string[]>>({});
 
   const [demoMode, setDemoMode] = useState(false);
   const [dateRange, setDateRange] = useState<DateRange | null>(null);
@@ -391,6 +398,24 @@ export default function AdminConversionesPage() {
     }
     return Array.from(set).sort((a, b) => a.localeCompare(b));
   }, [statsAllConversions]);
+  const statsTelefonoOptions = useMemo(() => {
+    const set = new Set<string>();
+    for (const r of statsAllConversions) {
+      const phone = normalizePhone(r.telefono_asignado);
+      if (phone) set.add(phone);
+    }
+    return Array.from(set).sort((a, b) => a.localeCompare(b));
+  }, [statsAllConversions]);
+  const statsGerenciaOptions = useMemo(() => {
+    const set = new Set<string>();
+    for (const r of statsAllConversions) {
+      const phone = normalizePhone(r.telefono_asignado);
+      if (!phone) continue;
+      const labels = gerenciaByPhone[phone] ?? [];
+      for (const label of labels) set.add(label);
+    }
+    return Array.from(set).sort((a, b) => a.localeCompare(b, "es"));
+  }, [statsAllConversions, gerenciaByPhone]);
   useEffect(() => {
     if (statsLandingFilter !== "__all__" && !statsLandingOptions.includes(statsLandingFilter)) {
       setStatsLandingFilter("__all__");
@@ -401,25 +426,39 @@ export default function AdminConversionesPage() {
       setStatsPixelFilter("__all__");
     }
   }, [statsPixelFilter, statsPixelOptions]);
+  useEffect(() => {
+    if (statsGerenciaFilter !== "__all__" && !statsGerenciaOptions.includes(statsGerenciaFilter)) {
+      setStatsGerenciaFilter("__all__");
+    }
+  }, [statsGerenciaFilter, statsGerenciaOptions]);
+  useEffect(() => {
+    if (statsTelefonoFilter !== "__all__" && !statsTelefonoOptions.includes(statsTelefonoFilter)) {
+      setStatsTelefonoFilter("__all__");
+    }
+  }, [statsTelefonoFilter, statsTelefonoOptions]);
   const statsConversionsFiltered = useMemo(() => {
     return statsConversions.filter((r) => {
       const byLanding = statsLandingFilter === "__all__" || String(r.landing_name ?? "").trim() === statsLandingFilter;
       const byPixel = statsPixelFilter === "__all__" || String(r.meta_pixel_id ?? r.pixel_id ?? "").trim() === statsPixelFilter;
-      return byLanding && byPixel;
+      const assignedPhone = normalizePhone(r.telefono_asignado);
+      const byTelefono = statsTelefonoFilter === "__all__" || assignedPhone === statsTelefonoFilter;
+      const labels = assignedPhone ? (gerenciaByPhone[assignedPhone] ?? []) : [];
+      const byGerencia = statsGerenciaFilter === "__all__" || labels.includes(statsGerenciaFilter);
+      return byLanding && byPixel && byGerencia && byTelefono;
     });
-  }, [statsConversions, statsLandingFilter, statsPixelFilter]);
+  }, [statsConversions, statsLandingFilter, statsPixelFilter, statsGerenciaFilter, statsTelefonoFilter, gerenciaByPhone]);
   const statsAllConversionsFiltered = useMemo(() => {
     return statsAllConversions.filter((r) => {
       const byLanding = statsLandingFilter === "__all__" || String(r.landing_name ?? "").trim() === statsLandingFilter;
       const byPixel = statsPixelFilter === "__all__" || String(r.meta_pixel_id ?? r.pixel_id ?? "").trim() === statsPixelFilter;
-      return byLanding && byPixel;
+      const assignedPhone = normalizePhone(r.telefono_asignado);
+      const byTelefono = statsTelefonoFilter === "__all__" || assignedPhone === statsTelefonoFilter;
+      const labels = assignedPhone ? (gerenciaByPhone[assignedPhone] ?? []) : [];
+      const byGerencia = statsGerenciaFilter === "__all__" || labels.includes(statsGerenciaFilter);
+      return byLanding && byPixel && byGerencia && byTelefono;
     });
-  }, [statsAllConversions, statsLandingFilter, statsPixelFilter]);
+  }, [statsAllConversions, statsLandingFilter, statsPixelFilter, statsGerenciaFilter, statsTelefonoFilter, gerenciaByPhone]);
   const activeFunnelFiltered = useMemo(() => {
-    if (statsPixelFilter === "__all__") {
-      if (statsLandingFilter === "__all__") return activeFunnel;
-      return activeFunnel.filter((r) => String(r.landing_name ?? "").trim() === statsLandingFilter);
-    }
     const phones = new Set(
       statsAllConversionsFiltered
         .map((r) => String(r.phone ?? "").trim())
@@ -430,7 +469,7 @@ export default function AdminConversionesPage() {
       const byPhone = phones.has(String(r.phone ?? "").trim());
       return byLanding && byPhone;
     });
-  }, [activeFunnel, statsLandingFilter, statsPixelFilter, statsAllConversionsFiltered]);
+  }, [activeFunnel, statsLandingFilter, statsAllConversionsFiltered]);
   const filteredConversions = useMemo(() => {
     const q = tableSearch.trim().toLowerCase();
     if (!q) return activeConversions;
@@ -488,6 +527,37 @@ export default function AdminConversionesPage() {
         const { data: profile } = await supabase
           .from("profiles").select("nombre").eq("id", user.id).maybeSingle();
         setClientName(profile?.nombre ?? "");
+
+        const { data: gerencias } = await supabase
+          .from("gerencias")
+          .select("id,nombre,gerencia_id");
+        const gerenciasList = gerencias ?? [];
+        const gerenciasById = new Map<number, string>();
+        for (const g of gerenciasList) {
+          const id = Number(g.id);
+          if (!Number.isFinite(id)) continue;
+          const extId = Number(g.gerencia_id);
+          gerenciasById.set(id, `${String(g.nombre ?? "").trim()} (ID ${Number.isFinite(extId) ? extId : id})`);
+        }
+        if (gerenciasById.size > 0) {
+          const ids = Array.from(gerenciasById.keys());
+          const { data: phones } = await supabase
+            .from("gerencia_phones")
+            .select("gerencia_id,phone")
+            .in("gerencia_id", ids);
+          const byPhone: Record<string, string[]> = {};
+          for (const row of phones ?? []) {
+            const phone = normalizePhone(String(row.phone ?? ""));
+            if (!phone) continue;
+            const label = gerenciasById.get(Number(row.gerencia_id));
+            if (!label) continue;
+            byPhone[phone] = byPhone[phone] ?? [];
+            if (!byPhone[phone].includes(label)) byPhone[phone].push(label);
+          }
+          setGerenciaByPhone(byPhone);
+        } else {
+          setGerenciaByPhone({});
+        }
       } catch (e) { console.error(e); }
       finally { setLoading(false); }
     };
@@ -1001,6 +1071,28 @@ export default function AdminConversionesPage() {
                 <option value="__all__">Todos los pixeles</option>
                 {statsPixelOptions.map((px) => (
                   <option key={px} value={px}>{px}</option>
+                ))}
+              </select>
+              <select
+                value={statsGerenciaFilter}
+                onChange={(e) => setStatsGerenciaFilter(e.target.value)}
+                className="h-7 rounded-lg border border-zinc-700 bg-zinc-900 px-2 text-[11px] text-zinc-100"
+                title="Filtrar estadisticas por gerencia"
+              >
+                <option value="__all__">Todas las gerencias</option>
+                {statsGerenciaOptions.map((g) => (
+                  <option key={g} value={g}>{g}</option>
+                ))}
+              </select>
+              <select
+                value={statsTelefonoFilter}
+                onChange={(e) => setStatsTelefonoFilter(e.target.value)}
+                className="h-7 rounded-lg border border-zinc-700 bg-zinc-900 px-2 text-[11px] text-zinc-100"
+                title="Filtrar estadisticas por telefono asignado"
+              >
+                <option value="__all__">Todos los telefonos</option>
+                {statsTelefonoOptions.map((phone) => (
+                  <option key={phone} value={phone}>{phone}</option>
                 ))}
               </select>
             </div>
