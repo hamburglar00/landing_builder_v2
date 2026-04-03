@@ -295,7 +295,7 @@ export default function TrackingBoard({
     lines.push("");
     for (const r of filteredRows) {
       const rank = r.loads === 0 ? LEAD_INDICATOR : indicatorFor(r.totalLoaded);
-      lines.push(`• ${rank} ${stripArPrefix(r.phone)}`);
+      lines.push(`• ${rank} wa.me/${stripArPrefix(r.phone)}`);
       lines.push(`⏳ Última actividad: ${relDate(r.lastActive)}`);
       lines.push(`💸 Carga promedio: ${formatCurrency(r.avgLoad)}`);
       lines.push(`🏦 Total cargado: ${formatCurrency(r.totalLoaded)}`);
