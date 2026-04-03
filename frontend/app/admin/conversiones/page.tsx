@@ -345,6 +345,11 @@ export default function AdminConversionesPage() {
   const [statsPixelFilter, setStatsPixelFilter] = useState<string>("__all__");
   const [statsGerenciaFilter, setStatsGerenciaFilter] = useState<string>("__all__");
   const [statsTelefonoFilter, setStatsTelefonoFilter] = useState<string>("__all__");
+  const [statsFilterModalOpen, setStatsFilterModalOpen] = useState(false);
+  const [draftLandingFilter, setDraftLandingFilter] = useState<string>("__all__");
+  const [draftPixelFilter, setDraftPixelFilter] = useState<string>("__all__");
+  const [draftGerenciaFilter, setDraftGerenciaFilter] = useState<string>("__all__");
+  const [draftTelefonoFilter, setDraftTelefonoFilter] = useState<string>("__all__");
   const [gerenciaByPhone, setGerenciaByPhone] = useState<Record<string, string[]>>({});
 
   const [demoMode, setDemoMode] = useState(false);
@@ -492,6 +497,14 @@ export default function AdminConversionesPage() {
   const internalIdByConversionId = useMemo(
     () => new Map(conversions.map((c) => [c.id, c.internal_id])),
     [conversions],
+  );
+  const hasStatsFiltersApplied = useMemo(
+    () =>
+      statsLandingFilter !== "__all__" ||
+      statsPixelFilter !== "__all__" ||
+      statsGerenciaFilter !== "__all__" ||
+      statsTelefonoFilter !== "__all__",
+    [statsLandingFilter, statsPixelFilter, statsGerenciaFilter, statsTelefonoFilter],
   );
 
   // Collapsible states for config tab
@@ -738,6 +751,22 @@ export default function AdminConversionesPage() {
     setCopiedUrl(text);
     setTimeout(() => setCopiedUrl(null), 2000);
   }, []);
+
+  const openStatsFilterModal = useCallback(() => {
+    setDraftLandingFilter(statsLandingFilter);
+    setDraftPixelFilter(statsPixelFilter);
+    setDraftGerenciaFilter(statsGerenciaFilter);
+    setDraftTelefonoFilter(statsTelefonoFilter);
+    setStatsFilterModalOpen(true);
+  }, [statsLandingFilter, statsPixelFilter, statsGerenciaFilter, statsTelefonoFilter]);
+
+  const applyStatsFilters = useCallback(() => {
+    setStatsLandingFilter(draftLandingFilter);
+    setStatsPixelFilter(draftPixelFilter);
+    setStatsGerenciaFilter(draftGerenciaFilter);
+    setStatsTelefonoFilter(draftTelefonoFilter);
+    setStatsFilterModalOpen(false);
+  }, [draftLandingFilter, draftPixelFilter, draftGerenciaFilter, draftTelefonoFilter]);
 
   const refreshTable = useCallback(async () => {
     if (!userId) return;
@@ -1051,53 +1080,69 @@ export default function AdminConversionesPage() {
         <div className="flex items-center justify-end gap-2 pt-1">
           {tab === "estadisticas" && (
             <div className="mr-auto flex items-center gap-2">
-              <select
-                value={statsLandingFilter}
-                onChange={(e) => setStatsLandingFilter(e.target.value)}
-                className="h-7 rounded-lg border border-zinc-700 bg-zinc-900 px-2 text-[11px] text-zinc-100"
-                title="Filtrar estadisticas por landing"
+              <button
+                type="button"
+                onClick={openStatsFilterModal}
+                className={`inline-flex h-7 items-center gap-1.5 rounded-lg border px-2 text-[11px] font-medium transition ${
+                  hasStatsFiltersApplied
+                    ? "border-emerald-700 bg-emerald-950/40 text-emerald-300"
+                    : "border-zinc-700 bg-zinc-900 text-zinc-200 hover:bg-zinc-800"
+                }`}
+                title="Abrir multifiltro de estadisticas"
               >
-                <option value="__all__">Todas las landings</option>
-                {statsLandingOptions.map((name) => (
-                  <option key={name} value={name}>{name}</option>
-                ))}
-              </select>
-              <select
-                value={statsPixelFilter}
-                onChange={(e) => setStatsPixelFilter(e.target.value)}
-                className="h-7 rounded-lg border border-zinc-700 bg-zinc-900 px-2 text-[11px] text-zinc-100"
-                title="Filtrar estadisticas por pixel"
-              >
-                <option value="__all__">Todos los pixeles</option>
-                {statsPixelOptions.map((px) => (
-                  <option key={px} value={px}>{px}</option>
-                ))}
-              </select>
-              <select
-                value={statsGerenciaFilter}
-                onChange={(e) => setStatsGerenciaFilter(e.target.value)}
-                className="h-7 rounded-lg border border-zinc-700 bg-zinc-900 px-2 text-[11px] text-zinc-100"
-                title="Filtrar estadisticas por gerencia"
-              >
-                <option value="__all__">Todas las gerencias</option>
-                {statsGerenciaOptions.map((g) => (
-                  <option key={g} value={g}>{g}</option>
-                ))}
-              </select>
-              <select
-                value={statsTelefonoFilter}
-                onChange={(e) => setStatsTelefonoFilter(e.target.value)}
-                className="h-7 rounded-lg border border-zinc-700 bg-zinc-900 px-2 text-[11px] text-zinc-100"
-                title="Filtrar estadisticas por telefono asignado"
-              >
-                <option value="__all__">Todos los telefonos</option>
-                {statsTelefonoOptions.map((phone) => (
-                  <option key={phone} value={phone}>{phone}</option>
-                ))}
-              </select>
+                <svg className="h-3.5 w-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2}>
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M3 5h18l-7 8v5l-4 2v-7L3 5z" />
+                </svg>
+                Aplicar filtros
+              </button>
             </div>
           )}
           <DateRangeFilter onChange={setDateRange} />
+        </div>
+      )}
+      {tab === "estadisticas" && statsFilterModalOpen && (
+        <div className="fixed inset-0 z-40 flex items-center justify-center bg-black/70 p-4">
+          <div className="w-full max-w-xl rounded-xl border border-zinc-700 bg-zinc-950 p-4">
+            <h3 className="mb-3 text-sm font-semibold text-zinc-100">Filtros de estadisticas</h3>
+            <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+              <div>
+                <label className="mb-1 block text-xs text-zinc-400">Landing</label>
+                <select value={draftLandingFilter} onChange={(e) => setDraftLandingFilter(e.target.value)} className="h-9 w-full rounded-lg border border-zinc-700 bg-zinc-900 px-2 text-xs text-zinc-100">
+                  <option value="__all__">Todas las landings</option>
+                  {statsLandingOptions.map((name) => <option key={name} value={name}>{name}</option>)}
+                </select>
+              </div>
+              <div>
+                <label className="mb-1 block text-xs text-zinc-400">Pixel</label>
+                <select value={draftPixelFilter} onChange={(e) => setDraftPixelFilter(e.target.value)} className="h-9 w-full rounded-lg border border-zinc-700 bg-zinc-900 px-2 text-xs text-zinc-100">
+                  <option value="__all__">Todos los pixeles</option>
+                  {statsPixelOptions.map((px) => <option key={px} value={px}>{px}</option>)}
+                </select>
+              </div>
+              <div>
+                <label className="mb-1 block text-xs text-zinc-400">Gerencia (ID)</label>
+                <select value={draftGerenciaFilter} onChange={(e) => setDraftGerenciaFilter(e.target.value)} className="h-9 w-full rounded-lg border border-zinc-700 bg-zinc-900 px-2 text-xs text-zinc-100">
+                  <option value="__all__">Todas las gerencias</option>
+                  {statsGerenciaOptions.map((g) => <option key={g} value={g}>{g}</option>)}
+                </select>
+              </div>
+              <div>
+                <label className="mb-1 block text-xs text-zinc-400">Telefono asignado</label>
+                <select value={draftTelefonoFilter} onChange={(e) => setDraftTelefonoFilter(e.target.value)} className="h-9 w-full rounded-lg border border-zinc-700 bg-zinc-900 px-2 text-xs text-zinc-100">
+                  <option value="__all__">Todos los telefonos</option>
+                  {statsTelefonoOptions.map((phone) => <option key={phone} value={phone}>{phone}</option>)}
+                </select>
+              </div>
+            </div>
+            <div className="mt-4 flex justify-end gap-2">
+              <button type="button" onClick={() => setStatsFilterModalOpen(false)} className="cursor-pointer rounded-md border border-zinc-600 px-3 py-1.5 text-xs text-zinc-300 hover:bg-zinc-800">
+                Cerrar
+              </button>
+              <button type="button" onClick={applyStatsFilters} className="cursor-pointer rounded-md border border-emerald-700 bg-emerald-600 px-3 py-1.5 text-xs font-semibold text-zinc-950 hover:bg-emerald-500">
+                Guardar
+              </button>
+            </div>
+          </div>
         </div>
       )}
       {demoMode && (
