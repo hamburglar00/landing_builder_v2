@@ -347,6 +347,10 @@ export default function DashboardConversionesPage() {
   const [editingPixelId, setEditingPixelId] = useState<string | null>(null);
   const [pixelEditOpen, setPixelEditOpen] = useState(false);
   const [pixelEditDraft, setPixelEditDraft] = useState<PixelEditDraft | null>(null);
+  const [pixelDeleteWarn, setPixelDeleteWarn] = useState<{
+    pixelId: string;
+    landings: Array<{ id: string; name: string }>;
+  } | null>(null);
   const [editPixelId, setEditPixelId] = useState(false);
   const [editAccessToken, setEditAccessToken] = useState(false);
   const [pixelConfigs, setPixelConfigs] = useState<PixelConfig[]>([]);
@@ -676,6 +680,14 @@ export default function DashboardConversionesPage() {
     setSaving(true);
     setSaveMsg(null);
     try {
+      const { data: affectedRows, error: affectedError } = await supabase
+        .from("landings")
+        .select("id,name")
+        .eq("user_id", userId)
+        .eq("pixel_id", px.pixel_id);
+      if (affectedError) throw affectedError;
+      const affectedLandings = (affectedRows ?? []) as Array<{ id: string; name: string }>;
+
       await deletePixelConfig(userId, px.pixel_id);
       let pixels = await fetchPixelConfigs(userId);
       if (pixels.length > 0 && !pixels.some((p) => p.is_default)) {
@@ -719,6 +731,9 @@ export default function DashboardConversionesPage() {
         }
       }
       setSaveMsg("Pixel eliminado.");
+      if (affectedLandings.length > 0) {
+        setPixelDeleteWarn({ pixelId: px.pixel_id, landings: affectedLandings });
+      }
     } catch (e) {
       setSaveMsg(e instanceof Error ? e.message : "Error al eliminar pixel");
     } finally {
@@ -985,6 +1000,46 @@ export default function DashboardConversionesPage() {
               >
                 {saving ? "Guardando..." : "Guardar"}
               </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {pixelDeleteWarn && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 p-4">
+          <div className="w-full max-w-xl rounded-xl border border-zinc-700 bg-zinc-950 p-4">
+            <div className="mb-3 flex items-start justify-between gap-3">
+              <h3 className="text-sm font-semibold text-zinc-100">Advertencia de pixel eliminado</h3>
+              <button
+                type="button"
+                onClick={() => setPixelDeleteWarn(null)}
+                className="cursor-pointer rounded-lg border border-zinc-700 px-3 py-1 text-xs text-zinc-300 hover:bg-zinc-800"
+              >
+                Cerrar
+              </button>
+            </div>
+            <p className="text-sm text-zinc-300">
+              Eliminaste el pixel <span className="font-mono text-zinc-100">{pixelDeleteWarn.pixelId}</span>, y hay landing(s) que lo estaban usando.
+            </p>
+            <p className="mt-2 text-xs text-zinc-400">
+              Ve a cada landing afectada, selecciona un nuevo pixel y guarda para publicar la configuracion actualizada.
+            </p>
+            <div className="mt-3 max-h-44 overflow-y-auto rounded-lg border border-zinc-800 bg-zinc-900/60 p-2">
+              <ul className="space-y-1.5 text-xs text-zinc-200">
+                {pixelDeleteWarn.landings.map((l) => (
+                  <li key={l.id} className="rounded border border-zinc-800 bg-zinc-900 px-2 py-1.5">
+                    {l.name}
+                  </li>
+                ))}
+              </ul>
+            </div>
+            <div className="mt-4 flex justify-end gap-2">
+              <a
+                href="/dashboard/landings"
+                className="cursor-pointer rounded-lg bg-lime-400 px-3 py-2 text-xs font-semibold text-black transition hover:bg-lime-300"
+              >
+                Ir a landings
+              </a>
             </div>
           </div>
         </div>
