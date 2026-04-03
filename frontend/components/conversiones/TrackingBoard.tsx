@@ -104,18 +104,21 @@ export default function TrackingBoard({
   const [openConfig, setOpenConfig] = useState(false);
 
   useEffect(() => {
-    const nextRules = rankingConfig?.rules?.length ? rankingConfig.rules : DEFAULT_RULES;
+    const nextRules = rankingConfig?.rules?.length
+      ? rankingConfig.rules
+      : DEFAULT_RULES;
     const nextOverflow = rankingConfig?.overflowIndicator || DEFAULT_OVERFLOW;
     const nextSort = rankingConfig?.sortMode || DEFAULT_SORT;
+
+    // Sincroniza estado persistido desde config, sin depender de abrir/cerrar modal.
+    // Evita pisar el sort recién guardado al cerrar la ventana.
     setRules(nextRules);
     setOverflowIndicator(nextOverflow);
     setSortMode(nextSort);
-    if (!openConfig) {
-      setDraftRules(nextRules);
-      setDraftOverflowIndicator(nextOverflow);
-      setDraftSortMode(nextSort);
-    }
-  }, [rankingConfig, openConfig]);
+    setDraftRules(nextRules);
+    setDraftOverflowIndicator(nextOverflow);
+    setDraftSortMode(nextSort);
+  }, [rankingConfig]);
 
   const rows = useMemo<TrackingRow[]>(() => {
     const byPhone = new Map<string, ConversionRow[]>();
@@ -145,18 +148,26 @@ export default function TrackingBoard({
   }, [conversions]);
 
   const sortedRows = useMemo(() => {
+    const byLastActiveDesc = (a: TrackingRow, b: TrackingRow) =>
+      new Date(b.lastActive).getTime() - new Date(a.lastActive).getTime();
+
+    // Si se ordena por última actividad, se aplica sobre TODO el listado.
+    // En los demás criterios mantenemos leads al final.
+    if (sortMode === "last_active_desc") {
+      return [...rows].sort(byLastActiveDesc);
+    }
+
     const withLoads = rows.filter((r) => r.loads > 0);
     const leads = rows.filter((r) => r.loads === 0);
 
     const sorter = (a: TrackingRow, b: TrackingRow) => {
       if (sortMode === "total_loaded_desc") return b.totalLoaded - a.totalLoaded;
       if (sortMode === "loads_desc") return b.loads - a.loads;
-      if (sortMode === "avg_load_desc") return b.avgLoad - a.avgLoad;
-      return new Date(b.lastActive).getTime() - new Date(a.lastActive).getTime();
+      return b.avgLoad - a.avgLoad;
     };
 
     withLoads.sort(sorter);
-    leads.sort((a, b) => new Date(b.lastActive).getTime() - new Date(a.lastActive).getTime());
+    leads.sort(byLastActiveDesc);
     return [...withLoads, ...leads];
   }, [rows, sortMode]);
 
