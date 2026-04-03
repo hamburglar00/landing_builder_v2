@@ -93,6 +93,7 @@ export function generateDemoConversions(count = 80): ConversionRow[] {
       pixel_id: "",
       contact_event_id: contactEvId,
       contact_event_time: ts,
+      send_contact_pixel: false,
       contact_payload_raw: "",
       lead_event_id: leadEvId,
       lead_event_time: leadEvId ? ts + 3600 : null,

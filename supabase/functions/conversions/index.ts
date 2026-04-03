@@ -64,6 +64,7 @@ interface ConversionRow {
   pixel_id: string;
   contact_event_id: string;
   contact_event_time: number | null;
+  send_contact_pixel?: boolean;
   contact_payload_raw: string;
   lead_event_id: string;
   lead_event_time: number | null;
@@ -109,6 +110,12 @@ type Params = Record<string, any>;
 
 
 const norm = (s: unknown): string => String(s ?? "").trim();
+
+function toBool(v: unknown): boolean {
+  if (typeof v === "boolean") return v;
+  const s = String(v ?? "").trim().toLowerCase();
+  return s === "true" || s === "1" || s === "yes" || s === "on";
+}
 
 function deriveNameFromPayload(p: Params): { fn: string; ln: string } {
   const explicitFn = norm(p.fn);
@@ -663,6 +670,7 @@ async function handleContact(
     pixel_id: inboundMetaPixelId,
     contact_event_id: contactEventId,
     contact_event_time: contactEventTime,
+    send_contact_pixel: toBool(p.send_contact_pixel),
     contact_payload_raw: safePayloadRaw(p),
     lead_event_id: "",
     lead_event_time: null,

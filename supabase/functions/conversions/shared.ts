@@ -30,6 +30,7 @@ export interface ConversionRow {
   pixel_id: string;
   contact_event_id: string;
   contact_event_time: number | null;
+  send_contact_pixel?: boolean;
   contact_payload_raw: string;
   lead_event_id: string;
   lead_event_time: number | null;
@@ -383,6 +384,7 @@ export function buildFakeConversionRow(event: MetaEventName): ConversionRow {
     pixel_id: "",
     contact_event_id: "",
     contact_event_time: null,
+    send_contact_pixel: false,
     contact_payload_raw: "",
     lead_event_id: "",
     lead_event_time: null,
