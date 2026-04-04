@@ -1,10 +1,10 @@
-import { supabase } from "@/lib/supabaseClient";
+﻿import { supabase } from "@/lib/supabaseClient";
 
 function normalizePixelId(value: string): string {
   return String(value ?? "").replace(/\D/g, "");
 }
 
-// ─── Types ──────────────────────────────────────────────────────────────────
+// Types
 
 export interface ConversionsConfig {
   user_id: string;
@@ -70,7 +70,7 @@ export interface ConversionRow {
   pixel_id: string;
   contact_event_id: string;
   contact_event_time: number | null;
-  send_contact_pixel: boolean;
+  sendContactPixel: boolean;
   contact_payload_raw: string;
   lead_event_id: string;
   lead_event_time: number | null;
@@ -175,7 +175,7 @@ const DEFAULT_CONFIG: ConversionsConfig = {
   tracking_ranking_config: null,
 };
 
-// ─── Config CRUD ────────────────────────────────────────────────────────────
+// Config CRUD
 
 export async function fetchConversionsConfig(
   userId: string,
@@ -281,20 +281,20 @@ export async function updateAllVisibleColumns(
   const { error } = await supabase
     .from("conversions_config")
     // PostgREST requiere un WHERE para UPDATE bajo RLS.
-    // Usamos una condición amplia sobre user_id para aplicar el cambio a todos los registros reales.
+    // Usamos una condicion amplia sobre user_id para aplicar el cambio a todos los registros reales.
     .update({ visible_columns: columns ?? [] })
     .not("user_id", "is", null);
 
   if (error) throw error;
 }
 
-// ─── Conversions list ───────────────────────────────────────────────────────
+// Conversions list
 
 const CONVERSIONS_SELECT = `
   id, internal_id, landing_id, user_id, landing_name,
   phone, email, fn, ln, ct, st, zip, country,
   fbp, fbc, meta_pixel_id, pixel_id,
-  contact_event_id, contact_event_time, send_contact_pixel, contact_payload_raw,
+  contact_event_id, contact_event_time, sendContactPixel, contact_payload_raw,
   lead_event_id, lead_event_time, lead_payload_raw,
   purchase_event_id, purchase_event_time, purchase_payload_raw,
   test_event_code,
@@ -424,7 +424,7 @@ export async function fetchConversionsForAdminFiltered(
   );
 }
 
-// ─── Funnel contacts (aggregated by phone) ──────────────────────────────────
+// Funnel contacts (aggregated by phone)
 
 function derivePurchaseType(row: ConversionRow): "first" | "repeat" | null {
   if (!row.purchase_event_id) return null;
@@ -517,7 +517,7 @@ export async function fetchFunnelContactsForAdminFiltered(
   return buildFunnelContactsFromConversions(rows);
 }
 
-// ─── Logs ───────────────────────────────────────────────────────────────────
+// Logs
 
 const LOGS_SELECT =
   "id, user_id, conversion_id, function_name, level, message, detail, payload_meta, response_meta, created_at";
@@ -569,7 +569,7 @@ export async function updateConversionEmail(
   if (error) throw error;
 }
 
-// ─── Hidden conversions / contacts (persistente en BD) ─────────────────────────
+// Hidden conversions / contacts (persistente en BD)
 
 export async function fetchHiddenConversionIds(
   hiddenBy: string,
@@ -631,3 +631,5 @@ export async function hideContacts(
     });
   if (error) throw error;
 }
+
+

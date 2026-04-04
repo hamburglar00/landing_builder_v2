@@ -1,4 +1,4 @@
-import type { SupabaseClient } from "https://esm.sh/@supabase/supabase-js@2";
+﻿import type { SupabaseClient } from "https://esm.sh/@supabase/supabase-js@2";
 
 // Shared types kept in sync with conversions/index.ts
 export interface ConversionsConfig {
@@ -30,7 +30,7 @@ export interface ConversionRow {
   pixel_id: string;
   contact_event_id: string;
   contact_event_time: number | null;
-  send_contact_pixel?: boolean;
+  sendContactPixel?: boolean;
   contact_payload_raw: string;
   lead_event_id: string;
   lead_event_time: number | null;
@@ -384,7 +384,7 @@ export function buildFakeConversionRow(event: MetaEventName): ConversionRow {
     pixel_id: "",
     contact_event_id: "",
     contact_event_time: null,
-    send_contact_pixel: false,
+    sendContactPixel: false,
     contact_payload_raw: "",
     lead_event_id: "",
     lead_event_time: null,
@@ -431,3 +431,4 @@ export async function hasPreviousSuccessfulPurchases(
 
   return (count ?? 0) > 0;
 }
+

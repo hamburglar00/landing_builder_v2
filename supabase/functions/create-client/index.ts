@@ -1,4 +1,4 @@
-import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
+﻿import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -48,7 +48,7 @@ const FALLBACK_VISIBLE_COLUMNS = [
   "meta_pixel_id",
   "contact_event_id",
   "contact_event_time",
-  "send_contact_pixel",
+  "sendContactPixel",
   "contact_payload_raw",
   "lead_event_id",
   "lead_event_time",
@@ -364,3 +364,4 @@ Deno.serve(async (req) => {
     );
   }
 });
+

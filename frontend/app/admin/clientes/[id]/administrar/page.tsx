@@ -23,7 +23,7 @@ type ClientUser = {
 
 const ALL_COLUMNS = [
   "phone","email","fn","ln","ct","st","zip","country","fbp","fbc","meta_pixel_id",
-  "contact_event_id","contact_event_time","send_contact_pixel","contact_payload_raw","lead_event_id","lead_event_time","lead_payload_raw",
+  "contact_event_id","contact_event_time","sendContactPixel","contact_payload_raw","lead_event_id","lead_event_time","lead_payload_raw",
   "purchase_event_id","purchase_event_time","purchase_payload_raw","timestamp","clientIP","agentuser",
   "estado","valor","purchase_type","contact_status_capi","lead_status_capi","purchase_status_capi",
   "observaciones","external_id","test_event_code","utm_campaign","telefono_asignado","promo_code",
@@ -504,5 +504,6 @@ export default function AdminClientManagePage() {
     </div>
   );
 }
+
 
 

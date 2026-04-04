@@ -64,7 +64,7 @@ interface ConversionRow {
   pixel_id: string;
   contact_event_id: string;
   contact_event_time: number | null;
-  send_contact_pixel?: boolean;
+  sendContactPixel?: boolean;
   contact_payload_raw: string;
   lead_event_id: string;
   lead_event_time: number | null;
@@ -670,7 +670,7 @@ async function handleContact(
     pixel_id: inboundMetaPixelId,
     contact_event_id: contactEventId,
     contact_event_time: contactEventTime,
-    send_contact_pixel: toBool(p.send_contact_pixel),
+    sendContactPixel: toBool(p.sendContactPixel),
     contact_payload_raw: safePayloadRaw(p),
     lead_event_id: "",
     lead_event_time: null,
@@ -1315,3 +1315,4 @@ Deno.serve(async (req) => {
     return textResponse("Error inesperado", 500);
   }
 });
+

@@ -1,27 +1,27 @@
-import type { ConversionRow, FunnelContact } from "./conversionsDb";
+﻿import type { ConversionRow, FunnelContact } from "./conversionsDb";
 
 const NAMES = [
-  { fn: "Juan", ln: "Pérez" },
-  { fn: "María", ln: "González" },
-  { fn: "Carlos", ln: "López" },
-  { fn: "Ana", ln: "Martínez" },
-  { fn: "Pedro", ln: "Rodríguez" },
-  { fn: "Lucía", ln: "Fernández" },
-  { fn: "Diego", ln: "García" },
-  { fn: "Valentina", ln: "Sánchez" },
-  { fn: "Matías", ln: "Romero" },
-  { fn: "Sofía", ln: "Torres" },
-  { fn: "Nicolás", ln: "Díaz" },
+  { fn: "Juan", ln: "Perez" },
+  { fn: "Maria", ln: "Gonzalez" },
+  { fn: "Carlos", ln: "Lopez" },
+  { fn: "Ana", ln: "Martinez" },
+  { fn: "Pedro", ln: "Rodriguez" },
+  { fn: "Lucia", ln: "Fernandez" },
+  { fn: "Diego", ln: "Garcia" },
+  { fn: "Valentina", ln: "Sanchez" },
+  { fn: "Matias", ln: "Romero" },
+  { fn: "Sofia", ln: "Torres" },
+  { fn: "Nicolas", ln: "Diaz" },
   { fn: "Camila", ln: "Ruiz" },
-  { fn: "Joaquín", ln: "Álvarez" },
+  { fn: "Joaquin", ln: "Alvarez" },
   { fn: "Florencia", ln: "Moreno" },
-  { fn: "Tomás", ln: "Gutiérrez" },
+  { fn: "Tomas", ln: "Gutierrez" },
   { fn: "", ln: "" },
   { fn: "", ln: "" },
   { fn: "Roberto", ln: "" },
 ];
 
-const REGIONS = ["Buenos Aires", "Córdoba", "Mendoza", "Santa Fe", "Tucumán", "Salta", "Neuquén", ""];
+const REGIONS = ["Buenos Aires", "Cordoba", "Mendoza", "Santa Fe", "Tucuman", "Salta", "Neuquen", ""];
 const COUNTRIES = ["AR", "AR", "AR", "AR", "UY", "CL", "BR", ""];
 const CAMPAIGNS = ["google_ads_brand", "meta_retarget_q1", "meta_lookalike", "organic", "referral", "tiktok_test", ""];
 const DEVICES = ["mobile", "mobile", "mobile", "desktop", "desktop", "tablet", ""];
@@ -93,7 +93,7 @@ export function generateDemoConversions(count = 80): ConversionRow[] {
       pixel_id: "",
       contact_event_id: contactEvId,
       contact_event_time: ts,
-      send_contact_pixel: false,
+      sendContactPixel: false,
       contact_payload_raw: "",
       lead_event_id: leadEvId,
       lead_event_time: leadEvId ? ts + 3600 : null,
@@ -111,7 +111,7 @@ export function generateDemoConversions(count = 80): ConversionRow[] {
       contact_status_capi: Math.random() > 0.1 ? "enviado" : "error",
       lead_status_capi: leadEvId ? (Math.random() > 0.1 ? "enviado" : "error") : "",
       purchase_status_capi: purchEvId ? (Math.random() > 0.15 ? "enviado" : "error") : "",
-      observaciones: isRepeat ? "✅ CONTACT OK | ✅ LEAD OK | ✅ PURCHASE REPEAT OK" : estado === "purchase" ? "✅ CONTACT OK | ✅ LEAD OK | ✅ PURCHASE OK" : estado === "lead" ? "✅ CONTACT OK | ✅ LEAD OK" : "✅ CONTACT OK",
+      observaciones: isRepeat ? "CONTACT OK | LEAD OK | PURCHASE REPEAT OK" : estado === "purchase" ? "CONTACT OK | LEAD OK | PURCHASE OK" : estado === "lead" ? "CONTACT OK | LEAD OK" : "CONTACT OK",
       external_id: Math.random() > 0.5 ? uuid() : "",
       utm_campaign: campaign,
       telefono_asignado: Math.random() > 0.7 ? randPhone() : "",
@@ -185,3 +185,4 @@ export function generateDemoFunnelContacts(conversions: ConversionRow[]): Funnel
 
   return contacts.sort((a, b) => new Date(b.last_activity).getTime() - new Date(a.last_activity).getTime());
 }
+
