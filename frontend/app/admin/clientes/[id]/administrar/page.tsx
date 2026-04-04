@@ -32,6 +32,19 @@ const ALL_COLUMNS = [
 
 type ColKey = (typeof ALL_COLUMNS)[number];
 
+function normalizeVisibleColumnName(col: string): string {
+  switch (col) {
+    case "send_contact_pixel":
+      return "sendContactPixel";
+    case "client_ip":
+      return "clientIP";
+    case "agent_user":
+      return "agentuser";
+    default:
+      return col;
+  }
+}
+
 function getPlanDefaults(planCode: "starter" | "plus" | "pro" | "premium" | "scale") {
   switch (planCode) {
     case "plus":
@@ -110,7 +123,9 @@ export default function AdminClientManagePage() {
       );
       setGraceDays(Number(found.grace_days ?? 5));
       const cols = Array.isArray(found.visible_columns) && found.visible_columns.length > 0
-        ? found.visible_columns.filter((c): c is ColKey => (ALL_COLUMNS as readonly string[]).includes(c))
+        ? found.visible_columns
+          .map((c) => normalizeVisibleColumnName(String(c)))
+          .filter((c): c is ColKey => (ALL_COLUMNS as readonly string[]).includes(c))
         : [...ALL_COLUMNS];
       setVisibleCols(new Set(cols));
       setLoading(false);

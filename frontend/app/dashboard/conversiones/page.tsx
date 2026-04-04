@@ -194,6 +194,19 @@ const ALL_COLUMNS = [
 
 type ColKey = (typeof ALL_COLUMNS)[number];
 
+function normalizeVisibleColumnName(col: string): string {
+  switch (col) {
+    case "send_contact_pixel":
+      return "sendContactPixel";
+    case "client_ip":
+      return "clientIP";
+    case "agent_user":
+      return "agentuser";
+    default:
+      return col;
+  }
+}
+
 function EditableEmailCell({ row, onSaved }: { row: ConversionRow; onSaved: (id: string, email: string) => void }) {
   const [editing, setEditing] = useState(false);
   const [value, setValue] = useState(row.email);
@@ -475,11 +488,15 @@ export default function DashboardConversionesPage() {
   }, [activeConversions, tableSearch]);
 
   const visibleCols = useMemo(() => {
-    const cols = config?.visible_columns ?? [];
+    const cols = (config?.visible_columns ?? []).map((c) =>
+      normalizeVisibleColumnName(String(c)),
+    );
     const valid = cols.filter((c): c is ColKey =>
       (ALL_COLUMNS as readonly string[]).includes(c),
     );
-    return new Set<ColKey>(valid);
+    // Fallback defensivo: si por algun motivo quedaron columnas legacy/invalidas,
+    // mostramos el set completo para no dejar la tabla "vacia".
+    return new Set<ColKey>(valid.length > 0 ? valid : [...ALL_COLUMNS]);
   }, [config]);
   const displayedCols = useMemo(
     () => ALL_COLUMNS.filter((c) => visibleCols.has(c)),
