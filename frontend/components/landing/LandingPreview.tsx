@@ -306,7 +306,7 @@ export function LandingPreview({
     return (
       <div className="relative mx-auto flex h-full min-h-[280px] w-full max-w-[380px] items-center justify-center overflow-hidden rounded-3xl bg-black shadow-[0_18px_40px_rgba(0,0,0,0.9)]">
         <p className="px-6 text-center text-sm text-zinc-300">
-          Plantilla 3: redirección directa a WhatsApp (sin UI visual).
+          Redirigiendo a WhatsApp
         </p>
       </div>
     );

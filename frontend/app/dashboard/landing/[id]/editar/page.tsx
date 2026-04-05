@@ -735,7 +735,7 @@ export default function DashboardLandingEditarPage() {
                       Asignar
                     </th>
                     {landing.gerenciaSelectionMode === "weighted_random" && (
-                      <th className="px-3 py-2 font-medium text-zinc-300 w-20">
+                      <th className="px-3 py-2 font-medium text-zinc-300 w-10">
                         Peso
                       </th>
                     )}
@@ -818,7 +818,7 @@ export default function DashboardLandingEditarPage() {
                                   ? "Peso de esta gerencia en esta landing"
                                   : "Marque Asignar para poder editar el peso"
                               }
-                              className="w-20 rounded border border-zinc-700 bg-zinc-900 px-2 py-1 text-zinc-100 disabled:cursor-not-allowed disabled:opacity-50 [appearance:textfield] [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:appearance-none"
+                              className="w-10 rounded border border-zinc-700 bg-zinc-900 px-2 py-1 text-zinc-100 disabled:cursor-not-allowed disabled:opacity-50 [appearance:textfield] [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:appearance-none"
                             />
                           </td>
                         )}
