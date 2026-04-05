@@ -16,6 +16,7 @@ interface LandingPreviewProps {
  *
  * Plantilla 1: fondo completo con columna centrada.
  * Plantilla 2: marco tipo teléfono con frame superior y CTA + textos debajo.
+ * Plantilla 3: redirect directo (sin UI visual).
  */
 export function LandingPreview({
   config,
@@ -30,7 +31,12 @@ export function LandingPreview({
   const ctaBgHex = getColorHex(config.ctaBackgroundColor);
   const ctaGlowHex = getColorHex(config.ctaGlowColor);
   const fontFamily = getFontFamilyCss(config.fontFamily);
-  const template = config.template === "template2" ? 2 : 1;
+  const template =
+    config.template === "template2"
+      ? 2
+      : config.template === "template3"
+        ? 3
+        : 1;
   const ctaPosition = config.ctaPosition ?? "between_title_and_info";
 
   // CTA común a ambas plantillas (botón con icono WhatsApp)
@@ -295,6 +301,16 @@ export function LandingPreview({
       </div>
     );
   };
+
+  if (template === 3) {
+    return (
+      <div className="relative mx-auto flex h-full min-h-[280px] w-full max-w-[380px] items-center justify-center overflow-hidden rounded-3xl bg-black shadow-[0_18px_40px_rgba(0,0,0,0.9)]">
+        <p className="px-6 text-center text-sm text-zinc-300">
+          Plantilla 3: redirección directa a WhatsApp (sin UI visual).
+        </p>
+      </div>
+    );
+  }
 
   // En modo galería y sin template especial, priorizamos la vista simple
   if (template === 2) {

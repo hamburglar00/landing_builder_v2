@@ -49,9 +49,10 @@ export type CtaPositionOption =
 /**
  * Plantilla de layout disponible en el constructor.
  * template1: layout actual (CTA + multimedia + textos).
- * template2: futuras variantes.
+ * template2: variante visual 2.
+ * template3: sin UI visual (redirect directo).
  */
-export type TemplateOption = "template1" | "template2";
+export type TemplateOption = "template1" | "template2" | "template3";
 
 /**
  * Modo de fondo: una sola imagen o rotacin entre varias.

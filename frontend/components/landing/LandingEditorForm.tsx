@@ -69,6 +69,7 @@ export function CollapsibleSection({
 const TEMPLATE_OPTIONS: { label: string; value: TemplateOption }[] = [
   { label: "Plantilla 1", value: "template1" },
   { label: "Plantilla 2", value: "template2" },
+  { label: "Plantilla 3 (redirect)", value: "template3" },
 ];
 
 export function LandingTemplateSection({
@@ -166,6 +167,8 @@ export function LandingEditorForm({
     { label: "Abajo de todo", value: "bottom" },
   ];
 
+  const isTemplate3 = config.template === "template3";
+
   const handleProbarAhora = async () => {
     if (!getPhoneForPreview) return;
     setProbarLoading(true);
@@ -234,7 +237,8 @@ export function LandingEditorForm({
         <LandingTemplateSection config={config} setConfig={setConfig} />
       )}
 
-      <CollapsibleSection title="CTA">
+      {!isTemplate3 && (
+        <CollapsibleSection title="CTA">
         <div className="space-y-3">
           <div>
             <label className="block text-xs font-medium text-zinc-400 mb-1">
@@ -358,9 +362,11 @@ export function LandingEditorForm({
             </div>
           )}
         </div>
-      </CollapsibleSection>
+        </CollapsibleSection>
+      )}
 
-      <CollapsibleSection title="Multimedia">
+      {!isTemplate3 && (
+        <CollapsibleSection title="Multimedia">
         <div className="space-y-6">
           <div className="space-y-4">
             <div>
@@ -442,9 +448,11 @@ export function LandingEditorForm({
             />
           </div>
         </div>
-      </CollapsibleSection>
+        </CollapsibleSection>
+      )}
 
-      <CollapsibleSection title="Textos">
+      {!isTemplate3 && (
+        <CollapsibleSection title="Textos">
         <div className="space-y-6">
           <div className="space-y-3">
             <span className="block text-xs font-medium text-zinc-400 mb-1">
@@ -720,7 +728,8 @@ export function LandingEditorForm({
             </div>
           </div>
         </div>
-      </CollapsibleSection>
+        </CollapsibleSection>
+      )}
 
       {/* Acciones */}
       <div className="flex flex-wrap gap-3 border-t border-zinc-800 pt-6">

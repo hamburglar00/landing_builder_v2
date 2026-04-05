@@ -13,26 +13,26 @@ export interface LandingConfigPayload {
     landingTag: string;
     sendContactPixel: boolean;
   };
-  background: {
+  background?: {
     mode: LandingThemeConfig["backgroundMode"];
     images: string[];
     rotateEveryHours: number;
   };
-  content: {
+  content?: {
     logoUrl: string;
     title: [string, string, string];
     subtitle: [string, string, string];
     footerBadge: [string, string, string];
     ctaText: string;
   };
-  typography: {
+  typography?: {
     fontFamily: LandingThemeConfig["fontFamily"];
     title: { sizePx: number; weight: number };
     subtitle: { sizePx: number; weight: number };
     cta: { sizePx: number; weight: number };
     badge: { sizePx: number; weight: number };
   };
-  colors: {
+  colors?: {
     title: string;
     subtitle: string;
     badge: string;
@@ -44,7 +44,7 @@ export interface LandingConfigPayload {
     mode: "random" | "fair";
   };
   layout: {
-    ctaPosition: LandingThemeConfig["ctaPosition"];
+    ctaPosition?: LandingThemeConfig["ctaPosition"];
     template: number;
   };
 }
@@ -72,6 +72,25 @@ export function buildLandingConfig({
   phoneMode,
   updatedAt,
 }: BuildArgs): LandingConfigPayload {
+  if (config.template === "template3") {
+    return {
+      schemaVersion: 1,
+      updatedAt: updatedAt ?? new Date().toISOString(),
+      id,
+      name,
+      comment,
+      tracking: {
+        pixelId,
+        postUrl,
+        landingTag,
+        sendContactPixel: config.sendContactPixel,
+      },
+      layout: {
+        template: 3,
+      },
+    };
+  }
+
   const themeWithHex = {
     ...config,
     titleColor: COLOR_MAP[config.titleColor],
@@ -152,7 +171,12 @@ export function buildLandingConfig({
     }),
     layout: {
       ctaPosition: themeWithHex.ctaPosition,
-      template: themeWithHex.template === "template2" ? 2 : 1,
+      template:
+        themeWithHex.template === "template2"
+          ? 2
+          : themeWithHex.template === "template3"
+            ? 3
+            : 1,
     },
   };
 }
