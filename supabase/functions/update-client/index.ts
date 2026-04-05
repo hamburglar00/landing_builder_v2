@@ -26,16 +26,16 @@ function getPlanDefaults(planCode: "starter" | "plus" | "pro" | "premium" | "sca
 } {
   switch (planCode) {
     case "plus":
-      return { maxLandings: 4, maxPhones: 10 };
+      return { maxLandings: 4, maxPhones: 5 };
     case "pro":
-      return { maxLandings: 8, maxPhones: 20 };
+      return { maxLandings: 8, maxPhones: 10 };
     case "premium":
-      return { maxLandings: 12, maxPhones: 50 };
+      return { maxLandings: 12, maxPhones: 20 };
     case "scale":
       return { maxLandings: 999, maxPhones: 999 };
     case "starter":
     default:
-      return { maxLandings: 2, maxPhones: 5 };
+      return { maxLandings: 2, maxPhones: 2 };
   }
 }
 
@@ -325,7 +325,7 @@ Deno.serve(async (req) => {
         nombre: profileRow?.nombre ?? null,
         plan_code: subRow?.plan_code ?? "starter",
         max_landings: subRow?.max_landings ?? 2,
-        max_phones: subRow?.max_phones ?? 5,
+        max_phones: subRow?.max_phones ?? 2,
         plan_status: subRow?.status ?? "active",
         expires_at: subRow?.expires_at ?? null,
         grace_days: subRow?.grace_days ?? 5,

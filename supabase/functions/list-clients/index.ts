@@ -210,7 +210,7 @@ Deno.serve(async (req) => {
           show_logs: cfgByUserId.get(u.id)?.show_logs ?? true,
           plan_code: subsByUserId.get(u.id)?.plan_code ?? "starter",
           max_landings: subsByUserId.get(u.id)?.max_landings ?? 2,
-          max_phones: subsByUserId.get(u.id)?.max_phones ?? 5,
+          max_phones: subsByUserId.get(u.id)?.max_phones ?? 2,
           plan_status: subsByUserId.get(u.id)?.status ?? "active",
           plan_status_effective: computeEffectivePlanStatus({
             status: subsByUserId.get(u.id)?.status ?? "active",

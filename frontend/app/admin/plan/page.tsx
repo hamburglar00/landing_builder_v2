@@ -18,7 +18,7 @@ const PLAN_CARDS: PlanCard[] = [
     title: "Starter",
     price: "USD 49 / mes",
     landings: "Hasta 2 landings",
-    phones: "Hasta 5 telefonos",
+    phones: "Hasta 2 telefonos",
     colorClass: "border-zinc-700 bg-zinc-900/40",
     conversiones:
       "Funnel y Estadisticas para analizar clics CTA, leads, primeras cargas, recargas, ingresos y tasas de conversion.",
@@ -32,7 +32,7 @@ const PLAN_CARDS: PlanCard[] = [
     title: "Plus",
     price: "USD 79 / mes",
     landings: "Hasta 4 landings",
-    phones: "Hasta 10 telefonos",
+    phones: "Hasta 5 telefonos",
     colorClass: "border-yellow-700 bg-yellow-950/30",
     conversiones:
       "Funnel y Estadisticas para analizar clics CTA, leads, primeras cargas, recargas, ingresos y tasas de conversion.",
@@ -46,7 +46,7 @@ const PLAN_CARDS: PlanCard[] = [
     title: "Pro",
     price: "USD 129 / mes",
     landings: "Hasta 8 landings",
-    phones: "Hasta 20 telefonos",
+    phones: "Hasta 10 telefonos",
     colorClass: "border-orange-700 bg-orange-950/30",
     conversiones:
       "Funnel y Estadisticas para analizar clics CTA, leads, primeras cargas, recargas, ingresos y tasas de conversion.",
@@ -60,7 +60,7 @@ const PLAN_CARDS: PlanCard[] = [
     title: "Premium",
     price: "USD 229 / mes",
     landings: "Hasta 12 landings",
-    phones: "Hasta 50 telefonos",
+    phones: "Hasta 20 telefonos",
     colorClass: "border-purple-700 bg-purple-950/30",
     conversiones:
       "Funnel y Estadisticas para analizar clics CTA, leads, primeras cargas, recargas, ingresos y tasas de conversion.",

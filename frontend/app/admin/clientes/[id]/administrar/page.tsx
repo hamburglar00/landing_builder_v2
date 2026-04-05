@@ -48,16 +48,16 @@ function normalizeVisibleColumnName(col: string): string {
 function getPlanDefaults(planCode: "starter" | "plus" | "pro" | "premium" | "scale") {
   switch (planCode) {
     case "plus":
-      return { maxLandings: 4, maxPhones: 10 };
+      return { maxLandings: 4, maxPhones: 5 };
     case "pro":
-      return { maxLandings: 8, maxPhones: 20 };
+      return { maxLandings: 8, maxPhones: 10 };
     case "premium":
-      return { maxLandings: 12, maxPhones: 50 };
+      return { maxLandings: 12, maxPhones: 20 };
     case "scale":
       return { maxLandings: 999, maxPhones: 999 };
     case "starter":
     default:
-      return { maxLandings: 2, maxPhones: 5 };
+      return { maxLandings: 2, maxPhones: 2 };
   }
 }
 
@@ -80,7 +80,7 @@ export default function AdminClientManagePage() {
   const [visibleCols, setVisibleCols] = useState<Set<ColKey>>(new Set(ALL_COLUMNS));
   const [planCode, setPlanCode] = useState<"starter" | "plus" | "pro" | "premium" | "scale">("starter");
   const [maxLandings, setMaxLandings] = useState(2);
-  const [maxPhones, setMaxPhones] = useState(5);
+  const [maxPhones, setMaxPhones] = useState(2);
   const [planStatus, setPlanStatus] = useState<"active" | "paused" | "expired">("active");
   const [expiresAt, setExpiresAt] = useState("");
   const [graceDays, setGraceDays] = useState(5);
@@ -116,7 +116,7 @@ export default function AdminClientManagePage() {
       setShowLogs(typeof found.show_logs === "boolean" ? found.show_logs : true);
       setPlanCode(found.plan_code ?? "starter");
       setMaxLandings(Number(found.max_landings ?? 2));
-      setMaxPhones(Number(found.max_phones ?? 5));
+      setMaxPhones(Number(found.max_phones ?? 2));
       setPlanStatus(found.plan_status_effective ?? found.plan_status ?? "active");
       setExpiresAt(
         found.expires_at ? new Date(found.expires_at).toISOString().slice(0, 10) : "",

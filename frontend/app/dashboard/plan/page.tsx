@@ -32,7 +32,7 @@ const PLAN_CARDS: PlanCard[] = [
     title: "Starter",
     price: "USD 49 / mes",
     landings: "Hasta 2 landings",
-    phones: "Hasta 5 telefonos",
+    phones: "Hasta 2 telefonos",
     colorClass: "border-zinc-700 bg-zinc-900/40",
     bulletClass: "text-zinc-200",
     conversiones:
@@ -47,7 +47,7 @@ const PLAN_CARDS: PlanCard[] = [
     title: "Plus",
     price: "USD 79 / mes",
     landings: "Hasta 4 landings",
-    phones: "Hasta 10 telefonos",
+    phones: "Hasta 5 telefonos",
     colorClass: "border-yellow-700 bg-yellow-950/30",
     bulletClass: "text-yellow-200",
     conversiones:
@@ -62,7 +62,7 @@ const PLAN_CARDS: PlanCard[] = [
     title: "Pro",
     price: "USD 129 / mes",
     landings: "Hasta 8 landings",
-    phones: "Hasta 20 telefonos",
+    phones: "Hasta 10 telefonos",
     colorClass: "border-orange-700 bg-orange-950/30",
     bulletClass: "text-orange-200",
     conversiones:
@@ -77,7 +77,7 @@ const PLAN_CARDS: PlanCard[] = [
     title: "Premium",
     price: "USD 229 / mes",
     landings: "Hasta 12 landings",
-    phones: "Hasta 50 telefonos",
+    phones: "Hasta 20 telefonos",
     colorClass: "border-purple-700 bg-purple-950/30",
     bulletClass: "text-purple-200",
     conversiones:
@@ -130,7 +130,7 @@ export default function DashboardPlanPage() {
           starts_at: data.starts_at ?? null,
           expires_at: data.expires_at ?? null,
           max_landings: Number(data.max_landings ?? 2),
-          max_phones: Number(data.max_phones ?? 5),
+          max_phones: Number(data.max_phones ?? 2),
         });
       }
       setLoading(false);
@@ -162,7 +162,7 @@ export default function DashboardPlanPage() {
           <div className="mt-3 grid gap-2 text-sm text-zinc-200 sm:grid-cols-2">
             <p>
               <span className="text-zinc-400">Incluye:</span>{" "}
-              {sub?.max_landings ?? 2} landings · {sub?.max_phones ?? 5} telefonos
+              {sub?.max_landings ?? 2} landings · {sub?.max_phones ?? 2} telefonos
             </p>
             <p>
               <span className="text-zinc-400">Precio:</span> {currentPlan.price}

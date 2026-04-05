@@ -72,7 +72,7 @@ export default function AdminClientesPage() {
         show_logs: typeof u.show_logs === "boolean" ? u.show_logs : true,
         plan_code: u.plan_code ?? "starter",
         max_landings: Number(u.max_landings ?? 2),
-        max_phones: Number(u.max_phones ?? 5),
+        max_phones: Number(u.max_phones ?? 2),
         plan_status: u.plan_status ?? "active",
         plan_status_effective: u.plan_status_effective ?? "active",
         expires_at: u.expires_at ?? null,
@@ -218,7 +218,7 @@ export default function AdminClientesPage() {
                           </span>
                         </div>
                         <span className="text-[11px] text-zinc-500">
-                          {client.max_landings ?? 2} landings · {client.max_phones ?? 5} telefonos
+                          {client.max_landings ?? 2} landings · {client.max_phones ?? 2} telefonos
                         </span>
                       </div>
                     )}
