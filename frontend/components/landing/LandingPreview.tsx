@@ -47,7 +47,7 @@ export function LandingPreview({
             fontFamily,
             fontSize: config.ctaFontSize,
             fontWeight: config.ctaBold ? 700 : 500,
-            boxShadow: `0 0 18px ${ctaGlowHex}`,
+            boxShadow: template === 2 ? "none" : `0 0 18px ${ctaGlowHex}`,
           }}
         >
           <span className="truncate">{text}</span>
@@ -302,4 +302,3 @@ export function LandingPreview({
   }
   return renderTemplate1();
 }
-

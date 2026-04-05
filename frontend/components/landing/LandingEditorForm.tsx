@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 import { useState } from "react";
 import type {
@@ -15,18 +15,19 @@ interface LandingEditorFormProps {
   setConfig: React.Dispatch<React.SetStateAction<LandingThemeConfig>>;
   onSave: () => void;
   onReset: () => void;
-  /** Sube la imagen a Supabase y devuelve la URL pública. Si se pasa, las imágenes se guardan en Storage. */
+  showTemplateSection?: boolean;
+  /** Sube la imagen a Supabase y devuelve la URL pÃºblica. Si se pasa, las imÃ¡genes se guardan en Storage. */
   uploadImage?: (file: File) => Promise<string>;
-  /** Identificación básica de la landing (usada en el JSON exportado). */
+  /** IdentificaciÃ³n bÃ¡sica de la landing (usada en el JSON exportado). */
   landingId?: string;
   landingName?: string;
-  /** Comentario interno de la landing (identificación). */
+  /** Comentario interno de la landing (identificaciÃ³n). */
   comment?: string;
   /** Tracking de la landing. */
   pixelId?: string;
   postUrl?: string;
   landingTag?: string;
-  /** Obtiene un número según la config de redirección y devuelve el teléfono para armar wa.me. */
+  /** Obtiene un nÃºmero segÃºn la config de redirecciÃ³n y devuelve el telÃ©fono para armar wa.me. */
   getPhoneForPreview?: () => Promise<string | null>;
 }
 
@@ -37,7 +38,7 @@ function updateConfig(
   setConfig((prev) => ({ ...prev, ...patch }));
 }
 
-function CollapsibleSection({
+export function CollapsibleSection({
   title,
   defaultOpen,
   children,
@@ -57,7 +58,7 @@ function CollapsibleSection({
       >
         {title}
         <span className="text-zinc-500 transition-transform" aria-hidden>
-          {open ? "▼" : "▶"}
+          {open ? "â–¼" : "â–¶"}
         </span>
       </button>
       {open && <div className="space-y-4 border-t border-zinc-800 p-4">{children}</div>}
@@ -65,15 +66,57 @@ function CollapsibleSection({
   );
 }
 
+const TEMPLATE_OPTIONS: { label: string; value: TemplateOption }[] = [
+  { label: "Plantilla 1", value: "template1" },
+  { label: "Plantilla 2", value: "template2" },
+];
+
+export function LandingTemplateSection({
+  config,
+  setConfig,
+}: {
+  config: LandingThemeConfig;
+  setConfig: React.Dispatch<React.SetStateAction<LandingThemeConfig>>;
+}) {
+  return (
+    <CollapsibleSection title="Plantilla" defaultOpen>
+      <div className="space-y-3">
+        <p className="text-xs text-zinc-400">
+          Elegí la plantilla de layout que define qué secciones se configuran.
+        </p>
+        <div className="flex flex-col gap-2 sm:flex-row">
+          {TEMPLATE_OPTIONS.map((opt) => (
+            <label
+              key={opt.value}
+              className="flex flex-1 cursor-pointer items-center gap-2 rounded-lg border border-zinc-700 bg-zinc-900 px-3 py-2 text-xs text-zinc-200 hover:bg-zinc-800"
+            >
+              <input
+                type="radio"
+                name="landing-template"
+                value={opt.value}
+                checked={config.template === opt.value}
+                onChange={() => updateConfig(setConfig, { template: opt.value })}
+                className="h-3.5 w-3.5 rounded-full border-zinc-500"
+              />
+              <span>{opt.label}</span>
+            </label>
+          ))}
+        </div>
+      </div>
+    </CollapsibleSection>
+  );
+}
+
 /**
  * Formulario del dashboard del constructor de landing por secciones.
- * Cada sección es colapsable. Incluye acciones: Guardar, Resetear, Exportar JSON.
+ * Cada secciÃ³n es colapsable. Incluye acciones: Guardar, Resetear, Exportar JSON.
  */
 export function LandingEditorForm({
   config,
   setConfig,
   onSave,
   onReset,
+  showTemplateSection = true,
   uploadImage,
   landingId,
   landingName,
@@ -95,8 +138,8 @@ export function LandingEditorForm({
     { label: "Normal (16px)", value: 16 },
     { label: "Grande (18px)", value: 18 },
     { label: "Muy grande (22px)", value: 22 },
-    { label: "Título (26px)", value: 26 },
-    { label: "Título XL (30px)", value: 30 },
+    { label: "TÃ­tulo (26px)", value: 26 },
+    { label: "TÃ­tulo XL (30px)", value: 30 },
   ];
 
   const fontFamilyOptions = [
@@ -110,15 +153,10 @@ export function LandingEditorForm({
     { label: "Anton", value: "anton" },
   ] as const;
 
-  const templateOptions: { label: string; value: TemplateOption }[] = [
-    { label: "Plantilla 1", value: "template1" },
-    { label: "Plantilla 2", value: "template2" },
-  ];
-
   const ctaPositionOptions: { label: string; value: CtaPositionOption }[] = [
     { label: "Arriba (debajo del logo)", value: "top" },
     {
-      label: "Entre título e info (por defecto)",
+      label: "Entre tÃ­tulo e info (por defecto)",
       value: "between_title_and_info",
     },
     {
@@ -135,17 +173,17 @@ export function LandingEditorForm({
     try {
       const phone = await getPhoneForPreview();
       if (!phone) {
-        setProbarError("No se pudo obtener un número. Revisá gerencias asignadas y sincronización.");
+        setProbarError("No se pudo obtener un nÃºmero. RevisÃ¡ gerencias asignadas y sincronizaciÃ³n.");
         return;
       }
       const digits = phone.replace(/\D/g, "");
       if (!digits.length) {
-        setProbarError("Número inválido.");
+        setProbarError("NÃºmero invÃ¡lido.");
         return;
       }
       window.open(`https://wa.me/${digits}`, "_blank", "noopener,noreferrer");
     } catch {
-      setProbarError("Error al obtener el número.");
+      setProbarError("Error al obtener el nÃºmero.");
     } finally {
       setProbarLoading(false);
     }
@@ -192,39 +230,15 @@ export function LandingEditorForm({
         onSave();
       }}
     >
-      <CollapsibleSection title="Plantilla" defaultOpen>
-        <div className="space-y-3">
-          <p className="text-xs text-zinc-400">
-            Elegí la plantilla de layout que define qué secciones se configuran.
-          </p>
-          <div className="flex flex-col gap-2 sm:flex-row">
-            {templateOptions.map((opt) => (
-              <label
-                key={opt.value}
-                className="flex flex-1 cursor-pointer items-center gap-2 rounded-lg border border-zinc-700 bg-zinc-900 px-3 py-2 text-xs text-zinc-200 hover:bg-zinc-800"
-              >
-                <input
-                  type="radio"
-                  name="landing-template"
-                  value={opt.value}
-                  checked={config.template === opt.value}
-                  onChange={() =>
-                    updateConfig(setConfig, { template: opt.value })
-                  }
-                  className="h-3.5 w-3.5 rounded-full border-zinc-500"
-                />
-                <span>{opt.label}</span>
-              </label>
-            ))}
-          </div>
-        </div>
-      </CollapsibleSection>
+      {showTemplateSection && (
+        <LandingTemplateSection config={config} setConfig={setConfig} />
+      )}
 
       <CollapsibleSection title="CTA">
         <div className="space-y-3">
           <div>
             <label className="block text-xs font-medium text-zinc-400 mb-1">
-              Texto del botón
+              Texto del botÃ³n
             </label>
             <input
               type="text"
@@ -238,7 +252,7 @@ export function LandingEditorForm({
           <div className="grid gap-3 sm:grid-cols-2">
             <div>
               <label className="block text-xs font-medium text-zinc-400 mb-1">
-                Tamaño de letra del CTA
+                TamaÃ±o de letra del CTA
               </label>
               <select
                 value={config.ctaFontSize}
@@ -324,7 +338,7 @@ export function LandingEditorForm({
               <div className="flex flex-wrap items-center justify-between gap-3">
                 <div className="flex-1">
                   <p className="text-[11px] text-zinc-400">
-                    Proba ahora la redirección del CTA usando la configuración
+                    Proba ahora la redirecciÃ³n del CTA usando la configuraciÃ³n
                     actual de esta landing
                     {landingName ? ` (${landingName})` : ""}.
                   </p>
@@ -354,7 +368,7 @@ export function LandingEditorForm({
                 Fondo
               </span>
               <span className="block text-[11px] text-zinc-500 mb-2">
-                Elegí cómo se ve el fondo de tu landing (una imagen fija o
+                ElegÃ­ cÃ³mo se ve el fondo de tu landing (una imagen fija o
                 rotando entre varias).
               </span>
               <div className="space-y-3">
@@ -383,7 +397,7 @@ export function LandingEditorForm({
                   </div>
                 </div>
                 <ImageUploader
-                  label="Imágenes de fondo"
+                  label="ImÃ¡genes de fondo"
                   multiple
                   value={config.backgroundImages}
                   onChange={(urls) =>
@@ -434,13 +448,13 @@ export function LandingEditorForm({
         <div className="space-y-6">
           <div className="space-y-3">
             <span className="block text-xs font-medium text-zinc-400 mb-1">
-              Título
+              TÃ­tulo
             </span>
             <div className="grid gap-3 sm:grid-cols-3">
               <div className="sm:col-span-2 space-y-3">
                 <div>
                   <label className="block text-xs font-medium text-zinc-400 mb-1">
-                    Línea 1
+                    LÃ­nea 1
                   </label>
                   <input
                     type="text"
@@ -453,7 +467,7 @@ export function LandingEditorForm({
                 </div>
                 <div>
                   <label className="block text-xs font-medium text-zinc-400 mb-1">
-                    Línea 2
+                    LÃ­nea 2
                   </label>
                   <input
                     type="text"
@@ -466,7 +480,7 @@ export function LandingEditorForm({
                 </div>
                 <div>
                   <label className="block text-xs font-medium text-zinc-400 mb-1">
-                    Línea 3
+                    LÃ­nea 3
                   </label>
                   <input
                     type="text"
@@ -481,7 +495,7 @@ export function LandingEditorForm({
               <div className="space-y-3">
                 <div>
                   <label className="block text-xs font-medium text-zinc-400 mb-1">
-                    Tamaño
+                    TamaÃ±o
                   </label>
                   <select
                     value={config.titleFontSize}
@@ -524,7 +538,7 @@ export function LandingEditorForm({
             <div className="grid gap-3 sm:grid-cols-[minmax(0,2fr)_minmax(0,1fr)]">
               <div>
                 <ColorSelect
-                  label="Color del título"
+                  label="Color del tÃ­tulo"
                   value={config.titleColor}
                   onChange={(titleColor) =>
                     updateConfig(setConfig, { titleColor })
@@ -533,7 +547,7 @@ export function LandingEditorForm({
               </div>
               <div>
                 <label className="block text-xs font-medium text-zinc-400 mb-1">
-                  Tipografía global
+                  TipografÃ­a global
                 </label>
                 <select
                   value={config.fontFamily}
@@ -556,7 +570,7 @@ export function LandingEditorForm({
 
           <div className="space-y-3 border-t border-zinc-800 pt-4">
             <span className="block text-xs font-medium text-zinc-400 mb-1">
-              Información
+              InformaciÃ³n
             </span>
             <div className="space-y-3">
               {(
@@ -564,7 +578,7 @@ export function LandingEditorForm({
               ).map((key, i) => (
                 <div key={key}>
                   <label className="block text-xs font-medium text-zinc-400 mb-1">
-                    Línea {i + 1}
+                    LÃ­nea {i + 1}
                   </label>
                   <input
                     type="text"
@@ -579,7 +593,7 @@ export function LandingEditorForm({
               <div className="grid gap-3 sm:grid-cols-2">
                 <div>
                   <label className="block text-xs font-medium text-zinc-400 mb-1">
-                    Tamaño
+                    TamaÃ±o
                   </label>
                   <select
                     value={config.subtitleFontSize}
@@ -630,7 +644,7 @@ export function LandingEditorForm({
 
           <div className="space-y-3 border-t border-zinc-800 pt-4">
             <span className="block text-xs font-medium text-zinc-400 mb-1">
-              Texto final (3 líneas)
+              Texto final (3 lÃ­neas)
             </span>
             <div className="space-y-3">
               {(
@@ -642,7 +656,7 @@ export function LandingEditorForm({
               ).map((key, i) => (
                 <div key={key}>
                   <label className="block text-xs font-medium text-zinc-400 mb-1">
-                    Línea {i + 1}
+                    LÃ­nea {i + 1}
                   </label>
                   <input
                     type="text"
@@ -657,7 +671,7 @@ export function LandingEditorForm({
               <div className="grid gap-3 sm:grid-cols-2">
                 <div>
                   <label className="block text-xs font-medium text-zinc-400 mb-1">
-                    Tamaño
+                    TamaÃ±o
                   </label>
                   <select
                     value={config.badgeFontSize}
@@ -736,7 +750,7 @@ export function LandingEditorForm({
           <div className="max-h-[80vh] w-full max-w-2xl overflow-hidden rounded-xl border border-zinc-700 bg-zinc-900 shadow-xl">
             <div className="flex items-center justify-between border-b border-zinc-800 px-4 py-3">
               <h2 className="text-sm font-semibold text-zinc-100">
-                JSON de configuración de la landing
+                JSON de configuraciÃ³n de la landing
               </h2>
               <button
                 type="button"
@@ -748,16 +762,16 @@ export function LandingEditorForm({
             </div>
             <div className="flex flex-col gap-3 px-4 py-3">
               <p className="text-[11px] text-zinc-500">
-                Este JSON incluye la identificación de la landing,{" "}
+                Este JSON incluye la identificaciÃ³n de la landing,{" "}
                 <span className="font-medium">tracking</span> (pixel, URL Post,
                 landing tag),{" "}
                 <span className="font-medium">background</span>,{" "}
-                <span className="font-medium">content</span> (logo, títulos,
+                <span className="font-medium">content</span> (logo, tÃ­tulos,
                 textos), <span className="font-medium">typography</span>,{" "}
                 <span className="font-medium">colors</span> (en formato hex) y{" "}
-                <span className="font-medium">layout</span> (posición del CTA y
+                <span className="font-medium">layout</span> (posiciÃ³n del CTA y
                 plantilla).
-                No incluye la configuración de redirección (gerencias, pesos,
+                No incluye la configuraciÃ³n de redirecciÃ³n (gerencias, pesos,
                 modo, intervalos).
               </p>
               <div className="flex items-center justify-between gap-2">
