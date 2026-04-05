@@ -212,7 +212,7 @@ export default function DashboardLandingEditarPage() {
       return;
     }
     if (!/^[a-zA-Z0-9]+$/.test(landing.landingTag)) {
-      setSaveError("Landing Tag solo puede contener letras y nÃºmeros, sin espacios.");
+      setSaveError("Landing Tag solo puede contener letras y números, sin espacios.");
       return;
     }
     if (landing.landingType === "external") {
@@ -223,7 +223,7 @@ export default function DashboardLandingEditarPage() {
       }
       const cleaned = domain.replace(/^https?:\/\//, "").replace(/\/+$/, "");
       if (!/^[a-z0-9.-]+$/.test(cleaned)) {
-        setSaveError("Dominio externo invÃ¡lido. UsÃ¡ solo dominio (ej: mi-landing.com).");
+        setSaveError("Dominio externo inválido. Usá solo dominio (ej: mi-landing.com).");
         return;
       }
     }
@@ -251,7 +251,7 @@ export default function DashboardLandingEditarPage() {
       setLanding((prev) => (prev ? { ...prev, pixelId: pixelIdToSave } : prev));
     }
     if (!/^\d+$/.test(pixelIdToSave)) {
-      setSaveError("Pixel ID invÃ¡lido. Debe contener solo nÃºmeros.");
+      setSaveError("Pixel ID inválido. Debe contener solo números.");
       return;
     }
     if (
@@ -260,7 +260,7 @@ export default function DashboardLandingEditarPage() {
       landing.name.trim()
     ) {
       const ok = window.confirm(
-        `Vas a nombrar tu landing como "${landing.name}". Este nombre se usarÃ¡ en la URL pÃºblica y no se podrÃ¡ cambiar luego.\n\nÂ¿Confirmar nombre?`,
+        `Vas a nombrar tu landing como "${landing.name}". Este nombre se usará en la URL pública y no se podrá cambiar luego.\n\n¿Confirmar nombre?`,
       );
       if (!ok) return;
     }
@@ -309,7 +309,7 @@ export default function DashboardLandingEditarPage() {
         landingConfig,
       });
       await setLandingGerencias(landing.id, assignments);
-      // Revalidar landing pÃºblica en Vercel (ISR) y calentar cachÃ©.
+      // Revalidar landing pública en Vercel (ISR) y calentar caché.
       if (urlBase && revalidateSecret) {
         const base = urlBase.replace(/\/$/, "");
         try {
@@ -333,7 +333,7 @@ export default function DashboardLandingEditarPage() {
             ).catch(() => {});
           }
         } catch {
-          // No bloqueamos el guardado si falla la revalidaciÃ³n.
+          // No bloqueamos el guardado si falla la revalidación.
         }
       }
       router.push("/dashboard/landings");
@@ -342,9 +342,9 @@ export default function DashboardLandingEditarPage() {
       if (err?.code === UNIQUE_VIOLATION_CODE) {
         const msg = err.message ?? "";
         if (msg.includes("landing_tag")) {
-          setSaveError("Ese Landing Tag ya estÃ¡ en uso. ElegÃ­ otro.");
+          setSaveError("Ese Landing Tag ya está en uso. Elegí otro.");
         } else {
-          setSaveError("Ese nombre ya existe. ElegÃ­ otro.");
+          setSaveError("Ese nombre ya existe. Elegí otro.");
         }
       } else {
         setSaveError(e instanceof Error ? e.message : "Error al guardar");
@@ -354,7 +354,7 @@ export default function DashboardLandingEditarPage() {
 
   const handleDelete = async () => {
     if (!landing) return;
-    if (!window.confirm(`Â¿Eliminar la landing "${landing.name}"? Esta acciÃ³n no se puede deshacer.`)) return;
+    if (!window.confirm(`¿Eliminar la landing "${landing.name}"? Esta acción no se puede deshacer.`)) return;
     setDeleting(true);
     setSaveError(null);
     try {
@@ -410,7 +410,7 @@ export default function DashboardLandingEditarPage() {
             className="inline-flex items-center gap-2 rounded-lg border border-zinc-700 px-3 py-1.5 text-xs font-medium text-zinc-300 transition hover:bg-zinc-800 hover:text-zinc-50"
           >
             <span className="text-sm" aria-hidden>
-              â†
+              ←
             </span>
             <span>Volver al listado</span>
           </Link>
@@ -457,7 +457,7 @@ export default function DashboardLandingEditarPage() {
 
         <section className="rounded-xl border border-zinc-800 bg-zinc-900/50 p-4">
           <h3 className="mb-4 text-sm font-semibold text-zinc-200">
-            IdentificaciÃ³n
+            Identificación
           </h3>
           <div className="space-y-3">
             <div>
@@ -483,8 +483,8 @@ export default function DashboardLandingEditarPage() {
                 placeholder="ej: milanding123"
               />
               <p className="mt-1 text-[11px] text-zinc-500">
-                Este nombre se usarÃ¡ como /name en la URL pÃºblica. Una vez que
-                guardes por primera vez, no se podrÃ¡ cambiar.
+                Este nombre se usará como /name en la URL pública. Una vez que
+                guardes por primera vez, no se podrá cambiar.
               </p>
             </div>
             <div>
@@ -531,7 +531,7 @@ export default function DashboardLandingEditarPage() {
                 placeholder="ej: landing.tercero.com"
               />
               <p className="mt-1 text-[11px] text-zinc-500">
-                IngresÃ¡ solo el dominio (sin https:// ni rutas). Se usa para validar el origen de la landing externa.
+                Ingresá solo el dominio (sin https:// ni rutas). Se usa para validar el origen de la landing externa.
               </p>
             </div>
           </section>
@@ -622,7 +622,7 @@ export default function DashboardLandingEditarPage() {
                 required
               />
               <p className="mt-1 text-[11px] text-zinc-500">
-                Identificador Ãºnico de la landing. Solo letras y nÃºmeros, sin espacios.
+                Identificador único de la landing. Solo letras y números, sin espacios.
               </p>
             </div>
           </div>
@@ -630,7 +630,7 @@ export default function DashboardLandingEditarPage() {
 
         <CollapsibleSection title="Redirección" defaultOpen>
           <div className="mb-3 rounded-lg border border-zinc-700 bg-zinc-900/70 p-3">
-            <p className="mb-2 text-xs font-medium text-zinc-300">SelecciÃ³n de gerencias</p>
+            <p className="mb-2 text-xs font-medium text-zinc-300">Selección de gerencias</p>
             <div className="flex flex-wrap items-center gap-3">
               <div className="inline-flex rounded-lg border border-zinc-700 bg-zinc-900 text-[11px]">
                 <button
@@ -705,10 +705,10 @@ export default function DashboardLandingEditarPage() {
             </div>
           </div>
           <p className="mb-3 text-xs text-zinc-400">
-            Configura a donde re dirigirÃ¡ el CTA de tu landing page.
+            Configura a donde re dirigirá el CTA de tu landing page.
           </p>
           <p className="mb-3 text-xs text-zinc-500">
-            Marque <strong>Asignar</strong> para incluir la gerencia; en selecciÃ³n <strong>Aleatoria (peso)</strong> puede editar el <strong>Peso</strong> para definir probabilidad. Elija modo (carga/ads/mkt), tipo de elecciÃ³n de telÃ©fono (aleatorio/equitativo) y opcionalmente un intervalo de tiempo. Crea gerencias en el menÃº Gerencias si no tienes.
+            Marque <strong>Asignar</strong> para incluir la gerencia; en selección <strong>Aleatoria (peso)</strong> puede editar el <strong>Peso</strong> para definir probabilidad. Elija modo (carga/ads/mkt), tipo de elección de teléfono (aleatorio/equitativo) y opcionalmente un intervalo de tiempo. Crea gerencias en el menú Gerencias si no tienes.
           </p>
           {gerencias.length === 0 ? (
             <p className="text-sm text-zinc-500">
@@ -1092,11 +1092,11 @@ export default function DashboardLandingEditarPage() {
             </p>
             <LandingPreview config={landing.config} />
             <p className="mt-2 w-full text-[11px] text-zinc-500">
-              La vista previa es aproximada. Para una vista certera, abrÃ­ el enlace de la landing.
+              La vista previa es aproximada. Para una vista certera, abrí el enlace de la landing.
             </p>
           </div>
 
-          {/* Desktop: preview fijo que acompaÃ±a el scroll y siempre queda visible */}
+          {/* Desktop: preview fijo que acompaña el scroll y siempre queda visible */}
           <div className="pointer-events-none fixed right-6 top-16 z-20 hidden w-[360px] max-w-[40vw] lg:block">
             <p className="mb-3 text-xs font-medium text-zinc-500">
               Vista previa
@@ -1107,7 +1107,7 @@ export default function DashboardLandingEditarPage() {
               </div>
           </div>
             <p className="mt-2 w-full text-[11px] text-zinc-500">
-              La vista previa es aproximada. Para una vista certera, abrÃ­ el enlace de la landing.
+              La vista previa es aproximada. Para una vista certera, abrí el enlace de la landing.
             </p>
           </div>
         </>
@@ -1116,6 +1116,7 @@ export default function DashboardLandingEditarPage() {
     </div>
   );
 }
+
 
 
 

@@ -16,18 +16,18 @@ interface LandingEditorFormProps {
   onSave: () => void;
   onReset: () => void;
   showTemplateSection?: boolean;
-  /** Sube la imagen a Supabase y devuelve la URL pÃºblica. Si se pasa, las imÃ¡genes se guardan en Storage. */
+  /** Sube la imagen a Supabase y devuelve la URL pública. Si se pasa, las imágenes se guardan en Storage. */
   uploadImage?: (file: File) => Promise<string>;
-  /** IdentificaciÃ³n bÃ¡sica de la landing (usada en el JSON exportado). */
+  /** Identificación básica de la landing (usada en el JSON exportado). */
   landingId?: string;
   landingName?: string;
-  /** Comentario interno de la landing (identificaciÃ³n). */
+  /** Comentario interno de la landing (identificación). */
   comment?: string;
   /** Tracking de la landing. */
   pixelId?: string;
   postUrl?: string;
   landingTag?: string;
-  /** Obtiene un nÃºmero segÃºn la config de redirecciÃ³n y devuelve el telÃ©fono para armar wa.me. */
+  /** Obtiene un número según la config de redirección y devuelve el teléfono para armar wa.me. */
   getPhoneForPreview?: () => Promise<string | null>;
 }
 
@@ -58,7 +58,7 @@ export function CollapsibleSection({
       >
         {title}
         <span className="text-zinc-500 transition-transform" aria-hidden>
-          {open ? "â–¼" : "â–¶"}
+          {open ? "▼" : "▶"}
         </span>
       </button>
       {open && <div className="space-y-4 border-t border-zinc-800 p-4">{children}</div>}
@@ -109,7 +109,7 @@ export function LandingTemplateSection({
 
 /**
  * Formulario del dashboard del constructor de landing por secciones.
- * Cada secciÃ³n es colapsable. Incluye acciones: Guardar, Resetear, Exportar JSON.
+ * Cada sección es colapsable. Incluye acciones: Guardar, Resetear, Exportar JSON.
  */
 export function LandingEditorForm({
   config,
@@ -138,8 +138,8 @@ export function LandingEditorForm({
     { label: "Normal (16px)", value: 16 },
     { label: "Grande (18px)", value: 18 },
     { label: "Muy grande (22px)", value: 22 },
-    { label: "TÃ­tulo (26px)", value: 26 },
-    { label: "TÃ­tulo XL (30px)", value: 30 },
+    { label: "Título (26px)", value: 26 },
+    { label: "Título XL (30px)", value: 30 },
   ];
 
   const fontFamilyOptions = [
@@ -156,7 +156,7 @@ export function LandingEditorForm({
   const ctaPositionOptions: { label: string; value: CtaPositionOption }[] = [
     { label: "Arriba (debajo del logo)", value: "top" },
     {
-      label: "Entre tÃ­tulo e info (por defecto)",
+      label: "Entre título e info (por defecto)",
       value: "between_title_and_info",
     },
     {
@@ -173,17 +173,17 @@ export function LandingEditorForm({
     try {
       const phone = await getPhoneForPreview();
       if (!phone) {
-        setProbarError("No se pudo obtener un nÃºmero. RevisÃ¡ gerencias asignadas y sincronizaciÃ³n.");
+        setProbarError("No se pudo obtener un número. Revisá gerencias asignadas y sincronización.");
         return;
       }
       const digits = phone.replace(/\D/g, "");
       if (!digits.length) {
-        setProbarError("NÃºmero invÃ¡lido.");
+        setProbarError("Número inválido.");
         return;
       }
       window.open(`https://wa.me/${digits}`, "_blank", "noopener,noreferrer");
     } catch {
-      setProbarError("Error al obtener el nÃºmero.");
+      setProbarError("Error al obtener el número.");
     } finally {
       setProbarLoading(false);
     }
@@ -238,7 +238,7 @@ export function LandingEditorForm({
         <div className="space-y-3">
           <div>
             <label className="block text-xs font-medium text-zinc-400 mb-1">
-              Texto del botÃ³n
+              Texto del botón
             </label>
             <input
               type="text"
@@ -252,7 +252,7 @@ export function LandingEditorForm({
           <div className="grid gap-3 sm:grid-cols-2">
             <div>
               <label className="block text-xs font-medium text-zinc-400 mb-1">
-                TamaÃ±o de letra del CTA
+                Tamaño de letra del CTA
               </label>
               <select
                 value={config.ctaFontSize}
@@ -338,7 +338,7 @@ export function LandingEditorForm({
               <div className="flex flex-wrap items-center justify-between gap-3">
                 <div className="flex-1">
                   <p className="text-[11px] text-zinc-400">
-                    Proba ahora la redirecciÃ³n del CTA usando la configuraciÃ³n
+                    Proba ahora la redirección del CTA usando la configuración
                     actual de esta landing
                     {landingName ? ` (${landingName})` : ""}.
                   </p>
@@ -368,7 +368,7 @@ export function LandingEditorForm({
                 Fondo
               </span>
               <span className="block text-[11px] text-zinc-500 mb-2">
-                ElegÃ­ cÃ³mo se ve el fondo de tu landing (una imagen fija o
+                Elegí cómo se ve el fondo de tu landing (una imagen fija o
                 rotando entre varias).
               </span>
               <div className="space-y-3">
@@ -397,7 +397,7 @@ export function LandingEditorForm({
                   </div>
                 </div>
                 <ImageUploader
-                  label="ImÃ¡genes de fondo"
+                  label="Imágenes de fondo"
                   multiple
                   value={config.backgroundImages}
                   onChange={(urls) =>
@@ -448,13 +448,13 @@ export function LandingEditorForm({
         <div className="space-y-6">
           <div className="space-y-3">
             <span className="block text-xs font-medium text-zinc-400 mb-1">
-              TÃ­tulo
+              Título
             </span>
             <div className="grid gap-3 sm:grid-cols-3">
               <div className="sm:col-span-2 space-y-3">
                 <div>
                   <label className="block text-xs font-medium text-zinc-400 mb-1">
-                    LÃ­nea 1
+                    Línea 1
                   </label>
                   <input
                     type="text"
@@ -467,7 +467,7 @@ export function LandingEditorForm({
                 </div>
                 <div>
                   <label className="block text-xs font-medium text-zinc-400 mb-1">
-                    LÃ­nea 2
+                    Línea 2
                   </label>
                   <input
                     type="text"
@@ -480,7 +480,7 @@ export function LandingEditorForm({
                 </div>
                 <div>
                   <label className="block text-xs font-medium text-zinc-400 mb-1">
-                    LÃ­nea 3
+                    Línea 3
                   </label>
                   <input
                     type="text"
@@ -495,7 +495,7 @@ export function LandingEditorForm({
               <div className="space-y-3">
                 <div>
                   <label className="block text-xs font-medium text-zinc-400 mb-1">
-                    TamaÃ±o
+                    Tamaño
                   </label>
                   <select
                     value={config.titleFontSize}
@@ -538,7 +538,7 @@ export function LandingEditorForm({
             <div className="grid gap-3 sm:grid-cols-[minmax(0,2fr)_minmax(0,1fr)]">
               <div>
                 <ColorSelect
-                  label="Color del tÃ­tulo"
+                  label="Color del título"
                   value={config.titleColor}
                   onChange={(titleColor) =>
                     updateConfig(setConfig, { titleColor })
@@ -547,7 +547,7 @@ export function LandingEditorForm({
               </div>
               <div>
                 <label className="block text-xs font-medium text-zinc-400 mb-1">
-                  TipografÃ­a global
+                  Tipografía global
                 </label>
                 <select
                   value={config.fontFamily}
@@ -570,7 +570,7 @@ export function LandingEditorForm({
 
           <div className="space-y-3 border-t border-zinc-800 pt-4">
             <span className="block text-xs font-medium text-zinc-400 mb-1">
-              InformaciÃ³n
+              Información
             </span>
             <div className="space-y-3">
               {(
@@ -578,7 +578,7 @@ export function LandingEditorForm({
               ).map((key, i) => (
                 <div key={key}>
                   <label className="block text-xs font-medium text-zinc-400 mb-1">
-                    LÃ­nea {i + 1}
+                    Línea {i + 1}
                   </label>
                   <input
                     type="text"
@@ -593,7 +593,7 @@ export function LandingEditorForm({
               <div className="grid gap-3 sm:grid-cols-2">
                 <div>
                   <label className="block text-xs font-medium text-zinc-400 mb-1">
-                    TamaÃ±o
+                    Tamaño
                   </label>
                   <select
                     value={config.subtitleFontSize}
@@ -644,7 +644,7 @@ export function LandingEditorForm({
 
           <div className="space-y-3 border-t border-zinc-800 pt-4">
             <span className="block text-xs font-medium text-zinc-400 mb-1">
-              Texto final (3 lÃ­neas)
+              Texto final (3 líneas)
             </span>
             <div className="space-y-3">
               {(
@@ -656,7 +656,7 @@ export function LandingEditorForm({
               ).map((key, i) => (
                 <div key={key}>
                   <label className="block text-xs font-medium text-zinc-400 mb-1">
-                    LÃ­nea {i + 1}
+                    Línea {i + 1}
                   </label>
                   <input
                     type="text"
@@ -671,7 +671,7 @@ export function LandingEditorForm({
               <div className="grid gap-3 sm:grid-cols-2">
                 <div>
                   <label className="block text-xs font-medium text-zinc-400 mb-1">
-                    TamaÃ±o
+                    Tamaño
                   </label>
                   <select
                     value={config.badgeFontSize}
@@ -750,7 +750,7 @@ export function LandingEditorForm({
           <div className="max-h-[80vh] w-full max-w-2xl overflow-hidden rounded-xl border border-zinc-700 bg-zinc-900 shadow-xl">
             <div className="flex items-center justify-between border-b border-zinc-800 px-4 py-3">
               <h2 className="text-sm font-semibold text-zinc-100">
-                JSON de configuraciÃ³n de la landing
+                JSON de configuración de la landing
               </h2>
               <button
                 type="button"
@@ -762,16 +762,16 @@ export function LandingEditorForm({
             </div>
             <div className="flex flex-col gap-3 px-4 py-3">
               <p className="text-[11px] text-zinc-500">
-                Este JSON incluye la identificaciÃ³n de la landing,{" "}
+                Este JSON incluye la identificación de la landing,{" "}
                 <span className="font-medium">tracking</span> (pixel, URL Post,
                 landing tag),{" "}
                 <span className="font-medium">background</span>,{" "}
-                <span className="font-medium">content</span> (logo, tÃ­tulos,
+                <span className="font-medium">content</span> (logo, títulos,
                 textos), <span className="font-medium">typography</span>,{" "}
                 <span className="font-medium">colors</span> (en formato hex) y{" "}
-                <span className="font-medium">layout</span> (posiciÃ³n del CTA y
+                <span className="font-medium">layout</span> (posición del CTA y
                 plantilla).
-                No incluye la configuraciÃ³n de redirecciÃ³n (gerencias, pesos,
+                No incluye la configuración de redirección (gerencias, pesos,
                 modo, intervalos).
               </p>
               <div className="flex items-center justify-between gap-2">
@@ -801,3 +801,4 @@ export function LandingEditorForm({
     </form>
   );
 }
+
