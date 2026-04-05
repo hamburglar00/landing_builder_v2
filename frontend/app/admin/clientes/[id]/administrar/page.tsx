@@ -190,7 +190,7 @@ export default function AdminClientManagePage() {
       return;
     }
     setOkMsg("Configuracion guardada.");
-    setTimeout(() => setOkMsg(null), 2500);
+    router.push("/admin/clientes");
   };
 
   const handleRenewOneMonth = async () => {
