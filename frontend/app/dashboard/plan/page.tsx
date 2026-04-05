@@ -90,7 +90,7 @@ const PLAN_CARDS: PlanCard[] = [
   {
     code: "scale",
     title: "Scale",
-    price: "Desde USD 399 / mes",
+    price: "Desde USD 799 / mes",
     landings: "Escalable",
     phones: "Escalable",
     colorClass: "border-zinc-500 bg-black",
