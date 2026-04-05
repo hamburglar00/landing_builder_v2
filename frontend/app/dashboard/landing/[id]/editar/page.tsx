@@ -726,7 +726,7 @@ export default function DashboardLandingEditarPage() {
                 <thead className="bg-zinc-800/80">
                   <tr>
                     <th className="px-3 py-2 font-medium text-zinc-300">
-                      Gerencia ID
+                      Gerencia
                     </th>
                     <th className="px-3 py-2 font-medium text-zinc-300">
                       Nombre
