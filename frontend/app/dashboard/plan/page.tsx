@@ -45,7 +45,7 @@ const PLAN_CARDS: PlanCard[] = [
   {
     code: "plus",
     title: "Plus",
-    price: "USD 79 / mes",
+    price: "USD 123 / mes",
     landings: "Hasta 4 landings",
     phones: "Hasta 5 telefonos",
     colorClass: "border-yellow-700 bg-yellow-950/30",
@@ -60,7 +60,7 @@ const PLAN_CARDS: PlanCard[] = [
   {
     code: "pro",
     title: "Pro",
-    price: "USD 129 / mes",
+    price: "USD 245 / mes",
     landings: "Hasta 8 landings",
     phones: "Hasta 10 telefonos",
     colorClass: "border-orange-700 bg-orange-950/30",
@@ -75,7 +75,7 @@ const PLAN_CARDS: PlanCard[] = [
   {
     code: "premium",
     title: "Premium",
-    price: "USD 229 / mes",
+    price: "USD 490 / mes",
     landings: "Hasta 12 landings",
     phones: "Hasta 20 telefonos",
     colorClass: "border-purple-700 bg-purple-950/30",
