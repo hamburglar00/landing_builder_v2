@@ -858,9 +858,9 @@ async function handlePurchase(
   const cleanPhone = sanitizePhone(p.phone);
   const inboundMetaPixelId = norm(p.meta_pixel_id || p.pixel_id);
   const amount = parseFloat(p.amount);
-  if (!cleanPhone || isNaN(amount)) {
+  if (!cleanPhone || isNaN(amount) || amount <= 0) {
     await writeLog(db, landing.user_id, "handlePurchase", "ERROR", "PURCHASE rechazado: falta phone o amount", safePayloadRaw(p));
-    return textResponse("Faltan parámetros: phone y amount", 400);
+    return textResponse("Faltan parametros validos: phone y amount > 0", 400);
   }
   const testEventCode = norm(p.test_event_code);
   const purchasePayloadRaw = safePayloadRaw(p);
@@ -1103,7 +1103,9 @@ async function handleSimplePurchase(
   const cleanPhone = sanitizePhone(p.phone);
   const inboundMetaPixelId = norm(p.meta_pixel_id || p.pixel_id);
   const amount = parseFloat(p.amount);
-  if (!cleanPhone || isNaN(amount)) return textResponse("Faltan parametros: phone y amount", 400);
+  if (!cleanPhone || isNaN(amount) || amount <= 0) {
+    return textResponse("Faltan parametros validos: phone y amount > 0", 400);
+  }
   const testEventCode = norm(p.test_event_code);
   const purchasePayloadRaw = safePayloadRaw(p);
 
