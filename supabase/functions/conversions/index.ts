@@ -111,6 +111,12 @@ type Params = Record<string, any>;
 
 const norm = (s: unknown): string => String(s ?? "").trim();
 
+function isFullPromoCode(v: unknown): boolean {
+  const s = norm(v);
+  // Expected: TAG-<12+ alphanumeric chars>
+  return /^[A-Za-z0-9]+-[A-Za-z0-9]{12,}$/.test(s);
+}
+
 function toBool(v: unknown): boolean {
   if (typeof v === "boolean") return v;
   const s = String(v ?? "").trim().toLowerCase();
@@ -866,6 +872,7 @@ async function handlePurchase(
   const purchasePayloadRaw = safePayloadRaw(p);
 
   const promoCode = norm(p.promo_code);
+  const promoCodeIsFull = isFullPromoCode(p.promo_code ?? p.promoCode ?? promoCode);
   const { fn: payloadFn, ln: payloadLn } = deriveNameFromPayload(p);
   const payloadEmail = norm(p.email);
   const eventSourceUrl = await deriveEventSourceUrl(db, landing.name, norm(p.event_source_url));
@@ -875,9 +882,10 @@ async function handlePurchase(
 
     const geo = resolveGeoForPayload(p);
 
-    // 1) Match by promo_code
+    // 1) Match by promo_code only when it is complete (TAG-XXXXXXXXXXXX)
     let targetId: string | null = null;
-    if (promoCode) {
+    let matchMethod: "promo_code" | "phone" | "created_new" = "created_new";
+    if (promoCode && promoCodeIsFull) {
       const { data } = await db
         .from("conversions")
         .select("id")
@@ -886,20 +894,36 @@ async function handlePurchase(
         .order("created_at", { ascending: true })
         .limit(1)
         .maybeSingle();
-      if (data) targetId = data.id;
+      if (data) {
+        targetId = data.id;
+        matchMethod = "promo_code";
+      }
+    } else if (promoCode) {
+      await writeLog(
+        db,
+        landing.user_id,
+        "handlePurchase",
+        "INFO",
+        "PURCHASE promo_code incompleto: fallback por phone",
+        JSON.stringify({ promo_code: promoCode, phone: cleanPhone }),
+      );
     }
 
-    // 2) Match by phone
+    // 2) Match by phone using the most recent LEAD row
     if (!targetId && cleanPhone) {
       const { data } = await db
         .from("conversions")
         .select("id")
         .eq("user_id", landing.user_id)
         .eq("phone", cleanPhone)
+        .eq("estado", "lead")
         .order("created_at", { ascending: false })
         .limit(1)
         .maybeSingle();
-      if (data) targetId = data.id;
+      if (data) {
+        targetId = data.id;
+        matchMethod = "phone";
+      }
     }
 
     const purchaseEventId = generateEventId();
@@ -955,6 +979,7 @@ async function handlePurchase(
       const { data: ins, error } = await db.from("conversions").insert(newRow).select("id").single();
       if (error || !ins) return textResponse("Error al crear fila PURCHASE", 500);
       targetId = ins.id;
+      matchMethod = "created_new";
     } else {
       const { data: existing } = await db
         .from("conversions")
@@ -998,6 +1023,18 @@ async function handlePurchase(
       await db.from("conversions").update(updates).eq("id", targetId);
     }
 
+    if (!targetId) {
+      await writeLog(
+        db,
+        landing.user_id,
+        "handlePurchase",
+        "ERROR",
+        "PURCHASE sin conversion_id tras matching",
+        JSON.stringify({ phone: cleanPhone, promo_code: promoCode }),
+      );
+      return textResponse("Error interno: PURCHASE sin fila asociada", 500);
+    }
+
     // Geo + send
     const { data: row } = await db.from("conversions").select("*").eq("id", targetId).single();
     if (!row) return textResponse("Error al leer fila PURCHASE", 500);
@@ -1008,7 +1045,15 @@ async function handlePurchase(
     const fullRow = (fresh ?? row) as ConversionRow;
     const customData = { currency: effectiveConfig.meta_currency, value: amount };
 
-    await writeLog(db, landing.user_id, "handlePurchase", "INFO", "Primera compra procesada", JSON.stringify({ phone: cleanPhone, amount, promo_code: promoCode }), targetId!);
+    await writeLog(
+      db,
+      landing.user_id,
+      "handlePurchase",
+      "INFO",
+      "Primera compra procesada",
+      JSON.stringify({ phone: cleanPhone, amount, promo_code: promoCode, match_method: matchMethod }),
+      targetId!,
+    );
 
     const ok = await sendToMetaCAPI(db, effectiveConfig, pixelConfigs, fullRow, targetId!, "Purchase", purchaseEventId, purchaseEventTime, customData, testEventCode || undefined);
     return textResponse(ok ? "Primera compra enviada (Purchase)" : "Purchase procesado. Error al enviar a Meta CAPI (revisar token, pixel o Logs).");
