@@ -95,8 +95,8 @@ const PLAN_CARDS: PlanCard[] = [
   {
     code: "scale",
     title: "Scale",
-    price: "Desde USD 899 / mes",
-    unitPrice: "Desde USD 18.0 por teléfono",
+    price: "Precio a medida",
+    unitPrice: "Cotización personalizada",
     landings: "Escalable",
     phones: "Escalable",
     colorClass: "border-zinc-500 bg-black",
