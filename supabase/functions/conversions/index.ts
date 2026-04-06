@@ -832,7 +832,7 @@ async function handleLead(
     if (geo.geo_region) updates.geo_region = geo.geo_region;
     if (geo.geo_country) updates.geo_country = geo.geo_country;
     // Fill promo_code if row didn't have it
-    if (promoCode) {
+    if (promoCode && promoCodeIsFull) {
       const { data: cur } = await db.from("conversions").select("promo_code").eq("id", targetId).single();
       if (!cur?.promo_code) updates.promo_code = promoCode;
     }
@@ -1060,7 +1060,7 @@ async function handlePurchase(
       external_id: "",
       utm_campaign: "",
       telefono_asignado: "",
-      promo_code: promoCode,
+      promo_code: promoCodeIsFull ? promoCode : "",
       geo_city: geo.geo_city,
       geo_region: geo.geo_region,
       geo_country: geo.geo_country,
@@ -1145,7 +1145,7 @@ async function handlePurchase(
     external_id: srcRow?.external_id ?? "",
     utm_campaign: srcRow?.utm_campaign ?? "",
     telefono_asignado: srcRow?.telefono_asignado ?? "",
-    promo_code: promoCode || srcRow?.promo_code || "",
+    promo_code: promoCodeIsFull ? promoCode : (srcRow?.promo_code || ""),
     geo_city: srcRow?.geo_city ?? "",
     geo_region: srcRow?.geo_region ?? "",
     geo_country: srcRow?.geo_country ?? "",
