@@ -908,19 +908,25 @@ async function handlePurchase(
 
   // 1) Primary match by full promo_code only.
   let targetId: string | null = null;
+  let forceRepeatFromPromo = false;
   let matchMethod: "promo_code" | "phone_lead" | "created_first" | "created_repeat" = "created_first";
   if (promoCode && promoCodeIsFull) {
     const { data } = await db
       .from("conversions")
-      .select("id")
+      .select("id, estado")
       .eq("user_id", landing.user_id)
       .eq("promo_code", promoCode)
       .order("created_at", { ascending: true })
       .limit(1)
       .maybeSingle();
     if (data) {
-      targetId = data.id;
-      matchMethod = "promo_code";
+      if (String(data.estado || "").toLowerCase() === "purchase") {
+        // Promo already converted before: next purchases must be repeat.
+        forceRepeatFromPromo = true;
+      } else {
+        targetId = data.id;
+        matchMethod = "promo_code";
+      }
     }
   } else if (promoCode) {
     await writeLog(
@@ -935,7 +941,7 @@ async function handlePurchase(
 
   // 2) Fallback by phone => most recent LEAD only.
   // Only when there are no purchases yet, or lead is newer than latest purchase.
-  if (!targetId && canUseLeadFallback) {
+  if (!targetId && !forceRepeatFromPromo && canUseLeadFallback) {
     const { data } = await db
       .from("conversions")
       .select("id")
@@ -1018,7 +1024,7 @@ async function handlePurchase(
   }
 
   // 4) No promo match and no eligible LEAD pending => apply repeat logic.
-  const isRepeat = hasPreviousPurchase;
+  const isRepeat = forceRepeatFromPromo || hasPreviousPurchase;
   if (!isRepeat) {
     const newRow: Omit<ConversionRow, "id"> = {
       landing_id: landing.id?.trim() || null,
