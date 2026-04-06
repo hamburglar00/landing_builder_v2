@@ -880,6 +880,31 @@ async function handlePurchase(
   const geo = resolveGeoForPayload(p);
   const purchaseEventId = generateEventId();
   const purchaseEventTime = toValidEventTime(p.purchase_event_time || p.event_time || Math.floor(Date.now() / 1000));
+  const { data: latestLeadRow } = await db
+    .from("conversions")
+    .select("id, created_at")
+    .eq("user_id", landing.user_id)
+    .eq("phone", cleanPhone)
+    .eq("estado", "lead")
+    .order("created_at", { ascending: false })
+    .limit(1)
+    .maybeSingle();
+  const { data: latestPurchaseRow } = await db
+    .from("conversions")
+    .select("id, created_at")
+    .eq("user_id", landing.user_id)
+    .eq("phone", cleanPhone)
+    .eq("estado", "purchase")
+    .order("created_at", { ascending: false })
+    .limit(1)
+    .maybeSingle();
+  const hasPreviousPurchase = !!latestPurchaseRow;
+  const leadIsAfterLatestPurchase = !!(
+    latestLeadRow?.created_at &&
+    latestPurchaseRow?.created_at &&
+    new Date(latestLeadRow.created_at).getTime() > new Date(latestPurchaseRow.created_at).getTime()
+  );
+  const canUseLeadFallback = !hasPreviousPurchase || leadIsAfterLatestPurchase;
 
   // 1) Primary match by full promo_code only.
   let targetId: string | null = null;
@@ -909,7 +934,8 @@ async function handlePurchase(
   }
 
   // 2) Fallback by phone => most recent LEAD only.
-  if (!targetId) {
+  // Only when there are no purchases yet, or lead is newer than latest purchase.
+  if (!targetId && canUseLeadFallback) {
     const { data } = await db
       .from("conversions")
       .select("id")
@@ -991,8 +1017,8 @@ async function handlePurchase(
     return textResponse(ok ? "Primera compra enviada (Purchase)" : "Purchase procesado. Error al enviar a Meta CAPI (revisar token, pixel o Logs).");
   }
 
-  // 4) No promo match and no LEAD pending => apply repeat logic.
-  const isRepeat = await hasPreviousSuccessfulPurchases(db, landing.user_id, cleanPhone);
+  // 4) No promo match and no eligible LEAD pending => apply repeat logic.
+  const isRepeat = hasPreviousPurchase;
   if (!isRepeat) {
     const newRow: Omit<ConversionRow, "id"> = {
       landing_id: landing.id?.trim() || null,
