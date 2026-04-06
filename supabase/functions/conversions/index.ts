@@ -766,6 +766,7 @@ async function handleLead(
     return textResponse("Faltan parámetros: phone requerido", 400);
   }
   const promoCode = norm(p.promo_code);
+  const promoCodeIsFull = isFullPromoCode(p.promo_code ?? p.promoCode ?? promoCode);
   if (!promoCode) {
     await writeLog(db, landing.user_id, "handleLead", "ERROR", "LEAD rechazado: falta promo_code", safePayloadRaw(p));
     return textResponse("Faltan parámetros: promo_code requerido", 400);
