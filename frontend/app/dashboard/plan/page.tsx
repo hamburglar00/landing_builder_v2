@@ -17,6 +17,7 @@ type PlanCard = {
   code: PlanCode;
   title: string;
   price: string;
+  unitPrice: string;
   landings: string;
   phones: string;
   colorClass: string;
@@ -31,6 +32,7 @@ const PLAN_CARDS: PlanCard[] = [
     code: "starter",
     title: "Starter",
     price: "USD 69 / mes",
+    unitPrice: "USD 34.5 por teléfono",
     landings: "Hasta 2 landings",
     phones: "Hasta 2 telefonos",
     colorClass: "border-zinc-700 bg-zinc-900/40",
@@ -46,6 +48,7 @@ const PLAN_CARDS: PlanCard[] = [
     code: "plus",
     title: "Plus",
     price: "USD 163 / mes",
+    unitPrice: "USD 32.6 por teléfono",
     landings: "Hasta 4 landings",
     phones: "Hasta 5 telefonos",
     colorClass: "border-yellow-700 bg-yellow-950/30",
@@ -61,6 +64,7 @@ const PLAN_CARDS: PlanCard[] = [
     code: "pro",
     title: "Pro",
     price: "USD 305 / mes",
+    unitPrice: "USD 30.5 por teléfono",
     landings: "Hasta 8 landings",
     phones: "Hasta 10 telefonos",
     colorClass: "border-orange-700 bg-orange-950/30",
@@ -76,6 +80,7 @@ const PLAN_CARDS: PlanCard[] = [
     code: "premium",
     title: "Premium",
     price: "USD 570 / mes",
+    unitPrice: "USD 28.5 por teléfono",
     landings: "Hasta 12 landings",
     phones: "Hasta 20 telefonos",
     colorClass: "border-purple-700 bg-purple-950/30",
@@ -91,6 +96,7 @@ const PLAN_CARDS: PlanCard[] = [
     code: "scale",
     title: "Scale",
     price: "Desde USD 899 / mes",
+    unitPrice: "Desde USD 18.0 por teléfono",
     landings: "Escalable",
     phones: "Escalable",
     colorClass: "border-zinc-500 bg-black",
@@ -197,6 +203,7 @@ export default function DashboardPlanPage() {
                 {plan.title}
               </h3>
               <p className="mt-2 text-lg font-bold text-zinc-100">{plan.price}</p>
+              <p className="mt-1 text-xs text-zinc-400">{plan.unitPrice}</p>
               <ul className={`mt-3 space-y-1 text-sm ${plan.bulletClass}`}>
                 <li>• {plan.landings}</li>
                 <li>• {plan.phones}</li>
