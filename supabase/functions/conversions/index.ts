@@ -734,7 +734,7 @@ async function handleContact(
   if (effectiveConfig.send_contact_capi) {
     const { data: fresh } = await db.from("conversions").select("*").eq("id", rowId).single();
     const fullRow = (fresh ?? row) as ConversionRow;
-    const ok = await sendToMetaCAPI(
+    await sendToMetaCAPI(
       db,
       effectiveConfig,
       pixelConfigs,
@@ -746,7 +746,6 @@ async function handleContact(
       undefined,
       testEventCode || undefined,
     );
-    return textResponse(ok ? "Contact registrado y enviado por CAPI" : "Contact registrado; error al enviar CAPI");
   }
 
   return textResponse("Success");
