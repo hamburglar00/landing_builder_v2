@@ -538,6 +538,17 @@ export async function fetchConversionLogs(
   return (data ?? []) as unknown as ConversionLogRow[];
 }
 
+export async function fetchConversionLogsFiltered(
+  userId: string,
+  hiddenBy: string,
+  limit = 200,
+  offset = 0,
+): Promise<ConversionLogRow[]> {
+  const rows = await fetchConversionLogs(userId, limit, offset);
+  const hiddenIds = await fetchHiddenConversionLogIds(hiddenBy);
+  return rows.filter((r) => !hiddenIds.has(r.id));
+}
+
 export async function fetchConversionLogsForAdmin(
   limit = 200,
   offset = 0,
@@ -550,6 +561,16 @@ export async function fetchConversionLogsForAdmin(
 
   if (error) throw error;
   return (data ?? []) as unknown as ConversionLogRow[];
+}
+
+export async function fetchConversionLogsForAdminFiltered(
+  hiddenBy: string,
+  limit = 200,
+  offset = 0,
+): Promise<ConversionLogRow[]> {
+  const rows = await fetchConversionLogsForAdmin(limit, offset);
+  const hiddenIds = await fetchHiddenConversionLogIds(hiddenBy);
+  return rows.filter((r) => !hiddenIds.has(r.id));
 }
 
 export async function fetchConversionsConfigForUser(
@@ -627,6 +648,35 @@ export async function hideContacts(
     .from("hidden_contacts")
     .upsert(rows, {
       onConflict: "user_id,phone,hidden_by",
+      ignoreDuplicates: true,
+    });
+  if (error) throw error;
+}
+
+export async function fetchHiddenConversionLogIds(
+  hiddenBy: string,
+): Promise<Set<number>> {
+  const { data, error } = await supabase
+    .from("hidden_conversion_logs")
+    .select("log_id")
+    .eq("hidden_by", hiddenBy);
+  if (error) throw error;
+  return new Set((data ?? []).map((r) => Number(r.log_id)));
+}
+
+export async function hideConversionLogs(
+  logIds: number[],
+  hiddenBy: string,
+): Promise<void> {
+  if (logIds.length === 0) return;
+  const rows = logIds.map((id) => ({
+    log_id: id,
+    hidden_by: hiddenBy,
+  }));
+  const { error } = await supabase
+    .from("hidden_conversion_logs")
+    .upsert(rows, {
+      onConflict: "log_id,hidden_by",
       ignoreDuplicates: true,
     });
   if (error) throw error;

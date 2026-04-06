@@ -10,11 +10,12 @@ import {
   upsertPixelConfig,
   deletePixelConfig,
   fetchConversionsForAdminFiltered,
-  fetchConversionLogsForAdmin,
+  fetchConversionLogsForAdminFiltered,
   fetchFunnelContactsForAdminFiltered,
   updateConversionEmail,
   hideConversions,
   hideContacts,
+  hideConversionLogs,
   type ConversionsConfig,
   type PixelConfig,
   type ConversionRow,
@@ -533,7 +534,7 @@ export default function AdminConversionesPage() {
           fetchConversionsConfig(user.id),
           fetchConversionsForAdminFiltered(user.id),
           fetchFunnelContactsForAdminFiltered(user.id),
-          fetchConversionLogsForAdmin(200),
+          fetchConversionLogsForAdminFiltered(user.id, 200),
           fetchPixelConfigs(user.id),
         ]);
         setConfig(cfg);
@@ -791,7 +792,7 @@ export default function AdminConversionesPage() {
       const [rows, funnel, logRows] = await Promise.all([
         fetchConversionsForAdminFiltered(userId),
         fetchFunnelContactsForAdminFiltered(userId),
-        fetchConversionLogsForAdmin(200),
+        fetchConversionLogsForAdminFiltered(userId, 200),
       ]);
       setConversions(rows);
       setFunnelContacts(funnel);
@@ -876,15 +877,16 @@ export default function AdminConversionesPage() {
     setHidingLogs(true);
     setClearMsg(null);
     try {
-      setLogs([]);
-      setClearMsg("Vista limpiada. Los registros siguen en la base de datos.");
+      await hideConversionLogs(logs.map((l) => Number(l.id)), userId);
+      await refreshTable();
+      setClearMsg("Vista limpiada.");
       setTimeout(() => setClearMsg(null), 4000);
     } catch (e) {
       console.error(e);
       const msg = e instanceof Error ? e.message : String(e);
       setClearMsg(`Error al limpiar: ${msg}`);
     } finally { setHidingLogs(false); }
-  }, [userId, logs.length, demoMode]);
+  }, [userId, logs, demoMode, refreshTable]);
 
   if (loading) {
     return (
