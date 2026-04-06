@@ -465,7 +465,7 @@ export default function StatsPanel({
             label="Primeras cargas"
             value={stats.firstLoadPurchasers}
             color="text-sky-300"
-            tooltip={compactTooltips ? "Personas que realizaron al menos una carga." : "Personas que realizaron al menos una carga (purchase sin recarga)."}
+            tooltip={compactTooltips ? "Personas que realizaron una carga." : "Personas que realizaron una carga (purchase sin recarga)."}
           />
           <KpiCard
             label="Recargas"
@@ -485,7 +485,7 @@ export default function StatsPanel({
             tooltip={compactTooltips ? `Contactos con monto total acumulado ≥ $${premiumThreshold.toLocaleString("es-AR")}.` : `Contactos cuyo monto total acumulado de cargas es igual o superior al umbral premium configurado ($${premiumThreshold.toLocaleString("es-AR")}).`}
           />
           <KpiCard
-            label="Retención activa 30d"
+            label="Retención"
             value={stats.retencionActiva30d}
             color="text-emerald-400"
             tooltip={compactTooltips ? "Jugadores que hicieron al menos 4 cargas en los últimos 30 días y cuya primera carga fue hace al menos 7 días." : "Jugadores que hicieron al menos 4 cargas en los últimos 30 días y cuya primera carga fue hace al menos 7 días. Métrica calculada siempre sobre los últimos 30 días, sin aplicar el filtro de fechas."}
