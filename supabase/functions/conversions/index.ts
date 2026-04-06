@@ -113,8 +113,9 @@ const norm = (s: unknown): string => String(s ?? "").trim();
 
 function isFullPromoCode(v: unknown): boolean {
   const s = norm(v);
-  // Expected: TAG-<12+ alphanumeric chars>
-  return /^[A-Za-z0-9]+-[A-Za-z0-9]{12,}$/.test(s);
+  // Flexible expected format: TAG-<alphanumeric suffix>
+  // (no hard dependency on fixed suffix length like 12)
+  return /^[A-Za-z0-9]+-[A-Za-z0-9]+$/.test(s);
 }
 
 function toBool(v: unknown): boolean {
