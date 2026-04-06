@@ -882,7 +882,7 @@ async function handlePurchase(
   const purchaseEventTime = toValidEventTime(p.purchase_event_time || p.event_time || Math.floor(Date.now() / 1000));
   const { data: latestLeadRow } = await db
     .from("conversions")
-    .select("id, created_at")
+    .select("id, created_at, sendContactPixel")
     .eq("user_id", landing.user_id)
     .eq("phone", cleanPhone)
     .eq("estado", "lead")
@@ -891,7 +891,7 @@ async function handlePurchase(
     .maybeSingle();
   const { data: latestPurchaseRow } = await db
     .from("conversions")
-    .select("id, created_at")
+    .select("id, created_at, sendContactPixel")
     .eq("user_id", landing.user_id)
     .eq("phone", cleanPhone)
     .eq("estado", "purchase")
@@ -1038,6 +1038,7 @@ async function handlePurchase(
       pixel_id: inboundMetaPixelId,
       contact_event_id: "",
       contact_event_time: null,
+      sendContactPixel: toBool(latestLeadRow?.sendContactPixel ?? latestPurchaseRow?.sendContactPixel),
       contact_payload_raw: "",
       lead_event_id: "",
       lead_event_time: null,
@@ -1122,6 +1123,7 @@ async function handlePurchase(
     // DO NOT inherit event IDs
     contact_event_id: "",
     contact_event_time: null,
+    sendContactPixel: toBool(srcRow?.sendContactPixel),
     contact_payload_raw: "",
     lead_event_id: "",
     lead_event_time: null,
@@ -1228,6 +1230,7 @@ async function handleSimplePurchase(
     pixel_id: srcRow?.pixel_id ?? inboundMetaPixelId,
     contact_event_id: "",
     contact_event_time: null,
+    sendContactPixel: toBool(srcRow?.sendContactPixel),
     contact_payload_raw: "",
     lead_event_id: "",
     lead_event_time: null,
