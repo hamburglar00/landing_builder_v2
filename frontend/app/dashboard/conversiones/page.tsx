@@ -528,7 +528,7 @@ export default function DashboardConversionesPage() {
         ? String(internalIdByConversionId.get(log.conversion_id) ?? "-")
         : "-";
       if (idx > 0 && key !== lastKey) tone = tone === 0 ? 1 : 0;
-      tones.push(tone === 0 ? "bg-zinc-950/40" : "bg-zinc-900/45");
+      tones.push(tone === 0 ? "bg-zinc-950/40 border-y-2 border-black/80" : "bg-zinc-900/45 border-y-2 border-black/80");
       lastKey = key;
     });
     return tones;
@@ -1514,7 +1514,7 @@ export default function DashboardConversionesPage() {
                             ? parsed.events_received
                             : Number(parsed.events_received ?? 0);
                           const ok = !parsed.error && Number.isFinite(eventsReceived) && eventsReceived > 0;
-                          return ok ? `${groupTone} border-l-2 border-emerald-400/60` : groupTone;
+                          return ok ? `${groupTone} shadow-[inset_0_-2px_0_0_rgba(16,185,129,0.35)]` : groupTone;
                         } catch {
                           return groupTone;
                         }
