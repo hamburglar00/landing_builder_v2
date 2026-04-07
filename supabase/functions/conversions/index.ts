@@ -748,17 +748,18 @@ async function handleContact(
 
   const ctaTapToRedirectMs = Number(p.cta_tap_to_redirect_ms);
   if (Number.isFinite(ctaTapToRedirectMs) && ctaTapToRedirectMs >= 0) {
+    const latencyPayload = JSON.stringify({ cta_tap_to_redirect_ms: Math.round(ctaTapToRedirectMs) });
     await writeLog(
       db,
       landing.user_id,
       "handleContact",
       "INFO",
       "CTA tap->redirect latency",
-      JSON.stringify({ cta_tap_to_redirect_ms: Math.round(ctaTapToRedirectMs) }),
+      latencyPayload,
       rowId,
       undefined,
       undefined,
-      safePayloadRaw(p),
+      latencyPayload,
       "latency registrada",
     );
   }
