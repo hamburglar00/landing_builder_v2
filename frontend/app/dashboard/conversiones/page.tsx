@@ -519,19 +519,27 @@ export default function DashboardConversionesPage() {
     () => new Map(conversions.map((c) => [c.id, c.internal_id])),
     [conversions],
   );
-  const logGroupToneByIndex = useMemo(() => {
-    const tones: string[] = [];
-    let lastKey = "__init__";
-    let tone = 0;
-    logs.forEach((log, idx) => {
-      const key = log.conversion_id
+  const logGroupMetaByIndex = useMemo(() => {
+    const keys = logs.map((log) =>
+      log.conversion_id
         ? String(internalIdByConversionId.get(log.conversion_id) ?? "-")
-        : "-";
-      if (idx > 0 && key !== lastKey) tone = tone === 0 ? 1 : 0;
-      tones.push(tone === 0 ? "bg-zinc-950/40 border-y-2 border-black/80" : "bg-zinc-900/45 border-y-2 border-black/80");
-      lastKey = key;
+        : "-"
+    );
+    const toneByKey = new Map<string, 0 | 1>();
+    let nextTone: 0 | 1 = 0;
+    const toneByIndex: (0 | 1)[] = [];
+    keys.forEach((key) => {
+      if (!toneByKey.has(key)) {
+        toneByKey.set(key, nextTone);
+        nextTone = nextTone === 0 ? 1 : 0;
+      }
+      toneByIndex.push(toneByKey.get(key)!);
     });
-    return tones;
+    return toneByIndex.map((tone, idx) => {
+      const isStart = idx === 0 || keys[idx - 1] !== keys[idx];
+      const isEnd = idx === keys.length - 1 || keys[idx + 1] !== keys[idx];
+      return { base: tone === 0 ? "bg-zinc-950/40" : "bg-zinc-900/45", isStart, isEnd };
+    });
   }, [logs, internalIdByConversionId]);
   const tabOrder = useMemo<Tab[]>(
     () => (config?.show_logs === false ? TAB_ORDER_BASE : [...TAB_ORDER_BASE, "logs"]),
@@ -1505,18 +1513,19 @@ export default function DashboardConversionesPage() {
                     <tr
                       key={log.id}
                       className={(() => {
-                        const groupTone = logGroupToneByIndex[idx] ?? "bg-zinc-950/40";
+                        const meta = logGroupMetaByIndex[idx] ?? { base: "bg-zinc-950/40", isStart: false, isEnd: false };
+                        const blockBorders = `${meta.isStart ? " border-t-2 border-t-black/80" : ""}${meta.isEnd ? " border-b-2 border-b-black/80" : ""}`;
                         const isMetaResponse = log.function_name === "sendToMetaCAPI" && log.message === "Meta CAPI respuesta";
-                        if (!isMetaResponse || !log.response_meta) return groupTone;
+                        if (!isMetaResponse || !log.response_meta) return `${meta.base}${blockBorders}`;
                         try {
                           const parsed = JSON.parse(log.response_meta) as { error?: unknown; events_received?: number | string };
                           const eventsReceived = typeof parsed.events_received === "number"
                             ? parsed.events_received
                             : Number(parsed.events_received ?? 0);
                           const ok = !parsed.error && Number.isFinite(eventsReceived) && eventsReceived > 0;
-                          return ok ? `${groupTone} shadow-[inset_0_-2px_0_0_rgba(16,185,129,0.35)]` : groupTone;
+                          return ok ? `${meta.base}${blockBorders} shadow-[inset_0_0_0_9999px_rgba(16,185,129,0.10)]` : `${meta.base}${blockBorders}`;
                         } catch {
-                          return groupTone;
+                          return `${meta.base}${blockBorders}`;
                         }
                       })()}
                     >
