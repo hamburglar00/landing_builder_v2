@@ -148,7 +148,7 @@ function statusText(status: string) {
   return <span className="text-zinc-600">-</span>;
 }
 
-function levelBadge(level: string, message?: string) {
+function levelBadge(level: string, functionName?: string, message?: string) {
   const cls =
     level === "ERROR"
       ? "bg-red-950 text-red-300"
@@ -156,11 +156,16 @@ function levelBadge(level: string, message?: string) {
         ? "bg-zinc-800 text-zinc-500"
         : "bg-blue-950 text-blue-300";
   const msg = String(message ?? "").toLowerCase();
-  const event =
-    msg.includes("contact") ? "CONTACT" :
-    msg.includes("lead") ? "LEAD" :
-    msg.includes("purchase") || msg.includes("compra") || msg.includes("recarga") ? "PURCHASE" :
-    null;
+  const fn = String(functionName ?? "").toLowerCase();
+  const event = fn.includes("handlecontact") ? "CONTACT"
+    : fn.includes("handlelead") ? "LEAD"
+    : fn.includes("handlepurchase") || fn.includes("handlesimplepurchase") ? "PURCHASE"
+    : (
+      msg.includes("contact") ? "CONTACT" :
+      msg.includes("lead") ? "LEAD" :
+      msg.includes("purchase") || msg.includes("compra") || msg.includes("recarga") ? "PURCHASE" :
+      null
+    );
   const text = level === "ERROR"
     ? (event ? `ERROR / ${event}` : "ERROR")
     : (event ?? level);
@@ -1506,7 +1511,7 @@ export default function DashboardConversionesPage() {
                       <td className="px-2 py-1.5 text-zinc-400 whitespace-nowrap">
                         {new Date(log.created_at).toLocaleString("es-AR", { month: "2-digit", day: "2-digit", hour: "2-digit", minute: "2-digit", second: "2-digit", hour12: false })}
                       </td>
-                      <td className="px-2 py-1.5">{levelBadge(log.level, log.message)}</td>
+                      <td className="px-2 py-1.5">{levelBadge(log.level, log.function_name, log.message)}</td>
                       <td className="px-2 py-1.5 text-zinc-200">{log.message}</td>
                       <td className="px-2 py-1.5 text-zinc-300 font-mono whitespace-nowrap">{log.function_name}</td>
                       <td className="px-2 py-1.5 text-zinc-500">

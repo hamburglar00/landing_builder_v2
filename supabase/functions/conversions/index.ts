@@ -712,7 +712,19 @@ async function handleContact(
   const { data: inserted, error } = await db.from("conversions").insert(row).select("id").single();
   if (error || !inserted) {
     const errDetail = error ? JSON.stringify({ message: error.message, code: error.code, details: error.details }) : "sin error";
-    await writeLog(db, landing.user_id, "handleContact", "ERROR", "Error al insertar contacto", errDetail);
+    await writeLog(
+      db,
+      landing.user_id,
+      "handleContact",
+      "ERROR",
+      "Error al insertar contacto",
+      errDetail,
+      undefined,
+      undefined,
+      undefined,
+      safePayloadRaw(p),
+      "error al insertar contacto",
+    );
     return textResponse(`Error al registrar contacto: ${error?.message ?? "unknown"}`, 500);
   }
   const rowId = inserted.id;
@@ -720,7 +732,19 @@ async function handleContact(
   const effectiveConfig = resolveEffectiveConfigForPixel(config, pixelConfigs, row.pixel_id);
   await ensureGeoOnRow(db, rowId, row.client_ip, { ct: row.ct, st: row.st, country: row.country, zip: row.zip, geo_city: row.geo_city, geo_region: row.geo_region, geo_country: row.geo_country }, effectiveConfig);
 
-  await writeLog(db, landing.user_id, "handleContact", "INFO", "Nuevo contacto registrado", JSON.stringify({ phone: row.phone, landing: landing.name, contact_event_id: contactEventId }), rowId);
+  await writeLog(
+    db,
+    landing.user_id,
+    "handleContact",
+    "INFO",
+    "Nuevo contacto registrado",
+    JSON.stringify({ phone: row.phone, landing: landing.name, contact_event_id: contactEventId }),
+    rowId,
+    undefined,
+    undefined,
+    safePayloadRaw(p),
+    "contacto registrado",
+  );
 
   const ctaTapToRedirectMs = Number(p.cta_tap_to_redirect_ms);
   if (Number.isFinite(ctaTapToRedirectMs) && ctaTapToRedirectMs >= 0) {
@@ -732,6 +756,10 @@ async function handleContact(
       "CTA tap->redirect latency",
       JSON.stringify({ cta_tap_to_redirect_ms: Math.round(ctaTapToRedirectMs) }),
       rowId,
+      undefined,
+      undefined,
+      safePayloadRaw(p),
+      "latency registrada",
     );
   }
 
