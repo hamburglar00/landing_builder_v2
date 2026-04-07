@@ -108,6 +108,8 @@ export interface ConversionLogRow {
   level: string;
   message: string;
   detail: string;
+  payload_received?: string | null;
+  result?: string | null;
   payload_meta?: string | null;
   response_meta?: string | null;
   created_at: string;
@@ -520,7 +522,7 @@ export async function fetchFunnelContactsForAdminFiltered(
 // Logs
 
 const LOGS_SELECT =
-  "id, user_id, conversion_id, function_name, level, message, detail, payload_meta, response_meta, created_at";
+  "id, user_id, conversion_id, function_name, level, message, detail, payload_received, result, payload_meta, response_meta, created_at";
 
 export async function fetchConversionLogs(
   userId: string,

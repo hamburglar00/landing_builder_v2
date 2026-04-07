@@ -161,7 +161,10 @@ function levelBadge(level: string, message?: string) {
     msg.includes("lead") ? "LEAD" :
     msg.includes("purchase") || msg.includes("compra") || msg.includes("recarga") ? "PURCHASE" :
     null;
-  return <span className={`inline-block rounded-full px-2 py-0.5 text-[10px] font-medium ${cls}`}>{event ? `${level} / ${event}` : level}</span>;
+  const text = level === "ERROR"
+    ? (event ? `ERROR / ${event}` : "ERROR")
+    : (event ?? level);
+  return <span className={`inline-block rounded-full px-2 py-0.5 text-[10px] font-medium ${cls}`}>{text}</span>;
 }
 
 function truncateId(id: string, len = 8) {
@@ -1470,11 +1473,12 @@ export default function DashboardConversionesPage() {
                     <th className="px-2 py-2 font-medium text-zinc-300 whitespace-nowrap">ID</th>
                     <th className="px-2 py-2 font-medium text-zinc-300 whitespace-nowrap">Fecha</th>
                     <th className="px-2 py-2 font-medium text-zinc-300 whitespace-nowrap">Nivel</th>
-                    <th className="px-2 py-2 font-medium text-zinc-300 whitespace-nowrap">Funcion</th>
                     <th className="px-2 py-2 font-medium text-zinc-300 whitespace-nowrap">Mensaje</th>
-                    <th className="px-2 py-2 font-medium text-zinc-300 whitespace-nowrap">Detalle</th>
+                    <th className="px-2 py-2 font-medium text-zinc-300 whitespace-nowrap">Funcion</th>
+                    <th className="px-2 py-2 font-medium text-zinc-300 whitespace-nowrap">Payload Recibido</th>
+                    <th className="px-2 py-2 font-medium text-zinc-300 whitespace-nowrap">Resultado</th>
                     <th className="px-2 py-2 font-medium text-zinc-300 whitespace-nowrap">Payload Meta</th>
-                    <th className="px-2 py-2 font-medium text-zinc-300 whitespace-nowrap">Respuesta Meta</th>
+                    <th className="px-2 py-2 font-medium text-zinc-300 whitespace-nowrap">Respuesta de Meta</th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-zinc-800">
@@ -1503,17 +1507,32 @@ export default function DashboardConversionesPage() {
                         {new Date(log.created_at).toLocaleString("es-AR", { month: "2-digit", day: "2-digit", hour: "2-digit", minute: "2-digit", second: "2-digit", hour12: false })}
                       </td>
                       <td className="px-2 py-1.5">{levelBadge(log.level, log.message)}</td>
-                      <td className="px-2 py-1.5 text-zinc-300 font-mono whitespace-nowrap">{log.function_name}</td>
                       <td className="px-2 py-1.5 text-zinc-200">{log.message}</td>
+                      <td className="px-2 py-1.5 text-zinc-300 font-mono whitespace-nowrap">{log.function_name}</td>
                       <td className="px-2 py-1.5 text-zinc-500">
-                        {log.detail ? (
+                        {(log.payload_received && log.payload_received.trim()) ? (
                           <button type="button" onClick={() => setExpandedLog(expandedLog === log.id ? null : log.id)} className="cursor-pointer text-zinc-400 underline hover:text-zinc-200">
                             {expandedLog === log.id ? "ocultar" : "ver"}
                           </button>
                         ) : "-"}
-                        {expandedLog === log.id && log.detail && (
+                        {expandedLog === log.id && log.payload_received && (
                           <pre className="mt-1 max-w-[500px] overflow-x-auto rounded bg-zinc-900 p-2 text-[10px] text-zinc-400">
-                            {(() => { try { return JSON.stringify(JSON.parse(log.detail), null, 2); } catch { return log.detail; } })()}
+                            {(() => { try { return JSON.stringify(JSON.parse(log.payload_received), null, 2); } catch { return log.payload_received; } })()}
+                          </pre>
+                        )}
+                      </td>
+                      <td className="px-2 py-1.5 text-zinc-500">
+                        {((log.result && log.result.trim()) || (log.detail && log.detail.trim())) ? (
+                          <button type="button" onClick={() => setExpandedLog(expandedLog === log.id ? null : log.id)} className="cursor-pointer text-zinc-400 underline hover:text-zinc-200">
+                            {expandedLog === log.id ? "ocultar" : "ver"}
+                          </button>
+                        ) : "-"}
+                        {expandedLog === log.id && ((log.result && log.result.trim()) || (log.detail && log.detail.trim())) && (
+                          <pre className="mt-1 max-w-[500px] overflow-x-auto rounded bg-zinc-900 p-2 text-[10px] text-zinc-400">
+                            {(() => {
+                              const raw = (log.result && log.result.trim()) ? log.result : (log.detail ?? "");
+                              try { return JSON.stringify(JSON.parse(raw), null, 2); } catch { return raw; }
+                            })()}
                           </pre>
                         )}
                       </td>

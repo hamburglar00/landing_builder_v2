@@ -325,6 +325,8 @@ async function writeLog(
   conversionId?: string,
   payloadMeta?: string,
   responseMeta?: string,
+  payloadReceived?: string,
+  result?: string,
 ): Promise<void> {
   try {
     await db.from("conversion_logs").insert({
@@ -334,6 +336,8 @@ async function writeLog(
       level,
       message,
       detail: detail.slice(0, 4000),
+      payload_received: (payloadReceived ?? "").slice(0, 20000),
+      result: (result ?? detail ?? "").slice(0, 4000),
       payload_meta: (payloadMeta ?? "").slice(0, 20000),
       response_meta: (responseMeta ?? "").slice(0, 20000),
     });
@@ -761,13 +765,37 @@ async function handleLead(
   const cleanPhone = sanitizePhone(p.phone);
   const inboundMetaPixelId = norm(p.meta_pixel_id || p.pixel_id);
   if (!cleanPhone) {
-    await writeLog(db, landing.user_id, "handleLead", "ERROR", "LEAD rechazado: falta phone", safePayloadRaw(p));
+    await writeLog(
+      db,
+      landing.user_id,
+      "handleLead",
+      "ERROR",
+      "LEAD rechazado: falta phone",
+      safePayloadRaw(p),
+      undefined,
+      undefined,
+      undefined,
+      safePayloadRaw(p),
+      "rechazado: falta phone",
+    );
     return textResponse("Faltan parámetros: phone requerido", 400);
   }
   const promoCode = norm(p.promo_code);
   const promoCodeIsFull = isFullPromoCode(p.promo_code ?? p.promoCode ?? promoCode);
   if (!promoCode) {
-    await writeLog(db, landing.user_id, "handleLead", "ERROR", "LEAD rechazado: falta promo_code", safePayloadRaw(p));
+    await writeLog(
+      db,
+      landing.user_id,
+      "handleLead",
+      "ERROR",
+      "LEAD rechazado: falta promo_code",
+      safePayloadRaw(p),
+      undefined,
+      undefined,
+      undefined,
+      safePayloadRaw(p),
+      "rechazado: falta promo_code",
+    );
     return textResponse("Faltan parámetros: promo_code requerido", 400);
   }
   const testEventCode = norm(p.test_event_code);
@@ -804,6 +832,11 @@ async function handleLead(
       "ERROR",
       "LEAD sin match por promo_code",
       JSON.stringify({ promo_code: promoCode, phone: cleanPhone }),
+      undefined,
+      undefined,
+      undefined,
+      safePayloadRaw(p),
+      "sin match por promo_code",
     );
     return textResponse("No se encontro fila para promo_code", 404);
   } else {
@@ -849,7 +882,19 @@ async function handleLead(
   const { data: fresh } = await db.from("conversions").select("*").eq("id", targetId).single();
   const fullRow = (fresh ?? row) as ConversionRow;
 
-  await writeLog(db, landing.user_id, "handleLead", "INFO", "LEAD procesado", JSON.stringify({ phone: cleanPhone, promo_code: promoCode, matched: !!targetId }), targetId!);
+  await writeLog(
+    db,
+    landing.user_id,
+    "handleLead",
+    "INFO",
+    "LEAD procesado",
+    JSON.stringify({ phone: cleanPhone, promo_code: promoCode, matched: !!targetId }),
+    targetId!,
+    undefined,
+    undefined,
+    safePayloadRaw(p),
+    "lead procesado",
+  );
 
   const ok = await sendToMetaCAPI(db, effectiveConfig, pixelConfigs, fullRow, targetId!, "Lead", leadEventId, leadEventTime, undefined, testEventCode || undefined);
   return textResponse(ok ? "Fila LEAD procesada" : "LEAD procesado. Error al enviar a Meta CAPI (revisar token, pixel o pestana Logs).");
@@ -866,7 +911,19 @@ async function handlePurchase(
   const inboundMetaPixelId = norm(p.meta_pixel_id || p.pixel_id);
   const amount = parseFloat(p.amount);
   if (!cleanPhone || isNaN(amount) || amount <= 0) {
-    await writeLog(db, landing.user_id, "handlePurchase", "ERROR", "PURCHASE rechazado: falta phone o amount", safePayloadRaw(p));
+    await writeLog(
+      db,
+      landing.user_id,
+      "handlePurchase",
+      "ERROR",
+      "PURCHASE rechazado: falta phone o amount",
+      safePayloadRaw(p),
+      undefined,
+      undefined,
+      undefined,
+      safePayloadRaw(p),
+      "rechazado: falta phone o amount",
+    );
     return textResponse("Faltan parametros validos: phone y amount > 0", 400);
   }
   const testEventCode = norm(p.test_event_code);
@@ -905,6 +962,10 @@ async function handlePurchase(
     new Date(latestLeadRow.created_at).getTime() > new Date(latestPurchaseRow.created_at).getTime()
   );
   const canUseLeadFallback = !hasPreviousPurchase || leadIsAfterLatestPurchase;
+  const fallbackSendContactPixel = toBool(
+    (latestLeadRow as { sendContactPixel?: unknown } | null)?.sendContactPixel ??
+      (latestPurchaseRow as { sendContactPixel?: unknown } | null)?.sendContactPixel,
+  );
 
   // 1) Primary match by full promo_code only.
   let targetId: string | null = null;
@@ -936,6 +997,11 @@ async function handlePurchase(
       "INFO",
       "PURCHASE promo_code incompleto: fallback por phone/lead",
       JSON.stringify({ promo_code: promoCode, phone: cleanPhone }),
+      undefined,
+      undefined,
+      undefined,
+      safePayloadRaw(p),
+      "fallback por phone/lead",
     );
   }
 
@@ -1017,6 +1083,10 @@ async function handlePurchase(
       "Primera compra procesada",
       JSON.stringify({ phone: cleanPhone, amount, promo_code: promoCode, match_method: matchMethod }),
       targetId,
+      undefined,
+      undefined,
+      safePayloadRaw(p),
+      "primera compra procesada",
     );
 
     const ok = await sendToMetaCAPI(db, effectiveConfig, pixelConfigs, fullRow, targetId, "Purchase", purchaseEventId, purchaseEventTime, customData, testEventCode || undefined);
@@ -1044,7 +1114,7 @@ async function handlePurchase(
       pixel_id: inboundMetaPixelId,
       contact_event_id: "",
       contact_event_time: null,
-      sendContactPixel: toBool(latestLeadRow?.sendContactPixel ?? latestPurchaseRow?.sendContactPixel),
+      sendContactPixel: fallbackSendContactPixel,
       contact_payload_raw: "",
       lead_event_id: "",
       lead_event_time: null,
@@ -1093,6 +1163,10 @@ async function handlePurchase(
       "Primera compra procesada",
       JSON.stringify({ phone: cleanPhone, amount, promo_code: promoCode, match_method: "created_first" }),
       createdId,
+      undefined,
+      undefined,
+      safePayloadRaw(p),
+      "primera compra procesada",
     );
 
     const ok = await sendToMetaCAPI(db, effectiveConfig, pixelConfigs, fullRow, createdId, "Purchase", purchaseEventId, purchaseEventTime, customData, testEventCode || undefined);
@@ -1178,6 +1252,10 @@ async function handlePurchase(
     "Recompra procesada",
     JSON.stringify({ phone: cleanPhone, amount, inherited_from: srcRow?.id, match_method: "created_repeat" }),
     newId,
+    undefined,
+    undefined,
+    safePayloadRaw(p),
+    "recompra procesada",
   );
 
   const ok = await sendToMetaCAPI(db, effectiveRepeatConfig, pixelConfigs, fullRow, newId, "Purchase", purchaseEventId, purchaseEventTime, customData, testEventCode || undefined);
