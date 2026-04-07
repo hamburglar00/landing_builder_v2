@@ -1385,77 +1385,79 @@ export default function AdminConversionesPage() {
             const displayRows = pagedConversions;
             const displayedColsWithoutTimestamp = cols.filter((c) => c !== "timestamp");
             return (
-              <div className="overflow-x-auto rounded-lg border border-zinc-700">
-                <table className="w-full text-left text-[11px]">
-                  <thead className="sticky top-0 z-20 bg-zinc-800/95">
-                    <tr>
-                      <th className="px-2 py-2 font-medium text-zinc-300 whitespace-nowrap">ID</th>
-                      <th className="px-2 py-2 font-medium text-zinc-300 whitespace-nowrap">timestamp</th>
-                      {displayedColsWithoutTimestamp.map((col) => (
-                        <th key={col} className="px-2 py-2 font-medium text-zinc-300 whitespace-nowrap">{col}</th>
-                      ))}
-                    </tr>
-                  </thead>
-                  <tbody className="divide-y divide-zinc-800">
-                    {displayRows.length === 0 ? (
+              <>
+                <div className="overflow-x-auto rounded-lg border border-zinc-700">
+                  <table className="w-full text-left text-[11px]">
+                    <thead className="sticky top-0 z-20 bg-zinc-800/95">
                       <tr>
-                        <td colSpan={(displayedColsWithoutTimestamp.length || 1) + 2} className="px-2 py-6 text-center text-zinc-500">
-                          Aun no hay conversiones registradas.
-                        </td>
+                        <th className="px-2 py-2 font-medium text-zinc-300 whitespace-nowrap">ID</th>
+                        <th className="px-2 py-2 font-medium text-zinc-300 whitespace-nowrap">timestamp</th>
+                        {displayedColsWithoutTimestamp.map((col) => (
+                          <th key={col} className="px-2 py-2 font-medium text-zinc-300 whitespace-nowrap">{col}</th>
+                        ))}
                       </tr>
-                    ) : displayRows.map((c, idx) => {
-                      const isRepeat = c.estado === "purchase" && c.observaciones?.includes("REPEAT");
-                      const rowColor =
-                        c.estado === "lead"
-                          ? "bg-amber-950/18"
-                          : c.estado === "purchase" && isRepeat
-                            ? "bg-violet-950/20"
-                            : c.estado === "purchase"
-                              ? "bg-rose-950/18"
-                              : "bg-zinc-950/40";
-                      return (
-                        <tr key={c.id} className={rowColor}>
-                          <td className="px-2 py-1.5 whitespace-nowrap text-zinc-500 font-mono">{c.internal_id ?? ((tablePage - 1) * tablePageSize + idx + 1)}</td>
-                          {cellValue(c, "timestamp")}
-                          {displayedColsWithoutTimestamp.map((col) =>
-                            col === "email" ? (
-                              <EditableEmailCell key={col} row={c} onSaved={(id, email) => setConversions((prev) => prev.map((r) => (r.id === id ? { ...r, email } : r)))} />
-                            ) : cellValue(c, col)
-                          )}
+                    </thead>
+                    <tbody className="divide-y divide-zinc-800">
+                      {displayRows.length === 0 ? (
+                        <tr>
+                          <td colSpan={(displayedColsWithoutTimestamp.length || 1) + 2} className="px-2 py-6 text-center text-zinc-500">
+                            Aun no hay conversiones registradas.
+                          </td>
                         </tr>
-                      );
-                    })}
-                  </tbody>
-                </table>
-              </div>
-              {filteredConversions.length > tablePageSize && (
-                <div className="mt-3 flex items-center justify-between text-xs text-zinc-400">
-                  <span>
-                    Mostrando {(tablePage - 1) * tablePageSize + 1}-{Math.min(tablePage * tablePageSize, filteredConversions.length)} de {filteredConversions.length}
-                  </span>
-                  <div className="flex items-center gap-2">
-                    <button
-                      type="button"
-                      disabled={tablePage <= 1}
-                      onClick={() => setTablePage((p) => Math.max(1, p - 1))}
-                      className="rounded border border-zinc-700 px-2 py-1 text-zinc-300 hover:bg-zinc-800 disabled:opacity-40"
-                    >
-                      Anterior
-                    </button>
-                    <span>
-                      {tablePage}/{totalTablePages}
-                    </span>
-                    <button
-                      type="button"
-                      disabled={tablePage >= totalTablePages}
-                      onClick={() => setTablePage((p) => Math.min(totalTablePages, p + 1))}
-                      className="rounded border border-zinc-700 px-2 py-1 text-zinc-300 hover:bg-zinc-800 disabled:opacity-40"
-                    >
-                      Siguiente
-                    </button>
-                  </div>
+                      ) : displayRows.map((c, idx) => {
+                        const isRepeat = c.estado === "purchase" && c.observaciones?.includes("REPEAT");
+                        const rowColor =
+                          c.estado === "lead"
+                            ? "bg-amber-950/18"
+                            : c.estado === "purchase" && isRepeat
+                              ? "bg-violet-950/20"
+                              : c.estado === "purchase"
+                                ? "bg-rose-950/18"
+                                : "bg-zinc-950/40";
+                        return (
+                          <tr key={c.id} className={rowColor}>
+                            <td className="px-2 py-1.5 whitespace-nowrap text-zinc-500 font-mono">{c.internal_id ?? ((tablePage - 1) * tablePageSize + idx + 1)}</td>
+                            {cellValue(c, "timestamp")}
+                            {displayedColsWithoutTimestamp.map((col) =>
+                              col === "email" ? (
+                                <EditableEmailCell key={col} row={c} onSaved={(id, email) => setConversions((prev) => prev.map((r) => (r.id === id ? { ...r, email } : r)))} />
+                              ) : cellValue(c, col)
+                            )}
+                          </tr>
+                        );
+                      })}
+                    </tbody>
+                  </table>
                 </div>
-              )}
+                {filteredConversions.length > tablePageSize && (
+                  <div className="mt-3 flex items-center justify-between text-xs text-zinc-400">
+                    <span>
+                      Mostrando {(tablePage - 1) * tablePageSize + 1}-{Math.min(tablePage * tablePageSize, filteredConversions.length)} de {filteredConversions.length}
+                    </span>
+                    <div className="flex items-center gap-2">
+                      <button
+                        type="button"
+                        disabled={tablePage <= 1}
+                        onClick={() => setTablePage((p) => Math.max(1, p - 1))}
+                        className="rounded border border-zinc-700 px-2 py-1 text-zinc-300 hover:bg-zinc-800 disabled:opacity-40"
+                      >
+                        Anterior
+                      </button>
+                      <span>
+                        {tablePage}/{totalTablePages}
+                      </span>
+                      <button
+                        type="button"
+                        disabled={tablePage >= totalTablePages}
+                        onClick={() => setTablePage((p) => Math.min(totalTablePages, p + 1))}
+                        className="rounded border border-zinc-700 px-2 py-1 text-zinc-300 hover:bg-zinc-800 disabled:opacity-40"
+                      >
+                        Siguiente
+                      </button>
+                    </div>
+                  </div>
+                )}
+              </>
             );
           })()}
         </section>
