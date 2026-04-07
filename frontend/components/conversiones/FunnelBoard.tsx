@@ -166,6 +166,7 @@ function ContactCard({
   return (
     <div
       className={`group relative overflow-hidden rounded-xl border ${meta.cardBorder} bg-zinc-900/88 px-3.5 py-3 shadow-[0_8px_24px_rgba(0,0,0,0.28)] ring-1 ring-white/5 transition-all duration-200 hover:-translate-y-0.5 hover:border-zinc-700/70 hover:shadow-[0_12px_30px_rgba(0,0,0,0.32)] ${meta.cardRing}`}
+      title="Los datos del funnel se calculan con las filas visibles de la Tabla de conversiones. Si limpiaste la vista, algunos totales/cargas pueden verse reducidos."
     >
       <div className={`pointer-events-none absolute inset-0 bg-gradient-to-br ${meta.cardGlow}`} />
       <div className="pointer-events-none absolute inset-x-0 top-0 h-[1px] bg-white/7" />

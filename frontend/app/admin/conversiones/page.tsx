@@ -351,6 +351,7 @@ export default function AdminConversionesPage() {
   const [copiedUrl, setCopiedUrl] = useState<string | null>(null);
   const [expandedLog, setExpandedLog] = useState<number | null>(null);
   const [tableSearch, setTableSearch] = useState("");
+  const [tablePage, setTablePage] = useState(1);
   const [statsLandingFilter, setStatsLandingFilter] = useState<string>("__all__");
   const [statsPixelFilter, setStatsPixelFilter] = useState<string>("__all__");
   const [statsGerenciaFilter, setStatsGerenciaFilter] = useState<string>("__all__");
@@ -504,6 +505,18 @@ export default function AdminConversionesPage() {
       return hay.includes(q);
     });
   }, [activeConversions, tableSearch]);
+  const tablePageSize = 20;
+  const totalTablePages = Math.max(1, Math.ceil(filteredConversions.length / tablePageSize));
+  const pagedConversions = useMemo(() => {
+    const start = (tablePage - 1) * tablePageSize;
+    return filteredConversions.slice(start, start + tablePageSize);
+  }, [filteredConversions, tablePage]);
+  useEffect(() => {
+    setTablePage(1);
+  }, [tableSearch, dateRange, statsLandingFilter, statsPixelFilter, statsGerenciaFilter, statsTelefonoFilter, demoMode]);
+  useEffect(() => {
+    if (tablePage > totalTablePages) setTablePage(totalTablePages);
+  }, [tablePage, totalTablePages]);
   const internalIdByConversionId = useMemo(
     () => new Map(conversions.map((c) => [c.id, c.internal_id])),
     [conversions],
@@ -1369,7 +1382,7 @@ export default function AdminConversionesPage() {
           </div>
           {(() => {
             const cols = ALL_COLUMNS;
-            const displayRows = filteredConversions;
+            const displayRows = pagedConversions;
             const displayedColsWithoutTimestamp = cols.filter((c) => c !== "timestamp");
             return (
               <div className="overflow-x-auto rounded-lg border border-zinc-700">
@@ -1402,7 +1415,7 @@ export default function AdminConversionesPage() {
                               : "bg-zinc-950/40";
                       return (
                         <tr key={c.id} className={rowColor}>
-                          <td className="px-2 py-1.5 whitespace-nowrap text-zinc-500 font-mono">{c.internal_id ?? idx + 1}</td>
+                          <td className="px-2 py-1.5 whitespace-nowrap text-zinc-500 font-mono">{c.internal_id ?? ((tablePage - 1) * tablePageSize + idx + 1)}</td>
                           {cellValue(c, "timestamp")}
                           {displayedColsWithoutTimestamp.map((col) =>
                             col === "email" ? (
@@ -1415,6 +1428,34 @@ export default function AdminConversionesPage() {
                   </tbody>
                 </table>
               </div>
+              {filteredConversions.length > tablePageSize && (
+                <div className="mt-3 flex items-center justify-between text-xs text-zinc-400">
+                  <span>
+                    Mostrando {(tablePage - 1) * tablePageSize + 1}-{Math.min(tablePage * tablePageSize, filteredConversions.length)} de {filteredConversions.length}
+                  </span>
+                  <div className="flex items-center gap-2">
+                    <button
+                      type="button"
+                      disabled={tablePage <= 1}
+                      onClick={() => setTablePage((p) => Math.max(1, p - 1))}
+                      className="rounded border border-zinc-700 px-2 py-1 text-zinc-300 hover:bg-zinc-800 disabled:opacity-40"
+                    >
+                      Anterior
+                    </button>
+                    <span>
+                      {tablePage}/{totalTablePages}
+                    </span>
+                    <button
+                      type="button"
+                      disabled={tablePage >= totalTablePages}
+                      onClick={() => setTablePage((p) => Math.min(totalTablePages, p + 1))}
+                      className="rounded border border-zinc-700 px-2 py-1 text-zinc-300 hover:bg-zinc-800 disabled:opacity-40"
+                    >
+                      Siguiente
+                    </button>
+                  </div>
+                </div>
+              )}
             );
           })()}
         </section>
