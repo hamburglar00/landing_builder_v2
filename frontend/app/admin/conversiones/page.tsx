@@ -1429,6 +1429,7 @@ export default function AdminConversionesPage() {
             <FunnelBoard
               contacts={activeFunnel}
               premiumThreshold={config?.funnel_premium_threshold ?? 50000}
+              rankingConfig={config?.tracking_ranking_config ?? null}
               headerSlot={
                 <div className="flex flex-wrap items-center gap-2">
                   <h3 className="mr-2 text-sm font-semibold text-zinc-200">Funnel</h3>

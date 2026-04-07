@@ -4,6 +4,7 @@ import { useState, useMemo, type ReactNode } from "react";
 import {
   type FunnelContact,
   type FunnelStage,
+  type TrackingRankingConfig,
   classifyContact,
 } from "@/lib/conversionsDb";
 
@@ -106,6 +107,31 @@ function relDate(iso: string): string {
   return `${Math.floor(days / 30)}mes`;
 }
 
+const DEFAULT_RANK_RULES = [
+  { id: "r1", indicator: "\u{1F4A9}", maxTotal: 1000 },
+  { id: "r2", indicator: "\u{1F7E2}", maxTotal: 5000 },
+  { id: "r3", indicator: "\u{1F7E1}", maxTotal: 10000 },
+  { id: "r4", indicator: "\u{1F7E0}", maxTotal: 50000 },
+  { id: "r5", indicator: "\u{1F534}", maxTotal: 100000 },
+  { id: "r6", indicator: "\u{26AB}", maxTotal: 300000 },
+  { id: "r7", indicator: "\u{1F525}", maxTotal: 500000 },
+];
+const DEFAULT_OVERFLOW_INDICATOR = "\u{1F4A3}";
+const LEAD_INDICATOR = "\u{1F4F2}";
+
+function rankIndicatorForTotal(
+  total: number,
+  rankingConfig?: TrackingRankingConfig | null,
+) {
+  const rules = rankingConfig?.rules?.length ? rankingConfig.rules : DEFAULT_RANK_RULES;
+  const overflow = rankingConfig?.overflowIndicator || DEFAULT_OVERFLOW_INDICATOR;
+  const sorted = [...rules].sort((a, b) => a.maxTotal - b.maxTotal);
+  for (const r of sorted) {
+    if (total < r.maxTotal) return r.indicator || "-";
+  }
+  return overflow || "-";
+}
+
 function WaIcon({ className }: { className?: string }) {
   return (
     <svg viewBox="0 0 24 24" className={className} fill="currentColor">
@@ -118,10 +144,21 @@ function WaIcon({ className }: { className?: string }) {
 /* aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa
    CONTACT CARD
    aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa */
-function ContactCard({ c, stage }: { c: FunnelContact; stage: FunnelStage }) {
+function ContactCard({
+  c,
+  stage,
+  rankingConfig,
+}: {
+  c: FunnelContact;
+  stage: FunnelStage;
+  rankingConfig?: TrackingRankingConfig | null;
+}) {
   const meta = STAGE_META[stage];
   const name = [c.fn, c.ln].filter(Boolean).join(" ");
   const hasPurchases = c.purchase_count > 0;
+  const rankIndicator = hasPurchases
+    ? rankIndicatorForTotal(c.total_valor, rankingConfig)
+    : LEAD_INDICATOR;
   const statusLabel = hasPurchases
     ? `${c.purchase_count} carga${c.purchase_count !== 1 ? "s" : ""}`
     : "Sin cargas";
@@ -158,9 +195,18 @@ function ContactCard({ c, stage }: { c: FunnelContact; stage: FunnelStage }) {
       {(name || c.email) && (
         <div className="relative z-10 mt-2 space-y-1 border-t border-zinc-800/35 pt-1.5">
           {name && (
-            <p className="truncate text-[11px] font-medium text-zinc-300/85 leading-none" title={name}>
-              {name}
-            </p>
+            <div className="flex items-center justify-between gap-2">
+              <p className="truncate text-[11px] font-medium text-zinc-300/85 leading-none" title={name}>
+                {name}
+              </p>
+              <span
+                className="text-base leading-none"
+                title={`Ranking: ${rankIndicator}`}
+                aria-label={`Ranking ${rankIndicator}`}
+              >
+                {rankIndicator}
+              </span>
+            </div>
           )}
           {c.email && (
             <p className="text-[11px] text-zinc-500 truncate leading-none" title={c.email}>
@@ -210,10 +256,12 @@ export default function FunnelBoard({
   contacts,
   premiumThreshold,
   headerSlot,
+  rankingConfig,
 }: {
   contacts: FunnelContact[];
   premiumThreshold: number;
   headerSlot?: ReactNode;
+  rankingConfig?: TrackingRankingConfig | null;
 }) {
   const [sortKey, setSortKey] = useState<SortKey>("date");
   const [sortDir, setSortDir] = useState<SortDir>("desc");
@@ -320,7 +368,14 @@ export default function FunnelBoard({
                     <p className="text-[11px] text-zinc-800">Sin contactos</p>
                   </div>
                 ) : (
-                  list.map((c) => <ContactCard key={c.phone} c={c} stage={stage} />)
+                  list.map((c) => (
+                    <ContactCard
+                      key={c.phone}
+                      c={c}
+                      stage={stage}
+                      rankingConfig={rankingConfig}
+                    />
+                  ))
                 )}
               </div>
             </div>
