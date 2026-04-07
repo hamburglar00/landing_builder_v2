@@ -922,7 +922,7 @@ async function handleLead(
     undefined,
     undefined,
     safePayloadRaw(p),
-    "lead procesado",
+    "lead procesado (match: promo_code)",
   );
 
   const ok = await sendToMetaCAPI(db, effectiveConfig, pixelConfigs, fullRow, targetId!, "Lead", leadEventId, leadEventTime, undefined, testEventCode || undefined);
@@ -1019,6 +1019,7 @@ async function handlePurchase(
       }
     }
   } else if (promoCode) {
+    const fallbackCandidateId = latestLeadRow?.id ?? latestPurchaseRow?.id ?? undefined;
     await writeLog(
       db,
       landing.user_id,
@@ -1026,11 +1027,11 @@ async function handlePurchase(
       "INFO",
       "PURCHASE promo_code incompleto: fallback por phone/lead",
       JSON.stringify({ promo_code: promoCode, phone: cleanPhone }),
-      undefined,
+      fallbackCandidateId,
       undefined,
       undefined,
       safePayloadRaw(p),
-      "fallback por phone/lead",
+      "fallback por phone/lead (match pendiente)",
     );
   }
 
@@ -1115,7 +1116,7 @@ async function handlePurchase(
       undefined,
       undefined,
       safePayloadRaw(p),
-      "primera compra procesada",
+      `primera compra procesada (match: ${matchMethod})`,
     );
 
     const ok = await sendToMetaCAPI(db, effectiveConfig, pixelConfigs, fullRow, targetId, "Purchase", purchaseEventId, purchaseEventTime, customData, testEventCode || undefined);
@@ -1195,7 +1196,7 @@ async function handlePurchase(
       undefined,
       undefined,
       safePayloadRaw(p),
-      "primera compra procesada",
+      "primera compra procesada (match: created_first)",
     );
 
     const ok = await sendToMetaCAPI(db, effectiveConfig, pixelConfigs, fullRow, createdId, "Purchase", purchaseEventId, purchaseEventTime, customData, testEventCode || undefined);
@@ -1284,7 +1285,7 @@ async function handlePurchase(
     undefined,
     undefined,
     safePayloadRaw(p),
-    "recompra procesada",
+    "recompra procesada (match: created_repeat)",
   );
 
   const ok = await sendToMetaCAPI(db, effectiveRepeatConfig, pixelConfigs, fullRow, newId, "Purchase", purchaseEventId, purchaseEventTime, customData, testEventCode || undefined);
