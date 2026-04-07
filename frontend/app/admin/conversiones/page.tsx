@@ -1178,9 +1178,9 @@ export default function AdminConversionesPage() {
 
       {/* Date filter + global actions (funnel, tabla, estadisticas) */}
       {(tab === "funnel" || tab === "seguimiento" || tab === "tabla" || tab === "estadisticas") && (
-        <div className="flex items-center justify-end gap-2 pt-1">
+        <div className="flex items-center justify-start gap-2 pt-1">
           {tab === "estadisticas" && (
-            <div className="mr-auto flex items-center gap-2">
+            <div className="flex items-center gap-2">
               <button
                 type="button"
                 onClick={openStatsFilterModal}
