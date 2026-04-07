@@ -508,6 +508,20 @@ export default function AdminConversionesPage() {
     () => new Map(conversions.map((c) => [c.id, c.internal_id])),
     [conversions],
   );
+  const logGroupToneByIndex = useMemo(() => {
+    const tones: string[] = [];
+    let lastKey = "__init__";
+    let tone = 0;
+    logs.forEach((log, idx) => {
+      const key = log.conversion_id
+        ? String(internalIdByConversionId.get(log.conversion_id) ?? "-")
+        : "-";
+      if (idx > 0 && key !== lastKey) tone = tone === 0 ? 1 : 0;
+      tones.push(tone === 0 ? "bg-zinc-950/40" : "bg-zinc-900/45");
+      lastKey = key;
+    });
+    return tones;
+  }, [logs, internalIdByConversionId]);
   const hasStatsFiltersApplied = useMemo(
     () =>
       statsLandingFilter !== "__all__" ||
@@ -1511,21 +1525,22 @@ export default function AdminConversionesPage() {
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-zinc-800">
-                  {logs.map((log) => (
+                  {logs.map((log, idx) => (
                     <tr
                       key={log.id}
                       className={(() => {
+                        const groupTone = logGroupToneByIndex[idx] ?? "bg-zinc-950/40";
                         const isMetaResponse = log.function_name === "sendToMetaCAPI" && log.message === "Meta CAPI respuesta";
-                        if (!isMetaResponse || !log.response_meta) return "bg-zinc-950/40";
+                        if (!isMetaResponse || !log.response_meta) return groupTone;
                         try {
                           const parsed = JSON.parse(log.response_meta) as { error?: unknown; events_received?: number | string };
                           const eventsReceived = typeof parsed.events_received === "number"
                             ? parsed.events_received
                             : Number(parsed.events_received ?? 0);
                           const ok = !parsed.error && Number.isFinite(eventsReceived) && eventsReceived > 0;
-                          return ok ? "bg-emerald-950/25 border-l-2 border-emerald-400/60" : "bg-zinc-950/40";
+                          return ok ? `${groupTone} border-l-2 border-emerald-400/60` : groupTone;
                         } catch {
-                          return "bg-zinc-950/40";
+                          return groupTone;
                         }
                       })()}
                     >
