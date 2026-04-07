@@ -195,17 +195,19 @@ function ContactCard({
       {(name || c.email) && (
         <div className="relative z-10 mt-2 space-y-1 border-t border-zinc-800/35 pt-1.5">
           {name && (
-            <div className="flex items-center justify-between gap-2">
+            <div className="flex items-center gap-1.5">
+              {hasPurchases && (
+                <span
+                  className="text-[10px] leading-none"
+                  title={`Ranking: ${rankIndicator}`}
+                  aria-label={`Ranking ${rankIndicator}`}
+                >
+                  {rankIndicator}
+                </span>
+              )}
               <p className="truncate text-[11px] font-medium text-zinc-300/85 leading-none" title={name}>
                 {name}
               </p>
-              <span
-                className="text-base leading-none"
-                title={`Ranking: ${rankIndicator}`}
-                aria-label={`Ranking ${rankIndicator}`}
-              >
-                {rankIndicator}
-              </span>
             </div>
           )}
           {c.email && (
