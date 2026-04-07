@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 import { useEffect, useMemo, useState } from "react";
 import { supabase } from "@/lib/supabaseClient";
@@ -18,6 +18,8 @@ type PlanCard = {
   title: string;
   price: string;
   unitPrice: string;
+  landingsLimit: number | null;
+  phonesLimit: number | null;
   landings: string;
   phones: string;
   colorClass: string;
@@ -32,7 +34,9 @@ const PLAN_CARDS: PlanCard[] = [
     code: "starter",
     title: "Starter",
     price: "USD 69 / mes",
-    unitPrice: "USD 34.5 por teléfono",
+    unitPrice: "USD 34.5 por telefono",
+    landingsLimit: 2,
+    phonesLimit: 2,
     landings: "Hasta 2 landings",
     phones: "Hasta 2 telefonos",
     colorClass: "border-zinc-700 bg-zinc-900/40",
@@ -48,7 +52,9 @@ const PLAN_CARDS: PlanCard[] = [
     code: "plus",
     title: "Plus",
     price: "USD 163 / mes",
-    unitPrice: "USD 32.6 por teléfono",
+    unitPrice: "USD 32.6 por telefono",
+    landingsLimit: 4,
+    phonesLimit: 5,
     landings: "Hasta 4 landings",
     phones: "Hasta 5 telefonos",
     colorClass: "border-yellow-700 bg-yellow-950/30",
@@ -64,7 +70,9 @@ const PLAN_CARDS: PlanCard[] = [
     code: "pro",
     title: "Pro",
     price: "USD 305 / mes",
-    unitPrice: "USD 30.5 por teléfono",
+    unitPrice: "USD 30.5 por telefono",
+    landingsLimit: 8,
+    phonesLimit: 10,
     landings: "Hasta 8 landings",
     phones: "Hasta 10 telefonos",
     colorClass: "border-orange-700 bg-orange-950/30",
@@ -80,7 +88,9 @@ const PLAN_CARDS: PlanCard[] = [
     code: "premium",
     title: "Premium",
     price: "USD 570 / mes",
-    unitPrice: "USD 28.5 por teléfono",
+    unitPrice: "USD 28.5 por telefono",
+    landingsLimit: 12,
+    phonesLimit: 20,
     landings: "Hasta 12 landings",
     phones: "Hasta 20 telefonos",
     colorClass: "border-purple-700 bg-purple-950/30",
@@ -96,7 +106,9 @@ const PLAN_CARDS: PlanCard[] = [
     code: "scale",
     title: "Scale",
     price: "Precio a medida",
-    unitPrice: "Cotización personalizada",
+    unitPrice: "Cotizacion personalizada",
+    landingsLimit: null,
+    phonesLimit: null,
     landings: "Escalable",
     phones: "Escalable",
     colorClass: "border-zinc-500 bg-black",
@@ -149,6 +161,13 @@ export default function DashboardPlanPage() {
     return PLAN_CARDS.find((p) => p.code === code) ?? PLAN_CARDS[0];
   }, [sub]);
 
+  const includeText = useMemo(() => {
+    if (currentPlan.landingsLimit === null || currentPlan.phonesLimit === null) {
+      return "Escalable";
+    }
+    return `${currentPlan.landingsLimit} landings · ${currentPlan.phonesLimit} telefonos`;
+  }, [currentPlan]);
+
   return (
     <div className="space-y-6">
       <div>
@@ -168,7 +187,7 @@ export default function DashboardPlanPage() {
           <div className="mt-3 grid gap-2 text-sm text-zinc-200 sm:grid-cols-2">
             <p>
               <span className="text-zinc-400">Incluye:</span>{" "}
-              {sub?.max_landings ?? 2} landings · {sub?.max_phones ?? 2} telefonos
+              {includeText}
             </p>
             <p>
               <span className="text-zinc-400">Precio:</span> {currentPlan.price}
