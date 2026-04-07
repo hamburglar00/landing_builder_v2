@@ -1147,7 +1147,7 @@ export default function DashboardConversionesPage() {
         </div>
       </div>
 
-      {/* Date filter  visible on funnel, seguimiento, tabla, estadisticas */}
+      {/* Date filter + global actions (funnel, tabla, estadisticas) */}
       {(tab === "funnel" || tab === "seguimiento" || tab === "tabla" || tab === "estadisticas") && (
         <div className="flex items-center justify-end gap-2 pt-1">
           {tab === "estadisticas" && (
@@ -1168,6 +1168,45 @@ export default function DashboardConversionesPage() {
                 Aplicar filtros
               </button>
             </div>
+          )}
+          {(tab === "funnel" || tab === "tabla" || tab === "estadisticas") && (
+            <>
+              <button
+                type="button"
+                onClick={refreshTable}
+                disabled={refreshingTable}
+                className="inline-flex items-center gap-1.5 rounded-lg border border-zinc-700 bg-zinc-800/80 px-2.5 py-1.5 text-xs font-medium text-zinc-300 transition hover:bg-zinc-700 hover:text-zinc-100 disabled:opacity-60"
+                title="Actualizar datos"
+              >
+                <svg className="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+                </svg>
+                {refreshingTable ? "Actualizando..." : "Actualizar"}
+              </button>
+              <button
+                type="button"
+                onClick={
+                  tab === "funnel"
+                    ? clearFunnelDisplay
+                    : tab === "tabla"
+                      ? clearTableDisplay
+                      : clearStatsDisplay
+                }
+                disabled={
+                  tab === "funnel"
+                    ? (hidingFunnel || refreshingTable || activeFunnel.length === 0)
+                    : tab === "tabla"
+                      ? (hidingTable || refreshingTable || filteredConversions.length === 0)
+                      : (hidingStats || refreshingTable || (activeFunnel.length === 0 && statsConversions.length === 0))
+                }
+                className="inline-flex items-center gap-1.5 rounded-lg border border-zinc-700 bg-zinc-800/80 px-2.5 py-1.5 text-xs font-medium text-zinc-400 transition hover:bg-zinc-700 hover:text-zinc-300 disabled:opacity-50 disabled:cursor-not-allowed"
+                title="Ocultar registros de la vista (persistente, no borra de la base)"
+              >
+                {tab === "funnel" ? (hidingFunnel ? "Ocultando..." : "Limpiar vista")
+                  : tab === "tabla" ? (hidingTable ? "Ocultando..." : "Limpiar vista")
+                    : (hidingStats ? "Ocultando..." : "Limpiar vista")}
+              </button>
+            </>
           )}
           <DateRangeFilter onChange={setDateRange} />
         </div>
@@ -1302,29 +1341,6 @@ export default function DashboardConversionesPage() {
                 placeholder="Buscar por phone, email, promo, utm..."
                 className="h-8 w-64 rounded-lg border border-zinc-700 bg-zinc-900 px-3 text-xs text-zinc-100 placeholder:text-zinc-500"
               />
-              <div className="flex gap-2">
-              <button
-                type="button"
-                onClick={refreshTable}
-                disabled={refreshingTable}
-                className="inline-flex items-center gap-1.5 rounded-lg border border-zinc-700 bg-zinc-800/80 px-2.5 py-1.5 text-xs font-medium text-zinc-300 transition hover:bg-zinc-700 hover:text-zinc-100 disabled:opacity-60"
-                title="Actualizar datos"
-              >
-                <svg className="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-                  <path strokeLinecap="round" strokeLinejoin="round" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
-                </svg>
-                {refreshingTable ? "Actualizando..." : "Actualizar"}
-              </button>
-              <button
-                type="button"
-                onClick={clearTableDisplay}
-                disabled={hidingTable || refreshingTable || filteredConversions.length === 0}
-                className="inline-flex items-center gap-1.5 rounded-lg border border-zinc-700 bg-zinc-800/80 px-2.5 py-1.5 text-xs font-medium text-zinc-400 transition hover:bg-zinc-700 hover:text-zinc-300 disabled:opacity-50 disabled:cursor-not-allowed"
-                title="Ocultar registros de la vista (persistente, no borra de la base)"
-              >
-                {hidingTable ? "Ocultando..." : "Limpiar vista"}
-              </button>
-            </div>
             </div>
           </div>
           <div className="overflow-x-auto rounded-lg border border-zinc-700">
@@ -1391,27 +1407,6 @@ export default function DashboardConversionesPage() {
               headerSlot={
                 <div className="flex flex-wrap items-center gap-2">
                   <h3 className="mr-2 text-sm font-semibold text-zinc-200">Funnel</h3>
-                  <button
-                    type="button"
-                    onClick={refreshTable}
-                    disabled={refreshingTable}
-                    className="inline-flex items-center gap-1.5 rounded-lg border border-zinc-700 bg-zinc-800/80 px-2.5 py-1.5 text-xs font-medium text-zinc-300 transition hover:bg-zinc-700 hover:text-zinc-100 disabled:opacity-60"
-                    title="Actualizar datos"
-                  >
-                    <svg className="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-                      <path strokeLinecap="round" strokeLinejoin="round" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
-                    </svg>
-                    {refreshingTable ? "Actualizando..." : "Actualizar"}
-                  </button>
-                  <button
-                    type="button"
-                    onClick={clearFunnelDisplay}
-                    disabled={hidingFunnel || refreshingTable || activeFunnel.length === 0}
-                    className="inline-flex items-center gap-1.5 rounded-lg border border-zinc-700 bg-zinc-800/80 px-2.5 py-1.5 text-xs font-medium text-zinc-400 transition hover:bg-zinc-700 hover:text-zinc-300 disabled:opacity-50 disabled:cursor-not-allowed"
-                    title="Ocultar registros de la vista (persistente, no borra de la base)"
-                  >
-                    {hidingFunnel ? "Ocultando..." : "Limpiar vista"}
-                  </button>
                 </div>
               }
             />
@@ -1433,29 +1428,6 @@ export default function DashboardConversionesPage() {
         <section className="rounded-xl border border-zinc-800 bg-zinc-900/50 p-4">
           <div className="mb-4 flex flex-wrap items-center justify-between gap-2">
             <h3 className="text-sm font-semibold text-zinc-200">Estadisticas</h3>
-            <div className="flex gap-2">
-              <button
-                type="button"
-                onClick={refreshTable}
-                disabled={refreshingTable}
-                className="inline-flex items-center gap-1.5 rounded-lg border border-zinc-700 bg-zinc-800/80 px-2.5 py-1.5 text-xs font-medium text-zinc-300 transition hover:bg-zinc-700 hover:text-zinc-100 disabled:opacity-60"
-                title="Actualizar datos"
-              >
-                <svg className="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-                  <path strokeLinecap="round" strokeLinejoin="round" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
-                </svg>
-                {refreshingTable ? "Actualizando..." : "Actualizar"}
-              </button>
-              <button
-                type="button"
-                onClick={clearStatsDisplay}
-                disabled={hidingStats || refreshingTable || (activeFunnel.length === 0 && statsConversions.length === 0)}
-                className="inline-flex items-center gap-1.5 rounded-lg border border-zinc-700 bg-zinc-800/80 px-2.5 py-1.5 text-xs font-medium text-zinc-400 transition hover:bg-zinc-700 hover:text-zinc-300 disabled:opacity-50 disabled:cursor-not-allowed"
-                title="Ocultar registros de la vista (persistente, no borra de la base)"
-              >
-                {hidingStats ? "Ocultando..." : "Limpiar vista"}
-              </button>
-            </div>
           </div>
           {activeFunnelFiltered.length === 0 && statsConversionsFiltered.length === 0 ? (
             <p className="py-12 text-center text-sm text-zinc-500">An no hay datos para estadsticas.</p>
