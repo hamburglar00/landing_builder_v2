@@ -889,22 +889,99 @@ async function handleLead(
   const leadEventId = generateEventId();
   const leadEventTime = toValidEventTime(p.lead_event_time || p.event_time || Math.floor(Date.now() / 1000));
 
-  // 2) No match -> stop (promo_code should exist)
+  // 2) No match -> create new LEAD row to avoid losing conversion
   if (!targetId) {
+    const resolvedPixelId = inboundMetaPixelId || config.pixel_id || "";
+    const generatedExternalId = norm(p.external_id) || generateEventId();
+    const newRow: Omit<ConversionRow, "id"> = {
+      landing_id: landing.id?.trim() || null,
+      user_id: landing.user_id,
+      landing_name: landing.name,
+      phone: cleanPhone,
+      email: payloadEmail,
+      fn: payloadFn,
+      ln: payloadLn,
+      ct: norm(geo.ct),
+      st: norm(geo.st),
+      zip: norm(geo.zip || p.zip),
+      country: norm(geo.country),
+      fbp: norm(p.fbp),
+      fbc: norm(p.fbc),
+      meta_pixel_id: resolvedPixelId,
+      source_platform: inboundSourcePlatform || "",
+      pixel_id: resolvedPixelId,
+      contact_event_id: "",
+      contact_event_time: null,
+      sendContactPixel: false,
+      contact_payload_raw: "",
+      lead_event_id: leadEventId,
+      lead_event_time: leadEventTime,
+      lead_payload_raw: leadPayloadRaw,
+      purchase_event_id: "",
+      purchase_event_time: null,
+      purchase_payload_raw: "",
+      test_event_code: testEventCode,
+      client_ip: norm(p.clientIP),
+      agent_user: norm(p.agentuser),
+      device_type: norm(p.device_type),
+      event_source_url: eventSourceUrl,
+      estado: "lead",
+      valor: 0,
+      contact_status_capi: "",
+      lead_status_capi: "",
+      purchase_status_capi: "",
+      observaciones: "",
+      external_id: generatedExternalId,
+      utm_campaign: norm(p.utm_campaign),
+      telefono_asignado: norm(p.telefono_asignado),
+      promo_code: promoCode,
+      geo_city: geo.geo_city,
+      geo_region: geo.geo_region,
+      geo_country: geo.geo_country,
+    };
+
+    const { data: inserted, error: insertError } = await db
+      .from("conversions")
+      .insert(newRow)
+      .select("id")
+      .single();
+
+    if (insertError || !inserted?.id) {
+      await writeLog(
+        db,
+        landing.user_id,
+        "handleLead",
+        "ERROR",
+        "LEAD sin match por promo_code y error al crear fila",
+        JSON.stringify({
+          promo_code: promoCode,
+          phone: cleanPhone,
+          error: insertError?.message ?? "unknown",
+        }),
+        undefined,
+        undefined,
+        undefined,
+        safePayloadRaw(p),
+        "sin match por promo_code y fallo al crear fila",
+      );
+      return textResponse("Error al crear fila LEAD sin match", 500);
+    }
+
+    targetId = inserted.id;
+
     await writeLog(
       db,
       landing.user_id,
       "handleLead",
-      "ERROR",
-      "LEAD sin match por promo_code",
-      JSON.stringify({ promo_code: promoCode, phone: cleanPhone }),
-      undefined,
+      "INFO",
+      "LEAD sin match por promo_code: creado nuevo",
+      JSON.stringify({ promo_code: promoCode, phone: cleanPhone, conversion_id: targetId }),
+      targetId,
       undefined,
       undefined,
       safePayloadRaw(p),
-      "sin match por promo_code",
+      "lead creado sin match (match: created_new)",
     );
-    return textResponse("No se encontro fila para promo_code", 404);
   } else {
     // 4) Update existing row
     const updates: Record<string, unknown> = {
@@ -932,7 +1009,7 @@ async function handleLead(
     if (geo.geo_region) updates.geo_region = geo.geo_region;
     if (geo.geo_country) updates.geo_country = geo.geo_country;
     // Fill promo_code if row didn't have it
-    if (promoCode && promoCodeIsFull) {
+    if (promoCode && isFullPromoCode(promoCode)) {
       const { data: cur } = await db.from("conversions").select("promo_code").eq("id", targetId).single();
       if (!cur?.promo_code) updates.promo_code = promoCode;
     }
