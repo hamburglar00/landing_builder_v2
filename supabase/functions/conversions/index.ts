@@ -485,6 +485,31 @@ async function sendToMetaCAPI(
     : "";
   const preferredPixelId = rowPixel || chatracePixelId;
   const effectiveConfig = resolveEffectiveConfigForPixel(config, pixelConfigs, preferredPixelId);
+  const defaultPixel = norm(pixelConfigs.find((pc) => pc.is_default)?.pixel_id);
+
+  if (!rowPixel && !chatracePixelId && norm(effectiveConfig.pixel_id)) {
+    const fallbackSource = defaultPixel && norm(effectiveConfig.pixel_id) === defaultPixel
+      ? "default"
+      : "base_config";
+    await writeLog(
+      db,
+      row.user_id,
+      "sendToMetaCAPI",
+      "INFO",
+      "Pixel resuelto por fallback",
+      JSON.stringify({
+        event_name: eventName,
+        row_id: rowId,
+        fallback_source: fallbackSource,
+        selected_pixel_id: norm(effectiveConfig.pixel_id),
+      }),
+      rowId,
+      undefined,
+      undefined,
+      undefined,
+      `pixel por fallback (${fallbackSource})`,
+    );
+  }
 
   if (!effectiveConfig.meta_access_token || !effectiveConfig.pixel_id) {
     const statusField =
