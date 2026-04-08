@@ -1652,6 +1652,24 @@ Deno.serve(async (req) => {
     ) {
       const existing = await findInboundByActionEventId(db, userId, rawAction, actionEventId);
       if (existing) {
+        await writeLog(
+          db,
+          userId,
+          "main",
+          "INFO",
+          "Duplicado ignorado por action_event_id",
+          JSON.stringify({
+            action: rawAction,
+            action_event_id: actionEventId,
+            landing_name: landingName,
+            existing_inbox_id: existing.id,
+          }),
+          undefined,
+          undefined,
+          undefined,
+          safePayloadRaw(params),
+          "duplicado ignorado por action_event_id",
+        );
         return textResponse("Duplicado ignorado (action_event_id ya procesado)", 200);
       }
     }
