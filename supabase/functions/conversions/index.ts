@@ -967,7 +967,8 @@ async function handleLead(
       return textResponse("Error al crear fila LEAD sin match", 500);
     }
 
-    targetId = inserted.id;
+    const createdId = inserted.id;
+    targetId = createdId;
 
     await writeLog(
       db,
@@ -975,8 +976,8 @@ async function handleLead(
       "handleLead",
       "INFO",
       "LEAD sin match por promo_code: creado nuevo",
-      JSON.stringify({ promo_code: promoCode, phone: cleanPhone, conversion_id: targetId }),
-      targetId,
+      JSON.stringify({ promo_code: promoCode, phone: cleanPhone, conversion_id: createdId }),
+      createdId,
       undefined,
       undefined,
       safePayloadRaw(p),
