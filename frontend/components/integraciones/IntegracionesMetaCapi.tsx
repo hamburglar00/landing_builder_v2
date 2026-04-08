@@ -21,6 +21,12 @@ import {
   type ChatraceClientConfig,
   upsertChatraceClientConfig,
 } from "@/lib/chatraceDb";
+import {
+  fetchGerencias,
+  fetchGerenciasForAdmin,
+  type LandingGerenciaAssignment,
+} from "@/lib/gerencias/gerenciasDb";
+import type { Gerencia } from "@/lib/gerencias/types";
 
 type PixelEditDraft = {
   id: string;
@@ -68,6 +74,8 @@ export default function IntegracionesMetaCapi() {
   const [chatraceActive, setChatraceActive] = useState(true);
   const [chatraceSaving, setChatraceSaving] = useState(false);
   const [chatraceMsg, setChatraceMsg] = useState<string | null>(null);
+  const [chatraceGerencias, setChatraceGerencias] = useState<Gerencia[]>([]);
+  const [chatraceAssignments, setChatraceAssignments] = useState<LandingGerenciaAssignment[]>([]);
 
   const endpointBase = process.env.NEXT_PUBLIC_SUPABASE_URL ?? "";
   const endpointUrl = useMemo(
@@ -93,10 +101,17 @@ export default function IntegracionesMetaCapi() {
   );
 
   const loadAll = useCallback(async (uid: string) => {
-    const [cfg, pixels, kommo] = await Promise.all([
+    const { data: p } = await supabase
+      .from("profiles")
+      .select("nombre, role")
+      .eq("id", uid)
+      .maybeSingle();
+    const adminView = String(p?.role ?? "") === "admin";
+    const [cfg, pixels, kommo, gers] = await Promise.all([
       fetchConversionsConfig(uid),
       fetchPixelConfigs(uid),
       fetchKommoClientConfig(uid),
+      adminView ? fetchGerenciasForAdmin(uid) : fetchGerencias(uid),
     ]);
     setConfig(cfg);
     setPixelConfigs(pixels);
@@ -112,13 +127,23 @@ export default function IntegracionesMetaCapi() {
     setChatraceLandingTag(chatrace?.landing_tag ?? "");
     setChatraceSendContactPixel(chatrace?.send_contact_pixel ?? true);
     setChatraceActive(chatrace?.active ?? true);
-    const { data: p } = await supabase
-      .from("profiles")
-      .select("nombre, role")
-      .eq("id", uid)
-      .maybeSingle();
+    setChatraceGerencias(gers);
+    const { data: chatraceAsg } = await supabase
+      .from("chatrace_gerencias")
+      .select("gerencia_id, weight, phone_mode, phone_kind, interval_start_hour, interval_end_hour")
+      .eq("user_id", uid);
+    setChatraceAssignments(
+      (chatraceAsg ?? []).map((r) => ({
+        gerencia_id: r.gerencia_id,
+        weight: Number(r.weight) || 0,
+        phoneMode: (r.phone_mode as "random" | "fair") ?? "random",
+        phoneKind: (r.phone_kind as "carga" | "ads" | "mkt") ?? "carga",
+        intervalStartHour: r.interval_start_hour ?? null,
+        intervalEndHour: r.interval_end_hour ?? null,
+      })),
+    );
     setClientName(String(p?.nombre ?? ""));
-    setIsAdmin(String(p?.role ?? "") === "admin");
+    setIsAdmin(adminView);
   }, []);
 
   const maskToken = useCallback((value: string) => {
@@ -252,6 +277,20 @@ export default function IntegracionesMetaCapi() {
         send_contact_pixel: chatraceSendContactPixel,
         active: chatraceActive,
       });
+      await supabase.from("chatrace_gerencias").delete().eq("user_id", userId);
+      if (chatraceAssignments.length > 0) {
+        const rows = chatraceAssignments.map((a) => ({
+          user_id: userId,
+          gerencia_id: a.gerencia_id,
+          weight: a.weight,
+          phone_mode: a.phoneMode,
+          phone_kind: a.phoneKind,
+          interval_start_hour: a.intervalStartHour,
+          interval_end_hour: a.intervalEndHour,
+        }));
+        const { error: asgErr } = await supabase.from("chatrace_gerencias").insert(rows);
+        if (asgErr) throw asgErr;
+      }
       setChatraceMsg("Configuración de Chatrace guardada.");
       await loadAll(userId);
     } catch (e) {
@@ -267,6 +306,7 @@ export default function IntegracionesMetaCapi() {
     endpointUrl,
     chatraceSendContactPixel,
     chatraceActive,
+    chatraceAssignments,
     loadAll,
   ]);
 
@@ -868,6 +908,172 @@ export default function IntegracionesMetaCapi() {
               <p className="text-xs text-zinc-400">
                 El intermediario de Chatrace debe consultar este endpoint para obtener el teléfono dinámico antes de redirigir a WhatsApp.
               </p>
+              <p className="text-xs text-zinc-500">
+                Asigna gerencias para habilitar selección de teléfono (misma lógica que editor de landing).
+              </p>
+              {chatraceGerencias.length === 0 ? (
+                <p className="text-xs text-zinc-500">No hay gerencias disponibles para asignar.</p>
+              ) : (
+                <div className="overflow-x-auto rounded-lg border border-zinc-700">
+                  <table className="w-full text-left text-xs">
+                    <thead className="bg-zinc-800/80">
+                      <tr>
+                        <th className="px-3 py-2 font-medium text-zinc-300">Gerencia</th>
+                        <th className="px-3 py-2 font-medium text-zinc-300">Nombre</th>
+                        <th className="px-3 py-2 font-medium text-zinc-300 text-center">Asignar</th>
+                        <th className="px-3 py-2 font-medium text-zinc-300">Peso</th>
+                        <th className="px-3 py-2 font-medium text-zinc-300">Modo</th>
+                        <th className="px-3 py-2 font-medium text-zinc-300">Tipo</th>
+                        <th className="px-3 py-2 font-medium text-zinc-300">Intervalo</th>
+                      </tr>
+                    </thead>
+                    <tbody className="divide-y divide-zinc-800">
+                      {chatraceGerencias.map((g) => {
+                        const assignment = chatraceAssignments.find((a) => a.gerencia_id === g.id);
+                        const isAssigned = !!assignment;
+                        const weight = assignment?.weight ?? 0;
+                        const phoneMode = assignment?.phoneMode ?? "random";
+                        const phoneKind = assignment?.phoneKind ?? "carga";
+                        const intervalStartHour = assignment?.intervalStartHour ?? null;
+                        const intervalEndHour = assignment?.intervalEndHour ?? null;
+                        return (
+                          <tr key={g.id} className="bg-zinc-950/40">
+                            <td className="px-3 py-2 text-zinc-300">{g.gerencia_id ?? "MANUAL"}</td>
+                            <td className="px-3 py-2 text-zinc-200">{g.nombre}</td>
+                            <td className="px-3 py-2 text-center">
+                              <input
+                                type="checkbox"
+                                checked={isAssigned}
+                                onChange={() => {
+                                  if (isAssigned) {
+                                    setChatraceAssignments((prev) => prev.filter((a) => a.gerencia_id !== g.id));
+                                  } else {
+                                    setChatraceAssignments((prev) => [
+                                      ...prev,
+                                      {
+                                        gerencia_id: g.id,
+                                        weight: 1,
+                                        phoneMode: "random",
+                                        phoneKind: "carga",
+                                        intervalStartHour: null,
+                                        intervalEndHour: null,
+                                      },
+                                    ]);
+                                  }
+                                }}
+                                className="rounded border-zinc-600"
+                              />
+                            </td>
+                            <td className="px-3 py-2">
+                              <input
+                                type="number"
+                                min={0}
+                                value={weight}
+                                onChange={(e) => {
+                                  if (!isAssigned) return;
+                                  const v = parseInt(e.target.value, 10);
+                                  const next = Number.isNaN(v) ? 0 : Math.max(0, v);
+                                  setChatraceAssignments((prev) =>
+                                    prev.map((a) => (a.gerencia_id === g.id ? { ...a, weight: next } : a)),
+                                  );
+                                }}
+                                disabled={!isAssigned}
+                                className="w-14 rounded border border-zinc-700 bg-zinc-900 px-2 py-1 text-zinc-100 disabled:cursor-not-allowed disabled:opacity-50"
+                              />
+                            </td>
+                            <td className="px-3 py-2">
+                              <div className="inline-flex rounded-lg border border-zinc-700 bg-zinc-900 text-[11px]">
+                                <button
+                                  type="button"
+                                  onClick={() => {
+                                    if (!isAssigned) return;
+                                    setChatraceAssignments((prev) =>
+                                      prev.map((a) => (a.gerencia_id === g.id ? { ...a, phoneMode: "random" } : a)),
+                                    );
+                                  }}
+                                  className={`cursor-pointer px-2 py-1 rounded-l-lg border-r border-zinc-700 ${phoneMode === "random" ? "bg-zinc-100 text-zinc-900" : "text-zinc-300 hover:bg-zinc-800"}`}
+                                >
+                                  Aleatorio
+                                </button>
+                                <button
+                                  type="button"
+                                  onClick={() => {
+                                    if (!isAssigned) return;
+                                    setChatraceAssignments((prev) =>
+                                      prev.map((a) => (a.gerencia_id === g.id ? { ...a, phoneMode: "fair" } : a)),
+                                    );
+                                  }}
+                                  className={`cursor-pointer px-2 py-1 rounded-r-lg ${phoneMode === "fair" ? "bg-zinc-100 text-zinc-900" : "text-zinc-300 hover:bg-zinc-800"}`}
+                                >
+                                  Equitativo
+                                </button>
+                              </div>
+                            </td>
+                            <td className="px-3 py-2">
+                              <div className="inline-flex rounded-lg border border-zinc-700 bg-zinc-900 text-[11px]">
+                                {(["carga", "ads", "mkt"] as const).map((kind) => (
+                                  <button
+                                    key={kind}
+                                    type="button"
+                                    onClick={() => {
+                                      if (!isAssigned) return;
+                                      setChatraceAssignments((prev) =>
+                                        prev.map((a) => (a.gerencia_id === g.id ? { ...a, phoneKind: kind } : a)),
+                                      );
+                                    }}
+                                    className={`cursor-pointer px-2 py-1 ${kind !== "mkt" ? "border-r border-zinc-700" : ""} ${phoneKind === kind ? "bg-zinc-100 text-zinc-900" : "text-zinc-300 hover:bg-zinc-800"}`}
+                                  >
+                                    {kind === "carga" ? "Carga" : kind === "ads" ? "Ads" : "Mkt"}
+                                  </button>
+                                ))}
+                              </div>
+                            </td>
+                            <td className="px-3 py-2">
+                              <div className="flex items-center gap-1 text-[11px]">
+                                <input
+                                  type="number"
+                                  min={0}
+                                  max={23}
+                                  value={intervalStartHour ?? ""}
+                                  placeholder="hh"
+                                  onChange={(e) => {
+                                    if (!isAssigned) return;
+                                    const raw = e.target.value;
+                                    const v = raw === "" ? null : Math.max(0, Math.min(23, parseInt(raw, 10) || 0));
+                                    setChatraceAssignments((prev) =>
+                                      prev.map((a) => (a.gerencia_id === g.id ? { ...a, intervalStartHour: v } : a)),
+                                    );
+                                  }}
+                                  disabled={!isAssigned}
+                                  className="w-12 rounded border border-zinc-700 bg-zinc-900 px-1 py-1 text-zinc-100 disabled:cursor-not-allowed disabled:opacity-50"
+                                />
+                                <span className="text-zinc-500">-</span>
+                                <input
+                                  type="number"
+                                  min={0}
+                                  max={23}
+                                  value={intervalEndHour ?? ""}
+                                  placeholder="hh"
+                                  onChange={(e) => {
+                                    if (!isAssigned) return;
+                                    const raw = e.target.value;
+                                    const v = raw === "" ? null : Math.max(0, Math.min(23, parseInt(raw, 10) || 0));
+                                    setChatraceAssignments((prev) =>
+                                      prev.map((a) => (a.gerencia_id === g.id ? { ...a, intervalEndHour: v } : a)),
+                                    );
+                                  }}
+                                  disabled={!isAssigned}
+                                  className="w-12 rounded border border-zinc-700 bg-zinc-900 px-1 py-1 text-zinc-100 disabled:cursor-not-allowed disabled:opacity-50"
+                                />
+                              </div>
+                            </td>
+                          </tr>
+                        );
+                      })}
+                    </tbody>
+                  </table>
+                </div>
+              )}
             </div>
           </div>
 
