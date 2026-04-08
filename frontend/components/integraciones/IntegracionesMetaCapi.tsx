@@ -16,6 +16,11 @@ import {
   type KommoClientConfig,
   upsertKommoClientConfig,
 } from "@/lib/kommoDb";
+import {
+  fetchChatraceClientConfig,
+  type ChatraceClientConfig,
+  upsertChatraceClientConfig,
+} from "@/lib/chatraceDb";
 
 type PixelEditDraft = {
   id: string;
@@ -47,7 +52,7 @@ export default function IntegracionesMetaCapi() {
 
   const [editOpen, setEditOpen] = useState(false);
   const [draft, setDraft] = useState<PixelEditDraft | null>(null);
-  const [activeIntegration, setActiveIntegration] = useState<"menu" | "meta" | "kommo">("menu");
+  const [activeIntegration, setActiveIntegration] = useState<"menu" | "meta" | "kommo" | "chatrace">("menu");
   const [kommoConfig, setKommoConfig] = useState<KommoClientConfig | null>(null);
   const [kommoBaseUrl, setKommoBaseUrl] = useState("");
   const [kommoToken, setKommoToken] = useState("");
@@ -56,6 +61,13 @@ export default function IntegracionesMetaCapi() {
   const [kommoMsg, setKommoMsg] = useState<string | null>(null);
   const [editKommoUrl, setEditKommoUrl] = useState(false);
   const [editKommoToken, setEditKommoToken] = useState(false);
+  const [chatraceConfig, setChatraceConfig] = useState<ChatraceClientConfig | null>(null);
+  const [chatracePixelId, setChatracePixelId] = useState("");
+  const [chatraceLandingTag, setChatraceLandingTag] = useState("");
+  const [chatraceSendContactPixel, setChatraceSendContactPixel] = useState(true);
+  const [chatraceActive, setChatraceActive] = useState(true);
+  const [chatraceSaving, setChatraceSaving] = useState(false);
+  const [chatraceMsg, setChatraceMsg] = useState<string | null>(null);
 
   const endpointBase = process.env.NEXT_PUBLIC_SUPABASE_URL ?? "";
   const endpointUrl = useMemo(
@@ -72,6 +84,13 @@ export default function IntegracionesMetaCapi() {
         : "",
     [clientName],
   );
+  const landingPhoneUrl = useMemo(
+    () =>
+      clientName
+        ? `${endpointBase}/functions/v1/landing-phone?name=${encodeURIComponent(clientName)}`
+        : "",
+    [clientName, endpointBase],
+  );
 
   const loadAll = useCallback(async (uid: string) => {
     const [cfg, pixels, kommo] = await Promise.all([
@@ -87,6 +106,12 @@ export default function IntegracionesMetaCapi() {
     setKommoActive(kommo?.active ?? true);
     setEditKommoUrl(!kommo);
     setEditKommoToken(!kommo);
+    const chatrace = await fetchChatraceClientConfig(uid);
+    setChatraceConfig(chatrace);
+    setChatracePixelId(chatrace?.meta_pixel_id ?? "");
+    setChatraceLandingTag(chatrace?.landing_tag ?? "");
+    setChatraceSendContactPixel(chatrace?.send_contact_pixel ?? true);
+    setChatraceActive(chatrace?.active ?? true);
     const { data: p } = await supabase
       .from("profiles")
       .select("nombre, role")
@@ -195,6 +220,55 @@ export default function IntegracionesMetaCapi() {
       setKommoSaving(false);
     }
   }, [userId, clientName, kommoBaseUrl, kommoToken, kommoActive, validateKommoInput, syncKommoRemote, loadAll]);
+
+  const handleChatraceSave = useCallback(async () => {
+    if (!userId) return;
+    setChatraceMsg(null);
+    if (!clientName.trim() || !/^[a-z0-9-]+$/.test(clientName.trim())) {
+      setChatraceMsg("Name de cliente inválido.");
+      return;
+    }
+    if (!chatracePixelId.trim()) {
+      setChatraceMsg("Pixel ID requerido.");
+      return;
+    }
+    if (!chatraceLandingTag.trim()) {
+      setChatraceMsg("Landing Tag requerido.");
+      return;
+    }
+    if (!endpointUrl) {
+      setChatraceMsg("No se pudo resolver URL Post.");
+      return;
+    }
+
+    setChatraceSaving(true);
+    try {
+      await upsertChatraceClientConfig({
+        user_id: userId,
+        name: clientName.trim(),
+        meta_pixel_id: chatracePixelId.trim(),
+        post_url: endpointUrl,
+        landing_tag: chatraceLandingTag.trim(),
+        send_contact_pixel: chatraceSendContactPixel,
+        active: chatraceActive,
+      });
+      setChatraceMsg("Configuración de Chatrace guardada.");
+      await loadAll(userId);
+    } catch (e) {
+      setChatraceMsg(e instanceof Error ? e.message : "Error al guardar Chatrace.");
+    } finally {
+      setChatraceSaving(false);
+    }
+  }, [
+    userId,
+    clientName,
+    chatracePixelId,
+    chatraceLandingTag,
+    endpointUrl,
+    chatraceSendContactPixel,
+    chatraceActive,
+    loadAll,
+  ]);
 
   const handleKommoRetrySync = useCallback(async () => {
     if (!userId) return;
@@ -447,6 +521,8 @@ export default function IntegracionesMetaCapi() {
               ? "INTEGRACIONES > Integración con Meta CAPI"
               : activeIntegration === "kommo"
               ? "INTEGRACIONES > Integración con CRM Kommo"
+              : activeIntegration === "chatrace"
+              ? "INTEGRACIONES > Integración con Chatrace"
               : "INTEGRACIONES"}
           </h1>
           <p className="mt-1 text-sm text-zinc-400">
@@ -454,6 +530,8 @@ export default function IntegracionesMetaCapi() {
               ? "Administra la configuración de Meta CAPI."
               : activeIntegration === "kommo"
               ? "Guía rápida para conectar Kommo con tu endpoint."
+              : activeIntegration === "chatrace"
+              ? "Configura identificación, tracking y redirección para Chatrace."
               : "Conecta y administra integraciones de eventos."}
           </p>
         </div>
@@ -500,6 +578,22 @@ export default function IntegracionesMetaCapi() {
                   className="h-8 w-8 shrink-0 rounded-sm object-contain"
                 />
                 Integración con CRM Kommo
+              </span>
+              <span className="text-xs text-zinc-400">Entrar</span>
+            </span>
+          </button>
+
+          <button
+            type="button"
+            onClick={() => setActiveIntegration("chatrace")}
+            className="w-full rounded-xl border border-zinc-800 bg-zinc-900/50 px-4 py-4 text-left transition active:scale-[0.99] hover:bg-zinc-900"
+          >
+            <span className="flex items-center justify-between gap-3">
+              <span className="inline-flex items-center gap-3 text-sm font-semibold text-zinc-200">
+                <span className="inline-flex h-8 w-8 items-center justify-center rounded-sm bg-zinc-100 text-xs font-bold text-zinc-900">
+                  CT
+                </span>
+                Integración con Chatrace
               </span>
               <span className="text-xs text-zinc-400">Entrar</span>
             </span>
@@ -666,6 +760,130 @@ export default function IntegracionesMetaCapi() {
         </div>
       </section>
       ) : (
+      activeIntegration === "chatrace" ? (
+      <section className="rounded-xl border border-zinc-800 bg-zinc-900/50 p-4">
+        <div className="mb-4 flex items-center justify-between gap-2">
+          <h3 className="text-sm font-semibold text-zinc-200">Integración con Chatrace</h3>
+          <button
+            type="button"
+            onClick={() => setActiveIntegration("menu")}
+            className="rounded-lg border border-zinc-700 px-3 py-1.5 text-xs text-zinc-300 hover:bg-zinc-800"
+          >
+            Volver
+          </button>
+        </div>
+
+        <div className="space-y-4 text-sm text-zinc-300">
+          {chatraceMsg && (
+            <div
+              className={`rounded-lg border px-3 py-2 text-xs ${
+                chatraceMsg.toLowerCase().includes("error")
+                  ? "border-red-800 bg-red-950/40 text-red-300"
+                  : "border-emerald-800 bg-emerald-950/40 text-emerald-300"
+              }`}
+            >
+              {chatraceMsg}
+            </div>
+          )}
+
+          <div className="rounded-lg border border-zinc-800 bg-zinc-950/40 p-3">
+            <p className="mb-2 font-semibold text-zinc-100">Identificación</p>
+            <div className="grid gap-3 sm:grid-cols-2">
+              <div className="sm:col-span-2">
+                <label className="mb-1 block text-[11px] text-zinc-400">Name del cliente</label>
+                <input
+                  value={clientName}
+                  disabled
+                  className="h-9 w-full rounded-lg border border-zinc-700 bg-zinc-900 px-3 text-sm text-zinc-300"
+                />
+              </div>
+              <label className="inline-flex items-center gap-2 text-xs text-zinc-300">
+                <input
+                  type="checkbox"
+                  checked={chatraceActive}
+                  onChange={(e) => setChatraceActive(e.target.checked)}
+                />
+                Integración activa
+              </label>
+            </div>
+          </div>
+
+          <div className="rounded-lg border border-zinc-800 bg-zinc-950/40 p-3">
+            <p className="mb-2 font-semibold text-zinc-100">Tracking</p>
+            <div className="grid gap-3 sm:grid-cols-2">
+              <div>
+                <label className="mb-1 block text-[11px] text-zinc-400">Meta Pixel ID</label>
+                <select
+                  value={chatracePixelId}
+                  onChange={(e) => setChatracePixelId(e.target.value)}
+                  className="h-9 w-full rounded-lg border border-zinc-700 bg-zinc-900 px-3 text-sm text-zinc-100"
+                >
+                  <option value="">Seleccionar pixel</option>
+                  {pixelConfigs.map((px) => (
+                    <option key={px.id} value={px.pixel_id}>
+                      {px.pixel_id} {px.is_default ? "(default)" : ""}
+                    </option>
+                  ))}
+                </select>
+              </div>
+              <div>
+                <label className="mb-1 block text-[11px] text-zinc-400">Landing Tag</label>
+                <input
+                  value={chatraceLandingTag}
+                  onChange={(e) => setChatraceLandingTag(e.target.value.toUpperCase())}
+                  placeholder="Ej: GD"
+                  className="h-9 w-full rounded-lg border border-zinc-700 bg-zinc-900 px-3 text-sm text-zinc-100"
+                />
+              </div>
+              <div className="sm:col-span-2">
+                <label className="mb-1 block text-[11px] text-zinc-400">URL Post (constructor)</label>
+                <input
+                  value={endpointUrl}
+                  disabled
+                  className="h-9 w-full rounded-lg border border-zinc-700 bg-zinc-900 px-3 text-sm text-zinc-300"
+                />
+              </div>
+              <label className="inline-flex items-center gap-2 text-xs text-zinc-300 sm:col-span-2">
+                <input
+                  type="checkbox"
+                  checked={chatraceSendContactPixel}
+                  onChange={(e) => setChatraceSendContactPixel(e.target.checked)}
+                />
+                Enviar Contact por Pixel
+              </label>
+            </div>
+          </div>
+
+          <div className="rounded-lg border border-zinc-800 bg-zinc-950/40 p-3">
+            <p className="mb-2 font-semibold text-zinc-100">Redirección</p>
+            <div className="space-y-3">
+              <div>
+                <label className="mb-1 block text-[11px] text-zinc-400">Endpoint para obtener teléfono</label>
+                <input
+                  value={landingPhoneUrl}
+                  disabled
+                  className="h-9 w-full rounded-lg border border-zinc-700 bg-zinc-900 px-3 font-mono text-xs text-zinc-300"
+                />
+              </div>
+              <p className="text-xs text-zinc-400">
+                El intermediario de Chatrace debe consultar este endpoint para obtener el teléfono dinámico antes de redirigir a WhatsApp.
+              </p>
+            </div>
+          </div>
+
+          <div className="flex justify-end">
+            <button
+              type="button"
+              disabled={chatraceSaving}
+              onClick={() => void handleChatraceSave()}
+              className="rounded-lg bg-emerald-500 px-3 py-1.5 text-xs font-semibold text-zinc-900 disabled:opacity-60"
+            >
+              {chatraceSaving ? "Guardando..." : "Guardar configuración"}
+            </button>
+          </div>
+        </div>
+      </section>
+      ) : (
       <section className="rounded-xl border border-zinc-800 bg-zinc-900/50 p-4">
         <div className="mb-3 flex items-center justify-between gap-2">
           <h3 className="text-sm font-semibold text-zinc-200">Configuración Meta CAPI</h3>
@@ -751,6 +969,7 @@ export default function IntegracionesMetaCapi() {
         </div>
       </section>
       )
+      )
       )}
 
       {quickOpen && (
@@ -808,4 +1027,3 @@ export default function IntegracionesMetaCapi() {
     </div>
   );
 }
-
