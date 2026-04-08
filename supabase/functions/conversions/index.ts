@@ -452,6 +452,19 @@ function resolveEffectiveConfigForPixel(
   };
 }
 
+async function resolveChatracePixelId(
+  db: SupabaseClient,
+  userId: string,
+): Promise<string> {
+  const { data } = await db
+    .from("chatrace_client_configs")
+    .select("meta_pixel_id, active")
+    .eq("user_id", userId)
+    .eq("active", true)
+    .maybeSingle();
+  return norm(data?.meta_pixel_id);
+}
+
 async function sendToMetaCAPI(
   db: SupabaseClient,
   config: ConversionsConfig,
@@ -464,7 +477,14 @@ async function sendToMetaCAPI(
   customData?: Record<string, unknown>,
   overrideTestEventCode?: string,
 ): Promise<boolean> {
-  const effectiveConfig = resolveEffectiveConfigForPixel(config, pixelConfigs, row.pixel_id);
+  const sourcePlatform = norm(row.source_platform).toLowerCase();
+  const isChatrace = sourcePlatform === "chatrace";
+  const rowPixel = norm(row.pixel_id || row.meta_pixel_id);
+  const chatracePixelId = isChatrace && !rowPixel
+    ? await resolveChatracePixelId(db, row.user_id)
+    : "";
+  const preferredPixelId = rowPixel || chatracePixelId;
+  const effectiveConfig = resolveEffectiveConfigForPixel(config, pixelConfigs, preferredPixelId);
 
   if (!effectiveConfig.meta_access_token || !effectiveConfig.pixel_id) {
     const statusField =
@@ -514,6 +534,19 @@ async function sendToMetaCAPI(
     eventName === "Contact" ? "ERROR CONTACT" :
     eventName === "Lead" ? "ERROR LEAD" :
     "ERROR PURCHASE";
+
+  if (isChatrace && eventName === "Contact") {
+    await writeLog(
+      db,
+      row.user_id,
+      "sendToMetaCAPI",
+      "INFO",
+      "Contact CAPI omitido por source_platform=chatrace",
+      JSON.stringify({ source_platform: row.source_platform }),
+      rowId,
+    );
+    return true;
+  }
 
   const maxAttempts = 3;
   const baseDelayMs = 500;

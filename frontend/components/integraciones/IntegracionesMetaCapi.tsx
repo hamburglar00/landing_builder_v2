@@ -69,13 +69,14 @@ export default function IntegracionesMetaCapi() {
   const [editKommoToken, setEditKommoToken] = useState(false);
   const [chatraceConfig, setChatraceConfig] = useState<ChatraceClientConfig | null>(null);
   const [chatracePixelId, setChatracePixelId] = useState("");
-  const [chatraceLandingTag, setChatraceLandingTag] = useState("");
-  const [chatraceSendContactPixel, setChatraceSendContactPixel] = useState(true);
   const [chatraceActive, setChatraceActive] = useState(true);
   const [chatraceSaving, setChatraceSaving] = useState(false);
   const [chatraceMsg, setChatraceMsg] = useState<string | null>(null);
   const [chatraceGerencias, setChatraceGerencias] = useState<Gerencia[]>([]);
   const [chatraceAssignments, setChatraceAssignments] = useState<LandingGerenciaAssignment[]>([]);
+  const [chatraceIdOpen, setChatraceIdOpen] = useState(true);
+  const [chatraceTrackingOpen, setChatraceTrackingOpen] = useState(true);
+  const [chatraceRedirectOpen, setChatraceRedirectOpen] = useState(true);
 
   const endpointBase = process.env.NEXT_PUBLIC_SUPABASE_URL ?? "";
   const endpointUrl = useMemo(
@@ -131,8 +132,6 @@ export default function IntegracionesMetaCapi() {
     const chatrace = await fetchChatraceClientConfig(uid);
     setChatraceConfig(chatrace);
     setChatracePixelId(chatrace?.meta_pixel_id ?? "");
-    setChatraceLandingTag(chatrace?.landing_tag ?? "");
-    setChatraceSendContactPixel(chatrace?.send_contact_pixel ?? true);
     setChatraceActive(chatrace?.active ?? true);
     setChatraceGerencias(gers);
     const { data: chatraceAsg } = await supabase
@@ -264,10 +263,6 @@ export default function IntegracionesMetaCapi() {
       setChatraceMsg("Pixel ID requerido.");
       return;
     }
-    if (!chatraceLandingTag.trim()) {
-      setChatraceMsg("Landing Tag requerido.");
-      return;
-    }
     if (!endpointUrl) {
       setChatraceMsg("No se pudo resolver URL Post.");
       return;
@@ -280,8 +275,8 @@ export default function IntegracionesMetaCapi() {
         name: clientName.trim(),
         meta_pixel_id: chatracePixelId.trim(),
         post_url: endpointUrl,
-        landing_tag: chatraceLandingTag.trim(),
-        send_contact_pixel: chatraceSendContactPixel,
+        landing_tag: "",
+        send_contact_pixel: false,
         active: chatraceActive,
       });
       await supabase.from("chatrace_gerencias").delete().eq("user_id", userId);
@@ -309,9 +304,8 @@ export default function IntegracionesMetaCapi() {
     userId,
     clientName,
     chatracePixelId,
-    chatraceLandingTag,
     endpointUrl,
-    chatraceSendContactPixel,
+    chatraceConfig,
     chatraceActive,
     chatraceAssignments,
     loadAll,
@@ -834,7 +828,15 @@ export default function IntegracionesMetaCapi() {
           )}
 
           <section className="rounded-xl border border-zinc-800 bg-zinc-900/50 p-4">
-            <h3 className="mb-4 text-sm font-semibold text-zinc-200">Identificación</h3>
+            <button
+              type="button"
+              onClick={() => setChatraceIdOpen((v) => !v)}
+              className="mb-2 flex w-full items-center justify-between text-left"
+            >
+              <h3 className="text-sm font-semibold text-zinc-200">Identificación</h3>
+              <span className="text-xs text-zinc-400">{chatraceIdOpen ? "ocultar" : "ver"}</span>
+            </button>
+            {chatraceIdOpen ? (
             <div className="grid gap-3 sm:grid-cols-2">
               <div className="sm:col-span-2">
                 <label className="mb-1 block text-xs font-medium text-zinc-400">Name del cliente</label>
@@ -853,10 +855,19 @@ export default function IntegracionesMetaCapi() {
                 Integración activa
               </label>
             </div>
+            ) : null}
           </section>
 
           <section className="rounded-xl border border-zinc-800 bg-zinc-900/50 p-4">
-            <h3 className="mb-4 text-sm font-semibold text-zinc-200">Tracking</h3>
+            <button
+              type="button"
+              onClick={() => setChatraceTrackingOpen((v) => !v)}
+              className="mb-2 flex w-full items-center justify-between text-left"
+            >
+              <h3 className="text-sm font-semibold text-zinc-200">Tracking</h3>
+              <span className="text-xs text-zinc-400">{chatraceTrackingOpen ? "ocultar" : "ver"}</span>
+            </button>
+            {chatraceTrackingOpen ? (
             <div className="grid gap-3 sm:grid-cols-2">
               <div>
                 <label className="mb-1 block text-xs font-medium text-zinc-400">Meta Pixel ID</label>
@@ -873,15 +884,6 @@ export default function IntegracionesMetaCapi() {
                   ))}
                 </select>
               </div>
-              <div>
-                <label className="mb-1 block text-xs font-medium text-zinc-400">Landing Tag</label>
-                <input
-                  value={chatraceLandingTag}
-                  onChange={(e) => setChatraceLandingTag(e.target.value.toUpperCase())}
-                  placeholder="Ej: GD"
-                  className="w-full rounded-lg border border-zinc-700 bg-zinc-900 px-3 py-2 text-sm text-zinc-100"
-                />
-              </div>
               <div className="sm:col-span-2">
                 <label className="mb-1 block text-xs font-medium text-zinc-400">URL Post (constructor)</label>
                 <input
@@ -890,20 +892,22 @@ export default function IntegracionesMetaCapi() {
                   className="w-full rounded-lg border border-zinc-700 bg-zinc-900 px-3 py-2 text-sm text-zinc-300"
                 />
               </div>
-              <label className="inline-flex items-center gap-2 text-xs text-zinc-300 sm:col-span-2">
-                <input
-                  type="checkbox"
-                  checked={chatraceSendContactPixel}
-                  onChange={(e) => setChatraceSendContactPixel(e.target.checked)}
-                />
-                Enviar Contact por Pixel
-              </label>
             </div>
+            ) : null}
           </section>
 
           <section className="rounded-xl border border-zinc-800 bg-zinc-900/50 p-4">
-            <h3 className="mb-4 text-sm font-semibold text-zinc-200">Redirección</h3>
+            <button
+              type="button"
+              onClick={() => setChatraceRedirectOpen((v) => !v)}
+              className="mb-2 flex w-full items-center justify-between text-left"
+            >
+              <h3 className="text-sm font-semibold text-zinc-200">Redirección</h3>
+              <span className="text-xs text-zinc-400">{chatraceRedirectOpen ? "ocultar" : "ver"}</span>
+            </button>
+            {chatraceRedirectOpen ? (
             <div className="space-y-3">
+              {isAdmin ? (
               <div>
                 <label className="mb-1 block text-xs font-medium text-zinc-400">Endpoint para obtener teléfono</label>
                 <input
@@ -912,6 +916,7 @@ export default function IntegracionesMetaCapi() {
                   className="w-full rounded-lg border border-zinc-700 bg-zinc-900 px-3 py-2 font-mono text-xs text-zinc-300"
                 />
               </div>
+              ) : null}
               <p className="text-xs text-zinc-400">
                 El intermediario de Chatrace debe consultar este endpoint para obtener el teléfono dinámico antes de redirigir a WhatsApp.
               </p>
@@ -1037,12 +1042,8 @@ export default function IntegracionesMetaCapi() {
                             </td>
                             <td className="px-3 py-2">
                               <div className="flex items-center gap-1 text-[11px]">
-                                <input
-                                  type="number"
-                                  min={0}
-                                  max={23}
+                                <select
                                   value={intervalStartHour ?? ""}
-                                  placeholder="hh"
                                   onChange={(e) => {
                                     if (!isAssigned) return;
                                     const raw = e.target.value;
@@ -1052,15 +1053,18 @@ export default function IntegracionesMetaCapi() {
                                     );
                                   }}
                                   disabled={!isAssigned}
-                                  className="w-12 rounded border border-zinc-700 bg-zinc-900 px-1 py-1 text-zinc-100 disabled:cursor-not-allowed disabled:opacity-50"
-                                />
+                                  className="w-24 rounded border border-zinc-700 bg-zinc-900 px-1 py-1 text-zinc-100 disabled:cursor-not-allowed disabled:opacity-50"
+                                >
+                                  <option value="">Sin inicio</option>
+                                  {Array.from({ length: 24 }, (_, h) => (
+                                    <option key={`start-${g.id}-${h}`} value={h}>
+                                      {String(h).padStart(2, "0")}:00
+                                    </option>
+                                  ))}
+                                </select>
                                 <span className="text-zinc-500">-</span>
-                                <input
-                                  type="number"
-                                  min={0}
-                                  max={23}
+                                <select
                                   value={intervalEndHour ?? ""}
-                                  placeholder="hh"
                                   onChange={(e) => {
                                     if (!isAssigned) return;
                                     const raw = e.target.value;
@@ -1070,8 +1074,15 @@ export default function IntegracionesMetaCapi() {
                                     );
                                   }}
                                   disabled={!isAssigned}
-                                  className="w-12 rounded border border-zinc-700 bg-zinc-900 px-1 py-1 text-zinc-100 disabled:cursor-not-allowed disabled:opacity-50"
-                                />
+                                  className="w-24 rounded border border-zinc-700 bg-zinc-900 px-1 py-1 text-zinc-100 disabled:cursor-not-allowed disabled:opacity-50"
+                                >
+                                  <option value="">Sin fin</option>
+                                  {Array.from({ length: 24 }, (_, h) => (
+                                    <option key={`end-${g.id}-${h}`} value={h}>
+                                      {String(h).padStart(2, "0")}:00
+                                    </option>
+                                  ))}
+                                </select>
                               </div>
                             </td>
                           </tr>
@@ -1082,6 +1093,7 @@ export default function IntegracionesMetaCapi() {
                 </div>
               )}
             </div>
+            ) : null}
           </section>
 
           <div className="flex justify-end">
