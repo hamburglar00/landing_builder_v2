@@ -9,6 +9,8 @@ const corsHeaders = {
 type PhoneKind = "carga" | "ads" | "mkt";
 
 type ExternalResponse = {
+  code?: string;
+  error?: string;
   load?: {
     whatsapp?: string[];
     telegram?: string[];
@@ -184,13 +186,24 @@ Deno.serve(async (req) => {
       let json: ExternalResponse | null = null;
       try {
         const res = await fetch(url);
-        if (!res.ok) {
+        const raw = await res.text();
+        let parsed: ExternalResponse | null = null;
+        try {
+          parsed = raw ? (JSON.parse(raw) as ExternalResponse) : null;
+        } catch {
+          parsed = null;
+        }
+
+        const noManagersFound = parsed?.code === "no_managers_found";
+        if (!res.ok && !noManagersFound) {
           console.error(
             `Error ${res.status} al llamar API externa para gerencia ${g.id}`,
           );
           continue;
         }
-        json = (await res.json()) as ExternalResponse;
+
+        // no_managers_found se trata como sync valida con 0 telefonos activos.
+        json = noManagersFound ? ({ load: { whatsapp: [] }, ads: { whatsapp: [] }, mkt: { whatsapp: [] } } as ExternalResponse) : parsed;
       } catch (e) {
         console.error("Error llamando API externa:", e);
         continue;
@@ -258,7 +271,7 @@ Deno.serve(async (req) => {
             : "()";
         const { error: inactivateError } = await supabaseAdmin
           .from("gerencia_phones")
-          .update({ status: "inactive" })
+          .update({ status: "inactive", last_seen_at: nowIso })
           .eq("gerencia_id", g.id)
           .not("phone", "in", inList);
 
@@ -272,7 +285,7 @@ Deno.serve(async (req) => {
         // Si no hay teléfonos activos desde la API, marcamos todos como inactivos
         const { error: inactivateAllError } = await supabaseAdmin
           .from("gerencia_phones")
-          .update({ status: "inactive" })
+          .update({ status: "inactive", last_seen_at: nowIso })
           .eq("gerencia_id", g.id);
 
         if (inactivateAllError) {
