@@ -9,7 +9,8 @@ const corsHeaders = {
 /**
  * API público: devuelve 1 número de teléfono para una landing.
  * Toda la lógica corre en la DB (get_phone_for_landing) para 1 solo round-trip.
- * Uso: GET /functions/v1/landing-phone?name=MiLanding
+ * Uso normal: GET /functions/v1/landing-phone?name=MiLanding
+ * Uso Chatrace: GET /functions/v1/landing-phone?name=MiCliente&source=chatrace
  */
 Deno.serve(async (req) => {
   if (req.method === "OPTIONS") {
@@ -31,15 +32,18 @@ Deno.serve(async (req) => {
 
   try {
     let name: string | undefined;
+    let source: string | undefined;
 
     if (req.method === "GET") {
       const url = new URL(req.url);
       name = url.searchParams.get("name")?.trim() || undefined;
+      source = url.searchParams.get("source")?.trim().toLowerCase() || undefined;
     } else {
       const body = (await req.json().catch(() => null)) as
-        | { name?: string | null }
+        | { name?: string | null; source?: string | null }
         | null;
       name = body?.name?.trim() || undefined;
+      source = body?.source?.trim().toLowerCase() || undefined;
     }
 
     if (!name) {
@@ -73,9 +77,13 @@ Deno.serve(async (req) => {
       auth: { autoRefreshToken: false, persistSession: false },
     });
 
-    const { data, error } = await supabase.rpc("get_phone_for_landing", {
-      p_landing_name: name,
-    });
+    const rpcName = source === "chatrace"
+      ? "get_phone_for_chatrace_client"
+      : "get_phone_for_landing";
+    const rpcParams = source === "chatrace"
+      ? { p_client_name: name }
+      : { p_landing_name: name };
+    const { data, error } = await supabase.rpc(rpcName, rpcParams);
 
     if (error) {
       return new Response(
@@ -123,7 +131,9 @@ Deno.serve(async (req) => {
       );
     }
 
-    // Éxito: result tiene phoneId, phone, landingId, landingName, phoneMode, phoneKind, gerencia
+    // Éxito:
+    // - flujo normal: phoneId, phone, landingId, landingName, phoneMode, phoneKind, gerencia
+    // - chatrace:     phoneId, phone, landingName(cliente), integrationSource, phoneMode, phoneKind, gerencia
     const payload = { ...result };
     delete (payload as Record<string, unknown>)._status;
 
