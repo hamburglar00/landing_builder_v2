@@ -193,7 +193,7 @@ function normalizePhone(value: string | null | undefined): string {
 }
 
 const ALL_COLUMNS = [
-  "phone","email","fn","ln","ct","st","zip","country","fbp","fbc","meta_pixel_id",
+  "phone","email","fn","ln","ct","st","zip","country","fbp","fbc","meta_pixel_id","source_platform",
   "contact_event_id","contact_event_time","sendContactPixel","contact_payload_raw","lead_event_id","lead_event_time","lead_payload_raw",
   "purchase_event_id","purchase_event_time","purchase_payload_raw","timestamp","clientIP","agentuser",
   "estado","valor","purchase_type","contact_status_capi","lead_status_capi","purchase_status_capi",
@@ -282,6 +282,7 @@ function cellValue(c: ConversionRow, col: ColKey): React.ReactNode {
       const px = c.meta_pixel_id || c.pixel_id;
       return <td key={col} className={dimMono} title={tip(px)}>{px || "-"}</td>;
     }
+    case "source_platform": return <td key={col} className={dim} title={tip(c.source_platform)}>{c.source_platform || "-"}</td>;
     case "contact_event_id": return <td key={col} className={dimMono} title={c.contact_event_id}>{truncateId(c.contact_event_id)}</td>;
     case "contact_event_time": return <td key={col} className={dim} title={tip(c.contact_event_time)}>{c.contact_event_time ?? "-"}</td>;
     case "sendContactPixel": return <td key={col} className={dim} title={tip(c.sendContactPixel)}>{c.sendContactPixel ? "true" : "false"}</td>;

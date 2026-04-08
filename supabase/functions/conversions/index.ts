@@ -61,6 +61,7 @@ interface ConversionRow {
   fbp: string;
   fbc: string;
   meta_pixel_id: string;
+  source_platform?: string;
   pixel_id: string;
   contact_event_id: string;
   contact_event_time: number | null;
@@ -656,6 +657,7 @@ async function handleContact(
   const nowIso = new Date().toISOString();
   const nowSec = Math.floor(Date.now() / 1000);
   const inboundMetaPixelId = norm(p.meta_pixel_id || p.pixel_id);
+  const inboundSourcePlatform = norm(p.source_platform);
 
   const contactEventId = norm(p.contact_event_id || p.event_id) || generateEventId();
   const contactEventTime = toValidEventTime(p.contact_event_time || p.event_time || nowSec);
@@ -678,6 +680,7 @@ async function handleContact(
     fbp: norm(p.fbp),
     fbc: norm(p.fbc),
     meta_pixel_id: inboundMetaPixelId,
+    source_platform: inboundSourcePlatform || "",
     pixel_id: inboundMetaPixelId,
     contact_event_id: contactEventId,
     contact_event_time: contactEventTime,
@@ -793,6 +796,7 @@ async function handleLead(
 ): Promise<Response> {
   const cleanPhone = sanitizePhone(p.phone);
   const inboundMetaPixelId = norm(p.meta_pixel_id || p.pixel_id);
+  const inboundSourcePlatform = norm(p.source_platform);
   if (!cleanPhone) {
     await writeLog(
       db,
@@ -882,6 +886,7 @@ async function handleLead(
       updates.meta_pixel_id = inboundMetaPixelId;
       updates.pixel_id = inboundMetaPixelId;
     }
+    if (inboundSourcePlatform) updates.source_platform = inboundSourcePlatform;
     if (testEventCode) updates.test_event_code = testEventCode;
     if (payloadFn) updates.fn = payloadFn;
     if (payloadLn) updates.ln = payloadLn;
@@ -938,6 +943,7 @@ async function handlePurchase(
 ): Promise<Response> {
   const cleanPhone = sanitizePhone(p.phone);
   const inboundMetaPixelId = norm(p.meta_pixel_id || p.pixel_id);
+  const inboundSourcePlatform = norm(p.source_platform);
   const amount = parseFloat(p.amount);
   if (!cleanPhone || isNaN(amount) || amount <= 0) {
     await writeLog(
@@ -1075,6 +1081,7 @@ async function handlePurchase(
       updates.meta_pixel_id = inboundMetaPixelId;
       updates.pixel_id = inboundMetaPixelId;
     }
+    if (inboundSourcePlatform) updates.source_platform = inboundSourcePlatform;
     if (testEventCode) updates.test_event_code = testEventCode;
     if (existing?.lead_event_id) {
       updates.lead_event_id = existing.lead_event_id;
@@ -1141,6 +1148,7 @@ async function handlePurchase(
       fbp: "",
       fbc: "",
       meta_pixel_id: inboundMetaPixelId,
+      source_platform: inboundSourcePlatform || "",
       pixel_id: inboundMetaPixelId,
       contact_event_id: "",
       contact_event_time: null,
@@ -1229,6 +1237,7 @@ async function handlePurchase(
     fbp: srcRow?.fbp ?? "",
     fbc: srcRow?.fbc ?? "",
     meta_pixel_id: srcRow?.meta_pixel_id ?? srcRow?.pixel_id ?? inboundMetaPixelId,
+    source_platform: srcRow?.source_platform ?? inboundSourcePlatform ?? "",
     pixel_id: srcRow?.pixel_id ?? inboundMetaPixelId,
     // DO NOT inherit event IDs
     contact_event_id: "",
@@ -1301,6 +1310,7 @@ async function handleSimplePurchase(
 ): Promise<Response> {
   const cleanPhone = sanitizePhone(p.phone);
   const inboundMetaPixelId = norm(p.meta_pixel_id || p.pixel_id);
+  const inboundSourcePlatform = norm(p.source_platform);
   const amount = parseFloat(p.amount);
   if (!cleanPhone || isNaN(amount) || amount <= 0) {
     return textResponse("Faltan parametros validos: phone y amount > 0", 400);
@@ -1341,6 +1351,7 @@ async function handleSimplePurchase(
     fbp: srcRow?.fbp ?? "",
     fbc: srcRow?.fbc ?? "",
     meta_pixel_id: srcRow?.meta_pixel_id ?? srcRow?.pixel_id ?? inboundMetaPixelId,
+    source_platform: srcRow?.source_platform ?? inboundSourcePlatform ?? "",
     pixel_id: srcRow?.pixel_id ?? inboundMetaPixelId,
     contact_event_id: "",
     contact_event_time: null,

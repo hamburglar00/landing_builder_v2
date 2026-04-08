@@ -67,6 +67,7 @@ export interface ConversionRow {
   fbp: string;
   fbc: string;
   meta_pixel_id: string;
+  source_platform?: string;
   pixel_id: string;
   contact_event_id: string;
   contact_event_time: number | null;
@@ -296,6 +297,7 @@ const CONVERSIONS_SELECT = `
   id, internal_id, landing_id, user_id, landing_name,
   phone, email, fn, ln, ct, st, zip, country,
   fbp, fbc, meta_pixel_id, pixel_id,
+  source_platform,
   contact_event_id, contact_event_time, sendContactPixel, contact_payload_raw,
   lead_event_id, lead_event_time, lead_payload_raw,
   purchase_event_id, purchase_event_time, purchase_payload_raw,
