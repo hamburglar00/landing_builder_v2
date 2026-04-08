@@ -1099,6 +1099,7 @@ async function handlePurchase(
   }
   const testEventCode = norm(p.test_event_code);
   const purchasePayloadRaw = safePayloadRaw(p);
+  const generatedExternalId = norm(p.external_id) || generateEventId();
 
   const promoCode = norm(p.promo_code);
   const promoCodeIsFull = isFullPromoCode(p.promo_code ?? p.promoCode ?? promoCode);
@@ -1308,7 +1309,7 @@ async function handlePurchase(
       lead_status_capi: "",
       purchase_status_capi: "",
       observaciones: "",
-      external_id: "",
+      external_id: generatedExternalId,
       utm_campaign: "",
       telefono_asignado: "",
       promo_code: promoCodeIsFull ? promoCode : "",
