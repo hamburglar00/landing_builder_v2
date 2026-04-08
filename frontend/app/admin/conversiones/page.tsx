@@ -541,7 +541,7 @@ export default function AdminConversionesPage() {
     return toneByIndex.map((tone, idx) => {
       const isStart = idx === 0 || keys[idx - 1] !== keys[idx];
       const isEnd = idx === keys.length - 1 || keys[idx + 1] !== keys[idx];
-      return { base: tone === 0 ? "bg-zinc-800/30" : "bg-zinc-950/70", isStart, isEnd };
+      return { base: tone === 0 ? "bg-zinc-100/20" : "bg-zinc-950/70", isStart, isEnd };
     });
   }, [logs, internalIdByConversionId]);
   const hasStatsFiltersApplied = useMemo(
@@ -1555,7 +1555,7 @@ export default function AdminConversionesPage() {
                       key={log.id}
                       className={(() => {
                         const meta = logGroupMetaByIndex[idx] ?? { base: "bg-zinc-950/40", isStart: false, isEnd: false };
-                        const blockBorders = `${meta.isStart ? " border-t-2 border-t-black/80" : ""}${meta.isEnd ? " border-b-2 border-b-black/80" : ""}`;
+                        const blockBorders = `${meta.isStart ? " border-t-4 border-t-black/90" : ""}${meta.isEnd ? " border-b-4 border-b-black/90" : ""}`;
                         const isMetaResponse = log.function_name === "sendToMetaCAPI" && log.message === "Meta CAPI respuesta";
                         if (!isMetaResponse || !log.response_meta) return `${meta.base}${blockBorders}`;
                         try {
