@@ -1,4 +1,4 @@
-﻿import { createClient, SupabaseClient } from "https://esm.sh/@supabase/supabase-js@2";
+import { createClient, SupabaseClient } from "https://esm.sh/@supabase/supabase-js@2";
 import {
   buildMetaRequest,
   type ConversionRow as SharedConversionRow,
@@ -869,7 +869,7 @@ async function handleLead(
       safePayloadRaw(p),
       "rechazado: falta phone",
     );
-    return textResponse("Faltan parámetros: phone requerido", 400);
+    return textResponse("Faltan parametros: phone requerido", 400);
   }
   const promoCode = norm(p.promo_code);
   const promoCodeIsFull = isFullPromoCode(p.promo_code ?? p.promoCode ?? promoCode);
@@ -887,7 +887,7 @@ async function handleLead(
       safePayloadRaw(p),
       "rechazado: falta promo_code",
     );
-    return textResponse("Faltan parámetros: promo_code requerido", 400);
+    return textResponse("Faltan parametros: promo_code requerido", 400);
   }
   const testEventCode = norm(p.test_event_code);
   const leadPayloadRaw = safePayloadRaw(p);
@@ -1090,7 +1090,7 @@ async function handleLead(
     undefined,
     undefined,
     safePayloadRaw(p),
-    "lead procesado (match: promo_code)",
+    `lead procesado (match: ${leadMatchMode})`,
   );
 
   const ok = await sendToMetaCAPI(db, effectiveConfig, pixelConfigs, fullRow, targetId!, "Lead", leadEventId, leadEventTime, undefined, testEventCode || undefined);

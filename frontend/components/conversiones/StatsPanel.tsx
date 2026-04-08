@@ -195,6 +195,7 @@ export default function StatsPanel({
     const uniqueContacts = core.uniqueContacts;
     const uniqueLeads = core.uniqueLeads;
     const firstLoadPurchasers = core.firstLoadPurchasers;
+    const firstLoadPurchasersLinkedToLead = core.firstLoadPurchasersLinkedToLead;
     const totalPurchases = core.totalPurchases;
     const primera = core.firstLoadPlayers;
     const recurrente = core.repeatPlayers;
@@ -408,6 +409,7 @@ export default function StatsPanel({
       uniqueContacts,
       uniqueLeads,
       firstLoadPurchasers,
+      firstLoadPurchasersLinkedToLead,
       totalPurchases,
       leads,
       primera,
@@ -583,8 +585,8 @@ export default function StatsPanel({
           />
           <KpiCard
             label="Porcentaje de carga"
-            value={pct(stats.firstLoadPurchasers, stats.uniqueLeads)}
-            sub={`${stats.firstLoadPurchasers} de ${stats.uniqueLeads} leads`}
+            value={pct(stats.firstLoadPurchasersLinkedToLead, stats.uniqueLeads)}
+            sub={`${stats.firstLoadPurchasersLinkedToLead} de ${stats.uniqueLeads} leads`}
             color="text-sky-400"
             tooltip={compactTooltips ? "De las personas que escribieron (leads), ¿cuántas cargaron?" : "De las personas que escribieron (leads), ¿cuántas cargaron? purchase únicos / leads únicos."}
           />

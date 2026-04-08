@@ -159,6 +159,7 @@ interface ProvinceData {
   contactos: number;
   reachedLead: number;
   reachedPurchase: number;
+  reachedPurchaseLinkedToLead: number;
   reachedRepeat: number;
   repeatFromFirstInRange: number;
   primerasCargas: number;
@@ -197,6 +198,7 @@ function buildProvinceData(
       contactos: core.uniqueContacts,
       reachedLead: core.uniqueLeads,
       reachedPurchase: core.firstLoadPurchasers,
+      reachedPurchaseLinkedToLead: core.firstLoadPurchasersLinkedToLead,
       reachedRepeat: core.purchaseRepeat,
       repeatFromFirstInRange: core.repeatFromFirstInRange,
       primerasCargas: core.firstLoadPurchasers,
@@ -228,7 +230,7 @@ function getMetricValue(
     case "recargas": return d.reachedRepeat;
     case "cargas_totales": return d.purchaseCount;
     case "pct_inicio": return d.contactos > 0 ? (d.reachedLead / d.contactos) * 100 : 0;
-    case "pct_carga": return d.reachedLead > 0 ? (d.reachedPurchase / d.reachedLead) * 100 : 0;
+    case "pct_carga": return d.reachedLead > 0 ? (d.reachedPurchaseLinkedToLead / d.reachedLead) * 100 : 0;
     case "pct_recarga": return d.reachedPurchase > 0 ? (d.repeatFromFirstInRange / d.reachedPurchase) * 100 : 0;
     case "carga_promedio": return d.purchaseCount > 0 ? d.totalCargado / d.purchaseCount : 0;
     case "carga_mediana": return d.cargaMediana;
@@ -334,7 +336,7 @@ export default function ArgentinaMap({
       case "recargas": return core.purchaseRepeat;
       case "cargas_totales": return core.totalPurchases;
       case "pct_inicio": return core.uniqueContacts > 0 ? (core.uniqueLeads / core.uniqueContacts) * 100 : 0;
-      case "pct_carga": return core.uniqueLeads > 0 ? (core.firstLoadPurchasers / core.uniqueLeads) * 100 : 0;
+      case "pct_carga": return core.uniqueLeads > 0 ? (core.firstLoadPurchasersLinkedToLead / core.uniqueLeads) * 100 : 0;
       case "pct_recarga": return core.firstLoadPurchasers > 0 ? (core.repeatFromFirstInRange / core.firstLoadPurchasers) * 100 : 0;
       case "carga_promedio": return core.totalPurchases > 0 ? core.totalRevenue / core.totalPurchases : 0;
       case "carga_mediana": return median(core.purchaseValues);

@@ -60,7 +60,7 @@ export function HomeOverview({
     const core = computeCoreStats(conversions, funnelContacts, conversions, premiumThreshold);
 
     const porcentajeCarga = core.uniqueLeads
-      ? (core.firstLoadPurchasers / core.uniqueLeads) * 100
+      ? (core.firstLoadPurchasersLinkedToLead / core.uniqueLeads) * 100
       : 0;
     const cargaPromedio = core.totalPurchaseCount > 0 ? core.totalRevenue / core.totalPurchaseCount : 0;
 
