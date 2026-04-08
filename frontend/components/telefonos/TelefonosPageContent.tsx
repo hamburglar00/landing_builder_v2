@@ -570,6 +570,9 @@ export function TelefonosPageContent({
               (acc, p) => acc + (Number(p.usage_count) || 0),
               0,
             );
+            const isPbadminSource = (g.source_type ?? "pbadmin") === "pbadmin";
+            const hasPhones = phones.length > 0;
+            const allInactive = hasPhones && phones.every((p) => p.status !== "active");
             const totalMessages = phones.reduce(
               (acc, p) =>
                 acc + (leadUniqueByAssignedPhone[onlyDigits(p.phone)] ?? 0),
@@ -658,7 +661,7 @@ export function TelefonosPageContent({
                         Mensajes recibidos
                       </button>
                       <div className="ml-auto flex flex-wrap gap-2">
-                        {(g.source_type ?? "pbadmin") === "pbadmin" ? (
+                        {isPbadminSource ? (
                           <button
                             type="button"
                             onClick={() => void handleSync(g.id)}
@@ -680,6 +683,11 @@ export function TelefonosPageContent({
                         </button>
                       </div>
                     </div>
+                    {isPbadminSource && allInactive ? (
+                      <div className="mb-3 rounded-lg border border-amber-900/40 bg-amber-950/20 px-3 py-2 text-xs text-amber-300">
+                        Sin managers activos detectados para esta gerencia en la última sincronización.
+                      </div>
+                    ) : null}
                     {(g.source_type ?? "pbadmin") === "manual" ? (
                       <div className="mb-3 flex justify-end">
                         <button

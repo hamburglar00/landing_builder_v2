@@ -195,7 +195,11 @@ Deno.serve(async (req) => {
         }
 
         const noManagersFound = parsed?.code === "no_managers_found";
-        if (!res.ok && !noManagersFound) {
+        // Flexible behavior:
+        // - If we can parse a payload, we process it as "current snapshot" even on non-2xx.
+        // - If there are no phones in that snapshot, phones for this gerencia are set inactive.
+        // - Only skip when response is non-2xx and body is not parseable.
+        if (!res.ok && !parsed && !noManagersFound) {
           console.error(
             `Error ${res.status} al llamar API externa para gerencia ${g.id}`,
           );
