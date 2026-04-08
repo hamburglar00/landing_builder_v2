@@ -1563,8 +1563,7 @@ export default function AdminConversionesPage() {
                           const eventsReceived = typeof parsed.events_received === "number"
                             ? parsed.events_received
                             : Number(parsed.events_received ?? 0);
-                          const ok = !parsed.error && Number.isFinite(eventsReceived) && eventsReceived > 0;
-                          return ok ? `${meta.base}${blockBorders} shadow-[inset_0_0_0_9999px_rgba(16,185,129,0.10)]` : `${meta.base}${blockBorders}`;
+                          return `${meta.base}${blockBorders}`;
                         } catch {
                           return `${meta.base}${blockBorders}`;
                         }
@@ -1577,7 +1576,22 @@ export default function AdminConversionesPage() {
                         {new Date(log.created_at).toLocaleString("es-AR", { month: "2-digit", day: "2-digit", hour: "2-digit", minute: "2-digit", second: "2-digit" })}
                       </td>
                       <td className="px-2 py-1.5">{levelBadge(log.level, log.function_name, log.message)}</td>
-                      <td className="px-2 py-1.5 text-zinc-200">{log.message}</td>
+                      <td className={`px-2 py-1.5 ${
+                        (() => {
+                          const isMetaResponse = log.function_name === "sendToMetaCAPI" && log.message === "Meta CAPI respuesta";
+                          if (!isMetaResponse || !log.response_meta) return "text-zinc-200";
+                          try {
+                            const parsed = JSON.parse(log.response_meta) as { error?: unknown; events_received?: number | string };
+                            const eventsReceived = typeof parsed.events_received === "number"
+                              ? parsed.events_received
+                              : Number(parsed.events_received ?? 0);
+                            const ok = !parsed.error && Number.isFinite(eventsReceived) && eventsReceived > 0;
+                            return ok ? "text-emerald-300 font-semibold" : "text-zinc-200";
+                          } catch {
+                            return "text-zinc-200";
+                          }
+                        })()
+                      }`}>{log.message}</td>
                       <td className="px-2 py-1.5 text-zinc-300 font-mono whitespace-nowrap">{log.function_name}</td>
                       <td className="px-2 py-1.5 text-zinc-500">
                         {(log.payload_received && log.payload_received.trim()) ? (
