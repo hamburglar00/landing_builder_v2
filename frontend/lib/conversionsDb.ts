@@ -375,14 +375,9 @@ export async function fetchConversionsFiltered(
     offset += chunkSize;
   }
 
-  const [hiddenIds, hiddenContactKeys] = await Promise.all([
-    fetchHiddenConversionIds(hiddenBy),
-    fetchHiddenContacts(hiddenBy),
-  ]);
+  const hiddenIds = await fetchHiddenConversionIds(hiddenBy);
   return rows.filter(
-    (r) =>
-      !hiddenIds.has(r.id) &&
-      !hiddenContactKeys.has(`${r.user_id}::${r.phone}`),
+    (r) => !hiddenIds.has(r.id),
   );
 }
 
@@ -417,14 +412,9 @@ export async function fetchConversionsForAdminFiltered(
     offset += chunkSize;
   }
 
-  const [hiddenIds, hiddenContactKeys] = await Promise.all([
-    fetchHiddenConversionIds(hiddenBy),
-    fetchHiddenContacts(hiddenBy),
-  ]);
+  const hiddenIds = await fetchHiddenConversionIds(hiddenBy);
   return rows.filter(
-    (r) =>
-      !hiddenIds.has(r.id) &&
-      !hiddenContactKeys.has(`${r.user_id}::${r.phone}`),
+    (r) => !hiddenIds.has(r.id),
   );
 }
 

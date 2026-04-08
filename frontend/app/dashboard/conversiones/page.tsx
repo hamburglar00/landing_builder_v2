@@ -14,7 +14,6 @@ import {
   fetchConversionLogsFiltered,
   updateConversionEmail,
   hideConversions,
-  hideContacts,
   hideConversionLogs,
   type ConversionsConfig,
   type PixelConfig,
@@ -382,6 +381,7 @@ export default function DashboardConversionesPage() {
 
   const activeConversions = useMemo(() => filterByDateRange(conversions, dateRange), [conversions, dateRange]);
   const activeFunnel = useMemo(() => filterFunnelByDateRange(funnelContacts, dateRange), [funnelContacts, dateRange]);
+  const activeLogs = useMemo(() => filterByDateRange(logs, dateRange), [logs, dateRange]);
   const statsConversions = useMemo(
     () => activeConversions.filter((r) => !String(r.test_event_code ?? "").trim()),
     [activeConversions],
@@ -842,83 +842,25 @@ export default function DashboardConversionesPage() {
     finally { setRefreshingTable(false); }
   }, [userId]);
 
-  const clearTableDisplay = useCallback(async () => {
-    if (!userId || activeConversions.length === 0) return;
+  const clearGlobalDisplay = useCallback(async () => {
+    if (!userId) return;
+    if (activeConversions.length === 0 && activeLogs.length === 0) return;
     const ok = window.confirm(
-      "Seguro que queres limpiar la vista?\n\nSi limpias la vista, perderas los registros visibles y las estadsticas volveran a cero.",
+      "Seguro que queres limpiar la vista?\n\nSe ocultaran los registros visibles en Funnel, Tabla, Estadisticas y Logs (no se borra nada de la base de datos).",
     );
     if (!ok) return;
     setHidingTable(true);
-    setClearMsg(null);
-    try {
-      await hideConversions(activeConversions.map((c) => c.id), userId);
-      await refreshTable();
-      setClearMsg("Vista limpiada.");
-      setTimeout(() => setClearMsg(null), 4000);
-    } catch (e) {
-      console.error(e);
-      const msg = e instanceof Error ? e.message : String(e);
-      setClearMsg(`Error al limpiar: ${msg}`);
-    } finally { setHidingTable(false); }
-  }, [userId, activeConversions, refreshTable]);
-
-  const clearFunnelDisplay = useCallback(async () => {
-    if (!userId || activeFunnel.length === 0) return;
-    const ok = window.confirm(
-      "Seguro que queres limpiar la vista?\n\nSi limpias la vista, perderas los registros visibles y las estadsticas volveran a cero.",
-    );
-    if (!ok) return;
     setHidingFunnel(true);
-    setClearMsg(null);
-    try {
-      await hideContacts(
-        activeFunnel.map((c) => ({ user_id: c.user_id, phone: c.phone })),
-        userId,
-      );
-      await refreshTable();
-      setClearMsg("Vista limpiada.");
-      setTimeout(() => setClearMsg(null), 4000);
-    } catch (e) {
-      console.error(e);
-      const msg = e instanceof Error ? e.message : String(e);
-      setClearMsg(`Error al limpiar: ${msg}`);
-    } finally { setHidingFunnel(false); }
-  }, [userId, activeFunnel, refreshTable]);
-
-  const clearStatsDisplay = useCallback(async () => {
-    if (!userId || (activeFunnel.length === 0 && activeConversions.length === 0)) return;
-    const ok = window.confirm(
-      "Seguro que queres limpiar la vista?\n\nSi limpias la vista, perderas los registros visibles y las estadsticas volveran a cero.",
-    );
-    if (!ok) return;
     setHidingStats(true);
-    setClearMsg(null);
-    try {
-      await hideContacts(
-        activeFunnel.map((c) => ({ user_id: c.user_id, phone: c.phone })),
-        userId,
-      );
-      await hideConversions(activeConversions.map((c) => c.id), userId);
-      await refreshTable();
-      setClearMsg("Vista limpiada.");
-      setTimeout(() => setClearMsg(null), 4000);
-    } catch (e) {
-      console.error(e);
-      const msg = e instanceof Error ? e.message : String(e);
-      setClearMsg(`Error al limpiar: ${msg}`);
-    } finally { setHidingStats(false); }
-  }, [userId, activeFunnel, activeConversions, refreshTable]);
-
-  const clearLogsDisplay = useCallback(async () => {
-    if (!userId || logs.length === 0) return;
-    const ok = window.confirm(
-      "Seguro que queres limpiar la vista?\n\nSi limpias la vista, perderas los registros visibles y las estadsticas volveran a cero.",
-    );
-    if (!ok) return;
     setHidingLogs(true);
     setClearMsg(null);
     try {
-      await hideConversionLogs(logs.map((l) => Number(l.id)), userId);
+      if (activeConversions.length > 0) {
+        await hideConversions(activeConversions.map((c) => c.id), userId);
+      }
+      if (activeLogs.length > 0) {
+        await hideConversionLogs(activeLogs.map((l) => Number(l.id)), userId);
+      }
       await refreshTable();
       setClearMsg("Vista limpiada.");
       setTimeout(() => setClearMsg(null), 4000);
@@ -926,8 +868,13 @@ export default function DashboardConversionesPage() {
       console.error(e);
       const msg = e instanceof Error ? e.message : String(e);
       setClearMsg(`Error al limpiar: ${msg}`);
-    } finally { setHidingLogs(false); }
-  }, [userId, logs, refreshTable]);
+    } finally {
+      setHidingTable(false);
+      setHidingFunnel(false);
+      setHidingStats(false);
+      setHidingLogs(false);
+    }
+  }, [userId, activeConversions, activeLogs, refreshTable]);
 
   if (loading) {
     return (
@@ -1161,11 +1108,11 @@ export default function DashboardConversionesPage() {
         </div>
       </div>
 
-      {/* Date filter + global actions (funnel, tabla, estadisticas) */}
-      {(tab === "funnel" || tab === "seguimiento" || tab === "tabla" || tab === "estadisticas") && (
+      {/* Date filter + global actions */}
+      {(tab === "funnel" || tab === "seguimiento" || tab === "tabla" || tab === "estadisticas" || tab === "logs") && (
         <div className="flex items-center justify-between gap-2 pt-1">
           <div className="flex items-center gap-2">
-            {(tab === "funnel" || tab === "tabla" || tab === "estadisticas") && (
+            {(tab === "funnel" || tab === "tabla" || tab === "estadisticas" || tab === "logs") && (
               <>
                 <button
                   type="button"
@@ -1181,26 +1128,19 @@ export default function DashboardConversionesPage() {
                 </button>
                 <button
                   type="button"
-                  onClick={
-                    tab === "funnel"
-                      ? clearFunnelDisplay
-                      : tab === "tabla"
-                        ? clearTableDisplay
-                        : clearStatsDisplay
-                  }
+                  onClick={clearGlobalDisplay}
                   disabled={
-                    tab === "funnel"
-                      ? (hidingFunnel || refreshingTable || activeFunnel.length === 0)
-                      : tab === "tabla"
-                        ? (hidingTable || refreshingTable || filteredConversions.length === 0)
-                        : (hidingStats || refreshingTable || (activeFunnel.length === 0 && statsConversions.length === 0))
+                    hidingFunnel ||
+                    hidingTable ||
+                    hidingStats ||
+                    hidingLogs ||
+                    refreshingTable ||
+                    (activeConversions.length === 0 && activeLogs.length === 0)
                   }
                   className="inline-flex h-7 items-center gap-1.5 rounded-lg border border-zinc-700 bg-zinc-800/80 px-2 text-[11px] font-medium text-zinc-400 transition hover:bg-zinc-700 hover:text-zinc-300 disabled:opacity-50 disabled:cursor-not-allowed"
                   title="Ocultar registros de la vista (persistente, no borra de la base)"
                 >
-                  {tab === "funnel" ? (hidingFunnel ? "Ocultando..." : "Limpiar vista")
-                    : tab === "tabla" ? (hidingTable ? "Ocultando..." : "Limpiar vista")
-                      : (hidingStats ? "Ocultando..." : "Limpiar vista")}
+                  {(hidingFunnel || hidingTable || hidingStats || hidingLogs) ? "Ocultando..." : "Limpiar vista"}
                 </button>
               </>
             )}
@@ -1493,19 +1433,10 @@ export default function DashboardConversionesPage() {
           <div className="mb-4 flex flex-wrap items-center justify-between gap-2">
             <h3 className="text-sm font-semibold text-zinc-200">
               Logs de conversiones{" "}
-              <span className="font-normal text-zinc-500">({logs.length})</span>
+              <span className="font-normal text-zinc-500">({activeLogs.length})</span>
             </h3>
-            <button
-              type="button"
-              onClick={clearLogsDisplay}
-              disabled={hidingLogs || logs.length === 0}
-              className="inline-flex items-center gap-1.5 rounded-lg border border-zinc-700 bg-zinc-800/80 px-2.5 py-1.5 text-xs font-medium text-zinc-400 transition hover:bg-zinc-700 hover:text-zinc-300 disabled:opacity-50 disabled:cursor-not-allowed"
-              title="Ocultar logs de la vista (no borra de la base)"
-            >
-              {hidingLogs ? "Ocultando..." : "Limpiar vista"}
-            </button>
           </div>
-          {logs.length === 0 ? (
+          {activeLogs.length === 0 ? (
             <p className="text-sm text-zinc-500">Aun no hay logs registrados.</p>
           ) : (
             <div className="overflow-x-auto rounded-lg border border-zinc-700">
@@ -1524,7 +1455,7 @@ export default function DashboardConversionesPage() {
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-zinc-800">
-                  {logs.map((log, idx) => (
+                  {activeLogs.map((log, idx) => (
                     <tr
                       key={log.id}
                       className={(() => {
