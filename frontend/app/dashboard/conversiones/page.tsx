@@ -552,7 +552,7 @@ export default function DashboardConversionesPage() {
     return toneByIndex.map((tone, idx) => {
       const isStart = idx === 0 || keys[idx - 1] !== keys[idx];
       const isEnd = idx === keys.length - 1 || keys[idx + 1] !== keys[idx];
-      return { base: tone === 0 ? "bg-zinc-950/40" : "bg-zinc-900/45", isStart, isEnd };
+      return { base: tone === 0 ? "bg-zinc-800/30" : "bg-zinc-950/70", isStart, isEnd };
     });
   }, [logs, internalIdByConversionId]);
   const tabOrder = useMemo<Tab[]>(
