@@ -77,12 +77,13 @@ export function computeCoreStats(
   const firstLoadPurchasers = phoneToFirstPurchase.size;
   const leadExternalKeys = new Set(
     leadRows
-      .filter((c) => (c.external_id ?? "").trim() !== "")
-      .map((c) => `${c.user_id}::${(c.external_id ?? "").trim()}`),
+      .map((c) => ({ userId: c.user_id, ext: String(c.external_id ?? "").trim() }))
+      .filter((x) => x.ext !== "")
+      .map((x) => `${x.userId}::${x.ext}`),
   );
   let firstLoadPurchasersLinkedToLead = 0;
   for (const c of phoneToFirstPurchase.values()) {
-    const ext = (c.external_id ?? "").trim();
+    const ext = String(c.external_id ?? "").trim();
     if (!ext) continue;
     if (leadExternalKeys.has(`${c.user_id}::${ext}`)) {
       firstLoadPurchasersLinkedToLead++;
