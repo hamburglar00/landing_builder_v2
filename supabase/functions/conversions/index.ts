@@ -899,6 +899,7 @@ async function handleLead(
 
   // 1) Match by promo_code
   let targetId: string | null = null;
+  let leadMatchMode: "promo_code" | "created_new" = "promo_code";
   if (promoCode) {
     const { data } = await db
       .from("conversions")
@@ -994,6 +995,7 @@ async function handleLead(
 
     const createdId = inserted.id;
     targetId = createdId;
+    leadMatchMode = "created_new";
 
     await writeLog(
       db,
@@ -1067,7 +1069,18 @@ async function handleLead(
   );
 
   const ok = await sendToMetaCAPI(db, effectiveConfig, pixelConfigs, fullRow, targetId!, "Lead", leadEventId, leadEventTime, undefined, testEventCode || undefined);
-  return textResponse(ok ? "Fila LEAD procesada" : "LEAD procesado. Error al enviar a Meta CAPI (revisar token, pixel o pestana Logs).");
+  if (ok) {
+    return textResponse(
+      leadMatchMode === "created_new"
+        ? "LEAD sin match por promo_code: se creo una fila nueva y se proceso correctamente."
+        : "Fila LEAD procesada",
+    );
+  }
+  return textResponse(
+    leadMatchMode === "created_new"
+      ? "LEAD sin match por promo_code: se creo una fila nueva, pero fallo el envio a Meta CAPI (revisar token, pixel o pestana Logs)."
+      : "LEAD procesado. Error al enviar a Meta CAPI (revisar token, pixel o pestana Logs).",
+  );
 }
 
 async function handlePurchase(
