@@ -80,6 +80,7 @@ export function TelefonosPageContent({
   );
   const [globalSyncing, setGlobalSyncing] = useState(false);
   const [globalResetting, setGlobalResetting] = useState(false);
+  const [globalDeletingInactive, setGlobalDeletingInactive] = useState(false);
   const [switchingGerenciaId, setSwitchingGerenciaId] = useState<number | null>(null);
   const [openGerenciaId, setOpenGerenciaId] = useState<number | null>(null);
   const [nextSyncCountdown, setNextSyncCountdown] = useState<string>("--:--");
@@ -339,6 +340,36 @@ export function TelefonosPageContent({
     }
   };
 
+  const handleDeleteInactive = async () => {
+    if (!userId) return;
+    const inactiveIds = Object.values(phonesByGerencia)
+      .flat()
+      .filter((p) => p.status !== "active")
+      .map((p) => p.id);
+    if (inactiveIds.length === 0) {
+      setError("No hay telefonos inactivos para borrar.");
+      return;
+    }
+    const ok = window.confirm(
+      `Se borraran ${inactiveIds.length} telefonos inactivos de la base de datos. Esta accion no se puede deshacer. ¿Continuar?`,
+    );
+    if (!ok) return;
+    setGlobalDeletingInactive(true);
+    setError(null);
+    try {
+      const { error: deleteError } = await supabase
+        .from("gerencia_phones")
+        .delete()
+        .in("id", inactiveIds);
+      if (deleteError) throw deleteError;
+      await loadData(userId);
+    } catch (e) {
+      setError(e instanceof Error ? e.message : "Error al borrar telefonos inactivos");
+    } finally {
+      setGlobalDeletingInactive(false);
+    }
+  };
+
   const handleFairCriterionChange = async (
     gerenciaId: number,
     criterion: FairCriterion,
@@ -544,6 +575,15 @@ export function TelefonosPageContent({
               className="rounded-lg border border-zinc-700 bg-zinc-800 px-3 py-1.5 text-xs font-medium text-zinc-200 transition hover:bg-zinc-700 disabled:opacity-60"
             >
               {globalResetting ? "Reiniciando..." : "Reiniciar contadores"}
+            </button>
+            <button
+              type="button"
+              onClick={() => void handleDeleteInactive()}
+              disabled={globalDeletingInactive || !gerencias.length}
+              title="Borra de forma permanente los telefonos inactivos de todas las gerencias."
+              className="rounded-lg border border-zinc-700 bg-zinc-800 px-3 py-1.5 text-xs font-medium text-zinc-200 transition hover:bg-zinc-700 disabled:opacity-60"
+            >
+              {globalDeletingInactive ? "Borrando..." : "Borrar telefonos inactivos"}
             </button>
           </div>
             );
