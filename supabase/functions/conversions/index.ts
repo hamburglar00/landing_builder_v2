@@ -1010,6 +1010,31 @@ async function handleLead(
       safePayloadRaw(p),
       "lead creado sin match (match: created_new)",
     );
+
+    if (!inboundMetaPixelId && resolvedPixelId) {
+      const defaultPixel = norm(pixelConfigs.find((pc) => pc.is_default)?.pixel_id);
+      const fallbackSource = defaultPixel && resolvedPixelId === defaultPixel
+        ? "default"
+        : "base_config";
+      await writeLog(
+        db,
+        landing.user_id,
+        "sendToMetaCAPI",
+        "INFO",
+        "Pixel resuelto por fallback",
+        JSON.stringify({
+          event_name: "Lead",
+          row_id: createdId,
+          fallback_source: fallbackSource,
+          selected_pixel_id: resolvedPixelId,
+        }),
+        createdId,
+        undefined,
+        undefined,
+        undefined,
+        `pixel por fallback (${fallbackSource})`,
+      );
+    }
   } else {
     // 4) Update existing row
     const updates: Record<string, unknown> = {
