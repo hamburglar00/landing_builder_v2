@@ -488,9 +488,22 @@ async function sendToMetaCAPI(
   const defaultPixel = norm(pixelConfigs.find((pc) => pc.is_default)?.pixel_id);
 
   if (!rowPixel && !chatracePixelId && norm(effectiveConfig.pixel_id)) {
+    const resolvedFallbackPixel = norm(effectiveConfig.pixel_id);
     const fallbackSource = defaultPixel && norm(effectiveConfig.pixel_id) === defaultPixel
       ? "default"
       : "base_config";
+
+    // Trazabilidad: para LEAD/PURCHASE persistimos el pixel usado por fallback.
+    if ((eventName === "Lead" || eventName === "Purchase") && resolvedFallbackPixel) {
+      await db
+        .from("conversions")
+        .update({
+          meta_pixel_id: resolvedFallbackPixel,
+          pixel_id: resolvedFallbackPixel,
+        })
+        .eq("id", rowId);
+    }
+
     await writeLog(
       db,
       row.user_id,
@@ -501,7 +514,7 @@ async function sendToMetaCAPI(
         event_name: eventName,
         row_id: rowId,
         fallback_source: fallbackSource,
-        selected_pixel_id: norm(effectiveConfig.pixel_id),
+        selected_pixel_id: resolvedFallbackPixel,
       }),
       rowId,
       undefined,
