@@ -516,6 +516,49 @@ export async function fetchFunnelContactsForAdminFiltered(
 const LOGS_SELECT =
   "id, user_id, conversion_id, function_name, level, message, detail, payload_received, result, payload_meta, response_meta, created_at";
 
+function arrangeLogsForUi(rows: ConversionLogRow[]): ConversionLogRow[] {
+  type LogGroup = {
+    sortTs: number;
+    rows: ConversionLogRow[];
+  };
+
+  const withId = new Map<string, ConversionLogRow[]>();
+  const withoutId: ConversionLogRow[] = [];
+
+  for (const row of rows) {
+    const key = row.conversion_id ?? "";
+    if (key) {
+      const bucket = withId.get(key) ?? [];
+      bucket.push(row);
+      withId.set(key, bucket);
+    } else {
+      withoutId.push(row);
+    }
+  }
+
+  const groups: LogGroup[] = [];
+
+  for (const bucket of withId.values()) {
+    const sortedBucket = [...bucket].sort(
+      (a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime(),
+    );
+    groups.push({
+      sortTs: new Date(sortedBucket[0]?.created_at ?? 0).getTime(),
+      rows: sortedBucket,
+    });
+  }
+
+  for (const row of withoutId) {
+    groups.push({
+      sortTs: new Date(row.created_at).getTime(),
+      rows: [row],
+    });
+  }
+
+  groups.sort((a, b) => b.sortTs - a.sortTs);
+  return groups.flatMap((g) => g.rows);
+}
+
 export async function fetchConversionLogs(
   userId: string,
   limit = 200,
@@ -525,12 +568,11 @@ export async function fetchConversionLogs(
     .from("conversion_logs")
     .select(LOGS_SELECT)
     .eq("user_id", userId)
-    .order("conversion_id", { ascending: false, nullsFirst: false })
     .order("created_at", { ascending: false })
     .range(offset, offset + limit - 1);
 
   if (error) throw error;
-  return (data ?? []) as unknown as ConversionLogRow[];
+  return arrangeLogsForUi((data ?? []) as unknown as ConversionLogRow[]);
 }
 
 export async function fetchConversionLogsFiltered(
@@ -551,12 +593,11 @@ export async function fetchConversionLogsForAdmin(
   const { data, error } = await supabase
     .from("conversion_logs")
     .select(LOGS_SELECT)
-    .order("conversion_id", { ascending: false, nullsFirst: false })
     .order("created_at", { ascending: false })
     .range(offset, offset + limit - 1);
 
   if (error) throw error;
-  return (data ?? []) as unknown as ConversionLogRow[];
+  return arrangeLogsForUi((data ?? []) as unknown as ConversionLogRow[]);
 }
 
 export async function fetchConversionLogsForAdminFiltered(
