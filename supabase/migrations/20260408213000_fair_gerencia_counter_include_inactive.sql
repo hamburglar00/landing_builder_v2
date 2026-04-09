@@ -1,4 +1,4 @@
-﻿-- Ajuste: en equitativa por contador de gerencia, usar sumatoria historica (activos + inactivos).
+-- Ajuste: en equitativa por contador de gerencia, usar sumatoria historica (activos + inactivos).
 -- La seleccion final de telefono mantiene status='active'.
 
 alter table public.landings
