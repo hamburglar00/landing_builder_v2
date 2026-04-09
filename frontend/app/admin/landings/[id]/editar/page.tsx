@@ -126,6 +126,7 @@ export default function AdminLandingEditarPage() {
   const [userId, setUserId] = useState<string | null>(null);
   const [ready, setReady] = useState(false);
   const [saveError, setSaveError] = useState<string | null>(null);
+  const [saving, setSaving] = useState(false);
   const [deleting, setDeleting] = useState(false);
   const [gerencias, setGerencias] = useState<Gerencia[]>([]);
   const [assignments, setAssignments] = useState<LandingGerenciaAssignment[]>([]);
@@ -210,6 +211,7 @@ export default function AdminLandingEditarPage() {
 
   const handleSave = async () => {
     if (!landing) return;
+    if (saving) return;
     setSaveError(null);
     if (/\s/.test(landing.name)) {
       setSaveError("El nombre no debe contener espacios.");
@@ -272,6 +274,7 @@ export default function AdminLandingEditarPage() {
       );
       if (!ok) return;
     }
+    setSaving(true);
     try {
       const effectivePhoneMode = assignments.some((a) => a.phoneMode === "fair")
         ? "fair"
@@ -357,6 +360,8 @@ export default function AdminLandingEditarPage() {
       } else {
         setSaveError(e instanceof Error ? e.message : "Error al guardar");
       }
+    } finally {
+      setSaving(false);
     }
   };
 
@@ -1146,7 +1151,6 @@ export default function AdminLandingEditarPage() {
     </div>
   );
 }
-
 
 
 
