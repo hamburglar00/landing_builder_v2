@@ -639,9 +639,12 @@ export default function IntegracionesMetaCapi() {
           >
             <span className="flex items-center justify-between gap-3">
               <span className="inline-flex items-center gap-3 text-sm font-semibold text-zinc-200">
-                <span className="inline-flex h-8 w-8 items-center justify-center rounded-sm bg-zinc-100 text-xs font-bold text-zinc-900">
-                  CT
-                </span>
+                <img
+                  src="/chatrace-logo.jpeg"
+                  alt=""
+                  aria-hidden="true"
+                  className="h-8 w-8 shrink-0 rounded-sm object-contain"
+                />
                 Integración con Chatrace
               </span>
               <span className="text-xs text-zinc-400">Entrar</span>
