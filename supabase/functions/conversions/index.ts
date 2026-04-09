@@ -520,7 +520,7 @@ async function sendToMetaCAPI(
       undefined,
       undefined,
       undefined,
-      `pixel por fallback (${fallbackSource})`,
+      `pixel por fallback (${fallbackSource}: ${resolvedFallbackPixel})`,
     );
   }
 
