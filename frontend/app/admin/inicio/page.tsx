@@ -5,7 +5,7 @@ import { supabase } from "@/lib/supabaseClient";
 import type { FunnelContact, ConversionRow } from "@/lib/conversionsDb";
 import {
   fetchConversionsConfig,
-  fetchConversionsForAdmin,
+  fetchConversionsForAdminFiltered,
   buildFunnelContactsFromConversions,
 } from "@/lib/conversionsDb";
 import { fetchLandingsForAdmin } from "@/lib/landing/landingsDb";
@@ -34,7 +34,7 @@ export default function AdminInicioPage() {
 
         const [{ mine, clients }, convs, cfg] = await Promise.all([
           fetchLandingsForAdmin(user.id),
-          fetchConversionsForAdmin(500),
+          fetchConversionsForAdminFiltered(user.id),
           fetchConversionsConfig(user.id),
         ]);
 

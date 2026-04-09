@@ -3,6 +3,7 @@
 import { useMemo } from "react";
 import type { FunnelContact, ConversionRow } from "@/lib/conversionsDb";
 import { computeCoreStats } from "@/lib/conversionStats";
+import { buildFunnelContactsFromConversions } from "@/lib/conversionsDb";
 
 function formatCurrency(n: number) {
   return n.toLocaleString("es-AR", {
@@ -23,14 +24,19 @@ function Card({
   value,
   subtitle,
   icon,
+  tooltip,
 }: {
   title: string;
   value: string;
   subtitle?: string;
   icon: React.ReactNode;
+  tooltip?: string;
 }) {
   return (
-    <div className="flex items-center gap-3 rounded-2xl border border-zinc-800 bg-zinc-900/60 px-4 py-3 shadow-sm">
+    <div
+      title={tooltip}
+      className="flex items-center gap-3 rounded-2xl border border-zinc-800 bg-zinc-900/60 px-4 py-3 shadow-sm"
+    >
       <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-zinc-900/80 text-zinc-300">
         {icon}
       </div>
@@ -57,7 +63,19 @@ export function HomeOverview({
   premiumThreshold: number;
 }) {
   const stats = useMemo(() => {
-    const core = computeCoreStats(conversions, funnelContacts, conversions, premiumThreshold);
+    const now = new Date();
+    const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1, 0, 0, 0, 0);
+    const monthlyConversions = conversions.filter((r) => {
+      const t = new Date(r.created_at).getTime();
+      return Number.isFinite(t) && t >= startOfMonth.getTime() && t <= now.getTime();
+    });
+    const monthlyFunnelContacts = buildFunnelContactsFromConversions(monthlyConversions);
+    const core = computeCoreStats(
+      monthlyConversions,
+      monthlyFunnelContacts,
+      monthlyConversions,
+      premiumThreshold,
+    );
 
     const porcentajeCarga = core.uniqueLeads
       ? (core.firstLoadPurchasersLinkedToLead / core.uniqueLeads) * 100
@@ -104,6 +122,7 @@ export function HomeOverview({
           title="Porcentaje de carga"
           value={pct(stats.porcentajeCarga, 100)}
           subtitle="Leads unicos que llegaron a cargar al menos una vez."
+          tooltip="Métrica mensual (mes actual)."
           icon={
             <svg viewBox="0 0 24 24" className="h-4 w-4" fill="none" stroke="currentColor" strokeWidth={1.6}>
               <path d="M4 4h4l2 6 3-10 3 8 2-4h2" className="text-emerald-400" />
@@ -115,6 +134,7 @@ export function HomeOverview({
           title="Carga promedio"
           value={formatCurrency(stats.cargaPromedio)}
           subtitle="Monto promedio por carga."
+          tooltip="Métrica mensual (mes actual)."
           icon={
             <svg viewBox="0 0 24 24" className="h-4 w-4" fill="none" stroke="currentColor" strokeWidth={1.6}>
               <circle cx="12" cy="12" r="8" className="text-amber-400" />
@@ -127,6 +147,7 @@ export function HomeOverview({
           title="Total cargado"
           value={formatCurrency(stats.totalCargado)}
           subtitle="Ingresos totales de cargas."
+          tooltip="Métrica mensual (mes actual)."
           icon={
             <svg viewBox="0 0 24 24" className="h-4 w-4" fill="none" stroke="currentColor" strokeWidth={1.6}>
               <rect x="3" y="5" width="18" height="14" rx="2" className="text-emerald-400" />
@@ -140,6 +161,7 @@ export function HomeOverview({
           title="Jugadores premium"
           value={stats.premium.toString()}
           subtitle="Contactos premium segun umbral configurado."
+          tooltip="Métrica mensual (mes actual)."
           icon={
             <svg viewBox="0 0 24 24" className="h-4 w-4" fill="none" stroke="currentColor" strokeWidth={1.6}>
               <path
@@ -153,6 +175,7 @@ export function HomeOverview({
           title="Retencion activa 30d"
           value={stats.retencionActiva30d.toString()}
           subtitle="Jugadores con >=4 cargas en 30d y primera carga >=7d."
+          tooltip="Métrica mensual (mes actual)."
           icon={
             <svg viewBox="0 0 24 24" className="h-4 w-4" fill="none" stroke="currentColor" strokeWidth={1.6}>
               <circle cx="12" cy="12" r="8" className="text-violet-400" />

@@ -37,7 +37,7 @@ export default function DashboardInicioPage() {
 
         const [landings, convs, cfg] = await Promise.all([
           fetchLandings(user.id),
-          fetchConversionsFiltered(user.id, user.id, 500),
+          fetchConversionsFiltered(user.id, user.id),
           fetchConversionsConfig(user.id),
         ]);
 
