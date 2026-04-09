@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { supabase } from "@/lib/supabaseClient";
 import { getSettings } from "@/lib/settingsDb";
+import { invokeFunction } from "@/lib/supabaseFunctions";
 import type { Landing } from "@/lib/landing/types";
 import { fetchLandingsForAdmin, createLanding } from "@/lib/landing/landingsDb";
 import { DEFAULT_CONFIG } from "@/lib/landing/mocks";
@@ -49,16 +50,20 @@ export default function AdminLandingsPage() {
           new Set((clients ?? []).map((l) => l.userId).filter((v): v is string => !!v)),
         );
         if (clientUserIds.length > 0) {
-          const { data: profiles } = await supabase
-            .from("profiles")
-            .select("id, nombre, email")
-            .in("id", clientUserIds);
+          const { data } = await invokeFunction<{ users?: Array<{ id: string; nombre: string | null; email: string | null }> }>(
+            supabase,
+            "list-clients",
+            { method: "GET" },
+          );
+          const users = Array.isArray(data?.users) ? data!.users : [];
+          const byId = new Map(users.map((u) => [String(u.id), u]));
           const map: Record<string, string> = {};
-          for (const p of profiles ?? []) {
-            const nombre = String(p.nombre ?? "").trim();
-            const email = String((p as { email?: string }).email ?? "").trim();
+          for (const uid of clientUserIds) {
+            const u = byId.get(uid);
+            const nombre = String(u?.nombre ?? "").trim();
+            const email = String(u?.email ?? "").trim();
             const label = [nombre, email].filter(Boolean).join("-");
-            map[String(p.id)] = label || nombre || email || String(p.id);
+            map[String(uid)] = label || nombre || email || String(uid);
           }
           setClientLabelsByUserId(map);
         } else {
