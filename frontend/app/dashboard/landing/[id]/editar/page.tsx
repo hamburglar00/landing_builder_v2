@@ -620,7 +620,32 @@ export default function DashboardLandingEditarPage() {
                   />
                 </button>
               </div>
-          </div>            <div>              <label className="block text-xs font-medium text-zinc-400 mb-1">                Landing Tag <span className="text-red-400">*</span>
+            </div>
+            <div>
+              <label className="block text-xs font-medium text-zinc-400 mb-1">
+                URL Post <span className="text-red-400">*</span>
+              </label>
+              <input
+                type="text"
+                value={
+                  clientName
+                    ? `${process.env.NEXT_PUBLIC_SUPABASE_URL?.replace(/\/$/, "") ?? ""}/functions/v1/conversions?name=${encodeURIComponent(
+                        clientName,
+                      )}`
+                    : landing.postUrl
+                }
+                disabled
+                className="w-full rounded-lg border border-zinc-700 bg-zinc-900 px-3 py-2 text-sm text-zinc-100 disabled:opacity-60 disabled:cursor-not-allowed"
+                placeholder="Se completa automáticamente desde Integraciones"
+              />
+              <p className="mt-1 text-[11px] text-zinc-500">
+                URL única de conversiones (Meta CAPI) para este cliente. Se completa automáticamente desde el
+                módulo Integraciones y no requiere edición manual.
+              </p>
+            </div>
+            <div>
+              <label className="block text-xs font-medium text-zinc-400 mb-1">
+                Landing Tag <span className="text-red-400">*</span>
               </label>
               <input
                 type="text"
@@ -1131,8 +1156,6 @@ export default function DashboardLandingEditarPage() {
     </div>
   );
 }
-
-
 
 
 
