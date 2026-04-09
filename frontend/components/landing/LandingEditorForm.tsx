@@ -734,12 +734,6 @@ export function LandingEditorForm({
       {/* Acciones */}
       <div className="flex flex-wrap gap-3 border-t border-zinc-800 pt-6">
         <button
-          type="submit"
-          className="cursor-pointer rounded-lg border border-emerald-700/70 bg-emerald-950/30 px-4 py-2 text-sm font-semibold uppercase tracking-wide text-emerald-300 transition hover:bg-emerald-950/50 active:scale-95"
-        >
-          GUARDAR
-        </button>
-        <button
           type="button"
           onClick={onReset}
           className="cursor-pointer rounded-lg border border-zinc-700 px-4 py-2 text-sm font-medium text-zinc-300 transition hover:bg-zinc-800 active:scale-95"

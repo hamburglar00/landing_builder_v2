@@ -21,7 +21,7 @@ export default function AdminLandingsPage() {
   const [error, setError] = useState<string | null>(null);
   const [creating, setCreating] = useState(false);
   const [urlBase, setUrlBase] = useState<string | null>(null);
-  const [clientNamesByUserId, setClientNamesByUserId] = useState<Record<string, string>>({});
+  const [clientLabelsByUserId, setClientLabelsByUserId] = useState<Record<string, string>>({});
 
   useEffect(() => {
     const init = async () => {
@@ -51,15 +51,18 @@ export default function AdminLandingsPage() {
         if (clientUserIds.length > 0) {
           const { data: profiles } = await supabase
             .from("profiles")
-            .select("id, nombre")
+            .select("id, nombre, email")
             .in("id", clientUserIds);
           const map: Record<string, string> = {};
           for (const p of profiles ?? []) {
-            map[String(p.id)] = String(p.nombre ?? "");
+            const nombre = String(p.nombre ?? "").trim();
+            const email = String((p as { email?: string }).email ?? "").trim();
+            const label = [nombre, email].filter(Boolean).join("-");
+            map[String(p.id)] = label || nombre || email || String(p.id);
           }
-          setClientNamesByUserId(map);
+          setClientLabelsByUserId(map);
         } else {
-          setClientNamesByUserId({});
+          setClientLabelsByUserId({});
         }
       } catch (e) {
         setError(e instanceof Error ? e.message : "Error al cargar landings");
@@ -123,8 +126,8 @@ export default function AdminLandingsPage() {
   }, {});
 
   const groupedEntries = Object.entries(groupedClientLandings).sort((a, b) => {
-    const nameA = (clientNamesByUserId[a[0]] || a[0]).toLowerCase();
-    const nameB = (clientNamesByUserId[b[0]] || b[0]).toLowerCase();
+    const nameA = (clientLabelsByUserId[a[0]] || a[0]).toLowerCase();
+    const nameB = (clientLabelsByUserId[b[0]] || b[0]).toLowerCase();
     return nameA.localeCompare(nameB);
   });
 
@@ -200,8 +203,8 @@ export default function AdminLandingsPage() {
               <div className="space-y-6">
                 {groupedEntries.map(([ownerId, landings]) => (
                   <div key={ownerId} className="space-y-3">
-                    <h3 className="text-xs font-semibold uppercase tracking-wide text-zinc-400">
-                      {(clientNamesByUserId[ownerId] || ownerId).trim() || "Cliente"}
+                      <h3 className="text-xs font-semibold uppercase tracking-wide text-zinc-400">
+                      {(clientLabelsByUserId[ownerId] || ownerId).trim() || "Cliente"}
                     </h3>
                     <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
                       {landings.map((landing) => (

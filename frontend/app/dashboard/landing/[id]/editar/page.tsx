@@ -399,6 +399,9 @@ export default function DashboardLandingEditarPage() {
       </div>
     );
   }
+  const isLandingTagLocked = Boolean(
+    initialName && !initialName.startsWith("Nueva-landing-"),
+  );
 
   return (
     <div className="lg:flex lg:gap-6 lg:items-start lg:pr-[440px]">
@@ -432,7 +435,7 @@ export default function DashboardLandingEditarPage() {
               type="button"
               onClick={() => void handleSave()}
               disabled={saving}
-              className="cursor-pointer rounded-lg border border-emerald-700/70 bg-emerald-950/30 px-3 py-1.5 text-sm font-semibold uppercase tracking-wide text-emerald-300 transition hover:bg-emerald-950/50 disabled:opacity-70 disabled:cursor-not-allowed"
+              className="cursor-pointer rounded-lg border border-emerald-700/70 bg-emerald-950/30 px-3 py-1.5 text-sm font-medium text-emerald-300 transition hover:bg-emerald-950/50 disabled:opacity-70 disabled:cursor-not-allowed"
             >
               {saving ? "GUARDANDO..." : "GUARDAR"}
             </button>
@@ -650,6 +653,12 @@ export default function DashboardLandingEditarPage() {
               <input
                 type="text"
                 value={landing.landingTag}
+                disabled={isLandingTagLocked}
+                title={
+                  isLandingTagLocked
+                    ? "Landing Tag inmutable luego del primer guardado."
+                    : undefined
+                }
                 onChange={(e) =>
                   setLanding((prev) => {
                     if (!prev) return prev;
@@ -657,7 +666,7 @@ export default function DashboardLandingEditarPage() {
                     return { ...prev, landingTag: cleaned };
                   })
                 }
-                className="w-full rounded-lg border border-zinc-700 bg-zinc-900 px-3 py-2 text-sm text-zinc-100"
+                className="w-full rounded-lg border border-zinc-700 bg-zinc-900 px-3 py-2 text-sm text-zinc-100 disabled:cursor-not-allowed disabled:opacity-70"
                 placeholder="ej: miLanding123"
                 required
               />
@@ -1156,7 +1165,6 @@ export default function DashboardLandingEditarPage() {
     </div>
   );
 }
-
 
 
 
