@@ -1045,7 +1045,7 @@ async function handleLead(
         undefined,
         undefined,
         undefined,
-        `pixel por fallback (${fallbackSource})`,
+        `pixel por fallback (${fallbackSource}: ${resolvedPixelId})`,
       );
     }
   } else {
