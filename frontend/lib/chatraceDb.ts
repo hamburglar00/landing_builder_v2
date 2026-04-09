@@ -8,6 +8,8 @@ export interface ChatraceClientConfig {
   post_url: string;
   landing_tag: string;
   send_contact_pixel: boolean;
+  gerencia_selection_mode: "weighted_random" | "fair";
+  gerencia_fair_criterion: "usage_count" | "messages_received";
   active: boolean;
   created_at: string;
   updated_at: string;
@@ -32,6 +34,8 @@ export async function upsertChatraceClientConfig(input: {
   post_url: string;
   landing_tag: string;
   send_contact_pixel: boolean;
+  gerencia_selection_mode: "weighted_random" | "fair";
+  gerencia_fair_criterion: "usage_count" | "messages_received";
   active: boolean;
 }): Promise<void> {
   const { error } = await supabase
@@ -44,6 +48,8 @@ export async function upsertChatraceClientConfig(input: {
         post_url: input.post_url,
         landing_tag: input.landing_tag,
         send_contact_pixel: input.send_contact_pixel,
+        gerencia_selection_mode: input.gerencia_selection_mode,
+        gerencia_fair_criterion: input.gerencia_fair_criterion,
         active: input.active,
         updated_at: new Date().toISOString(),
       },

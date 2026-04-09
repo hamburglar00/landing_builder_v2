@@ -74,6 +74,8 @@ export default function IntegracionesMetaCapi() {
   const [chatraceMsg, setChatraceMsg] = useState<string | null>(null);
   const [chatraceGerencias, setChatraceGerencias] = useState<Gerencia[]>([]);
   const [chatraceAssignments, setChatraceAssignments] = useState<LandingGerenciaAssignment[]>([]);
+  const [chatraceGerenciaSelectionMode, setChatraceGerenciaSelectionMode] = useState<"weighted_random" | "fair">("weighted_random");
+  const [chatraceGerenciaFairCriterion, setChatraceGerenciaFairCriterion] = useState<"usage_count" | "messages_received">("usage_count");
   const [chatraceIdOpen, setChatraceIdOpen] = useState(true);
   const [chatraceTrackingOpen, setChatraceTrackingOpen] = useState(true);
   const [chatraceRedirectOpen, setChatraceRedirectOpen] = useState(true);
@@ -133,6 +135,8 @@ export default function IntegracionesMetaCapi() {
     setChatraceConfig(chatrace);
     setChatracePixelId(chatrace?.meta_pixel_id ?? "");
     setChatraceActive(chatrace?.active ?? true);
+    setChatraceGerenciaSelectionMode(chatrace?.gerencia_selection_mode ?? "weighted_random");
+    setChatraceGerenciaFairCriterion(chatrace?.gerencia_fair_criterion ?? "usage_count");
     setChatraceGerencias(gers);
     const { data: chatraceAsg } = await supabase
       .from("chatrace_gerencias")
@@ -277,6 +281,8 @@ export default function IntegracionesMetaCapi() {
         post_url: endpointUrl,
         landing_tag: "",
         send_contact_pixel: false,
+        gerencia_selection_mode: chatraceGerenciaSelectionMode,
+        gerencia_fair_criterion: chatraceGerenciaFairCriterion,
         active: chatraceActive,
       });
       await supabase.from("chatrace_gerencias").delete().eq("user_id", userId);
@@ -307,6 +313,8 @@ export default function IntegracionesMetaCapi() {
     endpointUrl,
     chatraceConfig,
     chatraceActive,
+    chatraceGerenciaSelectionMode,
+    chatraceGerenciaFairCriterion,
     chatraceAssignments,
     loadAll,
   ]);
@@ -923,6 +931,61 @@ export default function IntegracionesMetaCapi() {
               <p className="text-xs text-zinc-500">
                 Asigna gerencias para habilitar selección de teléfono (misma lógica que editor de landing).
               </p>
+              <div className="rounded-lg border border-zinc-700 bg-zinc-900/70 p-3">
+                <p className="mb-2 text-xs font-medium text-zinc-300">Selección de gerencias</p>
+                <div className="flex flex-wrap items-center gap-3">
+                  <div className="inline-flex rounded-lg border border-zinc-700 bg-zinc-900 text-[11px]">
+                    <button
+                      type="button"
+                      onClick={() => setChatraceGerenciaSelectionMode("weighted_random")}
+                      className={`cursor-pointer px-2 py-1 rounded-l-lg border-r border-zinc-700 ${
+                        chatraceGerenciaSelectionMode === "weighted_random"
+                          ? "bg-zinc-100 text-zinc-900"
+                          : "text-zinc-300 hover:bg-zinc-800"
+                      }`}
+                    >
+                      Aleatoria (peso)
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => setChatraceGerenciaSelectionMode("fair")}
+                      className={`cursor-pointer px-2 py-1 rounded-r-lg ${
+                        chatraceGerenciaSelectionMode === "fair"
+                          ? "bg-zinc-100 text-zinc-900"
+                          : "text-zinc-300 hover:bg-zinc-800"
+                      }`}
+                    >
+                      Equitativa
+                    </button>
+                  </div>
+                  {chatraceGerenciaSelectionMode === "fair" ? (
+                    <div className="inline-flex rounded-lg border border-zinc-700 bg-zinc-900 text-[11px]">
+                      <button
+                        type="button"
+                        onClick={() => setChatraceGerenciaFairCriterion("usage_count")}
+                        className={`cursor-pointer px-2 py-1 rounded-l-lg border-r border-zinc-700 ${
+                          chatraceGerenciaFairCriterion === "usage_count"
+                            ? "bg-zinc-100 text-zinc-900"
+                            : "text-zinc-300 hover:bg-zinc-800"
+                        }`}
+                      >
+                        Por contador
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => setChatraceGerenciaFairCriterion("messages_received")}
+                        className={`cursor-pointer px-2 py-1 rounded-r-lg ${
+                          chatraceGerenciaFairCriterion === "messages_received"
+                            ? "bg-zinc-100 text-zinc-900"
+                            : "text-zinc-300 hover:bg-zinc-800"
+                        }`}
+                      >
+                        Mensajes recibidos
+                      </button>
+                    </div>
+                  ) : null}
+                </div>
+              </div>
               {chatraceGerencias.length === 0 ? (
                 <p className="text-xs text-zinc-500">No hay gerencias disponibles para asignar.</p>
               ) : (
@@ -933,7 +996,9 @@ export default function IntegracionesMetaCapi() {
                         <th className="px-3 py-2 font-medium text-zinc-300">Gerencia</th>
                         <th className="px-3 py-2 font-medium text-zinc-300">Nombre</th>
                         <th className="px-3 py-2 font-medium text-zinc-300 text-center">Asignar</th>
-                        <th className="px-3 py-2 font-medium text-zinc-300">Peso</th>
+                        {chatraceGerenciaSelectionMode === "weighted_random" ? (
+                          <th className="px-3 py-2 font-medium text-zinc-300">Peso</th>
+                        ) : null}
                         <th className="px-3 py-2 font-medium text-zinc-300">Modo</th>
                         <th className="px-3 py-2 font-medium text-zinc-300">Tipo</th>
                         <th className="px-3 py-2 font-medium text-zinc-300">Intervalo</th>
@@ -976,23 +1041,25 @@ export default function IntegracionesMetaCapi() {
                                 className="rounded border-zinc-600"
                               />
                             </td>
-                            <td className="px-3 py-2">
-                              <input
-                                type="number"
-                                min={0}
-                                value={weight}
-                                onChange={(e) => {
-                                  if (!isAssigned) return;
-                                  const v = parseInt(e.target.value, 10);
-                                  const next = Number.isNaN(v) ? 0 : Math.max(0, v);
-                                  setChatraceAssignments((prev) =>
-                                    prev.map((a) => (a.gerencia_id === g.id ? { ...a, weight: next } : a)),
-                                  );
-                                }}
-                                disabled={!isAssigned}
-                                className="w-14 rounded border border-zinc-700 bg-zinc-900 px-2 py-1 text-zinc-100 disabled:cursor-not-allowed disabled:opacity-50"
-                              />
-                            </td>
+                            {chatraceGerenciaSelectionMode === "weighted_random" ? (
+                              <td className="px-3 py-2">
+                                <input
+                                  type="number"
+                                  min={0}
+                                  value={weight}
+                                  onChange={(e) => {
+                                    if (!isAssigned) return;
+                                    const v = parseInt(e.target.value, 10);
+                                    const next = Number.isNaN(v) ? 0 : Math.max(0, v);
+                                    setChatraceAssignments((prev) =>
+                                      prev.map((a) => (a.gerencia_id === g.id ? { ...a, weight: next } : a)),
+                                    );
+                                  }}
+                                  disabled={!isAssigned}
+                                  className="w-14 rounded border border-zinc-700 bg-zinc-900 px-2 py-1 text-zinc-100 disabled:cursor-not-allowed disabled:opacity-50"
+                                />
+                              </td>
+                            ) : null}
                             <td className="px-3 py-2">
                               <div className="inline-flex rounded-lg border border-zinc-700 bg-zinc-900 text-[11px]">
                                 <button
@@ -1041,48 +1108,75 @@ export default function IntegracionesMetaCapi() {
                               </div>
                             </td>
                             <td className="px-3 py-2">
-                              <div className="flex items-center gap-1 text-[11px]">
-                                <select
-                                  value={intervalStartHour ?? ""}
-                                  onChange={(e) => {
-                                    if (!isAssigned) return;
-                                    const raw = e.target.value;
-                                    const v = raw === "" ? null : Math.max(0, Math.min(23, parseInt(raw, 10) || 0));
-                                    setChatraceAssignments((prev) =>
-                                      prev.map((a) => (a.gerencia_id === g.id ? { ...a, intervalStartHour: v } : a)),
-                                    );
-                                  }}
-                                  disabled={!isAssigned}
-                                  className="w-24 rounded border border-zinc-700 bg-zinc-900 px-1 py-1 text-zinc-100 disabled:cursor-not-allowed disabled:opacity-50"
-                                >
-                                  <option value="">Sin inicio</option>
-                                  {Array.from({ length: 24 }, (_, h) => (
-                                    <option key={`start-${g.id}-${h}`} value={h}>
-                                      {String(h).padStart(2, "0")}:00
-                                    </option>
-                                  ))}
-                                </select>
-                                <span className="text-zinc-500">-</span>
-                                <select
-                                  value={intervalEndHour ?? ""}
-                                  onChange={(e) => {
-                                    if (!isAssigned) return;
-                                    const raw = e.target.value;
-                                    const v = raw === "" ? null : Math.max(0, Math.min(23, parseInt(raw, 10) || 0));
-                                    setChatraceAssignments((prev) =>
-                                      prev.map((a) => (a.gerencia_id === g.id ? { ...a, intervalEndHour: v } : a)),
-                                    );
-                                  }}
-                                  disabled={!isAssigned}
-                                  className="w-24 rounded border border-zinc-700 bg-zinc-900 px-1 py-1 text-zinc-100 disabled:cursor-not-allowed disabled:opacity-50"
-                                >
-                                  <option value="">Sin fin</option>
-                                  {Array.from({ length: 24 }, (_, h) => (
-                                    <option key={`end-${g.id}-${h}`} value={h}>
-                                      {String(h).padStart(2, "0")}:00
-                                    </option>
-                                  ))}
-                                </select>
+                              <div className="flex flex-wrap items-center gap-2 text-[11px] text-zinc-300">
+                                <label className="flex items-center gap-1">
+                                  <input
+                                    type="checkbox"
+                                    checked={intervalStartHour !== null && intervalEndHour !== null}
+                                    onChange={(e) => {
+                                      if (!isAssigned) return;
+                                      setChatraceAssignments((prev) =>
+                                        prev.map((a) => {
+                                          if (a.gerencia_id !== g.id) return a;
+                                          if (!e.target.checked) {
+                                            return { ...a, intervalStartHour: null, intervalEndHour: null };
+                                          }
+                                          return {
+                                            ...a,
+                                            intervalStartHour: a.intervalStartHour ?? 9,
+                                            intervalEndHour: a.intervalEndHour ?? 21,
+                                          };
+                                        }),
+                                      );
+                                    }}
+                                    className="rounded border-zinc-600"
+                                  />
+                                  <span>Aplicar</span>
+                                </label>
+                                {intervalStartHour !== null && intervalEndHour !== null ? (
+                                  <div className="flex flex-wrap items-center gap-1">
+                                    <span>Dentro de</span>
+                                    <select
+                                      value={intervalStartHour}
+                                      onChange={(e) => {
+                                        const v = parseInt(e.target.value, 10);
+                                        const n = Number.isNaN(v) ? 0 : Math.max(0, Math.min(23, v));
+                                        setChatraceAssignments((prev) =>
+                                          prev.map((a) =>
+                                            a.gerencia_id === g.id ? { ...a, intervalStartHour: n } : a
+                                          ),
+                                        );
+                                      }}
+                                      className="rounded-lg border border-zinc-700 bg-zinc-900 px-2 py-1 text-[11px] text-zinc-100"
+                                    >
+                                      {Array.from({ length: 24 }).map((_, h) => (
+                                        <option key={`start-${g.id}-${h}`} value={h}>
+                                          {h.toString().padStart(2, "0")}:00
+                                        </option>
+                                      ))}
+                                    </select>
+                                    <span>a</span>
+                                    <select
+                                      value={intervalEndHour}
+                                      onChange={(e) => {
+                                        const v = parseInt(e.target.value, 10);
+                                        const n = Number.isNaN(v) ? 0 : Math.max(0, Math.min(23, v));
+                                        setChatraceAssignments((prev) =>
+                                          prev.map((a) =>
+                                            a.gerencia_id === g.id ? { ...a, intervalEndHour: n } : a
+                                          ),
+                                        );
+                                      }}
+                                      className="rounded-lg border border-zinc-700 bg-zinc-900 px-2 py-1 text-[11px] text-zinc-100"
+                                    >
+                                      {Array.from({ length: 24 }).map((_, h) => (
+                                        <option key={`end-${g.id}-${h}`} value={h}>
+                                          {h.toString().padStart(2, "0")}:00
+                                        </option>
+                                      ))}
+                                    </select>
+                                  </div>
+                                ) : null}
                               </div>
                             </td>
                           </tr>
