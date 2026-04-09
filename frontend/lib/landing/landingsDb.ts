@@ -37,6 +37,7 @@ function rowToLanding(row: LandingRow): Landing {
   };
   return {
     id: row.id,
+    userId: row.user_id,
     landingType: row.landing_type ?? "internal",
     externalDomain: row.external_domain ?? "",
     name: row.name,

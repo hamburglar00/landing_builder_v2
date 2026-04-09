@@ -118,6 +118,7 @@ export interface LandingThemeConfig {
  */
 export interface Landing {
   id: string;
+  userId?: string;
   landingType: "internal" | "external";
   externalDomain: string;
   name: string;

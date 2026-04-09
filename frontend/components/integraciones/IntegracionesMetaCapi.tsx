@@ -845,7 +845,7 @@ export default function IntegracionesMetaCapi() {
               className="mb-2 flex w-full items-center justify-between text-left"
             >
               <h3 className="text-sm font-semibold text-zinc-200">Identificación</h3>
-              <span className="text-xs text-zinc-400">{chatraceIdOpen ? "ocultar" : "ver"}</span>
+              <span className="text-sm text-zinc-400">{chatraceIdOpen ? "▾" : "▸"}</span>
             </button>
             {chatraceIdOpen ? (
             <div className="grid gap-3 sm:grid-cols-2">
@@ -895,7 +895,7 @@ export default function IntegracionesMetaCapi() {
               className="mb-2 flex w-full items-center justify-between text-left"
             >
               <h3 className="text-sm font-semibold text-zinc-200">Tracking</h3>
-              <span className="text-xs text-zinc-400">{chatraceTrackingOpen ? "ocultar" : "ver"}</span>
+              <span className="text-sm text-zinc-400">{chatraceTrackingOpen ? "▾" : "▸"}</span>
             </button>
             {chatraceTrackingOpen ? (
             <div className="grid gap-3 sm:grid-cols-2">
@@ -933,7 +933,7 @@ export default function IntegracionesMetaCapi() {
               className="mb-2 flex w-full items-center justify-between text-left"
             >
               <h3 className="text-sm font-semibold text-zinc-200">Redirección</h3>
-              <span className="text-xs text-zinc-400">{chatraceRedirectOpen ? "ocultar" : "ver"}</span>
+              <span className="text-sm text-zinc-400">{chatraceRedirectOpen ? "▾" : "▸"}</span>
             </button>
             {chatraceRedirectOpen ? (
             <div className="space-y-3">
@@ -947,12 +947,6 @@ export default function IntegracionesMetaCapi() {
                 />
               </div>
               ) : null}
-              <p className="text-xs text-zinc-400">
-                El intermediario de Chatrace debe consultar este endpoint para obtener el teléfono dinámico antes de redirigir a WhatsApp.
-              </p>
-              <p className="text-xs text-zinc-500">
-                Asigna gerencias para habilitar selección de teléfono (misma lógica que editor de landing).
-              </p>
               <div className="rounded-lg border border-zinc-700 bg-zinc-900/70 p-3">
                 <p className="mb-2 text-xs font-medium text-zinc-300">Selección de gerencias</p>
                 <div className="flex flex-wrap items-center gap-3">
@@ -1217,9 +1211,9 @@ export default function IntegracionesMetaCapi() {
               type="button"
               disabled={chatraceSaving}
               onClick={() => void handleChatraceSave()}
-              className="rounded-lg bg-emerald-500 px-3 py-1.5 text-xs font-semibold text-zinc-900 disabled:opacity-60"
+              className="rounded-lg border border-emerald-700/70 bg-emerald-950/30 px-3 py-1.5 text-xs font-semibold uppercase tracking-wide text-emerald-300 transition hover:bg-emerald-950/50 disabled:opacity-60"
             >
-              {chatraceSaving ? "Guardando..." : "Guardar configuración"}
+              {chatraceSaving ? "GUARDANDO..." : "GUARDAR"}
             </button>
           </div>
         </div>

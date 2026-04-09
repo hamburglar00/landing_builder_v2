@@ -21,6 +21,7 @@ export default function AdminLandingsPage() {
   const [error, setError] = useState<string | null>(null);
   const [creating, setCreating] = useState(false);
   const [urlBase, setUrlBase] = useState<string | null>(null);
+  const [clientNamesByUserId, setClientNamesByUserId] = useState<Record<string, string>>({});
 
   useEffect(() => {
     const init = async () => {
@@ -44,6 +45,22 @@ export default function AdminLandingsPage() {
         setMineLandings(mine);
         setClientLandings(clients);
         setUrlBase(settings.url_base ?? null);
+        const clientUserIds = Array.from(
+          new Set((clients ?? []).map((l) => l.userId).filter((v): v is string => !!v)),
+        );
+        if (clientUserIds.length > 0) {
+          const { data: profiles } = await supabase
+            .from("profiles")
+            .select("id, nombre")
+            .in("id", clientUserIds);
+          const map: Record<string, string> = {};
+          for (const p of profiles ?? []) {
+            map[String(p.id)] = String(p.nombre ?? "");
+          }
+          setClientNamesByUserId(map);
+        } else {
+          setClientNamesByUserId({});
+        }
       } catch (e) {
         setError(e instanceof Error ? e.message : "Error al cargar landings");
       } finally {
@@ -97,6 +114,19 @@ export default function AdminLandingsPage() {
       </div>
     );
   }
+
+  const groupedClientLandings = clientLandings.reduce<Record<string, Landing[]>>((acc, landing) => {
+    const ownerId = landing.userId ?? "sin-owner";
+    if (!acc[ownerId]) acc[ownerId] = [];
+    acc[ownerId].push(landing);
+    return acc;
+  }, {});
+
+  const groupedEntries = Object.entries(groupedClientLandings).sort((a, b) => {
+    const nameA = (clientNamesByUserId[a[0]] || a[0]).toLowerCase();
+    const nameB = (clientNamesByUserId[b[0]] || b[0]).toLowerCase();
+    return nameA.localeCompare(nameB);
+  });
 
   return (
     <div className="space-y-6">
@@ -167,9 +197,18 @@ export default function AdminLandingsPage() {
               <h2 className="mb-3 text-sm font-semibold text-[var(--color-text-muted)]">
                 Landings de clientes
               </h2>
-              <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
-                {clientLandings.map((landing) => (
-                  <LandingCard key={landing.id} landing={landing} urlBase={urlBase} />
+              <div className="space-y-6">
+                {groupedEntries.map(([ownerId, landings]) => (
+                  <div key={ownerId} className="space-y-3">
+                    <h3 className="text-xs font-semibold uppercase tracking-wide text-zinc-400">
+                      {(clientNamesByUserId[ownerId] || ownerId).trim() || "Cliente"}
+                    </h3>
+                    <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
+                      {landings.map((landing) => (
+                        <LandingCard key={landing.id} landing={landing} urlBase={urlBase} />
+                      ))}
+                    </div>
+                  </div>
                 ))}
               </div>
             </section>

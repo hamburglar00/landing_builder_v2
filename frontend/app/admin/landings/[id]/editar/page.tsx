@@ -421,14 +421,24 @@ export default function AdminLandingEditarPage() {
             </span>
             <span>Volver al listado</span>
           </Link>
-          <button
-            type="button"
-            onClick={() => void handleDelete()}
-            disabled={deleting}
-            className="cursor-pointer rounded-lg border border-red-900/60 bg-red-950/30 px-3 py-1.5 text-sm font-medium text-red-300 transition hover:bg-red-950/50 disabled:opacity-70 disabled:cursor-not-allowed"
-          >
-            {deleting ? "Eliminando..." : "Eliminar landing"}
-          </button>
+          <div className="flex items-center gap-2">
+            <button
+              type="button"
+              onClick={() => void handleDelete()}
+              disabled={deleting}
+              className="cursor-pointer rounded-lg border border-red-900/60 bg-red-950/30 px-3 py-1.5 text-sm font-medium text-red-300 transition hover:bg-red-950/50 disabled:opacity-70 disabled:cursor-not-allowed"
+            >
+              {deleting ? "Eliminando..." : "Eliminar landing"}
+            </button>
+            <button
+              type="button"
+              onClick={() => void handleSave()}
+              disabled={saving}
+              className="cursor-pointer rounded-lg border border-emerald-700/70 bg-emerald-950/30 px-3 py-1.5 text-sm font-semibold uppercase tracking-wide text-emerald-300 transition hover:bg-emerald-950/50 disabled:opacity-70 disabled:cursor-not-allowed"
+            >
+              {saving ? "GUARDANDO..." : "GUARDAR"}
+            </button>
+          </div>
         </div>
         <div>
           <h1 className="text-xl font-semibold text-zinc-100">Editar landing</h1>
@@ -1136,7 +1146,6 @@ export default function AdminLandingEditarPage() {
     </div>
   );
 }
-
 
 
 
