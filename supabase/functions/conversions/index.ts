@@ -328,23 +328,39 @@ async function writeLog(
   responseMeta?: string,
   payloadReceived?: string,
   result?: string,
-): Promise<void> {
-  try {
-    await db.from("conversion_logs").insert({
-      user_id: userId,
-      conversion_id: conversionId ?? null,
-      function_name: fn,
-      level,
-      message,
-      detail: detail.slice(0, 4000),
-      payload_received: (payloadReceived ?? "").slice(0, 20000),
-      result: (result ?? detail ?? "").slice(0, 4000),
-      payload_meta: (payloadMeta ?? "").slice(0, 20000),
-      response_meta: (responseMeta ?? "").slice(0, 20000),
-    });
-  } catch {
-    // non-critical
+): Promise<boolean> {
+  const maxAttempts = 3;
+  let lastError: unknown = null;
+  for (let attempt = 1; attempt <= maxAttempts; attempt++) {
+    try {
+      await db.from("conversion_logs").insert({
+        user_id: userId,
+        conversion_id: conversionId ?? null,
+        function_name: fn,
+        level,
+        message,
+        detail: detail.slice(0, 4000),
+        payload_received: (payloadReceived ?? "").slice(0, 20000),
+        result: (result ?? detail ?? "").slice(0, 4000),
+        payload_meta: (payloadMeta ?? "").slice(0, 20000),
+        response_meta: (responseMeta ?? "").slice(0, 20000),
+      });
+      return true;
+    } catch (err) {
+      lastError = err;
+      if (attempt < maxAttempts) {
+        await new Promise((resolve) => setTimeout(resolve, 120 * attempt));
+      }
+    }
   }
+  console.error("[writeLog] failed after retries", {
+    function_name: fn,
+    level,
+    message,
+    conversion_id: conversionId ?? null,
+    error: String(lastError),
+  });
+  return false;
 }
 
 
@@ -643,7 +659,7 @@ async function sendToMetaCAPI(
         const { data: current } = await db.from("conversions").select("observaciones").eq("id", rowId).single();
         const obs = appendObservation(current?.observaciones ?? "", okMsg);
         await db.from("conversions").update({ [statusField]: "enviado", observaciones: obs }).eq("id", rowId);
-        await writeLog(
+        const primaryLogOk = await writeLog(
           db,
           row.user_id,
           "sendToMetaCAPI",
@@ -654,6 +670,29 @@ async function sendToMetaCAPI(
           metaPayloadRaw,
           resText,
         );
+        if (!primaryLogOk) {
+          const backupOk = await writeLog(
+            db,
+            row.user_id,
+            "sendToMetaCAPI",
+            "WARN",
+            "Meta CAPI OK sin log primario",
+            JSON.stringify({
+              event_name: eventName,
+              row_id: rowId,
+              event_id: eventId,
+              note: "status enviado confirmado, fallo persistencia del log primario",
+            }),
+            rowId,
+          );
+          if (!backupOk) {
+            console.error("[sendToMetaCAPI] status enviado pero sin logs persistidos", {
+              row_id: rowId,
+              event_name: eventName,
+              event_id: eventId,
+            });
+          }
+        }
         if (attempt > 1) {
           await writeLog(
             db,
