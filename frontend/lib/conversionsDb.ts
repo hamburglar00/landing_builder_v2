@@ -525,6 +525,7 @@ export async function fetchConversionLogs(
     .from("conversion_logs")
     .select(LOGS_SELECT)
     .eq("user_id", userId)
+    .order("conversion_id", { ascending: false, nullsFirst: false })
     .order("created_at", { ascending: false })
     .range(offset, offset + limit - 1);
 
@@ -550,6 +551,7 @@ export async function fetchConversionLogsForAdmin(
   const { data, error } = await supabase
     .from("conversion_logs")
     .select(LOGS_SELECT)
+    .order("conversion_id", { ascending: false, nullsFirst: false })
     .order("created_at", { ascending: false })
     .range(offset, offset + limit - 1);
 
