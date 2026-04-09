@@ -581,7 +581,7 @@ export function TelefonosPageContent({
               onClick={() => void handleDeleteInactive()}
               disabled={globalDeletingInactive || !gerencias.length}
               title="Borra de forma permanente los telefonos inactivos de todas las gerencias."
-              className="rounded-lg border border-zinc-700 bg-zinc-800 px-3 py-1.5 text-xs font-medium text-zinc-200 transition hover:bg-zinc-700 disabled:opacity-60"
+              className="rounded-lg border border-red-700 bg-red-900/20 px-3 py-1.5 text-xs font-medium text-red-300 transition hover:bg-red-900/35 disabled:opacity-60"
             >
               {globalDeletingInactive ? "Borrando..." : "Borrar telefonos inactivos"}
             </button>

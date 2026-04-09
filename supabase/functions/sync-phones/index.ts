@@ -25,6 +25,16 @@ type ExternalResponse = {
   telegram?: string[];
 };
 
+const normalizeAndValidateArPhone = (
+  raw: string | null | undefined,
+): string | null => {
+  const digits = String(raw ?? "").replace(/\D/g, "");
+  // Formato esperado para móvil AR internacional: 549 + 10 dígitos locales = 13
+  if (!digits.startsWith("549")) return null;
+  if (digits.length !== 13) return null;
+  return digits;
+};
+
 /**
  * Sincroniza los teléfonos de TODAS las gerencias del usuario autenticado
  * llamando a la API externa api.asesadmin.com y actualizando la tabla
@@ -222,17 +232,17 @@ Deno.serve(async (req) => {
       const phoneKindMap = new Map<string, PhoneKind>();
 
       for (const phone of cargaWhatsapps) {
-        const normalized = String(phone).trim();
+        const normalized = normalizeAndValidateArPhone(phone);
         if (!normalized) continue;
         phoneKindMap.set(normalized, "carga");
       }
       for (const phone of adsWhatsapps) {
-        const normalized = String(phone).trim();
+        const normalized = normalizeAndValidateArPhone(phone);
         if (!normalized) continue;
         phoneKindMap.set(normalized, "ads");
       }
       for (const phone of mktWhatsapps) {
-        const normalized = String(phone).trim();
+        const normalized = normalizeAndValidateArPhone(phone);
         if (!normalized) continue;
         phoneKindMap.set(normalized, "mkt");
       }
