@@ -1,5 +1,6 @@
 import type { LandingThemeConfig } from "./types";
 import { COLOR_MAP } from "./constants";
+import { buildOptimizedImageUrl, buildResponsiveImageSet } from "./imageUrl";
 
 export interface LandingConfigPayload {
   schemaVersion: number;
@@ -16,6 +17,11 @@ export interface LandingConfigPayload {
   background?: {
     mode: LandingThemeConfig["backgroundMode"];
     images: string[];
+    imagesResponsive?: Array<{
+      mobile: string;
+      tablet: string;
+      desktop: string;
+    }>;
     rotateEveryHours: number;
   };
   content?: {
@@ -115,7 +121,12 @@ export function buildLandingConfig({
     },
     background: {
       mode: themeWithHex.backgroundMode,
-      images: themeWithHex.backgroundImages,
+      images: themeWithHex.backgroundImages.map((url) =>
+        buildOptimizedImageUrl(url, { width: 1280, quality: 65 }),
+      ),
+      imagesResponsive: themeWithHex.backgroundImages.map((url) =>
+        buildResponsiveImageSet(url),
+      ),
       rotateEveryHours: themeWithHex.rotateEveryHours,
     },
     content: {

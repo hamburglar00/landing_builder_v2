@@ -2,6 +2,7 @@
 
 import type { LandingThemeConfig } from "@/lib/landing/types";
 import { getColorHex, getFontFamilyCss } from "@/lib/landing/helpers";
+import { buildResponsiveImageSet } from "@/lib/landing/imageUrl";
 
 interface LandingPreviewProps {
   config: LandingThemeConfig;
@@ -24,6 +25,7 @@ export function LandingPreview({
   gallery = false,
 }: LandingPreviewProps) {
   const bgImage = config.backgroundImages[0];
+  const bgResponsive = bgImage ? buildResponsiveImageSet(bgImage) : null;
   const titleHex = getColorHex(config.titleColor);
   const subtitleHex = getColorHex(config.subtitleColor);
   const footerHex = getColorHex(config.footerBadgeColor);
@@ -79,7 +81,13 @@ export function LandingPreview({
         {bgImage && (
           // eslint-disable-next-line @next/next/no-img-element
           <img
-            src={bgImage}
+            src={bgResponsive?.desktop ?? bgImage}
+            srcSet={
+              bgResponsive
+                ? `${bgResponsive.mobile} 640w, ${bgResponsive.tablet} 1024w, ${bgResponsive.desktop} 1600w`
+                : undefined
+            }
+            sizes="(max-width: 640px) 100vw, (max-width: 1024px) 80vw, 380px"
             alt=""
             className="absolute inset-0 h-full w-full object-cover"
           />
@@ -211,7 +219,13 @@ export function LandingPreview({
               {bgImage && (
                 // eslint-disable-next-line @next/next/no-img-element
                 <img
-                  src={bgImage}
+                  src={bgResponsive?.desktop ?? bgImage}
+                  srcSet={
+                    bgResponsive
+                      ? `${bgResponsive.mobile} 640w, ${bgResponsive.tablet} 1024w, ${bgResponsive.desktop} 1600w`
+                      : undefined
+                  }
+                  sizes="(max-width: 640px) 100vw, (max-width: 1024px) 80vw, 380px"
                   alt=""
                   className="absolute inset-0 h-full w-full object-cover object-[50%_25%]"
                 />

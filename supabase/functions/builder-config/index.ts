@@ -30,6 +30,48 @@ function toHex(color: unknown, fallback: string): string {
   return COLOR_MAP[color] ?? fallback;
 }
 
+const STORAGE_PUBLIC_SEGMENT = "/storage/v1/object/public/";
+
+function isSupabaseStoragePublicUrl(url: string): boolean {
+  return url.includes(STORAGE_PUBLIC_SEGMENT);
+}
+
+function buildOptimizedImageUrl(
+  rawUrl: string,
+  width = 1280,
+  quality = 65,
+): string {
+  if (!rawUrl) return rawUrl;
+  if (!isSupabaseStoragePublicUrl(rawUrl)) return rawUrl;
+
+  let parsed: URL;
+  try {
+    parsed = new URL(rawUrl);
+  } catch {
+    return rawUrl;
+  }
+
+  if (Number.isFinite(width) && width > 0) {
+    parsed.searchParams.set("width", String(Math.round(width)));
+  }
+  if (Number.isFinite(quality) && quality > 0) {
+    parsed.searchParams.set("quality", String(Math.round(quality)));
+  }
+  return parsed.toString();
+}
+
+function buildResponsiveImageSet(rawUrl: string): {
+  mobile: string;
+  tablet: string;
+  desktop: string;
+} {
+  return {
+    mobile: buildOptimizedImageUrl(rawUrl, 640, 60),
+    tablet: buildOptimizedImageUrl(rawUrl, 1024, 65),
+    desktop: buildOptimizedImageUrl(rawUrl, 1600, 70),
+  };
+}
+
 /**
  * API público: devuelve toda la configuración de una landing por su nombre.
  * Uso: GET /functions/v1/builder-config?name=MiLanding
@@ -161,6 +203,10 @@ Deno.serve(async (req) => {
       const tracking = (cfg.tracking as Record<string, unknown>) ?? {};
       const typography = (cfg.typography as Record<string, unknown>) ?? {};
       const ctaTypography = (typography.cta as Record<string, unknown>) ?? {};
+      const rawBackground = (cfg.background as Record<string, unknown>) ?? {};
+      const rawImages = Array.isArray(rawBackground.images)
+        ? (rawBackground.images as string[])
+        : [];
       const merged = {
         ...cfg,
         tracking: {
@@ -184,6 +230,11 @@ Deno.serve(async (req) => {
                   : ((ctaTypography.weight as number) ?? 500)),
           },
         },
+        background: {
+          ...rawBackground,
+          images: rawImages.map((url) => buildOptimizedImageUrl(url)),
+          imagesResponsive: rawImages.map((url) => buildResponsiveImageSet(url)),
+        },
       };
       return new Response(JSON.stringify(merged), {
         status: 200,
@@ -204,6 +255,7 @@ Deno.serve(async (req) => {
       ctaBackgroundColor: toHex(rawConfig.ctaBackgroundColor, "#25D366"),
       ctaGlowColor: toHex(rawConfig.ctaGlowColor, "#000000"),
     } as Record<string, unknown>;
+    const rawImages = (themeWithHex.backgroundImages as string[]) ?? [];
 
     const payload = {
       schemaVersion: 1,
@@ -221,7 +273,8 @@ Deno.serve(async (req) => {
       },
       background: {
         mode: (themeWithHex.backgroundMode as string) ?? "single",
-        images: (themeWithHex.backgroundImages as string[]) ?? [],
+        images: rawImages.map((url) => buildOptimizedImageUrl(url)),
+        imagesResponsive: rawImages.map((url) => buildResponsiveImageSet(url)),
         rotateEveryHours: (themeWithHex.rotateEveryHours as number) ?? 24,
       },
       content: {
