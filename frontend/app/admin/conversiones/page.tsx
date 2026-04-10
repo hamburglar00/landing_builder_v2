@@ -215,6 +215,9 @@ const ALL_COLUMNS = [
 
 type ColKey = (typeof ALL_COLUMNS)[number];
 
+const CLEAR_VIEW_CONFIRM_MESSAGE =
+  "Vas a limpiar la vista de Conversiones.\n\nSe ocultaran los registros que ves ahora en esta seccion.\n\nEsta accion NO borra datos de la base.\nSolo deja de mostrarlos en la vista.\n\nQueres continuar?";
+
 const COLUMN_NOTES: Partial<Record<ColKey | "id", string>> = {
   id: "ID interno de la fila de conversion en la tabla.",
   timestamp: "Fecha y hora de creacion de la fila (created_at).",
@@ -897,9 +900,7 @@ export default function AdminConversionesPage() {
 
   const clearTableDisplay = useCallback(async () => {
     if (!userId || activeConversions.length === 0 || demoMode) return;
-    const ok = window.confirm(
-      "Seguro que queres limpiar la vista?\n\nSi limpias la vista, perderas los registros visibles y las estadsticas volveran a cero.",
-    );
+    const ok = window.confirm(CLEAR_VIEW_CONFIRM_MESSAGE);
     if (!ok) return;
     setHidingTable(true);
     setClearMsg(null);
@@ -917,9 +918,7 @@ export default function AdminConversionesPage() {
 
   const clearFunnelDisplay = useCallback(async () => {
     if (!userId || activeFunnel.length === 0 || demoMode) return;
-    const ok = window.confirm(
-      "Seguro que queres limpiar la vista?\n\nSi limpias la vista, perderas los registros visibles y las estadsticas volveran a cero.",
-    );
+    const ok = window.confirm(CLEAR_VIEW_CONFIRM_MESSAGE);
     if (!ok) return;
     setHidingFunnel(true);
     setClearMsg(null);
@@ -940,9 +939,7 @@ export default function AdminConversionesPage() {
 
   const clearStatsDisplay = useCallback(async () => {
     if (!userId || (activeFunnel.length === 0 && activeConversions.length === 0) || demoMode) return;
-    const ok = window.confirm(
-      "Seguro que queres limpiar la vista?\n\nSi limpias la vista, perderas los registros visibles y las estadsticas volveran a cero.",
-    );
+    const ok = window.confirm(CLEAR_VIEW_CONFIRM_MESSAGE);
     if (!ok) return;
     setHidingStats(true);
     setClearMsg(null);
@@ -964,9 +961,7 @@ export default function AdminConversionesPage() {
 
   const clearLogsDisplay = useCallback(async () => {
     if (!userId || logs.length === 0 || demoMode) return;
-    const ok = window.confirm(
-      "Seguro que queres limpiar la vista?\n\nSi limpias la vista, perderas los registros visibles y las estadsticas volveran a cero.",
-    );
+    const ok = window.confirm(CLEAR_VIEW_CONFIRM_MESSAGE);
     if (!ok) return;
     setHidingLogs(true);
     setClearMsg(null);
@@ -1261,7 +1256,7 @@ export default function AdminConversionesPage() {
                         ? (hidingTable || refreshingTable || filteredConversions.length === 0 || demoMode)
                         : (hidingStats || refreshingTable || (activeFunnelFiltered.length === 0 && statsConversionsFiltered.length === 0) || demoMode)
                   }
-                  className="inline-flex h-7 items-center gap-1.5 rounded-lg border border-zinc-700 bg-zinc-800/80 px-2 text-[11px] font-medium text-zinc-400 transition hover:bg-zinc-700 hover:text-zinc-300 disabled:opacity-50 disabled:cursor-not-allowed"
+                  className="inline-flex h-7 items-center gap-1.5 rounded-lg border border-red-900/60 bg-red-950/30 px-2 text-[11px] font-medium text-red-300 transition hover:bg-red-950/50 disabled:opacity-50 disabled:cursor-not-allowed"
                   title="Ocultar registros de la vista (persistente, no borra de la base)"
                 >
                   {tab === "funnel" ? (hidingFunnel ? "Ocultando..." : "Limpiar vista")
@@ -1581,7 +1576,7 @@ export default function AdminConversionesPage() {
               type="button"
               onClick={clearLogsDisplay}
               disabled={hidingLogs || logs.length === 0 || demoMode}
-              className="inline-flex items-center gap-1.5 rounded-lg border border-zinc-700 bg-zinc-800/80 px-2.5 py-1.5 text-xs font-medium text-zinc-400 transition hover:bg-zinc-700 hover:text-zinc-300 disabled:opacity-50 disabled:cursor-not-allowed"
+              className="inline-flex items-center gap-1.5 rounded-lg border border-red-900/60 bg-red-950/30 px-2.5 py-1.5 text-xs font-medium text-red-300 transition hover:bg-red-950/50 disabled:opacity-50 disabled:cursor-not-allowed"
               title="Ocultar logs de la vista (no borra de la base)"
             >
               {hidingLogs ? "Ocultando..." : "Limpiar vista"}

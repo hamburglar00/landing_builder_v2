@@ -896,7 +896,7 @@ export default function DashboardConversionesPage() {
     if (!userId) return;
     if (activeConversions.length === 0 && activeLogs.length === 0) return;
     const ok = window.confirm(
-      "Seguro que queres limpiar la vista?\n\nSe ocultaran los registros visibles en Funnel, Tabla, Estadisticas y Logs (no se borra nada de la base de datos).",
+      "Vas a limpiar la vista de Conversiones.\n\nSe ocultaran los registros que ves ahora en Funnel, Tabla, Estadisticas y Logs.\n\nEsta accion NO borra datos de la base.\nSolo deja de mostrarlos en esta vista.\n\nQueres continuar?",
     );
     if (!ok) return;
     setHidingTable(true);
@@ -1187,7 +1187,7 @@ export default function DashboardConversionesPage() {
                     refreshingTable ||
                     (activeConversions.length === 0 && activeLogs.length === 0)
                   }
-                  className="inline-flex h-7 items-center gap-1.5 rounded-lg border border-zinc-700 bg-zinc-800/80 px-2 text-[11px] font-medium text-zinc-400 transition hover:bg-zinc-700 hover:text-zinc-300 disabled:opacity-50 disabled:cursor-not-allowed"
+                  className="inline-flex h-7 items-center gap-1.5 rounded-lg border border-red-900/60 bg-red-950/30 px-2 text-[11px] font-medium text-red-300 transition hover:bg-red-950/50 disabled:opacity-50 disabled:cursor-not-allowed"
                   title="Ocultar registros de la vista (persistente, no borra de la base)"
                 >
                   {(hidingFunnel || hidingTable || hidingStats || hidingLogs) ? "Ocultando..." : "Limpiar vista"}
