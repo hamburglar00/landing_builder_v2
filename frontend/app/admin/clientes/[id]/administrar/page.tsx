@@ -22,7 +22,7 @@ type ClientUser = {
 };
 
 const ALL_COLUMNS = [
-  "phone","email","cuit_cuil","fn","ln","ct","st","zip","country","fbp","fbc","from_meta_ads","geo_source","meta_pixel_id","pixel_id","source_platform",
+  "phone","email","cuit_cuil","inferred_sex","fn","ln","ct","st","zip","country","fbp","fbc","from_meta_ads","geo_source","meta_pixel_id","pixel_id","source_platform",
   "contact_event_id","contact_event_time","sendContactPixel","contact_payload_raw","lead_event_id","lead_event_time","lead_payload_raw",
   "purchase_event_id","purchase_event_time","purchase_payload_raw","timestamp","clientIP","agentuser",
   "estado","valor","purchase_type","contact_status_capi","lead_status_capi","purchase_status_capi",
@@ -519,6 +519,7 @@ export default function AdminClientManagePage() {
     </div>
   );
 }
+
 
 
 
