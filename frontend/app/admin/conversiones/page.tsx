@@ -205,7 +205,7 @@ function normalizePhone(value: string | null | undefined): string {
 }
 
 const ALL_COLUMNS = [
-  "phone","email","fn","ln","ct","st","zip","country","fbp","fbc","meta_pixel_id","source_platform",
+  "phone","email","fn","ln","ct","st","zip","country","fbp","fbc","meta_pixel_id","pixel_id","source_platform",
   "contact_event_id","contact_event_time","sendContactPixel","contact_payload_raw","lead_event_id","lead_event_time","lead_payload_raw",
   "purchase_event_id","purchase_event_time","purchase_payload_raw","timestamp","clientIP","agentuser",
   "estado","valor","purchase_type","contact_status_capi","lead_status_capi","purchase_status_capi",
@@ -214,6 +214,52 @@ const ALL_COLUMNS = [
 ] as const;
 
 type ColKey = (typeof ALL_COLUMNS)[number];
+
+const COLUMN_NOTES: Partial<Record<ColKey | "id", string>> = {
+  id: "ID interno de la fila de conversion en la tabla.",
+  timestamp: "Fecha y hora de creacion de la fila (created_at).",
+  phone: "Telefono recibido en payload (normalizado a digitos). Puede actualizarse con LEAD/PURCHASE.",
+  email: "Email recibido en payload.",
+  fn: "Nombre (first name) recibido en payload.",
+  ln: "Apellido (last name) recibido en payload.",
+  ct: "Ciudad recibida en payload o enriquecida por geolocalizacion.",
+  st: "Provincia/estado recibido en payload o enriquecido por geolocalizacion.",
+  zip: "Codigo postal recibido en payload o enriquecido por geolocalizacion.",
+  country: "Pais recibido en payload o enriquecido por geolocalizacion.",
+  fbp: "Parametro fbp de Meta enviado por la fuente.",
+  fbc: "Parametro fbc de Meta enviado por la fuente.",
+  meta_pixel_id: "Pixel ID recibido en el payload de entrada (landing/chatrace/backend).",
+  pixel_id: "Pixel ID efectivo usado para CAPI. Si falta meta_pixel_id, puede resolverse por fallback de configuracion.",
+  source_platform: "Origen declarado del payload (ej: landing, chatrace).",
+  contact_event_id: "Event ID del Contact (dedupe Pixel/CAPI).",
+  contact_event_time: "Event time (unix) del Contact.",
+  sendContactPixel: "Bandera enviada por la fuente para indicar si Contact tambien salio por Pixel browser.",
+  contact_payload_raw: "Payload crudo recibido para Contact (trazabilidad).",
+  lead_event_id: "Event ID del Lead enviado por CAPI.",
+  lead_event_time: "Event time (unix) del Lead.",
+  lead_payload_raw: "Payload crudo recibido para action=LEAD (trazabilidad).",
+  purchase_event_id: "Event ID del Purchase enviado por CAPI.",
+  purchase_event_time: "Event time (unix) del Purchase.",
+  purchase_payload_raw: "Payload crudo recibido para action=PURCHASE (trazabilidad).",
+  clientIP: "IP recibida en payload (clientIP/client_ip_address).",
+  agentuser: "User-Agent recibido en payload (agentuser/client_user_agent).",
+  estado: "Estado actual de la conversion (contact, lead o purchase).",
+  valor: "Monto de compra/carga recibido para Purchase.",
+  purchase_type: "Tipo de compra: first (primera) o repeat (recompra).",
+  contact_status_capi: "Resultado de envio CAPI para Contact.",
+  lead_status_capi: "Resultado de envio CAPI para Lead.",
+  purchase_status_capi: "Resultado de envio CAPI para Purchase.",
+  observaciones: "Notas internas de procesamiento (tokens de estado/error).",
+  external_id: "ID externo de usuario/contacto para matching en Meta (hasheado al enviar).",
+  test_event_code: "Codigo de test de Meta (si se envio en modo prueba).",
+  utm_campaign: "UTM campaign recibida en payload.",
+  telefono_asignado: "Telefono de destino asignado para derivacion (landing/chatrace).",
+  promo_code: "Codigo de promo/track para matchear Contact->Lead->Purchase.",
+  device_type: "Tipo de dispositivo reportado por la fuente (mobile/tablet/desktop).",
+  geo_city: "Ciudad enriquecida por geolocalizacion IP.",
+  geo_region: "Region/provincia enriquecida por geolocalizacion IP.",
+  geo_country: "Pais enriquecido por geolocalizacion IP.",
+};
 
 function EditableEmailCell({
   row,
@@ -298,6 +344,7 @@ function cellValue(c: ConversionRow, col: ColKey): React.ReactNode {
       const px = c.meta_pixel_id || c.pixel_id;
       return <td key={col} className={dimMono} title={tip(px)}>{px || "-"}</td>;
     }
+    case "pixel_id": return <td key={col} className={dimMono} title={tip(c.pixel_id)}>{c.pixel_id || "-"}</td>;
     case "source_platform": return <td key={col} className={dim} title={tip(c.source_platform)}>{c.source_platform || "-"}</td>;
     case "contact_event_id": return <td key={col} className={dimMono} title={c.contact_event_id}>{truncateId(c.contact_event_id)}</td>;
     case "contact_event_time": return <td key={col} className={dim} title={tip(c.contact_event_time)}>{c.contact_event_time ?? "-"}</td>;
@@ -1391,10 +1438,16 @@ export default function AdminConversionesPage() {
                   <table className="w-full text-left text-[11px]">
                     <thead className="sticky top-0 z-20 bg-zinc-800/95">
                       <tr>
-                        <th className="px-2 py-2 font-medium text-zinc-300 whitespace-nowrap">ID</th>
-                        <th className="px-2 py-2 font-medium text-zinc-300 whitespace-nowrap">timestamp</th>
+                        <th className="px-2 py-2 font-medium text-zinc-300 whitespace-nowrap cursor-help" title={COLUMN_NOTES.id}>ID</th>
+                        <th className="px-2 py-2 font-medium text-zinc-300 whitespace-nowrap cursor-help" title={COLUMN_NOTES.timestamp}>timestamp</th>
                         {displayedColsWithoutTimestamp.map((col) => (
-                          <th key={col} className="px-2 py-2 font-medium text-zinc-300 whitespace-nowrap">{col}</th>
+                          <th
+                            key={col}
+                            className="px-2 py-2 font-medium text-zinc-300 whitespace-nowrap cursor-help"
+                            title={COLUMN_NOTES[col] ?? col}
+                          >
+                            {col}
+                          </th>
                         ))}
                       </tr>
                     </thead>
