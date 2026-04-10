@@ -66,6 +66,7 @@ export interface ConversionRow {
   country: string;
   fbp: string;
   fbc: string;
+  from_meta_ads: boolean;
   meta_pixel_id: string;
   source_platform?: string;
   pixel_id: string;
@@ -296,7 +297,7 @@ export async function updateAllVisibleColumns(
 const CONVERSIONS_SELECT = `
   id, internal_id, landing_id, user_id, landing_name,
   phone, email, fn, ln, ct, st, zip, country,
-  fbp, fbc, meta_pixel_id, pixel_id,
+  fbp, fbc, from_meta_ads, meta_pixel_id, pixel_id,
   source_platform,
   contact_event_id, contact_event_time, sendContactPixel, contact_payload_raw,
   lead_event_id, lead_event_time, lead_payload_raw,
