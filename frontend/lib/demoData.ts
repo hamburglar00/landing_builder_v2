@@ -72,6 +72,7 @@ export function generateDemoConversions(count = 80): ConversionRow[] {
     const leadEvId = estado !== "contact" ? uuid() : "";
     const purchEvId = estado === "purchase" ? uuid() : "";
     const ts = Math.floor(new Date(created).getTime() / 1000);
+    const fbc = Math.random() > 0.7 ? `fb.1.${Date.now()}.${uuid()}` : "";
 
     rows.push({
       id: uuid(),
@@ -88,7 +89,8 @@ export function generateDemoConversions(count = 80): ConversionRow[] {
       zip: region ? `${1000 + Math.floor(Math.random() * 9000)}` : "",
       country: rand(COUNTRIES),
       fbp: Math.random() > 0.3 ? `fb.1.${Date.now()}.${Math.floor(Math.random() * 1e9)}` : "",
-      fbc: Math.random() > 0.7 ? `fb.1.${Date.now()}.${uuid()}` : "",
+      fbc,
+      from_meta_ads: !!fbc,
       meta_pixel_id: "",
       pixel_id: "",
       contact_event_id: contactEvId,
