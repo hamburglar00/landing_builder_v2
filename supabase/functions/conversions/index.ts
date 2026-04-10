@@ -52,6 +52,7 @@ interface ConversionRow {
   landing_name: string;
   phone: string;
   email: string;
+  cuit_cuil: string;
   fn: string;
   ln: string;
   ct: string;
@@ -167,6 +168,22 @@ function safePayloadRaw(payload: Params): string {
 
 function sanitizePhone(v: unknown): string {
   return String(v ?? "").replace(/\D/g, "");
+}
+
+function sanitizeCuitCuil(v: unknown): string {
+  const digits = String(v ?? "").replace(/\D/g, "");
+  if (!digits) return "";
+  return digits.length > 11 ? digits.slice(0, 11) : digits;
+}
+
+function deriveCuitCuilFromPayload(p: Params): string {
+  return sanitizeCuitCuil(
+    p.cuit_cuil ??
+      p.cuitCuil ??
+      p.cuit ??
+      p.cuil ??
+      p["cuit/cuil"],
+  );
 }
 
 function sanitizeIp(v: unknown): string {
@@ -872,6 +889,7 @@ async function handleContact(
   const geo = resolveGeoForPayload(p);
   const payloadGeoSource: GeoSource = hasPayloadGeo(geo) ? "payload" : "none";
   const eventSourceUrl = await deriveEventSourceUrl(db, landing.name, norm(p.event_source_url));
+  const payloadCuitCuil = deriveCuitCuilFromPayload(p);
 
   const row: Omit<ConversionRow, "id"> = {
     landing_id: landing.id?.trim() || null,
@@ -879,6 +897,7 @@ async function handleContact(
     landing_name: landing.name,
     phone: sanitizePhone(p.phone),
     email: norm(p.email),
+    cuit_cuil: payloadCuitCuil,
     fn: norm(p.fn),
     ln: norm(p.ln),
     ct: norm(geo.ct),
@@ -1045,6 +1064,7 @@ async function handleLead(
 
   const { fn: payloadFn, ln: payloadLn } = deriveNameFromPayload(p);
   const payloadEmail = norm(p.email);
+  const payloadCuitCuil = deriveCuitCuilFromPayload(p);
   const eventSourceUrl = await deriveEventSourceUrl(db, landing.name, norm(p.event_source_url));
   const geo = resolveGeoForPayload(p);
   const payloadGeoSource: GeoSource = hasPayloadGeo(geo) ? "payload" : "none";
@@ -1077,6 +1097,7 @@ async function handleLead(
       landing_name: landing.name,
       phone: cleanPhone,
       email: payloadEmail,
+      cuit_cuil: payloadCuitCuil,
       fn: payloadFn,
       ln: payloadLn,
       ct: norm(geo.ct),
@@ -1207,6 +1228,7 @@ async function handleLead(
     if (payloadFn) updates.fn = payloadFn;
     if (payloadLn) updates.ln = payloadLn;
     if (payloadEmail) updates.email = payloadEmail;
+    if (payloadCuitCuil) updates.cuit_cuil = payloadCuitCuil;
     if (geo.ct) updates.ct = geo.ct;
     if (geo.st) updates.st = geo.st;
     if (geo.zip) updates.zip = geo.zip;
@@ -1297,6 +1319,7 @@ async function handlePurchase(
   const promoCodeIsFull = isFullPromoCode(p.promo_code ?? p.promoCode ?? promoCode);
   const { fn: payloadFn, ln: payloadLn } = deriveNameFromPayload(p);
   const payloadEmail = norm(p.email);
+  const payloadCuitCuil = deriveCuitCuilFromPayload(p);
   const eventSourceUrl = await deriveEventSourceUrl(db, landing.name, norm(p.event_source_url));
   const geo = resolveGeoForPayload(p);
   const payloadGeoSource: GeoSource = hasPayloadGeo(geo) ? "payload" : "none";
@@ -1420,6 +1443,7 @@ async function handlePurchase(
     if (payloadFn) updates.fn = payloadFn;
     if (payloadLn) updates.ln = payloadLn;
     if (payloadEmail) updates.email = payloadEmail;
+    if (payloadCuitCuil) updates.cuit_cuil = payloadCuitCuil;
     if (geo.ct) updates.ct = geo.ct;
     if (geo.st) updates.st = geo.st;
     if (geo.zip) updates.zip = geo.zip;
@@ -1470,6 +1494,7 @@ async function handlePurchase(
       landing_name: landing.name,
       phone: cleanPhone,
       email: payloadEmail,
+      cuit_cuil: payloadCuitCuil,
       fn: payloadFn,
       ln: payloadLn,
       ct: geo.ct,
@@ -1560,6 +1585,7 @@ async function handlePurchase(
     landing_name: srcRow?.landing_name ?? landing.name,
     phone: cleanPhone,
     email: payloadEmail || srcRow?.email || "",
+    cuit_cuil: payloadCuitCuil || srcRow?.cuit_cuil || "",
     fn: payloadFn || srcRow?.fn || "",
     ln: payloadLn || srcRow?.ln || "",
     ct: srcRow?.ct ?? "",
@@ -1652,6 +1678,7 @@ async function handleSimplePurchase(
   const purchasePayloadRaw = safePayloadRaw(p);
 
   const payloadEmail = norm(p.email);
+  const payloadCuitCuil = deriveCuitCuilFromPayload(p);
   const { fn: payloadFn, ln: payloadLn } = deriveNameFromPayload(p);
   const eventSourceUrl = await deriveEventSourceUrl(db, landing.name, norm(p.event_source_url));
   const isRepeatSimple = await hasPreviousSuccessfulPurchases(db, landing.user_id, cleanPhone);
@@ -1675,6 +1702,7 @@ async function handleSimplePurchase(
     landing_name: landing.name,
     phone: cleanPhone,
     email: payloadEmail || srcRow?.email || "",
+    cuit_cuil: payloadCuitCuil || srcRow?.cuit_cuil || "",
     fn: payloadFn || srcRow?.fn || "",
     ln: payloadLn || srcRow?.ln || "",
     ct: srcRow?.ct ?? "",

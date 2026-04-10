@@ -58,6 +58,7 @@ export interface ConversionRow {
   landing_name: string;
   phone: string;
   email: string;
+  cuit_cuil?: string;
   fn: string;
   ln: string;
   ct: string;
@@ -297,7 +298,7 @@ export async function updateAllVisibleColumns(
 
 const CONVERSIONS_SELECT = `
   id, internal_id, landing_id, user_id, landing_name,
-  phone, email, fn, ln, ct, st, zip, country,
+  phone, email, cuit_cuil, fn, ln, ct, st, zip, country,
   fbp, fbc, from_meta_ads, geo_source, meta_pixel_id, pixel_id,
   source_platform,
   contact_event_id, contact_event_time, sendContactPixel, contact_payload_raw,
