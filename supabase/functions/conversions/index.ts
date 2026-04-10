@@ -53,6 +53,8 @@ interface ConversionRow {
   phone: string;
   email: string;
   cuit_cuil: string;
+  inferred_sex?: string;
+  sex_source?: string;
   fn: string;
   ln: string;
   ct: string;
@@ -184,6 +186,74 @@ function deriveCuitCuilFromPayload(p: Params): string {
       p.cuil ??
       p["cuit/cuil"],
   );
+}
+
+function normalizeNameKey(value: unknown): string {
+  const raw = String(value ?? "").trim();
+  if (!raw) return "";
+  const first = raw.split(/\s+/)[0] ?? "";
+  if (!first) return "";
+  return first
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .toUpperCase()
+    .replace(/[^A-Z'-]/g, "");
+}
+
+function inferSexFromCuitPrefix(cuitCuil: string): "male" | "female" | "unknown" {
+  const digits = sanitizeCuitCuil(cuitCuil);
+  const prefix = digits.slice(0, 2);
+  if (prefix === "27") return "female";
+  if (prefix === "20" || prefix === "23") return "male";
+  return "unknown";
+}
+
+async function inferSexByNameCatalog(
+  db: SupabaseClient,
+  firstName: string,
+): Promise<"male" | "female" | "unknown"> {
+  const nameKey = normalizeNameKey(firstName);
+  if (!nameKey) return "unknown";
+  const { data, error } = await db
+    .from("ar_name_inferred_sex")
+    .select("inferred_sex")
+    .eq("name_key", nameKey)
+    .maybeSingle();
+  if (error || !data?.inferred_sex) return "unknown";
+  const sx = norm(data.inferred_sex).toLowerCase();
+  if (sx === "m") return "male";
+  if (sx === "f") return "female";
+  return "unknown";
+}
+
+async function ensureSexOnRow(
+  db: SupabaseClient,
+  rowId: string,
+  cuitCuil: string,
+  firstName: string,
+): Promise<void> {
+  const fromCuit = inferSexFromCuitPrefix(cuitCuil);
+  if (fromCuit !== "unknown") {
+    await db
+      .from("conversions")
+      .update({ inferred_sex: fromCuit, sex_source: "cuit_cuil" })
+      .eq("id", rowId);
+    return;
+  }
+
+  const byName = await inferSexByNameCatalog(db, firstName);
+  if (byName !== "unknown") {
+    await db
+      .from("conversions")
+      .update({ inferred_sex: byName, sex_source: "name_catalog" })
+      .eq("id", rowId);
+    return;
+  }
+
+  await db
+    .from("conversions")
+    .update({ inferred_sex: "unknown", sex_source: "unknown" })
+    .eq("id", rowId);
 }
 
 function sanitizeIp(v: unknown): string {
@@ -962,6 +1032,7 @@ async function handleContact(
 
   const effectiveConfig = resolveEffectiveConfigForPixel(config, pixelConfigs, row.pixel_id);
   await ensureGeoOnRow(db, rowId, row.phone, row.client_ip, { ct: row.ct, st: row.st, country: row.country, zip: row.zip, geo_city: row.geo_city, geo_region: row.geo_region, geo_country: row.geo_country }, row.geo_source ?? "", effectiveConfig);
+  await ensureSexOnRow(db, rowId, row.cuit_cuil, row.fn);
 
   await writeLog(
     db,
@@ -1251,6 +1322,7 @@ async function handleLead(
 
   const effectiveConfig = resolveEffectiveConfigForPixel(config, pixelConfigs, row.pixel_id);
   await ensureGeoOnRow(db, targetId!, row.phone, row.client_ip, { ct: row.ct, st: row.st, country: row.country, zip: row.zip, geo_city: row.geo_city, geo_region: row.geo_region, geo_country: row.geo_country }, norm((row as Record<string, unknown>).geo_source), effectiveConfig);
+  await ensureSexOnRow(db, targetId!, row.cuit_cuil, row.fn);
 
   const { data: fresh } = await db.from("conversions").select("*").eq("id", targetId).single();
   const fullRow = (fresh ?? row) as ConversionRow;
@@ -1462,6 +1534,7 @@ async function handlePurchase(
     if (!row) return textResponse("Error al leer fila PURCHASE", 500);
     const effectiveConfig = resolveEffectiveConfigForPixel(config, pixelConfigs, row.pixel_id);
     await ensureGeoOnRow(db, targetId, row.phone, row.client_ip, { ct: row.ct, st: row.st, country: row.country, zip: row.zip, geo_city: row.geo_city, geo_region: row.geo_region, geo_country: row.geo_country }, norm((row as Record<string, unknown>).geo_source), effectiveConfig);
+    await ensureSexOnRow(db, targetId, row.cuit_cuil, row.fn);
 
     const { data: fresh } = await db.from("conversions").select("*").eq("id", targetId).single();
     const fullRow = (fresh ?? row) as ConversionRow;
@@ -1545,6 +1618,7 @@ async function handlePurchase(
     if (!row) return textResponse("Error al leer fila PURCHASE", 500);
     const effectiveConfig = resolveEffectiveConfigForPixel(config, pixelConfigs, row.pixel_id);
     await ensureGeoOnRow(db, createdId, row.phone, row.client_ip, { ct: row.ct, st: row.st, country: row.country, zip: row.zip, geo_city: row.geo_city, geo_region: row.geo_region, geo_country: row.geo_country }, norm((row as Record<string, unknown>).geo_source), effectiveConfig);
+    await ensureSexOnRow(db, createdId, row.cuit_cuil, row.fn);
 
     const { data: fresh } = await db.from("conversions").select("*").eq("id", createdId).single();
     const fullRow = (fresh ?? row) as ConversionRow;
@@ -1637,6 +1711,7 @@ async function handlePurchase(
 
   const effectiveRepeatConfig = resolveEffectiveConfigForPixel(config, pixelConfigs, newRow.pixel_id);
   await ensureGeoOnRow(db, newId, newRow.phone, newRow.client_ip, { ct: newRow.ct, st: newRow.st, country: newRow.country, zip: newRow.zip, geo_city: newRow.geo_city, geo_region: newRow.geo_region, geo_country: newRow.geo_country }, newRow.geo_source ?? "", effectiveRepeatConfig);
+  await ensureSexOnRow(db, newId, newRow.cuit_cuil, newRow.fn);
 
   const { data: fresh } = await db.from("conversions").select("*").eq("id", newId).single();
   const fullRow = (fresh ?? newRow) as ConversionRow;
@@ -1752,6 +1827,7 @@ async function handleSimplePurchase(
 
   const effectiveSimpleConfig = resolveEffectiveConfigForPixel(config, pixelConfigs, newRow.pixel_id);
   await ensureGeoOnRow(db, newId, newRow.phone, newRow.client_ip, { ct: newRow.ct, st: newRow.st, country: newRow.country, zip: newRow.zip, geo_city: newRow.geo_city, geo_region: newRow.geo_region, geo_country: newRow.geo_country }, newRow.geo_source ?? "", effectiveSimpleConfig);
+  await ensureSexOnRow(db, newId, newRow.cuit_cuil, newRow.fn);
 
   const { data: fresh } = await db.from("conversions").select("*").eq("id", newId).single();
   const fullRow = (fresh ?? newRow) as ConversionRow;

@@ -205,7 +205,7 @@ function normalizePhone(value: string | null | undefined): string {
 }
 
 const ALL_COLUMNS = [
-  "phone","email","cuit_cuil","inferred_sex","fn","ln","ct","st","zip","country","fbp","fbc","from_meta_ads","geo_source","meta_pixel_id","pixel_id","source_platform",
+  "phone","email","cuit_cuil","inferred_sex","sex_source","fn","ln","ct","st","zip","country","fbp","fbc","from_meta_ads","geo_source","meta_pixel_id","pixel_id","source_platform",
   "contact_event_id","contact_event_time","sendContactPixel","contact_payload_raw","lead_event_id","lead_event_time","lead_payload_raw",
   "purchase_event_id","purchase_event_time","purchase_payload_raw","timestamp","clientIP","agentuser",
   "estado","valor","purchase_type","contact_status_capi","lead_status_capi","purchase_status_capi",
@@ -225,6 +225,7 @@ const COLUMN_NOTES: Partial<Record<ColKey | "id", string>> = {
   email: "Email recibido en payload.",
   cuit_cuil: "CUIT/CUIL recibido en payload (normalizado a digitos).",
   inferred_sex: "Sexo inferido desde prefijo CUIT/CUIL: 20/23=male, 27=female, resto=unknown.",
+  sex_source: "Origen del sexo inferido: cuit_cuil, name_catalog o unknown.",
   fn: "Nombre (first name) recibido en payload.",
   ln: "Apellido (last name) recibido en payload.",
   ct: "Ciudad recibida en payload o enriquecida por geolocalizacion.",
@@ -341,6 +342,7 @@ function cellValue(c: ConversionRow, col: ColKey): React.ReactNode {
     case "email": return <td key={col} className={dim} title={tip(c.email)}>{c.email || "-"}</td>;
     case "cuit_cuil": return <td key={col} className={dimMono} title={tip(c.cuit_cuil)}>{c.cuit_cuil || "-"}</td>;
     case "inferred_sex": return <td key={col} className={dim} title={tip(c.inferred_sex)}>{c.inferred_sex || "-"}</td>;
+    case "sex_source": return <td key={col} className={dim} title={tip(c.sex_source)}>{c.sex_source || "-"}</td>;
     case "fn": return <td key={col} className={dim} title={tip(c.fn)}>{c.fn || "-"}</td>;
     case "ln": return <td key={col} className={dim} title={tip(c.ln)}>{c.ln || "-"}</td>;
     case "ct": return <td key={col} className={dim} title={tip(c.ct)}>{c.ct || "-"}</td>;
