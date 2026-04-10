@@ -60,6 +60,7 @@ interface ConversionRow {
   country: string;
   fbp: string;
   fbc: string;
+  geo_source?: string;
   meta_pixel_id: string;
   source_platform?: string;
   pixel_id: string;
@@ -103,6 +104,8 @@ interface GeoResult {
   country: string;
   zip: string;
 }
+
+type GeoSource = "payload" | "ip" | "phone_prefix" | "none";
 
 type InboundStatus = "received" | "processed" | "error";
 
@@ -401,45 +404,139 @@ function resolveGeoForPayload(p: Params): GeoResult {
   };
 }
 
+function hasPayloadGeo(geo: GeoResult): boolean {
+  return Boolean(geo.ct || geo.st || geo.country || geo.zip || geo.geo_city || geo.geo_region || geo.geo_country);
+}
+
+function normalizeArNationalDigits(phone: string): string {
+  let d = sanitizePhone(phone);
+  if (!d) return "";
+  if (d.startsWith("54")) d = d.slice(2);
+  if (d.startsWith("9")) d = d.slice(1);
+  return d;
+}
+
+async function lookupGeoByPhonePrefix(db: SupabaseClient, rawPhone: string): Promise<GeoResult | null> {
+  const national = normalizeArNationalDigits(rawPhone);
+  if (!national || national.length < 2) return null;
+
+  const prefixes: string[] = [];
+  for (let len = 2; len <= 5; len++) {
+    if (national.length >= len) prefixes.push(national.slice(0, len));
+  }
+  if (!prefixes.length) return null;
+
+  const { data, error } = await db
+    .from("ar_phone_area_codes")
+    .select("codigo_de_area, localidad, provincia, zip_exacto, zip_aproximado")
+    .in("codigo_de_area", prefixes);
+
+  if (error || !data || data.length === 0) return null;
+
+  const picked = [...data]
+    .map((r) => ({
+      codigo_de_area: norm((r as Record<string, unknown>).codigo_de_area),
+      localidad: norm((r as Record<string, unknown>).localidad),
+      provincia: norm((r as Record<string, unknown>).provincia),
+      zip_exacto: norm((r as Record<string, unknown>).zip_exacto),
+      zip_aproximado: norm((r as Record<string, unknown>).zip_aproximado),
+    }))
+    .sort((a, b) => b.codigo_de_area.length - a.codigo_de_area.length)[0];
+
+  if (!picked?.codigo_de_area) return null;
+
+  const city = picked.localidad;
+  const region = picked.provincia;
+  const zip = picked.zip_exacto || picked.zip_aproximado;
+  return {
+    geo_city: city,
+    geo_region: region,
+    geo_country: "Argentina",
+    ct: city,
+    st: region,
+    country: "Argentina",
+    zip,
+  };
+}
+
 async function ensureGeoOnRow(
   db: SupabaseClient,
   rowId: string,
+  phone: string,
   clientIp: string,
   currentGeo: { ct: string; st: string; country: string; zip: string; geo_city: string; geo_region: string; geo_country: string },
+  currentGeoSource: string,
   config: ConversionsConfig,
 ): Promise<void> {
-  if (!config.geo_use_ipapi) return;
-  const ip = sanitizeIp(clientIp);
-  if (!ip || isPrivateOrReservedIp(ip)) return;
+  const sourceNow = norm(currentGeoSource).toLowerCase();
+  if (sourceNow === "payload") return;
 
   const needsGeo = config.geo_fill_only_when_missing
     ? (!currentGeo.geo_city || !currentGeo.geo_region || !currentGeo.geo_country || !currentGeo.ct || !currentGeo.st || !currentGeo.country)
     : true;
   if (!needsGeo) return;
 
-  const looked = await lookupGeoByIp(ip);
-  if (!looked) return;
+  if (config.geo_use_ipapi) {
+    const ip = sanitizeIp(clientIp);
+    if (ip && !isPrivateOrReservedIp(ip)) {
+      const looked = await lookupGeoByIp(ip);
+      if (looked) {
+        const finalGeo = config.geo_fill_only_when_missing
+          ? {
+              geo_city: currentGeo.geo_city || looked.geo_city,
+              geo_region: currentGeo.geo_region || looked.geo_region,
+              geo_country: currentGeo.geo_country || looked.geo_country,
+              ct: currentGeo.ct || looked.ct,
+              st: currentGeo.st || looked.st,
+              country: currentGeo.country || looked.country,
+              zip: currentGeo.zip || looked.zip,
+              geo_source: "ip",
+            }
+          : {
+              geo_city: looked.geo_city || currentGeo.geo_city,
+              geo_region: looked.geo_region || currentGeo.geo_region,
+              geo_country: looked.geo_country || currentGeo.geo_country,
+              ct: looked.ct || currentGeo.ct,
+              st: looked.st || currentGeo.st,
+              country: looked.country || currentGeo.country,
+              zip: looked.zip || currentGeo.zip,
+              geo_source: "ip",
+            };
+        await db.from("conversions").update(finalGeo).eq("id", rowId);
+        return;
+      }
+    }
+  }
+
+  const byPhone = await lookupGeoByPhonePrefix(db, phone);
+  if (!byPhone) {
+    if (!sourceNow) {
+      await db.from("conversions").update({ geo_source: "none" }).eq("id", rowId);
+    }
+    return;
+  }
 
   const finalGeo = config.geo_fill_only_when_missing
     ? {
-        geo_city: currentGeo.geo_city || looked.geo_city,
-        geo_region: currentGeo.geo_region || looked.geo_region,
-        geo_country: currentGeo.geo_country || looked.geo_country,
-        ct: currentGeo.ct || looked.ct,
-        st: currentGeo.st || looked.st,
-        country: currentGeo.country || looked.country,
-        zip: currentGeo.zip || looked.zip,
+        geo_city: currentGeo.geo_city || byPhone.geo_city,
+        geo_region: currentGeo.geo_region || byPhone.geo_region,
+        geo_country: currentGeo.geo_country || byPhone.geo_country,
+        ct: currentGeo.ct || byPhone.ct,
+        st: currentGeo.st || byPhone.st,
+        country: currentGeo.country || byPhone.country,
+        zip: currentGeo.zip || byPhone.zip,
+        geo_source: "phone_prefix",
       }
     : {
-        geo_city: looked.geo_city || currentGeo.geo_city,
-        geo_region: looked.geo_region || currentGeo.geo_region,
-        geo_country: looked.geo_country || currentGeo.geo_country,
-        ct: looked.ct || currentGeo.ct,
-        st: looked.st || currentGeo.st,
-        country: looked.country || currentGeo.country,
-        zip: looked.zip || currentGeo.zip,
+        geo_city: byPhone.geo_city || currentGeo.geo_city,
+        geo_region: byPhone.geo_region || currentGeo.geo_region,
+        geo_country: byPhone.geo_country || currentGeo.geo_country,
+        ct: byPhone.ct || currentGeo.ct,
+        st: byPhone.st || currentGeo.st,
+        country: byPhone.country || currentGeo.country,
+        zip: byPhone.zip || currentGeo.zip,
+        geo_source: "phone_prefix",
       };
-
   await db.from("conversions").update(finalGeo).eq("id", rowId);
 }
 
@@ -773,6 +870,7 @@ async function handleContact(
   const contactEventTime = toValidEventTime(p.contact_event_time || p.event_time || nowSec);
   const testEventCode = norm(p.test_event_code);
   const geo = resolveGeoForPayload(p);
+  const payloadGeoSource: GeoSource = hasPayloadGeo(geo) ? "payload" : "none";
   const eventSourceUrl = await deriveEventSourceUrl(db, landing.name, norm(p.event_source_url));
 
   const row: Omit<ConversionRow, "id"> = {
@@ -789,6 +887,7 @@ async function handleContact(
     country: norm(geo.country),
     fbp: norm(p.fbp),
     fbc: norm(p.fbc),
+    geo_source: payloadGeoSource,
     meta_pixel_id: inboundMetaPixelId,
     source_platform: inboundSourcePlatform || "",
     pixel_id: inboundMetaPixelId,
@@ -843,7 +942,7 @@ async function handleContact(
   const rowId = inserted.id;
 
   const effectiveConfig = resolveEffectiveConfigForPixel(config, pixelConfigs, row.pixel_id);
-  await ensureGeoOnRow(db, rowId, row.client_ip, { ct: row.ct, st: row.st, country: row.country, zip: row.zip, geo_city: row.geo_city, geo_region: row.geo_region, geo_country: row.geo_country }, effectiveConfig);
+  await ensureGeoOnRow(db, rowId, row.phone, row.client_ip, { ct: row.ct, st: row.st, country: row.country, zip: row.zip, geo_city: row.geo_city, geo_region: row.geo_region, geo_country: row.geo_country }, row.geo_source ?? "", effectiveConfig);
 
   await writeLog(
     db,
@@ -948,6 +1047,7 @@ async function handleLead(
   const payloadEmail = norm(p.email);
   const eventSourceUrl = await deriveEventSourceUrl(db, landing.name, norm(p.event_source_url));
   const geo = resolveGeoForPayload(p);
+  const payloadGeoSource: GeoSource = hasPayloadGeo(geo) ? "payload" : "none";
 
   // 1) Match by promo_code
   let targetId: string | null = null;
@@ -985,6 +1085,7 @@ async function handleLead(
       country: norm(geo.country),
       fbp: norm(p.fbp),
       fbc: norm(p.fbc),
+      geo_source: payloadGeoSource,
       meta_pixel_id: resolvedPixelId,
       source_platform: inboundSourcePlatform || "",
       pixel_id: resolvedPixelId,
@@ -1113,6 +1214,7 @@ async function handleLead(
     if (geo.geo_city) updates.geo_city = geo.geo_city;
     if (geo.geo_region) updates.geo_region = geo.geo_region;
     if (geo.geo_country) updates.geo_country = geo.geo_country;
+    if (hasPayloadGeo(geo)) updates.geo_source = "payload";
     // Fill promo_code if row didn't have it
     if (promoCode && isFullPromoCode(promoCode)) {
       const { data: cur } = await db.from("conversions").select("promo_code").eq("id", targetId).single();
@@ -1126,7 +1228,7 @@ async function handleLead(
   if (!row) return textResponse("Error al leer fila LEAD", 500);
 
   const effectiveConfig = resolveEffectiveConfigForPixel(config, pixelConfigs, row.pixel_id);
-  await ensureGeoOnRow(db, targetId!, row.client_ip, { ct: row.ct, st: row.st, country: row.country, zip: row.zip, geo_city: row.geo_city, geo_region: row.geo_region, geo_country: row.geo_country }, effectiveConfig);
+  await ensureGeoOnRow(db, targetId!, row.phone, row.client_ip, { ct: row.ct, st: row.st, country: row.country, zip: row.zip, geo_city: row.geo_city, geo_region: row.geo_region, geo_country: row.geo_country }, norm((row as Record<string, unknown>).geo_source), effectiveConfig);
 
   const { data: fresh } = await db.from("conversions").select("*").eq("id", targetId).single();
   const fullRow = (fresh ?? row) as ConversionRow;
@@ -1197,6 +1299,7 @@ async function handlePurchase(
   const payloadEmail = norm(p.email);
   const eventSourceUrl = await deriveEventSourceUrl(db, landing.name, norm(p.event_source_url));
   const geo = resolveGeoForPayload(p);
+  const payloadGeoSource: GeoSource = hasPayloadGeo(geo) ? "payload" : "none";
   const purchaseEventId = generateEventId();
   const purchaseEventTime = toValidEventTime(p.purchase_event_time || p.event_time || Math.floor(Date.now() / 1000));
   const { data: latestLeadRow } = await db
@@ -1324,6 +1427,7 @@ async function handlePurchase(
     if (geo.geo_city) updates.geo_city = geo.geo_city;
     if (geo.geo_region) updates.geo_region = geo.geo_region;
     if (geo.geo_country) updates.geo_country = geo.geo_country;
+    if (hasPayloadGeo(geo)) updates.geo_source = "payload";
     if (promoCode) {
       const { data: cur } = await db.from("conversions").select("promo_code").eq("id", targetId).single();
       if (!cur?.promo_code) updates.promo_code = promoCode;
@@ -1333,7 +1437,7 @@ async function handlePurchase(
     const { data: row } = await db.from("conversions").select("*").eq("id", targetId).single();
     if (!row) return textResponse("Error al leer fila PURCHASE", 500);
     const effectiveConfig = resolveEffectiveConfigForPixel(config, pixelConfigs, row.pixel_id);
-    await ensureGeoOnRow(db, targetId, row.client_ip, { ct: row.ct, st: row.st, country: row.country, zip: row.zip, geo_city: row.geo_city, geo_region: row.geo_region, geo_country: row.geo_country }, effectiveConfig);
+    await ensureGeoOnRow(db, targetId, row.phone, row.client_ip, { ct: row.ct, st: row.st, country: row.country, zip: row.zip, geo_city: row.geo_city, geo_region: row.geo_region, geo_country: row.geo_country }, norm((row as Record<string, unknown>).geo_source), effectiveConfig);
 
     const { data: fresh } = await db.from("conversions").select("*").eq("id", targetId).single();
     const fullRow = (fresh ?? row) as ConversionRow;
@@ -1374,6 +1478,7 @@ async function handlePurchase(
       country: geo.country,
       fbp: "",
       fbc: "",
+      geo_source: payloadGeoSource,
       meta_pixel_id: inboundMetaPixelId,
       source_platform: inboundSourcePlatform || "",
       pixel_id: inboundMetaPixelId,
@@ -1414,7 +1519,7 @@ async function handlePurchase(
     const { data: row } = await db.from("conversions").select("*").eq("id", createdId).single();
     if (!row) return textResponse("Error al leer fila PURCHASE", 500);
     const effectiveConfig = resolveEffectiveConfigForPixel(config, pixelConfigs, row.pixel_id);
-    await ensureGeoOnRow(db, createdId, row.client_ip, { ct: row.ct, st: row.st, country: row.country, zip: row.zip, geo_city: row.geo_city, geo_region: row.geo_region, geo_country: row.geo_country }, effectiveConfig);
+    await ensureGeoOnRow(db, createdId, row.phone, row.client_ip, { ct: row.ct, st: row.st, country: row.country, zip: row.zip, geo_city: row.geo_city, geo_region: row.geo_region, geo_country: row.geo_country }, norm((row as Record<string, unknown>).geo_source), effectiveConfig);
 
     const { data: fresh } = await db.from("conversions").select("*").eq("id", createdId).single();
     const fullRow = (fresh ?? row) as ConversionRow;
@@ -1463,6 +1568,7 @@ async function handlePurchase(
     country: srcRow?.country ?? "",
     fbp: srcRow?.fbp ?? "",
     fbc: srcRow?.fbc ?? "",
+    geo_source: norm((srcRow as Record<string, unknown> | null)?.geo_source) || "none",
     meta_pixel_id: srcRow?.meta_pixel_id ?? srcRow?.pixel_id ?? inboundMetaPixelId,
     source_platform: srcRow?.source_platform ?? inboundSourcePlatform ?? "",
     pixel_id: srcRow?.pixel_id ?? inboundMetaPixelId,
@@ -1504,7 +1610,7 @@ async function handlePurchase(
   const newId = ins.id;
 
   const effectiveRepeatConfig = resolveEffectiveConfigForPixel(config, pixelConfigs, newRow.pixel_id);
-  await ensureGeoOnRow(db, newId, newRow.client_ip, { ct: newRow.ct, st: newRow.st, country: newRow.country, zip: newRow.zip, geo_city: newRow.geo_city, geo_region: newRow.geo_region, geo_country: newRow.geo_country }, effectiveRepeatConfig);
+  await ensureGeoOnRow(db, newId, newRow.phone, newRow.client_ip, { ct: newRow.ct, st: newRow.st, country: newRow.country, zip: newRow.zip, geo_city: newRow.geo_city, geo_region: newRow.geo_region, geo_country: newRow.geo_country }, newRow.geo_source ?? "", effectiveRepeatConfig);
 
   const { data: fresh } = await db.from("conversions").select("*").eq("id", newId).single();
   const fullRow = (fresh ?? newRow) as ConversionRow;
@@ -1577,6 +1683,7 @@ async function handleSimplePurchase(
     country: srcRow?.country ?? "",
     fbp: srcRow?.fbp ?? "",
     fbc: srcRow?.fbc ?? "",
+    geo_source: norm((srcRow as Record<string, unknown> | null)?.geo_source) || "none",
     meta_pixel_id: srcRow?.meta_pixel_id ?? srcRow?.pixel_id ?? inboundMetaPixelId,
     source_platform: srcRow?.source_platform ?? inboundSourcePlatform ?? "",
     pixel_id: srcRow?.pixel_id ?? inboundMetaPixelId,
@@ -1616,7 +1723,7 @@ async function handleSimplePurchase(
   const newId = ins.id;
 
   const effectiveSimpleConfig = resolveEffectiveConfigForPixel(config, pixelConfigs, newRow.pixel_id);
-  await ensureGeoOnRow(db, newId, newRow.client_ip, { ct: newRow.ct, st: newRow.st, country: newRow.country, zip: newRow.zip, geo_city: newRow.geo_city, geo_region: newRow.geo_region, geo_country: newRow.geo_country }, effectiveSimpleConfig);
+  await ensureGeoOnRow(db, newId, newRow.phone, newRow.client_ip, { ct: newRow.ct, st: newRow.st, country: newRow.country, zip: newRow.zip, geo_city: newRow.geo_city, geo_region: newRow.geo_region, geo_country: newRow.geo_country }, newRow.geo_source ?? "", effectiveSimpleConfig);
 
   const { data: fresh } = await db.from("conversions").select("*").eq("id", newId).single();
   const fullRow = (fresh ?? newRow) as ConversionRow;

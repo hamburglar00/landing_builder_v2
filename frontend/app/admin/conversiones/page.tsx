@@ -205,7 +205,7 @@ function normalizePhone(value: string | null | undefined): string {
 }
 
 const ALL_COLUMNS = [
-  "phone","email","fn","ln","ct","st","zip","country","fbp","fbc","from_meta_ads","meta_pixel_id","pixel_id","source_platform",
+  "phone","email","fn","ln","ct","st","zip","country","fbp","fbc","from_meta_ads","geo_source","meta_pixel_id","pixel_id","source_platform",
   "contact_event_id","contact_event_time","sendContactPixel","contact_payload_raw","lead_event_id","lead_event_time","lead_payload_raw",
   "purchase_event_id","purchase_event_time","purchase_payload_raw","timestamp","clientIP","agentuser",
   "estado","valor","purchase_type","contact_status_capi","lead_status_capi","purchase_status_capi",
@@ -232,6 +232,7 @@ const COLUMN_NOTES: Partial<Record<ColKey | "id", string>> = {
   fbp: "Parametro fbp de Meta enviado por la fuente.",
   fbc: "Parametro fbc de Meta enviado por la fuente.",
   from_meta_ads: "Indica origen probable en Meta Ads. True cuando la fila tiene fbc.",
+  geo_source: "Fuente usada para completar geo: payload, ip, phone_prefix o none.",
   meta_pixel_id: "Pixel ID recibido en el payload de entrada (landing/chatrace/backend).",
   pixel_id: "Pixel ID efectivo usado para CAPI. Si falta meta_pixel_id, puede resolverse por fallback de configuracion.",
   source_platform: "Origen declarado del payload (ej: landing, chatrace).",
@@ -346,6 +347,7 @@ function cellValue(c: ConversionRow, col: ColKey): React.ReactNode {
     case "fbc": return <td key={col} className={dimMono} title={tip(c.fbc)}>{c.fbc ? truncateId(c.fbc, 12) : "-"}</td>;
     case "from_meta_ads":
       return <td key={col} className={dim} title={tip(c.from_meta_ads)}>{c.from_meta_ads ? "true" : "false"}</td>;
+    case "geo_source": return <td key={col} className={dim} title={tip(c.geo_source)}>{c.geo_source || "-"}</td>;
     case "meta_pixel_id": {
       const px = c.meta_pixel_id || c.pixel_id;
       return <td key={col} className={dimMono} title={tip(px)}>{px || "-"}</td>;
