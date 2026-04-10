@@ -410,7 +410,13 @@ export function LandingEditorForm({
                     updateConfig(setConfig, { backgroundImages: urls })
                   }
                   onUpload={uploadImage}
+                  maxFiles={config.backgroundMode === "rotating" ? 3 : undefined}
                 />
+                {config.backgroundMode === "rotating" && config.backgroundImages.length > 3 && (
+                  <p className="text-[11px] text-amber-400">
+                    Esta landing tiene más de 3 imágenes por configuración previa. No se eliminarán automáticamente, pero no podrás agregar nuevas hasta dejar 3 o menos.
+                  </p>
+                )}
                 {config.backgroundMode === "rotating" && (
                   <div>
                     <label className="block text-xs font-medium text-zinc-400 mb-1">

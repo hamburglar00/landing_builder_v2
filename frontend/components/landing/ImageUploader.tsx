@@ -12,6 +12,7 @@ interface ImageUploaderProps {
   onUpload?: (file: File) => Promise<string>;
   multiple?: boolean;
   label?: string;
+  maxFiles?: number;
 }
 
 /**
@@ -24,6 +25,7 @@ export function ImageUploader({
   onUpload,
   multiple = false,
   label,
+  maxFiles,
 }: ImageUploaderProps) {
   const inputRef = useRef<HTMLInputElement>(null);
   const [uploading, setUploading] = useState(false);
@@ -48,6 +50,18 @@ export function ImageUploader({
 
     e.target.value = "";
     setUploadError(null);
+
+    if (multiple && typeof maxFiles === "number" && maxFiles > 0) {
+      if (value.length >= maxFiles) {
+        setUploadError(`Ya alcanzaste el máximo de ${maxFiles} imágenes.`);
+        return;
+      }
+      const availableSlots = maxFiles - value.length;
+      if (files.length > availableSlots) {
+        setUploadError(`Solo podés agregar ${availableSlots} imagen${availableSlots === 1 ? "" : "es"} más (máximo ${maxFiles}).`);
+        return;
+      }
+    }
 
     if (onUpload) {
       setUploading(true);
@@ -105,6 +119,11 @@ export function ImageUploader({
       {uploadError && (
         <p className="text-xs text-red-400" role="alert">
           {uploadError}
+        </p>
+      )}
+      {multiple && typeof maxFiles === "number" && maxFiles > 0 && (
+        <p className="text-[11px] text-zinc-500">
+          Máximo {maxFiles} imágenes.
         </p>
       )}
       <div className="flex flex-wrap gap-2">
