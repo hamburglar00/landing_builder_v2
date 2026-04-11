@@ -410,7 +410,7 @@ export default function FunnelBoard({
           return (
             <div key={stage} className={`flex flex-col rounded-2xl border ${meta.columnBorder} bg-[#0d0d11] overflow-hidden`}>
               {/* Column Header */}
-              <div className={`sticky top-0 z-10 bg-[#0d0d11]/95 backdrop-blur-[2px] bg-gradient-to-b ${meta.headerGlow} px-4 pt-3.5 pb-3 border-b border-zinc-800/30`}>
+              <div className={`sticky top-0 z-10 bg-[#0d0d11]/95 backdrop-blur-[2px] bg-gradient-to-b ${meta.headerGlow} px-4 pt-3.5 pb-3 border-b border-zinc-800/30 min-h-[74px]`}>
                 <div className="flex items-center justify-between">
                   <div className="flex items-center gap-2">
                     <h4 className={`text-[13px] font-bold uppercase tracking-wide ${meta.accent} leading-none`}>
@@ -421,11 +421,12 @@ export default function FunnelBoard({
                     {groupedTotals[stage]}
                   </span>
                 </div>
-                {rev > 0 && (
-                  <p className={`mt-1.5 text-sm font-bold ${meta.accentSoft} tabular-nums leading-none`}>
-                    {fmtCompact(rev)}
-                  </p>
-                )}
+                <p
+                  className={`mt-1.5 text-sm font-bold ${meta.accentSoft} tabular-nums leading-none ${rev > 0 ? "" : "opacity-0"}`}
+                  aria-hidden={rev <= 0}
+                >
+                  {rev > 0 ? fmtCompact(rev) : "$0"}
+                </p>
               </div>
 
               {/* Cards */}
