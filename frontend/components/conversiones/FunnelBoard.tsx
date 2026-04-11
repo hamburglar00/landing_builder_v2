@@ -270,7 +270,7 @@ export default function FunnelBoard({
   const [sortDir, setSortDir] = useState<SortDir>("desc");
   const [page, setPage] = useState(1);
   const PAGE_SIZE_DEFAULT = 20;
-  const PAGE_SIZE_LEADS = 32;
+  const PAGE_SIZE_LEADS = 33;
 
   const toggleSort = (key: SortKey) => {
     if (sortKey === key) {
@@ -457,9 +457,6 @@ export default function FunnelBoard({
         >
           Anterior
         </button>
-        <span className="text-[11px] text-zinc-500">
-          Mostrando hasta {PAGE_SIZE_LEADS} en Leads y {PAGE_SIZE_DEFAULT} en el resto por pagina
-        </span>
         <button
           onClick={() => setPage((p) => Math.min(totalPages, p + 1))}
           disabled={safePage >= totalPages}
