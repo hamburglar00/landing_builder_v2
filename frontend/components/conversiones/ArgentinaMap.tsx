@@ -31,8 +31,8 @@ type MapMetric =
 const METRIC_LABELS: Record<MapMetric, string> = {
   contactos: "Clics en CTA",
   leads: "Mensajes recibidos",
-  primeras_cargas: "Primeras cargas",
-  recargas: "Recargas",
+  primeras_cargas: "Jugadores que cargaron",
+  recargas: "Jugadores que recargaron",
   cargas_totales: "Cargas totales",
   carga_promedio: "Carga promedio",
   carga_mediana: "Carga media",
@@ -158,6 +158,7 @@ function colorScale(value: number, max: number): string {
 interface ProvinceData {
   contactos: number;
   reachedLead: number;
+  reachedLeadLinkedToContact: number;
   reachedPurchase: number;
   reachedPurchaseLinkedToLead: number;
   reachedRepeat: number;
@@ -197,6 +198,7 @@ function buildProvinceData(
     map.set(prov, {
       contactos: core.uniqueContacts,
       reachedLead: core.uniqueLeads,
+      reachedLeadLinkedToContact: core.uniqueLeadsLinkedToContact,
       reachedPurchase: core.firstLoadPurchasers,
       reachedPurchaseLinkedToLead: core.firstLoadPurchasersLinkedToLead,
       reachedRepeat: core.purchaseRepeat,
@@ -229,9 +231,9 @@ function getMetricValue(
     case "primeras_cargas": return d.primerasCargas;
     case "recargas": return d.reachedRepeat;
     case "cargas_totales": return d.purchaseCount;
-    case "pct_inicio": return d.contactos > 0 ? (d.reachedLead / d.contactos) * 100 : 0;
-    case "pct_carga": return d.reachedLead > 0 ? (d.reachedPurchaseLinkedToLead / d.reachedLead) * 100 : 0;
-    case "pct_recarga": return d.reachedPurchase > 0 ? (d.repeatFromFirstInRange / d.reachedPurchase) * 100 : 0;
+    case "pct_inicio": return d.contactos > 0 ? (d.reachedLeadLinkedToContact / d.contactos) * 100 : 0;
+    case "pct_carga": return d.reachedLeadLinkedToContact > 0 ? (d.reachedPurchaseLinkedToLead / d.reachedLeadLinkedToContact) * 100 : 0;
+    case "pct_recarga": return d.reachedPurchaseLinkedToLead > 0 ? (d.repeatFromFirstInRange / d.reachedPurchaseLinkedToLead) * 100 : 0;
     case "carga_promedio": return d.purchaseCount > 0 ? d.totalCargado / d.purchaseCount : 0;
     case "carga_mediana": return d.cargaMediana;
     case "tiempo_lead_purchase_prom": return d.leadToPurchaseAvgHours;
@@ -335,9 +337,9 @@ export default function ArgentinaMap({
       case "primeras_cargas": return core.firstLoadPurchasers;
       case "recargas": return core.purchaseRepeat;
       case "cargas_totales": return core.totalPurchases;
-      case "pct_inicio": return core.uniqueContacts > 0 ? (core.uniqueLeads / core.uniqueContacts) * 100 : 0;
-      case "pct_carga": return core.uniqueLeads > 0 ? (core.firstLoadPurchasersLinkedToLead / core.uniqueLeads) * 100 : 0;
-      case "pct_recarga": return core.firstLoadPurchasers > 0 ? (core.repeatFromFirstInRange / core.firstLoadPurchasers) * 100 : 0;
+      case "pct_inicio": return core.uniqueContacts > 0 ? (core.uniqueLeadsLinkedToContact / core.uniqueContacts) * 100 : 0;
+      case "pct_carga": return core.uniqueLeadsLinkedToContact > 0 ? (core.firstLoadPurchasersLinkedToLead / core.uniqueLeadsLinkedToContact) * 100 : 0;
+      case "pct_recarga": return core.firstLoadPurchasersLinkedToLead > 0 ? (core.repeatFromFirstInRange / core.firstLoadPurchasersLinkedToLead) * 100 : 0;
       case "carga_promedio": return core.totalPurchases > 0 ? core.totalRevenue / core.totalPurchases : 0;
       case "carga_mediana": return median(core.purchaseValues);
       case "tiempo_lead_purchase_prom": return leadToPurchaseAvgHours;

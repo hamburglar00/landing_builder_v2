@@ -1,10 +1,9 @@
-"use client";
+﻿"use client";
 
 import { useMemo, useState } from "react";
 import {
   type FunnelContact,
   type ConversionRow,
-  classifyContact,
 } from "@/lib/conversionsDb";
 import { computeCoreStats } from "@/lib/conversionStats";
 import ArgentinaMap from "./ArgentinaMap";
@@ -205,97 +204,77 @@ export default function StatsPanel({
     const totalPurchaseCount = core.totalPurchaseCount;
     const firstPurchaseRevenue = core.firstPurchaseRevenue;
     const reachedRepeat = core.purchaseRepeat;
-    const leads = funnelContacts.filter((c) => classifyContact(c, premiumThreshold) === "leads").length;
-    const isFirstPurchase = (c: ConversionRow) => {
-      if ((c.purchase_event_id ?? "") === "") return false;
-      if (c.purchase_type === "first") return true;
-      if (c.purchase_type === "repeat") return false;
-      return !(c.observaciones ?? "").includes("REPEAT");
-    };
-    const purchaseRows = conversions.filter(
-      (c) => (c.purchase_event_id ?? "") !== "",
-    );
-    const phoneToFirstPurchase = new Map<string, ConversionRow>();
-    for (const c of purchaseRows.filter(isFirstPurchase)) {
-      const key = `${c.user_id}::${c.phone}`;
-      const existing = phoneToFirstPurchase.get(key);
-      if (!existing || new Date(c.created_at) < new Date(existing.created_at)) {
-        phoneToFirstPurchase.set(key, c);
-      }
-    }
+    const leads = uniqueLeads;
 
     const purchasers = firstLoadPurchasers;
     const avgTicket = totalPurchaseCount > 0 ? totalRevenue / totalPurchaseCount : 0;
     const avgLoadsPerPlayer = purchasers > 0 ? totalPurchaseCount / purchasers : 0;
+    type SliceStats = {
+      mensajes: number;
+      cargas: number;
+      revenue: number;
+      firstRevenue: number;
+    };
+    const getSliceStats = (
+      convSlice: ConversionRow[],
+      contactsSlice: FunnelContact[],
+      allConvSlice: ConversionRow[],
+    ): SliceStats => {
+      const slicedCore = computeCoreStats(convSlice, contactsSlice, allConvSlice, premiumThreshold);
+      return {
+        mensajes: slicedCore.uniqueLeadsLinkedToContact,
+        cargas: slicedCore.firstLoadPurchasersLinkedToLead,
+        revenue: slicedCore.totalRevenue,
+        firstRevenue: slicedCore.firstPurchaseRevenue,
+      };
+    };
 
-    // By campaign
-    const campaignMap = new Map<string, { leads: number; cargas: number; revenue: number; total: number; firstRevenue: number }>();
-    for (const c of funnelContacts) {
-      const camp = c.utm_campaign || "Sin campaña";
-      const entry = campaignMap.get(camp) ?? { leads: 0, cargas: 0, revenue: 0, total: 0, firstRevenue: 0 };
-      entry.total++;
-      if (c.reached_lead) entry.leads++;
-      if (c.reached_purchase) entry.cargas++;
-      entry.revenue += c.total_valor;
-      campaignMap.set(camp, entry);
-    }
-    for (const conv of phoneToFirstPurchase.values()) {
-      const camp = conv.utm_campaign || "Sin campaña";
-      const entry = campaignMap.get(camp) ?? { leads: 0, cargas: 0, revenue: 0, total: 0, firstRevenue: 0 };
-      entry.firstRevenue += conv.valor;
-      campaignMap.set(camp, entry);
-    }
-
-    const byCampaign = [...campaignMap.entries()]
-      .map(([campaign, d]) => ({ campaign, ...d }))
+    // By campaign (same formulas, filtered universe)
+    const campaignKeys = new Set<string>([
+      ...funnelContacts.map((c) => c.utm_campaign || "Sin campaña"),
+      ...conversions.map((c) => c.utm_campaign || "Sin campaña"),
+      ...allConversions.map((c) => c.utm_campaign || "Sin campaña"),
+    ]);
+    const byCampaign = [...campaignKeys]
+      .map((campaign) => {
+        const convSlice = conversions.filter((c) => (c.utm_campaign || "Sin campaña") === campaign);
+        const contactsSlice = funnelContacts.filter((c) => (c.utm_campaign || "Sin campaña") === campaign);
+        const allConvSlice = allConversions.filter((c) => (c.utm_campaign || "Sin campaña") === campaign);
+        return { campaign, ...getSliceStats(convSlice, contactsSlice, allConvSlice) };
+      })
       .sort((a, b) => b.revenue - a.revenue)
       .slice(0, 10);
 
-    // By device
-    const deviceMap = new Map<string, { leads: number; cargas: number; revenue: number; total: number; firstRevenue: number }>();
-    for (const c of funnelContacts) {
-      const dev = c.device_type || "Desconocido";
-      const entry = deviceMap.get(dev) ?? { leads: 0, cargas: 0, revenue: 0, total: 0, firstRevenue: 0 };
-      entry.total++;
-      if (c.reached_lead) entry.leads++;
-      if (c.reached_purchase) entry.cargas++;
-      entry.revenue += c.total_valor;
-      deviceMap.set(dev, entry);
-    }
-    for (const conv of phoneToFirstPurchase.values()) {
-      const dev = conv.device_type || "Desconocido";
-      const entry = deviceMap.get(dev) ?? { leads: 0, cargas: 0, revenue: 0, total: 0, firstRevenue: 0 };
-      entry.firstRevenue += conv.valor;
-      deviceMap.set(dev, entry);
-    }
-
-    const byDevice = [...deviceMap.entries()]
-      .map(([device, d]) => ({ device, ...d }))
+    // By device (same formulas, filtered universe)
+    const deviceKeys = new Set<string>([
+      ...funnelContacts.map((c) => c.device_type || "Desconocido"),
+      ...conversions.map((c) => c.device_type || "Desconocido"),
+      ...allConversions.map((c) => c.device_type || "Desconocido"),
+    ]);
+    const byDevice = [...deviceKeys]
+      .map((device) => {
+        const convSlice = conversions.filter((c) => (c.device_type || "Desconocido") === device);
+        const contactsSlice = funnelContacts.filter((c) => (c.device_type || "Desconocido") === device);
+        const allConvSlice = allConversions.filter((c) => (c.device_type || "Desconocido") === device);
+        return { device, ...getSliceStats(convSlice, contactsSlice, allConvSlice) };
+      })
       .sort((a, b) => b.revenue - a.revenue);
 
-    // By landing
-    const landingMap = new Map<string, { leads: number; cargas: number; revenue: number; total: number; firstRevenue: number }>();
-    for (const c of funnelContacts) {
-      const ln = c.landing_name || "Sin landing";
-      const entry = landingMap.get(ln) ?? { leads: 0, cargas: 0, revenue: 0, total: 0, firstRevenue: 0 };
-      entry.total++;
-      if (c.reached_lead) entry.leads++;
-      if (c.reached_purchase) entry.cargas++;
-      entry.revenue += c.total_valor;
-      landingMap.set(ln, entry);
-    }
-    for (const conv of phoneToFirstPurchase.values()) {
-      const ln = conv.landing_name || "Sin landing";
-      const entry = landingMap.get(ln) ?? { leads: 0, cargas: 0, revenue: 0, total: 0, firstRevenue: 0 };
-      entry.firstRevenue += conv.valor;
-      landingMap.set(ln, entry);
-    }
-
-    const byLanding = [...landingMap.entries()]
-      .map(([landing, d]) => ({ landing, ...d }))
+    // By landing (same formulas, filtered universe)
+    const landingKeys = new Set<string>([
+      ...funnelContacts.map((c) => c.landing_name || "Sin landing"),
+      ...conversions.map((c) => c.landing_name || "Sin landing"),
+      ...allConversions.map((c) => c.landing_name || "Sin landing"),
+    ]);
+    const byLanding = [...landingKeys]
+      .map((landing) => {
+        const convSlice = conversions.filter((c) => (c.landing_name || "Sin landing") === landing);
+        const contactsSlice = funnelContacts.filter((c) => (c.landing_name || "Sin landing") === landing);
+        const allConvSlice = allConversions.filter((c) => (c.landing_name || "Sin landing") === landing);
+        return { landing, ...getSliceStats(convSlice, contactsSlice, allConvSlice) };
+      })
       .sort((a, b) => b.revenue - a.revenue)
       .slice(0, 10);
-
     // Top contacts
     const topContacts = [...funnelContacts]
       .filter((c) => c.total_valor > 0)
@@ -621,7 +600,7 @@ export default function StatsPanel({
       <div className="grid gap-4 lg:grid-cols-2">
         {/* Cargas por hora */}
         <div className="rounded-xl border border-zinc-800 bg-zinc-900/50 p-4">
-          <h4 className="text-xs font-semibold text-zinc-200 mb-4">Cargas por hora del día</h4>
+          <h4 className="text-xs font-semibold text-zinc-200 mb-4">Distribución de cargas por hora del día</h4>
           <ResponsiveContainer width="100%" height={240}>
             <BarChart data={stats.hourlyBuckets} margin={{ top: 4, right: 8, bottom: 0, left: -16 }}>
               <CartesianGrid strokeDasharray="3 3" stroke="#27272a" />
@@ -651,7 +630,7 @@ export default function StatsPanel({
 
         {/* Leads vs Cargas por día */}
         <div className="rounded-xl border border-zinc-800 bg-zinc-900/50 p-4">
-          <h4 className="text-xs font-semibold text-zinc-200 mb-4">Leads y cargas por día</h4>
+          <h4 className="text-xs font-semibold text-zinc-200 mb-4">Mensajes recibidos y cargas por día</h4>
           <ResponsiveContainer width="100%" height={240}>
             <LineChart data={stats.dailyData} margin={{ top: 4, right: 8, bottom: 0, left: -16 }}>
               <CartesianGrid strokeDasharray="3 3" stroke="#27272a" />
@@ -677,7 +656,7 @@ export default function StatsPanel({
               <Legend
                 wrapperStyle={{ fontSize: 10, color: "#a1a1aa" }}
               />
-              <Line type="monotone" dataKey="leads" name="Leads" stroke="#fbbf24" strokeWidth={2} dot={{ r: 2, fill: "#fbbf24" }} activeDot={{ r: 4 }} />
+              <Line type="monotone" dataKey="leads" name="Mensajes recibidos" stroke="#fbbf24" strokeWidth={2} dot={{ r: 2, fill: "#fbbf24" }} activeDot={{ r: 4 }} />
               <Line type="monotone" dataKey="cargas" name="Cargas" stroke="#34d399" strokeWidth={2} dot={{ r: 2, fill: "#34d399" }} activeDot={{ r: 4 }} />
             </LineChart>
           </ResponsiveContainer>
@@ -689,12 +668,12 @@ export default function StatsPanel({
         <div>
           <SectionTitle>Por campaña</SectionTitle>
           <div className="mt-3">
-            <TableCard title="Leads, cargas e ingresos por campaña">
+            <TableCard title="Mensajes recibidos, cargas e ingresos por campaña">
               <div className="overflow-x-auto">
               <table className="w-full text-[11px]" style={{ minWidth: 760 }}>
                 <thead><tr className="text-zinc-500">
                   <th className="text-left pb-2 font-medium">Campaña</th>
-                  <th className="text-center pb-2 font-medium w-14">Leads</th>
+                  <th className="text-center pb-2 font-medium w-24">Mensajes recibidos</th>
                   <th className="text-center pb-2 font-medium w-14">Cargas</th>
                   <th className="text-center pb-2 font-medium" style={{ width: 180 }}>% de carga</th>
                   <th className="text-center pb-2 font-medium" style={{ width: 220 }}>Ingresos</th>
@@ -712,9 +691,9 @@ export default function StatsPanel({
                     return (
                       <tr key={r.campaign}>
                         <td className="py-1.5 text-zinc-300 truncate">{r.campaign}</td>
-                        <td className="py-1.5 text-center text-zinc-400">{r.leads}</td>
+                        <td className="py-1.5 text-center text-zinc-400">{r.mensajes}</td>
                         <td className="py-1.5 text-center text-zinc-400">{r.cargas}</td>
-                        <td className="py-1.5 px-2"><PctBar num={r.cargas} den={r.leads || 1} color="bg-amber-500" /></td>
+                        <td className="py-1.5 px-2"><PctBar num={r.cargas} den={r.mensajes || 1} color="bg-amber-500" /></td>
                         <td className="py-1.5 px-2"><BarCell value={r.revenue} max={maxCampaignRev} /></td>
                         {parsedAdSpend > 0 && (
                           <>
@@ -738,12 +717,12 @@ export default function StatsPanel({
         <div>
           <SectionTitle>Por dispositivo</SectionTitle>
           <div className="mt-3">
-            <TableCard title="Leads, cargas e ingresos por dispositivo">
+            <TableCard title="Mensajes recibidos, cargas e ingresos por dispositivo">
               <div className="overflow-x-auto">
               <table className="w-full text-[11px]" style={{ minWidth: 760 }}>
                 <thead><tr className="text-zinc-500">
                   <th className="text-left pb-2 font-medium">Dispositivo</th>
-                  <th className="text-center pb-2 font-medium w-14">Leads</th>
+                  <th className="text-center pb-2 font-medium w-24">Mensajes recibidos</th>
                   <th className="text-center pb-2 font-medium w-14">Cargas</th>
                   <th className="text-center pb-2 font-medium" style={{ width: 180 }}>% de carga</th>
                   <th className="text-center pb-2 font-medium" style={{ width: 220 }}>Ingresos</th>
@@ -761,9 +740,9 @@ export default function StatsPanel({
                     return (
                       <tr key={r.device}>
                         <td className="py-1.5 text-zinc-300 capitalize truncate">{r.device}</td>
-                        <td className="py-1.5 text-center text-zinc-400">{r.leads}</td>
+                        <td className="py-1.5 text-center text-zinc-400">{r.mensajes}</td>
                         <td className="py-1.5 text-center text-zinc-400">{r.cargas}</td>
-                        <td className="py-1.5 px-2"><PctBar num={r.cargas} den={r.leads || 1} color="bg-violet-500" /></td>
+                        <td className="py-1.5 px-2"><PctBar num={r.cargas} den={r.mensajes || 1} color="bg-violet-500" /></td>
                         <td className="py-1.5 px-2"><BarCell value={r.revenue} max={maxDeviceRev} /></td>
                         {parsedAdSpend > 0 && (
                           <>
@@ -787,12 +766,12 @@ export default function StatsPanel({
         <div>
           <SectionTitle>Por landing</SectionTitle>
           <div className="mt-3">
-            <TableCard title="Leads, cargas e ingresos por landing">
+            <TableCard title="Mensajes recibidos, cargas e ingresos por landing">
               <div className="overflow-x-auto">
               <table className="w-full text-[11px]" style={{ minWidth: 760 }}>
                 <thead><tr className="text-zinc-500">
                   <th className="text-left pb-2 font-medium">Landing</th>
-                  <th className="text-center pb-2 font-medium w-14">Leads</th>
+                  <th className="text-center pb-2 font-medium w-24">Mensajes recibidos</th>
                   <th className="text-center pb-2 font-medium w-14">Cargas</th>
                   <th className="text-center pb-2 font-medium" style={{ width: 180 }}>% de carga</th>
                   <th className="text-center pb-2 font-medium" style={{ width: 220 }}>Ingresos</th>
@@ -810,9 +789,9 @@ export default function StatsPanel({
                     return (
                       <tr key={r.landing}>
                         <td className="py-1.5 text-zinc-300 truncate">{r.landing}</td>
-                        <td className="py-1.5 text-center text-zinc-400">{r.leads}</td>
+                        <td className="py-1.5 text-center text-zinc-400">{r.mensajes}</td>
                         <td className="py-1.5 text-center text-zinc-400">{r.cargas}</td>
-                        <td className="py-1.5 px-2"><PctBar num={r.cargas} den={r.leads || 1} color="bg-emerald-500" /></td>
+                        <td className="py-1.5 px-2"><PctBar num={r.cargas} den={r.mensajes || 1} color="bg-emerald-500" /></td>
                         <td className="py-1.5 px-2"><BarCell value={r.revenue} max={maxLandingRev} /></td>
                         {parsedAdSpend > 0 && (
                           <>
@@ -877,6 +856,10 @@ export default function StatsPanel({
     </div>
   );
 }
+
+
+
+
 
 
 
