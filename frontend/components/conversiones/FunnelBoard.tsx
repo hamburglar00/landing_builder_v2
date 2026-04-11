@@ -280,17 +280,33 @@ export default function FunnelBoard({
     }
   };
 
-  const sortedContacts = useMemo(() => {
+  const groupedAll = useMemo(() => {
+    const g: Record<FunnelStage, FunnelContact[]> = {
+      leads: [], primera_carga: [], recurrente: [], premium: [],
+    };
+    for (const c of contacts) {
+      const stage = classifyContact(c, premiumThreshold);
+      g[stage].push(c);
+    }
+
     const dir = sortDir === "desc" ? 1 : -1;
     const sortFn = (a: FunnelContact, b: FunnelContact) =>
       sortKey === "amount"
         ? (b.total_valor - a.total_valor) * dir
         : (new Date(b.last_activity).getTime() - new Date(a.last_activity).getTime()) * dir;
 
-    return [...contacts].sort(sortFn);
+    for (const s of STAGES) g[s].sort(sortFn);
+    return g;
   }, [contacts, premiumThreshold, sortKey, sortDir]);
 
-  const totalPages = Math.max(1, Math.ceil(sortedContacts.length / PAGE_SIZE));
+  const totalPages = useMemo(
+    () =>
+      Math.max(
+        1,
+        ...STAGES.map((s) => Math.ceil((groupedAll[s]?.length ?? 0) / PAGE_SIZE)),
+      ),
+    [groupedAll],
+  );
   const safePage = Math.min(page, totalPages);
 
   useEffect(() => {
@@ -301,32 +317,25 @@ export default function FunnelBoard({
     if (page > totalPages) setPage(totalPages);
   }, [page, totalPages]);
 
-  const pageContacts = useMemo(() => {
-    const start = (safePage - 1) * PAGE_SIZE;
-    return sortedContacts.slice(start, start + PAGE_SIZE);
-  }, [sortedContacts, safePage]);
-
   const grouped = useMemo(() => {
-    const g: Record<FunnelStage, FunnelContact[]> = {
-      leads: [], primera_carga: [], recurrente: [], premium: [],
+    const start = (safePage - 1) * PAGE_SIZE;
+    return {
+      leads: groupedAll.leads.slice(start, start + PAGE_SIZE),
+      primera_carga: groupedAll.primera_carga.slice(start, start + PAGE_SIZE),
+      recurrente: groupedAll.recurrente.slice(start, start + PAGE_SIZE),
+      premium: groupedAll.premium.slice(start, start + PAGE_SIZE),
     };
-    for (const c of pageContacts) {
-      const stage = classifyContact(c, premiumThreshold);
-      g[stage].push(c);
-    }
-    return g;
-  }, [pageContacts, premiumThreshold]);
+  }, [groupedAll, safePage]);
 
-  const groupedTotals = useMemo(() => {
-    const g: Record<FunnelStage, number> = {
-      leads: 0, primera_carga: 0, recurrente: 0, premium: 0,
-    };
-    for (const c of contacts) {
-      const stage = classifyContact(c, premiumThreshold);
-      g[stage] += 1;
-    }
-    return g;
-  }, [contacts, premiumThreshold]);
+  const groupedTotals = useMemo(
+    () => ({
+      leads: groupedAll.leads.length,
+      primera_carga: groupedAll.primera_carga.length,
+      recurrente: groupedAll.recurrente.length,
+      premium: groupedAll.premium.length,
+    }),
+    [groupedAll],
+  );
 
   const stageRevenue = useMemo(() => {
     const rev: Record<FunnelStage, number> = { leads: 0, primera_carga: 0, recurrente: 0, premium: 0 };
@@ -442,7 +451,7 @@ export default function FunnelBoard({
           Anterior
         </button>
         <span className="text-[11px] text-zinc-500">
-          Mostrando hasta {PAGE_SIZE} tarjetas por pagina ({sortedContacts.length} total)
+          Mostrando hasta {PAGE_SIZE} tarjetas por columna en cada pagina
         </span>
         <button
           onClick={() => setPage((p) => Math.min(totalPages, p + 1))}
