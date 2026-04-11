@@ -68,7 +68,7 @@ function RevenueTrendBadge({
   const color = isUp ? "text-emerald-400" : "text-red-400";
   const pctStr =
     pctChange === Infinity
-      ? isUp ? "+∞" : "∞"
+      ? isUp ? "+" : ""
       : isUp
         ? `+${pctChange.toFixed(1)}%`
         : `-${Math.abs(pctChange).toFixed(1)}%`;
@@ -194,6 +194,7 @@ export default function StatsPanel({
     const core = computeCoreStats(conversions, funnelContacts, allConversions, premiumThreshold);
     const uniqueContacts = core.uniqueContacts;
     const uniqueLeads = core.uniqueLeads;
+    const uniqueLeadsLinkedToContact = core.uniqueLeadsLinkedToContact;
     const firstLoadPurchasers = core.firstLoadPurchasers;
     const firstLoadPurchasersLinkedToLead = core.firstLoadPurchasersLinkedToLead;
     const totalPurchases = core.totalPurchases;
@@ -310,7 +311,7 @@ export default function StatsPanel({
       }
     }
 
-    // Daily leads vs purchases — refleja el rango seleccionado, mínimo 7 días
+    // Daily leads vs purchases  refleja el rango seleccionado, mínimo 7 días
     const MS_PER_DAY = 86400000;
     const MIN_DAYS = 7;
 
@@ -408,6 +409,7 @@ export default function StatsPanel({
     return {
       uniqueContacts,
       uniqueLeads,
+      uniqueLeadsLinkedToContact,
       firstLoadPurchasers,
       firstLoadPurchasersLinkedToLead,
       totalPurchases,
@@ -448,7 +450,7 @@ export default function StatsPanel({
   return (
     <div className="space-y-8">
 
-      {/* ── RESUMEN GENERAL ── */}
+      {/*  RESUMEN GENERAL  */}
       <div>
         <SectionTitle>Resumen general</SectionTitle>
         <div className="mt-3 grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-7">
@@ -485,7 +487,7 @@ export default function StatsPanel({
             label="Jugadores Premium"
             value={stats.premium}
             color="text-emerald-300"
-            tooltip={compactTooltips ? `Contactos con monto total acumulado ≥ $${premiumThreshold.toLocaleString("es-AR")}.` : `Contactos cuyo monto total acumulado de cargas es igual o superior al umbral premium configurado ($${premiumThreshold.toLocaleString("es-AR")}).`}
+            tooltip={compactTooltips ? `Contactos con monto total acumulado  $${premiumThreshold.toLocaleString("es-AR")}.` : `Contactos cuyo monto total acumulado de cargas es igual o superior al umbral premium configurado ($${premiumThreshold.toLocaleString("es-AR")}).`}
           />
           <KpiCard
             label="Retención"
@@ -496,7 +498,7 @@ export default function StatsPanel({
         </div>
       </div>
 
-      {/* ── INGRESOS ── */}
+      {/*  INGRESOS  */}
       <div>
         <SectionTitle>Ingresos</SectionTitle>
         <div className={`mt-3 grid grid-cols-2 gap-3 ${parsedAdSpend > 0 ? "sm:grid-cols-3 lg:grid-cols-5" : "sm:grid-cols-3"}`}>
@@ -573,35 +575,35 @@ export default function StatsPanel({
         </div>
       </div>
 
-      {/* ── EMBUDO DE CONVERSIÓN ── */}
+      {/*  EMBUDO DE CONVERSIN  */}
       <div>
         <SectionTitle>Embudo de conversión</SectionTitle>
         <div className="mt-3 grid grid-cols-1 gap-3 sm:grid-cols-3">
           <KpiCard
             label="Porcentaje de inicio de conversación"
-            value={pct(stats.uniqueLeads, stats.uniqueContacts)}
-            sub={`${stats.uniqueLeads} de ${stats.uniqueContacts} contactos`}
+            value={pct(stats.uniqueLeadsLinkedToContact, stats.uniqueContacts)}
+            sub={`${stats.uniqueLeadsLinkedToContact} de ${stats.uniqueContacts} contactos`}
             color="text-amber-400"
-            tooltip={compactTooltips ? "De las personas que hicieron clic en el CTA, ¿cuántas enviaron mensaje?" : "De las personas que hicieron clic en el CTA, ¿cuántas enviaron mensaje? leads únicos / contactos únicos."}
+            tooltip="De las personas que hicieron clic en el CTA, cuantas enviaron mensaje (vinculadas por external_id)?"
           />
           <KpiCard
             label="Porcentaje de carga"
-            value={pct(stats.firstLoadPurchasersLinkedToLead, stats.uniqueLeads)}
-            sub={`${stats.firstLoadPurchasersLinkedToLead} de ${stats.uniqueLeads} leads`}
+            value={pct(stats.firstLoadPurchasersLinkedToLead, stats.uniqueLeadsLinkedToContact)}
+            sub={`${stats.firstLoadPurchasersLinkedToLead} de ${stats.uniqueLeadsLinkedToContact} leads`}
             color="text-sky-400"
-            tooltip={compactTooltips ? "De las personas que escribieron (leads), ¿cuántas cargaron?" : "De las personas que escribieron (leads), ¿cuántas cargaron? purchase únicos / leads únicos."}
+            tooltip="De las personas que escribieron (leads), cuantas cargaron (vinculadas por external_id)?"
           />
           <KpiCard
             label="Porcentaje de recarga"
-            value={pct(stats.repeatFromFirstInRange, stats.firstLoadPurchasers)}
-            sub={`${stats.repeatFromFirstInRange} de ${stats.firstLoadPurchasers} jugadores`}
+            value={pct(stats.repeatFromFirstInRange, stats.firstLoadPurchasersLinkedToLead)}
+            sub={`${stats.repeatFromFirstInRange} de ${stats.firstLoadPurchasersLinkedToLead} jugadores`}
             color="text-violet-400"
-            tooltip={compactTooltips ? "Porcentaje de jugadores que volvieron a cargar después de su primera carga." : "Porcentaje de jugadores que volvieron a cargar después de su primera carga. Se calcula: jugadores con recarga / jugadores que cargaron."}
+            tooltip="De las personas que cargaron una vez cuantas recargaron?"
           />
         </div>
       </div>
 
-      {/* ── MAPA DE ARGENTINA ── */}
+      {/*  MAPA DE ARGENTINA  */}
       <div>
         <SectionTitle>Distribución geográfica</SectionTitle>
         <div className="mt-3">
@@ -615,7 +617,7 @@ export default function StatsPanel({
         </div>
       </div>
 
-      {/* ── GRÁFICOS TEMPORALES ── */}
+      {/*  GRÁFICOS TEMPORALES  */}
       <div className="grid gap-4 lg:grid-cols-2">
         {/* Cargas por hora */}
         <div className="rounded-xl border border-zinc-800 bg-zinc-900/50 p-4">
@@ -682,7 +684,7 @@ export default function StatsPanel({
         </div>
       </div>
 
-      {/* ── POR CAMPAÑA ── */}
+      {/*  POR CAMPAA  */}
       {stats.byCampaign.length > 0 && (
         <div>
           <SectionTitle>Por campaña</SectionTitle>
@@ -731,7 +733,7 @@ export default function StatsPanel({
         </div>
       )}
 
-      {/* ── POR DISPOSITIVO ── */}
+      {/*  POR DISPOSITIVO  */}
       {stats.byDevice.length > 0 && (
         <div>
           <SectionTitle>Por dispositivo</SectionTitle>
@@ -780,7 +782,7 @@ export default function StatsPanel({
         </div>
       )}
 
-      {/* ── POR LANDING ── */}
+      {/*  POR LANDING  */}
       {stats.byLanding.length > 0 && (
         <div>
           <SectionTitle>Por landing</SectionTitle>
@@ -829,7 +831,7 @@ export default function StatsPanel({
         </div>
       )}
 
-      {/* ── TOP CONTACTOS ── */}
+      {/*  TOP CONTACTOS  */}
       {stats.topContacts.length > 0 && (
         <div>
           <SectionTitle>Top contactos por monto</SectionTitle>
@@ -875,4 +877,7 @@ export default function StatsPanel({
     </div>
   );
 }
+
+
+
 

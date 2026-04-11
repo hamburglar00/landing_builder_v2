@@ -4,6 +4,7 @@ import { classifyContact } from "@/lib/conversionsDb";
 export interface CoreStats {
   uniqueContacts: number;
   uniqueLeads: number;
+  uniqueLeadsLinkedToContact: number;
   firstLoadPurchasers: number;
   firstLoadPurchasersLinkedToLead: number;
   totalPurchases: number;
@@ -67,6 +68,22 @@ export function computeCoreStats(
     (c) => (c.lead_event_id ?? "") !== "",
   );
   const uniqueLeads = dedupeByUserPhone(leadRows).size;
+  const contactExternalKeys = new Set(
+    contactRows
+      .map((c) => ({ userId: c.user_id, ext: String(c.external_id ?? "").trim() }))
+      .filter((x) => x.ext !== "")
+      .map((x) => `${x.userId}::${x.ext}`),
+  );
+  const leadExternalKeys = new Set(
+    leadRows
+      .map((c) => ({ userId: c.user_id, ext: String(c.external_id ?? "").trim() }))
+      .filter((x) => x.ext !== "")
+      .map((x) => `${x.userId}::${x.ext}`),
+  );
+  const leadExternalKeysLinkedToContact = new Set(
+    [...leadExternalKeys].filter((k) => contactExternalKeys.has(k)),
+  );
+  const uniqueLeadsLinkedToContact = leadExternalKeysLinkedToContact.size;
 
   const purchaseRows = conversions.filter(
     (c) => (c.purchase_event_id ?? "") !== "",
@@ -75,30 +92,27 @@ export function computeCoreStats(
   const repeatPurchaseRows = purchaseRows.filter(isRepeatPurchase);
   const phoneToFirstPurchase = dedupeByUserPhone(firstPurchaseRows);
   const firstLoadPurchasers = phoneToFirstPurchase.size;
-  const leadExternalKeys = new Set(
-    leadRows
-      .map((c) => ({ userId: c.user_id, ext: String(c.external_id ?? "").trim() }))
-      .filter((x) => x.ext !== "")
-      .map((x) => `${x.userId}::${x.ext}`),
-  );
   let firstLoadPurchasersLinkedToLead = 0;
+  const firstExternalKeysLinkedToLead = new Set<string>();
   for (const c of phoneToFirstPurchase.values()) {
     const ext = String(c.external_id ?? "").trim();
     if (!ext) continue;
-    if (leadExternalKeys.has(`${c.user_id}::${ext}`)) {
+    const key = `${c.user_id}::${ext}`;
+    if (leadExternalKeysLinkedToContact.has(key)) {
       firstLoadPurchasersLinkedToLead++;
+      firstExternalKeysLinkedToLead.add(key);
     }
   }
 
   const totalPurchases = purchaseRows.length;
   const purchaseRepeat = dedupeByUserPhone(repeatPurchaseRows).size;
-  const firstPhones = new Set(
-    firstPurchaseRows.map((c) => `${c.user_id}::${c.phone}`),
+  const repeatExternalKeys = new Set(
+    repeatPurchaseRows
+      .map((c) => ({ userId: c.user_id, ext: String(c.external_id ?? "").trim() }))
+      .filter((x) => x.ext !== "")
+      .map((x) => `${x.userId}::${x.ext}`),
   );
-  const repeatPhones = new Set(
-    repeatPurchaseRows.map((c) => `${c.user_id}::${c.phone}`),
-  );
-  const repeatFromFirstInRange = [...repeatPhones].filter((k) => firstPhones.has(k)).length;
+  const repeatFromFirstInRange = [...repeatExternalKeys].filter((k) => firstExternalKeysLinkedToLead.has(k)).length;
 
   let firstLoadPlayers = 0;
   let repeatPlayers = 0;
@@ -159,6 +173,7 @@ export function computeCoreStats(
   return {
     uniqueContacts,
     uniqueLeads,
+    uniqueLeadsLinkedToContact,
     firstLoadPurchasers,
     firstLoadPurchasersLinkedToLead,
     totalPurchases,
