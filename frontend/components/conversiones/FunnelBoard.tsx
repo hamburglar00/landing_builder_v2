@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useMemo, type ReactNode } from "react";
+import { useState, useMemo, useEffect, type ReactNode } from "react";
 import {
   type FunnelContact,
   type FunnelStage,
@@ -268,6 +268,8 @@ export default function FunnelBoard({
 }) {
   const [sortKey, setSortKey] = useState<SortKey>("date");
   const [sortDir, setSortDir] = useState<SortDir>("desc");
+  const [page, setPage] = useState(1);
+  const PAGE_SIZE = 20;
 
   const toggleSort = (key: SortKey) => {
     if (sortKey === key) {
@@ -278,26 +280,53 @@ export default function FunnelBoard({
     }
   };
 
-  const grouped = useMemo(() => {
-    const g: Record<FunnelStage, FunnelContact[]> = {
-      leads: [], primera_carga: [], recurrente: [], premium: [],
-    };
-
-    for (const c of contacts) {
-      const stage = classifyContact(c, premiumThreshold);
-      g[stage].push(c);
-    }
-
+  const sortedContacts = useMemo(() => {
     const dir = sortDir === "desc" ? 1 : -1;
     const sortFn = (a: FunnelContact, b: FunnelContact) =>
       sortKey === "amount"
         ? (b.total_valor - a.total_valor) * dir
         : (new Date(b.last_activity).getTime() - new Date(a.last_activity).getTime()) * dir;
 
-    for (const s of STAGES) g[s].sort(sortFn);
-
-    return g;
+    return [...contacts].sort(sortFn);
   }, [contacts, premiumThreshold, sortKey, sortDir]);
+
+  const totalPages = Math.max(1, Math.ceil(sortedContacts.length / PAGE_SIZE));
+  const safePage = Math.min(page, totalPages);
+
+  useEffect(() => {
+    setPage(1);
+  }, [contacts, sortKey, sortDir, premiumThreshold]);
+
+  useEffect(() => {
+    if (page > totalPages) setPage(totalPages);
+  }, [page, totalPages]);
+
+  const pageContacts = useMemo(() => {
+    const start = (safePage - 1) * PAGE_SIZE;
+    return sortedContacts.slice(start, start + PAGE_SIZE);
+  }, [sortedContacts, safePage]);
+
+  const grouped = useMemo(() => {
+    const g: Record<FunnelStage, FunnelContact[]> = {
+      leads: [], primera_carga: [], recurrente: [], premium: [],
+    };
+    for (const c of pageContacts) {
+      const stage = classifyContact(c, premiumThreshold);
+      g[stage].push(c);
+    }
+    return g;
+  }, [pageContacts, premiumThreshold]);
+
+  const groupedTotals = useMemo(() => {
+    const g: Record<FunnelStage, number> = {
+      leads: 0, primera_carga: 0, recurrente: 0, premium: 0,
+    };
+    for (const c of contacts) {
+      const stage = classifyContact(c, premiumThreshold);
+      g[stage] += 1;
+    }
+    return g;
+  }, [contacts, premiumThreshold]);
 
   const stageRevenue = useMemo(() => {
     const rev: Record<FunnelStage, number> = { leads: 0, primera_carga: 0, recurrente: 0, premium: 0 };
@@ -310,6 +339,25 @@ export default function FunnelBoard({
       <div className="flex flex-wrap items-center justify-between gap-2">
         <div>{headerSlot}</div>
         <div className="flex items-center gap-2">
+          <div className="mr-2 flex items-center gap-1">
+            <button
+              onClick={() => setPage((p) => Math.max(1, p - 1))}
+              disabled={safePage <= 1}
+              className="cursor-pointer rounded-md border border-zinc-700/60 bg-zinc-900/80 px-2.5 py-1 text-[11px] font-medium text-zinc-300 transition hover:bg-zinc-800/70 disabled:cursor-not-allowed disabled:opacity-40"
+            >
+              Anterior
+            </button>
+            <span className="min-w-[84px] text-center text-[11px] text-zinc-500">
+              Pag {safePage}/{totalPages}
+            </span>
+            <button
+              onClick={() => setPage((p) => Math.min(totalPages, p + 1))}
+              disabled={safePage >= totalPages}
+              className="cursor-pointer rounded-md border border-zinc-700/60 bg-zinc-900/80 px-2.5 py-1 text-[11px] font-medium text-zinc-300 transition hover:bg-zinc-800/70 disabled:cursor-not-allowed disabled:opacity-40"
+            >
+              Siguiente
+            </button>
+          </div>
           <span className="text-[11px] text-zinc-600 font-medium">Ordenar</span>
           <div className="flex items-center rounded-lg border border-zinc-800/40 bg-[#0d0d11] p-0.5">
           {(["date", "amount"] as SortKey[]).map((k) => {
@@ -354,7 +402,7 @@ export default function FunnelBoard({
                     </h4>
                   </div>
                   <span className="rounded-full bg-zinc-800/70 px-2.5 py-0.5 text-[11px] font-bold text-zinc-300 tabular-nums leading-none">
-                    {list.length}
+                    {groupedTotals[stage]}
                   </span>
                 </div>
                 {rev > 0 && (
@@ -384,6 +432,25 @@ export default function FunnelBoard({
             </div>
           );
         })}
+      </div>
+      <div className="flex items-center justify-center gap-2 rounded-xl border border-zinc-800/40 bg-[#0d0d11] px-3 py-2">
+        <button
+          onClick={() => setPage((p) => Math.max(1, p - 1))}
+          disabled={safePage <= 1}
+          className="cursor-pointer rounded-md border border-zinc-700/60 bg-zinc-900/80 px-3 py-1 text-[11px] font-medium text-zinc-300 transition hover:bg-zinc-800/70 disabled:cursor-not-allowed disabled:opacity-40"
+        >
+          Anterior
+        </button>
+        <span className="text-[11px] text-zinc-500">
+          Mostrando hasta {PAGE_SIZE} tarjetas por pagina ({sortedContacts.length} total)
+        </span>
+        <button
+          onClick={() => setPage((p) => Math.min(totalPages, p + 1))}
+          disabled={safePage >= totalPages}
+          className="cursor-pointer rounded-md border border-zinc-700/60 bg-zinc-900/80 px-3 py-1 text-[11px] font-medium text-zinc-300 transition hover:bg-zinc-800/70 disabled:cursor-not-allowed disabled:opacity-40"
+        >
+          Siguiente
+        </button>
       </div>
     </div>
   );
