@@ -269,7 +269,8 @@ export default function FunnelBoard({
   const [sortKey, setSortKey] = useState<SortKey>("date");
   const [sortDir, setSortDir] = useState<SortDir>("desc");
   const [page, setPage] = useState(1);
-  const PAGE_SIZE = 20;
+  const PAGE_SIZE_DEFAULT = 20;
+  const PAGE_SIZE_LEADS = 32;
 
   const toggleSort = (key: SortKey) => {
     if (sortKey === key) {
@@ -303,7 +304,12 @@ export default function FunnelBoard({
     () =>
       Math.max(
         1,
-        ...STAGES.map((s) => Math.ceil((groupedAll[s]?.length ?? 0) / PAGE_SIZE)),
+        ...STAGES.map((s) =>
+          Math.ceil(
+            (groupedAll[s]?.length ?? 0) /
+              (s === "leads" ? PAGE_SIZE_LEADS : PAGE_SIZE_DEFAULT),
+          ),
+        ),
       ),
     [groupedAll],
   );
@@ -318,14 +324,15 @@ export default function FunnelBoard({
   }, [page, totalPages]);
 
   const grouped = useMemo(() => {
-    const start = (safePage - 1) * PAGE_SIZE;
+    const startLeads = (safePage - 1) * PAGE_SIZE_LEADS;
+    const startDefault = (safePage - 1) * PAGE_SIZE_DEFAULT;
     return {
-      leads: groupedAll.leads.slice(start, start + PAGE_SIZE),
-      primera_carga: groupedAll.primera_carga.slice(start, start + PAGE_SIZE),
-      recurrente: groupedAll.recurrente.slice(start, start + PAGE_SIZE),
-      premium: groupedAll.premium.slice(start, start + PAGE_SIZE),
+      leads: groupedAll.leads.slice(startLeads, startLeads + PAGE_SIZE_LEADS),
+      primera_carga: groupedAll.primera_carga.slice(startDefault, startDefault + PAGE_SIZE_DEFAULT),
+      recurrente: groupedAll.recurrente.slice(startDefault, startDefault + PAGE_SIZE_DEFAULT),
+      premium: groupedAll.premium.slice(startDefault, startDefault + PAGE_SIZE_DEFAULT),
     };
-  }, [groupedAll, safePage]);
+  }, [groupedAll, safePage, PAGE_SIZE_DEFAULT, PAGE_SIZE_LEADS]);
 
   const groupedTotals = useMemo(
     () => ({
@@ -451,7 +458,7 @@ export default function FunnelBoard({
           Anterior
         </button>
         <span className="text-[11px] text-zinc-500">
-          Mostrando hasta {PAGE_SIZE} tarjetas por columna en cada pagina
+          Mostrando hasta {PAGE_SIZE_LEADS} en Leads y {PAGE_SIZE_DEFAULT} en el resto por pagina
         </span>
         <button
           onClick={() => setPage((p) => Math.min(totalPages, p + 1))}
