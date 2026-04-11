@@ -235,7 +235,7 @@ const COLUMN_NOTES: Partial<Record<ColKey | "id", string>> = {
   country: "Pais recibido en payload o enriquecido por geolocalizacion.",
   fbp: "Parametro fbp de Meta enviado por la fuente.",
   fbc: "Parametro fbc de Meta enviado por la fuente.",
-  from_meta_ads: "Indica origen probable en Meta Ads. True cuando la fila tiene fbc.",
+  from_meta_ads: "Indica origen probable en Meta Ads para trafico tipo landing. True cuando la fila trae fbc.",
   geo_source: "Fuente usada para completar geo: payload, ip, phone_prefix o none.",
   meta_pixel_id: "Pixel ID recibido en el payload de entrada (landing/chatrace/backend).",
   pixel_id: "Pixel ID efectivo usado para CAPI. Si falta meta_pixel_id, puede resolverse por fallback de configuracion.",
