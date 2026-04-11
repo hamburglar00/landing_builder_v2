@@ -464,24 +464,25 @@ export default function StatsPanel({
             tooltip={compactTooltips ? "Personas que enviaron mensaje." : "Personas que enviaron mensaje (lead + purchase sin recarga)."}
           />
           <KpiCard
-            label="Primeras cargas"
+            label="Jugadores que cargaron"
             value={stats.firstLoadPurchasers}
             color="text-sky-300"
-            tooltip={compactTooltips ? "Personas que realizaron una carga." : "Personas que realizaron una carga (purchase sin recarga)."}
+            tooltip="Cantidad de jugadores que hicieron al menos una primera carga."
           />
           <KpiCard
-            label="Recargas"
+            label="Jugadores que recargaron"
             value={stats.reachedRepeat}
             color="text-violet-300"
-            tooltip={compactTooltips ? "Jugadores que recargaron al menos una vez." : "Jugadores únicos que realizaron al menos una recarga (purchase_type = repeat)."}
+            tooltip="Cantidad de jugadores que hicieron al menos una recarga."
           />
           <KpiCard
-            label="Cargas totales"
+            label="Cantidad de cargas"
             value={stats.totalPurchases}
             color="text-sky-400"
             tooltip={compactTooltips ? "Total de cargas registradas." : "Total de cargas registradas (primera carga + recargas)."}
-          />          <KpiCard
-            label="Premium"
+          />
+          <KpiCard
+            label="Jugadores Premium"
             value={stats.premium}
             color="text-emerald-300"
             tooltip={compactTooltips ? `Contactos con monto total acumulado ≥ $${premiumThreshold.toLocaleString("es-AR")}.` : `Contactos cuyo monto total acumulado de cargas es igual o superior al umbral premium configurado ($${premiumThreshold.toLocaleString("es-AR")}).`}
@@ -874,3 +875,4 @@ export default function StatsPanel({
     </div>
   );
 }
+
