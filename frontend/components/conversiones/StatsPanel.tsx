@@ -191,6 +191,18 @@ export default function StatsPanel({
 
   const stats = useMemo(() => {
     const core = computeCoreStats(conversions, funnelContacts, allConversions, premiumThreshold);
+    const isRepeatPurchase = (c: ConversionRow): boolean => {
+      if ((c.purchase_event_id ?? "") === "") return false;
+      if (c.purchase_type === "repeat") return true;
+      if (c.purchase_type === "first") return false;
+      return (c.observaciones ?? "").includes("REPEAT");
+    };
+    const isFirstPurchase = (c: ConversionRow): boolean => {
+      if ((c.purchase_event_id ?? "") === "") return false;
+      if (c.purchase_type === "first") return true;
+      if (c.purchase_type === "repeat") return false;
+      return !(c.observaciones ?? "").includes("REPEAT");
+    };
     const uniqueContacts = core.uniqueContacts;
     const uniqueLeads = core.uniqueLeads;
     const uniqueLeadsLinkedToContact = core.uniqueLeadsLinkedToContact;
@@ -204,6 +216,8 @@ export default function StatsPanel({
     const totalPurchaseCount = core.totalPurchaseCount;
     const firstPurchaseRevenue = core.firstPurchaseRevenue;
     const reachedRepeat = core.purchaseRepeat;
+    const purchaseFirstCount = conversions.filter(isFirstPurchase).length;
+    const purchaseRepeatCount = conversions.filter(isRepeatPurchase).length;
     const leads = uniqueLeads;
 
     const purchasers = firstLoadPurchasers;
@@ -398,6 +412,8 @@ export default function StatsPanel({
       premium,
       purchasers,
       reachedRepeat,
+      purchaseFirstCount,
+      purchaseRepeatCount,
       repeatFromFirstInRange: core.repeatFromFirstInRange,
       totalRevenue,
       firstPurchaseRevenue,
@@ -434,27 +450,39 @@ export default function StatsPanel({
         <SectionTitle>Resumen general</SectionTitle>
         <div className="mt-3 grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-7">
           <KpiCard
-            label="Clics en CTA"
+            label="Clicks en el boton de la landing"
             value={stats.uniqueContacts}
             tooltip={compactTooltips ? "Personas que hicieron clic en el CTA." : "Personas que hicieron clic en el CTA (contact + lead + purchase sin recarga)."}
           />
           <KpiCard
             label="Mensajes recibidos"
-            value={stats.uniqueLeads}
+            value={stats.uniqueLeadsLinkedToContact}
             color="text-amber-300"
-            tooltip={compactTooltips ? "Personas que enviaron mensaje." : "Personas que enviaron mensaje (lead + purchase sin recarga)."}
+            tooltip={compactTooltips ? "Personas que enviaron mensaje vinculadas a contacto." : "Personas que enviaron mensaje vinculadas por external_id a un contacto dentro del rango de fechas."}
           />
           <KpiCard
             label="Jugadores que cargaron"
-            value={stats.firstLoadPurchasers}
+            value={stats.firstLoadPurchasersLinkedToLead}
             color="text-sky-300"
-            tooltip="Cantidad de jugadores que hicieron al menos una primera carga."
+            tooltip="Cantidad de jugadores con primera carga vinculada por external_id a un lead dentro del rango de fechas."
           />
           <KpiCard
             label="Jugadores que recargaron"
-            value={stats.reachedRepeat}
+            value={stats.repeatFromFirstInRange}
             color="text-violet-300"
-            tooltip="Cantidad de jugadores que hicieron al menos una recarga."
+            tooltip="Cantidad de jugadores con recarga vinculada por external_id a una primera carga del rango."
+          />
+          <KpiCard
+            label="Cant. de primeras cargas"
+            value={stats.purchaseFirstCount}
+            color="text-sky-300"
+            tooltip="Cantidad de eventos purchase first en el rango de fechas."
+          />
+          <KpiCard
+            label="Cant. de recargas"
+            value={stats.purchaseRepeatCount}
+            color="text-violet-300"
+            tooltip="Cantidad de eventos purchase repeat en el rango de fechas."
           />
           <KpiCard
             label="Cantidad de cargas"
@@ -463,16 +491,38 @@ export default function StatsPanel({
             tooltip={compactTooltips ? "Total de cargas registradas." : "Total de cargas registradas (primera carga + recargas)."}
           />
           <KpiCard
-            label="Jugadores Premium"
-            value={stats.premium}
-            color="text-emerald-300"
-            tooltip={compactTooltips ? `Contactos con monto total acumulado  $${premiumThreshold.toLocaleString("es-AR")}.` : `Contactos cuyo monto total acumulado de cargas es igual o superior al umbral premium configurado ($${premiumThreshold.toLocaleString("es-AR")}).`}
-          />
-          <KpiCard
             label="Retención"
             value={stats.retencionActiva30d}
             color="text-emerald-400"
             tooltip={compactTooltips ? "Jugadores que hicieron al menos 4 cargas en los últimos 30 días y cuya primera carga fue hace al menos 7 días." : "Jugadores que hicieron al menos 4 cargas en los últimos 30 días y cuya primera carga fue hace al menos 7 días. Métrica calculada siempre sobre los últimos 30 días, sin aplicar el filtro de fechas."}
+          />
+        </div>
+      </div>
+
+      {/*  EMBUDO DE CONVERSIN  */}
+      <div>
+        <SectionTitle>Embudo de conversión</SectionTitle>
+        <div className="mt-3 grid grid-cols-1 gap-3 sm:grid-cols-3">
+          <KpiCard
+            label="Porcentaje de inicio de conversación"
+            value={pct(stats.uniqueLeadsLinkedToContact, stats.uniqueContacts)}
+            sub={`${stats.uniqueLeadsLinkedToContact} de ${stats.uniqueContacts} contactos`}
+            color="text-amber-400"
+            tooltip="Porcentaje de jugadores que, después de tocar el botón de la landing, decidieron enviar un mensaje."
+          />
+          <KpiCard
+            label="Porcentaje de carga"
+            value={pct(stats.firstLoadPurchasersLinkedToLead, stats.uniqueLeadsLinkedToContact)}
+            sub={`${stats.firstLoadPurchasersLinkedToLead} de ${stats.uniqueLeadsLinkedToContact} leads`}
+            color="text-sky-400"
+            tooltip="Porcentaje de jugadores que, después de enviar un mensaje, decidieron realizar una carga."
+          />
+          <KpiCard
+            label="Porcentaje de recarga"
+            value={pct(stats.repeatFromFirstInRange, stats.firstLoadPurchasersLinkedToLead)}
+            sub={`${stats.repeatFromFirstInRange} de ${stats.firstLoadPurchasersLinkedToLead} jugadores`}
+            color="text-violet-400"
+            tooltip="Porcentaje de jugadores que, después de realizar una primera carga, decidieron realizar otra carga más."
           />
         </div>
       </div>
@@ -551,34 +601,6 @@ export default function StatsPanel({
             />
           </div>
           <p className="text-[10px] text-zinc-600">Ingresá el gasto publicitario para calcular ROAS.</p>
-        </div>
-      </div>
-
-      {/*  EMBUDO DE CONVERSIN  */}
-      <div>
-        <SectionTitle>Embudo de conversión</SectionTitle>
-        <div className="mt-3 grid grid-cols-1 gap-3 sm:grid-cols-3">
-          <KpiCard
-            label="Porcentaje de inicio de conversación"
-            value={pct(stats.uniqueLeadsLinkedToContact, stats.uniqueContacts)}
-            sub={`${stats.uniqueLeadsLinkedToContact} de ${stats.uniqueContacts} contactos`}
-            color="text-amber-400"
-            tooltip="De las personas que hicieron clic en el CTA, cuantas enviaron mensaje (vinculadas por external_id)?"
-          />
-          <KpiCard
-            label="Porcentaje de carga"
-            value={pct(stats.firstLoadPurchasersLinkedToLead, stats.uniqueLeadsLinkedToContact)}
-            sub={`${stats.firstLoadPurchasersLinkedToLead} de ${stats.uniqueLeadsLinkedToContact} leads`}
-            color="text-sky-400"
-            tooltip="De las personas que escribieron (leads), cuantas cargaron (vinculadas por external_id)?"
-          />
-          <KpiCard
-            label="Porcentaje de recarga"
-            value={pct(stats.repeatFromFirstInRange, stats.firstLoadPurchasersLinkedToLead)}
-            sub={`${stats.repeatFromFirstInRange} de ${stats.firstLoadPurchasersLinkedToLead} jugadores`}
-            color="text-violet-400"
-            tooltip="De las personas que cargaron una vez cuantas recargaron?"
-          />
         </div>
       </div>
 
