@@ -485,7 +485,7 @@ export default function StatsPanel({
             tooltip="Cantidad de recargas (repeat) registradas para el rango de fecha seleccionado."
           />
           <KpiCard
-            label="Cantidad de cargas"
+            label="Total de cargas"
             value={stats.totalPurchases}
             color="text-sky-400"
             tooltip="Cantidad de primeras cargas (first) y de recargas (repeat) registradas para el rango de fecha seleccionado."
