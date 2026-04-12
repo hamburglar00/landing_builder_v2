@@ -448,11 +448,11 @@ export default function StatsPanel({
       {/*  RESUMEN GENERAL  */}
       <div>
         <SectionTitle>Resumen general</SectionTitle>
-        <div className="mt-3 grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-7">
+        <div className="mt-3 grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-8">
           <KpiCard
             label="Clicks en el boton de la landing"
             value={stats.uniqueContacts}
-            tooltip="Jugadores que hicieron clic en el botón de contacto de la landing page (CTA)."
+            tooltip="Cantidad de jugadores que hicieron clic en el botón de contacto de la landing page (CTA)."
           />
           <KpiCard
             label="Mensajes recibidos"
@@ -476,19 +476,19 @@ export default function StatsPanel({
             label="Cant. de primeras cargas"
             value={stats.purchaseFirstCount}
             color="text-sky-300"
-            tooltip="Cantidad de eventos purchase first en el rango de fechas."
+            tooltip="Cantidad de primeras cargas (first) registradas para el rango de fecha seleccionado."
           />
           <KpiCard
             label="Cant. de recargas"
             value={stats.purchaseRepeatCount}
             color="text-violet-300"
-            tooltip="Cantidad de eventos purchase repeat en el rango de fechas."
+            tooltip="Cantidad de recargas (repeat) registradas para el rango de fecha seleccionado."
           />
           <KpiCard
             label="Cantidad de cargas"
             value={stats.totalPurchases}
             color="text-sky-400"
-            tooltip={compactTooltips ? "Total de cargas registradas." : "Total de cargas registradas (primera carga + recargas)."}
+            tooltip="Cantidad de primeras cargas (first) y de recargas (repeat) registradas para el rango de fecha seleccionado."
           />
           <KpiCard
             label="Retención"
