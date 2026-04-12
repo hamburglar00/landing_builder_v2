@@ -452,25 +452,25 @@ export default function StatsPanel({
           <KpiCard
             label="Clicks en el boton de la landing"
             value={stats.uniqueContacts}
-            tooltip={compactTooltips ? "Personas que hicieron clic en el CTA." : "Personas que hicieron clic en el CTA (contact + lead + purchase sin recarga)."}
+            tooltip="Jugadores que hicieron clic en el botón de contacto de la landing page (CTA)."
           />
           <KpiCard
             label="Mensajes recibidos"
             value={stats.uniqueLeadsLinkedToContact}
             color="text-amber-300"
-            tooltip={compactTooltips ? "Personas que enviaron mensaje vinculadas a contacto." : "Personas que enviaron mensaje vinculadas por external_id a un contacto dentro del rango de fechas."}
+            tooltip="Cantidad de jugadores que, después de tocar el botón de la landing, decidieron enviar un mensaje."
           />
           <KpiCard
             label="Jugadores que cargaron"
             value={stats.firstLoadPurchasersLinkedToLead}
             color="text-sky-300"
-            tooltip="Cantidad de jugadores con primera carga vinculada por external_id a un lead dentro del rango de fechas."
+            tooltip="Catidad de jugadores que, después de enviar un mensaje, decidieron realizar una carga."
           />
           <KpiCard
             label="Jugadores que recargaron"
             value={stats.repeatFromFirstInRange}
             color="text-violet-300"
-            tooltip="Cantidad de jugadores con recarga vinculada por external_id a una primera carga del rango."
+            tooltip="Cantidad de jugadores que, después de realizar una primera carga, decidieron realizar otra carga más."
           />
           <KpiCard
             label="Cant. de primeras cargas"
