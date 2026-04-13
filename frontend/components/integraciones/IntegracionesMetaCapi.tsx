@@ -406,7 +406,7 @@ export default function IntegracionesMetaCapi() {
         meta_currency: quickCurrency || "ARS",
         meta_api_version: apiVersionToSave,
         send_contact_capi: false,
-        geo_use_ipapi: false,
+        geo_use_ipapi: true,
         geo_fill_only_when_missing: false,
         is_default: !hasAny,
       });
