@@ -135,6 +135,7 @@ export default function DashboardLandingEditarPage() {
   const [revalidateSecret, setRevalidateSecret] = useState<string | null>(null);
   const [clientName, setClientName] = useState<string | null>(null);
   const [pixelOptions, setPixelOptions] = useState<string[]>([]);
+  const [postUrlCopied, setPostUrlCopied] = useState(false);
 
   useEffect(() => {
     const init = async () => {
@@ -402,6 +403,11 @@ export default function DashboardLandingEditarPage() {
   const isLandingTagLocked = Boolean(
     initialName && !initialName.startsWith("Nueva-landing-"),
   );
+  const postUrlValue = clientName
+    ? `${process.env.NEXT_PUBLIC_SUPABASE_URL?.replace(/\/$/, "") ?? ""}/functions/v1/conversions?name=${encodeURIComponent(
+        clientName,
+      )}`
+    : landing.postUrl;
 
   return (
     <div className="lg:flex lg:gap-6 lg:items-start lg:pr-[440px]">
@@ -628,22 +634,38 @@ export default function DashboardLandingEditarPage() {
               <label className="block text-xs font-medium text-zinc-400 mb-1">
                 URL Post <span className="text-red-400">*</span>
               </label>
-              <input
-                type="text"
-                value={
-                  clientName
-                    ? `${process.env.NEXT_PUBLIC_SUPABASE_URL?.replace(/\/$/, "") ?? ""}/functions/v1/conversions?name=${encodeURIComponent(
-                        clientName,
-                      )}`
-                    : landing.postUrl
-                }
-                disabled
-                className="w-full rounded-lg border border-zinc-700 bg-zinc-900 px-3 py-2 text-sm text-zinc-100 disabled:opacity-60 disabled:cursor-not-allowed"
-                placeholder="Se completa automáticamente desde Integraciones"
-              />
+              <div className="flex gap-2">
+                <input
+                  type="text"
+                  value={postUrlValue}
+                  disabled
+                  className="w-full rounded-lg border border-zinc-700 bg-zinc-900 px-3 py-2 text-sm text-zinc-100 disabled:opacity-60 disabled:cursor-not-allowed"
+                  placeholder="Se completa automáticamente desde Integraciones"
+                />
+                <button
+                  type="button"
+                  onClick={async () => {
+                    if (!postUrlValue) return;
+                    await navigator.clipboard.writeText(postUrlValue);
+                    setPostUrlCopied(true);
+                    window.setTimeout(() => setPostUrlCopied(false), 1200);
+                  }}
+                  className="inline-flex h-10 w-10 shrink-0 items-center justify-center rounded-lg border border-zinc-700 bg-zinc-900 text-zinc-300 transition hover:bg-zinc-800 hover:text-zinc-100"
+                  title="Copiar URL Post"
+                  aria-label="Copiar URL Post"
+                >
+                  {postUrlCopied ? (
+                    <span className="text-[10px] text-emerald-400">OK</span>
+                  ) : (
+                    <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                      <rect x="9" y="9" width="13" height="13" rx="2" ry="2" />
+                      <path d="M5 15H4a2 2 0 01-2-2V4a2 2 0 012-2h9a2 2 0 012 2v1" />
+                    </svg>
+                  )}
+                </button>
+              </div>
               <p className="mt-1 text-[11px] text-zinc-500">
-                URL única de conversiones (Meta CAPI) para este cliente. Se completa automáticamente desde el
-                módulo Integraciones y no requiere edición manual.
+                URL a la cual enviara los eventos de conversion el Whatsapp que hayas integrado escaneando el QR.
               </p>
             </div>
             <div>
@@ -1165,7 +1187,6 @@ export default function DashboardLandingEditarPage() {
     </div>
   );
 }
-
 
 
 
