@@ -1955,6 +1955,43 @@ Deno.serve(async (req) => {
       return runAndFinalize(() => handleLead(db, params, landing, cfg, pixelConfigs));
     }
     if (rawAction === "PURCHASE") {
+      const hasIsValidReceipt =
+        Object.prototype.hasOwnProperty.call(params, "is_valid_receipt") ||
+        Object.prototype.hasOwnProperty.call(params, "isValidReceipt");
+      const isValidReceipt = toBool(
+        Object.prototype.hasOwnProperty.call(params, "is_valid_receipt")
+          ? params.is_valid_receipt
+          : params.isValidReceipt,
+      );
+      if (hasIsValidReceipt && !isValidReceipt) {
+        return runAndFinalize(async () => {
+          await writeLog(
+            db,
+            landing.user_id,
+            "handlePurchase",
+            "INFO",
+            "PURCHASE recibido pero no procesado (is_valid_receipt=false)",
+            JSON.stringify({
+              action: "PURCHASE",
+              is_valid_receipt: Object.prototype.hasOwnProperty.call(params, "is_valid_receipt")
+                ? params.is_valid_receipt
+                : params.isValidReceipt,
+              action_event_id: norm(params.action_event_id),
+              phone: norm(params.phone),
+              promo_code: norm(params.promo_code),
+            }),
+            undefined,
+            undefined,
+            undefined,
+            safePayloadRaw(params),
+            "evento recibido pero no procesado por is_valid_receipt=false",
+          );
+          return textResponse(
+            "Evento PURCHASE recibido pero no procesado: is_valid_receipt=false",
+            200,
+          );
+        });
+      }
       return runAndFinalize(() => handlePurchase(db, params, landing, cfg, pixelConfigs));
     }
 
