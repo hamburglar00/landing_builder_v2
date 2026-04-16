@@ -6,13 +6,36 @@ import { useRouter } from "next/navigation";
 import { invokeFunction } from "@/lib/supabaseFunctions";
 import { supabase } from "@/lib/supabaseClient";
 
+const ALL_COLUMNS = [
+  "phone","email","fn","ln","ct","st","zip","country","fbp","fbc","from_meta_ads","meta_pixel_id","pixel_id","source_platform",
+  "contact_event_id","contact_event_time","sendContactPixel","contact_payload_raw","lead_event_id","lead_event_time","lead_payload_raw",
+  "purchase_event_id","purchase_event_time","purchase_payload_raw","timestamp","clientIP","agentuser",
+  "estado","valor","purchase_type","contact_status_capi","lead_status_capi","purchase_status_capi",
+  "observaciones","external_id","test_event_code","utm_campaign","telefono_asignado","promo_code",
+  "device_type","geo_city","geo_region","geo_country","geo_source",
+  "cuit_cuil","inferred_sex","sex_source",
+] as const;
+
+type ColKey = (typeof ALL_COLUMNS)[number];
+
 export default function NuevoClientePage() {
   const router = useRouter();
   const [nombre, setNombre] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [showLogs, setShowLogs] = useState(true);
+  const [visibleCols, setVisibleCols] = useState<Set<ColKey>>(new Set(ALL_COLUMNS));
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
+
+  const toggleColumn = (col: ColKey) => {
+    setVisibleCols((prev) => {
+      const next = new Set(prev);
+      if (next.has(col)) next.delete(col);
+      else next.add(col);
+      return next;
+    });
+  };
 
   const handleSubmit = async (event: React.FormEvent) => {
     event.preventDefault();
@@ -32,6 +55,8 @@ export default function NuevoClientePage() {
           nombre: normalizedName,
           email,
           password,
+          visibleColumns: [...visibleCols],
+          showLogs,
         },
       },
     );
@@ -126,6 +151,33 @@ export default function NuevoClientePage() {
               className="w-full rounded-lg border border-zinc-800 bg-zinc-900 px-3 py-2 text-xs text-zinc-50 outline-none ring-0 transition focus:border-zinc-500 focus:ring-2 focus:ring-zinc-500/60"
               placeholder="Ingresa la contraseña"
             />
+          </div>
+
+          <div className="space-y-3 rounded-lg border border-zinc-800 bg-zinc-900/50 p-3">
+            <div className="flex items-center justify-between">
+              <p className="text-xs font-medium text-zinc-200">Configuración de Conversiones</p>
+              <label className="inline-flex items-center gap-2 text-xs text-zinc-300">
+                <input
+                  type="checkbox"
+                  checked={showLogs}
+                  onChange={(e) => setShowLogs(e.target.checked)}
+                />
+                Mostrar logs
+              </label>
+            </div>
+            <p className="text-[11px] text-zinc-500">Columnas visibles en Tabla de Conversiones</p>
+            <div className="grid grid-cols-1 gap-1 sm:grid-cols-2">
+              {ALL_COLUMNS.map((col) => (
+                <label key={col} className="inline-flex items-center gap-2 rounded border border-zinc-800 px-2 py-1 text-[11px] text-zinc-300">
+                  <input
+                    type="checkbox"
+                    checked={visibleCols.has(col)}
+                    onChange={() => toggleColumn(col)}
+                  />
+                  <span className="font-mono">{col}</span>
+                </label>
+              ))}
+            </div>
           </div>
 
           {error && (

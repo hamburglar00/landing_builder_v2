@@ -10,6 +10,8 @@ type CreateClientPayload = {
   email?: string;
   password?: string;
   nombre?: string;
+  visibleColumns?: string[];
+  showLogs?: boolean;
 };
 
 type PlanCode = "starter" | "plus" | "pro" | "premium" | "scale";
@@ -202,6 +204,12 @@ Deno.serve(async (req) => {
     const password = payload.password;
     const nombreRaw = payload.nombre?.trim() || null;
     const nombre = nombreRaw ? nombreRaw.toLowerCase() : null;
+    const requestedVisibleColumns = Array.isArray(payload.visibleColumns)
+      ? payload.visibleColumns.map((c) => String(c)).filter(Boolean)
+      : null;
+    const requestedShowLogs = typeof payload.showLogs === "boolean"
+      ? payload.showLogs
+      : null;
 
     if (!email || !password) {
       return new Response(
@@ -289,6 +297,10 @@ Deno.serve(async (req) => {
         adminCfg.visible_columns.length > 0
       ? adminCfg.visible_columns
       : FALLBACK_VISIBLE_COLUMNS;
+    const finalVisibleColumns = requestedVisibleColumns && requestedVisibleColumns.length > 0
+      ? requestedVisibleColumns
+      : inheritedVisibleColumns;
+    const finalShowLogs = requestedShowLogs ?? true;
 
     const premiumThreshold = Number(adminCfg?.funnel_premium_threshold);
 
@@ -297,11 +309,11 @@ Deno.serve(async (req) => {
       .upsert(
         {
           user_id: created.user.id,
-          visible_columns: inheritedVisibleColumns,
+          visible_columns: finalVisibleColumns,
           funnel_premium_threshold: Number.isFinite(premiumThreshold)
             ? premiumThreshold
             : 50000,
-          show_logs: true,
+          show_logs: finalShowLogs,
           updated_at: new Date().toISOString(),
         },
         { onConflict: "user_id" },

@@ -1346,11 +1346,87 @@ export default function IntegracionesMetaCapi() {
                   API Version: <span className="font-mono text-zinc-300">{draft.meta_api_version || "v25.0"}</span>
                 </div>
               )}
-              <label className="inline-flex items-center gap-2 text-xs text-zinc-300"><input type="checkbox" checked={draft.is_default} onChange={(e) => setDraft((p) => (p ? { ...p, is_default: e.target.checked } : p))} /> Default</label>
+              <label className="inline-flex items-center gap-2 text-xs text-zinc-300">
+                <button
+                  type="button"
+                  role="switch"
+                  aria-checked={draft.is_default}
+                  onClick={() => setDraft((p) => (p ? { ...p, is_default: !p.is_default } : p))}
+                  className={`relative inline-flex h-6 w-11 items-center rounded-full border transition ${
+                    draft.is_default
+                      ? "border-emerald-500/60 bg-emerald-500/30"
+                      : "border-zinc-700 bg-zinc-800"
+                  }`}
+                >
+                  <span
+                    className={`inline-block h-5 w-5 transform rounded-full bg-white transition ${
+                      draft.is_default ? "translate-x-5" : "translate-x-0.5"
+                    }`}
+                  />
+                </button>
+                <span>Default</span>
+              </label>
               <input value={draft.meta_access_token} onChange={(e) => setDraft((p) => (p ? { ...p, meta_access_token: e.target.value } : p))} placeholder="Access token" className="h-9 rounded-lg border border-zinc-700 bg-zinc-900 px-3 text-sm text-zinc-100 sm:col-span-2" />
-              <label className="inline-flex items-center gap-2 text-xs text-zinc-300"><input type="checkbox" checked={draft.send_contact_capi} onChange={(e) => setDraft((p) => (p ? { ...p, send_contact_capi: e.target.checked } : p))} /> Enviar Contact por CAPI</label>
-              <label className="inline-flex items-center gap-2 text-xs text-zinc-300"><input type="checkbox" checked={draft.geo_use_ipapi} onChange={(e) => setDraft((p) => (p ? { ...p, geo_use_ipapi: e.target.checked } : p))} /> Enviar geo</label>
-              <label className="inline-flex items-center gap-2 text-xs text-zinc-300 sm:col-span-2"><input type="checkbox" checked={draft.geo_fill_only_when_missing} onChange={(e) => setDraft((p) => (p ? { ...p, geo_fill_only_when_missing: e.target.checked } : p))} /> Solo completar geo faltante</label>
+              <label className="inline-flex items-center gap-2 text-xs text-zinc-300">
+                <button
+                  type="button"
+                  role="switch"
+                  aria-checked={draft.send_contact_capi}
+                  onClick={() => setDraft((p) => (p ? { ...p, send_contact_capi: !p.send_contact_capi } : p))}
+                  className={`relative inline-flex h-6 w-11 items-center rounded-full border transition ${
+                    draft.send_contact_capi
+                      ? "border-emerald-500/60 bg-emerald-500/30"
+                      : "border-zinc-700 bg-zinc-800"
+                  }`}
+                >
+                  <span
+                    className={`inline-block h-5 w-5 transform rounded-full bg-white transition ${
+                      draft.send_contact_capi ? "translate-x-5" : "translate-x-0.5"
+                    }`}
+                  />
+                </button>
+                <span>Enviar Contact por CAPI</span>
+              </label>
+              <label className="inline-flex items-center gap-2 text-xs text-zinc-300">
+                <button
+                  type="button"
+                  role="switch"
+                  aria-checked={draft.geo_use_ipapi}
+                  onClick={() => setDraft((p) => (p ? { ...p, geo_use_ipapi: !p.geo_use_ipapi } : p))}
+                  className={`relative inline-flex h-6 w-11 items-center rounded-full border transition ${
+                    draft.geo_use_ipapi
+                      ? "border-emerald-500/60 bg-emerald-500/30"
+                      : "border-zinc-700 bg-zinc-800"
+                  }`}
+                >
+                  <span
+                    className={`inline-block h-5 w-5 transform rounded-full bg-white transition ${
+                      draft.geo_use_ipapi ? "translate-x-5" : "translate-x-0.5"
+                    }`}
+                  />
+                </button>
+                <span>Enviar geo</span>
+              </label>
+              <label className="inline-flex items-center gap-2 text-xs text-zinc-300 sm:col-span-2">
+                <button
+                  type="button"
+                  role="switch"
+                  aria-checked={draft.geo_fill_only_when_missing}
+                  onClick={() => setDraft((p) => (p ? { ...p, geo_fill_only_when_missing: !p.geo_fill_only_when_missing } : p))}
+                  className={`relative inline-flex h-6 w-11 items-center rounded-full border transition ${
+                    draft.geo_fill_only_when_missing
+                      ? "border-emerald-500/60 bg-emerald-500/30"
+                      : "border-zinc-700 bg-zinc-800"
+                  }`}
+                >
+                  <span
+                    className={`inline-block h-5 w-5 transform rounded-full bg-white transition ${
+                      draft.geo_fill_only_when_missing ? "translate-x-5" : "translate-x-0.5"
+                    }`}
+                  />
+                </button>
+                <span>Solo completar geo faltante</span>
+              </label>
             </div>
             <div className="mt-4 flex justify-end gap-2">
               <button type="button" onClick={() => { setEditOpen(false); setDraft(null); }} className="rounded-lg border border-zinc-700 px-3 py-1.5 text-xs text-zinc-300">Cancelar</button>
