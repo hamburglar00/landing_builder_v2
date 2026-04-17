@@ -194,6 +194,11 @@ export default function StatsPanel({
     3: true,
     5: false,
   });
+  const [dailyLoadsMenuOpen, setDailyLoadsMenuOpen] = useState(false);
+  const [dailyLoadsEnabled, setDailyLoadsEnabled] = useState<{ first: boolean; total: boolean }>({
+    first: false,
+    total: true,
+  });
 
   const stats = useMemo(() => {
     const core = computeCoreStats(conversions, funnelContacts, allConversions, premiumThreshold);
@@ -443,6 +448,13 @@ export default function StatsPanel({
   const parsedAdSpend = parseFloat(adSpend.replace(/\D/g, "")) || 0;
   const roasFirstPurchase = parsedAdSpend > 0 ? stats.firstPurchaseRevenue / parsedAdSpend : 0;
   const roasTotal = parsedAdSpend > 0 ? stats.totalRevenue / parsedAdSpend : 0;
+  const isTodayRange = useMemo(() => {
+    if (!dateRange) return false;
+    const now = new Date();
+    const startToday = new Date(now.getFullYear(), now.getMonth(), now.getDate(), 0, 0, 0, 0).getTime();
+    const endToday = new Date(now.getFullYear(), now.getMonth(), now.getDate(), 23, 59, 59, 999).getTime();
+    return dateRange.start.getTime() === startToday && dateRange.end.getTime() === endToday;
+  }, [dateRange]);
   const hourlyChartData = useMemo(() => {
     const getSma = (idx: number, window: 1 | 3 | 5) => {
       const start = Math.max(0, idx - window + 1);
@@ -461,6 +473,50 @@ export default function StatsPanel({
       sma5: getSma(idx, 5),
     }));
   }, [stats.hourlyBuckets]);
+  const dailyMessagesLoadsData = useMemo(() => {
+    const isFirstPurchase = (c: ConversionRow): boolean => {
+      if ((c.purchase_event_id ?? "") === "") return false;
+      if (c.purchase_type === "first") return true;
+      if (c.purchase_type === "repeat") return false;
+      return !(c.observaciones ?? "").includes("REPEAT");
+    };
+    if (isTodayRange) {
+      const byHour = Array.from({ length: 24 }, (_, h) => ({ day: `${h}`, leads: 0, cargas: 0, cargas_first: 0 }));
+      for (const c of conversions) {
+        if (!c.created_at) continue;
+        const h = new Date(c.created_at).getHours();
+        if (c.estado === "lead" || c.lead_event_id) byHour[h].leads += 1;
+        if ((c.purchase_event_id ?? "") !== "") {
+          byHour[h].cargas += 1;
+          if (isFirstPurchase(c)) byHour[h].cargas_first += 1;
+        }
+      }
+      return byHour;
+    }
+
+    const byDay = new Map<string, { day: string; leads: number; cargas: number; cargas_first: number }>();
+    for (const c of conversions) {
+      if (!c.created_at) continue;
+      const d = new Date(c.created_at);
+      const key = `${d.getFullYear()}-${(d.getMonth() + 1).toString().padStart(2, "0")}-${d.getDate().toString().padStart(2, "0")}`;
+      const label = `${d.getDate().toString().padStart(2, "0")}/${(d.getMonth() + 1).toString().padStart(2, "0")}`;
+      const row = byDay.get(key) ?? { day: label, leads: 0, cargas: 0, cargas_first: 0 };
+      if (c.estado === "lead" || c.lead_event_id) row.leads += 1;
+      if ((c.purchase_event_id ?? "") !== "") {
+        row.cargas += 1;
+        if (isFirstPurchase(c)) row.cargas_first += 1;
+      }
+      byDay.set(key, row);
+    }
+    return stats.dailyData.map((d) => {
+      const [dayPart, monthPart] = d.day.split("/");
+      const match = Array.from(byDay.values()).find((r) => {
+        const [rd, rm] = r.day.split("/");
+        return rd === dayPart && rm === monthPart;
+      });
+      return match ?? { day: d.day, leads: 0, cargas: 0, cargas_first: 0 };
+    });
+  }, [isTodayRange, stats.dailyData, conversions]);
 
   const maxCampaignRev = Math.max(...stats.byCampaign.map((r) => r.revenue), 1);
   const maxDeviceRev = Math.max(...stats.byDevice.map((r) => r.revenue), 1);
@@ -714,18 +770,57 @@ export default function StatsPanel({
 
         {/* Leads vs Cargas por día */}
         <div className="rounded-xl border border-zinc-800 bg-zinc-900/50 p-4">
-          <h4 className="text-xs font-semibold text-zinc-200 mb-4">Mensajes recibidos y cargas por día</h4>
+          <div className="mb-4 flex items-center justify-between gap-2">
+            <h4 className="text-xs font-semibold text-zinc-200">
+              {isTodayRange ? "Mensajes recibidos y total de cargas por hora" : "Mensajes recibidos y total de cargas por día"}
+            </h4>
+            <div className="relative">
+              <button
+                type="button"
+                onClick={() => setDailyLoadsMenuOpen((v) => !v)}
+                className="inline-flex h-7 items-center gap-1.5 rounded-lg border border-zinc-700 bg-zinc-900 px-2 text-[11px] text-zinc-300 hover:bg-zinc-800"
+              >
+                Cargas
+                <svg className={`h-3 w-3 transition-transform ${dailyLoadsMenuOpen ? "rotate-180" : ""}`} viewBox="0 0 20 20" fill="currentColor">
+                  <path fillRule="evenodd" d="M5.23 7.21a.75.75 0 011.06.02L10 11.168l3.71-3.938a.75.75 0 111.08 1.04l-4.25 4.5a.75.75 0 01-1.08 0l-4.25-4.5a.75.75 0 01.02-1.06z" clipRule="evenodd" />
+                </svg>
+              </button>
+              {dailyLoadsMenuOpen && (
+                <div className="absolute right-0 top-8 z-20 w-44 rounded-lg border border-zinc-700 bg-zinc-900/95 p-2 shadow-xl">
+                  <label className="flex cursor-pointer items-center gap-2 rounded px-1.5 py-1 text-[11px] text-zinc-300 hover:bg-zinc-800/80">
+                    <input
+                      type="checkbox"
+                      checked={dailyLoadsEnabled.first}
+                      onChange={(e) => setDailyLoadsEnabled((prev) => ({ ...prev, first: e.target.checked }))}
+                      className="h-3.5 w-3.5 rounded border-zinc-600 bg-zinc-900 accent-emerald-500"
+                    />
+                    Primeras cargas (first)
+                  </label>
+                  <label className="flex cursor-pointer items-center gap-2 rounded px-1.5 py-1 text-[11px] text-zinc-300 hover:bg-zinc-800/80">
+                    <input
+                      type="checkbox"
+                      checked={dailyLoadsEnabled.total}
+                      onChange={(e) => setDailyLoadsEnabled((prev) => ({ ...prev, total: e.target.checked }))}
+                      className="h-3.5 w-3.5 rounded border-zinc-600 bg-zinc-900 accent-emerald-500"
+                    />
+                    Total de cargas
+                  </label>
+                </div>
+              )}
+            </div>
+          </div>
           <ResponsiveContainer width="100%" height={240}>
-            <LineChart data={stats.dailyData} margin={{ top: 4, right: 8, bottom: 0, left: -16 }}>
+            <LineChart data={dailyMessagesLoadsData} margin={{ top: 4, right: 8, bottom: 0, left: -16 }}>
               <CartesianGrid strokeDasharray="3 3" stroke="#27272a" />
               <XAxis
                 dataKey="day"
                 tick={{ fill: "#71717a", fontSize: 10 }}
                 axisLine={{ stroke: "#3f3f46" }}
                 tickLine={false}
-                angle={-35}
-                textAnchor="end"
-                height={48}
+                angle={isTodayRange ? 0 : -35}
+                textAnchor={isTodayRange ? "middle" : "end"}
+                height={isTodayRange ? 28 : 48}
+                interval={isTodayRange ? 1 : 0}
               />
               <YAxis
                 tick={{ fill: "#71717a", fontSize: 10 }}
@@ -736,12 +831,18 @@ export default function StatsPanel({
               <Tooltip
                 contentStyle={{ backgroundColor: "#18181b", border: "1px solid #3f3f46", borderRadius: 8, fontSize: 11 }}
                 labelStyle={{ color: "#a1a1aa" }}
+                labelFormatter={(v) => isTodayRange ? `${v}:00 hs` : `${v}`}
               />
               <Legend
                 wrapperStyle={{ fontSize: 10, color: "#a1a1aa" }}
               />
               <Line type="monotone" dataKey="leads" name="Mensajes recibidos" stroke="#fbbf24" strokeWidth={2} dot={{ r: 2, fill: "#fbbf24" }} activeDot={{ r: 4 }} />
-              <Line type="monotone" dataKey="cargas" name="Cargas" stroke="#34d399" strokeWidth={2} dot={{ r: 2, fill: "#34d399" }} activeDot={{ r: 4 }} />
+              {dailyLoadsEnabled.total && (
+                <Line type="monotone" dataKey="cargas" name="Cargas totales" stroke="#34d399" strokeWidth={2} dot={{ r: 2, fill: "#34d399" }} activeDot={{ r: 4 }} />
+              )}
+              {dailyLoadsEnabled.first && (
+                <Line type="monotone" dataKey="cargas_first" name="Primeras cargas (first)" stroke="#38bdf8" strokeWidth={2} dot={{ r: 2, fill: "#38bdf8" }} activeDot={{ r: 4 }} />
+              )}
             </LineChart>
           </ResponsiveContainer>
         </div>
