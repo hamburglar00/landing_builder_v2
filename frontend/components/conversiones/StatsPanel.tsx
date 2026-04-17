@@ -1,6 +1,6 @@
 ﻿"use client";
 
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import {
   type FunnelContact,
   type ConversionRow,
@@ -178,6 +178,12 @@ type AssistantMsg = {
   text: string;
 };
 
+type AssistantQuota = {
+  used: number;
+  remaining: number;
+  limit: number;
+};
+
 export default function StatsPanel({
   funnelContacts,
   conversions,
@@ -220,6 +226,7 @@ export default function StatsPanel({
   const [assistantLoading, setAssistantLoading] = useState(false);
   const [assistantInput, setAssistantInput] = useState("");
   const [assistantError, setAssistantError] = useState<string | null>(null);
+  const [assistantQuota, setAssistantQuota] = useState<AssistantQuota | null>(null);
   const [assistantMessages, setAssistantMessages] = useState<AssistantMsg[]>([
     {
       role: "assistant",
@@ -721,11 +728,12 @@ export default function StatsPanel({
         },
         body: JSON.stringify({ question, context: assistantContext }),
       });
-      const json = (await res.json()) as { answer?: string; error?: string };
+      const json = (await res.json()) as { answer?: string; error?: string; quota?: AssistantQuota };
       if (!res.ok) {
         throw new Error(json.error || "No se pudo obtener respuesta.");
       }
       const answer = String(json.answer ?? "").trim() || "No pude generar una respuesta con los datos actuales.";
+      if (json.quota) setAssistantQuota(json.quota);
       setAssistantMessages((prev) => [...prev, { role: "assistant", text: answer }]);
     } catch (e) {
       const msg = e instanceof Error ? e.message : "Error inesperado";
@@ -735,6 +743,28 @@ export default function StatsPanel({
       setAssistantLoading(false);
     }
   };
+
+  useEffect(() => {
+    if (!assistantOpen) return;
+    const loadQuota = async () => {
+      try {
+        const {
+          data: { session },
+        } = await supabase.auth.getSession();
+        const token = session?.access_token ?? "";
+        if (!token) return;
+        const res = await fetch("/api/stats-assistant", {
+          method: "GET",
+          headers: { Authorization: `Bearer ${token}` },
+        });
+        const json = (await res.json()) as { quota?: AssistantQuota };
+        if (res.ok && json.quota) setAssistantQuota(json.quota);
+      } catch {
+        // silent: quota is informational only
+      }
+    };
+    void loadQuota();
+  }, [assistantOpen]);
 
   return (
     <div className="space-y-8">
@@ -1432,6 +1462,11 @@ export default function StatsPanel({
             <div>
               <p className="text-xs font-semibold text-zinc-100">Asistente IA de Estadísticas</p>
               <p className="text-[10px] text-zinc-500">Analiza tus métricas y sugiere optimizaciones en Meta Ads</p>
+              <p className="mt-1 text-[10px] text-zinc-400">
+                {assistantQuota
+                  ? `Consultas este mes: ${assistantQuota.used}/${assistantQuota.limit}`
+                  : "Consultas este mes: -/750"}
+              </p>
             </div>
             <button
               type="button"

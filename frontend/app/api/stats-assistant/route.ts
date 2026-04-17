@@ -68,6 +68,63 @@ async function consumeAssistantQuota(
   return { allowed, used, remaining, limit };
 }
 
+async function readAssistantQuota(
+  bearer: string,
+): Promise<{ used: number; remaining: number; limit: number; error?: string }> {
+  const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL ?? "";
+  const supabaseAnon = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY ?? "";
+  if (!supabaseUrl || !supabaseAnon) {
+    return { used: 0, remaining: MONTHLY_REQUEST_LIMIT, limit: MONTHLY_REQUEST_LIMIT, error: "Supabase no configurado." };
+  }
+
+  const now = new Date();
+  const monthKey = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, "0")}-01`;
+  const url =
+    `${supabaseUrl}/rest/v1/ai_assistant_usage_monthly` +
+    `?select=requests_count&month_key=eq.${encodeURIComponent(monthKey)}&limit=1`;
+
+  const res = await fetch(url, {
+    headers: {
+      apikey: supabaseAnon,
+      Authorization: `Bearer ${bearer}`,
+    },
+    cache: "no-store",
+  });
+  if (!res.ok) {
+    const detail = await res.text();
+    return { used: 0, remaining: MONTHLY_REQUEST_LIMIT, limit: MONTHLY_REQUEST_LIMIT, error: `No se pudo leer cuota: ${detail.slice(0, 200)}` };
+  }
+  const rows = (await res.json()) as Array<{ requests_count?: number }>;
+  const used = Number(rows?.[0]?.requests_count ?? 0);
+  const limit = MONTHLY_REQUEST_LIMIT;
+  const remaining = Math.max(0, limit - used);
+  return { used, remaining, limit };
+}
+
+export async function GET(req: Request) {
+  try {
+    const authHeader = req.headers.get("authorization") ?? "";
+    const bearer = authHeader.startsWith("Bearer ") ? authHeader.slice(7).trim() : "";
+    if (!bearer) {
+      return NextResponse.json({ error: "Missing bearer token." }, { status: 401 });
+    }
+    const { userId, error: authError } = await getAuthUserIdFromBearer(bearer);
+    if (authError || !userId) {
+      return NextResponse.json({ error: authError ?? "No autorizado." }, { status: 401 });
+    }
+    const quota = await readAssistantQuota(bearer);
+    if (quota.error) {
+      return NextResponse.json({ error: quota.error }, { status: 500 });
+    }
+    return NextResponse.json({ ok: true, quota });
+  } catch (error) {
+    return NextResponse.json(
+      { error: error instanceof Error ? error.message : "Unexpected error" },
+      { status: 500 },
+    );
+  }
+}
+
 export async function POST(req: Request) {
   try {
     const apiKey = process.env.OPENAI_API_KEY ?? "";
@@ -116,8 +173,10 @@ export async function POST(req: Request) {
       "Sos un analista senior de performance para Meta Ads.",
       "Trabajas solo con los datos provistos por el dashboard.",
       "No inventes valores ni afirmes datos no presentes.",
+      "No ejecutes acciones operativas ni propongas cambios automaticos sobre datos, funciones o logica de negocio.",
       "Diferencia claramente: Hallazgos (datos) vs Inferencias (hipotesis) vs Acciones (recomendaciones).",
       "Prioriza recomendaciones practicas para mejorar calidad de leads, conversion a carga y recarga.",
+      "Para recomendaciones de Meta, apoyate en buenas practicas oficiales y agrega una seccion breve de 'Referencias oficiales sugeridas de Meta' (sin afirmar consulta en tiempo real).",
       "Responde en espanol, breve y accionable.",
     ].join(" ");
 
