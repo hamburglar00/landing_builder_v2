@@ -771,6 +771,21 @@ export default function DashboardConversionesPage() {
       statsDeviceFilter !== "__all__",
     [statsLandingFilter, statsPixelFilter, statsGerenciaFilter, statsTelefonoFilter, statsFromMetaAdsFilter, statsSourcePlatformFilter, statsSexoFilter, statsCampaignFilter, statsDeviceFilter],
   );
+  const statsFiltersCount = useMemo(
+    () =>
+      [
+        statsLandingFilter,
+        statsPixelFilter,
+        statsGerenciaFilter,
+        statsTelefonoFilter,
+        statsFromMetaAdsFilter,
+        statsSourcePlatformFilter,
+        statsSexoFilter,
+        statsCampaignFilter,
+        statsDeviceFilter,
+      ].filter((v) => v !== "__all__").length,
+    [statsLandingFilter, statsPixelFilter, statsGerenciaFilter, statsTelefonoFilter, statsFromMetaAdsFilter, statsSourcePlatformFilter, statsSexoFilter, statsCampaignFilter, statsDeviceFilter],
+  );
 
   useEffect(() => {
     if (config?.show_logs === false && tab === "logs") {
@@ -1039,6 +1054,26 @@ export default function DashboardConversionesPage() {
     setStatsDeviceFilter(draftDeviceFilter);
     setStatsFilterModalOpen(false);
   }, [draftLandingFilter, draftPixelFilter, draftGerenciaFilter, draftTelefonoFilter, draftFromMetaAdsFilter, draftSourcePlatformFilter, draftSexoFilter, draftCampaignFilter, draftDeviceFilter]);
+  const clearAllStatsFilters = useCallback(() => {
+    setStatsLandingFilter("__all__");
+    setStatsPixelFilter("__all__");
+    setStatsGerenciaFilter("__all__");
+    setStatsTelefonoFilter("__all__");
+    setStatsFromMetaAdsFilter("__all__");
+    setStatsSourcePlatformFilter("__all__");
+    setStatsSexoFilter("__all__");
+    setStatsCampaignFilter("__all__");
+    setStatsDeviceFilter("__all__");
+    setDraftLandingFilter("__all__");
+    setDraftPixelFilter("__all__");
+    setDraftGerenciaFilter("__all__");
+    setDraftTelefonoFilter("__all__");
+    setDraftFromMetaAdsFilter("__all__");
+    setDraftSourcePlatformFilter("__all__");
+    setDraftSexoFilter("__all__");
+    setDraftCampaignFilter("__all__");
+    setDraftDeviceFilter("__all__");
+  }, []);
 
   const refreshTable = useCallback(async () => {
     if (!userId) return;
@@ -1373,6 +1408,30 @@ export default function DashboardConversionesPage() {
                   <path strokeLinecap="round" strokeLinejoin="round" d="M4 6h16M7 12h10M10 18h4" />
                 </svg>
                 Aplicar filtros
+                {hasStatsFiltersApplied && (
+                  <>
+                    <span className="inline-flex h-4 min-w-4 items-center justify-center rounded-full bg-red-600 px-1 text-[10px] font-bold text-white">
+                      {statsFiltersCount}
+                    </span>
+                    <span
+                      role="button"
+                      tabIndex={0}
+                      onClick={(e) => { e.preventDefault(); e.stopPropagation(); clearAllStatsFilters(); }}
+                      onKeyDown={(e) => {
+                        if (e.key === "Enter" || e.key === " ") {
+                          e.preventDefault();
+                          e.stopPropagation();
+                          clearAllStatsFilters();
+                        }
+                      }}
+                      className="inline-flex h-4 w-4 items-center justify-center rounded-full border border-red-500/70 bg-red-950/70 text-[10px] font-bold leading-none text-red-200 hover:bg-red-900/80"
+                      title="Quitar todos los filtros"
+                      aria-label="Quitar todos los filtros"
+                    >
+                      ×
+                    </span>
+                  </>
+                )}
               </button>
             )}
           </div>

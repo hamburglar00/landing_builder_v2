@@ -438,18 +438,21 @@ export default function ArgentinaMap({
             {(Object.keys(METRIC_LABELS) as MapMetric[])
               .filter((m) => !ROAS_METRICS.has(m) || adSpend > 0)
               .map((m) => (
-                <button
-                  key={m}
-                  onClick={() => setMetric(m)}
-                  title={METRIC_TOOLTIPS[m]}
-                  className={`cursor-pointer rounded-lg px-2.5 py-1 text-[10px] font-medium transition-all ${
-                    metric === m
-                      ? "bg-emerald-950/60 text-emerald-300 border border-emerald-800/50"
-                      : "bg-zinc-900/60 text-zinc-500 border border-zinc-800/40 hover:text-zinc-300 hover:border-zinc-700/50"
-                  }`}
-                >
-                  {METRIC_LABELS[m]}
-                </button>
+                <div key={m} className="group relative">
+                  <button
+                    onClick={() => setMetric(m)}
+                    className={`cursor-pointer rounded-lg px-2.5 py-1 text-[10px] font-medium transition-all ${
+                      metric === m
+                        ? "bg-emerald-950/60 text-emerald-300 border border-emerald-800/50"
+                        : "bg-zinc-900/60 text-zinc-500 border border-zinc-800/40 hover:text-zinc-300 hover:border-zinc-700/50"
+                    }`}
+                  >
+                    {METRIC_LABELS[m]}
+                  </button>
+                  <div className="pointer-events-none absolute left-1/2 z-50 mt-1 w-56 -translate-x-1/2 rounded-lg border border-zinc-700/60 bg-zinc-900/95 px-3 py-2 text-[10px] leading-relaxed text-zinc-300 opacity-0 shadow-xl transition-opacity duration-150 group-hover:opacity-100">
+                    {METRIC_TOOLTIPS[m]}
+                  </div>
+                </div>
               ))}
           </div>
 
