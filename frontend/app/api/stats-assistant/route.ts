@@ -5,7 +5,7 @@ type StatsAssistantBody = {
   context?: unknown;
 };
 
-function compactJson(value: unknown, maxLen = 14000): string {
+function compactJson(value: unknown, maxLen = 4500): string {
   const raw = JSON.stringify(value ?? {}, null, 2);
   if (raw.length <= maxLen) return raw;
   return `${raw.slice(0, maxLen)}\n... [truncated]`;
@@ -225,7 +225,7 @@ export async function POST(req: Request) {
       );
     }
 
-    const model = process.env.OPENAI_STATS_MODEL ?? "gpt-4.1-mini";
+    const model = process.env.OPENAI_STATS_MODEL ?? "gpt-5-mini";
     const contextText = compactJson(body.context);
     const system = [
       "Sos un analista senior de performance para Meta Ads.",
@@ -236,7 +236,7 @@ export async function POST(req: Request) {
       "Prioriza recomendaciones practicas para mejorar calidad de leads, conversion a carga y recarga.",
       "Para recomendaciones de Meta, apoyate en buenas practicas oficiales y agrega una seccion breve de 'Referencias oficiales sugeridas de Meta' (sin afirmar consulta en tiempo real).",
       "Responde en espanol, claro, conciso y accionable.",
-      "Limita la respuesta total a 140-180 palabras maximo.",
+      "Limita la respuesta total a 100-140 palabras maximo.",
     ].join(" ");
 
     const user = [
@@ -247,10 +247,10 @@ export async function POST(req: Request) {
       contextText,
       "",
       "Formato de salida:",
-      "1) Hallazgos clave (max 5)",
-      "2) Que optimizar primero (max 5)",
-      "3) Experimentos concretos en Meta Ads para 7 dias (max 5)",
-      "4) Riesgos/validaciones pendientes (max 3)",
+      "1) Hallazgos clave (max 3)",
+      "2) Que optimizar primero (max 3)",
+      "3) Experimentos concretos en Meta Ads para 7 dias (max 3)",
+      "4) Riesgos/validaciones pendientes (max 2)",
     ].join("\n");
 
     const openaiRes = await fetch("https://api.openai.com/v1/responses", {
@@ -265,7 +265,7 @@ export async function POST(req: Request) {
           { role: "system", content: [{ type: "input_text", text: system }] },
           { role: "user", content: [{ type: "input_text", text: user }] },
         ],
-        max_output_tokens: 450,
+        max_output_tokens: 280,
       }),
       cache: "no-store",
     });

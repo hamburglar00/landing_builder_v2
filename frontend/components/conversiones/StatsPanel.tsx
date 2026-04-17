@@ -676,12 +676,9 @@ export default function StatsPanel({
       mensajes_recibidos: stats.uniqueLeadsLinkedToContact,
       jugadores_cargaron: stats.firstLoadPurchasersLinkedToLead,
       jugadores_recargaron: stats.repeatFromFirstInRange,
-      primeras_cargas: stats.purchaseFirstCount,
-      recargas: stats.purchaseRepeatCount,
       total_cargas: stats.totalPurchases,
       total_cargado: stats.totalRevenue,
-      ticket_promedio: stats.avgTicket,
-      cargas_promedio_por_jugador: stats.avgLoadsPerPlayer,
+      ticket_promedio: Number(stats.avgTicket.toFixed(2)),
     },
     funnel_pct: {
       inicio_conversacion: stats.uniqueContacts > 0 ? Number(((stats.uniqueLeadsLinkedToContact / stats.uniqueContacts) * 100).toFixed(1)) : 0,
@@ -689,15 +686,35 @@ export default function StatsPanel({
       recarga: stats.firstLoadPurchasersLinkedToLead > 0 ? Number(((stats.repeatFromFirstInRange / stats.firstLoadPurchasersLinkedToLead) * 100).toFixed(1)) : 0,
     },
     charts: {
-      hourly_total_cargas: stats.hourlyBuckets,
-      hourly_mensajes_cargas: hourlyMessagesLoadsData,
-      daily_mensajes_cargas: dailyMessagesLoadsData,
-      daily_funnel_pct: dailyFunnelPctData,
+      hourly_total_cargas_last24: stats.hourlyBuckets.map((r) => ({ hour: r.hour, cargas: r.cargas })),
+      hourly_mensajes_vs_cargas_last24: hourlyMessagesLoadsData.map((r) => ({
+        hour: r.hour,
+        mensajes: r.leads,
+        cargas_first: r.cargas_first,
+        cargas_total: r.cargas,
+      })),
+      daily_mensajes_vs_cargas_last14: dailyMessagesLoadsData.slice(-14),
+      daily_funnel_pct_last14: dailyFunnelPctData.slice(-14),
     },
     breakdowns: {
-      by_campaign_top10: stats.byCampaign.slice(0, 10),
-      by_device_top10: stats.byDevice.slice(0, 10),
-      by_landing_top10: stats.byLanding.slice(0, 10),
+      by_campaign_top5: stats.byCampaign.slice(0, 5).map((r) => ({
+        campaign: r.campaign,
+        mensajes: r.mensajes,
+        cargas: r.cargas,
+        revenue: r.revenue,
+      })),
+      by_device_top5: stats.byDevice.slice(0, 5).map((r) => ({
+        device: r.device,
+        mensajes: r.mensajes,
+        cargas: r.cargas,
+        revenue: r.revenue,
+      })),
+      by_landing_top5: stats.byLanding.slice(0, 5).map((r) => ({
+        landing: r.landing,
+        mensajes: r.mensajes,
+        cargas: r.cargas,
+        revenue: r.revenue,
+      })),
     },
   }), [isTodayRange, stats, hourlyMessagesLoadsData, dailyMessagesLoadsData, dailyFunnelPctData]);
 
