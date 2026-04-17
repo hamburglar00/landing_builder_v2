@@ -663,6 +663,24 @@ export default function DashboardConversionesPage() {
   const filteredConversions = useMemo(() => {
     const q = tableSearch.trim().toLowerCase();
     if (!q) return tableConversionsFiltered;
+    const conditionalMatch = q.match(/^valor\s*(>=|<=|>|<|==|=)\s*([-+]?[\d.,\s]+)$/i);
+    if (conditionalMatch) {
+      const op = conditionalMatch[1];
+      const raw = conditionalMatch[2] ?? "";
+      const normalizedDigits = raw.replace(/[^\d-]/g, "");
+      const target = Number(normalizedDigits);
+      if (Number.isFinite(target)) {
+        return tableConversionsFiltered.filter((c) => {
+          const value = Number(c.valor ?? 0);
+          if (!Number.isFinite(value)) return false;
+          if (op === ">") return value > target;
+          if (op === ">=") return value >= target;
+          if (op === "<") return value < target;
+          if (op === "<=") return value <= target;
+          return value === target;
+        });
+      }
+    }
     return tableConversionsFiltered.filter((c) => {
       const hay = [
         c.phone,
