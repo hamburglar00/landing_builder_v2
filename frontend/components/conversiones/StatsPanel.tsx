@@ -1091,7 +1091,7 @@ export default function StatsPanel({
             <Tooltip
               contentStyle={{ backgroundColor: "#18181b", border: "1px solid #3f3f46", borderRadius: 8, fontSize: 11 }}
               labelStyle={{ color: "#a1a1aa" }}
-              formatter={(value: number) => `${Number(value).toFixed(1)}%`}
+              formatter={(value) => `${Number(value ?? 0).toFixed(1)}%`}
             />
             <Legend wrapperStyle={{ fontSize: 10, color: "#a1a1aa" }} />
             {funnelPctEnabled.inicio && (
