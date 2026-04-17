@@ -48,6 +48,26 @@ const METRIC_LABELS: Record<MapMetric, string> = {
   retencion_activa_30d: "Retencion activa 30d",
 };
 
+const METRIC_TOOLTIPS: Record<MapMetric, string> = {
+  contactos: "Cantidad de jugadores que hicieron clic en el boton de contacto (CTA).",
+  leads: "Cantidad de jugadores que enviaron al menos un mensaje.",
+  primeras_cargas: "Cantidad de jugadores que hicieron al menos una primera carga.",
+  recargas: "Cantidad de jugadores que recargaron despues de una primera carga.",
+  cargas_totales: "Cantidad total de cargas: primeras cargas + recargas.",
+  carga_promedio: "Monto promedio por carga en la provincia seleccionada.",
+  carga_mediana: "Valor central de las cargas. Mitad por debajo y mitad por encima.",
+  total_cargado: "Suma total cargada por los jugadores de la provincia.",
+  roas_primera: "Retorno sobre gasto publicitario usando solo primeras cargas.",
+  roas_total: "Retorno sobre gasto publicitario usando primeras cargas y recargas.",
+  pct_inicio: "De los que hicieron clic en CTA, que porcentaje envio mensaje.",
+  pct_carga: "De los que enviaron mensaje, que porcentaje realizo una carga.",
+  pct_recarga: "De los que hicieron primera carga, que porcentaje recargo.",
+  tiempo_lead_purchase_prom: "Tiempo promedio entre mensaje (lead) y primera carga.",
+  jugadores_recurrentes: "Jugadores que realizaron mas de una carga.",
+  jugadores_premium: "Jugadores que superaron el umbral de premium configurado.",
+  retencion_activa_30d: "Jugadores con actividad sostenida en los ultimos 30 dias.",
+};
+
 const PCT_METRICS = new Set<MapMetric>(["pct_inicio", "pct_carga", "pct_recarga"]);
 const CURRENCY_METRICS = new Set<MapMetric>(["total_cargado", "carga_promedio"]);
 const ROAS_METRICS = new Set<MapMetric>(["roas_primera", "roas_total"]);
@@ -421,6 +441,7 @@ export default function ArgentinaMap({
                 <button
                   key={m}
                   onClick={() => setMetric(m)}
+                  title={METRIC_TOOLTIPS[m]}
                   className={`cursor-pointer rounded-lg px-2.5 py-1 text-[10px] font-medium transition-all ${
                     metric === m
                       ? "bg-emerald-950/60 text-emerald-300 border border-emerald-800/50"
