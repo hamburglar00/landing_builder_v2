@@ -14,6 +14,21 @@ function compactJson(value: unknown, maxLen = 14000): string {
 const MONTHLY_REQUEST_LIMIT = 150;
 
 function extractAssistantText(parsed: unknown): string {
+  const toText = (value: unknown): string => {
+    if (typeof value === "string") return value.trim();
+    if (typeof value === "number" || typeof value === "boolean") return String(value);
+    if (value && typeof value === "object") {
+      const asRecord = value as Record<string, unknown>;
+      if (typeof asRecord.value === "string") return asRecord.value.trim();
+      if (typeof asRecord.text === "string") return asRecord.text.trim();
+      if (Array.isArray(asRecord.content)) {
+        const joined = asRecord.content.map((x) => toText(x)).filter(Boolean).join(" ").trim();
+        if (joined) return joined;
+      }
+    }
+    return "";
+  };
+
   const asObj = parsed as
     | {
         output_text?: string;
@@ -23,7 +38,7 @@ function extractAssistantText(parsed: unknown): string {
       }
     | null;
 
-  const direct = String(asObj?.output_text ?? "").trim();
+  const direct = toText(asObj?.output_text);
   if (direct) return direct;
 
   const chunks = (asObj?.output ?? [])
@@ -33,13 +48,7 @@ function extractAssistantText(parsed: unknown): string {
       c?.type === "text" ||
       c?.type === "summary_text"
     )
-    .map((c) => {
-      if (typeof c.text === "string") return c.text.trim();
-      if (c.text && typeof c.text === "object" && typeof c.text.value === "string") {
-        return c.text.value.trim();
-      }
-      return "";
-    })
+    .map((c) => toText(c.text))
     .filter(Boolean);
 
   const joined = chunks.join("\n").trim();
@@ -48,10 +57,18 @@ function extractAssistantText(parsed: unknown): string {
   // Fallback defensivo: intenta encontrar posibles textos en estructuras no tipadas.
   const anyObj = parsed as Record<string, unknown> | null;
   const alt =
-    (anyObj?.["response_text"] as string | undefined) ??
-    (anyObj?.["text"] as string | undefined) ??
+    toText(anyObj?.["response_text"]) ||
+    toText(anyObj?.["text"]) ||
     "";
-  return String(alt).trim();
+  if (alt) return alt;
+
+  // Ultimo fallback: evita "[object Object]" y entrega JSON legible.
+  try {
+    const compact = JSON.stringify(parsed);
+    return compact && compact !== "{}" ? compact.slice(0, 500) : "";
+  } catch {
+    return "";
+  }
 }
 
 async function getAuthUserIdFromBearer(
