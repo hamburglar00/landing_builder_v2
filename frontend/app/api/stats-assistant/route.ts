@@ -11,6 +11,63 @@ function compactJson(value: unknown, maxLen = 14000): string {
   return `${raw.slice(0, maxLen)}\n... [truncated]`;
 }
 
+const MONTHLY_REQUEST_LIMIT = 750;
+
+async function getAuthUserIdFromBearer(
+  bearer: string,
+): Promise<{ userId: string | null; error?: string }> {
+  const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL ?? "";
+  const supabaseAnon = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY ?? "";
+  if (!supabaseUrl || !supabaseAnon) {
+    return { userId: null, error: "Faltan variables de Supabase en servidor." };
+  }
+
+  const authRes = await fetch(`${supabaseUrl}/auth/v1/user`, {
+    headers: {
+      apikey: supabaseAnon,
+      Authorization: `Bearer ${bearer}`,
+    },
+    cache: "no-store",
+  });
+  if (!authRes.ok) return { userId: null, error: "Sesion invalida." };
+  const authJson = (await authRes.json()) as { id?: string };
+  return { userId: authJson.id ?? null };
+}
+
+async function consumeAssistantQuota(
+  bearer: string,
+): Promise<{ allowed: boolean; used: number; remaining: number; limit: number; error?: string }> {
+  const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL ?? "";
+  const supabaseAnon = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY ?? "";
+  if (!supabaseUrl || !supabaseAnon) {
+    return { allowed: false, used: 0, remaining: 0, limit: MONTHLY_REQUEST_LIMIT, error: "Supabase no configurado." };
+  }
+
+  const rpcRes = await fetch(`${supabaseUrl}/rest/v1/rpc/consume_ai_assistant_quota`, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      apikey: supabaseAnon,
+      Authorization: `Bearer ${bearer}`,
+    },
+    body: JSON.stringify({ p_limit: MONTHLY_REQUEST_LIMIT }),
+    cache: "no-store",
+  });
+
+  if (!rpcRes.ok) {
+    const detail = await rpcRes.text();
+    return { allowed: false, used: 0, remaining: 0, limit: MONTHLY_REQUEST_LIMIT, error: `No se pudo validar cuota: ${detail.slice(0, 200)}` };
+  }
+
+  const payload = (await rpcRes.json()) as Array<{ allowed?: boolean; used?: number; remaining?: number; limit_count?: number }>;
+  const row = payload?.[0] ?? {};
+  const allowed = !!row.allowed;
+  const used = Number(row.used ?? 0);
+  const limit = Number(row.limit_count ?? MONTHLY_REQUEST_LIMIT);
+  const remaining = Math.max(0, Number(row.remaining ?? (limit - used)));
+  return { allowed, used, remaining, limit };
+}
+
 export async function POST(req: Request) {
   try {
     const apiKey = process.env.OPENAI_API_KEY ?? "";
@@ -25,6 +82,32 @@ export async function POST(req: Request) {
     const question = String(body.question ?? "").trim();
     if (!question) {
       return NextResponse.json({ error: "La pregunta es requerida." }, { status: 400 });
+    }
+    const authHeader = req.headers.get("authorization") ?? "";
+    const bearer = authHeader.startsWith("Bearer ") ? authHeader.slice(7).trim() : "";
+    if (!bearer) {
+      return NextResponse.json({ error: "Missing bearer token." }, { status: 401 });
+    }
+    const { userId, error: authError } = await getAuthUserIdFromBearer(bearer);
+    if (authError || !userId) {
+      return NextResponse.json({ error: authError ?? "No autorizado." }, { status: 401 });
+    }
+    const quota = await consumeAssistantQuota(bearer);
+    if (quota.error) {
+      return NextResponse.json({ error: quota.error }, { status: 500 });
+    }
+    if (!quota.allowed) {
+      return NextResponse.json(
+        {
+          error: `Alcanzaste el limite mensual del asistente (${quota.limit} consultas).`,
+          quota: {
+            used: quota.used,
+            remaining: quota.remaining,
+            limit: quota.limit,
+          },
+        },
+        { status: 429 },
+      );
     }
 
     const model = process.env.OPENAI_STATS_MODEL ?? "gpt-4.1-mini";
@@ -87,7 +170,15 @@ export async function POST(req: Request) {
       (parsed as { output_text?: string } | null)?.output_text ??
       "No se pudo generar una respuesta en este momento.";
 
-    return NextResponse.json({ ok: true, answer: outputText });
+    return NextResponse.json({
+      ok: true,
+      answer: outputText,
+      quota: {
+        used: quota.used,
+        remaining: quota.remaining,
+        limit: quota.limit,
+      },
+    });
   } catch (error) {
     return NextResponse.json(
       { error: error instanceof Error ? error.message : "Unexpected error" },
@@ -95,4 +186,3 @@ export async function POST(req: Request) {
     );
   }
 }
-

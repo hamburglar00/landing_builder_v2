@@ -7,6 +7,7 @@ import {
 } from "@/lib/conversionsDb";
 import { computeCoreStats } from "@/lib/conversionStats";
 import ArgentinaMap from "./ArgentinaMap";
+import { supabase } from "@/lib/supabaseClient";
 import {
   ComposedChart, Bar, LineChart, Line,
   XAxis, YAxis, CartesianGrid, Tooltip, Legend,
@@ -706,9 +707,18 @@ export default function StatsPanel({
     setAssistantMessages((prev) => [...prev, { role: "user", text: question }]);
     setAssistantInput("");
     try {
+      const {
+        data: { session },
+      } = await supabase.auth.getSession();
+      const token = session?.access_token ?? "";
+      if (!token) throw new Error("Sesion no valida para usar el asistente.");
+
       const res = await fetch("/api/stats-assistant", {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
         body: JSON.stringify({ question, context: assistantContext }),
       });
       const json = (await res.json()) as { answer?: string; error?: string };
