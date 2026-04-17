@@ -802,7 +802,7 @@ export default function StatsPanel({
       {/*  GRÁFICOS TEMPORALES  */}
       <div className="grid gap-4 lg:grid-cols-2">
         {/* Cargas por hora */}
-        <div className="rounded-xl border border-zinc-800 bg-zinc-900/50 p-4">
+        <div className="order-3 rounded-xl border border-zinc-800 bg-zinc-900/50 p-4">
           <div className="mb-4 flex items-center justify-between gap-2">
             <h4 className="text-xs font-semibold text-zinc-200">Distribución del total de cargas por hora del día</h4>
             <div className="relative">
@@ -870,7 +870,7 @@ export default function StatsPanel({
         </div>
 
         {/* Leads vs Cargas por día */}
-        <div className="rounded-xl border border-zinc-800 bg-zinc-900/50 p-4">
+        <div className="order-2 rounded-xl border border-zinc-800 bg-zinc-900/50 p-4">
           <div className="mb-4 flex items-center justify-between gap-2">
             <h4 className="text-xs font-semibold text-zinc-200">
               {isTodayRange ? "Mensajes recibidos y total de cargas por hora" : "Mensajes recibidos y total de cargas por día"}
@@ -949,7 +949,7 @@ export default function StatsPanel({
         </div>
 
         {/* Mensajes vs Cargas por hora */}
-        <div className="rounded-xl border border-zinc-800 bg-zinc-900/50 p-4">
+        <div className="order-1 rounded-xl border border-zinc-800 bg-zinc-900/50 p-4">
           <div className="mb-4 flex items-center justify-between gap-2">
             <h4 className="text-xs font-semibold text-zinc-200">Distribución de mensajes recibidos y total de cargas por hora del día</h4>
             <div className="relative">
@@ -1019,10 +1019,9 @@ export default function StatsPanel({
             </LineChart>
           </ResponsiveContainer>
         </div>
-      </div>
 
-      {/* Variación del embudo por día */}
-      <div className="rounded-xl border border-zinc-800 bg-zinc-900/50 p-4">
+        {/* Variación del embudo por día */}
+        <div className="order-4 rounded-xl border border-zinc-800 bg-zinc-900/50 p-4">
         <div className="mb-4 flex items-center justify-between gap-2">
           <h4 className="text-xs font-semibold text-zinc-200">Variación diaria de porcentajes del embudo</h4>
           <div className="relative">
@@ -1105,6 +1104,7 @@ export default function StatsPanel({
             )}
           </LineChart>
         </ResponsiveContainer>
+        </div>
       </div>
 
       {/*  POR CAMPAA  */}
