@@ -1506,6 +1506,12 @@ export default function StatsPanel({
             <textarea
               value={assistantInput}
               onChange={(e) => setAssistantInput(e.target.value)}
+              onKeyDown={(e) => {
+                if (e.key === "Enter" && !e.shiftKey) {
+                  e.preventDefault();
+                  void sendAssistantQuestion();
+                }
+              }}
               placeholder="Ej: ¿Qué horario conviene priorizar y qué probar en Meta Ads esta semana?"
               rows={3}
               className="w-full resize-none rounded-lg border border-zinc-700 bg-zinc-900 px-2.5 py-2 text-[11px] text-zinc-100 outline-none focus:border-zinc-500"
