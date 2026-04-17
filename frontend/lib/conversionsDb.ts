@@ -19,6 +19,7 @@ export interface ConversionsConfig {
   funnel_premium_threshold: number;
   visible_columns?: string[] | null;
   show_logs?: boolean;
+  show_ai_assistant?: boolean;
   tracking_ranking_config?: TrackingRankingConfig | null;
 }
 
@@ -180,6 +181,7 @@ const DEFAULT_CONFIG: ConversionsConfig = {
   funnel_premium_threshold: 50000,
   visible_columns: [],
   show_logs: true,
+  show_ai_assistant: false,
   tracking_ranking_config: null,
 };
 
@@ -218,6 +220,7 @@ export async function upsertConversionsConfig(
         funnel_premium_threshold: config.funnel_premium_threshold,
         visible_columns: config.visible_columns ?? [],
         show_logs: config.show_logs ?? true,
+        show_ai_assistant: config.show_ai_assistant ?? false,
         tracking_ranking_config: config.tracking_ranking_config ?? null,
         updated_at: new Date().toISOString(),
       },

@@ -191,6 +191,7 @@ export default function StatsPanel({
   premiumThreshold,
   dateRange,
   compactTooltips = false,
+  showAssistant = true,
 }: {
   funnelContacts: FunnelContact[];
   conversions: ConversionRow[];
@@ -198,6 +199,7 @@ export default function StatsPanel({
   premiumThreshold: number;
   dateRange?: { start: Date; end: Date } | null;
   compactTooltips?: boolean;
+  showAssistant?: boolean;
 }) {
   const [adSpend, setAdSpend] = useState<string>("");
   const [smaMenuOpen, setSmaMenuOpen] = useState(false);
@@ -1479,6 +1481,7 @@ export default function StatsPanel({
         </div>
       )}
 
+      {showAssistant && (
       <button
         type="button"
         onClick={() => setAssistantOpen((v) => !v)}
@@ -1490,7 +1493,8 @@ export default function StatsPanel({
           <path strokeLinecap="round" strokeLinejoin="round" d="M8 10h8M8 14h5M5 20l1.5-3H19a2 2 0 002-2V6a2 2 0 00-2-2H5a2 2 0 00-2 2v9a2 2 0 002 2z" />
         </svg>
       </button>
-      {assistantOpen && (
+      )}
+      {showAssistant && assistantOpen && (
         <div className="fixed bottom-20 right-6 z-40 w-[360px] max-w-[92vw] rounded-xl border border-zinc-700 bg-zinc-950 shadow-2xl">
           <div className="flex items-center justify-between border-b border-zinc-800 px-3 py-2">
             <div>

@@ -1759,6 +1759,7 @@ export default function DashboardConversionesPage() {
               premiumThreshold={config?.funnel_premium_threshold ?? 50000}
               dateRange={dateRange}
               compactTooltips
+              showAssistant={config?.show_ai_assistant === true}
             />
           )}
         </section>

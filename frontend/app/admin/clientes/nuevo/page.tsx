@@ -24,6 +24,7 @@ export default function NuevoClientePage() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [showLogs, setShowLogs] = useState(true);
+  const [showAiAssistant, setShowAiAssistant] = useState(false);
   const [visibleCols, setVisibleCols] = useState<Set<ColKey>>(new Set(ALL_COLUMNS));
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -57,6 +58,7 @@ export default function NuevoClientePage() {
           password,
           visibleColumns: [...visibleCols],
           showLogs,
+          showAiAssistant,
         },
       },
     );
@@ -163,6 +165,14 @@ export default function NuevoClientePage() {
                   onChange={(e) => setShowLogs(e.target.checked)}
                 />
                 Mostrar logs
+              </label>
+              <label className="inline-flex items-center gap-2 text-xs text-zinc-300">
+                <input
+                  type="checkbox"
+                  checked={showAiAssistant}
+                  onChange={(e) => setShowAiAssistant(e.target.checked)}
+                />
+                Mostrar agente IA
               </label>
             </div>
             <p className="text-[11px] text-zinc-500">Columnas visibles en Tabla de Conversiones</p>
