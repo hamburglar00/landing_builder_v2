@@ -1093,9 +1093,19 @@ async function handleLead(
   config: ConversionsConfig,
   pixelConfigs: PixelConfigRow[],
 ): Promise<Response> {
+  const TIMESTAMP_FALLBACK_WINDOW_SECONDS = 30;
+  const toEpochSeconds = (value: unknown): number | null => {
+    const n = Number(value);
+    if (!Number.isFinite(n) || n <= 0) return null;
+    // Accept both seconds and milliseconds.
+    return Math.floor(n > 1_000_000_000_000 ? n / 1000 : n);
+  };
+
   const cleanPhone = sanitizePhone(p.phone);
   const inboundMetaPixelId = norm(p.meta_pixel_id || p.pixel_id);
   const inboundSourcePlatform = norm(p.source_platform);
+  const botPhone = sanitizePhone(p.bot_phone);
+  const inboundBotTimestampSec = toEpochSeconds(p.timestamp);
   if (!cleanPhone) {
     await writeLog(
       db,
@@ -1114,22 +1124,6 @@ async function handleLead(
   }
   const promoCode = norm(p.promo_code);
   const promoCodeIsFull = isFullPromoCode(p.promo_code ?? p.promoCode ?? promoCode);
-  if (!promoCode) {
-    await writeLog(
-      db,
-      landing.user_id,
-      "handleLead",
-      "ERROR",
-      "LEAD rechazado: falta promo_code",
-      safePayloadRaw(p),
-      undefined,
-      undefined,
-      undefined,
-      safePayloadRaw(p),
-      "rechazado: falta promo_code",
-    );
-    return textResponse("Faltan parametros: promo_code requerido", 400);
-  }
   const testEventCode = norm(p.test_event_code);
   const leadPayloadRaw = safePayloadRaw(p);
 
@@ -1142,7 +1136,7 @@ async function handleLead(
 
   // 1) Match by promo_code
   let targetId: string | null = null;
-  let leadMatchMode: "promo_code" | "created_new" = "promo_code";
+  let leadMatchMode: "promo_code" | "bot_phone_timestamp_fallback" | "created_new" = "promo_code";
   if (promoCode) {
     const { data } = await db
       .from("conversions")
@@ -1155,8 +1149,79 @@ async function handleLead(
     if (data) targetId = data.id;
   }
 
+  // 1.b) Fallback ONLY when promo_code is missing: bot_phone + timestamp window (for CONTACT -> LEAD linking).
+  if (!targetId && !promoCode) {
+    if (botPhone && inboundBotTimestampSec) {
+      const fromIso = new Date((inboundBotTimestampSec - TIMESTAMP_FALLBACK_WINDOW_SECONDS) * 1000).toISOString();
+      const toIso = new Date((inboundBotTimestampSec + TIMESTAMP_FALLBACK_WINDOW_SECONDS) * 1000).toISOString();
+      const { data: candidates } = await db
+        .from("conversions")
+        .select("id, created_at")
+        .eq("user_id", landing.user_id)
+        .eq("estado", "contact")
+        .eq("telefono_asignado", botPhone)
+        .gte("created_at", fromIso)
+        .lte("created_at", toIso)
+        .order("created_at", { ascending: true })
+        .limit(5);
+
+      if ((candidates ?? []).length === 1) {
+        targetId = candidates![0].id;
+        leadMatchMode = "bot_phone_timestamp_fallback";
+      } else if ((candidates ?? []).length > 1) {
+        await writeLog(
+          db,
+          landing.user_id,
+          "handleLead",
+          "WARN",
+          "LEAD no procesado: fallback bot_phone+timestamp ambiguo",
+          JSON.stringify({
+            bot_phone: botPhone,
+            timestamp: inboundBotTimestampSec,
+            window_seconds: TIMESTAMP_FALLBACK_WINDOW_SECONDS,
+            candidates: candidates?.map((c) => ({ id: c.id, created_at: c.created_at })) ?? [],
+          }),
+          undefined,
+          undefined,
+          undefined,
+          safePayloadRaw(p),
+          "rechazado: fallback ambiguo (bot_phone+timestamp)",
+        );
+        return textResponse("LEAD recibido pero no procesado: fallback bot_phone+timestamp ambiguo", 409);
+      }
+    }
+
+    if (!targetId) {
+      await writeLog(
+        db,
+        landing.user_id,
+        "handleLead",
+        "ERROR",
+        "LEAD rechazado: falta promo_code y fallback bot_phone+timestamp sin match",
+        JSON.stringify({
+          promo_code: promoCode,
+          bot_phone: botPhone,
+          timestamp: inboundBotTimestampSec,
+          window_seconds: TIMESTAMP_FALLBACK_WINDOW_SECONDS,
+        }),
+        undefined,
+        undefined,
+        undefined,
+        safePayloadRaw(p),
+        "rechazado: falta promo_code y sin match por fallback",
+      );
+      return textResponse("Faltan parametros: promo_code requerido o fallback bot_phone+timestamp valido", 400);
+    }
+  }
+
   const leadEventId = generateEventId();
   const leadEventTime = toValidEventTime(p.lead_event_time || p.event_time || Math.floor(Date.now() / 1000));
+  const matchSourceToken =
+    leadMatchMode === "promo_code"
+      ? "match_source:promo_code"
+      : leadMatchMode === "bot_phone_timestamp_fallback"
+        ? "match_source:bot_phone_timestamp_fallback"
+        : "match_source:created_new";
 
   // 2) No match -> create new LEAD row to avoid losing conversion
   if (!targetId) {
@@ -1201,7 +1266,7 @@ async function handleLead(
       contact_status_capi: "",
       lead_status_capi: "",
       purchase_status_capi: "",
-      observaciones: "",
+      observaciones: matchSourceToken,
       external_id: generatedExternalId,
       utm_campaign: norm(p.utm_campaign),
       telefono_asignado: norm(p.telefono_asignado),
@@ -1308,11 +1373,12 @@ async function handleLead(
     if (geo.geo_region) updates.geo_region = geo.geo_region;
     if (geo.geo_country) updates.geo_country = geo.geo_country;
     if (hasPayloadGeo(geo)) updates.geo_source = "payload";
+    const { data: cur } = await db.from("conversions").select("promo_code, observaciones").eq("id", targetId).single();
     // Fill promo_code if row didn't have it
-    if (promoCode && isFullPromoCode(promoCode)) {
-      const { data: cur } = await db.from("conversions").select("promo_code").eq("id", targetId).single();
-      if (!cur?.promo_code) updates.promo_code = promoCode;
+    if (promoCode && isFullPromoCode(promoCode) && !cur?.promo_code) {
+      updates.promo_code = promoCode;
     }
+    updates.observaciones = appendObservation(cur?.observaciones ?? "", matchSourceToken);
     await db.from("conversions").update(updates).eq("id", targetId);
   }
 
