@@ -548,6 +548,35 @@ export default function StatsPanel({
     });
   }, [isTodayRange, stats.dailyData, conversions]);
   const dailyFunnelPctData = useMemo(() => {
+    if (isTodayRange) {
+      const result: { day: string; pct_inicio: number; pct_carga: number; pct_recarga: number }[] = [];
+      for (let h = 0; h < 24; h++) {
+        const convSlice = conversions.filter((c) => {
+          if (!c.created_at) return false;
+          return new Date(c.created_at).getHours() === h;
+        });
+        const contactsSlice = funnelContacts.filter((c) => {
+          if (!c.first_contact) return false;
+          return new Date(c.first_contact).getHours() === h;
+        });
+        const allConvSlice = allConversions.filter((c) => {
+          if (!c.created_at) return false;
+          return new Date(c.created_at).getHours() === h;
+        });
+        const core = computeCoreStats(convSlice, contactsSlice, allConvSlice, premiumThreshold);
+        const pctInicio = core.uniqueContacts > 0 ? (core.uniqueLeadsLinkedToContact / core.uniqueContacts) * 100 : 0;
+        const pctCarga = core.uniqueLeadsLinkedToContact > 0 ? (core.firstLoadPurchasersLinkedToLead / core.uniqueLeadsLinkedToContact) * 100 : 0;
+        const pctRecarga = core.firstLoadPurchasersLinkedToLead > 0 ? (core.repeatFromFirstInRange / core.firstLoadPurchasersLinkedToLead) * 100 : 0;
+        result.push({
+          day: `${h}`,
+          pct_inicio: Number(pctInicio.toFixed(1)),
+          pct_carga: Number(pctCarga.toFixed(1)),
+          pct_recarga: Number(pctRecarga.toFixed(1)),
+        });
+      }
+      return result;
+    }
+
     const toDayKey = (d: Date) =>
       `${d.getFullYear()}-${(d.getMonth() + 1).toString().padStart(2, "0")}-${d.getDate().toString().padStart(2, "0")}`;
     const toDayLabel = (d: Date) =>
@@ -617,7 +646,7 @@ export default function StatsPanel({
       iter.setDate(iter.getDate() + 1);
     }
     return result;
-  }, [conversions, funnelContacts, allConversions, premiumThreshold]);
+  }, [conversions, funnelContacts, allConversions, premiumThreshold, isTodayRange]);
 
   const maxCampaignRev = Math.max(...stats.byCampaign.map((r) => r.revenue), 1);
   const maxDeviceRev = Math.max(...stats.byDevice.map((r) => r.revenue), 1);
@@ -1023,7 +1052,9 @@ export default function StatsPanel({
         {/* Variación del embudo por día */}
         <div className="order-4 rounded-xl border border-zinc-800 bg-zinc-900/50 p-4">
         <div className="mb-4 flex items-center justify-between gap-2">
-          <h4 className="text-xs font-semibold text-zinc-200">Variación diaria de porcentajes del embudo</h4>
+          <h4 className="text-xs font-semibold text-zinc-200">
+            {isTodayRange ? "Variación horaria de porcentajes del embudo" : "Variación diaria de porcentajes del embudo"}
+          </h4>
           <div className="relative">
             <button
               type="button"
@@ -1076,9 +1107,10 @@ export default function StatsPanel({
               tick={{ fill: "#71717a", fontSize: 10 }}
               axisLine={{ stroke: "#3f3f46" }}
               tickLine={false}
-              angle={-35}
-              textAnchor="end"
-              height={48}
+              angle={isTodayRange ? 0 : -35}
+              textAnchor={isTodayRange ? "middle" : "end"}
+              height={isTodayRange ? 28 : 48}
+              interval={isTodayRange ? 1 : 0}
             />
             <YAxis
               tick={{ fill: "#71717a", fontSize: 10 }}
@@ -1090,6 +1122,7 @@ export default function StatsPanel({
             <Tooltip
               contentStyle={{ backgroundColor: "#18181b", border: "1px solid #3f3f46", borderRadius: 8, fontSize: 11 }}
               labelStyle={{ color: "#a1a1aa" }}
+              labelFormatter={(v) => isTodayRange ? `${v}:00 hs` : `${v}`}
               formatter={(value) => `${Number(value ?? 0).toFixed(1)}%`}
             />
             <Legend wrapperStyle={{ fontSize: 10, color: "#a1a1aa" }} />
