@@ -227,12 +227,7 @@ export default function StatsPanel({
   const [assistantInput, setAssistantInput] = useState("");
   const [assistantError, setAssistantError] = useState<string | null>(null);
   const [assistantQuota, setAssistantQuota] = useState<AssistantQuota | null>(null);
-  const [assistantMessages, setAssistantMessages] = useState<AssistantMsg[]>([
-    {
-      role: "assistant",
-      text: "Soy tu asistente de analitica. Preguntame por conclusiones del embudo, horarios, campanas o recomendaciones para optimizar Meta Ads.",
-    },
-  ]);
+  const [assistantMessages, setAssistantMessages] = useState<AssistantMsg[]>([]);
 
   const stats = useMemo(() => {
     const core = computeCoreStats(conversions, funnelContacts, allConversions, premiumThreshold);
@@ -1477,24 +1472,32 @@ export default function StatsPanel({
             </button>
           </div>
           <div className="max-h-[340px] space-y-2 overflow-y-auto px-3 py-3">
+            {assistantMessages.length === 0 && (
+              <div className="rounded-lg border border-zinc-800 bg-zinc-900/50 px-2.5 py-2 text-[11px] text-zinc-400">
+                Escribí una pregunta para analizar tus métricas.
+              </div>
+            )}
             {assistantMessages.map((m, i) => (
-              <div
-                key={`${m.role}-${i}`}
-                className={`rounded-lg px-2.5 py-2 text-[11px] leading-relaxed ${
-                  m.role === "user"
-                    ? "ml-8 border border-zinc-700 bg-zinc-900 text-zinc-200"
-                    : "mr-8 border border-emerald-900/60 bg-emerald-950/20 text-zinc-300"
-                }`}
-              >
-                <p className="mb-1 text-[10px] font-semibold uppercase tracking-wide text-zinc-500">
-                  {m.role === "user" ? "Vos" : "IA"}
-                </p>
-                <p className="whitespace-pre-wrap">{m.text}</p>
+              <div key={`${m.role}-${i}`} className={`flex ${m.role === "user" ? "justify-end" : "justify-start"}`}>
+                <div
+                  className={`max-w-[86%] rounded-2xl px-3 py-2 text-[11px] leading-relaxed ${
+                    m.role === "user"
+                      ? "border border-cyan-700/70 bg-cyan-900/35 text-cyan-100 rounded-br-md"
+                      : "border border-emerald-800/70 bg-emerald-950/25 text-zinc-200 rounded-bl-md"
+                  }`}
+                >
+                  <p className="mb-1 text-[10px] font-semibold uppercase tracking-wide text-zinc-400">
+                    {m.role === "user" ? "Cliente" : "IA"}
+                  </p>
+                  <p className="whitespace-pre-wrap">{m.text}</p>
+                </div>
               </div>
             ))}
             {assistantLoading && (
-              <div className="mr-8 rounded-lg border border-emerald-900/60 bg-emerald-950/20 px-2.5 py-2 text-[11px] text-zinc-300">
-                Analizando métricas...
+              <div className="flex justify-start">
+                <div className="max-w-[86%] rounded-2xl rounded-bl-md border border-emerald-800/70 bg-emerald-950/25 px-3 py-2 text-[11px] text-zinc-200">
+                  Analizando métricas...
+                </div>
               </div>
             )}
           </div>

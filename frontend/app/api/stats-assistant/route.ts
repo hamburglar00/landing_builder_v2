@@ -177,7 +177,8 @@ export async function POST(req: Request) {
       "Diferencia claramente: Hallazgos (datos) vs Inferencias (hipotesis) vs Acciones (recomendaciones).",
       "Prioriza recomendaciones practicas para mejorar calidad de leads, conversion a carga y recarga.",
       "Para recomendaciones de Meta, apoyate en buenas practicas oficiales y agrega una seccion breve de 'Referencias oficiales sugeridas de Meta' (sin afirmar consulta en tiempo real).",
-      "Responde en espanol, breve y accionable.",
+      "Responde en espanol, claro, conciso y accionable.",
+      "Limita la respuesta total a 140-180 palabras maximo.",
     ].join(" ");
 
     const user = [
@@ -206,7 +207,7 @@ export async function POST(req: Request) {
           { role: "system", content: [{ type: "input_text", text: system }] },
           { role: "user", content: [{ type: "input_text", text: user }] },
         ],
-        max_output_tokens: 1200,
+        max_output_tokens: 450,
       }),
       cache: "no-store",
     });

@@ -27,6 +27,7 @@ type PlanCard = {
   conversiones: string;
   seguimientos: string;
   notificaciones: string;
+  agenteIa?: string;
 };
 
 const PLAN_CARDS: PlanCard[] = [
@@ -47,6 +48,8 @@ const PLAN_CARDS: PlanCard[] = [
       "Listado de jugadores para detectar mejores usuarios, ordenarlos por criterio y contactarlos por WhatsApp.",
     notificaciones:
       "Programacion de alertas a Telegram para recordar seguimiento de usuarios inactivos.",
+    agenteIa:
+      "Asistente IA para analizar metricas de conversiones y sugerir optimizaciones practicas para Meta Ads.",
   },
   {
     code: "plus",
@@ -65,6 +68,8 @@ const PLAN_CARDS: PlanCard[] = [
       "Listado de jugadores para detectar mejores usuarios, ordenarlos por criterio y contactarlos por WhatsApp.",
     notificaciones:
       "Programacion de alertas a Telegram para recordar seguimiento de usuarios inactivos.",
+    agenteIa:
+      "Asistente IA para analizar metricas de conversiones y sugerir optimizaciones practicas para Meta Ads.",
   },
   {
     code: "pro",
@@ -119,6 +124,8 @@ const PLAN_CARDS: PlanCard[] = [
       "Listado de jugadores para detectar mejores usuarios, ordenarlos por criterio y contactarlos por WhatsApp.",
     notificaciones:
       "Programacion de alertas a Telegram para recordar seguimiento de usuarios inactivos.",
+    agenteIa:
+      "Asistente IA para analizar metricas de conversiones y sugerir optimizaciones practicas para Meta Ads.",
   },
 ];
 
@@ -240,6 +247,12 @@ export default function DashboardPlanPage() {
                   <p className="font-semibold uppercase">NOTIFICACIONES:</p>
                   <p>{plan.notificaciones}</p>
                 </div>
+                {plan.agenteIa && (
+                  <div>
+                    <p className="font-semibold uppercase">AGENTE IA:</p>
+                    <p>{plan.agenteIa}</p>
+                  </div>
+                )}
               </div>
             </article>
           ))}
