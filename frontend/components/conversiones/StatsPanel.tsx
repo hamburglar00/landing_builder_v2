@@ -8,7 +8,7 @@ import {
 import { computeCoreStats } from "@/lib/conversionStats";
 import ArgentinaMap from "./ArgentinaMap";
 import {
-  ComposedChart, Bar, LineChart, Line,
+  ComposedChart, Bar, Line,
   XAxis, YAxis, CartesianGrid, Tooltip, Legend,
   ResponsiveContainer,
 } from "recharts";
@@ -190,6 +190,12 @@ export default function StatsPanel({
   const [adSpend, setAdSpend] = useState<string>("");
   const [smaMenuOpen, setSmaMenuOpen] = useState(false);
   const [smaEnabled, setSmaEnabled] = useState<{ 1: boolean; 3: boolean; 5: boolean }>({
+    1: false,
+    3: true,
+    5: false,
+  });
+  const [dailySmaMenuOpen, setDailySmaMenuOpen] = useState(false);
+  const [dailySmaEnabled, setDailySmaEnabled] = useState<{ 1: boolean; 3: boolean; 5: boolean }>({
     1: false,
     3: true,
     5: false,
@@ -461,6 +467,26 @@ export default function StatsPanel({
       sma5: getSma(idx, 5),
     }));
   }, [stats.hourlyBuckets]);
+  const dailyChartData = useMemo(() => {
+    const getSma = (idx: number, window: 1 | 3 | 5) => {
+      const start = Math.max(0, idx - window + 1);
+      let sum = 0;
+      let count = 0;
+      for (let i = start; i <= idx; i++) {
+        const total = (stats.dailyData[i]?.leads ?? 0) + (stats.dailyData[i]?.cargas ?? 0);
+        sum += total;
+        count += 1;
+      }
+      return count > 0 ? Number((sum / count).toFixed(2)) : 0;
+    };
+    return stats.dailyData.map((row, idx) => ({
+      ...row,
+      total: row.leads + row.cargas,
+      sma1: getSma(idx, 1),
+      sma3: getSma(idx, 3),
+      sma5: getSma(idx, 5),
+    }));
+  }, [stats.dailyData]);
 
   const maxCampaignRev = Math.max(...stats.byCampaign.map((r) => r.revenue), 1);
   const maxDeviceRev = Math.max(...stats.byDevice.map((r) => r.revenue), 1);
@@ -714,9 +740,43 @@ export default function StatsPanel({
 
         {/* Leads vs Cargas por día */}
         <div className="rounded-xl border border-zinc-800 bg-zinc-900/50 p-4">
-          <h4 className="text-xs font-semibold text-zinc-200 mb-4">Mensajes recibidos y cargas por día</h4>
+          <div className="mb-4 flex items-center justify-between gap-2">
+            <h4 className="text-xs font-semibold text-zinc-200">Mensajes recibidos y cargas por día</h4>
+            <div className="relative">
+              <button
+                type="button"
+                onClick={() => setDailySmaMenuOpen((v) => !v)}
+                className="inline-flex h-7 items-center gap-1.5 rounded-lg border border-zinc-700 bg-zinc-900 px-2 text-[11px] text-zinc-300 hover:bg-zinc-800"
+              >
+                SMA
+                <svg className={`h-3 w-3 transition-transform ${dailySmaMenuOpen ? "rotate-180" : ""}`} viewBox="0 0 20 20" fill="currentColor">
+                  <path fillRule="evenodd" d="M5.23 7.21a.75.75 0 011.06.02L10 11.168l3.71-3.938a.75.75 0 111.08 1.04l-4.25 4.5a.75.75 0 01-1.08 0l-4.25-4.5a.75.75 0 01.02-1.06z" clipRule="evenodd" />
+                </svg>
+              </button>
+              {dailySmaMenuOpen && (
+                <div className="absolute right-0 top-8 z-20 w-36 rounded-lg border border-zinc-700 bg-zinc-900/95 p-2 shadow-xl">
+                  {[1, 3, 5].map((w) => {
+                    const key = w as 1 | 3 | 5;
+                    const color = key === 1 ? "bg-sky-400" : key === 3 ? "bg-fuchsia-400" : "bg-amber-400";
+                    return (
+                      <label key={w} className="flex cursor-pointer items-center gap-2 rounded px-1.5 py-1 text-[11px] text-zinc-300 hover:bg-zinc-800/80">
+                        <input
+                          type="checkbox"
+                          checked={dailySmaEnabled[key]}
+                          onChange={(e) => setDailySmaEnabled((prev) => ({ ...prev, [key]: e.target.checked }))}
+                          className="h-3.5 w-3.5 rounded border-zinc-600 bg-zinc-900 accent-emerald-500"
+                        />
+                        <span className={`inline-block h-2 w-2 rounded-full ${color}`} />
+                        {`SMA ${w}`}
+                      </label>
+                    );
+                  })}
+                </div>
+              )}
+            </div>
+          </div>
           <ResponsiveContainer width="100%" height={240}>
-            <LineChart data={stats.dailyData} margin={{ top: 4, right: 8, bottom: 0, left: -16 }}>
+            <ComposedChart data={dailyChartData} margin={{ top: 4, right: 8, bottom: 0, left: -16 }}>
               <CartesianGrid strokeDasharray="3 3" stroke="#27272a" />
               <XAxis
                 dataKey="day"
@@ -737,12 +797,13 @@ export default function StatsPanel({
                 contentStyle={{ backgroundColor: "#18181b", border: "1px solid #3f3f46", borderRadius: 8, fontSize: 11 }}
                 labelStyle={{ color: "#a1a1aa" }}
               />
-              <Legend
-                wrapperStyle={{ fontSize: 10, color: "#a1a1aa" }}
-              />
-              <Line type="monotone" dataKey="leads" name="Mensajes recibidos" stroke="#fbbf24" strokeWidth={2} dot={{ r: 2, fill: "#fbbf24" }} activeDot={{ r: 4 }} />
-              <Line type="monotone" dataKey="cargas" name="Cargas" stroke="#34d399" strokeWidth={2} dot={{ r: 2, fill: "#34d399" }} activeDot={{ r: 4 }} />
-            </LineChart>
+              <Bar dataKey="leads" stackId="daily" name="Mensajes recibidos" fill="#fbbf24" radius={[3, 3, 0, 0]} maxBarSize={24} />
+              <Bar dataKey="cargas" stackId="daily" name="Cargas" fill="#34d399" radius={[3, 3, 0, 0]} maxBarSize={24} />
+              {dailySmaEnabled[1] && <Line type="monotone" dataKey="sma1" name="SMA 1" stroke="#38bdf8" strokeWidth={2} dot={false} />}
+              {dailySmaEnabled[3] && <Line type="monotone" dataKey="sma3" name="SMA 3" stroke="#e879f9" strokeWidth={2} dot={false} />}
+              {dailySmaEnabled[5] && <Line type="monotone" dataKey="sma5" name="SMA 5" stroke="#f59e0b" strokeWidth={2} dot={false} />}
+              <Legend wrapperStyle={{ fontSize: 10, color: "#a1a1aa" }} />
+            </ComposedChart>
           </ResponsiveContainer>
         </div>
       </div>
