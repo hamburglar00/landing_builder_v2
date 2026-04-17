@@ -260,8 +260,88 @@ Deno.serve(async (req) => {
       }
     }
 
+    // Deferred LEAD replay (without promo_code): process after 1h.
+    let deferredLeadsPicked = 0;
+    let deferredLeadsProcessed = 0;
+    let deferredLeadsFailed = 0;
+
+    const cutoffIso = new Date(Date.now() - 60 * 60 * 1000).toISOString();
+    const { data: deferredRows } = await db
+      .from("conversion_inbox")
+      .select("id, user_id, landing_name, payload_raw, created_at")
+      .eq("status", "received")
+      .eq("action", "LEAD")
+      .lte("created_at", cutoffIso)
+      .order("created_at", { ascending: true })
+      .limit(50);
+
+    const deferred = (deferredRows ?? []) as DeferredLeadInboxRow[];
+    if (deferred.length > 0) {
+      deferredLeadsPicked = deferred.length;
+      const userIdsForDeferred = [...new Set(deferred.map((r) => r.user_id))];
+      const { data: profiles } = await db
+        .from("profiles")
+        .select("id, nombre")
+        .in("id", userIdsForDeferred);
+      const profileNameByUserId = new Map<string, string>();
+      for (const p of profiles ?? []) {
+        profileNameByUserId.set(String(p.id), String(p.nombre ?? "").trim());
+      }
+
+      for (const row of deferred) {
+        const clientName = profileNameByUserId.get(String(row.user_id)) ?? "";
+        if (!clientName) {
+          await db
+            .from("conversion_inbox")
+            .update({
+              status: "error",
+              http_status: 500,
+              response_body: "Deferred LEAD retry error: client name not found",
+              processed_at: new Date().toISOString(),
+            })
+            .eq("id", row.id);
+          deferredLeadsFailed++;
+          continue;
+        }
+
+        let payload: Record<string, unknown> = {};
+        try {
+          payload = JSON.parse(row.payload_raw || "{}") as Record<string, unknown>;
+        } catch {
+          payload = {};
+        }
+        payload.__deferred_retry = true;
+        payload.__inbox_id = row.id;
+        payload.action = "LEAD";
+
+        const replayUrl = `${supabaseUrl}/functions/v1/conversions?name=${encodeURIComponent(clientName)}`;
+        try {
+          const replayRes = await fetch(replayUrl, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify(payload),
+          });
+
+          if (replayRes.status >= 200 && replayRes.status < 400) {
+            deferredLeadsProcessed++;
+          } else {
+            deferredLeadsFailed++;
+          }
+        } catch {
+          deferredLeadsFailed++;
+        }
+      }
+    }
+
     return new Response(
-      JSON.stringify({ success: true, retried, succeeded }),
+      JSON.stringify({
+        success: true,
+        retried,
+        succeeded,
+        deferred_leads_picked: deferredLeadsPicked,
+        deferred_leads_processed: deferredLeadsProcessed,
+        deferred_leads_failed: deferredLeadsFailed,
+      }),
       { status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" } },
     );
   } catch (err) {
@@ -283,3 +363,11 @@ function appendObs(current: string, token: string): string {
   parts.push(clean);
   return parts.join(" | ");
 }
+
+type DeferredLeadInboxRow = {
+  id: string;
+  user_id: string;
+  landing_name: string;
+  payload_raw: string;
+  created_at: string;
+};

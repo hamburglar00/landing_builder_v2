@@ -1974,8 +1974,11 @@ Deno.serve(async (req) => {
     const rawAction = norm(params.action).toUpperCase();
     const actionEventId = norm(params.action_event_id);
     const inboxAction = rawAction || "CONTACT";
+    const isDeferredRetry = toBool(params.__deferred_retry);
+    const deferredInboxId = norm(params.__inbox_id);
 
     if (
+      !isDeferredRetry &&
       actionEventId &&
       (rawAction === "LEAD" || rawAction === "PURCHASE")
     ) {
@@ -2003,7 +2006,12 @@ Deno.serve(async (req) => {
       }
     }
 
-    const inboxId = await insertInboundEvent(db, userId, landingName, inboxAction, params);
+    let inboxId: string | null = null;
+    if (isDeferredRetry && deferredInboxId) {
+      inboxId = deferredInboxId;
+    } else {
+      inboxId = await insertInboundEvent(db, userId, landingName, inboxAction, params);
+    }
 
     const runAndFinalize = async (runner: () => Promise<Response>) => {
       const response = await runner();
@@ -2018,6 +2026,30 @@ Deno.serve(async (req) => {
       return runAndFinalize(() => handleSimplePurchase(db, params, landing, cfg, pixelConfigs));
     }
     if (rawAction === "LEAD") {
+      const incomingPromoCode = norm(params.promo_code);
+      // Deferred queue mode: LEAD without promo_code waits and is retried by cron after 1h.
+      if (!incomingPromoCode && !isDeferredRetry) {
+        await writeLog(
+          db,
+          landing.user_id,
+          "main",
+          "INFO",
+          "LEAD en espera por falta promo_code (deferred 1h)",
+          JSON.stringify({
+            action: "LEAD",
+            action_event_id: actionEventId,
+            bot_phone: sanitizePhone(params.bot_phone),
+            timestamp: norm(params.timestamp),
+            inbox_id: inboxId,
+          }),
+          undefined,
+          undefined,
+          undefined,
+          safePayloadRaw(params),
+          "lead en espera: faltante promo_code, reintento diferido",
+        );
+        return textResponse("LEAD recibido y en espera para reintento diferido (1h)", 202);
+      }
       return runAndFinalize(() => handleLead(db, params, landing, cfg, pixelConfigs));
     }
     if (rawAction === "PURCHASE") {
