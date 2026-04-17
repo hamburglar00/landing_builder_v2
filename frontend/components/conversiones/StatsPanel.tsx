@@ -206,7 +206,7 @@ export default function StatsPanel({
   });
   const [funnelPctMenuOpen, setFunnelPctMenuOpen] = useState(false);
   const [funnelPctEnabled, setFunnelPctEnabled] = useState<{ inicio: boolean; carga: boolean; recarga: boolean }>({
-    inicio: false,
+    inicio: true,
     carga: true,
     recarga: false,
   });
