@@ -484,6 +484,7 @@ export default function StatsPanel({
     const endToday = new Date(now.getFullYear(), now.getMonth(), now.getDate(), 23, 59, 59, 999).getTime();
     return dateRange.start.getTime() === startToday && dateRange.end.getTime() === endToday;
   }, [dateRange]);
+  const currentHour = useMemo(() => new Date().getHours(), []);
   const hourlyChartData = useMemo(() => {
     const getSma = (idx: number, window: 1 | 3 | 5) => {
       const start = Math.max(0, idx - window + 1);
@@ -495,13 +496,17 @@ export default function StatsPanel({
       }
       return count > 0 ? Number((sum / count).toFixed(2)) : 0;
     };
-    return stats.hourlyBuckets.map((row, idx) => ({
-      ...row,
-      sma1: getSma(idx, 1),
-      sma3: getSma(idx, 3),
-      sma5: getSma(idx, 5),
-    }));
-  }, [stats.hourlyBuckets]);
+    return stats.hourlyBuckets.map((row, idx) => {
+      const isFutureHour = isTodayRange && idx > currentHour;
+      return {
+        ...row,
+        cargas: isFutureHour ? null : row.cargas,
+        sma1: isFutureHour ? null : getSma(idx, 1),
+        sma3: isFutureHour ? null : getSma(idx, 3),
+        sma5: isFutureHour ? null : getSma(idx, 5),
+      };
+    });
+  }, [stats.hourlyBuckets, isTodayRange, currentHour]);
   const hourlyMessagesLoadsData = useMemo(() => {
     const isFirstPurchase = (c: ConversionRow): boolean => {
       if ((c.purchase_event_id ?? "") === "") return false;
@@ -519,8 +524,16 @@ export default function StatsPanel({
         if (isFirstPurchase(c)) byHour[h].cargas_first += 1;
       }
     }
-    return byHour;
-  }, [conversions]);
+    return byHour.map((row, idx) => {
+      const isFutureHour = isTodayRange && idx > currentHour;
+      return {
+        ...row,
+        leads: isFutureHour ? null : row.leads,
+        cargas: isFutureHour ? null : row.cargas,
+        cargas_first: isFutureHour ? null : row.cargas_first,
+      };
+    });
+  }, [conversions, isTodayRange, currentHour]);
   const dailyMessagesLoadsData = useMemo(() => {
     const isFirstPurchase = (c: ConversionRow): boolean => {
       if ((c.purchase_event_id ?? "") === "") return false;
@@ -539,7 +552,15 @@ export default function StatsPanel({
           if (isFirstPurchase(c)) byHour[h].cargas_first += 1;
         }
       }
-      return byHour;
+      return byHour.map((row, idx) => {
+        const isFutureHour = idx > currentHour;
+        return {
+          ...row,
+          leads: isFutureHour ? null : row.leads,
+          cargas: isFutureHour ? null : row.cargas,
+          cargas_first: isFutureHour ? null : row.cargas_first,
+        };
+      });
     }
 
     const byDay = new Map<string, { day: string; leads: number; cargas: number; cargas_first: number }>();
@@ -564,11 +585,12 @@ export default function StatsPanel({
       });
       return match ?? { day: d.day, leads: 0, cargas: 0, cargas_first: 0 };
     });
-  }, [isTodayRange, stats.dailyData, conversions]);
+  }, [isTodayRange, stats.dailyData, conversions, currentHour]);
   const dailyFunnelPctData = useMemo(() => {
     if (isTodayRange) {
-      const result: { day: string; pct_inicio: number; pct_carga: number; pct_recarga: number }[] = [];
+      const result: { day: string; pct_inicio: number | null; pct_carga: number | null; pct_recarga: number | null }[] = [];
       for (let h = 0; h < 24; h++) {
+        const isFutureHour = h > currentHour;
         const convSlice = conversions.filter((c) => {
           if (!c.created_at) return false;
           return new Date(c.created_at).getHours() === h;
@@ -587,9 +609,9 @@ export default function StatsPanel({
         const pctRecarga = core.firstLoadPurchasersLinkedToLead > 0 ? (core.repeatFromFirstInRange / core.firstLoadPurchasersLinkedToLead) * 100 : 0;
         result.push({
           day: `${h}`,
-          pct_inicio: Number(pctInicio.toFixed(1)),
-          pct_carga: Number(pctCarga.toFixed(1)),
-          pct_recarga: Number(pctRecarga.toFixed(1)),
+          pct_inicio: isFutureHour ? null : Number(pctInicio.toFixed(1)),
+          pct_carga: isFutureHour ? null : Number(pctCarga.toFixed(1)),
+          pct_recarga: isFutureHour ? null : Number(pctRecarga.toFixed(1)),
         });
       }
       return result;
@@ -664,7 +686,7 @@ export default function StatsPanel({
       iter.setDate(iter.getDate() + 1);
     }
     return result;
-  }, [conversions, funnelContacts, allConversions, premiumThreshold, isTodayRange]);
+  }, [conversions, funnelContacts, allConversions, premiumThreshold, isTodayRange, currentHour]);
 
   const maxCampaignRev = Math.max(...stats.byCampaign.map((r) => r.revenue), 1);
   const maxDeviceRev = Math.max(...stats.byDevice.map((r) => r.revenue), 1);
