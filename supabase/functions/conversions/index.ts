@@ -1185,9 +1185,9 @@ async function handleLead(
           undefined,
           undefined,
           safePayloadRaw(p),
-          "rechazado: fallback ambiguo (bot_phone+timestamp)",
+          "fallback ambiguo (bot_phone+timestamp): se crea LEAD nuevo",
         );
-        return textResponse("LEAD recibido pero no procesado: fallback bot_phone+timestamp ambiguo", 409);
+        leadMatchMode = "created_new";
       }
     }
 
@@ -1208,9 +1208,9 @@ async function handleLead(
         undefined,
         undefined,
         safePayloadRaw(p),
-        "rechazado: falta promo_code y sin match por fallback",
+        "sin match por fallback: se crea LEAD nuevo",
       );
-      return textResponse("Faltan parametros: promo_code requerido o fallback bot_phone+timestamp valido", 400);
+      leadMatchMode = "created_new";
     }
   }
 
