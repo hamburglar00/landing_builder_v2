@@ -18,7 +18,7 @@ function extractAssistantText(parsed: unknown): string {
     | {
         output_text?: string;
         output?: Array<{
-          content?: Array<{ type?: string; text?: string }>;
+          content?: Array<{ type?: string; text?: string | { value?: string } }>;
         }>;
       }
     | null;
@@ -28,11 +28,30 @@ function extractAssistantText(parsed: unknown): string {
 
   const chunks = (asObj?.output ?? [])
     .flatMap((o) => o.content ?? [])
-    .filter((c) => c?.type === "output_text" || c?.type === "text")
-    .map((c) => String(c.text ?? "").trim())
+    .filter((c) =>
+      c?.type === "output_text" ||
+      c?.type === "text" ||
+      c?.type === "summary_text"
+    )
+    .map((c) => {
+      if (typeof c.text === "string") return c.text.trim();
+      if (c.text && typeof c.text === "object" && typeof c.text.value === "string") {
+        return c.text.value.trim();
+      }
+      return "";
+    })
     .filter(Boolean);
 
-  return chunks.join("\n").trim();
+  const joined = chunks.join("\n").trim();
+  if (joined) return joined;
+
+  // Fallback defensivo: intenta encontrar posibles textos en estructuras no tipadas.
+  const anyObj = parsed as Record<string, unknown> | null;
+  const alt =
+    (anyObj?.["response_text"] as string | undefined) ??
+    (anyObj?.["text"] as string | undefined) ??
+    "";
+  return String(alt).trim();
 }
 
 async function getAuthUserIdFromBearer(
