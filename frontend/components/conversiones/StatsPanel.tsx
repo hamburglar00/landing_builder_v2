@@ -172,6 +172,11 @@ function TableCard({ title, children }: { title: string; children: React.ReactNo
   );
 }
 
+type AssistantMsg = {
+  role: "user" | "assistant";
+  text: string;
+};
+
 export default function StatsPanel({
   funnelContacts,
   conversions,
@@ -210,6 +215,16 @@ export default function StatsPanel({
     carga: true,
     recarga: false,
   });
+  const [assistantOpen, setAssistantOpen] = useState(false);
+  const [assistantLoading, setAssistantLoading] = useState(false);
+  const [assistantInput, setAssistantInput] = useState("");
+  const [assistantError, setAssistantError] = useState<string | null>(null);
+  const [assistantMessages, setAssistantMessages] = useState<AssistantMsg[]>([
+    {
+      role: "assistant",
+      text: "Soy tu asistente de analitica. Preguntame por conclusiones del embudo, horarios, campanas o recomendaciones para optimizar Meta Ads.",
+    },
+  ]);
 
   const stats = useMemo(() => {
     const core = computeCoreStats(conversions, funnelContacts, allConversions, premiumThreshold);
@@ -651,6 +666,65 @@ export default function StatsPanel({
   const maxCampaignRev = Math.max(...stats.byCampaign.map((r) => r.revenue), 1);
   const maxDeviceRev = Math.max(...stats.byDevice.map((r) => r.revenue), 1);
   const maxLandingRev = Math.max(...stats.byLanding.map((r) => r.revenue), 1);
+  const assistantContext = useMemo(() => ({
+    isTodayRange,
+    summary: {
+      clicks_cta: stats.uniqueContacts,
+      mensajes_recibidos: stats.uniqueLeadsLinkedToContact,
+      jugadores_cargaron: stats.firstLoadPurchasersLinkedToLead,
+      jugadores_recargaron: stats.repeatFromFirstInRange,
+      primeras_cargas: stats.purchaseFirstCount,
+      recargas: stats.purchaseRepeatCount,
+      total_cargas: stats.totalPurchases,
+      total_cargado: stats.totalRevenue,
+      ticket_promedio: stats.avgTicket,
+      cargas_promedio_por_jugador: stats.avgLoadsPerPlayer,
+    },
+    funnel_pct: {
+      inicio_conversacion: stats.uniqueContacts > 0 ? Number(((stats.uniqueLeadsLinkedToContact / stats.uniqueContacts) * 100).toFixed(1)) : 0,
+      carga: stats.uniqueLeadsLinkedToContact > 0 ? Number(((stats.firstLoadPurchasersLinkedToLead / stats.uniqueLeadsLinkedToContact) * 100).toFixed(1)) : 0,
+      recarga: stats.firstLoadPurchasersLinkedToLead > 0 ? Number(((stats.repeatFromFirstInRange / stats.firstLoadPurchasersLinkedToLead) * 100).toFixed(1)) : 0,
+    },
+    charts: {
+      hourly_total_cargas: stats.hourlyBuckets,
+      hourly_mensajes_cargas: hourlyMessagesLoadsData,
+      daily_mensajes_cargas: dailyMessagesLoadsData,
+      daily_funnel_pct: dailyFunnelPctData,
+    },
+    breakdowns: {
+      by_campaign_top10: stats.byCampaign.slice(0, 10),
+      by_device_top10: stats.byDevice.slice(0, 10),
+      by_landing_top10: stats.byLanding.slice(0, 10),
+    },
+  }), [isTodayRange, stats, hourlyMessagesLoadsData, dailyMessagesLoadsData, dailyFunnelPctData]);
+
+  const sendAssistantQuestion = async () => {
+    const question = assistantInput.trim();
+    if (!question || assistantLoading) return;
+    setAssistantError(null);
+    setAssistantLoading(true);
+    setAssistantMessages((prev) => [...prev, { role: "user", text: question }]);
+    setAssistantInput("");
+    try {
+      const res = await fetch("/api/stats-assistant", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ question, context: assistantContext }),
+      });
+      const json = (await res.json()) as { answer?: string; error?: string };
+      if (!res.ok) {
+        throw new Error(json.error || "No se pudo obtener respuesta.");
+      }
+      const answer = String(json.answer ?? "").trim() || "No pude generar una respuesta con los datos actuales.";
+      setAssistantMessages((prev) => [...prev, { role: "assistant", text: answer }]);
+    } catch (e) {
+      const msg = e instanceof Error ? e.message : "Error inesperado";
+      setAssistantError(msg);
+      setAssistantMessages((prev) => [...prev, { role: "assistant", text: "No pude responder en este momento. Proba de nuevo en unos segundos." }]);
+    } finally {
+      setAssistantLoading(false);
+    }
+  };
 
   return (
     <div className="space-y-8">
@@ -1327,6 +1401,84 @@ export default function StatsPanel({
                 </tbody>
               </table>
             </TableCard>
+          </div>
+        </div>
+      )}
+
+      <button
+        type="button"
+        onClick={() => setAssistantOpen((v) => !v)}
+        className="fixed bottom-6 right-6 z-40 inline-flex h-12 w-12 items-center justify-center rounded-full border border-emerald-700/70 bg-emerald-900/90 text-emerald-200 shadow-lg shadow-emerald-950/40 transition hover:bg-emerald-800"
+        title="Asistente IA de estadísticas"
+        aria-label="Abrir asistente IA de estadísticas"
+      >
+        <svg viewBox="0 0 24 24" className="h-6 w-6" fill="none" stroke="currentColor" strokeWidth={2}>
+          <path strokeLinecap="round" strokeLinejoin="round" d="M8 10h8M8 14h5M5 20l1.5-3H19a2 2 0 002-2V6a2 2 0 00-2-2H5a2 2 0 00-2 2v9a2 2 0 002 2z" />
+        </svg>
+      </button>
+      {assistantOpen && (
+        <div className="fixed bottom-20 right-6 z-40 w-[360px] max-w-[92vw] rounded-xl border border-zinc-700 bg-zinc-950 shadow-2xl">
+          <div className="flex items-center justify-between border-b border-zinc-800 px-3 py-2">
+            <div>
+              <p className="text-xs font-semibold text-zinc-100">Asistente IA de Estadísticas</p>
+              <p className="text-[10px] text-zinc-500">Analiza tus métricas y sugiere optimizaciones en Meta Ads</p>
+            </div>
+            <button
+              type="button"
+              onClick={() => setAssistantOpen(false)}
+              className="rounded-md border border-zinc-700 px-2 py-0.5 text-[11px] text-zinc-300 hover:bg-zinc-800"
+            >
+              Cerrar
+            </button>
+          </div>
+          <div className="max-h-[340px] space-y-2 overflow-y-auto px-3 py-3">
+            {assistantMessages.map((m, i) => (
+              <div
+                key={`${m.role}-${i}`}
+                className={`rounded-lg px-2.5 py-2 text-[11px] leading-relaxed ${
+                  m.role === "user"
+                    ? "ml-8 border border-zinc-700 bg-zinc-900 text-zinc-200"
+                    : "mr-8 border border-emerald-900/60 bg-emerald-950/20 text-zinc-300"
+                }`}
+              >
+                <p className="mb-1 text-[10px] font-semibold uppercase tracking-wide text-zinc-500">
+                  {m.role === "user" ? "Vos" : "IA"}
+                </p>
+                <p className="whitespace-pre-wrap">{m.text}</p>
+              </div>
+            ))}
+            {assistantLoading && (
+              <div className="mr-8 rounded-lg border border-emerald-900/60 bg-emerald-950/20 px-2.5 py-2 text-[11px] text-zinc-300">
+                Analizando métricas...
+              </div>
+            )}
+          </div>
+          <div className="space-y-2 border-t border-zinc-800 px-3 py-3">
+            {assistantError && <p className="text-[10px] text-red-400">{assistantError}</p>}
+            <textarea
+              value={assistantInput}
+              onChange={(e) => setAssistantInput(e.target.value)}
+              placeholder="Ej: ¿Qué horario conviene priorizar y qué probar en Meta Ads esta semana?"
+              rows={3}
+              className="w-full resize-none rounded-lg border border-zinc-700 bg-zinc-900 px-2.5 py-2 text-[11px] text-zinc-100 outline-none focus:border-zinc-500"
+            />
+            <div className="flex items-center justify-between gap-2">
+              <button
+                type="button"
+                onClick={() => setAssistantInput("Decime las 3 optimizaciones más importantes para mejorar % de carga en Meta Ads.")}
+                className="rounded-md border border-zinc-700 px-2 py-1 text-[10px] text-zinc-300 hover:bg-zinc-800"
+              >
+                Sugerir pregunta
+              </button>
+              <button
+                type="button"
+                onClick={() => { void sendAssistantQuestion(); }}
+                disabled={assistantLoading || !assistantInput.trim()}
+                className="rounded-md border border-emerald-700 bg-emerald-600 px-3 py-1 text-[11px] font-semibold text-zinc-950 hover:bg-emerald-500 disabled:opacity-50"
+              >
+                Enviar
+              </button>
+            </div>
           </div>
         </div>
       )}
