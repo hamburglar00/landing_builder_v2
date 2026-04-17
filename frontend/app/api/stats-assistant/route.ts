@@ -11,7 +11,29 @@ function compactJson(value: unknown, maxLen = 14000): string {
   return `${raw.slice(0, maxLen)}\n... [truncated]`;
 }
 
-const MONTHLY_REQUEST_LIMIT = 750;
+const MONTHLY_REQUEST_LIMIT = 150;
+
+function extractAssistantText(parsed: unknown): string {
+  const asObj = parsed as
+    | {
+        output_text?: string;
+        output?: Array<{
+          content?: Array<{ type?: string; text?: string }>;
+        }>;
+      }
+    | null;
+
+  const direct = String(asObj?.output_text ?? "").trim();
+  if (direct) return direct;
+
+  const chunks = (asObj?.output ?? [])
+    .flatMap((o) => o.content ?? [])
+    .filter((c) => c?.type === "output_text" || c?.type === "text")
+    .map((c) => String(c.text ?? "").trim())
+    .filter(Boolean);
+
+  return chunks.join("\n").trim();
+}
 
 async function getAuthUserIdFromBearer(
   bearer: string,
@@ -226,9 +248,7 @@ export async function POST(req: Request) {
     } catch {
       parsed = null;
     }
-    const outputText =
-      (parsed as { output_text?: string } | null)?.output_text ??
-      "No se pudo generar una respuesta en este momento.";
+    const outputText = extractAssistantText(parsed) || "No se pudo generar una respuesta en este momento.";
 
     return NextResponse.json({
       ok: true,

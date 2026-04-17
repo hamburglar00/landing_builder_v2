@@ -1460,7 +1460,7 @@ export default function StatsPanel({
               <p className="mt-1 text-[10px] text-zinc-400">
                 {assistantQuota
                   ? `Consultas este mes: ${assistantQuota.used}/${assistantQuota.limit}`
-                  : "Consultas este mes: -/750"}
+                  : "Consultas este mes: -/150"}
               </p>
             </div>
             <button
