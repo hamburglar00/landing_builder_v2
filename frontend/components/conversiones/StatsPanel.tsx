@@ -8,7 +8,7 @@ import {
 import { computeCoreStats } from "@/lib/conversionStats";
 import ArgentinaMap from "./ArgentinaMap";
 import {
-  BarChart, Bar, LineChart, Line,
+  ComposedChart, Bar, LineChart, Line,
   XAxis, YAxis, CartesianGrid, Tooltip, Legend,
   ResponsiveContainer,
 } from "recharts";
@@ -188,6 +188,12 @@ export default function StatsPanel({
   compactTooltips?: boolean;
 }) {
   const [adSpend, setAdSpend] = useState<string>("");
+  const [smaMenuOpen, setSmaMenuOpen] = useState(false);
+  const [smaEnabled, setSmaEnabled] = useState<{ 1: boolean; 3: boolean; 5: boolean }>({
+    1: false,
+    3: true,
+    5: false,
+  });
 
   const stats = useMemo(() => {
     const core = computeCoreStats(conversions, funnelContacts, allConversions, premiumThreshold);
@@ -437,6 +443,24 @@ export default function StatsPanel({
   const parsedAdSpend = parseFloat(adSpend.replace(/\D/g, "")) || 0;
   const roasFirstPurchase = parsedAdSpend > 0 ? stats.firstPurchaseRevenue / parsedAdSpend : 0;
   const roasTotal = parsedAdSpend > 0 ? stats.totalRevenue / parsedAdSpend : 0;
+  const hourlyChartData = useMemo(() => {
+    const getSma = (idx: number, window: 1 | 3 | 5) => {
+      const start = Math.max(0, idx - window + 1);
+      let sum = 0;
+      let count = 0;
+      for (let i = start; i <= idx; i++) {
+        sum += stats.hourlyBuckets[i]?.cargas ?? 0;
+        count += 1;
+      }
+      return count > 0 ? Number((sum / count).toFixed(2)) : 0;
+    };
+    return stats.hourlyBuckets.map((row, idx) => ({
+      ...row,
+      sma1: getSma(idx, 1),
+      sma3: getSma(idx, 3),
+      sma5: getSma(idx, 5),
+    }));
+  }, [stats.hourlyBuckets]);
 
   const maxCampaignRev = Math.max(...stats.byCampaign.map((r) => r.revenue), 1);
   const maxDeviceRev = Math.max(...stats.byDevice.map((r) => r.revenue), 1);
@@ -622,9 +646,43 @@ export default function StatsPanel({
       <div className="grid gap-4 lg:grid-cols-2">
         {/* Cargas por hora */}
         <div className="rounded-xl border border-zinc-800 bg-zinc-900/50 p-4">
-          <h4 className="text-xs font-semibold text-zinc-200 mb-4">Distribución de cargas por hora del día</h4>
+          <div className="mb-4 flex items-center justify-between gap-2">
+            <h4 className="text-xs font-semibold text-zinc-200">Distribución de cargas por hora del día</h4>
+            <div className="relative">
+              <button
+                type="button"
+                onClick={() => setSmaMenuOpen((v) => !v)}
+                className="inline-flex h-7 items-center gap-1.5 rounded-lg border border-zinc-700 bg-zinc-900 px-2 text-[11px] text-zinc-300 hover:bg-zinc-800"
+              >
+                SMA
+                <svg className={`h-3 w-3 transition-transform ${smaMenuOpen ? "rotate-180" : ""}`} viewBox="0 0 20 20" fill="currentColor">
+                  <path fillRule="evenodd" d="M5.23 7.21a.75.75 0 011.06.02L10 11.168l3.71-3.938a.75.75 0 111.08 1.04l-4.25 4.5a.75.75 0 01-1.08 0l-4.25-4.5a.75.75 0 01.02-1.06z" clipRule="evenodd" />
+                </svg>
+              </button>
+              {smaMenuOpen && (
+                <div className="absolute right-0 top-8 z-20 w-36 rounded-lg border border-zinc-700 bg-zinc-900/95 p-2 shadow-xl">
+                  {[1, 3, 5].map((w) => {
+                    const key = w as 1 | 3 | 5;
+                    const color = key === 1 ? "bg-sky-400" : key === 3 ? "bg-fuchsia-400" : "bg-amber-400";
+                    return (
+                      <label key={w} className="flex cursor-pointer items-center gap-2 rounded px-1.5 py-1 text-[11px] text-zinc-300 hover:bg-zinc-800/80">
+                        <input
+                          type="checkbox"
+                          checked={smaEnabled[key]}
+                          onChange={(e) => setSmaEnabled((prev) => ({ ...prev, [key]: e.target.checked }))}
+                          className="h-3.5 w-3.5 rounded border-zinc-600 bg-zinc-900 accent-emerald-500"
+                        />
+                        <span className={`inline-block h-2 w-2 rounded-full ${color}`} />
+                        {`SMA ${w}`}
+                      </label>
+                    );
+                  })}
+                </div>
+              )}
+            </div>
+          </div>
           <ResponsiveContainer width="100%" height={240}>
-            <BarChart data={stats.hourlyBuckets} margin={{ top: 4, right: 8, bottom: 0, left: -16 }}>
+            <ComposedChart data={hourlyChartData} margin={{ top: 4, right: 8, bottom: 0, left: -16 }}>
               <CartesianGrid strokeDasharray="3 3" stroke="#27272a" />
               <XAxis
                 dataKey="hour"
@@ -646,7 +704,11 @@ export default function StatsPanel({
                 labelFormatter={(v) => `${v}:00 hs`}
               />
               <Bar dataKey="cargas" name="Cargas" fill="#34d399" radius={[3, 3, 0, 0]} maxBarSize={20} />
-            </BarChart>
+              {smaEnabled[1] && <Line type="monotone" dataKey="sma1" name="SMA 1" stroke="#38bdf8" strokeWidth={2} dot={false} />}
+              {smaEnabled[3] && <Line type="monotone" dataKey="sma3" name="SMA 3" stroke="#e879f9" strokeWidth={2} dot={false} />}
+              {smaEnabled[5] && <Line type="monotone" dataKey="sma5" name="SMA 5" stroke="#f59e0b" strokeWidth={2} dot={false} />}
+              <Legend wrapperStyle={{ fontSize: 11 }} />
+            </ComposedChart>
           </ResponsiveContainer>
         </div>
 
