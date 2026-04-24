@@ -808,7 +808,7 @@ export default function StatsPanel({
       {/*  RESUMEN GENERAL  */}
       <div>
         <SectionTitle>Resumen general</SectionTitle>
-        <div className="mt-3 grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-6">
+        <div className="mt-3 grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-5">
           <KpiCard
             label="Clicks en el boton de la landing"
             value={stats.uniqueContacts}
@@ -837,12 +837,6 @@ export default function StatsPanel({
             value={stats.totalPurchases}
             color="text-sky-400"
             tooltip="Cantidad de primeras cargas (first) y de recargas (repeat) registradas para el rango de fecha seleccionado."
-          />
-          <KpiCard
-            label="Retención"
-            value={stats.retencionActiva30d}
-            color="text-emerald-400"
-            tooltip={compactTooltips ? "Jugadores que hicieron al menos 4 cargas en los últimos 30 días y cuya primera carga fue hace al menos 7 días." : "Jugadores que hicieron al menos 4 cargas en los últimos 30 días y cuya primera carga fue hace al menos 7 días. Métrica calculada siempre sobre los últimos 30 días, sin aplicar el filtro de fechas."}
           />
         </div>
       </div>
