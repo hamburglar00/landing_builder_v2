@@ -1699,25 +1699,6 @@ export default function AdminConversionesPage() {
                   />
                 </button>
               </label>
-              <label className="flex items-center justify-between rounded-lg border border-zinc-800 bg-zinc-950/50 px-3 py-2">
-                <span className="text-xs text-zinc-300">Mostrar pestaña Inbox</span>
-                <button
-                  type="button"
-                  aria-pressed={config?.show_inbox === true}
-                  onClick={() => setConfig((p) => (p ? { ...p, show_inbox: !(p.show_inbox === true) } : p))}
-                  className={`relative inline-flex h-6 w-11 items-center rounded-full border transition ${
-                    config?.show_inbox === true
-                      ? "border-emerald-500/60 bg-emerald-500/30"
-                      : "border-zinc-700 bg-zinc-800"
-                  }`}
-                >
-                  <span
-                    className={`inline-block h-5 w-5 transform rounded-full bg-white transition ${
-                      config?.show_inbox === true ? "translate-x-5" : "translate-x-0.5"
-                    }`}
-                  />
-                </button>
-              </label>
             </div>
           </section>
 
