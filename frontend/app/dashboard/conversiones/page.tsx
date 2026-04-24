@@ -1879,10 +1879,15 @@ export default function DashboardConversionesPage() {
                           const isLead = String(row.action ?? "").toUpperCase() === "LEAD";
                           const isProcessed = String(row.status ?? "").toLowerCase() === "processed";
                           const resp = String(row.response_body ?? "").toLowerCase();
+                          const promo = String(row.promo_code ?? "").trim();
+                          const hasValidPromo = /^[A-Za-z0-9]+-[A-Za-z0-9]+$/.test(promo);
                           if (!isLead || !isProcessed) return "bg-zinc-950/40";
                           if (resp.includes("match_mode:promo_code")) return "bg-emerald-950/30";
                           if (resp.includes("match_mode:bot_phone+datetime")) {
                             return "bg-cyan-950/30 [background-image:repeating-linear-gradient(135deg,rgba(6,182,212,0.14)_0,rgba(6,182,212,0.14)_6px,transparent_6px,transparent_12px)]";
+                          }
+                          if (hasValidPromo && !resp.includes("match_mode:created_new") && !resp.includes("sin match por promo_code")) {
+                            return "bg-emerald-950/30";
                           }
                           return "bg-zinc-950/40";
                         })()
