@@ -1236,7 +1236,8 @@ async function handleLead(
   // 2) No match -> create new LEAD row to avoid losing conversion
   if (!targetId) {
     const resolvedPixelId = inboundMetaPixelId || config.pixel_id || "";
-    const generatedExternalId = norm(p.external_id) || (cleanPhone ? await sha256(cleanPhone) : generateEventId());
+    const inboundExternalId = norm(p.external_id);
+    const generatedExternalId = inboundExternalId || (cleanPhone ? await sha256(cleanPhone) : generateEventId());
     const newRow: Omit<ConversionRow, "id"> = {
       landing_id: landing.id?.trim() || null,
       user_id: landing.user_id,
@@ -1330,6 +1331,25 @@ async function handleLead(
       safePayloadRaw(p),
       "lead creado sin match (match: created_new)",
     );
+    if (!inboundExternalId && cleanPhone) {
+      await writeLog(
+        db,
+        landing.user_id,
+        "handleLead",
+        "INFO",
+        "external_id generado por hash de phone (created_new)",
+        JSON.stringify({
+          conversion_id: createdId,
+          source: "phone_hash",
+          phone: cleanPhone,
+        }),
+        createdId,
+        undefined,
+        undefined,
+        safePayloadRaw(p),
+        "external_id generado por hash de phone",
+      );
+    }
 
     if (!inboundMetaPixelId && resolvedPixelId) {
       const defaultPixel = norm(pixelConfigs.find((pc) => pc.is_default)?.pixel_id);
