@@ -111,6 +111,7 @@ interface GeoResult {
 type GeoSource = "payload" | "ip" | "phone_prefix" | "none";
 
 type InboundStatus = "received" | "processed" | "error";
+type ProcessingContext = { conversionId?: string };
 
 // deno-lint-ignore no-explicit-any
 type Params = Record<string, any>;
@@ -951,6 +952,7 @@ async function handleContact(
   landing: LandingRow,
   config: ConversionsConfig,
   pixelConfigs: PixelConfigRow[],
+  ctx?: ProcessingContext,
 ): Promise<Response> {
   const nowIso = new Date().toISOString();
   const nowSec = Math.floor(Date.now() / 1000);
@@ -1033,6 +1035,7 @@ async function handleContact(
     return textResponse(`Error al registrar contacto: ${error?.message ?? "unknown"}`, 500);
   }
   const rowId = inserted.id;
+  if (ctx) ctx.conversionId = rowId;
 
   const effectiveConfig = resolveEffectiveConfigForPixel(config, pixelConfigs, row.pixel_id);
   await ensureGeoOnRow(db, rowId, row.phone, row.client_ip, { ct: row.ct, st: row.st, country: row.country, zip: row.zip, geo_city: row.geo_city, geo_region: row.geo_region, geo_country: row.geo_country }, row.geo_source ?? "", effectiveConfig);
@@ -1096,6 +1099,7 @@ async function handleLead(
   landing: LandingRow,
   config: ConversionsConfig,
   pixelConfigs: PixelConfigRow[],
+  ctx?: ProcessingContext,
 ): Promise<Response> {
   const TIMESTAMP_FALLBACK_WINDOW_SECONDS_BEFORE = 90;
   const TIMESTAMP_FALLBACK_WINDOW_SECONDS_AFTER = 30;
@@ -1415,6 +1419,7 @@ async function handleLead(
   // Geo enrichment
   const { data: row } = await db.from("conversions").select("*").eq("id", targetId).single();
   if (!row) return textResponse("Error al leer fila LEAD", 500);
+  if (ctx) ctx.conversionId = targetId ?? undefined;
 
   const effectiveConfig = resolveEffectiveConfigForPixel(config, pixelConfigs, row.pixel_id);
   await ensureGeoOnRow(db, targetId!, row.phone, row.client_ip, { ct: row.ct, st: row.st, country: row.country, zip: row.zip, geo_city: row.geo_city, geo_region: row.geo_region, geo_country: row.geo_country }, norm((row as Record<string, unknown>).geo_source), effectiveConfig);
@@ -1470,6 +1475,7 @@ async function handlePurchase(
   landing: LandingRow,
   config: ConversionsConfig,
   pixelConfigs: PixelConfigRow[],
+  ctx?: ProcessingContext,
 ): Promise<Response> {
   const cleanPhone = sanitizePhone(p.phone);
   const inboundMetaPixelId = norm(p.meta_pixel_id || p.pixel_id);
@@ -1640,6 +1646,7 @@ async function handlePurchase(
 
     const { data: row } = await db.from("conversions").select("*").eq("id", targetId).single();
     if (!row) return textResponse("Error al leer fila PURCHASE", 500);
+    if (ctx) ctx.conversionId = targetId;
     const effectiveConfig = resolveEffectiveConfigForPixel(config, pixelConfigs, row.pixel_id);
     await ensureGeoOnRow(db, targetId, row.phone, row.client_ip, { ct: row.ct, st: row.st, country: row.country, zip: row.zip, geo_city: row.geo_city, geo_region: row.geo_region, geo_country: row.geo_country }, norm((row as Record<string, unknown>).geo_source), effectiveConfig);
     await ensureSexOnRow(db, targetId, row.cuit_cuil, row.fn);
@@ -1721,6 +1728,7 @@ async function handlePurchase(
     const { data: ins, error } = await db.from("conversions").insert(newRow).select("id").single();
     if (error || !ins) return textResponse("Error al crear fila PURCHASE", 500);
     const createdId = ins.id;
+    if (ctx) ctx.conversionId = createdId;
 
     const { data: row } = await db.from("conversions").select("*").eq("id", createdId).single();
     if (!row) return textResponse("Error al leer fila PURCHASE", 500);
@@ -1816,6 +1824,7 @@ async function handlePurchase(
   const { data: ins, error } = await db.from("conversions").insert(newRow).select("id").single();
   if (error || !ins) return textResponse("Error al crear fila recompra", 500);
   const newId = ins.id;
+  if (ctx) ctx.conversionId = newId;
 
   const effectiveRepeatConfig = resolveEffectiveConfigForPixel(config, pixelConfigs, newRow.pixel_id);
   await ensureGeoOnRow(db, newId, newRow.phone, newRow.client_ip, { ct: newRow.ct, st: newRow.st, country: newRow.country, zip: newRow.zip, geo_city: newRow.geo_city, geo_region: newRow.geo_region, geo_country: newRow.geo_country }, newRow.geo_source ?? "", effectiveRepeatConfig);
@@ -1849,6 +1858,7 @@ async function handleSimplePurchase(
   landing: LandingRow,
   config: ConversionsConfig,
   pixelConfigs: PixelConfigRow[],
+  ctx?: ProcessingContext,
 ): Promise<Response> {
   const cleanPhone = sanitizePhone(p.phone);
   const inboundMetaPixelId = norm(p.meta_pixel_id || p.pixel_id);
@@ -1932,6 +1942,7 @@ async function handleSimplePurchase(
   const { data: ins, error } = await db.from("conversions").insert(newRow).select("id").single();
   if (error || !ins) return textResponse("Error al crear fila purchase simple", 500);
   const newId = ins.id;
+  if (ctx) ctx.conversionId = newId;
 
   const effectiveSimpleConfig = resolveEffectiveConfigForPixel(config, pixelConfigs, newRow.pixel_id);
   await ensureGeoOnRow(db, newId, newRow.phone, newRow.client_ip, { ct: newRow.ct, st: newRow.st, country: newRow.country, zip: newRow.zip, geo_city: newRow.geo_city, geo_region: newRow.geo_region, geo_country: newRow.geo_country }, newRow.geo_source ?? "", effectiveSimpleConfig);
@@ -2055,17 +2066,18 @@ Deno.serve(async (req) => {
       inboxId = await insertInboundEvent(db, userId, landingName, inboxAction, params);
     }
 
-    const runAndFinalize = async (runner: () => Promise<Response>) => {
-      const response = await runner();
+    const runAndFinalize = async (runner: (ctx: ProcessingContext) => Promise<Response>) => {
+      const ctx: ProcessingContext = {};
+      const response = await runner(ctx);
       const bodyText = await response.clone().text().catch(() => "");
       const finalStatus: InboundStatus = response.status >= 200 && response.status < 400 ? "processed" : "error";
-      await finalizeInboundEvent(db, inboxId, finalStatus, response.status, bodyText);
+      await finalizeInboundEvent(db, inboxId, finalStatus, response.status, bodyText, ctx.conversionId);
       return response;
     };
 
     // Route to the correct handler
     if (!rawAction && params.phone && params.amount) {
-      return runAndFinalize(() => handleSimplePurchase(db, params, landing, cfg, pixelConfigs));
+      return runAndFinalize((ctx) => handleSimplePurchase(db, params, landing, cfg, pixelConfigs, ctx));
     }
     if (rawAction === "LEAD") {
       const incomingPromoCode = derivePromoCodeFromPayload(params);
@@ -2092,7 +2104,7 @@ Deno.serve(async (req) => {
         );
         return textResponse("LEAD recibido y en espera para reintento diferido (1h)", 202);
       }
-      return runAndFinalize(() => handleLead(db, params, landing, cfg, pixelConfigs));
+      return runAndFinalize((ctx) => handleLead(db, params, landing, cfg, pixelConfigs, ctx));
     }
     if (rawAction === "PURCHASE") {
       const hasIsValidReceipt =
@@ -2104,7 +2116,7 @@ Deno.serve(async (req) => {
           : params.isValidReceipt,
       );
       if (hasIsValidReceipt && !isValidReceipt) {
-        return runAndFinalize(async () => {
+        return runAndFinalize(async (_ctx) => {
           await writeLog(
             db,
             landing.user_id,
@@ -2132,7 +2144,7 @@ Deno.serve(async (req) => {
           );
         });
       }
-      return runAndFinalize(() => handlePurchase(db, params, landing, cfg, pixelConfigs));
+      return runAndFinalize((ctx) => handlePurchase(db, params, landing, cfg, pixelConfigs, ctx));
     }
 
     if (rawAction) {
@@ -2147,7 +2159,7 @@ Deno.serve(async (req) => {
     }
 
     // Default: contact from landing
-    return runAndFinalize(() => handleContact(db, params, landing, cfg, pixelConfigs));
+    return runAndFinalize((ctx) => handleContact(db, params, landing, cfg, pixelConfigs, ctx));
   } catch (err) {
     console.error("conversions error:", err);
     try {

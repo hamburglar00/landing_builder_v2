@@ -82,15 +82,10 @@ Deno.serve(async (req) => {
       });
     }
 
-    if (!rows || rows.length === 0) {
-      return new Response(JSON.stringify({ success: true, retried: 0 }), {
-        status: 200,
-        headers: { ...corsHeaders, "Content-Type": "application/json" },
-      });
-    }
+    const purchaseRows = rows ?? [];
 
     // Group by user to get their legacy and per-pixel configs
-    const userIds = [...new Set(rows.map((r) => r.user_id))];
+    const userIds = [...new Set(purchaseRows.map((r) => r.user_id))];
     const { data: configs } = await db
       .from("conversions_config")
       .select("*")
@@ -114,7 +109,7 @@ Deno.serve(async (req) => {
     let retried = 0;
     let succeeded = 0;
 
-    for (const row of rows) {
+    for (const row of purchaseRows) {
       const cfg = configMap.get(row.user_id);
       if (!cfg) continue;
 
@@ -268,18 +263,18 @@ Deno.serve(async (req) => {
     let deferredLeadsFailed = 0;
 
     const cutoffIso = new Date(Date.now() - 60 * 60 * 1000).toISOString();
-    const { data: deferredRows } = await db
-      .from("conversion_inbox")
-      .select("id, user_id, landing_name, payload_raw, created_at")
-      .eq("status", "received")
-      .eq("action", "LEAD")
-      .lte("created_at", cutoffIso)
-      .order("created_at", { ascending: true })
-      .limit(50);
-
-    const deferred = (deferredRows ?? []) as DeferredLeadInboxRow[];
-    if (deferred.length > 0) {
-      deferredLeadsPicked = deferred.length;
+    for (let pass = 0; pass < 20; pass++) {
+      const { data: deferredRows } = await db
+        .from("conversion_inbox")
+        .select("id, user_id, landing_name, payload_raw, created_at")
+        .eq("status", "received")
+        .eq("action", "LEAD")
+        .lte("created_at", cutoffIso)
+        .order("created_at", { ascending: true })
+        .limit(100);
+      const deferred = (deferredRows ?? []) as DeferredLeadInboxRow[];
+      if (deferred.length === 0) break;
+      deferredLeadsPicked += deferred.length;
       const userIdsForDeferred = [...new Set(deferred.map((r) => r.user_id))];
       const { data: profiles } = await db
         .from("profiles")
