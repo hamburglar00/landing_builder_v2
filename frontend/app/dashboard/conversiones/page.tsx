@@ -1883,7 +1883,7 @@ export default function DashboardConversionesPage() {
                       <td className="px-2 py-1.5 text-zinc-500 max-w-[280px] truncate" title={row.response_body || "-"}>
                         {truncateText(row.response_body || "-", 80)}
                       </td>
-                      <td className="px-2 py-1.5 text-zinc-500 max-w-[320px] truncate" title={tipRawJson(row.payload_raw)}>
+                      <td className="px-2 py-1.5 text-zinc-500 max-w-[320px] truncate" title={row.payload_raw || "-"}>
                         {truncateText(row.payload_raw || "-", 90)}
                       </td>
                     </tr>
