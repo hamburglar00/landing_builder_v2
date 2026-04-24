@@ -27,7 +27,6 @@ type PlanCard = {
   conversiones: string;
   seguimientos: string;
   notificaciones: string;
-  agenteIa?: string;
 };
 
 const PLAN_CARDS: PlanCard[] = [
@@ -48,8 +47,6 @@ const PLAN_CARDS: PlanCard[] = [
       "Listado de jugadores para detectar mejores usuarios, ordenarlos por criterio y contactarlos por WhatsApp.",
     notificaciones:
       "Programacion de alertas a Telegram para recordar seguimiento de usuarios inactivos.",
-    agenteIa:
-      "Asistente IA para analizar metricas de conversiones y sugerir optimizaciones practicas para Meta Ads.",
   },
   {
     code: "plus",
@@ -68,17 +65,15 @@ const PLAN_CARDS: PlanCard[] = [
       "Listado de jugadores para detectar mejores usuarios, ordenarlos por criterio y contactarlos por WhatsApp.",
     notificaciones:
       "Programacion de alertas a Telegram para recordar seguimiento de usuarios inactivos.",
-    agenteIa:
-      "Asistente IA para analizar metricas de conversiones y sugerir optimizaciones practicas para Meta Ads.",
   },
   {
     code: "pro",
     title: "Pro",
     price: "USD 305 / mes",
     unitPrice: "USD 30.5 por telefono",
-    landingsLimit: 8,
+    landingsLimit: 4,
     phonesLimit: 10,
-    landings: "Hasta 8 landings",
+    landings: "Hasta 4 landings",
     phones: "Hasta 10 telefonos",
     colorClass: "border-orange-700 bg-orange-950/30",
     bulletClass: "text-orange-200",
@@ -94,9 +89,9 @@ const PLAN_CARDS: PlanCard[] = [
     title: "Premium",
     price: "USD 570 / mes",
     unitPrice: "USD 28.5 por telefono",
-    landingsLimit: 12,
+    landingsLimit: 6,
     phonesLimit: 20,
-    landings: "Hasta 12 landings",
+    landings: "Hasta 6 landings",
     phones: "Hasta 20 telefonos",
     colorClass: "border-purple-700 bg-purple-950/30",
     bulletClass: "text-purple-200",
@@ -124,8 +119,6 @@ const PLAN_CARDS: PlanCard[] = [
       "Listado de jugadores para detectar mejores usuarios, ordenarlos por criterio y contactarlos por WhatsApp.",
     notificaciones:
       "Programacion de alertas a Telegram para recordar seguimiento de usuarios inactivos.",
-    agenteIa:
-      "Asistente IA para analizar metricas de conversiones y sugerir optimizaciones practicas para Meta Ads.",
   },
 ];
 
@@ -247,12 +240,6 @@ export default function DashboardPlanPage() {
                   <p className="font-semibold uppercase">NOTIFICACIONES:</p>
                   <p>{plan.notificaciones}</p>
                 </div>
-                {plan.agenteIa && (
-                  <div>
-                    <p className="font-semibold uppercase">AGENTE IA:</p>
-                    <p>{plan.agenteIa}</p>
-                  </div>
-                )}
               </div>
             </article>
           ))}
