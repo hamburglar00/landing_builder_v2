@@ -12,6 +12,7 @@ type UpdateClientPayload = {
   password?: string;
   visibleColumns?: string[] | null;
   showLogs?: boolean;
+  showInbox?: boolean;
   showAiAssistant?: boolean;
   planCode?: "starter" | "plus" | "pro" | "premium" | "scale";
   maxLandings?: number;
@@ -175,6 +176,7 @@ Deno.serve(async (req) => {
     const visibleColumns =
       payload.visibleColumns === undefined ? undefined : (payload.visibleColumns ?? []);
     const showLogs = payload.showLogs === undefined ? undefined : Boolean(payload.showLogs);
+    const showInbox = payload.showInbox === undefined ? undefined : Boolean(payload.showInbox);
     const showAiAssistant = payload.showAiAssistant === undefined ? undefined : Boolean(payload.showAiAssistant);
     const planCode = payload.planCode;
     const maxLandings = Number.isFinite(Number(payload.maxLandings))
@@ -194,6 +196,7 @@ Deno.serve(async (req) => {
       !attributes.password &&
       visibleColumns === undefined &&
       showLogs === undefined &&
+      showInbox === undefined &&
       showAiAssistant === undefined &&
       planCode === undefined &&
       maxLandings === undefined &&
@@ -239,13 +242,14 @@ Deno.serve(async (req) => {
       }
     }
 
-    if (visibleColumns !== undefined || showLogs !== undefined || showAiAssistant !== undefined) {
+    if (visibleColumns !== undefined || showLogs !== undefined || showInbox !== undefined || showAiAssistant !== undefined) {
       const upsertPayload: Record<string, unknown> = {
         user_id: userId,
         updated_at: new Date().toISOString(),
       };
       if (visibleColumns !== undefined) upsertPayload.visible_columns = visibleColumns;
       if (showLogs !== undefined) upsertPayload.show_logs = showLogs;
+      if (showInbox !== undefined) upsertPayload.show_inbox = showInbox;
       if (showAiAssistant !== undefined) upsertPayload.show_ai_assistant = showAiAssistant;
 
       const { error: cfgError } = await supabaseAdmin

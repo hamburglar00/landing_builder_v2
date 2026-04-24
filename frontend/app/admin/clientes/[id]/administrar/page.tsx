@@ -12,6 +12,7 @@ type ClientUser = {
   nombre: string | null;
   visible_columns?: string[];
   show_logs?: boolean;
+  show_inbox?: boolean;
   show_ai_assistant?: boolean;
   plan_code?: "starter" | "plus" | "pro" | "premium" | "scale";
   max_landings?: number;
@@ -79,6 +80,7 @@ export default function AdminClientManagePage() {
   const [showResetPassword, setShowResetPassword] = useState(false);
   const [resettingPassword, setResettingPassword] = useState(false);
   const [showLogs, setShowLogs] = useState(true);
+  const [showInbox, setShowInbox] = useState(false);
   const [showAiAssistant, setShowAiAssistant] = useState(false);
   const [visibleCols, setVisibleCols] = useState<Set<ColKey>>(new Set(ALL_COLUMNS));
   const [planCode, setPlanCode] = useState<"starter" | "plus" | "pro" | "premium" | "scale">("starter");
@@ -117,6 +119,7 @@ export default function AdminClientManagePage() {
       setNombre(found.nombre ?? "");
       setEmail(found.email ?? "");
       setShowLogs(typeof found.show_logs === "boolean" ? found.show_logs : true);
+      setShowInbox(typeof found.show_inbox === "boolean" ? found.show_inbox : false);
       setShowAiAssistant(typeof found.show_ai_assistant === "boolean" ? found.show_ai_assistant : false);
       setPlanCode(found.plan_code ?? "starter");
       setMaxLandings(Number(found.max_landings ?? 2));
@@ -162,6 +165,7 @@ export default function AdminClientManagePage() {
       password?: string;
       visibleColumns: string[];
       showLogs: boolean;
+      showInbox: boolean;
       showAiAssistant: boolean;
       planCode: "starter" | "plus" | "pro" | "premium" | "scale";
       maxLandings: number;
@@ -173,6 +177,7 @@ export default function AdminClientManagePage() {
       userId: clientId,
       visibleColumns: [...visibleCols],
       showLogs,
+      showInbox,
       showAiAssistant,
       planCode,
       maxLandings,
@@ -472,6 +477,15 @@ export default function AdminClientManagePage() {
               className="h-4 w-4 rounded border-zinc-700 bg-zinc-900"
             />
             Mostrar pestaña Logs en Conversiones
+          </label>
+          <label className="ml-4 inline-flex items-center gap-2 text-xs text-zinc-200">
+            <input
+              type="checkbox"
+              checked={showInbox}
+              onChange={(e) => setShowInbox(e.target.checked)}
+              className="h-4 w-4 rounded border-zinc-700 bg-zinc-900"
+            />
+            Mostrar pestaña Inbox en Conversiones
           </label>
           <label className="ml-4 inline-flex items-center gap-2 text-xs text-zinc-200">
             <input
