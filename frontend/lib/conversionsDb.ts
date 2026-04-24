@@ -174,6 +174,14 @@ export function classifyContact(
   c: FunnelContact,
   premiumThreshold: number,
 ): FunnelStage {
+  // Regla de negocio para UI del funnel:
+  // si el contacto tiene al menos una compra registrada, no debe mostrarse en LEADS.
+  if (c.purchase_count > 0) {
+    if (c.total_valor >= premiumThreshold) return "premium";
+    if (c.repeat_count > 0 || c.purchase_count > 1) return "recurrente";
+    return "primera_carga";
+  }
+
   if (c.current_status === "purchase") {
     if (c.total_valor >= premiumThreshold) return "premium";
     if (c.current_purchase_type === "repeat") return "recurrente";
