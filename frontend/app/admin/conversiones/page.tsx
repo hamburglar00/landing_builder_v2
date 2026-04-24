@@ -1677,6 +1677,50 @@ export default function AdminConversionesPage() {
             )}
           </section>
 
+          <section className="rounded-xl border border-zinc-800 bg-zinc-900/50 p-4">
+            <h3 className="text-sm font-semibold text-zinc-200">Visibilidad en cliente</h3>
+            <div className="mt-3 space-y-3">
+              <label className="flex items-center justify-between rounded-lg border border-zinc-800 bg-zinc-950/50 px-3 py-2">
+                <span className="text-xs text-zinc-300">Mostrar pestaña Logs</span>
+                <button
+                  type="button"
+                  aria-pressed={config?.show_logs !== false}
+                  onClick={() => setConfig((p) => (p ? { ...p, show_logs: !(p.show_logs !== false) } : p))}
+                  className={`relative inline-flex h-6 w-11 items-center rounded-full border transition ${
+                    config?.show_logs !== false
+                      ? "border-emerald-500/60 bg-emerald-500/30"
+                      : "border-zinc-700 bg-zinc-800"
+                  }`}
+                >
+                  <span
+                    className={`inline-block h-5 w-5 transform rounded-full bg-white transition ${
+                      config?.show_logs !== false ? "translate-x-5" : "translate-x-0.5"
+                    }`}
+                  />
+                </button>
+              </label>
+              <label className="flex items-center justify-between rounded-lg border border-zinc-800 bg-zinc-950/50 px-3 py-2">
+                <span className="text-xs text-zinc-300">Mostrar pestaña Inbox</span>
+                <button
+                  type="button"
+                  aria-pressed={config?.show_inbox === true}
+                  onClick={() => setConfig((p) => (p ? { ...p, show_inbox: !(p.show_inbox === true) } : p))}
+                  className={`relative inline-flex h-6 w-11 items-center rounded-full border transition ${
+                    config?.show_inbox === true
+                      ? "border-emerald-500/60 bg-emerald-500/30"
+                      : "border-zinc-700 bg-zinc-800"
+                  }`}
+                >
+                  <span
+                    className={`inline-block h-5 w-5 transform rounded-full bg-white transition ${
+                      config?.show_inbox === true ? "translate-x-5" : "translate-x-0.5"
+                    }`}
+                  />
+                </button>
+              </label>
+            </div>
+          </section>
+
           <div className="flex justify-end pt-2">
             <button
               type="button"
@@ -1739,6 +1783,7 @@ export default function AdminConversionesPage() {
                         </tr>
                       ) : displayRows.map((c, idx) => {
                         const isRepeat = c.estado === "purchase" && c.observaciones?.includes("REPEAT");
+                        const isLeadCreatedNew = c.estado === "lead" && String(c.observaciones ?? "").includes("match_source:created_new");
                         const rowColor =
                           c.estado === "lead"
                             ? "bg-amber-950/18"
@@ -1748,7 +1793,14 @@ export default function AdminConversionesPage() {
                                 ? "bg-rose-950/18"
                                 : "bg-zinc-950/40";
                         return (
-                          <tr key={c.id} className={rowColor}>
+                          <tr
+                            key={c.id}
+                            className={rowColor}
+                            style={isLeadCreatedNew ? {
+                              backgroundImage: "repeating-linear-gradient(-45deg, rgba(120,53,15,0.18) 0px, rgba(120,53,15,0.18) 6px, rgba(39,39,42,0.12) 6px, rgba(39,39,42,0.12) 12px)",
+                            } : undefined}
+                            title={isLeadCreatedNew ? "LEAD creado sin match (debug visual)" : undefined}
+                          >
                             <td className="px-2 py-1.5 whitespace-nowrap text-zinc-500 font-mono">{c.internal_id ?? ((tablePage - 1) * tablePageSize + idx + 1)}</td>
                             {cellValue(c, "timestamp")}
                             {displayedColsWithoutTimestamp.map((col) =>

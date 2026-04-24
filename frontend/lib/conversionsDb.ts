@@ -19,6 +19,7 @@ export interface ConversionsConfig {
   funnel_premium_threshold: number;
   visible_columns?: string[] | null;
   show_logs?: boolean;
+  show_inbox?: boolean;
   show_ai_assistant?: boolean;
   tracking_ranking_config?: TrackingRankingConfig | null;
 }
@@ -122,6 +123,23 @@ export interface ConversionLogRow {
   created_at: string;
 }
 
+export interface ConversionInboxRow {
+  id: string;
+  user_id: string;
+  conversion_id: string | null;
+  landing_name: string;
+  action: string;
+  action_event_id?: string | null;
+  promo_code: string;
+  phone: string;
+  payload_raw: string;
+  status: string;
+  http_status: number | null;
+  response_body: string;
+  processed_at: string | null;
+  created_at: string;
+}
+
 export interface FunnelContact {
   user_id: string;
   phone: string;
@@ -181,6 +199,7 @@ const DEFAULT_CONFIG: ConversionsConfig = {
   funnel_premium_threshold: 50000,
   visible_columns: [],
   show_logs: true,
+  show_inbox: false,
   show_ai_assistant: false,
   tracking_ranking_config: null,
 };
@@ -220,6 +239,7 @@ export async function upsertConversionsConfig(
         funnel_premium_threshold: config.funnel_premium_threshold,
         visible_columns: config.visible_columns ?? [],
         show_logs: config.show_logs ?? true,
+        show_inbox: config.show_inbox ?? false,
         show_ai_assistant: config.show_ai_assistant ?? false,
         tracking_ranking_config: config.tracking_ranking_config ?? null,
         updated_at: new Date().toISOString(),
@@ -523,6 +543,8 @@ export async function fetchFunnelContactsForAdminFiltered(
 
 const LOGS_SELECT =
   "id, user_id, conversion_id, function_name, level, message, detail, payload_received, result, payload_meta, response_meta, created_at";
+const INBOX_SELECT =
+  "id, user_id, conversion_id, landing_name, action, action_event_id, promo_code, phone, payload_raw, status, http_status, response_body, processed_at, created_at";
 
 function arrangeLogsForUi(rows: ConversionLogRow[]): ConversionLogRow[] {
   type LogGroup = {
@@ -616,6 +638,21 @@ export async function fetchConversionLogsForAdminFiltered(
   const rows = await fetchConversionLogsForAdmin(limit, offset);
   const hiddenIds = await fetchHiddenConversionLogIds(hiddenBy);
   return rows.filter((r) => !hiddenIds.has(r.id));
+}
+
+export async function fetchConversionInbox(
+  userId: string,
+  limit = 300,
+  offset = 0,
+): Promise<ConversionInboxRow[]> {
+  const { data, error } = await supabase
+    .from("conversion_inbox")
+    .select(INBOX_SELECT)
+    .eq("user_id", userId)
+    .order("created_at", { ascending: false })
+    .range(offset, offset + limit - 1);
+  if (error) throw error;
+  return (data ?? []) as unknown as ConversionInboxRow[];
 }
 
 export async function fetchConversionsConfigForUser(

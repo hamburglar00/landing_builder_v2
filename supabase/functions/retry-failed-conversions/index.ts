@@ -6,6 +6,8 @@ const corsHeaders = {
   "Access-Control-Allow-Headers":
     "authorization, x-client-info, apikey, content-type",
 };
+const BACKFILL_WINDOW_BEFORE_SECONDS = 90;
+const BACKFILL_WINDOW_AFTER_SECONDS = 30;
 
 /**
  * Cron de reintentos: busca purchases con status != 'enviado' y reintenta el envío a Meta CAPI.
@@ -333,6 +335,83 @@ Deno.serve(async (req) => {
       }
     }
 
+    // Lead backfill reconciliation for rows previously created as `match_source:created_new`.
+    let leadBackfillChecked = 0;
+    let leadBackfillMerged = 0;
+    let leadBackfillAmbiguous = 0;
+
+    const { data: createdNewLeads } = await db
+      .from("conversions")
+      .select("id, user_id, phone, email, cuit_cuil, fn, ln, ct, st, zip, country, geo_city, geo_region, geo_country, lead_event_id, lead_event_time, lead_payload_raw, observaciones, created_at")
+      .eq("estado", "lead")
+      .ilike("observaciones", "%match_source:created_new%")
+      .or("promo_code.is.null,promo_code.eq.")
+      .order("created_at", { ascending: true })
+      .limit(200);
+
+    for (const lead of createdNewLeads ?? []) {
+      leadBackfillChecked++;
+      const payload = parseJsonObject(String(lead.lead_payload_raw ?? ""));
+      const botPhone = sanitizePhone(
+        typeof payload.bot_phone === "string" ? payload.bot_phone : "",
+      );
+      const leadTs = toEpochSeconds(payload.timestamp)
+        ?? toEpochFromIso(payload.dateTime)
+        ?? toEpochFromIso(payload.datetime)
+        ?? Math.floor(new Date(String(lead.created_at ?? new Date().toISOString())).getTime() / 1000);
+      if (!botPhone || !leadTs) continue;
+
+      const fromIso = new Date((leadTs - BACKFILL_WINDOW_BEFORE_SECONDS) * 1000).toISOString();
+      const toIso = new Date((leadTs + BACKFILL_WINDOW_AFTER_SECONDS) * 1000).toISOString();
+      const { data: contacts } = await db
+        .from("conversions")
+        .select("id, phone, email, cuit_cuil, fn, ln, ct, st, zip, country, geo_city, geo_region, geo_country, observaciones")
+        .eq("user_id", lead.user_id)
+        .eq("estado", "contact")
+        .eq("telefono_asignado", botPhone)
+        .gte("created_at", fromIso)
+        .lte("created_at", toIso)
+        .order("created_at", { ascending: true })
+        .limit(5);
+
+      const candidates = contacts ?? [];
+      if (candidates.length !== 1) {
+        if (candidates.length > 1) leadBackfillAmbiguous++;
+        continue;
+      }
+
+      const target = candidates[0];
+      const updates: Record<string, unknown> = {
+        estado: "lead",
+        lead_event_id: lead.lead_event_id ?? "",
+        lead_event_time: lead.lead_event_time ?? null,
+        lead_payload_raw: lead.lead_payload_raw ?? "",
+        observaciones: appendObs(String(target.observaciones ?? ""), "match_source:bot_phone_timestamp_backfill"),
+      };
+      if (!target.phone && lead.phone) updates.phone = lead.phone;
+      if (!target.email && lead.email) updates.email = lead.email;
+      if (!target.cuit_cuil && lead.cuit_cuil) updates.cuit_cuil = lead.cuit_cuil;
+      if (!target.fn && lead.fn) updates.fn = lead.fn;
+      if (!target.ln && lead.ln) updates.ln = lead.ln;
+      if (!target.ct && lead.ct) updates.ct = lead.ct;
+      if (!target.st && lead.st) updates.st = lead.st;
+      if (!target.zip && lead.zip) updates.zip = lead.zip;
+      if (!target.country && lead.country) updates.country = lead.country;
+      if (!target.geo_city && lead.geo_city) updates.geo_city = lead.geo_city;
+      if (!target.geo_region && lead.geo_region) updates.geo_region = lead.geo_region;
+      if (!target.geo_country && lead.geo_country) updates.geo_country = lead.geo_country;
+      await db.from("conversions").update(updates).eq("id", target.id);
+
+      await db
+        .from("conversions")
+        .update({
+          estado: "lead_backfill_merged",
+          observaciones: appendObs(String(lead.observaciones ?? ""), `backfill_merged_into:${target.id}`),
+        })
+        .eq("id", lead.id);
+      leadBackfillMerged++;
+    }
+
     return new Response(
       JSON.stringify({
         success: true,
@@ -341,6 +420,9 @@ Deno.serve(async (req) => {
         deferred_leads_picked: deferredLeadsPicked,
         deferred_leads_processed: deferredLeadsProcessed,
         deferred_leads_failed: deferredLeadsFailed,
+        lead_backfill_checked: leadBackfillChecked,
+        lead_backfill_merged: leadBackfillMerged,
+        lead_backfill_ambiguous: leadBackfillAmbiguous,
       }),
       { status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" } },
     );
@@ -371,3 +453,33 @@ type DeferredLeadInboxRow = {
   payload_raw: string;
   created_at: string;
 };
+
+function parseJsonObject(raw: string): Record<string, unknown> {
+  try {
+    const value = JSON.parse(raw || "{}");
+    if (value && typeof value === "object") return value as Record<string, unknown>;
+    return {};
+  } catch {
+    return {};
+  }
+}
+
+function sanitizePhone(input: string | null | undefined): string {
+  const digits = String(input ?? "").replace(/\D/g, "");
+  if (!digits) return "";
+  return digits.startsWith("54") ? digits : `54${digits}`;
+}
+
+function toEpochSeconds(value: unknown): number | null {
+  const n = Number(value);
+  if (!Number.isFinite(n) || n <= 0) return null;
+  return Math.floor(n > 1_000_000_000_000 ? n / 1000 : n);
+}
+
+function toEpochFromIso(value: unknown): number | null {
+  const raw = String(value ?? "").trim();
+  if (!raw) return null;
+  const ms = Date.parse(raw);
+  if (!Number.isFinite(ms) || ms <= 0) return null;
+  return Math.floor(ms / 1000);
+}

@@ -287,6 +287,10 @@ function extractClientIpFromHeaders(req: Request): string {
   return "";
 }
 
+function derivePromoCodeFromPayload(p: Params): string {
+  return norm(p.promo_code ?? p.promoCode);
+}
+
 function isPrivateOrReservedIp(ip: string): boolean {
   if (!ip) return true;
   if (ip.includes(":")) {
@@ -1004,7 +1008,7 @@ async function handleContact(
     external_id: norm(p.external_id),
     utm_campaign: norm(p.utm_campaign),
     telefono_asignado: norm(p.telefono_asignado),
-    promo_code: norm(p.promo_code),
+    promo_code: derivePromoCodeFromPayload(p),
     geo_city: geo.geo_city,
     geo_region: geo.geo_region,
     geo_country: geo.geo_country,
@@ -1093,19 +1097,30 @@ async function handleLead(
   config: ConversionsConfig,
   pixelConfigs: PixelConfigRow[],
 ): Promise<Response> {
-  const TIMESTAMP_FALLBACK_WINDOW_SECONDS = 30;
+  const TIMESTAMP_FALLBACK_WINDOW_SECONDS_BEFORE = 90;
+  const TIMESTAMP_FALLBACK_WINDOW_SECONDS_AFTER = 30;
   const toEpochSeconds = (value: unknown): number | null => {
     const n = Number(value);
     if (!Number.isFinite(n) || n <= 0) return null;
     // Accept both seconds and milliseconds.
     return Math.floor(n > 1_000_000_000_000 ? n / 1000 : n);
   };
+  const toEpochFromIso = (value: unknown): number | null => {
+    const raw = norm(value);
+    if (!raw) return null;
+    const ms = Date.parse(raw);
+    if (!Number.isFinite(ms) || ms <= 0) return null;
+    return Math.floor(ms / 1000);
+  };
 
   const cleanPhone = sanitizePhone(p.phone);
   const inboundMetaPixelId = norm(p.meta_pixel_id || p.pixel_id);
   const inboundSourcePlatform = norm(p.source_platform);
   const botPhone = sanitizePhone(p.bot_phone);
-  const inboundBotTimestampSec = toEpochSeconds(p.timestamp);
+  const inboundBotTimestampSec =
+    toEpochSeconds(p.timestamp) ??
+    toEpochFromIso((p as Record<string, unknown>).dateTime) ??
+    toEpochFromIso((p as Record<string, unknown>).datetime);
   if (!cleanPhone) {
     await writeLog(
       db,
@@ -1122,7 +1137,7 @@ async function handleLead(
     );
     return textResponse("Faltan parametros: phone requerido", 400);
   }
-  const promoCode = norm(p.promo_code);
+  const promoCode = derivePromoCodeFromPayload(p);
   const promoCodeIsFull = isFullPromoCode(p.promo_code ?? p.promoCode ?? promoCode);
   const testEventCode = norm(p.test_event_code);
   const leadPayloadRaw = safePayloadRaw(p);
@@ -1152,8 +1167,8 @@ async function handleLead(
   // 1.b) Fallback ONLY when promo_code is missing: bot_phone + timestamp window (for CONTACT -> LEAD linking).
   if (!targetId && !promoCode) {
     if (botPhone && inboundBotTimestampSec) {
-      const fromIso = new Date((inboundBotTimestampSec - TIMESTAMP_FALLBACK_WINDOW_SECONDS) * 1000).toISOString();
-      const toIso = new Date((inboundBotTimestampSec + TIMESTAMP_FALLBACK_WINDOW_SECONDS) * 1000).toISOString();
+      const fromIso = new Date((inboundBotTimestampSec - TIMESTAMP_FALLBACK_WINDOW_SECONDS_BEFORE) * 1000).toISOString();
+      const toIso = new Date((inboundBotTimestampSec + TIMESTAMP_FALLBACK_WINDOW_SECONDS_AFTER) * 1000).toISOString();
       const { data: candidates } = await db
         .from("conversions")
         .select("id, created_at")
@@ -1178,7 +1193,8 @@ async function handleLead(
           JSON.stringify({
             bot_phone: botPhone,
             timestamp: inboundBotTimestampSec,
-            window_seconds: TIMESTAMP_FALLBACK_WINDOW_SECONDS,
+            window_seconds_before: TIMESTAMP_FALLBACK_WINDOW_SECONDS_BEFORE,
+            window_seconds_after: TIMESTAMP_FALLBACK_WINDOW_SECONDS_AFTER,
             candidates: candidates?.map((c) => ({ id: c.id, created_at: c.created_at })) ?? [],
           }),
           undefined,
@@ -1202,7 +1218,8 @@ async function handleLead(
           promo_code: promoCode,
           bot_phone: botPhone,
           timestamp: inboundBotTimestampSec,
-          window_seconds: TIMESTAMP_FALLBACK_WINDOW_SECONDS,
+          window_seconds_before: TIMESTAMP_FALLBACK_WINDOW_SECONDS_BEFORE,
+          window_seconds_after: TIMESTAMP_FALLBACK_WINDOW_SECONDS_AFTER,
         }),
         undefined,
         undefined,
@@ -1453,7 +1470,7 @@ async function handlePurchase(
   const purchasePayloadRaw = safePayloadRaw(p);
   const generatedExternalId = norm(p.external_id) || generateEventId();
 
-  const promoCode = norm(p.promo_code);
+  const promoCode = derivePromoCodeFromPayload(p);
   const promoCodeIsFull = isFullPromoCode(p.promo_code ?? p.promoCode ?? promoCode);
   const { fn: payloadFn, ln: payloadLn } = deriveNameFromPayload(p);
   const payloadEmail = norm(p.email);
@@ -2026,7 +2043,7 @@ Deno.serve(async (req) => {
       return runAndFinalize(() => handleSimplePurchase(db, params, landing, cfg, pixelConfigs));
     }
     if (rawAction === "LEAD") {
-      const incomingPromoCode = norm(params.promo_code);
+      const incomingPromoCode = derivePromoCodeFromPayload(params);
       // Deferred queue mode: LEAD without promo_code waits and is retried by cron after 1h.
       if (!incomingPromoCode && !isDeferredRetry) {
         await writeLog(
@@ -2076,7 +2093,7 @@ Deno.serve(async (req) => {
                 : params.isValidReceipt,
               action_event_id: norm(params.action_event_id),
               phone: norm(params.phone),
-              promo_code: norm(params.promo_code),
+              promo_code: derivePromoCodeFromPayload(params),
             }),
             undefined,
             undefined,

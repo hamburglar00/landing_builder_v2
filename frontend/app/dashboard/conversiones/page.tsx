@@ -12,6 +12,7 @@ import {
   fetchConversionsFiltered,
   fetchFunnelContactsFiltered,
   fetchConversionLogsFiltered,
+  fetchConversionInbox,
   updateConversionEmail,
   hideConversions,
   hideConversionLogs,
@@ -19,6 +20,7 @@ import {
   type PixelConfig,
   type ConversionRow,
   type ConversionLogRow,
+  type ConversionInboxRow,
   type FunnelContact,
 } from "@/lib/conversionsDb";
 import FunnelBoard from "@/components/conversiones/FunnelBoard";
@@ -30,7 +32,7 @@ import DateRangeFilter, {
   filterFunnelByDateRange,
 } from "@/components/conversiones/DateRangeFilter";
 
-type Tab = "funnel" | "seguimiento" | "tabla" | "estadisticas" | "configuracion" | "logs";
+type Tab = "funnel" | "seguimiento" | "tabla" | "estadisticas" | "configuracion" | "inbox" | "logs";
 type PixelEditDraft = {
   id: string;
   pixel_id: string;
@@ -51,6 +53,7 @@ const TAB_LABELS: Record<Tab, string> = {
   tabla: "Tabla",
   estadisticas: "Estadisticas",
   configuracion: "Configuracion",
+  inbox: "Inbox",
   logs: "Logs",
 };
 
@@ -125,6 +128,15 @@ function LogsTabIcon() {
     <svg className="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2.25}>
       <path strokeLinecap="round" strokeLinejoin="round" d="M9 17h6M9 13h6M9 9h6" />
       <path strokeLinecap="round" strokeLinejoin="round" d="M7 3h8l4 4v14H7a2 2 0 01-2-2V5a2 2 0 012-2z" />
+    </svg>
+  );
+}
+
+function InboxTabIcon() {
+  return (
+    <svg className="h-3.5 w-3.5 overflow-visible" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.8} strokeLinecap="round" strokeLinejoin="round">
+      <path d="M3 7.5A2.5 2.5 0 0 1 5.5 5h13A2.5 2.5 0 0 1 21 7.5v9A2.5 2.5 0 0 1 18.5 19h-13A2.5 2.5 0 0 1 3 16.5v-9Z" />
+      <path d="M3 14h4.6l1.8 2h5.2l1.8-2H21" />
     </svg>
   );
 }
@@ -398,6 +410,7 @@ export default function DashboardConversionesPage() {
   const [conversions, setConversions] = useState<ConversionRow[]>([]);
   const [funnelContacts, setFunnelContacts] = useState<FunnelContact[]>([]);
   const [logs, setLogs] = useState<ConversionLogRow[]>([]);
+  const [inboxRows, setInboxRows] = useState<ConversionInboxRow[]>([]);
   const [clientName, setClientName] = useState("");
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
@@ -406,6 +419,7 @@ export default function DashboardConversionesPage() {
   const [tab, setTab] = useState<Tab>("funnel");
   const [copiedUrl, setCopiedUrl] = useState<string | null>(null);
   const [expandedLog, setExpandedLog] = useState<number | null>(null);
+  const [inboxSearch, setInboxSearch] = useState("");
   const [tableSearch, setTableSearch] = useState("");
   const [tablePage, setTablePage] = useState(1);
   const [statsLandingFilter, setStatsLandingFilter] = useState<string>("__all__");
@@ -465,6 +479,7 @@ export default function DashboardConversionesPage() {
   const activeConversions = useMemo(() => filterByDateRange(conversions, dateRange), [conversions, dateRange]);
   const activeFunnel = useMemo(() => filterFunnelByDateRange(funnelContacts, dateRange), [funnelContacts, dateRange]);
   const activeLogs = useMemo(() => filterByDateRange(logs, dateRange), [logs, dateRange]);
+  const activeInbox = useMemo(() => filterByDateRange(inboxRows, dateRange), [inboxRows, dateRange]);
   const statsConversions = useMemo(
     () => activeConversions.filter((r) => !String(r.test_event_code ?? "").trim()),
     [activeConversions],
@@ -714,6 +729,25 @@ export default function DashboardConversionesPage() {
       return hay.includes(q);
     });
   }, [tableConversionsFiltered, tableSearch]);
+  const filteredInbox = useMemo(() => {
+    const q = inboxSearch.trim().toLowerCase();
+    if (!q) return activeInbox;
+    return activeInbox.filter((r) => {
+      const hay = [
+        r.action,
+        r.status,
+        r.promo_code,
+        r.phone,
+        r.action_event_id ?? "",
+        r.response_body,
+        r.landing_name,
+        r.payload_raw,
+      ]
+        .join(" ")
+        .toLowerCase();
+      return hay.includes(q);
+    });
+  }, [activeInbox, inboxSearch]);
   const tablePageSize = 20;
   const totalTablePages = Math.max(1, Math.ceil(filteredConversions.length / tablePageSize));
   const pagedConversions = useMemo(() => {
@@ -773,8 +807,13 @@ export default function DashboardConversionesPage() {
     });
   }, [logs, internalIdByConversionId]);
   const tabOrder = useMemo<Tab[]>(
-    () => (config?.show_logs === false ? TAB_ORDER_BASE : [...TAB_ORDER_BASE, "logs"]),
-    [config?.show_logs],
+    () => {
+      const base = [...TAB_ORDER_BASE];
+      if (config?.show_inbox === true) base.push("inbox");
+      if (config?.show_logs !== false) base.push("logs");
+      return base;
+    },
+    [config?.show_logs, config?.show_inbox],
   );
   const hasStatsFiltersApplied = useMemo(
     () =>
@@ -809,7 +848,10 @@ export default function DashboardConversionesPage() {
     if (config?.show_logs === false && tab === "logs") {
       setTab("funnel");
     }
-  }, [config?.show_logs, tab]);
+    if (config?.show_inbox !== true && tab === "inbox") {
+      setTab("funnel");
+    }
+  }, [config?.show_logs, config?.show_inbox, tab]);
 
   useEffect(() => {
     const init = async () => {
@@ -817,17 +859,19 @@ export default function DashboardConversionesPage() {
       if (!user) return;
       setUserId(user.id);
       try {
-        const [cfg, rows, funnel, logRows, pixels] = await Promise.all([
+        const [cfg, rows, funnel, logRows, inbox, pixels] = await Promise.all([
           fetchConversionsConfig(user.id),
           fetchConversionsFiltered(user.id, user.id),
           fetchFunnelContactsFiltered(user.id, user.id),
           fetchConversionLogsFiltered(user.id, user.id, 200),
+          fetchConversionInbox(user.id, 400),
           fetchPixelConfigs(user.id),
         ]);
         setConfig(cfg);
         setConversions(rows);
         setFunnelContacts(funnel);
         setLogs(logRows);
+        setInboxRows(inbox);
         setPixelConfigs(pixels);
 
         const { data: profile } = await supabase
@@ -1097,14 +1141,16 @@ export default function DashboardConversionesPage() {
     if (!userId) return;
     setRefreshingTable(true);
     try {
-      const [rows, funnel, logRows] = await Promise.all([
+      const [rows, funnel, logRows, inbox] = await Promise.all([
         fetchConversionsFiltered(userId, userId),
         fetchFunnelContactsFiltered(userId, userId),
         fetchConversionLogsFiltered(userId, userId, 200),
+        fetchConversionInbox(userId, 400),
       ]);
       setConversions(rows);
       setFunnelContacts(funnel);
       setLogs(logRows);
+      setInboxRows(inbox);
     } catch (e) { console.error(e); }
     finally { setRefreshingTable(false); }
   }, [userId]);
@@ -1326,7 +1372,7 @@ export default function DashboardConversionesPage() {
       {/* Tabs */}
       <div className="flex items-center justify-between gap-4 flex-wrap border-b border-zinc-800/60 pb-1">
         <div className="flex gap-4">
-          {tabOrder.filter((t) => t !== "configuracion" && t !== "logs").map((t) => {
+          {tabOrder.filter((t) => t !== "configuracion" && t !== "logs" && t !== "inbox").map((t) => {
             const active = tab === t;
             return (
               <button
@@ -1350,7 +1396,7 @@ export default function DashboardConversionesPage() {
           })}
         </div>
         <div className="ml-auto flex items-center gap-4">
-          {tabOrder.filter((t) => t === "configuracion" || t === "logs").map((t) => {
+          {tabOrder.filter((t) => t === "configuracion" || t === "inbox" || t === "logs").map((t) => {
             const active = tab === t;
             return (
               <button
@@ -1361,7 +1407,7 @@ export default function DashboardConversionesPage() {
                 }`}
               >
                 <span className="inline-flex items-center gap-1.5">
-                  {t === "configuracion" ? <GearTabIcon /> : <LogsTabIcon />}
+                  {t === "configuracion" ? <GearTabIcon /> : t === "inbox" ? <InboxTabIcon /> : <LogsTabIcon />}
                   {TAB_LABELS[t]}
                 </span>
                 <span
@@ -1376,10 +1422,10 @@ export default function DashboardConversionesPage() {
       </div>
 
       {/* Date filter + global actions */}
-      {(tab === "funnel" || tab === "seguimiento" || tab === "tabla" || tab === "estadisticas" || tab === "logs") && (
+      {(tab === "funnel" || tab === "seguimiento" || tab === "tabla" || tab === "estadisticas" || tab === "inbox" || tab === "logs") && (
         <div className="flex items-center justify-between gap-2 pt-1">
           <div className="flex items-center gap-2">
-            {(tab === "funnel" || tab === "tabla" || tab === "estadisticas" || tab === "logs") && (
+            {(tab === "funnel" || tab === "tabla" || tab === "estadisticas" || tab === "inbox" || tab === "logs") && (
               <>
                 <button
                   type="button"
@@ -1660,6 +1706,7 @@ export default function DashboardConversionesPage() {
                   </tr>
                 ) : pagedConversions.map((c, idx) => {
                   const isRepeat = c.estado === "purchase" && c.observaciones?.includes("REPEAT");
+                  const isLeadCreatedNew = c.estado === "lead" && String(c.observaciones ?? "").includes("match_source:created_new");
                   const rowColor =
                     c.estado === "lead"
                       ? "bg-amber-950/18"
@@ -1669,7 +1716,14 @@ export default function DashboardConversionesPage() {
                           ? "bg-rose-950/18"
                           : "bg-zinc-950/40";
                   return (
-                    <tr key={c.id} className={rowColor}>
+                    <tr
+                      key={c.id}
+                      className={rowColor}
+                      style={isLeadCreatedNew ? {
+                        backgroundImage: "repeating-linear-gradient(-45deg, rgba(120,53,15,0.18) 0px, rgba(120,53,15,0.18) 6px, rgba(39,39,42,0.12) 6px, rgba(39,39,42,0.12) 12px)",
+                      } : undefined}
+                      title={isLeadCreatedNew ? "LEAD creado sin match (debug visual)" : undefined}
+                    >
                       <td className="px-2 py-1.5 whitespace-nowrap text-zinc-500 font-mono">{c.internal_id ?? ((tablePage - 1) * tablePageSize + idx + 1)}</td>
                       {cellValue(c, "timestamp")}
                       {displayedColsWithoutTimestamp.map((col) =>
@@ -1765,7 +1819,83 @@ export default function DashboardConversionesPage() {
         </section>
       )}
 
-            {/* TAB: LOGS */}
+      {/* TAB: INBOX */}
+      {tab === "inbox" && (
+        <section className="rounded-xl border border-zinc-800 bg-zinc-900/50 p-4">
+          <div className="mb-4 flex flex-wrap items-center justify-between gap-2">
+            <h3 className="text-sm font-semibold text-zinc-200">
+              Inbox de eventos (LEAD/PURCHASE){" "}
+              <span className="font-normal text-zinc-500">({filteredInbox.length})</span>
+            </h3>
+            <input
+              value={inboxSearch}
+              onChange={(e) => setInboxSearch(e.target.value)}
+              placeholder="Buscar por phone, promo_code, status..."
+              className="h-8 w-72 rounded-lg border border-zinc-700 bg-zinc-900 px-3 text-xs text-zinc-100 placeholder:text-zinc-500"
+            />
+          </div>
+          {filteredInbox.length === 0 ? (
+            <p className="text-sm text-zinc-500">No hay eventos en inbox para el filtro actual.</p>
+          ) : (
+            <div className="overflow-x-auto rounded-lg border border-zinc-700">
+              <table className="w-full text-left text-[11px]">
+                <thead className="bg-zinc-800/80">
+                  <tr>
+                    <th className="px-2 py-2 font-medium text-zinc-300 whitespace-nowrap">Fecha</th>
+                    <th className="px-2 py-2 font-medium text-zinc-300 whitespace-nowrap">Action</th>
+                    <th className="px-2 py-2 font-medium text-zinc-300 whitespace-nowrap">Status</th>
+                    <th className="px-2 py-2 font-medium text-zinc-300 whitespace-nowrap">Phone</th>
+                    <th className="px-2 py-2 font-medium text-zinc-300 whitespace-nowrap">Promo code</th>
+                    <th className="px-2 py-2 font-medium text-zinc-300 whitespace-nowrap">action_event_id</th>
+                    <th className="px-2 py-2 font-medium text-zinc-300 whitespace-nowrap">Fila</th>
+                    <th className="px-2 py-2 font-medium text-zinc-300 whitespace-nowrap">HTTP</th>
+                    <th className="px-2 py-2 font-medium text-zinc-300 whitespace-nowrap">Respuesta</th>
+                    <th className="px-2 py-2 font-medium text-zinc-300 whitespace-nowrap">Payload</th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-zinc-800">
+                  {filteredInbox.map((row) => (
+                    <tr key={row.id} className="bg-zinc-950/40">
+                      <td className="px-2 py-1.5 text-zinc-400 whitespace-nowrap">
+                        {new Date(row.created_at).toLocaleString("es-AR", { month: "2-digit", day: "2-digit", hour: "2-digit", minute: "2-digit", second: "2-digit", hour12: false })}
+                      </td>
+                      <td className="px-2 py-1.5 text-zinc-200 whitespace-nowrap">{row.action || "-"}</td>
+                      <td className="px-2 py-1.5 whitespace-nowrap">
+                        <span className={`inline-flex items-center rounded px-1.5 py-0.5 text-[10px] font-semibold ${
+                          row.status === "processed"
+                            ? "bg-emerald-500/15 text-emerald-300"
+                            : row.status === "error"
+                              ? "bg-rose-500/15 text-rose-300"
+                              : "bg-amber-500/15 text-amber-300"
+                        }`}>
+                          {row.status}
+                        </span>
+                      </td>
+                      <td className="px-2 py-1.5 text-zinc-300 font-mono whitespace-nowrap">{row.phone || "-"}</td>
+                      <td className="px-2 py-1.5 text-zinc-300 whitespace-nowrap">{row.promo_code || "-"}</td>
+                      <td className="px-2 py-1.5 text-zinc-500 font-mono whitespace-nowrap" title={row.action_event_id ?? ""}>
+                        {row.action_event_id ? truncateText(row.action_event_id, 20) : "-"}
+                      </td>
+                      <td className="px-2 py-1.5 text-zinc-400 whitespace-nowrap">
+                        {row.conversion_id ? (internalIdByConversionId.get(row.conversion_id) ?? "-") : "-"}
+                      </td>
+                      <td className="px-2 py-1.5 text-zinc-400 whitespace-nowrap">{row.http_status ?? "-"}</td>
+                      <td className="px-2 py-1.5 text-zinc-500 max-w-[280px] truncate" title={row.response_body || "-"}>
+                        {truncateText(row.response_body || "-", 80)}
+                      </td>
+                      <td className="px-2 py-1.5 text-zinc-500 max-w-[320px] truncate" title={tipRawJson(row.payload_raw)}>
+                        {truncateText(row.payload_raw || "-", 90)}
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          )}
+        </section>
+      )}
+
+      {/* TAB: LOGS */}
       {tab === "logs" && (
         <section className="rounded-xl border border-zinc-800 bg-zinc-900/50 p-4">
           <div className="mb-4 flex flex-wrap items-center justify-between gap-2">
