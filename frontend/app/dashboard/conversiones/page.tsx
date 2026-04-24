@@ -1858,13 +1858,13 @@ export default function DashboardConversionesPage() {
               <table className="w-full text-left text-[11px]">
                 <thead className="bg-zinc-800/80">
                   <tr>
+                    <th className="px-2 py-2 font-medium text-zinc-300 whitespace-nowrap">Fila</th>
                     <th className="px-2 py-2 font-medium text-zinc-300 whitespace-nowrap">Fecha</th>
                     <th className="px-2 py-2 font-medium text-zinc-300 whitespace-nowrap">Action</th>
                     <th className="px-2 py-2 font-medium text-zinc-300 whitespace-nowrap">Status</th>
                     <th className="px-2 py-2 font-medium text-zinc-300 whitespace-nowrap">Phone</th>
                     <th className="px-2 py-2 font-medium text-zinc-300 whitespace-nowrap">Promo code</th>
                     <th className="px-2 py-2 font-medium text-zinc-300 whitespace-nowrap">action_event_id</th>
-                    <th className="px-2 py-2 font-medium text-zinc-300 whitespace-nowrap">Fila</th>
                     <th className="px-2 py-2 font-medium text-zinc-300 whitespace-nowrap">HTTP</th>
                     <th className="px-2 py-2 font-medium text-zinc-300 whitespace-nowrap">Respuesta</th>
                     <th className="px-2 py-2 font-medium text-zinc-300 whitespace-nowrap">Payload</th>
@@ -1886,6 +1886,9 @@ export default function DashboardConversionesPage() {
                         })()
                       }
                     >
+                      <td className="px-2 py-1.5 text-zinc-300 whitespace-nowrap">
+                        {row.conversion_id ? (internalIdByConversionId.get(row.conversion_id) ?? "-") : "-"}
+                      </td>
                       <td className="px-2 py-1.5 text-zinc-400 whitespace-nowrap">
                         {new Date(row.created_at).toLocaleString("es-AR", { month: "2-digit", day: "2-digit", hour: "2-digit", minute: "2-digit", second: "2-digit", hour12: false })}
                       </td>
@@ -1905,9 +1908,6 @@ export default function DashboardConversionesPage() {
                       <td className="px-2 py-1.5 text-zinc-300 whitespace-nowrap">{row.promo_code || "-"}</td>
                       <td className="px-2 py-1.5 text-zinc-500 font-mono whitespace-nowrap" title={row.action_event_id ?? ""}>
                         {row.action_event_id ? truncateText(row.action_event_id, 20) : "-"}
-                      </td>
-                      <td className="px-2 py-1.5 text-zinc-400 whitespace-nowrap">
-                        {row.conversion_id ? (internalIdByConversionId.get(row.conversion_id) ?? "-") : "-"}
                       </td>
                       <td className="px-2 py-1.5 text-zinc-400 whitespace-nowrap">{row.http_status ?? "-"}</td>
                       <td className="px-2 py-1.5 text-zinc-500 max-w-[280px] truncate" title={row.response_body || "-"}>

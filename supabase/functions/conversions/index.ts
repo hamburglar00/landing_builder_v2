@@ -119,6 +119,21 @@ type Params = Record<string, any>;
 
 const norm = (s: unknown): string => String(s ?? "").trim();
 
+function normalizePromoCode(v: unknown): string {
+  const s = norm(v);
+  if (!s) return "";
+  const lower = s.toLowerCase();
+  if (
+    lower === "null" ||
+    lower === "undefined" ||
+    lower === "none" ||
+    lower === "n/a" ||
+    lower === "na" ||
+    s === "-"
+  ) return "";
+  return s;
+}
+
 function isFullPromoCode(v: unknown): boolean {
   const s = norm(v);
   // Flexible expected format: TAG-<alphanumeric suffix>
@@ -289,7 +304,7 @@ function extractClientIpFromHeaders(req: Request): string {
 }
 
 function derivePromoCodeFromPayload(p: Params): string {
-  return norm(p.promo_code ?? p.promoCode);
+  return normalizePromoCode(p.promo_code ?? p.promoCode);
 }
 
 function isPrivateOrReservedIp(ip: string): boolean {
@@ -363,7 +378,7 @@ async function insertInboundEvent(
       landing_name: landingName,
       action,
       action_event_id: norm(payload.action_event_id),
-      promo_code: norm(payload.promo_code),
+      promo_code: normalizePromoCode(payload.promo_code ?? payload.promoCode),
       phone: sanitizePhone(payload.phone),
       payload_raw: safePayloadRaw(payload),
       status: "received",
@@ -1149,7 +1164,7 @@ async function handleLead(
   // 1) Match by promo_code
   let targetId: string | null = null;
   let leadMatchMode: "promo_code" | "bot_phone_timestamp_fallback" | "created_new" = "promo_code";
-  if (promoCode) {
+  if (promoCodeIsFull) {
     const { data } = await db
       .from("conversions")
       .select("id")
@@ -1162,7 +1177,7 @@ async function handleLead(
   }
 
   // 1.b) Fallback ONLY when promo_code is missing: bot_phone + dateTime window (for CONTACT -> LEAD linking).
-  if (!targetId && !promoCode) {
+  if (!targetId && !promoCodeIsFull) {
     if (botPhone && inboundBotTimestampSec) {
       const fromIso = new Date((inboundBotTimestampSec - TIMESTAMP_FALLBACK_WINDOW_SECONDS_BEFORE) * 1000).toISOString();
       const toIso = new Date((inboundBotTimestampSec + TIMESTAMP_FALLBACK_WINDOW_SECONDS_AFTER) * 1000).toISOString();
@@ -1210,7 +1225,7 @@ async function handleLead(
         landing.user_id,
         "handleLead",
         "ERROR",
-        "LEAD rechazado: falta promo_code y fallback bot_phone+dateTime sin match",
+        "LEAD sin promo_code valido y fallback bot_phone+dateTime sin match",
         JSON.stringify({
           promo_code: promoCode,
           bot_phone: botPhone,
@@ -1407,10 +1422,17 @@ async function handleLead(
     if (geo.geo_region) updates.geo_region = geo.geo_region;
     if (geo.geo_country) updates.geo_country = geo.geo_country;
     if (hasPayloadGeo(geo)) updates.geo_source = "payload";
-    const { data: cur } = await db.from("conversions").select("promo_code, observaciones").eq("id", targetId).single();
+    const { data: cur } = await db
+      .from("conversions")
+      .select("promo_code, observaciones, external_id")
+      .eq("id", targetId)
+      .single();
     // Fill promo_code if row didn't have it
     if (promoCode && isFullPromoCode(promoCode) && !cur?.promo_code) {
       updates.promo_code = promoCode;
+    }
+    if (!norm((cur as Record<string, unknown> | null)?.external_id) && cleanPhone) {
+      updates.external_id = await sha256(cleanPhone);
     }
     updates.observaciones = appendObservation(cur?.observaciones ?? "", matchSourceToken);
     await db.from("conversions").update(updates).eq("id", targetId);
@@ -2082,7 +2104,7 @@ Deno.serve(async (req) => {
     if (rawAction === "LEAD") {
       const incomingPromoCode = derivePromoCodeFromPayload(params);
       // Deferred queue mode: LEAD without promo_code waits and is retried by cron after 1h.
-      if (!incomingPromoCode && !isDeferredRetry) {
+      if (!isFullPromoCode(incomingPromoCode) && !isDeferredRetry) {
         await writeLog(
           db,
           landing.user_id,
