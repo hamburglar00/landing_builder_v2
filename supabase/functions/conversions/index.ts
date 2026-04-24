@@ -1236,7 +1236,7 @@ async function handleLead(
   // 2) No match -> create new LEAD row to avoid losing conversion
   if (!targetId) {
     const resolvedPixelId = inboundMetaPixelId || config.pixel_id || "";
-    const generatedExternalId = norm(p.external_id) || generateEventId();
+    const generatedExternalId = norm(p.external_id) || (cleanPhone ? await sha256(cleanPhone) : generateEventId());
     const newRow: Omit<ConversionRow, "id"> = {
       landing_id: landing.id?.trim() || null,
       user_id: landing.user_id,
