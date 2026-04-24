@@ -523,6 +523,14 @@ function normalizeArNationalDigits(phone: string): string {
   return d;
 }
 
+function sanitizeLocalidadFromPhonePrefix(raw: unknown): string {
+  const base = norm(raw);
+  if (!base) return "";
+  // Ej: "SAN MARTIN (PROV. MENDOZA)" -> "SAN MARTIN"
+  const noParens = base.replace(/\s*\([^)]*\)/g, "");
+  return noParens.replace(/\s{2,}/g, " ").trim();
+}
+
 async function lookupGeoByPhonePrefix(db: SupabaseClient, rawPhone: string): Promise<GeoResult | null> {
   const national = normalizeArNationalDigits(rawPhone);
   if (!national || national.length < 2) return null;
@@ -543,7 +551,7 @@ async function lookupGeoByPhonePrefix(db: SupabaseClient, rawPhone: string): Pro
   const picked = [...data]
     .map((r) => ({
       codigo_de_area: norm((r as Record<string, unknown>).codigo_de_area),
-      localidad: norm((r as Record<string, unknown>).localidad),
+      localidad: sanitizeLocalidadFromPhonePrefix((r as Record<string, unknown>).localidad),
       provincia: norm((r as Record<string, unknown>).provincia),
       zip_exacto: norm((r as Record<string, unknown>).zip_exacto),
       zip_aproximado: norm((r as Record<string, unknown>).zip_aproximado),
