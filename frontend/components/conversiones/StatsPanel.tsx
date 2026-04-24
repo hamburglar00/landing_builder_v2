@@ -808,7 +808,7 @@ export default function StatsPanel({
       {/*  RESUMEN GENERAL  */}
       <div>
         <SectionTitle>Resumen general</SectionTitle>
-        <div className="mt-3 grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-8">
+        <div className="mt-3 grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-6">
           <KpiCard
             label="Clicks en el boton de la landing"
             value={stats.uniqueContacts}
@@ -831,18 +831,6 @@ export default function StatsPanel({
             value={stats.repeatFromFirstInRange}
             color="text-violet-300"
             tooltip="Cantidad de jugadores que, después de realizar una primera carga, decidieron realizar otra carga más."
-          />
-          <KpiCard
-            label="Cant. de primeras cargas"
-            value={stats.purchaseFirstCount}
-            color="text-sky-300"
-            tooltip="Cantidad de primeras cargas (first) registradas para el rango de fecha seleccionado."
-          />
-          <KpiCard
-            label="Cant. de recargas"
-            value={stats.purchaseRepeatCount}
-            color="text-violet-300"
-            tooltip="Cantidad de recargas (repeat) registradas para el rango de fecha seleccionado."
           />
           <KpiCard
             label="Total de cargas"
