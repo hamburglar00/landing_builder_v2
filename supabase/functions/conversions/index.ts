@@ -1439,16 +1439,28 @@ async function handleLead(
 
   const ok = await sendToMetaCAPI(db, effectiveConfig, pixelConfigs, fullRow, targetId!, "Lead", leadEventId, leadEventTime, undefined, testEventCode || undefined);
   if (ok) {
+    const modeText =
+      leadMatchMode === "promo_code"
+        ? "promo_code"
+        : leadMatchMode === "bot_phone_timestamp_fallback"
+          ? "bot_phone+dateTime"
+          : "created_new";
     return textResponse(
       leadMatchMode === "created_new"
-        ? "LEAD sin match por promo_code: se creo una fila nueva y se proceso correctamente."
-        : "Fila LEAD procesada",
+        ? "LEAD sin match por promo_code: se creo una fila nueva y se proceso correctamente. match_mode:created_new"
+        : `Fila LEAD procesada. match_mode:${modeText}`,
     );
   }
+  const modeText =
+    leadMatchMode === "promo_code"
+      ? "promo_code"
+      : leadMatchMode === "bot_phone_timestamp_fallback"
+        ? "bot_phone+dateTime"
+        : "created_new";
   return textResponse(
     leadMatchMode === "created_new"
-      ? "LEAD sin match por promo_code: se creo una fila nueva, pero fallo el envio a Meta CAPI (revisar token, pixel o pestana Logs)."
-      : "LEAD procesado. Error al enviar a Meta CAPI (revisar token, pixel o pestana Logs).",
+      ? "LEAD sin match por promo_code: se creo una fila nueva, pero fallo el envio a Meta CAPI (revisar token, pixel o pestana Logs). match_mode:created_new"
+      : `LEAD procesado. Error al enviar a Meta CAPI (revisar token, pixel o pestana Logs). match_mode:${modeText}`,
   );
 }
 

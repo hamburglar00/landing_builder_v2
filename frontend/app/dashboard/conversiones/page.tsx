@@ -1872,7 +1872,20 @@ export default function DashboardConversionesPage() {
                 </thead>
                 <tbody className="divide-y divide-zinc-800">
                   {filteredInbox.map((row) => (
-                    <tr key={row.id} className="bg-zinc-950/40">
+                    <tr
+                      key={row.id}
+                      className={
+                        (() => {
+                          const isLead = String(row.action ?? "").toUpperCase() === "LEAD";
+                          const isProcessed = String(row.status ?? "").toLowerCase() === "processed";
+                          const resp = String(row.response_body ?? "").toLowerCase();
+                          if (!isLead || !isProcessed) return "bg-zinc-950/40";
+                          if (resp.includes("match_mode:promo_code")) return "bg-emerald-950/30";
+                          if (resp.includes("match_mode:bot_phone+datetime")) return "bg-cyan-950/30";
+                          return "bg-zinc-950/40";
+                        })()
+                      }
+                    >
                       <td className="px-2 py-1.5 text-zinc-400 whitespace-nowrap">
                         {new Date(row.created_at).toLocaleString("es-AR", { month: "2-digit", day: "2-digit", hour: "2-digit", minute: "2-digit", second: "2-digit", hour12: false })}
                       </td>
