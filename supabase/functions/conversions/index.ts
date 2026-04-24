@@ -2059,6 +2059,31 @@ Deno.serve(async (req) => {
       const incomingPromoCode = derivePromoCodeFromPayload(params);
       // Deferred queue mode: LEAD without promo_code waits and is retried by cron after 1h.
       if (!incomingPromoCode && !isDeferredRetry) {
+        const immediateBotPhone = sanitizePhone(params.bot_phone);
+        const immediateDateTime = norm((params as Record<string, unknown>).dateTime || (params as Record<string, unknown>).datetime);
+        const canTryImmediateFallback = !!immediateBotPhone && !!immediateDateTime;
+        if (canTryImmediateFallback) {
+          await writeLog(
+            db,
+            landing.user_id,
+            "main",
+            "INFO",
+            "LEAD sin promo_code: intento inmediato con bot_phone+dateTime",
+            JSON.stringify({
+              action: "LEAD",
+              action_event_id: actionEventId,
+              bot_phone: immediateBotPhone,
+              dateTime: immediateDateTime,
+              inbox_id: inboxId,
+            }),
+            undefined,
+            undefined,
+            undefined,
+            safePayloadRaw(params),
+            "lead sin promo: intento inmediato",
+          );
+          return runAndFinalize(() => handleLead(db, params, landing, cfg, pixelConfigs));
+        }
         await writeLog(
           db,
           landing.user_id,
