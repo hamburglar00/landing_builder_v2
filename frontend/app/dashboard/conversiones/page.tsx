@@ -1881,7 +1881,9 @@ export default function DashboardConversionesPage() {
                           const resp = String(row.response_body ?? "").toLowerCase();
                           if (!isLead || !isProcessed) return "bg-zinc-950/40";
                           if (resp.includes("match_mode:promo_code")) return "bg-emerald-950/30";
-                          if (resp.includes("match_mode:bot_phone+datetime")) return "bg-cyan-950/30";
+                          if (resp.includes("match_mode:bot_phone+datetime")) {
+                            return "bg-cyan-950/30 [background-image:repeating-linear-gradient(135deg,rgba(6,182,212,0.14)_0,rgba(6,182,212,0.14)_6px,transparent_6px,transparent_12px)]";
+                          }
                           return "bg-zinc-950/40";
                         })()
                       }
