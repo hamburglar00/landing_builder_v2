@@ -137,6 +137,9 @@ max_catalogs = 2
 [functions.notify-inactive-contacts]
 verify_jwt = false
 
+[functions.retry-failed-conversions]
+verify_jwt = false
+
 # Analytics Buckets is available to Supabase Pro plan.
 # [storage.analytics.buckets.my-warehouse]
 
