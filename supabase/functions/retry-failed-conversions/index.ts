@@ -355,8 +355,7 @@ Deno.serve(async (req) => {
       const botPhone = sanitizePhone(
         typeof payload.bot_phone === "string" ? payload.bot_phone : "",
       );
-      const leadTs = toEpochSeconds(payload.timestamp)
-        ?? toEpochFromIso(payload.dateTime)
+      const leadTs = toEpochFromIso(payload.dateTime)
         ?? toEpochFromIso(payload.datetime)
         ?? Math.floor(new Date(String(lead.created_at ?? new Date().toISOString())).getTime() / 1000);
       if (!botPhone || !leadTs) continue;
@@ -465,12 +464,6 @@ function sanitizePhone(input: string | null | undefined): string {
   const digits = String(input ?? "").replace(/\D/g, "");
   if (!digits) return "";
   return digits.startsWith("54") ? digits : `54${digits}`;
-}
-
-function toEpochSeconds(value: unknown): number | null {
-  const n = Number(value);
-  if (!Number.isFinite(n) || n <= 0) return null;
-  return Math.floor(n > 1_000_000_000_000 ? n / 1000 : n);
 }
 
 function toEpochFromIso(value: unknown): number | null {

@@ -1099,12 +1099,6 @@ async function handleLead(
 ): Promise<Response> {
   const TIMESTAMP_FALLBACK_WINDOW_SECONDS_BEFORE = 90;
   const TIMESTAMP_FALLBACK_WINDOW_SECONDS_AFTER = 30;
-  const toEpochSeconds = (value: unknown): number | null => {
-    const n = Number(value);
-    if (!Number.isFinite(n) || n <= 0) return null;
-    // Accept both seconds and milliseconds.
-    return Math.floor(n > 1_000_000_000_000 ? n / 1000 : n);
-  };
   const toEpochFromIso = (value: unknown): number | null => {
     const raw = norm(value);
     if (!raw) return null;
@@ -1118,7 +1112,6 @@ async function handleLead(
   const inboundSourcePlatform = norm(p.source_platform);
   const botPhone = sanitizePhone(p.bot_phone);
   const inboundBotTimestampSec =
-    toEpochSeconds(p.timestamp) ??
     toEpochFromIso((p as Record<string, unknown>).dateTime) ??
     toEpochFromIso((p as Record<string, unknown>).datetime);
   if (!cleanPhone) {
@@ -1164,7 +1157,7 @@ async function handleLead(
     if (data) targetId = data.id;
   }
 
-  // 1.b) Fallback ONLY when promo_code is missing: bot_phone + timestamp window (for CONTACT -> LEAD linking).
+  // 1.b) Fallback ONLY when promo_code is missing: bot_phone + dateTime window (for CONTACT -> LEAD linking).
   if (!targetId && !promoCode) {
     if (botPhone && inboundBotTimestampSec) {
       const fromIso = new Date((inboundBotTimestampSec - TIMESTAMP_FALLBACK_WINDOW_SECONDS_BEFORE) * 1000).toISOString();
@@ -1189,7 +1182,7 @@ async function handleLead(
           landing.user_id,
           "handleLead",
           "WARN",
-          "LEAD no procesado: fallback bot_phone+timestamp ambiguo",
+          "LEAD no procesado: fallback bot_phone+dateTime ambiguo",
           JSON.stringify({
             bot_phone: botPhone,
             timestamp: inboundBotTimestampSec,
@@ -1201,7 +1194,7 @@ async function handleLead(
           undefined,
           undefined,
           safePayloadRaw(p),
-          "fallback ambiguo (bot_phone+timestamp): se crea LEAD nuevo",
+          "fallback ambiguo (bot_phone+dateTime): se crea LEAD nuevo",
         );
         leadMatchMode = "created_new";
       }
@@ -1213,7 +1206,7 @@ async function handleLead(
         landing.user_id,
         "handleLead",
         "ERROR",
-        "LEAD rechazado: falta promo_code y fallback bot_phone+timestamp sin match",
+        "LEAD rechazado: falta promo_code y fallback bot_phone+dateTime sin match",
         JSON.stringify({
           promo_code: promoCode,
           bot_phone: botPhone,
@@ -1225,7 +1218,7 @@ async function handleLead(
         undefined,
         undefined,
         safePayloadRaw(p),
-        "sin match por fallback: se crea LEAD nuevo",
+        "sin match por fallback dateTime: se crea LEAD nuevo",
       );
       leadMatchMode = "created_new";
     }
