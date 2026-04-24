@@ -404,10 +404,7 @@ Deno.serve(async (req) => {
 
       await db
         .from("conversions")
-        .update({
-          estado: "lead_backfill_merged",
-          observaciones: appendObs(String(lead.observaciones ?? ""), `backfill_merged_into:${target.id}`),
-        })
+        .delete()
         .eq("id", lead.id);
       leadBackfillMerged++;
     }

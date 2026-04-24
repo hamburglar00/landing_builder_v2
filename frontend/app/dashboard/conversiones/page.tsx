@@ -420,6 +420,7 @@ export default function DashboardConversionesPage() {
   const [copiedUrl, setCopiedUrl] = useState<string | null>(null);
   const [expandedLog, setExpandedLog] = useState<number | null>(null);
   const [inboxSearch, setInboxSearch] = useState("");
+  const [inboxActionFilter, setInboxActionFilter] = useState<"all" | "CONTACT" | "LEAD" | "PURCHASE">("LEAD");
   const [tableSearch, setTableSearch] = useState("");
   const [tablePage, setTablePage] = useState(1);
   const [statsLandingFilter, setStatsLandingFilter] = useState<string>("__all__");
@@ -731,8 +732,11 @@ export default function DashboardConversionesPage() {
   }, [tableConversionsFiltered, tableSearch]);
   const filteredInbox = useMemo(() => {
     const q = inboxSearch.trim().toLowerCase();
-    if (!q) return activeInbox;
-    return activeInbox.filter((r) => {
+    const byAction = activeInbox.filter((r) =>
+      inboxActionFilter === "all" ? true : String(r.action ?? "").toUpperCase() === inboxActionFilter,
+    );
+    if (!q) return byAction;
+    return byAction.filter((r) => {
       const hay = [
         r.action,
         r.status,
@@ -747,7 +751,7 @@ export default function DashboardConversionesPage() {
         .toLowerCase();
       return hay.includes(q);
     });
-  }, [activeInbox, inboxSearch]);
+  }, [activeInbox, inboxSearch, inboxActionFilter]);
   const tablePageSize = 20;
   const totalTablePages = Math.max(1, Math.ceil(filteredConversions.length / tablePageSize));
   const pagedConversions = useMemo(() => {
@@ -1827,12 +1831,25 @@ export default function DashboardConversionesPage() {
               Inbox de eventos (LEAD/PURCHASE){" "}
               <span className="font-normal text-zinc-500">({filteredInbox.length})</span>
             </h3>
-            <input
-              value={inboxSearch}
-              onChange={(e) => setInboxSearch(e.target.value)}
-              placeholder="Buscar por phone, promo_code, status..."
-              className="h-8 w-72 rounded-lg border border-zinc-700 bg-zinc-900 px-3 text-xs text-zinc-100 placeholder:text-zinc-500"
-            />
+            <div className="flex items-center gap-2">
+              <select
+                value={inboxActionFilter}
+                onChange={(e) => setInboxActionFilter(e.target.value as "all" | "CONTACT" | "LEAD" | "PURCHASE")}
+                className="h-8 rounded-lg border border-zinc-700 bg-zinc-900 px-2 text-xs text-zinc-100"
+                title="Filtrar por tipo de evento"
+              >
+                <option value="all">Todos</option>
+                <option value="CONTACT">Contact</option>
+                <option value="LEAD">Lead</option>
+                <option value="PURCHASE">Purchase</option>
+              </select>
+              <input
+                value={inboxSearch}
+                onChange={(e) => setInboxSearch(e.target.value)}
+                placeholder="Buscar por phone, promo_code, status..."
+                className="h-8 w-72 rounded-lg border border-zinc-700 bg-zinc-900 px-3 text-xs text-zinc-100 placeholder:text-zinc-500"
+              />
+            </div>
           </div>
           {filteredInbox.length === 0 ? (
             <p className="text-sm text-zinc-500">No hay eventos en inbox para el filtro actual.</p>
