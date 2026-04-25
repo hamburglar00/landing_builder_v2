@@ -170,8 +170,8 @@ export function TelefonosPageContent({
         payload = {};
       }
 
-      const assignedDigits = onlyDigits(payload.bot_phone ?? "");
-      const senderDigits = onlyDigits(payload.phone ?? row.phone ?? "");
+      const assignedDigits = onlyDigits(String(payload.bot_phone ?? ""));
+      const senderDigits = onlyDigits(String(payload.phone ?? row.phone ?? ""));
       if (!assignedDigits || !senderDigits) continue;
 
       const current = uniqueSendersByAssigned.get(assignedDigits) ?? new Set<string>();
