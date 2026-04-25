@@ -1482,7 +1482,7 @@ async function handleLead(
           : "created_new";
     return textResponse(
       leadMatchMode === "created_new"
-        ? "LEAD sin match por promo_code: se creo una fila nueva y se proceso correctamente. match_mode:created_new"
+        ? "No se encontro un Contact previo para este LEAD (sin match por promo_code ni por fallback de tiempo+telefono asignado). Se creo una nueva fila LEAD y se proceso correctamente. match_mode:created_new"
         : `Fila LEAD procesada. match_mode:${modeText}`,
     );
   }
@@ -1494,7 +1494,7 @@ async function handleLead(
         : "created_new";
   return textResponse(
     leadMatchMode === "created_new"
-      ? "LEAD sin match por promo_code: se creo una fila nueva, pero fallo el envio a Meta CAPI (revisar token, pixel o pestana Logs). match_mode:created_new"
+      ? "No se encontro un Contact previo para este LEAD (sin match por promo_code ni por fallback de tiempo+telefono asignado). Se creo una nueva fila LEAD, pero fallo el envio a Meta CAPI (revisar token, pixel o pestana Logs). match_mode:created_new"
       : `LEAD procesado. Error al enviar a Meta CAPI (revisar token, pixel o pestana Logs). match_mode:${modeText}`,
   );
 }
