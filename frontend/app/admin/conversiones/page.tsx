@@ -726,7 +726,7 @@ export default function AdminConversionesPage() {
       return hay.includes(q);
     });
   }, [tableConversionsFiltered, tableSearch]);
-  const tablePageSize = 20;
+  const tablePageSize = 50;
   const totalTablePages = Math.max(1, Math.ceil(filteredConversions.length / tablePageSize));
   const pagedConversions = useMemo(() => {
     const start = (tablePage - 1) * tablePageSize;
