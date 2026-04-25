@@ -149,39 +149,29 @@ export function TelefonosPageContent({
     }
     setPhonesByGerencia(byGerencia);
 
-    const inboxLeadQuery = supabase
-      .from("conversion_inbox")
-      .select("phone, payload_raw, action")
-      .eq("action", "LEAD");
+    const leadQuery = supabase
+      .from("conversions")
+      .select("telefono_asignado, lead_event_id")
+      .neq("telefono_asignado", "");
 
-    const { data: inboxLeadRows, error: leadsError } = await (isAdmin
-      ? inboxLeadQuery
-      : inboxLeadQuery.eq("user_id", uid));
+    const { data: leadRows, error: leadsError } = await (isAdmin
+      ? leadQuery
+      : leadQuery.eq("user_id", uid));
 
     if (leadsError) throw leadsError;
 
-    const uniqueSendersByAssigned = new Map<string, Set<string>>();
-
-    for (const row of inboxLeadRows ?? []) {
-      let payload: Record<string, unknown> = {};
-      try {
-        payload = JSON.parse(String(row.payload_raw ?? "{}")) as Record<string, unknown>;
-      } catch {
-        payload = {};
-      }
-
-      const assignedDigits = onlyDigits(String(payload.bot_phone ?? ""));
-      const senderDigits = onlyDigits(String(payload.phone ?? row.phone ?? ""));
-      if (!assignedDigits || !senderDigits) continue;
-
-      const current = uniqueSendersByAssigned.get(assignedDigits) ?? new Set<string>();
-      current.add(senderDigits);
-      uniqueSendersByAssigned.set(assignedDigits, current);
-    }
-
     const countsByAssigned: Record<string, number> = {};
-    for (const [assigned, senders] of uniqueSendersByAssigned.entries()) {
-      countsByAssigned[assigned] = senders.size;
+
+    for (const row of leadRows ?? []) {
+      const leadEventId = typeof row.lead_event_id === "string"
+        ? row.lead_event_id.trim()
+        : "";
+      if (!leadEventId) continue;
+
+      const assignedDigits = onlyDigits(row.telefono_asignado ?? "");
+      if (!assignedDigits) continue;
+
+      countsByAssigned[assignedDigits] = (countsByAssigned[assignedDigits] ?? 0) + 1;
     }
 
     setLeadUniqueByAssignedPhone(countsByAssigned);
