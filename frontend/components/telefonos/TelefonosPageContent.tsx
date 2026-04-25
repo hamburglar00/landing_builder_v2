@@ -149,29 +149,36 @@ export function TelefonosPageContent({
     }
     setPhonesByGerencia(byGerencia);
 
-    const leadQuery = supabase
-      .from("conversions")
-      .select("telefono_asignado, lead_event_id")
-      .neq("telefono_asignado", "");
-
-    const { data: leadRows, error: leadsError } = await (isAdmin
-      ? leadQuery
-      : leadQuery.eq("user_id", uid));
-
-    if (leadsError) throw leadsError;
-
     const countsByAssigned: Record<string, number> = {};
+    const pageSize = 1000;
+    let offset = 0;
+    while (true) {
+      const baseLeadQuery = supabase
+        .from("conversions")
+        .select("telefono_asignado, lead_event_id")
+        .neq("telefono_asignado", "")
+        .range(offset, offset + pageSize - 1);
 
-    for (const row of leadRows ?? []) {
-      const leadEventId = typeof row.lead_event_id === "string"
-        ? row.lead_event_id.trim()
-        : "";
-      if (!leadEventId) continue;
+      const { data: leadRows, error: leadsError } = await (isAdmin
+        ? baseLeadQuery
+        : baseLeadQuery.eq("user_id", uid));
+      if (leadsError) throw leadsError;
 
-      const assignedDigits = onlyDigits(row.telefono_asignado ?? "");
-      if (!assignedDigits) continue;
+      const chunk = leadRows ?? [];
+      for (const row of chunk) {
+        const leadEventId = typeof row.lead_event_id === "string"
+          ? row.lead_event_id.trim()
+          : "";
+        if (!leadEventId) continue;
 
-      countsByAssigned[assignedDigits] = (countsByAssigned[assignedDigits] ?? 0) + 1;
+        const assignedDigits = onlyDigits(row.telefono_asignado ?? "");
+        if (!assignedDigits) continue;
+
+        countsByAssigned[assignedDigits] = (countsByAssigned[assignedDigits] ?? 0) + 1;
+      }
+
+      if (chunk.length < pageSize) break;
+      offset += pageSize;
     }
 
     setLeadUniqueByAssignedPhone(countsByAssigned);
