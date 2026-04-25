@@ -155,8 +155,9 @@ export function TelefonosPageContent({
     while (true) {
       const baseLeadQuery = supabase
         .from("conversions")
-        .select("telefono_asignado, lead_event_id")
+        .select("telefono_asignado, lead_event_id, phone")
         .neq("telefono_asignado", "")
+        .neq("phone", "")
         .range(offset, offset + pageSize - 1);
 
       const { data: leadRows, error: leadsError } = await (isAdmin
