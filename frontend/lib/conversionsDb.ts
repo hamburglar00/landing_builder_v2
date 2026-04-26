@@ -168,6 +168,24 @@ export interface FunnelContact {
   current_purchase_type?: "first" | "repeat" | null;
 }
 
+type FetchDateRange = {
+  start?: Date | string | null;
+  end?: Date | string | null;
+};
+
+function toIsoIfValid(value: Date | string | null | undefined): string | null {
+  if (!value) return null;
+  if (value instanceof Date) {
+    const t = value.getTime();
+    if (!Number.isFinite(t)) return null;
+    return value.toISOString();
+  }
+  const d = new Date(value);
+  const t = d.getTime();
+  if (!Number.isFinite(t)) return null;
+  return d.toISOString();
+}
+
 export type FunnelStage = "leads" | "primera_carga" | "recurrente" | "premium";
 
 export function classifyContact(
@@ -383,17 +401,22 @@ export async function fetchConversionsFiltered(
   userId: string,
   hiddenBy: string,
   limit?: number,
+  range?: FetchDateRange,
 ): Promise<ConversionRow[]> {
   const pageSize = 1000;
   const rows: ConversionRow[] = [];
   let offset = 0;
 
   while (true) {
-    const query = supabase
+    let query = supabase
       .from("conversions")
       .select(CONVERSIONS_SELECT)
       .eq("user_id", userId)
       .order("created_at", { ascending: false });
+    const startIso = toIsoIfValid(range?.start);
+    const endIso = toIsoIfValid(range?.end);
+    if (startIso) query = query.gte("created_at", startIso);
+    if (endIso) query = query.lte("created_at", endIso);
 
     const chunkSize = typeof limit === "number"
       ? Math.min(pageSize, Math.max(limit - offset, 0))
@@ -421,16 +444,21 @@ export async function fetchConversionsFiltered(
 export async function fetchConversionsForAdminFiltered(
   hiddenBy: string,
   limit?: number,
+  range?: FetchDateRange,
 ): Promise<ConversionRow[]> {
   const pageSize = 1000;
   const rows: ConversionRow[] = [];
   let offset = 0;
 
   while (true) {
-    const query = supabase
+    let query = supabase
       .from("conversions")
       .select(CONVERSIONS_SELECT)
       .order("created_at", { ascending: false });
+    const startIso = toIsoIfValid(range?.start);
+    const endIso = toIsoIfValid(range?.end);
+    if (startIso) query = query.gte("created_at", startIso);
+    if (endIso) query = query.lte("created_at", endIso);
 
     const chunkSize = typeof limit === "number"
       ? Math.min(pageSize, Math.max(limit - offset, 0))
@@ -534,16 +562,18 @@ export async function fetchFunnelContactsForAdmin(): Promise<FunnelContact[]> {
 export async function fetchFunnelContactsFiltered(
   userId: string,
   hiddenBy: string,
+  range?: FetchDateRange,
 ): Promise<FunnelContact[]> {
-  const rows = await fetchConversionsFiltered(userId, hiddenBy);
+  const rows = await fetchConversionsFiltered(userId, hiddenBy, undefined, range);
   return buildFunnelContactsFromConversions(rows);
 }
 
 /** Fetch funnel contacts for admin excluyendo los ocultos por hiddenBy. */
 export async function fetchFunnelContactsForAdminFiltered(
   hiddenBy: string,
+  range?: FetchDateRange,
 ): Promise<FunnelContact[]> {
-  const rows = await fetchConversionsForAdminFiltered(hiddenBy);
+  const rows = await fetchConversionsForAdminFiltered(hiddenBy, undefined, range);
   return buildFunnelContactsFromConversions(rows);
 }
 

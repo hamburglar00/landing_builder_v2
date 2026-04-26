@@ -1,6 +1,6 @@
 ﻿"use client";
 
-import { useEffect, useState, useCallback, useMemo } from "react";
+import { useEffect, useState, useCallback, useMemo, useRef } from "react";
 import { useSearchParams } from "next/navigation";
 import { supabase } from "@/lib/supabaseClient";
 import {
@@ -209,6 +209,14 @@ function normalizeSexValue(value: unknown): string {
   if (raw === "m" || raw === "male" || raw === "masculino" || raw === "hombre") return "male";
   if (raw === "f" || raw === "female" || raw === "femenino" || raw === "mujer") return "female";
   return "unknown";
+}
+
+function todayRange(): DateRange {
+  const now = new Date();
+  return {
+    start: new Date(now.getFullYear(), now.getMonth(), now.getDate()),
+    end: new Date(now.getFullYear(), now.getMonth(), now.getDate(), 23, 59, 59, 999),
+  };
 }
 
 function sexLabel(value: string): string {
@@ -444,12 +452,14 @@ export default function DashboardConversionesPage() {
   const [draftDeviceFilter, setDraftDeviceFilter] = useState<string>("__all__");
   const [gerenciaByPhone, setGerenciaByPhone] = useState<Record<string, string[]>>({});
 
-  const [dateRange, setDateRange] = useState<DateRange | null>(null);
+  const [dateRange, setDateRange] = useState<DateRange | null>(todayRange());
   const [refreshingTable, setRefreshingTable] = useState(false);
   const [hidingTable, setHidingTable] = useState(false);
   const [hidingFunnel, setHidingFunnel] = useState(false);
   const [hidingStats, setHidingStats] = useState(false);
   const [hidingLogs, setHidingLogs] = useState(false);
+  const hasSyncedDateRangeOnceRef = useRef(false);
+  const initialDateRangeRef = useRef<DateRange | null>(dateRange);
 
   useEffect(() => {
     const view = (searchParams.get("view") || "").toLowerCase();
@@ -865,8 +875,8 @@ export default function DashboardConversionesPage() {
       try {
         const [cfg, rows, funnel, pixels] = await Promise.all([
           fetchConversionsConfig(user.id),
-          fetchConversionsFiltered(user.id, user.id),
-          fetchFunnelContactsFiltered(user.id, user.id),
+          fetchConversionsFiltered(user.id, user.id, undefined, initialDateRangeRef.current ?? undefined),
+          fetchFunnelContactsFiltered(user.id, user.id, initialDateRangeRef.current ?? undefined),
           fetchPixelConfigs(user.id),
         ]);
         setConfig(cfg);
@@ -1168,15 +1178,24 @@ export default function DashboardConversionesPage() {
         setInboxRows(inbox);
       } else {
         const [rows, funnel] = await Promise.all([
-          fetchConversionsFiltered(userId, userId),
-          fetchFunnelContactsFiltered(userId, userId),
+          fetchConversionsFiltered(userId, userId, undefined, dateRange ?? undefined),
+          fetchFunnelContactsFiltered(userId, userId, dateRange ?? undefined),
         ]);
         setConversions(rows);
         setFunnelContacts(funnel);
       }
     } catch (e) { console.error(e); }
     finally { setRefreshingTable(false); }
-  }, [userId, tab]);
+  }, [userId, tab, dateRange]);
+
+  useEffect(() => {
+    if (!userId) return;
+    if (!hasSyncedDateRangeOnceRef.current) {
+      hasSyncedDateRangeOnceRef.current = true;
+      return;
+    }
+    void refreshTable();
+  }, [dateRange, userId, refreshTable]);
 
   const clearGlobalDisplay = useCallback(async () => {
     if (!userId) return;
