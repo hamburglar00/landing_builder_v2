@@ -149,15 +149,15 @@ export function TelefonosPageContent({
     }
     setPhonesByGerencia(byGerencia);
 
-    const countsByAssigned: Record<string, number> = {};
+    const contactExternalKeys = new Set<string>();
+    const leadExternalKeysByAssignedPhone = new Map<string, Set<string>>();
     const pageSize = 1000;
     let offset = 0;
     while (true) {
       const baseLeadQuery = supabase
         .from("conversions")
-        .select("telefono_asignado, lead_event_id, phone")
+        .select("user_id, external_id, telefono_asignado, lead_event_id, contact_event_id")
         .neq("telefono_asignado", "")
-        .neq("phone", "")
         .range(offset, offset + pageSize - 1);
 
       const { data: leadRows, error: leadsError } = await (isAdmin
@@ -167,19 +167,40 @@ export function TelefonosPageContent({
 
       const chunk = leadRows ?? [];
       for (const row of chunk) {
+        const externalId = typeof row.external_id === "string"
+          ? row.external_id.trim()
+          : "";
+        if (!externalId) continue;
+        const key = `${row.user_id}::${externalId}`;
+        const assignedDigits = onlyDigits(row.telefono_asignado ?? "");
+        if (!assignedDigits) continue;
+        const contactEventId = typeof row.contact_event_id === "string"
+          ? row.contact_event_id.trim()
+          : "";
+        if (contactEventId) {
+          contactExternalKeys.add(key);
+        }
         const leadEventId = typeof row.lead_event_id === "string"
           ? row.lead_event_id.trim()
           : "";
         if (!leadEventId) continue;
-
-        const assignedDigits = onlyDigits(row.telefono_asignado ?? "");
-        if (!assignedDigits) continue;
-
-        countsByAssigned[assignedDigits] = (countsByAssigned[assignedDigits] ?? 0) + 1;
+        if (!leadExternalKeysByAssignedPhone.has(assignedDigits)) {
+          leadExternalKeysByAssignedPhone.set(assignedDigits, new Set<string>());
+        }
+        leadExternalKeysByAssignedPhone.get(assignedDigits)?.add(key);
       }
 
       if (chunk.length < pageSize) break;
       offset += pageSize;
+    }
+
+    const countsByAssigned: Record<string, number> = {};
+    for (const [assignedPhone, leadKeys] of leadExternalKeysByAssignedPhone.entries()) {
+      let linkedCount = 0;
+      for (const leadKey of leadKeys) {
+        if (contactExternalKeys.has(leadKey)) linkedCount++;
+      }
+      countsByAssigned[assignedPhone] = linkedCount;
     }
 
     setLeadUniqueByAssignedPhone(countsByAssigned);
