@@ -19,7 +19,7 @@ const PLAN_CARDS: PlanCard[] = [
     title: "Starter",
     price: "USD 69 / mes",
     unitPrice: "USD 34.5 por teléfono",
-    landings: "Hasta 2 landings",
+    landings: "Hasta 1 landing",
     phones: "Hasta 2 telefonos",
     colorClass: "border-zinc-700 bg-zinc-900/40",
     conversiones:
@@ -34,7 +34,7 @@ const PLAN_CARDS: PlanCard[] = [
     title: "Plus",
     price: "USD 163 / mes",
     unitPrice: "USD 32.6 por teléfono",
-    landings: "Hasta 4 landings",
+    landings: "Hasta 2 landings",
     phones: "Hasta 5 telefonos",
     colorClass: "border-yellow-700 bg-yellow-950/30",
     conversiones:
