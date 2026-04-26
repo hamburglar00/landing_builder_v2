@@ -814,17 +814,15 @@ export default function AdminConversionesPage() {
       if (!user) return;
       setUserId(user.id);
       try {
-        const [cfg, rows, funnel, logRows, pixels] = await Promise.all([
+        const [cfg, rows, funnel, pixels] = await Promise.all([
           fetchConversionsConfig(user.id),
           fetchConversionsForAdminFiltered(user.id),
           fetchFunnelContactsForAdminFiltered(user.id),
-          fetchConversionLogsForAdminFiltered(user.id, 200),
           fetchPixelConfigs(user.id),
         ]);
         setConfig(cfg);
         setConversions(rows);
         setFunnelContacts(funnel);
-        setLogs(logRows);
         setPixelConfigs(pixels);
 
         const { data: profile } = await supabase
@@ -866,6 +864,19 @@ export default function AdminConversionesPage() {
     };
     void init();
   }, []);
+
+  useEffect(() => {
+    const loadDeferredLogs = async () => {
+      if (!userId || tab !== "logs" || logs.length > 0) return;
+      try {
+        const logRows = await fetchConversionLogsForAdminFiltered(userId, 200);
+        setLogs(logRows);
+      } catch (e) {
+        console.error(e);
+      }
+    };
+    void loadDeferredLogs();
+  }, [tab, userId, logs.length]);
 
   const handleSave = async () => {
     if (!config || !userId) return;
@@ -1103,17 +1114,20 @@ export default function AdminConversionesPage() {
     if (!userId) return;
     setRefreshingTable(true);
     try {
-      const [rows, funnel, logRows] = await Promise.all([
-        fetchConversionsForAdminFiltered(userId),
-        fetchFunnelContactsForAdminFiltered(userId),
-        fetchConversionLogsForAdminFiltered(userId, 200),
-      ]);
-      setConversions(rows);
-      setFunnelContacts(funnel);
-      setLogs(logRows);
+      if (tab === "logs") {
+        const logRows = await fetchConversionLogsForAdminFiltered(userId, 200);
+        setLogs(logRows);
+      } else {
+        const [rows, funnel] = await Promise.all([
+          fetchConversionsForAdminFiltered(userId),
+          fetchFunnelContactsForAdminFiltered(userId),
+        ]);
+        setConversions(rows);
+        setFunnelContacts(funnel);
+      }
     } catch (e) { console.error(e); }
     finally { setRefreshingTable(false); }
-  }, [userId]);
+  }, [userId, tab]);
 
   const clearTableDisplay = useCallback(async () => {
     if (!userId || activeConversions.length === 0 || demoMode) return;

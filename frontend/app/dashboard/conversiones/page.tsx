@@ -863,19 +863,15 @@ export default function DashboardConversionesPage() {
       if (!user) return;
       setUserId(user.id);
       try {
-        const [cfg, rows, funnel, logRows, inbox, pixels] = await Promise.all([
+        const [cfg, rows, funnel, pixels] = await Promise.all([
           fetchConversionsConfig(user.id),
           fetchConversionsFiltered(user.id, user.id),
           fetchFunnelContactsFiltered(user.id, user.id),
-          fetchConversionLogsFiltered(user.id, user.id, 200),
-          fetchConversionInbox(user.id, 400),
           fetchPixelConfigs(user.id),
         ]);
         setConfig(cfg);
         setConversions(rows);
         setFunnelContacts(funnel);
-        setLogs(logRows);
-        setInboxRows(inbox);
         setPixelConfigs(pixels);
 
         const { data: profile } = await supabase
@@ -918,6 +914,25 @@ export default function DashboardConversionesPage() {
     };
     void init();
   }, []);
+
+  useEffect(() => {
+    const loadDeferredTabData = async () => {
+      if (!userId) return;
+      try {
+        if (tab === "logs" && logs.length === 0) {
+          const logRows = await fetchConversionLogsFiltered(userId, userId, 200);
+          setLogs(logRows);
+        }
+        if (tab === "inbox" && inboxRows.length === 0) {
+          const inbox = await fetchConversionInbox(userId, 400);
+          setInboxRows(inbox);
+        }
+      } catch (e) {
+        console.error(e);
+      }
+    };
+    void loadDeferredTabData();
+  }, [tab, userId, logs.length, inboxRows.length]);
 
   const handleSave = async () => {
     if (!config || !userId) return;
@@ -1145,19 +1160,23 @@ export default function DashboardConversionesPage() {
     if (!userId) return;
     setRefreshingTable(true);
     try {
-      const [rows, funnel, logRows, inbox] = await Promise.all([
-        fetchConversionsFiltered(userId, userId),
-        fetchFunnelContactsFiltered(userId, userId),
-        fetchConversionLogsFiltered(userId, userId, 200),
-        fetchConversionInbox(userId, 400),
-      ]);
-      setConversions(rows);
-      setFunnelContacts(funnel);
-      setLogs(logRows);
-      setInboxRows(inbox);
+      if (tab === "logs") {
+        const logRows = await fetchConversionLogsFiltered(userId, userId, 200);
+        setLogs(logRows);
+      } else if (tab === "inbox") {
+        const inbox = await fetchConversionInbox(userId, 400);
+        setInboxRows(inbox);
+      } else {
+        const [rows, funnel] = await Promise.all([
+          fetchConversionsFiltered(userId, userId),
+          fetchFunnelContactsFiltered(userId, userId),
+        ]);
+        setConversions(rows);
+        setFunnelContacts(funnel);
+      }
     } catch (e) { console.error(e); }
     finally { setRefreshingTable(false); }
-  }, [userId]);
+  }, [userId, tab]);
 
   const clearGlobalDisplay = useCallback(async () => {
     if (!userId) return;
