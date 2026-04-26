@@ -1538,7 +1538,7 @@ export default function AdminConversionesPage() {
               </button>
             )}
           </div>
-          <DateRangeFilter onChange={setDateRange} />
+          <DateRangeFilter onChange={setDateRange} initialPreset="hoy" />
         </div>
       )}
       {statsFilterModalOpen && (

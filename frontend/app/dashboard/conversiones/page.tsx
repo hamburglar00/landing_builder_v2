@@ -1522,7 +1522,7 @@ export default function DashboardConversionesPage() {
               </button>
             )}
           </div>
-          <DateRangeFilter onChange={setDateRange} />
+          <DateRangeFilter onChange={setDateRange} initialPreset="hoy" />
         </div>
       )}
 

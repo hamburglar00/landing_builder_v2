@@ -61,14 +61,20 @@ function fmtDate(d: Date) {
 
 export default function DateRangeFilter({
   onChange,
+  initialPreset = "maximo",
 }: {
   onChange: (range: DateRange | null) => void;
+  initialPreset?: Preset;
 }) {
-  const [preset, setPreset] = useState<Preset>("maximo");
+  const [preset, setPreset] = useState<Preset>(initialPreset);
   const [showCustom, setShowCustom] = useState(false);
   const [customStart, setCustomStart] = useState("");
   const [customEnd, setCustomEnd] = useState("");
   const ref = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    onChange(rangeForPreset(initialPreset));
+  }, [initialPreset, onChange]);
 
   useEffect(() => {
     function handleClick(e: MouseEvent) {
