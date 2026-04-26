@@ -1700,7 +1700,11 @@ async function handlePurchase(
     );
 
     const ok = await sendToMetaCAPI(db, effectiveConfig, pixelConfigs, fullRow, targetId, "Purchase", purchaseEventId, purchaseEventTime, customData, testEventCode || undefined);
-    return textResponse(ok ? "Primera compra enviada (Purchase)" : "Purchase procesado. Error al enviar a Meta CAPI (revisar token, pixel o Logs).");
+    return textResponse(
+      ok
+        ? `Fila PURCHASE procesada. match_mode:${matchMethod}`
+        : `PURCHASE procesado. Error al enviar a Meta CAPI (revisar token, pixel o Logs). match_mode:${matchMethod}`,
+    );
   }
 
   // 4) No promo match and no eligible LEAD pending => apply repeat logic.
@@ -1785,7 +1789,11 @@ async function handlePurchase(
     );
 
     const ok = await sendToMetaCAPI(db, effectiveConfig, pixelConfigs, fullRow, createdId, "Purchase", purchaseEventId, purchaseEventTime, customData, testEventCode || undefined);
-    return textResponse(ok ? "Primera compra enviada (Purchase)" : "Purchase procesado. Error al enviar a Meta CAPI (revisar token, pixel o Logs).");
+    return textResponse(
+      ok
+        ? "No se encontro una fila previa para este PURCHASE (sin match por promo_code ni por fallback phone->lead). Se creo una nueva fila PURCHASE y se proceso correctamente. match_mode:created_first"
+        : "No se encontro una fila previa para este PURCHASE (sin match por promo_code ni por fallback phone->lead). Se creo una nueva fila PURCHASE, pero fallo el envio a Meta CAPI (revisar token, pixel o Logs). match_mode:created_first",
+    );
   }
 
   // Repeat purchase => inherit from most recent PURCHASE row of this phone.
@@ -1879,7 +1887,11 @@ async function handlePurchase(
   );
 
   const ok = await sendToMetaCAPI(db, effectiveRepeatConfig, pixelConfigs, fullRow, newId, "Purchase", purchaseEventId, purchaseEventTime, customData, testEventCode || undefined);
-  return textResponse(ok ? "Recompra enviada (Purchase_Repeat)" : "Recompra procesada. Error al enviar a Meta CAPI (revisar token, pixel o Logs).");
+  return textResponse(
+    ok
+      ? "Fila PURCHASE procesada. match_mode:created_repeat"
+      : "PURCHASE procesado. Error al enviar a Meta CAPI (revisar token, pixel o Logs). match_mode:created_repeat",
+  );
 }
 
 async function handleSimplePurchase(

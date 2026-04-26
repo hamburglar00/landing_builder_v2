@@ -116,9 +116,16 @@ function StatsTabIcon() {
 
 function GearTabIcon() {
   return (
-    <svg className="h-3.5 w-3.5 overflow-visible" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.6} strokeLinecap="round" strokeLinejoin="round">
+    <svg className="h-4 w-4 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
       <circle cx="12" cy="12" r="3" />
-      <path d="M19.4 15a1.8 1.8 0 0 0 .37 2l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.8 1.8 0 0 0-2-.37 1.8 1.8 0 0 0-1 1.62V21a2 2 0 1 1-4 0v-.09a1.8 1.8 0 0 0-1-1.62 1.8 1.8 0 0 0-2 .37l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.8 1.8 0 0 0 .37-2 1.8 1.8 0 0 0-1.62-1H3a2 2 0 0 1 0-4h.09a1.8 1.8 0 0 0 1.62-1 1.8 1.8 0 0 0-.37-2l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.8 1.8 0 0 0 2 .37H9A1.8 1.8 0 0 0 10 3.09V3a2 2 0 1 1 4 0v.09a1.8 1.8 0 0 0 1 1.62 1.8 1.8 0 0 0 2-.37l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.8 1.8 0 0 0-.37 2V11c0 .74.42 1.4 1.1 1.73" />
+      <path d="M12 2v2.2" />
+      <path d="M12 19.8V22" />
+      <path d="m4.93 4.93 1.56 1.56" />
+      <path d="m17.5 17.5 1.57 1.57" />
+      <path d="M2 12h2.2" />
+      <path d="M19.8 12H22" />
+      <path d="m4.93 19.07 1.56-1.57" />
+      <path d="m17.5 6.5 1.57-1.57" />
     </svg>
   );
 }
@@ -1864,7 +1871,6 @@ export default function DashboardConversionesPage() {
                     <th className="px-2 py-2 font-medium text-zinc-300 whitespace-nowrap">Status</th>
                     <th className="px-2 py-2 font-medium text-zinc-300 whitespace-nowrap">Phone</th>
                     <th className="px-2 py-2 font-medium text-zinc-300 whitespace-nowrap">Promo code</th>
-                    <th className="px-2 py-2 font-medium text-zinc-300 whitespace-nowrap">action_event_id</th>
                     <th className="px-2 py-2 font-medium text-zinc-300 whitespace-nowrap">HTTP</th>
                     <th className="px-2 py-2 font-medium text-zinc-300 whitespace-nowrap">Respuesta</th>
                     <th className="px-2 py-2 font-medium text-zinc-300 whitespace-nowrap">Payload</th>
@@ -1876,11 +1882,21 @@ export default function DashboardConversionesPage() {
                       key={row.id}
                       className={
                         (() => {
-                          const isLead = String(row.action ?? "").toUpperCase() === "LEAD";
+                          const action = String(row.action ?? "").toUpperCase();
+                          const isLead = action === "LEAD";
+                          const isPurchase = action === "PURCHASE";
                           const isProcessed = String(row.status ?? "").toLowerCase() === "processed";
                           const resp = String(row.response_body ?? "").toLowerCase();
                           const promo = String(row.promo_code ?? "").trim();
                           const hasValidPromo = /^[A-Za-z0-9]+-[A-Za-z0-9]+$/.test(promo);
+                          if (isPurchase && isProcessed) {
+                            const purchaseSuccess =
+                              (resp.includes("match_mode:") && !resp.includes("error al enviar")) ||
+                              (resp.includes("compra enviada") || resp.includes("recompra enviada")) ||
+                              (resp.includes("purchase procesada") && !resp.includes("no procesado") && !resp.includes("error al enviar"));
+                            if (purchaseSuccess) return "bg-emerald-950/30";
+                            return "bg-zinc-950/40";
+                          }
                           if (!isLead || !isProcessed) return "bg-zinc-950/40";
                           if (resp.includes("match_mode:promo_code")) return "bg-emerald-950/30";
                           if (resp.includes("match_mode:bot_phone+datetime")) {
@@ -1913,9 +1929,6 @@ export default function DashboardConversionesPage() {
                       </td>
                       <td className="px-2 py-1.5 text-zinc-300 font-mono whitespace-nowrap">{row.phone || "-"}</td>
                       <td className="px-2 py-1.5 text-zinc-300 whitespace-nowrap">{row.promo_code || "-"}</td>
-                      <td className="px-2 py-1.5 text-zinc-500 font-mono whitespace-nowrap" title={row.action_event_id ?? ""}>
-                        {row.action_event_id ? truncateText(row.action_event_id, 20) : "-"}
-                      </td>
                       <td className="px-2 py-1.5 text-zinc-400 whitespace-nowrap">{row.http_status ?? "-"}</td>
                       <td className="px-2 py-1.5 text-zinc-500 max-w-[280px] truncate" title={row.response_body || "-"}>
                         {truncateText(row.response_body || "-", 80)}
