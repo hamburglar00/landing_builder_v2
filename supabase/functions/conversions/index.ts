@@ -112,6 +112,8 @@ type GeoSource = "payload" | "ip" | "phone_prefix" | "none";
 
 type InboundStatus = "received" | "processed" | "error";
 type ProcessingContext = { conversionId?: string };
+type ContactDuplicateReason = "contact_event_id" | "promo_code";
+type ContactDuplicateMatch = { id: string; reason: ContactDuplicateReason };
 
 // deno-lint-ignore no-explicit-any
 type Params = Record<string, any>;
@@ -968,6 +970,83 @@ async function deriveEventSourceUrl(
   return base ? `${base}/${landingName}` : "";
 }
 
+async function findExistingContactDuplicate(
+  db: SupabaseClient,
+  userId: string,
+  contactEventId: string,
+  promoCode: string,
+): Promise<ContactDuplicateMatch | null> {
+  if (contactEventId) {
+    const { data: existingByEventId } = await db
+      .from("conversions")
+      .select("id")
+      .eq("user_id", userId)
+      .eq("contact_event_id", contactEventId)
+      .order("created_at", { ascending: false })
+      .limit(1)
+      .maybeSingle();
+    if (existingByEventId?.id) {
+      return { id: existingByEventId.id, reason: "contact_event_id" };
+    }
+  }
+
+  if (promoCode) {
+    const { data: existingByPromoCode } = await db
+      .from("conversions")
+      .select("id")
+      .eq("user_id", userId)
+      .eq("promo_code", promoCode)
+      .order("created_at", { ascending: false })
+      .limit(1)
+      .maybeSingle();
+    if (existingByPromoCode?.id) {
+      return { id: existingByPromoCode.id, reason: "promo_code" };
+    }
+  }
+
+  return null;
+}
+
+async function ignoreContactDuplicate(
+  db: SupabaseClient,
+  userId: string,
+  duplicate: ContactDuplicateMatch,
+  payloadRaw: string,
+  ctx?: ProcessingContext,
+  detail?: Record<string, unknown>,
+): Promise<Response> {
+  const byEventId = duplicate.reason === "contact_event_id";
+  await writeLog(
+    db,
+    userId,
+    "handleContact",
+    "INFO",
+    byEventId
+      ? "Duplicado CONTACT ignorado por contact_event_id"
+      : "Duplicado CONTACT ignorado por promo_code",
+    JSON.stringify({
+      user_id: userId,
+      existing_conversion_id: duplicate.id,
+      dedupe_reason: duplicate.reason,
+      ...(detail ?? {}),
+    }),
+    duplicate.id,
+    undefined,
+    undefined,
+    payloadRaw,
+    byEventId
+      ? "duplicado ignorado por contact_event_id"
+      : "duplicado ignorado por promo_code",
+  );
+  if (ctx) ctx.conversionId = duplicate.id;
+  return textResponse(
+    byEventId
+      ? "Duplicado ignorado (contact_event_id ya procesado)"
+      : "Duplicado ignorado (promo_code ya procesado)",
+    200,
+  );
+}
+
 
 async function handleContact(
   db: SupabaseClient,
@@ -981,8 +1060,32 @@ async function handleContact(
   const nowSec = Math.floor(Date.now() / 1000);
   const inboundMetaPixelId = norm(p.meta_pixel_id || p.pixel_id);
   const inboundSourcePlatform = norm(p.source_platform);
+  const inboundContactEventId = norm(p.contact_event_id || p.event_id);
+  const inboundPromoCode = derivePromoCodeFromPayload(p);
+  const payloadRaw = safePayloadRaw(p);
 
-  const contactEventId = norm(p.contact_event_id || p.event_id) || generateEventId();
+  const existingDuplicate = await findExistingContactDuplicate(
+    db,
+    landing.user_id,
+    inboundContactEventId,
+    inboundPromoCode,
+  );
+  if (existingDuplicate) {
+    return ignoreContactDuplicate(
+      db,
+      landing.user_id,
+      existingDuplicate,
+      payloadRaw,
+      ctx,
+      {
+        dedupe_source: "precheck",
+        contact_event_id: inboundContactEventId,
+        promo_code: inboundPromoCode,
+      },
+    );
+  }
+
+  const contactEventId = inboundContactEventId || generateEventId();
   const contactEventTime = toValidEventTime(p.contact_event_time || p.event_time || nowSec);
   const testEventCode = norm(p.test_event_code);
   const geo = resolveGeoForPayload(p);
@@ -1012,7 +1115,7 @@ async function handleContact(
     contact_event_id: contactEventId,
     contact_event_time: contactEventTime,
     sendContactPixel: toBool(p.sendContactPixel),
-    contact_payload_raw: safePayloadRaw(p),
+    contact_payload_raw: payloadRaw,
     lead_event_id: "",
     lead_event_time: null,
     lead_payload_raw: "",
@@ -1033,7 +1136,7 @@ async function handleContact(
     external_id: norm(p.external_id),
     utm_campaign: norm(p.utm_campaign),
     telefono_asignado: norm(p.telefono_asignado),
-    promo_code: derivePromoCodeFromPayload(p),
+    promo_code: inboundPromoCode,
     geo_city: geo.geo_city,
     geo_region: geo.geo_region,
     geo_country: geo.geo_country,
@@ -1041,6 +1144,50 @@ async function handleContact(
 
   const { data: inserted, error } = await db.from("conversions").insert(row).select("id").single();
   if (error || !inserted) {
+    if (error?.code === "23505") {
+      const duplicateAfterConflict = await findExistingContactDuplicate(
+        db,
+        landing.user_id,
+        inboundContactEventId,
+        inboundPromoCode,
+      );
+      if (duplicateAfterConflict) {
+        return ignoreContactDuplicate(
+          db,
+          landing.user_id,
+          duplicateAfterConflict,
+          payloadRaw,
+          ctx,
+          {
+            dedupe_source: "unique_violation",
+            contact_event_id: inboundContactEventId,
+            promo_code: inboundPromoCode,
+          },
+        );
+      }
+
+      await writeLog(
+        db,
+        landing.user_id,
+        "handleContact",
+        "WARN",
+        "CONTACT con unique violation sin fila recuperable",
+        JSON.stringify({
+          message: error.message,
+          code: error.code,
+          details: error.details,
+          contact_event_id: inboundContactEventId,
+          promo_code: inboundPromoCode,
+        }),
+        undefined,
+        undefined,
+        undefined,
+        payloadRaw,
+        "possible duplicate contact (unique violation)",
+      );
+      return textResponse("Duplicado ignorado (constraint unique)", 200);
+    }
+
     const errDetail = error ? JSON.stringify({ message: error.message, code: error.code, details: error.details }) : "sin error";
     await writeLog(
       db,
@@ -1052,7 +1199,7 @@ async function handleContact(
       undefined,
       undefined,
       undefined,
-      safePayloadRaw(p),
+      payloadRaw,
       "error al insertar contacto",
     );
     return textResponse(`Error al registrar contacto: ${error?.message ?? "unknown"}`, 500);
@@ -1074,7 +1221,7 @@ async function handleContact(
     rowId,
     undefined,
     undefined,
-    safePayloadRaw(p),
+    payloadRaw,
     "contacto registrado",
   );
 
