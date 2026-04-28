@@ -48,6 +48,35 @@ type PixelEditDraft = {
   is_default: boolean;
 };
 
+function ConstructorEndpointLogo() {
+  return (
+    <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-sm bg-sky-50 text-sky-600">
+      <svg viewBox="0 0 32 32" aria-hidden="true" className="h-6 w-6">
+        <path
+          d="M7 10.5C7 8.6 8.6 7 10.5 7h11C23.4 7 25 8.6 25 10.5v11c0 1.9-1.6 3.5-3.5 3.5h-11C8.6 25 7 23.4 7 21.5v-11Z"
+          fill="currentColor"
+          opacity="0.14"
+        />
+        <path
+          d="M10.5 12.25h11M10.5 16h11M10.5 19.75h6.5"
+          fill="none"
+          stroke="currentColor"
+          strokeLinecap="round"
+          strokeWidth="2.2"
+        />
+        <path
+          d="M21.25 18.25 24 21l-2.75 2.75M18.75 18.25 16 21l2.75 2.75"
+          fill="none"
+          stroke="currentColor"
+          strokeLinecap="round"
+          strokeLinejoin="round"
+          strokeWidth="2"
+        />
+      </svg>
+    </span>
+  );
+}
+
 export default function IntegracionesMetaCapi() {
   const [userId, setUserId] = useState<string | null>(null);
   const [isAdmin, setIsAdmin] = useState(false);
@@ -66,7 +95,8 @@ export default function IntegracionesMetaCapi() {
 
   const [editOpen, setEditOpen] = useState(false);
   const [draft, setDraft] = useState<PixelEditDraft | null>(null);
-  const [activeIntegration, setActiveIntegration] = useState<"menu" | "meta" | "kommo" | "chatrace">("menu");
+  const [activeIntegration, setActiveIntegration] = useState<"menu" | "meta" | "constructor" | "kommo" | "chatrace">("menu");
+  const [constructorCopyMsg, setConstructorCopyMsg] = useState<string | null>(null);
   const [kommoConfig, setKommoConfig] = useState<KommoClientConfig | null>(null);
   const [kommoBaseUrl, setKommoBaseUrl] = useState("");
   const [kommoToken, setKommoToken] = useState("");
@@ -370,6 +400,16 @@ export default function IntegracionesMetaCapi() {
     }
   }, [userId, clientName, kommoBaseUrl, kommoToken, kommoActive, validateKommoInput, syncKommoRemote, loadAll]);
 
+  const handleCopyConstructorEndpoint = useCallback(async () => {
+    if (!endpointUrl) return;
+    try {
+      await navigator.clipboard.writeText(endpointUrl);
+      setConstructorCopyMsg("Endpoint copiado.");
+    } catch {
+      setConstructorCopyMsg("No se pudo copiar. Selecciona y copia el endpoint manualmente.");
+    }
+  }, [endpointUrl]);
+
   useEffect(() => {
     const run = async () => {
       try {
@@ -576,6 +616,8 @@ export default function IntegracionesMetaCapi() {
           <h1 className="text-xl font-semibold text-zinc-100">
             {activeIntegration === "meta"
               ? "INTEGRACIONES > Integración con Meta CAPI"
+              : activeIntegration === "constructor"
+              ? "INTEGRACIONES > Endpoint de Conversiones del constructor"
               : activeIntegration === "kommo"
               ? "INTEGRACIONES > Integración con CRM Kommo"
               : activeIntegration === "chatrace"
@@ -585,6 +627,8 @@ export default function IntegracionesMetaCapi() {
           <p className="mt-1 text-sm text-zinc-400">
             {activeIntegration === "meta"
               ? "Administra la configuración de Meta CAPI."
+              : activeIntegration === "constructor"
+              ? "Consulta y copia el endpoint de conversiones del cliente."
               : activeIntegration === "kommo"
               ? "Guía rápida para conectar Kommo con tu endpoint."
               : activeIntegration === "chatrace"
@@ -616,6 +660,23 @@ export default function IntegracionesMetaCapi() {
                   className="h-8 w-8 shrink-0 rounded-sm object-contain"
                 />
                 Integración con Meta CAPI
+              </span>
+              <span className="text-xs text-zinc-400">Entrar</span>
+            </span>
+          </button>
+
+          <button
+            type="button"
+            onClick={() => {
+              setConstructorCopyMsg(null);
+              setActiveIntegration("constructor");
+            }}
+            className="w-full rounded-xl border border-zinc-800 bg-zinc-900/50 px-4 py-4 text-left transition active:scale-[0.99] hover:bg-zinc-900"
+          >
+            <span className="flex items-center justify-between gap-3">
+              <span className="inline-flex items-center gap-3 text-sm font-semibold text-zinc-200">
+                <ConstructorEndpointLogo />
+                Endpoint de Conversiones del constructor
               </span>
               <span className="text-xs text-zinc-400">Entrar</span>
             </span>
@@ -659,6 +720,58 @@ export default function IntegracionesMetaCapi() {
             </span>
           </button>
         </div>
+      ) : (
+      activeIntegration === "constructor" ? (
+      <section className="rounded-xl border border-zinc-800 bg-zinc-900/50 p-4">
+        <div className="mb-4 flex items-center justify-between gap-2">
+          <div className="flex items-center gap-3">
+            <ConstructorEndpointLogo />
+            <h3 className="text-sm font-semibold text-zinc-200">Endpoint de Conversiones del constructor</h3>
+          </div>
+          <button
+            type="button"
+            onClick={() => setActiveIntegration("menu")}
+            className="rounded-lg border border-zinc-700 px-3 py-1.5 text-xs text-zinc-300 hover:bg-zinc-800"
+          >
+            Volver
+          </button>
+        </div>
+
+        <div className="space-y-4 text-sm text-zinc-300">
+          <div className="rounded-lg border border-zinc-800 bg-zinc-950/40 p-3">
+            <p className="font-semibold text-zinc-100">Endpoint del cliente</p>
+            <p className="mt-1 text-xs text-zinc-500">
+              Usa esta URL para recibir eventos de conversiones en el constructor.
+            </p>
+
+            <div className="mt-3 flex flex-col gap-2 rounded-lg border border-zinc-800 bg-zinc-950 p-2 sm:flex-row sm:items-center">
+              {endpointUrl ? (
+                <code className="min-w-0 flex-1 break-all px-1 py-1 text-xs text-emerald-300">
+                  {endpointUrl}
+                </code>
+              ) : (
+                <span className="min-w-0 flex-1 px-1 py-1 text-xs text-amber-300">
+                  No se pudo resolver el endpoint porque el cliente no tiene name configurado.
+                </span>
+              )}
+              <button
+                type="button"
+                disabled={!endpointUrl}
+                onClick={() => void handleCopyConstructorEndpoint()}
+                className="shrink-0 rounded-lg border border-emerald-700/70 bg-emerald-950/30 px-3 py-1.5 text-xs font-semibold uppercase tracking-wide text-emerald-300 transition hover:bg-emerald-950/50 disabled:cursor-not-allowed disabled:opacity-50"
+              >
+                Copiar
+              </button>
+            </div>
+
+            {constructorCopyMsg && (
+              <p className={`mt-2 text-xs ${constructorCopyMsg.includes("copiado") ? "text-emerald-400" : "text-amber-300"}`}>
+                {constructorCopyMsg}
+              </p>
+            )}
+          </div>
+        </div>
+      </section>
       ) : (
       activeIntegration === "kommo" ? (
       <section className="rounded-xl border border-zinc-800 bg-zinc-900/50 p-4">
@@ -1311,6 +1424,7 @@ export default function IntegracionesMetaCapi() {
           </code>
         </div>
       </section>
+      )
       )
       )
       )}
