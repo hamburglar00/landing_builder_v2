@@ -33,7 +33,7 @@ const PHONE_KIND_OPTIONS: Array<{ value: PhoneKind; label: string }> = [
   { value: "carga", label: "Carga" },
   { value: "ads", label: "Ads" },
   { value: "mkt", label: "Mkt" },
-  { value: "assistant", label: "Assistant" },
+  { value: "assistant", label: "Asistente" },
 ];
 
 type PixelEditDraft = {

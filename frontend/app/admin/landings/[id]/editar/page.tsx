@@ -34,7 +34,7 @@ const PHONE_KIND_OPTIONS: Array<{ value: PhoneKind; label: string }> = [
   { value: "carga", label: "Carga" },
   { value: "ads", label: "Ads" },
   { value: "mkt", label: "Mkt" },
-  { value: "assistant", label: "Assistant" },
+  { value: "assistant", label: "Asistente" },
 ];
 const EXTERNAL_INTEGRATION_STEPS: Array<{ title: string; desc: string }> = [
   { title: "1. Endpoint de conversiones", desc: "Enviar Contact al endpoint /functions/v1/conversions?name=CLIENTE." },
@@ -794,7 +794,7 @@ export default function AdminLandingEditarPage() {
             Configura a donde re dirigirá el CTA de tu landing page.
           </p>
           <p className="mb-3 text-xs text-zinc-500">
-            Marque <strong>Asignar</strong> para incluir la gerencia; en selección <strong>Aleatoria (peso)</strong> puede editar el <strong>Peso</strong> para definir probabilidad. Elija tipo de teléfono (carga/ads/mkt/assistant), modo de elección (aleatorio/equitativo) y opcionalmente un intervalo de tiempo. Crea gerencias en el menú Gerencias si no tienes.
+            Marque <strong>Asignar</strong> para incluir la gerencia; en selección <strong>Aleatoria (peso)</strong> puede editar el <strong>Peso</strong> para definir probabilidad. Elija tipo de teléfono (carga/ads/mkt/asistente), modo de elección (aleatorio/equitativo) y opcionalmente un intervalo de tiempo. Crea gerencias en el menú Gerencias si no tienes.
           </p>
           {gerencias.length === 0 ? (
             <p className="text-sm text-zinc-500">
@@ -1157,7 +1157,6 @@ export default function AdminLandingEditarPage() {
     </div>
   );
 }
-
 
 
 

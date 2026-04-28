@@ -24,6 +24,12 @@ export type GerenciaPhoneRow = {
 type FairCriterion = "usage_count" | "messages_received";
 
 const PHONE_KIND_OPTIONS: PhoneKind[] = ["carga", "ads", "mkt", "assistant"];
+const PHONE_KIND_LABELS: Record<PhoneKind, string> = {
+  carga: "carga",
+  ads: "ads",
+  mkt: "mkt",
+  assistant: "asistente",
+};
 
 type Props = {
   backLink?: string;
@@ -861,7 +867,7 @@ export function TelefonosPageContent({
                                   )}
                                 </td>
                                 <td className="px-3 py-2 text-zinc-300">
-                                  {p.kind}
+                                  {PHONE_KIND_LABELS[p.kind as PhoneKind] ?? p.kind}
                                 </td>
                                 <td className="px-3 py-2 text-zinc-300">
                                   {p.usage_count}
@@ -944,7 +950,7 @@ export function TelefonosPageContent({
                 >
                   {PHONE_KIND_OPTIONS.map((kind) => (
                     <option key={kind} value={kind}>
-                      {kind}
+                      {PHONE_KIND_LABELS[kind]}
                     </option>
                   ))}
                 </select>
