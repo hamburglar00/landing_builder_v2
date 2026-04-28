@@ -1,5 +1,5 @@
 import { supabase } from "@/lib/supabaseClient";
-import type { Landing, LandingThemeConfig } from "./types";
+import type { Landing, LandingThemeConfig, PhoneKind } from "./types";
 import { DEFAULT_CONFIG } from "./mocks";
 import type { LandingConfigPayload } from "./buildLandingConfig";
 
@@ -18,7 +18,7 @@ export interface LandingRow {
   gerencia_selection_mode: "weighted_random" | "fair";
   gerencia_fair_criterion: "usage_count" | "messages_received";
   phone_mode: "random" | "fair";
-  phone_kind: "carga" | "ads" | "mkt";
+  phone_kind: PhoneKind;
   phone_interval_start_hour: number | null;
   phone_interval_end_hour: number | null;
   post_url: string;
@@ -133,7 +133,7 @@ export async function createLanding(
     gerenciaSelectionMode?: "weighted_random" | "fair";
     gerenciaFairCriterion?: "usage_count" | "messages_received";
     phoneMode?: "random" | "fair";
-    phoneKind?: "carga" | "ads" | "mkt";
+    phoneKind?: PhoneKind;
     phoneIntervalStartHour?: number | null;
     phoneIntervalEndHour?: number | null;
     postUrl?: string;
@@ -200,7 +200,7 @@ export async function updateLanding(
     gerenciaSelectionMode?: "weighted_random" | "fair";
     gerenciaFairCriterion?: "usage_count" | "messages_received";
     phoneMode?: "random" | "fair";
-    phoneKind?: "carga" | "ads" | "mkt";
+    phoneKind?: PhoneKind;
     phoneIntervalStartHour?: number | null;
     phoneIntervalEndHour?: number | null;
     postUrl?: string;

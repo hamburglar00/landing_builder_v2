@@ -59,6 +59,8 @@ export type TemplateOption = "template1" | "template2" | "template3";
  */
 export type BackgroundMode = "single" | "rotating";
 
+export type PhoneKind = "carga" | "ads" | "mkt" | "assistant";
+
 /**
  * Configuracin completa del tema de la landing (plantilla fija).
  * El usuario solo puede editar estos campos; no puede mover elementos ni cambiar layout.
@@ -129,8 +131,8 @@ export interface Landing {
   gerenciaFairCriterion: "usage_count" | "messages_received";
   /** Modo de seleccion de tel?fono: 'random' (aleatorio) o 'fair' (equitativo). */
   phoneMode: "random" | "fair";
-  /** Tipo de nmero de telfono a usar: 'carga', 'ads' o 'mkt'. */
-  phoneKind: "carga" | "ads" | "mkt";
+  /** Tipo de nmero de telfono a usar. */
+  phoneKind: PhoneKind;
   /** Hora de inicio (0-23) del intervalo horario en el que esta landing puede mostrar telfonos. null = sin intervalo. */
   phoneIntervalStartHour: number | null;
   /** Hora de fin (0-23) del intervalo horario en el que esta landing puede mostrar telfonos. null = sin intervalo. */

@@ -26,7 +26,15 @@ import {
   fetchGerenciasForAdmin,
   type LandingGerenciaAssignment,
 } from "@/lib/gerencias/gerenciasDb";
+import type { PhoneKind } from "@/lib/landing/types";
 import type { Gerencia } from "@/lib/gerencias/types";
+
+const PHONE_KIND_OPTIONS: Array<{ value: PhoneKind; label: string }> = [
+  { value: "carga", label: "Carga" },
+  { value: "ads", label: "Ads" },
+  { value: "mkt", label: "Mkt" },
+  { value: "assistant", label: "Assistant" },
+];
 
 type PixelEditDraft = {
   id: string;
@@ -147,7 +155,7 @@ export default function IntegracionesMetaCapi() {
         gerencia_id: r.gerencia_id,
         weight: Number(r.weight) || 0,
         phoneMode: (r.phone_mode as "random" | "fair") ?? "random",
-        phoneKind: (r.phone_kind as "carga" | "ads" | "mkt") ?? "carga",
+        phoneKind: (r.phone_kind as PhoneKind) ?? "carga",
         intervalStartHour: r.interval_start_hour ?? null,
         intervalEndHour: r.interval_end_hour ?? null,
       })),
@@ -1106,7 +1114,7 @@ export default function IntegracionesMetaCapi() {
                             </td>
                             <td className="px-3 py-2">
                               <div className="inline-flex rounded-lg border border-zinc-700 bg-zinc-900 text-[11px]">
-                                {(["carga", "ads", "mkt"] as const).map((kind) => (
+                                {PHONE_KIND_OPTIONS.map(({ value: kind, label }, idx) => (
                                   <button
                                     key={kind}
                                     type="button"
@@ -1116,9 +1124,9 @@ export default function IntegracionesMetaCapi() {
                                         prev.map((a) => (a.gerencia_id === g.id ? { ...a, phoneKind: kind } : a)),
                                       );
                                     }}
-                                    className={`cursor-pointer px-2 py-1 ${kind !== "mkt" ? "border-r border-zinc-700" : ""} ${phoneKind === kind ? "bg-zinc-100 text-zinc-900" : "text-zinc-300 hover:bg-zinc-800"}`}
+                                    className={`cursor-pointer px-2 py-1 ${idx < PHONE_KIND_OPTIONS.length - 1 ? "border-r border-zinc-700" : ""} ${phoneKind === kind ? "bg-zinc-100 text-zinc-900" : "text-zinc-300 hover:bg-zinc-800"}`}
                                   >
-                                    {kind === "carga" ? "Carga" : kind === "ads" ? "Ads" : "Mkt"}
+                                    {label}
                                   </button>
                                 ))}
                               </div>
@@ -1294,7 +1302,7 @@ export default function IntegracionesMetaCapi() {
 
         <div className="mt-3 rounded-lg border border-amber-700/40 bg-amber-950/30 p-3 text-[11px] text-amber-200">
           <p className="font-semibold">Confirma que tus eventos estan llegando a Meta!</p>
-          <p className="mt-1">Ingresa al Administrador de eventos, selecciona tu pixel y dirigite a la seccion "Probar eventos".</p>
+          <p className="mt-1">Ingresa al Administrador de eventos, selecciona tu pixel y dirigite a la seccion &quot;Probar eventos&quot;.</p>
           <p className="mt-1">
             Copi tu <code className="rounded bg-zinc-900 px-1 py-0.5 text-[10px]">test_event_code</code> y luego prob tu URL con este formato:
           </p>

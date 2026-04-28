@@ -6,7 +6,7 @@ const corsHeaders = {
     "authorization, x-client-info, apikey, content-type",
 };
 
-type PhoneKind = "carga" | "ads" | "mkt";
+type PhoneKind = "carga" | "ads" | "mkt" | "assistant";
 
 type ExternalResponse = {
   code?: string;
@@ -19,6 +19,9 @@ type ExternalResponse = {
     whatsapp?: string[];
   };
   mkt?: {
+    whatsapp?: string[];
+  };
+  assistant?: {
     whatsapp?: string[];
   };
   whatsapp?: string[]; // legacy: carga (por un tiempo; luego solo load.whatsapp)
@@ -40,7 +43,7 @@ const normalizeAndValidateArPhone = (
  * llamando a la API externa api.asesadmin.com y actualizando la tabla
  * public.gerencia_phones:
  *
- * - Inserta teléfonos nuevos (status=active, kind=ads|carga, usage_count=0).
+ * - Inserta teléfonos nuevos (status=active, kind=ads|carga|mkt|assistant, usage_count=0).
  * - Actualiza tipo y status=active de los existentes que sigan llegando.
  * - Marca como inactive los teléfonos de la gerencia que NO vinieron en la última llamada.
  *
@@ -217,7 +220,7 @@ Deno.serve(async (req) => {
         }
 
         // no_managers_found se trata como sync valida con 0 telefonos activos.
-        json = noManagersFound ? ({ load: { whatsapp: [] }, ads: { whatsapp: [] }, mkt: { whatsapp: [] } } as ExternalResponse) : parsed;
+        json = noManagersFound ? ({ load: { whatsapp: [] }, ads: { whatsapp: [] }, mkt: { whatsapp: [] }, assistant: { whatsapp: [] } } as ExternalResponse) : parsed;
       } catch (e) {
         console.error("Error llamando API externa:", e);
         continue;
@@ -228,6 +231,7 @@ Deno.serve(async (req) => {
       const cargaWhatsapps = json.load?.whatsapp ?? json.whatsapp ?? [];
       const adsWhatsapps = json.ads?.whatsapp ?? [];
       const mktWhatsapps = json.mkt?.whatsapp ?? [];
+      const assistantWhatsapps = json.assistant?.whatsapp ?? [];
 
       const phoneKindMap = new Map<string, PhoneKind>();
 
@@ -245,6 +249,11 @@ Deno.serve(async (req) => {
         const normalized = normalizeAndValidateArPhone(phone);
         if (!normalized) continue;
         phoneKindMap.set(normalized, "mkt");
+      }
+      for (const phone of assistantWhatsapps) {
+        const normalized = normalizeAndValidateArPhone(phone);
+        if (!normalized) continue;
+        phoneKindMap.set(normalized, "assistant");
       }
 
       const entries = Array.from(phoneKindMap.entries());

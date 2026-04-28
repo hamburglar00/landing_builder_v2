@@ -1,5 +1,8 @@
 import { supabase } from "@/lib/supabaseClient";
 import type { Gerencia } from "./types";
+import type { PhoneKind } from "@/lib/landing/types";
+
+export type { PhoneKind };
 
 type DbErrorLike = {
   code?: string;
@@ -157,7 +160,7 @@ export interface LandingGerenciaAssignment {
   gerencia_id: number;
   weight: number;
   phoneMode: "random" | "fair";
-  phoneKind: "carga" | "ads" | "mkt";
+  phoneKind: PhoneKind;
   intervalStartHour: number | null;
   intervalEndHour: number | null;
 }
@@ -180,7 +183,7 @@ export async function fetchLandingGerencias(
     gerencia_id: r.gerencia_id,
     weight: Number(r.weight) || 0,
     phoneMode: (r.phone_mode as "random" | "fair") ?? "random",
-    phoneKind: (r.phone_kind as "carga" | "ads" | "mkt") ?? "carga",
+    phoneKind: (r.phone_kind as PhoneKind) ?? "carga",
     intervalStartHour: r.interval_start_hour ?? null,
     intervalEndHour: r.interval_end_hour ?? null,
   }));

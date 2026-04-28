@@ -6,6 +6,7 @@ import Image from "next/image";
 import { supabase } from "@/lib/supabaseClient";
 import type { Gerencia } from "@/lib/gerencias/types";
 import { fetchGerencias, fetchGerenciasForAdmin } from "@/lib/gerencias/gerenciasDb";
+import type { PhoneKind } from "@/lib/landing/types";
 
 export type GerenciaPhoneRow = {
   id: number;
@@ -21,6 +22,8 @@ export type GerenciaPhoneRow = {
 };
 
 type FairCriterion = "usage_count" | "messages_received";
+
+const PHONE_KIND_OPTIONS: PhoneKind[] = ["carga", "ads", "mkt", "assistant"];
 
 type Props = {
   backLink?: string;
@@ -85,7 +88,7 @@ export function TelefonosPageContent({
   const [openGerenciaId, setOpenGerenciaId] = useState<number | null>(null);
   const [nextSyncCountdown, setNextSyncCountdown] = useState<string>("--:--");
   const [manualPhoneInput, setManualPhoneInput] = useState<Record<number, string>>({});
-  const [manualPhoneKind, setManualPhoneKind] = useState<Record<number, "carga" | "ads" | "mkt">>({});
+  const [manualPhoneKind, setManualPhoneKind] = useState<Record<number, PhoneKind>>({});
   const [manualSavingGerenciaId, setManualSavingGerenciaId] = useState<number | null>(null);
   const [manualModalGerenciaId, setManualModalGerenciaId] = useState<number | null>(null);
   const [maxPhonesAllowed, setMaxPhonesAllowed] = useState<number | null>(null);
@@ -934,14 +937,16 @@ export function TelefonosPageContent({
                   onChange={(e) =>
                     setManualPhoneKind((prev) => ({
                       ...prev,
-                      [manualModalGerenciaId]: e.target.value as "carga" | "ads" | "mkt",
+                      [manualModalGerenciaId]: e.target.value as PhoneKind,
                     }))
                   }
                   className="w-full rounded-lg border border-zinc-700 bg-zinc-900 px-3 py-2 text-sm text-zinc-100"
                 >
-                  <option value="carga">carga</option>
-                  <option value="ads">ads</option>
-                  <option value="mkt">mkt</option>
+                  {PHONE_KIND_OPTIONS.map((kind) => (
+                    <option key={kind} value={kind}>
+                      {kind}
+                    </option>
+                  ))}
                 </select>
               </div>
 

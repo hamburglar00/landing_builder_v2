@@ -4,7 +4,7 @@ import { useEffect, useState } from "react";
 import { useRouter, useParams } from "next/navigation";
 import Link from "next/link";
 import { supabase } from "@/lib/supabaseClient";
-import type { Landing, LandingThemeConfig } from "@/lib/landing/types";
+import type { Landing, LandingThemeConfig, PhoneKind } from "@/lib/landing/types";
 import { DEFAULT_CONFIG } from "@/lib/landing/mocks";
 import {
   fetchLandingById,
@@ -37,6 +37,13 @@ const EXTERNAL_INTEGRATION_STEPS: Array<{ title: string; desc: string }> = [
   { title: "5. Redirect WhatsApp", desc: "Redirigir a wa.me usando telefono_asignado sin bloquear la UX." },
   { title: "6. Deduplicacion", desc: "Aplicar lock anti-rafaga en CTA para evitar eventos duplicados." },
   { title: "7. Pixel + CAPI", desc: "Si usan Pixel Contact, enviar el mismo event_id para deduplicar en Meta." },
+];
+
+const PHONE_KIND_OPTIONS: Array<{ value: PhoneKind; label: string }> = [
+  { value: "carga", label: "Carga" },
+  { value: "ads", label: "Ads" },
+  { value: "mkt", label: "Mkt" },
+  { value: "assistant", label: "Assistant" },
 ];
 
 function buildExternalIntegrationGuide(): string {
@@ -779,7 +786,7 @@ export default function DashboardLandingEditarPage() {
             Configura a donde re dirigirá el CTA de tu landing page.
           </p>
           <p className="mb-3 text-xs text-zinc-500">
-            Marque <strong>Asignar</strong> para incluir la gerencia; en selección <strong>Aleatoria (peso)</strong> puede editar el <strong>Peso</strong> para definir probabilidad. Elija modo (carga/ads/mkt), tipo de elección de teléfono (aleatorio/equitativo) y opcionalmente un intervalo de tiempo. Crea gerencias en el menú Gerencias si no tienes.
+            Marque <strong>Asignar</strong> para incluir la gerencia; en selección <strong>Aleatoria (peso)</strong> puede editar el <strong>Peso</strong> para definir probabilidad. Elija tipo de teléfono (carga/ads/mkt/assistant), modo de elección (aleatorio/equitativo) y opcionalmente un intervalo de tiempo. Crea gerencias en el menú Gerencias si no tienes.
           </p>
           {gerencias.length === 0 ? (
             <p className="text-sm text-zinc-500">
@@ -937,68 +944,37 @@ export default function DashboardLandingEditarPage() {
                             </button>
                           </div>
                         </td>
-                        <td className="px-3 py-2 min-w-[140px]">
+                        <td className="px-3 py-2 min-w-[190px]">
                           <div className="inline-flex flex-shrink-0 rounded-lg border border-zinc-700 bg-zinc-900 text-[11px]">
-                            <button
-                              type="button"
-                              onClick={() => {
-                                if (!isAssigned) return;
-                                setAssignments((prev) =>
-                                  prev.map((a) =>
-                                    a.gerencia_id === g.id
-                                      ? { ...a, phoneKind: "carga" }
-                                      : a,
-                                  ),
-                                );
-                              }}
-                              className={`cursor-pointer shrink-0 px-2 py-1 rounded-l-lg border-r border-zinc-700 ${
-                                phoneKind === "carga"
-                                  ? "bg-zinc-100 text-zinc-900"
-                                  : "text-zinc-300 hover:bg-zinc-800"
-                              }`}
-                            >
-                              Carga
-                            </button>
-                            <button
-                              type="button"
-                              onClick={() => {
-                                if (!isAssigned) return;
-                                setAssignments((prev) =>
-                                  prev.map((a) =>
-                                    a.gerencia_id === g.id
-                                      ? { ...a, phoneKind: "ads" }
-                                      : a,
-                                  ),
-                                );
-                              }}
-                              className={`cursor-pointer shrink-0 px-2 py-1 border-r border-zinc-700 ${
-                                phoneKind === "ads"
-                                  ? "bg-zinc-100 text-zinc-900"
-                                  : "text-zinc-300 hover:bg-zinc-800"
-                              }`}
-                            >
-                              Ads
-                            </button>
-                            <button
-                              type="button"
-                              onClick={() => {
-                                if (!isAssigned) return;
-                                setAssignments((prev) =>
-                                  prev.map((a) =>
-                                    a.gerencia_id === g.id
-                                      ? { ...a, phoneKind: "mkt" }
-                                      : a,
-                                  ),
-                                );
-                              }}
-                              className={`cursor-pointer shrink-0 px-2 py-1 rounded-r-lg ${
-                                phoneKind === "mkt"
-                                  ? "bg-zinc-100 text-zinc-900"
-                                  : "text-zinc-300 hover:bg-zinc-800"
-                              }`}
-                            >
-                              Mkt
-                            </button>
+                            {PHONE_KIND_OPTIONS.map(({ value: kind, label }, idx) => (
+                              <button
+                                key={kind}
+                                type="button"
+                                onClick={() => {
+                                  if (!isAssigned) return;
+                                  setAssignments((prev) =>
+                                    prev.map((a) =>
+                                      a.gerencia_id === g.id
+                                        ? { ...a, phoneKind: kind }
+                                        : a,
+                                    ),
+                                  );
+                                }}
+                                className={`cursor-pointer shrink-0 px-2 py-1 ${
+                                  idx === 0 ? "rounded-l-lg" : ""
+                                } ${
+                                  idx === PHONE_KIND_OPTIONS.length - 1
+                                    ? "rounded-r-lg"
+                                    : "border-r border-zinc-700"
+                                } ${
+                                  phoneKind === kind
+                                    ? "bg-zinc-100 text-zinc-900"
+                                    : "text-zinc-300 hover:bg-zinc-800"
+                                }`}
+                              >
+                                {label}
+                              </button>
+                            ))}
                           </div>
                         </td>
                         <td className="px-3 py-2">
@@ -1187,8 +1163,6 @@ export default function DashboardLandingEditarPage() {
     </div>
   );
 }
-
-
 
 
 
