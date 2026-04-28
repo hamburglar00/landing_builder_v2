@@ -1404,15 +1404,6 @@ export default function IntegracionesMetaCapi() {
           )}
         </div>
 
-        <div className="mt-3 rounded-lg border border-zinc-800 bg-zinc-900/40 px-3 py-2 text-[11px] text-zinc-500">
-          Endpoint de conversiones:{" "}
-          {endpointUrl ? (
-            <code className="break-all text-emerald-400">{endpointUrl}</code>
-          ) : (
-            <span className="text-amber-400">cliente sin nombre configurado</span>
-          )}
-        </div>
-
         <div className="mt-3 rounded-lg border border-amber-700/40 bg-amber-950/30 p-3 text-[11px] text-amber-200">
           <p className="font-semibold">Confirma que tus eventos estan llegando a Meta!</p>
           <p className="mt-1">Ingresa al Administrador de eventos, selecciona tu pixel y dirigite a la seccion &quot;Probar eventos&quot;.</p>
