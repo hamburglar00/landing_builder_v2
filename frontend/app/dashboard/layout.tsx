@@ -1,10 +1,13 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useRouter, usePathname } from "next/navigation";
 import Link from "next/link";
 import type { User } from "@supabase/supabase-js";
 import { supabase } from "@/lib/supabaseClient";
+import ConstructorSetupGuide from "@/components/onboarding/ConstructorSetupGuide";
+
+const SETUP_GUIDE_STORAGE_PREFIX = "constructor_setup_guide_hidden:";
 
 function MenuIcon({ className }: { className?: string }) {
   return (
@@ -261,6 +264,7 @@ export default function DashboardLayout({
   const [user, setUser] = useState<User | null>(null);
   const [isCheckingSession, setIsCheckingSession] = useState(true);
   const [isClient, setIsClient] = useState<boolean | null>(null);
+  const [clientName, setClientName] = useState("");
   const [isPlanBlocked, setIsPlanBlocked] = useState(false);
   const [blockedReason, setBlockedReason] = useState<string | null>(null);
   const [planCode, setPlanCode] = useState<"starter" | "plus" | "pro" | "premium" | "scale">("starter");
@@ -269,8 +273,11 @@ export default function DashboardLayout({
   const [planMaxLandings, setPlanMaxLandings] = useState<number>(2);
   const [planMaxPhones, setPlanMaxPhones] = useState<number>(2);
   const [planGraceDays, setPlanGraceDays] = useState<number>(5);
+  const [planNowMs, setPlanNowMs] = useState<number | null>(null);
   const [showPlanExpiryWarning, setShowPlanExpiryWarning] = useState(true);
   const [sidebarOpen, setSidebarOpen] = useState(false);
+  const [setupGuideOpen, setSetupGuideOpen] = useState(false);
+  const [hideSetupGuide, setHideSetupGuide] = useState(false);
 
   useEffect(() => {
     const checkSession = async () => {
@@ -285,7 +292,7 @@ export default function DashboardLayout({
 
       const { data: profile } = await supabase
         .from("profiles")
-        .select("role")
+        .select("nombre, role")
         .eq("id", data.user.id)
         .maybeSingle();
 
@@ -294,6 +301,11 @@ export default function DashboardLayout({
         router.replace("/admin");
         return;
       }
+      setClientName(String(profile?.nombre ?? ""));
+      const setupGuideHidden =
+        window.localStorage.getItem(`${SETUP_GUIDE_STORAGE_PREFIX}${data.user.id}`) === "1";
+      setHideSetupGuide(setupGuideHidden);
+      setSetupGuideOpen(!setupGuideHidden);
       const { data: sub } = await supabase
         .from("client_subscriptions")
         .select("plan_code, status, starts_at, expires_at, grace_days, max_landings, max_phones")
@@ -308,9 +320,11 @@ export default function DashboardLayout({
       const status = sub?.status ?? "active";
       const expiresAt = sub?.expires_at ? new Date(sub.expires_at) : null;
       const graceDays = Number(sub?.grace_days ?? 5);
+      const nowMs = Date.now();
+      setPlanNowMs(nowMs);
       const blockedByStatus = status === "paused" || status === "expired";
       const blockedByDate = expiresAt
-        ? Date.now() > (expiresAt.getTime() + graceDays * 24 * 60 * 60 * 1000)
+        ? nowMs > (expiresAt.getTime() + graceDays * 24 * 60 * 60 * 1000)
         : false;
       if (blockedByStatus || blockedByDate) {
         setIsPlanBlocked(true);
@@ -331,6 +345,24 @@ export default function DashboardLayout({
   const handleSignOut = async () => {
     await supabase.auth.signOut();
     router.replace("/login");
+  };
+
+  const constructorEndpointUrl = useMemo(() => {
+    const endpointBase = process.env.NEXT_PUBLIC_SUPABASE_URL ?? "";
+    return clientName
+      ? `${endpointBase}/functions/v1/conversions?name=${encodeURIComponent(clientName)}`
+      : "";
+  }, [clientName]);
+
+  const handleSetupGuidePreference = (checked: boolean) => {
+    setHideSetupGuide(checked);
+    if (!user?.id) return;
+    const key = `${SETUP_GUIDE_STORAGE_PREFIX}${user.id}`;
+    if (checked) {
+      window.localStorage.setItem(key, "1");
+    } else {
+      window.localStorage.removeItem(key);
+    }
   };
 
   if (isCheckingSession) {
@@ -383,15 +415,15 @@ export default function DashboardLayout({
     }
   };
   const isExpiringSoon = (() => {
-    if (!planExpiresAt) return false;
+    if (!planExpiresAt || planNowMs === null) return false;
     const exp = new Date(planExpiresAt).getTime();
-    const diffDays = Math.ceil((exp - Date.now()) / (1000 * 60 * 60 * 24));
+    const diffDays = Math.ceil((exp - planNowMs) / (1000 * 60 * 60 * 24));
     return diffDays >= 0 && diffDays <= 5;
   })();
   const expiresInDays = (() => {
-    if (!planExpiresAt) return null;
+    if (!planExpiresAt || planNowMs === null) return null;
     const exp = new Date(planExpiresAt).getTime();
-    return Math.ceil((exp - Date.now()) / (1000 * 60 * 60 * 24));
+    return Math.ceil((exp - planNowMs) / (1000 * 60 * 60 * 24));
   })();
 
   return (
@@ -581,33 +613,49 @@ export default function DashboardLayout({
       {/* Main content: margen izquierdo en desktop para no quedar bajo el sidebar fijo */}
       <div className="flex min-w-0 flex-1 flex-col md:ml-56">
         <header className="flex items-center justify-between gap-3 border-b border-[var(--color-border)] px-4 py-3 sm:px-6">
+          <div className="flex min-w-0 items-center gap-3">
+            <button
+              type="button"
+              aria-label="Abrir menú"
+              onClick={() => setSidebarOpen(true)}
+              className="rounded-lg p-2 text-[var(--color-text-muted)] hover:bg-[var(--color-bg-3)] hover:text-[var(--color-text-strong)] md:hidden"
+            >
+              <MenuIcon className="h-6 w-6" />
+            </button>
+            {showPlanExpiryWarning && isExpiringSoon && (
+              <div className="ml-2 flex items-center gap-2 rounded-lg border border-amber-700/70 bg-amber-950/40 px-3 py-1.5 text-[11px] text-amber-200">
+                <span>
+                  Tu plan vence {expiresInDays === 0 ? "hoy" : `en ${expiresInDays} día(s)`}.
+                </span>
+                <button
+                  type="button"
+                  onClick={() => setShowPlanExpiryWarning(false)}
+                  className="rounded border border-amber-700/60 px-1.5 py-0.5 text-[10px] hover:bg-amber-900/40"
+                >
+                  Cerrar
+                </button>
+              </div>
+            )}
+          </div>
           <button
             type="button"
-            aria-label="Abrir menú"
-            onClick={() => setSidebarOpen(true)}
-            className="rounded-lg p-2 text-[var(--color-text-muted)] hover:bg-[var(--color-bg-3)] hover:text-[var(--color-text-strong)] md:hidden"
+            onClick={() => setSetupGuideOpen(true)}
+            className="shrink-0 rounded-lg border border-cyan-700/70 bg-cyan-950/30 px-3 py-1.5 text-xs font-semibold text-cyan-200 transition hover:bg-cyan-950/50"
           >
-            <MenuIcon className="h-6 w-6" />
+            Ayuda
           </button>
-          {showPlanExpiryWarning && isExpiringSoon && (
-            <div className="ml-2 flex items-center gap-2 rounded-lg border border-amber-700/70 bg-amber-950/40 px-3 py-1.5 text-[11px] text-amber-200">
-              <span>
-                Tu plan vence {expiresInDays === 0 ? "hoy" : `en ${expiresInDays} día(s)`}.
-              </span>
-              <button
-                type="button"
-                onClick={() => setShowPlanExpiryWarning(false)}
-                className="rounded border border-amber-700/60 px-1.5 py-0.5 text-[10px] hover:bg-amber-900/40"
-              >
-                Cerrar
-              </button>
-            </div>
-          )}
         </header>
         <main className="min-h-0 flex-1 overflow-auto px-4 py-6 sm:px-6 sm:py-8 lg:px-10">
           {children}
         </main>
       </div>
+      <ConstructorSetupGuide
+        open={setupGuideOpen}
+        endpointUrl={constructorEndpointUrl}
+        dontShowAgain={hideSetupGuide}
+        onDontShowAgainChange={handleSetupGuidePreference}
+        onClose={() => setSetupGuideOpen(false)}
+      />
     </div>
   );
 }

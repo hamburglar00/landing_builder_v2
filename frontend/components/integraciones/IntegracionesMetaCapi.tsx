@@ -48,6 +48,24 @@ type PixelEditDraft = {
   is_default: boolean;
 };
 
+type ActiveIntegration = "menu" | "meta" | "constructor" | "kommo" | "chatrace";
+
+function resolveIntegrationSection(section: string | null): ActiveIntegration | null {
+  switch ((section ?? "").toLowerCase()) {
+    case "meta":
+      return "meta";
+    case "endpoint":
+    case "constructor":
+      return "constructor";
+    case "kommo":
+      return "kommo";
+    case "chatrace":
+      return "chatrace";
+    default:
+      return null;
+  }
+}
+
 function ConstructorEndpointLogo() {
   return (
     <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-sm bg-sky-50 text-sky-600">
@@ -95,7 +113,7 @@ export default function IntegracionesMetaCapi() {
 
   const [editOpen, setEditOpen] = useState(false);
   const [draft, setDraft] = useState<PixelEditDraft | null>(null);
-  const [activeIntegration, setActiveIntegration] = useState<"menu" | "meta" | "constructor" | "kommo" | "chatrace">("menu");
+  const [activeIntegration, setActiveIntegration] = useState<ActiveIntegration>("menu");
   const [constructorCopyMsg, setConstructorCopyMsg] = useState<string | null>(null);
   const [kommoConfig, setKommoConfig] = useState<KommoClientConfig | null>(null);
   const [kommoBaseUrl, setKommoBaseUrl] = useState("");
@@ -409,6 +427,11 @@ export default function IntegracionesMetaCapi() {
       setConstructorCopyMsg("No se pudo copiar. Selecciona y copia el endpoint manualmente.");
     }
   }, [endpointUrl]);
+
+  useEffect(() => {
+    const section = resolveIntegrationSection(new URLSearchParams(window.location.search).get("section"));
+    if (section) setActiveIntegration(section);
+  }, []);
 
   useEffect(() => {
     const run = async () => {
