@@ -41,9 +41,9 @@ const EXTERNAL_INTEGRATION_STEPS: Array<{ title: string; desc: string }> = [
 
 const PHONE_KIND_OPTIONS: Array<{ value: PhoneKind; label: string }> = [
   { value: "carga", label: "Carga" },
+  { value: "assistant", label: "Asistente" },
   { value: "ads", label: "Ads" },
   { value: "mkt", label: "Mkt" },
-  { value: "assistant", label: "Asistente" },
 ];
 
 function buildExternalIntegrationGuide(): string {
@@ -1163,6 +1163,5 @@ export default function DashboardLandingEditarPage() {
     </div>
   );
 }
-
 
 

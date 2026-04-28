@@ -31,9 +31,9 @@ import type { Gerencia } from "@/lib/gerencias/types";
 
 const PHONE_KIND_OPTIONS: Array<{ value: PhoneKind; label: string }> = [
   { value: "carga", label: "Carga" },
+  { value: "assistant", label: "Asistente" },
   { value: "ads", label: "Ads" },
   { value: "mkt", label: "Mkt" },
-  { value: "assistant", label: "Asistente" },
 ];
 
 type PixelEditDraft = {

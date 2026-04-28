@@ -23,7 +23,7 @@ export type GerenciaPhoneRow = {
 
 type FairCriterion = "usage_count" | "messages_received";
 
-const PHONE_KIND_OPTIONS: PhoneKind[] = ["carga", "ads", "mkt", "assistant"];
+const PHONE_KIND_OPTIONS: PhoneKind[] = ["carga", "assistant", "ads", "mkt"];
 const PHONE_KIND_LABELS: Record<PhoneKind, string> = {
   carga: "carga",
   ads: "ads",

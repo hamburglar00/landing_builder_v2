@@ -32,9 +32,9 @@ import { getSettings } from "@/lib/settingsDb";
 const BASE = "/admin/landings";
 const PHONE_KIND_OPTIONS: Array<{ value: PhoneKind; label: string }> = [
   { value: "carga", label: "Carga" },
+  { value: "assistant", label: "Asistente" },
   { value: "ads", label: "Ads" },
   { value: "mkt", label: "Mkt" },
-  { value: "assistant", label: "Asistente" },
 ];
 const EXTERNAL_INTEGRATION_STEPS: Array<{ title: string; desc: string }> = [
   { title: "1. Endpoint de conversiones", desc: "Enviar Contact al endpoint /functions/v1/conversions?name=CLIENTE." },
@@ -1157,7 +1157,6 @@ export default function AdminLandingEditarPage() {
     </div>
   );
 }
-
 
 
 
