@@ -1622,44 +1622,49 @@ export default function AdminConversionesPage() {
               </div>
               <div>
                 <label className="mb-1 block text-xs text-zinc-400">Campaña</label>
-                <div className="max-h-44 overflow-y-auto rounded-lg border border-zinc-700 bg-zinc-900 px-2 py-1.5 text-xs text-zinc-100">
-                  <label className="flex cursor-pointer items-center gap-2 rounded px-1 py-1 hover:bg-zinc-800/70">
-                    <input
-                      type="checkbox"
-                      checked={draftCampaignFilter.length === 0}
-                      onChange={() => setDraftCampaignFilter([])}
-                      className="h-3.5 w-3.5 rounded border-zinc-600 bg-zinc-900 accent-emerald-500"
-                    />
-                    Todas
-                  </label>
-                  {statsCampaignOptions.map((campaign) => {
-                    const checked = draftCampaignFilter.includes(campaign);
-                    return (
-                      <label key={campaign} className="flex cursor-pointer items-center gap-2 rounded px-1 py-1 hover:bg-zinc-800/70">
-                        <input
-                          type="checkbox"
-                          checked={checked}
-                          onChange={(e) => {
-                            setDraftCampaignFilter((prev) => (
-                              e.target.checked
-                                ? [...prev, campaign]
-                                : prev.filter((item) => item !== campaign)
-                            ));
-                          }}
-                          className="h-3.5 w-3.5 rounded border-zinc-600 bg-zinc-900 accent-emerald-500"
-                        />
-                        <span className="truncate">{campaign}</span>
-                      </label>
-                    );
-                  })}
-                </div>
-              </div>
-              <div>
-                <label className="mb-1 block text-xs text-zinc-400">Dispositivo</label>
-                <select value={draftDeviceFilter} onChange={(e) => setDraftDeviceFilter(e.target.value)} className="h-9 w-full rounded-lg border border-zinc-700 bg-zinc-900 px-2 text-xs text-zinc-100">
-                  <option value="__all__">Todos</option>
-                  {statsDeviceOptions.map((device) => <option key={device} value={device}>{device}</option>)}
-                </select>
+                <details className="group relative">
+                  <summary className="flex h-9 w-full cursor-pointer list-none items-center justify-between rounded-lg border border-zinc-700 bg-zinc-900 px-2 text-xs text-zinc-100 marker:hidden">
+                    <span className="truncate">
+                      {draftCampaignFilter.length === 0
+                        ? "Todas"
+                        : draftCampaignFilter.length === 1
+                          ? draftCampaignFilter[0]
+                          : `${draftCampaignFilter.length} campañas seleccionadas`}
+                    </span>
+                    <span className="ml-2 text-zinc-500 transition group-open:rotate-180">v</span>
+                  </summary>
+                  <div className="absolute z-30 mt-1 max-h-56 w-full overflow-y-auto rounded-lg border border-zinc-700 bg-zinc-950 px-2 py-1.5 text-xs text-zinc-100 shadow-xl">
+                    <label className="flex cursor-pointer items-center gap-2 rounded px-1 py-1 hover:bg-zinc-800/70">
+                      <input
+                        type="checkbox"
+                        checked={draftCampaignFilter.length === 0}
+                        onChange={() => setDraftCampaignFilter([])}
+                        className="h-3.5 w-3.5 rounded border-zinc-600 bg-zinc-900 accent-emerald-500"
+                      />
+                      Todas
+                    </label>
+                    {statsCampaignOptions.map((campaign) => {
+                      const checked = draftCampaignFilter.includes(campaign);
+                      return (
+                        <label key={campaign} className="flex cursor-pointer items-center gap-2 rounded px-1 py-1 hover:bg-zinc-800/70">
+                          <input
+                            type="checkbox"
+                            checked={checked}
+                            onChange={(e) => {
+                              setDraftCampaignFilter((prev) => (
+                                e.target.checked
+                                  ? [...prev, campaign]
+                                  : prev.filter((item) => item !== campaign)
+                              ));
+                            }}
+                            className="h-3.5 w-3.5 rounded border-zinc-600 bg-zinc-900 accent-emerald-500"
+                          />
+                          <span className="truncate">{campaign}</span>
+                        </label>
+                      );
+                    })}
+                  </div>
+                </details>
               </div>
             </div>
             <div className="mt-4 flex justify-end gap-2">
@@ -2076,7 +2081,6 @@ export default function AdminConversionesPage() {
     </div>
   );
 }
-
 
 
 
