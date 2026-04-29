@@ -37,6 +37,33 @@ const PHONE_KIND_OPTIONS: Array<{ value: PhoneKind; label: string }> = [
 ];
 
 const CHATRACE_TEMPLATE_URL = "https://chatrace.com/store/template?id=154796&key=elKSlGmNFCeIZbYwvr7z7z";
+const CHATRACE_INTERMEDIARY_URL = "https://chatraceinbox.mkt.panelbotadmin.com/api/intermediario-chatrace";
+const CHATRACE_CUSTOM_FIELDS = [
+  "email_detected",
+  "event_id",
+  "event_time",
+  "external_id",
+  "phone_detected",
+  "promo_code",
+  "telefono_asignado",
+  "timestamp",
+  "whatsapp_link",
+];
+const CHATRACE_CONSTRUCTOR_BODY = `{
+  "event_name": "Contact",
+  "meta_pixel_id": "",
+  "event_id": "{{event_id}}",
+  "external_id": "{{external_id}}",
+  "email": "{{email_detected}}",
+  "phone": "{{phone_detected}}",
+  "test_event_code": "",
+  "telefono_asignado": "{{telefono_asignado}}",
+  "promo_code": "{{promo_code}}",
+  "source_platform": "chatrace",
+  "device_type": "mobile",
+  "timestamp": "{{timestamp}}",
+  "event_time": "{{event_time}}"
+}`;
 
 type PixelEditDraft = {
   id: string;
@@ -137,6 +164,8 @@ export default function IntegracionesMetaCapi() {
   const [chatraceIdOpen, setChatraceIdOpen] = useState(true);
   const [chatraceTrackingOpen, setChatraceTrackingOpen] = useState(true);
   const [chatraceRedirectOpen, setChatraceRedirectOpen] = useState(true);
+  const [chatraceDetailsOpen, setChatraceDetailsOpen] = useState(false);
+  const [chatraceCopyMsg, setChatraceCopyMsg] = useState<string | null>(null);
 
   const endpointBase = process.env.NEXT_PUBLIC_SUPABASE_URL ?? "";
   const endpointUrl = useMemo(
@@ -166,6 +195,14 @@ export default function IntegracionesMetaCapi() {
         ? `${endpointBase}/functions/v1/landing-phone?name=${encodeURIComponent(clientName)}&source=chatrace`
         : "",
     [clientName, endpointBase],
+  );
+  const chatraceIntermediaryBody = useMemo(
+    () => `{
+  "name": "${clientName || "<cliente>"}",
+  "email": "{{email}}",
+  "phone": "{{phone}}"
+}`,
+    [clientName],
   );
 
   const loadAll = useCallback(async (uid: string) => {
@@ -429,6 +466,16 @@ export default function IntegracionesMetaCapi() {
       setConstructorCopyMsg("No se pudo copiar. Selecciona y copia el endpoint manualmente.");
     }
   }, [endpointUrl]);
+
+  const handleCopyChatraceText = useCallback(async (text: string, label: string) => {
+    try {
+      await navigator.clipboard.writeText(text);
+      setChatraceCopyMsg(`${label} copiado.`);
+      setTimeout(() => setChatraceCopyMsg(null), 2200);
+    } catch {
+      setChatraceCopyMsg("No se pudo copiar. Selecciona y copia manualmente.");
+    }
+  }, []);
 
   useEffect(() => {
     const section = resolveIntegrationSection(new URLSearchParams(window.location.search).get("section"));
@@ -1003,6 +1050,115 @@ export default function IntegracionesMetaCapi() {
                 Descargar plantilla
               </a>
             </div>
+            <div className="mt-3 flex flex-wrap items-center gap-2">
+              <button
+                type="button"
+                onClick={() => setChatraceDetailsOpen((v) => !v)}
+                className="rounded-lg border border-sky-800 px-3 py-1.5 text-xs font-semibold text-sky-100 hover:bg-sky-900/50"
+              >
+                {chatraceDetailsOpen ? "Ocultar detalles de integración" : "Ver detalles de integración"}
+              </button>
+              {chatraceCopyMsg && <span className="text-xs text-emerald-300">{chatraceCopyMsg}</span>}
+            </div>
+            {chatraceDetailsOpen && (
+              <div className="mt-4 space-y-4 rounded-xl border border-zinc-800 bg-zinc-950/50 p-4 text-xs text-zinc-300">
+                <div>
+                  <p className="font-semibold text-zinc-100">1. Crear campos personalizados</p>
+                  <p className="mt-1 leading-relaxed text-zinc-400">
+                    Creá estos campos en Chatrace como tipo <span className="font-medium text-zinc-200">Texto</span> y dejalos disponibles en Bandeja de Entrada.
+                  </p>
+                  <div className="mt-2 grid gap-1.5 sm:grid-cols-2 lg:grid-cols-3">
+                    {CHATRACE_CUSTOM_FIELDS.map((field) => (
+                      <div key={field} className="rounded-lg border border-zinc-800 bg-zinc-900/70 px-2 py-1.5 font-mono text-[11px] text-zinc-200">
+                        {field}
+                      </div>
+                    ))}
+                  </div>
+                </div>
+
+                <div>
+                  <p className="font-semibold text-zinc-100">2. Etiqueta necesaria</p>
+                  <p className="mt-1 leading-relaxed text-zinc-400">
+                    La única etiqueta que usamos en este flujo es <span className="rounded bg-zinc-800 px-1.5 py-0.5 font-mono text-zinc-100">Contact</span>.
+                    Debe agregarse en el botón <span className="font-medium text-zinc-200">Ir al Whatsapp</span> de la tarjeta <span className="font-medium text-zinc-200">No es contacto</span>.
+                  </p>
+                </div>
+
+                <div className="grid gap-3 lg:grid-cols-2">
+                  <div className="rounded-lg border border-zinc-800 bg-zinc-900/60 p-3">
+                    <div className="flex items-center justify-between gap-2">
+                      <p className="font-semibold text-zinc-100">3. External Request inicial</p>
+                      <button
+                        type="button"
+                        onClick={() => void handleCopyChatraceText(CHATRACE_INTERMEDIARY_URL, "URL del intermediario")}
+                        className="rounded-md border border-zinc-700 px-2 py-1 text-[11px] text-zinc-300 hover:bg-zinc-800"
+                      >
+                        Copiar URL
+                      </button>
+                    </div>
+                    <p className="mt-1 text-zinc-400">Usala en la acción “Solicitud de API Externa”.</p>
+                    <div className="mt-2 rounded bg-zinc-950 p-2 font-mono text-[11px] text-sky-200 break-all">
+                      POST {CHATRACE_INTERMEDIARY_URL}
+                    </div>
+                    <p className="mt-2 text-zinc-400">Header:</p>
+                    <div className="mt-1 rounded bg-zinc-950 p-2 font-mono text-[11px] text-zinc-200">Content-Type: application/json</div>
+                    <p className="mt-2 text-zinc-400">Body:</p>
+                    <pre className="mt-1 overflow-x-auto rounded bg-zinc-950 p-2 text-[11px] text-zinc-200">{chatraceIntermediaryBody}</pre>
+                    <p className="mt-2 text-zinc-400">Mapeo de respuesta esperado:</p>
+                    <div className="mt-1 space-y-1 font-mono text-[11px] text-zinc-300">
+                      <p>promo_code -&gt; promo_code</p>
+                      <p>whatsapp_link -&gt; whatsapp_link</p>
+                      <p>external_id -&gt; external_id</p>
+                      <p>event_id -&gt; event_id</p>
+                      <p>timestamp -&gt; timestamp</p>
+                      <p>telefono_asignado -&gt; telefono_asignado</p>
+                      <p>phone -&gt; phone_detected</p>
+                      <p>email -&gt; email_detected</p>
+                      <p>event_time -&gt; event_time</p>
+                    </div>
+                  </div>
+
+                  <div className="rounded-lg border border-zinc-800 bg-zinc-900/60 p-3">
+                    <div className="flex items-center justify-between gap-2">
+                      <p className="font-semibold text-zinc-100">4. Botón “Ir al Whatsapp”</p>
+                      <button
+                        type="button"
+                        onClick={() => void handleCopyChatraceText(CHATRACE_CONSTRUCTOR_BODY, "JSON del constructor")}
+                        className="rounded-md border border-zinc-700 px-2 py-1 text-[11px] text-zinc-300 hover:bg-zinc-800"
+                      >
+                        Copiar JSON
+                      </button>
+                    </div>
+                    <p className="mt-1 text-zinc-400">Configuración del botón:</p>
+                    <div className="mt-2 space-y-1 rounded bg-zinc-950 p-2 font-mono text-[11px] text-zinc-200">
+                      <p>Enlace: {"{{whatsapp_link}}"}</p>
+                      <p>Etiqueta: Contact</p>
+                    </div>
+                    <div className="mt-3 flex items-center justify-between gap-2">
+                      <p className="font-semibold text-zinc-100">External Request al constructor</p>
+                      <button
+                        type="button"
+                        disabled={!endpointUrl}
+                        onClick={() => void handleCopyChatraceText(endpointUrl, "URL POST del constructor")}
+                        className="rounded-md border border-zinc-700 px-2 py-1 text-[11px] text-zinc-300 hover:bg-zinc-800 disabled:opacity-50"
+                      >
+                        Copiar URL
+                      </button>
+                    </div>
+                    <p className="mt-1 text-zinc-400">
+                      En la plantilla viene por defecto con <span className="font-mono text-zinc-200">name=ngp</span>. Cambialo por la URL POST del cliente actual:
+                    </p>
+                    <div className="mt-2 rounded bg-zinc-950 p-2 font-mono text-[11px] text-sky-200 break-all">
+                      POST {endpointUrl || "https://<tu-supabase>/functions/v1/conversions?name=<cliente>"}
+                    </div>
+                    <p className="mt-2 text-zinc-400">Header:</p>
+                    <div className="mt-1 rounded bg-zinc-950 p-2 font-mono text-[11px] text-zinc-200">Content-Type: application/json</div>
+                    <p className="mt-2 text-zinc-400">Body:</p>
+                    <pre className="mt-1 max-h-72 overflow-auto rounded bg-zinc-950 p-2 text-[11px] text-zinc-200">{CHATRACE_CONSTRUCTOR_BODY}</pre>
+                  </div>
+                </div>
+              </div>
+            )}
           </section>
 
           <section className="rounded-xl border border-zinc-800 bg-zinc-900/50 p-4">
