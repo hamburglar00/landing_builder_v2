@@ -444,7 +444,7 @@ export default function AdminConversionesPage() {
   const [statsFromMetaAdsFilter, setStatsFromMetaAdsFilter] = useState<string>("__all__");
   const [statsSourcePlatformFilter, setStatsSourcePlatformFilter] = useState<string>("__all__");
   const [statsSexoFilter, setStatsSexoFilter] = useState<string>("__all__");
-  const [statsCampaignFilter, setStatsCampaignFilter] = useState<string>("__all__");
+  const [statsCampaignFilter, setStatsCampaignFilter] = useState<string[]>([]);
   const [statsDeviceFilter, setStatsDeviceFilter] = useState<string>("__all__");
   const [statsFilterModalOpen, setStatsFilterModalOpen] = useState(false);
   const [draftLandingFilter, setDraftLandingFilter] = useState<string>("__all__");
@@ -454,7 +454,7 @@ export default function AdminConversionesPage() {
   const [draftFromMetaAdsFilter, setDraftFromMetaAdsFilter] = useState<string>("__all__");
   const [draftSourcePlatformFilter, setDraftSourcePlatformFilter] = useState<string>("__all__");
   const [draftSexoFilter, setDraftSexoFilter] = useState<string>("__all__");
-  const [draftCampaignFilter, setDraftCampaignFilter] = useState<string>("__all__");
+  const [draftCampaignFilter, setDraftCampaignFilter] = useState<string[]>([]);
   const [draftDeviceFilter, setDraftDeviceFilter] = useState<string>("__all__");
   const [gerenciaByPhone, setGerenciaByPhone] = useState<Record<string, string[]>>({});
 
@@ -592,8 +592,9 @@ export default function AdminConversionesPage() {
     }
   }, [statsSexoFilter, statsSexoOptions]);
   useEffect(() => {
-    if (statsCampaignFilter !== "__all__" && !statsCampaignOptions.includes(statsCampaignFilter)) {
-      setStatsCampaignFilter("__all__");
+    const validCampaigns = statsCampaignFilter.filter((campaign) => statsCampaignOptions.includes(campaign));
+    if (validCampaigns.length !== statsCampaignFilter.length) {
+      setStatsCampaignFilter(validCampaigns);
     }
   }, [statsCampaignFilter, statsCampaignOptions]);
   useEffect(() => {
@@ -618,7 +619,7 @@ export default function AdminConversionesPage() {
       const bySexo =
         statsSexoFilter === "__all__" ||
         normalizeSexValue((r as { inferred_sex?: string | null }).inferred_sex) === statsSexoFilter;
-      const byCampaign = statsCampaignFilter === "__all__" || String(r.utm_campaign ?? "").trim() === statsCampaignFilter;
+      const byCampaign = statsCampaignFilter.length === 0 || statsCampaignFilter.includes(String(r.utm_campaign ?? "").trim());
       const byDevice = statsDeviceFilter === "__all__" || String(r.device_type ?? "").trim().toLowerCase() === statsDeviceFilter;
       return byLanding && byPixel && byGerencia && byTelefono && byFromMetaAds && bySourcePlatform && bySexo && byCampaign && byDevice;
     });
@@ -640,7 +641,7 @@ export default function AdminConversionesPage() {
       const bySexo =
         statsSexoFilter === "__all__" ||
         normalizeSexValue((r as { inferred_sex?: string | null }).inferred_sex) === statsSexoFilter;
-      const byCampaign = statsCampaignFilter === "__all__" || String(r.utm_campaign ?? "").trim() === statsCampaignFilter;
+      const byCampaign = statsCampaignFilter.length === 0 || statsCampaignFilter.includes(String(r.utm_campaign ?? "").trim());
       const byDevice = statsDeviceFilter === "__all__" || String(r.device_type ?? "").trim().toLowerCase() === statsDeviceFilter;
       return byLanding && byPixel && byGerencia && byTelefono && byFromMetaAds && bySourcePlatform && bySexo && byCampaign && byDevice;
     });
@@ -677,7 +678,7 @@ export default function AdminConversionesPage() {
       const bySexo =
         statsSexoFilter === "__all__" ||
         normalizeSexValue((r as { inferred_sex?: string | null }).inferred_sex) === statsSexoFilter;
-      const byCampaign = statsCampaignFilter === "__all__" || String(r.utm_campaign ?? "").trim() === statsCampaignFilter;
+      const byCampaign = statsCampaignFilter.length === 0 || statsCampaignFilter.includes(String(r.utm_campaign ?? "").trim());
       const byDevice = statsDeviceFilter === "__all__" || String(r.device_type ?? "").trim().toLowerCase() === statsDeviceFilter;
       return byLanding && byPixel && byGerencia && byTelefono && byFromMetaAds && bySourcePlatform && bySexo && byCampaign && byDevice;
     });
@@ -783,7 +784,7 @@ export default function AdminConversionesPage() {
       statsFromMetaAdsFilter !== "__all__" ||
       statsSourcePlatformFilter !== "__all__" ||
       statsSexoFilter !== "__all__" ||
-      statsCampaignFilter !== "__all__" ||
+      statsCampaignFilter.length > 0 ||
       statsDeviceFilter !== "__all__",
     [statsLandingFilter, statsPixelFilter, statsGerenciaFilter, statsTelefonoFilter, statsFromMetaAdsFilter, statsSourcePlatformFilter, statsSexoFilter, statsCampaignFilter, statsDeviceFilter],
   );
@@ -797,7 +798,7 @@ export default function AdminConversionesPage() {
         statsFromMetaAdsFilter,
         statsSourcePlatformFilter,
         statsSexoFilter,
-        statsCampaignFilter,
+        statsCampaignFilter.length > 0 ? statsCampaignFilter.join(", ") : "__all__",
         statsDeviceFilter,
       ].filter((v) => v !== "__all__").length,
     [statsLandingFilter, statsPixelFilter, statsGerenciaFilter, statsTelefonoFilter, statsFromMetaAdsFilter, statsSourcePlatformFilter, statsSexoFilter, statsCampaignFilter, statsDeviceFilter],
@@ -1082,7 +1083,7 @@ export default function AdminConversionesPage() {
     setDraftFromMetaAdsFilter(statsFromMetaAdsFilter);
     setDraftSourcePlatformFilter(statsSourcePlatformFilter);
     setDraftSexoFilter(statsSexoFilter);
-    setDraftCampaignFilter(statsCampaignFilter);
+    setDraftCampaignFilter([...statsCampaignFilter]);
     setDraftDeviceFilter(statsDeviceFilter);
     setStatsFilterModalOpen(true);
   }, [statsLandingFilter, statsPixelFilter, statsGerenciaFilter, statsTelefonoFilter, statsFromMetaAdsFilter, statsSourcePlatformFilter, statsSexoFilter, statsCampaignFilter, statsDeviceFilter]);
@@ -1095,7 +1096,7 @@ export default function AdminConversionesPage() {
     setStatsFromMetaAdsFilter(draftFromMetaAdsFilter);
     setStatsSourcePlatformFilter(draftSourcePlatformFilter);
     setStatsSexoFilter(draftSexoFilter);
-    setStatsCampaignFilter(draftCampaignFilter);
+    setStatsCampaignFilter([...draftCampaignFilter]);
     setStatsDeviceFilter(draftDeviceFilter);
     setStatsFilterModalOpen(false);
   }, [draftLandingFilter, draftPixelFilter, draftGerenciaFilter, draftTelefonoFilter, draftFromMetaAdsFilter, draftSourcePlatformFilter, draftSexoFilter, draftCampaignFilter, draftDeviceFilter]);
@@ -1107,7 +1108,7 @@ export default function AdminConversionesPage() {
     setStatsFromMetaAdsFilter("__all__");
     setStatsSourcePlatformFilter("__all__");
     setStatsSexoFilter("__all__");
-    setStatsCampaignFilter("__all__");
+    setStatsCampaignFilter([]);
     setStatsDeviceFilter("__all__");
     setDraftLandingFilter("__all__");
     setDraftPixelFilter("__all__");
@@ -1116,7 +1117,7 @@ export default function AdminConversionesPage() {
     setDraftFromMetaAdsFilter("__all__");
     setDraftSourcePlatformFilter("__all__");
     setDraftSexoFilter("__all__");
-    setDraftCampaignFilter("__all__");
+    setDraftCampaignFilter([]);
     setDraftDeviceFilter("__all__");
   }, []);
 
@@ -1621,10 +1622,37 @@ export default function AdminConversionesPage() {
               </div>
               <div>
                 <label className="mb-1 block text-xs text-zinc-400">Campaña</label>
-                <select value={draftCampaignFilter} onChange={(e) => setDraftCampaignFilter(e.target.value)} className="h-9 w-full rounded-lg border border-zinc-700 bg-zinc-900 px-2 text-xs text-zinc-100">
-                  <option value="__all__">Todas</option>
-                  {statsCampaignOptions.map((campaign) => <option key={campaign} value={campaign}>{campaign}</option>)}
-                </select>
+                <div className="max-h-44 overflow-y-auto rounded-lg border border-zinc-700 bg-zinc-900 px-2 py-1.5 text-xs text-zinc-100">
+                  <label className="flex cursor-pointer items-center gap-2 rounded px-1 py-1 hover:bg-zinc-800/70">
+                    <input
+                      type="checkbox"
+                      checked={draftCampaignFilter.length === 0}
+                      onChange={() => setDraftCampaignFilter([])}
+                      className="h-3.5 w-3.5 rounded border-zinc-600 bg-zinc-900 accent-emerald-500"
+                    />
+                    Todas
+                  </label>
+                  {statsCampaignOptions.map((campaign) => {
+                    const checked = draftCampaignFilter.includes(campaign);
+                    return (
+                      <label key={campaign} className="flex cursor-pointer items-center gap-2 rounded px-1 py-1 hover:bg-zinc-800/70">
+                        <input
+                          type="checkbox"
+                          checked={checked}
+                          onChange={(e) => {
+                            setDraftCampaignFilter((prev) => (
+                              e.target.checked
+                                ? [...prev, campaign]
+                                : prev.filter((item) => item !== campaign)
+                            ));
+                          }}
+                          className="h-3.5 w-3.5 rounded border-zinc-600 bg-zinc-900 accent-emerald-500"
+                        />
+                        <span className="truncate">{campaign}</span>
+                      </label>
+                    );
+                  })}
+                </div>
               </div>
               <div>
                 <label className="mb-1 block text-xs text-zinc-400">Dispositivo</label>
