@@ -1748,7 +1748,6 @@ export default function DashboardConversionesPage() {
                   </tr>
                 ) : pagedConversions.map((c, idx) => {
                   const isRepeat = c.estado === "purchase" && c.observaciones?.includes("REPEAT");
-                  const isLeadCreatedNew = c.estado === "lead" && String(c.observaciones ?? "").includes("match_source:created_new");
                   const rowColor =
                     c.estado === "lead"
                       ? "bg-amber-950/18"
@@ -1761,10 +1760,6 @@ export default function DashboardConversionesPage() {
                     <tr
                       key={c.id}
                       className={rowColor}
-                      style={isLeadCreatedNew ? {
-                        backgroundImage: "repeating-linear-gradient(-45deg, rgba(120,53,15,0.18) 0px, rgba(120,53,15,0.18) 6px, rgba(39,39,42,0.12) 6px, rgba(39,39,42,0.12) 12px)",
-                      } : undefined}
-                      title={isLeadCreatedNew ? "LEAD creado sin match (debug visual)" : undefined}
                     >
                       <td className="px-2 py-1.5 whitespace-nowrap text-zinc-500 font-mono">{c.internal_id ?? ((tablePage - 1) * tablePageSize + idx + 1)}</td>
                       {cellValue(c, "timestamp")}
