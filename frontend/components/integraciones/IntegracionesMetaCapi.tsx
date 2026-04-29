@@ -36,6 +36,8 @@ const PHONE_KIND_OPTIONS: Array<{ value: PhoneKind; label: string }> = [
   { value: "mkt", label: "Mkt" },
 ];
 
+const CHATRACE_TEMPLATE_URL = "https://chatrace.com/store/template?id=154796&key=elKSlGmNFCeIZbYwvr7z7z";
+
 type PixelEditDraft = {
   id: string;
   pixel_id: string;
@@ -981,6 +983,27 @@ export default function IntegracionesMetaCapi() {
               {chatraceMsg}
             </div>
           )}
+
+          <section className="rounded-xl border border-sky-900/70 bg-sky-950/20 p-4">
+            <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
+              <div>
+                <p className="text-sm font-semibold text-sky-100">Plantilla de flujo para Chatrace</p>
+                <p className="mt-1 text-xs leading-relaxed text-zinc-400">
+                  Podés descargar la plantilla recomendada para usar en tu cuenta de Chatrace. Antes de activarla,
+                  verificá que estén creados todos los campos personalizados y las etiquetas necesarias para que el
+                  flujo pueda guardar datos y disparar las conversiones correctamente.
+                </p>
+              </div>
+              <a
+                href={CHATRACE_TEMPLATE_URL}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="inline-flex shrink-0 items-center justify-center rounded-lg border border-sky-700 bg-sky-600 px-3 py-2 text-xs font-semibold text-white hover:bg-sky-500"
+              >
+                Descargar plantilla
+              </a>
+            </div>
+          </section>
 
           <section className="rounded-xl border border-zinc-800 bg-zinc-900/50 p-4">
             <button
