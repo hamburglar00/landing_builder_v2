@@ -38,6 +38,7 @@ const PHONE_KIND_OPTIONS: Array<{ value: PhoneKind; label: string }> = [
 
 const CHATRACE_TEMPLATE_URL = "https://chatrace.com/store/template?id=154796&key=elKSlGmNFCeIZbYwvr7z7z";
 const CHATRACE_INTERMEDIARY_URL = "https://chatraceinbox.mkt.panelbotadmin.com/api/intermediario-chatrace";
+const KOMMO_INTERMEDIARY_BASE_URL = "https://kommoinbox.mkt.panelbotadmin.com";
 const CHATRACE_CUSTOM_FIELDS = [
   "email_detected",
   "event_id",
@@ -178,7 +179,7 @@ export default function IntegracionesMetaCapi() {
   const kommoWebhookUrl = useMemo(
     () =>
       clientName
-        ? `https://intermediario-kommo.vercel.app/api/kommo/webhook?name=${encodeURIComponent(clientName)}`
+        ? `${KOMMO_INTERMEDIARY_BASE_URL}/api/kommo/webhook?name=${encodeURIComponent(clientName)}`
         : "",
     [clientName],
   );
@@ -739,16 +740,18 @@ export default function IntegracionesMetaCapi() {
 
           <button
             type="button"
-            onClick={() => {
-              setConstructorCopyMsg(null);
-              setActiveIntegration("constructor");
-            }}
+            onClick={() => setActiveIntegration("chatrace")}
             className="w-full rounded-xl border border-zinc-800 bg-zinc-900/50 px-4 py-4 text-left transition active:scale-[0.99] hover:bg-zinc-900"
           >
             <span className="flex items-center justify-between gap-3">
               <span className="inline-flex items-center gap-3 text-sm font-semibold text-zinc-200">
-                <ConstructorEndpointLogo />
-                Endpoint de Conversiones del constructor
+                <img
+                  src="/chatrace-logo.jpeg"
+                  alt=""
+                  aria-hidden="true"
+                  className="h-8 w-8 shrink-0 rounded-sm object-contain"
+                />
+                Integración con Chatrace
               </span>
               <span className="text-xs text-zinc-400">Entrar</span>
             </span>
@@ -775,18 +778,16 @@ export default function IntegracionesMetaCapi() {
 
           <button
             type="button"
-            onClick={() => setActiveIntegration("chatrace")}
+            onClick={() => {
+              setConstructorCopyMsg(null);
+              setActiveIntegration("constructor");
+            }}
             className="w-full rounded-xl border border-zinc-800 bg-zinc-900/50 px-4 py-4 text-left transition active:scale-[0.99] hover:bg-zinc-900"
           >
             <span className="flex items-center justify-between gap-3">
               <span className="inline-flex items-center gap-3 text-sm font-semibold text-zinc-200">
-                <img
-                  src="/chatrace-logo.jpeg"
-                  alt=""
-                  aria-hidden="true"
-                  className="h-8 w-8 shrink-0 rounded-sm object-contain"
-                />
-                Integración con Chatrace
+                <ConstructorEndpointLogo />
+                Endpoint de Conversiones del constructor
               </span>
               <span className="text-xs text-zinc-400">Entrar</span>
             </span>
@@ -980,7 +981,7 @@ export default function IntegracionesMetaCapi() {
               <li>En URL, ingresar:</li>
             </ol>
             <code className="mt-2 block break-all rounded bg-zinc-900 px-2 py-1 text-xs text-emerald-300">
-              {kommoWebhookUrl || "https://intermediario-kommo.vercel.app/api/kommo/webhook?name=<nombre_cliente>"}
+              {kommoWebhookUrl || `${KOMMO_INTERMEDIARY_BASE_URL}/api/kommo/webhook?name=<nombre_cliente>`}
             </code>
             <ol className="mt-2 list-decimal space-y-1 pl-5 text-zinc-300" start={5}>
               <li>En tipo de evento, dejar solo: <span className="font-medium">Mensaje entrante recibido</span>.</li>

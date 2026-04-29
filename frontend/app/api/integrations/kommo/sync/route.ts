@@ -98,7 +98,7 @@ export async function POST(req: Request) {
     }
 
     const intermediaryBase =
-      process.env.KOMMO_INTERMEDIARY_BASE_URL ?? "https://intermediario-kommo.vercel.app";
+      process.env.KOMMO_INTERMEDIARY_BASE_URL ?? "https://kommoinbox.mkt.panelbotadmin.com";
     const adminSecret = process.env.KOMMO_INTERMEDIARY_ADMIN_SECRET ?? "";
     if (!adminSecret) {
       return NextResponse.json({ error: "Falta KOMMO_INTERMEDIARY_ADMIN_SECRET." }, { status: 500 });
