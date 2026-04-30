@@ -44,39 +44,15 @@ const FALLBACK_VISIBLE_COLUMNS = [
   "ln",
   "ct",
   "st",
-  "zip",
-  "country",
-  "fbp",
-  "fbc",
+  "from_meta_ads",
   "meta_pixel_id",
-  "contact_event_id",
-  "contact_event_time",
-  "sendContactPixel",
-  "contact_payload_raw",
-  "lead_event_id",
-  "lead_event_time",
-  "lead_payload_raw",
-  "purchase_event_id",
-  "purchase_event_time",
-  "purchase_payload_raw",
   "timestamp",
-  "clientIP",
-  "agentuser",
   "estado",
   "valor",
-  "purchase_type",
-  "contact_status_capi",
-  "lead_status_capi",
-  "purchase_status_capi",
-  "observaciones",
-  "external_id",
+  "test_event_code",
   "utm_campaign",
   "telefono_asignado",
   "promo_code",
-  "device_type",
-  "geo_city",
-  "geo_region",
-  "geo_country",
 ];
 
 Deno.serve(async (req) => {
@@ -297,13 +273,9 @@ Deno.serve(async (req) => {
       .eq("user_id", user.id)
       .maybeSingle();
 
-    const inheritedVisibleColumns = Array.isArray(adminCfg?.visible_columns) &&
-        adminCfg.visible_columns.length > 0
-      ? adminCfg.visible_columns
-      : FALLBACK_VISIBLE_COLUMNS;
     const finalVisibleColumns = requestedVisibleColumns && requestedVisibleColumns.length > 0
       ? requestedVisibleColumns
-      : inheritedVisibleColumns;
+      : FALLBACK_VISIBLE_COLUMNS;
     const finalShowLogs = requestedShowLogs ?? true;
     const finalShowAiAssistant = requestedShowAiAssistant ?? false;
 

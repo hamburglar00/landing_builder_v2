@@ -18,6 +18,24 @@ const ALL_COLUMNS = [
 
 type ColKey = (typeof ALL_COLUMNS)[number];
 
+const DEFAULT_VISIBLE_COLUMNS: ColKey[] = [
+  "phone",
+  "email",
+  "fn",
+  "ln",
+  "ct",
+  "st",
+  "from_meta_ads",
+  "meta_pixel_id",
+  "timestamp",
+  "estado",
+  "valor",
+  "test_event_code",
+  "utm_campaign",
+  "telefono_asignado",
+  "promo_code",
+];
+
 export default function NuevoClientePage() {
   const router = useRouter();
   const [nombre, setNombre] = useState("");
@@ -25,7 +43,7 @@ export default function NuevoClientePage() {
   const [password, setPassword] = useState("");
   const [showLogs, setShowLogs] = useState(true);
   const [showAiAssistant, setShowAiAssistant] = useState(false);
-  const [visibleCols, setVisibleCols] = useState<Set<ColKey>>(new Set(ALL_COLUMNS));
+  const [visibleCols, setVisibleCols] = useState<Set<ColKey>>(new Set(DEFAULT_VISIBLE_COLUMNS));
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
