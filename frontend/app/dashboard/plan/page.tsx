@@ -1,4 +1,4 @@
-﻿"use client";
+"use client";
 
 import { useEffect, useMemo, useState } from "react";
 import { supabase } from "@/lib/supabaseClient";
@@ -33,8 +33,8 @@ const PLAN_CARDS: PlanCard[] = [
   {
     code: "starter",
     title: "Starter",
-    price: "USD 69 / mes",
-    unitPrice: "USD 34.5 por telefono",
+    price: "USDT 69 / mes",
+    unitPrice: "USDT 34.5 por telefono",
     landingsLimit: 1,
     phonesLimit: 2,
     landings: "Hasta 1 landing",
@@ -51,8 +51,8 @@ const PLAN_CARDS: PlanCard[] = [
   {
     code: "plus",
     title: "Plus",
-    price: "USD 163 / mes",
-    unitPrice: "USD 32.6 por telefono",
+    price: "USDT 163 / mes",
+    unitPrice: "USDT 32.6 por telefono",
     landingsLimit: 2,
     phonesLimit: 5,
     landings: "Hasta 2 landings",
@@ -69,8 +69,8 @@ const PLAN_CARDS: PlanCard[] = [
   {
     code: "pro",
     title: "Pro",
-    price: "USD 305 / mes",
-    unitPrice: "USD 30.5 por telefono",
+    price: "USDT 305 / mes",
+    unitPrice: "USDT 30.5 por telefono",
     landingsLimit: 4,
     phonesLimit: 10,
     landings: "Hasta 4 landings",
@@ -87,8 +87,8 @@ const PLAN_CARDS: PlanCard[] = [
   {
     code: "premium",
     title: "Premium",
-    price: "USD 570 / mes",
-    unitPrice: "USD 28.5 por telefono",
+    price: "USDT 570 / mes",
+    unitPrice: "USDT 28.5 por telefono",
     landingsLimit: 6,
     phonesLimit: 20,
     landings: "Hasta 6 landings",

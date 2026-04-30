@@ -17,8 +17,8 @@ const PLAN_CARDS: PlanCard[] = [
   {
     code: "starter",
     title: "Starter",
-    price: "USD 69 / mes",
-    unitPrice: "USD 34.5 por teléfono",
+    price: "USDT 69 / mes",
+    unitPrice: "USDT 34.5 por teléfono",
     landings: "Hasta 1 landing",
     phones: "Hasta 2 telefonos",
     colorClass: "border-zinc-700 bg-zinc-900/40",
@@ -32,8 +32,8 @@ const PLAN_CARDS: PlanCard[] = [
   {
     code: "plus",
     title: "Plus",
-    price: "USD 163 / mes",
-    unitPrice: "USD 32.6 por teléfono",
+    price: "USDT 163 / mes",
+    unitPrice: "USDT 32.6 por teléfono",
     landings: "Hasta 2 landings",
     phones: "Hasta 5 telefonos",
     colorClass: "border-yellow-700 bg-yellow-950/30",
@@ -47,8 +47,8 @@ const PLAN_CARDS: PlanCard[] = [
   {
     code: "pro",
     title: "Pro",
-    price: "USD 305 / mes",
-    unitPrice: "USD 30.5 por teléfono",
+    price: "USDT 305 / mes",
+    unitPrice: "USDT 30.5 por teléfono",
     landings: "Hasta 4 landings",
     phones: "Hasta 10 telefonos",
     colorClass: "border-orange-700 bg-orange-950/30",
@@ -62,8 +62,8 @@ const PLAN_CARDS: PlanCard[] = [
   {
     code: "premium",
     title: "Premium",
-    price: "USD 570 / mes",
-    unitPrice: "USD 28.5 por teléfono",
+    price: "USDT 570 / mes",
+    unitPrice: "USDT 28.5 por teléfono",
     landings: "Hasta 6 landings",
     phones: "Hasta 20 telefonos",
     colorClass: "border-purple-700 bg-purple-950/30",
