@@ -52,6 +52,15 @@ export interface TrackingRankingConfig {
   gerenciaFilter?: string;
 }
 
+export interface HomeOverviewStats {
+  landingsCount: number;
+  porcentajeCarga: number;
+  cargaPromedio: number;
+  totalCargado: number;
+  premium: number;
+  retencionActiva30d: number;
+}
+
 export interface ConversionRow {
   id: string;
   internal_id: number | null;
@@ -697,6 +706,24 @@ export async function fetchConversionsConfigForUser(
   userId: string,
 ): Promise<ConversionsConfig> {
   return fetchConversionsConfig(userId);
+}
+
+export async function fetchHomeOverviewStats(userId: string): Promise<HomeOverviewStats> {
+  const { data, error } = await supabase.rpc("get_home_overview_stats", {
+    p_user_id: userId,
+    p_hidden_by: userId,
+  });
+  if (error) throw error;
+
+  const row = (data ?? {}) as Record<string, unknown>;
+  return {
+    landingsCount: Number(row.landings_count ?? 0),
+    porcentajeCarga: Number(row.porcentaje_carga ?? 0),
+    cargaPromedio: Number(row.carga_promedio ?? 0),
+    totalCargado: Number(row.total_cargado ?? 0),
+    premium: Number(row.jugadores_premium ?? 0),
+    retencionActiva30d: Number(row.retencion_activa_30d ?? 0),
+  };
 }
 
 export async function updateConversionEmail(

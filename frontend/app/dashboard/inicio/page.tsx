@@ -3,13 +3,8 @@
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { supabase } from "@/lib/supabaseClient";
-import type { FunnelContact, ConversionRow } from "@/lib/conversionsDb";
-import {
-  fetchConversionsConfig,
-  fetchConversionsFiltered,
-  buildFunnelContactsFromConversions,
-} from "@/lib/conversionsDb";
-import { fetchLandings } from "@/lib/landing/landingsDb";
+import type { HomeOverviewStats } from "@/lib/conversionsDb";
+import { fetchHomeOverviewStats } from "@/lib/conversionsDb";
 import { HomeOverview } from "@/components/conversiones/HomeOverview";
 import { DashboardSkeleton } from "@/components/ui/DashboardSkeleton";
 
@@ -17,10 +12,7 @@ export default function DashboardInicioPage() {
   const router = useRouter();
   const [ready, setReady] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [landingsCount, setLandingsCount] = useState(0);
-  const [funnelContacts, setFunnelContacts] = useState<FunnelContact[]>([]);
-  const [conversions, setConversions] = useState<ConversionRow[]>([]);
-  const [premiumThreshold, setPremiumThreshold] = useState(50000);
+  const [overviewStats, setOverviewStats] = useState<HomeOverviewStats | null>(null);
 
   useEffect(() => {
     const init = async () => {
@@ -36,16 +28,8 @@ export default function DashboardInicioPage() {
           return;
         }
 
-        const [landings, convs, cfg] = await Promise.all([
-          fetchLandings(user.id),
-          fetchConversionsFiltered(user.id, user.id),
-          fetchConversionsConfig(user.id),
-        ]);
-
-        setLandingsCount(landings.length);
-        setFunnelContacts(buildFunnelContactsFromConversions(convs));
-        setConversions(convs);
-        setPremiumThreshold(cfg?.funnel_premium_threshold ?? 50000);
+        const stats = await fetchHomeOverviewStats(user.id);
+        setOverviewStats(stats);
       } catch (e) {
         const msg =
           e instanceof Error
@@ -79,10 +63,7 @@ export default function DashboardInicioPage() {
   return (
     <HomeOverview
       role="client"
-      landingsCount={landingsCount}
-      funnelContacts={funnelContacts}
-      conversions={conversions}
-      premiumThreshold={premiumThreshold}
+      overviewStats={overviewStats ?? undefined}
     />
   );
 }

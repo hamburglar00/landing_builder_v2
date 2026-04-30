@@ -1,7 +1,7 @@
 "use client";
 
 import { useMemo } from "react";
-import type { FunnelContact, ConversionRow } from "@/lib/conversionsDb";
+import type { FunnelContact, ConversionRow, HomeOverviewStats } from "@/lib/conversionsDb";
 import { computeCoreStats } from "@/lib/conversionStats";
 import { buildFunnelContactsFromConversions } from "@/lib/conversionsDb";
 
@@ -52,20 +52,24 @@ function Card({
 export function HomeOverview({
   role,
   landingsCount,
-  funnelContacts,
   conversions,
   premiumThreshold,
+  overviewStats,
 }: {
   role: "admin" | "client";
-  landingsCount: number;
-  funnelContacts: FunnelContact[];
-  conversions: ConversionRow[];
-  premiumThreshold: number;
+  landingsCount?: number;
+  funnelContacts?: FunnelContact[];
+  conversions?: ConversionRow[];
+  premiumThreshold?: number;
+  overviewStats?: HomeOverviewStats;
 }) {
   const stats = useMemo(() => {
+    if (overviewStats) return overviewStats;
+
     const now = new Date();
     const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1, 0, 0, 0, 0);
-    const monthlyConversions = conversions.filter((r) => {
+    const sourceConversions = conversions ?? [];
+    const monthlyConversions = sourceConversions.filter((r) => {
       const t = new Date(r.created_at).getTime();
       return Number.isFinite(t) && t >= startOfMonth.getTime() && t <= now.getTime();
     });
@@ -74,7 +78,7 @@ export function HomeOverview({
       monthlyConversions,
       monthlyFunnelContacts,
       monthlyConversions,
-      premiumThreshold,
+      premiumThreshold ?? 50000,
     );
 
     const porcentajeCarga = core.uniqueLeads
@@ -83,14 +87,14 @@ export function HomeOverview({
     const cargaPromedio = core.totalPurchaseCount > 0 ? core.totalRevenue / core.totalPurchaseCount : 0;
 
     return {
-      landings: landingsCount,
+      landingsCount: landingsCount ?? 0,
       porcentajeCarga,
       cargaPromedio,
       totalCargado: core.totalRevenue,
       premium: core.premiumPlayers,
       retencionActiva30d: core.activeRetention30d,
     };
-  }, [landingsCount, funnelContacts, conversions, premiumThreshold]);
+  }, [landingsCount, conversions, premiumThreshold, overviewStats]);
 
   const scopeLabel =
     role === "admin" ? "vista consolidada (todos los clientes)" : "vista consolidada";
@@ -107,7 +111,7 @@ export function HomeOverview({
       <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
         <Card
           title="Landings totales"
-          value={stats.landings.toString()}
+          value={stats.landingsCount.toString()}
           subtitle="Cantidad de landings activas en el constructor."
           icon={
             <svg viewBox="0 0 24 24" className="h-4 w-4" fill="none" stroke="currentColor" strokeWidth={1.6}>
