@@ -147,7 +147,7 @@ export default function DashboardPlanPage() {
           plan_code: (data.plan_code ?? "starter") as PlanCode,
           starts_at: data.starts_at ?? null,
           expires_at: data.expires_at ?? null,
-          max_landings: Number(data.max_landings ?? 2),
+          max_landings: Number(data.max_landings ?? 1),
           max_phones: Number(data.max_phones ?? 2),
         });
       }

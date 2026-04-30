@@ -281,7 +281,7 @@ export default function DashboardLayout({
   const [planCode, setPlanCode] = useState<"starter" | "plus" | "pro" | "premium" | "scale">("starter");
   const [planStartsAt, setPlanStartsAt] = useState<string | null>(null);
   const [planExpiresAt, setPlanExpiresAt] = useState<string | null>(null);
-  const [planMaxLandings, setPlanMaxLandings] = useState<number>(2);
+  const [planMaxLandings, setPlanMaxLandings] = useState<number>(1);
   const [planMaxPhones, setPlanMaxPhones] = useState<number>(2);
   const [planGraceDays, setPlanGraceDays] = useState<number>(5);
   const [planNowMs, setPlanNowMs] = useState<number | null>(null);
@@ -327,7 +327,7 @@ export default function DashboardLayout({
       setPlanStartsAt(sub?.starts_at ?? null);
       setPlanExpiresAt(sub?.expires_at ?? null);
       setPlanGraceDays(Number(sub?.grace_days ?? 5));
-      setPlanMaxLandings(Number(sub?.max_landings ?? 2));
+      setPlanMaxLandings(Number(sub?.max_landings ?? 1));
       setPlanMaxPhones(Number(sub?.max_phones ?? 2));
       const status = sub?.status ?? "active";
       const expiresAt = sub?.expires_at ? new Date(sub.expires_at) : null;

@@ -213,7 +213,7 @@ Deno.serve(async (req) => {
           show_inbox: cfgByUserId.get(u.id)?.show_inbox ?? false,
           show_ai_assistant: cfgByUserId.get(u.id)?.show_ai_assistant ?? false,
           plan_code: subsByUserId.get(u.id)?.plan_code ?? "starter",
-          max_landings: subsByUserId.get(u.id)?.max_landings ?? 2,
+          max_landings: subsByUserId.get(u.id)?.max_landings ?? 1,
           max_phones: subsByUserId.get(u.id)?.max_phones ?? 2,
           plan_status: subsByUserId.get(u.id)?.status ?? "active",
           plan_status_effective: computeEffectivePlanStatus({

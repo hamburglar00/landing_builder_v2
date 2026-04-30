@@ -63,7 +63,7 @@ export default function DashboardLandingsPage() {
         .select("max_landings, plan_code")
         .eq("user_id", userId)
         .maybeSingle();
-      const maxLandings = Number(sub?.max_landings ?? 2);
+      const maxLandings = Number(sub?.max_landings ?? 1);
       if (Number.isFinite(maxLandings) && landings.length >= maxLandings) {
         setPlanLimitModalText(
           `No puedes crear esta landing porque alcanzaste el máximo de tu plan actual (${maxLandings} landings).`,
@@ -80,7 +80,7 @@ export default function DashboardLandingsPage() {
       const msg = e instanceof Error ? e.message : "Error al crear la landing";
       if (msg.includes("PLAN_LIMIT_LANDINGS")) {
         setPlanLimitModalText(
-          "No puedes crear esta landing porque alcanzaste el límite de tu plan actual. En Starter puedes tener hasta 2 landings activas.",
+          "No puedes crear esta landing porque alcanzaste el límite de tu plan actual. En Starter puedes tener hasta 1 landing activa.",
         );
         setPlanLimitModalOpen(true);
       } else {
@@ -101,7 +101,7 @@ export default function DashboardLandingsPage() {
         .select("max_landings, plan_code")
         .eq("user_id", userId)
         .maybeSingle();
-      const maxLandings = Number(sub?.max_landings ?? 2);
+      const maxLandings = Number(sub?.max_landings ?? 1);
       if (Number.isFinite(maxLandings) && landings.length >= maxLandings) {
         setPlanLimitModalText(
           `No puedes conectar otra landing porque alcanzaste el máximo de tu plan actual (${maxLandings} landings).`,
@@ -120,7 +120,7 @@ export default function DashboardLandingsPage() {
       const msg = e instanceof Error ? e.message : "Error al conectar landing existente";
       if (msg.includes("PLAN_LIMIT_LANDINGS")) {
         setPlanLimitModalText(
-          "No puedes conectar otra landing porque alcanzaste el límite de tu plan actual. En Starter puedes tener hasta 2 landings activas.",
+          "No puedes conectar otra landing porque alcanzaste el límite de tu plan actual. En Starter puedes tener hasta 1 landing activa.",
         );
         setPlanLimitModalOpen(true);
       } else {

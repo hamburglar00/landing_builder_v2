@@ -24,16 +24,16 @@ function isValidClientName(value: string): boolean {
 function getPlanDefaults(planCode: PlanCode): { maxLandings: number; maxPhones: number } {
   switch (planCode) {
     case "plus":
-      return { maxLandings: 4, maxPhones: 5 };
+      return { maxLandings: 2, maxPhones: 5 };
     case "pro":
-      return { maxLandings: 8, maxPhones: 10 };
+      return { maxLandings: 4, maxPhones: 10 };
     case "premium":
-      return { maxLandings: 12, maxPhones: 20 };
+      return { maxLandings: 6, maxPhones: 20 };
     case "scale":
       return { maxLandings: 999, maxPhones: 999 };
     case "starter":
     default:
-      return { maxLandings: 2, maxPhones: 2 };
+      return { maxLandings: 1, maxPhones: 2 };
   }
 }
 
