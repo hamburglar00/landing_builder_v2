@@ -9,6 +9,7 @@ import { fetchLandings, createLanding } from "@/lib/landing/landingsDb";
 import { DEFAULT_CONFIG } from "@/lib/landing/mocks";
 import { LandingPreview } from "@/components/landing/LandingPreview";
 import { getSettings } from "@/lib/settingsDb";
+import { DashboardSkeleton } from "@/components/ui/DashboardSkeleton";
 
 export default function DashboardLandingsPage() {
   const router = useRouter();
@@ -131,11 +132,7 @@ export default function DashboardLandingsPage() {
   };
 
   if (!ready) {
-    return (
-      <div className="flex min-h-[40vh] items-center justify-center">
-        <p className="text-sm text-[var(--color-text-muted)]">Cargando...</p>
-      </div>
-    );
+    return <DashboardSkeleton title="Cargando landings..." />;
   }
 
   return (

@@ -28,6 +28,7 @@ import {
 } from "@/lib/gerencias/gerenciasDb";
 import type { PhoneKind } from "@/lib/landing/types";
 import type { Gerencia } from "@/lib/gerencias/types";
+import { DashboardSkeleton } from "@/components/ui/DashboardSkeleton";
 
 const PHONE_KIND_OPTIONS: Array<{ value: PhoneKind; label: string }> = [
   { value: "carga", label: "Carga" },
@@ -679,7 +680,7 @@ export default function IntegracionesMetaCapi() {
   }, [userId, config, loadAll]);
 
   if (loading) {
-    return <p className="text-sm text-zinc-500">Cargando...</p>;
+    return <DashboardSkeleton title="Cargando integraciones..." />;
   }
 
   return (

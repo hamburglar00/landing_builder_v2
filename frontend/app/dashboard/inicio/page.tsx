@@ -11,6 +11,7 @@ import {
 } from "@/lib/conversionsDb";
 import { fetchLandings } from "@/lib/landing/landingsDb";
 import { HomeOverview } from "@/components/conversiones/HomeOverview";
+import { DashboardSkeleton } from "@/components/ui/DashboardSkeleton";
 
 export default function DashboardInicioPage() {
   const router = useRouter();
@@ -62,11 +63,7 @@ export default function DashboardInicioPage() {
   }, [router]);
 
   if (!ready) {
-    return (
-      <div className="flex min-h-[40vh] items-center justify-center">
-        <p className="text-sm text-[var(--color-text-muted)]">Cargando inicio...</p>
-      </div>
-    );
+    return <DashboardSkeleton title="Cargando inicio..." />;
   }
 
   if (error) {

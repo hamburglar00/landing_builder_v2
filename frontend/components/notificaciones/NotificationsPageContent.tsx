@@ -6,6 +6,7 @@ import type {
   NotificationTelegramDestination,
   NotificationSettings,
 } from "@/lib/notificationsDb";
+import { DashboardSkeleton } from "@/components/ui/DashboardSkeleton";
 
 function normalizeHour(v: number) {
   if (!Number.isFinite(v)) return 10;
@@ -92,11 +93,7 @@ export default function NotificationsPageContent({
   };
 
   if (!cfg) {
-    return (
-      <div className="flex min-h-[40vh] items-center justify-center">
-        <p className="text-sm text-zinc-400">Cargando...</p>
-      </div>
-    );
+    return <DashboardSkeleton title="Cargando notificaciones..." />;
   }
 
   return (

@@ -1,6 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useMemo, useState } from "react";
+import dynamic from "next/dynamic";
 import { supabase } from "@/lib/supabaseClient";
 import {
   fetchConversions,
@@ -10,11 +11,15 @@ import {
   type TrackingRankingConfig,
   type ConversionRow,
 } from "@/lib/conversionsDb";
-import TrackingBoard from "@/components/conversiones/TrackingBoard";
+import { DashboardSkeleton, PanelSkeleton } from "@/components/ui/DashboardSkeleton";
 import DateRangeFilter, {
   type DateRange,
   filterByDateRange,
 } from "@/components/conversiones/DateRangeFilter";
+
+const TrackingBoard = dynamic(() => import("@/components/conversiones/TrackingBoard"), {
+  loading: () => <PanelSkeleton title="Cargando seguimiento..." />,
+});
 
 export default function DashboardSeguimientoPage() {
   const [userId, setUserId] = useState<string | null>(null);
@@ -150,11 +155,7 @@ export default function DashboardSeguimientoPage() {
   );
 
   if (loading) {
-    return (
-      <div className="flex min-h-[40vh] items-center justify-center">
-        <p className="text-sm text-zinc-400">Cargando...</p>
-      </div>
-    );
+    return <DashboardSkeleton title="Cargando seguimiento..." />;
   }
 
   return (
