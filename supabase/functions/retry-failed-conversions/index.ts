@@ -267,12 +267,12 @@ Deno.serve(async (req) => {
       const { data: deferredRows } = await db
         .from("conversion_inbox")
         .select("id, user_id, landing_name, payload_raw, created_at")
-        .eq("status", "received")
+        .eq("status", "deferred")
         .eq("action", "LEAD")
         .lte("created_at", cutoffIso)
         .order("created_at", { ascending: true })
         .limit(100);
-      const deferred = (deferredRows ?? []) as DeferredLeadInboxRow[];
+      const deferred = (deferredRows ?? []) as DeferredInboxRow[];
       if (deferred.length === 0) break;
       deferredLeadsPicked += deferred.length;
       const userIdsForDeferred = [...new Set(deferred.map((r) => r.user_id))];
@@ -307,6 +307,12 @@ Deno.serve(async (req) => {
         } catch {
           payload = {};
         }
+        if (!hasPositiveEpoch(payload.event_time)) {
+          const createdAtEpoch = Math.floor(Date.parse(row.created_at) / 1000);
+          if (Number.isFinite(createdAtEpoch) && createdAtEpoch > 0) {
+            payload.event_time = createdAtEpoch;
+          }
+        }
         payload.__deferred_retry = true;
         payload.__inbox_id = row.id;
         payload.action = "LEAD";
@@ -326,6 +332,84 @@ Deno.serve(async (req) => {
           }
         } catch {
           deferredLeadsFailed++;
+        }
+      }
+    }
+
+    // Deferred PURCHASE replay: after LEADs, so chronological pairing can settle first.
+    let deferredPurchasesPicked = 0;
+    let deferredPurchasesProcessed = 0;
+    let deferredPurchasesFailed = 0;
+
+    for (let pass = 0; pass < 20; pass++) {
+      const { data: deferredRows } = await db
+        .from("conversion_inbox")
+        .select("id, user_id, landing_name, payload_raw, created_at")
+        .eq("status", "deferred")
+        .eq("action", "PURCHASE")
+        .lte("created_at", cutoffIso)
+        .order("created_at", { ascending: true })
+        .limit(100);
+      const deferred = (deferredRows ?? []) as DeferredInboxRow[];
+      if (deferred.length === 0) break;
+      deferredPurchasesPicked += deferred.length;
+      const userIdsForDeferred = [...new Set(deferred.map((r) => r.user_id))];
+      const { data: profiles } = await db
+        .from("profiles")
+        .select("id, nombre")
+        .in("id", userIdsForDeferred);
+      const profileNameByUserId = new Map<string, string>();
+      for (const p of profiles ?? []) {
+        profileNameByUserId.set(String(p.id), String(p.nombre ?? "").trim());
+      }
+
+      for (const row of deferred) {
+        const clientName = profileNameByUserId.get(String(row.user_id)) ?? "";
+        if (!clientName) {
+          await db
+            .from("conversion_inbox")
+            .update({
+              status: "error",
+              http_status: 500,
+              response_body: "Deferred PURCHASE retry error: client name not found",
+              processed_at: new Date().toISOString(),
+            })
+            .eq("id", row.id);
+          deferredPurchasesFailed++;
+          continue;
+        }
+
+        let payload: Record<string, unknown> = {};
+        try {
+          payload = JSON.parse(row.payload_raw || "{}") as Record<string, unknown>;
+        } catch {
+          payload = {};
+        }
+        if (!hasPositiveEpoch(payload.event_time)) {
+          const createdAtEpoch = Math.floor(Date.parse(row.created_at) / 1000);
+          if (Number.isFinite(createdAtEpoch) && createdAtEpoch > 0) {
+            payload.event_time = createdAtEpoch;
+          }
+        }
+        payload.__deferred_retry = true;
+        payload.__inbox_id = row.id;
+        payload.action = "PURCHASE";
+
+        const replayUrl = `${supabaseUrl}/functions/v1/conversions?name=${encodeURIComponent(clientName)}`;
+        try {
+          const replayRes = await fetch(replayUrl, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify(payload),
+          });
+
+          if (replayRes.status >= 200 && replayRes.status < 400) {
+            deferredPurchasesProcessed++;
+          } else {
+            deferredPurchasesFailed++;
+          }
+        } catch {
+          deferredPurchasesFailed++;
         }
       }
     }
@@ -411,6 +495,9 @@ Deno.serve(async (req) => {
         deferred_leads_picked: deferredLeadsPicked,
         deferred_leads_processed: deferredLeadsProcessed,
         deferred_leads_failed: deferredLeadsFailed,
+        deferred_purchases_picked: deferredPurchasesPicked,
+        deferred_purchases_processed: deferredPurchasesProcessed,
+        deferred_purchases_failed: deferredPurchasesFailed,
         lead_backfill_checked: leadBackfillChecked,
         lead_backfill_merged: leadBackfillMerged,
         lead_backfill_ambiguous: leadBackfillAmbiguous,
@@ -437,7 +524,7 @@ function appendObs(current: string, token: string): string {
   return parts.join(" | ");
 }
 
-type DeferredLeadInboxRow = {
+type DeferredInboxRow = {
   id: string;
   user_id: string;
   landing_name: string;
@@ -467,4 +554,9 @@ function toEpochFromIso(value: unknown): number | null {
   const ms = Date.parse(raw);
   if (!Number.isFinite(ms) || ms <= 0) return null;
   return Math.floor(ms / 1000);
+}
+
+function hasPositiveEpoch(value: unknown): boolean {
+  const n = Number(value);
+  return Number.isFinite(n) && n > 0;
 }

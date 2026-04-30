@@ -110,8 +110,8 @@ interface GeoResult {
 
 type GeoSource = "payload" | "ip" | "phone_prefix" | "none";
 
-type InboundStatus = "received" | "processed" | "error";
-type ProcessingContext = { conversionId?: string };
+type InboundStatus = "received" | "deferred" | "processed" | "error";
+type ProcessingContext = { conversionId?: string; inboxStatus?: InboundStatus };
 type ContactDuplicateReason = "contact_event_id" | "promo_code";
 type ContactDuplicateMatch = { id: string; reason: ContactDuplicateReason };
 
@@ -184,6 +184,15 @@ function safePayloadRaw(payload: Params): string {
   } catch {
     return "";
   }
+}
+
+function ensurePayloadEventTime(payload: Params, receivedEventTime: number): Params {
+  const next = { ...payload };
+  const currentEventTime = Number(next.event_time);
+  if (!Number.isFinite(currentEventTime) || currentEventTime <= 0) {
+    next.event_time = receivedEventTime;
+  }
+  return next;
 }
 
 function sanitizePhone(v: unknown): string {
@@ -425,6 +434,25 @@ async function finalizeInboundEvent(
     conversion_id: conversionId ?? null,
     processed_at: new Date().toISOString(),
   }).eq("id", inboxId);
+}
+
+async function findDeferredLeadInboundByPhone(
+  db: SupabaseClient,
+  userId: string,
+  phone: string,
+): Promise<{ id: string; created_at: string } | null> {
+  if (!phone) return null;
+  const { data } = await db
+    .from("conversion_inbox")
+    .select("id, created_at")
+    .eq("user_id", userId)
+    .eq("action", "LEAD")
+    .eq("status", "deferred")
+    .eq("phone", phone)
+    .order("created_at", { ascending: true })
+    .limit(1)
+    .maybeSingle();
+  return (data as { id: string; created_at: string } | null) ?? null;
 }
 
 
@@ -1775,6 +1803,34 @@ async function handlePurchase(
     }
   }
 
+  // 2.b) If the matching LEAD is still waiting for its CONTACT window, keep PURCHASE queued.
+  // PURCHASE never uses the CONTACT->LEAD time window directly; it only waits for the LEAD to settle.
+  if (!targetId && !forceRepeatFromPromo) {
+    const deferredLead = await findDeferredLeadInboundByPhone(db, landing.user_id, cleanPhone);
+    if (deferredLead) {
+      if (ctx) ctx.inboxStatus = "deferred";
+      await writeLog(
+        db,
+        landing.user_id,
+        "handlePurchase",
+        "INFO",
+        "PURCHASE en espera por LEAD diferido del mismo phone",
+        JSON.stringify({
+          phone: cleanPhone,
+          promo_code: promoCode,
+          deferred_lead_inbox_id: deferredLead.id,
+          deferred_lead_created_at: deferredLead.created_at,
+        }),
+        undefined,
+        undefined,
+        undefined,
+        safePayloadRaw(p),
+        "purchase en espera: lead diferido pendiente",
+      );
+      return textResponse("PURCHASE recibido y en espera: hay un LEAD pendiente para este phone", 202);
+    }
+  }
+
   // 3) If we matched an existing row (promo or phone->lead), update to first purchase.
   if (targetId) {
     const { data: existing } = await db
@@ -2204,8 +2260,9 @@ Deno.serve(async (req) => {
       .eq("user_id", userId);
     const pixelConfigs: PixelConfigRow[] = (pixelConfigsData ?? []) as PixelConfigRow[];
 
-    const params: Params = await req.json().catch(() => ({}));
-    // Keep payload exactly as sent by emitter; do not infer client IP from request headers.
+    let params: Params = await req.json().catch(() => ({}));
+    // Preserve emitter data; when event_time is missing, freeze it at receive time for deferred replays.
+    params = ensurePayloadEventTime(params, Math.floor(Date.now() / 1000));
 
     // landing_name can come from the payload (to track which landing sent this)
     const landingName = norm(params.landing_name || params.landingName || "");
@@ -2259,7 +2316,8 @@ Deno.serve(async (req) => {
       const ctx: ProcessingContext = {};
       const response = await runner(ctx);
       const bodyText = await response.clone().text().catch(() => "");
-      const finalStatus: InboundStatus = response.status >= 200 && response.status < 400 ? "processed" : "error";
+      const finalStatus: InboundStatus = ctx.inboxStatus ??
+        (response.status >= 200 && response.status < 400 ? "processed" : "error");
       await finalizeInboundEvent(db, inboxId, finalStatus, response.status, bodyText, ctx.conversionId);
       return response;
     };
@@ -2291,7 +2349,10 @@ Deno.serve(async (req) => {
           safePayloadRaw(params),
           "lead en espera: faltante promo_code, reintento diferido",
         );
-        return textResponse("LEAD recibido y en espera para reintento diferido (1h)", 202);
+        const response = textResponse("LEAD recibido y en espera para reintento diferido (1h)", 202);
+        const bodyText = await response.clone().text().catch(() => "");
+        await finalizeInboundEvent(db, inboxId, "deferred", response.status, bodyText);
+        return response;
       }
       return runAndFinalize((ctx) => handleLead(db, params, landing, cfg, pixelConfigs, ctx));
     }
