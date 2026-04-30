@@ -6,6 +6,13 @@ const corsHeaders = {
     "authorization, x-client-info, apikey, content-type",
 };
 
+function jsonResponse(body: Record<string, unknown>, status: number): Response {
+  return new Response(JSON.stringify(body), {
+    status,
+    headers: { ...corsHeaders, "Content-Type": "application/json" },
+  });
+}
+
 /**
  * API público: devuelve 1 número de teléfono para una landing.
  * Toda la lógica corre en la DB (get_phone_for_landing) para 1 solo round-trip.
@@ -76,6 +83,39 @@ Deno.serve(async (req) => {
     const supabase = createClient(supabaseUrl, serviceRoleKey, {
       auth: { autoRefreshToken: false, persistSession: false },
     });
+
+    const ownerQuery = source === "chatrace"
+      ? supabase.from("profiles").select("id").eq("nombre", name).limit(1).maybeSingle()
+      : supabase.from("landings").select("user_id").eq("name", name).limit(1).maybeSingle();
+    const { data: ownerRow, error: ownerError } = await ownerQuery;
+
+    if (ownerError) {
+      return jsonResponse({ error: "Error al validar el plan del cliente." }, 500);
+    }
+
+    const ownerUserId = source === "chatrace"
+      ? String((ownerRow as { id?: unknown } | null)?.id ?? "")
+      : String((ownerRow as { user_id?: unknown } | null)?.user_id ?? "");
+
+    if (!ownerUserId) {
+      return jsonResponse(
+        { error: source === "chatrace" ? "Cliente no encontrado." : "Landing no encontrada." },
+        404,
+      );
+    }
+
+    const { data: isBlocked, error: planError } = await supabase.rpc(
+      "is_client_access_blocked",
+      { p_user_id: ownerUserId },
+    );
+
+    if (planError) {
+      return jsonResponse({ error: "Error al validar el plan del cliente." }, 500);
+    }
+
+    if (isBlocked === true) {
+      return jsonResponse({ error: "Plan vencido o inactivo." }, 403);
+    }
 
     const rpcName = source === "chatrace"
       ? "get_phone_for_chatrace_client"
