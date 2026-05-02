@@ -53,6 +53,15 @@ function monthLabel(monthValue: string): string {
   return new Intl.DateTimeFormat("es-AR", { month: "long", year: "numeric" }).format(date);
 }
 
+function monthOptions(count = 18): Array<{ value: string; label: string }> {
+  const now = new Date();
+  return Array.from({ length: count }, (_, index) => {
+    const date = new Date(now.getFullYear(), now.getMonth() - index, 1);
+    const value = `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, "0")}`;
+    return { value, label: monthLabel(value) };
+  });
+}
+
 function parseAmount(value: string): number {
   const normalized = value.replace(/\./g, "").replace(",", ".");
   const parsed = Number.parseFloat(normalized);
@@ -92,6 +101,7 @@ export default function GerenciasPerformancePanel({
   const [sortDirection, setSortDirection] = useState<SortDirection>("asc");
 
   const costStorageKey = `gerencias-performance-costs:v1:${storageKey}`;
+  const monthSelectOptions = useMemo(() => monthOptions(), []);
 
   useEffect(() => {
     try {
@@ -245,33 +255,26 @@ export default function GerenciasPerformancePanel({
 
   return (
     <section className="rounded-xl border border-zinc-800 bg-zinc-900/50 p-4">
-      <div className="mb-4 flex flex-wrap items-end justify-between gap-3">
-        <div>
-          <h3 className="text-sm font-semibold text-zinc-100">Desempeño por Gerencias</h3>
-          <p className="mt-1 text-xs text-zinc-500">
-            Comparativo mensual por gerencia usando las mismas métricas de Estadísticas e incluyendo registros ocultos por Limpiar vista.
-          </p>
-        </div>
-        <div className="flex flex-wrap items-end gap-2">
-          <label className="block">
-            <span className="mb-1 block text-[11px] text-zinc-500">Mes</span>
-            <input
-              type="month"
-              value={month}
-              onChange={(e) => setMonth(e.target.value || currentMonthValue())}
-              className="h-8 rounded-lg border border-zinc-700 bg-zinc-950 px-2 text-xs text-zinc-100"
-            />
-          </label>
-          <label className="block">
-            <span className="mb-1 block text-[11px] text-zinc-500">Costo por mensaje general</span>
-            <input
-              value={globalCost}
-              onChange={(e) => setGlobalCost(e.target.value)}
-              inputMode="decimal"
-              placeholder="0"
-              className="h-8 w-36 rounded-lg border border-zinc-700 bg-zinc-950 px-2 text-xs text-zinc-100"
-            />
-          </label>
+      <div className="mb-3 flex flex-wrap items-center justify-between gap-2">
+        <h3 className="text-sm font-semibold text-zinc-100">Desempeño por Gerencias</h3>
+        <div className="flex flex-wrap items-center gap-2">
+          <select
+            value={month}
+            onChange={(e) => setMonth(e.target.value || currentMonthValue())}
+            aria-label="Seleccionar mes"
+            className="h-8 rounded-lg border border-zinc-700 bg-zinc-950 px-2 text-xs font-medium text-zinc-100"
+          >
+            {monthSelectOptions.map((option) => (
+              <option key={option.value} value={option.value}>{option.label}</option>
+            ))}
+          </select>
+          <input
+            value={globalCost}
+            onChange={(e) => setGlobalCost(e.target.value)}
+            inputMode="decimal"
+            placeholder="Costo por mensaje"
+            className="h-8 w-40 rounded-lg border border-zinc-700 bg-zinc-950 px-2 text-xs text-zinc-100 placeholder:text-zinc-500"
+          />
           <button
             type="button"
             onClick={applyGlobalCost}
@@ -288,10 +291,6 @@ export default function GerenciasPerformancePanel({
             {loading ? "Actualizando..." : "Actualizar"}
           </button>
         </div>
-      </div>
-
-      <div className="mb-3 rounded-lg border border-zinc-800 bg-zinc-950/60 px-3 py-2 text-xs text-zinc-400">
-        Mes seleccionado: <span className="font-medium text-zinc-200">{monthLabel(month)}</span>
       </div>
 
       {error ? (
