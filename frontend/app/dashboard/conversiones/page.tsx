@@ -469,7 +469,18 @@ export default function DashboardConversionesPage() {
   const [hidingLogs, setHidingLogs] = useState(false);
   const hasSyncedDateRangeOnceRef = useRef(false);
   const initialDateRangeRef = useRef<DateRange | null>(dateRange);
+  const dateRangeRef = useRef<DateRange | null>(dateRange);
   const dataRequestSeqRef = useRef(0);
+  const userIdRef = useRef<string | null>(null);
+  const tabRef = useRef<Tab>(tab);
+
+  useEffect(() => {
+    userIdRef.current = userId;
+  }, [userId]);
+
+  useEffect(() => {
+    tabRef.current = tab;
+  }, [tab]);
 
   useEffect(() => {
     const view = (searchParams.get("view") || "").toLowerCase();
@@ -882,6 +893,7 @@ export default function DashboardConversionesPage() {
     const init = async () => {
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) return;
+      userIdRef.current = user.id;
       setUserId(user.id);
       const requestSeq = ++dataRequestSeqRef.current;
       try {
@@ -1181,23 +1193,25 @@ export default function DashboardConversionesPage() {
   }, []);
 
   const refreshTable = useCallback(async (explicitRange?: DateRange | null) => {
-    if (!userId) return;
-    const range = explicitRange === undefined ? dateRange : explicitRange;
+    const currentUserId = userIdRef.current;
+    if (!currentUserId) return;
+    const currentTab = tabRef.current;
+    const range = explicitRange === undefined ? dateRangeRef.current : explicitRange;
     const requestSeq = ++dataRequestSeqRef.current;
     setRefreshingTable(true);
     try {
-      if (tab === "logs") {
-        const logRows = await fetchConversionLogsFiltered(userId, userId, 200);
+      if (currentTab === "logs") {
+        const logRows = await fetchConversionLogsFiltered(currentUserId, currentUserId, 200);
         if (requestSeq !== dataRequestSeqRef.current) return;
         setLogs(logRows);
-      } else if (tab === "inbox") {
-        const inbox = await fetchConversionInbox(userId, 400);
+      } else if (currentTab === "inbox") {
+        const inbox = await fetchConversionInbox(currentUserId, 400);
         if (requestSeq !== dataRequestSeqRef.current) return;
         setInboxRows(inbox);
       } else {
         const [rows, funnel] = await Promise.all([
-          fetchConversionsFiltered(userId, userId, undefined, range ?? undefined),
-          fetchFunnelContactsFiltered(userId, userId, range ?? undefined),
+          fetchConversionsFiltered(currentUserId, currentUserId, undefined, range ?? undefined),
+          fetchFunnelContactsFiltered(currentUserId, currentUserId, range ?? undefined),
         ]);
         if (requestSeq !== dataRequestSeqRef.current) return;
         setConversions(rows);
@@ -1207,18 +1221,18 @@ export default function DashboardConversionesPage() {
     finally {
       if (requestSeq === dataRequestSeqRef.current) setRefreshingTable(false);
     }
-  }, [userId, tab, dateRange]);
+  }, []);
 
   const handleDateRangeChange = useCallback((nextRange: DateRange | null) => {
     initialDateRangeRef.current = nextRange;
+    dateRangeRef.current = nextRange;
     setDateRange(nextRange);
     if (!hasSyncedDateRangeOnceRef.current) {
       hasSyncedDateRangeOnceRef.current = true;
       return;
     }
-    if (!userId) return;
     void refreshTable(nextRange);
-  }, [refreshTable, userId]);
+  }, [refreshTable]);
 
   const clearGlobalDisplay = useCallback(async () => {
     if (!userId) return;

@@ -467,7 +467,18 @@ export default function AdminConversionesPage() {
   const [hidingLogs, setHidingLogs] = useState(false);
   const hasSyncedDateRangeOnceRef = useRef(false);
   const initialDateRangeRef = useRef<DateRange | null>(dateRange);
+  const dateRangeRef = useRef<DateRange | null>(dateRange);
   const dataRequestSeqRef = useRef(0);
+  const userIdRef = useRef<string | null>(null);
+  const tabRef = useRef<Tab>(tab);
+
+  useEffect(() => {
+    userIdRef.current = userId;
+  }, [userId]);
+
+  useEffect(() => {
+    tabRef.current = tab;
+  }, [tab]);
 
   useEffect(() => {
     const view = (searchParams.get("view") || "").toLowerCase();
@@ -824,6 +835,7 @@ export default function AdminConversionesPage() {
     const init = async () => {
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) return;
+      userIdRef.current = user.id;
       setUserId(user.id);
       const requestSeq = ++dataRequestSeqRef.current;
       try {
@@ -1126,19 +1138,21 @@ export default function AdminConversionesPage() {
   }, []);
 
   const refreshTable = useCallback(async (explicitRange?: DateRange | null) => {
-    if (!userId) return;
-    const range = explicitRange === undefined ? dateRange : explicitRange;
+    const currentUserId = userIdRef.current;
+    if (!currentUserId) return;
+    const currentTab = tabRef.current;
+    const range = explicitRange === undefined ? dateRangeRef.current : explicitRange;
     const requestSeq = ++dataRequestSeqRef.current;
     setRefreshingTable(true);
     try {
-      if (tab === "logs") {
-        const logRows = await fetchConversionLogsForAdminFiltered(userId, 200);
+      if (currentTab === "logs") {
+        const logRows = await fetchConversionLogsForAdminFiltered(currentUserId, 200);
         if (requestSeq !== dataRequestSeqRef.current) return;
         setLogs(logRows);
       } else {
         const [rows, funnel] = await Promise.all([
-          fetchConversionsForAdminFiltered(userId, undefined, range ?? undefined),
-          fetchFunnelContactsForAdminFiltered(userId, range ?? undefined),
+          fetchConversionsForAdminFiltered(currentUserId, undefined, range ?? undefined),
+          fetchFunnelContactsForAdminFiltered(currentUserId, range ?? undefined),
         ]);
         if (requestSeq !== dataRequestSeqRef.current) return;
         setConversions(rows);
@@ -1148,18 +1162,18 @@ export default function AdminConversionesPage() {
     finally {
       if (requestSeq === dataRequestSeqRef.current) setRefreshingTable(false);
     }
-  }, [userId, tab, dateRange]);
+  }, []);
 
   const handleDateRangeChange = useCallback((nextRange: DateRange | null) => {
     initialDateRangeRef.current = nextRange;
+    dateRangeRef.current = nextRange;
     setDateRange(nextRange);
     if (!hasSyncedDateRangeOnceRef.current) {
       hasSyncedDateRangeOnceRef.current = true;
       return;
     }
-    if (!userId) return;
     void refreshTable(nextRange);
-  }, [refreshTable, userId]);
+  }, [refreshTable]);
 
   const clearTableDisplay = useCallback(async () => {
     if (!userId || activeConversions.length === 0 || demoMode) return;
@@ -2093,4 +2107,3 @@ export default function AdminConversionesPage() {
     </div>
   );
 }
-
