@@ -298,7 +298,7 @@ export default function PublicPromotionPage() {
             setError(null);
             setFormOpen(true);
           }}
-          className="mt-6 w-full rounded-xl bg-emerald-400 px-4 py-3 text-sm font-black uppercase tracking-[0.18em] text-emerald-950 transition hover:bg-emerald-300"
+          className="mt-6 w-full rounded-xl bg-emerald-400 px-4 py-3 text-sm font-black uppercase tracking-[0.18em] text-emerald-950 shadow-[0_0_0_0_rgba(52,211,153,0.55)] transition hover:bg-emerald-300 hover:[animation-play-state:paused] [animation:promotion-heartbeat_1.65s_ease-in-out_infinite]"
         >
           Participar
         </button>
@@ -354,6 +354,28 @@ export default function PublicPromotionPage() {
   return (
     <main className="min-h-screen overflow-hidden bg-[#07100d] text-zinc-100" style={backgroundStyle}>
       <style>{`
+        @keyframes promotion-heartbeat {
+          0%, 100% {
+            transform: scale(1);
+            box-shadow: 0 0 0 0 rgba(52, 211, 153, 0.46);
+          }
+          14% {
+            transform: scale(1.045);
+            box-shadow: 0 0 0 10px rgba(52, 211, 153, 0.18);
+          }
+          28% {
+            transform: scale(1);
+            box-shadow: 0 0 0 18px rgba(52, 211, 153, 0);
+          }
+          42% {
+            transform: scale(1.035);
+            box-shadow: 0 0 0 8px rgba(52, 211, 153, 0.14);
+          }
+          70% {
+            transform: scale(1);
+            box-shadow: 0 0 0 0 rgba(52, 211, 153, 0);
+          }
+        }
         @keyframes promotion-draw-progress {
           from { width: 0%; }
           to { width: 100%; }
