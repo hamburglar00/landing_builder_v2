@@ -8,8 +8,6 @@ import {
   deletePromotion,
   fetchPromotionParticipants,
   fetchPromotions,
-  formatLocalDateTimeForInput,
-  localDateTimeInputToIso,
   slugifyPromotion,
   updatePromotion,
   type PromotionParticipantRow,
@@ -23,7 +21,8 @@ type FormState = {
   slug: string;
   message: string;
   prize: string;
-  drawAtLocal: string;
+  drawDate: string;
+  drawHour: string;
   status: PromotionStatus;
 };
 
@@ -32,9 +31,12 @@ const EMPTY_FORM: FormState = {
   slug: "",
   message: "",
   prize: "",
-  drawAtLocal: "",
+  drawDate: "",
+  drawHour: "12",
   status: "active",
 };
+
+const HOUR_OPTIONS = Array.from({ length: 24 }, (_, hour) => String(hour).padStart(2, "0"));
 
 function formatDateTime(value: string | null): string {
   if (!value) return "-";
@@ -48,6 +50,25 @@ function formatDateTime(value: string | null): string {
 
 function statusLabel(status: PromotionStatus) {
   return status === "active" ? "Activa" : "Cerrada";
+}
+
+function splitDrawDateHour(value: string | null): Pick<FormState, "drawDate" | "drawHour"> {
+  if (!value) return { drawDate: "", drawHour: "12" };
+  const date = new Date(value);
+  if (Number.isNaN(date.getTime())) return { drawDate: "", drawHour: "12" };
+  const pad = (n: number) => String(n).padStart(2, "0");
+  return {
+    drawDate: `${date.getFullYear()}-${pad(date.getMonth() + 1)}-${pad(date.getDate())}`,
+    drawHour: pad(date.getHours()),
+  };
+}
+
+function drawDateHourToIso(dateValue: string, hourValue: string): string {
+  if (!dateValue) return "";
+  const hour = Math.min(23, Math.max(0, Number(hourValue)));
+  const date = new Date(`${dateValue}T${String(hour).padStart(2, "0")}:00:00`);
+  if (Number.isNaN(date.getTime())) return "";
+  return date.toISOString();
 }
 
 export default function DashboardPromocionesPage() {
@@ -112,13 +133,15 @@ export default function DashboardPromocionesPage() {
   };
 
   const startEdit = (promotion: PromotionWithCount) => {
+    const draw = splitDrawDateHour(promotion.draw_at);
     setEditingId(promotion.id);
     setForm({
       title: promotion.title,
       slug: promotion.slug,
       message: promotion.message,
       prize: promotion.prize,
-      drawAtLocal: formatLocalDateTimeForInput(promotion.draw_at),
+      drawDate: draw.drawDate,
+      drawHour: draw.drawHour,
       status: promotion.status,
     });
   };
@@ -137,10 +160,10 @@ export default function DashboardPromocionesPage() {
     const slug = slugifyPromotion(form.slug || form.title);
     const messageText = form.message.trim();
     const prize = form.prize.trim();
-    const drawAt = localDateTimeInputToIso(form.drawAtLocal);
+    const drawAt = drawDateHourToIso(form.drawDate, form.drawHour);
 
     if (!title || !slug || !messageText || !prize || !drawAt) {
-      showMessage("Completa titulo, mensaje, premio y fecha del sorteo.", "error");
+      showMessage("Completa titulo, mensaje, premio, fecha y hora del sorteo.", "error");
       return;
     }
 
@@ -303,13 +326,27 @@ export default function DashboardPromocionesPage() {
             />
           </label>
           <label className="space-y-1">
-            <span className="text-xs text-zinc-400">Fecha y hora del sorteo</span>
+            <span className="text-xs text-zinc-400">Fecha del sorteo</span>
             <input
-              type="datetime-local"
-              value={form.drawAtLocal}
-              onChange={(e) => setForm((prev) => ({ ...prev, drawAtLocal: e.target.value }))}
+              type="date"
+              value={form.drawDate}
+              onChange={(e) => setForm((prev) => ({ ...prev, drawDate: e.target.value }))}
               className="w-full rounded-lg border border-zinc-800 bg-zinc-950 px-3 py-2 text-sm text-zinc-100 outline-none focus:border-cyan-700"
             />
+          </label>
+          <label className="space-y-1">
+            <span className="text-xs text-zinc-400">Hora del sorteo</span>
+            <select
+              value={form.drawHour}
+              onChange={(e) => setForm((prev) => ({ ...prev, drawHour: e.target.value }))}
+              className="w-full rounded-lg border border-zinc-800 bg-zinc-950 px-3 py-2 text-sm text-zinc-100 outline-none focus:border-cyan-700"
+            >
+              {HOUR_OPTIONS.map((hour) => (
+                <option key={hour} value={hour}>
+                  {hour}:00
+                </option>
+              ))}
+            </select>
           </label>
           <label className="space-y-1 lg:col-span-2">
             <span className="text-xs text-zinc-400">Mensaje para participantes</span>
