@@ -266,8 +266,8 @@ export default function GerenciasPerformancePanel({
   return (
     <section className="rounded-xl border border-zinc-800 bg-zinc-900/50 p-4">
       <div className="mb-3 flex flex-wrap items-center justify-between gap-2">
-        <h3 className="text-sm font-semibold text-zinc-100">Desempeño por Gerencias</h3>
         <div className="flex flex-wrap items-center gap-2">
+          <h3 className="text-sm font-semibold text-zinc-100">Desempeño por Gerencias</h3>
           <select
             value={month}
             onChange={(e) => setMonth(e.target.value || currentMonthValue())}
@@ -278,29 +278,15 @@ export default function GerenciasPerformancePanel({
               <option key={option.value} value={option.value}>{option.label}</option>
             ))}
           </select>
-          <input
-            value={globalCost}
-            onChange={(e) => setGlobalCost(e.target.value)}
-            inputMode="decimal"
-            placeholder="Costo por mensaje"
-            className="h-8 w-40 rounded-lg border border-zinc-700 bg-zinc-950 px-2 text-xs text-zinc-100 placeholder:text-zinc-500"
-          />
-          <button
-            type="button"
-            onClick={applyGlobalCost}
-            className="h-8 rounded-lg border border-zinc-700 bg-zinc-800 px-3 text-xs font-medium text-zinc-200 transition hover:bg-zinc-700"
-          >
-            Aplicar a todas
-          </button>
-          <button
-            type="button"
-            onClick={() => void loadMonth()}
-            disabled={loading}
-            className="h-8 rounded-lg border border-zinc-700 bg-zinc-800 px-3 text-xs font-medium text-zinc-200 transition hover:bg-zinc-700 disabled:opacity-60"
-          >
-            {loading ? "Actualizando..." : "Actualizar"}
-          </button>
         </div>
+        <button
+          type="button"
+          onClick={() => void loadMonth()}
+          disabled={loading}
+          className="h-8 rounded-lg border border-zinc-700 bg-zinc-800 px-3 text-xs font-medium text-zinc-200 transition hover:bg-zinc-700 disabled:opacity-60"
+        >
+          {loading ? "Actualizando..." : "Actualizar"}
+        </button>
       </div>
 
       {error ? (
@@ -324,7 +310,28 @@ export default function GerenciasPerformancePanel({
                 <th className="px-3 py-2"><SortHeader sort="cargas">Cargas Totales</SortHeader></th>
                 <th className="px-3 py-2"><SortHeader sort="pctCarga">Porcentaje de carga</SortHeader></th>
                 <th className="px-3 py-2"><SortHeader sort="pctRecarga">Porcentaje de recarga</SortHeader></th>
-                <th className="px-3 py-2"><SortHeader sort="cost">Costo por msj</SortHeader></th>
+                <th className="px-3 py-2">
+                  <div className="flex flex-col items-center gap-1.5">
+                    <SortHeader sort="cost">Costo por msj</SortHeader>
+                    <div className="flex w-full items-center justify-center gap-1">
+                      <input
+                        value={globalCost}
+                        onChange={(e) => setGlobalCost(e.target.value)}
+                        inputMode="decimal"
+                        placeholder="0"
+                        aria-label="Costo por mensaje general"
+                        className="h-7 w-16 rounded border border-zinc-700 bg-zinc-950 px-2 text-center text-[11px] font-normal text-zinc-100 placeholder:text-zinc-500"
+                      />
+                      <button
+                        type="button"
+                        onClick={applyGlobalCost}
+                        className="h-7 rounded border border-zinc-700 bg-zinc-800 px-2 text-[10px] font-medium text-zinc-200 transition hover:bg-zinc-700"
+                      >
+                        Aplicar
+                      </button>
+                    </div>
+                  </div>
+                </th>
                 <th className="px-3 py-2"><SortHeader sort="gasto">Gasto</SortHeader></th>
               </tr>
             </thead>
