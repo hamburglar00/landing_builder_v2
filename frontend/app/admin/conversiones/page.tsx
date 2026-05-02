@@ -54,7 +54,7 @@ const TAB_LABELS: Record<Tab, string> = {
   funnel: "Funnel",
   seguimiento: "Seguimiento",
   tabla: "Tabla",
-  estadisticas: "Estadisticas",
+  estadisticas: "Estadísticas",
   desempeno: "Desempeño",
   configuracion: "Configuracion",
   logs: "Logs",
@@ -1288,7 +1288,7 @@ export default function AdminConversionesPage() {
         <div>
           <h1 className="text-xl font-semibold text-zinc-100">CONVERSIONES</h1>
           <p className="mt-1 text-sm text-zinc-400">
-            Tu pipeline de leads, cargas y estadsticas.
+            Tu pipeline de leads, cargas y estadísticas.
           </p>
         </div>
       </div>
@@ -1967,10 +1967,19 @@ export default function AdminConversionesPage() {
       {tab === "estadisticas" && (
         <section className="rounded-xl border border-zinc-800 bg-zinc-900/50 p-4">
           <div className="mb-4 flex flex-wrap items-center justify-between gap-2">
-            <h3 className="text-sm font-semibold text-zinc-200">Estadisticas</h3>
+            <h3 className="text-sm font-semibold text-zinc-200">Estadísticas</h3>
           </div>
           {activeFunnelFiltered.length === 0 && statsConversionsFiltered.length === 0 ? (
-            <p className="py-12 text-center text-sm text-zinc-500">An no hay datos para estadsticas.</p>
+            refreshingTable ? (
+              <div className="flex min-h-[120px] flex-col items-center justify-center gap-3 text-sm text-zinc-500">
+                <div className="h-1 w-40 overflow-hidden rounded-full bg-zinc-800">
+                  <div className="h-full w-1/2 animate-pulse rounded-full bg-sky-400" />
+                </div>
+                <p>Actualizando estadísticas...</p>
+              </div>
+            ) : (
+              <p className="py-12 text-center text-sm text-zinc-500">Aún no hay datos para estadísticas.</p>
+            )
           ) : (
             <StatsPanel
               funnelContacts={activeFunnelFiltered}

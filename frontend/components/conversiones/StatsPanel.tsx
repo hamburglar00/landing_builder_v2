@@ -691,7 +691,6 @@ export default function StatsPanel({
   }, [conversions, funnelContacts, allConversions, premiumThreshold, isTodayRange, currentHour]);
 
   const maxCampaignRev = Math.max(...stats.byCampaign.map((r) => r.revenue), 1);
-  const maxDeviceRev = Math.max(...stats.byDevice.map((r) => r.revenue), 1);
   const maxLandingRev = Math.max(...stats.byLanding.map((r) => r.revenue), 1);
   const assistantContext = useMemo(() => ({
     isTodayRange,
@@ -1318,55 +1317,6 @@ export default function StatsPanel({
                         <td className="py-1.5 text-center text-zinc-400">{r.cargas}</td>
                         <td className="py-1.5 px-2"><PctBar num={r.cargas} den={r.mensajes || 1} color="bg-amber-500" /></td>
                         <td className="py-1.5 px-2"><BarCell value={r.revenue} max={maxCampaignRev} /></td>
-                        {parsedAdSpend > 0 && (
-                          <>
-                            <td className="py-1.5 text-center text-zinc-300 tabular-nums">{roas1.toFixed(2)}x</td>
-                            <td className="py-1.5 text-center text-zinc-300 tabular-nums">{roasT.toFixed(2)}x</td>
-                          </>
-                        )}
-                      </tr>
-                    );
-                  })}
-                </tbody>
-              </table>
-              </div>
-            </TableCard>
-          </div>
-        </div>
-      )}
-
-      {/*  POR DISPOSITIVO  */}
-      {stats.byDevice.length > 0 && (
-        <div>
-          <SectionTitle>Por dispositivo</SectionTitle>
-          <div className="mt-3">
-            <TableCard title="Mensajes recibidos, cargas e ingresos por dispositivo">
-              <div className="overflow-x-auto">
-              <table className="w-full text-[11px]" style={{ minWidth: 760 }}>
-                <thead><tr className="text-zinc-500">
-                  <th className="text-left pb-2 font-medium">Dispositivo</th>
-                  <th className="text-center pb-2 font-medium w-24">Mensajes recibidos</th>
-                  <th className="text-center pb-2 font-medium w-14">Cargas</th>
-                  <th className="text-center pb-2 font-medium" style={{ width: 180 }}>% de carga</th>
-                  <th className="text-center pb-2 font-medium" style={{ width: 220 }}>Ingresos</th>
-                  {parsedAdSpend > 0 && (
-                    <>
-                      <th className="text-center pb-2 font-medium w-20">ROAS 1ra</th>
-                      <th className="text-center pb-2 font-medium w-20">ROAS total</th>
-                    </>
-                  )}
-                </tr></thead>
-                <tbody className="divide-y divide-zinc-800/60">
-                  {stats.byDevice.map((r) => {
-                    const roas1 = parsedAdSpend > 0 ? r.firstRevenue / parsedAdSpend : 0;
-                    const roasT = parsedAdSpend > 0 ? r.revenue / parsedAdSpend : 0;
-                    return (
-                      <tr key={r.device}>
-                        <td className="py-1.5 text-zinc-300 capitalize truncate">{r.device}</td>
-                        <td className="py-1.5 text-center text-zinc-400">{r.mensajes}</td>
-                        <td className="py-1.5 text-center text-zinc-400">{r.cargas}</td>
-                        <td className="py-1.5 px-2"><PctBar num={r.cargas} den={r.mensajes || 1} color="bg-violet-500" /></td>
-                        <td className="py-1.5 px-2"><BarCell value={r.revenue} max={maxDeviceRev} /></td>
                         {parsedAdSpend > 0 && (
                           <>
                             <td className="py-1.5 text-center text-zinc-300 tabular-nums">{roas1.toFixed(2)}x</td>
