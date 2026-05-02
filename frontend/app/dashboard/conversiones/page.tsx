@@ -11,12 +11,14 @@ import {
   upsertPixelConfig,
   deletePixelConfig,
   fetchConversionsFiltered,
+  fetchConversionsUnfiltered,
   fetchFunnelContactsFiltered,
   fetchConversionLogsFiltered,
   fetchConversionInbox,
   updateConversionEmail,
   hideConversions,
   hideConversionLogs,
+  type FetchDateRange,
   type ConversionsConfig,
   type PixelConfig,
   type ConversionRow,
@@ -40,8 +42,11 @@ const TrackingBoard = dynamic(() => import("@/components/conversiones/TrackingBo
 const StatsPanel = dynamic(() => import("@/components/conversiones/StatsPanel"), {
   loading: () => <PanelSkeleton title="Cargando estadísticas..." />,
 });
+const GerenciasPerformancePanel = dynamic(() => import("@/components/conversiones/GerenciasPerformancePanel"), {
+  loading: () => <PanelSkeleton title="Cargando desempeño..." />,
+});
 
-type Tab = "funnel" | "seguimiento" | "tabla" | "estadisticas" | "configuracion" | "inbox" | "logs";
+type Tab = "funnel" | "seguimiento" | "tabla" | "estadisticas" | "desempeno" | "configuracion" | "inbox" | "logs";
 type PixelEditDraft = {
   id: string;
   pixel_id: string;
@@ -54,13 +59,14 @@ type PixelEditDraft = {
   is_default: boolean;
 };
 
-const TAB_ORDER_BASE: Tab[] = ["funnel", "tabla", "estadisticas", "configuracion"];
+const TAB_ORDER_BASE: Tab[] = ["funnel", "tabla", "estadisticas", "desempeno", "configuracion"];
 
 const TAB_LABELS: Record<Tab, string> = {
   funnel: "Funnel",
   seguimiento: "Seguimiento",
   tabla: "Tabla",
   estadisticas: "Estadisticas",
+  desempeno: "Desempeño",
   configuracion: "Configuracion",
   inbox: "Inbox",
   logs: "Logs",
@@ -1234,6 +1240,12 @@ export default function DashboardConversionesPage() {
     void refreshTable(nextRange);
   }, [refreshTable]);
 
+  const fetchPerformanceConversions = useCallback(async (range: FetchDateRange) => {
+    const currentUserId = userIdRef.current;
+    if (!currentUserId) return [];
+    return fetchConversionsUnfiltered(currentUserId, range);
+  }, []);
+
   const clearGlobalDisplay = useCallback(async () => {
     if (!userId) return;
     if (activeConversions.length === 0 && activeLogs.length === 0) return;
@@ -1458,7 +1470,7 @@ export default function DashboardConversionesPage() {
                 }`}
               >
                 <span className="inline-flex items-center gap-1.5">
-                  {t === "funnel" ? <FunnelTabIcon /> : t === "seguimiento" ? <TrackingTabIcon /> : t === "tabla" ? <TableTabIcon /> : t === "estadisticas" ? <StatsTabIcon /> : null}
+                  {t === "funnel" ? <FunnelTabIcon /> : t === "seguimiento" ? <TrackingTabIcon /> : t === "tabla" ? <TableTabIcon /> : t === "estadisticas" || t === "desempeno" ? <StatsTabIcon /> : null}
                   {TAB_LABELS[t]}
                 </span>
                 <span
@@ -1919,6 +1931,16 @@ export default function DashboardConversionesPage() {
             />
           )}
         </section>
+      )}
+
+      {/* TAB: DESEMPENO */}
+      {tab === "desempeno" && (
+        <GerenciasPerformancePanel
+          fetchConversionsForMonth={fetchPerformanceConversions}
+          gerenciaByPhone={gerenciaByPhone}
+          premiumThreshold={config?.funnel_premium_threshold ?? 50000}
+          storageKey={`dashboard:${userId ?? "client"}`}
+        />
       )}
 
       {/* TAB: INBOX */}

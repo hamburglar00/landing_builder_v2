@@ -177,7 +177,7 @@ export interface FunnelContact {
   current_purchase_type?: "first" | "repeat" | null;
 }
 
-type FetchDateRange = {
+export type FetchDateRange = {
   start?: Date | string | null;
   end?: Date | string | null;
 };
@@ -403,6 +403,70 @@ export async function fetchConversionsForAdmin(
 
   if (error) throw error;
   return (data ?? []) as unknown as ConversionRow[];
+}
+
+/** Fetch conversions sin excluir hidden_conversions. Se usa para reportes historicos/operativos. */
+export async function fetchConversionsUnfiltered(
+  userId: string,
+  range?: FetchDateRange,
+): Promise<ConversionRow[]> {
+  const pageSize = 1000;
+  const rows: ConversionRow[] = [];
+  let offset = 0;
+
+  while (true) {
+    let query = supabase
+      .from("conversions")
+      .select(CONVERSIONS_SELECT)
+      .eq("user_id", userId)
+      .order("created_at", { ascending: false });
+    const startIso = toIsoIfValid(range?.start);
+    const endIso = toIsoIfValid(range?.end);
+    if (startIso) query = query.gte("created_at", startIso);
+    if (endIso) query = query.lte("created_at", endIso);
+
+    const { data, error } = await query.range(offset, offset + pageSize - 1);
+    if (error) throw error;
+
+    const chunk = (data ?? []) as unknown as ConversionRow[];
+    rows.push(...chunk);
+
+    if (chunk.length < pageSize) break;
+    offset += pageSize;
+  }
+
+  return rows;
+}
+
+/** Fetch admin sin excluir hidden_conversions. */
+export async function fetchConversionsForAdminUnfiltered(
+  range?: FetchDateRange,
+): Promise<ConversionRow[]> {
+  const pageSize = 1000;
+  const rows: ConversionRow[] = [];
+  let offset = 0;
+
+  while (true) {
+    let query = supabase
+      .from("conversions")
+      .select(CONVERSIONS_SELECT)
+      .order("created_at", { ascending: false });
+    const startIso = toIsoIfValid(range?.start);
+    const endIso = toIsoIfValid(range?.end);
+    if (startIso) query = query.gte("created_at", startIso);
+    if (endIso) query = query.lte("created_at", endIso);
+
+    const { data, error } = await query.range(offset, offset + pageSize - 1);
+    if (error) throw error;
+
+    const chunk = (data ?? []) as unknown as ConversionRow[];
+    rows.push(...chunk);
+
+    if (chunk.length < pageSize) break;
+    offset += pageSize;
+  }
+
+  return rows;
 }
 
 /** Fetch conversions excluyendo los ocultos por hiddenBy. */

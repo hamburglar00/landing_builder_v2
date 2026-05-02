@@ -10,12 +10,14 @@ import {
   upsertPixelConfig,
   deletePixelConfig,
   fetchConversionsForAdminFiltered,
+  fetchConversionsForAdminUnfiltered,
   fetchConversionLogsForAdminFiltered,
   fetchFunnelContactsForAdminFiltered,
   updateConversionEmail,
   hideConversions,
   hideContacts,
   hideConversionLogs,
+  type FetchDateRange,
   type ConversionsConfig,
   type PixelConfig,
   type ConversionRow,
@@ -26,13 +28,14 @@ import { generateDemoConversions, generateDemoFunnelContacts } from "@/lib/demoD
 import FunnelBoard from "@/components/conversiones/FunnelBoard";
 import TrackingBoard from "@/components/conversiones/TrackingBoard";
 import StatsPanel from "@/components/conversiones/StatsPanel";
+import GerenciasPerformancePanel from "@/components/conversiones/GerenciasPerformancePanel";
 import DateRangeFilter, {
   type DateRange,
   filterByDateRange,
   filterFunnelByDateRange,
 } from "@/components/conversiones/DateRangeFilter";
 
-type Tab = "configuracion" | "tabla" | "funnel" | "seguimiento" | "estadisticas" | "logs";
+type Tab = "configuracion" | "tabla" | "funnel" | "seguimiento" | "estadisticas" | "desempeno" | "logs";
 type PixelEditDraft = {
   id: string;
   pixel_id: string;
@@ -45,13 +48,14 @@ type PixelEditDraft = {
   is_default: boolean;
 };
 
-const TAB_ORDER: Tab[] = ["funnel", "tabla", "estadisticas", "configuracion", "logs"];
+const TAB_ORDER: Tab[] = ["funnel", "tabla", "estadisticas", "desempeno", "configuracion", "logs"];
 
 const TAB_LABELS: Record<Tab, string> = {
   funnel: "Funnel",
   seguimiento: "Seguimiento",
   tabla: "Tabla",
   estadisticas: "Estadisticas",
+  desempeno: "Desempeño",
   configuracion: "Configuracion",
   logs: "Logs",
 };
@@ -1175,6 +1179,10 @@ export default function AdminConversionesPage() {
     void refreshTable(nextRange);
   }, [refreshTable]);
 
+  const fetchPerformanceConversions = useCallback(async (range: FetchDateRange) => {
+    return fetchConversionsForAdminUnfiltered(range);
+  }, []);
+
   const clearTableDisplay = useCallback(async () => {
     if (!userId || activeConversions.length === 0 || demoMode) return;
     const ok = window.confirm(CLEAR_VIEW_CONFIRM_MESSAGE);
@@ -1450,7 +1458,7 @@ export default function AdminConversionesPage() {
                 }`}
               >
                 <span className="inline-flex items-center gap-1.5">
-                  {t === "funnel" ? <FunnelTabIcon /> : t === "seguimiento" ? <TrackingTabIcon /> : t === "tabla" ? <TableTabIcon /> : t === "estadisticas" ? <StatsTabIcon /> : null}
+                  {t === "funnel" ? <FunnelTabIcon /> : t === "seguimiento" ? <TrackingTabIcon /> : t === "tabla" ? <TableTabIcon /> : t === "estadisticas" || t === "desempeno" ? <StatsTabIcon /> : null}
                   {TAB_LABELS[t]}
                 </span>
                 <span
@@ -1963,6 +1971,16 @@ export default function AdminConversionesPage() {
             />
           )}
         </section>
+      )}
+
+      {/* TAB: DESEMPENO */}
+      {tab === "desempeno" && (
+        <GerenciasPerformancePanel
+          fetchConversionsForMonth={fetchPerformanceConversions}
+          gerenciaByPhone={gerenciaByPhone}
+          premiumThreshold={config?.funnel_premium_threshold ?? 50000}
+          storageKey="admin"
+        />
       )}
 
       {/* TAB: LOGS */}

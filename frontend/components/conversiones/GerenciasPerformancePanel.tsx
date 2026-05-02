@@ -1,0 +1,312 @@
+"use client";
+
+import { useCallback, useEffect, useMemo, useState } from "react";
+import {
+  buildFunnelContactsFromConversions,
+  type ConversionRow,
+  type FetchDateRange,
+} from "@/lib/conversionsDb";
+import { computeCoreStats } from "@/lib/conversionStats";
+
+type Props = {
+  fetchConversionsForMonth: (range: FetchDateRange) => Promise<ConversionRow[]>;
+  gerenciaByPhone: Record<string, string[]>;
+  premiumThreshold: number;
+  storageKey: string;
+};
+
+type Row = {
+  label: string;
+  mensajes: number;
+  cargas: number;
+  pctCarga: number;
+  pctRecarga: number;
+};
+
+const normalizePhone = (value: string | null | undefined) => String(value ?? "").replace(/\D/g, "");
+
+function currentMonthValue(): string {
+  const now = new Date();
+  return `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, "0")}`;
+}
+
+function monthRange(monthValue: string): FetchDateRange {
+  const [yearRaw, monthRaw] = monthValue.split("-");
+  const year = Number(yearRaw);
+  const monthIndex = Number(monthRaw) - 1;
+  if (!Number.isFinite(year) || !Number.isFinite(monthIndex)) {
+    return monthRange(currentMonthValue());
+  }
+  return {
+    start: new Date(year, monthIndex, 1, 0, 0, 0, 0),
+    end: new Date(year, monthIndex + 1, 0, 23, 59, 59, 999),
+  };
+}
+
+function monthLabel(monthValue: string): string {
+  const [yearRaw, monthRaw] = monthValue.split("-");
+  const date = new Date(Number(yearRaw), Number(monthRaw) - 1, 1);
+  if (!Number.isFinite(date.getTime())) return monthValue;
+  return new Intl.DateTimeFormat("es-AR", { month: "long", year: "numeric" }).format(date);
+}
+
+function parseAmount(value: string): number {
+  const normalized = value.replace(/\./g, "").replace(",", ".");
+  const parsed = Number.parseFloat(normalized);
+  return Number.isFinite(parsed) && parsed > 0 ? parsed : 0;
+}
+
+function formatNumber(value: number): string {
+  return new Intl.NumberFormat("es-AR", { maximumFractionDigits: 0 }).format(value || 0);
+}
+
+function formatPercent(value: number): string {
+  return `${new Intl.NumberFormat("es-AR", { maximumFractionDigits: 1 }).format(value || 0)}%`;
+}
+
+function formatMoney(value: number): string {
+  return new Intl.NumberFormat("es-AR", {
+    style: "currency",
+    currency: "ARS",
+    maximumFractionDigits: 0,
+  }).format(value || 0);
+}
+
+export default function GerenciasPerformancePanel({
+  fetchConversionsForMonth,
+  gerenciaByPhone,
+  premiumThreshold,
+  storageKey,
+}: Props) {
+  const [month, setMonth] = useState(currentMonthValue());
+  const [rows, setRows] = useState<ConversionRow[]>([]);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const [globalCost, setGlobalCost] = useState("");
+  const [costByGerencia, setCostByGerencia] = useState<Record<string, string>>({});
+  const [costStorageReadyKey, setCostStorageReadyKey] = useState("");
+
+  const costStorageKey = `gerencias-performance-costs:v1:${storageKey}`;
+
+  useEffect(() => {
+    try {
+      const raw = window.localStorage.getItem(costStorageKey);
+      setCostByGerencia(raw ? JSON.parse(raw) as Record<string, string> : {});
+    } catch {
+      setCostByGerencia({});
+    } finally {
+      setCostStorageReadyKey(costStorageKey);
+    }
+  }, [costStorageKey]);
+
+  useEffect(() => {
+    if (costStorageReadyKey !== costStorageKey) return;
+    try {
+      window.localStorage.setItem(costStorageKey, JSON.stringify(costByGerencia));
+    } catch {
+      // LocalStorage puede no estar disponible en modo privado; el calculo sigue funcionando en memoria.
+    }
+  }, [costByGerencia, costStorageKey, costStorageReadyKey]);
+
+  const loadMonth = useCallback(async () => {
+    setLoading(true);
+    setError(null);
+    try {
+      const data = await fetchConversionsForMonth(monthRange(month));
+      setRows(data);
+    } catch (e) {
+      console.error(e);
+      setError(e instanceof Error ? e.message : "No se pudo cargar el desempeño por gerencias.");
+    } finally {
+      setLoading(false);
+    }
+  }, [fetchConversionsForMonth, month]);
+
+  useEffect(() => {
+    void loadMonth();
+  }, [loadMonth]);
+
+  const performanceRows = useMemo<Row[]>(() => {
+    const allLabels = new Set<string>();
+    for (const labels of Object.values(gerenciaByPhone)) {
+      for (const label of labels) allLabels.add(label);
+    }
+
+    const rowsByGerencia = new Map<string, ConversionRow[]>();
+    const cleanRows = rows.filter((row) => !String(row.test_event_code ?? "").trim());
+    for (const row of cleanRows) {
+      const assignedPhone = normalizePhone(row.telefono_asignado);
+      if (!assignedPhone) continue;
+      const labels = gerenciaByPhone[assignedPhone] ?? [];
+      for (const label of labels) {
+        allLabels.add(label);
+        const bucket = rowsByGerencia.get(label) ?? [];
+        bucket.push(row);
+        rowsByGerencia.set(label, bucket);
+      }
+    }
+
+    return Array.from(allLabels)
+      .sort((a, b) => a.localeCompare(b, "es"))
+      .map((label) => {
+        const gerenciaRows = rowsByGerencia.get(label) ?? [];
+        const funnel = buildFunnelContactsFromConversions(gerenciaRows);
+        const core = computeCoreStats(gerenciaRows, funnel, gerenciaRows, premiumThreshold);
+        const mensajes = core.uniqueLeadsLinkedToContact;
+        const cargas = core.totalPurchases;
+        return {
+          label,
+          mensajes,
+          cargas,
+          pctCarga: mensajes > 0 ? (core.firstLoadPurchasersLinkedToLead / mensajes) * 100 : 0,
+          pctRecarga: core.firstLoadPurchasersLinkedToLead > 0
+            ? (core.repeatFromFirstInRange / core.firstLoadPurchasersLinkedToLead) * 100
+            : 0,
+        };
+      });
+  }, [gerenciaByPhone, premiumThreshold, rows]);
+
+  const totals = useMemo(() => {
+    return performanceRows.reduce(
+      (acc, row) => {
+        const cost = parseAmount(costByGerencia[`${month}::${row.label}`] ?? "");
+        return {
+          mensajes: acc.mensajes + row.mensajes,
+          cargas: acc.cargas + row.cargas,
+          gasto: acc.gasto + row.mensajes * cost,
+        };
+      },
+      { mensajes: 0, cargas: 0, gasto: 0 },
+    );
+  }, [costByGerencia, month, performanceRows]);
+
+  const applyGlobalCost = () => {
+    setCostByGerencia((prev) => {
+      const next = { ...prev };
+      for (const row of performanceRows) {
+        next[`${month}::${row.label}`] = globalCost;
+      }
+      return next;
+    });
+  };
+
+  return (
+    <section className="rounded-xl border border-zinc-800 bg-zinc-900/50 p-4">
+      <div className="mb-4 flex flex-wrap items-end justify-between gap-3">
+        <div>
+          <h3 className="text-sm font-semibold text-zinc-100">Desempeño por Gerencias</h3>
+          <p className="mt-1 text-xs text-zinc-500">
+            Comparativo mensual por gerencia usando las mismas métricas de Estadísticas e incluyendo registros ocultos por Limpiar vista.
+          </p>
+        </div>
+        <div className="flex flex-wrap items-end gap-2">
+          <label className="block">
+            <span className="mb-1 block text-[11px] text-zinc-500">Mes</span>
+            <input
+              type="month"
+              value={month}
+              onChange={(e) => setMonth(e.target.value || currentMonthValue())}
+              className="h-8 rounded-lg border border-zinc-700 bg-zinc-950 px-2 text-xs text-zinc-100"
+            />
+          </label>
+          <label className="block">
+            <span className="mb-1 block text-[11px] text-zinc-500">Costo por mensaje general</span>
+            <input
+              value={globalCost}
+              onChange={(e) => setGlobalCost(e.target.value)}
+              inputMode="decimal"
+              placeholder="0"
+              className="h-8 w-36 rounded-lg border border-zinc-700 bg-zinc-950 px-2 text-xs text-zinc-100"
+            />
+          </label>
+          <button
+            type="button"
+            onClick={applyGlobalCost}
+            className="h-8 rounded-lg border border-zinc-700 bg-zinc-800 px-3 text-xs font-medium text-zinc-200 transition hover:bg-zinc-700"
+          >
+            Aplicar a todas
+          </button>
+          <button
+            type="button"
+            onClick={() => void loadMonth()}
+            disabled={loading}
+            className="h-8 rounded-lg border border-zinc-700 bg-zinc-800 px-3 text-xs font-medium text-zinc-200 transition hover:bg-zinc-700 disabled:opacity-60"
+          >
+            {loading ? "Actualizando..." : "Actualizar"}
+          </button>
+        </div>
+      </div>
+
+      <div className="mb-3 rounded-lg border border-zinc-800 bg-zinc-950/60 px-3 py-2 text-xs text-zinc-400">
+        Mes seleccionado: <span className="font-medium text-zinc-200">{monthLabel(month)}</span>
+      </div>
+
+      {error ? (
+        <p className="rounded-lg border border-red-900/50 bg-red-950/30 px-3 py-2 text-xs text-red-300">{error}</p>
+      ) : (
+        <div className="overflow-x-auto rounded-lg border border-zinc-700">
+          <table className="w-full min-w-[920px] text-left text-[11px]">
+            <thead className="bg-zinc-800/95">
+              <tr>
+                <th className="px-3 py-2 font-medium text-zinc-300">Nombre Gerencia (ID)</th>
+                <th className="px-3 py-2 text-right font-medium text-zinc-300">Mensajes recibidos</th>
+                <th className="px-3 py-2 text-right font-medium text-zinc-300">Cargas Totales</th>
+                <th className="px-3 py-2 text-right font-medium text-zinc-300">Porcentaje de carga</th>
+                <th className="px-3 py-2 text-right font-medium text-zinc-300">Porcentaje de recarga</th>
+                <th className="px-3 py-2 text-right font-medium text-zinc-300">Costo por msj</th>
+                <th className="px-3 py-2 text-right font-medium text-zinc-300">Gasto</th>
+              </tr>
+            </thead>
+            <tbody className="divide-y divide-zinc-800">
+              {performanceRows.length === 0 ? (
+                <tr>
+                  <td colSpan={7} className="px-3 py-8 text-center text-zinc-500">
+                    No hay gerencias configuradas para comparar.
+                  </td>
+                </tr>
+              ) : performanceRows.map((row) => {
+                const costKey = `${month}::${row.label}`;
+                const costRaw = costByGerencia[costKey] ?? "";
+                const cost = parseAmount(costRaw);
+                const gasto = row.mensajes * cost;
+                return (
+                  <tr key={row.label} className="bg-zinc-950/40">
+                    <td className="px-3 py-2 font-medium text-zinc-100">{row.label}</td>
+                    <td className="px-3 py-2 text-right text-amber-300">{formatNumber(row.mensajes)}</td>
+                    <td className="px-3 py-2 text-right text-sky-300">{formatNumber(row.cargas)}</td>
+                    <td className="px-3 py-2 text-right text-zinc-200">{formatPercent(row.pctCarga)}</td>
+                    <td className="px-3 py-2 text-right text-zinc-200">{formatPercent(row.pctRecarga)}</td>
+                    <td className="px-3 py-2 text-right">
+                      <input
+                        value={costRaw}
+                        onChange={(e) => {
+                          const value = e.target.value;
+                          setCostByGerencia((prev) => ({ ...prev, [costKey]: value }));
+                        }}
+                        inputMode="decimal"
+                        placeholder="0"
+                        className="h-7 w-24 rounded border border-zinc-700 bg-zinc-900 px-2 text-right text-xs text-zinc-100"
+                      />
+                    </td>
+                    <td className="px-3 py-2 text-right font-semibold text-emerald-300">{formatMoney(gasto)}</td>
+                  </tr>
+                );
+              })}
+            </tbody>
+            <tfoot className="border-t border-zinc-700 bg-zinc-900/80">
+              <tr>
+                <td className="px-3 py-2 font-semibold text-zinc-100">Totales</td>
+                <td className="px-3 py-2 text-right font-semibold text-amber-300">{formatNumber(totals.mensajes)}</td>
+                <td className="px-3 py-2 text-right font-semibold text-sky-300">{formatNumber(totals.cargas)}</td>
+                <td className="px-3 py-2 text-right text-zinc-500">-</td>
+                <td className="px-3 py-2 text-right text-zinc-500">-</td>
+                <td className="px-3 py-2 text-right text-zinc-500">-</td>
+                <td className="px-3 py-2 text-right font-semibold text-emerald-300">{formatMoney(totals.gasto)}</td>
+              </tr>
+            </tfoot>
+          </table>
+        </div>
+      )}
+    </section>
+  );
+}
