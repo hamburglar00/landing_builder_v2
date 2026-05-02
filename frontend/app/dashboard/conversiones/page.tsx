@@ -244,6 +244,12 @@ function todayRange(): DateRange {
   };
 }
 
+function isSameDateRange(a: DateRange | null, b: DateRange | null): boolean {
+  if (a === null && b === null) return true;
+  if (a === null || b === null) return false;
+  return a.start.getTime() === b.start.getTime() && a.end.getTime() === b.end.getTime();
+}
+
 function sexLabel(value: string): string {
   if (value === "male") return "Masculino";
   if (value === "female") return "Femenino";
@@ -483,7 +489,6 @@ export default function DashboardConversionesPage() {
   const [hidingFunnel, setHidingFunnel] = useState(false);
   const [hidingStats, setHidingStats] = useState(false);
   const [hidingLogs, setHidingLogs] = useState(false);
-  const hasSyncedDateRangeOnceRef = useRef(false);
   const initialDateRangeRef = useRef<DateRange | null>(dateRange);
   const dateRangeRef = useRef<DateRange | null>(dateRange);
   const dataRequestSeqRef = useRef(0);
@@ -1240,13 +1245,11 @@ export default function DashboardConversionesPage() {
   }, []);
 
   const handleDateRangeChange = useCallback((nextRange: DateRange | null) => {
+    const previousRange = dateRangeRef.current;
     initialDateRangeRef.current = nextRange;
     dateRangeRef.current = nextRange;
     setDateRange(nextRange);
-    if (!hasSyncedDateRangeOnceRef.current) {
-      hasSyncedDateRangeOnceRef.current = true;
-      return;
-    }
+    if (isSameDateRange(previousRange, nextRange)) return;
     void refreshTable(nextRange);
   }, [refreshTable]);
 
@@ -1896,7 +1899,16 @@ export default function DashboardConversionesPage() {
       {tab === "funnel" && (
         <section className="rounded-xl border border-zinc-800 bg-zinc-900/50 p-4">
           {activeFunnelFiltered.length === 0 ? (
-            <p className="py-12 text-center text-sm text-zinc-500">An no hay contactos en el funnel.</p>
+            refreshingTable ? (
+              <div className="flex min-h-[120px] flex-col items-center justify-center gap-3 text-sm text-zinc-500">
+                <div className="h-1 w-40 overflow-hidden rounded-full bg-zinc-800">
+                  <div className="h-full w-1/2 animate-pulse rounded-full bg-sky-400" />
+                </div>
+                <p>Actualizando funnel...</p>
+              </div>
+            ) : (
+              <p className="py-12 text-center text-sm text-zinc-500">Aún no hay contactos en el funnel.</p>
+            )
           ) : (
             <FunnelBoard
               contacts={activeFunnelFiltered}
