@@ -429,5 +429,8 @@ verify_jwt = false
 [functions.promotion-draw]
 verify_jwt = false
 
+[functions.promotion-draw-due]
+verify_jwt = false
+
 [functions.telegram-webhook]
 verify_jwt = false

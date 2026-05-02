@@ -126,7 +126,7 @@ Deno.serve(async (req) => {
     const winner = pool[Math.floor(Math.random() * pool.length)];
     const nowIso = new Date().toISOString();
 
-    const { error: updateError } = await db
+    const { data: updatedWinner, error: updateError } = await db
       .from("promotions")
       .update({
         winner_participant_id: winner.id,
@@ -134,9 +134,25 @@ Deno.serve(async (req) => {
         winner_selected_at: nowIso,
       })
       .eq("id", promotion.id)
-      .is("winner_participant_id", null);
+      .is("winner_participant_id", null)
+      .select("id")
+      .maybeSingle();
 
     if (updateError) throw updateError;
+    if (!updatedWinner) {
+      const { data: fresh } = await db
+        .from("promotions")
+        .select("winner_username, prize, winner_selected_at")
+        .eq("id", promotion.id)
+        .maybeSingle<Pick<Promotion, "winner_username" | "prize" | "winner_selected_at">>();
+      return jsonResponse({
+        ok: true,
+        already_drawn: true,
+        winner_username: fresh?.winner_username ?? "",
+        prize: fresh?.prize ?? promotion.prize,
+        winner_selected_at: fresh?.winner_selected_at ?? null,
+      });
+    }
 
     let notified = 0;
     let notificationSkipped = "";
