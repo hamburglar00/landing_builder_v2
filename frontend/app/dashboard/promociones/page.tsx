@@ -379,7 +379,7 @@ export default function DashboardPromocionesPage() {
               </span>
               <input
                 value={form.slug}
-                onChange={(e) => setForm((prev) => ({ ...prev, slug: slugifyPromotion(e.target.value) }))}
+                onChange={(e) => setForm((prev) => ({ ...prev, slug: e.target.value }))}
                 className="min-w-0 flex-1 rounded-lg border border-zinc-800 bg-zinc-950 px-3 py-2 text-sm text-zinc-100 outline-none focus:border-cyan-700"
                 placeholder="sorteo-mundial-vip"
               />
