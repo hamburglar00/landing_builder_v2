@@ -26,6 +26,8 @@ type Row = {
 type SortKey = "label" | "mensajes" | "cargas" | "pctCarga" | "pctRecarga" | "cost" | "gasto";
 type SortDirection = "asc" | "desc";
 
+const FIRST_DATA_MONTH = "2026-01";
+
 const normalizePhone = (value: string | null | undefined) => String(value ?? "").replace(/\D/g, "");
 
 function currentMonthValue(): string {
@@ -53,9 +55,17 @@ function monthLabel(monthValue: string): string {
   return new Intl.DateTimeFormat("es-AR", { month: "long", year: "numeric" }).format(date);
 }
 
-function monthOptions(count = 18): Array<{ value: string; label: string }> {
+function monthOptions(firstMonthValue = FIRST_DATA_MONTH): Array<{ value: string; label: string }> {
   const now = new Date();
-  return Array.from({ length: count }, (_, index) => {
+  const [firstYearRaw, firstMonthRaw] = firstMonthValue.split("-");
+  const firstYear = Number(firstYearRaw);
+  const firstMonthIndex = Number(firstMonthRaw) - 1;
+  const firstDate = new Date(firstYear, firstMonthIndex, 1);
+  const monthCount = Number.isFinite(firstDate.getTime())
+    ? ((now.getFullYear() - firstDate.getFullYear()) * 12) + now.getMonth() - firstDate.getMonth() + 1
+    : 1;
+
+  return Array.from({ length: Math.max(monthCount, 1) }, (_, index) => {
     const date = new Date(now.getFullYear(), now.getMonth() - index, 1);
     const value = `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, "0")}`;
     return { value, label: monthLabel(value) };
