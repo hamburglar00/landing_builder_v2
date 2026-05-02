@@ -682,7 +682,7 @@ export function TelefonosPageContent({
                     Contador: {totalUsage}
                   </div>
                   <div className="text-xs text-zinc-500 md:text-right">
-                    Mensajes recibidos: {totalMessages}
+                    Mensajes históricos recibidos: {totalMessages}
                   </div>
                   <svg
                     className={`h-4 w-4 shrink-0 text-zinc-400 transition-transform justify-self-end ml-auto ${isOpen ? "rotate-180" : ""}`}
