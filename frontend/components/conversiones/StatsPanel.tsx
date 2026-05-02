@@ -1,4 +1,4 @@
-﻿"use client";
+"use client";
 
 import { useEffect, useMemo, useState } from "react";
 import {
@@ -203,18 +203,18 @@ export default function StatsPanel({
 }) {
   const [adSpend, setAdSpend] = useState<string>("");
   const [smaMenuOpen, setSmaMenuOpen] = useState(false);
-  const [smaEnabled, setSmaEnabled] = useState<{ 1: boolean; 3: boolean; 5: boolean }>({
-    1: false,
-    3: true,
-    5: false,
+  const [smaEnabled, setSmaEnabled] = useState<{ 1: boolean }>({
+    1: true,
   });
   const [dailyLoadsMenuOpen, setDailyLoadsMenuOpen] = useState(false);
-  const [dailyLoadsEnabled, setDailyLoadsEnabled] = useState<{ first: boolean; total: boolean }>({
+  const [dailyLoadsEnabled, setDailyLoadsEnabled] = useState<{ leads: boolean; first: boolean; total: boolean }>({
+    leads: true,
     first: false,
     total: true,
   });
   const [hourlyLoadsMenuOpen, setHourlyLoadsMenuOpen] = useState(false);
-  const [hourlyLoadsEnabled, setHourlyLoadsEnabled] = useState<{ first: boolean; total: boolean }>({
+  const [hourlyLoadsEnabled, setHourlyLoadsEnabled] = useState<{ leads: boolean; first: boolean; total: boolean }>({
+    leads: true,
     first: false,
     total: true,
   });
@@ -965,7 +965,7 @@ export default function StatsPanel({
         {/* Cargas por hora */}
         <div className="order-3 rounded-xl border border-zinc-800 bg-zinc-900/50 p-4">
           <div className="mb-4 flex items-center justify-between gap-2">
-            <h4 className="text-xs font-semibold text-zinc-200">Distribución del total de cargas por hora del día</h4>
+            <h4 className="text-xs font-semibold text-zinc-200">Cargas Totales [distribución por hora]</h4>
             <div className="relative">
               <button
                 type="button"
@@ -979,22 +979,16 @@ export default function StatsPanel({
               </button>
               {smaMenuOpen && (
                 <div className="absolute right-0 top-8 z-20 w-36 rounded-lg border border-zinc-700 bg-zinc-900/95 p-2 shadow-xl">
-                  {[1, 3, 5].map((w) => {
-                    const key = w as 1 | 3 | 5;
-                    const color = key === 1 ? "bg-sky-400" : key === 3 ? "bg-fuchsia-400" : "bg-amber-400";
-                    return (
-                      <label key={w} className="flex cursor-pointer items-center gap-2 rounded px-1.5 py-1 text-[11px] text-zinc-300 hover:bg-zinc-800/80">
-                        <input
-                          type="checkbox"
-                          checked={smaEnabled[key]}
-                          onChange={(e) => setSmaEnabled((prev) => ({ ...prev, [key]: e.target.checked }))}
-                          className="h-3.5 w-3.5 rounded border-zinc-600 bg-zinc-900 accent-emerald-500"
-                        />
-                        <span className={`inline-block h-2 w-2 rounded-full ${color}`} />
-                        {`SMA ${w}`}
-                      </label>
-                    );
-                  })}
+                  <label className="flex cursor-pointer items-center gap-2 rounded px-1.5 py-1 text-[11px] text-zinc-300 hover:bg-zinc-800/80">
+                    <input
+                      type="checkbox"
+                      checked={smaEnabled[1]}
+                      onChange={(e) => setSmaEnabled({ 1: e.target.checked })}
+                      className="h-3.5 w-3.5 rounded border-zinc-600 bg-zinc-900 accent-emerald-500"
+                    />
+                    <span className="inline-block h-2 w-2 rounded-full bg-amber-400" />
+                    SMA 1
+                  </label>
                 </div>
               )}
             </div>
@@ -1022,9 +1016,7 @@ export default function StatsPanel({
                 labelFormatter={(v) => `${v}:00 hs`}
               />
               <Bar dataKey="cargas" name="Cargas" fill="#34d399" radius={[3, 3, 0, 0]} maxBarSize={20} />
-              {smaEnabled[1] && <Line type="monotone" dataKey="sma1" name="SMA 1" stroke="#38bdf8" strokeWidth={2} dot={false} />}
-              {smaEnabled[3] && <Line type="monotone" dataKey="sma3" name="SMA 3" stroke="#e879f9" strokeWidth={2} dot={false} />}
-              {smaEnabled[5] && <Line type="monotone" dataKey="sma5" name="SMA 5" stroke="#f59e0b" strokeWidth={2} dot={false} />}
+              {smaEnabled[1] && <Line type="monotone" dataKey="sma1" name="SMA 1" stroke="#f59e0b" strokeWidth={2} dot={false} />}
               <Legend wrapperStyle={{ fontSize: 11 }} />
             </ComposedChart>
           </ResponsiveContainer>
@@ -1034,7 +1026,7 @@ export default function StatsPanel({
         <div className="order-2 rounded-xl border border-zinc-800 bg-zinc-900/50 p-4">
           <div className="mb-4 flex items-center justify-between gap-2">
             <h4 className="text-xs font-semibold text-zinc-200">
-              {isTodayRange ? "Mensajes recibidos y total de cargas por hora" : "Mensajes recibidos y total de cargas por día"}
+              {isTodayRange ? "Mensajes recibidos vs Cargas [distribución por hora]" : "Mensajes recibidos vs Cargas [distribución por día]"}
             </h4>
             <div className="relative">
               <button
@@ -1042,7 +1034,7 @@ export default function StatsPanel({
                 onClick={() => setDailyLoadsMenuOpen((v) => !v)}
                 className="inline-flex h-7 items-center gap-1.5 rounded-lg border border-zinc-700 bg-zinc-900 px-2 text-[11px] text-zinc-300 hover:bg-zinc-800"
               >
-                Cargas
+                Curvas
                 <svg className={`h-3 w-3 transition-transform ${dailyLoadsMenuOpen ? "rotate-180" : ""}`} viewBox="0 0 20 20" fill="currentColor">
                   <path fillRule="evenodd" d="M5.23 7.21a.75.75 0 011.06.02L10 11.168l3.71-3.938a.75.75 0 111.08 1.04l-4.25 4.5a.75.75 0 01-1.08 0l-4.25-4.5a.75.75 0 01.02-1.06z" clipRule="evenodd" />
                 </svg>
@@ -1052,11 +1044,20 @@ export default function StatsPanel({
                   <label className="flex cursor-pointer items-center gap-2 rounded px-1.5 py-1 text-[11px] text-zinc-300 hover:bg-zinc-800/80">
                     <input
                       type="checkbox"
+                      checked={dailyLoadsEnabled.leads}
+                      onChange={(e) => setDailyLoadsEnabled((prev) => ({ ...prev, leads: e.target.checked }))}
+                      className="h-3.5 w-3.5 rounded border-zinc-600 bg-zinc-900 accent-emerald-500"
+                    />
+                    Mensajes recibidos
+                  </label>
+                  <label className="flex cursor-pointer items-center gap-2 rounded px-1.5 py-1 text-[11px] text-zinc-300 hover:bg-zinc-800/80">
+                    <input
+                      type="checkbox"
                       checked={dailyLoadsEnabled.first}
                       onChange={(e) => setDailyLoadsEnabled((prev) => ({ ...prev, first: e.target.checked }))}
                       className="h-3.5 w-3.5 rounded border-zinc-600 bg-zinc-900 accent-emerald-500"
                     />
-                    Primeras cargas (first)
+                    Primeras cargas
                   </label>
                   <label className="flex cursor-pointer items-center gap-2 rounded px-1.5 py-1 text-[11px] text-zinc-300 hover:bg-zinc-800/80">
                     <input
@@ -1098,12 +1099,14 @@ export default function StatsPanel({
               <Legend
                 wrapperStyle={{ fontSize: 10, color: "#a1a1aa" }}
               />
-              <Line type="monotone" dataKey="leads" name="Mensajes recibidos" stroke="#fbbf24" strokeWidth={2} dot={{ r: 2, fill: "#fbbf24" }} activeDot={{ r: 4 }} />
+              {dailyLoadsEnabled.leads && (
+                <Line type="monotone" dataKey="leads" name="Mensajes recibidos" stroke="#fbbf24" strokeWidth={2} dot={{ r: 2, fill: "#fbbf24" }} activeDot={{ r: 4 }} />
+              )}
               {dailyLoadsEnabled.total && (
-                <Line type="monotone" dataKey="cargas" name="Cargas totales" stroke="#34d399" strokeWidth={2} dot={{ r: 2, fill: "#34d399" }} activeDot={{ r: 4 }} />
+                <Line type="monotone" dataKey="cargas" name="Total de cargas" stroke="#34d399" strokeWidth={2} dot={{ r: 2, fill: "#34d399" }} activeDot={{ r: 4 }} />
               )}
               {dailyLoadsEnabled.first && (
-                <Line type="monotone" dataKey="cargas_first" name="Primeras cargas (first)" stroke="#38bdf8" strokeWidth={2} dot={{ r: 2, fill: "#38bdf8" }} activeDot={{ r: 4 }} />
+                <Line type="monotone" dataKey="cargas_first" name="Primeras cargas" stroke="#38bdf8" strokeWidth={2} dot={{ r: 2, fill: "#38bdf8" }} activeDot={{ r: 4 }} />
               )}
             </LineChart>
           </ResponsiveContainer>
@@ -1112,14 +1115,14 @@ export default function StatsPanel({
         {/* Mensajes vs Cargas por hora */}
         <div className="order-1 rounded-xl border border-zinc-800 bg-zinc-900/50 p-4">
           <div className="mb-4 flex items-center justify-between gap-2">
-            <h4 className="text-xs font-semibold text-zinc-200">Distribución de mensajes recibidos y total de cargas por hora del día</h4>
+            <h4 className="text-xs font-semibold text-zinc-200">Mensajes recibidos vs Cargas [distribución por hora]</h4>
             <div className="relative">
               <button
                 type="button"
                 onClick={() => setHourlyLoadsMenuOpen((v) => !v)}
                 className="inline-flex h-7 items-center gap-1.5 rounded-lg border border-zinc-700 bg-zinc-900 px-2 text-[11px] text-zinc-300 hover:bg-zinc-800"
               >
-                Cargas
+                Curvas
                 <svg className={`h-3 w-3 transition-transform ${hourlyLoadsMenuOpen ? "rotate-180" : ""}`} viewBox="0 0 20 20" fill="currentColor">
                   <path fillRule="evenodd" d="M5.23 7.21a.75.75 0 011.06.02L10 11.168l3.71-3.938a.75.75 0 111.08 1.04l-4.25 4.5a.75.75 0 01-1.08 0l-4.25-4.5a.75.75 0 01.02-1.06z" clipRule="evenodd" />
                 </svg>
@@ -1129,11 +1132,20 @@ export default function StatsPanel({
                   <label className="flex cursor-pointer items-center gap-2 rounded px-1.5 py-1 text-[11px] text-zinc-300 hover:bg-zinc-800/80">
                     <input
                       type="checkbox"
+                      checked={hourlyLoadsEnabled.leads}
+                      onChange={(e) => setHourlyLoadsEnabled((prev) => ({ ...prev, leads: e.target.checked }))}
+                      className="h-3.5 w-3.5 rounded border-zinc-600 bg-zinc-900 accent-emerald-500"
+                    />
+                    Mensajes recibidos
+                  </label>
+                  <label className="flex cursor-pointer items-center gap-2 rounded px-1.5 py-1 text-[11px] text-zinc-300 hover:bg-zinc-800/80">
+                    <input
+                      type="checkbox"
                       checked={hourlyLoadsEnabled.first}
                       onChange={(e) => setHourlyLoadsEnabled((prev) => ({ ...prev, first: e.target.checked }))}
                       className="h-3.5 w-3.5 rounded border-zinc-600 bg-zinc-900 accent-emerald-500"
                     />
-                    Primeras cargas (first)
+                    Primeras cargas
                   </label>
                   <label className="flex cursor-pointer items-center gap-2 rounded px-1.5 py-1 text-[11px] text-zinc-300 hover:bg-zinc-800/80">
                     <input
@@ -1170,12 +1182,14 @@ export default function StatsPanel({
                 labelFormatter={(v) => `${v}:00 hs`}
               />
               <Legend wrapperStyle={{ fontSize: 10, color: "#a1a1aa" }} />
-              <Line type="monotone" dataKey="leads" name="Mensajes recibidos" stroke="#fbbf24" strokeWidth={2} dot={{ r: 2, fill: "#fbbf24" }} activeDot={{ r: 4 }} />
+              {hourlyLoadsEnabled.leads && (
+                <Line type="monotone" dataKey="leads" name="Mensajes recibidos" stroke="#fbbf24" strokeWidth={2} dot={{ r: 2, fill: "#fbbf24" }} activeDot={{ r: 4 }} />
+              )}
               {hourlyLoadsEnabled.total && (
                 <Line type="monotone" dataKey="cargas" name="Total de cargas" stroke="#34d399" strokeWidth={2} dot={{ r: 2, fill: "#34d399" }} activeDot={{ r: 4 }} />
               )}
               {hourlyLoadsEnabled.first && (
-                <Line type="monotone" dataKey="cargas_first" name="Primeras cargas (first)" stroke="#38bdf8" strokeWidth={2} dot={{ r: 2, fill: "#38bdf8" }} activeDot={{ r: 4 }} />
+                <Line type="monotone" dataKey="cargas_first" name="Primeras cargas" stroke="#38bdf8" strokeWidth={2} dot={{ r: 2, fill: "#38bdf8" }} activeDot={{ r: 4 }} />
               )}
             </LineChart>
           </ResponsiveContainer>
