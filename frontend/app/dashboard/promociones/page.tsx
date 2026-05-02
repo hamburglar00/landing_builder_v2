@@ -248,7 +248,7 @@ export default function DashboardPromocionesPage() {
         <div>
           <h1 className="text-xl font-semibold text-zinc-50">PROMOCIONES</h1>
           <p className="mt-1 max-w-3xl text-sm text-zinc-400">
-            Crea sorteos publicos para captar email, telefono y usuario. El email se usa solo para enriquecer conversiones existentes por telefono; no dispara eventos a Meta.
+            Crea un link de sorteo para enviarselos a tus jugadores.
           </p>
         </div>
         <button
@@ -278,7 +278,7 @@ export default function DashboardPromocionesPage() {
               {editingPromotion ? `Editando: ${editingPromotion.title}` : "Crear promocion"}
             </h2>
             <p className="mt-1 text-xs text-zinc-500">
-              La notificacion del ganador usa el Telegram conectado en NOTIFICACIONES.
+              Se te enviara la notificacion del ganador via Telegram que hayas configurado en la seccion de notificaciones.
             </p>
           </div>
           {editingId && (
@@ -322,7 +322,7 @@ export default function DashboardPromocionesPage() {
               value={form.prize}
               onChange={(e) => setForm((prev) => ({ ...prev, prize: e.target.value }))}
               className="w-full rounded-lg border border-zinc-800 bg-zinc-950 px-3 py-2 text-sm text-zinc-100 outline-none focus:border-cyan-700"
-              placeholder="Bono de bienvenida, camiseta, entrada, etc."
+              placeholder="Bono, fichas, etc..."
             />
           </label>
           <label className="space-y-1">
