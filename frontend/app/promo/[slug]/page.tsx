@@ -33,7 +33,12 @@ function getTimeLeft(targetIso: string): TimeLeft {
 function formatDateTime(value: string): string {
   const date = new Date(value);
   if (Number.isNaN(date.getTime())) return "-";
-  return date.toLocaleString("es-AR", { dateStyle: "full", timeStyle: "short" });
+  return date.toLocaleString("es-AR", {
+    dateStyle: "full",
+    hour: "2-digit",
+    minute: "2-digit",
+    hour12: false,
+  });
 }
 
 function randomToken(): string {
@@ -52,6 +57,7 @@ export default function PublicPromotionPage() {
   const [loading, setLoading] = useState(true);
   const [submitting, setSubmitting] = useState(false);
   const [participantReady, setParticipantReady] = useState(false);
+  const [formOpen, setFormOpen] = useState(false);
   const [form, setForm] = useState<FormState>({ username: "", phone: "", email: "" });
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState<string | null>(null);
@@ -141,6 +147,15 @@ export default function PublicPromotionPage() {
       setError("Completa usuario, telefono y email para participar.");
       return;
     }
+    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+      setError("No es un email valido.");
+      return;
+    }
+    const phoneDigits = phone.replace(/\D/g, "");
+    if (phoneDigits.length < 8 || phoneDigits.length > 15) {
+      setError("No es un telefono valido.");
+      return;
+    }
 
     setSubmitting(true);
     try {
@@ -158,6 +173,7 @@ export default function PublicPromotionPage() {
 
       window.localStorage.setItem(storageKey, "1");
       setParticipantReady(true);
+      setFormOpen(false);
       setSuccess(data?.already_participated ? "Ya estabas participando." : "Participacion registrada.");
     } catch (err) {
       const text = err instanceof Error ? err.message : "No pudimos registrar tu participacion.";
@@ -198,7 +214,7 @@ export default function PublicPromotionPage() {
         ["seg", timeLeft.seconds],
       ]
     : [];
-  const showForm = !participantReady && !timeLeft?.isOver;
+  const canParticipate = !participantReady && !timeLeft?.isOver;
   const heroLabel = timeLeft?.isOver ? "Sorteo finalizado" : "Promocion activa";
   const backgroundImageUrl = String(promotion.background_image_url ?? "").trim();
   const backgroundStyle = backgroundImageUrl
@@ -219,6 +235,18 @@ export default function PublicPromotionPage() {
         <p className="mt-1 text-xl font-bold text-amber-50">{promotion.prize}</p>
       </div>
       <p className="mt-4 text-sm text-zinc-400">Sorteo: {formatDateTime(promotion.draw_at)}</p>
+      {canParticipate && (
+        <button
+          type="button"
+          onClick={() => {
+            setError(null);
+            setFormOpen(true);
+          }}
+          className="mt-6 w-full rounded-xl bg-emerald-400 px-4 py-3 text-sm font-black uppercase tracking-[0.18em] text-emerald-950 transition hover:bg-emerald-300"
+        >
+          Participar
+        </button>
+      )}
     </div>
   );
 
@@ -226,7 +254,9 @@ export default function PublicPromotionPage() {
     <section className="rounded-[2rem] border border-zinc-700/70 bg-zinc-950/78 p-5 shadow-2xl backdrop-blur sm:p-6">
       <p className="text-xs font-semibold uppercase tracking-[0.28em] text-emerald-300">Participa por</p>
       <h1 className="mt-3 text-3xl font-black text-white">{promotion.title}</h1>
-      <p className="mt-2 text-sm text-zinc-400">Completa los datos obligatorios para entrar.</p>
+      <p className="mt-2 text-sm text-zinc-400">
+        Completa los datos obligatorios para entrar. Se te notificara a tu email si ganaste.
+      </p>
       <div className="mt-5 rounded-2xl border border-amber-400/25 bg-amber-400/10 px-4 py-3">
         <p className="text-[10px] uppercase tracking-[0.22em] text-amber-200">Premio</p>
         <p className="mt-1 text-base font-bold text-amber-50">{promotion.prize}</p>
@@ -271,11 +301,9 @@ export default function PublicPromotionPage() {
         <div className="pointer-events-none fixed inset-0 bg-[radial-gradient(circle_at_20%_20%,rgba(16,185,129,0.26),transparent_30%),radial-gradient(circle_at_80%_0%,rgba(245,158,11,0.18),transparent_28%),linear-gradient(135deg,#07100d,#030504_55%,#0d160f)]" />
       )}
       <div className="relative mx-auto flex min-h-screen max-w-5xl flex-col justify-center px-5 py-10">
-        {showForm ? (
-          <div className="mx-auto w-full max-w-lg">{formCard}</div>
-        ) : (
-          <section className="grid gap-6 lg:grid-cols-[1.05fr_0.95fr] lg:items-center">
-            {heroCard}
+        <section className={`grid gap-6 ${participantReady || timeLeft?.isOver ? "lg:grid-cols-[1.05fr_0.95fr] lg:items-center" : "mx-auto w-full max-w-lg"}`}>
+          {heroCard}
+          {(participantReady || timeLeft?.isOver) && (
             <section className="rounded-[2rem] border border-emerald-500/25 bg-zinc-950/78 p-5 text-center shadow-2xl backdrop-blur sm:p-6">
               {success && <p className="mb-3 rounded-lg bg-emerald-950/50 px-3 py-2 text-sm text-emerald-200">{success}</p>}
               {!timeLeft?.isOver ? (
@@ -316,9 +344,23 @@ export default function PublicPromotionPage() {
                 </div>
               )}
             </section>
-          </section>
-        )}
+          )}
+        </section>
       </div>
+      {formOpen && canParticipate && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/75 px-4">
+          <div className="relative w-full max-w-lg">
+            <button
+              type="button"
+              onClick={() => setFormOpen(false)}
+              className="absolute -right-2 -top-10 rounded-lg border border-zinc-700 bg-zinc-950 px-3 py-1.5 text-xs text-zinc-200 hover:bg-zinc-900"
+            >
+              Cerrar
+            </button>
+            {formCard}
+          </div>
+        </div>
+      )}
     </main>
   );
 }
