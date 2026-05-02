@@ -159,6 +159,19 @@ export function TelefonosPageContent({
     }
     setPhonesByGerencia(byGerencia);
 
+    const hiddenConversionIds = new Set<string>();
+    if (!isAdmin) {
+      const { data: hiddenRows, error: hiddenError } = await supabase
+        .from("hidden_conversions")
+        .select("conversion_id")
+        .eq("hidden_by", uid);
+      if (hiddenError) throw hiddenError;
+      for (const row of hiddenRows ?? []) {
+        const id = String(row.conversion_id ?? "").trim();
+        if (id) hiddenConversionIds.add(id);
+      }
+    }
+
     const contactExternalKeys = new Set<string>();
     const leadExternalKeysByAssignedPhone = new Map<string, Set<string>>();
     const pageSize = 1000;
@@ -166,7 +179,7 @@ export function TelefonosPageContent({
     while (true) {
       const baseLeadQuery = supabase
         .from("conversions")
-        .select("user_id, external_id, telefono_asignado, lead_event_id, contact_event_id")
+        .select("id, user_id, external_id, telefono_asignado, lead_event_id, contact_event_id, test_event_code")
         .neq("telefono_asignado", "")
         .range(offset, offset + pageSize - 1);
 
@@ -177,6 +190,12 @@ export function TelefonosPageContent({
 
       const chunk = leadRows ?? [];
       for (const row of chunk) {
+        const conversionId = String(row.id ?? "").trim();
+        if (!isAdmin && conversionId && hiddenConversionIds.has(conversionId)) continue;
+        const testEventCode = typeof row.test_event_code === "string"
+          ? row.test_event_code.trim()
+          : "";
+        if (testEventCode) continue;
         const externalId = typeof row.external_id === "string"
           ? row.external_id.trim()
           : "";
@@ -682,7 +701,7 @@ export function TelefonosPageContent({
                     Contador: {totalUsage}
                   </div>
                   <div className="text-xs text-zinc-500 md:text-right">
-                    Mensajes históricos recibidos: {totalMessages}
+                    Mensajes recibidos: {totalMessages}
                   </div>
                   <svg
                     className={`h-4 w-4 shrink-0 text-zinc-400 transition-transform justify-self-end ml-auto ${isOpen ? "rotate-180" : ""}`}
@@ -790,7 +809,7 @@ export function TelefonosPageContent({
                               Contador
                             </th>
                             <th className="px-3 py-2 font-medium text-zinc-300">
-                              Mensajes históricos recibidos
+                              Mensajes recibidos
                             </th>
                             <th className="px-3 py-2 font-medium text-zinc-300">
                               {(g.source_type ?? "pbadmin") === "manual" ? "Comentario" : "Última sincronización"}
