@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useState, type ReactNode } from "react";
 import {
   buildFunnelContactsFromConversions,
   type ConversionRow,
@@ -22,6 +22,9 @@ type Row = {
   pctCarga: number;
   pctRecarga: number;
 };
+
+type SortKey = "label" | "mensajes" | "cargas" | "pctCarga" | "pctRecarga" | "cost" | "gasto";
+type SortDirection = "asc" | "desc";
 
 const normalizePhone = (value: string | null | undefined) => String(value ?? "").replace(/\D/g, "");
 
@@ -85,6 +88,8 @@ export default function GerenciasPerformancePanel({
   const [globalCost, setGlobalCost] = useState("");
   const [costByGerencia, setCostByGerencia] = useState<Record<string, string>>({});
   const [costStorageReadyKey, setCostStorageReadyKey] = useState("");
+  const [sortKey, setSortKey] = useState<SortKey>("label");
+  const [sortDirection, setSortDirection] = useState<SortDirection>("asc");
 
   const costStorageKey = `gerencias-performance-costs:v1:${storageKey}`;
 
@@ -190,6 +195,54 @@ export default function GerenciasPerformancePanel({
     });
   };
 
+  const getCost = useCallback((row: Row) => parseAmount(costByGerencia[`${month}::${row.label}`] ?? ""), [costByGerencia, month]);
+  const getGasto = useCallback((row: Row) => row.mensajes * getCost(row), [getCost]);
+
+  const sortedRows = useMemo(() => {
+    const valueFor = (row: Row): number | string => {
+      if (sortKey === "label") return row.label;
+      if (sortKey === "cost") return getCost(row);
+      if (sortKey === "gasto") return getGasto(row);
+      return row[sortKey];
+    };
+    return [...performanceRows].sort((a, b) => {
+      const av = valueFor(a);
+      const bv = valueFor(b);
+      const result = typeof av === "string" || typeof bv === "string"
+        ? String(av).localeCompare(String(bv), "es")
+        : av - bv;
+      return sortDirection === "asc" ? result : -result;
+    });
+  }, [getCost, getGasto, performanceRows, sortDirection, sortKey]);
+
+  const toggleSort = (key: SortKey) => {
+    setSortKey((currentKey) => {
+      if (currentKey === key) {
+        setSortDirection((currentDirection) => currentDirection === "asc" ? "desc" : "asc");
+        return currentKey;
+      }
+      setSortDirection(key === "label" ? "asc" : "desc");
+      return key;
+    });
+  };
+
+  const sortIcon = (key: SortKey) => {
+    if (sortKey !== key) return "△";
+    return sortDirection === "asc" ? "▲" : "▼";
+  };
+
+  const SortHeader = ({ sort, children }: { sort: SortKey; children: ReactNode }) => (
+    <button
+      type="button"
+      onClick={() => toggleSort(sort)}
+      className="inline-flex w-full items-center justify-center gap-1 text-center font-medium text-zinc-300 transition hover:text-zinc-100"
+      title="Ordenar columna"
+    >
+      <span>{children}</span>
+      <span className={sortKey === sort ? "text-zinc-100" : "text-zinc-600"}>{sortIcon(sort)}</span>
+    </button>
+  );
+
   return (
     <section className="rounded-xl border border-zinc-800 bg-zinc-900/50 p-4">
       <div className="mb-4 flex flex-wrap items-end justify-between gap-3">
@@ -245,16 +298,25 @@ export default function GerenciasPerformancePanel({
         <p className="rounded-lg border border-red-900/50 bg-red-950/30 px-3 py-2 text-xs text-red-300">{error}</p>
       ) : (
         <div className="overflow-x-auto rounded-lg border border-zinc-700">
-          <table className="w-full min-w-[920px] text-left text-[11px]">
+          <table className="w-full min-w-[980px] table-fixed text-[11px]">
+            <colgroup>
+              <col className="w-[14.285%]" />
+              <col className="w-[14.285%]" />
+              <col className="w-[14.285%]" />
+              <col className="w-[14.285%]" />
+              <col className="w-[14.285%]" />
+              <col className="w-[14.285%]" />
+              <col className="w-[14.285%]" />
+            </colgroup>
             <thead className="bg-zinc-800/95">
               <tr>
-                <th className="px-3 py-2 font-medium text-zinc-300">Nombre Gerencia (ID)</th>
-                <th className="px-3 py-2 text-right font-medium text-zinc-300">Mensajes recibidos</th>
-                <th className="px-3 py-2 text-right font-medium text-zinc-300">Cargas Totales</th>
-                <th className="px-3 py-2 text-right font-medium text-zinc-300">Porcentaje de carga</th>
-                <th className="px-3 py-2 text-right font-medium text-zinc-300">Porcentaje de recarga</th>
-                <th className="px-3 py-2 text-right font-medium text-zinc-300">Costo por msj</th>
-                <th className="px-3 py-2 text-right font-medium text-zinc-300">Gasto</th>
+                <th className="px-3 py-2"><SortHeader sort="label">Nombre Gerencia (ID)</SortHeader></th>
+                <th className="px-3 py-2"><SortHeader sort="mensajes">Mensajes recibidos</SortHeader></th>
+                <th className="px-3 py-2"><SortHeader sort="cargas">Cargas Totales</SortHeader></th>
+                <th className="px-3 py-2"><SortHeader sort="pctCarga">Porcentaje de carga</SortHeader></th>
+                <th className="px-3 py-2"><SortHeader sort="pctRecarga">Porcentaje de recarga</SortHeader></th>
+                <th className="px-3 py-2"><SortHeader sort="cost">Costo por msj</SortHeader></th>
+                <th className="px-3 py-2"><SortHeader sort="gasto">Gasto</SortHeader></th>
               </tr>
             </thead>
             <tbody className="divide-y divide-zinc-800">
@@ -264,19 +326,18 @@ export default function GerenciasPerformancePanel({
                     No hay gerencias configuradas para comparar.
                   </td>
                 </tr>
-              ) : performanceRows.map((row) => {
+              ) : sortedRows.map((row) => {
                 const costKey = `${month}::${row.label}`;
                 const costRaw = costByGerencia[costKey] ?? "";
-                const cost = parseAmount(costRaw);
-                const gasto = row.mensajes * cost;
+                const gasto = getGasto(row);
                 return (
                   <tr key={row.label} className="bg-zinc-950/40">
-                    <td className="px-3 py-2 font-medium text-zinc-100">{row.label}</td>
-                    <td className="px-3 py-2 text-right text-amber-300">{formatNumber(row.mensajes)}</td>
-                    <td className="px-3 py-2 text-right text-sky-300">{formatNumber(row.cargas)}</td>
-                    <td className="px-3 py-2 text-right text-zinc-200">{formatPercent(row.pctCarga)}</td>
-                    <td className="px-3 py-2 text-right text-zinc-200">{formatPercent(row.pctRecarga)}</td>
-                    <td className="px-3 py-2 text-right">
+                    <td className="px-3 py-2 text-center font-medium text-zinc-100">{row.label}</td>
+                    <td className="px-3 py-2 text-center text-amber-300">{formatNumber(row.mensajes)}</td>
+                    <td className="px-3 py-2 text-center text-sky-300">{formatNumber(row.cargas)}</td>
+                    <td className="px-3 py-2 text-center text-zinc-200">{formatPercent(row.pctCarga)}</td>
+                    <td className="px-3 py-2 text-center text-zinc-200">{formatPercent(row.pctRecarga)}</td>
+                    <td className="px-3 py-2 text-center">
                       <input
                         value={costRaw}
                         onChange={(e) => {
@@ -285,23 +346,23 @@ export default function GerenciasPerformancePanel({
                         }}
                         inputMode="decimal"
                         placeholder="0"
-                        className="h-7 w-24 rounded border border-zinc-700 bg-zinc-900 px-2 text-right text-xs text-zinc-100"
+                        className="h-7 w-24 rounded border border-zinc-700 bg-zinc-900 px-2 text-center text-xs text-zinc-100"
                       />
                     </td>
-                    <td className="px-3 py-2 text-right font-semibold text-emerald-300">{formatMoney(gasto)}</td>
+                    <td className="px-3 py-2 text-center font-semibold text-emerald-300">{formatMoney(gasto)}</td>
                   </tr>
                 );
               })}
             </tbody>
             <tfoot className="border-t border-zinc-700 bg-zinc-900/80">
               <tr>
-                <td className="px-3 py-2 font-semibold text-zinc-100">Totales</td>
-                <td className="px-3 py-2 text-right font-semibold text-amber-300">{formatNumber(totals.mensajes)}</td>
-                <td className="px-3 py-2 text-right font-semibold text-sky-300">{formatNumber(totals.cargas)}</td>
-                <td className="px-3 py-2 text-right text-zinc-500">-</td>
-                <td className="px-3 py-2 text-right text-zinc-500">-</td>
-                <td className="px-3 py-2 text-right text-zinc-500">-</td>
-                <td className="px-3 py-2 text-right font-semibold text-emerald-300">{formatMoney(totals.gasto)}</td>
+                <td className="px-3 py-2 text-center font-semibold text-zinc-100">Totales</td>
+                <td className="px-3 py-2 text-center font-semibold text-amber-300">{formatNumber(totals.mensajes)}</td>
+                <td className="px-3 py-2 text-center font-semibold text-sky-300">{formatNumber(totals.cargas)}</td>
+                <td className="px-3 py-2 text-center text-zinc-500">-</td>
+                <td className="px-3 py-2 text-center text-zinc-500">-</td>
+                <td className="px-3 py-2 text-center text-zinc-500">-</td>
+                <td className="px-3 py-2 text-center font-semibold text-emerald-300">{formatMoney(totals.gasto)}</td>
               </tr>
             </tfoot>
           </table>
