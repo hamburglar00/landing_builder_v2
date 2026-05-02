@@ -469,6 +469,7 @@ export default function DashboardConversionesPage() {
   const [hidingLogs, setHidingLogs] = useState(false);
   const hasSyncedDateRangeOnceRef = useRef(false);
   const initialDateRangeRef = useRef<DateRange | null>(dateRange);
+  const dataRequestSeqRef = useRef(0);
 
   useEffect(() => {
     const view = (searchParams.get("view") || "").toLowerCase();
@@ -882,6 +883,7 @@ export default function DashboardConversionesPage() {
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) return;
       setUserId(user.id);
+      const requestSeq = ++dataRequestSeqRef.current;
       try {
         const [cfg, rows, funnel, pixels] = await Promise.all([
           fetchConversionsConfig(user.id),
@@ -890,8 +892,10 @@ export default function DashboardConversionesPage() {
           fetchPixelConfigs(user.id),
         ]);
         setConfig(cfg);
-        setConversions(rows);
-        setFunnelContacts(funnel);
+        if (requestSeq === dataRequestSeqRef.current) {
+          setConversions(rows);
+          setFunnelContacts(funnel);
+        }
         setPixelConfigs(pixels);
 
         const { data: profile } = await supabase
@@ -1176,36 +1180,45 @@ export default function DashboardConversionesPage() {
     setDraftDeviceFilter("__all__");
   }, []);
 
-  const refreshTable = useCallback(async () => {
+  const refreshTable = useCallback(async (explicitRange?: DateRange | null) => {
     if (!userId) return;
+    const range = explicitRange === undefined ? dateRange : explicitRange;
+    const requestSeq = ++dataRequestSeqRef.current;
     setRefreshingTable(true);
     try {
       if (tab === "logs") {
         const logRows = await fetchConversionLogsFiltered(userId, userId, 200);
+        if (requestSeq !== dataRequestSeqRef.current) return;
         setLogs(logRows);
       } else if (tab === "inbox") {
         const inbox = await fetchConversionInbox(userId, 400);
+        if (requestSeq !== dataRequestSeqRef.current) return;
         setInboxRows(inbox);
       } else {
         const [rows, funnel] = await Promise.all([
-          fetchConversionsFiltered(userId, userId, undefined, dateRange ?? undefined),
-          fetchFunnelContactsFiltered(userId, userId, dateRange ?? undefined),
+          fetchConversionsFiltered(userId, userId, undefined, range ?? undefined),
+          fetchFunnelContactsFiltered(userId, userId, range ?? undefined),
         ]);
+        if (requestSeq !== dataRequestSeqRef.current) return;
         setConversions(rows);
         setFunnelContacts(funnel);
       }
     } catch (e) { console.error(e); }
-    finally { setRefreshingTable(false); }
+    finally {
+      if (requestSeq === dataRequestSeqRef.current) setRefreshingTable(false);
+    }
   }, [userId, tab, dateRange]);
 
-  useEffect(() => {
-    if (!userId) return;
+  const handleDateRangeChange = useCallback((nextRange: DateRange | null) => {
+    initialDateRangeRef.current = nextRange;
+    setDateRange(nextRange);
     if (!hasSyncedDateRangeOnceRef.current) {
       hasSyncedDateRangeOnceRef.current = true;
       return;
     }
-    void refreshTable();
-  }, [dateRange, userId, refreshTable]);
+    if (!userId) return;
+    void refreshTable(nextRange);
+  }, [refreshTable, userId]);
 
   const clearGlobalDisplay = useCallback(async () => {
     if (!userId) return;
@@ -1477,7 +1490,7 @@ export default function DashboardConversionesPage() {
               <>
                 <button
                   type="button"
-                  onClick={refreshTable}
+                  onClick={() => void refreshTable()}
                   disabled={refreshingTable}
                   className="inline-flex h-7 items-center gap-1.5 rounded-lg border border-zinc-700 bg-zinc-800/80 px-2 text-[11px] font-medium text-zinc-300 transition hover:bg-zinc-700 hover:text-zinc-100 disabled:opacity-60"
                   title="Actualizar datos"
@@ -1547,7 +1560,7 @@ export default function DashboardConversionesPage() {
               </button>
             )}
           </div>
-          <DateRangeFilter onChange={setDateRange} initialPreset="hoy" />
+          <DateRangeFilter onChange={handleDateRangeChange} initialPreset="hoy" />
         </div>
       )}
 
@@ -1867,7 +1880,7 @@ export default function DashboardConversionesPage() {
       {tab === "seguimiento" && (
         <TrackingBoard
           conversions={activeConversions.filter((r) => !String(r.test_event_code ?? "").trim())}
-          onRefresh={refreshTable}
+          onRefresh={() => void refreshTable()}
           refreshing={refreshingTable}
         />
       )}

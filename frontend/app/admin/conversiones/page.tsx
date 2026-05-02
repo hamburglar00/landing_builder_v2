@@ -467,6 +467,7 @@ export default function AdminConversionesPage() {
   const [hidingLogs, setHidingLogs] = useState(false);
   const hasSyncedDateRangeOnceRef = useRef(false);
   const initialDateRangeRef = useRef<DateRange | null>(dateRange);
+  const dataRequestSeqRef = useRef(0);
 
   useEffect(() => {
     const view = (searchParams.get("view") || "").toLowerCase();
@@ -824,6 +825,7 @@ export default function AdminConversionesPage() {
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) return;
       setUserId(user.id);
+      const requestSeq = ++dataRequestSeqRef.current;
       try {
         const [cfg, rows, funnel, pixels] = await Promise.all([
           fetchConversionsConfig(user.id),
@@ -832,8 +834,10 @@ export default function AdminConversionesPage() {
           fetchPixelConfigs(user.id),
         ]);
         setConfig(cfg);
-        setConversions(rows);
-        setFunnelContacts(funnel);
+        if (requestSeq === dataRequestSeqRef.current) {
+          setConversions(rows);
+          setFunnelContacts(funnel);
+        }
         setPixelConfigs(pixels);
 
         const { data: profile } = await supabase
@@ -1121,33 +1125,41 @@ export default function AdminConversionesPage() {
     setDraftDeviceFilter("__all__");
   }, []);
 
-  const refreshTable = useCallback(async () => {
+  const refreshTable = useCallback(async (explicitRange?: DateRange | null) => {
     if (!userId) return;
+    const range = explicitRange === undefined ? dateRange : explicitRange;
+    const requestSeq = ++dataRequestSeqRef.current;
     setRefreshingTable(true);
     try {
       if (tab === "logs") {
         const logRows = await fetchConversionLogsForAdminFiltered(userId, 200);
+        if (requestSeq !== dataRequestSeqRef.current) return;
         setLogs(logRows);
       } else {
         const [rows, funnel] = await Promise.all([
-          fetchConversionsForAdminFiltered(userId, undefined, dateRange ?? undefined),
-          fetchFunnelContactsForAdminFiltered(userId, dateRange ?? undefined),
+          fetchConversionsForAdminFiltered(userId, undefined, range ?? undefined),
+          fetchFunnelContactsForAdminFiltered(userId, range ?? undefined),
         ]);
+        if (requestSeq !== dataRequestSeqRef.current) return;
         setConversions(rows);
         setFunnelContacts(funnel);
       }
     } catch (e) { console.error(e); }
-    finally { setRefreshingTable(false); }
+    finally {
+      if (requestSeq === dataRequestSeqRef.current) setRefreshingTable(false);
+    }
   }, [userId, tab, dateRange]);
 
-  useEffect(() => {
-    if (!userId) return;
+  const handleDateRangeChange = useCallback((nextRange: DateRange | null) => {
+    initialDateRangeRef.current = nextRange;
+    setDateRange(nextRange);
     if (!hasSyncedDateRangeOnceRef.current) {
       hasSyncedDateRangeOnceRef.current = true;
       return;
     }
-    void refreshTable();
-  }, [dateRange, userId, refreshTable]);
+    if (!userId) return;
+    void refreshTable(nextRange);
+  }, [refreshTable, userId]);
 
   const clearTableDisplay = useCallback(async () => {
     if (!userId || activeConversions.length === 0 || demoMode) return;
@@ -1481,7 +1493,7 @@ export default function AdminConversionesPage() {
               <>
                 <button
                   type="button"
-                  onClick={refreshTable}
+                  onClick={() => void refreshTable()}
                   disabled={refreshingTable}
                   className="inline-flex h-7 items-center gap-1.5 rounded-lg border border-zinc-700 bg-zinc-800/80 px-2 text-[11px] font-medium text-zinc-300 transition hover:bg-zinc-700 hover:text-zinc-100 disabled:opacity-60"
                   title="Actualizar datos"
@@ -1558,7 +1570,7 @@ export default function AdminConversionesPage() {
               </button>
             )}
           </div>
-          <DateRangeFilter onChange={setDateRange} initialPreset="hoy" />
+          <DateRangeFilter onChange={handleDateRangeChange} initialPreset="hoy" />
         </div>
       )}
       {statsFilterModalOpen && (
@@ -1914,7 +1926,7 @@ export default function AdminConversionesPage() {
       {tab === "seguimiento" && (
         <TrackingBoard
           conversions={activeConversions.filter((r) => !String(r.test_event_code ?? "").trim())}
-          onRefresh={refreshTable}
+          onRefresh={() => void refreshTable()}
           refreshing={refreshingTable}
         />
       )}
@@ -2081,6 +2093,4 @@ export default function AdminConversionesPage() {
     </div>
   );
 }
-
-
 
