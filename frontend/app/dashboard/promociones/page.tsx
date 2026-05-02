@@ -111,6 +111,9 @@ export default function DashboardPromocionesPage() {
   const [participantsFor, setParticipantsFor] = useState<string | null>(null);
   const [participants, setParticipants] = useState<PromotionParticipantRow[]>([]);
   const [loadingParticipants, setLoadingParticipants] = useState(false);
+  const [selectedParticipantsPromotionId, setSelectedParticipantsPromotionId] = useState("");
+  const [tableParticipants, setTableParticipants] = useState<PromotionParticipantRow[]>([]);
+  const [loadingTableParticipants, setLoadingTableParticipants] = useState(false);
 
   const origin = typeof window === "undefined" ? "" : window.location.origin;
   const editingPromotion = useMemo(
@@ -152,6 +155,37 @@ export default function DashboardPromocionesPage() {
     };
     void load();
   }, [router, reload]);
+
+  useEffect(() => {
+    if (promotions.length === 0) {
+      setSelectedParticipantsPromotionId("");
+      setTableParticipants([]);
+      return;
+    }
+    if (!selectedParticipantsPromotionId || !promotions.some((promotion) => promotion.id === selectedParticipantsPromotionId)) {
+      setSelectedParticipantsPromotionId(promotions[0]?.id ?? "");
+    }
+  }, [promotions, selectedParticipantsPromotionId]);
+
+  useEffect(() => {
+    const load = async () => {
+      if (!selectedParticipantsPromotionId) {
+        setTableParticipants([]);
+        return;
+      }
+      setLoadingTableParticipants(true);
+      try {
+        const rows = await fetchPromotionParticipants(selectedParticipantsPromotionId);
+        setTableParticipants(rows);
+      } catch (err) {
+        console.error(err);
+        showMessage("No se pudieron cargar los participantes.", "error");
+      } finally {
+        setLoadingTableParticipants(false);
+      }
+    };
+    void load();
+  }, [selectedParticipantsPromotionId]);
 
   const resetForm = () => {
     setEditingId(null);
@@ -441,7 +475,7 @@ export default function DashboardPromocionesPage() {
             Aun no hay promociones. Crea la primera y comparte el link publico.
           </div>
         ) : (
-          <div className="grid gap-3 xl:grid-cols-2">
+          <div className="space-y-3">
             {promotions.map((promotion) => {
               const publicLink = `${origin}/promo/${promotion.slug}`;
               const drawReady = new Date(promotion.draw_at).getTime() <= Date.now();
@@ -522,6 +556,76 @@ export default function DashboardPromocionesPage() {
             })}
           </div>
         )}
+      </section>
+
+      <section className="rounded-2xl border border-zinc-800 bg-zinc-950/60 p-4 shadow-[0_24px_80px_rgba(0,0,0,0.35)]">
+        <div className="flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
+          <div>
+            <h2 className="text-sm font-semibold text-zinc-100">Participantes inscritos</h2>
+            <p className="mt-1 text-xs text-zinc-500">
+              Consulta los jugadores que completaron el formulario del sorteo.
+            </p>
+          </div>
+          <label className="space-y-1 sm:min-w-72">
+            <span className="text-xs text-zinc-400">Promocion</span>
+            <select
+              value={selectedParticipantsPromotionId}
+              onChange={(e) => setSelectedParticipantsPromotionId(e.target.value)}
+              className="w-full rounded-lg border border-zinc-800 bg-zinc-950 px-3 py-2 text-sm text-zinc-100 outline-none focus:border-cyan-700"
+            >
+              {promotions.length === 0 ? (
+                <option value="">Sin promociones</option>
+              ) : (
+                promotions.map((promotion) => (
+                  <option key={promotion.id} value={promotion.id}>
+                    {promotion.title}
+                  </option>
+                ))
+              )}
+            </select>
+          </label>
+        </div>
+
+        <div className="mt-4 overflow-hidden rounded-xl border border-zinc-800">
+          <div className="max-h-[360px] overflow-auto">
+            <table className="min-w-full text-left text-xs">
+              <thead className="sticky top-0 bg-zinc-900 text-zinc-400">
+                <tr>
+                  <th className="px-3 py-2 font-medium">ID</th>
+                  <th className="px-3 py-2 font-medium">Nombre</th>
+                  <th className="px-3 py-2 font-medium">Telefono</th>
+                  <th className="px-3 py-2 font-medium">Email</th>
+                </tr>
+              </thead>
+              <tbody>
+                {loadingTableParticipants ? (
+                  <tr>
+                    <td colSpan={4} className="px-3 py-8 text-center text-zinc-500">
+                      Cargando participantes...
+                    </td>
+                  </tr>
+                ) : tableParticipants.length === 0 ? (
+                  <tr>
+                    <td colSpan={4} className="px-3 py-8 text-center text-zinc-500">
+                      Todavia no hay participantes inscritos.
+                    </td>
+                  </tr>
+                ) : (
+                  tableParticipants.map((participant) => (
+                    <tr key={participant.id} className="border-t border-zinc-900 text-zinc-200">
+                      <td className="px-3 py-2 font-mono text-[11px] text-zinc-500">
+                        {participant.id.slice(0, 8)}
+                      </td>
+                      <td className="px-3 py-2">{participant.username}</td>
+                      <td className="px-3 py-2 font-mono">{participant.phone}</td>
+                      <td className="px-3 py-2">{participant.email}</td>
+                    </tr>
+                  ))
+                )}
+              </tbody>
+            </table>
+          </div>
+        </div>
       </section>
 
       {participantsFor && (
