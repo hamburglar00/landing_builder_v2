@@ -37,6 +37,31 @@ type TelegramDestination = {
   telegram_chat_id: string;
 };
 
+function shuffled<T>(items: T[]): T[] {
+  const copy = [...items];
+  for (let i = copy.length - 1; i > 0; i -= 1) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [copy[i], copy[j]] = [copy[j], copy[i]];
+  }
+  return copy;
+}
+
+function animationUsernamesFromParticipants(participants: Participant[]): string[] {
+  const names = participants
+    .map((participant) => String(participant.username || "").trim())
+    .filter(Boolean);
+  return shuffled(names).slice(0, 80);
+}
+
+async function fetchAnimationUsernames(db: any, promotionId: string): Promise<string[]> {
+  const { data } = await db
+    .from("promotion_participants")
+    .select("id, username, phone, email, created_at")
+    .eq("promotion_id", promotionId)
+    .limit(5000);
+  return animationUsernamesFromParticipants((data ?? []) as Participant[]);
+}
+
 function jsonResponse(body: Record<string, unknown>, status = 200): Response {
   return new Response(JSON.stringify(body), {
     status,
@@ -106,6 +131,7 @@ Deno.serve(async (req) => {
     }
 
     if (promotion.winner_participant_id) {
+      const animationUsernames = await fetchAnimationUsernames(db, promotion.id);
       return jsonResponse({
         ok: true,
         already_drawn: true,
@@ -113,6 +139,7 @@ Deno.serve(async (req) => {
         winner_username: promotion.winner_username,
         prize: promotion.prize,
         winner_selected_at: promotion.winner_selected_at,
+        animation_usernames: animationUsernames,
       });
     }
 
@@ -123,6 +150,7 @@ Deno.serve(async (req) => {
         draw_status: "no_participants",
         prize: promotion.prize,
         draw_processed_at: promotion.draw_processed_at,
+        animation_usernames: [],
       });
     }
 
@@ -152,10 +180,12 @@ Deno.serve(async (req) => {
         draw_status: "no_participants",
         prize: promotion.prize,
         draw_processed_at: nowIso,
+        animation_usernames: [],
       });
     }
 
     const winner = pool[Math.floor(Math.random() * pool.length)];
+    const animationUsernames = animationUsernamesFromParticipants(pool);
 
     const { data: updatedWinner, error: updateError } = await db
       .from("promotions")
@@ -187,6 +217,7 @@ Deno.serve(async (req) => {
         prize: fresh?.prize ?? promotion.prize,
         winner_selected_at: fresh?.winner_selected_at ?? null,
         draw_processed_at: fresh?.draw_processed_at ?? null,
+        animation_usernames: await fetchAnimationUsernames(db, promotion.id),
       });
     }
 
@@ -243,6 +274,7 @@ Deno.serve(async (req) => {
       prize: promotion.prize,
       winner_selected_at: nowIso,
       draw_processed_at: nowIso,
+      animation_usernames: animationUsernames,
       notified,
       notification_skipped: notificationSkipped || null,
     });

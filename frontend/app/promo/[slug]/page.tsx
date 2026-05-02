@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useParams } from "next/navigation";
 import { supabase } from "@/lib/supabaseClient";
 import { fetchPromotionBySlug, type PromotionDrawStatus, type PromotionRow } from "@/lib/promotionsDb";
@@ -65,7 +65,13 @@ export default function PublicPromotionPage() {
   const [winnerUsername, setWinnerUsername] = useState("");
   const [drawStatus, setDrawStatus] = useState<PromotionDrawStatus>("pending");
   const [drawMessage, setDrawMessage] = useState<string | null>(null);
+  const [animationUsernames, setAnimationUsernames] = useState<string[]>([]);
+  const [displayedCandidate, setDisplayedCandidate] = useState("");
+  const [isDrawAnimating, setIsDrawAnimating] = useState(false);
+  const [revealWinner, setRevealWinner] = useState(false);
   const drawRequestedRef = useRef(false);
+  const animationIntervalRef = useRef<number | null>(null);
+  const animationTimeoutRef = useRef<number | null>(null);
 
   const storageKey = useMemo(() => (slug ? `promotion_participant:${slug}` : ""), [slug]);
   const visitorToken = useMemo(() => {
@@ -77,6 +83,47 @@ export default function PublicPromotionPage() {
     return next;
   }, [storageKey]);
 
+  const clearDrawTimers = useCallback(() => {
+    if (animationIntervalRef.current !== null) {
+      window.clearInterval(animationIntervalRef.current);
+      animationIntervalRef.current = null;
+    }
+    if (animationTimeoutRef.current !== null) {
+      window.clearTimeout(animationTimeoutRef.current);
+      animationTimeoutRef.current = null;
+    }
+  }, []);
+
+  const startDrawAnimation = useCallback(
+    (names: string[], finalWinner: string) => {
+      clearDrawTimers();
+      const cleanNames = names.map((name) => String(name || "").trim()).filter(Boolean);
+      const pool = cleanNames.length > 0 ? cleanNames : [finalWinner];
+      let index = 0;
+
+      setAnimationUsernames(pool);
+      setDisplayedCandidate(pool[0] ?? finalWinner);
+      setIsDrawAnimating(true);
+      setRevealWinner(false);
+
+      animationIntervalRef.current = window.setInterval(() => {
+        index += 1;
+        const next = pool[Math.floor(Math.random() * pool.length)] ?? pool[index % pool.length] ?? finalWinner;
+        setDisplayedCandidate(next);
+      }, 85);
+
+      animationTimeoutRef.current = window.setTimeout(() => {
+        clearDrawTimers();
+        setDisplayedCandidate(finalWinner);
+        setIsDrawAnimating(false);
+        setRevealWinner(true);
+      }, 7000);
+    },
+    [clearDrawTimers],
+  );
+
+  useEffect(() => clearDrawTimers, [clearDrawTimers]);
+
   useEffect(() => {
     const load = async () => {
       setLoading(true);
@@ -85,6 +132,7 @@ export default function PublicPromotionPage() {
         setPromotion(row);
         setWinnerUsername(row?.winner_username ?? "");
         setDrawStatus(row?.draw_status ?? "pending");
+        setRevealWinner(false);
         if (storageKey && window.localStorage.getItem(storageKey) === "1") {
           setParticipantReady(true);
         }
@@ -107,7 +155,7 @@ export default function PublicPromotionPage() {
 
   useEffect(() => {
     const draw = async () => {
-      if (!promotion || !timeLeft?.isOver || winnerUsername || drawStatus !== "pending" || drawRequestedRef.current) return;
+      if (!promotion || !timeLeft?.isOver || drawStatus === "no_participants" || revealWinner || drawRequestedRef.current) return;
       drawRequestedRef.current = true;
       try {
         const { data, error: fnError } = await supabase.functions.invoke("promotion-draw", {
@@ -118,8 +166,13 @@ export default function PublicPromotionPage() {
           setDrawStatus(String(data.draw_status) as PromotionDrawStatus);
         }
         if (data?.winner_username) {
-          setWinnerUsername(String(data.winner_username));
+          const winner = String(data.winner_username);
+          const names = Array.isArray(data?.animation_usernames)
+            ? data.animation_usernames.map((name: unknown) => String(name)).filter(Boolean)
+            : [];
+          setWinnerUsername(winner);
           setDrawMessage(null);
+          startDrawAnimation(names, winner);
           return;
         }
         if (data?.draw_status === "no_participants") {
@@ -133,7 +186,7 @@ export default function PublicPromotionPage() {
       }
     };
     void draw();
-  }, [drawStatus, promotion, timeLeft?.isOver, winnerUsername]);
+  }, [drawStatus, promotion, revealWinner, startDrawAnimation, timeLeft?.isOver]);
 
   const handleSubmit = async () => {
     if (!promotion || !visitorToken) return;
@@ -297,6 +350,12 @@ export default function PublicPromotionPage() {
 
   return (
     <main className="min-h-screen overflow-hidden bg-[#07100d] text-zinc-100" style={backgroundStyle}>
+      <style>{`
+        @keyframes promotion-draw-progress {
+          from { width: 0%; }
+          to { width: 100%; }
+        }
+      `}</style>
       {!backgroundImageUrl && (
         <div className="pointer-events-none fixed inset-0 bg-[radial-gradient(circle_at_20%_20%,rgba(16,185,129,0.26),transparent_30%),radial-gradient(circle_at_80%_0%,rgba(245,158,11,0.18),transparent_28%),linear-gradient(135deg,#07100d,#030504_55%,#0d160f)]" />
       )}
@@ -319,11 +378,35 @@ export default function PublicPromotionPage() {
                   </div>
                   <p className="mt-5 text-sm text-zinc-400">Ya estas participando. Cuando llegue la hora, aca se mostrara el ganador.</p>
                 </>
-              ) : winnerUsername ? (
+              ) : isDrawAnimating ? (
+                <div className="relative overflow-hidden py-6">
+                  <div className="pointer-events-none absolute inset-0 opacity-60 [background-image:radial-gradient(circle_at_50%_0%,rgba(16,185,129,0.24),transparent_35%),radial-gradient(circle_at_50%_100%,rgba(251,191,36,0.18),transparent_32%)]" />
+                  <div className="relative">
+                    <p className="text-xs font-semibold uppercase tracking-[0.32em] text-emerald-300">Sorteando ganador</p>
+                    <p className="mt-2 text-xs text-zinc-500">Participantes verificados: {animationUsernames.length}</p>
+                    <div className="mx-auto mt-6 max-w-sm rounded-[1.7rem] border border-emerald-400/40 bg-black/70 p-4 shadow-[0_0_90px_rgba(16,185,129,0.25)]">
+                      <div className="rounded-2xl border border-zinc-800 bg-zinc-950 px-4 py-7">
+                        <p className="text-[10px] font-bold uppercase tracking-[0.28em] text-zinc-500">Ahora pasa por</p>
+                        <p className="mt-3 min-h-[3rem] break-words text-3xl font-black text-white sm:text-4xl">
+                          {displayedCandidate || "..."}
+                        </p>
+                      </div>
+                    </div>
+                    <div className="mx-auto mt-5 h-2 max-w-sm overflow-hidden rounded-full bg-zinc-900">
+                      <div className="h-full rounded-full bg-gradient-to-r from-emerald-400 via-amber-300 to-emerald-400 [animation:promotion-draw-progress_7s_linear_forwards]" />
+                    </div>
+                    <div className="mt-5 grid grid-cols-3 gap-2 text-[10px] uppercase tracking-[0.16em] text-zinc-500">
+                      <span className="rounded-full border border-zinc-800 bg-black/40 px-2 py-2">Mezclando</span>
+                      <span className="rounded-full border border-zinc-800 bg-black/40 px-2 py-2">Auditando</span>
+                      <span className="rounded-full border border-zinc-800 bg-black/40 px-2 py-2">Sellando</span>
+                    </div>
+                  </div>
+                </div>
+              ) : winnerUsername && revealWinner ? (
                 <div className="py-5">
                   <p className="text-xs font-semibold uppercase tracking-[0.32em] text-amber-200">Ganador del sorteo</p>
-                  <div className="mx-auto mt-6 flex h-40 w-40 animate-pulse items-center justify-center rounded-full border border-amber-300/50 bg-amber-300/15 shadow-[0_0_80px_rgba(251,191,36,0.35)]">
-                    <span className="text-4xl font-black text-amber-100">1</span>
+                  <div className="mx-auto mt-6 flex h-44 w-44 animate-pulse items-center justify-center rounded-full border border-amber-300/50 bg-amber-300/15 shadow-[0_0_100px_rgba(251,191,36,0.42)]">
+                    <span className="text-5xl font-black text-amber-100">1</span>
                   </div>
                   <h2 className="mt-6 break-words text-4xl font-black text-white">{winnerUsername}</h2>
                   <p className="mt-3 text-sm text-zinc-400">Premio: {promotion.prize}</p>
