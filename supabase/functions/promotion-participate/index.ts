@@ -41,7 +41,15 @@ function cleanText(value: unknown, maxLength: number): string {
 }
 
 function normalizePhone(value: unknown): string {
-  return String(value ?? "").replace(/\D/g, "").slice(0, 32);
+  let digits = String(value ?? "").replace(/\D/g, "");
+  digits = digits.replace(/^00+/, "");
+  digits = digits.replace(/^0+/, "");
+
+  if (!digits) return "";
+  if (digits.startsWith("549")) return digits.slice(0, 32);
+  if (digits.startsWith("54")) return `549${digits.slice(2)}`.slice(0, 32);
+  if (digits.startsWith("9") && digits.length >= 9) return `54${digits}`.slice(0, 32);
+  return `549${digits}`.slice(0, 32);
 }
 
 function normalizeEmail(value: unknown): string {

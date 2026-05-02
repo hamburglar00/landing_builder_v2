@@ -10,6 +10,7 @@ export interface PromotionRow {
   slug: string;
   message: string;
   prize: string;
+  background_image_url: string;
   draw_at: string;
   status: PromotionStatus;
   winner_participant_id: string | null;
@@ -45,12 +46,13 @@ export type PromotionInput = {
   slug: string;
   message: string;
   prize: string;
+  background_image_url: string;
   draw_at: string;
   status: PromotionStatus;
 };
 
 const PROMOTIONS_SELECT =
-  "id, user_id, title, slug, message, prize, draw_at, status, winner_participant_id, winner_username, winner_selected_at, winner_notified_at, draw_status, draw_processed_at, created_at, updated_at";
+  "id, user_id, title, slug, message, prize, background_image_url, draw_at, status, winner_participant_id, winner_username, winner_selected_at, winner_notified_at, draw_status, draw_processed_at, created_at, updated_at";
 
 export function slugifyPromotion(value: string): string {
   const normalized = value

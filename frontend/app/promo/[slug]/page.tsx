@@ -41,6 +41,10 @@ function randomToken(): string {
   return `${Date.now()}-${Math.random().toString(36).slice(2)}`;
 }
 
+function cssUrl(value: string): string {
+  return value.replace(/\\/g, "\\\\").replace(/"/g, '\\"');
+}
+
 export default function PublicPromotionPage() {
   const params = useParams<{ slug: string }>();
   const slug = Array.isArray(params.slug) ? params.slug[0] : params.slug;
@@ -196,60 +200,82 @@ export default function PublicPromotionPage() {
     : [];
   const showForm = !participantReady && !timeLeft?.isOver;
   const heroLabel = timeLeft?.isOver ? "Sorteo finalizado" : "Promocion activa";
+  const backgroundImageUrl = String(promotion.background_image_url ?? "").trim();
+  const backgroundStyle = backgroundImageUrl
+    ? {
+        backgroundImage: `linear-gradient(135deg, rgba(7,16,13,0.82), rgba(3,5,4,0.76) 52%, rgba(13,22,15,0.86)), url("${cssUrl(backgroundImageUrl)}")`,
+        backgroundPosition: "center",
+        backgroundSize: "cover",
+      }
+    : undefined;
+
+  const heroCard = (
+    <div className="rounded-[2rem] border border-emerald-500/20 bg-black/35 p-6 shadow-[0_30px_120px_rgba(0,0,0,0.45)] backdrop-blur sm:p-8">
+      <p className="text-xs font-semibold uppercase tracking-[0.35em] text-emerald-300">{heroLabel}</p>
+      <h1 className="mt-4 text-4xl font-black tracking-tight text-white sm:text-5xl">{promotion.title}</h1>
+      <p className="mt-4 max-w-2xl text-base leading-7 text-zinc-300">{promotion.message}</p>
+      <div className="mt-6 rounded-2xl border border-amber-400/30 bg-amber-400/10 p-4">
+        <p className="text-xs uppercase tracking-[0.25em] text-amber-200">Premio</p>
+        <p className="mt-1 text-xl font-bold text-amber-50">{promotion.prize}</p>
+      </div>
+      <p className="mt-4 text-sm text-zinc-400">Sorteo: {formatDateTime(promotion.draw_at)}</p>
+    </div>
+  );
+
+  const formCard = (
+    <section className="rounded-[2rem] border border-zinc-700/70 bg-zinc-950/78 p-5 shadow-2xl backdrop-blur sm:p-6">
+      <p className="text-xs font-semibold uppercase tracking-[0.28em] text-emerald-300">Participa por</p>
+      <h1 className="mt-3 text-3xl font-black text-white">{promotion.title}</h1>
+      <p className="mt-2 text-sm text-zinc-400">Completa los datos obligatorios para entrar.</p>
+      <div className="mt-5 rounded-2xl border border-amber-400/25 bg-amber-400/10 px-4 py-3">
+        <p className="text-[10px] uppercase tracking-[0.22em] text-amber-200">Premio</p>
+        <p className="mt-1 text-base font-bold text-amber-50">{promotion.prize}</p>
+      </div>
+      <div className="mt-5 space-y-3">
+        <input
+          value={form.username}
+          onChange={(e) => setForm((prev) => ({ ...prev, username: e.target.value }))}
+          className="w-full rounded-xl border border-zinc-800 bg-black/70 px-4 py-3 text-sm text-white outline-none focus:border-emerald-500"
+          placeholder="Nombre de usuario"
+        />
+        <input
+          value={form.phone}
+          onChange={(e) => setForm((prev) => ({ ...prev, phone: e.target.value }))}
+          className="w-full rounded-xl border border-zinc-800 bg-black/70 px-4 py-3 text-sm text-white outline-none focus:border-emerald-500"
+          placeholder="Telefono"
+          inputMode="tel"
+        />
+        <input
+          value={form.email}
+          onChange={(e) => setForm((prev) => ({ ...prev, email: e.target.value }))}
+          className="w-full rounded-xl border border-zinc-800 bg-black/70 px-4 py-3 text-sm text-white outline-none focus:border-emerald-500"
+          placeholder="Email"
+          type="email"
+        />
+      </div>
+      {error && <p className="mt-3 rounded-lg bg-red-950/60 px-3 py-2 text-sm text-red-200">{error}</p>}
+      <button
+        type="button"
+        disabled={submitting}
+        onClick={handleSubmit}
+        className="mt-5 w-full rounded-xl bg-emerald-400 px-4 py-3 text-sm font-black uppercase tracking-[0.16em] text-emerald-950 transition hover:bg-emerald-300 disabled:opacity-60"
+      >
+        {submitting ? "Registrando..." : "Participar"}
+      </button>
+    </section>
+  );
 
   return (
-    <main className="min-h-screen overflow-hidden bg-[#07100d] text-zinc-100">
-      <div className="pointer-events-none fixed inset-0 bg-[radial-gradient(circle_at_20%_20%,rgba(16,185,129,0.26),transparent_30%),radial-gradient(circle_at_80%_0%,rgba(245,158,11,0.18),transparent_28%),linear-gradient(135deg,#07100d,#030504_55%,#0d160f)]" />
+    <main className="min-h-screen overflow-hidden bg-[#07100d] text-zinc-100" style={backgroundStyle}>
+      {!backgroundImageUrl && (
+        <div className="pointer-events-none fixed inset-0 bg-[radial-gradient(circle_at_20%_20%,rgba(16,185,129,0.26),transparent_30%),radial-gradient(circle_at_80%_0%,rgba(245,158,11,0.18),transparent_28%),linear-gradient(135deg,#07100d,#030504_55%,#0d160f)]" />
+      )}
       <div className="relative mx-auto flex min-h-screen max-w-5xl flex-col justify-center px-5 py-10">
-        <section className="grid gap-6 lg:grid-cols-[1.05fr_0.95fr] lg:items-center">
-          <div className="rounded-[2rem] border border-emerald-500/20 bg-black/35 p-6 shadow-[0_30px_120px_rgba(0,0,0,0.45)] backdrop-blur sm:p-8">
-            <p className="text-xs font-semibold uppercase tracking-[0.35em] text-emerald-300">{heroLabel}</p>
-            <h1 className="mt-4 text-4xl font-black tracking-tight text-white sm:text-5xl">{promotion.title}</h1>
-            <p className="mt-4 max-w-2xl text-base leading-7 text-zinc-300">{promotion.message}</p>
-            <div className="mt-6 rounded-2xl border border-amber-400/30 bg-amber-400/10 p-4">
-              <p className="text-xs uppercase tracking-[0.25em] text-amber-200">Premio</p>
-              <p className="mt-1 text-xl font-bold text-amber-50">{promotion.prize}</p>
-            </div>
-            <p className="mt-4 text-sm text-zinc-400">Sorteo: {formatDateTime(promotion.draw_at)}</p>
-          </div>
-
-          {showForm ? (
-            <section className="rounded-[2rem] border border-zinc-700/70 bg-zinc-950/78 p-5 shadow-2xl backdrop-blur sm:p-6">
-              <h2 className="text-lg font-bold text-white">Participa del sorteo</h2>
-              <p className="mt-1 text-sm text-zinc-400">Completa los datos obligatorios para entrar.</p>
-              <div className="mt-5 space-y-3">
-                <input
-                  value={form.username}
-                  onChange={(e) => setForm((prev) => ({ ...prev, username: e.target.value }))}
-                  className="w-full rounded-xl border border-zinc-800 bg-black/70 px-4 py-3 text-sm text-white outline-none focus:border-emerald-500"
-                  placeholder="Nombre de usuario"
-                />
-                <input
-                  value={form.phone}
-                  onChange={(e) => setForm((prev) => ({ ...prev, phone: e.target.value }))}
-                  className="w-full rounded-xl border border-zinc-800 bg-black/70 px-4 py-3 text-sm text-white outline-none focus:border-emerald-500"
-                  placeholder="Telefono"
-                  inputMode="tel"
-                />
-                <input
-                  value={form.email}
-                  onChange={(e) => setForm((prev) => ({ ...prev, email: e.target.value }))}
-                  className="w-full rounded-xl border border-zinc-800 bg-black/70 px-4 py-3 text-sm text-white outline-none focus:border-emerald-500"
-                  placeholder="Email"
-                  type="email"
-                />
-              </div>
-              {error && <p className="mt-3 rounded-lg bg-red-950/60 px-3 py-2 text-sm text-red-200">{error}</p>}
-              <button
-                type="button"
-                disabled={submitting}
-                onClick={handleSubmit}
-                className="mt-5 w-full rounded-xl bg-emerald-400 px-4 py-3 text-sm font-black uppercase tracking-[0.16em] text-emerald-950 transition hover:bg-emerald-300 disabled:opacity-60"
-              >
-                {submitting ? "Registrando..." : "Participar"}
-              </button>
-            </section>
-          ) : (
+        {showForm ? (
+          <div className="mx-auto w-full max-w-lg">{formCard}</div>
+        ) : (
+          <section className="grid gap-6 lg:grid-cols-[1.05fr_0.95fr] lg:items-center">
+            {heroCard}
             <section className="rounded-[2rem] border border-emerald-500/25 bg-zinc-950/78 p-5 text-center shadow-2xl backdrop-blur sm:p-6">
               {success && <p className="mb-3 rounded-lg bg-emerald-950/50 px-3 py-2 text-sm text-emerald-200">{success}</p>}
               {!timeLeft?.isOver ? (
@@ -290,8 +316,8 @@ export default function PublicPromotionPage() {
                 </div>
               )}
             </section>
-          )}
-        </section>
+          </section>
+        )}
       </div>
     </main>
   );

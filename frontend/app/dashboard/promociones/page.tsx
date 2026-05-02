@@ -3,6 +3,8 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
 import { supabase } from "@/lib/supabaseClient";
+import { ImageUploader } from "@/components/landing/ImageUploader";
+import { uploadLandingImage } from "@/lib/landing/upload";
 import {
   createPromotion,
   deletePromotion,
@@ -22,6 +24,7 @@ type FormState = {
   slug: string;
   message: string;
   prize: string;
+  backgroundImageUrl: string;
   drawDate: string;
   drawHour: string;
   status: PromotionStatus;
@@ -32,6 +35,7 @@ const EMPTY_FORM: FormState = {
   slug: "",
   message: "",
   prize: "",
+  backgroundImageUrl: "",
   drawDate: "",
   drawHour: "12",
   status: "active",
@@ -162,6 +166,7 @@ export default function DashboardPromocionesPage() {
       slug: promotion.slug,
       message: promotion.message,
       prize: promotion.prize,
+      backgroundImageUrl: promotion.background_image_url ?? "",
       drawDate: draw.drawDate,
       drawHour: draw.drawHour,
       status: promotion.status,
@@ -182,6 +187,7 @@ export default function DashboardPromocionesPage() {
     const slug = slugifyPromotion(form.slug || form.title);
     const messageText = form.message.trim();
     const prize = form.prize.trim();
+    const backgroundImageUrl = form.backgroundImageUrl.trim();
     const drawAt = drawDateHourToIso(form.drawDate, form.drawHour);
 
     if (!title || !slug || !messageText || !prize || !drawAt) {
@@ -197,6 +203,7 @@ export default function DashboardPromocionesPage() {
           slug,
           message: messageText,
           prize,
+          background_image_url: backgroundImageUrl,
           draw_at: drawAt,
           status: form.status,
         });
@@ -208,6 +215,7 @@ export default function DashboardPromocionesPage() {
           slug,
           message: messageText,
           prize,
+          background_image_url: backgroundImageUrl,
           draw_at: drawAt,
           status: form.status,
         });
@@ -352,6 +360,20 @@ export default function DashboardPromocionesPage() {
               placeholder="Bono, fichas, etc..."
             />
           </label>
+          <div className="space-y-1">
+            <span className="text-xs text-zinc-400">Imagen de fondo (.avif)</span>
+            <ImageUploader
+              value={form.backgroundImageUrl ? [form.backgroundImageUrl] : []}
+              onChange={(urls) =>
+                setForm((prev) => ({ ...prev, backgroundImageUrl: urls[0] ?? "" }))
+              }
+              onUpload={async (file) => {
+                if (!userId) throw new Error("Usuario no encontrado.");
+                return uploadLandingImage(supabase, userId, file);
+              }}
+              label=""
+            />
+          </div>
           <div className="grid grid-cols-[minmax(0,1fr)_7.5rem] gap-3">
             <label className="space-y-1">
               <span className="text-xs text-zinc-400">Fecha del sorteo</span>
