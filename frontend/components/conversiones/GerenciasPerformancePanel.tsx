@@ -83,7 +83,7 @@ function formatNumber(value: number): string {
 }
 
 function formatPercent(value: number): string {
-  return `${new Intl.NumberFormat("es-AR", { maximumFractionDigits: 1 }).format(value || 0)}%`;
+  return `${new Intl.NumberFormat("es-AR", { maximumFractionDigits: 0 }).format(value || 0)}%`;
 }
 
 function formatMoney(value: number): string {
