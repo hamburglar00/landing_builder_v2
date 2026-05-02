@@ -790,7 +790,7 @@ export function TelefonosPageContent({
                               Contador
                             </th>
                             <th className="px-3 py-2 font-medium text-zinc-300">
-                              Mensajes recibidos
+                              Mensajes históricos recibidos
                             </th>
                             <th className="px-3 py-2 font-medium text-zinc-300">
                               {(g.source_type ?? "pbadmin") === "manual" ? "Comentario" : "Última sincronización"}
