@@ -1,6 +1,7 @@
 import { supabase } from "@/lib/supabaseClient";
 
 export type PromotionStatus = "active" | "closed";
+export type PromotionDrawStatus = "pending" | "completed" | "no_participants";
 
 export interface PromotionRow {
   id: string;
@@ -15,6 +16,8 @@ export interface PromotionRow {
   winner_username: string;
   winner_selected_at: string | null;
   winner_notified_at: string | null;
+  draw_status: PromotionDrawStatus;
+  draw_processed_at: string | null;
   created_at: string;
   updated_at: string;
 }
@@ -47,7 +50,7 @@ export type PromotionInput = {
 };
 
 const PROMOTIONS_SELECT =
-  "id, user_id, title, slug, message, prize, draw_at, status, winner_participant_id, winner_username, winner_selected_at, winner_notified_at, created_at, updated_at";
+  "id, user_id, title, slug, message, prize, draw_at, status, winner_participant_id, winner_username, winner_selected_at, winner_notified_at, draw_status, draw_processed_at, created_at, updated_at";
 
 export function slugifyPromotion(value: string): string {
   const normalized = value
@@ -58,20 +61,6 @@ export function slugifyPromotion(value: string): string {
     .replace(/^-+|-+$/g, "")
     .slice(0, 72);
   return normalized || `promo-${Date.now().toString(36)}`;
-}
-
-export function formatLocalDateTimeForInput(value: string | null): string {
-  if (!value) return "";
-  const date = new Date(value);
-  if (Number.isNaN(date.getTime())) return "";
-  const pad = (n: number) => String(n).padStart(2, "0");
-  return `${date.getFullYear()}-${pad(date.getMonth() + 1)}-${pad(date.getDate())}T${pad(date.getHours())}:${pad(date.getMinutes())}`;
-}
-
-export function localDateTimeInputToIso(value: string): string {
-  const date = new Date(value);
-  if (Number.isNaN(date.getTime())) return "";
-  return date.toISOString();
 }
 
 async function fetchParticipantCount(promotionId: string): Promise<number> {

@@ -11,6 +11,7 @@ type Promotion = {
   title: string;
   prize: string;
   draw_at: string;
+  draw_status: "pending" | "completed" | "no_participants";
 };
 
 type Participant = {
@@ -33,6 +34,7 @@ type DrawResult = {
   winner_username?: string;
   notified?: number;
   skipped?: string;
+  draw_status?: "completed" | "no_participants";
 };
 
 function jsonResponse(body: Record<string, unknown>, status = 200): Response {
@@ -115,10 +117,22 @@ async function drawPromotion(db: any, promotion: Promotion, botToken: string): P
 
   if (participantsError) throw participantsError;
   const pool = (participants ?? []) as Participant[];
-  if (!pool.length) return { promotion_id: promotion.id, skipped: "no-participants" };
+  const nowIso = new Date().toISOString();
+  if (!pool.length) {
+    const { error: noParticipantsError } = await db
+      .from("promotions")
+      .update({
+        draw_status: "no_participants",
+        draw_processed_at: nowIso,
+      })
+      .eq("id", promotion.id)
+      .eq("draw_status", "pending")
+      .is("winner_participant_id", null);
+    if (noParticipantsError) throw noParticipantsError;
+    return { promotion_id: promotion.id, skipped: "no-participants", draw_status: "no_participants" };
+  }
 
   const winner = pool[Math.floor(Math.random() * pool.length)];
-  const nowIso = new Date().toISOString();
 
   const { data: updatedWinner, error: updateError } = await db
     .from("promotions")
@@ -126,8 +140,11 @@ async function drawPromotion(db: any, promotion: Promotion, botToken: string): P
       winner_participant_id: winner.id,
       winner_username: winner.username,
       winner_selected_at: nowIso,
+      draw_status: "completed",
+      draw_processed_at: nowIso,
     })
     .eq("id", promotion.id)
+    .eq("draw_status", "pending")
     .is("winner_participant_id", null)
     .select("id")
     .maybeSingle();
@@ -139,7 +156,7 @@ async function drawPromotion(db: any, promotion: Promotion, botToken: string): P
     ? await notifyWinner(db, botToken, promotion, winner, nowIso)
     : 0;
 
-  return { promotion_id: promotion.id, winner_username: winner.username, notified };
+  return { promotion_id: promotion.id, winner_username: winner.username, notified, draw_status: "completed" };
 }
 
 Deno.serve(async (req) => {
@@ -177,10 +194,10 @@ Deno.serve(async (req) => {
 
     const { data: promotions, error: promotionsError } = await db
       .from("promotions")
-      .select("id, user_id, title, prize, draw_at")
+      .select("id, user_id, title, prize, draw_at, draw_status")
       .eq("status", "active")
+      .eq("draw_status", "pending")
       .lte("draw_at", new Date().toISOString())
-      .is("winner_participant_id", null)
       .order("draw_at", { ascending: true })
       .limit(50);
 

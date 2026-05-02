@@ -10,6 +10,7 @@ import {
   fetchPromotions,
   slugifyPromotion,
   updatePromotion,
+  type PromotionDrawStatus,
   type PromotionParticipantRow,
   type PromotionStatus,
   type PromotionWithCount,
@@ -48,8 +49,29 @@ function formatDateTime(value: string | null): string {
   });
 }
 
-function statusLabel(status: PromotionStatus) {
-  return status === "active" ? "Activa" : "Cerrada";
+function displayStatus(promotion: PromotionWithCount): { label: string; className: string } {
+  if (promotion.draw_status === "completed" || promotion.winner_username) {
+    return {
+      label: "Realizada",
+      className: "border-emerald-700 bg-emerald-950/40 text-emerald-300",
+    };
+  }
+  if (promotion.draw_status === "no_participants") {
+    return {
+      label: "Sin participantes",
+      className: "border-amber-700 bg-amber-950/40 text-amber-300",
+    };
+  }
+  if (promotion.status === "closed") {
+    return {
+      label: "Cerrada",
+      className: "border-zinc-700 bg-zinc-900 text-zinc-300",
+    };
+  }
+  return {
+    label: "Activa",
+    className: "border-cyan-800 bg-cyan-950/30 text-cyan-300",
+  };
 }
 
 function splitDrawDateHour(value: string | null): Pick<FormState, "drawDate" | "drawHour"> {
@@ -230,7 +252,12 @@ export default function DashboardPromocionesPage() {
       });
       if (error) throw error;
       if (data?.error) throw new Error(String(data.error));
-      showMessage(`Sorteo realizado. Ganador: ${String(data?.winner_username ?? "-")}`);
+      const drawStatus = String(data?.draw_status ?? "") as PromotionDrawStatus | "";
+      if (drawStatus === "no_participants") {
+        showMessage("Sorteo finalizado sin participantes.");
+      } else {
+        showMessage(`Sorteo realizado. Ganador: ${String(data?.winner_username ?? "-")}`);
+      }
       await reload(userId);
     } catch (err) {
       const text = err instanceof Error ? err.message : "No se pudo realizar el sorteo.";
@@ -325,29 +352,31 @@ export default function DashboardPromocionesPage() {
               placeholder="Bono, fichas, etc..."
             />
           </label>
-          <label className="space-y-1">
-            <span className="text-xs text-zinc-400">Fecha del sorteo</span>
-            <input
-              type="date"
-              value={form.drawDate}
-              onChange={(e) => setForm((prev) => ({ ...prev, drawDate: e.target.value }))}
-              className="w-full rounded-lg border border-zinc-800 bg-zinc-950 px-3 py-2 text-sm text-zinc-100 outline-none focus:border-cyan-700"
-            />
-          </label>
-          <label className="space-y-1">
-            <span className="text-xs text-zinc-400">Hora del sorteo</span>
-            <select
-              value={form.drawHour}
-              onChange={(e) => setForm((prev) => ({ ...prev, drawHour: e.target.value }))}
-              className="w-full rounded-lg border border-zinc-800 bg-zinc-950 px-3 py-2 text-sm text-zinc-100 outline-none focus:border-cyan-700"
-            >
-              {HOUR_OPTIONS.map((hour) => (
-                <option key={hour} value={hour}>
-                  {hour}:00
-                </option>
-              ))}
-            </select>
-          </label>
+          <div className="grid grid-cols-[minmax(0,1fr)_7.5rem] gap-3">
+            <label className="space-y-1">
+              <span className="text-xs text-zinc-400">Fecha del sorteo</span>
+              <input
+                type="date"
+                value={form.drawDate}
+                onChange={(e) => setForm((prev) => ({ ...prev, drawDate: e.target.value }))}
+                className="w-full rounded-lg border border-zinc-800 bg-zinc-950 px-3 py-2 text-sm text-zinc-100 outline-none focus:border-cyan-700"
+              />
+            </label>
+            <label className="space-y-1">
+              <span className="text-xs text-zinc-400">Hora</span>
+              <select
+                value={form.drawHour}
+                onChange={(e) => setForm((prev) => ({ ...prev, drawHour: e.target.value }))}
+                className="w-full rounded-lg border border-zinc-800 bg-zinc-950 px-3 py-2 text-sm text-zinc-100 outline-none focus:border-cyan-700"
+              >
+                {HOUR_OPTIONS.map((hour) => (
+                  <option key={hour} value={hour}>
+                    {hour}:00
+                  </option>
+                ))}
+              </select>
+            </label>
+          </div>
           <label className="space-y-1 lg:col-span-2">
             <span className="text-xs text-zinc-400">Mensaje para participantes</span>
             <textarea
@@ -394,14 +423,15 @@ export default function DashboardPromocionesPage() {
             {promotions.map((promotion) => {
               const publicLink = `${origin}/promo/${promotion.slug}`;
               const drawReady = new Date(promotion.draw_at).getTime() <= Date.now();
+              const badge = displayStatus(promotion);
               return (
                 <article key={promotion.id} className="rounded-2xl border border-zinc-800 bg-zinc-950/55 p-4">
                   <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
                     <div className="min-w-0">
                       <div className="flex flex-wrap items-center gap-2">
                         <h3 className="truncate text-sm font-semibold text-zinc-50">{promotion.title}</h3>
-                        <span className="rounded-full border border-zinc-700 px-2 py-0.5 text-[11px] text-zinc-300">
-                          {statusLabel(promotion.status)}
+                        <span className={`rounded-full border px-2 py-0.5 text-[11px] ${badge.className}`}>
+                          {badge.label}
                         </span>
                         {promotion.winner_username && (
                           <span className="rounded-full border border-emerald-700 bg-emerald-950/40 px-2 py-0.5 text-[11px] text-emerald-300">
@@ -438,7 +468,7 @@ export default function DashboardPromocionesPage() {
                       </button>
                       <button
                         type="button"
-                        disabled={saving || !drawReady || Boolean(promotion.winner_username)}
+                        disabled={saving || !drawReady || promotion.draw_status !== "pending"}
                         onClick={() => void runDraw(promotion.slug)}
                         className="rounded-lg border border-amber-700/70 px-3 py-1.5 text-xs text-amber-200 hover:bg-amber-950/40 disabled:opacity-40"
                         title={!drawReady ? "Disponible cuando llegue la fecha del sorteo" : undefined}

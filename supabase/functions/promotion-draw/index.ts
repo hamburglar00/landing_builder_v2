@@ -17,6 +17,8 @@ type Promotion = {
   winner_username: string;
   winner_selected_at: string | null;
   winner_notified_at: string | null;
+  draw_status: "pending" | "completed" | "no_participants";
+  draw_processed_at: string | null;
 };
 
 type Participant = {
@@ -89,7 +91,7 @@ Deno.serve(async (req) => {
 
     const { data: promotion, error: promotionError } = await db
       .from("promotions")
-      .select("id, user_id, title, slug, prize, draw_at, status, winner_participant_id, winner_username, winner_selected_at, winner_notified_at")
+      .select("id, user_id, title, slug, prize, draw_at, status, winner_participant_id, winner_username, winner_selected_at, winner_notified_at, draw_status, draw_processed_at")
       .eq("slug", slug)
       .maybeSingle<Promotion>();
 
@@ -107,9 +109,20 @@ Deno.serve(async (req) => {
       return jsonResponse({
         ok: true,
         already_drawn: true,
+        draw_status: "completed",
         winner_username: promotion.winner_username,
         prize: promotion.prize,
         winner_selected_at: promotion.winner_selected_at,
+      });
+    }
+
+    if (promotion.draw_status === "no_participants") {
+      return jsonResponse({
+        ok: true,
+        already_drawn: true,
+        draw_status: "no_participants",
+        prize: promotion.prize,
+        draw_processed_at: promotion.draw_processed_at,
       });
     }
 
@@ -121,10 +134,28 @@ Deno.serve(async (req) => {
 
     if (participantsError) throw participantsError;
     const pool = (participants ?? []) as Participant[];
-    if (!pool.length) return jsonResponse({ error: "No hay participantes para sortear." }, 409);
+    const nowIso = new Date().toISOString();
+    if (!pool.length) {
+      const { error: noParticipantsError } = await db
+        .from("promotions")
+        .update({
+          draw_status: "no_participants",
+          draw_processed_at: nowIso,
+        })
+        .eq("id", promotion.id)
+        .eq("draw_status", "pending")
+        .is("winner_participant_id", null);
+      if (noParticipantsError) throw noParticipantsError;
+      return jsonResponse({
+        ok: true,
+        already_drawn: false,
+        draw_status: "no_participants",
+        prize: promotion.prize,
+        draw_processed_at: nowIso,
+      });
+    }
 
     const winner = pool[Math.floor(Math.random() * pool.length)];
-    const nowIso = new Date().toISOString();
 
     const { data: updatedWinner, error: updateError } = await db
       .from("promotions")
@@ -132,8 +163,11 @@ Deno.serve(async (req) => {
         winner_participant_id: winner.id,
         winner_username: winner.username,
         winner_selected_at: nowIso,
+        draw_status: "completed",
+        draw_processed_at: nowIso,
       })
       .eq("id", promotion.id)
+      .eq("draw_status", "pending")
       .is("winner_participant_id", null)
       .select("id")
       .maybeSingle();
@@ -142,15 +176,17 @@ Deno.serve(async (req) => {
     if (!updatedWinner) {
       const { data: fresh } = await db
         .from("promotions")
-        .select("winner_username, prize, winner_selected_at")
+        .select("winner_username, prize, winner_selected_at, draw_status, draw_processed_at")
         .eq("id", promotion.id)
-        .maybeSingle<Pick<Promotion, "winner_username" | "prize" | "winner_selected_at">>();
+        .maybeSingle<Pick<Promotion, "winner_username" | "prize" | "winner_selected_at" | "draw_status" | "draw_processed_at">>();
       return jsonResponse({
         ok: true,
         already_drawn: true,
+        draw_status: fresh?.draw_status ?? "pending",
         winner_username: fresh?.winner_username ?? "",
         prize: fresh?.prize ?? promotion.prize,
         winner_selected_at: fresh?.winner_selected_at ?? null,
+        draw_processed_at: fresh?.draw_processed_at ?? null,
       });
     }
 
@@ -202,9 +238,11 @@ Deno.serve(async (req) => {
     return jsonResponse({
       ok: true,
       already_drawn: false,
+      draw_status: "completed",
       winner_username: winner.username,
       prize: promotion.prize,
       winner_selected_at: nowIso,
+      draw_processed_at: nowIso,
       notified,
       notification_skipped: notificationSkipped || null,
     });

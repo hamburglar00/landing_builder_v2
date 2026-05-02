@@ -3,7 +3,7 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import { useParams } from "next/navigation";
 import { supabase } from "@/lib/supabaseClient";
-import { fetchPromotionBySlug, type PromotionRow } from "@/lib/promotionsDb";
+import { fetchPromotionBySlug, type PromotionDrawStatus, type PromotionRow } from "@/lib/promotionsDb";
 
 type FormState = {
   username: string;
@@ -53,6 +53,7 @@ export default function PublicPromotionPage() {
   const [success, setSuccess] = useState<string | null>(null);
   const [timeLeft, setTimeLeft] = useState<TimeLeft | null>(null);
   const [winnerUsername, setWinnerUsername] = useState("");
+  const [drawStatus, setDrawStatus] = useState<PromotionDrawStatus>("pending");
   const [drawMessage, setDrawMessage] = useState<string | null>(null);
   const drawRequestedRef = useRef(false);
 
@@ -73,6 +74,7 @@ export default function PublicPromotionPage() {
         const row = await fetchPromotionBySlug(slug);
         setPromotion(row);
         setWinnerUsername(row?.winner_username ?? "");
+        setDrawStatus(row?.draw_status ?? "pending");
         if (storageKey && window.localStorage.getItem(storageKey) === "1") {
           setParticipantReady(true);
         }
@@ -95,16 +97,23 @@ export default function PublicPromotionPage() {
 
   useEffect(() => {
     const draw = async () => {
-      if (!promotion || !timeLeft?.isOver || winnerUsername || drawRequestedRef.current) return;
+      if (!promotion || !timeLeft?.isOver || winnerUsername || drawStatus !== "pending" || drawRequestedRef.current) return;
       drawRequestedRef.current = true;
       try {
         const { data, error: fnError } = await supabase.functions.invoke("promotion-draw", {
           body: { slug: promotion.slug },
         });
         if (fnError) throw fnError;
+        if (data?.draw_status) {
+          setDrawStatus(String(data.draw_status) as PromotionDrawStatus);
+        }
         if (data?.winner_username) {
           setWinnerUsername(String(data.winner_username));
           setDrawMessage(null);
+          return;
+        }
+        if (data?.draw_status === "no_participants") {
+          setDrawMessage("El sorteo finalizo sin participantes.");
           return;
         }
         if (data?.error) setDrawMessage(String(data.error));
@@ -114,7 +123,7 @@ export default function PublicPromotionPage() {
       }
     };
     void draw();
-  }, [promotion, timeLeft?.isOver, winnerUsername]);
+  }, [drawStatus, promotion, timeLeft?.isOver, winnerUsername]);
 
   const handleSubmit = async () => {
     if (!promotion || !visitorToken) return;
@@ -185,6 +194,8 @@ export default function PublicPromotionPage() {
         ["seg", timeLeft.seconds],
       ]
     : [];
+  const showForm = !participantReady && !timeLeft?.isOver;
+  const heroLabel = timeLeft?.isOver ? "Sorteo finalizado" : "Promocion activa";
 
   return (
     <main className="min-h-screen overflow-hidden bg-[#07100d] text-zinc-100">
@@ -192,7 +203,7 @@ export default function PublicPromotionPage() {
       <div className="relative mx-auto flex min-h-screen max-w-5xl flex-col justify-center px-5 py-10">
         <section className="grid gap-6 lg:grid-cols-[1.05fr_0.95fr] lg:items-center">
           <div className="rounded-[2rem] border border-emerald-500/20 bg-black/35 p-6 shadow-[0_30px_120px_rgba(0,0,0,0.45)] backdrop-blur sm:p-8">
-            <p className="text-xs font-semibold uppercase tracking-[0.35em] text-emerald-300">Promocion activa</p>
+            <p className="text-xs font-semibold uppercase tracking-[0.35em] text-emerald-300">{heroLabel}</p>
             <h1 className="mt-4 text-4xl font-black tracking-tight text-white sm:text-5xl">{promotion.title}</h1>
             <p className="mt-4 max-w-2xl text-base leading-7 text-zinc-300">{promotion.message}</p>
             <div className="mt-6 rounded-2xl border border-amber-400/30 bg-amber-400/10 p-4">
@@ -202,7 +213,7 @@ export default function PublicPromotionPage() {
             <p className="mt-4 text-sm text-zinc-400">Sorteo: {formatDateTime(promotion.draw_at)}</p>
           </div>
 
-          {!participantReady ? (
+          {showForm ? (
             <section className="rounded-[2rem] border border-zinc-700/70 bg-zinc-950/78 p-5 shadow-2xl backdrop-blur sm:p-6">
               <h2 className="text-lg font-bold text-white">Participa del sorteo</h2>
               <p className="mt-1 text-sm text-zinc-400">Completa los datos obligatorios para entrar.</p>
@@ -261,6 +272,15 @@ export default function PublicPromotionPage() {
                     <span className="text-4xl font-black text-amber-100">1</span>
                   </div>
                   <h2 className="mt-6 break-words text-4xl font-black text-white">{winnerUsername}</h2>
+                  <p className="mt-3 text-sm text-zinc-400">Premio: {promotion.prize}</p>
+                </div>
+              ) : drawStatus === "no_participants" ? (
+                <div className="py-8">
+                  <p className="text-xs font-semibold uppercase tracking-[0.32em] text-zinc-400">Sorteo finalizado</p>
+                  <div className="mx-auto mt-6 flex h-32 w-32 items-center justify-center rounded-full border border-zinc-700 bg-zinc-900/70 shadow-[0_0_70px_rgba(113,113,122,0.22)]">
+                    <span className="text-4xl font-black text-zinc-300">0</span>
+                  </div>
+                  <h2 className="mt-6 text-2xl font-black text-white">El sorteo finalizo sin participantes.</h2>
                   <p className="mt-3 text-sm text-zinc-400">Premio: {promotion.prize}</p>
                 </div>
               ) : (
