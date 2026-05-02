@@ -11,6 +11,7 @@ const SETUP_GUIDE_STORAGE_PREFIX = "constructor_setup_guide_hidden:";
 const DASHBOARD_PREFETCH_ROUTES = [
   "/dashboard/inicio",
   "/dashboard/landings",
+  "/dashboard/promociones",
   "/dashboard/conversiones",
   "/dashboard/seguimiento",
   "/dashboard/gerencias",
@@ -62,7 +63,7 @@ function NavIcon({
   variant,
   active,
 }: {
-  variant: "inicio" | "landings" | "gerencias" | "telefonos" | "conversiones" | "integraciones" | "seguimiento" | "notificaciones";
+  variant: "inicio" | "landings" | "promociones" | "gerencias" | "telefonos" | "conversiones" | "integraciones" | "seguimiento" | "notificaciones";
   active: boolean;
 }) {
   const base = active
@@ -77,10 +78,14 @@ function NavIcon({
         ? active
           ? "text-sky-400"
           : "text-sky-300"
-        : variant === "conversiones"
-          ? active
-            ? "text-orange-400"
-            : "text-orange-300"
+      : variant === "conversiones"
+        ? active
+          ? "text-orange-400"
+          : "text-orange-300"
+          : variant === "promociones"
+            ? active
+              ? "text-lime-300"
+              : "text-lime-200"
           : variant === "integraciones"
             ? active
               ? "text-cyan-400"
@@ -172,6 +177,28 @@ function NavIcon({
         >
           <polyline points="22 7 13.5 15.5 8.5 10.5 2 17" className={accent} />
           <polyline points="16 7 22 7 22 13" />
+        </svg>
+      </span>
+    );
+  }
+
+  if (variant === "promociones") {
+    return (
+      <span className={`${base}`}>
+        <svg
+          className="h-4 w-4"
+          viewBox="0 0 24 24"
+          fill="none"
+          stroke="currentColor"
+          strokeWidth={1.6}
+          strokeLinecap="round"
+          strokeLinejoin="round"
+        >
+          <path d="M20 12v8H4v-8" />
+          <path d="M2 7h20v5H2z" className={accent} />
+          <path d="M12 7v13" />
+          <path d="M12 7H8.5a2.5 2.5 0 1 1 2.2-3.7L12 7z" />
+          <path d="M12 7h3.5a2.5 2.5 0 1 0-2.2-3.7L12 7z" />
         </svg>
       </span>
     );
@@ -513,6 +540,22 @@ export default function DashboardLayout({
           >
             <NavIcon variant="landings" active={Boolean(pathname?.startsWith("/dashboard/landings"))} />
             <span>LANDINGS</span>
+          </Link>
+
+          <Link
+            href="/dashboard/promociones"
+            onClick={() => handleNavClick("/dashboard/promociones")}
+            className={`flex items-center gap-2 rounded-lg px-3 py-2 text-xs font-medium tracking-[0.18em] transition ${
+              pathname?.startsWith("/dashboard/promociones")
+                ? "bg-[var(--color-primary-soft-bg)] text-[var(--color-primary)] border border-[var(--color-primary-soft-border)]"
+                : "text-[var(--color-text-muted)] hover:bg-[var(--color-bg-3)] hover:text-[var(--color-text)]"
+            }`}
+          >
+            <NavIcon
+              variant="promociones"
+              active={Boolean(pathname?.startsWith("/dashboard/promociones"))}
+            />
+            <span>PROMOCIONES</span>
           </Link>
 
           <Link

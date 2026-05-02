@@ -423,5 +423,11 @@ verify_jwt = false
 [functions.conversions-test]
 verify_jwt = false
 
+[functions.promotion-participate]
+verify_jwt = false
+
+[functions.promotion-draw]
+verify_jwt = false
+
 [functions.telegram-webhook]
 verify_jwt = false
