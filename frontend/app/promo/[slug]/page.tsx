@@ -315,7 +315,7 @@ export default function PublicPromotionPage() {
           {tickerText} - {tickerText} - {tickerText} -
         </div>
       </div>
-      <h1 className="relative mx-auto mt-5 max-w-[310px] break-words text-[clamp(3.2rem,17vw,5.6rem)] font-black uppercase leading-[0.86] tracking-wide text-white [font-family:Impact,'Arial_Narrow',sans-serif]">
+      <h1 className="relative mx-auto mt-5 max-w-[310px] break-words text-[clamp(3.2rem,17vw,5.6rem)] font-black uppercase leading-[0.86] tracking-wide text-amber-500 [font-family:Impact,'Arial_Narrow',sans-serif]">
         {promotion.title}
       </h1>
       <p className="relative mx-auto mt-4 max-w-[290px] text-[13px] leading-6 text-zinc-400 sm:text-sm">{promotion.message}</p>

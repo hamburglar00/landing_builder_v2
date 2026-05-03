@@ -135,7 +135,7 @@ function PromotionMobilePreview({ form }: { form: FormState }) {
               {ticker} - {ticker} - {ticker} -
             </div>
           </div>
-          <h3 className="relative mt-4 break-words text-[42px] font-black uppercase leading-[0.92] tracking-wide text-white [font-family:Impact,'Arial_Narrow',sans-serif]">
+          <h3 className="relative mt-4 break-words text-[42px] font-black uppercase leading-[0.92] tracking-wide text-amber-500 [font-family:Impact,'Arial_Narrow',sans-serif]">
             {title}
           </h3>
           <p className="relative mx-auto mt-3 max-w-[220px] text-[12px] leading-5 text-zinc-400">{description}</p>
