@@ -659,6 +659,7 @@ export function TelefonosPageContent({
         <div className="space-y-2">
           {gerencias.map((g) => {
             const phones = phonesByGerencia[g.id] ?? [];
+            const activePhonesCount = phones.filter((p) => p.status === "active").length;
             const totalUsage = phones.reduce(
               (acc, p) => acc + (Number(p.usage_count) || 0),
               0,
@@ -694,7 +695,7 @@ export function TelefonosPageContent({
                       {(g.source_type ?? "pbadmin") === "manual" ? "Manual" : "PBadmin"}
                     </span>
                     <span className="text-xs text-zinc-500 md:text-right">
-                      {phones.length} registro{phones.length !== 1 ? "s" : ""}
+                      registros activos: {activePhonesCount}
                     </span>
                   </div>
                   <div className="text-xs text-zinc-500 md:text-right">
