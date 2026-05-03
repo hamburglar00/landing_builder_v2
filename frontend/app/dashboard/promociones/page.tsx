@@ -447,11 +447,14 @@ export default function DashboardPromocionesPage() {
     }
   };
 
-  const runDraw = async (slug: string) => {
+  const runDraw = async (slug: string, force = false) => {
+    if (force && !window.confirm("Forzar el sorteo ahora? Esta accion selecciona un ganador y no se puede deshacer.")) {
+      return;
+    }
     setSaving(true);
     try {
       const { data, error } = await supabase.functions.invoke("promotion-draw", {
-        body: { slug },
+        body: { slug, force },
       });
       if (error) throw error;
       if (data?.error) throw new Error(String(data.error));
@@ -737,10 +740,10 @@ export default function DashboardPromocionesPage() {
                       </button>
                       <button
                         type="button"
-                        disabled={saving || !drawReady || promotion.draw_status !== "pending"}
-                        onClick={() => void runDraw(promotion.slug)}
+                        disabled={saving || promotion.draw_status !== "pending"}
+                        onClick={() => void runDraw(promotion.slug, !drawReady)}
                         className="rounded-lg border border-amber-700/70 px-3 py-1.5 text-xs text-amber-200 hover:bg-amber-950/40 disabled:opacity-40"
-                        title={!drawReady ? "Disponible cuando llegue la fecha del sorteo" : undefined}
+                        title={!drawReady ? "Forzar sorteo antes de la fecha programada" : undefined}
                       >
                         Sortear
                       </button>

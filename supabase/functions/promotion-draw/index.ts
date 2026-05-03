@@ -37,6 +37,10 @@ type TelegramDestination = {
   telegram_chat_id: string;
 };
 
+type Profile = {
+  role: string;
+};
+
 function shuffled<T>(items: T[]): T[] {
   const copy = [...items];
   for (let i = copy.length - 1; i > 0; i -= 1) {
@@ -102,6 +106,7 @@ Deno.serve(async (req) => {
   try {
     const supabaseUrl = Deno.env.get("SUPABASE_URL");
     const serviceRoleKey = Deno.env.get("SERVICE_ROLE_KEY");
+    const anonKey = Deno.env.get("SUPABASE_ANON_KEY");
     if (!supabaseUrl || !serviceRoleKey) {
       return jsonResponse({ error: "Configuracion del servidor incompleta." }, 500);
     }
@@ -112,6 +117,7 @@ Deno.serve(async (req) => {
 
     const body = await req.json().catch(() => ({}));
     const slug = cleanText(body?.slug, 120).toLowerCase();
+    const force = body?.force === true;
     if (!slug) return jsonResponse({ error: "Falta slug." }, 400);
 
     const { data: promotion, error: promotionError } = await db
@@ -127,7 +133,44 @@ Deno.serve(async (req) => {
 
     const drawAtMs = new Date(promotion.draw_at).getTime();
     if (drawAtMs > Date.now()) {
-      return jsonResponse({ error: "El sorteo todavia no esta listo.", draw_at: promotion.draw_at }, 409);
+      if (!force) {
+        return jsonResponse({ error: "El sorteo todavia no esta listo.", draw_at: promotion.draw_at }, 409);
+      }
+
+      if (!anonKey) {
+        return jsonResponse({ error: "Configuracion de autenticacion incompleta." }, 500);
+      }
+
+      const authHeader = req.headers.get("Authorization") ?? req.headers.get("authorization") ?? "";
+      if (!authHeader) {
+        return jsonResponse({ error: "Falta autenticacion para forzar el sorteo." }, 401);
+      }
+
+      const supabaseForUser = createClient(supabaseUrl, anonKey, {
+        global: { headers: { Authorization: authHeader } },
+      });
+
+      const {
+        data: { user },
+        error: authError,
+      } = await supabaseForUser.auth.getUser();
+
+      if (authError || !user) {
+        return jsonResponse({ error: "No se pudo autenticar al usuario." }, 401);
+      }
+
+      const { data: profile, error: profileError } = await db
+        .from("profiles")
+        .select("role")
+        .eq("id", user.id)
+        .maybeSingle<Profile>();
+
+      if (profileError) throw profileError;
+      const isOwner = user.id === promotion.user_id;
+      const isAdmin = profile?.role === "admin";
+      if (!isOwner && !isAdmin) {
+        return jsonResponse({ error: "No tenes permiso para forzar este sorteo." }, 403);
+      }
     }
 
     if (promotion.winner_participant_id) {
