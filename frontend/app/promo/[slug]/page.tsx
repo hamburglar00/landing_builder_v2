@@ -352,10 +352,10 @@ export default function PublicPromotionPage() {
   const heroShellClassName = backgroundImageUrl
     ? showParticipantWaiting
       ? "relative h-[calc(100svh-1rem)] overflow-hidden rounded-[1.5rem] px-4 pb-48 pt-5 text-center sm:h-auto sm:min-h-[680px] sm:rounded-[2rem] sm:px-7 sm:pb-64 sm:pt-10"
-      : "relative h-[calc(100svh-1rem)] overflow-hidden rounded-[1.5rem] px-4 pb-20 pt-5 text-center sm:h-auto sm:min-h-[680px] sm:rounded-[2rem] sm:px-7 sm:pb-28 sm:pt-10"
+      : "relative flex h-[calc(100svh-1rem)] flex-col overflow-hidden rounded-[1.5rem] px-4 pb-20 pt-5 text-center sm:block sm:h-auto sm:min-h-[680px] sm:rounded-[2rem] sm:px-7 sm:pb-28 sm:pt-10"
     : showParticipantWaiting
       ? "relative h-[calc(100svh-1rem)] overflow-hidden rounded-[1.5rem] border border-white/10 bg-[#0c0c14] px-4 pb-48 pt-5 text-center shadow-[0_30px_100px_rgba(0,0,0,0.55)] sm:h-auto sm:min-h-[680px] sm:rounded-[2rem] sm:px-7 sm:pb-64 sm:pt-10"
-      : "relative h-[calc(100svh-1rem)] overflow-hidden rounded-[1.5rem] border border-white/10 bg-[#0c0c14] px-4 pb-20 pt-5 text-center shadow-[0_30px_100px_rgba(0,0,0,0.55)] sm:h-auto sm:min-h-[680px] sm:rounded-[2rem] sm:px-7 sm:pb-28 sm:pt-10";
+      : "relative flex h-[calc(100svh-1rem)] flex-col overflow-hidden rounded-[1.5rem] border border-white/10 bg-[#0c0c14] px-4 pb-20 pt-5 text-center shadow-[0_30px_100px_rgba(0,0,0,0.55)] sm:block sm:h-auto sm:min-h-[680px] sm:rounded-[2rem] sm:px-7 sm:pb-28 sm:pt-10";
   const ctaZoneClassName = backgroundImageUrl
     ? "absolute inset-x-0 bottom-0 px-4 pb-3 pt-6 sm:px-5 sm:pb-6 sm:pt-12"
     : "absolute inset-x-0 bottom-0 bg-gradient-to-t from-[#0c0c14] via-[#0c0c14] to-transparent px-4 pb-3 pt-6 sm:px-5 sm:pb-6 sm:pt-12";
@@ -368,17 +368,17 @@ export default function PublicPromotionPage() {
           {tickerText} - {tickerText} - {tickerText} -
         </div>
       </div>
-      <h1 className="relative mx-auto mt-3 max-w-[285px] break-words text-[clamp(2.65rem,14vw,4.5rem)] font-black uppercase leading-[0.84] tracking-wide text-amber-500 [font-family:Impact,'Arial_Narrow',sans-serif] sm:mt-5 sm:max-w-[310px] sm:text-[clamp(3.2rem,17vw,5.6rem)] sm:leading-[0.86]">
+      <h1 className="relative mx-auto mt-4 max-w-[285px] break-words text-[clamp(2.85rem,15vw,4.9rem)] font-black uppercase leading-[0.84] tracking-wide text-amber-500 [font-family:Impact,'Arial_Narrow',sans-serif] sm:mt-5 sm:max-w-[310px] sm:text-[clamp(3.2rem,17vw,5.6rem)] sm:leading-[0.86]">
         {promotion.title}
       </h1>
-      <p className="relative mx-auto mt-2 max-w-[292px] text-center text-[12px] font-bold leading-5 text-zinc-400 [text-wrap:balance] sm:mt-4 sm:max-w-[312px] sm:text-sm sm:leading-6">
+      <p className="relative mx-auto mt-3 max-w-[292px] text-center text-[12px] font-bold uppercase leading-5 tracking-[0.03em] text-zinc-400 [text-wrap:balance] sm:mt-4 sm:max-w-[312px] sm:text-sm sm:leading-6">
         {promotion.message}
       </p>
-      <div className="relative mt-4 flex items-center gap-3 rounded-2xl border border-amber-500/45 bg-[#1b152b] p-3 text-left shadow-[inset_0_1px_0_rgba(255,255,255,0.06)] sm:mt-7 sm:p-4">
-        <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl border border-amber-500/35 bg-amber-500/10 text-lg font-black text-amber-300 sm:h-12 sm:w-12 sm:text-xl">
+      <div className="relative mt-7 flex items-center justify-center gap-4 rounded-2xl border border-amber-500/45 bg-[#1b152b] p-4 text-left shadow-[inset_0_1px_0_rgba(255,255,255,0.06)] sm:p-4">
+        <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl border border-amber-500/35 bg-amber-500/10 text-lg font-black text-amber-300 sm:h-12 sm:w-12 sm:text-xl">
           $
         </div>
-        <div className="min-w-0">
+        <div className="min-w-0 text-center sm:text-left">
           <p className="text-[9px] font-semibold uppercase tracking-[0.18em] text-zinc-500 sm:text-[10px] sm:tracking-[0.22em]">Premio principal</p>
           <p className="mt-0.5 break-words text-2xl font-black uppercase leading-none text-amber-400 [font-family:Impact,'Arial_Narrow',sans-serif] sm:mt-1 sm:text-3xl">
             {promotion.prize}
@@ -387,8 +387,8 @@ export default function PublicPromotionPage() {
         </div>
       </div>
       {!showParticipantWaiting && !drawIsOver && (
-        <>
-          <p className="mt-4 text-left text-[9px] font-semibold uppercase tracking-[0.16em] text-zinc-500 sm:mt-6 sm:text-[10px] sm:tracking-[0.18em]">Termina en</p>
+        <div className="mt-6 sm:mt-6">
+          <p className="text-left text-[9px] font-semibold uppercase tracking-[0.16em] text-zinc-500 sm:text-[10px] sm:tracking-[0.18em]">Termina en</p>
           <div className="mt-1.5 grid grid-cols-4 gap-1.5 sm:mt-2 sm:gap-2">
             {units.map(([label, value]) => (
               <div key={label} className="rounded-xl border border-white/10 bg-white/[0.05] px-1 py-2 sm:px-1.5 sm:py-3">
@@ -399,13 +399,13 @@ export default function PublicPromotionPage() {
               </div>
             ))}
           </div>
-        </>
+        </div>
       )}
       {participationSteps.length > 0 && !showParticipantWaiting && !drawIsOver && (
-        <>
-          <div className="my-3 h-px bg-white/10 sm:my-5" />
+        <div className="mt-auto pb-16 sm:mt-0 sm:pb-0">
+          <div className="mb-4 h-px bg-white/10 sm:my-5" />
           <p className="text-left text-[9px] font-semibold uppercase tracking-[0.16em] text-zinc-500 sm:text-[10px] sm:tracking-[0.18em]">Como participar</p>
-          <div className="mt-2 space-y-1.5 text-left sm:mt-3 sm:space-y-2">
+          <div className="mt-3 space-y-2.5 text-left sm:mt-3 sm:space-y-2">
             {participationSteps.map((step, index) => (
               <div key={`${step}-${index}`} className="flex items-start gap-2">
                 <span className="flex h-4 w-4 shrink-0 items-center justify-center rounded-full border border-amber-500/60 bg-amber-500/10 text-[9px] font-bold text-amber-300 sm:h-5 sm:w-5 sm:text-[10px]">
@@ -415,7 +415,7 @@ export default function PublicPromotionPage() {
               </div>
             ))}
           </div>
-        </>
+        </div>
       )}
       {canParticipate && (
         <div className={ctaZoneClassName}>
