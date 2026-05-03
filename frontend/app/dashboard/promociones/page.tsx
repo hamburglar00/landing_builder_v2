@@ -183,7 +183,6 @@ function PromotionMobilePreview({ form }: { form: FormState }) {
             >
               {ctaLabel}
             </button>
-            <p className="mt-2 text-[9px] text-zinc-600">Mayores de 18 anos - Bases y condiciones aplican</p>
           </div>
         </div>
       </div>
