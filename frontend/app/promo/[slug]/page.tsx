@@ -408,7 +408,7 @@ export default function PublicPromotionPage() {
               </div>
             ))}
           </div>
-          <p className="mx-auto mt-5 max-w-[300px] text-center text-sm leading-6 text-zinc-300 [text-wrap:balance]">
+          <p className="mx-auto mt-5 max-w-[300px] text-center text-sm font-bold leading-6 text-zinc-300 [text-wrap:balance]">
             Cuando llegue la hora, aca se mostrara el sorteo en vivo y el ganador.
           </p>
         </div>
