@@ -232,6 +232,7 @@ export default function DashboardPromocionesPage() {
   const [saving, setSaving] = useState(false);
   const [promotions, setPromotions] = useState<PromotionWithCount[]>([]);
   const [editingId, setEditingId] = useState<string | null>(null);
+  const [editorOpen, setEditorOpen] = useState(false);
   const [form, setForm] = useState<FormState>(EMPTY_FORM);
   const [message, setMessage] = useState<string | null>(null);
   const [messageType, setMessageType] = useState<"success" | "error">("success");
@@ -318,6 +319,13 @@ export default function DashboardPromocionesPage() {
   const resetForm = () => {
     setEditingId(null);
     setForm(EMPTY_FORM);
+    setEditorOpen(false);
+  };
+
+  const openCreateEditor = () => {
+    setEditingId(null);
+    setForm(EMPTY_FORM);
+    setEditorOpen(true);
   };
 
   const startEdit = (promotion: PromotionWithCount) => {
@@ -337,6 +345,7 @@ export default function DashboardPromocionesPage() {
       drawHour: draw.drawHour,
       status: promotion.status,
     });
+    setEditorOpen(true);
   };
 
   const handleTitleChange = (title: string) => {
@@ -474,10 +483,10 @@ export default function DashboardPromocionesPage() {
         </div>
         <button
           type="button"
-          onClick={resetForm}
-          className="rounded-lg border border-zinc-700 bg-zinc-900 px-3 py-2 text-xs font-semibold text-zinc-100 hover:bg-zinc-800"
+          onClick={openCreateEditor}
+          className="cursor-pointer rounded-xl bg-[var(--color-primary)] px-4 py-2 text-sm font-semibold uppercase tracking-wide text-[var(--color-bg-0)] transition-colors duration-150 hover:bg-[var(--color-primary-hover)] active:bg-[var(--color-primary-press)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-ring-primary)]"
         >
-          Nueva promocion
+          CREAR PROMOCION
         </button>
       </div>
 
@@ -492,6 +501,7 @@ export default function DashboardPromocionesPage() {
         </p>
       )}
 
+      {editorOpen && (
       <section className="rounded-2xl border border-zinc-800 bg-zinc-950/60 p-4 shadow-[0_24px_80px_rgba(0,0,0,0.35)]">
         <div className="mb-4 flex items-center justify-between gap-3">
           <div>
@@ -502,13 +512,13 @@ export default function DashboardPromocionesPage() {
               Se te enviara la notificacion del ganador via Telegram que hayas configurado en la seccion de notificaciones.
             </p>
           </div>
-          {editingId && (
+          {editorOpen && (
             <button
               type="button"
               onClick={resetForm}
               className="rounded-lg border border-zinc-700 px-3 py-1.5 text-xs text-zinc-300 hover:bg-zinc-900"
             >
-              Cancelar edicion
+              {editingId ? "Cancelar edicion" : "Cancelar"}
             </button>
           )}
         </div>
@@ -669,6 +679,7 @@ export default function DashboardPromocionesPage() {
           </button>
         </div>
       </section>
+      )}
 
       <section className="space-y-3">
         <h2 className="text-sm font-semibold text-zinc-100">Promociones creadas</h2>
