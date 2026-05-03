@@ -425,7 +425,7 @@ export default function PublicPromotionPage() {
               setError(null);
               setFormOpen(true);
             }}
-            className="min-h-12 w-full rounded-xl bg-amber-500 px-4 py-3 text-sm font-black uppercase tracking-[0.16em] text-[#0c0c14] transition active:scale-[0.99] hover:bg-amber-400 hover:[animation-play-state:paused] [animation:promotion-heartbeat_2.6s_ease-in-out_infinite] [font-family:Impact,'Arial_Narrow',sans-serif] sm:min-h-14 sm:rounded-2xl sm:px-5 sm:py-4 sm:text-sm sm:tracking-[0.18em]"
+            className="min-h-12 w-full rounded-xl bg-amber-500 px-4 py-3 text-lg font-black uppercase tracking-[0.12em] text-[#0c0c14] transition active:scale-[0.99] hover:bg-amber-400 hover:[animation-play-state:paused] [animation:promotion-heartbeat_2.6s_ease-in-out_infinite] [font-family:Impact,'Arial_Narrow',sans-serif] sm:min-h-14 sm:rounded-2xl sm:px-5 sm:py-4 sm:text-xl sm:tracking-[0.14em]"
           >
             {ctaLabel}
           </button>
