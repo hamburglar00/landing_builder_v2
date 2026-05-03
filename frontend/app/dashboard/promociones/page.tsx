@@ -638,7 +638,7 @@ export default function DashboardPromocionesPage() {
           </div>
         </div>
 
-        <div className="mt-4 flex justify-end">
+        <div className="mt-4 flex justify-center">
           <button
             type="button"
             disabled={saving}
