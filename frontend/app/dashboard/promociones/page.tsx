@@ -98,9 +98,18 @@ function splitDrawDateHour(value: string | null): Pick<FormState, "drawDate" | "
 }
 
 function drawDateHourToIso(dateValue: string, hourValue: string): string {
-  if (!dateValue) return "";
+  const rawDate = dateValue.trim();
+  if (!rawDate) return "";
   const hour = Math.min(23, Math.max(0, Number(hourValue)));
-  const date = new Date(`${dateValue}T${String(hour).padStart(2, "0")}:00:00`);
+  const ymdMatch = rawDate.match(/^(\d{4})-(\d{2})-(\d{2})$/);
+  const dmyMatch = rawDate.match(/^(\d{1,2})\/(\d{1,2})\/(\d{4})$/);
+  const normalizedDate = ymdMatch
+    ? rawDate
+    : dmyMatch
+      ? `${dmyMatch[3]}-${dmyMatch[2].padStart(2, "0")}-${dmyMatch[1].padStart(2, "0")}`
+      : "";
+  if (!normalizedDate) return "";
+  const date = new Date(`${normalizedDate}T${String(hour).padStart(2, "0")}:00:00`);
   if (Number.isNaN(date.getTime())) return "";
   return date.toISOString();
 }
@@ -331,8 +340,16 @@ export default function DashboardPromocionesPage() {
     const backgroundImageUrl = form.backgroundImageUrl.trim();
     const drawAt = drawDateHourToIso(form.drawDate, form.drawHour);
 
-    if (!title || !slug || !messageText || !prize || !drawAt) {
-      showMessage("Completa titulo, mensaje, premio, fecha y hora del sorteo.", "error");
+    const missingFields = [
+      !title ? "titulo" : "",
+      !slug ? "link publico" : "",
+      !messageText ? "descripcion" : "",
+      !prize ? "premio" : "",
+      !drawAt ? "fecha y hora del sorteo" : "",
+    ].filter(Boolean);
+
+    if (missingFields.length > 0) {
+      showMessage(`Completa o revisa: ${missingFields.join(", ")}.`, "error");
       return;
     }
 
