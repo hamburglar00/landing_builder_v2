@@ -351,51 +351,51 @@ export default function PublicPromotionPage() {
 
   const heroShellClassName = backgroundImageUrl
     ? showParticipantWaiting
-      ? "relative min-h-[calc(100svh-2rem)] overflow-hidden rounded-[2rem] px-5 pb-64 pt-8 text-center sm:min-h-[680px] sm:px-7 sm:pt-10"
-      : "relative min-h-[calc(100svh-2rem)] overflow-hidden rounded-[2rem] px-5 pb-28 pt-8 text-center sm:min-h-[680px] sm:px-7 sm:pt-10"
+      ? "relative h-[calc(100svh-1rem)] overflow-hidden rounded-[1.5rem] px-4 pb-48 pt-5 text-center sm:h-auto sm:min-h-[680px] sm:rounded-[2rem] sm:px-7 sm:pb-64 sm:pt-10"
+      : "relative h-[calc(100svh-1rem)] overflow-hidden rounded-[1.5rem] px-4 pb-20 pt-5 text-center sm:h-auto sm:min-h-[680px] sm:rounded-[2rem] sm:px-7 sm:pb-28 sm:pt-10"
     : showParticipantWaiting
-      ? "relative min-h-[calc(100svh-2rem)] overflow-hidden rounded-[2rem] border border-white/10 bg-[#0c0c14] px-5 pb-64 pt-8 text-center shadow-[0_30px_100px_rgba(0,0,0,0.55)] sm:min-h-[680px] sm:px-7 sm:pt-10"
-      : "relative min-h-[calc(100svh-2rem)] overflow-hidden rounded-[2rem] border border-white/10 bg-[#0c0c14] px-5 pb-28 pt-8 text-center shadow-[0_30px_100px_rgba(0,0,0,0.55)] sm:min-h-[680px] sm:px-7 sm:pt-10";
+      ? "relative h-[calc(100svh-1rem)] overflow-hidden rounded-[1.5rem] border border-white/10 bg-[#0c0c14] px-4 pb-48 pt-5 text-center shadow-[0_30px_100px_rgba(0,0,0,0.55)] sm:h-auto sm:min-h-[680px] sm:rounded-[2rem] sm:px-7 sm:pb-64 sm:pt-10"
+      : "relative h-[calc(100svh-1rem)] overflow-hidden rounded-[1.5rem] border border-white/10 bg-[#0c0c14] px-4 pb-20 pt-5 text-center shadow-[0_30px_100px_rgba(0,0,0,0.55)] sm:h-auto sm:min-h-[680px] sm:rounded-[2rem] sm:px-7 sm:pb-28 sm:pt-10";
   const ctaZoneClassName = backgroundImageUrl
-    ? "absolute inset-x-0 bottom-0 px-5 pb-6 pt-12"
-    : "absolute inset-x-0 bottom-0 bg-gradient-to-t from-[#0c0c14] via-[#0c0c14] to-transparent px-5 pb-6 pt-12";
+    ? "absolute inset-x-0 bottom-0 px-4 pb-3 pt-6 sm:px-5 sm:pb-6 sm:pt-12"
+    : "absolute inset-x-0 bottom-0 bg-gradient-to-t from-[#0c0c14] via-[#0c0c14] to-transparent px-4 pb-3 pt-6 sm:px-5 sm:pb-6 sm:pt-12";
 
   const heroCard = (
     <div className={heroShellClassName}>
-      <div className="pointer-events-none absolute left-1/2 top-[-90px] h-72 w-72 -translate-x-1/2 rounded-full bg-amber-400/15 blur-3xl" />
-      <div className="relative mx-auto max-w-[260px] overflow-hidden rounded-full border border-amber-500/55 bg-amber-500/10 py-1.5">
-        <div className="whitespace-nowrap text-[10px] font-semibold uppercase tracking-[0.26em] text-amber-300 [animation:promotion-marquee_10s_linear_infinite]">
+      <div className="pointer-events-none absolute left-1/2 top-[-70px] h-56 w-56 -translate-x-1/2 rounded-full bg-amber-400/15 blur-3xl sm:top-[-90px] sm:h-72 sm:w-72" />
+      <div className="relative mx-auto max-w-[230px] overflow-hidden rounded-full border border-amber-500/55 bg-amber-500/10 py-1 sm:max-w-[260px] sm:py-1.5">
+        <div className="whitespace-nowrap text-[9px] font-semibold uppercase tracking-[0.2em] text-amber-300 [animation:promotion-marquee_10s_linear_infinite] sm:text-[10px] sm:tracking-[0.26em]">
           {tickerText} - {tickerText} - {tickerText} -
         </div>
       </div>
-      <h1 className="relative mx-auto mt-5 max-w-[310px] break-words text-[clamp(3.2rem,17vw,5.6rem)] font-black uppercase leading-[0.86] tracking-wide text-amber-500 [font-family:Impact,'Arial_Narrow',sans-serif]">
+      <h1 className="relative mx-auto mt-3 max-w-[285px] break-words text-[clamp(2.65rem,14vw,4.5rem)] font-black uppercase leading-[0.84] tracking-wide text-amber-500 [font-family:Impact,'Arial_Narrow',sans-serif] sm:mt-5 sm:max-w-[310px] sm:text-[clamp(3.2rem,17vw,5.6rem)] sm:leading-[0.86]">
         {promotion.title}
       </h1>
-      <p className="relative mx-auto mt-4 max-w-[312px] text-center text-[13px] font-bold leading-6 text-zinc-400 [text-wrap:balance] sm:text-sm">
+      <p className="relative mx-auto mt-2 max-w-[292px] text-center text-[12px] font-bold leading-5 text-zinc-400 [text-wrap:balance] sm:mt-4 sm:max-w-[312px] sm:text-sm sm:leading-6">
         {promotion.message}
       </p>
-      <div className="relative mt-7 flex items-center gap-3 rounded-2xl border border-amber-500/45 bg-[#1b152b] p-4 text-left shadow-[inset_0_1px_0_rgba(255,255,255,0.06)]">
-        <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl border border-amber-500/35 bg-amber-500/10 text-xl font-black text-amber-300">
+      <div className="relative mt-4 flex items-center gap-3 rounded-2xl border border-amber-500/45 bg-[#1b152b] p-3 text-left shadow-[inset_0_1px_0_rgba(255,255,255,0.06)] sm:mt-7 sm:p-4">
+        <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl border border-amber-500/35 bg-amber-500/10 text-lg font-black text-amber-300 sm:h-12 sm:w-12 sm:text-xl">
           $
         </div>
         <div className="min-w-0">
-          <p className="text-[10px] font-semibold uppercase tracking-[0.22em] text-zinc-500">Premio principal</p>
-          <p className="mt-1 break-words text-3xl font-black uppercase leading-none text-amber-400 [font-family:Impact,'Arial_Narrow',sans-serif]">
+          <p className="text-[9px] font-semibold uppercase tracking-[0.18em] text-zinc-500 sm:text-[10px] sm:tracking-[0.22em]">Premio principal</p>
+          <p className="mt-0.5 break-words text-2xl font-black uppercase leading-none text-amber-400 [font-family:Impact,'Arial_Narrow',sans-serif] sm:mt-1 sm:text-3xl">
             {promotion.prize}
           </p>
-          <p className="mt-1 text-[11px] text-zinc-500">{prizeDescription}</p>
+          <p className="mt-0.5 text-[10px] text-zinc-500 sm:mt-1 sm:text-[11px]">{prizeDescription}</p>
         </div>
       </div>
       {!showParticipantWaiting && !drawIsOver && (
         <>
-          <p className="mt-6 text-left text-[10px] font-semibold uppercase tracking-[0.18em] text-zinc-500">Termina en</p>
-          <div className="mt-2 grid grid-cols-4 gap-2">
+          <p className="mt-4 text-left text-[9px] font-semibold uppercase tracking-[0.16em] text-zinc-500 sm:mt-6 sm:text-[10px] sm:tracking-[0.18em]">Termina en</p>
+          <div className="mt-1.5 grid grid-cols-4 gap-1.5 sm:mt-2 sm:gap-2">
             {units.map(([label, value]) => (
-              <div key={label} className="rounded-xl border border-white/10 bg-white/[0.05] px-1.5 py-3">
-                <p className="text-2xl font-black leading-none text-white [font-family:Impact,'Arial_Narrow',sans-serif]">
+              <div key={label} className="rounded-xl border border-white/10 bg-white/[0.05] px-1 py-2 sm:px-1.5 sm:py-3">
+                <p className="text-xl font-black leading-none text-white [font-family:Impact,'Arial_Narrow',sans-serif] sm:text-2xl">
                   {String(value).padStart(2, "0")}
                 </p>
-                <p className="mt-1 text-[8px] uppercase tracking-[0.12em] text-zinc-500">{label}</p>
+                <p className="mt-1 text-[7px] uppercase tracking-[0.1em] text-zinc-500 sm:text-[8px] sm:tracking-[0.12em]">{label}</p>
               </div>
             ))}
           </div>
@@ -403,15 +403,15 @@ export default function PublicPromotionPage() {
       )}
       {participationSteps.length > 0 && !showParticipantWaiting && !drawIsOver && (
         <>
-          <div className="my-5 h-px bg-white/10" />
-          <p className="text-left text-[10px] font-semibold uppercase tracking-[0.18em] text-zinc-500">Como participar</p>
-          <div className="mt-3 space-y-2 text-left">
+          <div className="my-3 h-px bg-white/10 sm:my-5" />
+          <p className="text-left text-[9px] font-semibold uppercase tracking-[0.16em] text-zinc-500 sm:text-[10px] sm:tracking-[0.18em]">Como participar</p>
+          <div className="mt-2 space-y-1.5 text-left sm:mt-3 sm:space-y-2">
             {participationSteps.map((step, index) => (
               <div key={`${step}-${index}`} className="flex items-start gap-2">
-                <span className="flex h-5 w-5 shrink-0 items-center justify-center rounded-full border border-amber-500/60 bg-amber-500/10 text-[10px] font-bold text-amber-300">
+                <span className="flex h-4 w-4 shrink-0 items-center justify-center rounded-full border border-amber-500/60 bg-amber-500/10 text-[9px] font-bold text-amber-300 sm:h-5 sm:w-5 sm:text-[10px]">
                   {index + 1}
                 </span>
-                <span className="text-[11px] leading-5 text-zinc-300">{step}</span>
+                <span className="text-[10px] leading-4 text-zinc-300 sm:text-[11px] sm:leading-5">{step}</span>
               </div>
             ))}
           </div>
@@ -425,7 +425,7 @@ export default function PublicPromotionPage() {
               setError(null);
               setFormOpen(true);
             }}
-            className="min-h-14 w-full rounded-2xl bg-amber-500 px-5 py-4 text-sm font-black uppercase tracking-[0.18em] text-[#0c0c14] transition active:scale-[0.99] hover:bg-amber-400 hover:[animation-play-state:paused] [animation:promotion-heartbeat_2.6s_ease-in-out_infinite]"
+            className="min-h-12 w-full rounded-xl bg-amber-500 px-4 py-3 text-xs font-black uppercase tracking-[0.16em] text-[#0c0c14] transition active:scale-[0.99] hover:bg-amber-400 hover:[animation-play-state:paused] [animation:promotion-heartbeat_2.6s_ease-in-out_infinite] sm:min-h-14 sm:rounded-2xl sm:px-5 sm:py-4 sm:text-sm sm:tracking-[0.18em]"
           >
             {ctaLabel}
           </button>
@@ -438,18 +438,18 @@ export default function PublicPromotionPage() {
               {success}
             </p>
           )}
-          <p className="text-[11px] font-black uppercase tracking-[0.42em] text-amber-300">Ya estas participando</p>
-          <div className="mt-5 grid grid-cols-4 gap-2">
+          <p className="text-[10px] font-black uppercase tracking-[0.34em] text-amber-300 sm:text-[11px] sm:tracking-[0.42em]">Ya estas participando</p>
+          <div className="mt-4 grid grid-cols-4 gap-1.5 sm:mt-5 sm:gap-2">
             {units.map(([label, value]) => (
-              <div key={label} className="rounded-xl border border-white/10 bg-black/35 px-1.5 py-3 backdrop-blur-[2px]">
-                <p className="text-2xl font-black leading-none text-white [font-family:Impact,'Arial_Narrow',sans-serif]">
+              <div key={label} className="rounded-xl border border-white/10 bg-black/35 px-1 py-2 backdrop-blur-[2px] sm:px-1.5 sm:py-3">
+                <p className="text-xl font-black leading-none text-white [font-family:Impact,'Arial_Narrow',sans-serif] sm:text-2xl">
                   {String(value).padStart(2, "0")}
                 </p>
-                <p className="mt-1 text-[8px] uppercase tracking-[0.12em] text-zinc-500">{label}</p>
+                <p className="mt-1 text-[7px] uppercase tracking-[0.1em] text-zinc-500 sm:text-[8px] sm:tracking-[0.12em]">{label}</p>
               </div>
             ))}
           </div>
-          <p className="mx-auto mt-5 max-w-[300px] text-center text-sm font-bold leading-6 text-zinc-300 [text-wrap:balance]">
+          <p className="mx-auto mt-4 max-w-[300px] text-center text-xs font-bold leading-5 text-zinc-300 [text-wrap:balance] sm:mt-5 sm:text-sm sm:leading-6">
             Cuando llegue la hora, aca se mostrara el sorteo en vivo y el ganador.
           </p>
         </div>
@@ -645,7 +645,7 @@ export default function PublicPromotionPage() {
           ))}
         </div>
       )}
-      <div className="relative mx-auto flex min-h-[100svh] max-w-5xl flex-col justify-center px-4 py-6 sm:px-5 sm:py-10">
+      <div className="relative mx-auto flex min-h-[100svh] max-w-5xl flex-col justify-center px-3 py-2 sm:px-5 sm:py-10">
         {showFinalResultOnly ? (
           resultCard
         ) : showDrawAnimationOnly ? (
