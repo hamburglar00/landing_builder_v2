@@ -136,7 +136,7 @@ function PromotionMobilePreview({ form }: { form: FormState }) {
   const backgroundImageUrl = form.backgroundImageUrl.trim();
   const previewBackgroundStyle = backgroundImageUrl
     ? {
-        backgroundImage: `linear-gradient(180deg, rgba(12,12,20,0.48), rgba(12,12,20,0.68)), url("${cssUrl(backgroundImageUrl)}")`,
+        backgroundImage: `linear-gradient(180deg, rgba(12,12,20,0.18), rgba(12,12,20,0.28)), url("${cssUrl(backgroundImageUrl)}")`,
         backgroundPosition: "center",
         backgroundSize: "cover",
       }
@@ -144,6 +144,9 @@ function PromotionMobilePreview({ form }: { form: FormState }) {
   const previewScreenClassName = backgroundImageUrl
     ? "relative min-h-[580px] overflow-hidden rounded-[1.65rem] px-4 pb-24 pt-8 text-center"
     : "relative min-h-[580px] overflow-hidden rounded-[1.65rem] border border-zinc-800 bg-[#0c0c14] px-4 pb-24 pt-8 text-center";
+  const previewCtaZoneClassName = backgroundImageUrl
+    ? "absolute inset-x-0 bottom-0 px-4 pb-5 pt-10"
+    : "absolute inset-x-0 bottom-0 bg-gradient-to-t from-[#0c0c14] via-[#0c0c14] to-transparent px-4 pb-5 pt-10";
 
   return (
     <div className="rounded-2xl border border-zinc-800 bg-zinc-950/60 p-4">
@@ -202,10 +205,10 @@ function PromotionMobilePreview({ form }: { form: FormState }) {
               </div>
             </>
           )}
-          <div className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-[#0c0c14] via-[#0c0c14] to-transparent px-4 pb-5 pt-10">
+          <div className={previewCtaZoneClassName}>
             <button
               type="button"
-              className="w-full rounded-2xl bg-amber-500 px-4 py-4 text-sm font-black uppercase tracking-[0.2em] text-[#0c0c14] shadow-[0_18px_40px_rgba(245,158,11,0.25)]"
+              className="w-full rounded-2xl bg-amber-500 px-4 py-4 text-sm font-black uppercase tracking-[0.2em] text-[#0c0c14]"
             >
               {ctaLabel}
             </button>

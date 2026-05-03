@@ -301,7 +301,7 @@ export default function PublicPromotionPage() {
   const backgroundImageUrl = String(promotion.background_image_url ?? "").trim();
   const backgroundStyle = backgroundImageUrl
     ? {
-        backgroundImage: `linear-gradient(180deg, rgba(12,12,20,0.78), rgba(12,12,20,0.9)), url("${cssUrl(backgroundImageUrl)}")`,
+        backgroundImage: `linear-gradient(180deg, rgba(12,12,20,0.18), rgba(12,12,20,0.28)), url("${cssUrl(backgroundImageUrl)}")`,
         backgroundPosition: "center",
         backgroundSize: "cover",
       }
@@ -310,6 +310,9 @@ export default function PublicPromotionPage() {
   const heroShellClassName = backgroundImageUrl
     ? "relative min-h-[calc(100svh-2rem)] overflow-hidden rounded-[2rem] px-5 pb-28 pt-8 text-center sm:min-h-[680px] sm:px-7 sm:pt-10"
     : "relative min-h-[calc(100svh-2rem)] overflow-hidden rounded-[2rem] border border-white/10 bg-[#0c0c14] px-5 pb-28 pt-8 text-center shadow-[0_30px_100px_rgba(0,0,0,0.55)] sm:min-h-[680px] sm:px-7 sm:pt-10";
+  const ctaZoneClassName = backgroundImageUrl
+    ? "absolute inset-x-0 bottom-0 px-5 pb-6 pt-12"
+    : "absolute inset-x-0 bottom-0 bg-gradient-to-t from-[#0c0c14] via-[#0c0c14] to-transparent px-5 pb-6 pt-12";
 
   const heroCard = (
     <div className={heroShellClassName}>
@@ -365,7 +368,7 @@ export default function PublicPromotionPage() {
         </>
       )}
       {canParticipate && (
-        <div className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-[#0c0c14] via-[#0c0c14] to-transparent px-5 pb-6 pt-12">
+        <div className={ctaZoneClassName}>
           <button
             type="button"
             onClick={() => {
