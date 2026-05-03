@@ -114,6 +114,10 @@ function drawDateHourToIso(dateValue: string, hourValue: string): string {
   return date.toISOString();
 }
 
+function cssUrl(value: string): string {
+  return value.replace(/\\/g, "\\\\").replace(/"/g, '\\"');
+}
+
 const PREVIEW_UNITS = [
   ["02", "dias"],
   ["14", "horas"],
@@ -129,6 +133,17 @@ function PromotionMobilePreview({ form }: { form: FormState }) {
   const prizeDescription = form.prizeDescription.trim() || "en fichas de casino";
   const ctaLabel = form.ctaLabel.trim() || "Quiero participar";
   const steps = form.participationSteps.map((step) => step.trim()).filter(Boolean).slice(0, 3);
+  const backgroundImageUrl = form.backgroundImageUrl.trim();
+  const previewBackgroundStyle = backgroundImageUrl
+    ? {
+        backgroundImage: `linear-gradient(180deg, rgba(12,12,20,0.48), rgba(12,12,20,0.68)), url("${cssUrl(backgroundImageUrl)}")`,
+        backgroundPosition: "center",
+        backgroundSize: "cover",
+      }
+    : undefined;
+  const previewScreenClassName = backgroundImageUrl
+    ? "relative min-h-[580px] overflow-hidden rounded-[1.65rem] px-4 pb-24 pt-8 text-center"
+    : "relative min-h-[580px] overflow-hidden rounded-[1.65rem] border border-zinc-800 bg-[#0c0c14] px-4 pb-24 pt-8 text-center";
 
   return (
     <div className="rounded-2xl border border-zinc-800 bg-zinc-950/60 p-4">
@@ -137,7 +152,7 @@ function PromotionMobilePreview({ form }: { form: FormState }) {
         <p className="mt-1 text-xs text-zinc-500">Asi se vera el link publico del sorteo en celular.</p>
       </div>
       <div className="mx-auto w-full max-w-[310px] rounded-[2rem] border border-zinc-700 bg-zinc-900 p-2 shadow-[0_25px_80px_rgba(0,0,0,0.45)]">
-        <div className="relative min-h-[580px] overflow-hidden rounded-[1.65rem] border border-zinc-800 bg-[#0c0c14] px-4 pb-24 pt-8 text-center">
+        <div className={previewScreenClassName} style={previewBackgroundStyle}>
           <div className="pointer-events-none absolute left-1/2 top-[-70px] h-60 w-60 -translate-x-1/2 rounded-full bg-amber-400/15 blur-2xl" />
           <div className="relative overflow-hidden rounded-full border border-amber-500/50 bg-amber-500/10 py-1">
             <div className="whitespace-nowrap text-[10px] font-semibold uppercase tracking-[0.24em] text-amber-300 [animation:promotion-preview-marquee_9s_linear_infinite]">

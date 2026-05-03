@@ -307,8 +307,12 @@ export default function PublicPromotionPage() {
       }
     : undefined;
 
+  const heroShellClassName = backgroundImageUrl
+    ? "relative min-h-[calc(100svh-2rem)] overflow-hidden rounded-[2rem] px-5 pb-28 pt-8 text-center sm:min-h-[680px] sm:px-7 sm:pt-10"
+    : "relative min-h-[calc(100svh-2rem)] overflow-hidden rounded-[2rem] border border-white/10 bg-[#0c0c14] px-5 pb-28 pt-8 text-center shadow-[0_30px_100px_rgba(0,0,0,0.55)] sm:min-h-[680px] sm:px-7 sm:pt-10";
+
   const heroCard = (
-    <div className="relative min-h-[calc(100svh-2rem)] overflow-hidden rounded-[2rem] border border-white/10 bg-[#0c0c14] px-5 pb-28 pt-8 text-center shadow-[0_30px_100px_rgba(0,0,0,0.55)] sm:min-h-[680px] sm:px-7 sm:pt-10">
+    <div className={heroShellClassName}>
       <div className="pointer-events-none absolute left-1/2 top-[-90px] h-72 w-72 -translate-x-1/2 rounded-full bg-amber-400/15 blur-3xl" />
       <div className="relative mx-auto max-w-[260px] overflow-hidden rounded-full border border-amber-500/55 bg-amber-500/10 py-1.5">
         <div className="whitespace-nowrap text-[10px] font-semibold uppercase tracking-[0.26em] text-amber-300 [animation:promotion-marquee_10s_linear_infinite]">
@@ -368,7 +372,7 @@ export default function PublicPromotionPage() {
               setError(null);
               setFormOpen(true);
             }}
-            className="min-h-14 w-full rounded-2xl bg-amber-500 px-5 py-4 text-sm font-black uppercase tracking-[0.18em] text-[#0c0c14] shadow-[0_0_0_0_rgba(245,158,11,0.55)] transition active:scale-[0.99] hover:bg-amber-400 hover:[animation-play-state:paused] [animation:promotion-heartbeat_1.65s_ease-in-out_infinite]"
+            className="min-h-14 w-full rounded-2xl bg-amber-500 px-5 py-4 text-sm font-black uppercase tracking-[0.18em] text-[#0c0c14] transition active:scale-[0.99] hover:bg-amber-400 hover:[animation-play-state:paused] [animation:promotion-heartbeat_2.6s_ease-in-out_infinite]"
           >
             {ctaLabel}
           </button>
@@ -432,23 +436,18 @@ export default function PublicPromotionPage() {
         @keyframes promotion-heartbeat {
           0%, 100% {
             transform: scale(1);
-            box-shadow: 0 0 0 0 rgba(245, 158, 11, 0.46);
           }
           14% {
-            transform: scale(1.045);
-            box-shadow: 0 0 0 10px rgba(245, 158, 11, 0.18);
+            transform: scale(1.025);
           }
           28% {
             transform: scale(1);
-            box-shadow: 0 0 0 18px rgba(245, 158, 11, 0);
           }
           42% {
-            transform: scale(1.035);
-            box-shadow: 0 0 0 8px rgba(245, 158, 11, 0.14);
+            transform: scale(1.018);
           }
           70% {
             transform: scale(1);
-            box-shadow: 0 0 0 0 rgba(245, 158, 11, 0);
           }
         }
         @keyframes promotion-draw-progress {
