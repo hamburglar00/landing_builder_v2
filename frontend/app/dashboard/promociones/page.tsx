@@ -147,7 +147,7 @@ function PromotionMobilePreview({ form }: { form: FormState }) {
           <h3 className="relative mt-4 break-words text-[42px] font-black uppercase leading-[0.92] tracking-wide text-amber-500 [font-family:Impact,'Arial_Narrow',sans-serif]">
             {title}
           </h3>
-          <p className="relative mx-auto mt-3 max-w-[218px] text-center text-[12px] leading-5 text-zinc-400 [hyphens:auto] [text-align-last:center] sm:[text-align:justify]">
+          <p className="relative mx-auto mt-3 max-w-[238px] text-center text-[12px] leading-5 text-zinc-400 [text-wrap:balance]">
             {description}
           </p>
           <div className="relative mt-6 flex items-center gap-3 rounded-2xl border border-amber-500/45 bg-[#1b152b] p-3 text-left">
