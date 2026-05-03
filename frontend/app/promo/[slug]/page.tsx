@@ -298,6 +298,7 @@ export default function PublicPromotionPage() {
   const drawProcessedMs = new Date(promotion.draw_processed_at ?? promotion.winner_selected_at ?? "").getTime();
   const resultExpired =
     !!timeLeft?.isOver && Number.isFinite(drawProcessedMs) && Date.now() - drawProcessedMs > 60 * 60 * 1000;
+  const showParticipantWaiting = participantReady && !timeLeft?.isOver;
   const backgroundImageUrl = String(promotion.background_image_url ?? "").trim();
   const backgroundStyle = backgroundImageUrl
     ? {
@@ -308,8 +309,12 @@ export default function PublicPromotionPage() {
     : undefined;
 
   const heroShellClassName = backgroundImageUrl
-    ? "relative min-h-[calc(100svh-2rem)] overflow-hidden rounded-[2rem] px-5 pb-28 pt-8 text-center sm:min-h-[680px] sm:px-7 sm:pt-10"
-    : "relative min-h-[calc(100svh-2rem)] overflow-hidden rounded-[2rem] border border-white/10 bg-[#0c0c14] px-5 pb-28 pt-8 text-center shadow-[0_30px_100px_rgba(0,0,0,0.55)] sm:min-h-[680px] sm:px-7 sm:pt-10";
+    ? showParticipantWaiting
+      ? "relative min-h-[calc(100svh-2rem)] overflow-hidden rounded-[2rem] px-5 pb-64 pt-8 text-center sm:min-h-[680px] sm:px-7 sm:pt-10"
+      : "relative min-h-[calc(100svh-2rem)] overflow-hidden rounded-[2rem] px-5 pb-28 pt-8 text-center sm:min-h-[680px] sm:px-7 sm:pt-10"
+    : showParticipantWaiting
+      ? "relative min-h-[calc(100svh-2rem)] overflow-hidden rounded-[2rem] border border-white/10 bg-[#0c0c14] px-5 pb-64 pt-8 text-center shadow-[0_30px_100px_rgba(0,0,0,0.55)] sm:min-h-[680px] sm:px-7 sm:pt-10"
+      : "relative min-h-[calc(100svh-2rem)] overflow-hidden rounded-[2rem] border border-white/10 bg-[#0c0c14] px-5 pb-28 pt-8 text-center shadow-[0_30px_100px_rgba(0,0,0,0.55)] sm:min-h-[680px] sm:px-7 sm:pt-10";
   const ctaZoneClassName = backgroundImageUrl
     ? "absolute inset-x-0 bottom-0 px-5 pb-6 pt-12"
     : "absolute inset-x-0 bottom-0 bg-gradient-to-t from-[#0c0c14] via-[#0c0c14] to-transparent px-5 pb-6 pt-12";
@@ -340,18 +345,22 @@ export default function PublicPromotionPage() {
           <p className="mt-1 text-[11px] text-zinc-500">{prizeDescription}</p>
         </div>
       </div>
-      <p className="mt-6 text-left text-[10px] font-semibold uppercase tracking-[0.18em] text-zinc-500">Termina en</p>
-      <div className="mt-2 grid grid-cols-4 gap-2">
-        {units.map(([label, value]) => (
-          <div key={label} className="rounded-xl border border-white/10 bg-white/[0.05] px-1.5 py-3">
-            <p className="text-2xl font-black leading-none text-white [font-family:Impact,'Arial_Narrow',sans-serif]">
-              {String(value).padStart(2, "0")}
-            </p>
-            <p className="mt-1 text-[8px] uppercase tracking-[0.12em] text-zinc-500">{label}</p>
+      {!showParticipantWaiting && (
+        <>
+          <p className="mt-6 text-left text-[10px] font-semibold uppercase tracking-[0.18em] text-zinc-500">Termina en</p>
+          <div className="mt-2 grid grid-cols-4 gap-2">
+            {units.map(([label, value]) => (
+              <div key={label} className="rounded-xl border border-white/10 bg-white/[0.05] px-1.5 py-3">
+                <p className="text-2xl font-black leading-none text-white [font-family:Impact,'Arial_Narrow',sans-serif]">
+                  {String(value).padStart(2, "0")}
+                </p>
+                <p className="mt-1 text-[8px] uppercase tracking-[0.12em] text-zinc-500">{label}</p>
+              </div>
+            ))}
           </div>
-        ))}
-      </div>
-      {participationSteps.length > 0 && (
+        </>
+      )}
+      {participationSteps.length > 0 && !showParticipantWaiting && (
         <>
           <div className="my-5 h-px bg-white/10" />
           <p className="text-left text-[10px] font-semibold uppercase tracking-[0.18em] text-zinc-500">Como participar</p>
@@ -379,6 +388,29 @@ export default function PublicPromotionPage() {
           >
             {ctaLabel}
           </button>
+        </div>
+      )}
+      {showParticipantWaiting && (
+        <div className={ctaZoneClassName}>
+          {success && (
+            <p className="mb-4 rounded-lg bg-amber-500/10 px-3 py-2 text-sm font-semibold text-amber-100">
+              {success}
+            </p>
+          )}
+          <p className="text-[11px] font-black uppercase tracking-[0.42em] text-amber-300">Ya estas participando</p>
+          <div className="mt-5 grid grid-cols-4 gap-2">
+            {units.map(([label, value]) => (
+              <div key={label} className="rounded-xl border border-white/10 bg-black/35 px-1.5 py-3 backdrop-blur-[2px]">
+                <p className="text-2xl font-black leading-none text-white [font-family:Impact,'Arial_Narrow',sans-serif]">
+                  {String(value).padStart(2, "0")}
+                </p>
+                <p className="mt-1 text-[8px] uppercase tracking-[0.12em] text-zinc-500">{label}</p>
+              </div>
+            ))}
+          </div>
+          <p className="mx-auto mt-5 max-w-[300px] text-center text-sm leading-6 text-zinc-300 [text-wrap:balance]">
+            Cuando llegue la hora, aca se mostrara el sorteo en vivo y el ganador.
+          </p>
         </div>
       )}
     </div>
@@ -500,18 +532,10 @@ export default function PublicPromotionPage() {
           ))}
         </div>
       )}
-      {showJoinCelebration && (
-        <div className="pointer-events-none fixed inset-x-4 top-6 z-50 mx-auto max-w-sm rounded-2xl border border-amber-400/50 bg-[#0c0c14]/95 px-4 py-4 text-center shadow-[0_22px_70px_rgba(0,0,0,0.55)] backdrop-blur">
-          <p className="text-[11px] font-semibold uppercase tracking-[0.22em] text-amber-300">Felicitaciones</p>
-          <p className="mt-2 text-lg font-black uppercase text-white [font-family:Impact,'Arial_Narrow',sans-serif]">
-            Ya estas participando
-          </p>
-        </div>
-      )}
       <div className="relative mx-auto flex min-h-[100svh] max-w-5xl flex-col justify-center px-4 py-6 sm:px-5 sm:py-10">
-        <section className={`grid w-full gap-4 sm:gap-6 ${participantReady || timeLeft?.isOver ? "lg:grid-cols-[1.05fr_0.95fr] lg:items-center" : "mx-auto max-w-lg"}`}>
+        <section className={`grid w-full gap-4 sm:gap-6 ${timeLeft?.isOver ? "lg:grid-cols-[1.05fr_0.95fr] lg:items-center" : "mx-auto max-w-lg"}`}>
           {heroCard}
-          {(participantReady || timeLeft?.isOver) && (
+          {timeLeft?.isOver && (
             <section className="rounded-[1.7rem] border border-emerald-500/25 bg-zinc-950/82 p-4 text-center shadow-2xl backdrop-blur-md sm:rounded-[2rem] sm:p-6">
               {success && <p className="mb-3 rounded-lg bg-amber-500/10 px-3 py-2 text-sm text-amber-100">{success}</p>}
               {resultExpired ? (
@@ -590,7 +614,7 @@ export default function PublicPromotionPage() {
         </section>
       </div>
       {formOpen && canParticipate && (
-        <div className="fixed inset-0 z-50 flex items-end justify-center bg-black/78 px-3 pb-3 pt-10 backdrop-blur-sm sm:items-center sm:px-4 sm:py-6">
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/78 px-3 py-6 backdrop-blur-sm sm:px-4">
           <div className="relative w-full max-w-lg">
             <button
               type="button"
