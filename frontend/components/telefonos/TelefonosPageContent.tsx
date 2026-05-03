@@ -688,20 +688,20 @@ export function TelefonosPageContent({
                   className="grid w-full grid-cols-1 items-center gap-2 px-4 py-3 text-left hover:bg-zinc-800/50 md:grid-cols-[500px_160px_220px_20px]"
                 >
                   <div className="grid items-center gap-2 md:w-[500px] md:grid-cols-[250px_68px_150px]">
-                    <span className="flex items-center gap-2 font-medium text-zinc-200">
-                      {activePhonesCount > 0 ? (
-                        <span
-                          className="h-2.5 w-2.5 rounded-full bg-emerald-400 shadow-[0_0_8px_rgba(52,211,153,0.65)]"
-                          aria-label="Tiene telefonos activos"
-                          title="Tiene telefonos activos"
-                        />
-                      ) : null}
+                    <span className="font-medium text-zinc-200">
                       {g.nombre} {g.gerencia_id ? `(ID ${g.gerencia_id})` : ""}
                     </span>
                     <span className="inline-flex w-fit rounded border border-zinc-700 px-1.5 py-0.5 text-[10px] text-zinc-300">
                       {(g.source_type ?? "pbadmin") === "manual" ? "Manual" : "PBadmin"}
                     </span>
-                    <span className="whitespace-nowrap text-xs text-zinc-500 md:text-right">
+                    <span className="inline-flex items-center gap-1.5 whitespace-nowrap text-xs text-zinc-500 md:justify-end">
+                      {activePhonesCount > 0 ? (
+                        <span
+                          className="h-1.5 w-1.5 rounded-full bg-emerald-400/80"
+                          aria-label="Tiene telefonos activos"
+                          title="Tiene telefonos activos"
+                        />
+                      ) : null}
                       registros activos: {activePhonesCount}
                     </span>
                   </div>
