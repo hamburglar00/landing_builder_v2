@@ -79,6 +79,7 @@ export default function PublicPromotionPage() {
   const animationIntervalRef = useRef<number | null>(null);
   const animationTimeoutRef = useRef<number | null>(null);
   const celebrationTimeoutRef = useRef<number | null>(null);
+  const resultAnimationStartedRef = useRef(false);
 
   const storageKey = useMemo(() => (slug ? `promotion_participant:${slug}` : ""), [slug]);
   const visitorToken = useMemo(() => {
@@ -129,6 +130,15 @@ export default function PublicPromotionPage() {
     [clearDrawTimers],
   );
 
+  const startWinnerReveal = useCallback(
+    (names: string[], finalWinner: string) => {
+      if (!finalWinner || resultAnimationStartedRef.current) return;
+      resultAnimationStartedRef.current = true;
+      startDrawAnimation(names, finalWinner);
+    },
+    [startDrawAnimation],
+  );
+
   useEffect(() => clearDrawTimers, [clearDrawTimers]);
 
   useEffect(
@@ -148,6 +158,7 @@ export default function PublicPromotionPage() {
         setPromotion(row);
         setWinnerUsername(row?.winner_username ?? "");
         setDrawStatus(row?.draw_status ?? "pending");
+        resultAnimationStartedRef.current = false;
         setRevealWinner(false);
         if (storageKey && window.localStorage.getItem(storageKey) === "1") {
           setParticipantReady(true);
@@ -170,8 +181,25 @@ export default function PublicPromotionPage() {
   }, [promotion]);
 
   useEffect(() => {
+    if (!slug || !promotion || drawStatus !== "pending") return;
+    const refresh = async () => {
+      try {
+        const row = await fetchPromotionBySlug(slug);
+        if (!row) return;
+        setPromotion(row);
+        setWinnerUsername(row.winner_username ?? "");
+        setDrawStatus(row.draw_status ?? "pending");
+      } catch (err) {
+        console.error("promotion refresh error:", err);
+      }
+    };
+    const timer = window.setInterval(() => void refresh(), 4000);
+    return () => window.clearInterval(timer);
+  }, [drawStatus, promotion, slug]);
+
+  useEffect(() => {
     const draw = async () => {
-      if (!promotion || !timeLeft?.isOver || drawStatus === "no_participants" || revealWinner || drawRequestedRef.current) return;
+      if (!promotion || !timeLeft?.isOver || drawStatus !== "pending" || revealWinner || drawRequestedRef.current) return;
       const processedAtMs = new Date(promotion.draw_processed_at ?? promotion.winner_selected_at ?? "").getTime();
       if (Number.isFinite(processedAtMs) && Date.now() - processedAtMs > 60 * 60 * 1000) return;
       drawRequestedRef.current = true;
@@ -190,7 +218,7 @@ export default function PublicPromotionPage() {
             : [];
           setWinnerUsername(winner);
           setDrawMessage(null);
-          startDrawAnimation(names, winner);
+          startWinnerReveal(names, winner);
           return;
         }
         if (data?.draw_status === "no_participants") {
@@ -204,7 +232,15 @@ export default function PublicPromotionPage() {
       }
     };
     void draw();
-  }, [drawStatus, promotion, revealWinner, startDrawAnimation, timeLeft?.isOver]);
+  }, [drawStatus, promotion, revealWinner, startWinnerReveal, timeLeft?.isOver]);
+
+  useEffect(() => {
+    if (!promotion || drawStatus !== "completed" || !winnerUsername) return;
+    const processedAtMs = new Date(promotion.draw_processed_at ?? promotion.winner_selected_at ?? "").getTime();
+    if (Number.isFinite(processedAtMs) && Date.now() - processedAtMs > 60 * 60 * 1000) return;
+    setDrawMessage(null);
+    startWinnerReveal([winnerUsername], winnerUsername);
+  }, [drawStatus, promotion, startWinnerReveal, winnerUsername]);
 
   const handleSubmit = async () => {
     if (!promotion || !visitorToken) return;
@@ -288,17 +324,20 @@ export default function PublicPromotionPage() {
         ["seg", timeLeft.seconds],
       ]
     : [];
-  const canParticipate = !participantReady && !timeLeft?.isOver;
   const tickerText = String(promotion.ticker_text ?? "").trim() || "Sorteo exclusivo";
   const prizeDescription = String(promotion.prize_description ?? "").trim() || "en fichas de casino";
   const participationSteps = Array.isArray(promotion.participation_steps)
     ? promotion.participation_steps.map((step) => String(step ?? "").trim()).filter(Boolean).slice(0, 3)
     : [];
   const ctaLabel = String(promotion.cta_label ?? "").trim() || "Quiero participar";
+  const hasDrawResult = drawStatus === "completed" || !!winnerUsername;
+  const hasNoParticipants = drawStatus === "no_participants";
+  const drawIsOver = !!timeLeft?.isOver || hasDrawResult || hasNoParticipants;
+  const canParticipate = !participantReady && !drawIsOver;
   const drawProcessedMs = new Date(promotion.draw_processed_at ?? promotion.winner_selected_at ?? "").getTime();
   const resultExpired =
-    !!timeLeft?.isOver && Number.isFinite(drawProcessedMs) && Date.now() - drawProcessedMs > 60 * 60 * 1000;
-  const showParticipantWaiting = participantReady && !timeLeft?.isOver;
+    drawIsOver && Number.isFinite(drawProcessedMs) && Date.now() - drawProcessedMs > 60 * 60 * 1000;
+  const showParticipantWaiting = participantReady && !drawIsOver;
   const backgroundImageUrl = String(promotion.background_image_url ?? "").trim();
   const backgroundStyle = backgroundImageUrl
     ? {
@@ -345,7 +384,7 @@ export default function PublicPromotionPage() {
           <p className="mt-1 text-[11px] text-zinc-500">{prizeDescription}</p>
         </div>
       </div>
-      {!showParticipantWaiting && (
+      {!showParticipantWaiting && !drawIsOver && (
         <>
           <p className="mt-6 text-left text-[10px] font-semibold uppercase tracking-[0.18em] text-zinc-500">Termina en</p>
           <div className="mt-2 grid grid-cols-4 gap-2">
@@ -360,7 +399,7 @@ export default function PublicPromotionPage() {
           </div>
         </>
       )}
-      {participationSteps.length > 0 && !showParticipantWaiting && (
+      {participationSteps.length > 0 && !showParticipantWaiting && !drawIsOver && (
         <>
           <div className="my-5 h-px bg-white/10" />
           <p className="text-left text-[10px] font-semibold uppercase tracking-[0.18em] text-zinc-500">Como participar</p>
@@ -533,9 +572,9 @@ export default function PublicPromotionPage() {
         </div>
       )}
       <div className="relative mx-auto flex min-h-[100svh] max-w-5xl flex-col justify-center px-4 py-6 sm:px-5 sm:py-10">
-        <section className={`grid w-full gap-4 sm:gap-6 ${timeLeft?.isOver ? "lg:grid-cols-[1.05fr_0.95fr] lg:items-center" : "mx-auto max-w-lg"}`}>
+        <section className={`grid w-full gap-4 sm:gap-6 ${drawIsOver ? "lg:grid-cols-[1.05fr_0.95fr] lg:items-center" : "mx-auto max-w-lg"}`}>
           {heroCard}
-          {timeLeft?.isOver && (
+          {drawIsOver && (
             <section className="rounded-[1.7rem] border border-emerald-500/25 bg-zinc-950/82 p-4 text-center shadow-2xl backdrop-blur-md sm:rounded-[2rem] sm:p-6">
               {success && <p className="mb-3 rounded-lg bg-amber-500/10 px-3 py-2 text-sm text-amber-100">{success}</p>}
               {resultExpired ? (
@@ -548,19 +587,6 @@ export default function PublicPromotionPage() {
                     El resultado ya estuvo disponible durante una hora y este link caduco.
                   </p>
                 </div>
-              ) : !timeLeft?.isOver ? (
-                <>
-                  <p className="text-[11px] font-semibold uppercase tracking-[0.26em] text-amber-300 sm:text-xs sm:tracking-[0.32em]">Ya estas participando</p>
-                  <div className="mt-5 grid grid-cols-4 gap-1.5 sm:gap-2">
-                    {units.map(([label, value]) => (
-                      <div key={label} className="rounded-xl border border-zinc-800 bg-black/55 px-1.5 py-3 sm:rounded-2xl sm:px-2 sm:py-4">
-                        <p className="text-xl font-black text-white sm:text-3xl">{String(value).padStart(2, "0")}</p>
-                        <p className="mt-1 text-[9px] uppercase tracking-[0.12em] text-zinc-500 sm:text-[10px] sm:tracking-[0.18em]">{label}</p>
-                      </div>
-                    ))}
-                  </div>
-                  <p className="mt-5 text-sm text-zinc-400">Cuando llegue la hora, aca se mostrara el sorteo en vivo y el ganador.</p>
-                </>
               ) : isDrawAnimating ? (
                 <div className="relative overflow-hidden py-5 sm:py-6">
                   <div className="pointer-events-none absolute inset-0 opacity-60 [background-image:radial-gradient(circle_at_50%_0%,rgba(16,185,129,0.24),transparent_35%),radial-gradient(circle_at_50%_100%,rgba(251,191,36,0.18),transparent_32%)]" />
