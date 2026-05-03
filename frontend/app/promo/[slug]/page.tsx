@@ -363,8 +363,8 @@ export default function PublicPromotionPage() {
   const heroCard = (
     <div className={heroShellClassName}>
       <div className="pointer-events-none absolute left-1/2 top-[-70px] h-56 w-56 -translate-x-1/2 rounded-full bg-amber-400/15 blur-3xl sm:top-[-90px] sm:h-72 sm:w-72" />
-      <div className="relative mx-auto w-full overflow-hidden rounded-full border border-amber-500/55 bg-amber-500/10 py-1 sm:py-1.5">
-        <div className="whitespace-nowrap text-[10px] font-semibold uppercase tracking-[0.2em] text-amber-300 [animation:promotion-marquee_10s_linear_infinite] sm:text-[10px] sm:tracking-[0.26em]">
+      <div className="relative mx-auto flex min-h-8 w-full items-center overflow-hidden rounded-full border border-amber-500/55 bg-amber-500/10 py-1.5 sm:min-h-9 sm:py-2">
+        <div className="whitespace-nowrap text-[10px] font-bold uppercase leading-none tracking-[0.2em] text-amber-300 [animation:promotion-marquee_10s_linear_infinite] sm:text-[11px] sm:tracking-[0.24em]">
           {tickerText} - {tickerText} - {tickerText} -
         </div>
       </div>
