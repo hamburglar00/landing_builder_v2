@@ -363,7 +363,7 @@ export default function PublicPromotionPage() {
   const heroCard = (
     <div className={heroShellClassName}>
       <div className="pointer-events-none absolute left-1/2 top-[-70px] h-56 w-56 -translate-x-1/2 rounded-full bg-amber-400/15 blur-3xl sm:top-[-90px] sm:h-72 sm:w-72" />
-      <div className="relative mx-auto max-w-[230px] overflow-hidden rounded-full border border-amber-500/55 bg-amber-500/10 py-1 sm:max-w-[260px] sm:py-1.5">
+      <div className="relative mx-auto w-full overflow-hidden rounded-full border border-amber-500/55 bg-amber-500/10 py-1 sm:py-1.5">
         <div className="whitespace-nowrap text-[10px] font-semibold uppercase tracking-[0.2em] text-amber-300 [animation:promotion-marquee_10s_linear_infinite] sm:text-[10px] sm:tracking-[0.26em]">
           {tickerText} - {tickerText} - {tickerText} -
         </div>
@@ -374,11 +374,11 @@ export default function PublicPromotionPage() {
       <p className="relative mx-auto mt-3 max-w-[292px] text-center text-[13px] font-bold uppercase leading-5 tracking-[0.03em] text-zinc-400 [text-wrap:balance] sm:mt-4 sm:max-w-[312px] sm:text-sm sm:leading-6">
         {promotion.message}
       </p>
-      <div className="relative mt-7 flex items-center justify-center gap-4 rounded-2xl border border-amber-500/45 bg-[#1b152b] p-4 text-left shadow-[inset_0_1px_0_rgba(255,255,255,0.06)] sm:p-4">
+      <div className="relative mt-7 flex items-center gap-4 rounded-2xl border border-amber-500/45 bg-[#1b152b] p-4 text-left shadow-[inset_0_1px_0_rgba(255,255,255,0.06)] sm:p-4">
         <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl border border-amber-500/35 bg-amber-500/10 text-lg font-black text-amber-300 sm:h-12 sm:w-12 sm:text-xl">
           $
         </div>
-        <div className="min-w-0 text-center sm:text-left">
+        <div className="min-w-0 text-left">
           <p className="text-[10px] font-semibold uppercase tracking-[0.18em] text-zinc-500 sm:text-[10px] sm:tracking-[0.22em]">Premio principal</p>
           <p className="mt-0.5 break-words text-[1.7rem] font-black uppercase leading-none text-amber-400 [font-family:Impact,'Arial_Narrow',sans-serif] sm:mt-1 sm:text-3xl">
             {promotion.prize}
