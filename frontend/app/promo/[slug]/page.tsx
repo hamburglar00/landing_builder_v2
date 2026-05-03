@@ -325,7 +325,7 @@ export default function PublicPromotionPage() {
       <h1 className="relative mx-auto mt-5 max-w-[310px] break-words text-[clamp(3.2rem,17vw,5.6rem)] font-black uppercase leading-[0.86] tracking-wide text-amber-500 [font-family:Impact,'Arial_Narrow',sans-serif]">
         {promotion.title}
       </h1>
-      <p className="relative mx-auto mt-4 max-w-[312px] text-center text-[13px] leading-6 text-zinc-400 [text-wrap:balance] sm:text-sm">
+      <p className="relative mx-auto mt-4 max-w-[312px] text-center text-[13px] font-bold leading-6 text-zinc-400 [text-wrap:balance] sm:text-sm">
         {promotion.message}
       </p>
       <div className="relative mt-7 flex items-center gap-3 rounded-2xl border border-amber-500/45 bg-[#1b152b] p-4 text-left shadow-[inset_0_1px_0_rgba(255,255,255,0.06)]">
