@@ -339,6 +339,7 @@ export default function PublicPromotionPage() {
     drawIsOver && Number.isFinite(drawProcessedMs) && Date.now() - drawProcessedMs > 60 * 60 * 1000;
   const showParticipantWaiting = participantReady && !drawIsOver;
   const showFinalResultOnly = resultExpired || drawStatus === "no_participants" || (winnerUsername && revealWinner);
+  const showDrawAnimationOnly = drawIsOver && isDrawAnimating && !showFinalResultOnly;
   const backgroundImageUrl = String(promotion.background_image_url ?? "").trim();
   const backgroundStyle = backgroundImageUrl
     ? {
@@ -540,6 +541,39 @@ export default function PublicPromotionPage() {
     </section>
   );
 
+  const drawAnimationCard = (
+    <section className="mx-auto w-full max-w-lg overflow-hidden rounded-[1.9rem] border border-emerald-500/35 bg-zinc-950/86 p-5 text-center shadow-2xl backdrop-blur-md sm:rounded-[2.25rem] sm:p-7">
+      {success && (
+        <p className="mb-5 rounded-lg bg-amber-500/10 px-3 py-2 text-sm text-amber-100">{success}</p>
+      )}
+      <div className="relative overflow-hidden py-5 sm:py-6">
+        <div className="pointer-events-none absolute inset-0 opacity-60 [background-image:radial-gradient(circle_at_50%_0%,rgba(16,185,129,0.24),transparent_35%),radial-gradient(circle_at_50%_100%,rgba(251,191,36,0.18),transparent_32%)]" />
+        <div className="relative">
+          <p className="text-[11px] font-semibold uppercase tracking-[0.34em] text-amber-300 sm:text-xs sm:tracking-[0.42em]">
+            Sorteando ganador
+          </p>
+          <p className="mt-3 text-xs text-zinc-500">Participantes verificados: {animationUsernames.length}</p>
+          <div className="mx-auto mt-7 max-w-sm rounded-[1.5rem] border border-emerald-400/40 bg-black/70 p-3 shadow-[0_0_90px_rgba(16,185,129,0.25)] sm:rounded-[1.7rem] sm:p-4">
+            <div className="rounded-2xl border border-zinc-800 bg-zinc-950 px-4 py-8">
+              <p className="text-[10px] font-bold uppercase tracking-[0.32em] text-zinc-500">Ahora pasa por</p>
+              <p className="mt-4 min-h-[3rem] break-words text-[clamp(2rem,10vw,2.75rem)] font-black leading-tight text-white">
+                {displayedCandidate || "..."}
+              </p>
+            </div>
+          </div>
+          <div className="mx-auto mt-6 h-2 max-w-sm overflow-hidden rounded-full bg-zinc-900">
+            <div className="h-full rounded-full bg-gradient-to-r from-amber-500 via-yellow-200 to-amber-500 [animation:promotion-draw-progress_7s_linear_forwards]" />
+          </div>
+          <div className="mt-6 grid grid-cols-3 gap-1.5 text-[9px] uppercase tracking-[0.12em] text-zinc-500 sm:gap-2 sm:text-[10px] sm:tracking-[0.18em]">
+            <span className="rounded-full border border-zinc-800 bg-black/40 px-2 py-2">Mezclando</span>
+            <span className="rounded-full border border-zinc-800 bg-black/40 px-2 py-2">Auditando</span>
+            <span className="rounded-full border border-zinc-800 bg-black/40 px-2 py-2">Sellando</span>
+          </div>
+        </div>
+      </div>
+    </section>
+  );
+
   return (
     <main className="min-h-[100svh] overflow-hidden bg-[#07100d] text-zinc-100" style={backgroundStyle}>
       <style>{`
@@ -614,6 +648,8 @@ export default function PublicPromotionPage() {
       <div className="relative mx-auto flex min-h-[100svh] max-w-5xl flex-col justify-center px-4 py-6 sm:px-5 sm:py-10">
         {showFinalResultOnly ? (
           resultCard
+        ) : showDrawAnimationOnly ? (
+          drawAnimationCard
         ) : (
         <section className={`grid w-full gap-4 sm:gap-6 ${drawIsOver ? "lg:grid-cols-[1.05fr_0.95fr] lg:items-center" : "mx-auto max-w-lg"}`}>
           {heroCard}
