@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState, type CSSProperties } from "react";
 import { useParams } from "next/navigation";
 import { supabase } from "@/lib/supabaseClient";
 import { fetchPromotionBySlug, type PromotionDrawStatus, type PromotionRow } from "@/lib/promotionsDb";
@@ -53,6 +53,8 @@ function cssUrl(value: string): string {
   return value.replace(/\\/g, "\\\\").replace(/"/g, '\\"');
 }
 
+const COIN_RAIN = Array.from({ length: 34 }, (_, index) => index);
+
 export default function PublicPromotionPage() {
   const params = useParams<{ slug: string }>();
   const slug = Array.isArray(params.slug) ? params.slug[0] : params.slug;
@@ -72,9 +74,11 @@ export default function PublicPromotionPage() {
   const [displayedCandidate, setDisplayedCandidate] = useState("");
   const [isDrawAnimating, setIsDrawAnimating] = useState(false);
   const [revealWinner, setRevealWinner] = useState(false);
+  const [showJoinCelebration, setShowJoinCelebration] = useState(false);
   const drawRequestedRef = useRef(false);
   const animationIntervalRef = useRef<number | null>(null);
   const animationTimeoutRef = useRef<number | null>(null);
+  const celebrationTimeoutRef = useRef<number | null>(null);
 
   const storageKey = useMemo(() => (slug ? `promotion_participant:${slug}` : ""), [slug]);
   const visitorToken = useMemo(() => {
@@ -127,6 +131,15 @@ export default function PublicPromotionPage() {
 
   useEffect(() => clearDrawTimers, [clearDrawTimers]);
 
+  useEffect(
+    () => () => {
+      if (celebrationTimeoutRef.current !== null) {
+        window.clearTimeout(celebrationTimeoutRef.current);
+      }
+    },
+    [],
+  );
+
   useEffect(() => {
     const load = async () => {
       setLoading(true);
@@ -159,6 +172,8 @@ export default function PublicPromotionPage() {
   useEffect(() => {
     const draw = async () => {
       if (!promotion || !timeLeft?.isOver || drawStatus === "no_participants" || revealWinner || drawRequestedRef.current) return;
+      const processedAtMs = new Date(promotion.draw_processed_at ?? promotion.winner_selected_at ?? "").getTime();
+      if (Number.isFinite(processedAtMs) && Date.now() - processedAtMs > 60 * 60 * 1000) return;
       drawRequestedRef.current = true;
       try {
         const { data, error: fnError } = await supabase.functions.invoke("promotion-draw", {
@@ -231,6 +246,9 @@ export default function PublicPromotionPage() {
       setParticipantReady(true);
       setFormOpen(false);
       setSuccess(data?.already_participated ? "Ya estabas participando." : "Participacion registrada.");
+      setShowJoinCelebration(true);
+      if (celebrationTimeoutRef.current !== null) window.clearTimeout(celebrationTimeoutRef.current);
+      celebrationTimeoutRef.current = window.setTimeout(() => setShowJoinCelebration(false), 2600);
     } catch (err) {
       const text = err instanceof Error ? err.message : "No pudimos registrar tu participacion.";
       setError(text);
@@ -271,72 +289,122 @@ export default function PublicPromotionPage() {
       ]
     : [];
   const canParticipate = !participantReady && !timeLeft?.isOver;
-  const heroLabel = timeLeft?.isOver ? "Sorteo finalizado" : "Promocion activa";
+  const tickerText = String(promotion.ticker_text ?? "").trim() || "Sorteo exclusivo";
+  const prizeDescription = String(promotion.prize_description ?? "").trim() || "en fichas de casino";
+  const participationSteps = Array.isArray(promotion.participation_steps)
+    ? promotion.participation_steps.map((step) => String(step ?? "").trim()).filter(Boolean).slice(0, 3)
+    : [];
+  const ctaLabel = String(promotion.cta_label ?? "").trim() || "Quiero participar";
+  const drawProcessedMs = new Date(promotion.draw_processed_at ?? promotion.winner_selected_at ?? "").getTime();
+  const resultExpired =
+    !!timeLeft?.isOver && Number.isFinite(drawProcessedMs) && Date.now() - drawProcessedMs > 60 * 60 * 1000;
   const backgroundImageUrl = String(promotion.background_image_url ?? "").trim();
   const backgroundStyle = backgroundImageUrl
     ? {
-        backgroundImage: `linear-gradient(135deg, rgba(7,16,13,0.82), rgba(3,5,4,0.76) 52%, rgba(13,22,15,0.86)), url("${cssUrl(backgroundImageUrl)}")`,
+        backgroundImage: `linear-gradient(180deg, rgba(12,12,20,0.78), rgba(12,12,20,0.9)), url("${cssUrl(backgroundImageUrl)}")`,
         backgroundPosition: "center",
         backgroundSize: "cover",
       }
     : undefined;
 
   const heroCard = (
-    <div className="w-full rounded-[1.7rem] border border-emerald-500/20 bg-black/42 p-5 shadow-[0_30px_120px_rgba(0,0,0,0.45)] backdrop-blur-md sm:rounded-[2rem] sm:p-8">
-      <p className="text-[11px] font-semibold uppercase tracking-[0.28em] text-emerald-300 sm:text-xs sm:tracking-[0.35em]">{heroLabel}</p>
-      <h1 className="mt-4 break-words text-[clamp(2.35rem,14vw,4.6rem)] font-black leading-[0.92] tracking-tight text-white sm:text-5xl">
+    <div className="relative min-h-[calc(100svh-2rem)] overflow-hidden rounded-[2rem] border border-white/10 bg-[#0c0c14] px-5 pb-28 pt-8 text-center shadow-[0_30px_100px_rgba(0,0,0,0.55)] sm:min-h-[680px] sm:px-7 sm:pt-10">
+      <div className="pointer-events-none absolute left-1/2 top-[-90px] h-72 w-72 -translate-x-1/2 rounded-full bg-amber-400/15 blur-3xl" />
+      <div className="relative mx-auto max-w-[260px] overflow-hidden rounded-full border border-amber-500/55 bg-amber-500/10 py-1.5">
+        <div className="whitespace-nowrap text-[10px] font-semibold uppercase tracking-[0.26em] text-amber-300 [animation:promotion-marquee_10s_linear_infinite]">
+          {tickerText} - {tickerText} - {tickerText} -
+        </div>
+      </div>
+      <h1 className="relative mx-auto mt-5 max-w-[310px] break-words text-[clamp(3.2rem,17vw,5.6rem)] font-black uppercase leading-[0.86] tracking-wide text-white [font-family:Impact,'Arial_Narrow',sans-serif]">
         {promotion.title}
       </h1>
-      <p className="mt-4 max-w-2xl text-[15px] leading-7 text-zinc-300 sm:text-base">{promotion.message}</p>
-      <div className="mt-6 rounded-2xl border border-amber-400/30 bg-amber-400/10 p-4 shadow-[inset_0_1px_0_rgba(255,255,255,0.06)]">
-        <p className="text-[11px] uppercase tracking-[0.22em] text-amber-200 sm:text-xs sm:tracking-[0.25em]">Premio</p>
-        <p className="mt-1 break-words text-xl font-bold text-amber-50 sm:text-2xl">{promotion.prize}</p>
+      <p className="relative mx-auto mt-4 max-w-[290px] text-[13px] leading-6 text-zinc-400 sm:text-sm">{promotion.message}</p>
+      <div className="relative mt-7 flex items-center gap-3 rounded-2xl border border-amber-500/45 bg-[#1b152b] p-4 text-left shadow-[inset_0_1px_0_rgba(255,255,255,0.06)]">
+        <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl border border-amber-500/35 bg-amber-500/10 text-xl font-black text-amber-300">
+          $
+        </div>
+        <div className="min-w-0">
+          <p className="text-[10px] font-semibold uppercase tracking-[0.22em] text-zinc-500">Premio principal</p>
+          <p className="mt-1 break-words text-3xl font-black uppercase leading-none text-amber-400 [font-family:Impact,'Arial_Narrow',sans-serif]">
+            {promotion.prize}
+          </p>
+          <p className="mt-1 text-[11px] text-zinc-500">{prizeDescription}</p>
+        </div>
       </div>
-      <p className="mt-4 text-[13px] leading-6 text-zinc-400 sm:text-sm">Sorteo: {formatDateTime(promotion.draw_at)}</p>
+      <p className="mt-6 text-left text-[10px] font-semibold uppercase tracking-[0.18em] text-zinc-500">Termina en</p>
+      <div className="mt-2 grid grid-cols-4 gap-2">
+        {units.map(([label, value]) => (
+          <div key={label} className="rounded-xl border border-white/10 bg-white/[0.05] px-1.5 py-3">
+            <p className="text-2xl font-black leading-none text-white [font-family:Impact,'Arial_Narrow',sans-serif]">
+              {String(value).padStart(2, "0")}
+            </p>
+            <p className="mt-1 text-[8px] uppercase tracking-[0.12em] text-zinc-500">{label}</p>
+          </div>
+        ))}
+      </div>
+      {participationSteps.length > 0 && (
+        <>
+          <div className="my-5 h-px bg-white/10" />
+          <p className="text-left text-[10px] font-semibold uppercase tracking-[0.18em] text-zinc-500">Como participar</p>
+          <div className="mt-3 space-y-2 text-left">
+            {participationSteps.map((step, index) => (
+              <div key={`${step}-${index}`} className="flex items-start gap-2">
+                <span className="flex h-5 w-5 shrink-0 items-center justify-center rounded-full border border-amber-500/60 bg-amber-500/10 text-[10px] font-bold text-amber-300">
+                  {index + 1}
+                </span>
+                <span className="text-[11px] leading-5 text-zinc-300">{step}</span>
+              </div>
+            ))}
+          </div>
+        </>
+      )}
       {canParticipate && (
-        <button
-          type="button"
-          onClick={() => {
-            setError(null);
-            setFormOpen(true);
-          }}
-          className="mt-6 min-h-14 w-full rounded-2xl bg-emerald-400 px-5 py-4 text-sm font-black uppercase tracking-[0.18em] text-emerald-950 shadow-[0_0_0_0_rgba(52,211,153,0.55)] transition active:scale-[0.99] hover:bg-emerald-300 hover:[animation-play-state:paused] [animation:promotion-heartbeat_1.65s_ease-in-out_infinite]"
-        >
-          Participar
-        </button>
+        <div className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-[#0c0c14] via-[#0c0c14] to-transparent px-5 pb-6 pt-12">
+          <button
+            type="button"
+            onClick={() => {
+              setError(null);
+              setFormOpen(true);
+            }}
+            className="min-h-14 w-full rounded-2xl bg-amber-500 px-5 py-4 text-sm font-black uppercase tracking-[0.18em] text-[#0c0c14] shadow-[0_0_0_0_rgba(245,158,11,0.55)] transition active:scale-[0.99] hover:bg-amber-400 hover:[animation-play-state:paused] [animation:promotion-heartbeat_1.65s_ease-in-out_infinite]"
+          >
+            {ctaLabel}
+          </button>
+          <p className="mt-2 text-[9px] text-zinc-600">Mayores de 18 anos - Bases y condiciones aplican</p>
+        </div>
       )}
     </div>
   );
 
   const formCard = (
-    <section className="rounded-[1.65rem] border border-zinc-700/70 bg-zinc-950/90 p-4 shadow-2xl backdrop-blur-xl sm:rounded-[2rem] sm:p-6">
-      <p className="text-[11px] font-semibold uppercase tracking-[0.24em] text-emerald-300 sm:text-xs sm:tracking-[0.28em]">Participa por</p>
-      <h1 className="mt-3 break-words text-3xl font-black leading-none text-white sm:text-4xl">{promotion.title}</h1>
+    <section className="rounded-[1.65rem] border border-amber-500/25 bg-[#0c0c14]/95 p-4 shadow-2xl backdrop-blur-xl sm:rounded-[2rem] sm:p-6">
+      <p className="text-[11px] font-semibold uppercase tracking-[0.24em] text-amber-300 sm:text-xs sm:tracking-[0.28em]">Participa por</p>
+      <h1 className="mt-3 break-words text-4xl font-black uppercase leading-none text-white [font-family:Impact,'Arial_Narrow',sans-serif]">{promotion.title}</h1>
       <p className="mt-2 text-sm text-zinc-400">
         Completa los datos obligatorios para entrar. Se te notificara a tu email si ganaste.
       </p>
-      <div className="mt-5 rounded-2xl border border-amber-400/25 bg-amber-400/10 px-4 py-3">
-        <p className="text-[10px] uppercase tracking-[0.22em] text-amber-200">Premio</p>
-        <p className="mt-1 text-base font-bold text-amber-50">{promotion.prize}</p>
+      <div className="mt-5 rounded-2xl border border-amber-500/35 bg-amber-500/10 px-4 py-3">
+        <p className="text-[10px] uppercase tracking-[0.22em] text-amber-300">Premio</p>
+        <p className="mt-1 text-xl font-black text-amber-100 [font-family:Impact,'Arial_Narrow',sans-serif]">{promotion.prize}</p>
       </div>
       <div className="mt-5 space-y-3">
         <input
           value={form.username}
           onChange={(e) => setForm((prev) => ({ ...prev, username: e.target.value }))}
-          className="w-full rounded-xl border border-zinc-800 bg-black/70 px-4 py-3 text-base text-white outline-none focus:border-emerald-500 sm:text-sm"
+          className="w-full rounded-xl border border-zinc-800 bg-black/70 px-4 py-3 text-base text-white outline-none focus:border-amber-500 sm:text-sm"
           placeholder="Nombre de usuario"
         />
         <input
           value={form.phone}
           onChange={(e) => setForm((prev) => ({ ...prev, phone: e.target.value }))}
-          className="w-full rounded-xl border border-zinc-800 bg-black/70 px-4 py-3 text-base text-white outline-none focus:border-emerald-500 sm:text-sm"
+          className="w-full rounded-xl border border-zinc-800 bg-black/70 px-4 py-3 text-base text-white outline-none focus:border-amber-500 sm:text-sm"
           placeholder="Telefono"
           inputMode="tel"
         />
         <input
           value={form.email}
           onChange={(e) => setForm((prev) => ({ ...prev, email: e.target.value }))}
-          className="w-full rounded-xl border border-zinc-800 bg-black/70 px-4 py-3 text-base text-white outline-none focus:border-emerald-500 sm:text-sm"
+          className="w-full rounded-xl border border-zinc-800 bg-black/70 px-4 py-3 text-base text-white outline-none focus:border-amber-500 sm:text-sm"
           placeholder="Email"
           type="email"
         />
@@ -346,9 +414,9 @@ export default function PublicPromotionPage() {
         type="button"
         disabled={submitting}
         onClick={handleSubmit}
-        className="mt-5 min-h-[52px] w-full rounded-xl bg-emerald-400 px-4 py-3 text-sm font-black uppercase tracking-[0.16em] text-emerald-950 transition active:scale-[0.99] hover:bg-emerald-300 disabled:opacity-60"
+        className="mt-5 min-h-[52px] w-full rounded-xl bg-amber-500 px-4 py-3 text-sm font-black uppercase tracking-[0.16em] text-[#0c0c14] transition active:scale-[0.99] hover:bg-amber-400 disabled:opacity-60"
       >
-        {submitting ? "Registrando..." : "Participar"}
+        {submitting ? "Registrando..." : ctaLabel}
       </button>
     </section>
   );
@@ -356,51 +424,106 @@ export default function PublicPromotionPage() {
   return (
     <main className="min-h-[100svh] overflow-hidden bg-[#07100d] text-zinc-100" style={backgroundStyle}>
       <style>{`
+        @keyframes promotion-marquee {
+          from { transform: translateX(0); }
+          to { transform: translateX(-33.333%); }
+        }
         @keyframes promotion-heartbeat {
           0%, 100% {
             transform: scale(1);
-            box-shadow: 0 0 0 0 rgba(52, 211, 153, 0.46);
+            box-shadow: 0 0 0 0 rgba(245, 158, 11, 0.46);
           }
           14% {
             transform: scale(1.045);
-            box-shadow: 0 0 0 10px rgba(52, 211, 153, 0.18);
+            box-shadow: 0 0 0 10px rgba(245, 158, 11, 0.18);
           }
           28% {
             transform: scale(1);
-            box-shadow: 0 0 0 18px rgba(52, 211, 153, 0);
+            box-shadow: 0 0 0 18px rgba(245, 158, 11, 0);
           }
           42% {
             transform: scale(1.035);
-            box-shadow: 0 0 0 8px rgba(52, 211, 153, 0.14);
+            box-shadow: 0 0 0 8px rgba(245, 158, 11, 0.14);
           }
           70% {
             transform: scale(1);
-            box-shadow: 0 0 0 0 rgba(52, 211, 153, 0);
+            box-shadow: 0 0 0 0 rgba(245, 158, 11, 0);
           }
         }
         @keyframes promotion-draw-progress {
           from { width: 0%; }
           to { width: 100%; }
         }
+        @keyframes promotion-coin-rain {
+          0% {
+            transform: translate3d(0, -12vh, 0) rotate(0deg);
+            opacity: 0;
+          }
+          10% {
+            opacity: 1;
+          }
+          100% {
+            transform: translate3d(var(--coin-drift), 112vh, 0) rotate(720deg);
+            opacity: 0;
+          }
+        }
         @media (prefers-reduced-motion: reduce) {
           [class*="promotion-heartbeat"],
-          [class*="promotion-draw-progress"] {
+          [class*="promotion-draw-progress"],
+          [class*="promotion-coin-rain"],
+          [class*="promotion-marquee"] {
             animation: none !important;
           }
         }
       `}</style>
       {!backgroundImageUrl && (
-        <div className="pointer-events-none fixed inset-0 bg-[radial-gradient(circle_at_20%_20%,rgba(16,185,129,0.26),transparent_30%),radial-gradient(circle_at_80%_0%,rgba(245,158,11,0.18),transparent_28%),linear-gradient(135deg,#07100d,#030504_55%,#0d160f)]" />
+        <div className="pointer-events-none fixed inset-0 bg-[radial-gradient(circle_at_50%_0%,rgba(245,158,11,0.18),transparent_34%),radial-gradient(circle_at_20%_85%,rgba(120,53,15,0.24),transparent_30%),linear-gradient(160deg,#050507,#0c0c14_52%,#050507)]" />
+      )}
+      {(showJoinCelebration || (winnerUsername && revealWinner && !resultExpired)) && (
+        <div className="pointer-events-none fixed inset-0 z-40 overflow-hidden">
+          {COIN_RAIN.map((coin) => (
+            <span
+              key={coin}
+              className="absolute top-0 h-3 w-3 rounded-full border border-amber-200/70 bg-gradient-to-br from-yellow-200 via-amber-400 to-yellow-700 shadow-[0_0_16px_rgba(245,158,11,0.55)] [animation:promotion-coin-rain_2.8s_linear_infinite]"
+              style={
+                {
+                  left: `${(coin * 29) % 100}%`,
+                  animationDelay: `${(coin % 9) * 0.16}s`,
+                  animationDuration: `${2.2 + (coin % 5) * 0.22}s`,
+                  "--coin-drift": `${coin % 2 === 0 ? "" : "-"}${18 + (coin % 7) * 6}px`,
+                } as CSSProperties
+              }
+            />
+          ))}
+        </div>
+      )}
+      {showJoinCelebration && (
+        <div className="pointer-events-none fixed inset-x-4 top-6 z-50 mx-auto max-w-sm rounded-2xl border border-amber-400/50 bg-[#0c0c14]/95 px-4 py-4 text-center shadow-[0_22px_70px_rgba(0,0,0,0.55)] backdrop-blur">
+          <p className="text-[11px] font-semibold uppercase tracking-[0.22em] text-amber-300">Felicitaciones</p>
+          <p className="mt-2 text-lg font-black uppercase text-white [font-family:Impact,'Arial_Narrow',sans-serif]">
+            Ya estas participando
+          </p>
+        </div>
       )}
       <div className="relative mx-auto flex min-h-[100svh] max-w-5xl flex-col justify-center px-4 py-6 sm:px-5 sm:py-10">
         <section className={`grid w-full gap-4 sm:gap-6 ${participantReady || timeLeft?.isOver ? "lg:grid-cols-[1.05fr_0.95fr] lg:items-center" : "mx-auto max-w-lg"}`}>
           {heroCard}
           {(participantReady || timeLeft?.isOver) && (
             <section className="rounded-[1.7rem] border border-emerald-500/25 bg-zinc-950/82 p-4 text-center shadow-2xl backdrop-blur-md sm:rounded-[2rem] sm:p-6">
-              {success && <p className="mb-3 rounded-lg bg-emerald-950/50 px-3 py-2 text-sm text-emerald-200">{success}</p>}
-              {!timeLeft?.isOver ? (
+              {success && <p className="mb-3 rounded-lg bg-amber-500/10 px-3 py-2 text-sm text-amber-100">{success}</p>}
+              {resultExpired ? (
+                <div className="py-10">
+                  <p className="text-xs font-semibold uppercase tracking-[0.32em] text-zinc-500">Sorteo finalizado</p>
+                  <h2 className="mt-5 text-3xl font-black uppercase text-white [font-family:Impact,'Arial_Narrow',sans-serif]">
+                    Gracias por participar
+                  </h2>
+                  <p className="mt-3 text-sm leading-6 text-zinc-400">
+                    El resultado ya estuvo disponible durante una hora y este link caduco.
+                  </p>
+                </div>
+              ) : !timeLeft?.isOver ? (
                 <>
-                  <p className="text-[11px] font-semibold uppercase tracking-[0.26em] text-emerald-300 sm:text-xs sm:tracking-[0.32em]">Cuenta regresiva</p>
+                  <p className="text-[11px] font-semibold uppercase tracking-[0.26em] text-amber-300 sm:text-xs sm:tracking-[0.32em]">Ya estas participando</p>
                   <div className="mt-5 grid grid-cols-4 gap-1.5 sm:gap-2">
                     {units.map(([label, value]) => (
                       <div key={label} className="rounded-xl border border-zinc-800 bg-black/55 px-1.5 py-3 sm:rounded-2xl sm:px-2 sm:py-4">
@@ -409,13 +532,13 @@ export default function PublicPromotionPage() {
                       </div>
                     ))}
                   </div>
-                  <p className="mt-5 text-sm text-zinc-400">Ya estas participando. Cuando llegue la hora, aca se mostrara el ganador.</p>
+                  <p className="mt-5 text-sm text-zinc-400">Cuando llegue la hora, aca se mostrara el sorteo en vivo y el ganador.</p>
                 </>
               ) : isDrawAnimating ? (
                 <div className="relative overflow-hidden py-5 sm:py-6">
                   <div className="pointer-events-none absolute inset-0 opacity-60 [background-image:radial-gradient(circle_at_50%_0%,rgba(16,185,129,0.24),transparent_35%),radial-gradient(circle_at_50%_100%,rgba(251,191,36,0.18),transparent_32%)]" />
                   <div className="relative">
-                    <p className="text-[11px] font-semibold uppercase tracking-[0.26em] text-emerald-300 sm:text-xs sm:tracking-[0.32em]">Sorteando ganador</p>
+                    <p className="text-[11px] font-semibold uppercase tracking-[0.26em] text-amber-300 sm:text-xs sm:tracking-[0.32em]">Sorteando ganador</p>
                     <p className="mt-2 text-xs text-zinc-500">Participantes verificados: {animationUsernames.length}</p>
                     <div className="mx-auto mt-6 max-w-sm rounded-[1.5rem] border border-emerald-400/40 bg-black/70 p-3 shadow-[0_0_90px_rgba(16,185,129,0.25)] sm:rounded-[1.7rem] sm:p-4">
                       <div className="rounded-2xl border border-zinc-800 bg-zinc-950 px-4 py-7">
@@ -426,7 +549,7 @@ export default function PublicPromotionPage() {
                       </div>
                     </div>
                     <div className="mx-auto mt-5 h-2 max-w-sm overflow-hidden rounded-full bg-zinc-900">
-                      <div className="h-full rounded-full bg-gradient-to-r from-emerald-400 via-amber-300 to-emerald-400 [animation:promotion-draw-progress_7s_linear_forwards]" />
+                      <div className="h-full rounded-full bg-gradient-to-r from-amber-500 via-yellow-200 to-amber-500 [animation:promotion-draw-progress_7s_linear_forwards]" />
                     </div>
                     <div className="mt-5 grid grid-cols-3 gap-1.5 text-[9px] uppercase tracking-[0.1em] text-zinc-500 sm:gap-2 sm:text-[10px] sm:tracking-[0.16em]">
                       <span className="rounded-full border border-zinc-800 bg-black/40 px-2 py-2">Mezclando</span>

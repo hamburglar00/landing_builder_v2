@@ -24,6 +24,10 @@ type FormState = {
   slug: string;
   message: string;
   prize: string;
+  tickerText: string;
+  prizeDescription: string;
+  participationSteps: string[];
+  ctaLabel: string;
   backgroundImageUrl: string;
   drawDate: string;
   drawHour: string;
@@ -35,6 +39,10 @@ const EMPTY_FORM: FormState = {
   slug: "",
   message: "",
   prize: "",
+  tickerText: "Sorteo exclusivo",
+  prizeDescription: "en fichas de casino",
+  participationSteps: ["", "", ""],
+  ctaLabel: "Quiero participar",
   backgroundImageUrl: "",
   drawDate: "",
   drawHour: "12",
@@ -95,6 +103,98 @@ function drawDateHourToIso(dateValue: string, hourValue: string): string {
   const date = new Date(`${dateValue}T${String(hour).padStart(2, "0")}:00:00`);
   if (Number.isNaN(date.getTime())) return "";
   return date.toISOString();
+}
+
+const PREVIEW_UNITS = [
+  ["02", "dias"],
+  ["14", "horas"],
+  ["37", "min"],
+  ["09", "seg"],
+];
+
+function PromotionMobilePreview({ form }: { form: FormState }) {
+  const ticker = form.tickerText.trim() || "Sorteo exclusivo";
+  const title = form.title.trim() || "Gana en grande";
+  const description = form.message.trim() || "Participa y llevate fichas gratis para jugar sin limite";
+  const prize = form.prize.trim() || "$50.000";
+  const prizeDescription = form.prizeDescription.trim() || "en fichas de casino";
+  const ctaLabel = form.ctaLabel.trim() || "Quiero participar";
+  const steps = form.participationSteps.map((step) => step.trim()).filter(Boolean).slice(0, 3);
+
+  return (
+    <div className="rounded-2xl border border-zinc-800 bg-zinc-950/60 p-4">
+      <div className="mb-3">
+        <p className="text-xs font-semibold text-zinc-200">Vista previa mobile</p>
+        <p className="mt-1 text-xs text-zinc-500">Asi se vera el link publico del sorteo en celular.</p>
+      </div>
+      <div className="mx-auto w-full max-w-[310px] rounded-[2rem] border border-zinc-700 bg-zinc-900 p-2 shadow-[0_25px_80px_rgba(0,0,0,0.45)]">
+        <div className="relative min-h-[580px] overflow-hidden rounded-[1.65rem] border border-zinc-800 bg-[#0c0c14] px-4 pb-24 pt-8 text-center">
+          <div className="pointer-events-none absolute left-1/2 top-[-70px] h-60 w-60 -translate-x-1/2 rounded-full bg-amber-400/15 blur-2xl" />
+          <div className="relative overflow-hidden rounded-full border border-amber-500/50 bg-amber-500/10 py-1">
+            <div className="whitespace-nowrap text-[10px] font-semibold uppercase tracking-[0.24em] text-amber-300 [animation:promotion-preview-marquee_9s_linear_infinite]">
+              {ticker} - {ticker} - {ticker} -
+            </div>
+          </div>
+          <h3 className="relative mt-4 break-words text-[42px] font-black uppercase leading-[0.92] tracking-wide text-white [font-family:Impact,'Arial_Narrow',sans-serif]">
+            {title}
+          </h3>
+          <p className="relative mx-auto mt-3 max-w-[220px] text-[12px] leading-5 text-zinc-400">{description}</p>
+          <div className="relative mt-6 flex items-center gap-3 rounded-2xl border border-amber-500/45 bg-[#1b152b] p-3 text-left">
+            <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl border border-amber-500/35 bg-amber-500/10 text-lg">
+              $
+            </div>
+            <div className="min-w-0">
+              <p className="text-[9px] font-semibold uppercase tracking-[0.2em] text-zinc-500">Premio principal</p>
+              <p className="break-words text-2xl font-black uppercase leading-none text-amber-400 [font-family:Impact,'Arial_Narrow',sans-serif]">
+                {prize}
+              </p>
+              <p className="text-[10px] text-zinc-500">{prizeDescription}</p>
+            </div>
+          </div>
+          <p className="mt-5 text-left text-[10px] font-semibold uppercase tracking-[0.18em] text-zinc-500">Termina en</p>
+          <div className="mt-2 grid grid-cols-4 gap-2">
+            {PREVIEW_UNITS.map(([value, label]) => (
+              <div key={label} className="rounded-xl border border-white/10 bg-white/[0.05] px-1 py-2">
+                <p className="text-2xl font-black leading-none text-white [font-family:Impact,'Arial_Narrow',sans-serif]">{value}</p>
+                <p className="mt-1 text-[8px] uppercase tracking-[0.12em] text-zinc-500">{label}</p>
+              </div>
+            ))}
+          </div>
+          {steps.length > 0 && (
+            <>
+              <div className="my-4 h-px bg-white/10" />
+              <p className="text-left text-[10px] font-semibold uppercase tracking-[0.18em] text-zinc-500">Como participar</p>
+              <div className="mt-3 space-y-2 text-left">
+                {steps.map((step, index) => (
+                  <div key={`${step}-${index}`} className="flex items-start gap-2">
+                    <span className="flex h-5 w-5 shrink-0 items-center justify-center rounded-full border border-amber-500/60 bg-amber-500/10 text-[10px] font-bold text-amber-300">
+                      {index + 1}
+                    </span>
+                    <span className="text-[11px] leading-5 text-zinc-300">{step}</span>
+                  </div>
+                ))}
+              </div>
+            </>
+          )}
+          <div className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-[#0c0c14] via-[#0c0c14] to-transparent px-4 pb-5 pt-10">
+            <button
+              type="button"
+              className="w-full rounded-2xl bg-amber-500 px-4 py-4 text-sm font-black uppercase tracking-[0.2em] text-[#0c0c14] shadow-[0_18px_40px_rgba(245,158,11,0.25)]"
+            >
+              {ctaLabel}
+            </button>
+            <p className="mt-2 text-[9px] text-zinc-600">Mayores de 18 anos - Bases y condiciones aplican</p>
+          </div>
+        </div>
+      </div>
+      <style>{`
+        @keyframes promotion-preview-marquee {
+          from { transform: translateX(0); }
+          to { transform: translateX(-33.333%); }
+        }
+      `}</style>
+    </div>
+  );
 }
 
 export default function DashboardPromocionesPage() {
@@ -200,6 +300,10 @@ export default function DashboardPromocionesPage() {
       slug: promotion.slug,
       message: promotion.message,
       prize: promotion.prize,
+      tickerText: promotion.ticker_text ?? "Sorteo exclusivo",
+      prizeDescription: promotion.prize_description ?? "en fichas de casino",
+      participationSteps: [...(promotion.participation_steps ?? []), "", "", ""].slice(0, 3),
+      ctaLabel: promotion.cta_label ?? "Quiero participar",
       backgroundImageUrl: promotion.background_image_url ?? "",
       drawDate: draw.drawDate,
       drawHour: draw.drawHour,
@@ -221,6 +325,10 @@ export default function DashboardPromocionesPage() {
     const slug = slugifyPromotion(form.slug || form.title);
     const messageText = form.message.trim();
     const prize = form.prize.trim();
+    const tickerText = form.tickerText.trim() || "Sorteo exclusivo";
+    const prizeDescription = form.prizeDescription.trim() || "en fichas de casino";
+    const participationSteps = form.participationSteps.map((step) => step.trim()).filter(Boolean).slice(0, 3);
+    const ctaLabel = form.ctaLabel.trim() || "Quiero participar";
     const backgroundImageUrl = form.backgroundImageUrl.trim();
     const drawAt = drawDateHourToIso(form.drawDate, form.drawHour);
 
@@ -237,6 +345,10 @@ export default function DashboardPromocionesPage() {
           slug,
           message: messageText,
           prize,
+          ticker_text: tickerText,
+          prize_description: prizeDescription,
+          participation_steps: participationSteps,
+          cta_label: ctaLabel,
           background_image_url: backgroundImageUrl,
           draw_at: drawAt,
           status: form.status,
@@ -249,6 +361,10 @@ export default function DashboardPromocionesPage() {
           slug,
           message: messageText,
           prize,
+          ticker_text: tickerText,
+          prize_description: prizeDescription,
+          participation_steps: participationSteps,
+          cta_label: ctaLabel,
           background_image_url: backgroundImageUrl,
           draw_at: drawAt,
           status: form.status,
@@ -361,99 +477,149 @@ export default function DashboardPromocionesPage() {
           )}
         </div>
 
-        <div className="grid gap-3 lg:grid-cols-2">
-          <label className="space-y-1">
-            <span className="text-xs text-zinc-400">Titulo</span>
-            <input
-              value={form.title}
-              onChange={(e) => handleTitleChange(e.target.value)}
-              className="w-full rounded-lg border border-zinc-800 bg-zinc-950 px-3 py-2 text-sm text-zinc-100 outline-none focus:border-cyan-700"
-              placeholder="Sorteo Mundial VIP"
-            />
-          </label>
-          <label className="space-y-1">
-            <span className="text-xs text-zinc-400">Link publico</span>
-            <div className="flex gap-2">
-              <span className="hidden rounded-lg border border-zinc-800 bg-zinc-900 px-3 py-2 text-xs text-zinc-500 sm:inline">
-                /promo/
-              </span>
-              <input
-                value={form.slug}
-                onChange={(e) => setForm((prev) => ({ ...prev, slug: e.target.value }))}
-                className="min-w-0 flex-1 rounded-lg border border-zinc-800 bg-zinc-950 px-3 py-2 text-sm text-zinc-100 outline-none focus:border-cyan-700"
-                placeholder="sorteo-mundial-vip"
-              />
-            </div>
-          </label>
-          <label className="space-y-1">
-            <span className="text-xs text-zinc-400">Premio</span>
-            <input
-              value={form.prize}
-              onChange={(e) => setForm((prev) => ({ ...prev, prize: e.target.value }))}
-              className="w-full rounded-lg border border-zinc-800 bg-zinc-950 px-3 py-2 text-sm text-zinc-100 outline-none focus:border-cyan-700"
-              placeholder="Bono, fichas, etc..."
-            />
-          </label>
-          <div className="space-y-1">
-            <span className="text-xs text-zinc-400">Imagen de fondo (.avif)</span>
-            <ImageUploader
-              value={form.backgroundImageUrl ? [form.backgroundImageUrl] : []}
-              onChange={(urls) =>
-                setForm((prev) => ({ ...prev, backgroundImageUrl: urls[0] ?? "" }))
-              }
-              onUpload={async (file) => {
-                if (!userId) throw new Error("Usuario no encontrado.");
-                return uploadLandingImage(supabase, userId, file);
-              }}
-              label=""
-            />
-          </div>
-          <div className="grid grid-cols-[minmax(0,1fr)_7.5rem] gap-3">
+        <div className="grid gap-5 xl:grid-cols-[minmax(0,1fr)_360px]">
+          <div className="grid gap-3 lg:grid-cols-2">
             <label className="space-y-1">
-              <span className="text-xs text-zinc-400">Fecha del sorteo</span>
+              <span className="text-xs text-zinc-400">Ticker</span>
               <input
-                type="date"
-                value={form.drawDate}
-                onChange={(e) => setForm((prev) => ({ ...prev, drawDate: e.target.value }))}
+                value={form.tickerText}
+                onChange={(e) => setForm((prev) => ({ ...prev, tickerText: e.target.value }))}
                 className="w-full rounded-lg border border-zinc-800 bg-zinc-950 px-3 py-2 text-sm text-zinc-100 outline-none focus:border-cyan-700"
+                placeholder="Sorteo exclusivo"
               />
             </label>
             <label className="space-y-1">
-              <span className="text-xs text-zinc-400">Hora</span>
+              <span className="text-xs text-zinc-400">Link publico</span>
+              <div className="flex gap-2">
+                <span className="hidden rounded-lg border border-zinc-800 bg-zinc-900 px-3 py-2 text-xs text-zinc-500 sm:inline">
+                  /promo/
+                </span>
+                <input
+                  value={form.slug}
+                  onChange={(e) => setForm((prev) => ({ ...prev, slug: e.target.value }))}
+                  className="min-w-0 flex-1 rounded-lg border border-zinc-800 bg-zinc-950 px-3 py-2 text-sm text-zinc-100 outline-none focus:border-cyan-700"
+                  placeholder="sorteo-mundial-vip"
+                />
+              </div>
+            </label>
+            <label className="space-y-1">
+              <span className="text-xs text-zinc-400">Titulo</span>
+              <input
+                value={form.title}
+                onChange={(e) => handleTitleChange(e.target.value)}
+                className="w-full rounded-lg border border-zinc-800 bg-zinc-950 px-3 py-2 text-sm text-zinc-100 outline-none focus:border-cyan-700"
+                placeholder="Gana en grande"
+              />
+            </label>
+            <label className="space-y-1">
+              <span className="text-xs text-zinc-400">Texto del CTA</span>
+              <input
+                value={form.ctaLabel}
+                onChange={(e) => setForm((prev) => ({ ...prev, ctaLabel: e.target.value }))}
+                className="w-full rounded-lg border border-zinc-800 bg-zinc-950 px-3 py-2 text-sm text-zinc-100 outline-none focus:border-cyan-700"
+                placeholder="Quiero participar"
+              />
+            </label>
+            <label className="space-y-1">
+              <span className="text-xs text-zinc-400">Premio</span>
+              <input
+                value={form.prize}
+                onChange={(e) => setForm((prev) => ({ ...prev, prize: e.target.value }))}
+                className="w-full rounded-lg border border-zinc-800 bg-zinc-950 px-3 py-2 text-sm text-zinc-100 outline-none focus:border-cyan-700"
+                placeholder="$50.000"
+              />
+            </label>
+            <label className="space-y-1">
+              <span className="text-xs text-zinc-400">Descripcion del premio</span>
+              <input
+                value={form.prizeDescription}
+                onChange={(e) => setForm((prev) => ({ ...prev, prizeDescription: e.target.value }))}
+                className="w-full rounded-lg border border-zinc-800 bg-zinc-950 px-3 py-2 text-sm text-zinc-100 outline-none focus:border-cyan-700"
+                placeholder="en fichas de casino"
+              />
+            </label>
+            <div className="space-y-1">
+              <span className="text-xs text-zinc-400">Imagen de fondo (.avif)</span>
+              <ImageUploader
+                value={form.backgroundImageUrl ? [form.backgroundImageUrl] : []}
+                onChange={(urls) =>
+                  setForm((prev) => ({ ...prev, backgroundImageUrl: urls[0] ?? "" }))
+                }
+                onUpload={async (file) => {
+                  if (!userId) throw new Error("Usuario no encontrado.");
+                  return uploadLandingImage(supabase, userId, file);
+                }}
+                label=""
+              />
+            </div>
+            <div className="grid grid-cols-[minmax(0,1fr)_7.5rem] gap-3">
+              <label className="space-y-1">
+                <span className="text-xs text-zinc-400">Fecha del sorteo</span>
+                <input
+                  type="date"
+                  value={form.drawDate}
+                  onChange={(e) => setForm((prev) => ({ ...prev, drawDate: e.target.value }))}
+                  className="w-full rounded-lg border border-zinc-800 bg-zinc-950 px-3 py-2 text-sm text-zinc-100 outline-none focus:border-cyan-700"
+                />
+              </label>
+              <label className="space-y-1">
+                <span className="text-xs text-zinc-400">Hora</span>
+                <select
+                  value={form.drawHour}
+                  onChange={(e) => setForm((prev) => ({ ...prev, drawHour: e.target.value }))}
+                  className="w-full rounded-lg border border-zinc-800 bg-zinc-950 px-3 py-2 text-sm text-zinc-100 outline-none focus:border-cyan-700"
+                >
+                  {HOUR_OPTIONS.map((hour) => (
+                    <option key={hour} value={hour}>
+                      {hour}:00
+                    </option>
+                  ))}
+                </select>
+              </label>
+            </div>
+            <label className="space-y-1 lg:col-span-2">
+              <span className="text-xs text-zinc-400">Descripcion</span>
+              <textarea
+                value={form.message}
+                onChange={(e) => setForm((prev) => ({ ...prev, message: e.target.value }))}
+                rows={3}
+                className="w-full rounded-lg border border-zinc-800 bg-zinc-950 px-3 py-2 text-sm text-zinc-100 outline-none focus:border-cyan-700"
+                placeholder="Participa y llevate fichas gratis para jugar sin limite"
+              />
+            </label>
+            <div className="space-y-2 lg:col-span-2">
+              <span className="text-xs text-zinc-400">Como participar (opcional, hasta 3 lineas)</span>
+              {form.participationSteps.map((step, index) => (
+                <input
+                  key={index}
+                  value={step}
+                  onChange={(e) =>
+                    setForm((prev) => {
+                      const nextSteps = [...prev.participationSteps];
+                      nextSteps[index] = e.target.value;
+                      return { ...prev, participationSteps: nextSteps };
+                    })
+                  }
+                  className="w-full rounded-lg border border-zinc-800 bg-zinc-950 px-3 py-2 text-sm text-zinc-100 outline-none focus:border-cyan-700"
+                  placeholder={`Requisito ${index + 1}`}
+                />
+              ))}
+            </div>
+            <label className="space-y-1">
+              <span className="text-xs text-zinc-400">Estado</span>
               <select
-                value={form.drawHour}
-                onChange={(e) => setForm((prev) => ({ ...prev, drawHour: e.target.value }))}
+                value={form.status}
+                onChange={(e) => setForm((prev) => ({ ...prev, status: e.target.value as PromotionStatus }))}
                 className="w-full rounded-lg border border-zinc-800 bg-zinc-950 px-3 py-2 text-sm text-zinc-100 outline-none focus:border-cyan-700"
               >
-                {HOUR_OPTIONS.map((hour) => (
-                  <option key={hour} value={hour}>
-                    {hour}:00
-                  </option>
-                ))}
+                <option value="active">Activa</option>
+                <option value="closed">Cerrada</option>
               </select>
             </label>
           </div>
-          <label className="space-y-1 lg:col-span-2">
-            <span className="text-xs text-zinc-400">Mensaje para participantes</span>
-            <textarea
-              value={form.message}
-              onChange={(e) => setForm((prev) => ({ ...prev, message: e.target.value }))}
-              rows={3}
-              className="w-full rounded-lg border border-zinc-800 bg-zinc-950 px-3 py-2 text-sm text-zinc-100 outline-none focus:border-cyan-700"
-              placeholder="Completa tus datos para participar. El sorteo se realiza en vivo y anunciaremos el ganador al finalizar la cuenta regresiva."
-            />
-          </label>
-          <label className="space-y-1">
-            <span className="text-xs text-zinc-400">Estado</span>
-            <select
-              value={form.status}
-              onChange={(e) => setForm((prev) => ({ ...prev, status: e.target.value as PromotionStatus }))}
-              className="w-full rounded-lg border border-zinc-800 bg-zinc-950 px-3 py-2 text-sm text-zinc-100 outline-none focus:border-cyan-700"
-            >
-              <option value="active">Activa</option>
-              <option value="closed">Cerrada</option>
-            </select>
-          </label>
+          <div className="xl:sticky xl:top-4 xl:self-start">
+            <PromotionMobilePreview form={form} />
+          </div>
         </div>
 
         <div className="mt-4 flex justify-end">
