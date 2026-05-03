@@ -50,6 +50,10 @@ const EMPTY_FORM: FormState = {
 };
 
 const HOUR_OPTIONS = Array.from({ length: 24 }, (_, hour) => String(hour).padStart(2, "0"));
+const DEFAULT_PROMOTIONS_PUBLIC_BASE_URL = "https://sorteosgolden.vercel.app";
+const PROMOTIONS_PUBLIC_BASE_URL =
+  process.env.NEXT_PUBLIC_PROMOTIONS_PUBLIC_BASE_URL?.replace(/\/+$/, "") ||
+  DEFAULT_PROMOTIONS_PUBLIC_BASE_URL;
 
 function formatDateTime(value: string | null): string {
   if (!value) return "-";
@@ -116,6 +120,11 @@ function drawDateHourToIso(dateValue: string, hourValue: string): string {
 
 function cssUrl(value: string): string {
   return value.replace(/\\/g, "\\\\").replace(/"/g, '\\"');
+}
+
+function buildPromotionPublicLink(slug: string, fallbackOrigin: string): string {
+  const baseUrl = PROMOTIONS_PUBLIC_BASE_URL || fallbackOrigin;
+  return `${baseUrl}/promo/${slug}`;
 }
 
 const PREVIEW_UNITS = [
@@ -427,7 +436,7 @@ export default function DashboardPromocionesPage() {
   };
 
   const copyPublicLink = async (slug: string) => {
-    const link = `${origin}/promo/${slug}`;
+    const link = buildPromotionPublicLink(slug, origin);
     await navigator.clipboard.writeText(link);
     setCopiedSlug(slug);
     window.setTimeout(() => setCopiedSlug(null), 1500);
@@ -693,7 +702,7 @@ export default function DashboardPromocionesPage() {
         ) : (
           <div className="space-y-3">
             {promotions.map((promotion) => {
-              const publicLink = `${origin}/promo/${promotion.slug}`;
+              const publicLink = buildPromotionPublicLink(promotion.slug, origin);
               const drawReady = new Date(promotion.draw_at).getTime() <= Date.now();
               const badge = displayStatus(promotion);
               return (
