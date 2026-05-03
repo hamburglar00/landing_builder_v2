@@ -14,6 +14,7 @@ type ClientUser = {
   show_logs?: boolean;
   show_inbox?: boolean;
   show_ai_assistant?: boolean;
+  show_promotions?: boolean;
   plan_code?: "starter" | "plus" | "pro" | "premium" | "scale";
   max_landings?: number;
   max_phones?: number;
@@ -82,6 +83,7 @@ export default function AdminClientManagePage() {
   const [showLogs, setShowLogs] = useState(true);
   const [showInbox, setShowInbox] = useState(false);
   const [showAiAssistant, setShowAiAssistant] = useState(false);
+  const [showPromotions, setShowPromotions] = useState(false);
   const [visibleCols, setVisibleCols] = useState<Set<ColKey>>(new Set(ALL_COLUMNS));
   const [planCode, setPlanCode] = useState<"starter" | "plus" | "pro" | "premium" | "scale">("starter");
   const [maxLandings, setMaxLandings] = useState(1);
@@ -121,6 +123,7 @@ export default function AdminClientManagePage() {
       setShowLogs(typeof found.show_logs === "boolean" ? found.show_logs : true);
       setShowInbox(typeof found.show_inbox === "boolean" ? found.show_inbox : false);
       setShowAiAssistant(typeof found.show_ai_assistant === "boolean" ? found.show_ai_assistant : false);
+      setShowPromotions(typeof found.show_promotions === "boolean" ? found.show_promotions : false);
       setPlanCode(found.plan_code ?? "starter");
       setMaxLandings(Number(found.max_landings ?? 1));
       setMaxPhones(Number(found.max_phones ?? 2));
@@ -167,6 +170,7 @@ export default function AdminClientManagePage() {
       showLogs: boolean;
       showInbox: boolean;
       showAiAssistant: boolean;
+      showPromotions: boolean;
       planCode: "starter" | "plus" | "pro" | "premium" | "scale";
       maxLandings: number;
       maxPhones: number;
@@ -179,6 +183,7 @@ export default function AdminClientManagePage() {
       showLogs,
       showInbox,
       showAiAssistant,
+      showPromotions,
       planCode,
       maxLandings,
       maxPhones,
@@ -468,7 +473,7 @@ export default function AdminClientManagePage() {
           </p>
         </section>
 
-        <div className="rounded-lg border border-zinc-800 bg-zinc-900/50 p-3">
+        <div className="flex flex-wrap gap-4 rounded-lg border border-zinc-800 bg-zinc-900/50 p-3">
           <label className="inline-flex items-center gap-2 text-xs text-zinc-200">
             <input
               type="checkbox"
@@ -478,7 +483,7 @@ export default function AdminClientManagePage() {
             />
             Mostrar pestaña Logs en Conversiones
           </label>
-          <label className="ml-4 inline-flex items-center gap-2 text-xs text-zinc-200">
+          <label className="inline-flex items-center gap-2 text-xs text-zinc-200">
             <input
               type="checkbox"
               checked={showInbox}
@@ -487,7 +492,7 @@ export default function AdminClientManagePage() {
             />
             Mostrar pestaña Inbox en Conversiones
           </label>
-          <label className="ml-4 inline-flex items-center gap-2 text-xs text-zinc-200">
+          <label className="inline-flex items-center gap-2 text-xs text-zinc-200">
             <input
               type="checkbox"
               checked={showAiAssistant}
@@ -495,6 +500,15 @@ export default function AdminClientManagePage() {
               className="h-4 w-4 rounded border-zinc-700 bg-zinc-900"
             />
             Mostrar agente IA en Estadisticas
+          </label>
+          <label className="inline-flex items-center gap-2 text-xs text-zinc-200">
+            <input
+              type="checkbox"
+              checked={showPromotions}
+              onChange={(e) => setShowPromotions(e.target.checked)}
+              className="h-4 w-4 rounded border-zinc-700 bg-zinc-900"
+            />
+            Activar seccion Promociones
           </label>
         </div>
 

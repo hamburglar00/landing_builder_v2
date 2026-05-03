@@ -43,6 +43,7 @@ export default function NuevoClientePage() {
   const [password, setPassword] = useState("");
   const [showLogs, setShowLogs] = useState(true);
   const [showAiAssistant, setShowAiAssistant] = useState(false);
+  const [showPromotions, setShowPromotions] = useState(false);
   const [visibleCols, setVisibleCols] = useState<Set<ColKey>>(new Set(DEFAULT_VISIBLE_COLUMNS));
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -77,6 +78,7 @@ export default function NuevoClientePage() {
           visibleColumns: [...visibleCols],
           showLogs,
           showAiAssistant,
+          showPromotions,
         },
       },
     );
@@ -174,7 +176,7 @@ export default function NuevoClientePage() {
           </div>
 
           <div className="space-y-3 rounded-lg border border-zinc-800 bg-zinc-900/50 p-3">
-            <div className="flex items-center justify-between">
+            <div className="flex flex-wrap items-center gap-3">
               <p className="text-xs font-medium text-zinc-200">Configuración de Conversiones</p>
               <label className="inline-flex items-center gap-2 text-xs text-zinc-300">
                 <input
@@ -191,6 +193,14 @@ export default function NuevoClientePage() {
                   onChange={(e) => setShowAiAssistant(e.target.checked)}
                 />
                 Mostrar agente IA
+              </label>
+              <label className="inline-flex items-center gap-2 text-xs text-zinc-300">
+                <input
+                  type="checkbox"
+                  checked={showPromotions}
+                  onChange={(e) => setShowPromotions(e.target.checked)}
+                />
+                Activar promociones
               </label>
             </div>
             <p className="text-[11px] text-zinc-500">Columnas visibles en Tabla de Conversiones</p>

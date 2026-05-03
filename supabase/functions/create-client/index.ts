@@ -13,6 +13,7 @@ type CreateClientPayload = {
   visibleColumns?: string[];
   showLogs?: boolean;
   showAiAssistant?: boolean;
+  showPromotions?: boolean;
 };
 
 type PlanCode = "starter" | "plus" | "pro" | "premium" | "scale";
@@ -190,6 +191,9 @@ Deno.serve(async (req) => {
     const requestedShowAiAssistant = typeof payload.showAiAssistant === "boolean"
       ? payload.showAiAssistant
       : null;
+    const requestedShowPromotions = typeof payload.showPromotions === "boolean"
+      ? payload.showPromotions
+      : null;
 
     if (!email || !password) {
       return new Response(
@@ -278,6 +282,7 @@ Deno.serve(async (req) => {
       : FALLBACK_VISIBLE_COLUMNS;
     const finalShowLogs = requestedShowLogs ?? true;
     const finalShowAiAssistant = requestedShowAiAssistant ?? false;
+    const finalShowPromotions = requestedShowPromotions ?? false;
 
     const premiumThreshold = Number(adminCfg?.funnel_premium_threshold);
 
@@ -292,6 +297,7 @@ Deno.serve(async (req) => {
             : 50000,
           show_logs: finalShowLogs,
           show_ai_assistant: finalShowAiAssistant,
+          show_promotions: finalShowPromotions,
           updated_at: new Date().toISOString(),
         },
         { onConflict: "user_id" },

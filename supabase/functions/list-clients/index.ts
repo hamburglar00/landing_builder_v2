@@ -179,7 +179,7 @@ Deno.serve(async (req) => {
 
     const { data: cfgRows } = await supabaseAdmin
       .from("conversions_config")
-      .select("user_id, visible_columns, show_logs, show_inbox, show_ai_assistant")
+      .select("user_id, visible_columns, show_logs, show_inbox, show_ai_assistant, show_promotions")
       .in("user_id", ids);
     const { data: subsRows } = await supabaseAdmin
       .from("client_subscriptions")
@@ -195,6 +195,7 @@ Deno.serve(async (req) => {
         show_logs: r.show_logs ?? true,
         show_inbox: r.show_inbox ?? false,
         show_ai_assistant: r.show_ai_assistant ?? false,
+        show_promotions: r.show_promotions ?? false,
       }]),
     );
     const subsByUserId = new Map(
@@ -212,6 +213,7 @@ Deno.serve(async (req) => {
           show_logs: cfgByUserId.get(u.id)?.show_logs ?? true,
           show_inbox: cfgByUserId.get(u.id)?.show_inbox ?? false,
           show_ai_assistant: cfgByUserId.get(u.id)?.show_ai_assistant ?? false,
+          show_promotions: cfgByUserId.get(u.id)?.show_promotions ?? false,
           plan_code: subsByUserId.get(u.id)?.plan_code ?? "starter",
           max_landings: subsByUserId.get(u.id)?.max_landings ?? 1,
           max_phones: subsByUserId.get(u.id)?.max_phones ?? 2,

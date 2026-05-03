@@ -21,6 +21,7 @@ export interface ConversionsConfig {
   show_logs?: boolean;
   show_inbox?: boolean;
   show_ai_assistant?: boolean;
+  show_promotions?: boolean;
   tracking_ranking_config?: TrackingRankingConfig | null;
 }
 
@@ -236,6 +237,7 @@ const DEFAULT_CONFIG: ConversionsConfig = {
   show_logs: true,
   show_inbox: false,
   show_ai_assistant: false,
+  show_promotions: false,
   tracking_ranking_config: null,
 };
 
@@ -276,6 +278,7 @@ export async function upsertConversionsConfig(
         show_logs: config.show_logs ?? true,
         show_inbox: config.show_inbox ?? false,
         show_ai_assistant: config.show_ai_assistant ?? false,
+        show_promotions: config.show_promotions ?? false,
         tracking_ranking_config: config.tracking_ranking_config ?? null,
         updated_at: new Date().toISOString(),
       },

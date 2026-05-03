@@ -14,6 +14,7 @@ type UpdateClientPayload = {
   showLogs?: boolean;
   showInbox?: boolean;
   showAiAssistant?: boolean;
+  showPromotions?: boolean;
   planCode?: "starter" | "plus" | "pro" | "premium" | "scale";
   maxLandings?: number;
   maxPhones?: number;
@@ -178,6 +179,7 @@ Deno.serve(async (req) => {
     const showLogs = payload.showLogs === undefined ? undefined : Boolean(payload.showLogs);
     const showInbox = payload.showInbox === undefined ? undefined : Boolean(payload.showInbox);
     const showAiAssistant = payload.showAiAssistant === undefined ? undefined : Boolean(payload.showAiAssistant);
+    const showPromotions = payload.showPromotions === undefined ? undefined : Boolean(payload.showPromotions);
     const planCode = payload.planCode;
     const maxLandings = Number.isFinite(Number(payload.maxLandings))
       ? Number(payload.maxLandings)
@@ -198,6 +200,7 @@ Deno.serve(async (req) => {
       showLogs === undefined &&
       showInbox === undefined &&
       showAiAssistant === undefined &&
+      showPromotions === undefined &&
       planCode === undefined &&
       maxLandings === undefined &&
       maxPhones === undefined &&
@@ -242,7 +245,13 @@ Deno.serve(async (req) => {
       }
     }
 
-    if (visibleColumns !== undefined || showLogs !== undefined || showInbox !== undefined || showAiAssistant !== undefined) {
+    if (
+      visibleColumns !== undefined ||
+      showLogs !== undefined ||
+      showInbox !== undefined ||
+      showAiAssistant !== undefined ||
+      showPromotions !== undefined
+    ) {
       const upsertPayload: Record<string, unknown> = {
         user_id: userId,
         updated_at: new Date().toISOString(),
@@ -251,6 +260,7 @@ Deno.serve(async (req) => {
       if (showLogs !== undefined) upsertPayload.show_logs = showLogs;
       if (showInbox !== undefined) upsertPayload.show_inbox = showInbox;
       if (showAiAssistant !== undefined) upsertPayload.show_ai_assistant = showAiAssistant;
+      if (showPromotions !== undefined) upsertPayload.show_promotions = showPromotions;
 
       const { error: cfgError } = await supabaseAdmin
         .from("conversions_config")

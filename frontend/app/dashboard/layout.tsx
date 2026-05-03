@@ -11,7 +11,6 @@ const SETUP_GUIDE_STORAGE_PREFIX = "constructor_setup_guide_hidden:";
 const DASHBOARD_PREFETCH_ROUTES = [
   "/dashboard/inicio",
   "/dashboard/landings",
-  "/dashboard/promociones",
   "/dashboard/conversiones",
   "/dashboard/seguimiento",
   "/dashboard/gerencias",
@@ -312,6 +311,7 @@ export default function DashboardLayout({
   const [planMaxPhones, setPlanMaxPhones] = useState<number>(2);
   const [planGraceDays, setPlanGraceDays] = useState<number>(5);
   const [planNowMs, setPlanNowMs] = useState<number | null>(null);
+  const [promotionsEnabled, setPromotionsEnabled] = useState(false);
   const [showPlanExpiryWarning, setShowPlanExpiryWarning] = useState(true);
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [setupGuideOpen, setSetupGuideOpen] = useState(false);
@@ -374,6 +374,13 @@ export default function DashboardLayout({
         );
       }
 
+      const { data: conversionsConfig } = await supabase
+        .from("conversions_config")
+        .select("show_promotions")
+        .eq("user_id", data.user.id)
+        .maybeSingle();
+      setPromotionsEnabled(conversionsConfig?.show_promotions === true);
+
       setIsClient(true);
       setIsCheckingSession(false);
     };
@@ -385,7 +392,21 @@ export default function DashboardLayout({
     for (const route of DASHBOARD_PREFETCH_ROUTES) {
       router.prefetch(route);
     }
-  }, [router]);
+    if (promotionsEnabled) {
+      router.prefetch("/dashboard/promociones");
+    }
+  }, [router, promotionsEnabled]);
+
+  useEffect(() => {
+    if (
+      !isCheckingSession &&
+      isClient &&
+      !promotionsEnabled &&
+      pathname?.startsWith("/dashboard/promociones")
+    ) {
+      router.replace("/dashboard/inicio");
+    }
+  }, [isCheckingSession, isClient, pathname, promotionsEnabled, router]);
 
   const handleNavClick = (target: string) => {
     setSidebarOpen(false);
@@ -445,6 +466,14 @@ export default function DashboardLayout({
             Cerrar sesion
           </button>
         </div>
+      </div>
+    );
+  }
+
+  if (!promotionsEnabled && pathname?.startsWith("/dashboard/promociones")) {
+    return (
+      <div className="flex min-h-screen items-center justify-center bg-[var(--color-bg-0)]">
+        <p className="text-sm text-[var(--color-text-muted)]">Redirigiendo...</p>
       </div>
     );
   }
@@ -542,21 +571,23 @@ export default function DashboardLayout({
             <span>LANDINGS</span>
           </Link>
 
-          <Link
-            href="/dashboard/promociones"
-            onClick={() => handleNavClick("/dashboard/promociones")}
-            className={`flex items-center gap-2 rounded-lg px-3 py-2 text-xs font-medium tracking-[0.18em] transition ${
-              pathname?.startsWith("/dashboard/promociones")
-                ? "bg-[var(--color-primary-soft-bg)] text-[var(--color-primary)] border border-[var(--color-primary-soft-border)]"
-                : "text-[var(--color-text-muted)] hover:bg-[var(--color-bg-3)] hover:text-[var(--color-text)]"
-            }`}
-          >
-            <NavIcon
-              variant="promociones"
-              active={Boolean(pathname?.startsWith("/dashboard/promociones"))}
-            />
-            <span>PROMOCIONES</span>
-          </Link>
+          {promotionsEnabled && (
+            <Link
+              href="/dashboard/promociones"
+              onClick={() => handleNavClick("/dashboard/promociones")}
+              className={`flex items-center gap-2 rounded-lg px-3 py-2 text-xs font-medium tracking-[0.18em] transition ${
+                pathname?.startsWith("/dashboard/promociones")
+                  ? "bg-[var(--color-primary-soft-bg)] text-[var(--color-primary)] border border-[var(--color-primary-soft-border)]"
+                  : "text-[var(--color-text-muted)] hover:bg-[var(--color-bg-3)] hover:text-[var(--color-text)]"
+              }`}
+            >
+              <NavIcon
+                variant="promociones"
+                active={Boolean(pathname?.startsWith("/dashboard/promociones"))}
+              />
+              <span>PROMOCIONES</span>
+            </Link>
+          )}
 
           <Link
             href="/dashboard/conversiones"

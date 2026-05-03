@@ -15,6 +15,7 @@ type ClientUser = {
   visible_columns?: string[];
   show_logs?: boolean;
   show_ai_assistant?: boolean;
+  show_promotions?: boolean;
   plan_code?: string;
   max_landings?: number;
   max_phones?: number;
@@ -72,6 +73,7 @@ export default function AdminClientesPage() {
         visible_columns: Array.isArray(u.visible_columns) ? u.visible_columns : [],
         show_logs: typeof u.show_logs === "boolean" ? u.show_logs : true,
         show_ai_assistant: typeof u.show_ai_assistant === "boolean" ? u.show_ai_assistant : false,
+        show_promotions: typeof u.show_promotions === "boolean" ? u.show_promotions : false,
         plan_code: u.plan_code ?? "starter",
         max_landings: Number(u.max_landings ?? 1),
         max_phones: Number(u.max_phones ?? 2),
