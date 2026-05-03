@@ -820,18 +820,19 @@ export default function DashboardPromocionesPage() {
                   <th className="px-3 py-2 font-medium">Nombre</th>
                   <th className="px-3 py-2 font-medium">Telefono</th>
                   <th className="px-3 py-2 font-medium">Email</th>
+                  <th className="px-3 py-2 font-medium text-center">Match</th>
                 </tr>
               </thead>
               <tbody>
                 {loadingTableParticipants ? (
                   <tr>
-                    <td colSpan={4} className="px-3 py-8 text-center text-zinc-500">
+                    <td colSpan={5} className="px-3 py-8 text-center text-zinc-500">
                       Cargando participantes...
                     </td>
                   </tr>
                 ) : tableParticipants.length === 0 ? (
                   <tr>
-                    <td colSpan={4} className="px-3 py-8 text-center text-zinc-500">
+                    <td colSpan={5} className="px-3 py-8 text-center text-zinc-500">
                       Todavia no hay participantes inscritos.
                     </td>
                   </tr>
@@ -844,6 +845,9 @@ export default function DashboardPromocionesPage() {
                       <td className="px-3 py-2">{participant.username}</td>
                       <td className="px-3 py-2 font-mono">{participant.phone}</td>
                       <td className="px-3 py-2">{participant.email}</td>
+                      <td className="px-3 py-2 text-center">
+                        {participant.matched_conversion_count > 0 ? "Si" : "No"}
+                      </td>
                     </tr>
                   ))
                 )}
