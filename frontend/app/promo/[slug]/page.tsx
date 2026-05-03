@@ -338,6 +338,7 @@ export default function PublicPromotionPage() {
   const resultExpired =
     drawIsOver && Number.isFinite(drawProcessedMs) && Date.now() - drawProcessedMs > 60 * 60 * 1000;
   const showParticipantWaiting = participantReady && !drawIsOver;
+  const showFinalResultOnly = resultExpired || drawStatus === "no_participants" || (winnerUsername && revealWinner);
   const backgroundImageUrl = String(promotion.background_image_url ?? "").trim();
   const backgroundStyle = backgroundImageUrl
     ? {
@@ -500,6 +501,45 @@ export default function PublicPromotionPage() {
     </section>
   );
 
+  const resultCard = (
+    <section className="mx-auto w-full max-w-lg rounded-[1.9rem] border border-emerald-500/35 bg-zinc-950/86 p-5 text-center shadow-2xl backdrop-blur-md sm:rounded-[2.25rem] sm:p-7">
+      {success && !resultExpired && (
+        <p className="mb-5 rounded-lg bg-amber-500/10 px-3 py-2 text-sm text-amber-100">{success}</p>
+      )}
+      {resultExpired ? (
+        <div className="py-10">
+          <p className="text-xs font-semibold uppercase tracking-[0.32em] text-zinc-500">Sorteo finalizado</p>
+          <h2 className="mt-5 text-3xl font-black uppercase text-white [font-family:Impact,'Arial_Narrow',sans-serif]">
+            Gracias por participar
+          </h2>
+          <p className="mt-3 text-sm leading-6 text-zinc-400">
+            El resultado ya estuvo disponible durante una hora y este link caduco.
+          </p>
+        </div>
+      ) : winnerUsername && revealWinner ? (
+        <div className="py-7 sm:py-8">
+          <p className="text-xs font-semibold uppercase tracking-[0.42em] text-amber-200">Ganador del sorteo</p>
+          <div className="mx-auto mt-8 flex h-44 w-44 animate-pulse items-center justify-center rounded-full border border-amber-300/50 bg-amber-300/15 shadow-[0_0_100px_rgba(251,191,36,0.42)] sm:h-48 sm:w-48">
+            <span className="text-6xl font-black text-amber-100">1</span>
+          </div>
+          <h2 className="mt-8 break-words text-[clamp(2.75rem,14vw,4rem)] font-black leading-tight text-white">
+            {winnerUsername}
+          </h2>
+          <p className="mt-4 text-sm text-zinc-400">Premio: {promotion.prize}</p>
+        </div>
+      ) : drawStatus === "no_participants" ? (
+        <div className="py-8">
+          <p className="text-xs font-semibold uppercase tracking-[0.32em] text-zinc-400">Sorteo finalizado</p>
+          <div className="mx-auto mt-6 flex h-32 w-32 items-center justify-center rounded-full border border-zinc-700 bg-zinc-900/70 shadow-[0_0_70px_rgba(113,113,122,0.22)]">
+            <span className="text-4xl font-black text-zinc-300">0</span>
+          </div>
+          <h2 className="mt-6 text-2xl font-black text-white">El sorteo finalizo sin participantes.</h2>
+          <p className="mt-3 text-sm text-zinc-400">Premio: {promotion.prize}</p>
+        </div>
+      ) : null}
+    </section>
+  );
+
   return (
     <main className="min-h-[100svh] overflow-hidden bg-[#07100d] text-zinc-100" style={backgroundStyle}>
       <style>{`
@@ -572,6 +612,9 @@ export default function PublicPromotionPage() {
         </div>
       )}
       <div className="relative mx-auto flex min-h-[100svh] max-w-5xl flex-col justify-center px-4 py-6 sm:px-5 sm:py-10">
+        {showFinalResultOnly ? (
+          resultCard
+        ) : (
         <section className={`grid w-full gap-4 sm:gap-6 ${drawIsOver ? "lg:grid-cols-[1.05fr_0.95fr] lg:items-center" : "mx-auto max-w-lg"}`}>
           {heroCard}
           {drawIsOver && (
@@ -611,24 +654,6 @@ export default function PublicPromotionPage() {
                     </div>
                   </div>
                 </div>
-              ) : winnerUsername && revealWinner ? (
-                <div className="py-5">
-                  <p className="text-xs font-semibold uppercase tracking-[0.32em] text-amber-200">Ganador del sorteo</p>
-                  <div className="mx-auto mt-6 flex h-36 w-36 animate-pulse items-center justify-center rounded-full border border-amber-300/50 bg-amber-300/15 shadow-[0_0_100px_rgba(251,191,36,0.42)] sm:h-44 sm:w-44">
-                    <span className="text-5xl font-black text-amber-100">1</span>
-                  </div>
-                  <h2 className="mt-6 break-words text-[clamp(2rem,11vw,3rem)] font-black leading-tight text-white">{winnerUsername}</h2>
-                  <p className="mt-3 text-sm text-zinc-400">Premio: {promotion.prize}</p>
-                </div>
-              ) : drawStatus === "no_participants" ? (
-                <div className="py-8">
-                  <p className="text-xs font-semibold uppercase tracking-[0.32em] text-zinc-400">Sorteo finalizado</p>
-                  <div className="mx-auto mt-6 flex h-32 w-32 items-center justify-center rounded-full border border-zinc-700 bg-zinc-900/70 shadow-[0_0_70px_rgba(113,113,122,0.22)]">
-                    <span className="text-4xl font-black text-zinc-300">0</span>
-                  </div>
-                  <h2 className="mt-6 text-2xl font-black text-white">El sorteo finalizo sin participantes.</h2>
-                  <p className="mt-3 text-sm text-zinc-400">Premio: {promotion.prize}</p>
-                </div>
               ) : (
                 <div className="py-10">
                   <p className="text-sm text-zinc-300">El sorteo esta listo.</p>
@@ -638,6 +663,7 @@ export default function PublicPromotionPage() {
             </section>
           )}
         </section>
+        )}
       </div>
       {formOpen && canParticipate && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/78 px-3 py-6 backdrop-blur-sm sm:px-4">
