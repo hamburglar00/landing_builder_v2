@@ -184,6 +184,14 @@ type AssistantQuota = {
   limit: number;
 };
 
+type LoadMetric = "first" | "repeat" | "total";
+
+const LOAD_METRIC_LABELS: Record<LoadMetric, string> = {
+  first: "Primeras cargas",
+  repeat: "Recargas",
+  total: "Cargas totales",
+};
+
 export default function StatsPanel({
   funnelContacts,
   conversions,
@@ -202,14 +210,10 @@ export default function StatsPanel({
   showAssistant?: boolean;
 }) {
   const [adSpend, setAdSpend] = useState<string>("");
-  const [smaMenuOpen, setSmaMenuOpen] = useState(false);
-  const [smaEnabled, setSmaEnabled] = useState<{ 1: boolean }>({
-    1: true,
-  });
-  const [dailySmaMenuOpen, setDailySmaMenuOpen] = useState(false);
-  const [dailySmaEnabled, setDailySmaEnabled] = useState<{ 1: boolean }>({
-    1: true,
-  });
+  const [hourlyLoadMetric, setHourlyLoadMetric] = useState<LoadMetric>("total");
+  const [dailyLoadMetric, setDailyLoadMetric] = useState<LoadMetric>("total");
+  const [hourlySmaEnabled, setHourlySmaEnabled] = useState(true);
+  const [dailySmaEnabled, setDailySmaEnabled] = useState(true);
   const [funnelPctMenuOpen, setFunnelPctMenuOpen] = useState(false);
   const [funnelPctEnabled, setFunnelPctEnabled] = useState<{ inicio: boolean; carga: boolean; recarga: boolean }>({
     inicio: true,
@@ -330,11 +334,18 @@ export default function StatsPanel({
       .slice(0, 10);
 
     // Hourly distribution of purchases
-    const hourlyBuckets = Array.from({ length: 24 }, (_, h) => ({ hour: `${h}`, cargas: 0 }));
+    const hourlyBuckets = Array.from({ length: 24 }, (_, h) => ({
+      hour: `${h}`,
+      cargas: 0,
+      cargas_first: 0,
+      cargas_repeat: 0,
+    }));
     for (const c of conversions) {
       if ((c.purchase_event_id ?? "") !== "" && c.created_at) {
         const h = new Date(c.created_at).getHours();
         hourlyBuckets[h].cargas++;
+        if (isFirstPurchase(c)) hourlyBuckets[h].cargas_first++;
+        if (isRepeatPurchase(c)) hourlyBuckets[h].cargas_repeat++;
       }
     }
 
@@ -368,7 +379,7 @@ export default function StatsPanel({
       }
     }
 
-    const dailyMap = new Map<string, { day: string; leads: number; cargas: number }>();
+    const dailyMap = new Map<string, { day: string; leads: number; cargas: number; cargas_first: number; cargas_repeat: number }>();
     for (const c of conversions) {
       if (!c.created_at) continue;
       const d = new Date(c.created_at);
@@ -377,18 +388,24 @@ export default function StatsPanel({
         day: `${d.getDate().toString().padStart(2, "0")}/${(d.getMonth() + 1).toString().padStart(2, "0")}`,
         leads: 0,
         cargas: 0,
+        cargas_first: 0,
+        cargas_repeat: 0,
       };
       if (c.estado === "lead" || c.lead_event_id) entry.leads++;
-      if ((c.purchase_event_id ?? "") !== "") entry.cargas++;
+      if ((c.purchase_event_id ?? "") !== "") {
+        entry.cargas++;
+        if (isFirstPurchase(c)) entry.cargas_first++;
+        if (isRepeatPurchase(c)) entry.cargas_repeat++;
+      }
       dailyMap.set(dayKey, entry);
     }
 
-    const dailyData: { key: string; day: string; leads: number; cargas: number }[] = [];
+    const dailyData: { key: string; day: string; leads: number; cargas: number; cargas_first: number; cargas_repeat: number }[] = [];
     const iter = new Date(chartStart);
     while (iter <= chartEnd) {
       const dayKey = `${iter.getFullYear()}-${(iter.getMonth() + 1).toString().padStart(2, "0")}-${iter.getDate().toString().padStart(2, "0")}`;
       const label = `${iter.getDate().toString().padStart(2, "0")}/${(iter.getMonth() + 1).toString().padStart(2, "0")}`;
-      const entry = dailyMap.get(dayKey) ?? { day: label, leads: 0, cargas: 0 };
+      const entry = dailyMap.get(dayKey) ?? { day: label, leads: 0, cargas: 0, cargas_first: 0, cargas_repeat: 0 };
       dailyData.push({ ...entry, key: dayKey, day: label });
       iter.setDate(iter.getDate() + 1);
     }
@@ -474,43 +491,57 @@ export default function StatsPanel({
   }, [dateRange]);
   const currentHour = useMemo(() => new Date().getHours(), []);
   const hourlyChartData = useMemo(() => {
+    const valueForMetric = (row: { cargas: number; cargas_first: number; cargas_repeat: number }) => {
+      if (hourlyLoadMetric === "first") return row.cargas_first;
+      if (hourlyLoadMetric === "repeat") return row.cargas_repeat;
+      return row.cargas;
+    };
     const getSma = (idx: number, window: 1 | 3 | 5) => {
       const start = Math.max(0, idx - window + 1);
       let sum = 0;
       let count = 0;
       for (let i = start; i <= idx; i++) {
-        sum += stats.hourlyBuckets[i]?.cargas ?? 0;
+        const row = stats.hourlyBuckets[i];
+        sum += row ? valueForMetric(row) : 0;
         count += 1;
       }
       return count > 0 ? Number((sum / count).toFixed(2)) : 0;
     };
     return stats.hourlyBuckets.map((row, idx) => {
       const isFutureHour = isTodayRange && idx > currentHour;
+      const cargas = valueForMetric(row);
       return {
         ...row,
-        cargas: isFutureHour ? null : row.cargas,
+        cargas: isFutureHour ? null : cargas,
         sma1: isFutureHour ? null : getSma(idx, 1),
         sma3: isFutureHour ? null : getSma(idx, 3),
         sma5: isFutureHour ? null : getSma(idx, 5),
       };
     });
-  }, [stats.hourlyBuckets, isTodayRange, currentHour]);
+  }, [stats.hourlyBuckets, isTodayRange, currentHour, hourlyLoadMetric]);
   const dailyTotalLoadsData = useMemo(() => {
+    const valueForMetric = (row: { cargas: number; cargas_first: number; cargas_repeat: number }) => {
+      if (dailyLoadMetric === "first") return row.cargas_first;
+      if (dailyLoadMetric === "repeat") return row.cargas_repeat;
+      return row.cargas;
+    };
     const getSma = (idx: number, window: 1) => {
       const start = Math.max(0, idx - window + 1);
       let sum = 0;
       let count = 0;
       for (let i = start; i <= idx; i++) {
-        sum += stats.dailyData[i]?.cargas ?? 0;
+        const row = stats.dailyData[i];
+        sum += row ? valueForMetric(row) : 0;
         count += 1;
       }
       return count > 0 ? Number((sum / count).toFixed(2)) : 0;
     };
     return stats.dailyData.map((row, idx) => ({
       ...row,
+      cargas: valueForMetric(row),
       sma1: getSma(idx, 1),
     }));
-  }, [stats.dailyData]);
+  }, [stats.dailyData, dailyLoadMetric]);
   const hourlyMessagesLoadsData = useMemo(() => {
     const isFirstPurchase = (c: ConversionRow): boolean => {
       if ((c.purchase_event_id ?? "") === "") return false;
@@ -923,33 +954,31 @@ export default function StatsPanel({
       <div className="grid gap-4 lg:grid-cols-2">
         {/* Cargas por hora */}
         <div className="order-1 rounded-xl border border-zinc-800 bg-zinc-900/50 p-4">
-          <div className="mb-4 flex items-center justify-between gap-2">
-            <h4 className="text-xs font-semibold text-zinc-200">Cargas Totales [distribución por hora]</h4>
-            <div className="relative">
-              <button
-                type="button"
-                onClick={() => setSmaMenuOpen((v) => !v)}
-                className="inline-flex h-7 items-center gap-1.5 rounded-lg border border-zinc-700 bg-zinc-900 px-2 text-[11px] text-zinc-300 hover:bg-zinc-800"
+          <div className="mb-4 flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
+            <h4 className="text-xs font-semibold text-zinc-200">{LOAD_METRIC_LABELS[hourlyLoadMetric]} [distribucion por hora]</h4>
+            <div className="flex items-center gap-2">
+              <select
+                value={hourlyLoadMetric}
+                onChange={(e) => setHourlyLoadMetric(e.target.value as LoadMetric)}
+                className="h-7 rounded-lg border border-zinc-700 bg-zinc-900 px-2 text-[11px] text-zinc-200 outline-none hover:bg-zinc-800 focus:border-zinc-500"
               >
-                SMA
-                <svg className={`h-3 w-3 transition-transform ${smaMenuOpen ? "rotate-180" : ""}`} viewBox="0 0 20 20" fill="currentColor">
-                  <path fillRule="evenodd" d="M5.23 7.21a.75.75 0 011.06.02L10 11.168l3.71-3.938a.75.75 0 111.08 1.04l-4.25 4.5a.75.75 0 01-1.08 0l-4.25-4.5a.75.75 0 01.02-1.06z" clipRule="evenodd" />
-                </svg>
-              </button>
-              {smaMenuOpen && (
-                <div className="absolute right-0 top-8 z-20 w-36 rounded-lg border border-zinc-700 bg-zinc-900/95 p-2 shadow-xl">
-                  <label className="flex cursor-pointer items-center gap-2 rounded px-1.5 py-1 text-[11px] text-zinc-300 hover:bg-zinc-800/80">
-                    <input
-                      type="checkbox"
-                      checked={smaEnabled[1]}
-                      onChange={(e) => setSmaEnabled({ 1: e.target.checked })}
-                      className="h-3.5 w-3.5 rounded border-zinc-600 bg-zinc-900 accent-emerald-500"
-                    />
-                    <span className="inline-block h-2 w-2 rounded-full bg-amber-400" />
-                    SMA 1
-                  </label>
-                </div>
-              )}
+                <option value="first">Primeras cargas</option>
+                <option value="repeat">Recargas</option>
+                <option value="total">Cargas totales</option>
+              </select>
+              <label className="inline-flex h-7 items-center gap-2 rounded-lg border border-zinc-700 bg-zinc-900 px-2 text-[11px] text-zinc-300">
+                <span>SMA</span>
+                <button
+                  type="button"
+                  aria-pressed={hourlySmaEnabled}
+                  onClick={() => setHourlySmaEnabled((v) => !v)}
+                  className={`relative h-4 w-7 rounded-full transition-colors ${hourlySmaEnabled ? "bg-amber-500" : "bg-zinc-700"}`}
+                >
+                  <span
+                    className={`absolute top-0.5 h-3 w-3 rounded-full bg-white transition-transform ${hourlySmaEnabled ? "translate-x-3.5" : "translate-x-0.5"}`}
+                  />
+                </button>
+              </label>
             </div>
           </div>
           <ResponsiveContainer width="100%" height={240}>
@@ -974,8 +1003,8 @@ export default function StatsPanel({
                 itemStyle={{ color: "#34d399" }}
                 labelFormatter={(v) => `${v}:00 hs`}
               />
-              <Bar dataKey="cargas" name="Cargas" fill="#34d399" radius={[3, 3, 0, 0]} maxBarSize={20} />
-              {smaEnabled[1] && <Line type="monotone" dataKey="sma1" name="SMA 1" stroke="#f59e0b" strokeWidth={2} dot={false} />}
+              <Bar dataKey="cargas" name={LOAD_METRIC_LABELS[hourlyLoadMetric]} fill="#34d399" radius={[3, 3, 0, 0]} maxBarSize={20} />
+              {hourlySmaEnabled && <Line type="monotone" dataKey="sma1" name="SMA 1" stroke="#f59e0b" strokeWidth={2} dot={false} />}
               <Legend wrapperStyle={{ fontSize: 11 }} />
             </ComposedChart>
           </ResponsiveContainer>
@@ -983,33 +1012,31 @@ export default function StatsPanel({
 
         {/* Cargas por dia */}
         <div className="order-2 rounded-xl border border-zinc-800 bg-zinc-900/50 p-4">
-          <div className="mb-4 flex items-center justify-between gap-2">
-            <h4 className="text-xs font-semibold text-zinc-200">Cargas Totales [distribución por día]</h4>
-            <div className="relative">
-              <button
-                type="button"
-                onClick={() => setDailySmaMenuOpen((v) => !v)}
-                className="inline-flex h-7 items-center gap-1.5 rounded-lg border border-zinc-700 bg-zinc-900 px-2 text-[11px] text-zinc-300 hover:bg-zinc-800"
+          <div className="mb-4 flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
+            <h4 className="text-xs font-semibold text-zinc-200">{LOAD_METRIC_LABELS[dailyLoadMetric]} [distribucion por dia]</h4>
+            <div className="flex items-center gap-2">
+              <select
+                value={dailyLoadMetric}
+                onChange={(e) => setDailyLoadMetric(e.target.value as LoadMetric)}
+                className="h-7 rounded-lg border border-zinc-700 bg-zinc-900 px-2 text-[11px] text-zinc-200 outline-none hover:bg-zinc-800 focus:border-zinc-500"
               >
-                SMA
-                <svg className={`h-3 w-3 transition-transform ${dailySmaMenuOpen ? "rotate-180" : ""}`} viewBox="0 0 20 20" fill="currentColor">
-                  <path fillRule="evenodd" d="M5.23 7.21a.75.75 0 011.06.02L10 11.168l3.71-3.938a.75.75 0 111.08 1.04l-4.25 4.5a.75.75 0 01-1.08 0l-4.25-4.5a.75.75 0 01.02-1.06z" clipRule="evenodd" />
-                </svg>
-              </button>
-              {dailySmaMenuOpen && (
-                <div className="absolute right-0 top-8 z-20 w-36 rounded-lg border border-zinc-700 bg-zinc-900/95 p-2 shadow-xl">
-                  <label className="flex cursor-pointer items-center gap-2 rounded px-1.5 py-1 text-[11px] text-zinc-300 hover:bg-zinc-800/80">
-                    <input
-                      type="checkbox"
-                      checked={dailySmaEnabled[1]}
-                      onChange={(e) => setDailySmaEnabled({ 1: e.target.checked })}
-                      className="h-3.5 w-3.5 rounded border-zinc-600 bg-zinc-900 accent-emerald-500"
-                    />
-                    <span className="inline-block h-2 w-2 rounded-full bg-amber-400" />
-                    SMA 1
-                  </label>
-                </div>
-              )}
+                <option value="first">Primeras cargas</option>
+                <option value="repeat">Recargas</option>
+                <option value="total">Cargas totales</option>
+              </select>
+              <label className="inline-flex h-7 items-center gap-2 rounded-lg border border-zinc-700 bg-zinc-900 px-2 text-[11px] text-zinc-300">
+                <span>SMA</span>
+                <button
+                  type="button"
+                  aria-pressed={dailySmaEnabled}
+                  onClick={() => setDailySmaEnabled((v) => !v)}
+                  className={`relative h-4 w-7 rounded-full transition-colors ${dailySmaEnabled ? "bg-amber-500" : "bg-zinc-700"}`}
+                >
+                  <span
+                    className={`absolute top-0.5 h-3 w-3 rounded-full bg-white transition-transform ${dailySmaEnabled ? "translate-x-3.5" : "translate-x-0.5"}`}
+                  />
+                </button>
+              </label>
             </div>
           </div>
           <ResponsiveContainer width="100%" height={240}>
@@ -1036,8 +1063,8 @@ export default function StatsPanel({
                 labelStyle={{ color: "#a1a1aa" }}
                 itemStyle={{ color: "#34d399" }}
               />
-              <Bar dataKey="cargas" name="Cargas" fill="#34d399" radius={[3, 3, 0, 0]} maxBarSize={20} />
-              {dailySmaEnabled[1] && <Line type="monotone" dataKey="sma1" name="SMA 1" stroke="#f59e0b" strokeWidth={2} dot={false} />}
+              <Bar dataKey="cargas" name={LOAD_METRIC_LABELS[dailyLoadMetric]} fill="#34d399" radius={[3, 3, 0, 0]} maxBarSize={20} />
+              {dailySmaEnabled && <Line type="monotone" dataKey="sma1" name="SMA 1" stroke="#f59e0b" strokeWidth={2} dot={false} />}
               <Legend wrapperStyle={{ fontSize: 11 }} />
             </ComposedChart>
           </ResponsiveContainer>
@@ -1377,7 +1404,6 @@ export default function StatsPanel({
     </div>
   );
 }
-
 
 
 
