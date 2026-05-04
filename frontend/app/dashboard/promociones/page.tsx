@@ -939,15 +939,15 @@ export default function DashboardPromocionesPage() {
 
         <div className="mt-4 overflow-hidden rounded-xl border border-zinc-800">
           <div className="max-h-[360px] overflow-auto">
-            <table className="min-w-[820px] text-left text-xs">
+            <table className="w-full min-w-[820px] table-fixed text-left text-xs">
               <thead className="sticky top-0 bg-zinc-900 text-zinc-400">
                 <tr>
-                  <th className="px-3 py-2 font-medium">ID</th>
-                  <th className="px-3 py-2 font-medium">Nombre</th>
-                  <th className="px-3 py-2 font-medium">Telefono</th>
-                  <th className="px-3 py-2 font-medium">Email</th>
-                  <th className="px-3 py-2 font-medium text-center">Match</th>
-                  <th className="px-3 py-2 font-medium">Nombre gerencia (ID)</th>
+                  <th className="w-[11%] px-3 py-2 font-medium">ID</th>
+                  <th className="w-[18%] px-3 py-2 font-medium">Nombre</th>
+                  <th className="w-[18%] px-3 py-2 font-medium">Telefono</th>
+                  <th className="w-[27%] px-3 py-2 font-medium">Email</th>
+                  <th className="w-[8%] px-3 py-2 font-medium text-center">Match</th>
+                  <th className="w-[18%] px-3 py-2 font-medium">Nombre gerencia (ID)</th>
                 </tr>
               </thead>
               <tbody>
@@ -971,13 +971,13 @@ export default function DashboardPromocionesPage() {
                         <td className="px-3 py-2 font-mono text-[11px] text-zinc-500">
                           {participant.id.slice(0, 8)}
                         </td>
-                        <td className="px-3 py-2">{participant.username}</td>
+                        <td className="truncate px-3 py-2" title={participant.username}>{participant.username}</td>
                         <td className="px-3 py-2 font-mono">{participant.phone}</td>
-                        <td className="px-3 py-2">{participant.email}</td>
+                        <td className="truncate px-3 py-2" title={participant.email}>{participant.email}</td>
                         <td className="px-3 py-2 text-center">
                           {participant.matched_conversion_count > 0 ? "Si" : "No"}
                         </td>
-                        <td className="px-3 py-2 text-zinc-300">
+                        <td className="truncate px-3 py-2 text-zinc-300" title={agencyInfo?.label || undefined}>
                           {agencyInfo?.label || "-"}
                         </td>
                       </tr>
