@@ -65,6 +65,15 @@ function formatDateTime(value: string | null): string {
   });
 }
 
+function normalizePhone(value: string | null | undefined): string {
+  return String(value ?? "").replace(/\D/g, "");
+}
+
+type ParticipantAgencyInfo = {
+  label: string;
+  percentage: number | null;
+};
+
 function displayStatus(promotion: PromotionWithCount): { label: string; className: string } {
   if (promotion.draw_status === "completed" || promotion.winner_username) {
     return {
@@ -252,6 +261,7 @@ export default function DashboardPromocionesPage() {
   const [selectedParticipantsPromotionId, setSelectedParticipantsPromotionId] = useState("");
   const [tableParticipants, setTableParticipants] = useState<PromotionParticipantRow[]>([]);
   const [loadingTableParticipants, setLoadingTableParticipants] = useState(false);
+  const [participantAgencyById, setParticipantAgencyById] = useState<Record<string, ParticipantAgencyInfo>>({});
 
   const origin = typeof window === "undefined" ? "" : window.location.origin;
   const editingPromotion = useMemo(
@@ -309,21 +319,105 @@ export default function DashboardPromocionesPage() {
     const load = async () => {
       if (!selectedParticipantsPromotionId) {
         setTableParticipants([]);
+        setParticipantAgencyById({});
         return;
       }
       setLoadingTableParticipants(true);
       try {
         const rows = await fetchPromotionParticipants(selectedParticipantsPromotionId);
         setTableParticipants(rows);
+        if (!userId || rows.length === 0) {
+          setParticipantAgencyById({});
+          return;
+        }
+
+        const participantPhones = Array.from(
+          new Set(rows.map((row) => normalizePhone(row.phone)).filter(Boolean)),
+        );
+        if (participantPhones.length === 0) {
+          setParticipantAgencyById({});
+          return;
+        }
+
+        const { data: conversionRows, error: conversionsError } = await supabase
+          .from("conversions")
+          .select("phone, telefono_asignado, created_at")
+          .eq("user_id", userId)
+          .in("phone", participantPhones)
+          .order("created_at", { ascending: false });
+        if (conversionsError) throw conversionsError;
+
+        const assignedPhoneByContactPhone = new Map<string, string>();
+        for (const row of conversionRows ?? []) {
+          const contactPhone = normalizePhone(row.phone);
+          const assignedPhone = normalizePhone(row.telefono_asignado);
+          if (!contactPhone || !assignedPhone || assignedPhoneByContactPhone.has(contactPhone)) continue;
+          assignedPhoneByContactPhone.set(contactPhone, assignedPhone);
+        }
+
+        const { data: gerencias, error: gerenciasError } = await supabase
+          .from("gerencias")
+          .select("id,nombre,gerencia_id")
+          .eq("user_id", userId);
+        if (gerenciasError) throw gerenciasError;
+
+        const gerenciasById = new Map<number, string>();
+        for (const gerencia of gerencias ?? []) {
+          const id = Number(gerencia.id);
+          if (!Number.isFinite(id)) continue;
+          const externalId = Number(gerencia.gerencia_id);
+          const labelId = Number.isFinite(externalId) ? externalId : id;
+          gerenciasById.set(id, `${String(gerencia.nombre ?? "").trim()} (ID ${labelId})`);
+        }
+
+        const agencyByAssignedPhone = new Map<string, string>();
+        if (gerenciasById.size > 0) {
+          const { data: gerenciaPhones, error: gerenciaPhonesError } = await supabase
+            .from("gerencia_phones")
+            .select("gerencia_id,phone")
+            .in("gerencia_id", Array.from(gerenciasById.keys()));
+          if (gerenciaPhonesError) throw gerenciaPhonesError;
+
+          for (const row of gerenciaPhones ?? []) {
+            const assignedPhone = normalizePhone(row.phone);
+            const label = gerenciasById.get(Number(row.gerencia_id));
+            if (assignedPhone && label && !agencyByAssignedPhone.has(assignedPhone)) {
+              agencyByAssignedPhone.set(assignedPhone, label);
+            }
+          }
+        }
+
+        const labelsByParticipantId: Record<string, string> = {};
+        const countByAgency = new Map<string, number>();
+        for (const participant of rows) {
+          const contactPhone = normalizePhone(participant.phone);
+          const assignedPhone = assignedPhoneByContactPhone.get(contactPhone);
+          const agencyLabel = assignedPhone ? agencyByAssignedPhone.get(assignedPhone) : undefined;
+          if (!agencyLabel) continue;
+          labelsByParticipantId[participant.id] = agencyLabel;
+          countByAgency.set(agencyLabel, (countByAgency.get(agencyLabel) ?? 0) + 1);
+        }
+
+        const totalParticipants = rows.length || 1;
+        const nextAgencyById: Record<string, ParticipantAgencyInfo> = {};
+        for (const participant of rows) {
+          const label = labelsByParticipantId[participant.id] ?? "";
+          nextAgencyById[participant.id] = {
+            label,
+            percentage: label ? ((countByAgency.get(label) ?? 0) / totalParticipants) * 100 : null,
+          };
+        }
+        setParticipantAgencyById(nextAgencyById);
       } catch (err) {
         console.error(err);
         showMessage("No se pudieron cargar los participantes.", "error");
+        setParticipantAgencyById({});
       } finally {
         setLoadingTableParticipants(false);
       }
     };
     void load();
-  }, [selectedParticipantsPromotionId]);
+  }, [selectedParticipantsPromotionId, userId]);
 
   const resetForm = () => {
     setEditingId(null);
@@ -813,7 +907,7 @@ export default function DashboardPromocionesPage() {
 
         <div className="mt-4 overflow-hidden rounded-xl border border-zinc-800">
           <div className="max-h-[360px] overflow-auto">
-            <table className="min-w-full text-left text-xs">
+            <table className="min-w-[980px] text-left text-xs">
               <thead className="sticky top-0 bg-zinc-900 text-zinc-400">
                 <tr>
                   <th className="px-3 py-2 font-medium">ID</th>
@@ -821,35 +915,46 @@ export default function DashboardPromocionesPage() {
                   <th className="px-3 py-2 font-medium">Telefono</th>
                   <th className="px-3 py-2 font-medium">Email</th>
                   <th className="px-3 py-2 font-medium text-center">Match</th>
+                  <th className="px-3 py-2 font-medium">Nombre gerencia (ID)</th>
+                  <th className="px-3 py-2 font-medium text-center">% de correos recolectados</th>
                 </tr>
               </thead>
               <tbody>
                 {loadingTableParticipants ? (
                   <tr>
-                    <td colSpan={5} className="px-3 py-8 text-center text-zinc-500">
+                    <td colSpan={7} className="px-3 py-8 text-center text-zinc-500">
                       Cargando participantes...
                     </td>
                   </tr>
                 ) : tableParticipants.length === 0 ? (
                   <tr>
-                    <td colSpan={5} className="px-3 py-8 text-center text-zinc-500">
+                    <td colSpan={7} className="px-3 py-8 text-center text-zinc-500">
                       Todavia no hay participantes inscritos.
                     </td>
                   </tr>
                 ) : (
-                  tableParticipants.map((participant) => (
-                    <tr key={participant.id} className="border-t border-zinc-900 text-zinc-200">
-                      <td className="px-3 py-2 font-mono text-[11px] text-zinc-500">
-                        {participant.id.slice(0, 8)}
-                      </td>
-                      <td className="px-3 py-2">{participant.username}</td>
-                      <td className="px-3 py-2 font-mono">{participant.phone}</td>
-                      <td className="px-3 py-2">{participant.email}</td>
-                      <td className="px-3 py-2 text-center">
-                        {participant.matched_conversion_count > 0 ? "Si" : "No"}
-                      </td>
-                    </tr>
-                  ))
+                  tableParticipants.map((participant) => {
+                    const agencyInfo = participantAgencyById[participant.id];
+                    return (
+                      <tr key={participant.id} className="border-t border-zinc-900 text-zinc-200">
+                        <td className="px-3 py-2 font-mono text-[11px] text-zinc-500">
+                          {participant.id.slice(0, 8)}
+                        </td>
+                        <td className="px-3 py-2">{participant.username}</td>
+                        <td className="px-3 py-2 font-mono">{participant.phone}</td>
+                        <td className="px-3 py-2">{participant.email}</td>
+                        <td className="px-3 py-2 text-center">
+                          {participant.matched_conversion_count > 0 ? "Si" : "No"}
+                        </td>
+                        <td className="px-3 py-2 text-zinc-300">
+                          {agencyInfo?.label || "-"}
+                        </td>
+                        <td className="px-3 py-2 text-center text-zinc-300">
+                          {agencyInfo?.percentage != null ? `${Math.round(agencyInfo.percentage)}%` : "-"}
+                        </td>
+                      </tr>
+                    );
+                  })
                 )}
               </tbody>
             </table>
