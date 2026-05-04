@@ -206,17 +206,9 @@ export default function StatsPanel({
   const [smaEnabled, setSmaEnabled] = useState<{ 1: boolean }>({
     1: true,
   });
-  const [dailyLoadsMenuOpen, setDailyLoadsMenuOpen] = useState(false);
-  const [dailyLoadsEnabled, setDailyLoadsEnabled] = useState<{ leads: boolean; first: boolean; total: boolean }>({
-    leads: true,
-    first: false,
-    total: true,
-  });
-  const [hourlyLoadsMenuOpen, setHourlyLoadsMenuOpen] = useState(false);
-  const [hourlyLoadsEnabled, setHourlyLoadsEnabled] = useState<{ leads: boolean; first: boolean; total: boolean }>({
-    leads: true,
-    first: false,
-    total: true,
+  const [dailySmaMenuOpen, setDailySmaMenuOpen] = useState(false);
+  const [dailySmaEnabled, setDailySmaEnabled] = useState<{ 1: boolean }>({
+    1: true,
   });
   const [funnelPctMenuOpen, setFunnelPctMenuOpen] = useState(false);
   const [funnelPctEnabled, setFunnelPctEnabled] = useState<{ inicio: boolean; carga: boolean; recarga: boolean }>({
@@ -355,12 +347,6 @@ export default function StatsPanel({
     if (dateRange) {
       chartStart = new Date(dateRange.start);
       chartEnd = new Date(dateRange.end);
-      const spanDays = Math.ceil((chartEnd.getTime() - chartStart.getTime()) / MS_PER_DAY) + 1;
-      if (spanDays < MIN_DAYS) {
-        chartStart = new Date(chartEnd);
-        chartStart.setDate(chartStart.getDate() - MIN_DAYS + 1);
-        chartStart.setHours(0, 0, 0, 0);
-      }
     } else {
       const dates = conversions
         .filter((c) => c.created_at)
@@ -397,13 +383,13 @@ export default function StatsPanel({
       dailyMap.set(dayKey, entry);
     }
 
-    const dailyData: { day: string; leads: number; cargas: number }[] = [];
+    const dailyData: { key: string; day: string; leads: number; cargas: number }[] = [];
     const iter = new Date(chartStart);
     while (iter <= chartEnd) {
       const dayKey = `${iter.getFullYear()}-${(iter.getMonth() + 1).toString().padStart(2, "0")}-${iter.getDate().toString().padStart(2, "0")}`;
       const label = `${iter.getDate().toString().padStart(2, "0")}/${(iter.getMonth() + 1).toString().padStart(2, "0")}`;
       const entry = dailyMap.get(dayKey) ?? { day: label, leads: 0, cargas: 0 };
-      dailyData.push({ ...entry, day: label });
+      dailyData.push({ ...entry, key: dayKey, day: label });
       iter.setDate(iter.getDate() + 1);
     }
 
@@ -509,6 +495,22 @@ export default function StatsPanel({
       };
     });
   }, [stats.hourlyBuckets, isTodayRange, currentHour]);
+  const dailyTotalLoadsData = useMemo(() => {
+    const getSma = (idx: number, window: 1) => {
+      const start = Math.max(0, idx - window + 1);
+      let sum = 0;
+      let count = 0;
+      for (let i = start; i <= idx; i++) {
+        sum += stats.dailyData[i]?.cargas ?? 0;
+        count += 1;
+      }
+      return count > 0 ? Number((sum / count).toFixed(2)) : 0;
+    };
+    return stats.dailyData.map((row, idx) => ({
+      ...row,
+      sma1: getSma(idx, 1),
+    }));
+  }, [stats.dailyData]);
   const hourlyMessagesLoadsData = useMemo(() => {
     const isFirstPurchase = (c: ConversionRow): boolean => {
       if ((c.purchase_event_id ?? "") === "") return false;
@@ -619,49 +621,9 @@ export default function StatsPanel({
       return result;
     }
 
-    const toDayKey = (d: Date) =>
-      `${d.getFullYear()}-${(d.getMonth() + 1).toString().padStart(2, "0")}-${d.getDate().toString().padStart(2, "0")}`;
-    const toDayLabel = (d: Date) =>
-      `${d.getDate().toString().padStart(2, "0")}/${(d.getMonth() + 1).toString().padStart(2, "0")}`;
-
-    const uniqueDays = new Set<string>();
-    for (const c of conversions) {
-      if (!c.created_at) continue;
-      uniqueDays.add(toDayKey(new Date(c.created_at)));
-    }
-    for (const f of funnelContacts) {
-      if (!f.first_contact) continue;
-      uniqueDays.add(toDayKey(new Date(f.first_contact)));
-    }
-
-    if (uniqueDays.size === 0) {
-      const today = new Date();
-      const out: { day: string; pct_inicio: number; pct_carga: number; pct_recarga: number }[] = [];
-      for (let i = 6; i >= 0; i--) {
-        const d = new Date(today);
-        d.setDate(d.getDate() - i);
-        out.push({ day: toDayLabel(d), pct_inicio: 0, pct_carga: 0, pct_recarga: 0 });
-      }
-      return out;
-    }
-
-    const sortedKeys = Array.from(uniqueDays).sort((a, b) => a.localeCompare(b));
-    const minDate = new Date(`${sortedKeys[0]}T00:00:00`);
-    const maxDate = new Date(`${sortedKeys[sortedKeys.length - 1]}T00:00:00`);
-    const spanDays = Math.ceil((maxDate.getTime() - minDate.getTime()) / 86400000) + 1;
-    const startDate = spanDays < 7
-      ? (() => {
-          const d = new Date(maxDate);
-          d.setDate(d.getDate() - 6);
-          return d;
-        })()
-      : minDate;
-
-    const result: { day: string; pct_inicio: number; pct_carga: number; pct_recarga: number }[] = [];
-    const iter = new Date(startDate);
-    while (iter <= maxDate) {
-      const dayStart = new Date(iter.getFullYear(), iter.getMonth(), iter.getDate(), 0, 0, 0, 0);
-      const dayEnd = new Date(iter.getFullYear(), iter.getMonth(), iter.getDate(), 23, 59, 59, 999);
+    return stats.dailyData.map((row) => {
+      const dayStart = new Date(`${row.key}T00:00:00`);
+      const dayEnd = new Date(`${row.key}T23:59:59.999`);
       const convSlice = conversions.filter((c) => {
         const t = new Date(c.created_at).getTime();
         return t >= dayStart.getTime() && t <= dayEnd.getTime();
@@ -679,16 +641,14 @@ export default function StatsPanel({
       const pctCarga = core.uniqueLeadsLinkedToContact > 0 ? (core.firstLoadPurchasersLinkedToLead / core.uniqueLeadsLinkedToContact) * 100 : 0;
       const pctRecarga = core.firstLoadPurchasersLinkedToLead > 0 ? (core.repeatFromFirstInRange / core.firstLoadPurchasersLinkedToLead) * 100 : 0;
 
-      result.push({
-        day: toDayLabel(iter),
+      return {
+        day: row.day,
         pct_inicio: Number(pctInicio.toFixed(1)),
         pct_carga: Number(pctCarga.toFixed(1)),
         pct_recarga: Number(pctRecarga.toFixed(1)),
-      });
-      iter.setDate(iter.getDate() + 1);
-    }
-    return result;
-  }, [conversions, funnelContacts, allConversions, premiumThreshold, isTodayRange, currentHour]);
+      };
+    });
+  }, [conversions, funnelContacts, allConversions, premiumThreshold, isTodayRange, currentHour, stats.dailyData]);
 
   const maxCampaignRev = Math.max(...stats.byCampaign.map((r) => r.revenue), 1);
   const maxLandingRev = Math.max(...stats.byLanding.map((r) => r.revenue), 1);
@@ -962,7 +922,7 @@ export default function StatsPanel({
       {/*  GRÁFICOS TEMPORALES  */}
       <div className="grid gap-4 lg:grid-cols-2">
         {/* Cargas por hora */}
-        <div className="order-3 rounded-xl border border-zinc-800 bg-zinc-900/50 p-4">
+        <div className="order-1 rounded-xl border border-zinc-800 bg-zinc-900/50 p-4">
           <div className="mb-4 flex items-center justify-between gap-2">
             <h4 className="text-xs font-semibold text-zinc-200">Cargas Totales [distribución por hora]</h4>
             <div className="relative">
@@ -1021,68 +981,49 @@ export default function StatsPanel({
           </ResponsiveContainer>
         </div>
 
-        {/* Leads vs Cargas por día */}
+        {/* Cargas por dia */}
         <div className="order-2 rounded-xl border border-zinc-800 bg-zinc-900/50 p-4">
           <div className="mb-4 flex items-center justify-between gap-2">
-            <h4 className="text-xs font-semibold text-zinc-200">
-              {isTodayRange ? "Mensajes recibidos vs Cargas [distribución por hora]" : "Mensajes recibidos vs Cargas [distribución por día]"}
-            </h4>
+            <h4 className="text-xs font-semibold text-zinc-200">Cargas Totales [distribución por día]</h4>
             <div className="relative">
               <button
                 type="button"
-                onClick={() => setDailyLoadsMenuOpen((v) => !v)}
+                onClick={() => setDailySmaMenuOpen((v) => !v)}
                 className="inline-flex h-7 items-center gap-1.5 rounded-lg border border-zinc-700 bg-zinc-900 px-2 text-[11px] text-zinc-300 hover:bg-zinc-800"
               >
-                Curvas
-                <svg className={`h-3 w-3 transition-transform ${dailyLoadsMenuOpen ? "rotate-180" : ""}`} viewBox="0 0 20 20" fill="currentColor">
+                SMA
+                <svg className={`h-3 w-3 transition-transform ${dailySmaMenuOpen ? "rotate-180" : ""}`} viewBox="0 0 20 20" fill="currentColor">
                   <path fillRule="evenodd" d="M5.23 7.21a.75.75 0 011.06.02L10 11.168l3.71-3.938a.75.75 0 111.08 1.04l-4.25 4.5a.75.75 0 01-1.08 0l-4.25-4.5a.75.75 0 01.02-1.06z" clipRule="evenodd" />
                 </svg>
               </button>
-              {dailyLoadsMenuOpen && (
-                <div className="absolute right-0 top-8 z-20 w-44 rounded-lg border border-zinc-700 bg-zinc-900/95 p-2 shadow-xl">
+              {dailySmaMenuOpen && (
+                <div className="absolute right-0 top-8 z-20 w-36 rounded-lg border border-zinc-700 bg-zinc-900/95 p-2 shadow-xl">
                   <label className="flex cursor-pointer items-center gap-2 rounded px-1.5 py-1 text-[11px] text-zinc-300 hover:bg-zinc-800/80">
                     <input
                       type="checkbox"
-                      checked={dailyLoadsEnabled.leads}
-                      onChange={(e) => setDailyLoadsEnabled((prev) => ({ ...prev, leads: e.target.checked }))}
+                      checked={dailySmaEnabled[1]}
+                      onChange={(e) => setDailySmaEnabled({ 1: e.target.checked })}
                       className="h-3.5 w-3.5 rounded border-zinc-600 bg-zinc-900 accent-emerald-500"
                     />
-                    Mensajes recibidos
-                  </label>
-                  <label className="flex cursor-pointer items-center gap-2 rounded px-1.5 py-1 text-[11px] text-zinc-300 hover:bg-zinc-800/80">
-                    <input
-                      type="checkbox"
-                      checked={dailyLoadsEnabled.first}
-                      onChange={(e) => setDailyLoadsEnabled((prev) => ({ ...prev, first: e.target.checked }))}
-                      className="h-3.5 w-3.5 rounded border-zinc-600 bg-zinc-900 accent-emerald-500"
-                    />
-                    Primeras cargas
-                  </label>
-                  <label className="flex cursor-pointer items-center gap-2 rounded px-1.5 py-1 text-[11px] text-zinc-300 hover:bg-zinc-800/80">
-                    <input
-                      type="checkbox"
-                      checked={dailyLoadsEnabled.total}
-                      onChange={(e) => setDailyLoadsEnabled((prev) => ({ ...prev, total: e.target.checked }))}
-                      className="h-3.5 w-3.5 rounded border-zinc-600 bg-zinc-900 accent-emerald-500"
-                    />
-                    Total de cargas
+                    <span className="inline-block h-2 w-2 rounded-full bg-amber-400" />
+                    SMA 1
                   </label>
                 </div>
               )}
             </div>
           </div>
           <ResponsiveContainer width="100%" height={240}>
-            <LineChart data={dailyMessagesLoadsData} margin={{ top: 4, right: 8, bottom: 0, left: -16 }}>
+            <ComposedChart data={dailyTotalLoadsData} margin={{ top: 4, right: 8, bottom: 0, left: -16 }}>
               <CartesianGrid strokeDasharray="3 3" stroke="#27272a" />
               <XAxis
                 dataKey="day"
                 tick={{ fill: "#71717a", fontSize: 10 }}
                 axisLine={{ stroke: "#3f3f46" }}
                 tickLine={false}
-                angle={isTodayRange ? 0 : -35}
-                textAnchor={isTodayRange ? "middle" : "end"}
-                height={isTodayRange ? 28 : 48}
-                interval={isTodayRange ? 1 : 0}
+                angle={-35}
+                textAnchor="end"
+                height={48}
+                interval={0}
               />
               <YAxis
                 tick={{ fill: "#71717a", fontSize: 10 }}
@@ -1093,109 +1034,17 @@ export default function StatsPanel({
               <Tooltip
                 contentStyle={{ backgroundColor: "#18181b", border: "1px solid #3f3f46", borderRadius: 8, fontSize: 11 }}
                 labelStyle={{ color: "#a1a1aa" }}
-                labelFormatter={(v) => isTodayRange ? `${v}:00 hs` : `${v}`}
+                itemStyle={{ color: "#34d399" }}
               />
-              <Legend
-                wrapperStyle={{ fontSize: 10, color: "#a1a1aa" }}
-              />
-              {dailyLoadsEnabled.leads && (
-                <Line type="monotone" dataKey="leads" name="Mensajes recibidos" stroke="#fbbf24" strokeWidth={2} dot={{ r: 2, fill: "#fbbf24" }} activeDot={{ r: 4 }} />
-              )}
-              {dailyLoadsEnabled.total && (
-                <Line type="monotone" dataKey="cargas" name="Total de cargas" stroke="#34d399" strokeWidth={2} dot={{ r: 2, fill: "#34d399" }} activeDot={{ r: 4 }} />
-              )}
-              {dailyLoadsEnabled.first && (
-                <Line type="monotone" dataKey="cargas_first" name="Primeras cargas" stroke="#38bdf8" strokeWidth={2} dot={{ r: 2, fill: "#38bdf8" }} activeDot={{ r: 4 }} />
-              )}
-            </LineChart>
-          </ResponsiveContainer>
-        </div>
-
-        {/* Mensajes vs Cargas por hora */}
-        <div className="order-1 rounded-xl border border-zinc-800 bg-zinc-900/50 p-4">
-          <div className="mb-4 flex items-center justify-between gap-2">
-            <h4 className="text-xs font-semibold text-zinc-200">Mensajes recibidos vs Cargas [distribución por hora]</h4>
-            <div className="relative">
-              <button
-                type="button"
-                onClick={() => setHourlyLoadsMenuOpen((v) => !v)}
-                className="inline-flex h-7 items-center gap-1.5 rounded-lg border border-zinc-700 bg-zinc-900 px-2 text-[11px] text-zinc-300 hover:bg-zinc-800"
-              >
-                Curvas
-                <svg className={`h-3 w-3 transition-transform ${hourlyLoadsMenuOpen ? "rotate-180" : ""}`} viewBox="0 0 20 20" fill="currentColor">
-                  <path fillRule="evenodd" d="M5.23 7.21a.75.75 0 011.06.02L10 11.168l3.71-3.938a.75.75 0 111.08 1.04l-4.25 4.5a.75.75 0 01-1.08 0l-4.25-4.5a.75.75 0 01.02-1.06z" clipRule="evenodd" />
-                </svg>
-              </button>
-              {hourlyLoadsMenuOpen && (
-                <div className="absolute right-0 top-8 z-20 w-44 rounded-lg border border-zinc-700 bg-zinc-900/95 p-2 shadow-xl">
-                  <label className="flex cursor-pointer items-center gap-2 rounded px-1.5 py-1 text-[11px] text-zinc-300 hover:bg-zinc-800/80">
-                    <input
-                      type="checkbox"
-                      checked={hourlyLoadsEnabled.leads}
-                      onChange={(e) => setHourlyLoadsEnabled((prev) => ({ ...prev, leads: e.target.checked }))}
-                      className="h-3.5 w-3.5 rounded border-zinc-600 bg-zinc-900 accent-emerald-500"
-                    />
-                    Mensajes recibidos
-                  </label>
-                  <label className="flex cursor-pointer items-center gap-2 rounded px-1.5 py-1 text-[11px] text-zinc-300 hover:bg-zinc-800/80">
-                    <input
-                      type="checkbox"
-                      checked={hourlyLoadsEnabled.first}
-                      onChange={(e) => setHourlyLoadsEnabled((prev) => ({ ...prev, first: e.target.checked }))}
-                      className="h-3.5 w-3.5 rounded border-zinc-600 bg-zinc-900 accent-emerald-500"
-                    />
-                    Primeras cargas
-                  </label>
-                  <label className="flex cursor-pointer items-center gap-2 rounded px-1.5 py-1 text-[11px] text-zinc-300 hover:bg-zinc-800/80">
-                    <input
-                      type="checkbox"
-                      checked={hourlyLoadsEnabled.total}
-                      onChange={(e) => setHourlyLoadsEnabled((prev) => ({ ...prev, total: e.target.checked }))}
-                      className="h-3.5 w-3.5 rounded border-zinc-600 bg-zinc-900 accent-emerald-500"
-                    />
-                    Total de cargas
-                  </label>
-                </div>
-              )}
-            </div>
-          </div>
-          <ResponsiveContainer width="100%" height={240}>
-            <LineChart data={hourlyMessagesLoadsData} margin={{ top: 4, right: 8, bottom: 0, left: -16 }}>
-              <CartesianGrid strokeDasharray="3 3" stroke="#27272a" />
-              <XAxis
-                dataKey="hour"
-                tick={{ fill: "#71717a", fontSize: 10 }}
-                axisLine={{ stroke: "#3f3f46" }}
-                tickLine={false}
-                interval={1}
-              />
-              <YAxis
-                tick={{ fill: "#71717a", fontSize: 10 }}
-                axisLine={false}
-                tickLine={false}
-                allowDecimals={false}
-              />
-              <Tooltip
-                contentStyle={{ backgroundColor: "#18181b", border: "1px solid #3f3f46", borderRadius: 8, fontSize: 11 }}
-                labelStyle={{ color: "#a1a1aa" }}
-                labelFormatter={(v) => `${v}:00 hs`}
-              />
-              <Legend wrapperStyle={{ fontSize: 10, color: "#a1a1aa" }} />
-              {hourlyLoadsEnabled.leads && (
-                <Line type="monotone" dataKey="leads" name="Mensajes recibidos" stroke="#fbbf24" strokeWidth={2} dot={{ r: 2, fill: "#fbbf24" }} activeDot={{ r: 4 }} />
-              )}
-              {hourlyLoadsEnabled.total && (
-                <Line type="monotone" dataKey="cargas" name="Total de cargas" stroke="#34d399" strokeWidth={2} dot={{ r: 2, fill: "#34d399" }} activeDot={{ r: 4 }} />
-              )}
-              {hourlyLoadsEnabled.first && (
-                <Line type="monotone" dataKey="cargas_first" name="Primeras cargas" stroke="#38bdf8" strokeWidth={2} dot={{ r: 2, fill: "#38bdf8" }} activeDot={{ r: 4 }} />
-              )}
-            </LineChart>
+              <Bar dataKey="cargas" name="Cargas" fill="#34d399" radius={[3, 3, 0, 0]} maxBarSize={20} />
+              {dailySmaEnabled[1] && <Line type="monotone" dataKey="sma1" name="SMA 1" stroke="#f59e0b" strokeWidth={2} dot={false} />}
+              <Legend wrapperStyle={{ fontSize: 11 }} />
+            </ComposedChart>
           </ResponsiveContainer>
         </div>
 
         {/* Variación del embudo por día */}
-        <div className="order-4 rounded-xl border border-zinc-800 bg-zinc-900/50 p-4">
+        <div className="order-3 rounded-xl border border-zinc-800 bg-zinc-900/50 p-4 lg:col-span-2">
         <div className="mb-4 flex items-center justify-between gap-2">
           <h4 className="text-xs font-semibold text-zinc-200">
             {isTodayRange ? "Variación horaria de porcentajes del embudo" : "Variación diaria de porcentajes del embudo"}
