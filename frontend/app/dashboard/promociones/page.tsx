@@ -263,6 +263,23 @@ export default function DashboardPromocionesPage() {
   const [loadingTableParticipants, setLoadingTableParticipants] = useState(false);
   const [participantAgencyById, setParticipantAgencyById] = useState<Record<string, ParticipantAgencyInfo>>({});
 
+  const agencyEmailSummary = useMemo(() => {
+    const counts = new Map<string, number>();
+    for (const participant of tableParticipants) {
+      const label = participantAgencyById[participant.id]?.label;
+      if (!label) continue;
+      counts.set(label, (counts.get(label) ?? 0) + 1);
+    }
+    const total = tableParticipants.length || 1;
+    return Array.from(counts.entries())
+      .map(([label, count]) => ({
+        label,
+        count,
+        percentage: Math.round((count / total) * 100),
+      }))
+      .sort((a, b) => b.count - a.count || a.label.localeCompare(b.label, "es"));
+  }, [participantAgencyById, tableParticipants]);
+
   const origin = typeof window === "undefined" ? "" : window.location.origin;
   const editingPromotion = useMemo(
     () => promotions.find((promotion) => promotion.id === editingId) ?? null,
@@ -905,9 +922,24 @@ export default function DashboardPromocionesPage() {
           </label>
         </div>
 
+        {agencyEmailSummary.length > 0 && (
+          <div className="mt-4 flex flex-wrap gap-2">
+            {agencyEmailSummary.map((row) => (
+              <span
+                key={row.label}
+                className="inline-flex items-center gap-2 rounded-full border border-zinc-800 bg-zinc-900/70 px-3 py-1 text-[11px] text-zinc-400"
+                title={`${row.count} correos recolectados`}
+              >
+                <span className="max-w-[220px] truncate text-zinc-300">{row.label}</span>
+                <span className="text-cyan-300">{row.percentage}%</span>
+              </span>
+            ))}
+          </div>
+        )}
+
         <div className="mt-4 overflow-hidden rounded-xl border border-zinc-800">
           <div className="max-h-[360px] overflow-auto">
-            <table className="min-w-[980px] text-left text-xs">
+            <table className="min-w-[820px] text-left text-xs">
               <thead className="sticky top-0 bg-zinc-900 text-zinc-400">
                 <tr>
                   <th className="px-3 py-2 font-medium">ID</th>
@@ -916,19 +948,18 @@ export default function DashboardPromocionesPage() {
                   <th className="px-3 py-2 font-medium">Email</th>
                   <th className="px-3 py-2 font-medium text-center">Match</th>
                   <th className="px-3 py-2 font-medium">Nombre gerencia (ID)</th>
-                  <th className="px-3 py-2 font-medium text-center">% de correos recolectados</th>
                 </tr>
               </thead>
               <tbody>
                 {loadingTableParticipants ? (
                   <tr>
-                    <td colSpan={7} className="px-3 py-8 text-center text-zinc-500">
+                    <td colSpan={6} className="px-3 py-8 text-center text-zinc-500">
                       Cargando participantes...
                     </td>
                   </tr>
                 ) : tableParticipants.length === 0 ? (
                   <tr>
-                    <td colSpan={7} className="px-3 py-8 text-center text-zinc-500">
+                    <td colSpan={6} className="px-3 py-8 text-center text-zinc-500">
                       Todavia no hay participantes inscritos.
                     </td>
                   </tr>
@@ -948,9 +979,6 @@ export default function DashboardPromocionesPage() {
                         </td>
                         <td className="px-3 py-2 text-zinc-300">
                           {agencyInfo?.label || "-"}
-                        </td>
-                        <td className="px-3 py-2 text-center text-zinc-300">
-                          {agencyInfo?.percentage != null ? `${Math.round(agencyInfo.percentage)}%` : "-"}
                         </td>
                       </tr>
                     );
