@@ -707,6 +707,23 @@ export default function DashboardConversionesPage() {
       return byLanding && byPhone;
     });
   }, [activeFunnel, statsLandingFilter, filteredPhoneSet]);
+  const gerenciaLabelsByContactPhone = useMemo(() => {
+    const byContactPhone: Record<string, string[]> = {};
+    for (const row of statsAllConversionsFiltered) {
+      const contactPhone = normalizePhone(row.phone);
+      const assignedPhone = normalizePhone(row.telefono_asignado);
+      if (!contactPhone || !assignedPhone) continue;
+      const labels = gerenciaByPhone[assignedPhone] ?? [];
+      if (labels.length === 0) continue;
+      byContactPhone[contactPhone] = byContactPhone[contactPhone] ?? [];
+      for (const label of labels) {
+        if (!byContactPhone[contactPhone].includes(label)) {
+          byContactPhone[contactPhone].push(label);
+        }
+      }
+    }
+    return byContactPhone;
+  }, [statsAllConversionsFiltered, gerenciaByPhone]);
   const tableConversionsFiltered = useMemo(() => {
     return activeConversions.filter((r) => {
       const byLanding = statsLandingFilter === "__all__" || String(r.landing_name ?? "").trim() === statsLandingFilter;
@@ -1915,6 +1932,7 @@ export default function DashboardConversionesPage() {
               premiumThreshold={config?.funnel_premium_threshold ?? 50000}
               rankingConfig={config?.tracking_ranking_config ?? null}
               gerenciaByPhone={gerenciaByPhone}
+              gerenciaLabelsByContactPhone={gerenciaLabelsByContactPhone}
               headerSlot={
                 <div className="flex flex-wrap items-center gap-2">
                   <h3 className="mr-2 text-sm font-semibold text-zinc-200">Funnel</h3>

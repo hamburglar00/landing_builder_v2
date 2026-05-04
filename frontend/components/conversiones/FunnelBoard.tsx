@@ -153,11 +153,13 @@ function ContactCard({
   stage,
   rankingConfig,
   gerenciaByPhone,
+  gerenciaLabelsByContactPhone,
 }: {
   c: FunnelContact;
   stage: FunnelStage;
   rankingConfig?: TrackingRankingConfig | null;
   gerenciaByPhone?: Record<string, string[]>;
+  gerenciaLabelsByContactPhone?: Record<string, string[]>;
 }) {
   const meta = STAGE_META[stage];
   const name = [c.fn, c.ln].filter(Boolean).join(" ");
@@ -169,7 +171,12 @@ function ContactCard({
     ? `${c.purchase_count} carga${c.purchase_count !== 1 ? "s" : ""}`
     : "Sin cargas";
   const assignedPhone = normalizePhone(c.telefono_asignado);
-  const gerenciaLabels = assignedPhone ? (gerenciaByPhone?.[assignedPhone] ?? []) : [];
+  const contactPhone = normalizePhone(c.phone);
+  const gerenciaLabels = assignedPhone && gerenciaByPhone?.[assignedPhone]?.length
+    ? gerenciaByPhone[assignedPhone]
+    : contactPhone
+      ? (gerenciaLabelsByContactPhone?.[contactPhone] ?? [])
+      : [];
   const gerenciaLabel = gerenciaLabels[0] ?? "";
 
   return (
@@ -281,12 +288,14 @@ export default function FunnelBoard({
   headerSlot,
   rankingConfig,
   gerenciaByPhone,
+  gerenciaLabelsByContactPhone,
 }: {
   contacts: FunnelContact[];
   premiumThreshold: number;
   headerSlot?: ReactNode;
   rankingConfig?: TrackingRankingConfig | null;
   gerenciaByPhone?: Record<string, string[]>;
+  gerenciaLabelsByContactPhone?: Record<string, string[]>;
 }) {
   const [sortKey, setSortKey] = useState<SortKey>("date");
   const [sortDir, setSortDir] = useState<SortDir>("desc");
@@ -465,6 +474,7 @@ export default function FunnelBoard({
                         stage={stage}
                         rankingConfig={rankingConfig}
                         gerenciaByPhone={gerenciaByPhone}
+                        gerenciaLabelsByContactPhone={gerenciaLabelsByContactPhone}
                       />
                   ))
                 )}
