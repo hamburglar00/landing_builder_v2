@@ -1045,6 +1045,12 @@ export default function DashboardPromocionesPage() {
             </table>
           </div>
         </div>
+        <p className="mt-3 text-right text-xs font-semibold text-zinc-400">
+          Total de participantes: <span className="text-zinc-100">{tableParticipants.length}</span>
+          {participantPhoneSearch.trim() && (
+            <span className="font-normal text-zinc-500"> | Mostrando: {visibleTableParticipants.length}</span>
+          )}
+        </p>
       </section>
     </div>
   );
