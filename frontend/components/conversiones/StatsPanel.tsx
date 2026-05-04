@@ -489,6 +489,10 @@ export default function StatsPanel({
   const parsedAdSpend = parseFloat(adSpend.replace(/\D/g, "")) || 0;
   const roasFirstPurchase = parsedAdSpend > 0 ? stats.firstPurchaseRevenue / parsedAdSpend : 0;
   const roasTotal = parsedAdSpend > 0 ? stats.totalRevenue / parsedAdSpend : 0;
+  const todayEndTime = useMemo(() => {
+    const now = new Date();
+    return new Date(now.getFullYear(), now.getMonth(), now.getDate(), 23, 59, 59, 999).getTime();
+  }, []);
   const isTodayRange = useMemo(() => {
     if (!dateRange) return false;
     const now = new Date();
@@ -543,12 +547,15 @@ export default function StatsPanel({
       }
       return count > 0 ? Number((sum / count).toFixed(2)) : 0;
     };
-    return stats.dailyData.map((row, idx) => ({
-      ...row,
-      cargas: valueForMetric(row),
-      sma1: getSma(idx, 1),
-    }));
-  }, [stats.dailyData, dailyLoadMetric]);
+    return stats.dailyData.map((row, idx) => {
+      const isFutureDay = new Date(`${row.key}T00:00:00`).getTime() > todayEndTime;
+      return {
+        ...row,
+        cargas: isFutureDay ? null : valueForMetric(row),
+        sma1: isFutureDay ? null : getSma(idx, 1),
+      };
+    });
+  }, [stats.dailyData, dailyLoadMetric, todayEndTime]);
   const hourlyMessagesLoadsData = useMemo(() => {
     const isFirstPurchase = (c: ConversionRow): boolean => {
       if ((c.purchase_event_id ?? "") === "") return false;
@@ -638,10 +645,10 @@ export default function StatsPanel({
   const dailyMessagesChartData = useMemo(() => (
     stats.dailyData.map((row) => ({
       ...row,
-      mensajes: row.leads,
-      sma1: row.leads,
+      mensajes: new Date(`${row.key}T00:00:00`).getTime() > todayEndTime ? null : row.leads,
+      sma1: new Date(`${row.key}T00:00:00`).getTime() > todayEndTime ? null : row.leads,
     }))
-  ), [stats.dailyData]);
+  ), [stats.dailyData, todayEndTime]);
   const dailyFunnelPctData = useMemo(() => {
     if (isTodayRange) {
       const result: { day: string; pct_inicio: number | null; pct_carga: number | null; pct_recarga: number | null }[] = [];
@@ -676,6 +683,7 @@ export default function StatsPanel({
     return stats.dailyData.map((row) => {
       const dayStart = new Date(`${row.key}T00:00:00`);
       const dayEnd = new Date(`${row.key}T23:59:59.999`);
+      const isFutureDay = dayStart.getTime() > todayEndTime;
       const convSlice = conversions.filter((c) => {
         const t = new Date(c.created_at).getTime();
         return t >= dayStart.getTime() && t <= dayEnd.getTime();
@@ -695,12 +703,12 @@ export default function StatsPanel({
 
       return {
         day: row.day,
-        pct_inicio: Number(pctInicio.toFixed(1)),
-        pct_carga: Number(pctCarga.toFixed(1)),
-        pct_recarga: Number(pctRecarga.toFixed(1)),
+        pct_inicio: isFutureDay ? null : Number(pctInicio.toFixed(1)),
+        pct_carga: isFutureDay ? null : Number(pctCarga.toFixed(1)),
+        pct_recarga: isFutureDay ? null : Number(pctRecarga.toFixed(1)),
       };
     });
-  }, [conversions, funnelContacts, allConversions, premiumThreshold, isTodayRange, currentHour, stats.dailyData]);
+  }, [conversions, funnelContacts, allConversions, premiumThreshold, isTodayRange, currentHour, stats.dailyData, todayEndTime]);
 
   const toggleCampaignSort = (key: TableSortKey) => {
     setCampaignSort((prev) => ({

@@ -41,8 +41,11 @@ function rangeForPreset(preset: Preset): DateRange | null {
       const mon = new Date(now); mon.setDate(mon.getDate() - diff);
       return { start: startOfDay(mon), end: endOfDay(now) };
     }
-    case "mes":
-      return { start: new Date(now.getFullYear(), now.getMonth(), 1), end: endOfDay(now) };
+    case "mes": {
+      const first = new Date(now.getFullYear(), now.getMonth(), 1);
+      const last = new Date(now.getFullYear(), now.getMonth() + 1, 0);
+      return { start: first, end: endOfDay(last) };
+    }
     case "mes_pasado": {
       const first = new Date(now.getFullYear(), now.getMonth() - 1, 1);
       const last = new Date(now.getFullYear(), now.getMonth(), 0);
