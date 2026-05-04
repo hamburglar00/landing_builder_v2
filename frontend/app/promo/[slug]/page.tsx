@@ -11,6 +11,8 @@ type FormState = {
   email: string;
 };
 
+type ConfirmData = FormState;
+
 type TimeLeft = {
   days: number;
   hours: number;
@@ -64,6 +66,7 @@ export default function PublicPromotionPage() {
   const [participantReady, setParticipantReady] = useState(false);
   const [formOpen, setFormOpen] = useState(false);
   const [form, setForm] = useState<FormState>({ username: "", phone: "", email: "" });
+  const [confirmData, setConfirmData] = useState<ConfirmData | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState<string | null>(null);
   const [timeLeft, setTimeLeft] = useState<TimeLeft | null>(null);
@@ -242,8 +245,7 @@ export default function PublicPromotionPage() {
     startWinnerReveal([winnerUsername], winnerUsername);
   }, [drawStatus, promotion, startWinnerReveal, winnerUsername]);
 
-  const handleSubmit = async () => {
-    if (!promotion || !visitorToken) return;
+  const handleSubmit = () => {
     setError(null);
     setSuccess(null);
 
@@ -264,14 +266,20 @@ export default function PublicPromotionPage() {
       return;
     }
 
+    setConfirmData({ username, phone, email });
+  };
+
+  const handleConfirmParticipation = async () => {
+    if (!promotion || !visitorToken || !confirmData) return;
+
     setSubmitting(true);
     try {
       const { data, error: fnError } = await supabase.functions.invoke("promotion-participate", {
         body: {
           slug: promotion.slug,
-          username,
-          phone,
-          email,
+          username: confirmData.username,
+          phone: confirmData.phone,
+          email: confirmData.email,
           visitor_token: visitorToken,
         },
       });
@@ -280,6 +288,7 @@ export default function PublicPromotionPage() {
 
       window.localStorage.setItem(storageKey, "1");
       setParticipantReady(true);
+      setConfirmData(null);
       setFormOpen(false);
       setSuccess(data?.already_participated ? "Ya estabas participando." : "Participacion registrada.");
       setShowJoinCelebration(true);
@@ -288,6 +297,7 @@ export default function PublicPromotionPage() {
     } catch (err) {
       const text = err instanceof Error ? err.message : "No pudimos registrar tu participacion.";
       setError(text);
+      setConfirmData(null);
     } finally {
       setSubmitting(false);
     }
@@ -706,7 +716,10 @@ export default function PublicPromotionPage() {
           <div className="relative w-full max-w-lg">
             <button
               type="button"
-              onClick={() => setFormOpen(false)}
+              onClick={() => {
+                setConfirmData(null);
+                setFormOpen(false);
+              }}
               className="absolute right-3 top-3 z-10 rounded-lg border border-zinc-700 bg-zinc-950/90 px-3 py-1.5 text-xs text-zinc-200 shadow-lg hover:bg-zinc-900"
             >
               Cerrar
@@ -715,6 +728,43 @@ export default function PublicPromotionPage() {
               {formCard}
             </div>
           </div>
+        </div>
+      )}
+      {confirmData && canParticipate && (
+        <div className="fixed inset-0 z-[70] flex items-center justify-center bg-black/82 px-4 py-6 backdrop-blur-sm">
+          <section className="w-full max-w-md rounded-[1.5rem] border border-amber-500/30 bg-[#0c0c14]/95 p-5 text-center shadow-[0_24px_80px_rgba(0,0,0,0.55)]">
+            <p className="text-[11px] font-black uppercase tracking-[0.28em] text-amber-300">Confirma tus datos</p>
+            <h2 className="mt-3 text-2xl font-black uppercase leading-tight text-white [font-family:Impact,'Arial_Narrow',sans-serif]">
+              Estas a un paso
+            </h2>
+            <p className="mt-3 text-sm leading-6 text-zinc-300">
+              Asegurate de que sean correctos. Si ganas, te llegara a tu email el codigo para canjear tu premio.
+            </p>
+            <div className="mt-5 space-y-2 rounded-2xl border border-zinc-800 bg-black/45 p-4 text-left">
+              <p className="text-xs text-zinc-500">Telefono</p>
+              <p className="break-all font-mono text-base font-bold text-zinc-100">{confirmData.phone}</p>
+              <p className="pt-2 text-xs text-zinc-500">Email</p>
+              <p className="break-all font-mono text-base font-bold text-zinc-100">{confirmData.email}</p>
+            </div>
+            <div className="mt-5 grid gap-2 sm:grid-cols-2">
+              <button
+                type="button"
+                disabled={submitting}
+                onClick={() => setConfirmData(null)}
+                className="min-h-[46px] rounded-xl border border-zinc-700 bg-zinc-950 px-4 py-3 text-xs font-bold uppercase tracking-[0.14em] text-zinc-200 transition hover:bg-zinc-900 disabled:opacity-60"
+              >
+                Editar datos
+              </button>
+              <button
+                type="button"
+                disabled={submitting}
+                onClick={handleConfirmParticipation}
+                className="min-h-[46px] rounded-xl bg-amber-500 px-4 py-3 text-xs font-black uppercase tracking-[0.14em] text-[#0c0c14] transition hover:bg-amber-400 disabled:opacity-60"
+              >
+                {submitting ? "Registrando..." : "Confirmar"}
+              </button>
+            </div>
+          </section>
         </div>
       )}
     </main>
