@@ -981,7 +981,7 @@ export default function StatsPanel({
                 className={`relative h-4 w-7 rounded-full transition-colors ${hourlyMessagesSmaEnabled ? "bg-cyan-500" : "bg-zinc-700"}`}
               >
                 <span
-                  className={`absolute top-0.5 h-3 w-3 rounded-full bg-white transition-transform ${hourlyMessagesSmaEnabled ? "translate-x-3.5" : "translate-x-0.5"}`}
+                  className={`absolute top-0.5 h-3 w-3 rounded-full bg-white transition-transform ${hourlyMessagesSmaEnabled ? "translate-x-3" : "translate-x-0.5"}`}
                 />
               </button>
             </label>
@@ -1028,7 +1028,7 @@ export default function StatsPanel({
                 className={`relative h-4 w-7 rounded-full transition-colors ${dailyMessagesSmaEnabled ? "bg-cyan-500" : "bg-zinc-700"}`}
               >
                 <span
-                  className={`absolute top-0.5 h-3 w-3 rounded-full bg-white transition-transform ${dailyMessagesSmaEnabled ? "translate-x-3.5" : "translate-x-0.5"}`}
+                  className={`absolute top-0.5 h-3 w-3 rounded-full bg-white transition-transform ${dailyMessagesSmaEnabled ? "translate-x-3" : "translate-x-0.5"}`}
                 />
               </button>
             </label>
@@ -1087,7 +1087,7 @@ export default function StatsPanel({
                   className={`relative h-4 w-7 rounded-full transition-colors ${hourlySmaEnabled ? "bg-amber-500" : "bg-zinc-700"}`}
                 >
                   <span
-                    className={`absolute top-0.5 h-3 w-3 rounded-full bg-white transition-transform ${hourlySmaEnabled ? "translate-x-3.5" : "translate-x-0.5"}`}
+                    className={`absolute top-0.5 h-3 w-3 rounded-full bg-white transition-transform ${hourlySmaEnabled ? "translate-x-3" : "translate-x-0.5"}`}
                   />
                 </button>
               </label>
@@ -1145,7 +1145,7 @@ export default function StatsPanel({
                   className={`relative h-4 w-7 rounded-full transition-colors ${dailySmaEnabled ? "bg-amber-500" : "bg-zinc-700"}`}
                 >
                   <span
-                    className={`absolute top-0.5 h-3 w-3 rounded-full bg-white transition-transform ${dailySmaEnabled ? "translate-x-3.5" : "translate-x-0.5"}`}
+                    className={`absolute top-0.5 h-3 w-3 rounded-full bg-white transition-transform ${dailySmaEnabled ? "translate-x-3" : "translate-x-0.5"}`}
                   />
                 </button>
               </label>
