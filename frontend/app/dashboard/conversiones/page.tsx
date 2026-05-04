@@ -2046,18 +2046,29 @@ export default function DashboardConversionesPage() {
                       className={
                         (() => {
                           const action = String(row.action ?? "").toUpperCase();
+                          const isContact = action === "CONTACT";
                           const isLead = action === "LEAD";
                           const isPurchase = action === "PURCHASE";
                           const isProcessed = String(row.status ?? "").toLowerCase() === "processed";
                           const resp = String(row.response_body ?? "").toLowerCase();
+                          const httpStatus = Number(row.http_status ?? 0);
+                          const httpOk = !Number.isFinite(httpStatus) || httpStatus === 0 || (httpStatus >= 200 && httpStatus < 300);
                           const promo = String(row.promo_code ?? "").trim();
                           const hasValidPromo = /^[A-Za-z0-9]+-[A-Za-z0-9]+$/.test(promo);
+                          if (isContact && isProcessed && httpOk) {
+                            const contactSuccess =
+                              resp === "success" ||
+                              (resp.includes("success") && !resp.includes("error")) ||
+                              (resp.includes("contact") && resp.includes("procesad") && !resp.includes("error"));
+                            if (contactSuccess) return "bg-emerald-950/30";
+                            return "bg-zinc-950/40";
+                          }
                           if (isPurchase && isProcessed) {
                             const purchaseSuccess =
                               (resp.includes("match_mode:") && !resp.includes("error al enviar")) ||
                               (resp.includes("compra enviada") || resp.includes("recompra enviada")) ||
                               (resp.includes("purchase procesada") && !resp.includes("no procesado") && !resp.includes("error al enviar"));
-                            if (purchaseSuccess) return "bg-emerald-950/30";
+                            if (httpOk && purchaseSuccess) return "bg-emerald-950/30";
                             return "bg-zinc-950/40";
                           }
                           if (!isLead || !isProcessed) return "bg-zinc-950/40";
