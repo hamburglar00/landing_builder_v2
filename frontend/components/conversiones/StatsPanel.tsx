@@ -130,32 +130,6 @@ function KpiCard({
   );
 }
 
-function BarCell({ value, max }: { value: number; max: number }) {
-  const w = max > 0 ? Math.round((value / max) * 100) : 0;
-  return (
-    <div className="flex items-center gap-2">
-      <div className="flex-1 h-2 rounded-full bg-zinc-800 overflow-hidden">
-        <div className="h-full rounded-full bg-emerald-600" style={{ width: `${w}%` }} />
-      </div>
-      <span className="text-[10px] text-zinc-400 w-16 text-right font-mono">
-        {formatCurrency(value)}
-      </span>
-    </div>
-  );
-}
-
-function PctBar({ num, den, color = "bg-sky-500" }: { num: number; den: number; color?: string }) {
-  const w = den > 0 ? Math.round((num / den) * 100) : 0;
-  return (
-    <div className="flex items-center gap-2">
-      <div className="flex-1 h-2 rounded-full bg-zinc-800 overflow-hidden">
-        <div className={`h-full rounded-full ${color}`} style={{ width: `${w}%` }} />
-      </div>
-      <span className="text-[10px] text-zinc-400 w-10 text-right">{pct(num, den)}</span>
-    </div>
-  );
-}
-
 function SectionTitle({ children }: { children: React.ReactNode }) {
   return (
     <h3 className="text-sm font-semibold text-zinc-200 flex items-center gap-2">
@@ -185,12 +159,41 @@ type AssistantQuota = {
 };
 
 type LoadMetric = "first" | "repeat" | "total";
+type TableSortKey = "name" | "mensajes" | "cargas" | "pct" | "revenue" | "roas1" | "roasTotal";
+type SortDirection = "asc" | "desc";
 
 const LOAD_METRIC_LABELS: Record<LoadMetric, string> = {
   first: "Primeras cargas",
   repeat: "Recargas",
   total: "Cargas totales",
 };
+
+function SortButton({
+  active,
+  direction,
+  children,
+  onClick,
+  align = "center",
+}: {
+  active: boolean;
+  direction: SortDirection;
+  children: React.ReactNode;
+  onClick: () => void;
+  align?: "left" | "center";
+}) {
+  return (
+    <button
+      type="button"
+      onClick={onClick}
+      className={`inline-flex items-center gap-1 font-medium transition hover:text-zinc-300 ${
+        align === "left" ? "justify-start text-left" : "justify-center text-center"
+      } ${active ? "text-zinc-300" : "text-zinc-500"}`}
+    >
+      <span>{children}</span>
+      <span className="text-[9px] leading-none">{active ? (direction === "asc" ? "▲" : "▼") : "↕"}</span>
+    </button>
+  );
+}
 
 export default function StatsPanel({
   funnelContacts,
@@ -216,6 +219,8 @@ export default function StatsPanel({
   const [dailyMessagesSmaEnabled, setDailyMessagesSmaEnabled] = useState(true);
   const [hourlySmaEnabled, setHourlySmaEnabled] = useState(true);
   const [dailySmaEnabled, setDailySmaEnabled] = useState(true);
+  const [campaignSort, setCampaignSort] = useState<{ key: TableSortKey; direction: SortDirection }>({ key: "revenue", direction: "desc" });
+  const [landingSort, setLandingSort] = useState<{ key: TableSortKey; direction: SortDirection }>({ key: "revenue", direction: "desc" });
   const [funnelPctMenuOpen, setFunnelPctMenuOpen] = useState(false);
   const [funnelPctEnabled, setFunnelPctEnabled] = useState<{ inicio: boolean; carga: boolean; recarga: boolean }>({
     inicio: true,
@@ -697,8 +702,52 @@ export default function StatsPanel({
     });
   }, [conversions, funnelContacts, allConversions, premiumThreshold, isTodayRange, currentHour, stats.dailyData]);
 
-  const maxCampaignRev = Math.max(...stats.byCampaign.map((r) => r.revenue), 1);
-  const maxLandingRev = Math.max(...stats.byLanding.map((r) => r.revenue), 1);
+  const toggleCampaignSort = (key: TableSortKey) => {
+    setCampaignSort((prev) => ({
+      key,
+      direction: prev.key === key && prev.direction === "desc" ? "asc" : "desc",
+    }));
+  };
+  const toggleLandingSort = (key: TableSortKey) => {
+    setLandingSort((prev) => ({
+      key,
+      direction: prev.key === key && prev.direction === "desc" ? "asc" : "desc",
+    }));
+  };
+  const getSortValue = (
+    row: {
+      campaign?: string;
+      landing?: string;
+      mensajes: number;
+      cargas: number;
+      revenue: number;
+      firstRevenue: number;
+    },
+    key: TableSortKey,
+  ) => {
+    if (key === "name") return row.campaign ?? row.landing ?? "";
+    if (key === "pct") return row.mensajes > 0 ? row.cargas / row.mensajes : 0;
+    if (key === "roas1") return parsedAdSpend > 0 ? row.firstRevenue / parsedAdSpend : 0;
+    if (key === "roasTotal") return parsedAdSpend > 0 ? row.revenue / parsedAdSpend : 0;
+    return row[key];
+  };
+  const sortRows = <T extends { mensajes: number; cargas: number; revenue: number; firstRevenue: number; campaign?: string; landing?: string }>(
+    rows: T[],
+    sort: { key: TableSortKey; direction: SortDirection },
+  ) => {
+    const multiplier = sort.direction === "asc" ? 1 : -1;
+    return [...rows].sort((a, b) => {
+      const av = getSortValue(a, sort.key);
+      const bv = getSortValue(b, sort.key);
+      if (typeof av === "string" || typeof bv === "string") {
+        return String(av).localeCompare(String(bv), "es") * multiplier;
+      }
+      return ((av as number) - (bv as number)) * multiplier;
+    });
+  };
+  const sortedCampaignRows = useMemo(() => sortRows(stats.byCampaign, campaignSort), [stats.byCampaign, campaignSort, parsedAdSpend]);
+  const sortedLandingRows = useMemo(() => sortRows(stats.byLanding, landingSort), [stats.byLanding, landingSort, parsedAdSpend]);
+
   const assistantContext = useMemo(() => ({
     isTodayRange,
     summary: {
@@ -1268,26 +1317,40 @@ export default function StatsPanel({
       {/*  POR CAMPAA  */}
       {stats.byCampaign.length > 0 && (
         <div>
-          <SectionTitle>Por campaña</SectionTitle>
+          <SectionTitle>Por campana</SectionTitle>
           <div className="mt-3">
-            <TableCard title="Mensajes recibidos, cargas e ingresos por campaña">
+            <TableCard title="Mensajes recibidos, cargas e ingresos por campana">
               <div className="overflow-x-auto">
               <table className="w-full text-[11px]" style={{ minWidth: 760 }}>
                 <thead><tr className="text-zinc-500">
-                  <th className="text-left pb-2 font-medium">Campaña</th>
-                  <th className="text-center pb-2 font-medium w-24">Mensajes recibidos</th>
-                  <th className="text-center pb-2 font-medium w-14">Cargas</th>
-                  <th className="text-center pb-2 font-medium" style={{ width: 180 }}>% de carga</th>
-                  <th className="text-center pb-2 font-medium" style={{ width: 220 }}>Ingresos</th>
+                  <th className="text-left pb-2 font-medium">
+                    <SortButton active={campaignSort.key === "name"} direction={campaignSort.direction} onClick={() => toggleCampaignSort("name")} align="left">Campana</SortButton>
+                  </th>
+                  <th className="text-center pb-2 font-medium w-24">
+                    <SortButton active={campaignSort.key === "mensajes"} direction={campaignSort.direction} onClick={() => toggleCampaignSort("mensajes")}>Mensajes recibidos</SortButton>
+                  </th>
+                  <th className="text-center pb-2 font-medium w-14">
+                    <SortButton active={campaignSort.key === "cargas"} direction={campaignSort.direction} onClick={() => toggleCampaignSort("cargas")}>Cargas</SortButton>
+                  </th>
+                  <th className="text-center pb-2 font-medium w-24">
+                    <SortButton active={campaignSort.key === "pct"} direction={campaignSort.direction} onClick={() => toggleCampaignSort("pct")}>% de carga</SortButton>
+                  </th>
+                  <th className="text-center pb-2 font-medium w-28">
+                    <SortButton active={campaignSort.key === "revenue"} direction={campaignSort.direction} onClick={() => toggleCampaignSort("revenue")}>Ingresos</SortButton>
+                  </th>
                   {parsedAdSpend > 0 && (
                     <>
-                      <th className="text-center pb-2 font-medium w-20">ROAS 1ra</th>
-                      <th className="text-center pb-2 font-medium w-20">ROAS total</th>
+                      <th className="text-center pb-2 font-medium w-20">
+                        <SortButton active={campaignSort.key === "roas1"} direction={campaignSort.direction} onClick={() => toggleCampaignSort("roas1")}>ROAS 1ra</SortButton>
+                      </th>
+                      <th className="text-center pb-2 font-medium w-20">
+                        <SortButton active={campaignSort.key === "roasTotal"} direction={campaignSort.direction} onClick={() => toggleCampaignSort("roasTotal")}>ROAS total</SortButton>
+                      </th>
                     </>
                   )}
                 </tr></thead>
                 <tbody className="divide-y divide-zinc-800/60">
-                  {stats.byCampaign.map((r) => {
+                  {sortedCampaignRows.map((r) => {
                     const roas1 = parsedAdSpend > 0 ? r.firstRevenue / parsedAdSpend : 0;
                     const roasT = parsedAdSpend > 0 ? r.revenue / parsedAdSpend : 0;
                     return (
@@ -1295,8 +1358,8 @@ export default function StatsPanel({
                         <td className="py-1.5 text-zinc-300 truncate">{r.campaign}</td>
                         <td className="py-1.5 text-center text-zinc-400">{r.mensajes}</td>
                         <td className="py-1.5 text-center text-zinc-400">{r.cargas}</td>
-                        <td className="py-1.5 px-2"><PctBar num={r.cargas} den={r.mensajes || 1} color="bg-amber-500" /></td>
-                        <td className="py-1.5 px-2"><BarCell value={r.revenue} max={maxCampaignRev} /></td>
+                        <td className="py-1.5 text-center text-zinc-400 tabular-nums">{pct(r.cargas, r.mensajes || 1)}</td>
+                        <td className="py-1.5 text-center text-zinc-400 tabular-nums">{formatCurrency(r.revenue)}</td>
                         {parsedAdSpend > 0 && (
                           <>
                             <td className="py-1.5 text-center text-zinc-300 tabular-nums">{roas1.toFixed(2)}x</td>
@@ -1323,20 +1386,34 @@ export default function StatsPanel({
               <div className="overflow-x-auto">
               <table className="w-full text-[11px]" style={{ minWidth: 760 }}>
                 <thead><tr className="text-zinc-500">
-                  <th className="text-left pb-2 font-medium">Landing</th>
-                  <th className="text-center pb-2 font-medium w-24">Mensajes recibidos</th>
-                  <th className="text-center pb-2 font-medium w-14">Cargas</th>
-                  <th className="text-center pb-2 font-medium" style={{ width: 180 }}>% de carga</th>
-                  <th className="text-center pb-2 font-medium" style={{ width: 220 }}>Ingresos</th>
+                  <th className="text-left pb-2 font-medium">
+                    <SortButton active={landingSort.key === "name"} direction={landingSort.direction} onClick={() => toggleLandingSort("name")} align="left">Landing</SortButton>
+                  </th>
+                  <th className="text-center pb-2 font-medium w-24">
+                    <SortButton active={landingSort.key === "mensajes"} direction={landingSort.direction} onClick={() => toggleLandingSort("mensajes")}>Mensajes recibidos</SortButton>
+                  </th>
+                  <th className="text-center pb-2 font-medium w-14">
+                    <SortButton active={landingSort.key === "cargas"} direction={landingSort.direction} onClick={() => toggleLandingSort("cargas")}>Cargas</SortButton>
+                  </th>
+                  <th className="text-center pb-2 font-medium w-24">
+                    <SortButton active={landingSort.key === "pct"} direction={landingSort.direction} onClick={() => toggleLandingSort("pct")}>% de carga</SortButton>
+                  </th>
+                  <th className="text-center pb-2 font-medium w-28">
+                    <SortButton active={landingSort.key === "revenue"} direction={landingSort.direction} onClick={() => toggleLandingSort("revenue")}>Ingresos</SortButton>
+                  </th>
                   {parsedAdSpend > 0 && (
                     <>
-                      <th className="text-center pb-2 font-medium w-20">ROAS 1ra</th>
-                      <th className="text-center pb-2 font-medium w-20">ROAS total</th>
+                      <th className="text-center pb-2 font-medium w-20">
+                        <SortButton active={landingSort.key === "roas1"} direction={landingSort.direction} onClick={() => toggleLandingSort("roas1")}>ROAS 1ra</SortButton>
+                      </th>
+                      <th className="text-center pb-2 font-medium w-20">
+                        <SortButton active={landingSort.key === "roasTotal"} direction={landingSort.direction} onClick={() => toggleLandingSort("roasTotal")}>ROAS total</SortButton>
+                      </th>
                     </>
                   )}
                 </tr></thead>
                 <tbody className="divide-y divide-zinc-800/60">
-                  {stats.byLanding.map((r) => {
+                  {sortedLandingRows.map((r) => {
                     const roas1 = parsedAdSpend > 0 ? r.firstRevenue / parsedAdSpend : 0;
                     const roasT = parsedAdSpend > 0 ? r.revenue / parsedAdSpend : 0;
                     return (
@@ -1344,8 +1421,8 @@ export default function StatsPanel({
                         <td className="py-1.5 text-zinc-300 truncate">{r.landing}</td>
                         <td className="py-1.5 text-center text-zinc-400">{r.mensajes}</td>
                         <td className="py-1.5 text-center text-zinc-400">{r.cargas}</td>
-                        <td className="py-1.5 px-2"><PctBar num={r.cargas} den={r.mensajes || 1} color="bg-emerald-500" /></td>
-                        <td className="py-1.5 px-2"><BarCell value={r.revenue} max={maxLandingRev} /></td>
+                        <td className="py-1.5 text-center text-zinc-400 tabular-nums">{pct(r.cargas, r.mensajes || 1)}</td>
+                        <td className="py-1.5 text-center text-zinc-400 tabular-nums">{formatCurrency(r.revenue)}</td>
                         {parsedAdSpend > 0 && (
                           <>
                             <td className="py-1.5 text-center text-zinc-300 tabular-nums">{roas1.toFixed(2)}x</td>
