@@ -7,6 +7,7 @@ import { ImageUploader } from "@/components/landing/ImageUploader";
 import { uploadLandingImage } from "@/lib/landing/upload";
 import {
   createPromotion,
+  deletePromotionParticipant,
   deletePromotion,
   fetchPromotionParticipants,
   fetchPromotions,
@@ -259,6 +260,7 @@ export default function DashboardPromocionesPage() {
   const [tableParticipants, setTableParticipants] = useState<PromotionParticipantRow[]>([]);
   const [loadingTableParticipants, setLoadingTableParticipants] = useState(false);
   const [participantAgencyById, setParticipantAgencyById] = useState<Record<string, ParticipantAgencyInfo>>({});
+  const [deletingParticipantId, setDeletingParticipantId] = useState<string | null>(null);
 
   const agencyEmailSummary = useMemo(() => {
     const counts = new Map<string, number>();
@@ -573,6 +575,35 @@ export default function DashboardPromocionesPage() {
       showMessage(text, "error");
     } finally {
       setSaving(false);
+    }
+  };
+
+  const handleDeleteParticipant = async (participant: PromotionParticipantRow) => {
+    if (!window.confirm(`Eliminar participante ${participant.username || participant.email}? Esta accion no se puede deshacer.`)) {
+      return;
+    }
+    setDeletingParticipantId(participant.id);
+    try {
+      await deletePromotionParticipant(participant.id);
+      setTableParticipants((prev) => prev.filter((row) => row.id !== participant.id));
+      setParticipantAgencyById((prev) => {
+        const next = { ...prev };
+        delete next[participant.id];
+        return next;
+      });
+      setPromotions((prev) =>
+        prev.map((promotion) =>
+          promotion.id === participant.promotion_id
+            ? { ...promotion, participant_count: Math.max(0, promotion.participant_count - 1) }
+            : promotion,
+        ),
+      );
+      showMessage("Participante eliminado.");
+    } catch (err) {
+      console.error(err);
+      showMessage("No se pudo eliminar el participante.", "error");
+    } finally {
+      setDeletingParticipantId(null);
     }
   };
 
@@ -928,27 +959,28 @@ export default function DashboardPromocionesPage() {
 
         <div className="mt-4 overflow-hidden rounded-xl border border-zinc-800">
           <div className="max-h-[360px] overflow-auto">
-            <table className="w-full min-w-[820px] table-fixed text-left text-xs">
+            <table className="w-full min-w-[900px] table-fixed text-left text-xs">
               <thead className="sticky top-0 bg-zinc-900 text-zinc-400">
                 <tr>
-                  <th className="w-[11%] px-3 py-2 font-medium">ID</th>
-                  <th className="w-[18%] px-3 py-2 font-medium">Nombre</th>
-                  <th className="w-[18%] px-3 py-2 font-medium">Telefono</th>
-                  <th className="w-[27%] px-3 py-2 font-medium">Email</th>
+                  <th className="w-[10%] px-3 py-2 font-medium">ID</th>
+                  <th className="w-[17%] px-3 py-2 font-medium">Nombre</th>
+                  <th className="w-[17%] px-3 py-2 font-medium">Telefono</th>
+                  <th className="w-[26%] px-3 py-2 font-medium">Email</th>
                   <th className="w-[8%] px-3 py-2 font-medium text-center">Match</th>
-                  <th className="w-[18%] px-3 py-2 font-medium">Nombre gerencia (ID)</th>
+                  <th className="w-[17%] px-3 py-2 font-medium">Nombre gerencia (ID)</th>
+                  <th className="w-[5%] px-3 py-2 font-medium text-center"></th>
                 </tr>
               </thead>
               <tbody>
                 {loadingTableParticipants ? (
                   <tr>
-                    <td colSpan={6} className="px-3 py-8 text-center text-zinc-500">
+                    <td colSpan={7} className="px-3 py-8 text-center text-zinc-500">
                       Cargando participantes...
                     </td>
                   </tr>
                 ) : tableParticipants.length === 0 ? (
                   <tr>
-                    <td colSpan={6} className="px-3 py-8 text-center text-zinc-500">
+                    <td colSpan={7} className="px-3 py-8 text-center text-zinc-500">
                       Todavia no hay participantes inscritos.
                     </td>
                   </tr>
@@ -968,6 +1000,18 @@ export default function DashboardPromocionesPage() {
                         </td>
                         <td className="truncate px-3 py-2 text-zinc-300" title={agencyInfo?.label || undefined}>
                           {agencyInfo?.label || "-"}
+                        </td>
+                        <td className="px-3 py-2 text-center">
+                          <button
+                            type="button"
+                            disabled={deletingParticipantId === participant.id}
+                            onClick={() => void handleDeleteParticipant(participant)}
+                            className="inline-flex h-6 w-6 items-center justify-center rounded-full border border-red-800/70 bg-red-950/20 text-[11px] font-bold text-red-300 transition hover:bg-red-950/50 disabled:cursor-wait disabled:opacity-50"
+                            title="Eliminar participante"
+                            aria-label={`Eliminar participante ${participant.username}`}
+                          >
+                            {deletingParticipantId === participant.id ? "..." : "X"}
+                          </button>
                         </td>
                       </tr>
                     );

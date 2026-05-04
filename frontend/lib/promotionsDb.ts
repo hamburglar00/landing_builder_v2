@@ -132,6 +132,11 @@ export async function deletePromotion(id: string): Promise<void> {
   if (error) throw error;
 }
 
+export async function deletePromotionParticipant(id: string): Promise<void> {
+  const { error } = await supabase.from("promotion_participants").delete().eq("id", id);
+  if (error) throw error;
+}
+
 export async function fetchPromotionParticipants(
   promotionId: string,
 ): Promise<PromotionParticipantRow[]> {
