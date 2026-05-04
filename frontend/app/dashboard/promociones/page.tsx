@@ -261,6 +261,7 @@ export default function DashboardPromocionesPage() {
   const [loadingTableParticipants, setLoadingTableParticipants] = useState(false);
   const [participantAgencyById, setParticipantAgencyById] = useState<Record<string, ParticipantAgencyInfo>>({});
   const [deletingParticipantId, setDeletingParticipantId] = useState<string | null>(null);
+  const [participantPhoneSearch, setParticipantPhoneSearch] = useState("");
 
   const agencyEmailSummary = useMemo(() => {
     const counts = new Map<string, number>();
@@ -278,6 +279,11 @@ export default function DashboardPromocionesPage() {
       }))
       .sort((a, b) => b.count - a.count || a.label.localeCompare(b.label, "es"));
   }, [participantAgencyById, tableParticipants]);
+  const visibleTableParticipants = useMemo(() => {
+    const query = normalizePhone(participantPhoneSearch);
+    if (!query) return tableParticipants;
+    return tableParticipants.filter((participant) => normalizePhone(participant.phone).includes(query));
+  }, [participantPhoneSearch, tableParticipants]);
 
   const origin = typeof window === "undefined" ? "" : window.location.origin;
   const editingPromotion = useMemo(
@@ -922,24 +928,36 @@ export default function DashboardPromocionesPage() {
               Consulta los jugadores que completaron el formulario del sorteo.
             </p>
           </div>
-          <label className="space-y-1 sm:min-w-72">
-            <span className="text-xs text-zinc-400">Promocion</span>
-            <select
-              value={selectedParticipantsPromotionId}
-              onChange={(e) => setSelectedParticipantsPromotionId(e.target.value)}
-              className="w-full rounded-lg border border-zinc-800 bg-zinc-950 px-3 py-2 text-sm text-zinc-100 outline-none focus:border-cyan-700"
-            >
-              {promotions.length === 0 ? (
-                <option value="">Sin promociones</option>
-              ) : (
-                promotions.map((promotion) => (
-                  <option key={promotion.id} value={promotion.id}>
-                    {promotion.title}
-                  </option>
-                ))
-              )}
-            </select>
-          </label>
+          <div className="grid gap-2 sm:grid-cols-[minmax(0,16rem)_minmax(0,18rem)] sm:items-end">
+            <label className="space-y-1">
+              <span className="text-xs text-zinc-400">Buscar por telefono</span>
+              <input
+                value={participantPhoneSearch}
+                onChange={(e) => setParticipantPhoneSearch(e.target.value)}
+                placeholder="Ej: 549..."
+                inputMode="tel"
+                className="w-full rounded-lg border border-zinc-800 bg-zinc-950 px-3 py-2 text-sm text-zinc-100 outline-none placeholder:text-zinc-600 focus:border-cyan-700"
+              />
+            </label>
+            <label className="space-y-1">
+              <span className="text-xs text-zinc-400">Promocion</span>
+              <select
+                value={selectedParticipantsPromotionId}
+                onChange={(e) => setSelectedParticipantsPromotionId(e.target.value)}
+                className="w-full rounded-lg border border-zinc-800 bg-zinc-950 px-3 py-2 text-sm text-zinc-100 outline-none focus:border-cyan-700"
+              >
+                {promotions.length === 0 ? (
+                  <option value="">Sin promociones</option>
+                ) : (
+                  promotions.map((promotion) => (
+                    <option key={promotion.id} value={promotion.id}>
+                      {promotion.title}
+                    </option>
+                  ))
+                )}
+              </select>
+            </label>
+          </div>
         </div>
 
         {agencyEmailSummary.length > 0 && (
@@ -958,9 +976,9 @@ export default function DashboardPromocionesPage() {
         )}
 
         <div className="mt-4 overflow-hidden rounded-xl border border-zinc-800">
-          <div className="max-h-[360px] overflow-auto">
+          <div className="overflow-x-auto">
             <table className="w-full min-w-[900px] table-fixed text-left text-xs">
-              <thead className="sticky top-0 bg-zinc-900 text-zinc-400">
+              <thead className="bg-zinc-900 text-zinc-400">
                 <tr>
                   <th className="w-[10%] px-3 py-2 font-medium">ID</th>
                   <th className="w-[17%] px-3 py-2 font-medium">Nombre</th>
@@ -984,8 +1002,14 @@ export default function DashboardPromocionesPage() {
                       Todavia no hay participantes inscritos.
                     </td>
                   </tr>
+                ) : visibleTableParticipants.length === 0 ? (
+                  <tr>
+                    <td colSpan={7} className="px-3 py-8 text-center text-zinc-500">
+                      No hay participantes para ese telefono.
+                    </td>
+                  </tr>
                 ) : (
-                  tableParticipants.map((participant) => {
+                  visibleTableParticipants.map((participant) => {
                     const agencyInfo = participantAgencyById[participant.id];
                     return (
                       <tr key={participant.id} className="border-t border-zinc-900 text-zinc-200">
