@@ -255,9 +255,6 @@ export default function DashboardPromocionesPage() {
   const [message, setMessage] = useState<string | null>(null);
   const [messageType, setMessageType] = useState<"success" | "error">("success");
   const [copiedSlug, setCopiedSlug] = useState<string | null>(null);
-  const [participantsFor, setParticipantsFor] = useState<string | null>(null);
-  const [participants, setParticipants] = useState<PromotionParticipantRow[]>([]);
-  const [loadingParticipants, setLoadingParticipants] = useState(false);
   const [selectedParticipantsPromotionId, setSelectedParticipantsPromotionId] = useState("");
   const [tableParticipants, setTableParticipants] = useState<PromotionParticipantRow[]>([]);
   const [loadingTableParticipants, setLoadingTableParticipants] = useState(false);
@@ -553,20 +550,6 @@ export default function DashboardPromocionesPage() {
     window.setTimeout(() => setCopiedSlug(null), 1500);
   };
 
-  const loadParticipants = async (promotionId: string) => {
-    setParticipantsFor(promotionId);
-    setLoadingParticipants(true);
-    try {
-      const rows = await fetchPromotionParticipants(promotionId);
-      setParticipants(rows);
-    } catch (err) {
-      console.error(err);
-      showMessage("No se pudieron cargar los participantes.", "error");
-    } finally {
-      setLoadingParticipants(false);
-    }
-  };
-
   const runDraw = async (slug: string, force = false) => {
     if (force && !window.confirm("Forzar el sorteo ahora? Esta accion selecciona un ganador y no se puede deshacer.")) {
       return;
@@ -831,7 +814,27 @@ export default function DashboardPromocionesPage() {
                           </span>
                         )}
                       </div>
-                      <p className="mt-1 truncate font-mono text-xs text-cyan-300">{publicLink}</p>
+                      <div className="mt-1 flex min-w-0 items-center gap-1.5">
+                        <p className="truncate font-mono text-xs text-cyan-300">{publicLink}</p>
+                        <button
+                          type="button"
+                          onClick={() => void copyPublicLink(promotion.slug)}
+                          className="shrink-0 rounded-md p-1 text-cyan-300/80 transition hover:bg-cyan-950/40 hover:text-cyan-200"
+                          title={copiedSlug === promotion.slug ? "Copiado" : "Copiar link"}
+                          aria-label={copiedSlug === promotion.slug ? "Link copiado" : "Copiar link"}
+                        >
+                          {copiedSlug === promotion.slug ? (
+                            <svg viewBox="0 0 20 20" className="h-3.5 w-3.5" fill="currentColor" aria-hidden="true">
+                              <path fillRule="evenodd" d="M16.704 5.29a1 1 0 010 1.42l-7.25 7.2a1 1 0 01-1.414-.005l-3.25-3.25a1 1 0 111.414-1.414l2.545 2.545 6.545-6.5a1 1 0 011.41.005z" clipRule="evenodd" />
+                            </svg>
+                          ) : (
+                            <svg viewBox="0 0 20 20" className="h-3.5 w-3.5" fill="none" stroke="currentColor" strokeWidth="1.8" aria-hidden="true">
+                              <rect x="7" y="3" width="9" height="11" rx="2" />
+                              <path d="M4 6.5v8A2.5 2.5 0 0 0 6.5 17h6" />
+                            </svg>
+                          )}
+                        </button>
+                      </div>
                       <p className="mt-2 text-xs text-zinc-500">
                         Sorteo: {formatDateTime(promotion.draw_at)} | Participantes: {promotion.participant_count}
                       </p>
@@ -839,24 +842,10 @@ export default function DashboardPromocionesPage() {
                     <div className="flex flex-wrap gap-2 sm:justify-end">
                       <button
                         type="button"
-                        onClick={() => void copyPublicLink(promotion.slug)}
-                        className="rounded-lg border border-zinc-700 px-3 py-1.5 text-xs text-zinc-200 hover:bg-zinc-900"
-                      >
-                        {copiedSlug === promotion.slug ? "Copiado" : "Copiar link"}
-                      </button>
-                      <button
-                        type="button"
                         onClick={() => startEdit(promotion)}
                         className="rounded-lg border border-zinc-700 px-3 py-1.5 text-xs text-zinc-200 hover:bg-zinc-900"
                       >
                         Editar
-                      </button>
-                      <button
-                        type="button"
-                        onClick={() => void loadParticipants(promotion.id)}
-                        className="rounded-lg border border-zinc-700 px-3 py-1.5 text-xs text-zinc-200 hover:bg-zinc-900"
-                      >
-                        Participantes
                       </button>
                       <button
                         type="button"
@@ -989,59 +978,6 @@ export default function DashboardPromocionesPage() {
           </div>
         </div>
       </section>
-
-      {participantsFor && (
-        <div className="fixed inset-0 z-[120] flex items-center justify-center bg-black/70 px-4">
-          <div className="max-h-[86vh] w-full max-w-4xl overflow-hidden rounded-2xl border border-zinc-800 bg-zinc-950 shadow-2xl">
-            <div className="flex items-center justify-between border-b border-zinc-800 px-4 py-3">
-              <div>
-                <h3 className="text-sm font-semibold text-zinc-100">Participantes</h3>
-                <p className="text-xs text-zinc-500">Datos captados por el formulario publico.</p>
-              </div>
-              <button
-                type="button"
-                onClick={() => {
-                  setParticipantsFor(null);
-                  setParticipants([]);
-                }}
-                className="rounded-lg border border-zinc-700 px-3 py-1.5 text-xs text-zinc-300 hover:bg-zinc-900"
-              >
-                Cerrar
-              </button>
-            </div>
-            <div className="max-h-[70vh] overflow-auto p-4">
-              {loadingParticipants ? (
-                <p className="py-8 text-center text-sm text-zinc-500">Cargando participantes...</p>
-              ) : participants.length === 0 ? (
-                <p className="py-8 text-center text-sm text-zinc-500">Todavia no hay participantes.</p>
-              ) : (
-                <table className="min-w-full text-left text-xs">
-                  <thead className="bg-zinc-900 text-zinc-400">
-                    <tr>
-                      <th className="px-3 py-2 font-medium">Usuario</th>
-                      <th className="px-3 py-2 font-medium">Telefono</th>
-                      <th className="px-3 py-2 font-medium">Email</th>
-                      <th className="px-3 py-2 font-medium text-center">Emails completados</th>
-                      <th className="px-3 py-2 font-medium">Fecha</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {participants.map((participant) => (
-                      <tr key={participant.id} className="border-b border-zinc-900 text-zinc-200">
-                        <td className="px-3 py-2">{participant.username}</td>
-                        <td className="px-3 py-2 font-mono">{participant.phone}</td>
-                        <td className="px-3 py-2">{participant.email}</td>
-                        <td className="px-3 py-2 text-center">{participant.matched_conversion_count}</td>
-                        <td className="px-3 py-2 text-zinc-400">{formatDateTime(participant.created_at)}</td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
-              )}
-            </div>
-          </div>
-        </div>
-      )}
     </div>
   );
 }

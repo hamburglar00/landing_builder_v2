@@ -212,6 +212,8 @@ export default function StatsPanel({
   const [adSpend, setAdSpend] = useState<string>("");
   const [hourlyLoadMetric, setHourlyLoadMetric] = useState<LoadMetric>("total");
   const [dailyLoadMetric, setDailyLoadMetric] = useState<LoadMetric>("total");
+  const [hourlyMessagesSmaEnabled, setHourlyMessagesSmaEnabled] = useState(true);
+  const [dailyMessagesSmaEnabled, setDailyMessagesSmaEnabled] = useState(true);
   const [hourlySmaEnabled, setHourlySmaEnabled] = useState(true);
   const [dailySmaEnabled, setDailySmaEnabled] = useState(true);
   const [funnelPctMenuOpen, setFunnelPctMenuOpen] = useState(false);
@@ -621,6 +623,20 @@ export default function StatsPanel({
       return match ?? { day: d.day, leads: 0, cargas: 0, cargas_first: 0 };
     });
   }, [isTodayRange, stats.dailyData, conversions, currentHour]);
+  const hourlyMessagesChartData = useMemo(() => (
+    hourlyMessagesLoadsData.map((row) => ({
+      ...row,
+      mensajes: row.leads,
+      sma1: row.leads,
+    }))
+  ), [hourlyMessagesLoadsData]);
+  const dailyMessagesChartData = useMemo(() => (
+    stats.dailyData.map((row) => ({
+      ...row,
+      mensajes: row.leads,
+      sma1: row.leads,
+    }))
+  ), [stats.dailyData]);
   const dailyFunnelPctData = useMemo(() => {
     if (isTodayRange) {
       const result: { day: string; pct_inicio: number | null; pct_carga: number | null; pct_recarga: number | null }[] = [];
@@ -952,8 +968,104 @@ export default function StatsPanel({
 
       {/*  GRÁFICOS TEMPORALES  */}
       <div className="grid gap-4 lg:grid-cols-2">
-        {/* Cargas por hora */}
+        {/* Mensajes por hora */}
         <div className="order-1 rounded-xl border border-zinc-800 bg-zinc-900/50 p-4">
+          <div className="mb-4 flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
+            <h4 className="text-xs font-semibold text-zinc-200">Mensajes recibidos [distribucion por hora]</h4>
+            <label className="inline-flex h-7 w-fit items-center gap-2 rounded-lg border border-zinc-700 bg-zinc-900 px-2 text-[11px] text-zinc-300">
+              <span>SMA</span>
+              <button
+                type="button"
+                aria-pressed={hourlyMessagesSmaEnabled}
+                onClick={() => setHourlyMessagesSmaEnabled((v) => !v)}
+                className={`relative h-4 w-7 rounded-full transition-colors ${hourlyMessagesSmaEnabled ? "bg-cyan-500" : "bg-zinc-700"}`}
+              >
+                <span
+                  className={`absolute top-0.5 h-3 w-3 rounded-full bg-white transition-transform ${hourlyMessagesSmaEnabled ? "translate-x-3.5" : "translate-x-0.5"}`}
+                />
+              </button>
+            </label>
+          </div>
+          <ResponsiveContainer width="100%" height={240}>
+            <ComposedChart data={hourlyMessagesChartData} margin={{ top: 4, right: 8, bottom: 0, left: -16 }}>
+              <CartesianGrid strokeDasharray="3 3" stroke="#27272a" />
+              <XAxis
+                dataKey="hour"
+                tick={{ fill: "#71717a", fontSize: 10 }}
+                axisLine={{ stroke: "#3f3f46" }}
+                tickLine={false}
+                interval={1}
+              />
+              <YAxis
+                tick={{ fill: "#71717a", fontSize: 10 }}
+                axisLine={false}
+                tickLine={false}
+                allowDecimals={false}
+              />
+              <Tooltip
+                contentStyle={{ backgroundColor: "#18181b", border: "1px solid #3f3f46", borderRadius: 8, fontSize: 11 }}
+                labelStyle={{ color: "#a1a1aa" }}
+                itemStyle={{ color: "#facc15" }}
+                labelFormatter={(v) => `${v}:00 hs`}
+              />
+              <Bar dataKey="mensajes" name="Mensajes recibidos" fill="#facc15" radius={[3, 3, 0, 0]} maxBarSize={20} />
+              {hourlyMessagesSmaEnabled && <Line type="monotone" dataKey="sma1" name="SMA 1" stroke="#22d3ee" strokeWidth={2} dot={false} />}
+              <Legend wrapperStyle={{ fontSize: 11 }} />
+            </ComposedChart>
+          </ResponsiveContainer>
+        </div>
+
+        {/* Mensajes por dia */}
+        <div className="order-2 rounded-xl border border-zinc-800 bg-zinc-900/50 p-4">
+          <div className="mb-4 flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
+            <h4 className="text-xs font-semibold text-zinc-200">Mensajes recibidos [distribucion por dia]</h4>
+            <label className="inline-flex h-7 w-fit items-center gap-2 rounded-lg border border-zinc-700 bg-zinc-900 px-2 text-[11px] text-zinc-300">
+              <span>SMA</span>
+              <button
+                type="button"
+                aria-pressed={dailyMessagesSmaEnabled}
+                onClick={() => setDailyMessagesSmaEnabled((v) => !v)}
+                className={`relative h-4 w-7 rounded-full transition-colors ${dailyMessagesSmaEnabled ? "bg-cyan-500" : "bg-zinc-700"}`}
+              >
+                <span
+                  className={`absolute top-0.5 h-3 w-3 rounded-full bg-white transition-transform ${dailyMessagesSmaEnabled ? "translate-x-3.5" : "translate-x-0.5"}`}
+                />
+              </button>
+            </label>
+          </div>
+          <ResponsiveContainer width="100%" height={240}>
+            <ComposedChart data={dailyMessagesChartData} margin={{ top: 4, right: 8, bottom: 0, left: -16 }}>
+              <CartesianGrid strokeDasharray="3 3" stroke="#27272a" />
+              <XAxis
+                dataKey="day"
+                tick={{ fill: "#71717a", fontSize: 10 }}
+                axisLine={{ stroke: "#3f3f46" }}
+                tickLine={false}
+                angle={-35}
+                textAnchor="end"
+                height={48}
+                interval={0}
+              />
+              <YAxis
+                tick={{ fill: "#71717a", fontSize: 10 }}
+                axisLine={false}
+                tickLine={false}
+                allowDecimals={false}
+              />
+              <Tooltip
+                contentStyle={{ backgroundColor: "#18181b", border: "1px solid #3f3f46", borderRadius: 8, fontSize: 11 }}
+                labelStyle={{ color: "#a1a1aa" }}
+                itemStyle={{ color: "#facc15" }}
+              />
+              <Bar dataKey="mensajes" name="Mensajes recibidos" fill="#facc15" radius={[3, 3, 0, 0]} maxBarSize={20} />
+              {dailyMessagesSmaEnabled && <Line type="monotone" dataKey="sma1" name="SMA 1" stroke="#22d3ee" strokeWidth={2} dot={false} />}
+              <Legend wrapperStyle={{ fontSize: 11 }} />
+            </ComposedChart>
+          </ResponsiveContainer>
+        </div>
+
+        {/* Cargas por hora */}
+        <div className="order-3 rounded-xl border border-zinc-800 bg-zinc-900/50 p-4">
           <div className="mb-4 flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
             <h4 className="text-xs font-semibold text-zinc-200">{LOAD_METRIC_LABELS[hourlyLoadMetric]} [distribucion por hora]</h4>
             <div className="flex items-center gap-2">
@@ -1011,7 +1123,7 @@ export default function StatsPanel({
         </div>
 
         {/* Cargas por dia */}
-        <div className="order-2 rounded-xl border border-zinc-800 bg-zinc-900/50 p-4">
+        <div className="order-4 rounded-xl border border-zinc-800 bg-zinc-900/50 p-4">
           <div className="mb-4 flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
             <h4 className="text-xs font-semibold text-zinc-200">{LOAD_METRIC_LABELS[dailyLoadMetric]} [distribucion por dia]</h4>
             <div className="flex items-center gap-2">
@@ -1071,7 +1183,7 @@ export default function StatsPanel({
         </div>
 
         {/* Variación del embudo por día */}
-        <div className="order-3 rounded-xl border border-zinc-800 bg-zinc-900/50 p-4 lg:col-span-2">
+        <div className="order-5 rounded-xl border border-zinc-800 bg-zinc-900/50 p-4 lg:col-span-2">
         <div className="mb-4 flex items-center justify-between gap-2">
           <h4 className="text-xs font-semibold text-zinc-200">
             {isTodayRange ? "Variación horaria de porcentajes del embudo" : "Variación diaria de porcentajes del embudo"}
@@ -1404,9 +1516,6 @@ export default function StatsPanel({
     </div>
   );
 }
-
-
-
 
 
 
