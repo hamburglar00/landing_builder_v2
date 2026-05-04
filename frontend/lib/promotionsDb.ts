@@ -133,8 +133,14 @@ export async function deletePromotion(id: string): Promise<void> {
 }
 
 export async function deletePromotionParticipant(id: string): Promise<void> {
-  const { error } = await supabase.from("promotion_participants").delete().eq("id", id);
+  const { data, error } = await supabase
+    .from("promotion_participants")
+    .delete()
+    .eq("id", id)
+    .select("id")
+    .maybeSingle();
   if (error) throw error;
+  if (!data) throw new Error("No se pudo eliminar el participante por permisos o porque ya no existe.");
 }
 
 export async function fetchPromotionParticipants(
