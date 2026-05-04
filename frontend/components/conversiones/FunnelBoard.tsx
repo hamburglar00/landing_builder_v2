@@ -84,6 +84,10 @@ function waLink(phone: string) {
   return `https://wa.me/${phone.replace(/\D/g, "")}`;
 }
 
+function normalizePhone(phone: string | null | undefined) {
+  return String(phone ?? "").replace(/\D/g, "");
+}
+
 function fmtCurrency(n: number) {
   return n.toLocaleString("es-AR", { style: "currency", currency: "ARS", minimumFractionDigits: 0, maximumFractionDigits: 0 });
 }
@@ -148,10 +152,12 @@ function ContactCard({
   c,
   stage,
   rankingConfig,
+  gerenciaByPhone,
 }: {
   c: FunnelContact;
   stage: FunnelStage;
   rankingConfig?: TrackingRankingConfig | null;
+  gerenciaByPhone?: Record<string, string[]>;
 }) {
   const meta = STAGE_META[stage];
   const name = [c.fn, c.ln].filter(Boolean).join(" ");
@@ -162,6 +168,9 @@ function ContactCard({
   const statusLabel = hasPurchases
     ? `${c.purchase_count} carga${c.purchase_count !== 1 ? "s" : ""}`
     : "Sin cargas";
+  const assignedPhone = normalizePhone(c.telefono_asignado);
+  const gerenciaLabels = assignedPhone ? (gerenciaByPhone?.[assignedPhone] ?? []) : [];
+  const gerenciaLabel = gerenciaLabels[0] ?? "";
 
   return (
     <div
@@ -232,6 +241,17 @@ function ContactCard({
         </div>
       )}
 
+      {gerenciaLabel && (
+        <div className="relative z-10 mt-2 border-t border-zinc-800/25 pt-1.5">
+          <p
+            className="truncate text-[10px] font-medium leading-none text-zinc-500/80"
+            title={`Gerencia: ${gerenciaLabel}`}
+          >
+            Gerencia: {gerenciaLabel}
+          </p>
+        </div>
+      )}
+
       <div className="relative z-10 mt-2 flex min-w-0 items-center gap-1.5 border-t border-zinc-800/30 pt-1.5 text-[10px] leading-none">
         <span
           className="text-zinc-400/95 font-medium"
@@ -260,11 +280,13 @@ export default function FunnelBoard({
   premiumThreshold,
   headerSlot,
   rankingConfig,
+  gerenciaByPhone,
 }: {
   contacts: FunnelContact[];
   premiumThreshold: number;
   headerSlot?: ReactNode;
   rankingConfig?: TrackingRankingConfig | null;
+  gerenciaByPhone?: Record<string, string[]>;
 }) {
   const [sortKey, setSortKey] = useState<SortKey>("date");
   const [sortDir, setSortDir] = useState<SortDir>("desc");
@@ -437,12 +459,13 @@ export default function FunnelBoard({
                   </div>
                 ) : (
                   list.map((c) => (
-                    <ContactCard
-                      key={c.phone}
-                      c={c}
-                      stage={stage}
-                      rankingConfig={rankingConfig}
-                    />
+                      <ContactCard
+                        key={c.phone}
+                        c={c}
+                        stage={stage}
+                        rankingConfig={rankingConfig}
+                        gerenciaByPhone={gerenciaByPhone}
+                      />
                   ))
                 )}
               </div>

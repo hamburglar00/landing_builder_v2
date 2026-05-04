@@ -163,6 +163,7 @@ export interface FunnelContact {
   utm_campaign: string | null;
   device_type: string | null;
   landing_name: string | null;
+  telefono_asignado?: string | null;
   total_valor: number;
   purchase_count: number;
   repeat_count: number;
@@ -589,6 +590,9 @@ export function buildFunnelContactsFromConversions(rows: ConversionRow[]): Funne
     const repeatRows = purchaseRows.filter((r) => derivePurchaseType(r) === "repeat");
     const leadRows = sorted.filter((r) => (r.lead_event_id ?? "") !== "");
     const contactRows = sorted.filter((r) => (r.contact_event_id ?? "") !== "");
+    const assignedPhone =
+      [...sorted].reverse().find((r) => String(r.telefono_asignado ?? "").trim())?.telefono_asignado ??
+      null;
 
     funnel.push({
       user_id: latest.user_id,
@@ -603,6 +607,7 @@ export function buildFunnelContactsFromConversions(rows: ConversionRow[]): Funne
       utm_campaign: latest.utm_campaign || null,
       device_type: latest.device_type || null,
       landing_name: latest.landing_name || null,
+      telefono_asignado: assignedPhone,
       total_valor: purchaseRows.reduce((sum, r) => sum + (Number(r.valor) || 0), 0),
       purchase_count: purchaseRows.length,
       repeat_count: repeatRows.length,
