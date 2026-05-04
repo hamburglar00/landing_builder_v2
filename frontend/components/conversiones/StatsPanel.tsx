@@ -978,11 +978,9 @@ export default function StatsPanel({
                 type="button"
                 aria-pressed={hourlyMessagesSmaEnabled}
                 onClick={() => setHourlyMessagesSmaEnabled((v) => !v)}
-                className={`relative h-4 w-7 rounded-full transition-colors ${hourlyMessagesSmaEnabled ? "bg-cyan-500" : "bg-zinc-700"}`}
+                className={`flex h-4 w-7 shrink-0 items-center overflow-hidden rounded-full border-0 p-0.5 transition-colors ${hourlyMessagesSmaEnabled ? "justify-end bg-cyan-500" : "justify-start bg-zinc-700"}`}
               >
-                <span
-                  className={`absolute top-0.5 h-3 w-3 rounded-full bg-white transition-transform ${hourlyMessagesSmaEnabled ? "translate-x-3" : "translate-x-0.5"}`}
-                />
+                <span className="h-3 w-3 rounded-full bg-white" />
               </button>
             </label>
           </div>
@@ -1025,11 +1023,9 @@ export default function StatsPanel({
                 type="button"
                 aria-pressed={dailyMessagesSmaEnabled}
                 onClick={() => setDailyMessagesSmaEnabled((v) => !v)}
-                className={`relative h-4 w-7 rounded-full transition-colors ${dailyMessagesSmaEnabled ? "bg-cyan-500" : "bg-zinc-700"}`}
+                className={`flex h-4 w-7 shrink-0 items-center overflow-hidden rounded-full border-0 p-0.5 transition-colors ${dailyMessagesSmaEnabled ? "justify-end bg-cyan-500" : "justify-start bg-zinc-700"}`}
               >
-                <span
-                  className={`absolute top-0.5 h-3 w-3 rounded-full bg-white transition-transform ${dailyMessagesSmaEnabled ? "translate-x-3" : "translate-x-0.5"}`}
-                />
+                <span className="h-3 w-3 rounded-full bg-white" />
               </button>
             </label>
           </div>
@@ -1084,11 +1080,9 @@ export default function StatsPanel({
                   type="button"
                   aria-pressed={hourlySmaEnabled}
                   onClick={() => setHourlySmaEnabled((v) => !v)}
-                  className={`relative h-4 w-7 rounded-full transition-colors ${hourlySmaEnabled ? "bg-amber-500" : "bg-zinc-700"}`}
+                  className={`flex h-4 w-7 shrink-0 items-center overflow-hidden rounded-full border-0 p-0.5 transition-colors ${hourlySmaEnabled ? "justify-end bg-amber-500" : "justify-start bg-zinc-700"}`}
                 >
-                  <span
-                    className={`absolute top-0.5 h-3 w-3 rounded-full bg-white transition-transform ${hourlySmaEnabled ? "translate-x-3" : "translate-x-0.5"}`}
-                  />
+                  <span className="h-3 w-3 rounded-full bg-white" />
                 </button>
               </label>
             </div>
@@ -1142,11 +1136,9 @@ export default function StatsPanel({
                   type="button"
                   aria-pressed={dailySmaEnabled}
                   onClick={() => setDailySmaEnabled((v) => !v)}
-                  className={`relative h-4 w-7 rounded-full transition-colors ${dailySmaEnabled ? "bg-amber-500" : "bg-zinc-700"}`}
+                  className={`flex h-4 w-7 shrink-0 items-center overflow-hidden rounded-full border-0 p-0.5 transition-colors ${dailySmaEnabled ? "justify-end bg-amber-500" : "justify-start bg-zinc-700"}`}
                 >
-                  <span
-                    className={`absolute top-0.5 h-3 w-3 rounded-full bg-white transition-transform ${dailySmaEnabled ? "translate-x-3" : "translate-x-0.5"}`}
-                  />
+                  <span className="h-3 w-3 rounded-full bg-white" />
                 </button>
               </label>
             </div>
