@@ -28,22 +28,19 @@ function ToggleSwitch({
       role="switch"
       aria-checked={checked}
       onClick={() => onChange(!checked)}
-      className={`inline-flex h-7 w-12 shrink-0 items-center rounded-full p-1 transition-colors ${
-        checked ? "bg-emerald-500" : "bg-zinc-700"
+      className={`flex h-4 w-7 shrink-0 items-center overflow-hidden rounded-full border-0 p-0.5 transition-colors ${
+        checked ? "justify-end bg-emerald-500" : "justify-start bg-zinc-700"
       }`}
       title={label}
     >
-      <span
-        className={`h-5 w-5 rounded-full bg-white transition-transform ${
-          checked ? "translate-x-5" : "translate-x-0"
-        }`}
-      />
+      <span className="h-3 w-3 rounded-full bg-white" />
     </button>
   );
 }
 
 type Props = {
   isAdmin: boolean;
+  showPromotionsNotifications?: boolean;
   botConfig: NotificationBotConfig | null;
   settings: NotificationSettings | null;
   destinations: NotificationTelegramDestination[];
@@ -56,6 +53,7 @@ type Props = {
 
 export default function NotificationsPageContent({
   isAdmin,
+  showPromotionsNotifications = true,
   botConfig,
   settings,
   destinations,
@@ -486,49 +484,51 @@ export default function NotificationsPageContent({
         </div>
       </section>
 
-      <section className="rounded-xl border border-zinc-800 bg-zinc-900/50 p-4">
-        <div className="flex flex-wrap items-center justify-between gap-3">
-          <div>
-            <h3 className="text-sm font-semibold text-zinc-200">Promociones</h3>
-            <p className="mt-1 text-xs text-zinc-500">
-              Recibi por Telegram los datos del ganador cuando se realice un sorteo.
-            </p>
+      {showPromotionsNotifications && (
+        <section className="rounded-xl border border-zinc-800 bg-zinc-900/50 p-4">
+          <div className="flex flex-wrap items-center justify-between gap-3">
+            <div>
+              <h3 className="text-sm font-semibold text-zinc-200">Promociones</h3>
+              <p className="mt-1 text-xs text-zinc-500">
+                Recibi por Telegram los datos del ganador cuando se realice un sorteo.
+              </p>
+            </div>
+            <div className="flex items-center gap-2">
+              <span
+                className={`text-xs font-medium ${
+                  cfg.promotion_winner_notifications_enabled ? "text-emerald-300" : "text-zinc-500"
+                }`}
+              >
+                {cfg.promotion_winner_notifications_enabled ? "Activadas" : "Desactivadas"}
+              </span>
+              <ToggleSwitch
+                checked={cfg.promotion_winner_notifications_enabled ?? true}
+                label="Activar notificaciones de promociones"
+                onChange={(checked) =>
+                  setCfg((prev) =>
+                    prev ? { ...prev, promotion_winner_notifications_enabled: checked } : prev,
+                  )
+                }
+              />
+            </div>
           </div>
-          <div className="flex items-center gap-2">
-            <span
-              className={`text-xs font-medium ${
-                cfg.promotion_winner_notifications_enabled ? "text-emerald-300" : "text-zinc-500"
-              }`}
+          <div className="mt-3 flex justify-end">
+            <button
+              type="button"
+              disabled={saving}
+              onClick={async () => {
+                await onSaveSettings(cfg);
+                setMsgType("success");
+                setMsg("Configuracion de promociones guardada.");
+                setTimeout(() => setMsg(null), 3000);
+              }}
+              className="rounded-lg border border-zinc-700 bg-zinc-100 px-3 py-1.5 text-xs font-medium text-zinc-900 hover:bg-zinc-200 disabled:opacity-50"
             >
-              {cfg.promotion_winner_notifications_enabled ? "Activadas" : "Desactivadas"}
-            </span>
-            <ToggleSwitch
-              checked={cfg.promotion_winner_notifications_enabled ?? true}
-              label="Activar notificaciones de promociones"
-              onChange={(checked) =>
-                setCfg((prev) =>
-                  prev ? { ...prev, promotion_winner_notifications_enabled: checked } : prev,
-                )
-              }
-            />
+              Guardar promociones
+            </button>
           </div>
-        </div>
-        <div className="mt-3 flex justify-end">
-          <button
-            type="button"
-            disabled={saving}
-            onClick={async () => {
-              await onSaveSettings(cfg);
-              setMsgType("success");
-              setMsg("Configuracion de promociones guardada.");
-              setTimeout(() => setMsg(null), 3000);
-            }}
-            className="rounded-lg border border-zinc-700 bg-zinc-100 px-3 py-1.5 text-xs font-medium text-zinc-900 hover:bg-zinc-200 disabled:opacity-50"
-          >
-            Guardar promociones
-          </button>
-        </div>
-      </section>
+        </section>
+      )}
     </div>
   );
 }

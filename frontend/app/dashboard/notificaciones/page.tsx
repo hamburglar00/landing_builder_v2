@@ -22,6 +22,7 @@ export default function DashboardNotificacionesPage() {
   const [botConfig, setBotConfig] = useState<NotificationBotConfig | null>(null);
   const [settings, setSettings] = useState<NotificationSettings | null>(null);
   const [destinations, setDestinations] = useState<NotificationTelegramDestination[]>([]);
+  const [showPromotionsNotifications, setShowPromotionsNotifications] = useState(false);
 
   useEffect(() => {
     const load = async () => {
@@ -38,6 +39,13 @@ export default function DashboardNotificacionesPage() {
 
         const dest = await fetchNotificationTelegramDestinations(user.id).catch(() => []);
         setDestinations(dest);
+
+        const { data: conversionsConfig } = await supabase
+          .from("conversions_config")
+          .select("show_promotions")
+          .eq("user_id", user.id)
+          .maybeSingle();
+        setShowPromotionsNotifications(conversionsConfig?.show_promotions === true);
       } finally {
         setLoading(false);
       }
@@ -52,6 +60,7 @@ export default function DashboardNotificacionesPage() {
   return (
     <NotificationsPageContent
       isAdmin={false}
+      showPromotionsNotifications={showPromotionsNotifications}
       botConfig={botConfig}
       settings={settings}
       destinations={destinations}
