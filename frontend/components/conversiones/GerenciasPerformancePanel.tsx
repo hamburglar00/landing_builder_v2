@@ -260,7 +260,6 @@ export default function GerenciasPerformancePanel({
   }, [getGasto]);
   const showRoas = useMemo(() => performanceRows.some((row) => getGasto(row) > 0), [getGasto, performanceRows]);
   const columnCount = showRoas ? 9 : 8;
-  const columnWidth = showRoas ? "w-[11.111%]" : "w-[12.5%]";
 
   const sortedRows = useMemo(() => {
     const valueFor = (row: Row): number | string => {
@@ -292,15 +291,15 @@ export default function GerenciasPerformancePanel({
   };
 
   const sortIcon = (key: SortKey) => {
-    if (sortKey !== key) return "△";
-    return sortDirection === "asc" ? "▲" : "▼";
+    if (sortKey !== key) return "\u25B3";
+    return sortDirection === "asc" ? "\u25B2" : "\u25BC";
   };
 
   const SortHeader = ({ sort, children }: { sort: SortKey; children: ReactNode }) => (
     <button
       type="button"
       onClick={() => toggleSort(sort)}
-      className="inline-flex w-full items-center justify-center gap-1 text-center font-medium text-zinc-300 transition hover:text-zinc-100"
+      className="inline-flex w-full items-center justify-center gap-0.5 text-center font-medium leading-tight text-zinc-300 transition hover:text-zinc-100"
       title="Ordenar columna"
     >
       <span>{children}</span>
@@ -337,24 +336,30 @@ export default function GerenciasPerformancePanel({
       {error ? (
         <p className="rounded-lg border border-red-900/50 bg-red-950/30 px-3 py-2 text-xs text-red-300">{error}</p>
       ) : (
-        <div className="overflow-x-auto rounded-lg border border-zinc-700">
-          <table className={`w-full table-fixed text-[11px] ${showRoas ? "min-w-[1220px]" : "min-w-[1080px]"}`}>
+        <div className="overflow-hidden rounded-lg border border-zinc-700">
+          <table className="w-full max-w-full table-fixed text-[9.5px] leading-tight lg:text-[10px]">
             <colgroup>
-              {Array.from({ length: columnCount }, (_, index) => (
-                <col key={index} className={columnWidth} />
-              ))}
+              <col className={showRoas ? "w-[16%]" : "w-[18%]"} />
+              <col className={showRoas ? "w-[10%]" : "w-[11%]"} />
+              <col className={showRoas ? "w-[10%]" : "w-[11%]"} />
+              <col className={showRoas ? "w-[12%]" : "w-[13%]"} />
+              <col className={showRoas ? "w-[10%]" : "w-[11%]"} />
+              <col className={showRoas ? "w-[10%]" : "w-[11%]"} />
+              <col className={showRoas ? "w-[14%]" : "w-[14%]"} />
+              <col className={showRoas ? "w-[11%]" : "w-[11%]"} />
+              {showRoas && <col className="w-[7%]" />}
             </colgroup>
             <thead className="bg-zinc-800/95">
               <tr>
-                <th className="px-3 py-2"><SortHeader sort="label">Nombre Gerencia (ID)</SortHeader></th>
-                <th className="px-3 py-2"><SortHeader sort="mensajes">Mensajes recibidos</SortHeader></th>
-                <th className="px-3 py-2"><SortHeader sort="cargas">Cargas Totales</SortHeader></th>
-                <th className="px-3 py-2"><SortHeader sort="montoCargado">Monto Cargado</SortHeader></th>
-                <th className="px-3 py-2"><SortHeader sort="pctCarga">Porcentaje de carga</SortHeader></th>
-                <th className="px-3 py-2"><SortHeader sort="pctRecarga">Porcentaje de recarga</SortHeader></th>
-                <th className="px-3 py-2">
+                <th className="px-1.5 py-2"><SortHeader sort="label">Gerencia (ID)</SortHeader></th>
+                <th className="px-1.5 py-2"><SortHeader sort="mensajes">Mensajes</SortHeader></th>
+                <th className="px-1.5 py-2"><SortHeader sort="cargas">Cargas</SortHeader></th>
+                <th className="px-1.5 py-2"><SortHeader sort="montoCargado">Monto</SortHeader></th>
+                <th className="px-1.5 py-2"><SortHeader sort="pctCarga">% Carga</SortHeader></th>
+                <th className="px-1.5 py-2"><SortHeader sort="pctRecarga">% Recarga</SortHeader></th>
+                <th className="px-1.5 py-2">
                   <div className="flex flex-col items-center gap-1.5">
-                    <SortHeader sort="cost">Costo por msj</SortHeader>
+                    <SortHeader sort="cost">Costo/msj</SortHeader>
                     <div className="flex w-full items-center justify-center gap-1">
                       <input
                         value={globalCost}
@@ -362,20 +367,20 @@ export default function GerenciasPerformancePanel({
                         inputMode="decimal"
                         placeholder="0"
                         aria-label="Costo por mensaje general"
-                        className="h-7 w-16 rounded border border-zinc-700 bg-zinc-950 px-2 text-center text-[11px] font-normal text-zinc-100 placeholder:text-zinc-500"
+                        className="h-7 w-12 rounded border border-zinc-700 bg-zinc-950 px-1.5 text-center text-[10px] font-normal text-zinc-100 placeholder:text-zinc-500"
                       />
                       <button
                         type="button"
                         onClick={applyGlobalCost}
-                        className="h-7 rounded border border-zinc-700 bg-zinc-800 px-2 text-[10px] font-medium text-zinc-200 transition hover:bg-zinc-700"
+                        className="h-7 rounded border border-zinc-700 bg-zinc-800 px-1.5 text-[10px] font-medium text-zinc-200 transition hover:bg-zinc-700"
                       >
                         Aplicar
                       </button>
                     </div>
                   </div>
                 </th>
-                <th className="px-3 py-2"><SortHeader sort="gasto">Gasto</SortHeader></th>
-                {showRoas && <th className="px-3 py-2"><SortHeader sort="roas">ROAS</SortHeader></th>}
+                <th className="px-1.5 py-2"><SortHeader sort="gasto">Gasto</SortHeader></th>
+                {showRoas && <th className="px-1.5 py-2"><SortHeader sort="roas">ROAS</SortHeader></th>}
               </tr>
             </thead>
             <tbody className="divide-y divide-zinc-800">
@@ -392,13 +397,13 @@ export default function GerenciasPerformancePanel({
                 const roas = getRoas(row);
                 return (
                   <tr key={row.label} className="bg-zinc-950/40">
-                    <td className="px-3 py-2 text-center font-medium text-zinc-100">{row.label}</td>
-                    <td className="px-3 py-2 text-center text-amber-300">{formatNumber(row.mensajes)}</td>
-                    <td className="px-3 py-2 text-center text-sky-300">{formatNumber(row.cargas)}</td>
-                    <td className="px-3 py-2 text-center font-semibold text-emerald-300">{formatMoney(row.montoCargado)}</td>
-                    <td className="px-3 py-2 text-center text-zinc-200">{formatPercent(row.pctCarga)}</td>
-                    <td className="px-3 py-2 text-center text-zinc-200">{formatPercent(row.pctRecarga)}</td>
-                    <td className="px-3 py-2 text-center">
+                    <td className="truncate px-1.5 py-2 text-center font-medium text-zinc-100" title={row.label}>{row.label}</td>
+                    <td className="px-1.5 py-2 text-center text-amber-300">{formatNumber(row.mensajes)}</td>
+                    <td className="px-1.5 py-2 text-center text-sky-300">{formatNumber(row.cargas)}</td>
+                    <td className="px-1.5 py-2 text-center font-semibold text-emerald-300">{formatMoney(row.montoCargado)}</td>
+                    <td className="px-1.5 py-2 text-center text-zinc-200">{formatPercent(row.pctCarga)}</td>
+                    <td className="px-1.5 py-2 text-center text-zinc-200">{formatPercent(row.pctRecarga)}</td>
+                    <td className="px-1.5 py-2 text-center">
                       <input
                         value={costRaw}
                         onChange={(e) => {
@@ -407,12 +412,12 @@ export default function GerenciasPerformancePanel({
                         }}
                         inputMode="decimal"
                         placeholder="0"
-                        className="h-7 w-24 rounded border border-zinc-700 bg-zinc-900 px-2 text-center text-xs text-zinc-100"
+                        className="h-7 w-16 rounded border border-zinc-700 bg-zinc-900 px-1.5 text-center text-[10px] text-zinc-100"
                       />
                     </td>
-                    <td className="px-3 py-2 text-center font-semibold text-emerald-300">{formatMoney(gasto)}</td>
+                    <td className="px-1.5 py-2 text-center font-semibold text-emerald-300">{formatMoney(gasto)}</td>
                     {showRoas && (
-                      <td className="px-3 py-2 text-center font-semibold text-cyan-300">
+                      <td className="px-1.5 py-2 text-center font-semibold text-cyan-300">
                         {gasto > 0 ? formatRoas(roas) : "-"}
                       </td>
                     )}
@@ -422,16 +427,16 @@ export default function GerenciasPerformancePanel({
             </tbody>
             <tfoot className="border-t border-zinc-700 bg-zinc-900/80">
               <tr>
-                <td className="px-3 py-2 text-center font-semibold text-zinc-100">Totales</td>
-                <td className="px-3 py-2 text-center font-semibold text-amber-300">{formatNumber(totals.mensajes)}</td>
-                <td className="px-3 py-2 text-center font-semibold text-sky-300">{formatNumber(totals.cargas)}</td>
-                <td className="px-3 py-2 text-center font-semibold text-emerald-300">{formatMoney(totals.montoCargado)}</td>
-                <td className="px-3 py-2 text-center text-zinc-500">-</td>
-                <td className="px-3 py-2 text-center text-zinc-500">-</td>
-                <td className="px-3 py-2 text-center text-zinc-500">-</td>
-                <td className="px-3 py-2 text-center font-semibold text-emerald-300">{formatMoney(totals.gasto)}</td>
+                <td className="px-1.5 py-2 text-center font-semibold text-zinc-100">Totales</td>
+                <td className="px-1.5 py-2 text-center font-semibold text-amber-300">{formatNumber(totals.mensajes)}</td>
+                <td className="px-1.5 py-2 text-center font-semibold text-sky-300">{formatNumber(totals.cargas)}</td>
+                <td className="px-1.5 py-2 text-center font-semibold text-emerald-300">{formatMoney(totals.montoCargado)}</td>
+                <td className="px-1.5 py-2 text-center text-zinc-500">-</td>
+                <td className="px-1.5 py-2 text-center text-zinc-500">-</td>
+                <td className="px-1.5 py-2 text-center text-zinc-500">-</td>
+                <td className="px-1.5 py-2 text-center font-semibold text-emerald-300">{formatMoney(totals.gasto)}</td>
                 {showRoas && (
-                  <td className="px-3 py-2 text-center font-semibold text-cyan-300">
+                  <td className="px-1.5 py-2 text-center font-semibold text-cyan-300">
                     {totals.gasto > 0 ? formatRoas(totals.montoCargado / totals.gasto) : "-"}
                   </td>
                 )}
