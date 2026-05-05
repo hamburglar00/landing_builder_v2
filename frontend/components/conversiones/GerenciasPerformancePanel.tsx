@@ -19,11 +19,12 @@ type Row = {
   label: string;
   mensajes: number;
   cargas: number;
+  montoCargado: number;
   pctCarga: number;
   pctRecarga: number;
 };
 
-type SortKey = "label" | "mensajes" | "cargas" | "pctCarga" | "pctRecarga" | "cost" | "gasto";
+type SortKey = "label" | "mensajes" | "cargas" | "montoCargado" | "pctCarga" | "pctRecarga" | "cost" | "gasto" | "roas";
 type SortDirection = "asc" | "desc";
 
 const FIRST_DATA_MONTH = "2026-01";
@@ -92,6 +93,38 @@ function formatMoney(value: number): string {
     currency: "ARS",
     maximumFractionDigits: 0,
   }).format(value || 0);
+}
+
+function formatRoas(value: number): string {
+  return `${new Intl.NumberFormat("es-AR", {
+    minimumFractionDigits: 2,
+    maximumFractionDigits: 2,
+  }).format(value || 0)}x`;
+}
+
+function externalKey(row: ConversionRow): string {
+  const ext = String(row.external_id ?? "").trim();
+  return ext ? `${row.user_id}::${ext}` : "";
+}
+
+function getLinkedPurchaseRows(rows: ConversionRow[]): ConversionRow[] {
+  const contactKeys = new Set(
+    rows
+      .filter((row) => String(row.contact_event_id ?? "").trim())
+      .map(externalKey)
+      .filter(Boolean),
+  );
+  const leadLinkedKeys = new Set(
+    rows
+      .filter((row) => String(row.lead_event_id ?? "").trim())
+      .map(externalKey)
+      .filter((key) => key && contactKeys.has(key)),
+  );
+
+  return rows.filter((row) => (
+    String(row.purchase_event_id ?? "").trim() !== "" &&
+    leadLinkedKeys.has(externalKey(row))
+  ));
 }
 
 export default function GerenciasPerformancePanel({
@@ -178,11 +211,14 @@ export default function GerenciasPerformancePanel({
         const funnel = buildFunnelContactsFromConversions(gerenciaRows);
         const core = computeCoreStats(gerenciaRows, funnel, gerenciaRows, premiumThreshold);
         const mensajes = core.uniqueLeadsLinkedToContact;
-        const cargas = core.totalPurchases;
+        const linkedPurchaseRows = getLinkedPurchaseRows(gerenciaRows);
+        const cargas = linkedPurchaseRows.length;
+        const montoCargado = linkedPurchaseRows.reduce((sum, row) => sum + (Number(row.valor) || 0), 0);
         return {
           label,
           mensajes,
           cargas,
+          montoCargado,
           pctCarga: mensajes > 0 ? (core.firstLoadPurchasersLinkedToLead / mensajes) * 100 : 0,
           pctRecarga: core.firstLoadPurchasersLinkedToLead > 0
             ? (core.repeatFromFirstInRange / core.firstLoadPurchasersLinkedToLead) * 100
@@ -198,10 +234,11 @@ export default function GerenciasPerformancePanel({
         return {
           mensajes: acc.mensajes + row.mensajes,
           cargas: acc.cargas + row.cargas,
+          montoCargado: acc.montoCargado + row.montoCargado,
           gasto: acc.gasto + row.mensajes * cost,
         };
       },
-      { mensajes: 0, cargas: 0, gasto: 0 },
+      { mensajes: 0, cargas: 0, montoCargado: 0, gasto: 0 },
     );
   }, [costByGerencia, month, performanceRows]);
 
@@ -217,12 +254,20 @@ export default function GerenciasPerformancePanel({
 
   const getCost = useCallback((row: Row) => parseAmount(costByGerencia[`${month}::${row.label}`] ?? ""), [costByGerencia, month]);
   const getGasto = useCallback((row: Row) => row.mensajes * getCost(row), [getCost]);
+  const getRoas = useCallback((row: Row) => {
+    const gasto = getGasto(row);
+    return gasto > 0 ? row.montoCargado / gasto : 0;
+  }, [getGasto]);
+  const showRoas = useMemo(() => performanceRows.some((row) => getGasto(row) > 0), [getGasto, performanceRows]);
+  const columnCount = showRoas ? 9 : 8;
+  const columnWidth = showRoas ? "w-[11.111%]" : "w-[12.5%]";
 
   const sortedRows = useMemo(() => {
     const valueFor = (row: Row): number | string => {
       if (sortKey === "label") return row.label;
       if (sortKey === "cost") return getCost(row);
       if (sortKey === "gasto") return getGasto(row);
+      if (sortKey === "roas") return getRoas(row);
       return row[sortKey];
     };
     return [...performanceRows].sort((a, b) => {
@@ -233,7 +278,7 @@ export default function GerenciasPerformancePanel({
         : av - bv;
       return sortDirection === "asc" ? result : -result;
     });
-  }, [getCost, getGasto, performanceRows, sortDirection, sortKey]);
+  }, [getCost, getGasto, getRoas, performanceRows, sortDirection, sortKey]);
 
   const toggleSort = (key: SortKey) => {
     setSortKey((currentKey) => {
@@ -293,21 +338,18 @@ export default function GerenciasPerformancePanel({
         <p className="rounded-lg border border-red-900/50 bg-red-950/30 px-3 py-2 text-xs text-red-300">{error}</p>
       ) : (
         <div className="overflow-x-auto rounded-lg border border-zinc-700">
-          <table className="w-full min-w-[980px] table-fixed text-[11px]">
+          <table className={`w-full table-fixed text-[11px] ${showRoas ? "min-w-[1220px]" : "min-w-[1080px]"}`}>
             <colgroup>
-              <col className="w-[14.285%]" />
-              <col className="w-[14.285%]" />
-              <col className="w-[14.285%]" />
-              <col className="w-[14.285%]" />
-              <col className="w-[14.285%]" />
-              <col className="w-[14.285%]" />
-              <col className="w-[14.285%]" />
+              {Array.from({ length: columnCount }, (_, index) => (
+                <col key={index} className={columnWidth} />
+              ))}
             </colgroup>
             <thead className="bg-zinc-800/95">
               <tr>
                 <th className="px-3 py-2"><SortHeader sort="label">Nombre Gerencia (ID)</SortHeader></th>
                 <th className="px-3 py-2"><SortHeader sort="mensajes">Mensajes recibidos</SortHeader></th>
                 <th className="px-3 py-2"><SortHeader sort="cargas">Cargas Totales</SortHeader></th>
+                <th className="px-3 py-2"><SortHeader sort="montoCargado">Monto Cargado</SortHeader></th>
                 <th className="px-3 py-2"><SortHeader sort="pctCarga">Porcentaje de carga</SortHeader></th>
                 <th className="px-3 py-2"><SortHeader sort="pctRecarga">Porcentaje de recarga</SortHeader></th>
                 <th className="px-3 py-2">
@@ -333,12 +375,13 @@ export default function GerenciasPerformancePanel({
                   </div>
                 </th>
                 <th className="px-3 py-2"><SortHeader sort="gasto">Gasto</SortHeader></th>
+                {showRoas && <th className="px-3 py-2"><SortHeader sort="roas">ROAS</SortHeader></th>}
               </tr>
             </thead>
             <tbody className="divide-y divide-zinc-800">
               {performanceRows.length === 0 ? (
                 <tr>
-                  <td colSpan={7} className="px-3 py-8 text-center text-zinc-500">
+                  <td colSpan={columnCount} className="px-3 py-8 text-center text-zinc-500">
                     No hay gerencias configuradas para comparar.
                   </td>
                 </tr>
@@ -346,11 +389,13 @@ export default function GerenciasPerformancePanel({
                 const costKey = `${month}::${row.label}`;
                 const costRaw = costByGerencia[costKey] ?? "";
                 const gasto = getGasto(row);
+                const roas = getRoas(row);
                 return (
                   <tr key={row.label} className="bg-zinc-950/40">
                     <td className="px-3 py-2 text-center font-medium text-zinc-100">{row.label}</td>
                     <td className="px-3 py-2 text-center text-amber-300">{formatNumber(row.mensajes)}</td>
                     <td className="px-3 py-2 text-center text-sky-300">{formatNumber(row.cargas)}</td>
+                    <td className="px-3 py-2 text-center font-semibold text-emerald-300">{formatMoney(row.montoCargado)}</td>
                     <td className="px-3 py-2 text-center text-zinc-200">{formatPercent(row.pctCarga)}</td>
                     <td className="px-3 py-2 text-center text-zinc-200">{formatPercent(row.pctRecarga)}</td>
                     <td className="px-3 py-2 text-center">
@@ -366,6 +411,11 @@ export default function GerenciasPerformancePanel({
                       />
                     </td>
                     <td className="px-3 py-2 text-center font-semibold text-emerald-300">{formatMoney(gasto)}</td>
+                    {showRoas && (
+                      <td className="px-3 py-2 text-center font-semibold text-cyan-300">
+                        {gasto > 0 ? formatRoas(roas) : "-"}
+                      </td>
+                    )}
                   </tr>
                 );
               })}
@@ -375,10 +425,16 @@ export default function GerenciasPerformancePanel({
                 <td className="px-3 py-2 text-center font-semibold text-zinc-100">Totales</td>
                 <td className="px-3 py-2 text-center font-semibold text-amber-300">{formatNumber(totals.mensajes)}</td>
                 <td className="px-3 py-2 text-center font-semibold text-sky-300">{formatNumber(totals.cargas)}</td>
+                <td className="px-3 py-2 text-center font-semibold text-emerald-300">{formatMoney(totals.montoCargado)}</td>
                 <td className="px-3 py-2 text-center text-zinc-500">-</td>
                 <td className="px-3 py-2 text-center text-zinc-500">-</td>
                 <td className="px-3 py-2 text-center text-zinc-500">-</td>
                 <td className="px-3 py-2 text-center font-semibold text-emerald-300">{formatMoney(totals.gasto)}</td>
+                {showRoas && (
+                  <td className="px-3 py-2 text-center font-semibold text-cyan-300">
+                    {totals.gasto > 0 ? formatRoas(totals.montoCargado / totals.gasto) : "-"}
+                  </td>
+                )}
               </tr>
             </tfoot>
           </table>
