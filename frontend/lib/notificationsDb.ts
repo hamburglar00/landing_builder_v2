@@ -177,12 +177,32 @@ export async function removeNotificationTelegramDestination(
   userId: string,
   destinationId: number,
 ): Promise<void> {
+  const { data: destination, error: readError } = await supabase
+    .from("notification_telegram_destinations")
+    .select("telegram_chat_id")
+    .eq("id", destinationId)
+    .eq("user_id", userId)
+    .maybeSingle();
+  if (readError) throw readError;
+
   const { error } = await supabase
     .from("notification_telegram_destinations")
-    .delete()
+    .update({ is_active: false, updated_at: new Date().toISOString() })
     .eq("id", destinationId)
     .eq("user_id", userId);
   if (error) throw error;
+
+  const { data: settings } = await supabase
+    .from("notification_settings")
+    .select("telegram_chat_id")
+    .eq("user_id", userId)
+    .maybeSingle();
+
+  const legacyChatId = String(settings?.telegram_chat_id ?? "").trim();
+  const disconnectedChatId = String(destination?.telegram_chat_id ?? "").trim();
+  if (legacyChatId && (!disconnectedChatId || legacyChatId === disconnectedChatId)) {
+    await clearLegacyNotificationTelegramChat(userId);
+  }
 }
 
 export async function clearLegacyNotificationTelegramChat(userId: string): Promise<void> {
