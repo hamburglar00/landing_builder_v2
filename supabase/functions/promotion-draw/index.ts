@@ -37,6 +37,10 @@ type TelegramDestination = {
   telegram_chat_id: string;
 };
 
+type NotificationSettings = {
+  promotion_winner_notifications_enabled?: boolean | null;
+};
+
 type Profile = {
   role: string;
 };
@@ -275,36 +279,46 @@ Deno.serve(async (req) => {
     if (!botRow?.telegram_bot_token) {
       notificationSkipped = "bot-not-configured";
     } else {
-      const { data: destinations } = await db
-        .from("notification_telegram_destinations")
-        .select("telegram_chat_id")
+      const { data: notificationSettings } = await db
+        .from("notification_settings")
+        .select("promotion_winner_notifications_enabled")
         .eq("user_id", promotion.user_id)
-        .eq("is_active", true);
+        .maybeSingle<NotificationSettings>();
 
-      const rows = (destinations ?? []) as TelegramDestination[];
-      if (!rows.length) {
-        notificationSkipped = "no-telegram-destinations";
+      if (notificationSettings?.promotion_winner_notifications_enabled === false) {
+        notificationSkipped = "promotion-notifications-disabled";
       } else {
-        const text = [
-          `<b>Resultado del sorteo</b>`,
-          `Promocion: ${escapeHtml(promotion.title)}`,
-          `Ganador: ${escapeHtml(winner.username)}`,
-          `Telefono: ${escapeHtml(winner.phone)}`,
-          `Email: ${escapeHtml(winner.email)}`,
-          `Premio: ${escapeHtml(promotion.prize || "-")}`,
-        ].join("\n");
+        const { data: destinations } = await db
+          .from("notification_telegram_destinations")
+          .select("telegram_chat_id")
+          .eq("user_id", promotion.user_id)
+          .eq("is_active", true);
 
-        for (const destination of rows) {
-          if (!destination.telegram_chat_id) continue;
-          const sent = await sendTelegramMessage(botRow.telegram_bot_token, destination.telegram_chat_id, text);
-          if (sent.ok) notified += 1;
-        }
+        const rows = (destinations ?? []) as TelegramDestination[];
+        if (!rows.length) {
+          notificationSkipped = "no-telegram-destinations";
+        } else {
+          const text = [
+            `<b>Resultado del sorteo</b>`,
+            `Promocion: ${escapeHtml(promotion.title)}`,
+            `Ganador: ${escapeHtml(winner.username)}`,
+            `Telefono: ${escapeHtml(winner.phone)}`,
+            `Email: ${escapeHtml(winner.email)}`,
+            `Premio: ${escapeHtml(promotion.prize || "-")}`,
+          ].join("\n");
 
-        if (notified > 0) {
-          await db
-            .from("promotions")
-            .update({ winner_notified_at: nowIso })
-            .eq("id", promotion.id);
+          for (const destination of rows) {
+            if (!destination.telegram_chat_id) continue;
+            const sent = await sendTelegramMessage(botRow.telegram_bot_token, destination.telegram_chat_id, text);
+            if (sent.ok) notified += 1;
+          }
+
+          if (notified > 0) {
+            await db
+              .from("promotions")
+              .update({ winner_notified_at: nowIso })
+              .eq("id", promotion.id);
+          }
         }
       }
     }

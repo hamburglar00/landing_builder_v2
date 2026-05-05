@@ -29,6 +29,10 @@ type TelegramDestination = {
   telegram_chat_id: string;
 };
 
+type NotificationSettings = {
+  promotion_winner_notifications_enabled?: boolean | null;
+};
+
 type DrawResult = {
   promotion_id: string;
   winner_username?: string;
@@ -73,6 +77,14 @@ async function notifyWinner(
   winner: Participant,
   nowIso: string,
 ): Promise<number> {
+  const { data: settings } = await db
+    .from("notification_settings")
+    .select("promotion_winner_notifications_enabled")
+    .eq("user_id", promotion.user_id)
+    .maybeSingle<NotificationSettings>();
+
+  if (settings?.promotion_winner_notifications_enabled === false) return 0;
+
   const { data: destinations } = await db
     .from("notification_telegram_destinations")
     .select("telegram_chat_id")

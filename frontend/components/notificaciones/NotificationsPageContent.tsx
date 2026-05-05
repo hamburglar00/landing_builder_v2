@@ -13,6 +13,35 @@ function normalizeHour(v: number) {
   return Math.min(22, Math.max(8, Math.round(v)));
 }
 
+function ToggleSwitch({
+  checked,
+  onChange,
+  label,
+}: {
+  checked: boolean;
+  onChange: (checked: boolean) => void;
+  label: string;
+}) {
+  return (
+    <button
+      type="button"
+      role="switch"
+      aria-checked={checked}
+      onClick={() => onChange(!checked)}
+      className={`inline-flex h-7 w-12 shrink-0 items-center rounded-full p-1 transition-colors ${
+        checked ? "bg-emerald-500" : "bg-zinc-700"
+      }`}
+      title={label}
+    >
+      <span
+        className={`h-5 w-5 rounded-full bg-white transition-transform ${
+          checked ? "translate-x-5" : "translate-x-0"
+        }`}
+      />
+    </button>
+  );
+}
+
 type Props = {
   isAdmin: boolean;
   botConfig: NotificationBotConfig | null;
@@ -367,22 +396,27 @@ export default function NotificationsPageContent({
 
       <section className="rounded-xl border border-zinc-800 bg-zinc-900/50 p-4">
         <h3 className="mb-3 text-sm font-semibold text-zinc-200">Seguimiento</h3>
-        <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
-          <label className="flex flex-col gap-1">
-            <span className="min-h-[2.5rem] text-xs leading-5 text-zinc-400">Activar notificaciones</span>
-            <select
-              value={cfg.enabled ? "on" : "off"}
-              onChange={(e) =>
-                setCfg((prev) =>
-                  prev ? { ...prev, enabled: e.target.value === "on" } : prev,
-                )
+        <div className="mb-4 flex flex-wrap items-center justify-between gap-3 rounded-lg border border-zinc-800 bg-zinc-950/40 px-3 py-3">
+          <div>
+            <p className="text-xs font-medium text-zinc-200">Notificaciones de seguimiento</p>
+            <p className="mt-1 text-xs text-zinc-500">
+              Activa o desactiva los avisos por contactos inactivos.
+            </p>
+          </div>
+          <div className="flex items-center gap-2">
+            <span className={`text-xs font-medium ${cfg.enabled ? "text-emerald-300" : "text-zinc-500"}`}>
+              {cfg.enabled ? "Activadas" : "Desactivadas"}
+            </span>
+            <ToggleSwitch
+              checked={cfg.enabled}
+              label="Activar notificaciones de seguimiento"
+              onChange={(checked) =>
+                setCfg((prev) => prev ? { ...prev, enabled: checked } : prev)
               }
-              className="h-10 w-full rounded-lg border border-zinc-700 bg-zinc-950 px-3 text-sm text-zinc-100"
-            >
-              <option value="on">Activadas</option>
-              <option value="off">Desactivadas</option>
-            </select>
-          </label>
+            />
+          </div>
+        </div>
+        <div className="grid gap-3 sm:grid-cols-3">
           <label className="flex flex-col gap-1">
             <span className="min-h-[2.5rem] text-xs leading-5 text-zinc-400">Recibir notificaciones a las:</span>
             <select
@@ -448,6 +482,50 @@ export default function NotificationsPageContent({
             className="rounded-lg border border-zinc-700 bg-zinc-100 px-3 py-1.5 text-xs font-medium text-zinc-900 hover:bg-zinc-200 disabled:opacity-50"
           >
             Guardar seguimiento
+          </button>
+        </div>
+      </section>
+
+      <section className="rounded-xl border border-zinc-800 bg-zinc-900/50 p-4">
+        <div className="flex flex-wrap items-center justify-between gap-3">
+          <div>
+            <h3 className="text-sm font-semibold text-zinc-200">Promociones</h3>
+            <p className="mt-1 text-xs text-zinc-500">
+              Recibi por Telegram los datos del ganador cuando se realice un sorteo.
+            </p>
+          </div>
+          <div className="flex items-center gap-2">
+            <span
+              className={`text-xs font-medium ${
+                cfg.promotion_winner_notifications_enabled ? "text-emerald-300" : "text-zinc-500"
+              }`}
+            >
+              {cfg.promotion_winner_notifications_enabled ? "Activadas" : "Desactivadas"}
+            </span>
+            <ToggleSwitch
+              checked={cfg.promotion_winner_notifications_enabled ?? true}
+              label="Activar notificaciones de promociones"
+              onChange={(checked) =>
+                setCfg((prev) =>
+                  prev ? { ...prev, promotion_winner_notifications_enabled: checked } : prev,
+                )
+              }
+            />
+          </div>
+        </div>
+        <div className="mt-3 flex justify-end">
+          <button
+            type="button"
+            disabled={saving}
+            onClick={async () => {
+              await onSaveSettings(cfg);
+              setMsgType("success");
+              setMsg("Configuracion de promociones guardada.");
+              setTimeout(() => setMsg(null), 3000);
+            }}
+            className="rounded-lg border border-zinc-700 bg-zinc-100 px-3 py-1.5 text-xs font-medium text-zinc-900 hover:bg-zinc-200 disabled:opacity-50"
+          >
+            Guardar promociones
           </button>
         </div>
       </section>

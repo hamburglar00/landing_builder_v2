@@ -8,6 +8,7 @@ export interface NotificationBotConfig {
 export interface NotificationSettings {
   user_id: string;
   enabled: boolean;
+  promotion_winner_notifications_enabled: boolean;
   channel: "telegram";
   telegram_chat_id: string;
   telegram_start_token: string;
@@ -32,6 +33,7 @@ export interface NotificationTelegramDestination {
 const DEFAULT_SETTINGS: NotificationSettings = {
   user_id: "",
   enabled: true,
+  promotion_winner_notifications_enabled: true,
   channel: "telegram",
   telegram_chat_id: "",
   telegram_start_token: "",
@@ -95,7 +97,11 @@ export async function fetchNotificationSettings(userId: string): Promise<Notific
     .maybeSingle();
   if (error) throw error;
   if (data) {
-    const row = data as NotificationSettings;
+    const row = {
+      ...(data as NotificationSettings),
+      promotion_winner_notifications_enabled:
+        (data as Partial<NotificationSettings>).promotion_winner_notifications_enabled ?? true,
+    };
     if (String(row.telegram_start_token || "").trim()) return row;
     const fixedToken = generateStartToken();
     const { error: fixError } = await supabase
@@ -122,7 +128,11 @@ export async function fetchNotificationSettings(userId: string): Promise<Notific
     .maybeSingle();
   if (createdError) throw createdError;
   if (!created) return { ...DEFAULT_SETTINGS, user_id: userId };
-  return created as NotificationSettings;
+  return {
+    ...(created as NotificationSettings),
+    promotion_winner_notifications_enabled:
+      (created as Partial<NotificationSettings>).promotion_winner_notifications_enabled ?? true,
+  };
 }
 
 export async function upsertNotificationSettings(settings: NotificationSettings): Promise<void> {
@@ -133,6 +143,7 @@ export async function upsertNotificationSettings(settings: NotificationSettings)
       {
         user_id: settings.user_id,
         enabled: settings.enabled,
+        promotion_winner_notifications_enabled: settings.promotion_winner_notifications_enabled ?? true,
         channel: "telegram",
         telegram_chat_id: settings.telegram_chat_id ?? "",
         telegram_start_token: startToken,
