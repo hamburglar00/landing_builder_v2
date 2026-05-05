@@ -1998,7 +1998,7 @@ export default function DashboardConversionesPage() {
         <section className="rounded-xl border border-zinc-800 bg-zinc-900/50 p-4">
           <div className="mb-4 flex flex-wrap items-center justify-between gap-2">
             <h3 className="text-sm font-semibold text-zinc-200">
-              Inbox de eventos (LEAD/PURCHASE){" "}
+              Inbox de eventos (CONTACT/LEAD/PURCHASE){" "}
               <span className="font-normal text-zinc-500">({filteredInbox.length})</span>
             </h3>
             <div className="flex items-center gap-2">
