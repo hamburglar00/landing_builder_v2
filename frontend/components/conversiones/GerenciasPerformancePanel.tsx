@@ -142,6 +142,8 @@ export default function GerenciasPerformancePanel({
   const [costStorageReadyKey, setCostStorageReadyKey] = useState("");
   const [sortKey, setSortKey] = useState<SortKey>("label");
   const [sortDirection, setSortDirection] = useState<SortDirection>("asc");
+  const [metaAdsOnly, setMetaAdsOnly] = useState(false);
+  const [searchTerm, setSearchTerm] = useState("");
 
   const costStorageKey = `gerencias-performance-costs:v1:${storageKey}`;
   const monthSelectOptions = useMemo(() => monthOptions(), []);
@@ -191,7 +193,10 @@ export default function GerenciasPerformancePanel({
     }
 
     const rowsByGerencia = new Map<string, ConversionRow[]>();
-    const cleanRows = rows.filter((row) => !String(row.test_event_code ?? "").trim());
+    const cleanRows = rows.filter((row) => (
+      !String(row.test_event_code ?? "").trim() &&
+      (!metaAdsOnly || Boolean(row.from_meta_ads))
+    ));
     for (const row of cleanRows) {
       const assignedPhone = normalizePhone(row.telefono_asignado);
       if (!assignedPhone) continue;
@@ -225,10 +230,16 @@ export default function GerenciasPerformancePanel({
             : 0,
         };
       });
-  }, [gerenciaByPhone, premiumThreshold, rows]);
+  }, [gerenciaByPhone, metaAdsOnly, premiumThreshold, rows]);
+
+  const visiblePerformanceRows = useMemo(() => {
+    const query = searchTerm.trim().toLowerCase();
+    if (!query) return performanceRows;
+    return performanceRows.filter((row) => row.label.toLowerCase().includes(query));
+  }, [performanceRows, searchTerm]);
 
   const totals = useMemo(() => {
-    return performanceRows.reduce(
+    return visiblePerformanceRows.reduce(
       (acc, row) => {
         const cost = parseAmount(costByGerencia[`${month}::${row.label}`] ?? "");
         return {
@@ -240,12 +251,12 @@ export default function GerenciasPerformancePanel({
       },
       { mensajes: 0, cargas: 0, montoCargado: 0, gasto: 0 },
     );
-  }, [costByGerencia, month, performanceRows]);
+  }, [costByGerencia, month, visiblePerformanceRows]);
 
   const applyGlobalCost = () => {
     setCostByGerencia((prev) => {
       const next = { ...prev };
-      for (const row of performanceRows) {
+      for (const row of visiblePerformanceRows) {
         next[`${month}::${row.label}`] = globalCost;
       }
       return next;
@@ -258,7 +269,7 @@ export default function GerenciasPerformancePanel({
     const gasto = getGasto(row);
     return gasto > 0 ? row.montoCargado / gasto : 0;
   }, [getGasto]);
-  const showRoas = useMemo(() => performanceRows.some((row) => getGasto(row) > 0), [getGasto, performanceRows]);
+  const showRoas = useMemo(() => visiblePerformanceRows.some((row) => getGasto(row) > 0), [getGasto, visiblePerformanceRows]);
   const columnCount = showRoas ? 9 : 8;
 
   const sortedRows = useMemo(() => {
@@ -269,7 +280,7 @@ export default function GerenciasPerformancePanel({
       if (sortKey === "roas") return getRoas(row);
       return row[sortKey];
     };
-    return [...performanceRows].sort((a, b) => {
+    return [...visiblePerformanceRows].sort((a, b) => {
       const av = valueFor(a);
       const bv = valueFor(b);
       const result = typeof av === "string" || typeof bv === "string"
@@ -277,7 +288,7 @@ export default function GerenciasPerformancePanel({
         : av - bv;
       return sortDirection === "asc" ? result : -result;
     });
-  }, [getCost, getGasto, getRoas, performanceRows, sortDirection, sortKey]);
+  }, [getCost, getGasto, getRoas, visiblePerformanceRows, sortDirection, sortKey]);
 
   const toggleSort = (key: SortKey) => {
     setSortKey((currentKey) => {
@@ -322,15 +333,36 @@ export default function GerenciasPerformancePanel({
               <option key={option.value} value={option.value}>{option.label}</option>
             ))}
           </select>
+          <button
+            type="button"
+            onClick={() => setMetaAdsOnly((value) => !value)}
+            aria-pressed={metaAdsOnly}
+            className="inline-flex h-8 items-center gap-2 rounded-lg border border-zinc-700 bg-zinc-950 px-2 text-[11px] font-medium text-zinc-300 transition hover:border-zinc-600"
+            title="Filtrar metricas por origen Meta Ads"
+          >
+            <span>Meta Ads</span>
+            <span className={`relative inline-flex h-4 w-7 rounded-full border transition ${metaAdsOnly ? "border-cyan-400/60 bg-cyan-500/30" : "border-zinc-600 bg-zinc-800"}`}>
+              <span className={`absolute top-0.5 h-2.5 w-2.5 rounded-full transition ${metaAdsOnly ? "left-3.5 bg-cyan-300" : "left-0.5 bg-zinc-400"}`} />
+            </span>
+          </button>
         </div>
-        <button
-          type="button"
-          onClick={() => void loadMonth()}
-          disabled={loading}
-          className="h-8 rounded-lg border border-zinc-700 bg-zinc-800 px-3 text-xs font-medium text-zinc-200 transition hover:bg-zinc-700 disabled:opacity-60"
-        >
-          {loading ? "Actualizando..." : "Actualizar"}
-        </button>
+        <div className="ml-auto flex flex-wrap items-center justify-end gap-2">
+          <input
+            value={searchTerm}
+            onChange={(e) => setSearchTerm(e.target.value)}
+            placeholder="Buscar gerencia o ID..."
+            aria-label="Buscar gerencia por nombre o ID"
+            className="h-8 w-56 rounded-lg border border-zinc-700 bg-zinc-950 px-3 text-xs text-zinc-100 placeholder:text-zinc-500"
+          />
+          <button
+            type="button"
+            onClick={() => void loadMonth()}
+            disabled={loading}
+            className="h-8 rounded-lg border border-zinc-700 bg-zinc-800 px-3 text-xs font-medium text-zinc-200 transition hover:bg-zinc-700 disabled:opacity-60"
+          >
+            {loading ? "Actualizando..." : "Actualizar"}
+          </button>
+        </div>
       </div>
 
       {error ? (
@@ -384,10 +416,12 @@ export default function GerenciasPerformancePanel({
               </tr>
             </thead>
             <tbody className="divide-y divide-zinc-800">
-              {performanceRows.length === 0 ? (
+              {visiblePerformanceRows.length === 0 ? (
                 <tr>
                   <td colSpan={columnCount} className="px-3 py-8 text-center text-zinc-500">
-                    No hay gerencias configuradas para comparar.
+                    {searchTerm.trim()
+                      ? "No hay gerencias que coincidan con la busqueda."
+                      : "No hay gerencias configuradas para comparar."}
                   </td>
                 </tr>
               ) : sortedRows.map((row) => {
