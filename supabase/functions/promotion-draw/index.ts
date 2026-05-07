@@ -61,6 +61,44 @@ function animationUsernamesFromParticipants(participants: Participant[]): string
   return shuffled(names).slice(0, 80);
 }
 
+async function pickWinnerWithPurchaseFallback(
+  db: any,
+  userId: string,
+  participants: Participant[],
+): Promise<{ winner: Participant; eligibleByPurchase: boolean }> {
+  const randomized = shuffled(participants);
+  const phones = Array.from(new Set(
+    randomized
+      .map((participant) => String(participant.phone || "").trim())
+      .filter(Boolean),
+  ));
+
+  if (!phones.length) {
+    return { winner: randomized[0], eligibleByPurchase: false };
+  }
+
+  const { data, error } = await db
+    .from("conversions")
+    .select("phone")
+    .eq("user_id", userId)
+    .in("phone", phones)
+    .or("purchase_event_id.neq.,estado.eq.purchase");
+
+  if (error) throw error;
+
+  const purchaserPhones = new Set(
+    ((data ?? []) as Array<{ phone: string | null }>)
+      .map((row) => String(row.phone || "").trim())
+      .filter(Boolean),
+  );
+  const eligibleWinner = randomized.find((participant) => purchaserPhones.has(String(participant.phone || "").trim()));
+
+  return {
+    winner: eligibleWinner ?? randomized[0],
+    eligibleByPurchase: Boolean(eligibleWinner),
+  };
+}
+
 async function fetchAnimationUsernames(db: any, promotionId: string): Promise<string[]> {
   const { data } = await db
     .from("promotion_participants")
@@ -231,7 +269,7 @@ Deno.serve(async (req) => {
       });
     }
 
-    const winner = pool[Math.floor(Math.random() * pool.length)];
+    const { winner, eligibleByPurchase } = await pickWinnerWithPurchaseFallback(db, promotion.user_id, pool);
     const animationUsernames = animationUsernamesFromParticipants(pool);
 
     const { data: updatedWinner, error: updateError } = await db
@@ -332,6 +370,7 @@ Deno.serve(async (req) => {
       winner_selected_at: nowIso,
       draw_processed_at: nowIso,
       animation_usernames: animationUsernames,
+      winner_eligible_by_purchase: eligibleByPurchase,
       notified,
       notification_skipped: notificationSkipped || null,
     });

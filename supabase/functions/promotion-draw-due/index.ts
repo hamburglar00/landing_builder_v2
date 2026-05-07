@@ -39,6 +39,7 @@ type DrawResult = {
   notified?: number;
   skipped?: string;
   draw_status?: "completed" | "no_participants";
+  winner_eligible_by_purchase?: boolean;
 };
 
 function jsonResponse(body: Record<string, unknown>, status = 200): Response {
@@ -68,6 +69,53 @@ async function sendTelegramMessage(token: string, chatId: string, text: string) 
     }),
   });
   return { ok: res.ok, body: await res.text().catch(() => "") };
+}
+
+function shuffled<T>(items: T[]): T[] {
+  const copy = [...items];
+  for (let i = copy.length - 1; i > 0; i -= 1) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [copy[i], copy[j]] = [copy[j], copy[i]];
+  }
+  return copy;
+}
+
+async function pickWinnerWithPurchaseFallback(
+  db: any,
+  userId: string,
+  participants: Participant[],
+): Promise<{ winner: Participant; eligibleByPurchase: boolean }> {
+  const randomized = shuffled(participants);
+  const phones = Array.from(new Set(
+    randomized
+      .map((participant) => String(participant.phone || "").trim())
+      .filter(Boolean),
+  ));
+
+  if (!phones.length) {
+    return { winner: randomized[0], eligibleByPurchase: false };
+  }
+
+  const { data, error } = await db
+    .from("conversions")
+    .select("phone")
+    .eq("user_id", userId)
+    .in("phone", phones)
+    .or("purchase_event_id.neq.,estado.eq.purchase");
+
+  if (error) throw error;
+
+  const purchaserPhones = new Set(
+    ((data ?? []) as Array<{ phone: string | null }>)
+      .map((row) => String(row.phone || "").trim())
+      .filter(Boolean),
+  );
+  const eligibleWinner = randomized.find((participant) => purchaserPhones.has(String(participant.phone || "").trim()));
+
+  return {
+    winner: eligibleWinner ?? randomized[0],
+    eligibleByPurchase: Boolean(eligibleWinner),
+  };
 }
 
 async function notifyWinner(
@@ -144,7 +192,7 @@ async function drawPromotion(db: any, promotion: Promotion, botToken: string): P
     return { promotion_id: promotion.id, skipped: "no-participants", draw_status: "no_participants" };
   }
 
-  const winner = pool[Math.floor(Math.random() * pool.length)];
+  const { winner, eligibleByPurchase } = await pickWinnerWithPurchaseFallback(db, promotion.user_id, pool);
 
   const { data: updatedWinner, error: updateError } = await db
     .from("promotions")
@@ -168,7 +216,13 @@ async function drawPromotion(db: any, promotion: Promotion, botToken: string): P
     ? await notifyWinner(db, botToken, promotion, winner, nowIso)
     : 0;
 
-  return { promotion_id: promotion.id, winner_username: winner.username, notified, draw_status: "completed" };
+  return {
+    promotion_id: promotion.id,
+    winner_username: winner.username,
+    notified,
+    draw_status: "completed",
+    winner_eligible_by_purchase: eligibleByPurchase,
+  };
 }
 
 Deno.serve(async (req) => {
