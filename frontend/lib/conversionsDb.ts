@@ -96,6 +96,7 @@ export interface ConversionRow {
   purchase_event_id: string;
   purchase_event_time: number | null;
   purchase_payload_raw: string;
+  purchase_coelsa_id?: string | null;
   test_event_code?: string;
   purchase_type?: "first" | "repeat" | null;
   client_ip: string;
@@ -140,6 +141,7 @@ export interface ConversionInboxRow {
   landing_name: string;
   action: string;
   action_event_id?: string | null;
+  coelsa_id?: string | null;
   promo_code: string;
   phone: string;
   payload_raw: string;
@@ -367,7 +369,7 @@ const CONVERSIONS_SELECT = `
   source_platform,
   contact_event_id, contact_event_time, sendContactPixel, contact_payload_raw,
   lead_event_id, lead_event_time, lead_payload_raw,
-  purchase_event_id, purchase_event_time, purchase_payload_raw,
+  purchase_event_id, purchase_event_time, purchase_payload_raw, purchase_coelsa_id,
   test_event_code,
   purchase_type,
   client_ip, agent_user, device_type, event_source_url,
@@ -663,7 +665,7 @@ export async function fetchFunnelContactsForAdminFiltered(
 const LOGS_SELECT =
   "id, user_id, conversion_id, function_name, level, message, detail, payload_received, result, payload_meta, response_meta, created_at";
 const INBOX_SELECT =
-  "id, user_id, conversion_id, landing_name, action, action_event_id, promo_code, phone, payload_raw, status, http_status, response_body, processed_at, created_at";
+  "id, user_id, conversion_id, landing_name, action, action_event_id, coelsa_id, promo_code, phone, payload_raw, status, http_status, response_body, processed_at, created_at";
 
 function arrangeLogsForUi(rows: ConversionLogRow[]): ConversionLogRow[] {
   type LogGroup = {

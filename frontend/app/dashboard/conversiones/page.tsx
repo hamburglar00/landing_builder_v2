@@ -811,6 +811,7 @@ export default function DashboardConversionesPage() {
         r.action,
         r.status,
         r.promo_code,
+        r.coelsa_id ?? "",
         r.phone,
         r.action_event_id ?? "",
         r.response_body,
@@ -2016,7 +2017,7 @@ export default function DashboardConversionesPage() {
               <input
                 value={inboxSearch}
                 onChange={(e) => setInboxSearch(e.target.value)}
-                placeholder="Buscar por phone, promo_code, status..."
+                placeholder="Buscar por phone, promo, coelsa, status..."
                 className="h-8 w-72 rounded-lg border border-zinc-700 bg-zinc-900 px-3 text-xs text-zinc-100 placeholder:text-zinc-500"
               />
             </div>
@@ -2034,6 +2035,7 @@ export default function DashboardConversionesPage() {
                     <th className="px-2 py-2 font-medium text-zinc-300 whitespace-nowrap">Status</th>
                     <th className="px-2 py-2 font-medium text-zinc-300 whitespace-nowrap">Phone</th>
                     <th className="px-2 py-2 font-medium text-zinc-300 whitespace-nowrap">Promo code</th>
+                    <th className="px-2 py-2 font-medium text-zinc-300 whitespace-nowrap">Coelsa ID</th>
                     <th className="px-2 py-2 font-medium text-zinc-300 whitespace-nowrap">HTTP</th>
                     <th className="px-2 py-2 font-medium text-zinc-300 whitespace-nowrap">Respuesta</th>
                     <th className="px-2 py-2 font-medium text-zinc-300 whitespace-nowrap">Payload</th>
@@ -2050,11 +2052,13 @@ export default function DashboardConversionesPage() {
                           const isLead = action === "LEAD";
                           const isPurchase = action === "PURCHASE";
                           const isProcessed = String(row.status ?? "").toLowerCase() === "processed";
+                          const isDeduplicated = String(row.status ?? "").toLowerCase() === "deduplicated";
                           const resp = String(row.response_body ?? "").toLowerCase();
                           const httpStatus = Number(row.http_status ?? 0);
                           const httpOk = !Number.isFinite(httpStatus) || httpStatus === 0 || (httpStatus >= 200 && httpStatus < 300);
                           const promo = String(row.promo_code ?? "").trim();
                           const hasValidPromo = /^[A-Za-z0-9]+-[A-Za-z0-9]+$/.test(promo);
+                          if (isDeduplicated) return "bg-sky-950/25";
                           if (isContact && isProcessed && httpOk) {
                             const contactSuccess =
                               resp === "success" ||
@@ -2094,6 +2098,8 @@ export default function DashboardConversionesPage() {
                         <span className={`inline-flex items-center rounded px-1.5 py-0.5 text-[10px] font-semibold ${
                           row.status === "processed"
                             ? "bg-emerald-500/15 text-emerald-300"
+                            : row.status === "deduplicated"
+                              ? "bg-sky-500/15 text-sky-300"
                             : row.status === "error"
                               ? "bg-rose-500/15 text-rose-300"
                               : "bg-amber-500/15 text-amber-300"
@@ -2103,6 +2109,7 @@ export default function DashboardConversionesPage() {
                       </td>
                       <td className="px-2 py-1.5 text-zinc-300 font-mono whitespace-nowrap">{row.phone || "-"}</td>
                       <td className="px-2 py-1.5 text-zinc-300 whitespace-nowrap">{row.promo_code || "-"}</td>
+                      <td className="px-2 py-1.5 text-zinc-300 font-mono whitespace-nowrap">{row.coelsa_id || "-"}</td>
                       <td className="px-2 py-1.5 text-zinc-400 whitespace-nowrap">{row.http_status ?? "-"}</td>
                       <td className="px-2 py-1.5 text-zinc-500 max-w-[280px] truncate" title={row.response_body || "-"}>
                         {truncateText(row.response_body || "-", 80)}

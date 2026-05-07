@@ -77,6 +77,7 @@ interface ConversionRow {
   purchase_event_id: string;
   purchase_event_time: number | null;
   purchase_payload_raw: string;
+  purchase_coelsa_id?: string;
   test_event_code?: string;
   purchase_type?: "first" | "repeat" | null;
   client_ip: string;
@@ -110,7 +111,7 @@ interface GeoResult {
 
 type GeoSource = "payload" | "ip" | "phone_prefix" | "none";
 
-type InboundStatus = "received" | "deferred" | "processed" | "error";
+type InboundStatus = "received" | "deferred" | "processed" | "deduplicated" | "error";
 type ProcessingContext = { conversionId?: string; inboxStatus?: InboundStatus };
 type ContactDuplicateReason = "contact_event_id" | "promo_code";
 type ContactDuplicateMatch = { id: string; reason: ContactDuplicateReason };
@@ -120,6 +121,10 @@ type Params = Record<string, any>;
 
 
 const norm = (s: unknown): string => String(s ?? "").trim();
+
+function normalizeCoelsaId(v: unknown): string {
+  return norm(v).replace(/\s+/g, "").toUpperCase().slice(0, 120);
+}
 
 function normalizePromoCode(v: unknown): string {
   const s = norm(v);
@@ -389,6 +394,7 @@ async function insertInboundEvent(
       landing_name: landingName,
       action,
       action_event_id: norm(payload.action_event_id),
+      coelsa_id: normalizeCoelsaId(payload.coelsa_id),
       promo_code: normalizePromoCode(payload.promo_code ?? payload.promoCode),
       phone: sanitizePhone(payload.phone),
       payload_raw: safePayloadRaw(payload),
@@ -397,6 +403,23 @@ async function insertInboundEvent(
     .select("id")
     .single();
   return data?.id ?? null;
+}
+
+async function findPurchaseByCoelsaId(
+  db: SupabaseClient,
+  userId: string,
+  coelsaId: string,
+): Promise<{ id: string; purchase_event_id: string; estado: string } | null> {
+  if (!coelsaId) return null;
+  const { data } = await db
+    .from("conversions")
+    .select("id, purchase_event_id, estado")
+    .eq("user_id", userId)
+    .eq("purchase_coelsa_id", coelsaId)
+    .order("created_at", { ascending: false })
+    .limit(1)
+    .maybeSingle();
+  return (data as { id: string; purchase_event_id: string; estado: string } | null) ?? null;
 }
 
 async function findInboundByActionEventId(
@@ -1704,6 +1727,7 @@ async function handlePurchase(
   }
   const testEventCode = norm(p.test_event_code);
   const purchasePayloadRaw = safePayloadRaw(p);
+  const coelsaId = normalizeCoelsaId(p.coelsa_id);
   const generatedExternalId = norm(p.external_id) || generateEventId();
 
   const promoCode = derivePromoCodeFromPayload(p);
@@ -1847,6 +1871,7 @@ async function handlePurchase(
       purchase_event_id: purchaseEventId,
       purchase_event_time: purchaseEventTime,
       purchase_payload_raw: purchasePayloadRaw,
+      purchase_coelsa_id: coelsaId,
       purchase_type: "first",
     };
     if (inboundMetaPixelId) {
@@ -1942,6 +1967,7 @@ async function handlePurchase(
       purchase_event_id: purchaseEventId,
       purchase_event_time: purchaseEventTime,
       purchase_payload_raw: purchasePayloadRaw,
+      purchase_coelsa_id: coelsaId,
       test_event_code: testEventCode,
       purchase_type: "first",
       client_ip: "",
@@ -2040,6 +2066,7 @@ async function handlePurchase(
     purchase_event_id: purchaseEventId,
     purchase_event_time: purchaseEventTime,
     purchase_payload_raw: purchasePayloadRaw,
+    purchase_coelsa_id: coelsaId,
     test_event_code: testEventCode || srcRow?.test_event_code || "",
     purchase_type: "repeat",
     client_ip: srcRow?.client_ip ?? "",
@@ -2163,6 +2190,7 @@ async function handleSimplePurchase(
     purchase_event_id: purchaseEventId,
     purchase_event_time: purchaseEventTime,
     purchase_payload_raw: purchasePayloadRaw,
+    purchase_coelsa_id: coelsaId,
     test_event_code: testEventCode,
     purchase_type: isRepeatSimple ? "repeat" : "first",
     client_ip: srcRow?.client_ip ?? "",
@@ -2312,6 +2340,15 @@ Deno.serve(async (req) => {
       inboxId = await insertInboundEvent(db, userId, landingName, inboxAction, params);
     }
 
+    const markDeduplicated = async (
+      response: Response,
+      conversionId?: string,
+    ): Promise<Response> => {
+      const bodyText = await response.clone().text().catch(() => "");
+      await finalizeInboundEvent(db, inboxId, "deduplicated", response.status, bodyText, conversionId);
+      return response;
+    };
+
     const runAndFinalize = async (runner: (ctx: ProcessingContext) => Promise<Response>) => {
       const ctx: ProcessingContext = {};
       const response = await runner(ctx);
@@ -2357,6 +2394,35 @@ Deno.serve(async (req) => {
       return runAndFinalize((ctx) => handleLead(db, params, landing, cfg, pixelConfigs, ctx));
     }
     if (rawAction === "PURCHASE") {
+      const coelsaId = normalizeCoelsaId(params.coelsa_id);
+      if (coelsaId) {
+        const existingPurchase = await findPurchaseByCoelsaId(db, userId, coelsaId);
+        if (existingPurchase) {
+          await writeLog(
+            db,
+            userId,
+            "main",
+            "INFO",
+            "Duplicado ignorado por coelsa_id",
+            JSON.stringify({
+              action: "PURCHASE",
+              coelsa_id: coelsaId,
+              landing_name: landingName,
+              existing_conversion_id: existingPurchase.id,
+            }),
+            existingPurchase.id,
+            undefined,
+            undefined,
+            safePayloadRaw(params),
+            "duplicado ignorado por coelsa_id",
+          );
+          return markDeduplicated(
+            textResponse("Duplicado ignorado (coelsa_id ya procesado)", 200),
+            existingPurchase.id,
+          );
+        }
+      }
+
       const hasIsValidReceipt =
         Object.prototype.hasOwnProperty.call(params, "is_valid_receipt") ||
         Object.prototype.hasOwnProperty.call(params, "isValidReceipt");
