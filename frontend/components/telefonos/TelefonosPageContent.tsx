@@ -17,6 +17,7 @@ export type GerenciaPhoneRow = {
   usage_count: number;
   kind: string;
   comment: string;
+  messages_reset_at: string | null;
   last_seen_at: string;
   created_at: string;
   updated_at: string;
@@ -88,8 +89,12 @@ export function TelefonosPageContent({
   const [resettingGerenciaId, setResettingGerenciaId] = useState<number | null>(
     null,
   );
+  const [resettingMessagesGerenciaId, setResettingMessagesGerenciaId] = useState<number | null>(
+    null,
+  );
   const [globalSyncing, setGlobalSyncing] = useState(false);
   const [globalResetting, setGlobalResetting] = useState(false);
+  const [globalResettingMessages, setGlobalResettingMessages] = useState(false);
   const [globalDeletingInactive, setGlobalDeletingInactive] = useState(false);
   const [switchingGerenciaId, setSwitchingGerenciaId] = useState<number | null>(null);
   const [openGerenciaId, setOpenGerenciaId] = useState<number | null>(null);
@@ -144,7 +149,7 @@ export function TelefonosPageContent({
     const { data: phones, error: phonesError } = await supabase
       .from("gerencia_phones")
       .select(
-        "id, gerencia_id, phone, status, usage_count, kind, comment, last_seen_at, created_at, updated_at",
+        "id, gerencia_id, phone, status, usage_count, kind, comment, messages_reset_at, last_seen_at, created_at, updated_at",
       )
       .in("gerencia_id", ids)
       .order("gerencia_id", { ascending: true })
@@ -158,6 +163,16 @@ export function TelefonosPageContent({
       byGerencia[p.gerencia_id].push(p as GerenciaPhoneRow);
     }
     setPhonesByGerencia(byGerencia);
+
+    const messagesResetAtByAssignedPhone = new Map<string, number>();
+    for (const p of phones ?? []) {
+      const assignedDigits = onlyDigits(String(p.phone ?? ""));
+      const resetAt = String((p as GerenciaPhoneRow).messages_reset_at ?? "").trim();
+      const resetMs = resetAt ? Date.parse(resetAt) : NaN;
+      if (assignedDigits && Number.isFinite(resetMs)) {
+        messagesResetAtByAssignedPhone.set(assignedDigits, resetMs);
+      }
+    }
 
     const hiddenConversionIds = new Set<string>();
     if (!isAdmin) {
@@ -179,7 +194,7 @@ export function TelefonosPageContent({
     while (true) {
       const baseLeadQuery = supabase
         .from("conversions")
-        .select("id, user_id, external_id, telefono_asignado, lead_event_id, contact_event_id, test_event_code")
+        .select("id, user_id, external_id, telefono_asignado, lead_event_id, lead_event_time, contact_event_id, test_event_code")
         .neq("telefono_asignado", "")
         .range(offset, offset + pageSize - 1);
 
@@ -213,6 +228,14 @@ export function TelefonosPageContent({
           ? row.lead_event_id.trim()
           : "";
         if (!leadEventId) continue;
+        const resetMs = messagesResetAtByAssignedPhone.get(assignedDigits);
+        if (resetMs != null) {
+          const leadEventTime = Number(row.lead_event_time);
+          const leadMs = Number.isFinite(leadEventTime) && leadEventTime > 0
+            ? leadEventTime * 1000
+            : NaN;
+          if (!Number.isFinite(leadMs) || leadMs < resetMs) continue;
+        }
         if (!leadExternalKeysByAssignedPhone.has(assignedDigits)) {
           leadExternalKeysByAssignedPhone.set(assignedDigits, new Set<string>());
         }
@@ -394,6 +417,37 @@ export function TelefonosPageContent({
     } finally {
       if (gerenciaId !== null) setResettingGerenciaId(null);
       else setGlobalResetting(false);
+    }
+  };
+
+  const handleResetMessages = async (gerenciaId: number | null) => {
+    if (!userId || !base) return;
+    if (gerenciaId !== null) setResettingMessagesGerenciaId(gerenciaId);
+    else setGlobalResettingMessages(true);
+    setError(null);
+    try {
+      const res = await fetch(`${base}/functions/v1/reset-phone-messages`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          ...(apiKey ? { apikey: apiKey, Authorization: `Bearer ${apiKey}` } : {}),
+        },
+        body: JSON.stringify({
+          user_id: userId,
+          ...(gerenciaId !== null ? { gerencia_id: gerenciaId } : {}),
+        }),
+      });
+      const text = await res.text();
+      if (!res.ok) {
+        setError(`Reset mensajes: ${res.status} - ${text}`);
+      } else {
+        await loadData(userId);
+      }
+    } catch (e) {
+      setError(e instanceof Error ? e.message : "Error al reiniciar mensajes");
+    } finally {
+      if (gerenciaId !== null) setResettingMessagesGerenciaId(null);
+      else setGlobalResettingMessages(false);
     }
   };
 
@@ -631,6 +685,15 @@ export function TelefonosPageContent({
             </button>
             <button
               type="button"
+              onClick={() => void handleResetMessages(null)}
+              disabled={globalResettingMessages || !gerencias.length}
+              title="Reinicia el conteo operativo de mensajes recibidos sin borrar el historico de conversiones."
+              className="rounded-lg border border-zinc-700 bg-zinc-800 px-3 py-1.5 text-xs font-medium text-zinc-200 transition hover:bg-zinc-700 disabled:opacity-60"
+            >
+              {globalResettingMessages ? "Reiniciando..." : "Reiniciar mensajes"}
+            </button>
+            <button
+              type="button"
               onClick={() => void handleDeleteInactive()}
               disabled={globalDeletingInactive || !gerencias.length}
               title="Borra de forma permanente los telefonos inactivos de todas las gerencias."
@@ -675,6 +738,7 @@ export function TelefonosPageContent({
             const isOpen = openGerenciaId === g.id;
             const syncing = syncingGerenciaId === g.id;
             const resetting = resettingGerenciaId === g.id;
+            const resettingMessages = resettingMessagesGerenciaId === g.id;
             return (
               <div
                 key={g.id}
@@ -781,6 +845,15 @@ export function TelefonosPageContent({
                           className="rounded-lg border border-zinc-700 bg-zinc-800 px-2 py-1 text-xs font-medium text-zinc-200 transition hover:bg-zinc-700 disabled:opacity-60"
                         >
                           {resetting ? "Reiniciando..." : "Reiniciar contador"}
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => void handleResetMessages(g.id)}
+                          disabled={resettingMessages}
+                          title="Reinicia el conteo operativo de mensajes recibidos de esta gerencia sin borrar conversiones."
+                          className="rounded-lg border border-zinc-700 bg-zinc-800 px-2 py-1 text-xs font-medium text-zinc-200 transition hover:bg-zinc-700 disabled:opacity-60"
+                        >
+                          {resettingMessages ? "Reiniciando..." : "Reiniciar mensajes"}
                         </button>
                       </div>
                     </div>
