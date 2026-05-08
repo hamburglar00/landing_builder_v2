@@ -771,12 +771,12 @@ export function TelefonosPageContent({
                   onClick={() =>
                     setOpenGerenciaId((prev) => (prev === g.id ? null : g.id))
                   }
-                  className="grid w-full grid-cols-1 items-center gap-2 px-4 py-3 text-left hover:bg-zinc-800/50 lg:grid-cols-[1fr_110px_100px_170px_115px_24px]"
+                  className="grid w-full grid-cols-1 items-center gap-2 px-4 py-3 text-left hover:bg-zinc-800/50 lg:grid-cols-[minmax(220px,1fr)_72px_95px_92px_150px_105px_20px]"
                 >
                   <span className="min-w-0 truncate font-medium text-zinc-200">
                       {g.nombre} {g.gerencia_id ? `(ID ${g.gerencia_id})` : ""}
                   </span>
-                  <span className="inline-flex w-fit rounded border border-zinc-700 px-1.5 py-0.5 text-[10px] text-zinc-300">
+                  <span className="inline-flex w-fit rounded border border-zinc-700 px-1.5 py-0.5 text-[10px] text-zinc-300 lg:justify-self-start">
                     {(g.source_type ?? "pbadmin") === "manual" ? "Manual" : "PBadmin"}
                   </span>
                   <span className="inline-flex items-center gap-1.5 whitespace-nowrap text-xs text-zinc-500 lg:justify-end">
@@ -799,7 +799,7 @@ export function TelefonosPageContent({
                     Histórico: {totalHistoricalMessages}
                   </div>
                   <svg
-                    className={`h-4 w-4 shrink-0 text-zinc-400 transition-transform justify-self-end ml-auto ${isOpen ? "rotate-180" : ""}`}
+                    className={`h-4 w-4 shrink-0 justify-self-end text-zinc-400 transition-transform ${isOpen ? "rotate-180" : ""}`}
                     fill="none"
                     stroke="currentColor"
                     viewBox="0 0 24 24"
