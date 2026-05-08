@@ -80,6 +80,9 @@ export function TelefonosPageContent({
   const [leadUniqueByAssignedPhone, setLeadUniqueByAssignedPhone] = useState<
     Record<string, number>
   >({});
+  const [leadUniqueHistoricalByAssignedPhone, setLeadUniqueHistoricalByAssignedPhone] = useState<
+    Record<string, number>
+  >({});
   const [userId, setUserId] = useState<string | null>(null);
   const [ready, setReady] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -189,6 +192,7 @@ export function TelefonosPageContent({
 
     const contactExternalKeys = new Set<string>();
     const leadExternalKeysByAssignedPhone = new Map<string, Set<string>>();
+    const leadExternalKeysHistoricalByAssignedPhone = new Map<string, Set<string>>();
     const pageSize = 1000;
     let offset = 0;
     while (true) {
@@ -228,6 +232,10 @@ export function TelefonosPageContent({
           ? row.lead_event_id.trim()
           : "";
         if (!leadEventId) continue;
+        if (!leadExternalKeysHistoricalByAssignedPhone.has(assignedDigits)) {
+          leadExternalKeysHistoricalByAssignedPhone.set(assignedDigits, new Set<string>());
+        }
+        leadExternalKeysHistoricalByAssignedPhone.get(assignedDigits)?.add(key);
         const resetMs = messagesResetAtByAssignedPhone.get(assignedDigits);
         if (resetMs != null) {
           const leadEventTime = Number(row.lead_event_time);
@@ -256,6 +264,15 @@ export function TelefonosPageContent({
     }
 
     setLeadUniqueByAssignedPhone(countsByAssigned);
+    const historicalCountsByAssigned: Record<string, number> = {};
+    for (const [assignedPhone, leadKeys] of leadExternalKeysHistoricalByAssignedPhone.entries()) {
+      let linkedCount = 0;
+      for (const leadKey of leadKeys) {
+        if (contactExternalKeys.has(leadKey)) linkedCount++;
+      }
+      historicalCountsByAssigned[assignedPhone] = linkedCount;
+    }
+    setLeadUniqueHistoricalByAssignedPhone(historicalCountsByAssigned);
   }, [isAdmin]);
 
   const getActivePhonesCount = useCallback(() => {
@@ -735,6 +752,11 @@ export function TelefonosPageContent({
                 acc + (leadUniqueByAssignedPhone[onlyDigits(p.phone)] ?? 0),
               0,
             );
+            const totalHistoricalMessages = phones.reduce(
+              (acc, p) =>
+                acc + (leadUniqueHistoricalByAssignedPhone[onlyDigits(p.phone)] ?? 0),
+              0,
+            );
             const isOpen = openGerenciaId === g.id;
             const syncing = syncingGerenciaId === g.id;
             const resetting = resettingGerenciaId === g.id;
@@ -774,6 +796,9 @@ export function TelefonosPageContent({
                   </div>
                   <div className="text-xs text-zinc-500 md:text-right">
                     Mensajes recibidos: {totalMessages}
+                  </div>
+                  <div className="text-xs text-zinc-500 md:text-right">
+                    Histórico: {totalHistoricalMessages}
                   </div>
                   <svg
                     className={`h-4 w-4 shrink-0 text-zinc-400 transition-transform justify-self-end ml-auto ${isOpen ? "rotate-180" : ""}`}
@@ -893,6 +918,9 @@ export function TelefonosPageContent({
                               Mensajes recibidos
                             </th>
                             <th className="px-3 py-2 font-medium text-zinc-300">
+                              Mensajes recibidos históricos
+                            </th>
+                            <th className="px-3 py-2 font-medium text-zinc-300">
                               {(g.source_type ?? "pbadmin") === "manual" ? "Comentario" : "Última sincronización"}
                             </th>
                           </tr>
@@ -901,7 +929,7 @@ export function TelefonosPageContent({
                           {phones.length === 0 ? (
                             <tr>
                               <td
-                                colSpan={6}
+                                colSpan={7}
                                 className="px-3 py-4 text-center text-zinc-500"
                               >
                                 {(g.source_type ?? "pbadmin") === "manual"
@@ -971,6 +999,9 @@ export function TelefonosPageContent({
                                 </td>
                                 <td className="px-3 py-2 text-zinc-300">
                                   {leadUniqueByAssignedPhone[onlyDigits(p.phone)] ?? 0}
+                                </td>
+                                <td className="px-3 py-2 text-zinc-300">
+                                  {leadUniqueHistoricalByAssignedPhone[onlyDigits(p.phone)] ?? 0}
                                 </td>
                                 <td className="px-3 py-2 text-xs text-zinc-500">
                                   {(g.source_type ?? "pbadmin") === "manual" ? (
