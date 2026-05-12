@@ -18,6 +18,7 @@ import {
   updateConversionEmail,
   hideConversions,
   hideConversionLogs,
+  hideConversionInboxRows,
   type FetchDateRange,
   type ConversionsConfig,
   type PixelConfig,
@@ -999,7 +1000,7 @@ export default function DashboardConversionesPage() {
           setLogs(logRows);
         }
         if (tab === "inbox" && inboxRows.length === 0) {
-          const inbox = await fetchConversionInbox(userId, 400);
+          const inbox = await fetchConversionInbox(userId, userId, 400);
           setInboxRows(inbox);
         }
       } catch (e) {
@@ -1244,7 +1245,7 @@ export default function DashboardConversionesPage() {
         if (requestSeq !== dataRequestSeqRef.current) return;
         setLogs(logRows);
       } else if (currentTab === "inbox") {
-        const inbox = await fetchConversionInbox(currentUserId, 400);
+        const inbox = await fetchConversionInbox(currentUserId, currentUserId, 400);
         if (requestSeq !== dataRequestSeqRef.current) return;
         setInboxRows(inbox);
       } else {
@@ -1279,9 +1280,9 @@ export default function DashboardConversionesPage() {
 
   const clearGlobalDisplay = useCallback(async () => {
     if (!userId) return;
-    if (activeConversions.length === 0 && activeLogs.length === 0) return;
+    if (activeConversions.length === 0 && activeLogs.length === 0 && activeInbox.length === 0) return;
     const ok = window.confirm(
-      "Vas a limpiar la vista de Conversiones.\n\nSe ocultarán los registros que ves ahora en Funnel, Tabla, Estadísticas y Logs.\n\nEsta acción NO borra datos de la base.\nSolo deja de mostrarlos en esta vista.\n\n¿Querés continuar?",
+      "Vas a limpiar la vista de Conversiones.\n\nSe ocultarán los registros que ves ahora en Funnel, Tabla, Estadísticas, Inbox y Logs.\n\nEsta acción NO borra datos de la base.\nSolo deja de mostrarlos en esta vista.\n\n¿Querés continuar?",
     );
     if (!ok) return;
     setHidingTable(true);
@@ -1296,6 +1297,9 @@ export default function DashboardConversionesPage() {
       if (activeLogs.length > 0) {
         await hideConversionLogs(activeLogs.map((l) => Number(l.id)), userId);
       }
+      if (activeInbox.length > 0) {
+        await hideConversionInboxRows(activeInbox.map((row) => row.id), userId);
+      }
       await refreshTable();
       setClearMsg("Vista limpiada.");
       setTimeout(() => setClearMsg(null), 4000);
@@ -1309,7 +1313,7 @@ export default function DashboardConversionesPage() {
       setHidingStats(false);
       setHidingLogs(false);
     }
-  }, [userId, activeConversions, activeLogs, refreshTable]);
+  }, [userId, activeConversions, activeLogs, activeInbox, refreshTable]);
 
   if (loading) {
     return <DashboardSkeleton title="Cargando conversiones..." />;
@@ -1566,7 +1570,7 @@ export default function DashboardConversionesPage() {
                     hidingStats ||
                     hidingLogs ||
                     refreshingTable ||
-                    (activeConversions.length === 0 && activeLogs.length === 0)
+                    (activeConversions.length === 0 && activeLogs.length === 0 && activeInbox.length === 0)
                   }
                   className="inline-flex h-7 items-center gap-1.5 rounded-lg border border-red-900/60 bg-red-950/30 px-2 text-[11px] font-medium text-red-300 transition hover:bg-red-950/50 disabled:opacity-50 disabled:cursor-not-allowed"
                   title="Ocultar registros de la vista (persistente, no borra de la base)"

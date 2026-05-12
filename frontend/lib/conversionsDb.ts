@@ -763,6 +763,7 @@ export async function fetchConversionLogsForAdminFiltered(
 
 export async function fetchConversionInbox(
   userId: string,
+  hiddenBy: string,
   limit = 300,
   offset = 0,
 ): Promise<ConversionInboxRow[]> {
@@ -773,7 +774,8 @@ export async function fetchConversionInbox(
     .order("created_at", { ascending: false })
     .range(offset, offset + limit - 1);
   if (error) throw error;
-  return (data ?? []) as unknown as ConversionInboxRow[];
+  const hiddenIds = await fetchHiddenConversionInboxIds(hiddenBy);
+  return ((data ?? []) as unknown as ConversionInboxRow[]).filter((row) => !hiddenIds.has(row.id));
 }
 
 export async function fetchConversionsConfigForUser(
@@ -885,6 +887,17 @@ export async function fetchHiddenConversionLogIds(
   return new Set((data ?? []).map((r) => Number(r.log_id)));
 }
 
+export async function fetchHiddenConversionInboxIds(
+  hiddenBy: string,
+): Promise<Set<string>> {
+  const { data, error } = await supabase
+    .from("hidden_conversion_inbox")
+    .select("inbox_id")
+    .eq("hidden_by", hiddenBy);
+  if (error) throw error;
+  return new Set((data ?? []).map((r) => String(r.inbox_id ?? "").trim()).filter(Boolean));
+}
+
 export async function hideConversionLogs(
   logIds: number[],
   hiddenBy: string,
@@ -898,6 +911,24 @@ export async function hideConversionLogs(
     .from("hidden_conversion_logs")
     .upsert(rows, {
       onConflict: "log_id,hidden_by",
+      ignoreDuplicates: true,
+    });
+  if (error) throw error;
+}
+
+export async function hideConversionInboxRows(
+  inboxIds: string[],
+  hiddenBy: string,
+): Promise<void> {
+  if (inboxIds.length === 0) return;
+  const rows = inboxIds.map((id) => ({
+    inbox_id: id,
+    hidden_by: hiddenBy,
+  }));
+  const { error } = await supabase
+    .from("hidden_conversion_inbox")
+    .upsert(rows, {
+      onConflict: "inbox_id,hidden_by",
       ignoreDuplicates: true,
     });
   if (error) throw error;
