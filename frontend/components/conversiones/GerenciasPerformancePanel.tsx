@@ -389,26 +389,26 @@ export default function GerenciasPerformancePanel({
         <div className="overflow-hidden rounded-lg border border-zinc-700">
           <table className="w-full max-w-full table-fixed text-[9.5px] leading-tight lg:text-[10px]">
             <colgroup>
-              <col className={showRoas ? "w-[15%]" : "w-[17%]"} />
-              <col className={showRoas ? "w-[9%]" : "w-[10%]"} />
-              <col className={showRoas ? "w-[9%]" : "w-[10%]"} />
-              <col className={showRoas ? "w-[11%]" : "w-[12%]"} />
-              <col className={showRoas ? "w-[9%]" : "w-[10%]"} />
+              <col className={showRoas ? "w-[14%]" : "w-[16%]"} />
+              <col className={showRoas ? "w-[12%]" : "w-[13%]"} />
+              <col className={showRoas ? "w-[8%]" : "w-[9%]"} />
+              <col className={showRoas ? "w-[8%]" : "w-[9%]"} />
+              <col className={showRoas ? "w-[10%]" : "w-[11%]"} />
               <col className={showRoas ? "w-[9%]" : "w-[10%]"} />
               <col className={showRoas ? "w-[9%]" : "w-[10%]"} />
               <col className={showRoas ? "w-[13%]" : "w-[13%]"} />
-              <col className={showRoas ? "w-[10%]" : "w-[8%]"} />
-              {showRoas && <col className="w-[6%]" />}
+              <col className={showRoas ? "w-[10%]" : "w-[9%]"} />
+              {showRoas && <col className="w-[7%]" />}
             </colgroup>
             <thead className="bg-zinc-800/95">
               <tr>
                 <th className="px-1.5 py-2"><SortHeader sort="label">Gerencia (ID)</SortHeader></th>
+                <th className="px-1.5 py-2">
+                  <SortHeader sort="disponibilidad">Disponibilidad</SortHeader>
+                </th>
                 <th className="px-1.5 py-2"><SortHeader sort="mensajes">Mensajes</SortHeader></th>
                 <th className="px-1.5 py-2"><SortHeader sort="cargas">Cargas</SortHeader></th>
                 <th className="px-1.5 py-2"><SortHeader sort="montoCargado">Monto</SortHeader></th>
-                <th className="px-1.5 py-2">
-                  <SortHeader sort="disponibilidad">Dispon.</SortHeader>
-                </th>
                 <th className="px-1.5 py-2"><SortHeader sort="pctCarga">% Carga</SortHeader></th>
                 <th className="px-1.5 py-2"><SortHeader sort="pctRecarga">% Recarga</SortHeader></th>
                 <th className="px-1.5 py-2">
@@ -454,15 +454,15 @@ export default function GerenciasPerformancePanel({
                 return (
                   <tr key={row.label} className="bg-zinc-950/40">
                     <td className="truncate px-1.5 py-2 text-center font-medium text-zinc-100" title={row.label}>{row.label}</td>
-                    <td className="px-1.5 py-2 text-center text-amber-300">{formatNumber(row.mensajes)}</td>
-                    <td className="px-1.5 py-2 text-center text-sky-300">{formatNumber(row.cargas)}</td>
-                    <td className="px-1.5 py-2 text-center font-semibold text-emerald-300">{formatMoney(row.montoCargado)}</td>
                     <td
                       className="px-1.5 py-2 text-center text-zinc-200"
                       title="Porcentaje del mes en que la gerencia tuvo al menos un telefono activo."
                     >
                       {formatOptionalPercent(row.disponibilidad)}
                     </td>
+                    <td className="px-1.5 py-2 text-center text-amber-300">{formatNumber(row.mensajes)}</td>
+                    <td className="px-1.5 py-2 text-center text-sky-300">{formatNumber(row.cargas)}</td>
+                    <td className="px-1.5 py-2 text-center font-semibold text-emerald-300">{formatMoney(row.montoCargado)}</td>
                     <td className="px-1.5 py-2 text-center text-zinc-200">{formatPercent(row.pctCarga)}</td>
                     <td className="px-1.5 py-2 text-center text-zinc-200">{formatPercent(row.pctRecarga)}</td>
                     <td className="px-1.5 py-2 text-center">
@@ -490,10 +490,10 @@ export default function GerenciasPerformancePanel({
             <tfoot className="border-t border-zinc-700 bg-zinc-900/80">
               <tr>
                 <td className="px-1.5 py-2 text-center font-semibold text-zinc-100">Totales</td>
+                <td className="px-1.5 py-2 text-center text-zinc-500">-</td>
                 <td className="px-1.5 py-2 text-center font-semibold text-amber-300">{formatNumber(totals.mensajes)}</td>
                 <td className="px-1.5 py-2 text-center font-semibold text-sky-300">{formatNumber(totals.cargas)}</td>
                 <td className="px-1.5 py-2 text-center font-semibold text-emerald-300">{formatMoney(totals.montoCargado)}</td>
-                <td className="px-1.5 py-2 text-center text-zinc-500">-</td>
                 <td className="px-1.5 py-2 text-center text-zinc-500">-</td>
                 <td className="px-1.5 py-2 text-center text-zinc-500">-</td>
                 <td className="px-1.5 py-2 text-center text-zinc-500">-</td>
