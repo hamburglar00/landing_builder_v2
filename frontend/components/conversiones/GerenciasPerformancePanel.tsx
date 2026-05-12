@@ -5,11 +5,13 @@ import {
   buildFunnelContactsFromConversions,
   type ConversionRow,
   type FetchDateRange,
+  type GerenciaAvailabilitySummary,
 } from "@/lib/conversionsDb";
 import { computeCoreStats } from "@/lib/conversionStats";
 
 type Props = {
   fetchConversionsForMonth: (range: FetchDateRange) => Promise<ConversionRow[]>;
+  fetchAvailabilityForMonth: (range: FetchDateRange) => Promise<GerenciaAvailabilitySummary[]>;
   gerenciaByPhone: Record<string, string[]>;
   premiumThreshold: number;
   storageKey: string;
@@ -20,11 +22,12 @@ type Row = {
   mensajes: number;
   cargas: number;
   montoCargado: number;
+  disponibilidad: number | null;
   pctCarga: number;
   pctRecarga: number;
 };
 
-type SortKey = "label" | "mensajes" | "cargas" | "montoCargado" | "pctCarga" | "pctRecarga" | "cost" | "gasto" | "roas";
+type SortKey = "label" | "mensajes" | "cargas" | "montoCargado" | "disponibilidad" | "pctCarga" | "pctRecarga" | "cost" | "gasto" | "roas";
 type SortDirection = "asc" | "desc";
 
 const FIRST_DATA_MONTH = "2026-01";
@@ -87,6 +90,10 @@ function formatPercent(value: number): string {
   return `${new Intl.NumberFormat("es-AR", { maximumFractionDigits: 0 }).format(value || 0)}%`;
 }
 
+function formatOptionalPercent(value: number | null): string {
+  return value === null ? "-" : formatPercent(value);
+}
+
 function formatMoney(value: number): string {
   return new Intl.NumberFormat("es-AR", {
     style: "currency",
@@ -129,12 +136,14 @@ function getLinkedPurchaseRows(rows: ConversionRow[]): ConversionRow[] {
 
 export default function GerenciasPerformancePanel({
   fetchConversionsForMonth,
+  fetchAvailabilityForMonth,
   gerenciaByPhone,
   premiumThreshold,
   storageKey,
 }: Props) {
   const [month, setMonth] = useState(currentMonthValue());
   const [rows, setRows] = useState<ConversionRow[]>([]);
+  const [availabilityRows, setAvailabilityRows] = useState<GerenciaAvailabilitySummary[]>([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [globalCost, setGlobalCost] = useState("");
@@ -172,15 +181,20 @@ export default function GerenciasPerformancePanel({
     setLoading(true);
     setError(null);
     try {
-      const data = await fetchConversionsForMonth(monthRange(month));
+      const range = monthRange(month);
+      const [data, availability] = await Promise.all([
+        fetchConversionsForMonth(range),
+        fetchAvailabilityForMonth(range),
+      ]);
       setRows(data);
+      setAvailabilityRows(availability);
     } catch (e) {
       console.error(e);
       setError(e instanceof Error ? e.message : "No se pudo cargar el desempeño por gerencias.");
     } finally {
       setLoading(false);
     }
-  }, [fetchConversionsForMonth, month]);
+  }, [fetchAvailabilityForMonth, fetchConversionsForMonth, month]);
 
   useEffect(() => {
     void loadMonth();
@@ -191,8 +205,10 @@ export default function GerenciasPerformancePanel({
     for (const labels of Object.values(gerenciaByPhone)) {
       for (const label of labels) allLabels.add(label);
     }
+    for (const row of availabilityRows) allLabels.add(row.label);
 
     const rowsByGerencia = new Map<string, ConversionRow[]>();
+    const availabilityByLabel = new Map(availabilityRows.map((row) => [row.label, row]));
     const cleanRows = rows.filter((row) => (
       !String(row.test_event_code ?? "").trim() &&
       (!metaAdsOnly || Boolean(row.from_meta_ads))
@@ -224,13 +240,14 @@ export default function GerenciasPerformancePanel({
           mensajes,
           cargas,
           montoCargado,
+          disponibilidad: availabilityByLabel.get(label)?.availabilityPct ?? null,
           pctCarga: mensajes > 0 ? (core.firstLoadPurchasersLinkedToLead / mensajes) * 100 : 0,
           pctRecarga: core.firstLoadPurchasersLinkedToLead > 0
             ? (core.repeatFromFirstInRange / core.firstLoadPurchasersLinkedToLead) * 100
             : 0,
         };
       });
-  }, [gerenciaByPhone, metaAdsOnly, premiumThreshold, rows]);
+  }, [availabilityRows, gerenciaByPhone, metaAdsOnly, premiumThreshold, rows]);
 
   const visiblePerformanceRows = useMemo(() => {
     const query = searchTerm.trim().toLowerCase();
@@ -270,7 +287,7 @@ export default function GerenciasPerformancePanel({
     return gasto > 0 ? row.montoCargado / gasto : 0;
   }, [getGasto]);
   const showRoas = useMemo(() => visiblePerformanceRows.some((row) => getGasto(row) > 0), [getGasto, visiblePerformanceRows]);
-  const columnCount = showRoas ? 9 : 8;
+  const columnCount = showRoas ? 10 : 9;
 
   const sortedRows = useMemo(() => {
     const valueFor = (row: Row): number | string => {
@@ -278,6 +295,7 @@ export default function GerenciasPerformancePanel({
       if (sortKey === "cost") return getCost(row);
       if (sortKey === "gasto") return getGasto(row);
       if (sortKey === "roas") return getRoas(row);
+      if (sortKey === "disponibilidad") return row.disponibilidad ?? -1;
       return row[sortKey];
     };
     return [...visiblePerformanceRows].sort((a, b) => {
@@ -371,15 +389,16 @@ export default function GerenciasPerformancePanel({
         <div className="overflow-hidden rounded-lg border border-zinc-700">
           <table className="w-full max-w-full table-fixed text-[9.5px] leading-tight lg:text-[10px]">
             <colgroup>
-              <col className={showRoas ? "w-[16%]" : "w-[18%]"} />
-              <col className={showRoas ? "w-[10%]" : "w-[11%]"} />
-              <col className={showRoas ? "w-[10%]" : "w-[11%]"} />
-              <col className={showRoas ? "w-[12%]" : "w-[13%]"} />
-              <col className={showRoas ? "w-[10%]" : "w-[11%]"} />
-              <col className={showRoas ? "w-[10%]" : "w-[11%]"} />
-              <col className={showRoas ? "w-[14%]" : "w-[14%]"} />
-              <col className={showRoas ? "w-[11%]" : "w-[11%]"} />
-              {showRoas && <col className="w-[7%]" />}
+              <col className={showRoas ? "w-[15%]" : "w-[17%]"} />
+              <col className={showRoas ? "w-[9%]" : "w-[10%]"} />
+              <col className={showRoas ? "w-[9%]" : "w-[10%]"} />
+              <col className={showRoas ? "w-[11%]" : "w-[12%]"} />
+              <col className={showRoas ? "w-[9%]" : "w-[10%]"} />
+              <col className={showRoas ? "w-[9%]" : "w-[10%]"} />
+              <col className={showRoas ? "w-[9%]" : "w-[10%]"} />
+              <col className={showRoas ? "w-[13%]" : "w-[13%]"} />
+              <col className={showRoas ? "w-[10%]" : "w-[8%]"} />
+              {showRoas && <col className="w-[6%]" />}
             </colgroup>
             <thead className="bg-zinc-800/95">
               <tr>
@@ -387,6 +406,9 @@ export default function GerenciasPerformancePanel({
                 <th className="px-1.5 py-2"><SortHeader sort="mensajes">Mensajes</SortHeader></th>
                 <th className="px-1.5 py-2"><SortHeader sort="cargas">Cargas</SortHeader></th>
                 <th className="px-1.5 py-2"><SortHeader sort="montoCargado">Monto</SortHeader></th>
+                <th className="px-1.5 py-2">
+                  <SortHeader sort="disponibilidad">Dispon.</SortHeader>
+                </th>
                 <th className="px-1.5 py-2"><SortHeader sort="pctCarga">% Carga</SortHeader></th>
                 <th className="px-1.5 py-2"><SortHeader sort="pctRecarga">% Recarga</SortHeader></th>
                 <th className="px-1.5 py-2">
@@ -435,6 +457,12 @@ export default function GerenciasPerformancePanel({
                     <td className="px-1.5 py-2 text-center text-amber-300">{formatNumber(row.mensajes)}</td>
                     <td className="px-1.5 py-2 text-center text-sky-300">{formatNumber(row.cargas)}</td>
                     <td className="px-1.5 py-2 text-center font-semibold text-emerald-300">{formatMoney(row.montoCargado)}</td>
+                    <td
+                      className="px-1.5 py-2 text-center text-zinc-200"
+                      title="Porcentaje del mes en que la gerencia tuvo al menos un telefono activo."
+                    >
+                      {formatOptionalPercent(row.disponibilidad)}
+                    </td>
                     <td className="px-1.5 py-2 text-center text-zinc-200">{formatPercent(row.pctCarga)}</td>
                     <td className="px-1.5 py-2 text-center text-zinc-200">{formatPercent(row.pctRecarga)}</td>
                     <td className="px-1.5 py-2 text-center">
@@ -465,6 +493,7 @@ export default function GerenciasPerformancePanel({
                 <td className="px-1.5 py-2 text-center font-semibold text-amber-300">{formatNumber(totals.mensajes)}</td>
                 <td className="px-1.5 py-2 text-center font-semibold text-sky-300">{formatNumber(totals.cargas)}</td>
                 <td className="px-1.5 py-2 text-center font-semibold text-emerald-300">{formatMoney(totals.montoCargado)}</td>
+                <td className="px-1.5 py-2 text-center text-zinc-500">-</td>
                 <td className="px-1.5 py-2 text-center text-zinc-500">-</td>
                 <td className="px-1.5 py-2 text-center text-zinc-500">-</td>
                 <td className="px-1.5 py-2 text-center text-zinc-500">-</td>

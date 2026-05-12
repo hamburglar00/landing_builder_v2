@@ -15,6 +15,7 @@ import {
   fetchFunnelContactsFiltered,
   fetchConversionLogsFiltered,
   fetchConversionInbox,
+  fetchGerenciaAvailabilitySummaries,
   updateConversionEmail,
   hideConversions,
   hideConversionLogs,
@@ -1278,6 +1279,12 @@ export default function DashboardConversionesPage() {
     return fetchConversionsUnfiltered(currentUserId, range);
   }, []);
 
+  const fetchPerformanceAvailability = useCallback(async (range: FetchDateRange) => {
+    const currentUserId = userIdRef.current;
+    if (!currentUserId) return [];
+    return fetchGerenciaAvailabilitySummaries(currentUserId, range);
+  }, []);
+
   const clearGlobalDisplay = useCallback(async () => {
     if (!userId) return;
     if (activeConversions.length === 0 && activeLogs.length === 0 && activeInbox.length === 0) return;
@@ -1992,6 +1999,7 @@ export default function DashboardConversionesPage() {
       {tab === "desempeno" && (
         <GerenciasPerformancePanel
           fetchConversionsForMonth={fetchPerformanceConversions}
+          fetchAvailabilityForMonth={fetchPerformanceAvailability}
           gerenciaByPhone={gerenciaByPhone}
           premiumThreshold={config?.funnel_premium_threshold ?? 50000}
           storageKey={`dashboard:${userId ?? "client"}`}

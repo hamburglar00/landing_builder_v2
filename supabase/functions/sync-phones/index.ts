@@ -188,6 +188,7 @@ Deno.serve(async (req) => {
     let processedGerencias = 0;
     let totalActivePhones = 0;
     const touchedUserIds = new Set<string>();
+    const processedGerenciaIds = new Set<number>();
 
     for (const g of gerenciaRows) {
       if (g.user_id) touchedUserIds.add(g.user_id);
@@ -320,6 +321,7 @@ Deno.serve(async (req) => {
       }
 
       processedGerencias += 1;
+      processedGerenciaIds.add(Number(g.id));
     }
 
     // Respetar limite de telefonos activos por plan de cada cliente.
@@ -371,6 +373,70 @@ Deno.serve(async (req) => {
         allowed: maxPhones,
         deactivated,
       });
+    }
+
+    // Guardar disponibilidad final luego de aplicar sincronizacion y limite de plan.
+    // Esto mide si una gerencia realmente tenia al menos un telefono activo disponible.
+    if (processedGerenciaIds.size > 0) {
+      const checkedAt = new Date().toISOString();
+      const { data: snapshotRows, error: snapshotError } = await supabaseAdmin
+        .from("gerencia_phones")
+        .select("gerencia_id,status,gerencias!inner(user_id)")
+        .in("gerencia_id", Array.from(processedGerenciaIds));
+
+      if (snapshotError) {
+        console.error("Error al obtener datos para snapshots de disponibilidad:", snapshotError);
+      } else {
+        const byGerencia = new Map<
+          number,
+          { user_id: string; active_phone_count: number; total_phone_count: number }
+        >();
+
+        for (const row of snapshotRows ?? []) {
+          const gerenciaId = Number(row.gerencia_id);
+          if (!Number.isFinite(gerenciaId)) continue;
+          const joinedGerencia = Array.isArray(row.gerencias) ? row.gerencias[0] : row.gerencias;
+          const snapshot = byGerencia.get(gerenciaId) ?? {
+            user_id: String(joinedGerencia?.user_id ?? ""),
+            active_phone_count: 0,
+            total_phone_count: 0,
+          };
+          snapshot.total_phone_count += 1;
+          if (row.status === "active") snapshot.active_phone_count += 1;
+          byGerencia.set(gerenciaId, snapshot);
+        }
+
+        for (const g of gerenciaRows) {
+          const gerenciaId = Number(g.id);
+          if (!processedGerenciaIds.has(gerenciaId)) continue;
+          const existing = byGerencia.get(gerenciaId) ?? {
+            user_id: String(g.user_id ?? ""),
+            active_phone_count: 0,
+            total_phone_count: 0,
+          };
+          if (!existing.user_id) existing.user_id = String(g.user_id ?? "");
+          byGerencia.set(gerenciaId, existing);
+        }
+
+        const availabilityRows = Array.from(byGerencia.entries())
+          .map(([gerencia_id, row]) => ({
+            user_id: row.user_id,
+            gerencia_id,
+            checked_at: checkedAt,
+            active_phone_count: row.active_phone_count,
+            total_phone_count: row.total_phone_count,
+          }))
+          .filter((row) => row.user_id);
+
+        if (availabilityRows.length > 0) {
+          const { error: insertSnapshotError } = await supabaseAdmin
+            .from("gerencia_phone_availability_snapshots")
+            .insert(availabilityRows);
+          if (insertSnapshotError) {
+            console.error("Error al guardar snapshots de disponibilidad:", insertSnapshotError);
+          }
+        }
+      }
     }
 
     const capResultForRequester = userId ? capResultsByUser.get(userId) : null;

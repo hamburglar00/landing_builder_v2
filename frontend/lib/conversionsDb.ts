@@ -1,4 +1,4 @@
-﻿import { supabase } from "@/lib/supabaseClient";
+import { supabase } from "@/lib/supabaseClient";
 
 function normalizePixelId(value: string): string {
   return String(value ?? "").replace(/\D/g, "");
@@ -60,6 +60,13 @@ export interface HomeOverviewStats {
   totalCargado: number;
   premium: number;
   retencionActiva30d: number;
+}
+
+export interface GerenciaAvailabilitySummary {
+  label: string;
+  sampleCount: number;
+  activeSampleCount: number;
+  availabilityPct: number | null;
 }
 
 export interface ConversionRow {
@@ -802,6 +809,78 @@ export async function fetchHomeOverviewStats(userId: string): Promise<HomeOvervi
   };
 }
 
+type GerenciaAvailabilitySnapshotRaw = {
+  gerencia_id: number | string | null;
+  active_phone_count: number | string | null;
+  total_phone_count: number | string | null;
+  checked_at: string | null;
+  gerencias?:
+    | {
+        id?: number | string | null;
+        nombre?: string | null;
+        gerencia_id?: number | string | null;
+      }
+    | Array<{
+        id?: number | string | null;
+        nombre?: string | null;
+        gerencia_id?: number | string | null;
+      }>
+    | null;
+};
+
+async function fetchGerenciaAvailabilitySummariesInternal(
+  range: FetchDateRange,
+  userId?: string,
+): Promise<GerenciaAvailabilitySummary[]> {
+  const startIso = toIsoIfValid(range.start);
+  const endIso = toIsoIfValid(range.end);
+
+  let query = supabase
+    .from("gerencia_phone_availability_snapshots")
+    .select("gerencia_id, active_phone_count, total_phone_count, checked_at, gerencias!inner(id,nombre,gerencia_id)")
+    .order("checked_at", { ascending: true });
+  if (userId) query = query.eq("user_id", userId);
+  if (startIso) query = query.gte("checked_at", startIso);
+  if (endIso) query = query.lte("checked_at", endIso);
+
+  const { data, error } = await query;
+  if (error) throw error;
+
+  const byLabel = new Map<string, { sampleCount: number; activeSampleCount: number }>();
+  for (const row of (data ?? []) as unknown as GerenciaAvailabilitySnapshotRaw[]) {
+    const joined = Array.isArray(row.gerencias) ? row.gerencias[0] : row.gerencias;
+    const internalId = Number(joined?.id ?? row.gerencia_id);
+    const externalId = Number(joined?.gerencia_id);
+    const labelId = Number.isFinite(externalId) ? externalId : internalId;
+    const name = String(joined?.nombre ?? "").trim() || `Gerencia ${labelId}`;
+    const label = `${name} (ID ${labelId})`;
+    const current = byLabel.get(label) ?? { sampleCount: 0, activeSampleCount: 0 };
+    current.sampleCount += 1;
+    if (Number(row.active_phone_count ?? 0) > 0) current.activeSampleCount += 1;
+    byLabel.set(label, current);
+  }
+
+  return Array.from(byLabel.entries()).map(([label, value]) => ({
+    label,
+    sampleCount: value.sampleCount,
+    activeSampleCount: value.activeSampleCount,
+    availabilityPct: value.sampleCount > 0 ? (value.activeSampleCount / value.sampleCount) * 100 : null,
+  }));
+}
+
+export async function fetchGerenciaAvailabilitySummaries(
+  userId: string,
+  range: FetchDateRange,
+): Promise<GerenciaAvailabilitySummary[]> {
+  return fetchGerenciaAvailabilitySummariesInternal(range, userId);
+}
+
+export async function fetchGerenciaAvailabilitySummariesForAdmin(
+  range: FetchDateRange,
+): Promise<GerenciaAvailabilitySummary[]> {
+  return fetchGerenciaAvailabilitySummariesInternal(range);
+}
+
 export async function updateConversionEmail(
   conversionId: string,
   email: string,
@@ -933,5 +1012,3 @@ export async function hideConversionInboxRows(
     });
   if (error) throw error;
 }
-
-

@@ -13,6 +13,7 @@ import {
   fetchConversionsForAdminUnfiltered,
   fetchConversionLogsForAdminFiltered,
   fetchFunnelContactsForAdminFiltered,
+  fetchGerenciaAvailabilitySummariesForAdmin,
   updateConversionEmail,
   hideConversions,
   hideContacts,
@@ -1196,6 +1197,10 @@ export default function AdminConversionesPage() {
     return fetchConversionsForAdminUnfiltered(range);
   }, []);
 
+  const fetchPerformanceAvailability = useCallback(async (range: FetchDateRange) => {
+    return fetchGerenciaAvailabilitySummariesForAdmin(range);
+  }, []);
+
   const clearTableDisplay = useCallback(async () => {
     if (!userId || activeConversions.length === 0 || demoMode) return;
     const ok = window.confirm(CLEAR_VIEW_CONFIRM_MESSAGE);
@@ -2008,6 +2013,7 @@ export default function AdminConversionesPage() {
       {tab === "desempeno" && (
         <GerenciasPerformancePanel
           fetchConversionsForMonth={fetchPerformanceConversions}
+          fetchAvailabilityForMonth={fetchPerformanceAvailability}
           gerenciaByPhone={gerenciaByPhone}
           premiumThreshold={config?.funnel_premium_threshold ?? 50000}
           storageKey="admin"
