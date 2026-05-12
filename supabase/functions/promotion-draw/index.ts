@@ -99,13 +99,20 @@ async function pickWinnerWithPurchaseFallback(
   };
 }
 
-async function fetchAnimationUsernames(db: any, promotionId: string): Promise<string[]> {
+async function fetchAnimationParticipantSummary(
+  db: any,
+  promotionId: string,
+): Promise<{ animationUsernames: string[]; participantCount: number }> {
   const { data } = await db
     .from("promotion_participants")
     .select("id, username, phone, email, created_at")
     .eq("promotion_id", promotionId)
     .limit(5000);
-  return animationUsernamesFromParticipants((data ?? []) as Participant[]);
+  const participants = (data ?? []) as Participant[];
+  return {
+    animationUsernames: animationUsernamesFromParticipants(participants),
+    participantCount: participants.length,
+  };
 }
 
 function jsonResponse(body: Record<string, unknown>, status = 200): Response {
@@ -216,7 +223,7 @@ Deno.serve(async (req) => {
     }
 
     if (promotion.winner_participant_id) {
-      const animationUsernames = await fetchAnimationUsernames(db, promotion.id);
+      const { animationUsernames, participantCount } = await fetchAnimationParticipantSummary(db, promotion.id);
       return jsonResponse({
         ok: true,
         already_drawn: true,
@@ -225,6 +232,7 @@ Deno.serve(async (req) => {
         prize: promotion.prize,
         winner_selected_at: promotion.winner_selected_at,
         animation_usernames: animationUsernames,
+        participant_count: participantCount,
       });
     }
 
@@ -236,6 +244,7 @@ Deno.serve(async (req) => {
         prize: promotion.prize,
         draw_processed_at: promotion.draw_processed_at,
         animation_usernames: [],
+        participant_count: 0,
       });
     }
 
@@ -266,6 +275,7 @@ Deno.serve(async (req) => {
         prize: promotion.prize,
         draw_processed_at: nowIso,
         animation_usernames: [],
+        participant_count: 0,
       });
     }
 
@@ -370,6 +380,7 @@ Deno.serve(async (req) => {
       winner_selected_at: nowIso,
       draw_processed_at: nowIso,
       animation_usernames: animationUsernames,
+      participant_count: pool.length,
       winner_eligible_by_purchase: eligibleByPurchase,
       notified,
       notification_skipped: notificationSkipped || null,

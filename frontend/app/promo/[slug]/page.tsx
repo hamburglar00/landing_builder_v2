@@ -74,6 +74,7 @@ export default function PublicPromotionPage() {
   const [drawStatus, setDrawStatus] = useState<PromotionDrawStatus>("pending");
   const [drawMessage, setDrawMessage] = useState<string | null>(null);
   const [animationUsernames, setAnimationUsernames] = useState<string[]>([]);
+  const [animationParticipantCount, setAnimationParticipantCount] = useState<number | null>(null);
   const [displayedCandidate, setDisplayedCandidate] = useState("");
   const [isDrawAnimating, setIsDrawAnimating] = useState(false);
   const [revealWinner, setRevealWinner] = useState(false);
@@ -106,13 +107,16 @@ export default function PublicPromotionPage() {
   }, []);
 
   const startDrawAnimation = useCallback(
-    (names: string[], finalWinner: string) => {
+    (names: string[], finalWinner: string, participantCount?: number) => {
       clearDrawTimers();
       const cleanNames = names.map((name) => String(name || "").trim()).filter(Boolean);
       const pool = cleanNames.length > 0 ? cleanNames : [finalWinner];
       let index = 0;
 
       setAnimationUsernames(pool);
+      setAnimationParticipantCount(
+        typeof participantCount === "number" && Number.isFinite(participantCount) ? participantCount : pool.length,
+      );
       setDisplayedCandidate(pool[0] ?? finalWinner);
       setIsDrawAnimating(true);
       setRevealWinner(false);
@@ -134,10 +138,10 @@ export default function PublicPromotionPage() {
   );
 
   const startWinnerReveal = useCallback(
-    (names: string[], finalWinner: string) => {
+    (names: string[], finalWinner: string, participantCount?: number) => {
       if (!finalWinner || resultAnimationStartedRef.current) return;
       resultAnimationStartedRef.current = true;
-      startDrawAnimation(names, finalWinner);
+      startDrawAnimation(names, finalWinner, participantCount);
     },
     [startDrawAnimation],
   );
@@ -219,9 +223,10 @@ export default function PublicPromotionPage() {
           const names = Array.isArray(data?.animation_usernames)
             ? data.animation_usernames.map((name: unknown) => String(name)).filter(Boolean)
             : [];
+          const participantCount = Number(data?.participant_count);
           setWinnerUsername(winner);
           setDrawMessage(null);
-          startWinnerReveal(names, winner);
+          startWinnerReveal(names, winner, Number.isFinite(participantCount) ? participantCount : undefined);
           return;
         }
         if (data?.draw_status === "no_participants") {
@@ -241,8 +246,26 @@ export default function PublicPromotionPage() {
     if (!promotion || drawStatus !== "completed" || !winnerUsername) return;
     const processedAtMs = new Date(promotion.draw_processed_at ?? promotion.winner_selected_at ?? "").getTime();
     if (Number.isFinite(processedAtMs) && Date.now() - processedAtMs > 60 * 60 * 1000) return;
-    setDrawMessage(null);
-    startWinnerReveal([winnerUsername], winnerUsername);
+    const loadCompletedDraw = async () => {
+      try {
+        const { data, error: fnError } = await supabase.functions.invoke("promotion-draw", {
+          body: { slug: promotion.slug },
+        });
+        if (fnError) throw fnError;
+        const names = Array.isArray(data?.animation_usernames)
+          ? data.animation_usernames.map((name: unknown) => String(name)).filter(Boolean)
+          : [];
+        const participantCount = Number(data?.participant_count);
+        const winner = String(data?.winner_username || winnerUsername);
+        setDrawMessage(null);
+        startWinnerReveal(names, winner, Number.isFinite(participantCount) ? participantCount : undefined);
+      } catch (err) {
+        console.error(err);
+        setDrawMessage(null);
+        startWinnerReveal([winnerUsername], winnerUsername);
+      }
+    };
+    void loadCompletedDraw();
   }, [drawStatus, promotion, startWinnerReveal, winnerUsername]);
 
   const handleSubmit = () => {
@@ -344,6 +367,7 @@ export default function PublicPromotionPage() {
   const hasNoParticipants = drawStatus === "no_participants";
   const drawIsOver = !!timeLeft?.isOver || hasDrawResult || hasNoParticipants;
   const canParticipate = !participantReady && !drawIsOver;
+  const drawParticipantCount = animationParticipantCount ?? animationUsernames.length;
   const drawProcessedMs = new Date(promotion.draw_processed_at ?? promotion.winner_selected_at ?? "").getTime();
   const resultExpired =
     drawIsOver && Number.isFinite(drawProcessedMs) && Date.now() - drawProcessedMs > 60 * 60 * 1000;
@@ -562,7 +586,7 @@ export default function PublicPromotionPage() {
           <p className="text-[11px] font-semibold uppercase tracking-[0.34em] text-amber-300 sm:text-xs sm:tracking-[0.42em]">
             Sorteando ganador
           </p>
-          <p className="mt-3 text-xs text-zinc-500">Participantes verificados: {animationUsernames.length}</p>
+          <p className="mt-3 text-xs text-zinc-500">Participantes en sorteo: {drawParticipantCount}</p>
           <div className="mx-auto mt-7 max-w-sm rounded-[1.5rem] border border-emerald-400/40 bg-black/70 p-3 shadow-[0_0_90px_rgba(16,185,129,0.25)] sm:rounded-[1.7rem] sm:p-4">
             <div className="rounded-2xl border border-zinc-800 bg-zinc-950 px-4 py-8">
               <p className="text-[10px] font-bold uppercase tracking-[0.32em] text-zinc-500">Ahora pasa por</p>
@@ -681,7 +705,7 @@ export default function PublicPromotionPage() {
                   <div className="pointer-events-none absolute inset-0 opacity-60 [background-image:radial-gradient(circle_at_50%_0%,rgba(16,185,129,0.24),transparent_35%),radial-gradient(circle_at_50%_100%,rgba(251,191,36,0.18),transparent_32%)]" />
                   <div className="relative">
                     <p className="text-[11px] font-semibold uppercase tracking-[0.26em] text-amber-300 sm:text-xs sm:tracking-[0.32em]">Sorteando ganador</p>
-                    <p className="mt-2 text-xs text-zinc-500">Participantes verificados: {animationUsernames.length}</p>
+                    <p className="mt-2 text-xs text-zinc-500">Participantes en sorteo: {drawParticipantCount}</p>
                     <div className="mx-auto mt-6 max-w-sm rounded-[1.5rem] border border-emerald-400/40 bg-black/70 p-3 shadow-[0_0_90px_rgba(16,185,129,0.25)] sm:rounded-[1.7rem] sm:p-4">
                       <div className="rounded-2xl border border-zinc-800 bg-zinc-950 px-4 py-7">
                         <p className="text-[10px] font-bold uppercase tracking-[0.28em] text-zinc-500">Ahora pasa por</p>
