@@ -75,6 +75,95 @@ type ParticipantAgencyInfo = {
   percentage: number | null;
 };
 
+type PromotionWinnerDetails = {
+  username: string;
+  phone: string;
+  email: string;
+  agencyLabel: string;
+};
+
+async function resolveParticipantAgencyById(
+  userId: string,
+  participants: PromotionParticipantRow[],
+): Promise<Record<string, ParticipantAgencyInfo>> {
+  if (participants.length === 0) return {};
+
+  const participantPhones = Array.from(
+    new Set(participants.map((row) => normalizePhone(row.phone)).filter(Boolean)),
+  );
+  if (participantPhones.length === 0) return {};
+
+  const { data: conversionRows, error: conversionsError } = await supabase
+    .from("conversions")
+    .select("phone, telefono_asignado, created_at")
+    .eq("user_id", userId)
+    .in("phone", participantPhones)
+    .order("created_at", { ascending: false });
+  if (conversionsError) throw conversionsError;
+
+  const assignedPhoneByContactPhone = new Map<string, string>();
+  for (const row of conversionRows ?? []) {
+    const contactPhone = normalizePhone(row.phone);
+    const assignedPhone = normalizePhone(row.telefono_asignado);
+    if (!contactPhone || !assignedPhone || assignedPhoneByContactPhone.has(contactPhone)) continue;
+    assignedPhoneByContactPhone.set(contactPhone, assignedPhone);
+  }
+
+  const { data: gerencias, error: gerenciasError } = await supabase
+    .from("gerencias")
+    .select("id,nombre,gerencia_id")
+    .eq("user_id", userId);
+  if (gerenciasError) throw gerenciasError;
+
+  const gerenciasById = new Map<number, string>();
+  for (const gerencia of gerencias ?? []) {
+    const id = Number(gerencia.id);
+    if (!Number.isFinite(id)) continue;
+    const externalId = Number(gerencia.gerencia_id);
+    const labelId = Number.isFinite(externalId) ? externalId : id;
+    gerenciasById.set(id, `${String(gerencia.nombre ?? "").trim()} (ID ${labelId})`);
+  }
+
+  const agencyByAssignedPhone = new Map<string, string>();
+  if (gerenciasById.size > 0) {
+    const { data: gerenciaPhones, error: gerenciaPhonesError } = await supabase
+      .from("gerencia_phones")
+      .select("gerencia_id,phone")
+      .in("gerencia_id", Array.from(gerenciasById.keys()));
+    if (gerenciaPhonesError) throw gerenciaPhonesError;
+
+    for (const row of gerenciaPhones ?? []) {
+      const assignedPhone = normalizePhone(row.phone);
+      const label = gerenciasById.get(Number(row.gerencia_id));
+      if (assignedPhone && label && !agencyByAssignedPhone.has(assignedPhone)) {
+        agencyByAssignedPhone.set(assignedPhone, label);
+      }
+    }
+  }
+
+  const labelsByParticipantId: Record<string, string> = {};
+  const countByAgency = new Map<string, number>();
+  for (const participant of participants) {
+    const contactPhone = normalizePhone(participant.phone);
+    const assignedPhone = assignedPhoneByContactPhone.get(contactPhone);
+    const agencyLabel = assignedPhone ? agencyByAssignedPhone.get(assignedPhone) : undefined;
+    if (!agencyLabel) continue;
+    labelsByParticipantId[participant.id] = agencyLabel;
+    countByAgency.set(agencyLabel, (countByAgency.get(agencyLabel) ?? 0) + 1);
+  }
+
+  const totalParticipants = participants.length || 1;
+  const nextAgencyById: Record<string, ParticipantAgencyInfo> = {};
+  for (const participant of participants) {
+    const label = labelsByParticipantId[participant.id] ?? "";
+    nextAgencyById[participant.id] = {
+      label,
+      percentage: label ? ((countByAgency.get(label) ?? 0) / totalParticipants) * 100 : null,
+    };
+  }
+  return nextAgencyById;
+}
+
 function displayStatus(promotion: PromotionWithCount): { label: string; className: string } {
   if (promotion.draw_status === "completed" || promotion.winner_username) {
     return {
@@ -260,6 +349,7 @@ export default function DashboardPromocionesPage() {
   const [tableParticipants, setTableParticipants] = useState<PromotionParticipantRow[]>([]);
   const [loadingTableParticipants, setLoadingTableParticipants] = useState(false);
   const [participantAgencyById, setParticipantAgencyById] = useState<Record<string, ParticipantAgencyInfo>>({});
+  const [winnerDetailsByPromotionId, setWinnerDetailsByPromotionId] = useState<Record<string, PromotionWinnerDetails>>({});
   const [deletingParticipantId, setDeletingParticipantId] = useState<string | null>(null);
   const [participantPhoneSearch, setParticipantPhoneSearch] = useState("");
 
@@ -352,84 +442,7 @@ export default function DashboardPromocionesPage() {
           setParticipantAgencyById({});
           return;
         }
-
-        const participantPhones = Array.from(
-          new Set(rows.map((row) => normalizePhone(row.phone)).filter(Boolean)),
-        );
-        if (participantPhones.length === 0) {
-          setParticipantAgencyById({});
-          return;
-        }
-
-        const { data: conversionRows, error: conversionsError } = await supabase
-          .from("conversions")
-          .select("phone, telefono_asignado, created_at")
-          .eq("user_id", userId)
-          .in("phone", participantPhones)
-          .order("created_at", { ascending: false });
-        if (conversionsError) throw conversionsError;
-
-        const assignedPhoneByContactPhone = new Map<string, string>();
-        for (const row of conversionRows ?? []) {
-          const contactPhone = normalizePhone(row.phone);
-          const assignedPhone = normalizePhone(row.telefono_asignado);
-          if (!contactPhone || !assignedPhone || assignedPhoneByContactPhone.has(contactPhone)) continue;
-          assignedPhoneByContactPhone.set(contactPhone, assignedPhone);
-        }
-
-        const { data: gerencias, error: gerenciasError } = await supabase
-          .from("gerencias")
-          .select("id,nombre,gerencia_id")
-          .eq("user_id", userId);
-        if (gerenciasError) throw gerenciasError;
-
-        const gerenciasById = new Map<number, string>();
-        for (const gerencia of gerencias ?? []) {
-          const id = Number(gerencia.id);
-          if (!Number.isFinite(id)) continue;
-          const externalId = Number(gerencia.gerencia_id);
-          const labelId = Number.isFinite(externalId) ? externalId : id;
-          gerenciasById.set(id, `${String(gerencia.nombre ?? "").trim()} (ID ${labelId})`);
-        }
-
-        const agencyByAssignedPhone = new Map<string, string>();
-        if (gerenciasById.size > 0) {
-          const { data: gerenciaPhones, error: gerenciaPhonesError } = await supabase
-            .from("gerencia_phones")
-            .select("gerencia_id,phone")
-            .in("gerencia_id", Array.from(gerenciasById.keys()));
-          if (gerenciaPhonesError) throw gerenciaPhonesError;
-
-          for (const row of gerenciaPhones ?? []) {
-            const assignedPhone = normalizePhone(row.phone);
-            const label = gerenciasById.get(Number(row.gerencia_id));
-            if (assignedPhone && label && !agencyByAssignedPhone.has(assignedPhone)) {
-              agencyByAssignedPhone.set(assignedPhone, label);
-            }
-          }
-        }
-
-        const labelsByParticipantId: Record<string, string> = {};
-        const countByAgency = new Map<string, number>();
-        for (const participant of rows) {
-          const contactPhone = normalizePhone(participant.phone);
-          const assignedPhone = assignedPhoneByContactPhone.get(contactPhone);
-          const agencyLabel = assignedPhone ? agencyByAssignedPhone.get(assignedPhone) : undefined;
-          if (!agencyLabel) continue;
-          labelsByParticipantId[participant.id] = agencyLabel;
-          countByAgency.set(agencyLabel, (countByAgency.get(agencyLabel) ?? 0) + 1);
-        }
-
-        const totalParticipants = rows.length || 1;
-        const nextAgencyById: Record<string, ParticipantAgencyInfo> = {};
-        for (const participant of rows) {
-          const label = labelsByParticipantId[participant.id] ?? "";
-          nextAgencyById[participant.id] = {
-            label,
-            percentage: label ? ((countByAgency.get(label) ?? 0) / totalParticipants) * 100 : null,
-          };
-        }
-        setParticipantAgencyById(nextAgencyById);
+        setParticipantAgencyById(await resolveParticipantAgencyById(userId, rows));
       } catch (err) {
         console.error(err);
         showMessage("No se pudieron cargar los participantes.", "error");
@@ -440,6 +453,58 @@ export default function DashboardPromocionesPage() {
     };
     void load();
   }, [selectedParticipantsPromotionId, userId]);
+
+  useEffect(() => {
+    const winnerIds = Array.from(
+      new Set(
+        promotions
+          .map((promotion) => promotion.winner_participant_id)
+          .filter((id): id is string => Boolean(id)),
+      ),
+    );
+
+    if (!userId || winnerIds.length === 0) {
+      setWinnerDetailsByPromotionId({});
+      return;
+    }
+
+    let cancelled = false;
+    const load = async () => {
+      try {
+        const { data, error } = await supabase
+          .from("promotion_participants")
+          .select(
+            "id, promotion_id, user_id, username, phone, email, visitor_token, matched_conversion_count, matched_conversion_ids, created_at",
+          )
+          .eq("user_id", userId)
+          .in("id", winnerIds);
+        if (error) throw error;
+
+        const winnerRows = (data ?? []) as PromotionParticipantRow[];
+        const agencyByParticipantId = await resolveParticipantAgencyById(userId, winnerRows);
+        if (cancelled) return;
+
+        const next: Record<string, PromotionWinnerDetails> = {};
+        for (const winner of winnerRows) {
+          next[winner.promotion_id] = {
+            username: winner.username,
+            phone: winner.phone,
+            email: winner.email,
+            agencyLabel: agencyByParticipantId[winner.id]?.label ?? "",
+          };
+        }
+        setWinnerDetailsByPromotionId(next);
+      } catch (err) {
+        console.error(err);
+        if (!cancelled) setWinnerDetailsByPromotionId({});
+      }
+    };
+    void load();
+
+    return () => {
+      cancelled = true;
+    };
+  }, [promotions, userId]);
 
   const resetForm = () => {
     setEditingId(null);
@@ -836,6 +901,7 @@ export default function DashboardPromocionesPage() {
               const publicLink = buildPromotionPublicLink(promotion.slug, origin);
               const drawReady = new Date(promotion.draw_at).getTime() <= Date.now();
               const badge = displayStatus(promotion);
+              const winnerDetails = winnerDetailsByPromotionId[promotion.id];
               return (
                 <article key={promotion.id} className="rounded-2xl border border-zinc-800 bg-zinc-950/55 p-4">
                   <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
@@ -875,6 +941,27 @@ export default function DashboardPromocionesPage() {
                       <p className="mt-2 text-xs text-zinc-500">
                         Sorteo: {formatDateTime(promotion.draw_at)} | Participantes: {promotion.participant_count}
                       </p>
+                      {(winnerDetails || promotion.winner_username) && (
+                        <div className="mt-2 flex flex-wrap gap-x-4 gap-y-1 rounded-xl border border-emerald-900/60 bg-emerald-950/15 px-3 py-2 text-[11px] text-zinc-400">
+                          <span>
+                            Ganador:{" "}
+                            <strong className="text-emerald-300">
+                              {winnerDetails?.username || promotion.winner_username || "-"}
+                            </strong>
+                          </span>
+                          <span>
+                            Telefono: <strong className="text-zinc-200">{winnerDetails?.phone || "-"}</strong>
+                          </span>
+                          <span className="min-w-0">
+                            Email:{" "}
+                            <strong className="break-all text-zinc-200">{winnerDetails?.email || "-"}</strong>
+                          </span>
+                          <span>
+                            Gerencia:{" "}
+                            <strong className="text-zinc-200">{winnerDetails?.agencyLabel || "-"}</strong>
+                          </span>
+                        </div>
+                      )}
                     </div>
                     <div className="flex flex-wrap gap-2 sm:justify-end">
                       <button
