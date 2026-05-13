@@ -387,6 +387,21 @@ Deno.serve(async (req) => {
       if (snapshotError) {
         console.error("Error al obtener datos para snapshots de disponibilidad:", snapshotError);
       } else {
+        const { data: assignmentRows, error: assignmentError } = await supabaseAdmin
+          .from("landings_gerencias")
+          .select("gerencia_id")
+          .in("gerencia_id", Array.from(processedGerenciaIds));
+        if (assignmentError) {
+          console.error("Error al obtener asignaciones para snapshots de disponibilidad:", assignmentError);
+        }
+
+        const assignedCountByGerencia = new Map<number, number>();
+        for (const row of assignmentRows ?? []) {
+          const gerenciaId = Number(row.gerencia_id);
+          if (!Number.isFinite(gerenciaId)) continue;
+          assignedCountByGerencia.set(gerenciaId, (assignedCountByGerencia.get(gerenciaId) ?? 0) + 1);
+        }
+
         const byGerencia = new Map<
           number,
           { user_id: string; active_phone_count: number; total_phone_count: number }
@@ -425,6 +440,7 @@ Deno.serve(async (req) => {
             checked_at: checkedAt,
             active_phone_count: row.active_phone_count,
             total_phone_count: row.total_phone_count,
+            assigned_landing_count: assignedCountByGerencia.get(gerencia_id) ?? 0,
           }))
           .filter((row) => row.user_id);
 

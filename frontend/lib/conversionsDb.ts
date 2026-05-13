@@ -813,6 +813,7 @@ type GerenciaAvailabilitySnapshotRaw = {
   gerencia_id: number | string | null;
   active_phone_count: number | string | null;
   total_phone_count: number | string | null;
+  assigned_landing_count?: number | string | null;
   checked_at: string | null;
   gerencias?:
     | {
@@ -837,7 +838,7 @@ async function fetchGerenciaAvailabilitySummariesInternal(
 
   let query = supabase
     .from("gerencia_phone_availability_snapshots")
-    .select("gerencia_id, active_phone_count, total_phone_count, checked_at, gerencias!inner(id,nombre,gerencia_id)")
+    .select("gerencia_id, active_phone_count, total_phone_count, assigned_landing_count, checked_at, gerencias!inner(id,nombre,gerencia_id)")
     .order("checked_at", { ascending: true });
   if (userId) query = query.eq("user_id", userId);
   if (startIso) query = query.gte("checked_at", startIso);
@@ -848,6 +849,7 @@ async function fetchGerenciaAvailabilitySummariesInternal(
 
   const byLabel = new Map<string, { sampleCount: number; activeSampleCount: number }>();
   for (const row of (data ?? []) as unknown as GerenciaAvailabilitySnapshotRaw[]) {
+    if (Number(row.assigned_landing_count ?? 0) <= 0) continue;
     const joined = Array.isArray(row.gerencias) ? row.gerencias[0] : row.gerencias;
     const internalId = Number(joined?.id ?? row.gerencia_id);
     const externalId = Number(joined?.gerencia_id);
