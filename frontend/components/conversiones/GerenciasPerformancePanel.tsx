@@ -20,6 +20,7 @@ type Props = {
 type Row = {
   label: string;
   contactos: number;
+  pctInicioConversacion: number;
   mensajes: number;
   cargas: number;
   montoCargado: number;
@@ -28,7 +29,7 @@ type Row = {
   pctRecarga: number;
 };
 
-type SortKey = "label" | "contactos" | "mensajes" | "cargas" | "montoCargado" | "disponibilidad" | "pctCarga" | "pctRecarga" | "cost" | "gasto" | "roas";
+type SortKey = "label" | "contactos" | "pctInicioConversacion" | "mensajes" | "cargas" | "montoCargado" | "disponibilidad" | "pctCarga" | "pctRecarga" | "cost" | "gasto" | "roas";
 type SortDirection = "asc" | "desc";
 
 const FIRST_DATA_MONTH = "2026-01";
@@ -240,6 +241,7 @@ export default function GerenciasPerformancePanel({
         return {
           label,
           contactos,
+          pctInicioConversacion: contactos > 0 ? (mensajes / contactos) * 100 : 0,
           mensajes,
           cargas,
           montoCargado,
@@ -291,7 +293,7 @@ export default function GerenciasPerformancePanel({
     return gasto > 0 ? row.montoCargado / gasto : 0;
   }, [getGasto]);
   const showRoas = useMemo(() => visiblePerformanceRows.some((row) => getGasto(row) > 0), [getGasto, visiblePerformanceRows]);
-  const columnCount = showRoas ? 11 : 10;
+  const columnCount = showRoas ? 12 : 11;
 
   const sortedRows = useMemo(() => {
     const valueFor = (row: Row): number | string => {
@@ -393,17 +395,18 @@ export default function GerenciasPerformancePanel({
         <div className="overflow-hidden rounded-lg border border-zinc-700">
           <table className="w-full max-w-full table-fixed text-[9.5px] leading-tight lg:text-[10px]">
             <colgroup>
-              <col className={showRoas ? "w-[13%]" : "w-[15%]"} />
-              <col className={showRoas ? "w-[11%]" : "w-[12%]"} />
-              <col className={showRoas ? "w-[8%]" : "w-[9%]"} />
-              <col className={showRoas ? "w-[8%]" : "w-[9%]"} />
-              <col className={showRoas ? "w-[7%]" : "w-[8%]"} />
+              <col className={showRoas ? "w-[12%]" : "w-[14%]"} />
               <col className={showRoas ? "w-[10%]" : "w-[11%]"} />
-              <col className={showRoas ? "w-[8%]" : "w-[9%]"} />
-              <col className={showRoas ? "w-[8%]" : "w-[9%]"} />
-              <col className={showRoas ? "w-[12%]" : "w-[11%]"} />
-              <col className={showRoas ? "w-[9%]" : "w-[7%]"} />
-              {showRoas && <col className="w-[6%]" />}
+              <col className={showRoas ? "w-[7%]" : "w-[8%]"} />
+              <col className={showRoas ? "w-[9%]" : "w-[10%]"} />
+              <col className={showRoas ? "w-[7%]" : "w-[8%]"} />
+              <col className={showRoas ? "w-[6%]" : "w-[7%]"} />
+              <col className={showRoas ? "w-[9%]" : "w-[10%]"} />
+              <col className={showRoas ? "w-[7%]" : "w-[8%]"} />
+              <col className={showRoas ? "w-[7%]" : "w-[8%]"} />
+              <col className={showRoas ? "w-[11%]" : "w-[10%]"} />
+              <col className={showRoas ? "w-[8%]" : "w-[6%]"} />
+              {showRoas && <col className="w-[7%]" />}
             </colgroup>
             <thead className="bg-zinc-800/95">
               <tr>
@@ -412,6 +415,7 @@ export default function GerenciasPerformancePanel({
                   <SortHeader sort="disponibilidad">Disponibilidad</SortHeader>
                 </th>
                 <th className="px-1.5 py-2"><SortHeader sort="contactos">Contactos</SortHeader></th>
+                <th className="px-1.5 py-2"><SortHeader sort="pctInicioConversacion">% inicio conversación</SortHeader></th>
                 <th className="px-1.5 py-2"><SortHeader sort="mensajes">Mensajes</SortHeader></th>
                 <th className="px-1.5 py-2"><SortHeader sort="cargas">Cargas</SortHeader></th>
                 <th className="px-1.5 py-2"><SortHeader sort="montoCargado">Monto</SortHeader></th>
@@ -467,6 +471,7 @@ export default function GerenciasPerformancePanel({
                       {formatOptionalPercent(row.disponibilidad)}
                     </td>
                     <td className="px-1.5 py-2 text-center text-zinc-200">{formatNumber(row.contactos)}</td>
+                    <td className="px-1.5 py-2 text-center text-zinc-200">{formatPercent(row.pctInicioConversacion)}</td>
                     <td className="px-1.5 py-2 text-center text-amber-300">{formatNumber(row.mensajes)}</td>
                     <td className="px-1.5 py-2 text-center text-sky-300">{formatNumber(row.cargas)}</td>
                     <td className="px-1.5 py-2 text-center font-semibold text-emerald-300">{formatMoney(row.montoCargado)}</td>
@@ -499,6 +504,9 @@ export default function GerenciasPerformancePanel({
                 <td className="px-1.5 py-2 text-center font-semibold text-zinc-100">Totales</td>
                 <td className="px-1.5 py-2 text-center text-zinc-500">-</td>
                 <td className="px-1.5 py-2 text-center font-semibold text-zinc-200">{formatNumber(totals.contactos)}</td>
+                <td className="px-1.5 py-2 text-center font-semibold text-zinc-200">
+                  {formatPercent(totals.contactos > 0 ? (totals.mensajes / totals.contactos) * 100 : 0)}
+                </td>
                 <td className="px-1.5 py-2 text-center font-semibold text-amber-300">{formatNumber(totals.mensajes)}</td>
                 <td className="px-1.5 py-2 text-center font-semibold text-sky-300">{formatNumber(totals.cargas)}</td>
                 <td className="px-1.5 py-2 text-center font-semibold text-emerald-300">{formatMoney(totals.montoCargado)}</td>
