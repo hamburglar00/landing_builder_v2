@@ -781,7 +781,7 @@ export function TelefonosPageContent({
                   </span>
                   <span className="inline-flex items-center gap-1.5 whitespace-nowrap text-xs text-zinc-500 lg:justify-end">
                     <span
-                      className={`h-1.5 w-1.5 rounded-full ${activePhonesCount > 0 ? "bg-emerald-400/80" : "bg-red-400/80"}`}
+                      className={`h-[9px] w-[9px] rounded-full ${activePhonesCount > 0 ? "bg-emerald-400/80" : "bg-red-400/80"}`}
                       aria-label={activePhonesCount > 0 ? "Tiene telefonos activos" : "No tiene telefonos activos"}
                       title={activePhonesCount > 0 ? "Tiene telefonos activos" : "No tiene telefonos activos"}
                     />
