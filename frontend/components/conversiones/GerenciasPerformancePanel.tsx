@@ -19,6 +19,7 @@ type Props = {
 
 type Row = {
   label: string;
+  contactos: number;
   mensajes: number;
   cargas: number;
   montoCargado: number;
@@ -27,7 +28,7 @@ type Row = {
   pctRecarga: number;
 };
 
-type SortKey = "label" | "mensajes" | "cargas" | "montoCargado" | "disponibilidad" | "pctCarga" | "pctRecarga" | "cost" | "gasto" | "roas";
+type SortKey = "label" | "contactos" | "mensajes" | "cargas" | "montoCargado" | "disponibilidad" | "pctCarga" | "pctRecarga" | "cost" | "gasto" | "roas";
 type SortDirection = "asc" | "desc";
 
 const FIRST_DATA_MONTH = "2026-01";
@@ -134,6 +135,22 @@ function getLinkedPurchaseRows(rows: ConversionRow[]): ConversionRow[] {
   ));
 }
 
+function getLinkedContactCount(rows: ConversionRow[]): number {
+  const contactKeys = new Set(
+    rows
+      .filter((row) => String(row.contact_event_id ?? "").trim())
+      .map(externalKey)
+      .filter(Boolean),
+  );
+  const leadKeys = new Set(
+    rows
+      .filter((row) => String(row.lead_event_id ?? "").trim())
+      .map(externalKey)
+      .filter(Boolean),
+  );
+  return [...contactKeys].filter((key) => leadKeys.has(key)).length;
+}
+
 export default function GerenciasPerformancePanel({
   fetchConversionsForMonth,
   fetchAvailabilityForMonth,
@@ -231,12 +248,14 @@ export default function GerenciasPerformancePanel({
         const gerenciaRows = rowsByGerencia.get(label) ?? [];
         const funnel = buildFunnelContactsFromConversions(gerenciaRows);
         const core = computeCoreStats(gerenciaRows, funnel, gerenciaRows, premiumThreshold);
+        const contactos = getLinkedContactCount(gerenciaRows);
         const mensajes = core.uniqueLeadsLinkedToContact;
         const linkedPurchaseRows = getLinkedPurchaseRows(gerenciaRows);
         const cargas = linkedPurchaseRows.length;
         const montoCargado = linkedPurchaseRows.reduce((sum, row) => sum + (Number(row.valor) || 0), 0);
         return {
           label,
+          contactos,
           mensajes,
           cargas,
           montoCargado,
@@ -260,13 +279,14 @@ export default function GerenciasPerformancePanel({
       (acc, row) => {
         const cost = parseAmount(costByGerencia[`${month}::${row.label}`] ?? "");
         return {
+          contactos: acc.contactos + row.contactos,
           mensajes: acc.mensajes + row.mensajes,
           cargas: acc.cargas + row.cargas,
           montoCargado: acc.montoCargado + row.montoCargado,
           gasto: acc.gasto + row.mensajes * cost,
         };
       },
-      { mensajes: 0, cargas: 0, montoCargado: 0, gasto: 0 },
+      { contactos: 0, mensajes: 0, cargas: 0, montoCargado: 0, gasto: 0 },
     );
   }, [costByGerencia, month, visiblePerformanceRows]);
 
@@ -287,7 +307,7 @@ export default function GerenciasPerformancePanel({
     return gasto > 0 ? row.montoCargado / gasto : 0;
   }, [getGasto]);
   const showRoas = useMemo(() => visiblePerformanceRows.some((row) => getGasto(row) > 0), [getGasto, visiblePerformanceRows]);
-  const columnCount = showRoas ? 10 : 9;
+  const columnCount = showRoas ? 11 : 10;
 
   const sortedRows = useMemo(() => {
     const valueFor = (row: Row): number | string => {
@@ -389,16 +409,17 @@ export default function GerenciasPerformancePanel({
         <div className="overflow-hidden rounded-lg border border-zinc-700">
           <table className="w-full max-w-full table-fixed text-[9.5px] leading-tight lg:text-[10px]">
             <colgroup>
-              <col className={showRoas ? "w-[14%]" : "w-[16%]"} />
-              <col className={showRoas ? "w-[12%]" : "w-[13%]"} />
+              <col className={showRoas ? "w-[13%]" : "w-[15%]"} />
+              <col className={showRoas ? "w-[11%]" : "w-[12%]"} />
               <col className={showRoas ? "w-[8%]" : "w-[9%]"} />
               <col className={showRoas ? "w-[8%]" : "w-[9%]"} />
+              <col className={showRoas ? "w-[7%]" : "w-[8%]"} />
               <col className={showRoas ? "w-[10%]" : "w-[11%]"} />
-              <col className={showRoas ? "w-[9%]" : "w-[10%]"} />
-              <col className={showRoas ? "w-[9%]" : "w-[10%]"} />
-              <col className={showRoas ? "w-[13%]" : "w-[13%]"} />
-              <col className={showRoas ? "w-[10%]" : "w-[9%]"} />
-              {showRoas && <col className="w-[7%]" />}
+              <col className={showRoas ? "w-[8%]" : "w-[9%]"} />
+              <col className={showRoas ? "w-[8%]" : "w-[9%]"} />
+              <col className={showRoas ? "w-[12%]" : "w-[11%]"} />
+              <col className={showRoas ? "w-[9%]" : "w-[7%]"} />
+              {showRoas && <col className="w-[6%]" />}
             </colgroup>
             <thead className="bg-zinc-800/95">
               <tr>
@@ -406,6 +427,7 @@ export default function GerenciasPerformancePanel({
                 <th className="px-1.5 py-2">
                   <SortHeader sort="disponibilidad">Disponibilidad</SortHeader>
                 </th>
+                <th className="px-1.5 py-2"><SortHeader sort="contactos">Contactos</SortHeader></th>
                 <th className="px-1.5 py-2"><SortHeader sort="mensajes">Mensajes</SortHeader></th>
                 <th className="px-1.5 py-2"><SortHeader sort="cargas">Cargas</SortHeader></th>
                 <th className="px-1.5 py-2"><SortHeader sort="montoCargado">Monto</SortHeader></th>
@@ -460,6 +482,7 @@ export default function GerenciasPerformancePanel({
                     >
                       {formatOptionalPercent(row.disponibilidad)}
                     </td>
+                    <td className="px-1.5 py-2 text-center text-zinc-200">{formatNumber(row.contactos)}</td>
                     <td className="px-1.5 py-2 text-center text-amber-300">{formatNumber(row.mensajes)}</td>
                     <td className="px-1.5 py-2 text-center text-sky-300">{formatNumber(row.cargas)}</td>
                     <td className="px-1.5 py-2 text-center font-semibold text-emerald-300">{formatMoney(row.montoCargado)}</td>
@@ -491,6 +514,7 @@ export default function GerenciasPerformancePanel({
               <tr>
                 <td className="px-1.5 py-2 text-center font-semibold text-zinc-100">Totales</td>
                 <td className="px-1.5 py-2 text-center text-zinc-500">-</td>
+                <td className="px-1.5 py-2 text-center font-semibold text-zinc-200">{formatNumber(totals.contactos)}</td>
                 <td className="px-1.5 py-2 text-center font-semibold text-amber-300">{formatNumber(totals.mensajes)}</td>
                 <td className="px-1.5 py-2 text-center font-semibold text-sky-300">{formatNumber(totals.cargas)}</td>
                 <td className="px-1.5 py-2 text-center font-semibold text-emerald-300">{formatMoney(totals.montoCargado)}</td>
