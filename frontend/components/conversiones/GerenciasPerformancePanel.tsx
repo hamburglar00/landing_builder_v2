@@ -135,22 +135,6 @@ function getLinkedPurchaseRows(rows: ConversionRow[]): ConversionRow[] {
   ));
 }
 
-function getLinkedContactCount(rows: ConversionRow[]): number {
-  const contactKeys = new Set(
-    rows
-      .filter((row) => String(row.contact_event_id ?? "").trim())
-      .map(externalKey)
-      .filter(Boolean),
-  );
-  const leadKeys = new Set(
-    rows
-      .filter((row) => String(row.lead_event_id ?? "").trim())
-      .map(externalKey)
-      .filter(Boolean),
-  );
-  return [...contactKeys].filter((key) => leadKeys.has(key)).length;
-}
-
 export default function GerenciasPerformancePanel({
   fetchConversionsForMonth,
   fetchAvailabilityForMonth,
@@ -248,7 +232,7 @@ export default function GerenciasPerformancePanel({
         const gerenciaRows = rowsByGerencia.get(label) ?? [];
         const funnel = buildFunnelContactsFromConversions(gerenciaRows);
         const core = computeCoreStats(gerenciaRows, funnel, gerenciaRows, premiumThreshold);
-        const contactos = getLinkedContactCount(gerenciaRows);
+        const contactos = core.uniqueContacts;
         const mensajes = core.uniqueLeadsLinkedToContact;
         const linkedPurchaseRows = getLinkedPurchaseRows(gerenciaRows);
         const cargas = linkedPurchaseRows.length;
