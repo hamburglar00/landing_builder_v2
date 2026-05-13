@@ -140,9 +140,14 @@ export function TelefonosPageContent({
       setMaxPhonesAllowed(null);
     }
 
-    const list = isAdmin
+    const listRaw = isAdmin
       ? await fetchGerenciasForAdmin(uid)
       : await fetchGerencias(uid);
+    const list = [...listRaw].sort((a, b) => {
+      const byName = a.nombre.localeCompare(b.nombre, "es", { sensitivity: "base" });
+      if (byName !== 0) return byName;
+      return Number(a.gerencia_id ?? a.id) - Number(b.gerencia_id ?? b.id);
+    });
     setGerencias(list);
     if (list.length === 0) {
       setPhonesByGerencia({});
