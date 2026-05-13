@@ -264,6 +264,7 @@ export default function GerenciasPerformancePanel({
     return visiblePerformanceRows.reduce(
       (acc, row) => {
         const cost = parseAmount(costByGerencia[`${month}::${row.label}`] ?? "");
+        const gasto = row.mensajes * cost;
         return {
           contactos: acc.contactos + row.contactos,
           pctInicioConversacion: acc.pctInicioConversacion + row.pctInicioConversacion,
@@ -272,7 +273,9 @@ export default function GerenciasPerformancePanel({
           montoCargado: acc.montoCargado + row.montoCargado,
           pctCarga: acc.pctCarga + row.pctCarga,
           pctRecarga: acc.pctRecarga + row.pctRecarga,
-          gasto: acc.gasto + row.mensajes * cost,
+          gasto: acc.gasto + gasto,
+          roas: acc.roas + (gasto > 0 ? row.montoCargado / gasto : 0),
+          roasCount: acc.roasCount + (gasto > 0 ? 1 : 0),
         };
       },
       {
@@ -284,10 +287,13 @@ export default function GerenciasPerformancePanel({
         pctCarga: 0,
         pctRecarga: 0,
         gasto: 0,
+        roas: 0,
+        roasCount: 0,
       },
     );
   }, [costByGerencia, month, visiblePerformanceRows]);
   const rowAverageDivisor = visiblePerformanceRows.length || 1;
+  const roasAverageDivisor = totals.roasCount || 1;
 
   const applyGlobalCost = () => {
     setCostByGerencia((prev) => {
@@ -522,9 +528,27 @@ export default function GerenciasPerformancePanel({
                 </td>
                 <td className="px-1.5 py-2 text-center font-semibold text-amber-300">{formatNumber(totals.mensajes / rowAverageDivisor)}</td>
                 <td className="px-1.5 py-2 text-center font-semibold text-sky-300">{formatNumber(totals.cargas / rowAverageDivisor)}</td>
-                <td className="px-1.5 py-2 text-center font-semibold text-emerald-300">{formatMoney(totals.montoCargado)}</td>
+                <td className="px-1.5 py-2 text-center font-semibold text-emerald-300">{formatMoney(totals.montoCargado / rowAverageDivisor)}</td>
                 <td className="px-1.5 py-2 text-center font-semibold text-zinc-200">{formatPercent(totals.pctCarga / rowAverageDivisor)}</td>
                 <td className="px-1.5 py-2 text-center font-semibold text-zinc-200">{formatPercent(totals.pctRecarga / rowAverageDivisor)}</td>
+                <td className="px-1.5 py-2 text-center text-zinc-500">-</td>
+                <td className="px-1.5 py-2 text-center font-semibold text-emerald-300">{formatMoney(totals.gasto / rowAverageDivisor)}</td>
+                {showRoas && (
+                  <td className="px-1.5 py-2 text-center font-semibold text-cyan-300">
+                    {totals.roasCount > 0 ? formatRoas(totals.roas / roasAverageDivisor) : "-"}
+                  </td>
+                )}
+              </tr>
+              <tr className="border-t border-zinc-800/80">
+                <td className="px-1.5 py-2 text-center font-semibold text-zinc-100">Totales</td>
+                <td className="px-1.5 py-2 text-center text-zinc-500">-</td>
+                <td className="px-1.5 py-2 text-center font-semibold text-zinc-200">{formatNumber(totals.contactos)}</td>
+                <td className="px-1.5 py-2 text-center text-zinc-500">-</td>
+                <td className="px-1.5 py-2 text-center font-semibold text-amber-300">{formatNumber(totals.mensajes)}</td>
+                <td className="px-1.5 py-2 text-center font-semibold text-sky-300">{formatNumber(totals.cargas)}</td>
+                <td className="px-1.5 py-2 text-center font-semibold text-emerald-300">{formatMoney(totals.montoCargado)}</td>
+                <td className="px-1.5 py-2 text-center text-zinc-500">-</td>
+                <td className="px-1.5 py-2 text-center text-zinc-500">-</td>
                 <td className="px-1.5 py-2 text-center text-zinc-500">-</td>
                 <td className="px-1.5 py-2 text-center font-semibold text-emerald-300">{formatMoney(totals.gasto)}</td>
                 {showRoas && (
