@@ -780,13 +780,11 @@ export function TelefonosPageContent({
                     {(g.source_type ?? "pbadmin") === "manual" ? "Manual" : "PBadmin"}
                   </span>
                   <span className="inline-flex items-center gap-1.5 whitespace-nowrap text-xs text-zinc-500 lg:justify-end">
-                    {activePhonesCount > 0 ? (
-                      <span
-                        className="h-1.5 w-1.5 rounded-full bg-emerald-400/80"
-                        aria-label="Tiene telefonos activos"
-                        title="Tiene telefonos activos"
-                      />
-                    ) : null}
+                    <span
+                      className={`h-1.5 w-1.5 rounded-full ${activePhonesCount > 0 ? "bg-emerald-400/80" : "bg-red-400/80"}`}
+                      aria-label={activePhonesCount > 0 ? "Tiene telefonos activos" : "No tiene telefonos activos"}
+                      title={activePhonesCount > 0 ? "Tiene telefonos activos" : "No tiene telefonos activos"}
+                    />
                     activos: {activePhonesCount}
                   </span>
                   <div className="whitespace-nowrap text-xs text-zinc-500 lg:text-right">
