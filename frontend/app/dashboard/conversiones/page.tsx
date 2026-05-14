@@ -814,6 +814,7 @@ export default function DashboardConversionesPage() {
         r.status,
         r.promo_code,
         r.coelsa_id ?? "",
+        r.transaction_id ?? "",
         r.phone,
         r.action_event_id ?? "",
         r.response_body,
@@ -2029,7 +2030,7 @@ export default function DashboardConversionesPage() {
               <input
                 value={inboxSearch}
                 onChange={(e) => setInboxSearch(e.target.value)}
-                placeholder="Buscar por phone, promo, coelsa, status..."
+                placeholder="Buscar por phone, promo, coelsa, transaction, status..."
                 className="h-8 w-72 rounded-lg border border-zinc-700 bg-zinc-900 px-3 text-xs text-zinc-100 placeholder:text-zinc-500"
               />
             </div>
@@ -2048,6 +2049,7 @@ export default function DashboardConversionesPage() {
                     <th className="px-2 py-2 font-medium text-zinc-300 whitespace-nowrap">Phone</th>
                     <th className="px-2 py-2 font-medium text-zinc-300 whitespace-nowrap">Promo code</th>
                     <th className="px-2 py-2 font-medium text-zinc-300 whitespace-nowrap">Coelsa ID</th>
+                    <th className="px-2 py-2 font-medium text-zinc-300 whitespace-nowrap">Transaction ID</th>
                     <th className="px-2 py-2 font-medium text-zinc-300 whitespace-nowrap">HTTP</th>
                     <th className="px-2 py-2 font-medium text-zinc-300 whitespace-nowrap">Respuesta</th>
                     <th className="px-2 py-2 font-medium text-zinc-300 whitespace-nowrap">Payload</th>
@@ -2122,6 +2124,7 @@ export default function DashboardConversionesPage() {
                       <td className="px-2 py-1.5 text-zinc-300 font-mono whitespace-nowrap">{row.phone || "-"}</td>
                       <td className="px-2 py-1.5 text-zinc-300 whitespace-nowrap">{row.promo_code || "-"}</td>
                       <td className="px-2 py-1.5 text-zinc-300 font-mono whitespace-nowrap">{row.coelsa_id || "-"}</td>
+                      <td className="px-2 py-1.5 text-zinc-300 font-mono whitespace-nowrap">{row.transaction_id || "-"}</td>
                       <td className="px-2 py-1.5 text-zinc-400 whitespace-nowrap">{row.http_status ?? "-"}</td>
                       <td className="px-2 py-1.5 text-zinc-500 max-w-[280px] truncate" title={row.response_body || "-"}>
                         {truncateText(row.response_body || "-", 80)}

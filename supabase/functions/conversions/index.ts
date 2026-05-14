@@ -78,6 +78,7 @@ interface ConversionRow {
   purchase_event_time: number | null;
   purchase_payload_raw: string;
   purchase_coelsa_id?: string;
+  purchase_transaction_id?: string;
   test_event_code?: string;
   purchase_type?: "first" | "repeat" | null;
   client_ip: string;
@@ -124,6 +125,17 @@ const norm = (s: unknown): string => String(s ?? "").trim();
 
 function normalizeCoelsaId(v: unknown): string {
   return norm(v).replace(/\s+/g, "").toUpperCase().slice(0, 120);
+}
+
+function normalizeTransactionId(v: unknown): string {
+  return norm(v).replace(/\s+/g, "").toUpperCase().slice(0, 120);
+}
+
+function purchaseDedupeIdsFromPayload(p: Params): string[] {
+  return Array.from(new Set([
+    normalizeCoelsaId(p.coelsa_id),
+    normalizeTransactionId(p.transaction_id),
+  ].filter(Boolean)));
 }
 
 function normalizePromoCode(v: unknown): string {
@@ -395,6 +407,7 @@ async function insertInboundEvent(
       action,
       action_event_id: norm(payload.action_event_id),
       coelsa_id: normalizeCoelsaId(payload.coelsa_id),
+      transaction_id: normalizeTransactionId(payload.transaction_id),
       promo_code: normalizePromoCode(payload.promo_code ?? payload.promoCode),
       phone: sanitizePhone(payload.phone),
       payload_raw: safePayloadRaw(payload),
@@ -405,20 +418,34 @@ async function insertInboundEvent(
   return data?.id ?? null;
 }
 
-async function findPurchaseByCoelsaId(
+async function findPurchaseByDedupeIds(
   db: SupabaseClient,
   userId: string,
-  coelsaId: string,
+  dedupeIds: string[],
 ): Promise<{ id: string; purchase_event_id: string; estado: string } | null> {
-  if (!coelsaId) return null;
-  const { data } = await db
-    .from("conversions")
-    .select("id, purchase_event_id, estado")
-    .eq("user_id", userId)
-    .eq("purchase_coelsa_id", coelsaId)
-    .order("created_at", { ascending: false })
-    .limit(1)
-    .maybeSingle();
+  const ids = Array.from(new Set(dedupeIds.map((id) => norm(id)).filter(Boolean)));
+  if (ids.length === 0) return null;
+
+  const [byCoelsa, byTransaction] = await Promise.all([
+    db
+      .from("conversions")
+      .select("id, purchase_event_id, estado")
+      .eq("user_id", userId)
+      .in("purchase_coelsa_id", ids)
+      .order("created_at", { ascending: false })
+      .limit(1)
+      .maybeSingle(),
+    db
+      .from("conversions")
+      .select("id, purchase_event_id, estado")
+      .eq("user_id", userId)
+      .in("purchase_transaction_id", ids)
+      .order("created_at", { ascending: false })
+      .limit(1)
+      .maybeSingle(),
+  ]);
+
+  const data = byCoelsa.data ?? byTransaction.data;
   return (data as { id: string; purchase_event_id: string; estado: string } | null) ?? null;
 }
 
@@ -1728,6 +1755,7 @@ async function handlePurchase(
   const testEventCode = norm(p.test_event_code);
   const purchasePayloadRaw = safePayloadRaw(p);
   const coelsaId = normalizeCoelsaId(p.coelsa_id);
+  const transactionId = normalizeTransactionId(p.transaction_id);
   const generatedExternalId = norm(p.external_id) || generateEventId();
 
   const promoCode = derivePromoCodeFromPayload(p);
@@ -1872,6 +1900,7 @@ async function handlePurchase(
       purchase_event_time: purchaseEventTime,
       purchase_payload_raw: purchasePayloadRaw,
       purchase_coelsa_id: coelsaId,
+      purchase_transaction_id: transactionId,
       purchase_type: "first",
     };
     if (inboundMetaPixelId) {
@@ -1968,6 +1997,7 @@ async function handlePurchase(
       purchase_event_time: purchaseEventTime,
       purchase_payload_raw: purchasePayloadRaw,
       purchase_coelsa_id: coelsaId,
+      purchase_transaction_id: transactionId,
       test_event_code: testEventCode,
       purchase_type: "first",
       client_ip: "",
@@ -2067,6 +2097,7 @@ async function handlePurchase(
     purchase_event_time: purchaseEventTime,
     purchase_payload_raw: purchasePayloadRaw,
     purchase_coelsa_id: coelsaId,
+    purchase_transaction_id: transactionId,
     test_event_code: testEventCode || srcRow?.test_event_code || "",
     purchase_type: "repeat",
     client_ip: srcRow?.client_ip ?? "",
@@ -2141,6 +2172,8 @@ async function handleSimplePurchase(
   }
   const testEventCode = norm(p.test_event_code);
   const purchasePayloadRaw = safePayloadRaw(p);
+  const coelsaId = normalizeCoelsaId(p.coelsa_id);
+  const transactionId = normalizeTransactionId(p.transaction_id);
 
   const payloadEmail = norm(p.email);
   const payloadCuitCuil = deriveCuitCuilFromPayload(p);
@@ -2191,6 +2224,7 @@ async function handleSimplePurchase(
     purchase_event_time: purchaseEventTime,
     purchase_payload_raw: purchasePayloadRaw,
     purchase_coelsa_id: coelsaId,
+    purchase_transaction_id: transactionId,
     test_event_code: testEventCode,
     purchase_type: isRepeatSimple ? "repeat" : "first",
     client_ip: srcRow?.client_ip ?? "",
@@ -2394,19 +2428,21 @@ Deno.serve(async (req) => {
       return runAndFinalize((ctx) => handleLead(db, params, landing, cfg, pixelConfigs, ctx));
     }
     if (rawAction === "PURCHASE") {
-      const coelsaId = normalizeCoelsaId(params.coelsa_id);
-      if (coelsaId) {
-        const existingPurchase = await findPurchaseByCoelsaId(db, userId, coelsaId);
+      const purchaseDedupeIds = purchaseDedupeIdsFromPayload(params);
+      if (purchaseDedupeIds.length > 0) {
+        const existingPurchase = await findPurchaseByDedupeIds(db, userId, purchaseDedupeIds);
         if (existingPurchase) {
           await writeLog(
             db,
             userId,
             "main",
             "INFO",
-            "Duplicado ignorado por coelsa_id",
+            "Duplicado ignorado por coelsa_id/transaction_id",
             JSON.stringify({
               action: "PURCHASE",
-              coelsa_id: coelsaId,
+              coelsa_id: normalizeCoelsaId(params.coelsa_id),
+              transaction_id: normalizeTransactionId(params.transaction_id),
+              dedupe_ids: purchaseDedupeIds,
               landing_name: landingName,
               existing_conversion_id: existingPurchase.id,
             }),
@@ -2414,10 +2450,10 @@ Deno.serve(async (req) => {
             undefined,
             undefined,
             safePayloadRaw(params),
-            "duplicado ignorado por coelsa_id",
+            "duplicado ignorado por coelsa_id/transaction_id",
           );
           return markDeduplicated(
-            textResponse("Duplicado ignorado (coelsa_id ya procesado)", 200),
+            textResponse("Duplicado ignorado (coelsa_id/transaction_id ya procesado)", 200),
             existingPurchase.id,
           );
         }

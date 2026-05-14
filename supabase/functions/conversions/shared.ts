@@ -39,6 +39,7 @@ export interface ConversionRow {
   purchase_event_time: number | null;
   purchase_payload_raw: string;
   purchase_coelsa_id?: string;
+  purchase_transaction_id?: string;
   purchase_type?: "first" | "repeat" | null;
   client_ip: string;
   agent_user: string;
