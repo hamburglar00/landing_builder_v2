@@ -99,6 +99,8 @@ export function TelefonosPageContent({
   const [globalResetting, setGlobalResetting] = useState(false);
   const [globalResettingMessages, setGlobalResettingMessages] = useState(false);
   const [globalDeletingInactive, setGlobalDeletingInactive] = useState(false);
+  const [autoResetDaily, setAutoResetDaily] = useState(false);
+  const [autoResetSaving, setAutoResetSaving] = useState(false);
   const [switchingGerenciaId, setSwitchingGerenciaId] = useState<number | null>(null);
   const [openGerenciaId, setOpenGerenciaId] = useState<number | null>(null);
   const [nextSyncCountdown, setNextSyncCountdown] = useState<string>("--:--");
@@ -136,8 +138,17 @@ export function TelefonosPageContent({
         .eq("user_id", uid)
         .maybeSingle();
       setMaxPhonesAllowed(Number.isFinite(Number(sub?.max_phones)) ? Number(sub?.max_phones) : null);
+
+      const { data: config, error: configError } = await supabase
+        .from("conversions_config")
+        .select("phone_auto_reset_daily")
+        .eq("user_id", uid)
+        .maybeSingle();
+      if (configError) throw configError;
+      setAutoResetDaily(Boolean(config?.phone_auto_reset_daily));
     } else {
       setMaxPhonesAllowed(null);
+      setAutoResetDaily(false);
     }
 
     const listRaw = isAdmin
@@ -473,6 +484,33 @@ export function TelefonosPageContent({
     }
   };
 
+  const handleAutoResetToggle = async () => {
+    if (!userId || isAdmin) return;
+    const next = !autoResetDaily;
+    const previous = autoResetDaily;
+    setAutoResetDaily(next);
+    setAutoResetSaving(true);
+    setError(null);
+    try {
+      const { error: updateError } = await supabase
+        .from("conversions_config")
+        .upsert(
+          {
+            user_id: userId,
+            phone_auto_reset_daily: next,
+            updated_at: new Date().toISOString(),
+          },
+          { onConflict: "user_id" },
+        );
+      if (updateError) throw updateError;
+    } catch (e) {
+      setAutoResetDaily(previous);
+      setError(e instanceof Error ? e.message : "Error al actualizar reinicio automatico");
+    } finally {
+      setAutoResetSaving(false);
+    }
+  };
+
   const handleDeleteInactive = async () => {
     if (!userId) return;
     const inactiveIds = Object.values(phonesByGerencia)
@@ -687,6 +725,36 @@ export function TelefonosPageContent({
             const hasPbadmin = gerencias.some((g) => (g.source_type ?? "pbadmin") === "pbadmin");
             return (
           <div className="ml-auto flex flex-wrap items-center gap-2">
+            {!isAdmin ? (
+              <button
+                type="button"
+                onClick={() => void handleAutoResetToggle()}
+                disabled={autoResetSaving}
+                aria-pressed={autoResetDaily}
+                title="Si esta activo, todos los dias a las 00:00 se reinician Contador y Mensajes operativos. No borra historicos."
+                className="inline-flex h-8 items-center gap-2 rounded-lg border border-zinc-700 bg-zinc-800 px-3 text-xs font-medium text-zinc-200 transition hover:bg-zinc-700 disabled:opacity-60"
+              >
+                <span>Auto 00:00</span>
+                <span className="text-[10px] text-zinc-500">
+                  {autoResetDaily ? "On" : "Off"}
+                </span>
+                <span
+                  className={`relative inline-flex h-4 w-7 rounded-full border transition ${
+                    autoResetDaily
+                      ? "border-cyan-400/60 bg-cyan-500/30"
+                      : "border-zinc-600 bg-zinc-900"
+                  }`}
+                >
+                  <span
+                    className={`absolute top-0.5 h-2.5 w-2.5 rounded-full transition ${
+                      autoResetDaily
+                        ? "left-3.5 bg-cyan-300"
+                        : "left-0.5 bg-zinc-400"
+                    }`}
+                  />
+                </span>
+              </button>
+            ) : null}
             <button
               type="button"
               onClick={() => void handleSync(null)}
