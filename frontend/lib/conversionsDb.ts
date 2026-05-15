@@ -838,19 +838,31 @@ async function fetchGerenciaAvailabilitySummariesInternal(
   const startIso = toIsoIfValid(range.start);
   const endIso = toIsoIfValid(range.end);
 
-  let query = supabase
-    .from("gerencia_phone_availability_snapshots")
-    .select("gerencia_id, active_phone_count, total_phone_count, assigned_landing_count, checked_at, gerencias!inner(id,nombre,gerencia_id)")
-    .order("checked_at", { ascending: true });
-  if (userId) query = query.eq("user_id", userId);
-  if (startIso) query = query.gte("checked_at", startIso);
-  if (endIso) query = query.lte("checked_at", endIso);
+  const rows: GerenciaAvailabilitySnapshotRaw[] = [];
+  const pageSize = 1000;
+  let offset = 0;
 
-  const { data, error } = await query;
-  if (error) throw error;
+  while (true) {
+    let query = supabase
+      .from("gerencia_phone_availability_snapshots")
+      .select("gerencia_id, active_phone_count, total_phone_count, assigned_landing_count, checked_at, gerencias!inner(id,nombre,gerencia_id)")
+      .order("checked_at", { ascending: true })
+      .range(offset, offset + pageSize - 1);
+    if (userId) query = query.eq("user_id", userId);
+    if (startIso) query = query.gte("checked_at", startIso);
+    if (endIso) query = query.lte("checked_at", endIso);
+
+    const { data, error } = await query;
+    if (error) throw error;
+
+    const chunk = (data ?? []) as unknown as GerenciaAvailabilitySnapshotRaw[];
+    rows.push(...chunk);
+    if (chunk.length < pageSize) break;
+    offset += pageSize;
+  }
 
   const byLabel = new Map<string, { sampleCount: number; activeSampleCount: number }>();
-  for (const row of (data ?? []) as unknown as GerenciaAvailabilitySnapshotRaw[]) {
+  for (const row of rows) {
     if (Number(row.assigned_landing_count ?? 0) <= 0) continue;
     const joined = Array.isArray(row.gerencias) ? row.gerencias[0] : row.gerencias;
     const internalId = Number(joined?.id ?? row.gerencia_id);
