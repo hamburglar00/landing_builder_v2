@@ -220,6 +220,16 @@ function truncateText(value: string, len = 35) {
   return value.length > len ? value.slice(0, len) + "..." : value;
 }
 
+function formatRawPayload(value: unknown) {
+  const s = String(value ?? "").trim();
+  if (!s) return "-";
+  try {
+    return JSON.stringify(JSON.parse(s), null, 2);
+  } catch {
+    return s;
+  }
+}
+
 function formatIntegerWithThousands(value: number) {
   return new Intl.NumberFormat("es-AR", { maximumFractionDigits: 0 }).format(
     Math.max(0, Math.trunc(value || 0)),
@@ -368,17 +378,77 @@ function EditableEmailCell({ row, onSaved }: { row: ConversionRow; onSaved: (id:
   );
 }
 
+function RawPayloadCell({ col, value, className }: { col: ColKey; value: unknown; className: string }) {
+  const [tooltip, setTooltip] = useState<{
+    left: number;
+    top: number;
+    width: number;
+    maxHeight: number;
+  } | null>(null);
+  const formatted = formatRawPayload(value);
+  const preview = truncateText(String(value ?? "") || "-", 35);
+
+  const updateTooltipPosition = (event: React.MouseEvent) => {
+    const margin = 12;
+    const gap = 14;
+    const width = Math.min(780, window.innerWidth - margin * 2);
+    const maxHeight = Math.min(720, window.innerHeight - margin * 2);
+    let left = event.clientX + gap;
+    let top = event.clientY + gap;
+
+    if (left + width > window.innerWidth - margin) {
+      left = window.innerWidth - width - margin;
+    }
+    if (top + maxHeight > window.innerHeight - margin) {
+      top = window.innerHeight - maxHeight - margin;
+    }
+
+    setTooltip({ left: Math.max(margin, left), top: Math.max(margin, top), width, maxHeight });
+  };
+
+  return (
+    <td
+      key={col}
+      className={`${className} max-w-[220px] truncate cursor-help`}
+      onMouseEnter={updateTooltipPosition}
+      onMouseMove={updateTooltipPosition}
+      onMouseLeave={() => setTooltip(null)}
+    >
+      {preview}
+      {tooltip && (
+        <div
+          className="fixed z-[9999] overflow-hidden rounded-xl border border-zinc-700 bg-zinc-950/95 p-3 text-left shadow-2xl shadow-black/60 backdrop-blur"
+          style={{
+            left: tooltip.left,
+            top: tooltip.top,
+            width: tooltip.width,
+            maxHeight: tooltip.maxHeight,
+          }}
+        >
+          <div className="mb-2 flex items-center justify-between gap-3 border-b border-zinc-800 pb-2">
+            <span className="text-[11px] font-semibold uppercase tracking-[0.18em] text-cyan-300">
+              Payload completo
+            </span>
+            <span className="text-[10px] text-zinc-500">Contact / Lead / Purchase</span>
+          </div>
+          <pre
+            className="overflow-auto whitespace-pre-wrap break-words font-mono text-[10px] leading-relaxed text-zinc-200"
+            style={{ maxHeight: tooltip.maxHeight - 48 }}
+          >
+            {formatted}
+          </pre>
+        </div>
+      )}
+    </td>
+  );
+}
+
 function cellValue(c: ConversionRow, col: ColKey): React.ReactNode {
   const cell = "px-2 py-1.5 whitespace-nowrap";
   const mono = `${cell} font-mono`;
   const dim = `${cell} text-zinc-400`;
   const dimMono = `${dim} font-mono`;
   const tip = (v: unknown) => String(v ?? "-") || "-";
-  const tipRawJson = (v: unknown) => {
-    const s = String(v ?? "").trim();
-    if (!s) return "-";
-    try { return JSON.stringify(JSON.parse(s), null, 2); } catch { return s; }
-  };
   const timestampText = new Date(c.created_at).toLocaleString("es-AR", {
     year: "numeric", month: "2-digit", day: "2-digit",
     hour: "2-digit", minute: "2-digit", second: "2-digit",
@@ -411,13 +481,13 @@ function cellValue(c: ConversionRow, col: ColKey): React.ReactNode {
     case "contact_event_id": return <td key={col} className={dimMono} title={c.contact_event_id}>{truncateId(c.contact_event_id)}</td>;
     case "contact_event_time": return <td key={col} className={dim} title={tip(c.contact_event_time)}>{c.contact_event_time ?? "-"}</td>;
     case "sendContactPixel": return <td key={col} className={dim} title={tip(c.sendContactPixel)}>{c.sendContactPixel ? "true" : "false"}</td>;
-    case "contact_payload_raw": return <td key={col} className={`${dim} max-w-[220px] truncate`} title={tipRawJson(c.contact_payload_raw)}>{truncateText(c.contact_payload_raw || "-", 35)}</td>;
+    case "contact_payload_raw": return <RawPayloadCell key={col} col={col} value={c.contact_payload_raw} className={dim} />;
     case "lead_event_id": return <td key={col} className={dimMono} title={c.lead_event_id}>{truncateId(c.lead_event_id)}</td>;
     case "lead_event_time": return <td key={col} className={dim} title={tip(c.lead_event_time)}>{c.lead_event_time ?? "-"}</td>;
-    case "lead_payload_raw": return <td key={col} className={`${dim} max-w-[220px] truncate`} title={tipRawJson(c.lead_payload_raw)}>{truncateText(c.lead_payload_raw || "-", 35)}</td>;
+    case "lead_payload_raw": return <RawPayloadCell key={col} col={col} value={c.lead_payload_raw} className={dim} />;
     case "purchase_event_id": return <td key={col} className={dimMono} title={c.purchase_event_id}>{truncateId(c.purchase_event_id)}</td>;
     case "purchase_event_time": return <td key={col} className={dim} title={tip(c.purchase_event_time)}>{c.purchase_event_time ?? "-"}</td>;
-    case "purchase_payload_raw": return <td key={col} className={`${dim} max-w-[220px] truncate`} title={tipRawJson(c.purchase_payload_raw)}>{truncateText(c.purchase_payload_raw || "-", 35)}</td>;
+    case "purchase_payload_raw": return <RawPayloadCell key={col} col={col} value={c.purchase_payload_raw} className={dim} />;
     case "test_event_code": return <td key={col} className={dimMono} title={tip(c.test_event_code)}>{c.test_event_code || "-"}</td>;
     case "timestamp": return <td key={col} className={dim} title={timestampText}>{timestampText}</td>;
     case "clientIP": return <td key={col} className={dimMono} title={tip(c.client_ip)}>{c.client_ip || "-"}</td>;
