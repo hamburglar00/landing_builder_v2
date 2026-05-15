@@ -41,15 +41,10 @@ function cleanText(value: unknown, maxLength: number): string {
 }
 
 function normalizePhone(value: unknown): string {
-  let digits = String(value ?? "").replace(/\D/g, "");
-  digits = digits.replace(/^00+/, "");
-  digits = digits.replace(/^0+/, "");
-
+  const digits = String(value ?? "").replace(/\D/g, "");
   if (!digits) return "";
-  if (digits.startsWith("549")) return digits.slice(0, 32);
-  if (digits.startsWith("54")) return `549${digits.slice(2)}`.slice(0, 32);
-  if (digits.startsWith("9") && digits.length >= 9) return `54${digits}`.slice(0, 32);
-  return `549${digits}`.slice(0, 32);
+  if (digits.startsWith("549")) return digits.length === 13 ? digits : "";
+  return digits.length === 10 ? `549${digits}` : "";
 }
 
 function normalizeEmail(value: unknown): string {
@@ -108,14 +103,17 @@ Deno.serve(async (req) => {
     const body = await req.json().catch(() => ({}));
     const slug = cleanText(body?.slug, 120).toLowerCase();
     const username = cleanText(body?.username, 80);
+    const rawPhone = cleanText(body?.phone, 32);
     const phone = normalizePhone(body?.phone);
     const email = normalizeEmail(body?.email);
     const visitorToken = cleanText(body?.visitor_token, 120);
 
-    if (!slug || !username || !phone || !email || !visitorToken) {
+    if (!slug || !username || !rawPhone || !email || !visitorToken) {
       return jsonResponse({ error: "Nombre de usuario, telefono y email son obligatorios." }, 400);
     }
-    if (phone.length < 7) return jsonResponse({ error: "Telefono invalido." }, 400);
+    if (!phone) {
+      return jsonResponse({ error: "Telefono invalido. Ingresa 10 digitos o 13 digitos empezando con 549." }, 400);
+    }
     if (!isValidEmail(email)) return jsonResponse({ error: "Email invalido." }, 400);
 
     const { data: promotion, error: promotionError } = await db

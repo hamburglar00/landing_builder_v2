@@ -55,6 +55,13 @@ function cssUrl(value: string): string {
   return value.replace(/\\/g, "\\\\").replace(/"/g, '\\"');
 }
 
+function normalizeArgentinaMobilePhone(value: string): string | null {
+  const digits = String(value ?? "").replace(/\D/g, "");
+  if (digits.startsWith("549")) return digits.length === 13 ? digits : null;
+  if (digits.length === 10) return `549${digits}`;
+  return null;
+}
+
 const COIN_RAIN = Array.from({ length: 34 }, (_, index) => index);
 
 export default function PublicPromotionPage() {
@@ -283,13 +290,13 @@ export default function PublicPromotionPage() {
       setError("No es un email valido.");
       return;
     }
-    const phoneDigits = phone.replace(/\D/g, "");
-    if (phoneDigits.length < 8 || phoneDigits.length > 15) {
-      setError("No es un telefono valido.");
+    const normalizedPhone = normalizeArgentinaMobilePhone(phone);
+    if (!normalizedPhone) {
+      setError("Ingresa un telefono valido: 10 digitos o 13 digitos empezando con 549.");
       return;
     }
 
-    setConfirmData({ username, phone, email });
+    setConfirmData({ username, phone: normalizedPhone, email });
   };
 
   const handleConfirmParticipation = async () => {
@@ -513,7 +520,7 @@ export default function PublicPromotionPage() {
           value={form.phone}
           onChange={(e) => setForm((prev) => ({ ...prev, phone: e.target.value }))}
           className="w-full rounded-xl border border-zinc-800 bg-black/70 px-4 py-3 text-base text-white outline-none focus:border-amber-500 sm:text-sm"
-          placeholder="Telefono"
+          placeholder="3512332211 o 5493512332211"
           inputMode="tel"
         />
         <input
