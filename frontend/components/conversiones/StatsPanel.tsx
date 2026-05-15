@@ -919,13 +919,9 @@ export default function StatsPanel({
           <KpiCard
             label="Porcentaje de inicio de conversación"
             value={pct(stats.uniqueLeadsLinkedToContact, stats.uniqueContacts)}
-            sub={
-              stats.inferredLeadsFromContactPurchase > 0
-                ? `${stats.uniqueLeadsLinkedToContact} de ${stats.uniqueContacts} contactos (${stats.realLeadsLinkedToContact} + ${stats.inferredLeadsFromContactPurchase} inf.)`
-                : `${stats.uniqueLeadsLinkedToContact} de ${stats.uniqueContacts} contactos`
-            }
+            sub={`${stats.uniqueLeadsLinkedToContact} de ${stats.uniqueContacts} contactos`}
             color="text-amber-400"
-            tooltip="Porcentaje de jugadores que, despues de tocar el boton de la landing, decidieron enviar un mensaje. Incluye Leads inferidos cuando hubo Contact -> Purchase sin Lead."
+            tooltip="Porcentaje de jugadores que, despues de tocar el boton de la landing, decidieron enviar un mensaje. Usa el total de mensajes recibidos, incluyendo inferidos."
           />
           <KpiCard
             label="Porcentaje de carga"
