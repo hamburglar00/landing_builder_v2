@@ -81,9 +81,7 @@ export function HomeOverview({
       premiumThreshold ?? 50000,
     );
 
-    const porcentajeCarga = core.uniqueLeads
-      ? (core.firstLoadPurchasersLinkedToLead / core.uniqueLeads) * 100
-      : 0;
+    const porcentajeCarga = core.uniqueLeadsLinkedToContactWithInferred ? (core.firstLoadPurchasersAttributed / core.uniqueLeadsLinkedToContactWithInferred) * 100 : 0;
     const cargaPromedio = core.totalPurchaseCount > 0 ? core.totalRevenue / core.totalPurchaseCount : 0;
 
     return {

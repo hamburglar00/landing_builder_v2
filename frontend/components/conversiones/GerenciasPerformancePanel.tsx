@@ -116,7 +116,7 @@ function externalKey(row: ConversionRow): string {
   return ext ? `${row.user_id}::${ext}` : "";
 }
 
-function getLinkedPurchaseRows(rows: ConversionRow[]): ConversionRow[] {
+function getAttributedPurchaseRows(rows: ConversionRow[]): ConversionRow[] {
   const contactKeys = new Set(
     rows
       .filter((row) => String(row.contact_event_id ?? "").trim())
@@ -132,7 +132,7 @@ function getLinkedPurchaseRows(rows: ConversionRow[]): ConversionRow[] {
 
   return rows.filter((row) => (
     String(row.purchase_event_id ?? "").trim() !== "" &&
-    leadLinkedKeys.has(externalKey(row))
+    (leadLinkedKeys.has(externalKey(row)) || contactKeys.has(externalKey(row)))
   ));
 }
 
@@ -234,10 +234,10 @@ export default function GerenciasPerformancePanel({
         const funnel = buildFunnelContactsFromConversions(gerenciaRows);
         const core = computeCoreStats(gerenciaRows, funnel, gerenciaRows, premiumThreshold);
         const contactos = core.uniqueContacts;
-        const mensajes = core.uniqueLeadsLinkedToContact;
-        const linkedPurchaseRows = getLinkedPurchaseRows(gerenciaRows);
-        const cargas = linkedPurchaseRows.length;
-        const montoCargado = linkedPurchaseRows.reduce((sum, row) => sum + (Number(row.valor) || 0), 0);
+        const mensajes = core.uniqueLeadsLinkedToContactWithInferred;
+        const attributedPurchaseRows = getAttributedPurchaseRows(gerenciaRows);
+        const cargas = attributedPurchaseRows.length;
+        const montoCargado = attributedPurchaseRows.reduce((sum, row) => sum + (Number(row.valor) || 0), 0);
         return {
           label,
           contactos,
@@ -246,9 +246,9 @@ export default function GerenciasPerformancePanel({
           cargas,
           montoCargado,
           disponibilidad: availabilityByLabel.get(label)?.availabilityPct ?? null,
-          pctCarga: mensajes > 0 ? (core.firstLoadPurchasersLinkedToLead / mensajes) * 100 : 0,
-          pctRecarga: core.firstLoadPurchasersLinkedToLead > 0
-            ? (core.repeatFromFirstInRange / core.firstLoadPurchasersLinkedToLead) * 100
+          pctCarga: mensajes > 0 ? (core.firstLoadPurchasersAttributed / mensajes) * 100 : 0,
+          pctRecarga: core.firstLoadPurchasersAttributed > 0
+            ? (core.repeatFromAttributedFirstInRange / core.firstLoadPurchasersAttributed) * 100
             : 0,
         };
       });

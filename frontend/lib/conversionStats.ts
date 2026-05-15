@@ -5,11 +5,15 @@ export interface CoreStats {
   uniqueContacts: number;
   uniqueLeads: number;
   uniqueLeadsLinkedToContact: number;
+  inferredLeadsFromContactPurchase: number;
+  uniqueLeadsLinkedToContactWithInferred: number;
   firstLoadPurchasers: number;
   firstLoadPurchasersLinkedToLead: number;
+  firstLoadPurchasersAttributed: number;
   totalPurchases: number;
   purchaseRepeat: number;
   repeatFromFirstInRange: number;
+  repeatFromAttributedFirstInRange: number;
   firstLoadPlayers: number;
   repeatPlayers: number;
   premiumPlayers: number;
@@ -94,6 +98,8 @@ export function computeCoreStats(
   const firstLoadPurchasers = phoneToFirstPurchase.size;
   let firstLoadPurchasersLinkedToLead = 0;
   const firstExternalKeysLinkedToLead = new Set<string>();
+  const firstExternalKeysAttributed = new Set<string>();
+  let inferredLeadsFromContactPurchase = 0;
   for (const c of phoneToFirstPurchase.values()) {
     const ext = String(c.external_id ?? "").trim();
     if (!ext) continue;
@@ -101,8 +107,16 @@ export function computeCoreStats(
     if (leadExternalKeysLinkedToContact.has(key)) {
       firstLoadPurchasersLinkedToLead++;
       firstExternalKeysLinkedToLead.add(key);
+      firstExternalKeysAttributed.add(key);
+    } else if (contactExternalKeys.has(key)) {
+      // If a first purchase is tied to a prior Contact but the Lead was lost,
+      // infer that one conversation happened so the funnel denominator stays fair.
+      inferredLeadsFromContactPurchase++;
+      firstExternalKeysAttributed.add(key);
     }
   }
+  const uniqueLeadsLinkedToContactWithInferred = uniqueLeadsLinkedToContact + inferredLeadsFromContactPurchase;
+  const firstLoadPurchasersAttributed = firstLoadPurchasersLinkedToLead + inferredLeadsFromContactPurchase;
 
   const totalPurchases = purchaseRows.length;
   const purchaseRepeat = dedupeByUserPhone(repeatPurchaseRows).size;
@@ -113,6 +127,7 @@ export function computeCoreStats(
       .map((x) => `${x.userId}::${x.ext}`),
   );
   const repeatFromFirstInRange = [...repeatExternalKeys].filter((k) => firstExternalKeysLinkedToLead.has(k)).length;
+  const repeatFromAttributedFirstInRange = [...repeatExternalKeys].filter((k) => firstExternalKeysAttributed.has(k)).length;
 
   let firstLoadPlayers = 0;
   let repeatPlayers = 0;
@@ -174,11 +189,15 @@ export function computeCoreStats(
     uniqueContacts,
     uniqueLeads,
     uniqueLeadsLinkedToContact,
+    inferredLeadsFromContactPurchase,
+    uniqueLeadsLinkedToContactWithInferred,
     firstLoadPurchasers,
     firstLoadPurchasersLinkedToLead,
+    firstLoadPurchasersAttributed,
     totalPurchases,
     purchaseRepeat,
     repeatFromFirstInRange,
+    repeatFromAttributedFirstInRange,
     firstLoadPlayers,
     repeatPlayers,
     premiumPlayers,

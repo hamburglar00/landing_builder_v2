@@ -122,7 +122,7 @@ function KpiCard({
       </p>
       {sub && <p className="text-[10px] text-zinc-500 mt-1">{sub}</p>}
       {tooltip && (
-        <div className="pointer-events-none absolute left-1/2 -translate-x-1/2 bottom-full mb-2 w-56 rounded-lg border border-zinc-700/60 bg-zinc-900/95 backdrop-blur-sm px-3 py-2 shadow-xl opacity-0 group-hover:opacity-100 transition-opacity duration-150 z-50">
+        <div className="pointer-events-none absolute left-1/2 -translate-x-1/2 bottom-full mb-2 w-56 rounded-lg border border-zinc-700/60 bg-zinc-900/95 backdrop-blur-sm px-3 py-2 shadow-xl opacity-0 group-hover:opacity-100 transition-opacity duration-150 [transition-delay:0ms] group-hover:[transition-delay:1000ms] z-50">
           <p className="text-[10px] text-zinc-400 leading-relaxed">{tooltip}</p>
         </div>
       )}
@@ -250,9 +250,11 @@ export default function StatsPanel({
     };
     const uniqueContacts = core.uniqueContacts;
     const uniqueLeads = core.uniqueLeads;
-    const uniqueLeadsLinkedToContact = core.uniqueLeadsLinkedToContact;
+    const realLeadsLinkedToContact = core.uniqueLeadsLinkedToContact;
+    const inferredLeadsFromContactPurchase = core.inferredLeadsFromContactPurchase;
+    const uniqueLeadsLinkedToContact = core.uniqueLeadsLinkedToContactWithInferred;
     const firstLoadPurchasers = core.firstLoadPurchasers;
-    const firstLoadPurchasersLinkedToLead = core.firstLoadPurchasersLinkedToLead;
+    const firstLoadPurchasersLinkedToLead = core.firstLoadPurchasersAttributed;
     const totalPurchases = core.totalPurchases;
     const primera = core.firstLoadPlayers;
     const recurrente = core.repeatPlayers;
@@ -281,8 +283,8 @@ export default function StatsPanel({
     ): SliceStats => {
       const slicedCore = computeCoreStats(convSlice, contactsSlice, allConvSlice, premiumThreshold);
       return {
-        mensajes: slicedCore.uniqueLeadsLinkedToContact,
-        cargas: slicedCore.firstLoadPurchasersLinkedToLead,
+        mensajes: slicedCore.uniqueLeadsLinkedToContactWithInferred,
+        cargas: slicedCore.firstLoadPurchasersAttributed,
         revenue: slicedCore.totalRevenue,
         firstRevenue: slicedCore.firstPurchaseRevenue,
       };
@@ -454,6 +456,8 @@ export default function StatsPanel({
     return {
       uniqueContacts,
       uniqueLeads,
+      realLeadsLinkedToContact,
+      inferredLeadsFromContactPurchase,
       uniqueLeadsLinkedToContact,
       firstLoadPurchasers,
       firstLoadPurchasersLinkedToLead,
@@ -466,7 +470,7 @@ export default function StatsPanel({
       reachedRepeat,
       purchaseFirstCount,
       purchaseRepeatCount,
-      repeatFromFirstInRange: core.repeatFromFirstInRange,
+      repeatFromFirstInRange: core.repeatFromAttributedFirstInRange,
       totalRevenue,
       firstPurchaseRevenue,
       totalPurchaseCount,
@@ -667,9 +671,9 @@ export default function StatsPanel({
           return new Date(c.created_at).getHours() === h;
         });
         const core = computeCoreStats(convSlice, contactsSlice, allConvSlice, premiumThreshold);
-        const pctInicio = core.uniqueContacts > 0 ? (core.uniqueLeadsLinkedToContact / core.uniqueContacts) * 100 : 0;
-        const pctCarga = core.uniqueLeadsLinkedToContact > 0 ? (core.firstLoadPurchasersLinkedToLead / core.uniqueLeadsLinkedToContact) * 100 : 0;
-        const pctRecarga = core.firstLoadPurchasersLinkedToLead > 0 ? (core.repeatFromFirstInRange / core.firstLoadPurchasersLinkedToLead) * 100 : 0;
+        const pctInicio = core.uniqueContacts > 0 ? (core.uniqueLeadsLinkedToContactWithInferred / core.uniqueContacts) * 100 : 0;
+        const pctCarga = core.uniqueLeadsLinkedToContactWithInferred > 0 ? (core.firstLoadPurchasersAttributed / core.uniqueLeadsLinkedToContactWithInferred) * 100 : 0;
+        const pctRecarga = core.firstLoadPurchasersAttributed > 0 ? (core.repeatFromAttributedFirstInRange / core.firstLoadPurchasersAttributed) * 100 : 0;
         result.push({
           day: `${h}`,
           pct_inicio: isFutureHour ? null : Number(pctInicio.toFixed(1)),
@@ -697,9 +701,9 @@ export default function StatsPanel({
         return t >= dayStart.getTime() && t <= dayEnd.getTime();
       });
       const core = computeCoreStats(convSlice, contactsSlice, allConvSlice, premiumThreshold);
-      const pctInicio = core.uniqueContacts > 0 ? (core.uniqueLeadsLinkedToContact / core.uniqueContacts) * 100 : 0;
-      const pctCarga = core.uniqueLeadsLinkedToContact > 0 ? (core.firstLoadPurchasersLinkedToLead / core.uniqueLeadsLinkedToContact) * 100 : 0;
-      const pctRecarga = core.firstLoadPurchasersLinkedToLead > 0 ? (core.repeatFromFirstInRange / core.firstLoadPurchasersLinkedToLead) * 100 : 0;
+      const pctInicio = core.uniqueContacts > 0 ? (core.uniqueLeadsLinkedToContactWithInferred / core.uniqueContacts) * 100 : 0;
+      const pctCarga = core.uniqueLeadsLinkedToContactWithInferred > 0 ? (core.firstLoadPurchasersAttributed / core.uniqueLeadsLinkedToContactWithInferred) * 100 : 0;
+      const pctRecarga = core.firstLoadPurchasersAttributed > 0 ? (core.repeatFromAttributedFirstInRange / core.firstLoadPurchasersAttributed) * 100 : 0;
 
       return {
         day: row.day,
@@ -881,13 +885,17 @@ export default function StatsPanel({
             label="Mensajes recibidos"
             value={stats.uniqueLeadsLinkedToContact}
             color="text-amber-300"
-            tooltip="Cantidad de jugadores que, después de tocar el botón de la landing, decidieron enviar un mensaje."
+            tooltip={
+              stats.inferredLeadsFromContactPurchase > 0
+                ? `Cantidad de jugadores que, despues de tocar el boton de la landing, decidieron enviar un mensaje. ${stats.realLeadsLinkedToContact} atribuidos + ${stats.inferredLeadsFromContactPurchase} inferidos por cargas con Contact sin Lead.`
+                : "Cantidad de jugadores que, despues de tocar el boton de la landing, decidieron enviar un mensaje."
+            }
           />
           <KpiCard
             label="Jugadores que cargaron"
             value={stats.firstLoadPurchasersLinkedToLead}
             color="text-sky-300"
-            tooltip="Catidad de jugadores que, después de enviar un mensaje, decidieron realizar una carga."
+            tooltip="Cantidad de jugadores que, despues de enviar un mensaje, decidieron realizar una carga. Si hubo Contact y primera carga pero se perdio el Lead, se cuenta como Lead inferido."
           />
           <KpiCard
             label="Jugadores que recargaron"
@@ -911,16 +919,20 @@ export default function StatsPanel({
           <KpiCard
             label="Porcentaje de inicio de conversación"
             value={pct(stats.uniqueLeadsLinkedToContact, stats.uniqueContacts)}
-            sub={`${stats.uniqueLeadsLinkedToContact} de ${stats.uniqueContacts} contactos`}
+            sub={
+              stats.inferredLeadsFromContactPurchase > 0
+                ? `${stats.uniqueLeadsLinkedToContact} de ${stats.uniqueContacts} contactos (${stats.realLeadsLinkedToContact} + ${stats.inferredLeadsFromContactPurchase} inf.)`
+                : `${stats.uniqueLeadsLinkedToContact} de ${stats.uniqueContacts} contactos`
+            }
             color="text-amber-400"
-            tooltip="Porcentaje de jugadores que, después de tocar el botón de la landing, decidieron enviar un mensaje."
+            tooltip="Porcentaje de jugadores que, despues de tocar el boton de la landing, decidieron enviar un mensaje. Incluye Leads inferidos cuando hubo Contact -> Purchase sin Lead."
           />
           <KpiCard
             label="Porcentaje de carga"
             value={pct(stats.firstLoadPurchasersLinkedToLead, stats.uniqueLeadsLinkedToContact)}
             sub={`${stats.firstLoadPurchasersLinkedToLead} de ${stats.uniqueLeadsLinkedToContact} leads`}
             color="text-sky-400"
-            tooltip="Porcentaje de jugadores que, después de enviar un mensaje, decidieron realizar una carga."
+            tooltip="Porcentaje de jugadores que, despues de enviar un mensaje, decidieron realizar una carga. El numerador y denominador incluyen el mismo fallback inferido para no inflar la metrica."
           />
           <KpiCard
             label="Porcentaje de recarga"
@@ -1593,7 +1605,3 @@ export default function StatsPanel({
     </div>
   );
 }
-
-
-
-

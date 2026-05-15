@@ -217,13 +217,13 @@ function buildProvinceData(
       : 0;
     map.set(prov, {
       contactos: core.uniqueContacts,
-      reachedLead: core.uniqueLeads,
-      reachedLeadLinkedToContact: core.uniqueLeadsLinkedToContact,
-      reachedPurchase: core.firstLoadPurchasers,
-      reachedPurchaseLinkedToLead: core.firstLoadPurchasersLinkedToLead,
+      reachedLead: core.uniqueLeadsLinkedToContactWithInferred,
+      reachedLeadLinkedToContact: core.uniqueLeadsLinkedToContactWithInferred,
+      reachedPurchase: core.firstLoadPurchasersAttributed,
+      reachedPurchaseLinkedToLead: core.firstLoadPurchasersAttributed,
       reachedRepeat: core.purchaseRepeat,
-      repeatFromFirstInRange: core.repeatFromFirstInRange,
-      primerasCargas: core.firstLoadPurchasers,
+      repeatFromFirstInRange: core.repeatFromAttributedFirstInRange,
+      primerasCargas: core.firstLoadPurchasersAttributed,
       recurrentes: core.repeatPlayers,
       totalCargado: core.totalRevenue,
       firstPurchaseRevenue: core.firstPurchaseRevenue,
@@ -353,13 +353,13 @@ export default function ArgentinaMap({
 
     switch (metric) {
       case "contactos": return core.uniqueContacts;
-      case "leads": return core.uniqueLeads;
-      case "primeras_cargas": return core.firstLoadPurchasers;
+      case "leads": return core.uniqueLeadsLinkedToContactWithInferred;
+      case "primeras_cargas": return core.firstLoadPurchasersAttributed;
       case "recargas": return core.purchaseRepeat;
       case "cargas_totales": return core.totalPurchases;
-      case "pct_inicio": return core.uniqueContacts > 0 ? (core.uniqueLeadsLinkedToContact / core.uniqueContacts) * 100 : 0;
-      case "pct_carga": return core.uniqueLeadsLinkedToContact > 0 ? (core.firstLoadPurchasersLinkedToLead / core.uniqueLeadsLinkedToContact) * 100 : 0;
-      case "pct_recarga": return core.firstLoadPurchasersLinkedToLead > 0 ? (core.repeatFromFirstInRange / core.firstLoadPurchasersLinkedToLead) * 100 : 0;
+      case "pct_inicio": return core.uniqueContacts > 0 ? (core.uniqueLeadsLinkedToContactWithInferred / core.uniqueContacts) * 100 : 0;
+      case "pct_carga": return core.uniqueLeadsLinkedToContactWithInferred > 0 ? (core.firstLoadPurchasersAttributed / core.uniqueLeadsLinkedToContactWithInferred) * 100 : 0;
+      case "pct_recarga": return core.firstLoadPurchasersAttributed > 0 ? (core.repeatFromAttributedFirstInRange / core.firstLoadPurchasersAttributed) * 100 : 0;
       case "carga_promedio": return core.totalPurchases > 0 ? core.totalRevenue / core.totalPurchases : 0;
       case "carga_mediana": return median(core.purchaseValues);
       case "tiempo_lead_purchase_prom": return leadToPurchaseAvgHours;
