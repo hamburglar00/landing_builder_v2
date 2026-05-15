@@ -385,6 +385,8 @@ function RawPayloadCell({ col, value, className }: { col: ColKey; value: unknown
     width: number;
     maxHeight: number;
   } | null>(null);
+  const hoverTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const latestMouseRef = useRef<React.MouseEvent | null>(null);
   const formatted = formatRawPayload(value);
   const preview = truncateText(String(value ?? "") || "-", 35);
 
@@ -406,13 +408,36 @@ function RawPayloadCell({ col, value, className }: { col: ColKey; value: unknown
     setTooltip({ left: Math.max(margin, left), top: Math.max(margin, top), width, maxHeight });
   };
 
+  const handleMouseEnter = (event: React.MouseEvent) => {
+    latestMouseRef.current = event;
+    if (hoverTimerRef.current) clearTimeout(hoverTimerRef.current);
+    hoverTimerRef.current = setTimeout(() => {
+      if (latestMouseRef.current) updateTooltipPosition(latestMouseRef.current);
+      hoverTimerRef.current = null;
+    }, 1500);
+  };
+
+  const handleMouseMove = (event: React.MouseEvent) => {
+    latestMouseRef.current = event;
+    if (tooltip) updateTooltipPosition(event);
+  };
+
+  const handleMouseLeave = () => {
+    latestMouseRef.current = null;
+    if (hoverTimerRef.current) {
+      clearTimeout(hoverTimerRef.current);
+      hoverTimerRef.current = null;
+    }
+    setTooltip(null);
+  };
+
   return (
     <td
       key={col}
       className={`${className} max-w-[220px] truncate cursor-help`}
-      onMouseEnter={updateTooltipPosition}
-      onMouseMove={updateTooltipPosition}
-      onMouseLeave={() => setTooltip(null)}
+      onMouseEnter={handleMouseEnter}
+      onMouseMove={handleMouseMove}
+      onMouseLeave={handleMouseLeave}
     >
       {preview}
       {tooltip && (
