@@ -44,6 +44,7 @@ function normalizePhone(value: unknown): string {
   const digits = String(value ?? "").replace(/\D/g, "");
   if (!digits) return "";
   if (digits.startsWith("549")) return digits.length === 13 ? digits : "";
+  if (digits.startsWith("54")) return digits.length === 12 ? `549${digits.slice(2)}` : "";
   return digits.length === 10 ? `549${digits}` : "";
 }
 
@@ -112,7 +113,7 @@ Deno.serve(async (req) => {
       return jsonResponse({ error: "Nombre de usuario, telefono y email son obligatorios." }, 400);
     }
     if (!phone) {
-      return jsonResponse({ error: "Telefono invalido. Ingresa 10 digitos o 13 digitos empezando con 549." }, 400);
+      return jsonResponse({ error: "Telefono invalido. Ingresa 10 digitos, 12 empezando con 54 o 13 empezando con 549." }, 400);
     }
     if (!isValidEmail(email)) return jsonResponse({ error: "Email invalido." }, 400);
 

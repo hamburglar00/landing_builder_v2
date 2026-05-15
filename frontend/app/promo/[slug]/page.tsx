@@ -58,6 +58,7 @@ function cssUrl(value: string): string {
 function normalizeArgentinaMobilePhone(value: string): string | null {
   const digits = String(value ?? "").replace(/\D/g, "");
   if (digits.startsWith("549")) return digits.length === 13 ? digits : null;
+  if (digits.startsWith("54")) return digits.length === 12 ? `549${digits.slice(2)}` : null;
   if (digits.length === 10) return `549${digits}`;
   return null;
 }
@@ -292,7 +293,7 @@ export default function PublicPromotionPage() {
     }
     const normalizedPhone = normalizeArgentinaMobilePhone(phone);
     if (!normalizedPhone) {
-      setError("Ingresa un telefono valido: 10 digitos o 13 digitos empezando con 549.");
+      setError("Ingresa un telefono valido: 10 digitos, 12 empezando con 54 o 13 empezando con 549.");
       return;
     }
 
@@ -520,7 +521,7 @@ export default function PublicPromotionPage() {
           value={form.phone}
           onChange={(e) => setForm((prev) => ({ ...prev, phone: e.target.value }))}
           className="w-full rounded-xl border border-zinc-800 bg-black/70 px-4 py-3 text-base text-white outline-none focus:border-amber-500 sm:text-sm"
-          placeholder="3512332211 o 5493512332211"
+          placeholder="3512332211, 543512332211 o 5493512332211"
           inputMode="tel"
         />
         <input
