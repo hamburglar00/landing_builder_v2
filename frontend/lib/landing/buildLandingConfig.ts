@@ -53,6 +53,9 @@ export interface LandingConfigPayload {
     ctaPosition?: LandingThemeConfig["ctaPosition"];
     template: number;
   };
+  socialProof?: {
+    enabled: boolean;
+  };
 }
 
 interface BuildArgs {
@@ -93,6 +96,9 @@ export function buildLandingConfig({
       },
       layout: {
         template: 3,
+      },
+      socialProof: {
+        enabled: config.socialProofEnabled,
       },
     };
   }
@@ -188,6 +194,9 @@ export function buildLandingConfig({
           : themeWithHex.template === "template3"
             ? 3
             : 1,
+    },
+    socialProof: {
+      enabled: themeWithHex.socialProofEnabled,
     },
   };
 }

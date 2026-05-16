@@ -112,6 +112,10 @@ export interface LandingThemeConfig {
    * Si es false, solo envia al endpoint de conversiones/CAPI.
    */
   sendContactPixel: boolean;
+  /**
+   * Activa o desactiva el bloque de prueba social de la landing publica.
+   */
+  socialProofEnabled: boolean;
 }
 
 /**

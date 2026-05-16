@@ -38,6 +38,39 @@ function updateConfig(
   setConfig((prev) => ({ ...prev, ...patch }));
 }
 
+function ToggleSwitch({
+  checked,
+  onChange,
+  label,
+}: {
+  checked: boolean;
+  onChange: (checked: boolean) => void;
+  label: string;
+}) {
+  return (
+    <button
+      type="button"
+      role="switch"
+      aria-checked={checked}
+      aria-label={label}
+      onClick={() => onChange(!checked)}
+      className={[
+        "flex h-6 w-11 items-center rounded-full border px-0.5 transition",
+        checked
+          ? "border-emerald-400/60 bg-emerald-500/25"
+          : "border-zinc-700 bg-zinc-800",
+      ].join(" ")}
+    >
+      <span
+        className={[
+          "h-5 w-5 rounded-full transition-transform",
+          checked ? "translate-x-5 bg-emerald-300" : "translate-x-0 bg-zinc-400",
+        ].join(" ")}
+      />
+    </button>
+  );
+}
+
 export function CollapsibleSection({
   title,
   defaultOpen,
@@ -735,6 +768,33 @@ export function LandingEditorForm({
           </div>
         </div>
         </CollapsibleSection>
+      )}
+
+      {!isTemplate3 && (
+        <section className="rounded-xl border border-zinc-800 bg-zinc-900/50 p-4">
+          <div className="flex items-center justify-between gap-4">
+            <div>
+              <h3 className="text-sm font-semibold text-zinc-100">
+                Prueba social
+              </h3>
+              <p className="mt-1 text-xs text-zinc-500">
+                Activa o desactiva el bloque de prueba social en la landing.
+              </p>
+            </div>
+            <div className="flex items-center gap-3">
+              <span className="text-xs font-medium text-zinc-400">
+                {config.socialProofEnabled ? "Activada" : "Desactivada"}
+              </span>
+              <ToggleSwitch
+                checked={config.socialProofEnabled}
+                label="Activar prueba social"
+                onChange={(socialProofEnabled) =>
+                  updateConfig(setConfig, { socialProofEnabled })
+                }
+              />
+            </div>
+          </div>
+        </section>
       )}
 
       {/* Acciones */}
