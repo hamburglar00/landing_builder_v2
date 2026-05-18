@@ -34,6 +34,7 @@ import DateRangeFilter, {
   filterByDateRange,
   filterFunnelByDateRange,
 } from "@/components/conversiones/DateRangeFilter";
+import type { LandingPerformanceFilterOption } from "@/components/conversiones/GerenciasPerformancePanel";
 
 const FunnelBoard = dynamic(() => import("@/components/conversiones/FunnelBoard"), {
   loading: () => <PanelSkeleton title="Cargando funnel..." />,
@@ -579,6 +580,7 @@ export default function DashboardConversionesPage() {
   const [draftCampaignFilter, setDraftCampaignFilter] = useState<string[]>([]);
   const [draftDeviceFilter, setDraftDeviceFilter] = useState<string>("__all__");
   const [gerenciaByPhone, setGerenciaByPhone] = useState<Record<string, string[]>>({});
+  const [performanceLandingOptions, setPerformanceLandingOptions] = useState<LandingPerformanceFilterOption[]>([]);
 
   const [dateRange, setDateRange] = useState<DateRange | null>(todayRange());
   const [refreshingTable, setRefreshingTable] = useState(false);
@@ -1081,6 +1083,39 @@ export default function DashboardConversionesPage() {
           setGerenciaByPhone(byPhone);
         } else {
           setGerenciaByPhone({});
+        }
+
+        const { data: landings } = await supabase
+          .from("landings")
+          .select("id,user_id,name")
+          .eq("user_id", user.id)
+          .order("name", { ascending: true });
+        const landingRows = landings ?? [];
+        if (landingRows.length > 0 && gerenciasById.size > 0) {
+          const landingIds = landingRows.map((landing) => String(landing.id)).filter(Boolean);
+          const { data: assignments } = await supabase
+            .from("landings_gerencias")
+            .select("landing_id,gerencia_id")
+            .in("landing_id", landingIds);
+          const labelsByLanding = new Map<string, Set<string>>();
+          for (const assignment of assignments ?? []) {
+            const landingId = String(assignment.landing_id ?? "");
+            const label = gerenciasById.get(Number(assignment.gerencia_id));
+            if (!landingId || !label) continue;
+            const labels = labelsByLanding.get(landingId) ?? new Set<string>();
+            labels.add(label);
+            labelsByLanding.set(landingId, labels);
+          }
+          setPerformanceLandingOptions(
+            landingRows.map((landing) => ({
+              id: String(landing.id),
+              name: String(landing.name ?? "").trim() || "Landing sin nombre",
+              userId: String(landing.user_id ?? user.id),
+              gerenciaLabels: Array.from(labelsByLanding.get(String(landing.id)) ?? []).sort((a, b) => a.localeCompare(b, "es")),
+            })),
+          );
+        } else {
+          setPerformanceLandingOptions([]);
         }
       } catch (e) { console.error(e); }
       finally { setLoading(false); }
@@ -2097,6 +2132,7 @@ export default function DashboardConversionesPage() {
           fetchConversionsForMonth={fetchPerformanceConversions}
           fetchAvailabilityForMonth={fetchPerformanceAvailability}
           gerenciaByPhone={gerenciaByPhone}
+          landingOptions={performanceLandingOptions}
           premiumThreshold={config?.funnel_premium_threshold ?? 50000}
           storageKey={`dashboard:${userId ?? "client"}`}
         />

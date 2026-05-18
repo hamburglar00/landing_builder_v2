@@ -13,8 +13,16 @@ type Props = {
   fetchConversionsForMonth: (range: FetchDateRange) => Promise<ConversionRow[]>;
   fetchAvailabilityForMonth: (range: FetchDateRange) => Promise<GerenciaAvailabilitySummary[]>;
   gerenciaByPhone: Record<string, string[]>;
+  landingOptions?: LandingPerformanceFilterOption[];
   premiumThreshold: number;
   storageKey: string;
+};
+
+export type LandingPerformanceFilterOption = {
+  id: string;
+  name: string;
+  userId?: string;
+  gerenciaLabels: string[];
 };
 
 type Row = {
@@ -140,10 +148,12 @@ export default function GerenciasPerformancePanel({
   fetchConversionsForMonth,
   fetchAvailabilityForMonth,
   gerenciaByPhone,
+  landingOptions = [],
   premiumThreshold,
   storageKey,
 }: Props) {
   const [month, setMonth] = useState(currentMonthValue());
+  const [landingFilter, setLandingFilter] = useState("__all__");
   const [rows, setRows] = useState<ConversionRow[]>([]);
   const [availabilityRows, setAvailabilityRows] = useState<GerenciaAvailabilitySummary[]>([]);
   const [loading, setLoading] = useState(false);
@@ -158,6 +168,21 @@ export default function GerenciasPerformancePanel({
 
   const costStorageKey = `gerencias-performance-costs:v1:${storageKey}`;
   const monthSelectOptions = useMemo(() => monthOptions(), []);
+  const selectedLanding = useMemo(
+    () => landingOptions.find((option) => option.id === landingFilter) ?? null,
+    [landingFilter, landingOptions],
+  );
+  const selectedLandingLabelSet = useMemo(
+    () => selectedLanding ? new Set(selectedLanding.gerenciaLabels) : null,
+    [selectedLanding],
+  );
+
+  useEffect(() => {
+    if (landingFilter === "__all__") return;
+    if (!landingOptions.some((option) => option.id === landingFilter)) {
+      setLandingFilter("__all__");
+    }
+  }, [landingFilter, landingOptions]);
 
   useEffect(() => {
     try {
@@ -204,22 +229,37 @@ export default function GerenciasPerformancePanel({
 
   const performanceRows = useMemo<Row[]>(() => {
     const allLabels = new Set<string>();
-    for (const labels of Object.values(gerenciaByPhone)) {
-      for (const label of labels) allLabels.add(label);
+    if (selectedLandingLabelSet) {
+      for (const label of selectedLandingLabelSet) allLabels.add(label);
+    } else {
+      for (const labels of Object.values(gerenciaByPhone)) {
+        for (const label of labels) allLabels.add(label);
+      }
     }
-    for (const row of availabilityRows) allLabels.add(row.label);
+    for (const row of availabilityRows) {
+      if (!selectedLandingLabelSet || selectedLandingLabelSet.has(row.label)) allLabels.add(row.label);
+    }
 
     const rowsByGerencia = new Map<string, ConversionRow[]>();
     const availabilityByLabel = new Map(availabilityRows.map((row) => [row.label, row]));
     const cleanRows = rows.filter((row) => (
       !String(row.test_event_code ?? "").trim() &&
-      (!metaAdsOnly || Boolean(row.from_meta_ads))
+      (!metaAdsOnly || Boolean(row.from_meta_ads)) &&
+      (
+        !selectedLanding ||
+        String(row.landing_id ?? "").trim() === selectedLanding.id ||
+        (
+          String(row.landing_name ?? "").trim() === selectedLanding.name &&
+          (!selectedLanding.userId || String(row.user_id ?? "") === selectedLanding.userId)
+        )
+      )
     ));
     for (const row of cleanRows) {
       const assignedPhone = normalizePhone(row.telefono_asignado);
       if (!assignedPhone) continue;
       const labels = gerenciaByPhone[assignedPhone] ?? [];
       for (const label of labels) {
+        if (selectedLandingLabelSet && !selectedLandingLabelSet.has(label)) continue;
         allLabels.add(label);
         const bucket = rowsByGerencia.get(label) ?? [];
         bucket.push(row);
@@ -252,7 +292,7 @@ export default function GerenciasPerformancePanel({
             : 0,
         };
       });
-  }, [availabilityRows, gerenciaByPhone, metaAdsOnly, premiumThreshold, rows]);
+  }, [availabilityRows, gerenciaByPhone, metaAdsOnly, premiumThreshold, rows, selectedLanding, selectedLandingLabelSet]);
 
   const visiblePerformanceRows = useMemo(() => {
     const query = searchTerm.trim().toLowerCase();
@@ -374,6 +414,20 @@ export default function GerenciasPerformancePanel({
           >
             {monthSelectOptions.map((option) => (
               <option key={option.value} value={option.value}>{option.label}</option>
+            ))}
+          </select>
+          <select
+            value={landingFilter}
+            onChange={(e) => setLandingFilter(e.target.value || "__all__")}
+            aria-label="Filtrar por landing"
+            className="h-8 max-w-[220px] rounded-lg border border-zinc-700 bg-zinc-950 px-2 text-xs font-medium text-zinc-100"
+            title="Filtrar desempeno por landing"
+          >
+            <option value="__all__">Todas las landings</option>
+            {landingOptions.map((option) => (
+              <option key={option.id} value={option.id}>
+                {option.name || "Landing sin nombre"}
+              </option>
             ))}
           </select>
           <button
