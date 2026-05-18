@@ -40,6 +40,17 @@ export function formatGerenciaError(error: unknown, fallback: string): string {
   return fallback;
 }
 
+export function sortGerenciasByName(list: Gerencia[]): Gerencia[] {
+  return [...list].sort((a, b) => {
+    const byName = String(a.nombre ?? "").localeCompare(String(b.nombre ?? ""), "es", {
+      numeric: true,
+      sensitivity: "base",
+    });
+    if (byName !== 0) return byName;
+    return Number(a.gerencia_id ?? a.id) - Number(b.gerencia_id ?? b.id);
+  });
+}
+
 /**
  * Lista las gerencias del usuario.
  */
@@ -48,10 +59,11 @@ export async function fetchGerencias(userId: string): Promise<Gerencia[]> {
     .from("gerencias")
     .select("id, nombre, gerencia_id, source_type, fair_criterion")
     .eq("user_id", userId)
-    .order("id", { ascending: true });
+    .order("nombre", { ascending: true })
+    .order("gerencia_id", { ascending: true });
 
   if (error) throw error;
-  return (data ?? []) as Gerencia[];
+  return sortGerenciasByName((data ?? []) as Gerencia[]);
 }
 
 /**
@@ -61,7 +73,8 @@ export async function fetchGerenciasForAdmin(adminUserId: string): Promise<Geren
   const { data, error } = await supabase
     .from("gerencias")
     .select("id, nombre, gerencia_id, source_type, fair_criterion, user_id")
-    .order("id", { ascending: true });
+    .order("nombre", { ascending: true })
+    .order("gerencia_id", { ascending: true });
 
   if (error) throw error;
   const list = (data ?? []) as Gerencia[];
@@ -71,7 +84,7 @@ export async function fetchGerenciasForAdmin(adminUserId: string): Promise<Geren
     if (g.user_id === adminUserId) mine.push(g);
     else others.push(g);
   }
-  return [...mine, ...others];
+  return [...sortGerenciasByName(mine), ...sortGerenciasByName(others)];
 }
 
 /**

@@ -10,6 +10,7 @@ import {
   updateGerencia,
   deleteGerencia,
   formatGerenciaError,
+  sortGerenciasByName,
 } from "@/lib/gerencias/gerenciasDb";
 import { DashboardSkeleton } from "@/components/ui/DashboardSkeleton";
 
@@ -77,7 +78,7 @@ export default function DashboardGerenciasPage() {
         source_type: newSourceType,
         gerencia_id: gid,
       });
-      setGerencias((prev) => [...prev, created].sort((a, b) => a.id - b.id));
+      setGerencias((prev) => sortGerenciasByName([...prev, created]));
       setNewNombre("");
       setNewGerenciaId("");
       setNewSourceType("pbadmin");
@@ -120,15 +121,17 @@ export default function DashboardGerenciasPage() {
         gerencia_id: gid,
       });
       setGerencias((prev) =>
-        prev.map((x) =>
-          x.id === editingId
-            ? {
-                ...x,
-                nombre: editNombre.trim(),
-                source_type: editSourceType,
-                gerencia_id: editSourceType === "pbadmin" ? gid : null,
-              }
-            : x,
+        sortGerenciasByName(
+          prev.map((x) =>
+            x.id === editingId
+              ? {
+                  ...x,
+                  nombre: editNombre.trim(),
+                  source_type: editSourceType,
+                  gerencia_id: editSourceType === "pbadmin" ? gid : null,
+                }
+              : x,
+          ),
         ),
       );
       cancelEdit();
