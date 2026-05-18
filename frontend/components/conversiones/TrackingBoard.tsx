@@ -359,7 +359,7 @@ export default function TrackingBoard({
       </p>
 
       <div className="overflow-x-auto rounded-lg border border-zinc-700">
-        <table className="w-full text-left text-[11px] sm:min-w-[840px]">
+        <table className="min-w-[840px] text-left text-[11px] md:min-w-full">
           <thead className="bg-zinc-800/95">
             <tr>
               <th className="px-2 py-2 font-medium text-zinc-300 whitespace-nowrap">Ranking</th>

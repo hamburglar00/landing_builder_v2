@@ -257,8 +257,8 @@ export default function DashboardGerenciasPage() {
         </div>
       )}
 
-      <div className="rounded-xl border border-zinc-800 overflow-hidden">
-        <table className="w-full text-left text-sm">
+      <div className="overflow-x-auto rounded-xl border border-zinc-800">
+        <table className="min-w-[680px] text-left text-sm md:min-w-full">
           <thead className="bg-zinc-900/80">
             <tr>
               <th className="px-4 py-3 font-medium text-zinc-300">Nombre</th>

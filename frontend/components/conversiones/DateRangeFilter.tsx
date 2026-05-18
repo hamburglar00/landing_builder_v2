@@ -115,8 +115,20 @@ export default function DateRangeFilter({
     : PRESET_LABELS[preset];
 
   return (
-    <div ref={ref} className="relative">
-      <div className="flex flex-wrap items-center gap-1 rounded-lg border border-zinc-800/50 bg-[#0d0d11] p-0.5 sm:flex-nowrap">
+    <div ref={ref} className="relative w-full sm:w-auto">
+      <select
+        value={preset}
+        onChange={(e) => handlePreset(e.target.value as Preset)}
+        aria-label="Seleccionar rango de fechas"
+        className="h-8 w-full rounded-lg border border-zinc-800 bg-[#0d0d11] px-2 text-[11px] font-medium text-zinc-200 outline-none sm:hidden"
+      >
+        {(Object.keys(PRESET_LABELS) as Preset[]).map((p) => (
+          <option key={p} value={p}>
+            {p === "personalizado" && preset === "personalizado" && customStart ? activeLabel : PRESET_LABELS[p]}
+          </option>
+        ))}
+      </select>
+      <div className="hidden flex-wrap items-center gap-1 rounded-lg border border-zinc-800/50 bg-[#0d0d11] p-0.5 sm:flex sm:flex-nowrap">
         {(Object.keys(PRESET_LABELS) as Preset[]).map((p) => (
           <button
             key={p}

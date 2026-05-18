@@ -800,7 +800,7 @@ export default function DashboardLandingEditarPage() {
             </p>
           ) : (
             <div className="overflow-x-auto rounded-lg border border-zinc-700">
-              <table className="w-full text-left text-sm">
+              <table className="min-w-[900px] text-left text-sm md:min-w-full">
                 <thead className="bg-zinc-800/80">
                   <tr>
                     <th className="px-3 py-2 font-medium text-zinc-300">
@@ -1163,5 +1163,4 @@ export default function DashboardLandingEditarPage() {
     </div>
   );
 }
-
 

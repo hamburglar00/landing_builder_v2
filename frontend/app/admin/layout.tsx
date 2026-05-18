@@ -720,7 +720,7 @@ export default function AdminLayout({
             <MenuIcon className="h-6 w-6" />
           </button>
         </header>
-        <main className="min-h-0 flex-1 overflow-auto px-4 py-6 sm:px-6 sm:py-8 lg:px-10">
+        <main className="min-h-0 max-w-full flex-1 overflow-x-hidden overflow-y-auto px-3 py-5 sm:px-6 sm:py-8 lg:px-10">
           {children}
         </main>
       </div>

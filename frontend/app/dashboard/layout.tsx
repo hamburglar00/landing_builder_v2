@@ -744,7 +744,7 @@ export default function DashboardLayout({
             Ayuda
           </button>
         </header>
-        <main className="min-h-0 flex-1 overflow-auto px-4 py-6 sm:px-6 sm:py-8 lg:px-10">
+        <main className="min-h-0 max-w-full flex-1 overflow-x-hidden overflow-y-auto px-3 py-5 sm:px-6 sm:py-8 lg:px-10">
           {isNavigating && (
             <div className="pointer-events-none fixed left-0 right-0 top-0 z-[80] h-1 overflow-hidden bg-cyan-950/40">
               <div className="h-full w-1/3 animate-[pulse_0.9s_ease-in-out_infinite] rounded-r-full bg-cyan-400 shadow-[0_0_18px_rgba(34,211,238,0.65)]" />

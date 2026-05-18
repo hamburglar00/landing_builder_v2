@@ -142,7 +142,7 @@ function TableCard({ title, children }: { title: string; children: React.ReactNo
   return (
     <div className="rounded-xl border border-zinc-800 bg-zinc-900/50 p-4">
       <h4 className="text-xs font-semibold text-zinc-200 mb-3">{title}</h4>
-      {children}
+      <div className="overflow-x-auto">{children}</div>
     </div>
   );
 }

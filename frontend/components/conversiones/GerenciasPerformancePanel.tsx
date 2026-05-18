@@ -402,15 +402,15 @@ export default function GerenciasPerformancePanel({
   );
 
   return (
-    <section className="rounded-xl border border-zinc-800 bg-zinc-900/50 p-4">
-      <div className="mb-3 flex flex-wrap items-center justify-between gap-2">
-        <div className="flex flex-wrap items-center gap-2">
-          <h3 className="text-sm font-semibold text-zinc-100">Desempeño por Gerencias</h3>
+    <section className="rounded-xl border border-zinc-800 bg-zinc-900/50 p-3 sm:p-4">
+      <div className="mb-3 flex flex-col gap-2 lg:flex-row lg:items-center lg:justify-between">
+        <div className="grid grid-cols-1 gap-2 sm:flex sm:flex-wrap sm:items-center">
+          <h3 className="text-sm font-semibold text-zinc-100 sm:mr-1">Desempeño por Gerencias</h3>
           <select
             value={month}
             onChange={(e) => setMonth(e.target.value || currentMonthValue())}
             aria-label="Seleccionar mes"
-            className="h-8 rounded-lg border border-zinc-700 bg-zinc-950 px-2 text-xs font-medium text-zinc-100"
+            className="h-8 w-full rounded-lg border border-zinc-700 bg-zinc-950 px-2 text-xs font-medium text-zinc-100 sm:w-auto"
           >
             {monthSelectOptions.map((option) => (
               <option key={option.value} value={option.value}>{option.label}</option>
@@ -420,7 +420,7 @@ export default function GerenciasPerformancePanel({
             value={landingFilter}
             onChange={(e) => setLandingFilter(e.target.value || "__all__")}
             aria-label="Filtrar por landing"
-            className="h-8 max-w-[220px] rounded-lg border border-zinc-700 bg-zinc-950 px-2 text-xs font-medium text-zinc-100"
+            className="h-8 w-full rounded-lg border border-zinc-700 bg-zinc-950 px-2 text-xs font-medium text-zinc-100 sm:max-w-[220px]"
             title="Filtrar desempeno por landing"
           >
             <option value="__all__">Todas las landings</option>
@@ -434,7 +434,7 @@ export default function GerenciasPerformancePanel({
             type="button"
             onClick={() => setMetaAdsOnly((value) => !value)}
             aria-pressed={metaAdsOnly}
-            className="inline-flex h-8 items-center gap-2 rounded-lg border border-zinc-700 bg-zinc-950 px-2 text-[11px] font-medium text-zinc-300 transition hover:border-zinc-600"
+            className="inline-flex h-8 w-full items-center justify-between gap-2 rounded-lg border border-zinc-700 bg-zinc-950 px-2 text-[11px] font-medium text-zinc-300 transition hover:border-zinc-600 sm:w-auto sm:justify-start"
             title="Filtrar metricas por origen Meta Ads"
           >
             <span>Meta Ads</span>
@@ -443,19 +443,19 @@ export default function GerenciasPerformancePanel({
             </span>
           </button>
         </div>
-        <div className="ml-auto flex flex-wrap items-center justify-end gap-2">
+        <div className="grid grid-cols-1 gap-2 sm:flex sm:flex-wrap sm:items-center sm:justify-end lg:ml-auto">
           <input
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
             placeholder="Buscar gerencia o ID..."
             aria-label="Buscar gerencia por nombre o ID"
-            className="h-8 w-56 rounded-lg border border-zinc-700 bg-zinc-950 px-3 text-xs text-zinc-100 placeholder:text-zinc-500"
+            className="h-8 w-full rounded-lg border border-zinc-700 bg-zinc-950 px-3 text-xs text-zinc-100 placeholder:text-zinc-500 sm:w-56"
           />
           <button
             type="button"
             onClick={() => void loadMonth()}
             disabled={loading}
-            className="h-8 rounded-lg border border-zinc-700 bg-zinc-800 px-3 text-xs font-medium text-zinc-200 transition hover:bg-zinc-700 disabled:opacity-60"
+            className="h-8 w-full rounded-lg border border-zinc-700 bg-zinc-800 px-3 text-xs font-medium text-zinc-200 transition hover:bg-zinc-700 disabled:opacity-60 sm:w-auto"
           >
             {loading ? "Actualizando..." : "Actualizar"}
           </button>
@@ -465,8 +465,8 @@ export default function GerenciasPerformancePanel({
       {error ? (
         <p className="rounded-lg border border-red-900/50 bg-red-950/30 px-3 py-2 text-xs text-red-300">{error}</p>
       ) : (
-        <div className="overflow-hidden rounded-lg border border-zinc-700">
-          <table className="w-full max-w-full table-fixed text-[9.5px] leading-tight lg:text-[10px]">
+        <div className="overflow-x-auto rounded-lg border border-zinc-700">
+          <table className="min-w-[1080px] table-fixed text-[9.5px] leading-tight md:min-w-full lg:text-[10px]">
             <colgroup>
               <col className={showRoas ? "w-[12%]" : "w-[14%]"} />
               <col className={showRoas ? "w-[10%]" : "w-[11%]"} />
