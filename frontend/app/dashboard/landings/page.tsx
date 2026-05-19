@@ -152,18 +152,6 @@ export default function DashboardLandingsPage() {
     return true;
   };
 
-  const buildDuplicateName = (baseName: string) => {
-    const cleanBase = String(baseName || "landing").trim() || "landing";
-    const existingNames = new Set(landings.map((landing) => landing.name));
-    let candidate = `${cleanBase}-copia`;
-    let index = 2;
-    while (existingNames.has(candidate)) {
-      candidate = `${cleanBase}-copia-${index}`;
-      index += 1;
-    }
-    return candidate;
-  };
-
   const handleDuplicate = async (landing: Landing) => {
     if (!userId) return;
     setDuplicatingId(landing.id);
@@ -175,7 +163,6 @@ export default function DashboardLandingsPage() {
       const { id } = await createLanding(userId, {
         landingType: landing.landingType,
         externalDomain: landing.externalDomain,
-        name: buildDuplicateName(landing.name),
         pixelId: landing.pixelId,
         gerenciaSelectionMode: landing.gerenciaSelectionMode,
         gerenciaFairCriterion: landing.gerenciaFairCriterion,
