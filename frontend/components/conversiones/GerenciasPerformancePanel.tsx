@@ -422,12 +422,17 @@ export default function GerenciasPerformancePanel({
         const lines = doc.splitTextToSize(clean, Math.max(maxWidth, 4));
         return Array.isArray(lines) ? String(lines[0] ?? "") : String(lines ?? "");
       };
+      const fitLines = (value: string, maxWidth: number, maxLines = 2): string[] => {
+        const clean = String(value ?? "");
+        const lines = doc.splitTextToSize(clean, Math.max(maxWidth, 4));
+        return (Array.isArray(lines) ? lines : [String(lines ?? "")]).slice(0, maxLines).map(String);
+      };
 
       const columns = [
         { key: "label", label: "Gerencia (ID)", width: showRoas ? 36 : 42, align: "left" as const },
         { key: "disponibilidad", label: "Disponibilidad", width: showRoas ? 22 : 25, align: "center" as const },
-        { key: "contactos", label: "Contactos", width: showRoas ? 18 : 20, align: "center" as const },
-        { key: "inicio", label: "% Inicio", width: showRoas ? 19 : 22, align: "center" as const },
+        { key: "contactos", label: "Contactos", width: showRoas ? 17 : 20, align: "center" as const },
+        { key: "inicio", label: "% inicio conversación", width: showRoas ? 23 : 26, align: "center" as const },
         { key: "mensajes", label: "Mensajes", width: showRoas ? 18 : 20, align: "center" as const },
         { key: "cargas", label: "Cargas", width: showRoas ? 17 : 19, align: "center" as const },
         { key: "monto", label: "Monto", width: showRoas ? 25 : 29, align: "center" as const },
@@ -568,9 +573,9 @@ export default function GerenciasPerformancePanel({
           doc.setDrawColor(13, 148, 136);
           doc.rect(x, startY, column.width, 9, "FD");
           doc.setTextColor(255, 255, 255);
-          const label = fitText(column.label, column.width - 2.5);
+          const labelLines = fitLines(column.label, column.width - 2.5, 2);
           const textX = column.align === "left" ? x + 2.2 : x + (column.width / 2);
-          doc.text(label, textX, startY + 5.8, { align: column.align });
+          doc.text(labelLines, textX, startY + (labelLines.length > 1 ? 3.7 : 5.8), { align: column.align });
           x += column.width;
         });
       };
