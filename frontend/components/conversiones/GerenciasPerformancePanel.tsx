@@ -119,6 +119,15 @@ function formatRoas(value: number): string {
   }).format(value || 0)}x`;
 }
 
+function escapeHtml(value: string): string {
+  return value
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;")
+    .replace(/'/g, "&#039;");
+}
+
 function externalKey(row: ConversionRow): string {
   const ext = String(row.external_id ?? "").trim();
   return ext ? `${row.user_id}::${ext}` : "";
@@ -389,6 +398,209 @@ export default function GerenciasPerformancePanel({
     return sortDirection === "asc" ? "\u25B2" : "\u25BC";
   };
 
+  const exportPdf = () => {
+    const reportWindow = window.open("", "_blank", "width=1200,height=800");
+    if (!reportWindow) {
+      setError("El navegador bloqueó la ventana para exportar el PDF. Permití popups e intentá nuevamente.");
+      return;
+    }
+
+    const generatedAt = new Date().toLocaleString("es-AR");
+    const landingLabel = selectedLanding?.name || "Todas las landings";
+    const filters = [
+      `Mes: ${monthLabel(month)}`,
+      `Landing: ${landingLabel}`,
+      `Meta Ads: ${metaAdsOnly ? "Sí" : "No"}`,
+      `Búsqueda: ${searchTerm.trim() || "-"}`,
+      `Orden: ${sortKey} ${sortDirection === "asc" ? "ascendente" : "descendente"}`,
+    ];
+    const roasHeader = showRoas ? "<th>ROAS</th>" : "";
+    const roasAverage = showRoas
+      ? `<td>${totals.roasCount > 0 ? formatRoas(totals.roas / roasAverageDivisor) : "-"}</td>`
+      : "";
+    const roasTotal = showRoas
+      ? `<td>${totals.gasto > 0 ? formatRoas(totals.montoCargado / totals.gasto) : "-"}</td>`
+      : "";
+
+    const bodyRows = sortedRows.map((row) => {
+      const cost = getCost(row);
+      const gasto = getGasto(row);
+      const roasCell = showRoas ? `<td>${gasto > 0 ? formatRoas(getRoas(row)) : "-"}</td>` : "";
+      return `
+        <tr>
+          <td class="left">${escapeHtml(row.label)}</td>
+          <td>${formatOptionalPercent(row.disponibilidad)}</td>
+          <td>${formatNumber(row.contactos)}</td>
+          <td>${formatPercent(row.pctInicioConversacion)}</td>
+          <td>${formatNumber(row.mensajes)}</td>
+          <td>${formatNumber(row.cargas)}</td>
+          <td>${formatMoney(row.montoCargado)}</td>
+          <td>${formatPercent(row.pctCarga)}</td>
+          <td>${formatPercent(row.pctRecarga)}</td>
+          <td>${cost > 0 ? formatMoney(cost) : "-"}</td>
+          <td>${formatMoney(gasto)}</td>
+          ${roasCell}
+        </tr>
+      `;
+    }).join("");
+
+    const emptyRow = sortedRows.length === 0
+      ? `<tr><td colspan="${showRoas ? 12 : 11}" class="empty">No hay datos para los filtros aplicados.</td></tr>`
+      : "";
+
+    const html = `<!doctype html>
+      <html>
+        <head>
+          <meta charset="utf-8" />
+          <title>Desempeño por Gerencias - ${escapeHtml(monthLabel(month))}</title>
+          <style>
+            @page { size: A4 landscape; margin: 12mm; }
+            * { box-sizing: border-box; }
+            body {
+              margin: 0;
+              color: #111827;
+              font-family: Arial, Helvetica, sans-serif;
+              font-size: 10px;
+            }
+            header {
+              align-items: flex-start;
+              border-bottom: 2px solid #111827;
+              display: flex;
+              justify-content: space-between;
+              margin-bottom: 12px;
+              padding-bottom: 8px;
+              gap: 16px;
+            }
+            h1 {
+              font-size: 18px;
+              margin: 0 0 6px;
+              text-transform: uppercase;
+            }
+            .meta {
+              color: #4b5563;
+              line-height: 1.45;
+            }
+            .filters {
+              color: #374151;
+              display: flex;
+              flex-wrap: wrap;
+              gap: 6px;
+              justify-content: flex-end;
+              max-width: 58%;
+            }
+            .chip {
+              border: 1px solid #d1d5db;
+              border-radius: 999px;
+              padding: 3px 7px;
+              white-space: nowrap;
+            }
+            table {
+              border-collapse: collapse;
+              table-layout: fixed;
+              width: 100%;
+            }
+            th, td {
+              border: 1px solid #d1d5db;
+              padding: 5px 4px;
+              text-align: center;
+              vertical-align: middle;
+              word-break: break-word;
+            }
+            th {
+              background: #111827;
+              color: #ffffff;
+              font-size: 9px;
+              text-transform: uppercase;
+            }
+            tbody tr:nth-child(even) td { background: #f9fafb; }
+            tfoot td {
+              background: #eef2ff;
+              font-weight: 700;
+            }
+            .left { text-align: left; }
+            .money { color: #047857; font-weight: 700; }
+            .empty {
+              color: #6b7280;
+              padding: 18px;
+            }
+          </style>
+        </head>
+        <body>
+          <header>
+            <div>
+              <h1>Desempeño por Gerencias</h1>
+              <div class="meta">Generado: ${escapeHtml(generatedAt)}</div>
+            </div>
+            <div class="filters">
+              ${filters.map((filter) => `<span class="chip">${escapeHtml(filter)}</span>`).join("")}
+            </div>
+          </header>
+          <table>
+            <thead>
+              <tr>
+                <th>Gerencia (ID)</th>
+                <th>Disponibilidad</th>
+                <th>Contactos</th>
+                <th>% inicio conversación</th>
+                <th>Mensajes</th>
+                <th>Cargas</th>
+                <th>Monto</th>
+                <th>% Carga</th>
+                <th>% Recarga</th>
+                <th>Costo/msj</th>
+                <th>Gasto</th>
+                ${roasHeader}
+              </tr>
+            </thead>
+            <tbody>
+              ${emptyRow || bodyRows}
+            </tbody>
+            <tfoot>
+              <tr>
+                <td class="left">Promedio</td>
+                <td>-</td>
+                <td>${formatNumber(totals.contactos / rowAverageDivisor)}</td>
+                <td>${formatPercent(totals.pctInicioConversacion / rowAverageDivisor)}</td>
+                <td>${formatNumber(totals.mensajes / rowAverageDivisor)}</td>
+                <td>${formatNumber(totals.cargas / rowAverageDivisor)}</td>
+                <td>${formatMoney(totals.montoCargado / rowAverageDivisor)}</td>
+                <td>${formatPercent(totals.pctCarga / rowAverageDivisor)}</td>
+                <td>${formatPercent(totals.pctRecarga / rowAverageDivisor)}</td>
+                <td>-</td>
+                <td>${formatMoney(totals.gasto / rowAverageDivisor)}</td>
+                ${roasAverage}
+              </tr>
+              <tr>
+                <td class="left">Totales</td>
+                <td>-</td>
+                <td>${formatNumber(totals.contactos)}</td>
+                <td>-</td>
+                <td>${formatNumber(totals.mensajes)}</td>
+                <td>${formatNumber(totals.cargas)}</td>
+                <td>${formatMoney(totals.montoCargado)}</td>
+                <td>-</td>
+                <td>-</td>
+                <td>-</td>
+                <td>${formatMoney(totals.gasto)}</td>
+                ${roasTotal}
+              </tr>
+            </tfoot>
+          </table>
+          <script>
+            window.addEventListener("load", () => {
+              setTimeout(() => {
+                window.print();
+              }, 250);
+            });
+          </script>
+        </body>
+      </html>`;
+
+    reportWindow.document.open();
+    reportWindow.document.write(html);
+    reportWindow.document.close();
+  };
+
   const SortHeader = ({ sort, children }: { sort: SortKey; children: ReactNode }) => (
     <button
       type="button"
@@ -456,6 +668,14 @@ export default function GerenciasPerformancePanel({
           className="h-8 w-full shrink-0 rounded-lg border border-zinc-700 bg-zinc-800 px-3 text-xs font-medium text-zinc-200 transition hover:bg-zinc-700 disabled:opacity-60 lg:w-auto"
         >
           {loading ? "Actualizando..." : "Actualizar"}
+        </button>
+        <button
+          type="button"
+          onClick={exportPdf}
+          disabled={loading}
+          className="h-8 w-full shrink-0 rounded-lg border border-emerald-700 bg-emerald-900/20 px-3 text-xs font-semibold text-emerald-300 transition hover:bg-emerald-900/35 disabled:opacity-60 lg:w-auto"
+        >
+          Exportar PDF
         </button>
       </div>
 
