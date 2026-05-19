@@ -831,12 +831,45 @@ type GerenciaAvailabilitySnapshotRaw = {
     | null;
 };
 
+type GerenciaAvailabilitySummaryRaw = {
+  label: string | null;
+  sample_count: number | string | null;
+  active_sample_count: number | string | null;
+  availability_pct: number | string | null;
+};
+
 async function fetchGerenciaAvailabilitySummariesInternal(
   range: FetchDateRange,
   userId?: string,
 ): Promise<GerenciaAvailabilitySummary[]> {
   const startIso = toIsoIfValid(range.start);
   const endIso = toIsoIfValid(range.end);
+
+  const { data: summaryData, error: summaryError } = await supabase.rpc(
+    "get_gerencia_availability_summaries",
+    {
+      p_user_id: userId ?? null,
+      p_start: startIso ?? null,
+      p_end: endIso ?? null,
+    },
+  );
+  if (!summaryError) {
+    return ((summaryData ?? []) as unknown as GerenciaAvailabilitySummaryRaw[])
+      .map((row) => ({
+        label: String(row.label ?? "").trim(),
+        sampleCount: Number(row.sample_count ?? 0),
+        activeSampleCount: Number(row.active_sample_count ?? 0),
+        availabilityPct: row.availability_pct === null ? null : Number(row.availability_pct),
+      }))
+      .filter((row) => row.label);
+  }
+
+  // Fallback temporal: permite desplegar frontend antes de aplicar la migracion remota.
+  if (String(summaryError.message ?? "").toLowerCase().includes("function")) {
+    console.warn("Falling back to client-side availability summaries:", summaryError.message);
+  } else {
+    throw summaryError;
+  }
 
   const rows: GerenciaAvailabilitySnapshotRaw[] = [];
   const pageSize = 1000;
