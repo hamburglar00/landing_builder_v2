@@ -414,9 +414,11 @@ export default function AdminLandingEditarPage() {
       </div>
     );
   }
-  const isLandingTagLocked = Boolean(
-    initialName && !initialName.startsWith("Nueva-landing-"),
+  const isDraftLanding = Boolean(
+    (initialName && initialName.startsWith("Nueva-landing-")) ||
+    !landing.landingTag.trim(),
   );
+  const isLandingTagLocked = Boolean(!isDraftLanding);
   const postUrlValue = clientName
     ? `${process.env.NEXT_PUBLIC_SUPABASE_URL?.replace(/\/$/, "") ?? ""}/functions/v1/conversions?name=${encodeURIComponent(
         clientName,
@@ -508,8 +510,7 @@ export default function AdminLandingEditarPage() {
                   })
                 }
                 disabled={
-                  initialName !== null &&
-                  !initialName.startsWith("Nueva-landing-")
+                  !isDraftLanding
                 }
                 className="w-full rounded-lg border border-zinc-700 bg-zinc-900 px-3 py-2 text-sm text-zinc-100"
                 placeholder="ej: milanding123"
@@ -1157,5 +1158,4 @@ export default function AdminLandingEditarPage() {
     </div>
   );
 }
-
 
