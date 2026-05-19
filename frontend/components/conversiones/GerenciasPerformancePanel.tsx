@@ -669,13 +669,13 @@ export default function GerenciasPerformancePanel({
 
   return (
     <section className="rounded-xl border border-zinc-800 bg-zinc-900/50 p-3 sm:p-4">
-      <div className="mb-3 grid grid-cols-1 gap-2 lg:flex lg:items-center lg:gap-2">
-        <h3 className="shrink-0 text-sm font-semibold text-zinc-100 lg:mr-1">Desempeño por Gerencias</h3>
+      <div className="mb-3 flex flex-wrap items-center gap-2">
+        <h3 className="w-full shrink-0 text-sm font-semibold text-zinc-100 md:w-auto md:mr-1">Desempeño por Gerencias</h3>
         <select
           value={month}
           onChange={(e) => setMonth(e.target.value || currentMonthValue())}
           aria-label="Seleccionar mes"
-          className="h-8 w-full shrink-0 rounded-lg border border-zinc-700 bg-zinc-950 px-2 text-xs font-medium text-zinc-100 lg:w-auto"
+          className="h-8 w-full shrink-0 rounded-lg border border-zinc-700 bg-zinc-950 px-2 text-xs font-medium text-zinc-100 sm:w-[126px]"
         >
           {monthSelectOptions.map((option) => (
             <option key={option.value} value={option.value}>{option.label}</option>
@@ -685,7 +685,7 @@ export default function GerenciasPerformancePanel({
           value={landingFilter}
           onChange={(e) => setLandingFilter(e.target.value || "__all__")}
           aria-label="Filtrar por landing"
-          className="h-8 w-full shrink-0 rounded-lg border border-zinc-700 bg-zinc-950 px-2 text-xs font-medium text-zinc-100 lg:w-[200px] xl:w-[220px]"
+          className="h-8 w-full shrink-0 rounded-lg border border-zinc-700 bg-zinc-950 px-2 text-xs font-medium text-zinc-100 sm:w-[180px] lg:w-[190px]"
           title="Filtrar desempeno por landing"
         >
           <option value="__all__">Todas las landings</option>
@@ -699,7 +699,7 @@ export default function GerenciasPerformancePanel({
           type="button"
           onClick={() => setMetaAdsOnly((value) => !value)}
           aria-pressed={metaAdsOnly}
-          className="inline-flex h-8 w-full shrink-0 items-center justify-between gap-2 rounded-lg border border-zinc-700 bg-zinc-950 px-2 text-[11px] font-medium text-zinc-300 transition hover:border-zinc-600 lg:w-auto lg:justify-start"
+          className="inline-flex h-8 w-full shrink-0 items-center justify-between gap-2 rounded-lg border border-zinc-700 bg-zinc-950 px-2 text-[11px] font-medium text-zinc-300 transition hover:border-zinc-600 sm:w-auto sm:justify-start"
           title="Filtrar metricas por origen Meta Ads"
         >
           <span>Meta Ads</span>
@@ -707,19 +707,18 @@ export default function GerenciasPerformancePanel({
             <span className={`absolute top-0.5 h-2.5 w-2.5 rounded-full transition ${metaAdsOnly ? "left-3.5 bg-cyan-300" : "left-0.5 bg-zinc-400"}`} />
           </span>
         </button>
-        <div className="hidden lg:block lg:flex-1" />
         <input
           value={searchTerm}
           onChange={(e) => setSearchTerm(e.target.value)}
           placeholder="Buscar gerencia o ID..."
           aria-label="Buscar gerencia por nombre o ID"
-          className="h-8 w-full shrink-0 rounded-lg border border-zinc-700 bg-zinc-950 px-3 text-xs text-zinc-100 placeholder:text-zinc-500 lg:w-52 xl:w-56"
+          className="h-8 w-full min-w-0 shrink-0 rounded-lg border border-zinc-700 bg-zinc-950 px-3 text-xs text-zinc-100 placeholder:text-zinc-500 md:ml-auto md:w-[190px] lg:w-[205px]"
         />
         <button
           type="button"
           onClick={() => void loadMonth()}
           disabled={loading}
-          className="h-8 w-full shrink-0 rounded-lg border border-zinc-700 bg-zinc-800 px-3 text-xs font-medium text-zinc-200 transition hover:bg-zinc-700 disabled:opacity-60 lg:w-auto"
+          className="h-8 w-full shrink-0 rounded-lg border border-zinc-700 bg-zinc-800 px-3 text-xs font-medium text-zinc-200 transition hover:bg-zinc-700 disabled:opacity-60 sm:w-[104px]"
         >
           {loading ? "Actualizando..." : "Actualizar"}
         </button>
@@ -727,7 +726,7 @@ export default function GerenciasPerformancePanel({
           type="button"
           onClick={exportPdf}
           disabled={loading}
-          className="h-8 w-full shrink-0 rounded-lg border border-emerald-700 bg-emerald-900/20 px-3 text-xs font-semibold text-emerald-300 transition hover:bg-emerald-900/35 disabled:opacity-60 lg:w-auto"
+          className="h-8 w-full shrink-0 rounded-lg border border-emerald-700 bg-emerald-900/20 px-3 text-xs font-semibold text-emerald-300 transition hover:bg-emerald-900/35 disabled:opacity-60 sm:w-[108px]"
         >
           Exportar PDF
         </button>
