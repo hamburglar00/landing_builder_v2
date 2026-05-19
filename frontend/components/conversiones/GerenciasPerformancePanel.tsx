@@ -403,63 +403,60 @@ export default function GerenciasPerformancePanel({
 
   return (
     <section className="rounded-xl border border-zinc-800 bg-zinc-900/50 p-3 sm:p-4">
-      <div className="mb-3 flex flex-col gap-2 lg:flex-row lg:items-center lg:justify-between">
-        <div className="grid grid-cols-1 gap-2 sm:flex sm:flex-wrap sm:items-center">
-          <h3 className="text-sm font-semibold text-zinc-100 sm:mr-1">Desempeño por Gerencias</h3>
-          <select
-            value={month}
-            onChange={(e) => setMonth(e.target.value || currentMonthValue())}
-            aria-label="Seleccionar mes"
-            className="h-8 w-full rounded-lg border border-zinc-700 bg-zinc-950 px-2 text-xs font-medium text-zinc-100 sm:w-auto"
-          >
-            {monthSelectOptions.map((option) => (
-              <option key={option.value} value={option.value}>{option.label}</option>
-            ))}
-          </select>
-          <select
-            value={landingFilter}
-            onChange={(e) => setLandingFilter(e.target.value || "__all__")}
-            aria-label="Filtrar por landing"
-            className="h-8 w-full rounded-lg border border-zinc-700 bg-zinc-950 px-2 text-xs font-medium text-zinc-100 sm:max-w-[220px]"
-            title="Filtrar desempeno por landing"
-          >
-            <option value="__all__">Todas las landings</option>
-            {landingOptions.map((option) => (
-              <option key={option.id} value={option.id}>
-                {option.name || "Landing sin nombre"}
-              </option>
-            ))}
-          </select>
-          <button
-            type="button"
-            onClick={() => setMetaAdsOnly((value) => !value)}
-            aria-pressed={metaAdsOnly}
-            className="inline-flex h-8 w-full items-center justify-between gap-2 rounded-lg border border-zinc-700 bg-zinc-950 px-2 text-[11px] font-medium text-zinc-300 transition hover:border-zinc-600 sm:w-auto sm:justify-start"
-            title="Filtrar metricas por origen Meta Ads"
-          >
-            <span>Meta Ads</span>
-            <span className={`relative inline-flex h-4 w-7 rounded-full border transition ${metaAdsOnly ? "border-cyan-400/60 bg-cyan-500/30" : "border-zinc-600 bg-zinc-800"}`}>
-              <span className={`absolute top-0.5 h-2.5 w-2.5 rounded-full transition ${metaAdsOnly ? "left-3.5 bg-cyan-300" : "left-0.5 bg-zinc-400"}`} />
-            </span>
-          </button>
-        </div>
-        <div className="grid grid-cols-1 gap-2 sm:flex sm:flex-wrap sm:items-center sm:justify-end lg:ml-auto">
-          <input
-            value={searchTerm}
-            onChange={(e) => setSearchTerm(e.target.value)}
-            placeholder="Buscar gerencia o ID..."
-            aria-label="Buscar gerencia por nombre o ID"
-            className="h-8 w-full rounded-lg border border-zinc-700 bg-zinc-950 px-3 text-xs text-zinc-100 placeholder:text-zinc-500 sm:w-56"
-          />
-          <button
-            type="button"
-            onClick={() => void loadMonth()}
-            disabled={loading}
-            className="h-8 w-full rounded-lg border border-zinc-700 bg-zinc-800 px-3 text-xs font-medium text-zinc-200 transition hover:bg-zinc-700 disabled:opacity-60 sm:w-auto"
-          >
-            {loading ? "Actualizando..." : "Actualizar"}
-          </button>
-        </div>
+      <div className="mb-3 grid grid-cols-1 gap-2 lg:flex lg:items-center lg:gap-2">
+        <h3 className="shrink-0 text-sm font-semibold text-zinc-100 lg:mr-1">Desempeño por Gerencias</h3>
+        <select
+          value={month}
+          onChange={(e) => setMonth(e.target.value || currentMonthValue())}
+          aria-label="Seleccionar mes"
+          className="h-8 w-full shrink-0 rounded-lg border border-zinc-700 bg-zinc-950 px-2 text-xs font-medium text-zinc-100 lg:w-auto"
+        >
+          {monthSelectOptions.map((option) => (
+            <option key={option.value} value={option.value}>{option.label}</option>
+          ))}
+        </select>
+        <select
+          value={landingFilter}
+          onChange={(e) => setLandingFilter(e.target.value || "__all__")}
+          aria-label="Filtrar por landing"
+          className="h-8 w-full shrink-0 rounded-lg border border-zinc-700 bg-zinc-950 px-2 text-xs font-medium text-zinc-100 lg:w-[200px] xl:w-[220px]"
+          title="Filtrar desempeno por landing"
+        >
+          <option value="__all__">Todas las landings</option>
+          {landingOptions.map((option) => (
+            <option key={option.id} value={option.id}>
+              {option.name || "Landing sin nombre"}
+            </option>
+          ))}
+        </select>
+        <button
+          type="button"
+          onClick={() => setMetaAdsOnly((value) => !value)}
+          aria-pressed={metaAdsOnly}
+          className="inline-flex h-8 w-full shrink-0 items-center justify-between gap-2 rounded-lg border border-zinc-700 bg-zinc-950 px-2 text-[11px] font-medium text-zinc-300 transition hover:border-zinc-600 lg:w-auto lg:justify-start"
+          title="Filtrar metricas por origen Meta Ads"
+        >
+          <span>Meta Ads</span>
+          <span className={`relative inline-flex h-4 w-7 rounded-full border transition ${metaAdsOnly ? "border-cyan-400/60 bg-cyan-500/30" : "border-zinc-600 bg-zinc-800"}`}>
+            <span className={`absolute top-0.5 h-2.5 w-2.5 rounded-full transition ${metaAdsOnly ? "left-3.5 bg-cyan-300" : "left-0.5 bg-zinc-400"}`} />
+          </span>
+        </button>
+        <div className="hidden lg:block lg:flex-1" />
+        <input
+          value={searchTerm}
+          onChange={(e) => setSearchTerm(e.target.value)}
+          placeholder="Buscar gerencia o ID..."
+          aria-label="Buscar gerencia por nombre o ID"
+          className="h-8 w-full shrink-0 rounded-lg border border-zinc-700 bg-zinc-950 px-3 text-xs text-zinc-100 placeholder:text-zinc-500 lg:w-52 xl:w-56"
+        />
+        <button
+          type="button"
+          onClick={() => void loadMonth()}
+          disabled={loading}
+          className="h-8 w-full shrink-0 rounded-lg border border-zinc-700 bg-zinc-800 px-3 text-xs font-medium text-zinc-200 transition hover:bg-zinc-700 disabled:opacity-60 lg:w-auto"
+        >
+          {loading ? "Actualizando..." : "Actualizar"}
+        </button>
       </div>
 
       {error ? (
