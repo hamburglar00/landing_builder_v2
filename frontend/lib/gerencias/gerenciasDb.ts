@@ -1,5 +1,5 @@
 import { supabase } from "@/lib/supabaseClient";
-import type { Gerencia } from "./types";
+import type { Gerencia, GerenciaWorkGroup } from "./types";
 import type { PhoneKind } from "@/lib/landing/types";
 
 export type { PhoneKind };
@@ -166,6 +166,92 @@ export async function deleteGerencia(id: number): Promise<void> {
   const { error } = await supabase.from("gerencias").delete().eq("id", id);
 
   if (error) throw error;
+}
+
+type WorkGroupRow = {
+  id: number;
+  user_id: string;
+  name: string;
+  created_at?: string;
+  updated_at?: string;
+  gerencia_work_group_members?: Array<{ gerencia_id: number | null }> | null;
+};
+
+export async function fetchGerenciaWorkGroups(userId: string): Promise<GerenciaWorkGroup[]> {
+  const { data, error } = await supabase
+    .from("gerencia_work_groups")
+    .select("id, user_id, name, created_at, updated_at, gerencia_work_group_members(gerencia_id)")
+    .eq("user_id", userId)
+    .order("name", { ascending: true });
+
+  if (error) throw error;
+  return ((data ?? []) as unknown as WorkGroupRow[]).map((row) => ({
+    id: Number(row.id),
+    user_id: row.user_id,
+    name: row.name,
+    created_at: row.created_at,
+    updated_at: row.updated_at,
+    gerenciaIds: (row.gerencia_work_group_members ?? [])
+      .map((member) => Number(member.gerencia_id))
+      .filter((id) => Number.isFinite(id)),
+  }));
+}
+
+export async function createGerenciaWorkGroup(
+  userId: string,
+  name: string,
+  gerenciaIds: number[],
+): Promise<GerenciaWorkGroup> {
+  const { data, error } = await supabase
+    .from("gerencia_work_groups")
+    .insert({ user_id: userId, name: name.trim() })
+    .select("id, user_id, name, created_at, updated_at")
+    .single();
+
+  if (error) throw error;
+  const group = data as GerenciaWorkGroup;
+  await setGerenciaWorkGroupMembers(group.id, gerenciaIds);
+  return { ...group, gerenciaIds };
+}
+
+export async function updateGerenciaWorkGroup(
+  groupId: number,
+  name: string,
+  gerenciaIds: number[],
+): Promise<void> {
+  const { error } = await supabase
+    .from("gerencia_work_groups")
+    .update({ name: name.trim() })
+    .eq("id", groupId);
+
+  if (error) throw error;
+  await setGerenciaWorkGroupMembers(groupId, gerenciaIds);
+}
+
+export async function deleteGerenciaWorkGroup(groupId: number): Promise<void> {
+  const { error } = await supabase
+    .from("gerencia_work_groups")
+    .delete()
+    .eq("id", groupId);
+
+  if (error) throw error;
+}
+
+async function setGerenciaWorkGroupMembers(groupId: number, gerenciaIds: number[]): Promise<void> {
+  const uniqueIds = Array.from(new Set(gerenciaIds.filter((id) => Number.isFinite(id))));
+  const { error: deleteError } = await supabase
+    .from("gerencia_work_group_members")
+    .delete()
+    .eq("group_id", groupId);
+
+  if (deleteError) throw deleteError;
+  if (uniqueIds.length === 0) return;
+
+  const { error: insertError } = await supabase
+    .from("gerencia_work_group_members")
+    .insert(uniqueIds.map((gerencia_id) => ({ group_id: groupId, gerencia_id })));
+
+  if (insertError) throw insertError;
 }
 
 /** Asignación de una gerencia a una landing, con peso y configuración telefónica. */

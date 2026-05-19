@@ -3,20 +3,26 @@
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { supabase } from "@/lib/supabaseClient";
-import type { Gerencia } from "@/lib/gerencias/types";
+import type { Gerencia, GerenciaWorkGroup } from "@/lib/gerencias/types";
 import {
   fetchGerencias,
   createGerencia,
   updateGerencia,
   deleteGerencia,
+  fetchGerenciaWorkGroups,
+  createGerenciaWorkGroup,
+  updateGerenciaWorkGroup,
+  deleteGerenciaWorkGroup,
   formatGerenciaError,
   sortGerenciasByName,
 } from "@/lib/gerencias/gerenciasDb";
 import { DashboardSkeleton } from "@/components/ui/DashboardSkeleton";
+import { GerenciaWorkGroupsPanel } from "@/components/gerencias/GerenciaWorkGroupsPanel";
 
 export default function DashboardGerenciasPage() {
   const router = useRouter();
   const [gerencias, setGerencias] = useState<Gerencia[]>([]);
+  const [workGroups, setWorkGroups] = useState<GerenciaWorkGroup[]>([]);
   const [userId, setUserId] = useState<string | null>(null);
   const [ready, setReady] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -29,6 +35,7 @@ export default function DashboardGerenciasPage() {
   const [newSourceType, setNewSourceType] = useState<"pbadmin" | "manual">("pbadmin");
   const [showCreateModal, setShowCreateModal] = useState(false);
   const [saving, setSaving] = useState(false);
+  const [savingGroup, setSavingGroup] = useState(false);
   const [deletingId, setDeletingId] = useState<number | null>(null);
 
   useEffect(() => {
@@ -44,8 +51,12 @@ export default function DashboardGerenciasPage() {
       setUserId(user.id);
       setError(null);
       try {
-        const list = await fetchGerencias(user.id);
+        const [list, groups] = await Promise.all([
+          fetchGerencias(user.id),
+          fetchGerenciaWorkGroups(user.id),
+        ]);
         setGerencias(list);
+        setWorkGroups(groups);
       } catch (e) {
         setError(e instanceof Error ? e.message : "Error al cargar gerencias");
       } finally {
@@ -149,10 +160,60 @@ export default function DashboardGerenciasPage() {
     try {
       await deleteGerencia(id);
       setGerencias((prev) => prev.filter((x) => x.id !== id));
+      setWorkGroups((prev) =>
+        prev.map((group) => ({
+          ...group,
+          gerenciaIds: group.gerenciaIds.filter((gerenciaId) => gerenciaId !== id),
+        })),
+      );
     } catch (e) {
       setError(formatGerenciaError(e, "Error al eliminar"));
     } finally {
       setDeletingId(null);
+    }
+  };
+
+  const handleCreateGroup = async (name: string, gerenciaIds: number[]) => {
+    if (!userId) return;
+    setSavingGroup(true);
+    setError(null);
+    try {
+      const created = await createGerenciaWorkGroup(userId, name, gerenciaIds);
+      setWorkGroups((prev) => [...prev, created].sort((a, b) => a.name.localeCompare(b.name, "es")));
+    } catch (e) {
+      setError(formatGerenciaError(e, "Error al crear grupo"));
+    } finally {
+      setSavingGroup(false);
+    }
+  };
+
+  const handleUpdateGroup = async (groupId: number, name: string, gerenciaIds: number[]) => {
+    setSavingGroup(true);
+    setError(null);
+    try {
+      await updateGerenciaWorkGroup(groupId, name, gerenciaIds);
+      setWorkGroups((prev) =>
+        prev
+          .map((group) => (group.id === groupId ? { ...group, name, gerenciaIds } : group))
+          .sort((a, b) => a.name.localeCompare(b.name, "es")),
+      );
+    } catch (e) {
+      setError(formatGerenciaError(e, "Error al actualizar grupo"));
+    } finally {
+      setSavingGroup(false);
+    }
+  };
+
+  const handleDeleteGroup = async (groupId: number) => {
+    setSavingGroup(true);
+    setError(null);
+    try {
+      await deleteGerenciaWorkGroup(groupId);
+      setWorkGroups((prev) => prev.filter((group) => group.id !== groupId));
+    } catch (e) {
+      setError(formatGerenciaError(e, "Error al eliminar grupo"));
+    } finally {
+      setSavingGroup(false);
     }
   };
 
@@ -256,6 +317,15 @@ export default function DashboardGerenciasPage() {
           </div>
         </div>
       )}
+
+      <GerenciaWorkGroupsPanel
+        gerencias={gerencias}
+        groups={workGroups}
+        saving={savingGroup}
+        onCreate={handleCreateGroup}
+        onUpdate={handleUpdateGroup}
+        onDelete={handleDeleteGroup}
+      />
 
       <div className="overflow-x-auto rounded-xl border border-zinc-800">
         <table className="min-w-[680px] text-left text-sm md:min-w-full">

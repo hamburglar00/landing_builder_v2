@@ -4,7 +4,7 @@ import { useEffect, useState } from "react";
 import { useRouter, useParams } from "next/navigation";
 import Link from "next/link";
 import { supabase } from "@/lib/supabaseClient";
-import type { Landing, LandingThemeConfig, PhoneKind } from "@/lib/landing/types";
+import type { Landing, LandingThemeConfig } from "@/lib/landing/types";
 import { DEFAULT_CONFIG } from "@/lib/landing/mocks";
 import {
   fetchLandingById,
@@ -21,21 +21,18 @@ import {
 } from "@/components/landing/LandingEditorForm";
 import { buildLandingConfig } from "@/lib/landing/buildLandingConfig";
 import type { Gerencia } from "@/lib/gerencias/types";
+import type { GerenciaWorkGroup } from "@/lib/gerencias/types";
 import type { LandingGerenciaAssignment } from "@/lib/gerencias/gerenciasDb";
 import {
   fetchGerenciasForAdmin,
+  fetchGerenciaWorkGroups,
   fetchLandingGerencias,
   setLandingGerencias,
 } from "@/lib/gerencias/gerenciasDb";
+import { GerenciaRedirectSection } from "@/components/landing/GerenciaRedirectSection";
 import { getSettings } from "@/lib/settingsDb";
 
 const BASE = "/admin/landings";
-const PHONE_KIND_OPTIONS: Array<{ value: PhoneKind; label: string }> = [
-  { value: "carga", label: "Carga" },
-  { value: "assistant", label: "Asistente" },
-  { value: "ads", label: "Ads" },
-  { value: "mkt", label: "Mkt" },
-];
 const EXTERNAL_INTEGRATION_STEPS: Array<{ title: string; desc: string }> = [
   { title: "1. Endpoint de conversiones", desc: "Enviar Contact al endpoint /functions/v1/conversions?name=CLIENTE." },
   { title: "2. Obtener telefono", desc: "Pedir telefono a landing-phone y guardarlo como telefono_asignado para el CTA." },
@@ -135,6 +132,7 @@ export default function AdminLandingEditarPage() {
   const [saving, setSaving] = useState(false);
   const [deleting, setDeleting] = useState(false);
   const [gerencias, setGerencias] = useState<Gerencia[]>([]);
+  const [workGroups, setWorkGroups] = useState<GerenciaWorkGroup[]>([]);
   const [assignments, setAssignments] = useState<LandingGerenciaAssignment[]>([]);
   const [initialName, setInitialName] = useState<string | null>(null);
   const [urlBase, setUrlBase] = useState<string | null>(null);
@@ -173,22 +171,30 @@ export default function AdminLandingEditarPage() {
         if (!initialName) {
           setInitialName(found.name);
         }
-        setGerencias(allGerencias);
         setAssignments(assigned);
         setUrlBase(settings.url_base ?? null);
         setRevalidateSecret(settings.revalidate_secret || null);
-        if (owner.data?.user_id) {
-          setOwnerUserId(owner.data.user_id);
+        const ownerId = owner.data?.user_id ?? "";
+        if (ownerId) {
+          setOwnerUserId(ownerId);
+          setGerencias(allGerencias.filter((g) => g.user_id === ownerId));
+          const groups = await fetchGerenciaWorkGroups(ownerId);
+          setWorkGroups(groups);
+        } else {
+          setGerencias(allGerencias);
+          setWorkGroups([]);
+        }
+        if (ownerId) {
           const { data: profile } = await supabase
             .from("profiles")
             .select("nombre")
-            .eq("id", owner.data.user_id)
+            .eq("id", ownerId)
             .maybeSingle();
           setClientName(profile?.nombre ?? null);
           const { data: pixels } = await supabase
             .from("conversions_pixel_configs")
             .select("pixel_id")
-            .eq("user_id", owner.data.user_id)
+            .eq("user_id", ownerId)
             .order("is_default", { ascending: false })
             .order("created_at", { ascending: true });
           const options = (pixels ?? [])
@@ -715,381 +721,15 @@ export default function AdminLandingEditarPage() {
           </div>
         </CollapsibleSection>
 
-        <CollapsibleSection title="Redirección" defaultOpen>
-          <div className="mb-3 rounded-lg border border-zinc-700 bg-zinc-900/70 p-3">
-            <p className="mb-2 text-xs font-medium text-zinc-300">Selección de gerencias</p>
-            <div className="flex flex-wrap items-center gap-3">
-              <div className="inline-flex rounded-lg border border-zinc-700 bg-zinc-900 text-[11px]">
-                <button
-                  type="button"
-                  onClick={() =>
-                    setLanding((prev) =>
-                      prev ? { ...prev, gerenciaSelectionMode: "weighted_random" } : prev,
-                    )
-                  }
-                  className={`cursor-pointer px-2 py-1 rounded-l-lg border-r border-zinc-700 ${
-                    landing.gerenciaSelectionMode === "weighted_random"
-                      ? "bg-zinc-100 text-zinc-900"
-                      : "text-zinc-300 hover:bg-zinc-800"
-                  }`}
-                  title="Aleatorio por peso de gerencia"
-                >
-                  Aleatoria (peso)
-                </button>
-                <button
-                  type="button"
-                  onClick={() =>
-                    setLanding((prev) =>
-                      prev ? { ...prev, gerenciaSelectionMode: "fair" } : prev,
-                    )
-                  }
-                  className={`cursor-pointer px-2 py-1 rounded-r-lg ${
-                    landing.gerenciaSelectionMode === "fair"
-                      ? "bg-zinc-100 text-zinc-900"
-                      : "text-zinc-300 hover:bg-zinc-800"
-                  }`}
-                  title="Equitativo entre gerencias (ignora peso)"
-                >
-                  Equitativa
-                </button>
-              </div>
-              {landing.gerenciaSelectionMode === "fair" && (
-                <div className="inline-flex rounded-lg border border-zinc-700 bg-zinc-900 text-[11px]">
-                  <button
-                    type="button"
-                    onClick={() =>
-                      setLanding((prev) =>
-                        prev ? { ...prev, gerenciaFairCriterion: "usage_count" } : prev,
-                      )
-                    }
-                    className={`cursor-pointer px-2 py-1 rounded-l-lg border-r border-zinc-700 ${
-                      landing.gerenciaFairCriterion === "usage_count"
-                        ? "bg-zinc-100 text-zinc-900"
-                        : "text-zinc-300 hover:bg-zinc-800"
-                    }`}
-                    title="Equitativo por sumatoria de contador"
-                  >
-                    Por contador
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() =>
-                      setLanding((prev) =>
-                        prev ? { ...prev, gerenciaFairCriterion: "messages_received" } : prev,
-                      )
-                    }
-                    className={`cursor-pointer px-2 py-1 rounded-r-lg ${
-                      landing.gerenciaFairCriterion === "messages_received"
-                        ? "bg-zinc-100 text-zinc-900"
-                        : "text-zinc-300 hover:bg-zinc-800"
-                    }`}
-                    title="Equitativo por sumatoria de mensajes recibidos"
-                  >
-                    Mensajes recibidos
-                  </button>
-                </div>
-              )}
-            </div>
-          </div>
-          <p className="mb-3 text-xs text-zinc-400">
-            Configura a donde re dirigirá el CTA de tu landing page.
-          </p>
-          <p className="mb-3 text-xs text-zinc-500">
-            Marque <strong>Asignar</strong> para incluir la gerencia; en selección <strong>Aleatoria (peso)</strong> puede editar el <strong>Peso</strong> para definir probabilidad. Elija tipo de teléfono (carga/ads/mkt/asistente), modo de elección (aleatorio/equitativo) y opcionalmente un intervalo de tiempo. Crea gerencias en el menú Gerencias si no tienes.
-          </p>
-          {gerencias.length === 0 ? (
-            <p className="text-sm text-zinc-500">
-              No tienes gerencias.{" "}
-              <Link
-                href="/admin/gerencias"
-                className="text-zinc-300 underline hover:text-zinc-100"
-              >
-                Crear gerencias
-              </Link>
-            </p>
-          ) : (
-            <div className="overflow-x-auto rounded-lg border border-zinc-700">
-              <table className="min-w-[900px] text-left text-sm md:min-w-full">
-                <thead className="bg-zinc-800/80">
-                  <tr>
-                    <th className="px-3 py-2 font-medium text-zinc-300">
-                      Gerencia
-                    </th>
-                    <th className="px-3 py-2 font-medium text-zinc-300">
-                      Nombre
-                    </th>
-                    <th className="px-3 py-2 font-medium text-zinc-300 w-20 text-center">
-                      Asignar
-                    </th>
-                    {landing.gerenciaSelectionMode === "weighted_random" && (
-                      <th className="px-3 py-2 font-medium text-zinc-300 w-10">
-                        Peso
-                      </th>
-                    )}
-                    <th className="px-3 py-2 font-medium text-zinc-300 w-32">
-                      Modo
-                    </th>
-                    <th className="px-3 py-2 font-medium text-zinc-300 min-w-[140px]">
-                      Tipo
-                    </th>
-                    <th className="px-3 py-2 font-medium text-zinc-300 w-56">
-                      Intervalo
-                    </th>
-                  </tr>
-                </thead>
-                <tbody className="divide-y divide-zinc-800">
-                  {gerencias.map((g) => {
-                    const assignment = assignments.find(
-                      (a) => a.gerencia_id === g.id,
-                    );
-                    const isAssigned = !!assignment;
-                    const weight = assignment?.weight ?? 0;
-                    const phoneMode = assignment?.phoneMode ?? "random";
-                    const phoneKind = assignment?.phoneKind ?? "carga";
-                    const intervalStartHour =
-                      assignment?.intervalStartHour ?? null;
-                    const intervalEndHour = assignment?.intervalEndHour ?? null;
-                    return (
-                      <tr key={g.id} className="bg-zinc-950/40">
-                        <td className="px-3 py-2 text-zinc-300">
-                          {g.gerencia_id}
-                        </td>
-                        <td className="px-3 py-2 text-zinc-200">{g.nombre}</td>
-                        <td className="px-3 py-2 text-center">
-                          <input
-                            type="checkbox"
-                            checked={isAssigned}
-                            onChange={() => {
-                              if (isAssigned) {
-                                setAssignments((prev) =>
-                                  prev.filter((a) => a.gerencia_id !== g.id),
-                                );
-                              } else {
-                                setAssignments((prev) => [
-                                  ...prev,
-                                  {
-                                    gerencia_id: g.id,
-                                    weight: 1,
-                                    phoneMode: "random",
-                                    phoneKind: "carga",
-                                    intervalStartHour: null,
-                                    intervalEndHour: null,
-                                  },
-                                ]);
-                              }
-                            }}
-                            className="rounded border-zinc-600"
-                          />
-                        </td>
-                        {landing.gerenciaSelectionMode === "weighted_random" && (
-                          <td className="px-3 py-2">
-                            <input
-                              type="number"
-                              min={0}
-                              value={weight}
-                              onChange={(e) => {
-                                if (!isAssigned) return;
-                                const v = parseInt(e.target.value, 10);
-                                const next = Number.isNaN(v) ? 0 : Math.max(0, v);
-                                setAssignments((prev) =>
-                                  prev.map((a) =>
-                                    a.gerencia_id === g.id
-                                      ? { ...a, weight: next }
-                                      : a,
-                                  ),
-                                );
-                              }}
-                              disabled={!isAssigned}
-                              title={
-                                isAssigned
-                                  ? "Peso de esta gerencia en esta landing"
-                                  : "Marque Asignar para poder editar el peso"
-                              }
-                              className="w-10 rounded border border-zinc-700 bg-zinc-900 px-2 py-1 text-zinc-100 disabled:cursor-not-allowed disabled:opacity-50 [appearance:textfield] [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:appearance-none"
-                            />
-                          </td>
-                        )}
-                        <td className="px-3 py-2">
-                          <div className="inline-flex rounded-lg border border-zinc-700 bg-zinc-900 text-[11px]">
-                            <button
-                              type="button"
-                              onClick={() => {
-                                if (!isAssigned) return;
-                                setAssignments((prev) =>
-                                  prev.map((a) =>
-                                    a.gerencia_id === g.id
-                                      ? { ...a, phoneMode: "random" }
-                                      : a,
-                                  ),
-                                );
-                              }}
-                              className={`cursor-pointer px-2 py-1 rounded-l-lg border-r border-zinc-700 ${
-                                phoneMode === "random"
-                                  ? "bg-zinc-100 text-zinc-900"
-                                  : "text-zinc-300 hover:bg-zinc-800"
-                              }`}
-                            >
-                              Aleatorio
-                            </button>
-                            <button
-                              type="button"
-                              onClick={() => {
-                                if (!isAssigned) return;
-                                setAssignments((prev) =>
-                                  prev.map((a) =>
-                                    a.gerencia_id === g.id
-                                      ? { ...a, phoneMode: "fair" }
-                                      : a,
-                                  ),
-                                );
-                              }}
-                              className={`cursor-pointer px-2 py-1 rounded-r-lg ${
-                                phoneMode === "fair"
-                                  ? "bg-zinc-100 text-zinc-900"
-                                  : "text-zinc-300 hover:bg-zinc-800"
-                              }`}
-                            >
-                              Equitativo
-                            </button>
-                          </div>
-                        </td>
-                        <td className="px-3 py-2 min-w-[190px]">
-                          <div className="inline-flex flex-shrink-0 rounded-lg border border-zinc-700 bg-zinc-900 text-[11px]">
-                            {PHONE_KIND_OPTIONS.map(({ value: kind, label }, idx) => (
-                              <button
-                                key={kind}
-                                type="button"
-                                onClick={() => {
-                                  if (!isAssigned) return;
-                                  setAssignments((prev) =>
-                                    prev.map((a) =>
-                                      a.gerencia_id === g.id
-                                        ? { ...a, phoneKind: kind }
-                                        : a,
-                                    ),
-                                  );
-                                }}
-                                className={`cursor-pointer shrink-0 px-2 py-1 ${
-                                  idx === 0 ? "rounded-l-lg" : ""
-                                } ${
-                                  idx === PHONE_KIND_OPTIONS.length - 1
-                                    ? "rounded-r-lg"
-                                    : "border-r border-zinc-700"
-                                } ${
-                                  phoneKind === kind
-                                    ? "bg-zinc-100 text-zinc-900"
-                                    : "text-zinc-300 hover:bg-zinc-800"
-                                }`}
-                              >
-                                {label}
-                              </button>
-                            ))}
-                          </div>
-                        </td>
-                        <td className="px-3 py-2">
-                          <div className="flex flex-wrap items-center gap-2 text-[11px] text-zinc-300">
-                            <label className="flex items-center gap-1">
-                              <input
-                                type="checkbox"
-                                checked={
-                                  intervalStartHour !== null &&
-                                  intervalEndHour !== null
-                                }
-                                onChange={(e) => {
-                                  if (!isAssigned) return;
-                                  setAssignments((prev) =>
-                                    prev.map((a) => {
-                                      if (a.gerencia_id !== g.id) return a;
-                                      if (!e.target.checked) {
-                                        return {
-                                          ...a,
-                                          intervalStartHour: null,
-                                          intervalEndHour: null,
-                                        };
-                                      }
-                                      return {
-                                        ...a,
-                                        intervalStartHour:
-                                          a.intervalStartHour ?? 9,
-                                        intervalEndHour:
-                                          a.intervalEndHour ?? 21,
-                                      };
-                                    }),
-                                  );
-                                }}
-                                className="rounded border-zinc-600"
-                              />
-                              <span>Aplicar</span>
-                            </label>
-                            {intervalStartHour !== null &&
-                              intervalEndHour !== null && (
-                                <div className="flex flex-wrap items-center gap-1">
-                                  <span>Dentro de</span>
-                                  <select
-                                    value={intervalStartHour}
-                                    onChange={(e) => {
-                                      const v = parseInt(e.target.value, 10);
-                                      const n = Number.isNaN(v)
-                                        ? 0
-                                        : Math.max(0, Math.min(23, v));
-                                      setAssignments((prev) =>
-                                        prev.map((a) =>
-                                          a.gerencia_id === g.id
-                                            ? {
-                                                ...a,
-                                                intervalStartHour: n,
-                                              }
-                                            : a,
-                                        ),
-                                      );
-                                    }}
-                                    className="rounded-lg border border-zinc-700 bg-zinc-900 px-2 py-1 text-[11px] text-zinc-100"
-                                  >
-                                    {Array.from({ length: 24 }).map((_, h) => (
-                                      <option key={h} value={h}>
-                                        {h.toString().padStart(2, "0")}:00
-                                      </option>
-                                    ))}
-                                  </select>
-                                  <span>a</span>
-                                  <select
-                                    value={intervalEndHour}
-                                    onChange={(e) => {
-                                      const v = parseInt(e.target.value, 10);
-                                      const n = Number.isNaN(v)
-                                        ? 0
-                                        : Math.max(0, Math.min(23, v));
-                                      setAssignments((prev) =>
-                                        prev.map((a) =>
-                                          a.gerencia_id === g.id
-                                            ? {
-                                                ...a,
-                                                intervalEndHour: n,
-                                              }
-                                            : a,
-                                        ),
-                                      );
-                                    }}
-                                    className="rounded-lg border border-zinc-700 bg-zinc-900 px-2 py-1 text-[11px] text-zinc-100"
-                                  >
-                                    {Array.from({ length: 24 }).map((_, h) => (
-                                      <option key={h} value={h}>
-                                        {h.toString().padStart(2, "0")}:00
-                                      </option>
-                                    ))}
-                                  </select>
-                                </div>
-                              )}
-                          </div>
-                        </td>
-                      </tr>
-                    );
-                  })}
-                </tbody>
-              </table>
-            </div>
-          )}
-        </CollapsibleSection>
+        <GerenciaRedirectSection
+          landing={landing}
+          setLanding={setLanding}
+          gerencias={gerencias}
+          workGroups={workGroups}
+          assignments={assignments}
+          setAssignments={setAssignments}
+          createGerenciasHref="/admin/gerencias"
+        />
 
         {landing.landingType !== "external" && (
           <LandingEditorForm
@@ -1158,4 +798,3 @@ export default function AdminLandingEditarPage() {
     </div>
   );
 }
-
