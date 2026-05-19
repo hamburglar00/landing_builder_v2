@@ -119,15 +119,6 @@ function formatRoas(value: number): string {
   }).format(value || 0)}x`;
 }
 
-function escapeHtml(value: string): string {
-  return value
-    .replace(/&/g, "&amp;")
-    .replace(/</g, "&lt;")
-    .replace(/>/g, "&gt;")
-    .replace(/"/g, "&quot;")
-    .replace(/'/g, "&#039;");
-}
-
 function externalKey(row: ConversionRow): string {
   const ext = String(row.external_id ?? "").trim();
   return ext ? `${row.user_id}::${ext}` : "";
@@ -398,264 +389,252 @@ export default function GerenciasPerformancePanel({
     return sortDirection === "asc" ? "\u25B2" : "\u25BC";
   };
 
-  const exportPdf = () => {
-    const reportWindow = window.open("", "_blank", "width=1200,height=800");
-    if (!reportWindow) {
-      setError("El navegador bloqueó la ventana para exportar el PDF. Permití popups e intentá nuevamente.");
-      return;
+  const exportPdf = async () => {
+    try {
+      const { jsPDF } = await import("jspdf");
+      const reportTitle = `Desempeño por Gerencias - ${monthLabel(month)}`;
+      const landingLabel = selectedLanding?.name || "Todas las landings";
+      const filters = [
+        `Mes: ${monthLabel(month)}`,
+        `Landing: ${landingLabel}`,
+        `Meta Ads: ${metaAdsOnly ? "Sí" : "No"}`,
+        `Búsqueda: ${searchTerm.trim() || "-"}`,
+        `Orden: ${sortKey} ${sortDirection === "asc" ? "ascendente" : "descendente"}`,
+      ];
+
+      const doc = new jsPDF({ orientation: "landscape", unit: "mm", format: "a4", compress: true });
+      doc.setProperties({ title: reportTitle, subject: "Reporte de desempeño por gerencias" });
+
+      const pageWidth = doc.internal.pageSize.getWidth();
+      const pageHeight = doc.internal.pageSize.getHeight();
+      const margin = 10;
+      const tableWidth = pageWidth - (margin * 2);
+      const primary = [15, 118, 110] as const;
+      const primaryDark = [6, 31, 28] as const;
+      const border = [203, 213, 225] as const;
+      const text = [15, 23, 42] as const;
+      const muted = [100, 116, 139] as const;
+
+      const money = (value: number) => formatMoney(value).replace("ARS", "$").replace(/\s+/g, " ").trim();
+      const safeFilename = `${reportTitle}.pdf`.replace(/[\\/:*?"<>|]/g, "-");
+      const fitText = (value: string, maxWidth: number): string => {
+        const clean = String(value ?? "");
+        const lines = doc.splitTextToSize(clean, Math.max(maxWidth, 4));
+        return Array.isArray(lines) ? String(lines[0] ?? "") : String(lines ?? "");
+      };
+
+      const columns = [
+        { key: "label", label: "Gerencia (ID)", width: showRoas ? 36 : 42, align: "left" as const },
+        { key: "disponibilidad", label: "Disponibilidad", width: showRoas ? 22 : 25, align: "center" as const },
+        { key: "contactos", label: "Contactos", width: showRoas ? 18 : 20, align: "center" as const },
+        { key: "inicio", label: "% Inicio", width: showRoas ? 19 : 22, align: "center" as const },
+        { key: "mensajes", label: "Mensajes", width: showRoas ? 18 : 20, align: "center" as const },
+        { key: "cargas", label: "Cargas", width: showRoas ? 17 : 19, align: "center" as const },
+        { key: "monto", label: "Monto", width: showRoas ? 25 : 29, align: "center" as const },
+        { key: "pctCarga", label: "% Carga", width: showRoas ? 18 : 21, align: "center" as const },
+        { key: "pctRecarga", label: "% Recarga", width: showRoas ? 19 : 22, align: "center" as const },
+        { key: "cost", label: "Costo/msj", width: showRoas ? 21 : 24, align: "center" as const },
+        { key: "gasto", label: "Gasto", width: showRoas ? 23 : 33, align: "center" as const },
+        ...(showRoas ? [{ key: "roas", label: "ROAS", width: 18, align: "center" as const }] : []),
+      ];
+      const totalBaseWidth = columns.reduce((sum, column) => sum + column.width, 0);
+      const normalizedColumns = columns.map((column) => ({
+        ...column,
+        width: (column.width / totalBaseWidth) * tableWidth,
+      }));
+
+      const tableRows = sortedRows.map((row) => {
+        const cost = getCost(row);
+        const gasto = getGasto(row);
+        return {
+          kind: "body" as const,
+          values: [
+            row.label,
+            formatOptionalPercent(row.disponibilidad),
+            formatNumber(row.contactos),
+            formatPercent(row.pctInicioConversacion),
+            formatNumber(row.mensajes),
+            formatNumber(row.cargas),
+            money(row.montoCargado),
+            formatPercent(row.pctCarga),
+            formatPercent(row.pctRecarga),
+            cost > 0 ? money(cost) : "-",
+            money(gasto),
+            ...(showRoas ? [gasto > 0 ? formatRoas(getRoas(row)) : "-"] : []),
+          ],
+        };
+      });
+
+      const footerRows = [
+        {
+          kind: "average" as const,
+          values: [
+            "Promedio",
+            "-",
+            formatNumber(totals.contactos / rowAverageDivisor),
+            formatPercent(totals.pctInicioConversacion / rowAverageDivisor),
+            formatNumber(totals.mensajes / rowAverageDivisor),
+            formatNumber(totals.cargas / rowAverageDivisor),
+            money(totals.montoCargado / rowAverageDivisor),
+            formatPercent(totals.pctCarga / rowAverageDivisor),
+            formatPercent(totals.pctRecarga / rowAverageDivisor),
+            "-",
+            money(totals.gasto / rowAverageDivisor),
+            ...(showRoas ? [totals.roasCount > 0 ? formatRoas(totals.roas / roasAverageDivisor) : "-"] : []),
+          ],
+        },
+        {
+          kind: "total" as const,
+          values: [
+            "Totales",
+            "-",
+            formatNumber(totals.contactos),
+            "-",
+            formatNumber(totals.mensajes),
+            formatNumber(totals.cargas),
+            money(totals.montoCargado),
+            "-",
+            "-",
+            "-",
+            money(totals.gasto),
+            ...(showRoas ? [totals.gasto > 0 ? formatRoas(totals.montoCargado / totals.gasto) : "-"] : []),
+          ],
+        },
+      ];
+
+      const drawHeader = () => {
+        doc.setFillColor(...primaryDark);
+        doc.roundedRect(margin, 10, tableWidth, 28, 4, 4, "F");
+        doc.setFillColor(...primary);
+        doc.rect(margin, 34, tableWidth, 4, "F");
+        doc.setTextColor(255, 255, 255);
+        doc.setFont("helvetica", "bold");
+        doc.setFontSize(17);
+        doc.text("Desempeño por Gerencias", margin + 8, 22);
+        doc.setFont("helvetica", "normal");
+        doc.setFontSize(9);
+        doc.setTextColor(204, 251, 241);
+        doc.text("Reporte de rendimiento para los filtros aplicados", margin + 8, 30);
+
+        doc.setFontSize(7.5);
+        let chipX = pageWidth - margin - 2;
+        let chipY = 18;
+        filters.slice().reverse().forEach((filter) => {
+          const chipText = fitText(filter, 70);
+          const chipWidth = Math.min(doc.getTextWidth(chipText) + 8, 74);
+          if (chipX - chipWidth < margin + 116) {
+            chipX = pageWidth - margin - 2;
+            chipY += 8;
+          }
+          chipX -= chipWidth;
+          doc.setFillColor(18, 83, 75);
+          doc.roundedRect(chipX, chipY - 4.5, chipWidth, 6.2, 3, 3, "F");
+          doc.setTextColor(236, 253, 245);
+          doc.text(chipText, chipX + 4, chipY);
+          chipX -= 3;
+        });
+      };
+
+      const drawSummary = (startY: number) => {
+        const cards = [
+          { label: "Contactos", value: formatNumber(totals.contactos) },
+          { label: "Mensajes", value: formatNumber(totals.mensajes) },
+          { label: "Cargas", value: formatNumber(totals.cargas) },
+          { label: "Monto cargado", value: money(totals.montoCargado) },
+        ];
+        const gap = 4;
+        const cardWidth = (tableWidth - gap * 3) / 4;
+        cards.forEach((card, index) => {
+          const x = margin + index * (cardWidth + gap);
+          doc.setFillColor(248, 250, 252);
+          doc.setDrawColor(...border);
+          doc.roundedRect(x, startY, cardWidth, 16, 3, 3, "FD");
+          doc.setFont("helvetica", "bold");
+          doc.setFontSize(6.5);
+          doc.setTextColor(...muted);
+          doc.text(card.label.toUpperCase(), x + 5, startY + 5.4);
+          doc.setFontSize(11);
+          doc.setTextColor(...text);
+          doc.text(card.value, x + 5, startY + 12);
+        });
+      };
+
+      const drawTableHead = (startY: number) => {
+        let x = margin;
+        doc.setFont("helvetica", "bold");
+        doc.setFontSize(6.2);
+        normalizedColumns.forEach((column, index) => {
+          doc.setFillColor(index === 0 ? 19 : 15, index === 0 ? 78 : 118, index === 0 ? 74 : 110);
+          doc.setDrawColor(13, 148, 136);
+          doc.rect(x, startY, column.width, 9, "FD");
+          doc.setTextColor(255, 255, 255);
+          const label = fitText(column.label, column.width - 2.5);
+          const textX = column.align === "left" ? x + 2.2 : x + (column.width / 2);
+          doc.text(label, textX, startY + 5.8, { align: column.align });
+          x += column.width;
+        });
+      };
+
+      const drawRow = (values: string[], startY: number, rowIndex: number, kind: "body" | "average" | "total") => {
+        let x = margin;
+        const rowHeight = kind === "body" ? 7.1 : 7.8;
+        const isFooter = kind !== "body";
+        const fill = kind === "total" ? [209, 250, 229] : kind === "average" ? [236, 253, 245] : rowIndex % 2 === 0 ? [255, 255, 255] : [248, 250, 252];
+        doc.setFont("helvetica", isFooter ? "bold" : "normal");
+        doc.setFontSize(isFooter ? 6.4 : 6.1);
+        normalizedColumns.forEach((column, columnIndex) => {
+          doc.setFillColor(fill[0], fill[1], fill[2]);
+          doc.setDrawColor(...border);
+          doc.rect(x, startY, column.width, rowHeight, "FD");
+          const rawValue = values[columnIndex] ?? "";
+          const isMoneyColumn = ["monto", "gasto"].includes(column.key);
+          if (isMoneyColumn) {
+            doc.setTextColor(4, 120, 87);
+          } else {
+            doc.setTextColor(...text);
+          }
+          const clipped = fitText(rawValue, column.width - 3);
+          const textX = column.align === "left" ? x + 2.2 : x + (column.width / 2);
+          doc.text(clipped, textX, startY + 4.8, { align: column.align });
+          x += column.width;
+        });
+        return rowHeight;
+      };
+
+      const drawPageFooter = () => {
+        const pageNumber = doc.getNumberOfPages();
+        doc.setFont("helvetica", "normal");
+        doc.setFontSize(7);
+        doc.setTextColor(...muted);
+        doc.text(`Página ${pageNumber}`, pageWidth - margin, pageHeight - 5, { align: "right" });
+      };
+
+      drawHeader();
+      drawSummary(44);
+      let y = 67;
+      drawTableHead(y);
+      y += 9;
+
+      const allRows = tableRows.length > 0 ? tableRows : [{ kind: "body" as const, values: ["No hay datos para los filtros aplicados.", ...Array(normalizedColumns.length - 1).fill("")] }];
+      const rowsToDraw = [...allRows, ...footerRows];
+      rowsToDraw.forEach((row, rowIndex) => {
+        const neededHeight = row.kind === "body" ? 7.1 : 7.8;
+        if (y + neededHeight > pageHeight - 12) {
+          drawPageFooter();
+          doc.addPage("a4", "landscape");
+          y = 16;
+          drawTableHead(y);
+          y += 9;
+        }
+        y += drawRow(row.values, y, rowIndex, row.kind);
+      });
+      drawPageFooter();
+
+      doc.save(safeFilename);
+    } catch (error) {
+      console.error("Error exporting performance PDF", error);
+      setError("No se pudo generar el PDF. Intentá nuevamente en unos segundos.");
     }
-
-    const landingLabel = selectedLanding?.name || "Todas las landings";
-    const filters = [
-      `Mes: ${monthLabel(month)}`,
-      `Landing: ${landingLabel}`,
-      `Meta Ads: ${metaAdsOnly ? "Sí" : "No"}`,
-      `Búsqueda: ${searchTerm.trim() || "-"}`,
-      `Orden: ${sortKey} ${sortDirection === "asc" ? "ascendente" : "descendente"}`,
-    ];
-    const roasHeader = showRoas ? "<th>ROAS</th>" : "";
-    const roasAverage = showRoas
-      ? `<td>${totals.roasCount > 0 ? formatRoas(totals.roas / roasAverageDivisor) : "-"}</td>`
-      : "";
-    const roasTotal = showRoas
-      ? `<td>${totals.gasto > 0 ? formatRoas(totals.montoCargado / totals.gasto) : "-"}</td>`
-      : "";
-
-    const bodyRows = sortedRows.map((row) => {
-      const cost = getCost(row);
-      const gasto = getGasto(row);
-      const roasCell = showRoas ? `<td>${gasto > 0 ? formatRoas(getRoas(row)) : "-"}</td>` : "";
-      return `
-        <tr>
-          <td class="left">${escapeHtml(row.label)}</td>
-          <td>${formatOptionalPercent(row.disponibilidad)}</td>
-          <td>${formatNumber(row.contactos)}</td>
-          <td>${formatPercent(row.pctInicioConversacion)}</td>
-          <td>${formatNumber(row.mensajes)}</td>
-          <td>${formatNumber(row.cargas)}</td>
-          <td>${formatMoney(row.montoCargado)}</td>
-          <td>${formatPercent(row.pctCarga)}</td>
-          <td>${formatPercent(row.pctRecarga)}</td>
-          <td>${cost > 0 ? formatMoney(cost) : "-"}</td>
-          <td>${formatMoney(gasto)}</td>
-          ${roasCell}
-        </tr>
-      `;
-    }).join("");
-
-    const emptyRow = sortedRows.length === 0
-      ? `<tr><td colspan="${showRoas ? 12 : 11}" class="empty">No hay datos para los filtros aplicados.</td></tr>`
-      : "";
-
-    const html = `<!doctype html>
-      <html>
-        <head>
-          <meta charset="utf-8" />
-          <title>Desempeño por Gerencias - ${escapeHtml(monthLabel(month))}</title>
-          <style>
-            @page { size: A4 landscape; margin: 12mm; }
-            * { box-sizing: border-box; }
-            body {
-              margin: 0;
-              color: #0f172a;
-              font-family: Arial, Helvetica, sans-serif;
-              font-size: 10px;
-              background: #ffffff;
-            }
-            header {
-              align-items: flex-start;
-              background: linear-gradient(135deg, #061f1c 0%, #0f3d34 58%, #0ea5a4 100%);
-              border-radius: 14px;
-              color: #ffffff;
-              display: flex;
-              justify-content: space-between;
-              margin-bottom: 14px;
-              padding: 16px 18px;
-              gap: 16px;
-            }
-            h1 {
-              font-size: 20px;
-              letter-spacing: 0.02em;
-              margin: 0 0 5px;
-              text-transform: uppercase;
-            }
-            .meta {
-              color: #c7f9ef;
-              line-height: 1.45;
-              font-size: 11px;
-            }
-            .filters {
-              color: #eafff8;
-              display: flex;
-              flex-wrap: wrap;
-              gap: 6px;
-              justify-content: flex-end;
-              max-width: 58%;
-            }
-            .chip {
-              background: rgba(255, 255, 255, 0.13);
-              border: 1px solid rgba(255, 255, 255, 0.28);
-              border-radius: 999px;
-              padding: 4px 8px;
-              white-space: nowrap;
-            }
-            .summary {
-              display: grid;
-              gap: 8px;
-              grid-template-columns: repeat(4, 1fr);
-              margin-bottom: 12px;
-            }
-            .summary-card {
-              background: #f8fafc;
-              border: 1px solid #dbe4ee;
-              border-radius: 12px;
-              padding: 9px 10px;
-            }
-            .summary-label {
-              color: #64748b;
-              font-size: 8px;
-              font-weight: 700;
-              letter-spacing: 0.08em;
-              margin-bottom: 4px;
-              text-transform: uppercase;
-            }
-            .summary-value {
-              color: #0f172a;
-              font-size: 14px;
-              font-weight: 800;
-            }
-            table {
-              border-collapse: collapse;
-              border-radius: 12px;
-              overflow: hidden;
-              table-layout: fixed;
-              width: 100%;
-            }
-            th, td {
-              border: 1px solid #d7dee8;
-              padding: 5px 4px;
-              text-align: center;
-              vertical-align: middle;
-              word-break: break-word;
-            }
-            th {
-              background: #0f766e;
-              color: #ffffff;
-              font-size: 9px;
-              letter-spacing: 0.03em;
-              text-transform: uppercase;
-            }
-            thead th:first-child { background: #134e4a; }
-            tbody tr:nth-child(even) td { background: #f9fafb; }
-            tbody tr:nth-child(odd) td { background: #ffffff; }
-            tfoot td {
-              background: #ecfdf5;
-              border-color: #a7f3d0;
-              font-weight: 700;
-            }
-            tfoot tr:last-child td {
-              background: #d1fae5;
-            }
-            .left { text-align: left; }
-            .money { color: #047857; font-weight: 700; }
-            .empty {
-              color: #6b7280;
-              padding: 18px;
-            }
-          </style>
-        </head>
-        <body>
-          <header>
-            <div>
-              <h1>Desempeño por Gerencias</h1>
-              <div class="meta">Reporte de rendimiento para los filtros aplicados</div>
-            </div>
-            <div class="filters">
-              ${filters.map((filter) => `<span class="chip">${escapeHtml(filter)}</span>`).join("")}
-            </div>
-          </header>
-          <section class="summary">
-            <div class="summary-card">
-              <div class="summary-label">Contactos</div>
-              <div class="summary-value">${formatNumber(totals.contactos)}</div>
-            </div>
-            <div class="summary-card">
-              <div class="summary-label">Mensajes</div>
-              <div class="summary-value">${formatNumber(totals.mensajes)}</div>
-            </div>
-            <div class="summary-card">
-              <div class="summary-label">Cargas</div>
-              <div class="summary-value">${formatNumber(totals.cargas)}</div>
-            </div>
-            <div class="summary-card">
-              <div class="summary-label">Monto cargado</div>
-              <div class="summary-value">${formatMoney(totals.montoCargado)}</div>
-            </div>
-          </section>
-          <table>
-            <thead>
-              <tr>
-                <th>Gerencia (ID)</th>
-                <th>Disponibilidad</th>
-                <th>Contactos</th>
-                <th>% inicio conversación</th>
-                <th>Mensajes</th>
-                <th>Cargas</th>
-                <th>Monto</th>
-                <th>% Carga</th>
-                <th>% Recarga</th>
-                <th>Costo/msj</th>
-                <th>Gasto</th>
-                ${roasHeader}
-              </tr>
-            </thead>
-            <tbody>
-              ${emptyRow || bodyRows}
-            </tbody>
-            <tfoot>
-              <tr>
-                <td class="left">Promedio</td>
-                <td>-</td>
-                <td>${formatNumber(totals.contactos / rowAverageDivisor)}</td>
-                <td>${formatPercent(totals.pctInicioConversacion / rowAverageDivisor)}</td>
-                <td>${formatNumber(totals.mensajes / rowAverageDivisor)}</td>
-                <td>${formatNumber(totals.cargas / rowAverageDivisor)}</td>
-                <td>${formatMoney(totals.montoCargado / rowAverageDivisor)}</td>
-                <td>${formatPercent(totals.pctCarga / rowAverageDivisor)}</td>
-                <td>${formatPercent(totals.pctRecarga / rowAverageDivisor)}</td>
-                <td>-</td>
-                <td>${formatMoney(totals.gasto / rowAverageDivisor)}</td>
-                ${roasAverage}
-              </tr>
-              <tr>
-                <td class="left">Totales</td>
-                <td>-</td>
-                <td>${formatNumber(totals.contactos)}</td>
-                <td>-</td>
-                <td>${formatNumber(totals.mensajes)}</td>
-                <td>${formatNumber(totals.cargas)}</td>
-                <td>${formatMoney(totals.montoCargado)}</td>
-                <td>-</td>
-                <td>-</td>
-                <td>-</td>
-                <td>${formatMoney(totals.gasto)}</td>
-                ${roasTotal}
-              </tr>
-            </tfoot>
-          </table>
-          <script>
-            window.addEventListener("load", () => {
-              setTimeout(() => {
-                window.print();
-              }, 250);
-            });
-          </script>
-        </body>
-      </html>`;
-
-    reportWindow.document.open();
-    reportWindow.document.write(html);
-    reportWindow.document.close();
   };
 
   const SortHeader = ({ sort, children }: { sort: SortKey; children: ReactNode }) => (
