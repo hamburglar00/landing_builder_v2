@@ -6,6 +6,7 @@ import Link from "next/link";
 import { supabase } from "@/lib/supabaseClient";
 import type { Landing } from "@/lib/landing/types";
 import { fetchLandings, createLanding } from "@/lib/landing/landingsDb";
+import { fetchLandingGerencias, setLandingGerencias } from "@/lib/gerencias/gerenciasDb";
 import { DEFAULT_CONFIG } from "@/lib/landing/mocks";
 import { LandingPreview } from "@/components/landing/LandingPreview";
 import { getSettings } from "@/lib/settingsDb";
@@ -18,6 +19,7 @@ export default function DashboardLandingsPage() {
   const [ready, setReady] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [creating, setCreating] = useState(false);
+  const [duplicatingId, setDuplicatingId] = useState<string | null>(null);
   const [urlBase, setUrlBase] = useState<string | null>(null);
   const [planLimitModalOpen, setPlanLimitModalOpen] = useState(false);
   const [planLimitModalText, setPlanLimitModalText] = useState("");
@@ -131,6 +133,80 @@ export default function DashboardLandingsPage() {
     }
   };
 
+  const ensureCanCreateLanding = async (action: "crear" | "conectar" | "duplicar") => {
+    if (!userId) return false;
+    const { data: sub } = await supabase
+      .from("client_subscriptions")
+      .select("max_landings, plan_code")
+      .eq("user_id", userId)
+      .maybeSingle();
+    const maxLandings = Number(sub?.max_landings ?? 1);
+    if (Number.isFinite(maxLandings) && landings.length >= maxLandings) {
+      const verb = action === "duplicar" ? "duplicar" : action === "conectar" ? "conectar otra" : "crear esta";
+      setPlanLimitModalText(
+        `No puedes ${verb} landing porque alcanzaste el máximo de tu plan actual (${maxLandings} landings).`,
+      );
+      setPlanLimitModalOpen(true);
+      return false;
+    }
+    return true;
+  };
+
+  const buildDuplicateName = (baseName: string) => {
+    const cleanBase = String(baseName || "landing").trim() || "landing";
+    const existingNames = new Set(landings.map((landing) => landing.name));
+    let candidate = `${cleanBase}-copia`;
+    let index = 2;
+    while (existingNames.has(candidate)) {
+      candidate = `${cleanBase}-copia-${index}`;
+      index += 1;
+    }
+    return candidate;
+  };
+
+  const handleDuplicate = async (landing: Landing) => {
+    if (!userId) return;
+    setDuplicatingId(landing.id);
+    setError(null);
+    try {
+      const canCreate = await ensureCanCreateLanding("duplicar");
+      if (!canCreate) return;
+      const copiedConfig = JSON.parse(JSON.stringify(landing.config)) as Landing["config"];
+      const { id } = await createLanding(userId, {
+        landingType: landing.landingType,
+        externalDomain: landing.externalDomain,
+        name: buildDuplicateName(landing.name),
+        pixelId: landing.pixelId,
+        gerenciaSelectionMode: landing.gerenciaSelectionMode,
+        gerenciaFairCriterion: landing.gerenciaFairCriterion,
+        phoneMode: landing.phoneMode,
+        phoneKind: landing.phoneKind,
+        phoneIntervalStartHour: landing.phoneIntervalStartHour,
+        phoneIntervalEndHour: landing.phoneIntervalEndHour,
+        landingTag: "",
+        comment: landing.comment,
+        config: copiedConfig,
+      });
+      const assignments = await fetchLandingGerencias(landing.id);
+      if (assignments.length > 0) {
+        await setLandingGerencias(id, assignments);
+      }
+      router.push(`/dashboard/landing/${id}/editar`);
+    } catch (e) {
+      const msg = e instanceof Error ? e.message : "Error al duplicar la landing";
+      if (msg.includes("PLAN_LIMIT_LANDINGS")) {
+        setPlanLimitModalText(
+          "No puedes duplicar esta landing porque alcanzaste el límite de tu plan actual.",
+        );
+        setPlanLimitModalOpen(true);
+      } else {
+        setError(msg);
+      }
+    } finally {
+      setDuplicatingId(null);
+    }
+  };
+
   if (!ready) {
     return <DashboardSkeleton title="Cargando landings..." />;
   }
@@ -186,7 +262,13 @@ export default function DashboardLandingsPage() {
       ) : (
         <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
           {landings.map((landing) => (
-            <LandingCard key={landing.id} landing={landing} urlBase={urlBase} />
+            <LandingCard
+              key={landing.id}
+              landing={landing}
+              urlBase={urlBase}
+              duplicating={duplicatingId === landing.id}
+              onDuplicate={handleDuplicate}
+            />
           ))}
         </div>
       )}
@@ -216,7 +298,17 @@ export default function DashboardLandingsPage() {
   );
 }
 
-function LandingCard({ landing, urlBase }: { landing: Landing; urlBase: string | null }) {
+function LandingCard({
+  landing,
+  urlBase,
+  duplicating,
+  onDuplicate,
+}: {
+  landing: Landing;
+  urlBase: string | null;
+  duplicating: boolean;
+  onDuplicate: (landing: Landing) => void;
+}) {
   return (
     <div
       key={landing.id}
@@ -275,6 +367,35 @@ function LandingCard({ landing, urlBase }: { landing: Landing; urlBase: string |
           >
             Editar
           </Link>
+          <button
+            type="button"
+            onClick={(e) => {
+              e.stopPropagation();
+              onDuplicate(landing);
+            }}
+            disabled={duplicating}
+            className="inline-flex h-[26px] w-[30px] items-center justify-center rounded-lg border border-[var(--color-border)] bg-[rgba(255,255,255,0.06)] text-[var(--color-text)] transition hover:bg-[rgba(255,255,255,0.1)] disabled:cursor-not-allowed disabled:opacity-60 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-ring-neutral)]"
+            title="Duplicar landing"
+            aria-label={`Duplicar landing ${landing.name}`}
+          >
+            {duplicating ? (
+              <span className="h-3 w-3 animate-spin rounded-full border border-zinc-500 border-t-zinc-100" />
+            ) : (
+              <svg
+                aria-hidden="true"
+                className="h-3.5 w-3.5"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                strokeWidth={1.8}
+                strokeLinecap="round"
+                strokeLinejoin="round"
+              >
+                <rect x="8" y="8" width="11" height="11" rx="2" />
+                <path d="M5 16H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1" />
+              </svg>
+            )}
+          </button>
         </div>
       </div>
     </div>
