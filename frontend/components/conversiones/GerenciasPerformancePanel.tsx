@@ -405,7 +405,6 @@ export default function GerenciasPerformancePanel({
       return;
     }
 
-    const generatedAt = new Date().toLocaleString("es-AR");
     const landingLabel = selectedLanding?.name || "Todas las landings";
     const filters = [
       `Mes: ${monthLabel(month)}`,
@@ -458,30 +457,35 @@ export default function GerenciasPerformancePanel({
             * { box-sizing: border-box; }
             body {
               margin: 0;
-              color: #111827;
+              color: #0f172a;
               font-family: Arial, Helvetica, sans-serif;
               font-size: 10px;
+              background: #ffffff;
             }
             header {
               align-items: flex-start;
-              border-bottom: 2px solid #111827;
+              background: linear-gradient(135deg, #061f1c 0%, #0f3d34 58%, #0ea5a4 100%);
+              border-radius: 14px;
+              color: #ffffff;
               display: flex;
               justify-content: space-between;
-              margin-bottom: 12px;
-              padding-bottom: 8px;
+              margin-bottom: 14px;
+              padding: 16px 18px;
               gap: 16px;
             }
             h1 {
-              font-size: 18px;
-              margin: 0 0 6px;
+              font-size: 20px;
+              letter-spacing: 0.02em;
+              margin: 0 0 5px;
               text-transform: uppercase;
             }
             .meta {
-              color: #4b5563;
+              color: #c7f9ef;
               line-height: 1.45;
+              font-size: 11px;
             }
             .filters {
-              color: #374151;
+              color: #eafff8;
               display: flex;
               flex-wrap: wrap;
               gap: 6px;
@@ -489,33 +493,68 @@ export default function GerenciasPerformancePanel({
               max-width: 58%;
             }
             .chip {
-              border: 1px solid #d1d5db;
+              background: rgba(255, 255, 255, 0.13);
+              border: 1px solid rgba(255, 255, 255, 0.28);
               border-radius: 999px;
-              padding: 3px 7px;
+              padding: 4px 8px;
               white-space: nowrap;
+            }
+            .summary {
+              display: grid;
+              gap: 8px;
+              grid-template-columns: repeat(4, 1fr);
+              margin-bottom: 12px;
+            }
+            .summary-card {
+              background: #f8fafc;
+              border: 1px solid #dbe4ee;
+              border-radius: 12px;
+              padding: 9px 10px;
+            }
+            .summary-label {
+              color: #64748b;
+              font-size: 8px;
+              font-weight: 700;
+              letter-spacing: 0.08em;
+              margin-bottom: 4px;
+              text-transform: uppercase;
+            }
+            .summary-value {
+              color: #0f172a;
+              font-size: 14px;
+              font-weight: 800;
             }
             table {
               border-collapse: collapse;
+              border-radius: 12px;
+              overflow: hidden;
               table-layout: fixed;
               width: 100%;
             }
             th, td {
-              border: 1px solid #d1d5db;
+              border: 1px solid #d7dee8;
               padding: 5px 4px;
               text-align: center;
               vertical-align: middle;
               word-break: break-word;
             }
             th {
-              background: #111827;
+              background: #0f766e;
               color: #ffffff;
               font-size: 9px;
+              letter-spacing: 0.03em;
               text-transform: uppercase;
             }
+            thead th:first-child { background: #134e4a; }
             tbody tr:nth-child(even) td { background: #f9fafb; }
+            tbody tr:nth-child(odd) td { background: #ffffff; }
             tfoot td {
-              background: #eef2ff;
+              background: #ecfdf5;
+              border-color: #a7f3d0;
               font-weight: 700;
+            }
+            tfoot tr:last-child td {
+              background: #d1fae5;
             }
             .left { text-align: left; }
             .money { color: #047857; font-weight: 700; }
@@ -529,12 +568,30 @@ export default function GerenciasPerformancePanel({
           <header>
             <div>
               <h1>Desempeño por Gerencias</h1>
-              <div class="meta">Generado: ${escapeHtml(generatedAt)}</div>
+              <div class="meta">Reporte de rendimiento para los filtros aplicados</div>
             </div>
             <div class="filters">
               ${filters.map((filter) => `<span class="chip">${escapeHtml(filter)}</span>`).join("")}
             </div>
           </header>
+          <section class="summary">
+            <div class="summary-card">
+              <div class="summary-label">Contactos</div>
+              <div class="summary-value">${formatNumber(totals.contactos)}</div>
+            </div>
+            <div class="summary-card">
+              <div class="summary-label">Mensajes</div>
+              <div class="summary-value">${formatNumber(totals.mensajes)}</div>
+            </div>
+            <div class="summary-card">
+              <div class="summary-label">Cargas</div>
+              <div class="summary-value">${formatNumber(totals.cargas)}</div>
+            </div>
+            <div class="summary-card">
+              <div class="summary-label">Monto cargado</div>
+              <div class="summary-value">${formatMoney(totals.montoCargado)}</div>
+            </div>
+          </section>
           <table>
             <thead>
               <tr>
