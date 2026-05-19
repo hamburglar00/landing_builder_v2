@@ -103,6 +103,7 @@ export function TelefonosPageContent({
   const [autoResetSaving, setAutoResetSaving] = useState(false);
   const [switchingGerenciaId, setSwitchingGerenciaId] = useState<number | null>(null);
   const [openGerenciaId, setOpenGerenciaId] = useState<number | null>(null);
+  const [gerenciaSearch, setGerenciaSearch] = useState("");
   const [nextSyncCountdown, setNextSyncCountdown] = useState<string>("--:--");
   const [manualPhoneInput, setManualPhoneInput] = useState<Record<number, string>>({});
   const [manualPhoneKind, setManualPhoneKind] = useState<Record<number, PhoneKind>>({});
@@ -680,6 +681,26 @@ export function TelefonosPageContent({
     return <DashboardSkeleton title="Cargando teléfonos..." />;
   }
 
+  const normalizedGerenciaSearch = gerenciaSearch.trim().toLowerCase();
+  const normalizedPhoneSearch = onlyDigits(gerenciaSearch);
+  const filteredGerencias = normalizedGerenciaSearch
+    ? gerencias.filter((g) => {
+        const id = String(g.gerencia_id ?? g.id ?? "").toLowerCase();
+        const internalId = String(g.id ?? "").toLowerCase();
+        const name = String(g.nombre ?? "").toLowerCase();
+        const phones = phonesByGerencia[g.id] ?? [];
+        const hasPhoneMatch =
+          normalizedPhoneSearch.length > 0 &&
+          phones.some((p) => onlyDigits(p.phone).includes(normalizedPhoneSearch));
+        return (
+          name.includes(normalizedGerenciaSearch) ||
+          id.includes(normalizedGerenciaSearch) ||
+          internalId.includes(normalizedGerenciaSearch) ||
+          hasPhoneMatch
+        );
+      })
+    : gerencias;
+
   return (
     <div className="space-y-6">
       {backLink && backLabel ? (
@@ -717,10 +738,17 @@ export function TelefonosPageContent({
 
       {/* Botones globales */}
       <div className="rounded-xl border border-zinc-800 bg-zinc-900/50 p-4">
-        <div className="flex flex-wrap items-center justify-between gap-2">
+        <div className="flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
           <span className="text-xs font-medium text-zinc-400">
             Todas las gerencias:
           </span>
+          <input
+            value={gerenciaSearch}
+            onChange={(e) => setGerenciaSearch(e.target.value)}
+            placeholder="Buscar por gerencia, ID o phone..."
+            aria-label="Buscar gerencia por nombre, ID o phone"
+            className="h-8 w-full rounded-lg border border-zinc-700 bg-zinc-950 px-3 text-xs text-zinc-100 placeholder:text-zinc-500 lg:max-w-xs"
+          />
           {(() => {
             const hasPbadmin = gerencias.some((g) => (g.source_type ?? "pbadmin") === "pbadmin");
             return (
@@ -810,7 +838,12 @@ export function TelefonosPageContent({
         </p>
       ) : (
         <div className="space-y-2">
-          {gerencias.map((g) => {
+          {filteredGerencias.length === 0 ? (
+            <div className="rounded-xl border border-zinc-800 bg-zinc-950/40 px-4 py-6 text-center text-sm text-zinc-500">
+              No hay gerencias que coincidan con la búsqueda.
+            </div>
+          ) : null}
+          {filteredGerencias.map((g) => {
             const phones = phonesByGerencia[g.id] ?? [];
             const activePhonesCount = phones.filter((p) => p.status === "active").length;
             const totalUsage = phones.reduce(
