@@ -13,6 +13,7 @@ type Props = {
   fetchConversionsForMonth: (range: FetchDateRange) => Promise<ConversionRow[]>;
   fetchAvailabilityForMonth: (range: FetchDateRange) => Promise<GerenciaAvailabilitySummary[]>;
   gerenciaByPhone: Record<string, string[]>;
+  activePhonesByGerenciaLabel?: Record<string, string[]>;
   landingOptions?: LandingPerformanceFilterOption[];
   premiumThreshold: number;
   storageKey: string;
@@ -148,6 +149,7 @@ export default function GerenciasPerformancePanel({
   fetchConversionsForMonth,
   fetchAvailabilityForMonth,
   gerenciaByPhone,
+  activePhonesByGerenciaLabel,
   landingOptions = [],
   premiumThreshold,
   storageKey,
@@ -176,6 +178,17 @@ export default function GerenciasPerformancePanel({
     () => selectedLanding ? new Set(selectedLanding.gerenciaLabels) : null,
     [selectedLanding],
   );
+  const fallbackActivePhonesByLabel = useMemo(() => {
+    const next: Record<string, string[]> = {};
+    for (const [phone, labels] of Object.entries(gerenciaByPhone)) {
+      for (const label of labels) {
+        next[label] = next[label] ?? [];
+        if (!next[label].includes(phone)) next[label].push(phone);
+      }
+    }
+    return next;
+  }, [gerenciaByPhone]);
+  const phonesByGerenciaLabel = activePhonesByGerenciaLabel ?? fallbackActivePhonesByLabel;
 
   useEffect(() => {
     if (landingFilter === "__all__") return;
@@ -794,7 +807,14 @@ export default function GerenciasPerformancePanel({
                 const roas = getRoas(row);
                 return (
                   <tr key={row.label} className="bg-zinc-950/40">
-                    <td className="truncate px-1.5 py-2 text-center font-medium text-zinc-100" title={row.label}>{row.label}</td>
+                    <td className="px-1.5 py-2 text-center font-medium text-zinc-100" title={row.label}>
+                      <div className="truncate">{row.label}</div>
+                      <div className="mt-1 truncate text-[9px] font-normal text-zinc-500" title={(phonesByGerenciaLabel[row.label] ?? []).join(" · ")}>
+                        {(phonesByGerenciaLabel[row.label] ?? []).length > 0
+                          ? (phonesByGerenciaLabel[row.label] ?? []).join(" · ")
+                          : "Sin telefono activo"}
+                      </div>
+                    </td>
                     <td
                       className="px-1.5 py-2 text-center text-zinc-200"
                       title="Porcentaje del mes en que la gerencia tuvo al menos un telefono activo."

@@ -479,6 +479,7 @@ export default function AdminConversionesPage() {
   const [draftCampaignFilter, setDraftCampaignFilter] = useState<string[]>([]);
   const [draftDeviceFilter, setDraftDeviceFilter] = useState<string>("__all__");
   const [gerenciaByPhone, setGerenciaByPhone] = useState<Record<string, string[]>>({});
+  const [activePhonesByGerenciaLabel, setActivePhonesByGerenciaLabel] = useState<Record<string, string[]>>({});
   const [performanceLandingOptions, setPerformanceLandingOptions] = useState<LandingPerformanceFilterOption[]>([]);
 
   const [demoMode, setDemoMode] = useState(false);
@@ -893,9 +894,10 @@ export default function AdminConversionesPage() {
           const ids = Array.from(gerenciasById.keys());
           const { data: phones } = await supabase
             .from("gerencia_phones")
-            .select("gerencia_id,phone")
+            .select("gerencia_id,phone,status")
             .in("gerencia_id", ids);
           const byPhone: Record<string, string[]> = {};
+          const activeByLabel: Record<string, string[]> = {};
           for (const row of phones ?? []) {
             const phone = normalizePhone(String(row.phone ?? ""));
             if (!phone) continue;
@@ -903,10 +905,16 @@ export default function AdminConversionesPage() {
             if (!label) continue;
             byPhone[phone] = byPhone[phone] ?? [];
             if (!byPhone[phone].includes(label)) byPhone[phone].push(label);
+            if (String(row.status ?? "") === "active") {
+              activeByLabel[label] = activeByLabel[label] ?? [];
+              if (!activeByLabel[label].includes(phone)) activeByLabel[label].push(phone);
+            }
           }
           setGerenciaByPhone(byPhone);
+          setActivePhonesByGerenciaLabel(activeByLabel);
         } else {
           setGerenciaByPhone({});
+          setActivePhonesByGerenciaLabel({});
         }
 
         const { data: landings } = await supabase
@@ -2049,6 +2057,7 @@ export default function AdminConversionesPage() {
           fetchConversionsForMonth={fetchPerformanceConversions}
           fetchAvailabilityForMonth={fetchPerformanceAvailability}
           gerenciaByPhone={gerenciaByPhone}
+          activePhonesByGerenciaLabel={activePhonesByGerenciaLabel}
           landingOptions={performanceLandingOptions}
           premiumThreshold={config?.funnel_premium_threshold ?? 50000}
           storageKey="admin"
