@@ -3,6 +3,7 @@
 import { useCallback, useEffect, useMemo, useState, type ReactNode } from "react";
 import {
   buildFunnelContactsFromConversions,
+  getConversionGerenciaLabels,
   type ConversionRow,
   type FetchDateRange,
   type GerenciaAvailabilitySummary,
@@ -268,9 +269,8 @@ export default function GerenciasPerformancePanel({
       )
     ));
     for (const row of cleanRows) {
-      const assignedPhone = normalizePhone(row.telefono_asignado);
-      if (!assignedPhone) continue;
-      const labels = gerenciaByPhone[assignedPhone] ?? [];
+      const labels = getConversionGerenciaLabels(row, gerenciaByPhone);
+      if (labels.length === 0) continue;
       for (const label of labels) {
         if (selectedLandingLabelSet && !selectedLandingLabelSet.has(label)) continue;
         allLabels.add(label);

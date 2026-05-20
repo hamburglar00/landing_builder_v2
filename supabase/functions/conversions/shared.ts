@@ -54,6 +54,10 @@ export interface ConversionRow {
   external_id: string;
   utm_campaign: string;
   telefono_asignado: string;
+  assigned_gerencia_id?: number | null;
+  assigned_gerencia_external_id?: number | null;
+  assigned_gerencia_name?: string | null;
+  assigned_gerencia_label?: string | null;
   promo_code: string;
   geo_city: string;
   geo_region: string;

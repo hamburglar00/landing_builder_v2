@@ -172,7 +172,9 @@ function ContactCard({
     : "Sin cargas";
   const assignedPhone = normalizePhone(c.telefono_asignado);
   const contactPhone = normalizePhone(c.phone);
-  const gerenciaLabels = assignedPhone && gerenciaByPhone?.[assignedPhone]?.length
+  const gerenciaLabels = String(c.assigned_gerencia_label ?? "").trim()
+    ? [String(c.assigned_gerencia_label ?? "").trim()]
+    : assignedPhone && gerenciaByPhone?.[assignedPhone]?.length
     ? gerenciaByPhone[assignedPhone]
     : contactPhone
       ? (gerenciaLabelsByContactPhone?.[contactPhone] ?? [])

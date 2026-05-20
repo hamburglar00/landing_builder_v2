@@ -17,6 +17,7 @@ import {
   fetchConversionInbox,
   fetchGerenciaAvailabilitySummaries,
   updateConversionEmail,
+  getConversionGerenciaLabels,
   hideConversions,
   hideConversionLogs,
   hideConversionInboxRows,
@@ -274,7 +275,7 @@ const ALL_COLUMNS = [
   "contact_event_id","contact_event_time","sendContactPixel","contact_payload_raw","lead_event_id","lead_event_time","lead_payload_raw",
   "purchase_event_id","purchase_event_time","purchase_payload_raw","timestamp","clientIP","agentuser",
   "estado","valor","purchase_type","contact_status_capi","lead_status_capi","purchase_status_capi",
-  "observaciones","external_id","test_event_code","utm_campaign","telefono_asignado","promo_code",
+  "observaciones","external_id","test_event_code","utm_campaign","telefono_asignado","assigned_gerencia_label","promo_code",
   "device_type","geo_city","geo_region","geo_country","geo_source",
   "cuit_cuil","inferred_sex","sex_source",
 ] as const;
@@ -325,6 +326,7 @@ const COLUMN_NOTES: Partial<Record<ColKey | "id", string>> = {
   test_event_code: "Codigo de test de Meta (si se envio en modo prueba).",
   utm_campaign: "UTM campaign recibida en payload.",
   telefono_asignado: "Telefono de destino asignado para derivacion (landing/chatrace).",
+  assigned_gerencia_label: "Gerencia historica asociada al telefono asignado al momento de crear/procesar la fila.",
   promo_code: "Codigo de promo/track para matchear Contact->Lead->Purchase.",
   device_type: "Tipo de dispositivo reportado por la fuente (mobile/tablet/desktop).",
   geo_city: "Ciudad enriquecida por geolocalizacion IP.",
@@ -343,6 +345,11 @@ function normalizeVisibleColumnName(col: string): string {
     default:
       return col;
   }
+}
+
+function columnLabel(col: ColKey): string {
+  if (col === "assigned_gerencia_label") return "Nombre gerencia (ID)";
+  return col;
 }
 
 function EditableEmailCell({ row, onSaved }: { row: ConversionRow; onSaved: (id: string, email: string) => void }) {
@@ -531,6 +538,7 @@ function cellValue(c: ConversionRow, col: ColKey): React.ReactNode {
     case "external_id": return <td key={col} className={dimMono} title={tip(c.external_id)}>{c.external_id ? truncateId(c.external_id) : "-"}</td>;
     case "utm_campaign": return <td key={col} className={dim} title={tip(c.utm_campaign)}>{c.utm_campaign || "-"}</td>;
     case "telefono_asignado": return <td key={col} className={dim} title={tip(c.telefono_asignado)}>{c.telefono_asignado || "-"}</td>;
+    case "assigned_gerencia_label": return <td key={col} className={dim} title={tip(c.assigned_gerencia_label)}>{c.assigned_gerencia_label || "-"}</td>;
     case "promo_code": return <td key={col} className={dim} title={tip(c.promo_code)}>{c.promo_code || "-"}</td>;
     case "device_type": return <td key={col} className={dim} title={tip(c.device_type)}>{c.device_type || "-"}</td>;
     case "geo_city": return <td key={col} className={dim} title={tip(c.geo_city)}>{c.geo_city || "-"}</td>;
@@ -668,9 +676,7 @@ export default function DashboardConversionesPage() {
   const statsGerenciaOptions = useMemo(() => {
     const set = new Set<string>();
     for (const r of statsAllConversions) {
-      const phone = normalizePhone(r.telefono_asignado);
-      if (!phone) continue;
-      const labels = gerenciaByPhone[phone] ?? [];
+      const labels = getConversionGerenciaLabels(r, gerenciaByPhone);
       for (const label of labels) set.add(label);
     }
     return Array.from(set).sort((a, b) => a.localeCompare(b, "es"));
@@ -754,7 +760,7 @@ export default function DashboardConversionesPage() {
       const byPixel = statsPixelFilter === "__all__" || String(r.meta_pixel_id ?? r.pixel_id ?? "").trim() === statsPixelFilter;
       const assignedPhone = normalizePhone(r.telefono_asignado);
       const byTelefono = statsTelefonoFilter === "__all__" || assignedPhone === statsTelefonoFilter;
-      const labels = assignedPhone ? (gerenciaByPhone[assignedPhone] ?? []) : [];
+      const labels = getConversionGerenciaLabels(r, gerenciaByPhone);
       const byGerencia = statsGerenciaFilter === "__all__" || labels.includes(statsGerenciaFilter);
       const byFromMetaAds =
         statsFromMetaAdsFilter === "__all__" ||
@@ -776,7 +782,7 @@ export default function DashboardConversionesPage() {
       const byPixel = statsPixelFilter === "__all__" || String(r.meta_pixel_id ?? r.pixel_id ?? "").trim() === statsPixelFilter;
       const assignedPhone = normalizePhone(r.telefono_asignado);
       const byTelefono = statsTelefonoFilter === "__all__" || assignedPhone === statsTelefonoFilter;
-      const labels = assignedPhone ? (gerenciaByPhone[assignedPhone] ?? []) : [];
+      const labels = getConversionGerenciaLabels(r, gerenciaByPhone);
       const byGerencia = statsGerenciaFilter === "__all__" || labels.includes(statsGerenciaFilter);
       const byFromMetaAds =
         statsFromMetaAdsFilter === "__all__" ||
@@ -811,9 +817,8 @@ export default function DashboardConversionesPage() {
     const byContactPhone: Record<string, string[]> = {};
     for (const row of statsAllConversionsFiltered) {
       const contactPhone = normalizePhone(row.phone);
-      const assignedPhone = normalizePhone(row.telefono_asignado);
-      if (!contactPhone || !assignedPhone) continue;
-      const labels = gerenciaByPhone[assignedPhone] ?? [];
+      if (!contactPhone) continue;
+      const labels = getConversionGerenciaLabels(row, gerenciaByPhone);
       if (labels.length === 0) continue;
       byContactPhone[contactPhone] = byContactPhone[contactPhone] ?? [];
       for (const label of labels) {
@@ -830,7 +835,7 @@ export default function DashboardConversionesPage() {
       const byPixel = statsPixelFilter === "__all__" || String(r.meta_pixel_id ?? r.pixel_id ?? "").trim() === statsPixelFilter;
       const assignedPhone = normalizePhone(r.telefono_asignado);
       const byTelefono = statsTelefonoFilter === "__all__" || assignedPhone === statsTelefonoFilter;
-      const labels = assignedPhone ? (gerenciaByPhone[assignedPhone] ?? []) : [];
+      const labels = getConversionGerenciaLabels(r, gerenciaByPhone);
       const byGerencia = statsGerenciaFilter === "__all__" || labels.includes(statsGerenciaFilter);
       const byFromMetaAds =
         statsFromMetaAdsFilter === "__all__" ||
@@ -875,6 +880,7 @@ export default function DashboardConversionesPage() {
         c.external_id,
         c.utm_campaign,
         c.telefono_asignado,
+        c.assigned_gerencia_label,
         c.landing_name,
         c.estado,
         c.purchase_type,
@@ -949,7 +955,14 @@ export default function DashboardConversionesPage() {
     return new Set<ColKey>(valid.length > 0 ? valid : [...ALL_COLUMNS]);
   }, [config]);
   const displayedCols = useMemo(
-    () => ALL_COLUMNS.filter((c) => visibleCols.has(c)),
+    () => {
+      const cols = ALL_COLUMNS.filter((c) => visibleCols.has(c));
+      if (cols.includes("telefono_asignado") && !cols.includes("assigned_gerencia_label")) {
+        const phoneIndex = cols.indexOf("telefono_asignado");
+        cols.splice(phoneIndex + 1, 0, "assigned_gerencia_label");
+      }
+      return cols;
+    },
     [visibleCols],
   );
   const displayedColsWithoutTimestamp = useMemo(
@@ -1986,7 +1999,7 @@ export default function DashboardConversionesPage() {
                       className="px-2 py-2 font-medium text-zinc-300 whitespace-nowrap cursor-help"
                       title={COLUMN_NOTES[col] ?? col}
                     >
-                      {col}
+                      {columnLabel(col)}
                     </th>
                   ))}
                 </tr>

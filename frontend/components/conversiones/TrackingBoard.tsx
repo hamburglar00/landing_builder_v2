@@ -171,6 +171,11 @@ export default function TrackingBoard({
       const avgLoad = loads > 0 ? totalLoaded / loads : 0;
       const gerenciaSet = new Set<number>();
       for (const row of group) {
+        const historicalId = Number(row.assigned_gerencia_id);
+        if (Number.isFinite(historicalId)) {
+          gerenciaSet.add(historicalId);
+          continue;
+        }
         const assignedDigits = String(row.telefono_asignado ?? "").replace(/\D/g, "");
         if (!assignedDigits) continue;
         const gid = assignedPhoneToGerenciaId[assignedDigits];

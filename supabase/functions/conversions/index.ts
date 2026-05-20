@@ -94,11 +94,22 @@ interface ConversionRow {
   external_id: string;
   utm_campaign: string;
   telefono_asignado: string;
+  assigned_gerencia_id?: number | null;
+  assigned_gerencia_external_id?: number | null;
+  assigned_gerencia_name?: string | null;
+  assigned_gerencia_label?: string | null;
   promo_code: string;
   geo_city: string;
   geo_region: string;
   geo_country: string;
 }
+
+type AssignedGerenciaSnapshot = {
+  assigned_gerencia_id: number | null;
+  assigned_gerencia_external_id: number | null;
+  assigned_gerencia_name: string;
+  assigned_gerencia_label: string;
+};
 
 interface GeoResult {
   geo_city: string;
@@ -122,6 +133,91 @@ type Params = Record<string, any>;
 
 
 const norm = (s: unknown): string => String(s ?? "").trim();
+
+function buildGerenciaLabel(row: { id?: unknown; nombre?: unknown; gerencia_id?: unknown }): AssignedGerenciaSnapshot {
+  const internalId = Number(row.id);
+  const externalId = Number(row.gerencia_id);
+  const labelId = Number.isFinite(externalId)
+    ? externalId
+    : (Number.isFinite(internalId) ? internalId : null);
+  const name = norm(row.nombre) || (labelId != null ? `Gerencia ${labelId}` : "Gerencia");
+  return {
+    assigned_gerencia_id: Number.isFinite(internalId) ? internalId : null,
+    assigned_gerencia_external_id: labelId,
+    assigned_gerencia_name: name,
+    assigned_gerencia_label: labelId != null ? `${name} (ID ${labelId})` : name,
+  };
+}
+
+async function resolveAssignedGerenciaSnapshot(
+  db: SupabaseClient,
+  userId: string,
+  assignedPhone: unknown,
+  landingId?: string | null,
+): Promise<AssignedGerenciaSnapshot> {
+  const phone = sanitizePhone(assignedPhone);
+  const empty: AssignedGerenciaSnapshot = {
+    assigned_gerencia_id: null,
+    assigned_gerencia_external_id: null,
+    assigned_gerencia_name: "",
+    assigned_gerencia_label: "",
+  };
+  if (!phone) return empty;
+
+  const { data: phoneRows } = await db
+    .from("gerencia_phones")
+    .select("gerencia_id,status,gerencias!inner(id,nombre,gerencia_id,user_id)")
+    .eq("phone", phone)
+    .eq("gerencias.user_id", userId);
+
+  const candidates = (phoneRows ?? [])
+    .map((row: Record<string, unknown>) => {
+      const joined = Array.isArray(row.gerencias) ? row.gerencias[0] : row.gerencias;
+      return {
+        phoneGerenciaId: Number(row.gerencia_id),
+        status: norm(row.status),
+        gerencia: (joined ?? {}) as Record<string, unknown>,
+      };
+    })
+    .filter((row) => Number.isFinite(row.phoneGerenciaId));
+
+  if (candidates.length === 0) return empty;
+
+  let assignedIds = new Set<number>();
+  if (landingId) {
+    const { data: assignments } = await db
+      .from("landings_gerencias")
+      .select("gerencia_id")
+      .eq("landing_id", landingId);
+    assignedIds = new Set(
+      (assignments ?? [])
+        .map((row: Record<string, unknown>) => Number(row.gerencia_id))
+        .filter((id) => Number.isFinite(id)),
+    );
+  }
+
+  const ranked = [...candidates].sort((a, b) => {
+    const aLanding = assignedIds.has(a.phoneGerenciaId) ? 1 : 0;
+    const bLanding = assignedIds.has(b.phoneGerenciaId) ? 1 : 0;
+    if (aLanding !== bLanding) return bLanding - aLanding;
+    const aActive = a.status === "active" ? 1 : 0;
+    const bActive = b.status === "active" ? 1 : 0;
+    if (aActive !== bActive) return bActive - aActive;
+    return a.phoneGerenciaId - b.phoneGerenciaId;
+  });
+
+  return buildGerenciaLabel(ranked[0].gerencia);
+}
+
+function snapshotPatch(snapshot: AssignedGerenciaSnapshot): Record<string, unknown> {
+  if (!snapshot.assigned_gerencia_label) return {};
+  return {
+    assigned_gerencia_id: snapshot.assigned_gerencia_id,
+    assigned_gerencia_external_id: snapshot.assigned_gerencia_external_id,
+    assigned_gerencia_name: snapshot.assigned_gerencia_name,
+    assigned_gerencia_label: snapshot.assigned_gerencia_label,
+  };
+}
 
 function normalizeCoelsaId(v: unknown): string {
   return norm(v).replace(/\s+/g, "").toUpperCase().slice(0, 120);
@@ -1170,6 +1266,12 @@ async function handleContact(
   const payloadGeoSource: GeoSource = hasPayloadGeo(geo) ? "payload" : "none";
   const eventSourceUrl = await deriveEventSourceUrl(db, landing.name, norm(p.event_source_url));
   const payloadCuitCuil = deriveCuitCuilFromPayload(p);
+  const assignedGerencia = await resolveAssignedGerenciaSnapshot(
+    db,
+    landing.user_id,
+    p.telefono_asignado,
+    landing.id,
+  );
 
   const row: Omit<ConversionRow, "id"> = {
     landing_id: landing.id?.trim() || null,
@@ -1214,6 +1316,7 @@ async function handleContact(
     external_id: norm(p.external_id),
     utm_campaign: norm(p.utm_campaign),
     telefono_asignado: norm(p.telefono_asignado),
+    ...snapshotPatch(assignedGerencia),
     promo_code: inboundPromoCode,
     geo_city: geo.geo_city,
     geo_region: geo.geo_region,
@@ -1490,6 +1593,12 @@ async function handleLead(
     const resolvedPixelId = inboundMetaPixelId || config.pixel_id || "";
     const inboundExternalId = norm(p.external_id);
     const generatedExternalId = inboundExternalId || (cleanPhone ? await sha256(cleanPhone) : generateEventId());
+    const assignedGerencia = await resolveAssignedGerenciaSnapshot(
+      db,
+      landing.user_id,
+      p.telefono_asignado,
+      landing.id,
+    );
     const newRow: Omit<ConversionRow, "id"> = {
       landing_id: landing.id?.trim() || null,
       user_id: landing.user_id,
@@ -1533,6 +1642,7 @@ async function handleLead(
       external_id: generatedExternalId,
       utm_campaign: norm(p.utm_campaign),
       telefono_asignado: norm(p.telefono_asignado),
+      ...snapshotPatch(assignedGerencia),
       promo_code: promoCode,
       geo_city: geo.geo_city,
       geo_region: geo.geo_region,
@@ -1657,7 +1767,7 @@ async function handleLead(
     if (hasPayloadGeo(geo)) updates.geo_source = "payload";
     const { data: cur } = await db
       .from("conversions")
-      .select("promo_code, observaciones, external_id")
+      .select("promo_code, observaciones, external_id, telefono_asignado, assigned_gerencia_label")
       .eq("id", targetId)
       .single();
     // Fill promo_code if row didn't have it
@@ -1666,6 +1776,13 @@ async function handleLead(
     }
     if (!norm((cur as Record<string, unknown> | null)?.external_id) && cleanPhone) {
       updates.external_id = await sha256(cleanPhone);
+    }
+    if (!norm((cur as Record<string, unknown> | null)?.assigned_gerencia_label)) {
+      const assignedPhone = norm(p.telefono_asignado) || norm((cur as Record<string, unknown> | null)?.telefono_asignado);
+      Object.assign(
+        updates,
+        snapshotPatch(await resolveAssignedGerenciaSnapshot(db, landing.user_id, assignedPhone, landing.id)),
+      );
     }
     updates.observaciones = appendObservation(cur?.observaciones ?? "", matchSourceToken);
     await db.from("conversions").update(updates).eq("id", targetId);
@@ -1887,7 +2004,7 @@ async function handlePurchase(
   if (targetId) {
     const { data: existing } = await db
       .from("conversions")
-      .select("lead_event_id, lead_event_time")
+      .select("lead_event_id, lead_event_time, telefono_asignado, assigned_gerencia_label")
       .eq("id", targetId)
       .single();
 
@@ -1928,6 +2045,12 @@ async function handlePurchase(
     if (promoCode) {
       const { data: cur } = await db.from("conversions").select("promo_code").eq("id", targetId).single();
       if (!cur?.promo_code) updates.promo_code = promoCode;
+    }
+    if (!norm((existing as Record<string, unknown> | null)?.assigned_gerencia_label)) {
+      Object.assign(
+        updates,
+        snapshotPatch(await resolveAssignedGerenciaSnapshot(db, landing.user_id, existing?.telefono_asignado, landing.id)),
+      );
     }
     await db.from("conversions").update(updates).eq("id", targetId);
 
@@ -2114,6 +2237,10 @@ async function handlePurchase(
     external_id: srcRow?.external_id ?? "",
     utm_campaign: srcRow?.utm_campaign ?? "",
     telefono_asignado: srcRow?.telefono_asignado ?? "",
+    assigned_gerencia_id: srcRow?.assigned_gerencia_id ?? null,
+    assigned_gerencia_external_id: srcRow?.assigned_gerencia_external_id ?? null,
+    assigned_gerencia_name: srcRow?.assigned_gerencia_name ?? "",
+    assigned_gerencia_label: srcRow?.assigned_gerencia_label ?? "",
     promo_code: promoCodeIsFull ? promoCode : (srcRow?.promo_code || ""),
     geo_city: srcRow?.geo_city ?? "",
     geo_region: srcRow?.geo_region ?? "",
@@ -2240,6 +2367,10 @@ async function handleSimplePurchase(
     external_id: srcRow?.external_id ?? "",
     utm_campaign: srcRow?.utm_campaign ?? "",
     telefono_asignado: srcRow?.telefono_asignado ?? "",
+    assigned_gerencia_id: srcRow?.assigned_gerencia_id ?? null,
+    assigned_gerencia_external_id: srcRow?.assigned_gerencia_external_id ?? null,
+    assigned_gerencia_name: srcRow?.assigned_gerencia_name ?? "",
+    assigned_gerencia_label: srcRow?.assigned_gerencia_label ?? "",
     promo_code: "",
     geo_city: srcRow?.geo_city ?? "",
     geo_region: srcRow?.geo_region ?? "",

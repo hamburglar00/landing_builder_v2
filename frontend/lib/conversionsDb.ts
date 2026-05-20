@@ -120,6 +120,10 @@ export interface ConversionRow {
   external_id: string;
   utm_campaign: string;
   telefono_asignado: string;
+  assigned_gerencia_id?: number | null;
+  assigned_gerencia_external_id?: number | null;
+  assigned_gerencia_name?: string | null;
+  assigned_gerencia_label?: string | null;
   promo_code: string;
   geo_city: string;
   geo_region: string;
@@ -175,6 +179,7 @@ export interface FunnelContact {
   device_type: string | null;
   landing_name: string | null;
   telefono_asignado?: string | null;
+  assigned_gerencia_label?: string | null;
   total_valor: number;
   purchase_count: number;
   repeat_count: number;
@@ -194,6 +199,16 @@ export type FetchDateRange = {
   start?: Date | string | null;
   end?: Date | string | null;
 };
+
+export function getConversionGerenciaLabels(
+  row: Pick<ConversionRow, "telefono_asignado" | "assigned_gerencia_label">,
+  gerenciaByPhone: Record<string, string[]>,
+): string[] {
+  const historicalLabel = String(row.assigned_gerencia_label ?? "").trim();
+  if (historicalLabel) return [historicalLabel];
+  const assignedPhone = String(row.telefono_asignado ?? "").replace(/\D/g, "");
+  return assignedPhone ? (gerenciaByPhone[assignedPhone] ?? []) : [];
+}
 
 function toIsoIfValid(value: Date | string | null | undefined): string | null {
   if (!value) return null;
@@ -385,7 +400,9 @@ const CONVERSIONS_SELECT = `
   estado, valor,
   contact_status_capi, lead_status_capi, purchase_status_capi,
   observaciones,
-  external_id, utm_campaign, telefono_asignado, promo_code,
+  external_id, utm_campaign, telefono_asignado,
+  assigned_gerencia_id, assigned_gerencia_external_id, assigned_gerencia_name, assigned_gerencia_label,
+  promo_code,
   geo_city, geo_region, geo_country,
   created_at
 `.replace(/\s+/g, " ").trim();
@@ -604,6 +621,9 @@ export function buildFunnelContactsFromConversions(rows: ConversionRow[]): Funne
     const assignedPhone =
       [...sorted].reverse().find((r) => String(r.telefono_asignado ?? "").trim())?.telefono_asignado ??
       null;
+    const assignedGerenciaLabel =
+      [...sorted].reverse().find((r) => String(r.assigned_gerencia_label ?? "").trim())?.assigned_gerencia_label ??
+      null;
 
     funnel.push({
       user_id: latest.user_id,
@@ -619,6 +639,7 @@ export function buildFunnelContactsFromConversions(rows: ConversionRow[]): Funne
       device_type: latest.device_type || null,
       landing_name: latest.landing_name || null,
       telefono_asignado: assignedPhone,
+      assigned_gerencia_label: assignedGerenciaLabel,
       total_valor: purchaseRows.reduce((sum, r) => sum + (Number(r.valor) || 0), 0),
       purchase_count: purchaseRows.length,
       repeat_count: repeatRows.length,
