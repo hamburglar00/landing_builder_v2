@@ -257,7 +257,15 @@ export default function GerenciasPerformancePanel({
     const availabilityByLabel = new Map(availabilityRows.map((row) => [row.label, row]));
     const cleanRows = rows.filter((row) => (
       !String(row.test_event_code ?? "").trim() &&
-      (!metaAdsOnly || Boolean(row.from_meta_ads))
+      (!metaAdsOnly || Boolean(row.from_meta_ads)) &&
+      (
+        !selectedLanding ||
+        String(row.landing_id ?? "").trim() === selectedLanding.id ||
+        (
+          String(row.landing_name ?? "").trim() === selectedLanding.name &&
+          (!selectedLanding.userId || String(row.user_id ?? "") === selectedLanding.userId)
+        )
+      )
     ));
     for (const row of cleanRows) {
       const assignedPhone = normalizePhone(row.telefono_asignado);
@@ -297,7 +305,7 @@ export default function GerenciasPerformancePanel({
             : 0,
         };
       });
-  }, [availabilityRows, gerenciaByPhone, metaAdsOnly, premiumThreshold, rows, selectedLandingLabelSet]);
+  }, [availabilityRows, gerenciaByPhone, metaAdsOnly, premiumThreshold, rows, selectedLanding, selectedLandingLabelSet]);
 
   const visiblePerformanceRows = useMemo(() => {
     const query = searchTerm.trim().toLowerCase();
