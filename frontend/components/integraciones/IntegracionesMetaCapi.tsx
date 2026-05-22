@@ -201,6 +201,7 @@ export default function IntegracionesMetaCapi() {
   const chatraceIntermediaryBody = useMemo(
     () => `{
   "name": "${clientName || "<cliente>"}",
+  "prefix": "${clientName || "<prefijo>"}",
   "email": "{{email}}",
   "phone": "{{phone}}"
 }`,
