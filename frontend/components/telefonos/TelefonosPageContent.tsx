@@ -1076,7 +1076,7 @@ export function TelefonosPageContent({
                                       <button
                                         type="button"
                                         onClick={() => void handleManualStatusToggle(p)}
-                                        className={`relative inline-flex h-5 w-10 items-center rounded-full transition ${
+                                        className={`relative inline-flex h-3 w-5 items-center rounded-full transition ${
                                           p.status === "active" ? "bg-emerald-500/70" : "bg-zinc-700"
                                         }`}
                                         title={
@@ -1087,8 +1087,8 @@ export function TelefonosPageContent({
                                         aria-pressed={p.status === "active"}
                                       >
                                         <span
-                                          className={`inline-block h-4 w-4 transform rounded-full bg-white transition ${
-                                            p.status === "active" ? "translate-x-5" : "translate-x-1"
+                                          className={`inline-block h-2 w-2 transform rounded-full bg-white transition ${
+                                            p.status === "active" ? "translate-x-3" : "translate-x-0.5"
                                           }`}
                                         />
                                       </button>
