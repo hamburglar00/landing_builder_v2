@@ -260,19 +260,41 @@ Deno.serve(async (req) => {
       const entries = Array.from(phoneKindMap.entries());
       const nowIso = new Date().toISOString();
 
-      const activeRows = entries.map(([phone, kind]) => ({
+      const { data: existingPhones, error: existingPhonesError } = await supabaseAdmin
+        .from("gerencia_phones")
+        .select("phone,status")
+        .eq("gerencia_id", g.id);
+
+      if (existingPhonesError) {
+        console.error(
+          "Error al leer estados existentes de gerencia_phones:",
+          existingPhonesError,
+        );
+        continue;
+      }
+
+      const existingStatusByPhone = new Map<string, string>();
+      for (const row of existingPhones ?? []) {
+        const phone = normalizeAndValidateArPhone(row.phone);
+        if (!phone) continue;
+        const status = String(row.status ?? "").trim();
+        existingStatusByPhone.set(phone, status === "inactive" ? "inactive" : "active");
+      }
+
+      const syncedRows = entries.map(([phone, kind]) => ({
         gerencia_id: g.id,
         phone,
         kind,
-        status: "active",
+        status: existingStatusByPhone.get(phone) ?? "active",
         last_seen_at: nowIso,
       }));
 
-      // 2) Upsert de teléfonos activos (inserta nuevos y actualiza tipo/status/last_seen_at)
-      if (activeRows.length > 0) {
+      // 2) Upsert de teléfonos presentes en la API.
+      // Para teléfonos ya existentes preservamos el status manual activo/inactivo.
+      if (syncedRows.length > 0) {
         const { error: upsertError } = await supabaseAdmin
           .from("gerencia_phones")
-          .upsert(activeRows, {
+          .upsert(syncedRows, {
             onConflict: "gerencia_id,phone",
           });
 
@@ -284,7 +306,7 @@ Deno.serve(async (req) => {
           continue;
         }
 
-        totalActivePhones += activeRows.length;
+        totalActivePhones += syncedRows.filter((row) => row.status === "active").length;
 
         // 3) Marcar como inactivos los que no vinieron en esta llamada.
         // Supabase .not('col', 'in', ...) espera un string del tipo '(a,b,c)'.
