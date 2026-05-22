@@ -1148,9 +1148,7 @@ export default function IntegracionesMetaCapi() {
                         Copiar URL
                       </button>
                     </div>
-                    <p className="mt-1 text-zinc-400">
-                      En la plantilla viene por defecto con <span className="font-mono text-zinc-200">name=ngp</span>. Cambialo por la URL POST del cliente actual:
-                    </p>
+                    <p className="mt-1 text-zinc-400">URL POST para “Solicitud de API Externa”.</p>
                     <div className="mt-2 rounded bg-zinc-950 p-2 font-mono text-[11px] text-sky-200 break-all">
                       POST {endpointUrl || "https://<tu-supabase>/functions/v1/conversions?name=<cliente>"}
                     </div>
