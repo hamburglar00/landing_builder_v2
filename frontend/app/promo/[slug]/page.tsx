@@ -64,6 +64,7 @@ function normalizeArgentinaMobilePhone(value: string): string | null {
 }
 
 const COIN_RAIN = Array.from({ length: 34 }, (_, index) => index);
+const RESULT_VISIBLE_MS = 3 * 24 * 60 * 60 * 1000;
 
 export default function PublicPromotionPage() {
   const params = useParams<{ slug: string }>();
@@ -216,7 +217,7 @@ export default function PublicPromotionPage() {
     const draw = async () => {
       if (!promotion || !timeLeft?.isOver || drawStatus !== "pending" || revealWinner || drawRequestedRef.current) return;
       const processedAtMs = new Date(promotion.draw_processed_at ?? promotion.winner_selected_at ?? "").getTime();
-      if (Number.isFinite(processedAtMs) && Date.now() - processedAtMs > 60 * 60 * 1000) return;
+      if (Number.isFinite(processedAtMs) && Date.now() - processedAtMs > RESULT_VISIBLE_MS) return;
       drawRequestedRef.current = true;
       try {
         const { data, error: fnError } = await supabase.functions.invoke("promotion-draw", {
@@ -253,7 +254,7 @@ export default function PublicPromotionPage() {
   useEffect(() => {
     if (!promotion || drawStatus !== "completed" || !winnerUsername) return;
     const processedAtMs = new Date(promotion.draw_processed_at ?? promotion.winner_selected_at ?? "").getTime();
-    if (Number.isFinite(processedAtMs) && Date.now() - processedAtMs > 60 * 60 * 1000) return;
+    if (Number.isFinite(processedAtMs) && Date.now() - processedAtMs > RESULT_VISIBLE_MS) return;
     const loadCompletedDraw = async () => {
       try {
         const { data, error: fnError } = await supabase.functions.invoke("promotion-draw", {
@@ -378,7 +379,7 @@ export default function PublicPromotionPage() {
   const drawParticipantCount = animationParticipantCount ?? animationUsernames.length;
   const drawProcessedMs = new Date(promotion.draw_processed_at ?? promotion.winner_selected_at ?? "").getTime();
   const resultExpired =
-    drawIsOver && Number.isFinite(drawProcessedMs) && Date.now() - drawProcessedMs > 60 * 60 * 1000;
+    drawIsOver && Number.isFinite(drawProcessedMs) && Date.now() - drawProcessedMs > RESULT_VISIBLE_MS;
   const showParticipantWaiting = participantReady && !drawIsOver;
   const showFinalResultOnly = resultExpired || drawStatus === "no_participants" || (winnerUsername && revealWinner);
   const showDrawAnimationOnly = drawIsOver && isDrawAnimating && !showFinalResultOnly;
@@ -556,7 +557,7 @@ export default function PublicPromotionPage() {
             Gracias por participar
           </h2>
           <p className="mt-3 text-sm leading-6 text-zinc-400">
-            El resultado ya estuvo disponible durante una hora y este link caduco.
+            El resultado ya estuvo disponible durante 3 dias y este link caduco.
           </p>
         </div>
       ) : winnerUsername && revealWinner ? (
@@ -705,7 +706,7 @@ export default function PublicPromotionPage() {
                     Gracias por participar
                   </h2>
                   <p className="mt-3 text-sm leading-6 text-zinc-400">
-                    El resultado ya estuvo disponible durante una hora y este link caduco.
+                    El resultado ya estuvo disponible durante 3 dias y este link caduco.
                   </p>
                 </div>
               ) : isDrawAnimating ? (
