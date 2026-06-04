@@ -14,6 +14,7 @@ export type GerenciaPhoneRow = {
   gerencia_id: number;
   phone: string;
   status: string;
+  source_available?: boolean;
   usage_count: number;
   kind: string;
   comment: string;
@@ -63,6 +64,11 @@ const formatStatus = (status: string) => {
   if (status === "active") return "activo";
   if (status === "inactive") return "inactivo";
   return status;
+};
+
+const formatPhoneAvailabilityStatus = (row: GerenciaPhoneRow) => {
+  if (row.source_available === false) return "no disponible";
+  return formatStatus(row.status);
 };
 
 const onlyDigits = (raw: string) => raw.replace(/\D/g, "");
@@ -169,7 +175,7 @@ export function TelefonosPageContent({
     const { data: phones, error: phonesError } = await supabase
       .from("gerencia_phones")
       .select(
-        "id, gerencia_id, phone, status, usage_count, kind, comment, messages_reset_at, last_seen_at, created_at, updated_at",
+        "id, gerencia_id, phone, status, source_available, usage_count, kind, comment, messages_reset_at, last_seen_at, created_at, updated_at",
       )
       .in("gerencia_id", ids)
       .order("gerencia_id", { ascending: true })
@@ -604,6 +610,7 @@ export function TelefonosPageContent({
         gerencia_id: gerenciaId,
         phone,
         status: "active",
+        source_available: true,
         kind,
         comment: "",
         last_seen_at: new Date().toISOString(),
@@ -624,6 +631,13 @@ export function TelefonosPageContent({
 
   const handleManualStatusToggle = async (row: GerenciaPhoneRow) => {
     const nextStatus = row.status === "active" ? "inactive" : "active";
+    if (nextStatus === "active" && row.source_available === false) {
+      setPlanLimitModal({
+        open: true,
+        message: "No se puede activar este teléfono porque la API externa ya no lo devuelve para esta gerencia.",
+      });
+      return;
+    }
     if (!isAdmin && nextStatus === "active" && maxPhonesAllowed != null) {
       const currentActive = getActivePhonesCount();
       if (currentActive >= maxPhonesAllowed) {
@@ -852,7 +866,8 @@ export function TelefonosPageContent({
             );
             const isPbadminSource = (g.source_type ?? "pbadmin") === "pbadmin";
             const hasPhones = phones.length > 0;
-            const allInactive = hasPhones && phones.every((p) => p.status !== "active");
+            const allUnavailableFromSource =
+              hasPhones && isPbadminSource && phones.every((p) => p.source_available === false);
             const totalMessages = phones.reduce(
               (acc, p) =>
                 acc + (leadUniqueByAssignedPhone[onlyDigits(p.phone)] ?? 0),
@@ -984,7 +999,7 @@ export function TelefonosPageContent({
                         </button>
                       </div>
                     </div>
-                    {isPbadminSource && allInactive ? (
+                    {allUnavailableFromSource ? (
                       <div className="mb-3 rounded-lg border border-amber-900/40 bg-amber-950/20 px-3 py-2 text-xs text-amber-300">
                         Sin managers activos detectados para esta gerencia en la última sincronización.
                       </div>
@@ -1043,7 +1058,7 @@ export function TelefonosPageContent({
                             phones.map((p) => {
                               const canTogglePhoneStatus =
                                 (g.source_type ?? "pbadmin") === "manual" ||
-                                p.status === "active";
+                                p.source_available !== false;
 
                               return (
                               <tr
@@ -1100,7 +1115,7 @@ export function TelefonosPageContent({
                                           : "text-zinc-500"
                                       }
                                     >
-                                      {formatStatus(p.status)}
+                                      {formatPhoneAvailabilityStatus(p)}
                                     </span>
                                   </div>
                                 </td>

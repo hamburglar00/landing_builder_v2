@@ -43,9 +43,11 @@ const normalizeAndValidateArPhone = (
  * llamando a la API externa api.asesadmin.com y actualizando la tabla
  * public.gerencia_phones:
  *
- * - Inserta teléfonos nuevos (status=active, kind=ads|carga|mkt|assistant, usage_count=0).
- * - Actualiza tipo y status=active de los existentes que sigan llegando.
- * - Marca como inactive los teléfonos de la gerencia que NO vinieron en la última llamada.
+ * - Inserta teléfonos nuevos (status=active, source_available=true, kind=ads|carga|mkt|assistant, usage_count=0).
+ * - Actualiza tipo y source_available=true de los existentes que sigan llegando.
+ * - Si el teléfono ya estaba disponible y el cliente lo apagó, preserva status=inactive.
+ * - Si el teléfono vuelve después de no venir en la API, lo reactiva.
+ * - Marca como source_available=false/status=inactive los teléfonos PBadmin que NO vinieron en la última llamada.
  *
  * Uso: POST /functions/v1/sync-phones
  * Requiere Authorization: Bearer <JWT de Supabase>.
@@ -262,7 +264,7 @@ Deno.serve(async (req) => {
 
       const { data: existingPhones, error: existingPhonesError } = await supabaseAdmin
         .from("gerencia_phones")
-        .select("phone,status")
+        .select("phone,status,source_available")
         .eq("gerencia_id", g.id);
 
       if (existingPhonesError) {
@@ -273,24 +275,35 @@ Deno.serve(async (req) => {
         continue;
       }
 
-      const existingStatusByPhone = new Map<string, string>();
+      const existingStateByPhone = new Map<string, { status: string; sourceAvailable: boolean }>();
       for (const row of existingPhones ?? []) {
         const phone = normalizeAndValidateArPhone(row.phone);
         if (!phone) continue;
         const status = String(row.status ?? "").trim();
-        existingStatusByPhone.set(phone, status === "inactive" ? "inactive" : "active");
+        existingStateByPhone.set(phone, {
+          status: status === "inactive" ? "inactive" : "active",
+          sourceAvailable: row.source_available !== false,
+        });
       }
 
-      const syncedRows = entries.map(([phone, kind]) => ({
-        gerencia_id: g.id,
-        phone,
-        kind,
-        status: existingStatusByPhone.get(phone) ?? "active",
-        last_seen_at: nowIso,
-      }));
+      const syncedRows = entries.map(([phone, kind]) => {
+        const existing = existingStateByPhone.get(phone);
+        const status = existing?.sourceAvailable === true
+          ? existing.status
+          : "active";
+        return {
+          gerencia_id: g.id,
+          phone,
+          kind,
+          status,
+          source_available: true,
+          last_seen_at: nowIso,
+        };
+      });
 
       // 2) Upsert de teléfonos presentes en la API.
-      // Para teléfonos ya existentes preservamos el status manual activo/inactivo.
+      // Para teléfonos ya disponibles preservamos el status manual activo/inactivo.
+      // Si antes no estaban disponibles por API y vuelven a aparecer, se reactivan.
       if (syncedRows.length > 0) {
         const { error: upsertError } = await supabaseAdmin
           .from("gerencia_phones")
@@ -317,7 +330,7 @@ Deno.serve(async (req) => {
             : "()";
         const { error: inactivateError } = await supabaseAdmin
           .from("gerencia_phones")
-          .update({ status: "inactive", last_seen_at: nowIso })
+          .update({ status: "inactive", source_available: false, last_seen_at: nowIso })
           .eq("gerencia_id", g.id)
           .not("phone", "in", inList);
 
@@ -331,7 +344,7 @@ Deno.serve(async (req) => {
         // Si no hay teléfonos activos desde la API, marcamos todos como inactivos
         const { error: inactivateAllError } = await supabaseAdmin
           .from("gerencia_phones")
-          .update({ status: "inactive", last_seen_at: nowIso })
+          .update({ status: "inactive", source_available: false, last_seen_at: nowIso })
           .eq("gerencia_id", g.id);
 
         if (inactivateAllError) {
