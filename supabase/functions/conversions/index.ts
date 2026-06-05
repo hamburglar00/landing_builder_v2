@@ -495,13 +495,17 @@ async function insertInboundEvent(
   action: string,
   payload: Params,
 ): Promise<string | null> {
+  const normalizedAction = norm(action).toUpperCase() || "CONTACT";
+  const actionEventId = normalizedAction === "CONTACT"
+    ? norm(payload.action_event_id || payload.contact_event_id || payload.event_id)
+    : norm(payload.action_event_id);
   const { data } = await db
     .from("conversion_inbox")
     .insert({
       user_id: userId,
       landing_name: landingName,
-      action,
-      action_event_id: norm(payload.action_event_id),
+      action: normalizedAction,
+      action_event_id: actionEventId,
       coelsa_id: normalizeCoelsaId(payload.coelsa_id),
       transaction_id: normalizeTransactionId(payload.transaction_id),
       promo_code: normalizePromoCode(payload.promo_code ?? payload.promoCode),
@@ -1212,7 +1216,10 @@ async function ignoreContactDuplicate(
       ? "duplicado ignorado por contact_event_id"
       : "duplicado ignorado por promo_code",
   );
-  if (ctx) ctx.conversionId = duplicate.id;
+  if (ctx) {
+    ctx.conversionId = duplicate.id;
+    ctx.inboxStatus = "deduplicated";
+  }
   return textResponse(
     byEventId
       ? "Duplicado ignorado (contact_event_id ya procesado)"
@@ -1236,6 +1243,9 @@ async function handleContact(
   const inboundSourcePlatform = norm(p.source_platform);
   const inboundContactEventId = norm(p.contact_event_id || p.event_id);
   const inboundPromoCode = derivePromoCodeFromPayload(p);
+  const sendContactPixelExplicitFalse =
+    Object.prototype.hasOwnProperty.call(p, "sendContactPixel") &&
+    !toBool(p.sendContactPixel);
   const payloadRaw = safePayloadRaw(p);
 
   const existingDuplicate = await findExistingContactDuplicate(
@@ -1424,7 +1434,7 @@ async function handleContact(
     );
   }
 
-  if (effectiveConfig.send_contact_capi) {
+  if (effectiveConfig.send_contact_capi && !sendContactPixelExplicitFalse) {
     const { data: fresh } = await db.from("conversions").select("*").eq("id", rowId).single();
     const fullRow = (fresh ?? row) as ConversionRow;
     await sendToMetaCAPI(
@@ -1438,6 +1448,24 @@ async function handleContact(
       contactEventTime,
       undefined,
       testEventCode || undefined,
+    );
+  } else if (effectiveConfig.send_contact_capi && sendContactPixelExplicitFalse) {
+    await db
+      .from("conversions")
+      .update({ contact_status_capi: "skipped" })
+      .eq("id", rowId);
+    await writeLog(
+      db,
+      landing.user_id,
+      "handleContact",
+      "INFO",
+      "Contact CAPI omitido por sendContactPixel=false",
+      JSON.stringify({ contact_event_id: contactEventId, sendContactPixel: p.sendContactPixel }),
+      rowId,
+      undefined,
+      undefined,
+      payloadRaw,
+      "Contact CAPI omitido por sendContactPixel=false",
     );
   }
 
@@ -2464,17 +2492,22 @@ Deno.serve(async (req) => {
     const landing: LandingRow = { id: "", name: landingName, user_id: userId };
 
     const rawAction = norm(params.action).toUpperCase();
-    const actionEventId = norm(params.action_event_id);
-    const inboxAction = rawAction || "CONTACT";
+    const rawEventName = norm(params.event_name);
+    const eventNameAction = rawEventName.toUpperCase();
+    const inferredAction = rawAction || (eventNameAction === "CONTACT" ? "CONTACT" : "");
+    const actionEventId = inferredAction === "CONTACT"
+      ? norm(params.action_event_id || params.contact_event_id || params.event_id)
+      : norm(params.action_event_id);
+    const inboxAction = inferredAction || "CONTACT";
     const isDeferredRetry = toBool(params.__deferred_retry);
     const deferredInboxId = norm(params.__inbox_id);
 
     if (
       !isDeferredRetry &&
       actionEventId &&
-      (rawAction === "LEAD" || rawAction === "PURCHASE")
+      (inferredAction === "LEAD" || inferredAction === "PURCHASE")
     ) {
-      const existing = await findInboundByActionEventId(db, userId, rawAction, actionEventId);
+      const existing = await findInboundByActionEventId(db, userId, inferredAction, actionEventId);
       if (existing) {
         await writeLog(
           db,
@@ -2483,7 +2516,7 @@ Deno.serve(async (req) => {
           "INFO",
           "Duplicado ignorado por action_event_id",
           JSON.stringify({
-            action: rawAction,
+            action: inferredAction,
             action_event_id: actionEventId,
             landing_name: landingName,
             existing_inbox_id: existing.id,
@@ -2528,7 +2561,7 @@ Deno.serve(async (req) => {
     if (!rawAction && params.phone && params.amount) {
       return runAndFinalize((ctx) => handleSimplePurchase(db, params, landing, cfg, pixelConfigs, ctx));
     }
-    if (rawAction === "LEAD") {
+    if (inferredAction === "LEAD") {
       const incomingPromoCode = derivePromoCodeFromPayload(params);
       // Deferred queue mode: LEAD without promo_code waits and is retried by cron after 1h.
       if (!isFullPromoCode(incomingPromoCode) && !isDeferredRetry) {
@@ -2558,7 +2591,7 @@ Deno.serve(async (req) => {
       }
       return runAndFinalize((ctx) => handleLead(db, params, landing, cfg, pixelConfigs, ctx));
     }
-    if (rawAction === "PURCHASE") {
+    if (inferredAction === "PURCHASE") {
       const purchaseDedupeIds = purchaseDedupeIdsFromPayload(params);
       if (purchaseDedupeIds.length > 0) {
         const existingPurchase = await findPurchaseByDedupeIds(db, userId, purchaseDedupeIds);
@@ -2630,6 +2663,10 @@ Deno.serve(async (req) => {
       return runAndFinalize((ctx) => handlePurchase(db, params, landing, cfg, pixelConfigs, ctx));
     }
 
+    if (inferredAction === "CONTACT") {
+      return runAndFinalize((ctx) => handleContact(db, params, landing, cfg, pixelConfigs, ctx));
+    }
+
     if (rawAction) {
       await writeLog(
         db,
@@ -2638,7 +2675,36 @@ Deno.serve(async (req) => {
         "ERROR",
         "Action desconocida recibida",
         JSON.stringify({ action: rawAction, payload: safePayloadRaw(params) }),
+        undefined,
+        undefined,
+        undefined,
+        safePayloadRaw(params),
+        "action desconocida",
       );
+      const response = textResponse(`Action desconocida: ${rawAction}`, 400);
+      const bodyText = await response.clone().text().catch(() => "");
+      await finalizeInboundEvent(db, inboxId, "error", response.status, bodyText);
+      return response;
+    }
+
+    if (rawEventName && eventNameAction !== "CONTACT") {
+      await writeLog(
+        db,
+        landing.user_id,
+        "main",
+        "ERROR",
+        "event_name invalido para flujo Contact",
+        JSON.stringify({ event_name: rawEventName, payload: safePayloadRaw(params) }),
+        undefined,
+        undefined,
+        undefined,
+        safePayloadRaw(params),
+        "event_name invalido",
+      );
+      const response = textResponse(`event_name invalido para Contact: ${rawEventName}`, 400);
+      const bodyText = await response.clone().text().catch(() => "");
+      await finalizeInboundEvent(db, inboxId, "error", response.status, bodyText);
+      return response;
     }
 
     // Default: contact from landing
