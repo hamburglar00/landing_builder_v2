@@ -138,7 +138,7 @@ export default function DashboardLandingEditarPage() {
   const [urlBase, setUrlBase] = useState<string | null>(null);
   const [revalidateSecret, setRevalidateSecret] = useState<string | null>(null);
   const [clientName, setClientName] = useState<string | null>(null);
-  const [pixelOptions, setPixelOptions] = useState<string[]>([]);
+  const [pixelOptions, setPixelOptions] = useState<Array<{ pixel_id: string; comment: string }>>([]);
   const [postUrlCopied, setPostUrlCopied] = useState(false);
 
   useEffect(() => {
@@ -180,13 +180,16 @@ export default function DashboardLandingEditarPage() {
         setClientName(profile.data?.nombre ?? null);
         const { data: pixels } = await supabase
           .from("conversions_pixel_configs")
-          .select("pixel_id")
+          .select("pixel_id,comment")
           .eq("user_id", user.id)
           .order("is_default", { ascending: false })
           .order("created_at", { ascending: true });
         const options = (pixels ?? [])
-          .map((p) => String(p.pixel_id ?? "").trim())
-          .filter(Boolean);
+          .map((p) => ({
+            pixel_id: String(p.pixel_id ?? "").trim(),
+            comment: String(p.comment ?? "").trim(),
+          }))
+          .filter((p) => p.pixel_id);
         setPixelOptions(options);
       } catch {
         router.replace("/dashboard");
@@ -584,9 +587,9 @@ export default function DashboardLandingEditarPage() {
                 className="w-full rounded-lg border border-zinc-700 bg-zinc-900 px-3 py-2 text-sm text-zinc-100"
               >
                 <option value="">Seleccionar pixel</option>
-                {[...(pixelOptions.includes(landing.pixelId) || !landing.pixelId ? pixelOptions : [landing.pixelId, ...pixelOptions])].map((pid) => (
-                  <option key={pid} value={pid}>
-                    {pid}
+                {[...(pixelOptions.some((p) => p.pixel_id === landing.pixelId) || !landing.pixelId ? pixelOptions : [{ pixel_id: landing.pixelId, comment: "" }, ...pixelOptions])].map((pixel) => (
+                  <option key={pixel.pixel_id} value={pixel.pixel_id}>
+                    {pixel.comment ? `${pixel.pixel_id} (${pixel.comment})` : pixel.pixel_id}
                   </option>
                 ))}
               </select>
