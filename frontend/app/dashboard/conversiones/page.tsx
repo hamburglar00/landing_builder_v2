@@ -242,6 +242,29 @@ function normalizePhone(value: string | null | undefined): string {
   return String(value ?? "").replace(/\D/g, "");
 }
 
+function parseInboxPayload(raw: string | null | undefined): Record<string, unknown> {
+  const value = String(raw ?? "").trim();
+  if (!value) return {};
+  try {
+    const parsed = JSON.parse(value);
+    return parsed && typeof parsed === "object" && !Array.isArray(parsed)
+      ? (parsed as Record<string, unknown>)
+      : {};
+  } catch {
+    return {};
+  }
+}
+
+function getPayloadString(payload: Record<string, unknown>, keys: string[]): string {
+  for (const key of keys) {
+    const value = payload[key];
+    if (value == null) continue;
+    const text = String(value).trim();
+    if (text) return text;
+  }
+  return "";
+}
+
 function normalizeSexValue(value: unknown): string {
   const raw = String(value ?? "").trim().toLowerCase();
   if (!raw) return "";
@@ -906,9 +929,78 @@ export default function DashboardConversionesPage() {
       return hay.includes(q);
     });
   }, [tableConversionsFiltered, tableSearch]);
+  const conversionById = useMemo(
+    () => new Map(conversions.map((c) => [c.id, c])),
+    [conversions],
+  );
+  const inboxFilteredByGlobalFilters = useMemo(() => {
+    return activeInbox.filter((row) => {
+      const payload = parseInboxPayload(row.payload_raw);
+      const related = row.conversion_id ? conversionById.get(row.conversion_id) : undefined;
+      const landingName = String(
+        row.landing_name ||
+        related?.landing_name ||
+        getPayloadString(payload, ["landing_name", "landingName", "landing"])
+      ).trim();
+      const pixelId = String(
+        related?.meta_pixel_id ||
+        related?.pixel_id ||
+        getPayloadString(payload, ["meta_pixel_id", "pixel_id"])
+      ).trim();
+      const assignedPhone = normalizePhone(
+        related?.telefono_asignado ||
+        getPayloadString(payload, ["telefono_asignado", "bot_phone", "assigned_phone"])
+      );
+      const payloadGerenciaLabel = getPayloadString(payload, ["assigned_gerencia_label", "gerencia_label", "gerencia"]);
+      const gerenciaLabels = related
+        ? getConversionGerenciaLabels(related, gerenciaByPhone)
+        : [
+            ...(payloadGerenciaLabel ? [payloadGerenciaLabel] : []),
+            ...(assignedPhone ? (gerenciaByPhone[assignedPhone] ?? []) : []),
+          ];
+      const sourcePlatform = String(
+        related?.source_platform ||
+        getPayloadString(payload, ["source_platform"])
+      ).trim().toLowerCase();
+      const sex = related
+        ? normalizeSexValue((related as { inferred_sex?: string | null }).inferred_sex)
+        : normalizeSexValue(getPayloadString(payload, ["inferred_sex", "sex"]));
+      const campaign = String(
+        related?.utm_campaign ||
+        getPayloadString(payload, ["utm_campaign"])
+      ).trim();
+      const device = String(
+        related?.device_type ||
+        getPayloadString(payload, ["device_type"])
+      ).trim().toLowerCase();
+      const promo = String(row.promo_code || getPayloadString(payload, ["promo_code"])).trim();
+      const hasMetaSignal =
+        related != null
+          ? !!related.from_meta_ads
+          : Boolean(
+              getPayloadString(payload, ["fbc"]) ||
+              campaign ||
+              /^[A-Za-z0-9]+-[A-Za-z0-9]+$/.test(promo)
+            );
+
+      const byLanding = statsLandingFilter === "__all__" || landingName === statsLandingFilter;
+      const byPixel = statsPixelFilter === "__all__" || pixelId === statsPixelFilter;
+      const byTelefono = statsTelefonoFilter === "__all__" || assignedPhone === statsTelefonoFilter;
+      const byGerencia = statsGerenciaFilter === "__all__" || gerenciaLabels.includes(statsGerenciaFilter);
+      const byFromMetaAds =
+        statsFromMetaAdsFilter === "__all__" ||
+        (statsFromMetaAdsFilter === "true" ? hasMetaSignal : !hasMetaSignal);
+      const bySourcePlatform = statsSourcePlatformFilter === "__all__" || sourcePlatform === statsSourcePlatformFilter;
+      const bySexo = statsSexoFilter === "__all__" || sex === statsSexoFilter;
+      const byCampaign = statsCampaignFilter.length === 0 || statsCampaignFilter.includes(campaign);
+      const byDevice = statsDeviceFilter === "__all__" || device === statsDeviceFilter;
+
+      return byLanding && byPixel && byTelefono && byGerencia && byFromMetaAds && bySourcePlatform && bySexo && byCampaign && byDevice;
+    });
+  }, [activeInbox, conversionById, gerenciaByPhone, statsLandingFilter, statsPixelFilter, statsGerenciaFilter, statsTelefonoFilter, statsFromMetaAdsFilter, statsSourcePlatformFilter, statsSexoFilter, statsCampaignFilter, statsDeviceFilter]);
   const filteredInbox = useMemo(() => {
     const q = inboxSearch.trim().toLowerCase();
-    const byAction = activeInbox.filter((r) =>
+    const byAction = inboxFilteredByGlobalFilters.filter((r) =>
       inboxActionFilter === "all" ? true : String(r.action ?? "").toUpperCase() === inboxActionFilter,
     );
     if (!q) return byAction;
@@ -929,7 +1021,7 @@ export default function DashboardConversionesPage() {
         .toLowerCase();
       return hay.includes(q);
     });
-  }, [activeInbox, inboxSearch, inboxActionFilter]);
+  }, [inboxFilteredByGlobalFilters, inboxSearch, inboxActionFilter]);
   const tablePageSize = 50;
   const totalTablePages = Math.max(1, Math.ceil(filteredConversions.length / tablePageSize));
   const pagedConversions = useMemo(() => {
@@ -1738,7 +1830,7 @@ export default function DashboardConversionesPage() {
                 </button>
               </>
             )}
-            {(tab === "funnel" || tab === "tabla" || tab === "estadisticas") && (
+            {(tab === "funnel" || tab === "tabla" || tab === "estadisticas" || tab === "inbox") && (
               <button
                 type="button"
                 onClick={openStatsFilterModal}
@@ -1787,7 +1879,7 @@ export default function DashboardConversionesPage() {
       {statsFilterModalOpen && (
         <div className="fixed inset-0 z-40 flex items-center justify-center bg-black/70 p-4">
           <div className="w-full max-w-xl rounded-xl border border-zinc-700 bg-zinc-950 p-4">
-            <h3 className="mb-3 text-sm font-semibold text-zinc-100">Filtros de estadisticas</h3>
+            <h3 className="mb-3 text-sm font-semibold text-zinc-100">Filtros globales</h3>
             <div className="grid grid-cols-1 gap-3">
               <div>
                 <label className="mb-1 block text-xs text-zinc-400">Landing</label>
