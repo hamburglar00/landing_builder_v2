@@ -30,6 +30,7 @@ export interface PixelConfig {
   user_id: string;
   pixel_id: string;
   meta_access_token: string;
+  comment: string;
   meta_currency: string;
   meta_api_version: string;
   send_contact_capi: boolean;
@@ -330,6 +331,7 @@ export async function upsertPixelConfig(input: {
   user_id: string;
   pixel_id: string;
   meta_access_token: string;
+  comment?: string;
   meta_currency?: string;
   meta_api_version?: string;
   send_contact_capi?: boolean;
@@ -338,23 +340,24 @@ export async function upsertPixelConfig(input: {
   is_default?: boolean;
 }): Promise<void> {
   const pixelId = normalizePixelId(input.pixel_id);
+  const body: Record<string, unknown> = {
+    user_id: input.user_id,
+    pixel_id: pixelId,
+    meta_access_token: input.meta_access_token,
+    meta_currency: input.meta_currency ?? "ARS",
+    meta_api_version: input.meta_api_version ?? "v25.0",
+    send_contact_capi: !!input.send_contact_capi,
+    geo_use_ipapi: !!input.geo_use_ipapi,
+    geo_fill_only_when_missing: !!input.geo_fill_only_when_missing,
+    is_default: !!input.is_default,
+    updated_at: new Date().toISOString(),
+  };
+  if (input.comment !== undefined) {
+    body.comment = input.comment.trim();
+  }
   const { error } = await supabase
     .from("conversions_pixel_configs")
-    .upsert(
-      {
-        user_id: input.user_id,
-        pixel_id: pixelId,
-        meta_access_token: input.meta_access_token,
-        meta_currency: input.meta_currency ?? "ARS",
-        meta_api_version: input.meta_api_version ?? "v25.0",
-        send_contact_capi: !!input.send_contact_capi,
-        geo_use_ipapi: !!input.geo_use_ipapi,
-        geo_fill_only_when_missing: !!input.geo_fill_only_when_missing,
-        is_default: !!input.is_default,
-        updated_at: new Date().toISOString(),
-      },
-      { onConflict: "user_id,pixel_id" },
-    );
+    .upsert(body, { onConflict: "user_id,pixel_id" });
   if (error) throw error;
 }
 

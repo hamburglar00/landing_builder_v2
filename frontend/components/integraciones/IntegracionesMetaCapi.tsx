@@ -71,6 +71,7 @@ type PixelEditDraft = {
   id: string;
   pixel_id: string;
   meta_access_token: string;
+  comment: string;
   meta_currency: string;
   meta_api_version: string;
   send_contact_capi: boolean;
@@ -139,6 +140,7 @@ export default function IntegracionesMetaCapi() {
   const [quickOpen, setQuickOpen] = useState(false);
   const [quickPixelId, setQuickPixelId] = useState("");
   const [quickToken, setQuickToken] = useState("");
+  const [quickComment, setQuickComment] = useState("");
   const [quickCurrency, setQuickCurrency] = useState("ARS");
   const [quickErr, setQuickErr] = useState<string | null>(null);
 
@@ -505,6 +507,7 @@ export default function IntegracionesMetaCapi() {
   const openQuickModal = useCallback(() => {
     setQuickPixelId("");
     setQuickToken("");
+    setQuickComment("");
     setQuickCurrency(config?.meta_currency ?? "ARS");
     setQuickErr(null);
     setQuickOpen(true);
@@ -526,6 +529,7 @@ export default function IntegracionesMetaCapi() {
         user_id: userId,
         pixel_id: pixel,
         meta_access_token: token,
+        comment: quickComment,
         meta_currency: quickCurrency || "ARS",
         meta_api_version: apiVersionToSave,
         send_contact_capi: false,
@@ -556,13 +560,14 @@ export default function IntegracionesMetaCapi() {
     } finally {
       setSaving(false);
     }
-  }, [userId, config, quickPixelId, quickToken, quickCurrency, pixelConfigs.length, loadAll]);
+  }, [userId, config, quickPixelId, quickToken, quickComment, quickCurrency, pixelConfigs.length, loadAll]);
 
   const handleEdit = useCallback((px: PixelConfig) => {
     setDraft({
       id: px.id,
       pixel_id: px.pixel_id,
       meta_access_token: px.meta_access_token,
+      comment: px.comment ?? "",
       meta_currency: px.meta_currency || "ARS",
       meta_api_version: px.meta_api_version || "v25.0",
       send_contact_capi: !!px.send_contact_capi,
@@ -590,6 +595,7 @@ export default function IntegracionesMetaCapi() {
         user_id: userId,
         pixel_id: pixel,
         meta_access_token: token,
+        comment: draft.comment,
         meta_currency: draft.meta_currency || "ARS",
         meta_api_version: apiVersionToSave,
         send_contact_capi: !!draft.send_contact_capi,
@@ -634,6 +640,7 @@ export default function IntegracionesMetaCapi() {
         user_id: userId,
         pixel_id: px.pixel_id,
         meta_access_token: px.meta_access_token,
+        comment: px.comment ?? "",
         meta_currency: px.meta_currency || "ARS",
         meta_api_version: px.meta_api_version || "v25.0",
         send_contact_capi: !!px.send_contact_capi,
@@ -1575,11 +1582,15 @@ export default function IntegracionesMetaCapi() {
               {pixelConfigs.map((px) => {
                 const token = px.meta_access_token || "";
                 const tokenMasked = token.length > 14 ? `${token.slice(0, 8)}...${token.slice(-6)}` : token || "-";
+                const comment = String(px.comment ?? "").trim();
                 return (
                   <div key={px.id} className="flex w-full items-center justify-between rounded-lg border border-zinc-800 bg-zinc-900/60 px-3 py-2">
                     <div className="min-w-0">
                       <p className="font-mono text-xs text-zinc-200">{px.pixel_id}</p>
                       <p className="truncate text-[11px] text-zinc-500">{tokenMasked}</p>
+                      {comment ? (
+                        <p className="mt-0.5 truncate text-[11px] text-cyan-300/80">{comment}</p>
+                      ) : null}
                     </div>
                     <div className="ml-3 flex items-center justify-end gap-2">
                       {px.is_default ? (
@@ -1632,6 +1643,7 @@ export default function IntegracionesMetaCapi() {
               <select value={quickCurrency} onChange={(e) => setQuickCurrency(e.target.value)} className="h-9 rounded-lg border border-zinc-700 bg-zinc-900 px-3 text-sm text-zinc-100">
                 {["ARS","USD","EUR","BRL","CLP","MXN","COP"].map((c) => <option key={c} value={c}>{c}</option>)}
               </select>
+              <input value={quickComment} onChange={(e) => setQuickComment(e.target.value)} placeholder="Comentario opcional" className="h-9 rounded-lg border border-zinc-700 bg-zinc-900 px-3 text-sm text-zinc-100 sm:col-span-2" />
               <input value={quickToken} onChange={(e) => setQuickToken(e.target.value)} placeholder="Access token" className="h-9 rounded-lg border border-zinc-700 bg-zinc-900 px-3 text-sm text-zinc-100 sm:col-span-2" />
             </div>
             {quickErr && <p className="mt-2 text-xs text-red-400">{quickErr}</p>}
@@ -1650,6 +1662,7 @@ export default function IntegracionesMetaCapi() {
             <div className="mt-3 grid gap-3 sm:grid-cols-2">
               <input value={draft.pixel_id} onChange={(e) => setDraft((p) => (p ? { ...p, pixel_id: e.target.value.replace(/\D/g, "") } : p))} placeholder="Pixel ID" className="h-9 rounded-lg border border-zinc-700 bg-zinc-900 px-3 text-sm text-zinc-100" />
               <input value={draft.meta_currency} onChange={(e) => setDraft((p) => (p ? { ...p, meta_currency: e.target.value.toUpperCase() } : p))} placeholder="Moneda" className="h-9 rounded-lg border border-zinc-700 bg-zinc-900 px-3 text-sm text-zinc-100" />
+              <input value={draft.comment} onChange={(e) => setDraft((p) => (p ? { ...p, comment: e.target.value } : p))} placeholder="Comentario opcional" className="h-9 rounded-lg border border-zinc-700 bg-zinc-900 px-3 text-sm text-zinc-100 sm:col-span-2" />
               {isAdmin ? (
                 <input
                   value={draft.meta_api_version}
