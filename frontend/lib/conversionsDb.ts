@@ -811,6 +811,58 @@ export async function fetchConversionInbox(
   return ((data ?? []) as unknown as ConversionInboxRow[]).filter((row) => !hiddenIds.has(row.id));
 }
 
+export async function fetchConversionInboxFiltered(
+  userId: string,
+  hiddenBy: string,
+  options: {
+    limit?: number;
+    offset?: number;
+    range?: FetchDateRange | null;
+    action?: "all" | "CONTACT" | "LEAD" | "PURCHASE";
+    search?: string;
+  } = {},
+): Promise<ConversionInboxRow[]> {
+  const limit = options.limit ?? 400;
+  const offset = options.offset ?? 0;
+  let query = supabase
+    .from("conversion_inbox")
+    .select(INBOX_SELECT)
+    .eq("user_id", userId);
+
+  const start = toIsoIfValid(options.range?.start);
+  const end = toIsoIfValid(options.range?.end);
+  if (start) query = query.gte("created_at", start);
+  if (end) query = query.lt("created_at", end);
+
+  const action = options.action && options.action !== "all" ? options.action : "";
+  if (action) query = query.eq("action", action);
+
+  const search = String(options.search ?? "").trim();
+  if (search) {
+    const term = search.replace(/[%_]/g, "\\$&");
+    const like = `%${term}%`;
+    query = query.or([
+      `action.ilike.${like}`,
+      `status.ilike.${like}`,
+      `promo_code.ilike.${like}`,
+      `coelsa_id.ilike.${like}`,
+      `transaction_id.ilike.${like}`,
+      `phone.ilike.${like}`,
+      `action_event_id.ilike.${like}`,
+      `response_body.ilike.${like}`,
+      `landing_name.ilike.${like}`,
+      `payload_raw.ilike.${like}`,
+    ].join(","));
+  }
+
+  const { data, error } = await query
+    .order("created_at", { ascending: false })
+    .range(offset, offset + limit - 1);
+  if (error) throw error;
+  const hiddenIds = await fetchHiddenConversionInboxIds(hiddenBy);
+  return ((data ?? []) as unknown as ConversionInboxRow[]).filter((row) => !hiddenIds.has(row.id));
+}
+
 export async function fetchConversionsConfigForUser(
   userId: string,
 ): Promise<ConversionsConfig> {

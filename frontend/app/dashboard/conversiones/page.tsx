@@ -14,7 +14,7 @@ import {
   fetchConversionsUnfiltered,
   fetchFunnelContactsFiltered,
   fetchConversionLogsFiltered,
-  fetchConversionInbox,
+  fetchConversionInboxFiltered,
   fetchGerenciaAvailabilitySummaries,
   updateConversionEmail,
   getConversionGerenciaLabels,
@@ -625,6 +625,8 @@ export default function DashboardConversionesPage() {
   const dataRequestSeqRef = useRef(0);
   const userIdRef = useRef<string | null>(null);
   const tabRef = useRef<Tab>(tab);
+  const inboxSearchRef = useRef(inboxSearch);
+  const inboxActionFilterRef = useRef(inboxActionFilter);
 
   useEffect(() => {
     userIdRef.current = userId;
@@ -633,6 +635,14 @@ export default function DashboardConversionesPage() {
   useEffect(() => {
     tabRef.current = tab;
   }, [tab]);
+
+  useEffect(() => {
+    inboxSearchRef.current = inboxSearch;
+  }, [inboxSearch]);
+
+  useEffect(() => {
+    inboxActionFilterRef.current = inboxActionFilter;
+  }, [inboxActionFilter]);
 
   useEffect(() => {
     const view = (searchParams.get("view") || "").toLowerCase();
@@ -1245,7 +1255,12 @@ export default function DashboardConversionesPage() {
           setLogs(logRows);
         }
         if (tab === "inbox" && inboxRows.length === 0) {
-          const inbox = await fetchConversionInbox(userId, userId, 400);
+          const inbox = await fetchConversionInboxFiltered(userId, userId, {
+            limit: 400,
+            range: dateRangeRef.current ?? undefined,
+            action: inboxActionFilterRef.current,
+            search: inboxSearchRef.current,
+          });
           setInboxRows(inbox);
         }
       } catch (e) {
@@ -1254,6 +1269,30 @@ export default function DashboardConversionesPage() {
     };
     void loadDeferredTabData();
   }, [tab, userId, logs.length, inboxRows.length]);
+
+  useEffect(() => {
+    if (tab !== "inbox" || !userId) return;
+    const search = inboxSearch.trim();
+    const timer = window.setTimeout(async () => {
+      const requestSeq = ++dataRequestSeqRef.current;
+      setRefreshingTable(true);
+      try {
+        const inbox = await fetchConversionInboxFiltered(userId, userId, {
+          limit: search ? 500 : 400,
+          range: dateRange ?? undefined,
+          action: inboxActionFilter,
+          search,
+        });
+        if (requestSeq !== dataRequestSeqRef.current) return;
+        setInboxRows(inbox);
+      } catch (e) {
+        console.error(e);
+      } finally {
+        if (requestSeq === dataRequestSeqRef.current) setRefreshingTable(false);
+      }
+    }, search ? 300 : 0);
+    return () => window.clearTimeout(timer);
+  }, [tab, userId, inboxSearch, inboxActionFilter, dateRange]);
 
   const handleSave = async () => {
     if (!config || !userId) return;
@@ -1490,7 +1529,13 @@ export default function DashboardConversionesPage() {
         if (requestSeq !== dataRequestSeqRef.current) return;
         setLogs(logRows);
       } else if (currentTab === "inbox") {
-        const inbox = await fetchConversionInbox(currentUserId, currentUserId, 400);
+        const search = inboxSearchRef.current.trim();
+        const inbox = await fetchConversionInboxFiltered(currentUserId, currentUserId, {
+          limit: search ? 500 : 400,
+          range: range ?? undefined,
+          action: inboxActionFilterRef.current,
+          search,
+        });
         if (requestSeq !== dataRequestSeqRef.current) return;
         setInboxRows(inbox);
       } else {
