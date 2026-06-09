@@ -554,18 +554,49 @@ async function findInboundByActionEventId(
   userId: string,
   action: string,
   actionEventId: string,
-): Promise<{ id: string; status: InboundStatus; http_status: number | null; response_body: string } | null> {
+): Promise<
+  { id: string; status: InboundStatus; http_status: number | null; response_body: string; promo_code: string | null }
+  | null
+> {
   if (!actionEventId) return null;
   const { data } = await db
     .from("conversion_inbox")
-    .select("id, status, http_status, response_body")
+    .select("id, status, http_status, response_body, promo_code")
     .eq("user_id", userId)
     .eq("action", action)
     .eq("action_event_id", actionEventId)
     .order("created_at", { ascending: false })
     .limit(1)
     .maybeSingle();
-  return (data as { id: string; status: InboundStatus; http_status: number | null; response_body: string } | null) ?? null;
+  return (data as
+      | { id: string; status: InboundStatus; http_status: number | null; response_body: string; promo_code: string | null }
+      | null) ?? null;
+}
+
+async function findInboundByActionEventIdAndPromo(
+  db: SupabaseClient,
+  userId: string,
+  action: string,
+  actionEventId: string,
+  promoCode: string,
+): Promise<
+  { id: string; status: InboundStatus; http_status: number | null; response_body: string; promo_code: string | null }
+  | null
+> {
+  if (!actionEventId || !promoCode) return null;
+  const { data } = await db
+    .from("conversion_inbox")
+    .select("id, status, http_status, response_body, promo_code")
+    .eq("user_id", userId)
+    .eq("action", action)
+    .eq("action_event_id", actionEventId)
+    .eq("promo_code", promoCode)
+    .order("created_at", { ascending: false })
+    .limit(1)
+    .maybeSingle();
+  return (data as
+      | { id: string; status: InboundStatus; http_status: number | null; response_body: string; promo_code: string | null }
+      | null) ?? null;
 }
 
 async function finalizeInboundEvent(
@@ -2501,33 +2532,80 @@ Deno.serve(async (req) => {
     const inboxAction = inferredAction || "CONTACT";
     const isDeferredRetry = toBool(params.__deferred_retry);
     const deferredInboxId = norm(params.__inbox_id);
+    const incomingPromoCodeForDedupe = derivePromoCodeFromPayload(params);
 
     if (
       !isDeferredRetry &&
       actionEventId &&
       (inferredAction === "LEAD" || inferredAction === "PURCHASE")
     ) {
-      const existing = await findInboundByActionEventId(db, userId, inferredAction, actionEventId);
+      const shouldDeduplicateLeadByPromo = inferredAction === "LEAD" && isFullPromoCode(incomingPromoCodeForDedupe);
+      const existing = shouldDeduplicateLeadByPromo
+        ? await findInboundByActionEventIdAndPromo(
+          db,
+          userId,
+          inferredAction,
+          actionEventId,
+          incomingPromoCodeForDedupe,
+        )
+        : await findInboundByActionEventId(db, userId, inferredAction, actionEventId);
       if (existing) {
         await writeLog(
           db,
           userId,
           "main",
           "INFO",
-          "Duplicado ignorado por action_event_id",
+          shouldDeduplicateLeadByPromo
+            ? "Duplicado LEAD ignorado por action_event_id + promo_code"
+            : "Duplicado ignorado por action_event_id",
           JSON.stringify({
             action: inferredAction,
             action_event_id: actionEventId,
+            promo_code: incomingPromoCodeForDedupe,
             landing_name: landingName,
             existing_inbox_id: existing.id,
+            existing_promo_code: existing.promo_code,
           }),
           undefined,
           undefined,
           undefined,
           safePayloadRaw(params),
-          "duplicado ignorado por action_event_id",
+          shouldDeduplicateLeadByPromo
+            ? "duplicado ignorado por action_event_id + promo_code"
+            : "duplicado ignorado por action_event_id",
         );
-        return textResponse("Duplicado ignorado (action_event_id ya procesado)", 200);
+        return textResponse(
+          shouldDeduplicateLeadByPromo
+            ? "Duplicado ignorado (action_event_id + promo_code ya procesado)"
+            : "Duplicado ignorado (action_event_id ya procesado)",
+          200,
+        );
+      }
+
+      if (shouldDeduplicateLeadByPromo) {
+        const reused = await findInboundByActionEventId(db, userId, inferredAction, actionEventId);
+        const reusedPromoCode = normalizePromoCode(reused?.promo_code ?? "");
+        if (reused && reusedPromoCode && reusedPromoCode !== incomingPromoCodeForDedupe) {
+          await writeLog(
+            db,
+            userId,
+            "main",
+            "WARN",
+            "action_event_id reutilizado con promo_code distinto",
+            JSON.stringify({
+              action: inferredAction,
+              action_event_id: actionEventId,
+              promo_code: incomingPromoCodeForDedupe,
+              existing_inbox_id: reused.id,
+              existing_promo_code: reusedPromoCode,
+            }),
+            undefined,
+            undefined,
+            undefined,
+            safePayloadRaw(params),
+            "se procesa porque el promo_code es distinto",
+          );
+        }
       }
     }
 
