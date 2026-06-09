@@ -2533,14 +2533,19 @@ Deno.serve(async (req) => {
     const isDeferredRetry = toBool(params.__deferred_retry);
     const deferredInboxId = norm(params.__inbox_id);
     const incomingPromoCodeForDedupe = derivePromoCodeFromPayload(params);
+    const purchaseDedupeIdsForRequest = inferredAction === "PURCHASE"
+      ? purchaseDedupeIdsFromPayload(params)
+      : [];
+    const purchaseHasStrongDedupe = purchaseDedupeIdsForRequest.length > 0;
 
     if (
       !isDeferredRetry &&
       actionEventId &&
-      (inferredAction === "LEAD" || inferredAction === "PURCHASE")
+      (inferredAction === "LEAD" || (inferredAction === "PURCHASE" && !purchaseHasStrongDedupe))
     ) {
-      const shouldDeduplicateLeadByPromo = inferredAction === "LEAD" && isFullPromoCode(incomingPromoCodeForDedupe);
-      const existing = shouldDeduplicateLeadByPromo
+      const shouldDeduplicateActionByPromo = isFullPromoCode(incomingPromoCodeForDedupe) &&
+        (inferredAction === "LEAD" || inferredAction === "PURCHASE");
+      const existing = shouldDeduplicateActionByPromo
         ? await findInboundByActionEventIdAndPromo(
           db,
           userId,
@@ -2555,8 +2560,8 @@ Deno.serve(async (req) => {
           userId,
           "main",
           "INFO",
-          shouldDeduplicateLeadByPromo
-            ? "Duplicado LEAD ignorado por action_event_id + promo_code"
+          shouldDeduplicateActionByPromo
+            ? `Duplicado ${inferredAction} ignorado por action_event_id + promo_code`
             : "Duplicado ignorado por action_event_id",
           JSON.stringify({
             action: inferredAction,
@@ -2570,19 +2575,19 @@ Deno.serve(async (req) => {
           undefined,
           undefined,
           safePayloadRaw(params),
-          shouldDeduplicateLeadByPromo
+          shouldDeduplicateActionByPromo
             ? "duplicado ignorado por action_event_id + promo_code"
             : "duplicado ignorado por action_event_id",
         );
         return textResponse(
-          shouldDeduplicateLeadByPromo
+          shouldDeduplicateActionByPromo
             ? "Duplicado ignorado (action_event_id + promo_code ya procesado)"
             : "Duplicado ignorado (action_event_id ya procesado)",
           200,
         );
       }
 
-      if (shouldDeduplicateLeadByPromo) {
+      if (shouldDeduplicateActionByPromo) {
         const reused = await findInboundByActionEventId(db, userId, inferredAction, actionEventId);
         const reusedPromoCode = normalizePromoCode(reused?.promo_code ?? "");
         if (reused && reusedPromoCode && reusedPromoCode !== incomingPromoCodeForDedupe) {
@@ -2670,7 +2675,7 @@ Deno.serve(async (req) => {
       return runAndFinalize((ctx) => handleLead(db, params, landing, cfg, pixelConfigs, ctx));
     }
     if (inferredAction === "PURCHASE") {
-      const purchaseDedupeIds = purchaseDedupeIdsFromPayload(params);
+      const purchaseDedupeIds = purchaseDedupeIdsForRequest;
       if (purchaseDedupeIds.length > 0) {
         const existingPurchase = await findPurchaseByDedupeIds(db, userId, purchaseDedupeIds);
         if (existingPurchase) {
