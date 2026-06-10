@@ -80,6 +80,8 @@ const TAB_LABELS: Record<Tab, string> = {
   logs: "Logs",
 };
 
+const ACTIVITY_PAGE_SIZE = 200;
+
 function ChevronIcon({ open }: { open: boolean }) {
   return (
     <svg
@@ -607,6 +609,10 @@ export default function DashboardConversionesPage() {
   const [inboxActionFilter, setInboxActionFilter] = useState<"all" | "CONTACT" | "LEAD" | "PURCHASE">("LEAD");
   const [tableSearch, setTableSearch] = useState("");
   const [tablePage, setTablePage] = useState(1);
+  const [logsPage, setLogsPage] = useState(1);
+  const [logsHasNextPage, setLogsHasNextPage] = useState(false);
+  const [inboxPage, setInboxPage] = useState(1);
+  const [inboxHasNextPage, setInboxHasNextPage] = useState(false);
   const [statsLandingFilter, setStatsLandingFilter] = useState<string>("__all__");
   const [statsPixelFilter, setStatsPixelFilter] = useState<string>("__all__");
   const [statsGerenciaFilter, setStatsGerenciaFilter] = useState<string>("__all__");
@@ -644,6 +650,8 @@ export default function DashboardConversionesPage() {
   const tabRef = useRef<Tab>(tab);
   const inboxSearchRef = useRef(inboxSearch);
   const inboxActionFilterRef = useRef(inboxActionFilter);
+  const logsPageRef = useRef(logsPage);
+  const inboxPageRef = useRef(inboxPage);
 
   useEffect(() => {
     userIdRef.current = userId;
@@ -660,6 +668,14 @@ export default function DashboardConversionesPage() {
   useEffect(() => {
     inboxActionFilterRef.current = inboxActionFilter;
   }, [inboxActionFilter]);
+
+  useEffect(() => {
+    logsPageRef.current = logsPage;
+  }, [logsPage]);
+
+  useEffect(() => {
+    inboxPageRef.current = inboxPage;
+  }, [inboxPage]);
 
   useEffect(() => {
     const view = (searchParams.get("view") || "").toLowerCase();
@@ -1115,7 +1131,7 @@ export default function DashboardConversionesPage() {
   const logGroupMetaByIndex = useMemo(() => {
     const keys = logs.map((log) =>
       log.conversion_id
-        ? String(internalIdByConversionId.get(log.conversion_id) ?? "-")
+        ? String(log.conversion_internal_id ?? internalIdByConversionId.get(log.conversion_id) ?? "-")
         : "-"
     );
     const toneByKey = new Map<string, 0 | 1>();
@@ -1288,28 +1304,37 @@ export default function DashboardConversionesPage() {
   }, []);
 
   useEffect(() => {
-    const loadDeferredTabData = async () => {
-      if (!userId) return;
+    setLogsPage(1);
+  }, [dateRange]);
+
+  useEffect(() => {
+    setInboxPage(1);
+  }, [inboxSearch, inboxActionFilter, dateRange]);
+
+  useEffect(() => {
+    if (tab !== "logs" || !userId) return;
+    const requestSeq = ++dataRequestSeqRef.current;
+    setRefreshingTable(true);
+    const offset = (logsPage - 1) * ACTIVITY_PAGE_SIZE;
+    void (async () => {
       try {
-        if (tab === "logs" && logs.length === 0) {
-          const logRows = await fetchConversionLogsFiltered(userId, userId, 200);
-          setLogs(logRows);
-        }
-        if (tab === "inbox" && inboxRows.length === 0) {
-          const inbox = await fetchConversionInboxFiltered(userId, userId, {
-            limit: 200,
-            range: dateRangeRef.current ?? undefined,
-            action: inboxActionFilterRef.current,
-            search: inboxSearchRef.current,
-          });
-          setInboxRows(inbox);
-        }
+        const logRows = await fetchConversionLogsFiltered(
+          userId,
+          userId,
+          ACTIVITY_PAGE_SIZE + 1,
+          offset,
+          dateRange ?? undefined,
+        );
+        if (requestSeq !== dataRequestSeqRef.current) return;
+        setLogs(logRows.slice(0, ACTIVITY_PAGE_SIZE));
+        setLogsHasNextPage(logRows.length > ACTIVITY_PAGE_SIZE);
       } catch (e) {
         console.error(e);
+      } finally {
+        if (requestSeq === dataRequestSeqRef.current) setRefreshingTable(false);
       }
-    };
-    void loadDeferredTabData();
-  }, [tab, userId, logs.length, inboxRows.length]);
+    })();
+  }, [tab, userId, logsPage, dateRange]);
 
   useEffect(() => {
     if (tab !== "inbox" || !userId) return;
@@ -1317,15 +1342,18 @@ export default function DashboardConversionesPage() {
     const timer = window.setTimeout(async () => {
       const requestSeq = ++dataRequestSeqRef.current;
       setRefreshingTable(true);
+      const offset = (inboxPage - 1) * ACTIVITY_PAGE_SIZE;
       try {
         const inbox = await fetchConversionInboxFiltered(userId, userId, {
-          limit: 200,
+          limit: ACTIVITY_PAGE_SIZE + 1,
+          offset,
           range: dateRange ?? undefined,
           action: inboxActionFilter,
           search,
         });
         if (requestSeq !== dataRequestSeqRef.current) return;
-        setInboxRows(inbox);
+        setInboxRows(inbox.slice(0, ACTIVITY_PAGE_SIZE));
+        setInboxHasNextPage(inbox.length > ACTIVITY_PAGE_SIZE);
       } catch (e) {
         console.error(e);
       } finally {
@@ -1333,7 +1361,7 @@ export default function DashboardConversionesPage() {
       }
     }, search ? 300 : 0);
     return () => window.clearTimeout(timer);
-  }, [tab, userId, inboxSearch, inboxActionFilter, dateRange]);
+  }, [tab, userId, inboxSearch, inboxActionFilter, inboxPage, dateRange]);
 
   const handleSave = async () => {
     if (!config || !userId) return;
@@ -1566,19 +1594,32 @@ export default function DashboardConversionesPage() {
     setRefreshingTable(true);
     try {
       if (currentTab === "logs") {
-        const logRows = await fetchConversionLogsFiltered(currentUserId, currentUserId, 200);
+        const page = logsPageRef.current;
+        const offset = (page - 1) * ACTIVITY_PAGE_SIZE;
+        const logRows = await fetchConversionLogsFiltered(
+          currentUserId,
+          currentUserId,
+          ACTIVITY_PAGE_SIZE + 1,
+          offset,
+          range ?? undefined,
+        );
         if (requestSeq !== dataRequestSeqRef.current) return;
-        setLogs(logRows);
+        setLogs(logRows.slice(0, ACTIVITY_PAGE_SIZE));
+        setLogsHasNextPage(logRows.length > ACTIVITY_PAGE_SIZE);
       } else if (currentTab === "inbox") {
         const search = inboxSearchRef.current.trim();
+        const page = inboxPageRef.current;
+        const offset = (page - 1) * ACTIVITY_PAGE_SIZE;
         const inbox = await fetchConversionInboxFiltered(currentUserId, currentUserId, {
-          limit: 200,
+          limit: ACTIVITY_PAGE_SIZE + 1,
+          offset,
           range: range ?? undefined,
           action: inboxActionFilterRef.current,
           search,
         });
         if (requestSeq !== dataRequestSeqRef.current) return;
-        setInboxRows(inbox);
+        setInboxRows(inbox.slice(0, ACTIVITY_PAGE_SIZE));
+        setInboxHasNextPage(inbox.length > ACTIVITY_PAGE_SIZE);
       } else {
         const [rows, funnel] = await Promise.all([
           fetchConversionsFiltered(currentUserId, currentUserId, undefined, range ?? undefined),
@@ -2344,7 +2385,9 @@ export default function DashboardConversionesPage() {
           <div className="mb-4 flex flex-wrap items-center justify-between gap-2">
             <h3 className="text-sm font-semibold text-zinc-200">
               Inbox de eventos (CONTACT/LEAD/PURCHASE){" "}
-              <span className="font-normal text-zinc-500">({filteredInbox.length})</span>
+              <span className="font-normal text-zinc-500">
+                ({filteredInbox.length}{inboxHasNextPage ? "+" : ""})
+              </span>
             </h3>
             <div className="flex items-center gap-2">
               <select
@@ -2369,25 +2412,26 @@ export default function DashboardConversionesPage() {
           {filteredInbox.length === 0 ? (
             <p className="text-sm text-zinc-500">No hay eventos en inbox para el filtro actual.</p>
           ) : (
-            <div className="overflow-x-auto rounded-lg border border-zinc-700">
-              <table className="min-w-[980px] text-left text-[11px] md:min-w-full">
-                <thead className="bg-zinc-800/80">
-                  <tr>
-                    <th className="px-2 py-2 font-medium text-zinc-300 whitespace-nowrap">Fila</th>
-                    <th className="px-2 py-2 font-medium text-zinc-300 whitespace-nowrap">Fecha</th>
-                    <th className="px-2 py-2 font-medium text-zinc-300 whitespace-nowrap">Action</th>
-                    <th className="px-2 py-2 font-medium text-zinc-300 whitespace-nowrap">Status</th>
-                    <th className="px-2 py-2 font-medium text-zinc-300 whitespace-nowrap">Phone</th>
-                    <th className="px-2 py-2 font-medium text-zinc-300 whitespace-nowrap">Promo code</th>
-                    <th className="px-2 py-2 font-medium text-zinc-300 whitespace-nowrap">Coelsa ID</th>
-                    <th className="px-2 py-2 font-medium text-zinc-300 whitespace-nowrap">Transaction ID</th>
-                    <th className="px-2 py-2 font-medium text-zinc-300 whitespace-nowrap">HTTP</th>
-                    <th className="px-2 py-2 font-medium text-zinc-300 whitespace-nowrap">Respuesta</th>
-                    <th className="px-2 py-2 font-medium text-zinc-300 whitespace-nowrap">Payload</th>
-                  </tr>
-                </thead>
-                <tbody className="divide-y divide-zinc-800">
-                  {filteredInbox.map((row) => (
+            <>
+              <div className="overflow-x-auto rounded-lg border border-zinc-700">
+                <table className="min-w-[980px] text-left text-[11px] md:min-w-full">
+                  <thead className="bg-zinc-800/80">
+                    <tr>
+                      <th className="px-2 py-2 font-medium text-zinc-300 whitespace-nowrap">Fila</th>
+                      <th className="px-2 py-2 font-medium text-zinc-300 whitespace-nowrap">Fecha</th>
+                      <th className="px-2 py-2 font-medium text-zinc-300 whitespace-nowrap">Action</th>
+                      <th className="px-2 py-2 font-medium text-zinc-300 whitespace-nowrap">Status</th>
+                      <th className="px-2 py-2 font-medium text-zinc-300 whitespace-nowrap">Phone</th>
+                      <th className="px-2 py-2 font-medium text-zinc-300 whitespace-nowrap">Promo code</th>
+                      <th className="px-2 py-2 font-medium text-zinc-300 whitespace-nowrap">Coelsa ID</th>
+                      <th className="px-2 py-2 font-medium text-zinc-300 whitespace-nowrap">Transaction ID</th>
+                      <th className="px-2 py-2 font-medium text-zinc-300 whitespace-nowrap">HTTP</th>
+                      <th className="px-2 py-2 font-medium text-zinc-300 whitespace-nowrap">Respuesta</th>
+                      <th className="px-2 py-2 font-medium text-zinc-300 whitespace-nowrap">Payload</th>
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y divide-zinc-800">
+                    {filteredInbox.map((row) => (
                     <tr
                       key={row.id}
                       className={
@@ -2464,10 +2508,37 @@ export default function DashboardConversionesPage() {
                         {truncateText(row.payload_raw || "-", 90)}
                       </td>
                     </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+              {(inboxPage > 1 || inboxHasNextPage) && (
+                <div className="mt-3 flex items-center justify-between text-xs text-zinc-400">
+                  <span>
+                    Página {inboxPage} · mostrando {filteredInbox.length} registros{inboxHasNextPage ? "+" : ""}
+                  </span>
+                  <div className="flex items-center gap-2">
+                    <button
+                      type="button"
+                      disabled={inboxPage <= 1 || refreshingTable}
+                      onClick={() => setInboxPage((p) => Math.max(1, p - 1))}
+                      className="rounded border border-zinc-700 px-2 py-1 text-zinc-300 hover:bg-zinc-800 disabled:opacity-40"
+                    >
+                      Anterior
+                    </button>
+                    <span>Pag {inboxPage}</span>
+                    <button
+                      type="button"
+                      disabled={!inboxHasNextPage || refreshingTable}
+                      onClick={() => setInboxPage((p) => p + 1)}
+                      className="rounded border border-zinc-700 px-2 py-1 text-zinc-300 hover:bg-zinc-800 disabled:opacity-40"
+                    >
+                      Siguiente
+                    </button>
+                  </div>
+                </div>
+              )}
+            </>
           )}
         </section>
       )}
@@ -2478,29 +2549,32 @@ export default function DashboardConversionesPage() {
           <div className="mb-4 flex flex-wrap items-center justify-between gap-2">
             <h3 className="text-sm font-semibold text-zinc-200">
               Logs de conversiones{" "}
-              <span className="font-normal text-zinc-500">({activeLogs.length})</span>
+              <span className="font-normal text-zinc-500">
+                ({activeLogs.length}{logsHasNextPage ? "+" : ""})
+              </span>
             </h3>
           </div>
           {activeLogs.length === 0 ? (
             <p className="text-sm text-zinc-500">Aun no hay logs registrados.</p>
           ) : (
-            <div className="overflow-x-auto rounded-lg border border-zinc-700">
-              <table className="min-w-[980px] text-left text-[11px] md:min-w-full">
-                <thead className="bg-zinc-800/80">
-                  <tr>
-                    <th className="px-2 py-2 font-medium text-zinc-300 whitespace-nowrap">ID</th>
-                    <th className="px-2 py-2 font-medium text-zinc-300 whitespace-nowrap">Fecha</th>
-                    <th className="px-2 py-2 font-medium text-zinc-300 whitespace-nowrap">Nivel</th>
-                    <th className="px-2 py-2 font-medium text-zinc-300 whitespace-nowrap">Mensaje</th>
-                    <th className="px-2 py-2 font-medium text-zinc-300 whitespace-nowrap">Funcion</th>
-                    <th className="px-2 py-2 font-medium text-zinc-300 whitespace-nowrap">Payload Recibido</th>
-                    <th className="px-2 py-2 font-medium text-zinc-300 whitespace-nowrap">Resultado</th>
-                    <th className="px-2 py-2 font-medium text-zinc-300 whitespace-nowrap">Payload Meta</th>
-                    <th className="px-2 py-2 font-medium text-zinc-300 whitespace-nowrap">Respuesta de Meta</th>
-                  </tr>
-                </thead>
-                <tbody className="divide-y divide-zinc-800">
-                  {activeLogs.map((log, idx) => (
+            <>
+              <div className="overflow-x-auto rounded-lg border border-zinc-700">
+                <table className="min-w-[980px] text-left text-[11px] md:min-w-full">
+                  <thead className="bg-zinc-800/80">
+                    <tr>
+                      <th className="px-2 py-2 font-medium text-zinc-300 whitespace-nowrap">ID</th>
+                      <th className="px-2 py-2 font-medium text-zinc-300 whitespace-nowrap">Fecha</th>
+                      <th className="px-2 py-2 font-medium text-zinc-300 whitespace-nowrap">Nivel</th>
+                      <th className="px-2 py-2 font-medium text-zinc-300 whitespace-nowrap">Mensaje</th>
+                      <th className="px-2 py-2 font-medium text-zinc-300 whitespace-nowrap">Funcion</th>
+                      <th className="px-2 py-2 font-medium text-zinc-300 whitespace-nowrap">Payload Recibido</th>
+                      <th className="px-2 py-2 font-medium text-zinc-300 whitespace-nowrap">Resultado</th>
+                      <th className="px-2 py-2 font-medium text-zinc-300 whitespace-nowrap">Payload Meta</th>
+                      <th className="px-2 py-2 font-medium text-zinc-300 whitespace-nowrap">Respuesta de Meta</th>
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y divide-zinc-800">
+                    {activeLogs.map((log, idx) => (
                     <tr
                       key={log.id}
                       className={(() => {
@@ -2520,7 +2594,7 @@ export default function DashboardConversionesPage() {
                       })()}
                     >
                       <td className="px-2 py-1.5 text-zinc-500 font-mono whitespace-nowrap">
-                        {log.conversion_id ? (internalIdByConversionId.get(log.conversion_id) ?? "-") : "-"}
+                        {log.conversion_internal_id ?? (log.conversion_id ? (internalIdByConversionId.get(log.conversion_id) ?? "-") : "-")}
                       </td>
                       <td className="px-2 py-1.5 text-zinc-400 whitespace-nowrap">
                         {new Date(log.created_at).toLocaleString("es-AR", { month: "2-digit", day: "2-digit", hour: "2-digit", minute: "2-digit", second: "2-digit", hour12: false })}
@@ -2595,10 +2669,37 @@ export default function DashboardConversionesPage() {
                         )}
                       </td>
                     </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+              {(logsPage > 1 || logsHasNextPage) && (
+                <div className="mt-3 flex items-center justify-between text-xs text-zinc-400">
+                  <span>
+                    Página {logsPage} · mostrando {activeLogs.length} registros{logsHasNextPage ? "+" : ""}
+                  </span>
+                  <div className="flex items-center gap-2">
+                    <button
+                      type="button"
+                      disabled={logsPage <= 1 || refreshingTable}
+                      onClick={() => setLogsPage((p) => Math.max(1, p - 1))}
+                      className="rounded border border-zinc-700 px-2 py-1 text-zinc-300 hover:bg-zinc-800 disabled:opacity-40"
+                    >
+                      Anterior
+                    </button>
+                    <span>Pag {logsPage}</span>
+                    <button
+                      type="button"
+                      disabled={!logsHasNextPage || refreshingTable}
+                      onClick={() => setLogsPage((p) => p + 1)}
+                      className="rounded border border-zinc-700 px-2 py-1 text-zinc-300 hover:bg-zinc-800 disabled:opacity-40"
+                    >
+                      Siguiente
+                    </button>
+                  </div>
+                </div>
+              )}
+            </>
           )}
         </section>
       )}

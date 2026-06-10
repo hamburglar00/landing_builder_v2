@@ -136,6 +136,7 @@ export interface ConversionLogRow {
   id: number;
   user_id: string;
   conversion_id: string | null;
+  conversion_internal_id?: number | null;
   function_name: string;
   level: string;
   message: string;
@@ -697,9 +698,25 @@ export async function fetchFunnelContactsForAdminFiltered(
 // Logs
 
 const LOGS_SELECT =
-  "id, user_id, conversion_id, function_name, level, message, detail, payload_received, result, payload_meta, response_meta, created_at";
+  "id, user_id, conversion_id, conversions(internal_id), function_name, level, message, detail, payload_received, result, payload_meta, response_meta, created_at";
 const INBOX_SELECT =
   "id, user_id, conversion_id, conversions(internal_id), landing_name, action, action_event_id, coelsa_id, transaction_id, promo_code, phone, payload_raw, status, http_status, response_body, processed_at, created_at";
+
+function normalizeLogRows(rows: unknown[]): ConversionLogRow[] {
+  return rows.map((row) => {
+    const record = row as ConversionLogRow & {
+      conversions?: { internal_id?: number | string | null } | Array<{ internal_id?: number | string | null }> | null;
+    };
+    const joined = Array.isArray(record.conversions) ? record.conversions[0] : record.conversions;
+    const rawInternalId = joined?.internal_id;
+    const internalId = rawInternalId == null ? null : Number(rawInternalId);
+    const { conversions: _conversions, ...clean } = record;
+    return {
+      ...clean,
+      conversion_internal_id: Number.isFinite(internalId) ? internalId : null,
+    };
+  });
+}
 
 function normalizeInboxRows(rows: unknown[]): ConversionInboxRow[] {
   return rows.map((row) => {
@@ -764,16 +781,24 @@ export async function fetchConversionLogs(
   userId: string,
   limit = 200,
   offset = 0,
+  range?: FetchDateRange | null,
 ): Promise<ConversionLogRow[]> {
-  const { data, error } = await supabase
+  let query = supabase
     .from("conversion_logs")
     .select(LOGS_SELECT)
-    .eq("user_id", userId)
+    .eq("user_id", userId);
+
+  const start = toIsoIfValid(range?.start);
+  const end = toIsoIfValid(range?.end);
+  if (start) query = query.gte("created_at", start);
+  if (end) query = query.lt("created_at", end);
+
+  const { data, error } = await query
     .order("created_at", { ascending: false })
     .range(offset, offset + limit - 1);
 
   if (error) throw error;
-  return arrangeLogsForUi((data ?? []) as unknown as ConversionLogRow[]);
+  return arrangeLogsForUi(normalizeLogRows(data ?? []));
 }
 
 export async function fetchConversionLogsFiltered(
@@ -781,8 +806,9 @@ export async function fetchConversionLogsFiltered(
   hiddenBy: string,
   limit = 200,
   offset = 0,
+  range?: FetchDateRange | null,
 ): Promise<ConversionLogRow[]> {
-  const rows = await fetchConversionLogs(userId, limit, offset);
+  const rows = await fetchConversionLogs(userId, limit, offset, range);
   const hiddenIds = await fetchHiddenConversionLogIds(hiddenBy);
   return rows.filter((r) => !hiddenIds.has(r.id));
 }
@@ -798,7 +824,7 @@ export async function fetchConversionLogsForAdmin(
     .range(offset, offset + limit - 1);
 
   if (error) throw error;
-  return arrangeLogsForUi((data ?? []) as unknown as ConversionLogRow[]);
+  return arrangeLogsForUi(normalizeLogRows(data ?? []));
 }
 
 export async function fetchConversionLogsForAdminFiltered(
