@@ -129,9 +129,34 @@ export function sanitizeIp(v: unknown): string {
   return ip;
 }
 
-export function normalizeIpToMeta(rawIp: string): Record<string, string> {
+function isValidPublicIpv4(ip: string): boolean {
+  const parts = ip.split(".").map(Number);
+  if (parts.length !== 4 || parts.some((n) => !Number.isInteger(n) || n < 0 || n > 255)) return false;
+  const [a, b, c] = parts;
+  if (a === 0 || a === 10 || a === 127 || a >= 224) return false;
+  if (a === 100 && b >= 64 && b <= 127) return false;
+  if (a === 169 && b === 254) return false;
+  if (a === 172 && b >= 16 && b <= 31) return false;
+  if (a === 192 && (b === 0 || b === 168)) return false;
+  if (a === 198 && (b === 18 || b === 19 || (b === 51 && c === 100))) return false;
+  if (a === 203 && b === 0 && c === 113) return false;
+  return true;
+}
+
+function isLikelyPublicIpv6(ip: string): boolean {
+  const lower = ip.toLowerCase();
+  if (!lower.includes(":")) return false;
+  if (!/^[0-9a-f:]+$/.test(lower)) return false;
+  if (lower === "::" || lower === "::1") return false;
+  if (lower.startsWith("fc") || lower.startsWith("fd") || lower.startsWith("fe80:")) return false;
+  if (lower.startsWith("ff")) return false;
+  if (lower.startsWith("2001:db8:")) return false;
+  return lower.includes("::") || lower.split(":").filter(Boolean).length >= 3;
+}
+
+export function normalizePublicClientIp(rawIp: unknown): string {
   let ip = sanitizeIp(rawIp);
-  if (!ip) return {};
+  if (!ip) return "";
   if (!ip.includes(".") && !ip.includes(":") && ip.length === 12) {
     ip = ip.replace(/(\d{3})(\d{3})(\d{3})(\d{3})/, "$1.$2.$3.$4");
   }
@@ -139,6 +164,14 @@ export function normalizeIpToMeta(rawIp: string): Record<string, string> {
     const m = ip.match(/\d{1,3}/g);
     if (m) ip = m.join(".");
   }
+  if (ip.includes(".") && isValidPublicIpv4(ip)) return ip;
+  if (ip.includes(":") && isLikelyPublicIpv6(ip)) return ip;
+  return "";
+}
+
+export function normalizeIpToMeta(rawIp: string): Record<string, string> {
+  const ip = normalizePublicClientIp(rawIp);
+  if (!ip) return {};
   return { client_ip_address: ip };
 }
 

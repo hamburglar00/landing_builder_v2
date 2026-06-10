@@ -411,46 +411,38 @@ function sanitizeIp(v: unknown): string {
   return ip;
 }
 
-function extractClientIpFromHeaders(req: Request): string {
-  const candidates = [
-    req.headers.get("cf-connecting-ip"),
-    req.headers.get("x-real-ip"),
-    req.headers.get("x-forwarded-for"),
-    req.headers.get("x-vercel-forwarded-for"),
-    req.headers.get("fly-client-ip"),
-  ];
-
-  for (const c of candidates) {
-    const ip = sanitizeIp(c);
-    if (ip) return ip;
-  }
-  return "";
-}
-
 function derivePromoCodeFromPayload(p: Params): string {
   return normalizePromoCode(p.promo_code ?? p.promoCode);
 }
 
-function isPrivateOrReservedIp(ip: string): boolean {
-  if (!ip) return true;
-  if (ip.includes(":")) {
-    const lower = ip.toLowerCase();
-    return lower === "::1" || lower.startsWith("fc") || lower.startsWith("fd") || lower.startsWith("fe80");
-  }
+function isValidPublicIpv4(ip: string): boolean {
   const parts = ip.split(".").map(Number);
-  if (parts.length !== 4 || parts.some((n) => isNaN(n) || n < 0 || n > 255)) return true;
-  const [a, b] = parts;
-  if (a === 10 || a === 127 || a === 0) return true;
-  if (a === 169 && b === 254) return true;
-  if (a === 172 && b >= 16 && b <= 31) return true;
-  if (a === 192 && b === 168) return true;
-  if (a === 100 && b >= 64 && b <= 127) return true;
-  return false;
+  if (parts.length !== 4 || parts.some((n) => !Number.isInteger(n) || n < 0 || n > 255)) return false;
+  const [a, b, c] = parts;
+  if (a === 0 || a === 10 || a === 127 || a >= 224) return false;
+  if (a === 100 && b >= 64 && b <= 127) return false;
+  if (a === 169 && b === 254) return false;
+  if (a === 172 && b >= 16 && b <= 31) return false;
+  if (a === 192 && (b === 0 || b === 168)) return false;
+  if (a === 198 && (b === 18 || b === 19 || (b === 51 && c === 100))) return false;
+  if (a === 203 && b === 0 && c === 113) return false;
+  return true;
 }
 
-function normalizeIpToMeta(rawIp: string): Record<string, string> {
+function isLikelyPublicIpv6(ip: string): boolean {
+  const lower = ip.toLowerCase();
+  if (!lower.includes(":")) return false;
+  if (!/^[0-9a-f:]+$/.test(lower)) return false;
+  if (lower === "::" || lower === "::1") return false;
+  if (lower.startsWith("fc") || lower.startsWith("fd") || lower.startsWith("fe80:")) return false;
+  if (lower.startsWith("ff")) return false;
+  if (lower.startsWith("2001:db8:")) return false;
+  return lower.includes("::") || lower.split(":").filter(Boolean).length >= 3;
+}
+
+function normalizePublicClientIp(rawIp: unknown): string {
   let ip = sanitizeIp(rawIp);
-  if (!ip) return {};
+  if (!ip) return "";
   if (!ip.includes(".") && !ip.includes(":") && ip.length === 12) {
     ip = ip.replace(/(\d{3})(\d{3})(\d{3})(\d{3})/, "$1.$2.$3.$4");
   }
@@ -458,6 +450,26 @@ function normalizeIpToMeta(rawIp: string): Record<string, string> {
     const m = ip.match(/\d{1,3}/g);
     if (m) ip = m.join(".");
   }
+  if (ip.includes(".") && isValidPublicIpv4(ip)) return ip;
+  if (ip.includes(":") && isLikelyPublicIpv6(ip)) return ip;
+  return "";
+}
+
+function isPrivateOrReservedIp(ip: string): boolean {
+  return !normalizePublicClientIp(ip);
+}
+
+function payloadClientIp(p: Params): string {
+  return normalizePublicClientIp(
+    p.clientIP ??
+      p.client_ip ??
+      p.client_ip_address,
+  );
+}
+
+function normalizeIpToMeta(rawIp: string): Record<string, string> {
+  const ip = normalizePublicClientIp(rawIp);
+  if (!ip) return {};
   return { client_ip_address: ip };
 }
 
@@ -1344,7 +1356,7 @@ async function handleContact(
     purchase_event_time: null,
     purchase_payload_raw: "",
     test_event_code: testEventCode,
-    client_ip: norm(p.clientIP),
+    client_ip: payloadClientIp(p),
     agent_user: norm(p.agentuser),
     device_type: norm(p.device_type),
     event_source_url: eventSourceUrl,
@@ -1688,7 +1700,7 @@ async function handleLead(
       purchase_event_time: null,
       purchase_payload_raw: "",
       test_event_code: testEventCode,
-      client_ip: norm(p.clientIP),
+      client_ip: payloadClientIp(p),
       agent_user: norm(p.agentuser),
       device_type: norm(p.device_type),
       event_source_url: eventSourceUrl,
