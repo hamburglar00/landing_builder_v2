@@ -133,6 +133,13 @@ type Params = Record<string, any>;
 
 
 const norm = (s: unknown): string => String(s ?? "").trim();
+const META_CAPI_MAX_EVENT_AGE_SECONDS = 7 * 24 * 60 * 60;
+
+function isEventTimeTooOldForMetaCapi(eventTime: number): boolean {
+  if (!Number.isFinite(eventTime) || eventTime <= 0) return false;
+  const now = Math.floor(Date.now() / 1000);
+  return now - eventTime > META_CAPI_MAX_EVENT_AGE_SECONDS;
+}
 
 function buildGerenciaLabel(row: { id?: unknown; nombre?: unknown; gerencia_id?: unknown }): AssignedGerenciaSnapshot {
   const internalId = Number(row.id);
@@ -937,6 +944,20 @@ async function sendToMetaCAPI(
   const preferredPixelId = rowPixel || chatracePixelId;
   const effectiveConfig = resolveEffectiveConfigForPixel(config, pixelConfigs, preferredPixelId);
   const defaultPixel = norm(pixelConfigs.find((pc) => pc.is_default)?.pixel_id);
+  const statusField =
+    eventName === "Contact" ? "contact_status_capi" :
+    eventName === "Lead" ? "lead_status_capi" :
+    "purchase_status_capi";
+
+  const okMsg =
+    eventName === "Contact" ? "CONTACT OK" :
+    eventName === "Lead" ? "LEAD OK" :
+    customData?.purchase_type === "repeat" ? "PURCHASE REPEAT OK" : "PURCHASE OK";
+
+  const errMsg =
+    eventName === "Contact" ? "ERROR CONTACT" :
+    eventName === "Lead" ? "ERROR LEAD" :
+    "ERROR PURCHASE";
 
   if (!rowPixel && !chatracePixelId && norm(effectiveConfig.pixel_id)) {
     const resolvedFallbackPixel = norm(effectiveConfig.pixel_id);
@@ -975,11 +996,30 @@ async function sendToMetaCAPI(
     );
   }
 
+  if (isEventTimeTooOldForMetaCapi(eventTime)) {
+    const skippedMsg = `${eventName.toUpperCase()} CAPI OMITIDO EVENT_TIME ANTIGUO`;
+    const { data: current } = await db.from("conversions").select("observaciones").eq("id", rowId).single();
+    const obs = appendObservation(current?.observaciones ?? "", skippedMsg);
+    await db.from("conversions").update({ [statusField]: "skipped_old_event_time", observaciones: obs }).eq("id", rowId);
+    await writeLog(
+      db,
+      row.user_id,
+      "sendToMetaCAPI",
+      "WARN",
+      "Meta CAPI omitido por event_time mayor a 7 dias",
+      JSON.stringify({
+        event_name: eventName,
+        row_id: rowId,
+        event_id: eventId,
+        event_time: eventTime,
+        max_age_seconds: META_CAPI_MAX_EVENT_AGE_SECONDS,
+      }),
+      rowId,
+    );
+    return true;
+  }
+
   if (!effectiveConfig.meta_access_token || !effectiveConfig.pixel_id) {
-    const statusField =
-      eventName === "Contact" ? "contact_status_capi" :
-      eventName === "Lead" ? "lead_status_capi" :
-      "purchase_status_capi";
     const missingCfgMsg =
       eventName === "Contact" ? "ERROR CONTACT NO CONFIG" :
       eventName === "Lead" ? "ERROR LEAD NO CONFIG" :
@@ -1008,21 +1048,6 @@ async function sendToMetaCAPI(
     customData as Record<string, unknown> | undefined,
     effectiveTestEventCode || undefined,
   );
-
-  const statusField =
-    eventName === "Contact" ? "contact_status_capi" :
-    eventName === "Lead" ? "lead_status_capi" :
-    "purchase_status_capi";
-
-  const okMsg =
-    eventName === "Contact" ? "CONTACT OK" :
-    eventName === "Lead" ? "LEAD OK" :
-    customData?.purchase_type === "repeat" ? "PURCHASE REPEAT OK" : "PURCHASE OK";
-
-  const errMsg =
-    eventName === "Contact" ? "ERROR CONTACT" :
-    eventName === "Lead" ? "ERROR LEAD" :
-    "ERROR PURCHASE";
 
   if (isChatrace && eventName === "Contact") {
     await writeLog(

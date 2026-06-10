@@ -8,6 +8,8 @@ const corsHeaders = {
 };
 const BACKFILL_WINDOW_BEFORE_SECONDS = 90;
 const BACKFILL_WINDOW_AFTER_SECONDS = 30;
+const DUPLICATE_LEAD_LOG_BACKFILL_LIMIT = 75;
+const META_CAPI_MAX_EVENT_AGE_SECONDS = 7 * 24 * 60 * 60;
 
 /**
  * Cron de reintentos: busca purchases con status != 'enviado' y reintenta el envío a Meta CAPI.
@@ -70,7 +72,7 @@ Deno.serve(async (req) => {
       .from("conversions")
       .select("id, user_id, phone, pixel_id, purchase_event_id, purchase_event_time, valor, event_source_url, email, fn, ln, ct, st, zip, country, fbp, fbc, client_ip, agent_user, external_id, observaciones")
       .eq("estado", "purchase")
-      .neq("purchase_status_capi", "enviado")
+      .not("purchase_status_capi", "in", "(enviado,skipped_old_event_time)")
       .gt("valor", 0)
       .order("created_at", { ascending: true })
       .limit(100);
@@ -142,6 +144,16 @@ Deno.serve(async (req) => {
       let eventId = String(row.purchase_event_id ?? "").trim();
       if (!eventId) eventId = crypto.randomUUID();
       const eventTime = row.purchase_event_time ?? Math.floor(Date.now() / 1000);
+      if (isEventTimeTooOldForMetaCapi(Number(eventTime))) {
+        const obs = appendObs(row.observaciones ?? "", "PURCHASE CAPI OMITIDO EVENT_TIME ANTIGUO");
+        await db.from("conversions").update({
+          purchase_status_capi: "skipped_old_event_time",
+          purchase_event_id: eventId,
+          purchase_event_time: eventTime,
+          observaciones: obs,
+        }).eq("id", row.id);
+        continue;
+      }
 
       // Count previous successful purchases to determine repeat
       const { count: prevCount } = await db
@@ -511,7 +523,7 @@ Deno.serve(async (req) => {
       .eq("function_name", "main")
       .eq("message", "Duplicado ignorado por action_event_id")
       .order("id", { ascending: true })
-      .limit(25);
+      .limit(DUPLICATE_LEAD_LOG_BACKFILL_LIMIT);
 
     const duplicateLogs = (duplicateActionLogs ?? []) as DuplicateLeadLogRow[];
     if (duplicateLogs.length > 0) {
@@ -672,6 +684,12 @@ function appendObs(current: string, token: string): string {
   if (parts.includes(clean)) return cur;
   parts.push(clean);
   return parts.join(" | ");
+}
+
+function isEventTimeTooOldForMetaCapi(eventTime: number): boolean {
+  if (!Number.isFinite(eventTime) || eventTime <= 0) return false;
+  const now = Math.floor(Date.now() / 1000);
+  return now - eventTime > META_CAPI_MAX_EVENT_AGE_SECONDS;
 }
 
 type DeferredInboxRow = {
