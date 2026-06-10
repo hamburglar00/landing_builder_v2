@@ -487,6 +487,152 @@ Deno.serve(async (req) => {
       leadBackfillMerged++;
     }
 
+    // Historical LEAD replay: before 2026-06-09, some LEADs were ignored when
+    // the bot reused action_event_id even if promo_code was different. Those
+    // payloads were not inserted in conversion_inbox, but they were kept in
+    // conversion_logs.payload_received. Replay them through the current
+    // conversions endpoint so the normal matching + CAPI logic remains the
+    // single source of business behavior.
+    let duplicateLeadLogsChecked = 0;
+    let duplicateLeadLogsReplayed = 0;
+    let duplicateLeadLogsSkipped = 0;
+    let duplicateLeadLogsFailed = 0;
+
+    const { data: replayCheckpoint } = await db
+      .from("conversion_log_lead_backfill_replays")
+      .select("log_id")
+      .order("log_id", { ascending: false })
+      .limit(1);
+    const lastReplayedLogId = Number(replayCheckpoint?.[0]?.log_id ?? 0);
+    const { data: duplicateActionLogs } = await db
+      .from("conversion_logs")
+      .select("id, user_id, payload_received, created_at")
+      .gt("id", lastReplayedLogId)
+      .eq("function_name", "main")
+      .eq("message", "Duplicado ignorado por action_event_id")
+      .order("id", { ascending: true })
+      .limit(25);
+
+    const duplicateLogs = (duplicateActionLogs ?? []) as DuplicateLeadLogRow[];
+    if (duplicateLogs.length > 0) {
+      const userIdsForLogs = [...new Set(duplicateLogs.map((r) => String(r.user_id)))];
+      const { data: profiles } = await db
+        .from("profiles")
+        .select("id, nombre")
+        .in("id", userIdsForLogs);
+      const profileNameByUserId = new Map<string, string>();
+      for (const p of profiles ?? []) {
+        profileNameByUserId.set(String(p.id), String(p.nombre ?? "").trim());
+      }
+
+      for (const log of duplicateLogs) {
+        duplicateLeadLogsChecked++;
+        const payload = parseJsonObject(String(log.payload_received ?? ""));
+        const action = String(payload.action ?? "").trim().toUpperCase();
+        const actionEventId = normalizeText(payload.action_event_id);
+        const promoCode = normalizePromoCode(payload.promo_code ?? payload.promoCode);
+        const phone = sanitizePhone(typeof payload.phone === "string" ? payload.phone : "");
+        const clientName = profileNameByUserId.get(String(log.user_id)) ?? "";
+
+        const mark = async (
+          status: "replayed" | "skipped" | "error",
+          notes: string,
+          httpStatus?: number,
+          responseBody?: string,
+        ) => {
+          await db
+            .from("conversion_log_lead_backfill_replays")
+            .upsert({
+              log_id: log.id,
+              user_id: log.user_id,
+              action: action || "LEAD",
+              action_event_id: actionEventId,
+              promo_code: promoCode,
+              status,
+              http_status: httpStatus ?? null,
+              response_body: String(responseBody ?? "").slice(0, 4000),
+              notes,
+              processed_at: new Date().toISOString(),
+            }, { onConflict: "log_id" });
+        };
+
+        if (action !== "LEAD") {
+          duplicateLeadLogsSkipped++;
+          await mark("skipped", `payload action no es LEAD: ${action || "-"}`);
+          continue;
+        }
+        if (!clientName) {
+          duplicateLeadLogsFailed++;
+          await mark("error", "client name not found");
+          continue;
+        }
+        if (!actionEventId || !isFullPromoCodeForBackfill(promoCode) || !phone) {
+          duplicateLeadLogsSkipped++;
+          await mark("skipped", "payload incompleto: action_event_id, promo_code valido o phone faltante");
+          continue;
+        }
+
+        const { data: alreadyInInbox } = await db
+          .from("conversion_inbox")
+          .select("id")
+          .eq("user_id", log.user_id)
+          .eq("action", "LEAD")
+          .eq("action_event_id", actionEventId)
+          .eq("promo_code", promoCode)
+          .limit(1)
+          .maybeSingle();
+        if (alreadyInInbox?.id) {
+          duplicateLeadLogsSkipped++;
+          await mark("skipped", `inbox existente: ${alreadyInInbox.id}`);
+          continue;
+        }
+
+        const { data: existingConversion } = await db
+          .from("conversions")
+          .select("id, lead_event_id")
+          .eq("user_id", log.user_id)
+          .eq("promo_code", promoCode)
+          .order("created_at", { ascending: true })
+          .limit(1)
+          .maybeSingle();
+        if (String(existingConversion?.lead_event_id ?? "").trim()) {
+          duplicateLeadLogsSkipped++;
+          await mark("skipped", `conversion ya tiene lead_event_id: ${existingConversion?.id ?? "-"}`);
+          continue;
+        }
+
+        if (!hasPositiveEpoch(payload.event_time)) {
+          const createdAtEpoch = Math.floor(Date.parse(String(log.created_at)) / 1000);
+          if (Number.isFinite(createdAtEpoch) && createdAtEpoch > 0) {
+            payload.event_time = createdAtEpoch;
+          }
+        }
+        payload.action = "LEAD";
+        payload.__backfill_duplicate_action_event_id = true;
+        payload.__source_log_id = log.id;
+
+        const replayUrl = `${supabaseUrl}/functions/v1/conversions?name=${encodeURIComponent(clientName)}`;
+        try {
+          const replayRes = await fetch(replayUrl, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify(payload),
+          });
+          const responseBody = await replayRes.text().catch(() => "");
+          if (replayRes.status >= 200 && replayRes.status < 400) {
+            duplicateLeadLogsReplayed++;
+            await mark("replayed", "replayed through conversions endpoint", replayRes.status, responseBody);
+          } else {
+            duplicateLeadLogsFailed++;
+            await mark("error", "conversions endpoint returned error", replayRes.status, responseBody);
+          }
+        } catch (err) {
+          duplicateLeadLogsFailed++;
+          await mark("error", `fetch error: ${String(err)}`);
+        }
+      }
+    }
+
     return new Response(
       JSON.stringify({
         success: true,
@@ -501,6 +647,10 @@ Deno.serve(async (req) => {
         lead_backfill_checked: leadBackfillChecked,
         lead_backfill_merged: leadBackfillMerged,
         lead_backfill_ambiguous: leadBackfillAmbiguous,
+        duplicate_lead_logs_checked: duplicateLeadLogsChecked,
+        duplicate_lead_logs_replayed: duplicateLeadLogsReplayed,
+        duplicate_lead_logs_skipped: duplicateLeadLogsSkipped,
+        duplicate_lead_logs_failed: duplicateLeadLogsFailed,
       }),
       { status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" } },
     );
@@ -532,6 +682,13 @@ type DeferredInboxRow = {
   created_at: string;
 };
 
+type DuplicateLeadLogRow = {
+  id: number;
+  user_id: string;
+  payload_received: string | null;
+  created_at: string;
+};
+
 function parseJsonObject(raw: string): Record<string, unknown> {
   try {
     const value = JSON.parse(raw || "{}");
@@ -540,6 +697,18 @@ function parseJsonObject(raw: string): Record<string, unknown> {
   } catch {
     return {};
   }
+}
+
+function normalizeText(value: unknown): string {
+  return String(value ?? "").trim();
+}
+
+function normalizePromoCode(value: unknown): string {
+  return normalizeText(value);
+}
+
+function isFullPromoCodeForBackfill(value: unknown): boolean {
+  return /^[A-Za-z0-9]+-[A-Za-z0-9]+$/.test(normalizePromoCode(value));
 }
 
 function sanitizePhone(input: string | null | undefined): string {
