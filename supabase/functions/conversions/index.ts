@@ -124,7 +124,7 @@ interface GeoResult {
 type GeoSource = "payload" | "ip" | "phone_prefix" | "none";
 
 type InboundStatus = "received" | "deferred" | "processed" | "deduplicated" | "error";
-type ProcessingContext = { conversionId?: string; inboxStatus?: InboundStatus };
+type ProcessingContext = { conversionId?: string; inboxStatus?: InboundStatus; inboxPromoCode?: string };
 type ContactDuplicateReason = "contact_event_id" | "promo_code";
 type ContactDuplicateMatch = { id: string; reason: ContactDuplicateReason };
 
@@ -625,15 +625,20 @@ async function finalizeInboundEvent(
   httpStatus: number,
   responseBody: string,
   conversionId?: string,
+  promoCode?: string,
 ): Promise<void> {
   if (!inboxId) return;
-  await db.from("conversion_inbox").update({
+  const updates: Record<string, unknown> = {
     status,
     http_status: httpStatus,
     response_body: (responseBody ?? "").slice(0, 4000),
     conversion_id: conversionId ?? null,
     processed_at: new Date().toISOString(),
-  }).eq("id", inboxId);
+  };
+  if (isFullPromoCode(promoCode)) {
+    updates.promo_code = promoCode;
+  }
+  await db.from("conversion_inbox").update(updates).eq("id", inboxId);
 }
 
 async function findDeferredLeadInboundByPhone(
@@ -1895,6 +1900,7 @@ async function handleLead(
 
   const { data: fresh } = await db.from("conversions").select("*").eq("id", targetId).single();
   const fullRow = (fresh ?? row) as ConversionRow;
+  if (ctx) ctx.inboxPromoCode = norm(fullRow.promo_code);
 
   await writeLog(
     db,
@@ -2673,7 +2679,7 @@ Deno.serve(async (req) => {
       const bodyText = await response.clone().text().catch(() => "");
       const finalStatus: InboundStatus = ctx.inboxStatus ??
         (response.status >= 200 && response.status < 400 ? "processed" : "error");
-      await finalizeInboundEvent(db, inboxId, finalStatus, response.status, bodyText, ctx.conversionId);
+      await finalizeInboundEvent(db, inboxId, finalStatus, response.status, bodyText, ctx.conversionId, ctx.inboxPromoCode);
       return response;
     };
 
