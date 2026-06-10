@@ -62,6 +62,10 @@ type PixelEditDraft = {
   geo_fill_only_when_missing: boolean;
   is_default: boolean;
 };
+type GerenciaFilterOption = {
+  value: string;
+  label: string;
+};
 
 const TAB_ORDER_BASE: Tab[] = ["funnel", "tabla", "estadisticas", "desempeno", "configuracion"];
 
@@ -240,6 +244,18 @@ function formatIntegerWithThousands(value: number) {
 
 function normalizePhone(value: string | null | undefined): string {
   return String(value ?? "").replace(/\D/g, "");
+}
+
+function extractGerenciaIdFromLabel(label: string | null | undefined): string {
+  const match = String(label ?? "").match(/\(ID\s*(\d+)\)/i);
+  return match?.[1] ?? "";
+}
+
+function gerenciaFilterMatchesLabels(filter: string, labels: string[]): boolean {
+  if (filter === "__all__") return true;
+  const filterId = /^\d+$/.test(filter) ? filter : extractGerenciaIdFromLabel(filter);
+  if (filterId) return labels.some((label) => extractGerenciaIdFromLabel(label) === filterId);
+  return labels.includes(filter);
 }
 
 function parseInboxPayload(raw: string | null | undefined): Record<string, unknown> {
@@ -611,6 +627,7 @@ export default function DashboardConversionesPage() {
   const [draftCampaignFilter, setDraftCampaignFilter] = useState<string[]>([]);
   const [draftDeviceFilter, setDraftDeviceFilter] = useState<string>("__all__");
   const [gerenciaByPhone, setGerenciaByPhone] = useState<Record<string, string[]>>({});
+  const [currentGerenciaLabelById, setCurrentGerenciaLabelById] = useState<Record<string, string>>({});
   const [activePhonesByGerenciaLabel, setActivePhonesByGerenciaLabel] = useState<Record<string, string[]>>({});
   const [performanceLandingOptions, setPerformanceLandingOptions] = useState<LandingPerformanceFilterOption[]>([]);
 
@@ -706,14 +723,28 @@ export default function DashboardConversionesPage() {
     }
     return Array.from(set).sort((a, b) => a.localeCompare(b));
   }, [statsAllConversions]);
-  const statsGerenciaOptions = useMemo(() => {
-    const set = new Set<string>();
+  const statsGerenciaOptions = useMemo<GerenciaFilterOption[]>(() => {
+    const byId = new Map<string, string>();
+    for (const [id, label] of Object.entries(currentGerenciaLabelById)) {
+      if (id && label) byId.set(id, label);
+    }
+    const loose = new Set<string>();
     for (const r of statsAllConversions) {
       const labels = getConversionGerenciaLabels(r, gerenciaByPhone);
-      for (const label of labels) set.add(label);
+      for (const label of labels) {
+        const id = extractGerenciaIdFromLabel(label);
+        if (id) {
+          if (!byId.has(id)) byId.set(id, label);
+        } else if (label) {
+          loose.add(label);
+        }
+      }
     }
-    return Array.from(set).sort((a, b) => a.localeCompare(b, "es"));
-  }, [statsAllConversions, gerenciaByPhone]);
+    return [
+      ...Array.from(byId.entries()).map(([value, label]) => ({ value, label })),
+      ...Array.from(loose).map((label) => ({ value: label, label })),
+    ].sort((a, b) => a.label.localeCompare(b.label, "es", { numeric: true, sensitivity: "base" }));
+  }, [statsAllConversions, gerenciaByPhone, currentGerenciaLabelById]);
   const statsSourcePlatformOptions = useMemo(() => {
     const set = new Set<string>();
     for (const r of statsAllConversions) {
@@ -757,7 +788,13 @@ export default function DashboardConversionesPage() {
     }
   }, [statsPixelFilter, statsPixelOptions]);
   useEffect(() => {
-    if (statsGerenciaFilter !== "__all__" && !statsGerenciaOptions.includes(statsGerenciaFilter)) {
+    if (statsGerenciaFilter === "__all__") return;
+    const canonical = extractGerenciaIdFromLabel(statsGerenciaFilter) || statsGerenciaFilter;
+    if (canonical !== statsGerenciaFilter && statsGerenciaOptions.some((g) => g.value === canonical)) {
+      setStatsGerenciaFilter(canonical);
+      return;
+    }
+    if (!statsGerenciaOptions.some((g) => g.value === statsGerenciaFilter)) {
       setStatsGerenciaFilter("__all__");
     }
   }, [statsGerenciaFilter, statsGerenciaOptions]);
@@ -794,7 +831,7 @@ export default function DashboardConversionesPage() {
       const assignedPhone = normalizePhone(r.telefono_asignado);
       const byTelefono = statsTelefonoFilter === "__all__" || assignedPhone === statsTelefonoFilter;
       const labels = getConversionGerenciaLabels(r, gerenciaByPhone);
-      const byGerencia = statsGerenciaFilter === "__all__" || labels.includes(statsGerenciaFilter);
+      const byGerencia = gerenciaFilterMatchesLabels(statsGerenciaFilter, labels);
       const byFromMetaAds =
         statsFromMetaAdsFilter === "__all__" ||
         (statsFromMetaAdsFilter === "true" ? !!r.from_meta_ads : !r.from_meta_ads);
@@ -816,7 +853,7 @@ export default function DashboardConversionesPage() {
       const assignedPhone = normalizePhone(r.telefono_asignado);
       const byTelefono = statsTelefonoFilter === "__all__" || assignedPhone === statsTelefonoFilter;
       const labels = getConversionGerenciaLabels(r, gerenciaByPhone);
-      const byGerencia = statsGerenciaFilter === "__all__" || labels.includes(statsGerenciaFilter);
+      const byGerencia = gerenciaFilterMatchesLabels(statsGerenciaFilter, labels);
       const byFromMetaAds =
         statsFromMetaAdsFilter === "__all__" ||
         (statsFromMetaAdsFilter === "true" ? !!r.from_meta_ads : !r.from_meta_ads);
@@ -869,7 +906,7 @@ export default function DashboardConversionesPage() {
       const assignedPhone = normalizePhone(r.telefono_asignado);
       const byTelefono = statsTelefonoFilter === "__all__" || assignedPhone === statsTelefonoFilter;
       const labels = getConversionGerenciaLabels(r, gerenciaByPhone);
-      const byGerencia = statsGerenciaFilter === "__all__" || labels.includes(statsGerenciaFilter);
+      const byGerencia = gerenciaFilterMatchesLabels(statsGerenciaFilter, labels);
       const byFromMetaAds =
         statsFromMetaAdsFilter === "__all__" ||
         (statsFromMetaAdsFilter === "true" ? !!r.from_meta_ads : !r.from_meta_ads);
@@ -996,7 +1033,7 @@ export default function DashboardConversionesPage() {
       const byLanding = statsLandingFilter === "__all__" || landingName === statsLandingFilter;
       const byPixel = statsPixelFilter === "__all__" || pixelId === statsPixelFilter;
       const byTelefono = statsTelefonoFilter === "__all__" || assignedPhone === statsTelefonoFilter;
-      const byGerencia = statsGerenciaFilter === "__all__" || gerenciaLabels.includes(statsGerenciaFilter);
+      const byGerencia = gerenciaFilterMatchesLabels(statsGerenciaFilter, gerenciaLabels);
       const byFromMetaAds =
         statsFromMetaAdsFilter === "__all__" ||
         (statsFromMetaAdsFilter === "true" ? hasMetaSignal : !hasMetaSignal);
@@ -1175,12 +1212,16 @@ export default function DashboardConversionesPage() {
           .eq("user_id", user.id);
         const gerenciasList = gerencias ?? [];
         const gerenciasById = new Map<number, string>();
+        const currentLabelsById: Record<string, string> = {};
         for (const g of gerenciasList) {
           const id = Number(g.id);
           if (!Number.isFinite(id)) continue;
           const extId = Number(g.gerencia_id);
-          gerenciasById.set(id, `${String(g.nombre ?? "").trim()} (ID ${Number.isFinite(extId) ? extId : id})`);
+          const label = `${String(g.nombre ?? "").trim()} (ID ${Number.isFinite(extId) ? extId : id})`;
+          gerenciasById.set(id, label);
+          currentLabelsById[String(Number.isFinite(extId) ? extId : id)] = label;
         }
+        setCurrentGerenciaLabelById(currentLabelsById);
         if (gerenciasById.size > 0) {
           const ids = Array.from(gerenciasById.keys());
           const { data: phones } = await supabase
@@ -1944,7 +1985,7 @@ export default function DashboardConversionesPage() {
                 <label className="mb-1 block text-xs text-zinc-400">Gerencia (ID)</label>
                 <select value={draftGerenciaFilter} onChange={(e) => setDraftGerenciaFilter(e.target.value)} className="h-9 w-full rounded-lg border border-zinc-700 bg-zinc-900 px-2 text-xs text-zinc-100">
                   <option value="__all__">Todas las gerencias</option>
-                  {statsGerenciaOptions.map((g) => <option key={g} value={g}>{g}</option>)}
+                  {statsGerenciaOptions.map((g) => <option key={g.value} value={g.value}>{g.label}</option>)}
                 </select>
               </div>
               <div>
