@@ -1297,7 +1297,7 @@ export default function DashboardConversionesPage() {
         }
         if (tab === "inbox" && inboxRows.length === 0) {
           const inbox = await fetchConversionInboxFiltered(userId, userId, {
-            limit: 400,
+            limit: 200,
             range: dateRangeRef.current ?? undefined,
             action: inboxActionFilterRef.current,
             search: inboxSearchRef.current,
@@ -1319,7 +1319,7 @@ export default function DashboardConversionesPage() {
       setRefreshingTable(true);
       try {
         const inbox = await fetchConversionInboxFiltered(userId, userId, {
-          limit: search ? 500 : 400,
+          limit: 200,
           range: dateRange ?? undefined,
           action: inboxActionFilter,
           search,
@@ -1572,7 +1572,7 @@ export default function DashboardConversionesPage() {
       } else if (currentTab === "inbox") {
         const search = inboxSearchRef.current.trim();
         const inbox = await fetchConversionInboxFiltered(currentUserId, currentUserId, {
-          limit: search ? 500 : 400,
+          limit: 200,
           range: range ?? undefined,
           action: inboxActionFilterRef.current,
           search,
@@ -2433,7 +2433,7 @@ export default function DashboardConversionesPage() {
                       }
                     >
                       <td className="px-2 py-1.5 text-zinc-300 whitespace-nowrap">
-                        {row.conversion_id ? (internalIdByConversionId.get(row.conversion_id) ?? "-") : "-"}
+                        {row.conversion_internal_id ?? (row.conversion_id ? (internalIdByConversionId.get(row.conversion_id) ?? "-") : "-")}
                       </td>
                       <td className="px-2 py-1.5 text-zinc-400 whitespace-nowrap">
                         {new Date(row.created_at).toLocaleString("es-AR", { month: "2-digit", day: "2-digit", hour: "2-digit", minute: "2-digit", second: "2-digit", hour12: false })}

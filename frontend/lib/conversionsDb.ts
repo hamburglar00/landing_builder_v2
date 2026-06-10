@@ -151,6 +151,7 @@ export interface ConversionInboxRow {
   id: string;
   user_id: string;
   conversion_id: string | null;
+  conversion_internal_id?: number | null;
   landing_name: string;
   action: string;
   action_event_id?: string | null;
@@ -698,7 +699,23 @@ export async function fetchFunnelContactsForAdminFiltered(
 const LOGS_SELECT =
   "id, user_id, conversion_id, function_name, level, message, detail, payload_received, result, payload_meta, response_meta, created_at";
 const INBOX_SELECT =
-  "id, user_id, conversion_id, landing_name, action, action_event_id, coelsa_id, transaction_id, promo_code, phone, payload_raw, status, http_status, response_body, processed_at, created_at";
+  "id, user_id, conversion_id, conversions(internal_id), landing_name, action, action_event_id, coelsa_id, transaction_id, promo_code, phone, payload_raw, status, http_status, response_body, processed_at, created_at";
+
+function normalizeInboxRows(rows: unknown[]): ConversionInboxRow[] {
+  return rows.map((row) => {
+    const record = row as ConversionInboxRow & {
+      conversions?: { internal_id?: number | string | null } | Array<{ internal_id?: number | string | null }> | null;
+    };
+    const joined = Array.isArray(record.conversions) ? record.conversions[0] : record.conversions;
+    const rawInternalId = joined?.internal_id;
+    const internalId = rawInternalId == null ? null : Number(rawInternalId);
+    const { conversions: _conversions, ...clean } = record;
+    return {
+      ...clean,
+      conversion_internal_id: Number.isFinite(internalId) ? internalId : null,
+    };
+  });
+}
 
 function arrangeLogsForUi(rows: ConversionLogRow[]): ConversionLogRow[] {
   type LogGroup = {
@@ -808,7 +825,7 @@ export async function fetchConversionInbox(
     .range(offset, offset + limit - 1);
   if (error) throw error;
   const hiddenIds = await fetchHiddenConversionInboxIds(hiddenBy);
-  return ((data ?? []) as unknown as ConversionInboxRow[]).filter((row) => !hiddenIds.has(row.id));
+  return normalizeInboxRows(data ?? []).filter((row) => !hiddenIds.has(row.id));
 }
 
 export async function fetchConversionInboxFiltered(
@@ -860,7 +877,7 @@ export async function fetchConversionInboxFiltered(
     .range(offset, offset + limit - 1);
   if (error) throw error;
   const hiddenIds = await fetchHiddenConversionInboxIds(hiddenBy);
-  return ((data ?? []) as unknown as ConversionInboxRow[]).filter((row) => !hiddenIds.has(row.id));
+  return normalizeInboxRows(data ?? []).filter((row) => !hiddenIds.has(row.id));
 }
 
 export async function fetchConversionsConfigForUser(
