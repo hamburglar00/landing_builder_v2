@@ -1301,6 +1301,41 @@ async function ignoreContactDuplicate(
   );
 }
 
+async function ignoreLeadDuplicateByPromoCode(
+  db: SupabaseClient,
+  userId: string,
+  conversionId: string,
+  promoCode: string,
+  payloadRaw: string,
+  ctx?: ProcessingContext,
+  detail?: Record<string, unknown>,
+): Promise<Response> {
+  await writeLog(
+    db,
+    userId,
+    "handleLead",
+    "INFO",
+    "Duplicado LEAD ignorado por promo_code",
+    JSON.stringify({
+      user_id: userId,
+      existing_conversion_id: conversionId,
+      promo_code: promoCode,
+      ...(detail ?? {}),
+    }),
+    conversionId,
+    undefined,
+    undefined,
+    payloadRaw,
+    "duplicado ignorado por promo_code",
+  );
+  if (ctx) {
+    ctx.conversionId = conversionId;
+    ctx.inboxStatus = "deduplicated";
+    ctx.inboxPromoCode = promoCode;
+  }
+  return textResponse("Duplicado LEAD ignorado (promo_code ya procesado)", 200);
+}
+
 
 async function handleContact(
   db: SupabaseClient,
@@ -1604,13 +1639,29 @@ async function handleLead(
   if (promoCodeIsFull) {
     const { data } = await db
       .from("conversions")
-      .select("id")
+      .select("id, lead_event_id")
       .eq("user_id", landing.user_id)
       .eq("promo_code", promoCode)
       .order("created_at", { ascending: true })
       .limit(1)
       .maybeSingle();
-    if (data) targetId = data.id;
+    if (data?.id) {
+      if (norm((data as Record<string, unknown>).lead_event_id)) {
+        return ignoreLeadDuplicateByPromoCode(
+          db,
+          landing.user_id,
+          data.id,
+          promoCode,
+          leadPayloadRaw,
+          ctx,
+          {
+            dedupe_source: "precheck",
+            action_event_id: norm(p.action_event_id),
+          },
+        );
+      }
+      targetId = data.id;
+    }
   }
 
   // 1.b) Fallback ONLY when promo_code is missing: bot_phone + dateTime window (for CONTACT -> LEAD linking).
@@ -1757,6 +1808,33 @@ async function handleLead(
       .single();
 
     if (insertError || !inserted?.id) {
+      if (insertError?.code === "23505" && promoCodeIsFull) {
+        const { data: existingAfterConflict } = await db
+          .from("conversions")
+          .select("id")
+          .eq("user_id", landing.user_id)
+          .eq("promo_code", promoCode)
+          .order("created_at", { ascending: true })
+          .limit(1)
+          .maybeSingle();
+
+        if (existingAfterConflict?.id) {
+          return ignoreLeadDuplicateByPromoCode(
+            db,
+            landing.user_id,
+            existingAfterConflict.id,
+            promoCode,
+            leadPayloadRaw,
+            ctx,
+            {
+              dedupe_source: "unique_violation",
+              action_event_id: norm(p.action_event_id),
+              error: insertError.message,
+            },
+          );
+        }
+      }
+
       await writeLog(
         db,
         landing.user_id,
