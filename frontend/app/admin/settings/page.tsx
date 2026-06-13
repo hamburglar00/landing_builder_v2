@@ -2,7 +2,11 @@
 
 import { useEffect, useState } from "react";
 import { supabase } from "@/lib/supabaseClient";
-import { getSettings, updateSettings } from "@/lib/settingsDb";
+import {
+  getSettings,
+  updateSettings,
+  type PublicLandingRuntime,
+} from "@/lib/settingsDb";
 
 export default function AdminSettingsPage() {
   const [urlBase, setUrlBase] = useState("");
@@ -11,6 +15,10 @@ export default function AdminSettingsPage() {
   const [revalidateSecret, setRevalidateSecret] = useState("");
   const [showSecret, setShowSecret] = useState(false);
   const [adminNombre, setAdminNombre] = useState("");
+  const [publicLandingRuntime, setPublicLandingRuntime] =
+    useState<PublicLandingRuntime>("legacy");
+  const [publicLandingLegacyBaseUrl, setPublicLandingLegacyBaseUrl] =
+    useState("");
   const [ready, setReady] = useState(false);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -23,18 +31,25 @@ export default function AdminSettingsPage() {
       } = await supabase.auth.getUser();
       if (authError || !user) return;
       try {
-        const s = await getSettings();
-        setUrlBase(s.url_base ?? "");
+        const settings = await getSettings();
+        setUrlBase(settings.url_base ?? "");
         setShowClientLandingPreview(
-          s.show_client_landing_preview ?? true,
+          settings.show_client_landing_preview ?? true,
         );
-        setRevalidateSecret(s.revalidate_secret ?? "");
+        setRevalidateSecret(settings.revalidate_secret ?? "");
+        setPublicLandingRuntime(settings.public_landing_runtime ?? "legacy");
+        setPublicLandingLegacyBaseUrl(
+          settings.public_landing_legacy_base_url ?? "",
+        );
 
         const { data: profile } = await supabase
-          .from("profiles").select("nombre").eq("id", user.id).maybeSingle();
+          .from("profiles")
+          .select("nombre")
+          .eq("id", user.id)
+          .maybeSingle();
         setAdminNombre(profile?.nombre ?? "");
       } catch {
-        setError("No se pudo cargar la configuración.");
+        setError("No se pudo cargar la configuracion.");
       } finally {
         setReady(true);
       }
@@ -42,22 +57,29 @@ export default function AdminSettingsPage() {
     void init();
   }, []);
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
+  const handleSubmit = async (event: React.FormEvent) => {
+    event.preventDefault();
     setSaving(true);
     setError(null);
     try {
-      const { data: { user } } = await supabase.auth.getUser();
+      const {
+        data: { user },
+      } = await supabase.auth.getUser();
       await updateSettings({
         urlBase: urlBase.trim(),
         showClientLandingPreview,
         revalidateSecret: revalidateSecret.trim(),
+        publicLandingRuntime,
+        publicLandingLegacyBaseUrl: publicLandingLegacyBaseUrl.trim(),
       });
       if (user) {
-        await supabase.from("profiles").update({ nombre: adminNombre.trim() }).eq("id", user.id);
+        await supabase
+          .from("profiles")
+          .update({ nombre: adminNombre.trim() })
+          .eq("id", user.id);
       }
-    } catch (e) {
-      setError(e instanceof Error ? e.message : "Error al guardar");
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Error al guardar");
     } finally {
       setSaving(false);
     }
@@ -76,81 +98,163 @@ export default function AdminSettingsPage() {
       <div>
         <h1 className="text-xl font-semibold text-zinc-100">CONFIGURACION</h1>
         <p className="mt-1 text-sm text-zinc-400">
-          Solo administradores. Configuración global de la aplicación.
+          Solo administradores. Configuracion global de la aplicacion.
         </p>
       </div>
       {error && (
-        <p className="rounded-lg bg-red-950/50 px-3 py-2 text-sm text-red-300" role="alert">
+        <p
+          className="rounded-lg bg-red-950/50 px-3 py-2 text-sm text-red-300"
+          role="alert"
+        >
           {error}
         </p>
       )}
       <form onSubmit={handleSubmit} className="max-w-md space-y-5">
         <div>
-          <label htmlFor="admin_nombre" className="block text-xs font-medium text-zinc-400 mb-1">
+          <label
+            htmlFor="admin_nombre"
+            className="mb-1 block text-xs font-medium text-zinc-400"
+          >
             Nombre del administrador
           </label>
           <input
             id="admin_nombre"
             type="text"
             value={adminNombre}
-            onChange={(e) => setAdminNombre(e.target.value)}
+            onChange={(event) => setAdminNombre(event.target.value)}
             placeholder="Tu nombre (se usa en Conversiones para la URL del endpoint)"
             className="w-full rounded-lg border border-zinc-700 bg-zinc-900 px-3 py-2 text-sm text-zinc-100"
           />
-          <p className="mt-2 text-[11px] text-zinc-500 leading-relaxed">
-            <strong>Para qué se usa:</strong> Se utiliza para construir la URL del endpoint de conversiones (<span className="font-mono">?name=tu-nombre</span>). También aparece como tu nombre de perfil.
+          <p className="mt-2 text-[11px] leading-relaxed text-zinc-500">
+            <strong>Para que se usa:</strong> Se utiliza para construir la URL
+            del endpoint de conversiones (
+            <span className="font-mono">?name=tu-nombre</span>). Tambien
+            aparece como tu nombre de perfil.
           </p>
         </div>
+
         <div>
-          <label htmlFor="url_base" className="block text-xs font-medium text-zinc-400 mb-1">
+          <label
+            htmlFor="url_base"
+            className="mb-1 block text-xs font-medium text-zinc-400"
+          >
             URL base
           </label>
           <input
             id="url_base"
             type="url"
             value={urlBase}
-            onChange={(e) => setUrlBase(e.target.value)}
-            placeholder="https://tu-landing.vercel.app"
+            onChange={(event) => setUrlBase(event.target.value)}
+            placeholder="https://landing.panelbotadmin.com"
             className="w-full rounded-lg border border-zinc-700 bg-zinc-900 px-3 py-2 text-sm text-zinc-100"
           />
-          <p className="mt-2 text-[11px] text-zinc-500 leading-relaxed">
-            <strong>Para qué se usa:</strong> Es la URL raíz de tu landing pública (ej. <span className="font-mono">https://tu-landing.vercel.app</span>). El constructor la usa para: (1) Enviar <span className="font-mono">POST &lt;URL base&gt;/api/revalidate</span> después de guardar una landing (con nombre y secreto), para invalidar la caché de esa ruta (ISR). (2) Enviar <span className="font-mono">GET &lt;URL base&gt;/&lt;nombre&gt;?warm=1</span> para regenerar la página y dejarla cacheada al instante. (3) Los enlaces &quot;Abrir landing&quot; en el listado. Si no configurás URL base, el guardado en Supabase funciona igual pero no se revalida ni se calienta la landing pública.
+          <p className="mt-2 text-[11px] leading-relaxed text-zinc-500">
+            <strong>Para que se usa:</strong> Es la URL publica que ven los
+            usuarios y Meta Ads. Se usa para revalidar cache, calentar landings
+            y armar los links &quot;Abrir landing&quot;.
           </p>
         </div>
+
         <div>
           <label
             htmlFor="revalidate_secret"
-            className="block text-xs font-medium text-zinc-400 mb-1"
+            className="mb-1 block text-xs font-medium text-zinc-400"
           >
-            Secreto para revalidar landing pública (ISR)
+            Secreto para revalidar landing publica (ISR)
           </label>
           <div className="relative">
             <input
               id="revalidate_secret"
               type={showSecret ? "text" : "password"}
               value={revalidateSecret}
-              onChange={(e) => setRevalidateSecret(e.target.value)}
+              onChange={(event) => setRevalidateSecret(event.target.value)}
               placeholder="Secreto compartido con /api/revalidate"
               className="w-full rounded-lg border border-zinc-700 bg-zinc-900 px-3 py-2 pr-10 text-sm text-zinc-100"
             />
             <button
               type="button"
-              onClick={() => setShowSecret((v) => !v)}
+              onClick={() => setShowSecret((value) => !value)}
               className="absolute inset-y-0 right-2 flex items-center text-[11px] text-zinc-400 hover:text-zinc-200"
             >
               {showSecret ? "Ocultar" : "Ver"}
             </button>
           </div>
-          <p className="mt-2 text-[11px] text-zinc-500 leading-relaxed">
-            <strong>Para qué se usa:</strong> Secreto compartido entre el constructor y la landing pública. Debe coincidir con la variable <span className="font-mono">REVALIDATE_SECRET</span> del proyecto de la landing (Vercel). Al guardar una landing, el constructor envía <span className="font-mono">POST &lt;URL base&gt;/api/revalidate</span> con <span className="font-mono">{`{ name: "<nombre>", secret: "<este valor>" }`}</span>. El endpoint de la landing valida el secreto y ejecuta <span className="font-mono">revalidatePath(&#39;/&lt;nombre&gt;&#39;)</span>, invalidando la caché. Después el constructor hace <span className="font-mono">GET &lt;URL base&gt;/&lt;nombre&gt;?warm=1</span> para regenerar la página y dejarla cacheada. Sin este secreto (o con URL base vacía) no se realiza la revalidación.
+          <p className="mt-2 text-[11px] leading-relaxed text-zinc-500">
+            <strong>Para que se usa:</strong> Es una clave interna para que
+            solo el constructor pueda decirle a la landing publica que refresque
+            su cache.
           </p>
         </div>
+
+        <div className="space-y-3 rounded-xl border border-lime-500/20 bg-lime-500/5 p-4">
+          <div>
+            <p className="text-sm font-semibold text-zinc-100">
+              Motor de landing publica
+            </p>
+            <p className="mt-1 text-[11px] leading-relaxed text-zinc-400">
+              Controla que version atiende a{" "}
+              <span className="font-mono">landing.panelbotadmin.com</span>{" "}
+              cuando movamos ese dominio al constructor.
+            </p>
+          </div>
+
+          <div className="grid grid-cols-2 gap-2 rounded-lg bg-zinc-950/60 p-1">
+            <button
+              type="button"
+              onClick={() => setPublicLandingRuntime("legacy")}
+              className={`rounded-md px-3 py-2 text-xs font-medium transition ${
+                publicLandingRuntime === "legacy"
+                  ? "bg-zinc-100 text-zinc-950"
+                  : "text-zinc-400 hover:bg-zinc-900 hover:text-zinc-100"
+              }`}
+            >
+              Vieja actual
+            </button>
+            <button
+              type="button"
+              onClick={() => setPublicLandingRuntime("constructor")}
+              className={`rounded-md px-3 py-2 text-xs font-medium transition ${
+                publicLandingRuntime === "constructor"
+                  ? "bg-lime-300 text-zinc-950"
+                  : "text-zinc-400 hover:bg-zinc-900 hover:text-zinc-100"
+              }`}
+            >
+              Constructor
+            </button>
+          </div>
+
+          <div>
+            <label
+              htmlFor="public_landing_legacy_base_url"
+              className="mb-1 block text-xs font-medium text-zinc-400"
+            >
+              URL tecnica de la landing vieja
+            </label>
+            <input
+              id="public_landing_legacy_base_url"
+              type="url"
+              value={publicLandingLegacyBaseUrl}
+              onChange={(event) =>
+                setPublicLandingLegacyBaseUrl(event.target.value)
+              }
+              placeholder="https://public-landing-bl.vercel.app"
+              className="w-full rounded-lg border border-zinc-700 bg-zinc-900 px-3 py-2 text-sm text-zinc-100"
+            />
+            <p className="mt-2 text-[11px] leading-relaxed text-zinc-500">
+              Si el switch esta en &quot;Vieja actual&quot;, el constructor usa
+              esta URL por detras como fallback sin cambiar la URL visible.
+            </p>
+          </div>
+        </div>
+
         <div className="flex items-start gap-3 rounded-lg border border-zinc-800 bg-zinc-900/60 px-3 py-3">
           <input
             id="show_client_preview"
             type="checkbox"
             checked={showClientLandingPreview}
-            onChange={(e) => setShowClientLandingPreview(e.target.checked)}
+            onChange={(event) =>
+              setShowClientLandingPreview(event.target.checked)
+            }
             className="mt-1 h-4 w-4 rounded border-zinc-600 bg-zinc-900"
           />
           <div>
@@ -161,12 +265,13 @@ export default function AdminSettingsPage() {
               Mostrar preview del editor de landings a clientes
             </label>
             <p className="mt-1 text-[11px] text-zinc-400">
-              Si está desactivado, en el dashboard de clientes no se mostrará
-              la vista previa del teléfono en el editor de landings. En el
-              panel de administrador siempre se mostrará.
+              Si esta desactivado, en el dashboard de clientes no se mostrara
+              la vista previa del telefono en el editor de landings. En el panel
+              de administrador siempre se mostrara.
             </p>
           </div>
         </div>
+
         <button
           type="submit"
           disabled={saving}
@@ -178,4 +283,3 @@ export default function AdminSettingsPage() {
     </div>
   );
 }
-

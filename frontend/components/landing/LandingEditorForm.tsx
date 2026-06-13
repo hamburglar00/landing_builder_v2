@@ -217,11 +217,7 @@ export function LandingEditorForm({
         setProbarError("Número inválido.");
         return;
       }
-      const prefillText =
-        config.interactionsEnabled && config.whatsappPrefillText.trim()
-          ? `?text=${encodeURIComponent(config.whatsappPrefillText.trim())}`
-          : "";
-      window.open(`https://wa.me/${digits}${prefillText}`, "_blank", "noopener,noreferrer");
+      window.open(`https://wa.me/${digits}`, "_blank", "noopener,noreferrer");
     } catch {
       setProbarError("Error al obtener el número.");
     } finally {

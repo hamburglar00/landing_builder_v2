@@ -350,7 +350,9 @@ export default function AdminLandingEditarPage() {
               secret: revalidateSecret,
             }),
           });
-          // Calentar la Edge Function builder-config para que la primera visita a la landing no pague cold start.
+          fetch(`${base}/${encodeURIComponent(landing.name)}?warm=1`).catch(() => {});
+          fetch(`${base}/l/${encodeURIComponent(landing.name)}?warm=1`).catch(() => {});
+          // Calentar builder-config para que la primera visita no pague cold start.
           const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL?.replace(/\/$/, "");
           const anonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY ?? "";
           if (supabaseUrl && anonKey) {
@@ -360,7 +362,7 @@ export default function AdminLandingEditarPage() {
             ).catch(() => {});
           }
         } catch {
-          // No bloqueamos el guardado si falla la revalidación.
+          // No bloqueamos el guardado si falla la revalidacion.
         }
       }
       router.push(BASE);
