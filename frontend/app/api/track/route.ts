@@ -1,7 +1,8 @@
 import { NextRequest, NextResponse } from "next/server";
 
 const MAX_ATTEMPTS = 2;
-const TRACK_TIMEOUT_MS = 1800;
+const TRACK_TIMEOUT_MS = 8000;
+const RETRY_DELAY_MS = 1500;
 
 type TrackBody = {
   postUrl?: unknown;
@@ -41,6 +42,10 @@ async function postWithTimeout(url: string, body: unknown, timeoutMs: number) {
   }
 }
 
+function delay(ms: number) {
+  return new Promise((resolve) => setTimeout(resolve, ms));
+}
+
 export async function POST(request: NextRequest) {
   let body: TrackBody;
 
@@ -67,6 +72,10 @@ export async function POST(request: NextRequest) {
   let lastStatus = 0;
 
   for (let attempt = 1; attempt <= MAX_ATTEMPTS; attempt += 1) {
+    if (attempt > 1) {
+      await delay(RETRY_DELAY_MS);
+    }
+
     try {
       const response = await postWithTimeout(body.postUrl, payload, TRACK_TIMEOUT_MS);
       lastStatus = response.status;
