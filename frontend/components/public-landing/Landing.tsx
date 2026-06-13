@@ -1,4 +1,5 @@
 import PixelInit from "./PixelInit";
+import PhonePrewarmScript from "./PhonePrewarmScript";
 import Template1View from "./Template1View";
 import Template2View from "./Template2View";
 import Template3View from "./Template3View";
@@ -33,6 +34,7 @@ export default function PublicLanding({ slug, config }: Props) {
     return (
       <>
         {pixelBlock}
+        <PhonePrewarmScript slug={slug} />
         <Template3View slug={slug} config={config} />
       </>
     );
@@ -42,6 +44,7 @@ export default function PublicLanding({ slug, config }: Props) {
     return (
       <>
         {pixelBlock}
+        <PhonePrewarmScript slug={slug} />
         <Template2View slug={slug} config={config} />
       </>
     );
@@ -50,6 +53,7 @@ export default function PublicLanding({ slug, config }: Props) {
   return (
     <>
       {pixelBlock}
+      <PhonePrewarmScript slug={slug} />
       <Template1View slug={slug} config={config} />
     </>
   );

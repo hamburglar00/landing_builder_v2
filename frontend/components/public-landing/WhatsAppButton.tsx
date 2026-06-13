@@ -29,6 +29,10 @@ declare global {
       externalId?: string;
       safeUUID?: () => string;
     };
+    __PUBLIC_LANDING_PHONE_PROMISES?: Record<
+      string,
+      Promise<Awaited<ReturnType<typeof getPublicLandingPhone>> | null>
+    >;
   }
 }
 
@@ -293,11 +297,21 @@ export default function WhatsAppButton({
 
   function ensurePhonePromise() {
     if (!phonePromiseRef.current) {
-      phonePromiseRef.current = getPublicLandingPhone(slug)
-        .then((data) => data)
-        .catch(() => null);
+      phonePromiseRef.current =
+        typeof window !== "undefined" &&
+        window.__PUBLIC_LANDING_PHONE_PROMISES?.[slug]
+          ? window.__PUBLIC_LANDING_PHONE_PROMISES[slug]
+          : getPublicLandingPhone(slug)
+              .then((data) => data)
+              .catch(() => null);
     }
     return phonePromiseRef.current;
+  }
+
+  function clearPrewarmedPhonePromise() {
+    if (typeof window === "undefined") return;
+    if (!window.__PUBLIC_LANDING_PHONE_PROMISES) return;
+    delete window.__PUBLIC_LANDING_PHONE_PROMISES[slug];
   }
 
   useEffect(() => {
@@ -314,6 +328,7 @@ export default function WhatsAppButton({
         const data = await ensurePhonePromise();
         if (data?.phone) return;
         phonePromiseRef.current = null;
+        clearPrewarmedPhonePromise();
       }
     };
 
@@ -424,6 +439,7 @@ export default function WhatsAppButton({
       let phoneData = await waitWithTimeout(ensurePhonePromise(), 1500);
       if (!phoneData?.phone) {
         phonePromiseRef.current = null;
+        clearPrewarmedPhonePromise();
         phoneData = await waitWithTimeout(ensurePhonePromise(), 2500);
       }
 

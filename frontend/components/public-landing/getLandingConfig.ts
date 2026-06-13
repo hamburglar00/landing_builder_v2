@@ -19,7 +19,7 @@ export async function getPublicLandingConfig(
       Authorization: `Bearer ${anonKey}`,
     },
     cache: "force-cache",
-    next: { revalidate: 60, tags: [`landing-config:${name}`] },
+    next: { tags: [`landing-config:${name}`] },
   });
 
   if (response.status === 404) return null;

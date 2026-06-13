@@ -9,7 +9,7 @@ type PageProps = {
   }>;
 };
 
-export const revalidate = 60;
+export const revalidate = false;
 export const dynamic = "force-static";
 
 export async function generateMetadata({ params }: PageProps): Promise<Metadata> {
