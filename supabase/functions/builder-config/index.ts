@@ -204,6 +204,7 @@ Deno.serve(async (req) => {
       const typography = (cfg.typography as Record<string, unknown>) ?? {};
       const ctaTypography = (typography.cta as Record<string, unknown>) ?? {};
       const rawBackground = (cfg.background as Record<string, unknown>) ?? {};
+      const rawInteractions = (cfg.interactions as Record<string, unknown>) ?? {};
       const rawImages = Array.isArray(rawBackground.images)
         ? (rawBackground.images as string[])
         : [];
@@ -234,6 +235,17 @@ Deno.serve(async (req) => {
           ...rawBackground,
           images: rawImages.map((url) => buildOptimizedImageUrl(url)),
           imagesResponsive: rawImages.map((url) => buildResponsiveImageSet(url)),
+        },
+        interactions: {
+          ...rawInteractions,
+          enabled:
+            typeof rawConfig.interactionsEnabled === "boolean"
+              ? rawConfig.interactionsEnabled
+              : ((rawInteractions.enabled as boolean | undefined) ?? false),
+          whatsappPrefillText:
+            typeof rawConfig.whatsappPrefillText === "string"
+              ? rawConfig.whatsappPrefillText
+              : ((rawInteractions.whatsappPrefillText as string | undefined) ?? ""),
         },
       };
       return new Response(JSON.stringify(merged), {
@@ -329,6 +341,10 @@ Deno.serve(async (req) => {
         mode:
           (data.phone_mode as "random" | "fair" | null) ??
           "random",
+      },
+      interactions: {
+        enabled: (themeWithHex.interactionsEnabled as boolean | undefined) ?? false,
+        whatsappPrefillText: (themeWithHex.whatsappPrefillText as string) ?? "",
       },
       layout: {
         ctaPosition:

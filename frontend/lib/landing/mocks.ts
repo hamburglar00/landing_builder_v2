@@ -42,4 +42,6 @@ export const DEFAULT_CONFIG: LandingThemeConfig = {
   ctaGlowColor: "gold",
   sendContactPixel: true,
   socialProofEnabled: false,
+  interactionsEnabled: false,
+  whatsappPrefillText: "",
 };

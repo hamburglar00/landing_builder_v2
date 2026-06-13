@@ -56,6 +56,10 @@ export interface LandingConfigPayload {
   socialProof?: {
     enabled: boolean;
   };
+  interactions?: {
+    enabled: boolean;
+    whatsappPrefillText: string;
+  };
 }
 
 interface BuildArgs {
@@ -99,6 +103,10 @@ export function buildLandingConfig({
       },
       socialProof: {
         enabled: config.socialProofEnabled,
+      },
+      interactions: {
+        enabled: config.interactionsEnabled,
+        whatsappPrefillText: config.whatsappPrefillText.trim(),
       },
     };
   }
@@ -197,6 +205,10 @@ export function buildLandingConfig({
     },
     socialProof: {
       enabled: themeWithHex.socialProofEnabled,
+    },
+    interactions: {
+      enabled: themeWithHex.interactionsEnabled,
+      whatsappPrefillText: themeWithHex.whatsappPrefillText.trim(),
     },
   };
 }

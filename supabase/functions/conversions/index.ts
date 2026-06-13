@@ -953,6 +953,10 @@ async function sendToMetaCAPI(
     eventName === "Contact" ? "contact_status_capi" :
     eventName === "Lead" ? "lead_status_capi" :
     "purchase_status_capi";
+  const retryableField =
+    eventName === "Contact" ? "contact_capi_retryable" :
+    eventName === "Lead" ? "lead_capi_retryable" :
+    "";
 
   const okMsg =
     eventName === "Contact" ? "CONTACT OK" :
@@ -1005,7 +1009,9 @@ async function sendToMetaCAPI(
     const skippedMsg = `${eventName.toUpperCase()} CAPI OMITIDO EVENT_TIME ANTIGUO`;
     const { data: current } = await db.from("conversions").select("observaciones").eq("id", rowId).single();
     const obs = appendObservation(current?.observaciones ?? "", skippedMsg);
-    await db.from("conversions").update({ [statusField]: "skipped_old_event_time", observaciones: obs }).eq("id", rowId);
+    const updates: Record<string, unknown> = { [statusField]: "skipped_old_event_time", observaciones: obs };
+    if (retryableField) updates[retryableField] = false;
+    await db.from("conversions").update(updates).eq("id", rowId);
     await writeLog(
       db,
       row.user_id,
@@ -1031,7 +1037,9 @@ async function sendToMetaCAPI(
       "ERROR PURCHASE NO CONFIG";
     const { data: current } = await db.from("conversions").select("observaciones").eq("id", rowId).single();
     const obs = appendObservation(current?.observaciones ?? "", missingCfgMsg);
-    await db.from("conversions").update({ [statusField]: "error", observaciones: obs }).eq("id", rowId);
+    const updates: Record<string, unknown> = { [statusField]: "error", observaciones: obs };
+    if (retryableField) updates[retryableField] = false;
+    await db.from("conversions").update(updates).eq("id", rowId);
     await writeLog(db, row.user_id, "sendToMetaCAPI", "ERROR", "Meta CAPI no configurado", JSON.stringify({
       has_token: !!effectiveConfig.meta_access_token,
       has_pixel: !!effectiveConfig.pixel_id,
@@ -1071,10 +1079,12 @@ async function sendToMetaCAPI(
   const baseDelayMs = 500;
   const metaPayloadRaw = JSON.stringify(body);
 
-  const persistError = async (detail: string, responseRaw = "") => {
+  const persistError = async (detail: string, responseRaw = "", retryable = false) => {
     const { data: current } = await db.from("conversions").select("observaciones").eq("id", rowId).single();
     const obs = appendObservation(current?.observaciones ?? "", errMsg);
-    await db.from("conversions").update({ [statusField]: "error", observaciones: obs }).eq("id", rowId);
+    const updates: Record<string, unknown> = { [statusField]: "error", observaciones: obs };
+    if (retryableField) updates[retryableField] = retryable;
+    await db.from("conversions").update(updates).eq("id", rowId);
     await writeLog(
       db,
       row.user_id,
@@ -1117,13 +1127,15 @@ async function sendToMetaCAPI(
         const hasZeroEventsReceived = Number.isFinite(eventsReceived) && eventsReceived <= 0;
 
         if (hasErrorObject || hasZeroEventsReceived) {
-          await persistError(`HTTP 200 inconsistente (attempt ${attempt}/${maxAttempts}): ${resText}`, resText);
+          await persistError(`HTTP 200 inconsistente (attempt ${attempt}/${maxAttempts}): ${resText}`, resText, false);
           return false;
         }
 
         const { data: current } = await db.from("conversions").select("observaciones").eq("id", rowId).single();
         const obs = appendObservation(current?.observaciones ?? "", okMsg);
-        await db.from("conversions").update({ [statusField]: "enviado", observaciones: obs }).eq("id", rowId);
+        const updates: Record<string, unknown> = { [statusField]: "enviado", observaciones: obs };
+        if (retryableField) updates[retryableField] = false;
+        await db.from("conversions").update(updates).eq("id", rowId);
         const primaryLogOk = await writeLog(
           db,
           row.user_id,
@@ -1173,7 +1185,7 @@ async function sendToMetaCAPI(
       }
 
       if (!isTransientHttp || attempt === maxAttempts) {
-        await persistError(`HTTP ${res.status} (attempt ${attempt}/${maxAttempts}): ${resText}`, resText);
+        await persistError(`HTTP ${res.status} (attempt ${attempt}/${maxAttempts}): ${resText}`, resText, isTransientHttp);
         return false;
       }
 
@@ -1189,7 +1201,7 @@ async function sendToMetaCAPI(
       await new Promise((r) => setTimeout(r, baseDelayMs * attempt));
     } catch (e) {
       if (attempt === maxAttempts) {
-        await persistError(`Excepcion en llamada Meta (attempt ${attempt}/${maxAttempts}): ${String(e)}`);
+        await persistError(`Excepcion en llamada Meta (attempt ${attempt}/${maxAttempts}): ${String(e)}`, "", true);
         return false;
       }
       await writeLog(
@@ -1205,7 +1217,7 @@ async function sendToMetaCAPI(
     }
   }
 
-  await persistError("Fallo desconocido luego de agotar reintentos");
+  await persistError("Fallo desconocido luego de agotar reintentos", "", true);
   return false;
 }
 

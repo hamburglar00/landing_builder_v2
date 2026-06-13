@@ -217,7 +217,11 @@ export function LandingEditorForm({
         setProbarError("Número inválido.");
         return;
       }
-      window.open(`https://wa.me/${digits}`, "_blank", "noopener,noreferrer");
+      const prefillText =
+        config.interactionsEnabled && config.whatsappPrefillText.trim()
+          ? `?text=${encodeURIComponent(config.whatsappPrefillText.trim())}`
+          : "";
+      window.open(`https://wa.me/${digits}${prefillText}`, "_blank", "noopener,noreferrer");
     } catch {
       setProbarError("Error al obtener el número.");
     } finally {
@@ -797,6 +801,48 @@ export function LandingEditorForm({
         </section>
       )}
 
+      <section className="rounded-xl border border-zinc-800 bg-zinc-900/50 p-4">
+        <div className="flex items-center justify-between gap-4">
+          <div>
+            <h3 className="text-sm font-semibold text-zinc-100">
+              Interacciones
+            </h3>
+            <p className="mt-1 text-xs text-zinc-500">
+              Agrega texto al mensaje prellenado cuando la landing redirige a WhatsApp.
+            </p>
+          </div>
+          <div className="flex items-center gap-3">
+            <span className="text-xs font-medium text-zinc-400">
+              {config.interactionsEnabled ? "Activadas" : "Desactivadas"}
+            </span>
+            <ToggleSwitch
+              checked={config.interactionsEnabled}
+              label="Activar interacciones"
+              onChange={(interactionsEnabled) =>
+                updateConfig(setConfig, { interactionsEnabled })
+              }
+            />
+          </div>
+        </div>
+
+        {config.interactionsEnabled && (
+          <div className="mt-4">
+            <label className="mb-1 block text-xs font-medium text-zinc-400">
+              Texto para WhatsApp
+            </label>
+            <textarea
+              value={config.whatsappPrefillText}
+              onChange={(e) =>
+                updateConfig(setConfig, { whatsappPrefillText: e.target.value })
+              }
+              rows={3}
+              placeholder="Oportunidad desbloqueada: siguenos en nuestra fan page y reclama tu bono..."
+              className="w-full resize-y rounded-lg border border-zinc-700 bg-zinc-900 px-3 py-2 text-sm text-zinc-100 placeholder:text-zinc-600"
+            />
+          </div>
+        )}
+      </section>
+
       {/* Acciones */}
       <div className="flex flex-wrap gap-3 border-t border-zinc-800 pt-6">
         <button
@@ -839,7 +885,8 @@ export function LandingEditorForm({
                 textos), <span className="font-medium">typography</span>,{" "}
                 <span className="font-medium">colors</span> (en formato hex) y{" "}
                 <span className="font-medium">layout</span> (posición del CTA y
-                plantilla).
+                plantilla), <span className="font-medium">interactions</span>{" "}
+                (mensaje prellenado de WhatsApp).
                 No incluye la configuración de redirección (gerencias, pesos,
                 modo, intervalos).
               </p>

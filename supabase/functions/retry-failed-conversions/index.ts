@@ -1,4 +1,4 @@
-import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
+import { createClient, type SupabaseClient } from "https://esm.sh/@supabase/supabase-js@2";
 import { buildMetaRequest, type ConversionRow, type ConversionsConfig } from "../conversions/shared.ts";
 
 const corsHeaders = {
@@ -10,6 +10,24 @@ const BACKFILL_WINDOW_BEFORE_SECONDS = 90;
 const BACKFILL_WINDOW_AFTER_SECONDS = 30;
 const DUPLICATE_LEAD_LOG_BACKFILL_LIMIT = 75;
 const META_CAPI_MAX_EVENT_AGE_SECONDS = 7 * 24 * 60 * 60;
+const MAX_CONTACT_LEAD_CAPI_RETRIES = 6;
+const MIN_CONTACT_LEAD_RETRY_INTERVAL_MS = 5 * 60 * 1000;
+const CONTACT_LEAD_CAPI_RETRY_SELECT = `
+  id, landing_id, user_id, landing_name,
+  phone, email, fn, ln, ct, st, zip, country,
+  fbp, fbc, pixel_id,
+  contact_event_id, contact_event_time, contact_payload_raw,
+  lead_event_id, lead_event_time, lead_payload_raw,
+  purchase_event_id, purchase_event_time, purchase_payload_raw,
+  client_ip, agent_user, device_type, event_source_url,
+  estado, valor,
+  contact_status_capi, lead_status_capi, purchase_status_capi,
+  observaciones,
+  external_id, utm_campaign, telefono_asignado, promo_code,
+  geo_city, geo_region, geo_country,
+  contact_capi_retry_count, lead_capi_retry_count,
+  contact_capi_last_retry_at, lead_capi_last_retry_at
+`.replace(/\s+/g, " ").trim();
 
 /**
  * Cron de reintentos: busca purchases con status != 'enviado' y reintenta el envío a Meta CAPI.
@@ -67,6 +85,41 @@ Deno.serve(async (req) => {
       auth: { autoRefreshToken: false, persistSession: false },
     });
 
+    const { data: contactRetryRowsData, error: contactRetryError } = await db
+      .from("conversions")
+      .select(CONTACT_LEAD_CAPI_RETRY_SELECT)
+      .eq("contact_capi_retryable", true)
+      .eq("contact_status_capi", "error")
+      .lt("contact_capi_retry_count", MAX_CONTACT_LEAD_CAPI_RETRIES)
+      .order("created_at", { ascending: true })
+      .limit(100);
+
+    if (contactRetryError) {
+      return new Response(JSON.stringify({ error: "Error al buscar Contact CAPI retry" }), {
+        status: 500,
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
+
+    const { data: leadRetryRowsData, error: leadRetryError } = await db
+      .from("conversions")
+      .select(CONTACT_LEAD_CAPI_RETRY_SELECT)
+      .eq("lead_capi_retryable", true)
+      .eq("lead_status_capi", "error")
+      .lt("lead_capi_retry_count", MAX_CONTACT_LEAD_CAPI_RETRIES)
+      .order("created_at", { ascending: true })
+      .limit(100);
+
+    if (leadRetryError) {
+      return new Response(JSON.stringify({ error: "Error al buscar Lead CAPI retry" }), {
+        status: 500,
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
+
+    const contactRetryRows = (contactRetryRowsData ?? []) as unknown as CapiRetryRow[];
+    const leadRetryRows = (leadRetryRowsData ?? []) as unknown as CapiRetryRow[];
+
     // Find purchases that need retry
     const { data: rows, error } = await db
       .from("conversions")
@@ -87,15 +140,23 @@ Deno.serve(async (req) => {
     const purchaseRows = rows ?? [];
 
     // Group by user to get their legacy and per-pixel configs
-    const userIds = [...new Set(purchaseRows.map((r) => r.user_id))];
-    const { data: configs } = await db
-      .from("conversions_config")
-      .select("*")
-      .in("user_id", userIds);
-    const { data: pixelConfigs } = await db
-      .from("conversions_pixel_configs")
-      .select("user_id, pixel_id, meta_access_token, meta_currency, meta_api_version, is_default")
-      .in("user_id", userIds);
+    const userIds = [...new Set([
+      ...purchaseRows.map((r) => String(r.user_id)),
+      ...contactRetryRows.map((r) => String(r.user_id)),
+      ...leadRetryRows.map((r) => String(r.user_id)),
+    ].filter(Boolean))];
+    const { data: configs } = userIds.length > 0
+      ? await db
+        .from("conversions_config")
+        .select("*")
+        .in("user_id", userIds)
+      : { data: [] };
+    const { data: pixelConfigs } = userIds.length > 0
+      ? await db
+        .from("conversions_pixel_configs")
+        .select("user_id, pixel_id, meta_access_token, meta_currency, meta_api_version, is_default")
+        .in("user_id", userIds)
+      : { data: [] };
 
     const configMap = new Map<string, Record<string, unknown>>();
     for (const c of configs ?? []) {
@@ -107,6 +168,14 @@ Deno.serve(async (req) => {
       list.push(pc as Record<string, unknown>);
       pixelConfigMap.set(String(pc.user_id), list);
     }
+
+    const contactLeadRetryStats = await retryContactLeadCapiEvents(
+      db,
+      contactRetryRows,
+      leadRetryRows,
+      configMap,
+      pixelConfigMap,
+    );
 
     let retried = 0;
     let succeeded = 0;
@@ -250,8 +319,19 @@ Deno.serve(async (req) => {
             purchase_event_time: eventTime,
             observaciones: obs,
           }).eq("id", row.id);
+          await writeConversionLog(
+            db,
+            row.user_id,
+            row.id,
+            "INFO",
+            "Meta CAPI retry Purchase OK",
+            "HTTP 200",
+            JSON.stringify(metaReq.body),
+            await res.clone().text().catch(() => ""),
+          );
           succeeded++;
         } else {
+          const resText = await res.clone().text().catch(() => "");
           const obs = appendObs(row.observaciones ?? "", "ERROR PURCHASE");
           await db.from("conversions").update({
             purchase_status_capi: "error",
@@ -259,13 +339,33 @@ Deno.serve(async (req) => {
             purchase_event_time: eventTime,
             observaciones: obs,
           }).eq("id", row.id);
+          await writeConversionLog(
+            db,
+            row.user_id,
+            row.id,
+            "ERROR",
+            "Meta CAPI retry Purchase fallo",
+            `HTTP ${res.status}: ${resText}`,
+            JSON.stringify(metaReq.body),
+            resText,
+          );
         }
-      } catch {
+      } catch (err) {
         const obs = appendObs(row.observaciones ?? "", "ERROR PURCHASE");
         await db.from("conversions").update({
           purchase_status_capi: "error",
           observaciones: obs,
         }).eq("id", row.id);
+        await writeConversionLog(
+          db,
+          row.user_id,
+          row.id,
+          "ERROR",
+          "Meta CAPI retry Purchase excepcion",
+          String(err),
+          JSON.stringify(metaReq.body),
+          "",
+        );
       }
     }
 
@@ -650,6 +750,14 @@ Deno.serve(async (req) => {
         success: true,
         retried,
         succeeded,
+        contact_capi_retried: contactLeadRetryStats.contactRetried,
+        contact_capi_succeeded: contactLeadRetryStats.contactSucceeded,
+        contact_capi_failed: contactLeadRetryStats.contactFailed,
+        contact_capi_skipped: contactLeadRetryStats.contactSkipped,
+        lead_capi_retried: contactLeadRetryStats.leadRetried,
+        lead_capi_succeeded: contactLeadRetryStats.leadSucceeded,
+        lead_capi_failed: contactLeadRetryStats.leadFailed,
+        lead_capi_skipped: contactLeadRetryStats.leadSkipped,
         deferred_leads_picked: deferredLeadsPicked,
         deferred_leads_processed: deferredLeadsProcessed,
         deferred_leads_failed: deferredLeadsFailed,
@@ -684,6 +792,298 @@ function appendObs(current: string, token: string): string {
   if (parts.includes(clean)) return cur;
   parts.push(clean);
   return parts.join(" | ");
+}
+
+type CapiRetryEventName = "Contact" | "Lead";
+
+type CapiRetryRow = ConversionRow & {
+  id: string;
+  contact_capi_retry_count?: number | string | null;
+  lead_capi_retry_count?: number | string | null;
+  contact_capi_last_retry_at?: string | null;
+  lead_capi_last_retry_at?: string | null;
+};
+
+type CapiRetryStats = {
+  contactRetried: number;
+  contactSucceeded: number;
+  contactFailed: number;
+  contactSkipped: number;
+  leadRetried: number;
+  leadSucceeded: number;
+  leadFailed: number;
+  leadSkipped: number;
+};
+
+async function retryContactLeadCapiEvents(
+  db: SupabaseClient,
+  contactRows: CapiRetryRow[],
+  leadRows: CapiRetryRow[],
+  configMap: Map<string, Record<string, unknown>>,
+  pixelConfigMap: Map<string, Array<Record<string, unknown>>>,
+): Promise<CapiRetryStats> {
+  const stats: CapiRetryStats = {
+    contactRetried: 0,
+    contactSucceeded: 0,
+    contactFailed: 0,
+    contactSkipped: 0,
+    leadRetried: 0,
+    leadSucceeded: 0,
+    leadFailed: 0,
+    leadSkipped: 0,
+  };
+
+  for (const row of contactRows) {
+    await retrySingleContactLeadCapiEvent(db, row, "Contact", configMap, pixelConfigMap, stats);
+  }
+  for (const row of leadRows) {
+    await retrySingleContactLeadCapiEvent(db, row, "Lead", configMap, pixelConfigMap, stats);
+  }
+
+  return stats;
+}
+
+async function retrySingleContactLeadCapiEvent(
+  db: SupabaseClient,
+  row: CapiRetryRow,
+  eventName: CapiRetryEventName,
+  configMap: Map<string, Record<string, unknown>>,
+  pixelConfigMap: Map<string, Array<Record<string, unknown>>>,
+  stats: CapiRetryStats,
+): Promise<void> {
+  const isContact = eventName === "Contact";
+  const retriedKey = isContact ? "contactRetried" : "leadRetried";
+  const succeededKey = isContact ? "contactSucceeded" : "leadSucceeded";
+  const failedKey = isContact ? "contactFailed" : "leadFailed";
+  const skippedKey = isContact ? "contactSkipped" : "leadSkipped";
+  const statusField = isContact ? "contact_status_capi" : "lead_status_capi";
+  const retryableField = isContact ? "contact_capi_retryable" : "lead_capi_retryable";
+  const retryCountField = isContact ? "contact_capi_retry_count" : "lead_capi_retry_count";
+  const lastRetryField = isContact ? "contact_capi_last_retry_at" : "lead_capi_last_retry_at";
+  const eventId = normalizeText(isContact ? row.contact_event_id : row.lead_event_id);
+  const eventTime = Number(isContact ? row.contact_event_time : row.lead_event_time);
+  const retryCount = Number(row[retryCountField] ?? 0);
+  const lastRetryAt = normalizeText(row[lastRetryField]);
+  const nowIso = new Date().toISOString();
+
+  const skip = async (reason: string, updates: Record<string, unknown> = {}) => {
+    stats[skippedKey]++;
+    await db.from("conversions").update({
+      [retryableField]: false,
+      ...updates,
+    }).eq("id", row.id);
+    await writeConversionLog(
+      db,
+      row.user_id,
+      row.id,
+      "WARN",
+      `Meta CAPI retry ${eventName} omitido`,
+      reason,
+      "",
+      "",
+    );
+  };
+
+  if (!eventId || !Number.isFinite(eventTime) || eventTime <= 0) {
+    await skip(JSON.stringify({ event_name: eventName, reason: "event_id/event_time invalido", event_id: eventId, event_time: eventTime }));
+    return;
+  }
+
+  if (lastRetryAt) {
+    const lastRetryMs = Date.parse(lastRetryAt);
+    if (Number.isFinite(lastRetryMs) && Date.now() - lastRetryMs < MIN_CONTACT_LEAD_RETRY_INTERVAL_MS) {
+      stats[skippedKey]++;
+      return;
+    }
+  }
+
+  if (retryCount >= MAX_CONTACT_LEAD_CAPI_RETRIES) {
+    await skip(JSON.stringify({ event_name: eventName, reason: "max retries alcanzado", retry_count: retryCount }));
+    return;
+  }
+
+  if (isEventTimeTooOldForMetaCapi(eventTime)) {
+    const oldMsg = `${eventName.toUpperCase()} CAPI OMITIDO EVENT_TIME ANTIGUO`;
+    await skip(
+      JSON.stringify({ event_name: eventName, reason: "event_time mayor a 7 dias", event_time: eventTime }),
+      {
+        [statusField]: "skipped_old_event_time",
+        observaciones: appendObs(row.observaciones ?? "", oldMsg),
+      },
+    );
+    return;
+  }
+
+  const config = resolveRetryConfig(row, configMap, pixelConfigMap);
+  if (!config) {
+    stats[failedKey]++;
+    await db.from("conversions").update({
+      [retryableField]: false,
+      [lastRetryField]: nowIso,
+    }).eq("id", row.id);
+    await writeConversionLog(
+      db,
+      row.user_id,
+      row.id,
+      "ERROR",
+      `Meta CAPI retry ${eventName} sin config`,
+      JSON.stringify({ event_name: eventName, pixel_id: row.pixel_id ?? "" }),
+      "",
+      "",
+    );
+    return;
+  }
+
+  const metaReq = await buildMetaRequest(
+    config,
+    row as ConversionRow,
+    eventName,
+    eventId,
+    eventTime,
+  );
+  const metaPayloadRaw = JSON.stringify(metaReq.body);
+  stats[retriedKey]++;
+
+  const fail = async (detail: string, responseRaw = "", retryableNext = false) => {
+    stats[failedKey]++;
+    const nextRetryCount = retryCount + 1;
+    const shouldKeepRetrying = retryableNext && nextRetryCount < MAX_CONTACT_LEAD_CAPI_RETRIES;
+    await db.from("conversions").update({
+      [statusField]: "error",
+      [retryableField]: shouldKeepRetrying,
+      [retryCountField]: nextRetryCount,
+      [lastRetryField]: nowIso,
+      observaciones: appendObs(row.observaciones ?? "", isContact ? "ERROR CONTACT" : "ERROR LEAD"),
+    }).eq("id", row.id);
+    await writeConversionLog(
+      db,
+      row.user_id,
+      row.id,
+      "ERROR",
+      `Meta CAPI retry ${eventName} fallo`,
+      detail,
+      metaPayloadRaw,
+      responseRaw,
+    );
+  };
+
+  try {
+    const res = await fetch(metaReq.apiUrl, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(metaReq.body),
+    });
+    const resText = await res.text();
+    const isTransientHttp = res.status === 429 || res.status === 408 || res.status >= 500;
+
+    if (res.status === 200 && isMetaResponseOk(resText)) {
+      stats[succeededKey]++;
+      await db.from("conversions").update({
+        [statusField]: "enviado",
+        [retryableField]: false,
+        [retryCountField]: retryCount + 1,
+        [lastRetryField]: nowIso,
+        observaciones: appendObs(row.observaciones ?? "", isContact ? "CONTACT OK" : "LEAD OK"),
+      }).eq("id", row.id);
+      await writeConversionLog(
+        db,
+        row.user_id,
+        row.id,
+        "INFO",
+        `Meta CAPI retry ${eventName} OK`,
+        `HTTP 200 retry ${retryCount + 1}/${MAX_CONTACT_LEAD_CAPI_RETRIES}`,
+        metaPayloadRaw,
+        resText,
+      );
+      return;
+    }
+
+    await fail(`HTTP ${res.status} retry ${retryCount + 1}/${MAX_CONTACT_LEAD_CAPI_RETRIES}: ${resText}`, resText, isTransientHttp);
+  } catch (err) {
+    await fail(`Excepcion retry ${retryCount + 1}/${MAX_CONTACT_LEAD_CAPI_RETRIES}: ${String(err)}`, "", true);
+  }
+}
+
+function resolveRetryConfig(
+  row: CapiRetryRow,
+  configMap: Map<string, Record<string, unknown>>,
+  pixelConfigMap: Map<string, Array<Record<string, unknown>>>,
+): ConversionsConfig | null {
+  const cfg = configMap.get(String(row.user_id));
+  if (!cfg) return null;
+
+  const rowPixel = normalizeText(row.pixel_id);
+  const userPixelConfigs = pixelConfigMap.get(String(row.user_id)) ?? [];
+  const matchedPixelCfg = rowPixel
+    ? userPixelConfigs.find((pc) => normalizeText(pc.pixel_id) === rowPixel)
+    : null;
+  const defaultPixelCfg = userPixelConfigs.find((pc) => Boolean(pc.is_default));
+  const selected = matchedPixelCfg ?? defaultPixelCfg ?? null;
+  const accessToken = selected
+    ? normalizeText(selected.meta_access_token)
+    : normalizeText(cfg.meta_access_token);
+  const pixelId = selected
+    ? normalizeText(selected.pixel_id)
+    : normalizeText(cfg.pixel_id);
+  if (!accessToken || !pixelId) return null;
+
+  return {
+    user_id: String(row.user_id),
+    pixel_id: pixelId,
+    meta_access_token: accessToken,
+    meta_currency: selected
+      ? normalizeText(selected.meta_currency || "ARS")
+      : normalizeText(cfg.meta_currency || "ARS"),
+    meta_api_version: selected
+      ? normalizeText(selected.meta_api_version || "v25.0")
+      : normalizeText(cfg.meta_api_version || "v25.0"),
+    send_contact_capi: false,
+    geo_use_ipapi: false,
+    geo_fill_only_when_missing: false,
+  };
+}
+
+function isMetaResponseOk(raw: string): boolean {
+  let parsed: Record<string, unknown> | null = null;
+  try {
+    parsed = raw ? JSON.parse(raw) as Record<string, unknown> : null;
+  } catch {
+    parsed = null;
+  }
+  if (!parsed) return true;
+  if ("error" in parsed) return false;
+  const eventsReceivedRaw = parsed.events_received;
+  const eventsReceived = typeof eventsReceivedRaw === "number"
+    ? eventsReceivedRaw
+    : Number(eventsReceivedRaw);
+  return !Number.isFinite(eventsReceived) || eventsReceived > 0;
+}
+
+async function writeConversionLog(
+  db: SupabaseClient,
+  userId: string,
+  conversionId: string,
+  level: string,
+  message: string,
+  detail: string,
+  payloadMeta: string,
+  responseMeta: string,
+): Promise<void> {
+  try {
+    await db.from("conversion_logs").insert({
+      user_id: userId,
+      conversion_id: conversionId,
+      function_name: "retry-failed-conversions",
+      level,
+      message,
+      detail: detail.slice(0, 4000),
+      result: detail.slice(0, 4000),
+      payload_meta: payloadMeta.slice(0, 20000),
+      response_meta: responseMeta.slice(0, 20000),
+    });
+  } catch (err) {
+    console.error("[retry-failed-conversions] writeConversionLog failed", String(err));
+  }
 }
 
 function isEventTimeTooOldForMetaCapi(eventTime: number): boolean {

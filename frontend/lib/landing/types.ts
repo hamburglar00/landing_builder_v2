@@ -116,6 +116,11 @@ export interface LandingThemeConfig {
    * Activa o desactiva el bloque de prueba social de la landing publica.
    */
   socialProofEnabled: boolean;
+  /**
+   * Activa un texto adicional para el mensaje prellenado de WhatsApp.
+   */
+  interactionsEnabled: boolean;
+  whatsappPrefillText: string;
 }
 
 /**
