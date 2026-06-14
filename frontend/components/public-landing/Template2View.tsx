@@ -1,8 +1,5 @@
-"use client";
-
-import { useEffect, useState } from "react";
 import FrameBackgroundTemplate2 from "./FrameBackgroundTemplate2";
-import WhatsAppButton from "./WhatsAppButton";
+import WhatsAppLiteButton from "./WhatsAppLiteButton";
 import { resolveFontFamily } from "./resolveFontFamily";
 import type { PublicLandingConfig } from "./types";
 
@@ -10,8 +7,6 @@ type Props = {
   slug: string;
   config: PublicLandingConfig;
 };
-
-const SOCIAL_PROOF_INTERVAL_MS = 5000;
 
 const SOCIAL_PROOF_ITEMS = [
   { quote: "Muy buena atencion. Me respondieron rapido y sin vueltas.", name: "Nico R." },
@@ -36,22 +31,7 @@ export default function Template2View({ slug, config }: Props) {
     (badgeArray.find((line) => line && line.trim().length > 0) || config.content?.footerBadgeText || "").trim();
   const fontFamily = resolveFontFamily(config.typography?.fontFamily);
   const isSocialProofEnabled = config.socialProof?.enabled !== false;
-  const [socialProofIndex, setSocialProofIndex] = useState(0);
-  const sharedTriggerEvent = `lp:cta-trigger:${slug}`;
-  const triggerWhatsApp = () => {
-    if (typeof window === "undefined") return;
-    window.dispatchEvent(new Event(sharedTriggerEvent));
-  };
-
-  useEffect(() => {
-    const intervalId = window.setInterval(() => {
-      setSocialProofIndex((current) => (current + 1) % SOCIAL_PROOF_ITEMS.length);
-    }, SOCIAL_PROOF_INTERVAL_MS);
-
-    return () => window.clearInterval(intervalId);
-  }, []);
-
-  const activeSocialProof = SOCIAL_PROOF_ITEMS[socialProofIndex];
+  const activeSocialProof = SOCIAL_PROOF_ITEMS[0];
 
   return (
     <main className="public-landing lp">
@@ -70,7 +50,7 @@ export default function Template2View({ slug, config }: Props) {
                 className="frame__logo"
                 decoding="async"
                 fetchPriority="high"
-                onClick={triggerWhatsApp}
+                data-public-landing-trigger
                 style={{ cursor: "pointer" }}
               />
             ) : null}
@@ -85,7 +65,7 @@ export default function Template2View({ slug, config }: Props) {
                     fontWeight: config.typography?.badge?.weight ?? 700,
                     cursor: "pointer",
                   }}
-                  onClick={triggerWhatsApp}
+                  data-public-landing-trigger
                 >
                   {badgeText}
                 </p>
@@ -98,7 +78,7 @@ export default function Template2View({ slug, config }: Props) {
                   fontWeight: config.typography?.title?.weight ?? 700,
                   cursor: "pointer",
                 }}
-                onClick={triggerWhatsApp}
+                data-public-landing-trigger
               >
                 {titleLines.map((line, index) => (
                   <span key={`${slug}-t2-title-${index}`}>
@@ -110,32 +90,35 @@ export default function Template2View({ slug, config }: Props) {
             </div>
           </div>
 
-          <WhatsAppButton
-            slug={slug}
+          <WhatsAppLiteButton
             config={config}
             templateVariant="template2"
-            externalTriggerEvent={sharedTriggerEvent}
           />
 
           {isSocialProofEnabled ? (
             <section
               className="social-proof"
               aria-label="Prueba social"
-              onClick={triggerWhatsApp}
+              data-public-landing-social-proof
+              data-public-landing-trigger
               style={{ cursor: "pointer" }}
             >
-              <p key={`quote-${socialProofIndex}`} className="social-proof__quote">
+              <p className="social-proof__quote" data-public-landing-social-quote>
                 &quot;{activeSocialProof.quote}&quot;
               </p>
-              <p className="social-proof__meta">
+              <p className="social-proof__meta" data-public-landing-social-meta>
                 {activeSocialProof.name} <span aria-hidden="true">-</span>{" "}
                 <span className="social-proof__stars">{"\u2605".repeat(5)}</span>
               </p>
-              <div key={`progress-${socialProofIndex}`} className="social-proof__progress" aria-hidden="true" />
+              <div
+                className="social-proof__progress"
+                data-public-landing-social-progress
+                aria-hidden="true"
+              />
             </section>
           ) : null}
 
-          <div className="features" onClick={triggerWhatsApp} style={{ cursor: "pointer" }}>
+          <div className="features" data-public-landing-trigger style={{ cursor: "pointer" }}>
             {subtitleLines.map((line, index) => (
               <p
                 key={`${slug}-t2-sub-${index}`}

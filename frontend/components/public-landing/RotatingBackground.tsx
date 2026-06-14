@@ -1,7 +1,3 @@
-"use client";
-
-import { useEffect, useMemo, useState } from "react";
-
 type Props = {
   images: string[];
   rotateEveryHours?: number;
@@ -13,28 +9,15 @@ export default function RotatingBackground({
   rotateEveryHours = 24,
   overlay = true,
 }: Props) {
-  const safeImages = useMemo(() => images.filter(Boolean), [images]);
-  const [index, setIndex] = useState(0);
-
-  useEffect(() => {
-    if (safeImages.length <= 1) return;
-
-    const everyMs = Math.max(1, rotateEveryHours) * 60 * 60 * 1000;
-    const initialIndex = Math.floor(Date.now() / everyMs) % safeImages.length;
-    setIndex(initialIndex);
-
-    const interval = window.setInterval(() => {
-      setIndex((current) => (current + 1) % safeImages.length);
-    }, everyMs);
-
-    return () => window.clearInterval(interval);
-  }, [safeImages, rotateEveryHours]);
-
-  const currentImage = safeImages[index];
+  const safeImages = images.filter(Boolean);
+  const currentImage = safeImages[0];
 
   return (
     <div
       className="background-layer"
+      data-public-landing-rotating-background={safeImages.length > 0 ? "true" : undefined}
+      data-public-landing-images={JSON.stringify(safeImages)}
+      data-public-landing-rotate-hours={rotateEveryHours}
       style={
         currentImage
           ? {

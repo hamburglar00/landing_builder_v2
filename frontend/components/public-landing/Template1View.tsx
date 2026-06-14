@@ -1,7 +1,5 @@
-"use client";
-
 import RotatingBackground from "./RotatingBackground";
-import WhatsAppButton from "./WhatsAppButton";
+import WhatsAppLiteButton from "./WhatsAppLiteButton";
 import { resolveFontFamily } from "./resolveFontFamily";
 import type { PublicLandingConfig } from "./types";
 
@@ -16,11 +14,6 @@ export default function Template1View({ slug, config }: Props) {
   const titleLines = config.content?.title || [];
   const subtitleLines = config.content?.subtitle || [];
   const badgeText = config.content?.footerBadgeText || "";
-  const sharedTriggerEvent = `lp:cta-trigger:${slug}`;
-  const triggerWhatsApp = () => {
-    if (typeof window === "undefined") return;
-    window.dispatchEvent(new Event(sharedTriggerEvent));
-  };
 
   const rawCtaPosition = config.layout?.ctaPosition ?? "between_title_and_info";
   const normalizedCtaPosition = (() => {
@@ -49,18 +42,18 @@ export default function Template1View({ slug, config }: Props) {
               alt={config.name}
               decoding="async"
               fetchPriority="high"
-              onClick={triggerWhatsApp}
+              data-public-landing-trigger
               style={{ cursor: "pointer" }}
             />
           ) : null}
 
           {normalizedCtaPosition === "top" ? (
-            <WhatsAppButton slug={slug} config={config} externalTriggerEvent={sharedTriggerEvent} />
+            <WhatsAppLiteButton config={config} />
           ) : null}
 
           <p
             className="title"
-            onClick={triggerWhatsApp}
+            data-public-landing-trigger
             style={{
               color: config.colors?.title ?? "#FFFFFF",
               fontSize: `${config.typography?.title?.sizePx ?? 26}px`,
@@ -77,12 +70,12 @@ export default function Template1View({ slug, config }: Props) {
           </p>
 
           {normalizedCtaPosition === "between_title_and_info" ? (
-            <WhatsAppButton slug={slug} config={config} externalTriggerEvent={sharedTriggerEvent} />
+            <WhatsAppLiteButton config={config} />
           ) : null}
 
           <p
             className="subtitle"
-            onClick={triggerWhatsApp}
+            data-public-landing-trigger
             style={{
               color: config.colors?.subtitle ?? "#FFFFFF",
               fontSize: `${config.typography?.subtitle?.sizePx ?? 16}px`,
@@ -99,26 +92,26 @@ export default function Template1View({ slug, config }: Props) {
           </p>
 
           {normalizedCtaPosition === "between_info_and_badge" ? (
-            <WhatsAppButton slug={slug} config={config} externalTriggerEvent={sharedTriggerEvent} />
+            <WhatsAppLiteButton config={config} />
           ) : null}
 
           {badgeText ? (
             <p
               className="description"
+              data-public-landing-trigger
               style={{
                 color: config.colors?.badge ?? "#FFD700",
                 fontSize: `${config.typography?.badge?.sizePx ?? 16}px`,
                 fontWeight: config.typography?.badge?.weight ?? 700,
                 cursor: "pointer",
               }}
-              onClick={triggerWhatsApp}
             >
               -{badgeText}-
             </p>
           ) : null}
 
           {normalizedCtaPosition === "bottom" ? (
-            <WhatsAppButton slug={slug} config={config} externalTriggerEvent={sharedTriggerEvent} />
+            <WhatsAppLiteButton config={config} />
           ) : null}
         </div>
       </section>

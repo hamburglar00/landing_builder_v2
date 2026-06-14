@@ -1,15 +1,13 @@
-"use client";
-
 import { resolveFontFamily } from "./resolveFontFamily";
 import type { PublicLandingConfig } from "./types";
-import WhatsAppButton from "./WhatsAppButton";
+import WhatsAppLiteButton from "./WhatsAppLiteButton";
 
 type Props = {
   slug: string;
   config: PublicLandingConfig;
 };
 
-export default function Template3View({ slug, config }: Props) {
+export default function Template3View({ config }: Props) {
   const fontFamily = resolveFontFamily(config.typography?.fontFamily);
 
   return (
@@ -37,13 +35,7 @@ export default function Template3View({ slug, config }: Props) {
         Redirigiendo a WhatsApp...
       </p>
 
-      <WhatsAppButton
-        slug={slug}
-        config={config}
-        templateVariant="template3"
-        autoStart
-        hideButton
-      />
+      <WhatsAppLiteButton config={config} templateVariant="template3" autoStart hideButton />
     </main>
   );
 }
