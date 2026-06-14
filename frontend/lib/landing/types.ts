@@ -55,6 +55,14 @@ export type CtaPositionOption =
 export type TemplateOption = "template1" | "template2" | "template3";
 
 /**
+ * Motor que sirve la URL publica de una landing creada en el constructor.
+ *
+ * classic: dominio historico landing.panelbotadmin.com/<name>.
+ * constructor: dominio del constructor con ruta /l/<name>.
+ */
+export type PublishTarget = "classic" | "constructor";
+
+/**
  * Modo de fondo: una sola imagen o rotacin entre varias.
  */
 export type BackgroundMode = "single" | "rotating";
@@ -131,6 +139,7 @@ export interface Landing {
   id: string;
   userId?: string;
   landingType: "internal" | "external";
+  publishTarget: PublishTarget;
   externalDomain: string;
   name: string;
   pixelId: string;

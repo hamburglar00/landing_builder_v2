@@ -8,6 +8,7 @@ import { getSettings } from "@/lib/settingsDb";
 import { invokeFunction } from "@/lib/supabaseFunctions";
 import type { Landing } from "@/lib/landing/types";
 import { fetchLandingsForAdmin, createLanding } from "@/lib/landing/landingsDb";
+import { buildLandingPublicUrl } from "@/lib/landing/publicUrls";
 import { DEFAULT_CONFIG } from "@/lib/landing/mocks";
 import { LandingPreview } from "@/components/landing/LandingPreview";
 
@@ -228,6 +229,19 @@ export default function AdminLandingsPage() {
 }
 
 function LandingCard({ landing, urlBase }: { landing: Landing; urlBase: string | null }) {
+  const publicUrl =
+    landing.landingType === "external"
+      ? urlBase
+        ? `${urlBase.replace(/\/$/, "")}/${landing.name}`
+        : "#"
+      : buildLandingPublicUrl(landing.name, landing.publishTarget, urlBase);
+  const publishLabel =
+    landing.landingType === "external"
+      ? "Conectada externa"
+      : landing.publishTarget === "constructor"
+        ? "Constructor"
+        : "Clasico";
+
   return (
     <div
       className="relative aspect-[3/4] w-full overflow-hidden rounded-2xl border border-[var(--color-border)] bg-[var(--color-bg-1)] shadow-sm"
@@ -256,6 +270,9 @@ function LandingCard({ landing, urlBase }: { landing: Landing; urlBase: string |
                     Teléfono:{" "}
                     {landing.phoneMode === "fair" ? "equitativo" : "aleatorio"}
                   </p>
+                  <p className="truncate text-[10px] text-[var(--color-text-muted)]">
+                    Motor: {publishLabel}
+                  </p>
                   {landing.comment ? (
                     <p className="truncate text-[10px] text-[var(--color-text-muted)]">
                       {landing.comment}
@@ -264,11 +281,7 @@ function LandingCard({ landing, urlBase }: { landing: Landing; urlBase: string |
                 </div>
                 <div className="pointer-events-auto flex items-center gap-1.5 pt-1">
                   <a
-                    href={
-                      urlBase
-                        ? `${urlBase.replace(/\/$/, "")}/${landing.name}`
-                        : "#"
-                    }
+                    href={publicUrl}
                     target="_blank"
                     rel="noreferrer"
                     onClick={(e) => e.stopPropagation()}

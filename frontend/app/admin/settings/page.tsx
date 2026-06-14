@@ -2,11 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { supabase } from "@/lib/supabaseClient";
-import {
-  getSettings,
-  updateSettings,
-  type PublicLandingRuntime,
-} from "@/lib/settingsDb";
+import { getSettings, updateSettings } from "@/lib/settingsDb";
 
 export default function AdminSettingsPage() {
   const [urlBase, setUrlBase] = useState("");
@@ -15,10 +11,6 @@ export default function AdminSettingsPage() {
   const [revalidateSecret, setRevalidateSecret] = useState("");
   const [showSecret, setShowSecret] = useState(false);
   const [adminNombre, setAdminNombre] = useState("");
-  const [publicLandingRuntime, setPublicLandingRuntime] =
-    useState<PublicLandingRuntime>("legacy");
-  const [publicLandingLegacyBaseUrl, setPublicLandingLegacyBaseUrl] =
-    useState("");
   const [ready, setReady] = useState(false);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -37,10 +29,6 @@ export default function AdminSettingsPage() {
           settings.show_client_landing_preview ?? true,
         );
         setRevalidateSecret(settings.revalidate_secret ?? "");
-        setPublicLandingRuntime(settings.public_landing_runtime ?? "legacy");
-        setPublicLandingLegacyBaseUrl(
-          settings.public_landing_legacy_base_url ?? "",
-        );
 
         const { data: profile } = await supabase
           .from("profiles")
@@ -69,8 +57,6 @@ export default function AdminSettingsPage() {
         urlBase: urlBase.trim(),
         showClientLandingPreview,
         revalidateSecret: revalidateSecret.trim(),
-        publicLandingRuntime,
-        publicLandingLegacyBaseUrl: publicLandingLegacyBaseUrl.trim(),
       });
       if (user) {
         await supabase
@@ -184,67 +170,6 @@ export default function AdminSettingsPage() {
             solo el constructor pueda decirle a la landing publica que refresque
             su cache.
           </p>
-        </div>
-
-        <div className="space-y-3 rounded-xl border border-lime-500/20 bg-lime-500/5 p-4">
-          <div>
-            <p className="text-sm font-semibold text-zinc-100">
-              Motor de landing publica
-            </p>
-            <p className="mt-1 text-[11px] leading-relaxed text-zinc-400">
-              Controla que version atiende a{" "}
-              <span className="font-mono">landing.panelbotadmin.com</span>{" "}
-              cuando movamos ese dominio al constructor.
-            </p>
-          </div>
-
-          <div className="grid grid-cols-2 gap-2 rounded-lg bg-zinc-950/60 p-1">
-            <button
-              type="button"
-              onClick={() => setPublicLandingRuntime("legacy")}
-              className={`rounded-md px-3 py-2 text-xs font-medium transition ${
-                publicLandingRuntime === "legacy"
-                  ? "bg-zinc-100 text-zinc-950"
-                  : "text-zinc-400 hover:bg-zinc-900 hover:text-zinc-100"
-              }`}
-            >
-              Vieja actual
-            </button>
-            <button
-              type="button"
-              onClick={() => setPublicLandingRuntime("constructor")}
-              className={`rounded-md px-3 py-2 text-xs font-medium transition ${
-                publicLandingRuntime === "constructor"
-                  ? "bg-lime-300 text-zinc-950"
-                  : "text-zinc-400 hover:bg-zinc-900 hover:text-zinc-100"
-              }`}
-            >
-              Constructor
-            </button>
-          </div>
-
-          <div>
-            <label
-              htmlFor="public_landing_legacy_base_url"
-              className="mb-1 block text-xs font-medium text-zinc-400"
-            >
-              URL tecnica de la landing vieja
-            </label>
-            <input
-              id="public_landing_legacy_base_url"
-              type="url"
-              value={publicLandingLegacyBaseUrl}
-              onChange={(event) =>
-                setPublicLandingLegacyBaseUrl(event.target.value)
-              }
-              placeholder="https://public-landing-bl.vercel.app"
-              className="w-full rounded-lg border border-zinc-700 bg-zinc-900 px-3 py-2 text-sm text-zinc-100"
-            />
-            <p className="mt-2 text-[11px] leading-relaxed text-zinc-500">
-              Si el switch esta en &quot;Vieja actual&quot;, el constructor usa
-              esta URL por detras como fallback sin cambiar la URL visible.
-            </p>
-          </div>
         </div>
 
         <div className="flex items-start gap-3 rounded-lg border border-zinc-800 bg-zinc-900/60 px-3 py-3">

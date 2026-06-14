@@ -6,6 +6,7 @@ import Link from "next/link";
 import { supabase } from "@/lib/supabaseClient";
 import type { Landing } from "@/lib/landing/types";
 import { fetchLandings, createLanding } from "@/lib/landing/landingsDb";
+import { buildLandingPublicUrl } from "@/lib/landing/publicUrls";
 import { fetchLandingGerencias, setLandingGerencias } from "@/lib/gerencias/gerenciasDb";
 import { DEFAULT_CONFIG } from "@/lib/landing/mocks";
 import { LandingPreview } from "@/components/landing/LandingPreview";
@@ -162,6 +163,7 @@ export default function DashboardLandingsPage() {
       const copiedConfig = JSON.parse(JSON.stringify(landing.config)) as Landing["config"];
       const { id } = await createLanding(userId, {
         landingType: landing.landingType,
+        publishTarget: landing.publishTarget,
         externalDomain: landing.externalDomain,
         pixelId: landing.pixelId,
         gerenciaSelectionMode: landing.gerenciaSelectionMode,
@@ -296,6 +298,19 @@ function LandingCard({
   duplicating: boolean;
   onDuplicate: (landing: Landing) => void;
 }) {
+  const publicUrl =
+    landing.landingType === "external"
+      ? urlBase
+        ? `${urlBase.replace(/\/$/, "")}/${landing.name}`
+        : "#"
+      : buildLandingPublicUrl(landing.name, landing.publishTarget, urlBase);
+  const publishLabel =
+    landing.landingType === "external"
+      ? "Conectada externa"
+      : landing.publishTarget === "constructor"
+        ? "Constructor"
+        : "Clasico";
+
   return (
     <div
       key={landing.id}
@@ -319,13 +334,16 @@ function LandingCard({
           <p className="truncate text-[10px] text-[var(--color-text-muted)]">
             Teléfono: {landing.phoneMode === "fair" ? "equitativo" : "aleatorio"}
           </p>
+          <p className="truncate text-[10px] text-[var(--color-text-muted)]">
+            Motor: {publishLabel}
+          </p>
           {landing.comment ? (
             <p className="truncate text-[10px] text-[var(--color-text-muted)]">{landing.comment}</p>
           ) : null}
         </div>
         <div className="pointer-events-auto flex items-center gap-1.5 pt-1">
           <a
-            href={urlBase ? `${urlBase.replace(/\/$/, "")}/${landing.name}` : "#"}
+            href={publicUrl}
             target="_blank"
             rel="noreferrer"
             onClick={(e) => e.stopPropagation()}

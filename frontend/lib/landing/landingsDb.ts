@@ -1,5 +1,5 @@
 import { supabase } from "@/lib/supabaseClient";
-import type { Landing, LandingThemeConfig, PhoneKind } from "./types";
+import type { Landing, LandingThemeConfig, PhoneKind, PublishTarget } from "./types";
 import { DEFAULT_CONFIG } from "./mocks";
 import type { LandingConfigPayload } from "./buildLandingConfig";
 
@@ -12,6 +12,7 @@ export interface LandingRow {
   id: string;
   user_id: string;
   landing_type: "internal" | "external";
+  publish_target: PublishTarget;
   external_domain: string;
   name: string;
   pixel_id: string;
@@ -39,6 +40,7 @@ function rowToLanding(row: LandingRow): Landing {
     id: row.id,
     userId: row.user_id,
     landingType: row.landing_type ?? "internal",
+    publishTarget: row.publish_target ?? "classic",
     externalDomain: row.external_domain ?? "",
     name: row.name,
     pixelId: row.pixel_id ?? "",
@@ -63,7 +65,7 @@ export async function fetchLandings(userId: string): Promise<Landing[]> {
 }
 
 const LANDINGS_SELECT =
-  "id, user_id, landing_type, external_domain, name, pixel_id, gerencia_selection_mode, gerencia_fair_criterion, phone_mode, phone_kind, phone_interval_start_hour, phone_interval_end_hour, post_url, landing_tag, comment, config, created_at, updated_at";
+  "id, user_id, landing_type, publish_target, external_domain, name, pixel_id, gerencia_selection_mode, gerencia_fair_criterion, phone_mode, phone_kind, phone_interval_start_hour, phone_interval_end_hour, post_url, landing_tag, comment, config, created_at, updated_at";
 
 /**
  * Lista landings de un usuario por su id. Los admins pueden listar landings de cualquier usuario (RLS).
@@ -127,6 +129,7 @@ export async function createLanding(
   userId: string,
   payload: {
     landingType?: "internal" | "external";
+    publishTarget?: PublishTarget;
     externalDomain?: string;
     name?: string;
     pixelId?: string;
@@ -165,6 +168,7 @@ export async function createLanding(
     .insert({
       user_id: userId,
       landing_type: payload.landingType ?? "internal",
+      publish_target: payload.publishTarget ?? "classic",
       external_domain: payload.externalDomain ?? "",
       name,
       pixel_id: pixelId,
@@ -194,6 +198,7 @@ export async function updateLanding(
   landingId: string,
   payload: {
     landingType?: "internal" | "external";
+    publishTarget?: PublishTarget;
     externalDomain?: string;
     name?: string;
     pixelId?: string;
@@ -212,6 +217,7 @@ export async function updateLanding(
 ): Promise<void> {
   const body: Record<string, unknown> = {};
   if (payload.landingType !== undefined) body.landing_type = payload.landingType;
+  if (payload.publishTarget !== undefined) body.publish_target = payload.publishTarget;
   if (payload.externalDomain !== undefined) body.external_domain = payload.externalDomain;
   if (payload.name !== undefined) body.name = payload.name;
   if (payload.pixelId !== undefined) body.pixel_id = normalizePixelId(payload.pixelId);
