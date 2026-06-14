@@ -50,6 +50,8 @@ export default function Template2View({ slug, config }: Props) {
                 className="frame__logo"
                 decoding="async"
                 fetchPriority="high"
+                width={220}
+                height={160}
                 data-public-landing-trigger
                 style={{ cursor: "pointer" }}
               />

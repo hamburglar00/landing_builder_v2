@@ -23,6 +23,8 @@ export default function FrameBackgroundTemplate2({
       loading="eager"
       fetchPriority="high"
       decoding="async"
+      width={430}
+      height={780}
     />
   );
 }

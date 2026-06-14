@@ -42,6 +42,8 @@ export default function Template1View({ slug, config }: Props) {
               alt={config.name}
               decoding="async"
               fetchPriority="high"
+              width={200}
+              height={150}
               data-public-landing-trigger
               style={{ cursor: "pointer" }}
             />

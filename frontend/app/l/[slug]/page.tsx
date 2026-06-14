@@ -36,6 +36,7 @@ export default async function PublicLandingPage({ params }: PageProps) {
 
   const firstBackground = config.background?.images?.[0];
   const secondBackground = config.background?.images?.[1];
+  const logoUrl = config.content?.logoUrl;
   const supabaseOrigin = (() => {
     const raw = process.env.NEXT_PUBLIC_SUPABASE_URL || "";
     try {
@@ -57,6 +58,7 @@ export default async function PublicLandingPage({ params }: PageProps) {
       <link rel="preconnect" href="https://connect.facebook.net" />
       {firstBackground ? <link rel="preload" as="image" href={firstBackground} fetchPriority="high" /> : null}
       {secondBackground ? <link rel="preload" as="image" href={secondBackground} /> : null}
+      {logoUrl ? <link rel="preload" as="image" href={logoUrl} /> : null}
       <PublicLanding slug={slug} config={config} />
     </>
   );

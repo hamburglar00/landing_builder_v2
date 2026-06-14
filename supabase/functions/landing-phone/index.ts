@@ -86,7 +86,7 @@ Deno.serve(async (req) => {
 
     const ownerQuery = source === "chatrace"
       ? supabase.from("profiles").select("id").eq("nombre", name).limit(1).maybeSingle()
-      : supabase.from("landings").select("user_id").eq("name", name).limit(1).maybeSingle();
+      : supabase.from("landings").select("user_id,publish_target").eq("name", name).limit(1).maybeSingle();
     const { data: ownerRow, error: ownerError } = await ownerQuery;
 
     if (ownerError) {
@@ -115,6 +115,47 @@ Deno.serve(async (req) => {
 
     if (isBlocked === true) {
       return jsonResponse({ error: "Plan vencido o inactivo." }, 403);
+    }
+
+    if (source !== "chatrace") {
+      const publishTarget = String(
+        (ownerRow as { publish_target?: unknown } | null)?.publish_target ?? "classic",
+      );
+
+      if (publishTarget === "constructor") {
+        const { data: cacheRow } = await supabase
+          .from("landing_phone_cache")
+          .select("status,payload,refreshed_at")
+          .eq("landing_name", name)
+          .maybeSingle();
+
+        const refreshedAt = Date.parse(
+          String((cacheRow as { refreshed_at?: unknown } | null)?.refreshed_at ?? ""),
+        );
+        const isFresh =
+          Number.isFinite(refreshedAt) && Date.now() - refreshedAt <= 90_000;
+        const payload = (cacheRow as { payload?: unknown } | null)?.payload as
+          | Record<string, unknown>
+          | undefined;
+
+        if (
+          cacheRow &&
+          (cacheRow as { status?: unknown }).status === "ok" &&
+          isFresh &&
+          payload &&
+          typeof payload.phone === "string" &&
+          payload.phone
+        ) {
+          return new Response(JSON.stringify(payload), {
+            status: 200,
+            headers: {
+              ...corsHeaders,
+              "Content-Type": "application/json",
+              "Cache-Control": "no-store",
+            },
+          });
+        }
+      }
     }
 
     const rpcName = source === "chatrace"

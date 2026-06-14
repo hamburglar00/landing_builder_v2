@@ -12,19 +12,31 @@ export default function RotatingBackground({
   const safeImages = images.filter(Boolean);
   const currentImage = safeImages[0];
 
+  if (currentImage) {
+    return (
+      <>
+        {/* eslint-disable-next-line @next/next/no-img-element */}
+        <img
+          src={currentImage}
+          alt=""
+          className="background-layer background-layer__image"
+          data-public-landing-rotating-image="true"
+          data-public-landing-images={JSON.stringify(safeImages)}
+          data-public-landing-rotate-hours={rotateEveryHours}
+          loading="eager"
+          fetchPriority="high"
+          decoding="async"
+          width={1080}
+          height={1920}
+        />
+        {overlay ? <div className="overlay" /> : null}
+      </>
+    );
+  }
+
   return (
     <div
       className="background-layer"
-      data-public-landing-rotating-background={safeImages.length > 0 ? "true" : undefined}
-      data-public-landing-images={JSON.stringify(safeImages)}
-      data-public-landing-rotate-hours={rotateEveryHours}
-      style={
-        currentImage
-          ? {
-              backgroundImage: `url(${currentImage})`,
-            }
-          : undefined
-      }
     >
       {overlay ? <div className="overlay" /> : null}
     </div>
