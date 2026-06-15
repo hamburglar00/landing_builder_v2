@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import PublicLanding from "@/components/public-landing/Landing";
+import { getCachedLandingPhone } from "@/components/public-landing/getCachedLandingPhone";
 import { getPublicLandingConfig } from "@/components/public-landing/getLandingConfig";
 
 type PageProps = {
@@ -9,7 +10,7 @@ type PageProps = {
   }>;
 };
 
-export const revalidate = false;
+export const revalidate = 60;
 export const dynamic = "force-static";
 
 export async function generateMetadata({ params }: PageProps): Promise<Metadata> {
@@ -34,6 +35,7 @@ export default async function PublicLandingPage({ params }: PageProps) {
 
   if (!config) notFound();
 
+  const cachedPhone = await getCachedLandingPhone(slug);
   const firstBackground = config.background?.images?.[0];
   const secondBackground = config.background?.images?.[1];
   const logoUrl = config.content?.logoUrl;
@@ -59,7 +61,7 @@ export default async function PublicLandingPage({ params }: PageProps) {
       {firstBackground ? <link rel="preload" as="image" href={firstBackground} fetchPriority="high" /> : null}
       {secondBackground ? <link rel="preload" as="image" href={secondBackground} /> : null}
       {logoUrl ? <link rel="preload" as="image" href={logoUrl} /> : null}
-      <PublicLanding slug={slug} config={config} />
+      <PublicLanding slug={slug} config={config} cachedPhone={cachedPhone} />
     </>
   );
 }

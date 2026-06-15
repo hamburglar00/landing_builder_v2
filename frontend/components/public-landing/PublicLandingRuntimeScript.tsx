@@ -64,6 +64,7 @@ export default function PublicLandingRuntimeScript({ slug, config }: Props) {
       var clickLocked = false;
       var noPhoneTimer = null;
       var metaTracking = { fbp: "", fbc: "", clientIpAddress: "" };
+      var prearmedContact = null;
       var CONTACT_DEDUP_TTL_MS = 5 * 60 * 1000;
       var SOCIAL_PROOF_INTERVAL_MS = 5000;
 
@@ -366,6 +367,41 @@ export default function PublicLandingRuntimeScript({ slug, config }: Props) {
         } catch (e) {}
       }
 
+      function createContactPrearm() {
+        var params = queryParams();
+        var promoCode = generatePromoCode(cfg.landingTag || "LP");
+        var identity = resolveIdentity(params);
+        var tracking = collectMetaTrackingParams(params);
+        var testEventCode = params.get("test_event_code") || "";
+
+        return {
+          params: params,
+          promoCode: promoCode,
+          message: buildMessage(promoCode),
+          eventId: safeUUID(),
+          identity: identity,
+          tracking: tracking,
+          testEventCode: testEventCode,
+          shouldSkipContact: testEventCode ? false : wasContactRecentlySent(cfg.slug, identity.externalId),
+          createdAt: Date.now()
+        };
+      }
+
+      function prearmContactContext() {
+        try {
+          prearmedContact = createContactPrearm();
+        } catch (e) {
+          prearmedContact = null;
+        }
+      }
+
+      function consumeContactContext() {
+        var context = prearmedContact || createContactPrearm();
+        prearmedContact = null;
+        window.setTimeout(prearmContactContext, 0);
+        return context;
+      }
+
       function handleCtaClick(button) {
         if (clickLocked || button.disabled) return;
         clickLocked = true;
@@ -374,14 +410,15 @@ export default function PublicLandingRuntimeScript({ slug, config }: Props) {
         var tapStartedAt = Date.now();
 
         window.requestAnimationFrame(function () {
-          var params = queryParams();
-          var promoCode = generatePromoCode(cfg.landingTag || "LP");
-          var message = buildMessage(promoCode);
-          var eventId = safeUUID();
-          var identity = resolveIdentity(params);
-          var tracking = collectMetaTrackingParams(params);
-          var testEventCode = params.get("test_event_code") || "";
-          var shouldSkipContact = testEventCode ? false : wasContactRecentlySent(cfg.slug, identity.externalId);
+          var context = consumeContactContext();
+          var params = context.params;
+          var promoCode = context.promoCode;
+          var message = context.message;
+          var eventId = context.eventId;
+          var identity = context.identity;
+          var tracking = context.tracking;
+          var testEventCode = context.testEventCode;
+          var shouldSkipContact = context.shouldSkipContact;
 
           waitWithTimeout(ensurePhonePromise(), 1500)
             .then(function (phoneData) {
@@ -551,6 +588,9 @@ export default function PublicLandingRuntimeScript({ slug, config }: Props) {
       }
 
       function init() {
+        prearmContactContext();
+        ensurePhonePromise();
+        window.setTimeout(prearmContactContext, 700);
         initRotatingBackgrounds();
         initCtas();
         initSocialProof();

@@ -1,12 +1,30 @@
+import type { PublicLandingPhoneResponse } from "./types";
+
 type Props = {
   slug: string;
+  initialPhone?: PublicLandingPhoneResponse | null;
 };
 
-function escapeScriptJson(value: string) {
-  return JSON.stringify(value).replace(/</g, "\\u003c");
+function escapeScriptJson(value: unknown) {
+  return JSON.stringify(value).replace(/[<>&\u2028\u2029]/g, (character) => {
+    switch (character) {
+      case "<":
+        return "\\u003c";
+      case ">":
+        return "\\u003e";
+      case "&":
+        return "\\u0026";
+      case "\u2028":
+        return "\\u2028";
+      case "\u2029":
+        return "\\u2029";
+      default:
+        return character;
+    }
+  });
 }
 
-export default function PhonePrewarmScript({ slug }: Props) {
+export default function PhonePrewarmScript({ slug, initialPhone }: Props) {
   const baseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
   const anonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
 
@@ -21,9 +39,17 @@ export default function PhonePrewarmScript({ slug }: Props) {
         var slug = ${escapeScriptJson(slug)};
         var url = ${escapeScriptJson(endpoint)};
         var anonKey = ${escapeScriptJson(anonKey)};
+        var initialPhone = ${escapeScriptJson(initialPhone ?? null)};
         window.__PUBLIC_LANDING_PHONE_PROMISES = window.__PUBLIC_LANDING_PHONE_PROMISES || {};
         if (!window.__PUBLIC_LANDING_PHONE_PROMISES[slug]) {
-          window.__PUBLIC_LANDING_PHONE_PROMISES[slug] = fetch(url, {
+          var refreshedAt = initialPhone && initialPhone.cacheRefreshedAt
+            ? Date.parse(initialPhone.cacheRefreshedAt)
+            : 0;
+          var isInitialFresh = initialPhone && initialPhone.phone && refreshedAt && Date.now() - refreshedAt <= 90000;
+
+          window.__PUBLIC_LANDING_PHONE_PROMISES[slug] = isInitialFresh
+            ? Promise.resolve(initialPhone)
+            : fetch(url, {
             method: 'GET',
             headers: {
               apikey: anonKey,

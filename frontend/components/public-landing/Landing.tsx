@@ -4,14 +4,15 @@ import PublicLandingRuntimeScript from "./PublicLandingRuntimeScript";
 import Template1View from "./Template1View";
 import Template2View from "./Template2View";
 import Template3View from "./Template3View";
-import type { PublicLandingConfig } from "./types";
+import type { PublicLandingConfig, PublicLandingPhoneResponse } from "./types";
 
 type Props = {
   slug: string;
   config: PublicLandingConfig;
+  cachedPhone?: PublicLandingPhoneResponse | null;
 };
 
-export default function PublicLanding({ slug, config }: Props) {
+export default function PublicLanding({ slug, config, cachedPhone }: Props) {
   const isTemplate2 = config.layout?.template === 2;
   const isTemplate3 = config.layout?.template === 3;
 
@@ -35,7 +36,7 @@ export default function PublicLanding({ slug, config }: Props) {
     return (
       <>
         {pixelBlock}
-        <PhonePrewarmScript slug={slug} />
+        <PhonePrewarmScript slug={slug} initialPhone={cachedPhone} />
         <Template3View slug={slug} config={config} />
         <PublicLandingRuntimeScript slug={slug} config={config} />
       </>
@@ -46,7 +47,7 @@ export default function PublicLanding({ slug, config }: Props) {
     return (
       <>
         {pixelBlock}
-        <PhonePrewarmScript slug={slug} />
+        <PhonePrewarmScript slug={slug} initialPhone={cachedPhone} />
         <Template2View slug={slug} config={config} />
         <PublicLandingRuntimeScript slug={slug} config={config} />
       </>
@@ -56,7 +57,7 @@ export default function PublicLanding({ slug, config }: Props) {
   return (
     <>
       {pixelBlock}
-      <PhonePrewarmScript slug={slug} />
+      <PhonePrewarmScript slug={slug} initialPhone={cachedPhone} />
       <Template1View slug={slug} config={config} />
       <PublicLandingRuntimeScript slug={slug} config={config} />
     </>

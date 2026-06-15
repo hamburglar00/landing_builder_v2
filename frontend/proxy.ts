@@ -1,8 +1,4 @@
 import { NextResponse, type NextRequest } from "next/server";
-import {
-  getPublicLandingHost,
-  getPublicLandingRoutingSettings,
-} from "@/lib/publicLandingRouting";
 
 const DEFAULT_PROMOTIONS_PUBLIC_HOST = "sorteosgolden.vercel.app";
 
@@ -26,50 +22,14 @@ function isAllowedAssetPath(pathname: string): boolean {
 
 export async function proxy(request: NextRequest) {
   const promotionsHost = getPromotionsPublicHost();
-  const publicLandingHost = getPublicLandingHost();
   const requestHost = request.headers.get("host")?.toLowerCase().split(":")[0] ?? "";
   const { pathname } = request.nextUrl;
-
-  if (requestHost === publicLandingHost) {
-    return handlePublicLandingHost(request, pathname);
-  }
 
   if (requestHost === promotionsHost && !pathname.startsWith("/promo/") && !isAllowedAssetPath(pathname)) {
     return new NextResponse("Not found", { status: 404 });
   }
 
   return NextResponse.next();
-}
-
-async function handlePublicLandingHost(request: NextRequest, pathname: string) {
-  if (pathname.startsWith("/api/public-landing-legacy/")) {
-    return NextResponse.next();
-  }
-
-  const routing = await getPublicLandingRoutingSettings();
-
-  if (routing.runtime === "legacy") {
-    const proxyUrl = request.nextUrl.clone();
-    proxyUrl.pathname = `/api/public-landing-legacy${pathname === "/" ? "" : pathname}`;
-    return NextResponse.rewrite(proxyUrl);
-  }
-
-  if (
-    pathname.startsWith("/l/") ||
-    pathname.startsWith("/api/") ||
-    isAllowedAssetPath(pathname)
-  ) {
-    return NextResponse.next();
-  }
-
-  const slug = pathname.replace(/^\/+|\/+$/g, "");
-  if (!slug) {
-    return new NextResponse("Not found", { status: 404 });
-  }
-
-  const internalUrl = request.nextUrl.clone();
-  internalUrl.pathname = `/l/${slug}`;
-  return NextResponse.rewrite(internalUrl);
 }
 
 export const config = {

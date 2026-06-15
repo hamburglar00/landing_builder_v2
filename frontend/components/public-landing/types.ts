@@ -69,6 +69,8 @@ export type PublicLandingPhoneResponse = {
   phone: string;
   landingId: string;
   landingName: string;
+  cacheRefreshedAt?: string;
+  cacheSource?: string;
   phoneId?: number;
   phoneMode: string;
   fairCriterion?: string;
