@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useMemo, useEffect, type ReactNode } from "react";
+import { useState, useMemo, type ReactNode } from "react";
 import {
   type FunnelContact,
   type FunnelStage,
@@ -301,7 +301,13 @@ export default function FunnelBoard({
 }) {
   const [sortKey, setSortKey] = useState<SortKey>("date");
   const [sortDir, setSortDir] = useState<SortDir>("desc");
-  const [page, setPage] = useState(1);
+  const [pageState, setPageState] = useState({
+    contacts,
+    page: 1,
+    premiumThreshold,
+    sortDir: "desc" as SortDir,
+    sortKey: "date" as SortKey,
+  });
   const PAGE_SIZE_DEFAULT = 20;
   const PAGE_SIZE_LEADS = 33;
 
@@ -346,15 +352,25 @@ export default function FunnelBoard({
       ),
     [groupedAll],
   );
+  const shouldResetPage =
+    pageState.contacts !== contacts ||
+    pageState.premiumThreshold !== premiumThreshold ||
+    pageState.sortDir !== sortDir ||
+    pageState.sortKey !== sortKey;
+  const page = shouldResetPage ? 1 : pageState.page;
   const safePage = Math.min(page, totalPages);
 
-  useEffect(() => {
-    setPage(1);
-  }, [contacts, sortKey, sortDir, premiumThreshold]);
-
-  useEffect(() => {
-    if (page > totalPages) setPage(totalPages);
-  }, [page, totalPages]);
+  const setSafePage = (nextPage: number | ((currentPage: number) => number)) => {
+    const resolvedPage =
+      typeof nextPage === "function" ? nextPage(safePage) : nextPage;
+    setPageState({
+      contacts,
+      page: Math.min(totalPages, Math.max(1, resolvedPage)),
+      premiumThreshold,
+      sortDir,
+      sortKey,
+    });
+  };
 
   const grouped = useMemo(() => {
     const startLeads = (safePage - 1) * PAGE_SIZE_LEADS;
@@ -390,7 +406,7 @@ export default function FunnelBoard({
         <div className="flex items-center gap-2">
           <div className="mr-2 flex items-center gap-1">
             <button
-              onClick={() => setPage((p) => Math.max(1, p - 1))}
+              onClick={() => setSafePage((p) => p - 1)}
               disabled={safePage <= 1}
               className="cursor-pointer rounded-md border border-zinc-700/60 bg-zinc-900/80 px-2.5 py-1 text-[11px] font-medium text-zinc-300 transition hover:bg-zinc-800/70 disabled:cursor-not-allowed disabled:opacity-40"
             >
@@ -400,7 +416,7 @@ export default function FunnelBoard({
               Pag {safePage}/{totalPages}
             </span>
             <button
-              onClick={() => setPage((p) => Math.min(totalPages, p + 1))}
+              onClick={() => setSafePage((p) => p + 1)}
               disabled={safePage >= totalPages}
               className="cursor-pointer rounded-md border border-zinc-700/60 bg-zinc-900/80 px-2.5 py-1 text-[11px] font-medium text-zinc-300 transition hover:bg-zinc-800/70 disabled:cursor-not-allowed disabled:opacity-40"
             >
@@ -487,14 +503,14 @@ export default function FunnelBoard({
       </div>
       <div className="flex items-center justify-center gap-2 rounded-xl border border-zinc-800/40 bg-[#0d0d11] px-3 py-2">
         <button
-          onClick={() => setPage((p) => Math.max(1, p - 1))}
+          onClick={() => setSafePage((p) => p - 1)}
           disabled={safePage <= 1}
           className="cursor-pointer rounded-md border border-zinc-700/60 bg-zinc-900/80 px-3 py-1 text-[11px] font-medium text-zinc-300 transition hover:bg-zinc-800/70 disabled:cursor-not-allowed disabled:opacity-40"
         >
           Anterior
         </button>
         <button
-          onClick={() => setPage((p) => Math.min(totalPages, p + 1))}
+          onClick={() => setSafePage((p) => p + 1)}
           disabled={safePage >= totalPages}
           className="cursor-pointer rounded-md border border-zinc-700/60 bg-zinc-900/80 px-3 py-1 text-[11px] font-medium text-zinc-300 transition hover:bg-zinc-800/70 disabled:cursor-not-allowed disabled:opacity-40"
         >

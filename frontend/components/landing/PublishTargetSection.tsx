@@ -15,17 +15,14 @@ type PublishTargetSectionProps = {
 const TARGETS: Array<{
   value: PublishTarget;
   title: string;
-  description: string;
 }> = [
   {
     value: "classic",
     title: "Clasico",
-    description: "Usa el proyecto historico de landing publica.",
   },
   {
     value: "constructor",
     title: "Constructor",
-    description: "Sirve la landing desde el proyecto del constructor.",
   },
 ];
 
@@ -52,10 +49,6 @@ export function PublishTargetSection({
       <h3 className="mb-1 text-sm font-semibold text-zinc-200">
         Motor de publicacion
       </h3>
-      <p className="text-[11px] leading-relaxed text-zinc-500">
-        Elegi donde vive esta landing creada en el constructor. No afecta las
-        landings conectadas externas.
-      </p>
 
       <div className="mt-4 grid gap-2 sm:grid-cols-2">
         {TARGETS.map((target) => {
@@ -83,9 +76,6 @@ export function PublishTargetSection({
                     active ? "bg-emerald-400" : "bg-zinc-700"
                   }`}
                 />
-              </span>
-              <span className="mt-1 block text-[11px] leading-relaxed text-zinc-500">
-                {target.description}
               </span>
               <span className="mt-2 block truncate font-mono text-[10px] text-zinc-400">
                 {targetUrl}
