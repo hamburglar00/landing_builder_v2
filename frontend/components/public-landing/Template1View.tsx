@@ -29,6 +29,7 @@ export default function Template1View({ slug, config }: Props) {
       <section className="container background-image">
         <RotatingBackground
           images={images}
+          responsiveImages={config.background?.imagesResponsive}
           rotateEveryHours={config.background?.rotateEveryHours}
           overlay={false}
         />

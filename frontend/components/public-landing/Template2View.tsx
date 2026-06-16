@@ -40,6 +40,7 @@ export default function Template2View({ slug, config }: Props) {
           <div className="frame">
             <FrameBackgroundTemplate2
               images={images}
+              responsiveImages={config.background?.imagesResponsive}
               rotateEveryHours={config.background?.rotateEveryHours}
             />
             {hasLogo ? (
