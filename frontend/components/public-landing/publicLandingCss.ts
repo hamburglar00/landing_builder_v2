@@ -194,8 +194,8 @@ button, a {
 }
 
 .public-landing .whatsapp-icon {
-  width: 24px;
-  height: 24px;
+  width: 29px;
+  height: 29px;
   display: block;
 }
 
@@ -444,8 +444,8 @@ button, a {
 }
 
 .public-landing.lp .cta__icon {
-  width: 24px;
-  height: 24px;
+  width: 29px;
+  height: 29px;
   object-fit: contain;
   flex: 0 0 auto;
 }
@@ -618,8 +618,8 @@ button, a {
   }
 
   .public-landing.lp .cta__icon {
-    width: 20px;
-    height: 20px;
+    width: 24px;
+    height: 24px;
   }
 
   .public-landing.lp .social-proof {
