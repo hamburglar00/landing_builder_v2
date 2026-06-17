@@ -42,7 +42,7 @@ export function LandingPreview({
   const ctaPosition = config.ctaPosition ?? "between_title_and_info";
 
   // CTA común a ambas plantillas (botón con icono WhatsApp)
-  const CtaButton = () => {
+  const CtaButton = ({ template2Like = false }: { template2Like?: boolean } = {}) => {
     const text = config.ctaText?.trim() || "¡Contactar ya!";
     return (
       <div className="flex justify-center">
@@ -55,7 +55,10 @@ export function LandingPreview({
             fontFamily,
             fontSize: config.ctaFontSize,
             fontWeight: config.ctaBold ? 700 : 500,
-            boxShadow: template === 2 ? "none" : `0 0 18px ${ctaGlowHex}`,
+            boxShadow:
+              template === 2 || template2Like
+                ? "inset 0 1px 0 rgba(255,255,255,.1), 0 10px 24px rgba(0,0,0,.26)"
+                : `0 0 18px ${ctaGlowHex}`,
           }}
         >
           <span className="truncate">{text}</span>
@@ -125,7 +128,7 @@ export function LandingPreview({
 
               {/* Título */}
               <div
-                className="mb-4 flex w-full flex-col items-center text-center"
+                className="mb-4 flex w-[85%] max-w-[620px] flex-col items-center text-center"
                 style={{
                   color: titleHex,
                   fontFamily,
@@ -147,7 +150,7 @@ export function LandingPreview({
 
               {/* Info / subtítulos */}
               <div
-                className="mb-4 flex w-full flex-col items-center text-center"
+                className="mb-4 flex w-[85%] max-w-[620px] flex-col items-center text-center"
                 style={{
                   color: subtitleHex,
                   fontFamily,
@@ -169,7 +172,7 @@ export function LandingPreview({
 
               {/* Badge final (solo texto, sin fondo) */}
               <div
-                className="flex w-full flex-col items-center text-center mt-2"
+                className="mt-2 flex w-[85%] max-w-[620px] flex-col items-center text-center"
                 style={{
                   color: footerHex,
                   fontFamily,
@@ -193,9 +196,9 @@ export function LandingPreview({
         </div>
 
         {!gallery && usesTemplate2AlignedBottomCta ? (
-          <div className="absolute left-1/2 top-[calc(66%+10px)] z-20 flex w-full max-w-[380px] -translate-x-1/2 justify-center px-3">
+          <div className="absolute left-1/2 top-[calc(74%+10px)] z-20 flex w-full max-w-[380px] -translate-x-1/2 justify-center px-3">
             <div className="w-[80%] max-w-[360px]">
-              <CtaButton />
+              <CtaButton template2Like />
             </div>
           </div>
         ) : null}
@@ -217,7 +220,7 @@ export function LandingPreview({
           <div className="flex h-full w-full max-w-[380px] flex-col px-3">
             {/* Frame con imagen de fondo */}
             <div
-              className={`relative w-full flex-[2] ${frameMinHeight} max-h-[640px] overflow-hidden rounded-b-[28px] rounded-t-[8px] bg-black`}
+              className={`relative h-[74%] w-full flex-none ${frameMinHeight} max-h-[840px] overflow-hidden rounded-b-[28px] rounded-t-[8px] bg-black`}
             >
               {bgImage && (
                 // eslint-disable-next-line @next/next/no-img-element
@@ -254,7 +257,7 @@ export function LandingPreview({
 
               {/* Zona de texto en la parte baja del frame: badge + título */}
               {!gallery && (
-                <div className="pointer-events-none absolute inset-x-0 bottom-6 z-20 px-4 text-center">
+                <div className="pointer-events-none absolute inset-x-0 bottom-6 z-20 mx-auto w-[85%] max-w-[365px] px-0 text-center">
                   {/* Badge (solo texto, sin fondo) */}
                   <div
                     className="mb-2 text-xs tracking-wide"
@@ -293,13 +296,13 @@ export function LandingPreview({
               <>
                 <div className="mt-3 flex justify-center">
                   <div className="w-[80%] max-w-[360px]">
-                    <CtaButton />
+                    <CtaButton template2Like />
                   </div>
                 </div>
 
                 {/* Subtítulos debajo del CTA */}
                 <div
-                  className="mt-6 px-4 text-center"
+                  className="mx-auto mt-6 w-[85%] max-w-[365px] px-0 text-center"
                   style={{
                     color: subtitleHex,
                     fontFamily,

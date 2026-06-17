@@ -346,7 +346,10 @@ function renderWhatsAppButton(
   options: { autoStart?: boolean; hideButton?: boolean } = {},
 ) {
   const ctaText = config.content?.ctaText || "¡Contactar ya!";
-  const isTemplate2Like = templateVariant === "template2" || templateVariant === "template3";
+  const isTemplate2Like =
+    templateVariant === "template1" ||
+    templateVariant === "template2" ||
+    templateVariant === "template3";
   const buttonClass = isTemplate2Like ? "cta" : "whatsapp-button";
   const iconClass = isTemplate2Like ? "cta__icon" : "whatsapp-icon";
   const buttonStyle = {
@@ -386,7 +389,9 @@ function renderTemplate1({ config }: RenderParams) {
   const fontFamily = resolveFontFamily(config.typography?.fontFamily);
   const isBottomCta = ctaPosition === "bottom";
 
-  return `<main class="public-landing landing-shell${isBottomCta ? " landing-shell--bottom-cta" : ""}"><section class="container background-image">${renderRotatingBackground(
+  return `<main class="public-landing landing-shell"><section class="container background-image${
+    isBottomCta ? " template1-bottom-layout" : ""
+  }">${renderRotatingBackground(
     config,
     false,
   )}<div class="content"${styleAttr({ "font-family": fontFamily })}>${
@@ -422,7 +427,7 @@ function renderTemplate1({ config }: RenderParams) {
       : ""
   }</div>${
     isBottomCta
-      ? `<div class="template1-bottom-cta-slot">${renderWhatsAppButton(config)}</div>`
+      ? `<div class="template1-bottom-cta-slot">${renderWhatsAppButton(config, "template1")}</div>`
       : ""
   }</section></main>`;
 }

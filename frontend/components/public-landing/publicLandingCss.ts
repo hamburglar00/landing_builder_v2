@@ -94,6 +94,13 @@ button, a {
   padding: 32px 20px;
 }
 
+.public-landing .content .title,
+.public-landing .content .subtitle,
+.public-landing .content .description {
+  width: 100%;
+  max-width: min(85vw, 620px);
+}
+
 .public-landing .logo {
   width: 200px;
   height: 150px;
@@ -133,28 +140,27 @@ button, a {
   animation: publicLandingHeartbeat 2s infinite ease-in-out;
 }
 
-.public-landing .template1-bottom-cta-slot {
-  display: flex;
-  justify-content: center;
-  width: 100%;
+.public-landing .container.background-image.template1-bottom-layout {
+  --cta-thumb-frame-height: 74svh;
+  align-items: flex-start;
 }
 
-.public-landing.landing-shell--bottom-cta .template1-bottom-cta-slot {
+.public-landing .template1-bottom-layout .content {
+  min-height: var(--cta-thumb-frame-height);
+  justify-content: center;
+  padding-bottom: 16px;
+}
+
+.public-landing .template1-bottom-cta-slot {
   position: absolute;
   z-index: 2;
-  top: calc(66svh + 10px);
+  top: var(--cta-thumb-frame-height);
   left: 50%;
   width: min(100vw, 430px);
   padding: 0 16px;
-  box-sizing: border-box;
+  display: flex;
+  justify-content: center;
   transform: translateX(-50%);
-}
-
-.public-landing.landing-shell--bottom-cta .template1-bottom-cta-slot .whatsapp-button {
-  width: 80%;
-  min-height: 45px;
-  margin-top: 0;
-  border-radius: 16px;
 }
 
 .public-landing .whatsapp-button::before {
@@ -228,6 +234,7 @@ button, a {
 }
 
 .public-landing.lp .artboard {
+  --cta-thumb-frame-height: 74svh;
   width: min(100vw, 430px);
   height: 100vh;
   height: 100svh;
@@ -243,7 +250,7 @@ button, a {
 .public-landing.lp .frame {
   position: relative;
   width: 100%;
-  height: 66svh;
+  height: var(--cta-thumb-frame-height);
   min-height: 0;
   max-height: none;
   margin-top: 0;
@@ -297,8 +304,11 @@ button, a {
   z-index: 2;
   left: 0;
   right: 0;
+  width: 85%;
+  max-width: 365px;
   bottom: 26px;
-  padding: 0 14px;
+  padding: 0;
+  margin: 0 auto;
   text-align: center;
 }
 
@@ -321,7 +331,8 @@ button, a {
   text-shadow: 0 3px 10px rgba(0, 0, 0, 0.95);
 }
 
-.public-landing.lp .cta {
+.public-landing.lp .cta,
+.public-landing .template1-bottom-cta-slot .cta {
   position: relative;
   width: 80%;
   min-height: 45px;
@@ -346,7 +357,8 @@ button, a {
   will-change: transform;
 }
 
-.public-landing.lp .cta::after {
+.public-landing.lp .cta::after,
+.public-landing .template1-bottom-cta-slot .cta::after {
   content: "";
   position: absolute;
   inset: -4px;
@@ -360,26 +372,30 @@ button, a {
   will-change: transform, opacity;
 }
 
-.public-landing.lp .cta > * {
+.public-landing.lp .cta > *,
+.public-landing .template1-bottom-cta-slot .cta > * {
   position: relative;
   z-index: 1;
 }
 
-.public-landing.lp .cta:hover {
+.public-landing.lp .cta:hover,
+.public-landing .template1-bottom-cta-slot .cta:hover {
   transform: translateY(-1px);
   box-shadow:
     inset 0 1px 0 rgba(255, 255, 255, 0.1),
     0 14px 28px rgba(0, 0, 0, 0.28);
 }
 
-.public-landing.lp .cta:active {
+.public-landing.lp .cta:active,
+.public-landing .template1-bottom-cta-slot .cta:active {
   transform: scale(0.97);
   box-shadow:
     inset 0 2px 8px rgba(0, 0, 0, 0.2),
     0 4px 12px rgba(0, 0, 0, 0.2);
 }
 
-.public-landing.lp .cta:disabled {
+.public-landing.lp .cta:disabled,
+.public-landing .template1-bottom-cta-slot .cta:disabled {
   cursor: not-allowed;
   opacity: 0.75;
 }
@@ -416,7 +432,8 @@ button, a {
   }
 }
 
-.public-landing.lp .cta__fill {
+.public-landing.lp .cta__fill,
+.public-landing .template1-bottom-cta-slot .cta__fill {
   flex: 1 1 auto;
   min-width: 0;
   color: #fff;
@@ -429,7 +446,8 @@ button, a {
   word-break: break-word;
 }
 
-.public-landing.lp .cta__icon {
+.public-landing.lp .cta__icon,
+.public-landing .template1-bottom-cta-slot .cta__icon {
   width: 24px;
   height: 24px;
   object-fit: contain;
@@ -505,6 +523,8 @@ button, a {
 }
 
 .public-landing.lp .features {
+  width: 85%;
+  max-width: 365px;
   margin-top: 8px;
   text-align: center;
   color: #f4f4f4;
@@ -522,18 +542,22 @@ button, a {
   .public-landing .whatsapp-button,
   .public-landing .whatsapp-button::before,
   .public-landing.lp .cta,
+  .public-landing .template1-bottom-cta-slot .cta,
   .public-landing.lp .cta::after,
+  .public-landing .template1-bottom-cta-slot .cta::after,
   .public-landing.lp .social-proof__quote,
   .public-landing.lp .social-proof__progress {
     animation: none !important;
   }
 
   .public-landing .whatsapp-button,
-  .public-landing.lp .cta {
+  .public-landing.lp .cta,
+  .public-landing .template1-bottom-cta-slot .cta {
     transition: none;
   }
 
-  .public-landing.lp .cta:hover {
+  .public-landing.lp .cta:hover,
+  .public-landing .template1-bottom-cta-slot .cta:hover {
     transform: none;
   }
 }
@@ -554,12 +578,20 @@ button, a {
 }
 
 @media (max-width: 390px) {
+  .public-landing .container.background-image.template1-bottom-layout,
+  .public-landing.lp .artboard {
+    --cta-thumb-frame-height: 72svh;
+  }
+
+  .public-landing .template1-bottom-cta-slot {
+    padding: 0 12px;
+  }
+
   .public-landing.lp .artboard {
     padding: 0 12px calc(8px + env(safe-area-inset-bottom));
   }
 
   .public-landing.lp .frame {
-    height: 64svh;
     min-height: 0;
   }
 
@@ -575,7 +607,6 @@ button, a {
 
   .public-landing.lp .frame__copy {
     bottom: 22px;
-    padding: 0 12px;
   }
 
   .public-landing.lp .eyebrow {
@@ -586,7 +617,8 @@ button, a {
     font-size: 20px;
   }
 
-  .public-landing.lp .cta {
+  .public-landing.lp .cta,
+  .public-landing .template1-bottom-cta-slot .cta {
     width: 80%;
     min-height: 38px;
     border-radius: 14px;
@@ -594,21 +626,10 @@ button, a {
     gap: 8px;
   }
 
-  .public-landing.lp .cta__icon {
+  .public-landing.lp .cta__icon,
+  .public-landing .template1-bottom-cta-slot .cta__icon {
     width: 20px;
     height: 20px;
-  }
-
-  .public-landing.landing-shell--bottom-cta .template1-bottom-cta-slot {
-    top: calc(64svh + 10px);
-    padding: 0 12px;
-  }
-
-  .public-landing.landing-shell--bottom-cta .template1-bottom-cta-slot .whatsapp-button {
-    min-height: 38px;
-    border-radius: 14px;
-    padding: 6px 11px;
-    gap: 8px;
   }
 
   .public-landing.lp .social-proof {
@@ -618,37 +639,46 @@ button, a {
     border-radius: 11px;
   }
 
-  .public-landing.lp .social-proof__quote,
-  .public-landing.lp .features {
+  .public-landing.lp .social-proof__quote {
     font-size: 12px;
   }
 
   .public-landing.lp .social-proof__meta {
     font-size: 11px;
   }
+
+  .public-landing.lp .features {
+    font-size: 11px;
+  }
 }
 
 @media (min-width: 431px) {
+  .public-landing .container.background-image.template1-bottom-layout,
+  .public-landing.lp .artboard {
+    --cta-thumb-frame-height: 74vh;
+  }
+
   .public-landing.lp .artboard {
     width: 430px;
   }
 
-  .public-landing.lp .frame {
-    height: 67vh;
-  }
-
-  .public-landing.landing-shell--bottom-cta .template1-bottom-cta-slot {
-    top: calc(67vh + 10px);
+  .public-landing .template1-bottom-cta-slot {
+    width: 430px;
   }
 }
 
 @media (min-width: 768px) {
+  .public-landing .container.background-image.template1-bottom-layout,
+  .public-landing.lp .artboard {
+    --cta-thumb-frame-height: min(74vh, 840px);
+  }
+
   .public-landing.lp .artboard {
     padding-bottom: 30px;
   }
 
   .public-landing.lp .frame {
-    max-height: 780px;
+    max-height: 840px;
   }
 
   .public-landing.lp .frame__copy .title {

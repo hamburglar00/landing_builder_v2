@@ -16,7 +16,9 @@ export default function WhatsAppLiteButton({
 }: Props) {
   const ctaText = config.content?.ctaText || "¡Contactar ya!";
   const isTemplate2Like =
-    templateVariant === "template2" || templateVariant === "template3";
+    templateVariant === "template1" ||
+    templateVariant === "template2" ||
+    templateVariant === "template3";
   const ctaStyle: CSSProperties = {
     color: config.colors?.ctaText ?? "#FFFFFF",
     background: config.colors?.ctaBackground ?? "#25D366",

@@ -26,8 +26,8 @@ export default function Template1View({ slug, config }: Props) {
   const isBottomCta = normalizedCtaPosition === "bottom";
 
   return (
-    <main className={`public-landing landing-shell${isBottomCta ? " landing-shell--bottom-cta" : ""}`}>
-      <section className="container background-image">
+    <main className="public-landing landing-shell">
+      <section className={`container background-image${isBottomCta ? " template1-bottom-layout" : ""}`}>
         <RotatingBackground
           images={images}
           responsiveImages={config.background?.imagesResponsive}
@@ -118,7 +118,7 @@ export default function Template1View({ slug, config }: Props) {
 
         {isBottomCta ? (
           <div className="template1-bottom-cta-slot">
-            <WhatsAppLiteButton config={config} />
+            <WhatsAppLiteButton config={config} templateVariant="template1" />
           </div>
         ) : null}
       </section>
