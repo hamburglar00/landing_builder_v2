@@ -21,10 +21,7 @@ import {
 } from "@/components/landing/LandingEditorForm";
 import { PublishTargetSection } from "@/components/landing/PublishTargetSection";
 import { buildLandingConfig } from "@/lib/landing/buildLandingConfig";
-import {
-  buildLandingPublicUrl,
-  getLandingPublicBaseUrl,
-} from "@/lib/landing/publicUrls";
+import { publishLandingChanges } from "@/lib/landing/publishLanding";
 import type { Gerencia } from "@/lib/gerencias/types";
 import type { GerenciaWorkGroup } from "@/lib/gerencias/types";
 import type { LandingGerenciaAssignment } from "@/lib/gerencias/gerenciasDb";
@@ -342,39 +339,12 @@ export default function AdminLandingEditarPage() {
         landingConfig,
       });
       await setLandingGerencias(landing.id, assignments);
-      // Revalidar landing pública en Vercel (ISR) y calentar caché.
-      if (revalidateSecret) {
-        const base = getLandingPublicBaseUrl(landing.publishTarget, urlBase);
-        const warmUrl = buildLandingPublicUrl(
-          landing.name,
-          landing.publishTarget,
-          urlBase,
-        );
-        try {
-          await fetch(`${base}/api/revalidate`, {
-            method: "POST",
-            headers: {
-              "Content-Type": "application/json",
-            },
-            body: JSON.stringify({
-              name: landing.name,
-              secret: revalidateSecret,
-            }),
-          });
-          fetch(`${warmUrl}?warm=1`).catch(() => {});
-          // Calentar builder-config para que la primera visita no pague cold start.
-          const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL?.replace(/\/$/, "");
-          const anonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY ?? "";
-          if (supabaseUrl && anonKey) {
-            fetch(
-              `${supabaseUrl}/functions/v1/builder-config?name=${encodeURIComponent(landing.name)}`,
-              { headers: { apikey: anonKey, Authorization: `Bearer ${anonKey}` } },
-            ).catch(() => {});
-          }
-        } catch {
-          // No bloqueamos el guardado si falla la revalidacion.
-        }
-      }
+      await publishLandingChanges({
+        name: landing.name,
+        publishTarget: landing.publishTarget,
+        classicBaseUrl: urlBase,
+        revalidateSecret,
+      });
       router.push(BASE);
     } catch (e: unknown) {
       const err = e as { code?: string; message?: string };

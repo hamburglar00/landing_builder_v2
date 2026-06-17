@@ -8,7 +8,7 @@ type RouteContext = {
   }>;
 };
 
-export const revalidate = 60;
+export const revalidate = 15;
 export const dynamic = "force-static";
 
 export async function GET(_request: Request, context: RouteContext) {
@@ -20,7 +20,7 @@ export async function GET(_request: Request, context: RouteContext) {
       status: 404,
       headers: {
         "Content-Type": "text/plain; charset=utf-8",
-        "Cache-Control": "public, max-age=0, s-maxage=60",
+        "Cache-Control": "public, max-age=0, s-maxage=15",
       },
     });
   }
@@ -32,7 +32,7 @@ export async function GET(_request: Request, context: RouteContext) {
     status: 200,
     headers: {
       "Content-Type": "text/html; charset=utf-8",
-      "Cache-Control": "public, max-age=0, s-maxage=60, stale-while-revalidate=300",
+      "Cache-Control": "public, max-age=0, s-maxage=15, stale-while-revalidate=60",
     },
   });
 }
