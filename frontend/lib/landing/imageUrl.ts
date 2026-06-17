@@ -1,4 +1,5 @@
-const STORAGE_PUBLIC_SEGMENT = "/storage/v1/object/public/";
+const STORAGE_OBJECT_PUBLIC_SEGMENT = "/storage/v1/object/public/";
+const STORAGE_RENDER_PUBLIC_SEGMENT = "/storage/v1/render/image/public/";
 
 interface TransformOptions {
   width?: number;
@@ -6,7 +7,10 @@ interface TransformOptions {
 }
 
 function isSupabaseStoragePublicUrl(url: string): boolean {
-  return url.includes(STORAGE_PUBLIC_SEGMENT);
+  return (
+    url.includes(STORAGE_OBJECT_PUBLIC_SEGMENT) ||
+    url.includes(STORAGE_RENDER_PUBLIC_SEGMENT)
+  );
 }
 
 export function buildOptimizedImageUrl(
@@ -22,6 +26,11 @@ export function buildOptimizedImageUrl(
   } catch {
     return rawUrl;
   }
+
+  parsed.pathname = parsed.pathname.replace(
+    STORAGE_OBJECT_PUBLIC_SEGMENT,
+    STORAGE_RENDER_PUBLIC_SEGMENT,
+  );
 
   const width = options.width ?? 1280;
   const quality = options.quality ?? 65;
@@ -42,8 +51,8 @@ export function buildResponsiveImageSet(rawUrl: string): {
   desktop: string;
 } {
   return {
-    mobile: buildOptimizedImageUrl(rawUrl, { width: 640, quality: 60 }),
-    tablet: buildOptimizedImageUrl(rawUrl, { width: 1024, quality: 65 }),
-    desktop: buildOptimizedImageUrl(rawUrl, { width: 1600, quality: 70 }),
+    mobile: buildOptimizedImageUrl(rawUrl, { width: 640, quality: 55 }),
+    tablet: buildOptimizedImageUrl(rawUrl, { width: 960, quality: 58 }),
+    desktop: buildOptimizedImageUrl(rawUrl, { width: 1280, quality: 60 }),
   };
 }
