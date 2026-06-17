@@ -133,6 +133,30 @@ button, a {
   animation: publicLandingHeartbeat 2s infinite ease-in-out;
 }
 
+.public-landing .template1-bottom-cta-slot {
+  display: flex;
+  justify-content: center;
+  width: 100%;
+}
+
+.public-landing.landing-shell--bottom-cta .template1-bottom-cta-slot {
+  position: absolute;
+  z-index: 2;
+  top: calc(66svh + 10px);
+  left: 50%;
+  width: min(100vw, 430px);
+  padding: 0 16px;
+  box-sizing: border-box;
+  transform: translateX(-50%);
+}
+
+.public-landing.landing-shell--bottom-cta .template1-bottom-cta-slot .whatsapp-button {
+  width: 80%;
+  min-height: 45px;
+  margin-top: 0;
+  border-radius: 16px;
+}
+
 .public-landing .whatsapp-button::before {
   content: "";
   position: absolute;
@@ -575,6 +599,18 @@ button, a {
     height: 20px;
   }
 
+  .public-landing.landing-shell--bottom-cta .template1-bottom-cta-slot {
+    top: calc(64svh + 10px);
+    padding: 0 12px;
+  }
+
+  .public-landing.landing-shell--bottom-cta .template1-bottom-cta-slot .whatsapp-button {
+    min-height: 38px;
+    border-radius: 14px;
+    padding: 6px 11px;
+    gap: 8px;
+  }
+
   .public-landing.lp .social-proof {
     width: 80%;
     margin-top: 14px;
@@ -599,6 +635,10 @@ button, a {
 
   .public-landing.lp .frame {
     height: 67vh;
+  }
+
+  .public-landing.landing-shell--bottom-cta .template1-bottom-cta-slot {
+    top: calc(67vh + 10px);
   }
 }
 

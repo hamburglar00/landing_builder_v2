@@ -384,8 +384,9 @@ function renderTemplate1({ config }: RenderParams) {
   const badgeText = config.content?.footerBadgeText || "";
   const ctaPosition = normalizeCtaPosition(config);
   const fontFamily = resolveFontFamily(config.typography?.fontFamily);
+  const isBottomCta = ctaPosition === "bottom";
 
-  return `<main class="public-landing landing-shell"><section class="container background-image">${renderRotatingBackground(
+  return `<main class="public-landing landing-shell${isBottomCta ? " landing-shell--bottom-cta" : ""}"><section class="container background-image">${renderRotatingBackground(
     config,
     false,
   )}<div class="content"${styleAttr({ "font-family": fontFamily })}>${
@@ -419,7 +420,11 @@ function renderTemplate1({ config }: RenderParams) {
           cursor: "pointer",
         })}>-${escapeHtml(badgeText)}-</p>`
       : ""
-  }${ctaPosition === "bottom" ? renderWhatsAppButton(config) : ""}</div></section></main>`;
+  }</div>${
+    isBottomCta
+      ? `<div class="template1-bottom-cta-slot">${renderWhatsAppButton(config)}</div>`
+      : ""
+  }</section></main>`;
 }
 
 function renderTemplate2({ config }: RenderParams) {

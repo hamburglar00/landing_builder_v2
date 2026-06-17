@@ -75,6 +75,7 @@ export function LandingPreview({
     const outerClass = compact
       ? "relative h-full w-full overflow-hidden rounded-3xl bg-black shadow-[0_14px_32px_rgba(0,0,0,0.8)]"
       : "relative mx-auto w-full max-w-[380px] aspect-[9/16] overflow-hidden rounded-3xl bg-black shadow-[0_18px_40px_rgba(0,0,0,0.9)]";
+    const usesTemplate2AlignedBottomCta = ctaPosition === "bottom";
 
     return (
       <div className={outerClass}>
@@ -187,15 +188,17 @@ export function LandingPreview({
                 </p>
               </div>
 
-              {/* CTA abajo de todo */}
-              {ctaPosition === "bottom" && (
-                <div className="mt-4">
-                  <CtaButton />
-                </div>
-              )}
             </div>
           )}
         </div>
+
+        {!gallery && usesTemplate2AlignedBottomCta ? (
+          <div className="absolute left-1/2 top-[calc(66%+10px)] z-20 flex w-full max-w-[380px] -translate-x-1/2 justify-center px-3">
+            <div className="w-[80%] max-w-[360px]">
+              <CtaButton />
+            </div>
+          </div>
+        ) : null}
       </div>
     );
   };

@@ -23,9 +23,10 @@ export default function Template1View({ slug, config }: Props) {
   })();
 
   const resolvedFontFamily = resolveFontFamily(config.typography?.fontFamily);
+  const isBottomCta = normalizedCtaPosition === "bottom";
 
   return (
-    <main className="public-landing landing-shell">
+    <main className={`public-landing landing-shell${isBottomCta ? " landing-shell--bottom-cta" : ""}`}>
       <section className="container background-image">
         <RotatingBackground
           images={images}
@@ -113,10 +114,13 @@ export default function Template1View({ slug, config }: Props) {
             </p>
           ) : null}
 
-          {normalizedCtaPosition === "bottom" ? (
-            <WhatsAppLiteButton config={config} />
-          ) : null}
         </div>
+
+        {isBottomCta ? (
+          <div className="template1-bottom-cta-slot">
+            <WhatsAppLiteButton config={config} />
+          </div>
+        ) : null}
       </section>
     </main>
   );
