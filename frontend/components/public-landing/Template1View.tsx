@@ -118,7 +118,7 @@ export default function Template1View({ slug, config }: Props) {
 
         {isBottomCta ? (
           <div className="template1-bottom-cta-slot">
-            <WhatsAppLiteButton config={config} templateVariant="template1" />
+            <WhatsAppLiteButton config={config} />
           </div>
         ) : null}
       </section>

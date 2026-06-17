@@ -3,7 +3,7 @@ import type { PublicLandingConfig } from "./types";
 
 type Props = {
   config: PublicLandingConfig;
-  templateVariant?: "default" | "template1" | "template2" | "template3";
+  templateVariant?: "default" | "template2" | "template3";
   autoStart?: boolean;
   hideButton?: boolean;
 };
@@ -16,7 +16,6 @@ export default function WhatsAppLiteButton({
 }: Props) {
   const ctaText = config.content?.ctaText || "¡Contactar ya!";
   const isTemplate2Like =
-    templateVariant === "template1" ||
     templateVariant === "template2" ||
     templateVariant === "template3";
   const ctaStyle: CSSProperties = {

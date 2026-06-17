@@ -342,12 +342,11 @@ function renderFrameBackgroundTemplate2(config: PublicLandingConfig) {
 
 function renderWhatsAppButton(
   config: PublicLandingConfig,
-  templateVariant: "default" | "template1" | "template2" | "template3" = "default",
+  templateVariant: "default" | "template2" | "template3" = "default",
   options: { autoStart?: boolean; hideButton?: boolean } = {},
 ) {
   const ctaText = config.content?.ctaText || "¡Contactar ya!";
   const isTemplate2Like =
-    templateVariant === "template1" ||
     templateVariant === "template2" ||
     templateVariant === "template3";
   const buttonClass = isTemplate2Like ? "cta" : "whatsapp-button";
@@ -427,7 +426,7 @@ function renderTemplate1({ config }: RenderParams) {
       : ""
   }</div>${
     isBottomCta
-      ? `<div class="template1-bottom-cta-slot">${renderWhatsAppButton(config, "template1")}</div>`
+      ? `<div class="template1-bottom-cta-slot">${renderWhatsAppButton(config)}</div>`
       : ""
   }</section></main>`;
 }
