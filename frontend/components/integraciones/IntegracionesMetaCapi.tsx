@@ -1240,7 +1240,8 @@ export default function IntegracionesMetaCapi() {
                   <option value="">Seleccionar pixel</option>
                   {pixelConfigs.map((px) => (
                     <option key={px.id} value={px.pixel_id}>
-                      {px.pixel_id} {px.is_default ? "(default)" : ""}
+                      {px.comment ? `${px.pixel_id} (${px.comment})` : px.pixel_id}
+                      {px.is_default ? " (default)" : ""}
                     </option>
                   ))}
                 </select>
