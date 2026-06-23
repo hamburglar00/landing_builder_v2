@@ -67,6 +67,11 @@ export async function POST(request: NextRequest) {
       (body.payload as Record<string, unknown>).client_user_agent ||
       request.headers.get("user-agent") ||
       undefined,
+    agentuser:
+      (body.payload as Record<string, unknown>).agentuser ||
+      (body.payload as Record<string, unknown>).client_user_agent ||
+      request.headers.get("user-agent") ||
+      undefined,
   };
 
   let lastStatus = 0;

@@ -208,6 +208,30 @@ export default function PublicLandingRuntimeScript({ slug, config }: Props) {
         return metaTracking;
       }
 
+      function mergeMetaTracking(base, incoming) {
+        var next = incoming && typeof incoming === "object" ? incoming : {};
+        return {
+          fbp: String(next.fbp || base.fbp || ""),
+          fbc: String(next.fbc || base.fbc || ""),
+          clientIpAddress: String(next.clientIpAddress || base.clientIpAddress || "")
+        };
+      }
+
+      function refreshMetaTracking(params, fallback) {
+        var base = mergeMetaTracking(collectMetaTrackingParams(params), fallback || {});
+        var collector = window.__PUBLIC_META_COLLECT_PARAMS;
+        if (typeof collector !== "function") return Promise.resolve(base);
+        return waitWithTimeout(Promise.resolve(collector()), 450)
+          .then(function (value) {
+            metaTracking = mergeMetaTracking(base, value || {});
+            return metaTracking;
+          })
+          .catch(function () {
+            metaTracking = base;
+            return base;
+          });
+      }
+
       function waitWithTimeout(promise, timeoutMs) {
         var timeoutId;
         var timeout = new Promise(function (resolve) {
@@ -420,7 +444,11 @@ export default function PublicLandingRuntimeScript({ slug, config }: Props) {
           var testEventCode = context.testEventCode;
           var shouldSkipContact = context.shouldSkipContact;
 
-          waitWithTimeout(ensurePhonePromise(), 1500)
+          refreshMetaTracking(params, tracking)
+            .then(function (freshTracking) {
+              tracking = freshTracking;
+              return waitWithTimeout(ensurePhonePromise(), 1500);
+            })
             .then(function (phoneData) {
               if (phoneData && phoneData.phone) return phoneData;
               clearPrewarmedPhonePromise();
@@ -460,6 +488,7 @@ export default function PublicLandingRuntimeScript({ slug, config }: Props) {
                 fbc: tracking.fbc,
                 client_ip_address: tracking.clientIpAddress || undefined,
                 client_user_agent: navigator.userAgent || undefined,
+                agentuser: navigator.userAgent || undefined,
                 telefono_asignado: phone,
                 promo_code: promoCode,
                 source: "main_button",

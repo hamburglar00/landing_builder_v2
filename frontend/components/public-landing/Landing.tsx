@@ -1,4 +1,5 @@
 import PixelInit from "./PixelInit";
+import MetaTrackingBootstrap from "./MetaTrackingBootstrap";
 import PhonePrewarmScript from "./PhonePrewarmScript";
 import PublicLandingRuntimeScript from "./PublicLandingRuntimeScript";
 import Template1View from "./Template1View";
@@ -20,6 +21,7 @@ export default function PublicLanding({ slug, config, cachedPhone }: Props) {
   const pixelBlock = pixelId ? (
     <>
       <PixelInit pixelId={pixelId} />
+      <MetaTrackingBootstrap />
       <noscript>
         <img
           height="1"
