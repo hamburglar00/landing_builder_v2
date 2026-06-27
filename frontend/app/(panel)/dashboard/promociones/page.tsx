@@ -82,6 +82,8 @@ type PromotionWinnerDetails = {
   agencyLabel: string;
 };
 
+type MatchSort = "none" | "yes_first" | "no_first";
+
 async function resolveParticipantAgencyById(
   userId: string,
   participants: PromotionParticipantRow[],
@@ -352,6 +354,7 @@ export default function DashboardPromocionesPage() {
   const [winnerDetailsByPromotionId, setWinnerDetailsByPromotionId] = useState<Record<string, PromotionWinnerDetails>>({});
   const [deletingParticipantId, setDeletingParticipantId] = useState<string | null>(null);
   const [participantPhoneSearch, setParticipantPhoneSearch] = useState("");
+  const [matchSort, setMatchSort] = useState<MatchSort>("none");
 
   const agencyEmailSummary = useMemo(() => {
     const counts = new Map<string, number>();
@@ -371,9 +374,28 @@ export default function DashboardPromocionesPage() {
   }, [participantAgencyById, tableParticipants]);
   const visibleTableParticipants = useMemo(() => {
     const query = normalizePhone(participantPhoneSearch);
-    if (!query) return tableParticipants;
-    return tableParticipants.filter((participant) => normalizePhone(participant.phone).includes(query));
-  }, [participantPhoneSearch, tableParticipants]);
+    const filtered = query
+      ? tableParticipants.filter((participant) => normalizePhone(participant.phone).includes(query))
+      : tableParticipants;
+
+    if (matchSort === "none") return filtered;
+
+    return [...filtered].sort((a, b) => {
+      const aMatched = a.matched_conversion_count > 0 ? 1 : 0;
+      const bMatched = b.matched_conversion_count > 0 ? 1 : 0;
+      const matchDiff = matchSort === "yes_first" ? bMatched - aMatched : aMatched - bMatched;
+      if (matchDiff !== 0) return matchDiff;
+      return new Date(b.created_at).getTime() - new Date(a.created_at).getTime();
+    });
+  }, [matchSort, participantPhoneSearch, tableParticipants]);
+
+  const toggleMatchSort = () => {
+    setMatchSort((current) => {
+      if (current === "none") return "yes_first";
+      if (current === "yes_first") return "no_first";
+      return "none";
+    });
+  };
 
   const origin = typeof window === "undefined" ? "" : window.location.origin;
   const editingPromotion = useMemo(
@@ -1071,7 +1093,19 @@ export default function DashboardPromocionesPage() {
                   <th className="w-[17%] px-3 py-2 font-medium">Nombre</th>
                   <th className="w-[17%] px-3 py-2 font-medium">Telefono</th>
                   <th className="w-[26%] px-3 py-2 font-medium">Email</th>
-                  <th className="w-[8%] px-3 py-2 font-medium text-center">Match</th>
+                  <th className="w-[8%] px-3 py-2 text-center font-medium">
+                    <button
+                      type="button"
+                      onClick={toggleMatchSort}
+                      className="inline-flex items-center gap-1 rounded-md px-2 py-1 text-zinc-300 transition hover:bg-zinc-800 hover:text-zinc-100"
+                      title="Ordenar por Match"
+                    >
+                      Match
+                      <span className="text-[10px] text-zinc-500">
+                        {matchSort === "yes_first" ? "Si" : matchSort === "no_first" ? "No" : "↕"}
+                      </span>
+                    </button>
+                  </th>
                   <th className="w-[17%] px-3 py-2 font-medium">Nombre gerencia (ID)</th>
                   <th className="w-[5%] px-3 py-2 font-medium text-center"></th>
                 </tr>

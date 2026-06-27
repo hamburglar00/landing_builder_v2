@@ -29,6 +29,11 @@ type Participant = {
 
 type DbClient = any;
 
+type ConversionEmailMatch = {
+  matchedIds: string[];
+  updatedIds: string[];
+};
+
 function jsonResponse(body: Record<string, unknown>, status = 200): Response {
   return new Response(JSON.stringify(body), {
     status,
@@ -58,24 +63,23 @@ function isValidEmail(value: string): boolean {
 
 async function enrichConversionsEmail(
   db: DbClient,
-  userId: string,
   phone: string,
   email: string,
-): Promise<string[]> {
+): Promise<ConversionEmailMatch> {
   const { data: rows, error: fetchError } = await db
     .from("conversions")
     .select("id, email")
-    .eq("user_id", userId)
     .eq("phone", phone);
 
   if (fetchError) throw fetchError;
 
   const typedRows = (rows ?? []) as Array<{ id: string; email: string | null }>;
+  const matchedIds = typedRows.map((row) => String(row.id)).filter(Boolean);
   const idsToUpdate = typedRows
     .filter((row) => !String(row.email ?? "").trim())
     .map((row) => String(row.id));
 
-  if (!idsToUpdate.length) return [];
+  if (!idsToUpdate.length) return { matchedIds, updatedIds: [] };
 
   const { error: updateError } = await db
     .from("conversions")
@@ -83,7 +87,7 @@ async function enrichConversionsEmail(
     .in("id", idsToUpdate);
 
   if (updateError) throw updateError;
-  return idsToUpdate;
+  return { matchedIds, updatedIds: idsToUpdate };
 }
 
 Deno.serve(async (req) => {
@@ -121,7 +125,7 @@ Deno.serve(async (req) => {
       .from("promotions")
       .select("id, user_id, title, draw_at, status, winner_participant_id")
       .eq("slug", slug)
-      .maybeSingle<Promotion>();
+      .maybeSingle();
 
     if (promotionError) throw promotionError;
     if (!promotion || promotion.status !== "active") {
@@ -144,14 +148,9 @@ Deno.serve(async (req) => {
     if (existingError) throw existingError;
     const existing = (existingRows ?? [])[0] as Participant | undefined;
     if (existing) {
-      const updatedConversionIds = await enrichConversionsEmail(
-        db,
-        promotion.user_id,
-        existing.phone,
-        existing.email,
-      );
-      if (updatedConversionIds.length) {
-        const mergedIds = Array.from(new Set([...(existing.matched_conversion_ids ?? []), ...updatedConversionIds]));
+      const conversionMatch = await enrichConversionsEmail(db, existing.phone, existing.email);
+      if (conversionMatch.matchedIds.length) {
+        const mergedIds = Array.from(new Set([...(existing.matched_conversion_ids ?? []), ...conversionMatch.matchedIds]));
         await db
           .from("promotion_participants")
           .update({
@@ -166,11 +165,12 @@ Deno.serve(async (req) => {
         ok: true,
         already_participated: true,
         participant: existing,
-        enriched_conversions: updatedConversionIds.length,
+        enriched_conversions: conversionMatch.updatedIds.length,
+        matched_conversions: conversionMatch.matchedIds.length,
       });
     }
 
-    const updatedConversionIds = await enrichConversionsEmail(db, promotion.user_id, phone, email);
+    const conversionMatch = await enrichConversionsEmail(db, phone, email);
 
     const { data: inserted, error: insertError } = await db
       .from("promotion_participants")
@@ -181,11 +181,11 @@ Deno.serve(async (req) => {
         phone,
         email,
         visitor_token: visitorToken,
-        matched_conversion_count: updatedConversionIds.length,
-        matched_conversion_ids: updatedConversionIds,
+        matched_conversion_count: conversionMatch.matchedIds.length,
+        matched_conversion_ids: conversionMatch.matchedIds,
       })
       .select("*")
-      .single<Participant>();
+      .single();
 
     if (insertError) {
       if (String(insertError.code) === "23505") {
@@ -198,7 +198,8 @@ Deno.serve(async (req) => {
       ok: true,
       already_participated: false,
       participant: inserted,
-      enriched_conversions: updatedConversionIds.length,
+      enriched_conversions: conversionMatch.updatedIds.length,
+      matched_conversions: conversionMatch.matchedIds.length,
     });
   } catch (err) {
     console.error("promotion-participate error:", err);
