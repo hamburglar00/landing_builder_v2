@@ -19,6 +19,8 @@ type Participant = {
   username: string;
   phone: string;
   email: string;
+  created_at: string;
+  matched_conversion_count: number;
 };
 
 type BotConfig = {
@@ -40,7 +42,12 @@ type DrawResult = {
   skipped?: string;
   draw_status?: "completed" | "no_participants";
   winner_eligible_by_purchase?: boolean;
+  participant_count?: number;
+  eligible_participant_count?: number;
 };
+
+const PARTICIPANT_PAGE_SIZE = 1000;
+const PARTICIPANT_SELECT = "id, username, phone, email, created_at, matched_conversion_count";
 
 function jsonResponse(body: Record<string, unknown>, status = 200): Response {
   return new Response(JSON.stringify(body), {
@@ -78,6 +85,34 @@ function shuffled<T>(items: T[]): T[] {
     [copy[i], copy[j]] = [copy[j], copy[i]];
   }
   return copy;
+}
+
+async function fetchPromotionParticipants(db: any, promotionId: string): Promise<Participant[]> {
+  const participants: Participant[] = [];
+  let from = 0;
+
+  for (;;) {
+    const to = from + PARTICIPANT_PAGE_SIZE - 1;
+    const { data, error } = await db
+      .from("promotion_participants")
+      .select(PARTICIPANT_SELECT)
+      .eq("promotion_id", promotionId)
+      .order("created_at", { ascending: true })
+      .range(from, to);
+
+    if (error) throw error;
+
+    const rows = (data ?? []) as Participant[];
+    participants.push(...rows);
+    if (rows.length < PARTICIPANT_PAGE_SIZE) break;
+    from += PARTICIPANT_PAGE_SIZE;
+  }
+
+  return participants;
+}
+
+function filterMatchedParticipants(participants: Participant[]): Participant[] {
+  return participants.filter((participant) => Number(participant.matched_conversion_count ?? 0) > 0);
 }
 
 async function pickWinnerWithPurchaseFallback(
@@ -129,7 +164,7 @@ async function notifyWinner(
     .from("notification_settings")
     .select("promotion_winner_notifications_enabled")
     .eq("user_id", promotion.user_id)
-    .maybeSingle<NotificationSettings>();
+    .maybeSingle();
 
   if (settings?.promotion_winner_notifications_enabled === false) return 0;
 
@@ -169,14 +204,7 @@ async function notifyWinner(
 }
 
 async function drawPromotion(db: any, promotion: Promotion, botToken: string): Promise<DrawResult> {
-  const { data: participants, error: participantsError } = await db
-    .from("promotion_participants")
-    .select("id, username, phone, email")
-    .eq("promotion_id", promotion.id)
-    .limit(5000);
-
-  if (participantsError) throw participantsError;
-  const pool = (participants ?? []) as Participant[];
+  const pool = await fetchPromotionParticipants(db, promotion.id);
   const nowIso = new Date().toISOString();
   if (!pool.length) {
     const { error: noParticipantsError } = await db
@@ -189,10 +217,37 @@ async function drawPromotion(db: any, promotion: Promotion, botToken: string): P
       .eq("draw_status", "pending")
       .is("winner_participant_id", null);
     if (noParticipantsError) throw noParticipantsError;
-    return { promotion_id: promotion.id, skipped: "no-participants", draw_status: "no_participants" };
+    return {
+      promotion_id: promotion.id,
+      skipped: "no-participants",
+      draw_status: "no_participants",
+      participant_count: 0,
+      eligible_participant_count: 0,
+    };
   }
 
-  const { winner, eligibleByPurchase } = await pickWinnerWithPurchaseFallback(db, promotion.user_id, pool);
+  const matchedPool = filterMatchedParticipants(pool);
+  if (!matchedPool.length) {
+    const { error: noMatchedParticipantsError } = await db
+      .from("promotions")
+      .update({
+        draw_status: "no_participants",
+        draw_processed_at: nowIso,
+      })
+      .eq("id", promotion.id)
+      .eq("draw_status", "pending")
+      .is("winner_participant_id", null);
+    if (noMatchedParticipantsError) throw noMatchedParticipantsError;
+    return {
+      promotion_id: promotion.id,
+      skipped: "no-matched-participants",
+      draw_status: "no_participants",
+      participant_count: pool.length,
+      eligible_participant_count: 0,
+    };
+  }
+
+  const { winner, eligibleByPurchase } = await pickWinnerWithPurchaseFallback(db, promotion.user_id, matchedPool);
 
   const { data: updatedWinner, error: updateError } = await db
     .from("promotions")
@@ -222,6 +277,8 @@ async function drawPromotion(db: any, promotion: Promotion, botToken: string): P
     notified,
     draw_status: "completed",
     winner_eligible_by_purchase: eligibleByPurchase,
+    participant_count: pool.length,
+    eligible_participant_count: matchedPool.length,
   };
 }
 
@@ -255,7 +312,7 @@ Deno.serve(async (req) => {
       .from("notification_bot_config")
       .select("telegram_bot_token")
       .eq("id", 1)
-      .maybeSingle<BotConfig>();
+      .maybeSingle();
     const botToken = String(botRow?.telegram_bot_token ?? "");
 
     const { data: promotions, error: promotionsError } = await db
