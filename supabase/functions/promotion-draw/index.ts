@@ -62,7 +62,7 @@ function animationUsernamesFromParticipants(participants: Participant[]): string
   const names = participants
     .map((participant) => String(participant.username || "").trim())
     .filter(Boolean);
-  return shuffled(names).slice(0, 80);
+  return shuffled(names);
 }
 
 async function fetchPromotionParticipants(db: any, promotionId: string): Promise<Participant[]> {

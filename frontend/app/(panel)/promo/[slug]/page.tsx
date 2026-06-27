@@ -65,6 +65,7 @@ function normalizeArgentinaMobilePhone(value: string): string | null {
 
 const COIN_RAIN = Array.from({ length: 34 }, (_, index) => index);
 const RESULT_VISIBLE_MS = 3 * 24 * 60 * 60 * 1000;
+const DRAW_ANIMATION_MS = 10000;
 
 export default function PublicPromotionPage() {
   const params = useParams<{ slug: string }>();
@@ -141,7 +142,7 @@ export default function PublicPromotionPage() {
         setDisplayedCandidate(finalWinner);
         setIsDrawAnimating(false);
         setRevealWinner(true);
-      }, 7000);
+      }, DRAW_ANIMATION_MS);
     },
     [clearDrawTimers],
   );
@@ -605,7 +606,7 @@ export default function PublicPromotionPage() {
             </div>
           </div>
           <div className="mx-auto mt-6 h-2 max-w-sm overflow-hidden rounded-full bg-zinc-900">
-            <div className="h-full rounded-full bg-gradient-to-r from-amber-500 via-yellow-200 to-amber-500 [animation:promotion-draw-progress_7s_linear_forwards]" />
+            <div className="h-full rounded-full bg-gradient-to-r from-amber-500 via-yellow-200 to-amber-500 [animation:promotion-draw-progress_10s_linear_forwards]" />
           </div>
           <div className="mt-6 grid grid-cols-3 gap-1.5 text-[9px] uppercase tracking-[0.12em] text-zinc-500 sm:gap-2 sm:text-[10px] sm:tracking-[0.18em]">
             <span className="rounded-full border border-zinc-800 bg-black/40 px-2 py-2">Mezclando</span>
@@ -724,7 +725,7 @@ export default function PublicPromotionPage() {
                       </div>
                     </div>
                     <div className="mx-auto mt-5 h-2 max-w-sm overflow-hidden rounded-full bg-zinc-900">
-                      <div className="h-full rounded-full bg-gradient-to-r from-amber-500 via-yellow-200 to-amber-500 [animation:promotion-draw-progress_7s_linear_forwards]" />
+                      <div className="h-full rounded-full bg-gradient-to-r from-amber-500 via-yellow-200 to-amber-500 [animation:promotion-draw-progress_10s_linear_forwards]" />
                     </div>
                     <div className="mt-5 grid grid-cols-3 gap-1.5 text-[9px] uppercase tracking-[0.1em] text-zinc-500 sm:gap-2 sm:text-[10px] sm:tracking-[0.16em]">
                       <span className="rounded-full border border-zinc-800 bg-black/40 px-2 py-2">Mezclando</span>
