@@ -394,11 +394,11 @@ export default function PublicPromotionPage() {
 
   const heroShellClassName = backgroundImageUrl
     ? showParticipantWaiting
-      ? "relative h-[calc(100svh-1rem)] overflow-hidden rounded-[1.5rem] px-4 pb-48 pt-5 text-center sm:h-auto sm:min-h-[680px] sm:rounded-[2rem] sm:px-7 sm:pb-64 sm:pt-10"
-      : "relative flex h-[calc(100svh-1rem)] flex-col overflow-hidden rounded-[1.5rem] px-4 pb-20 pt-5 text-center sm:block sm:h-auto sm:min-h-[680px] sm:rounded-[2rem] sm:px-7 sm:pb-28 sm:pt-10"
+      ? "relative min-h-[calc(100svh-1rem)] overflow-hidden rounded-[1.5rem] px-4 pb-48 pt-5 text-center sm:h-auto sm:min-h-[680px] sm:rounded-[2rem] sm:px-7 sm:pb-64 sm:pt-10"
+      : "relative flex min-h-[calc(100svh-1rem)] flex-col overflow-hidden rounded-[1.5rem] px-4 pb-20 pt-5 text-center sm:block sm:h-auto sm:min-h-[680px] sm:rounded-[2rem] sm:px-7 sm:pb-28 sm:pt-10"
     : showParticipantWaiting
-      ? "relative h-[calc(100svh-1rem)] overflow-hidden rounded-[1.5rem] border border-white/10 bg-[#0c0c14] px-4 pb-48 pt-5 text-center shadow-[0_30px_100px_rgba(0,0,0,0.55)] sm:h-auto sm:min-h-[680px] sm:rounded-[2rem] sm:px-7 sm:pb-64 sm:pt-10"
-      : "relative flex h-[calc(100svh-1rem)] flex-col overflow-hidden rounded-[1.5rem] border border-white/10 bg-[#0c0c14] px-4 pb-20 pt-5 text-center shadow-[0_30px_100px_rgba(0,0,0,0.55)] sm:block sm:h-auto sm:min-h-[680px] sm:rounded-[2rem] sm:px-7 sm:pb-28 sm:pt-10";
+      ? "relative min-h-[calc(100svh-1rem)] overflow-hidden rounded-[1.5rem] border border-white/10 bg-[#0c0c14] px-4 pb-48 pt-5 text-center shadow-[0_30px_100px_rgba(0,0,0,0.55)] sm:h-auto sm:min-h-[680px] sm:rounded-[2rem] sm:px-7 sm:pb-64 sm:pt-10"
+      : "relative flex min-h-[calc(100svh-1rem)] flex-col overflow-hidden rounded-[1.5rem] border border-white/10 bg-[#0c0c14] px-4 pb-20 pt-5 text-center shadow-[0_30px_100px_rgba(0,0,0,0.55)] sm:block sm:h-auto sm:min-h-[680px] sm:rounded-[2rem] sm:px-7 sm:pb-28 sm:pt-10";
   const ctaZoneClassName = backgroundImageUrl
     ? "absolute inset-x-0 bottom-0 px-4 pb-3 pt-6 sm:px-5 sm:pb-6 sm:pt-12"
     : "absolute inset-x-0 bottom-0 bg-gradient-to-t from-[#0c0c14] via-[#0c0c14] to-transparent px-4 pb-3 pt-6 sm:px-5 sm:pb-6 sm:pt-12";
@@ -522,7 +522,7 @@ export default function PublicPromotionPage() {
           value={form.phone}
           onChange={(e) => setForm((prev) => ({ ...prev, phone: e.target.value }))}
           className="w-full rounded-xl border border-zinc-800 bg-black/70 px-4 py-3 text-base text-white outline-none focus:border-amber-500 sm:text-sm"
-          placeholder="3512332211, 543512332211 o 5493512332211"
+          placeholder="Número de teléfono"
           inputMode="tel"
         />
         <input
@@ -618,7 +618,7 @@ export default function PublicPromotionPage() {
   );
 
   return (
-    <main className="min-h-[100svh] overflow-hidden bg-[#07100d] text-zinc-100" style={backgroundStyle}>
+    <main className="min-h-[100svh] overflow-x-hidden bg-[#07100d] text-zinc-100" style={backgroundStyle}>
       <style>{`
         @keyframes promotion-marquee {
           from { transform: translateX(0); }
