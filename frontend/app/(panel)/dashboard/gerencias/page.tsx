@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
 import { supabase } from "@/lib/supabaseClient";
 import type { Gerencia, GerenciaWorkGroup } from "@/lib/gerencias/types";
@@ -37,6 +37,7 @@ export default function DashboardGerenciasPage() {
   const [saving, setSaving] = useState(false);
   const [savingGroup, setSavingGroup] = useState(false);
   const [deletingId, setDeletingId] = useState<number | null>(null);
+  const [gerenciaSearch, setGerenciaSearch] = useState("");
 
   useEffect(() => {
     const init = async () => {
@@ -217,6 +218,18 @@ export default function DashboardGerenciasPage() {
     }
   };
 
+  const filteredGerencias = useMemo(() => {
+    const query = gerenciaSearch.trim().toLowerCase();
+    if (!query) return gerencias;
+
+    return gerencias.filter((gerencia) => {
+      const name = gerencia.nombre.toLowerCase();
+      const internalId = String(gerencia.id);
+      const externalId = gerencia.gerencia_id == null ? "" : String(gerencia.gerencia_id);
+      return name.includes(query) || internalId.includes(query) || externalId.includes(query);
+    });
+  }, [gerenciaSearch, gerencias]);
+
   if (!ready) {
     return <DashboardSkeleton title="Cargando gerencias..." />;
   }
@@ -318,17 +331,28 @@ export default function DashboardGerenciasPage() {
         </div>
       )}
 
-      <GerenciaWorkGroupsPanel
-        gerencias={gerencias}
-        groups={workGroups}
-        saving={savingGroup}
-        onCreate={handleCreateGroup}
-        onUpdate={handleUpdateGroup}
-        onDelete={handleDeleteGroup}
-      />
+      <section className="rounded-xl border border-zinc-800 bg-zinc-950/30">
+        <div className="flex flex-col gap-3 border-b border-zinc-800 p-4 md:flex-row md:items-center md:justify-between">
+          <div>
+            <h2 className="text-sm font-semibold text-zinc-100">Listado de gerencias</h2>
+            <p className="mt-1 text-xs text-zinc-500">
+              {filteredGerencias.length} de {gerencias.length} gerencias visibles
+            </p>
+          </div>
+          <label className="w-full md:max-w-sm">
+            <span className="sr-only">Buscar gerencias por nombre o ID</span>
+            <input
+              type="search"
+              value={gerenciaSearch}
+              onChange={(event) => setGerenciaSearch(event.target.value)}
+              placeholder="Buscar por nombre o ID..."
+              className="w-full rounded-lg border border-[var(--color-border)] bg-[var(--color-bg-2)] px-3 py-2 text-sm text-[var(--color-text-strong)] placeholder:text-[var(--color-text-disabled)] focus:border-[var(--color-primary)] focus:outline-none focus:ring-2 focus:ring-[var(--color-ring-primary)]"
+            />
+          </label>
+        </div>
 
-      <div className="overflow-x-auto rounded-xl border border-zinc-800">
-        <table className="min-w-[680px] text-left text-sm md:min-w-full">
+        <div className="overflow-x-auto">
+          <table className="min-w-[680px] text-left text-sm md:min-w-full">
           <thead className="bg-zinc-900/80">
             <tr>
               <th className="px-4 py-3 font-medium text-zinc-300">Nombre</th>
@@ -345,7 +369,14 @@ export default function DashboardGerenciasPage() {
                 </td>
               </tr>
             )}
-            {gerencias.map((g) => (
+            {gerencias.length > 0 && filteredGerencias.length === 0 && (
+              <tr>
+                <td colSpan={4} className="px-4 py-6 text-center text-zinc-500">
+                  No hay gerencias que coincidan con la busqueda.
+                </td>
+              </tr>
+            )}
+            {filteredGerencias.map((g) => (
               <tr key={g.id} className="bg-zinc-950/40">
                 <td className="px-4 py-3">
                   {editingId === g.id ? (
@@ -413,8 +444,18 @@ export default function DashboardGerenciasPage() {
               </tr>
             ))}
           </tbody>
-        </table>
-      </div>
+          </table>
+        </div>
+      </section>
+
+      <GerenciaWorkGroupsPanel
+        gerencias={gerencias}
+        groups={workGroups}
+        saving={savingGroup}
+        onCreate={handleCreateGroup}
+        onUpdate={handleUpdateGroup}
+        onDelete={handleDeleteGroup}
+      />
     </div>
   );
 }
