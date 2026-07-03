@@ -191,6 +191,7 @@ function estadoBadge(estado: string, isRepeat = false) {
 function statusText(status: string) {
   if (status === "enviado") return <span className="text-emerald-400">enviado</span>;
   if (status === "error") return <span className="text-red-400">error</span>;
+  if (status.startsWith("skipped")) return <span className="text-zinc-400">omitido</span>;
   return <span className="text-zinc-600">-</span>;
 }
 
