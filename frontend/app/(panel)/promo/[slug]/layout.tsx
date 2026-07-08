@@ -52,7 +52,7 @@ export async function generateMetadata({ params }: PromoLayoutProps): Promise<Me
     title,
     description,
     icons: {
-      icon: [{ url: "/promo-favicon.svg", type: "image/svg+xml" }],
+      icon: [{ url: "/promo-favicon.svg?v=promotion", type: "image/svg+xml" }],
     },
     alternates: {
       canonical: pageUrl,
