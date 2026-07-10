@@ -15,7 +15,7 @@ const MIN_CONTACT_LEAD_RETRY_INTERVAL_MS = 5 * 60 * 1000;
 const CONTACT_LEAD_CAPI_RETRY_SELECT = `
   id, landing_id, user_id, landing_name,
   phone, email, fn, ln, ct, st, zip, country,
-  fbp, fbc, pixel_id,
+  fbp, fbc, source_platform, pixel_id,
   contact_event_id, contact_event_time, contact_payload_raw,
   lead_event_id, lead_event_time, lead_payload_raw,
   purchase_event_id, purchase_event_time, purchase_payload_raw,
@@ -123,7 +123,7 @@ Deno.serve(async (req) => {
     // Find purchases that need retry
     const { data: rows, error } = await db
       .from("conversions")
-      .select("id, user_id, phone, pixel_id, purchase_event_id, purchase_event_time, valor, event_source_url, email, fn, ln, ct, st, zip, country, fbp, fbc, client_ip, agent_user, external_id, observaciones")
+      .select("id, user_id, phone, source_platform, pixel_id, purchase_event_id, purchase_event_time, valor, event_source_url, email, fn, ln, ct, st, zip, country, fbp, fbc, client_ip, agent_user, external_id, observaciones")
       .eq("estado", "purchase")
       .not("purchase_status_capi", "in", "(enviado,skipped_old_event_time)")
       .gt("valor", 0)
@@ -157,6 +157,12 @@ Deno.serve(async (req) => {
         .select("user_id, pixel_id, meta_access_token, meta_currency, meta_api_version, is_default")
         .in("user_id", userIds)
       : { data: [] };
+    const { data: chatraceConfigs } = userIds.length > 0
+      ? await db
+        .from("chatrace_client_configs")
+        .select("user_id, active, send_meta_capi_events")
+        .in("user_id", userIds)
+      : { data: [] };
 
     const configMap = new Map<string, Record<string, unknown>>();
     for (const c of configs ?? []) {
@@ -168,6 +174,10 @@ Deno.serve(async (req) => {
       list.push(pc as Record<string, unknown>);
       pixelConfigMap.set(String(pc.user_id), list);
     }
+    const chatraceMetaCapiMap = new Map<string, boolean>();
+    for (const cc of chatraceConfigs ?? []) {
+      chatraceMetaCapiMap.set(String(cc.user_id), cc.active !== false && cc.send_meta_capi_events !== false);
+    }
 
     const contactLeadRetryStats = await retryContactLeadCapiEvents(
       db,
@@ -175,6 +185,7 @@ Deno.serve(async (req) => {
       leadRetryRows,
       configMap,
       pixelConfigMap,
+      chatraceMetaCapiMap,
     );
 
     let retried = 0;
@@ -183,6 +194,24 @@ Deno.serve(async (req) => {
     for (const row of purchaseRows) {
       const cfg = configMap.get(row.user_id);
       if (!cfg) continue;
+      if (isChatraceMetaCapiDisabled(row, chatraceMetaCapiMap)) {
+        const obs = appendObs(row.observaciones ?? "", "PURCHASE CAPI OMITIDO CHATRACE DESACTIVADO");
+        await db.from("conversions").update({
+          purchase_status_capi: "skipped_chatrace_capi_disabled",
+          observaciones: obs,
+        }).eq("id", row.id);
+        await writeConversionLog(
+          db,
+          row.user_id,
+          row.id,
+          "INFO",
+          "Meta CAPI retry Purchase omitido por config Chatrace",
+          JSON.stringify({ source_platform: row.source_platform ?? "" }),
+          "",
+          "",
+        );
+        continue;
+      }
 
       const rowPixel = String(row.pixel_id ?? "").trim();
       const userPixelConfigs = pixelConfigMap.get(String(row.user_id)) ?? [];
@@ -798,6 +827,7 @@ type CapiRetryEventName = "Contact" | "Lead";
 
 type CapiRetryRow = ConversionRow & {
   id: string;
+  source_platform?: string | null;
   contact_capi_retry_count?: number | string | null;
   lead_capi_retry_count?: number | string | null;
   contact_capi_last_retry_at?: string | null;
@@ -821,6 +851,7 @@ async function retryContactLeadCapiEvents(
   leadRows: CapiRetryRow[],
   configMap: Map<string, Record<string, unknown>>,
   pixelConfigMap: Map<string, Array<Record<string, unknown>>>,
+  chatraceMetaCapiMap: Map<string, boolean>,
 ): Promise<CapiRetryStats> {
   const stats: CapiRetryStats = {
     contactRetried: 0,
@@ -834,10 +865,10 @@ async function retryContactLeadCapiEvents(
   };
 
   for (const row of contactRows) {
-    await retrySingleContactLeadCapiEvent(db, row, "Contact", configMap, pixelConfigMap, stats);
+    await retrySingleContactLeadCapiEvent(db, row, "Contact", configMap, pixelConfigMap, chatraceMetaCapiMap, stats);
   }
   for (const row of leadRows) {
-    await retrySingleContactLeadCapiEvent(db, row, "Lead", configMap, pixelConfigMap, stats);
+    await retrySingleContactLeadCapiEvent(db, row, "Lead", configMap, pixelConfigMap, chatraceMetaCapiMap, stats);
   }
 
   return stats;
@@ -849,6 +880,7 @@ async function retrySingleContactLeadCapiEvent(
   eventName: CapiRetryEventName,
   configMap: Map<string, Record<string, unknown>>,
   pixelConfigMap: Map<string, Array<Record<string, unknown>>>,
+  chatraceMetaCapiMap: Map<string, boolean>,
   stats: CapiRetryStats,
 ): Promise<void> {
   const isContact = eventName === "Contact";
@@ -899,6 +931,17 @@ async function retrySingleContactLeadCapiEvent(
 
   if (retryCount >= MAX_CONTACT_LEAD_CAPI_RETRIES) {
     await skip(JSON.stringify({ event_name: eventName, reason: "max retries alcanzado", retry_count: retryCount }));
+    return;
+  }
+
+  if (isChatraceMetaCapiDisabled(row, chatraceMetaCapiMap)) {
+    await skip(
+      JSON.stringify({ event_name: eventName, reason: "chatrace_meta_capi_disabled" }),
+      {
+        [statusField]: "skipped_chatrace_capi_disabled",
+        observaciones: appendObs(row.observaciones ?? "", `${eventName.toUpperCase()} CAPI OMITIDO CHATRACE DESACTIVADO`),
+      },
+    );
     return;
   }
 
@@ -1041,6 +1084,15 @@ function resolveRetryConfig(
     geo_use_ipapi: false,
     geo_fill_only_when_missing: false,
   };
+}
+
+function isChatraceMetaCapiDisabled(
+  row: { user_id?: unknown; source_platform?: unknown },
+  chatraceMetaCapiMap: Map<string, boolean>,
+): boolean {
+  const sourcePlatform = normalizeText(row.source_platform).toLowerCase();
+  if (sourcePlatform !== "chatrace") return false;
+  return chatraceMetaCapiMap.get(String(row.user_id)) === false;
 }
 
 function isMetaResponseOk(raw: string): boolean {

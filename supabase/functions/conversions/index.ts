@@ -973,6 +973,18 @@ async function resolveChatracePixelId(
   return norm(data?.meta_pixel_id);
 }
 
+async function resolveChatraceMetaCapiEnabled(
+  db: SupabaseClient,
+  userId: string,
+): Promise<boolean> {
+  const { data } = await db
+    .from("chatrace_client_configs")
+    .select("active, send_meta_capi_events")
+    .eq("user_id", userId)
+    .maybeSingle();
+  return data?.active !== false && data?.send_meta_capi_events !== false;
+}
+
 async function sendToMetaCAPI(
   db: SupabaseClient,
   config: ConversionsConfig,
@@ -1016,6 +1028,32 @@ async function sendToMetaCAPI(
     eventName === "Contact" ? "ERROR CONTACT" :
     eventName === "Lead" ? "ERROR LEAD" :
     "ERROR PURCHASE";
+
+  if (isChatrace && !(await resolveChatraceMetaCapiEnabled(db, row.user_id))) {
+    const skippedMsg = `${eventName.toUpperCase()} CAPI OMITIDO CHATRACE DESACTIVADO`;
+    const { data: current } = await db.from("conversions").select("observaciones").eq("id", rowId).single();
+    const obs = appendObservation(current?.observaciones ?? "", skippedMsg);
+    const updates: Record<string, unknown> = {
+      [statusField]: "skipped_chatrace_capi_disabled",
+      observaciones: obs,
+    };
+    if (retryableField) updates[retryableField] = false;
+    await db.from("conversions").update(updates).eq("id", rowId);
+    await writeLog(
+      db,
+      row.user_id,
+      "sendToMetaCAPI",
+      "INFO",
+      "Meta CAPI omitido por config Chatrace",
+      JSON.stringify({ event_name: eventName, source_platform: row.source_platform }),
+      rowId,
+      undefined,
+      undefined,
+      undefined,
+      "Meta CAPI Chatrace desactivado",
+    );
+    return true;
+  }
 
   if (allowPixelFallback && !rowPixel && !chatracePixelId && norm(effectiveConfig.pixel_id)) {
     const resolvedFallbackPixel = norm(effectiveConfig.pixel_id);
@@ -1137,19 +1175,6 @@ async function sendToMetaCAPI(
     customData as Record<string, unknown> | undefined,
     effectiveTestEventCode || undefined,
   );
-
-  if (isChatrace && eventName === "Contact") {
-    await writeLog(
-      db,
-      row.user_id,
-      "sendToMetaCAPI",
-      "INFO",
-      "Contact CAPI omitido por source_platform=chatrace",
-      JSON.stringify({ source_platform: row.source_platform }),
-      rowId,
-    );
-    return true;
-  }
 
   const maxAttempts = 3;
   const baseDelayMs = 500;
@@ -1630,7 +1655,10 @@ async function handleContact(
     );
   }
 
-  if (effectiveConfig.send_contact_capi && !sendContactPixelExplicitFalse) {
+  const shouldSendContactCapi =
+    inboundSourcePlatform.toLowerCase() === "chatrace" || effectiveConfig.send_contact_capi;
+
+  if (shouldSendContactCapi && !sendContactPixelExplicitFalse) {
     const { data: fresh } = await db.from("conversions").select("*").eq("id", rowId).single();
     const fullRow = (fresh ?? row) as ConversionRow;
     await sendToMetaCAPI(
@@ -1645,7 +1673,7 @@ async function handleContact(
       undefined,
       testEventCode || undefined,
     );
-  } else if (effectiveConfig.send_contact_capi && sendContactPixelExplicitFalse) {
+  } else if (shouldSendContactCapi && sendContactPixelExplicitFalse) {
     await db
       .from("conversions")
       .update({ contact_status_capi: "skipped" })

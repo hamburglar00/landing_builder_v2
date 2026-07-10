@@ -27,6 +27,7 @@ export interface ConversionRow {
   country: string;
   fbp: string;
   fbc: string;
+  source_platform?: string;
   pixel_id: string;
   contact_event_id: string;
   contact_event_time: number | null;
