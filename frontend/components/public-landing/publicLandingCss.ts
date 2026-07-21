@@ -534,13 +534,121 @@ button, a {
   margin-top: 1px;
 }
 
+.public-landing.template3 {
+  min-height: 100vh;
+  min-height: 100dvh;
+  display: grid;
+  place-items: center;
+  padding: 12px;
+  color: #10213a;
+  text-align: center;
+  background: #f2f4f5;
+}
+
+.public-landing.template3 .template3__card {
+  width: min(100%, 384px);
+  min-height: 396px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 31px 32px 26px;
+  border-radius: 17px;
+  background: #fff;
+  box-shadow: 0 8px 18px rgba(16, 33, 58, 0.13);
+}
+
+.public-landing.template3 .template3__whatsapp {
+  width: 82px;
+  height: 82px;
+  flex: none;
+  color: #00cf70;
+  filter: drop-shadow(0 3px 2px rgba(0, 207, 112, 0.18));
+}
+
+.public-landing.template3 .template3__title {
+  margin: 20px 0 6px;
+  color: #10213a;
+  font-size: 24px;
+  line-height: 1.2;
+  font-weight: 800;
+  letter-spacing: -0.025em;
+}
+
+.public-landing.template3 .template3__copy {
+  margin: 0;
+  color: #586577;
+  font-size: 14px;
+  line-height: 1.5;
+  font-weight: 400;
+}
+
+.public-landing.template3 .template3__spinner {
+  width: 48px;
+  height: 48px;
+  margin-top: 23px;
+  border: 4px solid #eef0f0;
+  border-top-color: #00cf70;
+  border-right-color: #00cf70;
+  border-radius: 50%;
+  animation: publicLandingTemplate3Spin 850ms linear infinite;
+}
+
+.public-landing.template3 .template3__fallback {
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  margin-top: 31px;
+  padding-top: 16px;
+  border-top: 1px solid #dde1e4;
+  color: #8a94a3;
+  font-size: 12px;
+  line-height: 1.35;
+}
+
+.public-landing.template3 .template3__retry {
+  appearance: none;
+  margin: 0;
+  padding: 0;
+  border: 0;
+  color: #00ba66;
+  background: transparent;
+  font: inherit;
+  font-weight: 700;
+  line-height: inherit;
+  cursor: pointer;
+}
+
+.public-landing.template3 .template3__retry:hover {
+  color: #009f57;
+  text-decoration: underline;
+}
+
+.public-landing.template3 .template3__retry:focus-visible {
+  outline: 2px solid #00ba66;
+  outline-offset: 3px;
+  border-radius: 2px;
+}
+
+.public-landing.template3 .template3__retry:disabled {
+  cursor: wait;
+  opacity: 0.65;
+}
+
+@keyframes publicLandingTemplate3Spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
 @media (prefers-reduced-motion: reduce) {
   .public-landing .whatsapp-button,
   .public-landing .whatsapp-button::before,
   .public-landing.lp .cta,
   .public-landing.lp .cta::after,
   .public-landing.lp .social-proof__quote,
-  .public-landing.lp .social-proof__progress {
+  .public-landing.lp .social-proof__progress,
+  .public-landing.template3 .template3__spinner {
     animation: none !important;
   }
 
@@ -639,6 +747,13 @@ button, a {
 
   .public-landing.lp .features {
     font-size: 11px;
+  }
+}
+
+@media (max-width: 420px) {
+  .public-landing.template3 .template3__card {
+    min-height: 0;
+    padding-inline: 24px;
   }
 }
 

@@ -18,9 +18,26 @@ export default function WhatsAppLiteButton({
   hideButton = false,
 }: Props) {
   const ctaText = config.content?.ctaText || "¡Contactar ya!";
+  if (templateVariant === "template3") {
+    return (
+      <button
+        type="button"
+        className="template3__retry"
+        style={hideButton ? { display: "none" } : undefined}
+        data-public-landing-cta
+        data-public-landing-auto-start={autoStart ? "true" : undefined}
+        data-public-landing-rest-label="haz clic aquí."
+        data-public-landing-loading-label="conectando..."
+        data-public-landing-disabled-label="reintenta en un momento"
+        aria-label="Reintentar redirección a WhatsApp"
+      >
+        <span data-public-landing-cta-label>haz clic aquí.</span>
+      </button>
+    );
+  }
+
   const isTemplate2Like =
-    templateVariant === "template2" ||
-    templateVariant === "template3";
+    templateVariant === "template2";
   const ctaStyle: CSSProperties = {
     color: config.colors?.ctaText ?? "#FFFFFF",
     background: config.colors?.ctaBackground ?? "#25D366",

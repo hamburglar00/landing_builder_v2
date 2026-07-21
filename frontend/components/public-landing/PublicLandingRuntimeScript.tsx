@@ -336,13 +336,29 @@ export default function PublicLandingRuntimeScript({ slug, config }: Props) {
         if (label) label.textContent = text;
       }
 
+      function getButtonLabel(button, attrName, fallback) {
+        return button.getAttribute(attrName) || fallback;
+      }
+
+      function getRestButtonText(button) {
+        return getButtonLabel(button, "data-public-landing-rest-label", cfg.ctaText);
+      }
+
+      function getLoadingButtonText(button) {
+        return getButtonLabel(button, "data-public-landing-loading-label", "Abriendo...");
+      }
+
+      function getDisabledButtonText(button) {
+        return getButtonLabel(button, "data-public-landing-disabled-label", "Sin numero disponible");
+      }
+
       function setNoPhoneState(button) {
         button.disabled = true;
-        setButtonText(button, "Sin numero disponible");
+        setButtonText(button, getDisabledButtonText(button));
         if (noPhoneTimer) window.clearTimeout(noPhoneTimer);
         noPhoneTimer = window.setTimeout(function () {
           button.disabled = false;
-          setButtonText(button, cfg.ctaText);
+          setButtonText(button, getRestButtonText(button));
           clickLocked = false;
           noPhoneTimer = null;
         }, 2000);
@@ -430,7 +446,7 @@ export default function PublicLandingRuntimeScript({ slug, config }: Props) {
         if (clickLocked || button.disabled) return;
         clickLocked = true;
         button.disabled = true;
-        setButtonText(button, "Abriendo...");
+        setButtonText(button, getLoadingButtonText(button));
         var tapStartedAt = Date.now();
 
         window.requestAnimationFrame(function () {
@@ -520,7 +536,7 @@ export default function PublicLandingRuntimeScript({ slug, config }: Props) {
             .catch(function () {
               clickLocked = false;
               button.disabled = false;
-              setButtonText(button, cfg.ctaText);
+              setButtonText(button, getRestButtonText(button));
             });
         });
       }
