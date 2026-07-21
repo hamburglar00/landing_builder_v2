@@ -20,7 +20,7 @@ interface LandingPreviewProps {
  *
  * Plantilla 1: fondo completo con columna centrada.
  * Plantilla 2: marco tipo teléfono con frame superior y CTA + textos debajo.
- * Plantilla 3: redirect directo (sin UI visual).
+ * Plantilla 3: redirect directo con card de conexión a WhatsApp.
  */
 export function LandingPreview({
   config,
@@ -327,11 +327,63 @@ export function LandingPreview({
   };
 
   if (template === 3) {
+    const outerClass = compact
+      ? "relative h-full w-full overflow-hidden rounded-3xl bg-[#f2f4f5] shadow-[0_14px_32px_rgba(0,0,0,0.55)]"
+      : "relative mx-auto flex aspect-[9/16] w-full max-w-[380px] items-center justify-center overflow-hidden rounded-3xl bg-[#f2f4f5] p-3 shadow-[0_18px_40px_rgba(0,0,0,0.45)]";
+    const cardClass = gallery
+      ? "w-[78%] max-w-[295px] -translate-y-11 rounded-[17px] bg-white px-5 py-6 text-center shadow-[0_8px_18px_rgba(16,33,58,0.13)]"
+      : "w-full max-w-[384px] min-h-[396px] rounded-[17px] bg-white px-8 pb-[26px] pt-[31px] text-center shadow-[0_8px_18px_rgba(16,33,58,0.13)]";
+    const iconClass = gallery
+      ? "mx-auto h-16 w-16 text-[#00cf70] drop-shadow-[0_3px_2px_rgba(0,207,112,0.18)]"
+      : "mx-auto h-[82px] w-[82px] text-[#00cf70] drop-shadow-[0_3px_2px_rgba(0,207,112,0.18)]";
+    const titleClass = gallery
+      ? "mt-4 text-[18px] font-extrabold leading-tight tracking-[-0.025em] text-[#10213a]"
+      : "mt-5 text-2xl font-extrabold leading-tight tracking-[-0.025em] text-[#10213a]";
+    const copyClass = gallery
+      ? "mt-1 text-[11px] leading-snug text-[#586577]"
+      : "mt-1.5 text-sm leading-normal text-[#586577]";
+    const spinnerClass = gallery
+      ? "mx-auto mt-4 h-9 w-9 animate-spin rounded-full border-[3px] border-[#eef0f0] border-r-[#00cf70] border-t-[#00cf70]"
+      : "mx-auto mt-[23px] h-12 w-12 animate-spin rounded-full border-4 border-[#eef0f0] border-r-[#00cf70] border-t-[#00cf70]";
+    const fallbackClass = gallery
+      ? "mt-5 border-t border-[#dde1e4] pt-3 text-[10px] leading-tight text-[#8a94a3]"
+      : "mt-[31px] border-t border-[#dde1e4] pt-4 text-xs leading-snug text-[#8a94a3]";
+
     return (
-      <div className="relative mx-auto flex h-full min-h-[280px] w-full max-w-[380px] items-center justify-center overflow-hidden rounded-3xl bg-black shadow-[0_18px_40px_rgba(0,0,0,0.9)]">
-        <p className="px-6 text-center text-sm text-zinc-300">
-          Redirigiendo a WhatsApp
-        </p>
+      <div className={outerClass} style={{ fontFamily }}>
+        <div className="flex h-full w-full items-center justify-center p-3">
+          <div className={cardClass}>
+            <svg
+              className={iconClass}
+              viewBox="0 0 48 48"
+              role="img"
+              aria-label="WhatsApp"
+            >
+              <g transform="translate(-700 -360)">
+                <path fill="currentColor" fillRule="evenodd" d={WHATSAPP_ICON_PATH} />
+              </g>
+            </svg>
+
+            <h1 className={titleClass}>Conectando...</h1>
+            <p className={copyClass}>
+              Te estamos redirigiendo a nuestro chat de
+              <br />
+              WhatsApp para atenderte enseguida.
+            </p>
+
+            <span
+              className={spinnerClass}
+              style={{ animationDuration: "850ms" }}
+              aria-hidden="true"
+            />
+
+            <div className={fallbackClass}>
+              <span>Si no eres redirigido en unos segundos,</span>
+              <br />
+              <span className="font-bold text-[#00ba66]">haz clic aquí.</span>
+            </div>
+          </div>
+        </div>
       </div>
     );
   }
