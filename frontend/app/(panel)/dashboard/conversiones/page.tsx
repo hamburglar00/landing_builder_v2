@@ -58,6 +58,8 @@ type PixelEditDraft = {
   meta_currency: string;
   meta_api_version: string;
   send_contact_capi: boolean;
+  send_lead_capi: boolean;
+  send_purchase_capi: boolean;
   geo_use_ipapi: boolean;
   geo_fill_only_when_missing: boolean;
   is_default: boolean;
@@ -81,6 +83,7 @@ const TAB_LABELS: Record<Tab, string> = {
 };
 
 const ACTIVITY_PAGE_SIZE = 200;
+const META_CURRENCY_OPTIONS = ["ARS", "PYG", "USD", "EUR", "BRL", "CLP", "MXN", "COP"];
 
 function ChevronIcon({ open }: { open: boolean }) {
   return (
@@ -362,8 +365,8 @@ const COLUMN_NOTES: Partial<Record<ColKey | "id", string>> = {
   valor: "Monto de compra/carga recibido para Purchase.",
   purchase_type: "Tipo de compra: first (primera) o repeat (recompra).",
   contact_status_capi: "Resultado de envio CAPI para Contact. Puede ser omitido si detectamos crawler de Meta.",
-  lead_status_capi: "Resultado de envio CAPI para Lead.",
-  purchase_status_capi: "Resultado de envio CAPI para Purchase.",
+  lead_status_capi: "Resultado de envio CAPI para Lead. Puede ser omitido por configuracion del pixel.",
+  purchase_status_capi: "Resultado de envio CAPI para Purchase. Puede ser omitido por configuracion del pixel.",
   observaciones: "Notas internas de procesamiento (tokens de estado/error).",
   external_id: "ID externo de usuario/contacto para matching en Meta (hasheado al enviar).",
   test_event_code: "Codigo de test de Meta (si se envio en modo prueba).",
@@ -701,8 +704,7 @@ export default function DashboardConversionesPage() {
     pixelId: string;
     landings: Array<{ id: string; name: string }>;
   } | null>(null);
-  const [editPixelId, setEditPixelId] = useState(false);
-  const [editAccessToken, setEditAccessToken] = useState(false);
+  const [editPixelSensitiveFields, setEditPixelSensitiveFields] = useState(false);
   const [pixelConfigs, setPixelConfigs] = useState<PixelConfig[]>([]);
 
   const activeConversions = useMemo(() => filterByDateRange(conversions, dateRange), [conversions, dateRange]);
@@ -1382,6 +1384,8 @@ export default function DashboardConversionesPage() {
           meta_currency: currency,
           meta_api_version: config.meta_api_version || "v25.0",
           send_contact_capi: !!config.send_contact_capi,
+          send_lead_capi: config.send_lead_capi !== false,
+          send_purchase_capi: config.send_purchase_capi !== false,
           geo_use_ipapi: !!config.geo_use_ipapi,
           geo_fill_only_when_missing: !!config.geo_fill_only_when_missing,
           is_default: existing ? existing.is_default : pixelConfigs.length === 0,
@@ -1405,14 +1409,15 @@ export default function DashboardConversionesPage() {
       meta_currency: px.meta_currency || "ARS",
       meta_api_version: px.meta_api_version || "v25.0",
       send_contact_capi: !!px.send_contact_capi,
+      send_lead_capi: px.send_lead_capi !== false,
+      send_purchase_capi: px.send_purchase_capi !== false,
       geo_use_ipapi: !!px.geo_use_ipapi,
       geo_fill_only_when_missing: !!px.geo_fill_only_when_missing,
       is_default: !!px.is_default,
     });
     setPixelEditOpen(true);
     setEditingPixelId(px.id);
-    setEditPixelId(false);
-    setEditAccessToken(false);
+    setEditPixelSensitiveFields(false);
   }, []);
 
   const handlePixelModalSave = useCallback(async () => {
@@ -1438,6 +1443,8 @@ export default function DashboardConversionesPage() {
         meta_currency: pixelEditDraft.meta_currency || "ARS",
         meta_api_version: pixelEditDraft.meta_api_version || "v25.0",
         send_contact_capi: !!pixelEditDraft.send_contact_capi,
+        send_lead_capi: !!pixelEditDraft.send_lead_capi,
+        send_purchase_capi: !!pixelEditDraft.send_purchase_capi,
         geo_use_ipapi: !!pixelEditDraft.geo_use_ipapi,
         geo_fill_only_when_missing: !!pixelEditDraft.geo_fill_only_when_missing,
         is_default: !!pixelEditDraft.is_default,
@@ -1453,12 +1460,15 @@ export default function DashboardConversionesPage() {
           meta_currency: current.meta_currency || prev.meta_currency,
           meta_api_version: current.meta_api_version || prev.meta_api_version,
           send_contact_capi: !!current.send_contact_capi,
+          send_lead_capi: current.send_lead_capi !== false,
+          send_purchase_capi: current.send_purchase_capi !== false,
           geo_use_ipapi: !!current.geo_use_ipapi,
           geo_fill_only_when_missing: !!current.geo_fill_only_when_missing,
         } : prev);
       }
       setPixelEditOpen(false);
       setPixelEditDraft(null);
+      setEditPixelSensitiveFields(false);
       setSaveMsg("Pixel actualizado.");
     } catch (e) {
       setSaveMsg(e instanceof Error ? `Error: ${e.message}` : "Error al guardar pixel");
@@ -1493,6 +1503,8 @@ export default function DashboardConversionesPage() {
           meta_currency: first.meta_currency || "ARS",
           meta_api_version: first.meta_api_version || "v25.0",
           send_contact_capi: !!first.send_contact_capi,
+          send_lead_capi: first.send_lead_capi !== false,
+          send_purchase_capi: first.send_purchase_capi !== false,
           geo_use_ipapi: !!first.geo_use_ipapi,
           geo_fill_only_when_missing: !!first.geo_fill_only_when_missing,
           is_default: true,
@@ -1511,6 +1523,8 @@ export default function DashboardConversionesPage() {
             meta_currency: next.meta_currency || prev.meta_currency,
             meta_api_version: next.meta_api_version || prev.meta_api_version,
             send_contact_capi: !!next.send_contact_capi,
+            send_lead_capi: next.send_lead_capi !== false,
+            send_purchase_capi: next.send_purchase_capi !== false,
             geo_use_ipapi: !!next.geo_use_ipapi,
             geo_fill_only_when_missing: !!next.geo_fill_only_when_missing,
           } : prev);
@@ -1725,14 +1739,26 @@ export default function DashboardConversionesPage() {
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 p-4">
           <div className="w-full max-w-2xl rounded-xl border border-zinc-700 bg-zinc-950 p-4">
             <div className="mb-4 flex items-center justify-between gap-3">
-              <h3 className="text-sm font-semibold text-zinc-100">Editar pixel</h3>
-              <button
-                type="button"
-                onClick={() => { setPixelEditOpen(false); setPixelEditDraft(null); }}
-                className="cursor-pointer rounded-lg border border-zinc-700 px-3 py-1 text-xs text-zinc-300 hover:bg-zinc-800"
-              >
-                Cerrar
-              </button>
+              <div>
+                <h3 className="text-sm font-semibold text-zinc-100">Editar pixel</h3>
+                <p className="mt-1 text-xs text-zinc-500">Pixel ID, moneda y token quedan bloqueados para evitar cambios accidentales.</p>
+              </div>
+              <div className="flex items-center gap-2">
+                <button
+                  type="button"
+                  onClick={() => setEditPixelSensitiveFields((v) => !v)}
+                  className="cursor-pointer rounded-lg border border-amber-700/70 px-3 py-1 text-xs text-amber-200 hover:bg-amber-950/30"
+                >
+                  {editPixelSensitiveFields ? "Bloquear datos" : "Editar datos"}
+                </button>
+                <button
+                  type="button"
+                  onClick={() => { setPixelEditOpen(false); setPixelEditDraft(null); setEditPixelSensitiveFields(false); }}
+                  className="cursor-pointer rounded-lg border border-zinc-700 px-3 py-1 text-xs text-zinc-300 hover:bg-zinc-800"
+                >
+                  Cerrar
+                </button>
+              </div>
             </div>
 
             <div className="space-y-3">
@@ -1741,8 +1767,9 @@ export default function DashboardConversionesPage() {
                 <input
                   type="text"
                   value={pixelEditDraft.pixel_id}
+                  disabled={!editPixelSensitiveFields}
                   onChange={(e) => setPixelEditDraft((p) => p ? { ...p, pixel_id: e.target.value.replace(/\D/g, "") } : p)}
-                  className="w-full rounded-lg border border-zinc-700 bg-zinc-900 px-3 py-2 text-sm text-zinc-100"
+                  className="w-full rounded-lg border border-zinc-700 bg-zinc-900 px-3 py-2 text-sm text-zinc-100 disabled:cursor-not-allowed disabled:border-zinc-800 disabled:bg-zinc-950 disabled:text-zinc-500"
                 />
               </div>
               <div>
@@ -1750,8 +1777,9 @@ export default function DashboardConversionesPage() {
                 <input
                   type="text"
                   value={pixelEditDraft.meta_access_token}
+                  disabled={!editPixelSensitiveFields}
                   onChange={(e) => setPixelEditDraft((p) => p ? { ...p, meta_access_token: e.target.value } : p)}
-                  className="w-full rounded-lg border border-zinc-700 bg-zinc-900 px-3 py-2 text-sm text-zinc-100"
+                  className="w-full rounded-lg border border-zinc-700 bg-zinc-900 px-3 py-2 text-sm text-zinc-100 disabled:cursor-not-allowed disabled:border-zinc-800 disabled:bg-zinc-950 disabled:text-zinc-500"
                 />
               </div>
               <div className="grid gap-3 sm:grid-cols-2">
@@ -1759,10 +1787,11 @@ export default function DashboardConversionesPage() {
                   <label className="mb-1 block text-xs font-medium text-zinc-400">Moneda</label>
                   <select
                     value={pixelEditDraft.meta_currency}
+                    disabled={!editPixelSensitiveFields}
                     onChange={(e) => setPixelEditDraft((p) => p ? { ...p, meta_currency: e.target.value } : p)}
-                    className="w-full rounded-lg border border-zinc-700 bg-zinc-900 px-2 py-2 text-sm text-zinc-100"
+                    className="w-full rounded-lg border border-zinc-700 bg-zinc-900 px-2 py-2 text-sm text-zinc-100 disabled:cursor-not-allowed disabled:border-zinc-800 disabled:bg-zinc-950 disabled:text-zinc-500"
                   >
-                    {["ARS","USD","EUR","BRL","CLP","MXN","COP"].map((c) => <option key={c} value={c}>{c}</option>)}
+                    {META_CURRENCY_OPTIONS.map((c) => <option key={c} value={c}>{c}</option>)}
                   </select>
                 </div>
                 <div>
@@ -1790,6 +1819,24 @@ export default function DashboardConversionesPage() {
                 <label className="flex items-center gap-2 text-xs text-zinc-300">
                   <input
                     type="checkbox"
+                    checked={pixelEditDraft.send_lead_capi}
+                    onChange={(e) => setPixelEditDraft((p) => p ? { ...p, send_lead_capi: e.target.checked } : p)}
+                    className="h-4 w-4 rounded border-zinc-600 bg-zinc-900 accent-emerald-500"
+                  />
+                  Enviar evento Lead por CAPI
+                </label>
+                <label className="flex items-center gap-2 text-xs text-zinc-300">
+                  <input
+                    type="checkbox"
+                    checked={pixelEditDraft.send_purchase_capi}
+                    onChange={(e) => setPixelEditDraft((p) => p ? { ...p, send_purchase_capi: e.target.checked } : p)}
+                    className="h-4 w-4 rounded border-zinc-600 bg-zinc-900 accent-emerald-500"
+                  />
+                  Enviar evento Purchase por CAPI
+                </label>
+                <label className="flex items-center gap-2 text-xs text-zinc-300">
+                  <input
+                    type="checkbox"
                     checked={pixelEditDraft.geo_use_ipapi}
                     onChange={(e) => setPixelEditDraft((p) => p ? { ...p, geo_use_ipapi: e.target.checked } : p)}
                     className="h-4 w-4 rounded border-zinc-600 bg-zinc-900 accent-emerald-500"
@@ -1813,7 +1860,7 @@ export default function DashboardConversionesPage() {
             <div className="mt-4 flex justify-end gap-2">
               <button
                 type="button"
-                onClick={() => { setPixelEditOpen(false); setPixelEditDraft(null); }}
+                onClick={() => { setPixelEditOpen(false); setPixelEditDraft(null); setEditPixelSensitiveFields(false); }}
                 className="cursor-pointer rounded-lg border border-zinc-700 px-3 py-2 text-xs text-zinc-300 hover:bg-zinc-800"
               >
                 Cancelar

@@ -125,7 +125,7 @@ Deno.serve(async (req) => {
       .from("conversions")
       .select("id, user_id, phone, source_platform, pixel_id, purchase_event_id, purchase_event_time, valor, event_source_url, email, fn, ln, ct, st, zip, country, fbp, fbc, client_ip, agent_user, external_id, observaciones")
       .eq("estado", "purchase")
-      .not("purchase_status_capi", "in", "(enviado,skipped_old_event_time)")
+      .not("purchase_status_capi", "in", "(enviado,skipped_old_event_time,skipped_chatrace_capi_disabled,skipped_purchase_capi_disabled)")
       .gt("valor", 0)
       .order("created_at", { ascending: true })
       .limit(100);
@@ -154,7 +154,7 @@ Deno.serve(async (req) => {
     const { data: pixelConfigs } = userIds.length > 0
       ? await db
         .from("conversions_pixel_configs")
-        .select("user_id, pixel_id, meta_access_token, meta_currency, meta_api_version, is_default")
+        .select("user_id, pixel_id, meta_access_token, meta_currency, meta_api_version, send_lead_capi, send_purchase_capi, is_default")
         .in("user_id", userIds)
       : { data: [] };
     const { data: chatraceConfigs } = userIds.length > 0
@@ -233,6 +233,28 @@ Deno.serve(async (req) => {
       const currency = selected
         ? String(selected.meta_currency ?? "ARS")
         : String(cfg.meta_currency ?? "ARS");
+      const sendPurchaseCapi = selected
+        ? selected.send_purchase_capi !== false
+        : cfg.send_purchase_capi !== false;
+
+      if (!sendPurchaseCapi) {
+        const obs = appendObs(row.observaciones ?? "", "PURCHASE CAPI OMITIDO CONFIG DESACTIVADA");
+        await db.from("conversions").update({
+          purchase_status_capi: "skipped_purchase_capi_disabled",
+          observaciones: obs,
+        }).eq("id", row.id);
+        await writeConversionLog(
+          db,
+          row.user_id,
+          row.id,
+          "INFO",
+          "Meta CAPI retry Purchase omitido por config del pixel",
+          JSON.stringify({ pixel_id: pixelId, source_platform: row.source_platform ?? "" }),
+          "",
+          "",
+        );
+        continue;
+      }
 
       if (!accessToken || !pixelId) continue;
 
@@ -316,6 +338,8 @@ Deno.serve(async (req) => {
         meta_currency: currency,
         meta_api_version: apiVersion,
         send_contact_capi: false,
+        send_lead_capi: true,
+        send_purchase_capi: sendPurchaseCapi,
         geo_use_ipapi: false,
         geo_fill_only_when_missing: false,
       };
@@ -977,6 +1001,17 @@ async function retrySingleContactLeadCapiEvent(
     return;
   }
 
+  if (eventName === "Lead" && config.send_lead_capi === false) {
+    await skip(
+      JSON.stringify({ event_name: eventName, reason: "lead_capi_disabled_by_pixel_config", pixel_id: config.pixel_id }),
+      {
+        [statusField]: "skipped_lead_capi_disabled",
+        observaciones: appendObs(row.observaciones ?? "", "LEAD CAPI OMITIDO CONFIG DESACTIVADA"),
+      },
+    );
+    return;
+  }
+
   const metaReq = await buildMetaRequest(
     config,
     row as ConversionRow,
@@ -1081,6 +1116,12 @@ function resolveRetryConfig(
       ? normalizeText(selected.meta_api_version || "v25.0")
       : normalizeText(cfg.meta_api_version || "v25.0"),
     send_contact_capi: false,
+    send_lead_capi: selected
+      ? selected.send_lead_capi !== false
+      : cfg.send_lead_capi !== false,
+    send_purchase_capi: selected
+      ? selected.send_purchase_capi !== false
+      : cfg.send_purchase_capi !== false,
     geo_use_ipapi: false,
     geo_fill_only_when_missing: false,
   };

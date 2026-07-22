@@ -23,6 +23,8 @@ interface ConversionsConfig {
   meta_currency: string;
   meta_api_version: string;
   send_contact_capi: boolean;
+  send_lead_capi: boolean;
+  send_purchase_capi: boolean;
   geo_use_ipapi: boolean;
   geo_fill_only_when_missing: boolean;
 }
@@ -34,6 +36,8 @@ interface PixelConfigRow {
   meta_currency: string;
   meta_api_version: string;
   send_contact_capi: boolean;
+  send_lead_capi: boolean;
+  send_purchase_capi: boolean;
   geo_use_ipapi: boolean;
   geo_fill_only_when_missing: boolean;
   is_default: boolean;
@@ -1050,6 +1054,8 @@ function resolveEffectiveConfigForPixel(
     meta_currency: norm(picked.meta_currency) || baseConfig.meta_currency,
     meta_api_version: norm(picked.meta_api_version) || baseConfig.meta_api_version,
     send_contact_capi: Boolean(picked.send_contact_capi),
+    send_lead_capi: picked.send_lead_capi !== false,
+    send_purchase_capi: picked.send_purchase_capi !== false,
     geo_use_ipapi: Boolean(picked.geo_use_ipapi),
     geo_fill_only_when_missing: Boolean(picked.geo_fill_only_when_missing),
   };
@@ -1187,6 +1193,41 @@ async function sendToMetaCAPI(
       undefined,
       undefined,
       "Meta CAPI Chatrace desactivado",
+    );
+    return true;
+  }
+
+  const eventDisabledByPixelConfig =
+    (eventName === "Lead" && effectiveConfig.send_lead_capi === false) ||
+    (eventName === "Purchase" && effectiveConfig.send_purchase_capi === false);
+  if (eventDisabledByPixelConfig) {
+    const skippedMsg = `${eventName.toUpperCase()} CAPI OMITIDO CONFIG DESACTIVADA`;
+    const skippedStatus = eventName === "Lead" ? "skipped_lead_capi_disabled" : "skipped_purchase_capi_disabled";
+    const { data: current } = await db.from("conversions").select("observaciones").eq("id", rowId).single();
+    const obs = appendObservation(current?.observaciones ?? "", skippedMsg);
+    const updates: Record<string, unknown> = {
+      [statusField]: skippedStatus,
+      observaciones: obs,
+    };
+    if (retryableField) updates[retryableField] = false;
+    await db.from("conversions").update(updates).eq("id", rowId);
+    await writeLog(
+      db,
+      row.user_id,
+      "sendToMetaCAPI",
+      "INFO",
+      "Meta CAPI omitido por config del pixel",
+      JSON.stringify({
+        event_name: eventName,
+        row_id: rowId,
+        pixel_id: effectiveConfig.pixel_id,
+        source_platform: sourcePlatform,
+      }),
+      rowId,
+      undefined,
+      undefined,
+      eventName === "Lead" ? row.lead_payload_raw : row.purchase_payload_raw,
+      skippedMsg,
     );
     return true;
   }
@@ -2938,13 +2979,15 @@ Deno.serve(async (req) => {
       meta_currency: "ARS",
       meta_api_version: "v25.0",
       send_contact_capi: false,
+      send_lead_capi: true,
+      send_purchase_capi: true,
       geo_use_ipapi: false,
       geo_fill_only_when_missing: false,
     };
 
     const { data: pixelConfigsData } = await db
       .from("conversions_pixel_configs")
-      .select("user_id, pixel_id, meta_access_token, meta_currency, meta_api_version, send_contact_capi, geo_use_ipapi, geo_fill_only_when_missing, is_default")
+      .select("user_id, pixel_id, meta_access_token, meta_currency, meta_api_version, send_contact_capi, send_lead_capi, send_purchase_capi, geo_use_ipapi, geo_fill_only_when_missing, is_default")
       .eq("user_id", userId);
     const pixelConfigs: PixelConfigRow[] = (pixelConfigsData ?? []) as PixelConfigRow[];
 

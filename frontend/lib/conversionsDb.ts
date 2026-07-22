@@ -14,6 +14,8 @@ export interface ConversionsConfig {
   meta_currency: string;
   meta_api_version: string;
   send_contact_capi: boolean;
+  send_lead_capi: boolean;
+  send_purchase_capi: boolean;
   geo_use_ipapi: boolean;
   geo_fill_only_when_missing: boolean;
   funnel_premium_threshold: number;
@@ -34,6 +36,8 @@ export interface PixelConfig {
   meta_currency: string;
   meta_api_version: string;
   send_contact_capi: boolean;
+  send_lead_capi: boolean;
+  send_purchase_capi: boolean;
   geo_use_ipapi: boolean;
   geo_fill_only_when_missing: boolean;
   is_default: boolean;
@@ -260,6 +264,8 @@ const DEFAULT_CONFIG: ConversionsConfig = {
   meta_currency: "ARS",
   meta_api_version: "v25.0",
   send_contact_capi: false,
+  send_lead_capi: true,
+  send_purchase_capi: true,
   geo_use_ipapi: false,
   geo_fill_only_when_missing: false,
   funnel_premium_threshold: 50000,
@@ -284,7 +290,7 @@ export async function fetchConversionsConfig(
 
   if (error) throw error;
   if (!data) return { ...DEFAULT_CONFIG, user_id: userId };
-  return data as unknown as ConversionsConfig;
+  return { ...DEFAULT_CONFIG, ...(data as Partial<ConversionsConfig>), user_id: userId };
 }
 
 export async function upsertConversionsConfig(
@@ -301,6 +307,8 @@ export async function upsertConversionsConfig(
         meta_currency: config.meta_currency,
         meta_api_version: config.meta_api_version,
         send_contact_capi: config.send_contact_capi,
+        send_lead_capi: config.send_lead_capi !== false,
+        send_purchase_capi: config.send_purchase_capi !== false,
         geo_use_ipapi: config.geo_use_ipapi,
         geo_fill_only_when_missing: config.geo_fill_only_when_missing,
         funnel_premium_threshold: config.funnel_premium_threshold,
@@ -326,7 +334,11 @@ export async function fetchPixelConfigs(userId: string): Promise<PixelConfig[]> 
     .order("is_default", { ascending: false })
     .order("created_at", { ascending: true });
   if (error) throw error;
-  return (data ?? []) as PixelConfig[];
+  return (data ?? []).map((pixel) => ({
+    ...pixel,
+    send_lead_capi: pixel.send_lead_capi !== false,
+    send_purchase_capi: pixel.send_purchase_capi !== false,
+  })) as PixelConfig[];
 }
 
 export async function upsertPixelConfig(input: {
@@ -337,6 +349,8 @@ export async function upsertPixelConfig(input: {
   meta_currency?: string;
   meta_api_version?: string;
   send_contact_capi?: boolean;
+  send_lead_capi?: boolean;
+  send_purchase_capi?: boolean;
   geo_use_ipapi?: boolean;
   geo_fill_only_when_missing?: boolean;
   is_default?: boolean;
@@ -349,6 +363,8 @@ export async function upsertPixelConfig(input: {
     meta_currency: input.meta_currency ?? "ARS",
     meta_api_version: input.meta_api_version ?? "v25.0",
     send_contact_capi: !!input.send_contact_capi,
+    send_lead_capi: input.send_lead_capi !== false,
+    send_purchase_capi: input.send_purchase_capi !== false,
     geo_use_ipapi: !!input.geo_use_ipapi,
     geo_fill_only_when_missing: !!input.geo_fill_only_when_missing,
     is_default: !!input.is_default,

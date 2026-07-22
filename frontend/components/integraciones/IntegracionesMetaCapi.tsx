@@ -40,6 +40,7 @@ const PHONE_KIND_OPTIONS: Array<{ value: PhoneKind; label: string }> = [
 const CHATRACE_TEMPLATE_URL = "https://chatrace.com/store/template?id=154796&key=elKSlGmNFCeIZbYwvr7z7z";
 const CHATRACE_INTERMEDIARY_URL = "https://chatraceinbox.mkt.panelbotadmin.com/api/intermediario-chatrace";
 const KOMMO_INTERMEDIARY_BASE_URL = "https://kommoinbox.mkt.panelbotadmin.com";
+const META_CURRENCY_OPTIONS = ["ARS", "PYG", "USD", "EUR", "BRL", "CLP", "MXN", "COP"];
 const CHATRACE_CUSTOM_FIELDS = [
   "email_detected",
   "event_id",
@@ -75,6 +76,8 @@ type PixelEditDraft = {
   meta_currency: string;
   meta_api_version: string;
   send_contact_capi: boolean;
+  send_lead_capi: boolean;
+  send_purchase_capi: boolean;
   geo_use_ipapi: boolean;
   geo_fill_only_when_missing: boolean;
   is_default: boolean;
@@ -127,6 +130,44 @@ function ConstructorEndpointLogo() {
   );
 }
 
+function SettingsSwitch({
+  checked,
+  label,
+  description,
+  onChange,
+}: {
+  checked: boolean;
+  label: string;
+  description?: string;
+  onChange: () => void;
+}) {
+  return (
+    <div className="flex items-center justify-between gap-3 rounded-lg border border-zinc-800 bg-zinc-950/30 px-3 py-2">
+      <span>
+        <span className="block text-xs font-medium text-zinc-200">{label}</span>
+        {description ? <span className="mt-0.5 block text-[11px] text-zinc-500">{description}</span> : null}
+      </span>
+      <button
+        type="button"
+        role="switch"
+        aria-checked={checked}
+        onClick={onChange}
+        className={`relative inline-flex h-6 w-11 shrink-0 items-center rounded-full border transition ${
+          checked
+            ? "border-emerald-500/60 bg-emerald-500/30"
+            : "border-zinc-700 bg-zinc-800"
+        }`}
+      >
+        <span
+          className={`inline-block h-5 w-5 transform rounded-full bg-white transition ${
+            checked ? "translate-x-5" : "translate-x-0.5"
+          }`}
+        />
+      </button>
+    </div>
+  );
+}
+
 export default function IntegracionesMetaCapi() {
   const [userId, setUserId] = useState<string | null>(null);
   const [isAdmin, setIsAdmin] = useState(false);
@@ -146,6 +187,7 @@ export default function IntegracionesMetaCapi() {
 
   const [editOpen, setEditOpen] = useState(false);
   const [draft, setDraft] = useState<PixelEditDraft | null>(null);
+  const [editSensitiveFields, setEditSensitiveFields] = useState(false);
   const [activeIntegration, setActiveIntegration] = useState<ActiveIntegration>("menu");
   const [constructorCopyMsg, setConstructorCopyMsg] = useState<string | null>(null);
   const [kommoConfig, setKommoConfig] = useState<KommoClientConfig | null>(null);
@@ -537,6 +579,8 @@ export default function IntegracionesMetaCapi() {
         meta_currency: quickCurrency || "ARS",
         meta_api_version: apiVersionToSave,
         send_contact_capi: false,
+        send_lead_capi: true,
+        send_purchase_capi: true,
         geo_use_ipapi: true,
         geo_fill_only_when_missing: false,
         is_default: !hasAny,
@@ -575,10 +619,13 @@ export default function IntegracionesMetaCapi() {
       meta_currency: px.meta_currency || "ARS",
       meta_api_version: px.meta_api_version || "v25.0",
       send_contact_capi: !!px.send_contact_capi,
+      send_lead_capi: px.send_lead_capi !== false,
+      send_purchase_capi: px.send_purchase_capi !== false,
       geo_use_ipapi: !!px.geo_use_ipapi,
       geo_fill_only_when_missing: !!px.geo_fill_only_when_missing,
       is_default: !!px.is_default,
     });
+    setEditSensitiveFields(false);
     setEditOpen(true);
   }, []);
 
@@ -603,6 +650,8 @@ export default function IntegracionesMetaCapi() {
         meta_currency: draft.meta_currency || "ARS",
         meta_api_version: apiVersionToSave,
         send_contact_capi: !!draft.send_contact_capi,
+        send_lead_capi: !!draft.send_lead_capi,
+        send_purchase_capi: !!draft.send_purchase_capi,
         geo_use_ipapi: !!draft.geo_use_ipapi,
         geo_fill_only_when_missing: !!draft.geo_fill_only_when_missing,
         is_default: !!draft.is_default,
@@ -617,6 +666,8 @@ export default function IntegracionesMetaCapi() {
           meta_currency: draft.meta_currency || "ARS",
           meta_api_version: apiVersionToSave,
           send_contact_capi: !!draft.send_contact_capi,
+          send_lead_capi: !!draft.send_lead_capi,
+          send_purchase_capi: !!draft.send_purchase_capi,
           geo_use_ipapi: !!draft.geo_use_ipapi,
           geo_fill_only_when_missing: !!draft.geo_fill_only_when_missing,
         };
@@ -627,6 +678,7 @@ export default function IntegracionesMetaCapi() {
       await loadAll(userId);
       setEditOpen(false);
       setDraft(null);
+      setEditSensitiveFields(false);
       setSaveMsg("Pixel actualizado.");
     } catch (e) {
       setSaveMsg(e instanceof Error ? e.message : "Error al actualizar");
@@ -648,6 +700,8 @@ export default function IntegracionesMetaCapi() {
         meta_currency: px.meta_currency || "ARS",
         meta_api_version: px.meta_api_version || "v25.0",
         send_contact_capi: !!px.send_contact_capi,
+        send_lead_capi: px.send_lead_capi !== false,
+        send_purchase_capi: px.send_purchase_capi !== false,
         geo_use_ipapi: !!px.geo_use_ipapi,
         geo_fill_only_when_missing: !!px.geo_fill_only_when_missing,
         is_default: true,
@@ -660,6 +714,8 @@ export default function IntegracionesMetaCapi() {
         meta_currency: px.meta_currency || "ARS",
         meta_api_version: px.meta_api_version || "v25.0",
         send_contact_capi: !!px.send_contact_capi,
+        send_lead_capi: px.send_lead_capi !== false,
+        send_purchase_capi: px.send_purchase_capi !== false,
         geo_use_ipapi: !!px.geo_use_ipapi,
         geo_fill_only_when_missing: !!px.geo_fill_only_when_missing,
       };
@@ -1615,6 +1671,11 @@ export default function IntegracionesMetaCapi() {
                 const token = px.meta_access_token || "";
                 const tokenMasked = token.length > 14 ? `${token.slice(0, 8)}...${token.slice(-6)}` : token || "-";
                 const comment = String(px.comment ?? "").trim();
+                const eventBadges: Array<[string, boolean]> = [
+                  ["Contact", !!px.send_contact_capi],
+                  ["Lead", px.send_lead_capi !== false],
+                  ["Purchase", px.send_purchase_capi !== false],
+                ];
                 return (
                   <div key={px.id} className="flex w-full items-center justify-between rounded-lg border border-zinc-800 bg-zinc-900/60 px-3 py-2">
                     <div className="min-w-0">
@@ -1623,6 +1684,20 @@ export default function IntegracionesMetaCapi() {
                       {comment ? (
                         <p className="mt-0.5 truncate text-[11px] text-cyan-300/80">{comment}</p>
                       ) : null}
+                      <p className="mt-1 flex flex-wrap gap-1 text-[10px]">
+                        {eventBadges.map(([label, enabled]) => (
+                          <span
+                            key={label}
+                            className={`rounded border px-1.5 py-0.5 ${
+                              enabled
+                                ? "border-emerald-700/60 bg-emerald-950/30 text-emerald-300"
+                                : "border-zinc-700 bg-zinc-950 text-zinc-500"
+                            }`}
+                          >
+                            {label} {enabled ? "ON" : "OFF"}
+                          </span>
+                        ))}
+                      </p>
                     </div>
                     <div className="ml-3 flex items-center justify-end gap-2">
                       {px.is_default ? (
@@ -1673,7 +1748,7 @@ export default function IntegracionesMetaCapi() {
             <div className="mt-3 grid gap-3 sm:grid-cols-2">
               <input value={quickPixelId} onChange={(e) => setQuickPixelId(e.target.value.replace(/\D/g, ""))} placeholder="Pixel ID" className="h-9 rounded-lg border border-zinc-700 bg-zinc-900 px-3 text-sm text-zinc-100" />
               <select value={quickCurrency} onChange={(e) => setQuickCurrency(e.target.value)} className="h-9 rounded-lg border border-zinc-700 bg-zinc-900 px-3 text-sm text-zinc-100">
-                {["ARS","USD","EUR","BRL","CLP","MXN","COP"].map((c) => <option key={c} value={c}>{c}</option>)}
+                {META_CURRENCY_OPTIONS.map((c) => <option key={c} value={c}>{c}</option>)}
               </select>
               <input value={quickComment} onChange={(e) => setQuickComment(e.target.value)} placeholder="Comentario opcional" className="h-9 rounded-lg border border-zinc-700 bg-zinc-900 px-3 text-sm text-zinc-100 sm:col-span-2" />
               <input value={quickToken} onChange={(e) => setQuickToken(e.target.value)} placeholder="Access token" className="h-9 rounded-lg border border-zinc-700 bg-zinc-900 px-3 text-sm text-zinc-100 sm:col-span-2" />
@@ -1689,108 +1764,121 @@ export default function IntegracionesMetaCapi() {
 
       {editOpen && draft && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 px-3">
-          <div className="w-full max-w-2xl rounded-xl border border-zinc-700 bg-zinc-900 p-4">
-            <h3 className="text-sm font-semibold text-zinc-100">Editar pixel</h3>
-            <div className="mt-3 grid gap-3 sm:grid-cols-2">
-              <input value={draft.pixel_id} onChange={(e) => setDraft((p) => (p ? { ...p, pixel_id: e.target.value.replace(/\D/g, "") } : p))} placeholder="Pixel ID" className="h-9 rounded-lg border border-zinc-700 bg-zinc-900 px-3 text-sm text-zinc-100" />
-              <input value={draft.meta_currency} onChange={(e) => setDraft((p) => (p ? { ...p, meta_currency: e.target.value.toUpperCase() } : p))} placeholder="Moneda" className="h-9 rounded-lg border border-zinc-700 bg-zinc-900 px-3 text-sm text-zinc-100" />
-              <input value={draft.comment} onChange={(e) => setDraft((p) => (p ? { ...p, comment: e.target.value } : p))} placeholder="Comentario opcional" className="h-9 rounded-lg border border-zinc-700 bg-zinc-900 px-3 text-sm text-zinc-100 sm:col-span-2" />
-              {isAdmin ? (
-                <input
-                  value={draft.meta_api_version}
-                  onChange={(e) => setDraft((p) => (p ? { ...p, meta_api_version: e.target.value } : p))}
-                  placeholder="API Version"
-                  className="h-9 rounded-lg border border-zinc-700 bg-zinc-900 px-3 text-sm text-zinc-100"
-                />
-              ) : (
-                <div className="rounded-lg border border-zinc-800 bg-zinc-950 px-3 py-2 text-xs text-zinc-400">
-                  API Version: <span className="font-mono text-zinc-300">{draft.meta_api_version || "v25.0"}</span>
+          <div className="w-full max-w-3xl rounded-xl border border-zinc-700 bg-zinc-900 p-4">
+            <div className="flex items-start justify-between gap-3">
+              <div>
+                <h3 className="text-sm font-semibold text-zinc-100">Editar pixel</h3>
+                <p className="mt-1 text-xs text-zinc-500">
+                  Los datos sensibles quedan bloqueados para evitar cambios accidentales.
+                </p>
+              </div>
+              <button
+                type="button"
+                onClick={() => setEditSensitiveFields((v) => !v)}
+                className="rounded-lg border border-zinc-700 px-3 py-1.5 text-xs font-medium text-zinc-200 transition hover:bg-zinc-800"
+              >
+                {editSensitiveFields ? "Bloquear datos" : "Editar datos"}
+              </button>
+            </div>
+
+            <div className="mt-4 space-y-3">
+              <section className="rounded-xl border border-zinc-800 bg-zinc-950/40 p-3">
+                <h4 className="text-xs font-semibold uppercase tracking-wide text-zinc-400">Credenciales</h4>
+                <div className="mt-3 grid gap-3 sm:grid-cols-2">
+                  <input
+                    value={draft.pixel_id}
+                    disabled={!editSensitiveFields}
+                    onChange={(e) => setDraft((p) => (p ? { ...p, pixel_id: e.target.value.replace(/\D/g, "") } : p))}
+                    placeholder="Pixel ID"
+                    className="h-9 rounded-lg border border-zinc-700 bg-zinc-900 px-3 text-sm text-zinc-100 disabled:cursor-not-allowed disabled:border-zinc-800 disabled:bg-zinc-950 disabled:text-zinc-500"
+                  />
+                  <select
+                    value={draft.meta_currency}
+                    disabled={!editSensitiveFields}
+                    onChange={(e) => setDraft((p) => (p ? { ...p, meta_currency: e.target.value } : p))}
+                    className="h-9 rounded-lg border border-zinc-700 bg-zinc-900 px-3 text-sm text-zinc-100 disabled:cursor-not-allowed disabled:border-zinc-800 disabled:bg-zinc-950 disabled:text-zinc-500"
+                  >
+                    {META_CURRENCY_OPTIONS.map((c) => <option key={c} value={c}>{c}</option>)}
+                  </select>
+                  <input
+                    value={draft.meta_access_token}
+                    disabled={!editSensitiveFields}
+                    onChange={(e) => setDraft((p) => (p ? { ...p, meta_access_token: e.target.value } : p))}
+                    placeholder="Access token"
+                    className="h-9 rounded-lg border border-zinc-700 bg-zinc-900 px-3 text-sm text-zinc-100 disabled:cursor-not-allowed disabled:border-zinc-800 disabled:bg-zinc-950 disabled:text-zinc-500 sm:col-span-2"
+                  />
                 </div>
-              )}
-              <label className="inline-flex items-center gap-2 text-xs text-zinc-300">
-                <button
-                  type="button"
-                  role="switch"
-                  aria-checked={draft.is_default}
-                  onClick={() => setDraft((p) => (p ? { ...p, is_default: !p.is_default } : p))}
-                  className={`relative inline-flex h-6 w-11 items-center rounded-full border transition ${
-                    draft.is_default
-                      ? "border-emerald-500/60 bg-emerald-500/30"
-                      : "border-zinc-700 bg-zinc-800"
-                  }`}
-                >
-                  <span
-                    className={`inline-block h-5 w-5 transform rounded-full bg-white transition ${
-                      draft.is_default ? "translate-x-5" : "translate-x-0.5"
-                    }`}
+              </section>
+
+              <section className="rounded-xl border border-zinc-800 bg-zinc-950/40 p-3">
+                <h4 className="text-xs font-semibold uppercase tracking-wide text-zinc-400">Identificación</h4>
+                <div className="mt-3 grid gap-3 sm:grid-cols-2">
+                  <input value={draft.comment} onChange={(e) => setDraft((p) => (p ? { ...p, comment: e.target.value } : p))} placeholder="Comentario opcional" className="h-9 rounded-lg border border-zinc-700 bg-zinc-900 px-3 text-sm text-zinc-100 sm:col-span-2" />
+                  {isAdmin ? (
+                    <input
+                      value={draft.meta_api_version}
+                      onChange={(e) => setDraft((p) => (p ? { ...p, meta_api_version: e.target.value } : p))}
+                      placeholder="API Version"
+                      className="h-9 rounded-lg border border-zinc-700 bg-zinc-900 px-3 text-sm text-zinc-100"
+                    />
+                  ) : (
+                    <div className="rounded-lg border border-zinc-800 bg-zinc-950 px-3 py-2 text-xs text-zinc-400">
+                      API Version: <span className="font-mono text-zinc-300">{draft.meta_api_version || "v25.0"}</span>
+                    </div>
+                  )}
+                  <SettingsSwitch
+                    checked={draft.is_default}
+                    label="Pixel default"
+                    description="Se usa como fallback cuando una landing no trae pixel explicito."
+                    onChange={() => setDraft((p) => (p ? { ...p, is_default: !p.is_default } : p))}
                   />
-                </button>
-                <span>Default</span>
-              </label>
-              <input value={draft.meta_access_token} onChange={(e) => setDraft((p) => (p ? { ...p, meta_access_token: e.target.value } : p))} placeholder="Access token" className="h-9 rounded-lg border border-zinc-700 bg-zinc-900 px-3 text-sm text-zinc-100 sm:col-span-2" />
-              <label className="inline-flex items-center gap-2 text-xs text-zinc-300">
-                <button
-                  type="button"
-                  role="switch"
-                  aria-checked={draft.send_contact_capi}
-                  onClick={() => setDraft((p) => (p ? { ...p, send_contact_capi: !p.send_contact_capi } : p))}
-                  className={`relative inline-flex h-6 w-11 items-center rounded-full border transition ${
-                    draft.send_contact_capi
-                      ? "border-emerald-500/60 bg-emerald-500/30"
-                      : "border-zinc-700 bg-zinc-800"
-                  }`}
-                >
-                  <span
-                    className={`inline-block h-5 w-5 transform rounded-full bg-white transition ${
-                      draft.send_contact_capi ? "translate-x-5" : "translate-x-0.5"
-                    }`}
+                </div>
+              </section>
+
+              <section className="rounded-xl border border-zinc-800 bg-zinc-950/40 p-3">
+                <h4 className="text-xs font-semibold uppercase tracking-wide text-zinc-400">Eventos por CAPI</h4>
+                <div className="mt-3 grid gap-2 sm:grid-cols-3">
+                  <SettingsSwitch
+                    checked={draft.send_contact_capi}
+                    label="Contact"
+                    description="Envía Contact desde landings."
+                    onChange={() => setDraft((p) => (p ? { ...p, send_contact_capi: !p.send_contact_capi } : p))}
                   />
-                </button>
-                <span>Enviar Contact por CAPI</span>
-              </label>
-              <label className="inline-flex items-center gap-2 text-xs text-zinc-300">
-                <button
-                  type="button"
-                  role="switch"
-                  aria-checked={draft.geo_use_ipapi}
-                  onClick={() => setDraft((p) => (p ? { ...p, geo_use_ipapi: !p.geo_use_ipapi } : p))}
-                  className={`relative inline-flex h-6 w-11 items-center rounded-full border transition ${
-                    draft.geo_use_ipapi
-                      ? "border-emerald-500/60 bg-emerald-500/30"
-                      : "border-zinc-700 bg-zinc-800"
-                  }`}
-                >
-                  <span
-                    className={`inline-block h-5 w-5 transform rounded-full bg-white transition ${
-                      draft.geo_use_ipapi ? "translate-x-5" : "translate-x-0.5"
-                    }`}
+                  <SettingsSwitch
+                    checked={draft.send_lead_capi}
+                    label="Lead"
+                    description="Envía Lead por Meta CAPI."
+                    onChange={() => setDraft((p) => (p ? { ...p, send_lead_capi: !p.send_lead_capi } : p))}
                   />
-                </button>
-                <span>Enviar geo</span>
-              </label>
-              <label className="inline-flex items-center gap-2 text-xs text-zinc-300 sm:col-span-2">
-                <button
-                  type="button"
-                  role="switch"
-                  aria-checked={draft.geo_fill_only_when_missing}
-                  onClick={() => setDraft((p) => (p ? { ...p, geo_fill_only_when_missing: !p.geo_fill_only_when_missing } : p))}
-                  className={`relative inline-flex h-6 w-11 items-center rounded-full border transition ${
-                    draft.geo_fill_only_when_missing
-                      ? "border-emerald-500/60 bg-emerald-500/30"
-                      : "border-zinc-700 bg-zinc-800"
-                  }`}
-                >
-                  <span
-                    className={`inline-block h-5 w-5 transform rounded-full bg-white transition ${
-                      draft.geo_fill_only_when_missing ? "translate-x-5" : "translate-x-0.5"
-                    }`}
+                  <SettingsSwitch
+                    checked={draft.send_purchase_capi}
+                    label="Purchase"
+                    description="Envía Purchase y repeat."
+                    onChange={() => setDraft((p) => (p ? { ...p, send_purchase_capi: !p.send_purchase_capi } : p))}
                   />
-                </button>
-                <span>Solo completar geo faltante</span>
-              </label>
+                </div>
+              </section>
+
+              <section className="rounded-xl border border-zinc-800 bg-zinc-950/40 p-3">
+                <h4 className="text-xs font-semibold uppercase tracking-wide text-zinc-400">Geolocalización</h4>
+                <div className="mt-3 grid gap-2 sm:grid-cols-2">
+                  <SettingsSwitch
+                    checked={draft.geo_use_ipapi}
+                    label="Enviar geo"
+                    description="Completa ciudad/provincia/país por IP."
+                    onChange={() => setDraft((p) => (p ? { ...p, geo_use_ipapi: !p.geo_use_ipapi } : p))}
+                  />
+                  <SettingsSwitch
+                    checked={draft.geo_fill_only_when_missing}
+                    label="Solo geo faltante"
+                    description="No pisa datos que ya vienen en payload."
+                    onChange={() => setDraft((p) => (p ? { ...p, geo_fill_only_when_missing: !p.geo_fill_only_when_missing } : p))}
+                  />
+                </div>
+              </section>
             </div>
             <div className="mt-4 flex justify-end gap-2">
-              <button type="button" onClick={() => { setEditOpen(false); setDraft(null); }} className="rounded-lg border border-zinc-700 px-3 py-1.5 text-xs text-zinc-300">Cancelar</button>
+              <button type="button" onClick={() => { setEditOpen(false); setDraft(null); setEditSensitiveFields(false); }} className="rounded-lg border border-zinc-700 px-3 py-1.5 text-xs text-zinc-300">Cancelar</button>
               <button disabled={saving} type="button" onClick={() => void handleEditSave()} className="rounded-lg bg-emerald-500 px-3 py-1.5 text-xs font-semibold text-zinc-900 disabled:opacity-60">Guardar</button>
             </div>
           </div>
