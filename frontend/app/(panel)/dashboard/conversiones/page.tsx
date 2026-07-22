@@ -191,6 +191,7 @@ function estadoBadge(estado: string, isRepeat = false) {
 function statusText(status: string) {
   if (status === "enviado") return <span className="text-emerald-400">enviado</span>;
   if (status === "error") return <span className="text-red-400">error</span>;
+  if (status === "skipped_meta_crawler") return <span className="text-zinc-400">omitido bot meta</span>;
   if (status.startsWith("skipped")) return <span className="text-zinc-400">omitido</span>;
   return <span className="text-zinc-600">-</span>;
 }
@@ -360,7 +361,7 @@ const COLUMN_NOTES: Partial<Record<ColKey | "id", string>> = {
   estado: "Estado actual de la conversion (contact, lead o purchase).",
   valor: "Monto de compra/carga recibido para Purchase.",
   purchase_type: "Tipo de compra: first (primera) o repeat (recompra).",
-  contact_status_capi: "Resultado de envio CAPI para Contact.",
+  contact_status_capi: "Resultado de envio CAPI para Contact. Puede ser omitido si detectamos crawler de Meta.",
   lead_status_capi: "Resultado de envio CAPI para Lead.",
   purchase_status_capi: "Resultado de envio CAPI para Purchase.",
   observaciones: "Notas internas de procesamiento (tokens de estado/error).",

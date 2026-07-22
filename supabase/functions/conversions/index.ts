@@ -134,6 +134,44 @@ type Params = Record<string, any>;
 
 const norm = (s: unknown): string => String(s ?? "").trim();
 const META_CAPI_MAX_EVENT_AGE_SECONDS = 7 * 24 * 60 * 60;
+const META_CRAWLER_CONTACT_STATUS = "skipped_meta_crawler";
+const META_CRAWLER_CONTACT_OBSERVATION = "CONTACT CAPI OMITIDO META CRAWLER";
+const META_CRAWLER_USER_AGENT_TOKENS = [
+  "facebookexternalhit",
+  "facebot",
+  "facebookcatalog",
+  "facebookbot",
+  "meta-externalagent",
+  "meta-externalfetcher",
+  "meta-externalads",
+  "meta-webindexer",
+];
+const META_INFRASTRUCTURE_IPV4_CIDRS = [
+  "31.13.24.0/21",
+  "31.13.64.0/18",
+  "45.64.40.0/22",
+  "57.141.0.0/16",
+  "66.220.144.0/20",
+  "69.63.176.0/20",
+  "69.171.224.0/19",
+  "74.119.76.0/22",
+  "103.4.96.0/22",
+  "129.134.0.0/16",
+  "157.240.0.0/16",
+  "163.70.128.0/17",
+  "173.252.64.0/18",
+  "179.60.192.0/22",
+  "185.60.216.0/22",
+  "204.15.20.0/22",
+];
+
+type MetaCrawlerMatch = {
+  matched: boolean;
+  reason: string;
+  clientIp: string;
+  matchedCidr: string;
+  matchedUserAgentToken: string;
+};
 
 function isEventTimeTooOldForMetaCapi(eventTime: number): boolean {
   if (!Number.isFinite(eventTime) || eventTime <= 0) return false;
@@ -517,6 +555,63 @@ function payloadClientIp(p: Params): string {
       p.client_ip ??
       p.client_ip_address,
   );
+}
+
+function ipv4ToUint32(ip: string): number | null {
+  const parts = ip.split(".").map((part) => Number(part));
+  if (parts.length !== 4 || parts.some((part) => !Number.isInteger(part) || part < 0 || part > 255)) {
+    return null;
+  }
+  return (((parts[0] * 256 + parts[1]) * 256 + parts[2]) * 256 + parts[3]) >>> 0;
+}
+
+function ipv4MatchesCidr(ip: string, cidr: string): boolean {
+  const [network, prefixRaw] = cidr.split("/");
+  const prefix = Number(prefixRaw);
+  if (!Number.isInteger(prefix) || prefix < 0 || prefix > 32) return false;
+  const ipNumber = ipv4ToUint32(ip);
+  const networkNumber = ipv4ToUint32(network);
+  if (ipNumber == null || networkNumber == null) return false;
+  const mask = prefix === 0 ? 0 : (0xffffffff << (32 - prefix)) >>> 0;
+  return ((ipNumber & mask) >>> 0) === ((networkNumber & mask) >>> 0);
+}
+
+function detectMetaCrawlerContact(row: ConversionRow): MetaCrawlerMatch {
+  const userAgent = norm(row.agent_user).toLowerCase();
+  const matchedUserAgentToken =
+    META_CRAWLER_USER_AGENT_TOKENS.find((token) => userAgent.includes(token)) ?? "";
+  if (matchedUserAgentToken) {
+    return {
+      matched: true,
+      reason: "meta_crawler_user_agent",
+      clientIp: normalizePublicClientIp(row.client_ip),
+      matchedCidr: "",
+      matchedUserAgentToken,
+    };
+  }
+
+  const clientIp = normalizePublicClientIp(row.client_ip);
+  const matchedCidr = clientIp.includes(".")
+    ? (META_INFRASTRUCTURE_IPV4_CIDRS.find((cidr) => ipv4MatchesCidr(clientIp, cidr)) ?? "")
+    : "";
+
+  if (matchedCidr) {
+    return {
+      matched: true,
+      reason: "meta_infrastructure_ip",
+      clientIp,
+      matchedCidr,
+      matchedUserAgentToken: "",
+    };
+  }
+
+  return {
+    matched: false,
+    reason: "",
+    clientIp,
+    matchedCidr: "",
+    matchedUserAgentToken: "",
+  };
 }
 
 function normalizeIpToMeta(rawIp: string): Record<string, string> {
@@ -1028,6 +1123,47 @@ async function sendToMetaCAPI(
     eventName === "Contact" ? "ERROR CONTACT" :
     eventName === "Lead" ? "ERROR LEAD" :
     "ERROR PURCHASE";
+
+  if (eventName === "Contact") {
+    const metaCrawlerMatch = detectMetaCrawlerContact(row);
+    if (metaCrawlerMatch.matched) {
+      const { data: current } = await db.from("conversions").select("observaciones").eq("id", rowId).single();
+      const obs = appendObservation(current?.observaciones ?? "", META_CRAWLER_CONTACT_OBSERVATION);
+      const updates: Record<string, unknown> = {
+        [statusField]: META_CRAWLER_CONTACT_STATUS,
+        observaciones: obs,
+      };
+      if (retryableField) updates[retryableField] = false;
+      await db.from("conversions").update(updates).eq("id", rowId);
+      await writeLog(
+        db,
+        row.user_id,
+        "sendToMetaCAPI",
+        "INFO",
+        "Contact CAPI omitido por crawler de Meta",
+        JSON.stringify({
+          event_name: eventName,
+          row_id: rowId,
+          event_id: eventId,
+          source_platform: sourcePlatform,
+          reason: metaCrawlerMatch.reason,
+          client_ip: metaCrawlerMatch.clientIp,
+          matched_cidr: metaCrawlerMatch.matchedCidr,
+          matched_user_agent_token: metaCrawlerMatch.matchedUserAgentToken,
+          user_agent: row.agent_user,
+          geo_country: row.geo_country || row.country,
+          geo_region: row.geo_region || row.st,
+          geo_city: row.geo_city || row.ct,
+        }),
+        rowId,
+        undefined,
+        undefined,
+        row.contact_payload_raw,
+        "Contact CAPI omitido por crawler de Meta",
+      );
+      return true;
+    }
+  }
 
   if (isChatrace && !(await resolveChatraceMetaCapiEnabled(db, row.user_id))) {
     const skippedMsg = `${eventName.toUpperCase()} CAPI OMITIDO CHATRACE DESACTIVADO`;
