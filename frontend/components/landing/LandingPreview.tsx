@@ -346,8 +346,8 @@ export function LandingPreview({
       ? "mt-1 text-[11px] leading-snug text-[#586577]"
       : "mt-1.5 text-sm leading-normal text-[#586577]";
     const spinnerClass = gallery
-      ? "mx-auto mt-4 block h-9 w-9 shrink-0 animate-spin rounded-full border-[3px] border-[#eef0f0] border-r-[#00cf70] border-t-[#00cf70]"
-      : "mx-auto mt-[23px] block h-12 w-12 shrink-0 animate-spin rounded-full border-4 border-[#eef0f0] border-r-[#00cf70] border-t-[#00cf70]";
+      ? "mx-auto mt-4 block h-9 w-9 shrink-0 rounded-full border-[3px] border-[#eef0f0] border-r-[#00cf70] border-t-[#00cf70]"
+      : "mx-auto mt-[23px] block h-12 w-12 shrink-0 rounded-full border-4 border-[#eef0f0] border-r-[#00cf70] border-t-[#00cf70]";
     const fallbackClass = gallery
       ? "mt-5 border-t border-[#dde1e4] pt-3 text-[10px] leading-tight text-[#8a94a3]"
       : "mt-[31px] border-t border-[#dde1e4] pt-4 text-xs leading-snug text-[#8a94a3]";
@@ -374,7 +374,6 @@ export function LandingPreview({
 
             <span
               className={spinnerClass}
-              style={{ animationDuration: "850ms" }}
               aria-hidden="true"
             />
 
