@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import { supabase } from "@/lib/supabaseClient";
 import { getSettings, updateSettings } from "@/lib/settingsDb";
+import { DashboardSkeleton } from "@/components/ui/DashboardSkeleton";
 
 export default function AdminSettingsPage() {
   const [urlBase, setUrlBase] = useState("");
@@ -72,11 +73,7 @@ export default function AdminSettingsPage() {
   };
 
   if (!ready) {
-    return (
-      <div className="flex min-h-[40vh] items-center justify-center">
-        <p className="text-sm text-zinc-400">Cargando...</p>
-      </div>
-    );
+    return <DashboardSkeleton title="Cargando configuración..." />;
   }
 
   return (

@@ -1,11 +1,12 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useState, type MouseEvent } from "react";
 import { useRouter, usePathname } from "next/navigation";
 import Link from "next/link";
 import type { User } from "@supabase/supabase-js";
 import { supabase } from "@/lib/supabaseClient";
 import ConstructorSetupGuide from "@/components/onboarding/ConstructorSetupGuide";
+import { RouteProgress } from "@/components/ui/RouteProgress";
 
 const SETUP_GUIDE_STORAGE_PREFIX = "constructor_setup_guide_hidden:";
 const DASHBOARD_PREFETCH_ROUTES = [
@@ -389,13 +390,25 @@ export default function DashboardLayout({
   }, [router]);
 
   useEffect(() => {
-    for (const route of DASHBOARD_PREFETCH_ROUTES) {
-      router.prefetch(route);
+    if (isCheckingSession || !isClient) return;
+
+    const prefetchRoutes = () => {
+      for (const route of DASHBOARD_PREFETCH_ROUTES) {
+        router.prefetch(route);
+      }
+      if (promotionsEnabled) {
+        router.prefetch("/dashboard/promociones");
+      }
+    };
+
+    if ("requestIdleCallback" in window) {
+      const idleId = window.requestIdleCallback(prefetchRoutes, { timeout: 2000 });
+      return () => window.cancelIdleCallback(idleId);
     }
-    if (promotionsEnabled) {
-      router.prefetch("/dashboard/promociones");
-    }
-  }, [router, promotionsEnabled]);
+
+    const timeoutId = setTimeout(prefetchRoutes, 250);
+    return () => clearTimeout(timeoutId);
+  }, [isCheckingSession, isClient, router, promotionsEnabled]);
 
   useEffect(() => {
     if (
@@ -408,12 +421,28 @@ export default function DashboardLayout({
     }
   }, [isCheckingSession, isClient, pathname, promotionsEnabled, router]);
 
-  const handleNavClick = (target: string) => {
+  const handleNavClick = (target: string, event: MouseEvent<HTMLAnchorElement>) => {
     setSidebarOpen(false);
+    if (
+      event.defaultPrevented ||
+      event.button !== 0 ||
+      event.metaKey ||
+      event.ctrlKey ||
+      event.shiftKey ||
+      event.altKey
+    ) {
+      return;
+    }
     setNavigatingTo(pathname !== target ? target : null);
   };
 
   const isNavigating = navigatingTo !== null && pathname !== navigatingTo;
+
+  useEffect(() => {
+    if (!isNavigating) return;
+    const timeoutId = window.setTimeout(() => setNavigatingTo(null), 10000);
+    return () => window.clearTimeout(timeoutId);
+  }, [isNavigating]);
 
   const handleSignOut = async () => {
     await supabase.auth.signOut();
@@ -509,6 +538,7 @@ export default function DashboardLayout({
 
   return (
     <div className="flex min-h-screen bg-[var(--color-bg-0)] text-[var(--color-text)]">
+      <RouteProgress active={isNavigating} />
       {sidebarOpen && (
         <button
           type="button"
@@ -547,7 +577,7 @@ export default function DashboardLayout({
         <nav className="flex flex-1 flex-col gap-2 p-3">
           <Link
             href="/dashboard/inicio"
-            onClick={() => handleNavClick("/dashboard/inicio")}
+            onClick={(event) => handleNavClick("/dashboard/inicio", event)}
             className={`flex items-center gap-2 rounded-lg px-3 py-2 text-xs font-medium tracking-[0.18em] transition ${
               pathname === "/dashboard/inicio"
                 ? "bg-[var(--color-primary-soft-bg)] text-[var(--color-primary)] border border-[var(--color-primary-soft-border)]"
@@ -560,7 +590,7 @@ export default function DashboardLayout({
 
           <Link
             href="/dashboard/landings"
-            onClick={() => handleNavClick("/dashboard/landings")}
+            onClick={(event) => handleNavClick("/dashboard/landings", event)}
             className={`flex items-center gap-2 rounded-lg px-3 py-2 text-xs font-medium tracking-[0.18em] transition ${
               pathname?.startsWith("/dashboard/landings")
                 ? "bg-[var(--color-primary-soft-bg)] text-[var(--color-primary)] border border-[var(--color-primary-soft-border)]"
@@ -574,7 +604,7 @@ export default function DashboardLayout({
           {promotionsEnabled && (
             <Link
               href="/dashboard/promociones"
-              onClick={() => handleNavClick("/dashboard/promociones")}
+              onClick={(event) => handleNavClick("/dashboard/promociones", event)}
               className={`flex items-center gap-2 rounded-lg px-3 py-2 text-xs font-medium tracking-[0.18em] transition ${
                 pathname?.startsWith("/dashboard/promociones")
                   ? "bg-[var(--color-primary-soft-bg)] text-[var(--color-primary)] border border-[var(--color-primary-soft-border)]"
@@ -591,7 +621,7 @@ export default function DashboardLayout({
 
           <Link
             href="/dashboard/conversiones"
-            onClick={() => handleNavClick("/dashboard/conversiones")}
+            onClick={(event) => handleNavClick("/dashboard/conversiones", event)}
             className={`flex items-center gap-2 rounded-lg px-3 py-2 text-xs font-medium tracking-[0.18em] transition ${
               pathname?.startsWith("/dashboard/conversiones")
                 ? "bg-[var(--color-primary-soft-bg)] text-[var(--color-primary)] border border-[var(--color-primary-soft-border)]"
@@ -607,7 +637,7 @@ export default function DashboardLayout({
 
           <Link
             href="/dashboard/seguimiento"
-            onClick={() => handleNavClick("/dashboard/seguimiento")}
+            onClick={(event) => handleNavClick("/dashboard/seguimiento", event)}
             className={`flex items-center gap-2 rounded-lg px-3 py-2 text-xs font-medium tracking-[0.18em] transition ${
               pathname?.startsWith("/dashboard/seguimiento")
                 ? "bg-[var(--color-primary-soft-bg)] text-[var(--color-primary)] border border-[var(--color-primary-soft-border)]"
@@ -623,7 +653,7 @@ export default function DashboardLayout({
 
           <Link
             href="/dashboard/gerencias"
-            onClick={() => handleNavClick("/dashboard/gerencias")}
+            onClick={(event) => handleNavClick("/dashboard/gerencias", event)}
             className={`flex items-center gap-2 rounded-lg px-3 py-2 text-xs font-medium tracking-[0.18em] transition ${
               pathname?.startsWith("/dashboard/gerencias")
                 ? "bg-[var(--color-primary-soft-bg)] text-[var(--color-primary)] border border-[var(--color-primary-soft-border)]"
@@ -639,7 +669,7 @@ export default function DashboardLayout({
 
           <Link
             href="/dashboard/telefonos"
-            onClick={() => handleNavClick("/dashboard/telefonos")}
+            onClick={(event) => handleNavClick("/dashboard/telefonos", event)}
             className={`flex items-center gap-2 rounded-lg px-3 py-2 text-xs font-medium tracking-[0.18em] transition ${
               pathname?.startsWith("/dashboard/telefonos")
                 ? "bg-[var(--color-primary-soft-bg)] text-[var(--color-primary)] border border-[var(--color-primary-soft-border)]"
@@ -655,7 +685,7 @@ export default function DashboardLayout({
 
           <Link
             href="/dashboard/integraciones"
-            onClick={() => handleNavClick("/dashboard/integraciones")}
+            onClick={(event) => handleNavClick("/dashboard/integraciones", event)}
             className={`flex items-center gap-2 rounded-lg px-3 py-2 text-xs font-medium tracking-[0.18em] transition ${
               pathname?.startsWith("/dashboard/integraciones")
                 ? "bg-[var(--color-primary-soft-bg)] text-[var(--color-primary)] border border-[var(--color-primary-soft-border)]"
@@ -671,7 +701,7 @@ export default function DashboardLayout({
 
           <Link
             href="/dashboard/notificaciones"
-            onClick={() => handleNavClick("/dashboard/notificaciones")}
+            onClick={(event) => handleNavClick("/dashboard/notificaciones", event)}
             className={`flex items-center gap-2 rounded-lg px-3 py-2 text-xs font-medium tracking-[0.18em] transition ${
               pathname?.startsWith("/dashboard/notificaciones")
                 ? "bg-[var(--color-primary-soft-bg)] text-[var(--color-primary)] border border-[var(--color-primary-soft-border)]"
@@ -692,7 +722,7 @@ export default function DashboardLayout({
           </p>
           <Link
             href="/dashboard/plan"
-            onClick={() => handleNavClick("/dashboard/plan")}
+            onClick={(event) => handleNavClick("/dashboard/plan", event)}
             className={`block w-full rounded-lg border px-3 py-2 text-center text-xs font-semibold transition hover:opacity-90 ${planClass(planCode)} ${
               pathname?.startsWith("/dashboard/plan") ? "ring-2 ring-zinc-500/60" : ""
             }`}
@@ -744,12 +774,10 @@ export default function DashboardLayout({
             Ayuda
           </button>
         </header>
-        <main className="min-h-0 max-w-full flex-1 overflow-x-hidden overflow-y-auto px-3 py-5 sm:px-6 sm:py-8 lg:px-10">
-          {isNavigating && (
-            <div className="pointer-events-none fixed left-0 right-0 top-0 z-[80] h-1 overflow-hidden bg-cyan-950/40">
-              <div className="h-full w-1/3 animate-[pulse_0.9s_ease-in-out_infinite] rounded-r-full bg-cyan-400 shadow-[0_0_18px_rgba(34,211,238,0.65)]" />
-            </div>
-          )}
+        <main
+          className="min-h-0 max-w-full flex-1 overflow-x-hidden overflow-y-auto px-3 py-5 sm:px-6 sm:py-8 lg:px-10"
+          aria-busy={isNavigating}
+        >
           {children}
         </main>
       </div>

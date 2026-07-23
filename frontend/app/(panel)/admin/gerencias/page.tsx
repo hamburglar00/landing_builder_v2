@@ -12,6 +12,7 @@ import {
   formatGerenciaError,
   sortGerenciasByName,
 } from "@/lib/gerencias/gerenciasDb";
+import { DashboardSkeleton } from "@/components/ui/DashboardSkeleton";
 
 export default function AdminGerenciasPage() {
   const router = useRouter();
@@ -156,11 +157,7 @@ export default function AdminGerenciasPage() {
   };
 
   if (!ready) {
-    return (
-      <div className="flex min-h-[40vh] items-center justify-center">
-        <p className="text-sm text-zinc-400">Cargando...</p>
-      </div>
-    );
+    return <DashboardSkeleton title="Cargando gerencias..." />;
   }
 
   return (

@@ -1,6 +1,7 @@
 ﻿"use client";
 
 import { useEffect, useState, useCallback, useMemo, useRef } from "react";
+import dynamic from "next/dynamic";
 import { useSearchParams } from "next/navigation";
 import { supabase } from "@/lib/supabaseClient";
 import {
@@ -27,16 +28,27 @@ import {
   type FunnelContact,
 } from "@/lib/conversionsDb";
 import { generateDemoConversions, generateDemoFunnelContacts } from "@/lib/demoData";
-import FunnelBoard from "@/components/conversiones/FunnelBoard";
-import TrackingBoard from "@/components/conversiones/TrackingBoard";
-import StatsPanel from "@/components/conversiones/StatsPanel";
-import GerenciasPerformancePanel from "@/components/conversiones/GerenciasPerformancePanel";
+import { DashboardSkeleton, PanelSkeleton } from "@/components/ui/DashboardSkeleton";
 import type { LandingPerformanceFilterOption } from "@/components/conversiones/GerenciasPerformancePanel";
 import DateRangeFilter, {
   type DateRange,
   filterByDateRange,
   filterFunnelByDateRange,
 } from "@/components/conversiones/DateRangeFilter";
+
+const FunnelBoard = dynamic(() => import("@/components/conversiones/FunnelBoard"), {
+  loading: () => <PanelSkeleton title="Cargando funnel..." />,
+});
+const TrackingBoard = dynamic(() => import("@/components/conversiones/TrackingBoard"), {
+  loading: () => <PanelSkeleton title="Cargando seguimiento..." />,
+});
+const StatsPanel = dynamic(() => import("@/components/conversiones/StatsPanel"), {
+  loading: () => <PanelSkeleton title="Cargando estadísticas..." />,
+});
+const GerenciasPerformancePanel = dynamic(
+  () => import("@/components/conversiones/GerenciasPerformancePanel"),
+  { loading: () => <PanelSkeleton title="Cargando desempeño..." /> },
+);
 
 type Tab = "configuracion" | "tabla" | "funnel" | "seguimiento" | "estadisticas" | "desempeno" | "logs";
 type PixelEditDraft = {
@@ -1346,11 +1358,7 @@ export default function AdminConversionesPage() {
   }, [userId, logs, demoMode, refreshTable]);
 
   if (loading) {
-    return (
-      <div className="flex min-h-[40vh] items-center justify-center">
-        <p className="text-sm text-zinc-400">Cargando...</p>
-      </div>
-    );
+    return <DashboardSkeleton title="Cargando conversiones..." />;
   }
 
   const endpointBase = process.env.NEXT_PUBLIC_SUPABASE_URL?.replace(/\/$/, "") ?? "";

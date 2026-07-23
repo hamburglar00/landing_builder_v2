@@ -10,6 +10,7 @@ import {
 } from "@/lib/conversionsDb";
 import { fetchLandingsForAdmin } from "@/lib/landing/landingsDb";
 import { HomeOverview } from "@/components/conversiones/HomeOverview";
+import { DashboardSkeleton } from "@/components/ui/DashboardSkeleton";
 
 export default function AdminInicioPage() {
   const [ready, setReady] = useState(false);
@@ -59,11 +60,7 @@ export default function AdminInicioPage() {
   }, []);
 
   if (!ready) {
-    return (
-      <div className="flex min-h-[40vh] items-center justify-center">
-        <p className="text-sm text-zinc-500">Cargando inicio...</p>
-      </div>
-    );
+    return <DashboardSkeleton title="Cargando inicio..." />;
   }
 
   if (error) {

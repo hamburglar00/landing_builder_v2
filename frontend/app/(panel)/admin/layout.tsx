@@ -1,10 +1,11 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, type MouseEvent } from "react";
 import { useRouter, usePathname } from "next/navigation";
 import Link from "next/link";
 import type { User } from "@supabase/supabase-js";
 import { supabase } from "@/lib/supabaseClient";
+import { RouteProgress } from "@/components/ui/RouteProgress";
 
 function MenuIcon({ className }: { className?: string }) {
   return (
@@ -368,6 +369,7 @@ export default function AdminLayout({
   const [isAdmin, setIsAdmin] = useState<boolean | null>(null);
   const [roleError, setRoleError] = useState<string | null>(null);
   const [sidebarOpen, setSidebarOpen] = useState(false);
+  const [navigatingTo, setNavigatingTo] = useState<string | null>(null);
 
   useEffect(() => {
     const checkSession = async () => {
@@ -417,6 +419,35 @@ export default function AdminLayout({
     router.replace("/login");
   };
 
+  const handleNavClick = (target: string, event: MouseEvent<HTMLAnchorElement>) => {
+    setSidebarOpen(false);
+    if (
+      event.defaultPrevented ||
+      event.button !== 0 ||
+      event.metaKey ||
+      event.ctrlKey ||
+      event.shiftKey ||
+      event.altKey
+    ) {
+      return;
+    }
+    setNavigatingTo(pathname !== target ? target : null);
+  };
+
+  const getNavLinkProps = (target: string) => ({
+    onClick: (event: MouseEvent<HTMLAnchorElement>) => handleNavClick(target, event),
+    onMouseEnter: () => router.prefetch(target),
+    onFocus: () => router.prefetch(target),
+  });
+
+  const isNavigating = navigatingTo !== null && pathname !== navigatingTo;
+
+  useEffect(() => {
+    if (!isNavigating) return;
+    const timeoutId = window.setTimeout(() => setNavigatingTo(null), 10000);
+    return () => window.clearTimeout(timeoutId);
+  }, [isNavigating]);
+
   if (isCheckingSession) {
     return (
       <div className="flex min-h-screen items-center justify-center bg-[var(--color-bg-0)]">
@@ -456,6 +487,7 @@ export default function AdminLayout({
 
   return (
     <div className="flex min-h-screen bg-[var(--color-bg-0)] text-[var(--color-text)]">
+      <RouteProgress active={isNavigating} />
       {/* Overlay móvil cuando el menú está abierto */}
       {sidebarOpen && (
         <button
@@ -495,7 +527,7 @@ export default function AdminLayout({
         <nav className="flex flex-1 flex-col gap-2 p-3">
           <Link
             href="/admin/inicio"
-            onClick={() => setSidebarOpen(false)}
+            {...getNavLinkProps("/admin/inicio")}
             className={`flex items-center gap-2 rounded-lg px-3 py-2 text-xs font-medium tracking-[0.18em] transition ${
               pathname === "/admin/inicio"
                 ? "bg-[var(--color-primary-soft-bg)] text-[var(--color-primary)] border border-[var(--color-primary-soft-border)]"
@@ -511,7 +543,7 @@ export default function AdminLayout({
 
           <Link
             href="/admin/clientes"
-            onClick={() => setSidebarOpen(false)}
+            {...getNavLinkProps("/admin/clientes")}
             className={`flex items-center gap-2 rounded-lg px-3 py-2 text-xs font-medium tracking-[0.18em] transition ${
               pathname === "/admin/clientes"
                 ? "bg-[var(--color-primary-soft-bg)] text-[var(--color-primary)] border border-[var(--color-primary-soft-border)]"
@@ -527,7 +559,7 @@ export default function AdminLayout({
 
           <Link
             href="/admin/landings"
-            onClick={() => setSidebarOpen(false)}
+            {...getNavLinkProps("/admin/landings")}
             className={`flex items-center gap-2 rounded-lg px-3 py-2 text-xs font-medium tracking-[0.18em] transition ${
               pathname?.startsWith("/admin/landings")
                 ? "bg-[var(--color-primary-soft-bg)] text-[var(--color-primary)] border border-[var(--color-primary-soft-border)]"
@@ -543,7 +575,7 @@ export default function AdminLayout({
 
           <Link
             href="/admin/conversiones"
-            onClick={() => setSidebarOpen(false)}
+            {...getNavLinkProps("/admin/conversiones")}
             className={`flex items-center gap-2 rounded-lg px-3 py-2 text-xs font-medium tracking-[0.18em] transition ${
               pathname?.startsWith("/admin/conversiones")
                 ? "bg-[var(--color-primary-soft-bg)] text-[var(--color-primary)] border border-[var(--color-primary-soft-border)]"
@@ -559,7 +591,7 @@ export default function AdminLayout({
 
           <Link
             href="/admin/seguimiento"
-            onClick={() => setSidebarOpen(false)}
+            {...getNavLinkProps("/admin/seguimiento")}
             className={`flex items-center gap-2 rounded-lg px-3 py-2 text-xs font-medium tracking-[0.18em] transition ${
               pathname?.startsWith("/admin/seguimiento")
                 ? "bg-[var(--color-primary-soft-bg)] text-[var(--color-primary)] border border-[var(--color-primary-soft-border)]"
@@ -575,7 +607,7 @@ export default function AdminLayout({
 
           <Link
             href="/admin/gerencias"
-            onClick={() => setSidebarOpen(false)}
+            {...getNavLinkProps("/admin/gerencias")}
             className={`flex items-center gap-2 rounded-lg px-3 py-2 text-xs font-medium tracking-[0.18em] transition ${
               pathname?.startsWith("/admin/gerencias")
                 ? "bg-[var(--color-primary-soft-bg)] text-[var(--color-primary)] border border-[var(--color-primary-soft-border)]"
@@ -591,7 +623,7 @@ export default function AdminLayout({
 
           <Link
             href="/admin/telefonos"
-            onClick={() => setSidebarOpen(false)}
+            {...getNavLinkProps("/admin/telefonos")}
             className={`flex items-center gap-2 rounded-lg px-3 py-2 text-xs font-medium tracking-[0.18em] transition ${
               pathname?.startsWith("/admin/telefonos")
                 ? "bg-[var(--color-primary-soft-bg)] text-[var(--color-primary)] border border-[var(--color-primary-soft-border)]"
@@ -607,7 +639,7 @@ export default function AdminLayout({
 
           <Link
             href="/admin/integraciones"
-            onClick={() => setSidebarOpen(false)}
+            {...getNavLinkProps("/admin/integraciones")}
             className={`flex items-center gap-2 rounded-lg px-3 py-2 text-xs font-medium tracking-[0.18em] transition ${
               pathname?.startsWith("/admin/integraciones")
                 ? "bg-[var(--color-primary-soft-bg)] text-[var(--color-primary)] border border-[var(--color-primary-soft-border)]"
@@ -623,7 +655,7 @@ export default function AdminLayout({
 
           <Link
             href="/admin/notificaciones"
-            onClick={() => setSidebarOpen(false)}
+            {...getNavLinkProps("/admin/notificaciones")}
             className={`flex items-center gap-2 rounded-lg px-3 py-2 text-xs font-medium tracking-[0.18em] transition ${
               pathname?.startsWith("/admin/notificaciones")
                 ? "bg-[var(--color-primary-soft-bg)] text-[var(--color-primary)] border border-[var(--color-primary-soft-border)]"
@@ -639,7 +671,7 @@ export default function AdminLayout({
 
           <Link
             href="/admin/settings"
-            onClick={() => setSidebarOpen(false)}
+            {...getNavLinkProps("/admin/settings")}
             className={`flex items-center gap-2 rounded-lg px-3 py-2 text-xs font-medium tracking-[0.18em] transition ${
               pathname === "/admin/settings"
                 ? "bg-[var(--color-primary-soft-bg)] text-[var(--color-primary)] border border-[var(--color-primary-soft-border)]"
@@ -655,7 +687,7 @@ export default function AdminLayout({
 
           <Link
             href="/admin/tests"
-            onClick={() => setSidebarOpen(false)}
+            {...getNavLinkProps("/admin/tests")}
             className={`flex items-center gap-2 rounded-lg px-3 py-2 text-xs font-medium tracking-[0.18em] transition ${
               pathname === "/admin/tests"
                 ? "bg-[var(--color-primary-soft-bg)] text-[var(--color-primary)] border border-[var(--color-primary-soft-border)]"
@@ -668,7 +700,7 @@ export default function AdminLayout({
 
           <Link
             href="/admin/documentacion"
-            onClick={() => setSidebarOpen(false)}
+            {...getNavLinkProps("/admin/documentacion")}
             className={`flex items-center gap-2 rounded-lg px-3 py-2 text-xs font-medium tracking-[0.18em] transition ${
               pathname === "/admin/documentacion"
                 ? "bg-[var(--color-primary-soft-bg)] text-[var(--color-primary)] border border-[var(--color-primary-soft-border)]"
@@ -689,7 +721,7 @@ export default function AdminLayout({
           </p>
           <Link
             href="/admin/plan"
-            onClick={() => setSidebarOpen(false)}
+            {...getNavLinkProps("/admin/plan")}
             className={`block w-full rounded-lg border px-3 py-2 text-center text-xs font-semibold transition hover:bg-[var(--color-bg-3)] ${
               pathname?.startsWith("/admin/plan")
                 ? "border-[var(--color-primary-soft-border)] bg-[var(--color-primary-soft-bg)] text-[var(--color-primary)]"
@@ -720,7 +752,10 @@ export default function AdminLayout({
             <MenuIcon className="h-6 w-6" />
           </button>
         </header>
-        <main className="min-h-0 max-w-full flex-1 overflow-x-hidden overflow-y-auto px-3 py-5 sm:px-6 sm:py-8 lg:px-10">
+        <main
+          className="min-h-0 max-w-full flex-1 overflow-x-hidden overflow-y-auto px-3 py-5 sm:px-6 sm:py-8 lg:px-10"
+          aria-busy={isNavigating}
+        >
           {children}
         </main>
       </div>

@@ -11,6 +11,7 @@ import { fetchLandingsForAdmin, createLanding } from "@/lib/landing/landingsDb";
 import { buildLandingPublicUrl } from "@/lib/landing/publicUrls";
 import { DEFAULT_CONFIG } from "@/lib/landing/mocks";
 import { LandingPreview } from "@/components/landing/LandingPreview";
+import { DashboardSkeleton } from "@/components/ui/DashboardSkeleton";
 
 const BASE = "/admin/landings";
 
@@ -117,11 +118,7 @@ export default function AdminLandingsPage() {
   };
 
   if (!ready) {
-    return (
-      <div className="flex min-h-[40vh] items-center justify-center">
-        <p className="text-sm text-[var(--color-text-muted)]">Cargando...</p>
-      </div>
-    );
+    return <DashboardSkeleton title="Cargando landings..." />;
   }
 
   const groupedClientLandings = clientLandings.reduce<Record<string, Landing[]>>((acc, landing) => {

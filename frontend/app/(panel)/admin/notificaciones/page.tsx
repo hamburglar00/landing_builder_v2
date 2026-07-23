@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import { supabase } from "@/lib/supabaseClient";
 import NotificationsPageContent from "@/components/notificaciones/NotificationsPageContent";
+import { DashboardSkeleton } from "@/components/ui/DashboardSkeleton";
 import {
   clearLegacyNotificationTelegramChat,
   fetchNotificationBotConfig,
@@ -44,7 +45,7 @@ export default function AdminNotificacionesPage() {
   }, []);
 
   if (loading) {
-    return <div className="text-sm text-zinc-400">Cargando...</div>;
+    return <DashboardSkeleton title="Cargando notificaciones..." />;
   }
 
   return (

@@ -47,6 +47,32 @@ body {
   font-family: Arial, Helvetica, sans-serif;
 }
 
+@keyframes route-progress {
+  0% {
+    transform: translateX(-110%);
+  }
+  55% {
+    transform: translateX(120%);
+  }
+  100% {
+    transform: translateX(280%);
+  }
+}
+
+.route-progress-bar {
+  animation: route-progress 1.15s ease-in-out infinite;
+  will-change: transform;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .route-progress-bar {
+    animation: none;
+    transform: none;
+    width: 100%;
+    opacity: 0.8;
+  }
+}
+
 /* Ocultar flechas de inputs numéricos en todos los navegadores */
 input[type="number"] {
   appearance: textfield;
