@@ -123,9 +123,9 @@ Deno.serve(async (req) => {
     // Find purchases that need retry
     const { data: rows, error } = await db
       .from("conversions")
-      .select("id, user_id, phone, source_platform, pixel_id, purchase_event_id, purchase_event_time, valor, event_source_url, email, fn, ln, ct, st, zip, country, fbp, fbc, client_ip, agent_user, external_id, observaciones")
+      .select("id, user_id, phone, source_platform, pixel_id, purchase_event_id, purchase_event_time, purchase_type, valor, event_source_url, email, fn, ln, ct, st, zip, country, fbp, fbc, client_ip, agent_user, external_id, observaciones")
       .eq("estado", "purchase")
-      .not("purchase_status_capi", "in", "(enviado,skipped_old_event_time,skipped_chatrace_capi_disabled,skipped_purchase_capi_disabled)")
+      .not("purchase_status_capi", "in", "(enviado,skipped_old_event_time,skipped_chatrace_capi_disabled,skipped_purchase_capi_disabled,skipped_first_purchase_capi_disabled,skipped_repeat_purchase_capi_disabled)")
       .gt("valor", 0)
       .order("created_at", { ascending: true })
       .limit(100);
@@ -154,7 +154,7 @@ Deno.serve(async (req) => {
     const { data: pixelConfigs } = userIds.length > 0
       ? await db
         .from("conversions_pixel_configs")
-        .select("user_id, pixel_id, meta_access_token, meta_currency, meta_api_version, send_lead_capi, send_purchase_capi, is_default")
+        .select("user_id, pixel_id, meta_access_token, meta_currency, meta_api_version, send_lead_capi, send_first_purchase_capi, send_repeat_purchase_capi, send_purchase_capi, is_default")
         .in("user_id", userIds)
       : { data: [] };
     const { data: chatraceConfigs } = userIds.length > 0
@@ -233,14 +233,37 @@ Deno.serve(async (req) => {
       const currency = selected
         ? String(selected.meta_currency ?? "ARS")
         : String(cfg.meta_currency ?? "ARS");
-      const sendPurchaseCapi = selected
-        ? selected.send_purchase_capi !== false
-        : cfg.send_purchase_capi !== false;
+      let purchaseType = row.purchase_type === "repeat"
+        ? "repeat"
+        : row.purchase_type === "first"
+          ? "first"
+          : null;
+      if (!purchaseType) {
+        const { count: prevCount } = await db
+          .from("conversions")
+          .select("id", { count: "exact", head: true })
+          .eq("user_id", row.user_id)
+          .eq("phone", row.phone)
+          .eq("purchase_status_capi", "enviado")
+          .neq("id", row.id);
+        purchaseType = (prevCount ?? 0) > 0 ? "repeat" : "first";
+      }
+      const purchaseFlags = resolvePurchaseCapiFlags(selected, cfg);
+      const sendPurchaseCapi = purchaseType === "repeat"
+        ? purchaseFlags.repeat
+        : purchaseFlags.first;
 
       if (!sendPurchaseCapi) {
-        const obs = appendObs(row.observaciones ?? "", "PURCHASE CAPI OMITIDO CONFIG DESACTIVADA");
+        const typeLabel = purchaseType === "repeat" ? "REPEAT" : "FIRST";
+        const skippedStatus = purchaseType === "repeat"
+          ? "skipped_repeat_purchase_capi_disabled"
+          : "skipped_first_purchase_capi_disabled";
+        const obs = appendObs(
+          row.observaciones ?? "",
+          `${typeLabel} PURCHASE CAPI OMITIDO CONFIG DESACTIVADA`,
+        );
         await db.from("conversions").update({
-          purchase_status_capi: "skipped_purchase_capi_disabled",
+          purchase_status_capi: skippedStatus,
           observaciones: obs,
         }).eq("id", row.id);
         await writeConversionLog(
@@ -249,7 +272,11 @@ Deno.serve(async (req) => {
           row.id,
           "INFO",
           "Meta CAPI retry Purchase omitido por config del pixel",
-          JSON.stringify({ pixel_id: pixelId, source_platform: row.source_platform ?? "" }),
+          JSON.stringify({
+            pixel_id: pixelId,
+            source_platform: row.source_platform ?? "",
+            purchase_type: purchaseType,
+          }),
           "",
           "",
         );
@@ -275,16 +302,7 @@ Deno.serve(async (req) => {
         continue;
       }
 
-      // Count previous successful purchases to determine repeat
-      const { count: prevCount } = await db
-        .from("conversions")
-        .select("id", { count: "exact", head: true })
-        .eq("user_id", row.user_id)
-        .eq("phone", row.phone)
-        .eq("purchase_status_capi", "enviado")
-        .neq("id", row.id);
-
-      const isRepeat = (prevCount ?? 0) > 0;
+      const isRepeat = purchaseType === "repeat";
 
       const customData: Record<string, unknown> = { currency, value: amount };
       if (isRepeat) customData.purchase_type = "repeat";
@@ -339,6 +357,8 @@ Deno.serve(async (req) => {
         meta_api_version: apiVersion,
         send_contact_capi: false,
         send_lead_capi: true,
+        send_first_purchase_capi: purchaseFlags.first,
+        send_repeat_purchase_capi: purchaseFlags.repeat,
         send_purchase_capi: sendPurchaseCapi,
         geo_use_ipapi: false,
         geo_fill_only_when_missing: false,
@@ -1104,6 +1124,7 @@ function resolveRetryConfig(
     ? normalizeText(selected.pixel_id)
     : normalizeText(cfg.pixel_id);
   if (!accessToken || !pixelId) return null;
+  const purchaseFlags = resolvePurchaseCapiFlags(selected, cfg);
 
   return {
     user_id: String(row.user_id),
@@ -1119,11 +1140,27 @@ function resolveRetryConfig(
     send_lead_capi: selected
       ? selected.send_lead_capi !== false
       : cfg.send_lead_capi !== false,
-    send_purchase_capi: selected
-      ? selected.send_purchase_capi !== false
-      : cfg.send_purchase_capi !== false,
+    send_first_purchase_capi: purchaseFlags.first,
+    send_repeat_purchase_capi: purchaseFlags.repeat,
+    send_purchase_capi: purchaseFlags.first && purchaseFlags.repeat,
     geo_use_ipapi: false,
     geo_fill_only_when_missing: false,
+  };
+}
+
+function resolvePurchaseCapiFlags(
+  selected: Record<string, unknown> | null,
+  fallback: Record<string, unknown>,
+): { first: boolean; repeat: boolean } {
+  const source = selected ?? fallback;
+  const legacyEnabled = source.send_purchase_capi !== false;
+  return {
+    first: typeof source.send_first_purchase_capi === "boolean"
+      ? source.send_first_purchase_capi
+      : legacyEnabled,
+    repeat: typeof source.send_repeat_purchase_capi === "boolean"
+      ? source.send_repeat_purchase_capi
+      : legacyEnabled,
   };
 }
 

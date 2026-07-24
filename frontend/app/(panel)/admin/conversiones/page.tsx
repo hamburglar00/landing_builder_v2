@@ -59,7 +59,8 @@ type PixelEditDraft = {
   meta_api_version: string;
   send_contact_capi: boolean;
   send_lead_capi: boolean;
-  send_purchase_capi: boolean;
+  send_first_purchase_capi: boolean;
+  send_repeat_purchase_capi: boolean;
   geo_use_ipapi: boolean;
   geo_fill_only_when_missing: boolean;
   is_default: boolean;
@@ -186,6 +187,12 @@ function statusText(status: string) {
   if (status === "enviado") return <span className="text-emerald-400">enviado</span>;
   if (status === "error") return <span className="text-red-400">error</span>;
   if (status === "skipped_meta_crawler") return <span className="text-zinc-400">omitido bot meta</span>;
+  if (status === "skipped_contact_capi_disabled") return <span className="text-amber-300">omitido: Contact desactivado</span>;
+  if (status === "skipped_lead_capi_disabled") return <span className="text-amber-300">omitido: Lead desactivado</span>;
+  if (status === "skipped_first_purchase_capi_disabled") return <span className="text-amber-300">omitido: First desactivado</span>;
+  if (status === "skipped_repeat_purchase_capi_disabled") return <span className="text-amber-300">omitido: Repeat desactivado</span>;
+  if (status === "skipped_purchase_capi_disabled") return <span className="text-amber-300">omitido: Purchase desactivado</span>;
+  if (status === "skipped_chatrace_capi_disabled") return <span className="text-amber-300">omitido: Chatrace desactivado</span>;
   if (status.startsWith("skipped")) return <span className="text-zinc-400">omitido</span>;
   return <span className="text-zinc-600">-</span>;
 }
@@ -319,7 +326,7 @@ const COLUMN_NOTES: Partial<Record<ColKey | "id", string>> = {
   purchase_type: "Tipo de compra: first (primera) o repeat (recompra).",
   contact_status_capi: "Resultado de envio CAPI para Contact. Puede ser omitido si detectamos crawler de Meta.",
   lead_status_capi: "Resultado de envio CAPI para Lead. Puede ser omitido por configuracion del pixel.",
-  purchase_status_capi: "Resultado de envio CAPI para Purchase. Puede ser omitido por configuracion del pixel.",
+  purchase_status_capi: "Resultado de envio CAPI para Purchase. Indica si First o Repeat fue omitido por su switch del pixel.",
   observaciones: "Notas internas de procesamiento (tokens de estado/error).",
   external_id: "ID externo de usuario/contacto para matching en Meta (hasheado al enviar).",
   test_event_code: "Codigo de test de Meta (si se envio en modo prueba).",
@@ -1008,7 +1015,8 @@ export default function AdminConversionesPage() {
           meta_api_version: config.meta_api_version || "v25.0",
           send_contact_capi: !!config.send_contact_capi,
           send_lead_capi: config.send_lead_capi !== false,
-          send_purchase_capi: config.send_purchase_capi !== false,
+          send_first_purchase_capi: config.send_first_purchase_capi !== false,
+          send_repeat_purchase_capi: config.send_repeat_purchase_capi !== false,
           geo_use_ipapi: !!config.geo_use_ipapi,
           geo_fill_only_when_missing: !!config.geo_fill_only_when_missing,
           is_default: existing ? existing.is_default : pixelConfigs.length === 0,
@@ -1043,7 +1051,8 @@ export default function AdminConversionesPage() {
       meta_api_version: px.meta_api_version || "v25.0",
       send_contact_capi: !!px.send_contact_capi,
       send_lead_capi: px.send_lead_capi !== false,
-      send_purchase_capi: px.send_purchase_capi !== false,
+      send_first_purchase_capi: px.send_first_purchase_capi !== false,
+      send_repeat_purchase_capi: px.send_repeat_purchase_capi !== false,
       geo_use_ipapi: !!px.geo_use_ipapi,
       geo_fill_only_when_missing: !!px.geo_fill_only_when_missing,
       is_default: !!px.is_default,
@@ -1077,7 +1086,8 @@ export default function AdminConversionesPage() {
         meta_api_version: pixelEditDraft.meta_api_version || "v25.0",
         send_contact_capi: !!pixelEditDraft.send_contact_capi,
         send_lead_capi: !!pixelEditDraft.send_lead_capi,
-        send_purchase_capi: !!pixelEditDraft.send_purchase_capi,
+        send_first_purchase_capi: !!pixelEditDraft.send_first_purchase_capi,
+        send_repeat_purchase_capi: !!pixelEditDraft.send_repeat_purchase_capi,
         geo_use_ipapi: !!pixelEditDraft.geo_use_ipapi,
         geo_fill_only_when_missing: !!pixelEditDraft.geo_fill_only_when_missing,
         is_default: !!pixelEditDraft.is_default,
@@ -1094,7 +1104,8 @@ export default function AdminConversionesPage() {
           meta_api_version: current.meta_api_version || prev.meta_api_version,
           send_contact_capi: !!current.send_contact_capi,
           send_lead_capi: current.send_lead_capi !== false,
-          send_purchase_capi: current.send_purchase_capi !== false,
+          send_first_purchase_capi: current.send_first_purchase_capi !== false,
+          send_repeat_purchase_capi: current.send_repeat_purchase_capi !== false,
           geo_use_ipapi: !!current.geo_use_ipapi,
           geo_fill_only_when_missing: !!current.geo_fill_only_when_missing,
         } : prev);
@@ -1137,7 +1148,8 @@ export default function AdminConversionesPage() {
           meta_api_version: first.meta_api_version || "v25.0",
           send_contact_capi: !!first.send_contact_capi,
           send_lead_capi: first.send_lead_capi !== false,
-          send_purchase_capi: first.send_purchase_capi !== false,
+          send_first_purchase_capi: first.send_first_purchase_capi !== false,
+          send_repeat_purchase_capi: first.send_repeat_purchase_capi !== false,
           geo_use_ipapi: !!first.geo_use_ipapi,
           geo_fill_only_when_missing: !!first.geo_fill_only_when_missing,
           is_default: true,
@@ -1157,7 +1169,8 @@ export default function AdminConversionesPage() {
             meta_api_version: next.meta_api_version || prev.meta_api_version,
             send_contact_capi: !!next.send_contact_capi,
             send_lead_capi: next.send_lead_capi !== false,
-            send_purchase_capi: next.send_purchase_capi !== false,
+            send_first_purchase_capi: next.send_first_purchase_capi !== false,
+            send_repeat_purchase_capi: next.send_repeat_purchase_capi !== false,
             geo_use_ipapi: !!next.geo_use_ipapi,
             geo_fill_only_when_missing: !!next.geo_fill_only_when_missing,
           } : prev);
@@ -1478,11 +1491,20 @@ export default function AdminConversionesPage() {
                 <label className="flex items-center gap-2 text-xs text-zinc-300">
                   <input
                     type="checkbox"
-                    checked={pixelEditDraft.send_purchase_capi}
-                    onChange={(e) => setPixelEditDraft((p) => p ? { ...p, send_purchase_capi: e.target.checked } : p)}
+                    checked={pixelEditDraft.send_first_purchase_capi}
+                    onChange={(e) => setPixelEditDraft((p) => p ? { ...p, send_first_purchase_capi: e.target.checked } : p)}
                     className="h-4 w-4 rounded border-zinc-600 bg-zinc-900 accent-emerald-500"
                   />
-                  Enviar evento Purchase por CAPI
+                  Enviar First Purchase por CAPI
+                </label>
+                <label className="flex items-center gap-2 text-xs text-zinc-300">
+                  <input
+                    type="checkbox"
+                    checked={pixelEditDraft.send_repeat_purchase_capi}
+                    onChange={(e) => setPixelEditDraft((p) => p ? { ...p, send_repeat_purchase_capi: e.target.checked } : p)}
+                    className="h-4 w-4 rounded border-zinc-600 bg-zinc-900 accent-emerald-500"
+                  />
+                  Enviar Repeat Purchase por CAPI
                 </label>
                 <label className="flex items-center gap-2 text-xs text-zinc-300">
                   <input

@@ -9,6 +9,8 @@ export interface ConversionsConfig {
   meta_api_version: string;
   send_contact_capi: boolean;
   send_lead_capi?: boolean;
+  send_first_purchase_capi?: boolean;
+  send_repeat_purchase_capi?: boolean;
   send_purchase_capi?: boolean;
   geo_use_ipapi: boolean;
   geo_fill_only_when_missing: boolean;

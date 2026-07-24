@@ -77,7 +77,8 @@ type PixelEditDraft = {
   meta_api_version: string;
   send_contact_capi: boolean;
   send_lead_capi: boolean;
-  send_purchase_capi: boolean;
+  send_first_purchase_capi: boolean;
+  send_repeat_purchase_capi: boolean;
   geo_use_ipapi: boolean;
   geo_fill_only_when_missing: boolean;
   is_default: boolean;
@@ -580,7 +581,8 @@ export default function IntegracionesMetaCapi() {
         meta_api_version: apiVersionToSave,
         send_contact_capi: false,
         send_lead_capi: true,
-        send_purchase_capi: true,
+        send_first_purchase_capi: true,
+        send_repeat_purchase_capi: true,
         geo_use_ipapi: true,
         geo_fill_only_when_missing: false,
         is_default: !hasAny,
@@ -620,7 +622,8 @@ export default function IntegracionesMetaCapi() {
       meta_api_version: px.meta_api_version || "v25.0",
       send_contact_capi: !!px.send_contact_capi,
       send_lead_capi: px.send_lead_capi !== false,
-      send_purchase_capi: px.send_purchase_capi !== false,
+      send_first_purchase_capi: px.send_first_purchase_capi !== false,
+      send_repeat_purchase_capi: px.send_repeat_purchase_capi !== false,
       geo_use_ipapi: !!px.geo_use_ipapi,
       geo_fill_only_when_missing: !!px.geo_fill_only_when_missing,
       is_default: !!px.is_default,
@@ -651,7 +654,8 @@ export default function IntegracionesMetaCapi() {
         meta_api_version: apiVersionToSave,
         send_contact_capi: !!draft.send_contact_capi,
         send_lead_capi: !!draft.send_lead_capi,
-        send_purchase_capi: !!draft.send_purchase_capi,
+        send_first_purchase_capi: !!draft.send_first_purchase_capi,
+        send_repeat_purchase_capi: !!draft.send_repeat_purchase_capi,
         geo_use_ipapi: !!draft.geo_use_ipapi,
         geo_fill_only_when_missing: !!draft.geo_fill_only_when_missing,
         is_default: !!draft.is_default,
@@ -667,7 +671,8 @@ export default function IntegracionesMetaCapi() {
           meta_api_version: apiVersionToSave,
           send_contact_capi: !!draft.send_contact_capi,
           send_lead_capi: !!draft.send_lead_capi,
-          send_purchase_capi: !!draft.send_purchase_capi,
+          send_first_purchase_capi: !!draft.send_first_purchase_capi,
+          send_repeat_purchase_capi: !!draft.send_repeat_purchase_capi,
           geo_use_ipapi: !!draft.geo_use_ipapi,
           geo_fill_only_when_missing: !!draft.geo_fill_only_when_missing,
         };
@@ -701,7 +706,8 @@ export default function IntegracionesMetaCapi() {
         meta_api_version: px.meta_api_version || "v25.0",
         send_contact_capi: !!px.send_contact_capi,
         send_lead_capi: px.send_lead_capi !== false,
-        send_purchase_capi: px.send_purchase_capi !== false,
+        send_first_purchase_capi: px.send_first_purchase_capi !== false,
+        send_repeat_purchase_capi: px.send_repeat_purchase_capi !== false,
         geo_use_ipapi: !!px.geo_use_ipapi,
         geo_fill_only_when_missing: !!px.geo_fill_only_when_missing,
         is_default: true,
@@ -715,7 +721,8 @@ export default function IntegracionesMetaCapi() {
         meta_api_version: px.meta_api_version || "v25.0",
         send_contact_capi: !!px.send_contact_capi,
         send_lead_capi: px.send_lead_capi !== false,
-        send_purchase_capi: px.send_purchase_capi !== false,
+        send_first_purchase_capi: px.send_first_purchase_capi !== false,
+        send_repeat_purchase_capi: px.send_repeat_purchase_capi !== false,
         geo_use_ipapi: !!px.geo_use_ipapi,
         geo_fill_only_when_missing: !!px.geo_fill_only_when_missing,
       };
@@ -1674,7 +1681,8 @@ export default function IntegracionesMetaCapi() {
                 const eventBadges: Array<[string, boolean]> = [
                   ["Contact", !!px.send_contact_capi],
                   ["Lead", px.send_lead_capi !== false],
-                  ["Purchase", px.send_purchase_capi !== false],
+                  ["First", px.send_first_purchase_capi !== false],
+                  ["Repeat", px.send_repeat_purchase_capi !== false],
                 ];
                 return (
                   <div key={px.id} className="flex w-full items-center justify-between rounded-lg border border-zinc-800 bg-zinc-900/60 px-3 py-2">
@@ -1837,7 +1845,7 @@ export default function IntegracionesMetaCapi() {
 
               <section className="rounded-xl border border-zinc-800 bg-zinc-950/40 p-3">
                 <h4 className="text-xs font-semibold uppercase tracking-wide text-zinc-400">Eventos por CAPI</h4>
-                <div className="mt-3 grid gap-2 sm:grid-cols-3">
+                <div className="mt-3 grid gap-2 sm:grid-cols-2 lg:grid-cols-4">
                   <SettingsSwitch
                     checked={draft.send_contact_capi}
                     label="Contact"
@@ -1851,10 +1859,16 @@ export default function IntegracionesMetaCapi() {
                     onChange={() => setDraft((p) => (p ? { ...p, send_lead_capi: !p.send_lead_capi } : p))}
                   />
                   <SettingsSwitch
-                    checked={draft.send_purchase_capi}
-                    label="Purchase"
-                    description="Envía Purchase y repeat."
-                    onChange={() => setDraft((p) => (p ? { ...p, send_purchase_capi: !p.send_purchase_capi } : p))}
+                    checked={draft.send_first_purchase_capi}
+                    label="First Purchase"
+                    description="Envía la primera compra."
+                    onChange={() => setDraft((p) => (p ? { ...p, send_first_purchase_capi: !p.send_first_purchase_capi } : p))}
+                  />
+                  <SettingsSwitch
+                    checked={draft.send_repeat_purchase_capi}
+                    label="Repeat Purchase"
+                    description="Envía las recompras."
+                    onChange={() => setDraft((p) => (p ? { ...p, send_repeat_purchase_capi: !p.send_repeat_purchase_capi } : p))}
                   />
                 </div>
               </section>
