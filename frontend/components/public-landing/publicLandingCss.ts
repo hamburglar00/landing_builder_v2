@@ -32,8 +32,9 @@ button, a {
 .public-privacy-footer {
   position: fixed;
   z-index: 20;
-  right: 10px;
+  left: 50%;
   bottom: max(8px, env(safe-area-inset-bottom));
+  transform: translateX(-50%);
 }
 
 .public-privacy-link {
