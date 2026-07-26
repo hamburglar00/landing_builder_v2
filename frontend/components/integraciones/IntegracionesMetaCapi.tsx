@@ -43,6 +43,7 @@ const KOMMO_INTERMEDIARY_BASE_URL = "https://kommoinbox.mkt.panelbotadmin.com";
 const META_CURRENCY_OPTIONS = ["ARS", "PYG", "USD", "EUR", "BRL", "CLP", "MXN", "COP"];
 const CHATRACE_CUSTOM_FIELDS = [
   "email_detected",
+  "ctwa_clid",
   "event_id",
   "event_time",
   "external_id",
@@ -62,6 +63,7 @@ const CHATRACE_CONSTRUCTOR_BODY = `{
   "test_event_code": "",
   "telefono_asignado": "{{telefono_asignado}}",
   "promo_code": "{{promo_code}}",
+  "ctwa_clid": "{{ctwa_clid}}",
   "source_platform": "chatrace",
   "device_type": "mobile",
   "timestamp": "{{timestamp}}",
@@ -204,6 +206,10 @@ export default function IntegracionesMetaCapi() {
   const [chatracePixelId, setChatracePixelId] = useState("");
   const [chatraceActive, setChatraceActive] = useState(true);
   const [chatraceSendMetaCapiEvents, setChatraceSendMetaCapiEvents] = useState(true);
+  const [chatraceSendBusinessMessagingPurchase, setChatraceSendBusinessMessagingPurchase] = useState(false);
+  const [chatraceWabaId, setChatraceWabaId] = useState("");
+  const [chatraceMessagingDatasetId, setChatraceMessagingDatasetId] = useState("");
+  const [chatraceMessagingAccessToken, setChatraceMessagingAccessToken] = useState("");
   const [chatraceSaving, setChatraceSaving] = useState(false);
   const [chatraceMsg, setChatraceMsg] = useState<string | null>(null);
   const [chatraceGerencias, setChatraceGerencias] = useState<Gerencia[]>([]);
@@ -281,6 +287,10 @@ export default function IntegracionesMetaCapi() {
     setChatracePixelId(chatrace?.meta_pixel_id ?? "");
     setChatraceActive(chatrace?.active ?? true);
     setChatraceSendMetaCapiEvents(chatrace?.send_meta_capi_events ?? true);
+    setChatraceSendBusinessMessagingPurchase(chatrace?.send_business_messaging_purchase_capi ?? false);
+    setChatraceWabaId(chatrace?.whatsapp_business_account_id ?? "");
+    setChatraceMessagingDatasetId(chatrace?.meta_messaging_dataset_id ?? "");
+    setChatraceMessagingAccessToken(chatrace?.meta_messaging_access_token ?? "");
     setChatraceGerenciaSelectionMode(chatrace?.gerencia_selection_mode ?? "weighted_random");
     setChatraceGerenciaFairCriterion(chatrace?.gerencia_fair_criterion ?? "usage_count");
     setChatraceGerencias(gers);
@@ -417,6 +427,20 @@ export default function IntegracionesMetaCapi() {
       setChatraceMsg("No se pudo resolver URL Post.");
       return;
     }
+    if (chatraceSendBusinessMessagingPurchase) {
+      if (!/^\d+$/.test(chatraceWabaId.trim())) {
+        setChatraceMsg("WhatsApp Business Account ID inválido.");
+        return;
+      }
+      if (!/^\d+$/.test(chatraceMessagingDatasetId.trim())) {
+        setChatraceMsg("Dataset ID de mensajería inválido.");
+        return;
+      }
+      if (!chatraceMessagingAccessToken.trim()) {
+        setChatraceMsg("Token de Meta para Business Messaging requerido.");
+        return;
+      }
+    }
 
     setChatraceSaving(true);
     try {
@@ -428,6 +452,10 @@ export default function IntegracionesMetaCapi() {
         landing_tag: "",
         send_contact_pixel: false,
         send_meta_capi_events: chatraceSendMetaCapiEvents,
+        send_business_messaging_purchase_capi: chatraceSendBusinessMessagingPurchase,
+        whatsapp_business_account_id: chatraceWabaId.trim(),
+        meta_messaging_dataset_id: chatraceMessagingDatasetId.trim(),
+        meta_messaging_access_token: chatraceMessagingAccessToken.trim(),
         gerencia_selection_mode: chatraceGerenciaSelectionMode,
         gerencia_fair_criterion: chatraceGerenciaFairCriterion,
         active: chatraceActive,
@@ -461,6 +489,10 @@ export default function IntegracionesMetaCapi() {
     chatraceConfig,
     chatraceActive,
     chatraceSendMetaCapiEvents,
+    chatraceSendBusinessMessagingPurchase,
+    chatraceWabaId,
+    chatraceMessagingDatasetId,
+    chatraceMessagingAccessToken,
     chatraceGerenciaSelectionMode,
     chatraceGerenciaFairCriterion,
     chatraceAssignments,
@@ -1287,6 +1319,77 @@ export default function IntegracionesMetaCapi() {
                       }`}
                     />
                   </button>
+                </div>
+              </div>
+              <div className="rounded-lg border border-sky-900/70 bg-sky-950/20 p-3 sm:col-span-2">
+                <div className="flex items-center justify-between gap-3">
+                  <div>
+                    <p className="text-xs font-medium text-sky-100">Purchase como compra en WhatsApp (CTWA)</p>
+                    <p className="mt-0.5 text-[11px] leading-relaxed text-zinc-500">
+                      Solo aplica a compras cuyo origen conservado sea Chatrace y tengan un ctwa_clid válido.
+                      Envía action_source=business_messaging; la landing continúa usando la ruta website actual.
+                    </p>
+                  </div>
+                  <button
+                    type="button"
+                    role="switch"
+                    aria-checked={chatraceSendBusinessMessagingPurchase}
+                    onClick={() => setChatraceSendBusinessMessagingPurchase((v) => !v)}
+                    className={`relative inline-flex h-6 w-11 shrink-0 items-center rounded-full border transition ${
+                      chatraceSendBusinessMessagingPurchase
+                        ? "border-emerald-500/60 bg-emerald-500/30"
+                        : "border-zinc-700 bg-zinc-800"
+                    }`}
+                  >
+                    <span
+                      className={`inline-block h-5 w-5 transform rounded-full bg-white transition ${
+                        chatraceSendBusinessMessagingPurchase ? "translate-x-5" : "translate-x-0.5"
+                      }`}
+                    />
+                  </button>
+                </div>
+                <div className="mt-3 grid gap-3 sm:grid-cols-2">
+                  <div>
+                    <label className="mb-1 block text-xs font-medium text-zinc-400">
+                      WhatsApp Business Account ID
+                    </label>
+                    <input
+                      inputMode="numeric"
+                      value={chatraceWabaId}
+                      onChange={(e) => setChatraceWabaId(e.target.value.replace(/\D/g, ""))}
+                      placeholder="WABA ID"
+                      className="w-full rounded-lg border border-zinc-700 bg-zinc-900 px-3 py-2 text-sm text-zinc-100"
+                    />
+                  </div>
+                  <div>
+                    <label className="mb-1 block text-xs font-medium text-zinc-400">
+                      Dataset ID asociado al WABA
+                    </label>
+                    <input
+                      inputMode="numeric"
+                      value={chatraceMessagingDatasetId}
+                      onChange={(e) => setChatraceMessagingDatasetId(e.target.value.replace(/\D/g, ""))}
+                      placeholder="Dataset ID"
+                      className="w-full rounded-lg border border-zinc-700 bg-zinc-900 px-3 py-2 text-sm text-zinc-100"
+                    />
+                  </div>
+                  <div className="sm:col-span-2">
+                    <label className="mb-1 block text-xs font-medium text-zinc-400">
+                      Token de Meta para Business Messaging
+                    </label>
+                    <input
+                      type="password"
+                      autoComplete="off"
+                      value={chatraceMessagingAccessToken}
+                      onChange={(e) => setChatraceMessagingAccessToken(e.target.value)}
+                      placeholder="Requiere whatsapp_business_management y whatsapp_business_manage_events"
+                      className="w-full rounded-lg border border-zinc-700 bg-zinc-900 px-3 py-2 text-sm text-zinc-100"
+                    />
+                    <p className="mt-1 text-[11px] leading-relaxed text-zinc-500">
+                      Meta exige ambos permisos. Si el modo está apagado o falta ctwa_clid, se conserva el envío
+                      website existente y queda registrada la razón.
+                    </p>
+                  </div>
                 </div>
               </div>
             </div>

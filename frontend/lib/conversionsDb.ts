@@ -105,6 +105,7 @@ export interface ConversionRow {
   geo_source?: string;
   meta_pixel_id: string;
   source_platform?: string;
+  ctwa_clid?: string;
   pixel_id: string;
   contact_event_id: string;
   contact_event_time: number | null;
@@ -120,6 +121,8 @@ export interface ConversionRow {
   purchase_transaction_id?: string | null;
   test_event_code?: string;
   purchase_type?: "first" | "repeat" | null;
+  purchase_capi_route?: "" | "website" | "business_messaging";
+  purchase_capi_route_reason?: string;
   client_ip: string;
   agent_user: string;
   device_type: string;
@@ -459,12 +462,12 @@ const CONVERSIONS_SELECT = `
   id, internal_id, landing_id, user_id, landing_name,
   phone, email, cuit_cuil, inferred_sex, sex_source, fn, ln, ct, st, zip, country,
   fbp, fbc, from_meta_ads, geo_source, meta_pixel_id, pixel_id,
-  source_platform,
+  source_platform, ctwa_clid,
   contact_event_id, contact_event_time, sendContactPixel, contact_payload_raw,
   lead_event_id, lead_event_time, lead_payload_raw,
   purchase_event_id, purchase_event_time, purchase_payload_raw, purchase_coelsa_id, purchase_transaction_id,
   test_event_code,
-  purchase_type,
+  purchase_type, purchase_capi_route, purchase_capi_route_reason,
   client_ip, agent_user, device_type, event_source_url,
   estado, valor,
   contact_status_capi, lead_status_capi, purchase_status_capi,

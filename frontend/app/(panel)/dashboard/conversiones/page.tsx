@@ -325,10 +325,10 @@ function sexLabel(value: string): string {
 }
 
 const ALL_COLUMNS = [
-  "phone","email","fn","ln","ct","st","zip","country","fbp","fbc","from_meta_ads","meta_pixel_id","pixel_id","source_platform",
+  "phone","email","fn","ln","ct","st","zip","country","fbp","fbc","from_meta_ads","meta_pixel_id","pixel_id","source_platform","ctwa_clid",
   "contact_event_id","contact_event_time","sendContactPixel","contact_payload_raw","lead_event_id","lead_event_time","lead_payload_raw",
   "purchase_event_id","purchase_event_time","purchase_payload_raw","timestamp","clientIP","agentuser",
-  "estado","valor","purchase_type","contact_status_capi","lead_status_capi","purchase_status_capi",
+  "estado","valor","purchase_type","purchase_capi_route","purchase_capi_route_reason","contact_status_capi","lead_status_capi","purchase_status_capi",
   "observaciones","external_id","test_event_code","utm_campaign","telefono_asignado","assigned_gerencia_label","promo_code",
   "device_type","geo_city","geo_region","geo_country","geo_source",
   "cuit_cuil","inferred_sex","sex_source",
@@ -357,6 +357,7 @@ const COLUMN_NOTES: Partial<Record<ColKey | "id", string>> = {
   meta_pixel_id: "Pixel ID recibido en el payload de entrada (landing/chatrace/backend).",
   pixel_id: "Pixel ID efectivo usado para CAPI. Si falta meta_pixel_id, puede resolverse por fallback de configuracion.",
   source_platform: "Origen declarado del payload (ej: landing, chatrace).",
+  ctwa_clid: "Click ID crudo de anuncios Click-to-WhatsApp. Solo se conserva para el recorrido Chatrace.",
   contact_event_id: "Event ID del Contact (dedupe Pixel/CAPI).",
   contact_event_time: "Event time (unix) del Contact.",
   sendContactPixel: "Bandera enviada por la fuente para indicar si Contact tambien salio por Pixel browser.",
@@ -372,6 +373,8 @@ const COLUMN_NOTES: Partial<Record<ColKey | "id", string>> = {
   estado: "Estado actual de la conversion (contact, lead o purchase).",
   valor: "Monto de compra/carga recibido para Purchase.",
   purchase_type: "Tipo de compra: first (primera) o repeat (recompra).",
+  purchase_capi_route: "Ruta fijada antes del primer envío de Purchase: website o business_messaging.",
+  purchase_capi_route_reason: "Motivo por el que se eligió la ruta de envío de Purchase.",
   contact_status_capi: "Resultado de envio CAPI para Contact. Puede ser omitido si detectamos crawler de Meta.",
   lead_status_capi: "Resultado de envio CAPI para Lead. Puede ser omitido por configuracion del pixel.",
   purchase_status_capi: "Resultado de envio CAPI para Purchase. Indica si First o Repeat fue omitido por su switch del pixel.",
@@ -565,6 +568,7 @@ function cellValue(c: ConversionRow, col: ColKey): React.ReactNode {
     }
     case "pixel_id": return <td key={col} className={dimMono} title={tip(c.pixel_id)}>{c.pixel_id || "-"}</td>;
     case "source_platform": return <td key={col} className={dim} title={tip(c.source_platform)}>{c.source_platform || "-"}</td>;
+    case "ctwa_clid": return <td key={col} className={dim} title={tip(c.ctwa_clid)}>{c.ctwa_clid || "-"}</td>;
     case "contact_event_id": return <td key={col} className={dimMono} title={c.contact_event_id}>{truncateId(c.contact_event_id)}</td>;
     case "contact_event_time": return <td key={col} className={dim} title={tip(c.contact_event_time)}>{c.contact_event_time ?? "-"}</td>;
     case "sendContactPixel": return <td key={col} className={dim} title={tip(c.sendContactPixel)}>{c.sendContactPixel ? "true" : "false"}</td>;
@@ -585,6 +589,8 @@ function cellValue(c: ConversionRow, col: ColKey): React.ReactNode {
     }
     case "valor": return <td key={col} className={`${cell} text-zinc-200`} title={tip(c.valor)}>{c.valor > 0 ? c.valor : "-"}</td>;
     case "purchase_type": return <td key={col} className={dim} title={tip(c.purchase_type)}>{c.purchase_type || "-"}</td>;
+    case "purchase_capi_route": return <td key={col} className={dim} title={tip(c.purchase_capi_route)}>{c.purchase_capi_route || "-"}</td>;
+    case "purchase_capi_route_reason": return <td key={col} className={dim} title={tip(c.purchase_capi_route_reason)}>{c.purchase_capi_route_reason || "-"}</td>;
     case "contact_status_capi": return <td key={col} className={cell} title={tip(c.contact_status_capi)}>{statusText(c.contact_status_capi)}</td>;
     case "lead_status_capi": return <td key={col} className={cell} title={tip(c.lead_status_capi)}>{statusText(c.lead_status_capi)}</td>;
     case "purchase_status_capi": return <td key={col} className={cell} title={tip(c.purchase_status_capi)}>{statusText(c.purchase_status_capi)}</td>;

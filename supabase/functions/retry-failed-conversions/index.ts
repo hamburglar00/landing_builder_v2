@@ -1,5 +1,12 @@
 import { createClient, type SupabaseClient } from "https://esm.sh/@supabase/supabase-js@2";
-import { buildMetaRequest, type ConversionRow, type ConversionsConfig } from "../conversions/shared.ts";
+import {
+  buildMetaBusinessMessagingPurchaseRequest,
+  buildMetaRequest,
+  normalizeCtwaClid,
+  resolvePurchaseCapiRoute,
+  type ConversionRow,
+  type ConversionsConfig,
+} from "../conversions/shared.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -123,7 +130,7 @@ Deno.serve(async (req) => {
     // Find purchases that need retry
     const { data: rows, error } = await db
       .from("conversions")
-      .select("id, user_id, phone, source_platform, pixel_id, purchase_event_id, purchase_event_time, purchase_type, valor, event_source_url, email, fn, ln, ct, st, zip, country, fbp, fbc, client_ip, agent_user, external_id, observaciones")
+      .select("id, user_id, phone, source_platform, ctwa_clid, pixel_id, purchase_event_id, purchase_event_time, purchase_type, purchase_capi_route, purchase_capi_route_reason, valor, event_source_url, email, fn, ln, ct, st, zip, country, fbp, fbc, client_ip, agent_user, external_id, observaciones")
       .eq("estado", "purchase")
       .not("purchase_status_capi", "in", "(enviado,skipped_old_event_time,skipped_chatrace_capi_disabled,skipped_purchase_capi_disabled,skipped_first_purchase_capi_disabled,skipped_repeat_purchase_capi_disabled)")
       .gt("valor", 0)
@@ -160,7 +167,7 @@ Deno.serve(async (req) => {
     const { data: chatraceConfigs } = userIds.length > 0
       ? await db
         .from("chatrace_client_configs")
-        .select("user_id, active, send_meta_capi_events")
+        .select("user_id, active, send_meta_capi_events, send_business_messaging_purchase_capi, whatsapp_business_account_id, meta_messaging_dataset_id, meta_messaging_access_token")
         .in("user_id", userIds)
       : { data: [] };
 
@@ -175,8 +182,10 @@ Deno.serve(async (req) => {
       pixelConfigMap.set(String(pc.user_id), list);
     }
     const chatraceMetaCapiMap = new Map<string, boolean>();
+    const chatraceConfigMap = new Map<string, Record<string, unknown>>();
     for (const cc of chatraceConfigs ?? []) {
       chatraceMetaCapiMap.set(String(cc.user_id), cc.active !== false && cc.send_meta_capi_events !== false);
+      chatraceConfigMap.set(String(cc.user_id), cc as Record<string, unknown>);
     }
 
     const contactLeadRetryStats = await retryContactLeadCapiEvents(
@@ -283,7 +292,72 @@ Deno.serve(async (req) => {
         continue;
       }
 
-      if (!accessToken || !pixelId) continue;
+      const chatraceCfg = chatraceConfigMap.get(String(row.user_id)) ?? null;
+      const ctwaClid = normalizeCtwaClid(row.ctwa_clid);
+      const businessMessagingConfigured = Boolean(
+        normalizeText(chatraceCfg?.whatsapp_business_account_id) &&
+        normalizeText(chatraceCfg?.meta_messaging_dataset_id) &&
+        normalizeText(chatraceCfg?.meta_messaging_access_token),
+      );
+      let purchaseCapiRoute =
+        row.purchase_capi_route === "business_messaging" || row.purchase_capi_route === "website"
+          ? row.purchase_capi_route
+          : "";
+      let purchaseCapiRouteReason = normalizeText(row.purchase_capi_route_reason);
+
+      if (!purchaseCapiRoute) {
+        const decision = resolvePurchaseCapiRoute({
+          source_platform: row.source_platform,
+          business_messaging_enabled:
+            chatraceCfg?.send_business_messaging_purchase_capi === true,
+          business_messaging_configured: businessMessagingConfigured,
+          ctwa_clid: ctwaClid,
+        });
+        purchaseCapiRoute = decision.route;
+        purchaseCapiRouteReason = decision.reason;
+        await db.from("conversions").update({
+          purchase_capi_route: purchaseCapiRoute,
+          purchase_capi_route_reason: purchaseCapiRouteReason,
+        }).eq("id", row.id);
+      }
+      const useBusinessMessaging = purchaseCapiRoute === "business_messaging";
+      const missingRouteConfig = useBusinessMessaging
+        ? (
+          !ctwaClid ||
+          !normalizeText(chatraceCfg?.whatsapp_business_account_id) ||
+          !normalizeText(chatraceCfg?.meta_messaging_dataset_id) ||
+          !normalizeText(chatraceCfg?.meta_messaging_access_token)
+        )
+        : (!accessToken || !pixelId);
+      if (missingRouteConfig) {
+        const obs = appendObs(row.observaciones ?? "", "ERROR PURCHASE NO CONFIG");
+        await db.from("conversions").update({
+          purchase_status_capi: "error",
+          observaciones: obs,
+        }).eq("id", row.id);
+        await writeConversionLog(
+          db,
+          row.user_id,
+          row.id,
+          "ERROR",
+          "Meta CAPI retry Purchase sin config de ruta",
+          JSON.stringify({
+            route: purchaseCapiRoute,
+            reason: purchaseCapiRouteReason,
+            has_ctwa_clid: Boolean(ctwaClid),
+            has_waba: Boolean(normalizeText(chatraceCfg?.whatsapp_business_account_id)),
+            has_destination: useBusinessMessaging
+              ? Boolean(normalizeText(chatraceCfg?.meta_messaging_dataset_id))
+              : Boolean(pixelId),
+            has_token: useBusinessMessaging
+              ? Boolean(normalizeText(chatraceCfg?.meta_messaging_access_token))
+              : Boolean(accessToken),
+          }),
+          "",
+          "",
+        );
+        continue;
+      }
 
       const amount = parseFloat(row.valor) || 0;
       if (amount <= 0) continue;
@@ -370,14 +444,27 @@ Deno.serve(async (req) => {
         geo_fill_only_when_missing: false,
       };
 
-      const metaReq = await buildMetaRequest(
-        cfgObj,
-        conversionRow,
-        "Purchase",
-        eventId,
-        eventTime,
-        customData,
-      );
+      const metaReq = useBusinessMessaging
+        ? buildMetaBusinessMessagingPurchaseRequest(
+          {
+            dataset_id: normalizeText(chatraceCfg?.meta_messaging_dataset_id),
+            whatsapp_business_account_id: normalizeText(chatraceCfg?.whatsapp_business_account_id),
+            meta_access_token: normalizeText(chatraceCfg?.meta_messaging_access_token),
+            meta_api_version: apiVersion,
+            meta_currency: currency,
+          },
+          ctwaClid,
+          Number(eventTime),
+          amount,
+        )
+        : await buildMetaRequest(
+          cfgObj,
+          conversionRow,
+          "Purchase",
+          eventId,
+          eventTime,
+          customData,
+        );
 
       retried++;
 
@@ -387,10 +474,11 @@ Deno.serve(async (req) => {
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify(metaReq.body),
         });
+        const resText = await res.text();
 
         const successMsg = isRepeat ? "✅ PURCHASE REPEAT OK" : "✅ PURCHASE OK";
 
-        if (res.status === 200) {
+        if (res.status === 200 && isMetaResponseOk(resText)) {
           const obs = appendObs(row.observaciones ?? "", successMsg);
           await db.from("conversions").update({
             purchase_status_capi: "enviado",
@@ -406,11 +494,10 @@ Deno.serve(async (req) => {
             "Meta CAPI retry Purchase OK",
             "HTTP 200",
             JSON.stringify(metaReq.body),
-            await res.clone().text().catch(() => ""),
+            resText,
           );
           succeeded++;
         } else {
-          const resText = await res.clone().text().catch(() => "");
           const obs = appendObs(row.observaciones ?? "", "ERROR PURCHASE");
           await db.from("conversions").update({
             purchase_status_capi: "error",

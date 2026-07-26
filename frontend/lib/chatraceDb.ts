@@ -9,6 +9,10 @@ export interface ChatraceClientConfig {
   landing_tag: string;
   send_contact_pixel: boolean;
   send_meta_capi_events: boolean;
+  send_business_messaging_purchase_capi: boolean;
+  whatsapp_business_account_id: string;
+  meta_messaging_dataset_id: string;
+  meta_messaging_access_token: string;
   gerencia_selection_mode: "weighted_random" | "fair";
   gerencia_fair_criterion: "usage_count" | "messages_received";
   active: boolean;
@@ -36,6 +40,10 @@ export async function upsertChatraceClientConfig(input: {
   landing_tag: string;
   send_contact_pixel: boolean;
   send_meta_capi_events: boolean;
+  send_business_messaging_purchase_capi: boolean;
+  whatsapp_business_account_id: string;
+  meta_messaging_dataset_id: string;
+  meta_messaging_access_token: string;
   gerencia_selection_mode: "weighted_random" | "fair";
   gerencia_fair_criterion: "usage_count" | "messages_received";
   active: boolean;
@@ -51,6 +59,10 @@ export async function upsertChatraceClientConfig(input: {
         landing_tag: input.landing_tag,
         send_contact_pixel: input.send_contact_pixel,
         send_meta_capi_events: input.send_meta_capi_events,
+        send_business_messaging_purchase_capi: input.send_business_messaging_purchase_capi,
+        whatsapp_business_account_id: input.whatsapp_business_account_id,
+        meta_messaging_dataset_id: input.meta_messaging_dataset_id,
+        meta_messaging_access_token: input.meta_messaging_access_token,
         gerencia_selection_mode: input.gerencia_selection_mode,
         gerencia_fair_criterion: input.gerencia_fair_criterion,
         active: input.active,

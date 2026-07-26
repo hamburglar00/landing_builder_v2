@@ -1,9 +1,12 @@
 import { createClient, SupabaseClient } from "https://esm.sh/@supabase/supabase-js@2";
 import {
+  buildMetaBusinessMessagingPurchaseRequest,
   buildMetaRequest,
   type ConversionRow as SharedConversionRow,
   type ConversionsConfig as SharedConversionsConfig,
   generateEventId as sharedGenerateEventId,
+  normalizeCtwaClid,
+  resolvePurchaseCapiRoute,
   toValidEventTime,
   hasPreviousSuccessfulPurchases,
 } from "./shared.ts";
@@ -49,6 +52,16 @@ interface PixelConfigRow {
   is_default: boolean;
 }
 
+interface ChatraceCapiConfig {
+  active: boolean;
+  send_meta_capi_events: boolean;
+  send_business_messaging_purchase_capi: boolean;
+  whatsapp_business_account_id: string;
+  meta_messaging_dataset_id: string;
+  meta_messaging_access_token: string;
+  meta_pixel_id: string;
+}
+
 interface LandingRow {
   id: string;
   name: string;
@@ -76,6 +89,7 @@ interface ConversionRow {
   geo_source?: string;
   meta_pixel_id: string;
   source_platform?: string;
+  ctwa_clid?: string;
   pixel_id: string;
   contact_event_id: string;
   contact_event_time: number | null;
@@ -91,6 +105,8 @@ interface ConversionRow {
   purchase_transaction_id?: string;
   test_event_code?: string;
   purchase_type?: "first" | "repeat" | null;
+  purchase_capi_route?: "" | "website" | "business_messaging";
+  purchase_capi_route_reason?: string;
   client_ip: string;
   agent_user: string;
   device_type: string;
@@ -143,6 +159,11 @@ type Params = Record<string, any>;
 
 
 const norm = (s: unknown): string => String(s ?? "").trim();
+const normalizedSourcePlatform = (s: unknown): string => norm(s).toLowerCase();
+const ctwaClidForSource = (value: unknown, sourcePlatform: unknown): string =>
+  normalizedSourcePlatform(sourcePlatform) === "chatrace"
+    ? normalizeCtwaClid(value)
+    : "";
 const META_CAPI_MAX_EVENT_AGE_SECONDS = 7 * 24 * 60 * 60;
 const META_CRAWLER_CONTACT_STATUS = "skipped_meta_crawler";
 const META_CRAWLER_CONTACT_OBSERVATION = "CONTACT CAPI OMITIDO META CRAWLER";
@@ -1092,29 +1113,18 @@ function isPurchaseCapiEnabled(
     : (config.send_first_purchase_capi ?? legacyPurchaseEnabled);
 }
 
-async function resolveChatracePixelId(
+async function resolveChatraceCapiConfig(
   db: SupabaseClient,
   userId: string,
-): Promise<string> {
+): Promise<ChatraceCapiConfig | null> {
   const { data } = await db
     .from("chatrace_client_configs")
-    .select("meta_pixel_id, active")
-    .eq("user_id", userId)
-    .eq("active", true)
-    .maybeSingle();
-  return norm(data?.meta_pixel_id);
-}
-
-async function resolveChatraceMetaCapiEnabled(
-  db: SupabaseClient,
-  userId: string,
-): Promise<boolean> {
-  const { data } = await db
-    .from("chatrace_client_configs")
-    .select("active, send_meta_capi_events")
+    .select(
+      "active, send_meta_capi_events, send_business_messaging_purchase_capi, whatsapp_business_account_id, meta_messaging_dataset_id, meta_messaging_access_token, meta_pixel_id",
+    )
     .eq("user_id", userId)
     .maybeSingle();
-  return data?.active !== false && data?.send_meta_capi_events !== false;
+  return data ? data as ChatraceCapiConfig : null;
 }
 
 async function sendToMetaCAPI(
@@ -1130,11 +1140,14 @@ async function sendToMetaCAPI(
   overrideTestEventCode?: string,
   options: { allowPixelFallback?: boolean; pixelFallbackDisabledReason?: string } = {},
 ): Promise<boolean> {
-  const sourcePlatform = norm(row.source_platform).toLowerCase();
+  const sourcePlatform = normalizedSourcePlatform(row.source_platform);
   const isChatrace = sourcePlatform === "chatrace";
+  const chatraceConfig = isChatrace
+    ? await resolveChatraceCapiConfig(db, row.user_id)
+    : null;
   const rowPixel = norm(row.pixel_id || row.meta_pixel_id);
   const chatracePixelId = isChatrace && !rowPixel
-    ? await resolveChatracePixelId(db, row.user_id)
+    ? norm(chatraceConfig?.meta_pixel_id)
     : "";
   const preferredPixelId = rowPixel || chatracePixelId;
   const allowPixelFallback = options.allowPixelFallback !== false;
@@ -1205,7 +1218,10 @@ async function sendToMetaCAPI(
     }
   }
 
-  if (isChatrace && !(await resolveChatraceMetaCapiEnabled(db, row.user_id))) {
+  if (
+    isChatrace &&
+    (chatraceConfig?.active === false || chatraceConfig?.send_meta_capi_events === false)
+  ) {
     const skippedMsg = `${eventName.toUpperCase()} CAPI OMITIDO CHATRACE DESACTIVADO`;
     const { data: current } = await db.from("conversions").select("observaciones").eq("id", rowId).single();
     const obs = appendObservation(current?.observaciones ?? "", skippedMsg);
@@ -1277,7 +1293,61 @@ async function sendToMetaCAPI(
     return true;
   }
 
-  if (allowPixelFallback && !rowPixel && !chatracePixelId && norm(effectiveConfig.pixel_id)) {
+  let purchaseCapiRoute: "" | "website" | "business_messaging" =
+    row.purchase_capi_route === "website" || row.purchase_capi_route === "business_messaging"
+      ? row.purchase_capi_route
+      : "";
+  let purchaseCapiRouteReason = norm(row.purchase_capi_route_reason);
+  const ctwaClid = normalizeCtwaClid(row.ctwa_clid);
+  const businessMessagingConfigured = Boolean(
+    norm(chatraceConfig?.whatsapp_business_account_id) &&
+    norm(chatraceConfig?.meta_messaging_dataset_id) &&
+    norm(chatraceConfig?.meta_messaging_access_token),
+  );
+
+  if (eventName === "Purchase" && !purchaseCapiRoute) {
+    const decision = resolvePurchaseCapiRoute({
+      source_platform: sourcePlatform,
+      business_messaging_enabled:
+        chatraceConfig?.send_business_messaging_purchase_capi === true,
+      business_messaging_configured: businessMessagingConfigured,
+      ctwa_clid: ctwaClid,
+    });
+    purchaseCapiRoute = decision.route;
+    purchaseCapiRouteReason = decision.reason;
+
+    await db.from("conversions").update({
+      purchase_capi_route: purchaseCapiRoute,
+      purchase_capi_route_reason: purchaseCapiRouteReason,
+    }).eq("id", rowId);
+    await writeLog(
+      db,
+      row.user_id,
+      "sendToMetaCAPI",
+      "INFO",
+      "Ruta Purchase CAPI fijada",
+      JSON.stringify({
+        route: purchaseCapiRoute,
+        reason: purchaseCapiRouteReason,
+        source_platform: sourcePlatform,
+        has_ctwa_clid: Boolean(ctwaClid),
+        business_messaging_enabled:
+          chatraceConfig?.send_business_messaging_purchase_capi === true,
+        business_messaging_configured: businessMessagingConfigured,
+      }),
+      rowId,
+    );
+  }
+  const useBusinessMessaging =
+    eventName === "Purchase" && purchaseCapiRoute === "business_messaging";
+
+  if (
+    !useBusinessMessaging &&
+    allowPixelFallback &&
+    !rowPixel &&
+    !chatracePixelId &&
+    norm(effectiveConfig.pixel_id)
+  ) {
     const resolvedFallbackPixel = norm(effectiveConfig.pixel_id);
     const fallbackSource = defaultPixel && norm(effectiveConfig.pixel_id) === defaultPixel
       ? "default"
@@ -1314,7 +1384,7 @@ async function sendToMetaCAPI(
     );
   }
 
-  if (!preferredPixelId && !allowPixelFallback) {
+  if (!useBusinessMessaging && !preferredPixelId && !allowPixelFallback) {
     const skippedMsg =
       eventName === "Contact" ? "CONTACT CAPI OMITIDO SIN PIXEL CONFIABLE" :
       eventName === "Lead" ? "LEAD CAPI OMITIDO SIN PIXEL CONFIABLE" :
@@ -1366,7 +1436,18 @@ async function sendToMetaCAPI(
     return true;
   }
 
-  if (!effectiveConfig.meta_access_token || !effectiveConfig.pixel_id) {
+  const missingBusinessMessagingConfig =
+    useBusinessMessaging &&
+    (
+      !ctwaClid ||
+      !norm(chatraceConfig?.whatsapp_business_account_id) ||
+      !norm(chatraceConfig?.meta_messaging_dataset_id) ||
+      !norm(chatraceConfig?.meta_messaging_access_token)
+    );
+  const missingWebsiteConfig =
+    !useBusinessMessaging &&
+    (!effectiveConfig.meta_access_token || !effectiveConfig.pixel_id);
+  if (missingBusinessMessagingConfig || missingWebsiteConfig) {
     const missingCfgMsg =
       eventName === "Contact" ? "ERROR CONTACT NO CONFIG" :
       eventName === "Lead" ? "ERROR LEAD NO CONFIG" :
@@ -1377,26 +1458,44 @@ async function sendToMetaCAPI(
     if (retryableField) updates[retryableField] = false;
     await db.from("conversions").update(updates).eq("id", rowId);
     await writeLog(db, row.user_id, "sendToMetaCAPI", "ERROR", "Meta CAPI no configurado", JSON.stringify({
-      has_token: !!effectiveConfig.meta_access_token,
-      has_pixel: !!effectiveConfig.pixel_id,
+      route: useBusinessMessaging ? "business_messaging" : "website",
+      has_token: useBusinessMessaging
+        ? Boolean(norm(chatraceConfig?.meta_messaging_access_token))
+        : !!effectiveConfig.meta_access_token,
+      has_destination: useBusinessMessaging
+        ? Boolean(norm(chatraceConfig?.meta_messaging_dataset_id))
+        : !!effectiveConfig.pixel_id,
+      has_waba: Boolean(norm(chatraceConfig?.whatsapp_business_account_id)),
+      has_ctwa_clid: Boolean(ctwaClid),
       event_name: eventName,
       row_pixel_id: row.pixel_id ?? "",
     }), rowId);
     return false;
   }
 
-  const sharedRow = row as unknown as SharedConversionRow;
-  const sharedConfig = effectiveConfig as unknown as SharedConversionsConfig;
-  const effectiveTestEventCode = overrideTestEventCode || norm(row.test_event_code);
-  const { apiUrl, body } = await buildMetaRequest(
-    sharedConfig,
-    sharedRow,
-    eventName,
-    eventId,
-    eventTime,
-    customData as Record<string, unknown> | undefined,
-    effectiveTestEventCode || undefined,
-  );
+  const metaRequest = useBusinessMessaging
+    ? buildMetaBusinessMessagingPurchaseRequest(
+      {
+        dataset_id: norm(chatraceConfig?.meta_messaging_dataset_id),
+        whatsapp_business_account_id: norm(chatraceConfig?.whatsapp_business_account_id),
+        meta_access_token: norm(chatraceConfig?.meta_messaging_access_token),
+        meta_api_version: effectiveConfig.meta_api_version,
+        meta_currency: norm(customData?.currency) || effectiveConfig.meta_currency,
+      },
+      ctwaClid,
+      eventTime,
+      Number(customData?.value ?? row.valor),
+    )
+    : await buildMetaRequest(
+      effectiveConfig as unknown as SharedConversionsConfig,
+      row as unknown as SharedConversionRow,
+      eventName,
+      eventId,
+      eventTime,
+      customData as Record<string, unknown> | undefined,
+      overrideTestEventCode || norm(row.test_event_code) || undefined,
+    );
+  const { apiUrl, body } = metaRequest;
 
   const maxAttempts = 3;
   const baseDelayMs = 500;
@@ -1684,6 +1783,7 @@ async function handleContact(
   const nowSec = Math.floor(Date.now() / 1000);
   const inboundMetaPixelId = norm(p.meta_pixel_id || p.pixel_id);
   const inboundSourcePlatform = norm(p.source_platform);
+  const inboundCtwaClid = ctwaClidForSource(p.ctwa_clid, inboundSourcePlatform);
   const inboundContactEventId = norm(p.contact_event_id || p.event_id);
   const inboundPromoCode = derivePromoCodeFromPayload(p);
   const payloadRaw = safePayloadRaw(p);
@@ -1741,6 +1841,7 @@ async function handleContact(
     geo_source: payloadGeoSource,
     meta_pixel_id: inboundMetaPixelId,
     source_platform: inboundSourcePlatform || "",
+    ctwa_clid: inboundCtwaClid,
     pixel_id: inboundMetaPixelId,
     contact_event_id: contactEventId,
     contact_event_time: contactEventTime,
@@ -1949,6 +2050,7 @@ async function handleLead(
   const cleanPhone = sanitizePhone(p.phone);
   const inboundMetaPixelId = norm(p.meta_pixel_id || p.pixel_id);
   const inboundSourcePlatform = norm(p.source_platform);
+  const inboundCtwaClid = ctwaClidForSource(p.ctwa_clid, inboundSourcePlatform);
   const botPhone = sanitizePhone(p.bot_phone);
   const inboundBotTimestampSec =
     toEpochFromIso((p as Record<string, unknown>).dateTime) ??
@@ -2117,6 +2219,7 @@ async function handleLead(
       geo_source: payloadGeoSource,
       meta_pixel_id: resolvedPixelId,
       source_platform: inboundSourcePlatform || "",
+      ctwa_clid: inboundCtwaClid,
       pixel_id: resolvedPixelId,
       contact_event_id: "",
       contact_event_time: null,
@@ -2253,7 +2356,6 @@ async function handleLead(
       updates.meta_pixel_id = inboundMetaPixelId;
       updates.pixel_id = inboundMetaPixelId;
     }
-    if (inboundSourcePlatform) updates.source_platform = inboundSourcePlatform;
     if (testEventCode) updates.test_event_code = testEventCode;
     if (payloadFn) updates.fn = payloadFn;
     if (payloadLn) updates.ln = payloadLn;
@@ -2269,9 +2371,21 @@ async function handleLead(
     if (hasPayloadGeo(geo)) updates.geo_source = "payload";
     const { data: cur } = await db
       .from("conversions")
-      .select("promo_code, observaciones, external_id, telefono_asignado, assigned_gerencia_label")
+      .select("promo_code, observaciones, external_id, telefono_asignado, assigned_gerencia_label, source_platform, ctwa_clid")
       .eq("id", targetId)
       .single();
+    const currentOriginSource = norm((cur as Record<string, unknown> | null)?.source_platform);
+    const effectiveOriginSource = currentOriginSource || inboundSourcePlatform;
+    if (!currentOriginSource && inboundSourcePlatform) {
+      updates.source_platform = inboundSourcePlatform;
+    }
+    if (
+      normalizedSourcePlatform(effectiveOriginSource) === "chatrace" &&
+      !normalizeCtwaClid((cur as Record<string, unknown> | null)?.ctwa_clid) &&
+      inboundCtwaClid
+    ) {
+      updates.ctwa_clid = inboundCtwaClid;
+    }
     // Fill promo_code if row didn't have it
     if (promoCode && isFullPromoCode(promoCode) && !cur?.promo_code) {
       updates.promo_code = promoCode;
@@ -2372,6 +2486,7 @@ async function handlePurchase(
   const cleanPhone = sanitizePhone(p.phone);
   const inboundMetaPixelId = norm(p.meta_pixel_id || p.pixel_id);
   const inboundSourcePlatform = norm(p.source_platform);
+  const inboundCtwaClid = ctwaClidForSource(p.ctwa_clid, inboundSourcePlatform);
   const amount = parseFloat(p.amount);
   if (!cleanPhone || isNaN(amount) || amount <= 0) {
     await writeLog(
@@ -2524,7 +2639,7 @@ async function handlePurchase(
   if (targetId) {
     const { data: existing } = await db
       .from("conversions")
-      .select("lead_event_id, lead_event_time, telefono_asignado, assigned_gerencia_label")
+      .select("lead_event_id, lead_event_time, telefono_asignado, assigned_gerencia_label, source_platform, ctwa_clid")
       .eq("id", targetId)
       .single();
 
@@ -2539,12 +2654,25 @@ async function handlePurchase(
       purchase_coelsa_id: coelsaId,
       purchase_transaction_id: transactionId,
       purchase_type: "first",
+      purchase_capi_route: "",
+      purchase_capi_route_reason: "",
     };
     if (inboundMetaPixelId) {
       updates.meta_pixel_id = inboundMetaPixelId;
       updates.pixel_id = inboundMetaPixelId;
     }
-    if (inboundSourcePlatform) updates.source_platform = inboundSourcePlatform;
+    const currentOriginSource = norm((existing as Record<string, unknown> | null)?.source_platform);
+    const effectiveOriginSource = currentOriginSource || inboundSourcePlatform;
+    if (!currentOriginSource && inboundSourcePlatform) {
+      updates.source_platform = inboundSourcePlatform;
+    }
+    if (
+      normalizedSourcePlatform(effectiveOriginSource) === "chatrace" &&
+      !normalizeCtwaClid((existing as Record<string, unknown> | null)?.ctwa_clid) &&
+      inboundCtwaClid
+    ) {
+      updates.ctwa_clid = inboundCtwaClid;
+    }
     if (testEventCode) updates.test_event_code = testEventCode;
     if (existing?.lead_event_id) {
       updates.lead_event_id = existing.lead_event_id;
@@ -2649,6 +2777,7 @@ async function handlePurchase(
       geo_source: payloadGeoSource,
       meta_pixel_id: inboundMetaPixelId,
       source_platform: inboundSourcePlatform || "",
+      ctwa_clid: inboundCtwaClid,
       pixel_id: inboundMetaPixelId,
       contact_event_id: "",
       contact_event_time: null,
@@ -2664,6 +2793,8 @@ async function handlePurchase(
       purchase_transaction_id: transactionId,
       test_event_code: testEventCode,
       purchase_type: "first",
+      purchase_capi_route: "",
+      purchase_capi_route_reason: "",
       client_ip: "",
       agent_user: "",
       device_type: "",
@@ -2751,6 +2882,10 @@ async function handlePurchase(
     .maybeSingle();
   const repeatSourceRow = srcRow as ConversionRow | null;
   const repeatInheritedPixel = inboundMetaPixelId || trustedStoredPixel(repeatSourceRow);
+  const repeatOriginSource = norm(srcRow?.source_platform) || inboundSourcePlatform;
+  const repeatCtwaClid = normalizedSourcePlatform(repeatOriginSource) === "chatrace"
+    ? normalizeCtwaClid(srcRow?.ctwa_clid) || inboundCtwaClid
+    : "";
 
   const newRow: Omit<ConversionRow, "id"> = {
     landing_id: srcRow?.landing_id ?? (landing.id?.trim() || null),
@@ -2769,7 +2904,8 @@ async function handlePurchase(
     fbc: srcRow?.fbc ?? "",
     geo_source: norm((srcRow as Record<string, unknown> | null)?.geo_source) || "none",
     meta_pixel_id: repeatInheritedPixel,
-    source_platform: srcRow?.source_platform ?? inboundSourcePlatform ?? "",
+    source_platform: repeatOriginSource,
+    ctwa_clid: repeatCtwaClid,
     pixel_id: repeatInheritedPixel,
     // DO NOT inherit event IDs
     contact_event_id: "",
@@ -2786,6 +2922,8 @@ async function handlePurchase(
     purchase_transaction_id: transactionId,
     test_event_code: testEventCode || srcRow?.test_event_code || "",
     purchase_type: "repeat",
+    purchase_capi_route: "",
+    purchase_capi_route_reason: "",
     client_ip: srcRow?.client_ip ?? "",
     agent_user: srcRow?.agent_user ?? "",
     device_type: srcRow?.device_type ?? "",
@@ -2873,6 +3011,7 @@ async function handleSimplePurchase(
   const cleanPhone = sanitizePhone(p.phone);
   const inboundMetaPixelId = norm(p.meta_pixel_id || p.pixel_id);
   const inboundSourcePlatform = norm(p.source_platform);
+  const inboundCtwaClid = ctwaClidForSource(p.ctwa_clid, inboundSourcePlatform);
   const amount = parseFloat(p.amount);
   if (!cleanPhone || isNaN(amount) || amount <= 0) {
     return textResponse("Faltan parametros validos: phone y amount > 0", 400);
@@ -2899,6 +3038,10 @@ async function handleSimplePurchase(
     .maybeSingle();
   const simpleSourceRow = srcRow as ConversionRow | null;
   const simpleInheritedPixel = inboundMetaPixelId || trustedStoredPixel(simpleSourceRow);
+  const simpleOriginSource = norm(srcRow?.source_platform) || inboundSourcePlatform;
+  const simpleCtwaClid = normalizedSourcePlatform(simpleOriginSource) === "chatrace"
+    ? normalizeCtwaClid(srcRow?.ctwa_clid) || inboundCtwaClid
+    : "";
 
   const purchaseEventId = generateEventId();
   const purchaseEventTime = toValidEventTime(p.purchase_event_time || p.event_time || Math.floor(Date.now() / 1000));
@@ -2920,7 +3063,8 @@ async function handleSimplePurchase(
     fbc: srcRow?.fbc ?? "",
     geo_source: norm((srcRow as Record<string, unknown> | null)?.geo_source) || "none",
     meta_pixel_id: simpleInheritedPixel,
-    source_platform: srcRow?.source_platform ?? inboundSourcePlatform ?? "",
+    source_platform: simpleOriginSource,
+    ctwa_clid: simpleCtwaClid,
     pixel_id: simpleInheritedPixel,
     contact_event_id: "",
     contact_event_time: null,
@@ -2936,6 +3080,8 @@ async function handleSimplePurchase(
     purchase_transaction_id: transactionId,
     test_event_code: testEventCode,
     purchase_type: isRepeatSimple ? "repeat" : "first",
+    purchase_capi_route: "",
+    purchase_capi_route_reason: "",
     client_ip: srcRow?.client_ip ?? "",
     agent_user: srcRow?.agent_user ?? "",
     device_type: srcRow?.device_type ?? "",

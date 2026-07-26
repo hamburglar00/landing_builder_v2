@@ -33,6 +33,7 @@ export interface ConversionRow {
   fbp: string;
   fbc: string;
   source_platform?: string;
+  ctwa_clid?: string;
   pixel_id: string;
   contact_event_id: string;
   contact_event_time: number | null;
@@ -47,6 +48,8 @@ export interface ConversionRow {
   purchase_coelsa_id?: string;
   purchase_transaction_id?: string;
   purchase_type?: "first" | "repeat" | null;
+  purchase_capi_route?: "" | "website" | "business_messaging";
+  purchase_capi_route_reason?: string;
   client_ip: string;
   agent_user: string;
   device_type: string;
@@ -355,6 +358,104 @@ export interface MetaRequest {
   apiUrl: string;
   body: Record<string, unknown>;
   eventPayload: Record<string, unknown>;
+}
+
+export interface MetaBusinessMessagingPurchaseConfig {
+  dataset_id: string;
+  whatsapp_business_account_id: string;
+  meta_access_token: string;
+  meta_api_version: string;
+  meta_currency: string;
+}
+
+/**
+ * ctwa_clid is an opaque Meta identifier. It must be sent raw (not hashed).
+ * Empty values and unresolved Chatrace template placeholders are rejected.
+ */
+export function normalizeCtwaClid(value: unknown): string {
+  const normalized = String(value ?? "").trim();
+  if (!normalized || normalized.length > 2048) return "";
+  if (/^(?:null|undefined)$/i.test(normalized)) return "";
+  if (
+    normalized.includes("{{") ||
+    normalized.includes("}}") ||
+    normalized.includes("<") ||
+    normalized.includes(">")
+  ) {
+    return "";
+  }
+  return normalized;
+}
+
+export type PurchaseCapiRoute = "website" | "business_messaging";
+
+export interface PurchaseCapiRouteDecision {
+  route: PurchaseCapiRoute;
+  reason:
+    | "eligible_chatrace_ctwa"
+    | "source_not_chatrace"
+    | "business_messaging_disabled"
+    | "missing_ctwa_clid"
+    | "missing_business_messaging_config";
+}
+
+/**
+ * Business Messaging is deliberately opt-in and exclusive to Chatrace.
+ * Every other source, including constructor-powered landings, keeps the
+ * existing website CAPI path.
+ */
+export function resolvePurchaseCapiRoute(input: {
+  source_platform: unknown;
+  business_messaging_enabled: boolean;
+  business_messaging_configured: boolean;
+  ctwa_clid: unknown;
+}): PurchaseCapiRouteDecision {
+  const isChatrace = String(input.source_platform ?? "").trim().toLowerCase() ===
+    "chatrace";
+  if (!isChatrace) {
+    return { route: "website", reason: "source_not_chatrace" };
+  }
+  if (!input.business_messaging_enabled) {
+    return { route: "website", reason: "business_messaging_disabled" };
+  }
+  if (!normalizeCtwaClid(input.ctwa_clid)) {
+    return { route: "website", reason: "missing_ctwa_clid" };
+  }
+  if (!input.business_messaging_configured) {
+    return { route: "website", reason: "missing_business_messaging_config" };
+  }
+  return { route: "business_messaging", reason: "eligible_chatrace_ctwa" };
+}
+
+/**
+ * Payload kept intentionally aligned with Meta's WhatsApp Business Messaging
+ * Purchase example. Attribution uses only the WABA + raw ctwa_clid pair.
+ */
+export function buildMetaBusinessMessagingPurchaseRequest(
+  config: MetaBusinessMessagingPurchaseConfig,
+  ctwaClid: string,
+  eventTime: number,
+  value: number,
+): MetaRequest {
+  const eventPayload: Record<string, unknown> = {
+    event_name: "Purchase",
+    event_time: eventTime,
+    action_source: "business_messaging",
+    messaging_channel: "whatsapp",
+    user_data: {
+      whatsapp_business_account_id: config.whatsapp_business_account_id,
+      ctwa_clid: ctwaClid,
+    },
+    custom_data: {
+      currency: config.meta_currency,
+      value,
+    },
+  };
+  const body: Record<string, unknown> = { data: [eventPayload] };
+  const apiVersion = String(config.meta_api_version || "v25.0").trim();
+  const apiUrl =
+    `https://graph.facebook.com/${apiVersion}/${config.dataset_id}/events?access_token=${encodeURIComponent(config.meta_access_token)}`;
+  return { apiUrl, body, eventPayload };
 }
 
 export async function buildMetaRequest(
