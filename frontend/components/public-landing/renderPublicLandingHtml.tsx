@@ -560,7 +560,6 @@ export function renderPublicLandingHtml(params: RenderParams) {
   const { slug, config, cachedPhone } = params;
   const pixelId = String(config.tracking?.pixelId || "").trim().replace(/\D+/g, "");
   const title = config.name || slug;
-  const description = config.comment || config.content?.subtitle?.join(" ") || title;
   const supabaseOrigin = (() => {
     const raw = process.env.NEXT_PUBLIC_SUPABASE_URL || "";
     try {
@@ -576,9 +575,7 @@ export function renderPublicLandingHtml(params: RenderParams) {
 
   return `<!doctype html><html lang="es"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"><title>${escapeHtml(
     title,
-  )}</title><meta name="description" content="${escapeHtml(
-    description,
-  )}"><meta name="theme-color" content="#000000">${
+  )}</title><meta name="theme-color" content="#000000">${
     supabaseOrigin
       ? `<link rel="preconnect" href="${escapeHtml(supabaseOrigin)}" crossorigin><link rel="dns-prefetch" href="${escapeHtml(supabaseOrigin)}">`
       : ""
