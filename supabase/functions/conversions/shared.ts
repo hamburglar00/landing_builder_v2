@@ -12,6 +12,7 @@ export interface ConversionsConfig {
   send_first_purchase_capi?: boolean;
   send_repeat_purchase_capi?: boolean;
   send_purchase_capi?: boolean;
+  send_geo_capi: boolean;
   geo_use_ipapi: boolean;
   geo_fill_only_when_missing: boolean;
 }
@@ -317,12 +318,15 @@ function normalizeState(value: string, countryRaw: string): string {
   return s;
 }
 
-export async function buildUserData(row: ConversionRow): Promise<MetaUserData> {
+export async function buildUserData(
+  row: ConversionRow,
+  includeGeo = true,
+): Promise<MetaUserData> {
   const ud: MetaUserData = {};
-  const normalizedCountry = normalizeCountry(row.country);
-  const normalizedState = normalizeState(row.st, row.country);
-  const normalizedCity = normalizeCity(row.ct);
-  const normalizedZip = normalizePostalCode(row.zip);
+  const normalizedCountry = includeGeo ? normalizeCountry(row.country) : "";
+  const normalizedState = includeGeo ? normalizeState(row.st, row.country) : "";
+  const normalizedCity = includeGeo ? normalizeCity(row.ct) : "";
+  const normalizedZip = includeGeo ? normalizePostalCode(row.zip) : "";
   const email = normalizeEmail(String(row.email ?? ""));
   const phone = normalizePhoneForMeta(String(row.phone ?? ""));
   const firstName = normalizeName(String(row.fn ?? ""));
@@ -362,7 +366,7 @@ export async function buildMetaRequest(
   customData?: Record<string, unknown>,
   overrideTestEventCode?: string,
 ): Promise<MetaRequest> {
-  const userData = await buildUserData(row);
+  const userData = await buildUserData(row, config.send_geo_capi !== false);
   const srcUrl = row.event_source_url || "";
 
   // deno-lint-ignore no-explicit-any

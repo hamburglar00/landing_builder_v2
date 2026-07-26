@@ -29,6 +29,113 @@ button, a {
   -webkit-tap-highlight-color: transparent;
 }
 
+.public-privacy-footer {
+  position: fixed;
+  z-index: 20;
+  right: 10px;
+  bottom: max(8px, env(safe-area-inset-bottom));
+}
+
+.public-privacy-link {
+  appearance: none;
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  border-radius: 999px;
+  padding: 5px 9px;
+  color: rgba(255, 255, 255, 0.78);
+  background: rgba(0, 0, 0, 0.66);
+  font: 500 11px/1.2 Arial, Helvetica, sans-serif;
+  cursor: pointer;
+  backdrop-filter: blur(8px);
+}
+
+.public-privacy-link:hover,
+.public-privacy-link:focus-visible {
+  color: #fff;
+  border-color: rgba(255, 255, 255, 0.45);
+}
+
+.public-privacy-link:focus-visible,
+.public-privacy-dialog__close:focus-visible,
+.public-privacy-dialog a:focus-visible {
+  outline: 2px solid #25d366;
+  outline-offset: 2px;
+}
+
+.public-privacy-dialog {
+  width: min(92vw, 620px);
+  max-height: min(82vh, 720px);
+  margin: auto;
+  padding: 0;
+  overflow: hidden;
+  border: 1px solid #343a46;
+  border-radius: 16px;
+  color: #e8ebf0;
+  background: #12151b;
+  box-shadow: 0 24px 80px rgba(0, 0, 0, 0.55);
+}
+
+.public-privacy-dialog::backdrop {
+  background: rgba(0, 0, 0, 0.72);
+  backdrop-filter: blur(3px);
+}
+
+.public-privacy-dialog__header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  padding: 18px 20px;
+  border-bottom: 1px solid #2a2f39;
+}
+
+.public-privacy-dialog__header h2 {
+  margin: 0;
+  color: #fff;
+  font: 700 18px/1.25 Arial, Helvetica, sans-serif;
+}
+
+.public-privacy-dialog__close {
+  appearance: none;
+  width: 32px;
+  height: 32px;
+  flex: 0 0 auto;
+  border: 1px solid #3a414d;
+  border-radius: 8px;
+  color: #d8dde5;
+  background: #1b2028;
+  font: 400 24px/1 Arial, Helvetica, sans-serif;
+  cursor: pointer;
+}
+
+.public-privacy-dialog__content {
+  max-height: calc(min(82vh, 720px) - 69px);
+  padding: 18px 20px 22px;
+  overflow-y: auto;
+  color: #c9cfd8;
+  font: 400 13px/1.55 Arial, Helvetica, sans-serif;
+}
+
+.public-privacy-dialog__content p {
+  margin: 0 0 13px;
+}
+
+.public-privacy-dialog__content strong {
+  color: #fff;
+}
+
+.public-privacy-dialog__links {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px 16px;
+  padding-top: 3px;
+}
+
+.public-privacy-dialog__links a {
+  color: #67e8a5;
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+
 .public-landing,
 .public-landing * {
   box-sizing: border-box;

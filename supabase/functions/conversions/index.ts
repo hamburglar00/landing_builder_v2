@@ -27,6 +27,7 @@ interface ConversionsConfig {
   send_first_purchase_capi?: boolean;
   send_repeat_purchase_capi?: boolean;
   send_purchase_capi: boolean;
+  send_geo_capi: boolean;
   geo_use_ipapi: boolean;
   geo_fill_only_when_missing: boolean;
 }
@@ -42,6 +43,7 @@ interface PixelConfigRow {
   send_first_purchase_capi?: boolean;
   send_repeat_purchase_capi?: boolean;
   send_purchase_capi: boolean;
+  send_geo_capi: boolean;
   geo_use_ipapi: boolean;
   geo_fill_only_when_missing: boolean;
   is_default: boolean;
@@ -1065,6 +1067,7 @@ function resolveEffectiveConfigForPixel(
     send_repeat_purchase_capi:
       picked.send_repeat_purchase_capi ?? legacyPurchaseEnabled,
     send_purchase_capi: legacyPurchaseEnabled,
+    send_geo_capi: picked.send_geo_capi !== false,
     geo_use_ipapi: Boolean(picked.geo_use_ipapi),
     geo_fill_only_when_missing: Boolean(picked.geo_fill_only_when_missing),
   };
@@ -1683,9 +1686,6 @@ async function handleContact(
   const inboundSourcePlatform = norm(p.source_platform);
   const inboundContactEventId = norm(p.contact_event_id || p.event_id);
   const inboundPromoCode = derivePromoCodeFromPayload(p);
-  const sendContactPixelExplicitFalse =
-    Object.prototype.hasOwnProperty.call(p, "sendContactPixel") &&
-    !toBool(p.sendContactPixel);
   const payloadRaw = safePayloadRaw(p);
 
   const existingDuplicate = await findExistingContactDuplicate(
@@ -1877,7 +1877,7 @@ async function handleContact(
   const shouldSendContactCapi =
     inboundSourcePlatform.toLowerCase() === "chatrace" || effectiveConfig.send_contact_capi;
 
-  if (shouldSendContactCapi && !sendContactPixelExplicitFalse) {
+  if (shouldSendContactCapi) {
     const { data: fresh } = await db.from("conversions").select("*").eq("id", rowId).single();
     const fullRow = (fresh ?? row) as ConversionRow;
     await sendToMetaCAPI(
@@ -1891,24 +1891,6 @@ async function handleContact(
       contactEventTime,
       undefined,
       testEventCode || undefined,
-    );
-  } else if (shouldSendContactCapi && sendContactPixelExplicitFalse) {
-    await db
-      .from("conversions")
-      .update({ contact_status_capi: "skipped" })
-      .eq("id", rowId);
-    await writeLog(
-      db,
-      landing.user_id,
-      "handleContact",
-      "INFO",
-      "Contact CAPI omitido por sendContactPixel=false",
-      JSON.stringify({ contact_event_id: contactEventId, sendContactPixel: p.sendContactPixel }),
-      rowId,
-      undefined,
-      undefined,
-      payloadRaw,
-      "Contact CAPI omitido por sendContactPixel=false",
     );
   } else {
     const skippedMsg = "CONTACT CAPI OMITIDO CONFIG DESACTIVADA";
@@ -2601,7 +2583,11 @@ async function handlePurchase(
 
     const { data: fresh } = await db.from("conversions").select("*").eq("id", targetId).single();
     const fullRow = (fresh ?? row) as ConversionRow;
-    const customData = { currency: effectiveConfig.meta_currency, value: amount };
+    const customData = {
+      currency: effectiveConfig.meta_currency,
+      value: amount,
+      purchase_type: "first",
+    };
     const allowPurchasePixelFallback = hasContactContext(fullRow);
     const capiRow = clearUntrustedStoredPixel(fullRow);
 
@@ -2709,7 +2695,11 @@ async function handlePurchase(
 
     const { data: fresh } = await db.from("conversions").select("*").eq("id", createdId).single();
     const fullRow = (fresh ?? row) as ConversionRow;
-    const customData = { currency: effectiveConfig.meta_currency, value: amount };
+    const customData = {
+      currency: effectiveConfig.meta_currency,
+      value: amount,
+      purchase_type: "first",
+    };
     const capiRow = clearUntrustedStoredPixel(fullRow);
 
     await writeLog(
@@ -2980,7 +2970,11 @@ async function handleSimplePurchase(
 
   const { data: fresh } = await db.from("conversions").select("*").eq("id", newId).single();
   const fullRow = (fresh ?? newRow) as ConversionRow;
-  const customData = { currency: effectiveSimpleConfig.meta_currency, value: amount };
+  const customData = {
+    currency: effectiveSimpleConfig.meta_currency,
+    value: amount,
+    purchase_type: isRepeatSimple ? "repeat" : "first",
+  };
   const simpleAllowsPixelFallback = hasContactContext(simpleSourceRow);
   const simpleCapiRow = simpleInheritedPixel ? fullRow : clearUntrustedStoredPixel(fullRow);
 
@@ -3056,13 +3050,14 @@ Deno.serve(async (req) => {
       send_first_purchase_capi: true,
       send_repeat_purchase_capi: true,
       send_purchase_capi: true,
+      send_geo_capi: true,
       geo_use_ipapi: false,
       geo_fill_only_when_missing: false,
     };
 
     const { data: pixelConfigsData } = await db
       .from("conversions_pixel_configs")
-      .select("user_id, pixel_id, meta_access_token, meta_currency, meta_api_version, send_contact_capi, send_lead_capi, send_first_purchase_capi, send_repeat_purchase_capi, send_purchase_capi, geo_use_ipapi, geo_fill_only_when_missing, is_default")
+      .select("user_id, pixel_id, meta_access_token, meta_currency, meta_api_version, send_contact_capi, send_lead_capi, send_first_purchase_capi, send_repeat_purchase_capi, send_purchase_capi, send_geo_capi, geo_use_ipapi, geo_fill_only_when_missing, is_default")
       .eq("user_id", userId);
     const pixelConfigs: PixelConfigRow[] = (pixelConfigsData ?? []) as PixelConfigRow[];
 

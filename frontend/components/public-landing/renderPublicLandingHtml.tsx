@@ -127,9 +127,18 @@ function renderWhatsAppIcon(className: string) {
   )}" viewBox="0 0 48 48" aria-hidden="true" focusable="false"><g transform="translate(-700 -360)"><path fill="currentColor" fill-rule="evenodd" d="${WHATSAPP_ICON_PATH}"/></g></svg>`;
 }
 
-function buildPixelInitScript(pixelId: string) {
+function renderPrivacyFooter(config: PublicLandingConfig) {
+  const businessName = config.name || "el responsable de esta landing";
+
+  return `<footer class="public-privacy-footer"><button type="button" class="public-privacy-link" data-public-privacy-open aria-haspopup="dialog">Política de privacidad</button></footer><dialog class="public-privacy-dialog" data-public-privacy-dialog aria-labelledby="public-privacy-title"><div class="public-privacy-dialog__header"><h2 id="public-privacy-title">Política de privacidad</h2><button type="button" class="public-privacy-dialog__close" data-public-privacy-close aria-label="Cerrar política de privacidad">×</button></div><div class="public-privacy-dialog__content"><p><strong>Responsable.</strong> Esta landing es gestionada por ${escapeHtml(
+    businessName,
+  )}.</p><p><strong>Datos tratados.</strong> Al navegar o utilizar el botón de contacto pueden procesarse datos técnicos del dispositivo y la conexión, cookies e identificadores publicitarios, la procedencia de la visita y los datos que usted proporcione voluntariamente.</p><p><strong>Finalidades.</strong> Los datos se utilizan para atender consultas por WhatsApp, operar el servicio, medir resultados y atribuir conversiones publicitarias.</p><p><strong>Meta.</strong> Esta landing puede utilizar Meta Pixel y Conversions API. En consecuencia, cierta información puede compartirse con Meta Platforms para medición, atribución y publicidad, de acuerdo con sus políticas.</p><p><strong>Derechos y contacto.</strong> Puede solicitar información, actualización o supresión de sus datos mediante el canal de WhatsApp ofrecido en esta landing.</p><p>También puede administrar las cookies desde su navegador y revisar sus preferencias publicitarias en Meta.</p><div class="public-privacy-dialog__links"><a href="https://www.facebook.com/privacy/policy/" target="_blank" rel="noreferrer noopener">Política de privacidad de Meta</a><a href="https://www.facebook.com/adpreferences/ad_settings" target="_blank" rel="noreferrer noopener">Preferencias de anuncios de Meta</a></div></div></dialog>`;
+}
+
+function buildPixelInitScript(pixelId: string, slug: string) {
   const safePixelId = pixelId.replace(/\D+/g, "");
   if (!safePixelId) return "";
+  const storageNamespace = `landing-builder:${safePixelId}:${slug}`;
 
   return `<script>
     (function () {
@@ -154,6 +163,11 @@ function buildPixelInitScript(pixelId: string) {
 
       try {
         var params = new URLSearchParams(window.location.search);
+        var storageNamespace = ${escapeScriptJson(storageNamespace)};
+
+        function storageKey(key){
+          return storageNamespace + ':' + key;
+        }
 
         function readMeta(key){
           try {
@@ -165,10 +179,33 @@ function buildPixelInitScript(pixelId: string) {
 
         function readLocalStorage(key){
           try {
-            return localStorage.getItem(key) || '';
+            return localStorage.getItem(storageKey(key)) || '';
           } catch (e) {
             return '';
           }
+        }
+
+        function writeLocalStorage(key, value){
+          try {
+            if (value) localStorage.setItem(storageKey(key), value);
+          } catch (e) {}
+        }
+
+        function sanitizeAddressBar(){
+          try {
+            var url = new URL(window.location.href);
+            var sensitiveKeys = ['email', 'em', 'phone', 'ph', 'fn', 'ln', 'external_id', 'eid', 'ct', 'st', 'zip', 'country'];
+            var changed = false;
+            sensitiveKeys.forEach(function(key){
+              if (url.searchParams.has(key)) {
+                url.searchParams.delete(key);
+                changed = true;
+              }
+            });
+            if (changed) {
+              window.history.replaceState(window.history.state, '', url.pathname + url.search + url.hash);
+            }
+          } catch (e) {}
         }
 
         function firstNonEmpty(values){
@@ -209,10 +246,10 @@ function buildPixelInitScript(pixelId: string) {
 
         function getOrCreateExternalId(){
           try {
-            var existing = localStorage.getItem('external_id');
+            var existing = readLocalStorage('external_id');
             if (existing) return existing;
             var created = safeUUID();
-            localStorage.setItem('external_id', created);
+            localStorage.setItem(storageKey('external_id'), created);
             return created;
           } catch (e) {
             return safeUUID();
@@ -247,14 +284,14 @@ function buildPixelInitScript(pixelId: string) {
           firstNonEmpty([readMeta('externalId'), readLocalStorage('external_id')]) ||
           getOrCreateExternalId();
 
-        try {
-          localStorage.setItem('external_id', externalId);
-        } catch (e) {}
-
-        try {
-          if (userEmail) localStorage.setItem('em', userEmail);
-          if (userPhone) localStorage.setItem('ph', userPhone);
-        } catch (e) {}
+        writeLocalStorage('external_id', externalId);
+        writeLocalStorage('em', userEmail);
+        writeLocalStorage('ph', userPhone);
+        writeLocalStorage('ct', params.get('ct') || '');
+        writeLocalStorage('st', params.get('st') || '');
+        writeLocalStorage('zip', params.get('zip') || '');
+        writeLocalStorage('country', params.get('country') || '');
+        sanitizeAddressBar();
 
         fbq('init', ${escapeScriptJson(safePixelId)}, {
           em: userEmail,
@@ -551,5 +588,8 @@ export function renderPublicLandingHtml(params: RenderParams) {
       : ""
   }${buildPreloadLinks(config)}<style>${PUBLIC_LANDING_CSS}</style>${phonePrewarmScript}${buildPixelInitScript(
     pixelId,
-  )}</head><body>${buildPixelNoscript(pixelId)}${renderTemplate(params)}${runtimeScript}</body></html>`;
+    slug,
+  )}</head><body>${buildPixelNoscript(pixelId)}${renderTemplate(params)}${renderPrivacyFooter(
+    config,
+  )}${runtimeScript}</body></html>`;
 }

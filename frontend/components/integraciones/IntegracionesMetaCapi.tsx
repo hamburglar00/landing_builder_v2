@@ -79,6 +79,7 @@ type PixelEditDraft = {
   send_lead_capi: boolean;
   send_first_purchase_capi: boolean;
   send_repeat_purchase_capi: boolean;
+  send_geo_capi: boolean;
   geo_use_ipapi: boolean;
   geo_fill_only_when_missing: boolean;
   is_default: boolean;
@@ -583,6 +584,7 @@ export default function IntegracionesMetaCapi() {
         send_lead_capi: true,
         send_first_purchase_capi: true,
         send_repeat_purchase_capi: true,
+        send_geo_capi: true,
         geo_use_ipapi: true,
         geo_fill_only_when_missing: false,
         is_default: !hasAny,
@@ -624,6 +626,7 @@ export default function IntegracionesMetaCapi() {
       send_lead_capi: px.send_lead_capi !== false,
       send_first_purchase_capi: px.send_first_purchase_capi !== false,
       send_repeat_purchase_capi: px.send_repeat_purchase_capi !== false,
+      send_geo_capi: px.send_geo_capi !== false,
       geo_use_ipapi: !!px.geo_use_ipapi,
       geo_fill_only_when_missing: !!px.geo_fill_only_when_missing,
       is_default: !!px.is_default,
@@ -656,6 +659,7 @@ export default function IntegracionesMetaCapi() {
         send_lead_capi: !!draft.send_lead_capi,
         send_first_purchase_capi: !!draft.send_first_purchase_capi,
         send_repeat_purchase_capi: !!draft.send_repeat_purchase_capi,
+        send_geo_capi: !!draft.send_geo_capi,
         geo_use_ipapi: !!draft.geo_use_ipapi,
         geo_fill_only_when_missing: !!draft.geo_fill_only_when_missing,
         is_default: !!draft.is_default,
@@ -673,6 +677,7 @@ export default function IntegracionesMetaCapi() {
           send_lead_capi: !!draft.send_lead_capi,
           send_first_purchase_capi: !!draft.send_first_purchase_capi,
           send_repeat_purchase_capi: !!draft.send_repeat_purchase_capi,
+          send_geo_capi: !!draft.send_geo_capi,
           geo_use_ipapi: !!draft.geo_use_ipapi,
           geo_fill_only_when_missing: !!draft.geo_fill_only_when_missing,
         };
@@ -708,6 +713,7 @@ export default function IntegracionesMetaCapi() {
         send_lead_capi: px.send_lead_capi !== false,
         send_first_purchase_capi: px.send_first_purchase_capi !== false,
         send_repeat_purchase_capi: px.send_repeat_purchase_capi !== false,
+        send_geo_capi: px.send_geo_capi !== false,
         geo_use_ipapi: !!px.geo_use_ipapi,
         geo_fill_only_when_missing: !!px.geo_fill_only_when_missing,
         is_default: true,
@@ -723,6 +729,7 @@ export default function IntegracionesMetaCapi() {
         send_lead_capi: px.send_lead_capi !== false,
         send_first_purchase_capi: px.send_first_purchase_capi !== false,
         send_repeat_purchase_capi: px.send_repeat_purchase_capi !== false,
+        send_geo_capi: px.send_geo_capi !== false,
         geo_use_ipapi: !!px.geo_use_ipapi,
         geo_fill_only_when_missing: !!px.geo_fill_only_when_missing,
       };
@@ -1878,7 +1885,7 @@ export default function IntegracionesMetaCapi() {
                 <div className="mt-3 grid gap-2 sm:grid-cols-2">
                   <SettingsSwitch
                     checked={draft.geo_use_ipapi}
-                    label="Enviar geo"
+                    label="Geo por IP"
                     description="Completa ciudad/provincia/país por IP."
                     onChange={() => setDraft((p) => (p ? { ...p, geo_use_ipapi: !p.geo_use_ipapi } : p))}
                   />
@@ -1887,6 +1894,12 @@ export default function IntegracionesMetaCapi() {
                     label="Solo geo faltante"
                     description="No pisa datos que ya vienen en payload."
                     onChange={() => setDraft((p) => (p ? { ...p, geo_fill_only_when_missing: !p.geo_fill_only_when_missing } : p))}
+                  />
+                  <SettingsSwitch
+                    checked={draft.send_geo_capi}
+                    label="Enviar geo"
+                    description="Incluye la geo disponible en el payload de Meta CAPI."
+                    onChange={() => setDraft((p) => (p ? { ...p, send_geo_capi: !p.send_geo_capi } : p))}
                   />
                 </div>
               </section>

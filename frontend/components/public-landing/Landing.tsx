@@ -1,6 +1,7 @@
 import PixelInit from "./PixelInit";
 import MetaTrackingBootstrap from "./MetaTrackingBootstrap";
 import PhonePrewarmScript from "./PhonePrewarmScript";
+import PrivacyFooter from "./PrivacyFooter";
 import PublicLandingRuntimeScript from "./PublicLandingRuntimeScript";
 import Template1View from "./Template1View";
 import Template2View from "./Template2View";
@@ -20,7 +21,7 @@ export default function PublicLanding({ slug, config, cachedPhone }: Props) {
   const pixelId = String(config.tracking?.pixelId || "").trim().replace(/\D+/g, "");
   const pixelBlock = pixelId ? (
     <>
-      <PixelInit pixelId={pixelId} />
+      <PixelInit pixelId={pixelId} slug={slug} />
       <MetaTrackingBootstrap />
       <noscript>
         <img
@@ -40,6 +41,7 @@ export default function PublicLanding({ slug, config, cachedPhone }: Props) {
         {pixelBlock}
         <PhonePrewarmScript slug={slug} initialPhone={cachedPhone} />
         <Template3View slug={slug} config={config} />
+        <PrivacyFooter config={config} />
         <PublicLandingRuntimeScript slug={slug} config={config} />
       </>
     );
@@ -51,6 +53,7 @@ export default function PublicLanding({ slug, config, cachedPhone }: Props) {
         {pixelBlock}
         <PhonePrewarmScript slug={slug} initialPhone={cachedPhone} />
         <Template2View slug={slug} config={config} />
+        <PrivacyFooter config={config} />
         <PublicLandingRuntimeScript slug={slug} config={config} />
       </>
     );
@@ -61,6 +64,7 @@ export default function PublicLanding({ slug, config, cachedPhone }: Props) {
       {pixelBlock}
       <PhonePrewarmScript slug={slug} initialPhone={cachedPhone} />
       <Template1View slug={slug} config={config} />
+      <PrivacyFooter config={config} />
       <PublicLandingRuntimeScript slug={slug} config={config} />
     </>
   );

@@ -61,6 +61,7 @@ type PixelEditDraft = {
   send_lead_capi: boolean;
   send_first_purchase_capi: boolean;
   send_repeat_purchase_capi: boolean;
+  send_geo_capi: boolean;
   geo_use_ipapi: boolean;
   geo_fill_only_when_missing: boolean;
   is_default: boolean;
@@ -1394,6 +1395,7 @@ export default function DashboardConversionesPage() {
           send_lead_capi: config.send_lead_capi !== false,
           send_first_purchase_capi: config.send_first_purchase_capi !== false,
           send_repeat_purchase_capi: config.send_repeat_purchase_capi !== false,
+          send_geo_capi: config.send_geo_capi !== false,
           geo_use_ipapi: !!config.geo_use_ipapi,
           geo_fill_only_when_missing: !!config.geo_fill_only_when_missing,
           is_default: existing ? existing.is_default : pixelConfigs.length === 0,
@@ -1420,6 +1422,7 @@ export default function DashboardConversionesPage() {
       send_lead_capi: px.send_lead_capi !== false,
       send_first_purchase_capi: px.send_first_purchase_capi !== false,
       send_repeat_purchase_capi: px.send_repeat_purchase_capi !== false,
+      send_geo_capi: px.send_geo_capi !== false,
       geo_use_ipapi: !!px.geo_use_ipapi,
       geo_fill_only_when_missing: !!px.geo_fill_only_when_missing,
       is_default: !!px.is_default,
@@ -1455,6 +1458,7 @@ export default function DashboardConversionesPage() {
         send_lead_capi: !!pixelEditDraft.send_lead_capi,
         send_first_purchase_capi: !!pixelEditDraft.send_first_purchase_capi,
         send_repeat_purchase_capi: !!pixelEditDraft.send_repeat_purchase_capi,
+        send_geo_capi: !!pixelEditDraft.send_geo_capi,
         geo_use_ipapi: !!pixelEditDraft.geo_use_ipapi,
         geo_fill_only_when_missing: !!pixelEditDraft.geo_fill_only_when_missing,
         is_default: !!pixelEditDraft.is_default,
@@ -1473,6 +1477,7 @@ export default function DashboardConversionesPage() {
           send_lead_capi: current.send_lead_capi !== false,
           send_first_purchase_capi: current.send_first_purchase_capi !== false,
           send_repeat_purchase_capi: current.send_repeat_purchase_capi !== false,
+          send_geo_capi: current.send_geo_capi !== false,
           geo_use_ipapi: !!current.geo_use_ipapi,
           geo_fill_only_when_missing: !!current.geo_fill_only_when_missing,
         } : prev);
@@ -1517,6 +1522,7 @@ export default function DashboardConversionesPage() {
           send_lead_capi: first.send_lead_capi !== false,
           send_first_purchase_capi: first.send_first_purchase_capi !== false,
           send_repeat_purchase_capi: first.send_repeat_purchase_capi !== false,
+          send_geo_capi: first.send_geo_capi !== false,
           geo_use_ipapi: !!first.geo_use_ipapi,
           geo_fill_only_when_missing: !!first.geo_fill_only_when_missing,
           is_default: true,
@@ -1538,6 +1544,7 @@ export default function DashboardConversionesPage() {
             send_lead_capi: next.send_lead_capi !== false,
             send_first_purchase_capi: next.send_first_purchase_capi !== false,
             send_repeat_purchase_capi: next.send_repeat_purchase_capi !== false,
+            send_geo_capi: next.send_geo_capi !== false,
             geo_use_ipapi: !!next.geo_use_ipapi,
             geo_fill_only_when_missing: !!next.geo_fill_only_when_missing,
           } : prev);
@@ -1863,7 +1870,7 @@ export default function DashboardConversionesPage() {
                     onChange={(e) => setPixelEditDraft((p) => p ? { ...p, geo_use_ipapi: e.target.checked } : p)}
                     className="h-4 w-4 rounded border-zinc-600 bg-zinc-900 accent-emerald-500"
                   />
-                  Enviar geo
+                  Geo por IP
                 </label>
                 {pixelEditDraft.geo_use_ipapi && (
                   <label className="ml-6 flex items-center gap-2 text-xs text-zinc-300">
@@ -1876,6 +1883,15 @@ export default function DashboardConversionesPage() {
                     Solo completar geo faltante (no pisar datos del payload)
                   </label>
                 )}
+                <label className="flex items-center gap-2 text-xs text-zinc-300">
+                  <input
+                    type="checkbox"
+                    checked={pixelEditDraft.send_geo_capi}
+                    onChange={(e) => setPixelEditDraft((p) => p ? { ...p, send_geo_capi: e.target.checked } : p)}
+                    className="h-4 w-4 rounded border-zinc-600 bg-zinc-900 accent-emerald-500"
+                  />
+                  Enviar geo por CAPI
+                </label>
               </div>
             </div>
 

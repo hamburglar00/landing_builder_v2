@@ -43,6 +43,7 @@ export default function PublicLandingRuntimeScript({ slug, config }: Props) {
     landingId: config.id,
     landingName: config.name,
     pixelId: String(config.tracking?.pixelId || "").trim(),
+    storageNamespace: `landing-builder:${String(config.tracking?.pixelId || "").replace(/\D+/g, "") || "no-pixel"}:${slug}`,
     postUrl: config.tracking?.postUrl || "",
     landingTag: config.tracking?.landingTag || "LP",
     sendContactPixel: config.tracking?.sendContactPixel !== false,
@@ -107,13 +108,17 @@ export default function PublicLandingRuntimeScript({ slug, config }: Props) {
         });
       }
 
+      function storageKey(key) {
+        return String(cfg.storageNamespace || ("landing-builder:no-pixel:" + cfg.slug)) + ":" + key;
+      }
+
       function getLocalStorageValue(key) {
-        try { return window.localStorage.getItem(key) || ""; }
+        try { return window.localStorage.getItem(storageKey(key)) || ""; }
         catch (e) { return ""; }
       }
 
       function setLocalStorageValue(key, value) {
-        try { window.localStorage.setItem(key, value); }
+        try { if (value) window.localStorage.setItem(storageKey(key), value); }
         catch (e) {}
       }
 
@@ -164,22 +169,34 @@ export default function PublicLandingRuntimeScript({ slug, config }: Props) {
           meta.externalId || "",
           getLocalStorageValue("external_id")
         ]) || getOrCreateExternalId();
+        var fn = firstNonEmpty([getParam("fn"), getLocalStorageValue("fn"), meta.userFn || ""]);
+        var ln = firstNonEmpty([getParam("ln"), getLocalStorageValue("ln"), meta.userLn || ""]);
+        var ct = firstNonEmpty([getParam("ct"), getLocalStorageValue("ct")]);
+        var st = firstNonEmpty([getParam("st"), getLocalStorageValue("st")]);
+        var zip = firstNonEmpty([getParam("zip"), getLocalStorageValue("zip")]);
+        var country = firstNonEmpty([getParam("country"), getLocalStorageValue("country")]);
 
         setLocalStorageValue("external_id", externalId);
         if (emailRaw) setLocalStorageValue("em", normalizeEmail(emailRaw));
         if (phoneRaw) setLocalStorageValue("ph", normalizePhone(phoneRaw));
+        if (fn) setLocalStorageValue("fn", fn);
+        if (ln) setLocalStorageValue("ln", ln);
+        if (ct) setLocalStorageValue("ct", ct);
+        if (st) setLocalStorageValue("st", st);
+        if (zip) setLocalStorageValue("zip", zip);
+        if (country) setLocalStorageValue("country", country);
 
         return {
           emailRaw: emailRaw,
           phoneRaw: phoneRaw,
-          ct: firstNonEmpty([getParam("ct"), getLocalStorageValue("ct")]),
-          st: firstNonEmpty([getParam("st"), getLocalStorageValue("st")]),
-          zip: firstNonEmpty([getParam("zip"), getLocalStorageValue("zip")]),
-          country: firstNonEmpty([getParam("country"), getLocalStorageValue("country")]),
+          ct: ct,
+          st: st,
+          zip: zip,
+          country: country,
           email: emailRaw ? normalizeEmail(emailRaw) : "",
           ph: phoneRaw ? normalizePhone(phoneRaw) : "",
-          fn: firstNonEmpty([getParam("fn"), meta.userFn || ""]),
-          ln: firstNonEmpty([getParam("ln"), meta.userLn || ""]),
+          fn: fn,
+          ln: ln,
           externalId: externalId
         };
       }
@@ -206,6 +223,31 @@ export default function PublicLandingRuntimeScript({ slug, config }: Props) {
         }
         metaTracking = { fbp: fbp || "", fbc: fbc || "", clientIpAddress: "" };
         return metaTracking;
+      }
+
+      function safeEventSourceUrl() {
+        try {
+          return window.location.origin + window.location.pathname;
+        } catch (e) {
+          return "";
+        }
+      }
+
+      function sanitizeSensitiveQueryParams() {
+        try {
+          var url = new URL(window.location.href);
+          var sensitiveKeys = ["email", "em", "phone", "ph", "fn", "ln", "external_id", "eid", "ct", "st", "zip", "country"];
+          var changed = false;
+          sensitiveKeys.forEach(function (key) {
+            if (url.searchParams.has(key)) {
+              url.searchParams.delete(key);
+              changed = true;
+            }
+          });
+          if (changed) {
+            window.history.replaceState(window.history.state, "", url.pathname + url.search + url.hash);
+          }
+        } catch (e) {}
       }
 
       function mergeMetaTracking(base, incoming) {
@@ -390,20 +432,10 @@ export default function PublicLandingRuntimeScript({ slug, config }: Props) {
         } catch (e) {}
       }
 
-      function firePixelContact(eventId, identity, tracking) {
+      function firePixelContact(eventId) {
         try {
           if (!cfg.sendContactPixel || !window.fbq) return;
-          var contactData = {
-            source: "main_button",
-            external_id: identity.externalId
-          };
-          if (identity.email) contactData.em = identity.email;
-          if (identity.ph) contactData.ph = identity.ph;
-          if (identity.fn) contactData.fn = identity.fn;
-          if (identity.ln) contactData.ln = identity.ln;
-          if (tracking.fbp) contactData.fbp = tracking.fbp;
-          if (tracking.fbc) contactData.fbc = tracking.fbc;
-          window.fbq("track", "Contact", contactData, { eventID: eventId });
+          window.fbq("track", "Contact", { source: "main_button" }, { eventID: eventId });
         } catch (e) {}
       }
 
@@ -413,6 +445,7 @@ export default function PublicLandingRuntimeScript({ slug, config }: Props) {
         var identity = resolveIdentity(params);
         var tracking = collectMetaTrackingParams(params);
         var testEventCode = params.get("test_event_code") || "";
+        sanitizeSensitiveQueryParams();
 
         return {
           params: params,
@@ -478,7 +511,7 @@ export default function PublicLandingRuntimeScript({ slug, config }: Props) {
               }
 
               if (!shouldSkipContact) {
-                firePixelContact(eventId, identity, tracking);
+                firePixelContact(eventId);
               }
 
               notifyPhoneClick(phoneData, phone);
@@ -489,7 +522,7 @@ export default function PublicLandingRuntimeScript({ slug, config }: Props) {
                 sendContactPixel: cfg.sendContactPixel,
                 event_id: eventId,
                 external_id: identity.externalId,
-                event_source_url: window.location.href,
+                event_source_url: safeEventSourceUrl(),
                 email: identity.emailRaw,
                 phone: identity.phoneRaw,
                 fn: identity.fn || undefined,
@@ -558,6 +591,30 @@ export default function PublicLandingRuntimeScript({ slug, config }: Props) {
         if (autoCta) {
           window.setTimeout(function () { autoCta.click(); }, 40);
         }
+      }
+
+      function initPrivacyDialog() {
+        var dialog = document.querySelector("[data-public-privacy-dialog]");
+        var openButton = document.querySelector("[data-public-privacy-open]");
+        if (!dialog || !openButton) return;
+
+        function openDialog() {
+          if (typeof dialog.showModal === "function") dialog.showModal();
+          else dialog.setAttribute("open", "");
+        }
+
+        function closeDialog() {
+          if (typeof dialog.close === "function") dialog.close();
+          else dialog.removeAttribute("open");
+        }
+
+        openButton.addEventListener("click", openDialog);
+        Array.prototype.slice.call(dialog.querySelectorAll("[data-public-privacy-close]")).forEach(function (button) {
+          button.addEventListener("click", closeDialog);
+        });
+        dialog.addEventListener("click", function (event) {
+          if (event.target === dialog) closeDialog();
+        });
       }
 
       function parseImages(value) {
@@ -639,6 +696,7 @@ export default function PublicLandingRuntimeScript({ slug, config }: Props) {
         initRotatingBackgrounds();
         initCtas();
         initSocialProof();
+        initPrivacyDialog();
       }
 
       if (document.readyState === "loading") {

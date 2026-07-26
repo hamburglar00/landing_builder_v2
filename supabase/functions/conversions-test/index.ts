@@ -131,7 +131,7 @@ Deno.serve(async (req) => {
     customData = {
       currency: config.meta_currency,
       value: row.valor || 0,
-      ...(isRepeat ? { purchase_type: "repeat" } : {}),
+      purchase_type: isRepeat ? "repeat" : "first",
     };
   }
 

@@ -19,6 +19,7 @@ export interface ConversionsConfig {
   send_repeat_purchase_capi: boolean;
   /** @deprecated Compatibility field for deployments predating the split Purchase switches. */
   send_purchase_capi: boolean;
+  send_geo_capi: boolean;
   geo_use_ipapi: boolean;
   geo_fill_only_when_missing: boolean;
   funnel_premium_threshold: number;
@@ -44,6 +45,7 @@ export interface PixelConfig {
   send_repeat_purchase_capi: boolean;
   /** @deprecated Compatibility field for deployments predating the split Purchase switches. */
   send_purchase_capi: boolean;
+  send_geo_capi: boolean;
   geo_use_ipapi: boolean;
   geo_fill_only_when_missing: boolean;
   is_default: boolean;
@@ -274,6 +276,7 @@ const DEFAULT_CONFIG: ConversionsConfig = {
   send_first_purchase_capi: true,
   send_repeat_purchase_capi: true,
   send_purchase_capi: true,
+  send_geo_capi: true,
   geo_use_ipapi: false,
   geo_fill_only_when_missing: false,
   funnel_premium_threshold: 50000,
@@ -308,6 +311,7 @@ export async function fetchConversionsConfig(
       stored.send_first_purchase_capi ?? legacyPurchaseEnabled,
     send_repeat_purchase_capi:
       stored.send_repeat_purchase_capi ?? legacyPurchaseEnabled,
+    send_geo_capi: stored.send_geo_capi !== false,
   };
 }
 
@@ -331,6 +335,7 @@ export async function upsertConversionsConfig(
         send_purchase_capi:
           config.send_first_purchase_capi !== false &&
           config.send_repeat_purchase_capi !== false,
+        send_geo_capi: config.send_geo_capi !== false,
         geo_use_ipapi: config.geo_use_ipapi,
         geo_fill_only_when_missing: config.geo_fill_only_when_missing,
         funnel_premium_threshold: config.funnel_premium_threshold,
@@ -366,6 +371,7 @@ export async function fetchPixelConfigs(userId: string): Promise<PixelConfig[]> 
       send_repeat_purchase_capi:
         pixel.send_repeat_purchase_capi ?? legacyPurchaseEnabled,
       send_purchase_capi: legacyPurchaseEnabled,
+      send_geo_capi: pixel.send_geo_capi !== false,
     };
   }) as PixelConfig[];
 }
@@ -382,6 +388,7 @@ export async function upsertPixelConfig(input: {
   send_first_purchase_capi?: boolean;
   send_repeat_purchase_capi?: boolean;
   send_purchase_capi?: boolean;
+  send_geo_capi?: boolean;
   geo_use_ipapi?: boolean;
   geo_fill_only_when_missing?: boolean;
   is_default?: boolean;
@@ -410,6 +417,9 @@ export async function upsertPixelConfig(input: {
   };
   if (input.comment !== undefined) {
     body.comment = input.comment.trim();
+  }
+  if (input.send_geo_capi !== undefined) {
+    body.send_geo_capi = input.send_geo_capi;
   }
   const { error } = await supabase
     .from("conversions_pixel_configs")

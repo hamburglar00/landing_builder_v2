@@ -2,6 +2,7 @@ import Script from "next/script";
 
 type Props = {
   pixelId: string;
+  slug: string;
 };
 
 declare global {
@@ -18,9 +19,24 @@ declare global {
   }
 }
 
-export default function PixelInit({ pixelId }: Props) {
+function escapeScriptJson(value: unknown) {
+  return JSON.stringify(value).replace(/[<>&\u2028\u2029]/g, (character) => {
+    switch (character) {
+      case "<": return "\\u003c";
+      case ">": return "\\u003e";
+      case "&": return "\\u0026";
+      case "\u2028": return "\\u2028";
+      case "\u2029": return "\\u2029";
+      default: return character;
+    }
+  });
+}
+
+export default function PixelInit({ pixelId, slug }: Props) {
   const normalizedPixelId = String(pixelId || "").trim().replace(/\D+/g, "");
   if (!normalizedPixelId) return null;
+  const storageNamespace = `landing-builder:${normalizedPixelId}:${slug}`;
+  const storageNamespaceJson = escapeScriptJson(storageNamespace);
 
   return (
     <>
@@ -31,6 +47,11 @@ export default function PixelInit({ pixelId }: Props) {
             (function () {
               try {
                 var params = new URLSearchParams(window.location.search);
+                var storageNamespace = ${storageNamespaceJson};
+
+                function storageKey(key){
+                  return storageNamespace + ':' + key;
+                }
 
                 function safeUUID(){
                   if (window.crypto && typeof window.crypto.randomUUID === 'function') return window.crypto.randomUUID();
@@ -59,11 +80,28 @@ export default function PixelInit({ pixelId }: Props) {
                 }
 
                 function readLocalStorage(key){
-                  try { return localStorage.getItem(key) || ''; } catch (e) { return ''; }
+                  try { return localStorage.getItem(storageKey(key)) || ''; } catch (e) { return ''; }
                 }
 
                 function writeLocalStorage(key, value){
-                  try { if (value) localStorage.setItem(key, value); } catch (e) {}
+                  try { if (value) localStorage.setItem(storageKey(key), value); } catch (e) {}
+                }
+
+                function sanitizeAddressBar(){
+                  try {
+                    var url = new URL(window.location.href);
+                    var sensitiveKeys = ['email', 'em', 'phone', 'ph', 'fn', 'ln', 'external_id', 'eid', 'ct', 'st', 'zip', 'country'];
+                    var changed = false;
+                    sensitiveKeys.forEach(function(key){
+                      if (url.searchParams.has(key)) {
+                        url.searchParams.delete(key);
+                        changed = true;
+                      }
+                    });
+                    if (changed) {
+                      window.history.replaceState(window.history.state, '', url.pathname + url.search + url.hash);
+                    }
+                  } catch (e) {}
                 }
 
                 function normEmail(value){ return String(value || '').trim().toLowerCase(); }
@@ -87,6 +125,10 @@ export default function PixelInit({ pixelId }: Props) {
                 writeLocalStorage('external_id', externalId);
                 writeLocalStorage('em', userEmail);
                 writeLocalStorage('ph', userPhone);
+                writeLocalStorage('ct', params.get('ct') || '');
+                writeLocalStorage('st', params.get('st') || '');
+                writeLocalStorage('zip', params.get('zip') || '');
+                writeLocalStorage('country', params.get('country') || '');
 
                 window.__META = Object.assign({}, window.__META || {}, {
                   PIXEL_ID: '${normalizedPixelId}',
@@ -97,6 +139,7 @@ export default function PixelInit({ pixelId }: Props) {
                   externalId: externalId,
                   safeUUID: safeUUID
                 });
+                sanitizeAddressBar();
               } catch (e) {}
             })();
           `,
@@ -126,6 +169,11 @@ export default function PixelInit({ pixelId }: Props) {
 
           try {
             var params = new URLSearchParams(window.location.search);
+            var storageNamespace = ${storageNamespaceJson};
+
+            function storageKey(key){
+              return storageNamespace + ':' + key;
+            }
 
             function readMeta(key){
               try {
@@ -136,11 +184,8 @@ export default function PixelInit({ pixelId }: Props) {
             }
 
             function readLocalStorage(key){
-              try {
-                return localStorage.getItem(key) || '';
-              } catch (e) {
-                return '';
-              }
+              try { return localStorage.getItem(storageKey(key)) || ''; }
+              catch (e) { return ''; }
             }
 
             function firstNonEmpty(values){
@@ -181,10 +226,10 @@ export default function PixelInit({ pixelId }: Props) {
 
             function getOrCreateExternalId(){
               try {
-                var existing = localStorage.getItem('external_id');
+                var existing = readLocalStorage('external_id');
                 if (existing) return existing;
                 var created = safeUUID();
-                localStorage.setItem('external_id', created);
+                localStorage.setItem(storageKey('external_id'), created);
                 return created;
               } catch (e) {
                 return safeUUID();
@@ -220,12 +265,12 @@ export default function PixelInit({ pixelId }: Props) {
               getOrCreateExternalId();
 
             try {
-              localStorage.setItem('external_id', externalId);
+              localStorage.setItem(storageKey('external_id'), externalId);
             } catch (e) {}
 
             try {
-              if (userEmail) localStorage.setItem('em', userEmail);
-              if (userPhone) localStorage.setItem('ph', userPhone);
+              if (userEmail) localStorage.setItem(storageKey('em'), userEmail);
+              if (userPhone) localStorage.setItem(storageKey('ph'), userPhone);
             } catch (e) {}
 
             fbq('init', '${normalizedPixelId}', {

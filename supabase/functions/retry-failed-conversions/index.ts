@@ -154,7 +154,7 @@ Deno.serve(async (req) => {
     const { data: pixelConfigs } = userIds.length > 0
       ? await db
         .from("conversions_pixel_configs")
-        .select("user_id, pixel_id, meta_access_token, meta_currency, meta_api_version, send_lead_capi, send_first_purchase_capi, send_repeat_purchase_capi, send_purchase_capi, is_default")
+        .select("user_id, pixel_id, meta_access_token, meta_currency, meta_api_version, send_lead_capi, send_first_purchase_capi, send_repeat_purchase_capi, send_purchase_capi, send_geo_capi, is_default")
         .in("user_id", userIds)
       : { data: [] };
     const { data: chatraceConfigs } = userIds.length > 0
@@ -304,8 +304,11 @@ Deno.serve(async (req) => {
 
       const isRepeat = purchaseType === "repeat";
 
-      const customData: Record<string, unknown> = { currency, value: amount };
-      if (isRepeat) customData.purchase_type = "repeat";
+      const customData: Record<string, unknown> = {
+        currency,
+        value: amount,
+        purchase_type: isRepeat ? "repeat" : "first",
+      };
       const conversionRow: ConversionRow = {
         landing_id: null,
         user_id: row.user_id,
@@ -360,6 +363,9 @@ Deno.serve(async (req) => {
         send_first_purchase_capi: purchaseFlags.first,
         send_repeat_purchase_capi: purchaseFlags.repeat,
         send_purchase_capi: sendPurchaseCapi,
+        send_geo_capi: selected
+          ? selected.send_geo_capi !== false
+          : cfg.send_geo_capi !== false,
         geo_use_ipapi: false,
         geo_fill_only_when_missing: false,
       };
@@ -1143,6 +1149,9 @@ function resolveRetryConfig(
     send_first_purchase_capi: purchaseFlags.first,
     send_repeat_purchase_capi: purchaseFlags.repeat,
     send_purchase_capi: purchaseFlags.first && purchaseFlags.repeat,
+    send_geo_capi: selected
+      ? selected.send_geo_capi !== false
+      : cfg.send_geo_capi !== false,
     geo_use_ipapi: false,
     geo_fill_only_when_missing: false,
   };
