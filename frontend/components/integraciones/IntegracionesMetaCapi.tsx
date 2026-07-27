@@ -79,6 +79,8 @@ type PixelEditDraft = {
   meta_api_version: string;
   send_contact_capi: boolean;
   send_lead_capi: boolean;
+  send_purchase_capi: boolean;
+  include_purchase_type_capi: boolean;
   send_first_purchase_capi: boolean;
   send_repeat_purchase_capi: boolean;
   send_geo_capi: boolean;
@@ -614,6 +616,8 @@ export default function IntegracionesMetaCapi() {
         meta_api_version: apiVersionToSave,
         send_contact_capi: false,
         send_lead_capi: true,
+        send_purchase_capi: true,
+        include_purchase_type_capi: true,
         send_first_purchase_capi: true,
         send_repeat_purchase_capi: true,
         send_geo_capi: true,
@@ -656,6 +660,8 @@ export default function IntegracionesMetaCapi() {
       meta_api_version: px.meta_api_version || "v25.0",
       send_contact_capi: !!px.send_contact_capi,
       send_lead_capi: px.send_lead_capi !== false,
+      send_purchase_capi: px.send_purchase_capi !== false,
+      include_purchase_type_capi: px.include_purchase_type_capi !== false,
       send_first_purchase_capi: px.send_first_purchase_capi !== false,
       send_repeat_purchase_capi: px.send_repeat_purchase_capi !== false,
       send_geo_capi: px.send_geo_capi !== false,
@@ -689,6 +695,8 @@ export default function IntegracionesMetaCapi() {
         meta_api_version: apiVersionToSave,
         send_contact_capi: !!draft.send_contact_capi,
         send_lead_capi: !!draft.send_lead_capi,
+        send_purchase_capi: !!draft.send_purchase_capi,
+        include_purchase_type_capi: !!draft.include_purchase_type_capi,
         send_first_purchase_capi: !!draft.send_first_purchase_capi,
         send_repeat_purchase_capi: !!draft.send_repeat_purchase_capi,
         send_geo_capi: !!draft.send_geo_capi,
@@ -707,6 +715,8 @@ export default function IntegracionesMetaCapi() {
           meta_api_version: apiVersionToSave,
           send_contact_capi: !!draft.send_contact_capi,
           send_lead_capi: !!draft.send_lead_capi,
+          send_purchase_capi: !!draft.send_purchase_capi,
+          include_purchase_type_capi: !!draft.include_purchase_type_capi,
           send_first_purchase_capi: !!draft.send_first_purchase_capi,
           send_repeat_purchase_capi: !!draft.send_repeat_purchase_capi,
           send_geo_capi: !!draft.send_geo_capi,
@@ -743,6 +753,8 @@ export default function IntegracionesMetaCapi() {
         meta_api_version: px.meta_api_version || "v25.0",
         send_contact_capi: !!px.send_contact_capi,
         send_lead_capi: px.send_lead_capi !== false,
+        send_purchase_capi: px.send_purchase_capi !== false,
+        include_purchase_type_capi: px.include_purchase_type_capi !== false,
         send_first_purchase_capi: px.send_first_purchase_capi !== false,
         send_repeat_purchase_capi: px.send_repeat_purchase_capi !== false,
         send_geo_capi: px.send_geo_capi !== false,
@@ -759,6 +771,8 @@ export default function IntegracionesMetaCapi() {
         meta_api_version: px.meta_api_version || "v25.0",
         send_contact_capi: !!px.send_contact_capi,
         send_lead_capi: px.send_lead_capi !== false,
+        send_purchase_capi: px.send_purchase_capi !== false,
+        include_purchase_type_capi: px.include_purchase_type_capi !== false,
         send_first_purchase_capi: px.send_first_purchase_capi !== false,
         send_repeat_purchase_capi: px.send_repeat_purchase_capi !== false,
         send_geo_capi: px.send_geo_capi !== false,
@@ -1791,9 +1805,20 @@ export default function IntegracionesMetaCapi() {
                 const eventBadges: Array<[string, boolean]> = [
                   ["Contact", !!px.send_contact_capi],
                   ["Lead", px.send_lead_capi !== false],
-                  ["First", px.send_first_purchase_capi !== false],
-                  ["Repeat", px.send_repeat_purchase_capi !== false],
+                  ["Purchase", px.send_purchase_capi !== false],
                 ];
+                if (px.send_purchase_capi !== false) {
+                  eventBadges.push([
+                    px.include_purchase_type_capi !== false ? "Segmentado" : "Estándar",
+                    true,
+                  ]);
+                  if (px.include_purchase_type_capi !== false) {
+                    eventBadges.push(
+                      ["First", px.send_first_purchase_capi !== false],
+                      ["Repeat", px.send_repeat_purchase_capi !== false],
+                    );
+                  }
+                }
                 return (
                   <div key={px.id} className="flex w-full items-center justify-between rounded-lg border border-zinc-800 bg-zinc-900/60 px-3 py-2">
                     <div className="min-w-0">
@@ -1955,7 +1980,7 @@ export default function IntegracionesMetaCapi() {
 
               <section className="rounded-xl border border-zinc-800 bg-zinc-950/40 p-3">
                 <h4 className="text-xs font-semibold uppercase tracking-wide text-zinc-400">Eventos por CAPI</h4>
-                <div className="mt-3 grid gap-2 sm:grid-cols-2 lg:grid-cols-4">
+                <div className="mt-3 grid gap-2 sm:grid-cols-2 lg:grid-cols-3">
                   <SettingsSwitch
                     checked={draft.send_contact_capi}
                     label="Contact"
@@ -1969,18 +1994,38 @@ export default function IntegracionesMetaCapi() {
                     onChange={() => setDraft((p) => (p ? { ...p, send_lead_capi: !p.send_lead_capi } : p))}
                   />
                   <SettingsSwitch
-                    checked={draft.send_first_purchase_capi}
-                    label="First Purchase"
-                    description="Envía la primera compra."
-                    onChange={() => setDraft((p) => (p ? { ...p, send_first_purchase_capi: !p.send_first_purchase_capi } : p))}
-                  />
-                  <SettingsSwitch
-                    checked={draft.send_repeat_purchase_capi}
-                    label="Repeat Purchase"
-                    description="Envía las recompras."
-                    onChange={() => setDraft((p) => (p ? { ...p, send_repeat_purchase_capi: !p.send_repeat_purchase_capi } : p))}
+                    checked={draft.send_purchase_capi}
+                    label="Purchase"
+                    description="Control maestro del envío de compras."
+                    onChange={() => setDraft((p) => (p ? { ...p, send_purchase_capi: !p.send_purchase_capi } : p))}
                   />
                 </div>
+                {draft.send_purchase_capi ? (
+                  <div className="mt-2 rounded-lg border border-zinc-800 bg-zinc-950/60 p-2">
+                    <SettingsSwitch
+                      checked={draft.include_purchase_type_capi}
+                      label="Incluir purchase_type"
+                      description="Activado: envía first/repeat y permite filtrarlos. Desactivado: envía Purchase estándar."
+                      onChange={() => setDraft((p) => (p ? { ...p, include_purchase_type_capi: !p.include_purchase_type_capi } : p))}
+                    />
+                    {draft.include_purchase_type_capi ? (
+                      <div className="mt-2 grid gap-2 sm:grid-cols-2">
+                        <SettingsSwitch
+                          checked={draft.send_first_purchase_capi}
+                          label="First Purchase"
+                          description="Envía las compras clasificadas como first."
+                          onChange={() => setDraft((p) => (p ? { ...p, send_first_purchase_capi: !p.send_first_purchase_capi } : p))}
+                        />
+                        <SettingsSwitch
+                          checked={draft.send_repeat_purchase_capi}
+                          label="Repeat Purchase"
+                          description="Envía las compras clasificadas como repeat."
+                          onChange={() => setDraft((p) => (p ? { ...p, send_repeat_purchase_capi: !p.send_repeat_purchase_capi } : p))}
+                        />
+                      </div>
+                    ) : null}
+                  </div>
+                ) : null}
               </section>
 
               <section className="rounded-xl border border-zinc-800 bg-zinc-950/40 p-3">

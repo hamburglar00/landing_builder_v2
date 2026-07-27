@@ -59,6 +59,8 @@ type PixelEditDraft = {
   meta_api_version: string;
   send_contact_capi: boolean;
   send_lead_capi: boolean;
+  send_purchase_capi: boolean;
+  include_purchase_type_capi: boolean;
   send_first_purchase_capi: boolean;
   send_repeat_purchase_capi: boolean;
   send_geo_capi: boolean;
@@ -1399,6 +1401,8 @@ export default function DashboardConversionesPage() {
           meta_api_version: config.meta_api_version || "v25.0",
           send_contact_capi: !!config.send_contact_capi,
           send_lead_capi: config.send_lead_capi !== false,
+          send_purchase_capi: config.send_purchase_capi !== false,
+          include_purchase_type_capi: config.include_purchase_type_capi !== false,
           send_first_purchase_capi: config.send_first_purchase_capi !== false,
           send_repeat_purchase_capi: config.send_repeat_purchase_capi !== false,
           send_geo_capi: config.send_geo_capi !== false,
@@ -1426,6 +1430,8 @@ export default function DashboardConversionesPage() {
       meta_api_version: px.meta_api_version || "v25.0",
       send_contact_capi: !!px.send_contact_capi,
       send_lead_capi: px.send_lead_capi !== false,
+      send_purchase_capi: px.send_purchase_capi !== false,
+      include_purchase_type_capi: px.include_purchase_type_capi !== false,
       send_first_purchase_capi: px.send_first_purchase_capi !== false,
       send_repeat_purchase_capi: px.send_repeat_purchase_capi !== false,
       send_geo_capi: px.send_geo_capi !== false,
@@ -1462,6 +1468,8 @@ export default function DashboardConversionesPage() {
         meta_api_version: pixelEditDraft.meta_api_version || "v25.0",
         send_contact_capi: !!pixelEditDraft.send_contact_capi,
         send_lead_capi: !!pixelEditDraft.send_lead_capi,
+        send_purchase_capi: !!pixelEditDraft.send_purchase_capi,
+        include_purchase_type_capi: !!pixelEditDraft.include_purchase_type_capi,
         send_first_purchase_capi: !!pixelEditDraft.send_first_purchase_capi,
         send_repeat_purchase_capi: !!pixelEditDraft.send_repeat_purchase_capi,
         send_geo_capi: !!pixelEditDraft.send_geo_capi,
@@ -1481,6 +1489,8 @@ export default function DashboardConversionesPage() {
           meta_api_version: current.meta_api_version || prev.meta_api_version,
           send_contact_capi: !!current.send_contact_capi,
           send_lead_capi: current.send_lead_capi !== false,
+          send_purchase_capi: current.send_purchase_capi !== false,
+          include_purchase_type_capi: current.include_purchase_type_capi !== false,
           send_first_purchase_capi: current.send_first_purchase_capi !== false,
           send_repeat_purchase_capi: current.send_repeat_purchase_capi !== false,
           send_geo_capi: current.send_geo_capi !== false,
@@ -1526,6 +1536,8 @@ export default function DashboardConversionesPage() {
           meta_api_version: first.meta_api_version || "v25.0",
           send_contact_capi: !!first.send_contact_capi,
           send_lead_capi: first.send_lead_capi !== false,
+          send_purchase_capi: first.send_purchase_capi !== false,
+          include_purchase_type_capi: first.include_purchase_type_capi !== false,
           send_first_purchase_capi: first.send_first_purchase_capi !== false,
           send_repeat_purchase_capi: first.send_repeat_purchase_capi !== false,
           send_geo_capi: first.send_geo_capi !== false,
@@ -1548,6 +1560,8 @@ export default function DashboardConversionesPage() {
             meta_api_version: next.meta_api_version || prev.meta_api_version,
             send_contact_capi: !!next.send_contact_capi,
             send_lead_capi: next.send_lead_capi !== false,
+            send_purchase_capi: next.send_purchase_capi !== false,
+            include_purchase_type_capi: next.include_purchase_type_capi !== false,
             send_first_purchase_capi: next.send_first_purchase_capi !== false,
             send_repeat_purchase_capi: next.send_repeat_purchase_capi !== false,
             send_geo_capi: next.send_geo_capi !== false,
@@ -1854,21 +1868,49 @@ export default function DashboardConversionesPage() {
                 <label className="flex items-center gap-2 text-xs text-zinc-300">
                   <input
                     type="checkbox"
-                    checked={pixelEditDraft.send_first_purchase_capi}
-                    onChange={(e) => setPixelEditDraft((p) => p ? { ...p, send_first_purchase_capi: e.target.checked } : p)}
+                    checked={pixelEditDraft.send_purchase_capi}
+                    onChange={(e) => setPixelEditDraft((p) => p ? { ...p, send_purchase_capi: e.target.checked } : p)}
                     className="h-4 w-4 rounded border-zinc-600 bg-zinc-900 accent-emerald-500"
                   />
-                  Enviar First Purchase por CAPI
+                  Enviar evento Purchase por CAPI
                 </label>
-                <label className="flex items-center gap-2 text-xs text-zinc-300">
-                  <input
-                    type="checkbox"
-                    checked={pixelEditDraft.send_repeat_purchase_capi}
-                    onChange={(e) => setPixelEditDraft((p) => p ? { ...p, send_repeat_purchase_capi: e.target.checked } : p)}
-                    className="h-4 w-4 rounded border-zinc-600 bg-zinc-900 accent-emerald-500"
-                  />
-                  Enviar Repeat Purchase por CAPI
-                </label>
+                {pixelEditDraft.send_purchase_capi ? (
+                  <div className="ml-6 space-y-2 rounded-lg border border-zinc-800 p-2">
+                    <label className="flex items-center gap-2 text-xs text-zinc-300">
+                      <input
+                        type="checkbox"
+                        checked={pixelEditDraft.include_purchase_type_capi}
+                        onChange={(e) => setPixelEditDraft((p) => p ? { ...p, include_purchase_type_capi: e.target.checked } : p)}
+                        className="h-4 w-4 rounded border-zinc-600 bg-zinc-900 accent-emerald-500"
+                      />
+                      Incluir purchase_type (first/repeat)
+                    </label>
+                    {pixelEditDraft.include_purchase_type_capi ? (
+                      <div className="ml-6 space-y-2">
+                        <label className="flex items-center gap-2 text-xs text-zinc-300">
+                          <input
+                            type="checkbox"
+                            checked={pixelEditDraft.send_first_purchase_capi}
+                            onChange={(e) => setPixelEditDraft((p) => p ? { ...p, send_first_purchase_capi: e.target.checked } : p)}
+                            className="h-4 w-4 rounded border-zinc-600 bg-zinc-900 accent-emerald-500"
+                          />
+                          Enviar First Purchase por CAPI
+                        </label>
+                        <label className="flex items-center gap-2 text-xs text-zinc-300">
+                          <input
+                            type="checkbox"
+                            checked={pixelEditDraft.send_repeat_purchase_capi}
+                            onChange={(e) => setPixelEditDraft((p) => p ? { ...p, send_repeat_purchase_capi: e.target.checked } : p)}
+                            className="h-4 w-4 rounded border-zinc-600 bg-zinc-900 accent-emerald-500"
+                          />
+                          Enviar Repeat Purchase por CAPI
+                        </label>
+                      </div>
+                    ) : (
+                      <p className="text-[11px] text-zinc-500">Se enviará el evento Purchase estándar, sin purchase_type.</p>
+                    )}
+                  </div>
+                ) : null}
                 <label className="flex items-center gap-2 text-xs text-zinc-300">
                   <input
                     type="checkbox"

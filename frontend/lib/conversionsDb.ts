@@ -15,10 +15,10 @@ export interface ConversionsConfig {
   meta_api_version: string;
   send_contact_capi: boolean;
   send_lead_capi: boolean;
+  send_purchase_capi: boolean;
+  include_purchase_type_capi: boolean;
   send_first_purchase_capi: boolean;
   send_repeat_purchase_capi: boolean;
-  /** @deprecated Compatibility field for deployments predating the split Purchase switches. */
-  send_purchase_capi: boolean;
   send_geo_capi: boolean;
   geo_use_ipapi: boolean;
   geo_fill_only_when_missing: boolean;
@@ -41,10 +41,10 @@ export interface PixelConfig {
   meta_api_version: string;
   send_contact_capi: boolean;
   send_lead_capi: boolean;
+  send_purchase_capi: boolean;
+  include_purchase_type_capi: boolean;
   send_first_purchase_capi: boolean;
   send_repeat_purchase_capi: boolean;
-  /** @deprecated Compatibility field for deployments predating the split Purchase switches. */
-  send_purchase_capi: boolean;
   send_geo_capi: boolean;
   geo_use_ipapi: boolean;
   geo_fill_only_when_missing: boolean;
@@ -276,9 +276,10 @@ const DEFAULT_CONFIG: ConversionsConfig = {
   meta_api_version: "v25.0",
   send_contact_capi: false,
   send_lead_capi: true,
+  send_purchase_capi: true,
+  include_purchase_type_capi: true,
   send_first_purchase_capi: true,
   send_repeat_purchase_capi: true,
-  send_purchase_capi: true,
   send_geo_capi: true,
   geo_use_ipapi: false,
   geo_fill_only_when_missing: false,
@@ -310,6 +311,10 @@ export async function fetchConversionsConfig(
     ...DEFAULT_CONFIG,
     ...stored,
     user_id: userId,
+    send_purchase_capi:
+      stored.send_purchase_capi ??
+      (stored.send_first_purchase_capi !== false || stored.send_repeat_purchase_capi !== false),
+    include_purchase_type_capi: stored.include_purchase_type_capi !== false,
     send_first_purchase_capi:
       stored.send_first_purchase_capi ?? legacyPurchaseEnabled,
     send_repeat_purchase_capi:
@@ -333,11 +338,10 @@ export async function upsertConversionsConfig(
         meta_api_version: config.meta_api_version,
         send_contact_capi: config.send_contact_capi,
         send_lead_capi: config.send_lead_capi !== false,
+        send_purchase_capi: config.send_purchase_capi !== false,
+        include_purchase_type_capi: config.include_purchase_type_capi !== false,
         send_first_purchase_capi: config.send_first_purchase_capi !== false,
         send_repeat_purchase_capi: config.send_repeat_purchase_capi !== false,
-        send_purchase_capi:
-          config.send_first_purchase_capi !== false &&
-          config.send_repeat_purchase_capi !== false,
         send_geo_capi: config.send_geo_capi !== false,
         geo_use_ipapi: config.geo_use_ipapi,
         geo_fill_only_when_missing: config.geo_fill_only_when_missing,
@@ -369,11 +373,14 @@ export async function fetchPixelConfigs(userId: string): Promise<PixelConfig[]> 
     return {
       ...pixel,
       send_lead_capi: pixel.send_lead_capi !== false,
+      send_purchase_capi:
+        pixel.send_purchase_capi ??
+        (pixel.send_first_purchase_capi !== false || pixel.send_repeat_purchase_capi !== false),
+      include_purchase_type_capi: pixel.include_purchase_type_capi !== false,
       send_first_purchase_capi:
         pixel.send_first_purchase_capi ?? legacyPurchaseEnabled,
       send_repeat_purchase_capi:
         pixel.send_repeat_purchase_capi ?? legacyPurchaseEnabled,
-      send_purchase_capi: legacyPurchaseEnabled,
       send_geo_capi: pixel.send_geo_capi !== false,
     };
   }) as PixelConfig[];
@@ -388,9 +395,10 @@ export async function upsertPixelConfig(input: {
   meta_api_version?: string;
   send_contact_capi?: boolean;
   send_lead_capi?: boolean;
+  send_purchase_capi?: boolean;
+  include_purchase_type_capi?: boolean;
   send_first_purchase_capi?: boolean;
   send_repeat_purchase_capi?: boolean;
-  send_purchase_capi?: boolean;
   send_geo_capi?: boolean;
   geo_use_ipapi?: boolean;
   geo_fill_only_when_missing?: boolean;
@@ -402,6 +410,8 @@ export async function upsertPixelConfig(input: {
     input.send_first_purchase_capi ?? legacyPurchaseEnabled;
   const repeatPurchaseEnabled =
     input.send_repeat_purchase_capi ?? legacyPurchaseEnabled;
+  const purchaseEnabled =
+    input.send_purchase_capi ?? (firstPurchaseEnabled || repeatPurchaseEnabled);
   const body: Record<string, unknown> = {
     user_id: input.user_id,
     pixel_id: pixelId,
@@ -410,9 +420,10 @@ export async function upsertPixelConfig(input: {
     meta_api_version: input.meta_api_version ?? "v25.0",
     send_contact_capi: !!input.send_contact_capi,
     send_lead_capi: input.send_lead_capi !== false,
+    send_purchase_capi: purchaseEnabled,
+    include_purchase_type_capi: input.include_purchase_type_capi !== false,
     send_first_purchase_capi: firstPurchaseEnabled,
     send_repeat_purchase_capi: repeatPurchaseEnabled,
-    send_purchase_capi: firstPurchaseEnabled && repeatPurchaseEnabled,
     geo_use_ipapi: !!input.geo_use_ipapi,
     geo_fill_only_when_missing: !!input.geo_fill_only_when_missing,
     is_default: !!input.is_default,

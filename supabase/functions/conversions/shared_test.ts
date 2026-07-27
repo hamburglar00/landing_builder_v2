@@ -1,6 +1,8 @@
 import {
   buildMetaBusinessMessagingPurchaseRequest,
   normalizeCtwaClid,
+  preparePurchaseCustomDataForMeta,
+  resolvePurchaseCapiDecision,
   resolvePurchaseCapiRoute,
 } from "./shared.ts";
 
@@ -65,6 +67,77 @@ Deno.test("Business Messaging Purchase matches Meta WhatsApp payload shape", () 
   const customData = event.custom_data as Record<string, unknown>;
   assert(customData.currency === "ARS", "currency must be preserved");
   assert(customData.value === 12500, "value must be preserved");
+  assert(
+    !("purchase_type" in customData),
+    "Business Messaging Purchase must stay standard",
+  );
+});
+
+Deno.test("Purchase master switch disables every website Purchase", () => {
+  const decision = resolvePurchaseCapiDecision(
+    {
+      send_purchase_capi: false,
+      include_purchase_type_capi: false,
+      send_first_purchase_capi: true,
+      send_repeat_purchase_capi: true,
+    },
+    "first",
+  );
+  assert(!decision.enabled, "Master switch must disable Purchase");
+  assert(
+    decision.reason === "purchase_disabled",
+    "Master switch skip reason must be traceable",
+  );
+});
+
+Deno.test("Standard Purchase mode sends all purchases without purchase_type", () => {
+  const decision = resolvePurchaseCapiDecision(
+    {
+      send_purchase_capi: true,
+      include_purchase_type_capi: false,
+      send_first_purchase_capi: false,
+      send_repeat_purchase_capi: false,
+    },
+    "repeat",
+  );
+  assert(decision.enabled, "Standard mode must not apply subtype filters");
+  assert(
+    decision.reason === "enabled_standard",
+    "Standard mode must be traceable",
+  );
+  const prepared = preparePurchaseCustomDataForMeta(
+    { currency: "ARS", value: 2500, purchase_type: "repeat" },
+    decision.includePurchaseType,
+  );
+  assert(
+    !("purchase_type" in prepared),
+    "Standard mode must omit purchase_type from Meta custom_data",
+  );
+  assert(prepared.currency === "ARS", "Standard mode must preserve currency");
+  assert(prepared.value === 2500, "Standard mode must preserve value");
+});
+
+Deno.test("Segmented Purchase mode preserves first/repeat filters and parameter", () => {
+  const config = {
+    send_purchase_capi: true,
+    include_purchase_type_capi: true,
+    send_first_purchase_capi: true,
+    send_repeat_purchase_capi: false,
+  };
+  const first = resolvePurchaseCapiDecision(config, "first");
+  const repeat = resolvePurchaseCapiDecision(config, "repeat");
+  assert(first.enabled, "Enabled first purchases must be sent");
+  assert(!repeat.enabled, "Disabled repeat purchases must be skipped");
+  assert(repeat.reason === "repeat_disabled", "Subtype skip must be traceable");
+
+  const prepared = preparePurchaseCustomDataForMeta(
+    { currency: "ARS", value: 2500, purchase_type: "first" },
+    first.includePurchaseType,
+  );
+  assert(
+    prepared.purchase_type === "first",
+    "Segmented mode must include the internal purchase_type",
+  );
 });
 
 Deno.test("ctwa_clid validation rejects unresolved Chatrace placeholders", () => {

@@ -9,9 +9,10 @@ export interface ConversionsConfig {
   meta_api_version: string;
   send_contact_capi: boolean;
   send_lead_capi?: boolean;
+  send_purchase_capi?: boolean;
+  include_purchase_type_capi?: boolean;
   send_first_purchase_capi?: boolean;
   send_repeat_purchase_capi?: boolean;
-  send_purchase_capi?: boolean;
   send_geo_capi: boolean;
   geo_use_ipapi: boolean;
   geo_fill_only_when_missing: boolean;
@@ -71,6 +72,72 @@ export interface ConversionRow {
   geo_city: string;
   geo_region: string;
   geo_country: string;
+}
+
+export type PurchaseType = "first" | "repeat";
+
+export type PurchaseCapiDecision = {
+  enabled: boolean;
+  includePurchaseType: boolean;
+  reason:
+    | "enabled_standard"
+    | "enabled_first"
+    | "enabled_repeat"
+    | "purchase_disabled"
+    | "first_disabled"
+    | "repeat_disabled";
+};
+
+/**
+ * Purchase is always classified internally. This decision only controls what is
+ * delivered to Meta and whether the internal type is exposed in custom_data.
+ */
+export function resolvePurchaseCapiDecision(
+  config: Pick<
+    ConversionsConfig,
+    | "send_purchase_capi"
+    | "include_purchase_type_capi"
+    | "send_first_purchase_capi"
+    | "send_repeat_purchase_capi"
+  >,
+  purchaseType: PurchaseType,
+): PurchaseCapiDecision {
+  if (config.send_purchase_capi === false) {
+    return {
+      enabled: false,
+      includePurchaseType: config.include_purchase_type_capi !== false,
+      reason: "purchase_disabled",
+    };
+  }
+
+  const includePurchaseType = config.include_purchase_type_capi !== false;
+  if (!includePurchaseType) {
+    return {
+      enabled: true,
+      includePurchaseType: false,
+      reason: "enabled_standard",
+    };
+  }
+
+  const typeEnabled = purchaseType === "repeat"
+    ? (config.send_repeat_purchase_capi ?? true)
+    : (config.send_first_purchase_capi ?? true);
+  return {
+    enabled: typeEnabled,
+    includePurchaseType: true,
+    reason: typeEnabled
+      ? (purchaseType === "repeat" ? "enabled_repeat" : "enabled_first")
+      : (purchaseType === "repeat" ? "repeat_disabled" : "first_disabled"),
+  };
+}
+
+export function preparePurchaseCustomDataForMeta(
+  customData: Record<string, unknown>,
+  includePurchaseType: boolean,
+): Record<string, unknown> {
+  const prepared = { ...customData };
+  if (!includePurchaseType) delete prepared.purchase_type;
+  return prepared;
 }
 
 export type MetaEventName = "Contact" | "Lead" | "Purchase";
