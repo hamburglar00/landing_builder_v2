@@ -1914,32 +1914,34 @@ export default function DashboardConversionesPage() {
                 <label className="flex items-center gap-2 text-xs text-zinc-300">
                   <input
                     type="checkbox"
-                    checked={pixelEditDraft.geo_use_ipapi}
-                    onChange={(e) => setPixelEditDraft((p) => p ? { ...p, geo_use_ipapi: e.target.checked } : p)}
-                    className="h-4 w-4 rounded border-zinc-600 bg-zinc-900 accent-emerald-500"
-                  />
-                  Geo por IP
-                </label>
-                {pixelEditDraft.geo_use_ipapi && (
-                  <label className="ml-6 flex items-center gap-2 text-xs text-zinc-300">
-                    <input
-                      type="checkbox"
-                      checked={pixelEditDraft.geo_fill_only_when_missing}
-                      onChange={(e) => setPixelEditDraft((p) => p ? { ...p, geo_fill_only_when_missing: e.target.checked } : p)}
-                      className="h-4 w-4 rounded border-zinc-600 bg-zinc-900 accent-emerald-500"
-                    />
-                    Solo completar geo faltante (no pisar datos del payload)
-                  </label>
-                )}
-                <label className="flex items-center gap-2 text-xs text-zinc-300">
-                  <input
-                    type="checkbox"
                     checked={pixelEditDraft.send_geo_capi}
                     onChange={(e) => setPixelEditDraft((p) => p ? { ...p, send_geo_capi: e.target.checked } : p)}
                     className="h-4 w-4 rounded border-zinc-600 bg-zinc-900 accent-emerald-500"
                   />
                   Enviar geo por CAPI
                 </label>
+                {pixelEditDraft.send_geo_capi ? (
+                  <div className="ml-6 space-y-2">
+                    <label className="flex items-center gap-2 text-xs text-zinc-300">
+                      <input
+                        type="checkbox"
+                        checked={pixelEditDraft.geo_use_ipapi}
+                        onChange={(e) => setPixelEditDraft((p) => p ? { ...p, geo_use_ipapi: e.target.checked } : p)}
+                        className="h-4 w-4 rounded border-zinc-600 bg-zinc-900 accent-emerald-500"
+                      />
+                      Geo por IP
+                    </label>
+                    <label className="flex items-center gap-2 text-xs text-zinc-300">
+                      <input
+                        type="checkbox"
+                        checked={pixelEditDraft.geo_fill_only_when_missing}
+                        onChange={(e) => setPixelEditDraft((p) => p ? { ...p, geo_fill_only_when_missing: e.target.checked } : p)}
+                        className="h-4 w-4 rounded border-zinc-600 bg-zinc-900 accent-emerald-500"
+                      />
+                      Solo completar geo faltante (no pisar datos del payload)
+                    </label>
+                  </div>
+                ) : null}
               </div>
             </div>
 

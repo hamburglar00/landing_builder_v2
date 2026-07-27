@@ -2032,23 +2032,27 @@ export default function IntegracionesMetaCapi() {
                 <h4 className="text-xs font-semibold uppercase tracking-wide text-zinc-400">Geolocalización</h4>
                 <div className="mt-3 grid gap-2 sm:grid-cols-2">
                   <SettingsSwitch
-                    checked={draft.geo_use_ipapi}
-                    label="Geo por IP"
-                    description="Completa ciudad/provincia/país por IP."
-                    onChange={() => setDraft((p) => (p ? { ...p, geo_use_ipapi: !p.geo_use_ipapi } : p))}
-                  />
-                  <SettingsSwitch
-                    checked={draft.geo_fill_only_when_missing}
-                    label="Solo geo faltante"
-                    description="No pisa datos que ya vienen en payload."
-                    onChange={() => setDraft((p) => (p ? { ...p, geo_fill_only_when_missing: !p.geo_fill_only_when_missing } : p))}
-                  />
-                  <SettingsSwitch
                     checked={draft.send_geo_capi}
                     label="Enviar geo"
                     description="Incluye la geo disponible en el payload de Meta CAPI."
                     onChange={() => setDraft((p) => (p ? { ...p, send_geo_capi: !p.send_geo_capi } : p))}
                   />
+                  {draft.send_geo_capi ? (
+                    <>
+                      <SettingsSwitch
+                        checked={draft.geo_use_ipapi}
+                        label="Geo por IP"
+                        description="Completa ciudad/provincia/país por IP."
+                        onChange={() => setDraft((p) => (p ? { ...p, geo_use_ipapi: !p.geo_use_ipapi } : p))}
+                      />
+                      <SettingsSwitch
+                        checked={draft.geo_fill_only_when_missing}
+                        label="Solo geo faltante"
+                        description="No pisa datos que ya vienen en payload."
+                        onChange={() => setDraft((p) => (p ? { ...p, geo_fill_only_when_missing: !p.geo_fill_only_when_missing } : p))}
+                      />
+                    </>
+                  ) : null}
                 </div>
               </section>
             </div>
