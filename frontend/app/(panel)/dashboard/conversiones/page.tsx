@@ -45,7 +45,6 @@ import {
 import {
   CURRENCY_ALL,
   filterConversionsByCurrency,
-  formatCurrencyAmount,
 } from "@/lib/currency";
 
 const FunnelBoard = dynamic(() => import("@/components/conversiones/FunnelBoard"), {
@@ -601,7 +600,7 @@ function cellValue(c: ConversionRow, col: ColKey): React.ReactNode {
       const isRepeat = c.estado === "purchase" && c.observaciones?.includes("REPEAT");
       return <td key={col} className={cell}>{estadoBadge(c.estado, isRepeat)}</td>;
     }
-    case "valor": return <td key={col} className={`${cell} text-zinc-200`} title={tip(c.valor)}>{c.valor > 0 ? formatCurrencyAmount(c.valor, c.currency) : "-"}</td>;
+    case "valor": return <td key={col} className={`${cell} text-zinc-200`} title={tip(c.valor)}>{c.valor > 0 ? formatIntegerWithThousands(c.valor) : "-"}</td>;
     case "currency": return <td key={col} className={dimMono} title={tip(c.currency)}>{c.currency || "ARS"}</td>;
     case "purchase_type": return <td key={col} className={dim} title={tip(c.purchase_type)}>{c.purchase_type || "-"}</td>;
     case "purchase_capi_route": return <td key={col} className={dim} title={tip(c.purchase_capi_route)}>{c.purchase_capi_route || "-"}</td>;
