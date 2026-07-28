@@ -21,9 +21,7 @@ import {
   getPremiumThreshold,
   setPremiumThreshold,
   getTrackingRankingConfig,
-  hideConversions,
-  hideConversionLogs,
-  hideConversionInboxRows,
+  setConversionViewVisibleFrom,
   type FetchDateRange,
   type ConversionsConfig,
   type PixelConfig,
@@ -31,6 +29,9 @@ import {
   type ConversionLogRow,
   type ConversionInboxRow,
 } from "@/lib/conversionsDb";
+import ClearConversionsViewModal, {
+  type ClearConversionsViewMode,
+} from "@/components/conversiones/ClearConversionsViewModal";
 import { DashboardSkeleton, PanelSkeleton } from "@/components/ui/DashboardSkeleton";
 import DateRangeFilter, {
   type DateRange,
@@ -640,6 +641,7 @@ export default function DashboardConversionesPage() {
   const [saving, setSaving] = useState(false);
   const [saveMsg, setSaveMsg] = useState<string | null>(null);
   const [clearMsg, setClearMsg] = useState<string | null>(null);
+  const [clearViewOpen, setClearViewOpen] = useState(false);
   const [tab, setTab] = useState<Tab>("funnel");
   const [copiedUrl, setCopiedUrl] = useState<string | null>(null);
   const [expandedLog, setExpandedLog] = useState<number | null>(null);
@@ -1738,30 +1740,46 @@ export default function DashboardConversionesPage() {
     return fetchGerenciaAvailabilitySummaries(currentUserId, range);
   }, []);
 
-  const clearGlobalDisplay = useCallback(async () => {
+  const clearGlobalDisplay = useCallback(() => {
     if (!userId) return;
-    if (activeConversions.length === 0 && activeLogs.length === 0 && activeInbox.length === 0) return;
-    const ok = window.confirm(
-      "Vas a limpiar la vista de Conversiones.\n\nSe ocultarán los registros que ves ahora en Funnel, Tabla, Estadísticas, Inbox y Logs.\n\nEsta acción NO borra datos de la base.\nSolo deja de mostrarlos en esta vista.\n\n¿Querés continuar?",
-    );
-    if (!ok) return;
+    setClearViewOpen(true);
+  }, [userId]);
+
+  const applyGlobalDisplayCleanup = useCallback(async (
+    mode: ClearConversionsViewMode,
+  ) => {
+    if (!userId) return;
     setHidingTable(true);
     setHidingFunnel(true);
     setHidingStats(true);
     setHidingLogs(true);
     setClearMsg(null);
     try {
-      if (activeConversions.length > 0) {
-        await hideConversions(activeConversions.map((c) => c.id), userId);
-      }
-      if (activeLogs.length > 0) {
-        await hideConversionLogs(activeLogs.map((l) => Number(l.id)), userId);
-      }
-      if (activeInbox.length > 0) {
-        await hideConversionInboxRows(activeInbox.map((row) => row.id), userId);
-      }
+      const now = new Date();
+      const visibleFrom = mode === "keep_current_month"
+        ? new Date(now.getFullYear(), now.getMonth(), 1)
+        : now;
+      const cutoffMs = visibleFrom.getTime();
+      await setConversionViewVisibleFrom(userId, visibleFrom);
+      setConversions((rows) =>
+        rows.filter((row) => new Date(row.created_at).getTime() >= cutoffMs)
+      );
+      setLogs((rows) =>
+        rows.filter((row) => new Date(row.created_at).getTime() >= cutoffMs)
+      );
+      setInboxRows((rows) =>
+        rows.filter((row) => new Date(row.created_at).getTime() >= cutoffMs)
+      );
+      setTablePage(1);
+      setLogsPage(1);
+      setInboxPage(1);
       await refreshTable();
-      setClearMsg("Vista limpiada.");
+      setClearViewOpen(false);
+      setClearMsg(
+        mode === "keep_current_month"
+          ? "Vista limpiada. Se conserva únicamente el mes actual."
+          : "Vista limpiada. Las conversiones nuevas seguirán apareciendo.",
+      );
       setTimeout(() => setClearMsg(null), 4000);
     } catch (e) {
       console.error(e);
@@ -1773,7 +1791,7 @@ export default function DashboardConversionesPage() {
       setHidingStats(false);
       setHidingLogs(false);
     }
-  }, [userId, activeConversions, activeLogs, activeInbox, refreshTable]);
+  }, [userId, refreshTable]);
 
   if (loading) {
     return <DashboardSkeleton title="Cargando conversiones..." />;
@@ -1800,6 +1818,16 @@ export default function DashboardConversionesPage() {
           {clearMsg}
         </p>
       )}
+      <ClearConversionsViewModal
+        open={clearViewOpen}
+        busy={hidingFunnel || hidingTable || hidingStats || hidingLogs}
+        currentMonthLabel={new Intl.DateTimeFormat("es-AR", {
+          month: "long",
+          year: "numeric",
+        }).format(new Date())}
+        onClose={() => setClearViewOpen(false)}
+        onConfirm={(mode) => void applyGlobalDisplayCleanup(mode)}
+      />
 
       {pixelEditOpen && pixelEditDraft && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 p-4">
@@ -2110,13 +2138,12 @@ export default function DashboardConversionesPage() {
                     hidingTable ||
                     hidingStats ||
                     hidingLogs ||
-                    refreshingTable ||
-                    (activeConversions.length === 0 && activeLogs.length === 0 && activeInbox.length === 0)
+                    refreshingTable
                   }
                   className="inline-flex h-8 items-center justify-center gap-1.5 rounded-lg border border-red-900/60 bg-red-950/30 px-2 text-[11px] font-medium text-red-300 transition hover:bg-red-950/50 disabled:opacity-50 disabled:cursor-not-allowed sm:h-7"
-                  title="Ocultar registros de la vista (persistente, no borra de la base)"
+                  title="Organizar el historial visible sin borrar datos"
                 >
-                  {(hidingFunnel || hidingTable || hidingStats || hidingLogs) ? "Ocultando..." : "Limpiar vista"}
+                  {(hidingFunnel || hidingTable || hidingStats || hidingLogs) ? "Ocultando..." : "Limpiar vistas"}
                 </button>
               </>
             )}
