@@ -79,6 +79,7 @@ type PixelEditDraft = {
   meta_api_version: string;
   send_contact_capi: boolean;
   send_lead_capi: boolean;
+  meta_ads_only_capi: boolean;
   send_purchase_capi: boolean;
   include_purchase_type_capi: boolean;
   send_first_purchase_capi: boolean;
@@ -616,6 +617,7 @@ export default function IntegracionesMetaCapi() {
         meta_api_version: apiVersionToSave,
         send_contact_capi: false,
         send_lead_capi: true,
+        meta_ads_only_capi: false,
         send_purchase_capi: true,
         include_purchase_type_capi: true,
         send_first_purchase_capi: true,
@@ -660,6 +662,7 @@ export default function IntegracionesMetaCapi() {
       meta_api_version: px.meta_api_version || "v25.0",
       send_contact_capi: !!px.send_contact_capi,
       send_lead_capi: px.send_lead_capi !== false,
+      meta_ads_only_capi: px.meta_ads_only_capi === true,
       send_purchase_capi: px.send_purchase_capi !== false,
       include_purchase_type_capi: px.include_purchase_type_capi !== false,
       send_first_purchase_capi: px.send_first_purchase_capi !== false,
@@ -695,6 +698,7 @@ export default function IntegracionesMetaCapi() {
         meta_api_version: apiVersionToSave,
         send_contact_capi: !!draft.send_contact_capi,
         send_lead_capi: !!draft.send_lead_capi,
+        meta_ads_only_capi: !!draft.meta_ads_only_capi,
         send_purchase_capi: !!draft.send_purchase_capi,
         include_purchase_type_capi: !!draft.include_purchase_type_capi,
         send_first_purchase_capi: !!draft.send_first_purchase_capi,
@@ -715,6 +719,7 @@ export default function IntegracionesMetaCapi() {
           meta_api_version: apiVersionToSave,
           send_contact_capi: !!draft.send_contact_capi,
           send_lead_capi: !!draft.send_lead_capi,
+          meta_ads_only_capi: !!draft.meta_ads_only_capi,
           send_purchase_capi: !!draft.send_purchase_capi,
           include_purchase_type_capi: !!draft.include_purchase_type_capi,
           send_first_purchase_capi: !!draft.send_first_purchase_capi,
@@ -753,6 +758,7 @@ export default function IntegracionesMetaCapi() {
         meta_api_version: px.meta_api_version || "v25.0",
         send_contact_capi: !!px.send_contact_capi,
         send_lead_capi: px.send_lead_capi !== false,
+        meta_ads_only_capi: px.meta_ads_only_capi === true,
         send_purchase_capi: px.send_purchase_capi !== false,
         include_purchase_type_capi: px.include_purchase_type_capi !== false,
         send_first_purchase_capi: px.send_first_purchase_capi !== false,
@@ -771,6 +777,7 @@ export default function IntegracionesMetaCapi() {
         meta_api_version: px.meta_api_version || "v25.0",
         send_contact_capi: !!px.send_contact_capi,
         send_lead_capi: px.send_lead_capi !== false,
+        meta_ads_only_capi: px.meta_ads_only_capi === true,
         send_purchase_capi: px.send_purchase_capi !== false,
         include_purchase_type_capi: px.include_purchase_type_capi !== false,
         send_first_purchase_capi: px.send_first_purchase_capi !== false,
@@ -1906,8 +1913,8 @@ export default function IntegracionesMetaCapi() {
       )}
 
       {editOpen && draft && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 px-3">
-          <div className="w-full max-w-3xl rounded-xl border border-zinc-700 bg-zinc-900 p-4">
+        <div className="fixed inset-0 z-50 flex items-start justify-center overflow-y-auto bg-black/70 p-2 sm:items-center sm:p-4">
+          <div className="max-h-[calc(100dvh-1rem)] w-full max-w-3xl overflow-y-auto overscroll-contain rounded-xl border border-zinc-700 bg-zinc-900 p-3 sm:max-h-[calc(100dvh-2rem)] sm:p-4">
             <div className="flex items-start justify-between gap-3">
               <div>
                 <h3 className="text-sm font-semibold text-zinc-100">Editar pixel</h3>
@@ -1980,11 +1987,22 @@ export default function IntegracionesMetaCapi() {
 
               <section className="rounded-xl border border-zinc-800 bg-zinc-950/40 p-3">
                 <h4 className="text-xs font-semibold uppercase tracking-wide text-zinc-400">Eventos por CAPI</h4>
-                <div className="mt-3 grid gap-2 sm:grid-cols-2 lg:grid-cols-3">
+                <div className="mt-3">
+                  <SettingsSwitch
+                    checked={draft.meta_ads_only_capi}
+                    label="Solo eventos de Meta Ads"
+                    description="Activado: CAPI solo envía conversiones con from_meta_ads = true. Desactivado: envía todos los orígenes."
+                    onChange={() => setDraft((p) => (p ? { ...p, meta_ads_only_capi: !p.meta_ads_only_capi } : p))}
+                  />
+                  <p className="mt-1.5 px-1 text-[10px] leading-relaxed text-zinc-500">
+                    Se considera Meta Ads al detectar, en este orden: fbc; utm_campaign; o un promo_code TAG-SUFIX cuando el origen es Chatrace.
+                  </p>
+                </div>
+                <div className="mt-2 grid gap-2 sm:grid-cols-2 lg:grid-cols-3">
                   <SettingsSwitch
                     checked={draft.send_contact_capi}
                     label="Contact"
-                    description="Envía Contact desde landings."
+                    description="Envía el evento Contact mediante Meta CAPI."
                     onChange={() => setDraft((p) => (p ? { ...p, send_contact_capi: !p.send_contact_capi } : p))}
                   />
                   <SettingsSwitch
@@ -2030,7 +2048,7 @@ export default function IntegracionesMetaCapi() {
 
               <section className="rounded-xl border border-zinc-800 bg-zinc-950/40 p-3">
                 <h4 className="text-xs font-semibold uppercase tracking-wide text-zinc-400">Geolocalización</h4>
-                <div className="mt-3 grid gap-2 sm:grid-cols-2">
+                <div className="mt-3 grid gap-2 sm:grid-cols-3">
                   <SettingsSwitch
                     checked={draft.send_geo_capi}
                     label="Enviar geo"

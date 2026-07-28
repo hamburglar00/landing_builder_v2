@@ -7,6 +7,7 @@ import {
   preparePurchaseCustomDataForMeta,
   resolvePurchaseCapiDecision,
   resolvePurchaseCapiRoute,
+  shouldSkipCapiForNonMetaOrigin,
   type ConversionRow,
   type ConversionsConfig,
 } from "../conversions/shared.ts";
@@ -28,7 +29,7 @@ const MIN_CONTACT_LEAD_RETRY_INTERVAL_MS = 5 * 60 * 1000;
 const CONTACT_LEAD_CAPI_RETRY_SELECT = `
   id, landing_id, user_id, landing_name,
   phone, email, fn, ln, ct, st, zip, country,
-  fbp, fbc, source_platform, pixel_id,
+  fbp, fbc, from_meta_ads, source_platform, pixel_id,
   contact_event_id, contact_event_time, contact_payload_raw,
   lead_event_id, lead_event_time, lead_payload_raw,
   purchase_event_id, purchase_event_time, purchase_payload_raw,
@@ -136,9 +137,9 @@ Deno.serve(async (req) => {
     // Find purchases that need retry
     const { data: rows, error } = await db
       .from("conversions")
-      .select("id, landing_id, user_id, phone, source_platform, ctwa_clid, pixel_id, meta_pixel_id, pixel_attribution_source, pixel_attribution_conversion_id, contact_event_id, contact_payload_raw, lead_payload_raw, purchase_payload_raw, promo_code, purchase_event_id, purchase_event_time, purchase_type, purchase_capi_route, purchase_capi_route_reason, valor, currency, event_source_url, email, fn, ln, ct, st, zip, country, fbp, fbc, client_ip, agent_user, external_id, observaciones")
+      .select("id, landing_id, user_id, phone, source_platform, ctwa_clid, pixel_id, meta_pixel_id, pixel_attribution_source, pixel_attribution_conversion_id, contact_event_id, contact_payload_raw, lead_payload_raw, purchase_payload_raw, promo_code, purchase_event_id, purchase_event_time, purchase_type, purchase_capi_route, purchase_capi_route_reason, valor, currency, event_source_url, email, fn, ln, ct, st, zip, country, fbp, fbc, from_meta_ads, client_ip, agent_user, external_id, observaciones")
       .eq("estado", "purchase")
-      .not("purchase_status_capi", "in", "(enviado,skipped_old_event_time,skipped_chatrace_capi_disabled,skipped_purchase_capi_disabled,skipped_first_purchase_capi_disabled,skipped_repeat_purchase_capi_disabled)")
+      .not("purchase_status_capi", "in", "(enviado,skipped_old_event_time,skipped_chatrace_capi_disabled,skipped_not_meta_ads,skipped_purchase_capi_disabled,skipped_first_purchase_capi_disabled,skipped_repeat_purchase_capi_disabled)")
       .gt("valor", 0)
       .order("created_at", { ascending: true })
       .limit(100);
@@ -167,7 +168,7 @@ Deno.serve(async (req) => {
     const { data: pixelConfigs } = userIds.length > 0
       ? await db
         .from("conversions_pixel_configs")
-        .select("user_id, pixel_id, meta_access_token, meta_currency, meta_api_version, send_lead_capi, send_purchase_capi, include_purchase_type_capi, send_first_purchase_capi, send_repeat_purchase_capi, send_geo_capi, is_default")
+        .select("user_id, pixel_id, meta_access_token, meta_currency, meta_api_version, send_contact_capi, send_lead_capi, meta_ads_only_capi, send_purchase_capi, include_purchase_type_capi, send_first_purchase_capi, send_repeat_purchase_capi, send_geo_capi, is_default")
         .in("user_id", userIds)
       : { data: [] };
     const { data: chatraceConfigs } = userIds.length > 0
@@ -335,6 +336,35 @@ Deno.serve(async (req) => {
       const selected = useBusinessMessaging
         ? matchedPixelCfg ?? defaultPixelCfg ?? null
         : matchedPixelCfg ?? null;
+      const metaAdsOnlyCapi = selected
+        ? selected.meta_ads_only_capi === true
+        : cfg.meta_ads_only_capi === true;
+
+      if (shouldSkipCapiForNonMetaOrigin(
+        { meta_ads_only_capi: metaAdsOnlyCapi },
+        row,
+      )) {
+        const skippedMsg = "PURCHASE CAPI OMITIDO ORIGEN NO META ADS";
+        await db.from("conversions").update({
+          purchase_status_capi: "skipped_not_meta_ads",
+          observaciones: appendObs(row.observaciones ?? "", skippedMsg),
+        }).eq("id", row.id);
+        await writeConversionLog(
+          db,
+          row.user_id,
+          row.id,
+          "INFO",
+          "Meta CAPI retry Purchase omitido por politica de origen",
+          JSON.stringify({
+            from_meta_ads: row.from_meta_ads === true,
+            pixel_id: row.pixel_id ?? "",
+            route: purchaseCapiRoute,
+          }),
+          "",
+          "",
+        );
+        continue;
+      }
 
       const accessToken = selected
         ? String(selected.meta_access_token ?? "")
@@ -499,6 +529,7 @@ Deno.serve(async (req) => {
         country: row.country ?? "",
         fbp: row.fbp ?? "",
         fbc: row.fbc ?? "",
+        from_meta_ads: row.from_meta_ads === true,
         pixel_id: row.pixel_id ?? "",
         contact_event_id: "",
         contact_event_time: null,
@@ -537,6 +568,7 @@ Deno.serve(async (req) => {
         meta_api_version: apiVersion,
         send_contact_capi: false,
         send_lead_capi: true,
+        meta_ads_only_capi: metaAdsOnlyCapi,
         send_purchase_capi: purchaseSettings.enabled,
         include_purchase_type_capi: purchaseSettings.includePurchaseType,
         send_first_purchase_capi: purchaseSettings.first,
@@ -1218,6 +1250,41 @@ async function retrySingleContactLeadCapiEvent(
     return;
   }
 
+  if (shouldSkipCapiForNonMetaOrigin(config, row)) {
+    const skippedMsg = `${eventName.toUpperCase()} CAPI OMITIDO ORIGEN NO META ADS`;
+    await skip(
+      JSON.stringify({
+        event_name: eventName,
+        reason: "not_meta_ads",
+        from_meta_ads: row.from_meta_ads === true,
+        pixel_id: config.pixel_id,
+      }),
+      {
+        [statusField]: "skipped_not_meta_ads",
+        observaciones: appendObs(row.observaciones ?? "", skippedMsg),
+      },
+    );
+    return;
+  }
+
+  if (eventName === "Contact" && config.send_contact_capi === false) {
+    await skip(
+      JSON.stringify({
+        event_name: eventName,
+        reason: "contact_capi_disabled_by_pixel_config",
+        pixel_id: config.pixel_id,
+      }),
+      {
+        [statusField]: "skipped_contact_capi_disabled",
+        observaciones: appendObs(
+          row.observaciones ?? "",
+          "CONTACT CAPI OMITIDO CONFIG DESACTIVADA",
+        ),
+      },
+    );
+    return;
+  }
+
   if (eventName === "Lead" && config.send_lead_capi === false) {
     await skip(
       JSON.stringify({ event_name: eventName, reason: "lead_capi_disabled_by_pixel_config", pixel_id: config.pixel_id }),
@@ -1336,10 +1403,15 @@ function resolveRetryConfig(
     meta_api_version: selected
       ? normalizeText(selected.meta_api_version || "v25.0")
       : normalizeText(cfg.meta_api_version || "v25.0"),
-    send_contact_capi: false,
+    send_contact_capi: selected
+      ? selected.send_contact_capi === true
+      : cfg.send_contact_capi === true,
     send_lead_capi: selected
       ? selected.send_lead_capi !== false
       : cfg.send_lead_capi !== false,
+    meta_ads_only_capi: selected
+      ? selected.meta_ads_only_capi === true
+      : cfg.meta_ads_only_capi === true,
     send_purchase_capi: purchaseSettings.enabled,
     include_purchase_type_capi: purchaseSettings.includePurchaseType,
     send_first_purchase_capi: purchaseSettings.first,

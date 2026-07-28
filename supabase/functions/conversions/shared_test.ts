@@ -5,6 +5,7 @@ import {
   preparePurchaseCustomDataForMeta,
   resolvePurchaseCapiDecision,
   resolvePurchaseCapiRoute,
+  shouldSkipCapiForNonMetaOrigin,
 } from "./shared.ts";
 
 function assert(condition: unknown, message: string): asserts condition {
@@ -21,6 +22,30 @@ Deno.test("Currency codes are normalized and safely default to ARS", () => {
   assert(
     normalizeCurrencyCode("", "invalid") === "ARS",
     "Invalid input and fallback must use ARS",
+  );
+});
+
+Deno.test("Meta Ads-only CAPI policy filters every non-Meta origin", () => {
+  assert(
+    shouldSkipCapiForNonMetaOrigin(
+      { meta_ads_only_capi: true },
+      { from_meta_ads: false },
+    ),
+    "non-Meta rows must be skipped when the policy is enabled",
+  );
+  assert(
+    !shouldSkipCapiForNonMetaOrigin(
+      { meta_ads_only_capi: true },
+      { from_meta_ads: true },
+    ),
+    "Meta Ads rows must still be sent",
+  );
+  assert(
+    !shouldSkipCapiForNonMetaOrigin(
+      { meta_ads_only_capi: false },
+      { from_meta_ads: false },
+    ),
+    "all origins must be allowed when the policy is disabled",
   );
 });
 

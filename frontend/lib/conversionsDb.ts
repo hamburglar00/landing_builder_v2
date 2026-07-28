@@ -16,6 +16,7 @@ export interface ConversionsConfig {
   meta_api_version: string;
   send_contact_capi: boolean;
   send_lead_capi: boolean;
+  meta_ads_only_capi: boolean;
   send_purchase_capi: boolean;
   include_purchase_type_capi: boolean;
   send_first_purchase_capi: boolean;
@@ -44,6 +45,7 @@ export interface PixelConfig {
   meta_api_version: string;
   send_contact_capi: boolean;
   send_lead_capi: boolean;
+  meta_ads_only_capi: boolean;
   send_purchase_capi: boolean;
   include_purchase_type_capi: boolean;
   send_first_purchase_capi: boolean;
@@ -282,6 +284,7 @@ const DEFAULT_CONFIG: ConversionsConfig = {
   meta_api_version: "v25.0",
   send_contact_capi: false,
   send_lead_capi: true,
+  meta_ads_only_capi: false,
   send_purchase_capi: true,
   include_purchase_type_capi: true,
   send_first_purchase_capi: true,
@@ -342,6 +345,7 @@ export async function fetchConversionsConfig(
     send_purchase_capi:
       stored.send_purchase_capi ??
       (stored.send_first_purchase_capi !== false || stored.send_repeat_purchase_capi !== false),
+    meta_ads_only_capi: stored.meta_ads_only_capi === true,
     include_purchase_type_capi: stored.include_purchase_type_capi !== false,
     send_first_purchase_capi:
       stored.send_first_purchase_capi ?? legacyPurchaseEnabled,
@@ -366,6 +370,7 @@ export async function upsertConversionsConfig(
         meta_api_version: config.meta_api_version,
         send_contact_capi: config.send_contact_capi,
         send_lead_capi: config.send_lead_capi !== false,
+        meta_ads_only_capi: config.meta_ads_only_capi === true,
         send_purchase_capi: config.send_purchase_capi !== false,
         include_purchase_type_capi: config.include_purchase_type_capi !== false,
         send_first_purchase_capi: config.send_first_purchase_capi !== false,
@@ -409,6 +414,7 @@ export async function fetchPixelConfigs(userId: string): Promise<PixelConfig[]> 
     return {
       ...pixel,
       send_lead_capi: pixel.send_lead_capi !== false,
+      meta_ads_only_capi: pixel.meta_ads_only_capi === true,
       send_purchase_capi:
         pixel.send_purchase_capi ??
         (pixel.send_first_purchase_capi !== false || pixel.send_repeat_purchase_capi !== false),
@@ -431,6 +437,7 @@ export async function upsertPixelConfig(input: {
   meta_api_version?: string;
   send_contact_capi?: boolean;
   send_lead_capi?: boolean;
+  meta_ads_only_capi?: boolean;
   send_purchase_capi?: boolean;
   include_purchase_type_capi?: boolean;
   send_first_purchase_capi?: boolean;
@@ -467,6 +474,9 @@ export async function upsertPixelConfig(input: {
   };
   if (input.comment !== undefined) {
     body.comment = input.comment.trim();
+  }
+  if (input.meta_ads_only_capi !== undefined) {
+    body.meta_ads_only_capi = input.meta_ads_only_capi;
   }
   if (input.send_geo_capi !== undefined) {
     body.send_geo_capi = input.send_geo_capi;

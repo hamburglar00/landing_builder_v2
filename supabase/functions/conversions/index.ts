@@ -10,6 +10,7 @@ import {
   preparePurchaseCustomDataForMeta,
   resolvePurchaseCapiDecision,
   resolvePurchaseCapiRoute,
+  shouldSkipCapiForNonMetaOrigin,
   toValidEventTime,
   hasPreviousSuccessfulPurchases,
 } from "./shared.ts";
@@ -34,6 +35,7 @@ interface ConversionsConfig {
   meta_api_version: string;
   send_contact_capi: boolean;
   send_lead_capi: boolean;
+  meta_ads_only_capi: boolean;
   include_purchase_type_capi?: boolean;
   send_first_purchase_capi?: boolean;
   send_repeat_purchase_capi?: boolean;
@@ -51,6 +53,7 @@ interface PixelConfigRow {
   meta_api_version: string;
   send_contact_capi: boolean;
   send_lead_capi: boolean;
+  meta_ads_only_capi: boolean;
   include_purchase_type_capi?: boolean;
   send_first_purchase_capi?: boolean;
   send_repeat_purchase_capi?: boolean;
@@ -95,6 +98,7 @@ interface ConversionRow {
   country: string;
   fbp: string;
   fbc: string;
+  from_meta_ads?: boolean;
   geo_source?: string;
   meta_pixel_id: string;
   pixel_attribution_source?: string;
@@ -1166,6 +1170,7 @@ function resolveEffectiveConfigForPixel(
     meta_api_version: norm(picked.meta_api_version) || baseConfig.meta_api_version,
     send_contact_capi: Boolean(picked.send_contact_capi),
     send_lead_capi: picked.send_lead_capi !== false,
+    meta_ads_only_capi: Boolean(picked.meta_ads_only_capi),
     include_purchase_type_capi: picked.include_purchase_type_capi !== false,
     send_first_purchase_capi:
       picked.send_first_purchase_capi ?? legacyPurchaseEnabled,
@@ -1397,6 +1402,44 @@ async function sendToMetaCAPI(
   }
   const useBusinessMessaging =
     eventName === "Purchase" && purchaseCapiRoute === "business_messaging";
+  if (shouldSkipCapiForNonMetaOrigin(effectiveConfig, row)) {
+    const skippedMsg = `${eventName.toUpperCase()} CAPI OMITIDO ORIGEN NO META ADS`;
+    const { data: current } = await db
+      .from("conversions")
+      .select("observaciones")
+      .eq("id", rowId)
+      .single();
+    const obs = appendObservation(current?.observaciones ?? "", skippedMsg);
+    const updates: Record<string, unknown> = {
+      [statusField]: "skipped_not_meta_ads",
+      observaciones: obs,
+    };
+    if (retryableField) updates[retryableField] = false;
+    await db.from("conversions").update(updates).eq("id", rowId);
+    await writeLog(
+      db,
+      row.user_id,
+      "sendToMetaCAPI",
+      "INFO",
+      "Meta CAPI omitido por politica de origen",
+      JSON.stringify({
+        event_name: eventName,
+        row_id: rowId,
+        from_meta_ads: row.from_meta_ads === true,
+        pixel_id: effectiveConfig.pixel_id,
+      }),
+      rowId,
+      undefined,
+      undefined,
+      eventName === "Contact"
+        ? row.contact_payload_raw
+        : eventName === "Lead"
+          ? row.lead_payload_raw
+          : row.purchase_payload_raw,
+      skippedMsg,
+    );
+    return true;
+  }
   if (!useBusinessMessaging && !preferredPixelId && !allowPixelFallback) {
     const skippedMsg =
       eventName === "Contact" ? "CONTACT CAPI OMITIDO SIN PIXEL CONFIABLE" :
@@ -2144,8 +2187,7 @@ async function handleContact(
     );
   }
 
-  const shouldSendContactCapi =
-    inboundSourcePlatform.toLowerCase() === "chatrace" || effectiveConfig.send_contact_capi;
+  const shouldSendContactCapi = effectiveConfig.send_contact_capi;
 
   if (shouldSendContactCapi) {
     const { data: fresh } = await db.from("conversions").select("*").eq("id", rowId).single();
@@ -3491,6 +3533,7 @@ Deno.serve(async (req) => {
       meta_api_version: "v25.0",
       send_contact_capi: false,
       send_lead_capi: true,
+      meta_ads_only_capi: false,
       include_purchase_type_capi: true,
       send_first_purchase_capi: true,
       send_repeat_purchase_capi: true,
@@ -3502,7 +3545,7 @@ Deno.serve(async (req) => {
 
     const { data: pixelConfigsData } = await db
       .from("conversions_pixel_configs")
-      .select("user_id, pixel_id, meta_access_token, meta_currency, meta_api_version, send_contact_capi, send_lead_capi, send_purchase_capi, include_purchase_type_capi, send_first_purchase_capi, send_repeat_purchase_capi, send_geo_capi, geo_use_ipapi, geo_fill_only_when_missing, is_default")
+      .select("user_id, pixel_id, meta_access_token, meta_currency, meta_api_version, send_contact_capi, send_lead_capi, meta_ads_only_capi, send_purchase_capi, include_purchase_type_capi, send_first_purchase_capi, send_repeat_purchase_capi, send_geo_capi, geo_use_ipapi, geo_fill_only_when_missing, is_default")
       .eq("user_id", userId);
     const pixelConfigs: PixelConfigRow[] = (pixelConfigsData ?? []) as PixelConfigRow[];
 

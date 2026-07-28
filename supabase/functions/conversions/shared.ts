@@ -9,6 +9,7 @@ export interface ConversionsConfig {
   meta_api_version: string;
   send_contact_capi: boolean;
   send_lead_capi?: boolean;
+  meta_ads_only_capi?: boolean;
   send_purchase_capi?: boolean;
   include_purchase_type_capi?: boolean;
   send_first_purchase_capi?: boolean;
@@ -33,6 +34,7 @@ export interface ConversionRow {
   country: string;
   fbp: string;
   fbc: string;
+  from_meta_ads?: boolean;
   source_platform?: string;
   ctwa_clid?: string;
   pixel_id: string;
@@ -76,6 +78,13 @@ export interface ConversionRow {
   geo_city: string;
   geo_region: string;
   geo_country: string;
+}
+
+export function shouldSkipCapiForNonMetaOrigin(
+  config: Pick<ConversionsConfig, "meta_ads_only_capi">,
+  row: Pick<ConversionRow, "from_meta_ads">,
+): boolean {
+  return config.meta_ads_only_capi === true && row.from_meta_ads !== true;
 }
 
 export type PurchaseType = "first" | "repeat";
