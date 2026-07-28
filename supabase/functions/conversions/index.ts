@@ -6,6 +6,7 @@ import {
   type ConversionsConfig as SharedConversionsConfig,
   generateEventId as sharedGenerateEventId,
   normalizeCtwaClid,
+  normalizeCurrencyCode,
   preparePurchaseCustomDataForMeta,
   resolvePurchaseCapiDecision,
   resolvePurchaseCapiRoute,
@@ -117,6 +118,7 @@ interface ConversionRow {
   event_source_url: string;
   estado: string;
   valor: number;
+  currency: string;
   contact_status_capi: string;
   lead_status_capi: string;
   purchase_status_capi: string;
@@ -1099,6 +1101,35 @@ function resolveEffectiveConfigForPixel(
   };
 }
 
+function resolveCurrencyForPixel(
+  baseConfig: ConversionsConfig,
+  pixelConfigs: PixelConfigRow[],
+  pixelId?: string,
+  fallbackCurrency: unknown = "ARS",
+): string {
+  const preferredPixel = norm(pixelId);
+  const matchedPixel = preferredPixel
+    ? pixelConfigs.find((pixel) => norm(pixel.pixel_id) === preferredPixel)
+    : null;
+  if (matchedPixel) {
+    return normalizeCurrencyCode(
+      matchedPixel.meta_currency,
+      fallbackCurrency,
+    );
+  }
+
+  const normalizedFallback = String(fallbackCurrency ?? "").trim().toUpperCase();
+  if (preferredPixel && /^[A-Z]{3}$/.test(normalizedFallback)) {
+    return normalizedFallback;
+  }
+
+  const defaultPixel = pixelConfigs.find((pixel) => pixel.is_default);
+  return normalizeCurrencyCode(
+    defaultPixel?.meta_currency ?? baseConfig.meta_currency,
+    fallbackCurrency,
+  );
+}
+
 function resolvePurchaseType(
   row: Pick<ConversionRow, "purchase_type">,
   customData?: Record<string, unknown>,
@@ -1484,13 +1515,23 @@ async function sendToMetaCAPI(
     return false;
   }
 
+  const canonicalCustomData =
+    eventName === "Purchase"
+      ? {
+        ...(customData ?? {}),
+        currency: normalizeCurrencyCode(
+          row.currency,
+          customData?.currency ?? effectiveConfig.meta_currency,
+        ),
+      }
+      : customData;
   const metaCustomData =
-    eventName === "Purchase" && customData && purchaseCapiDecision && !useBusinessMessaging
+    eventName === "Purchase" && canonicalCustomData && purchaseCapiDecision && !useBusinessMessaging
       ? preparePurchaseCustomDataForMeta(
-        customData,
+        canonicalCustomData,
         purchaseCapiDecision.includePurchaseType,
       )
-      : customData;
+      : canonicalCustomData;
 
   if (eventName === "Purchase") {
     await writeLog(
@@ -1507,6 +1548,7 @@ async function sendToMetaCAPI(
             ? "segmented"
             : "standard",
         purchase_type_internal: purchaseType,
+        currency: canonicalCustomData?.currency,
         purchase_type_sent: Boolean(
           metaCustomData &&
           Object.prototype.hasOwnProperty.call(metaCustomData, "purchase_type"),
@@ -1523,11 +1565,14 @@ async function sendToMetaCAPI(
         whatsapp_business_account_id: norm(chatraceConfig?.whatsapp_business_account_id),
         meta_access_token: norm(chatraceConfig?.meta_messaging_access_token),
         meta_api_version: effectiveConfig.meta_api_version,
-        meta_currency: norm(customData?.currency) || effectiveConfig.meta_currency,
+        meta_currency: normalizeCurrencyCode(
+          canonicalCustomData?.currency,
+          effectiveConfig.meta_currency,
+        ),
       },
       ctwaClid,
       eventTime,
-      Number(customData?.value ?? row.valor),
+      Number(canonicalCustomData?.value ?? row.valor),
     )
     : await buildMetaRequest(
       effectiveConfig as unknown as SharedConversionsConfig,
@@ -1903,6 +1948,11 @@ async function handleContact(
     event_source_url: eventSourceUrl,
     estado: "contact",
     valor: 0,
+    currency: resolveCurrencyForPixel(
+      config,
+      pixelConfigs,
+      inboundMetaPixelId,
+    ),
     contact_status_capi: "",
     lead_status_capi: "",
     purchase_status_capi: "",
@@ -2281,6 +2331,11 @@ async function handleLead(
       event_source_url: eventSourceUrl,
       estado: "lead",
       valor: 0,
+      currency: resolveCurrencyForPixel(
+        config,
+        pixelConfigs,
+        resolvedPixelId,
+      ),
       contact_status_capi: "",
       lead_status_capi: "",
       purchase_status_capi: "",
@@ -2398,6 +2453,11 @@ async function handleLead(
     if (inboundMetaPixelId) {
       updates.meta_pixel_id = inboundMetaPixelId;
       updates.pixel_id = inboundMetaPixelId;
+      updates.currency = resolveCurrencyForPixel(
+        config,
+        pixelConfigs,
+        inboundMetaPixelId,
+      );
     }
     if (testEventCode) updates.test_event_code = testEventCode;
     if (payloadFn) updates.fn = payloadFn;
@@ -2682,14 +2742,21 @@ async function handlePurchase(
   if (targetId) {
     const { data: existing } = await db
       .from("conversions")
-      .select("lead_event_id, lead_event_time, telefono_asignado, assigned_gerencia_label, source_platform, ctwa_clid")
+      .select("lead_event_id, lead_event_time, telefono_asignado, assigned_gerencia_label, source_platform, ctwa_clid, pixel_id, currency")
       .eq("id", targetId)
       .single();
+    const purchaseCurrency = resolveCurrencyForPixel(
+      config,
+      pixelConfigs,
+      inboundMetaPixelId || norm(existing?.pixel_id),
+      existing?.currency,
+    );
 
     const updates: Record<string, unknown> = {
       phone: cleanPhone,
       estado: "purchase",
       valor: amount,
+      currency: purchaseCurrency,
       event_source_url: eventSourceUrl,
       purchase_event_id: purchaseEventId,
       purchase_event_time: purchaseEventTime,
@@ -2844,6 +2911,11 @@ async function handlePurchase(
       event_source_url: eventSourceUrl,
       estado: "purchase",
       valor: amount,
+      currency: resolveCurrencyForPixel(
+        config,
+        pixelConfigs,
+        inboundMetaPixelId,
+      ),
       contact_status_capi: "",
       lead_status_capi: "",
       purchase_status_capi: "",
@@ -2973,6 +3045,12 @@ async function handlePurchase(
     event_source_url: eventSourceUrl || srcRow?.event_source_url || "",
     estado: "purchase",
     valor: amount,
+    currency: resolveCurrencyForPixel(
+      config,
+      pixelConfigs,
+      repeatInheritedPixel,
+      srcRow?.currency,
+    ),
     // DO NOT inherit statuses
     contact_status_capi: "",
     lead_status_capi: "",
@@ -3131,6 +3209,12 @@ async function handleSimplePurchase(
     event_source_url: eventSourceUrl || srcRow?.event_source_url || "",
     estado: "purchase",
     valor: amount,
+    currency: resolveCurrencyForPixel(
+      config,
+      pixelConfigs,
+      simpleInheritedPixel,
+      srcRow?.currency,
+    ),
     contact_status_capi: "",
     lead_status_capi: "",
     purchase_status_capi: "",

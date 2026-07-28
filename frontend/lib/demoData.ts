@@ -110,6 +110,7 @@ export function generateDemoConversions(count = 80): ConversionRow[] {
       event_source_url: `https://landing.example.com/${landing}`,
       estado,
       valor,
+      currency: "ARS",
       contact_status_capi: Math.random() > 0.1 ? "enviado" : "error",
       lead_status_capi: leadEvId ? (Math.random() > 0.1 ? "enviado" : "error") : "",
       purchase_status_capi: purchEvId ? (Math.random() > 0.15 ? "enviado" : "error") : "",

@@ -50,6 +50,7 @@ const FALLBACK_VISIBLE_COLUMNS = [
   "timestamp",
   "estado",
   "valor",
+  "currency",
   "test_event_code",
   "utm_campaign",
   "telefono_asignado",

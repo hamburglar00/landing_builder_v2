@@ -280,7 +280,7 @@ const ALL_COLUMNS = [
   "phone","email","fn","ln","ct","st","zip","country","fbp","fbc","from_meta_ads","meta_pixel_id","pixel_id","source_platform","ctwa_clid",
   "contact_event_id","contact_event_time","sendContactPixel","contact_payload_raw","lead_event_id","lead_event_time","lead_payload_raw",
   "purchase_event_id","purchase_event_time","purchase_payload_raw","timestamp","clientIP","agentuser",
-  "estado","valor","purchase_type","purchase_capi_route","purchase_capi_route_reason","contact_status_capi","lead_status_capi","purchase_status_capi",
+  "estado","valor","currency","purchase_type","purchase_capi_route","purchase_capi_route_reason","contact_status_capi","lead_status_capi","purchase_status_capi",
   "observaciones","external_id","test_event_code","utm_campaign","telefono_asignado","assigned_gerencia_label","promo_code",
   "device_type","geo_city","geo_region","geo_country","geo_source",
   "cuit_cuil","inferred_sex","sex_source",
@@ -327,6 +327,7 @@ const COLUMN_NOTES: Partial<Record<ColKey | "id", string>> = {
   agentuser: "User-Agent recibido en payload (agentuser/client_user_agent).",
   estado: "Estado actual de la conversion (contact, lead o purchase).",
   valor: "Monto de compra/carga recibido para Purchase.",
+  currency: "Moneda ISO asociada a la conversion y al monto (por ejemplo ARS o PYG).",
   purchase_type: "Tipo de compra: first (primera) o repeat (recompra).",
   purchase_capi_route: "Ruta fijada antes del primer envío de Purchase: website o business_messaging.",
   purchase_capi_route_reason: "Motivo por el que se eligió la ruta de envío de Purchase.",
@@ -462,6 +463,7 @@ function cellValue(c: ConversionRow, col: ColKey): React.ReactNode {
       return <td key={col} className={cell}>{estadoBadge(c.estado, isRepeat)}</td>;
     }
     case "valor": return <td key={col} className={`${cell} text-zinc-200`} title={tip(c.valor)}>{c.valor > 0 ? c.valor : "-"}</td>;
+    case "currency": return <td key={col} className={dimMono} title={tip(c.currency)}>{c.currency || "ARS"}</td>;
     case "purchase_type": return <td key={col} className={dim} title={tip(c.purchase_type)}>{c.purchase_type || "-"}</td>;
     case "purchase_capi_route": return <td key={col} className={dim} title={tip(c.purchase_capi_route)}>{c.purchase_capi_route || "-"}</td>;
     case "purchase_capi_route_reason": return <td key={col} className={dim} title={tip(c.purchase_capi_route_reason)}>{c.purchase_capi_route_reason || "-"}</td>;

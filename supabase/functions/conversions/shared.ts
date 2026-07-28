@@ -57,6 +57,7 @@ export interface ConversionRow {
   event_source_url: string;
   estado: string;
   valor: number;
+  currency: string;
   contact_status_capi: string;
   lead_status_capi: string;
   purchase_status_capi: string;
@@ -148,6 +149,16 @@ export interface MetaUserData {
 
 export function sanitizePhone(v: unknown): string {
   return String(v ?? "").replace(/\D/g, "");
+}
+
+export function normalizeCurrencyCode(
+  value: unknown,
+  fallback: unknown = "ARS",
+): string {
+  const normalized = String(value ?? "").trim().toUpperCase();
+  if (/^[A-Z]{3}$/.test(normalized)) return normalized;
+  const normalizedFallback = String(fallback ?? "").trim().toUpperCase();
+  return /^[A-Z]{3}$/.test(normalizedFallback) ? normalizedFallback : "ARS";
 }
 
 function normalizeMetaParamValue(v: unknown): string {
@@ -615,6 +626,7 @@ export function buildFakeConversionRow(event: MetaEventName): ConversionRow {
     event_source_url: "https://fake-landing.test/landing",
     estado: event === "Purchase" ? "purchase" : event === "Lead" ? "lead" : "contact",
     valor: event === "Purchase" ? 10000 : 0,
+    currency: "ARS",
     contact_status_capi: "",
     lead_status_capi: "",
     purchase_status_capi: "",

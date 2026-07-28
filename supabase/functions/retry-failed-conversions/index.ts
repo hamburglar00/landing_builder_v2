@@ -3,6 +3,7 @@ import {
   buildMetaBusinessMessagingPurchaseRequest,
   buildMetaRequest,
   normalizeCtwaClid,
+  normalizeCurrencyCode,
   preparePurchaseCustomDataForMeta,
   resolvePurchaseCapiDecision,
   resolvePurchaseCapiRoute,
@@ -29,7 +30,7 @@ const CONTACT_LEAD_CAPI_RETRY_SELECT = `
   lead_event_id, lead_event_time, lead_payload_raw,
   purchase_event_id, purchase_event_time, purchase_payload_raw,
   client_ip, agent_user, device_type, event_source_url,
-  estado, valor,
+  estado, valor, currency,
   contact_status_capi, lead_status_capi, purchase_status_capi,
   observaciones,
   external_id, utm_campaign, telefono_asignado, promo_code,
@@ -132,7 +133,7 @@ Deno.serve(async (req) => {
     // Find purchases that need retry
     const { data: rows, error } = await db
       .from("conversions")
-      .select("id, user_id, phone, source_platform, ctwa_clid, pixel_id, purchase_event_id, purchase_event_time, purchase_type, purchase_capi_route, purchase_capi_route_reason, valor, event_source_url, email, fn, ln, ct, st, zip, country, fbp, fbc, client_ip, agent_user, external_id, observaciones")
+      .select("id, user_id, phone, source_platform, ctwa_clid, pixel_id, purchase_event_id, purchase_event_time, purchase_type, purchase_capi_route, purchase_capi_route_reason, valor, currency, event_source_url, email, fn, ln, ct, st, zip, country, fbp, fbc, client_ip, agent_user, external_id, observaciones")
       .eq("estado", "purchase")
       .not("purchase_status_capi", "in", "(enviado,skipped_old_event_time,skipped_chatrace_capi_disabled,skipped_purchase_capi_disabled,skipped_first_purchase_capi_disabled,skipped_repeat_purchase_capi_disabled)")
       .gt("valor", 0)
@@ -241,9 +242,10 @@ Deno.serve(async (req) => {
       const apiVersion = selected
         ? String(selected.meta_api_version ?? "v25.0")
         : String(cfg.meta_api_version ?? "v25.0");
-      const currency = selected
+      const configuredCurrency = selected
         ? String(selected.meta_currency ?? "ARS")
         : String(cfg.meta_currency ?? "ARS");
+      const currency = normalizeCurrencyCode(row.currency, configuredCurrency);
       let purchaseType: "first" | "repeat" | null = row.purchase_type === "repeat"
         ? "repeat"
         : row.purchase_type === "first"
@@ -439,6 +441,7 @@ Deno.serve(async (req) => {
         event_source_url: row.event_source_url ?? "",
         estado: "purchase",
         valor: amount,
+        currency,
         contact_status_capi: "",
         lead_status_capi: "",
         purchase_status_capi: "",
@@ -1250,9 +1253,12 @@ function resolveRetryConfig(
     user_id: String(row.user_id),
     pixel_id: pixelId,
     meta_access_token: accessToken,
-    meta_currency: selected
-      ? normalizeText(selected.meta_currency || "ARS")
-      : normalizeText(cfg.meta_currency || "ARS"),
+    meta_currency: normalizeCurrencyCode(
+      row.currency,
+      selected
+        ? selected.meta_currency
+        : cfg.meta_currency,
+    ),
     meta_api_version: selected
       ? normalizeText(selected.meta_api_version || "v25.0")
       : normalizeText(cfg.meta_api_version || "v25.0"),

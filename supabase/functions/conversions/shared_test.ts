@@ -1,6 +1,7 @@
 import {
   buildMetaBusinessMessagingPurchaseRequest,
   normalizeCtwaClid,
+  normalizeCurrencyCode,
   preparePurchaseCustomDataForMeta,
   resolvePurchaseCapiDecision,
   resolvePurchaseCapiRoute,
@@ -9,6 +10,19 @@ import {
 function assert(condition: unknown, message: string): asserts condition {
   if (!condition) throw new Error(message);
 }
+
+Deno.test("Currency codes are normalized and safely default to ARS", () => {
+  assert(normalizeCurrencyCode(" pyg ") === "PYG", "PYG must be normalized");
+  assert(normalizeCurrencyCode("ars") === "ARS", "ARS must be normalized");
+  assert(
+    normalizeCurrencyCode("invalid", "usd") === "USD",
+    "A valid configured fallback must be used",
+  );
+  assert(
+    normalizeCurrencyCode("", "invalid") === "ARS",
+    "Invalid input and fallback must use ARS",
+  );
+});
 
 Deno.test("Business Messaging Purchase matches Meta WhatsApp payload shape", () => {
   const request = buildMetaBusinessMessagingPurchaseRequest(
