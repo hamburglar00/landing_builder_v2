@@ -42,42 +42,49 @@ where coalesce(c.pixel_attribution_source, '') = ''
 
 -- First choice for historical Purchase rows: the trusted Contact/root row with
 -- the exact same full promo_code.
-with exact_promo_attribution as (
+with trusted_promo_roots as (
+  select distinct on (candidate.user_id, candidate.promo_code)
+    candidate.user_id,
+    candidate.promo_code,
+    candidate.id as source_conversion_id,
+    coalesce(
+      nullif(candidate.pixel_id, ''),
+      nullif(candidate.meta_pixel_id, '')
+    ) as resolved_pixel_id
+  from public.conversions candidate
+  join public.conversions_pixel_configs pc
+    on pc.user_id = candidate.user_id
+   and pc.pixel_id = coalesce(
+     nullif(candidate.pixel_id, ''),
+     nullif(candidate.meta_pixel_id, '')
+   )
+  where coalesce(candidate.promo_code, '') <> ''
+    and coalesce(
+      nullif(candidate.pixel_id, ''),
+      nullif(candidate.meta_pixel_id, '')
+    ) is not null
+    and (
+      coalesce(candidate.contact_event_id, '') <> ''
+      or coalesce(candidate.contact_payload_raw, '') <> ''
+      or coalesce(candidate.pixel_attribution_source, '') <> ''
+      or lower(coalesce(candidate.source_platform, '')) = 'chatrace'
+    )
+  order by
+    candidate.user_id,
+    candidate.promo_code,
+    case when coalesce(candidate.contact_payload_raw, '') <> '' then 0 else 1 end,
+    case when coalesce(candidate.contact_event_id, '') <> '' then 0 else 1 end,
+    candidate.created_at asc
+),
+exact_promo_attribution as (
   select
     target.id as target_id,
-    root.id as source_conversion_id,
+    root.source_conversion_id,
     root.resolved_pixel_id
   from public.conversions target
-  cross join lateral (
-    select
-      candidate.id,
-      coalesce(nullif(candidate.pixel_id, ''), nullif(candidate.meta_pixel_id, '')) as resolved_pixel_id
-    from public.conversions candidate
-    where candidate.user_id = target.user_id
-      and candidate.promo_code = target.promo_code
-      and coalesce(target.promo_code, '') <> ''
-      and coalesce(nullif(candidate.pixel_id, ''), nullif(candidate.meta_pixel_id, '')) is not null
-      and (
-        coalesce(candidate.contact_event_id, '') <> ''
-        or coalesce(candidate.contact_payload_raw, '') <> ''
-        or coalesce(candidate.pixel_attribution_source, '') <> ''
-        or lower(coalesce(candidate.source_platform, '')) = 'chatrace'
-      )
-      and exists (
-        select 1
-        from public.conversions_pixel_configs pc
-        where pc.user_id = candidate.user_id
-          and pc.pixel_id = coalesce(
-            nullif(candidate.pixel_id, ''),
-            nullif(candidate.meta_pixel_id, '')
-          )
-      )
-    order by
-      case when coalesce(candidate.contact_payload_raw, '') <> '' then 0 else 1 end,
-      case when coalesce(candidate.contact_event_id, '') <> '' then 0 else 1 end,
-      candidate.created_at asc
-    limit 1
-  ) root
+  join trusted_promo_roots root
+    on root.user_id = target.user_id
+   and root.promo_code = target.promo_code
   where target.estado = 'purchase'
     and coalesce(target.pixel_attribution_source, '') = ''
     and (
