@@ -136,17 +136,6 @@ export default function ClearConversionsViewModal({
           </button>
         </div>
 
-        <div className="mt-4 rounded-xl border border-sky-900/60 bg-sky-950/25 p-3">
-          <p className="text-[11px] font-medium text-sky-200">
-            No se elimina información de la base de datos.
-          </p>
-          <p className="mt-1 text-[10px] leading-relaxed text-sky-300/70">
-            La selección define desde qué fecha consulta la UI, por lo que
-            también reduce los registros descargados y mejora la carga del
-            historial.
-          </p>
-        </div>
-
         <div className="mt-5 flex flex-col-reverse gap-2 sm:flex-row sm:justify-end">
           <button
             type="button"
@@ -160,7 +149,7 @@ export default function ClearConversionsViewModal({
             type="button"
             disabled={busy}
             onClick={() => onConfirm(mode)}
-            className="rounded-lg bg-amber-400 px-4 py-2 text-xs font-semibold text-zinc-950 transition hover:bg-amber-300 disabled:cursor-wait disabled:opacity-60"
+            className="rounded-lg bg-emerald-500 px-4 py-2 text-xs font-semibold text-zinc-950 transition hover:bg-emerald-400 disabled:cursor-wait disabled:opacity-60"
           >
             {busy ? "Limpiando..." : "Aplicar limpieza"}
           </button>
