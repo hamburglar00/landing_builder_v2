@@ -274,7 +274,7 @@ Deno.serve(async (req) => {
 
     const { data: adminCfg } = await supabaseAdmin
       .from("conversions_config")
-      .select("visible_columns, funnel_premium_threshold")
+      .select("visible_columns, funnel_premium_threshold, funnel_premium_thresholds, tracking_ranking_config, tracking_ranking_configs")
       .eq("user_id", user.id)
       .maybeSingle();
 
@@ -296,6 +296,25 @@ Deno.serve(async (req) => {
           funnel_premium_threshold: Number.isFinite(premiumThreshold)
             ? premiumThreshold
             : 50000,
+          funnel_premium_thresholds:
+            adminCfg?.funnel_premium_thresholds &&
+              typeof adminCfg.funnel_premium_thresholds === "object" &&
+              !Array.isArray(adminCfg.funnel_premium_thresholds)
+              ? adminCfg.funnel_premium_thresholds
+              : {
+                ARS: Number.isFinite(premiumThreshold)
+                  ? premiumThreshold
+                  : 50000,
+              },
+          tracking_ranking_config: adminCfg?.tracking_ranking_config ?? null,
+          tracking_ranking_configs:
+            adminCfg?.tracking_ranking_configs &&
+              typeof adminCfg.tracking_ranking_configs === "object" &&
+              !Array.isArray(adminCfg.tracking_ranking_configs)
+              ? adminCfg.tracking_ranking_configs
+              : adminCfg?.tracking_ranking_config
+                ? { ARS: adminCfg.tracking_ranking_config }
+                : {},
           show_logs: finalShowLogs,
           show_ai_assistant: finalShowAiAssistant,
           show_promotions: finalShowPromotions,

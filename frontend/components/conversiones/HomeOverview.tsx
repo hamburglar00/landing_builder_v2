@@ -4,15 +4,7 @@ import { useMemo } from "react";
 import type { FunnelContact, ConversionRow, HomeOverviewStats } from "@/lib/conversionsDb";
 import { computeCoreStats } from "@/lib/conversionStats";
 import { buildFunnelContactsFromConversions } from "@/lib/conversionsDb";
-
-function formatCurrency(n: number) {
-  return n.toLocaleString("es-AR", {
-    style: "currency",
-    currency: "ARS",
-    minimumFractionDigits: 0,
-    maximumFractionDigits: 0,
-  });
-}
+import { formatCurrencyAmount, type ReportingCurrency } from "@/lib/currency";
 
 function pct(num: number, den: number) {
   if (den === 0) return "0%";
@@ -55,6 +47,7 @@ export function HomeOverview({
   conversions,
   premiumThreshold,
   overviewStats,
+  currency,
 }: {
   role: "admin" | "client";
   landingsCount?: number;
@@ -62,6 +55,7 @@ export function HomeOverview({
   conversions?: ConversionRow[];
   premiumThreshold?: number;
   overviewStats?: HomeOverviewStats;
+  currency: ReportingCurrency;
 }) {
   const stats = useMemo(() => {
     if (overviewStats) return overviewStats;
@@ -102,7 +96,7 @@ export function HomeOverview({
       <div>
         <h1 className="text-xl font-semibold text-zinc-100">INICIO</h1>
         <p className="mt-1 text-sm text-zinc-400">
-          Resumen ejecutivo de landings y conversiones - {scopeLabel}.
+          Resumen ejecutivo de landings y conversiones - {scopeLabel} en {currency}.
         </p>
       </div>
 
@@ -134,7 +128,7 @@ export function HomeOverview({
         />
         <Card
           title="Carga promedio"
-          value={formatCurrency(stats.cargaPromedio)}
+          value={formatCurrencyAmount(stats.cargaPromedio, currency)}
           subtitle="Monto promedio por carga."
           tooltip="Métrica mensual (mes actual)."
           icon={
@@ -147,7 +141,7 @@ export function HomeOverview({
         />
         <Card
           title="Total cargado"
-          value={formatCurrency(stats.totalCargado)}
+          value={formatCurrencyAmount(stats.totalCargado, currency)}
           subtitle="Ingresos totales de cargas."
           tooltip="Métrica mensual (mes actual)."
           icon={

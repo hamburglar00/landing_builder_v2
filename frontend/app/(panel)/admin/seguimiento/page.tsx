@@ -7,6 +7,8 @@ import {
   fetchConversionsForAdmin,
   fetchConversionsConfig,
   upsertConversionsConfig,
+  getTrackingRankingConfig,
+  setTrackingRankingConfig,
   type ConversionsConfig,
   type TrackingRankingConfig,
   type ConversionRow,
@@ -16,12 +18,22 @@ import DateRangeFilter, {
   type DateRange,
   filterByDateRange,
 } from "@/components/conversiones/DateRangeFilter";
+import {
+  SingleCurrencyRequired,
+  useCurrencyScope,
+} from "@/components/currency/CurrencyScope";
+import {
+  CURRENCY_ALL,
+  filterConversionsByCurrency,
+} from "@/lib/currency";
 
 const TrackingBoard = dynamic(() => import("@/components/conversiones/TrackingBoard"), {
   loading: () => <PanelSkeleton title="Cargando seguimiento..." />,
 });
 
 export default function AdminSeguimientoPage() {
+  const { currencyScope } = useCurrencyScope();
+  const reportingCurrency = currencyScope === CURRENCY_ALL ? "ARS" : currencyScope;
   const [userId, setUserId] = useState<string | null>(null);
   const [conversions, setConversions] = useState<ConversionRow[]>([]);
   const [config, setConfig] = useState<ConversionsConfig | null>(null);
@@ -36,8 +48,8 @@ export default function AdminSeguimientoPage() {
   >({});
 
   const activeConversions = useMemo(
-    () => filterByDateRange(conversions, dateRange),
-    [conversions, dateRange],
+    () => filterByDateRange(filterConversionsByCurrency(conversions, currencyScope), dateRange),
+    [conversions, dateRange, currencyScope],
   );
 
   const refreshTable = useCallback(async () => {
@@ -102,7 +114,7 @@ export default function AdminSeguimientoPage() {
   const handleRankingConfigChange = useCallback(
     async (rankingConfig: TrackingRankingConfig) => {
       if (!config) return;
-      const next = { ...config, tracking_ranking_config: rankingConfig };
+      const next = setTrackingRankingConfig(config, reportingCurrency, rankingConfig);
       setConfig(next);
       try {
         await upsertConversionsConfig(next);
@@ -110,7 +122,7 @@ export default function AdminSeguimientoPage() {
         console.error(e);
       }
     },
-    [config],
+    [config, reportingCurrency],
   );
 
   if (loading) {
@@ -130,15 +142,20 @@ export default function AdminSeguimientoPage() {
         <DateRangeFilter onChange={setDateRange} />
       </div>
 
-      <TrackingBoard
-        conversions={activeConversions}
-        onRefresh={refreshTable}
-        refreshing={refreshing}
-        rankingConfig={config?.tracking_ranking_config ?? null}
-        onRankingConfigChange={handleRankingConfigChange}
-        gerenciaOptions={gerenciaOptions}
-        assignedPhoneToGerenciaId={assignedPhoneToGerenciaId}
-      />
+      {currencyScope === CURRENCY_ALL ? (
+        <SingleCurrencyRequired title="Elegí ARS o PYG para ver el seguimiento monetario" />
+      ) : (
+        <TrackingBoard
+          conversions={activeConversions}
+          onRefresh={refreshTable}
+          refreshing={refreshing}
+          rankingConfig={getTrackingRankingConfig(config, reportingCurrency)}
+          onRankingConfigChange={handleRankingConfigChange}
+          gerenciaOptions={gerenciaOptions}
+          assignedPhoneToGerenciaId={assignedPhoneToGerenciaId}
+          currency={reportingCurrency}
+        />
+      )}
     </div>
   );
 }

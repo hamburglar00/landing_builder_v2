@@ -44,6 +44,7 @@ type ConversionRow = {
   estado: string;
   created_at: string;
   valor: number;
+  currency: string;
   purchase_event_id: string;
   test_event_code?: string | null;
 };
@@ -168,7 +169,7 @@ Deno.serve(async (req) => {
 
       const { data: rows } = await db
         .from("conversions")
-        .select("user_id, phone, estado, created_at, valor, purchase_event_id, test_event_code")
+        .select("user_id, phone, estado, created_at, valor, currency, purchase_event_id, test_event_code")
         .eq("user_id", s.user_id)
         .order("created_at", { ascending: false });
       const conv = (rows ?? []).filter((r) => !String(r.test_event_code ?? "").trim()) as ConversionRow[];
@@ -202,11 +203,16 @@ Deno.serve(async (req) => {
       const inactiveThreshold = new Date(now.getTime() - s.inactive_days * 24 * 60 * 60 * 1000);
       const renotifyThreshold = new Date(now.getTime() - s.renotify_days * 24 * 60 * 60 * 1000);
 
-      const candidates: Array<{ phone: string; lastActivity: Date; isLead: boolean; avg: number; total: number }> = [];
+      const candidates: Array<{
+        phone: string;
+        lastActivity: Date;
+        isLead: boolean;
+        amounts: Array<{ currency: string; avg: number; total: number }>;
+      }> = [];
 
       const { data: cfg } = await db
         .from("conversions_config")
-        .select("tracking_ranking_config")
+        .select("tracking_ranking_config, tracking_ranking_configs")
         .eq("user_id", s.user_id)
         .maybeSingle();
       const cfgAny = (cfg as Record<string, unknown> | null)?.tracking_ranking_config as Record<string, unknown> | null;
@@ -221,6 +227,29 @@ Deno.serve(async (req) => {
       const overflowIndicator = typeof cfgAny?.overflowIndicator === "string" && cfgAny.overflowIndicator.trim()
         ? cfgAny.overflowIndicator
         : DEFAULT_OVERFLOW_INDICATOR;
+      const rawScopedRankingConfigs =
+        (cfg as Record<string, unknown> | null)?.tracking_ranking_configs;
+      const scopedRankingConfigs: Record<string, Record<string, unknown>> =
+        rawScopedRankingConfigs &&
+          typeof rawScopedRankingConfigs === "object" &&
+          !Array.isArray(rawScopedRankingConfigs)
+          ? rawScopedRankingConfigs as Record<string, Record<string, unknown>>
+          : {};
+      const rankingForCurrency = (currency: string) => {
+        const scoped = scopedRankingConfigs[currency];
+        const rules = Array.isArray(scoped?.rules)
+          ? (scoped.rules as Array<Record<string, unknown>>)
+            .map((r) => ({
+              indicator: String(r.indicator ?? ""),
+              maxTotal: Number(r.maxTotal ?? 0),
+            }))
+            .filter((r) => r.maxTotal > 0 && r.indicator)
+          : rankingRules;
+        const overflow = typeof scoped?.overflowIndicator === "string" && scoped.overflowIndicator.trim()
+          ? scoped.overflowIndicator
+          : overflowIndicator;
+        return { rules, overflow };
+      };
 
       for (const [phone, group] of byPhone.entries()) {
         const sorted = [...group].sort((a, b) =>
@@ -232,8 +261,23 @@ Deno.serve(async (req) => {
         if (lastActivity > inactiveThreshold) continue;
 
         const purchaseRows = sorted.filter((x) => String(x.purchase_event_id || "").trim());
-        const total = purchaseRows.reduce((acc, x) => acc + Number(x.valor || 0), 0);
-        const avg = purchaseRows.length ? total / purchaseRows.length : 0;
+        const amountsByCurrency = new Map<string, { total: number; count: number }>();
+        for (const purchase of purchaseRows) {
+          const currency = /^[A-Z]{3}$/.test(String(purchase.currency ?? "").trim().toUpperCase())
+            ? String(purchase.currency).trim().toUpperCase()
+            : "ARS";
+          const current = amountsByCurrency.get(currency) ?? { total: 0, count: 0 };
+          current.total += Number(purchase.valor || 0);
+          current.count += 1;
+          amountsByCurrency.set(currency, current);
+        }
+        const amounts = [...amountsByCurrency.entries()]
+          .map(([currency, amount]) => ({
+            currency,
+            total: amount.total,
+            avg: amount.count > 0 ? amount.total / amount.count : 0,
+          }))
+          .sort((a, b) => a.currency.localeCompare(b.currency));
         const isLead = purchaseRows.length === 0;
 
         const prev = alertMap.get(phone);
@@ -245,7 +289,7 @@ Deno.serve(async (req) => {
           : true;
         if (prev && !hasNewActivity && !canRenotifyByTime) continue;
 
-        candidates.push({ phone, lastActivity, isLead, avg, total });
+        candidates.push({ phone, lastActivity, isLead, amounts });
       }
 
       if (!candidates.length) {
@@ -266,11 +310,15 @@ Deno.serve(async (req) => {
             1,
             Math.floor((now.getTime() - c.lastActivity.getTime()) / (24 * 60 * 60 * 1000)),
           );
-          const rank = c.isLead ? LEAD_INDICATOR : indicatorFor(c.total, rankingRules, overflowIndicator);
           if (c.isLead) {
-            return `• ${rank} <a href="${wa}">${c.phone}</a>\n⏳ Inactivo hace ${relTimeFromDays(inactiveDays)}.\n📭 Aun no realizo una carga.`;
+            return `• ${LEAD_INDICATOR} <a href="${wa}">${c.phone}</a>\n⏳ Inactivo hace ${relTimeFromDays(inactiveDays)}.\n📭 Aun no realizo una carga.`;
           }
-          return `• ${rank} <a href="${wa}">${c.phone}</a>\n⏳ Inactivo hace ${relTimeFromDays(inactiveDays)}.\n💵 Carga promedio: $${Math.round(c.avg)}.\n🏦 Total cargado: $${Math.round(c.total)}.`;
+          const amountLines = c.amounts.map((amount) => {
+            const ranking = rankingForCurrency(amount.currency);
+            const rank = indicatorFor(amount.total, ranking.rules, ranking.overflow);
+            return `${rank} ${amount.currency} — Promedio: ${Math.round(amount.avg).toLocaleString("es-AR")}. Total: ${Math.round(amount.total).toLocaleString("es-AR")}.`;
+          });
+          return `• <a href="${wa}">${c.phone}</a>\n⏳ Inactivo hace ${relTimeFromDays(inactiveDays)}.\n💵 ${amountLines.join("\n💵 ")}`;
         });
 
         const text = [

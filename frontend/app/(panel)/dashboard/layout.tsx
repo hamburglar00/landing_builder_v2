@@ -7,6 +7,7 @@ import type { User } from "@supabase/supabase-js";
 import { supabase } from "@/lib/supabaseClient";
 import ConstructorSetupGuide from "@/components/onboarding/ConstructorSetupGuide";
 import { RouteProgress } from "@/components/ui/RouteProgress";
+import { CurrencyScopeSelector } from "@/components/currency/CurrencyScope";
 
 const SETUP_GUIDE_STORAGE_PREFIX = "constructor_setup_guide_hidden:";
 const DASHBOARD_PREFETCH_ROUTES = [
@@ -766,13 +767,16 @@ export default function DashboardLayout({
               </div>
             )}
           </div>
-          <button
-            type="button"
-            onClick={() => setSetupGuideOpen(true)}
-            className="shrink-0 rounded-lg border border-cyan-700/70 bg-cyan-950/30 px-3 py-1.5 text-xs font-semibold text-cyan-200 transition hover:bg-cyan-950/50"
-          >
-            Ayuda
-          </button>
+          <div className="flex shrink-0 items-center gap-2">
+            <CurrencyScopeSelector />
+            <button
+              type="button"
+              onClick={() => setSetupGuideOpen(true)}
+              className="shrink-0 rounded-lg border border-cyan-700/70 bg-cyan-950/30 px-3 py-1.5 text-xs font-semibold text-cyan-200 transition hover:bg-cyan-950/50"
+            >
+              Ayuda
+            </button>
+          </div>
         </header>
         <main
           className="min-h-0 max-w-full flex-1 overflow-x-hidden overflow-y-auto px-3 py-5 sm:px-6 sm:py-8 lg:px-10"

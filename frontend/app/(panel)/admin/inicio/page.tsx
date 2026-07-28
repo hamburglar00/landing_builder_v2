@@ -1,24 +1,30 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { supabase } from "@/lib/supabaseClient";
-import type { FunnelContact, ConversionRow } from "@/lib/conversionsDb";
+import type { ConversionRow, ConversionsConfig } from "@/lib/conversionsDb";
 import {
   fetchConversionsConfig,
   fetchConversionsForAdminFiltered,
-  buildFunnelContactsFromConversions,
+  getPremiumThreshold,
 } from "@/lib/conversionsDb";
 import { fetchLandingsForAdmin } from "@/lib/landing/landingsDb";
 import { HomeOverview } from "@/components/conversiones/HomeOverview";
 import { DashboardSkeleton } from "@/components/ui/DashboardSkeleton";
+import {
+  SingleCurrencyRequired,
+  useCurrencyScope,
+} from "@/components/currency/CurrencyScope";
+import { CURRENCY_ALL, filterConversionsByCurrency } from "@/lib/currency";
 
 export default function AdminInicioPage() {
   const [ready, setReady] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [landingsCount, setLandingsCount] = useState(0);
-  const [funnelContacts, setFunnelContacts] = useState<FunnelContact[]>([]);
   const [conversions, setConversions] = useState<ConversionRow[]>([]);
-  const [premiumThreshold, setPremiumThreshold] = useState(50000);
+  const [config, setConfig] = useState<ConversionsConfig | null>(null);
+  const { currencyScope, isAllCurrencies } = useCurrencyScope();
+  const reportingCurrency = currencyScope === CURRENCY_ALL ? "ARS" : currencyScope;
 
   useEffect(() => {
     const init = async () => {
@@ -40,9 +46,8 @@ export default function AdminInicioPage() {
         ]);
 
         setLandingsCount(mine.length + clients.length);
-        setFunnelContacts(buildFunnelContactsFromConversions(convs));
         setConversions(convs);
-        setPremiumThreshold(cfg?.funnel_premium_threshold ?? 50000);
+        setConfig(cfg);
       } catch (e) {
         const msg =
           e instanceof Error
@@ -59,6 +64,11 @@ export default function AdminInicioPage() {
     void init();
   }, []);
 
+  const scopedConversions = useMemo(
+    () => filterConversionsByCurrency(conversions, currencyScope),
+    [conversions, currencyScope],
+  );
+
   if (!ready) {
     return <DashboardSkeleton title="Cargando inicio..." />;
   }
@@ -73,13 +83,17 @@ export default function AdminInicioPage() {
     );
   }
 
+  if (isAllCurrencies) {
+    return <SingleCurrencyRequired title="Elegí ARS o PYG para ver el resumen consolidado" />;
+  }
+
   return (
     <HomeOverview
       role="admin"
       landingsCount={landingsCount}
-      funnelContacts={funnelContacts}
-      conversions={conversions}
-      premiumThreshold={premiumThreshold}
+      conversions={scopedConversions}
+      premiumThreshold={getPremiumThreshold(config, reportingCurrency)}
+      currency={reportingCurrency}
     />
   );
 }

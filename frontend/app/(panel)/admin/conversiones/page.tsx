@@ -13,10 +13,13 @@ import {
   fetchConversionsForAdminFiltered,
   fetchConversionsForAdminUnfiltered,
   fetchConversionLogsForAdminFiltered,
-  fetchFunnelContactsForAdminFiltered,
   fetchGerenciaAvailabilitySummariesForAdmin,
   updateConversionEmail,
   getConversionGerenciaLabels,
+  buildFunnelContactsFromConversions,
+  getPremiumThreshold,
+  setPremiumThreshold,
+  getTrackingRankingConfig,
   hideConversions,
   hideContacts,
   hideConversionLogs,
@@ -25,9 +28,8 @@ import {
   type PixelConfig,
   type ConversionRow,
   type ConversionLogRow,
-  type FunnelContact,
 } from "@/lib/conversionsDb";
-import { generateDemoConversions, generateDemoFunnelContacts } from "@/lib/demoData";
+import { generateDemoConversions } from "@/lib/demoData";
 import { DashboardSkeleton, PanelSkeleton } from "@/components/ui/DashboardSkeleton";
 import type { LandingPerformanceFilterOption } from "@/components/conversiones/GerenciasPerformancePanel";
 import DateRangeFilter, {
@@ -35,6 +37,15 @@ import DateRangeFilter, {
   filterByDateRange,
   filterFunnelByDateRange,
 } from "@/components/conversiones/DateRangeFilter";
+import {
+  SingleCurrencyRequired,
+  useCurrencyScope,
+} from "@/components/currency/CurrencyScope";
+import {
+  CURRENCY_ALL,
+  filterConversionsByCurrency,
+  formatCurrencyAmount,
+} from "@/lib/currency";
 
 const FunnelBoard = dynamic(() => import("@/components/conversiones/FunnelBoard"), {
   loading: () => <PanelSkeleton title="Cargando funnel..." />,
@@ -462,7 +473,7 @@ function cellValue(c: ConversionRow, col: ColKey): React.ReactNode {
       const isRepeat = c.estado === "purchase" && c.observaciones?.includes("REPEAT");
       return <td key={col} className={cell}>{estadoBadge(c.estado, isRepeat)}</td>;
     }
-    case "valor": return <td key={col} className={`${cell} text-zinc-200`} title={tip(c.valor)}>{c.valor > 0 ? c.valor : "-"}</td>;
+    case "valor": return <td key={col} className={`${cell} text-zinc-200`} title={tip(c.valor)}>{c.valor > 0 ? formatCurrencyAmount(c.valor, c.currency) : "-"}</td>;
     case "currency": return <td key={col} className={dimMono} title={tip(c.currency)}>{c.currency || "ARS"}</td>;
     case "purchase_type": return <td key={col} className={dim} title={tip(c.purchase_type)}>{c.purchase_type || "-"}</td>;
     case "purchase_capi_route": return <td key={col} className={dim} title={tip(c.purchase_capi_route)}>{c.purchase_capi_route || "-"}</td>;
@@ -487,10 +498,11 @@ function cellValue(c: ConversionRow, col: ColKey): React.ReactNode {
 
 export default function AdminConversionesPage() {
   const searchParams = useSearchParams();
+  const { currencyScope, isAllCurrencies } = useCurrencyScope();
+  const reportingCurrency = currencyScope === CURRENCY_ALL ? "ARS" : currencyScope;
   const [userId, setUserId] = useState<string | null>(null);
   const [config, setConfig] = useState<ConversionsConfig | null>(null);
   const [conversions, setConversions] = useState<ConversionRow[]>([]);
-  const [funnelContacts, setFunnelContacts] = useState<FunnelContact[]>([]);
   const [logs, setLogs] = useState<ConversionLogRow[]>([]);
   const [clientName, setClientName] = useState("");
   const [loading, setLoading] = useState(true);
@@ -559,12 +571,18 @@ export default function AdminConversionesPage() {
   }, [searchParams]);
 
   const demoConversions = useMemo(() => generateDemoConversions(80), []);
-  const demoFunnel = useMemo(() => generateDemoFunnelContacts(demoConversions), [demoConversions]);
-
   const rawConversions = demoMode ? demoConversions : conversions;
-  const rawFunnel = demoMode ? demoFunnel : funnelContacts;
-  const activeConversions = useMemo(() => filterByDateRange(rawConversions, dateRange), [rawConversions, dateRange]);
-  const activeFunnel = useMemo(() => filterFunnelByDateRange(rawFunnel, dateRange), [rawFunnel, dateRange]);
+  const scopedConversions = useMemo(
+    () => filterConversionsByCurrency(rawConversions, currencyScope),
+    [rawConversions, currencyScope],
+  );
+  const scopedFunnel = useMemo(
+    () => buildFunnelContactsFromConversions(scopedConversions),
+    [scopedConversions],
+  );
+  const activeConversions = useMemo(() => filterByDateRange(scopedConversions, dateRange), [scopedConversions, dateRange]);
+  const activeFunnel = useMemo(() => filterFunnelByDateRange(scopedFunnel, dateRange), [scopedFunnel, dateRange]);
+  const premiumThreshold = getPremiumThreshold(config, reportingCurrency);
   const statsConversions = useMemo(
     () => activeConversions.filter((r) => !String(r.test_event_code ?? "").trim()),
     [activeConversions],
@@ -822,7 +840,7 @@ export default function AdminConversionesPage() {
   }, [filteredConversions, tablePage]);
   useEffect(() => {
     setTablePage(1);
-  }, [tableSearch, dateRange, statsLandingFilter, statsPixelFilter, statsGerenciaFilter, statsTelefonoFilter, statsFromMetaAdsFilter, statsSourcePlatformFilter, statsSexoFilter, statsCampaignFilter, statsDeviceFilter, demoMode]);
+  }, [tableSearch, dateRange, statsLandingFilter, statsPixelFilter, statsGerenciaFilter, statsTelefonoFilter, statsFromMetaAdsFilter, statsSourcePlatformFilter, statsSexoFilter, statsCampaignFilter, statsDeviceFilter, demoMode, currencyScope]);
   useEffect(() => {
     if (tablePage > totalTablePages) setTablePage(totalTablePages);
   }, [tablePage, totalTablePages]);
@@ -903,16 +921,14 @@ export default function AdminConversionesPage() {
       setUserId(user.id);
       const requestSeq = ++dataRequestSeqRef.current;
       try {
-        const [cfg, rows, funnel, pixels] = await Promise.all([
+        const [cfg, rows, pixels] = await Promise.all([
           fetchConversionsConfig(user.id),
           fetchConversionsForAdminFiltered(user.id, undefined, initialDateRangeRef.current ?? undefined),
-          fetchFunnelContactsForAdminFiltered(user.id, initialDateRangeRef.current ?? undefined),
           fetchPixelConfigs(user.id),
         ]);
         setConfig(cfg);
         if (requestSeq === dataRequestSeqRef.current) {
           setConversions(rows);
-          setFunnelContacts(funnel);
         }
         setPixelConfigs(pixels);
 
@@ -1289,13 +1305,13 @@ export default function AdminConversionesPage() {
         if (requestSeq !== dataRequestSeqRef.current) return;
         setLogs(logRows);
       } else {
-        const [rows, funnel] = await Promise.all([
-          fetchConversionsForAdminFiltered(currentUserId, undefined, range ?? undefined),
-          fetchFunnelContactsForAdminFiltered(currentUserId, range ?? undefined),
-        ]);
+        const rows = await fetchConversionsForAdminFiltered(
+          currentUserId,
+          undefined,
+          range ?? undefined,
+        );
         if (requestSeq !== dataRequestSeqRef.current) return;
         setConversions(rows);
-        setFunnelContacts(funnel);
       }
     } catch (e) { console.error(e); }
     finally {
@@ -1313,8 +1329,9 @@ export default function AdminConversionesPage() {
   }, [refreshTable]);
 
   const fetchPerformanceConversions = useCallback(async (range: FetchDateRange) => {
-    return fetchConversionsForAdminUnfiltered(range);
-  }, []);
+    const rows = await fetchConversionsForAdminUnfiltered(range);
+    return filterConversionsByCurrency(rows, currencyScope);
+  }, [currencyScope]);
 
   const fetchPerformanceAvailability = useCallback(async (range: FetchDateRange) => {
     return fetchGerenciaAvailabilitySummariesForAdmin(range);
@@ -1970,21 +1987,26 @@ export default function AdminConversionesPage() {
             {funnelConfigOpen && (
               <div className="space-y-4 border-t border-zinc-800 p-4">
                 <div>
-                  <label className="block text-xs font-medium text-zinc-400 mb-1">Monto mnimo para Jugador Premium</label>
+                  <label className="block text-xs font-medium text-zinc-400 mb-1">
+                    Monto mínimo para Jugador Premium {isAllCurrencies ? "" : `(${reportingCurrency})`}
+                  </label>
                   <input
                     type="text"
                     inputMode="numeric"
-                    value={formatIntegerWithThousands(config?.funnel_premium_threshold ?? 50000)}
+                    value={isAllCurrencies ? "" : formatIntegerWithThousands(premiumThreshold)}
+                    disabled={isAllCurrencies}
                     onChange={(e) => {
                       const raw = e.target.value.replace(/[^\d]/g, "");
                       const parsed = raw ? Number.parseInt(raw, 10) : 0;
-                      setConfig((p) => (p ? { ...p, funnel_premium_threshold: parsed } : p));
+                      setConfig((p) => (p ? setPremiumThreshold(p, reportingCurrency, parsed) : p));
                     }}
                     className="w-full max-w-xs rounded-lg border border-zinc-700 bg-zinc-900 px-3 py-2 text-sm text-zinc-100"
                     placeholder="50.000"
                   />
                   <p className="mt-1 text-[11px] text-zinc-500">
-                    Contactos cuya sumatoria total de cargas sea igual o mayor a este monto se clasifican como Jugador Premium.
+                    {isAllCurrencies
+                      ? "Seleccioná ARS o PYG arriba para configurar su umbral de manera independiente."
+                      : `Solo se compara contra cargas expresadas en ${reportingCurrency}.`}
                   </p>
                 </div>
               </div>
@@ -2141,7 +2163,9 @@ export default function AdminConversionesPage() {
       {/* TAB: FUNNEL */}
       {tab === "funnel" && (
         <section className="rounded-xl border border-zinc-800 bg-zinc-900/50 p-4">
-          {activeFunnelFiltered.length === 0 ? (
+          {isAllCurrencies ? (
+            <SingleCurrencyRequired title="Elegí ARS o PYG para calcular el funnel" />
+          ) : activeFunnelFiltered.length === 0 ? (
             refreshingTable ? (
               <div className="flex min-h-[120px] flex-col items-center justify-center gap-3 text-sm text-zinc-500">
                 <div className="h-1 w-40 overflow-hidden rounded-full bg-zinc-800">
@@ -2155,8 +2179,9 @@ export default function AdminConversionesPage() {
           ) : (
             <FunnelBoard
               contacts={activeFunnelFiltered}
-              premiumThreshold={config?.funnel_premium_threshold ?? 50000}
-              rankingConfig={config?.tracking_ranking_config ?? null}
+              premiumThreshold={premiumThreshold}
+              currency={reportingCurrency}
+              rankingConfig={getTrackingRankingConfig(config, reportingCurrency)}
               headerSlot={
                 <div className="flex flex-wrap items-center gap-2">
                   <h3 className="mr-2 text-sm font-semibold text-zinc-200">Funnel</h3>
@@ -2169,11 +2194,16 @@ export default function AdminConversionesPage() {
 
       {/* TAB: SEGUIMIENTO */}
       {tab === "seguimiento" && (
-        <TrackingBoard
-          conversions={activeConversions.filter((r) => !String(r.test_event_code ?? "").trim())}
-          onRefresh={() => void refreshTable()}
-          refreshing={refreshingTable}
-        />
+        isAllCurrencies ? (
+          <SingleCurrencyRequired title="Elegí ARS o PYG para ver el seguimiento monetario" />
+        ) : (
+          <TrackingBoard
+            conversions={activeConversions.filter((r) => !String(r.test_event_code ?? "").trim())}
+            onRefresh={() => void refreshTable()}
+            refreshing={refreshingTable}
+            currency={reportingCurrency}
+          />
+        )
       )}
 
       {/* TAB: ESTADSTICAS */}
@@ -2182,7 +2212,9 @@ export default function AdminConversionesPage() {
           <div className="mb-4 flex flex-wrap items-center justify-between gap-2">
             <h3 className="text-sm font-semibold text-zinc-200">Estadísticas</h3>
           </div>
-          {activeFunnelFiltered.length === 0 && statsConversionsFiltered.length === 0 ? (
+          {isAllCurrencies ? (
+            <SingleCurrencyRequired title="Elegí ARS o PYG para calcular estadísticas" />
+          ) : activeFunnelFiltered.length === 0 && statsConversionsFiltered.length === 0 ? (
             refreshingTable ? (
               <div className="flex min-h-[120px] flex-col items-center justify-center gap-3 text-sm text-zinc-500">
                 <div className="h-1 w-40 overflow-hidden rounded-full bg-zinc-800">
@@ -2198,7 +2230,8 @@ export default function AdminConversionesPage() {
               funnelContacts={activeFunnelFiltered}
               conversions={statsConversionsFiltered}
               allConversions={statsAllConversionsFiltered}
-              premiumThreshold={config?.funnel_premium_threshold ?? 50000}
+              premiumThreshold={premiumThreshold}
+              currency={reportingCurrency}
               dateRange={dateRange}
             />
           )}
@@ -2207,15 +2240,20 @@ export default function AdminConversionesPage() {
 
       {/* TAB: DESEMPENO */}
       {tab === "desempeno" && (
-        <GerenciasPerformancePanel
-          fetchConversionsForMonth={fetchPerformanceConversions}
-          fetchAvailabilityForMonth={fetchPerformanceAvailability}
-          gerenciaByPhone={gerenciaByPhone}
-          activePhonesByGerenciaLabel={activePhonesByGerenciaLabel}
-          landingOptions={performanceLandingOptions}
-          premiumThreshold={config?.funnel_premium_threshold ?? 50000}
-          storageKey="admin"
-        />
+        isAllCurrencies ? (
+          <SingleCurrencyRequired title="Elegí ARS o PYG para comparar desempeño" />
+        ) : (
+          <GerenciasPerformancePanel
+            fetchConversionsForMonth={fetchPerformanceConversions}
+            fetchAvailabilityForMonth={fetchPerformanceAvailability}
+            gerenciaByPhone={gerenciaByPhone}
+            activePhonesByGerenciaLabel={activePhonesByGerenciaLabel}
+            landingOptions={performanceLandingOptions}
+            premiumThreshold={premiumThreshold}
+            storageKey="admin"
+            currency={reportingCurrency}
+          />
+        )
       )}
 
       {/* TAB: LOGS */}

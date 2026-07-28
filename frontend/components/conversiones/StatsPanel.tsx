@@ -6,6 +6,7 @@ import {
   type ConversionRow,
 } from "@/lib/conversionsDb";
 import { computeCoreStats } from "@/lib/conversionStats";
+import { formatCurrencyAmount, type ReportingCurrency } from "@/lib/currency";
 import ArgentinaMap from "./ArgentinaMap";
 import { supabase } from "@/lib/supabaseClient";
 import {
@@ -25,15 +26,6 @@ function WaIcon({ className }: { className?: string }) {
       <path d="M12 0C5.373 0 0 5.373 0 12c0 2.625.846 5.059 2.284 7.034L.789 23.492a.5.5 0 00.611.611l4.458-1.495A11.935 11.935 0 0012 24c6.627 0 12-5.373 12-12S18.627 0 12 0zm0 22a9.94 9.94 0 01-5.39-1.585l-.386-.234-2.647.887.887-2.647-.234-.386A9.94 9.94 0 012 12C2 6.486 6.486 2 12 2s10 4.486 10 10-4.486 10-10 10z" />
     </svg>
   );
-}
-
-function formatCurrency(n: number) {
-  return n.toLocaleString("es-AR", {
-    style: "currency",
-    currency: "ARS",
-    minimumFractionDigits: 0,
-    maximumFractionDigits: 0,
-  });
 }
 
 function pct(num: number, den: number) {
@@ -58,11 +50,13 @@ function RevenueTrendBadge({
   pctChange,
   revenueToday,
   revenueYesterday,
+  currency,
 }: {
   trend: "up" | "down";
   pctChange: number;
   revenueToday: number;
   revenueYesterday: number;
+  currency: ReportingCurrency;
 }) {
   const isUp = trend === "up";
   const color = isUp ? "text-emerald-400" : "text-red-400";
@@ -74,10 +68,10 @@ function RevenueTrendBadge({
         : `-${Math.abs(pctChange).toFixed(1)}%`;
   const tooltip =
     pctChange === Infinity
-      ? `Ayer no hubo ingresos. Hoy: $${revenueToday.toLocaleString("es-AR")}.`
+      ? `Ayer no hubo ingresos. Hoy: ${formatCurrencyAmount(revenueToday, currency)}.`
       : isUp
-        ? `Ingresos de hoy ($${revenueToday.toLocaleString("es-AR")}) son ${pctStr} mayores que ayer ($${revenueYesterday.toLocaleString("es-AR")}).`
-        : `Ingresos de hoy ($${revenueToday.toLocaleString("es-AR")}) son ${pctStr} menores que ayer ($${revenueYesterday.toLocaleString("es-AR")}).`;
+        ? `Ingresos de hoy (${formatCurrencyAmount(revenueToday, currency)}) son ${pctStr} mayores que ayer (${formatCurrencyAmount(revenueYesterday, currency)}).`
+        : `Ingresos de hoy (${formatCurrencyAmount(revenueToday, currency)}) son ${pctStr} menores que ayer (${formatCurrencyAmount(revenueYesterday, currency)}).`;
 
   return (
     <span
@@ -104,7 +98,7 @@ function KpiCard({
   sub?: string;
   tooltip?: string;
   color?: string;
-  trendInfo?: { trend: "up" | "down"; pctChange: number; revenueToday: number; revenueYesterday: number };
+  trendInfo?: { trend: "up" | "down"; pctChange: number; revenueToday: number; revenueYesterday: number; currency: ReportingCurrency };
 }) {
   return (
     <div className="rounded-xl border border-zinc-800 bg-zinc-900/60 p-4 group relative">
@@ -117,6 +111,7 @@ function KpiCard({
             pctChange={trendInfo.pctChange}
             revenueToday={trendInfo.revenueToday}
             revenueYesterday={trendInfo.revenueYesterday}
+            currency={trendInfo.currency}
           />
         )}
       </p>
@@ -203,6 +198,7 @@ export default function StatsPanel({
   dateRange,
   compactTooltips = false,
   showAssistant = true,
+  currency,
 }: {
   funnelContacts: FunnelContact[];
   conversions: ConversionRow[];
@@ -211,6 +207,7 @@ export default function StatsPanel({
   dateRange?: { start: Date; end: Date } | null;
   compactTooltips?: boolean;
   showAssistant?: boolean;
+  currency: ReportingCurrency;
 }) {
   const [adSpend, setAdSpend] = useState<string>("");
   const [hourlyLoadMetric, setHourlyLoadMetric] = useState<LoadMetric>("total");
@@ -233,6 +230,10 @@ export default function StatsPanel({
   const [assistantError, setAssistantError] = useState<string | null>(null);
   const [assistantQuota, setAssistantQuota] = useState<AssistantQuota | null>(null);
   const [assistantMessages, setAssistantMessages] = useState<AssistantMsg[]>([]);
+
+  useEffect(() => {
+    setAdSpend("");
+  }, [currency]);
 
   const stats = useMemo(() => {
     const core = computeCoreStats(conversions, funnelContacts, allConversions, premiumThreshold);
@@ -762,6 +763,7 @@ export default function StatsPanel({
 
   const assistantContext = useMemo(() => ({
     isTodayRange,
+    currency,
     summary: {
       clicks_cta: stats.uniqueContacts,
       mensajes_recibidos: stats.uniqueLeadsLinkedToContact,
@@ -807,7 +809,7 @@ export default function StatsPanel({
         revenue: r.revenue,
       })),
     },
-  }), [isTodayRange, stats, hourlyMessagesLoadsData, dailyMessagesLoadsData, dailyFunnelPctData]);
+  }), [isTodayRange, currency, stats, hourlyMessagesLoadsData, dailyMessagesLoadsData, dailyFunnelPctData]);
 
   const sendAssistantQuestion = async () => {
     const question = assistantInput.trim();
@@ -946,7 +948,7 @@ export default function StatsPanel({
         <div className={`mt-3 grid grid-cols-2 gap-3 ${parsedAdSpend > 0 ? "sm:grid-cols-3 lg:grid-cols-5" : "sm:grid-cols-3"}`}>
           <KpiCard
             label="Total cargado"
-            value={formatCurrency(stats.totalRevenue)}
+            value={formatCurrencyAmount(stats.totalRevenue, currency)}
             color="text-emerald-400"
             trendInfo={
               stats.revenueTrend && stats.revenuePctChange !== undefined
@@ -955,6 +957,7 @@ export default function StatsPanel({
                     pctChange: stats.revenuePctChange,
                     revenueToday: stats.revenueToday,
                     revenueYesterday: stats.revenueYesterday,
+                    currency,
                   }
                 : undefined
             }
@@ -962,7 +965,7 @@ export default function StatsPanel({
           />
           <KpiCard
             label="Carga promedio"
-            value={formatCurrency(stats.avgTicket)}
+            value={formatCurrencyAmount(stats.avgTicket, currency)}
             sub={`${stats.totalPurchaseCount} cargas totales`}
             tooltip={compactTooltips ? "Monto promedio por carga individual." : "Monto promedio por carga individual. Se calcula dividiendo el total cargado por la cantidad de cargas realizadas."}
           />
@@ -976,14 +979,14 @@ export default function StatsPanel({
               <KpiCard
                 label="ROAS primera carga"
                 value={`${roasFirstPurchase.toFixed(2)}x`}
-                sub={formatCurrency(stats.firstPurchaseRevenue)}
+                sub={formatCurrencyAmount(stats.firstPurchaseRevenue, currency)}
                 color="text-sky-400"
                 tooltip={compactTooltips ? "Retorno sobre la inversión publicitaria (solo primeras cargas)." : "Retorno sobre la inversión publicitaria considerando sólo ingresos de primeras cargas (sin recargas). Se calcula: ingresos primera carga / importe gastado."}
               />
               <KpiCard
                 label="ROAS total"
                 value={`${roasTotal.toFixed(2)}x`}
-                sub={formatCurrency(stats.totalRevenue)}
+                sub={formatCurrencyAmount(stats.totalRevenue, currency)}
                 color="text-amber-400"
                 tooltip={compactTooltips ? "Retorno sobre la inversión publicitaria total." : "Retorno sobre la inversión publicitaria total. Se calcula: ingresos totales (incluyendo recargas) / importe gastado."}
               />
@@ -993,9 +996,9 @@ export default function StatsPanel({
 
         {/* Ad spend input */}
         <div className="mt-4 flex items-center gap-3 rounded-xl border border-zinc-800 bg-zinc-900/40 p-3">
-          <label className="text-[11px] text-zinc-500 whitespace-nowrap">Importe gastado</label>
+          <label className="text-[11px] text-zinc-500 whitespace-nowrap">Importe gastado ({currency})</label>
           <div className="relative max-w-[200px]">
-            <span className="absolute left-2.5 top-1/2 -translate-y-1/2 text-[11px] text-zinc-600">$</span>
+            <span className="absolute left-2.5 top-1/2 -translate-y-1/2 text-[10px] text-zinc-600">{currency}</span>
             <input
               type="text"
               inputMode="numeric"
@@ -1010,14 +1013,15 @@ export default function StatsPanel({
                 setAdSpend(n.toLocaleString("es-AR"));
               }}
               placeholder="0"
-              className="w-full rounded-lg border border-zinc-700 bg-zinc-950 pl-6 pr-3 py-1.5 text-[12px] text-zinc-200 outline-none focus:border-zinc-500"
+              className="w-full rounded-lg border border-zinc-700 bg-zinc-950 pl-11 pr-3 py-1.5 text-[12px] text-zinc-200 outline-none focus:border-zinc-500"
             />
           </div>
           <p className="text-[10px] text-zinc-600">Ingresá el gasto publicitario para calcular ROAS.</p>
         </div>
       </div>
 
-      {/*  MAPA DE ARGENTINA  */}
+      {/* El mapa actual modela provincias argentinas; no se muestra para PYG. */}
+      {currency === "ARS" && (
       <div>
         <SectionTitle>Distribución geográfica</SectionTitle>
         <div className="mt-3">
@@ -1030,6 +1034,7 @@ export default function StatsPanel({
           />
         </div>
       </div>
+      )}
 
       {/*  GRÁFICOS TEMPORALES  */}
       <div className="grid gap-4 lg:grid-cols-2">
@@ -1375,7 +1380,7 @@ export default function StatsPanel({
                         <td className="py-1.5 text-center text-zinc-400">{r.mensajes}</td>
                         <td className="py-1.5 text-center text-zinc-400">{r.cargas}</td>
                         <td className="py-1.5 text-center text-zinc-400 tabular-nums">{pct(r.cargas, r.mensajes || 1)}</td>
-                        <td className="py-1.5 text-center text-zinc-400 tabular-nums">{formatCurrency(r.revenue)}</td>
+                        <td className="py-1.5 text-center text-zinc-400 tabular-nums">{formatCurrencyAmount(r.revenue, currency)}</td>
                         {parsedAdSpend > 0 && (
                           <>
                             <td className="py-1.5 text-center text-zinc-300 tabular-nums">{roas1.toFixed(2)}x</td>
@@ -1438,7 +1443,7 @@ export default function StatsPanel({
                         <td className="py-1.5 text-center text-zinc-400">{r.mensajes}</td>
                         <td className="py-1.5 text-center text-zinc-400">{r.cargas}</td>
                         <td className="py-1.5 text-center text-zinc-400 tabular-nums">{pct(r.cargas, r.mensajes || 1)}</td>
-                        <td className="py-1.5 text-center text-zinc-400 tabular-nums">{formatCurrency(r.revenue)}</td>
+                        <td className="py-1.5 text-center text-zinc-400 tabular-nums">{formatCurrencyAmount(r.revenue, currency)}</td>
                         {parsedAdSpend > 0 && (
                           <>
                             <td className="py-1.5 text-center text-zinc-300 tabular-nums">{roas1.toFixed(2)}x</td>
@@ -1490,7 +1495,7 @@ export default function StatsPanel({
                       </td>
                       <td className="py-1.5 text-zinc-400">{[c.fn, c.ln].filter(Boolean).join(" ") || "-"}</td>
                       <td className="py-1.5 text-center text-zinc-400">{c.purchase_count}</td>
-                      <td className="py-1.5 text-center text-emerald-400 font-mono font-semibold">{formatCurrency(c.total_valor)}</td>
+                      <td className="py-1.5 text-center text-emerald-400 font-mono font-semibold">{formatCurrencyAmount(c.total_valor, currency)}</td>
                     </tr>
                   ))}
                 </tbody>

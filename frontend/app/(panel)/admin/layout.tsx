@@ -6,6 +6,7 @@ import Link from "next/link";
 import type { User } from "@supabase/supabase-js";
 import { supabase } from "@/lib/supabaseClient";
 import { RouteProgress } from "@/components/ui/RouteProgress";
+import { CurrencyScopeSelector } from "@/components/currency/CurrencyScope";
 
 function MenuIcon({ className }: { className?: string }) {
   return (
@@ -751,6 +752,7 @@ export default function AdminLayout({
           >
             <MenuIcon className="h-6 w-6" />
           </button>
+          <CurrencyScopeSelector />
         </header>
         <main
           className="min-h-0 max-w-full flex-1 overflow-x-hidden overflow-y-auto px-3 py-5 sm:px-6 sm:py-8 lg:px-10"

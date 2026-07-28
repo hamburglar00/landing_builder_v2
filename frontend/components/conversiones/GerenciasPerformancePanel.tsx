@@ -9,6 +9,7 @@ import {
   type GerenciaAvailabilitySummary,
 } from "@/lib/conversionsDb";
 import { computeCoreStats } from "@/lib/conversionStats";
+import { formatCurrencyAmount, type ReportingCurrency } from "@/lib/currency";
 
 type Props = {
   fetchConversionsForMonth: (range: FetchDateRange) => Promise<ConversionRow[]>;
@@ -18,6 +19,7 @@ type Props = {
   landingOptions?: LandingPerformanceFilterOption[];
   premiumThreshold: number;
   storageKey: string;
+  currency: ReportingCurrency;
 };
 
 export type LandingPerformanceFilterOption = {
@@ -106,14 +108,6 @@ function formatOptionalPercent(value: number | null): string {
   return value === null ? "-" : formatPercent(value);
 }
 
-function formatMoney(value: number): string {
-  return new Intl.NumberFormat("es-AR", {
-    style: "currency",
-    currency: "ARS",
-    maximumFractionDigits: 0,
-  }).format(value || 0);
-}
-
 function formatRoas(value: number): string {
   return `${new Intl.NumberFormat("es-AR", {
     minimumFractionDigits: 2,
@@ -154,6 +148,7 @@ export default function GerenciasPerformancePanel({
   landingOptions = [],
   premiumThreshold,
   storageKey,
+  currency,
 }: Props) {
   const [month, setMonth] = useState(currentMonthValue());
   const [landingFilter, setLandingFilter] = useState("__all__");
@@ -169,7 +164,7 @@ export default function GerenciasPerformancePanel({
   const [metaAdsOnly, setMetaAdsOnly] = useState(false);
   const [searchTerm, setSearchTerm] = useState("");
 
-  const costStorageKey = `gerencias-performance-costs:v1:${storageKey}`;
+  const costStorageKey = `gerencias-performance-costs:v2:${storageKey}:${currency}`;
   const monthSelectOptions = useMemo(() => monthOptions(), []);
   const selectedLanding = useMemo(
     () => landingOptions.find((option) => option.id === landingFilter) ?? null,
@@ -200,14 +195,17 @@ export default function GerenciasPerformancePanel({
 
   useEffect(() => {
     try {
-      const raw = window.localStorage.getItem(costStorageKey);
+      const raw = window.localStorage.getItem(costStorageKey) ??
+        (currency === "ARS"
+          ? window.localStorage.getItem(`gerencias-performance-costs:v1:${storageKey}`)
+          : null);
       setCostByGerencia(raw ? JSON.parse(raw) as Record<string, string> : {});
     } catch {
       setCostByGerencia({});
     } finally {
       setCostStorageReadyKey(costStorageKey);
     }
-  }, [costStorageKey]);
+  }, [costStorageKey, currency, storageKey]);
 
   useEffect(() => {
     if (costStorageReadyKey !== costStorageKey) return;
@@ -405,10 +403,11 @@ export default function GerenciasPerformancePanel({
   const exportPdf = async () => {
     try {
       const { jsPDF } = await import("jspdf");
-      const reportTitle = `Desempeño por Gerencias - ${monthLabel(month)}`;
+      const reportTitle = `Desempeño por Gerencias - ${currency} - ${monthLabel(month)}`;
       const landingLabel = selectedLanding?.name || "Todas las landings";
       const filters = [
         `Mes: ${monthLabel(month)}`,
+        `Moneda: ${currency}`,
         `Landing: ${landingLabel}`,
         `Meta Ads: ${metaAdsOnly ? "Sí" : "No"}`,
         `Búsqueda: ${searchTerm.trim() || "-"}`,
@@ -428,7 +427,7 @@ export default function GerenciasPerformancePanel({
       const text = [15, 23, 42] as const;
       const muted = [100, 116, 139] as const;
 
-      const money = (value: number) => formatMoney(value).replace("ARS", "$").replace(/\s+/g, " ").trim();
+      const money = (value: number) => formatCurrencyAmount(value, currency).replace(/\s+/g, " ").trim();
       const safeFilename = `${reportTitle}.pdf`.replace(/[\\/:*?"<>|]/g, "-");
       const fitText = (value: string, maxWidth: number): string => {
         const clean = String(value ?? "");
@@ -766,14 +765,14 @@ export default function GerenciasPerformancePanel({
                 <th className="px-1.5 py-2"><SortHeader sort="pctRecarga">% Recarga</SortHeader></th>
                 <th className="px-1.5 py-2">
                   <div className="flex flex-col items-center gap-1.5">
-                    <SortHeader sort="cost">Costo/msj</SortHeader>
+                    <SortHeader sort="cost">Costo/msj ({currency})</SortHeader>
                     <div className="flex w-full items-center justify-center gap-1">
                       <input
                         value={globalCost}
                         onChange={(e) => setGlobalCost(e.target.value)}
                         inputMode="decimal"
                         placeholder="0"
-                        aria-label="Costo por mensaje general"
+                        aria-label={`Costo por mensaje general en ${currency}`}
                         className="h-7 w-12 rounded border border-zinc-700 bg-zinc-950 px-1.5 text-center text-[10px] font-normal text-zinc-100 placeholder:text-zinc-500"
                       />
                       <button
@@ -824,7 +823,7 @@ export default function GerenciasPerformancePanel({
                     <td className="px-1.5 py-2 text-center text-zinc-200">{formatPercent(row.pctInicioConversacion)}</td>
                     <td className="px-1.5 py-2 text-center text-amber-300">{formatNumber(row.mensajes)}</td>
                     <td className="px-1.5 py-2 text-center text-sky-300">{formatNumber(row.cargas)}</td>
-                    <td className="px-1.5 py-2 text-center font-semibold text-emerald-300">{formatMoney(row.montoCargado)}</td>
+                    <td className="px-1.5 py-2 text-center font-semibold text-emerald-300">{formatCurrencyAmount(row.montoCargado, currency)}</td>
                     <td className="px-1.5 py-2 text-center text-zinc-200">{formatPercent(row.pctCarga)}</td>
                     <td className="px-1.5 py-2 text-center text-zinc-200">{formatPercent(row.pctRecarga)}</td>
                     <td className="px-1.5 py-2 text-center">
@@ -839,7 +838,7 @@ export default function GerenciasPerformancePanel({
                         className="h-7 w-16 rounded border border-zinc-700 bg-zinc-900 px-1.5 text-center text-[10px] text-zinc-100"
                       />
                     </td>
-                    <td className="px-1.5 py-2 text-center font-semibold text-emerald-300">{formatMoney(gasto)}</td>
+                    <td className="px-1.5 py-2 text-center font-semibold text-emerald-300">{formatCurrencyAmount(gasto, currency)}</td>
                     {showRoas && (
                       <td className="px-1.5 py-2 text-center font-semibold text-cyan-300">
                         {gasto > 0 ? formatRoas(roas) : "-"}
@@ -859,11 +858,11 @@ export default function GerenciasPerformancePanel({
                 </td>
                 <td className="px-1.5 py-2 text-center font-semibold text-amber-300">{formatNumber(totals.mensajes / rowAverageDivisor)}</td>
                 <td className="px-1.5 py-2 text-center font-semibold text-sky-300">{formatNumber(totals.cargas / rowAverageDivisor)}</td>
-                <td className="px-1.5 py-2 text-center font-semibold text-emerald-300">{formatMoney(totals.montoCargado / rowAverageDivisor)}</td>
+                <td className="px-1.5 py-2 text-center font-semibold text-emerald-300">{formatCurrencyAmount(totals.montoCargado / rowAverageDivisor, currency)}</td>
                 <td className="px-1.5 py-2 text-center font-semibold text-zinc-200">{formatPercent(totals.pctCarga / rowAverageDivisor)}</td>
                 <td className="px-1.5 py-2 text-center font-semibold text-zinc-200">{formatPercent(totals.pctRecarga / rowAverageDivisor)}</td>
                 <td className="px-1.5 py-2 text-center text-zinc-500">-</td>
-                <td className="px-1.5 py-2 text-center font-semibold text-emerald-300">{formatMoney(totals.gasto / rowAverageDivisor)}</td>
+                <td className="px-1.5 py-2 text-center font-semibold text-emerald-300">{formatCurrencyAmount(totals.gasto / rowAverageDivisor, currency)}</td>
                 {showRoas && (
                   <td className="px-1.5 py-2 text-center font-semibold text-cyan-300">
                     {totals.roasCount > 0 ? formatRoas(totals.roas / roasAverageDivisor) : "-"}
@@ -877,11 +876,11 @@ export default function GerenciasPerformancePanel({
                 <td className="px-1.5 py-2 text-center text-zinc-500">-</td>
                 <td className="px-1.5 py-2 text-center font-semibold text-amber-300">{formatNumber(totals.mensajes)}</td>
                 <td className="px-1.5 py-2 text-center font-semibold text-sky-300">{formatNumber(totals.cargas)}</td>
-                <td className="px-1.5 py-2 text-center font-semibold text-emerald-300">{formatMoney(totals.montoCargado)}</td>
+                <td className="px-1.5 py-2 text-center font-semibold text-emerald-300">{formatCurrencyAmount(totals.montoCargado, currency)}</td>
                 <td className="px-1.5 py-2 text-center text-zinc-500">-</td>
                 <td className="px-1.5 py-2 text-center text-zinc-500">-</td>
                 <td className="px-1.5 py-2 text-center text-zinc-500">-</td>
-                <td className="px-1.5 py-2 text-center font-semibold text-emerald-300">{formatMoney(totals.gasto)}</td>
+                <td className="px-1.5 py-2 text-center font-semibold text-emerald-300">{formatCurrencyAmount(totals.gasto, currency)}</td>
                 {showRoas && (
                   <td className="px-1.5 py-2 text-center font-semibold text-cyan-300">
                     {totals.gasto > 0 ? formatRoas(totals.montoCargado / totals.gasto) : "-"}

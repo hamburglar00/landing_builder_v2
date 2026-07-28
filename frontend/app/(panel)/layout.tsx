@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import "../globals.css";
+import { CurrencyScopeProvider } from "@/components/currency/CurrencyScope";
 
 export const metadata: Metadata = {
   title: "PBAdmin Landing Builder",
@@ -23,7 +24,9 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="es">
-      <body>{children}</body>
+      <body>
+        <CurrencyScopeProvider>{children}</CurrencyScopeProvider>
+      </body>
     </html>
   );
 }

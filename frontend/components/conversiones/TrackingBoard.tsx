@@ -6,6 +6,7 @@ import type {
   TrackingRankingConfig,
   TrackingRankingRule,
 } from "@/lib/conversionsDb";
+import { formatCurrencyAmount, type ReportingCurrency } from "@/lib/currency";
 
 type SortMode = TrackingRankingConfig["sortMode"];
 type RankRule = TrackingRankingRule;
@@ -43,15 +44,6 @@ function formatThousands(n: number) {
   );
 }
 
-function formatCurrency(n: number) {
-  return new Intl.NumberFormat("es-AR", {
-    style: "currency",
-    currency: "ARS",
-    minimumFractionDigits: 0,
-    maximumFractionDigits: 0,
-  }).format(n || 0);
-}
-
 function relDate(iso: string): string {
   const d = Date.now() - new Date(iso).getTime();
   const m = Math.floor(d / 60000);
@@ -86,6 +78,7 @@ export default function TrackingBoard({
   onDeletePhone,
   gerenciaOptions = [],
   assignedPhoneToGerenciaId = {},
+  currency,
 }: {
   conversions: ConversionRow[];
   onRefresh?: () => void;
@@ -95,6 +88,7 @@ export default function TrackingBoard({
   onDeletePhone?: (phone: string) => Promise<void> | void;
   gerenciaOptions?: GerenciaOption[];
   assignedPhoneToGerenciaId?: Record<string, number>;
+  currency: ReportingCurrency;
 }) {
   const initialRules = rankingConfig?.rules?.length ? rankingConfig.rules : DEFAULT_RULES;
   const initialOverflow = rankingConfig?.overflowIndicator || DEFAULT_OVERFLOW;
@@ -240,12 +234,12 @@ export default function TrackingBoard({
         String(rank).toLowerCase().includes(q) ||
         String(r.phone).toLowerCase().includes(q) ||
         String(r.loads).toLowerCase().includes(q) ||
-        formatCurrency(r.avgLoad).toLowerCase().includes(q) ||
-        formatCurrency(r.totalLoaded).toLowerCase().includes(q) ||
+        formatCurrencyAmount(r.avgLoad, currency).toLowerCase().includes(q) ||
+        formatCurrencyAmount(r.totalLoaded, currency).toLowerCase().includes(q) ||
         formatThousands(r.totalLoaded).toLowerCase().includes(q)
       );
     });
-  }, [sortedRows, search, rules, overflowIndicator, gerenciaFilter]);
+  }, [sortedRows, search, rules, overflowIndicator, gerenciaFilter, currency]);
 
   const pageSize = 20;
   const totalPages = Math.max(1, Math.ceil(filteredRows.length / pageSize));
@@ -302,12 +296,12 @@ export default function TrackingBoard({
       const rank = r.loads === 0 ? LEAD_INDICATOR : indicatorFor(r.totalLoaded);
       lines.push(`• ${rank} wa.me/${stripArPrefix(r.phone)}`);
       lines.push(`⏳ Última actividad: ${relDate(r.lastActive)}`);
-      lines.push(`💸 Carga promedio: ${formatCurrency(r.avgLoad)}`);
-      lines.push(`🏦 Total cargado: ${formatCurrency(r.totalLoaded)}`);
+      lines.push(`💸 Carga promedio: ${formatCurrencyAmount(r.avgLoad, currency)}`);
+      lines.push(`🏦 Total cargado: ${formatCurrencyAmount(r.totalLoaded, currency)}`);
       lines.push("");
     }
     return lines.join("\n").trim();
-  }, [filteredRows, overflowIndicator, rules]);
+  }, [filteredRows, overflowIndicator, rules, currency]);
 
   const handleCopyExport = async () => {
     try {
@@ -417,8 +411,8 @@ export default function TrackingBoard({
                     {relDate(r.lastActive)}
                   </td>
                   <td className="hidden sm:table-cell px-2 py-1.5 whitespace-nowrap text-zinc-300">{r.loads}</td>
-                  <td className="px-2 py-1.5 whitespace-nowrap text-zinc-300">{formatCurrency(r.avgLoad)}</td>
-                  <td className="px-2 py-1.5 whitespace-nowrap text-zinc-100 font-semibold">{formatCurrency(r.totalLoaded)}</td>
+                  <td className="px-2 py-1.5 whitespace-nowrap text-zinc-300">{formatCurrencyAmount(r.avgLoad, currency)}</td>
+                  <td className="px-2 py-1.5 whitespace-nowrap text-zinc-100 font-semibold">{formatCurrencyAmount(r.totalLoaded, currency)}</td>
                   {onDeletePhone && (
                     <td className="px-2 py-1.5 whitespace-nowrap text-right">
                       <button

@@ -1,4 +1,5 @@
 import { supabase } from "@/lib/supabaseClient";
+import type { ReportingCurrency } from "@/lib/currency";
 
 function normalizePixelId(value: string): string {
   return String(value ?? "").replace(/\D/g, "");
@@ -23,12 +24,14 @@ export interface ConversionsConfig {
   geo_use_ipapi: boolean;
   geo_fill_only_when_missing: boolean;
   funnel_premium_threshold: number;
+  funnel_premium_thresholds?: Record<string, number> | null;
   visible_columns?: string[] | null;
   show_logs?: boolean;
   show_inbox?: boolean;
   show_ai_assistant?: boolean;
   show_promotions?: boolean;
   tracking_ranking_config?: TrackingRankingConfig | null;
+  tracking_ranking_configs?: Record<string, TrackingRankingConfig> | null;
 }
 
 export interface PixelConfig {
@@ -285,12 +288,14 @@ const DEFAULT_CONFIG: ConversionsConfig = {
   geo_use_ipapi: false,
   geo_fill_only_when_missing: false,
   funnel_premium_threshold: 50000,
+  funnel_premium_thresholds: { ARS: 50000 },
   visible_columns: [],
   show_logs: true,
   show_inbox: false,
   show_ai_assistant: false,
   show_promotions: false,
   tracking_ranking_config: null,
+  tracking_ranking_configs: {},
 };
 
 // Config CRUD
@@ -307,11 +312,31 @@ export async function fetchConversionsConfig(
   if (error) throw error;
   if (!data) return { ...DEFAULT_CONFIG, user_id: userId };
   const stored = data as Partial<ConversionsConfig>;
+  const storedThresholds =
+    stored.funnel_premium_thresholds &&
+    typeof stored.funnel_premium_thresholds === "object" &&
+    !Array.isArray(stored.funnel_premium_thresholds)
+      ? stored.funnel_premium_thresholds
+      : {};
+  const storedRankingConfigs =
+    stored.tracking_ranking_configs &&
+    typeof stored.tracking_ranking_configs === "object" &&
+    !Array.isArray(stored.tracking_ranking_configs)
+      ? stored.tracking_ranking_configs
+      : {};
   const legacyPurchaseEnabled = stored.send_purchase_capi !== false;
   return {
     ...DEFAULT_CONFIG,
     ...stored,
     user_id: userId,
+    funnel_premium_thresholds: {
+      ARS: Number(storedThresholds.ARS ?? stored.funnel_premium_threshold ?? 50000),
+      ...storedThresholds,
+    },
+    tracking_ranking_configs: {
+      ...(stored.tracking_ranking_config ? { ARS: stored.tracking_ranking_config } : {}),
+      ...storedRankingConfigs,
+    },
     send_purchase_capi:
       stored.send_purchase_capi ??
       (stored.send_first_purchase_capi !== false || stored.send_repeat_purchase_capi !== false),
@@ -347,12 +372,20 @@ export async function upsertConversionsConfig(
         geo_use_ipapi: config.geo_use_ipapi,
         geo_fill_only_when_missing: config.geo_fill_only_when_missing,
         funnel_premium_threshold: config.funnel_premium_threshold,
+        funnel_premium_thresholds: config.funnel_premium_thresholds ?? {
+          ARS: config.funnel_premium_threshold,
+        },
         visible_columns: config.visible_columns ?? [],
         show_logs: config.show_logs ?? true,
         show_inbox: config.show_inbox ?? false,
         show_ai_assistant: config.show_ai_assistant ?? false,
         show_promotions: config.show_promotions ?? false,
         tracking_ranking_config: config.tracking_ranking_config ?? null,
+        tracking_ranking_configs: config.tracking_ranking_configs ?? (
+          config.tracking_ranking_config
+            ? { ARS: config.tracking_ranking_config }
+            : {}
+        ),
         updated_at: new Date().toISOString(),
       },
       { onConflict: "user_id" },
@@ -991,10 +1024,73 @@ export async function fetchConversionsConfigForUser(
   return fetchConversionsConfig(userId);
 }
 
-export async function fetchHomeOverviewStats(userId: string): Promise<HomeOverviewStats> {
-  const { data, error } = await supabase.rpc("get_home_overview_stats", {
+export function getPremiumThreshold(
+  config: Pick<ConversionsConfig, "funnel_premium_threshold" | "funnel_premium_thresholds"> | null | undefined,
+  currency: ReportingCurrency,
+): number {
+  const scoped = Number(config?.funnel_premium_thresholds?.[currency]);
+  if (Number.isFinite(scoped) && scoped >= 0) return scoped;
+  const legacy = Number(config?.funnel_premium_threshold);
+  return Number.isFinite(legacy) && legacy >= 0 ? legacy : 50000;
+}
+
+export function setPremiumThreshold(
+  config: ConversionsConfig,
+  currency: ReportingCurrency,
+  value: number,
+): ConversionsConfig {
+  const normalized = Number.isFinite(value) && value >= 0 ? value : 0;
+  return {
+    ...config,
+    funnel_premium_threshold: currency === "ARS"
+      ? normalized
+      : config.funnel_premium_threshold,
+    funnel_premium_thresholds: {
+      ...(config.funnel_premium_thresholds ?? {
+        ARS: config.funnel_premium_threshold,
+      }),
+      [currency]: normalized,
+    },
+  };
+}
+
+export function getTrackingRankingConfig(
+  config: Pick<ConversionsConfig, "tracking_ranking_config" | "tracking_ranking_configs"> | null | undefined,
+  currency: ReportingCurrency,
+): TrackingRankingConfig | null {
+  return config?.tracking_ranking_configs?.[currency] ??
+    (currency === "ARS" ? config?.tracking_ranking_config ?? null : null);
+}
+
+export function setTrackingRankingConfig(
+  config: ConversionsConfig,
+  currency: ReportingCurrency,
+  value: TrackingRankingConfig,
+): ConversionsConfig {
+  return {
+    ...config,
+    tracking_ranking_config: currency === "ARS"
+      ? value
+      : config.tracking_ranking_config,
+    tracking_ranking_configs: {
+      ...(config.tracking_ranking_configs ?? (
+        config.tracking_ranking_config
+          ? { ARS: config.tracking_ranking_config }
+          : {}
+      )),
+      [currency]: value,
+    },
+  };
+}
+
+export async function fetchHomeOverviewStats(
+  userId: string,
+  currency: ReportingCurrency = "ARS",
+): Promise<HomeOverviewStats> {
+  const { data, error } = await supabase.rpc("get_home_overview_stats_by_currency", {
     p_user_id: userId,
     p_hidden_by: userId,
+    p_currency: currency,
   });
   if (error) throw error;
 

@@ -7,6 +7,11 @@ import {
   type TrackingRankingConfig,
   classifyContact,
 } from "@/lib/conversionsDb";
+import {
+  formatCompactCurrency,
+  formatCurrencyAmount,
+  type ReportingCurrency,
+} from "@/lib/currency";
 
 type SortKey = "date" | "amount";
 type SortDir = "asc" | "desc";
@@ -88,17 +93,6 @@ function normalizePhone(phone: string | null | undefined) {
   return String(phone ?? "").replace(/\D/g, "");
 }
 
-function fmtCurrency(n: number) {
-  return n.toLocaleString("es-AR", { style: "currency", currency: "ARS", minimumFractionDigits: 0, maximumFractionDigits: 0 });
-}
-
-function fmtCompact(n: number) {
-  if (n >= 1_000_000) return `$${(n / 1_000_000).toFixed(1)}M`;
-  if (n >= 10_000) return `$${(n / 1_000).toFixed(0)}K`;
-  if (n >= 1_000) return `$${(n / 1_000).toFixed(1)}K`;
-  return `$${n.toLocaleString("es-AR")}`;
-}
-
 function relDate(iso: string): string {
   const d = Date.now() - new Date(iso).getTime();
   const m = Math.floor(d / 60000);
@@ -154,12 +148,14 @@ function ContactCard({
   rankingConfig,
   gerenciaByPhone,
   gerenciaLabelsByContactPhone,
+  currency,
 }: {
   c: FunnelContact;
   stage: FunnelStage;
   rankingConfig?: TrackingRankingConfig | null;
   gerenciaByPhone?: Record<string, string[]>;
   gerenciaLabelsByContactPhone?: Record<string, string[]>;
+  currency: ReportingCurrency;
 }) {
   const meta = STAGE_META[stage];
   const name = [c.fn, c.ln].filter(Boolean).join(" ");
@@ -241,7 +237,7 @@ function ContactCard({
         <div className="relative z-10 mt-2 border-t border-zinc-800/35 pt-1.5">
           <div className="flex items-baseline justify-between gap-2">
             <span className={`text-[16px] font-extrabold tracking-tight leading-none tabular-nums ${meta.amountColor}`}>
-              {fmtCurrency(c.total_valor)}
+              {formatCurrencyAmount(c.total_valor, currency)}
             </span>
             <span className="text-[10px] font-medium text-zinc-500/80">
               {c.purchase_count} carga{c.purchase_count !== 1 ? "s" : ""}
@@ -291,6 +287,7 @@ export default function FunnelBoard({
   rankingConfig,
   gerenciaByPhone,
   gerenciaLabelsByContactPhone,
+  currency,
 }: {
   contacts: FunnelContact[];
   premiumThreshold: number;
@@ -298,6 +295,7 @@ export default function FunnelBoard({
   rankingConfig?: TrackingRankingConfig | null;
   gerenciaByPhone?: Record<string, string[]>;
   gerenciaLabelsByContactPhone?: Record<string, string[]>;
+  currency: ReportingCurrency;
 }) {
   const [sortKey, setSortKey] = useState<SortKey>("date");
   const [sortDir, setSortDir] = useState<SortDir>("desc");
@@ -474,7 +472,7 @@ export default function FunnelBoard({
                   className={`mt-1.5 text-sm font-bold ${meta.accentSoft} tabular-nums leading-none ${rev > 0 ? "" : "opacity-0"}`}
                   aria-hidden={rev <= 0}
                 >
-                  {rev > 0 ? fmtCompact(rev) : "$0"}
+                  {formatCompactCurrency(rev, currency)}
                 </p>
               </div>
 
@@ -493,6 +491,7 @@ export default function FunnelBoard({
                         rankingConfig={rankingConfig}
                         gerenciaByPhone={gerenciaByPhone}
                         gerenciaLabelsByContactPhone={gerenciaLabelsByContactPhone}
+                        currency={currency}
                       />
                   ))
                 )}
