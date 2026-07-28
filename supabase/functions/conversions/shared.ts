@@ -36,6 +36,9 @@ export interface ConversionRow {
   source_platform?: string;
   ctwa_clid?: string;
   pixel_id: string;
+  meta_pixel_id?: string;
+  pixel_attribution_source?: string;
+  pixel_attribution_conversion_id?: string | null;
   contact_event_id: string;
   contact_event_time: number | null;
   sendContactPixel?: boolean;

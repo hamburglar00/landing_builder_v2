@@ -13,6 +13,10 @@ import {
   toValidEventTime,
   hasPreviousSuccessfulPurchases,
 } from "./shared.ts";
+import {
+  resolvePurchasePixelAttribution,
+  type PurchasePixelAttribution,
+} from "./pixel_attribution.ts";
 
 
 const corsHeaders = {
@@ -93,6 +97,8 @@ interface ConversionRow {
   fbc: string;
   geo_source?: string;
   meta_pixel_id: string;
+  pixel_attribution_source?: string;
+  pixel_attribution_conversion_id?: string | null;
   source_platform?: string;
   ctwa_clid?: string;
   pixel_id: string;
@@ -421,9 +427,80 @@ function clearUntrustedStoredPixel(row: ConversionRow): ConversionRow {
   return { ...row, meta_pixel_id: "", pixel_id: "" };
 }
 
-function trustedStoredPixel(row: ConversionRow | null | undefined): string {
-  if (!row || !hasTrustedStoredPixelContext(row)) return "";
-  return norm(row.pixel_id || row.meta_pixel_id);
+function configuredPixelIds(
+  config: ConversionsConfig,
+  pixelConfigs: PixelConfigRow[],
+): string[] {
+  return Array.from(new Set(
+    [config.pixel_id, ...pixelConfigs.map((pixel) => pixel.pixel_id)]
+      .map(norm)
+      .filter(Boolean),
+  ));
+}
+
+async function resolveAndPersistPurchasePixel(
+  db: SupabaseClient,
+  config: ConversionsConfig,
+  pixelConfigs: PixelConfigRow[],
+  row: ConversionRow,
+  rowId: string,
+  input: {
+    inboundPixelId?: unknown;
+    promoCode?: unknown;
+    landingId?: unknown;
+  },
+): Promise<{ row: ConversionRow; attribution: PurchasePixelAttribution | null }> {
+  const attribution = await resolvePurchasePixelAttribution(db, {
+    userId: row.user_id,
+    inboundPixelId: input.inboundPixelId,
+    currentRow: row,
+    promoCode: input.promoCode ?? row.promo_code,
+    landingId: input.landingId ?? row.landing_id,
+    configuredPixelIds: configuredPixelIds(config, pixelConfigs),
+  });
+
+  if (!attribution) {
+    return {
+      row: clearUntrustedStoredPixel(row),
+      attribution: null,
+    };
+  }
+
+  const attributedRow: ConversionRow = {
+    ...row,
+    pixel_id: attribution.pixelId,
+    meta_pixel_id: attribution.pixelId,
+    pixel_attribution_source: attribution.source,
+    pixel_attribution_conversion_id: attribution.sourceConversionId,
+  };
+
+  await db
+    .from("conversions")
+    .update({
+      pixel_id: attribution.pixelId,
+      meta_pixel_id: attribution.pixelId,
+      pixel_attribution_source: attribution.source,
+      pixel_attribution_conversion_id: attribution.sourceConversionId,
+    })
+    .eq("id", rowId);
+
+  await writeLog(
+    db,
+    row.user_id,
+    "resolvePurchasePixelAttribution",
+    "INFO",
+    "Pixel Purchase resuelto",
+    JSON.stringify({
+      pixel_id: attribution.pixelId,
+      source: attribution.source,
+      source_conversion_id: attribution.sourceConversionId,
+      promo_code: norm(input.promoCode ?? row.promo_code),
+      landing_id: norm(input.landingId ?? row.landing_id),
+    }),
+    rowId,
+  );
+
+  return { row: attributedRow, attribution };
 }
 
 function ensurePayloadEventTime(payload: Params, receivedEventTime: number): Params {
@@ -1320,6 +1397,32 @@ async function sendToMetaCAPI(
   }
   const useBusinessMessaging =
     eventName === "Purchase" && purchaseCapiRoute === "business_messaging";
+  if (!useBusinessMessaging && !preferredPixelId && !allowPixelFallback) {
+    const skippedMsg =
+      eventName === "Contact" ? "CONTACT CAPI OMITIDO SIN PIXEL CONFIABLE" :
+      eventName === "Lead" ? "LEAD CAPI OMITIDO SIN PIXEL CONFIABLE" :
+      "PURCHASE CAPI OMITIDO SIN PIXEL CONFIABLE";
+    const { data: current } = await db.from("conversions").select("observaciones").eq("id", rowId).single();
+    const obs = appendObservation(current?.observaciones ?? "", skippedMsg);
+    const updates: Record<string, unknown> = { [statusField]: "skipped_no_trusted_pixel", observaciones: obs };
+    if (retryableField) updates[retryableField] = false;
+    await db.from("conversions").update(updates).eq("id", rowId);
+    await writeLog(
+      db,
+      row.user_id,
+      "sendToMetaCAPI",
+      "WARN",
+      "Meta CAPI omitido: pixel fallback deshabilitado",
+      JSON.stringify({
+        event_name: eventName,
+        row_id: rowId,
+        reason: options.pixelFallbackDisabledReason || "pixel_fallback_disabled",
+        source_platform: sourcePlatform,
+      }),
+      rowId,
+    );
+    return true;
+  }
   const purchaseCapiDecision =
     eventName === "Purchase" && purchaseType !== null
       ? resolvePurchaseCapiDecision(
@@ -1424,33 +1527,6 @@ async function sendToMetaCAPI(
       undefined,
       `pixel por fallback (${fallbackSource}: ${resolvedFallbackPixel})`,
     );
-  }
-
-  if (!useBusinessMessaging && !preferredPixelId && !allowPixelFallback) {
-    const skippedMsg =
-      eventName === "Contact" ? "CONTACT CAPI OMITIDO SIN PIXEL CONFIABLE" :
-      eventName === "Lead" ? "LEAD CAPI OMITIDO SIN PIXEL CONFIABLE" :
-      "PURCHASE CAPI OMITIDO SIN PIXEL CONFIABLE";
-    const { data: current } = await db.from("conversions").select("observaciones").eq("id", rowId).single();
-    const obs = appendObservation(current?.observaciones ?? "", skippedMsg);
-    const updates: Record<string, unknown> = { [statusField]: "skipped_no_trusted_pixel", observaciones: obs };
-    if (retryableField) updates[retryableField] = false;
-    await db.from("conversions").update(updates).eq("id", rowId);
-    await writeLog(
-      db,
-      row.user_id,
-      "sendToMetaCAPI",
-      "WARN",
-      "Meta CAPI omitido: pixel fallback deshabilitado",
-      JSON.stringify({
-        event_name: eventName,
-        row_id: rowId,
-        reason: options.pixelFallbackDisabledReason || "pixel_fallback_disabled",
-        source_platform: sourcePlatform,
-      }),
-      rowId,
-    );
-    return true;
   }
 
   if (isEventTimeTooOldForMetaCapi(eventTime)) {
@@ -2821,13 +2897,29 @@ async function handlePurchase(
 
     const { data: fresh } = await db.from("conversions").select("*").eq("id", targetId).single();
     const fullRow = (fresh ?? row) as ConversionRow;
+    const purchasePixel = await resolveAndPersistPurchasePixel(
+      db,
+      config,
+      pixelConfigs,
+      fullRow,
+      targetId,
+      {
+        inboundPixelId: inboundMetaPixelId,
+        promoCode,
+        landingId: fullRow.landing_id ?? landing.id,
+      },
+    );
+    const capiRow = purchasePixel.row;
+    const purchaseConfig = resolveEffectiveConfigForPixel(
+      config,
+      pixelConfigs,
+      capiRow.pixel_id,
+    );
     const customData = {
-      currency: effectiveConfig.meta_currency,
+      currency: purchaseConfig.meta_currency,
       value: amount,
       purchase_type: "first",
     };
-    const allowPurchasePixelFallback = hasContactContext(fullRow);
-    const capiRow = clearUntrustedStoredPixel(fullRow);
 
     await writeLog(
       db,
@@ -2845,7 +2937,7 @@ async function handlePurchase(
 
     const ok = await sendToMetaCAPI(
       db,
-      effectiveConfig,
+      purchaseConfig,
       pixelConfigs,
       capiRow,
       targetId,
@@ -2855,7 +2947,7 @@ async function handlePurchase(
       customData,
       testEventCode || undefined,
       {
-        allowPixelFallback: allowPurchasePixelFallback,
+        allowPixelFallback: false,
         pixelFallbackDisabledReason: "purchase_without_contact_payload",
       },
     );
@@ -2941,12 +3033,29 @@ async function handlePurchase(
 
     const { data: fresh } = await db.from("conversions").select("*").eq("id", createdId).single();
     const fullRow = (fresh ?? row) as ConversionRow;
+    const purchasePixel = await resolveAndPersistPurchasePixel(
+      db,
+      config,
+      pixelConfigs,
+      fullRow,
+      createdId,
+      {
+        inboundPixelId: inboundMetaPixelId,
+        promoCode,
+        landingId: fullRow.landing_id ?? landing.id,
+      },
+    );
+    const capiRow = purchasePixel.row;
+    const purchaseConfig = resolveEffectiveConfigForPixel(
+      config,
+      pixelConfigs,
+      capiRow.pixel_id,
+    );
     const customData = {
-      currency: effectiveConfig.meta_currency,
+      currency: purchaseConfig.meta_currency,
       value: amount,
       purchase_type: "first",
     };
-    const capiRow = clearUntrustedStoredPixel(fullRow);
 
     await writeLog(
       db,
@@ -2964,7 +3073,7 @@ async function handlePurchase(
 
     const ok = await sendToMetaCAPI(
       db,
-      effectiveConfig,
+      purchaseConfig,
       pixelConfigs,
       capiRow,
       createdId,
@@ -2996,7 +3105,19 @@ async function handlePurchase(
     .limit(1)
     .maybeSingle();
   const repeatSourceRow = srcRow as ConversionRow | null;
-  const repeatInheritedPixel = inboundMetaPixelId || trustedStoredPixel(repeatSourceRow);
+  const repeatSourceMatchesPromo =
+    norm(repeatSourceRow?.promo_code).toLowerCase() === promoCode.toLowerCase();
+  const repeatAttribution = await resolvePurchasePixelAttribution(db, {
+    userId: landing.user_id,
+    inboundPixelId: inboundMetaPixelId,
+    currentRow: repeatSourceRow,
+    promoCode,
+    landingId: repeatSourceMatchesPromo
+      ? repeatSourceRow?.landing_id ?? landing.id
+      : landing.id,
+    configuredPixelIds: configuredPixelIds(config, pixelConfigs),
+  });
+  const repeatInheritedPixel = repeatAttribution?.pixelId ?? "";
   const repeatOriginSource = norm(srcRow?.source_platform) || inboundSourcePlatform;
   const repeatCtwaClid = normalizedSourcePlatform(repeatOriginSource) === "chatrace"
     ? normalizeCtwaClid(srcRow?.ctwa_clid) || inboundCtwaClid
@@ -3019,6 +3140,8 @@ async function handlePurchase(
     fbc: srcRow?.fbc ?? "",
     geo_source: norm((srcRow as Record<string, unknown> | null)?.geo_source) || "none",
     meta_pixel_id: repeatInheritedPixel,
+    pixel_attribution_source: repeatAttribution?.source ?? "",
+    pixel_attribution_conversion_id: repeatAttribution?.sourceConversionId ?? null,
     source_platform: repeatOriginSource,
     ctwa_clid: repeatCtwaClid,
     pixel_id: repeatInheritedPixel,
@@ -3081,7 +3204,6 @@ async function handlePurchase(
   const { data: fresh } = await db.from("conversions").select("*").eq("id", newId).single();
   const fullRow = (fresh ?? newRow) as ConversionRow;
   const customData: Record<string, unknown> = { currency: effectiveRepeatConfig.meta_currency, value: amount, purchase_type: "repeat" };
-  const repeatAllowsPixelFallback = hasContactContext(repeatSourceRow);
   const repeatCapiRow = repeatInheritedPixel ? fullRow : clearUntrustedStoredPixel(fullRow);
 
   await writeLog(
@@ -3098,6 +3220,28 @@ async function handlePurchase(
     "recompra procesada (match: created_repeat)",
   );
 
+  if (repeatAttribution) {
+    await writeLog(
+      db,
+      landing.user_id,
+      "resolvePurchasePixelAttribution",
+      "INFO",
+      "Pixel Purchase resuelto",
+      JSON.stringify({
+        pixel_id: repeatAttribution.pixelId,
+        source: repeatAttribution.source,
+        source_conversion_id: repeatAttribution.sourceConversionId,
+        promo_code: promoCode,
+        landing_id: norm(
+          repeatSourceMatchesPromo
+            ? repeatSourceRow?.landing_id ?? landing.id
+            : landing.id,
+        ),
+      }),
+      newId,
+    );
+  }
+
   const ok = await sendToMetaCAPI(
     db,
     effectiveRepeatConfig,
@@ -3110,7 +3254,7 @@ async function handlePurchase(
     customData,
     testEventCode || undefined,
     {
-      allowPixelFallback: repeatAllowsPixelFallback,
+      allowPixelFallback: false,
       pixelFallbackDisabledReason: "purchase_without_contact_payload",
     },
   );
@@ -3158,7 +3302,15 @@ async function handleSimplePurchase(
     .limit(1)
     .maybeSingle();
   const simpleSourceRow = srcRow as ConversionRow | null;
-  const simpleInheritedPixel = inboundMetaPixelId || trustedStoredPixel(simpleSourceRow);
+  const simpleAttribution = await resolvePurchasePixelAttribution(db, {
+    userId: landing.user_id,
+    inboundPixelId: inboundMetaPixelId,
+    currentRow: simpleSourceRow,
+    promoCode: "",
+    landingId: landing.id,
+    configuredPixelIds: configuredPixelIds(config, pixelConfigs),
+  });
+  const simpleInheritedPixel = simpleAttribution?.pixelId ?? "";
   const simpleOriginSource = norm(srcRow?.source_platform) || inboundSourcePlatform;
   const simpleCtwaClid = normalizedSourcePlatform(simpleOriginSource) === "chatrace"
     ? normalizeCtwaClid(srcRow?.ctwa_clid) || inboundCtwaClid
@@ -3184,6 +3336,8 @@ async function handleSimplePurchase(
     fbc: srcRow?.fbc ?? "",
     geo_source: norm((srcRow as Record<string, unknown> | null)?.geo_source) || "none",
     meta_pixel_id: simpleInheritedPixel,
+    pixel_attribution_source: simpleAttribution?.source ?? "",
+    pixel_attribution_conversion_id: simpleAttribution?.sourceConversionId ?? null,
     source_platform: simpleOriginSource,
     ctwa_clid: simpleCtwaClid,
     pixel_id: simpleInheritedPixel,
@@ -3248,10 +3402,27 @@ async function handleSimplePurchase(
     value: amount,
     purchase_type: isRepeatSimple ? "repeat" : "first",
   };
-  const simpleAllowsPixelFallback = hasContactContext(simpleSourceRow);
   const simpleCapiRow = simpleInheritedPixel ? fullRow : clearUntrustedStoredPixel(fullRow);
 
   await writeLog(db, landing.user_id, "handleSimplePurchase", "INFO", "Purchase simple procesado", JSON.stringify({ phone: cleanPhone, amount, inherited_from: srcRow?.id }), newId);
+
+  if (simpleAttribution) {
+    await writeLog(
+      db,
+      landing.user_id,
+      "resolvePurchasePixelAttribution",
+      "INFO",
+      "Pixel Purchase resuelto",
+      JSON.stringify({
+        pixel_id: simpleAttribution.pixelId,
+        source: simpleAttribution.source,
+        source_conversion_id: simpleAttribution.sourceConversionId,
+        promo_code: "",
+        landing_id: norm(landing.id),
+      }),
+      newId,
+    );
+  }
 
   const ok = await sendToMetaCAPI(
     db,
@@ -3265,7 +3436,7 @@ async function handleSimplePurchase(
     customData,
     testEventCode || undefined,
     {
-      allowPixelFallback: simpleAllowsPixelFallback,
+      allowPixelFallback: false,
       pixelFallbackDisabledReason: "purchase_without_contact_payload",
     },
   );

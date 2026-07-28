@@ -10,6 +10,9 @@ import {
   type ConversionRow,
   type ConversionsConfig,
 } from "../conversions/shared.ts";
+import {
+  resolvePurchasePixelAttribution,
+} from "../conversions/pixel_attribution.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -133,7 +136,7 @@ Deno.serve(async (req) => {
     // Find purchases that need retry
     const { data: rows, error } = await db
       .from("conversions")
-      .select("id, user_id, phone, source_platform, ctwa_clid, pixel_id, purchase_event_id, purchase_event_time, purchase_type, purchase_capi_route, purchase_capi_route_reason, valor, currency, event_source_url, email, fn, ln, ct, st, zip, country, fbp, fbc, client_ip, agent_user, external_id, observaciones")
+      .select("id, landing_id, user_id, phone, source_platform, ctwa_clid, pixel_id, meta_pixel_id, pixel_attribution_source, pixel_attribution_conversion_id, contact_event_id, contact_payload_raw, lead_payload_raw, purchase_payload_raw, promo_code, purchase_event_id, purchase_event_time, purchase_type, purchase_capi_route, purchase_capi_route_reason, valor, currency, event_source_url, email, fn, ln, ct, st, zip, country, fbp, fbc, client_ip, agent_user, external_id, observaciones")
       .eq("estado", "purchase")
       .not("purchase_status_capi", "in", "(enviado,skipped_old_event_time,skipped_chatrace_capi_disabled,skipped_purchase_capi_disabled,skipped_first_purchase_capi_disabled,skipped_repeat_purchase_capi_disabled)")
       .gt("valor", 0)
@@ -225,13 +228,113 @@ Deno.serve(async (req) => {
         continue;
       }
 
-      const rowPixel = String(row.pixel_id ?? "").trim();
       const userPixelConfigs = pixelConfigMap.get(String(row.user_id)) ?? [];
+      const chatraceCfg = chatraceConfigMap.get(String(row.user_id)) ?? null;
+      const ctwaClid = normalizeCtwaClid(row.ctwa_clid);
+      const businessMessagingConfigured = Boolean(
+        normalizeText(chatraceCfg?.whatsapp_business_account_id) &&
+        normalizeText(chatraceCfg?.meta_messaging_dataset_id) &&
+        normalizeText(chatraceCfg?.meta_messaging_access_token),
+      );
+      let purchaseCapiRoute =
+        row.purchase_capi_route === "business_messaging" || row.purchase_capi_route === "website"
+          ? row.purchase_capi_route
+          : "";
+      let purchaseCapiRouteReason = normalizeText(row.purchase_capi_route_reason);
+
+      if (!purchaseCapiRoute) {
+        const decision = resolvePurchaseCapiRoute({
+          source_platform: row.source_platform,
+          business_messaging_enabled:
+            chatraceCfg?.send_business_messaging_purchase_capi === true,
+          business_messaging_configured: businessMessagingConfigured,
+          ctwa_clid: ctwaClid,
+        });
+        purchaseCapiRoute = decision.route;
+        purchaseCapiRouteReason = decision.reason;
+        await db.from("conversions").update({
+          purchase_capi_route: purchaseCapiRoute,
+          purchase_capi_route_reason: purchaseCapiRouteReason,
+        }).eq("id", row.id);
+      }
+      const useBusinessMessaging = purchaseCapiRoute === "business_messaging";
+
+      if (!useBusinessMessaging) {
+        const attribution = await resolvePurchasePixelAttribution(db, {
+          userId: String(row.user_id),
+          currentRow: row,
+          promoCode: row.promo_code,
+          landingId: row.landing_id,
+          configuredPixelIds: [
+            cfg.pixel_id,
+            ...userPixelConfigs.map((pixel) => pixel.pixel_id),
+          ],
+        });
+
+        if (!attribution) {
+          const obs = appendObs(
+            row.observaciones ?? "",
+            "PURCHASE CAPI OMITIDO SIN PIXEL CONFIABLE",
+          );
+          await db.from("conversions").update({
+            purchase_status_capi: "skipped_no_trusted_pixel",
+            observaciones: obs,
+          }).eq("id", row.id);
+          await writeConversionLog(
+            db,
+            row.user_id,
+            row.id,
+            "WARN",
+            "Meta CAPI retry Purchase omitido sin pixel confiable",
+            JSON.stringify({
+              promo_code: row.promo_code ?? "",
+              landing_id: row.landing_id ?? "",
+              configured_pixel_count: new Set([
+                normalizeText(cfg.pixel_id),
+                ...userPixelConfigs.map((pixel) => normalizeText(pixel.pixel_id)),
+              ].filter(Boolean)).size,
+            }),
+            "",
+            "",
+          );
+          continue;
+        }
+
+        row.pixel_id = attribution.pixelId;
+        row.meta_pixel_id = attribution.pixelId;
+        row.pixel_attribution_source = attribution.source;
+        row.pixel_attribution_conversion_id = attribution.sourceConversionId;
+        await db.from("conversions").update({
+          pixel_id: attribution.pixelId,
+          meta_pixel_id: attribution.pixelId,
+          pixel_attribution_source: attribution.source,
+          pixel_attribution_conversion_id: attribution.sourceConversionId,
+        }).eq("id", row.id);
+        await writeConversionLog(
+          db,
+          row.user_id,
+          row.id,
+          "INFO",
+          "Pixel Purchase resuelto para retry",
+          JSON.stringify({
+            pixel_id: attribution.pixelId,
+            source: attribution.source,
+            source_conversion_id: attribution.sourceConversionId,
+            promo_code: row.promo_code ?? "",
+          }),
+          "",
+          "",
+        );
+      }
+
+      const rowPixel = String(row.pixel_id ?? "").trim();
       const matchedPixelCfg = rowPixel
         ? userPixelConfigs.find((pc) => String(pc.pixel_id ?? "").trim() === rowPixel)
         : null;
       const defaultPixelCfg = userPixelConfigs.find((pc) => Boolean(pc.is_default));
-      const selected = matchedPixelCfg ?? defaultPixelCfg ?? null;
+      const selected = useBusinessMessaging
+        ? matchedPixelCfg ?? defaultPixelCfg ?? null
+        : matchedPixelCfg ?? null;
 
       const accessToken = selected
         ? String(selected.meta_access_token ?? "")
@@ -262,35 +365,6 @@ Deno.serve(async (req) => {
         purchaseType = (prevCount ?? 0) > 0 ? "repeat" : "first";
       }
 
-      const chatraceCfg = chatraceConfigMap.get(String(row.user_id)) ?? null;
-      const ctwaClid = normalizeCtwaClid(row.ctwa_clid);
-      const businessMessagingConfigured = Boolean(
-        normalizeText(chatraceCfg?.whatsapp_business_account_id) &&
-        normalizeText(chatraceCfg?.meta_messaging_dataset_id) &&
-        normalizeText(chatraceCfg?.meta_messaging_access_token),
-      );
-      let purchaseCapiRoute =
-        row.purchase_capi_route === "business_messaging" || row.purchase_capi_route === "website"
-          ? row.purchase_capi_route
-          : "";
-      let purchaseCapiRouteReason = normalizeText(row.purchase_capi_route_reason);
-
-      if (!purchaseCapiRoute) {
-        const decision = resolvePurchaseCapiRoute({
-          source_platform: row.source_platform,
-          business_messaging_enabled:
-            chatraceCfg?.send_business_messaging_purchase_capi === true,
-          business_messaging_configured: businessMessagingConfigured,
-          ctwa_clid: ctwaClid,
-        });
-        purchaseCapiRoute = decision.route;
-        purchaseCapiRouteReason = decision.reason;
-        await db.from("conversions").update({
-          purchase_capi_route: purchaseCapiRoute,
-          purchase_capi_route_reason: purchaseCapiRouteReason,
-        }).eq("id", row.id);
-      }
-      const useBusinessMessaging = purchaseCapiRoute === "business_messaging";
       const purchaseSettings = resolvePurchaseCapiSettings(selected, cfg);
       const purchaseDecision = resolvePurchaseCapiDecision(
         {

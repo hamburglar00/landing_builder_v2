@@ -110,6 +110,8 @@ export interface ConversionRow {
   source_platform?: string;
   ctwa_clid?: string;
   pixel_id: string;
+  pixel_attribution_source?: string;
+  pixel_attribution_conversion_id?: string | null;
   contact_event_id: string;
   contact_event_time: number | null;
   sendContactPixel: boolean;
@@ -507,6 +509,7 @@ const CONVERSIONS_SELECT = `
   id, internal_id, landing_id, user_id, landing_name,
   phone, email, cuit_cuil, inferred_sex, sex_source, fn, ln, ct, st, zip, country,
   fbp, fbc, from_meta_ads, geo_source, meta_pixel_id, pixel_id,
+  pixel_attribution_source, pixel_attribution_conversion_id,
   source_platform, ctwa_clid,
   contact_event_id, contact_event_time, sendContactPixel, contact_payload_raw,
   lead_event_id, lead_event_time, lead_payload_raw,

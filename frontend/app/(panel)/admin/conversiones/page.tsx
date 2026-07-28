@@ -287,7 +287,7 @@ function sexLabel(value: string): string {
 }
 
 const ALL_COLUMNS = [
-  "phone","email","fn","ln","ct","st","zip","country","fbp","fbc","from_meta_ads","meta_pixel_id","pixel_id","source_platform","ctwa_clid",
+  "phone","email","fn","ln","ct","st","zip","country","fbp","fbc","from_meta_ads","meta_pixel_id","pixel_id","pixel_attribution_source","pixel_attribution_conversion_id","source_platform","ctwa_clid",
   "contact_event_id","contact_event_time","sendContactPixel","contact_payload_raw","lead_event_id","lead_event_time","lead_payload_raw",
   "purchase_event_id","purchase_event_time","purchase_payload_raw","timestamp","clientIP","agentuser",
   "estado","valor","currency","purchase_type","purchase_capi_route","purchase_capi_route_reason","contact_status_capi","lead_status_capi","purchase_status_capi",
@@ -320,7 +320,9 @@ const COLUMN_NOTES: Partial<Record<ColKey | "id", string>> = {
   from_meta_ads: "Indica origen probable en Meta Ads. True si trae fbc o utm_campaign; si solo trae promo_code valido (TAG-SUFIX), cuenta solo cuando source_platform es chatrace.",
   geo_source: "Fuente usada para completar geo: payload, ip, phone_prefix o none.",
   meta_pixel_id: "Pixel ID recibido en el payload de entrada (landing/chatrace/backend).",
-  pixel_id: "Pixel ID efectivo usado para CAPI. Si falta meta_pixel_id, puede resolverse por fallback de configuracion.",
+  pixel_id: "Pixel ID efectivo usado para CAPI.",
+  pixel_attribution_source: "Origen confiable usado para resolver el pixel de Purchase: payload, Contact raiz, landing o configuracion unica.",
+  pixel_attribution_conversion_id: "UUID de la conversion raiz que aporto el pixel, cuando la atribucion se resolvio por una fila anterior.",
   source_platform: "Origen declarado del payload (ej: landing, chatrace).",
   ctwa_clid: "Click ID crudo de anuncios Click-to-WhatsApp. Solo se conserva para el recorrido Chatrace.",
   contact_event_id: "Event ID del Contact (dedupe Pixel/CAPI).",
@@ -452,6 +454,8 @@ function cellValue(c: ConversionRow, col: ColKey): React.ReactNode {
       return <td key={col} className={dimMono} title={tip(px)}>{px || "-"}</td>;
     }
     case "pixel_id": return <td key={col} className={dimMono} title={tip(c.pixel_id)}>{c.pixel_id || "-"}</td>;
+    case "pixel_attribution_source": return <td key={col} className={dim} title={tip(c.pixel_attribution_source)}>{c.pixel_attribution_source || "-"}</td>;
+    case "pixel_attribution_conversion_id": return <td key={col} className={dimMono} title={tip(c.pixel_attribution_conversion_id)}>{c.pixel_attribution_conversion_id ? truncateId(c.pixel_attribution_conversion_id) : "-"}</td>;
     case "source_platform": return <td key={col} className={dim} title={tip(c.source_platform)}>{c.source_platform || "-"}</td>;
     case "ctwa_clid": return <td key={col} className={dim} title={tip(c.ctwa_clid)}>{c.ctwa_clid || "-"}</td>;
     case "contact_event_id": return <td key={col} className={dimMono} title={c.contact_event_id}>{truncateId(c.contact_event_id)}</td>;
