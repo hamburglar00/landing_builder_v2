@@ -41,6 +41,36 @@ import DateRangeFilter, {
   filterFunnelByDateRange,
 } from "@/components/conversiones/DateRangeFilter";
 import {
+  ALL_COLUMNS,
+  COLUMN_NOTES,
+  META_CURRENCY_OPTIONS,
+  columnLabel,
+  formatIntegerWithThousands,
+  isSameDateRange,
+  normalizePhone,
+  normalizeSexValue,
+  sexLabel,
+  todayRange,
+  truncateId,
+  truncateText,
+  type ConversionColumnKey as ColKey,
+  type PixelEditDraft,
+} from "@/components/conversiones/conversionPageShared";
+import {
+  ChevronIcon,
+  CopyIcon,
+  FunnelTabIcon,
+  GearTabIcon,
+  LogsTabIcon,
+  PerformanceTabIcon,
+  StatsTabIcon,
+  TableTabIcon,
+  TrackingTabIcon,
+  estadoBadge,
+  levelBadge,
+  statusText,
+} from "@/components/conversiones/ConversionPageUi";
+import {
   SingleCurrencyRequired,
   useCurrencyScope,
 } from "@/components/currency/CurrencyScope";
@@ -64,26 +94,8 @@ const GerenciasPerformancePanel = dynamic(
 );
 
 type Tab = "configuracion" | "tabla" | "funnel" | "seguimiento" | "estadisticas" | "desempeno" | "logs";
-type PixelEditDraft = {
-  id: string;
-  pixel_id: string;
-  meta_access_token: string;
-  meta_currency: string;
-  meta_api_version: string;
-  send_contact_capi: boolean;
-  send_lead_capi: boolean;
-  send_purchase_capi: boolean;
-  include_purchase_type_capi: boolean;
-  send_first_purchase_capi: boolean;
-  send_repeat_purchase_capi: boolean;
-  send_geo_capi: boolean;
-  geo_use_ipapi: boolean;
-  geo_fill_only_when_missing: boolean;
-  is_default: boolean;
-};
 
 const TAB_ORDER: Tab[] = ["funnel", "tabla", "estadisticas", "desempeno", "configuracion", "logs"];
-const META_CURRENCY_OPTIONS = ["ARS", "PYG", "USD", "EUR", "BRL", "CLP", "MXN", "COP"];
 
 const TAB_LABELS: Record<Tab, string> = {
   funnel: "Funnel",
@@ -95,277 +107,8 @@ const TAB_LABELS: Record<Tab, string> = {
   logs: "Logs",
 };
 
-function ChevronIcon({ open }: { open: boolean }) {
-  return (
-    <svg
-      className={`h-4 w-4 text-zinc-400 transition-transform ${open ? "rotate-90" : ""}`}
-      fill="none"
-      viewBox="0 0 24 24"
-      stroke="currentColor"
-      strokeWidth={2}
-    >
-      <path strokeLinecap="round" strokeLinejoin="round" d="M9 5l7 7-7 7" />
-    </svg>
-  );
-}
-
-function CopyIcon() {
-  return (
-    <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-      <rect x="9" y="9" width="13" height="13" rx="2" ry="2" />
-      <path d="M5 15H4a2 2 0 01-2-2V4a2 2 0 012-2h9a2 2 0 012 2v1" />
-    </svg>
-  );
-}
-
-function FunnelTabIcon() {
-  return (
-    <svg className="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2.25}>
-      <path strokeLinecap="round" strokeLinejoin="round" d="M3 5h18l-7 8v5l-4 2v-7L3 5z" />
-    </svg>
-  );
-}
-
-function TrackingTabIcon() {
-  return (
-    <svg className="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2.25}>
-      <path strokeLinecap="round" strokeLinejoin="round" d="M4 19h16M7 15l3-3 3 2 4-5" />
-      <path strokeLinecap="round" strokeLinejoin="round" d="M17 10h2v2" />
-    </svg>
-  );
-}
-
-function TableTabIcon() {
-  return (
-    <svg className="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2.25}>
-      <rect x="3" y="5" width="18" height="14" rx="2" />
-      <path d="M3 10h18M9 5v14M15 5v14" />
-    </svg>
-  );
-}
-
-function StatsTabIcon() {
-  return (
-    <svg className="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2.25}>
-      <path strokeLinecap="round" strokeLinejoin="round" d="M4 19h16" />
-      <rect x="6" y="11" width="3" height="6" rx="1" />
-      <rect x="11" y="8" width="3" height="9" rx="1" />
-      <rect x="16" y="5" width="3" height="12" rx="1" />
-    </svg>
-  );
-}
-
-function PerformanceTabIcon() {
-  return (
-    <svg className="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2.1} strokeLinecap="round" strokeLinejoin="round">
-      <path d="M4 6h16M4 12h16M4 18h16" />
-      <path d="M8 4v16M16 4v16" />
-      <path d="M6 9h4M14 15h4" />
-    </svg>
-  );
-}
-
-function GearTabIcon() {
-  return (
-    <svg className="h-4 w-4 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.9} strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
-      <circle cx="12" cy="12" r="3" />
-      <path d="M19.4 15a1.8 1.8 0 0 0 .37 2l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.8 1.8 0 0 0-2-.37 1.8 1.8 0 0 0-1 1.62V21a2 2 0 1 1-4 0v-.09a1.8 1.8 0 0 0-1-1.62 1.8 1.8 0 0 0-2 .37l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.8 1.8 0 0 0 .37-2 1.8 1.8 0 0 0-1.62-1H3a2 2 0 0 1 0-4h.09a1.8 1.8 0 0 0 1.62-1 1.8 1.8 0 0 0-.37-2l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.8 1.8 0 0 0 2 .37H9A1.8 1.8 0 0 0 10 3.09V3a2 2 0 1 1 4 0v.09a1.8 1.8 0 0 0 1 1.62 1.8 1.8 0 0 0 2-.37l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.8 1.8 0 0 0-.37 2V11c0 .74.42 1.4 1.1 1.73" />
-    </svg>
-  );
-}
-
-function LogsTabIcon() {
-  return (
-    <svg className="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2.25}>
-      <path strokeLinecap="round" strokeLinejoin="round" d="M9 17h6M9 13h6M9 9h6" />
-      <path strokeLinecap="round" strokeLinejoin="round" d="M7 3h8l4 4v14H7a2 2 0 01-2-2V5a2 2 0 012-2z" />
-    </svg>
-  );
-}
-
-function estadoBadge(estado: string, isRepeat = false) {
-  const cls =
-    estado === "purchase" && isRepeat
-      ? "bg-violet-950 text-violet-300"
-      : estado === "purchase"
-        ? "bg-rose-950 text-rose-300"
-      : estado === "lead"
-        ? "bg-amber-950 text-amber-300"
-        : "bg-zinc-800 text-zinc-400";
-  return (
-    <span className={`inline-block rounded-full px-2 py-0.5 text-[10px] font-medium whitespace-nowrap ${cls}`}>
-      {estado === "purchase" && isRepeat ? "purchase repeat" : estado}
-    </span>
-  );
-}
-
-function statusText(status: string) {
-  if (status === "enviado") return <span className="text-emerald-400">enviado</span>;
-  if (status === "error") return <span className="text-red-400">error</span>;
-  if (status === "skipped_meta_crawler") return <span className="text-zinc-400">omitido bot meta</span>;
-  if (status === "skipped_contact_capi_disabled") return <span className="text-amber-300">omitido: Contact desactivado</span>;
-  if (status === "skipped_lead_capi_disabled") return <span className="text-amber-300">omitido: Lead desactivado</span>;
-  if (status === "skipped_first_purchase_capi_disabled") return <span className="text-amber-300">omitido: First desactivado</span>;
-  if (status === "skipped_repeat_purchase_capi_disabled") return <span className="text-amber-300">omitido: Repeat desactivado</span>;
-  if (status === "skipped_purchase_capi_disabled") return <span className="text-amber-300">omitido: Purchase desactivado</span>;
-  if (status === "skipped_chatrace_capi_disabled") return <span className="text-amber-300">omitido: Chatrace desactivado</span>;
-  if (status.startsWith("skipped")) return <span className="text-zinc-400">omitido</span>;
-  return <span className="text-zinc-600">-</span>;
-}
-
-function levelBadge(level: string, functionName?: string, message?: string) {
-  const cls =
-    level === "ERROR"
-      ? "bg-red-950 text-red-300"
-      : level === "DEBUG"
-        ? "bg-zinc-800 text-zinc-500"
-        : "bg-blue-950 text-blue-300";
-  const msg = String(message ?? "").toLowerCase();
-  const fn = String(functionName ?? "").toLowerCase();
-  const event = fn.includes("handlecontact") ? "CONTACT"
-    : fn.includes("handlelead") ? "LEAD"
-    : fn.includes("handlepurchase") || fn.includes("handlesimplepurchase") ? "PURCHASE"
-    : (
-      msg.includes("contact") ? "CONTACT" :
-      msg.includes("lead") ? "LEAD" :
-      msg.includes("purchase") || msg.includes("compra") || msg.includes("recarga") ? "PURCHASE" :
-      null
-    );
-  const text = level === "ERROR"
-    ? (event ? `ERROR / ${event}` : "ERROR")
-    : (event ?? level);
-  return (
-    <span className={`inline-block rounded-full px-2 py-0.5 text-[10px] font-medium ${cls}`}>
-      {text}
-    </span>
-  );
-}
-
-function truncateId(id: string, len = 8) {
-  if (!id) return "-";
-  return id.length > len ? id.slice(0, len) + "..." : id;
-}
-
-function truncateText(value: string, len = 35) {
-  if (!value) return "-";
-  return value.length > len ? value.slice(0, len) + "..." : value;
-}
-
-function formatIntegerWithThousands(value: number) {
-  return new Intl.NumberFormat("es-AR", { maximumFractionDigits: 0 }).format(
-    Math.max(0, Math.trunc(value || 0)),
-  );
-}
-
-function normalizePhone(value: string | null | undefined): string {
-  return String(value ?? "").replace(/\D/g, "");
-}
-
-function normalizeSexValue(value: unknown): string {
-  const raw = String(value ?? "").trim().toLowerCase();
-  if (!raw) return "";
-  if (raw === "m" || raw === "male" || raw === "masculino" || raw === "hombre") return "male";
-  if (raw === "f" || raw === "female" || raw === "femenino" || raw === "mujer") return "female";
-  return "unknown";
-}
-
-function todayRange(): DateRange {
-  const now = new Date();
-  return {
-    start: new Date(now.getFullYear(), now.getMonth(), now.getDate()),
-    end: new Date(now.getFullYear(), now.getMonth(), now.getDate(), 23, 59, 59, 999),
-  };
-}
-
-function isSameDateRange(a: DateRange | null, b: DateRange | null): boolean {
-  if (a === null && b === null) return true;
-  if (a === null || b === null) return false;
-  return a.start.getTime() === b.start.getTime() && a.end.getTime() === b.end.getTime();
-}
-
-function sexLabel(value: string): string {
-  if (value === "male") return "Masculino";
-  if (value === "female") return "Femenino";
-  return "Sin inferir";
-}
-
-const ALL_COLUMNS = [
-  "phone","email","fn","ln","ct","st","zip","country","fbp","fbc","from_meta_ads","meta_pixel_id","pixel_id","pixel_attribution_source","pixel_attribution_conversion_id","source_platform","ctwa_clid",
-  "contact_event_id","contact_event_time","sendContactPixel","contact_payload_raw","lead_event_id","lead_event_time","lead_payload_raw",
-  "purchase_event_id","purchase_event_time","purchase_payload_raw","timestamp","clientIP","agentuser",
-  "estado","valor","currency","purchase_type","purchase_capi_route","purchase_capi_route_reason","contact_status_capi","lead_status_capi","purchase_status_capi",
-  "observaciones","external_id","test_event_code","utm_campaign","telefono_asignado","assigned_gerencia_label","promo_code",
-  "device_type","geo_city","geo_region","geo_country","geo_source",
-  "cuit_cuil","inferred_sex","sex_source",
-] as const;
-
-type ColKey = (typeof ALL_COLUMNS)[number];
-
 const CLEAR_VIEW_CONFIRM_MESSAGE =
   "Vas a limpiar la vista de Conversiones.\n\nSe ocultaran los registros que ves ahora en esta seccion.\n\nEsta accion NO borra datos de la base.\nSolo deja de mostrarlos en la vista.\n\nQueres continuar?";
-
-const COLUMN_NOTES: Partial<Record<ColKey | "id", string>> = {
-  id: "ID interno de la fila de conversion en la tabla.",
-  timestamp: "Fecha y hora de creacion de la fila (created_at).",
-  phone: "Telefono recibido en payload (normalizado a digitos). Puede actualizarse con LEAD/PURCHASE.",
-  email: "Email recibido en payload.",
-  cuit_cuil: "CUIT/CUIL recibido en payload (normalizado a digitos).",
-  inferred_sex: "Sexo inferido desde prefijo CUIT/CUIL: 20/23=male, 27=female, resto=unknown.",
-  sex_source: "Origen del sexo inferido: cuit_cuil, name_catalog o unknown.",
-  fn: "Nombre (first name) recibido en payload.",
-  ln: "Apellido (last name) recibido en payload.",
-  ct: "Ciudad recibida en payload o enriquecida por geolocalizacion.",
-  st: "Provincia/estado recibido en payload o enriquecido por geolocalizacion.",
-  zip: "Codigo postal recibido en payload o enriquecido por geolocalizacion.",
-  country: "Pais recibido en payload o enriquecido por geolocalizacion.",
-  fbp: "Parametro fbp de Meta enviado por la fuente.",
-  fbc: "Parametro fbc de Meta enviado por la fuente.",
-  from_meta_ads: "Indica origen probable en Meta Ads. True si trae fbc o utm_campaign; si solo trae promo_code valido (TAG-SUFIX), cuenta solo cuando source_platform es chatrace.",
-  geo_source: "Fuente usada para completar geo: payload, ip, phone_prefix o none.",
-  meta_pixel_id: "Pixel ID recibido en el payload de entrada (landing/chatrace/backend).",
-  pixel_id: "Pixel ID efectivo usado para CAPI.",
-  pixel_attribution_source: "Origen confiable usado para resolver el pixel de Purchase: payload, Contact raiz, landing o configuracion unica.",
-  pixel_attribution_conversion_id: "UUID de la conversion raiz que aporto el pixel, cuando la atribucion se resolvio por una fila anterior.",
-  source_platform: "Origen declarado del payload (ej: landing, chatrace).",
-  ctwa_clid: "Click ID crudo de anuncios Click-to-WhatsApp. Solo se conserva para el recorrido Chatrace.",
-  contact_event_id: "Event ID del Contact (dedupe Pixel/CAPI).",
-  contact_event_time: "Event time (unix) del Contact.",
-  sendContactPixel: "Bandera enviada por la fuente para indicar si Contact tambien salio por Pixel browser.",
-  contact_payload_raw: "Payload crudo recibido para Contact (trazabilidad).",
-  lead_event_id: "Event ID del Lead enviado por CAPI.",
-  lead_event_time: "Event time (unix) del Lead.",
-  lead_payload_raw: "Payload crudo recibido para action=LEAD (trazabilidad).",
-  purchase_event_id: "Event ID del Purchase enviado por CAPI.",
-  purchase_event_time: "Event time (unix) del Purchase.",
-  purchase_payload_raw: "Payload crudo recibido para action=PURCHASE (trazabilidad).",
-  clientIP: "IP recibida en payload (clientIP/client_ip_address).",
-  agentuser: "User-Agent recibido en payload (agentuser/client_user_agent).",
-  estado: "Estado actual de la conversion (contact, lead o purchase).",
-  valor: "Monto de compra/carga recibido para Purchase.",
-  currency: "Moneda ISO asociada a la conversion y al monto (por ejemplo ARS o PYG).",
-  purchase_type: "Tipo de compra: first (primera) o repeat (recompra).",
-  purchase_capi_route: "Ruta fijada antes del primer envío de Purchase: website o business_messaging.",
-  purchase_capi_route_reason: "Motivo por el que se eligió la ruta de envío de Purchase.",
-  contact_status_capi: "Resultado de envio CAPI para Contact. Puede ser omitido si detectamos crawler de Meta.",
-  lead_status_capi: "Resultado de envio CAPI para Lead. Puede ser omitido por configuracion del pixel.",
-  purchase_status_capi: "Resultado de envio CAPI para Purchase. Indica si First o Repeat fue omitido por su switch del pixel.",
-  observaciones: "Notas internas de procesamiento (tokens de estado/error).",
-  external_id: "ID externo de usuario/contacto para matching en Meta (hasheado al enviar).",
-  test_event_code: "Codigo de test de Meta (si se envio en modo prueba).",
-  utm_campaign: "UTM campaign recibida en payload.",
-  telefono_asignado: "Telefono de destino asignado para derivacion (landing/chatrace).",
-  assigned_gerencia_label: "Gerencia historica asociada al telefono asignado al momento de crear/procesar la fila.",
-  promo_code: "Codigo de promo/track para matchear Contact->Lead->Purchase.",
-  device_type: "Tipo de dispositivo reportado por la fuente (mobile/tablet/desktop).",
-  geo_city: "Ciudad enriquecida por geolocalizacion IP.",
-  geo_region: "Region/provincia enriquecida por geolocalizacion IP.",
-  geo_country: "Pais enriquecido por geolocalizacion IP.",
-};
-
-function columnLabel(col: ColKey): string {
-  if (col === "assigned_gerencia_label") return "Nombre gerencia (ID)";
-  return col;
-}
 
 function EditableEmailCell({
   row,
