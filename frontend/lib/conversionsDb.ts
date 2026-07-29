@@ -580,15 +580,24 @@ const CONVERSIONS_SELECT = `
   created_at
 `.replace(/\s+/g, " ").trim();
 
-export async function fetchConversions(
-  userId: string,
-  limit = 200,
-  offset = 0,
-): Promise<ConversionRow[]> {
-  const { data, error } = await supabase
+type ConversionQueryScope = {
+  userId?: string;
+};
+
+async function fetchConversionPageInternal({
+  userId,
+  limit,
+  offset,
+}: ConversionQueryScope & {
+  limit: number;
+  offset: number;
+}): Promise<ConversionRow[]> {
+  let query = supabase
     .from("conversions")
-    .select(CONVERSIONS_SELECT)
-    .eq("user_id", userId)
+    .select(CONVERSIONS_SELECT);
+  if (userId !== undefined) query = query.eq("user_id", userId);
+
+  const { data, error } = await query
     .order("created_at", { ascending: false })
     .range(offset, offset + limit - 1);
 
@@ -596,18 +605,72 @@ export async function fetchConversions(
   return (data ?? []) as unknown as ConversionRow[];
 }
 
+async function fetchConversionRowsInternal({
+  userId,
+  limit,
+  range,
+  visibleFrom,
+}: ConversionQueryScope & {
+  limit?: number;
+  range?: FetchDateRange;
+  visibleFrom?: Date | string | null;
+}): Promise<ConversionRow[]> {
+  const pageSize = 1000;
+  const rows: ConversionRow[] = [];
+  const startIso = latestIso(range?.start, visibleFrom);
+  const endIso = toIsoIfValid(range?.end);
+  let offset = 0;
+
+  while (true) {
+    let query = supabase
+      .from("conversions")
+      .select(CONVERSIONS_SELECT);
+    if (userId !== undefined) query = query.eq("user_id", userId);
+    query = query.order("created_at", { ascending: false });
+    if (startIso) query = query.gte("created_at", startIso);
+    if (endIso) query = query.lte("created_at", endIso);
+
+    const chunkSize = typeof limit === "number"
+      ? Math.min(pageSize, Math.max(limit - offset, 0))
+      : pageSize;
+    if (chunkSize <= 0) break;
+
+    const { data, error } = await query.range(offset, offset + chunkSize - 1);
+    if (error) throw error;
+
+    const chunk = (data ?? []) as unknown as ConversionRow[];
+    rows.push(...chunk);
+    if (chunk.length < chunkSize) break;
+    offset += chunkSize;
+  }
+
+  return rows;
+}
+
+async function excludeHiddenConversions(
+  rows: ConversionRow[],
+  hiddenBy: string,
+): Promise<ConversionRow[]> {
+  const hiddenIds = await fetchHiddenConversionIds(
+    hiddenBy,
+    rows.map((row) => row.id),
+  );
+  return rows.filter((row) => !hiddenIds.has(row.id));
+}
+
+export async function fetchConversions(
+  userId: string,
+  limit = 200,
+  offset = 0,
+): Promise<ConversionRow[]> {
+  return fetchConversionPageInternal({ userId, limit, offset });
+}
+
 export async function fetchConversionsForAdmin(
   limit = 500,
   offset = 0,
 ): Promise<ConversionRow[]> {
-  const { data, error } = await supabase
-    .from("conversions")
-    .select(CONVERSIONS_SELECT)
-    .order("created_at", { ascending: false })
-    .range(offset, offset + limit - 1);
-
-  if (error) throw error;
-  return (data ?? []) as unknown as ConversionRow[];
+  return fetchConversionPageInternal({ limit, offset });
 }
 
 /** Fetch conversions sin excluir hidden_conversions. Se usa para reportes historicos/operativos. */
@@ -615,63 +678,14 @@ export async function fetchConversionsUnfiltered(
   userId: string,
   range?: FetchDateRange,
 ): Promise<ConversionRow[]> {
-  const pageSize = 1000;
-  const rows: ConversionRow[] = [];
-  let offset = 0;
-
-  while (true) {
-    let query = supabase
-      .from("conversions")
-      .select(CONVERSIONS_SELECT)
-      .eq("user_id", userId)
-      .order("created_at", { ascending: false });
-    const startIso = toIsoIfValid(range?.start);
-    const endIso = toIsoIfValid(range?.end);
-    if (startIso) query = query.gte("created_at", startIso);
-    if (endIso) query = query.lte("created_at", endIso);
-
-    const { data, error } = await query.range(offset, offset + pageSize - 1);
-    if (error) throw error;
-
-    const chunk = (data ?? []) as unknown as ConversionRow[];
-    rows.push(...chunk);
-
-    if (chunk.length < pageSize) break;
-    offset += pageSize;
-  }
-
-  return rows;
+  return fetchConversionRowsInternal({ userId, range });
 }
 
 /** Fetch admin sin excluir hidden_conversions. */
 export async function fetchConversionsForAdminUnfiltered(
   range?: FetchDateRange,
 ): Promise<ConversionRow[]> {
-  const pageSize = 1000;
-  const rows: ConversionRow[] = [];
-  let offset = 0;
-
-  while (true) {
-    let query = supabase
-      .from("conversions")
-      .select(CONVERSIONS_SELECT)
-      .order("created_at", { ascending: false });
-    const startIso = toIsoIfValid(range?.start);
-    const endIso = toIsoIfValid(range?.end);
-    if (startIso) query = query.gte("created_at", startIso);
-    if (endIso) query = query.lte("created_at", endIso);
-
-    const { data, error } = await query.range(offset, offset + pageSize - 1);
-    if (error) throw error;
-
-    const chunk = (data ?? []) as unknown as ConversionRow[];
-    rows.push(...chunk);
-
-    if (chunk.length < pageSize) break;
-    offset += pageSize;
-  }
-
-  return rows;
+  return fetchConversionRowsInternal({ range });
 }
 
 /** Fetch conversions excluyendo los ocultos por hiddenBy. */
@@ -681,45 +695,14 @@ export async function fetchConversionsFiltered(
   limit?: number,
   range?: FetchDateRange,
 ): Promise<ConversionRow[]> {
-  const pageSize = 1000;
-  const rows: ConversionRow[] = [];
-  let offset = 0;
   const visibleFrom = await fetchConversionViewVisibleFrom(hiddenBy);
-
-  while (true) {
-    let query = supabase
-      .from("conversions")
-      .select(CONVERSIONS_SELECT)
-      .eq("user_id", userId)
-      .order("created_at", { ascending: false });
-    const startIso = latestIso(range?.start, visibleFrom);
-    const endIso = toIsoIfValid(range?.end);
-    if (startIso) query = query.gte("created_at", startIso);
-    if (endIso) query = query.lte("created_at", endIso);
-
-    const chunkSize = typeof limit === "number"
-      ? Math.min(pageSize, Math.max(limit - offset, 0))
-      : pageSize;
-
-    if (chunkSize <= 0) break;
-
-    const { data, error } = await query.range(offset, offset + chunkSize - 1);
-    if (error) throw error;
-
-    const chunk = (data ?? []) as unknown as ConversionRow[];
-    rows.push(...chunk);
-
-    if (chunk.length < chunkSize) break;
-    offset += chunkSize;
-  }
-
-  const hiddenIds = await fetchHiddenConversionIds(
-    hiddenBy,
-    rows.map((row) => row.id),
-  );
-  return rows.filter(
-    (r) => !hiddenIds.has(r.id),
-  );
+  const rows = await fetchConversionRowsInternal({
+    userId,
+    limit,
+    range,
+    visibleFrom,
+  });
+  return excludeHiddenConversions(rows, hiddenBy);
 }
 
 /** Fetch conversions for admin excluyendo los ocultos por hiddenBy. */
@@ -728,44 +711,13 @@ export async function fetchConversionsForAdminFiltered(
   limit?: number,
   range?: FetchDateRange,
 ): Promise<ConversionRow[]> {
-  const pageSize = 1000;
-  const rows: ConversionRow[] = [];
-  let offset = 0;
   const visibleFrom = await fetchConversionViewVisibleFrom(hiddenBy);
-
-  while (true) {
-    let query = supabase
-      .from("conversions")
-      .select(CONVERSIONS_SELECT)
-      .order("created_at", { ascending: false });
-    const startIso = latestIso(range?.start, visibleFrom);
-    const endIso = toIsoIfValid(range?.end);
-    if (startIso) query = query.gte("created_at", startIso);
-    if (endIso) query = query.lte("created_at", endIso);
-
-    const chunkSize = typeof limit === "number"
-      ? Math.min(pageSize, Math.max(limit - offset, 0))
-      : pageSize;
-
-    if (chunkSize <= 0) break;
-
-    const { data, error } = await query.range(offset, offset + chunkSize - 1);
-    if (error) throw error;
-
-    const chunk = (data ?? []) as unknown as ConversionRow[];
-    rows.push(...chunk);
-
-    if (chunk.length < chunkSize) break;
-    offset += chunkSize;
-  }
-
-  const hiddenIds = await fetchHiddenConversionIds(
-    hiddenBy,
-    rows.map((row) => row.id),
-  );
-  return rows.filter(
-    (r) => !hiddenIds.has(r.id),
-  );
+  const rows = await fetchConversionRowsInternal({
+    limit,
+    range,
+    visibleFrom,
+  });
+  return excludeHiddenConversions(rows, hiddenBy);
 }
 
 // Funnel contacts (aggregated by phone)
@@ -953,16 +905,20 @@ function arrangeLogsForUi(rows: ConversionLogRow[]): ConversionLogRow[] {
   return groups.flatMap((g) => g.rows);
 }
 
-export async function fetchConversionLogs(
-  userId: string,
-  limit = 200,
-  offset = 0,
-  range?: FetchDateRange | null,
-): Promise<ConversionLogRow[]> {
+async function fetchConversionLogsInternal({
+  userId,
+  limit,
+  offset,
+  range,
+}: ConversionQueryScope & {
+  limit: number;
+  offset: number;
+  range?: FetchDateRange | null;
+}): Promise<ConversionLogRow[]> {
   let query = supabase
     .from("conversion_logs")
-    .select(LOGS_SELECT)
-    .eq("user_id", userId);
+    .select(LOGS_SELECT);
+  if (userId !== undefined) query = query.eq("user_id", userId);
 
   const start = toIsoIfValid(range?.start);
   const end = toIsoIfValid(range?.end);
@@ -975,6 +931,45 @@ export async function fetchConversionLogs(
 
   if (error) throw error;
   return arrangeLogsForUi(normalizeLogRows(data ?? []));
+}
+
+async function fetchVisibleConversionLogs({
+  userId,
+  hiddenBy,
+  limit,
+  offset,
+  range,
+}: ConversionQueryScope & {
+  hiddenBy: string;
+  limit: number;
+  offset: number;
+  range?: FetchDateRange | null;
+}): Promise<ConversionLogRow[]> {
+  const visibleFrom = await fetchConversionViewVisibleFrom(hiddenBy);
+  const effectiveRange: FetchDateRange = {
+    ...range,
+    start: latestIso(range?.start, visibleFrom),
+  };
+  const rows = await fetchConversionLogsInternal({
+    userId,
+    limit,
+    offset,
+    range: effectiveRange,
+  });
+  const hiddenIds = await fetchHiddenConversionLogIds(
+    hiddenBy,
+    rows.map((row) => row.id),
+  );
+  return rows.filter((row) => !hiddenIds.has(row.id));
+}
+
+export async function fetchConversionLogs(
+  userId: string,
+  limit = 200,
+  offset = 0,
+  range?: FetchDateRange | null,
+): Promise<ConversionLogRow[]> {
+  return fetchConversionLogsInternal({ userId, limit, offset, range });
 }
 
 export async function fetchConversionLogsFiltered(
@@ -984,22 +979,13 @@ export async function fetchConversionLogsFiltered(
   offset = 0,
   range?: FetchDateRange | null,
 ): Promise<ConversionLogRow[]> {
-  const visibleFrom = await fetchConversionViewVisibleFrom(hiddenBy);
-  const effectiveRange: FetchDateRange = {
-    ...range,
-    start: latestIso(range?.start, visibleFrom),
-  };
-  const rows = await fetchConversionLogs(
+  return fetchVisibleConversionLogs({
     userId,
+    hiddenBy,
     limit,
     offset,
-    effectiveRange,
-  );
-  const hiddenIds = await fetchHiddenConversionLogIds(
-    hiddenBy,
-    rows.map((row) => row.id),
-  );
-  return rows.filter((r) => !hiddenIds.has(r.id));
+    range,
+  });
 }
 
 export async function fetchConversionLogsForAdmin(
@@ -1007,20 +993,7 @@ export async function fetchConversionLogsForAdmin(
   offset = 0,
   range?: FetchDateRange | null,
 ): Promise<ConversionLogRow[]> {
-  let query = supabase
-    .from("conversion_logs")
-    .select(LOGS_SELECT);
-  const start = toIsoIfValid(range?.start);
-  const end = toIsoIfValid(range?.end);
-  if (start) query = query.gte("created_at", start);
-  if (end) query = query.lt("created_at", end);
-
-  const { data, error } = await query
-    .order("created_at", { ascending: false })
-    .range(offset, offset + limit - 1);
-
-  if (error) throw error;
-  return arrangeLogsForUi(normalizeLogRows(data ?? []));
+  return fetchConversionLogsInternal({ limit, offset, range });
 }
 
 export async function fetchConversionLogsForAdminFiltered(
@@ -1028,15 +1001,11 @@ export async function fetchConversionLogsForAdminFiltered(
   limit = 200,
   offset = 0,
 ): Promise<ConversionLogRow[]> {
-  const visibleFrom = await fetchConversionViewVisibleFrom(hiddenBy);
-  const rows = await fetchConversionLogsForAdmin(limit, offset, {
-    start: visibleFrom,
-  });
-  const hiddenIds = await fetchHiddenConversionLogIds(
+  return fetchVisibleConversionLogs({
     hiddenBy,
-    rows.map((row) => row.id),
-  );
-  return rows.filter((r) => !hiddenIds.has(r.id));
+    limit,
+    offset,
+  });
 }
 
 export async function fetchConversionInbox(
