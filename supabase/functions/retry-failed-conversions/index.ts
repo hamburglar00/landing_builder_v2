@@ -4,6 +4,7 @@ import {
   buildMetaRequest,
   normalizeCtwaClid,
   normalizeCurrencyCode,
+  normalizePurchaseAmount,
   preparePurchaseCustomDataForMeta,
   resolvePurchaseCapiDecision,
   resolvePurchaseCapiRoute,
@@ -485,8 +486,24 @@ Deno.serve(async (req) => {
         continue;
       }
 
-      const amount = parseFloat(row.valor) || 0;
-      if (amount <= 0) continue;
+      const normalizedAmount = normalizePurchaseAmount(row.valor);
+      if (!normalizedAmount.ok) {
+        await writeConversionLog(
+          db,
+          row.user_id,
+          row.id,
+          "ERROR",
+          "Meta CAPI retry Purchase omitido por monto invalido",
+          JSON.stringify({
+            reason: normalizedAmount.reason,
+            amount_input_type: typeof row.valor,
+          }),
+          "",
+          "",
+        );
+        continue;
+      }
+      const amount = normalizedAmount.value;
 
       let eventId = String(row.purchase_event_id ?? "").trim();
       if (!eventId) eventId = crypto.randomUUID();

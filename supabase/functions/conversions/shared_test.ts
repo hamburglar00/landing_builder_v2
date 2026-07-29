@@ -2,6 +2,7 @@ import {
   buildMetaBusinessMessagingPurchaseRequest,
   normalizeCtwaClid,
   normalizeCurrencyCode,
+  normalizePurchaseAmount,
   preparePurchaseCustomDataForMeta,
   resolvePurchaseCapiDecision,
   resolvePurchaseCapiRoute,
@@ -23,6 +24,62 @@ Deno.test("Currency codes are normalized and safely default to ARS", () => {
     normalizeCurrencyCode("", "invalid") === "ARS",
     "Invalid input and fallback must use ARS",
   );
+  assert(
+    normalizeCurrencyCode("ABC", "PYG") === "PYG",
+    "Unknown three-letter codes must not reach Meta",
+  );
+});
+
+Deno.test("Purchase amounts normalize to finite JSON numbers without separators", () => {
+  const cases: Array<[unknown, number]> = [
+    [100000, 100000],
+    ["100000", 100000],
+    ["100000.50", 100000.5],
+    ["100000,50", 100000.5],
+    ["100.000", 100000],
+    ["100,000", 100000],
+    ["1.000.000,50", 1000000.5],
+    ["1,000,000.50", 1000000.5],
+    ["1 000 000", 1000000],
+  ];
+
+  for (const [input, expected] of cases) {
+    const result = normalizePurchaseAmount(input);
+    assert(result.ok, `Expected a valid amount for ${String(input)}`);
+    assert(
+      result.value === expected,
+      `Unexpected normalized value for ${String(input)}`,
+    );
+    const serialized = JSON.parse(JSON.stringify({ value: result.value })) as {
+      value: unknown;
+    };
+    assert(
+      typeof serialized.value === "number",
+      "Meta value must remain a JSON number",
+    );
+  }
+});
+
+Deno.test("Purchase amounts reject partial, ambiguous and unsafe input", () => {
+  const invalid = [
+    "",
+    null,
+    "ARS 100000",
+    "100000ARS",
+    "1.23.45",
+    "100.000,123",
+    100000.123,
+    Number.POSITIVE_INFINITY,
+    Number.MIN_VALUE,
+    0,
+    -100,
+    {},
+  ];
+
+  for (const input of invalid) {
+    const result = normalizePurchaseAmount(input);
+    assert(!result.ok, `Expected an invalid amount for ${String(input)}`);
+  }
 });
 
 Deno.test("Meta Ads-only CAPI policy filters every non-Meta origin", () => {

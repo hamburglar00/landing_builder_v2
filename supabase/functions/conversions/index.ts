@@ -7,6 +7,7 @@ import {
   generateEventId as sharedGenerateEventId,
   normalizeCtwaClid,
   normalizeCurrencyCode,
+  normalizePurchaseAmount,
   preparePurchaseCustomDataForMeta,
   resolvePurchaseCapiDecision,
   resolvePurchaseCapiRoute,
@@ -1297,8 +1298,8 @@ function resolveCurrencyForPixel(
   }
 
   const normalizedFallback = String(fallbackCurrency ?? "").trim().toUpperCase();
-  if (preferredPixel && /^[A-Z]{3}$/.test(normalizedFallback)) {
-    return normalizedFallback;
+  if (preferredPixel && normalizedFallback) {
+    return normalizeCurrencyCode(normalizedFallback, baseConfig.meta_currency);
   }
 
   const defaultPixel = pixelConfigs.find((pixel) => pixel.is_default);
@@ -2804,23 +2805,34 @@ async function handlePurchase(
   const inboundMetaPixelId = norm(p.meta_pixel_id || p.pixel_id);
   const inboundSourcePlatform = norm(p.source_platform);
   const inboundCtwaClid = ctwaClidForSource(p.ctwa_clid, inboundSourcePlatform);
-  const amount = parseFloat(p.amount);
-  if (!cleanPhone || isNaN(amount) || amount <= 0) {
+  const normalizedAmount = normalizePurchaseAmount(p.amount);
+  if (!cleanPhone || !normalizedAmount.ok) {
+    let rejectionReason = "missing_phone";
+    if (cleanPhone && !normalizedAmount.ok) {
+      rejectionReason = normalizedAmount.reason;
+    }
     await writeLog(
       db,
       landing.user_id,
       "handlePurchase",
       "ERROR",
-      "PURCHASE rechazado: falta phone o amount",
-      safePayloadRaw(p),
+      "PURCHASE rechazado: phone o amount invalido",
+      JSON.stringify({
+        reason: rejectionReason,
+        amount_input_type: typeof p.amount,
+      }),
       undefined,
       undefined,
       undefined,
       safePayloadRaw(p),
-      "rechazado: falta phone o amount",
+      `rechazado: ${rejectionReason}`,
     );
-    return textResponse("Faltan parametros validos: phone y amount > 0", 400);
+    return textResponse(
+      "Faltan parametros validos: phone y amount monetario > 0",
+      400,
+    );
   }
+  const amount = normalizedAmount.value;
   const testEventCode = norm(p.test_event_code);
   const purchasePayloadRaw = safePayloadRaw(p);
   const coelsaId = normalizeCoelsaId(p.coelsa_id);
@@ -3443,10 +3455,34 @@ async function handleSimplePurchase(
   const inboundMetaPixelId = norm(p.meta_pixel_id || p.pixel_id);
   const inboundSourcePlatform = norm(p.source_platform);
   const inboundCtwaClid = ctwaClidForSource(p.ctwa_clid, inboundSourcePlatform);
-  const amount = parseFloat(p.amount);
-  if (!cleanPhone || isNaN(amount) || amount <= 0) {
-    return textResponse("Faltan parametros validos: phone y amount > 0", 400);
+  const normalizedAmount = normalizePurchaseAmount(p.amount);
+  if (!cleanPhone || !normalizedAmount.ok) {
+    let rejectionReason = "missing_phone";
+    if (cleanPhone && !normalizedAmount.ok) {
+      rejectionReason = normalizedAmount.reason;
+    }
+    await writeLog(
+      db,
+      landing.user_id,
+      "handleSimplePurchase",
+      "ERROR",
+      "PURCHASE simple rechazado: phone o amount invalido",
+      JSON.stringify({
+        reason: rejectionReason,
+        amount_input_type: typeof p.amount,
+      }),
+      undefined,
+      undefined,
+      undefined,
+      safePayloadRaw(p),
+      `rechazado: ${rejectionReason}`,
+    );
+    return textResponse(
+      "Faltan parametros validos: phone y amount monetario > 0",
+      400,
+    );
   }
+  const amount = normalizedAmount.value;
   const testEventCode = norm(p.test_event_code);
   const purchasePayloadRaw = safePayloadRaw(p);
   const coelsaId = normalizeCoelsaId(p.coelsa_id);

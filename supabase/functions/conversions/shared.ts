@@ -163,14 +163,139 @@ export function sanitizePhone(v: unknown): string {
   return String(v ?? "").replace(/\D/g, "");
 }
 
+export type PurchaseAmountNormalization =
+  | {
+    ok: true;
+    value: number;
+    inputFormat:
+      | "number"
+      | "plain"
+      | "decimal_dot"
+      | "decimal_comma"
+      | "grouped_dot"
+      | "grouped_comma"
+      | "grouped_space"
+      | "grouped_dot_decimal_comma"
+      | "grouped_comma_decimal_dot";
+  }
+  | {
+    ok: false;
+    reason:
+      | "missing"
+      | "unsupported_type"
+      | "invalid_format"
+      | "non_finite"
+      | "non_positive"
+      | "too_many_decimals"
+      | "unsafe_precision";
+  };
+
+function finalizePurchaseAmount(
+  value: number,
+  inputFormat: Extract<
+    PurchaseAmountNormalization,
+    { ok: true }
+  >["inputFormat"],
+): PurchaseAmountNormalization {
+  if (!Number.isFinite(value)) return { ok: false, reason: "non_finite" };
+  if (value <= 0) return { ok: false, reason: "non_positive" };
+
+  const rounded = Math.round(value * 100) / 100;
+  if (rounded <= 0) return { ok: false, reason: "non_positive" };
+  if (Math.abs(value - rounded) > 1e-9) {
+    return { ok: false, reason: "too_many_decimals" };
+  }
+  if (!Number.isSafeInteger(Math.round(rounded * 100))) {
+    return { ok: false, reason: "unsafe_precision" };
+  }
+
+  return { ok: true, value: rounded, inputFormat };
+}
+
+/**
+ * Converts inbound monetary values to the JSON number Meta expects.
+ *
+ * Numeric JSON is preferred. String input is accepted only when the complete
+ * value matches a supported canonical or thousands-grouped monetary format.
+ * Partial parsing (for example "100000ARS") is intentionally rejected.
+ */
+export function normalizePurchaseAmount(
+  value: unknown,
+): PurchaseAmountNormalization {
+  if (typeof value === "number") {
+    return finalizePurchaseAmount(value, "number");
+  }
+  if (typeof value !== "string") {
+    return value == null
+      ? { ok: false, reason: "missing" }
+      : { ok: false, reason: "unsupported_type" };
+  }
+
+  const raw = value.trim();
+  if (!raw) return { ok: false, reason: "missing" };
+
+  let normalized = "";
+  let inputFormat: Extract<
+    PurchaseAmountNormalization,
+    { ok: true }
+  >["inputFormat"];
+
+  if (/^\d+$/.test(raw)) {
+    normalized = raw;
+    inputFormat = "plain";
+  } else if (/^\d+\.\d{1,2}$/.test(raw)) {
+    normalized = raw;
+    inputFormat = "decimal_dot";
+  } else if (/^\d+,\d{1,2}$/.test(raw)) {
+    normalized = raw.replace(",", ".");
+    inputFormat = "decimal_comma";
+  } else if (/^\d{1,3}(?:\.\d{3})+$/.test(raw)) {
+    normalized = raw.replaceAll(".", "");
+    inputFormat = "grouped_dot";
+  } else if (/^\d{1,3}(?:,\d{3})+$/.test(raw)) {
+    normalized = raw.replaceAll(",", "");
+    inputFormat = "grouped_comma";
+  } else if (/^\d{1,3}(?:[ \u00A0]\d{3})+$/.test(raw)) {
+    normalized = raw.replace(/[ \u00A0]/g, "");
+    inputFormat = "grouped_space";
+  } else if (/^\d{1,3}(?:\.\d{3})+,\d{1,2}$/.test(raw)) {
+    normalized = raw.replaceAll(".", "").replace(",", ".");
+    inputFormat = "grouped_dot_decimal_comma";
+  } else if (/^\d{1,3}(?:,\d{3})+\.\d{1,2}$/.test(raw)) {
+    normalized = raw.replaceAll(",", "");
+    inputFormat = "grouped_comma_decimal_dot";
+  } else {
+    return { ok: false, reason: "invalid_format" };
+  }
+
+  return finalizePurchaseAmount(Number(normalized), inputFormat);
+}
+
+const SUPPORTED_META_CURRENCY_CODES = new Set([
+  "ARS",
+  "PYG",
+  "USD",
+  "EUR",
+  "BRL",
+  "CLP",
+  "MXN",
+  "COP",
+]);
+
+function isSupportedMetaCurrencyCode(value: string): boolean {
+  return SUPPORTED_META_CURRENCY_CODES.has(value);
+}
+
 export function normalizeCurrencyCode(
   value: unknown,
   fallback: unknown = "ARS",
 ): string {
   const normalized = String(value ?? "").trim().toUpperCase();
-  if (/^[A-Z]{3}$/.test(normalized)) return normalized;
+  if (isSupportedMetaCurrencyCode(normalized)) return normalized;
   const normalizedFallback = String(fallback ?? "").trim().toUpperCase();
-  return /^[A-Z]{3}$/.test(normalizedFallback) ? normalizedFallback : "ARS";
+  return isSupportedMetaCurrencyCode(normalizedFallback)
+    ? normalizedFallback
+    : "ARS";
 }
 
 function normalizeMetaParamValue(v: unknown): string {
