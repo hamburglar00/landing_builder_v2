@@ -103,6 +103,88 @@ export function LogsTabIcon() {
   );
 }
 
+function InboxTabIcon() {
+  return (
+    <svg
+      className="h-3.5 w-3.5 overflow-visible"
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth={1.8}
+      strokeLinecap="round"
+      strokeLinejoin="round"
+    >
+      <path d="M3 7.5A2.5 2.5 0 0 1 5.5 5h13A2.5 2.5 0 0 1 21 7.5v9A2.5 2.5 0 0 1 18.5 19h-13A2.5 2.5 0 0 1 3 16.5v-9Z" />
+      <path d="M3 14h4.6l1.8 2h5.2l1.8-2H21" />
+    </svg>
+  );
+}
+
+function iconForTab(tab: ConversionTabId): ReactNode {
+  if (tab === "funnel") return <FunnelTabIcon />;
+  if (tab === "seguimiento") return <TrackingTabIcon />;
+  if (tab === "tabla") return <TableTabIcon />;
+  if (tab === "estadisticas") return <StatsTabIcon />;
+  if (tab === "desempeno") return <PerformanceTabIcon />;
+  if (tab === "configuracion") return <GearTabIcon />;
+  if (tab === "inbox") return <InboxTabIcon />;
+  return <LogsTabIcon />;
+}
+
+type ConversionTabsProps<T extends ConversionTabId> = {
+  tabs: readonly T[];
+  utilityTabs: readonly T[];
+  labels: Readonly<Record<T, string>>;
+  activeTab: T;
+  onTabChange: (tab: T) => void;
+  trailing?: ReactNode;
+};
+
+export function ConversionTabs<T extends ConversionTabId>({
+  tabs,
+  utilityTabs,
+  labels,
+  activeTab,
+  onTabChange,
+  trailing,
+}: ConversionTabsProps<T>) {
+  const renderTab = (tab: T) => {
+    const active = activeTab === tab;
+    return (
+      <button
+        key={tab}
+        type="button"
+        role="tab"
+        aria-selected={active}
+        onClick={() => onTabChange(tab)}
+        className="ui-tab whitespace-nowrap"
+        data-active={active ? "true" : "false"}
+      >
+        <span className="inline-flex items-center gap-1.5">
+          {iconForTab(tab)}
+          {labels[tab]}
+        </span>
+      </button>
+    );
+  };
+
+  return (
+    <div
+      className="ui-tabs flex items-center justify-between gap-2 overflow-x-auto"
+      role="tablist"
+      aria-label="Secciones de conversiones"
+    >
+      <div className="flex min-w-max gap-1">
+        {tabs.filter((tab) => !utilityTabs.includes(tab)).map(renderTab)}
+      </div>
+      <div className="ml-auto flex min-w-max items-center gap-1">
+        {tabs.filter((tab) => utilityTabs.includes(tab)).map(renderTab)}
+        {trailing}
+      </div>
+    </div>
+  );
+}
+
 export function estadoBadge(estado: string, isRepeat = false) {
   const cls =
     estado === "purchase" && isRepeat
@@ -160,3 +242,14 @@ export function levelBadge(level: string, functionName?: string, message?: strin
     </span>
   );
 }
+import type { ReactNode } from "react";
+
+export type ConversionTabId =
+  | "funnel"
+  | "seguimiento"
+  | "tabla"
+  | "estadisticas"
+  | "desempeno"
+  | "configuracion"
+  | "inbox"
+  | "logs";

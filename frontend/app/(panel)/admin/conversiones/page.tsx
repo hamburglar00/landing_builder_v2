@@ -14,7 +14,6 @@ import {
   fetchConversionsForAdminUnfiltered,
   fetchConversionLogsForAdminFiltered,
   fetchGerenciaAvailabilitySummariesForAdmin,
-  updateConversionEmail,
   getConversionGerenciaLabels,
   buildFunnelContactsFromConversions,
   getPremiumThreshold,
@@ -56,16 +55,11 @@ import {
   type ConversionColumnKey as ColKey,
   type PixelEditDraft,
 } from "@/components/conversiones/conversionPageShared";
+import EditableConversionEmailCell from "@/components/conversiones/EditableConversionEmailCell";
 import {
   ChevronIcon,
+  ConversionTabs,
   CopyIcon,
-  FunnelTabIcon,
-  GearTabIcon,
-  LogsTabIcon,
-  PerformanceTabIcon,
-  StatsTabIcon,
-  TableTabIcon,
-  TrackingTabIcon,
   estadoBadge,
   levelBadge,
   statusText,
@@ -109,62 +103,6 @@ const TAB_LABELS: Record<Tab, string> = {
 
 const CLEAR_VIEW_CONFIRM_MESSAGE =
   "Vas a limpiar la vista de Conversiones.\n\nSe ocultaran los registros que ves ahora en esta seccion.\n\nEsta accion NO borra datos de la base.\nSolo deja de mostrarlos en la vista.\n\nQueres continuar?";
-
-function EditableEmailCell({
-  row,
-  onSaved,
-}: {
-  row: ConversionRow;
-  onSaved: (id: string, email: string) => void;
-}) {
-  const [editing, setEditing] = useState(false);
-  const [value, setValue] = useState(row.email);
-  const [saving, setSaving] = useState(false);
-
-  const save = async () => {
-    const trimmed = value.trim();
-    if (trimmed === row.email) { setEditing(false); return; }
-    setSaving(true);
-    try {
-      await updateConversionEmail(row.id, trimmed);
-      onSaved(row.id, trimmed);
-    } catch { setValue(row.email); }
-    finally { setSaving(false); setEditing(false); }
-  };
-
-  if (editing) {
-    return (
-      <td className="px-1 py-0.5">
-        <input
-          autoFocus type="email" value={value}
-          aria-label={`Email de ${row.phone || "la conversión"}`}
-          onChange={(e) => setValue(e.target.value)}
-          onBlur={save}
-          onKeyDown={(e) => {
-            if (e.key === "Enter") save();
-            if (e.key === "Escape") { setValue(row.email); setEditing(false); }
-          }}
-          disabled={saving}
-          className="w-full min-w-[140px] rounded border border-zinc-600 bg-zinc-900 px-1.5 py-0.5 text-[11px] text-zinc-100 outline-none focus:border-zinc-400"
-        />
-      </td>
-    );
-  }
-
-  return (
-    <td className="px-2 py-1.5 whitespace-nowrap text-zinc-400">
-      <button
-        type="button"
-        onClick={() => { setValue(row.email); setEditing(true); }}
-        title="Editar email"
-        aria-label={`${row.email ? "Editar" : "Agregar"} email de ${row.phone || "la conversión"}`}
-        className="group w-full cursor-pointer text-left hover:text-zinc-200 focus-visible:rounded focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-ring-primary)]"
-      >
-        {row.email || <span className="text-zinc-600 group-hover:text-zinc-400">+ email</span>}
-      </button>
-    </td>
-  );
-}
 
 function cellValue(c: ConversionRow, col: ColKey): React.ReactNode {
   const cell = "px-2 py-1.5 whitespace-nowrap";
@@ -1484,48 +1422,13 @@ export default function AdminConversionesPage() {
       )}
 
       {/* Tabs + Demo toggle */}
-      <div className="ui-tabs flex items-center justify-between gap-2 overflow-x-auto" role="tablist" aria-label="Secciones de conversiones">
-        <div className="flex min-w-max gap-1">
-          {TAB_ORDER.filter((t) => t !== "configuracion" && t !== "logs").map((t) => {
-            const active = tab === t;
-            return (
-              <button
-                key={t}
-                type="button"
-                role="tab"
-                aria-selected={active}
-                onClick={() => setTab(t)}
-                className="ui-tab whitespace-nowrap"
-                data-active={active ? "true" : "false"}
-              >
-                <span className="inline-flex items-center gap-1.5">
-                  {t === "funnel" ? <FunnelTabIcon /> : t === "seguimiento" ? <TrackingTabIcon /> : t === "tabla" ? <TableTabIcon /> : t === "estadisticas" ? <StatsTabIcon /> : t === "desempeno" ? <PerformanceTabIcon /> : null}
-                  {TAB_LABELS[t]}
-                </span>
-              </button>
-            );
-          })}
-        </div>
-        <div className="ml-auto flex min-w-max items-center gap-1">
-          {TAB_ORDER.filter((t) => t === "configuracion" || t === "logs").map((t) => {
-            const active = tab === t;
-            return (
-              <button
-                key={t}
-                type="button"
-                role="tab"
-                aria-selected={active}
-                onClick={() => setTab(t)}
-                className="ui-tab whitespace-nowrap"
-                data-active={active ? "true" : "false"}
-              >
-                <span className="inline-flex items-center gap-1.5">
-                  {t === "configuracion" ? <GearTabIcon /> : <LogsTabIcon />}
-                  {TAB_LABELS[t]}
-                </span>
-              </button>
-            );
-          })}
+      <ConversionTabs
+        tabs={TAB_ORDER}
+        utilityTabs={["configuracion", "logs"]}
+        labels={TAB_LABELS}
+        activeTab={tab}
+        onTabChange={setTab}
+        trailing={(
           <label className="flex items-center gap-2 select-none">
             <input
               type="checkbox"
@@ -1537,8 +1440,8 @@ export default function AdminConversionesPage() {
               Datos demo
             </span>
           </label>
-        </div>
-      </div>
+        )}
+      />
 
       {/* Date filter + global actions (funnel, tabla, estadisticas) */}
       {(tab === "funnel" || tab === "seguimiento" || tab === "tabla" || tab === "estadisticas") && (
@@ -1925,7 +1828,7 @@ export default function AdminConversionesPage() {
                             {cellValue(c, "timestamp")}
                             {displayedColsWithoutTimestamp.map((col) =>
                               col === "email" ? (
-                                <EditableEmailCell key={col} row={c} onSaved={(id, email) => setConversions((prev) => prev.map((r) => (r.id === id ? { ...r, email } : r)))} />
+                                <EditableConversionEmailCell key={col} row={c} onSaved={(id, email) => setConversions((prev) => prev.map((r) => (r.id === id ? { ...r, email } : r)))} />
                               ) : cellValue(c, col)
                             )}
                           </tr>
