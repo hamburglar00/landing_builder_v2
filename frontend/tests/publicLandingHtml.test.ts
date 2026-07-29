@@ -1,5 +1,10 @@
 import assert from "node:assert/strict";
+import { createHash } from "node:crypto";
 import test from "node:test";
+import {
+  buildPixelInitScript,
+  buildPixelNoscript,
+} from "../components/public-landing/metaPixelHtml";
 import { renderPublicLandingHtml } from "../components/public-landing/renderPublicLandingHtml";
 import type { PublicLandingConfig } from "../components/public-landing/types";
 
@@ -61,11 +66,17 @@ function occurrences(value: string, search: string) {
   return value.split(search).length - 1;
 }
 
+function sha256(value: string) {
+  return createHash("sha256").update(value).digest("hex");
+}
+
 test("genera un único bootstrap de Meta Pixel y un único PageView", () => {
   const html = renderPublicLandingHtml({
     slug: "oferta-test",
     config: baseConfig,
   });
+  const pixelScript = buildPixelInitScript("123456789", "oferta-test");
+  const pixelNoscript = buildPixelNoscript("123456789");
 
   assert.equal(
     occurrences(html, "https://connect.facebook.net/en_US/fbevents.js"),
@@ -73,6 +84,27 @@ test("genera un único bootstrap de Meta Pixel y un único PageView", () => {
   );
   assert.equal(occurrences(html, "fbq('track', 'PageView')"), 1);
   assert.equal(occurrences(html, "fbq('init', \"123456789\""), 1);
+  assert.equal(occurrences(html, pixelScript), 1);
+  assert.equal(occurrences(html, pixelNoscript), 1);
+});
+
+test("mantiene estable el bloque activo de Meta Pixel", () => {
+  const pixelScript = buildPixelInitScript("abc123456", "slug-test");
+  const pixelNoscript = buildPixelNoscript("abc123456");
+
+  assert.equal(
+    sha256(pixelScript),
+    "d31d058a45e0e84ce2ce74ab8b71099470a17c9886a7d54ff4c9b8b7cbdb0076",
+  );
+  assert.equal(
+    sha256(pixelNoscript),
+    "2c57ae4dcb0eda01ead14e7ca178241ed91c0ca61bef0f370705d8b5145e142c",
+  );
+  assert.match(pixelScript, /landing-builder:123456:slug-test/);
+  assert.match(pixelScript, /sanitizeAddressBar/);
+  assert.match(pixelScript, /fbq\('track', 'PageView'\)/);
+  assert.match(pixelScript, /external_id: externalId/);
+  assert.match(pixelNoscript, /facebook\.com\/tr\?id=123456&amp;ev=PageView/);
 });
 
 test("mantiene identidad aislada por pixel y slug", () => {
