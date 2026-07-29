@@ -1,25 +1,5 @@
 import type { DateRange } from "@/components/conversiones/DateRangeFilter";
 
-export type PixelEditDraft = {
-  id: string;
-  pixel_id: string;
-  meta_access_token: string;
-  meta_currency: string;
-  meta_api_version: string;
-  send_contact_capi: boolean;
-  send_lead_capi: boolean;
-  send_purchase_capi: boolean;
-  include_purchase_type_capi: boolean;
-  send_first_purchase_capi: boolean;
-  send_repeat_purchase_capi: boolean;
-  send_geo_capi: boolean;
-  geo_use_ipapi: boolean;
-  geo_fill_only_when_missing: boolean;
-  is_default: boolean;
-};
-
-export const META_CURRENCY_OPTIONS = ["ARS", "PYG", "USD", "EUR", "BRL", "CLP", "MXN", "COP"];
-
 export const ALL_COLUMNS = [
   "phone","email","fn","ln","ct","st","zip","country","fbp","fbc","from_meta_ads","meta_pixel_id","pixel_id","pixel_attribution_source","pixel_attribution_conversion_id","source_platform","ctwa_clid",
   "contact_event_id","contact_event_time","sendContactPixel","contact_payload_raw","lead_event_id","lead_event_time","lead_payload_raw",

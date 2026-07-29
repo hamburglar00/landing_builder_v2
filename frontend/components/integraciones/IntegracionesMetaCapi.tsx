@@ -28,6 +28,7 @@ import {
 } from "@/lib/gerencias/gerenciasDb";
 import type { PhoneKind } from "@/lib/landing/types";
 import type { Gerencia } from "@/lib/gerencias/types";
+import { META_CURRENCY_OPTIONS } from "@/lib/currency";
 import { DashboardSkeleton } from "@/components/ui/DashboardSkeleton";
 import { PageHeader } from "@/components/ui/PanelPrimitives";
 import { useAppConfirm } from "@/components/ui/AppConfirmDialog";
@@ -43,7 +44,6 @@ const PHONE_KIND_OPTIONS: Array<{ value: PhoneKind; label: string }> = [
 const CHATRACE_TEMPLATE_URL = "https://chatrace.com/store/template?id=154796&key=elKSlGmNFCeIZbYwvr7z7z";
 const CHATRACE_INTERMEDIARY_URL = "https://chatraceinbox.mkt.panelbotadmin.com/api/intermediario-chatrace";
 const KOMMO_INTERMEDIARY_BASE_URL = "https://kommoinbox.mkt.panelbotadmin.com";
-const META_CURRENCY_OPTIONS = ["ARS", "PYG", "USD", "EUR", "BRL", "CLP", "MXN", "COP"];
 const CHATRACE_CUSTOM_FIELDS = [
   "email_detected",
   "ctwa_clid",

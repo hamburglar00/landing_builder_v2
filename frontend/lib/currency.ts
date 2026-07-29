@@ -2,6 +2,7 @@ import type { ConversionRow } from "@/lib/conversionsDb";
 
 export const CURRENCY_ALL = "__all__" as const;
 export const REPORTING_CURRENCIES = ["ARS", "PYG"] as const;
+export const META_CURRENCY_OPTIONS = ["ARS", "PYG", "USD", "EUR", "BRL", "CLP", "MXN", "COP"] as const;
 
 export type ReportingCurrency = (typeof REPORTING_CURRENCIES)[number];
 export type CurrencyScope = ReportingCurrency | typeof CURRENCY_ALL;

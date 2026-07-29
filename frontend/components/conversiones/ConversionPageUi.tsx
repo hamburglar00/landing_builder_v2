@@ -1,3 +1,20 @@
+import type { ReactNode } from "react";
+import {
+  COLUMN_NOTES,
+  columnLabel,
+  type ConversionColumnKey,
+} from "@/components/conversiones/conversionPageShared";
+
+export type ConversionTabId =
+  | "funnel"
+  | "seguimiento"
+  | "tabla"
+  | "estadisticas"
+  | "desempeno"
+  | "configuracion"
+  | "inbox"
+  | "logs";
+
 export function ChevronIcon({ open }: { open: boolean }) {
   return (
     <svg
@@ -185,6 +202,85 @@ export function ConversionTabs<T extends ConversionTabId>({
   );
 }
 
+export function ConversionTableHeader({
+  columns,
+}: {
+  columns: readonly ConversionColumnKey[];
+}) {
+  return (
+    <thead className="sticky top-0 z-20 bg-zinc-800/95">
+      <tr>
+        <th
+          className="px-2 py-2 font-medium text-zinc-300 whitespace-nowrap cursor-help"
+          title={COLUMN_NOTES.id}
+        >
+          ID
+        </th>
+        <th
+          className="px-2 py-2 font-medium text-zinc-300 whitespace-nowrap cursor-help"
+          title={COLUMN_NOTES.timestamp}
+        >
+          timestamp
+        </th>
+        {columns.map((column) => (
+          <th
+            key={column}
+            className="px-2 py-2 font-medium text-zinc-300 whitespace-nowrap cursor-help"
+            title={COLUMN_NOTES[column] ?? column}
+          >
+            {columnLabel(column)}
+          </th>
+        ))}
+      </tr>
+    </thead>
+  );
+}
+
+export function ConversionPagination({
+  page,
+  totalPages,
+  totalItems,
+  pageSize,
+  onPageChange,
+}: {
+  page: number;
+  totalPages: number;
+  totalItems: number;
+  pageSize: number;
+  onPageChange: (page: number) => void;
+}) {
+  if (totalItems <= pageSize) return null;
+
+  return (
+    <div className="mt-3 flex items-center justify-between text-xs text-zinc-400">
+      <span>
+        Mostrando {(page - 1) * pageSize + 1}-{Math.min(page * pageSize, totalItems)} de {totalItems}
+      </span>
+      <div className="flex items-center gap-2">
+        <button
+          type="button"
+          disabled={page <= 1}
+          onClick={() => onPageChange(Math.max(1, page - 1))}
+          className="rounded border border-zinc-700 px-2 py-1 text-zinc-300 hover:bg-zinc-800 disabled:opacity-40"
+        >
+          Anterior
+        </button>
+        <span>
+          {page}/{totalPages}
+        </span>
+        <button
+          type="button"
+          disabled={page >= totalPages}
+          onClick={() => onPageChange(Math.min(totalPages, page + 1))}
+          className="rounded border border-zinc-700 px-2 py-1 text-zinc-300 hover:bg-zinc-800 disabled:opacity-40"
+        >
+          Siguiente
+        </button>
+      </div>
+    </div>
+  );
+}
+
 export function estadoBadge(estado: string, isRepeat = false) {
   const cls =
     estado === "purchase" && isRepeat
@@ -215,6 +311,35 @@ export function statusText(status: string) {
   return <span className="text-zinc-600">-</span>;
 }
 
+type MetaResponseLog = {
+  function_name: string;
+  message: string;
+  response_meta?: string | null;
+};
+
+export function isSuccessfulMetaResponse(log: MetaResponseLog): boolean {
+  if (
+    log.function_name !== "sendToMetaCAPI" ||
+    log.message !== "Meta CAPI respuesta" ||
+    !log.response_meta
+  ) {
+    return false;
+  }
+
+  try {
+    const parsed = JSON.parse(log.response_meta) as {
+      error?: unknown;
+      events_received?: number | string;
+    };
+    const eventsReceived = typeof parsed.events_received === "number"
+      ? parsed.events_received
+      : Number(parsed.events_received ?? 0);
+    return !parsed.error && Number.isFinite(eventsReceived) && eventsReceived > 0;
+  } catch {
+    return false;
+  }
+}
+
 export function levelBadge(level: string, functionName?: string, message?: string) {
   const cls =
     level === "ERROR"
@@ -242,14 +367,3 @@ export function levelBadge(level: string, functionName?: string, message?: strin
     </span>
   );
 }
-import type { ReactNode } from "react";
-
-export type ConversionTabId =
-  | "funnel"
-  | "seguimiento"
-  | "tabla"
-  | "estadisticas"
-  | "desempeno"
-  | "configuracion"
-  | "inbox"
-  | "logs";

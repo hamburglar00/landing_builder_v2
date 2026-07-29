@@ -6,21 +6,12 @@ import { useSearchParams } from "next/navigation";
 import { supabase } from "@/lib/supabaseClient";
 import {
   fetchConversionsConfig,
-  upsertConversionsConfig,
   fetchPixelConfigs,
-  upsertPixelConfig,
-  deletePixelConfig,
-  fetchConversionsFiltered,
-  fetchConversionsUnfiltered,
-  fetchConversionLogsFiltered,
-  fetchConversionInboxFiltered,
-  fetchGerenciaAvailabilitySummaries,
   getConversionGerenciaLabels,
   buildFunnelContactsFromConversions,
   getPremiumThreshold,
   setPremiumThreshold,
   getTrackingRankingConfig,
-  setConversionViewVisibleFrom,
   type FetchDateRange,
   type ConversionsConfig,
   type PixelConfig,
@@ -28,13 +19,13 @@ import {
   type ConversionLogRow,
   type ConversionInboxRow,
 } from "@/lib/conversionsDb";
+import { dashboardConversionPageDataSource } from "@/lib/conversionPageDataSource";
+import { saveConversionPageConfig } from "@/lib/conversionPageConfig";
 import ClearConversionsViewModal, {
   type ClearConversionsViewMode,
 } from "@/components/conversiones/ClearConversionsViewModal";
 import { DashboardSkeleton, PanelSkeleton } from "@/components/ui/DashboardSkeleton";
 import { PageHeader } from "@/components/ui/PanelPrimitives";
-import ModalPortal from "@/components/ui/ModalPortal";
-import { useAppConfirm } from "@/components/ui/AppConfirmDialog";
 import DateRangeFilter, {
   type DateRange,
   filterByDateRange,
@@ -42,26 +33,25 @@ import DateRangeFilter, {
 } from "@/components/conversiones/DateRangeFilter";
 import {
   ALL_COLUMNS,
-  COLUMN_NOTES,
-  META_CURRENCY_OPTIONS,
-  columnLabel,
   formatIntegerWithThousands,
   isSameDateRange,
   normalizePhone,
   normalizeSexValue,
-  sexLabel,
   todayRange,
   truncateId,
   truncateText,
   type ConversionColumnKey as ColKey,
-  type PixelEditDraft,
 } from "@/components/conversiones/conversionPageShared";
 import EditableConversionEmailCell from "@/components/conversiones/EditableConversionEmailCell";
+import ConversionFiltersModal from "@/components/conversiones/ConversionFiltersModal";
+import ConversionConfigurationPanel from "@/components/conversiones/ConversionConfigurationPanel";
+import { useConversionStatsFilters } from "@/components/conversiones/useConversionStatsFilters";
 import {
-  ChevronIcon,
+  ConversionPagination,
+  ConversionTableHeader,
   ConversionTabs,
-  CopyIcon,
   estadoBadge,
+  isSuccessfulMetaResponse,
   levelBadge,
   statusText,
 } from "@/components/conversiones/ConversionPageUi";
@@ -336,7 +326,6 @@ function cellValue(c: ConversionRow, col: ColKey): React.ReactNode {
 }
 
 export default function DashboardConversionesPage() {
-  const confirmAction = useAppConfirm();
   const searchParams = useSearchParams();
   const { currencyScope, isAllCurrencies } = useCurrencyScope();
   const reportingCurrency = currencyScope === CURRENCY_ALL ? "ARS" : currencyScope;
@@ -352,7 +341,6 @@ export default function DashboardConversionesPage() {
   const [clearMsg, setClearMsg] = useState<string | null>(null);
   const [clearViewOpen, setClearViewOpen] = useState(false);
   const [tab, setTab] = useState<Tab>("funnel");
-  const [copiedUrl, setCopiedUrl] = useState<string | null>(null);
   const [expandedLog, setExpandedLog] = useState<number | null>(null);
   const [inboxSearch, setInboxSearch] = useState("");
   const [inboxActionFilter, setInboxActionFilter] = useState<"all" | "CONTACT" | "LEAD" | "PURCHASE">("LEAD");
@@ -362,25 +350,48 @@ export default function DashboardConversionesPage() {
   const [logsHasNextPage, setLogsHasNextPage] = useState(false);
   const [inboxPage, setInboxPage] = useState(1);
   const [inboxHasNextPage, setInboxHasNextPage] = useState(false);
-  const [statsLandingFilter, setStatsLandingFilter] = useState<string>("__all__");
-  const [statsPixelFilter, setStatsPixelFilter] = useState<string>("__all__");
-  const [statsGerenciaFilter, setStatsGerenciaFilter] = useState<string>("__all__");
-  const [statsTelefonoFilter, setStatsTelefonoFilter] = useState<string>("__all__");
-  const [statsFromMetaAdsFilter, setStatsFromMetaAdsFilter] = useState<string>("__all__");
-  const [statsSourcePlatformFilter, setStatsSourcePlatformFilter] = useState<string>("__all__");
-  const [statsSexoFilter, setStatsSexoFilter] = useState<string>("__all__");
-  const [statsCampaignFilter, setStatsCampaignFilter] = useState<string[]>([]);
-  const [statsDeviceFilter, setStatsDeviceFilter] = useState<string>("__all__");
-  const [statsFilterModalOpen, setStatsFilterModalOpen] = useState(false);
-  const [draftLandingFilter, setDraftLandingFilter] = useState<string>("__all__");
-  const [draftPixelFilter, setDraftPixelFilter] = useState<string>("__all__");
-  const [draftGerenciaFilter, setDraftGerenciaFilter] = useState<string>("__all__");
-  const [draftTelefonoFilter, setDraftTelefonoFilter] = useState<string>("__all__");
-  const [draftFromMetaAdsFilter, setDraftFromMetaAdsFilter] = useState<string>("__all__");
-  const [draftSourcePlatformFilter, setDraftSourcePlatformFilter] = useState<string>("__all__");
-  const [draftSexoFilter, setDraftSexoFilter] = useState<string>("__all__");
-  const [draftCampaignFilter, setDraftCampaignFilter] = useState<string[]>([]);
-  const [draftDeviceFilter, setDraftDeviceFilter] = useState<string>("__all__");
+  const {
+    statsLandingFilter,
+    setStatsLandingFilter,
+    statsPixelFilter,
+    setStatsPixelFilter,
+    statsGerenciaFilter,
+    setStatsGerenciaFilter,
+    statsTelefonoFilter,
+    setStatsTelefonoFilter,
+    statsFromMetaAdsFilter,
+    statsSourcePlatformFilter,
+    setStatsSourcePlatformFilter,
+    statsSexoFilter,
+    setStatsSexoFilter,
+    statsCampaignFilter,
+    setStatsCampaignFilter,
+    statsDeviceFilter,
+    setStatsDeviceFilter,
+    statsFilterModalOpen,
+    setStatsFilterModalOpen,
+    draftLandingFilter,
+    setDraftLandingFilter,
+    draftPixelFilter,
+    setDraftPixelFilter,
+    draftGerenciaFilter,
+    setDraftGerenciaFilter,
+    draftTelefonoFilter,
+    setDraftTelefonoFilter,
+    draftFromMetaAdsFilter,
+    setDraftFromMetaAdsFilter,
+    draftSourcePlatformFilter,
+    setDraftSourcePlatformFilter,
+    draftSexoFilter,
+    setDraftSexoFilter,
+    draftCampaignFilter,
+    setDraftCampaignFilter,
+    openStatsFilterModal,
+    applyStatsFilters,
+    clearAllStatsFilters,
+    hasStatsFiltersApplied,
+    statsFiltersCount,
+  } = useConversionStatsFilters();
   const [gerenciaByPhone, setGerenciaByPhone] = useState<Record<string, string[]>>({});
   const [currentGerenciaLabelById, setCurrentGerenciaLabelById] = useState<Record<string, string>>({});
   const [activePhonesByGerenciaLabel, setActivePhonesByGerenciaLabel] = useState<Record<string, string[]>>({});
@@ -438,17 +449,6 @@ export default function DashboardConversionesPage() {
     }
   }, [searchParams]);
 
-  const [configOpen, setConfigOpen] = useState(false);
-  const [endpointOpen, setEndpointOpen] = useState(false);
-  const [funnelConfigOpen, setFunnelConfigOpen] = useState(false);
-  const [editingPixelId, setEditingPixelId] = useState<string | null>(null);
-  const [pixelEditOpen, setPixelEditOpen] = useState(false);
-  const [pixelEditDraft, setPixelEditDraft] = useState<PixelEditDraft | null>(null);
-  const [pixelDeleteWarn, setPixelDeleteWarn] = useState<{
-    pixelId: string;
-    landings: Array<{ id: string; name: string }>;
-  } | null>(null);
-  const [editPixelSensitiveFields, setEditPixelSensitiveFields] = useState(false);
   const [pixelConfigs, setPixelConfigs] = useState<PixelConfig[]>([]);
 
   const scopedConversions = useMemo(
@@ -554,12 +554,12 @@ export default function DashboardConversionesPage() {
     if (statsLandingFilter !== "__all__" && !statsLandingOptions.includes(statsLandingFilter)) {
       setStatsLandingFilter("__all__");
     }
-  }, [statsLandingFilter, statsLandingOptions]);
+  }, [statsLandingFilter, statsLandingOptions, setStatsLandingFilter]);
   useEffect(() => {
     if (statsPixelFilter !== "__all__" && !statsPixelOptions.includes(statsPixelFilter)) {
       setStatsPixelFilter("__all__");
     }
-  }, [statsPixelFilter, statsPixelOptions]);
+  }, [statsPixelFilter, statsPixelOptions, setStatsPixelFilter]);
   useEffect(() => {
     if (statsGerenciaFilter === "__all__") return;
     const canonical = extractGerenciaIdFromLabel(statsGerenciaFilter) || statsGerenciaFilter;
@@ -570,33 +570,33 @@ export default function DashboardConversionesPage() {
     if (!statsGerenciaOptions.some((g) => g.value === statsGerenciaFilter)) {
       setStatsGerenciaFilter("__all__");
     }
-  }, [statsGerenciaFilter, statsGerenciaOptions]);
+  }, [statsGerenciaFilter, statsGerenciaOptions, setStatsGerenciaFilter]);
   useEffect(() => {
     if (statsTelefonoFilter !== "__all__" && !statsTelefonoOptions.includes(statsTelefonoFilter)) {
       setStatsTelefonoFilter("__all__");
     }
-  }, [statsTelefonoFilter, statsTelefonoOptions]);
+  }, [statsTelefonoFilter, statsTelefonoOptions, setStatsTelefonoFilter]);
   useEffect(() => {
     if (statsSourcePlatformFilter !== "__all__" && !statsSourcePlatformOptions.includes(statsSourcePlatformFilter)) {
       setStatsSourcePlatformFilter("__all__");
     }
-  }, [statsSourcePlatformFilter, statsSourcePlatformOptions]);
+  }, [statsSourcePlatformFilter, statsSourcePlatformOptions, setStatsSourcePlatformFilter]);
   useEffect(() => {
     if (statsSexoFilter !== "__all__" && !statsSexoOptions.includes(statsSexoFilter)) {
       setStatsSexoFilter("__all__");
     }
-  }, [statsSexoFilter, statsSexoOptions]);
+  }, [statsSexoFilter, statsSexoOptions, setStatsSexoFilter]);
   useEffect(() => {
     const validCampaigns = statsCampaignFilter.filter((campaign) => statsCampaignOptions.includes(campaign));
     if (validCampaigns.length !== statsCampaignFilter.length) {
       setStatsCampaignFilter(validCampaigns);
     }
-  }, [statsCampaignFilter, statsCampaignOptions]);
+  }, [statsCampaignFilter, statsCampaignOptions, setStatsCampaignFilter]);
   useEffect(() => {
     if (statsDeviceFilter !== "__all__" && !statsDeviceOptions.includes(statsDeviceFilter)) {
       setStatsDeviceFilter("__all__");
     }
-  }, [statsDeviceFilter, statsDeviceOptions]);
+  }, [statsDeviceFilter, statsDeviceOptions, setStatsDeviceFilter]);
   const statsConversionsFiltered = useMemo(() => {
     return statsConversions.filter((r) => {
       const byLanding = statsLandingFilter === "__all__" || String(r.landing_name ?? "").trim() === statsLandingFilter;
@@ -916,35 +916,6 @@ export default function DashboardConversionesPage() {
     },
     [config?.show_logs, config?.show_inbox],
   );
-  const hasStatsFiltersApplied = useMemo(
-    () =>
-      statsLandingFilter !== "__all__" ||
-      statsPixelFilter !== "__all__" ||
-      statsGerenciaFilter !== "__all__" ||
-      statsTelefonoFilter !== "__all__" ||
-      statsFromMetaAdsFilter !== "__all__" ||
-      statsSourcePlatformFilter !== "__all__" ||
-      statsSexoFilter !== "__all__" ||
-      statsCampaignFilter.length > 0 ||
-      statsDeviceFilter !== "__all__",
-    [statsLandingFilter, statsPixelFilter, statsGerenciaFilter, statsTelefonoFilter, statsFromMetaAdsFilter, statsSourcePlatformFilter, statsSexoFilter, statsCampaignFilter, statsDeviceFilter],
-  );
-  const statsFiltersCount = useMemo(
-    () =>
-      [
-        statsLandingFilter,
-        statsPixelFilter,
-        statsGerenciaFilter,
-        statsTelefonoFilter,
-        statsFromMetaAdsFilter,
-        statsSourcePlatformFilter,
-        statsSexoFilter,
-        statsCampaignFilter.length > 0 ? statsCampaignFilter.join(", ") : "__all__",
-        statsDeviceFilter,
-      ].filter((v) => v !== "__all__").length,
-    [statsLandingFilter, statsPixelFilter, statsGerenciaFilter, statsTelefonoFilter, statsFromMetaAdsFilter, statsSourcePlatformFilter, statsSexoFilter, statsCampaignFilter, statsDeviceFilter],
-  );
-
   useEffect(() => {
     if (config?.show_logs === false && tab === "logs") {
       setTab("funnel");
@@ -964,7 +935,10 @@ export default function DashboardConversionesPage() {
       try {
         const [cfg, rows, pixels] = await Promise.all([
           fetchConversionsConfig(user.id),
-          fetchConversionsFiltered(user.id, user.id, undefined, initialDateRangeRef.current ?? undefined),
+          dashboardConversionPageDataSource.fetchVisibleConversions({
+            viewerId: user.id,
+            range: initialDateRangeRef.current,
+          }),
           fetchPixelConfigs(user.id),
         ]);
         setConfig(cfg);
@@ -1073,13 +1047,12 @@ export default function DashboardConversionesPage() {
     const offset = (logsPage - 1) * ACTIVITY_PAGE_SIZE;
     void (async () => {
       try {
-        const logRows = await fetchConversionLogsFiltered(
-          userId,
-          userId,
-          ACTIVITY_PAGE_SIZE + 1,
+        const logRows = await dashboardConversionPageDataSource.fetchVisibleLogs({
+          viewerId: userId,
+          limit: ACTIVITY_PAGE_SIZE + 1,
           offset,
-          dateRange ?? undefined,
-        );
+          range: dateRange,
+        });
         if (requestSeq !== dataRequestSeqRef.current) return;
         setLogs(logRows.slice(0, ACTIVITY_PAGE_SIZE));
         setLogsHasNextPage(logRows.length > ACTIVITY_PAGE_SIZE);
@@ -1099,10 +1072,11 @@ export default function DashboardConversionesPage() {
       setRefreshingTable(true);
       const offset = (inboxPage - 1) * ACTIVITY_PAGE_SIZE;
       try {
-        const inbox = await fetchConversionInboxFiltered(userId, userId, {
+        const inbox = await dashboardConversionPageDataSource.fetchInbox({
+          viewerId: userId,
           limit: ACTIVITY_PAGE_SIZE + 1,
           offset,
-          range: dateRange ?? undefined,
+          range: dateRange,
           action: inboxActionFilter,
           search,
         });
@@ -1122,273 +1096,17 @@ export default function DashboardConversionesPage() {
     if (!config || !userId) return;
     setSaving(true); setSaveMsg(null);
     try {
-      await upsertConversionsConfig({ ...config, user_id: userId });
-      const pixel = String(config.pixel_id ?? "").replace(/\D/g, "");
-      const token = String(config.meta_access_token ?? "").trim();
-      const currency = String(config.meta_currency ?? "ARS").trim() || "ARS";
-      if (pixel && token) {
-        const existing = pixelConfigs.find((p) => p.pixel_id === pixel);
-        await upsertPixelConfig({
-          user_id: userId,
-          pixel_id: pixel,
-          meta_access_token: token,
-          meta_currency: currency,
-          meta_api_version: config.meta_api_version || "v25.0",
-          send_contact_capi: !!config.send_contact_capi,
-          send_lead_capi: config.send_lead_capi !== false,
-          send_purchase_capi: config.send_purchase_capi !== false,
-          include_purchase_type_capi: config.include_purchase_type_capi !== false,
-          send_first_purchase_capi: config.send_first_purchase_capi !== false,
-          send_repeat_purchase_capi: config.send_repeat_purchase_capi !== false,
-          send_geo_capi: config.send_geo_capi !== false,
-          geo_use_ipapi: !!config.geo_use_ipapi,
-          geo_fill_only_when_missing: !!config.geo_fill_only_when_missing,
-          is_default: existing ? existing.is_default : pixelConfigs.length === 0,
-        });
-        const pixels = await fetchPixelConfigs(userId);
-        setPixelConfigs(pixels);
-        const current = pixels.find((p) => p.pixel_id === pixel);
-        if (current) setEditingPixelId(current.id);
-      }
+      const pixels = await saveConversionPageConfig({
+        userId,
+        config,
+        pixelConfigs,
+      });
+      setPixelConfigs(pixels);
       setSaveMsg("Configuracion guardada.");
     } catch (e) {
       setSaveMsg(e instanceof Error ? e.message : "Error al guardar");
     } finally { setSaving(false); }
   };
-
-  const handlePixelEdit = useCallback((px: PixelConfig) => {
-    setPixelEditDraft({
-      id: px.id,
-      pixel_id: px.pixel_id,
-      meta_access_token: px.meta_access_token,
-      meta_currency: px.meta_currency || "ARS",
-      meta_api_version: px.meta_api_version || "v25.0",
-      send_contact_capi: !!px.send_contact_capi,
-      send_lead_capi: px.send_lead_capi !== false,
-      send_purchase_capi: px.send_purchase_capi !== false,
-      include_purchase_type_capi: px.include_purchase_type_capi !== false,
-      send_first_purchase_capi: px.send_first_purchase_capi !== false,
-      send_repeat_purchase_capi: px.send_repeat_purchase_capi !== false,
-      send_geo_capi: px.send_geo_capi !== false,
-      geo_use_ipapi: !!px.geo_use_ipapi,
-      geo_fill_only_when_missing: !!px.geo_fill_only_when_missing,
-      is_default: !!px.is_default,
-    });
-    setPixelEditOpen(true);
-    setEditingPixelId(px.id);
-    setEditPixelSensitiveFields(false);
-  }, []);
-
-  const handlePixelModalSave = useCallback(async () => {
-    if (!userId || !pixelEditDraft) return;
-    const pixel = pixelEditDraft.pixel_id.replace(/\D/g, "").trim();
-    const token = pixelEditDraft.meta_access_token.trim();
-    if (!pixel) {
-      setSaveMsg("Error: Pixel ID es obligatorio.");
-      return;
-    }
-    if (!token) {
-      setSaveMsg("Error: Token es obligatorio.");
-      return;
-    }
-    if (
-      pixelEditDraft.send_purchase_capi &&
-      pixelEditDraft.include_purchase_type_capi &&
-      !pixelEditDraft.send_first_purchase_capi &&
-      !pixelEditDraft.send_repeat_purchase_capi
-    ) {
-      setSaveMsg("Error: elegí First Purchase, Repeat Purchase o ambas. Para no enviar compras, apagá Purchase.");
-      return;
-    }
-
-    setSaving(true);
-    setSaveMsg(null);
-    try {
-      await upsertPixelConfig({
-        user_id: userId,
-        pixel_id: pixel,
-        meta_access_token: token,
-        meta_currency: pixelEditDraft.meta_currency || "ARS",
-        meta_api_version: pixelEditDraft.meta_api_version || "v25.0",
-        send_contact_capi: !!pixelEditDraft.send_contact_capi,
-        send_lead_capi: !!pixelEditDraft.send_lead_capi,
-        send_purchase_capi: !!pixelEditDraft.send_purchase_capi,
-        include_purchase_type_capi: !!pixelEditDraft.include_purchase_type_capi,
-        send_first_purchase_capi: !!pixelEditDraft.send_first_purchase_capi,
-        send_repeat_purchase_capi: !!pixelEditDraft.send_repeat_purchase_capi,
-        send_geo_capi: !!pixelEditDraft.send_geo_capi,
-        geo_use_ipapi: !!pixelEditDraft.geo_use_ipapi,
-        geo_fill_only_when_missing: !!pixelEditDraft.geo_fill_only_when_missing,
-        is_default: !!pixelEditDraft.is_default,
-      });
-      const pixels = await fetchPixelConfigs(userId);
-      setPixelConfigs(pixels);
-      const current = pixels.find((p) => p.id === pixelEditDraft.id) || pixels.find((p) => p.pixel_id === pixel);
-      if (current) {
-        setConfig((prev) => prev ? {
-          ...prev,
-          pixel_id: current.pixel_id,
-          meta_access_token: current.meta_access_token,
-          meta_currency: current.meta_currency || prev.meta_currency,
-          meta_api_version: current.meta_api_version || prev.meta_api_version,
-          send_contact_capi: !!current.send_contact_capi,
-          send_lead_capi: current.send_lead_capi !== false,
-          send_purchase_capi: current.send_purchase_capi !== false,
-          include_purchase_type_capi: current.include_purchase_type_capi !== false,
-          send_first_purchase_capi: current.send_first_purchase_capi !== false,
-          send_repeat_purchase_capi: current.send_repeat_purchase_capi !== false,
-          send_geo_capi: current.send_geo_capi !== false,
-          geo_use_ipapi: !!current.geo_use_ipapi,
-          geo_fill_only_when_missing: !!current.geo_fill_only_when_missing,
-        } : prev);
-      }
-      setPixelEditOpen(false);
-      setPixelEditDraft(null);
-      setEditPixelSensitiveFields(false);
-      setSaveMsg("Pixel actualizado.");
-    } catch (e) {
-      setSaveMsg(e instanceof Error ? `Error: ${e.message}` : "Error al guardar pixel");
-    } finally {
-      setSaving(false);
-    }
-  }, [userId, pixelEditDraft]);
-
-  const handlePixelDelete = useCallback(async (px: PixelConfig) => {
-    if (!userId || !config) return;
-    const ok = await confirmAction({
-      title: "Eliminar pixel",
-      description: `El pixel ${px.pixel_id} se eliminará de tu configuración.`,
-      confirmLabel: "Eliminar pixel",
-      danger: true,
-    });
-    if (!ok) return;
-    setSaving(true);
-    setSaveMsg(null);
-    try {
-      const { data: affectedRows, error: affectedError } = await supabase
-        .from("landings")
-        .select("id,name")
-        .eq("user_id", userId)
-        .eq("pixel_id", px.pixel_id);
-      if (affectedError) throw affectedError;
-      const affectedLandings = (affectedRows ?? []) as Array<{ id: string; name: string }>;
-
-      await deletePixelConfig(userId, px.pixel_id);
-      let pixels = await fetchPixelConfigs(userId);
-      if (pixels.length > 0 && !pixels.some((p) => p.is_default)) {
-        const first = pixels[0];
-        await upsertPixelConfig({
-          user_id: userId,
-          pixel_id: first.pixel_id,
-          meta_access_token: first.meta_access_token,
-          meta_currency: first.meta_currency || "ARS",
-          meta_api_version: first.meta_api_version || "v25.0",
-          send_contact_capi: !!first.send_contact_capi,
-          send_lead_capi: first.send_lead_capi !== false,
-          send_purchase_capi: first.send_purchase_capi !== false,
-          include_purchase_type_capi: first.include_purchase_type_capi !== false,
-          send_first_purchase_capi: first.send_first_purchase_capi !== false,
-          send_repeat_purchase_capi: first.send_repeat_purchase_capi !== false,
-          send_geo_capi: first.send_geo_capi !== false,
-          geo_use_ipapi: !!first.geo_use_ipapi,
-          geo_fill_only_when_missing: !!first.geo_fill_only_when_missing,
-          is_default: true,
-        });
-        pixels = await fetchPixelConfigs(userId);
-      }
-      setPixelConfigs(pixels);
-
-      if (config.pixel_id === px.pixel_id) {
-        const next = pixels[0];
-        if (next) {
-          setConfig((prev) => prev ? {
-            ...prev,
-            pixel_id: next.pixel_id,
-            meta_access_token: next.meta_access_token,
-            meta_currency: next.meta_currency || prev.meta_currency,
-            meta_api_version: next.meta_api_version || prev.meta_api_version,
-            send_contact_capi: !!next.send_contact_capi,
-            send_lead_capi: next.send_lead_capi !== false,
-            send_purchase_capi: next.send_purchase_capi !== false,
-            include_purchase_type_capi: next.include_purchase_type_capi !== false,
-            send_first_purchase_capi: next.send_first_purchase_capi !== false,
-            send_repeat_purchase_capi: next.send_repeat_purchase_capi !== false,
-            send_geo_capi: next.send_geo_capi !== false,
-            geo_use_ipapi: !!next.geo_use_ipapi,
-            geo_fill_only_when_missing: !!next.geo_fill_only_when_missing,
-          } : prev);
-          setEditingPixelId(next.id);
-        } else {
-          setConfig((prev) => prev ? {
-            ...prev,
-            pixel_id: "",
-            meta_access_token: "",
-          } : prev);
-          setEditingPixelId(null);
-        }
-      }
-      setSaveMsg("Pixel eliminado.");
-      if (affectedLandings.length > 0) {
-        setPixelDeleteWarn({ pixelId: px.pixel_id, landings: affectedLandings });
-      }
-    } catch (e) {
-      setSaveMsg(e instanceof Error ? e.message : "Error al eliminar pixel");
-    } finally {
-      setSaving(false);
-    }
-  }, [userId, config, confirmAction]);
-
-  const copyToClipboard = useCallback(async (text: string) => {
-    await navigator.clipboard.writeText(text);
-    setCopiedUrl(text);
-    setTimeout(() => setCopiedUrl(null), 2000);
-  }, []);
-
-  const openStatsFilterModal = useCallback(() => {
-    setDraftLandingFilter(statsLandingFilter);
-    setDraftPixelFilter(statsPixelFilter);
-    setDraftGerenciaFilter(statsGerenciaFilter);
-    setDraftTelefonoFilter(statsTelefonoFilter);
-    setDraftFromMetaAdsFilter(statsFromMetaAdsFilter);
-    setDraftSourcePlatformFilter(statsSourcePlatformFilter);
-    setDraftSexoFilter(statsSexoFilter);
-    setDraftCampaignFilter([...statsCampaignFilter]);
-    setDraftDeviceFilter(statsDeviceFilter);
-    setStatsFilterModalOpen(true);
-  }, [statsLandingFilter, statsPixelFilter, statsGerenciaFilter, statsTelefonoFilter, statsFromMetaAdsFilter, statsSourcePlatformFilter, statsSexoFilter, statsCampaignFilter, statsDeviceFilter]);
-
-  const applyStatsFilters = useCallback(() => {
-    setStatsLandingFilter(draftLandingFilter);
-    setStatsPixelFilter(draftPixelFilter);
-    setStatsGerenciaFilter(draftGerenciaFilter);
-    setStatsTelefonoFilter(draftTelefonoFilter);
-    setStatsFromMetaAdsFilter(draftFromMetaAdsFilter);
-    setStatsSourcePlatformFilter(draftSourcePlatformFilter);
-    setStatsSexoFilter(draftSexoFilter);
-    setStatsCampaignFilter([...draftCampaignFilter]);
-    setStatsDeviceFilter(draftDeviceFilter);
-    setStatsFilterModalOpen(false);
-  }, [draftLandingFilter, draftPixelFilter, draftGerenciaFilter, draftTelefonoFilter, draftFromMetaAdsFilter, draftSourcePlatformFilter, draftSexoFilter, draftCampaignFilter, draftDeviceFilter]);
-  const clearAllStatsFilters = useCallback(() => {
-    setStatsLandingFilter("__all__");
-    setStatsPixelFilter("__all__");
-    setStatsGerenciaFilter("__all__");
-    setStatsTelefonoFilter("__all__");
-    setStatsFromMetaAdsFilter("__all__");
-    setStatsSourcePlatformFilter("__all__");
-    setStatsSexoFilter("__all__");
-    setStatsCampaignFilter([]);
-    setStatsDeviceFilter("__all__");
-    setDraftLandingFilter("__all__");
-    setDraftPixelFilter("__all__");
-    setDraftGerenciaFilter("__all__");
-    setDraftTelefonoFilter("__all__");
-    setDraftFromMetaAdsFilter("__all__");
-    setDraftSourcePlatformFilter("__all__");
-    setDraftSexoFilter("__all__");
-    setDraftCampaignFilter([]);
-    setDraftDeviceFilter("__all__");
-  }, []);
 
   const refreshTable = useCallback(async (explicitRange?: DateRange | null) => {
     const currentUserId = userIdRef.current;
@@ -1401,13 +1119,12 @@ export default function DashboardConversionesPage() {
       if (currentTab === "logs") {
         const page = logsPageRef.current;
         const offset = (page - 1) * ACTIVITY_PAGE_SIZE;
-        const logRows = await fetchConversionLogsFiltered(
-          currentUserId,
-          currentUserId,
-          ACTIVITY_PAGE_SIZE + 1,
+        const logRows = await dashboardConversionPageDataSource.fetchVisibleLogs({
+          viewerId: currentUserId,
+          limit: ACTIVITY_PAGE_SIZE + 1,
           offset,
-          range ?? undefined,
-        );
+          range,
+        });
         if (requestSeq !== dataRequestSeqRef.current) return;
         setLogs(logRows.slice(0, ACTIVITY_PAGE_SIZE));
         setLogsHasNextPage(logRows.length > ACTIVITY_PAGE_SIZE);
@@ -1415,10 +1132,11 @@ export default function DashboardConversionesPage() {
         const search = inboxSearchRef.current.trim();
         const page = inboxPageRef.current;
         const offset = (page - 1) * ACTIVITY_PAGE_SIZE;
-        const inbox = await fetchConversionInboxFiltered(currentUserId, currentUserId, {
+        const inbox = await dashboardConversionPageDataSource.fetchInbox({
+          viewerId: currentUserId,
           limit: ACTIVITY_PAGE_SIZE + 1,
           offset,
-          range: range ?? undefined,
+          range,
           action: inboxActionFilterRef.current,
           search,
         });
@@ -1426,12 +1144,10 @@ export default function DashboardConversionesPage() {
         setInboxRows(inbox.slice(0, ACTIVITY_PAGE_SIZE));
         setInboxHasNextPage(inbox.length > ACTIVITY_PAGE_SIZE);
       } else {
-        const rows = await fetchConversionsFiltered(
-          currentUserId,
-          currentUserId,
-          undefined,
-          range ?? undefined,
-        );
+        const rows = await dashboardConversionPageDataSource.fetchVisibleConversions({
+          viewerId: currentUserId,
+          range,
+        });
         if (requestSeq !== dataRequestSeqRef.current) return;
         setConversions(rows);
       }
@@ -1453,14 +1169,20 @@ export default function DashboardConversionesPage() {
   const fetchPerformanceConversions = useCallback(async (range: FetchDateRange) => {
     const currentUserId = userIdRef.current;
     if (!currentUserId) return [];
-    const rows = await fetchConversionsUnfiltered(currentUserId, range);
+    const rows = await dashboardConversionPageDataSource.fetchReportingConversions({
+      viewerId: currentUserId,
+      range,
+    });
     return filterConversionsByCurrency(rows, currencyScope);
   }, [currencyScope]);
 
   const fetchPerformanceAvailability = useCallback(async (range: FetchDateRange) => {
     const currentUserId = userIdRef.current;
     if (!currentUserId) return [];
-    return fetchGerenciaAvailabilitySummaries(currentUserId, range);
+    return dashboardConversionPageDataSource.fetchAvailability({
+      viewerId: currentUserId,
+      range,
+    });
   }, []);
 
   const clearGlobalDisplay = useCallback(() => {
@@ -1483,7 +1205,10 @@ export default function DashboardConversionesPage() {
         ? new Date(now.getFullYear(), now.getMonth(), 1)
         : now;
       const cutoffMs = visibleFrom.getTime();
-      await setConversionViewVisibleFrom(userId, visibleFrom);
+      await dashboardConversionPageDataSource.setVisibleFrom({
+        viewerId: userId,
+        visibleFrom,
+      });
       setConversions((rows) =>
         rows.filter((row) => new Date(row.created_at).getTime() >= cutoffMs)
       );
@@ -1550,259 +1275,6 @@ export default function DashboardConversionesPage() {
         onClose={() => setClearViewOpen(false)}
         onConfirm={(mode) => void applyGlobalDisplayCleanup(mode)}
       />
-
-      {pixelEditOpen && pixelEditDraft && (
-        <ModalPortal>
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 p-4">
-          <div className="w-full max-w-2xl rounded-xl border border-zinc-700 bg-zinc-950 p-4">
-            <div className="mb-4 flex items-center justify-between gap-3">
-              <div>
-                <h3 className="text-sm font-semibold text-zinc-100">Editar pixel</h3>
-                <p className="mt-1 text-xs text-zinc-500">Pixel ID, moneda y token quedan bloqueados para evitar cambios accidentales.</p>
-              </div>
-              <div className="flex items-center gap-2">
-                <button
-                  type="button"
-                  onClick={() => setEditPixelSensitiveFields((v) => !v)}
-                  className="cursor-pointer rounded-lg border border-amber-700/70 px-3 py-1 text-xs text-amber-200 hover:bg-amber-950/30"
-                >
-                  {editPixelSensitiveFields ? "Bloquear datos" : "Editar datos"}
-                </button>
-                <button
-                  type="button"
-                  onClick={() => { setPixelEditOpen(false); setPixelEditDraft(null); setEditPixelSensitiveFields(false); }}
-                  className="cursor-pointer rounded-lg border border-zinc-700 px-3 py-1 text-xs text-zinc-300 hover:bg-zinc-800"
-                >
-                  Cerrar
-                </button>
-              </div>
-            </div>
-
-            <div className="space-y-3">
-              <div>
-                <label className="mb-1 block text-xs font-medium text-zinc-400">Pixel ID</label>
-                <input
-                  type="text"
-                  value={pixelEditDraft.pixel_id}
-                  disabled={!editPixelSensitiveFields}
-                  onChange={(e) => setPixelEditDraft((p) => p ? { ...p, pixel_id: e.target.value.replace(/\D/g, "") } : p)}
-                  className="w-full rounded-lg border border-zinc-700 bg-zinc-900 px-3 py-2 text-sm text-zinc-100 disabled:cursor-not-allowed disabled:border-zinc-800 disabled:bg-zinc-950 disabled:text-zinc-500"
-                />
-              </div>
-              <div>
-                <label className="mb-1 block text-xs font-medium text-zinc-400">Access Token</label>
-                <input
-                  type="text"
-                  value={pixelEditDraft.meta_access_token}
-                  disabled={!editPixelSensitiveFields}
-                  onChange={(e) => setPixelEditDraft((p) => p ? { ...p, meta_access_token: e.target.value } : p)}
-                  className="w-full rounded-lg border border-zinc-700 bg-zinc-900 px-3 py-2 text-sm text-zinc-100 disabled:cursor-not-allowed disabled:border-zinc-800 disabled:bg-zinc-950 disabled:text-zinc-500"
-                />
-              </div>
-              <div className="grid gap-3 sm:grid-cols-2">
-                <div>
-                  <label className="mb-1 block text-xs font-medium text-zinc-400">Moneda</label>
-                  <select
-                    value={pixelEditDraft.meta_currency}
-                    disabled={!editPixelSensitiveFields}
-                    onChange={(e) => setPixelEditDraft((p) => p ? { ...p, meta_currency: e.target.value } : p)}
-                    className="w-full rounded-lg border border-zinc-700 bg-zinc-900 px-2 py-2 text-sm text-zinc-100 disabled:cursor-not-allowed disabled:border-zinc-800 disabled:bg-zinc-950 disabled:text-zinc-500"
-                  >
-                    {META_CURRENCY_OPTIONS.map((c) => <option key={c} value={c}>{c}</option>)}
-                  </select>
-                </div>
-                <div>
-                  <label className="mb-1 block text-xs font-medium text-zinc-400">API Version</label>
-                  <select
-                    value={pixelEditDraft.meta_api_version}
-                    onChange={(e) => setPixelEditDraft((p) => p ? { ...p, meta_api_version: e.target.value } : p)}
-                    className="w-full rounded-lg border border-zinc-700 bg-zinc-900 px-2 py-2 text-sm text-zinc-100"
-                  >
-                    <option value="v25.0">v25.0</option>
-                  </select>
-                </div>
-              </div>
-
-              <div className="space-y-2 rounded-lg border border-zinc-800 bg-zinc-900/50 p-3">
-                <label className="flex items-center gap-2 text-xs text-zinc-300">
-                  <input
-                    type="checkbox"
-                    checked={pixelEditDraft.send_contact_capi}
-                    onChange={(e) => setPixelEditDraft((p) => p ? { ...p, send_contact_capi: e.target.checked } : p)}
-                    className="h-4 w-4 rounded border-zinc-600 bg-zinc-900 accent-emerald-500"
-                  />
-                  Enviar evento Contact por CAPI
-                </label>
-                <label className="flex items-center gap-2 text-xs text-zinc-300">
-                  <input
-                    type="checkbox"
-                    checked={pixelEditDraft.send_lead_capi}
-                    onChange={(e) => setPixelEditDraft((p) => p ? { ...p, send_lead_capi: e.target.checked } : p)}
-                    className="h-4 w-4 rounded border-zinc-600 bg-zinc-900 accent-emerald-500"
-                  />
-                  Enviar evento Lead por CAPI
-                </label>
-                <label className="flex items-center gap-2 text-xs text-zinc-300">
-                  <input
-                    type="checkbox"
-                    checked={pixelEditDraft.send_purchase_capi}
-                    onChange={(e) => setPixelEditDraft((p) => p ? { ...p, send_purchase_capi: e.target.checked } : p)}
-                    className="h-4 w-4 rounded border-zinc-600 bg-zinc-900 accent-emerald-500"
-                  />
-                  Enviar evento Purchase por CAPI
-                </label>
-                {pixelEditDraft.send_purchase_capi ? (
-                  <div className="ml-6 space-y-2 rounded-lg border border-zinc-800 p-2">
-                    <label className="flex items-center gap-2 text-xs text-zinc-300">
-                      <input
-                        type="checkbox"
-                        checked={pixelEditDraft.include_purchase_type_capi}
-                        onChange={(e) => setPixelEditDraft((p) => p ? { ...p, include_purchase_type_capi: e.target.checked } : p)}
-                        className="h-4 w-4 rounded border-zinc-600 bg-zinc-900 accent-emerald-500"
-                      />
-                      Clasificar Purchase con purchase_type (first/repeat)
-                    </label>
-                    {pixelEditDraft.include_purchase_type_capi ? (
-                      <div className="ml-6 space-y-2">
-                        <label className="flex items-center gap-2 text-xs text-zinc-300">
-                          <input
-                            type="checkbox"
-                            checked={pixelEditDraft.send_first_purchase_capi}
-                            onChange={(e) => setPixelEditDraft((p) => p ? { ...p, send_first_purchase_capi: e.target.checked } : p)}
-                            className="h-4 w-4 rounded border-zinc-600 bg-zinc-900 accent-emerald-500"
-                          />
-                          Enviar First Purchase por CAPI
-                        </label>
-                        <label className="flex items-center gap-2 text-xs text-zinc-300">
-                          <input
-                            type="checkbox"
-                            checked={pixelEditDraft.send_repeat_purchase_capi}
-                            onChange={(e) => setPixelEditDraft((p) => p ? { ...p, send_repeat_purchase_capi: e.target.checked } : p)}
-                            className="h-4 w-4 rounded border-zinc-600 bg-zinc-900 accent-emerald-500"
-                          />
-                          Enviar Repeat Purchase por CAPI
-                        </label>
-                        {!pixelEditDraft.send_first_purchase_capi &&
-                        !pixelEditDraft.send_repeat_purchase_capi ? (
-                          <p className="text-[11px] text-amber-400">
-                            Elegí First Purchase, Repeat Purchase o ambas.
-                          </p>
-                        ) : (
-                          <p className="text-[11px] text-zinc-500">
-                            Cada compra seleccionada conserva un único evento estándar Purchase; purchase_type solo agrega la clasificación.
-                          </p>
-                        )}
-                      </div>
-                    ) : (
-                      <p className="text-[11px] text-zinc-500">Se enviarán todas las compras una sola vez como Purchase, sin purchase_type.</p>
-                    )}
-                  </div>
-                ) : null}
-                <label className="flex items-center gap-2 text-xs text-zinc-300">
-                  <input
-                    type="checkbox"
-                    checked={pixelEditDraft.send_geo_capi}
-                    onChange={(e) => setPixelEditDraft((p) => p ? { ...p, send_geo_capi: e.target.checked } : p)}
-                    className="h-4 w-4 rounded border-zinc-600 bg-zinc-900 accent-emerald-500"
-                  />
-                  Enviar geo por CAPI
-                </label>
-                {pixelEditDraft.send_geo_capi ? (
-                  <div className="ml-6 space-y-2">
-                    <label className="flex items-center gap-2 text-xs text-zinc-300">
-                      <input
-                        type="checkbox"
-                        checked={pixelEditDraft.geo_use_ipapi}
-                        onChange={(e) => setPixelEditDraft((p) => p ? { ...p, geo_use_ipapi: e.target.checked } : p)}
-                        className="h-4 w-4 rounded border-zinc-600 bg-zinc-900 accent-emerald-500"
-                      />
-                      Geo por IP
-                    </label>
-                    <label className="flex items-center gap-2 text-xs text-zinc-300">
-                      <input
-                        type="checkbox"
-                        checked={pixelEditDraft.geo_fill_only_when_missing}
-                        onChange={(e) => setPixelEditDraft((p) => p ? { ...p, geo_fill_only_when_missing: e.target.checked } : p)}
-                        className="h-4 w-4 rounded border-zinc-600 bg-zinc-900 accent-emerald-500"
-                      />
-                      Solo completar geo faltante (no pisar datos del payload)
-                    </label>
-                  </div>
-                ) : null}
-              </div>
-            </div>
-
-            <div className="mt-4 flex justify-end gap-2">
-              <button
-                type="button"
-                onClick={() => { setPixelEditOpen(false); setPixelEditDraft(null); setEditPixelSensitiveFields(false); }}
-                className="cursor-pointer rounded-lg border border-zinc-700 px-3 py-2 text-xs text-zinc-300 hover:bg-zinc-800"
-              >
-                Cancelar
-              </button>
-              <button
-                type="button"
-                onClick={() => void handlePixelModalSave()}
-                disabled={
-                  saving ||
-                  Boolean(
-                    pixelEditDraft.send_purchase_capi &&
-                    pixelEditDraft.include_purchase_type_capi &&
-                    !pixelEditDraft.send_first_purchase_capi &&
-                    !pixelEditDraft.send_repeat_purchase_capi
-                  )
-                }
-                className="cursor-pointer rounded-lg bg-lime-400 px-3 py-2 text-xs font-semibold text-black transition hover:bg-lime-300 disabled:opacity-60"
-              >
-                {saving ? "Guardando..." : "Guardar"}
-              </button>
-            </div>
-          </div>
-        </div>
-        </ModalPortal>
-      )}
-
-      {pixelDeleteWarn && (
-        <ModalPortal>
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 p-4">
-          <div className="w-full max-w-xl rounded-xl border border-zinc-700 bg-zinc-950 p-4">
-            <div className="mb-3 flex items-start justify-between gap-3">
-              <h3 className="text-sm font-semibold text-zinc-100">Advertencia de pixel eliminado</h3>
-              <button
-                type="button"
-                onClick={() => setPixelDeleteWarn(null)}
-                className="cursor-pointer rounded-lg border border-zinc-700 px-3 py-1 text-xs text-zinc-300 hover:bg-zinc-800"
-              >
-                Cerrar
-              </button>
-            </div>
-            <p className="text-sm text-zinc-300">
-              Eliminaste el pixel <span className="font-mono text-zinc-100">{pixelDeleteWarn.pixelId}</span>, y hay landing(s) que lo estaban usando.
-            </p>
-            <p className="mt-2 text-xs text-zinc-400">
-              Ve a cada landing afectada, selecciona un nuevo pixel y guarda para publicar la configuracion actualizada.
-            </p>
-            <div className="mt-3 max-h-44 overflow-y-auto rounded-lg border border-zinc-800 bg-zinc-900/60 p-2">
-              <ul className="space-y-1.5 text-xs text-zinc-200">
-                {pixelDeleteWarn.landings.map((l) => (
-                  <li key={l.id} className="rounded border border-zinc-800 bg-zinc-900 px-2 py-1.5">
-                    {l.name}
-                  </li>
-                ))}
-              </ul>
-            </div>
-            <div className="mt-4 flex justify-end gap-2">
-              <a
-                href="/dashboard/landings"
-                className="cursor-pointer rounded-lg bg-lime-400 px-3 py-2 text-xs font-semibold text-black transition hover:bg-lime-300"
-              >
-                Ir a landings
-              </a>
-            </div>
-          </div>
-        </div>
-        </ModalPortal>
-      )}
 
       {/* Tabs */}
       <ConversionTabs
@@ -1895,203 +1367,62 @@ export default function DashboardConversionesPage() {
       )}
 
       {statsFilterModalOpen && (
-        <ModalPortal>
-        <div className="fixed inset-0 z-[70] flex items-center justify-center overflow-hidden bg-black/70 p-3 sm:p-4">
-          <div className="flex max-h-[calc(100dvh-1.5rem)] w-full max-w-xl flex-col overflow-hidden rounded-xl border border-zinc-700 bg-zinc-950 shadow-2xl">
-            <div className="shrink-0 border-b border-zinc-800 px-4 py-3">
-              <h3 className="text-sm font-semibold text-zinc-100">Filtros globales</h3>
-            </div>
-            <div className="min-h-0 flex-1 overflow-y-auto px-4 py-3">
-              <div className="grid grid-cols-1 gap-3">
-              <div>
-                <label className="mb-1 block text-xs text-zinc-400">Landing</label>
-                <select value={draftLandingFilter} onChange={(e) => setDraftLandingFilter(e.target.value)} className="h-9 w-full rounded-lg border border-zinc-700 bg-zinc-900 px-2 text-xs text-zinc-100">
-                  <option value="__all__">Todas las landings</option>
-                  {statsLandingOptions.map((name) => <option key={name} value={name}>{name}</option>)}
-                </select>
-              </div>
-              <div>
-                <label className="mb-1 block text-xs text-zinc-400">Pixel</label>
-                <select value={draftPixelFilter} onChange={(e) => setDraftPixelFilter(e.target.value)} className="h-9 w-full rounded-lg border border-zinc-700 bg-zinc-900 px-2 text-xs text-zinc-100">
-                  <option value="__all__">Todos los pixeles</option>
-                  {statsPixelOptions.map((px) => <option key={px} value={px}>{px}</option>)}
-                </select>
-              </div>
-              <div>
-                <label className="mb-1 block text-xs text-zinc-400">Gerencia (ID)</label>
-                <select value={draftGerenciaFilter} onChange={(e) => setDraftGerenciaFilter(e.target.value)} className="h-9 w-full rounded-lg border border-zinc-700 bg-zinc-900 px-2 text-xs text-zinc-100">
-                  <option value="__all__">Todas las gerencias</option>
-                  {statsGerenciaOptions.map((g) => <option key={g.value} value={g.value}>{g.label}</option>)}
-                </select>
-              </div>
-              <div>
-                <label className="mb-1 block text-xs text-zinc-400">Telefono asignado</label>
-                <select value={draftTelefonoFilter} onChange={(e) => setDraftTelefonoFilter(e.target.value)} className="h-9 w-full rounded-lg border border-zinc-700 bg-zinc-900 px-2 text-xs text-zinc-100">
-                  <option value="__all__">Todos los telefonos</option>
-                  {statsTelefonoOptions.map((phone) => {
-                    const labels = gerenciaByPhone[phone] ?? [];
-                    const extra = labels.length > 0 ? ` [${labels.join(" | ")}]` : "";
-                    return <option key={phone} value={phone}>{`${phone}${extra}`}</option>;
-                  })}
-                </select>
-              </div>
-              <div>
-                <label className="mb-1 block text-xs text-zinc-400">Origen Meta Ads</label>
-                <select value={draftFromMetaAdsFilter} onChange={(e) => setDraftFromMetaAdsFilter(e.target.value)} className="h-9 w-full rounded-lg border border-zinc-700 bg-zinc-900 px-2 text-xs text-zinc-100">
-                  <option value="__all__">Todos</option>
-                  <option value="true">Si</option>
-                  <option value="false">No</option>
-                </select>
-              </div>
-              <div>
-                <label className="mb-1 block text-xs text-zinc-400">Plataforma de origen</label>
-                <select value={draftSourcePlatformFilter} onChange={(e) => setDraftSourcePlatformFilter(e.target.value)} className="h-9 w-full rounded-lg border border-zinc-700 bg-zinc-900 px-2 text-xs text-zinc-100">
-                  <option value="__all__">Todas</option>
-                  {statsSourcePlatformOptions.map((source) => <option key={source} value={source}>{source}</option>)}
-                </select>
-              </div>
-              <div>
-                <label className="mb-1 block text-xs text-zinc-400">Sexo</label>
-                <select value={draftSexoFilter} onChange={(e) => setDraftSexoFilter(e.target.value)} className="h-9 w-full rounded-lg border border-zinc-700 bg-zinc-900 px-2 text-xs text-zinc-100">
-                  <option value="__all__">Todos</option>
-                  {statsSexoOptions.map((sex) => <option key={sex} value={sex}>{sexLabel(sex)}</option>)}
-                </select>
-              </div>
-              <div>
-                <label className="mb-1 block text-xs text-zinc-400">Campaña</label>
-                <details className="group relative">
-                  <summary className="flex h-9 w-full cursor-pointer list-none items-center justify-between rounded-lg border border-zinc-700 bg-zinc-900 px-2 text-xs text-zinc-100 marker:hidden">
-                    <span className="truncate">
-                      {draftCampaignFilter.length === 0
-                        ? "Todas"
-                        : draftCampaignFilter.length === 1
-                          ? draftCampaignFilter[0]
-                          : `${draftCampaignFilter.length} campañas seleccionadas`}
-                    </span>
-                    <span className="ml-2 text-zinc-500 transition group-open:rotate-180">v</span>
-                  </summary>
-                  <div className="absolute z-30 mt-1 max-h-56 w-full overflow-y-auto rounded-lg border border-zinc-700 bg-zinc-950 px-2 py-1.5 text-xs text-zinc-100 shadow-xl">
-                    <label className="flex cursor-pointer items-center gap-2 rounded px-1 py-1 hover:bg-zinc-800/70">
-                      <input
-                        type="checkbox"
-                        checked={draftCampaignFilter.length === 0}
-                        onChange={() => setDraftCampaignFilter([])}
-                        className="h-3.5 w-3.5 rounded border-zinc-600 bg-zinc-900 accent-emerald-500"
-                      />
-                      Todas
-                    </label>
-                    {statsCampaignOptions.map((campaign) => {
-                      const checked = draftCampaignFilter.includes(campaign);
-                      return (
-                        <label key={campaign} className="flex cursor-pointer items-center gap-2 rounded px-1 py-1 hover:bg-zinc-800/70">
-                          <input
-                            type="checkbox"
-                            checked={checked}
-                            onChange={(e) => {
-                              setDraftCampaignFilter((prev) => (
-                                e.target.checked
-                                  ? [...prev, campaign]
-                                  : prev.filter((item) => item !== campaign)
-                              ));
-                            }}
-                            className="h-3.5 w-3.5 rounded border-zinc-600 bg-zinc-900 accent-emerald-500"
-                          />
-                          <span className="truncate">{campaign}</span>
-                        </label>
-                      );
-                    })}
-                  </div>
-                </details>
-              </div>
-              </div>
-            </div>
-            <div className="flex shrink-0 justify-end gap-2 border-t border-zinc-800 px-4 py-3">
-              <button type="button" onClick={() => setStatsFilterModalOpen(false)} className="cursor-pointer rounded-md border border-zinc-600 px-3 py-1.5 text-xs text-zinc-300 hover:bg-zinc-800">
-                Cerrar
-              </button>
-              <button type="button" onClick={applyStatsFilters} className="cursor-pointer rounded-md border border-emerald-700 bg-emerald-600 px-3 py-1.5 text-xs font-semibold text-zinc-950 hover:bg-emerald-500">
-                Guardar
-              </button>
-            </div>
-          </div>
-        </div>
-        </ModalPortal>
+        <ConversionFiltersModal
+          title="Filtros globales"
+          draft={{
+            landing: draftLandingFilter,
+            pixel: draftPixelFilter,
+            gerencia: draftGerenciaFilter,
+            phone: draftTelefonoFilter,
+            fromMetaAds: draftFromMetaAdsFilter,
+            sourcePlatform: draftSourcePlatformFilter,
+            sex: draftSexoFilter,
+            campaigns: draftCampaignFilter,
+          }}
+          options={{
+            landings: statsLandingOptions,
+            pixels: statsPixelOptions,
+            gerencias: statsGerenciaOptions,
+            phones: statsTelefonoOptions,
+            sourcePlatforms: statsSourcePlatformOptions,
+            sexes: statsSexoOptions,
+            campaigns: statsCampaignOptions,
+          }}
+          phoneGerenciaLabels={gerenciaByPhone}
+          onChange={{
+            landing: setDraftLandingFilter,
+            pixel: setDraftPixelFilter,
+            gerencia: setDraftGerenciaFilter,
+            phone: setDraftTelefonoFilter,
+            fromMetaAds: setDraftFromMetaAdsFilter,
+            sourcePlatform: setDraftSourcePlatformFilter,
+            sex: setDraftSexoFilter,
+            campaigns: setDraftCampaignFilter,
+          }}
+          onClose={() => setStatsFilterModalOpen(false)}
+          onApply={applyStatsFilters}
+        />
       )}
 
       {/* TAB: CONFIGURACIN */}
       {tab === "configuracion" && (
-        <div className="space-y-4">
-          {/* Endpoint */}
-          <section className="rounded-xl border border-zinc-800 bg-zinc-900/50">
-            <button type="button" onClick={() => setEndpointOpen((v) => !v)} className="flex w-full cursor-pointer items-center gap-2 p-4">
-              <ChevronIcon open={endpointOpen} />
-              <h3 className="text-sm font-semibold text-zinc-200">Endpoint de conversiones</h3>
-            </button>
-            {endpointOpen && (
-              <div className="space-y-3 border-t border-zinc-800 p-4">
-                <p className="text-xs text-zinc-400">Tus landings y sistemas externos deben enviar POST a esta URL.</p>
-                {(() => {
-                  const url = clientName ? `${endpointBase}/functions/v1/conversions?name=${encodeURIComponent(clientName)}` : "";
-                  return clientName ? (
-                    <div className="flex items-center gap-2 rounded-lg border border-zinc-800 bg-zinc-950/70 px-3 py-2">
-                      <code className="flex-1 text-[11px] text-emerald-400 break-all">{url}</code>
-                      <button type="button" onClick={() => copyToClipboard(url)} className="shrink-0 cursor-pointer rounded p-1 text-zinc-500 transition hover:bg-zinc-800 hover:text-zinc-300" title="Copiar URL">
-                        {copiedUrl === url ? <span className="text-[10px] text-emerald-400">OK</span> : <CopyIcon />}
-                      </button>
-                    </div>
-                  ) : (
-                    <p className="text-[11px] text-amber-400">Tu URL an no fue configurada. Contact al administrador.</p>
-                  );
-                })()}
-              </div>
-            )}
-          </section>
-
-          {/* Funnel Configuration */}
-          <section className="rounded-xl border border-zinc-800 bg-zinc-900/50">
-            <button type="button" onClick={() => setFunnelConfigOpen((v) => !v)} className="flex w-full cursor-pointer items-center gap-2 p-4">
-              <ChevronIcon open={funnelConfigOpen} />
-              <h3 className="text-sm font-semibold text-zinc-200">Personalizacin del funnel</h3>
-            </button>
-            {funnelConfigOpen && (
-              <div className="space-y-4 border-t border-zinc-800 p-4">
-                <div>
-                  <label className="block text-xs font-medium text-zinc-400 mb-1">
-                    Monto mínimo para Jugador Premium {isAllCurrencies ? "" : `(${reportingCurrency})`}
-                  </label>
-                  <input
-                    type="text"
-                    inputMode="numeric"
-                    value={isAllCurrencies ? "" : formatIntegerWithThousands(premiumThreshold)}
-                    disabled={isAllCurrencies}
-                    onChange={(e) => {
-                      const raw = e.target.value.replace(/[^\d]/g, "");
-                      const parsed = raw ? Number.parseInt(raw, 10) : 0;
-                      setConfig((p) => (p ? setPremiumThreshold(p, reportingCurrency, parsed) : p));
-                    }}
-                    className="w-full max-w-xs rounded-lg border border-zinc-700 bg-zinc-900 px-3 py-2 text-sm text-zinc-100"
-                    placeholder="50.000"
-                  />
-                  <p className="mt-1 text-[11px] text-zinc-500">
-                    {isAllCurrencies
-                      ? "Seleccioná ARS o PYG arriba para configurar su umbral de manera independiente."
-                      : `Solo se compara contra cargas expresadas en ${reportingCurrency}.`}
-                  </p>
-                </div>
-              </div>
-            )}
-          </section>
-          <div className="flex justify-end pt-2">
-            <button
-              type="button"
-              onClick={handleSave}
-              disabled={saving}
-              className="cursor-pointer rounded-lg bg-zinc-100 px-4 py-2 text-sm font-medium text-zinc-900 transition hover:bg-zinc-200 active:scale-95 disabled:opacity-60"
-            >
-              {saving ? "Guardando..." : "Guardar configuracin"}
-            </button>
-          </div>
-        </div>
+        <ConversionConfigurationPanel
+          endpointBase={endpointBase}
+          clientName={clientName}
+          endpointMissingMessage="Tu URL aún no fue configurada. Contactá al administrador."
+          isAllCurrencies={isAllCurrencies}
+          reportingCurrency={reportingCurrency}
+          premiumThreshold={premiumThreshold}
+          onPremiumThresholdChange={(value) =>
+            setConfig((current) =>
+              current
+                ? setPremiumThreshold(current, reportingCurrency, value)
+                : current
+            )
+          }
+          saving={saving}
+          onSave={() => void handleSave()}
+        />
       )}
 
       {/* TAB: TABLA */}
@@ -2112,21 +1443,7 @@ export default function DashboardConversionesPage() {
           </div>
           <div className="overflow-x-auto rounded-lg border border-zinc-700">
             <table className="min-w-[920px] text-left text-[11px] md:min-w-full">
-              <thead className="sticky top-0 z-20 bg-zinc-800/95">
-                <tr>
-                  <th className="px-2 py-2 font-medium text-zinc-300 whitespace-nowrap cursor-help" title={COLUMN_NOTES.id}>ID</th>
-                  <th className="px-2 py-2 font-medium text-zinc-300 whitespace-nowrap cursor-help" title={COLUMN_NOTES.timestamp}>timestamp</th>
-                  {displayedColsWithoutTimestamp.map((col) => (
-                    <th
-                      key={col}
-                      className="px-2 py-2 font-medium text-zinc-300 whitespace-nowrap cursor-help"
-                      title={COLUMN_NOTES[col] ?? col}
-                    >
-                      {columnLabel(col)}
-                    </th>
-                  ))}
-                </tr>
-              </thead>
+              <ConversionTableHeader columns={displayedColsWithoutTimestamp} />
               <tbody className="divide-y divide-zinc-800">
                 {displayedColsWithoutTimestamp.length === 0 ? (
                   <tr>
@@ -2168,34 +1485,13 @@ export default function DashboardConversionesPage() {
               </tbody>
             </table>
           </div>
-          {filteredConversions.length > tablePageSize && (
-            <div className="mt-3 flex items-center justify-between text-xs text-zinc-400">
-              <span>
-                Mostrando {(tablePage - 1) * tablePageSize + 1}-{Math.min(tablePage * tablePageSize, filteredConversions.length)} de {filteredConversions.length}
-              </span>
-              <div className="flex items-center gap-2">
-                <button
-                  type="button"
-                  disabled={tablePage <= 1}
-                  onClick={() => setTablePage((p) => Math.max(1, p - 1))}
-                  className="rounded border border-zinc-700 px-2 py-1 text-zinc-300 hover:bg-zinc-800 disabled:opacity-40"
-                >
-                  Anterior
-                </button>
-                <span>
-                  {tablePage}/{totalTablePages}
-                </span>
-                <button
-                  type="button"
-                  disabled={tablePage >= totalTablePages}
-                  onClick={() => setTablePage((p) => Math.min(totalTablePages, p + 1))}
-                  className="rounded border border-zinc-700 px-2 py-1 text-zinc-300 hover:bg-zinc-800 disabled:opacity-40"
-                >
-                  Siguiente
-                </button>
-              </div>
-            </div>
-          )}
+          <ConversionPagination
+            page={tablePage}
+            totalPages={totalTablePages}
+            totalItems={filteredConversions.length}
+            pageSize={tablePageSize}
+            onPageChange={setTablePage}
+          />
         </section>
       )}
 
@@ -2500,17 +1796,7 @@ export default function DashboardConversionesPage() {
                       className={(() => {
                         const meta = logGroupMetaByIndex[idx] ?? { base: "bg-zinc-950/40", isStart: false, isEnd: false };
                         const blockBorders = `${meta.isStart ? " border-t-4 border-t-black/90" : ""}${meta.isEnd ? " border-b-4 border-b-black/90" : ""}`;
-                        const isMetaResponse = log.function_name === "sendToMetaCAPI" && log.message === "Meta CAPI respuesta";
-                        if (!isMetaResponse || !log.response_meta) return `${meta.base}${blockBorders}`;
-                        try {
-                          const parsed = JSON.parse(log.response_meta) as { error?: unknown; events_received?: number | string };
-                          const eventsReceived = typeof parsed.events_received === "number"
-                            ? parsed.events_received
-                            : Number(parsed.events_received ?? 0);
-                          return `${meta.base}${blockBorders}`;
-                        } catch {
-                          return `${meta.base}${blockBorders}`;
-                        }
+                        return `${meta.base}${blockBorders}`;
                       })()}
                     >
                       <td className="px-2 py-1.5 text-zinc-500 font-mono whitespace-nowrap">
@@ -2522,18 +1808,9 @@ export default function DashboardConversionesPage() {
                       <td className="px-2 py-1.5">{levelBadge(log.level, log.function_name, log.message)}</td>
                       <td className={`px-2 py-1.5 ${
                         (() => {
-                          const isMetaResponse = log.function_name === "sendToMetaCAPI" && log.message === "Meta CAPI respuesta";
-                          if (!isMetaResponse || !log.response_meta) return "text-zinc-200";
-                          try {
-                            const parsed = JSON.parse(log.response_meta) as { error?: unknown; events_received?: number | string };
-                            const eventsReceived = typeof parsed.events_received === "number"
-                              ? parsed.events_received
-                              : Number(parsed.events_received ?? 0);
-                            const ok = !parsed.error && Number.isFinite(eventsReceived) && eventsReceived > 0;
-                            return ok ? "text-emerald-300 font-semibold" : "text-zinc-200";
-                          } catch {
-                            return "text-zinc-200";
-                          }
+                          return isSuccessfulMetaResponse(log)
+                            ? "text-emerald-300 font-semibold"
+                            : "text-zinc-200";
                         })()
                       }`}>{log.message}</td>
                       <td className="px-2 py-1.5 text-zinc-300 font-mono whitespace-nowrap">{log.function_name}</td>
