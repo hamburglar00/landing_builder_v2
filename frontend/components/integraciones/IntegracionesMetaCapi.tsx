@@ -681,6 +681,14 @@ export default function IntegracionesMetaCapi() {
     const pixel = draft.pixel_id.replace(/\D/g, "").trim();
     const token = draft.meta_access_token.trim();
     if (!pixel || !token) return setSaveMsg("Pixel y token son obligatorios.");
+    if (
+      draft.send_purchase_capi &&
+      draft.include_purchase_type_capi &&
+      !draft.send_first_purchase_capi &&
+      !draft.send_repeat_purchase_capi
+    ) {
+      return setSaveMsg("Elegí First Purchase, Repeat Purchase o ambas. Para no enviar compras, apagá Purchase.");
+    }
     setSaving(true);
     setSaveMsg(null);
     try {
@@ -2022,8 +2030,8 @@ export default function IntegracionesMetaCapi() {
                   <div className="mt-2 rounded-lg border border-zinc-800 bg-zinc-950/60 p-2">
                     <SettingsSwitch
                       checked={draft.include_purchase_type_capi}
-                      label="Incluir purchase_type"
-                      description="Activado: envía first/repeat y permite filtrarlos. Desactivado: envía Purchase estándar."
+                      label="Clasificar Purchase (first/repeat)"
+                      description="Activado: agrega purchase_type al único evento Purchase y permite filtrar tipos. Desactivado: envía todas las compras sin clasificación."
                       onChange={() => setDraft((p) => (p ? { ...p, include_purchase_type_capi: !p.include_purchase_type_capi } : p))}
                     />
                     {draft.include_purchase_type_capi ? (
@@ -2042,6 +2050,19 @@ export default function IntegracionesMetaCapi() {
                         />
                       </div>
                     ) : null}
+                    {draft.include_purchase_type_capi &&
+                    !draft.send_first_purchase_capi &&
+                    !draft.send_repeat_purchase_capi ? (
+                      <p className="mt-2 text-[11px] text-amber-400">
+                        Elegí First Purchase, Repeat Purchase o ambas. Cada compra seleccionada se envía una sola vez.
+                      </p>
+                    ) : (
+                      <p className="mt-2 text-[11px] text-zinc-500">
+                        {draft.include_purchase_type_capi
+                          ? "Sigue siendo el evento estándar Purchase; purchase_type solo permite crear conversiones personalizadas."
+                          : "Se enviarán todas las compras una sola vez como Purchase, sin purchase_type."}
+                      </p>
+                    )}
                   </div>
                 ) : null}
               </section>
@@ -2076,7 +2097,22 @@ export default function IntegracionesMetaCapi() {
             </div>
             <div className="mt-4 flex justify-end gap-2">
               <button type="button" onClick={() => { setEditOpen(false); setDraft(null); setEditSensitiveFields(false); }} className="rounded-lg border border-zinc-700 px-3 py-1.5 text-xs text-zinc-300">Cancelar</button>
-              <button disabled={saving} type="button" onClick={() => void handleEditSave()} className="rounded-lg bg-emerald-500 px-3 py-1.5 text-xs font-semibold text-zinc-900 disabled:opacity-60">Guardar</button>
+              <button
+                disabled={
+                  saving ||
+                  Boolean(
+                    draft.send_purchase_capi &&
+                    draft.include_purchase_type_capi &&
+                    !draft.send_first_purchase_capi &&
+                    !draft.send_repeat_purchase_capi
+                  )
+                }
+                type="button"
+                onClick={() => void handleEditSave()}
+                className="rounded-lg bg-emerald-500 px-3 py-1.5 text-xs font-semibold text-zinc-900 disabled:cursor-not-allowed disabled:opacity-60"
+              >
+                Guardar
+              </button>
             </div>
           </div>
         </div>

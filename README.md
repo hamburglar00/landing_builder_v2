@@ -154,7 +154,11 @@ sequenceDiagram
 - Primera compra: `purchase_type=first`.
 - Recompra: nueva fila heredando identidad relevante (`purchase_type=repeat`).
 - Guarda `purchase_payload_raw`.
-- Envia `Purchase` CAPI con `custom_data` (`value`, `currency`, `purchase_type` cuando corresponde).
+- Siempre conserva la clasificación interna first/repeat.
+- Modo estándar: envía todas las compras una sola vez sin `purchase_type`.
+- Modo clasificado: envía los tipos habilitados y agrega `purchase_type` al mismo evento estándar `Purchase`.
+- Antes de procesar, reserva atómicamente un único `event_id` por `coelsa_id`, `transaction_id` o `action_event_id`; los webhooks concurrentes quedan deduplicados.
+- Envía `Purchase` CAPI con `custom_data` (`value`, `currency`, `purchase_type` cuando corresponde).
 
 ### 6.4 Dedupe de eventos entrantes por `action_event_id`
 - Si llega `action_event_id` y ya fue procesado:

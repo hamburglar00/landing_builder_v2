@@ -1110,6 +1110,15 @@ export default function AdminConversionesPage() {
       setSaveMsg("Error: Token es obligatorio.");
       return;
     }
+    if (
+      pixelEditDraft.send_purchase_capi &&
+      pixelEditDraft.include_purchase_type_capi &&
+      !pixelEditDraft.send_first_purchase_capi &&
+      !pixelEditDraft.send_repeat_purchase_capi
+    ) {
+      setSaveMsg("Error: elegí First Purchase, Repeat Purchase o ambas. Para no enviar compras, apagá Purchase.");
+      return;
+    }
 
     setSaving(true);
     setSaveMsg(null);
@@ -1555,7 +1564,7 @@ export default function AdminConversionesPage() {
                         onChange={(e) => setPixelEditDraft((p) => p ? { ...p, include_purchase_type_capi: e.target.checked } : p)}
                         className="h-4 w-4 rounded border-zinc-600 bg-zinc-900 accent-emerald-500"
                       />
-                      Incluir purchase_type (first/repeat)
+                      Clasificar Purchase con purchase_type (first/repeat)
                     </label>
                     {pixelEditDraft.include_purchase_type_capi ? (
                       <div className="ml-6 space-y-2">
@@ -1577,9 +1586,19 @@ export default function AdminConversionesPage() {
                           />
                           Enviar Repeat Purchase por CAPI
                         </label>
+                        {!pixelEditDraft.send_first_purchase_capi &&
+                        !pixelEditDraft.send_repeat_purchase_capi ? (
+                          <p className="text-[11px] text-amber-400">
+                            Elegí First Purchase, Repeat Purchase o ambas.
+                          </p>
+                        ) : (
+                          <p className="text-[11px] text-zinc-500">
+                            Cada compra seleccionada conserva un único evento estándar Purchase; purchase_type solo agrega la clasificación.
+                          </p>
+                        )}
                       </div>
                     ) : (
-                      <p className="text-[11px] text-zinc-500">Se enviará el evento Purchase estándar, sin purchase_type.</p>
+                      <p className="text-[11px] text-zinc-500">Se enviarán todas las compras una sola vez como Purchase, sin purchase_type.</p>
                     )}
                   </div>
                 ) : null}
@@ -1628,7 +1647,15 @@ export default function AdminConversionesPage() {
               <button
                 type="button"
                 onClick={() => void handlePixelModalSave()}
-                disabled={saving}
+                disabled={
+                  saving ||
+                  Boolean(
+                    pixelEditDraft.send_purchase_capi &&
+                    pixelEditDraft.include_purchase_type_capi &&
+                    !pixelEditDraft.send_first_purchase_capi &&
+                    !pixelEditDraft.send_repeat_purchase_capi
+                  )
+                }
                 className="cursor-pointer rounded-lg bg-lime-400 px-3 py-2 text-xs font-semibold text-black transition hover:bg-lime-300 disabled:opacity-60"
               >
                 {saving ? "Guardando..." : "Guardar"}

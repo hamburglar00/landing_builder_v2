@@ -166,9 +166,22 @@ interface GeoResult {
 type GeoSource = "payload" | "ip" | "phone_prefix" | "none";
 
 type InboundStatus = "received" | "deferred" | "processed" | "deduplicated" | "error";
-type ProcessingContext = { conversionId?: string; inboxStatus?: InboundStatus; inboxPromoCode?: string };
+type ProcessingContext = {
+  conversionId?: string;
+  inboxStatus?: InboundStatus;
+  inboxPromoCode?: string;
+  purchaseClaimId?: string;
+};
 type ContactDuplicateReason = "contact_event_id" | "promo_code";
 type ContactDuplicateMatch = { id: string; reason: ContactDuplicateReason };
+type PurchaseEventClaim = {
+  claimed: boolean;
+  claimId: string;
+  eventId: string;
+  conversionId: string;
+  status: string;
+  protectedBy: string[];
+};
 
 // deno-lint-ignore no-explicit-any
 type Params = Record<string, any>;
@@ -324,6 +337,89 @@ function purchaseDedupeIdsFromPayload(p: Params): string[] {
     normalizeCoelsaId(p.coelsa_id),
     normalizeTransactionId(p.transaction_id),
   ].filter(Boolean)));
+}
+
+function purchaseIdempotencyKeysFromPayload(p: Params): string[] {
+  const strongIds = purchaseDedupeIdsFromPayload(p);
+  if (strongIds.length > 0) {
+    // The same opaque payment identifier is intentionally equivalent whether
+    // an emitter labels it coelsa_id or transaction_id.
+    return strongIds.map((id) => `payment:${id}`);
+  }
+
+  const actionEventId = norm(p.action_event_id);
+  if (!actionEventId) return [];
+
+  const promoCode = derivePromoCodeFromPayload(p);
+  return [
+    isFullPromoCode(promoCode)
+      ? `action:${actionEventId}|promo:${promoCode.toUpperCase()}`
+      : `action:${actionEventId}`,
+  ];
+}
+
+async function claimPurchaseEvent(
+  db: SupabaseClient,
+  userId: string,
+  p: Params,
+): Promise<PurchaseEventClaim> {
+  const candidateEventId = generateEventId();
+  const protectedBy = purchaseIdempotencyKeysFromPayload(p);
+  if (protectedBy.length === 0) {
+    return {
+      claimed: true,
+      claimId: "",
+      eventId: candidateEventId,
+      conversionId: "",
+      status: "unprotected",
+      protectedBy,
+    };
+  }
+
+  const { data, error } = await db.rpc("claim_purchase_event", {
+    p_user_id: userId,
+    p_idempotency_keys: protectedBy,
+    p_candidate_event_id: candidateEventId,
+  });
+  if (error) {
+    throw new Error(`No se pudo reservar atomicamente el Purchase: ${error.message}`);
+  }
+
+  const row = (Array.isArray(data) ? data[0] : data) as Record<string, unknown> | null;
+  if (!row?.event_id) {
+    throw new Error("La reserva atomica de Purchase no devolvio event_id");
+  }
+
+  return {
+    claimed: row.claimed === true,
+    claimId: norm(row.claim_id),
+    eventId: norm(row.event_id),
+    conversionId: norm(row.conversion_id),
+    status: norm(row.claim_status),
+    protectedBy,
+  };
+}
+
+async function completePurchaseEventClaim(
+  db: SupabaseClient,
+  ctx: ProcessingContext,
+  status: InboundStatus,
+): Promise<void> {
+  if (!ctx.purchaseClaimId) return;
+  const { error } = await db.rpc("complete_purchase_event_claim", {
+    p_claim_id: ctx.purchaseClaimId,
+    p_conversion_id: ctx.conversionId || null,
+    p_status: status,
+  });
+  if (error) {
+    // Do not turn an already successful Meta response into an HTTP failure.
+    // A stale claim can be reclaimed after five minutes with the same event_id.
+    console.error("[completePurchaseEventClaim]", error.message, {
+      claim_id: ctx.purchaseClaimId,
+      conversion_id: ctx.conversionId,
+      status,
+    });
+  }
 }
 
 function normalizePromoCode(v: unknown): string {
@@ -2730,6 +2826,34 @@ async function handlePurchase(
   const coelsaId = normalizeCoelsaId(p.coelsa_id);
   const transactionId = normalizeTransactionId(p.transaction_id);
   const generatedExternalId = norm(p.external_id) || generateEventId();
+  const purchaseClaim = await claimPurchaseEvent(db, landing.user_id, p);
+  if (!purchaseClaim.claimed) {
+    if (ctx) {
+      ctx.conversionId = purchaseClaim.conversionId || undefined;
+      ctx.inboxStatus = "deduplicated";
+    }
+    await writeLog(
+      db,
+      landing.user_id,
+      "handlePurchase",
+      "INFO",
+      "PURCHASE concurrente deduplicado por reserva atomica",
+      JSON.stringify({
+        event_id: purchaseClaim.eventId,
+        claim_id: purchaseClaim.claimId,
+        claim_status: purchaseClaim.status,
+        protected_by: purchaseClaim.protectedBy,
+        existing_conversion_id: purchaseClaim.conversionId,
+      }),
+      purchaseClaim.conversionId || undefined,
+      undefined,
+      undefined,
+      purchasePayloadRaw,
+      "duplicado ignorado por reserva atomica",
+    );
+    return textResponse("Duplicado ignorado (Purchase ya reservado o procesado)", 200);
+  }
+  if (ctx && purchaseClaim.claimId) ctx.purchaseClaimId = purchaseClaim.claimId;
 
   const promoCode = derivePromoCodeFromPayload(p);
   const promoCodeIsFull = isFullPromoCode(p.promo_code ?? p.promoCode ?? promoCode);
@@ -2739,7 +2863,7 @@ async function handlePurchase(
   const eventSourceUrl = await deriveEventSourceUrl(db, landing.name, norm(p.event_source_url));
   const geo = resolveGeoForPayload(p);
   const payloadGeoSource: GeoSource = hasPayloadGeo(geo) ? "payload" : "none";
-  const purchaseEventId = generateEventId();
+  const purchaseEventId = purchaseClaim.eventId;
   const purchaseEventTime = toValidEventTime(p.purchase_event_time || p.event_time || Math.floor(Date.now() / 1000));
   const { data: latestLeadRow } = await db
     .from("conversions")
@@ -3327,6 +3451,34 @@ async function handleSimplePurchase(
   const purchasePayloadRaw = safePayloadRaw(p);
   const coelsaId = normalizeCoelsaId(p.coelsa_id);
   const transactionId = normalizeTransactionId(p.transaction_id);
+  const purchaseClaim = await claimPurchaseEvent(db, landing.user_id, p);
+  if (!purchaseClaim.claimed) {
+    if (ctx) {
+      ctx.conversionId = purchaseClaim.conversionId || undefined;
+      ctx.inboxStatus = "deduplicated";
+    }
+    await writeLog(
+      db,
+      landing.user_id,
+      "handleSimplePurchase",
+      "INFO",
+      "PURCHASE simple concurrente deduplicado por reserva atomica",
+      JSON.stringify({
+        event_id: purchaseClaim.eventId,
+        claim_id: purchaseClaim.claimId,
+        claim_status: purchaseClaim.status,
+        protected_by: purchaseClaim.protectedBy,
+        existing_conversion_id: purchaseClaim.conversionId,
+      }),
+      purchaseClaim.conversionId || undefined,
+      undefined,
+      undefined,
+      purchasePayloadRaw,
+      "duplicado ignorado por reserva atomica",
+    );
+    return textResponse("Duplicado ignorado (Purchase ya reservado o procesado)", 200);
+  }
+  if (ctx && purchaseClaim.claimId) ctx.purchaseClaimId = purchaseClaim.claimId;
 
   const payloadEmail = norm(p.email);
   const payloadCuitCuil = deriveCuitCuilFromPayload(p);
@@ -3358,7 +3510,7 @@ async function handleSimplePurchase(
     ? normalizeCtwaClid(srcRow?.ctwa_clid) || inboundCtwaClid
     : "";
 
-  const purchaseEventId = generateEventId();
+  const purchaseEventId = purchaseClaim.eventId;
   const purchaseEventTime = toValidEventTime(p.purchase_event_time || p.event_time || Math.floor(Date.now() / 1000));
 
   const newRow: Omit<ConversionRow, "id"> = {
@@ -3669,10 +3821,17 @@ Deno.serve(async (req) => {
 
     const runAndFinalize = async (runner: (ctx: ProcessingContext) => Promise<Response>) => {
       const ctx: ProcessingContext = {};
-      const response = await runner(ctx);
+      let response: Response;
+      try {
+        response = await runner(ctx);
+      } catch (error) {
+        await completePurchaseEventClaim(db, ctx, "error");
+        throw error;
+      }
       const bodyText = await response.clone().text().catch(() => "");
       const finalStatus: InboundStatus = ctx.inboxStatus ??
         (response.status >= 200 && response.status < 400 ? "processed" : "error");
+      await completePurchaseEventClaim(db, ctx, finalStatus);
       await finalizeInboundEvent(db, inboxId, finalStatus, response.status, bodyText, ctx.conversionId, ctx.inboxPromoCode);
       return response;
     };
