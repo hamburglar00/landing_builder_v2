@@ -285,10 +285,15 @@ a {
 
 .panel-shell [class*="fixed"][class*="inset-0"] > [class*="max-w-"] {
   max-height: calc(100dvh - 1.5rem);
-  overflow-y: auto;
   overscroll-behavior: contain;
   border-color: var(--color-border-strong);
   box-shadow: var(--shadow-raised);
+}
+
+.integration-edit-modal {
+  height: min(52rem, calc(100dvh - 1.5rem));
+  max-height: calc(100dvh - 1.5rem);
+  overflow: hidden !important;
 }
 
 .panel-main-content > * {
@@ -611,6 +616,11 @@ a {
   .panel-shell [class*="fixed"][class*="inset-0"] > [class*="max-w-"] {
     max-height: calc(100dvh - 1rem);
     border-radius: 1rem;
+  }
+
+  .integration-edit-modal {
+    height: calc(100dvh - 1rem);
+    max-height: calc(100dvh - 1rem);
   }
 
   .ui-modal-backdrop {

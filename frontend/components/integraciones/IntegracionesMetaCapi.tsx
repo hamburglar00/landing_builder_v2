@@ -1928,25 +1928,39 @@ export default function IntegracionesMetaCapi() {
       )}
 
       {editOpen && draft && (
-        <div className="fixed inset-0 z-50 flex items-start justify-center overflow-y-auto bg-black/70 p-2 sm:items-center sm:p-4">
-          <div className="max-h-[calc(100dvh-1rem)] w-full max-w-3xl overflow-y-auto overscroll-contain rounded-xl border border-zinc-700 bg-zinc-900 p-3 sm:max-h-[calc(100dvh-2rem)] sm:p-4">
-            <div className="flex items-start justify-between gap-3">
+        <div className="ui-modal-backdrop z-50">
+          <div className="ui-modal integration-edit-modal flex max-w-3xl flex-col overflow-hidden">
+            <div className="flex shrink-0 items-start justify-between gap-3 border-b border-[var(--color-border-subtle)] px-3 py-3 sm:px-4">
               <div>
                 <h3 className="text-sm font-semibold text-zinc-100">Editar pixel</h3>
                 <p className="mt-1 text-xs text-zinc-500">
                   Los datos sensibles quedan bloqueados para evitar cambios accidentales.
                 </p>
               </div>
-              <button
-                type="button"
-                onClick={() => setEditSensitiveFields((v) => !v)}
-                className="rounded-lg border border-zinc-700 px-3 py-1.5 text-xs font-medium text-zinc-200 transition hover:bg-zinc-800"
-              >
-                {editSensitiveFields ? "Bloquear datos" : "Editar datos"}
-              </button>
+              <div className="flex shrink-0 items-center gap-2">
+                <button
+                  type="button"
+                  onClick={() => setEditSensitiveFields((v) => !v)}
+                  className="ui-button ui-button-secondary h-8 min-h-8"
+                >
+                  {editSensitiveFields ? "Bloquear datos" : "Editar datos"}
+                </button>
+                <button
+                  type="button"
+                  aria-label="Cerrar configuración"
+                  onClick={() => {
+                    setEditOpen(false);
+                    setDraft(null);
+                    setEditSensitiveFields(false);
+                  }}
+                  className="ui-button ui-button-secondary h-8 min-h-8 w-8 p-0 text-base"
+                >
+                  ×
+                </button>
+              </div>
             </div>
 
-            <div className="mt-4 space-y-3">
+            <div className="min-h-0 flex-1 space-y-3 overflow-y-auto px-3 py-3 sm:px-4">
               <section className="rounded-xl border border-zinc-800 bg-zinc-950/40 p-3">
                 <h4 className="text-xs font-semibold uppercase tracking-wide text-zinc-400">Credenciales</h4>
                 <div className="mt-3 grid gap-3 sm:grid-cols-2">
@@ -2102,8 +2116,8 @@ export default function IntegracionesMetaCapi() {
                 </div>
               </section>
             </div>
-            <div className="mt-4 flex justify-end gap-2">
-              <button type="button" onClick={() => { setEditOpen(false); setDraft(null); setEditSensitiveFields(false); }} className="rounded-lg border border-zinc-700 px-3 py-1.5 text-xs text-zinc-300">Cancelar</button>
+            <div className="flex shrink-0 justify-end gap-2 border-t border-[var(--color-border-subtle)] bg-[rgba(11,15,21,0.96)] px-3 py-3 sm:px-4">
+              <button type="button" onClick={() => { setEditOpen(false); setDraft(null); setEditSensitiveFields(false); }} className="ui-button ui-button-secondary">Cancelar</button>
               <button
                 disabled={
                   saving ||
@@ -2116,7 +2130,7 @@ export default function IntegracionesMetaCapi() {
                 }
                 type="button"
                 onClick={() => void handleEditSave()}
-                className="rounded-lg bg-emerald-500 px-3 py-1.5 text-xs font-semibold text-zinc-900 disabled:cursor-not-allowed disabled:opacity-60"
+                className="ui-button ui-button-primary"
               >
                 Guardar
               </button>
