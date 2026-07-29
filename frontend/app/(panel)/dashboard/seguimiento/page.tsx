@@ -1,10 +1,10 @@
 "use client";
 
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import dynamic from "next/dynamic";
 import { supabase } from "@/lib/supabaseClient";
 import {
-  fetchConversions,
+  fetchConversionsFiltered,
   fetchConversionsConfig,
   upsertConversionsConfig,
   getTrackingRankingConfig,
@@ -41,6 +41,9 @@ export default function DashboardSeguimientoPage() {
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
   const [dateRange, setDateRange] = useState<DateRange | null>(null);
+  const userIdRef = useRef<string | null>(null);
+  const dateRangeRef = useRef<DateRange | null>(null);
+  const requestSeqRef = useRef(0);
   const [gerenciaOptions, setGerenciaOptions] = useState<
     { id: number; label: string }[]
   >([]);
@@ -49,20 +52,52 @@ export default function DashboardSeguimientoPage() {
   >({});
 
   const activeConversions = useMemo(
-    () => filterByDateRange(filterConversionsByCurrency(conversions, currencyScope), dateRange),
+    () =>
+      filterByDateRange(
+        filterConversionsByCurrency(conversions, currencyScope).filter(
+          (row) => !String(row.test_event_code ?? "").trim(),
+        ),
+        dateRange,
+      ),
     [conversions, dateRange, currencyScope],
   );
 
   const refreshTable = useCallback(async () => {
-    if (!userId) return;
+    const currentUserId = userIdRef.current;
+    if (!currentUserId) return;
+    const requestSeq = ++requestSeqRef.current;
     setRefreshing(true);
     try {
-      const rows = await fetchConversions(userId);
+      const rows = await fetchConversionsFiltered(
+        currentUserId,
+        currentUserId,
+        undefined,
+        dateRangeRef.current ?? undefined,
+      );
+      if (requestSeq !== requestSeqRef.current) return;
       setConversions(rows);
+    } catch (error) {
+      console.error("No se pudo actualizar Seguimiento:", error);
     } finally {
-      setRefreshing(false);
+      if (requestSeq === requestSeqRef.current) setRefreshing(false);
     }
-  }, [userId]);
+  }, []);
+
+  const handleDateRangeChange = useCallback(
+    (nextRange: DateRange | null) => {
+      const previousRange = dateRangeRef.current;
+      const unchanged =
+        previousRange === nextRange ||
+        (previousRange !== null &&
+          nextRange !== null &&
+          previousRange.start.getTime() === nextRange.start.getTime() &&
+          previousRange.end.getTime() === nextRange.end.getTime());
+      dateRangeRef.current = nextRange;
+      setDateRange(nextRange);
+      if (!unchanged) void refreshTable();
+    },
+    [refreshTable],
+  );
 
   const handleDeletePhone = useCallback(
     async (phone: string) => {
@@ -111,9 +146,10 @@ export default function DashboardSeguimientoPage() {
       } = await supabase.auth.getUser();
       if (!user) return;
       setUserId(user.id);
+      userIdRef.current = user.id;
       try {
         const [rows, cfg] = await Promise.all([
-          fetchConversions(user.id),
+          fetchConversionsFiltered(user.id, user.id),
           fetchConversionsConfig(user.id),
         ]);
         setConversions(rows);
@@ -180,7 +216,7 @@ export default function DashboardSeguimientoPage() {
       />
 
       <div className="flex justify-end">
-        <DateRangeFilter onChange={setDateRange} />
+        <DateRangeFilter onChange={handleDateRangeChange} />
       </div>
 
       {currencyScope === CURRENCY_ALL ? (

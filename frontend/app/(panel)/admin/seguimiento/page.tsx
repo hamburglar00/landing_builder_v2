@@ -1,10 +1,10 @@
 "use client";
 
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import dynamic from "next/dynamic";
 import { supabase } from "@/lib/supabaseClient";
 import {
-  fetchConversionsForAdmin,
+  fetchConversionsForAdminFiltered,
   fetchConversionsConfig,
   upsertConversionsConfig,
   getTrackingRankingConfig,
@@ -35,12 +35,14 @@ const TrackingBoard = dynamic(() => import("@/components/conversiones/TrackingBo
 export default function AdminSeguimientoPage() {
   const { currencyScope } = useCurrencyScope();
   const reportingCurrency = currencyScope === CURRENCY_ALL ? "ARS" : currencyScope;
-  const [userId, setUserId] = useState<string | null>(null);
   const [conversions, setConversions] = useState<ConversionRow[]>([]);
   const [config, setConfig] = useState<ConversionsConfig | null>(null);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
   const [dateRange, setDateRange] = useState<DateRange | null>(null);
+  const userIdRef = useRef<string | null>(null);
+  const dateRangeRef = useRef<DateRange | null>(null);
+  const requestSeqRef = useRef(0);
   const [gerenciaOptions, setGerenciaOptions] = useState<
     { id: number; label: string }[]
   >([]);
@@ -49,20 +51,51 @@ export default function AdminSeguimientoPage() {
   >({});
 
   const activeConversions = useMemo(
-    () => filterByDateRange(filterConversionsByCurrency(conversions, currencyScope), dateRange),
+    () =>
+      filterByDateRange(
+        filterConversionsByCurrency(conversions, currencyScope).filter(
+          (row) => !String(row.test_event_code ?? "").trim(),
+        ),
+        dateRange,
+      ),
     [conversions, dateRange, currencyScope],
   );
 
   const refreshTable = useCallback(async () => {
-    if (!userId) return;
+    const currentUserId = userIdRef.current;
+    if (!currentUserId) return;
+    const requestSeq = ++requestSeqRef.current;
     setRefreshing(true);
     try {
-      const rows = await fetchConversionsForAdmin();
+      const rows = await fetchConversionsForAdminFiltered(
+        currentUserId,
+        undefined,
+        dateRangeRef.current ?? undefined,
+      );
+      if (requestSeq !== requestSeqRef.current) return;
       setConversions(rows);
+    } catch (error) {
+      console.error("No se pudo actualizar Seguimiento:", error);
     } finally {
-      setRefreshing(false);
+      if (requestSeq === requestSeqRef.current) setRefreshing(false);
     }
-  }, [userId]);
+  }, []);
+
+  const handleDateRangeChange = useCallback(
+    (nextRange: DateRange | null) => {
+      const previousRange = dateRangeRef.current;
+      const unchanged =
+        previousRange === nextRange ||
+        (previousRange !== null &&
+          nextRange !== null &&
+          previousRange.start.getTime() === nextRange.start.getTime() &&
+          previousRange.end.getTime() === nextRange.end.getTime());
+      dateRangeRef.current = nextRange;
+      setDateRange(nextRange);
+      if (!unchanged) void refreshTable();
+    },
+    [refreshTable],
+  );
 
   useEffect(() => {
     const init = async () => {
@@ -70,10 +103,10 @@ export default function AdminSeguimientoPage() {
         data: { user },
       } = await supabase.auth.getUser();
       if (!user) return;
-      setUserId(user.id);
+      userIdRef.current = user.id;
       try {
         const [rows, cfg] = await Promise.all([
-          fetchConversionsForAdmin(),
+          fetchConversionsForAdminFiltered(user.id),
           fetchConversionsConfig(user.id),
         ]);
         setConversions(rows);
@@ -139,7 +172,7 @@ export default function AdminSeguimientoPage() {
       />
 
       <div className="flex justify-end">
-        <DateRangeFilter onChange={setDateRange} />
+        <DateRangeFilter onChange={handleDateRangeChange} />
       </div>
 
       {currencyScope === CURRENCY_ALL ? (
