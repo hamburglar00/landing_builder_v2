@@ -347,7 +347,7 @@ function purchaseIdempotencyKeysFromPayload(p: Params): string[] {
     return strongIds.map((id) => `payment:${id}`);
   }
 
-  const actionEventId = norm(p.action_event_id);
+  const actionEventId = norm(p.action_event_id || p.purchase_event_id || p.event_id);
   if (!actionEventId) return [];
 
   const promoCode = derivePromoCodeFromPayload(p);
