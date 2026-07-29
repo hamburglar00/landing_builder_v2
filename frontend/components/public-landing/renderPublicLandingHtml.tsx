@@ -8,6 +8,7 @@ type RenderParams = {
   slug: string;
   config: PublicLandingConfig;
   cachedPhone?: PublicLandingPhoneResponse | null;
+  canonicalUrl?: string;
 };
 
 type ResponsiveImage = {
@@ -116,6 +117,61 @@ function buildPreloadLinks(config: PublicLandingConfig) {
         } fetchpriority="high">`
       : "",
     logoUrl ? `<link rel="preload" as="image" href="${escapeHtml(logoUrl)}" fetchpriority="high">` : "",
+  ]
+    .filter(Boolean)
+    .join("");
+}
+
+function publicMetadata(config: PublicLandingConfig, slug: string) {
+  const contentTitle = (config.content?.title ?? [])
+    .map((line) => String(line ?? "").trim())
+    .filter(Boolean)
+    .join(" ");
+  const contentDescription = (config.content?.subtitle ?? [])
+    .map((line) => String(line ?? "").trim())
+    .filter(Boolean)
+    .join(" ");
+  const title = contentTitle || config.name || slug;
+  const description =
+    contentDescription || "Contactanos por WhatsApp para recibir atención inmediata.";
+  const responsiveImage = config.background?.imagesResponsive?.[0];
+  const image =
+    responsiveImage?.desktop ||
+    responsiveImage?.tablet ||
+    responsiveImage?.mobile ||
+    config.background?.images?.[0] ||
+    config.content?.logoUrl ||
+    "";
+
+  return { title, description, image };
+}
+
+function buildPublicMetadataTags(
+  config: PublicLandingConfig,
+  slug: string,
+  canonicalUrl?: string,
+) {
+  const metadata = publicMetadata(config, slug);
+  const canonical = String(canonicalUrl ?? "").trim();
+
+  return [
+    `<meta name="description" content="${escapeHtml(metadata.description)}">`,
+    canonical ? `<link rel="canonical" href="${escapeHtml(canonical)}">` : "",
+    `<meta property="og:type" content="website">`,
+    `<meta property="og:title" content="${escapeHtml(metadata.title)}">`,
+    `<meta property="og:description" content="${escapeHtml(metadata.description)}">`,
+    canonical ? `<meta property="og:url" content="${escapeHtml(canonical)}">` : "",
+    metadata.image
+      ? `<meta property="og:image" content="${escapeHtml(metadata.image)}">`
+      : "",
+    `<meta name="twitter:card" content="${
+      metadata.image ? "summary_large_image" : "summary"
+    }">`,
+    `<meta name="twitter:title" content="${escapeHtml(metadata.title)}">`,
+    `<meta name="twitter:description" content="${escapeHtml(metadata.description)}">`,
+    metadata.image
+      ? `<meta name="twitter:image" content="${escapeHtml(metadata.image)}">`
+      : "",
   ]
     .filter(Boolean)
     .join("");
@@ -557,9 +613,9 @@ function renderTemplate(params: RenderParams) {
 }
 
 export function renderPublicLandingHtml(params: RenderParams) {
-  const { slug, config, cachedPhone } = params;
+  const { slug, config, cachedPhone, canonicalUrl } = params;
   const pixelId = String(config.tracking?.pixelId || "").trim().replace(/\D+/g, "");
-  const title = config.name || slug;
+  const metadata = publicMetadata(config, slug);
   const supabaseOrigin = (() => {
     const raw = process.env.NEXT_PUBLIC_SUPABASE_URL || "";
     try {
@@ -574,8 +630,12 @@ export function renderPublicLandingHtml(params: RenderParams) {
   const runtimeScript = renderScriptElement(PublicLandingRuntimeScript({ slug, config }));
 
   return `<!doctype html><html lang="es"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"><title>${escapeHtml(
-    title,
-  )}</title><meta name="theme-color" content="#000000">${
+    metadata.title,
+  )}</title>${buildPublicMetadataTags(
+    config,
+    slug,
+    canonicalUrl,
+  )}<meta name="theme-color" content="#000000">${
     supabaseOrigin
       ? `<link rel="preconnect" href="${escapeHtml(supabaseOrigin)}" crossorigin><link rel="dns-prefetch" href="${escapeHtml(supabaseOrigin)}">`
       : ""

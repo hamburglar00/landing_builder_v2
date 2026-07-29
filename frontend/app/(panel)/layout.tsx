@@ -6,6 +6,11 @@ export const metadata: Metadata = {
   title: "PBAdmin Landing Builder",
   description:
     "PBAdmin Landing Builder: panel para configurar y administrar landings multi-cuenta.",
+  robots: {
+    index: false,
+    follow: false,
+    nocache: true,
+  },
   manifest: "/manifest.webmanifest",
   icons: {
     icon: [

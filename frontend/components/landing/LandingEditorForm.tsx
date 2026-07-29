@@ -1,6 +1,6 @@
 ﻿"use client";
 
-import { useState } from "react";
+import { useId, useState } from "react";
 import type {
   LandingThemeConfig,
   CtaPositionOption,
@@ -161,6 +161,8 @@ export function LandingEditorForm({
   landingTag,
   getPhoneForPreview,
 }: LandingEditorFormProps) {
+  const formId = useId();
+  const fieldId = (name: string) => `${formId}-${name}`;
   const [probarLoading, setProbarLoading] = useState(false);
   const [probarError, setProbarError] = useState<string | null>(null);
   const [showJsonModal, setShowJsonModal] = useState(false);
@@ -275,10 +277,14 @@ export function LandingEditorForm({
         <CollapsibleSection title="CTA">
         <div className="space-y-3">
           <div>
-            <label className="block text-xs font-medium text-zinc-400 mb-1">
+            <label
+              htmlFor={fieldId("cta-text")}
+              className="block text-xs font-medium text-zinc-400 mb-1"
+            >
               Texto del botón
             </label>
             <input
+              id={fieldId("cta-text")}
               type="text"
               value={config.ctaText}
               onChange={(e) =>
@@ -289,10 +295,14 @@ export function LandingEditorForm({
           </div>
           <div className="grid gap-3 sm:grid-cols-2">
             <div>
-              <label className="block text-xs font-medium text-zinc-400 mb-1">
+              <label
+                htmlFor={fieldId("cta-font-size")}
+                className="block text-xs font-medium text-zinc-400 mb-1"
+              >
                 Tamaño de letra del CTA
               </label>
               <select
+                id={fieldId("cta-font-size")}
                 value={config.ctaFontSize}
                 onChange={(e) =>
                   updateConfig(setConfig, {
@@ -310,7 +320,7 @@ export function LandingEditorForm({
             </div>
             <div className="flex items-end gap-2 pt-1">
               <input
-                id="cta-bold"
+                id={fieldId("cta-bold")}
                 type="checkbox"
                 checked={config.ctaBold}
                 onChange={(e) =>
@@ -319,7 +329,7 @@ export function LandingEditorForm({
                 className="h-4 w-4 rounded border-zinc-600 bg-zinc-900"
               />
               <label
-                htmlFor="cta-bold"
+                htmlFor={fieldId("cta-bold")}
                 className="text-xs font-medium text-zinc-300"
               >
                 CTA en negrita
@@ -328,10 +338,14 @@ export function LandingEditorForm({
           </div>
           {config.template !== "template2" && (
             <div>
-              <label className="block text-xs font-medium text-zinc-400 mb-1">
+              <label
+                htmlFor={fieldId("cta-position")}
+                className="block text-xs font-medium text-zinc-400 mb-1"
+              >
                 Posici?n del CTA
               </label>
               <select
+                id={fieldId("cta-position")}
                 value={config.ctaPosition}
                 onChange={(e) =>
                   updateConfig(setConfig, {
@@ -453,10 +467,14 @@ export function LandingEditorForm({
                 )}
                 {config.backgroundMode === "rotating" && (
                   <div>
-                    <label className="block text-xs font-medium text-zinc-400 mb-1">
+                    <label
+                      htmlFor={fieldId("rotate-hours")}
+                      className="block text-xs font-medium text-zinc-400 mb-1"
+                    >
                       Rotar cada (horas)
                     </label>
                     <input
+                      id={fieldId("rotate-hours")}
                       type="number"
                       min={1}
                       max={168}
@@ -501,10 +519,14 @@ export function LandingEditorForm({
             <div className="grid gap-3 sm:grid-cols-3">
               <div className="sm:col-span-2 space-y-3">
                 <div>
-                  <label className="block text-xs font-medium text-zinc-400 mb-1">
+                  <label
+                    htmlFor={fieldId("title-line-1")}
+                    className="block text-xs font-medium text-zinc-400 mb-1"
+                  >
                     Línea 1
                   </label>
                   <input
+                    id={fieldId("title-line-1")}
                     type="text"
                     value={config.titleLine1}
                     onChange={(e) =>
@@ -514,10 +536,14 @@ export function LandingEditorForm({
                   />
                 </div>
                 <div>
-                  <label className="block text-xs font-medium text-zinc-400 mb-1">
+                  <label
+                    htmlFor={fieldId("title-line-2")}
+                    className="block text-xs font-medium text-zinc-400 mb-1"
+                  >
                     Línea 2
                   </label>
                   <input
+                    id={fieldId("title-line-2")}
                     type="text"
                     value={config.titleLine2}
                     onChange={(e) =>
@@ -527,10 +553,14 @@ export function LandingEditorForm({
                   />
                 </div>
                 <div>
-                  <label className="block text-xs font-medium text-zinc-400 mb-1">
+                  <label
+                    htmlFor={fieldId("title-line-3")}
+                    className="block text-xs font-medium text-zinc-400 mb-1"
+                  >
                     Línea 3
                   </label>
                   <input
+                    id={fieldId("title-line-3")}
                     type="text"
                     value={config.titleLine3}
                     onChange={(e) =>
@@ -542,10 +572,14 @@ export function LandingEditorForm({
               </div>
               <div className="space-y-3">
                 <div>
-                  <label className="block text-xs font-medium text-zinc-400 mb-1">
+                  <label
+                    htmlFor={fieldId("title-font-size")}
+                    className="block text-xs font-medium text-zinc-400 mb-1"
+                  >
                     Tamaño
                   </label>
                   <select
+                    id={fieldId("title-font-size")}
                     value={config.titleFontSize}
                     onChange={(e) =>
                       updateConfig(setConfig, {
@@ -564,7 +598,7 @@ export function LandingEditorForm({
                 </div>
                 <div className="flex items-center gap-2">
                   <input
-                    id="title-bold"
+                    id={fieldId("title-bold")}
                     type="checkbox"
                     checked={config.titleBold}
                     onChange={(e) =>
@@ -575,7 +609,7 @@ export function LandingEditorForm({
                     className="h-4 w-4 rounded border-zinc-600 bg-zinc-900"
                   />
                   <label
-                    htmlFor="title-bold"
+                    htmlFor={fieldId("title-bold")}
                     className="text-xs font-medium text-zinc-300"
                   >
                     Negrita
@@ -594,10 +628,14 @@ export function LandingEditorForm({
                 />
               </div>
               <div>
-                <label className="block text-xs font-medium text-zinc-400 mb-1">
+                <label
+                  htmlFor={fieldId("font-family")}
+                  className="block text-xs font-medium text-zinc-400 mb-1"
+                >
                   Tipografía global
                 </label>
                 <select
+                  id={fieldId("font-family")}
                   value={config.fontFamily}
                   onChange={(e) =>
                     updateConfig(setConfig, {
@@ -625,10 +663,14 @@ export function LandingEditorForm({
                 ["subtitleLine1", "subtitleLine2", "subtitleLine3"] as const
               ).map((key, i) => (
                 <div key={key}>
-                  <label className="block text-xs font-medium text-zinc-400 mb-1">
+                  <label
+                    htmlFor={fieldId(key)}
+                    className="block text-xs font-medium text-zinc-400 mb-1"
+                  >
                     Línea {i + 1}
                   </label>
                   <input
+                    id={fieldId(key)}
                     type="text"
                     value={config[key]}
                     onChange={(e) =>
@@ -640,10 +682,14 @@ export function LandingEditorForm({
               ))}
               <div className="grid gap-3 sm:grid-cols-2">
                 <div>
-                  <label className="block text-xs font-medium text-zinc-400 mb-1">
+                  <label
+                    htmlFor={fieldId("subtitle-font-size")}
+                    className="block text-xs font-medium text-zinc-400 mb-1"
+                  >
                     Tamaño
                   </label>
                   <select
+                    id={fieldId("subtitle-font-size")}
                     value={config.subtitleFontSize}
                     onChange={(e) =>
                       updateConfig(setConfig, {
@@ -662,7 +708,7 @@ export function LandingEditorForm({
                 </div>
                 <div className="flex items-end gap-2 pt-1">
                   <input
-                    id="subtitle-bold"
+                    id={fieldId("subtitle-bold")}
                     type="checkbox"
                     checked={config.subtitleBold}
                     onChange={(e) =>
@@ -673,7 +719,7 @@ export function LandingEditorForm({
                     className="h-4 w-4 rounded border-zinc-600 bg-zinc-900"
                   />
                   <label
-                    htmlFor="subtitle-bold"
+                    htmlFor={fieldId("subtitle-bold")}
                     className="text-xs font-medium text-zinc-300"
                   >
                     Negrita
@@ -703,10 +749,14 @@ export function LandingEditorForm({
                 ] as const
               ).map((key, i) => (
                 <div key={key}>
-                  <label className="block text-xs font-medium text-zinc-400 mb-1">
+                  <label
+                    htmlFor={fieldId(key)}
+                    className="block text-xs font-medium text-zinc-400 mb-1"
+                  >
                     Línea {i + 1}
                   </label>
                   <input
+                    id={fieldId(key)}
                     type="text"
                     value={config[key]}
                     onChange={(e) =>
@@ -718,10 +768,14 @@ export function LandingEditorForm({
               ))}
               <div className="grid gap-3 sm:grid-cols-2">
                 <div>
-                  <label className="block text-xs font-medium text-zinc-400 mb-1">
+                  <label
+                    htmlFor={fieldId("badge-font-size")}
+                    className="block text-xs font-medium text-zinc-400 mb-1"
+                  >
                     Tamaño
                   </label>
                   <select
+                    id={fieldId("badge-font-size")}
                     value={config.badgeFontSize}
                     onChange={(e) =>
                       updateConfig(setConfig, {
@@ -740,7 +794,7 @@ export function LandingEditorForm({
                 </div>
                 <div className="flex items-end gap-2 pt-1">
                   <input
-                    id="badge-bold"
+                    id={fieldId("badge-bold")}
                     type="checkbox"
                     checked={config.badgeBold}
                     onChange={(e) =>
@@ -751,7 +805,7 @@ export function LandingEditorForm({
                     className="h-4 w-4 rounded border-zinc-600 bg-zinc-900"
                   />
                   <label
-                    htmlFor="badge-bold"
+                    htmlFor={fieldId("badge-bold")}
                     className="text-xs font-medium text-zinc-300"
                   >
                     Negrita
@@ -824,10 +878,14 @@ export function LandingEditorForm({
 
         {config.interactionsEnabled && (
           <div className="mt-4">
-            <label className="mb-1 block text-xs font-medium text-zinc-400">
+            <label
+              htmlFor={fieldId("whatsapp-prefill")}
+              className="mb-1 block text-xs font-medium text-zinc-400"
+            >
               Texto para WhatsApp
             </label>
             <textarea
+              id={fieldId("whatsapp-prefill")}
               value={config.whatsappPrefillText}
               onChange={(e) =>
                 updateConfig(setConfig, { whatsappPrefillText: e.target.value })

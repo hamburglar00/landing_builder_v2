@@ -1,6 +1,7 @@
 import { getCachedLandingPhone } from "@/components/public-landing/getCachedLandingPhone";
 import { getPublicLandingConfig } from "@/components/public-landing/getLandingConfig";
 import { renderPublicLandingHtml } from "@/components/public-landing/renderPublicLandingHtml";
+import { getConstructorLandingBaseUrl } from "@/lib/landing/publicUrls";
 
 type RouteContext = {
   params: Promise<{
@@ -26,7 +27,16 @@ export async function GET(_request: Request, context: RouteContext) {
   }
 
   const cachedPhone = await getCachedLandingPhone(slug);
-  const html = renderPublicLandingHtml({ slug, config, cachedPhone });
+  const canonicalUrl = new URL(
+    `/l/${encodeURIComponent(slug)}`,
+    `${getConstructorLandingBaseUrl()}/`,
+  ).toString();
+  const html = renderPublicLandingHtml({
+    slug,
+    config,
+    cachedPhone,
+    canonicalUrl,
+  });
 
   return new Response(html, {
     status: 200,

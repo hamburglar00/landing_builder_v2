@@ -1,6 +1,6 @@
 "use client";
 
-import { useRef, useCallback, useState } from "react";
+import { useRef, useCallback, useId, useState } from "react";
 
 const ACCEPT = "image/avif,.avif";
 
@@ -27,6 +27,8 @@ export function ImageUploader({
   label,
   maxFiles,
 }: ImageUploaderProps) {
+  const inputId = useId();
+  const errorId = `${inputId}-error`;
   const inputRef = useRef<HTMLInputElement>(null);
   const [uploading, setUploading] = useState(false);
   const [uploadError, setUploadError] = useState<string | null>(null);
@@ -103,11 +105,15 @@ export function ImageUploader({
   return (
     <div className="space-y-2">
       {label && (
-        <label className="block text-xs font-medium text-zinc-200">
+        <label
+          htmlFor={inputId}
+          className="block text-xs font-medium text-zinc-200"
+        >
           {label}
         </label>
       )}
       <input
+        id={inputId}
         ref={inputRef}
         type="file"
         accept={ACCEPT}
@@ -115,9 +121,14 @@ export function ImageUploader({
         onChange={handleChange}
         className="hidden"
         disabled={uploading}
+        aria-describedby={uploadError ? errorId : undefined}
       />
       {uploadError && (
-        <p className="ui-alert border-[rgba(251,113,133,0.25)] bg-[rgba(251,113,133,0.07)] text-xs text-[var(--color-danger)]" role="alert">
+        <p
+          id={errorId}
+          className="ui-alert border-[rgba(251,113,133,0.25)] bg-[rgba(251,113,133,0.07)] text-xs text-[var(--color-danger)]"
+          role="alert"
+        >
           {uploadError}
         </p>
       )}

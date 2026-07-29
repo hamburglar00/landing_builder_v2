@@ -51,6 +51,10 @@ export async function generateMetadata({ params }: PromoLayoutProps): Promise<Me
     metadataBase: baseUrl,
     title,
     description,
+    robots: {
+      index: true,
+      follow: true,
+    },
     icons: {
       icon: [{ url: "/promo-favicon.svg?v=promotion", type: "image/svg+xml" }],
     },

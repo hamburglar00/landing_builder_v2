@@ -1,5 +1,6 @@
 "use client";
 
+import { useId } from "react";
 import type { ColorOption } from "@/lib/landing/types";
 import { COLOR_MAP, COLOR_OPTIONS } from "@/lib/landing/constants";
 
@@ -28,11 +29,14 @@ interface ColorSelectProps {
 }
 
 export function ColorSelect({ value, onChange, label, id }: ColorSelectProps) {
+  const generatedId = useId();
+  const controlId = id ?? generatedId;
+
   return (
     <div className="space-y-2">
       {label && (
         <label
-          htmlFor={id}
+          htmlFor={controlId}
           className="block text-xs font-medium text-zinc-200"
         >
           {label}
@@ -45,7 +49,7 @@ export function ColorSelect({ value, onChange, label, id }: ColorSelectProps) {
           aria-hidden
         />
         <select
-          id={id}
+          id={controlId}
           value={value}
           onChange={(e) => onChange(e.target.value as ColorOption)}
           className="min-w-[8rem] rounded-lg border border-zinc-700 bg-zinc-900 px-3 py-1.5 text-xs text-zinc-100"

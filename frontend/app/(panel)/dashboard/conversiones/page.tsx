@@ -446,6 +446,7 @@ function EditableEmailCell({ row, onSaved }: { row: ConversionRow; onSaved: (id:
     return (
       <td className="px-1 py-0.5">
         <input autoFocus type="email" value={value}
+          aria-label={`Email de ${row.phone || "la conversión"}`}
           onChange={(e) => setValue(e.target.value)} onBlur={save}
           onKeyDown={(e) => { if (e.key === "Enter") save(); if (e.key === "Escape") { setValue(row.email); setEditing(false); } }}
           disabled={saving}
@@ -455,9 +456,16 @@ function EditableEmailCell({ row, onSaved }: { row: ConversionRow; onSaved: (id:
   }
 
   return (
-    <td className="px-2 py-1.5 whitespace-nowrap text-zinc-400 cursor-pointer hover:text-zinc-200 group"
-      onClick={() => { setValue(row.email); setEditing(true); }} title="Click para editar email">
-      {row.email || <span className="text-zinc-600 group-hover:text-zinc-400">+ email</span>}
+    <td className="px-2 py-1.5 whitespace-nowrap text-zinc-400">
+      <button
+        type="button"
+        onClick={() => { setValue(row.email); setEditing(true); }}
+        title="Editar email"
+        aria-label={`${row.email ? "Editar" : "Agregar"} email de ${row.phone || "la conversión"}`}
+        className="group w-full cursor-pointer text-left hover:text-zinc-200 focus-visible:rounded focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-ring-primary)]"
+      >
+        {row.email || <span className="text-zinc-600 group-hover:text-zinc-400">+ email</span>}
+      </button>
     </td>
   );
 }
