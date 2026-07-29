@@ -20,6 +20,7 @@ import { DashboardSkeleton } from "@/components/ui/DashboardSkeleton";
 import { GerenciaWorkGroupsPanel } from "@/components/gerencias/GerenciaWorkGroupsPanel";
 import { PageHeader } from "@/components/ui/PanelPrimitives";
 import { useAppConfirm } from "@/components/ui/AppConfirmDialog";
+import ModalPortal from "@/components/ui/ModalPortal";
 
 export default function DashboardGerenciasPage() {
   const confirmAction = useAppConfirm();
@@ -269,6 +270,7 @@ export default function DashboardGerenciasPage() {
       </div>
 
       {showCreateModal && (
+        <ModalPortal>
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 px-4">
           <div className="w-full max-w-lg rounded-xl border border-[var(--color-border)] bg-[var(--color-bg-2)] p-5 shadow-2xl">
             <div className="mb-4 flex items-center justify-between">
@@ -337,6 +339,7 @@ export default function DashboardGerenciasPage() {
             </form>
           </div>
         </div>
+        </ModalPortal>
       )}
 
       <section className="rounded-xl border border-zinc-800 bg-zinc-950/30">

@@ -1,6 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useState } from "react";
+import ModalPortal from "@/components/ui/ModalPortal";
 
 export type ClearConversionsViewMode = "keep_current_month" | "hide_all";
 
@@ -36,6 +37,7 @@ export default function ClearConversionsViewModal({
   if (!open) return null;
 
   return (
+    <ModalPortal>
     <div
       className="fixed inset-0 z-[70] flex items-center justify-center bg-black/75 p-3 backdrop-blur-[2px]"
       role="presentation"
@@ -163,5 +165,6 @@ export default function ClearConversionsViewModal({
         </div>
       </div>
     </div>
+    </ModalPortal>
   );
 }

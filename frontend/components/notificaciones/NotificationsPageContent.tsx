@@ -8,6 +8,7 @@ import type {
 } from "@/lib/notificationsDb";
 import { DashboardSkeleton } from "@/components/ui/DashboardSkeleton";
 import { PageHeader } from "@/components/ui/PanelPrimitives";
+import ModalPortal from "@/components/ui/ModalPortal";
 
 function normalizeHour(v: number) {
   if (!Number.isFinite(v)) return 10;
@@ -342,6 +343,7 @@ export default function NotificationsPageContent({
       </section>
 
       {showConnectModal && (
+        <ModalPortal>
         <div className="fixed inset-0 z-[120] flex items-center justify-center bg-black/70 px-4">
           <div className="w-full max-w-md rounded-xl border border-zinc-700 bg-zinc-900 p-4">
             <div className="mb-3 flex items-center justify-between">
@@ -392,6 +394,7 @@ export default function NotificationsPageContent({
             </div>
           </div>
         </div>
+        </ModalPortal>
       )}
 
       <section className="rounded-xl border border-zinc-800 bg-zinc-900/50 p-4">

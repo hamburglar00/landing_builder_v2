@@ -32,6 +32,7 @@ import {
 import { generateDemoConversions } from "@/lib/demoData";
 import { DashboardSkeleton, PanelSkeleton } from "@/components/ui/DashboardSkeleton";
 import { PageHeader } from "@/components/ui/PanelPrimitives";
+import ModalPortal from "@/components/ui/ModalPortal";
 import { useAppConfirm } from "@/components/ui/AppConfirmDialog";
 import type { LandingPerformanceFilterOption } from "@/components/conversiones/GerenciasPerformancePanel";
 import DateRangeFilter, {
@@ -1482,6 +1483,7 @@ export default function AdminConversionesPage() {
       )}
 
       {pixelEditOpen && pixelEditDraft && (
+        <ModalPortal>
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 p-4">
           <div className="w-full max-w-2xl rounded-xl border border-zinc-700 bg-zinc-950 p-4">
             <div className="mb-4 flex items-center justify-between gap-3">
@@ -1688,9 +1690,11 @@ export default function AdminConversionesPage() {
             </div>
           </div>
         </div>
+        </ModalPortal>
       )}
 
       {pixelDeleteWarn && (
+        <ModalPortal>
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 p-4">
           <div className="w-full max-w-xl rounded-xl border border-zinc-700 bg-zinc-950 p-4">
             <div className="mb-3 flex items-start justify-between gap-3">
@@ -1728,6 +1732,7 @@ export default function AdminConversionesPage() {
             </div>
           </div>
         </div>
+        </ModalPortal>
       )}
 
       {/* Tabs + Demo toggle */}
@@ -1876,10 +1881,14 @@ export default function AdminConversionesPage() {
         </div>
       )}
       {statsFilterModalOpen && (
-        <div className="fixed inset-0 z-40 flex items-center justify-center bg-black/70 p-4">
-          <div className="w-full max-w-xl rounded-xl border border-zinc-700 bg-zinc-950 p-4">
-            <h3 className="mb-3 text-sm font-semibold text-zinc-100">Filtros de estadisticas</h3>
-            <div className="grid grid-cols-1 gap-3">
+        <ModalPortal>
+        <div className="fixed inset-0 z-[70] flex items-center justify-center overflow-hidden bg-black/70 p-3 sm:p-4">
+          <div className="flex max-h-[calc(100dvh-1.5rem)] w-full max-w-xl flex-col overflow-hidden rounded-xl border border-zinc-700 bg-zinc-950 shadow-2xl">
+            <div className="shrink-0 border-b border-zinc-800 px-4 py-3">
+              <h3 className="text-sm font-semibold text-zinc-100">Filtros de estadisticas</h3>
+            </div>
+            <div className="min-h-0 flex-1 overflow-y-auto px-4 py-3">
+              <div className="grid grid-cols-1 gap-3">
               <div>
                 <label className="mb-1 block text-xs text-zinc-400">Landing</label>
                 <select value={draftLandingFilter} onChange={(e) => setDraftLandingFilter(e.target.value)} className="h-9 w-full rounded-lg border border-zinc-700 bg-zinc-900 px-2 text-xs text-zinc-100">
@@ -1980,8 +1989,9 @@ export default function AdminConversionesPage() {
                   </div>
                 </details>
               </div>
+              </div>
             </div>
-            <div className="mt-4 flex justify-end gap-2">
+            <div className="flex shrink-0 justify-end gap-2 border-t border-zinc-800 px-4 py-3">
               <button type="button" onClick={() => setStatsFilterModalOpen(false)} className="cursor-pointer rounded-md border border-zinc-600 px-3 py-1.5 text-xs text-zinc-300 hover:bg-zinc-800">
                 Cerrar
               </button>
@@ -1991,6 +2001,7 @@ export default function AdminConversionesPage() {
             </div>
           </div>
         </div>
+        </ModalPortal>
       )}
       {demoMode && (
         <p className="rounded-lg bg-amber-950/40 border border-amber-800/40 px-3 py-1.5 text-[11px] text-amber-300">

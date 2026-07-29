@@ -8,6 +8,7 @@ import type {
 } from "@/lib/conversionsDb";
 import { formatCurrencyAmount, type ReportingCurrency } from "@/lib/currency";
 import { useAppConfirm } from "@/components/ui/AppConfirmDialog";
+import ModalPortal from "@/components/ui/ModalPortal";
 
 type SortMode = TrackingRankingConfig["sortMode"];
 type RankRule = TrackingRankingRule;
@@ -485,6 +486,7 @@ export default function TrackingBoard({
       </div>
 
       {exportOpen && (
+        <ModalPortal>
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-3 sm:p-4">
           <div className="w-full max-w-2xl rounded-xl border border-zinc-700 bg-zinc-900 p-3 sm:p-4 shadow-2xl">
             <div className="mb-3 flex items-center justify-between gap-2">
@@ -511,9 +513,11 @@ export default function TrackingBoard({
             </div>
           </div>
         </div>
+        </ModalPortal>
       )}
 
       {openConfig && (
+        <ModalPortal>
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-3 sm:p-4">
           <div className="w-full max-w-3xl max-h-[88vh] overflow-y-auto rounded-xl border border-zinc-700 bg-zinc-900 p-3 sm:p-4 shadow-2xl">
             <div className="mb-3 flex items-center justify-between gap-2">
@@ -664,6 +668,7 @@ export default function TrackingBoard({
             </div>
           </div>
         </div>
+        </ModalPortal>
       )}
     </section>
   );

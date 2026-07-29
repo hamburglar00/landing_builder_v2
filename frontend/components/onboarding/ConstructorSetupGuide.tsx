@@ -1,6 +1,7 @@
 "use client";
 
 import { useCallback, useMemo, useState } from "react";
+import ModalPortal from "@/components/ui/ModalPortal";
 
 type GuideStep = {
   title: string;
@@ -110,6 +111,7 @@ export default function ConstructorSetupGuide({
   if (!open) return null;
 
   return (
+    <ModalPortal>
     <div className="fixed inset-0 z-[80] flex items-center justify-center bg-black/75 px-4 py-6">
       <div className="w-full max-w-2xl overflow-hidden rounded-2xl border border-zinc-700 bg-zinc-950 shadow-2xl shadow-black/40">
         <div className="border-b border-zinc-800 bg-zinc-900/70 px-5 py-4">
@@ -236,5 +238,6 @@ export default function ConstructorSetupGuide({
         </div>
       </div>
     </div>
+    </ModalPortal>
   );
 }

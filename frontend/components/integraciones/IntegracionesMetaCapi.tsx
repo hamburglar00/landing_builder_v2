@@ -31,6 +31,7 @@ import type { Gerencia } from "@/lib/gerencias/types";
 import { DashboardSkeleton } from "@/components/ui/DashboardSkeleton";
 import { PageHeader } from "@/components/ui/PanelPrimitives";
 import { useAppConfirm } from "@/components/ui/AppConfirmDialog";
+import ModalPortal from "@/components/ui/ModalPortal";
 
 const PHONE_KIND_OPTIONS: Array<{ value: PhoneKind; label: string }> = [
   { value: "carga", label: "Carga" },
@@ -1907,6 +1908,7 @@ export default function IntegracionesMetaCapi() {
       )}
 
       {quickOpen && (
+        <ModalPortal>
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 px-3">
           <div className="w-full max-w-xl rounded-xl border border-zinc-700 bg-zinc-900 p-4">
             <h3 className="text-sm font-semibold text-zinc-100">Añadir pixel</h3>
@@ -1925,9 +1927,11 @@ export default function IntegracionesMetaCapi() {
             </div>
           </div>
         </div>
+        </ModalPortal>
       )}
 
       {editOpen && draft && (
+        <ModalPortal>
         <div className="ui-modal-backdrop z-50">
           <div className="ui-modal integration-edit-modal flex max-w-3xl flex-col overflow-hidden">
             <div className="flex shrink-0 items-start justify-between gap-3 border-b border-[var(--color-border-subtle)] px-3 py-3 sm:px-4">
@@ -2137,6 +2141,7 @@ export default function IntegracionesMetaCapi() {
             </div>
           </div>
         </div>
+        </ModalPortal>
       )}
     </div>
   );

@@ -10,6 +10,7 @@ import type { PhoneKind } from "@/lib/landing/types";
 import { DashboardSkeleton } from "@/components/ui/DashboardSkeleton";
 import { PageHeader } from "@/components/ui/PanelPrimitives";
 import { useAppConfirm } from "@/components/ui/AppConfirmDialog";
+import ModalPortal from "@/components/ui/ModalPortal";
 
 export type GerenciaPhoneRow = {
   id: number;
@@ -1170,6 +1171,7 @@ export function TelefonosPageContent({
       )}
 
       {manualModalGerenciaId !== null && (
+        <ModalPortal>
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 px-4">
           <div className="w-full max-w-md rounded-xl border border-zinc-700 bg-zinc-900 p-4 shadow-2xl">
             <div className="mb-4 flex items-center justify-between">
@@ -1234,9 +1236,11 @@ export function TelefonosPageContent({
             </div>
           </div>
         </div>
+        </ModalPortal>
       )}
 
       {planCapModal.open ? (
+        <ModalPortal>
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 px-4">
           <div className="w-full max-w-xl rounded-2xl border border-zinc-700 bg-zinc-900 p-5 shadow-2xl">
             <h3 className="text-base font-semibold text-zinc-100">Límite de teléfonos del plan</h3>
@@ -1256,9 +1260,11 @@ export function TelefonosPageContent({
             </div>
           </div>
         </div>
+        </ModalPortal>
       ) : null}
 
       {planLimitModal.open ? (
+        <ModalPortal>
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 px-4">
           <div className="w-full max-w-xl rounded-2xl border border-zinc-700 bg-zinc-900 p-5 shadow-2xl">
             <h3 className="text-base font-semibold text-zinc-100">Límite de teléfonos del plan</h3>
@@ -1274,6 +1280,7 @@ export function TelefonosPageContent({
             </div>
           </div>
         </div>
+        </ModalPortal>
       ) : null}
     </div>
   );

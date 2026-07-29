@@ -6,6 +6,7 @@ import {
   useRef,
   type ReactNode,
 } from "react";
+import ModalPortal from "@/components/ui/ModalPortal";
 
 function cx(...values: Array<string | false | null | undefined>) {
   return values.filter(Boolean).join(" ");
@@ -116,8 +117,6 @@ export function ModalShell({
 
   useEffect(() => {
     if (!open) return;
-    const previousOverflow = document.body.style.overflow;
-    document.body.style.overflow = "hidden";
     closeRef.current?.focus();
 
     const onKeyDown = (event: KeyboardEvent) => {
@@ -125,7 +124,6 @@ export function ModalShell({
     };
     window.addEventListener("keydown", onKeyDown);
     return () => {
-      document.body.style.overflow = previousOverflow;
       window.removeEventListener("keydown", onKeyDown);
     };
   }, [open, closeDisabled, onClose]);
@@ -133,6 +131,7 @@ export function ModalShell({
   if (!open) return null;
 
   return (
+    <ModalPortal>
     <div
       className="ui-modal-backdrop"
       role="presentation"
@@ -177,6 +176,7 @@ export function ModalShell({
         ) : null}
       </section>
     </div>
+    </ModalPortal>
   );
 }
 

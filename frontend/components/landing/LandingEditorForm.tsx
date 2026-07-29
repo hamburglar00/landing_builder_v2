@@ -9,6 +9,7 @@ import type {
 import { ColorSelect } from "./ColorSelect";
 import { ImageUploader } from "./ImageUploader";
 import { buildLandingConfig } from "@/lib/landing/buildLandingConfig";
+import ModalPortal from "@/components/ui/ModalPortal";
 
 interface LandingEditorFormProps {
   config: LandingThemeConfig;
@@ -857,6 +858,7 @@ export function LandingEditorForm({
         </button>
       </div>
       {showJsonModal && (
+        <ModalPortal>
         <div className="fixed inset-0 z-40 flex items-center justify-center bg-black/60 px-3">
           <div className="max-h-[80vh] w-full max-w-2xl overflow-hidden rounded-xl border border-zinc-700 bg-zinc-900 shadow-xl">
             <div className="flex items-center justify-between border-b border-zinc-800 px-4 py-3">
@@ -909,6 +911,7 @@ export function LandingEditorForm({
             </div>
           </div>
         </div>
+        </ModalPortal>
       )}
     </form>
   );
