@@ -1,5 +1,7 @@
 "use client";
 
+import { PageHeader } from "@/components/ui/PanelPrimitives";
+
 type PlanCard = {
   code: string;
   title: string;
@@ -94,18 +96,17 @@ const PLAN_CARDS: PlanCard[] = [
 export default function AdminPlanPage() {
   return (
     <div className="space-y-6">
-      <div>
-        <h1 className="text-xl font-semibold text-zinc-50">PLANES</h1>
-        <p className="mt-1 text-sm text-zinc-400">
-          Catalogo de planes disponibles para clientes.
-        </p>
-      </div>
+      <PageHeader
+        eyebrow="Suscripciones"
+        title="Planes"
+        description="Catálogo de planes disponibles para clientes."
+      />
 
       <section className="space-y-3">
         <h2 className="text-sm font-semibold text-zinc-200">Comparacion de planes</h2>
         <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-5">
           {PLAN_CARDS.map((plan) => (
-            <article key={plan.code} className={`rounded-2xl border p-4 ${plan.colorClass}`}>
+            <article key={plan.code} className={`ui-card p-4 ${plan.colorClass}`}>
               <h3 className="text-sm font-semibold uppercase tracking-wide text-zinc-50">
                 {plan.title}
               </h3>

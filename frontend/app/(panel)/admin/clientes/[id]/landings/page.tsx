@@ -6,6 +6,7 @@ import Link from "next/link";
 import { supabase } from "@/lib/supabaseClient";
 import type { Landing } from "@/lib/landing/types";
 import { fetchLandingsByUserId } from "@/lib/landing/landingsDb";
+import { EmptyState, PageHeader } from "@/components/ui/PanelPrimitives";
 
 export default function AdminClienteLandingsPage() {
   const router = useRouter();
@@ -65,26 +66,20 @@ export default function AdminClienteLandingsPage() {
           ← Clientes
         </Link>
       </div>
-      <div>
-        <h1 className="text-xl font-semibold text-zinc-100">
-          Landings del cliente
-          {clientName ? `: ${clientName}` : ""}
-        </h1>
-        <p className="mt-1 text-sm text-zinc-400">
-          Listado de landings de este cliente. Solo lectura desde aquí.
-        </p>
-      </div>
+      <PageHeader
+        eyebrow="Cliente"
+        title={`Landings${clientName ? ` · ${clientName}` : ""}`}
+        description="Listado de experiencias del cliente en modo solo lectura."
+      />
 
       {error && (
-        <p className="rounded-lg bg-red-950/50 px-3 py-2 text-sm text-red-300" role="alert">
+        <p className="ui-alert border-[rgba(251,113,133,0.25)] bg-[rgba(251,113,133,0.07)] text-sm text-[var(--color-danger)]" role="alert">
           {error}
         </p>
       )}
 
       {landings.length === 0 ? (
-        <div className="rounded-xl border border-zinc-800 bg-zinc-900/50 p-8 text-center">
-          <p className="text-zinc-400">Este cliente no tiene ninguna landing.</p>
-        </div>
+        <EmptyState title="Este cliente no tiene landings" description="Cuando cree o conecte una experiencia, aparecerá en este listado." />
       ) : (
         <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
           {landings.map((landing) => {

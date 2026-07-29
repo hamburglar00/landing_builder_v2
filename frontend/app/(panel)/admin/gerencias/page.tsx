@@ -13,8 +13,11 @@ import {
   sortGerenciasByName,
 } from "@/lib/gerencias/gerenciasDb";
 import { DashboardSkeleton } from "@/components/ui/DashboardSkeleton";
+import { PageHeader } from "@/components/ui/PanelPrimitives";
+import { useAppConfirm } from "@/components/ui/AppConfirmDialog";
 
 export default function AdminGerenciasPage() {
+  const confirmAction = useAppConfirm();
   const router = useRouter();
   const [gerencias, setGerencias] = useState<Gerencia[]>([]);
   const [userId, setUserId] = useState<string | null>(null);
@@ -143,7 +146,13 @@ export default function AdminGerenciasPage() {
   };
 
   const handleDelete = async (id: number) => {
-    if (!window.confirm("¿Eliminar esta gerencia?")) return;
+    const confirmed = await confirmAction({
+      title: "Eliminar gerencia",
+      description: "La gerencia dejará de estar disponible para nuevas asignaciones.",
+      confirmLabel: "Eliminar gerencia",
+      danger: true,
+    });
+    if (!confirmed) return;
     setDeletingId(id);
     setError(null);
     try {
@@ -163,27 +172,26 @@ export default function AdminGerenciasPage() {
   return (
     <div className="space-y-6">
       {error && (
-        <p className="rounded-lg bg-red-950/50 px-3 py-2 text-sm text-red-300" role="alert">
+        <p className="ui-alert border-[rgba(251,113,133,0.25)] bg-[rgba(251,113,133,0.07)] text-sm text-[var(--color-danger)]" role="alert">
           {error}
         </p>
       )}
 
       <div className="space-y-4">
-        <div className="flex flex-wrap items-center justify-between gap-4">
-          <div>
-            <h1 className="text-xl font-bold text-[var(--color-text-strong)]">GERENCIAS</h1>
-            <p className="mt-1 text-sm text-[var(--color-text-muted)]">
-              Crea y edita gerencias para asignarlas a tus landings.
-            </p>
-          </div>
+        <PageHeader
+          eyebrow="Organización global"
+          title="Gerencias"
+          description="Creá y administrá gerencias para asignarlas a las landings."
+          actions={
           <button
             type="button"
             onClick={() => setShowCreateModal(true)}
-            className="cursor-pointer rounded-xl bg-[var(--color-primary)] px-4 py-2 text-sm font-semibold uppercase tracking-wide text-[var(--color-bg-0)] transition-colors duration-150 hover:bg-[var(--color-primary-hover)] active:bg-[var(--color-primary-press)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-ring-primary)]"
+            className="ui-button ui-button-primary"
           >
-            AGREGAR GERENCIA
+            Agregar gerencia
           </button>
-        </div>
+          }
+        />
       </div>
 
       {showCreateModal && (

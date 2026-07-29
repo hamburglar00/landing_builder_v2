@@ -5,6 +5,7 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { invokeFunction } from "@/lib/supabaseFunctions";
 import { supabase } from "@/lib/supabaseClient";
+import { PageHeader } from "@/components/ui/PanelPrimitives";
 
 const ALL_COLUMNS = [
   "phone","email","fn","ln","ct","st","zip","country","fbp","fbc","from_meta_ads","meta_pixel_id","pixel_id","source_platform",
@@ -98,25 +99,21 @@ export default function NuevoClientePage() {
 
   return (
     <div className="flex flex-col gap-6 sm:gap-8">
-      <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
-        <div>
-          <h1 className="text-base font-semibold text-zinc-50 sm:text-lg">
-            Crear nuevo cliente
-          </h1>
-          <p className="mt-1 text-xs text-zinc-400">
-            El cliente se crea como usuario de Supabase Auth con rol{" "}
-            <span className="font-semibold text-zinc-200">client</span>.
-          </p>
-        </div>
+      <PageHeader
+        eyebrow="Nueva cuenta"
+        title="Crear cliente"
+        description="Creá un usuario de acceso con rol de cliente y configurá sus permisos iniciales."
+        actions={
         <Link
           href="/admin/clientes"
-          className="inline-flex w-fit items-center rounded-lg border border-zinc-700 px-3 py-2 text-xs font-medium text-zinc-300 transition hover:bg-zinc-800"
+          className="ui-button ui-button-secondary w-fit"
         >
           Volver al listado
         </Link>
-      </div>
+        }
+      />
 
-      <section className="w-full max-w-xl rounded-xl border border-zinc-800 bg-zinc-950/60 p-4 sm:rounded-2xl sm:p-6">
+      <section className="ui-card w-full max-w-2xl p-4 sm:p-6">
         <form onSubmit={handleSubmit} className="space-y-4">
           <div className="space-y-2">
             <label

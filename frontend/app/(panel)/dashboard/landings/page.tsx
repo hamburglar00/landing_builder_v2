@@ -12,6 +12,7 @@ import { DEFAULT_CONFIG } from "@/lib/landing/mocks";
 import { LandingPreview } from "@/components/landing/LandingPreview";
 import { getSettings } from "@/lib/settingsDb";
 import { DashboardSkeleton } from "@/components/ui/DashboardSkeleton";
+import { EmptyState, ModalShell, PageHeader } from "@/components/ui/PanelPrimitives";
 
 export default function DashboardLandingsPage() {
   const router = useRouter();
@@ -203,51 +204,52 @@ export default function DashboardLandingsPage() {
   return (
     <div className="space-y-6">
       {error && (
-        <p className="rounded-lg bg-[rgba(239,68,68,0.14)] px-3 py-2 text-sm text-[var(--color-danger)]" role="alert">
+        <p className="ui-alert border-[rgba(251,113,133,0.25)] bg-[rgba(251,113,133,0.07)] text-sm text-[var(--color-danger)]" role="alert">
           {error}
         </p>
       )}
-      <div className="flex flex-wrap items-center justify-between gap-4">
-        <div>
-          <h1 className="text-xl font-bold text-[var(--color-text-strong)]">
-            LANDINGS
-          </h1>
-          <p className="mt-1 text-sm text-[var(--color-text-muted)]">
-            Crea y edita tus landings.
-          </p>
-        </div>
-        <div className="flex items-center gap-2">
+      <PageHeader
+        eyebrow="Constructor"
+        title="Landings"
+        description="Creá, conectá y administrá todas tus experiencias publicadas."
+        actions={
+          <>
           <button
             type="button"
             onClick={() => void handleConnectExisting()}
             disabled={creating}
-            className="cursor-pointer rounded-xl border border-zinc-700 bg-zinc-900 px-4 py-2 text-sm font-semibold uppercase tracking-wide text-zinc-100 transition-colors duration-150 hover:bg-zinc-800 active:bg-zinc-700 disabled:cursor-not-allowed disabled:opacity-70 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-zinc-500"
+            className="ui-button ui-button-secondary"
           >
-            {creating ? "CREANDO..." : "CONECTAR EXISTENTE"}
+            {creating ? "Creando…" : "Conectar existente"}
           </button>
           <button
             type="button"
             onClick={() => void handleCreate()}
             disabled={creating}
-            className="cursor-pointer rounded-xl bg-[var(--color-primary)] px-4 py-2 text-sm font-semibold uppercase tracking-wide text-[var(--color-bg-0)] transition-colors duration-150 hover:bg-[var(--color-primary-hover)] active:bg-[var(--color-primary-press)] disabled:cursor-not-allowed disabled:opacity-70 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-ring-primary)]"
+            className="ui-button ui-button-primary"
           >
-            {creating ? "CREANDO..." : "CREAR LANDING"}
+            {creating ? "Creando…" : "Crear landing"}
           </button>
-        </div>
-      </div>
+          </>
+        }
+      />
 
       {landings.length === 0 ? (
-        <div className="rounded-xl border border-[var(--color-border)] bg-[var(--color-bg-2)] p-8 text-center shadow-sm">
-          <p className="text-[var(--color-text-muted)]">Aún no tienes ninguna landing.</p>
-          <button
-            type="button"
-            onClick={() => void handleCreate()}
-            disabled={creating}
-            className="mt-4 cursor-pointer rounded-xl bg-[var(--color-primary)] px-4 py-2 text-sm font-semibold uppercase tracking-wide text-[var(--color-bg-0)] transition-colors duration-150 hover:bg-[var(--color-primary-hover)] active:bg-[var(--color-primary-press)] disabled:cursor-not-allowed disabled:opacity-70 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-ring-primary)]"
-          >
-            {creating ? "CREANDO..." : "CREAR LA PRIMERA"}
-          </button>
-        </div>
+        <EmptyState
+          title="Todavía no hay landings"
+          description="Creá tu primera landing con el constructor o conectá una experiencia existente."
+          icon={
+            <svg aria-hidden className="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.7">
+              <rect x="3" y="4" width="18" height="16" rx="2" />
+              <path d="M3 9h18M8 4v5" />
+            </svg>
+          }
+          action={
+            <button type="button" onClick={() => void handleCreate()} disabled={creating} className="ui-button ui-button-primary">
+              {creating ? "Creando…" : "Crear la primera"}
+            </button>
+          }
+        />
       ) : (
         <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
           {landings.map((landing) => (
@@ -262,27 +264,20 @@ export default function DashboardLandingsPage() {
         </div>
       )}
 
-      {planLimitModalOpen ? (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 px-4">
-          <div className="w-full max-w-lg rounded-2xl border border-zinc-700 bg-zinc-900 p-5 shadow-2xl">
-            <h3 className="text-base font-semibold text-zinc-100">
-              Límite del plan alcanzado
-            </h3>
-            <p className="mt-2 text-sm text-zinc-300">
-              {planLimitModalText}
-            </p>
-            <div className="mt-5 flex justify-end">
-              <button
-                type="button"
-                onClick={() => setPlanLimitModalOpen(false)}
-                className="rounded-lg border border-zinc-600 px-3 py-1.5 text-sm text-zinc-100 hover:bg-zinc-800"
-              >
-                Cerrar
-              </button>
-            </div>
-          </div>
-        </div>
-      ) : null}
+      <ModalShell
+        open={planLimitModalOpen}
+        title="Límite del plan alcanzado"
+        description="Tu configuración actual llegó al máximo disponible."
+        onClose={() => setPlanLimitModalOpen(false)}
+        width="sm"
+        footer={
+          <button type="button" onClick={() => setPlanLimitModalOpen(false)} className="ui-button ui-button-primary">
+            Entendido
+          </button>
+        }
+      >
+        <p className="text-sm leading-6 text-[var(--color-text)]">{planLimitModalText}</p>
+      </ModalShell>
     </div>
   );
 }
@@ -314,16 +309,16 @@ function LandingCard({
   return (
     <div
       key={landing.id}
-      className="relative aspect-[3/4] w-full overflow-hidden rounded-2xl border border-[var(--color-border)] bg-[var(--color-bg-1)] shadow-sm"
+      className="ui-card group relative aspect-[3/4] w-full overflow-hidden transition duration-200 hover:-translate-y-1 hover:border-[var(--color-border-strong)] hover:shadow-[var(--shadow-raised)]"
     >
       <Link href={`/dashboard/landing/${landing.id}/editar`} className="absolute inset-0">
         <div className="group/img absolute inset-0 overflow-hidden">
-          <div className="h-full w-full transition-transform duration-200 group-hover/img:scale-[1.02]">
+          <div className="h-full w-full transition-transform duration-500 ease-out group-hover/img:scale-[1.025]">
             <LandingPreview config={landing.config} compact gallery />
           </div>
         </div>
       </Link>
-      <div className="pointer-events-none absolute inset-x-0 bottom-0 flex flex-col gap-0.5 bg-gradient-to-t from-black/85 to-black/50 px-2.5 py-2">
+      <div className="pointer-events-none absolute inset-x-0 bottom-0 flex flex-col gap-1 bg-gradient-to-t from-[#07090d] via-[#07090d]/95 to-transparent px-3 pb-3 pt-12">
         <div className="space-y-0.5">
           <p className="truncate text-xs font-medium text-[var(--color-text-strong)]">
             {landing.name}

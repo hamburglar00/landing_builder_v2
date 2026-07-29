@@ -5,6 +5,7 @@ import type { FunnelContact, ConversionRow, HomeOverviewStats } from "@/lib/conv
 import { computeCoreStats } from "@/lib/conversionStats";
 import { buildFunnelContactsFromConversions } from "@/lib/conversionsDb";
 import { formatCurrencyAmount, type ReportingCurrency } from "@/lib/currency";
+import { PageHeader } from "@/components/ui/PanelPrimitives";
 
 function pct(num: number, den: number) {
   if (den === 0) return "0%";
@@ -27,15 +28,15 @@ function Card({
   return (
     <div
       title={tooltip}
-      className="flex items-center gap-3 rounded-2xl border border-zinc-800 bg-zinc-900/60 px-4 py-3 shadow-sm"
+      className="ui-card ui-card-interactive group flex min-h-[104px] items-center gap-3 px-4 py-4"
     >
-      <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-zinc-900/80 text-zinc-300">
+      <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl border border-[var(--color-border-subtle)] bg-[var(--color-bg-2)] text-[var(--color-text-muted)] transition group-hover:border-[var(--color-primary-soft-border)] group-hover:text-[var(--color-primary)]">
         {icon}
       </div>
       <div className="min-w-0">
-        <p className="text-[11px] font-medium text-zinc-500">{title}</p>
-        <p className="text-lg font-semibold text-zinc-50 tabular-nums">{value}</p>
-        {subtitle && <p className="text-[10px] text-zinc-600 mt-0.5 truncate">{subtitle}</p>}
+        <p className="text-[10px] font-semibold uppercase tracking-[0.08em] text-[var(--color-text-muted)]">{title}</p>
+        <p className="mt-1 text-xl font-semibold tracking-[-0.025em] text-[var(--color-text-strong)] tabular-nums">{value}</p>
+        {subtitle && <p className="mt-1 truncate text-[10px] text-[var(--color-text-disabled)]">{subtitle}</p>}
       </div>
     </div>
   );
@@ -93,12 +94,12 @@ export function HomeOverview({
 
   return (
     <div className="space-y-6">
-      <div>
-        <h1 className="text-xl font-semibold text-zinc-100">INICIO</h1>
-        <p className="mt-1 text-sm text-zinc-400">
-          Resumen ejecutivo de landings y conversiones - {scopeLabel} en {currency}.
-        </p>
-      </div>
+      <PageHeader
+        eyebrow={role === "admin" ? "Control center" : "Workspace"}
+        title="Inicio"
+        description={`Resumen ejecutivo de landings y conversiones · ${scopeLabel} en ${currency}.`}
+        actions={<span className="ui-badge">{currency} · Mes actual</span>}
+      />
 
       <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
         <Card

@@ -7,6 +7,7 @@ import type {
   NotificationSettings,
 } from "@/lib/notificationsDb";
 import { DashboardSkeleton } from "@/components/ui/DashboardSkeleton";
+import { PageHeader } from "@/components/ui/PanelPrimitives";
 
 function normalizeHour(v: number) {
   if (!Number.isFinite(v)) return 10;
@@ -125,17 +126,18 @@ export default function NotificationsPageContent({
 
   return (
     <div className="space-y-6 pb-8">
-      <div>
-        <h1 className="text-xl font-semibold text-zinc-100">NOTIFICACIONES</h1>
-        <p className="mt-1 text-sm text-zinc-400">
-          Configura alertas automaticas por inactividad en Telegram.
-        </p>
-      </div>
+      <PageHeader
+        eyebrow="Automatización"
+        title="Notificaciones"
+        description="Configurá alertas automáticas por inactividad en Telegram."
+      />
 
       {msg && (
         <p
-          className={`rounded-lg px-3 py-2 text-sm ${
-            msgType === "error" ? "bg-red-950/50 text-red-300" : "bg-emerald-950/50 text-emerald-300"
+          className={`ui-alert text-sm ${
+            msgType === "error"
+              ? "border-[rgba(251,113,133,0.25)] bg-[rgba(251,113,133,0.07)] text-[var(--color-danger)]"
+              : "border-[rgba(52,211,153,0.22)] bg-[rgba(52,211,153,0.07)] text-[var(--color-success)]"
           }`}
           role="alert"
         >
@@ -144,7 +146,7 @@ export default function NotificationsPageContent({
       )}
 
       {isAdmin && (
-        <section className="rounded-xl border border-zinc-800 bg-zinc-900/50 p-4">
+        <section className="ui-card p-4">
           <h3 className="mb-3 text-sm font-semibold text-zinc-200">Conectar bot</h3>
           <div className="grid gap-3 sm:grid-cols-2">
             <label className="space-y-1">

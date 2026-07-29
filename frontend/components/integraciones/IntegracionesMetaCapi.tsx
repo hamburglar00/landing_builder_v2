@@ -29,6 +29,8 @@ import {
 import type { PhoneKind } from "@/lib/landing/types";
 import type { Gerencia } from "@/lib/gerencias/types";
 import { DashboardSkeleton } from "@/components/ui/DashboardSkeleton";
+import { PageHeader } from "@/components/ui/PanelPrimitives";
+import { useAppConfirm } from "@/components/ui/AppConfirmDialog";
 
 const PHONE_KIND_OPTIONS: Array<{ value: PhoneKind; label: string }> = [
   { value: "carga", label: "Carga" },
@@ -176,6 +178,7 @@ function SettingsSwitch({
 }
 
 export default function IntegracionesMetaCapi() {
+  const confirmAction = useAppConfirm();
   const [userId, setUserId] = useState<string | null>(null);
   const [isAdmin, setIsAdmin] = useState(false);
   const [clientName, setClientName] = useState("");
@@ -807,7 +810,12 @@ export default function IntegracionesMetaCapi() {
 
   const handleDelete = useCallback(async (px: PixelConfig) => {
     if (!userId || !config) return;
-    const ok = window.confirm(`Eliminar pixel ${px.pixel_id}?`);
+    const ok = await confirmAction({
+      title: "Eliminar pixel",
+      description: `Se eliminará el pixel ${px.pixel_id} de esta configuración.`,
+      confirmLabel: "Eliminar pixel",
+      danger: true,
+    });
     if (!ok) return;
     setSaving(true);
     setSaveMsg(null);
@@ -820,43 +828,42 @@ export default function IntegracionesMetaCapi() {
     } finally {
       setSaving(false);
     }
-  }, [userId, config, loadAll]);
+  }, [userId, config, loadAll, confirmAction]);
 
   if (loading) {
     return <DashboardSkeleton title="Cargando integraciones..." />;
   }
 
   return (
-    <div className="space-y-4">
-      <div className="flex items-center justify-between gap-3">
-        <div>
-          <h1 className="text-xl font-semibold text-zinc-100">
-            {activeIntegration === "meta"
-              ? "INTEGRACIONES > Integración con Meta CAPI"
-              : activeIntegration === "constructor"
-              ? "INTEGRACIONES > Endpoint de Conversiones del constructor"
+    <div className="space-y-6">
+      <PageHeader
+        eyebrow="Ecosistema"
+        title={
+          activeIntegration === "meta"
+            ? "Meta Conversions API"
+            : activeIntegration === "constructor"
+              ? "Endpoint del constructor"
               : activeIntegration === "kommo"
-              ? "INTEGRACIONES > Integración con CRM Kommo"
-              : activeIntegration === "chatrace"
-              ? "INTEGRACIONES > Integración con Chatrace"
-              : "INTEGRACIONES"}
-          </h1>
-          <p className="mt-1 text-sm text-zinc-400">
-            {activeIntegration === "meta"
-              ? "Administra la configuración de Meta CAPI."
-              : activeIntegration === "constructor"
-              ? "Consulta y copia el endpoint de conversiones del cliente."
+                ? "CRM Kommo"
+                : activeIntegration === "chatrace"
+                  ? "Chatrace"
+                  : "Integraciones"
+        }
+        description={
+          activeIntegration === "meta"
+            ? "Administrá la configuración y el envío de eventos por Meta CAPI."
+            : activeIntegration === "constructor"
+              ? "Consultá y copiá el endpoint de conversiones del cliente."
               : activeIntegration === "kommo"
-              ? "Guía rápida para conectar Kommo con tu endpoint."
-              : activeIntegration === "chatrace"
-              ? "Configura identificación, tracking y redirección para Chatrace."
-              : "Conecta y administra integraciones de eventos."}
-          </p>
-        </div>
-      </div>
+                ? "Conectá Kommo con tu endpoint de conversiones."
+                : activeIntegration === "chatrace"
+                  ? "Configurá identificación, tracking y redirección para Chatrace."
+                  : "Conectá y administrá los servicios que forman parte de tu operación."
+        }
+      />
 
       {saveMsg && (
-        <div className={`rounded-lg border px-3 py-2 text-sm ${saveMsg.toLowerCase().includes("error") ? "border-red-800 bg-red-950/40 text-red-300" : "border-emerald-800 bg-emerald-950/40 text-emerald-300"}`}>
+        <div className={`ui-alert text-sm ${saveMsg.toLowerCase().includes("error") ? "border-[rgba(251,113,133,0.25)] bg-[rgba(251,113,133,0.07)] text-[var(--color-danger)]" : "border-[rgba(52,211,153,0.22)] bg-[rgba(52,211,153,0.07)] text-[var(--color-success)]"}`}>
           {saveMsg}
         </div>
       )}
@@ -866,7 +873,7 @@ export default function IntegracionesMetaCapi() {
           <button
             type="button"
             onClick={() => setActiveIntegration("meta")}
-            className="w-full rounded-xl border border-zinc-800 bg-zinc-900/50 px-4 py-4 text-left transition active:scale-[0.99] hover:bg-zinc-900"
+            className="ui-card ui-card-interactive w-full px-4 py-4 text-left active:scale-[0.995]"
           >
             <span className="flex items-center justify-between gap-3">
               <span className="inline-flex items-center gap-3 text-sm font-semibold text-zinc-200">
@@ -885,7 +892,7 @@ export default function IntegracionesMetaCapi() {
           <button
             type="button"
             onClick={() => setActiveIntegration("chatrace")}
-            className="w-full rounded-xl border border-zinc-800 bg-zinc-900/50 px-4 py-4 text-left transition active:scale-[0.99] hover:bg-zinc-900"
+            className="ui-card ui-card-interactive w-full px-4 py-4 text-left active:scale-[0.995]"
           >
             <span className="flex items-center justify-between gap-3">
               <span className="inline-flex items-center gap-3 text-sm font-semibold text-zinc-200">
@@ -904,7 +911,7 @@ export default function IntegracionesMetaCapi() {
           <button
             type="button"
             onClick={() => setActiveIntegration("kommo")}
-            className="w-full rounded-xl border border-zinc-800 bg-zinc-900/50 px-4 py-4 text-left transition active:scale-[0.99] hover:bg-zinc-900"
+            className="ui-card ui-card-interactive w-full px-4 py-4 text-left active:scale-[0.995]"
           >
             <span className="flex items-center justify-between gap-3">
               <span className="inline-flex items-center gap-3 text-sm font-semibold text-zinc-200">
@@ -926,7 +933,7 @@ export default function IntegracionesMetaCapi() {
               setConstructorCopyMsg(null);
               setActiveIntegration("constructor");
             }}
-            className="w-full rounded-xl border border-zinc-800 bg-zinc-900/50 px-4 py-4 text-left transition active:scale-[0.99] hover:bg-zinc-900"
+            className="ui-card ui-card-interactive w-full px-4 py-4 text-left active:scale-[0.995]"
           >
             <span className="flex items-center justify-between gap-3">
               <span className="inline-flex items-center gap-3 text-sm font-semibold text-zinc-200">

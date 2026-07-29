@@ -43,7 +43,7 @@ export function ImageUploader({
 
     const valid = files.every((f) => f.name.toLowerCase().endsWith(".avif"));
     if (!valid) {
-      alert("Solo se permiten imágenes en formato .avif");
+      setUploadError("Solo se permiten imágenes en formato .avif.");
       e.target.value = "";
       return;
     }
@@ -117,7 +117,7 @@ export function ImageUploader({
         disabled={uploading}
       />
       {uploadError && (
-        <p className="text-xs text-red-400" role="alert">
+        <p className="ui-alert border-[rgba(251,113,133,0.25)] bg-[rgba(251,113,133,0.07)] text-xs text-[var(--color-danger)]" role="alert">
           {uploadError}
         </p>
       )}

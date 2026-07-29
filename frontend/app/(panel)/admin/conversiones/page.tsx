@@ -31,6 +31,8 @@ import {
 } from "@/lib/conversionsDb";
 import { generateDemoConversions } from "@/lib/demoData";
 import { DashboardSkeleton, PanelSkeleton } from "@/components/ui/DashboardSkeleton";
+import { PageHeader } from "@/components/ui/PanelPrimitives";
+import { useAppConfirm } from "@/components/ui/AppConfirmDialog";
 import type { LandingPerformanceFilterOption } from "@/components/conversiones/GerenciasPerformancePanel";
 import DateRangeFilter, {
   type DateRange,
@@ -500,6 +502,7 @@ function cellValue(c: ConversionRow, col: ColKey): React.ReactNode {
 
 
 export default function AdminConversionesPage() {
+  const confirmAction = useAppConfirm();
   const searchParams = useSearchParams();
   const { currencyScope, isAllCurrencies } = useCurrencyScope();
   const reportingCurrency = currencyScope === CURRENCY_ALL ? "ARS" : currencyScope;
@@ -1174,7 +1177,12 @@ export default function AdminConversionesPage() {
 
   const handlePixelDelete = useCallback(async (px: PixelConfig) => {
     if (!userId || !config) return;
-    const ok = window.confirm(`Eliminar pixel ${px.pixel_id}?\n\nSe eliminara de la vista y de la base de datos.`);
+    const ok = await confirmAction({
+      title: "Eliminar pixel",
+      description: `El pixel ${px.pixel_id} se eliminará de la vista y de la base de datos.`,
+      confirmLabel: "Eliminar pixel",
+      danger: true,
+    });
     if (!ok) return;
     setSaving(true);
     setSaveMsg(null);
@@ -1250,7 +1258,7 @@ export default function AdminConversionesPage() {
     } finally {
       setSaving(false);
     }
-  }, [userId, config]);
+  }, [userId, config, confirmAction]);
 
   const copyToClipboard = useCallback(async (text: string) => {
     await navigator.clipboard.writeText(text);
@@ -1351,7 +1359,12 @@ export default function AdminConversionesPage() {
 
   const clearTableDisplay = useCallback(async () => {
     if (!userId || activeConversions.length === 0 || demoMode) return;
-    const ok = window.confirm(CLEAR_VIEW_CONFIRM_MESSAGE);
+    const ok = await confirmAction({
+      title: "Limpiar vista",
+      description: CLEAR_VIEW_CONFIRM_MESSAGE,
+      confirmLabel: "Limpiar vista",
+      danger: true,
+    });
     if (!ok) return;
     setHidingTable(true);
     setClearMsg(null);
@@ -1365,11 +1378,16 @@ export default function AdminConversionesPage() {
       const msg = e instanceof Error ? e.message : String(e);
       setClearMsg(`Error al limpiar: ${msg}`);
     } finally { setHidingTable(false); }
-  }, [userId, activeConversions, refreshTable, demoMode]);
+  }, [userId, activeConversions, refreshTable, demoMode, confirmAction]);
 
   const clearFunnelDisplay = useCallback(async () => {
     if (!userId || activeFunnel.length === 0 || demoMode) return;
-    const ok = window.confirm(CLEAR_VIEW_CONFIRM_MESSAGE);
+    const ok = await confirmAction({
+      title: "Limpiar vista",
+      description: CLEAR_VIEW_CONFIRM_MESSAGE,
+      confirmLabel: "Limpiar vista",
+      danger: true,
+    });
     if (!ok) return;
     setHidingFunnel(true);
     setClearMsg(null);
@@ -1386,11 +1404,16 @@ export default function AdminConversionesPage() {
       const msg = e instanceof Error ? e.message : String(e);
       setClearMsg(`Error al limpiar: ${msg}`);
     } finally { setHidingFunnel(false); }
-  }, [userId, activeFunnel, refreshTable, demoMode]);
+  }, [userId, activeFunnel, refreshTable, demoMode, confirmAction]);
 
   const clearStatsDisplay = useCallback(async () => {
     if (!userId || (activeFunnel.length === 0 && activeConversions.length === 0) || demoMode) return;
-    const ok = window.confirm(CLEAR_VIEW_CONFIRM_MESSAGE);
+    const ok = await confirmAction({
+      title: "Limpiar vista",
+      description: CLEAR_VIEW_CONFIRM_MESSAGE,
+      confirmLabel: "Limpiar vista",
+      danger: true,
+    });
     if (!ok) return;
     setHidingStats(true);
     setClearMsg(null);
@@ -1408,11 +1431,16 @@ export default function AdminConversionesPage() {
       const msg = e instanceof Error ? e.message : String(e);
       setClearMsg(`Error al limpiar: ${msg}`);
     } finally { setHidingStats(false); }
-  }, [userId, activeFunnel, activeConversions, refreshTable, demoMode]);
+  }, [userId, activeFunnel, activeConversions, refreshTable, demoMode, confirmAction]);
 
   const clearLogsDisplay = useCallback(async () => {
     if (!userId || logs.length === 0 || demoMode) return;
-    const ok = window.confirm(CLEAR_VIEW_CONFIRM_MESSAGE);
+    const ok = await confirmAction({
+      title: "Limpiar vista",
+      description: CLEAR_VIEW_CONFIRM_MESSAGE,
+      confirmLabel: "Limpiar vista",
+      danger: true,
+    });
     if (!ok) return;
     setHidingLogs(true);
     setClearMsg(null);
@@ -1426,7 +1454,7 @@ export default function AdminConversionesPage() {
       const msg = e instanceof Error ? e.message : String(e);
       setClearMsg(`Error al limpiar: ${msg}`);
     } finally { setHidingLogs(false); }
-  }, [userId, logs, demoMode, refreshTable]);
+  }, [userId, logs, demoMode, refreshTable, confirmAction]);
 
   if (loading) {
     return <DashboardSkeleton title="Cargando conversiones..." />;
@@ -1436,22 +1464,19 @@ export default function AdminConversionesPage() {
 
   return (
     <div className="space-y-6 pb-8">
-      <div className="flex items-start justify-between gap-4">
-        <div>
-          <h1 className="text-xl font-semibold text-zinc-100">CONVERSIONES</h1>
-          <p className="mt-1 text-sm text-zinc-400">
-            Tu pipeline de leads, cargas y estadísticas.
-          </p>
-        </div>
-      </div>
+      <PageHeader
+        eyebrow="Performance global"
+        title="Conversiones"
+        description="Pipeline consolidado de contactos, leads, compras y métricas comerciales."
+      />
 
       {saveMsg && (
-        <p className={`rounded-lg px-3 py-2 text-sm ${saveMsg.includes("Error") ? "bg-red-950/50 text-red-300" : "bg-emerald-950/50 text-emerald-300"}`} role="alert">
+        <p className={`ui-alert text-sm ${saveMsg.includes("Error") ? "border-[rgba(251,113,133,0.25)] bg-[rgba(251,113,133,0.07)] text-[var(--color-danger)]" : "border-[rgba(52,211,153,0.22)] bg-[rgba(52,211,153,0.07)] text-[var(--color-success)]"}`} role="alert">
           {saveMsg}
         </p>
       )}
       {clearMsg && (
-        <p className={`rounded-lg px-3 py-2 text-sm ${clearMsg.includes("Error") ? "bg-red-950/50 text-red-300" : "bg-emerald-950/50 text-emerald-300"}`} role="alert">
+        <p className={`ui-alert text-sm ${clearMsg.includes("Error") ? "border-[rgba(251,113,133,0.25)] bg-[rgba(251,113,133,0.07)] text-[var(--color-danger)]" : "border-[rgba(52,211,153,0.22)] bg-[rgba(52,211,153,0.07)] text-[var(--color-success)]"}`} role="alert">
           {clearMsg}
         </p>
       )}
@@ -1706,51 +1731,45 @@ export default function AdminConversionesPage() {
       )}
 
       {/* Tabs + Demo toggle */}
-      <div className="flex items-center justify-between gap-4 overflow-x-auto border-b border-zinc-800/60 pb-1">
-        <div className="flex min-w-max gap-4">
+      <div className="ui-tabs flex items-center justify-between gap-2 overflow-x-auto" role="tablist" aria-label="Secciones de conversiones">
+        <div className="flex min-w-max gap-1">
           {TAB_ORDER.filter((t) => t !== "configuracion" && t !== "logs").map((t) => {
             const active = tab === t;
             return (
               <button
                 key={t}
+                type="button"
+                role="tab"
+                aria-selected={active}
                 onClick={() => setTab(t)}
-                className={`relative cursor-pointer pb-2 text-xs font-medium transition-colors whitespace-nowrap ${
-                  active ? "text-zinc-100" : "text-zinc-500 hover:text-zinc-200"
-                }`}
+                className="ui-tab whitespace-nowrap"
+                data-active={active ? "true" : "false"}
               >
                 <span className="inline-flex items-center gap-1.5">
                   {t === "funnel" ? <FunnelTabIcon /> : t === "seguimiento" ? <TrackingTabIcon /> : t === "tabla" ? <TableTabIcon /> : t === "estadisticas" ? <StatsTabIcon /> : t === "desempeno" ? <PerformanceTabIcon /> : null}
                   {TAB_LABELS[t]}
                 </span>
-                <span
-                  className={`pointer-events-none absolute inset-x-0 -bottom-[1px] h-0.5 rounded-full transition-opacity ${
-                    active ? "bg-zinc-100 opacity-100" : "bg-zinc-600 opacity-0"
-                  }`}
-                />
               </button>
             );
           })}
         </div>
-        <div className="ml-auto flex min-w-max items-center gap-4">
+        <div className="ml-auto flex min-w-max items-center gap-1">
           {TAB_ORDER.filter((t) => t === "configuracion" || t === "logs").map((t) => {
             const active = tab === t;
             return (
               <button
                 key={t}
+                type="button"
+                role="tab"
+                aria-selected={active}
                 onClick={() => setTab(t)}
-                className={`relative cursor-pointer pb-2 text-xs font-medium transition-colors whitespace-nowrap ${
-                  active ? "text-zinc-100" : "text-zinc-500 hover:text-zinc-200"
-                }`}
+                className="ui-tab whitespace-nowrap"
+                data-active={active ? "true" : "false"}
               >
                 <span className="inline-flex items-center gap-1.5">
                   {t === "configuracion" ? <GearTabIcon /> : <LogsTabIcon />}
                   {TAB_LABELS[t]}
                 </span>
-                <span
-                  className={`pointer-events-none absolute inset-x-0 -bottom-[1px] h-0.5 rounded-full transition-opacity ${
-                    active ? "bg-zinc-100 opacity-100" : "bg-zinc-600 opacity-0"
-                  }`}
-                />
               </button>
             );
           })}

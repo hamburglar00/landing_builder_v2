@@ -4,6 +4,8 @@ import { useCallback, useEffect, useMemo, useState } from "react";
 import Link from "next/link";
 import { invokeFunction } from "@/lib/supabaseFunctions";
 import { supabase } from "@/lib/supabaseClient";
+import { PageHeader } from "@/components/ui/PanelPrimitives";
+import { useAppConfirm } from "@/components/ui/AppConfirmDialog";
 
 type ClientUser = {
   id: string;
@@ -26,6 +28,7 @@ type ClientUser = {
 };
 
 export default function AdminClientesPage() {
+  const confirmAction = useAppConfirm();
   const [clients, setClients] = useState<ClientUser[]>([]);
   const [isLoadingClients, setIsLoadingClients] = useState(false);
   const [clientsError, setClientsError] = useState<string | null>(null);
@@ -95,7 +98,13 @@ export default function AdminClientesPage() {
   }, [fetchClients]);
 
   const handleDeleteClient = async (clientId: string) => {
-    if (!window.confirm("Seguro que quieres eliminar este cliente?")) {
+    const confirmed = await confirmAction({
+      title: "Eliminar cliente",
+      description: "Se eliminará la cuenta del cliente y dejará de tener acceso al panel.",
+      confirmLabel: "Eliminar cliente",
+      danger: true,
+    });
+    if (!confirmed) {
       return;
     }
 
@@ -120,24 +129,21 @@ export default function AdminClientesPage() {
 
   return (
     <div className="flex flex-col gap-6 sm:gap-8">
-      <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-        <div>
-          <h1 className="text-base font-semibold text-zinc-50 sm:text-lg">
-            CLIENTES
-          </h1>
-          <p className="mt-1 text-xs text-zinc-400">
-            Gestion de usuarios clientes (Supabase Auth).
-          </p>
-        </div>
+      <PageHeader
+        eyebrow="Cuentas"
+        title="Clientes"
+        description="Gestioná usuarios, planes y accesos de clientes."
+        actions={
         <Link
           href="/admin/clientes/nuevo"
-          className="inline-flex w-fit cursor-pointer items-center justify-center rounded-xl bg-[var(--color-primary)] px-4 py-2 text-sm font-semibold uppercase tracking-wide text-[var(--color-bg-0)] transition-colors duration-150 hover:bg-[var(--color-primary-hover)] active:bg-[var(--color-primary-press)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-ring-primary)]"
+          className="ui-button ui-button-primary w-fit"
         >
-          CREAR CLIENTE
+          Crear cliente
         </Link>
-      </div>
+        }
+      />
 
-      <section className="w-full rounded-xl border border-zinc-800 bg-zinc-950/60 p-4 sm:rounded-2xl sm:p-6">
+      <section className="ui-card w-full p-4 sm:p-6">
         <div className="mb-4 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
           <div>
             <h2 className="text-sm font-semibold">Listado de clientes</h2>

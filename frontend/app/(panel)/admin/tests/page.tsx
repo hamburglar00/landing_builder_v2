@@ -3,6 +3,7 @@
 import { useState, useCallback, useRef, useEffect } from "react";
 import { supabase } from "@/lib/supabaseClient";
 import { getSettings } from "@/lib/settingsDb";
+import { PageHeader } from "@/components/ui/PanelPrimitives";
 
 type LogLevel = "info" | "warn" | "error";
 type LogEntry = { id: number; time: string; level: LogLevel; message: string; data?: unknown };
@@ -343,20 +344,20 @@ export default function AdminTestsPage() {
 
   return (
     <div className="space-y-6">
-      <div>
-        <h1 className="text-xl font-semibold text-zinc-100">TESTS</h1>
-        <p className="mt-1 text-sm text-zinc-400">
-          Proba rápidamente los endpoints públicos de configuraciones y
-          teléfonos de tus landings.
-        </p>
-        <p className="mt-1 text-[11px] text-zinc-500">
-          Revalidate: la URL base en Configuración debe ser la de la landing
-          (ej. http://localhost:3000). Si el constructor corre en otro puerto,
-          la landing debe permitir CORS desde ese origen.
-        </p>
-      </div>
+      <PageHeader
+        eyebrow="Diagnóstico"
+        title="Tests"
+        description={
+          <>
+            Probá los endpoints públicos de configuración y teléfonos.
+            <span className="mt-1 block text-[11px] text-[var(--color-text-disabled)]">
+              Revalidate usa la URL base de la landing configurada en el sistema.
+            </span>
+          </>
+        }
+      />
 
-      <div className="space-y-4 rounded-xl border border-zinc-800 bg-zinc-950/40 p-4 sm:p-5">
+      <div className="ui-card space-y-4 p-4 sm:p-5">
         <div className="flex flex-wrap items-end gap-3">
           <div className="min-w-[220px] flex-1">
             <label

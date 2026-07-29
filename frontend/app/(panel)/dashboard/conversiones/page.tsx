@@ -33,6 +33,8 @@ import ClearConversionsViewModal, {
   type ClearConversionsViewMode,
 } from "@/components/conversiones/ClearConversionsViewModal";
 import { DashboardSkeleton, PanelSkeleton } from "@/components/ui/DashboardSkeleton";
+import { PageHeader } from "@/components/ui/PanelPrimitives";
+import { useAppConfirm } from "@/components/ui/AppConfirmDialog";
 import DateRangeFilter, {
   type DateRange,
   filterByDateRange,
@@ -628,6 +630,7 @@ function cellValue(c: ConversionRow, col: ColKey): React.ReactNode {
 }
 
 export default function DashboardConversionesPage() {
+  const confirmAction = useAppConfirm();
   const searchParams = useSearchParams();
   const { currencyScope, isAllCurrencies } = useCurrencyScope();
   const reportingCurrency = currencyScope === CURRENCY_ALL ? "ARS" : currencyScope;
@@ -1546,7 +1549,12 @@ export default function DashboardConversionesPage() {
 
   const handlePixelDelete = useCallback(async (px: PixelConfig) => {
     if (!userId || !config) return;
-    const ok = window.confirm(`Eliminar pixel ${px.pixel_id}?\n\nSe eliminara de tu configuracion.`);
+    const ok = await confirmAction({
+      title: "Eliminar pixel",
+      description: `El pixel ${px.pixel_id} se eliminará de tu configuración.`,
+      confirmLabel: "Eliminar pixel",
+      danger: true,
+    });
     if (!ok) return;
     setSaving(true);
     setSaveMsg(null);
@@ -1622,7 +1630,7 @@ export default function DashboardConversionesPage() {
     } finally {
       setSaving(false);
     }
-  }, [userId, config]);
+  }, [userId, config, confirmAction]);
 
   const copyToClipboard = useCallback(async (text: string) => {
     await navigator.clipboard.writeText(text);
@@ -1810,20 +1818,19 @@ export default function DashboardConversionesPage() {
 
   return (
     <div className="space-y-6 pb-8">
-      <div className="flex items-start justify-between gap-4">
-        <div>
-          <h1 className="text-xl font-semibold text-zinc-100">CONVERSIONES</h1>
-          <p className="mt-1 text-sm text-zinc-400">Tu pipeline de leads, cargas y estadísticas.</p>
-        </div>
-      </div>
+      <PageHeader
+        eyebrow="Performance"
+        title="Conversiones"
+        description="Tu pipeline de contactos, leads, compras y métricas comerciales."
+      />
 
       {saveMsg && (
-        <p className={`rounded-lg px-3 py-2 text-sm ${saveMsg.includes("Error") ? "bg-red-950/50 text-red-300" : "bg-emerald-950/50 text-emerald-300"}`} role="alert">
+        <p className={`ui-alert text-sm ${saveMsg.includes("Error") ? "border-[rgba(251,113,133,0.25)] bg-[rgba(251,113,133,0.07)] text-[var(--color-danger)]" : "border-[rgba(52,211,153,0.22)] bg-[rgba(52,211,153,0.07)] text-[var(--color-success)]"}`} role="alert">
           {saveMsg}
         </p>
       )}
       {clearMsg && (
-        <p className={`rounded-lg px-3 py-2 text-sm ${clearMsg.includes("Error") ? "bg-red-950/50 text-red-300" : "bg-emerald-950/50 text-emerald-300"}`} role="alert">
+        <p className={`ui-alert text-sm ${clearMsg.includes("Error") ? "border-[rgba(251,113,133,0.25)] bg-[rgba(251,113,133,0.07)] text-[var(--color-danger)]" : "border-[rgba(52,211,153,0.22)] bg-[rgba(52,211,153,0.07)] text-[var(--color-success)]"}`} role="alert">
           {clearMsg}
         </p>
       )}
@@ -2088,51 +2095,45 @@ export default function DashboardConversionesPage() {
       )}
 
       {/* Tabs */}
-      <div className="flex items-center justify-between gap-4 overflow-x-auto border-b border-zinc-800/60 pb-1">
-        <div className="flex min-w-max gap-4">
+      <div className="ui-tabs flex items-center justify-between gap-2 overflow-x-auto" role="tablist" aria-label="Secciones de conversiones">
+        <div className="flex min-w-max gap-1">
           {tabOrder.filter((t) => t !== "configuracion" && t !== "logs" && t !== "inbox").map((t) => {
             const active = tab === t;
             return (
               <button
                 key={t}
+                type="button"
+                role="tab"
+                aria-selected={active}
                 onClick={() => setTab(t)}
-                className={`relative cursor-pointer pb-2 text-xs font-medium transition-colors whitespace-nowrap ${
-                  active ? "text-zinc-100" : "text-zinc-500 hover:text-zinc-200"
-                }`}
+                className="ui-tab whitespace-nowrap"
+                data-active={active ? "true" : "false"}
               >
                 <span className="inline-flex items-center gap-1.5">
                   {t === "funnel" ? <FunnelTabIcon /> : t === "seguimiento" ? <TrackingTabIcon /> : t === "tabla" ? <TableTabIcon /> : t === "estadisticas" ? <StatsTabIcon /> : t === "desempeno" ? <PerformanceTabIcon /> : null}
                   {TAB_LABELS[t]}
                 </span>
-                <span
-                  className={`pointer-events-none absolute inset-x-0 -bottom-[1px] h-0.5 rounded-full transition-opacity ${
-                    active ? "bg-zinc-100 opacity-100" : "bg-zinc-600 opacity-0"
-                  }`}
-                />
               </button>
             );
           })}
         </div>
-        <div className="ml-auto flex min-w-max items-center gap-4">
+        <div className="ml-auto flex min-w-max items-center gap-1">
           {tabOrder.filter((t) => t === "configuracion" || t === "inbox" || t === "logs").map((t) => {
             const active = tab === t;
             return (
               <button
                 key={t}
+                type="button"
+                role="tab"
+                aria-selected={active}
                 onClick={() => setTab(t)}
-                className={`relative cursor-pointer pb-2 text-xs font-medium transition-colors whitespace-nowrap ${
-                  active ? "text-zinc-100" : "text-zinc-500 hover:text-zinc-200"
-                }`}
+                className="ui-tab whitespace-nowrap"
+                data-active={active ? "true" : "false"}
               >
                 <span className="inline-flex items-center gap-1.5">
                   {t === "configuracion" ? <GearTabIcon /> : t === "inbox" ? <InboxTabIcon /> : <LogsTabIcon />}
                   {TAB_LABELS[t]}
                 </span>
-                <span
-                  className={`pointer-events-none absolute inset-x-0 -bottom-[1px] h-0.5 rounded-full transition-opacity ${
-                    active ? "bg-zinc-100 opacity-100" : "bg-zinc-600 opacity-0"
-                  }`}
-                />
               </button>
             );
           })}

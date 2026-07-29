@@ -12,6 +12,7 @@ import { buildLandingPublicUrl } from "@/lib/landing/publicUrls";
 import { DEFAULT_CONFIG } from "@/lib/landing/mocks";
 import { LandingPreview } from "@/components/landing/LandingPreview";
 import { DashboardSkeleton } from "@/components/ui/DashboardSkeleton";
+import { EmptyState, PageHeader } from "@/components/ui/PanelPrimitives";
 
 const BASE = "/admin/landings";
 
@@ -137,51 +138,46 @@ export default function AdminLandingsPage() {
   return (
     <div className="space-y-6">
       {error && (
-        <p className="rounded-lg bg-[rgba(239,68,68,0.14)] px-3 py-2 text-sm text-[var(--color-danger)]" role="alert">
+        <p className="ui-alert border-[rgba(251,113,133,0.25)] bg-[rgba(251,113,133,0.07)] text-sm text-[var(--color-danger)]" role="alert">
           {error}
         </p>
       )}
-      <div className="flex flex-wrap items-center justify-between gap-4">
-        <div>
-          <h1 className="text-xl font-bold text-[var(--color-text-strong)]">
-            LANDINGS
-          </h1>
-          <p className="mt-1 text-sm text-[var(--color-text-muted)]">
-            Crea y edita tus landings.
-          </p>
-        </div>
-        <div className="flex items-center gap-2">
+      <PageHeader
+        eyebrow="Constructor global"
+        title="Landings"
+        description="Creá y administrá landings propias y de clientes."
+        actions={
+          <>
           <button
             type="button"
             onClick={() => void handleConnectExisting()}
             disabled={creating}
-            className="cursor-pointer rounded-xl border border-zinc-700 bg-zinc-900 px-4 py-2 text-sm font-semibold uppercase tracking-wide text-zinc-100 transition-colors duration-150 hover:bg-zinc-800 active:bg-zinc-700 disabled:cursor-not-allowed disabled:opacity-70 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-zinc-500"
+            className="ui-button ui-button-secondary"
           >
-            {creating ? "CREANDO..." : "CONECTAR EXISTENTE"}
+            {creating ? "Creando…" : "Conectar existente"}
           </button>
           <button
             type="button"
             onClick={() => void handleCreate()}
             disabled={creating}
-            className="cursor-pointer rounded-xl bg-[var(--color-primary)] px-4 py-2 text-sm font-semibold uppercase tracking-wide text-[var(--color-bg-0)] transition-colors duration-150 hover:bg-[var(--color-primary-hover)] active:bg-[var(--color-primary-press)] disabled:cursor-not-allowed disabled:opacity-70 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-ring-primary)]"
+            className="ui-button ui-button-primary"
           >
-            {creating ? "CREANDO..." : "CREAR LANDING"}
+            {creating ? "Creando…" : "Crear landing"}
           </button>
-        </div>
-      </div>
+          </>
+        }
+      />
 
       {mineLandings.length === 0 && clientLandings.length === 0 ? (
-        <div className="rounded-xl border border-[var(--color-border)] bg-[var(--color-bg-2)] p-8 text-center shadow-sm">
-          <p className="text-[var(--color-text-muted)]">Aún no tienes ninguna landing.</p>
-          <button
-            type="button"
-            onClick={() => void handleCreate()}
-            disabled={creating}
-            className="mt-4 cursor-pointer rounded-xl bg-[var(--color-primary)] px-4 py-2 text-sm font-semibold uppercase tracking-wide text-[var(--color-bg-0)] transition-colors duration-150 hover:bg-[var(--color-primary-hover)] active:bg-[var(--color-primary-press)] disabled:cursor-not-allowed disabled:opacity-70 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-ring-primary)]"
-          >
-            {creating ? "CREANDO..." : "CREAR LA PRIMERA"}
-          </button>
-        </div>
+        <EmptyState
+          title="Todavía no hay landings"
+          description="Creá una landing propia o conectá una experiencia existente."
+          action={
+            <button type="button" onClick={() => void handleCreate()} disabled={creating} className="ui-button ui-button-primary">
+              {creating ? "Creando…" : "Crear la primera"}
+            </button>
+          }
+        />
       ) : (
         <div className="space-y-8">
           {/* Mis landings */}

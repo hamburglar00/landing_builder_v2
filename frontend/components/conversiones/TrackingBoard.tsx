@@ -7,6 +7,7 @@ import type {
   TrackingRankingRule,
 } from "@/lib/conversionsDb";
 import { formatCurrencyAmount, type ReportingCurrency } from "@/lib/currency";
+import { useAppConfirm } from "@/components/ui/AppConfirmDialog";
 
 type SortMode = TrackingRankingConfig["sortMode"];
 type RankRule = TrackingRankingRule;
@@ -90,6 +91,7 @@ export default function TrackingBoard({
   assignedPhoneToGerenciaId?: Record<string, number>;
   currency: ReportingCurrency;
 }) {
+  const confirmAction = useAppConfirm();
   const initialRules = rankingConfig?.rules?.length ? rankingConfig.rules : DEFAULT_RULES;
   const initialOverflow = rankingConfig?.overflowIndicator || DEFAULT_OVERFLOW;
   const initialSort = rankingConfig?.sortMode || DEFAULT_SORT;
@@ -111,6 +113,7 @@ export default function TrackingBoard({
   const [search, setSearch] = useState("");
   const [page, setPage] = useState(1);
   const [deletingPhone, setDeletingPhone] = useState<string | null>(null);
+  const [deleteError, setDeleteError] = useState<string | null>(null);
   const [exportOpen, setExportOpen] = useState(false);
   const [copiedExport, setCopiedExport] = useState(false);
 
@@ -272,14 +275,20 @@ export default function TrackingBoard({
 
   const handleDelete = async (phone: string) => {
     if (!onDeletePhone) return;
-    const ok = window.confirm(`Eliminar jugador ${phone} y su historial?`);
+    const ok = await confirmAction({
+      title: "Eliminar jugador",
+      description: `Se eliminarán ${phone} y su historial de seguimiento.`,
+      confirmLabel: "Eliminar jugador",
+      danger: true,
+    });
     if (!ok) return;
     try {
+      setDeleteError(null);
       setDeletingPhone(phone);
       await onDeletePhone(phone);
     } catch (e) {
       const msg = e instanceof Error ? e.message : "No se pudo eliminar el jugador.";
-      window.alert(msg);
+      setDeleteError(msg);
     } finally {
       setDeletingPhone(null);
     }
@@ -322,7 +331,12 @@ export default function TrackingBoard({
   }, [page, totalPages]);
 
   return (
-    <section className="rounded-xl border border-zinc-800 bg-zinc-900/50 p-3 sm:p-4">
+    <section className="ui-card p-3 sm:p-4">
+      {deleteError ? (
+        <p className="ui-alert mb-4 border-[rgba(251,113,133,0.25)] bg-[rgba(251,113,133,0.07)] text-[var(--color-danger)]" role="alert">
+          {deleteError}
+        </p>
+      ) : null}
       <div className="mb-4 flex flex-col gap-2 sm:flex-row sm:flex-wrap sm:items-center sm:justify-between">
         <h3 className="text-sm font-semibold text-zinc-200">Seguimiento ({filteredRows.length})</h3>
         <div className="flex w-full items-center gap-2 sm:ml-auto sm:w-auto">

@@ -14,6 +14,7 @@ import {
   type ConversionRow,
 } from "@/lib/conversionsDb";
 import { DashboardSkeleton, PanelSkeleton } from "@/components/ui/DashboardSkeleton";
+import { PageHeader } from "@/components/ui/PanelPrimitives";
 import DateRangeFilter, {
   type DateRange,
   filterByDateRange,
@@ -172,12 +173,11 @@ export default function DashboardSeguimientoPage() {
 
   return (
     <div className="space-y-6 pb-8">
-      <div>
-        <h1 className="text-xl font-semibold text-zinc-100">SEGUIMIENTO</h1>
-        <p className="mt-1 text-sm text-zinc-400">
-          Seguimiento de jugadores y actividad reciente.
-        </p>
-      </div>
+      <PageHeader
+        eyebrow="Retención"
+        title="Seguimiento"
+        description="Monitoreá jugadores, actividad reciente y señales de retención."
+      />
 
       <div className="flex justify-end">
         <DateRangeFilter onChange={setDateRange} />

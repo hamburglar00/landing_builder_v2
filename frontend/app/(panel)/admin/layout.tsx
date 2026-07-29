@@ -7,6 +7,7 @@ import type { User } from "@supabase/supabase-js";
 import { supabase } from "@/lib/supabaseClient";
 import { RouteProgress } from "@/components/ui/RouteProgress";
 import { CurrencyScopeSelector } from "@/components/currency/CurrencyScope";
+import { AppConfirmProvider } from "@/components/ui/AppConfirmDialog";
 
 function MenuIcon({ className }: { className?: string }) {
   return (
@@ -65,48 +66,12 @@ function NavIcon({
     | "settings";
   active: boolean;
 }) {
-  const base = active ? "text-zinc-50" : "text-zinc-500";
-
-  const accent =
-    variant === "telefonos"
-      ? active
-        ? "text-pink-400"
-        : "text-pink-300"
-      : variant === "gerencias"
-        ? active
-          ? "text-sky-400"
-          : "text-sky-300"
-        : variant === "landings"
-          ? active
-            ? "text-emerald-400"
-            : "text-emerald-300"
-          : variant === "clientes"
-            ? active
-              ? "text-indigo-400"
-              : "text-indigo-300"
-            : variant === "conversiones"
-              ? active
-                ? "text-orange-400"
-                : "text-orange-300"
-              : variant === "integraciones"
-                ? active
-                  ? "text-cyan-400"
-                  : "text-cyan-300"
-              : variant === "seguimiento"
-                ? active
-                  ? "text-amber-300"
-                  : "text-amber-200"
-                : variant === "notificaciones"
-                  ? active
-                    ? "text-yellow-300"
-                    : "text-yellow-200"
-              : variant === "tests"
-                ? active
-                  ? "text-amber-400"
-                  : "text-amber-300"
-                : active
-                  ? "text-zinc-200"
-                  : "text-zinc-400";
+  const base = active
+    ? "text-[var(--color-primary)]"
+    : "text-[var(--color-text-muted)]";
+  const accent = active
+    ? "text-[var(--color-primary)]"
+    : "text-[var(--color-text-disabled)]";
 
   if (variant === "landings") {
     return (
@@ -487,7 +452,8 @@ export default function AdminLayout({
   }
 
   return (
-    <div className="flex min-h-screen bg-[var(--color-bg-0)] text-[var(--color-text)]">
+    <AppConfirmProvider>
+    <div className="panel-shell flex min-h-screen text-[var(--color-text)]">
       <RouteProgress active={isNavigating} />
       {/* Overlay móvil cuando el menú está abierto */}
       {sidebarOpen && (
@@ -501,19 +467,20 @@ export default function AdminLayout({
 
       {/* Sidebar: siempre fijo; drawer en móvil, visible en desktop */}
       <aside
-        className={`fixed inset-y-0 left-0 z-50 flex w-64 flex-col border-r border-[var(--color-border)] bg-[var(--color-bg-1)] transition-transform duration-200 ease-out md:translate-x-0 md:w-56 ${
+        className={`panel-sidebar fixed inset-y-0 left-0 z-50 flex w-64 flex-col border-r border-[var(--color-border)] transition-transform duration-200 ease-out md:translate-x-0 md:w-56 ${
           sidebarOpen ? "translate-x-0" : "-translate-x-full"
         }`}
       >
         <div className="flex items-center justify-between border-b border-[var(--color-border)] px-4 py-4 md:block">
           <div className="flex items-center gap-3">
-            <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-[var(--color-bg-2)] text-sm font-semibold text-[var(--color-text-strong)] shadow-sm">
+            <div className="panel-brand-mark flex h-9 w-9 items-center justify-center rounded-xl text-sm font-bold">
               PB
             </div>
             <div>
-              <h2 className="text-[11px] font-semibold tracking-[0.2em] text-[var(--color-text-muted)]">
-                CONSTRUCTOR DE LANDINGS
+              <h2 className="text-[10px] font-semibold tracking-[0.17em] text-[var(--color-text-strong)]">
+                PANEL BOT ADMIN
               </h2>
+              <p className="mt-0.5 text-[9px] text-[var(--color-text-disabled)]">Control central</p>
             </div>
           </div>
           <button
@@ -525,7 +492,7 @@ export default function AdminLayout({
             <CloseIcon className="h-5 w-5" />
           </button>
         </div>
-        <nav className="flex flex-1 flex-col gap-2 p-3">
+        <nav className="panel-sidebar-nav flex flex-1 flex-col gap-1 overflow-y-auto p-3">
           <Link
             href="/admin/inicio"
             {...getNavLinkProps("/admin/inicio")}
@@ -743,24 +710,31 @@ export default function AdminLayout({
 
       {/* Main content: margen izquierdo en desktop para no quedar bajo el sidebar fijo */}
       <div className="flex min-w-0 flex-1 flex-col md:ml-56">
-        <header className="flex items-center justify-between gap-3 border-b border-[var(--color-border)] px-4 py-3 sm:px-6">
-          <button
-            type="button"
-            aria-label="Abrir menú"
-            onClick={() => setSidebarOpen(true)}
-            className="rounded-lg p-2 text-[var(--color-text-muted)] hover:bg-[var(--color-bg-3)] hover:text-[var(--color-text-strong)] md:hidden"
-          >
-            <MenuIcon className="h-6 w-6" />
-          </button>
+        <header className="panel-topbar flex min-h-16 items-center justify-between gap-3 border-b px-4 py-3 sm:px-6">
+          <div className="flex min-w-0 items-center gap-3">
+            <button
+              type="button"
+              aria-label="Abrir menú"
+              onClick={() => setSidebarOpen(true)}
+              className="rounded-lg p-2 text-[var(--color-text-muted)] hover:bg-[var(--color-bg-3)] hover:text-[var(--color-text-strong)] md:hidden"
+            >
+              <MenuIcon className="h-6 w-6" />
+            </button>
+            <div className="hidden md:block">
+              <p className="text-[9px] font-semibold uppercase tracking-[0.16em] text-[var(--color-primary)]">Control center</p>
+              <p className="text-xs font-medium text-[var(--color-text-strong)]">Administración</p>
+            </div>
+          </div>
           <CurrencyScopeSelector />
         </header>
         <main
-          className="min-h-0 max-w-full flex-1 overflow-x-hidden overflow-y-auto px-3 py-5 sm:px-6 sm:py-8 lg:px-10"
+          className="panel-main-content min-h-0 flex-1 overflow-x-hidden overflow-y-auto px-3 py-5 sm:px-6 sm:py-8 lg:px-10"
           aria-busy={isNavigating}
         >
           {children}
         </main>
       </div>
     </div>
+    </AppConfirmProvider>
   );
 }

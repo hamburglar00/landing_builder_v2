@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 
 export type ClearConversionsViewMode = "keep_current_month" | "hide_all";
 
@@ -19,16 +19,19 @@ export default function ClearConversionsViewModal({
 }) {
   const [mode, setMode] =
     useState<ClearConversionsViewMode>("keep_current_month");
+  const closeModal = useCallback(() => {
+    setMode("keep_current_month");
+    onClose();
+  }, [onClose]);
 
   useEffect(() => {
     if (!open) return;
-    setMode("keep_current_month");
     const onKeyDown = (event: KeyboardEvent) => {
-      if (event.key === "Escape" && !busy) onClose();
+      if (event.key === "Escape" && !busy) closeModal();
     };
     window.addEventListener("keydown", onKeyDown);
     return () => window.removeEventListener("keydown", onKeyDown);
-  }, [open, busy, onClose]);
+  }, [open, busy, closeModal]);
 
   if (!open) return null;
 
@@ -37,7 +40,7 @@ export default function ClearConversionsViewModal({
       className="fixed inset-0 z-[70] flex items-center justify-center bg-black/75 p-3 backdrop-blur-[2px]"
       role="presentation"
       onMouseDown={(event) => {
-        if (event.target === event.currentTarget && !busy) onClose();
+        if (event.target === event.currentTarget && !busy) closeModal();
       }}
     >
       <div
@@ -66,7 +69,7 @@ export default function ClearConversionsViewModal({
             type="button"
             aria-label="Cerrar"
             disabled={busy}
-            onClick={onClose}
+            onClick={closeModal}
             className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg border border-zinc-700 text-lg text-zinc-400 transition hover:bg-zinc-800 hover:text-zinc-100 disabled:opacity-50"
           >
             ×
@@ -140,7 +143,7 @@ export default function ClearConversionsViewModal({
           <button
             type="button"
             disabled={busy}
-            onClick={onClose}
+            onClick={closeModal}
             className="rounded-lg border border-zinc-700 px-4 py-2 text-xs font-medium text-zinc-300 transition hover:bg-zinc-800 disabled:opacity-50"
           >
             Cancelar
@@ -148,8 +151,12 @@ export default function ClearConversionsViewModal({
           <button
             type="button"
             disabled={busy}
-            onClick={() => onConfirm(mode)}
-            className="rounded-lg bg-emerald-500 px-4 py-2 text-xs font-semibold text-zinc-950 transition hover:bg-emerald-400 disabled:cursor-wait disabled:opacity-60"
+            onClick={() => {
+              const selectedMode = mode;
+              setMode("keep_current_month");
+              onConfirm(selectedMode);
+            }}
+            className="ui-button ui-button-primary"
           >
             {busy ? "Limpiando..." : "Aplicar limpieza"}
           </button>

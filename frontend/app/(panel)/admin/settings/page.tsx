@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import { supabase } from "@/lib/supabaseClient";
 import { getSettings, updateSettings } from "@/lib/settingsDb";
 import { DashboardSkeleton } from "@/components/ui/DashboardSkeleton";
+import { PageHeader } from "@/components/ui/PanelPrimitives";
 
 export default function AdminSettingsPage() {
   const [urlBase, setUrlBase] = useState("");
@@ -78,21 +79,20 @@ export default function AdminSettingsPage() {
 
   return (
     <div className="space-y-6">
-      <div>
-        <h1 className="text-xl font-semibold text-zinc-100">CONFIGURACION</h1>
-        <p className="mt-1 text-sm text-zinc-400">
-          Solo administradores. Configuracion global de la aplicacion.
-        </p>
-      </div>
+      <PageHeader
+        eyebrow="Sistema"
+        title="Configuración"
+        description="Parámetros globales de la aplicación, disponibles solo para administradores."
+      />
       {error && (
         <p
-          className="rounded-lg bg-red-950/50 px-3 py-2 text-sm text-red-300"
+          className="ui-alert border-[rgba(251,113,133,0.25)] bg-[rgba(251,113,133,0.07)] text-sm text-[var(--color-danger)]"
           role="alert"
         >
           {error}
         </p>
       )}
-      <form onSubmit={handleSubmit} className="max-w-md space-y-5">
+      <form onSubmit={handleSubmit} className="ui-card max-w-2xl space-y-5 p-5 sm:p-6">
         <div>
           <label
             htmlFor="admin_nombre"

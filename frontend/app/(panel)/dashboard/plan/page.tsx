@@ -2,6 +2,7 @@
 
 import { useEffect, useMemo, useState } from "react";
 import { supabase } from "@/lib/supabaseClient";
+import { PageHeader } from "@/components/ui/PanelPrimitives";
 
 type PlanCode = "starter" | "plus" | "pro" | "premium" | "scale";
 
@@ -170,14 +171,13 @@ export default function DashboardPlanPage() {
 
   return (
     <div className="space-y-6">
-      <div>
-        <h1 className="text-xl font-semibold text-zinc-50">PLAN</h1>
-        <p className="mt-1 text-sm text-zinc-400">
-          Consulta tu plan actual y compara los planes disponibles.
-        </p>
-      </div>
+      <PageHeader
+        eyebrow="Suscripción"
+        title="Plan"
+        description="Consultá tu plan actual y compará las alternativas disponibles."
+      />
 
-      <section className={`rounded-2xl border p-5 ${currentPlan.colorClass}`}>
+      <section className={`ui-card p-5 ${currentPlan.colorClass}`}>
         <h2 className="text-base font-semibold text-zinc-50">
           Plan actual: {currentPlan.title}
         </h2>
@@ -214,7 +214,7 @@ export default function DashboardPlanPage() {
           {PLAN_CARDS.map((plan) => (
             <article
               key={plan.code}
-              className={`rounded-2xl border p-4 ${plan.colorClass} ${
+              className={`ui-card p-4 ${plan.colorClass} ${
                 currentPlan.code === plan.code ? "ring-2 ring-zinc-400/50" : ""
               }`}
             >

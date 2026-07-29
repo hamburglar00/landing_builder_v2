@@ -24,15 +24,14 @@ export default async function AdminDocumentacionPage() {
           ← Listado
         </Link>
       </div>
-      <div>
-        <h1 className="text-xl font-semibold text-zinc-100">
-          DOCUMENTACION
-        </h1>
-        <p className="mt-1 text-sm text-zinc-400">
-          README del proyecto.
-        </p>
+      <div className="ui-page-header">
+        <div>
+          <p className="ui-page-eyebrow">Base técnica</p>
+          <h1 className="ui-page-title">Documentación</h1>
+          <p className="ui-page-description">README y referencias internas del proyecto.</p>
+        </div>
       </div>
-      <div className="rounded-xl border border-zinc-800 bg-zinc-950/40 p-4">
+      <div className="ui-card p-4">
         <div className="max-h-[70vh] overflow-auto text-sm text-zinc-200">
           <ReactMarkdown
             remarkPlugins={[remarkGfm]}

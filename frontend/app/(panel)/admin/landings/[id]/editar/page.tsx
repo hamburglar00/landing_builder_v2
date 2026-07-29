@@ -33,6 +33,8 @@ import {
 } from "@/lib/gerencias/gerenciasDb";
 import { GerenciaRedirectSection } from "@/components/landing/GerenciaRedirectSection";
 import { getSettings } from "@/lib/settingsDb";
+import { useAppConfirm, useAppPrompt } from "@/components/ui/AppConfirmDialog";
+import { PageHeader } from "@/components/ui/PanelPrimitives";
 
 const BASE = "/admin/landings";
 const EXTERNAL_INTEGRATION_STEPS: Array<{ title: string; desc: string }> = [
@@ -124,6 +126,8 @@ function buildExternalIntegrationGuide(): string {
 }
 
 export default function AdminLandingEditarPage() {
+  const confirmAction = useAppConfirm();
+  const promptAction = useAppPrompt();
   const router = useRouter();
   const params = useParams();
   const id = params?.id as string | undefined;
@@ -267,10 +271,13 @@ export default function AdminLandingEditarPage() {
       }
     }
     if (!pixelIdToSave) {
-      const entered = window.prompt(
-        "El Pixel ID es obligatorio para guardar la landing. Ingresalo para continuar:",
-        "",
-      );
+      const entered = await promptAction({
+        title: "Pixel ID requerido",
+        description: "La landing necesita un Pixel ID válido antes de poder guardarse.",
+        label: "Pixel ID",
+        placeholder: "Ej. 880464554785896",
+        confirmLabel: "Usar Pixel ID",
+      });
       pixelIdToSave = (entered ?? "").replace(/\D/g, "");
       if (!pixelIdToSave) {
         setSaveError("No se puede guardar sin Pixel ID.");
@@ -287,9 +294,11 @@ export default function AdminLandingEditarPage() {
       initialName.startsWith("Nueva-landing-") &&
       landing.name.trim()
     ) {
-      const ok = window.confirm(
-        `Vas a nombrar esta landing como "${landing.name}". Este nombre se usará en la URL pública y no se podrá cambiar luego.\n\n¿Confirmar nombre?`,
-      );
+      const ok = await confirmAction({
+        title: "Confirmar nombre público",
+        description: `La landing se llamará “${landing.name}”. Este nombre se usará en la URL pública y no podrá cambiarse luego.`,
+        confirmLabel: "Confirmar nombre",
+      });
       if (!ok) return;
     }
     setSaving(true);
@@ -365,7 +374,13 @@ export default function AdminLandingEditarPage() {
 
   const handleDelete = async () => {
     if (!landing) return;
-    if (!window.confirm(`¿Eliminar la landing "${landing.name}"? Esta acción no se puede deshacer.`)) return;
+    const confirmed = await confirmAction({
+      title: "Eliminar landing",
+      description: `Se eliminará “${landing.name}”. Esta acción no se puede deshacer.`,
+      confirmLabel: "Eliminar landing",
+      danger: true,
+    });
+    if (!confirmed) return;
     setDeleting(true);
     setSaveError(null);
     try {
@@ -417,17 +432,17 @@ export default function AdminLandingEditarPage() {
     : landing.postUrl;
 
   return (
-    <div className="lg:flex lg:gap-6 lg:items-start lg:pr-[440px]">
+    <div className="lg:grid lg:grid-cols-[minmax(0,1fr)_360px] lg:items-start lg:gap-6">
       <div className="min-w-0 flex-1 space-y-8 pb-8 lg:pr-4">
         {saveError && (
-          <p className="rounded-lg bg-red-950/50 px-3 py-2 text-sm text-red-300" role="alert">
+          <p className="ui-alert border-[rgba(251,113,133,0.25)] bg-[rgba(251,113,133,0.07)] text-sm text-[var(--color-danger)]" role="alert">
             {saveError}
           </p>
         )}
         <div className="flex flex-wrap items-center justify-between gap-4">
           <Link
             href={BASE}
-            className="inline-flex items-center gap-2 rounded-lg border border-zinc-700 px-3 py-1.5 text-xs font-medium text-zinc-300 transition hover:bg-zinc-800 hover:text-zinc-50"
+            className="ui-button ui-button-secondary"
           >
             <span className="text-sm" aria-hidden>
               ←
@@ -439,7 +454,7 @@ export default function AdminLandingEditarPage() {
               type="button"
               onClick={() => void handleDelete()}
               disabled={deleting}
-              className="cursor-pointer rounded-lg border border-red-900/60 bg-red-950/30 px-3 py-1.5 text-sm font-medium text-red-300 transition hover:bg-red-950/50 disabled:opacity-70 disabled:cursor-not-allowed"
+              className="ui-button ui-button-danger"
             >
               {deleting ? "Eliminando..." : "Eliminar landing"}
             </button>
@@ -447,18 +462,17 @@ export default function AdminLandingEditarPage() {
               type="button"
               onClick={() => void handleSave()}
               disabled={saving}
-              className="cursor-pointer rounded-lg border border-emerald-700/70 bg-emerald-950/30 px-3 py-1.5 text-sm font-medium text-emerald-300 transition hover:bg-emerald-950/50 disabled:opacity-70 disabled:cursor-not-allowed"
+              className="ui-button ui-button-primary"
             >
-              {saving ? "GUARDANDO..." : "GUARDAR"}
+              {saving ? "Guardando…" : "Guardar"}
             </button>
           </div>
         </div>
-        <div>
-          <h1 className="text-xl font-semibold text-zinc-100">Editar landing</h1>
-          <p className="mt-1 text-sm text-zinc-400">
-            Nombre y comentario identifican esta landing en tu listado.
-          </p>
-        </div>
+        <PageHeader
+          eyebrow="Editor"
+          title="Editar landing"
+          description="Configurá identidad, publicación, tracking y contenido visual."
+        />
 
         {landing.landingType === "external" && (
           <section className="rounded-xl border border-zinc-800 bg-zinc-900/50 p-4">
@@ -779,18 +793,21 @@ export default function AdminLandingEditarPage() {
           La vista previa es aproximada. Para una vista certera, abrí el enlace de la landing.
         </p>
       </div>}
-      {/* Desktop: preview fijo que acompaña el scroll y siempre queda visible */}
-      {landing.landingType !== "external" && <div className="pointer-events-none fixed right-6 top-16 z-20 hidden w-[360px] max-w-[40vw] lg:block">
-        <p className="mb-3 text-xs font-medium text-zinc-500">Vista previa</p>
-        <div className="pointer-events-auto w-full">
-          <div className="scale-[0.7] origin-top">
+      {/* Desktop: preview sticky dentro de la grilla del editor */}
+      {landing.landingType !== "external" && <aside className="sticky top-20 hidden max-h-[calc(100dvh-6rem)] w-[360px] overflow-y-auto rounded-2xl border border-[var(--color-border)] bg-[rgba(11,15,21,0.72)] p-3 shadow-[var(--shadow-card)] lg:block">
+        <div className="mb-3 flex items-center justify-between">
+          <p className="text-xs font-semibold text-[var(--color-text)]">Vista previa</p>
+          <span className="ui-badge">En vivo</span>
+        </div>
+        <div className="w-full overflow-hidden rounded-xl border border-[var(--color-border-subtle)]">
+          <div className="origin-top scale-[0.7]">
             <LandingPreview config={landing.config} />
           </div>
-          </div>
-        <p className="mt-2 w-full text-[11px] text-zinc-500">
+        </div>
+        <p className="mt-3 w-full text-[11px] leading-5 text-[var(--color-text-disabled)]">
           La vista previa es aproximada. Para una vista certera, abrí el enlace de la landing.
         </p>
-      </div>}
+      </aside>}
     </div>
   );
 }

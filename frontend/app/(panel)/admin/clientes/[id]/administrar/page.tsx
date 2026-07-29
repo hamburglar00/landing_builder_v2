@@ -5,6 +5,7 @@ import Link from "next/link";
 import { useParams, useRouter } from "next/navigation";
 import { invokeFunction } from "@/lib/supabaseFunctions";
 import { supabase } from "@/lib/supabaseClient";
+import { PageHeader } from "@/components/ui/PanelPrimitives";
 
 type ClientUser = {
   id: string;
@@ -284,34 +285,33 @@ export default function AdminClientManagePage() {
 
   return (
     <div className="space-y-6">
-      <div className="flex flex-wrap items-center justify-between gap-3">
-        <div>
-          <h1 className="text-base font-semibold text-zinc-50 sm:text-lg">Administrar cliente</h1>
-          <p className="mt-1 text-xs text-zinc-400">
-            Gestiona email, clave y permisos de Conversiones.
-          </p>
-        </div>
-        <div className="flex gap-2">
+      <PageHeader
+        eyebrow="Cuenta de cliente"
+        title="Administrar cliente"
+        description="Gestioná acceso, plan, permisos y visibilidad de módulos."
+        actions={
+          <>
           <button
             type="button"
             onClick={() => router.back()}
-            className="rounded-lg border border-zinc-700 px-3 py-2 text-xs text-zinc-200 hover:bg-zinc-800"
+            className="ui-button ui-button-secondary"
           >
             Volver
           </button>
           <Link
             href="/admin/clientes"
-            className="rounded-lg border border-zinc-700 px-3 py-2 text-xs text-zinc-200 hover:bg-zinc-800"
+            className="ui-button ui-button-secondary"
           >
             Ir a clientes
           </Link>
-        </div>
-      </div>
+          </>
+        }
+      />
 
-      {error && <p className="text-xs text-red-400">{error}</p>}
-      {okMsg && <p className="text-xs text-emerald-400">{okMsg}</p>}
+      {error && <p className="ui-alert border-[rgba(251,113,133,0.25)] bg-[rgba(251,113,133,0.07)] text-xs text-[var(--color-danger)]">{error}</p>}
+      {okMsg && <p className="ui-alert border-[rgba(52,211,153,0.22)] bg-[rgba(52,211,153,0.07)] text-xs text-[var(--color-success)]">{okMsg}</p>}
 
-      <section className="rounded-xl border border-zinc-800 bg-zinc-950/60 p-4">
+      <section className="ui-card p-4">
         <h2 className="text-sm font-semibold text-zinc-100">Landings del cliente</h2>
         <p className="mt-1 text-xs text-zinc-400">
           Accede al listado de landings de este cliente desde aquí.
@@ -326,7 +326,7 @@ export default function AdminClientManagePage() {
         </div>
       </section>
 
-      <form onSubmit={onSave} className="space-y-5 rounded-xl border border-zinc-800 bg-zinc-950/60 p-5">
+      <form onSubmit={onSave} className="ui-card space-y-5 p-5">
         <div className="grid gap-4 sm:grid-cols-2">
           <div className="space-y-2">
             <label className="block text-xs font-medium text-zinc-300">Nombre (inmutable)</label>

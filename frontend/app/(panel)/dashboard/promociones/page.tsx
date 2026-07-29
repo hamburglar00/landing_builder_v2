@@ -19,6 +19,8 @@ import {
   type PromotionWithCount,
 } from "@/lib/promotionsDb";
 import { DashboardSkeleton } from "@/components/ui/DashboardSkeleton";
+import { PageHeader } from "@/components/ui/PanelPrimitives";
+import { useAppConfirm } from "@/components/ui/AppConfirmDialog";
 
 type FormState = {
   title: string;
@@ -336,6 +338,7 @@ function PromotionMobilePreview({ form }: { form: FormState }) {
 }
 
 export default function DashboardPromocionesPage() {
+  const confirmAction = useAppConfirm();
   const router = useRouter();
   const [userId, setUserId] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
@@ -646,8 +649,14 @@ export default function DashboardPromocionesPage() {
   };
 
   const runDraw = async (slug: string, force = false) => {
-    if (force && !window.confirm("Forzar el sorteo ahora? Esta accion selecciona un ganador y no se puede deshacer.")) {
-      return;
+    if (force) {
+      const confirmed = await confirmAction({
+        title: "Forzar sorteo",
+        description: "Se seleccionará un ganador ahora y la acción no se puede deshacer.",
+        confirmLabel: "Forzar sorteo",
+        danger: true,
+      });
+      if (!confirmed) return;
     }
     setSaving(true);
     try {
@@ -672,9 +681,13 @@ export default function DashboardPromocionesPage() {
   };
 
   const handleDeleteParticipant = async (participant: PromotionParticipantRow) => {
-    if (!window.confirm(`Eliminar participante ${participant.username || participant.email}? Esta accion no se puede deshacer.`)) {
-      return;
-    }
+    const confirmed = await confirmAction({
+      title: "Eliminar participante",
+      description: `Se eliminará ${participant.username || participant.email} de la promoción.`,
+      confirmLabel: "Eliminar participante",
+      danger: true,
+    });
+    if (!confirmed) return;
     setDeletingParticipantId(participant.id);
     try {
       await deletePromotionParticipant(participant.id);
@@ -704,26 +717,27 @@ export default function DashboardPromocionesPage() {
 
   return (
     <div className="space-y-6 pb-8">
-      <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
-        <div>
-          <h1 className="text-xl font-semibold text-zinc-50">PROMOCIONES</h1>
-          <p className="mt-1 max-w-3xl text-sm text-zinc-400">
-            Crea un link de sorteo para enviarselos a tus jugadores.
-          </p>
-        </div>
+      <PageHeader
+        eyebrow="Engagement"
+        title="Promociones"
+        description="Creá experiencias de sorteo y compartilas con tus jugadores."
+        actions={
         <button
           type="button"
           onClick={openCreateEditor}
-          className="cursor-pointer rounded-xl bg-[var(--color-primary)] px-4 py-2 text-sm font-semibold uppercase tracking-wide text-[var(--color-bg-0)] transition-colors duration-150 hover:bg-[var(--color-primary-hover)] active:bg-[var(--color-primary-press)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-ring-primary)]"
+          className="ui-button ui-button-primary"
         >
-          CREAR PROMOCION
+          Crear promoción
         </button>
-      </div>
+        }
+      />
 
       {message && (
         <p
-          className={`rounded-lg px-3 py-2 text-sm ${
-            messageType === "error" ? "bg-red-950/50 text-red-300" : "bg-emerald-950/50 text-emerald-300"
+          className={`ui-alert text-sm ${
+            messageType === "error"
+              ? "border-[rgba(251,113,133,0.25)] bg-[rgba(251,113,133,0.07)] text-[var(--color-danger)]"
+              : "border-[rgba(52,211,153,0.22)] bg-[rgba(52,211,153,0.07)] text-[var(--color-success)]"
           }`}
           role="alert"
         >
@@ -732,7 +746,7 @@ export default function DashboardPromocionesPage() {
       )}
 
       {editorOpen && (
-      <section className="rounded-2xl border border-zinc-800 bg-zinc-950/60 p-4 shadow-[0_24px_80px_rgba(0,0,0,0.35)]">
+      <section className="ui-card p-4 shadow-[var(--shadow-raised)]">
         <div className="mb-4 flex items-center justify-between gap-3">
           <div>
             <h2 className="text-sm font-semibold text-zinc-100">
@@ -1006,7 +1020,13 @@ export default function DashboardPromocionesPage() {
                         type="button"
                         disabled={saving}
                         onClick={async () => {
-                          if (!window.confirm("Eliminar esta promocion y sus participantes?")) return;
+                          const confirmed = await confirmAction({
+                            title: "Eliminar promoción",
+                            description: "Se eliminarán la promoción y todos sus participantes.",
+                            confirmLabel: "Eliminar promoción",
+                            danger: true,
+                          });
+                          if (!confirmed) return;
                           try {
                             await deletePromotion(promotion.id);
                             await reload(userId);

@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import type { Gerencia, GerenciaWorkGroup } from "@/lib/gerencias/types";
+import { useAppConfirm } from "@/components/ui/AppConfirmDialog";
 
 type Props = {
   gerencias: Gerencia[];
@@ -20,6 +21,7 @@ export function GerenciaWorkGroupsPanel({
   onUpdate,
   onDelete,
 }: Props) {
+  const confirmAction = useAppConfirm();
   const [name, setName] = useState("");
   const [selectedIds, setSelectedIds] = useState<number[]>([]);
   const [editingId, setEditingId] = useState<number | null>(null);
@@ -153,8 +155,14 @@ export function GerenciaWorkGroupsPanel({
                       </button>
                       <button
                         type="button"
-                        onClick={() => {
-                          if (window.confirm(`¿Eliminar el grupo "${group.name}"?`)) void onDelete(group.id);
+                        onClick={async () => {
+                          const confirmed = await confirmAction({
+                            title: "Eliminar grupo",
+                            description: `El grupo “${group.name}” dejará de estar disponible.`,
+                            confirmLabel: "Eliminar grupo",
+                            danger: true,
+                          });
+                          if (confirmed) void onDelete(group.id);
                         }}
                         className="rounded-md border border-red-800 px-2 py-1 text-xs text-red-300 hover:bg-red-950/50"
                       >

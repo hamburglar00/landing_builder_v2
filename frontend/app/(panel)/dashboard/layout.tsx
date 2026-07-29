@@ -8,6 +8,7 @@ import { supabase } from "@/lib/supabaseClient";
 import ConstructorSetupGuide from "@/components/onboarding/ConstructorSetupGuide";
 import { RouteProgress } from "@/components/ui/RouteProgress";
 import { CurrencyScopeSelector } from "@/components/currency/CurrencyScope";
+import { AppConfirmProvider } from "@/components/ui/AppConfirmDialog";
 
 const SETUP_GUIDE_STORAGE_PREFIX = "constructor_setup_guide_hidden:";
 const DASHBOARD_PREFETCH_ROUTES = [
@@ -68,40 +69,11 @@ function NavIcon({
   active: boolean;
 }) {
   const base = active
-    ? "text-[var(--color-text-strong)]"
+    ? "text-[var(--color-primary)]"
     : "text-[var(--color-text-muted)]";
-  const accent =
-    variant === "telefonos"
-      ? active
-        ? "text-pink-400"
-        : "text-pink-300"
-      : variant === "gerencias"
-        ? active
-          ? "text-sky-400"
-          : "text-sky-300"
-      : variant === "conversiones"
-        ? active
-          ? "text-orange-400"
-          : "text-orange-300"
-          : variant === "promociones"
-            ? active
-              ? "text-lime-300"
-              : "text-lime-200"
-          : variant === "integraciones"
-            ? active
-              ? "text-cyan-400"
-              : "text-cyan-300"
-          : variant === "seguimiento"
-            ? active
-              ? "text-amber-300"
-              : "text-amber-200"
-            : variant === "notificaciones"
-              ? active
-                ? "text-yellow-300"
-                : "text-yellow-200"
-          : active
-            ? "text-emerald-400"
-            : "text-emerald-300";
+  const accent = active
+    ? "text-[var(--color-primary)]"
+    : "text-[var(--color-text-disabled)]";
 
   if (variant === "inicio") {
     return (
@@ -538,7 +510,8 @@ export default function DashboardLayout({
   })();
 
   return (
-    <div className="flex min-h-screen bg-[var(--color-bg-0)] text-[var(--color-text)]">
+    <AppConfirmProvider>
+    <div className="panel-shell flex min-h-screen text-[var(--color-text)]">
       <RouteProgress active={isNavigating} />
       {sidebarOpen && (
         <button
@@ -551,19 +524,20 @@ export default function DashboardLayout({
 
       {/* Sidebar: siempre fijo; drawer en móvil, visible en desktop */}
       <aside
-        className={`fixed inset-y-0 left-0 z-50 flex w-64 flex-col border-r border-[var(--color-border)] bg-[var(--color-bg-1)] transition-transform duration-200 ease-out md:translate-x-0 md:w-56 ${
+        className={`panel-sidebar fixed inset-y-0 left-0 z-50 flex w-64 flex-col border-r border-[var(--color-border)] transition-transform duration-200 ease-out md:translate-x-0 md:w-56 ${
           sidebarOpen ? "translate-x-0" : "-translate-x-full"
         }`}
       >
         <div className="flex items-center justify-between border-b border-[var(--color-border)] px-4 py-4 md:block">
           <div className="flex items-center gap-3">
-            <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-[var(--color-bg-2)] text-sm font-semibold text-[var(--color-text-strong)] shadow-sm">
+            <div className="panel-brand-mark flex h-9 w-9 items-center justify-center rounded-xl text-sm font-bold">
               PB
             </div>
             <div>
-              <h2 className="text-[11px] font-semibold tracking-[0.2em] text-[var(--color-text-muted)]">
-                CONSTRUCTOR DE LANDINGS
+              <h2 className="text-[10px] font-semibold tracking-[0.17em] text-[var(--color-text-strong)]">
+                PANEL BOT ADMIN
               </h2>
+              <p className="mt-0.5 text-[9px] text-[var(--color-text-disabled)]">Constructor de landings</p>
             </div>
           </div>
           <button
@@ -575,7 +549,7 @@ export default function DashboardLayout({
             <CloseIcon className="h-5 w-5" />
           </button>
         </div>
-        <nav className="flex flex-1 flex-col gap-2 p-3">
+        <nav className="panel-sidebar-nav flex flex-1 flex-col gap-1 overflow-y-auto p-3">
           <Link
             href="/dashboard/inicio"
             onClick={(event) => handleNavClick("/dashboard/inicio", event)}
@@ -742,7 +716,7 @@ export default function DashboardLayout({
 
       {/* Main content: margen izquierdo en desktop para no quedar bajo el sidebar fijo */}
       <div className="flex min-w-0 flex-1 flex-col md:ml-56">
-        <header className="flex items-center justify-between gap-3 border-b border-[var(--color-border)] px-4 py-3 sm:px-6">
+        <header className="panel-topbar flex min-h-16 items-center justify-between gap-3 border-b px-4 py-3 sm:px-6">
           <div className="flex min-w-0 items-center gap-3">
             <button
               type="button"
@@ -752,6 +726,12 @@ export default function DashboardLayout({
             >
               <MenuIcon className="h-6 w-6" />
             </button>
+            <div className="hidden min-w-0 md:block">
+              <p className="text-[9px] font-semibold uppercase tracking-[0.16em] text-[var(--color-primary)]">Workspace</p>
+              <p className="truncate text-xs font-medium text-[var(--color-text-strong)]">
+                {clientName || "Panel de gestión"}
+              </p>
+            </div>
             {showPlanExpiryWarning && isExpiringSoon && (
               <div className="ml-2 flex items-center gap-2 rounded-lg border border-amber-700/70 bg-amber-950/40 px-3 py-1.5 text-[11px] text-amber-200">
                 <span>
@@ -772,14 +752,14 @@ export default function DashboardLayout({
             <button
               type="button"
               onClick={() => setSetupGuideOpen(true)}
-              className="shrink-0 rounded-lg border border-cyan-700/70 bg-cyan-950/30 px-3 py-1.5 text-xs font-semibold text-cyan-200 transition hover:bg-cyan-950/50"
+              className="ui-button ui-button-secondary h-9 min-h-9 shrink-0 px-3"
             >
               Ayuda
             </button>
           </div>
         </header>
         <main
-          className="min-h-0 max-w-full flex-1 overflow-x-hidden overflow-y-auto px-3 py-5 sm:px-6 sm:py-8 lg:px-10"
+          className="panel-main-content min-h-0 flex-1 overflow-x-hidden overflow-y-auto px-3 py-5 sm:px-6 sm:py-8 lg:px-10"
           aria-busy={isNavigating}
         >
           {children}
@@ -793,6 +773,7 @@ export default function DashboardLayout({
         onClose={() => setSetupGuideOpen(false)}
       />
     </div>
+    </AppConfirmProvider>
   );
 }
 

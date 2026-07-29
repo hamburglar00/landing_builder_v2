@@ -8,6 +8,8 @@ import type { Gerencia } from "@/lib/gerencias/types";
 import { fetchGerencias, fetchGerenciasForAdmin } from "@/lib/gerencias/gerenciasDb";
 import type { PhoneKind } from "@/lib/landing/types";
 import { DashboardSkeleton } from "@/components/ui/DashboardSkeleton";
+import { PageHeader } from "@/components/ui/PanelPrimitives";
+import { useAppConfirm } from "@/components/ui/AppConfirmDialog";
 
 export type GerenciaPhoneRow = {
   id: number;
@@ -79,6 +81,7 @@ export function TelefonosPageContent({
   title = "Teléfonos",
   isAdmin = false,
 }: Props) {
+  const confirmAction = useAppConfirm();
   const [gerencias, setGerencias] = useState<Gerencia[]>([]);
   const [phonesByGerencia, setPhonesByGerencia] = useState<
     Record<number, GerenciaPhoneRow[]>
@@ -528,9 +531,12 @@ export function TelefonosPageContent({
       setError("No hay telefonos inactivos para borrar.");
       return;
     }
-    const ok = window.confirm(
-      `Se borraran ${inactiveIds.length} telefonos inactivos de la base de datos. Esta accion no se puede deshacer. ¿Continuar?`,
-    );
+    const ok = await confirmAction({
+      title: "Eliminar teléfonos inactivos",
+      description: `Se eliminarán ${inactiveIds.length} teléfonos inactivos de la base de datos. Esta acción no se puede deshacer.`,
+      confirmLabel: "Eliminar teléfonos",
+      danger: true,
+    });
     if (!ok) return;
     setGlobalDeletingInactive(true);
     setError(null);
@@ -727,23 +733,25 @@ export function TelefonosPageContent({
           </a>
         </div>
       ) : null}
-      <div>
-        <h1 className="text-xl font-semibold text-zinc-100">{title}</h1>
-        <p className="mt-1 text-sm text-zinc-400">
-          Historial de teléfonos por gerencia. Sincroniza y reinicia contadores por
-          gerencia o en bloque.
-        </p>
-        <p className="mt-1 text-xs text-zinc-500">
+      <PageHeader
+        eyebrow="Operación"
+        title={title}
+        description={
+          <>
+            Historial de teléfonos por gerencia. Sincronizá y reiniciá contadores por gerencia o en bloque.
+            <span className="mt-1 block text-[11px] text-[var(--color-text-disabled)]">
           {isAdmin
             ? "Próxima sincronización automática (cron):"
             : "Próxima sincronización automática:"}{" "}
-          <span className="font-mono text-zinc-300">{nextSyncCountdown}</span>
-        </p>
-      </div>
+              <span className="font-mono text-[var(--color-text)]">{nextSyncCountdown}</span>
+            </span>
+          </>
+        }
+      />
 
       {error && (
         <p
-          className="rounded-lg bg-red-950/50 px-3 py-2 text-sm text-red-300"
+          className="ui-alert border-[rgba(251,113,133,0.25)] bg-[rgba(251,113,133,0.07)] text-sm text-[var(--color-danger)]"
           role="alert"
         >
           {error}
@@ -751,7 +759,7 @@ export function TelefonosPageContent({
       )}
 
       {/* Botones globales */}
-      <div className="rounded-xl border border-zinc-800 bg-zinc-900/50 p-4">
+      <div className="ui-card p-4">
         <div className="flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
           <span className="text-xs font-medium text-zinc-400">
             Todas las gerencias:
