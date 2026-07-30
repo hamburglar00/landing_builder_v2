@@ -753,7 +753,6 @@ export default function PublicLandingRuntimeScript({ slug, config }: Props) {
                 client_ip_issued_at: tracking.clientIpIssuedAt || undefined,
                 client_ip_proof: tracking.clientIpProof || undefined,
                 client_user_agent: navigator.userAgent || undefined,
-                agentuser: navigator.userAgent || undefined,
                 telefono_asignado: phone,
                 promo_code: promoCode,
                 source: "main_button",

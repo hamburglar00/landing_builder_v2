@@ -18,31 +18,75 @@ type PublishTargetSectionProps = {
 const TARGETS: Array<{
   value: PublishTarget;
   title: string;
+  profile: string;
+  recommendation: string;
+  comparison: Array<{
+    label: string;
+    value: string;
+  }>;
   pros: string[];
   cons: string[];
 }> = [
   {
     value: "classic",
     title: "Clásico",
+    profile: "Continuidad y compatibilidad",
+    recommendation:
+      "Elegilo si esta URL ya está publicada en anuncios y no querés modificar una campaña activa.",
+    comparison: [
+      {
+        label: "Carga inicial",
+        value: "Buena, aunque más pesada: necesita iniciar React/Next.",
+      },
+      {
+        label: "Teléfono",
+        value: "Lo precarga al iniciar la app y reintenta si la red demora.",
+      },
+      {
+        label: "Actualizaciones",
+        value: "Funciona como un servicio independiente del Constructor.",
+      },
+    ],
     pros: [
-      "Estable y probado en campañas.",
-      "Conserva tus enlaces actuales sin cambios.",
+      "Motor histórico, estable y muy probado en campañas reales.",
+      "Conserva la URL actual: no hace falta editar anuncios existentes.",
+      "Su despliegue separado aísla los cambios del motor principal.",
     ],
     cons: [
-      "Las mejoras se actualizan por separado.",
-      "Los cambios pueden tardar un poco más en verse.",
+      "Descarga e inicializa una aplicación React antes de quedar plenamente interactivo.",
+      "La búsqueda anticipada del teléfono comienza después de esa inicialización.",
+      "Las mejoras del motor deben actualizarse también en este proyecto.",
     ],
   },
   {
     value: "constructor",
     title: "Constructor",
+    profile: "Rendimiento recomendado",
+    recommendation:
+      "Es la opción recomendada para campañas nuevas o cuando la prioridad es abrir y responder lo más rápido posible.",
+    comparison: [
+      {
+        label: "Carga inicial",
+        value: "Más rápida: entrega HTML listo y no necesita iniciar React.",
+      },
+      {
+        label: "Teléfono",
+        value: "Puede venir cacheado en la página y se actualiza en paralelo.",
+      },
+      {
+        label: "Actualizaciones",
+        value: "Recibe directamente las mejoras del Constructor.",
+      },
+    ],
     pros: [
-      "Carga más liviana y rápida.",
-      "Recibe primero las mejoras del editor.",
+      "Menos JavaScript y CTA disponible antes, especialmente en móviles lentos.",
+      "Inicia la obtención del teléfono antes que el motor Clásico.",
+      "Publicación, tracking y mejoras quedan centralizados en un solo motor.",
     ],
     cons: [
-      "Utiliza una dirección web diferente.",
-      "Migrar una campaña activa requiere actualizar su enlace.",
+      "Usa una URL diferente con el formato /l/nombre.",
+      "Al migrar una campaña activa hay que reemplazar su enlace en Meta Ads.",
+      "Los cambios recién publicados pueden atravesar unos segundos de caché, aunque el sistema los precalienta.",
     ],
   },
 ];
@@ -177,12 +221,36 @@ export function PublishTargetSection({
                 <div
                   id={infoId}
                   role="tooltip"
-                  className="absolute right-2 top-10 z-30 w-[min(18rem,calc(100vw-3rem))] rounded-xl border border-zinc-700 bg-zinc-950 p-3.5 text-left shadow-2xl shadow-black/50"
+                  className="absolute right-2 top-10 z-30 max-h-[min(34rem,calc(100vh-2rem))] w-[min(23rem,calc(100vw-3rem))] overflow-y-auto rounded-xl border border-zinc-700 bg-zinc-950 p-3.5 text-left shadow-2xl shadow-black/50"
                 >
                   <p className="text-xs font-semibold text-zinc-100">
                     Motor {target.title}
                   </p>
+                  <p className="mt-0.5 text-[10px] font-medium uppercase tracking-[0.1em] text-sky-300">
+                    {target.profile}
+                  </p>
+                  <p className="mt-3 rounded-lg border border-sky-500/20 bg-sky-500/5 px-2.5 py-2 text-[11px] leading-4 text-zinc-200">
+                    {target.recommendation}
+                  </p>
                   <div className="mt-3 grid gap-3">
+                    <div>
+                      <p className="text-[10px] font-semibold uppercase tracking-[0.12em] text-sky-300">
+                        Comparativa técnica
+                      </p>
+                      <dl className="mt-1.5 divide-y divide-zinc-800 rounded-lg border border-zinc-800 bg-zinc-900/50 px-2.5">
+                        {target.comparison.map((item) => (
+                          <div
+                            key={item.label}
+                            className="grid grid-cols-[5.5rem_1fr] gap-2 py-2 text-[10px] leading-4"
+                          >
+                            <dt className="font-semibold text-zinc-300">
+                              {item.label}
+                            </dt>
+                            <dd className="text-zinc-400">{item.value}</dd>
+                          </div>
+                        ))}
+                      </dl>
+                    </div>
                     <div>
                       <p className="text-[10px] font-semibold uppercase tracking-[0.12em] text-emerald-400">
                         Ventajas
@@ -216,6 +284,11 @@ export function PublishTargetSection({
                       </ul>
                     </div>
                   </div>
+                  <p className="mt-3 border-t border-zinc-800 pt-2.5 text-[10px] leading-4 text-zinc-500">
+                    Ambos conservan la misma lógica de asignación de teléfonos,
+                    Pixel/CAPI y conversiones. Cambia la arquitectura de entrega,
+                    no la lógica del negocio.
+                  </p>
                 </div>
               ) : null}
             </div>

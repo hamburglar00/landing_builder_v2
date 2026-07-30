@@ -19,6 +19,11 @@ import {
   resolvePurchasePixelAttribution,
   type PurchasePixelAttribution,
 } from "./pixel_attribution.ts";
+import {
+  canonicalizeInboundTrackingPayload,
+  inboundClientIpCandidates,
+  inboundUserAgent,
+} from "./inbound_tracking.ts";
 
 
 const corsHeaders = {
@@ -818,11 +823,11 @@ function isPrivateOrReservedIp(ip: string): boolean {
 }
 
 function payloadClientIp(p: Params): string {
-  return normalizePublicClientIp(
-    p.clientIP ??
-      p.client_ip ??
-      p.client_ip_address,
-  );
+  for (const candidate of inboundClientIpCandidates(p)) {
+    const normalized = normalizePublicClientIp(candidate);
+    if (normalized) return normalized;
+  }
+  return "";
 }
 
 function ipv4ToUint32(ip: string): number | null {
@@ -2212,7 +2217,7 @@ async function handleContact(
     purchase_payload_raw: "",
     test_event_code: testEventCode,
     client_ip: payloadClientIp(p),
-    agent_user: norm(p.agentuser),
+    agent_user: inboundUserAgent(p),
     device_type: norm(p.device_type),
     event_source_url: eventSourceUrl,
     estado: "contact",
@@ -2594,7 +2599,7 @@ async function handleLead(
       purchase_payload_raw: "",
       test_event_code: testEventCode,
       client_ip: payloadClientIp(p),
-      agent_user: norm(p.agentuser),
+      agent_user: inboundUserAgent(p),
       device_type: norm(p.device_type),
       event_source_url: eventSourceUrl,
       estado: "lead",
@@ -3825,6 +3830,10 @@ Deno.serve(async (req) => {
     let params: Params = await req.json().catch(() => ({}));
     // Preserve emitter data; when event_time is missing, freeze it at receive time for deferred replays.
     params = ensurePayloadEventTime(params, Math.floor(Date.now() / 1000));
+    params = canonicalizeInboundTrackingPayload(params, {
+      clientIpAddress: payloadClientIp(params),
+      userAgent: inboundUserAgent(params),
+    });
 
     // landing_name can come from the payload (to track which landing sent this)
     const landingName = norm(params.landing_name || params.landingName || "");

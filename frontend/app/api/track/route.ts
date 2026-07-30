@@ -9,6 +9,7 @@ import {
   selectPreferredClientIp,
   verifyClientIpProof,
 } from "@/lib/tracking/clientIpProof";
+import { buildCanonicalTrackingPayload } from "@/lib/tracking/canonicalPayload";
 import { deliverToUpstream } from "@/lib/tracking/upstream";
 
 function hostFromUrl(value?: string) {
@@ -125,35 +126,13 @@ function normalizePayload(
   });
   const clientIpAddress = preferredClientIp.ip;
   const clientIpSource = preferredClientIp.source;
-  const {
-    clientIP,
-    client_ip_source,
-    client_ip_version,
-    client_ipv4,
-    client_ipv6,
-    client_ip_issued_at,
-    client_ip_proof,
-    ...payload
-  } = payloadFromClient;
-  void clientIP;
-  void client_ip_source;
-  void client_ip_version;
-  void client_ipv4;
-  void client_ipv6;
-  void client_ip_issued_at;
-  void client_ip_proof;
-
-  return {
-    ...payload,
-    clientIP: clientIpAddress,
-    client_ip_source: clientIpSource,
-    client_ip_version: getIpVersion(clientIpAddress),
-    agentuser: payloadFromClient.agentuser ?? userAgent,
-    client_ip_address: clientIpAddress,
-    client_user_agent: payloadFromClient.client_user_agent ?? userAgent,
-    timestamp: payloadFromClient.timestamp ?? new Date().toISOString(),
-    event_time: payloadFromClient.event_time ?? Math.floor(Date.now() / 1000),
-  };
+  return buildCanonicalTrackingPayload({
+    payloadFromClient,
+    clientIpAddress,
+    clientIpSource,
+    clientIpVersion: getIpVersion(clientIpAddress),
+    observedUserAgent: userAgent,
+  });
 }
 
 export async function POST(request: NextRequest) {
