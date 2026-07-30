@@ -19,6 +19,7 @@
 
 # production
 /build
+/public/vendor/meta-capi-param-builder/
 
 # misc
 .DS_Store

@@ -18,6 +18,9 @@ const SOCIAL_PROOF_ITEMS = [
   { quote: "Excelente trato, buena onda y respuesta inmediata.", name: "Gise A." },
 ];
 
+const META_PARAM_BUILDER_PUBLIC_PATH =
+  "/vendor/meta-capi-param-builder/1.3.1/clientParamBuilder.bundle.js";
+
 function escapeScriptJson(value: unknown) {
   return JSON.stringify(value).replace(/[<>&\u2028\u2029]/g, (character) => {
     switch (character) {
@@ -51,6 +54,7 @@ export default function PublicLandingRuntimeScript({ slug, config }: Props) {
     phoneSelectionMode: config.phoneSelection?.mode || "",
     backgroundMode: config.background?.mode || "",
     metaIpCollectorUrl: process.env.NEXT_PUBLIC_META_IP_COLLECTOR_URL || "",
+    metaParamBuilderSrc: META_PARAM_BUILDER_PUBLIC_PATH,
     whatsappPrefillText:
       config.interactions?.enabled && config.interactions.whatsappPrefillText
         ? config.interactions.whatsappPrefillText
@@ -73,6 +77,8 @@ export default function PublicLandingRuntimeScript({ slug, config }: Props) {
         clientIpProof: ""
       };
       var metaIpCollectorPromise = null;
+      var metaParamBuilderPromise = null;
+      var officialMetaTracking = null;
       var prearmedContact = null;
       var CONTACT_DEDUP_TTL_MS = 5 * 60 * 1000;
       var SOCIAL_PROOF_INTERVAL_MS = 5000;
@@ -275,6 +281,106 @@ export default function PublicLandingRuntimeScript({ slug, config }: Props) {
         };
       }
 
+      function getOfficialMetaParamBuilder() {
+        try {
+          var sdk = window.clientParamBuilder;
+          if (
+            sdk &&
+            typeof sdk.processAndCollectAllParams === "function" &&
+            typeof sdk.getFbc === "function" &&
+            typeof sdk.getFbp === "function"
+          ) {
+            return sdk;
+          }
+        } catch (e) {}
+        return null;
+      }
+
+      function loadOfficialMetaParamBuilder() {
+        var available = getOfficialMetaParamBuilder();
+        if (available) return Promise.resolve(available);
+        if (metaParamBuilderPromise) return metaParamBuilderPromise;
+
+        var source = String(cfg.metaParamBuilderSrc || "").trim();
+        if (!source) return Promise.resolve(null);
+
+        metaParamBuilderPromise = new Promise(function (resolve) {
+          var existing = document.querySelector("script[data-meta-param-builder='official']");
+          var script = existing || document.createElement("script");
+          var settled = false;
+
+          function finish(value) {
+            if (settled) return;
+            settled = true;
+            resolve(value || null);
+          }
+
+          script.addEventListener("load", function () {
+            finish(getOfficialMetaParamBuilder());
+          }, { once: true });
+          script.addEventListener("error", function () {
+            finish(null);
+          }, { once: true });
+
+          if (!existing) {
+            script.src = source;
+            script.async = true;
+            script.setAttribute("data-meta-param-builder", "official");
+            document.head.appendChild(script);
+          }
+        }).finally(function () {
+          metaParamBuilderPromise = null;
+        });
+
+        return metaParamBuilderPromise;
+      }
+
+      function readOfficialMetaParam(sdk, methodName) {
+        try {
+          var method = sdk && sdk[methodName];
+          return typeof method === "function" ? String(method.call(sdk) || "") : "";
+        } catch (e) {
+          return "";
+        }
+      }
+
+      function collectOfficialMetaTracking() {
+        var sdk = getOfficialMetaParamBuilder();
+        if (!sdk) return Promise.resolve(null);
+
+        var trustedIp =
+          metaTracking.clientIpAddress && metaTracking.clientIpProof
+            ? metaTracking.clientIpAddress
+            : "";
+        var processResult;
+
+        try {
+          processResult = trustedIp
+            ? sdk.processAndCollectAllParams(window.location.href, function () {
+                return Promise.resolve(trustedIp);
+              })
+            : sdk.processAndCollectAllParams(window.location.href);
+        } catch (e) {
+          return Promise.resolve(null);
+        }
+
+        return Promise.resolve(processResult)
+          .then(function () {
+            officialMetaTracking = {
+              fbp: readOfficialMetaParam(sdk, "getFbp"),
+              fbc: readOfficialMetaParam(sdk, "getFbc"),
+              clientIpAddress: trustedIp,
+              clientIpIssuedAt: trustedIp ? metaTracking.clientIpIssuedAt : null,
+              clientIpProof: trustedIp ? metaTracking.clientIpProof : ""
+            };
+            metaTracking = mergeMetaTracking(metaTracking, officialMetaTracking);
+            return officialMetaTracking;
+          })
+          .catch(function () {
+            return null;
+          });
+      }
+
       function collectMetaClientIpProof() {
         var collectorUrl = String(cfg.metaIpCollectorUrl || "").trim();
         if (!collectorUrl) return Promise.resolve(null);
@@ -342,6 +448,30 @@ export default function PublicLandingRuntimeScript({ slug, config }: Props) {
           window.setTimeout(run, 0);
         }
       }
+
+      function scheduleOfficialMetaParamBuilder() {
+        var run = function () {
+          Promise.all([
+            loadOfficialMetaParamBuilder(),
+            collectMetaClientIpProof()
+          ])
+            .then(function (values) {
+              if (!values[0]) return null;
+              return collectOfficialMetaTracking();
+            })
+            .catch(function () {});
+        };
+
+        if (typeof window.requestIdleCallback === "function") {
+          window.requestIdleCallback(run, { timeout: 1200 });
+        } else {
+          window.setTimeout(run, 0);
+        }
+      }
+
+      window.__PUBLIC_META_COLLECT_PARAMS = function () {
+        return officialMetaTracking;
+      };
 
       function refreshMetaTracking(params, fallback) {
         var base = mergeMetaTracking(collectMetaTrackingParams(params), fallback || {});
@@ -779,6 +909,7 @@ export default function PublicLandingRuntimeScript({ slug, config }: Props) {
         prearmContactContext();
         ensurePhonePromise();
         scheduleMetaClientIpCollection();
+        scheduleOfficialMetaParamBuilder();
         window.setTimeout(prearmContactContext, 700);
         initRotatingBackgrounds();
         initCtas();

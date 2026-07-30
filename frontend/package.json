@@ -8,6 +8,8 @@
     "start": "next start",
     "lint": "eslint",
     "test": "tsx --test tests/**/*.test.ts",
+    "sync:meta-sdk": "node scripts/sync-meta-param-builder.mjs",
+    "postinstall": "npm run sync:meta-sdk",
     "check:encoding": "node ../scripts/check-encoding.js",
     "check:encoding:changed": "node ../scripts/check-encoding.js --changed"
   },
@@ -15,6 +17,7 @@
     "@supabase/supabase-js": "^2.98.0",
     "d3-geo": "^3.1.1",
     "jspdf": "^4.2.1",
+    "meta-capi-param-builder-clientjs": "1.3.1",
     "next": "16.1.6",
     "react": "19.2.3",
     "react-dom": "19.2.3",

@@ -159,9 +159,33 @@ test("conserva Contact con eventID y deduplicación local", () => {
   assert.match(html, /CONTACT_DEDUP_TTL_MS = 5 \* 60 \* 1000/);
   assert.match(html, /contact_sent:/);
   assert.match(html, /scheduleMetaClientIpCollection/);
+  assert.match(html, /scheduleOfficialMetaParamBuilder/);
+  assert.match(
+    html,
+    /vendor\/meta-capi-param-builder\/1\.3\.1\/clientParamBuilder\.bundle\.js/,
+  );
+  assert.match(html, /sdk\.processAndCollectAllParams\(window\.location\.href/);
+  assert.match(html, /window\.__PUBLIC_META_COLLECT_PARAMS/);
+  assert.match(html, /return officialMetaTracking/);
   assert.match(html, /client_ip_issued_at: tracking\.clientIpIssuedAt/);
   assert.match(html, /client_ip_proof: tracking\.clientIpProof/);
   assert.match(html, /requestIdleCallback/);
+});
+
+test("genera scripts públicos con JavaScript válido", () => {
+  const html = renderPublicLandingHtml({
+    slug: "oferta-test",
+    config: baseConfig,
+  });
+  const inlineScripts = Array.from(
+    html.matchAll(/<script(?:\s[^>]*)?>([\s\S]*?)<\/script>/g),
+    (match) => match[1],
+  ).filter(Boolean);
+
+  assert.ok(inlineScripts.length >= 2);
+  inlineScripts.forEach((script) => {
+    assert.doesNotThrow(() => new Function(script));
+  });
 });
 
 test("omite completamente el pixel cuando no hay Pixel ID", () => {
