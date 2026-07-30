@@ -5,6 +5,7 @@ import { handleRequest, normalizePublicIp, signClientIp } from "../src/index.js"
 
 const SECRET = "test-secret-with-enough-entropy";
 const ORIGIN = "https://landing.panelbotadmin.com";
+const BUILDER_ORIGIN = "https://mkt.panelbotadmin.com";
 
 test("normaliza IPv4 e IPv6 públicas y rechaza direcciones privadas", () => {
   assert.equal(normalizePublicIp("181.10.20.30"), "181.10.20.30");
@@ -64,4 +65,22 @@ test("rechaza orígenes no autorizados", async () => {
   );
 
   assert.equal(response.status, 403);
+});
+
+test("admite el dominio público del motor constructor", async () => {
+  const response = await handleRequest(
+    new Request("https://collector.example.test/", {
+      headers: {
+        Origin: BUILDER_ORIGIN,
+        "CF-Connecting-IP": "2800:810:abcd::1",
+      },
+    }),
+    {
+      ALLOWED_ORIGINS: `${ORIGIN},${BUILDER_ORIGIN}`,
+      META_IP_PROOF_SECRET: SECRET,
+    },
+  );
+
+  assert.equal(response.status, 200);
+  assert.equal(response.headers.get("Access-Control-Allow-Origin"), BUILDER_ORIGIN);
 });
