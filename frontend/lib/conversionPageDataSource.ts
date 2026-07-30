@@ -15,6 +15,10 @@ import {
   type FetchDateRange,
   type GerenciaAvailabilitySummary,
 } from "@/lib/conversionsDb";
+import type {
+  ConversionLogDirectionFilter,
+  ConversionLogEventFilter,
+} from "@/lib/conversionLogFilters";
 
 type ViewerRequest = {
   viewerId: string;
@@ -29,6 +33,8 @@ type VisibleLogsRequest = ViewerRequest & {
   limit?: number;
   offset?: number;
   range?: FetchDateRange | null;
+  direction?: ConversionLogDirectionFilter;
+  eventType?: ConversionLogEventFilter;
 };
 
 type InboxRequest = ViewerRequest & {
@@ -71,8 +77,17 @@ export const adminConversionPageDataSource = {
     range,
   }: ViewerRequest & { range?: FetchDateRange }) =>
     fetchConversionsForAdminUnfiltered(range),
-  fetchVisibleLogs: ({ viewerId, limit, offset }: VisibleLogsRequest) =>
-    fetchConversionLogsForAdminFiltered(viewerId, limit, offset),
+  fetchVisibleLogs: ({
+    viewerId,
+    limit,
+    offset,
+    direction,
+    eventType,
+  }: VisibleLogsRequest) =>
+    fetchConversionLogsForAdminFiltered(viewerId, limit, offset, {
+      direction,
+      eventType,
+    }),
   fetchAvailability: ({
     range,
   }: ViewerRequest & { range: FetchDateRange }) =>
@@ -96,6 +111,8 @@ export const dashboardConversionPageDataSource = {
     limit,
     offset,
     range,
+    direction,
+    eventType,
   }: VisibleLogsRequest) =>
     fetchConversionLogsFiltered(
       viewerId,
@@ -103,6 +120,7 @@ export const dashboardConversionPageDataSource = {
       limit,
       offset,
       range ?? undefined,
+      { direction, eventType },
     ),
   fetchAvailability: ({
     viewerId,

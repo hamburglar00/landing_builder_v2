@@ -44,6 +44,7 @@ import {
 } from "@/components/conversiones/conversionPageShared";
 import EditableConversionEmailCell from "@/components/conversiones/EditableConversionEmailCell";
 import ConversionFiltersModal from "@/components/conversiones/ConversionFiltersModal";
+import ConversionLogFilters from "@/components/conversiones/ConversionLogFilters";
 import ConversionConfigurationPanel from "@/components/conversiones/ConversionConfigurationPanel";
 import { useConversionStatsFilters } from "@/components/conversiones/useConversionStatsFilters";
 import {
@@ -64,6 +65,10 @@ import {
   CURRENCY_ALL,
   filterConversionsByCurrency,
 } from "@/lib/currency";
+import type {
+  ConversionLogDirectionFilter,
+  ConversionLogEventFilter,
+} from "@/lib/conversionLogFilters";
 
 const FunnelBoard = dynamic(() => import("@/components/conversiones/FunnelBoard"), {
   loading: () => <PanelSkeleton title="Cargando funnel..." />,
@@ -348,6 +353,10 @@ export default function DashboardConversionesPage() {
   const [tablePage, setTablePage] = useState(1);
   const [logsPage, setLogsPage] = useState(1);
   const [logsHasNextPage, setLogsHasNextPage] = useState(false);
+  const [logDirectionFilter, setLogDirectionFilter] =
+    useState<ConversionLogDirectionFilter>("all");
+  const [logEventFilter, setLogEventFilter] =
+    useState<ConversionLogEventFilter>("all");
   const [inboxPage, setInboxPage] = useState(1);
   const [inboxHasNextPage, setInboxHasNextPage] = useState(false);
   const {
@@ -411,6 +420,8 @@ export default function DashboardConversionesPage() {
   const inboxSearchRef = useRef(inboxSearch);
   const inboxActionFilterRef = useRef(inboxActionFilter);
   const logsPageRef = useRef(logsPage);
+  const logDirectionFilterRef = useRef(logDirectionFilter);
+  const logEventFilterRef = useRef(logEventFilter);
   const inboxPageRef = useRef(inboxPage);
 
   useEffect(() => {
@@ -432,6 +443,14 @@ export default function DashboardConversionesPage() {
   useEffect(() => {
     logsPageRef.current = logsPage;
   }, [logsPage]);
+
+  useEffect(() => {
+    logDirectionFilterRef.current = logDirectionFilter;
+  }, [logDirectionFilter]);
+
+  useEffect(() => {
+    logEventFilterRef.current = logEventFilter;
+  }, [logEventFilter]);
 
   useEffect(() => {
     inboxPageRef.current = inboxPage;
@@ -1034,7 +1053,7 @@ export default function DashboardConversionesPage() {
 
   useEffect(() => {
     setLogsPage(1);
-  }, [dateRange]);
+  }, [dateRange, logDirectionFilter, logEventFilter]);
 
   useEffect(() => {
     setInboxPage(1);
@@ -1052,6 +1071,8 @@ export default function DashboardConversionesPage() {
           limit: ACTIVITY_PAGE_SIZE + 1,
           offset,
           range: dateRange,
+          direction: logDirectionFilter,
+          eventType: logEventFilter,
         });
         if (requestSeq !== dataRequestSeqRef.current) return;
         setLogs(logRows.slice(0, ACTIVITY_PAGE_SIZE));
@@ -1062,7 +1083,14 @@ export default function DashboardConversionesPage() {
         if (requestSeq === dataRequestSeqRef.current) setRefreshingTable(false);
       }
     })();
-  }, [tab, userId, logsPage, dateRange]);
+  }, [
+    tab,
+    userId,
+    logsPage,
+    dateRange,
+    logDirectionFilter,
+    logEventFilter,
+  ]);
 
   useEffect(() => {
     if (tab !== "inbox" || !userId) return;
@@ -1124,6 +1152,8 @@ export default function DashboardConversionesPage() {
           limit: ACTIVITY_PAGE_SIZE + 1,
           offset,
           range,
+          direction: logDirectionFilterRef.current,
+          eventType: logEventFilterRef.current,
         });
         if (requestSeq !== dataRequestSeqRef.current) return;
         setLogs(logRows.slice(0, ACTIVITY_PAGE_SIZE));
@@ -1360,6 +1390,17 @@ export default function DashboardConversionesPage() {
                   </>
                 )}
               </button>
+            )}
+            {tab === "logs" && (
+              <ConversionLogFilters
+                direction={logDirectionFilter}
+                eventType={logEventFilter}
+                onApply={(direction, eventType) => {
+                  setLogDirectionFilter(direction);
+                  setLogEventFilter(eventType);
+                  setLogsPage(1);
+                }}
+              />
             )}
           </div>
           <DateRangeFilter onChange={handleDateRangeChange} initialPreset="hoy" />
@@ -1771,7 +1812,11 @@ export default function DashboardConversionesPage() {
             </h3>
           </div>
           {activeLogs.length === 0 ? (
-            <p className="text-sm text-zinc-500">Aun no hay logs registrados.</p>
+            <p className="text-sm text-zinc-500">
+              {logDirectionFilter !== "all" || logEventFilter !== "all"
+                ? "No hay logs que coincidan con los filtros aplicados."
+                : "Aun no hay logs registrados."}
+            </p>
           ) : (
             <>
               <div className="overflow-x-auto rounded-lg border border-zinc-700">

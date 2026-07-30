@@ -46,6 +46,7 @@ import {
 } from "@/components/conversiones/conversionPageShared";
 import EditableConversionEmailCell from "@/components/conversiones/EditableConversionEmailCell";
 import ConversionFiltersModal from "@/components/conversiones/ConversionFiltersModal";
+import ConversionLogFilters from "@/components/conversiones/ConversionLogFilters";
 import ConversionConfigurationPanel from "@/components/conversiones/ConversionConfigurationPanel";
 import { useConversionStatsFilters } from "@/components/conversiones/useConversionStatsFilters";
 import {
@@ -65,6 +66,10 @@ import {
   CURRENCY_ALL,
   filterConversionsByCurrency,
 } from "@/lib/currency";
+import type {
+  ConversionLogDirectionFilter,
+  ConversionLogEventFilter,
+} from "@/lib/conversionLogFilters";
 
 const FunnelBoard = dynamic(() => import("@/components/conversiones/FunnelBoard"), {
   loading: () => <PanelSkeleton title="Cargando funnel..." />,
@@ -199,6 +204,10 @@ export default function AdminConversionesPage() {
   const [expandedLog, setExpandedLog] = useState<number | null>(null);
   const [tableSearch, setTableSearch] = useState("");
   const [tablePage, setTablePage] = useState(1);
+  const [logDirectionFilter, setLogDirectionFilter] =
+    useState<ConversionLogDirectionFilter>("all");
+  const [logEventFilter, setLogEventFilter] =
+    useState<ConversionLogEventFilter>("all");
   const {
     statsLandingFilter,
     setStatsLandingFilter,
@@ -257,6 +266,8 @@ export default function AdminConversionesPage() {
   const dataRequestSeqRef = useRef(0);
   const userIdRef = useRef<string | null>(null);
   const tabRef = useRef<Tab>(tab);
+  const logDirectionFilterRef = useRef(logDirectionFilter);
+  const logEventFilterRef = useRef(logEventFilter);
 
   useEffect(() => {
     userIdRef.current = userId;
@@ -265,6 +276,14 @@ export default function AdminConversionesPage() {
   useEffect(() => {
     tabRef.current = tab;
   }, [tab]);
+
+  useEffect(() => {
+    logDirectionFilterRef.current = logDirectionFilter;
+  }, [logDirectionFilter]);
+
+  useEffect(() => {
+    logEventFilterRef.current = logEventFilter;
+  }, [logEventFilter]);
 
   useEffect(() => {
     const view = (searchParams.get("view") || "").toLowerCase();
@@ -683,19 +702,28 @@ export default function AdminConversionesPage() {
 
   useEffect(() => {
     const loadDeferredLogs = async () => {
-      if (!userId || tab !== "logs" || logs.length > 0) return;
+      if (!userId || tab !== "logs") return;
+      const requestSeq = ++dataRequestSeqRef.current;
+      setRefreshingTable(true);
       try {
         const logRows = await adminConversionPageDataSource.fetchVisibleLogs({
           viewerId: userId,
           limit: 200,
+          direction: logDirectionFilter,
+          eventType: logEventFilter,
         });
+        if (requestSeq !== dataRequestSeqRef.current) return;
         setLogs(logRows);
       } catch (e) {
         console.error(e);
+      } finally {
+        if (requestSeq === dataRequestSeqRef.current) {
+          setRefreshingTable(false);
+        }
       }
     };
     void loadDeferredLogs();
-  }, [tab, userId, logs.length]);
+  }, [tab, userId, logDirectionFilter, logEventFilter]);
 
   const handleSave = async () => {
     if (!config || !userId) return;
@@ -735,6 +763,8 @@ export default function AdminConversionesPage() {
         const logRows = await adminConversionPageDataSource.fetchVisibleLogs({
           viewerId: currentUserId,
           limit: 200,
+          direction: logDirectionFilterRef.current,
+          eventType: logEventFilterRef.current,
         });
         if (requestSeq !== dataRequestSeqRef.current) return;
         setLogs(logRows);
@@ -1260,18 +1290,32 @@ export default function AdminConversionesPage() {
               Logs de conversiones{" "}
               <span className="font-normal text-zinc-500">({logs.length})</span>
             </h3>
-            <button
-              type="button"
-              onClick={clearLogsDisplay}
-              disabled={hidingLogs || logs.length === 0 || demoMode}
-              className="inline-flex items-center gap-1.5 rounded-lg border border-red-900/60 bg-red-950/30 px-2.5 py-1.5 text-xs font-medium text-red-300 transition hover:bg-red-950/50 disabled:opacity-50 disabled:cursor-not-allowed"
-              title="Ocultar logs de la vista (no borra de la base)"
-            >
-              {hidingLogs ? "Ocultando..." : "Limpiar vista"}
-            </button>
+            <div className="flex flex-wrap items-center gap-2">
+              <ConversionLogFilters
+                direction={logDirectionFilter}
+                eventType={logEventFilter}
+                onApply={(direction, eventType) => {
+                  setLogDirectionFilter(direction);
+                  setLogEventFilter(eventType);
+                }}
+              />
+              <button
+                type="button"
+                onClick={clearLogsDisplay}
+                disabled={hidingLogs || logs.length === 0 || demoMode}
+                className="inline-flex items-center gap-1.5 rounded-lg border border-red-900/60 bg-red-950/30 px-2.5 py-1.5 text-xs font-medium text-red-300 transition hover:bg-red-950/50 disabled:opacity-50 disabled:cursor-not-allowed"
+                title="Ocultar logs de la vista (no borra de la base)"
+              >
+                {hidingLogs ? "Ocultando..." : "Limpiar vista"}
+              </button>
+            </div>
           </div>
           {logs.length === 0 ? (
-            <p className="text-sm text-zinc-500">Aun no hay logs registrados.</p>
+            <p className="text-sm text-zinc-500">
+              {logDirectionFilter !== "all" || logEventFilter !== "all"
+                ? "No hay logs que coincidan con los filtros aplicados."
+                : "Aun no hay logs registrados."}
+            </p>
           ) : (
             <div className="overflow-x-auto rounded-lg border border-zinc-700">
               <table className="min-w-[980px] text-left text-[11px] md:min-w-full">

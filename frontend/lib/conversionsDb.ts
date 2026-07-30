@@ -1,5 +1,10 @@
 import { supabase } from "@/lib/supabaseClient";
 import type { ReportingCurrency } from "@/lib/currency";
+import {
+  buildConversionLogQueryFilter,
+  type ConversionLogDirectionFilter,
+  type ConversionLogEventFilter,
+} from "@/lib/conversionLogFilters";
 
 function normalizePixelId(value: string): string {
   return String(value ?? "").replace(/\D/g, "");
@@ -910,10 +915,14 @@ async function fetchConversionLogsInternal({
   limit,
   offset,
   range,
+  direction,
+  eventType,
 }: ConversionQueryScope & {
   limit: number;
   offset: number;
   range?: FetchDateRange | null;
+  direction?: ConversionLogDirectionFilter;
+  eventType?: ConversionLogEventFilter;
 }): Promise<ConversionLogRow[]> {
   let query = supabase
     .from("conversion_logs")
@@ -924,6 +933,17 @@ async function fetchConversionLogsInternal({
   const end = toIsoIfValid(range?.end);
   if (start) query = query.gte("created_at", start);
   if (end) query = query.lt("created_at", end);
+
+  const logFilter = buildConversionLogQueryFilter(direction, eventType);
+  if (logFilter.requireReceivedPayload) {
+    query = query.neq("payload_received", "");
+  }
+  if (logFilter.requireMetaPayload) {
+    query = query.neq("payload_meta", "");
+  }
+  if (logFilter.orExpression) {
+    query = query.or(logFilter.orExpression);
+  }
 
   const { data, error } = await query
     .order("created_at", { ascending: false })
@@ -939,11 +959,15 @@ async function fetchVisibleConversionLogs({
   limit,
   offset,
   range,
+  direction,
+  eventType,
 }: ConversionQueryScope & {
   hiddenBy: string;
   limit: number;
   offset: number;
   range?: FetchDateRange | null;
+  direction?: ConversionLogDirectionFilter;
+  eventType?: ConversionLogEventFilter;
 }): Promise<ConversionLogRow[]> {
   const visibleFrom = await fetchConversionViewVisibleFrom(hiddenBy);
   const effectiveRange: FetchDateRange = {
@@ -955,6 +979,8 @@ async function fetchVisibleConversionLogs({
     limit,
     offset,
     range: effectiveRange,
+    direction,
+    eventType,
   });
   const hiddenIds = await fetchHiddenConversionLogIds(
     hiddenBy,
@@ -978,6 +1004,10 @@ export async function fetchConversionLogsFiltered(
   limit = 200,
   offset = 0,
   range?: FetchDateRange | null,
+  filters: {
+    direction?: ConversionLogDirectionFilter;
+    eventType?: ConversionLogEventFilter;
+  } = {},
 ): Promise<ConversionLogRow[]> {
   return fetchVisibleConversionLogs({
     userId,
@@ -985,6 +1015,8 @@ export async function fetchConversionLogsFiltered(
     limit,
     offset,
     range,
+    direction: filters.direction,
+    eventType: filters.eventType,
   });
 }
 
@@ -1000,11 +1032,17 @@ export async function fetchConversionLogsForAdminFiltered(
   hiddenBy: string,
   limit = 200,
   offset = 0,
+  filters: {
+    direction?: ConversionLogDirectionFilter;
+    eventType?: ConversionLogEventFilter;
+  } = {},
 ): Promise<ConversionLogRow[]> {
   return fetchVisibleConversionLogs({
     hiddenBy,
     limit,
     offset,
+    direction: filters.direction,
+    eventType: filters.eventType,
   });
 }
 
