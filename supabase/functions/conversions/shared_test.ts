@@ -6,6 +6,7 @@ import {
   preparePurchaseCustomDataForMeta,
   resolvePurchaseCapiDecision,
   resolvePurchaseCapiRoute,
+  resolvePurchaseRetryIdentity,
   shouldSkipCapiForNonMetaOrigin,
 } from "./shared.ts";
 
@@ -307,5 +308,49 @@ Deno.test("Business Messaging routing is exclusive to eligible Chatrace purchase
   assert(
     eligible.reason === "eligible_chatrace_ctwa",
     "Eligible route must be traceable",
+  );
+});
+
+Deno.test("Purchase retries reuse a persisted Meta identity", () => {
+  const identity = resolvePurchaseRetryIdentity(
+    " purchase-event-123 ",
+    1773792243,
+    1999999999,
+    () => "must-not-be-used",
+  );
+
+  assert(
+    identity.eventId === "purchase-event-123",
+    "A retry must reuse the stored event_id",
+  );
+  assert(
+    identity.eventTime === 1773792243,
+    "A retry must reuse the stored event_time",
+  );
+  assert(
+    !identity.needsPersistence,
+    "A complete stored identity must not be rewritten",
+  );
+});
+
+Deno.test("Purchase retries persist generated identity before delivery", () => {
+  const identity = resolvePurchaseRetryIdentity(
+    "",
+    null,
+    1773792243,
+    () => "generated-once",
+  );
+
+  assert(
+    identity.eventId === "generated-once",
+    "A missing legacy event_id must be generated once",
+  );
+  assert(
+    identity.eventTime === 1773792243,
+    "A missing legacy event_time must be frozen before delivery",
+  );
+  assert(
+    identity.needsPersistence,
+    "Generated retry identity must be persisted before calling Meta",
   );
 });

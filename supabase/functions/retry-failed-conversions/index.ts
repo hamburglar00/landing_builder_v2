@@ -8,6 +8,7 @@ import {
   preparePurchaseCustomDataForMeta,
   resolvePurchaseCapiDecision,
   resolvePurchaseCapiRoute,
+  resolvePurchaseRetryIdentity,
   shouldSkipCapiForNonMetaOrigin,
   type ConversionRow,
   type ConversionsConfig,
@@ -505,9 +506,35 @@ Deno.serve(async (req) => {
       }
       const amount = normalizedAmount.value;
 
-      let eventId = String(row.purchase_event_id ?? "").trim();
-      if (!eventId) eventId = crypto.randomUUID();
-      const eventTime = row.purchase_event_time ?? Math.floor(Date.now() / 1000);
+      const retryIdentity = resolvePurchaseRetryIdentity(
+        row.purchase_event_id,
+        row.purchase_event_time,
+      );
+      const { eventId, eventTime } = retryIdentity;
+
+      if (retryIdentity.needsPersistence) {
+        const { error: identityPersistError } = await db
+          .from("conversions")
+          .update({
+            purchase_event_id: eventId,
+            purchase_event_time: eventTime,
+          })
+          .eq("id", row.id);
+        if (identityPersistError) {
+          await writeConversionLog(
+            db,
+            row.user_id,
+            row.id,
+            "ERROR",
+            "Meta CAPI retry Purchase cancelado: identidad no persistida",
+            identityPersistError.message,
+            "",
+            "",
+          );
+          continue;
+        }
+      }
+
       if (isEventTimeTooOldForMetaCapi(Number(eventTime))) {
         const obs = appendObs(row.observaciones ?? "", "PURCHASE CAPI OMITIDO EVENT_TIME ANTIGUO");
         await db.from("conversions").update({

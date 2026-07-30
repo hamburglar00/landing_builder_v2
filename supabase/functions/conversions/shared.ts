@@ -709,6 +709,31 @@ export function generateEventId(): string {
   return crypto.randomUUID();
 }
 
+export function resolvePurchaseRetryIdentity(
+  persistedEventId: unknown,
+  persistedEventTime: unknown,
+  nowSeconds = Math.floor(Date.now() / 1000),
+  createEventId: () => string = generateEventId,
+): {
+  eventId: string;
+  eventTime: number;
+  needsPersistence: boolean;
+} {
+  const currentEventId = String(persistedEventId ?? "").trim();
+  const currentEventTime = Number(persistedEventTime);
+  const hasEventId = Boolean(currentEventId);
+  const hasEventTime =
+    Number.isFinite(currentEventTime) && currentEventTime > 0;
+
+  return {
+    eventId: hasEventId ? currentEventId : createEventId(),
+    eventTime: hasEventTime
+      ? Math.floor(currentEventTime)
+      : Math.floor(nowSeconds),
+    needsPersistence: !hasEventId || !hasEventTime,
+  };
+}
+
 export function toValidEventTime(value: unknown): number {
   const n = Number(value);
   const now = Math.floor(Date.now() / 1000);

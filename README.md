@@ -157,7 +157,8 @@ sequenceDiagram
 - Siempre conserva la clasificación interna first/repeat.
 - Modo estándar: envía todas las compras una sola vez sin `purchase_type`.
 - Modo clasificado: envía los tipos habilitados y agrega `purchase_type` al mismo evento estándar `Purchase`.
-- Antes de procesar, reserva atómicamente un único `event_id` por `coelsa_id`, `transaction_id` o `action_event_id`; los webhooks concurrentes quedan deduplicados.
+- Antes de procesar, reserva atómicamente un único `event_id` por `coelsa_id`, `transaction_id`, `action_event_id`, `purchase_event_id` o `event_id`; los webhooks concurrentes quedan deduplicados.
+- Si el emisor no aporta ninguno de esos identificadores, la compra se procesa para no descartar una operación legítima, pero queda marcada en `observaciones` y Logs como `DEDUPE NO GARANTIZADO`.
 - Envía `Purchase` CAPI con `custom_data` (`value`, `currency`, `purchase_type` cuando corresponde).
 
 ### 6.4 Dedupe de eventos entrantes por `action_event_id`

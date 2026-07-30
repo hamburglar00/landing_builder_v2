@@ -195,6 +195,8 @@ const ctwaClidForSource = (value: unknown, sourcePlatform: unknown): string =>
     ? normalizeCtwaClid(value)
     : "";
 const META_CAPI_MAX_EVENT_AGE_SECONDS = 7 * 24 * 60 * 60;
+const PURCHASE_UNPROTECTED_OBSERVATION =
+  "PURCHASE SIN IDENTIFICADOR ESTABLE (DEDUPE NO GARANTIZADO)";
 const META_CRAWLER_CONTACT_STATUS = "skipped_meta_crawler";
 const META_CRAWLER_CONTACT_OBSERVATION = "CONTACT CAPI OMITIDO META CRAWLER";
 const META_CRAWLER_USER_AGENT_TOKENS = [
@@ -421,6 +423,57 @@ async function completePurchaseEventClaim(
       status,
     });
   }
+}
+
+async function traceUnprotectedPurchase(
+  db: SupabaseClient,
+  userId: string,
+  rowId: string,
+  p: Params,
+  claim: PurchaseEventClaim,
+): Promise<void> {
+  if (claim.status !== "unprotected" || claim.protectedBy.length > 0) return;
+
+  const { data: current } = await db
+    .from("conversions")
+    .select("observaciones")
+    .eq("id", rowId)
+    .single();
+  const observaciones = appendObservation(
+    norm(current?.observaciones),
+    PURCHASE_UNPROTECTED_OBSERVATION,
+  );
+  const { error: updateError } = await db
+    .from("conversions")
+    .update({ observaciones })
+    .eq("id", rowId);
+
+  await writeLog(
+    db,
+    userId,
+    "claimPurchaseEvent",
+    "WARN",
+    "Purchase procesado sin identificador estable",
+    JSON.stringify({
+      row_id: rowId,
+      generated_event_id: claim.eventId,
+      source_platform: norm(p.source_platform),
+      accepted_identifiers: [
+        "coelsa_id",
+        "transaction_id",
+        "action_event_id",
+        "purchase_event_id",
+        "event_id",
+      ],
+      observation_persisted: !updateError,
+      observation_error: updateError?.message ?? "",
+    }),
+    rowId,
+    undefined,
+    undefined,
+    safePayloadRaw(p),
+    PURCHASE_UNPROTECTED_OBSERVATION,
+  );
 }
 
 function normalizePromoCode(v: unknown): string {
@@ -3099,6 +3152,14 @@ async function handlePurchase(
       purchase_type: "first",
     };
 
+    await traceUnprotectedPurchase(
+      db,
+      landing.user_id,
+      targetId,
+      p,
+      purchaseClaim,
+    );
+
     await writeLog(
       db,
       landing.user_id,
@@ -3234,6 +3295,14 @@ async function handlePurchase(
       value: amount,
       purchase_type: "first",
     };
+
+    await traceUnprotectedPurchase(
+      db,
+      landing.user_id,
+      createdId,
+      p,
+      purchaseClaim,
+    );
 
     await writeLog(
       db,
@@ -3383,6 +3452,14 @@ async function handlePurchase(
   const fullRow = (fresh ?? newRow) as ConversionRow;
   const customData: Record<string, unknown> = { currency: effectiveRepeatConfig.meta_currency, value: amount, purchase_type: "repeat" };
   const repeatCapiRow = repeatInheritedPixel ? fullRow : clearUntrustedStoredPixel(fullRow);
+
+  await traceUnprotectedPurchase(
+    db,
+    landing.user_id,
+    newId,
+    p,
+    purchaseClaim,
+  );
 
   await writeLog(
     db,
@@ -3633,6 +3710,14 @@ async function handleSimplePurchase(
     purchase_type: isRepeatSimple ? "repeat" : "first",
   };
   const simpleCapiRow = simpleInheritedPixel ? fullRow : clearUntrustedStoredPixel(fullRow);
+
+  await traceUnprotectedPurchase(
+    db,
+    landing.user_id,
+    newId,
+    p,
+    purchaseClaim,
+  );
 
   await writeLog(db, landing.user_id, "handleSimplePurchase", "INFO", "Purchase simple procesado", JSON.stringify({ phone: cleanPhone, amount, inherited_from: srcRow?.id }), newId);
 
