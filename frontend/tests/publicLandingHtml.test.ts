@@ -158,6 +158,10 @@ test("conserva Contact con eventID y deduplicación local", () => {
   );
   assert.match(html, /CONTACT_DEDUP_TTL_MS = 5 \* 60 \* 1000/);
   assert.match(html, /contact_sent:/);
+  assert.match(html, /scheduleMetaClientIpCollection/);
+  assert.match(html, /client_ip_issued_at: tracking\.clientIpIssuedAt/);
+  assert.match(html, /client_ip_proof: tracking\.clientIpProof/);
+  assert.match(html, /requestIdleCallback/);
 });
 
 test("omite completamente el pixel cuando no hay Pixel ID", () => {

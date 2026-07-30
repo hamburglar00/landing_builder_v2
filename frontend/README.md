@@ -180,6 +180,7 @@ Ver **supabase/migrations/README.md** para el listado completo y pasos del cron 
 ## Despliegue y entorno
 
 - **Variables de entorno frontend:** `NEXT_PUBLIC_SUPABASE_URL`, `NEXT_PUBLIC_SUPABASE_ANON_KEY`.
+- **IP dual-stack para Meta (opcional):** `NEXT_PUBLIC_META_IP_COLLECTOR_URL` apunta al Worker de `infra/meta-ip-collector` y `META_IP_PROOF_SECRET` contiene el mismo secreto HMAC configurado en el Worker. La consulta se ejecuta en segundo plano y mantiene la IP observada por Vercel como fallback.
 - **Edge Functions a desplegar:**
   ```bash
   npx supabase functions deploy sync-phones

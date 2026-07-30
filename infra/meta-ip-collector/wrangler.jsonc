@@ -1,0 +1,12 @@
+{
+  "$schema": "node_modules/wrangler/config-schema.json",
+  "name": "panelbot-meta-ip-collector",
+  "main": "src/index.js",
+  "compatibility_date": "2026-07-30",
+  "observability": {
+    "enabled": true
+  },
+  "vars": {
+    "ALLOWED_ORIGINS": "https://landing.panelbotadmin.com,https://constructor.panelbotadmin.com"
+  }
+}

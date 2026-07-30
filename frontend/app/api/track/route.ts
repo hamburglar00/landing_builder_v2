@@ -4,6 +4,11 @@ import {
   markTrackEventDelivered,
   persistTrackEvent,
 } from "@/lib/tracking/queue";
+import {
+  normalizePublicClientIp,
+  selectPreferredClientIp,
+  verifyClientIpProof,
+} from "@/lib/tracking/clientIpProof";
 import { deliverToUpstream } from "@/lib/tracking/upstream";
 
 function hostFromUrl(value?: string) {
@@ -102,18 +107,32 @@ function normalizePayload(
   payloadFromClient: Record<string, unknown>,
 ) {
   const userAgent = request.headers.get("user-agent") || "";
-  const realClientIp = getRealClientIp(request);
+  const realClientIp = normalizePublicClientIp(getRealClientIp(request));
   const fallbackClientIp =
     typeof payloadFromClient.client_ip_address === "string"
-      ? payloadFromClient.client_ip_address.trim()
+      ? normalizePublicClientIp(payloadFromClient.client_ip_address)
       : "";
-  const clientIpAddress = realClientIp || fallbackClientIp;
+  const verifiedClientIp = verifyClientIpProof({
+    ip: fallbackClientIp,
+    issuedAt: payloadFromClient.client_ip_issued_at,
+    proof: payloadFromClient.client_ip_proof,
+    secret: process.env.META_IP_PROOF_SECRET,
+  });
+  const preferredClientIp = selectPreferredClientIp({
+    verifiedClientIp,
+    observedClientIp: realClientIp,
+    fallbackClientIp,
+  });
+  const clientIpAddress = preferredClientIp.ip;
+  const clientIpSource = preferredClientIp.source;
   const {
     clientIP,
     client_ip_source,
     client_ip_version,
     client_ipv4,
     client_ipv6,
+    client_ip_issued_at,
+    client_ip_proof,
     ...payload
   } = payloadFromClient;
   void clientIP;
@@ -121,10 +140,14 @@ function normalizePayload(
   void client_ip_version;
   void client_ipv4;
   void client_ipv6;
+  void client_ip_issued_at;
+  void client_ip_proof;
 
   return {
     ...payload,
     clientIP: clientIpAddress,
+    client_ip_source: clientIpSource,
+    client_ip_version: getIpVersion(clientIpAddress),
     agentuser: payloadFromClient.agentuser ?? userAgent,
     client_ip_address: clientIpAddress,
     client_user_agent: payloadFromClient.client_user_agent ?? userAgent,

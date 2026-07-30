@@ -330,6 +330,10 @@ npm run dev
 `frontend/.env.local` minimo:
 - `NEXT_PUBLIC_SUPABASE_URL`
 - `NEXT_PUBLIC_SUPABASE_ANON_KEY`
+- `NEXT_PUBLIC_META_IP_COLLECTOR_URL` (opcional): URL publica del colector dual-stack.
+- `META_IP_PROOF_SECRET` (opcional): secreto HMAC compartido con el colector.
+
+El colector de IP para Meta se encuentra en `infra/meta-ip-collector`. La landing lo consulta en segundo plano, sin bloquear el CTA, y conserva la IP observada por Vercel como fallback.
 
 ### 13.2 Supabase CLI
 ```bash

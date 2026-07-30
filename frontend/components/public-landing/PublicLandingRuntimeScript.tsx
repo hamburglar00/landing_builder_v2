@@ -50,6 +50,7 @@ export default function PublicLandingRuntimeScript({ slug, config }: Props) {
     ctaText: config.content?.ctaText || "¡Contactar ya!",
     phoneSelectionMode: config.phoneSelection?.mode || "",
     backgroundMode: config.background?.mode || "",
+    metaIpCollectorUrl: process.env.NEXT_PUBLIC_META_IP_COLLECTOR_URL || "",
     whatsappPrefillText:
       config.interactions?.enabled && config.interactions.whatsappPrefillText
         ? config.interactions.whatsappPrefillText
@@ -64,7 +65,14 @@ export default function PublicLandingRuntimeScript({ slug, config }: Props) {
       var cfg = ${escapeScriptJson(runtimeConfig)};
       var clickLocked = false;
       var noPhoneTimer = null;
-      var metaTracking = { fbp: "", fbc: "", clientIpAddress: "" };
+      var metaTracking = {
+        fbp: "",
+        fbc: "",
+        clientIpAddress: "",
+        clientIpIssuedAt: null,
+        clientIpProof: ""
+      };
+      var metaIpCollectorPromise = null;
       var prearmedContact = null;
       var CONTACT_DEDUP_TTL_MS = 5 * 60 * 1000;
       var SOCIAL_PROOF_INTERVAL_MS = 5000;
@@ -221,7 +229,13 @@ export default function PublicLandingRuntimeScript({ slug, config }: Props) {
         if (!fbc && fbclid) {
           fbc = "fb.1." + Date.now() + "." + fbclid;
         }
-        metaTracking = { fbp: fbp || "", fbc: fbc || "", clientIpAddress: "" };
+        metaTracking = {
+          fbp: fbp || "",
+          fbc: fbc || "",
+          clientIpAddress: metaTracking.clientIpAddress || "",
+          clientIpIssuedAt: metaTracking.clientIpIssuedAt || null,
+          clientIpProof: metaTracking.clientIpProof || ""
+        };
         return metaTracking;
       }
 
@@ -255,8 +269,78 @@ export default function PublicLandingRuntimeScript({ slug, config }: Props) {
         return {
           fbp: String(next.fbp || base.fbp || ""),
           fbc: String(next.fbc || base.fbc || ""),
-          clientIpAddress: String(next.clientIpAddress || base.clientIpAddress || "")
+          clientIpAddress: String(next.clientIpAddress || base.clientIpAddress || ""),
+          clientIpIssuedAt: Number(next.clientIpIssuedAt || base.clientIpIssuedAt) || null,
+          clientIpProof: String(next.clientIpProof || base.clientIpProof || "")
         };
+      }
+
+      function collectMetaClientIpProof() {
+        var collectorUrl = String(cfg.metaIpCollectorUrl || "").trim();
+        if (!collectorUrl) return Promise.resolve(null);
+        if (metaTracking.clientIpAddress && metaTracking.clientIpProof) {
+          return Promise.resolve(metaTracking);
+        }
+        if (metaIpCollectorPromise) return metaIpCollectorPromise;
+
+        metaIpCollectorPromise = new Promise(function (resolve) {
+          var controller = typeof AbortController !== "undefined" ? new AbortController() : null;
+          var timeoutId = window.setTimeout(function () {
+            if (controller) controller.abort();
+            resolve(null);
+          }, 800);
+
+          fetch(collectorUrl, {
+            method: "GET",
+            mode: "cors",
+            credentials: "omit",
+            cache: "no-store",
+            signal: controller ? controller.signal : undefined
+          })
+            .then(function (response) {
+              if (!response.ok) return null;
+              return response.json();
+            })
+            .then(function (value) {
+              if (!value || typeof value !== "object") return null;
+              var ip = String(value.ip || "").trim().toLowerCase();
+              var issuedAt = Number(value.issued_at);
+              var proof = String(value.proof || "").trim();
+              var nowSeconds = Math.floor(Date.now() / 1000);
+              if (
+                !ip ||
+                !proof ||
+                !Number.isInteger(issuedAt) ||
+                issuedAt > nowSeconds + 30 ||
+                nowSeconds - issuedAt > 600
+              ) {
+                return null;
+              }
+              metaTracking = mergeMetaTracking(metaTracking, {
+                clientIpAddress: ip,
+                clientIpIssuedAt: issuedAt,
+                clientIpProof: proof
+              });
+              return metaTracking;
+            })
+            .then(resolve)
+            .catch(function () { resolve(null); })
+            .finally(function () {
+              window.clearTimeout(timeoutId);
+              metaIpCollectorPromise = null;
+            });
+        });
+
+        return metaIpCollectorPromise;
+      }
+
+      function scheduleMetaClientIpCollection() {
+        var run = function () { void collectMetaClientIpProof(); };
+        if (typeof window.requestIdleCallback === "function") {
+          window.requestIdleCallback(run, { timeout: 800 });
+        } else {
+          window.setTimeout(run, 0);
+        }
       }
 
       function refreshMetaTracking(params, fallback) {
@@ -536,6 +620,8 @@ export default function PublicLandingRuntimeScript({ slug, config }: Props) {
                 fbp: tracking.fbp,
                 fbc: tracking.fbc,
                 client_ip_address: tracking.clientIpAddress || undefined,
+                client_ip_issued_at: tracking.clientIpIssuedAt || undefined,
+                client_ip_proof: tracking.clientIpProof || undefined,
                 client_user_agent: navigator.userAgent || undefined,
                 agentuser: navigator.userAgent || undefined,
                 telefono_asignado: phone,
@@ -692,6 +778,7 @@ export default function PublicLandingRuntimeScript({ slug, config }: Props) {
       function init() {
         prearmContactContext();
         ensurePhonePromise();
+        scheduleMetaClientIpCollection();
         window.setTimeout(prearmContactContext, 700);
         initRotatingBackgrounds();
         initCtas();
