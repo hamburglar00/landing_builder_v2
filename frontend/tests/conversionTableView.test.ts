@@ -34,7 +34,7 @@ const EXPECTED_HIDDEN_COLUMNS: ConversionColumnKey[] = [
   "sex_source",
 ];
 
-test("la vista amigable oculta exactamente las columnas técnicas solicitadas", () => {
+test("la vista reducida oculta exactamente las columnas técnicas solicitadas", () => {
   assert.deepEqual(
     [...FRIENDLY_HIDDEN_COLUMNS],
     EXPECTED_HIDDEN_COLUMNS,
@@ -68,7 +68,7 @@ test("la vista técnica conserva todas las columnas y sus nombres originales", (
   assert.equal(columnLabel("assigned_gerencia_label", "technical"), "Nombre gerencia (ID)");
 });
 
-test("la vista amigable usa encabezados comprensibles", () => {
+test("la vista reducida usa encabezados comprensibles", () => {
   assert.equal(columnLabel("phone", "friendly"), "Teléfono");
   assert.equal(columnLabel("timestamp", "friendly"), "Fecha y hora");
   assert.equal(columnLabel("purchase_status_capi", "friendly"), "Envío CAPI de Purchase");

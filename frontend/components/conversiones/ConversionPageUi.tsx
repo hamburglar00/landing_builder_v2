@@ -252,7 +252,7 @@ export function ConversionTableViewToggle({
   onToggle: () => void;
 }) {
   const friendly = view === "friendly";
-  const nextView = friendly ? "técnica" : "amigable";
+  const nextView = friendly ? "técnica" : "reducida";
 
   return (
     <div className="group relative shrink-0">

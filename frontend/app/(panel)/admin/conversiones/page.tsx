@@ -1154,7 +1154,7 @@ export default function AdminConversionesPage() {
                     : "border-zinc-700 bg-zinc-800/70 text-zinc-400"
                 }`}
               >
-                {tableView === "friendly" ? "Vista amigable" : "Vista técnica"}
+                {tableView === "friendly" ? "Vista reducida" : "Vista técnica"}
               </span>
             </h3>
             <div className="flex w-full items-center gap-2 sm:w-auto">
