@@ -56,7 +56,6 @@ const TARGETS: Array<{
     cons: [
       "Descarga e inicializa una aplicación React antes de quedar plenamente interactivo.",
       "La búsqueda anticipada del teléfono comienza después de esa inicialización.",
-      "Al ser una aplicación separada, las mejoras técnicas deben desplegarse también aquí; el cliente no tiene que hacer nada.",
     ],
   },
   {
