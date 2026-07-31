@@ -1,6 +1,5 @@
 import FrameBackgroundTemplate2 from "./FrameBackgroundTemplate2";
 import WhatsAppLiteButton from "./WhatsAppLiteButton";
-import { resolveFontFamily } from "./resolveFontFamily";
 import type { PublicLandingConfig } from "./types";
 
 type Props = {
@@ -29,14 +28,13 @@ export default function Template2View({ slug, config }: Props) {
   const badgeArray = config.content?.footerBadge || [];
   const badgeText =
     (badgeArray.find((line) => line && line.trim().length > 0) || config.content?.footerBadgeText || "").trim();
-  const fontFamily = resolveFontFamily(config.typography?.fontFamily);
   const isSocialProofEnabled = config.socialProof?.enabled !== false;
   const activeSocialProof = SOCIAL_PROOF_ITEMS[0];
 
   return (
     <main className="public-landing lp">
       <section className="phone-view">
-        <div className="artboard" style={fontFamily ? { fontFamily } : undefined}>
+        <div className="artboard">
           <div className="frame">
             <FrameBackgroundTemplate2
               images={images}

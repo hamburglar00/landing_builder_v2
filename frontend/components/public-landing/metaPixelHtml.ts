@@ -1,3 +1,5 @@
+import { buildPhoneNormalizerScript } from "./trackingScriptHelpers";
+
 function escapeHtml(value: unknown): string {
   return String(value ?? "")
     .replace(/&/g, "&amp;")
@@ -25,7 +27,11 @@ function escapeScriptJson(value: unknown) {
   });
 }
 
-export function buildPixelInitScript(pixelId: string, slug: string) {
+export function buildPixelInitScript(
+  pixelId: string,
+  slug: string,
+  phoneCountryCode = "54",
+) {
   const safePixelId = pixelId.replace(/\D+/g, "");
   if (!safePixelId) return "";
   const storageNamespace = `landing-builder:${safePixelId}:${slug}`;
@@ -114,14 +120,7 @@ export function buildPixelInitScript(pixelId: string, slug: string) {
           return v || undefined;
         }
 
-        function normPhone(v){
-          var d = String(v || '').replace(/\\D+/g, '');
-          if (!d) return undefined;
-          if (d.indexOf('54') === 0) return d;
-          d = d.replace(/^0+/, '').replace(/^15/, '');
-          if (d.length === 10) return '54' + d;
-          return d || undefined;
-        }
+        ${buildPhoneNormalizerScript("normPhone")}
 
         function safeUUID(){
           if (window.crypto && typeof window.crypto.randomUUID === 'function') {
@@ -158,7 +157,7 @@ export function buildPixelInitScript(pixelId: string, slug: string) {
           params.get('ph'),
           readLocalStorage('ph'),
           readMeta('userPhone')
-        ]));
+        ]), ${escapeScriptJson(phoneCountryCode)}) || undefined;
 
         var userFn = firstNonEmpty([
           params.get('fn'),

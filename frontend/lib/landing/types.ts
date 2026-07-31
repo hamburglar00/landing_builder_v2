@@ -18,19 +18,8 @@ export type ColorOption =
   | "gray_light"
   | "gray_dark";
 
-/**
- * Familia tipogrfica seleccionable desde el constructor.
- * La landing pblica debe mapear estos tokens a font-family reales.
- */
-export type FontFamilyOption =
-  | "pp_mori"
-  | "roboto"
-  | "poppins"
-  | "montserrat"
-  | "bebas"
-  | "alpha"
-  | "anton"
-  | "system";
+/** Las landings públicas usan exclusivamente la fuente nativa del sistema. */
+export type FontFamilyOption = "system";
 
 /**
  * Posicin del CTA dentro del layout fijo de la landing.
@@ -93,8 +82,8 @@ export interface LandingThemeConfig {
    */
   template: TemplateOption;
   /**
-   * Tipografa y estilos de texto.
-   * Se guardan en pixeles/booleanos para que la landing pblica pueda aplicarlos 1:1.
+   * Campo conservado por compatibilidad con configuraciones históricas.
+   * Los motores públicos siempre renderizan con la fuente del sistema.
    */
   fontFamily: FontFamilyOption;
   titleFontSize: number;

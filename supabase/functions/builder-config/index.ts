@@ -1,4 +1,5 @@
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
+import { phoneCountryCodeForCurrency } from "./market.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -167,6 +168,23 @@ Deno.serve(async (req) => {
       );
     }
 
+    const { data: matchedPixelConfig } = await supabase
+      .from("conversions_pixel_configs")
+      .select("meta_currency")
+      .eq("user_id", data.user_id)
+      .eq("pixel_id", data.pixel_id ?? "")
+      .maybeSingle();
+    let metaCurrency = String(matchedPixelConfig?.meta_currency ?? "").trim();
+    if (!metaCurrency) {
+      const { data: baseConversionsConfig } = await supabase
+        .from("conversions_config")
+        .select("meta_currency")
+        .eq("user_id", data.user_id)
+        .maybeSingle();
+      metaCurrency = String(baseConversionsConfig?.meta_currency ?? "").trim();
+    }
+    const phoneCountryCode = phoneCountryCodeForCurrency(metaCurrency);
+
     // Asegurar que post_url sea SIEMPRE el endpoint de conversiones (nunca Sheet u otra URL).
     const supabaseBase = (Deno.env.get("SUPABASE_URL") ?? "").replace(/\/$/, "");
     const isWrongUrl = (url: string) =>
@@ -213,6 +231,7 @@ Deno.serve(async (req) => {
         tracking: {
           ...tracking,
           postUrl: effectivePostUrl,
+          phoneCountryCode,
           sendContactPixel:
             typeof tracking.sendContactPixel === "boolean"
               ? tracking.sendContactPixel
@@ -220,6 +239,7 @@ Deno.serve(async (req) => {
         },
         typography: {
           ...typography,
+          fontFamily: "system",
           cta: {
             ...ctaTypography,
             sizePx: (rawConfig.ctaFontSize as number) ?? (ctaTypography.sizePx as number) ?? 18,
@@ -281,6 +301,7 @@ Deno.serve(async (req) => {
         pixelId: data.pixel_id ?? "",
         postUrl: effectivePostUrl,
         landingTag: data.landing_tag ?? "",
+        phoneCountryCode,
         sendContactPixel: (rawConfig.sendContactPixel as boolean | undefined) ?? true,
       },
       background: {
@@ -309,7 +330,7 @@ Deno.serve(async (req) => {
         ctaText: (themeWithHex.ctaText as string) ?? "",
       },
       typography: {
-        fontFamily: (themeWithHex.fontFamily as string) ?? "system",
+        fontFamily: "system",
         title: {
           sizePx: (themeWithHex.titleFontSize as number) ?? 28,
           weight: (themeWithHex.titleBold as boolean | undefined) ? 700 : 500,

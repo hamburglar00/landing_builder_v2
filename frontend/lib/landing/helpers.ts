@@ -1,5 +1,8 @@
-import type { ColorOption, FontFamilyOption, Landing } from "./types";
+import type { ColorOption, Landing } from "./types";
 import { COLOR_MAP } from "./constants";
+
+export const SYSTEM_FONT_FAMILY =
+  'system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif';
 
 /**
  * Devuelve el valor hex de un color de la lista cerrada.
@@ -12,28 +15,6 @@ export function getColorHex(color: ColorOption): string {
  * Mapea el token de familia tipográfica a una font-family CSS.
  * La landing pública puede reutilizar este contrato o definir el suyo propio.
  */
-export function getFontFamilyCss(font: FontFamilyOption): string {
-  switch (font) {
-    case "pp_mori":
-      return '"PP Mori", system-ui, -apple-system, BlinkMacSystemFont, "SF Pro Text", "Roboto", sans-serif';
-    case "roboto":
-      return '"Roboto", system-ui, -apple-system, BlinkMacSystemFont, "SF Pro Text", sans-serif';
-    case "poppins":
-      return '"Poppins", system-ui, -apple-system, BlinkMacSystemFont, "SF Pro Text", sans-serif';
-    case "montserrat":
-      return '"Montserrat", system-ui, -apple-system, BlinkMacSystemFont, "SF Pro Text", sans-serif';
-    case "bebas":
-      return '"Bebas Neue", system-ui, -apple-system, BlinkMacSystemFont, "SF Pro Text", sans-serif';
-    case "alpha":
-      return '"Alpha", system-ui, -apple-system, BlinkMacSystemFont, "SF Pro Text", sans-serif';
-    case "anton":
-      return '"Anton", system-ui, -apple-system, BlinkMacSystemFont, "SF Pro Text", sans-serif';
-    case "system":
-    default:
-      return 'system-ui, -apple-system, BlinkMacSystemFont, "SF Pro Text", "Roboto", sans-serif';
-  }
-}
-
 const STORAGE_KEY_PREFIX = "landing-config";
 const LANDINGS_LIST_KEY_PREFIX = "landings-list";
 

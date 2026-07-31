@@ -1,7 +1,7 @@
 "use client";
 
 import type { LandingThemeConfig } from "@/lib/landing/types";
-import { getColorHex, getFontFamilyCss } from "@/lib/landing/helpers";
+import { getColorHex, SYSTEM_FONT_FAMILY } from "@/lib/landing/helpers";
 import { buildResponsiveImageSet } from "@/lib/landing/imageUrl";
 
 const WHATSAPP_ICON_PATH =
@@ -38,7 +38,7 @@ export function LandingPreview({
   const ctaTextHex = getColorHex(config.ctaTextColor);
   const ctaBgHex = getColorHex(config.ctaBackgroundColor);
   const ctaGlowHex = getColorHex(config.ctaGlowColor);
-  const fontFamily = getFontFamilyCss(config.fontFamily);
+  const fontFamily = SYSTEM_FONT_FAMILY;
   const template =
     config.template === "template2"
       ? 2

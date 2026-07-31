@@ -179,17 +179,6 @@ export function LandingEditorForm({
     { label: "Título XL (30px)", value: 30 },
   ];
 
-  const fontFamilyOptions = [
-    { label: "System (por defecto)", value: "system" },
-    { label: "PP Mori", value: "pp_mori" },
-    { label: "Roboto", value: "roboto" },
-    { label: "Poppins", value: "poppins" },
-    { label: "Montserrat", value: "montserrat" },
-    { label: "Bebas Neue", value: "bebas" },
-    { label: "Alpha", value: "alpha" },
-    { label: "Anton", value: "anton" },
-  ] as const;
-
   const ctaPositionOptions: { label: string; value: CtaPositionOption }[] = [
     { label: "Arriba (debajo del logo)", value: "top" },
     {
@@ -617,40 +606,14 @@ export function LandingEditorForm({
                 </div>
               </div>
             </div>
-            <div className="grid gap-3 sm:grid-cols-[minmax(0,2fr)_minmax(0,1fr)]">
-              <div>
-                <ColorSelect
-                  label="Color del título"
-                  value={config.titleColor}
-                  onChange={(titleColor) =>
-                    updateConfig(setConfig, { titleColor })
-                  }
-                />
-              </div>
-              <div>
-                <label
-                  htmlFor={fieldId("font-family")}
-                  className="block text-xs font-medium text-zinc-400 mb-1"
-                >
-                  Tipografía global
-                </label>
-                <select
-                  id={fieldId("font-family")}
-                  value={config.fontFamily}
-                  onChange={(e) =>
-                    updateConfig(setConfig, {
-                      fontFamily: e.target.value as LandingThemeConfig["fontFamily"],
-                    })
-                  }
-                  className="w-full rounded-lg border border-zinc-700 bg-zinc-900 px-2 py-1.5 text-xs text-zinc-100"
-                >
-                  {fontFamilyOptions.map((opt) => (
-                    <option key={opt.value} value={opt.value}>
-                      {opt.label}
-                    </option>
-                  ))}
-                </select>
-              </div>
+            <div>
+              <ColorSelect
+                label="Color del título"
+                value={config.titleColor}
+                onChange={(titleColor) =>
+                  updateConfig(setConfig, { titleColor })
+                }
+              />
             </div>
           </div>
 

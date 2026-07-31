@@ -1,4 +1,5 @@
 import type { PublicLandingConfig } from "./types";
+import { buildPhoneNormalizerScript } from "./trackingScriptHelpers";
 
 type Props = {
   slug: string;
@@ -50,6 +51,7 @@ export default function PublicLandingRuntimeScript({ slug, config }: Props) {
     postUrl: config.tracking?.postUrl || "",
     landingTag: config.tracking?.landingTag || "LP",
     sendContactPixel: config.tracking?.sendContactPixel !== false,
+    phoneCountryCode: config.tracking?.phoneCountryCode || "54",
     ctaText: config.content?.ctaText || "¡Contactar ya!",
     phoneSelectionMode: config.phoneSelection?.mode || "",
     backgroundMode: config.background?.mode || "",
@@ -95,11 +97,7 @@ export default function PublicLandingRuntimeScript({ slug, config }: Props) {
         return "desktop";
       }
 
-      function normalizePhone(raw) {
-        var value = String(raw || "").replace(/\\D+/g, "");
-        if (value.length === 10) value = "54" + value;
-        return value;
-      }
+      ${buildPhoneNormalizerScript("normalizePhone")}
 
       function generatePromoCode(tag) {
         return String(tag || "LP") + "-" + Math.random().toString(16).slice(2, 14);
@@ -192,7 +190,7 @@ export default function PublicLandingRuntimeScript({ slug, config }: Props) {
 
         setLocalStorageValue("external_id", externalId);
         if (emailRaw) setLocalStorageValue("em", normalizeEmail(emailRaw));
-        if (phoneRaw) setLocalStorageValue("ph", normalizePhone(phoneRaw));
+        if (phoneRaw) setLocalStorageValue("ph", normalizePhone(phoneRaw, cfg.phoneCountryCode));
         if (fn) setLocalStorageValue("fn", fn);
         if (ln) setLocalStorageValue("ln", ln);
         if (ct) setLocalStorageValue("ct", ct);
@@ -208,7 +206,7 @@ export default function PublicLandingRuntimeScript({ slug, config }: Props) {
           zip: zip,
           country: country,
           email: emailRaw ? normalizeEmail(emailRaw) : "",
-          ph: phoneRaw ? normalizePhone(phoneRaw) : "",
+          ph: phoneRaw ? normalizePhone(phoneRaw, cfg.phoneCountryCode) : "",
           fn: fn,
           ln: ln,
           externalId: externalId
@@ -718,7 +716,10 @@ export default function PublicLandingRuntimeScript({ slug, config }: Props) {
               return waitWithTimeout(ensurePhonePromise(), 2500);
             })
             .then(function (phoneData) {
-              var phone = normalizePhone((phoneData && phoneData.phone) || "");
+              var phone = normalizePhone(
+                (phoneData && phoneData.phone) || "",
+                cfg.phoneCountryCode
+              );
               if (!phone) {
                 setNoPhoneState(button);
                 return;

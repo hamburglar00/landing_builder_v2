@@ -9,6 +9,7 @@ export type PublicLandingConfig = {
     postUrl: string;
     landingTag: string;
     sendContactPixel?: boolean;
+    phoneCountryCode?: string;
   };
   phoneSelection?: {
     mode: "random" | "fixed" | "fair" | string;

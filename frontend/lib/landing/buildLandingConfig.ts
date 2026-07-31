@@ -13,6 +13,7 @@ export interface LandingConfigPayload {
     postUrl: string;
     landingTag: string;
     sendContactPixel: boolean;
+    phoneCountryCode?: string;
   };
   background?: {
     mode: LandingThemeConfig["backgroundMode"];
@@ -163,7 +164,7 @@ export function buildLandingConfig({
       ctaText: themeWithHex.ctaText,
     },
     typography: {
-      fontFamily: themeWithHex.fontFamily,
+      fontFamily: "system",
       title: {
         sizePx: themeWithHex.titleFontSize,
         weight: themeWithHex.titleBold ? 700 : 500,

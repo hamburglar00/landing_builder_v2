@@ -94,7 +94,7 @@ test("mantiene estable el bloque activo de Meta Pixel", () => {
 
   assert.equal(
     sha256(pixelScript),
-    "d31d058a45e0e84ce2ce74ab8b71099470a17c9886a7d54ff4c9b8b7cbdb0076",
+    "be13960ae1245fa97a0ca99127d12d83d3679fe58c372257754f1331529c6ec6",
   );
   assert.equal(
     sha256(pixelNoscript),

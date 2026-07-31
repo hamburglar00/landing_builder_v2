@@ -1,6 +1,5 @@
 import RotatingBackground from "./RotatingBackground";
 import WhatsAppLiteButton from "./WhatsAppLiteButton";
-import { resolveFontFamily } from "./resolveFontFamily";
 import type { PublicLandingConfig } from "./types";
 
 type Props = {
@@ -22,7 +21,6 @@ export default function Template1View({ slug, config }: Props) {
     return allowed.includes(value as (typeof allowed)[number]) ? value : "between_title_and_info";
   })();
 
-  const resolvedFontFamily = resolveFontFamily(config.typography?.fontFamily);
   const isBottomCta = normalizedCtaPosition === "bottom";
 
   return (
@@ -35,7 +33,7 @@ export default function Template1View({ slug, config }: Props) {
           overlay={false}
         />
 
-        <div className="content" style={{ fontFamily: resolvedFontFamily }}>
+        <div className="content">
           {hasLogo ? (
             // eslint-disable-next-line @next/next/no-img-element
             <img
