@@ -1,3 +1,3 @@
-export function phoneCountryCodeForCurrency(currency: unknown): "54" | "595" {
-  return String(currency ?? "").trim().toUpperCase() === "PYG" ? "595" : "54";
+export function phoneCountryCodeForMarket(country: unknown): "54" | "595" {
+  return String(country ?? "").trim().toUpperCase() === "PY" ? "595" : "54";
 }

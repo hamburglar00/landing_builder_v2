@@ -5,6 +5,7 @@ import type { LandingThemeConfig } from "./types";
  * Se usa cuando el usuario no tiene config guardada en localStorage.
  */
 export const DEFAULT_CONFIG: LandingThemeConfig = {
+  marketCountry: "AR",
   backgroundMode: "single",
   backgroundImages: [],
   rotateEveryHours: 24,

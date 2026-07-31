@@ -1,5 +1,5 @@
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
-import { phoneCountryCodeForCurrency } from "./market.ts";
+import { phoneCountryCodeForMarket } from "./market.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -168,23 +168,6 @@ Deno.serve(async (req) => {
       );
     }
 
-    const { data: matchedPixelConfig } = await supabase
-      .from("conversions_pixel_configs")
-      .select("meta_currency")
-      .eq("user_id", data.user_id)
-      .eq("pixel_id", data.pixel_id ?? "")
-      .maybeSingle();
-    let metaCurrency = String(matchedPixelConfig?.meta_currency ?? "").trim();
-    if (!metaCurrency) {
-      const { data: baseConversionsConfig } = await supabase
-        .from("conversions_config")
-        .select("meta_currency")
-        .eq("user_id", data.user_id)
-        .maybeSingle();
-      metaCurrency = String(baseConversionsConfig?.meta_currency ?? "").trim();
-    }
-    const phoneCountryCode = phoneCountryCodeForCurrency(metaCurrency);
-
     // Asegurar que post_url sea SIEMPRE el endpoint de conversiones (nunca Sheet u otra URL).
     const supabaseBase = (Deno.env.get("SUPABASE_URL") ?? "").replace(/\/$/, "");
     const isWrongUrl = (url: string) =>
@@ -212,6 +195,7 @@ Deno.serve(async (req) => {
     };
 
     const rawConfig = (data.config ?? {}) as Record<string, unknown>;
+    const phoneCountryCode = phoneCountryCodeForMarket(rawConfig.marketCountry);
 
     // Si ya existe landing_config persistido, lo devolvemos pero SIEMPRE inyectamos
     // post_url (effectivePostUrl = conversiones, nunca Sheet) y refrescamos

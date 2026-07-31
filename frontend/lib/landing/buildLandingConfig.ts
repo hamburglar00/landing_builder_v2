@@ -2,6 +2,10 @@ import type { LandingThemeConfig } from "./types";
 import { COLOR_MAP } from "./constants";
 import { buildOptimizedImageUrl, buildResponsiveImageSet } from "./imageUrl";
 
+function phoneCountryCodeForMarket(country: LandingThemeConfig["marketCountry"]): "54" | "595" {
+  return country === "PY" ? "595" : "54";
+}
+
 export interface LandingConfigPayload {
   schemaVersion: number;
   updatedAt: string;
@@ -98,6 +102,7 @@ export function buildLandingConfig({
         postUrl,
         landingTag,
         sendContactPixel: config.sendContactPixel,
+        phoneCountryCode: phoneCountryCodeForMarket(config.marketCountry),
       },
       layout: {
         template: 3,
@@ -133,6 +138,7 @@ export function buildLandingConfig({
       postUrl,
       landingTag,
       sendContactPixel: config.sendContactPixel,
+      phoneCountryCode: phoneCountryCodeForMarket(config.marketCountry),
     },
     background: {
       mode: themeWithHex.backgroundMode,

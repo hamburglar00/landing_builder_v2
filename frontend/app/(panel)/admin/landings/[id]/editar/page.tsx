@@ -20,6 +20,7 @@ import {
   LandingTemplateSection,
 } from "@/components/landing/LandingEditorForm";
 import { PublishTargetSection } from "@/components/landing/PublishTargetSection";
+import { LandingMarketCountryField } from "@/components/landing/LandingMarketCountryField";
 import { buildLandingConfig } from "@/lib/landing/buildLandingConfig";
 import { publishLandingChanges } from "@/lib/landing/publishLanding";
 import type { Gerencia } from "@/lib/gerencias/types";
@@ -584,6 +585,7 @@ export default function AdminLandingEditarPage() {
 
         <CollapsibleSection title="Tracking" defaultOpen>
           <div className="space-y-3">
+            <LandingMarketCountryField config={landing.config} setConfig={setConfig} />
             <div>
               <label className="block text-xs font-medium text-zinc-400 mb-1">Pixel ID <span className="text-red-400">*</span></label>
               <select

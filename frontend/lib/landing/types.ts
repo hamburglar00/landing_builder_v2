@@ -51,6 +51,9 @@ export type TemplateOption = "template1" | "template2" | "template3";
  */
 export type PublishTarget = "classic" | "constructor";
 
+/** Mercado principal de la landing, usado para interpretar teléfonos locales. */
+export type LandingMarketCountry = "AR" | "PY";
+
 /**
  * Modo de fondo: una sola imagen o rotacin entre varias.
  */
@@ -63,6 +66,7 @@ export type PhoneKind = "carga" | "ads" | "mkt" | "assistant";
  * El usuario solo puede editar estos campos; no puede mover elementos ni cambiar layout.
  */
 export interface LandingThemeConfig {
+  marketCountry: LandingMarketCountry;
   backgroundMode: BackgroundMode;
   backgroundImages: string[];
   rotateEveryHours: number;
