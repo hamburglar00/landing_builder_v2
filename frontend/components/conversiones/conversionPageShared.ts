@@ -12,6 +12,100 @@ export const ALL_COLUMNS = [
 
 export type ConversionColumnKey = (typeof ALL_COLUMNS)[number];
 
+export type ConversionTableView = "technical" | "friendly";
+
+export const FRIENDLY_HIDDEN_COLUMNS = new Set<ConversionColumnKey>([
+  "zip",
+  "fbc",
+  "fbp",
+  "meta_pixel_id",
+  "ctwa_clid",
+  "contact_event_time",
+  "contact_payload_raw",
+  "lead_event_time",
+  "lead_payload_raw",
+  "purchase_event_time",
+  "purchase_payload_raw",
+  "clientIP",
+  "agentuser",
+  "purchase_capi_route",
+  "purchase_capi_route_reason",
+  "device_type",
+  "geo_city",
+  "geo_region",
+  "geo_country",
+  "geo_source",
+  "cuit_cuil",
+  "inferred_sex",
+  "sex_source",
+]);
+
+const FRIENDLY_COLUMN_LABELS: Record<ConversionColumnKey, string> = {
+  phone: "Teléfono",
+  email: "Correo electrónico",
+  fn: "Nombre",
+  ln: "Apellido",
+  ct: "Ciudad",
+  st: "Provincia / estado",
+  zip: "Código postal",
+  country: "País",
+  fbp: "ID de navegador Meta",
+  fbc: "ID de clic Meta",
+  from_meta_ads: "Origen Meta Ads",
+  meta_pixel_id: "Pixel recibido",
+  pixel_id: "Pixel utilizado",
+  pixel_attribution_source: "Origen del Pixel",
+  pixel_attribution_conversion_id: "Conversión de referencia",
+  source_platform: "Plataforma de origen",
+  ctwa_clid: "ID de clic a WhatsApp",
+  contact_event_id: "ID del evento Contact",
+  contact_event_time: "Hora del evento Contact",
+  sendContactPixel: "Contact enviado por Pixel",
+  contact_payload_raw: "Datos técnicos de Contact",
+  lead_event_id: "ID del evento Lead",
+  lead_event_time: "Hora del evento Lead",
+  lead_payload_raw: "Datos técnicos de Lead",
+  purchase_event_id: "ID del evento Purchase",
+  purchase_event_time: "Hora del evento Purchase",
+  purchase_payload_raw: "Datos técnicos de Purchase",
+  timestamp: "Fecha y hora",
+  clientIP: "Dirección IP",
+  agentuser: "Navegador",
+  estado: "Etapa",
+  valor: "Valor",
+  currency: "Moneda",
+  purchase_type: "Tipo de compra",
+  purchase_capi_route: "Ruta de Purchase",
+  purchase_capi_route_reason: "Motivo de la ruta",
+  contact_status_capi: "Envío CAPI de Contact",
+  lead_status_capi: "Envío CAPI de Lead",
+  purchase_status_capi: "Envío CAPI de Purchase",
+  observaciones: "Observaciones",
+  external_id: "ID externo",
+  test_event_code: "Código de prueba Meta",
+  utm_campaign: "Campaña UTM",
+  telefono_asignado: "Teléfono asignado",
+  assigned_gerencia_label: "Gerencia asignada",
+  promo_code: "Código promocional",
+  device_type: "Dispositivo",
+  geo_city: "Ciudad por geolocalización",
+  geo_region: "Provincia por geolocalización",
+  geo_country: "País por geolocalización",
+  geo_source: "Origen de geolocalización",
+  cuit_cuil: "CUIT / CUIL",
+  inferred_sex: "Sexo inferido",
+  sex_source: "Origen del sexo",
+};
+
+export function columnsForTableView(
+  columns: readonly ConversionColumnKey[],
+  view: ConversionTableView,
+): ConversionColumnKey[] {
+  return view === "friendly"
+    ? columns.filter((column) => !FRIENDLY_HIDDEN_COLUMNS.has(column))
+    : [...columns];
+}
+
 export const COLUMN_NOTES: Partial<Record<ConversionColumnKey | "id", string>> = {
   id: "ID interno de la fila de conversion en la tabla.",
   timestamp: "Fecha y hora de creacion de la fila (created_at).",
@@ -118,7 +212,41 @@ export function sexLabel(value: string): string {
   return "Sin inferir";
 }
 
-export function columnLabel(col: ConversionColumnKey): string {
+export function columnLabel(
+  col: ConversionColumnKey,
+  view: ConversionTableView = "technical",
+): string {
+  if (view === "friendly") return FRIENDLY_COLUMN_LABELS[col];
   if (col === "assigned_gerencia_label") return "Nombre gerencia (ID)";
   return col;
+}
+
+export function friendlyPurchaseType(value: unknown): string {
+  const normalized = String(value ?? "").trim().toLowerCase();
+  if (normalized === "first") return "Primera compra";
+  if (normalized === "repeat") return "Recompra";
+  return normalized || "-";
+}
+
+export function friendlySourcePlatform(value: unknown): string {
+  const normalized = String(value ?? "").trim().toLowerCase();
+  if (normalized === "landing") return "Landing";
+  if (normalized === "chatrace") return "Chatrace";
+  return normalized || "-";
+}
+
+export function friendlyPixelAttributionSource(value: unknown): string {
+  const normalized = String(value ?? "").trim().toLowerCase();
+  const labels: Record<string, string> = {
+    explicit_payload: "Evento recibido",
+    stored_attribution: "Atribución guardada",
+    contact_context: "Contact de origen",
+    explicit_stored_payload: "Evento anterior",
+    chatrace_context: "Contexto de Chatrace",
+    promo_root: "Promoción de origen",
+    landing_id: "Landing asignada",
+    landing_tag: "Etiqueta de la landing",
+    single_configured_pixel: "Único Pixel configurado",
+  };
+  return labels[normalized] ?? (normalized || "-");
 }

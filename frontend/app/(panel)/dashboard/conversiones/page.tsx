@@ -33,7 +33,11 @@ import DateRangeFilter, {
 } from "@/components/conversiones/DateRangeFilter";
 import {
   ALL_COLUMNS,
+  columnsForTableView,
   formatIntegerWithThousands,
+  friendlyPixelAttributionSource,
+  friendlyPurchaseType,
+  friendlySourcePlatform,
   isSameDateRange,
   normalizePhone,
   normalizeSexValue,
@@ -41,6 +45,7 @@ import {
   truncateId,
   truncateText,
   type ConversionColumnKey as ColKey,
+  type ConversionTableView,
 } from "@/components/conversiones/conversionPageShared";
 import EditableConversionEmailCell from "@/components/conversiones/EditableConversionEmailCell";
 import ConversionFiltersModal from "@/components/conversiones/ConversionFiltersModal";
@@ -50,6 +55,7 @@ import { useConversionStatsFilters } from "@/components/conversiones/useConversi
 import {
   ConversionPagination,
   ConversionTableHeader,
+  ConversionTableViewToggle,
   ConversionTabs,
   estadoBadge,
   isSuccessfulMetaResponse,
@@ -103,6 +109,7 @@ const TAB_LABELS: Record<Tab, string> = {
 };
 
 const ACTIVITY_PAGE_SIZE = 200;
+const TABLE_VIEW_STORAGE_KEY = "conversion-table-view:dashboard";
 
 function formatRawPayload(value: unknown) {
   const s = String(value ?? "").trim();
@@ -252,7 +259,11 @@ function RawPayloadCell({ col, value, className }: { col: ColKey; value: unknown
   );
 }
 
-function cellValue(c: ConversionRow, col: ColKey): React.ReactNode {
+function cellValue(
+  c: ConversionRow,
+  col: ColKey,
+  view: ConversionTableView = "technical",
+): React.ReactNode {
   const cell = "px-2 py-1.5 whitespace-nowrap";
   const mono = `${cell} font-mono`;
   const dim = `${cell} text-zinc-400`;
@@ -279,20 +290,20 @@ function cellValue(c: ConversionRow, col: ColKey): React.ReactNode {
     case "fbp": return <td key={col} className={dimMono} title={tip(c.fbp)}>{c.fbp ? truncateId(c.fbp, 12) : "-"}</td>;
     case "fbc": return <td key={col} className={dimMono} title={tip(c.fbc)}>{c.fbc ? truncateId(c.fbc, 12) : "-"}</td>;
     case "from_meta_ads":
-      return <td key={col} className={dim} title={tip(c.from_meta_ads)}>{c.from_meta_ads ? "true" : "false"}</td>;
+      return <td key={col} className={dim} title={tip(c.from_meta_ads)}>{view === "friendly" ? (c.from_meta_ads ? "Sí" : "No") : (c.from_meta_ads ? "true" : "false")}</td>;
     case "geo_source": return <td key={col} className={dim} title={tip(c.geo_source)}>{c.geo_source || "-"}</td>;
     case "meta_pixel_id": {
       const px = c.meta_pixel_id || c.pixel_id;
       return <td key={col} className={dimMono} title={tip(px)}>{px || "-"}</td>;
     }
     case "pixel_id": return <td key={col} className={dimMono} title={tip(c.pixel_id)}>{c.pixel_id || "-"}</td>;
-    case "pixel_attribution_source": return <td key={col} className={dim} title={tip(c.pixel_attribution_source)}>{c.pixel_attribution_source || "-"}</td>;
+    case "pixel_attribution_source": return <td key={col} className={dim} title={tip(c.pixel_attribution_source)}>{view === "friendly" ? friendlyPixelAttributionSource(c.pixel_attribution_source) : (c.pixel_attribution_source || "-")}</td>;
     case "pixel_attribution_conversion_id": return <td key={col} className={dimMono} title={tip(c.pixel_attribution_conversion_id)}>{c.pixel_attribution_conversion_id ? truncateId(c.pixel_attribution_conversion_id) : "-"}</td>;
-    case "source_platform": return <td key={col} className={dim} title={tip(c.source_platform)}>{c.source_platform || "-"}</td>;
+    case "source_platform": return <td key={col} className={dim} title={tip(c.source_platform)}>{view === "friendly" ? friendlySourcePlatform(c.source_platform) : (c.source_platform || "-")}</td>;
     case "ctwa_clid": return <td key={col} className={dim} title={tip(c.ctwa_clid)}>{c.ctwa_clid || "-"}</td>;
     case "contact_event_id": return <td key={col} className={dimMono} title={c.contact_event_id}>{truncateId(c.contact_event_id)}</td>;
     case "contact_event_time": return <td key={col} className={dim} title={tip(c.contact_event_time)}>{c.contact_event_time ?? "-"}</td>;
-    case "sendContactPixel": return <td key={col} className={dim} title={tip(c.sendContactPixel)}>{c.sendContactPixel ? "true" : "false"}</td>;
+    case "sendContactPixel": return <td key={col} className={dim} title={tip(c.sendContactPixel)}>{view === "friendly" ? (c.sendContactPixel ? "Sí" : "No") : (c.sendContactPixel ? "true" : "false")}</td>;
     case "contact_payload_raw": return <RawPayloadCell key={col} col={col} value={c.contact_payload_raw} className={dim} />;
     case "lead_event_id": return <td key={col} className={dimMono} title={c.lead_event_id}>{truncateId(c.lead_event_id)}</td>;
     case "lead_event_time": return <td key={col} className={dim} title={tip(c.lead_event_time)}>{c.lead_event_time ?? "-"}</td>;
@@ -310,7 +321,7 @@ function cellValue(c: ConversionRow, col: ColKey): React.ReactNode {
     }
     case "valor": return <td key={col} className={`${cell} text-zinc-200`} title={tip(c.valor)}>{c.valor > 0 ? formatIntegerWithThousands(c.valor) : "-"}</td>;
     case "currency": return <td key={col} className={dimMono} title={tip(c.currency)}>{c.currency || "ARS"}</td>;
-    case "purchase_type": return <td key={col} className={dim} title={tip(c.purchase_type)}>{c.purchase_type || "-"}</td>;
+    case "purchase_type": return <td key={col} className={dim} title={tip(c.purchase_type)}>{view === "friendly" ? friendlyPurchaseType(c.purchase_type) : (c.purchase_type || "-")}</td>;
     case "purchase_capi_route": return <td key={col} className={dim} title={tip(c.purchase_capi_route)}>{c.purchase_capi_route || "-"}</td>;
     case "purchase_capi_route_reason": return <td key={col} className={dim} title={tip(c.purchase_capi_route_reason)}>{c.purchase_capi_route_reason || "-"}</td>;
     case "contact_status_capi": return <td key={col} className={cell} title={tip(c.contact_status_capi)}>{statusText(c.contact_status_capi)}</td>;
@@ -350,6 +361,8 @@ export default function DashboardConversionesPage() {
   const [inboxSearch, setInboxSearch] = useState("");
   const [inboxActionFilter, setInboxActionFilter] = useState<"all" | "CONTACT" | "LEAD" | "PURCHASE">("LEAD");
   const [tableSearch, setTableSearch] = useState("");
+  const [tableView, setTableView] =
+    useState<ConversionTableView>("friendly");
   const [tablePage, setTablePage] = useState(1);
   const [logsPage, setLogsPage] = useState(1);
   const [logsHasNextPage, setLogsHasNextPage] = useState(false);
@@ -423,6 +436,21 @@ export default function DashboardConversionesPage() {
   const logDirectionFilterRef = useRef(logDirectionFilter);
   const logEventFilterRef = useRef(logEventFilter);
   const inboxPageRef = useRef(inboxPage);
+
+  useEffect(() => {
+    const stored = window.localStorage.getItem(TABLE_VIEW_STORAGE_KEY);
+    if (stored === "technical" || stored === "friendly") {
+      setTableView(stored);
+    }
+  }, []);
+
+  const toggleTableView = useCallback(() => {
+    setTableView((current) => {
+      const next = current === "friendly" ? "technical" : "friendly";
+      window.localStorage.setItem(TABLE_VIEW_STORAGE_KEY, next);
+      return next;
+    });
+  }, []);
 
   useEffect(() => {
     userIdRef.current = userId;
@@ -897,8 +925,11 @@ export default function DashboardConversionesPage() {
     [visibleCols],
   );
   const displayedColsWithoutTimestamp = useMemo(
-    () => displayedCols.filter((c) => c !== "timestamp"),
-    [displayedCols],
+    () =>
+      columnsForTableView(displayedCols, tableView).filter(
+        (column) => column !== "timestamp",
+      ),
+    [displayedCols, tableView],
   );
   const internalIdByConversionId = useMemo(
     () => new Map(conversions.map((c) => [c.id, c.internal_id])),
@@ -1472,19 +1503,39 @@ export default function DashboardConversionesPage() {
           <div className="sticky top-0 z-30 mb-4 flex flex-col gap-2 rounded-lg py-2 sm:flex-row sm:flex-wrap sm:items-center sm:justify-between">
             <h3 className="text-sm font-semibold text-zinc-200">
               Tabla de conversiones <span className="font-normal text-zinc-500">({filteredConversions.length})</span>
+              <span
+                className={`ml-2 inline-flex rounded-full border px-2 py-0.5 align-middle text-[9px] font-semibold uppercase tracking-[0.12em] ${
+                  tableView === "friendly"
+                    ? "border-emerald-500/25 bg-emerald-500/10 text-emerald-300"
+                    : "border-zinc-700 bg-zinc-800/70 text-zinc-400"
+                }`}
+              >
+                {tableView === "friendly" ? "Vista amigable" : "Vista técnica"}
+              </span>
             </h3>
             <div className="flex w-full items-center gap-2 sm:w-auto">
               <input
                 value={tableSearch}
                 onChange={(e) => setTableSearch(e.target.value)}
-                placeholder="Buscar por phone, email, promo, utm..."
+                placeholder={
+                  tableView === "friendly"
+                    ? "Buscar por teléfono, correo, promoción o campaña..."
+                    : "Buscar por phone, email, promo, utm..."
+                }
                 className="h-8 w-full rounded-lg border border-zinc-700 bg-zinc-900 px-3 text-xs text-zinc-100 placeholder:text-zinc-500 sm:w-64"
+              />
+              <ConversionTableViewToggle
+                view={tableView}
+                onToggle={toggleTableView}
               />
             </div>
           </div>
           <div className="overflow-x-auto rounded-lg border border-zinc-700">
             <table className="min-w-[920px] text-left text-[11px] md:min-w-full">
-              <ConversionTableHeader columns={displayedColsWithoutTimestamp} />
+              <ConversionTableHeader
+                columns={displayedColsWithoutTimestamp}
+                view={tableView}
+              />
               <tbody className="divide-y divide-zinc-800">
                 {displayedColsWithoutTimestamp.length === 0 ? (
                   <tr>
@@ -1514,11 +1565,11 @@ export default function DashboardConversionesPage() {
                       className={rowColor}
                     >
                       <td className="px-2 py-1.5 whitespace-nowrap text-zinc-500 font-mono">{c.internal_id ?? ((tablePage - 1) * tablePageSize + idx + 1)}</td>
-                      {cellValue(c, "timestamp")}
+                      {cellValue(c, "timestamp", tableView)}
                       {displayedColsWithoutTimestamp.map((col) =>
                         col === "email" ? (
                           <EditableConversionEmailCell key={col} row={c} onSaved={(id, email) => setConversions((prev) => prev.map((r) => (r.id === id ? { ...r, email } : r)))} />
-                        ) : cellValue(c, col)
+                        ) : cellValue(c, col, tableView)
                       )}
                     </tr>
                   );

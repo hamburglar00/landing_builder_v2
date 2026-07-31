@@ -3,6 +3,7 @@ import {
   COLUMN_NOTES,
   columnLabel,
   type ConversionColumnKey,
+  type ConversionTableView,
 } from "@/components/conversiones/conversionPageShared";
 
 export type ConversionTabId =
@@ -204,23 +205,30 @@ export function ConversionTabs<T extends ConversionTabId>({
 
 export function ConversionTableHeader({
   columns,
+  view = "technical",
 }: {
   columns: readonly ConversionColumnKey[];
+  view?: ConversionTableView;
 }) {
+  const friendly = view === "friendly";
   return (
-    <thead className="sticky top-0 z-20 bg-zinc-800/95">
+    <thead
+      className={`sticky top-0 z-20 ${
+        friendly ? "bg-[#13211d]/95" : "bg-zinc-800/95"
+      }`}
+    >
       <tr>
         <th
           className="px-2 py-2 font-medium text-zinc-300 whitespace-nowrap cursor-help"
           title={COLUMN_NOTES.id}
         >
-          ID
+          {friendly ? "Registro" : "ID"}
         </th>
         <th
           className="px-2 py-2 font-medium text-zinc-300 whitespace-nowrap cursor-help"
           title={COLUMN_NOTES.timestamp}
         >
-          timestamp
+          {friendly ? "Fecha y hora" : "timestamp"}
         </th>
         {columns.map((column) => (
           <th
@@ -228,11 +236,56 @@ export function ConversionTableHeader({
             className="px-2 py-2 font-medium text-zinc-300 whitespace-nowrap cursor-help"
             title={COLUMN_NOTES[column] ?? column}
           >
-            {columnLabel(column)}
+            {columnLabel(column, view)}
           </th>
         ))}
       </tr>
     </thead>
+  );
+}
+
+export function ConversionTableViewToggle({
+  view,
+  onToggle,
+}: {
+  view: ConversionTableView;
+  onToggle: () => void;
+}) {
+  const friendly = view === "friendly";
+  const nextView = friendly ? "técnica" : "amigable";
+
+  return (
+    <div className="group relative shrink-0">
+      <button
+        type="button"
+        onClick={onToggle}
+        aria-label={`Cambiar a vista ${nextView}`}
+        title={`Cambiar a vista ${nextView}`}
+        className={`inline-flex h-8 w-8 items-center justify-center rounded-full border transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-400/60 ${
+          friendly
+            ? "border-emerald-500/45 bg-emerald-500/12 text-emerald-300 hover:bg-emerald-500/20"
+            : "border-zinc-700 bg-zinc-900 text-zinc-400 hover:border-zinc-600 hover:text-zinc-100"
+        }`}
+      >
+        <svg
+          className="h-4 w-4 transition-transform duration-300 group-hover:rotate-180"
+          viewBox="0 0 24 24"
+          fill="none"
+          stroke="currentColor"
+          strokeWidth="1.8"
+          aria-hidden="true"
+        >
+          <path
+            strokeLinecap="round"
+            strokeLinejoin="round"
+            d="M20 7h-5V2M4 17h5v5M19 11a7.5 7.5 0 0 0-12.7-4.4L5 8m14 8-1.3 1.4A7.5 7.5 0 0 1 5 13"
+          />
+        </svg>
+      </button>
+      <span className="pointer-events-none absolute right-0 top-10 z-40 hidden w-max rounded-lg border border-zinc-700 bg-zinc-950 px-2.5 py-1.5 text-[10px] text-zinc-300 shadow-xl group-hover:block">
+        Cambiar a vista {nextView}
+      </span>
+    </div>
   );
 }
 
