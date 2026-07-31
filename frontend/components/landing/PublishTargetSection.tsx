@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
+import { createPortal } from "react-dom";
 import type { PublishTarget } from "@/lib/landing/types";
 import {
   buildLandingPublicUrl,
@@ -44,7 +45,7 @@ const TARGETS: Array<{
       },
       {
         label: "Actualizaciones",
-        value: "Funciona como un servicio independiente del Constructor.",
+        value: "Proyecto independiente: sus mejoras se despliegan por separado.",
       },
     ],
     pros: [
@@ -55,7 +56,7 @@ const TARGETS: Array<{
     cons: [
       "Descarga e inicializa una aplicación React antes de quedar plenamente interactivo.",
       "La búsqueda anticipada del teléfono comienza después de esa inicialización.",
-      "Las mejoras del motor deben actualizarse también en este proyecto.",
+      "Al ser una aplicación separada, las mejoras técnicas deben desplegarse también aquí; el cliente no tiene que hacer nada.",
     ],
   },
   {
@@ -99,7 +100,9 @@ export function PublishTargetSection({
 }: PublishTargetSectionProps) {
   const [currentUrlCopied, setCurrentUrlCopied] = useState(false);
   const [openInfo, setOpenInfo] = useState<PublishTarget | null>(null);
-  const sectionRef = useRef<HTMLElement>(null);
+  const dialogRef = useRef<HTMLDivElement>(null);
+  const openTarget =
+    TARGETS.find((target) => target.value === openInfo) ?? null;
   const currentUrl = buildLandingPublicUrl(
     landingName,
     publishTarget,
@@ -121,30 +124,50 @@ export function PublishTargetSection({
   useEffect(() => {
     if (!openInfo) return;
 
-    const closeOnOutsideClick = (event: PointerEvent) => {
-      if (
-        sectionRef.current &&
-        event.target instanceof Node &&
-        !sectionRef.current.contains(event.target)
-      ) {
+    const previousBodyOverflow = document.body.style.overflow;
+    document.body.style.overflow = "hidden";
+    const focusFrame = window.requestAnimationFrame(() => {
+      dialogRef.current?.focus();
+    });
+
+    const handleDialogKeys = (event: KeyboardEvent) => {
+      if (event.key === "Escape") {
         setOpenInfo(null);
+        return;
+      }
+
+      if (event.key !== "Tab" || !dialogRef.current) return;
+      const focusable = Array.from(
+        dialogRef.current.querySelectorAll<HTMLElement>(
+          'button:not([disabled]), [href], input:not([disabled]), select:not([disabled]), textarea:not([disabled]), [tabindex]:not([tabindex="-1"])',
+        ),
+      );
+      if (focusable.length === 0) {
+        event.preventDefault();
+        return;
+      }
+
+      const first = focusable[0];
+      const last = focusable[focusable.length - 1];
+      if (event.shiftKey && document.activeElement === first) {
+        event.preventDefault();
+        last.focus();
+      } else if (!event.shiftKey && document.activeElement === last) {
+        event.preventDefault();
+        first.focus();
       }
     };
-    const closeOnEscape = (event: KeyboardEvent) => {
-      if (event.key === "Escape") setOpenInfo(null);
-    };
 
-    document.addEventListener("pointerdown", closeOnOutsideClick);
-    document.addEventListener("keydown", closeOnEscape);
+    document.addEventListener("keydown", handleDialogKeys);
     return () => {
-      document.removeEventListener("pointerdown", closeOnOutsideClick);
-      document.removeEventListener("keydown", closeOnEscape);
+      window.cancelAnimationFrame(focusFrame);
+      document.body.style.overflow = previousBodyOverflow;
+      document.removeEventListener("keydown", handleDialogKeys);
     };
   }, [openInfo]);
 
   return (
     <section
-      ref={sectionRef}
       className="rounded-xl border border-zinc-800 bg-zinc-900/50 p-4"
     >
       <h3 className="mb-1 text-sm font-semibold text-zinc-200">
@@ -217,80 +240,6 @@ export function PublishTargetSection({
                 </span>
               </div>
 
-              {infoOpen ? (
-                <div
-                  id={infoId}
-                  role="tooltip"
-                  className="absolute right-2 top-10 z-30 max-h-[min(34rem,calc(100vh-2rem))] w-[min(23rem,calc(100vw-3rem))] overflow-y-auto rounded-xl border border-zinc-700 bg-zinc-950 p-3.5 text-left shadow-2xl shadow-black/50"
-                >
-                  <p className="text-xs font-semibold text-zinc-100">
-                    Motor {target.title}
-                  </p>
-                  <p className="mt-0.5 text-[10px] font-medium uppercase tracking-[0.1em] text-sky-300">
-                    {target.profile}
-                  </p>
-                  <p className="mt-3 rounded-lg border border-sky-500/20 bg-sky-500/5 px-2.5 py-2 text-[11px] leading-4 text-zinc-200">
-                    {target.recommendation}
-                  </p>
-                  <div className="mt-3 grid gap-3">
-                    <div>
-                      <p className="text-[10px] font-semibold uppercase tracking-[0.12em] text-sky-300">
-                        Comparativa técnica
-                      </p>
-                      <dl className="mt-1.5 divide-y divide-zinc-800 rounded-lg border border-zinc-800 bg-zinc-900/50 px-2.5">
-                        {target.comparison.map((item) => (
-                          <div
-                            key={item.label}
-                            className="grid grid-cols-[5.5rem_1fr] gap-2 py-2 text-[10px] leading-4"
-                          >
-                            <dt className="font-semibold text-zinc-300">
-                              {item.label}
-                            </dt>
-                            <dd className="text-zinc-400">{item.value}</dd>
-                          </div>
-                        ))}
-                      </dl>
-                    </div>
-                    <div>
-                      <p className="text-[10px] font-semibold uppercase tracking-[0.12em] text-emerald-400">
-                        Ventajas
-                      </p>
-                      <ul className="mt-1.5 space-y-1.5 text-[11px] leading-4 text-zinc-300">
-                        {target.pros.map((item) => (
-                          <li key={item} className="flex gap-2">
-                            <span
-                              className="mt-1.5 h-1.5 w-1.5 shrink-0 rounded-full bg-emerald-400"
-                              aria-hidden="true"
-                            />
-                            <span>{item}</span>
-                          </li>
-                        ))}
-                      </ul>
-                    </div>
-                    <div>
-                      <p className="text-[10px] font-semibold uppercase tracking-[0.12em] text-amber-300">
-                        A tener en cuenta
-                      </p>
-                      <ul className="mt-1.5 space-y-1.5 text-[11px] leading-4 text-zinc-300">
-                        {target.cons.map((item) => (
-                          <li key={item} className="flex gap-2">
-                            <span
-                              className="mt-1.5 h-1.5 w-1.5 shrink-0 rounded-full bg-amber-300"
-                              aria-hidden="true"
-                            />
-                            <span>{item}</span>
-                          </li>
-                        ))}
-                      </ul>
-                    </div>
-                  </div>
-                  <p className="mt-3 border-t border-zinc-800 pt-2.5 text-[10px] leading-4 text-zinc-500">
-                    Ambos conservan la misma lógica de asignación de teléfonos,
-                    Pixel/CAPI y conversiones. Cambia la arquitectura de entrega,
-                    no la lógica del negocio.
-                  </p>
-                </div>
-              ) : null}
             </div>
           );
         })}
@@ -317,6 +266,113 @@ export function PublishTargetSection({
           )}
         </button>
       </div>
+
+      {openTarget && typeof document !== "undefined"
+        ? createPortal(
+            <div
+              className="fixed inset-0 z-[140] flex items-center justify-center bg-black/70 p-3 backdrop-blur-sm sm:p-6"
+              onPointerDown={(event) => {
+                if (event.currentTarget === event.target) setOpenInfo(null);
+              }}
+            >
+              <div
+                ref={dialogRef}
+                id={`publish-target-${openTarget.value}-info`}
+                role="dialog"
+                aria-modal="true"
+                aria-labelledby={`publish-target-${openTarget.value}-title`}
+                tabIndex={-1}
+                className="flex max-h-[calc(100dvh-1.5rem)] w-full max-w-lg flex-col overflow-hidden rounded-2xl border border-zinc-700 bg-zinc-950 text-left shadow-2xl shadow-black/70 outline-none sm:max-h-[calc(100dvh-3rem)]"
+              >
+                <div className="flex shrink-0 items-start gap-3 border-b border-zinc-800 px-4 py-3.5">
+                  <div className="min-w-0 flex-1">
+                    <p
+                      id={`publish-target-${openTarget.value}-title`}
+                      className="text-sm font-semibold text-zinc-100"
+                    >
+                      Motor {openTarget.title}
+                    </p>
+                    <p className="mt-0.5 text-[10px] font-medium uppercase tracking-[0.1em] text-sky-300">
+                      {openTarget.profile}
+                    </p>
+                  </div>
+                  <button
+                    type="button"
+                    onClick={() => setOpenInfo(null)}
+                    aria-label="Cerrar información"
+                    className="inline-flex h-8 w-8 shrink-0 items-center justify-center rounded-lg border border-zinc-700 bg-zinc-900 text-lg leading-none text-zinc-400 transition hover:border-zinc-600 hover:text-zinc-100"
+                  >
+                    ×
+                  </button>
+                </div>
+
+                <div className="min-h-0 overflow-y-auto overscroll-contain px-4 py-4">
+                  <p className="rounded-lg border border-sky-500/20 bg-sky-500/5 px-3 py-2.5 text-[11px] leading-4 text-zinc-200">
+                    {openTarget.recommendation}
+                  </p>
+                  <div className="mt-4 grid gap-4">
+                    <div>
+                      <p className="text-[10px] font-semibold uppercase tracking-[0.12em] text-sky-300">
+                        Comparativa técnica
+                      </p>
+                      <dl className="mt-2 divide-y divide-zinc-800 rounded-lg border border-zinc-800 bg-zinc-900/50 px-3">
+                        {openTarget.comparison.map((item) => (
+                          <div
+                            key={item.label}
+                            className="grid grid-cols-[5.75rem_1fr] gap-3 py-2.5 text-[11px] leading-4"
+                          >
+                            <dt className="font-semibold text-zinc-300">
+                              {item.label}
+                            </dt>
+                            <dd className="text-zinc-400">{item.value}</dd>
+                          </div>
+                        ))}
+                      </dl>
+                    </div>
+                    <div>
+                      <p className="text-[10px] font-semibold uppercase tracking-[0.12em] text-emerald-400">
+                        Ventajas
+                      </p>
+                      <ul className="mt-2 space-y-2 text-[11px] leading-4 text-zinc-300">
+                        {openTarget.pros.map((item) => (
+                          <li key={item} className="flex gap-2">
+                            <span
+                              className="mt-1.5 h-1.5 w-1.5 shrink-0 rounded-full bg-emerald-400"
+                              aria-hidden="true"
+                            />
+                            <span>{item}</span>
+                          </li>
+                        ))}
+                      </ul>
+                    </div>
+                    <div>
+                      <p className="text-[10px] font-semibold uppercase tracking-[0.12em] text-amber-300">
+                        A tener en cuenta
+                      </p>
+                      <ul className="mt-2 space-y-2 text-[11px] leading-4 text-zinc-300">
+                        {openTarget.cons.map((item) => (
+                          <li key={item} className="flex gap-2">
+                            <span
+                              className="mt-1.5 h-1.5 w-1.5 shrink-0 rounded-full bg-amber-300"
+                              aria-hidden="true"
+                            />
+                            <span>{item}</span>
+                          </li>
+                        ))}
+                      </ul>
+                    </div>
+                  </div>
+                  <p className="mt-4 border-t border-zinc-800 pt-3 text-[10px] leading-4 text-zinc-500">
+                    Ambos conservan la misma lógica de asignación de teléfonos,
+                    Pixel/CAPI y conversiones. Cambia la arquitectura de entrega,
+                    no la lógica del negocio.
+                  </p>
+                </div>
+              </div>
+            </div>,
+            document.body,
+          )
+        : null}
     </section>
   );
 }
