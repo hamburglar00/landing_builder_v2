@@ -786,17 +786,19 @@ export default function DashboardLandingEditarPage() {
           </div>
 
           {/* Desktop: preview fijo que acompaña el scroll y siempre queda visible */}
-          <aside className="sticky top-20 hidden max-h-[calc(100dvh-6rem)] w-[360px] overflow-y-auto rounded-2xl border border-[var(--color-border)] bg-[rgba(11,15,21,0.72)] p-3 shadow-[var(--shadow-card)] lg:block">
-            <div className="mb-3 flex items-center justify-between">
+          <aside className="sticky top-20 hidden h-fit w-[360px] self-start rounded-2xl border border-[var(--color-border)] bg-[rgba(11,15,21,0.72)] p-3 shadow-[var(--shadow-card)] lg:block">
+            <div className="mb-2 flex items-center justify-between">
               <p className="text-xs font-semibold text-[var(--color-text)]">Vista previa</p>
               <span className="ui-badge">En vivo</span>
             </div>
-            <div className="w-full overflow-hidden rounded-xl border border-[var(--color-border-subtle)]">
-              <div className="origin-top scale-[0.7]">
-                <LandingPreview config={landing.config} />
+            <div className="flex w-full items-center justify-center overflow-hidden rounded-xl border border-[var(--color-border-subtle)] p-2">
+              <div className="relative h-[397px] w-[224px] shrink-0">
+                <div className="absolute left-1/2 top-0 w-[360px] -translate-x-1/2 origin-top scale-[0.62]">
+                  <LandingPreview config={landing.config} />
+                </div>
               </div>
             </div>
-            <p className="mt-3 w-full text-[11px] leading-5 text-[var(--color-text-disabled)]">
+            <p className="mt-2 w-full text-[11px] leading-4 text-[var(--color-text-disabled)]">
               La vista previa es aproximada. Para una vista certera, abrí el enlace de la landing.
             </p>
           </aside>
