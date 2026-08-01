@@ -1,9 +1,6 @@
 "use client";
 
-import { useMemo } from "react";
-import type { FunnelContact, ConversionRow, HomeOverviewStats } from "@/lib/conversionsDb";
-import { computeCoreStats } from "@/lib/conversionStats";
-import { buildFunnelContactsFromConversions } from "@/lib/conversionsDb";
+import type { HomeOverviewStats } from "@/lib/conversionsDb";
 import { formatCurrencyAmount, type ReportingCurrency } from "@/lib/currency";
 import { PageHeader } from "@/components/ui/PanelPrimitives";
 
@@ -44,50 +41,14 @@ function Card({
 
 export function HomeOverview({
   role,
-  landingsCount,
-  conversions,
-  premiumThreshold,
   overviewStats,
   currency,
 }: {
   role: "admin" | "client";
-  landingsCount?: number;
-  funnelContacts?: FunnelContact[];
-  conversions?: ConversionRow[];
-  premiumThreshold?: number;
-  overviewStats?: HomeOverviewStats;
+  overviewStats: HomeOverviewStats;
   currency: ReportingCurrency;
 }) {
-  const stats = useMemo(() => {
-    if (overviewStats) return overviewStats;
-
-    const now = new Date();
-    const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1, 0, 0, 0, 0);
-    const sourceConversions = conversions ?? [];
-    const monthlyConversions = sourceConversions.filter((r) => {
-      const t = new Date(r.created_at).getTime();
-      return Number.isFinite(t) && t >= startOfMonth.getTime() && t <= now.getTime();
-    });
-    const monthlyFunnelContacts = buildFunnelContactsFromConversions(monthlyConversions);
-    const core = computeCoreStats(
-      monthlyConversions,
-      monthlyFunnelContacts,
-      monthlyConversions,
-      premiumThreshold ?? 50000,
-    );
-
-    const porcentajeCarga = core.uniqueLeadsLinkedToContactWithInferred ? (core.firstLoadPurchasersAttributed / core.uniqueLeadsLinkedToContactWithInferred) * 100 : 0;
-    const cargaPromedio = core.totalPurchaseCount > 0 ? core.totalRevenue / core.totalPurchaseCount : 0;
-
-    return {
-      landingsCount: landingsCount ?? 0,
-      porcentajeCarga,
-      cargaPromedio,
-      totalCargado: core.totalRevenue,
-      premium: core.premiumPlayers,
-      retencionActiva30d: core.activeRetention30d,
-    };
-  }, [landingsCount, conversions, premiumThreshold, overviewStats]);
+  const stats = overviewStats;
 
   const scopeLabel =
     role === "admin" ? "vista consolidada (todos los clientes)" : "vista consolidada";

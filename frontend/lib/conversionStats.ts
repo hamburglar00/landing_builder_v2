@@ -1,5 +1,5 @@
-import type { ConversionRow, FunnelContact } from "@/lib/conversionsDb";
-import { classifyContact } from "@/lib/conversionsDb";
+import type { ConversionRow, FunnelContact, HomeOverviewStats } from "@/lib/conversionsDb";
+import { buildFunnelContactsFromConversions, classifyContact } from "@/lib/conversionsDb";
 
 export interface CoreStats {
   uniqueContacts: number;
@@ -366,6 +366,39 @@ export function computeCoreStats(
     activeRetention30d,
     purchaseValues,
     leadPurchaseHours,
+  };
+}
+
+export function computeHomeOverviewStatsFromConversions({
+  conversions,
+  landingsCount,
+  premiumThreshold,
+  allConversions,
+}: {
+  conversions: ConversionRow[];
+  landingsCount: number;
+  premiumThreshold: number;
+  allConversions?: ConversionRow[];
+}): HomeOverviewStats {
+  const cleanConversions = conversions.filter((row) => !String(row.test_event_code ?? "").trim());
+  const cleanAllConversions = (allConversions ?? cleanConversions).filter((row) => !String(row.test_event_code ?? "").trim());
+  const funnelContacts = buildFunnelContactsFromConversions(cleanConversions);
+  const core = computeCoreStats(
+    cleanConversions,
+    funnelContacts,
+    cleanAllConversions,
+    premiumThreshold,
+  );
+
+  return {
+    landingsCount,
+    porcentajeCarga: core.adLeadJourneysLinkedToContact > 0
+      ? (core.adFirstPurchaseJourneysAttributed / core.adLeadJourneysLinkedToContact) * 100
+      : 0,
+    cargaPromedio: core.totalPurchaseCount > 0 ? core.totalRevenue / core.totalPurchaseCount : 0,
+    totalCargado: core.totalRevenue,
+    premium: core.premiumPlayers,
+    retencionActiva30d: core.activeRetention30d,
   };
 }
 
