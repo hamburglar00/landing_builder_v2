@@ -372,7 +372,7 @@ export default function DashboardConversionesPage() {
   const [tab, setTab] = useState<Tab>("funnel");
   const [expandedLog, setExpandedLog] = useState<number | null>(null);
   const [inboxSearch, setInboxSearch] = useState("");
-  const [inboxActionFilter, setInboxActionFilter] = useState<"all" | "CONTACT" | "LEAD" | "PURCHASE">("LEAD");
+  const [inboxActionFilter, setInboxActionFilter] = useState<"all" | "CONTACT" | "LEAD" | "COMPLETEREGISTRATION" | "PURCHASE">("LEAD");
   const [tableSearch, setTableSearch] = useState("");
   const [tableView, setTableView] =
     useState<ConversionTableView>("friendly");
@@ -1724,7 +1724,7 @@ export default function DashboardConversionesPage() {
         <section className="rounded-xl border border-zinc-800 bg-zinc-900/50 p-4">
           <div className="mb-4 flex flex-wrap items-center justify-between gap-2">
             <h3 className="text-sm font-semibold text-zinc-200">
-              Inbox de eventos (CONTACT/LEAD/PURCHASE){" "}
+              Inbox de eventos (CONTACT/LEAD/COMPLETEREGISTRATION/PURCHASE){" "}
               <span className="font-normal text-zinc-500">
                 ({filteredInbox.length}{inboxHasNextPage ? "+" : ""})
               </span>
@@ -1732,13 +1732,14 @@ export default function DashboardConversionesPage() {
             <div className="flex items-center gap-2">
               <select
                 value={inboxActionFilter}
-                onChange={(e) => setInboxActionFilter(e.target.value as "all" | "CONTACT" | "LEAD" | "PURCHASE")}
+                onChange={(e) => setInboxActionFilter(e.target.value as "all" | "CONTACT" | "LEAD" | "COMPLETEREGISTRATION" | "PURCHASE")}
                 className="h-8 rounded-lg border border-zinc-700 bg-zinc-900 px-2 text-xs text-zinc-100"
                 title="Filtrar por tipo de evento"
               >
                 <option value="all">Todos</option>
                 <option value="CONTACT">Contact</option>
                 <option value="LEAD">Lead</option>
+                <option value="COMPLETEREGISTRATION">CompleteRegistration</option>
                 <option value="PURCHASE">Purchase</option>
               </select>
               <input

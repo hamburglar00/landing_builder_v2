@@ -1,5 +1,7 @@
 import {
   buildMetaBusinessMessagingPurchaseRequest,
+  buildMetaRequest,
+  buildFakeConversionRow,
   normalizeCtwaClid,
   normalizeCurrencyCode,
   normalizePurchaseAmount,
@@ -167,6 +169,68 @@ Deno.test("Business Messaging Purchase matches Meta WhatsApp payload shape", () 
   assert(
     !("purchase_type" in customData),
     "Business Messaging Purchase must stay standard",
+  );
+});
+
+Deno.test("CompleteRegistration website CAPI uses Meta standard event shape", async () => {
+  const row = buildFakeConversionRow("CompleteRegistration");
+  row.pixel_id = "123456789";
+  row.meta_pixel_id = "123456789";
+  row.event_source_url = "https://landing.example.com/demo";
+
+  const request = await buildMetaRequest(
+    {
+      user_id: row.user_id,
+      pixel_id: "123456789",
+      meta_access_token: "token",
+      meta_currency: "ARS",
+      meta_api_version: "v25.0",
+      send_contact_capi: true,
+      send_geo_capi: true,
+      geo_use_ipapi: false,
+      geo_fill_only_when_missing: false,
+    },
+    row,
+    "CompleteRegistration",
+    "registration-event-id",
+    1_700_000_000,
+    undefined,
+    "TEST123",
+  );
+
+  assert(
+    request.apiUrl ===
+      "https://graph.facebook.com/v25.0/123456789/events?access_token=token",
+    "CompleteRegistration must use the website Pixel events endpoint",
+  );
+  assert(
+    request.body.test_event_code === "TEST123",
+    "test_event_code must be preserved outside the event payload",
+  );
+
+  const data = request.body.data as Array<Record<string, unknown>>;
+  const event = data[0];
+  assert(
+    event.event_name === "CompleteRegistration",
+    "Meta standard event name must be exactly CompleteRegistration",
+  );
+  assert(event.event_time === 1_700_000_000, "event_time must be preserved");
+  assert(
+    event.event_id === "registration-event-id",
+    "event_id must be preserved for idempotency/dedup compatibility",
+  );
+  assert(
+    event.action_source === "website",
+    "CompleteRegistration from landing journeys must be website",
+  );
+  assert(
+    event.event_source_url === "https://landing.example.com/demo",
+    "website events must include event_source_url",
+  );
+  assert("user_data" in event, "user_data is required by CAPI");
+  assert(
+    !("custom_data" in event),
+    "CompleteRegistration must not invent custom_data unless explicitly provided",
   );
 });
 

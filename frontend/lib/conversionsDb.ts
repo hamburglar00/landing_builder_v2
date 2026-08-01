@@ -154,6 +154,7 @@ export interface ConversionRow {
   assigned_gerencia_name?: string | null;
   assigned_gerencia_label?: string | null;
   lead_bot_phone?: string | null;
+  lead_player_username?: string | null;
   lead_agency_id?: string | null;
   lead_gerencia_id?: number | null;
   lead_gerencia_external_id?: number | null;
@@ -162,7 +163,21 @@ export interface ConversionRow {
   lead_incoming_promo_code?: string | null;
   lead_attribution_status?: string | null;
   lead_attribution_conversion_id?: string | null;
+  registration_event_id?: string | null;
+  registration_event_time?: number | null;
+  registration_payload_raw?: string | null;
+  registration_player_username?: string | null;
+  registration_bot_phone?: string | null;
+  registration_agency_id?: string | null;
+  registration_gerencia_id?: number | null;
+  registration_gerencia_external_id?: number | null;
+  registration_gerencia_name?: string | null;
+  registration_gerencia_label?: string | null;
+  registration_incoming_promo_code?: string | null;
+  registration_attribution_status?: string | null;
+  registration_attribution_conversion_id?: string | null;
   purchase_bot_phone?: string | null;
+  purchase_player_username?: string | null;
   purchase_agency_id?: string | null;
   purchase_gerencia_id?: number | null;
   purchase_gerencia_external_id?: number | null;
@@ -229,6 +244,7 @@ export interface FunnelContact {
   landing_name: string | null;
   telefono_asignado?: string | null;
   assigned_gerencia_label?: string | null;
+  player_username?: string | null;
   total_valor: number;
   purchase_count: number;
   repeat_count: number;
@@ -662,9 +678,13 @@ const CONVERSIONS_SELECT = `
   observaciones,
   external_id, utm_campaign, telefono_asignado,
   assigned_gerencia_id, assigned_gerencia_external_id, assigned_gerencia_name, assigned_gerencia_label,
-  lead_bot_phone, lead_agency_id, lead_gerencia_id, lead_gerencia_external_id, lead_gerencia_name, lead_gerencia_label,
+  lead_bot_phone, lead_player_username, lead_agency_id, lead_gerencia_id, lead_gerencia_external_id, lead_gerencia_name, lead_gerencia_label,
   lead_incoming_promo_code, lead_attribution_status, lead_attribution_conversion_id,
-  purchase_bot_phone, purchase_agency_id, purchase_gerencia_id, purchase_gerencia_external_id, purchase_gerencia_name, purchase_gerencia_label,
+  registration_event_id, registration_event_time, registration_payload_raw, registration_player_username,
+  registration_bot_phone, registration_agency_id, registration_gerencia_id, registration_gerencia_external_id,
+  registration_gerencia_name, registration_gerencia_label, registration_incoming_promo_code,
+  registration_attribution_status, registration_attribution_conversion_id,
+  purchase_bot_phone, purchase_player_username, purchase_agency_id, purchase_gerencia_id, purchase_gerencia_external_id, purchase_gerencia_name, purchase_gerencia_label,
   purchase_incoming_promo_code, purchase_attribution_status, purchase_attribution_conversion_id,
   promo_code,
   geo_city, geo_region, geo_country,
@@ -811,7 +831,7 @@ export async function fetchConversionsForAdminFiltered(
   return excludeHiddenConversions(rows, hiddenBy);
 }
 
-// Funnel contacts (aggregated by phone)
+// Funnel contacts (aggregated by player/phone + gerencia)
 
 function derivePurchaseType(row: ConversionRow): "first" | "repeat" | null {
   if (!row.purchase_event_id) return null;
@@ -820,11 +840,39 @@ function derivePurchaseType(row: ConversionRow): "first" | "repeat" | null {
 }
 
 export function buildFunnelContactsFromConversions(rows: ConversionRow[]): FunnelContact[] {
+  const stageGerenciaKey = (row: ConversionRow): string => {
+    const purchaseKey = String(row.purchase_gerencia_id ?? row.purchase_gerencia_external_id ?? row.purchase_gerencia_label ?? "").trim();
+    const registrationKey = String(row.registration_gerencia_id ?? row.registration_gerencia_external_id ?? row.registration_gerencia_label ?? "").trim();
+    const leadKey = String(row.lead_gerencia_id ?? row.lead_gerencia_external_id ?? row.lead_gerencia_label ?? "").trim();
+    const assignedKey = String(row.assigned_gerencia_id ?? row.assigned_gerencia_external_id ?? row.assigned_gerencia_label ?? row.telefono_asignado ?? "").trim();
+    return purchaseKey || registrationKey || leadKey || assignedKey || "__sin_gerencia__";
+  };
+  const stagePlayerKey = (row: ConversionRow): string => {
+    const username = String(
+      row.purchase_player_username ||
+      row.registration_player_username ||
+      row.lead_player_username ||
+      "",
+    ).trim();
+    return username || row.phone || row.external_id || row.id || row.created_at;
+  };
+  const displayPlayerUsername = (groupRows: ConversionRow[]): string | null => {
+    const latestUsername = [...groupRows].reverse()
+      .map((row) => String(
+        row.purchase_player_username ||
+        row.registration_player_username ||
+        row.lead_player_username ||
+        "",
+      ).trim())
+      .find(Boolean);
+    return latestUsername || null;
+  };
+
   const grouped = new Map<string, ConversionRow[]>();
   for (const row of rows) {
     // Excluir eventos de prueba para no ensuciar el funnel.
     if (String(row.test_event_code ?? "").trim()) continue;
-    const key = `${row.user_id}::${row.phone}`;
+    const key = `${row.user_id}::${stagePlayerKey(row)}::${stageGerenciaKey(row)}`;
     const bucket = grouped.get(key) ?? [];
     bucket.push(row);
     grouped.set(key, bucket);
@@ -844,16 +892,18 @@ export function buildFunnelContactsFromConversions(rows: ConversionRow[]): Funne
     const contactRows = sorted.filter((r) => (r.contact_event_id ?? "") !== "");
     const stagePhone = currentStatus === "purchase"
       ? String(latest.purchase_bot_phone ?? "").trim()
-      : currentStatus === "lead"
-        ? String(latest.lead_bot_phone ?? "").trim()
-        : "";
+      : String(latest.registration_bot_phone ?? "").trim() ||
+        (currentStatus === "lead"
+          ? String(latest.lead_bot_phone ?? "").trim()
+          : "");
     const assignedPhone = stagePhone ||
       ([...sorted].reverse().find((r) => String(r.telefono_asignado ?? "").trim())?.telefono_asignado ?? null);
     const stageGerenciaLabel = currentStatus === "purchase"
       ? String(latest.purchase_gerencia_label ?? "").trim()
-      : currentStatus === "lead"
-        ? String(latest.lead_gerencia_label ?? "").trim()
-        : "";
+      : String(latest.registration_gerencia_label ?? "").trim() ||
+        (currentStatus === "lead"
+          ? String(latest.lead_gerencia_label ?? "").trim()
+          : "");
     const assignedGerenciaLabel = stageGerenciaLabel ||
       ([...sorted].reverse().find((r) => String(r.assigned_gerencia_label ?? "").trim())?.assigned_gerencia_label ?? null);
 
@@ -872,6 +922,7 @@ export function buildFunnelContactsFromConversions(rows: ConversionRow[]): Funne
       landing_name: latest.landing_name || null,
       telefono_asignado: assignedPhone,
       assigned_gerencia_label: assignedGerenciaLabel,
+      player_username: displayPlayerUsername(sorted),
       total_valor: purchaseRows.reduce((sum, r) => sum + (Number(r.valor) || 0), 0),
       purchase_count: purchaseRows.length,
       repeat_count: repeatRows.length,
@@ -1171,7 +1222,7 @@ export async function fetchConversionInboxFiltered(
     limit?: number;
     offset?: number;
     range?: FetchDateRange | null;
-    action?: "all" | "CONTACT" | "LEAD" | "PURCHASE";
+    action?: "all" | "CONTACT" | "LEAD" | "COMPLETEREGISTRATION" | "PURCHASE";
     search?: string;
   } = {},
 ): Promise<ConversionInboxRow[]> {

@@ -249,21 +249,23 @@ export default function StatsPanel({
       if (c.purchase_type === "repeat") return false;
       return !(c.observaciones ?? "").includes("REPEAT");
     };
-    const uniqueContacts = core.uniqueContacts;
+    const uniqueContacts = core.adContactJourneys;
     const uniqueLeads = core.uniqueLeads;
-    const realLeadsLinkedToContact = core.uniqueLeadsLinkedToContact;
-    const inferredLeadsFromContactPurchase = core.inferredLeadsFromContactPurchase;
-    const uniqueLeadsLinkedToContact = core.uniqueLeadsLinkedToContactWithInferred;
+    const realLeadsLinkedToContact = core.adLeadJourneysLinkedToContact;
+    const inferredLeadsFromContactPurchase = core.adInferredLeadJourneys;
+    const uniqueLeadsLinkedToContact = core.adLeadJourneysLinkedToContact;
     const firstLoadPurchasers = core.firstLoadPurchasers;
-    const firstLoadPurchasersLinkedToLead = core.firstLoadPurchasersAttributed;
+    const firstLoadPurchasersLinkedToLead = core.adFirstPurchaseJourneysAttributed;
+    const firstLoadPlayersAttributed = core.firstLoadPurchasersAttributed;
     const totalPurchases = core.totalPurchases;
     const primera = core.firstLoadPlayers;
     const recurrente = core.repeatPlayers;
     const premium = core.premiumPlayers;
     const totalRevenue = core.totalRevenue;
     const totalPurchaseCount = core.totalPurchaseCount;
-    const firstPurchaseRevenue = core.firstPurchaseRevenue;
-    const reachedRepeat = core.purchaseRepeat;
+    const firstPurchaseRevenue = core.firstPurchaseEventRevenue;
+    const reachedRepeat = core.adRepeatJourneys;
+    const repeatPlayersReached = core.purchaseRepeat;
     const purchaseFirstCount = conversions.filter(isFirstPurchase).length;
     const purchaseRepeatCount = conversions.filter(isRepeatPurchase).length;
     const leads = uniqueLeads;
@@ -284,10 +286,10 @@ export default function StatsPanel({
     ): SliceStats => {
       const slicedCore = computeCoreStats(convSlice, contactsSlice, allConvSlice, premiumThreshold);
       return {
-        mensajes: slicedCore.uniqueLeadsLinkedToContactWithInferred,
-        cargas: slicedCore.firstLoadPurchasersAttributed,
+        mensajes: slicedCore.adLeadJourneysLinkedToContact,
+        cargas: slicedCore.adFirstPurchaseEventsAttributed,
         revenue: slicedCore.totalRevenue,
-        firstRevenue: slicedCore.firstPurchaseRevenue,
+        firstRevenue: slicedCore.firstPurchaseEventRevenue,
       };
     };
 
@@ -462,6 +464,7 @@ export default function StatsPanel({
       uniqueLeadsLinkedToContact,
       firstLoadPurchasers,
       firstLoadPurchasersLinkedToLead,
+      firstLoadPlayersAttributed,
       totalPurchases,
       leads,
       primera,
@@ -469,9 +472,12 @@ export default function StatsPanel({
       premium,
       purchasers,
       reachedRepeat,
+      repeatPlayersReached,
       purchaseFirstCount,
       purchaseRepeatCount,
-      repeatFromFirstInRange: core.repeatFromAttributedFirstInRange,
+      repeatFromFirstInRange: core.adRepeatJourneysFromAttributedFirstInRange,
+      repeatEventsFromFirstInRange: core.adRepeatEventsFromAttributedFirstInRange,
+      repeatPlayersFromFirstInRange: core.repeatFromAttributedFirstInRange,
       totalRevenue,
       firstPurchaseRevenue,
       totalPurchaseCount,
@@ -672,9 +678,9 @@ export default function StatsPanel({
           return new Date(c.created_at).getHours() === h;
         });
         const core = computeCoreStats(convSlice, contactsSlice, allConvSlice, premiumThreshold);
-        const pctInicio = core.uniqueContacts > 0 ? (core.uniqueLeadsLinkedToContactWithInferred / core.uniqueContacts) * 100 : 0;
-        const pctCarga = core.uniqueLeadsLinkedToContactWithInferred > 0 ? (core.firstLoadPurchasersAttributed / core.uniqueLeadsLinkedToContactWithInferred) * 100 : 0;
-        const pctRecarga = core.firstLoadPurchasersAttributed > 0 ? (core.repeatFromAttributedFirstInRange / core.firstLoadPurchasersAttributed) * 100 : 0;
+        const pctInicio = core.adContactJourneys > 0 ? (core.adLeadJourneysLinkedToContact / core.adContactJourneys) * 100 : 0;
+        const pctCarga = core.adLeadJourneysLinkedToContact > 0 ? (core.adFirstPurchaseJourneysAttributed / core.adLeadJourneysLinkedToContact) * 100 : 0;
+        const pctRecarga = core.adFirstPurchaseJourneysAttributed > 0 ? (core.adRepeatJourneysFromAttributedFirstInRange / core.adFirstPurchaseJourneysAttributed) * 100 : 0;
         result.push({
           day: `${h}`,
           pct_inicio: isFutureHour ? null : Number(pctInicio.toFixed(1)),
@@ -702,9 +708,9 @@ export default function StatsPanel({
         return t >= dayStart.getTime() && t <= dayEnd.getTime();
       });
       const core = computeCoreStats(convSlice, contactsSlice, allConvSlice, premiumThreshold);
-      const pctInicio = core.uniqueContacts > 0 ? (core.uniqueLeadsLinkedToContactWithInferred / core.uniqueContacts) * 100 : 0;
-      const pctCarga = core.uniqueLeadsLinkedToContactWithInferred > 0 ? (core.firstLoadPurchasersAttributed / core.uniqueLeadsLinkedToContactWithInferred) * 100 : 0;
-      const pctRecarga = core.firstLoadPurchasersAttributed > 0 ? (core.repeatFromAttributedFirstInRange / core.firstLoadPurchasersAttributed) * 100 : 0;
+      const pctInicio = core.adContactJourneys > 0 ? (core.adLeadJourneysLinkedToContact / core.adContactJourneys) * 100 : 0;
+      const pctCarga = core.adLeadJourneysLinkedToContact > 0 ? (core.adFirstPurchaseJourneysAttributed / core.adLeadJourneysLinkedToContact) * 100 : 0;
+      const pctRecarga = core.adFirstPurchaseJourneysAttributed > 0 ? (core.adRepeatJourneysFromAttributedFirstInRange / core.adFirstPurchaseJourneysAttributed) * 100 : 0;
 
       return {
         day: row.day,
@@ -767,9 +773,12 @@ export default function StatsPanel({
     summary: {
       clicks_cta: stats.uniqueContacts,
       mensajes_recibidos: stats.uniqueLeadsLinkedToContact,
-      jugadores_cargaron: stats.firstLoadPurchasersLinkedToLead,
-      jugadores_recargaron: stats.reachedRepeat,
-      nuevos_que_recargaron: stats.repeatFromFirstInRange,
+      recorridos_cargaron: stats.firstLoadPurchasersLinkedToLead,
+      recorridos_recargaron: stats.reachedRepeat,
+      recorridos_first_y_repeat_periodo: stats.repeatFromFirstInRange,
+      jugadores_cargaron: stats.firstLoadPlayersAttributed,
+      jugadores_recargaron: stats.repeatPlayersReached,
+      jugadores_first_y_repeat_periodo: stats.repeatPlayersFromFirstInRange,
       recargas_totales: stats.purchaseRepeatCount,
       total_cargas: stats.totalPurchases,
       total_cargado: stats.totalRevenue,
@@ -883,7 +892,7 @@ export default function StatsPanel({
           <KpiCard
             label="Clicks en el boton de la landing"
             value={stats.uniqueContacts}
-            tooltip="Cantidad de jugadores que hicieron clic en el botón de contacto de la landing page (CTA)."
+            tooltip="Eventos Contact registrados al tocar el boton de la landing."
           />
           <KpiCard
             label="Mensajes recibidos"
@@ -891,34 +900,36 @@ export default function StatsPanel({
             color="text-amber-300"
             tooltip={
               stats.inferredLeadsFromContactPurchase > 0
-                ? `Cantidad de jugadores que, despues de tocar el boton de la landing, decidieron enviar un mensaje. ${stats.realLeadsLinkedToContact} atribuidos + ${stats.inferredLeadsFromContactPurchase} inferidos por cargas con Contact sin Lead.`
-                : "Cantidad de jugadores que, despues de tocar el boton de la landing, decidieron enviar un mensaje."
+                ? `Eventos Lead vinculados al recorrido publicitario. Hay ${stats.inferredLeadsFromContactPurchase} recorridos inferidos por carga sin Lead.`
+                : "Eventos Lead vinculados al recorrido de la landing."
             }
           />
           <KpiCard
-            label="Jugadores que cargaron"
-            value={stats.firstLoadPurchasersLinkedToLead}
+            label="Primeras cargas"
+            value={stats.purchaseFirstCount}
+            sub={`${stats.firstLoadPlayersAttributed} ${stats.firstLoadPlayersAttributed === 1 ? "jugador" : "jugadores"}`}
             color="text-sky-300"
-            tooltip="Cantidad de jugadores que, despues de enviar un mensaje, decidieron realizar una carga. Si hubo Contact y primera carga pero se perdio el Lead, se cuenta como Lead inferido."
+            tooltip="Eventos Purchase clasificados como first dentro del periodo y filtros seleccionados."
           />
           <KpiCard
-            label="Jugadores que recargaron"
-            value={stats.reachedRepeat}
-            sub={`${stats.purchaseRepeatCount} ${stats.purchaseRepeatCount === 1 ? "recarga" : "recargas"}`}
+            label="Recargas"
+            value={stats.purchaseRepeatCount}
+            sub={`${stats.repeatPlayersReached} ${stats.repeatPlayersReached === 1 ? "jugador" : "jugadores"}`}
             color="text-violet-300"
-            tooltip="Cantidad de jugadores únicos con al menos una recarga (repeat) en el período y filtros seleccionados, aunque su primera carga haya ocurrido antes o fuera del filtro. La leyenda muestra la cantidad total de recargas."
-          />
-          <KpiCard
-            label="Nuevos que recargaron"
-            value={stats.repeatFromFirstInRange}
-            color="text-fuchsia-300"
-            tooltip="Cantidad de jugadores cuya primera carga atribuida y al menos una recarga ocurrieron dentro del mismo período y filtros seleccionados."
+            tooltip="Eventos Purchase clasificados como repeat dentro del periodo y filtros seleccionados."
           />
           <KpiCard
             label="Total de cargas"
             value={stats.totalPurchases}
             color="text-sky-400"
             tooltip="Cantidad de primeras cargas (first) y de recargas (repeat) registradas para el rango de fecha seleccionado."
+          />
+          <KpiCard
+            label="Cargas -> recargas del periodo"
+            value={stats.repeatEventsFromFirstInRange}
+            sub={`${stats.repeatPlayersFromFirstInRange} ${stats.repeatPlayersFromFirstInRange === 1 ? "jugador" : "jugadores"}`}
+            color="text-fuchsia-300"
+            tooltip="Eventos repeat de jugadores que tambien tuvieron un evento first en el mismo periodo y filtros."
           />
         </div>
       </div>
@@ -930,23 +941,23 @@ export default function StatsPanel({
           <KpiCard
             label="Porcentaje de inicio de conversación"
             value={pct(stats.uniqueLeadsLinkedToContact, stats.uniqueContacts)}
-            sub={`${stats.uniqueLeadsLinkedToContact} de ${stats.uniqueContacts} contactos`}
+            sub={`${stats.uniqueLeadsLinkedToContact} de ${stats.uniqueContacts} recorridos`}
             color="text-amber-400"
-            tooltip="Porcentaje de jugadores que, despues de tocar el boton de la landing, decidieron enviar un mensaje. Usa el total de mensajes recibidos, incluyendo inferidos."
+            tooltip="Porcentaje de recorridos con Contact que tambien tuvieron Lead."
           />
           <KpiCard
             label="Porcentaje de carga"
             value={pct(stats.firstLoadPurchasersLinkedToLead, stats.uniqueLeadsLinkedToContact)}
-            sub={`${stats.firstLoadPurchasersLinkedToLead} de ${stats.uniqueLeadsLinkedToContact} leads`}
+            sub={`${stats.firstLoadPurchasersLinkedToLead} de ${stats.uniqueLeadsLinkedToContact} recorridos`}
             color="text-sky-400"
-            tooltip="Porcentaje de jugadores que, despues de enviar un mensaje, decidieron realizar una carga. El numerador y denominador incluyen el mismo fallback inferido para no inflar la metrica."
+            tooltip="Porcentaje de recorridos con Lead que tambien tuvieron Purchase first."
           />
           <KpiCard
             label="Porcentaje de recarga"
             value={pct(stats.repeatFromFirstInRange, stats.firstLoadPurchasersLinkedToLead)}
-            sub={`${stats.repeatFromFirstInRange} de ${stats.firstLoadPurchasersLinkedToLead} jugadores`}
+            sub={`${stats.repeatFromFirstInRange} de ${stats.firstLoadPurchasersLinkedToLead} recorridos`}
             color="text-violet-400"
-            tooltip="Porcentaje de jugadores con una primera carga atribuida dentro del período y filtros seleccionados que también recargaron dentro de ese mismo universo."
+            tooltip="Porcentaje de recorridos con first que tambien tuvieron repeat dentro del mismo periodo y filtros."
           />
         </div>
       </div>

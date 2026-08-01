@@ -1,5 +1,5 @@
 export type ConversionLogDirectionFilter = "all" | "received" | "meta";
-export type ConversionLogEventFilter = "all" | "CONTACT" | "LEAD" | "PURCHASE";
+export type ConversionLogEventFilter = "all" | "CONTACT" | "LEAD" | "COMPLETEREGISTRATION" | "PURCHASE";
 
 const META_EVENT_NAMES: Record<
   Exclude<ConversionLogEventFilter, "all">,
@@ -7,6 +7,7 @@ const META_EVENT_NAMES: Record<
 > = {
   CONTACT: "Contact",
   LEAD: "Lead",
+  COMPLETEREGISTRATION: "CompleteRegistration",
   PURCHASE: "Purchase",
 };
 
@@ -35,6 +36,14 @@ export function buildConversionLogQueryFilter(
     `payload_received.ilike.%\"event_name\":\"${eventName}\"%`,
     `payload_received.ilike.%\"action\":\"${eventType}\"%`,
   ];
+  if (eventType === "COMPLETEREGISTRATION") {
+    receivedTerms.push(
+      `payload_received.ilike.%\"action\":\"COMPLETATIONREGISTRATION\"%`,
+      `payload_received.ilike.%\"action\":\"COMPLETE_REGISTRATION\"%`,
+      `payload_received.ilike.%\"action\":\"CompleteRegistration\"%`,
+      `payload_received.ilike.%\"event_name\":\"COMPLETEREGISTRATION\"%`,
+    );
+  }
   const metaTerms = [
     `payload_meta.ilike.%\"event_name\":\"${eventName}\"%`,
   ];

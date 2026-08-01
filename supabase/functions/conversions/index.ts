@@ -155,6 +155,7 @@ interface ConversionRow {
   assigned_gerencia_name?: string | null;
   assigned_gerencia_label?: string | null;
   lead_bot_phone?: string;
+  lead_player_username?: string;
   lead_agency_id?: string;
   lead_gerencia_id?: number | null;
   lead_gerencia_external_id?: number | null;
@@ -163,7 +164,21 @@ interface ConversionRow {
   lead_incoming_promo_code?: string;
   lead_attribution_status?: string;
   lead_attribution_conversion_id?: string | null;
+  registration_event_id?: string;
+  registration_event_time?: number | null;
+  registration_payload_raw?: string;
+  registration_player_username?: string;
+  registration_bot_phone?: string;
+  registration_agency_id?: string;
+  registration_gerencia_id?: number | null;
+  registration_gerencia_external_id?: number | null;
+  registration_gerencia_name?: string;
+  registration_gerencia_label?: string;
+  registration_incoming_promo_code?: string;
+  registration_attribution_status?: string;
+  registration_attribution_conversion_id?: string | null;
   purchase_bot_phone?: string;
+  purchase_player_username?: string;
   purchase_agency_id?: string;
   purchase_gerencia_id?: number | null;
   purchase_gerencia_external_id?: number | null;
@@ -231,6 +246,24 @@ type Params = Record<string, any>;
 
 const norm = (s: unknown): string => String(s ?? "").trim();
 const normalizedSourcePlatform = (s: unknown): string => norm(s).toLowerCase();
+const canonicalInboundAction = (value: unknown): string => {
+  const raw = norm(value);
+  if (!raw) return "";
+  const compact = raw.replace(/[\s_-]+/g, "").toUpperCase();
+  if (
+    compact === "COMPLETEREGISTRATION" ||
+    compact === "COMPLETATIONREGISTRATION" ||
+    compact === "COMPLETEDREGISTRATION"
+  ) {
+    return "COMPLETEREGISTRATION";
+  }
+  if (compact === "CONTACT") return "CONTACT";
+  if (compact === "LEAD") return "LEAD";
+  if (compact === "PURCHASE") return "PURCHASE";
+  return raw.toUpperCase();
+};
+const playerUsernameFromPayload = (p: Params): string =>
+  norm(p.player_username ?? p.playerUsername ?? p.username);
 const ctwaClidForSource = (value: unknown, sourcePlatform: unknown): string =>
   normalizedSourcePlatform(sourcePlatform) === "chatrace"
     ? normalizeCtwaClid(value)
@@ -509,7 +542,7 @@ async function resolveEventGerenciaSnapshot(
 }
 
 function eventGerenciaPatch(
-  stage: "lead" | "purchase",
+  stage: "lead" | "registration" | "purchase",
   snapshot: EventGerenciaSnapshot,
   incomingPromoCode: string,
   attributionStatus: string,
@@ -1205,7 +1238,7 @@ async function insertInboundEvent(
   action: string,
   payload: Params,
 ): Promise<string | null> {
-  const normalizedAction = norm(action).toUpperCase() || "CONTACT";
+  const normalizedAction = canonicalInboundAction(action) || "CONTACT";
   const actionEventId = normalizedAction === "CONTACT"
     ? norm(payload.action_event_id || payload.contact_event_id || payload.event_id)
     : norm(payload.action_event_id);
@@ -2723,6 +2756,7 @@ async function handleLead(
   const inboundCtwaClid = ctwaClidForSource(p.ctwa_clid, inboundSourcePlatform);
   const botPhone = sanitizePhone(p.bot_phone);
   const inboundAgencyId = norm(p.agency_id);
+  const leadPlayerUsername = playerUsernameFromPayload(p);
   const inboundBotTimestampSec =
     toEpochFromIso((p as Record<string, unknown>).dateTime) ??
     toEpochFromIso((p as Record<string, unknown>).datetime);
@@ -2974,6 +3008,7 @@ async function handleLead(
       lead_event_id: leadEventId,
       lead_event_time: leadEventTime,
       lead_payload_raw: leadPayloadRaw,
+      lead_player_username: leadPlayerUsername,
       purchase_event_id: "",
       purchase_event_time: null,
       purchase_payload_raw: "",
@@ -3121,6 +3156,7 @@ async function handleLead(
       lead_event_id: leadEventId,
       lead_event_time: leadEventTime,
       lead_payload_raw: leadPayloadRaw,
+      lead_player_username: leadPlayerUsername,
       ...eventGerenciaPatch(
         "lead",
         eventGerencia,
@@ -3266,6 +3302,280 @@ async function handleLead(
   );
 }
 
+async function handleCompleteRegistration(
+  db: SupabaseClient,
+  p: Params,
+  landing: LandingRow,
+  config: ConversionsConfig,
+  pixelConfigs: PixelConfigRow[],
+  ctx?: ProcessingContext,
+): Promise<Response> {
+  const cleanPhone = sanitizePhone(p.phone);
+  const botPhone = sanitizePhone(p.bot_phone);
+  const inboundAgencyId = norm(p.agency_id);
+  const playerUsername = playerUsernameFromPayload(p);
+  const promoCode = derivePromoCodeFromPayload(p);
+  const promoCodeIsFull = isFullPromoCode(p.promo_code ?? p.promoCode ?? promoCode);
+  const registrationPayloadRaw = safePayloadRaw(p);
+  const registrationEventId = norm(p.action_event_id || p.registration_event_id || p.event_id) || generateEventId();
+  const registrationEventTime = toValidEventTime(p.registration_event_time || p.event_time || Math.floor(Date.now() / 1000));
+  const inboundMetaPixelId = norm(p.meta_pixel_id || p.pixel_id);
+  const eventGerencia = await resolveEventGerenciaSnapshot(
+    db,
+    landing.user_id,
+    inboundAgencyId,
+    botPhone,
+  );
+
+  if (!cleanPhone) {
+    await writeLog(
+      db,
+      landing.user_id,
+      "handleCompleteRegistration",
+      "ERROR",
+      "COMPLETEREGISTRATION rechazado: falta phone",
+      safePayloadRaw(p),
+      undefined,
+      undefined,
+      undefined,
+      registrationPayloadRaw,
+      "rechazado: falta phone",
+    );
+    return textResponse("Faltan parametros: phone requerido", 400);
+  }
+
+  let targetRow: ConversionRow | null = null;
+  let matchMode = "none";
+  let promoCoherence: PromoGerenciaCoherence = "not_found";
+
+  if (promoCodeIsFull) {
+    const { data } = await db
+      .from("conversions")
+      .select("*")
+      .eq("user_id", landing.user_id)
+      .eq("promo_code", promoCode)
+      .order("created_at", { ascending: true })
+      .limit(1)
+      .maybeSingle();
+    const promoRow = data as ConversionRow | null;
+    promoCoherence = evaluatePromoGerenciaCoherence({
+      promoFound: Boolean(promoRow?.id),
+      promoPlayerPhone: promoRow?.phone,
+      eventPlayerPhone: cleanPhone,
+      promoGerenciaId: promoJourneyGerenciaId(promoRow),
+      eventGerenciaId: eventGerencia.gerencia_id,
+    });
+    if (promoRow?.id && promoCoherence !== "player_phone_conflict") {
+      targetRow = promoRow;
+      matchMode = `promo_${promoCoherence}`;
+    }
+  }
+
+  if (!targetRow) {
+    const trustedLineage = await findLatestTrustedGerenciaLineage(
+      db,
+      landing.user_id,
+      cleanPhone,
+      eventGerencia.gerencia_id,
+    );
+    if (trustedLineage?.id) {
+      targetRow = trustedLineage;
+      matchMode = "trusted_gerencia_lineage";
+    }
+  }
+
+  if (!targetRow) {
+    const { data } = await db
+      .from("conversions")
+      .select("*")
+      .eq("user_id", landing.user_id)
+      .eq("phone", cleanPhone)
+      .order("created_at", { ascending: false })
+      .limit(1)
+      .maybeSingle();
+    targetRow = data as ConversionRow | null;
+    if (targetRow?.id) matchMode = "latest_phone_fallback";
+  }
+
+  const registrationStatus = matchMode === "none"
+    ? "created_new"
+    : matchMode;
+
+  if (targetRow?.id) {
+    const updates: Record<string, unknown> = {
+      phone: cleanPhone,
+      estado: norm(targetRow.estado) === "purchase" ? "purchase" : "lead",
+      registration_event_id: registrationEventId,
+      registration_event_time: registrationEventTime,
+      registration_payload_raw: registrationPayloadRaw,
+      registration_player_username: playerUsername,
+      ...eventGerenciaPatch(
+        "registration",
+        eventGerencia,
+        promoCode,
+        registrationStatus,
+        targetRow.id,
+      ),
+    };
+    if (inboundMetaPixelId) {
+      updates.meta_pixel_id = inboundMetaPixelId;
+      updates.pixel_id = inboundMetaPixelId;
+      updates.currency = resolveCurrencyForPixel(config, pixelConfigs, inboundMetaPixelId, targetRow.currency);
+    }
+    if (playerUsername && !norm(targetRow.lead_player_username)) {
+      updates.lead_player_username = playerUsername;
+    }
+    await db.from("conversions").update(updates).eq("id", targetRow.id);
+    if (ctx) {
+      ctx.conversionId = targetRow.id;
+      ctx.inboxPromoCode = norm(targetRow.promo_code || promoCode);
+    }
+    await writeLog(
+      db,
+      landing.user_id,
+      "handleCompleteRegistration",
+      "INFO",
+      "COMPLETEREGISTRATION procesado",
+      JSON.stringify({
+        phone: cleanPhone,
+        player_username: playerUsername,
+        promo_code_received: promoCode,
+        match_mode: matchMode,
+        promo_coherence: promoCoherence,
+        event_gerencia_id: eventGerencia.gerencia_id,
+      }),
+      targetRow.id,
+      undefined,
+      undefined,
+      registrationPayloadRaw,
+      `registro procesado (match: ${matchMode})`,
+    );
+    return textResponse(`COMPLETEREGISTRATION procesado. match_mode:${matchMode}`);
+  }
+
+  const resolvedPixelId = inboundMetaPixelId || config.pixel_id || "";
+  const { fn: payloadFn, ln: payloadLn } = deriveNameFromPayload(p);
+  const payloadEmail = norm(p.email);
+  const payloadCuitCuil = deriveCuitCuilFromPayload(p);
+  const eventSourceUrl = await deriveEventSourceUrl(db, landing.name, norm(p.event_source_url));
+  const geo = resolveGeoForPayload(p);
+  const payloadGeoSource: GeoSource = hasPayloadGeo(geo) ? "payload" : "none";
+  const assignedGerencia = await resolveAssignedGerenciaSnapshot(
+    db,
+    landing.user_id,
+    p.telefono_asignado,
+    landing.id,
+  );
+  const generatedExternalId = norm(p.external_id) || (cleanPhone ? await sha256(cleanPhone) : generateEventId());
+  const newRow: Omit<ConversionRow, "id"> = {
+    landing_id: landing.id?.trim() || null,
+    user_id: landing.user_id,
+    landing_name: landing.name,
+    phone: cleanPhone,
+    email: payloadEmail,
+    cuit_cuil: payloadCuitCuil,
+    fn: payloadFn,
+    ln: payloadLn,
+    ct: norm(geo.ct),
+    st: norm(geo.st),
+    zip: norm(geo.zip || p.zip),
+    country: norm(geo.country),
+    fbp: norm(p.fbp),
+    fbc: norm(p.fbc),
+    from_meta_ads: false,
+    geo_source: payloadGeoSource,
+    meta_pixel_id: resolvedPixelId,
+    pixel_attribution_source: "",
+    pixel_attribution_conversion_id: null,
+    source_platform: norm(p.source_platform),
+    ctwa_clid: ctwaClidForSource(p.ctwa_clid, p.source_platform),
+    pixel_id: resolvedPixelId,
+    contact_event_id: "",
+    contact_event_time: null,
+    sendContactPixel: false,
+    contact_payload_raw: "",
+    lead_event_id: "",
+    lead_event_time: null,
+    lead_payload_raw: "",
+    purchase_event_id: "",
+    purchase_event_time: null,
+    purchase_payload_raw: "",
+    test_event_code: norm(p.test_event_code),
+    client_ip: payloadClientIp(p),
+    agent_user: inboundUserAgent(p),
+    device_type: norm(p.device_type),
+    event_source_url: eventSourceUrl,
+    estado: "lead",
+    valor: 0,
+    currency: resolveCurrencyForPixel(config, pixelConfigs, resolvedPixelId),
+    contact_status_capi: "",
+    lead_status_capi: "",
+    purchase_status_capi: "",
+    observaciones: "match_source:complete_registration_created_new",
+    external_id: generatedExternalId,
+    utm_campaign: norm(p.utm_campaign),
+    telefono_asignado: norm(p.telefono_asignado),
+    ...snapshotPatch(assignedGerencia),
+    lead_player_username: "",
+    registration_event_id: registrationEventId,
+    registration_event_time: registrationEventTime,
+    registration_payload_raw: registrationPayloadRaw,
+    registration_player_username: playerUsername,
+    ...eventGerenciaPatch(
+      "registration",
+      eventGerencia,
+      promoCode,
+      registrationStatus,
+      null,
+    ),
+    purchase_player_username: "",
+    promo_code: promoCodeIsFull ? promoCode : "",
+    geo_city: geo.geo_city,
+    geo_region: geo.geo_region,
+    geo_country: geo.geo_country,
+  };
+
+  const { data: inserted, error } = await db
+    .from("conversions")
+    .insert(newRow)
+    .select("id")
+    .single();
+  if (error || !inserted?.id) {
+    await writeLog(
+      db,
+      landing.user_id,
+      "handleCompleteRegistration",
+      "ERROR",
+      "COMPLETEREGISTRATION sin match y error al crear fila",
+      JSON.stringify({ phone: cleanPhone, player_username: playerUsername, error: error?.message ?? "unknown" }),
+      undefined,
+      undefined,
+      undefined,
+      registrationPayloadRaw,
+      "registro sin match: fallo al crear fila",
+    );
+    return textResponse("Error al crear fila COMPLETEREGISTRATION sin match", 500);
+  }
+  if (ctx) {
+    ctx.conversionId = inserted.id;
+    ctx.inboxPromoCode = newRow.promo_code;
+  }
+  await writeLog(
+    db,
+    landing.user_id,
+    "handleCompleteRegistration",
+    "INFO",
+    "COMPLETEREGISTRATION sin match: creado nuevo",
+    JSON.stringify({ phone: cleanPhone, player_username: playerUsername, promo_code: promoCode, conversion_id: inserted.id }),
+    inserted.id,
+    undefined,
+    undefined,
+    registrationPayloadRaw,
+    "registro creado sin match",
+  );
+  return textResponse("COMPLETEREGISTRATION recibido sin match: fila creada");
+}
+
 async function handlePurchase(
   db: SupabaseClient,
   p: Params,
@@ -3280,6 +3590,7 @@ async function handlePurchase(
   const inboundCtwaClid = ctwaClidForSource(p.ctwa_clid, inboundSourcePlatform);
   const botPhone = sanitizePhone(p.bot_phone);
   const inboundAgencyId = norm(p.agency_id);
+  const purchasePlayerUsername = playerUsernameFromPayload(p);
   const normalizedAmount = normalizePurchaseAmount(p.amount);
   if (!cleanPhone || !normalizedAmount.ok) {
     let rejectionReason = "missing_phone";
@@ -3555,6 +3866,9 @@ async function handlePurchase(
       purchase_event_id: purchaseEventId,
       purchase_event_time: purchaseEventTime,
       purchase_payload_raw: purchasePayloadRaw,
+      purchase_player_username: purchasePlayerUsername ||
+        norm(existingRow?.registration_player_username) ||
+        norm(existingRow?.lead_player_username),
       purchase_coelsa_id: coelsaId,
       purchase_transaction_id: transactionId,
       purchase_type: purchaseType,
@@ -3742,6 +4056,9 @@ async function handlePurchase(
       purchase_event_id: purchaseEventId,
       purchase_event_time: purchaseEventTime,
       purchase_payload_raw: purchasePayloadRaw,
+      purchase_player_username: purchasePlayerUsername ||
+        norm(firstSource?.registration_player_username) ||
+        norm(firstSource?.lead_player_username),
       purchase_coelsa_id: coelsaId,
       purchase_transaction_id: transactionId,
       test_event_code: testEventCode,
@@ -3931,6 +4248,9 @@ async function handlePurchase(
     purchase_event_id: purchaseEventId,
     purchase_event_time: purchaseEventTime,
     purchase_payload_raw: purchasePayloadRaw,
+    purchase_player_username: purchasePlayerUsername ||
+      norm(repeatSourceRow?.registration_player_username) ||
+      norm(repeatSourceRow?.lead_player_username),
     purchase_coelsa_id: coelsaId,
     purchase_transaction_id: transactionId,
     test_event_code: testEventCode || repeatSourceRow?.test_event_code || "",
@@ -4081,6 +4401,7 @@ async function handleSimplePurchase(
   const inboundCtwaClid = ctwaClidForSource(p.ctwa_clid, inboundSourcePlatform);
   const botPhone = sanitizePhone(p.bot_phone);
   const inboundAgencyId = norm(p.agency_id);
+  const purchasePlayerUsername = playerUsernameFromPayload(p);
   const normalizedAmount = normalizePurchaseAmount(p.amount);
   if (!cleanPhone || !normalizedAmount.ok) {
     let rejectionReason = "missing_phone";
@@ -4223,6 +4544,9 @@ async function handleSimplePurchase(
     purchase_event_id: purchaseEventId,
     purchase_event_time: purchaseEventTime,
     purchase_payload_raw: purchasePayloadRaw,
+    purchase_player_username: purchasePlayerUsername ||
+      norm(srcRow?.registration_player_username) ||
+      norm(srcRow?.lead_player_username),
     purchase_coelsa_id: coelsaId,
     purchase_transaction_id: transactionId,
     test_event_code: testEventCode,
@@ -4423,10 +4747,11 @@ Deno.serve(async (req) => {
     // Build a virtual LandingRow representing the client endpoint
     const landing: LandingRow = { id: "", name: landingName, user_id: userId };
 
-    const rawAction = norm(params.action).toUpperCase();
+    const rawAction = canonicalInboundAction(params.action);
     const rawEventName = norm(params.event_name);
-    const eventNameAction = rawEventName.toUpperCase();
-    const inferredAction = rawAction || (eventNameAction === "CONTACT" ? "CONTACT" : "");
+    const eventNameAction = canonicalInboundAction(rawEventName);
+    const inferredAction = rawAction ||
+      (eventNameAction === "CONTACT" || eventNameAction === "COMPLETEREGISTRATION" ? eventNameAction : "");
     const actionEventId = inferredAction === "CONTACT"
       ? norm(params.action_event_id || params.contact_event_id || params.event_id)
       : norm(params.action_event_id);
@@ -4441,10 +4766,10 @@ Deno.serve(async (req) => {
     if (
       !isDeferredRetry &&
       actionEventId &&
-      (inferredAction === "LEAD" || inferredAction === "PURCHASE")
+      (inferredAction === "LEAD" || inferredAction === "COMPLETEREGISTRATION" || inferredAction === "PURCHASE")
     ) {
       const shouldDeduplicateActionByPromo = isFullPromoCode(incomingPromoCodeForDedupe) &&
-        inferredAction === "LEAD";
+        (inferredAction === "LEAD" || inferredAction === "COMPLETEREGISTRATION");
       const existing = shouldDeduplicateActionByPromo
         ? await findInboundByActionEventIdAndPromo(
           db,
@@ -4580,6 +4905,9 @@ Deno.serve(async (req) => {
         return response;
       }
       return runAndFinalize((ctx) => handleLead(db, params, landing, cfg, pixelConfigs, ctx));
+    }
+    if (inferredAction === "COMPLETEREGISTRATION") {
+      return runAndFinalize((ctx) => handleCompleteRegistration(db, params, landing, cfg, pixelConfigs, ctx));
     }
     if (inferredAction === "PURCHASE") {
       const purchaseDedupeIds = purchaseDedupeIdsForRequest;

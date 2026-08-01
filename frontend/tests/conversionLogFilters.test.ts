@@ -10,6 +10,15 @@ test("sin filtros conserva todos los Logs", () => {
   assert.equal(filter.orExpression, "");
 });
 
+test("CompleteRegistration recibido contempla variantes del bot", () => {
+  const filter = buildConversionLogQueryFilter("received", "COMPLETEREGISTRATION");
+
+  assert.match(filter.orExpression, /"event_name":"CompleteRegistration"/);
+  assert.match(filter.orExpression, /"action":"COMPLETEREGISTRATION"/);
+  assert.match(filter.orExpression, /"action":"COMPLETATIONREGISTRATION"/);
+  assert.match(filter.orExpression, /"action":"COMPLETE_REGISTRATION"/);
+});
+
 test("Purchase recibido se identifica por event_name o action", () => {
   const filter = buildConversionLogQueryFilter("received", "PURCHASE");
 

@@ -404,10 +404,12 @@ export function levelBadge(level: string, functionName?: string, message?: strin
   const fn = String(functionName ?? "").toLowerCase();
   const event = fn.includes("handlecontact") ? "CONTACT"
     : fn.includes("handlelead") ? "LEAD"
+    : fn.includes("handlecompleteregistration") ? "COMPLETEREGISTRATION"
     : fn.includes("handlepurchase") || fn.includes("handlesimplepurchase") ? "PURCHASE"
     : (
       msg.includes("contact") ? "CONTACT" :
       msg.includes("lead") ? "LEAD" :
+      msg.includes("completeregistration") || msg.includes("registro") ? "COMPLETEREGISTRATION" :
       msg.includes("purchase") || msg.includes("compra") || msg.includes("recarga") ? "PURCHASE" :
       null
     );

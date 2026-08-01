@@ -14,15 +14,98 @@ export interface CoreStats {
   purchaseRepeat: number;
   repeatFromFirstInRange: number;
   repeatFromAttributedFirstInRange: number;
+  repeatEventsFromAttributedFirstInRange: number;
+  adContactJourneys: number;
+  adLeadJourneysLinkedToContact: number;
+  adInferredLeadJourneys: number;
+  adLeadJourneysLinkedToContactWithInferred: number;
+  adFirstPurchaseJourneysAttributed: number;
+  adFirstPurchaseEvents: number;
+  adFirstPurchaseEventsAttributed: number;
+  adRepeatJourneys: number;
+  adRepeatEvents: number;
+  adRepeatJourneysFromAttributedFirstInRange: number;
+  adRepeatEventsFromAttributedFirstInRange: number;
   firstLoadPlayers: number;
   repeatPlayers: number;
   premiumPlayers: number;
   totalRevenue: number;
   totalPurchaseCount: number;
   firstPurchaseRevenue: number;
+  firstPurchaseEventRevenue: number;
   activeRetention30d: number;
   purchaseValues: number[];
   leadPurchaseHours: number[];
+}
+
+type JourneyStage = "contact" | "lead" | "purchase";
+
+function cleanText(value: unknown): string {
+  return String(value ?? "").trim();
+}
+
+function cleanDigits(value: unknown): string {
+  return cleanText(value).replace(/\D/g, "");
+}
+
+function keyPart(kind: string, value: unknown): string {
+  const raw = cleanText(value);
+  return raw ? `${kind}:${raw.toLowerCase()}` : "";
+}
+
+function phoneKeyPart(kind: string, value: unknown): string {
+  const digits = cleanDigits(value);
+  return digits ? `${kind}:${digits}` : "";
+}
+
+function firstNonEmpty(...values: string[]): string {
+  return values.find((value) => value !== "") ?? "";
+}
+
+function identityKey(row: ConversionRow): string {
+  return firstNonEmpty(
+    keyPart("player", row.purchase_player_username),
+    keyPart("player", row.registration_player_username),
+    keyPart("player", row.lead_player_username),
+    keyPart("external", row.external_id),
+    phoneKeyPart("phone", row.phone),
+    keyPart("email", row.email),
+    keyPart("row", row.id),
+    keyPart("created", row.created_at),
+  );
+}
+
+function gerenciaKey(row: ConversionRow, stage: JourneyStage): string {
+  const assigned = firstNonEmpty(
+    keyPart("gid", row.assigned_gerencia_id),
+    keyPart("gext", row.assigned_gerencia_external_id),
+    keyPart("glabel", row.assigned_gerencia_label),
+    phoneKeyPart("assigned_phone", row.telefono_asignado),
+  );
+  const lead = firstNonEmpty(
+    keyPart("gid", row.lead_gerencia_id),
+    keyPart("gext", row.lead_gerencia_external_id),
+    keyPart("glabel", row.lead_gerencia_label),
+    phoneKeyPart("bot_phone", row.lead_bot_phone),
+    assigned,
+  );
+  const purchase = firstNonEmpty(
+    keyPart("gid", row.purchase_gerencia_id),
+    keyPart("gext", row.purchase_gerencia_external_id),
+    keyPart("glabel", row.purchase_gerencia_label),
+    phoneKeyPart("bot_phone", row.purchase_bot_phone),
+    lead,
+  );
+
+  if (stage === "purchase") return purchase;
+  if (stage === "lead") return lead;
+  return assigned;
+}
+
+function adJourneyKey(row: ConversionRow, stage: JourneyStage): string {
+  const promo = keyPart("promo", row.promo_code) || keyPart("promo", `${stage}:${row.id || row.created_at}`);
+  const gerencia = gerenciaKey(row, stage) || keyPart("gerencia", "unknown");
+  return `${cleanText(row.user_id)}::${identityKey(row)}::${promo}::${gerencia}`;
 }
 
 export function dedupeByUserPhone(rows: ConversionRow[]): Map<string, ConversionRow> {
@@ -128,6 +211,69 @@ export function computeCoreStats(
   );
   const repeatFromFirstInRange = [...repeatExternalKeys].filter((k) => firstExternalKeysLinkedToLead.has(k)).length;
   const repeatFromAttributedFirstInRange = [...repeatExternalKeys].filter((k) => firstExternalKeysAttributed.has(k)).length;
+  const repeatEventsFromAttributedFirstInRange = repeatPurchaseRows.filter((c) => {
+    const ext = String(c.external_id ?? "").trim();
+    return ext !== "" && firstExternalKeysAttributed.has(`${c.user_id}::${ext}`);
+  }).length;
+  const firstPurchaseEventRevenue = firstPurchaseRows.reduce((sum, c) => sum + (Number(c.valor) || 0), 0);
+
+  type AdJourney = {
+    hasContact: boolean;
+    hasLead: boolean;
+    firstEvents: number;
+    repeatEvents: number;
+  };
+  const adJourneys = new Map<string, AdJourney>();
+  const getAdJourney = (key: string): AdJourney => {
+    const current = adJourneys.get(key);
+    if (current) return current;
+    const created: AdJourney = { hasContact: false, hasLead: false, firstEvents: 0, repeatEvents: 0 };
+    adJourneys.set(key, created);
+    return created;
+  };
+
+  for (const row of contactRows) {
+    getAdJourney(adJourneyKey(row, "contact")).hasContact = true;
+  }
+  for (const row of leadRows) {
+    getAdJourney(adJourneyKey(row, "lead")).hasLead = true;
+  }
+  for (const row of firstPurchaseRows) {
+    getAdJourney(adJourneyKey(row, "purchase")).firstEvents += 1;
+  }
+  for (const row of repeatPurchaseRows) {
+    getAdJourney(adJourneyKey(row, "purchase")).repeatEvents += 1;
+  }
+
+  let adContactJourneys = 0;
+  let adLeadJourneysLinkedToContact = 0;
+  let adInferredLeadJourneys = 0;
+  let adFirstPurchaseJourneysAttributed = 0;
+  let adFirstPurchaseEventsAttributed = 0;
+  let adRepeatJourneys = 0;
+  let adRepeatEvents = 0;
+  let adRepeatJourneysFromAttributedFirstInRange = 0;
+  let adRepeatEventsFromAttributedFirstInRange = 0;
+
+  for (const journey of adJourneys.values()) {
+    if (journey.hasContact) adContactJourneys++;
+    if (journey.hasContact && journey.hasLead) adLeadJourneysLinkedToContact++;
+    const inferredLead = journey.hasContact && !journey.hasLead && journey.firstEvents > 0;
+    if (inferredLead) adInferredLeadJourneys++;
+    const hasLeadOrInference = journey.hasLead || inferredLead;
+    const hasAttributedFirst = journey.hasContact && hasLeadOrInference && journey.firstEvents > 0;
+    if (hasAttributedFirst) {
+      adFirstPurchaseJourneysAttributed++;
+      adFirstPurchaseEventsAttributed += journey.firstEvents;
+      if (journey.repeatEvents > 0) {
+        adRepeatJourneysFromAttributedFirstInRange++;
+        adRepeatEventsFromAttributedFirstInRange += journey.repeatEvents;
+      }
+    }
+    if (journey.repeatEvents > 0) adRepeatJourneys++;
+    adRepeatEvents += journey.repeatEvents;
+  }
+  const adLeadJourneysLinkedToContactWithInferred = adLeadJourneysLinkedToContact + adInferredLeadJourneys;
 
   let firstLoadPlayers = 0;
   let repeatPlayers = 0;
@@ -198,12 +344,25 @@ export function computeCoreStats(
     purchaseRepeat,
     repeatFromFirstInRange,
     repeatFromAttributedFirstInRange,
+    repeatEventsFromAttributedFirstInRange,
+    adContactJourneys,
+    adLeadJourneysLinkedToContact,
+    adInferredLeadJourneys,
+    adLeadJourneysLinkedToContactWithInferred,
+    adFirstPurchaseJourneysAttributed,
+    adFirstPurchaseEvents: firstPurchaseRows.length,
+    adFirstPurchaseEventsAttributed,
+    adRepeatJourneys,
+    adRepeatEvents,
+    adRepeatJourneysFromAttributedFirstInRange,
+    adRepeatEventsFromAttributedFirstInRange,
     firstLoadPlayers,
     repeatPlayers,
     premiumPlayers,
     totalRevenue,
     totalPurchaseCount,
     firstPurchaseRevenue,
+    firstPurchaseEventRevenue,
     activeRetention30d,
     purchaseValues,
     leadPurchaseHours,

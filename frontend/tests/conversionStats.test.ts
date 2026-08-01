@@ -25,6 +25,22 @@ function purchaseRow(
   } as ConversionRow;
 }
 
+function conversionRow(
+  id: string,
+  extra: Partial<ConversionRow>,
+): ConversionRow {
+  return {
+    id,
+    user_id: "client-1",
+    phone: "5491111111111",
+    external_id: "player-a",
+    promo_code: "PROMO-a",
+    created_at: "2026-07-31T12:00:00.000Z",
+    valor: 0,
+    ...extra,
+  } as ConversionRow;
+}
+
 test("separa jugadores que recargaron, recargas totales y cohorte del período", async () => {
   const { computeCoreStats } = await import("../lib/conversionStats");
   const conversions = [
@@ -32,6 +48,8 @@ test("separa jugadores que recargaron, recargas totales y cohorte del período",
       contact_event_id: "contact-a",
       lead_event_id: "lead-a",
     }),
+    purchaseRow("repeat-a-1", "5491111111111", "repeat", "player-a"),
+    purchaseRow("repeat-a-2", "5491111111111", "repeat", "player-a"),
     purchaseRow("repeat-b-1", "5492222222222", "repeat", "player-b"),
     purchaseRow("repeat-b-2", "5492222222222", "repeat", "player-b"),
     purchaseRow("repeat-c-1", "5493333333333", "repeat", "player-c"),
@@ -40,7 +58,135 @@ test("separa jugadores que recargaron, recargas totales y cohorte del período",
   const stats = computeCoreStats(conversions, [], conversions, 200_000);
 
   assert.equal(stats.firstLoadPurchasersAttributed, 1);
-  assert.equal(stats.purchaseRepeat, 2);
-  assert.equal(stats.totalPurchases, 4);
-  assert.equal(stats.repeatFromAttributedFirstInRange, 0);
+  assert.equal(stats.purchaseRepeat, 3);
+  assert.equal(stats.totalPurchases, 6);
+  assert.equal(stats.repeatFromAttributedFirstInRange, 1);
+  assert.equal(stats.repeatEventsFromAttributedFirstInRange, 2);
+});
+
+test("mide recorridos publicitarios por promo y gerencia aunque sea el mismo jugador", async () => {
+  const { computeCoreStats } = await import("../lib/conversionStats");
+  const conversions = [
+    conversionRow("contact-a", {
+      contact_event_id: "contact-a",
+      promo_code: "PROMO-a",
+      assigned_gerencia_id: 10,
+    }),
+    conversionRow("lead-a", {
+      lead_event_id: "lead-a",
+      promo_code: "PROMO-a",
+      assigned_gerencia_id: 10,
+      lead_gerencia_id: 10,
+    }),
+    conversionRow("purchase-a", {
+      purchase_event_id: "purchase-a",
+      purchase_type: "first",
+      promo_code: "PROMO-a",
+      assigned_gerencia_id: 10,
+      lead_gerencia_id: 10,
+      purchase_gerencia_id: 10,
+      valor: 100,
+    }),
+    conversionRow("contact-b", {
+      contact_event_id: "contact-b",
+      promo_code: "PROMO-b",
+      assigned_gerencia_id: 20,
+    }),
+    conversionRow("lead-b", {
+      lead_event_id: "lead-b",
+      promo_code: "PROMO-b",
+      assigned_gerencia_id: 20,
+      lead_gerencia_id: 20,
+    }),
+    conversionRow("purchase-b", {
+      purchase_event_id: "purchase-b",
+      purchase_type: "first",
+      promo_code: "PROMO-b",
+      assigned_gerencia_id: 20,
+      lead_gerencia_id: 20,
+      purchase_gerencia_id: 20,
+      valor: 200,
+    }),
+  ];
+
+  const stats = computeCoreStats(conversions, [], conversions, 200_000);
+
+  assert.equal(stats.firstLoadPurchasersAttributed, 1);
+  assert.equal(stats.adContactJourneys, 2);
+  assert.equal(stats.adLeadJourneysLinkedToContact, 2);
+  assert.equal(stats.adFirstPurchaseJourneysAttributed, 2);
+  assert.equal(stats.adFirstPurchaseEventsAttributed, 2);
+  assert.equal(stats.firstPurchaseEventRevenue, 300);
+});
+
+test("no adjudica al recorrido una compra con promo arrastrado y gerencia receptora distinta", async () => {
+  const { computeCoreStats } = await import("../lib/conversionStats");
+  const conversions = [
+    conversionRow("contact-b", {
+      contact_event_id: "contact-b",
+      promo_code: "PROMO-b",
+      assigned_gerencia_id: 20,
+    }),
+    conversionRow("lead-b", {
+      lead_event_id: "lead-b",
+      promo_code: "PROMO-b",
+      assigned_gerencia_id: 20,
+      lead_gerencia_id: 20,
+    }),
+    conversionRow("purchase-conflict", {
+      purchase_event_id: "purchase-conflict",
+      purchase_type: "first",
+      promo_code: "PROMO-b",
+      purchase_incoming_promo_code: "PROMO-b",
+      assigned_gerencia_id: 20,
+      lead_gerencia_id: 20,
+      purchase_gerencia_id: 10,
+      valor: 100,
+    }),
+  ];
+
+  const stats = computeCoreStats(conversions, [], conversions, 200_000);
+
+  assert.equal(stats.adContactJourneys, 1);
+  assert.equal(stats.adLeadJourneysLinkedToContact, 1);
+  assert.equal(stats.adFirstPurchaseEvents, 1);
+  assert.equal(stats.adFirstPurchaseJourneysAttributed, 0);
+  assert.equal(stats.adFirstPurchaseEventsAttributed, 0);
+});
+
+test("el funnel separa tarjetas por jugador/gerencia y acota montos", async () => {
+  const { buildFunnelContactsFromConversions } = await import("../lib/conversionsDb");
+  const rows = [
+    conversionRow("purchase-a", {
+      purchase_event_id: "purchase-a",
+      purchase_type: "first",
+      phone: "5491111111111",
+      purchase_player_username: "guille2737",
+      purchase_gerencia_id: 10,
+      purchase_gerencia_label: "Gerencia A",
+      estado: "purchase",
+      valor: 100,
+    }),
+    conversionRow("purchase-b", {
+      purchase_event_id: "purchase-b",
+      purchase_type: "first",
+      phone: "5491111111111",
+      purchase_player_username: "guille2737",
+      purchase_gerencia_id: 20,
+      purchase_gerencia_label: "Gerencia B",
+      estado: "purchase",
+      valor: 250,
+    }),
+  ];
+
+  const contacts = buildFunnelContactsFromConversions(rows);
+
+  assert.equal(contacts.length, 2);
+  assert.deepEqual(
+    contacts.map((c) => ({ gerencia: c.assigned_gerencia_label, total: c.total_valor, player: c.player_username })).sort((a, b) => a.total - b.total),
+    [
+      { gerencia: "Gerencia A", total: 100, player: "guille2737" },
+      { gerencia: "Gerencia B", total: 250, player: "guille2737" },
+    ],
+  );
 });

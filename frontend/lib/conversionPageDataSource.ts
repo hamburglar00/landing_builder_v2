@@ -41,7 +41,7 @@ type InboxRequest = ViewerRequest & {
   limit?: number;
   offset?: number;
   range?: FetchDateRange | null;
-  action?: "all" | "CONTACT" | "LEAD" | "PURCHASE";
+  action?: "all" | "CONTACT" | "LEAD" | "COMPLETEREGISTRATION" | "PURCHASE";
   search?: string;
 };
 

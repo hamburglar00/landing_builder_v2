@@ -157,6 +157,7 @@ export default function ConversionLogFilters({
                     <option value="all">Todos los eventos</option>
                     <option value="CONTACT">Contact</option>
                     <option value="LEAD">Lead</option>
+                    <option value="COMPLETEREGISTRATION">CompleteRegistration</option>
                     <option value="PURCHASE">Purchase</option>
                   </select>
                 </div>

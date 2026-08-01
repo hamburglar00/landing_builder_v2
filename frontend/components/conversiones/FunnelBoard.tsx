@@ -166,8 +166,12 @@ function ContactCard({
   const statusLabel = hasPurchases
     ? `${c.purchase_count} carga${c.purchase_count !== 1 ? "s" : ""}`
     : "Sin cargas";
+  const playerUsername = String(c.player_username ?? "").trim();
+  const playerUsernameDigits = normalizePhone(playerUsername);
+  const phoneDigits = normalizePhone(c.phone);
+  const showPlayerUsername = playerUsername && playerUsernameDigits !== phoneDigits;
   const assignedPhone = normalizePhone(c.telefono_asignado);
-  const contactPhone = normalizePhone(c.phone);
+  const contactPhone = phoneDigits;
   const gerenciaLabels = String(c.assigned_gerencia_label ?? "").trim()
     ? [String(c.assigned_gerencia_label ?? "").trim()]
     : assignedPhone && gerenciaByPhone?.[assignedPhone]?.length
@@ -190,10 +194,15 @@ function ContactCard({
         <div className="min-w-0">
           <p
             className="truncate text-[16px] font-extrabold text-zinc-50 font-mono tracking-tight leading-none"
-            title={c.phone}
+            title={showPlayerUsername ? playerUsername : c.phone}
           >
-            {c.phone}
+            {showPlayerUsername ? playerUsername : c.phone}
           </p>
+          {showPlayerUsername && (
+            <p className="mt-1 truncate text-[10px] font-medium leading-none text-zinc-500" title={c.phone}>
+              {c.phone}
+            </p>
+          )}
         </div>
         <a
           href={waLink(c.phone)}

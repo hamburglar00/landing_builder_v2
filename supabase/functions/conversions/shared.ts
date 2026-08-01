@@ -153,7 +153,7 @@ export function preparePurchaseCustomDataForMeta(
   return prepared;
 }
 
-export type MetaEventName = "Contact" | "Lead" | "Purchase";
+export type MetaEventName = "Contact" | "Lead" | "CompleteRegistration" | "Purchase";
 
 export interface MetaUserData {
   [key: string]: string;

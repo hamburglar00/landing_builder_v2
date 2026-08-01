@@ -216,17 +216,17 @@ function buildProvinceData(
       ? core.leadPurchaseHours.reduce((acc, n) => acc + n, 0) / core.leadPurchaseHours.length
       : 0;
     map.set(prov, {
-      contactos: core.uniqueContacts,
-      reachedLead: core.uniqueLeadsLinkedToContactWithInferred,
-      reachedLeadLinkedToContact: core.uniqueLeadsLinkedToContactWithInferred,
-      reachedPurchase: core.firstLoadPurchasersAttributed,
-      reachedPurchaseLinkedToLead: core.firstLoadPurchasersAttributed,
-      reachedRepeat: core.purchaseRepeat,
-      repeatFromFirstInRange: core.repeatFromAttributedFirstInRange,
-      primerasCargas: core.firstLoadPurchasersAttributed,
+      contactos: core.adContactJourneys,
+      reachedLead: core.adLeadJourneysLinkedToContact,
+      reachedLeadLinkedToContact: core.adLeadJourneysLinkedToContact,
+      reachedPurchase: core.adFirstPurchaseEventsAttributed,
+      reachedPurchaseLinkedToLead: core.adFirstPurchaseJourneysAttributed,
+      reachedRepeat: core.adRepeatEvents,
+      repeatFromFirstInRange: core.adRepeatJourneysFromAttributedFirstInRange,
+      primerasCargas: core.adFirstPurchaseEventsAttributed,
       recurrentes: core.repeatPlayers,
       totalCargado: core.totalRevenue,
-      firstPurchaseRevenue: core.firstPurchaseRevenue,
+      firstPurchaseRevenue: core.firstPurchaseEventRevenue,
       purchaseCount: core.totalPurchases,
       premium: core.premiumPlayers,
       retencionActiva30d: core.activeRetention30d,
@@ -352,19 +352,19 @@ export default function ArgentinaMap({
       : 0;
 
     switch (metric) {
-      case "contactos": return core.uniqueContacts;
-      case "leads": return core.uniqueLeadsLinkedToContactWithInferred;
-      case "primeras_cargas": return core.firstLoadPurchasersAttributed;
-      case "recargas": return core.purchaseRepeat;
+      case "contactos": return core.adContactJourneys;
+      case "leads": return core.adLeadJourneysLinkedToContact;
+      case "primeras_cargas": return core.adFirstPurchaseEventsAttributed;
+      case "recargas": return core.adRepeatEvents;
       case "cargas_totales": return core.totalPurchases;
-      case "pct_inicio": return core.uniqueContacts > 0 ? (core.uniqueLeadsLinkedToContactWithInferred / core.uniqueContacts) * 100 : 0;
-      case "pct_carga": return core.uniqueLeadsLinkedToContactWithInferred > 0 ? (core.firstLoadPurchasersAttributed / core.uniqueLeadsLinkedToContactWithInferred) * 100 : 0;
-      case "pct_recarga": return core.firstLoadPurchasersAttributed > 0 ? (core.repeatFromAttributedFirstInRange / core.firstLoadPurchasersAttributed) * 100 : 0;
+      case "pct_inicio": return core.adContactJourneys > 0 ? (core.adLeadJourneysLinkedToContact / core.adContactJourneys) * 100 : 0;
+      case "pct_carga": return core.adLeadJourneysLinkedToContact > 0 ? (core.adFirstPurchaseJourneysAttributed / core.adLeadJourneysLinkedToContact) * 100 : 0;
+      case "pct_recarga": return core.adFirstPurchaseJourneysAttributed > 0 ? (core.adRepeatJourneysFromAttributedFirstInRange / core.adFirstPurchaseJourneysAttributed) * 100 : 0;
       case "carga_promedio": return core.totalPurchases > 0 ? core.totalRevenue / core.totalPurchases : 0;
       case "carga_mediana": return median(core.purchaseValues);
       case "tiempo_lead_purchase_prom": return leadToPurchaseAvgHours;
       case "total_cargado": return core.totalRevenue;
-      case "roas_primera": return adSpend > 0 ? core.firstPurchaseRevenue / adSpend : 0;
+      case "roas_primera": return adSpend > 0 ? core.firstPurchaseEventRevenue / adSpend : 0;
       case "roas_total": return adSpend > 0 ? core.totalRevenue / adSpend : 0;
       case "jugadores_recurrentes": return core.repeatPlayers;
       case "jugadores_premium": return core.premiumPlayers;
