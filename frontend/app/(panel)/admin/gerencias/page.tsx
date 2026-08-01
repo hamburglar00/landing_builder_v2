@@ -16,10 +16,14 @@ import { DashboardSkeleton } from "@/components/ui/DashboardSkeleton";
 import { PageHeader } from "@/components/ui/PanelPrimitives";
 import { useAppConfirm } from "@/components/ui/AppConfirmDialog";
 import ModalPortal from "@/components/ui/ModalPortal";
+import { CURRENCY_ALL } from "@/lib/currency";
+import { SingleCurrencyRequired, useCurrencyScope } from "@/components/currency/CurrencyScope";
 
 export default function AdminGerenciasPage() {
   const confirmAction = useAppConfirm();
   const router = useRouter();
+  const { currencyScope, isAllCurrencies } = useCurrencyScope();
+  const workspaceCurrency = currencyScope === CURRENCY_ALL ? "ARS" : currencyScope;
   const [gerencias, setGerencias] = useState<Gerencia[]>([]);
   const [userId, setUserId] = useState<string | null>(null);
   const [ready, setReady] = useState(false);
@@ -48,7 +52,7 @@ export default function AdminGerenciasPage() {
       setUserId(user.id);
       setError(null);
       try {
-        const list = await fetchGerenciasForAdmin(user.id);
+        const list = await fetchGerenciasForAdmin(user.id, workspaceCurrency);
         setGerencias(list);
       } catch (e) {
         setError(e instanceof Error ? e.message : "Error al cargar gerencias");
@@ -57,7 +61,7 @@ export default function AdminGerenciasPage() {
       }
     };
     void init();
-  }, [router]);
+  }, [router, workspaceCurrency]);
 
   const parseGerenciaId = (s: string): number | null => {
     const n = s.trim();
@@ -81,6 +85,7 @@ export default function AdminGerenciasPage() {
         nombre: newNombre.trim(),
         source_type: newSourceType,
         gerencia_id: gid,
+        workspace_currency: workspaceCurrency,
       });
       setGerencias((prev) => sortGerenciasByName([...prev, created]));
       setNewNombre("");
@@ -168,6 +173,10 @@ export default function AdminGerenciasPage() {
 
   if (!ready) {
     return <DashboardSkeleton title="Cargando gerencias..." />;
+  }
+
+  if (isAllCurrencies) {
+    return <SingleCurrencyRequired title="Elegí ARS o PYG para administrar gerencias" />;
   }
 
   return (

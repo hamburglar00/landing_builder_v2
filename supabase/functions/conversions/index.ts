@@ -225,6 +225,7 @@ type EventGerenciaSnapshot = {
   gerencia_external_id: number | null;
   gerencia_name: string;
   gerencia_label: string;
+  workspace_currency: string;
   bot_phone: string;
   agency_id: string;
   resolution_status: string;
@@ -426,6 +427,7 @@ function emptyEventGerenciaSnapshot(
     gerencia_external_id: null,
     gerencia_name: "",
     gerencia_label: "",
+    workspace_currency: "",
     bot_phone: sanitizePhone(botPhone),
     agency_id: norm(agencyId),
     resolution_status: status,
@@ -439,11 +441,16 @@ function eventSnapshotFromGerencia(
   status: string,
 ): EventGerenciaSnapshot {
   const snapshot = buildGerenciaLabel(row);
+  const workspaceCurrency = norm(row.workspace_currency).toUpperCase();
   return {
     gerencia_id: snapshot.assigned_gerencia_id,
     gerencia_external_id: snapshot.assigned_gerencia_external_id,
     gerencia_name: snapshot.assigned_gerencia_name,
     gerencia_label: snapshot.assigned_gerencia_label,
+    workspace_currency:
+      workspaceCurrency === "ARS" || workspaceCurrency === "PYG"
+        ? workspaceCurrency
+        : "",
     bot_phone: sanitizePhone(botPhone),
     agency_id: norm(agencyId),
     resolution_status: status,
@@ -464,7 +471,7 @@ async function resolveEventGerenciaSnapshot(
   if (agencyId && Number.isInteger(numericAgencyId) && numericAgencyId > 0) {
     const { data: candidates } = await db
       .from("gerencias")
-      .select("id,nombre,gerencia_id")
+      .select("id,nombre,gerencia_id,workspace_currency")
       .eq("user_id", userId)
       .eq("gerencia_id", numericAgencyId);
     const rows = (candidates ?? []) as Record<string, unknown>[];
@@ -478,7 +485,7 @@ async function resolveEventGerenciaSnapshot(
   if (botPhone) {
     const { data: phoneRows } = await db
       .from("gerencia_phones")
-      .select("status,gerencias!inner(id,nombre,gerencia_id,user_id)")
+      .select("status,gerencias!inner(id,nombre,gerencia_id,workspace_currency,user_id)")
       .eq("phone", botPhone)
       .eq("gerencias.user_id", userId);
     phoneGerencias = (phoneRows ?? []).map((row: Record<string, unknown>) => {
@@ -1680,6 +1687,7 @@ function resolveCurrencyForPixel(
   pixelConfigs: PixelConfigRow[],
   pixelId?: string,
   fallbackCurrency: unknown = "ARS",
+  options: { preferFallbackWithoutPixel?: boolean } = {},
 ): string {
   const preferredPixel = norm(pixelId);
   const matchedPixel = preferredPixel
@@ -1694,6 +1702,9 @@ function resolveCurrencyForPixel(
 
   const normalizedFallback = String(fallbackCurrency ?? "").trim().toUpperCase();
   if (preferredPixel && normalizedFallback) {
+    return normalizeCurrencyCode(normalizedFallback, baseConfig.meta_currency);
+  }
+  if (!preferredPixel && normalizedFallback && options.preferFallbackWithoutPixel) {
     return normalizeCurrencyCode(normalizedFallback, baseConfig.meta_currency);
   }
 
@@ -3849,7 +3860,8 @@ async function handlePurchase(
       config,
       pixelConfigs,
       inboundMetaPixelId || norm(existingRow?.pixel_id),
-      existingRow?.currency,
+      eventGerencia.workspace_currency || existingRow?.currency,
+      { preferFallbackWithoutPixel: Boolean(eventGerencia.workspace_currency) },
     );
     const attributionSourceId = norm(existingRow?.lead_attribution_conversion_id) || targetId;
     const purchaseAttributionStatus = promoCoherence === "gerencia_conflict" ||
@@ -4075,7 +4087,8 @@ async function handlePurchase(
         config,
         pixelConfigs,
         firstPixel,
-        firstSource?.currency,
+        eventGerencia.workspace_currency || firstSource?.currency,
+        { preferFallbackWithoutPixel: Boolean(eventGerencia.workspace_currency) },
       ),
       contact_status_capi: "",
       lead_status_capi: "",
@@ -4267,7 +4280,8 @@ async function handlePurchase(
       config,
       pixelConfigs,
       repeatInheritedPixel,
-      repeatSourceRow?.currency,
+      eventGerencia.workspace_currency || repeatSourceRow?.currency,
+      { preferFallbackWithoutPixel: Boolean(eventGerencia.workspace_currency) },
     ),
     // DO NOT inherit statuses
     contact_status_capi: "",
@@ -4563,7 +4577,8 @@ async function handleSimplePurchase(
       config,
       pixelConfigs,
       simpleInheritedPixel,
-      srcRow?.currency,
+      eventGerencia.workspace_currency || srcRow?.currency,
+      { preferFallbackWithoutPixel: Boolean(eventGerencia.workspace_currency) },
     ),
     contact_status_capi: "",
     lead_status_capi: "",

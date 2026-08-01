@@ -1,4 +1,5 @@
 import { supabase } from "@/lib/supabaseClient";
+import { normalizeCurrency, type ReportingCurrency } from "@/lib/currency";
 import type { Landing, LandingThemeConfig, PhoneKind, PublishTarget } from "./types";
 import { DEFAULT_CONFIG } from "./mocks";
 import type { LandingConfigPayload } from "./buildLandingConfig";
@@ -11,6 +12,7 @@ function normalizePixelId(value: string): string {
 export interface LandingRow {
   id: string;
   user_id: string;
+  workspace_currency: string | null;
   landing_type: "internal" | "external";
   publish_target: PublishTarget;
   external_domain: string;
@@ -39,6 +41,7 @@ function rowToLanding(row: LandingRow): Landing {
   return {
     id: row.id,
     userId: row.user_id,
+    workspaceCurrency: normalizeCurrency(row.workspace_currency),
     landingType: row.landing_type ?? "internal",
     publishTarget: row.publish_target ?? "classic",
     externalDomain: row.external_domain ?? "",
@@ -60,22 +63,32 @@ function rowToLanding(row: LandingRow): Landing {
 /**
  * Lista todas las landings del usuario (solo las propias por RLS).
  */
-export async function fetchLandings(userId: string): Promise<Landing[]> {
-  return fetchLandingsByUserId(userId);
+export async function fetchLandings(
+  userId: string,
+  workspaceCurrency?: ReportingCurrency,
+): Promise<Landing[]> {
+  return fetchLandingsByUserId(userId, workspaceCurrency);
 }
 
 const LANDINGS_SELECT =
-  "id, user_id, landing_type, publish_target, external_domain, name, pixel_id, gerencia_selection_mode, gerencia_fair_criterion, phone_mode, phone_kind, phone_interval_start_hour, phone_interval_end_hour, post_url, landing_tag, comment, config, created_at, updated_at";
+  "id, user_id, workspace_currency, landing_type, publish_target, external_domain, name, pixel_id, gerencia_selection_mode, gerencia_fair_criterion, phone_mode, phone_kind, phone_interval_start_hour, phone_interval_end_hour, post_url, landing_tag, comment, config, created_at, updated_at";
 
 /**
  * Lista landings de un usuario por su id. Los admins pueden listar landings de cualquier usuario (RLS).
  */
-export async function fetchLandingsByUserId(userId: string): Promise<Landing[]> {
-  const { data, error } = await supabase
+export async function fetchLandingsByUserId(
+  userId: string,
+  workspaceCurrency?: ReportingCurrency,
+): Promise<Landing[]> {
+  let query = supabase
     .from("landings")
     .select(LANDINGS_SELECT)
     .eq("user_id", userId)
     .order("updated_at", { ascending: false });
+
+  if (workspaceCurrency) query = query.eq("workspace_currency", workspaceCurrency);
+
+  const { data, error } = await query;
 
   if (error) throw error;
   return (data ?? []).map((r) => rowToLanding(r as LandingRow));
@@ -85,14 +98,21 @@ export async function fetchLandingsByUserId(userId: string): Promise<Landing[]> 
  * Para admin: lista todas las landings, propias primero y después las de los clientes.
  * Requiere RLS "Admins can read all landings".
  */
-export async function fetchLandingsForAdmin(adminUserId: string): Promise<{
+export async function fetchLandingsForAdmin(
+  adminUserId: string,
+  workspaceCurrency?: ReportingCurrency,
+): Promise<{
   mine: Landing[];
   clients: Landing[];
 }> {
-  const { data, error } = await supabase
+  let query = supabase
     .from("landings")
     .select(LANDINGS_SELECT)
     .order("updated_at", { ascending: false });
+
+  if (workspaceCurrency) query = query.eq("workspace_currency", workspaceCurrency);
+
+  const { data, error } = await query;
 
   if (error) throw error;
   const rows = (data ?? []) as LandingRow[];
@@ -129,6 +149,7 @@ export async function createLanding(
   userId: string,
   payload: {
     landingType?: "internal" | "external";
+    workspaceCurrency?: ReportingCurrency;
     publishTarget?: PublishTarget;
     externalDomain?: string;
     name?: string;
@@ -167,6 +188,7 @@ export async function createLanding(
     .from("landings")
     .insert({
       user_id: userId,
+      workspace_currency: payload.workspaceCurrency ?? "ARS",
       landing_type: payload.landingType ?? "internal",
       publish_target: payload.publishTarget ?? "classic",
       external_domain: payload.externalDomain ?? "",
@@ -198,6 +220,7 @@ export async function updateLanding(
   landingId: string,
   payload: {
     landingType?: "internal" | "external";
+    workspaceCurrency?: ReportingCurrency;
     publishTarget?: PublishTarget;
     externalDomain?: string;
     name?: string;
@@ -217,6 +240,7 @@ export async function updateLanding(
 ): Promise<void> {
   const body: Record<string, unknown> = {};
   if (payload.landingType !== undefined) body.landing_type = payload.landingType;
+  if (payload.workspaceCurrency !== undefined) body.workspace_currency = payload.workspaceCurrency;
   if (payload.publishTarget !== undefined) body.publish_target = payload.publishTarget;
   if (payload.externalDomain !== undefined) body.external_domain = payload.externalDomain;
   if (payload.name !== undefined) body.name = payload.name;

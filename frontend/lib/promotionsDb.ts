@@ -1,4 +1,5 @@
 import { supabase } from "@/lib/supabaseClient";
+import type { ReportingCurrency } from "@/lib/currency";
 
 export type PromotionStatus = "active" | "closed";
 export type PromotionDrawStatus = "pending" | "completed" | "no_participants";
@@ -6,6 +7,7 @@ export type PromotionDrawStatus = "pending" | "completed" | "no_participants";
 export interface PromotionRow {
   id: string;
   user_id: string;
+  workspace_currency: ReportingCurrency;
   title: string;
   slug: string;
   message: string;
@@ -46,6 +48,7 @@ export interface PromotionWithCount extends PromotionRow {
 
 export type PromotionInput = {
   user_id: string;
+  workspace_currency?: ReportingCurrency;
   title: string;
   slug: string;
   message: string;
@@ -60,7 +63,7 @@ export type PromotionInput = {
 };
 
 const PROMOTIONS_SELECT =
-  "id, user_id, title, slug, message, prize, ticker_text, prize_description, participation_steps, cta_label, background_image_url, draw_at, status, winner_participant_id, winner_username, winner_selected_at, winner_notified_at, draw_status, draw_processed_at, created_at, updated_at";
+  "id, user_id, workspace_currency, title, slug, message, prize, ticker_text, prize_description, participation_steps, cta_label, background_image_url, draw_at, status, winner_participant_id, winner_username, winner_selected_at, winner_notified_at, draw_status, draw_processed_at, created_at, updated_at";
 
 export function slugifyPromotion(value: string): string {
   const normalized = value
@@ -82,12 +85,19 @@ async function fetchParticipantCount(promotionId: string): Promise<number> {
   return count ?? 0;
 }
 
-export async function fetchPromotions(userId: string): Promise<PromotionWithCount[]> {
-  const { data, error } = await supabase
+export async function fetchPromotions(
+  userId: string,
+  workspaceCurrency?: ReportingCurrency,
+): Promise<PromotionWithCount[]> {
+  let query = supabase
     .from("promotions")
     .select(PROMOTIONS_SELECT)
     .eq("user_id", userId)
     .order("created_at", { ascending: false });
+
+  if (workspaceCurrency) query = query.eq("workspace_currency", workspaceCurrency);
+
+  const { data, error } = await query;
   if (error) throw error;
 
   const rows = (data ?? []) as PromotionRow[];
@@ -107,9 +117,10 @@ export async function fetchPromotionBySlug(slug: string): Promise<PromotionRow |
 }
 
 export async function createPromotion(input: PromotionInput): Promise<PromotionRow> {
+  const insertInput = { ...input, workspace_currency: input.workspace_currency ?? "ARS" };
   const { data, error } = await supabase
     .from("promotions")
-    .insert(input)
+    .insert(insertInput)
     .select(PROMOTIONS_SELECT)
     .single();
   if (error) throw error;

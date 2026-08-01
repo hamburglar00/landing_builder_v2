@@ -21,6 +21,8 @@ import {
 import { DashboardSkeleton } from "@/components/ui/DashboardSkeleton";
 import { PageHeader } from "@/components/ui/PanelPrimitives";
 import { useAppConfirm } from "@/components/ui/AppConfirmDialog";
+import { CURRENCY_ALL } from "@/lib/currency";
+import { SingleCurrencyRequired, useCurrencyScope } from "@/components/currency/CurrencyScope";
 
 type FormState = {
   title: string;
@@ -340,6 +342,8 @@ function PromotionMobilePreview({ form }: { form: FormState }) {
 export default function DashboardPromocionesPage() {
   const confirmAction = useAppConfirm();
   const router = useRouter();
+  const { currencyScope, isAllCurrencies } = useCurrencyScope();
+  const workspaceCurrency = currencyScope === CURRENCY_ALL ? "ARS" : currencyScope;
   const [userId, setUserId] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
@@ -414,9 +418,9 @@ export default function DashboardPromocionesPage() {
 
   const reload = useCallback(async (currentUserId: string | null) => {
     if (!currentUserId) return;
-    const rows = await fetchPromotions(currentUserId);
+    const rows = await fetchPromotions(currentUserId, workspaceCurrency);
     setPromotions(rows);
-  }, []);
+  }, [workspaceCurrency]);
 
   useEffect(() => {
     const load = async () => {
@@ -617,6 +621,7 @@ export default function DashboardPromocionesPage() {
       } else {
         await createPromotion({
           user_id: userId,
+          workspace_currency: workspaceCurrency,
           title,
           slug,
           message: messageText,
@@ -714,6 +719,10 @@ export default function DashboardPromocionesPage() {
   };
 
   if (loading) return <DashboardSkeleton title="Cargando promociones..." />;
+
+  if (isAllCurrencies) {
+    return <SingleCurrencyRequired title="Elegí ARS o PYG para administrar promociones" />;
+  }
 
   return (
     <div className="space-y-6 pb-8">

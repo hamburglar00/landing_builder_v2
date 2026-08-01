@@ -21,10 +21,14 @@ import { GerenciaWorkGroupsPanel } from "@/components/gerencias/GerenciaWorkGrou
 import { PageHeader } from "@/components/ui/PanelPrimitives";
 import { useAppConfirm } from "@/components/ui/AppConfirmDialog";
 import ModalPortal from "@/components/ui/ModalPortal";
+import { CURRENCY_ALL } from "@/lib/currency";
+import { SingleCurrencyRequired, useCurrencyScope } from "@/components/currency/CurrencyScope";
 
 export default function DashboardGerenciasPage() {
   const confirmAction = useAppConfirm();
   const router = useRouter();
+  const { currencyScope, isAllCurrencies } = useCurrencyScope();
+  const workspaceCurrency = currencyScope === CURRENCY_ALL ? "ARS" : currencyScope;
   const [gerencias, setGerencias] = useState<Gerencia[]>([]);
   const [workGroups, setWorkGroups] = useState<GerenciaWorkGroup[]>([]);
   const [userId, setUserId] = useState<string | null>(null);
@@ -57,7 +61,7 @@ export default function DashboardGerenciasPage() {
       setError(null);
       try {
         const [list, groups] = await Promise.all([
-          fetchGerencias(user.id),
+          fetchGerencias(user.id, workspaceCurrency),
           fetchGerenciaWorkGroups(user.id),
         ]);
         setGerencias(list);
@@ -69,7 +73,7 @@ export default function DashboardGerenciasPage() {
       }
     };
     void init();
-  }, [router]);
+  }, [router, workspaceCurrency]);
 
   const parseGerenciaId = (s: string): number | null => {
     const n = s.trim();
@@ -93,6 +97,7 @@ export default function DashboardGerenciasPage() {
         nombre: newNombre.trim(),
         source_type: newSourceType,
         gerencia_id: gid,
+        workspace_currency: workspaceCurrency,
       });
       setGerencias((prev) => sortGerenciasByName([...prev, created]));
       setNewNombre("");
@@ -242,6 +247,10 @@ export default function DashboardGerenciasPage() {
 
   if (!ready) {
     return <DashboardSkeleton title="Cargando gerencias..." />;
+  }
+
+  if (isAllCurrencies) {
+    return <SingleCurrencyRequired title="Elegí ARS o PYG para administrar gerencias" />;
   }
 
   return (

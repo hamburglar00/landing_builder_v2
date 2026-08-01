@@ -27,6 +27,7 @@ import type { Gerencia } from "@/lib/gerencias/types";
 import type { GerenciaWorkGroup } from "@/lib/gerencias/types";
 import type { LandingGerenciaAssignment } from "@/lib/gerencias/gerenciasDb";
 import {
+  assertLandingGerenciasWorkspaceCompatible,
   fetchGerenciasForAdmin,
   fetchGerenciaWorkGroups,
   fetchLandingGerencias,
@@ -163,9 +164,8 @@ export default function AdminLandingEditarPage() {
 
       setUserId(user.id);
       try {
-        const [found, allGerencias, assigned, settings, owner] = await Promise.all([
+        const [found, assigned, settings, owner] = await Promise.all([
           fetchLandingById(id),
-          fetchGerenciasForAdmin(user.id),
           fetchLandingGerencias(id),
           getSettings(),
           supabase.from("landings").select("user_id").eq("id", id).maybeSingle(),
@@ -182,6 +182,7 @@ export default function AdminLandingEditarPage() {
         setUrlBase(settings.url_base ?? null);
         setRevalidateSecret(settings.revalidate_secret || null);
         const ownerId = owner.data?.user_id ?? "";
+        const allGerencias = await fetchGerenciasForAdmin(user.id, found.workspaceCurrency);
         if (ownerId) {
           setOwnerUserId(ownerId);
           setGerencias(allGerencias.filter((g) => g.user_id === ownerId));
@@ -326,8 +327,15 @@ export default function AdminLandingEditarPage() {
         updatedAt: undefined,
       });
 
+      await assertLandingGerenciasWorkspaceCompatible(
+        landing.id,
+        assignments,
+        landing.workspaceCurrency,
+      );
+
       await updateLanding(landing.id, {
         landingType: landing.landingType,
+        workspaceCurrency: landing.workspaceCurrency,
         publishTarget: landing.publishTarget,
         externalDomain: landing.externalDomain
           .trim()

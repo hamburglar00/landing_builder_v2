@@ -1,6 +1,12 @@
 import { supabase } from "@/lib/supabaseClient";
+import { normalizeCurrency, type ReportingCurrency } from "@/lib/currency";
 import type { Gerencia, GerenciaWorkGroup } from "./types";
 import type { PhoneKind } from "@/lib/landing/types";
+import {
+  findGerenciaWorkspaceConflicts,
+  workspaceCurrencyLabel,
+  type GerenciaWorkspaceSnapshot,
+} from "./workspaceCompatibility";
 
 export type { PhoneKind };
 
@@ -54,13 +60,20 @@ export function sortGerenciasByName(list: Gerencia[]): Gerencia[] {
 /**
  * Lista las gerencias del usuario.
  */
-export async function fetchGerencias(userId: string): Promise<Gerencia[]> {
-  const { data, error } = await supabase
+export async function fetchGerencias(
+  userId: string,
+  workspaceCurrency?: ReportingCurrency,
+): Promise<Gerencia[]> {
+  let query = supabase
     .from("gerencias")
-    .select("id, nombre, gerencia_id, source_type, fair_criterion")
+    .select("id, nombre, gerencia_id, workspace_currency, source_type, fair_criterion")
     .eq("user_id", userId)
     .order("nombre", { ascending: true })
     .order("gerencia_id", { ascending: true });
+
+  if (workspaceCurrency) query = query.eq("workspace_currency", workspaceCurrency);
+
+  const { data, error } = await query;
 
   if (error) throw error;
   return sortGerenciasByName((data ?? []) as Gerencia[]);
@@ -69,12 +82,19 @@ export async function fetchGerencias(userId: string): Promise<Gerencia[]> {
 /**
  * Para admin: lista todas las gerencias, propias primero y después las de los clientes.
  */
-export async function fetchGerenciasForAdmin(adminUserId: string): Promise<Gerencia[]> {
-  const { data, error } = await supabase
+export async function fetchGerenciasForAdmin(
+  adminUserId: string,
+  workspaceCurrency?: ReportingCurrency,
+): Promise<Gerencia[]> {
+  let query = supabase
     .from("gerencias")
-    .select("id, nombre, gerencia_id, source_type, fair_criterion, user_id")
+    .select("id, nombre, gerencia_id, workspace_currency, source_type, fair_criterion, user_id")
     .order("nombre", { ascending: true })
     .order("gerencia_id", { ascending: true });
+
+  if (workspaceCurrency) query = query.eq("workspace_currency", workspaceCurrency);
+
+  const { data, error } = await query;
 
   if (error) throw error;
   const list = (data ?? []) as Gerencia[];
@@ -92,7 +112,12 @@ export async function fetchGerenciasForAdmin(adminUserId: string): Promise<Geren
  */
 export async function createGerencia(
   userId: string,
-  payload: { nombre: string; source_type: "pbadmin" | "manual"; gerencia_id?: number | null },
+  payload: {
+    nombre: string;
+    source_type: "pbadmin" | "manual";
+    gerencia_id?: number | null;
+    workspace_currency?: ReportingCurrency;
+  },
 ): Promise<Gerencia> {
   const isPbAdmin = payload.source_type === "pbadmin";
   let generatedId: number | null = null;
@@ -114,6 +139,7 @@ export async function createGerencia(
     .insert({
       user_id: userId,
       nombre: payload.nombre.trim(),
+      workspace_currency: payload.workspace_currency ?? "ARS",
       source_type: payload.source_type,
       ...(isPbAdmin
         ? {
@@ -125,7 +151,7 @@ export async function createGerencia(
             gerencia_id: generatedId,
           }),
     })
-    .select("id, nombre, gerencia_id, source_type")
+    .select("id, nombre, gerencia_id, workspace_currency, source_type")
     .single();
 
   if (error) throw error;
@@ -137,7 +163,12 @@ export async function createGerencia(
  */
 export async function updateGerencia(
   id: number,
-  payload: { nombre: string; source_type: "pbadmin" | "manual"; gerencia_id?: number | null },
+  payload: {
+    nombre: string;
+    source_type: "pbadmin" | "manual";
+    gerencia_id?: number | null;
+    workspace_currency?: ReportingCurrency;
+  },
 ): Promise<void> {
   const isPbAdmin = payload.source_type === "pbadmin";
   const { error } = await supabase
@@ -145,6 +176,7 @@ export async function updateGerencia(
     .update({
       nombre: payload.nombre.trim(),
       source_type: payload.source_type,
+      ...(payload.workspace_currency ? { workspace_currency: payload.workspace_currency } : {}),
       ...(isPbAdmin
         ? {
             id: payload.gerencia_id,
@@ -264,6 +296,71 @@ export interface LandingGerenciaAssignment {
   intervalEndHour: number | null;
 }
 
+type LandingWorkspaceRow = {
+  id: string;
+  workspace_currency: string | null;
+};
+
+type GerenciaWorkspaceRow = {
+  id: number;
+  nombre: string | null;
+  gerencia_id: number | null;
+  workspace_currency: string | null;
+};
+
+export async function assertLandingGerenciasWorkspaceCompatible(
+  landingId: string,
+  assignments: LandingGerenciaAssignment[],
+  targetWorkspaceCurrency?: unknown,
+): Promise<void> {
+  const gerenciaIds = Array.from(new Set(
+    assignments
+      .map((assignment) => Number(assignment.gerencia_id))
+      .filter((id) => Number.isFinite(id)),
+  ));
+  if (gerenciaIds.length === 0) return;
+
+  let targetWorkspace = normalizeCurrency(targetWorkspaceCurrency);
+  if (targetWorkspaceCurrency === undefined) {
+    const { data: landing, error: landingError } = await supabase
+      .from("landings")
+      .select("id, workspace_currency")
+      .eq("id", landingId)
+      .single();
+    if (landingError) throw landingError;
+    targetWorkspace = normalizeCurrency((landing as LandingWorkspaceRow | null)?.workspace_currency);
+  }
+
+  const { data: gerenciaRows, error: gerenciasError } = await supabase
+    .from("gerencias")
+    .select("id, nombre, gerencia_id, workspace_currency")
+    .in("id", gerenciaIds);
+  if (gerenciasError) throw gerenciasError;
+
+  const snapshots: GerenciaWorkspaceSnapshot[] = ((gerenciaRows ?? []) as GerenciaWorkspaceRow[]).map((row) => ({
+    gerenciaId: Number(row.id),
+    gerenciaName: String(row.nombre ?? `Gerencia ${row.gerencia_id ?? row.id}`),
+    gerenciaExternalId: row.gerencia_id == null ? null : Number(row.gerencia_id),
+    workspaceCurrency: row.workspace_currency,
+  }));
+
+  const conflicts = findGerenciaWorkspaceConflicts({
+    targetWorkspaceCurrency: targetWorkspace,
+    gerencias: snapshots,
+  });
+  if (conflicts.length === 0) return;
+
+  const conflict = conflicts[0];
+  const gerenciaLabel = conflict.gerenciaExternalId == null
+    ? conflict.gerenciaName
+    : `${conflict.gerenciaName} (ID ${conflict.gerenciaExternalId})`;
+
+  throw new Error(
+    `No se puede asignar ${gerenciaLabel} a una landing del workspace ${workspaceCurrencyLabel(targetWorkspace)} ` +
+      `porque esa gerencia pertenece al workspace ${workspaceCurrencyLabel(conflict.gerenciaWorkspaceCurrency)}. ` +
+      "Crea una gerencia separada para no mezclar monedas entre workspaces.",
+  );
+}
 /**
  * Devuelve las gerencias asignadas a una landing con su weight.
  */
@@ -305,6 +402,8 @@ export async function setLandingGerencias(
   landingId: string,
   assignments: LandingGerenciaAssignment[],
 ): Promise<void> {
+  await assertLandingGerenciasWorkspaceCompatible(landingId, assignments);
+
   const { error: deleteError } = await supabase
     .from("landings_gerencias")
     .delete()

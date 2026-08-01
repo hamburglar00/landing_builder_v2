@@ -54,6 +54,9 @@ export type PublishTarget = "classic" | "constructor";
 /** Mercado principal de la landing, usado para interpretar teléfonos locales. */
 export type LandingMarketCountry = "AR" | "PY";
 
+/** Workspace operativo donde vive la landing dentro del panel. */
+export type LandingWorkspaceCurrency = "ARS" | "PYG";
+
 /**
  * Modo de fondo: una sola imagen o rotacin entre varias.
  */
@@ -131,6 +134,7 @@ export interface LandingThemeConfig {
 export interface Landing {
   id: string;
   userId?: string;
+  workspaceCurrency: LandingWorkspaceCurrency;
   landingType: "internal" | "external";
   publishTarget: PublishTarget;
   externalDomain: string;

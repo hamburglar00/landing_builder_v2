@@ -13,11 +13,15 @@ import { DEFAULT_CONFIG } from "@/lib/landing/mocks";
 import { LandingPreview } from "@/components/landing/LandingPreview";
 import { DashboardSkeleton } from "@/components/ui/DashboardSkeleton";
 import { EmptyState, PageHeader } from "@/components/ui/PanelPrimitives";
+import { CURRENCY_ALL } from "@/lib/currency";
+import { SingleCurrencyRequired, useCurrencyScope } from "@/components/currency/CurrencyScope";
 
 const BASE = "/admin/landings";
 
 export default function AdminLandingsPage() {
   const router = useRouter();
+  const { currencyScope, isAllCurrencies } = useCurrencyScope();
+  const workspaceCurrency = currencyScope === CURRENCY_ALL ? "ARS" : currencyScope;
   const [mineLandings, setMineLandings] = useState<Landing[]>([]);
   const [clientLandings, setClientLandings] = useState<Landing[]>([]);
   const [userId, setUserId] = useState<string | null>(null);
@@ -43,7 +47,7 @@ export default function AdminLandingsPage() {
       setError(null);
       try {
         const [{ mine, clients }, settings] = await Promise.all([
-          fetchLandingsForAdmin(user.id),
+          fetchLandingsForAdmin(user.id, workspaceCurrency),
           getSettings(),
         ]);
         setMineLandings(mine);
@@ -80,7 +84,7 @@ export default function AdminLandingsPage() {
     };
 
     void init();
-  }, [router]);
+  }, [router, workspaceCurrency]);
 
   const handleCreate = async () => {
     if (!userId) return;
@@ -88,8 +92,9 @@ export default function AdminLandingsPage() {
     setError(null);
     try {
       const { id } = await createLanding(userId, {
+        workspaceCurrency,
         comment: "",
-        config: { ...DEFAULT_CONFIG },
+        config: { ...DEFAULT_CONFIG, marketCountry: workspaceCurrency === "PYG" ? "PY" : "AR" },
       });
       router.push(`${BASE}/${id}/editar`);
     } catch (e) {
@@ -105,10 +110,11 @@ export default function AdminLandingsPage() {
     setError(null);
     try {
       const { id } = await createLanding(userId, {
+        workspaceCurrency,
         landingType: "external",
         externalDomain: "",
         comment: "",
-        config: { ...DEFAULT_CONFIG },
+        config: { ...DEFAULT_CONFIG, marketCountry: workspaceCurrency === "PYG" ? "PY" : "AR" },
       });
       router.push(`${BASE}/${id}/editar`);
     } catch (e) {
@@ -120,6 +126,10 @@ export default function AdminLandingsPage() {
 
   if (!ready) {
     return <DashboardSkeleton title="Cargando landings..." />;
+  }
+
+  if (isAllCurrencies) {
+    return <SingleCurrencyRequired title="Elegí ARS o PYG para administrar landings" />;
   }
 
   const groupedClientLandings = clientLandings.reduce<Record<string, Landing[]>>((acc, landing) => {

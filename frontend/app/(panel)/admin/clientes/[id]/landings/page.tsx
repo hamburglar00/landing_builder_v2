@@ -7,11 +7,15 @@ import { supabase } from "@/lib/supabaseClient";
 import type { Landing } from "@/lib/landing/types";
 import { fetchLandingsByUserId } from "@/lib/landing/landingsDb";
 import { EmptyState, PageHeader } from "@/components/ui/PanelPrimitives";
+import { CURRENCY_ALL } from "@/lib/currency";
+import { SingleCurrencyRequired, useCurrencyScope } from "@/components/currency/CurrencyScope";
 
 export default function AdminClienteLandingsPage() {
   const router = useRouter();
   const params = useParams();
   const clientId = params?.id as string | undefined;
+  const { currencyScope, isAllCurrencies } = useCurrencyScope();
+  const workspaceCurrency = currencyScope === CURRENCY_ALL ? "ARS" : currencyScope;
   const [landings, setLandings] = useState<Landing[]>([]);
   const [clientName, setClientName] = useState<string | null>(null);
   const [ready, setReady] = useState(false);
@@ -36,7 +40,7 @@ export default function AdminClienteLandingsPage() {
           .maybeSingle();
         setClientName(profile?.nombre ?? null);
 
-        const list = await fetchLandingsByUserId(clientId);
+        const list = await fetchLandingsByUserId(clientId, workspaceCurrency);
         setLandings(list);
       } catch (e) {
         setError(e instanceof Error ? e.message : "Error al cargar landings");
@@ -46,7 +50,7 @@ export default function AdminClienteLandingsPage() {
     };
 
     void init();
-  }, [router, clientId]);
+  }, [router, clientId, workspaceCurrency]);
 
   if (!ready) {
     return (
@@ -54,6 +58,10 @@ export default function AdminClienteLandingsPage() {
         <p className="text-sm text-zinc-400">Cargando...</p>
       </div>
     );
+  }
+
+  if (isAllCurrencies) {
+    return <SingleCurrencyRequired title="Elegí ARS o PYG para ver landings del cliente" />;
   }
 
   return (

@@ -17,6 +17,7 @@ import type { Gerencia } from "@/lib/gerencias/types";
 import type { GerenciaWorkGroup } from "@/lib/gerencias/types";
 import type { LandingGerenciaAssignment } from "@/lib/gerencias/gerenciasDb";
 import {
+  assertLandingGerenciasWorkspaceCompatible,
   fetchGerencias,
   fetchGerenciaWorkGroups,
   fetchLandingGerencias,
@@ -162,9 +163,8 @@ export default function DashboardLandingEditarPage() {
 
       setUserId(user.id);
       try {
-        const [found, userGerencias, groups, assigned, settings, profile] = await Promise.all([
+        const [found, groups, assigned, settings, profile] = await Promise.all([
           fetchLandingById(id),
-          fetchGerencias(user.id),
           fetchGerenciaWorkGroups(user.id),
           fetchLandingGerencias(id),
           getSettings(),
@@ -174,6 +174,7 @@ export default function DashboardLandingEditarPage() {
           router.replace("/dashboard");
           return;
         }
+        const userGerencias = await fetchGerencias(user.id, found.workspaceCurrency);
         setLanding(found);
         if (!initialName) {
           setInitialName(found.name);
@@ -312,8 +313,15 @@ export default function DashboardLandingEditarPage() {
         updatedAt: undefined,
       });
 
+      await assertLandingGerenciasWorkspaceCompatible(
+        landing.id,
+        assignments,
+        landing.workspaceCurrency,
+      );
+
       await updateLanding(landing.id, {
         landingType: landing.landingType,
+        workspaceCurrency: landing.workspaceCurrency,
         publishTarget: landing.publishTarget,
         externalDomain: landing.externalDomain
           .trim()

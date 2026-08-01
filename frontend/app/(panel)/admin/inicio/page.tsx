@@ -40,7 +40,7 @@ export default function AdminInicioPage() {
         }
 
         const [{ mine, clients }, convs, cfg] = await Promise.all([
-          fetchLandingsForAdmin(user.id),
+          fetchLandingsForAdmin(user.id, reportingCurrency),
           fetchConversionsForAdminFiltered(user.id),
           fetchConversionsConfig(user.id),
         ]);
@@ -62,7 +62,7 @@ export default function AdminInicioPage() {
     };
 
     void init();
-  }, []);
+  }, [reportingCurrency]);
 
   const scopedConversions = useMemo(
     () => filterConversionsByCurrency(conversions, currencyScope),

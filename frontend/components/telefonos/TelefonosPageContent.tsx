@@ -11,6 +11,8 @@ import { DashboardSkeleton } from "@/components/ui/DashboardSkeleton";
 import { PageHeader } from "@/components/ui/PanelPrimitives";
 import { useAppConfirm } from "@/components/ui/AppConfirmDialog";
 import ModalPortal from "@/components/ui/ModalPortal";
+import { CURRENCY_ALL } from "@/lib/currency";
+import { SingleCurrencyRequired, useCurrencyScope } from "@/components/currency/CurrencyScope";
 
 export type GerenciaPhoneRow = {
   id: number;
@@ -83,6 +85,8 @@ export function TelefonosPageContent({
   isAdmin = false,
 }: Props) {
   const confirmAction = useAppConfirm();
+  const { currencyScope, isAllCurrencies } = useCurrencyScope();
+  const workspaceCurrency = currencyScope === CURRENCY_ALL ? "ARS" : currencyScope;
   const [gerencias, setGerencias] = useState<Gerencia[]>([]);
   const [phonesByGerencia, setPhonesByGerencia] = useState<
     Record<number, GerenciaPhoneRow[]>
@@ -163,8 +167,8 @@ export function TelefonosPageContent({
     }
 
     const listRaw = isAdmin
-      ? await fetchGerenciasForAdmin(uid)
-      : await fetchGerencias(uid);
+      ? await fetchGerenciasForAdmin(uid, workspaceCurrency)
+      : await fetchGerencias(uid, workspaceCurrency);
     const list = [...listRaw].sort((a, b) => {
       const byName = a.nombre.localeCompare(b.nombre, "es", { sensitivity: "base" });
       if (byName !== 0) return byName;
@@ -300,7 +304,7 @@ export function TelefonosPageContent({
       historicalCountsByAssigned[assignedPhone] = linkedCount;
     }
     setLeadUniqueHistoricalByAssignedPhone(historicalCountsByAssigned);
-  }, [isAdmin]);
+  }, [isAdmin, workspaceCurrency]);
 
   const getActivePhonesCount = useCallback(() => {
     return Object.values(phonesByGerencia).reduce((acc, list) => {
@@ -700,6 +704,10 @@ export function TelefonosPageContent({
 
   if (!ready) {
     return <DashboardSkeleton title="Cargando teléfonos..." />;
+  }
+
+  if (isAllCurrencies) {
+    return <SingleCurrencyRequired title="Elegí ARS o PYG para administrar teléfonos" />;
   }
 
   const normalizedGerenciaSearch = gerenciaSearch.trim().toLowerCase();

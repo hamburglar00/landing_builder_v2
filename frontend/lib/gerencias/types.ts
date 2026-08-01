@@ -2,10 +2,13 @@
  * Gerencia: id (PK), nombre, gerencia_id (entero obligatorio para invocar API externa).
  * user_id solo viene cuando se listan todas para admin (orden: propias primero, luego de clientes).
  */
+import type { ReportingCurrency } from "@/lib/currency";
+
 export interface Gerencia {
   id: number;
   nombre: string;
   gerencia_id: number | null;
+  workspace_currency?: ReportingCurrency;
   source_type?: "pbadmin" | "manual";
   fair_criterion?: "usage_count" | "messages_received";
   user_id?: string;

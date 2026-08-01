@@ -13,9 +13,13 @@ import { LandingPreview } from "@/components/landing/LandingPreview";
 import { getSettings } from "@/lib/settingsDb";
 import { DashboardSkeleton } from "@/components/ui/DashboardSkeleton";
 import { EmptyState, ModalShell, PageHeader } from "@/components/ui/PanelPrimitives";
+import { CURRENCY_ALL } from "@/lib/currency";
+import { SingleCurrencyRequired, useCurrencyScope } from "@/components/currency/CurrencyScope";
 
 export default function DashboardLandingsPage() {
   const router = useRouter();
+  const { currencyScope, isAllCurrencies } = useCurrencyScope();
+  const workspaceCurrency = currencyScope === CURRENCY_ALL ? "ARS" : currencyScope;
   const [landings, setLandings] = useState<Landing[]>([]);
   const [userId, setUserId] = useState<string | null>(null);
   const [ready, setReady] = useState(false);
@@ -42,7 +46,7 @@ export default function DashboardLandingsPage() {
       setError(null);
       try {
         const [list, settings] = await Promise.all([
-          fetchLandings(user.id),
+          fetchLandings(user.id, workspaceCurrency),
           getSettings(),
         ]);
         setLandings(list);
@@ -55,7 +59,7 @@ export default function DashboardLandingsPage() {
     };
 
     void init();
-  }, [router]);
+  }, [router, workspaceCurrency]);
 
   const handleCreate = async () => {
     if (!userId) return;
@@ -76,8 +80,9 @@ export default function DashboardLandingsPage() {
         return;
       }
       const { id } = await createLanding(userId, {
+        workspaceCurrency,
         comment: "",
-        config: { ...DEFAULT_CONFIG },
+        config: { ...DEFAULT_CONFIG, marketCountry: workspaceCurrency === "PYG" ? "PY" : "AR" },
       });
       router.push(`/dashboard/landing/${id}/editar`);
     } catch (e) {
@@ -114,10 +119,11 @@ export default function DashboardLandingsPage() {
         return;
       }
       const { id } = await createLanding(userId, {
+        workspaceCurrency,
         landingType: "external",
         externalDomain: "",
         comment: "",
-        config: { ...DEFAULT_CONFIG },
+        config: { ...DEFAULT_CONFIG, marketCountry: workspaceCurrency === "PYG" ? "PY" : "AR" },
       });
       router.push(`/dashboard/landing/${id}/editar`);
     } catch (e) {
@@ -163,6 +169,7 @@ export default function DashboardLandingsPage() {
       if (!canCreate) return;
       const copiedConfig = JSON.parse(JSON.stringify(landing.config)) as Landing["config"];
       const { id } = await createLanding(userId, {
+        workspaceCurrency: landing.workspaceCurrency,
         landingType: landing.landingType,
         publishTarget: landing.publishTarget,
         externalDomain: landing.externalDomain,
@@ -199,6 +206,10 @@ export default function DashboardLandingsPage() {
 
   if (!ready) {
     return <DashboardSkeleton title="Cargando landings..." />;
+  }
+
+  if (isAllCurrencies) {
+    return <SingleCurrencyRequired title="Elegí ARS o PYG para administrar landings" />;
   }
 
   return (
