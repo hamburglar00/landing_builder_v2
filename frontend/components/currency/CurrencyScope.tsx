@@ -25,7 +25,7 @@ type CurrencyScopeContextValue = {
 const CurrencyScopeContext = createContext<CurrencyScopeContextValue | null>(null);
 
 function isCurrencyScope(value: unknown): value is CurrencyScope {
-  return value === CURRENCY_ALL || REPORTING_CURRENCIES.includes(value as "ARS" | "PYG");
+  return REPORTING_CURRENCIES.includes(value as "ARS" | "PYG");
 }
 
 export function CurrencyScopeProvider({ children }: { children: ReactNode }) {
@@ -36,9 +36,22 @@ export function CurrencyScopeProvider({ children }: { children: ReactNode }) {
   });
 
   useEffect(() => {
+    const stored = window.localStorage.getItem(STORAGE_KEY);
+    if (!isCurrencyScope(stored)) {
+      window.localStorage.setItem(STORAGE_KEY, "ARS");
+    }
+  }, []);
+
+  useEffect(() => {
     const handleStorage = (event: StorageEvent) => {
-      if (event.key === STORAGE_KEY && isCurrencyScope(event.newValue)) {
+      if (event.key !== STORAGE_KEY) return;
+      if (isCurrencyScope(event.newValue)) {
         setCurrencyScopeState(event.newValue);
+        return;
+      }
+      if (event.newValue === CURRENCY_ALL) {
+        setCurrencyScopeState("ARS");
+        window.localStorage.setItem(STORAGE_KEY, "ARS");
       }
     };
     window.addEventListener("storage", handleStorage);
@@ -90,17 +103,16 @@ export function CurrencyScopeSelector() {
         <circle cx="12" cy="12" r="9" />
         <path d="M3 12h18M12 3c2.3 2.5 3.5 5.5 3.5 9S14.3 18.5 12 21c-2.3-2.5-3.5-5.5-3.5-9S9.7 5.5 12 3Z" />
       </svg>
-      <span className="hidden sm:inline">Vista</span>
+      <span className="hidden sm:inline">Workspace</span>
       <select
-        aria-label="Moneda global de reportes"
+        aria-label="Workspace activo"
         value={currencyScope}
         onChange={(event) => setCurrencyScope(event.target.value as CurrencyScope)}
         className="h-7 min-w-16 rounded-lg border-0 bg-transparent px-1.5 text-xs font-semibold text-[var(--color-text-strong)] outline-none"
-        title="Filtra de forma global las conversiones y reportes por moneda."
+        title="Define el workspace activo del panel."
       >
         <option value="ARS">ARS</option>
         <option value="PYG">PYG</option>
-        <option value={CURRENCY_ALL}>Todas</option>
       </select>
     </label>
   );
@@ -115,7 +127,7 @@ export function SingleCurrencyRequired({
     <div className="ui-alert border-[rgba(251,191,36,0.24)] bg-[rgba(251,191,36,0.07)] px-5 py-8 text-center">
       <p className="text-sm font-semibold text-[var(--color-warning)]">{title}</p>
       <p className="mx-auto mt-2 max-w-xl text-xs leading-relaxed text-[var(--color-text-muted)]">
-        Para evitar sumar ARS y PYG como si fueran equivalentes, esta vista requiere elegir una moneda específica en el selector superior. “Todas” queda disponible para listados y trazabilidad.
+        Para evitar sumar ARS y PYG como si fueran equivalentes, esta vista requiere elegir un workspace especifico en el selector superior.
       </p>
     </div>
   );
