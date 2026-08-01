@@ -32,6 +32,18 @@ const EXPECTED_HIDDEN_COLUMNS: ConversionColumnKey[] = [
   "cuit_cuil",
   "inferred_sex",
   "sex_source",
+  "lead_bot_phone",
+  "lead_agency_id",
+  "lead_gerencia_label",
+  "lead_incoming_promo_code",
+  "lead_attribution_status",
+  "lead_attribution_conversion_id",
+  "purchase_bot_phone",
+  "purchase_agency_id",
+  "purchase_gerencia_label",
+  "purchase_incoming_promo_code",
+  "purchase_attribution_status",
+  "purchase_attribution_conversion_id",
 ];
 
 test("la vista reducida oculta exactamente las columnas técnicas solicitadas", () => {

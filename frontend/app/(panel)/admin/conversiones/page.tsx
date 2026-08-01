@@ -8,6 +8,7 @@ import {
   fetchConversionsConfig,
   fetchPixelConfigs,
   getConversionGerenciaLabels,
+  scopeConversionStagesToGerencia,
   buildFunnelContactsFromConversions,
   getPremiumThreshold,
   setPremiumThreshold,
@@ -187,6 +188,18 @@ function cellValue(
     case "utm_campaign": return <td key={col} className={dim} title={tip(c.utm_campaign)}>{c.utm_campaign || "-"}</td>;
     case "telefono_asignado": return <td key={col} className={dim} title={tip(c.telefono_asignado)}>{c.telefono_asignado || "-"}</td>;
     case "assigned_gerencia_label": return <td key={col} className={dim} title={tip(c.assigned_gerencia_label)}>{c.assigned_gerencia_label || "-"}</td>;
+    case "lead_bot_phone": return <td key={col} className={dimMono} title={tip(c.lead_bot_phone)}>{c.lead_bot_phone || "-"}</td>;
+    case "lead_agency_id": return <td key={col} className={dimMono} title={tip(c.lead_agency_id)}>{c.lead_agency_id || "-"}</td>;
+    case "lead_gerencia_label": return <td key={col} className={dim} title={tip(c.lead_gerencia_label)}>{c.lead_gerencia_label || "-"}</td>;
+    case "lead_incoming_promo_code": return <td key={col} className={dimMono} title={tip(c.lead_incoming_promo_code)}>{c.lead_incoming_promo_code || "-"}</td>;
+    case "lead_attribution_status": return <td key={col} className={dim} title={tip(c.lead_attribution_status)}>{c.lead_attribution_status || "-"}</td>;
+    case "lead_attribution_conversion_id": return <td key={col} className={dimMono} title={tip(c.lead_attribution_conversion_id)}>{c.lead_attribution_conversion_id ? truncateId(c.lead_attribution_conversion_id) : "-"}</td>;
+    case "purchase_bot_phone": return <td key={col} className={dimMono} title={tip(c.purchase_bot_phone)}>{c.purchase_bot_phone || "-"}</td>;
+    case "purchase_agency_id": return <td key={col} className={dimMono} title={tip(c.purchase_agency_id)}>{c.purchase_agency_id || "-"}</td>;
+    case "purchase_gerencia_label": return <td key={col} className={dim} title={tip(c.purchase_gerencia_label)}>{c.purchase_gerencia_label || "-"}</td>;
+    case "purchase_incoming_promo_code": return <td key={col} className={dimMono} title={tip(c.purchase_incoming_promo_code)}>{c.purchase_incoming_promo_code || "-"}</td>;
+    case "purchase_attribution_status": return <td key={col} className={dim} title={tip(c.purchase_attribution_status)}>{c.purchase_attribution_status || "-"}</td>;
+    case "purchase_attribution_conversion_id": return <td key={col} className={dimMono} title={tip(c.purchase_attribution_conversion_id)}>{c.purchase_attribution_conversion_id ? truncateId(c.purchase_attribution_conversion_id) : "-"}</td>;
     case "promo_code": return <td key={col} className={dim} title={tip(c.promo_code)}>{c.promo_code || "-"}</td>;
     case "device_type": return <td key={col} className={dim} title={tip(c.device_type)}>{c.device_type || "-"}</td>;
     case "geo_city": return <td key={col} className={dim} title={tip(c.geo_city)}>{c.geo_city || "-"}</td>;
@@ -452,7 +465,7 @@ export default function AdminConversionesPage() {
     }
   }, [statsDeviceFilter, statsDeviceOptions, setStatsDeviceFilter]);
   const statsConversionsFiltered = useMemo(() => {
-    return statsConversions.filter((r) => {
+    const filtered = statsConversions.filter((r) => {
       const byLanding = statsLandingFilter === "__all__" || String(r.landing_name ?? "").trim() === statsLandingFilter;
       const byPixel = statsPixelFilter === "__all__" || String(r.meta_pixel_id ?? r.pixel_id ?? "").trim() === statsPixelFilter;
       const assignedPhone = normalizePhone(r.telefono_asignado);
@@ -472,9 +485,17 @@ export default function AdminConversionesPage() {
       const byDevice = statsDeviceFilter === "__all__" || String(r.device_type ?? "").trim().toLowerCase() === statsDeviceFilter;
       return byLanding && byPixel && byGerencia && byTelefono && byFromMetaAds && bySourcePlatform && bySexo && byCampaign && byDevice;
     });
+    if (statsGerenciaFilter === "__all__") return filtered;
+    return filtered
+      .map((row) => scopeConversionStagesToGerencia(
+        row,
+        gerenciaByPhone,
+        (labels) => labels.includes(statsGerenciaFilter),
+      ))
+      .filter((row): row is ConversionRow => row !== null);
   }, [statsConversions, statsLandingFilter, statsPixelFilter, statsGerenciaFilter, statsTelefonoFilter, statsFromMetaAdsFilter, statsSourcePlatformFilter, statsSexoFilter, statsCampaignFilter, statsDeviceFilter, gerenciaByPhone]);
   const statsAllConversionsFiltered = useMemo(() => {
-    return statsAllConversions.filter((r) => {
+    const filtered = statsAllConversions.filter((r) => {
       const byLanding = statsLandingFilter === "__all__" || String(r.landing_name ?? "").trim() === statsLandingFilter;
       const byPixel = statsPixelFilter === "__all__" || String(r.meta_pixel_id ?? r.pixel_id ?? "").trim() === statsPixelFilter;
       const assignedPhone = normalizePhone(r.telefono_asignado);
@@ -494,6 +515,14 @@ export default function AdminConversionesPage() {
       const byDevice = statsDeviceFilter === "__all__" || String(r.device_type ?? "").trim().toLowerCase() === statsDeviceFilter;
       return byLanding && byPixel && byGerencia && byTelefono && byFromMetaAds && bySourcePlatform && bySexo && byCampaign && byDevice;
     });
+    if (statsGerenciaFilter === "__all__") return filtered;
+    return filtered
+      .map((row) => scopeConversionStagesToGerencia(
+        row,
+        gerenciaByPhone,
+        (labels) => labels.includes(statsGerenciaFilter),
+      ))
+      .filter((row): row is ConversionRow => row !== null);
   }, [statsAllConversions, statsLandingFilter, statsPixelFilter, statsGerenciaFilter, statsTelefonoFilter, statsFromMetaAdsFilter, statsSourcePlatformFilter, statsSexoFilter, statsCampaignFilter, statsDeviceFilter, gerenciaByPhone]);
   const filteredPhoneSet = useMemo(
     () => new Set(
@@ -504,12 +533,15 @@ export default function AdminConversionesPage() {
     [statsConversionsFiltered],
   );
   const activeFunnelFiltered = useMemo(() => {
+    if (statsGerenciaFilter !== "__all__") {
+      return buildFunnelContactsFromConversions(statsConversionsFiltered);
+    }
     return activeFunnel.filter((r) => {
       const byLanding = statsLandingFilter === "__all__" || String(r.landing_name ?? "").trim() === statsLandingFilter;
       const byPhone = filteredPhoneSet.has(String(r.phone ?? "").trim());
       return byLanding && byPhone;
     });
-  }, [activeFunnel, statsLandingFilter, filteredPhoneSet]);
+  }, [activeFunnel, statsLandingFilter, filteredPhoneSet, statsGerenciaFilter, statsConversionsFiltered]);
   const tableConversionsFiltered = useMemo(() => {
     return activeConversions.filter((r) => {
       const byLanding = statsLandingFilter === "__all__" || String(r.landing_name ?? "").trim() === statsLandingFilter;

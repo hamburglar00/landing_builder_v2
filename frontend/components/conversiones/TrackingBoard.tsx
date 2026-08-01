@@ -169,6 +169,15 @@ export default function TrackingBoard({
       const avgLoad = loads > 0 ? totalLoaded / loads : 0;
       const gerenciaSet = new Set<number>();
       for (const row of group) {
+        const eventGerenciaId = String(row.purchase_event_id ?? "").trim()
+          ? Number(row.purchase_gerencia_id)
+          : String(row.lead_event_id ?? "").trim()
+            ? Number(row.lead_gerencia_id)
+            : Number.NaN;
+        if (Number.isFinite(eventGerenciaId)) {
+          gerenciaSet.add(eventGerenciaId);
+          continue;
+        }
         const historicalId = Number(row.assigned_gerencia_id);
         if (Number.isFinite(historicalId)) {
           gerenciaSet.add(historicalId);

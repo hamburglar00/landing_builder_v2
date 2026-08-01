@@ -4,6 +4,7 @@ import { useCallback, useEffect, useMemo, useState, type ReactNode } from "react
 import {
   buildFunnelContactsFromConversions,
   getConversionGerenciaLabels,
+  scopeConversionStagesToGerencia,
   type ConversionRow,
   type FetchDateRange,
   type GerenciaAvailabilitySummary,
@@ -45,8 +46,6 @@ type SortKey = "label" | "contactos" | "pctInicioConversacion" | "mensajes" | "c
 type SortDirection = "asc" | "desc";
 
 const FIRST_DATA_MONTH = "2026-01";
-
-const normalizePhone = (value: string | null | undefined) => String(value ?? "").replace(/\D/g, "");
 
 function currentMonthValue(): string {
   const now = new Date();
@@ -270,10 +269,18 @@ export default function GerenciasPerformancePanel({
       const labels = getConversionGerenciaLabels(row, gerenciaByPhone);
       if (labels.length === 0) continue;
       for (const label of labels) {
-        if (selectedLandingLabelSet && !selectedLandingLabelSet.has(label)) continue;
+        // A historical row can contain Contact from one landing and Purchase
+        // received by another gerencia. Scope each stage independently so the
+        // same physical DB row does not move all three metrics together.
+        const scopedRow = scopeConversionStagesToGerencia(
+          row,
+          gerenciaByPhone,
+          (stageLabels) => stageLabels.includes(label),
+        );
+        if (!scopedRow) continue;
         allLabels.add(label);
         const bucket = rowsByGerencia.get(label) ?? [];
-        bucket.push(row);
+        bucket.push(scopedRow);
         rowsByGerencia.set(label, bucket);
       }
     }

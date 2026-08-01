@@ -31,6 +31,8 @@ const ALL_COLUMNS = [
   "purchase_event_id","purchase_event_time","purchase_payload_raw","timestamp","clientIP","agentuser",
   "estado","valor","currency","purchase_type","contact_status_capi","lead_status_capi","purchase_status_capi",
   "observaciones","external_id","test_event_code","utm_campaign","telefono_asignado","promo_code",
+  "lead_bot_phone","lead_agency_id","lead_gerencia_label","lead_incoming_promo_code","lead_attribution_status","lead_attribution_conversion_id",
+  "purchase_bot_phone","purchase_agency_id","purchase_gerencia_label","purchase_incoming_promo_code","purchase_attribution_status","purchase_attribution_conversion_id",
   "device_type","geo_city","geo_region","geo_country","geo_source",
   "cuit_cuil","inferred_sex","sex_source",
 ] as const;

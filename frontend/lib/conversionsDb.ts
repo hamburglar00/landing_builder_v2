@@ -153,6 +153,24 @@ export interface ConversionRow {
   assigned_gerencia_external_id?: number | null;
   assigned_gerencia_name?: string | null;
   assigned_gerencia_label?: string | null;
+  lead_bot_phone?: string | null;
+  lead_agency_id?: string | null;
+  lead_gerencia_id?: number | null;
+  lead_gerencia_external_id?: number | null;
+  lead_gerencia_name?: string | null;
+  lead_gerencia_label?: string | null;
+  lead_incoming_promo_code?: string | null;
+  lead_attribution_status?: string | null;
+  lead_attribution_conversion_id?: string | null;
+  purchase_bot_phone?: string | null;
+  purchase_agency_id?: string | null;
+  purchase_gerencia_id?: number | null;
+  purchase_gerencia_external_id?: number | null;
+  purchase_gerencia_name?: string | null;
+  purchase_gerencia_label?: string | null;
+  purchase_incoming_promo_code?: string | null;
+  purchase_attribution_status?: string | null;
+  purchase_attribution_conversion_id?: string | null;
   promo_code: string;
   geo_city: string;
   geo_region: string;
@@ -232,13 +250,77 @@ export type FetchDateRange = {
 };
 
 export function getConversionGerenciaLabels(
-  row: Pick<ConversionRow, "telefono_asignado" | "assigned_gerencia_label">,
+  row: Pick<
+    ConversionRow,
+    | "telefono_asignado"
+    | "assigned_gerencia_label"
+    | "contact_event_id"
+    | "lead_event_id"
+    | "purchase_event_id"
+    | "lead_gerencia_label"
+    | "purchase_gerencia_label"
+  >,
   gerenciaByPhone: Record<string, string[]>,
+  stage?: "contact" | "lead" | "purchase",
 ): string[] {
-  const historicalLabel = String(row.assigned_gerencia_label ?? "").trim();
-  if (historicalLabel) return [historicalLabel];
-  const assignedPhone = String(row.telefono_asignado ?? "").replace(/\D/g, "");
-  return assignedPhone ? (gerenciaByPhone[assignedPhone] ?? []) : [];
+  const assignedLabels = (): string[] => {
+    const historicalLabel = String(row.assigned_gerencia_label ?? "").trim();
+    if (historicalLabel) return [historicalLabel];
+    const assignedPhone = String(row.telefono_asignado ?? "").replace(/\D/g, "");
+    return assignedPhone ? (gerenciaByPhone[assignedPhone] ?? []) : [];
+  };
+  const leadLabels = (): string[] => {
+    const label = String(row.lead_gerencia_label ?? "").trim();
+    return label ? [label] : assignedLabels();
+  };
+  const purchaseLabels = (): string[] => {
+    const label = String(row.purchase_gerencia_label ?? "").trim();
+    return label ? [label] : leadLabels();
+  };
+
+  if (stage === "contact") return assignedLabels();
+  if (stage === "lead") return leadLabels();
+  if (stage === "purchase") return purchaseLabels();
+
+  const labels = new Set<string>();
+  if (String(row.contact_event_id ?? "").trim()) {
+    for (const label of assignedLabels()) labels.add(label);
+  }
+  if (String(row.lead_event_id ?? "").trim()) {
+    for (const label of leadLabels()) labels.add(label);
+  }
+  if (String(row.purchase_event_id ?? "").trim()) {
+    for (const label of purchaseLabels()) labels.add(label);
+  }
+  if (labels.size > 0) return Array.from(labels);
+  return assignedLabels();
+}
+
+export function scopeConversionStagesToGerencia(
+  row: ConversionRow,
+  gerenciaByPhone: Record<string, string[]>,
+  matches: (labels: string[]) => boolean,
+): ConversionRow | null {
+  const hasContact = String(row.contact_event_id ?? "").trim() !== "" &&
+    matches(getConversionGerenciaLabels(row, gerenciaByPhone, "contact"));
+  const hasLead = String(row.lead_event_id ?? "").trim() !== "" &&
+    matches(getConversionGerenciaLabels(row, gerenciaByPhone, "lead"));
+  const hasPurchase = String(row.purchase_event_id ?? "").trim() !== "" &&
+    matches(getConversionGerenciaLabels(row, gerenciaByPhone, "purchase"));
+  if (!hasContact && !hasLead && !hasPurchase) return null;
+
+  return {
+    ...row,
+    contact_event_id: hasContact ? row.contact_event_id : "",
+    contact_event_time: hasContact ? row.contact_event_time : null,
+    lead_event_id: hasLead ? row.lead_event_id : "",
+    lead_event_time: hasLead ? row.lead_event_time : null,
+    purchase_event_id: hasPurchase ? row.purchase_event_id : "",
+    purchase_event_time: hasPurchase ? row.purchase_event_time : null,
+    purchase_type: hasPurchase ? row.purchase_type : null,
+    valor: hasPurchase ? row.valor : 0,
+    estado: hasPurchase ? "purchase" : (hasLead ? "lead" : "contact"),
+  };
 }
 
 function toIsoIfValid(value: Date | string | null | undefined): string | null {
@@ -580,6 +662,10 @@ const CONVERSIONS_SELECT = `
   observaciones,
   external_id, utm_campaign, telefono_asignado,
   assigned_gerencia_id, assigned_gerencia_external_id, assigned_gerencia_name, assigned_gerencia_label,
+  lead_bot_phone, lead_agency_id, lead_gerencia_id, lead_gerencia_external_id, lead_gerencia_name, lead_gerencia_label,
+  lead_incoming_promo_code, lead_attribution_status, lead_attribution_conversion_id,
+  purchase_bot_phone, purchase_agency_id, purchase_gerencia_id, purchase_gerencia_external_id, purchase_gerencia_name, purchase_gerencia_label,
+  purchase_incoming_promo_code, purchase_attribution_status, purchase_attribution_conversion_id,
   promo_code,
   geo_city, geo_region, geo_country,
   created_at
@@ -756,12 +842,20 @@ export function buildFunnelContactsFromConversions(rows: ConversionRow[]): Funne
     const repeatRows = purchaseRows.filter((r) => derivePurchaseType(r) === "repeat");
     const leadRows = sorted.filter((r) => (r.lead_event_id ?? "") !== "");
     const contactRows = sorted.filter((r) => (r.contact_event_id ?? "") !== "");
-    const assignedPhone =
-      [...sorted].reverse().find((r) => String(r.telefono_asignado ?? "").trim())?.telefono_asignado ??
-      null;
-    const assignedGerenciaLabel =
-      [...sorted].reverse().find((r) => String(r.assigned_gerencia_label ?? "").trim())?.assigned_gerencia_label ??
-      null;
+    const stagePhone = currentStatus === "purchase"
+      ? String(latest.purchase_bot_phone ?? "").trim()
+      : currentStatus === "lead"
+        ? String(latest.lead_bot_phone ?? "").trim()
+        : "";
+    const assignedPhone = stagePhone ||
+      ([...sorted].reverse().find((r) => String(r.telefono_asignado ?? "").trim())?.telefono_asignado ?? null);
+    const stageGerenciaLabel = currentStatus === "purchase"
+      ? String(latest.purchase_gerencia_label ?? "").trim()
+      : currentStatus === "lead"
+        ? String(latest.lead_gerencia_label ?? "").trim()
+        : "";
+    const assignedGerenciaLabel = stageGerenciaLabel ||
+      ([...sorted].reverse().find((r) => String(r.assigned_gerencia_label ?? "").trim())?.assigned_gerencia_label ?? null);
 
     funnel.push({
       user_id: latest.user_id,

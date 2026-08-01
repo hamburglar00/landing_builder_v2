@@ -24,6 +24,13 @@ import {
   inboundClientIpCandidates,
   inboundUserAgent,
 } from "./inbound_tracking.ts";
+import {
+  actionEventIdempotencyKey,
+  canUsePromoForJourney,
+  choosePurchaseJourney,
+  evaluatePromoGerenciaCoherence,
+  type PromoGerenciaCoherence,
+} from "./event_attribution.ts";
 
 
 const corsHeaders = {
@@ -88,6 +95,7 @@ interface LandingRow {
 
 interface ConversionRow {
   id?: string;
+  created_at?: string;
   landing_id: string | null;
   user_id: string;
   landing_name: string;
@@ -146,6 +154,24 @@ interface ConversionRow {
   assigned_gerencia_external_id?: number | null;
   assigned_gerencia_name?: string | null;
   assigned_gerencia_label?: string | null;
+  lead_bot_phone?: string;
+  lead_agency_id?: string;
+  lead_gerencia_id?: number | null;
+  lead_gerencia_external_id?: number | null;
+  lead_gerencia_name?: string | null;
+  lead_gerencia_label?: string | null;
+  lead_incoming_promo_code?: string;
+  lead_attribution_status?: string;
+  lead_attribution_conversion_id?: string | null;
+  purchase_bot_phone?: string;
+  purchase_agency_id?: string;
+  purchase_gerencia_id?: number | null;
+  purchase_gerencia_external_id?: number | null;
+  purchase_gerencia_name?: string | null;
+  purchase_gerencia_label?: string | null;
+  purchase_incoming_promo_code?: string;
+  purchase_attribution_status?: string;
+  purchase_attribution_conversion_id?: string | null;
   promo_code: string;
   geo_city: string;
   geo_region: string;
@@ -177,6 +203,16 @@ type ProcessingContext = {
   inboxStatus?: InboundStatus;
   inboxPromoCode?: string;
   purchaseClaimId?: string;
+};
+
+type EventGerenciaSnapshot = {
+  gerencia_id: number | null;
+  gerencia_external_id: number | null;
+  gerencia_name: string;
+  gerencia_label: string;
+  bot_phone: string;
+  agency_id: string;
+  resolution_status: string;
 };
 type ContactDuplicateReason = "contact_event_id" | "promo_code";
 type ContactDuplicateMatch = { id: string; reason: ContactDuplicateReason };
@@ -347,23 +383,265 @@ function purchaseDedupeIdsFromPayload(p: Params): string[] {
   ].filter(Boolean)));
 }
 
-function purchaseIdempotencyKeysFromPayload(p: Params): string[] {
-  const strongIds = purchaseDedupeIdsFromPayload(p);
-  if (strongIds.length > 0) {
-    // The same opaque payment identifier is intentionally equivalent whether
-    // an emitter labels it coelsa_id or transaction_id.
-    return strongIds.map((id) => `payment:${id}`);
+function emptyEventGerenciaSnapshot(
+  agencyId: unknown,
+  botPhone: unknown,
+  status = "unresolved",
+): EventGerenciaSnapshot {
+  return {
+    gerencia_id: null,
+    gerencia_external_id: null,
+    gerencia_name: "",
+    gerencia_label: "",
+    bot_phone: sanitizePhone(botPhone),
+    agency_id: norm(agencyId),
+    resolution_status: status,
+  };
+}
+
+function eventSnapshotFromGerencia(
+  row: Record<string, unknown>,
+  agencyId: unknown,
+  botPhone: unknown,
+  status: string,
+): EventGerenciaSnapshot {
+  const snapshot = buildGerenciaLabel(row);
+  return {
+    gerencia_id: snapshot.assigned_gerencia_id,
+    gerencia_external_id: snapshot.assigned_gerencia_external_id,
+    gerencia_name: snapshot.assigned_gerencia_name,
+    gerencia_label: snapshot.assigned_gerencia_label,
+    bot_phone: sanitizePhone(botPhone),
+    agency_id: norm(agencyId),
+    resolution_status: status,
+  };
+}
+
+async function resolveEventGerenciaSnapshot(
+  db: SupabaseClient,
+  userId: string,
+  agencyIdValue: unknown,
+  botPhoneValue: unknown,
+): Promise<EventGerenciaSnapshot> {
+  const agencyId = norm(agencyIdValue);
+  const botPhone = sanitizePhone(botPhoneValue);
+  const numericAgencyId = Number(agencyId);
+
+  let agencyGerencia: Record<string, unknown> | null = null;
+  if (agencyId && Number.isInteger(numericAgencyId) && numericAgencyId > 0) {
+    const { data: candidates } = await db
+      .from("gerencias")
+      .select("id,nombre,gerencia_id")
+      .eq("user_id", userId)
+      .eq("gerencia_id", numericAgencyId);
+    const rows = (candidates ?? []) as Record<string, unknown>[];
+    agencyGerencia = rows.find((row) => Number(row.gerencia_id) === numericAgencyId) ?? null;
   }
 
-  const actionEventId = norm(p.action_event_id || p.purchase_event_id || p.event_id);
-  if (!actionEventId) return [];
+  let phoneGerencias: Array<{
+    status: string;
+    gerencia: Record<string, unknown>;
+  }> = [];
+  if (botPhone) {
+    const { data: phoneRows } = await db
+      .from("gerencia_phones")
+      .select("status,gerencias!inner(id,nombre,gerencia_id,user_id)")
+      .eq("phone", botPhone)
+      .eq("gerencias.user_id", userId);
+    phoneGerencias = (phoneRows ?? []).map((row: Record<string, unknown>) => {
+      const joined = Array.isArray(row.gerencias) ? row.gerencias[0] : row.gerencias;
+      return {
+        status: norm(row.status),
+        gerencia: (joined ?? {}) as Record<string, unknown>,
+      };
+    });
+  }
 
-  const promoCode = derivePromoCodeFromPayload(p);
+  if (agencyGerencia) {
+    const agencyInternalId = Number(agencyGerencia.id);
+    const phoneMatchesAgency = phoneGerencias.some(
+      (candidate) => Number(candidate.gerencia.id) === agencyInternalId,
+    );
+    const status = !botPhone
+      ? "agency_id"
+      : phoneGerencias.length === 0
+        ? "agency_id_bot_unmapped"
+        : phoneMatchesAgency
+          ? "agency_id_bot_confirmed"
+          : "agency_id_bot_conflict";
+    return eventSnapshotFromGerencia(
+      agencyGerencia,
+      agencyId,
+      botPhone,
+      status,
+    );
+  }
+
+  const uniqueByInternalId = new Map<number, typeof phoneGerencias[number]>();
+  for (const candidate of phoneGerencias) {
+    const id = Number(candidate.gerencia.id);
+    if (Number.isInteger(id) && id > 0) uniqueByInternalId.set(id, candidate);
+  }
+  const uniqueCandidates = Array.from(uniqueByInternalId.values());
+  if (uniqueCandidates.length === 1) {
+    return eventSnapshotFromGerencia(
+      uniqueCandidates[0].gerencia,
+      agencyId,
+      botPhone,
+      agencyId ? "bot_phone_agency_unresolved" : "bot_phone_unique",
+    );
+  }
+  const activeCandidates = uniqueCandidates.filter((candidate) => candidate.status === "active");
+  if (activeCandidates.length === 1) {
+    return eventSnapshotFromGerencia(
+      activeCandidates[0].gerencia,
+      agencyId,
+      botPhone,
+      agencyId ? "bot_phone_active_agency_unresolved" : "bot_phone_active_unique",
+    );
+  }
+
+  return emptyEventGerenciaSnapshot(
+    agencyId,
+    botPhone,
+    uniqueCandidates.length > 1 ? "bot_phone_ambiguous" : "unresolved",
+  );
+}
+
+function eventGerenciaPatch(
+  stage: "lead" | "purchase",
+  snapshot: EventGerenciaSnapshot,
+  incomingPromoCode: string,
+  attributionStatus: string,
+  attributionConversionId?: string | null,
+): Record<string, unknown> {
+  return {
+    [`${stage}_bot_phone`]: snapshot.bot_phone,
+    [`${stage}_agency_id`]: snapshot.agency_id,
+    [`${stage}_gerencia_id`]: snapshot.gerencia_id,
+    [`${stage}_gerencia_external_id`]: snapshot.gerencia_external_id,
+    [`${stage}_gerencia_name`]: snapshot.gerencia_name,
+    [`${stage}_gerencia_label`]: snapshot.gerencia_label,
+    [`${stage}_incoming_promo_code`]: incomingPromoCode,
+    [`${stage}_attribution_status`]: `${attributionStatus}|gerencia:${snapshot.resolution_status}`,
+    [`${stage}_attribution_conversion_id`]: attributionConversionId ?? null,
+  };
+}
+
+function promoJourneyGerenciaId(row: ConversionRow | null | undefined): number | null {
+  if (!row) return null;
+  if (hasContactContext(row)) {
+    const assigned = Number(row.assigned_gerencia_id);
+    if (Number.isInteger(assigned) && assigned > 0) return assigned;
+  }
+  const lead = Number(row.lead_gerencia_id);
+  if (Number.isInteger(lead) && lead > 0) return lead;
+  const purchase = Number(row.purchase_gerencia_id);
+  if (Number.isInteger(purchase) && purchase > 0) return purchase;
+  const assigned = Number(row.assigned_gerencia_id);
+  return Number.isInteger(assigned) && assigned > 0 ? assigned : null;
+}
+
+function rowBelongsToGerencia(row: ConversionRow, gerenciaId: number): boolean {
   return [
-    isFullPromoCode(promoCode)
-      ? `action:${actionEventId}|promo:${promoCode.toUpperCase()}`
-      : `action:${actionEventId}`,
-  ];
+    row.purchase_gerencia_id,
+    row.lead_gerencia_id,
+    row.assigned_gerencia_id,
+  ].some((value) => Number(value) === gerenciaId);
+}
+
+function rowIsTrustedLineageForGerencia(
+  row: ConversionRow,
+  gerenciaId: number,
+): boolean {
+  if (!rowBelongsToGerencia(row, gerenciaId)) return false;
+  const assignedId = Number(row.assigned_gerencia_id);
+  if (
+    Number.isInteger(assignedId) &&
+    assignedId > 0 &&
+    assignedId !== gerenciaId
+  ) {
+    return false;
+  }
+  return hasContactContext(row) ||
+    Boolean(norm(row.pixel_attribution_conversion_id)) ||
+    Boolean(norm(row.pixel_attribution_source) && norm(row.pixel_id || row.meta_pixel_id));
+}
+
+async function findLatestRowForEventGerencia(
+  db: SupabaseClient,
+  userId: string,
+  phone: string,
+  gerenciaId: number | null,
+  stage: "lead" | "purchase",
+): Promise<ConversionRow | null> {
+  let query = db
+    .from("conversions")
+    .select("*")
+    .eq("user_id", userId)
+    .eq("phone", phone)
+    .eq("estado", stage)
+    .order("created_at", { ascending: false })
+    .limit(100);
+  if (gerenciaId) {
+    query = query.or(
+      `${stage}_gerencia_id.eq.${gerenciaId},assigned_gerencia_id.eq.${gerenciaId}`,
+    );
+  }
+  const { data } = await query;
+  const rows = (data ?? []) as ConversionRow[];
+  if (!gerenciaId) return rows[0] ?? null;
+  return rows.find((row) => {
+    const eventId = Number(
+      stage === "lead" ? row.lead_gerencia_id : row.purchase_gerencia_id,
+    );
+    const assignedId = Number(row.assigned_gerencia_id);
+    return eventId === gerenciaId ||
+      (!(Number.isInteger(eventId) && eventId > 0) && assignedId === gerenciaId);
+  }) ?? null;
+}
+
+async function findLatestTrustedGerenciaLineage(
+  db: SupabaseClient,
+  userId: string,
+  phone: string,
+  gerenciaId: number | null,
+): Promise<ConversionRow | null> {
+  if (!gerenciaId) return null;
+  const { data } = await db
+    .from("conversions")
+    .select("*")
+    .eq("user_id", userId)
+    .eq("phone", phone)
+    .or(
+      `purchase_gerencia_id.eq.${gerenciaId},lead_gerencia_id.eq.${gerenciaId},assigned_gerencia_id.eq.${gerenciaId}`,
+    )
+    .order("created_at", { ascending: false })
+    .limit(100);
+  return ((data ?? []) as ConversionRow[]).find(
+    (row) => rowIsTrustedLineageForGerencia(row, gerenciaId),
+  ) ?? null;
+}
+
+function leadHasTrustedPromo(row: ConversionRow | null | undefined): boolean {
+  if (!row || !isFullPromoCode(row.promo_code)) return false;
+  const status = norm(row.lead_attribution_status);
+  return hasContactContext(row) && !status.includes("conflict");
+}
+
+function purchaseIdempotencyKeysFromPayload(p: Params): string[] {
+  const strongIds = purchaseDedupeIdsFromPayload(p);
+  // The same opaque payment identifier is intentionally equivalent whether
+  // an emitter labels it coelsa_id or transaction_id.
+  const keys = strongIds.map((id) => `payment:${id}`);
+  const actionEventId = norm(p.action_event_id || p.purchase_event_id || p.event_id);
+  if (actionEventId) {
+    // action_event_id is a stable receipt/event identity supplied by the bot.
+    // It remains an alias of the same payment even when Coelsa/transaction are
+    // also present or the latest promo_code later changes.
+    keys.push(actionEventIdempotencyKey(actionEventId));
+  }
+  return Array.from(new Set(keys.filter(Boolean)));
 }
 
 async function claimPurchaseEvent(
@@ -1058,19 +1336,45 @@ async function findDeferredLeadInboundByPhone(
   db: SupabaseClient,
   userId: string,
   phone: string,
+  agencyId?: string,
+  botPhone?: string,
 ): Promise<{ id: string; created_at: string } | null> {
   if (!phone) return null;
   const { data } = await db
     .from("conversion_inbox")
-    .select("id, created_at")
+    .select("id, created_at, payload_raw")
     .eq("user_id", userId)
     .eq("action", "LEAD")
     .eq("status", "deferred")
     .eq("phone", phone)
     .order("created_at", { ascending: true })
-    .limit(1)
-    .maybeSingle();
-  return (data as { id: string; created_at: string } | null) ?? null;
+    .limit(20);
+  const candidates = (data ?? []) as Array<{
+    id: string;
+    created_at: string;
+    payload_raw?: string | null;
+  }>;
+  const cleanAgencyId = norm(agencyId);
+  const cleanBotPhone = sanitizePhone(botPhone);
+  if (!cleanAgencyId && !cleanBotPhone) return candidates[0] ?? null;
+
+  for (const candidate of candidates) {
+    let payload: Params = {};
+    try {
+      payload = JSON.parse(norm(candidate.payload_raw) || "{}") as Params;
+    } catch {
+      continue;
+    }
+    const candidateAgencyId = norm(payload.agency_id);
+    const candidateBotPhone = sanitizePhone(payload.bot_phone);
+    if (
+      (cleanAgencyId && candidateAgencyId && cleanAgencyId === candidateAgencyId) ||
+      (cleanBotPhone && candidateBotPhone && cleanBotPhone === candidateBotPhone)
+    ) {
+      return { id: candidate.id, created_at: candidate.created_at };
+    }
+  }
+  return null;
 }
 
 
@@ -2418,6 +2722,7 @@ async function handleLead(
   const inboundSourcePlatform = norm(p.source_platform);
   const inboundCtwaClid = ctwaClidForSource(p.ctwa_clid, inboundSourcePlatform);
   const botPhone = sanitizePhone(p.bot_phone);
+  const inboundAgencyId = norm(p.agency_id);
   const inboundBotTimestampSec =
     toEpochFromIso((p as Record<string, unknown>).dateTime) ??
     toEpochFromIso((p as Record<string, unknown>).datetime);
@@ -2448,35 +2753,84 @@ async function handleLead(
   const eventSourceUrl = await deriveEventSourceUrl(db, landing.name, norm(p.event_source_url));
   const geo = resolveGeoForPayload(p);
   const payloadGeoSource: GeoSource = hasPayloadGeo(geo) ? "payload" : "none";
+  const eventGerencia = await resolveEventGerenciaSnapshot(
+    db,
+    landing.user_id,
+    inboundAgencyId,
+    botPhone,
+  );
 
   // 1) Match by promo_code
   let targetId: string | null = null;
   let leadMatchMode: "promo_code" | "bot_phone_timestamp_fallback" | "created_new" = "promo_code";
+  let promoRow: ConversionRow | null = null;
+  let promoCoherence: PromoGerenciaCoherence = "not_found";
+  let leadAttributionStatus = "created_new";
   if (promoCodeIsFull) {
     const { data } = await db
       .from("conversions")
-      .select("id, lead_event_id")
+      .select("*")
       .eq("user_id", landing.user_id)
       .eq("promo_code", promoCode)
       .order("created_at", { ascending: true })
       .limit(1)
       .maybeSingle();
-    if (data?.id) {
-      if (norm((data as Record<string, unknown>).lead_event_id)) {
+    promoRow = data as ConversionRow | null;
+    promoCoherence = evaluatePromoGerenciaCoherence({
+      promoFound: Boolean(promoRow?.id),
+      promoPlayerPhone: promoRow?.phone,
+      eventPlayerPhone: cleanPhone,
+      promoGerenciaId: promoJourneyGerenciaId(promoRow),
+      eventGerenciaId: eventGerencia.gerencia_id,
+    });
+    if (promoRow?.id && canUsePromoForJourney(promoCoherence)) {
+      if (norm(promoRow.lead_event_id)) {
         return ignoreLeadDuplicateByPromoCode(
           db,
           landing.user_id,
-          data.id,
+          promoRow.id,
           promoCode,
           leadPayloadRaw,
           ctx,
           {
             dedupe_source: "precheck",
             action_event_id: norm(p.action_event_id),
+            promo_coherence: promoCoherence,
+            event_gerencia_id: eventGerencia.gerencia_id,
           },
         );
       }
-      targetId = data.id;
+      targetId = promoRow.id;
+      leadAttributionStatus = `promo_${promoCoherence}`;
+    } else if (
+      promoCoherence === "gerencia_conflict" ||
+      promoCoherence === "player_phone_conflict"
+    ) {
+      leadMatchMode = "created_new";
+      leadAttributionStatus = `promo_${promoCoherence}`;
+      await writeLog(
+        db,
+        landing.user_id,
+        "handleLead",
+        "WARN",
+        "LEAD con promo_code incompatible con el bot receptor",
+        JSON.stringify({
+          promo_code: promoCode,
+          promo_conversion_id: promoRow?.id ?? null,
+          promo_gerencia_id: promoJourneyGerenciaId(promoRow),
+          event_gerencia_id: eventGerencia.gerencia_id,
+          agency_id: inboundAgencyId,
+          bot_phone: botPhone,
+          coherence: promoCoherence,
+        }),
+        promoRow?.id,
+        undefined,
+        undefined,
+        leadPayloadRaw,
+        "promo recibido conservado solo como trazabilidad; no se atribuye a esa fila",
+      );
+    } else if (promoCoherence === "not_found") {
+      leadAttributionStatus = "promo_not_found";
     }
   }
 
@@ -2499,6 +2853,7 @@ async function handleLead(
       if ((candidates ?? []).length === 1) {
         targetId = candidates![0].id;
         leadMatchMode = "bot_phone_timestamp_fallback";
+        leadAttributionStatus = "bot_phone_timestamp_fallback";
       } else if ((candidates ?? []).length > 1) {
         await writeLog(
           db,
@@ -2555,37 +2910,62 @@ async function handleLead(
       : leadMatchMode === "bot_phone_timestamp_fallback"
         ? "match_source:bot_phone_timestamp_fallback"
         : "match_source:created_new";
+  const trustedLineage = !targetId
+    ? await findLatestTrustedGerenciaLineage(
+      db,
+      landing.user_id,
+      cleanPhone,
+      eventGerencia.gerencia_id,
+    )
+    : null;
+  const promoIsConflicting = promoCoherence === "gerencia_conflict" ||
+    promoCoherence === "player_phone_conflict";
 
   // 2) No match -> create new LEAD row to avoid losing conversion
   if (!targetId) {
-    const resolvedPixelId = inboundMetaPixelId;
+    const resolvedPixelId = inboundMetaPixelId ||
+      norm(trustedLineage?.pixel_id || trustedLineage?.meta_pixel_id);
     const inboundExternalId = norm(p.external_id);
-    const generatedExternalId = inboundExternalId || (cleanPhone ? await sha256(cleanPhone) : generateEventId());
-    const assignedGerencia = await resolveAssignedGerenciaSnapshot(
-      db,
-      landing.user_id,
-      p.telefono_asignado,
-      landing.id,
-    );
+    const generatedExternalId = inboundExternalId ||
+      norm(trustedLineage?.external_id) ||
+      (cleanPhone ? await sha256(cleanPhone) : generateEventId());
+    const assignedGerencia: AssignedGerenciaSnapshot = trustedLineage
+      ? {
+        assigned_gerencia_id: trustedLineage.assigned_gerencia_id ?? null,
+        assigned_gerencia_external_id: trustedLineage.assigned_gerencia_external_id ?? null,
+        assigned_gerencia_name: norm(trustedLineage.assigned_gerencia_name),
+        assigned_gerencia_label: norm(trustedLineage.assigned_gerencia_label),
+      }
+      : await resolveAssignedGerenciaSnapshot(
+        db,
+        landing.user_id,
+        p.telefono_asignado,
+        landing.id,
+      );
     const newRow: Omit<ConversionRow, "id"> = {
-      landing_id: landing.id?.trim() || null,
+      landing_id: trustedLineage?.landing_id ?? (landing.id?.trim() || null),
       user_id: landing.user_id,
-      landing_name: landing.name,
+      landing_name: trustedLineage?.landing_name || landing.name,
       phone: cleanPhone,
-      email: payloadEmail,
-      cuit_cuil: payloadCuitCuil,
-      fn: payloadFn,
-      ln: payloadLn,
-      ct: norm(geo.ct),
-      st: norm(geo.st),
-      zip: norm(geo.zip || p.zip),
-      country: norm(geo.country),
-      fbp: norm(p.fbp),
-      fbc: norm(p.fbc),
-      geo_source: payloadGeoSource,
+      email: payloadEmail || trustedLineage?.email || "",
+      cuit_cuil: payloadCuitCuil || trustedLineage?.cuit_cuil || "",
+      fn: payloadFn || trustedLineage?.fn || "",
+      ln: payloadLn || trustedLineage?.ln || "",
+      ct: norm(geo.ct) || trustedLineage?.ct || "",
+      st: norm(geo.st) || trustedLineage?.st || "",
+      zip: norm(geo.zip || p.zip) || trustedLineage?.zip || "",
+      country: norm(geo.country) || trustedLineage?.country || "",
+      fbp: norm(p.fbp) || trustedLineage?.fbp || "",
+      fbc: norm(p.fbc) || trustedLineage?.fbc || "",
+      from_meta_ads: trustedLineage?.from_meta_ads ?? false,
+      geo_source: payloadGeoSource !== "none"
+        ? payloadGeoSource
+        : (norm(trustedLineage?.geo_source) || "none"),
       meta_pixel_id: resolvedPixelId,
+      pixel_attribution_source: trustedLineage ? "stored_attribution" : "",
+      pixel_attribution_conversion_id: trustedLineage?.id ?? null,
       source_platform: inboundSourcePlatform || "",
-      ctwa_clid: inboundCtwaClid,
+      ctwa_clid: inboundCtwaClid || trustedLineage?.ctwa_clid || "",
       pixel_id: resolvedPixelId,
       contact_event_id: "",
       contact_event_time: null,
@@ -2598,10 +2978,10 @@ async function handleLead(
       purchase_event_time: null,
       purchase_payload_raw: "",
       test_event_code: testEventCode,
-      client_ip: payloadClientIp(p),
-      agent_user: inboundUserAgent(p),
-      device_type: norm(p.device_type),
-      event_source_url: eventSourceUrl,
+      client_ip: payloadClientIp(p) || trustedLineage?.client_ip || "",
+      agent_user: inboundUserAgent(p) || trustedLineage?.agent_user || "",
+      device_type: norm(p.device_type) || trustedLineage?.device_type || "",
+      event_source_url: eventSourceUrl || trustedLineage?.event_source_url || "",
       estado: "lead",
       valor: 0,
       currency: resolveCurrencyForPixel(
@@ -2612,15 +2992,25 @@ async function handleLead(
       contact_status_capi: "",
       lead_status_capi: "",
       purchase_status_capi: "",
-      observaciones: matchSourceToken,
+      observaciones: appendObservation(
+        matchSourceToken,
+        promoIsConflicting ? `promo_conflict:${promoCoherence}` : "",
+      ),
       external_id: generatedExternalId,
-      utm_campaign: norm(p.utm_campaign),
-      telefono_asignado: norm(p.telefono_asignado),
+      utm_campaign: norm(p.utm_campaign) || trustedLineage?.utm_campaign || "",
+      telefono_asignado: norm(p.telefono_asignado) || trustedLineage?.telefono_asignado || "",
       ...snapshotPatch(assignedGerencia),
-      promo_code: promoCode,
-      geo_city: geo.geo_city,
-      geo_region: geo.geo_region,
-      geo_country: geo.geo_country,
+      ...eventGerenciaPatch(
+        "lead",
+        eventGerencia,
+        promoCode,
+        leadAttributionStatus,
+        trustedLineage?.id ?? null,
+      ),
+      promo_code: promoIsConflicting ? "" : promoCode,
+      geo_city: geo.geo_city || trustedLineage?.geo_city || "",
+      geo_region: geo.geo_region || trustedLineage?.geo_region || "",
+      geo_country: geo.geo_country || trustedLineage?.geo_country || "",
     };
 
     const { data: inserted, error: insertError } = await db
@@ -2687,7 +3077,16 @@ async function handleLead(
       "handleLead",
       "INFO",
       "LEAD sin match por promo_code: creado nuevo",
-      JSON.stringify({ promo_code: promoCode, phone: cleanPhone, conversion_id: createdId }),
+      JSON.stringify({
+        promo_code_received: promoCode,
+        promo_code_attributed: newRow.promo_code,
+        phone: cleanPhone,
+        agency_id: inboundAgencyId,
+        bot_phone: botPhone,
+        event_gerencia_id: eventGerencia.gerencia_id,
+        attribution_source_conversion_id: trustedLineage?.id ?? null,
+        conversion_id: createdId,
+      }),
       createdId,
       undefined,
       undefined,
@@ -2722,6 +3121,13 @@ async function handleLead(
       lead_event_id: leadEventId,
       lead_event_time: leadEventTime,
       lead_payload_raw: leadPayloadRaw,
+      ...eventGerenciaPatch(
+        "lead",
+        eventGerencia,
+        promoCode,
+        leadAttributionStatus,
+        targetId,
+      ),
     };
     if (inboundMetaPixelId) {
       updates.meta_pixel_id = inboundMetaPixelId;
@@ -2801,7 +3207,16 @@ async function handleLead(
     "handleLead",
     "INFO",
     "LEAD procesado",
-    JSON.stringify({ phone: cleanPhone, promo_code: promoCode, matched: !!targetId }),
+    JSON.stringify({
+      phone: cleanPhone,
+      promo_code_received: promoCode,
+      promo_code_attributed: fullRow.promo_code,
+      matched: !!targetId,
+      match_mode: leadMatchMode,
+      promo_coherence: promoCoherence,
+      event_gerencia_id: eventGerencia.gerencia_id,
+      event_gerencia_status: eventGerencia.resolution_status,
+    }),
     targetId!,
     undefined,
     undefined,
@@ -2863,6 +3278,8 @@ async function handlePurchase(
   const inboundMetaPixelId = norm(p.meta_pixel_id || p.pixel_id);
   const inboundSourcePlatform = norm(p.source_platform);
   const inboundCtwaClid = ctwaClidForSource(p.ctwa_clid, inboundSourcePlatform);
+  const botPhone = sanitizePhone(p.bot_phone);
+  const inboundAgencyId = norm(p.agency_id);
   const normalizedAmount = normalizePurchaseAmount(p.amount);
   if (!cleanPhone || !normalizedAmount.ok) {
     let rejectionReason = "missing_phone";
@@ -2895,7 +3312,6 @@ async function handlePurchase(
   const purchasePayloadRaw = safePayloadRaw(p);
   const coelsaId = normalizeCoelsaId(p.coelsa_id);
   const transactionId = normalizeTransactionId(p.transaction_id);
-  const generatedExternalId = norm(p.external_id) || generateEventId();
   const purchaseClaim = await claimPurchaseEvent(db, landing.user_id, p);
   if (!purchaseClaim.claimed) {
     if (ctx) {
@@ -2935,60 +3351,79 @@ async function handlePurchase(
   const payloadGeoSource: GeoSource = hasPayloadGeo(geo) ? "payload" : "none";
   const purchaseEventId = purchaseClaim.eventId;
   const purchaseEventTime = toValidEventTime(p.purchase_event_time || p.event_time || Math.floor(Date.now() / 1000));
-  const { data: latestLeadRow } = await db
-    .from("conversions")
-    .select("id, created_at, sendContactPixel")
-    .eq("user_id", landing.user_id)
-    .eq("phone", cleanPhone)
-    .eq("estado", "lead")
-    .order("created_at", { ascending: false })
-    .limit(1)
-    .maybeSingle();
+  const eventGerencia = await resolveEventGerenciaSnapshot(
+    db,
+    landing.user_id,
+    inboundAgencyId,
+    botPhone,
+  );
   const { data: latestPurchaseRow } = await db
     .from("conversions")
-    .select("id, created_at, sendContactPixel")
+    .select("*")
     .eq("user_id", landing.user_id)
     .eq("phone", cleanPhone)
     .eq("estado", "purchase")
     .order("created_at", { ascending: false })
     .limit(1)
     .maybeSingle();
+  const latestGlobalPurchase = latestPurchaseRow as ConversionRow | null;
   const hasPreviousPurchase = !!latestPurchaseRow;
+  const receiverLeadRow = await findLatestRowForEventGerencia(
+    db,
+    landing.user_id,
+    cleanPhone,
+    eventGerencia.gerencia_id,
+    "lead",
+  );
+  const receiverPurchaseRow = await findLatestRowForEventGerencia(
+    db,
+    landing.user_id,
+    cleanPhone,
+    eventGerencia.gerencia_id,
+    "purchase",
+  );
+  const receiverPurchaseLineage = !eventGerencia.gerencia_id ||
+      (receiverPurchaseRow && rowIsTrustedLineageForGerencia(
+        receiverPurchaseRow,
+        eventGerencia.gerencia_id,
+      ))
+    ? receiverPurchaseRow
+    : null;
+  const trustedReceiverLineage = await findLatestTrustedGerenciaLineage(
+    db,
+    landing.user_id,
+    cleanPhone,
+    eventGerencia.gerencia_id,
+  );
   const leadIsAfterLatestPurchase = !!(
-    latestLeadRow?.created_at &&
+    receiverLeadRow?.created_at &&
     latestPurchaseRow?.created_at &&
-    new Date(latestLeadRow.created_at).getTime() > new Date(latestPurchaseRow.created_at).getTime()
+    new Date(receiverLeadRow.created_at).getTime() > new Date(latestPurchaseRow.created_at).getTime()
   );
   const canUseLeadFallback = !hasPreviousPurchase || leadIsAfterLatestPurchase;
-  const fallbackSendContactPixel = toBool(
-    (latestLeadRow as { sendContactPixel?: unknown } | null)?.sendContactPixel ??
-      (latestPurchaseRow as { sendContactPixel?: unknown } | null)?.sendContactPixel,
-  );
 
   // 1) Primary match by full promo_code only.
-  let targetId: string | null = null;
-  let forceRepeatFromPromo = false;
-  let matchMethod: "promo_code" | "phone_lead" | "created_first" | "created_repeat" = "created_first";
+  let promoRow: ConversionRow | null = null;
+  let promoCoherence: PromoGerenciaCoherence = "not_found";
   if (promoCode && promoCodeIsFull) {
     const { data } = await db
       .from("conversions")
-      .select("id, estado")
+      .select("*")
       .eq("user_id", landing.user_id)
       .eq("promo_code", promoCode)
       .order("created_at", { ascending: true })
       .limit(1)
       .maybeSingle();
-    if (data) {
-      if (String(data.estado || "").toLowerCase() === "purchase") {
-        // Promo already converted before: next purchases must be repeat.
-        forceRepeatFromPromo = true;
-      } else {
-        targetId = data.id;
-        matchMethod = "promo_code";
-      }
-    }
+    promoRow = data as ConversionRow | null;
+    promoCoherence = evaluatePromoGerenciaCoherence({
+      promoFound: Boolean(promoRow?.id),
+      promoPlayerPhone: promoRow?.phone,
+      eventPlayerPhone: cleanPhone,
+      promoGerenciaId: promoJourneyGerenciaId(promoRow),
+      eventGerenciaId: eventGerencia.gerencia_id,
+    });
   } else if (promoCode) {
-    const fallbackCandidateId = latestLeadRow?.id ?? latestPurchaseRow?.id ?? undefined;
+    const fallbackCandidateId = receiverLeadRow?.id ?? latestPurchaseRow?.id ?? undefined;
     await writeLog(
       db,
       landing.user_id,
@@ -3004,28 +3439,69 @@ async function handlePurchase(
     );
   }
 
-  // 2) Fallback by phone => most recent LEAD only.
-  // Only when there are no purchases yet, or lead is newer than latest purchase.
-  if (!targetId && !forceRepeatFromPromo && canUseLeadFallback) {
-    const { data } = await db
-      .from("conversions")
-      .select("id")
-      .eq("user_id", landing.user_id)
-      .eq("phone", cleanPhone)
-      .eq("estado", "lead")
-      .order("created_at", { ascending: false })
-      .limit(1)
-      .maybeSingle();
-    if (data) {
-      targetId = data.id;
-      matchMethod = "phone_lead";
-    }
+  if (
+    promoCoherence === "gerencia_conflict" ||
+    promoCoherence === "player_phone_conflict"
+  ) {
+    await writeLog(
+      db,
+      landing.user_id,
+      "handlePurchase",
+      "WARN",
+      "PURCHASE con promo_code incompatible con el bot receptor",
+      JSON.stringify({
+        promo_code: promoCode,
+        promo_conversion_id: promoRow?.id ?? null,
+        promo_gerencia_id: promoJourneyGerenciaId(promoRow),
+        event_gerencia_id: eventGerencia.gerencia_id,
+        agency_id: inboundAgencyId,
+        bot_phone: botPhone,
+        coherence: promoCoherence,
+      }),
+      promoRow?.id,
+      undefined,
+      undefined,
+      purchasePayloadRaw,
+      "promo recibido conservado solo como trazabilidad; prevalece el receptor real",
+    );
   }
+
+  const decision = choosePurchaseJourney({
+    promoRowId: promoRow?.id,
+    promoRowAlreadyPurchased: norm(promoRow?.estado).toLowerCase() === "purchase",
+    promoCoherence,
+    receiverLeadId: receiverLeadRow?.id,
+    receiverLeadIsEligible: canUseLeadFallback,
+    receiverLeadHasTrustedPromo: leadHasTrustedPromo(receiverLeadRow),
+    hasPreviousPurchase,
+  });
+  const targetId = decision.targetId;
+  const purchaseType = decision.purchaseType;
+  const matchMethod = decision.matchMethod;
+  const receiverAttributionSource = targetId
+    ? receiverLeadRow?.id === targetId
+      ? receiverLeadRow
+      : promoRow
+    : (receiverPurchaseLineage ?? trustedReceiverLineage);
+  const attributedPromoCode = promoRow?.id && canUsePromoForJourney(promoCoherence)
+    ? promoCode
+    : (isFullPromoCode(receiverAttributionSource?.promo_code)
+      ? norm(receiverAttributionSource?.promo_code)
+      : (promoCodeIsFull && promoCoherence === "not_found" ? promoCode : ""));
+  const fallbackSendContactPixel = toBool(
+    receiverAttributionSource?.sendContactPixel ?? latestGlobalPurchase?.sendContactPixel,
+  );
 
   // 2.b) If the matching LEAD is still waiting for its CONTACT window, keep PURCHASE queued.
   // PURCHASE never uses the CONTACT->LEAD time window directly; it only waits for the LEAD to settle.
-  if (!targetId && !forceRepeatFromPromo) {
-    const deferredLead = await findDeferredLeadInboundByPhone(db, landing.user_id, cleanPhone);
+  if (!targetId && !(promoRow?.id && canUsePromoForJourney(promoCoherence) && purchaseType === "repeat")) {
+    const deferredLead = await findDeferredLeadInboundByPhone(
+      db,
+      landing.user_id,
+      cleanPhone,
+      inboundAgencyId,
+      botPhone,
+    );
     if (deferredLead) {
       if (ctx) ctx.inboxStatus = "deferred";
       await writeLog(
@@ -3050,55 +3526,68 @@ async function handlePurchase(
     }
   }
 
-  // 3) If we matched an existing row (promo or phone->lead), update to first purchase.
+  // 3) Update the coherent promo row or the latest Lead of the real receiver.
   if (targetId) {
     const { data: existing } = await db
       .from("conversions")
-      .select("lead_event_id, lead_event_time, telefono_asignado, assigned_gerencia_label, source_platform, ctwa_clid, pixel_id, currency")
+      .select("*")
       .eq("id", targetId)
       .single();
+    const existingRow = existing as ConversionRow;
     const purchaseCurrency = resolveCurrencyForPixel(
       config,
       pixelConfigs,
-      inboundMetaPixelId || norm(existing?.pixel_id),
-      existing?.currency,
+      inboundMetaPixelId || norm(existingRow?.pixel_id),
+      existingRow?.currency,
     );
+    const attributionSourceId = norm(existingRow?.lead_attribution_conversion_id) || targetId;
+    const purchaseAttributionStatus = promoCoherence === "gerencia_conflict" ||
+        promoCoherence === "player_phone_conflict"
+      ? `promo_${promoCoherence}_${matchMethod}`
+      : `${matchMethod}_${promoCoherence}`;
 
     const updates: Record<string, unknown> = {
       phone: cleanPhone,
       estado: "purchase",
       valor: amount,
       currency: purchaseCurrency,
-      event_source_url: eventSourceUrl,
+      event_source_url: eventSourceUrl || existingRow?.event_source_url || "",
       purchase_event_id: purchaseEventId,
       purchase_event_time: purchaseEventTime,
       purchase_payload_raw: purchasePayloadRaw,
       purchase_coelsa_id: coelsaId,
       purchase_transaction_id: transactionId,
-      purchase_type: "first",
+      purchase_type: purchaseType,
       purchase_capi_route: "",
       purchase_capi_route_reason: "",
+      ...eventGerenciaPatch(
+        "purchase",
+        eventGerencia,
+        promoCode,
+        purchaseAttributionStatus,
+        attributionSourceId,
+      ),
     };
     if (inboundMetaPixelId) {
       updates.meta_pixel_id = inboundMetaPixelId;
       updates.pixel_id = inboundMetaPixelId;
     }
-    const currentOriginSource = norm((existing as Record<string, unknown> | null)?.source_platform);
+    const currentOriginSource = norm(existingRow?.source_platform);
     const effectiveOriginSource = currentOriginSource || inboundSourcePlatform;
     if (!currentOriginSource && inboundSourcePlatform) {
       updates.source_platform = inboundSourcePlatform;
     }
     if (
       normalizedSourcePlatform(effectiveOriginSource) === "chatrace" &&
-      !normalizeCtwaClid((existing as Record<string, unknown> | null)?.ctwa_clid) &&
+      !normalizeCtwaClid(existingRow?.ctwa_clid) &&
       inboundCtwaClid
     ) {
       updates.ctwa_clid = inboundCtwaClid;
     }
     if (testEventCode) updates.test_event_code = testEventCode;
-    if (existing?.lead_event_id) {
-      updates.lead_event_id = existing.lead_event_id;
-      if (existing.lead_event_time) updates.lead_event_time = existing.lead_event_time;
+    if (existingRow?.lead_event_id) {
+      updates.lead_event_id = existingRow.lead_event_id;
+      if (existingRow.lead_event_time) updates.lead_event_time = existingRow.lead_event_time;
     }
     if (payloadFn) updates.fn = payloadFn;
     if (payloadLn) updates.ln = payloadLn;
@@ -3112,14 +3601,13 @@ async function handlePurchase(
     if (geo.geo_region) updates.geo_region = geo.geo_region;
     if (geo.geo_country) updates.geo_country = geo.geo_country;
     if (hasPayloadGeo(geo)) updates.geo_source = "payload";
-    if (promoCode) {
-      const { data: cur } = await db.from("conversions").select("promo_code").eq("id", targetId).single();
-      if (!cur?.promo_code) updates.promo_code = promoCode;
+    if (attributedPromoCode && !existingRow?.promo_code) {
+      updates.promo_code = attributedPromoCode;
     }
-    if (!norm((existing as Record<string, unknown> | null)?.assigned_gerencia_label)) {
+    if (!norm(existingRow?.assigned_gerencia_label)) {
       Object.assign(
         updates,
-        snapshotPatch(await resolveAssignedGerenciaSnapshot(db, landing.user_id, existing?.telefono_asignado, landing.id)),
+        snapshotPatch(await resolveAssignedGerenciaSnapshot(db, landing.user_id, existingRow?.telefono_asignado, landing.id)),
       );
     }
     await db.from("conversions").update(updates).eq("id", targetId);
@@ -3141,7 +3629,7 @@ async function handlePurchase(
       targetId,
       {
         inboundPixelId: inboundMetaPixelId,
-        promoCode,
+        promoCode: attributedPromoCode,
         landingId: fullRow.landing_id ?? landing.id,
       },
     );
@@ -3154,7 +3642,7 @@ async function handlePurchase(
     const customData = {
       currency: purchaseConfig.meta_currency,
       value: amount,
-      purchase_type: "first",
+      purchase_type: purchaseType,
     };
 
     await traceUnprotectedPurchase(
@@ -3170,13 +3658,24 @@ async function handlePurchase(
       landing.user_id,
       "handlePurchase",
       "INFO",
-      "Primera compra procesada",
-      JSON.stringify({ phone: cleanPhone, amount, promo_code: promoCode, match_method: matchMethod }),
+      purchaseType === "first" ? "Primera compra procesada" : "Recompra procesada",
+      JSON.stringify({
+        phone: cleanPhone,
+        amount,
+        promo_code_received: promoCode,
+        promo_code_attributed: attributedPromoCode,
+        promo_coherence: promoCoherence,
+        agency_id: inboundAgencyId,
+        bot_phone: botPhone,
+        event_gerencia_id: eventGerencia.gerencia_id,
+        purchase_type: purchaseType,
+        match_method: matchMethod,
+      }),
       targetId,
       undefined,
       undefined,
       safePayloadRaw(p),
-      `primera compra procesada (match: ${matchMethod})`,
+      `${purchaseType === "first" ? "primera compra" : "recompra"} procesada (match: ${matchMethod})`,
     );
 
     const ok = await sendToMetaCAPI(
@@ -3202,29 +3701,37 @@ async function handlePurchase(
     );
   }
 
-  // 4) No promo match and no eligible LEAD pending => apply repeat logic.
-  const isRepeat = forceRepeatFromPromo || hasPreviousPurchase;
-  if (!isRepeat) {
+  // 4) No existing row was selected: create a first or repeat row according
+  // to the player's global history, but inherit only from the real receiver.
+  if (purchaseType === "first") {
+    const firstSource = trustedReceiverLineage;
+    const firstPixel = inboundMetaPixelId || norm(firstSource?.pixel_id || firstSource?.meta_pixel_id);
+    const firstExternalId = norm(p.external_id) || norm(firstSource?.external_id) || await sha256(cleanPhone);
     const newRow: Omit<ConversionRow, "id"> = {
-      landing_id: landing.id?.trim() || null,
+      landing_id: firstSource?.landing_id ?? (landing.id?.trim() || null),
       user_id: landing.user_id,
-      landing_name: landing.name,
+      landing_name: firstSource?.landing_name || landing.name,
       phone: cleanPhone,
-      email: payloadEmail,
-      cuit_cuil: payloadCuitCuil,
-      fn: payloadFn,
-      ln: payloadLn,
-      ct: geo.ct,
-      st: geo.st,
-      zip: geo.zip,
-      country: geo.country,
-      fbp: "",
-      fbc: "",
-      geo_source: payloadGeoSource,
-      meta_pixel_id: inboundMetaPixelId,
-      source_platform: inboundSourcePlatform || "",
-      ctwa_clid: inboundCtwaClid,
-      pixel_id: inboundMetaPixelId,
+      email: payloadEmail || firstSource?.email || "",
+      cuit_cuil: payloadCuitCuil || firstSource?.cuit_cuil || "",
+      fn: payloadFn || firstSource?.fn || "",
+      ln: payloadLn || firstSource?.ln || "",
+      ct: geo.ct || firstSource?.ct || "",
+      st: geo.st || firstSource?.st || "",
+      zip: geo.zip || firstSource?.zip || "",
+      country: geo.country || firstSource?.country || "",
+      fbp: firstSource?.fbp || "",
+      fbc: firstSource?.fbc || "",
+      from_meta_ads: firstSource?.from_meta_ads ?? false,
+      geo_source: payloadGeoSource !== "none"
+        ? payloadGeoSource
+        : (norm(firstSource?.geo_source) || "none"),
+      meta_pixel_id: firstPixel,
+      pixel_attribution_source: firstSource ? "stored_attribution" : "",
+      pixel_attribution_conversion_id: firstSource?.id ?? null,
+      source_platform: inboundSourcePlatform || firstSource?.source_platform || "",
+      ctwa_clid: inboundCtwaClid || firstSource?.ctwa_clid || "",
+      pixel_id: firstPixel,
       contact_event_id: "",
       contact_event_time: null,
       sendContactPixel: fallbackSendContactPixel,
@@ -3241,28 +3748,42 @@ async function handlePurchase(
       purchase_type: "first",
       purchase_capi_route: "",
       purchase_capi_route_reason: "",
-      client_ip: "",
-      agent_user: "",
-      device_type: "",
-      event_source_url: eventSourceUrl,
+      client_ip: firstSource?.client_ip || "",
+      agent_user: firstSource?.agent_user || "",
+      device_type: firstSource?.device_type || "",
+      event_source_url: eventSourceUrl || firstSource?.event_source_url || "",
       estado: "purchase",
       valor: amount,
       currency: resolveCurrencyForPixel(
         config,
         pixelConfigs,
-        inboundMetaPixelId,
+        firstPixel,
+        firstSource?.currency,
       ),
       contact_status_capi: "",
       lead_status_capi: "",
       purchase_status_capi: "",
-      observaciones: "",
-      external_id: generatedExternalId,
-      utm_campaign: "",
-      telefono_asignado: "",
-      promo_code: promoCodeIsFull ? promoCode : "",
-      geo_city: geo.geo_city,
-      geo_region: geo.geo_region,
-      geo_country: geo.geo_country,
+      observaciones: promoCoherence === "gerencia_conflict" || promoCoherence === "player_phone_conflict"
+        ? `promo_conflict:${promoCoherence}`
+        : "",
+      external_id: firstExternalId,
+      utm_campaign: firstSource?.utm_campaign || "",
+      telefono_asignado: firstSource?.telefono_asignado || "",
+      assigned_gerencia_id: firstSource?.assigned_gerencia_id ?? null,
+      assigned_gerencia_external_id: firstSource?.assigned_gerencia_external_id ?? null,
+      assigned_gerencia_name: firstSource?.assigned_gerencia_name ?? "",
+      assigned_gerencia_label: firstSource?.assigned_gerencia_label ?? "",
+      ...eventGerenciaPatch(
+        "purchase",
+        eventGerencia,
+        promoCode,
+        `created_first_${promoCoherence}`,
+        firstSource?.id ?? null,
+      ),
+      promo_code: attributedPromoCode,
+      geo_city: geo.geo_city || firstSource?.geo_city || "",
+      geo_region: geo.geo_region || firstSource?.geo_region || "",
+      geo_country: geo.geo_country || firstSource?.geo_country || "",
     };
     const { data: ins, error } = await db.from("conversions").insert(newRow).select("id").single();
     if (error || !ins) return textResponse("Error al crear fila PURCHASE", 500);
@@ -3285,7 +3806,7 @@ async function handlePurchase(
       createdId,
       {
         inboundPixelId: inboundMetaPixelId,
-        promoCode,
+        promoCode: attributedPromoCode,
         landingId: fullRow.landing_id ?? landing.id,
       },
     );
@@ -3315,7 +3836,18 @@ async function handlePurchase(
       "handlePurchase",
       "INFO",
       "Primera compra procesada",
-      JSON.stringify({ phone: cleanPhone, amount, promo_code: promoCode, match_method: "created_first" }),
+      JSON.stringify({
+        phone: cleanPhone,
+        amount,
+        promo_code_received: promoCode,
+        promo_code_attributed: attributedPromoCode,
+        promo_coherence: promoCoherence,
+        agency_id: inboundAgencyId,
+        bot_phone: botPhone,
+        event_gerencia_id: eventGerencia.gerencia_id,
+        attribution_source_conversion_id: firstSource?.id ?? null,
+        match_method: "created_first",
+      }),
       createdId,
       undefined,
       undefined,
@@ -3346,51 +3878,42 @@ async function handlePurchase(
     );
   }
 
-  // Repeat purchase => inherit from most recent PURCHASE row of this phone.
-  const { data: srcRow } = await db
-    .from("conversions")
-    .select("*")
-    .eq("user_id", landing.user_id)
-    .eq("phone", cleanPhone)
-    .eq("estado", "purchase")
-    .order("created_at", { ascending: false })
-    .limit(1)
-    .maybeSingle();
-  const repeatSourceRow = srcRow as ConversionRow | null;
-  const repeatSourceMatchesPromo =
-    norm(repeatSourceRow?.promo_code).toLowerCase() === promoCode.toLowerCase();
+  // Repeat purchase => inherit only from the same receiver gerencia. If no
+  // trustworthy lineage exists there, keep the event direct/unattributed.
+  const repeatSourceRow = receiverPurchaseLineage ?? trustedReceiverLineage;
   const repeatAttribution = await resolvePurchasePixelAttribution(db, {
     userId: landing.user_id,
     inboundPixelId: inboundMetaPixelId,
     currentRow: repeatSourceRow,
-    promoCode,
-    landingId: repeatSourceMatchesPromo
-      ? repeatSourceRow?.landing_id ?? landing.id
-      : landing.id,
+    promoCode: attributedPromoCode,
+    landingId: repeatSourceRow?.landing_id ?? landing.id,
     configuredPixelIds: configuredPixelIds(config, pixelConfigs),
   });
   const repeatInheritedPixel = repeatAttribution?.pixelId ?? "";
-  const repeatOriginSource = norm(srcRow?.source_platform) || inboundSourcePlatform;
+  const repeatOriginSource = inboundSourcePlatform || norm(repeatSourceRow?.source_platform);
   const repeatCtwaClid = normalizedSourcePlatform(repeatOriginSource) === "chatrace"
-    ? normalizeCtwaClid(srcRow?.ctwa_clid) || inboundCtwaClid
+    ? inboundCtwaClid || normalizeCtwaClid(repeatSourceRow?.ctwa_clid)
     : "";
 
   const newRow: Omit<ConversionRow, "id"> = {
-    landing_id: srcRow?.landing_id ?? (landing.id?.trim() || null),
+    landing_id: repeatSourceRow?.landing_id ?? (landing.id?.trim() || null),
     user_id: landing.user_id,
-    landing_name: srcRow?.landing_name ?? landing.name,
+    landing_name: repeatSourceRow?.landing_name ?? landing.name,
     phone: cleanPhone,
-    email: payloadEmail || srcRow?.email || "",
-    cuit_cuil: payloadCuitCuil || srcRow?.cuit_cuil || "",
-    fn: payloadFn || srcRow?.fn || "",
-    ln: payloadLn || srcRow?.ln || "",
-    ct: srcRow?.ct ?? "",
-    st: srcRow?.st ?? "",
-    zip: srcRow?.zip ?? "",
-    country: srcRow?.country ?? "",
-    fbp: srcRow?.fbp ?? "",
-    fbc: srcRow?.fbc ?? "",
-    geo_source: norm((srcRow as Record<string, unknown> | null)?.geo_source) || "none",
+    email: payloadEmail || repeatSourceRow?.email || "",
+    cuit_cuil: payloadCuitCuil || repeatSourceRow?.cuit_cuil || "",
+    fn: payloadFn || repeatSourceRow?.fn || "",
+    ln: payloadLn || repeatSourceRow?.ln || "",
+    ct: geo.ct || repeatSourceRow?.ct || "",
+    st: geo.st || repeatSourceRow?.st || "",
+    zip: geo.zip || repeatSourceRow?.zip || "",
+    country: geo.country || repeatSourceRow?.country || "",
+    fbp: repeatSourceRow?.fbp ?? "",
+    fbc: repeatSourceRow?.fbc ?? "",
+    from_meta_ads: repeatSourceRow?.from_meta_ads ?? false,
+    geo_source: payloadGeoSource !== "none"
+      ? payloadGeoSource
+      : (norm(repeatSourceRow?.geo_source) || "none"),
     meta_pixel_id: repeatInheritedPixel,
     pixel_attribution_source: repeatAttribution?.source ?? "",
     pixel_attribution_conversion_id: repeatAttribution?.sourceConversionId ?? null,
@@ -3400,7 +3923,7 @@ async function handlePurchase(
     // DO NOT inherit event IDs
     contact_event_id: "",
     contact_event_time: null,
-    sendContactPixel: toBool(srcRow?.sendContactPixel),
+    sendContactPixel: toBool(repeatSourceRow?.sendContactPixel),
     contact_payload_raw: "",
     lead_event_id: "",
     lead_event_time: null,
@@ -3410,38 +3933,50 @@ async function handlePurchase(
     purchase_payload_raw: purchasePayloadRaw,
     purchase_coelsa_id: coelsaId,
     purchase_transaction_id: transactionId,
-    test_event_code: testEventCode || srcRow?.test_event_code || "",
+    test_event_code: testEventCode || repeatSourceRow?.test_event_code || "",
     purchase_type: "repeat",
     purchase_capi_route: "",
     purchase_capi_route_reason: "",
-    client_ip: srcRow?.client_ip ?? "",
-    agent_user: srcRow?.agent_user ?? "",
-    device_type: srcRow?.device_type ?? "",
-    event_source_url: eventSourceUrl || srcRow?.event_source_url || "",
+    client_ip: repeatSourceRow?.client_ip ?? "",
+    agent_user: repeatSourceRow?.agent_user ?? "",
+    device_type: repeatSourceRow?.device_type ?? "",
+    event_source_url: eventSourceUrl || repeatSourceRow?.event_source_url || "",
     estado: "purchase",
     valor: amount,
     currency: resolveCurrencyForPixel(
       config,
       pixelConfigs,
       repeatInheritedPixel,
-      srcRow?.currency,
+      repeatSourceRow?.currency,
     ),
     // DO NOT inherit statuses
     contact_status_capi: "",
     lead_status_capi: "",
     purchase_status_capi: "",
-    observaciones: "REPEAT",
-    external_id: srcRow?.external_id ?? "",
-    utm_campaign: srcRow?.utm_campaign ?? "",
-    telefono_asignado: srcRow?.telefono_asignado ?? "",
-    assigned_gerencia_id: srcRow?.assigned_gerencia_id ?? null,
-    assigned_gerencia_external_id: srcRow?.assigned_gerencia_external_id ?? null,
-    assigned_gerencia_name: srcRow?.assigned_gerencia_name ?? "",
-    assigned_gerencia_label: srcRow?.assigned_gerencia_label ?? "",
-    promo_code: promoCodeIsFull ? promoCode : (srcRow?.promo_code || ""),
-    geo_city: srcRow?.geo_city ?? "",
-    geo_region: srcRow?.geo_region ?? "",
-    geo_country: srcRow?.geo_country ?? "",
+    observaciones: appendObservation(
+      "REPEAT",
+      promoCoherence === "gerencia_conflict" || promoCoherence === "player_phone_conflict"
+        ? `promo_conflict:${promoCoherence}`
+        : "",
+    ),
+    external_id: norm(p.external_id) || repeatSourceRow?.external_id || await sha256(cleanPhone),
+    utm_campaign: repeatSourceRow?.utm_campaign ?? "",
+    telefono_asignado: repeatSourceRow?.telefono_asignado ?? "",
+    assigned_gerencia_id: repeatSourceRow?.assigned_gerencia_id ?? null,
+    assigned_gerencia_external_id: repeatSourceRow?.assigned_gerencia_external_id ?? null,
+    assigned_gerencia_name: repeatSourceRow?.assigned_gerencia_name ?? "",
+    assigned_gerencia_label: repeatSourceRow?.assigned_gerencia_label ?? "",
+    ...eventGerenciaPatch(
+      "purchase",
+      eventGerencia,
+      promoCode,
+      `created_repeat_${promoCoherence}`,
+      repeatSourceRow?.id ?? null,
+    ),
+    promo_code: attributedPromoCode,
+    geo_city: geo.geo_city || repeatSourceRow?.geo_city || "",
+    geo_region: geo.geo_region || repeatSourceRow?.geo_region || "",
+    geo_country: geo.geo_country || repeatSourceRow?.geo_country || "",
   };
 
   const { data: ins, error } = await db.from("conversions").insert(newRow).select("id").single();
@@ -3472,7 +4007,18 @@ async function handlePurchase(
     "handlePurchase",
     "INFO",
     "Recompra procesada",
-    JSON.stringify({ phone: cleanPhone, amount, inherited_from: srcRow?.id, match_method: "created_repeat" }),
+    JSON.stringify({
+      phone: cleanPhone,
+      amount,
+      promo_code_received: promoCode,
+      promo_code_attributed: attributedPromoCode,
+      promo_coherence: promoCoherence,
+      agency_id: inboundAgencyId,
+      bot_phone: botPhone,
+      event_gerencia_id: eventGerencia.gerencia_id,
+      inherited_from: repeatSourceRow?.id ?? null,
+      match_method: "created_repeat",
+    }),
     newId,
     undefined,
     undefined,
@@ -3491,12 +4037,8 @@ async function handlePurchase(
         pixel_id: repeatAttribution.pixelId,
         source: repeatAttribution.source,
         source_conversion_id: repeatAttribution.sourceConversionId,
-        promo_code: promoCode,
-        landing_id: norm(
-          repeatSourceMatchesPromo
-            ? repeatSourceRow?.landing_id ?? landing.id
-            : landing.id,
-        ),
+        promo_code: attributedPromoCode,
+        landing_id: norm(repeatSourceRow?.landing_id ?? landing.id),
       }),
       newId,
     );
@@ -3537,6 +4079,8 @@ async function handleSimplePurchase(
   const inboundMetaPixelId = norm(p.meta_pixel_id || p.pixel_id);
   const inboundSourcePlatform = norm(p.source_platform);
   const inboundCtwaClid = ctwaClidForSource(p.ctwa_clid, inboundSourcePlatform);
+  const botPhone = sanitizePhone(p.bot_phone);
+  const inboundAgencyId = norm(p.agency_id);
   const normalizedAmount = normalizePurchaseAmount(p.amount);
   if (!cleanPhone || !normalizedAmount.ok) {
     let rejectionReason = "missing_phone";
@@ -3603,9 +4147,16 @@ async function handleSimplePurchase(
   const { fn: payloadFn, ln: payloadLn } = deriveNameFromPayload(p);
   const eventSourceUrl = await deriveEventSourceUrl(db, landing.name, norm(p.event_source_url));
   const isRepeatSimple = await hasPreviousSuccessfulPurchases(db, landing.user_id, cleanPhone);
+  const eventGerencia = await resolveEventGerenciaSnapshot(
+    db,
+    landing.user_id,
+    inboundAgencyId,
+    botPhone,
+  );
 
-  // Inherit from most recent row of this phone
-  const { data: srcRow } = await db
+  // Legacy payloads without action still inherit only from the real receiver
+  // when agency_id/bot_phone are available.
+  const { data: latestAnyRow } = await db
     .from("conversions")
     .select("*")
     .eq("user_id", landing.user_id)
@@ -3613,28 +4164,36 @@ async function handleSimplePurchase(
     .order("created_at", { ascending: false })
     .limit(1)
     .maybeSingle();
+  const srcRow = eventGerencia.gerencia_id
+    ? await findLatestTrustedGerenciaLineage(
+      db,
+      landing.user_id,
+      cleanPhone,
+      eventGerencia.gerencia_id,
+    )
+    : (latestAnyRow as ConversionRow | null);
   const simpleSourceRow = srcRow as ConversionRow | null;
   const simpleAttribution = await resolvePurchasePixelAttribution(db, {
     userId: landing.user_id,
     inboundPixelId: inboundMetaPixelId,
     currentRow: simpleSourceRow,
     promoCode: "",
-    landingId: landing.id,
+    landingId: simpleSourceRow?.landing_id ?? landing.id,
     configuredPixelIds: configuredPixelIds(config, pixelConfigs),
   });
   const simpleInheritedPixel = simpleAttribution?.pixelId ?? "";
-  const simpleOriginSource = norm(srcRow?.source_platform) || inboundSourcePlatform;
+  const simpleOriginSource = inboundSourcePlatform || norm(srcRow?.source_platform);
   const simpleCtwaClid = normalizedSourcePlatform(simpleOriginSource) === "chatrace"
-    ? normalizeCtwaClid(srcRow?.ctwa_clid) || inboundCtwaClid
+    ? inboundCtwaClid || normalizeCtwaClid(srcRow?.ctwa_clid)
     : "";
 
   const purchaseEventId = purchaseClaim.eventId;
   const purchaseEventTime = toValidEventTime(p.purchase_event_time || p.event_time || Math.floor(Date.now() / 1000));
 
   const newRow: Omit<ConversionRow, "id"> = {
-    landing_id: landing.id?.trim() || null,
+    landing_id: srcRow?.landing_id ?? (landing.id?.trim() || null),
     user_id: landing.user_id,
-    landing_name: landing.name,
+    landing_name: srcRow?.landing_name || landing.name,
     phone: cleanPhone,
     email: payloadEmail || srcRow?.email || "",
     cuit_cuil: payloadCuitCuil || srcRow?.cuit_cuil || "",
@@ -3646,6 +4205,7 @@ async function handleSimplePurchase(
     country: srcRow?.country ?? "",
     fbp: srcRow?.fbp ?? "",
     fbc: srcRow?.fbc ?? "",
+    from_meta_ads: srcRow?.from_meta_ads ?? false,
     geo_source: norm((srcRow as Record<string, unknown> | null)?.geo_source) || "none",
     meta_pixel_id: simpleInheritedPixel,
     pixel_attribution_source: simpleAttribution?.source ?? "",
@@ -3685,13 +4245,20 @@ async function handleSimplePurchase(
     lead_status_capi: "",
     purchase_status_capi: "",
     observaciones: "",
-    external_id: srcRow?.external_id ?? "",
+    external_id: norm(p.external_id) || srcRow?.external_id || await sha256(cleanPhone),
     utm_campaign: srcRow?.utm_campaign ?? "",
     telefono_asignado: srcRow?.telefono_asignado ?? "",
     assigned_gerencia_id: srcRow?.assigned_gerencia_id ?? null,
     assigned_gerencia_external_id: srcRow?.assigned_gerencia_external_id ?? null,
     assigned_gerencia_name: srcRow?.assigned_gerencia_name ?? "",
     assigned_gerencia_label: srcRow?.assigned_gerencia_label ?? "",
+    ...eventGerenciaPatch(
+      "purchase",
+      eventGerencia,
+      "",
+      `simple_${isRepeatSimple ? "repeat" : "first"}`,
+      srcRow?.id ?? null,
+    ),
     promo_code: "",
     geo_city: srcRow?.geo_city ?? "",
     geo_region: srcRow?.geo_region ?? "",
@@ -3724,7 +4291,22 @@ async function handleSimplePurchase(
     purchaseClaim,
   );
 
-  await writeLog(db, landing.user_id, "handleSimplePurchase", "INFO", "Purchase simple procesado", JSON.stringify({ phone: cleanPhone, amount, inherited_from: srcRow?.id }), newId);
+  await writeLog(
+    db,
+    landing.user_id,
+    "handleSimplePurchase",
+    "INFO",
+    "Purchase simple procesado",
+    JSON.stringify({
+      phone: cleanPhone,
+      amount,
+      agency_id: inboundAgencyId,
+      bot_phone: botPhone,
+      event_gerencia_id: eventGerencia.gerencia_id,
+      inherited_from: srcRow?.id ?? null,
+    }),
+    newId,
+  );
 
   if (simpleAttribution) {
     await writeLog(
@@ -3738,7 +4320,7 @@ async function handleSimplePurchase(
         source: simpleAttribution.source,
         source_conversion_id: simpleAttribution.sourceConversionId,
         promo_code: "",
-        landing_id: norm(landing.id),
+        landing_id: norm(simpleSourceRow?.landing_id ?? landing.id),
       }),
       newId,
     );
@@ -3855,15 +4437,14 @@ Deno.serve(async (req) => {
     const purchaseDedupeIdsForRequest = inferredAction === "PURCHASE"
       ? purchaseDedupeIdsFromPayload(params)
       : [];
-    const purchaseHasStrongDedupe = purchaseDedupeIdsForRequest.length > 0;
 
     if (
       !isDeferredRetry &&
       actionEventId &&
-      (inferredAction === "LEAD" || (inferredAction === "PURCHASE" && !purchaseHasStrongDedupe))
+      (inferredAction === "LEAD" || inferredAction === "PURCHASE")
     ) {
       const shouldDeduplicateActionByPromo = isFullPromoCode(incomingPromoCodeForDedupe) &&
-        (inferredAction === "LEAD" || inferredAction === "PURCHASE");
+        inferredAction === "LEAD";
       const existing = shouldDeduplicateActionByPromo
         ? await findInboundByActionEventIdAndPromo(
           db,

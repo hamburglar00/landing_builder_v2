@@ -768,7 +768,9 @@ export default function StatsPanel({
       clicks_cta: stats.uniqueContacts,
       mensajes_recibidos: stats.uniqueLeadsLinkedToContact,
       jugadores_cargaron: stats.firstLoadPurchasersLinkedToLead,
-      jugadores_recargaron: stats.repeatFromFirstInRange,
+      jugadores_recargaron: stats.reachedRepeat,
+      nuevos_que_recargaron: stats.repeatFromFirstInRange,
+      recargas_totales: stats.purchaseRepeatCount,
       total_cargas: stats.totalPurchases,
       total_cargado: stats.totalRevenue,
       ticket_promedio: Number(stats.avgTicket.toFixed(2)),
@@ -877,7 +879,7 @@ export default function StatsPanel({
       {/*  RESUMEN GENERAL  */}
       <div>
         <SectionTitle>Resumen general</SectionTitle>
-        <div className="mt-3 grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-5">
+        <div className="mt-3 grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-6">
           <KpiCard
             label="Clicks en el boton de la landing"
             value={stats.uniqueContacts}
@@ -901,9 +903,16 @@ export default function StatsPanel({
           />
           <KpiCard
             label="Jugadores que recargaron"
-            value={stats.repeatFromFirstInRange}
+            value={stats.reachedRepeat}
+            sub={`${stats.purchaseRepeatCount} ${stats.purchaseRepeatCount === 1 ? "recarga" : "recargas"}`}
             color="text-violet-300"
-            tooltip="Cantidad de jugadores que, después de realizar una primera carga, decidieron realizar otra carga más."
+            tooltip="Cantidad de jugadores únicos con al menos una recarga (repeat) en el período y filtros seleccionados, aunque su primera carga haya ocurrido antes o fuera del filtro. La leyenda muestra la cantidad total de recargas."
+          />
+          <KpiCard
+            label="Nuevos que recargaron"
+            value={stats.repeatFromFirstInRange}
+            color="text-fuchsia-300"
+            tooltip="Cantidad de jugadores cuya primera carga atribuida y al menos una recarga ocurrieron dentro del mismo período y filtros seleccionados."
           />
           <KpiCard
             label="Total de cargas"
@@ -937,7 +946,7 @@ export default function StatsPanel({
             value={pct(stats.repeatFromFirstInRange, stats.firstLoadPurchasersLinkedToLead)}
             sub={`${stats.repeatFromFirstInRange} de ${stats.firstLoadPurchasersLinkedToLead} jugadores`}
             color="text-violet-400"
-            tooltip="Porcentaje de jugadores que, después de realizar una primera carga, decidieron realizar otra carga más."
+            tooltip="Porcentaje de jugadores con una primera carga atribuida dentro del período y filtros seleccionados que también recargaron dentro de ese mismo universo."
           />
         </div>
       </div>
