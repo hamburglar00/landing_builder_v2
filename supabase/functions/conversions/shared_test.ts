@@ -1,7 +1,7 @@
 import {
+  buildFakeConversionRow,
   buildMetaBusinessMessagingPurchaseRequest,
   buildMetaRequest,
-  buildFakeConversionRow,
   normalizeCtwaClid,
   normalizeCurrencyCode,
   normalizePurchaseAmount,
@@ -231,6 +231,86 @@ Deno.test("CompleteRegistration website CAPI uses Meta standard event shape", as
   assert(
     !("custom_data" in event),
     "CompleteRegistration must not invent custom_data unless explicitly provided",
+  );
+});
+
+Deno.test("Website CAPI omits expired fbc values before sending to Meta", async () => {
+  const row = buildFakeConversionRow("Purchase");
+  row.pixel_id = "123456789";
+  row.meta_pixel_id = "123456789";
+  row.purchase_event_id = "purchase-event-id";
+  row.purchase_type = "first";
+  row.fbc = `fb.1.${Date.now() - 91 * 24 * 60 * 60 * 1000}.ExpiredClickId`;
+
+  const request = await buildMetaRequest(
+    {
+      user_id: row.user_id,
+      pixel_id: "123456789",
+      meta_access_token: "token",
+      meta_currency: "ARS",
+      meta_api_version: "v25.0",
+      send_contact_capi: true,
+      send_purchase_capi: true,
+      include_purchase_type_capi: true,
+      send_first_purchase_capi: true,
+      send_repeat_purchase_capi: true,
+      send_geo_capi: true,
+      geo_use_ipapi: false,
+      geo_fill_only_when_missing: false,
+    },
+    row,
+    "Purchase",
+    "purchase-event-id",
+    1_700_000_000,
+    { currency: "ARS", value: 10000, purchase_type: "first" },
+  );
+
+  const data = request.body.data as Array<Record<string, unknown>>;
+  const userData = data[0].user_data as Record<string, unknown>;
+  assert(!("fbc" in userData), "Expired fbc must not be sent to Meta");
+  assert(
+    userData.fbp === row.fbp,
+    "Other matching parameters must be preserved",
+  );
+});
+
+Deno.test("Website CAPI preserves fresh fbc and normalizes legacy seconds timestamp", async () => {
+  const row = buildFakeConversionRow("Purchase");
+  row.pixel_id = "123456789";
+  row.meta_pixel_id = "123456789";
+  row.purchase_event_id = "purchase-event-id";
+  row.purchase_type = "first";
+  const freshSeconds = Math.floor((Date.now() - 24 * 60 * 60 * 1000) / 1000);
+  row.fbc = `fb.1.${freshSeconds}.FreshClickId`;
+
+  const request = await buildMetaRequest(
+    {
+      user_id: row.user_id,
+      pixel_id: "123456789",
+      meta_access_token: "token",
+      meta_currency: "ARS",
+      meta_api_version: "v25.0",
+      send_contact_capi: true,
+      send_purchase_capi: true,
+      include_purchase_type_capi: true,
+      send_first_purchase_capi: true,
+      send_repeat_purchase_capi: true,
+      send_geo_capi: true,
+      geo_use_ipapi: false,
+      geo_fill_only_when_missing: false,
+    },
+    row,
+    "Purchase",
+    "purchase-event-id",
+    1_700_000_000,
+    { currency: "ARS", value: 10000, purchase_type: "first" },
+  );
+
+  const data = request.body.data as Array<Record<string, unknown>>;
+  const userData = data[0].user_data as Record<string, unknown>;
+  assert(
+    userData.fbc === `fb.1.${freshSeconds * 1000}.FreshClickId`,
+    "Fresh legacy fbc timestamps must be sent in Meta's millisecond format",
   );
 });
 

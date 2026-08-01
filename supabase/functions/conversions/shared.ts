@@ -1,4 +1,4 @@
-﻿import type { SupabaseClient } from "https://esm.sh/@supabase/supabase-js@2";
+import type { SupabaseClient } from "https://esm.sh/@supabase/supabase-js@2";
 
 // Shared types kept in sync with conversions/index.ts
 export interface ConversionsConfig {
@@ -153,7 +153,11 @@ export function preparePurchaseCustomDataForMeta(
   return prepared;
 }
 
-export type MetaEventName = "Contact" | "Lead" | "CompleteRegistration" | "Purchase";
+export type MetaEventName =
+  | "Contact"
+  | "Lead"
+  | "CompleteRegistration"
+  | "Purchase";
 
 export interface MetaUserData {
   [key: string]: string;
@@ -303,7 +307,28 @@ function normalizeMetaParamValue(v: unknown): string {
 }
 
 function nowMetaTs(): string {
-  return String(Math.floor(Date.now() / 1000));
+  return String(Date.now());
+}
+
+const META_FBC_MAX_AGE_MS = 90 * 24 * 60 * 60 * 1000;
+const META_FBC_CLOCK_SKEW_MS = 5 * 60 * 1000;
+
+function normalizeMetaCreationTimeMs(raw: string): number | null {
+  if (!/^\d+$/.test(raw)) return null;
+  const numeric = Number(raw);
+  if (!Number.isFinite(numeric) || numeric <= 0) return null;
+  // Meta documents fbc/fbp creation_time in milliseconds. Some legacy rows
+  // may contain seconds, so normalize those before deciding freshness.
+  return numeric < 1_000_000_000_000 ? numeric * 1000 : numeric;
+}
+
+function isFreshMetaFbcCreationTime(
+  creationTimeMs: number,
+  nowMs = Date.now(),
+): boolean {
+  if (!Number.isFinite(creationTimeMs) || creationTimeMs <= 0) return false;
+  if (creationTimeMs > nowMs + META_FBC_CLOCK_SKEW_MS) return false;
+  return nowMs - creationTimeMs <= META_FBC_MAX_AGE_MS;
 }
 
 // Meta _fbp expected: fb.1.<timestamp>.<random>
@@ -313,7 +338,9 @@ function normalizeFbp(raw: unknown): string {
   // Accept legacy and extended variants:
   // - fb.1.<creation_time>.<random_number>
   // - fb.1.<creation_time>.<random_number>.<appendix>
-  if (/^fb\.1\.\d+\.[A-Za-z0-9_-]+(?:\.[A-Za-z0-9_-]+)?$/.test(value)) return value;
+  if (/^fb\.1\.\d+\.[A-Za-z0-9_-]+(?:\.[A-Za-z0-9_-]+)?$/.test(value)) {
+    return value;
+  }
 
   // If only the last token/random piece arrives, wrap it into a valid fbp shape.
   if (/^[A-Za-z0-9_-]{6,}$/.test(value)) {
@@ -330,7 +357,16 @@ function normalizeFbc(raw: unknown): string {
   // Accept legacy and extended variants:
   // - fb.1.<creation_time>.<fbclid>
   // - fb.1.<creation_time>.<fbclid>.<appendix>
-  if (/^fb\.1\.\d+\.[A-Za-z0-9_-]+(?:\.[A-Za-z0-9_-]+)?$/.test(value)) return value;
+  const wrapped = value.match(
+    /^fb\.1\.(\d+)\.([A-Za-z0-9_-]+(?:\.[A-Za-z0-9_-]+)?)$/,
+  );
+  if (wrapped) {
+    const creationTimeMs = normalizeMetaCreationTimeMs(wrapped[1]);
+    if (!creationTimeMs || !isFreshMetaFbcCreationTime(creationTimeMs)) {
+      return "";
+    }
+    return `fb.1.${Math.floor(creationTimeMs)}.${wrapped[2]}`;
+  }
 
   // If we receive fbclid directly, convert to fbc.
   if (/^[A-Za-z0-9_-]{8,}$/.test(value)) {
@@ -355,14 +391,19 @@ export function sanitizeIp(v: unknown): string {
 
 function isValidPublicIpv4(ip: string): boolean {
   const parts = ip.split(".").map(Number);
-  if (parts.length !== 4 || parts.some((n) => !Number.isInteger(n) || n < 0 || n > 255)) return false;
+  if (
+    parts.length !== 4 ||
+    parts.some((n) => !Number.isInteger(n) || n < 0 || n > 255)
+  ) return false;
   const [a, b, c] = parts;
   if (a === 0 || a === 10 || a === 127 || a >= 224) return false;
   if (a === 100 && b >= 64 && b <= 127) return false;
   if (a === 169 && b === 254) return false;
   if (a === 172 && b >= 16 && b <= 31) return false;
   if (a === 192 && (b === 0 || b === 168)) return false;
-  if (a === 198 && (b === 18 || b === 19 || (b === 51 && c === 100))) return false;
+  if (a === 198 && (b === 18 || b === 19 || (b === 51 && c === 100))) {
+    return false;
+  }
   if (a === 203 && b === 0 && c === 113) return false;
   return true;
 }
@@ -372,7 +413,10 @@ function isLikelyPublicIpv6(ip: string): boolean {
   if (!lower.includes(":")) return false;
   if (!/^[0-9a-f:]+$/.test(lower)) return false;
   if (lower === "::" || lower === "::1") return false;
-  if (lower.startsWith("fc") || lower.startsWith("fd") || lower.startsWith("fe80:")) return false;
+  if (
+    lower.startsWith("fc") || lower.startsWith("fd") ||
+    lower.startsWith("fe80:")
+  ) return false;
   if (lower.startsWith("ff")) return false;
   if (lower.startsWith("2001:db8:")) return false;
   return lower.includes("::") || lower.split(":").filter(Boolean).length >= 3;
@@ -384,7 +428,9 @@ export function normalizePublicClientIp(rawIp: unknown): string {
   if (!ip.includes(".") && !ip.includes(":") && ip.length === 12) {
     ip = ip.replace(/(\d{3})(\d{3})(\d{3})(\d{3})/, "$1.$2.$3.$4");
   }
-  if (!ip.includes(".") && !ip.includes(":") && ip.length >= 8 && ip.length <= 11) {
+  if (
+    !ip.includes(".") && !ip.includes(":") && ip.length >= 8 && ip.length <= 11
+  ) {
     const m = ip.match(/\d{1,3}/g);
     if (m) ip = m.join(".");
   }
@@ -625,8 +671,9 @@ export function resolvePurchaseCapiRoute(input: {
   business_messaging_configured: boolean;
   ctwa_clid: unknown;
 }): PurchaseCapiRouteDecision {
-  const isChatrace = String(input.source_platform ?? "").trim().toLowerCase() ===
-    "chatrace";
+  const isChatrace =
+    String(input.source_platform ?? "").trim().toLowerCase() ===
+      "chatrace";
   if (!isChatrace) {
     return { route: "website", reason: "source_not_chatrace" };
   }
@@ -669,7 +716,9 @@ export function buildMetaBusinessMessagingPurchaseRequest(
   const body: Record<string, unknown> = { data: [eventPayload] };
   const apiVersion = String(config.meta_api_version || "v25.0").trim();
   const apiUrl =
-    `https://graph.facebook.com/${apiVersion}/${config.dataset_id}/events?access_token=${encodeURIComponent(config.meta_access_token)}`;
+    `https://graph.facebook.com/${apiVersion}/${config.dataset_id}/events?access_token=${
+      encodeURIComponent(config.meta_access_token)
+    }`;
   return { apiUrl, body, eventPayload };
 }
 
@@ -701,7 +750,8 @@ export async function buildMetaRequest(
   const testCode = overrideTestEventCode;
   if (testCode) body.test_event_code = testCode;
 
-  const apiUrl = `https://graph.facebook.com/${config.meta_api_version}/${config.pixel_id}/events?access_token=${config.meta_access_token}`;
+  const apiUrl =
+    `https://graph.facebook.com/${config.meta_api_version}/${config.pixel_id}/events?access_token=${config.meta_access_token}`;
   return { apiUrl, body, eventPayload };
 }
 
@@ -722,8 +772,8 @@ export function resolvePurchaseRetryIdentity(
   const currentEventId = String(persistedEventId ?? "").trim();
   const currentEventTime = Number(persistedEventTime);
   const hasEventId = Boolean(currentEventId);
-  const hasEventTime =
-    Number.isFinite(currentEventTime) && currentEventTime > 0;
+  const hasEventTime = Number.isFinite(currentEventTime) &&
+    currentEventTime > 0;
 
   return {
     eventId: hasEventId ? currentEventId : createEventId(),
@@ -786,7 +836,11 @@ export function buildFakeConversionRow(event: MetaEventName): ConversionRow {
     agent_user: "Mozilla/5.0 (Windows NT 10.0; Win64; x64)",
     device_type: "desktop",
     event_source_url: "https://fake-landing.test/landing",
-    estado: event === "Purchase" ? "purchase" : event === "Lead" ? "lead" : "contact",
+    estado: event === "Purchase"
+      ? "purchase"
+      : event === "Lead"
+      ? "lead"
+      : "contact",
     valor: event === "Purchase" ? 10000 : 0,
     currency: "ARS",
     contact_status_capi: "",
@@ -821,4 +875,3 @@ export async function hasPreviousSuccessfulPurchases(
 
   return (count ?? 0) > 0;
 }
-
