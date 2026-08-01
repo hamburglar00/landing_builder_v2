@@ -34,6 +34,8 @@ export async function saveConversionPageConfig({
     meta_api_version: config.meta_api_version || "v25.0",
     send_contact_capi: !!config.send_contact_capi,
     send_lead_capi: config.send_lead_capi !== false,
+    send_complete_registration_capi:
+      config.send_complete_registration_capi === true,
     send_purchase_capi: config.send_purchase_capi !== false,
     include_purchase_type_capi: config.include_purchase_type_capi !== false,
     send_first_purchase_capi: config.send_first_purchase_capi !== false,

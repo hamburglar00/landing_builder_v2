@@ -182,6 +182,7 @@ function cellValue(
     case "purchase_capi_route_reason": return <td key={col} className={dim} title={tip(c.purchase_capi_route_reason)}>{c.purchase_capi_route_reason || "-"}</td>;
     case "contact_status_capi": return <td key={col} className={cell} title={tip(c.contact_status_capi)}>{statusText(c.contact_status_capi)}</td>;
     case "lead_status_capi": return <td key={col} className={cell} title={tip(c.lead_status_capi)}>{statusText(c.lead_status_capi)}</td>;
+    case "registration_status_capi": return <td key={col} className={cell} title={tip(c.registration_status_capi ?? "")}>{statusText(c.registration_status_capi ?? "")}</td>;
     case "purchase_status_capi": return <td key={col} className={cell} title={tip(c.purchase_status_capi)}>{statusText(c.purchase_status_capi)}</td>;
     case "observaciones": return <td key={col} className={`${cell} text-zinc-500 max-w-[200px] truncate`} title={c.observaciones}>{c.observaciones || "-"}</td>;
     case "external_id": return <td key={col} className={dimMono} title={tip(c.external_id)}>{c.external_id ? truncateId(c.external_id) : "-"}</td>;

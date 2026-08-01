@@ -21,6 +21,7 @@ export interface ConversionsConfig {
   meta_api_version: string;
   send_contact_capi: boolean;
   send_lead_capi: boolean;
+  send_complete_registration_capi: boolean;
   meta_ads_only_capi: boolean;
   send_purchase_capi: boolean;
   include_purchase_type_capi: boolean;
@@ -50,6 +51,7 @@ export interface PixelConfig {
   meta_api_version: string;
   send_contact_capi: boolean;
   send_lead_capi: boolean;
+  send_complete_registration_capi: boolean;
   meta_ads_only_capi: boolean;
   send_purchase_capi: boolean;
   include_purchase_type_capi: boolean;
@@ -144,6 +146,7 @@ export interface ConversionRow {
   currency: string;
   contact_status_capi: string;
   lead_status_capi: string;
+  registration_status_capi?: string;
   purchase_status_capi: string;
   observaciones: string;
   external_id: string;
@@ -430,6 +433,7 @@ const DEFAULT_CONFIG: ConversionsConfig = {
   meta_api_version: "v25.0",
   send_contact_capi: false,
   send_lead_capi: true,
+  send_complete_registration_capi: false,
   meta_ads_only_capi: false,
   send_purchase_capi: true,
   include_purchase_type_capi: true,
@@ -491,6 +495,7 @@ export async function fetchConversionsConfig(
     send_purchase_capi:
       stored.send_purchase_capi ??
       (stored.send_first_purchase_capi !== false || stored.send_repeat_purchase_capi !== false),
+    send_complete_registration_capi: stored.send_complete_registration_capi === true,
     meta_ads_only_capi: stored.meta_ads_only_capi === true,
     include_purchase_type_capi: stored.include_purchase_type_capi !== false,
     send_first_purchase_capi:
@@ -516,6 +521,7 @@ export async function upsertConversionsConfig(
         meta_api_version: config.meta_api_version,
         send_contact_capi: config.send_contact_capi,
         send_lead_capi: config.send_lead_capi !== false,
+        send_complete_registration_capi: config.send_complete_registration_capi === true,
         meta_ads_only_capi: config.meta_ads_only_capi === true,
         send_purchase_capi: config.send_purchase_capi !== false,
         include_purchase_type_capi: config.include_purchase_type_capi !== false,
@@ -560,6 +566,7 @@ export async function fetchPixelConfigs(userId: string): Promise<PixelConfig[]> 
     return {
       ...pixel,
       send_lead_capi: pixel.send_lead_capi !== false,
+      send_complete_registration_capi: pixel.send_complete_registration_capi === true,
       meta_ads_only_capi: pixel.meta_ads_only_capi === true,
       send_purchase_capi:
         pixel.send_purchase_capi ??
@@ -583,6 +590,7 @@ export async function upsertPixelConfig(input: {
   meta_api_version?: string;
   send_contact_capi?: boolean;
   send_lead_capi?: boolean;
+  send_complete_registration_capi?: boolean;
   meta_ads_only_capi?: boolean;
   send_purchase_capi?: boolean;
   include_purchase_type_capi?: boolean;
@@ -609,6 +617,7 @@ export async function upsertPixelConfig(input: {
     meta_api_version: input.meta_api_version ?? "v25.0",
     send_contact_capi: !!input.send_contact_capi,
     send_lead_capi: input.send_lead_capi !== false,
+    send_complete_registration_capi: input.send_complete_registration_capi === true,
     send_purchase_capi: purchaseEnabled,
     include_purchase_type_capi: input.include_purchase_type_capi !== false,
     send_first_purchase_capi: firstPurchaseEnabled,
@@ -674,7 +683,7 @@ const CONVERSIONS_SELECT = `
   purchase_type, purchase_capi_route, purchase_capi_route_reason,
   client_ip, agent_user, device_type, event_source_url,
   estado, valor, currency,
-  contact_status_capi, lead_status_capi, purchase_status_capi,
+  contact_status_capi, lead_status_capi, registration_status_capi, purchase_status_capi,
   observaciones,
   external_id, utm_campaign, telefono_asignado,
   assigned_gerencia_id, assigned_gerencia_external_id, assigned_gerencia_name, assigned_gerencia_label,

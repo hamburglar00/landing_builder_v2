@@ -9,6 +9,7 @@ export interface ConversionsConfig {
   meta_api_version: string;
   send_contact_capi: boolean;
   send_lead_capi?: boolean;
+  send_complete_registration_capi?: boolean;
   meta_ads_only_capi?: boolean;
   send_purchase_capi?: boolean;
   include_purchase_type_capi?: boolean;

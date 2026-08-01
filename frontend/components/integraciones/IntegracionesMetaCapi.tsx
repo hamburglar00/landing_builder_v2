@@ -82,6 +82,7 @@ type PixelEditDraft = {
   meta_api_version: string;
   send_contact_capi: boolean;
   send_lead_capi: boolean;
+  send_complete_registration_capi: boolean;
   meta_ads_only_capi: boolean;
   send_purchase_capi: boolean;
   include_purchase_type_capi: boolean;
@@ -621,6 +622,7 @@ export default function IntegracionesMetaCapi() {
         meta_api_version: apiVersionToSave,
         send_contact_capi: false,
         send_lead_capi: true,
+        send_complete_registration_capi: false,
         meta_ads_only_capi: false,
         send_purchase_capi: true,
         include_purchase_type_capi: true,
@@ -666,6 +668,7 @@ export default function IntegracionesMetaCapi() {
       meta_api_version: px.meta_api_version || "v25.0",
       send_contact_capi: !!px.send_contact_capi,
       send_lead_capi: px.send_lead_capi !== false,
+      send_complete_registration_capi: px.send_complete_registration_capi === true,
       meta_ads_only_capi: px.meta_ads_only_capi === true,
       send_purchase_capi: px.send_purchase_capi !== false,
       include_purchase_type_capi: px.include_purchase_type_capi !== false,
@@ -710,6 +713,7 @@ export default function IntegracionesMetaCapi() {
         meta_api_version: apiVersionToSave,
         send_contact_capi: !!draft.send_contact_capi,
         send_lead_capi: !!draft.send_lead_capi,
+        send_complete_registration_capi: !!draft.send_complete_registration_capi,
         meta_ads_only_capi: !!draft.meta_ads_only_capi,
         send_purchase_capi: !!draft.send_purchase_capi,
         include_purchase_type_capi: !!draft.include_purchase_type_capi,
@@ -731,6 +735,7 @@ export default function IntegracionesMetaCapi() {
           meta_api_version: apiVersionToSave,
           send_contact_capi: !!draft.send_contact_capi,
           send_lead_capi: !!draft.send_lead_capi,
+          send_complete_registration_capi: !!draft.send_complete_registration_capi,
           meta_ads_only_capi: !!draft.meta_ads_only_capi,
           send_purchase_capi: !!draft.send_purchase_capi,
           include_purchase_type_capi: !!draft.include_purchase_type_capi,
@@ -770,6 +775,7 @@ export default function IntegracionesMetaCapi() {
         meta_api_version: px.meta_api_version || "v25.0",
         send_contact_capi: !!px.send_contact_capi,
         send_lead_capi: px.send_lead_capi !== false,
+        send_complete_registration_capi: px.send_complete_registration_capi === true,
         meta_ads_only_capi: px.meta_ads_only_capi === true,
         send_purchase_capi: px.send_purchase_capi !== false,
         include_purchase_type_capi: px.include_purchase_type_capi !== false,
@@ -789,6 +795,7 @@ export default function IntegracionesMetaCapi() {
         meta_api_version: px.meta_api_version || "v25.0",
         send_contact_capi: !!px.send_contact_capi,
         send_lead_capi: px.send_lead_capi !== false,
+        send_complete_registration_capi: px.send_complete_registration_capi === true,
         meta_ads_only_capi: px.meta_ads_only_capi === true,
         send_purchase_capi: px.send_purchase_capi !== false,
         include_purchase_type_capi: px.include_purchase_type_capi !== false,
@@ -1828,6 +1835,7 @@ export default function IntegracionesMetaCapi() {
                 const eventBadges: Array<[string, boolean]> = [
                   ["Contact", !!px.send_contact_capi],
                   ["Lead", px.send_lead_capi !== false],
+                  ["CompleteRegistration", px.send_complete_registration_capi === true],
                   ["Purchase", px.send_purchase_capi !== false],
                 ];
                 if (px.send_purchase_capi !== false) {
@@ -2043,6 +2051,12 @@ export default function IntegracionesMetaCapi() {
                     label="Lead"
                     description="Envía Lead por Meta CAPI."
                     onChange={() => setDraft((p) => (p ? { ...p, send_lead_capi: !p.send_lead_capi } : p))}
+                  />
+                  <SettingsSwitch
+                    checked={draft.send_complete_registration_capi}
+                    label="CompleteRegistration"
+                    description="Envía el registro completo por Meta CAPI. Por defecto queda apagado."
+                    onChange={() => setDraft((p) => (p ? { ...p, send_complete_registration_capi: !p.send_complete_registration_capi } : p))}
                   />
                   <SettingsSwitch
                     checked={draft.send_purchase_capi}
