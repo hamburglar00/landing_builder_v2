@@ -844,7 +844,7 @@ export async function fetchConversionsForAdminFiltered(
   return excludeHiddenConversions(rows, hiddenBy);
 }
 
-// Funnel contacts (aggregated by player/phone + gerencia)
+// Funnel contacts (aggregated by phone + agency/bot, with player username as display/fallback)
 
 function derivePurchaseType(row: ConversionRow): "first" | "repeat" | null {
   if (!row.purchase_event_id) return null;
@@ -853,21 +853,45 @@ function derivePurchaseType(row: ConversionRow): "first" | "repeat" | null {
 }
 
 export function buildFunnelContactsFromConversions(rows: ConversionRow[]): FunnelContact[] {
-  const stageGerenciaKey = (row: ConversionRow): string => {
-    const purchaseKey = String(row.purchase_gerencia_id ?? row.purchase_gerencia_external_id ?? row.purchase_gerencia_label ?? "").trim();
-    const registrationKey = String(row.registration_gerencia_id ?? row.registration_gerencia_external_id ?? row.registration_gerencia_label ?? "").trim();
-    const leadKey = String(row.lead_gerencia_id ?? row.lead_gerencia_external_id ?? row.lead_gerencia_label ?? "").trim();
-    const assignedKey = String(row.assigned_gerencia_id ?? row.assigned_gerencia_external_id ?? row.assigned_gerencia_label ?? row.telefono_asignado ?? "").trim();
+  const cleanText = (value: unknown): string => String(value ?? "").trim();
+  const cleanDigits = (value: unknown): string => cleanText(value).replace(/\D/g, "");
+  const stageContextKey = (row: ConversionRow): string => {
+    const purchaseKey = cleanText(row.purchase_agency_id) ||
+      cleanText(row.purchase_gerencia_external_id) ||
+      cleanText(row.purchase_gerencia_id) ||
+      cleanText(row.purchase_bot_phone) ||
+      cleanText(row.purchase_gerencia_label);
+    const registrationKey = cleanText(row.registration_agency_id) ||
+      cleanText(row.registration_gerencia_external_id) ||
+      cleanText(row.registration_gerencia_id) ||
+      cleanText(row.registration_bot_phone) ||
+      cleanText(row.registration_gerencia_label);
+    const leadKey = cleanText(row.lead_agency_id) ||
+      cleanText(row.lead_gerencia_external_id) ||
+      cleanText(row.lead_gerencia_id) ||
+      cleanText(row.lead_bot_phone) ||
+      cleanText(row.lead_gerencia_label);
+    const assignedKey = cleanText(row.assigned_gerencia_external_id) ||
+      cleanText(row.assigned_gerencia_id) ||
+      cleanText(row.telefono_asignado) ||
+      cleanText(row.assigned_gerencia_label);
     return purchaseKey || registrationKey || leadKey || assignedKey || "__sin_gerencia__";
   };
-  const stagePlayerKey = (row: ConversionRow): string => {
+  const stagePlayerFallbackKey = (row: ConversionRow): string => {
     const username = String(
       row.purchase_player_username ||
       row.registration_player_username ||
       row.lead_player_username ||
       "",
     ).trim();
-    return username || row.phone || row.external_id || row.id || row.created_at;
+    return username || row.external_id || row.id || row.created_at;
+  };
+  const stageScopedPlayerKey = (row: ConversionRow): string => {
+    const phone = cleanDigits(row.phone);
+    const context = stageContextKey(row);
+    if (phone && context) return `phone:${phone}::context:${context.toLowerCase()}`;
+    if (phone) return `phone:${phone}`;
+    return `fallback:${stagePlayerFallbackKey(row).toLowerCase()}`;
   };
   const displayPlayerUsername = (groupRows: ConversionRow[]): string | null => {
     const latestUsername = [...groupRows].reverse()
@@ -885,7 +909,7 @@ export function buildFunnelContactsFromConversions(rows: ConversionRow[]): Funne
   for (const row of rows) {
     // Excluir eventos de prueba para no ensuciar el funnel.
     if (String(row.test_event_code ?? "").trim()) continue;
-    const key = `${row.user_id}::${stagePlayerKey(row)}::${stageGerenciaKey(row)}`;
+    const key = `${row.user_id}::${stageScopedPlayerKey(row)}`;
     const bucket = grouped.get(key) ?? [];
     bucket.push(row);
     grouped.set(key, bucket);

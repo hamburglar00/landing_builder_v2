@@ -154,6 +154,48 @@ test("no adjudica al recorrido una compra con promo arrastrado y gerencia recept
   assert.equal(stats.adFirstPurchaseEventsAttributed, 0);
 });
 
+test("los recorridos publicitarios usan phone + agency como identidad", async () => {
+  const { computeCoreStats } = await import("../lib/conversionStats");
+  const conversions = [
+    conversionRow("contact-a", {
+      contact_event_id: "contact-a",
+      promo_code: "PROMO-a",
+      assigned_gerencia_external_id: 10,
+      external_id: "shared-external",
+    }),
+    conversionRow("lead-a", {
+      lead_event_id: "lead-a",
+      promo_code: "PROMO-a",
+      lead_agency_id: "10",
+      external_id: "shared-external",
+    }),
+    conversionRow("purchase-a", {
+      purchase_event_id: "purchase-a",
+      purchase_type: "first",
+      promo_code: "PROMO-a",
+      purchase_agency_id: "10",
+      external_id: "shared-external",
+      valor: 100,
+    }),
+    conversionRow("purchase-b-same-promo-other-agency", {
+      purchase_event_id: "purchase-b",
+      purchase_type: "first",
+      promo_code: "PROMO-a",
+      purchase_agency_id: "20",
+      external_id: "shared-external",
+      valor: 200,
+    }),
+  ];
+
+  const stats = computeCoreStats(conversions, [], conversions, 200_000);
+
+  assert.equal(stats.adContactJourneys, 1);
+  assert.equal(stats.adLeadJourneysLinkedToContact, 1);
+  assert.equal(stats.adFirstPurchaseEvents, 2);
+  assert.equal(stats.adFirstPurchaseJourneysAttributed, 1);
+  assert.equal(stats.adFirstPurchaseEventsAttributed, 1);
+});
+
 test("el funnel separa tarjetas por jugador/gerencia y acota montos", async () => {
   const { buildFunnelContactsFromConversions } = await import("../lib/conversionsDb");
   const rows = [
@@ -161,8 +203,7 @@ test("el funnel separa tarjetas por jugador/gerencia y acota montos", async () =
       purchase_event_id: "purchase-a",
       purchase_type: "first",
       phone: "5491111111111",
-      purchase_player_username: "guille2737",
-      purchase_gerencia_id: 10,
+      purchase_agency_id: "10",
       purchase_gerencia_label: "Gerencia A",
       estado: "purchase",
       valor: 100,
@@ -171,8 +212,7 @@ test("el funnel separa tarjetas por jugador/gerencia y acota montos", async () =
       purchase_event_id: "purchase-b",
       purchase_type: "first",
       phone: "5491111111111",
-      purchase_player_username: "guille2737",
-      purchase_gerencia_id: 20,
+      purchase_agency_id: "20",
       purchase_gerencia_label: "Gerencia B",
       estado: "purchase",
       valor: 250,
@@ -185,8 +225,41 @@ test("el funnel separa tarjetas por jugador/gerencia y acota montos", async () =
   assert.deepEqual(
     contacts.map((c) => ({ gerencia: c.assigned_gerencia_label, total: c.total_valor, player: c.player_username })).sort((a, b) => a.total - b.total),
     [
-      { gerencia: "Gerencia A", total: 100, player: "guille2737" },
-      { gerencia: "Gerencia B", total: 250, player: "guille2737" },
+      { gerencia: "Gerencia A", total: 100, player: null },
+      { gerencia: "Gerencia B", total: 250, player: null },
     ],
   );
+});
+
+test("el funnel agrupa por phone + agency aunque cambie player_username", async () => {
+  const { buildFunnelContactsFromConversions } = await import("../lib/conversionsDb");
+  const rows = [
+    conversionRow("purchase-a-1", {
+      purchase_event_id: "purchase-a-1",
+      purchase_type: "first",
+      phone: "5491111111111",
+      purchase_agency_id: "10",
+      purchase_player_username: "temporal-phone",
+      purchase_gerencia_label: "Gerencia A",
+      estado: "purchase",
+      valor: 100,
+    }),
+    conversionRow("purchase-a-2", {
+      purchase_event_id: "purchase-a-2",
+      purchase_type: "repeat",
+      phone: "5491111111111",
+      purchase_agency_id: "10",
+      purchase_player_username: "guille2737",
+      purchase_gerencia_label: "Gerencia A",
+      estado: "purchase",
+      valor: 250,
+    }),
+  ];
+
+  const contacts = buildFunnelContactsFromConversions(rows);
+
+  assert.equal(contacts.length, 1);
+  assert.equal(contacts[0].total_valor, 350);
+  assert.equal(contacts[0].purchase_count, 2);
+  assert.equal(contacts[0].player_username, "guille2737");
 });

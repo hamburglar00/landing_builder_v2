@@ -62,36 +62,25 @@ function firstNonEmpty(...values: string[]): string {
   return values.find((value) => value !== "") ?? "";
 }
 
-function identityKey(row: ConversionRow): string {
-  return firstNonEmpty(
-    keyPart("player", row.purchase_player_username),
-    keyPart("player", row.registration_player_username),
-    keyPart("player", row.lead_player_username),
-    keyPart("external", row.external_id),
-    phoneKeyPart("phone", row.phone),
-    keyPart("email", row.email),
-    keyPart("row", row.id),
-    keyPart("created", row.created_at),
-  );
-}
-
-function gerenciaKey(row: ConversionRow, stage: JourneyStage): string {
+function stageAgencyKey(row: ConversionRow, stage: JourneyStage): string {
   const assigned = firstNonEmpty(
-    keyPart("gid", row.assigned_gerencia_id),
-    keyPart("gext", row.assigned_gerencia_external_id),
+    keyPart("agency", row.assigned_gerencia_external_id),
+    keyPart("agency", row.assigned_gerencia_id),
     keyPart("glabel", row.assigned_gerencia_label),
     phoneKeyPart("assigned_phone", row.telefono_asignado),
   );
   const lead = firstNonEmpty(
-    keyPart("gid", row.lead_gerencia_id),
-    keyPart("gext", row.lead_gerencia_external_id),
+    keyPart("agency", row.lead_agency_id),
+    keyPart("agency", row.lead_gerencia_external_id),
+    keyPart("agency", row.lead_gerencia_id),
     keyPart("glabel", row.lead_gerencia_label),
     phoneKeyPart("bot_phone", row.lead_bot_phone),
     assigned,
   );
   const purchase = firstNonEmpty(
-    keyPart("gid", row.purchase_gerencia_id),
-    keyPart("gext", row.purchase_gerencia_external_id),
+    keyPart("agency", row.purchase_agency_id),
+    keyPart("agency", row.purchase_gerencia_external_id),
+    keyPart("agency", row.purchase_gerencia_id),
     keyPart("glabel", row.purchase_gerencia_label),
     phoneKeyPart("bot_phone", row.purchase_bot_phone),
     lead,
@@ -102,10 +91,45 @@ function gerenciaKey(row: ConversionRow, stage: JourneyStage): string {
   return assigned;
 }
 
+function stagePlayerUsername(row: ConversionRow, stage: JourneyStage): string {
+  if (stage === "purchase") {
+    return firstNonEmpty(
+      keyPart("player", row.purchase_player_username),
+      keyPart("player", row.registration_player_username),
+      keyPart("player", row.lead_player_username),
+    );
+  }
+  if (stage === "lead") {
+    return firstNonEmpty(
+      keyPart("player", row.registration_player_username),
+      keyPart("player", row.lead_player_username),
+    );
+  }
+  return "";
+}
+
+function phoneScopedIdentityKey(row: ConversionRow, stage: JourneyStage): string {
+  const phone = phoneKeyPart("phone", row.phone);
+  const agency = stageAgencyKey(row, stage);
+  const player = stagePlayerUsername(row, stage);
+
+  if (phone && agency) return `${phone}::${agency}`;
+  if (phone && player) return `${phone}::${player}`;
+  if (phone) return phone;
+
+  return firstNonEmpty(
+    player,
+    keyPart("external", row.external_id),
+    keyPart("email", row.email),
+    keyPart("row", row.id),
+    keyPart("created", row.created_at),
+  );
+}
+
 function adJourneyKey(row: ConversionRow, stage: JourneyStage): string {
   const promo = keyPart("promo", row.promo_code) || keyPart("promo", `${stage}:${row.id || row.created_at}`);
-  const gerencia = gerenciaKey(row, stage) || keyPart("gerencia", "unknown");
-  return `${cleanText(row.user_id)}::${identityKey(row)}::${promo}::${gerencia}`;
+  const scopedIdentity = phoneScopedIdentityKey(row, stage);
+  return `${cleanText(row.user_id)}::${scopedIdentity}::${promo}`;
 }
 
 export function dedupeByUserPhone(rows: ConversionRow[]): Map<string, ConversionRow> {
