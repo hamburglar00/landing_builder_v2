@@ -47,9 +47,8 @@ export const DEFAULT_CONFIG: LandingThemeConfig = {
   whatsappPrefillText: "",
   leadCapture: {
     enabled: false,
-    title: "¿Querés atención personalizada y desbloquear un código promocional?",
-    description:
-      "Completá tus datos si querés recibir una atención más personalizada. Si dejás tu email, también podemos enviarte promociones exclusivas.",
+    title: "Desbloqueá atención personalizada",
+    description: "Completá tus datos o seguí directo a WhatsApp.",
     fields: {
       firstName: true,
       lastName: true,

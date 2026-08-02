@@ -107,9 +107,9 @@ const TEMPLATE_OPTIONS: { label: string; value: TemplateOption }[] = [
 ];
 
 const LEAD_CAPTURE_DEFAULT_TITLE =
-  "¿Querés atención personalizada y desbloquear un código promocional?";
+  "Desbloqueá atención personalizada";
 const LEAD_CAPTURE_DEFAULT_DESCRIPTION =
-  "Completá tus datos si querés recibir una atención más personalizada. Si dejás tu email, también podemos enviarte promociones exclusivas.";
+  "Completá tus datos o seguí directo a WhatsApp.";
 
 export function LandingTemplateSection({
   config,

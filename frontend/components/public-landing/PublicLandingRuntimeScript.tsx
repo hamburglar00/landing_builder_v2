@@ -65,10 +65,10 @@ export default function PublicLandingRuntimeScript({ slug, config }: Props) {
       enabled: config.leadCapture?.enabled === true,
       title:
         config.leadCapture?.title ||
-        "¿Querés atención personalizada y desbloquear un código promocional?",
+        "Desbloqueá atención personalizada",
       description:
         config.leadCapture?.description ||
-        "Completá tus datos si querés recibir una atención más personalizada. Si dejás tu email, también podemos enviarte promociones exclusivas.",
+        "Completá tus datos o seguí directo a WhatsApp.",
       fields: {
         firstName: config.leadCapture?.fields?.firstName === true,
         lastName: config.leadCapture?.fields?.lastName === true,
@@ -755,15 +755,13 @@ export default function PublicLandingRuntimeScript({ slug, config }: Props) {
       function createLeadCaptureInput(name, label, type, autocomplete) {
         var wrapper = document.createElement("label");
         wrapper.className = "public-lead-capture__field";
-        var span = document.createElement("span");
-        span.textContent = label;
         var input = document.createElement("input");
         input.type = type;
         input.name = name;
         input.autocomplete = autocomplete;
+        input.setAttribute("aria-label", label);
         input.placeholder = label;
         input.className = "public-lead-capture__input";
-        wrapper.appendChild(span);
         wrapper.appendChild(input);
         return wrapper;
       }
@@ -791,7 +789,7 @@ export default function PublicLandingRuntimeScript({ slug, config }: Props) {
 
         var title = document.createElement("h2");
         title.id = "public-lead-capture-title";
-        title.textContent = String(leadCapture.title || "¿Querés atención personalizada?");
+        title.textContent = String(leadCapture.title || "Desbloqueá atención personalizada");
 
         var description = document.createElement("p");
         description.className = "public-lead-capture__description";
@@ -809,11 +807,11 @@ export default function PublicLandingRuntimeScript({ slug, config }: Props) {
         var skip = document.createElement("button");
         skip.type = "button";
         skip.className = "public-lead-capture__skip";
-        skip.textContent = "Omitir e ir a WhatsApp";
+        skip.textContent = "OMITIR E IR A WHATSAPP";
         var submit = document.createElement("button");
         submit.type = "submit";
         submit.className = "public-lead-capture__submit";
-        submit.textContent = "Continuar a WhatsApp";
+        submit.textContent = "CONTINUAR A WHATSAPP →";
         actions.appendChild(skip);
         actions.appendChild(submit);
 

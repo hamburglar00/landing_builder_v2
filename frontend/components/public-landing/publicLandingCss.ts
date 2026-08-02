@@ -257,12 +257,17 @@ body.public-lead-capture-open {
   color: #04130a;
   background: #25d366;
   box-shadow: 0 14px 30px rgba(37, 211, 102, 0.24);
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  animation: publicLeadCapturePulse 2.7s ease-in-out infinite;
 }
 
 .public-lead-capture__skip {
   border: 1px solid rgba(255, 255, 255, 0.15);
   color: rgba(226, 232, 240, 0.86);
   background: rgba(255, 255, 255, 0.04);
+  text-transform: uppercase;
+  letter-spacing: 0.035em;
 }
 
 .public-lead-capture__submit:focus-visible,
@@ -274,7 +279,7 @@ body.public-lead-capture-open {
 
 @media (max-width: 430px), (max-height: 720px) {
   .public-lead-capture {
-    align-items: end;
+    align-items: center;
     padding: 10px 10px max(10px, env(safe-area-inset-bottom));
   }
 
@@ -332,6 +337,17 @@ body.public-lead-capture-open {
   .public-lead-capture__skip {
     min-height: 40px;
     font-size: 13px;
+  }
+}
+
+@keyframes publicLeadCapturePulse {
+  0%, 100% {
+    box-shadow: 0 14px 30px rgba(37, 211, 102, 0.24);
+    transform: translateZ(0) scale(1);
+  }
+  50% {
+    box-shadow: 0 16px 36px rgba(37, 211, 102, 0.38);
+    transform: translateZ(0) scale(1.015);
   }
 }
 
