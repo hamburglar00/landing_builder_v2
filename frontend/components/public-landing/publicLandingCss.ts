@@ -272,6 +272,69 @@ body.public-lead-capture-open {
   outline-offset: 2px;
 }
 
+@media (max-width: 430px), (max-height: 720px) {
+  .public-lead-capture {
+    align-items: end;
+    padding: 10px 10px max(10px, env(safe-area-inset-bottom));
+  }
+
+  .public-lead-capture__card {
+    width: 100%;
+    max-height: min(92svh, 580px);
+    border-radius: 18px;
+    padding: 16px;
+  }
+
+  .public-lead-capture__close {
+    top: 9px;
+    right: 9px;
+    width: 28px;
+    height: 28px;
+    font-size: 19px;
+  }
+
+  .public-lead-capture__card h2 {
+    padding-right: 30px;
+    font-size: 18px;
+    line-height: 1.08;
+  }
+
+  .public-lead-capture__description {
+    margin-top: 7px;
+    font-size: 12px;
+    line-height: 1.32;
+  }
+
+  .public-lead-capture__grid {
+    gap: 7px;
+    margin-top: 12px;
+  }
+
+  .public-lead-capture__field {
+    gap: 4px;
+    font-size: 10px;
+    letter-spacing: 0.06em;
+  }
+
+  .public-lead-capture__input {
+    min-height: 40px;
+    border-radius: 12px;
+    padding-inline: 12px;
+    font-size: 14px;
+  }
+
+  .public-lead-capture__actions {
+    gap: 8px;
+    margin-top: 12px;
+  }
+
+  .public-lead-capture__submit,
+  .public-lead-capture__skip {
+    min-height: 40px;
+    font-size: 13px;
+  }
+}
+
 .public-landing,
 .public-landing * {
   box-sizing: border-box;
