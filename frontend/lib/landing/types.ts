@@ -64,6 +64,18 @@ export type BackgroundMode = "single" | "rotating";
 
 export type PhoneKind = "carga" | "ads" | "mkt" | "assistant";
 
+export interface LandingLeadCaptureConfig {
+  enabled: boolean;
+  title: string;
+  description: string;
+  fields: {
+    firstName: boolean;
+    lastName: boolean;
+    phone: boolean;
+    email: boolean;
+  };
+}
+
 /**
  * Configuracin completa del tema de la landing (plantilla fija).
  * El usuario solo puede editar estos campos; no puede mover elementos ni cambiar layout.
@@ -125,6 +137,11 @@ export interface LandingThemeConfig {
    */
   interactionsEnabled: boolean;
   whatsappPrefillText: string;
+  /**
+   * Formulario opcional que aparece al tocar el CTA antes de redirigir a WhatsApp.
+   * Apagado por defecto para no agregar friccion.
+   */
+  leadCapture: LandingLeadCaptureConfig;
 }
 
 /**

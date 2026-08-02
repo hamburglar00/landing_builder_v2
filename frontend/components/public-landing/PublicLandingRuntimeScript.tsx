@@ -61,6 +61,21 @@ export default function PublicLandingRuntimeScript({ slug, config }: Props) {
       config.interactions?.enabled && config.interactions.whatsappPrefillText
         ? config.interactions.whatsappPrefillText
         : "",
+    leadCapture: {
+      enabled: config.leadCapture?.enabled === true,
+      title:
+        config.leadCapture?.title ||
+        "¿Querés atención personalizada y desbloquear un código promocional?",
+      description:
+        config.leadCapture?.description ||
+        "Completá tus datos si querés recibir una atención más personalizada. Si dejás tu email, también podemos enviarte promociones exclusivas.",
+      fields: {
+        firstName: config.leadCapture?.fields?.firstName === true,
+        lastName: config.leadCapture?.fields?.lastName === true,
+        phone: config.leadCapture?.fields?.phone === true,
+        email: config.leadCapture?.fields?.email === true,
+      },
+    },
     supabaseUrl: process.env.NEXT_PUBLIC_SUPABASE_URL || "",
     supabaseAnonKey: process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || "",
     socialProofItems: SOCIAL_PROOF_ITEMS,
@@ -82,6 +97,8 @@ export default function PublicLandingRuntimeScript({ slug, config }: Props) {
       var metaParamBuilderPromise = null;
       var officialMetaTracking = null;
       var prearmedContact = null;
+      var leadCaptureModal = null;
+      var pendingLeadCaptureButton = null;
       var CONTACT_DEDUP_TTL_MS = 5 * 60 * 1000;
       var SOCIAL_PROOF_INTERVAL_MS = 5000;
 
@@ -210,6 +227,29 @@ export default function PublicLandingRuntimeScript({ slug, config }: Props) {
           fn: fn,
           ln: ln,
           externalId: externalId
+        };
+      }
+
+      function applyLeadCaptureToIdentity(identity, capture) {
+        if (!capture || typeof capture !== "object") return identity;
+        var fields = (cfg.leadCapture && cfg.leadCapture.fields) || {};
+        var firstName = fields.firstName ? String(capture.firstName || "").trim() : "";
+        var lastName = fields.lastName ? String(capture.lastName || "").trim() : "";
+        var emailRaw = fields.email ? String(capture.email || "").trim() : "";
+        var phoneRaw = fields.phone ? String(capture.phone || "").trim() : "";
+
+        return {
+          emailRaw: emailRaw || identity.emailRaw,
+          phoneRaw: phoneRaw || identity.phoneRaw,
+          ct: identity.ct,
+          st: identity.st,
+          zip: identity.zip,
+          country: identity.country,
+          email: emailRaw ? normalizeEmail(emailRaw) : identity.email,
+          ph: phoneRaw ? normalizePhone(phoneRaw, cfg.phoneCountryCode) : identity.ph,
+          fn: firstName || identity.fn,
+          ln: lastName || identity.ln,
+          externalId: identity.externalId
         };
       }
 
@@ -687,7 +727,153 @@ export default function PublicLandingRuntimeScript({ slug, config }: Props) {
         return context;
       }
 
+      function hasLeadCaptureFields() {
+        var leadCapture = cfg.leadCapture || {};
+        var fields = leadCapture.fields || {};
+        return leadCapture.enabled === true &&
+          (fields.firstName === true || fields.lastName === true || fields.phone === true || fields.email === true);
+      }
+
+      function shouldShowLeadCapture(button) {
+        if (!hasLeadCaptureFields()) return false;
+        return button.getAttribute("data-public-landing-auto-start") !== "true";
+      }
+
+      function closeLeadCaptureModal() {
+        if (!leadCaptureModal) return;
+        leadCaptureModal.hidden = true;
+        document.body.classList.remove("public-lead-capture-open");
+        pendingLeadCaptureButton = null;
+      }
+
+      function continueAfterLeadCapture(capture) {
+        var button = pendingLeadCaptureButton;
+        closeLeadCaptureModal();
+        if (button) processCtaClick(button, capture || null);
+      }
+
+      function createLeadCaptureInput(name, label, type, autocomplete) {
+        var wrapper = document.createElement("label");
+        wrapper.className = "public-lead-capture__field";
+        var span = document.createElement("span");
+        span.textContent = label;
+        var input = document.createElement("input");
+        input.type = type;
+        input.name = name;
+        input.autocomplete = autocomplete;
+        input.placeholder = label;
+        input.className = "public-lead-capture__input";
+        wrapper.appendChild(span);
+        wrapper.appendChild(input);
+        return wrapper;
+      }
+
+      function initLeadCaptureModal() {
+        if (!hasLeadCaptureFields() || leadCaptureModal) return;
+        var leadCapture = cfg.leadCapture || {};
+        var fields = leadCapture.fields || {};
+        var overlay = document.createElement("div");
+        overlay.className = "public-lead-capture";
+        overlay.hidden = true;
+        overlay.setAttribute("role", "dialog");
+        overlay.setAttribute("aria-modal", "true");
+        overlay.setAttribute("aria-labelledby", "public-lead-capture-title");
+
+        var card = document.createElement("form");
+        card.className = "public-lead-capture__card";
+        card.noValidate = true;
+
+        var close = document.createElement("button");
+        close.type = "button";
+        close.className = "public-lead-capture__close";
+        close.setAttribute("aria-label", "Omitir formulario e ir a WhatsApp");
+        close.textContent = "×";
+
+        var title = document.createElement("h2");
+        title.id = "public-lead-capture-title";
+        title.textContent = String(leadCapture.title || "¿Querés atención personalizada?");
+
+        var description = document.createElement("p");
+        description.className = "public-lead-capture__description";
+        description.textContent = String(leadCapture.description || "");
+
+        var grid = document.createElement("div");
+        grid.className = "public-lead-capture__grid";
+        if (fields.firstName === true) grid.appendChild(createLeadCaptureInput("firstName", "Nombre", "text", "given-name"));
+        if (fields.lastName === true) grid.appendChild(createLeadCaptureInput("lastName", "Apellido", "text", "family-name"));
+        if (fields.phone === true) grid.appendChild(createLeadCaptureInput("phone", "Teléfono", "tel", "tel"));
+        if (fields.email === true) grid.appendChild(createLeadCaptureInput("email", "Email", "email", "email"));
+
+        var actions = document.createElement("div");
+        actions.className = "public-lead-capture__actions";
+        var skip = document.createElement("button");
+        skip.type = "button";
+        skip.className = "public-lead-capture__skip";
+        skip.textContent = "Omitir e ir a WhatsApp";
+        var submit = document.createElement("button");
+        submit.type = "submit";
+        submit.className = "public-lead-capture__submit";
+        submit.textContent = "Continuar a WhatsApp";
+        actions.appendChild(skip);
+        actions.appendChild(submit);
+
+        card.appendChild(close);
+        card.appendChild(title);
+        if (description.textContent) card.appendChild(description);
+        card.appendChild(grid);
+        card.appendChild(actions);
+        overlay.appendChild(card);
+        document.body.appendChild(overlay);
+        leadCaptureModal = overlay;
+
+        function readCaptureValues() {
+          var data = {};
+          Array.prototype.slice.call(card.querySelectorAll("input[name]")).forEach(function (input) {
+            data[input.name] = String(input.value || "").trim();
+          });
+          return data;
+        }
+
+        card.addEventListener("submit", function (event) {
+          event.preventDefault();
+          continueAfterLeadCapture(readCaptureValues());
+        });
+        skip.addEventListener("click", function () { continueAfterLeadCapture(null); });
+        close.addEventListener("click", function () { continueAfterLeadCapture(null); });
+        overlay.addEventListener("click", function (event) {
+          if (event.target === overlay) continueAfterLeadCapture(null);
+        });
+        document.addEventListener("keydown", function (event) {
+          if (!leadCaptureModal || leadCaptureModal.hidden) return;
+          if (event.key === "Escape") continueAfterLeadCapture(null);
+        });
+      }
+
+      function openLeadCaptureModal(button) {
+        initLeadCaptureModal();
+        if (!leadCaptureModal) {
+          processCtaClick(button, null);
+          return;
+        }
+        pendingLeadCaptureButton = button;
+        leadCaptureModal.hidden = false;
+        document.body.classList.add("public-lead-capture-open");
+        window.setTimeout(function () {
+          var first = leadCaptureModal.querySelector("input, button");
+          if (first && typeof first.focus === "function") first.focus();
+        }, 0);
+      }
+
       function handleCtaClick(button) {
+        if (clickLocked || button.disabled) return;
+        if (shouldShowLeadCapture(button)) {
+          openLeadCaptureModal(button);
+          return;
+        }
+        processCtaClick(button, null);
+      }
+
+      function processCtaClick(button, leadCaptureValues) {
         if (clickLocked || button.disabled) return;
         clickLocked = true;
         button.disabled = true;
@@ -700,7 +886,7 @@ export default function PublicLandingRuntimeScript({ slug, config }: Props) {
           var promoCode = context.promoCode;
           var message = context.message;
           var eventId = context.eventId;
-          var identity = context.identity;
+          var identity = applyLeadCaptureToIdentity(context.identity, leadCaptureValues);
           var tracking = context.tracking;
           var testEventCode = context.testEventCode;
           var shouldSkipContact = context.shouldSkipContact;

@@ -54,6 +54,17 @@ export type PublicLandingConfig = {
     enabled?: boolean;
     whatsappPrefillText?: string;
   };
+  leadCapture?: {
+    enabled?: boolean;
+    title?: string;
+    description?: string;
+    fields?: {
+      firstName?: boolean;
+      lastName?: boolean;
+      phone?: boolean;
+      email?: boolean;
+    };
+  };
   layout: {
     ctaPosition:
       | "top"

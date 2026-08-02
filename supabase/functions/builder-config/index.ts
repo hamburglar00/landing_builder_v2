@@ -169,7 +169,10 @@ Deno.serve(async (req) => {
     }
 
     // Asegurar que post_url sea SIEMPRE el endpoint de conversiones (nunca Sheet u otra URL).
-    const supabaseBase = (Deno.env.get("SUPABASE_URL") ?? "").replace(/\/$/, "");
+    const supabaseBase = (Deno.env.get("SUPABASE_URL") ?? "").replace(
+      /\/$/,
+      "",
+    );
     const isWrongUrl = (url: string) =>
       !url ||
       url.includes("script.google.com") ||
@@ -184,7 +187,9 @@ Deno.serve(async (req) => {
         .maybeSingle();
       const nombre = (profile?.nombre ?? "").trim();
       if (nombre) {
-        effectivePostUrl = `${supabaseBase}/functions/v1/conversions?name=${encodeURIComponent(nombre)}`;
+        effectivePostUrl = `${supabaseBase}/functions/v1/conversions?name=${
+          encodeURIComponent(nombre)
+        }`;
       }
     }
 
@@ -206,7 +211,15 @@ Deno.serve(async (req) => {
       const typography = (cfg.typography as Record<string, unknown>) ?? {};
       const ctaTypography = (typography.cta as Record<string, unknown>) ?? {};
       const rawBackground = (cfg.background as Record<string, unknown>) ?? {};
-      const rawInteractions = (cfg.interactions as Record<string, unknown>) ?? {};
+      const rawInteractions = (cfg.interactions as Record<string, unknown>) ??
+        {};
+      const rawLeadCapture = (cfg.leadCapture as Record<string, unknown>) ?? {};
+      const rawLeadCaptureFields =
+        (rawLeadCapture.fields as Record<string, unknown>) ?? {};
+      const rawConfigLeadCapture =
+        (rawConfig.leadCapture as Record<string, unknown>) ?? {};
+      const rawConfigLeadCaptureFields =
+        (rawConfigLeadCapture.fields as Record<string, unknown>) ?? {};
       const rawImages = Array.isArray(rawBackground.images)
         ? (rawBackground.images as string[])
         : [];
@@ -216,40 +229,69 @@ Deno.serve(async (req) => {
           ...tracking,
           postUrl: effectivePostUrl,
           phoneCountryCode,
-          sendContactPixel:
-            typeof tracking.sendContactPixel === "boolean"
-              ? tracking.sendContactPixel
-              : ((rawConfig.sendContactPixel as boolean | undefined) ?? true),
+          sendContactPixel: typeof tracking.sendContactPixel === "boolean"
+            ? tracking.sendContactPixel
+            : ((rawConfig.sendContactPixel as boolean | undefined) ?? true),
         },
         typography: {
           ...typography,
           fontFamily: "system",
           cta: {
             ...ctaTypography,
-            sizePx: (rawConfig.ctaFontSize as number) ?? (ctaTypography.sizePx as number) ?? 18,
-            weight:
-              (rawConfig.ctaBold as boolean | undefined)
-                ? 700
-                : ((rawConfig.ctaBold as boolean | undefined) === false
-                  ? 500
-                  : ((ctaTypography.weight as number) ?? 500)),
+            sizePx: (rawConfig.ctaFontSize as number) ??
+              (ctaTypography.sizePx as number) ?? 18,
+            weight: (rawConfig.ctaBold as boolean | undefined)
+              ? 700
+              : ((rawConfig.ctaBold as boolean | undefined) === false
+                ? 500
+                : ((ctaTypography.weight as number) ?? 500)),
           },
         },
         background: {
           ...rawBackground,
           images: rawImages.map((url) => buildOptimizedImageUrl(url)),
-          imagesResponsive: rawImages.map((url) => buildResponsiveImageSet(url)),
+          imagesResponsive: rawImages.map((url) =>
+            buildResponsiveImageSet(url)
+          ),
         },
         interactions: {
           ...rawInteractions,
-          enabled:
-            typeof rawConfig.interactionsEnabled === "boolean"
-              ? rawConfig.interactionsEnabled
-              : ((rawInteractions.enabled as boolean | undefined) ?? false),
-          whatsappPrefillText:
-            typeof rawConfig.whatsappPrefillText === "string"
-              ? rawConfig.whatsappPrefillText
-              : ((rawInteractions.whatsappPrefillText as string | undefined) ?? ""),
+          enabled: typeof rawConfig.interactionsEnabled === "boolean"
+            ? rawConfig.interactionsEnabled
+            : ((rawInteractions.enabled as boolean | undefined) ?? false),
+          whatsappPrefillText: typeof rawConfig.whatsappPrefillText === "string"
+            ? rawConfig.whatsappPrefillText
+            : ((rawInteractions.whatsappPrefillText as string | undefined) ??
+              ""),
+        },
+        leadCapture: {
+          ...rawLeadCapture,
+          enabled: typeof rawConfigLeadCapture.enabled === "boolean"
+            ? rawConfigLeadCapture.enabled
+            : ((rawLeadCapture.enabled as boolean | undefined) ?? false),
+          title: typeof rawConfigLeadCapture.title === "string"
+            ? rawConfigLeadCapture.title
+            : ((rawLeadCapture.title as string | undefined) ?? ""),
+          description: typeof rawConfigLeadCapture.description === "string"
+            ? rawConfigLeadCapture.description
+            : ((rawLeadCapture.description as string | undefined) ?? ""),
+          fields: {
+            ...rawLeadCaptureFields,
+            firstName: typeof rawConfigLeadCaptureFields.firstName === "boolean"
+              ? rawConfigLeadCaptureFields.firstName
+              : ((rawLeadCaptureFields.firstName as boolean | undefined) ??
+                true),
+            lastName: typeof rawConfigLeadCaptureFields.lastName === "boolean"
+              ? rawConfigLeadCaptureFields.lastName
+              : ((rawLeadCaptureFields.lastName as boolean | undefined) ??
+                true),
+            phone: typeof rawConfigLeadCaptureFields.phone === "boolean"
+              ? rawConfigLeadCaptureFields.phone
+              : ((rawLeadCaptureFields.phone as boolean | undefined) ?? true),
+            email: typeof rawConfigLeadCaptureFields.email === "boolean"
+              ? rawConfigLeadCaptureFields.email
+              : ((rawLeadCaptureFields.email as boolean | undefined) ?? true),
+          },
         },
       };
       return new Response(JSON.stringify(merged), {
@@ -275,8 +317,7 @@ Deno.serve(async (req) => {
 
     const payload = {
       schemaVersion: 1,
-      updatedAt:
-        asAny.updated_at ??
+      updatedAt: asAny.updated_at ??
         new Date().toISOString(),
       id: data.id,
       name: data.name,
@@ -286,7 +327,8 @@ Deno.serve(async (req) => {
         postUrl: effectivePostUrl,
         landingTag: data.landing_tag ?? "",
         phoneCountryCode,
-        sendContactPixel: (rawConfig.sendContactPixel as boolean | undefined) ?? true,
+        sendContactPixel: (rawConfig.sendContactPixel as boolean | undefined) ??
+          true,
       },
       background: {
         mode: (themeWithHex.backgroundMode as string) ?? "single",
@@ -343,23 +385,50 @@ Deno.serve(async (req) => {
         ctaGlow: themeWithHex.ctaGlowColor,
       },
       phoneSelection: {
-        mode:
-          (data.phone_mode as "random" | "fair" | null) ??
+        mode: (data.phone_mode as "random" | "fair" | null) ??
           "random",
       },
       interactions: {
-        enabled: (themeWithHex.interactionsEnabled as boolean | undefined) ?? false,
+        enabled: (themeWithHex.interactionsEnabled as boolean | undefined) ??
+          false,
         whatsappPrefillText: (themeWithHex.whatsappPrefillText as string) ?? "",
       },
+      leadCapture: {
+        enabled:
+          ((themeWithHex.leadCapture as Record<string, unknown> | undefined)
+            ?.enabled as boolean | undefined) ?? false,
+        title:
+          ((themeWithHex.leadCapture as Record<string, unknown> | undefined)
+            ?.title as string | undefined) ?? "",
+        description:
+          ((themeWithHex.leadCapture as Record<string, unknown> | undefined)
+            ?.description as string | undefined) ?? "",
+        fields: {
+          firstName:
+            (((themeWithHex.leadCapture as Record<string, unknown> | undefined)
+              ?.fields as Record<string, unknown> | undefined)
+              ?.firstName as boolean | undefined) ?? true,
+          lastName:
+            (((themeWithHex.leadCapture as Record<string, unknown> | undefined)
+              ?.fields as Record<string, unknown> | undefined)
+              ?.lastName as boolean | undefined) ?? true,
+          phone:
+            (((themeWithHex.leadCapture as Record<string, unknown> | undefined)
+              ?.fields as Record<string, unknown> | undefined)
+              ?.phone as boolean | undefined) ?? true,
+          email:
+            (((themeWithHex.leadCapture as Record<string, unknown> | undefined)
+              ?.fields as Record<string, unknown> | undefined)
+              ?.email as boolean | undefined) ?? true,
+        },
+      },
       layout: {
-        ctaPosition:
-          (themeWithHex.ctaPosition as
-            | "top"
-            | "between_title_and_info"
-            | "between_info_and_badge"
-            | "bottom") ?? "between_title_and_info",
-        template:
-          ((themeWithHex.template as string) === "template2" ? 2 : 1),
+        ctaPosition: (themeWithHex.ctaPosition as
+          | "top"
+          | "between_title_and_info"
+          | "between_info_and_badge"
+          | "bottom") ?? "between_title_and_info",
+        template: (themeWithHex.template as string) === "template2" ? 2 : 1,
       },
     };
 

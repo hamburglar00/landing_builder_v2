@@ -45,4 +45,16 @@ export const DEFAULT_CONFIG: LandingThemeConfig = {
   socialProofEnabled: false,
   interactionsEnabled: false,
   whatsappPrefillText: "",
+  leadCapture: {
+    enabled: false,
+    title: "¿Querés atención personalizada y desbloquear un código promocional?",
+    description:
+      "Completá tus datos si querés recibir una atención más personalizada. Si dejás tu email, también podemos enviarte promociones exclusivas.",
+    fields: {
+      firstName: true,
+      lastName: true,
+      phone: true,
+      email: true,
+    },
+  },
 };

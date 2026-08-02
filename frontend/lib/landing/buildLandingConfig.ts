@@ -65,6 +65,17 @@ export interface LandingConfigPayload {
     enabled: boolean;
     whatsappPrefillText: string;
   };
+  leadCapture?: {
+    enabled: boolean;
+    title: string;
+    description: string;
+    fields: {
+      firstName: boolean;
+      lastName: boolean;
+      phone: boolean;
+      email: boolean;
+    };
+  };
 }
 
 interface BuildArgs {
@@ -113,6 +124,17 @@ export function buildLandingConfig({
       interactions: {
         enabled: config.interactionsEnabled,
         whatsappPrefillText: config.whatsappPrefillText.trim(),
+      },
+      leadCapture: {
+        enabled: config.leadCapture?.enabled === true,
+        title: config.leadCapture?.title?.trim() || "",
+        description: config.leadCapture?.description?.trim() || "",
+        fields: {
+          firstName: config.leadCapture?.fields?.firstName === true,
+          lastName: config.leadCapture?.fields?.lastName === true,
+          phone: config.leadCapture?.fields?.phone === true,
+          email: config.leadCapture?.fields?.email === true,
+        },
       },
     };
   }
@@ -216,6 +238,17 @@ export function buildLandingConfig({
     interactions: {
       enabled: themeWithHex.interactionsEnabled,
       whatsappPrefillText: themeWithHex.whatsappPrefillText.trim(),
+    },
+    leadCapture: {
+      enabled: themeWithHex.leadCapture?.enabled === true,
+      title: themeWithHex.leadCapture?.title?.trim() || "",
+      description: themeWithHex.leadCapture?.description?.trim() || "",
+      fields: {
+        firstName: themeWithHex.leadCapture?.fields?.firstName === true,
+        lastName: themeWithHex.leadCapture?.fields?.lastName === true,
+        phone: themeWithHex.leadCapture?.fields?.phone === true,
+        email: themeWithHex.leadCapture?.fields?.email === true,
+      },
     },
   };
 }

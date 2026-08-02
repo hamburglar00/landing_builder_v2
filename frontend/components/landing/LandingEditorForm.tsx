@@ -106,6 +106,11 @@ const TEMPLATE_OPTIONS: { label: string; value: TemplateOption }[] = [
   { label: "Plantilla 3 (redirect)", value: "template3" },
 ];
 
+const LEAD_CAPTURE_DEFAULT_TITLE =
+  "¿Querés atención personalizada y desbloquear un código promocional?";
+const LEAD_CAPTURE_DEFAULT_DESCRIPTION =
+  "Completá tus datos si querés recibir una atención más personalizada. Si dejás tu email, también podemos enviarte promociones exclusivas.";
+
 export function LandingTemplateSection({
   config,
   setConfig,
@@ -193,6 +198,34 @@ export function LandingEditorForm({
   ];
 
   const isTemplate3 = config.template === "template3";
+  const leadCapture = config.leadCapture ?? {
+    enabled: false,
+    title: LEAD_CAPTURE_DEFAULT_TITLE,
+    description: LEAD_CAPTURE_DEFAULT_DESCRIPTION,
+    fields: {
+      firstName: true,
+      lastName: true,
+      phone: true,
+      email: true,
+    },
+  };
+
+  const updateLeadCapture = (
+    patch: Omit<Partial<LandingThemeConfig["leadCapture"]>, "fields"> & {
+      fields?: Partial<LandingThemeConfig["leadCapture"]["fields"]>;
+    },
+  ) => {
+    updateConfig(setConfig, {
+      leadCapture: {
+        ...leadCapture,
+        ...patch,
+        fields: {
+          ...leadCapture.fields,
+          ...(patch.fields ?? {}),
+        },
+      },
+    });
+  };
 
   const handleProbarAhora = async () => {
     if (!getPhoneForPreview) return;
@@ -812,6 +845,99 @@ export function LandingEditorForm({
               />
             </div>
           </div>
+        </section>
+      )}
+
+      {!isTemplate3 && (
+        <section className="rounded-xl border border-zinc-800 bg-zinc-900/50 p-4">
+          <div className="flex items-center justify-between gap-4">
+            <div>
+              <h3 className="text-sm font-semibold text-zinc-100">
+                Captura opcional antes de WhatsApp
+              </h3>
+              <p className="mt-1 text-xs text-zinc-500">
+                Muestra un formulario al tocar el CTA. El visitante puede omitirlo y continuar igual.
+              </p>
+            </div>
+            <div className="flex items-center gap-3">
+              <span className="text-xs font-medium text-zinc-400">
+                {leadCapture.enabled ? "Activada" : "Desactivada"}
+              </span>
+              <ToggleSwitch
+                checked={leadCapture.enabled}
+                label="Activar captura opcional antes de WhatsApp"
+                onChange={(enabled) => updateLeadCapture({ enabled })}
+              />
+            </div>
+          </div>
+
+          {leadCapture.enabled && (
+            <div className="mt-4 space-y-4 border-t border-zinc-800 pt-4">
+              <div className="grid gap-3 sm:grid-cols-2">
+                {[
+                  ["firstName", "Nombre"],
+                  ["lastName", "Apellido"],
+                  ["phone", "Teléfono"],
+                  ["email", "Email"],
+                ].map(([field, label]) => {
+                  const key = field as keyof typeof leadCapture.fields;
+                  return (
+                    <div
+                      key={field}
+                      className="flex items-center justify-between gap-3 rounded-lg border border-zinc-800 bg-zinc-950/40 px-3 py-2"
+                    >
+                      <span className="text-xs font-medium text-zinc-300">
+                        Pedir {label.toLowerCase()}
+                      </span>
+                      <ToggleSwitch
+                        checked={leadCapture.fields[key] === true}
+                        label={`Mostrar campo ${label}`}
+                        onChange={(checked) =>
+                          updateLeadCapture({
+                            fields: { [key]: checked } as Partial<typeof leadCapture.fields>,
+                          })
+                        }
+                      />
+                    </div>
+                  );
+                })}
+              </div>
+
+              <div>
+                <label
+                  htmlFor={fieldId("lead-capture-title")}
+                  className="mb-1 block text-xs font-medium text-zinc-400"
+                >
+                  Título del modal
+                </label>
+                <input
+                  id={fieldId("lead-capture-title")}
+                  type="text"
+                  value={leadCapture.title}
+                  onChange={(e) => updateLeadCapture({ title: e.target.value })}
+                  placeholder={LEAD_CAPTURE_DEFAULT_TITLE}
+                  className="w-full rounded-lg border border-zinc-700 bg-zinc-900 px-3 py-2 text-sm text-zinc-100 placeholder:text-zinc-600"
+                />
+              </div>
+
+              <div>
+                <label
+                  htmlFor={fieldId("lead-capture-description")}
+                  className="mb-1 block text-xs font-medium text-zinc-400"
+                >
+                  Descripción del modal
+                </label>
+                <textarea
+                  id={fieldId("lead-capture-description")}
+                  value={leadCapture.description}
+                  onChange={(e) => updateLeadCapture({ description: e.target.value })}
+                  rows={3}
+                  placeholder={LEAD_CAPTURE_DEFAULT_DESCRIPTION}
+                  className="w-full resize-y rounded-lg border border-zinc-700 bg-zinc-900 px-3 py-2 text-sm text-zinc-100 placeholder:text-zinc-600"
+                />
+              </div>
+            </div>
+          )}
         </section>
       )}
 
