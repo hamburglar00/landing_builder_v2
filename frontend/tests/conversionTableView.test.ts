@@ -10,6 +10,10 @@ import {
 
 const EXPECTED_HIDDEN_COLUMNS: ConversionColumnKey[] = [
   "zip",
+  "form_fn",
+  "form_ln",
+  "form_email",
+  "form_phone",
   "fbc",
   "fbp",
   "meta_pixel_id",

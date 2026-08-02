@@ -104,6 +104,10 @@ interface ConversionRow {
   landing_name: string;
   phone: string;
   email: string;
+  form_fn?: string | null;
+  form_ln?: string | null;
+  form_email?: string | null;
+  form_phone?: string | null;
   cuit_cuil: string;
   inferred_sex?: string;
   sex_source?: string;
@@ -1042,6 +1046,46 @@ function ensurePayloadEventTime(
 
 function sanitizePhone(v: unknown): string {
   return String(v ?? "").replace(/\D/g, "");
+}
+
+function sanitizeEmail(v: unknown): string {
+  const email = norm(v).toLowerCase();
+  if (!email || email.length > 254) return "";
+  if (!/^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/i.test(email)) return "";
+  return email;
+}
+
+function isPlausibleInternationalPhone(digits: string): boolean {
+  return /^\d{10,15}$/.test(digits);
+}
+
+function sanitizeContactPhone(
+  v: unknown,
+  rawCountryCallingCode: unknown,
+): string {
+  let digits = sanitizePhone(v);
+  if (!digits) return "";
+  if (digits.startsWith("00")) digits = digits.slice(2);
+
+  const countryCallingCode = sanitizePhone(rawCountryCallingCode);
+  if (
+    countryCallingCode &&
+    digits.startsWith(countryCallingCode) &&
+    isPlausibleInternationalPhone(digits)
+  ) {
+    return digits;
+  }
+
+  let national = digits.replace(/^0+/, "");
+  if (countryCallingCode === "54") {
+    national = national.replace(/^15/, "");
+    return national.length === 10 ? `54${national}` : "";
+  }
+  if (countryCallingCode === "595") {
+    return national.length === 9 ? `595${national}` : "";
+  }
+
+  return isPlausibleInternationalPhone(digits) ? digits : "";
 }
 
 function sanitizeCuitCuil(v: unknown): string {
@@ -2776,6 +2820,15 @@ async function handleContact(
   const inboundContactEventId = norm(p.contact_event_id || p.event_id);
   const inboundPromoCode = derivePromoCodeFromPayload(p);
   const payloadRaw = safePayloadRaw(p);
+  const hasLeadCaptureForm = toBool(p.lead_capture_form);
+  const formFn = hasLeadCaptureForm ? norm(p.form_fn ?? p.fn) : "";
+  const formLn = hasLeadCaptureForm ? norm(p.form_ln ?? p.ln) : "";
+  const formEmail = hasLeadCaptureForm
+    ? sanitizeEmail(p.form_email ?? p.email)
+    : "";
+  const formPhone = hasLeadCaptureForm
+    ? sanitizeContactPhone(p.form_phone ?? p.phone, p.phone_country_code)
+    : "";
 
   const existingDuplicate = await findExistingContactDuplicate(
     db,
@@ -2822,8 +2875,12 @@ async function handleContact(
     landing_id: landing.id?.trim() || null,
     user_id: landing.user_id,
     landing_name: landing.name,
-    phone: sanitizePhone(p.phone),
-    email: norm(p.email),
+    phone: sanitizeContactPhone(p.phone, p.phone_country_code),
+    email: sanitizeEmail(p.email),
+    form_fn: formFn,
+    form_ln: formLn,
+    form_email: formEmail,
+    form_phone: formPhone,
     cuit_cuil: payloadCuitCuil,
     fn: norm(p.fn),
     ln: norm(p.ln),
@@ -3122,7 +3179,7 @@ async function handleLead(
   const leadPayloadRaw = safePayloadRaw(p);
 
   const { fn: payloadFn, ln: payloadLn } = deriveNameFromPayload(p);
-  const payloadEmail = norm(p.email);
+  const payloadEmail = sanitizeEmail(p.email);
   const payloadCuitCuil = deriveCuitCuilFromPayload(p);
   const eventSourceUrl = await deriveEventSourceUrl(
     db,
@@ -3340,6 +3397,10 @@ async function handleLead(
       landing_name: trustedLineage?.landing_name || landing.name,
       phone: cleanPhone,
       email: payloadEmail || trustedLineage?.email || "",
+      form_fn: trustedLineage?.form_fn || "",
+      form_ln: trustedLineage?.form_ln || "",
+      form_email: trustedLineage?.form_email || "",
+      form_phone: trustedLineage?.form_phone || "",
       cuit_cuil: payloadCuitCuil || trustedLineage?.cuit_cuil || "",
       fn: payloadFn || trustedLineage?.fn || "",
       ln: payloadLn || trustedLineage?.ln || "",
@@ -3535,9 +3596,6 @@ async function handleLead(
       );
     }
     if (testEventCode) updates.test_event_code = testEventCode;
-    if (payloadFn) updates.fn = payloadFn;
-    if (payloadLn) updates.ln = payloadLn;
-    if (payloadEmail) updates.email = payloadEmail;
     if (payloadCuitCuil) updates.cuit_cuil = payloadCuitCuil;
     if (geo.ct) updates.ct = geo.ct;
     if (geo.st) updates.st = geo.st;
@@ -3568,6 +3626,9 @@ async function handleLead(
     ) {
       updates.ctwa_clid = inboundCtwaClid;
     }
+    if (payloadFn) updates.fn = payloadFn;
+    if (payloadLn) updates.ln = payloadLn;
+    if (payloadEmail) updates.email = payloadEmail;
     // Fill promo_code if row didn't have it
     if (promoCode && isFullPromoCode(promoCode) && !cur?.promo_code) {
       updates.promo_code = promoCode;
@@ -3807,6 +3868,9 @@ async function handleCompleteRegistration(
   }
 
   const registrationStatus = matchMode === "none" ? "created_new" : matchMode;
+  const { fn: payloadFn, ln: payloadLn } = deriveNameFromPayload(p);
+  const payloadEmail = sanitizeEmail(p.email);
+  const payloadCuitCuil = deriveCuitCuilFromPayload(p);
 
   if (targetRow?.id) {
     const updates: Record<string, unknown> = {
@@ -3837,6 +3901,10 @@ async function handleCompleteRegistration(
     if (playerUsername && !norm(targetRow.lead_player_username)) {
       updates.lead_player_username = playerUsername;
     }
+    if (payloadFn) updates.fn = payloadFn;
+    if (payloadLn) updates.ln = payloadLn;
+    if (payloadEmail) updates.email = payloadEmail;
+    if (payloadCuitCuil) updates.cuit_cuil = payloadCuitCuil;
     await db.from("conversions").update(updates).eq("id", targetRow.id);
     if (ctx) {
       ctx.conversionId = targetRow.id;
@@ -3897,9 +3965,6 @@ async function handleCompleteRegistration(
   }
 
   const resolvedPixelId = inboundMetaPixelId || config.pixel_id || "";
-  const { fn: payloadFn, ln: payloadLn } = deriveNameFromPayload(p);
-  const payloadEmail = norm(p.email);
-  const payloadCuitCuil = deriveCuitCuilFromPayload(p);
   const eventSourceUrl = await deriveEventSourceUrl(
     db,
     landing.name,
@@ -3921,6 +3986,10 @@ async function handleCompleteRegistration(
     landing_name: landing.name,
     phone: cleanPhone,
     email: payloadEmail,
+    form_fn: "",
+    form_ln: "",
+    form_email: "",
+    form_phone: "",
     cuit_cuil: payloadCuitCuil,
     fn: payloadFn,
     ln: payloadLn,
@@ -4151,7 +4220,7 @@ async function handlePurchase(
     p.promo_code ?? p.promoCode ?? promoCode,
   );
   const { fn: payloadFn, ln: payloadLn } = deriveNameFromPayload(p);
-  const payloadEmail = norm(p.email);
+  const payloadEmail = sanitizeEmail(p.email);
   const payloadCuitCuil = deriveCuitCuilFromPayload(p);
   const eventSourceUrl = await deriveEventSourceUrl(
     db,
@@ -4582,6 +4651,10 @@ async function handlePurchase(
       landing_name: firstSource?.landing_name || landing.name,
       phone: cleanPhone,
       email: payloadEmail || firstSource?.email || "",
+      form_fn: firstSource?.form_fn || "",
+      form_ln: firstSource?.form_ln || "",
+      form_email: firstSource?.form_email || "",
+      form_phone: firstSource?.form_phone || "",
       cuit_cuil: payloadCuitCuil || firstSource?.cuit_cuil || "",
       fn: payloadFn || firstSource?.fn || "",
       ln: payloadLn || firstSource?.ln || "",
@@ -4808,6 +4881,10 @@ async function handlePurchase(
     landing_name: repeatSourceRow?.landing_name ?? landing.name,
     phone: cleanPhone,
     email: payloadEmail || repeatSourceRow?.email || "",
+    form_fn: repeatSourceRow?.form_fn || "",
+    form_ln: repeatSourceRow?.form_ln || "",
+    form_email: repeatSourceRow?.form_email || "",
+    form_phone: repeatSourceRow?.form_phone || "",
     cuit_cuil: payloadCuitCuil || repeatSourceRow?.cuit_cuil || "",
     fn: payloadFn || repeatSourceRow?.fn || "",
     ln: payloadLn || repeatSourceRow?.ln || "",
@@ -5091,7 +5168,7 @@ async function handleSimplePurchase(
   }
   if (ctx && purchaseClaim.claimId) ctx.purchaseClaimId = purchaseClaim.claimId;
 
-  const payloadEmail = norm(p.email);
+  const payloadEmail = sanitizeEmail(p.email);
   const payloadCuitCuil = deriveCuitCuilFromPayload(p);
   const { fn: payloadFn, ln: payloadLn } = deriveNameFromPayload(p);
   const eventSourceUrl = await deriveEventSourceUrl(
@@ -5157,6 +5234,10 @@ async function handleSimplePurchase(
     landing_name: srcRow?.landing_name || landing.name,
     phone: cleanPhone,
     email: payloadEmail || srcRow?.email || "",
+    form_fn: srcRow?.form_fn || "",
+    form_ln: srcRow?.form_ln || "",
+    form_email: srcRow?.form_email || "",
+    form_phone: srcRow?.form_phone || "",
     cuit_cuil: payloadCuitCuil || srcRow?.cuit_cuil || "",
     fn: payloadFn || srcRow?.fn || "",
     ln: payloadLn || srcRow?.ln || "",

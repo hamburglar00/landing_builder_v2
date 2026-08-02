@@ -1,7 +1,7 @@
 import type { DateRange } from "@/components/conversiones/DateRangeFilter";
 
 export const ALL_COLUMNS = [
-  "phone","email","fn","ln","ct","st","zip","country","fbp","fbc","from_meta_ads","meta_pixel_id","pixel_id","pixel_attribution_source","pixel_attribution_conversion_id","source_platform","ctwa_clid",
+  "phone","email","form_fn","form_ln","form_email","form_phone","fn","ln","ct","st","zip","country","fbp","fbc","from_meta_ads","meta_pixel_id","pixel_id","pixel_attribution_source","pixel_attribution_conversion_id","source_platform","ctwa_clid",
   "contact_event_id","contact_event_time","sendContactPixel","contact_payload_raw","lead_event_id","lead_event_time","lead_payload_raw",
   "purchase_event_id","purchase_event_time","purchase_payload_raw","timestamp","clientIP","agentuser",
   "estado","valor","currency","purchase_type","purchase_capi_route","purchase_capi_route_reason","contact_status_capi","lead_status_capi","registration_status_capi","purchase_status_capi",
@@ -20,6 +20,10 @@ export type ConversionTableView = "technical" | "friendly";
 
 export const FRIENDLY_HIDDEN_COLUMNS = new Set<ConversionColumnKey>([
   "zip",
+  "form_fn",
+  "form_ln",
+  "form_email",
+  "form_phone",
   "fbc",
   "fbp",
   "meta_pixel_id",
@@ -71,6 +75,10 @@ export const FRIENDLY_HIDDEN_COLUMNS = new Set<ConversionColumnKey>([
 const FRIENDLY_COLUMN_LABELS: Record<ConversionColumnKey, string> = {
   phone: "Teléfono",
   email: "Correo electrónico",
+  form_fn: "Nombre formulario",
+  form_ln: "Apellido formulario",
+  form_email: "Email formulario",
+  form_phone: "Teléfono formulario",
   fn: "Nombre",
   ln: "Apellido",
   ct: "Ciudad",
@@ -164,6 +172,10 @@ export const COLUMN_NOTES: Partial<Record<ConversionColumnKey | "id", string>> =
   timestamp: "Fecha y hora de creacion de la fila (created_at).",
   phone: "Telefono recibido en payload (normalizado a digitos). Puede actualizarse con LEAD/PURCHASE.",
   email: "Email recibido en payload.",
+  form_fn: "Nombre escrito en el formulario opcional previo a WhatsApp. Es trazabilidad: LEAD/registro/PURCHASE pueden pisar el campo Nombre principal.",
+  form_ln: "Apellido escrito en el formulario opcional previo a WhatsApp. Es trazabilidad: LEAD/registro/PURCHASE pueden pisar el campo Apellido principal.",
+  form_email: "Email escrito en el formulario opcional previo a WhatsApp, guardado solo si tiene formato valido.",
+  form_phone: "Telefono escrito en el formulario opcional previo a WhatsApp, guardado solo si puede normalizarse como telefono plausible.",
   cuit_cuil: "CUIT/CUIL recibido en payload (normalizado a digitos).",
   inferred_sex: "Sexo inferido desde prefijo CUIT/CUIL: 20/23=male, 27=female, resto=unknown.",
   sex_source: "Origen del sexo inferido: cuit_cuil, name_catalog o unknown.",

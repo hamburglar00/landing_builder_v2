@@ -172,6 +172,43 @@ test("conserva Contact con eventID y deduplicación local", () => {
   assert.match(html, /requestIdleCallback/);
 });
 
+test("Contact se dispara una sola vez y despues del formulario opcional", () => {
+  const html = renderPublicLandingHtml({
+    slug: "oferta-test",
+    config: {
+      ...baseConfig,
+      leadCapture: {
+        enabled: true,
+        title: "Datos de prueba",
+        description: "Segui a WhatsApp.",
+        fields: {
+          firstName: true,
+          lastName: true,
+          phone: true,
+          email: true,
+        },
+      },
+    },
+  });
+
+  assert.equal(occurrences(html, "firePixelContact(eventId);"), 1);
+  assert.match(html, /return leadCapture\.enabled === true/);
+  assert.match(html, /if \(shouldShowLeadCapture\(button\)\) \{/);
+  assert.match(html, /openLeadCaptureModal\(button\);\s*return;/);
+  assert.match(html, /card\.addEventListener\("submit", function \(event\)/);
+  assert.match(html, /continueAfterLeadCapture\(readCaptureValues\(\)\)/);
+  assert.match(
+    html,
+    /skip\.addEventListener\("click", function \(\) \{ continueAfterLeadCapture\(null\); \}\)/,
+  );
+  assert.match(html, /test_event_code: testEventCode \|\| undefined/);
+  assert.match(html, /lead_capture_form: hasLeadCaptureForm \|\| undefined/);
+  assert.match(html, /form_fn: formFn \|\| undefined/);
+  assert.match(html, /form_ln: formLn \|\| undefined/);
+  assert.match(html, /form_email: formEmail \|\| undefined/);
+  assert.match(html, /form_phone: formPhone \|\| undefined/);
+});
+
 test("genera scripts públicos con JavaScript válido", () => {
   const html = renderPublicLandingHtml({
     slug: "oferta-test",

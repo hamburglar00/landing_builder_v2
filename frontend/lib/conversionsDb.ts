@@ -102,6 +102,10 @@ export interface ConversionRow {
   landing_name: string;
   phone: string;
   email: string;
+  form_fn?: string | null;
+  form_ln?: string | null;
+  form_email?: string | null;
+  form_phone?: string | null;
   cuit_cuil?: string;
   inferred_sex?: string;
   sex_source?: string;
@@ -672,7 +676,7 @@ export async function updateAllVisibleColumns(
 
 const CONVERSIONS_SELECT = `
   id, internal_id, landing_id, user_id, landing_name,
-  phone, email, cuit_cuil, inferred_sex, sex_source, fn, ln, ct, st, zip, country,
+  phone, email, form_fn, form_ln, form_email, form_phone, cuit_cuil, inferred_sex, sex_source, fn, ln, ct, st, zip, country,
   fbp, fbc, from_meta_ads, geo_source, meta_pixel_id, pixel_id,
   pixel_attribution_source, pixel_attribution_conversion_id,
   source_platform, ctwa_clid,

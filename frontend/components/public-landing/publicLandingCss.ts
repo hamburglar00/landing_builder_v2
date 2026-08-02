@@ -413,7 +413,7 @@ body.public-lead-capture-open {
   flex-direction: column;
   align-items: center;
   width: min(100%, 720px);
-  padding: 32px 20px;
+  padding: 32px 20px max(76px, calc(32px + env(safe-area-inset-bottom)));
 }
 
 .public-landing .content .title,
@@ -564,7 +564,7 @@ body.public-lead-capture-open {
   width: min(100vw, 430px);
   height: 100vh;
   height: 100svh;
-  padding: 0 16px calc(10px + env(safe-area-inset-bottom));
+  padding: 0 16px calc(46px + env(safe-area-inset-bottom));
   background: #000;
   display: flex;
   flex-direction: column;
@@ -1010,7 +1010,7 @@ body.public-lead-capture-open {
   }
 
   .public-landing.lp .artboard {
-    padding: 0 12px calc(8px + env(safe-area-inset-bottom));
+    padding: 0 12px calc(42px + env(safe-area-inset-bottom));
   }
 
   .public-landing.lp .frame {
@@ -1072,6 +1072,31 @@ body.public-lead-capture-open {
   }
 }
 
+@media (max-height: 720px) {
+  .public-landing.lp .artboard {
+    --cta-thumb-frame-height: 69svh;
+  }
+
+  .public-landing.lp .social-proof {
+    margin-top: 10px;
+    padding: 6px 9px;
+  }
+
+  .public-landing.lp .social-proof__quote {
+    font-size: 11px;
+    line-height: 1.16;
+  }
+
+  .public-landing.lp .social-proof__progress {
+    margin-top: 6px;
+  }
+
+  .public-landing.lp .features {
+    margin-top: 6px;
+    line-height: 1.02;
+  }
+}
+
 @media (max-width: 420px) {
   .public-landing.template3 .template3__card {
     min-height: 0;
@@ -1101,7 +1126,7 @@ body.public-lead-capture-open {
   }
 
   .public-landing.lp .artboard {
-    padding-bottom: 30px;
+    padding-bottom: calc(56px + env(safe-area-inset-bottom));
   }
 
   .public-landing.lp .frame {

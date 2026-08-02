@@ -134,6 +134,10 @@ function cellValue(
   switch (col) {
     case "phone": return <td key={col} className={`${mono} text-zinc-200`} title={tip(c.phone)}>{c.phone || "-"}</td>;
     case "email": return <td key={col} className={dim} title={tip(c.email)}>{c.email || "-"}</td>;
+    case "form_fn": return <td key={col} className={dim} title={tip(c.form_fn)}>{c.form_fn || "-"}</td>;
+    case "form_ln": return <td key={col} className={dim} title={tip(c.form_ln)}>{c.form_ln || "-"}</td>;
+    case "form_email": return <td key={col} className={dim} title={tip(c.form_email)}>{c.form_email || "-"}</td>;
+    case "form_phone": return <td key={col} className={dimMono} title={tip(c.form_phone)}>{c.form_phone || "-"}</td>;
     case "cuit_cuil": return <td key={col} className={dimMono} title={tip(c.cuit_cuil)}>{c.cuit_cuil || "-"}</td>;
     case "inferred_sex": return <td key={col} className={dim} title={tip(c.inferred_sex)}>{c.inferred_sex || "-"}</td>;
     case "sex_source": return <td key={col} className={dim} title={tip(c.sex_source)}>{c.sex_source || "-"}</td>;

@@ -885,6 +885,23 @@ export default function PublicLandingRuntimeScript({ slug, config }: Props) {
           var message = context.message;
           var eventId = context.eventId;
           var identity = applyLeadCaptureToIdentity(context.identity, leadCaptureValues);
+          var captureFields = (cfg.leadCapture && cfg.leadCapture.fields) || {};
+          var hasLeadCaptureForm = !!leadCaptureValues;
+          var formFn = hasLeadCaptureForm && captureFields.firstName
+            ? String(leadCaptureValues.firstName || "").trim()
+            : "";
+          var formLn = hasLeadCaptureForm && captureFields.lastName
+            ? String(leadCaptureValues.lastName || "").trim()
+            : "";
+          var formEmail = hasLeadCaptureForm && captureFields.email
+            ? normalizeEmail(leadCaptureValues.email || "")
+            : "";
+          var formPhoneRaw = hasLeadCaptureForm && captureFields.phone
+            ? String(leadCaptureValues.phone || "").trim()
+            : "";
+          var formPhone = formPhoneRaw
+            ? normalizePhone(formPhoneRaw, cfg.phoneCountryCode)
+            : "";
           var tracking = context.tracking;
           var testEventCode = context.testEventCode;
           var shouldSkipContact = context.shouldSkipContact;
@@ -923,7 +940,13 @@ export default function PublicLandingRuntimeScript({ slug, config }: Props) {
                 external_id: identity.externalId,
                 event_source_url: safeEventSourceUrl(),
                 email: identity.emailRaw,
-                phone: identity.phoneRaw,
+                phone: identity.ph || identity.phoneRaw,
+                phone_country_code: cfg.phoneCountryCode || undefined,
+                lead_capture_form: hasLeadCaptureForm || undefined,
+                form_fn: formFn || undefined,
+                form_ln: formLn || undefined,
+                form_email: formEmail || undefined,
+                form_phone: formPhone || undefined,
                 fn: identity.fn || undefined,
                 ln: identity.ln || undefined,
                 ct: identity.ct || undefined,
