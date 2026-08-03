@@ -459,7 +459,6 @@ body.public-lead-capture-open {
   padding: 12px 16px;
   margin-top: 25px;
   transition: transform 0.25s ease, opacity 0.25s ease;
-  animation: publicLandingHeartbeat 2s infinite ease-in-out;
 }
 
 .public-landing .container.background-image.template1-bottom-layout {
@@ -493,10 +492,10 @@ body.public-lead-capture-open {
   content: "";
   position: absolute;
   inset: 0;
-  width: 50%;
-  background: linear-gradient(120deg, transparent, rgba(255, 255, 255, 0.55), transparent);
+  width: 44%;
+  background: linear-gradient(120deg, transparent, rgba(255, 255, 255, 0.34), transparent);
   transform: translateX(-150%) skewX(-25deg);
-  animation: publicLandingShineX 3.5s infinite;
+  animation: publicLandingShineX 5.8s infinite;
   pointer-events: none;
 }
 
@@ -513,6 +512,11 @@ body.public-lead-capture-open {
   cursor: not-allowed;
   opacity: 0.75;
   animation: none;
+}
+
+.public-landing .whatsapp-button:disabled::before {
+  animation: none;
+  opacity: 0;
 }
 
 .public-landing .whatsapp-icon {
@@ -678,21 +682,20 @@ body.public-lead-capture-open {
   transition: transform 0.12s ease, box-shadow 0.12s ease;
   overflow: visible;
   isolation: isolate;
-  animation: publicLandingCtaHeartbeat 1.6s ease-in-out infinite;
   will-change: transform;
 }
 
 .public-landing.lp .cta::after {
   content: "";
   position: absolute;
-  inset: -4px;
+  inset: -3px;
   border-radius: inherit;
-  border: 2px solid rgba(255, 255, 255, 0.44);
+  border: 1px solid rgba(255, 255, 255, 0.34);
   opacity: 0;
   transform: scale(1);
   pointer-events: none;
   z-index: 0;
-  animation: publicLandingCtaPulseRing 1.45s ease-out infinite;
+  animation: publicLandingCtaPulseRing 2.8s ease-out infinite;
   will-change: transform, opacity;
 }
 
@@ -720,18 +723,23 @@ body.public-lead-capture-open {
   opacity: 0.75;
 }
 
+.public-landing.lp .cta:disabled::after {
+  animation: none;
+  opacity: 0;
+}
+
 @keyframes publicLandingCtaPulseRing {
   0% {
-    opacity: 0.48;
+    opacity: 0.34;
     transform: scale(1);
   }
   70% {
     opacity: 0;
-    transform: scale(1.13);
+    transform: scale(1.07);
   }
   100% {
     opacity: 0;
-    transform: scale(1.13);
+    transform: scale(1.07);
   }
 }
 
