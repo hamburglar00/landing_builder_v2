@@ -47,6 +47,19 @@ type Props = {
   isAdmin?: boolean;
 };
 
+type PhoneMetricRow = {
+  gerencia_phone_id: number;
+  messages_received: number;
+  messages_received_historical: number;
+  calculated_at: string;
+};
+
+type PhoneMetricSummary = {
+  messagesReceived: number;
+  messagesReceivedHistorical: number;
+  calculatedAt: string;
+};
+
 const formatPhone = (raw: string) => {
   if (!raw) return "";
   const digits = raw.replace(/\D/g, "");
@@ -91,11 +104,8 @@ export function TelefonosPageContent({
   const [phonesByGerencia, setPhonesByGerencia] = useState<
     Record<number, GerenciaPhoneRow[]>
   >({});
-  const [leadUniqueByAssignedPhone, setLeadUniqueByAssignedPhone] = useState<
-    Record<string, number>
-  >({});
-  const [leadUniqueHistoricalByAssignedPhone, setLeadUniqueHistoricalByAssignedPhone] = useState<
-    Record<string, number>
+  const [phoneMetricsById, setPhoneMetricsById] = useState<
+    Record<number, PhoneMetricSummary>
   >({});
   const [userId, setUserId] = useState<string | null>(null);
   const [ready, setReady] = useState(false);
@@ -198,112 +208,31 @@ export function TelefonosPageContent({
     }
     setPhonesByGerencia(byGerencia);
 
-    const messagesResetAtByAssignedPhone = new Map<string, number>();
-    for (const p of phones ?? []) {
-      const assignedDigits = onlyDigits(String(p.phone ?? ""));
-      const resetAt = String((p as GerenciaPhoneRow).messages_reset_at ?? "").trim();
-      const resetMs = resetAt ? Date.parse(resetAt) : NaN;
-      if (assignedDigits && Number.isFinite(resetMs)) {
-        messagesResetAtByAssignedPhone.set(assignedDigits, resetMs);
-      }
+    const phoneIds = (phones ?? [])
+      .map((phone) => Number((phone as GerenciaPhoneRow).id))
+      .filter((id) => Number.isFinite(id) && id > 0);
+    if (phoneIds.length === 0) {
+      setPhoneMetricsById({});
+      return;
     }
 
-    const hiddenConversionIds = new Set<string>();
-    if (!isAdmin) {
-      const { data: hiddenRows, error: hiddenError } = await supabase
-        .from("hidden_conversions")
-        .select("conversion_id")
-        .eq("hidden_by", uid);
-      if (hiddenError) throw hiddenError;
-      for (const row of hiddenRows ?? []) {
-        const id = String(row.conversion_id ?? "").trim();
-        if (id) hiddenConversionIds.add(id);
-      }
+    const { data: metricsRows, error: metricsError } = await supabase
+      .from("phone_metrics")
+      .select("gerencia_phone_id, messages_received, messages_received_historical, calculated_at")
+      .in("gerencia_phone_id", phoneIds);
+    if (metricsError) throw metricsError;
+
+    const metricsById: Record<number, PhoneMetricSummary> = {};
+    for (const metric of (metricsRows ?? []) as PhoneMetricRow[]) {
+      const id = Number(metric.gerencia_phone_id);
+      if (!Number.isFinite(id)) continue;
+      metricsById[id] = {
+        messagesReceived: Number(metric.messages_received) || 0,
+        messagesReceivedHistorical: Number(metric.messages_received_historical) || 0,
+        calculatedAt: String(metric.calculated_at ?? ""),
+      };
     }
-
-    const contactExternalKeys = new Set<string>();
-    const leadExternalKeysByAssignedPhone = new Map<string, Set<string>>();
-    const leadExternalKeysHistoricalByAssignedPhone = new Map<string, Set<string>>();
-    const pageSize = 1000;
-    let offset = 0;
-    while (true) {
-      const baseLeadQuery = supabase
-        .from("conversions")
-        .select("id, user_id, external_id, telefono_asignado, lead_event_id, lead_event_time, contact_event_id, test_event_code")
-        .neq("telefono_asignado", "")
-        .range(offset, offset + pageSize - 1);
-
-      const { data: leadRows, error: leadsError } = await (isAdmin
-        ? baseLeadQuery
-        : baseLeadQuery.eq("user_id", uid));
-      if (leadsError) throw leadsError;
-
-      const chunk = leadRows ?? [];
-      for (const row of chunk) {
-        const conversionId = String(row.id ?? "").trim();
-        if (!isAdmin && conversionId && hiddenConversionIds.has(conversionId)) continue;
-        const testEventCode = typeof row.test_event_code === "string"
-          ? row.test_event_code.trim()
-          : "";
-        if (testEventCode) continue;
-        const externalId = typeof row.external_id === "string"
-          ? row.external_id.trim()
-          : "";
-        if (!externalId) continue;
-        const key = `${row.user_id}::${externalId}`;
-        const assignedDigits = onlyDigits(row.telefono_asignado ?? "");
-        if (!assignedDigits) continue;
-        const contactEventId = typeof row.contact_event_id === "string"
-          ? row.contact_event_id.trim()
-          : "";
-        if (contactEventId) {
-          contactExternalKeys.add(key);
-        }
-        const leadEventId = typeof row.lead_event_id === "string"
-          ? row.lead_event_id.trim()
-          : "";
-        if (!leadEventId) continue;
-        if (!leadExternalKeysHistoricalByAssignedPhone.has(assignedDigits)) {
-          leadExternalKeysHistoricalByAssignedPhone.set(assignedDigits, new Set<string>());
-        }
-        leadExternalKeysHistoricalByAssignedPhone.get(assignedDigits)?.add(key);
-        const resetMs = messagesResetAtByAssignedPhone.get(assignedDigits);
-        if (resetMs != null) {
-          const leadEventTime = Number(row.lead_event_time);
-          const leadMs = Number.isFinite(leadEventTime) && leadEventTime > 0
-            ? leadEventTime * 1000
-            : NaN;
-          if (!Number.isFinite(leadMs) || leadMs < resetMs) continue;
-        }
-        if (!leadExternalKeysByAssignedPhone.has(assignedDigits)) {
-          leadExternalKeysByAssignedPhone.set(assignedDigits, new Set<string>());
-        }
-        leadExternalKeysByAssignedPhone.get(assignedDigits)?.add(key);
-      }
-
-      if (chunk.length < pageSize) break;
-      offset += pageSize;
-    }
-
-    const countsByAssigned: Record<string, number> = {};
-    for (const [assignedPhone, leadKeys] of leadExternalKeysByAssignedPhone.entries()) {
-      let linkedCount = 0;
-      for (const leadKey of leadKeys) {
-        if (contactExternalKeys.has(leadKey)) linkedCount++;
-      }
-      countsByAssigned[assignedPhone] = linkedCount;
-    }
-
-    setLeadUniqueByAssignedPhone(countsByAssigned);
-    const historicalCountsByAssigned: Record<string, number> = {};
-    for (const [assignedPhone, leadKeys] of leadExternalKeysHistoricalByAssignedPhone.entries()) {
-      let linkedCount = 0;
-      for (const leadKey of leadKeys) {
-        if (contactExternalKeys.has(leadKey)) linkedCount++;
-      }
-      historicalCountsByAssigned[assignedPhone] = linkedCount;
-    }
-    setLeadUniqueHistoricalByAssignedPhone(historicalCountsByAssigned);
+    setPhoneMetricsById(metricsById);
   }, [isAdmin, workspaceCurrency]);
 
   const getActivePhonesCount = useCallback(() => {
@@ -729,6 +658,16 @@ export function TelefonosPageContent({
         );
       })
     : gerencias;
+  const latestPhoneMetricsAt = Object.values(phoneMetricsById).reduce((latest, metric) => {
+    const timestamp = Date.parse(metric.calculatedAt);
+    return Number.isFinite(timestamp) ? Math.max(latest, timestamp) : latest;
+  }, 0);
+  const phoneMetricsLabel = latestPhoneMetricsAt > 0
+    ? new Date(latestPhoneMetricsAt).toLocaleTimeString("es-AR", {
+      hour: "2-digit",
+      minute: "2-digit",
+    })
+    : "";
 
   return (
     <div className="space-y-6">
@@ -753,6 +692,10 @@ export function TelefonosPageContent({
             ? "Próxima sincronización automática (cron):"
             : "Próxima sincronización automática:"}{" "}
               <span className="font-mono text-[var(--color-text)]">{nextSyncCountdown}</span>
+            </span>
+            <span className="mt-1 block text-[11px] text-[var(--color-text-disabled)]">
+              Métricas de mensajes calculadas por backend cada 5 min
+              {phoneMetricsLabel ? ` · última actualización ${phoneMetricsLabel}` : ""}.
             </span>
           </>
         }
@@ -887,12 +830,12 @@ export function TelefonosPageContent({
               hasPhones && isPbadminSource && phones.every((p) => p.source_available === false);
             const totalMessages = phones.reduce(
               (acc, p) =>
-                acc + (leadUniqueByAssignedPhone[onlyDigits(p.phone)] ?? 0),
+                acc + (phoneMetricsById[p.id]?.messagesReceived ?? 0),
               0,
             );
             const totalHistoricalMessages = phones.reduce(
               (acc, p) =>
-                acc + (leadUniqueHistoricalByAssignedPhone[onlyDigits(p.phone)] ?? 0),
+                acc + (phoneMetricsById[p.id]?.messagesReceivedHistorical ?? 0),
               0,
             );
             const isOpen = openGerenciaId === g.id;
@@ -1143,10 +1086,10 @@ export function TelefonosPageContent({
                                   {p.usage_count}
                                 </td>
                                 <td className="px-3 py-2 text-zinc-300">
-                                  {leadUniqueByAssignedPhone[onlyDigits(p.phone)] ?? 0}
+                                  {phoneMetricsById[p.id]?.messagesReceived ?? 0}
                                 </td>
                                 <td className="px-3 py-2 text-zinc-300">
-                                  {leadUniqueHistoricalByAssignedPhone[onlyDigits(p.phone)] ?? 0}
+                                  {phoneMetricsById[p.id]?.messagesReceivedHistorical ?? 0}
                                 </td>
                                 <td className="px-3 py-2 text-xs text-zinc-500">
                                   {(g.source_type ?? "pbadmin") === "manual" ? (
