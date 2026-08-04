@@ -18,16 +18,24 @@ const EXPECTED_HIDDEN_COLUMNS: ConversionColumnKey[] = [
   "fbp",
   "meta_pixel_id",
   "ctwa_clid",
+  "contact_event_id",
   "contact_event_time",
+  "sendContactPixel",
   "contact_payload_raw",
+  "lead_event_id",
   "lead_event_time",
   "lead_payload_raw",
+  "purchase_event_id",
   "purchase_event_time",
   "purchase_payload_raw",
   "clientIP",
   "agentuser",
   "purchase_capi_route",
   "purchase_capi_route_reason",
+  "contact_status_capi",
+  "lead_status_capi",
+  "registration_status_capi",
+  "purchase_status_capi",
   "device_type",
   "geo_city",
   "geo_region",
@@ -36,6 +44,7 @@ const EXPECTED_HIDDEN_COLUMNS: ConversionColumnKey[] = [
   "cuit_cuil",
   "inferred_sex",
   "sex_source",
+  "external_id",
   "lead_bot_phone",
   "lead_player_username",
   "lead_agency_id",
@@ -77,12 +86,7 @@ test("la vista reducida oculta exactamente las columnas técnicas solicitadas", 
     "phone",
     "email",
     "pixel_id",
-    "contact_event_id",
-    "lead_event_id",
-    "purchase_event_id",
-    "contact_status_capi",
-    "lead_status_capi",
-    "purchase_status_capi",
+    "test_event_code",
   ] satisfies ConversionColumnKey[]) {
     assert.equal(friendlyColumns.includes(column), true, column);
   }
@@ -99,5 +103,5 @@ test("la vista técnica conserva todas las columnas y sus nombres originales", (
 test("la vista reducida usa encabezados comprensibles", () => {
   assert.equal(columnLabel("phone", "friendly"), "Teléfono");
   assert.equal(columnLabel("timestamp", "friendly"), "Fecha y hora");
-  assert.equal(columnLabel("purchase_status_capi", "friendly"), "Envío CAPI de Purchase");
+  assert.equal(columnLabel("test_event_code", "friendly"), "Test Event Code");
 });
