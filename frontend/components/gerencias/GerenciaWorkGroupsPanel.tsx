@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useMemo, useState } from "react";
 import type { Gerencia, GerenciaWorkGroup } from "@/lib/gerencias/types";
 import { useAppConfirm } from "@/components/ui/AppConfirmDialog";
 
@@ -27,6 +27,16 @@ export function GerenciaWorkGroupsPanel({
   const [editingId, setEditingId] = useState<number | null>(null);
   const [editName, setEditName] = useState("");
   const [editSelectedIds, setEditSelectedIds] = useState<number[]>([]);
+
+  const assignedGroupIdByGerenciaId = useMemo(() => {
+    const map = new Map<number, number>();
+    for (const group of groups) {
+      for (const id of group.gerenciaIds) {
+        if (!map.has(id)) map.set(id, group.id);
+      }
+    }
+    return map;
+  }, [groups]);
 
   const toggleId = (id: number, list: number[], setter: (next: number[]) => void) => {
     setter(list.includes(id) ? list.filter((x) => x !== id) : [...list, id]);
@@ -55,27 +65,40 @@ export function GerenciaWorkGroupsPanel({
     setEditSelectedIds([]);
   };
 
-  const renderGerenciaPicker = (ids: number[], setIds: (next: number[]) => void) => (
-    <div className="grid max-h-52 gap-2 overflow-auto rounded-lg border border-zinc-800 bg-zinc-950/40 p-2 sm:grid-cols-2 lg:grid-cols-3">
-      {gerencias.length === 0 ? (
-        <p className="text-xs text-zinc-500">Primero creá gerencias para poder agruparlas.</p>
-      ) : (
-        gerencias.map((g) => (
-          <label key={g.id} className="flex cursor-pointer items-center gap-2 rounded-md px-2 py-1.5 text-xs text-zinc-300 hover:bg-zinc-900">
-            <input
-              type="checkbox"
-              checked={ids.includes(g.id)}
-              onChange={() => toggleId(g.id, ids, setIds)}
-              className="rounded border-zinc-600"
-            />
-            <span className="truncate">
-              {g.nombre} {g.gerencia_id ? `(ID ${g.gerencia_id})` : ""}
-            </span>
-          </label>
-        ))
-      )}
-    </div>
-  );
+  const renderGerenciaPicker = (
+    ids: number[],
+    setIds: (next: number[]) => void,
+    currentGroupId: number | null = null,
+  ) => {
+    const availableGerencias = gerencias.filter((g) => {
+      const assignedGroupId = assignedGroupIdByGerenciaId.get(g.id);
+      return ids.includes(g.id) || assignedGroupId === undefined || assignedGroupId === currentGroupId;
+    });
+
+    return (
+      <div className="grid max-h-52 gap-2 overflow-auto rounded-lg border border-zinc-800 bg-zinc-950/40 p-2 sm:grid-cols-2 lg:grid-cols-3">
+        {gerencias.length === 0 ? (
+          <p className="text-xs text-zinc-500">Primero creá gerencias para poder agruparlas.</p>
+        ) : availableGerencias.length === 0 ? (
+          <p className="text-xs text-zinc-500">Todas las gerencias ya están asignadas a un grupo.</p>
+        ) : (
+          availableGerencias.map((g) => (
+            <label key={g.id} className="flex cursor-pointer items-center gap-2 rounded-md px-2 py-1.5 text-xs text-zinc-300 hover:bg-zinc-900">
+              <input
+                type="checkbox"
+                checked={ids.includes(g.id)}
+                onChange={() => toggleId(g.id, ids, setIds)}
+                className="rounded border-zinc-600"
+              />
+              <span className="truncate">
+                {g.nombre} {g.gerencia_id ? `(ID ${g.gerencia_id})` : ""}
+              </span>
+            </label>
+          ))
+        )}
+      </div>
+    );
+  };
 
   return (
     <section className="rounded-xl border border-zinc-800 bg-zinc-900/50 p-4">
@@ -83,7 +106,7 @@ export function GerenciaWorkGroupsPanel({
         <div>
           <h2 className="text-sm font-semibold text-zinc-100">Grupos de trabajo</h2>
           <p className="mt-1 text-xs text-zinc-500">
-            Agrupá gerencias para encontrarlas más rápido. Una gerencia puede estar en varios grupos.
+            Agrupá gerencias para encontrarlas más rápido. Cada gerencia puede estar en un solo grupo.
           </p>
         </div>
         <span className="rounded-full border border-zinc-700 px-2 py-1 text-[11px] text-zinc-400">
@@ -131,7 +154,7 @@ export function GerenciaWorkGroupsPanel({
                       onChange={(e) => setEditName(e.target.value)}
                       className="w-full rounded-lg border border-zinc-700 bg-zinc-950 px-3 py-2 text-sm text-zinc-100"
                     />
-                    {renderGerenciaPicker(editSelectedIds, setEditSelectedIds)}
+                    {renderGerenciaPicker(editSelectedIds, setEditSelectedIds, group.id)}
                     <div className="flex justify-end gap-2">
                       <button type="button" onClick={() => setEditingId(null)} className="rounded-lg border border-zinc-700 px-3 py-1.5 text-xs text-zinc-300 hover:bg-zinc-800">
                         Cancelar
@@ -158,7 +181,7 @@ export function GerenciaWorkGroupsPanel({
                         onClick={async () => {
                           const confirmed = await confirmAction({
                             title: "Eliminar grupo",
-                            description: `El grupo “${group.name}” dejará de estar disponible.`,
+                            description: `El grupo "${group.name}" dejará de estar disponible.`,
                             confirmLabel: "Eliminar grupo",
                             danger: true,
                           });
