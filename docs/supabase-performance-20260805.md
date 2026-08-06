@@ -34,6 +34,15 @@ Applied migrations:
     minute.
   - Frequencies remain the same; only minute offsets changed.
 
+- `20260805215000_optimize_pg_stat_top_queries.sql`
+  - Adds indexes matched to the exact top `pg_stat_statements` queries observed
+    after the first optimization batch.
+  - Targets purchase dedupe by `purchase_coelsa_id` and
+    `purchase_transaction_id`, inbox dedupe by `action_event_id`, purchase CAPI
+    retry scans, conversion log backfill scans, user conversion lists, and
+    normalized phone metrics lookups.
+  - Does not change endpoint behavior or business logic.
+
 Deployed function changes:
 
 - `supabase/functions/conversions/index.ts`
@@ -45,7 +54,7 @@ Deployed function changes:
 Verification:
 
 - `supabase db push --linked --yes` succeeded for every migration above.
-- `supabase migration list --linked` showed all five migrations in local and
+- `supabase migration list --linked` showed all six migrations in local and
   remote.
 - `supabase functions deploy conversions` succeeded.
 - `deno check supabase/functions/conversions/index.ts` succeeded.
