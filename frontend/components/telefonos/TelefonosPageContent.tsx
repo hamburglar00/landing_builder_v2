@@ -694,7 +694,7 @@ export function TelefonosPageContent({
               <span className="font-mono text-[var(--color-text)]">{nextSyncCountdown}</span>
             </span>
             <span className="mt-1 block text-[11px] text-[var(--color-text-disabled)]">
-              Métricas de mensajes calculadas por backend cada 5 min
+              Métricas de mensajes calculadas por backend cada 10 min
               {phoneMetricsLabel ? ` · última actualización ${phoneMetricsLabel}` : ""}.
             </span>
           </>
