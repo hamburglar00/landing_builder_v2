@@ -32,7 +32,6 @@ import type { LandingPerformanceFilterOption } from "@/components/conversiones/G
 import DateRangeFilter, {
   type DateRange,
   filterByDateRange,
-  filterFunnelByDateRange,
 } from "@/components/conversiones/DateRangeFilter";
 import {
   ALL_COLUMNS,
@@ -349,12 +348,11 @@ export default function AdminConversionesPage() {
     () => filterConversionsByCurrency(rawConversions, currencyScope),
     [rawConversions, currencyScope],
   );
-  const scopedFunnel = useMemo(
-    () => buildFunnelContactsFromConversions(scopedConversions),
-    [scopedConversions],
-  );
   const activeConversions = useMemo(() => filterByDateRange(scopedConversions, dateRange), [scopedConversions, dateRange]);
-  const activeFunnel = useMemo(() => filterFunnelByDateRange(scopedFunnel, dateRange), [scopedFunnel, dateRange]);
+  const activeFunnel = useMemo(
+    () => buildFunnelContactsFromConversions(activeConversions),
+    [activeConversions],
+  );
   const premiumThreshold = getPremiumThreshold(config, reportingCurrency);
   const statsConversions = useMemo(
     () => activeConversions.filter((r) => !String(r.test_event_code ?? "").trim()),
