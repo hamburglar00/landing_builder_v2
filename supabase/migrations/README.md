@@ -16,6 +16,7 @@ Este directorio está reservado para las migraciones SQL del proyecto.
 | `20260327210000_get_phone_for_landing_rpc.sql` | Función `get_phone_for_landing(p_landing_name)`: toda la lógica de selección de teléfono en la DB (1 round-trip desde la Edge Function `landing-phone`). |
 | `20260327220000_cron_warm_landing_phone.sql` | Cron cada 5 min entre 8:00 y 2:00 que invoca `landing-phone` para mantener la función caliente (menos cold starts). |
 | `20260305120000_cron_sync_phones.sql` | Cron cada 5 min que invoca `sync-phones` para actualizar teléfonos de todas las gerencias. |
+| `20260806103000_optimize_phone_metrics_refresh_30min.sql` | Optimiza `refresh_phone_metrics` y pasa el cache de metricas de Telefonos a cada 30 min. No participa en la asignacion del CTA. |
 
 ### Cron: sincronizar teléfonos cada 5 minutos
 

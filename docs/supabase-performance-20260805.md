@@ -43,6 +43,14 @@ Applied migrations:
     normalized phone metrics lookups.
   - Does not change endpoint behavior or business logic.
 
+- `20260806103000_optimize_phone_metrics_refresh_30min.sql`
+  - Rewrites `refresh_phone_metrics` so it normalizes and filters
+    `conversions` once, then derives contact and lead sets from that base.
+  - Changes the Telefonos UI metrics cache refresh from every 10 minutes to
+    every 30 minutes (`7,37 * * * *`).
+  - Affects only the freshness of the Telefonos UI metrics. CTA phone assignment
+    still counts live rows from `conversions` in `get_phone_for_landing`.
+
 Deployed function changes:
 
 - `supabase/functions/conversions/index.ts`
@@ -53,9 +61,10 @@ Deployed function changes:
 
 Verification:
 
-- `supabase db push --linked --yes` succeeded for every migration above.
-- `supabase migration list --linked` showed all six migrations in local and
-  remote.
+- `supabase db push --linked --yes` succeeded for every migration above,
+  including `20260806103000_optimize_phone_metrics_refresh_30min.sql`.
+- `supabase migration list --linked` showed the seven performance migrations in
+  local and remote.
 - `supabase functions deploy conversions` succeeded.
 - `deno check supabase/functions/conversions/index.ts` succeeded.
 - Conversion helper tests passed: 28 passed, 0 failed.
