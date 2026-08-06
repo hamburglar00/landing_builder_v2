@@ -282,6 +282,7 @@ const ctwaClidForSource = (value: unknown, sourcePlatform: unknown): string =>
     ? normalizeCtwaClid(value)
     : "";
 const META_CAPI_MAX_EVENT_AGE_SECONDS = 7 * 24 * 60 * 60;
+const META_CAPI_FETCH_TIMEOUT_MS = 8000;
 const PURCHASE_UNPROTECTED_OBSERVATION =
   "PURCHASE SIN IDENTIFICADOR ESTABLE (DEDUPE NO GARANTIZADO)";
 const META_CRAWLER_CONTACT_STATUS = "skipped_meta_crawler";
@@ -2514,11 +2515,23 @@ async function sendToMetaCAPI(
 
   for (let attempt = 1; attempt <= maxAttempts; attempt++) {
     try {
-      const res = await fetch(apiUrl, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(body),
-      });
+      const controller = new AbortController();
+      const timeout = setTimeout(
+        () => controller.abort(),
+        META_CAPI_FETCH_TIMEOUT_MS,
+      );
+      const res = await (async () => {
+        try {
+          return await fetch(apiUrl, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify(body),
+            signal: controller.signal,
+          });
+        } finally {
+          clearTimeout(timeout);
+        }
+      })();
 
       const resText = await res.text();
       const isTransientHttp = res.status === 429 || res.status === 408 ||
@@ -2644,11 +2657,13 @@ async function sendToMetaCAPI(
       );
       await new Promise((r) => setTimeout(r, baseDelayMs * attempt));
     } catch (e) {
+      const errorName = e instanceof Error ? e.name : "";
+      const errorDetail = errorName === "AbortError"
+        ? `Timeout Meta CAPI luego de ${META_CAPI_FETCH_TIMEOUT_MS}ms`
+        : String(e);
       if (attempt === maxAttempts) {
         await persistError(
-          `Excepcion en llamada Meta (attempt ${attempt}/${maxAttempts}): ${
-            String(e)
-          }`,
+          `Excepcion en llamada Meta (attempt ${attempt}/${maxAttempts}): ${errorDetail}`,
           "",
           true,
         );
@@ -2665,7 +2680,7 @@ async function sendToMetaCAPI(
           eventId,
           attempt,
           maxAttempts,
-          error: String(e),
+          error: errorDetail,
         }),
         rowId,
       );
@@ -5450,12 +5465,20 @@ Deno.serve(async (req) => {
       auth: { autoRefreshToken: false, persistSession: false },
     });
 
-    // Lookup client by nombre in profiles
-    const { data: profile } = await db
+    // Lookup client by nombre in profiles.
+    const { data: profile, error: profileError } = await db
       .from("profiles")
       .select("id, nombre")
       .eq("nombre", name)
       .maybeSingle();
+
+    if (profileError) {
+      console.error("[conversions] profile lookup failed", {
+        name,
+        error: profileError.message,
+      });
+      return textResponse("Error al buscar cliente", 500);
+    }
 
     if (!profile) return textResponse("Cliente no encontrado", 404);
 
