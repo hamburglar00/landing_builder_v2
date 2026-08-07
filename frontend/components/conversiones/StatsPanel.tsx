@@ -216,6 +216,8 @@ export default function StatsPanel({
   const [dailyMessagesSmaEnabled, setDailyMessagesSmaEnabled] = useState(true);
   const [hourlySmaEnabled, setHourlySmaEnabled] = useState(true);
   const [dailySmaEnabled, setDailySmaEnabled] = useState(true);
+  const [weekdayMessagesSmaEnabled, setWeekdayMessagesSmaEnabled] = useState(true);
+  const [weekdayLoadsSmaEnabled, setWeekdayLoadsSmaEnabled] = useState(true);
   const [campaignSort, setCampaignSort] = useState<{ key: TableSortKey; direction: SortDirection }>({ key: "revenue", direction: "desc" });
   const [landingSort, setLandingSort] = useState<{ key: TableSortKey; direction: SortDirection }>({ key: "revenue", direction: "desc" });
   const [funnelPctMenuOpen, setFunnelPctMenuOpen] = useState(false);
@@ -688,7 +690,7 @@ export default function StatsPanel({
       sma1: new Date(`${row.key}T00:00:00`).getTime() > todayEndTime ? null : row.leads,
     }))
   ), [stats.dailyData, todayEndTime]);
-  const weekdayDistributionData = useMemo(() => {
+  const weekdayDistributionBaseData = useMemo(() => {
     const labels = ["Lunes", "Martes", "Miércoles", "Jueves", "Viernes", "Sábado", "Domingo"];
     const rows = labels.map((day) => ({ day, mensajes: 0, cargas: 0 }));
     for (const c of conversions) {
@@ -700,6 +702,18 @@ export default function StatsPanel({
     }
     return rows;
   }, [conversions]);
+  const weekdayMessagesChartData = useMemo(() => (
+    weekdayDistributionBaseData.map((row) => ({
+      ...row,
+      sma1: row.mensajes,
+    }))
+  ), [weekdayDistributionBaseData]);
+  const weekdayLoadsChartData = useMemo(() => (
+    weekdayDistributionBaseData.map((row) => ({
+      ...row,
+      sma1: row.cargas,
+    }))
+  ), [weekdayDistributionBaseData]);
   const dailyFunnelPctData = useMemo(() => {
     if (isTodayRange) {
       const result: { day: string; pct_inicio: number | null; pct_carga: number | null; pct_recarga: number | null }[] = [];
@@ -1314,39 +1328,96 @@ export default function StatsPanel({
 
         {/* Variación del embudo por día */}
         {showWeekdayDistribution && (
-          <div className="order-5 rounded-xl border border-zinc-800 bg-zinc-900/50 p-4 lg:col-span-2">
-            <div className="mb-4 flex flex-col gap-1 sm:flex-row sm:items-center sm:justify-between">
-              <h4 className="text-xs font-semibold text-zinc-200">Mensajes y cargas [distribucion por dia de la semana]</h4>
+          <>
+            <div className="order-5 rounded-xl border border-zinc-800 bg-zinc-900/50 p-4">
+              <div className="mb-4 flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
+                <h4 className="text-xs font-semibold text-zinc-200">Mensajes recibidos [distribucion por dia de la semana]</h4>
+                <label className="inline-flex h-7 w-fit items-center gap-2 rounded-lg border border-zinc-700 bg-zinc-900 px-2 text-[11px] text-zinc-300">
+                  <span>SMA</span>
+                  <button
+                    type="button"
+                    aria-pressed={weekdayMessagesSmaEnabled}
+                    onClick={() => setWeekdayMessagesSmaEnabled((v) => !v)}
+                    className={`flex h-4 w-7 shrink-0 items-center overflow-hidden rounded-full border-0 p-0.5 transition-colors ${weekdayMessagesSmaEnabled ? "justify-end bg-cyan-500" : "justify-start bg-zinc-700"}`}
+                  >
+                    <span className="h-3 w-3 rounded-full bg-white" />
+                  </button>
+                </label>
+              </div>
+              <ResponsiveContainer width="100%" height={240}>
+                <ComposedChart data={weekdayMessagesChartData} margin={{ top: 4, right: 8, bottom: 0, left: -16 }}>
+                  <CartesianGrid strokeDasharray="3 3" stroke="#27272a" />
+                  <XAxis
+                    dataKey="day"
+                    tick={{ fill: "#71717a", fontSize: 10 }}
+                    axisLine={{ stroke: "#3f3f46" }}
+                    tickLine={false}
+                    interval={0}
+                  />
+                  <YAxis
+                    tick={{ fill: "#71717a", fontSize: 10 }}
+                    axisLine={false}
+                    tickLine={false}
+                    allowDecimals={false}
+                  />
+                  <Tooltip
+                    contentStyle={{ backgroundColor: "#18181b", border: "1px solid #3f3f46", borderRadius: 8, fontSize: 11 }}
+                    labelStyle={{ color: "#a1a1aa" }}
+                    itemStyle={{ color: "#facc15" }}
+                  />
+                  <Bar dataKey="mensajes" name="Mensajes recibidos" fill="#facc15" radius={[3, 3, 0, 0]} maxBarSize={24} />
+                  {weekdayMessagesSmaEnabled && <Line type="monotone" dataKey="sma1" name="SMA 1" stroke="#22d3ee" strokeWidth={2} dot={false} />}
+                  <Legend wrapperStyle={{ fontSize: 11 }} />
+                </ComposedChart>
+              </ResponsiveContainer>
             </div>
-            <ResponsiveContainer width="100%" height={260}>
-              <ComposedChart data={weekdayDistributionData} margin={{ top: 4, right: 8, bottom: 0, left: -16 }}>
-                <CartesianGrid strokeDasharray="3 3" stroke="#27272a" />
-                <XAxis
-                  dataKey="day"
-                  tick={{ fill: "#71717a", fontSize: 10 }}
-                  axisLine={{ stroke: "#3f3f46" }}
-                  tickLine={false}
-                  interval={0}
-                />
-                <YAxis
-                  tick={{ fill: "#71717a", fontSize: 10 }}
-                  axisLine={false}
-                  tickLine={false}
-                  allowDecimals={false}
-                />
-                <Tooltip
-                  contentStyle={{ backgroundColor: "#18181b", border: "1px solid #3f3f46", borderRadius: 8, fontSize: 11 }}
-                  labelStyle={{ color: "#a1a1aa" }}
-                />
-                <Bar dataKey="mensajes" name="Mensajes recibidos" fill="#facc15" radius={[3, 3, 0, 0]} maxBarSize={28} />
-                <Bar dataKey="cargas" name="Cargas totales" fill="#34d399" radius={[3, 3, 0, 0]} maxBarSize={28} />
-                <Legend wrapperStyle={{ fontSize: 11 }} />
-              </ComposedChart>
-            </ResponsiveContainer>
-          </div>
+
+            <div className="order-6 rounded-xl border border-zinc-800 bg-zinc-900/50 p-4">
+              <div className="mb-4 flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
+                <h4 className="text-xs font-semibold text-zinc-200">Cargas totales [distribucion por dia de la semana]</h4>
+                <label className="inline-flex h-7 w-fit items-center gap-2 rounded-lg border border-zinc-700 bg-zinc-900 px-2 text-[11px] text-zinc-300">
+                  <span>SMA</span>
+                  <button
+                    type="button"
+                    aria-pressed={weekdayLoadsSmaEnabled}
+                    onClick={() => setWeekdayLoadsSmaEnabled((v) => !v)}
+                    className={`flex h-4 w-7 shrink-0 items-center overflow-hidden rounded-full border-0 p-0.5 transition-colors ${weekdayLoadsSmaEnabled ? "justify-end bg-amber-500" : "justify-start bg-zinc-700"}`}
+                  >
+                    <span className="h-3 w-3 rounded-full bg-white" />
+                  </button>
+                </label>
+              </div>
+              <ResponsiveContainer width="100%" height={240}>
+                <ComposedChart data={weekdayLoadsChartData} margin={{ top: 4, right: 8, bottom: 0, left: -16 }}>
+                  <CartesianGrid strokeDasharray="3 3" stroke="#27272a" />
+                  <XAxis
+                    dataKey="day"
+                    tick={{ fill: "#71717a", fontSize: 10 }}
+                    axisLine={{ stroke: "#3f3f46" }}
+                    tickLine={false}
+                    interval={0}
+                  />
+                  <YAxis
+                    tick={{ fill: "#71717a", fontSize: 10 }}
+                    axisLine={false}
+                    tickLine={false}
+                    allowDecimals={false}
+                  />
+                  <Tooltip
+                    contentStyle={{ backgroundColor: "#18181b", border: "1px solid #3f3f46", borderRadius: 8, fontSize: 11 }}
+                    labelStyle={{ color: "#a1a1aa" }}
+                    itemStyle={{ color: "#34d399" }}
+                  />
+                  <Bar dataKey="cargas" name="Cargas totales" fill="#34d399" radius={[3, 3, 0, 0]} maxBarSize={24} />
+                  {weekdayLoadsSmaEnabled && <Line type="monotone" dataKey="sma1" name="SMA 1" stroke="#f59e0b" strokeWidth={2} dot={false} />}
+                  <Legend wrapperStyle={{ fontSize: 11 }} />
+                </ComposedChart>
+              </ResponsiveContainer>
+            </div>
+          </>
         )}
 
-        <div className="order-6 rounded-xl border border-zinc-800 bg-zinc-900/50 p-4 lg:col-span-2">
+        <div className="order-7 rounded-xl border border-zinc-800 bg-zinc-900/50 p-4 lg:col-span-2">
         <div className="mb-4 flex items-center justify-between gap-2">
           <h4 className="text-xs font-semibold text-zinc-200">
             {isTodayRange ? "Variación horaria de porcentajes del embudo" : "Variación diaria de porcentajes del embudo"}
