@@ -511,6 +511,34 @@ export default function StatsPanel({
     const endToday = new Date(now.getFullYear(), now.getMonth(), now.getDate(), 23, 59, 59, 999).getTime();
     return dateRange.start.getTime() === startToday && dateRange.end.getTime() === endToday;
   }, [dateRange]);
+  const isYesterdayRange = useMemo(() => {
+    if (!dateRange) return false;
+    const now = new Date();
+    const yesterday = new Date(now.getFullYear(), now.getMonth(), now.getDate() - 1);
+    const startYesterday = new Date(yesterday.getFullYear(), yesterday.getMonth(), yesterday.getDate(), 0, 0, 0, 0).getTime();
+    const endYesterday = new Date(yesterday.getFullYear(), yesterday.getMonth(), yesterday.getDate(), 23, 59, 59, 999).getTime();
+    return dateRange.start.getTime() === startYesterday && dateRange.end.getTime() === endYesterday;
+  }, [dateRange]);
+  const isCurrentWeekRange = useMemo(() => {
+    if (!dateRange) return false;
+    const now = new Date();
+    const day = now.getDay();
+    const diff = day === 0 ? 6 : day - 1;
+    const monday = new Date(now);
+    monday.setDate(now.getDate() - diff);
+    const startWeek = new Date(monday.getFullYear(), monday.getMonth(), monday.getDate(), 0, 0, 0, 0).getTime();
+    const endToday = new Date(now.getFullYear(), now.getMonth(), now.getDate(), 23, 59, 59, 999).getTime();
+    return dateRange.start.getTime() === startWeek && dateRange.end.getTime() === endToday;
+  }, [dateRange]);
+  const showWeekdayDistribution = useMemo(() => {
+    if (!dateRange) return true;
+    if (isTodayRange || isYesterdayRange) return false;
+    if (isCurrentWeekRange) return true;
+    const inclusiveDays = Math.floor(
+      (dateRange.end.getTime() - dateRange.start.getTime()) / 86400000,
+    ) + 1;
+    return inclusiveDays >= 7;
+  }, [dateRange, isCurrentWeekRange, isTodayRange, isYesterdayRange]);
   const currentHour = useMemo(() => new Date().getHours(), []);
   const hourlyChartData = useMemo(() => {
     const valueForMetric = (row: { cargas: number; cargas_first: number; cargas_repeat: number }) => {
@@ -660,6 +688,18 @@ export default function StatsPanel({
       sma1: new Date(`${row.key}T00:00:00`).getTime() > todayEndTime ? null : row.leads,
     }))
   ), [stats.dailyData, todayEndTime]);
+  const weekdayDistributionData = useMemo(() => {
+    const labels = ["Lunes", "Martes", "Miércoles", "Jueves", "Viernes", "Sábado", "Domingo"];
+    const rows = labels.map((day) => ({ day, mensajes: 0, cargas: 0 }));
+    for (const c of conversions) {
+      if (!c.created_at) continue;
+      const d = new Date(c.created_at);
+      const idx = (d.getDay() + 6) % 7;
+      if (c.estado === "lead" || c.lead_event_id) rows[idx].mensajes += 1;
+      if ((c.purchase_event_id ?? "") !== "") rows[idx].cargas += 1;
+    }
+    return rows;
+  }, [conversions]);
   const dailyFunnelPctData = useMemo(() => {
     if (isTodayRange) {
       const result: { day: string; pct_inicio: number | null; pct_carga: number | null; pct_recarga: number | null }[] = [];
@@ -1273,7 +1313,40 @@ export default function StatsPanel({
         )}
 
         {/* Variación del embudo por día */}
-        <div className="order-5 rounded-xl border border-zinc-800 bg-zinc-900/50 p-4 lg:col-span-2">
+        {showWeekdayDistribution && (
+          <div className="order-5 rounded-xl border border-zinc-800 bg-zinc-900/50 p-4 lg:col-span-2">
+            <div className="mb-4 flex flex-col gap-1 sm:flex-row sm:items-center sm:justify-between">
+              <h4 className="text-xs font-semibold text-zinc-200">Mensajes y cargas [distribucion por dia de la semana]</h4>
+            </div>
+            <ResponsiveContainer width="100%" height={260}>
+              <ComposedChart data={weekdayDistributionData} margin={{ top: 4, right: 8, bottom: 0, left: -16 }}>
+                <CartesianGrid strokeDasharray="3 3" stroke="#27272a" />
+                <XAxis
+                  dataKey="day"
+                  tick={{ fill: "#71717a", fontSize: 10 }}
+                  axisLine={{ stroke: "#3f3f46" }}
+                  tickLine={false}
+                  interval={0}
+                />
+                <YAxis
+                  tick={{ fill: "#71717a", fontSize: 10 }}
+                  axisLine={false}
+                  tickLine={false}
+                  allowDecimals={false}
+                />
+                <Tooltip
+                  contentStyle={{ backgroundColor: "#18181b", border: "1px solid #3f3f46", borderRadius: 8, fontSize: 11 }}
+                  labelStyle={{ color: "#a1a1aa" }}
+                />
+                <Bar dataKey="mensajes" name="Mensajes recibidos" fill="#facc15" radius={[3, 3, 0, 0]} maxBarSize={28} />
+                <Bar dataKey="cargas" name="Cargas totales" fill="#34d399" radius={[3, 3, 0, 0]} maxBarSize={28} />
+                <Legend wrapperStyle={{ fontSize: 11 }} />
+              </ComposedChart>
+            </ResponsiveContainer>
+          </div>
+        )}
+
+        <div className="order-6 rounded-xl border border-zinc-800 bg-zinc-900/50 p-4 lg:col-span-2">
         <div className="mb-4 flex items-center justify-between gap-2">
           <h4 className="text-xs font-semibold text-zinc-200">
             {isTodayRange ? "Variación horaria de porcentajes del embudo" : "Variación diaria de porcentajes del embudo"}
