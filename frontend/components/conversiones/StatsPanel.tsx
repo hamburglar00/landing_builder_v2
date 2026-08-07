@@ -1644,12 +1644,13 @@ export default function StatsPanel({
                   <th className="text-center pb-2 font-medium w-6">#</th>
                   <th className="text-left pb-2 font-medium">Teléfono</th>
                   <th className="text-left pb-2 font-medium">Nombre</th>
+                  <th className="text-left pb-2 font-medium">Gerencia</th>
                   <th className="text-center pb-2 font-medium w-16">Cargas</th>
                   <th className="text-center pb-2 font-medium w-28">Total</th>
                 </tr></thead>
                 <tbody className="divide-y divide-zinc-800/60">
                   {stats.topContacts.map((c, i) => (
-                    <tr key={c.phone}>
+                    <tr key={`${c.phone}-${c.assigned_gerencia_label ?? i}`}>
                       <td className="py-1.5 text-center text-zinc-600">{i + 1}</td>
                       <td className="py-1.5 text-zinc-200 font-mono">
                         <div className="flex items-center gap-1.5">
@@ -1666,6 +1667,7 @@ export default function StatsPanel({
                         </div>
                       </td>
                       <td className="py-1.5 text-zinc-400">{[c.fn, c.ln].filter(Boolean).join(" ") || "-"}</td>
+                      <td className="py-1.5 text-zinc-400">{c.assigned_gerencia_label || "-"}</td>
                       <td className="py-1.5 text-center text-zinc-400">{c.purchase_count}</td>
                       <td className="py-1.5 text-center text-emerald-400 font-mono font-semibold">{formatCurrencyAmount(c.total_valor, currency)}</td>
                     </tr>
