@@ -1160,7 +1160,7 @@ export default function StatsPanel({
         {!isTodayRange && (
           <>
         {/* Mensajes por dia */}
-        <div className="order-2 rounded-xl border border-zinc-800 bg-zinc-900/50 p-4">
+        <div className="order-3 rounded-xl border border-zinc-800 bg-zinc-900/50 p-4">
           <div className="mb-4 flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
             <h4 className="text-xs font-semibold text-zinc-200">Mensajes recibidos [distribucion por dia]</h4>
             <label className="inline-flex h-7 w-fit items-center gap-2 rounded-lg border border-zinc-700 bg-zinc-900 px-2 text-[11px] text-zinc-300">
@@ -1209,7 +1209,7 @@ export default function StatsPanel({
         )}
 
         {/* Cargas por hora */}
-        <div className={`order-3 rounded-xl border border-zinc-800 bg-zinc-900/50 p-4 ${isTodayRange ? "lg:col-span-2" : ""}`}>
+        <div className={`order-2 rounded-xl border border-zinc-800 bg-zinc-900/50 p-4 ${isTodayRange ? "lg:col-span-2" : ""}`}>
           <div className="mb-4 flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
             <h4 className="text-xs font-semibold text-zinc-200">{LOAD_METRIC_LABELS[hourlyLoadMetric]} [distribucion por hora]</h4>
             <div className="flex items-center gap-2">
