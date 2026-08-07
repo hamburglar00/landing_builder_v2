@@ -156,12 +156,15 @@ type AssistantQuota = {
 type LoadMetric = "first" | "repeat" | "total";
 type TableSortKey = "name" | "mensajes" | "cargas" | "pct" | "revenue" | "roas1" | "roasTotal";
 type SortDirection = "asc" | "desc";
+type TopContactsLimit = 10 | 25 | 50 | 100;
 
 const LOAD_METRIC_LABELS: Record<LoadMetric, string> = {
   first: "Primeras cargas",
   repeat: "Recargas",
   total: "Cargas totales",
 };
+
+const TOP_CONTACT_LIMIT_OPTIONS: TopContactsLimit[] = [10, 25, 50, 100];
 
 function SortButton({
   active,
@@ -218,6 +221,7 @@ export default function StatsPanel({
   const [dailySmaEnabled, setDailySmaEnabled] = useState(true);
   const [weekdayMessagesSmaEnabled, setWeekdayMessagesSmaEnabled] = useState(true);
   const [weekdayLoadsSmaEnabled, setWeekdayLoadsSmaEnabled] = useState(true);
+  const [topContactsLimit, setTopContactsLimit] = useState<TopContactsLimit>(10);
   const [campaignSort, setCampaignSort] = useState<{ key: TableSortKey; direction: SortDirection }>({ key: "revenue", direction: "desc" });
   const [landingSort, setLandingSort] = useState<{ key: TableSortKey; direction: SortDirection }>({ key: "revenue", direction: "desc" });
   const [funnelPctMenuOpen, setFunnelPctMenuOpen] = useState(false);
@@ -344,8 +348,7 @@ export default function StatsPanel({
     // Top contacts
     const topContacts = [...funnelContacts]
       .filter((c) => c.total_valor > 0)
-      .sort((a, b) => b.total_valor - a.total_valor)
-      .slice(0, 10);
+      .sort((a, b) => b.total_valor - a.total_valor);
 
     // Hourly distribution of purchases
     const hourlyBuckets = Array.from({ length: 24 }, (_, h) => ({
@@ -502,6 +505,10 @@ export default function StatsPanel({
   const parsedAdSpend = parseFloat(adSpend.replace(/\D/g, "")) || 0;
   const roasFirstPurchase = parsedAdSpend > 0 ? stats.firstPurchaseRevenue / parsedAdSpend : 0;
   const roasTotal = parsedAdSpend > 0 ? stats.totalRevenue / parsedAdSpend : 0;
+  const visibleTopContacts = useMemo(
+    () => stats.topContacts.slice(0, topContactsLimit),
+    [stats.topContacts, topContactsLimit],
+  );
   const todayEndTime = useMemo(() => {
     const now = new Date();
     return new Date(now.getFullYear(), now.getMonth(), now.getDate(), 23, 59, 59, 999).getTime();
@@ -1634,11 +1641,27 @@ export default function StatsPanel({
       )}
 
       {/*  TOP CONTACTOS  */}
-      {stats.topContacts.length > 0 && (
+      {visibleTopContacts.length > 0 && (
         <div>
           <SectionTitle>Top contactos por monto</SectionTitle>
           <div className="mt-3">
-            <TableCard title="Top 10 jugadores">
+            <TableCard title={`Top ${topContactsLimit} jugadores`}>
+              <div className="mb-3 flex items-center justify-end">
+                <label className="inline-flex items-center gap-2 text-[11px] text-zinc-400">
+                  Mostrar
+                  <select
+                    value={topContactsLimit}
+                    onChange={(e) => setTopContactsLimit(Number(e.target.value) as TopContactsLimit)}
+                    className="h-7 rounded-lg border border-zinc-700 bg-zinc-900 px-2 text-[11px] text-zinc-200 outline-none hover:bg-zinc-800 focus:border-zinc-500"
+                  >
+                    {TOP_CONTACT_LIMIT_OPTIONS.map((limit) => (
+                      <option key={limit} value={limit}>
+                        Top {limit}
+                      </option>
+                    ))}
+                  </select>
+                </label>
+              </div>
               <table className="w-full text-[11px]">
                 <thead><tr className="text-zinc-500">
                   <th className="text-center pb-2 font-medium w-6">#</th>
@@ -1649,7 +1672,7 @@ export default function StatsPanel({
                   <th className="text-center pb-2 font-medium w-28">Total</th>
                 </tr></thead>
                 <tbody className="divide-y divide-zinc-800/60">
-                  {stats.topContacts.map((c, i) => (
+                  {visibleTopContacts.map((c, i) => (
                     <tr key={`${c.phone}-${c.assigned_gerencia_label ?? i}`}>
                       <td className="py-1.5 text-center text-zinc-600">{i + 1}</td>
                       <td className="py-1.5 text-zinc-200 font-mono">
