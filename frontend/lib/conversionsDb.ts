@@ -319,6 +319,45 @@ export function getConversionGerenciaLabels(
   return assignedLabels();
 }
 
+export function getConversionTableGerenciaLabels(
+  row: Pick<
+    ConversionRow,
+    | "telefono_asignado"
+    | "assigned_gerencia_label"
+    | "lead_event_id"
+    | "registration_event_id"
+    | "purchase_event_id"
+    | "lead_gerencia_label"
+    | "registration_gerencia_label"
+    | "purchase_gerencia_label"
+  >,
+  gerenciaByPhone: Record<string, string[]>,
+): string[] {
+  const assignedLabels = (): string[] => {
+    const historicalLabel = String(row.assigned_gerencia_label ?? "").trim();
+    if (historicalLabel) return [historicalLabel];
+    const assignedPhone = String(row.telefono_asignado ?? "").replace(/\D/g, "");
+    return assignedPhone ? (gerenciaByPhone[assignedPhone] ?? []) : [];
+  };
+  const leadLabels = (): string[] => {
+    const label = String(row.lead_gerencia_label ?? "").trim();
+    return label ? [label] : assignedLabels();
+  };
+  const registrationLabels = (): string[] => {
+    const label = String(row.registration_gerencia_label ?? "").trim();
+    return label ? [label] : leadLabels();
+  };
+  const purchaseLabels = (): string[] => {
+    const label = String(row.purchase_gerencia_label ?? "").trim();
+    return label ? [label] : registrationLabels();
+  };
+
+  if (String(row.purchase_event_id ?? "").trim()) return purchaseLabels();
+  if (String(row.registration_event_id ?? "").trim()) return registrationLabels();
+  if (String(row.lead_event_id ?? "").trim()) return leadLabels();
+  return assignedLabels();
+}
+
 export function scopeConversionStagesToGerencia(
   row: ConversionRow,
   gerenciaByPhone: Record<string, string[]>,

@@ -8,6 +8,7 @@ import {
   fetchConversionsConfig,
   fetchPixelConfigs,
   getConversionGerenciaLabels,
+  getConversionTableGerenciaLabels,
   scopeConversionStagesToGerencia,
   buildFunnelContactsFromConversions,
   getPremiumThreshold,
@@ -551,7 +552,7 @@ export default function AdminConversionesPage() {
       const byPixel = statsPixelFilter === "__all__" || String(r.meta_pixel_id ?? r.pixel_id ?? "").trim() === statsPixelFilter;
       const assignedPhone = normalizePhone(r.telefono_asignado);
       const byTelefono = statsTelefonoFilter === "__all__" || assignedPhone === statsTelefonoFilter;
-      const labels = getConversionGerenciaLabels(r, gerenciaByPhone);
+      const labels = getConversionTableGerenciaLabels(r, gerenciaByPhone);
       const byGerencia = statsGerenciaFilter === "__all__" || labels.includes(statsGerenciaFilter);
       const byFromMetaAds =
         statsFromMetaAdsFilter === "__all__" ||
