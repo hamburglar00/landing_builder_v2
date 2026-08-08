@@ -17,6 +17,7 @@ Este directorio está reservado para las migraciones SQL del proyecto.
 | `20260327220000_cron_warm_landing_phone.sql` | Cron cada 5 min entre 8:00 y 2:00 que invoca `landing-phone` para mantener la función caliente (menos cold starts). |
 | `20260305120000_cron_sync_phones.sql` | Cron cada 5 min que invoca `sync-phones` para actualizar teléfonos de todas las gerencias. |
 | `20260806103000_optimize_phone_metrics_refresh_30min.sql` | Optimiza `refresh_phone_metrics` y pasa el cache de metricas de Telefonos a cada 30 min. No participa en la asignacion del CTA. |
+| `20260808120000_optimize_rls_auth_uid_initplan.sql` | Optimiza policies RLS reemplazando `auth.uid()` por `(select auth.uid())` sin cambiar permisos ni reglas de acceso. |
 
 ### Cron: sincronizar teléfonos cada 5 minutos
 
@@ -45,4 +46,3 @@ Tras eso, el cron cada 5 minutos invocará `sync-phones` y actualizará los tel�
 ### Cron: warm de landing-phone (8:00–2:00, cada 5 min)
 
 La migración `20260327220000_cron_warm_landing_phone.sql` programa un job que, entre las 8:00 y las 2:00, cada 5 minutos hace un `GET` a la Edge Function `landing-phone` (con el nombre de la primera landing o `warmup`). Así la función se mantiene “caliente” y se reducen los cold starts cuando la landing pública pide un número. Usa la misma URL base que el cron de sync-phones (derivada de `cron_config.sync_phones_url`). No requiere configuración adicional si el cron de sync-phones ya está configurado.
-
