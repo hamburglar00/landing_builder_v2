@@ -221,6 +221,7 @@ export default function StatsPanel({
   const [dailySmaEnabled, setDailySmaEnabled] = useState(true);
   const [weekdayMessagesSmaEnabled, setWeekdayMessagesSmaEnabled] = useState(true);
   const [weekdayLoadsSmaEnabled, setWeekdayLoadsSmaEnabled] = useState(true);
+  const [revenueSmaEnabled, setRevenueSmaEnabled] = useState(true);
   const [topContactsLimit, setTopContactsLimit] = useState<TopContactsLimit>(10);
   const [campaignSort, setCampaignSort] = useState<{ key: TableSortKey; direction: SortDirection }>({ key: "revenue", direction: "desc" });
   const [landingSort, setLandingSort] = useState<{ key: TableSortKey; direction: SortDirection }>({ key: "revenue", direction: "desc" });
@@ -356,6 +357,7 @@ export default function StatsPanel({
       cargas: 0,
       cargas_first: 0,
       cargas_repeat: 0,
+      ingresos: 0,
     }));
     for (const c of conversions) {
       if ((c.purchase_event_id ?? "") !== "" && c.created_at) {
@@ -363,6 +365,7 @@ export default function StatsPanel({
         hourlyBuckets[h].cargas++;
         if (isFirstPurchase(c)) hourlyBuckets[h].cargas_first++;
         if (isRepeatPurchase(c)) hourlyBuckets[h].cargas_repeat++;
+        hourlyBuckets[h].ingresos += Number(c.valor) || 0;
       }
     }
 
@@ -396,7 +399,7 @@ export default function StatsPanel({
       }
     }
 
-    const dailyMap = new Map<string, { day: string; leads: number; cargas: number; cargas_first: number; cargas_repeat: number }>();
+    const dailyMap = new Map<string, { day: string; leads: number; cargas: number; cargas_first: number; cargas_repeat: number; ingresos: number }>();
     for (const c of conversions) {
       if (!c.created_at) continue;
       const d = new Date(c.created_at);
@@ -407,22 +410,24 @@ export default function StatsPanel({
         cargas: 0,
         cargas_first: 0,
         cargas_repeat: 0,
+        ingresos: 0,
       };
       if (c.estado === "lead" || c.lead_event_id) entry.leads++;
       if ((c.purchase_event_id ?? "") !== "") {
         entry.cargas++;
         if (isFirstPurchase(c)) entry.cargas_first++;
         if (isRepeatPurchase(c)) entry.cargas_repeat++;
+        entry.ingresos += Number(c.valor) || 0;
       }
       dailyMap.set(dayKey, entry);
     }
 
-    const dailyData: { key: string; day: string; leads: number; cargas: number; cargas_first: number; cargas_repeat: number }[] = [];
+    const dailyData: { key: string; day: string; leads: number; cargas: number; cargas_first: number; cargas_repeat: number; ingresos: number }[] = [];
     const iter = new Date(chartStart);
     while (iter <= chartEnd) {
       const dayKey = `${iter.getFullYear()}-${(iter.getMonth() + 1).toString().padStart(2, "0")}-${iter.getDate().toString().padStart(2, "0")}`;
       const label = `${iter.getDate().toString().padStart(2, "0")}/${(iter.getMonth() + 1).toString().padStart(2, "0")}`;
-      const entry = dailyMap.get(dayKey) ?? { day: label, leads: 0, cargas: 0, cargas_first: 0, cargas_repeat: 0 };
+      const entry = dailyMap.get(dayKey) ?? { day: label, leads: 0, cargas: 0, cargas_first: 0, cargas_repeat: 0, ingresos: 0 };
       dailyData.push({ ...entry, key: dayKey, day: label });
       iter.setDate(iter.getDate() + 1);
     }
@@ -549,6 +554,36 @@ export default function StatsPanel({
     return inclusiveDays >= 7;
   }, [dateRange, isCurrentWeekRange, isTodayRange, isYesterdayRange]);
   const currentHour = useMemo(() => new Date().getHours(), []);
+  const revenueChartData = useMemo(() => {
+    const source = isTodayRange
+      ? stats.hourlyBuckets.map((row, idx) => ({
+          label: row.hour,
+          ingresos: idx > currentHour ? null : row.ingresos,
+        }))
+      : stats.dailyData.map((row) => ({
+          label: row.day,
+          ingresos: new Date(`${row.key}T00:00:00`).getTime() > todayEndTime ? null : row.ingresos,
+        }));
+
+    const getSma = (idx: number, window: 3) => {
+      const start = Math.max(0, idx - window + 1);
+      let sum = 0;
+      let count = 0;
+      for (let i = start; i <= idx; i++) {
+        const value = source[i]?.ingresos;
+        if (typeof value === "number") {
+          sum += value;
+          count += 1;
+        }
+      }
+      return count > 0 ? Number((sum / count).toFixed(2)) : null;
+    };
+
+    return source.map((row, idx) => ({
+      ...row,
+      sma3: row.ingresos === null ? null : getSma(idx, 3),
+    }));
+  }, [currentHour, isTodayRange, stats.dailyData, stats.hourlyBuckets, todayEndTime]);
   const hourlyChartData = useMemo(() => {
     const valueForMetric = (row: { cargas: number; cargas_first: number; cargas_repeat: number }) => {
       if (hourlyLoadMetric === "first") return row.cargas_first;
@@ -1098,6 +1133,56 @@ export default function StatsPanel({
             />
           </div>
           <p className="text-[10px] text-zinc-600">Ingresá el gasto publicitario para calcular ROAS.</p>
+        </div>
+
+        <div className="mt-4 rounded-xl border border-zinc-800 bg-zinc-900/50 p-4">
+          <div className="mb-4 flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
+            <h4 className="text-xs font-semibold text-zinc-200">
+              Ingresos [{isTodayRange ? "distribucion por hora" : "distribucion por dia"}]
+            </h4>
+            <label className="inline-flex h-7 w-fit items-center gap-2 rounded-lg border border-zinc-700 bg-zinc-900 px-2 text-[11px] text-zinc-300">
+              <span>SMA</span>
+              <button
+                type="button"
+                aria-pressed={revenueSmaEnabled}
+                onClick={() => setRevenueSmaEnabled((v) => !v)}
+                className={`flex h-4 w-7 shrink-0 items-center overflow-hidden rounded-full border-0 p-0.5 transition-colors ${revenueSmaEnabled ? "justify-end bg-emerald-500" : "justify-start bg-zinc-700"}`}
+              >
+                <span className="h-3 w-3 rounded-full bg-white" />
+              </button>
+            </label>
+          </div>
+          <ResponsiveContainer width="100%" height={260}>
+            <LineChart data={revenueChartData} margin={{ top: 4, right: 12, bottom: 0, left: 8 }}>
+              <CartesianGrid strokeDasharray="3 3" stroke="#27272a" />
+              <XAxis
+                dataKey="label"
+                tick={{ fill: "#71717a", fontSize: 10 }}
+                axisLine={{ stroke: "#3f3f46" }}
+                tickLine={false}
+                interval={isTodayRange ? 1 : 0}
+                angle={isTodayRange ? 0 : -35}
+                textAnchor={isTodayRange ? "middle" : "end"}
+                height={isTodayRange ? 30 : 48}
+              />
+              <YAxis
+                tick={{ fill: "#71717a", fontSize: 10 }}
+                axisLine={false}
+                tickLine={false}
+                tickFormatter={(value) => formatCurrencyAmount(Number(value) || 0, currency)}
+                width={72}
+              />
+              <Tooltip
+                contentStyle={{ backgroundColor: "#18181b", border: "1px solid #3f3f46", borderRadius: 8, fontSize: 11 }}
+                labelStyle={{ color: "#a1a1aa" }}
+                formatter={(value, name) => [formatCurrencyAmount(Number(value) || 0, currency), name]}
+                labelFormatter={(value) => isTodayRange ? `${value}:00 hs` : value}
+              />
+              <Line type="monotone" dataKey="ingresos" name="Ingresos" stroke="#34d399" strokeWidth={2.5} dot={{ r: 2 }} activeDot={{ r: 4 }} connectNulls={false} />
+              {revenueSmaEnabled && <Line type="monotone" dataKey="sma3" name="SMA 3" stroke="#f59e0b" strokeWidth={2} dot={false} connectNulls={false} />}
+              <Legend wrapperStyle={{ fontSize: 11 }} />
+            </LineChart>
+          </ResponsiveContainer>
         </div>
       </div>
 
