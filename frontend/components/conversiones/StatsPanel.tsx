@@ -10,7 +10,7 @@ import { formatCompactCurrency, formatCurrencyAmount, type ReportingCurrency } f
 import ArgentinaMap from "./ArgentinaMap";
 import { supabase } from "@/lib/supabaseClient";
 import {
-  ComposedChart, Area, Bar, LineChart, Line,
+  ComposedChart, Area, Bar, Line,
   XAxis, YAxis, CartesianGrid, Tooltip, Legend,
   ResponsiveContainer,
 } from "recharts";
@@ -1587,8 +1587,22 @@ export default function StatsPanel({
             )}
           </div>
         </div>
-        <ResponsiveContainer width="100%" height={240}>
-          <LineChart data={dailyFunnelPctData} margin={{ top: 4, right: 8, bottom: 0, left: -8 }}>
+        <ResponsiveContainer width="100%" height={260}>
+          <ComposedChart data={dailyFunnelPctData} margin={{ top: 8, right: 18, bottom: 0, left: -8 }}>
+            <defs>
+              <linearGradient id="funnelInicioGradient" x1="0" y1="0" x2="0" y2="1">
+                <stop offset="5%" stopColor="#fbbf24" stopOpacity={0.26} />
+                <stop offset="95%" stopColor="#fbbf24" stopOpacity={0.02} />
+              </linearGradient>
+              <linearGradient id="funnelCargaGradient" x1="0" y1="0" x2="0" y2="1">
+                <stop offset="5%" stopColor="#38bdf8" stopOpacity={0.24} />
+                <stop offset="95%" stopColor="#38bdf8" stopOpacity={0.02} />
+              </linearGradient>
+              <linearGradient id="funnelRecargaGradient" x1="0" y1="0" x2="0" y2="1">
+                <stop offset="5%" stopColor="#e879f9" stopOpacity={0.22} />
+                <stop offset="95%" stopColor="#e879f9" stopOpacity={0.02} />
+              </linearGradient>
+            </defs>
             <CartesianGrid strokeDasharray="3 3" stroke="#27272a" />
             <XAxis
               dataKey="day"
@@ -1608,22 +1622,23 @@ export default function StatsPanel({
               tickFormatter={(v) => `${v}%`}
             />
             <Tooltip
-              contentStyle={{ backgroundColor: "#18181b", border: "1px solid #3f3f46", borderRadius: 8, fontSize: 11 }}
+              cursor={{ stroke: "#52525b", strokeDasharray: "4 4" }}
+              contentStyle={{ backgroundColor: "#18181b", border: "1px solid #3f3f46", borderRadius: 8, fontSize: 11, boxShadow: "0 18px 36px rgba(0,0,0,0.35)" }}
               labelStyle={{ color: "#a1a1aa" }}
               labelFormatter={(v) => isTodayRange ? `${v}:00 hs` : `${v}`}
               formatter={(value) => `${Number(value ?? 0).toFixed(1)}%`}
             />
             <Legend wrapperStyle={{ fontSize: 10, color: "#a1a1aa" }} />
             {funnelPctEnabled.inicio && (
-              <Line type="monotone" dataKey="pct_inicio" name="% inicio de conversación" stroke="#fbbf24" strokeWidth={2} dot={{ r: 2, fill: "#fbbf24" }} activeDot={{ r: 4 }} />
+              <Area type="monotone" dataKey="pct_inicio" name="% inicio de conversación" stroke="#fbbf24" strokeWidth={2.4} fill="url(#funnelInicioGradient)" dot={false} activeDot={{ r: 4, strokeWidth: 0, fill: "#fde68a" }} connectNulls={false} />
             )}
             {funnelPctEnabled.carga && (
-              <Line type="monotone" dataKey="pct_carga" name="% de carga" stroke="#38bdf8" strokeWidth={2} dot={{ r: 2, fill: "#38bdf8" }} activeDot={{ r: 4 }} />
+              <Line type="monotone" dataKey="pct_carga" name="% de carga" stroke="#38bdf8" strokeWidth={2.2} dot={false} activeDot={{ r: 4, strokeWidth: 0, fill: "#bae6fd" }} connectNulls={false} />
             )}
             {funnelPctEnabled.recarga && (
-              <Line type="monotone" dataKey="pct_recarga" name="% de recarga" stroke="#e879f9" strokeWidth={2} dot={{ r: 2, fill: "#e879f9" }} activeDot={{ r: 4 }} />
+              <Line type="monotone" dataKey="pct_recarga" name="% de recarga" stroke="#e879f9" strokeWidth={2.2} strokeDasharray="5 4" dot={false} activeDot={{ r: 4, strokeWidth: 0, fill: "#f5d0fe" }} connectNulls={false} />
             )}
-          </LineChart>
+          </ComposedChart>
         </ResponsiveContainer>
         </div>
       </div>
