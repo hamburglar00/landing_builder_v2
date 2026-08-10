@@ -18,6 +18,8 @@ Este directorio está reservado para las migraciones SQL del proyecto.
 | `20260305120000_cron_sync_phones.sql` | Cron cada 5 min que invoca `sync-phones` para actualizar teléfonos de todas las gerencias. |
 | `20260806103000_optimize_phone_metrics_refresh_30min.sql` | Optimiza `refresh_phone_metrics` y pasa el cache de metricas de Telefonos a cada 30 min. No participa en la asignacion del CTA. |
 | `20260808120000_optimize_rls_auth_uid_initplan.sql` | Optimiza policies RLS reemplazando `auth.uid()` por `(select auth.uid())` sin cambiar permisos ni reglas de acceso. |
+| `20260810172000_whatsapp_cloud_api_module.sql` | Crea el modulo `whatsapp_cloud_api`: configuracion, asignacion de gerencias, auditoria de webhooks Meta y RPC `get_phone_for_whatsapp_cloud_api`. |
+| `20260810181000_whatsapp_cloud_api_increment_phone_usage.sql` | Agrega RPC atomica para incrementar `usage_count` cuando WhatsApp Cloud API envia una derivacion exitosa. |
 
 ### Cron: sincronizar teléfonos cada 5 minutos
 

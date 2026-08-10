@@ -196,14 +196,14 @@ export const COLUMN_NOTES: Partial<Record<ConversionColumnKey | "id", string>> =
   country: "Pais recibido en payload o enriquecido por geolocalizacion.",
   fbp: "Parametro fbp de Meta enviado por la fuente.",
   fbc: "Parametro fbc de Meta enviado por la fuente.",
-  from_meta_ads: "Indica origen probable en Meta Ads. True si trae fbc o utm_campaign; si solo trae promo_code valido (TAG-SUFIX), cuenta solo cuando source_platform es chatrace.",
+  from_meta_ads: "Indica origen probable en Meta Ads. True si trae fbc o utm_campaign; si solo trae promo_code valido (TAG-SUFIX), cuenta solo cuando source_platform es chatrace o whatsapp_cloud_api.",
   geo_source: "Fuente usada para completar geo: payload, ip, phone_prefix o none.",
-  meta_pixel_id: "Pixel ID recibido en el payload de entrada (landing/chatrace/backend).",
+  meta_pixel_id: "Pixel ID recibido en el payload de entrada (landing/chatrace/whatsapp_cloud_api/backend).",
   pixel_id: "Pixel ID efectivo usado para CAPI.",
   pixel_attribution_source: "Origen confiable usado para resolver el pixel de Purchase: payload, Contact raiz, landing o configuracion unica.",
   pixel_attribution_conversion_id: "UUID de la conversion raiz que aporto el pixel, cuando la atribucion se resolvio por una fila anterior.",
-  source_platform: "Origen declarado del payload (ej: landing, chatrace).",
-  ctwa_clid: "Click ID crudo de anuncios Click-to-WhatsApp. Solo se conserva para el recorrido Chatrace.",
+  source_platform: "Origen declarado del payload (ej: landing, chatrace, whatsapp_cloud_api).",
+  ctwa_clid: "Click ID crudo de anuncios Click-to-WhatsApp. Solo se conserva para recorridos Click-to-WhatsApp controlados.",
   contact_event_id: "Event ID del Contact (dedupe Pixel/CAPI).",
   contact_event_time: "Event time (unix) del Contact.",
   sendContactPixel: "Bandera enviada por la fuente para indicar si Contact tambien salio por Pixel browser.",
@@ -230,7 +230,7 @@ export const COLUMN_NOTES: Partial<Record<ConversionColumnKey | "id", string>> =
   external_id: "ID externo de usuario/contacto para matching en Meta (hasheado al enviar).",
   test_event_code: "Codigo de test de Meta (si se envio en modo prueba).",
   utm_campaign: "UTM campaign recibida en payload.",
-  telefono_asignado: "Telefono de destino asignado para derivacion (landing/chatrace).",
+  telefono_asignado: "Telefono de destino asignado para derivacion (landing/chatrace/whatsapp_cloud_api).",
   assigned_gerencia_label: "Gerencia historica asociada al telefono asignado al momento de crear/procesar la fila.",
   promo_code: "Codigo de promo/track para matchear Contact->Lead->Purchase.",
   lead_bot_phone: "Bot de WhatsApp que realmente recibio el Lead segun el payload.",
@@ -331,6 +331,7 @@ export function friendlySourcePlatform(value: unknown): string {
   const normalized = String(value ?? "").trim().toLowerCase();
   if (normalized === "landing") return "Landing";
   if (normalized === "chatrace") return "Chatrace";
+  if (normalized === "whatsapp_cloud_api") return "WhatsApp Cloud API";
   return normalized || "-";
 }
 

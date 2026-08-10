@@ -278,9 +278,15 @@ const canonicalInboundAction = (value: unknown): string => {
 const playerUsernameFromPayload = (p: Params): string =>
   norm(p.player_username ?? p.playerUsername ?? p.username);
 const ctwaClidForSource = (value: unknown, sourcePlatform: unknown): string =>
-  normalizedSourcePlatform(sourcePlatform) === "chatrace"
+  ["chatrace", "whatsapp_cloud_api"].includes(
+    normalizedSourcePlatform(sourcePlatform),
+  )
     ? normalizeCtwaClid(value)
     : "";
+const isClickToWhatsAppSource = (sourcePlatform: unknown): boolean =>
+  ["chatrace", "whatsapp_cloud_api"].includes(
+    normalizedSourcePlatform(sourcePlatform),
+  );
 const META_CAPI_MAX_EVENT_AGE_SECONDS = 7 * 24 * 60 * 60;
 const META_CAPI_FETCH_TIMEOUT_MS = 8000;
 const PURCHASE_UNPROTECTED_OBSERVATION =
@@ -2905,6 +2911,7 @@ async function handleContact(
     country: norm(geo.country),
     fbp: norm(p.fbp),
     fbc: norm(p.fbc),
+    from_meta_ads: toBool(p.from_meta_ads) || Boolean(inboundCtwaClid),
     geo_source: payloadGeoSource,
     meta_pixel_id: inboundMetaPixelId,
     source_platform: inboundSourcePlatform || "",
@@ -3635,7 +3642,7 @@ async function handleLead(
       updates.source_platform = inboundSourcePlatform;
     }
     if (
-      normalizedSourcePlatform(effectiveOriginSource) === "chatrace" &&
+      isClickToWhatsAppSource(effectiveOriginSource) &&
       !normalizeCtwaClid((cur as Record<string, unknown> | null)?.ctwa_clid) &&
       inboundCtwaClid
     ) {
@@ -4490,7 +4497,7 @@ async function handlePurchase(
       updates.source_platform = inboundSourcePlatform;
     }
     if (
-      normalizedSourcePlatform(effectiveOriginSource) === "chatrace" &&
+      isClickToWhatsAppSource(effectiveOriginSource) &&
       !normalizeCtwaClid(existingRow?.ctwa_clid) &&
       inboundCtwaClid
     ) {
@@ -4886,7 +4893,7 @@ async function handlePurchase(
   const repeatOriginSource = inboundSourcePlatform ||
     norm(repeatSourceRow?.source_platform);
   const repeatCtwaClid =
-    normalizedSourcePlatform(repeatOriginSource) === "chatrace"
+    isClickToWhatsAppSource(repeatOriginSource)
       ? inboundCtwaClid || normalizeCtwaClid(repeatSourceRow?.ctwa_clid)
       : "";
 
@@ -5234,7 +5241,7 @@ async function handleSimplePurchase(
   const simpleOriginSource = inboundSourcePlatform ||
     norm(srcRow?.source_platform);
   const simpleCtwaClid =
-    normalizedSourcePlatform(simpleOriginSource) === "chatrace"
+    isClickToWhatsAppSource(simpleOriginSource)
       ? inboundCtwaClid || normalizeCtwaClid(srcRow?.ctwa_clid)
       : "";
 
