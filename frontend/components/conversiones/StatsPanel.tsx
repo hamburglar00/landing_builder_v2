@@ -6,11 +6,11 @@ import {
   type ConversionRow,
 } from "@/lib/conversionsDb";
 import { computeCoreStats } from "@/lib/conversionStats";
-import { formatCurrencyAmount, type ReportingCurrency } from "@/lib/currency";
+import { formatCompactCurrency, formatCurrencyAmount, type ReportingCurrency } from "@/lib/currency";
 import ArgentinaMap from "./ArgentinaMap";
 import { supabase } from "@/lib/supabaseClient";
 import {
-  ComposedChart, Bar, LineChart, Line,
+  ComposedChart, Area, Bar, LineChart, Line,
   XAxis, YAxis, CartesianGrid, Tooltip, Legend,
   ResponsiveContainer,
 } from "recharts";
@@ -1152,8 +1152,14 @@ export default function StatsPanel({
               </button>
             </label>
           </div>
-          <ResponsiveContainer width="100%" height={260}>
-            <LineChart data={revenueChartData} margin={{ top: 4, right: 12, bottom: 0, left: 8 }}>
+          <ResponsiveContainer width="100%" height={280}>
+            <ComposedChart data={revenueChartData} margin={{ top: 8, right: 18, bottom: 0, left: 4 }}>
+              <defs>
+                <linearGradient id="revenueAreaGradient" x1="0" y1="0" x2="0" y2="1">
+                  <stop offset="5%" stopColor="#34d399" stopOpacity={0.34} />
+                  <stop offset="95%" stopColor="#34d399" stopOpacity={0.02} />
+                </linearGradient>
+              </defs>
               <CartesianGrid strokeDasharray="3 3" stroke="#27272a" />
               <XAxis
                 dataKey="label"
@@ -1169,19 +1175,42 @@ export default function StatsPanel({
                 tick={{ fill: "#71717a", fontSize: 10 }}
                 axisLine={false}
                 tickLine={false}
-                tickFormatter={(value) => formatCurrencyAmount(Number(value) || 0, currency)}
-                width={72}
+                tickFormatter={(value) => formatCompactCurrency(Number(value) || 0, currency)}
+                width={64}
               />
               <Tooltip
-                contentStyle={{ backgroundColor: "#18181b", border: "1px solid #3f3f46", borderRadius: 8, fontSize: 11 }}
+                cursor={{ stroke: "#52525b", strokeDasharray: "4 4" }}
+                contentStyle={{ backgroundColor: "#18181b", border: "1px solid #3f3f46", borderRadius: 8, fontSize: 11, boxShadow: "0 18px 36px rgba(0,0,0,0.35)" }}
                 labelStyle={{ color: "#a1a1aa" }}
-                formatter={(value, name) => [formatCurrencyAmount(Number(value) || 0, currency), name]}
+                formatter={(value, name) => [formatCurrencyAmount(Number(value) || 0, currency), name === "sma3" ? "SMA 3" : name]}
                 labelFormatter={(value) => isTodayRange ? `${value}:00 hs` : value}
               />
-              <Line type="monotone" dataKey="ingresos" name="Ingresos" stroke="#34d399" strokeWidth={2.5} dot={{ r: 2 }} activeDot={{ r: 4 }} connectNulls={false} />
-              {revenueSmaEnabled && <Line type="monotone" dataKey="sma3" name="SMA 3" stroke="#f59e0b" strokeWidth={2} dot={false} connectNulls={false} />}
+              <Area
+                type="monotone"
+                dataKey="ingresos"
+                name="Ingresos"
+                stroke="#34d399"
+                strokeWidth={2.5}
+                fill="url(#revenueAreaGradient)"
+                dot={false}
+                activeDot={{ r: 4, strokeWidth: 0, fill: "#a7f3d0" }}
+                connectNulls={false}
+              />
+              {revenueSmaEnabled && (
+                <Line
+                  type="monotone"
+                  dataKey="sma3"
+                  name="SMA 3"
+                  stroke="#f59e0b"
+                  strokeWidth={1.8}
+                  strokeDasharray="5 4"
+                  dot={false}
+                  activeDot={false}
+                  connectNulls={false}
+                />
+              )}
               <Legend wrapperStyle={{ fontSize: 11 }} />
-            </LineChart>
+            </ComposedChart>
           </ResponsiveContainer>
         </div>
       </div>
