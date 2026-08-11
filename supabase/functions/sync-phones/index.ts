@@ -43,7 +43,7 @@ const normalizeAndValidateArPhone = (
  * llamando a la API externa api.asesadmin.com y actualizando la tabla
  * public.gerencia_phones:
  *
- * - Inserta teléfonos nuevos (status=active, source_available=true, kind=ads|carga|mkt|assistant, usage_count=0).
+ * - Inserta teléfonos nuevos (status=active, assignment_role=acquisition, source_available=true, kind=ads|carga|mkt|assistant, usage_count=0).
  * - Actualiza tipo y source_available=true de los existentes que sigan llegando.
  * - Si el teléfono ya estaba disponible y el cliente lo apagó, preserva status=inactive.
  * - Si el teléfono vuelve después de no venir en la API, lo reactiva.
@@ -264,7 +264,7 @@ Deno.serve(async (req) => {
 
       const { data: existingPhones, error: existingPhonesError } = await supabaseAdmin
         .from("gerencia_phones")
-        .select("phone,status,source_available")
+        .select("phone,status,source_available,assignment_role")
         .eq("gerencia_id", g.id);
 
       if (existingPhonesError) {
@@ -275,14 +275,21 @@ Deno.serve(async (req) => {
         continue;
       }
 
-      const existingStateByPhone = new Map<string, { status: string; sourceAvailable: boolean }>();
+      const existingStateByPhone = new Map<
+        string,
+        { status: string; sourceAvailable: boolean; assignmentRole: "acquisition" | "follow_up" }
+      >();
       for (const row of existingPhones ?? []) {
         const phone = normalizeAndValidateArPhone(row.phone);
         if (!phone) continue;
         const status = String(row.status ?? "").trim();
+        const assignmentRole = String(row.assignment_role ?? "").trim() === "follow_up"
+          ? "follow_up"
+          : "acquisition";
         existingStateByPhone.set(phone, {
           status: status === "inactive" ? "inactive" : "active",
           sourceAvailable: row.source_available !== false,
+          assignmentRole,
         });
       }
 
@@ -319,7 +326,10 @@ Deno.serve(async (req) => {
           continue;
         }
 
-        totalActivePhones += syncedRows.filter((row) => row.status === "active").length;
+        totalActivePhones += syncedRows.filter((row) => {
+          const existing = existingStateByPhone.get(row.phone);
+          return row.status === "active" && existing?.assignmentRole !== "follow_up";
+        }).length;
 
         // 3) Marcar como inactivos los que no vinieron en esta llamada.
         // Supabase .not('col', 'in', ...) espera un string del tipo '(a,b,c)'.
@@ -378,6 +388,7 @@ Deno.serve(async (req) => {
         .from("gerencia_phones")
         .select("id")
         .eq("status", "active")
+        .eq("assignment_role", "acquisition")
         .in(
           "gerencia_id",
           (
@@ -416,7 +427,7 @@ Deno.serve(async (req) => {
       const checkedAt = new Date().toISOString();
       const { data: snapshotRows, error: snapshotError } = await supabaseAdmin
         .from("gerencia_phones")
-        .select("gerencia_id,status,gerencias!inner(user_id)")
+        .select("gerencia_id,status,assignment_role,gerencias!inner(user_id)")
         .in("gerencia_id", Array.from(processedGerenciaIds));
 
       if (snapshotError) {
@@ -452,7 +463,9 @@ Deno.serve(async (req) => {
             total_phone_count: 0,
           };
           snapshot.total_phone_count += 1;
-          if (row.status === "active") snapshot.active_phone_count += 1;
+          if (row.status === "active" && row.assignment_role !== "follow_up") {
+            snapshot.active_phone_count += 1;
+          }
           byGerencia.set(gerenciaId, snapshot);
         }
 

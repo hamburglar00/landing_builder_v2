@@ -22,6 +22,7 @@ export type GerenciaPhoneRow = {
   source_available?: boolean;
   usage_count: number;
   kind: string;
+  assignment_role?: AssignmentRole | null;
   comment: string;
   messages_reset_at: string | null;
   last_seen_at: string;
@@ -30,6 +31,7 @@ export type GerenciaPhoneRow = {
 };
 
 type FairCriterion = "usage_count" | "messages_received";
+type AssignmentRole = "acquisition" | "follow_up";
 
 const PHONE_KIND_OPTIONS: PhoneKind[] = ["carga", "assistant", "ads", "mkt"];
 const PHONE_KIND_LABELS: Record<PhoneKind, string> = {
@@ -38,6 +40,14 @@ const PHONE_KIND_LABELS: Record<PhoneKind, string> = {
   mkt: "mkt",
   assistant: "asistente",
 };
+const ASSIGNMENT_ROLE_OPTIONS: AssignmentRole[] = ["acquisition", "follow_up"];
+const ASSIGNMENT_ROLE_LABELS: Record<AssignmentRole, string> = {
+  acquisition: "Captacion",
+  follow_up: "WhatsApp de venta",
+};
+
+const getAssignmentRole = (row: GerenciaPhoneRow): AssignmentRole =>
+  row.assignment_role === "follow_up" ? "follow_up" : "acquisition";
 
 type Props = {
   backLink?: string;
@@ -193,7 +203,7 @@ export function TelefonosPageContent({
     const { data: phones, error: phonesError } = await supabase
       .from("gerencia_phones")
       .select(
-        "id, gerencia_id, phone, status, source_available, usage_count, kind, comment, messages_reset_at, last_seen_at, created_at, updated_at",
+        "id, gerencia_id, phone, status, source_available, usage_count, kind, assignment_role, comment, messages_reset_at, last_seen_at, created_at, updated_at",
       )
       .in("gerencia_id", ids)
       .order("gerencia_id", { ascending: true })
@@ -237,7 +247,7 @@ export function TelefonosPageContent({
 
   const getActivePhonesCount = useCallback(() => {
     return Object.values(phonesByGerencia).reduce((acc, list) => {
-      return acc + list.filter((p) => p.status === "active").length;
+      return acc + list.filter((p) => p.status === "active" && getAssignmentRole(p) === "acquisition").length;
     }, 0);
   }, [phonesByGerencia]);
 
@@ -552,6 +562,7 @@ export function TelefonosPageContent({
         status: "active",
         source_available: true,
         kind,
+        assignment_role: "acquisition",
         comment: "",
         last_seen_at: new Date().toISOString(),
       }];
@@ -578,7 +589,12 @@ export function TelefonosPageContent({
       });
       return;
     }
-    if (!isAdmin && nextStatus === "active" && maxPhonesAllowed != null) {
+    if (
+      !isAdmin &&
+      nextStatus === "active" &&
+      getAssignmentRole(row) === "acquisition" &&
+      maxPhonesAllowed != null
+    ) {
       const currentActive = getActivePhonesCount();
       if (currentActive >= maxPhonesAllowed) {
         setPlanLimitModal({
@@ -603,6 +619,45 @@ export function TelefonosPageContent({
         ...prev,
         [row.gerencia_id]: list.map((x) =>
           x.id === row.id ? { ...x, status: nextStatus } : x,
+        ),
+      };
+    });
+  };
+
+  const handleAssignmentRoleChange = async (
+    row: GerenciaPhoneRow,
+    nextRole: AssignmentRole,
+  ) => {
+    const currentRole = getAssignmentRole(row);
+    if (currentRole === nextRole) return;
+    if (
+      !isAdmin &&
+      row.status === "active" &&
+      nextRole === "acquisition" &&
+      maxPhonesAllowed != null &&
+      getActivePhonesCount() >= maxPhonesAllowed
+    ) {
+      setPlanLimitModal({
+        open: true,
+        message: `No se puede marcar como Captacion porque alcanzaste el limite de tu plan (${maxPhonesAllowed} telefonos activos de captacion).`,
+      });
+      return;
+    }
+    setError(null);
+    const { error: updateError } = await supabase
+      .from("gerencia_phones")
+      .update({ assignment_role: nextRole })
+      .eq("id", row.id);
+    if (updateError) {
+      setError(updateError.message);
+      return;
+    }
+    setPhonesByGerencia((prev) => {
+      const list = prev[row.gerencia_id] ?? [];
+      return {
+        ...prev,
+        [row.gerencia_id]: list.map((x) =>
+          x.id === row.id ? { ...x, assignment_role: nextRole } : x,
         ),
       };
     });
@@ -819,7 +874,9 @@ export function TelefonosPageContent({
           ) : null}
           {filteredGerencias.map((g) => {
             const phones = phonesByGerencia[g.id] ?? [];
-            const activePhonesCount = phones.filter((p) => p.status === "active").length;
+            const activePhonesCount = phones.filter(
+              (p) => p.status === "active" && getAssignmentRole(p) === "acquisition",
+            ).length;
             const totalUsage = phones.reduce(
               (acc, p) => acc + (Number(p.usage_count) || 0),
               0,
@@ -852,7 +909,7 @@ export function TelefonosPageContent({
                   onClick={() =>
                     setOpenGerenciaId((prev) => (prev === g.id ? null : g.id))
                   }
-                  className="grid w-full grid-cols-1 items-center gap-2 px-4 py-3 text-left hover:bg-zinc-800/50 lg:grid-cols-[minmax(220px,1fr)_72px_95px_92px_150px_105px_20px]"
+                  className="grid w-full grid-cols-1 items-center gap-2 px-4 py-3 text-left hover:bg-zinc-800/50 lg:grid-cols-[minmax(220px,1fr)_72px_110px_92px_150px_105px_20px]"
                 >
                   <span className="min-w-0 truncate font-medium text-zinc-200">
                       {g.nombre} {g.gerencia_id ? `(ID ${g.gerencia_id})` : ""}
@@ -863,10 +920,10 @@ export function TelefonosPageContent({
                   <span className="inline-flex items-center gap-1.5 whitespace-nowrap text-xs text-zinc-500 lg:justify-end">
                     <span
                       className={`h-[9px] w-[9px] rounded-full ${activePhonesCount > 0 ? "bg-emerald-400/80" : "bg-red-400/80"}`}
-                      aria-label={activePhonesCount > 0 ? "Tiene telefonos activos" : "No tiene telefonos activos"}
-                      title={activePhonesCount > 0 ? "Tiene telefonos activos" : "No tiene telefonos activos"}
+                      aria-label={activePhonesCount > 0 ? "Tiene telefonos de captacion activos" : "No tiene telefonos de captacion activos"}
+                      title={activePhonesCount > 0 ? "Tiene telefonos de captacion activos" : "No tiene telefonos de captacion activos"}
                     />
-                    activos: {activePhonesCount}
+                    captacion: {activePhonesCount}
                   </span>
                   <div className="whitespace-nowrap text-xs text-zinc-500 lg:text-right">
                     Contador: {totalUsage}
@@ -976,7 +1033,7 @@ export function TelefonosPageContent({
                       </div>
                     ) : null}
                     <div className="overflow-x-auto rounded-lg border border-zinc-700">
-                      <table className="min-w-[860px] text-left text-sm md:min-w-full">
+                      <table className="min-w-[980px] text-left text-sm md:min-w-full">
                         <thead className="bg-zinc-800/80">
                           <tr>
                             <th className="px-3 py-2 font-medium text-zinc-300">
@@ -987,6 +1044,9 @@ export function TelefonosPageContent({
                             </th>
                             <th className="px-3 py-2 font-medium text-zinc-300">
                               Tipo
+                            </th>
+                            <th className="px-3 py-2 font-medium text-zinc-300">
+                              Uso
                             </th>
                             <th className="px-3 py-2 font-medium text-zinc-300">
                               Contador
@@ -1006,7 +1066,7 @@ export function TelefonosPageContent({
                           {phones.length === 0 ? (
                             <tr>
                               <td
-                                colSpan={7}
+                                colSpan={8}
                                 className="px-3 py-4 text-center text-zinc-500"
                               >
                                 {(g.source_type ?? "pbadmin") === "manual"
@@ -1019,6 +1079,7 @@ export function TelefonosPageContent({
                               const canTogglePhoneStatus =
                                 (g.source_type ?? "pbadmin") === "manual" ||
                                 p.source_available !== false;
+                              const assignmentRole = getAssignmentRole(p);
 
                               return (
                               <tr
@@ -1056,8 +1117,8 @@ export function TelefonosPageContent({
                                         }`}
                                         title={
                                           p.status === "active"
-                                            ? "Activo: este teléfono puede ser usado por la landing"
-                                            : "Inactivo: este teléfono queda disponible pero no se usa en la landing"
+                                            ? "Activo: este telefono puede recibir seguimiento. Si el uso es Captacion, tambien puede ser asignado por publicidad."
+                                            : "Inactivo: este telefono queda registrado pero no se usa para asignaciones."
                                         }
                                         aria-pressed={p.status === "active"}
                                       >
@@ -1081,6 +1142,33 @@ export function TelefonosPageContent({
                                 </td>
                                 <td className="px-3 py-2 text-zinc-300">
                                   {PHONE_KIND_LABELS[p.kind as PhoneKind] ?? p.kind}
+                                </td>
+                                <td className="px-3 py-2">
+                                  <select
+                                    value={assignmentRole}
+                                    onChange={(e) =>
+                                      void handleAssignmentRoleChange(
+                                        p,
+                                        e.target.value as AssignmentRole,
+                                      )
+                                    }
+                                    className={`min-w-[150px] rounded-lg border px-2 py-1 text-xs font-medium outline-none transition ${
+                                      assignmentRole === "follow_up"
+                                        ? "border-amber-800/70 bg-amber-950/25 text-amber-200"
+                                        : "border-emerald-900/70 bg-emerald-950/20 text-emerald-200"
+                                    }`}
+                                    title={
+                                      assignmentRole === "follow_up"
+                                        ? "WhatsApp de venta: queda activo para seguimiento, pero no se asigna en publicidad."
+                                        : "Captacion: puede ser elegido por landings, Chatrace y WhatsApp Cloud API."
+                                    }
+                                  >
+                                    {ASSIGNMENT_ROLE_OPTIONS.map((role) => (
+                                      <option key={role} value={role}>
+                                        {ASSIGNMENT_ROLE_LABELS[role]}
+                                      </option>
+                                    ))}
+                                  </select>
                                 </td>
                                 <td className="px-3 py-2 text-zinc-300">
                                   {p.usage_count}
