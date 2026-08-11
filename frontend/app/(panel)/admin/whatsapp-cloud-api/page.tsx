@@ -1,5 +1,5 @@
-import WhatsAppCloudApiPageContent from "@/components/whatsapp-cloud-api/WhatsAppCloudApiPageContent";
+import WhatsAppCloudApiHubContent from "@/components/whatsapp-cloud-api/WhatsAppCloudApiHubContent";
 
 export default function AdminWhatsappCloudApiPage() {
-  return <WhatsAppCloudApiPageContent mode="admin" />;
+  return <WhatsAppCloudApiHubContent mode="admin" />;
 }

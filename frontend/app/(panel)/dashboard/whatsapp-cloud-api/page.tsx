@@ -1,5 +1,5 @@
-import WhatsAppCloudApiPageContent from "@/components/whatsapp-cloud-api/WhatsAppCloudApiPageContent";
+import WhatsAppCloudApiHubContent from "@/components/whatsapp-cloud-api/WhatsAppCloudApiHubContent";
 
 export default function DashboardWhatsappCloudApiPage() {
-  return <WhatsAppCloudApiPageContent mode="dashboard" />;
+  return <WhatsAppCloudApiHubContent mode="dashboard" />;
 }

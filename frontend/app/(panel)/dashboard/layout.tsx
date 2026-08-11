@@ -17,6 +17,8 @@ const DASHBOARD_PREFETCH_ROUTES = [
   "/dashboard/conversiones",
   "/dashboard/seguimiento",
   "/dashboard/whatsapp-cloud-api",
+  "/dashboard/whatsapp-cloud-api/configuracion",
+  "/dashboard/whatsapp-cloud-api/inbox",
   "/dashboard/gerencias",
   "/dashboard/telefonos",
   "/dashboard/integraciones",

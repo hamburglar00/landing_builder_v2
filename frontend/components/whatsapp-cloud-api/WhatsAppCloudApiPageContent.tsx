@@ -357,6 +357,7 @@ export default function WhatsAppCloudApiPageContent({
 
   const displayGroups = useMemo(() => buildDisplayGroups(gerencias, workGroups), [gerencias, workGroups]);
   const identificationLocked = Boolean(config?.id && !identificationEditing);
+  const hubPath = mode === "admin" ? "/admin/whatsapp-cloud-api" : "/dashboard/whatsapp-cloud-api";
 
   const loadTarget = useCallback(async (uid: string, ownerId: string) => {
     setError(null);
@@ -552,6 +553,9 @@ export default function WhatsAppCloudApiPageContent({
         description="Recibi mensajes Click-to-WhatsApp y deriva al asesor asignado."
         actions={
           <>
+            <Link href={hubPath} className="ui-button ui-button-secondary">
+              Volver
+            </Link>
             <button
               type="button"
               onClick={() => setInstructionsOpen((value) => !value)}
