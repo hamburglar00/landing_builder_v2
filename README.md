@@ -405,6 +405,7 @@ sh scripts/install-git-hooks.sh
 - [CRON-SETUP.md](CRON-SETUP.md)
 - [supabase/migrations/README.md](supabase/migrations/README.md)
 - [docs/META_CAPI_PAYLOAD.md](docs/META_CAPI_PAYLOAD.md)
+- [docs/whatsapp-cloud-api.md](docs/whatsapp-cloud-api.md)
 
 ---
 

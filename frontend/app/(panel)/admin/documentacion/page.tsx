@@ -7,11 +7,19 @@ import remarkGfm from "remark-gfm";
 
 export default async function AdminDocumentacionPage() {
   const readmePath = path.join(process.cwd(), "README.md");
+  const whatsappCloudApiPath = path.join(process.cwd(), "..", "docs", "whatsapp-cloud-api.md");
   let content = "";
   try {
     content = fs.readFileSync(readmePath, "utf-8");
   } catch {
     content = "No se encontró README en el proyecto.";
+  }
+
+  try {
+    const whatsappCloudApiContent = fs.readFileSync(whatsappCloudApiPath, "utf-8");
+    content = `${content}\n\n---\n\n${whatsappCloudApiContent}`;
+  } catch {
+    // La guia complementaria es opcional para entornos que solo empaquetan frontend.
   }
 
   return (
