@@ -85,6 +85,20 @@ export default function WhatsAppCloudApiHubContent({ mode }: Props) {
           meta="Operativo"
         />
       </div>
+
+      <SurfaceCard className="p-4">
+        <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+          <div className="min-w-0">
+            <p className="text-sm font-semibold text-[var(--color-text-strong)]">Diagnostico</p>
+            <p className="mt-1 max-w-3xl text-xs leading-5 text-[var(--color-text-muted)]">
+              Revisa webhooks, worker, respuestas enviadas y errores de integracion sin mezclarlo con la operacion diaria.
+            </p>
+          </div>
+          <Link href={`${basePath}/logs`} className="ui-button ui-button-secondary shrink-0">
+            Ver logs
+          </Link>
+        </div>
+      </SurfaceCard>
     </div>
   );
 }
