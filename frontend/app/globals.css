@@ -512,6 +512,24 @@ a {
   box-shadow: var(--shadow-card);
 }
 
+.ui-alert-success {
+  border-color: rgba(52, 211, 153, 0.25);
+  background: rgba(16, 185, 129, 0.1);
+  color: #6ee7b7;
+}
+
+.ui-alert-error {
+  border-color: rgba(251, 113, 133, 0.25);
+  background: rgba(244, 63, 94, 0.1);
+  color: #fda4af;
+}
+
+.ui-alert-warning {
+  border-color: rgba(251, 191, 36, 0.3);
+  background: rgba(245, 158, 11, 0.1);
+  color: #fcd34d;
+}
+
 .ui-empty-state {
   display: flex;
   min-height: 12rem;
