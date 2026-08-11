@@ -597,12 +597,12 @@ export default function WhatsAppCloudApiPageContent({
       ) : null}
 
       {error ? (
-        <p className="ui-alert border-rose-400/25 bg-rose-500/10 text-sm text-rose-300">
+        <p className="ui-alert !border-rose-400/25 !bg-rose-500/10 text-sm !text-rose-300">
           {error}
         </p>
       ) : null}
       {message ? (
-        <p className="ui-alert border-emerald-500/25 bg-emerald-500/10 text-sm text-emerald-300" role="status" aria-live="polite">
+        <p className="ui-alert !border-emerald-500/25 !bg-emerald-500/10 text-sm !text-emerald-300" role="status" aria-live="polite">
           {message}
         </p>
       ) : null}
