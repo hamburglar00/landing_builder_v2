@@ -566,8 +566,17 @@ export default function WhatsAppCloudApiPageContent({
                 <Field label="Verify token">
                   <div className="flex gap-2">
                     <input value={verifyToken} onChange={(e) => setVerifyToken(e.target.value.trim())} className={`${inputClass} font-mono text-xs`} />
-                    <button type="button" onClick={() => void copyText(verifyToken, "Verify token")} className="ui-button ui-button-secondary shrink-0">
-                      Copiar
+                    <button
+                      type="button"
+                      onClick={() => void copyText(verifyToken, "Verify token")}
+                      className="inline-flex h-10 w-10 shrink-0 items-center justify-center rounded-lg border border-zinc-700 bg-zinc-900 text-zinc-300 transition hover:bg-zinc-800 hover:text-zinc-100"
+                      title="Copiar Verify token"
+                      aria-label="Copiar Verify token"
+                    >
+                      <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                        <rect x="9" y="9" width="13" height="13" rx="2" ry="2" />
+                        <path d="M5 15H4a2 2 0 01-2-2V4a2 2 0 012-2h9a2 2 0 012 2v1" />
+                      </svg>
                     </button>
                   </div>
                 </Field>
