@@ -34,6 +34,25 @@ export interface WhatsappCloudApiAssignment {
   intervalEndHour: number | null;
 }
 
+export type WhatsappCloudApiLogKind = "webhook" | "assignment" | "outbound";
+
+export interface WhatsappCloudApiLogEntry {
+  id: string;
+  kind: WhatsappCloudApiLogKind;
+  label: string;
+  status: string;
+  created_at: string;
+  config_id: string | null;
+  config_name: string;
+  phone: string;
+  meta_message_id: string;
+  promo_code: string;
+  gerencia: string;
+  attempts: number | null;
+  error: string;
+  payload: Record<string, unknown> | null;
+}
+
 export async function fetchWhatsappCloudApiConfig(
   userId: string,
 ): Promise<WhatsappCloudApiConfig | null> {
@@ -173,4 +192,149 @@ export async function fetchWhatsappCloudApiRecentEvents(configId: string): Promi
     received_at: string;
     last_error: string;
   }>;
+}
+
+function asRecord(value: unknown): Record<string, unknown> | null {
+  return value && typeof value === "object" && !Array.isArray(value)
+    ? value as Record<string, unknown>
+    : null;
+}
+
+function firstString(...values: unknown[]): string {
+  for (const value of values) {
+    if (typeof value === "string" && value.trim()) return value.trim();
+    if (typeof value === "number" && Number.isFinite(value)) return String(value);
+  }
+  return "";
+}
+
+function readPayloadPhone(payload: Record<string, unknown> | null): string {
+  const entry = Array.isArray(payload?.entry) ? asRecord(payload.entry[0]) : null;
+  const changes = Array.isArray(entry?.changes) ? asRecord(entry.changes[0]) : null;
+  const value = asRecord(changes?.value);
+  const contacts = Array.isArray(value?.contacts) ? asRecord(value.contacts[0]) : null;
+  const messages = Array.isArray(value?.messages) ? asRecord(value.messages[0]) : null;
+  return firstString(messages?.from, contacts?.wa_id);
+}
+
+export async function fetchWhatsappCloudApiLogs(input: {
+  userId: string;
+  isAdmin: boolean;
+  limit?: number;
+}): Promise<WhatsappCloudApiLogEntry[]> {
+  const limit = input.limit ?? 40;
+
+  const webhookQuery = supabase
+    .from("whatsapp_cloud_api_webhook_events")
+    .select("id,config_id,user_id,event_type,status,phone_number_id,meta_message_id,meta_status_id,payload,attempts,received_at,processed_at,last_error")
+    .order("received_at", { ascending: false })
+    .limit(limit);
+  if (!input.isAdmin) webhookQuery.eq("user_id", input.userId);
+
+  const assignmentQuery = supabase
+    .from("whatsapp_cloud_api_assignments")
+    .select("id,config_id,user_id,assigned_phone,assigned_gerencia_id,assigned_gerencia_label,promo_code,redirect_message_id,status,last_error,created_at,redirect_sent_at")
+    .order("created_at", { ascending: false })
+    .limit(limit);
+  if (!input.isAdmin) assignmentQuery.eq("user_id", input.userId);
+
+  const outboundQuery = supabase
+    .from("whatsapp_cloud_api_outbound_messages")
+    .select("id,config_id,user_id,assignment_id,meta_message_id,recipient_wa_id,message_type,status,payload,response,last_error,created_at,sent_at")
+    .order("created_at", { ascending: false })
+    .limit(limit);
+  if (!input.isAdmin) outboundQuery.eq("user_id", input.userId);
+
+  const [webhookResult, assignmentResult, outboundResult] = await Promise.all([
+    webhookQuery,
+    assignmentQuery,
+    outboundQuery,
+  ]);
+  if (webhookResult.error) throw webhookResult.error;
+  if (assignmentResult.error) throw assignmentResult.error;
+  if (outboundResult.error) throw outboundResult.error;
+
+  const rawConfigIds = [
+    ...(webhookResult.data ?? []).map((row) => row.config_id),
+    ...(assignmentResult.data ?? []).map((row) => row.config_id),
+    ...(outboundResult.data ?? []).map((row) => row.config_id),
+  ];
+  const configIds = Array.from(new Set(rawConfigIds.filter((id): id is string => typeof id === "string" && Boolean(id))));
+  const configNames = new Map<string, string>();
+  if (configIds.length > 0) {
+    const { data, error } = await supabase
+      .from("whatsapp_cloud_api_configs")
+      .select("id,name,display_phone_number")
+      .in("id", configIds);
+    if (error) throw error;
+    for (const row of data ?? []) {
+      const displayPhone = firstString(row.display_phone_number);
+      configNames.set(String(row.id), displayPhone ? `${row.name} (${displayPhone})` : String(row.name ?? ""));
+    }
+  }
+
+  const logs: WhatsappCloudApiLogEntry[] = [];
+
+  for (const row of webhookResult.data ?? []) {
+    const payload = asRecord(row.payload);
+    logs.push({
+      id: String(row.id),
+      kind: "webhook",
+      label: row.event_type ? `Webhook ${row.event_type}` : "Webhook",
+      status: String(row.status ?? ""),
+      created_at: String(row.received_at ?? ""),
+      config_id: row.config_id ?? null,
+      config_name: row.config_id ? configNames.get(row.config_id) ?? "" : "",
+      phone: readPayloadPhone(payload),
+      meta_message_id: firstString(row.meta_message_id, row.meta_status_id),
+      promo_code: "",
+      gerencia: firstString(row.phone_number_id),
+      attempts: Number(row.attempts ?? 0),
+      error: String(row.last_error ?? ""),
+      payload,
+    });
+  }
+
+  for (const row of assignmentResult.data ?? []) {
+    logs.push({
+      id: String(row.id),
+      kind: "assignment",
+      label: "Derivacion",
+      status: String(row.status ?? ""),
+      created_at: String(row.created_at ?? ""),
+      config_id: row.config_id ?? null,
+      config_name: row.config_id ? configNames.get(row.config_id) ?? "" : "",
+      phone: firstString(row.assigned_phone),
+      meta_message_id: firstString(row.redirect_message_id),
+      promo_code: firstString(row.promo_code),
+      gerencia: firstString(row.assigned_gerencia_label, row.assigned_gerencia_id),
+      attempts: null,
+      error: String(row.last_error ?? ""),
+      payload: null,
+    });
+  }
+
+  for (const row of outboundResult.data ?? []) {
+    logs.push({
+      id: String(row.id),
+      kind: "outbound",
+      label: `Mensaje saliente ${firstString(row.message_type) || "text"}`,
+      status: String(row.status ?? ""),
+      created_at: String(row.created_at ?? ""),
+      config_id: row.config_id ?? null,
+      config_name: row.config_id ? configNames.get(row.config_id) ?? "" : "",
+      phone: firstString(row.recipient_wa_id),
+      meta_message_id: firstString(row.meta_message_id),
+      promo_code: "",
+      gerencia: "",
+      attempts: null,
+      error: String(row.last_error ?? ""),
+      payload: asRecord(row.response) ?? asRecord(row.payload),
+    });
+  }
+
+  return logs
+    .filter((log) => log.created_at)
+    .sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime())
+    .slice(0, limit);
 }
