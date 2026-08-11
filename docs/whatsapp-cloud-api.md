@@ -221,23 +221,24 @@ https://developers.facebook.com/apps
 
 1. Crear una app nueva o abrir la app del cliente.
 2. En casos de uso, elegir `Conecta con los clientes a traves de WhatsApp`.
-3. En `Paso 1. Probar`, solicitar numero de prueba si se quiere validar el flujo antes de produccion.
-4. Copiar `Phone Number ID` y `Identificador de la cuenta de WhatsApp Business`.
-5. Generar el identificador de acceso y pegarlo como `Meta access token`.
+3. Ir directo a `Paso 2. Configuracion de produccion` y registrar el numero real del cliente.
+4. Copiar el `Phone Number ID` y el `Identificador de la cuenta de WhatsApp Business` del numero real registrado.
+5. Generar el identificador de acceso para ese numero/WABA y pegarlo como `Meta access token`.
 6. En `Configuracion de la app > Informacion basica`, copiar el `App Secret` y pegarlo como `App Secret / token de la app`.
-7. En `Paso 2. Configuracion de produccion`, registrar el numero real del cliente.
-8. Activar `Suscribirse a webhooks` sobre el numero registrado.
-9. Pegar la `Webhook URL` del constructor.
-10. Pegar el `Verify token` del constructor.
-11. Verificar y guardar.
-12. En campos de webhook, suscribirse al campo `messages`.
-13. Publicar la app. Si Meta pide politica de privacidad, usar:
+7. Activar `Suscribirse a webhooks` sobre el numero registrado.
+8. Pegar la `Webhook URL` del constructor.
+9. Pegar el `Verify token` del constructor.
+10. Verificar y guardar.
+11. En campos de webhook, suscribirse al campo `messages`.
+12. Publicar la app. Si Meta pide politica de privacidad, usar:
 
 ```text
 https://mkt.panelbotadmin.com/privacy-policy
 ```
 
-14. Volver al constructor, activar la integracion y guardar.
+13. Volver al constructor, activar la integracion y guardar.
+
+`Paso 1. Probar` y el numero de prueba de Meta son opcionales. Sirven para validar el sandbox antes de produccion, pero no son necesarios cuando se conecta directamente un numero propio del cliente.
 
 El webhook valida:
 

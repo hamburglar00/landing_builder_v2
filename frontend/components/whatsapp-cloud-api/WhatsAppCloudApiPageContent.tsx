@@ -34,10 +34,11 @@ const DEFAULT_FALLBACK_TEMPLATE =
 const INSTRUCTION_CHECKLIST = [
   "Entrar a https://developers.facebook.com/apps y crear una app nueva o abrir la app del cliente.",
   "Agregar el caso de uso Conecta con los clientes a traves de WhatsApp.",
-  "En Paso 1, solicitar numero de prueba para obtener Phone Number ID y WhatsApp Business Account ID.",
-  "Generar el identificador de acceso y pegarlo en Meta access token.",
+  "Ir a Paso 2. Configuracion de produccion y registrar el numero real del cliente.",
+  "Copiar el Phone Number ID y el WhatsApp Business Account ID del numero real registrado.",
+  "Generar el identificador de acceso para ese numero/WABA y pegarlo en Meta access token.",
   "En Configuracion de la app > Informacion basica, copiar App Secret y pegarlo en App Secret / token de la app.",
-  "En Paso 2, registrar el numero de produccion y activar Suscribirse a webhooks sobre ese numero.",
+  "Activar Suscribirse a webhooks sobre el numero registrado.",
   "Pegar la Webhook URL y el Verify token del constructor, verificar y guardar.",
   "En Campos de webhook, suscribirse al campo messages. Los demas campos son opcionales.",
   "Publicar la app. Meta puede pedir URL de politica de privacidad: usar https://mkt.panelbotadmin.com/privacy-policy.",
@@ -596,12 +597,12 @@ export default function WhatsAppCloudApiPageContent({
       ) : null}
 
       {error ? (
-        <p className="ui-alert border-[rgba(251,113,133,0.25)] bg-[rgba(251,113,133,0.07)] text-sm text-[var(--color-danger)]">
+        <p className="ui-alert border-rose-400/25 bg-rose-500/10 text-sm text-rose-300">
           {error}
         </p>
       ) : null}
       {message ? (
-        <p className="ui-alert border-[rgba(52,211,153,0.22)] bg-[rgba(52,211,153,0.07)] text-sm text-[var(--color-success)]" role="status" aria-live="polite">
+        <p className="ui-alert border-emerald-500/25 bg-emerald-500/10 text-sm text-emerald-300" role="status" aria-live="polite">
           {message}
         </p>
       ) : null}
@@ -628,6 +629,9 @@ export default function WhatsAppCloudApiPageContent({
           <div className="mt-4 grid gap-4 lg:grid-cols-2">
             <div className="rounded-xl border border-zinc-800 bg-zinc-950/50 p-4">
               <p className="text-xs font-semibold text-zinc-100">Configuracion inicial</p>
+              <p className="mt-1 text-[11px] leading-4 text-amber-300">
+                El numero de prueba de Meta es opcional. Si vas a conectar un numero propio, podes pasar directo a produccion.
+              </p>
               <ol className="mt-3 space-y-2 text-xs leading-relaxed text-zinc-300">
                 {INSTRUCTION_CHECKLIST.map((item, index) => (
                   <li key={item} className="flex gap-2">
