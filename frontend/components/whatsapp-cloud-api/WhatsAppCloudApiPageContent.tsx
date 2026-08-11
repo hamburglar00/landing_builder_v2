@@ -93,6 +93,10 @@ function cleanTag(value: string): string {
   return value.replace(/[^a-zA-Z0-9]/g, "");
 }
 
+function generateVerifyToken(): string {
+  return crypto.randomUUID().replace(/-/g, "");
+}
+
 function toAssignments(rows: WhatsappCloudApiAssignment[]): LandingGerenciaAssignment[] {
   return rows.map((row) => ({
     gerencia_id: row.gerencia_id,
@@ -279,16 +283,27 @@ function CopyIcon() {
   );
 }
 
+function GenerateIcon() {
+  return (
+    <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round">
+      <path d="M12 5v14" />
+      <path d="M5 12h14" />
+    </svg>
+  );
+}
+
 function CopyButton({
   copied,
   disabled = false,
   onClick,
   title,
+  variant = "copy",
 }: {
   copied: boolean;
   disabled?: boolean;
   onClick: () => void;
   title: string;
+  variant?: "copy" | "generate";
 }) {
   return (
     <button
@@ -299,7 +314,7 @@ function CopyButton({
       title={title}
       aria-label={title}
     >
-      {copied ? <span className="text-[10px] font-semibold text-emerald-400">OK</span> : <CopyIcon />}
+      {copied ? <span className="text-[10px] font-semibold text-emerald-400">OK</span> : variant === "generate" ? <GenerateIcon /> : <CopyIcon />}
     </button>
   );
 }
@@ -397,7 +412,7 @@ export default function WhatsAppCloudApiPageContent({
     setAccessToken(cfg?.meta_access_token ?? "");
     setAppSecret(cfg?.meta_app_secret ?? "");
     setApiVersion(cfg?.meta_api_version ?? "v25.0");
-    setVerifyToken(cfg?.webhook_verify_token ?? crypto.randomUUID().replace(/-/g, ""));
+    setVerifyToken(cfg?.webhook_verify_token ?? generateVerifyToken());
     setPixelId(cfg?.pixel_id ?? "");
     setLandingTag(cfg?.landing_tag ?? "");
     setSelectionMode(cfg?.gerencia_selection_mode ?? "weighted_random");
@@ -762,12 +777,21 @@ export default function WhatsAppCloudApiPageContent({
                     />
                     <CopyButton
                       copied={verifyTokenCopied}
-                      disabled={!verifyToken}
-                      title="Copiar Verify token"
-                      onClick={() => void copyText(verifyToken, "Verify token", () => {
-                        setVerifyTokenCopied(true);
-                        window.setTimeout(() => setVerifyTokenCopied(false), 1200);
-                      })}
+                      disabled={false}
+                      title={verifyToken ? "Copiar Verify token" : "Generar Verify token"}
+                      variant={verifyToken ? "copy" : "generate"}
+                      onClick={() => {
+                        if (!verifyToken) {
+                          setError(null);
+                          setVerifyToken(generateVerifyToken());
+                          setMessage("Verify token generado.");
+                          return;
+                        }
+                        void copyText(verifyToken, "Verify token", () => {
+                          setVerifyTokenCopied(true);
+                          window.setTimeout(() => setVerifyTokenCopied(false), 1200);
+                        });
+                      }}
                     />
                   </div>
                 </Field>

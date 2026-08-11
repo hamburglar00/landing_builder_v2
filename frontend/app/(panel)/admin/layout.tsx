@@ -563,6 +563,22 @@ export default function AdminLayout({
           </Link>
 
           <Link
+            href="/admin/whatsapp-cloud-api"
+            {...getNavLinkProps("/admin/whatsapp-cloud-api")}
+            className={`flex items-center gap-2 rounded-lg px-3 py-2 text-xs font-medium tracking-[0.18em] transition ${
+              pathname?.startsWith("/admin/whatsapp-cloud-api")
+                ? "bg-[var(--color-primary-soft-bg)] text-[var(--color-primary)] border border-[var(--color-primary-soft-border)]"
+                : "text-[var(--color-text-muted)] hover:bg-[var(--color-bg-3)] hover:text-[var(--color-text)]"
+            }`}
+          >
+            <NavIcon
+              variant="whatsapp"
+              active={Boolean(pathname?.startsWith("/admin/whatsapp-cloud-api"))}
+            />
+            <span>WHATSAPP API</span>
+          </Link>
+
+          <Link
             href="/admin/conversiones"
             {...getNavLinkProps("/admin/conversiones")}
             className={`flex items-center gap-2 rounded-lg px-3 py-2 text-xs font-medium tracking-[0.18em] transition ${
@@ -592,22 +608,6 @@ export default function AdminLayout({
               active={Boolean(pathname?.startsWith("/admin/seguimiento"))}
             />
             <span>SEGUIMIENTOS</span>
-          </Link>
-
-          <Link
-            href="/admin/whatsapp-cloud-api"
-            {...getNavLinkProps("/admin/whatsapp-cloud-api")}
-            className={`flex items-center gap-2 rounded-lg px-3 py-2 text-xs font-medium tracking-[0.18em] transition ${
-              pathname?.startsWith("/admin/whatsapp-cloud-api")
-                ? "bg-[var(--color-primary-soft-bg)] text-[var(--color-primary)] border border-[var(--color-primary-soft-border)]"
-                : "text-[var(--color-text-muted)] hover:bg-[var(--color-bg-3)] hover:text-[var(--color-text)]"
-            }`}
-          >
-            <NavIcon
-              variant="whatsapp"
-              active={Boolean(pathname?.startsWith("/admin/whatsapp-cloud-api"))}
-            />
-            <span>WHATSAPP API</span>
           </Link>
 
           <Link

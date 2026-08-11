@@ -53,10 +53,6 @@ function HubCard({
             <h2 className="text-base font-semibold text-[var(--color-text-strong)]">{title}</h2>
             <p className="mt-2 max-w-xl text-sm leading-6 text-[var(--color-text-muted)]">{description}</p>
           </div>
-          <div className="mt-auto flex items-center gap-2 text-xs font-semibold text-[var(--color-primary)]">
-            <span>Abrir</span>
-            <span className="transition group-hover:translate-x-0.5" aria-hidden>{">"}</span>
-          </div>
         </div>
       </SurfaceCard>
     </Link>
