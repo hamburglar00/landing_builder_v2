@@ -69,15 +69,15 @@ async function hmacSha256(secret: string, rawBody: string): Promise<string> {
 async function verifyMetaSignature(
   req: Request,
   rawBody: string,
-  appSecretOverride?: string,
+  appSecret: string,
 ): Promise<boolean> {
-  const appSecret = appSecretOverride?.trim() || Deno.env.get("META_APP_SECRET")?.trim() || "";
-  if (!appSecret) return false;
+  const secret = appSecret.trim();
+  if (!secret) return false;
   const header = req.headers.get("x-hub-signature-256")?.trim() ?? "";
   const expectedPrefix = "sha256=";
   if (!header.toLowerCase().startsWith(expectedPrefix)) return false;
   const received = header.slice(expectedPrefix.length);
-  const expected = await hmacSha256(appSecret, rawBody);
+  const expected = await hmacSha256(secret, rawBody);
   return timingSafeEqual(received, expected);
 }
 
@@ -247,7 +247,14 @@ Deno.serve(async (req) => {
       return textResponse("Invalid JSON", 400);
     }
 
-    const appSecret = await resolveSignatureSecret(db, extractPhoneNumberIds(payload));
+    const phoneNumberIds = extractPhoneNumberIds(payload);
+    const appSecret = await resolveSignatureSecret(db, phoneNumberIds);
+    if (!appSecret) {
+      console.warn("[whatsapp-cloud-webhook] missing app secret for phone number", {
+        phone_number_ids: phoneNumberIds,
+      });
+      return textResponse("Missing App Secret", 401);
+    }
     const signatureOk = await verifyMetaSignature(req, rawBody, appSecret);
     if (!signatureOk) {
       console.warn("[whatsapp-cloud-webhook] invalid signature");

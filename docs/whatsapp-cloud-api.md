@@ -244,7 +244,7 @@ El webhook valida:
 - `hub.verify_token` para GET de verificacion.
 - `X-Hub-Signature-256` para POST reales.
 
-Para POST reales se usa el App Secret guardado en la configuracion. Si no existe, se usa `META_APP_SECRET` como fallback operativo.
+Para POST reales se usa exclusivamente el App Secret guardado en la configuracion del cliente. Si falta o no coincide, el webhook rechaza el evento.
 
 ## 8. Como probar
 
