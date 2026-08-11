@@ -122,6 +122,7 @@ export default function WhatsAppCloudApiLogsPageContent({ mode }: Props) {
         log.status,
         log.config_name,
         log.phone,
+        log.phone_number_id,
         log.meta_message_id,
         log.promo_code,
         log.gerencia,
@@ -252,6 +253,9 @@ export default function WhatsAppCloudApiLogsPageContent({ mode }: Props) {
                     </td>
                     <td className="px-4 py-3 font-mono text-xs" title={log.meta_message_id || undefined}>{compactId(log.meta_message_id)}</td>
                     <td className="max-w-[18rem] px-4 py-3 text-xs">
+                      {log.phone_number_id ? (
+                        <p className="mb-1 font-mono text-[var(--color-text-muted)]">Phone Number ID: {log.phone_number_id}</p>
+                      ) : null}
                       {log.error ? <p className="text-rose-200">{log.error}</p> : <p className="text-[var(--color-text-muted)]">Sin error</p>}
                       {payload ? (
                         <details className="mt-2">

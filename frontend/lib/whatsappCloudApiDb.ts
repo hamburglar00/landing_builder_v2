@@ -45,6 +45,7 @@ export interface WhatsappCloudApiLogEntry {
   config_id: string | null;
   config_name: string;
   phone: string;
+  phone_number_id: string;
   meta_message_id: string;
   promo_code: string;
   gerencia: string;
@@ -286,9 +287,10 @@ export async function fetchWhatsappCloudApiLogs(input: {
       config_id: row.config_id ?? null,
       config_name: row.config_id ? configNames.get(row.config_id) ?? "" : "",
       phone: readPayloadPhone(payload),
+      phone_number_id: firstString(row.phone_number_id),
       meta_message_id: firstString(row.meta_message_id, row.meta_status_id),
       promo_code: "",
-      gerencia: firstString(row.phone_number_id),
+      gerencia: "",
       attempts: Number(row.attempts ?? 0),
       error: String(row.last_error ?? ""),
       payload,
@@ -305,6 +307,7 @@ export async function fetchWhatsappCloudApiLogs(input: {
       config_id: row.config_id ?? null,
       config_name: row.config_id ? configNames.get(row.config_id) ?? "" : "",
       phone: firstString(row.assigned_phone),
+      phone_number_id: "",
       meta_message_id: firstString(row.redirect_message_id),
       promo_code: firstString(row.promo_code),
       gerencia: firstString(row.assigned_gerencia_label, row.assigned_gerencia_id),
@@ -324,6 +327,7 @@ export async function fetchWhatsappCloudApiLogs(input: {
       config_id: row.config_id ?? null,
       config_name: row.config_id ? configNames.get(row.config_id) ?? "" : "",
       phone: firstString(row.recipient_wa_id),
+      phone_number_id: "",
       meta_message_id: firstString(row.meta_message_id),
       promo_code: "",
       gerencia: "",
