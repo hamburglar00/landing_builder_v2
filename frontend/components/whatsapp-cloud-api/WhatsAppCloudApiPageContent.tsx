@@ -256,6 +256,7 @@ export default function WhatsAppCloudApiPageContent({
   const [gerencias, setGerencias] = useState<Gerencia[]>([]);
   const [assignments, setAssignments] = useState<LandingGerenciaAssignment[]>([]);
   const [recentEvents, setRecentEvents] = useState<RecentEvent[]>([]);
+  const [pixelOptions, setPixelOptions] = useState<Array<{ pixel_id: string; comment: string }>>([]);
 
   const [name, setName] = useState("whatsapp-cloud-api");
   const [active, setActive] = useState(false);
@@ -294,8 +295,21 @@ export default function WhatsAppCloudApiPageContent({
       fetchWhatsappCloudApiConfig(uid),
       gerenciasPromise,
     ]);
+    const { data: pixels } = await supabase
+      .from("conversions_pixel_configs")
+      .select("pixel_id,comment")
+      .eq("user_id", uid)
+      .order("is_default", { ascending: false })
+      .order("created_at", { ascending: true });
+    const options = (pixels ?? [])
+      .map((p) => ({
+        pixel_id: String(p.pixel_id ?? "").trim(),
+        comment: String(p.comment ?? "").trim(),
+      }))
+      .filter((p) => p.pixel_id);
     setConfig(cfg);
     setGerencias(gers);
+    setPixelOptions(options);
     const fallbackName = cleanSlug(selectedClientName || "whatsapp-cloud-api") || "whatsapp-cloud-api";
     setName(cfg?.name ?? fallbackName);
     setActive(cfg?.active ?? false);
@@ -524,9 +538,6 @@ export default function WhatsAppCloudApiPageContent({
                 <Field label="WhatsApp Business Account ID">
                   <input value={wabaId} onChange={(e) => setWabaId(e.target.value.replace(/\D/g, ""))} className={inputClass} inputMode="numeric" />
                 </Field>
-                <Field label="Graph API version">
-                  <input value={apiVersion} onChange={(e) => setApiVersion(e.target.value)} className={inputClass} />
-                </Field>
                 <Field label="Verify token">
                   <div className="flex gap-2">
                     <input value={verifyToken} onChange={(e) => setVerifyToken(e.target.value.trim())} className={`${inputClass} font-mono text-xs`} />
@@ -538,13 +549,11 @@ export default function WhatsAppCloudApiPageContent({
                 <Field label="Meta access token">
                   <input value={accessToken} onChange={(e) => setAccessToken(e.target.value)} className={`${inputClass} font-mono text-xs`} type="password" autoComplete="off" />
                 </Field>
-                <Field label="Webhook URL">
-                  <div className="flex gap-2">
-                    <input value={webhookUrl} readOnly className={`${inputClass} font-mono text-xs`} />
-                    <button type="button" onClick={() => void copyText(webhookUrl, "Webhook URL")} className="ui-button ui-button-secondary shrink-0">
-                      Copiar
-                    </button>
-                  </div>
+                <Field label="Version WhatsApp Cloud API">
+                  <input value={apiVersion} onChange={(e) => setApiVersion(e.target.value)} className={inputClass} />
+                  <p className="mt-1 text-[11px] leading-4 text-[var(--color-text-muted)]">
+                    Solo aplica al envio de mensajes de WhatsApp Cloud API; CAPI se configura desde Integraciones.
+                  </p>
                 </Field>
               </div>
             </div>
@@ -559,11 +568,45 @@ export default function WhatsAppCloudApiPageContent({
               />
               <div className="grid gap-3 md:grid-cols-2">
                 <Field label="Pixel ID">
-                  <input value={pixelId} onChange={(e) => setPixelId(e.target.value.replace(/\D/g, ""))} className={inputClass} inputMode="numeric" />
+                  <select
+                    value={pixelId}
+                    onChange={(e) => setPixelId(e.target.value)}
+                    className={inputClass}
+                  >
+                    <option value="">Seleccionar pixel</option>
+                    {[...(pixelOptions.some((p) => p.pixel_id === pixelId) || !pixelId ? pixelOptions : [{ pixel_id: pixelId, comment: "" }, ...pixelOptions])].map((pixel) => (
+                      <option key={pixel.pixel_id} value={pixel.pixel_id}>
+                        {pixel.comment ? `${pixel.pixel_id} (${pixel.comment})` : pixel.pixel_id}
+                      </option>
+                    ))}
+                  </select>
+                  <p className="mt-1 text-[11px] text-[var(--color-text-muted)]">
+                    Se configura desde{" "}
+                    <a
+                      href={mode === "admin" ? "/admin/integraciones" : "/dashboard/integraciones"}
+                      className="text-[var(--color-text)] underline hover:text-[var(--color-text-strong)]"
+                    >
+                      Integraciones
+                    </a>
+                    .
+                  </p>
                 </Field>
-                <Field label="Tag promo_code">
+                <Field label="Tag">
                   <input value={landingTag} onChange={(e) => setLandingTag(cleanTag(e.target.value))} className={inputClass} />
                 </Field>
+                <div className="md:col-span-2">
+                  <Field label="Webhook URL">
+                    <div className="flex gap-2">
+                      <input value={webhookUrl} readOnly className={`${inputClass} font-mono text-xs`} />
+                      <button type="button" onClick={() => void copyText(webhookUrl, "Webhook URL")} className="ui-button ui-button-secondary shrink-0">
+                        Copiar
+                      </button>
+                    </div>
+                    <p className="mt-1 text-[11px] text-[var(--color-text-muted)]">
+                      URL para configurar el webhook del numero en Meta.
+                    </p>
+                  </Field>
+                </div>
               </div>
               <Toggle
                 checked={sendContactCapi}
@@ -608,7 +651,7 @@ export default function WhatsAppCloudApiPageContent({
           <SurfaceCard className="overflow-hidden">
             <div className="space-y-4 p-4 sm:p-5">
               <SectionTitle
-                eyebrow="Distribucion"
+                eyebrow="Redireccion"
                 title="Asignacion de gerencias"
                 description="Misma matriz operativa que las landings, aplicada al numero Cloud API."
                 action={
