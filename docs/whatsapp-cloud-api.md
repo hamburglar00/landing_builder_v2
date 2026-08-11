@@ -1,8 +1,8 @@
 # WhatsApp Cloud API
 
-Guia operativa para configurar la landing conversacional oficial de Meta.
+Guia operativa para configurar WhatsApp Cloud API oficial de Meta.
 
-Esta seccion permite usar un numero de WhatsApp Cloud API como punto de entrada de un anuncio Click-to-WhatsApp. En vez de abrir una landing web, el usuario escribe al numero oficial, el sistema le asigna un telefono de atencion y le responde con un mensaje configurable.
+Esta seccion permite usar un numero de WhatsApp Cloud API como punto de entrada de un anuncio Click-to-WhatsApp. Internamente se comporta como una landing porque asigna gerencias, genera promo code y deriva al asesor, pero para el cliente y para Meta es una conexion oficial de WhatsApp Cloud API.
 
 ## 1. Que hace este modulo
 
@@ -47,15 +47,14 @@ Se configuran en `WhatsApp Cloud API > Identificacion`.
 
 ### Nombre interno
 
-Identificador interno de esta configuracion. Se guarda en formato slug, por ejemplo:
+Nombre visible interno de esta configuracion. Se usa tambien como `{{name}}` en el mensaje automatico.
 
 ```text
-whatsapp-cloud-api
-goldencajeros-wa
-cliente-x-cloud-api
+WhatsApp Martin Test
+Golden Cajeros Cloud API
 ```
 
-No es el nombre publico del negocio. Sirve para identificar esta integracion dentro del constructor.
+Puede tener mayusculas, minusculas, numeros y espacios.
 
 ### Telefono visible
 
@@ -92,6 +91,12 @@ Debe coincidir exactamente con el token que muestra el constructor. El boton de 
 Token que usa el worker para responderle al usuario por WhatsApp.
 
 Debe tener permisos validos para enviar mensajes desde ese Phone Number ID.
+
+### App Secret / token de la app
+
+Secret de la app de Meta. Se copia desde `Configuracion de la app > Informacion basica`.
+
+Se usa para validar `X-Hub-Signature-256` en los webhooks reales. No es el mismo valor que el Meta access token.
 
 ### Version WhatsApp Cloud API
 
@@ -208,19 +213,38 @@ Esto replica el contador que en una landing aumenta cuando el usuario toca el CT
 
 En Meta Developers:
 
-1. Entrar a la app del cliente.
-2. Ir a WhatsApp > Configuration o Webhooks, segun la vista de Meta.
-3. Pegar la Webhook URL del constructor.
-4. Pegar el Verify token del constructor.
-5. Guardar y verificar.
-6. Suscribirse a eventos de mensajes.
+URL oficial:
+
+```text
+https://developers.facebook.com/apps
+```
+
+1. Crear una app nueva o abrir la app del cliente.
+2. En casos de uso, elegir `Conecta con los clientes a traves de WhatsApp`.
+3. En `Paso 1. Probar`, solicitar numero de prueba si se quiere validar el flujo antes de produccion.
+4. Copiar `Phone Number ID` y `Identificador de la cuenta de WhatsApp Business`.
+5. Generar el identificador de acceso y pegarlo como `Meta access token`.
+6. En `Configuracion de la app > Informacion basica`, copiar el `App Secret` y pegarlo como `App Secret / token de la app`.
+7. En `Paso 2. Configuracion de produccion`, registrar el numero real del cliente.
+8. Activar `Suscribirse a webhooks` sobre el numero registrado.
+9. Pegar la `Webhook URL` del constructor.
+10. Pegar el `Verify token` del constructor.
+11. Verificar y guardar.
+12. En campos de webhook, suscribirse al campo `messages`.
+13. Publicar la app. Si Meta pide politica de privacidad, usar:
+
+```text
+https://mkt.panelbotadmin.com/privacy-policy
+```
+
+14. Volver al constructor, activar la integracion y guardar.
 
 El webhook valida:
 
 - `hub.verify_token` para GET de verificacion.
 - `X-Hub-Signature-256` para POST reales.
 
-Para POST reales es obligatorio tener `META_APP_SECRET` cargado como secret de Supabase.
+Para POST reales se usa el App Secret guardado en la configuracion. Si no existe, se usa `META_APP_SECRET` como fallback operativo.
 
 ## 8. Como probar
 

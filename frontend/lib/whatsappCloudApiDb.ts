@@ -11,6 +11,7 @@ export interface WhatsappCloudApiConfig {
   whatsapp_business_account_id: string;
   display_phone_number: string;
   meta_access_token: string;
+  meta_app_secret: string;
   meta_api_version: string;
   webhook_verify_token: string;
   pixel_id: string;
@@ -57,6 +58,7 @@ export async function upsertWhatsappCloudApiConfig(input: {
   whatsapp_business_account_id: string;
   display_phone_number: string;
   meta_access_token: string;
+  meta_app_secret: string;
   meta_api_version: string;
   webhook_verify_token: string;
   pixel_id: string;
@@ -77,6 +79,7 @@ export async function upsertWhatsappCloudApiConfig(input: {
     whatsapp_business_account_id: input.whatsapp_business_account_id,
     display_phone_number: input.display_phone_number,
     meta_access_token: input.meta_access_token,
+    meta_app_secret: input.meta_app_secret,
     meta_api_version: input.meta_api_version,
     webhook_verify_token: input.webhook_verify_token,
     pixel_id: input.pixel_id,

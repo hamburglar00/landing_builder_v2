@@ -33,12 +33,16 @@ const DEFAULT_FALLBACK_TEMPLATE =
   "Hola, gracias por comunicarte. En este momento no hay un asesor disponible. Por favor intenta nuevamente en unos minutos.";
 
 const INSTRUCTION_CHECKLIST = [
-  "Crear o seleccionar la app de Meta y conectar el numero oficial a WhatsApp Cloud API.",
-  "Copiar Phone Number ID, WhatsApp Business Account ID y generar un access token valido para enviar mensajes.",
-  "Pegar en Meta la Webhook URL y el Verify token de esta pantalla.",
-  "Suscribir el webhook a eventos de mensajes y verificar que Meta acepte el challenge.",
-  "Seleccionar el Pixel, definir el Tag, cargar el mensaje de respuesta y asignar gerencias.",
-  "Activar la integracion, guardar y probar escribiendo al numero conectado.",
+  "Entrar a https://developers.facebook.com/apps y crear una app nueva o abrir la app del cliente.",
+  "Agregar el caso de uso Conecta con los clientes a traves de WhatsApp.",
+  "En Paso 1, solicitar numero de prueba para obtener Phone Number ID y WhatsApp Business Account ID.",
+  "Generar el identificador de acceso y pegarlo en Meta access token.",
+  "En Configuracion de la app > Informacion basica, copiar App Secret y pegarlo en App Secret / token de la app.",
+  "En Paso 2, registrar el numero de produccion y activar Suscribirse a webhooks sobre ese numero.",
+  "Pegar la Webhook URL y el Verify token del constructor, verificar y guardar.",
+  "En Campos de webhook, suscribirse al campo messages. Los demas campos son opcionales.",
+  "Publicar la app. Meta puede pedir URL de politica de privacidad: usar https://mkt.panelbotadmin.com/privacy-policy.",
+  "Seleccionar pixel, definir tag, cargar respuesta, asignar gerencias, activar, guardar y probar.",
 ];
 
 const INSTRUCTION_FLOW = [
@@ -78,13 +82,12 @@ type DisplayGroup = {
   gerencias: Gerencia[];
 };
 
-function cleanSlug(value: string): string {
-  return value
-    .trim()
-    .toLowerCase()
-    .replace(/[^a-z0-9-]/g, "-")
-    .replace(/-+/g, "-")
-    .replace(/^-|-$/g, "");
+function normalizeInternalName(value: string): string {
+  return value.trim().replace(/\s+/g, " ");
+}
+
+function onlyDigits(value: string): string {
+  return value.replace(/\D/g, "");
 }
 
 function cleanTag(value: string): string {
@@ -295,6 +298,7 @@ export default function WhatsAppCloudApiPageContent({
   const [wabaId, setWabaId] = useState("");
   const [displayPhone, setDisplayPhone] = useState("");
   const [accessToken, setAccessToken] = useState("");
+  const [appSecret, setAppSecret] = useState("");
   const [apiVersion, setApiVersion] = useState("v25.0");
   const [verifyToken, setVerifyToken] = useState("");
   const [pixelId, setPixelId] = useState("");
@@ -344,13 +348,14 @@ export default function WhatsAppCloudApiPageContent({
     setGerencias(gers);
     setWorkGroups(groups);
     setPixelOptions(options);
-    const fallbackName = cleanSlug(selectedClientName || "whatsapp-cloud-api") || "whatsapp-cloud-api";
+    const fallbackName = normalizeInternalName(selectedClientName || "WhatsApp Cloud API") || "WhatsApp Cloud API";
     setName(cfg?.name ?? fallbackName);
     setActive(cfg?.active ?? false);
     setPhoneNumberId(cfg?.phone_number_id ?? "");
     setWabaId(cfg?.whatsapp_business_account_id ?? "");
     setDisplayPhone(cfg?.display_phone_number ?? "");
     setAccessToken(cfg?.meta_access_token ?? "");
+    setAppSecret(cfg?.meta_app_secret ?? "");
     setApiVersion(cfg?.meta_api_version ?? "v25.0");
     setVerifyToken(cfg?.webhook_verify_token ?? crypto.randomUUID().replace(/-/g, ""));
     setPixelId(cfg?.pixel_id ?? "");
@@ -419,11 +424,14 @@ export default function WhatsAppCloudApiPageContent({
     setError(null);
     setMessage(null);
     try {
-      const cleanName = cleanSlug(name);
-      if (!cleanName) throw new Error("El nombre debe tener letras o numeros.");
+      const cleanName = normalizeInternalName(name);
+      if (!cleanName) throw new Error("Nombre interno requerido.");
+      if (cleanName.length > 120) throw new Error("Nombre interno demasiado largo.");
       if (!/^\d+$/.test(phoneNumberId.trim())) throw new Error("Phone Number ID debe ser numerico.");
       if (!/^\d+$/.test(wabaId.trim())) throw new Error("WABA ID debe ser numerico.");
+      if (displayPhone.trim() && !/^\d+$/.test(displayPhone.trim())) throw new Error("Telefono visible debe ser numerico.");
       if (!accessToken.trim()) throw new Error("Meta access token requerido.");
+      if (!appSecret.trim()) throw new Error("App Secret / token de la app requerido.");
       if (!verifyToken.trim()) throw new Error("Verify token requerido.");
       if (!cleanTag(landingTag)) throw new Error("Tag de promo_code requerido.");
       if (!/^\d+$/.test(pixelId.trim())) throw new Error("Pixel ID requerido.");
@@ -438,6 +446,7 @@ export default function WhatsAppCloudApiPageContent({
         whatsapp_business_account_id: wabaId.trim(),
         display_phone_number: displayPhone.trim(),
         meta_access_token: accessToken.trim(),
+        meta_app_secret: appSecret.trim(),
         meta_api_version: apiVersion.trim() || "v25.0",
         webhook_verify_token: verifyToken.trim(),
         pixel_id: pixelId.trim(),
@@ -453,7 +462,7 @@ export default function WhatsAppCloudApiPageContent({
         targetUserId,
         assignmentRows(assignments),
       );
-      setMessage("Configuracion guardada.");
+      setMessage("Cambios guardados.");
       await reloadSelected(targetUserId);
     } catch (err) {
       setError(err instanceof Error ? err.message : "Error al guardar.");
@@ -511,9 +520,6 @@ export default function WhatsAppCloudApiPageContent({
             >
               {instructionsOpen ? "Ocultar instructivo" : "Ver instructivo"}
             </button>
-            <StatusBadge tone={active ? "success" : "warning"}>
-              {active ? "Activo" : "Inactivo"}
-            </StatusBadge>
             <button
               type="button"
               disabled={saving}
@@ -557,7 +563,7 @@ export default function WhatsAppCloudApiPageContent({
         </p>
       ) : null}
       {message ? (
-        <p className="ui-alert border-emerald-500/30 bg-emerald-500/10 text-sm text-emerald-200">
+        <p className="ui-alert border-[rgba(52,211,153,0.22)] bg-[rgba(52,211,153,0.07)] text-sm text-[var(--color-success)]" role="status" aria-live="polite">
           {message}
         </p>
       ) : null}
@@ -641,16 +647,40 @@ export default function WhatsAppCloudApiPageContent({
 
               <div className="grid gap-3 md:grid-cols-2">
                 <Field label="Nombre interno">
-                  <input value={name} onChange={(e) => setName(cleanSlug(e.target.value))} className={inputClass} />
+                  <input
+                    value={name}
+                    onChange={(e) => setName(e.target.value)}
+                    className={inputClass}
+                    placeholder="Ej: WhatsApp Martin Test"
+                  />
                 </Field>
                 <Field label="Telefono visible">
-                  <input value={displayPhone} onChange={(e) => setDisplayPhone(e.target.value)} className={inputClass} placeholder="549..." />
+                  <input
+                    value={displayPhone}
+                    onChange={(e) => setDisplayPhone(onlyDigits(e.target.value))}
+                    className={inputClass}
+                    inputMode="numeric"
+                    pattern="[0-9]*"
+                    placeholder="549..."
+                  />
                 </Field>
                 <Field label="Phone Number ID">
-                  <input value={phoneNumberId} onChange={(e) => setPhoneNumberId(e.target.value.replace(/\D/g, ""))} className={inputClass} inputMode="numeric" />
+                  <input
+                    value={phoneNumberId}
+                    onChange={(e) => setPhoneNumberId(onlyDigits(e.target.value))}
+                    className={inputClass}
+                    inputMode="numeric"
+                    pattern="[0-9]*"
+                  />
                 </Field>
                 <Field label="WhatsApp Business Account ID">
-                  <input value={wabaId} onChange={(e) => setWabaId(e.target.value.replace(/\D/g, ""))} className={inputClass} inputMode="numeric" />
+                  <input
+                    value={wabaId}
+                    onChange={(e) => setWabaId(onlyDigits(e.target.value))}
+                    className={inputClass}
+                    inputMode="numeric"
+                    pattern="[0-9]*"
+                  />
                 </Field>
                 <Field label="Verify token">
                   <div className="flex gap-2">
@@ -671,6 +701,16 @@ export default function WhatsAppCloudApiPageContent({
                 </Field>
                 <Field label="Meta access token">
                   <input value={accessToken} onChange={(e) => setAccessToken(e.target.value)} className={`${inputClass} font-mono text-xs`} type="password" autoComplete="off" />
+                </Field>
+                <Field label="App Secret / token de la app">
+                  <input
+                    value={appSecret}
+                    onChange={(e) => setAppSecret(e.target.value.trim())}
+                    className={`${inputClass} font-mono text-xs`}
+                    type="password"
+                    autoComplete="off"
+                    placeholder="Se copia desde Informacion basica de la app en Meta"
+                  />
                 </Field>
                 <Field label="Version WhatsApp Cloud API">
                   <select value={apiVersion} onChange={(e) => setApiVersion(e.target.value)} className={inputClass}>
@@ -698,7 +738,7 @@ export default function WhatsAppCloudApiPageContent({
                 </label>
                 <select
                   value={pixelId}
-                  onChange={(e) => setPixelId(e.target.value)}
+                  onChange={(e) => setPixelId(onlyDigits(e.target.value))}
                   className="w-full rounded-lg border border-zinc-700 bg-zinc-900 px-3 py-2 text-sm text-zinc-100"
                 >
                   <option value="">Seleccionar pixel</option>
@@ -754,6 +794,7 @@ export default function WhatsAppCloudApiPageContent({
                       if (!webhookUrl) return;
                       await navigator.clipboard.writeText(webhookUrl);
                       setWebhookUrlCopied(true);
+                      setMessage("Webhook URL copiada.");
                       window.setTimeout(() => setWebhookUrlCopied(false), 1200);
                     }}
                     className="inline-flex h-10 w-10 shrink-0 items-center justify-center rounded-lg border border-zinc-700 bg-zinc-900 text-zinc-300 transition hover:bg-zinc-800 hover:text-zinc-100"
@@ -817,10 +858,14 @@ export default function WhatsAppCloudApiPageContent({
                   className={textareaClass}
                 />
               </Field>
-              <div className="flex flex-wrap gap-2">
-                {["{{name}}", "{{phone}}", "{{promo_code}}", "{{wa_link}}"].map((token) => (
-                  <span key={token} className="ui-badge font-mono">{token}</span>
-                ))}
+              <div className="rounded-xl border border-[var(--color-border-subtle)] bg-[rgba(255,255,255,0.025)] p-3">
+                <p className="text-xs font-medium text-[var(--color-text)]">Variables disponibles</p>
+                <div className="mt-2 grid gap-2 text-[11px] leading-4 text-[var(--color-text-muted)] sm:grid-cols-2">
+                  <p><span className="ui-badge font-mono">{"{{name}}"}</span> inserta el nombre interno configurado.</p>
+                  <p><span className="ui-badge font-mono">{"{{phone}}"}</span> inserta el telefono asignado.</p>
+                  <p><span className="ui-badge font-mono">{"{{promo_code}}"}</span> inserta el codigo generado para tracking.</p>
+                  <p><span className="ui-badge font-mono">{"{{wa_link}}"}</span> inserta el link a WhatsApp con telefono y promo.</p>
+                </div>
               </div>
             </div>
           </SurfaceCard>
@@ -953,34 +998,57 @@ export default function WhatsAppCloudApiPageContent({
                                             const value = Number(e.target.value);
                                             updateAssignment(g.id, { weight: Number.isNaN(value) ? 0 : Math.max(0, value) });
                                           }}
-                                          className="w-16 rounded-lg border border-zinc-700 bg-zinc-900 px-2 py-1 text-sm text-zinc-100 disabled:opacity-50"
+                                          title={isAssigned ? "Peso de esta gerencia en esta landing" : "Marque Asignar para poder editar el peso"}
+                                          className="w-10 rounded border border-zinc-700 bg-zinc-900 px-2 py-1 text-zinc-100 disabled:cursor-not-allowed disabled:opacity-50 [appearance:textfield] [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:appearance-none"
                                         />
                                       </td>
                                     ) : null}
                                     <td className="px-3 py-2">
-                                      <select
-                                        disabled={!isAssigned}
-                                        value={assignment?.phoneMode ?? "random"}
-                                        onChange={(e) => updateAssignment(g.id, { phoneMode: e.target.value as "random" | "fair" })}
-                                        className="rounded-lg border border-zinc-700 bg-zinc-900 px-2 py-1 text-sm text-zinc-100 disabled:opacity-50"
-                                      >
-                                        <option value="random">Aleatorio</option>
-                                        <option value="fair">Equitativo</option>
-                                      </select>
+                                      <div className="inline-flex rounded-lg border border-zinc-700 bg-zinc-900 text-[11px]">
+                                        <button
+                                          type="button"
+                                          onClick={() => {
+                                            if (!isAssigned) return;
+                                            updateAssignment(g.id, { phoneMode: "random" });
+                                          }}
+                                          className={`cursor-pointer rounded-l-lg border-r border-zinc-700 px-2 py-1 ${
+                                            (assignment?.phoneMode ?? "random") === "random" ? "bg-zinc-100 text-zinc-900" : "text-zinc-300 hover:bg-zinc-800"
+                                          }`}
+                                        >
+                                          Aleatorio
+                                        </button>
+                                        <button
+                                          type="button"
+                                          onClick={() => {
+                                            if (!isAssigned) return;
+                                            updateAssignment(g.id, { phoneMode: "fair" });
+                                          }}
+                                          className={`cursor-pointer rounded-r-lg px-2 py-1 ${
+                                            (assignment?.phoneMode ?? "random") === "fair" ? "bg-zinc-100 text-zinc-900" : "text-zinc-300 hover:bg-zinc-800"
+                                          }`}
+                                        >
+                                          Equitativo
+                                        </button>
+                                      </div>
                                     </td>
-                                    <td className="px-3 py-2">
-                                      <select
-                                        disabled={!isAssigned}
-                                        value={assignment?.phoneKind ?? "carga"}
-                                        onChange={(e) => updateAssignment(g.id, { phoneKind: e.target.value as PhoneKind })}
-                                        className="rounded-lg border border-zinc-700 bg-zinc-900 px-2 py-1 text-sm text-zinc-100 disabled:opacity-50"
-                                      >
-                                        {PHONE_KIND_OPTIONS.map((option) => (
-                                          <option key={option.value} value={option.value}>
+                                    <td className="min-w-[190px] px-3 py-2">
+                                      <div className="inline-flex flex-shrink-0 rounded-lg border border-zinc-700 bg-zinc-900 text-[11px]">
+                                        {PHONE_KIND_OPTIONS.map((option, idx) => (
+                                          <button
+                                            key={option.value}
+                                            type="button"
+                                            onClick={() => {
+                                              if (!isAssigned) return;
+                                              updateAssignment(g.id, { phoneKind: option.value });
+                                            }}
+                                            className={`cursor-pointer shrink-0 px-2 py-1 ${idx === 0 ? "rounded-l-lg" : ""} ${
+                                              idx === PHONE_KIND_OPTIONS.length - 1 ? "rounded-r-lg" : "border-r border-zinc-700"
+                                            } ${(assignment?.phoneKind ?? "carga") === option.value ? "bg-zinc-100 text-zinc-900" : "text-zinc-300 hover:bg-zinc-800"}`}
+                                          >
                                             {option.label}
-                                          </option>
+                                          </button>
                                         ))}
-                                      </select>
+                                      </div>
                                     </td>
                                     <td className="px-3 py-2 text-zinc-300">
                                       <div className="flex flex-wrap items-center gap-2">
@@ -991,15 +1059,16 @@ export default function WhatsAppCloudApiPageContent({
                                             checked={intervalStartHour !== null && intervalEndHour !== null}
                                             onChange={(e) =>
                                               updateAssignment(g.id, e.target.checked
-                                                ? { intervalStartHour: 0, intervalEndHour: 23 }
+                                                ? { intervalStartHour: assignment?.intervalStartHour ?? 9, intervalEndHour: assignment?.intervalEndHour ?? 21 }
                                                 : { intervalStartHour: null, intervalEndHour: null })
                                             }
                                             className="rounded border-zinc-600"
                                           />
-                                          Horario
+                                          Aplicar
                                         </label>
                                         {intervalStartHour !== null && intervalEndHour !== null ? (
                                           <div className="flex items-center gap-1">
+                                            <span className="text-[11px] text-zinc-500">Dentro de</span>
                                             <select
                                               disabled={!isAssigned}
                                               value={intervalStartHour}

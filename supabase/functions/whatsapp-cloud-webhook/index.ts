@@ -69,8 +69,9 @@ async function hmacSha256(secret: string, rawBody: string): Promise<string> {
 async function verifyMetaSignature(
   req: Request,
   rawBody: string,
+  appSecretOverride?: string,
 ): Promise<boolean> {
-  const appSecret = Deno.env.get("META_APP_SECRET")?.trim() ?? "";
+  const appSecret = appSecretOverride?.trim() || Deno.env.get("META_APP_SECRET")?.trim() || "";
   if (!appSecret) return false;
   const header = req.headers.get("x-hub-signature-256")?.trim() ?? "";
   const expectedPrefix = "sha256=";
@@ -124,8 +125,34 @@ function normalizeId(value: unknown): string {
   return String(value ?? "").trim();
 }
 
-function normalizePhone(value: unknown): string {
-  return String(value ?? "").replace(/\D/g, "");
+function extractPhoneNumberIds(payload: MetaWebhookPayload): string[] {
+  const ids = new Set<string>();
+  for (const entry of payload.entry ?? []) {
+    for (const change of entry.changes ?? []) {
+      const phoneNumberId = normalizeId(change.value?.metadata?.phone_number_id);
+      if (phoneNumberId) ids.add(phoneNumberId);
+    }
+  }
+  return [...ids];
+}
+
+async function resolveSignatureSecret(
+  db: SupabaseDb,
+  phoneNumberIds: string[],
+): Promise<string> {
+  const ids = phoneNumberIds.filter(Boolean);
+  if (ids.length === 0) return "";
+  const { data, error } = await db
+    .from("whatsapp_cloud_api_configs")
+    .select("meta_app_secret")
+    .in("phone_number_id", ids)
+    .limit(1)
+    .maybeSingle();
+  if (error) {
+    console.error("[whatsapp-cloud-webhook] app secret lookup failed", error);
+    return "";
+  }
+  return normalizeId((data as { meta_app_secret?: string } | null)?.meta_app_secret);
 }
 
 async function resolveConfig(
@@ -213,17 +240,18 @@ Deno.serve(async (req) => {
     if (req.method !== "POST") return textResponse("Method not allowed", 405);
 
     const rawBody = await req.text();
-    const signatureOk = await verifyMetaSignature(req, rawBody);
-    if (!signatureOk) {
-      console.warn("[whatsapp-cloud-webhook] invalid signature");
-      return textResponse("Invalid signature", 401);
-    }
-
     let payload: MetaWebhookPayload;
     try {
       payload = JSON.parse(rawBody) as MetaWebhookPayload;
     } catch {
       return textResponse("Invalid JSON", 400);
+    }
+
+    const appSecret = await resolveSignatureSecret(db, extractPhoneNumberIds(payload));
+    const signatureOk = await verifyMetaSignature(req, rawBody, appSecret);
+    if (!signatureOk) {
+      console.warn("[whatsapp-cloud-webhook] invalid signature");
+      return textResponse("Invalid signature", 401);
     }
 
     const object = normalizeId(payload.object);
