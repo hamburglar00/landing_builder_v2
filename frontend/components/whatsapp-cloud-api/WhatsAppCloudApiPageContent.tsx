@@ -1,19 +1,22 @@
 "use client";
 
 import { useCallback, useEffect, useMemo, useState } from "react";
+import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { supabase } from "@/lib/supabaseClient";
 import { invokeFunction } from "@/lib/supabaseFunctions";
 import { PageHeader, SurfaceCard } from "@/components/ui/PanelPrimitives";
 import { CURRENCY_ALL } from "@/lib/currency";
 import { SingleCurrencyRequired, useCurrencyScope } from "@/components/currency/CurrencyScope";
-import type { Gerencia } from "@/lib/gerencias/types";
+import type { Gerencia, GerenciaWorkGroup } from "@/lib/gerencias/types";
 import type { PhoneKind } from "@/lib/landing/types";
 import {
   fetchGerencias,
+  fetchGerenciaWorkGroups,
   fetchGerenciasForAdmin,
   type LandingGerenciaAssignment,
 } from "@/lib/gerencias/gerenciasDb";
+import { CollapsibleSection } from "@/components/landing/LandingEditorForm";
 import {
   fetchWhatsappCloudApiAssignments,
   fetchWhatsappCloudApiConfig,
@@ -36,14 +39,12 @@ const PHONE_KIND_OPTIONS: Array<{ value: PhoneKind; label: string }> = [
   { value: "mkt", label: "Mkt" },
 ];
 
+const GRAPH_API_VERSION_OPTIONS = ["v26.0", "v25.0", "v24.0", "v23.0", "v22.0", "v21.0"];
+
 const inputClass =
   "h-10 w-full rounded-xl border border-[var(--color-border)] bg-[var(--color-bg-2)] px-3 text-sm text-[var(--color-text-strong)] outline-none placeholder:text-[var(--color-text-disabled)]";
 const textareaClass =
   "w-full rounded-xl border border-[var(--color-border)] bg-[var(--color-bg-2)] px-3 py-2.5 text-sm leading-5 text-[var(--color-text-strong)] outline-none placeholder:text-[var(--color-text-disabled)]";
-const compactInputClass =
-  "h-8 rounded-lg border border-[var(--color-border)] bg-[var(--color-bg-2)] px-2 text-xs text-[var(--color-text-strong)] outline-none disabled:opacity-50";
-const compactSelectClass =
-  "h-8 rounded-lg border border-[var(--color-border)] bg-[var(--color-bg-2)] px-2 text-xs text-[var(--color-text-strong)] outline-none disabled:opacity-50";
 
 type ClientOption = {
   id: string;
@@ -52,6 +53,12 @@ type ClientOption = {
 };
 
 type RecentEvent = Awaited<ReturnType<typeof fetchWhatsappCloudApiRecentEvents>>[number];
+
+type DisplayGroup = {
+  id: string;
+  name: string;
+  gerencias: Gerencia[];
+};
 
 function cleanSlug(value: string): string {
   return value
@@ -86,6 +93,33 @@ function assignmentRows(rows: LandingGerenciaAssignment[]): WhatsappCloudApiAssi
     intervalStartHour: row.intervalStartHour,
     intervalEndHour: row.intervalEndHour,
   }));
+}
+
+function buildDisplayGroups(gerencias: Gerencia[], workGroups: GerenciaWorkGroup[]): DisplayGroup[] {
+  if (workGroups.length === 0) {
+    return [{ id: "__all__", name: "Todas las gerencias", gerencias }];
+  }
+
+  const byId = new Map(gerencias.map((g) => [g.id, g]));
+  const groupedIds = new Set<number>();
+  const groups = workGroups.map((group) => {
+    const groupGerencias = group.gerenciaIds
+      .map((id) => byId.get(id))
+      .filter((g): g is Gerencia => Boolean(g));
+    groupGerencias.forEach((g) => groupedIds.add(g.id));
+    return {
+      id: String(group.id),
+      name: group.name,
+      gerencias: groupGerencias,
+    };
+  });
+
+  const ungrouped = gerencias.filter((g) => !groupedIds.has(g.id));
+  if (ungrouped.length > 0) {
+    groups.push({ id: "__ungrouped__", name: "Sin grupo", gerencias: ungrouped });
+  }
+
+  return groups;
 }
 
 function Toggle({
@@ -183,30 +217,6 @@ function StatusBadge({
   return <span className={`ui-badge ${toneClass}`}>{children}</span>;
 }
 
-function SegmentButton({
-  active,
-  onClick,
-  children,
-}: {
-  active: boolean;
-  onClick: () => void;
-  children: React.ReactNode;
-}) {
-  return (
-    <button
-      type="button"
-      onClick={onClick}
-      className={`min-h-8 rounded-lg px-3 text-xs font-semibold transition ${
-        active
-          ? "bg-[var(--color-text-strong)] text-[var(--color-bg-0)]"
-          : "text-[var(--color-text-muted)] hover:bg-[rgba(255,255,255,0.05)] hover:text-[var(--color-text)]"
-      }`}
-    >
-      {children}
-    </button>
-  );
-}
-
 function MetricTile({
   label,
   value,
@@ -254,9 +264,11 @@ export default function WhatsAppCloudApiPageContent({
   const [error, setError] = useState<string | null>(null);
   const [config, setConfig] = useState<WhatsappCloudApiConfig | null>(null);
   const [gerencias, setGerencias] = useState<Gerencia[]>([]);
+  const [workGroups, setWorkGroups] = useState<GerenciaWorkGroup[]>([]);
   const [assignments, setAssignments] = useState<LandingGerenciaAssignment[]>([]);
   const [recentEvents, setRecentEvents] = useState<RecentEvent[]>([]);
   const [pixelOptions, setPixelOptions] = useState<Array<{ pixel_id: string; comment: string }>>([]);
+  const [webhookUrlCopied, setWebhookUrlCopied] = useState(false);
 
   const [name, setName] = useState("whatsapp-cloud-api");
   const [active, setActive] = useState(false);
@@ -284,6 +296,8 @@ export default function WhatsAppCloudApiPageContent({
     return selected?.nombre || selected?.email || "";
   }, [clients, targetUserId]);
 
+  const displayGroups = useMemo(() => buildDisplayGroups(gerencias, workGroups), [gerencias, workGroups]);
+
   const loadTarget = useCallback(async (uid: string, ownerId: string) => {
     setError(null);
     const gerenciasPromise = mode === "admin"
@@ -291,9 +305,10 @@ export default function WhatsAppCloudApiPageContent({
         rows.filter((row) => row.user_id === uid)
       )
       : fetchGerencias(uid, workspaceCurrency);
-    const [cfg, gers] = await Promise.all([
+    const [cfg, gers, groups] = await Promise.all([
       fetchWhatsappCloudApiConfig(uid),
       gerenciasPromise,
+      fetchGerenciaWorkGroups(uid),
     ]);
     const { data: pixels } = await supabase
       .from("conversions_pixel_configs")
@@ -309,6 +324,7 @@ export default function WhatsAppCloudApiPageContent({
       .filter((p) => p.pixel_id);
     setConfig(cfg);
     setGerencias(gers);
+    setWorkGroups(groups);
     setPixelOptions(options);
     const fallbackName = cleanSlug(selectedClientName || "whatsapp-cloud-api") || "whatsapp-cloud-api";
     setName(cfg?.name ?? fallbackName);
@@ -429,7 +445,7 @@ export default function WhatsAppCloudApiPageContent({
     }
   };
 
-  const toggleAssignment = (g: Gerencia) => {
+  const upsertAssignment = (g: Gerencia) => {
     setAssignments((prev) => {
       const exists = prev.some((row) => row.gerencia_id === g.id);
       if (exists) return prev.filter((row) => row.gerencia_id !== g.id);
@@ -447,6 +463,15 @@ export default function WhatsAppCloudApiPageContent({
     });
   };
 
+  const updateAssignment = (
+    gerenciaId: number,
+    patch: Partial<LandingGerenciaAssignment>,
+  ) => {
+    setAssignments((prev) =>
+      prev.map((row) => (row.gerencia_id === gerenciaId ? { ...row, ...patch } : row)),
+    );
+  };
+
   if (!ready) {
     return <p className="text-sm text-[var(--color-text-muted)]">Cargando WhatsApp Cloud API...</p>;
   }
@@ -460,7 +485,7 @@ export default function WhatsAppCloudApiPageContent({
       <PageHeader
         eyebrow="Landing conversacional"
         title="WhatsApp Cloud API"
-        description="Recibi mensajes Click-to-WhatsApp, captura referral/ctwa_clid y deriva al asesor asignado."
+        description="Recibi mensajes Click-to-WhatsApp y deriva al asesor asignado."
         actions={
           <>
             <StatusBadge tone={active ? "success" : "warning"}>
@@ -550,7 +575,15 @@ export default function WhatsAppCloudApiPageContent({
                   <input value={accessToken} onChange={(e) => setAccessToken(e.target.value)} className={`${inputClass} font-mono text-xs`} type="password" autoComplete="off" />
                 </Field>
                 <Field label="Version WhatsApp Cloud API">
-                  <input value={apiVersion} onChange={(e) => setApiVersion(e.target.value)} className={inputClass} />
+                  <select value={apiVersion} onChange={(e) => setApiVersion(e.target.value)} className={inputClass}>
+                    {[...(GRAPH_API_VERSION_OPTIONS.includes(apiVersion) ? GRAPH_API_VERSION_OPTIONS : [apiVersion, ...GRAPH_API_VERSION_OPTIONS])]
+                      .filter(Boolean)
+                      .map((version) => (
+                        <option key={version} value={version}>
+                          {version}
+                        </option>
+                      ))}
+                  </select>
                   <p className="mt-1 text-[11px] leading-4 text-[var(--color-text-muted)]">
                     Solo aplica al envio de mensajes de WhatsApp Cloud API; CAPI se configura desde Integraciones.
                   </p>
@@ -559,63 +592,121 @@ export default function WhatsAppCloudApiPageContent({
             </div>
           </SurfaceCard>
 
-          <SurfaceCard className="overflow-hidden">
-            <div className="space-y-4 p-4 sm:p-5">
-              <SectionTitle
-                eyebrow="Tracking"
-                title="Pixel y atribucion"
-                description="Origen, promo_code y comportamiento del primer Contact interno."
-              />
-              <div className="grid gap-3 md:grid-cols-2">
-                <Field label="Pixel ID">
-                  <select
-                    value={pixelId}
-                    onChange={(e) => setPixelId(e.target.value)}
-                    className={inputClass}
+          <CollapsibleSection title="Tracking" defaultOpen>
+            <div className="space-y-3">
+              <div>
+                <label className="mb-1 block text-xs font-medium text-zinc-400">
+                  Pixel ID <span className="text-red-400">*</span>
+                </label>
+                <select
+                  value={pixelId}
+                  onChange={(e) => setPixelId(e.target.value)}
+                  className="w-full rounded-lg border border-zinc-700 bg-zinc-900 px-3 py-2 text-sm text-zinc-100"
+                >
+                  <option value="">Seleccionar pixel</option>
+                  {[...(pixelOptions.some((p) => p.pixel_id === pixelId) || !pixelId ? pixelOptions : [{ pixel_id: pixelId, comment: "" }, ...pixelOptions])].map((pixel) => (
+                    <option key={pixel.pixel_id} value={pixel.pixel_id}>
+                      {pixel.comment ? `${pixel.pixel_id} (${pixel.comment})` : pixel.pixel_id}
+                    </option>
+                  ))}
+                </select>
+                <p className="mt-1 text-[11px] text-zinc-500">
+                  Se configura desde{" "}
+                  <a
+                    href={mode === "admin" ? "/admin/integraciones" : "/dashboard/integraciones"}
+                    className="text-zinc-300 underline hover:text-zinc-100"
                   >
-                    <option value="">Seleccionar pixel</option>
-                    {[...(pixelOptions.some((p) => p.pixel_id === pixelId) || !pixelId ? pixelOptions : [{ pixel_id: pixelId, comment: "" }, ...pixelOptions])].map((pixel) => (
-                      <option key={pixel.pixel_id} value={pixel.pixel_id}>
-                        {pixel.comment ? `${pixel.pixel_id} (${pixel.comment})` : pixel.pixel_id}
-                      </option>
-                    ))}
-                  </select>
-                  <p className="mt-1 text-[11px] text-[var(--color-text-muted)]">
-                    Se configura desde{" "}
-                    <a
-                      href={mode === "admin" ? "/admin/integraciones" : "/dashboard/integraciones"}
-                      className="text-[var(--color-text)] underline hover:text-[var(--color-text-strong)]"
-                    >
-                      Integraciones
-                    </a>
-                    .
-                  </p>
-                </Field>
-                <Field label="Tag">
-                  <input value={landingTag} onChange={(e) => setLandingTag(cleanTag(e.target.value))} className={inputClass} />
-                </Field>
-                <div className="md:col-span-2">
-                  <Field label="Webhook URL">
-                    <div className="flex gap-2">
-                      <input value={webhookUrl} readOnly className={`${inputClass} font-mono text-xs`} />
-                      <button type="button" onClick={() => void copyText(webhookUrl, "Webhook URL")} className="ui-button ui-button-secondary shrink-0">
-                        Copiar
-                      </button>
-                    </div>
-                    <p className="mt-1 text-[11px] text-[var(--color-text-muted)]">
-                      URL para configurar el webhook del numero en Meta.
+                    Integraciones
+                  </a>
+                  .
+                </p>
+              </div>
+
+              <div className="rounded-lg border border-zinc-800 bg-zinc-950/30 px-3 py-2">
+                <div className="flex items-center justify-between gap-3">
+                  <div>
+                    <p className="text-xs font-medium text-zinc-300">Enviar Contact CAPI a Meta</p>
+                    <p className="mt-0.5 text-[11px] text-zinc-500">
+                      Por defecto queda apagado; el Contact interno se crea igual.
                     </p>
-                  </Field>
+                  </div>
+                  <button
+                    type="button"
+                    role="switch"
+                    aria-checked={sendContactCapi}
+                    onClick={() => setSendContactCapi(!sendContactCapi)}
+                    className={`relative inline-flex h-6 w-11 items-center rounded-full border transition ${
+                      sendContactCapi
+                        ? "border-emerald-500/60 bg-emerald-500/30"
+                        : "border-zinc-700 bg-zinc-800"
+                    }`}
+                  >
+                    <span
+                      className={`inline-block h-5 w-5 transform rounded-full bg-white transition ${
+                        sendContactCapi ? "translate-x-5" : "translate-x-0.5"
+                      }`}
+                    />
+                  </button>
                 </div>
               </div>
-              <Toggle
-                checked={sendContactCapi}
-                onChange={setSendContactCapi}
-                label="Enviar Contact CAPI a Meta"
-                description="Por defecto queda apagado; el Contact interno se crea igual."
-              />
+
+              <div>
+                <label className="mb-1 block text-xs font-medium text-zinc-400">
+                  Webhook URL <span className="text-red-400">*</span>
+                </label>
+                <div className="flex gap-2">
+                  <input
+                    type="text"
+                    value={webhookUrl}
+                    disabled
+                    className="w-full rounded-lg border border-zinc-700 bg-zinc-900 px-3 py-2 font-mono text-xs text-zinc-100 disabled:cursor-not-allowed disabled:opacity-60"
+                    placeholder="Se completa automaticamente desde Supabase"
+                  />
+                  <button
+                    type="button"
+                    onClick={async () => {
+                      if (!webhookUrl) return;
+                      await navigator.clipboard.writeText(webhookUrl);
+                      setWebhookUrlCopied(true);
+                      window.setTimeout(() => setWebhookUrlCopied(false), 1200);
+                    }}
+                    className="inline-flex h-10 w-10 shrink-0 items-center justify-center rounded-lg border border-zinc-700 bg-zinc-900 text-zinc-300 transition hover:bg-zinc-800 hover:text-zinc-100"
+                    title="Copiar Webhook URL"
+                    aria-label="Copiar Webhook URL"
+                  >
+                    {webhookUrlCopied ? (
+                      <span className="text-[10px] text-emerald-400">OK</span>
+                    ) : (
+                      <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                        <rect x="9" y="9" width="13" height="13" rx="2" ry="2" />
+                        <path d="M5 15H4a2 2 0 01-2-2V4a2 2 0 012-2h9a2 2 0 012 2v1" />
+                      </svg>
+                    )}
+                  </button>
+                </div>
+                <p className="mt-1 text-[11px] text-zinc-500">
+                  URL para configurar el webhook del numero en Meta.
+                </p>
+              </div>
+
+              <div>
+                <label className="mb-1 block text-xs font-medium text-zinc-400">
+                  Tag <span className="text-red-400">*</span>
+                </label>
+                <input
+                  type="text"
+                  value={landingTag}
+                  onChange={(e) => setLandingTag(cleanTag(e.target.value))}
+                  className="w-full rounded-lg border border-zinc-700 bg-zinc-900 px-3 py-2 text-sm text-zinc-100"
+                  placeholder="ej: miTag123"
+                  required
+                />
+                <p className="mt-1 text-[11px] text-zinc-500">
+                  Identificador unico del flujo. Solo letras y numeros, sin espacios.
+                </p>
+              </div>
             </div>
-          </SurfaceCard>
+          </CollapsibleSection>
 
           <SurfaceCard className="overflow-hidden">
             <div className="space-y-4 p-4 sm:p-5">
@@ -648,112 +739,225 @@ export default function WhatsAppCloudApiPageContent({
             </div>
           </SurfaceCard>
 
-          <SurfaceCard className="overflow-hidden">
-            <div className="space-y-4 p-4 sm:p-5">
-              <SectionTitle
-                eyebrow="Redireccion"
-                title="Asignacion de gerencias"
-                description="Misma matriz operativa que las landings, aplicada al numero Cloud API."
-                action={
-                  <div className="flex rounded-xl border border-[var(--color-border)] bg-[var(--color-bg-2)] p-1">
-                    <SegmentButton active={selectionMode === "weighted_random"} onClick={() => setSelectionMode("weighted_random")}>
-                      Peso
-                    </SegmentButton>
-                    <SegmentButton active={selectionMode === "fair"} onClick={() => setSelectionMode("fair")}>
-                      Equitativa
-                    </SegmentButton>
-                  </div>
-                }
-              />
-
-              {selectionMode === "fair" ? (
-                <div className="flex w-fit rounded-xl border border-[var(--color-border)] bg-[var(--color-bg-2)] p-1">
-                  <SegmentButton active={fairCriterion === "usage_count"} onClick={() => setFairCriterion("usage_count")}>
-                    Contador
-                  </SegmentButton>
-                  <SegmentButton active={fairCriterion === "messages_received"} onClick={() => setFairCriterion("messages_received")}>
-                    Mensajes
-                  </SegmentButton>
+          <CollapsibleSection title="Redirección">
+            <div className="mb-3 rounded-lg border border-zinc-700 bg-zinc-900/70 p-3">
+              <p className="mb-2 text-xs font-medium text-zinc-300">Selección de gerencias</p>
+              <div className="flex flex-wrap items-center gap-3">
+                <div className="inline-flex rounded-lg border border-zinc-700 bg-zinc-900 text-[11px]">
+                  <button
+                    type="button"
+                    onClick={() => setSelectionMode("weighted_random")}
+                    className={`cursor-pointer rounded-l-lg border-r border-zinc-700 px-2 py-1 ${
+                      selectionMode === "weighted_random" ? "bg-zinc-100 text-zinc-900" : "text-zinc-300 hover:bg-zinc-800"
+                    }`}
+                    title="Aleatorio por peso de gerencia"
+                  >
+                    Aleatoria (peso)
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setSelectionMode("fair")}
+                    className={`cursor-pointer rounded-r-lg px-2 py-1 ${
+                      selectionMode === "fair" ? "bg-zinc-100 text-zinc-900" : "text-zinc-300 hover:bg-zinc-800"
+                    }`}
+                    title="Equitativo entre gerencias (ignora peso)"
+                  >
+                    Equitativa
+                  </button>
                 </div>
-              ) : null}
-
-              <div className="overflow-x-auto rounded-xl border border-[var(--color-border)]">
-                <table className="min-w-[820px] w-full text-left text-xs">
-                  <thead className="bg-[rgba(255,255,255,0.035)] text-[var(--color-text-muted)]">
-                    <tr>
-                      <th className="px-3 py-2.5 font-medium">Asignar</th>
-                      <th className="px-3 py-2.5 font-medium">Gerencia</th>
-                      {selectionMode === "weighted_random" ? <th className="px-3 py-2.5 font-medium">Peso</th> : null}
-                      <th className="px-3 py-2.5 font-medium">Modo telefono</th>
-                      <th className="px-3 py-2.5 font-medium">Tipo</th>
-                    </tr>
-                  </thead>
-                  <tbody className="divide-y divide-[var(--color-border-subtle)]">
-                    {gerencias.map((g) => {
-                      const assignment = assignments.find((row) => row.gerencia_id === g.id);
-                      const checked = Boolean(assignment);
-                      return (
-                        <tr key={g.id} className={checked ? "bg-[rgba(163,230,53,0.035)]" : "bg-transparent"}>
-                          <td className="px-3 py-2.5">
-                            <input type="checkbox" checked={checked} onChange={() => toggleAssignment(g)} className="h-4 w-4 accent-[var(--color-primary)]" />
-                          </td>
-                          <td className="px-3 py-2.5 text-[var(--color-text)]">
-                            <div className="font-medium text-[var(--color-text-strong)]">{g.nombre}</div>
-                            <div className="mt-0.5 text-[11px] text-[var(--color-text-muted)]">ID {g.gerencia_id ?? g.id}</div>
-                          </td>
-                          {selectionMode === "weighted_random" ? (
-                            <td className="px-3 py-2.5">
-                              <input
-                                type="number"
-                                min={0}
-                                disabled={!checked}
-                                value={assignment?.weight ?? 0}
-                                onChange={(e) => {
-                                  const next = Math.max(0, Number(e.target.value) || 0);
-                                  setAssignments((prev) => prev.map((row) => row.gerencia_id === g.id ? { ...row, weight: next } : row));
-                                }}
-                                className={`${compactInputClass} w-20`}
-                              />
-                            </td>
-                          ) : null}
-                          <td className="px-3 py-2.5">
-                            <select
-                              disabled={!checked}
-                              value={assignment?.phoneMode ?? "random"}
-                              onChange={(e) => setAssignments((prev) => prev.map((row) => row.gerencia_id === g.id ? { ...row, phoneMode: e.target.value as "random" | "fair" } : row))}
-                              className={compactSelectClass}
-                            >
-                              <option value="random">Aleatorio</option>
-                              <option value="fair">Equitativo</option>
-                            </select>
-                          </td>
-                          <td className="px-3 py-2.5">
-                            <select
-                              disabled={!checked}
-                              value={assignment?.phoneKind ?? "carga"}
-                              onChange={(e) => setAssignments((prev) => prev.map((row) => row.gerencia_id === g.id ? { ...row, phoneKind: e.target.value as PhoneKind } : row))}
-                              className={compactSelectClass}
-                            >
-                              {PHONE_KIND_OPTIONS.map((option) => (
-                                <option key={option.value} value={option.value}>{option.label}</option>
-                              ))}
-                            </select>
-                          </td>
-                        </tr>
-                      );
-                    })}
-                    {gerencias.length === 0 ? (
-                      <tr>
-                        <td colSpan={selectionMode === "weighted_random" ? 5 : 4} className="px-3 py-8 text-center text-[var(--color-text-muted)]">
-                          No hay gerencias para este workspace.
-                        </td>
-                      </tr>
-                    ) : null}
-                  </tbody>
-                </table>
+                {selectionMode === "fair" ? (
+                  <div className="inline-flex rounded-lg border border-zinc-700 bg-zinc-900 text-[11px]">
+                    <button
+                      type="button"
+                      onClick={() => setFairCriterion("usage_count")}
+                      className={`cursor-pointer rounded-l-lg border-r border-zinc-700 px-2 py-1 ${
+                        fairCriterion === "usage_count" ? "bg-zinc-100 text-zinc-900" : "text-zinc-300 hover:bg-zinc-800"
+                      }`}
+                      title="Equitativo por sumatoria de contador"
+                    >
+                      Por contador
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => setFairCriterion("messages_received")}
+                      className={`cursor-pointer rounded-r-lg px-2 py-1 ${
+                        fairCriterion === "messages_received" ? "bg-zinc-100 text-zinc-900" : "text-zinc-300 hover:bg-zinc-800"
+                      }`}
+                      title="Equitativo por sumatoria de mensajes recibidos"
+                    >
+                      Mensajes recibidos
+                    </button>
+                  </div>
+                ) : null}
               </div>
             </div>
-          </SurfaceCard>
+            <p className="mb-3 text-xs text-zinc-400">
+              Configura a dónde redirigirá el mensaje automático del número Cloud API.
+            </p>
+            <p className="mb-3 text-xs text-zinc-500">
+              Desplegá un grupo de trabajo y marcá <strong>Asignar</strong> para incluir sus gerencias. La asignación real sigue siendo por gerencia individual.
+            </p>
+            {gerencias.length === 0 ? (
+              <p className="text-sm text-zinc-500">
+                No tienes gerencias.{" "}
+                <Link href={mode === "admin" ? "/admin/gerencias" : "/dashboard/gerencias"} className="text-zinc-300 underline hover:text-zinc-100">
+                  Crear gerencias
+                </Link>
+              </p>
+            ) : (
+              <div className="space-y-3">
+                {displayGroups.map((group) => {
+                  const assignedCount = group.gerencias.filter((g) => assignments.some((a) => a.gerencia_id === g.id)).length;
+                  return (
+                    <details key={group.id} className="overflow-hidden rounded-lg border border-zinc-700 bg-zinc-950/30">
+                      <summary className="flex cursor-pointer list-none items-center justify-between gap-3 bg-zinc-900/80 px-3 py-2 text-sm font-medium text-zinc-200 marker:hidden">
+                        <span>{group.name}</span>
+                        <span className="text-[11px] font-normal text-zinc-500">
+                          {assignedCount}/{group.gerencias.length} asignadas
+                        </span>
+                      </summary>
+                      <div className="overflow-x-auto border-t border-zinc-800">
+                        <table className="min-w-[900px] text-left text-sm md:min-w-full">
+                          <thead className="bg-zinc-800/80">
+                            <tr>
+                              <th className="px-3 py-2 font-medium text-zinc-300">Gerencia</th>
+                              <th className="px-3 py-2 font-medium text-zinc-300">Nombre</th>
+                              <th className="w-20 px-3 py-2 text-center font-medium text-zinc-300">Asignar</th>
+                              {selectionMode === "weighted_random" ? (
+                                <th className="w-10 px-3 py-2 font-medium text-zinc-300">Peso</th>
+                              ) : null}
+                              <th className="w-32 px-3 py-2 font-medium text-zinc-300">Modo</th>
+                              <th className="min-w-[140px] px-3 py-2 font-medium text-zinc-300">Tipo</th>
+                              <th className="w-56 px-3 py-2 font-medium text-zinc-300">Intervalo</th>
+                            </tr>
+                          </thead>
+                          <tbody className="divide-y divide-zinc-800">
+                            {group.gerencias.length === 0 ? (
+                              <tr>
+                                <td colSpan={selectionMode === "weighted_random" ? 7 : 6} className="px-3 py-4 text-center text-xs text-zinc-500">
+                                  Este grupo todavía no tiene gerencias.
+                                </td>
+                              </tr>
+                            ) : (
+                              group.gerencias.map((g) => {
+                                const assignment = assignments.find((row) => row.gerencia_id === g.id);
+                                const isAssigned = Boolean(assignment);
+                                const intervalStartHour = assignment?.intervalStartHour ?? null;
+                                const intervalEndHour = assignment?.intervalEndHour ?? null;
+                                return (
+                                  <tr key={g.id} className="bg-zinc-950/40">
+                                    <td className="px-3 py-2 text-zinc-300">{g.gerencia_id ?? "MANUAL"}</td>
+                                    <td className="px-3 py-2 text-zinc-200">{g.nombre}</td>
+                                    <td className="px-3 py-2 text-center">
+                                      <input
+                                        type="checkbox"
+                                        checked={isAssigned}
+                                        onChange={() => upsertAssignment(g)}
+                                        className="rounded border-zinc-600"
+                                      />
+                                    </td>
+                                    {selectionMode === "weighted_random" ? (
+                                      <td className="px-3 py-2">
+                                        <input
+                                          type="number"
+                                          min={0}
+                                          disabled={!isAssigned}
+                                          value={assignment?.weight ?? 0}
+                                          onChange={(e) => {
+                                            const value = Number(e.target.value);
+                                            updateAssignment(g.id, { weight: Number.isNaN(value) ? 0 : Math.max(0, value) });
+                                          }}
+                                          className="w-16 rounded-lg border border-zinc-700 bg-zinc-900 px-2 py-1 text-sm text-zinc-100 disabled:opacity-50"
+                                        />
+                                      </td>
+                                    ) : null}
+                                    <td className="px-3 py-2">
+                                      <select
+                                        disabled={!isAssigned}
+                                        value={assignment?.phoneMode ?? "random"}
+                                        onChange={(e) => updateAssignment(g.id, { phoneMode: e.target.value as "random" | "fair" })}
+                                        className="rounded-lg border border-zinc-700 bg-zinc-900 px-2 py-1 text-sm text-zinc-100 disabled:opacity-50"
+                                      >
+                                        <option value="random">Aleatorio</option>
+                                        <option value="fair">Equitativo</option>
+                                      </select>
+                                    </td>
+                                    <td className="px-3 py-2">
+                                      <select
+                                        disabled={!isAssigned}
+                                        value={assignment?.phoneKind ?? "carga"}
+                                        onChange={(e) => updateAssignment(g.id, { phoneKind: e.target.value as PhoneKind })}
+                                        className="rounded-lg border border-zinc-700 bg-zinc-900 px-2 py-1 text-sm text-zinc-100 disabled:opacity-50"
+                                      >
+                                        {PHONE_KIND_OPTIONS.map((option) => (
+                                          <option key={option.value} value={option.value}>
+                                            {option.label}
+                                          </option>
+                                        ))}
+                                      </select>
+                                    </td>
+                                    <td className="px-3 py-2 text-zinc-300">
+                                      <div className="flex flex-wrap items-center gap-2">
+                                        <label className="flex items-center gap-1 text-[11px] text-zinc-400">
+                                          <input
+                                            type="checkbox"
+                                            disabled={!isAssigned}
+                                            checked={intervalStartHour !== null && intervalEndHour !== null}
+                                            onChange={(e) =>
+                                              updateAssignment(g.id, e.target.checked
+                                                ? { intervalStartHour: 0, intervalEndHour: 23 }
+                                                : { intervalStartHour: null, intervalEndHour: null })
+                                            }
+                                            className="rounded border-zinc-600"
+                                          />
+                                          Horario
+                                        </label>
+                                        {intervalStartHour !== null && intervalEndHour !== null ? (
+                                          <div className="flex items-center gap-1">
+                                            <select
+                                              disabled={!isAssigned}
+                                              value={intervalStartHour}
+                                              onChange={(e) => {
+                                                const value = Number(e.target.value);
+                                                updateAssignment(g.id, { intervalStartHour: Number.isNaN(value) ? 0 : Math.max(0, Math.min(23, value)) });
+                                              }}
+                                              className="rounded-lg border border-zinc-700 bg-zinc-900 px-2 py-1 text-[11px] text-zinc-100"
+                                            >
+                                              {Array.from({ length: 24 }).map((_, hour) => (
+                                                <option key={hour} value={hour}>{hour.toString().padStart(2, "0")}:00</option>
+                                              ))}
+                                            </select>
+                                            <span className="text-[11px] text-zinc-500">a</span>
+                                            <select
+                                              disabled={!isAssigned}
+                                              value={intervalEndHour}
+                                              onChange={(e) => {
+                                                const value = Number(e.target.value);
+                                                updateAssignment(g.id, { intervalEndHour: Number.isNaN(value) ? 23 : Math.max(0, Math.min(23, value)) });
+                                              }}
+                                              className="rounded-lg border border-zinc-700 bg-zinc-900 px-2 py-1 text-[11px] text-zinc-100"
+                                            >
+                                              {Array.from({ length: 24 }).map((_, hour) => (
+                                                <option key={hour} value={hour}>{hour.toString().padStart(2, "0")}:00</option>
+                                              ))}
+                                            </select>
+                                          </div>
+                                        ) : null}
+                                      </div>
+                                    </td>
+                                  </tr>
+                                );
+                              })
+                            )}
+                          </tbody>
+                        </table>
+                      </div>
+                    </details>
+                  );
+                })}
+              </div>
+            )}
+          </CollapsibleSection>
         </div>
 
         <aside className="space-y-4 xl:sticky xl:top-24 xl:self-start">
