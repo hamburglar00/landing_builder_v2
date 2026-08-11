@@ -32,6 +32,24 @@ const DEFAULT_REDIRECT_TEMPLATE =
 const DEFAULT_FALLBACK_TEMPLATE =
   "Hola, gracias por comunicarte. En este momento no hay un asesor disponible. Por favor intenta nuevamente en unos minutos.";
 
+const INSTRUCTION_CHECKLIST = [
+  "Crear o seleccionar la app de Meta y conectar el numero oficial a WhatsApp Cloud API.",
+  "Copiar Phone Number ID, WhatsApp Business Account ID y generar un access token valido para enviar mensajes.",
+  "Pegar en Meta la Webhook URL y el Verify token de esta pantalla.",
+  "Suscribir el webhook a eventos de mensajes y verificar que Meta acepte el challenge.",
+  "Seleccionar el Pixel, definir el Tag, cargar el mensaje de respuesta y asignar gerencias.",
+  "Activar la integracion, guardar y probar escribiendo al numero conectado.",
+];
+
+const INSTRUCTION_FLOW = [
+  "Meta envia el mensaje entrante al webhook del constructor.",
+  "El constructor guarda el payload completo y captura referral/ctwa_clid cuando Meta lo envia.",
+  "Se selecciona un telefono con la misma matriz de gerencias que usan las landings.",
+  "Se crea un Contact interno en conversiones, sin enviar Contact CAPI a Meta.",
+  "El usuario recibe por WhatsApp el mensaje configurado con telefono, link y promo_code.",
+  "LEAD y PURCHASE siguen entrando por el endpoint actual y matchean con el recorrido.",
+];
+
 const PHONE_KIND_OPTIONS: Array<{ value: PhoneKind; label: string }> = [
   { value: "carga", label: "Carga" },
   { value: "assistant", label: "Asistente" },
@@ -262,6 +280,7 @@ export default function WhatsAppCloudApiPageContent({
   const [saving, setSaving] = useState(false);
   const [message, setMessage] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const [instructionsOpen, setInstructionsOpen] = useState(false);
   const [config, setConfig] = useState<WhatsappCloudApiConfig | null>(null);
   const [gerencias, setGerencias] = useState<Gerencia[]>([]);
   const [workGroups, setWorkGroups] = useState<GerenciaWorkGroup[]>([]);
@@ -481,11 +500,17 @@ export default function WhatsAppCloudApiPageContent({
   return (
     <div className="space-y-6">
       <PageHeader
-        eyebrow="Landing conversacional"
         title="WhatsApp Cloud API"
         description="Recibi mensajes Click-to-WhatsApp y deriva al asesor asignado."
         actions={
           <>
+            <button
+              type="button"
+              onClick={() => setInstructionsOpen((value) => !value)}
+              className="ui-button ui-button-secondary"
+            >
+              {instructionsOpen ? "Ocultar instructivo" : "Ver instructivo"}
+            </button>
             <StatusBadge tone={active ? "success" : "warning"}>
               {active ? "Activo" : "Inactivo"}
             </StatusBadge>
@@ -535,6 +560,72 @@ export default function WhatsAppCloudApiPageContent({
         <p className="ui-alert border-emerald-500/30 bg-emerald-500/10 text-sm text-emerald-200">
           {message}
         </p>
+      ) : null}
+
+      {instructionsOpen ? (
+        <section className="rounded-xl border border-sky-900/70 bg-sky-950/20 p-4">
+          <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
+            <div>
+              <p className="text-sm font-semibold text-sky-100">Instructivo de WhatsApp Cloud API</p>
+              <p className="mt-1 max-w-4xl text-xs leading-relaxed text-zinc-400">
+                Esta seccion conecta un numero oficial de Meta. Internamente se comporta como una landing: recibe el mensaje inicial, asigna un telefono de gerencia y responde con el link/promo para continuar.
+              </p>
+            </div>
+            {mode === "admin" ? (
+              <a
+                href="/admin/documentacion"
+                className="inline-flex shrink-0 items-center justify-center rounded-lg border border-sky-700 bg-sky-600 px-3 py-2 text-xs font-semibold text-white hover:bg-sky-500"
+              >
+                Abrir documentacion completa
+              </a>
+            ) : null}
+          </div>
+
+          <div className="mt-4 grid gap-4 lg:grid-cols-2">
+            <div className="rounded-xl border border-zinc-800 bg-zinc-950/50 p-4">
+              <p className="text-xs font-semibold text-zinc-100">Configuracion inicial</p>
+              <ol className="mt-3 space-y-2 text-xs leading-relaxed text-zinc-300">
+                {INSTRUCTION_CHECKLIST.map((item, index) => (
+                  <li key={item} className="flex gap-2">
+                    <span className="mt-0.5 flex h-5 w-5 shrink-0 items-center justify-center rounded-full border border-sky-800 bg-sky-950 text-[10px] font-semibold text-sky-200">
+                      {index + 1}
+                    </span>
+                    <span>{item}</span>
+                  </li>
+                ))}
+              </ol>
+            </div>
+
+            <div className="rounded-xl border border-zinc-800 bg-zinc-950/50 p-4">
+              <p className="text-xs font-semibold text-zinc-100">Que pasa cuando escribe un usuario</p>
+              <ol className="mt-3 space-y-2 text-xs leading-relaxed text-zinc-300">
+                {INSTRUCTION_FLOW.map((item, index) => (
+                  <li key={item} className="flex gap-2">
+                    <span className="mt-0.5 flex h-5 w-5 shrink-0 items-center justify-center rounded-full border border-emerald-800 bg-emerald-950 text-[10px] font-semibold text-emerald-200">
+                      {index + 1}
+                    </span>
+                    <span>{item}</span>
+                  </li>
+                ))}
+              </ol>
+            </div>
+          </div>
+
+          <div className="mt-4 grid gap-3 text-xs text-zinc-300 lg:grid-cols-3">
+            <div className="rounded-lg border border-zinc-800 bg-zinc-900/60 p-3">
+              <p className="font-semibold text-zinc-100">Webhook URL</p>
+              <p className="mt-1 break-all font-mono text-[11px] text-sky-200">{webhookUrl || "Sin URL disponible"}</p>
+            </div>
+            <div className="rounded-lg border border-zinc-800 bg-zinc-900/60 p-3">
+              <p className="font-semibold text-zinc-100">Verify token</p>
+              <p className="mt-1 font-mono text-[11px] text-zinc-300">{verifyToken || "Se genera al cargar"}</p>
+            </div>
+            <div className="rounded-lg border border-zinc-800 bg-zinc-900/60 p-3">
+              <p className="font-semibold text-zinc-100">Contact CAPI</p>
+              <p className="mt-1 text-zinc-400">Omitido por diseno para este flujo. El Contact queda interno.</p>
+            </div>
+          </div>
+        </section>
       ) : null}
 
       <div className="grid gap-4 xl:grid-cols-[minmax(0,1fr)_22rem]">
