@@ -20,7 +20,6 @@ import { CollapsibleSection } from "@/components/landing/LandingEditorForm";
 import {
   fetchWhatsappCloudApiAssignments,
   fetchWhatsappCloudApiConfig,
-  fetchWhatsappCloudApiRecentEvents,
   setWhatsappCloudApiAssignments,
   upsertWhatsappCloudApiConfig,
   type WhatsappCloudApiAssignment,
@@ -51,6 +50,7 @@ const INSTRUCTION_FLOW = [
   "Se selecciona un telefono con la misma matriz de gerencias que usan las landings.",
   "Se crea un Contact interno en conversiones, sin enviar Contact CAPI a Meta.",
   "El usuario recibe por WhatsApp el mensaje configurado con telefono, link y promo_code.",
+  "Si el mismo usuario vuelve a escribir sin un nuevo click-to-WhatsApp, no se reenvia otra derivacion durante 24 horas.",
   "LEAD y PURCHASE siguen entrando por el endpoint actual y matchean con el recorrido.",
 ];
 
@@ -64,17 +64,15 @@ const PHONE_KIND_OPTIONS: Array<{ value: PhoneKind; label: string }> = [
 const GRAPH_API_VERSION_OPTIONS = ["v26.0", "v25.0", "v24.0", "v23.0", "v22.0", "v21.0"];
 
 const inputClass =
-  "h-10 w-full rounded-xl border border-[var(--color-border)] bg-[var(--color-bg-2)] px-3 text-sm text-[var(--color-text-strong)] outline-none placeholder:text-[var(--color-text-disabled)]";
+  "h-10 w-full rounded-xl border border-[var(--color-border)] bg-[var(--color-bg-2)] px-3 text-sm text-[var(--color-text-strong)] outline-none placeholder:text-[var(--color-text-disabled)] disabled:cursor-not-allowed disabled:opacity-60";
 const textareaClass =
-  "w-full rounded-xl border border-[var(--color-border)] bg-[var(--color-bg-2)] px-3 py-2.5 text-sm leading-5 text-[var(--color-text-strong)] outline-none placeholder:text-[var(--color-text-disabled)]";
+  "w-full rounded-xl border border-[var(--color-border)] bg-[var(--color-bg-2)] px-3 py-2.5 text-sm leading-5 text-[var(--color-text-strong)] outline-none placeholder:text-[var(--color-text-disabled)] disabled:cursor-not-allowed disabled:opacity-60";
 
 type ClientOption = {
   id: string;
   nombre: string | null;
   email: string | null;
 };
-
-type RecentEvent = Awaited<ReturnType<typeof fetchWhatsappCloudApiRecentEvents>>[number];
 
 type DisplayGroup = {
   id: string;
@@ -148,19 +146,22 @@ function Toggle({
   onChange,
   label,
   description,
+  disabled = false,
 }: {
   checked: boolean;
   onChange: (next: boolean) => void;
   label: string;
   description?: string;
+  disabled?: boolean;
 }) {
   return (
     <button
       type="button"
       role="switch"
       aria-checked={checked}
+      disabled={disabled}
       onClick={() => onChange(!checked)}
-      className="flex min-w-0 items-center justify-between gap-3 rounded-xl border border-[var(--color-border-subtle)] bg-[rgba(255,255,255,0.025)] px-3 py-2 text-left transition hover:border-[var(--color-border-strong)] hover:bg-[rgba(255,255,255,0.045)]"
+      className="flex min-w-0 items-center justify-between gap-3 rounded-xl border border-[var(--color-border-subtle)] bg-[rgba(255,255,255,0.025)] px-3 py-2 text-left transition hover:border-[var(--color-border-strong)] hover:bg-[rgba(255,255,255,0.045)] disabled:cursor-not-allowed disabled:opacity-60"
     >
       <span className="min-w-0">
         <span className="block text-xs font-medium text-[var(--color-text)]">{label}</span>
@@ -268,6 +269,40 @@ function MetricTile({
   );
 }
 
+function CopyIcon() {
+  return (
+    <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+      <rect x="9" y="9" width="13" height="13" rx="2" ry="2" />
+      <path d="M5 15H4a2 2 0 01-2-2V4a2 2 0 012-2h9a2 2 0 012 2v1" />
+    </svg>
+  );
+}
+
+function CopyButton({
+  copied,
+  disabled = false,
+  onClick,
+  title,
+}: {
+  copied: boolean;
+  disabled?: boolean;
+  onClick: () => void;
+  title: string;
+}) {
+  return (
+    <button
+      type="button"
+      disabled={disabled}
+      onClick={onClick}
+      className="inline-flex h-10 w-10 shrink-0 items-center justify-center rounded-lg border border-zinc-700 bg-zinc-900 text-zinc-300 transition hover:bg-zinc-800 hover:text-zinc-100 disabled:cursor-not-allowed disabled:opacity-50"
+      title={title}
+      aria-label={title}
+    >
+      {copied ? <span className="text-[10px] font-semibold text-emerald-400">OK</span> : <CopyIcon />}
+    </button>
+  );
+}
+
 export default function WhatsAppCloudApiPageContent({
   mode,
 }: {
@@ -288,9 +323,10 @@ export default function WhatsAppCloudApiPageContent({
   const [gerencias, setGerencias] = useState<Gerencia[]>([]);
   const [workGroups, setWorkGroups] = useState<GerenciaWorkGroup[]>([]);
   const [assignments, setAssignments] = useState<LandingGerenciaAssignment[]>([]);
-  const [recentEvents, setRecentEvents] = useState<RecentEvent[]>([]);
   const [pixelOptions, setPixelOptions] = useState<Array<{ pixel_id: string; comment: string }>>([]);
   const [webhookUrlCopied, setWebhookUrlCopied] = useState(false);
+  const [verifyTokenCopied, setVerifyTokenCopied] = useState(false);
+  const [identificationEditing, setIdentificationEditing] = useState(true);
 
   const [name, setName] = useState("whatsapp-cloud-api");
   const [active, setActive] = useState(false);
@@ -319,6 +355,7 @@ export default function WhatsAppCloudApiPageContent({
   }, [clients, targetUserId]);
 
   const displayGroups = useMemo(() => buildDisplayGroups(gerencias, workGroups), [gerencias, workGroups]);
+  const identificationLocked = Boolean(config?.id && !identificationEditing);
 
   const loadTarget = useCallback(async (uid: string, ownerId: string) => {
     setError(null);
@@ -345,6 +382,7 @@ export default function WhatsAppCloudApiPageContent({
       }))
       .filter((p) => p.pixel_id);
     setConfig(cfg);
+    setIdentificationEditing(!cfg?.id);
     setGerencias(gers);
     setWorkGroups(groups);
     setPixelOptions(options);
@@ -365,15 +403,10 @@ export default function WhatsAppCloudApiPageContent({
     setRedirectTemplate(cfg?.redirect_message_template ?? DEFAULT_REDIRECT_TEMPLATE);
     setFallbackTemplate(cfg?.fallback_message_template ?? DEFAULT_FALLBACK_TEMPLATE);
     if (cfg?.id) {
-      const [asg, events] = await Promise.all([
-        fetchWhatsappCloudApiAssignments(cfg.id),
-        fetchWhatsappCloudApiRecentEvents(cfg.id),
-      ]);
+      const asg = await fetchWhatsappCloudApiAssignments(cfg.id);
       setAssignments(toAssignments(asg));
-      setRecentEvents(events);
     } else {
       setAssignments([]);
-      setRecentEvents([]);
     }
   }, [mode, selectedClientName, workspaceCurrency]);
 
@@ -412,10 +445,12 @@ export default function WhatsAppCloudApiPageContent({
     await loadTarget(uid, currentUserId);
   };
 
-  const copyText = async (value: string, label: string) => {
+  const copyText = async (value: string, label: string, onCopied?: () => void) => {
     if (!value) return;
     await navigator.clipboard.writeText(value);
+    setError(null);
     setMessage(`${label} copiado.`);
+    onCopied?.();
   };
 
   const handleSave = async () => {
@@ -435,6 +470,9 @@ export default function WhatsAppCloudApiPageContent({
       if (!verifyToken.trim()) throw new Error("Verify token requerido.");
       if (!cleanTag(landingTag)) throw new Error("Tag de promo_code requerido.");
       if (!/^\d+$/.test(pixelId.trim())) throw new Error("Pixel ID requerido.");
+      if (!redirectTemplate.trim()) throw new Error("Mensaje de derivacion requerido.");
+      if (!fallbackTemplate.trim()) throw new Error("Mensaje fallback requerido.");
+      if (assignments.length === 0) throw new Error("Asigna al menos una gerencia para poder derivar mensajes.");
 
       const saved = await upsertWhatsappCloudApiConfig({
         id: config?.id,
@@ -642,14 +680,35 @@ export default function WhatsAppCloudApiPageContent({
                 eyebrow="Conexion Meta"
                 title="Identificacion"
                 description="Numero oficial, WABA y credenciales de la app conectada."
-                action={<Toggle checked={active} onChange={setActive} label={active ? "Integracion activa" : "Integracion inactiva"} />}
+                action={
+                  <div className="flex flex-wrap items-center justify-end gap-2">
+                    {config?.id && !identificationEditing ? (
+                      <button
+                        type="button"
+                        onClick={() => setIdentificationEditing(true)}
+                        className="ui-button ui-button-secondary h-10"
+                      >
+                        Editar
+                      </button>
+                    ) : config?.id ? (
+                      <StatusBadge tone="warning">Editando</StatusBadge>
+                    ) : null}
+                    <Toggle
+                      checked={active}
+                      onChange={setActive}
+                      disabled={identificationLocked}
+                      label={active ? "Integracion activa" : "Integracion inactiva"}
+                    />
+                  </div>
+                }
               />
 
               <div className="grid gap-3 md:grid-cols-2">
-                <Field label="Nombre interno">
+                <Field label="Nombre interno" required>
                   <input
                     value={name}
                     onChange={(e) => setName(e.target.value)}
+                    disabled={identificationLocked}
                     className={inputClass}
                     placeholder="Ej: WhatsApp Martin Test"
                   />
@@ -658,62 +717,80 @@ export default function WhatsAppCloudApiPageContent({
                   <input
                     value={displayPhone}
                     onChange={(e) => setDisplayPhone(onlyDigits(e.target.value))}
+                    disabled={identificationLocked}
                     className={inputClass}
                     inputMode="numeric"
                     pattern="[0-9]*"
                     placeholder="549..."
                   />
                 </Field>
-                <Field label="Phone Number ID">
+                <Field label="Phone Number ID" required>
                   <input
                     value={phoneNumberId}
                     onChange={(e) => setPhoneNumberId(onlyDigits(e.target.value))}
+                    disabled={identificationLocked}
                     className={inputClass}
                     inputMode="numeric"
                     pattern="[0-9]*"
                   />
                 </Field>
-                <Field label="WhatsApp Business Account ID">
+                <Field label="WhatsApp Business Account ID" required>
                   <input
                     value={wabaId}
                     onChange={(e) => setWabaId(onlyDigits(e.target.value))}
+                    disabled={identificationLocked}
                     className={inputClass}
                     inputMode="numeric"
                     pattern="[0-9]*"
                   />
                 </Field>
-                <Field label="Verify token">
+                <Field label="Verify token" required>
                   <div className="flex gap-2">
-                    <input value={verifyToken} onChange={(e) => setVerifyToken(e.target.value.trim())} className={`${inputClass} font-mono text-xs`} />
-                    <button
-                      type="button"
-                      onClick={() => void copyText(verifyToken, "Verify token")}
-                      className="inline-flex h-10 w-10 shrink-0 items-center justify-center rounded-lg border border-zinc-700 bg-zinc-900 text-zinc-300 transition hover:bg-zinc-800 hover:text-zinc-100"
+                    <input
+                      value={verifyToken}
+                      onChange={(e) => setVerifyToken(e.target.value.trim())}
+                      disabled={identificationLocked}
+                      className={`${inputClass} font-mono text-xs`}
+                    />
+                    <CopyButton
+                      copied={verifyTokenCopied}
+                      disabled={!verifyToken}
                       title="Copiar Verify token"
-                      aria-label="Copiar Verify token"
-                    >
-                      <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-                        <rect x="9" y="9" width="13" height="13" rx="2" ry="2" />
-                        <path d="M5 15H4a2 2 0 01-2-2V4a2 2 0 012-2h9a2 2 0 012 2v1" />
-                      </svg>
-                    </button>
+                      onClick={() => void copyText(verifyToken, "Verify token", () => {
+                        setVerifyTokenCopied(true);
+                        window.setTimeout(() => setVerifyTokenCopied(false), 1200);
+                      })}
+                    />
                   </div>
                 </Field>
-                <Field label="Meta access token">
-                  <input value={accessToken} onChange={(e) => setAccessToken(e.target.value)} className={`${inputClass} font-mono text-xs`} type="password" autoComplete="off" />
+                <Field label="Meta access token" required>
+                  <input
+                    value={accessToken}
+                    onChange={(e) => setAccessToken(e.target.value)}
+                    disabled={identificationLocked}
+                    className={`${inputClass} font-mono text-xs`}
+                    type="password"
+                    autoComplete="off"
+                  />
                 </Field>
-                <Field label="App Secret / token de la app">
+                <Field label="App Secret / token de la app" required>
                   <input
                     value={appSecret}
                     onChange={(e) => setAppSecret(e.target.value.trim())}
+                    disabled={identificationLocked}
                     className={`${inputClass} font-mono text-xs`}
                     type="password"
                     autoComplete="off"
                     placeholder="Se copia desde Informacion basica de la app en Meta"
                   />
                 </Field>
-                <Field label="Version WhatsApp Cloud API">
-                  <select value={apiVersion} onChange={(e) => setApiVersion(e.target.value)} className={inputClass}>
+                <Field label="Version WhatsApp Cloud API" required>
+                  <select
+                    value={apiVersion}
+                    onChange={(e) => setApiVersion(e.target.value)}
+                    disabled={identificationLocked}
+                    className={inputClass}
+                  >
                     {[...(GRAPH_API_VERSION_OPTIONS.includes(apiVersion) ? GRAPH_API_VERSION_OPTIONS : [apiVersion, ...GRAPH_API_VERSION_OPTIONS])]
                       .filter(Boolean)
                       .map((version) => (
@@ -788,28 +865,15 @@ export default function WhatsAppCloudApiPageContent({
                     className="w-full rounded-lg border border-zinc-700 bg-zinc-900 px-3 py-2 font-mono text-xs text-zinc-100 disabled:cursor-not-allowed disabled:opacity-60"
                     placeholder="Se completa automaticamente desde Supabase"
                   />
-                  <button
-                    type="button"
-                    onClick={async () => {
-                      if (!webhookUrl) return;
-                      await navigator.clipboard.writeText(webhookUrl);
-                      setWebhookUrlCopied(true);
-                      setMessage("Webhook URL copiada.");
-                      window.setTimeout(() => setWebhookUrlCopied(false), 1200);
-                    }}
-                    className="inline-flex h-10 w-10 shrink-0 items-center justify-center rounded-lg border border-zinc-700 bg-zinc-900 text-zinc-300 transition hover:bg-zinc-800 hover:text-zinc-100"
+                  <CopyButton
+                    copied={webhookUrlCopied}
+                    disabled={!webhookUrl}
                     title="Copiar Webhook URL"
-                    aria-label="Copiar Webhook URL"
-                  >
-                    {webhookUrlCopied ? (
-                      <span className="text-[10px] text-emerald-400">OK</span>
-                    ) : (
-                      <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-                        <rect x="9" y="9" width="13" height="13" rx="2" ry="2" />
-                        <path d="M5 15H4a2 2 0 01-2-2V4a2 2 0 012-2h9a2 2 0 012 2v1" />
-                      </svg>
-                    )}
-                  </button>
+                    onClick={() => void copyText(webhookUrl, "Webhook URL", () => {
+                      setWebhookUrlCopied(true);
+                      window.setTimeout(() => setWebhookUrlCopied(false), 1200);
+                    })}
+                  />
                 </div>
                 <p className="mt-1 text-[11px] text-zinc-500">
                   URL para configurar el webhook del numero en Meta.
@@ -842,7 +906,7 @@ export default function WhatsAppCloudApiPageContent({
                 title="Mensaje automatico"
                 description="Texto que recibe el usuario cuando escriba al numero Cloud API."
               />
-              <Field label="Mensaje de derivacion">
+              <Field label="Mensaje de derivacion" required>
                 <textarea
                   value={redirectTemplate}
                   onChange={(e) => setRedirectTemplate(e.target.value)}
@@ -850,7 +914,7 @@ export default function WhatsAppCloudApiPageContent({
                   className={`${textareaClass} min-h-36`}
                 />
               </Field>
-              <Field label="Mensaje fallback sin telefonos">
+              <Field label="Mensaje fallback sin telefonos" required>
                 <textarea
                   value={fallbackTemplate}
                   onChange={(e) => setFallbackTemplate(e.target.value)}
@@ -872,7 +936,9 @@ export default function WhatsAppCloudApiPageContent({
 
           <CollapsibleSection title="Redirección">
             <div className="mb-3 rounded-lg border border-zinc-700 bg-zinc-900/70 p-3">
-              <p className="mb-2 text-xs font-medium text-zinc-300">Selección de gerencias</p>
+              <p className="mb-2 text-xs font-medium text-zinc-300">
+                Selección de gerencias <span className="text-red-400">*</span>
+              </p>
               <div className="flex flex-wrap items-center gap-3">
                 <div className="inline-flex rounded-lg border border-zinc-700 bg-zinc-900 text-[11px]">
                   <button
@@ -1125,34 +1191,6 @@ export default function WhatsAppCloudApiPageContent({
               <MetricTile label="Contact CAPI" value="Omitido" tone="neutral" />
             </div>
           </SurfaceCard>
-
-          <SurfaceCard className="space-y-3 p-4">
-            <SectionTitle title="Ultimos eventos" />
-            {recentEvents.length > 0 ? (
-              <div className="space-y-2">
-                {recentEvents.map((event) => (
-                  <div key={event.id} className="rounded-xl border border-[var(--color-border-subtle)] bg-[rgba(255,255,255,0.025)] p-3">
-                    <div className="flex items-center justify-between gap-2 text-xs">
-                      <span className="font-medium capitalize text-[var(--color-text-strong)]">{event.event_type}</span>
-                      <StatusBadge tone={event.status === "failed" ? "danger" : event.status === "processed" ? "success" : "neutral"}>
-                        {event.status}
-                      </StatusBadge>
-                    </div>
-                    <p className="mt-2 truncate font-mono text-[10px] text-[var(--color-text-muted)]">
-                      {event.meta_message_id || event.id}
-                    </p>
-                    {event.last_error ? (
-                      <p className="mt-2 line-clamp-3 text-[11px] leading-4 text-[var(--color-danger)]">{event.last_error}</p>
-                    ) : null}
-                  </div>
-                ))}
-              </div>
-            ) : (
-              <p className="rounded-xl border border-dashed border-[var(--color-border-strong)] px-3 py-5 text-center text-xs text-[var(--color-text-muted)]">
-                Todavia no hay webhooks recibidos.
-              </p>
-            )}
-          </SurfaceCard>
         </aside>
       </div>
     </div>
@@ -1162,13 +1200,17 @@ export default function WhatsAppCloudApiPageContent({
 function Field({
   label,
   children,
+  required = false,
 }: {
   label: string;
   children: React.ReactNode;
+  required?: boolean;
 }) {
   return (
     <label className="block space-y-1.5">
-      <span className="text-xs font-medium text-[var(--color-text-muted)]">{label}</span>
+      <span className="text-xs font-medium text-[var(--color-text-muted)]">
+        {label} {required ? <span className="text-red-400">*</span> : null}
+      </span>
       {children}
     </label>
   );
