@@ -282,7 +282,6 @@ export default function WhatsAppCloudApiPageContent({
   const [landingTag, setLandingTag] = useState("");
   const [selectionMode, setSelectionMode] = useState<"weighted_random" | "fair">("weighted_random");
   const [fairCriterion, setFairCriterion] = useState<"usage_count" | "messages_received">("usage_count");
-  const [sendContactCapi, setSendContactCapi] = useState(false);
   const [redirectTemplate, setRedirectTemplate] = useState(DEFAULT_REDIRECT_TEMPLATE);
   const [fallbackTemplate, setFallbackTemplate] = useState(DEFAULT_FALLBACK_TEMPLATE);
 
@@ -339,7 +338,6 @@ export default function WhatsAppCloudApiPageContent({
     setLandingTag(cfg?.landing_tag ?? "");
     setSelectionMode(cfg?.gerencia_selection_mode ?? "weighted_random");
     setFairCriterion(cfg?.gerencia_fair_criterion ?? "usage_count");
-    setSendContactCapi(cfg?.send_contact_capi ?? false);
     setRedirectTemplate(cfg?.redirect_message_template ?? DEFAULT_REDIRECT_TEMPLATE);
     setFallbackTemplate(cfg?.fallback_message_template ?? DEFAULT_FALLBACK_TEMPLATE);
     if (cfg?.id) {
@@ -427,7 +425,7 @@ export default function WhatsAppCloudApiPageContent({
         landing_tag: cleanTag(landingTag),
         gerencia_selection_mode: selectionMode,
         gerencia_fair_criterion: fairCriterion,
-        send_contact_capi: sendContactCapi,
+        send_contact_capi: false,
         redirect_message_template: redirectTemplate,
         fallback_message_template: fallbackTemplate,
       });
@@ -634,28 +632,16 @@ export default function WhatsAppCloudApiPageContent({
               <div className="rounded-lg border border-zinc-800 bg-zinc-950/30 px-3 py-2">
                 <div className="flex items-center justify-between gap-3">
                   <div>
-                    <p className="text-xs font-medium text-zinc-300">Enviar Contact CAPI a Meta</p>
+                    <p className="text-xs font-medium text-zinc-300">Contact CAPI omitido</p>
                     <p className="mt-0.5 text-[11px] text-zinc-500">
-                      Por defecto queda apagado; el Contact interno se crea igual.
+                      En WhatsApp Cloud API el Contact se crea interno, pero no se envia a Meta.
                     </p>
                   </div>
-                  <button
-                    type="button"
-                    role="switch"
-                    aria-checked={sendContactCapi}
-                    onClick={() => setSendContactCapi(!sendContactCapi)}
-                    className={`relative inline-flex h-6 w-11 items-center rounded-full border transition ${
-                      sendContactCapi
-                        ? "border-emerald-500/60 bg-emerald-500/30"
-                        : "border-zinc-700 bg-zinc-800"
-                    }`}
+                  <span
+                    className="inline-flex h-6 items-center rounded-full border border-zinc-700 bg-zinc-800 px-2 text-[10px] font-medium text-zinc-400"
                   >
-                    <span
-                      className={`inline-block h-5 w-5 transform rounded-full bg-white transition ${
-                        sendContactCapi ? "translate-x-5" : "translate-x-0.5"
-                      }`}
-                    />
-                  </button>
+                    Off
+                  </span>
                 </div>
               </div>
 
@@ -976,7 +962,7 @@ export default function WhatsAppCloudApiPageContent({
               <MetricTile label="Configuracion" value={config ? "Guardada" : "Sin guardar"} tone={config ? "success" : "warning"} />
               <MetricTile label="Webhook" value={webhookUrl ? "URL lista" : "Sin URL"} tone={webhookUrl ? "info" : "warning"} />
               <MetricTile label="Gerencias" value={`${assignments.length} asignadas`} tone={assignments.length > 0 ? "success" : "warning"} />
-              <MetricTile label="Contact CAPI" value={sendContactCapi ? "Activo" : "Apagado"} tone={sendContactCapi ? "success" : "neutral"} />
+              <MetricTile label="Contact CAPI" value="Omitido" tone="neutral" />
             </div>
           </SurfaceCard>
 

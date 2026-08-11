@@ -324,7 +324,7 @@ async function createInternalContact(input: {
     source_platform: "whatsapp_cloud_api",
     ctwa_clid: input.ctwaClid,
     from_meta_ads: Boolean(input.ctwaClid),
-    sendContactPixel: input.config.send_contact_capi,
+    sendContactPixel: false,
     event_source_url: `whatsapp-cloud-api://${input.config.phone_number_id}`,
     whatsapp_cloud_api_config_id: input.config.id,
     whatsapp_cloud_api_referral: input.referral,

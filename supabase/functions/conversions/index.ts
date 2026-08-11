@@ -3090,7 +3090,10 @@ async function handleContact(
     );
   }
 
-  const shouldSendContactCapi = effectiveConfig.send_contact_capi;
+  const isWhatsappCloudApiContact =
+    normalizedSourcePlatform(row.source_platform) === "whatsapp_cloud_api";
+  const shouldSendContactCapi = effectiveConfig.send_contact_capi &&
+    !isWhatsappCloudApiContact;
 
   if (shouldSendContactCapi) {
     const { data: fresh } = await db.from("conversions").select("*").eq(
@@ -3111,7 +3114,15 @@ async function handleContact(
       testEventCode || undefined,
     );
   } else {
-    const skippedMsg = "CONTACT CAPI OMITIDO CONFIG DESACTIVADA";
+    const skippedMsg = isWhatsappCloudApiContact
+      ? "CONTACT CAPI OMITIDO WHATSAPP CLOUD API"
+      : "CONTACT CAPI OMITIDO CONFIG DESACTIVADA";
+    const skippedStatus = isWhatsappCloudApiContact
+      ? "skipped_whatsapp_cloud_api_contact"
+      : "skipped_contact_capi_disabled";
+    const skippedLogMessage = isWhatsappCloudApiContact
+      ? "Contact CAPI omitido por WhatsApp Cloud API"
+      : "Contact CAPI omitido por config del pixel";
     const { data: current } = await db
       .from("conversions")
       .select("observaciones")
@@ -3120,7 +3131,7 @@ async function handleContact(
     await db
       .from("conversions")
       .update({
-        contact_status_capi: "skipped_contact_capi_disabled",
+        contact_status_capi: skippedStatus,
         contact_capi_retryable: false,
         observaciones: appendObservation(
           current?.observaciones ?? "",
@@ -3133,10 +3144,11 @@ async function handleContact(
       landing.user_id,
       "handleContact",
       "INFO",
-      "Contact CAPI omitido por config del pixel",
+      skippedLogMessage,
       JSON.stringify({
         contact_event_id: contactEventId,
         pixel_id: effectiveConfig.pixel_id,
+        source_platform: row.source_platform,
       }),
       rowId,
       undefined,
