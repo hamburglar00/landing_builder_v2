@@ -42,7 +42,7 @@ const PHONE_KIND_LABELS: Record<PhoneKind, string> = {
 };
 const ASSIGNMENT_ROLE_OPTIONS: AssignmentRole[] = ["acquisition", "follow_up"];
 const ASSIGNMENT_ROLE_LABELS: Record<AssignmentRole, string> = {
-  acquisition: "Captacion",
+  acquisition: "WhatsApp publicitario",
   follow_up: "WhatsApp de venta",
 };
 
@@ -639,7 +639,7 @@ export function TelefonosPageContent({
     ) {
       setPlanLimitModal({
         open: true,
-        message: `No se puede marcar como Captacion porque alcanzaste el limite de tu plan (${maxPhonesAllowed} telefonos activos de captacion).`,
+        message: `No se puede marcar como WhatsApp publicitario porque alcanzaste el limite de tu plan (${maxPhonesAllowed} telefonos publicitarios activos).`,
       });
       return;
     }
@@ -920,10 +920,10 @@ export function TelefonosPageContent({
                   <span className="inline-flex items-center gap-1.5 whitespace-nowrap text-xs text-zinc-500 lg:justify-end">
                     <span
                       className={`h-[9px] w-[9px] rounded-full ${activePhonesCount > 0 ? "bg-emerald-400/80" : "bg-red-400/80"}`}
-                      aria-label={activePhonesCount > 0 ? "Tiene telefonos de captacion activos" : "No tiene telefonos de captacion activos"}
-                      title={activePhonesCount > 0 ? "Tiene telefonos de captacion activos" : "No tiene telefonos de captacion activos"}
+                      aria-label={activePhonesCount > 0 ? "Tiene WhatsApp publicitarios activos" : "No tiene WhatsApp publicitarios activos"}
+                      title={activePhonesCount > 0 ? "Tiene WhatsApp publicitarios activos" : "No tiene WhatsApp publicitarios activos"}
                     />
-                    captacion: {activePhonesCount}
+                    publicitarios: {activePhonesCount}
                   </span>
                   <div className="whitespace-nowrap text-xs text-zinc-500 lg:text-right">
                     Contador: {totalUsage}
@@ -1117,7 +1117,7 @@ export function TelefonosPageContent({
                                         }`}
                                         title={
                                           p.status === "active"
-                                            ? "Activo: este telefono puede recibir seguimiento. Si el uso es Captacion, tambien puede ser asignado por publicidad."
+                                            ? "Activo: este telefono puede recibir seguimiento. Si el uso es WhatsApp publicitario, tambien puede ser asignado por publicidad."
                                             : "Inactivo: este telefono queda registrado pero no se usa para asignaciones."
                                         }
                                         aria-pressed={p.status === "active"}
@@ -1160,7 +1160,7 @@ export function TelefonosPageContent({
                                     title={
                                       assignmentRole === "follow_up"
                                         ? "WhatsApp de venta: queda activo para seguimiento, pero no se asigna en publicidad."
-                                        : "Captacion: puede ser elegido por landings, Chatrace y WhatsApp Cloud API."
+                                        : "WhatsApp publicitario: puede ser elegido por landings, Chatrace y WhatsApp Cloud API."
                                     }
                                   >
                                     {ASSIGNMENT_ROLE_OPTIONS.map((role) => (
