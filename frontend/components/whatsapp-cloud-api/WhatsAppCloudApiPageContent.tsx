@@ -36,6 +36,15 @@ const PHONE_KIND_OPTIONS: Array<{ value: PhoneKind; label: string }> = [
   { value: "mkt", label: "Mkt" },
 ];
 
+const inputClass =
+  "h-10 w-full rounded-xl border border-[var(--color-border)] bg-[var(--color-bg-2)] px-3 text-sm text-[var(--color-text-strong)] outline-none placeholder:text-[var(--color-text-disabled)]";
+const textareaClass =
+  "w-full rounded-xl border border-[var(--color-border)] bg-[var(--color-bg-2)] px-3 py-2.5 text-sm leading-5 text-[var(--color-text-strong)] outline-none placeholder:text-[var(--color-text-disabled)]";
+const compactInputClass =
+  "h-8 rounded-lg border border-[var(--color-border)] bg-[var(--color-bg-2)] px-2 text-xs text-[var(--color-text-strong)] outline-none disabled:opacity-50";
+const compactSelectClass =
+  "h-8 rounded-lg border border-[var(--color-border)] bg-[var(--color-bg-2)] px-2 text-xs text-[var(--color-text-strong)] outline-none disabled:opacity-50";
+
 type ClientOption = {
   id: string;
   nombre: string | null;
@@ -83,10 +92,12 @@ function Toggle({
   checked,
   onChange,
   label,
+  description,
 }: {
   checked: boolean;
   onChange: (next: boolean) => void;
   label: string;
+  description?: string;
 }) {
   return (
     <button
@@ -94,23 +105,135 @@ function Toggle({
       role="switch"
       aria-checked={checked}
       onClick={() => onChange(!checked)}
-      className="inline-flex items-center gap-2 text-xs text-[var(--color-text)]"
+      className="flex min-w-0 items-center justify-between gap-3 rounded-xl border border-[var(--color-border-subtle)] bg-[rgba(255,255,255,0.025)] px-3 py-2 text-left transition hover:border-[var(--color-border-strong)] hover:bg-[rgba(255,255,255,0.045)]"
     >
+      <span className="min-w-0">
+        <span className="block text-xs font-medium text-[var(--color-text)]">{label}</span>
+        {description ? (
+          <span className="mt-0.5 block text-[11px] leading-4 text-[var(--color-text-muted)]">
+            {description}
+          </span>
+        ) : null}
+      </span>
       <span
-        className={`relative h-5 w-9 rounded-full border transition ${
+        className={`relative h-6 w-11 shrink-0 rounded-full border transition ${
           checked
-            ? "border-emerald-500 bg-emerald-500/25"
+            ? "border-[rgba(52,211,153,0.55)] bg-[rgba(52,211,153,0.25)]"
             : "border-[var(--color-border)] bg-[var(--color-bg-2)]"
         }`}
       >
         <span
-          className={`absolute top-1/2 h-3.5 w-3.5 -translate-y-1/2 rounded-full bg-[var(--color-text-strong)] transition ${
+          className={`absolute top-1/2 h-5 w-5 -translate-y-1/2 rounded-full bg-[var(--color-text-strong)] shadow-sm transition ${
             checked ? "left-5" : "left-0.5"
           }`}
         />
       </span>
-      <span>{label}</span>
     </button>
+  );
+}
+
+function SectionTitle({
+  eyebrow,
+  title,
+  description,
+  action,
+}: {
+  eyebrow?: string;
+  title: string;
+  description?: string;
+  action?: React.ReactNode;
+}) {
+  return (
+    <div className="flex flex-wrap items-start justify-between gap-3 border-b border-[var(--color-border-subtle)] pb-3">
+      <div className="min-w-0">
+        {eyebrow ? (
+          <p className="text-[10px] font-semibold uppercase tracking-[0.12em] text-[var(--color-primary)]">
+            {eyebrow}
+          </p>
+        ) : null}
+        <h2 className="mt-1 text-sm font-semibold text-[var(--color-text-strong)]">{title}</h2>
+        {description ? (
+          <p className="mt-1 max-w-3xl text-xs leading-5 text-[var(--color-text-muted)]">
+            {description}
+          </p>
+        ) : null}
+      </div>
+      {action ? <div className="shrink-0">{action}</div> : null}
+    </div>
+  );
+}
+
+function StatusBadge({
+  tone = "neutral",
+  children,
+}: {
+  tone?: "neutral" | "success" | "warning" | "danger" | "info";
+  children: React.ReactNode;
+}) {
+  const toneClass =
+    tone === "success"
+      ? "border-[rgba(52,211,153,0.28)] bg-[rgba(52,211,153,0.08)] text-[var(--color-success)]"
+      : tone === "warning"
+        ? "border-[rgba(251,191,36,0.28)] bg-[rgba(251,191,36,0.08)] text-[var(--color-warning)]"
+        : tone === "danger"
+          ? "border-[rgba(251,113,133,0.28)] bg-[rgba(251,113,133,0.08)] text-[var(--color-danger)]"
+          : tone === "info"
+            ? "border-[rgba(56,189,248,0.28)] bg-[rgba(56,189,248,0.08)] text-[var(--color-info)]"
+            : "";
+  return <span className={`ui-badge ${toneClass}`}>{children}</span>;
+}
+
+function SegmentButton({
+  active,
+  onClick,
+  children,
+}: {
+  active: boolean;
+  onClick: () => void;
+  children: React.ReactNode;
+}) {
+  return (
+    <button
+      type="button"
+      onClick={onClick}
+      className={`min-h-8 rounded-lg px-3 text-xs font-semibold transition ${
+        active
+          ? "bg-[var(--color-text-strong)] text-[var(--color-bg-0)]"
+          : "text-[var(--color-text-muted)] hover:bg-[rgba(255,255,255,0.05)] hover:text-[var(--color-text)]"
+      }`}
+    >
+      {children}
+    </button>
+  );
+}
+
+function MetricTile({
+  label,
+  value,
+  tone = "neutral",
+}: {
+  label: string;
+  value: string;
+  tone?: "neutral" | "success" | "warning" | "info";
+}) {
+  const dotClass =
+    tone === "success"
+      ? "bg-[var(--color-success)]"
+      : tone === "warning"
+        ? "bg-[var(--color-warning)]"
+        : tone === "info"
+          ? "bg-[var(--color-info)]"
+          : "bg-[var(--color-text-disabled)]";
+  return (
+    <div className="rounded-xl border border-[var(--color-border-subtle)] bg-[rgba(255,255,255,0.025)] p-3">
+      <div className="flex items-center gap-2">
+        <span className={`h-1.5 w-1.5 rounded-full ${dotClass}`} />
+        <p className="text-[10px] font-semibold uppercase tracking-[0.1em] text-[var(--color-text-muted)]">
+          {label}
+        </p>
+      </div>
+      <p className="mt-2 truncate text-sm font-semibold text-[var(--color-text-strong)]">{value}</p>
+    </div>
   );
 }
 
@@ -237,6 +360,12 @@ export default function WhatsAppCloudApiPageContent({
     await loadTarget(uid, currentUserId);
   };
 
+  const copyText = async (value: string, label: string) => {
+    if (!value) return;
+    await navigator.clipboard.writeText(value);
+    setMessage(`${label} copiado.`);
+  };
+
   const handleSave = async () => {
     if (!targetUserId) return;
     setSaving(true);
@@ -319,37 +448,44 @@ export default function WhatsAppCloudApiPageContent({
         title="WhatsApp Cloud API"
         description="Recibi mensajes Click-to-WhatsApp, captura referral/ctwa_clid y deriva al asesor asignado."
         actions={
-          <button
-            type="button"
-            disabled={saving}
-            onClick={() => void handleSave()}
-            className="ui-button ui-button-primary"
-          >
-            {saving ? "Guardando..." : "Guardar"}
-          </button>
+          <>
+            <StatusBadge tone={active ? "success" : "warning"}>
+              {active ? "Activo" : "Inactivo"}
+            </StatusBadge>
+            <button
+              type="button"
+              disabled={saving}
+              onClick={() => void handleSave()}
+              className="ui-button ui-button-primary"
+            >
+              {saving ? "Guardando..." : "Guardar"}
+            </button>
+          </>
         }
       />
 
       {mode === "admin" && clients.length > 0 ? (
         <SurfaceCard className="p-4">
-          <label className="text-xs font-medium text-[var(--color-text-muted)]">
-            Cliente
-          </label>
-          <select
-            value={targetUserId ?? ""}
-            onChange={(event) => {
-              const next = event.target.value;
-              setTargetUserId(next);
-              void reloadSelected(next);
-            }}
-            className="mt-2 w-full rounded-lg border border-[var(--color-border)] bg-[var(--color-bg-2)] px-3 py-2 text-sm text-[var(--color-text)]"
-          >
-            {clients.map((client) => (
-              <option key={client.id} value={client.id}>
-                {client.nombre || client.email || client.id}
-              </option>
-            ))}
-          </select>
+          <div className="flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
+            <Field label="Cliente">
+              <select
+                value={targetUserId ?? ""}
+                onChange={(event) => {
+                  const next = event.target.value;
+                  setTargetUserId(next);
+                  void reloadSelected(next);
+                }}
+                className={`${inputClass} sm:min-w-80`}
+              >
+                {clients.map((client) => (
+                  <option key={client.id} value={client.id}>
+                    {client.nombre || client.email || client.id}
+                  </option>
+                ))}
+              </select>
+            </Field>
+            <StatusBadge tone="info">{workspaceCurrency}</StatusBadge>
+          </div>
         </SurfaceCard>
       ) : null}
 
@@ -364,239 +500,255 @@ export default function WhatsAppCloudApiPageContent({
         </p>
       ) : null}
 
-      <div className="grid gap-4 lg:grid-cols-[minmax(0,1fr)_minmax(320px,420px)]">
+      <div className="grid gap-4 xl:grid-cols-[minmax(0,1fr)_22rem]">
         <div className="space-y-4">
-          <SurfaceCard className="space-y-4 p-4">
-            <div className="flex flex-wrap items-center justify-between gap-3">
-              <div>
-                <h2 className="text-sm font-semibold text-[var(--color-text-strong)]">Identificacion</h2>
-                <p className="mt-1 text-xs text-[var(--color-text-muted)]">
-                  Datos del numero conectado a la app oficial de Meta.
-                </p>
-              </div>
-              <Toggle checked={active} onChange={setActive} label={active ? "Activo" : "Inactivo"} />
-            </div>
-
-            <div className="grid gap-3 sm:grid-cols-2">
-              <Field label="Nombre interno">
-                <input value={name} onChange={(e) => setName(cleanSlug(e.target.value))} className="ui-input" />
-              </Field>
-              <Field label="Telefono visible">
-                <input value={displayPhone} onChange={(e) => setDisplayPhone(e.target.value)} className="ui-input" />
-              </Field>
-              <Field label="Phone Number ID">
-                <input value={phoneNumberId} onChange={(e) => setPhoneNumberId(e.target.value.replace(/\D/g, ""))} className="ui-input" />
-              </Field>
-              <Field label="WhatsApp Business Account ID">
-                <input value={wabaId} onChange={(e) => setWabaId(e.target.value.replace(/\D/g, ""))} className="ui-input" />
-              </Field>
-              <Field label="Graph API version">
-                <input value={apiVersion} onChange={(e) => setApiVersion(e.target.value)} className="ui-input" />
-              </Field>
-              <Field label="Verify token">
-                <input value={verifyToken} onChange={(e) => setVerifyToken(e.target.value.trim())} className="ui-input font-mono text-xs" />
-              </Field>
-              <Field label="Meta access token">
-                <input value={accessToken} onChange={(e) => setAccessToken(e.target.value)} className="ui-input font-mono text-xs" type="password" />
-              </Field>
-              <Field label="Webhook URL">
-                <input value={webhookUrl} readOnly className="ui-input font-mono text-xs" />
-              </Field>
-            </div>
-          </SurfaceCard>
-
-          <SurfaceCard className="space-y-4 p-4">
-            <h2 className="text-sm font-semibold text-[var(--color-text-strong)]">Tracking</h2>
-            <div className="grid gap-3 sm:grid-cols-2">
-              <Field label="Pixel ID">
-                <input value={pixelId} onChange={(e) => setPixelId(e.target.value.replace(/\D/g, ""))} className="ui-input" />
-              </Field>
-              <Field label="Tag promo_code">
-                <input value={landingTag} onChange={(e) => setLandingTag(cleanTag(e.target.value))} className="ui-input" />
-              </Field>
-            </div>
-            <Toggle
-              checked={sendContactCapi}
-              onChange={setSendContactCapi}
-              label="Enviar Contact CAPI a Meta"
-            />
-          </SurfaceCard>
-
-          <SurfaceCard className="space-y-4 p-4">
-            <h2 className="text-sm font-semibold text-[var(--color-text-strong)]">Mensaje automatico</h2>
-            <Field label="Mensaje de derivacion">
-              <textarea
-                value={redirectTemplate}
-                onChange={(e) => setRedirectTemplate(e.target.value)}
-                rows={6}
-                className="ui-input min-h-36"
+          <SurfaceCard className="overflow-hidden">
+            <div className="space-y-4 p-4 sm:p-5">
+              <SectionTitle
+                eyebrow="Conexion Meta"
+                title="Identificacion"
+                description="Numero oficial, WABA y credenciales de la app conectada."
+                action={<Toggle checked={active} onChange={setActive} label={active ? "Integracion activa" : "Integracion inactiva"} />}
               />
-            </Field>
-            <Field label="Mensaje fallback sin telefonos">
-              <textarea
-                value={fallbackTemplate}
-                onChange={(e) => setFallbackTemplate(e.target.value)}
-                rows={3}
-                className="ui-input"
-              />
-            </Field>
-            <p className="text-xs text-[var(--color-text-muted)]">
-              Variables disponibles: {"{{name}}"}, {"{{phone}}"}, {"{{promo_code}}"}, {"{{wa_link}}"}.
-            </p>
-          </SurfaceCard>
 
-          <SurfaceCard className="space-y-4 p-4">
-            <div className="flex flex-wrap items-center justify-between gap-3">
-              <div>
-                <h2 className="text-sm font-semibold text-[var(--color-text-strong)]">Asignacion de gerencias</h2>
-                <p className="mt-1 text-xs text-[var(--color-text-muted)]">
-                  Usa la misma logica de reparto que una landing.
-                </p>
-              </div>
-              <div className="inline-flex rounded-lg border border-[var(--color-border)] bg-[var(--color-bg-2)] text-[11px]">
-                <button
-                  type="button"
-                  onClick={() => setSelectionMode("weighted_random")}
-                  className={`rounded-l-lg border-r border-[var(--color-border)] px-2 py-1 ${selectionMode === "weighted_random" ? "bg-zinc-100 text-zinc-950" : "text-zinc-300"}`}
-                >
-                  Peso
-                </button>
-                <button
-                  type="button"
-                  onClick={() => setSelectionMode("fair")}
-                  className={`rounded-r-lg px-2 py-1 ${selectionMode === "fair" ? "bg-zinc-100 text-zinc-950" : "text-zinc-300"}`}
-                >
-                  Equitativa
-                </button>
+              <div className="grid gap-3 md:grid-cols-2">
+                <Field label="Nombre interno">
+                  <input value={name} onChange={(e) => setName(cleanSlug(e.target.value))} className={inputClass} />
+                </Field>
+                <Field label="Telefono visible">
+                  <input value={displayPhone} onChange={(e) => setDisplayPhone(e.target.value)} className={inputClass} placeholder="549..." />
+                </Field>
+                <Field label="Phone Number ID">
+                  <input value={phoneNumberId} onChange={(e) => setPhoneNumberId(e.target.value.replace(/\D/g, ""))} className={inputClass} inputMode="numeric" />
+                </Field>
+                <Field label="WhatsApp Business Account ID">
+                  <input value={wabaId} onChange={(e) => setWabaId(e.target.value.replace(/\D/g, ""))} className={inputClass} inputMode="numeric" />
+                </Field>
+                <Field label="Graph API version">
+                  <input value={apiVersion} onChange={(e) => setApiVersion(e.target.value)} className={inputClass} />
+                </Field>
+                <Field label="Verify token">
+                  <div className="flex gap-2">
+                    <input value={verifyToken} onChange={(e) => setVerifyToken(e.target.value.trim())} className={`${inputClass} font-mono text-xs`} />
+                    <button type="button" onClick={() => void copyText(verifyToken, "Verify token")} className="ui-button ui-button-secondary shrink-0">
+                      Copiar
+                    </button>
+                  </div>
+                </Field>
+                <Field label="Meta access token">
+                  <input value={accessToken} onChange={(e) => setAccessToken(e.target.value)} className={`${inputClass} font-mono text-xs`} type="password" autoComplete="off" />
+                </Field>
+                <Field label="Webhook URL">
+                  <div className="flex gap-2">
+                    <input value={webhookUrl} readOnly className={`${inputClass} font-mono text-xs`} />
+                    <button type="button" onClick={() => void copyText(webhookUrl, "Webhook URL")} className="ui-button ui-button-secondary shrink-0">
+                      Copiar
+                    </button>
+                  </div>
+                </Field>
               </div>
             </div>
+          </SurfaceCard>
 
-            {selectionMode === "fair" ? (
-              <div className="inline-flex rounded-lg border border-[var(--color-border)] bg-[var(--color-bg-2)] text-[11px]">
-                <button
-                  type="button"
-                  onClick={() => setFairCriterion("usage_count")}
-                  className={`rounded-l-lg border-r border-[var(--color-border)] px-2 py-1 ${fairCriterion === "usage_count" ? "bg-zinc-100 text-zinc-950" : "text-zinc-300"}`}
-                >
-                  Contador
-                </button>
-                <button
-                  type="button"
-                  onClick={() => setFairCriterion("messages_received")}
-                  className={`rounded-r-lg px-2 py-1 ${fairCriterion === "messages_received" ? "bg-zinc-100 text-zinc-950" : "text-zinc-300"}`}
-                >
-                  Mensajes
-                </button>
+          <SurfaceCard className="overflow-hidden">
+            <div className="space-y-4 p-4 sm:p-5">
+              <SectionTitle
+                eyebrow="Tracking"
+                title="Pixel y atribucion"
+                description="Origen, promo_code y comportamiento del primer Contact interno."
+              />
+              <div className="grid gap-3 md:grid-cols-2">
+                <Field label="Pixel ID">
+                  <input value={pixelId} onChange={(e) => setPixelId(e.target.value.replace(/\D/g, ""))} className={inputClass} inputMode="numeric" />
+                </Field>
+                <Field label="Tag promo_code">
+                  <input value={landingTag} onChange={(e) => setLandingTag(cleanTag(e.target.value))} className={inputClass} />
+                </Field>
               </div>
-            ) : null}
+              <Toggle
+                checked={sendContactCapi}
+                onChange={setSendContactCapi}
+                label="Enviar Contact CAPI a Meta"
+                description="Por defecto queda apagado; el Contact interno se crea igual."
+              />
+            </div>
+          </SurfaceCard>
 
-            <div className="overflow-x-auto rounded-lg border border-[var(--color-border)]">
-              <table className="min-w-[760px] w-full text-left text-xs">
-                <thead className="bg-[var(--color-bg-2)] text-[var(--color-text-muted)]">
-                  <tr>
-                    <th className="px-3 py-2">Asignar</th>
-                    <th className="px-3 py-2">Gerencia</th>
-                    {selectionMode === "weighted_random" ? <th className="px-3 py-2">Peso</th> : null}
-                    <th className="px-3 py-2">Modo telefono</th>
-                    <th className="px-3 py-2">Tipo</th>
-                  </tr>
-                </thead>
-                <tbody className="divide-y divide-[var(--color-border)]">
-                  {gerencias.map((g) => {
-                    const assignment = assignments.find((row) => row.gerencia_id === g.id);
-                    const checked = Boolean(assignment);
-                    return (
-                      <tr key={g.id}>
-                        <td className="px-3 py-2">
-                          <input type="checkbox" checked={checked} onChange={() => toggleAssignment(g)} />
-                        </td>
-                        <td className="px-3 py-2 text-[var(--color-text)]">
-                          {g.nombre} <span className="text-[var(--color-text-muted)]">(ID {g.gerencia_id ?? g.id})</span>
-                        </td>
-                        {selectionMode === "weighted_random" ? (
-                          <td className="px-3 py-2">
-                            <input
-                              type="number"
-                              min={0}
-                              disabled={!checked}
-                              value={assignment?.weight ?? 0}
-                              onChange={(e) => {
-                                const next = Math.max(0, Number(e.target.value) || 0);
-                                setAssignments((prev) => prev.map((row) => row.gerencia_id === g.id ? { ...row, weight: next } : row));
-                              }}
-                              className="w-16 rounded border border-[var(--color-border)] bg-[var(--color-bg-2)] px-2 py-1 text-[var(--color-text)] disabled:opacity-50"
-                            />
+          <SurfaceCard className="overflow-hidden">
+            <div className="space-y-4 p-4 sm:p-5">
+              <SectionTitle
+                eyebrow="Respuesta"
+                title="Mensaje automatico"
+                description="Texto que recibe el usuario cuando escriba al numero Cloud API."
+              />
+              <Field label="Mensaje de derivacion">
+                <textarea
+                  value={redirectTemplate}
+                  onChange={(e) => setRedirectTemplate(e.target.value)}
+                  rows={6}
+                  className={`${textareaClass} min-h-36`}
+                />
+              </Field>
+              <Field label="Mensaje fallback sin telefonos">
+                <textarea
+                  value={fallbackTemplate}
+                  onChange={(e) => setFallbackTemplate(e.target.value)}
+                  rows={3}
+                  className={textareaClass}
+                />
+              </Field>
+              <div className="flex flex-wrap gap-2">
+                {["{{name}}", "{{phone}}", "{{promo_code}}", "{{wa_link}}"].map((token) => (
+                  <span key={token} className="ui-badge font-mono">{token}</span>
+                ))}
+              </div>
+            </div>
+          </SurfaceCard>
+
+          <SurfaceCard className="overflow-hidden">
+            <div className="space-y-4 p-4 sm:p-5">
+              <SectionTitle
+                eyebrow="Distribucion"
+                title="Asignacion de gerencias"
+                description="Misma matriz operativa que las landings, aplicada al numero Cloud API."
+                action={
+                  <div className="flex rounded-xl border border-[var(--color-border)] bg-[var(--color-bg-2)] p-1">
+                    <SegmentButton active={selectionMode === "weighted_random"} onClick={() => setSelectionMode("weighted_random")}>
+                      Peso
+                    </SegmentButton>
+                    <SegmentButton active={selectionMode === "fair"} onClick={() => setSelectionMode("fair")}>
+                      Equitativa
+                    </SegmentButton>
+                  </div>
+                }
+              />
+
+              {selectionMode === "fair" ? (
+                <div className="flex w-fit rounded-xl border border-[var(--color-border)] bg-[var(--color-bg-2)] p-1">
+                  <SegmentButton active={fairCriterion === "usage_count"} onClick={() => setFairCriterion("usage_count")}>
+                    Contador
+                  </SegmentButton>
+                  <SegmentButton active={fairCriterion === "messages_received"} onClick={() => setFairCriterion("messages_received")}>
+                    Mensajes
+                  </SegmentButton>
+                </div>
+              ) : null}
+
+              <div className="overflow-x-auto rounded-xl border border-[var(--color-border)]">
+                <table className="min-w-[820px] w-full text-left text-xs">
+                  <thead className="bg-[rgba(255,255,255,0.035)] text-[var(--color-text-muted)]">
+                    <tr>
+                      <th className="px-3 py-2.5 font-medium">Asignar</th>
+                      <th className="px-3 py-2.5 font-medium">Gerencia</th>
+                      {selectionMode === "weighted_random" ? <th className="px-3 py-2.5 font-medium">Peso</th> : null}
+                      <th className="px-3 py-2.5 font-medium">Modo telefono</th>
+                      <th className="px-3 py-2.5 font-medium">Tipo</th>
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y divide-[var(--color-border-subtle)]">
+                    {gerencias.map((g) => {
+                      const assignment = assignments.find((row) => row.gerencia_id === g.id);
+                      const checked = Boolean(assignment);
+                      return (
+                        <tr key={g.id} className={checked ? "bg-[rgba(163,230,53,0.035)]" : "bg-transparent"}>
+                          <td className="px-3 py-2.5">
+                            <input type="checkbox" checked={checked} onChange={() => toggleAssignment(g)} className="h-4 w-4 accent-[var(--color-primary)]" />
                           </td>
-                        ) : null}
-                        <td className="px-3 py-2">
-                          <select
-                            disabled={!checked}
-                            value={assignment?.phoneMode ?? "random"}
-                            onChange={(e) => setAssignments((prev) => prev.map((row) => row.gerencia_id === g.id ? { ...row, phoneMode: e.target.value as "random" | "fair" } : row))}
-                            className="rounded border border-[var(--color-border)] bg-[var(--color-bg-2)] px-2 py-1 text-[var(--color-text)] disabled:opacity-50"
-                          >
-                            <option value="random">Aleatorio</option>
-                            <option value="fair">Equitativo</option>
-                          </select>
-                        </td>
-                        <td className="px-3 py-2">
-                          <select
-                            disabled={!checked}
-                            value={assignment?.phoneKind ?? "carga"}
-                            onChange={(e) => setAssignments((prev) => prev.map((row) => row.gerencia_id === g.id ? { ...row, phoneKind: e.target.value as PhoneKind } : row))}
-                            className="rounded border border-[var(--color-border)] bg-[var(--color-bg-2)] px-2 py-1 text-[var(--color-text)] disabled:opacity-50"
-                          >
-                            {PHONE_KIND_OPTIONS.map((option) => (
-                              <option key={option.value} value={option.value}>{option.label}</option>
-                            ))}
-                          </select>
+                          <td className="px-3 py-2.5 text-[var(--color-text)]">
+                            <div className="font-medium text-[var(--color-text-strong)]">{g.nombre}</div>
+                            <div className="mt-0.5 text-[11px] text-[var(--color-text-muted)]">ID {g.gerencia_id ?? g.id}</div>
+                          </td>
+                          {selectionMode === "weighted_random" ? (
+                            <td className="px-3 py-2.5">
+                              <input
+                                type="number"
+                                min={0}
+                                disabled={!checked}
+                                value={assignment?.weight ?? 0}
+                                onChange={(e) => {
+                                  const next = Math.max(0, Number(e.target.value) || 0);
+                                  setAssignments((prev) => prev.map((row) => row.gerencia_id === g.id ? { ...row, weight: next } : row));
+                                }}
+                                className={`${compactInputClass} w-20`}
+                              />
+                            </td>
+                          ) : null}
+                          <td className="px-3 py-2.5">
+                            <select
+                              disabled={!checked}
+                              value={assignment?.phoneMode ?? "random"}
+                              onChange={(e) => setAssignments((prev) => prev.map((row) => row.gerencia_id === g.id ? { ...row, phoneMode: e.target.value as "random" | "fair" } : row))}
+                              className={compactSelectClass}
+                            >
+                              <option value="random">Aleatorio</option>
+                              <option value="fair">Equitativo</option>
+                            </select>
+                          </td>
+                          <td className="px-3 py-2.5">
+                            <select
+                              disabled={!checked}
+                              value={assignment?.phoneKind ?? "carga"}
+                              onChange={(e) => setAssignments((prev) => prev.map((row) => row.gerencia_id === g.id ? { ...row, phoneKind: e.target.value as PhoneKind } : row))}
+                              className={compactSelectClass}
+                            >
+                              {PHONE_KIND_OPTIONS.map((option) => (
+                                <option key={option.value} value={option.value}>{option.label}</option>
+                              ))}
+                            </select>
+                          </td>
+                        </tr>
+                      );
+                    })}
+                    {gerencias.length === 0 ? (
+                      <tr>
+                        <td colSpan={selectionMode === "weighted_random" ? 5 : 4} className="px-3 py-8 text-center text-[var(--color-text-muted)]">
+                          No hay gerencias para este workspace.
                         </td>
                       </tr>
-                    );
-                  })}
-                  {gerencias.length === 0 ? (
-                    <tr>
-                      <td colSpan={5} className="px-3 py-5 text-center text-[var(--color-text-muted)]">
-                        No hay gerencias para este workspace.
-                      </td>
-                    </tr>
-                  ) : null}
-                </tbody>
-              </table>
+                    ) : null}
+                  </tbody>
+                </table>
+              </div>
             </div>
           </SurfaceCard>
         </div>
 
-        <aside className="space-y-4">
+        <aside className="space-y-4 xl:sticky xl:top-24 xl:self-start">
           <SurfaceCard className="space-y-3 p-4">
-            <h2 className="text-sm font-semibold text-[var(--color-text-strong)]">Estado</h2>
-            <StatusRow label="Configuracion" value={config ? "Guardada" : "Sin guardar"} />
-            <StatusRow label="Webhook" value={webhookUrl ? "URL lista" : "Sin URL"} />
-            <StatusRow label="Gerencias" value={`${assignments.length} asignadas`} />
-            <StatusRow label="Contact CAPI" value={sendContactCapi ? "Activo" : "Apagado"} />
+            <SectionTitle title="Estado" />
+            <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-1">
+              <MetricTile label="Configuracion" value={config ? "Guardada" : "Sin guardar"} tone={config ? "success" : "warning"} />
+              <MetricTile label="Webhook" value={webhookUrl ? "URL lista" : "Sin URL"} tone={webhookUrl ? "info" : "warning"} />
+              <MetricTile label="Gerencias" value={`${assignments.length} asignadas`} tone={assignments.length > 0 ? "success" : "warning"} />
+              <MetricTile label="Contact CAPI" value={sendContactCapi ? "Activo" : "Apagado"} tone={sendContactCapi ? "success" : "neutral"} />
+            </div>
           </SurfaceCard>
 
           <SurfaceCard className="space-y-3 p-4">
-            <h2 className="text-sm font-semibold text-[var(--color-text-strong)]">Ultimos eventos</h2>
+            <SectionTitle title="Ultimos eventos" />
             {recentEvents.length > 0 ? (
               <div className="space-y-2">
                 {recentEvents.map((event) => (
-                  <div key={event.id} className="rounded-lg border border-[var(--color-border)] bg-[var(--color-bg-2)] p-2">
+                  <div key={event.id} className="rounded-xl border border-[var(--color-border-subtle)] bg-[rgba(255,255,255,0.025)] p-3">
                     <div className="flex items-center justify-between gap-2 text-xs">
-                      <span className="font-medium text-[var(--color-text)]">{event.event_type}</span>
-                      <span className="text-[var(--color-text-muted)]">{event.status}</span>
+                      <span className="font-medium capitalize text-[var(--color-text-strong)]">{event.event_type}</span>
+                      <StatusBadge tone={event.status === "failed" ? "danger" : event.status === "processed" ? "success" : "neutral"}>
+                        {event.status}
+                      </StatusBadge>
                     </div>
-                    <p className="mt-1 truncate font-mono text-[10px] text-[var(--color-text-muted)]">
+                    <p className="mt-2 truncate font-mono text-[10px] text-[var(--color-text-muted)]">
                       {event.meta_message_id || event.id}
                     </p>
                     {event.last_error ? (
-                      <p className="mt-1 text-[10px] text-rose-300">{event.last_error}</p>
+                      <p className="mt-2 line-clamp-3 text-[11px] leading-4 text-[var(--color-danger)]">{event.last_error}</p>
                     ) : null}
                   </div>
                 ))}
               </div>
             ) : (
-              <p className="text-xs text-[var(--color-text-muted)]">Todavia no hay webhooks recibidos.</p>
+              <p className="rounded-xl border border-dashed border-[var(--color-border-strong)] px-3 py-5 text-center text-xs text-[var(--color-text-muted)]">
+                Todavia no hay webhooks recibidos.
+              </p>
             )}
           </SurfaceCard>
         </aside>
@@ -617,14 +769,5 @@ function Field({
       <span className="text-xs font-medium text-[var(--color-text-muted)]">{label}</span>
       {children}
     </label>
-  );
-}
-
-function StatusRow({ label, value }: { label: string; value: string }) {
-  return (
-    <div className="flex items-center justify-between gap-3 border-b border-[var(--color-border-subtle)] pb-2 text-xs last:border-0 last:pb-0">
-      <span className="text-[var(--color-text-muted)]">{label}</span>
-      <span className="font-medium text-[var(--color-text)]">{value}</span>
-    </div>
   );
 }
