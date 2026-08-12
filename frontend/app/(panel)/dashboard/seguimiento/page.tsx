@@ -100,19 +100,49 @@ export default function DashboardSeguimientoPage() {
   );
 
   const handleDeletePhone = useCallback(
-    async (phone: string) => {
+    async (phone: string, gerenciaId: number | null = null) => {
       if (!userId) return;
       const cleanPhone = String(phone || "").replace(/\D/g, "");
       if (!cleanPhone) return;
+      const targetGerenciaId = Number.isFinite(Number(gerenciaId)) && Number(gerenciaId) > 0
+        ? Number(gerenciaId)
+        : null;
+
+      const finitePositiveNumber = (value: unknown): number | null => {
+        const n = Number(value);
+        return Number.isFinite(n) && n > 0 ? n : null;
+      };
+
+      const resolveGerenciaId = (row: ConversionRow): number | null => {
+        const eventGerenciaId = String(row.purchase_event_id ?? "").trim()
+          ? finitePositiveNumber(row.purchase_gerencia_id)
+          : String(row.registration_event_id ?? "").trim()
+            ? finitePositiveNumber(row.registration_gerencia_id)
+            : String(row.lead_event_id ?? "").trim()
+              ? finitePositiveNumber(row.lead_gerencia_id)
+              : null;
+        if (eventGerenciaId) return eventGerenciaId;
+
+        const historicalId = finitePositiveNumber(row.assigned_gerencia_id);
+        if (historicalId) return historicalId;
+
+        const assignedDigits = String(row.telefono_asignado ?? "").replace(/\D/g, "");
+        if (!assignedDigits) return null;
+        return finitePositiveNumber(assignedPhoneToGerenciaId[assignedDigits]);
+      };
 
       const { data: ownRows, error: ownRowsError } = await supabase
         .from("conversions")
-        .select("id, phone")
+        .select("id, phone, purchase_event_id, purchase_gerencia_id, registration_event_id, registration_gerencia_id, lead_event_id, lead_gerencia_id, assigned_gerencia_id, telefono_asignado")
         .eq("user_id", userId);
       if (ownRowsError) throw ownRowsError;
 
       const idsToDelete = (ownRows ?? [])
-        .filter((r) => String(r.phone ?? "").replace(/\D/g, "") === cleanPhone)
+        .filter((r) => {
+          const rowPhone = String(r.phone ?? "").replace(/\D/g, "");
+          if (rowPhone !== cleanPhone) return false;
+          return resolveGerenciaId(r as ConversionRow) === targetGerenciaId;
+        })
         .map((r) => r.id)
         .filter(Boolean);
 
@@ -124,19 +154,26 @@ export default function DashboardSeguimientoPage() {
         .in("id", idsToDelete);
       if (delConvError) throw delConvError;
 
-      // Best effort: si falla por permisos/RLS no debe bloquear el borrado principal.
-      const { error: delAlertsError } = await supabase
-        .from("notification_contact_alerts")
-        .delete()
-        .eq("user_id", userId)
-        .eq("phone", cleanPhone);
-      if (delAlertsError) {
-        console.warn("No se pudo limpiar notification_contact_alerts:", delAlertsError.message);
+      const hasRemainingPhoneRows = (ownRows ?? []).some((r) => {
+        const rowPhone = String(r.phone ?? "").replace(/\D/g, "");
+        return rowPhone === cleanPhone && !idsToDelete.includes(r.id);
+      });
+
+      if (!hasRemainingPhoneRows) {
+        // Best effort: si falla por permisos/RLS no debe bloquear el borrado principal.
+        const { error: delAlertsError } = await supabase
+          .from("notification_contact_alerts")
+          .delete()
+          .eq("user_id", userId)
+          .eq("phone", cleanPhone);
+        if (delAlertsError) {
+          console.warn("No se pudo limpiar notification_contact_alerts:", delAlertsError.message);
+        }
       }
 
       await refreshTable();
     },
-    [userId, refreshTable],
+    [userId, assignedPhoneToGerenciaId, refreshTable],
   );
 
   useEffect(() => {

@@ -95,7 +95,7 @@ export default function TrackingBoard({
   refreshing?: boolean;
   rankingConfig?: TrackingRankingConfig | null;
   onRankingConfigChange?: (cfg: TrackingRankingConfig) => void;
-  onDeletePhone?: (phone: string) => Promise<void> | void;
+  onDeletePhone?: (phone: string, gerenciaId: number | null) => Promise<void> | void;
   gerenciaOptions?: GerenciaOption[];
   assignedPhoneToGerenciaId?: Record<string, number>;
   currency: ReportingCurrency;
@@ -121,7 +121,7 @@ export default function TrackingBoard({
   );
   const [search, setSearch] = useState("");
   const [page, setPage] = useState(1);
-  const [deletingPhone, setDeletingPhone] = useState<string | null>(null);
+  const [deletingRowId, setDeletingRowId] = useState<string | null>(null);
   const [deleteError, setDeleteError] = useState<string | null>(null);
   const [exportOpen, setExportOpen] = useState(false);
   const [copiedExport, setCopiedExport] = useState(false);
@@ -306,24 +306,24 @@ export default function TrackingBoard({
     setOpenConfig(false);
   };
 
-  const handleDelete = async (phone: string) => {
+  const handleDelete = async (row: TrackingRow) => {
     if (!onDeletePhone) return;
     const ok = await confirmAction({
       title: "Eliminar jugador",
-      description: `Se eliminarán ${phone} y su historial de seguimiento.`,
+      description: `Se eliminaran las conversiones de ${row.phone} para ${row.gerenciaLabel}.`,
       confirmLabel: "Eliminar jugador",
       danger: true,
     });
     if (!ok) return;
     try {
       setDeleteError(null);
-      setDeletingPhone(phone);
-      await onDeletePhone(phone);
+      setDeletingRowId(row.id);
+      await onDeletePhone(row.phone, row.gerenciaId);
     } catch (e) {
       const msg = e instanceof Error ? e.message : "No se pudo eliminar el jugador.";
       setDeleteError(msg);
     } finally {
-      setDeletingPhone(null);
+      setDeletingRowId(null);
     }
   };
 
@@ -469,11 +469,11 @@ export default function TrackingBoard({
                     <td className="px-2 py-1.5 whitespace-nowrap text-right">
                       <button
                         type="button"
-                        onClick={() => void handleDelete(r.phone)}
-                        disabled={deletingPhone === r.phone}
+                        onClick={() => void handleDelete(r)}
+                        disabled={deletingRowId === r.id}
                         className="rounded border border-red-900/70 bg-red-950/30 px-2 py-1 text-[11px] text-red-300 hover:bg-red-950/50 disabled:opacity-60"
                       >
-                        {deletingPhone === r.phone ? "Eliminando..." : "Eliminar"}
+                        {deletingRowId === r.id ? "Eliminando..." : "Eliminar"}
                       </button>
                     </td>
                   )}
