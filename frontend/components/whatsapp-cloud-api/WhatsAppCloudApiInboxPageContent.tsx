@@ -20,7 +20,7 @@ const TAG_LABELS: Record<WhatsappCloudApiInboxThread["tag"], string> = {
   nuevo: "Nuevo",
   lead: "Lead",
   cargo: "Cargo",
-  recompra: "Recompra",
+  recompra: "Recarga",
   premium: "Premium",
 };
 
@@ -201,6 +201,16 @@ function SearchIcon() {
   );
 }
 
+function FilterIcon() {
+  return (
+    <svg className="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.8} strokeLinecap="round" strokeLinejoin="round" aria-hidden>
+      <path d="M4 5h16" />
+      <path d="M7 12h10" />
+      <path d="M10 19h4" />
+    </svg>
+  );
+}
+
 function SendIcon() {
   return (
     <svg className="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.8} strokeLinecap="round" strokeLinejoin="round" aria-hidden>
@@ -246,6 +256,12 @@ function lastInboundMessageAt(messages: WhatsappCloudApiInboxMessage[]): Date | 
   return null;
 }
 
+function gerenciaFilterLabel(thread: WhatsappCloudApiInboxThread): string {
+  const label = String(thread.assigned_gerencia_label ?? "").trim();
+  if (label) return label;
+  return thread.assigned_gerencia_id ? `Gerencia ${thread.assigned_gerencia_id}` : "";
+}
+
 export default function WhatsAppCloudApiInboxPageContent({ mode }: Props) {
   const router = useRouter();
   const basePath = mode === "admin" ? "/admin/whatsapp-cloud-api" : "/dashboard/whatsapp-cloud-api";
@@ -253,6 +269,9 @@ export default function WhatsAppCloudApiInboxPageContent({ mode }: Props) {
   const [selectedId, setSelectedId] = useState<string>("");
   const [search, setSearch] = useState("");
   const [tagFilter, setTagFilter] = useState<"all" | WhatsappCloudApiInboxThread["tag"]>("all");
+  const [gerenciaFilter, setGerenciaFilter] = useState("");
+  const [draftGerenciaFilter, setDraftGerenciaFilter] = useState("");
+  const [gerenciaFilterOpen, setGerenciaFilterOpen] = useState(false);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [manualMessage, setManualMessage] = useState("");
@@ -287,10 +306,17 @@ export default function WhatsAppCloudApiInboxPageContent({ mode }: Props) {
     setSendNotice(null);
   }, [selectedId]);
 
+  const gerenciaOptions = useMemo(() => {
+    return Array.from(new Set(threads.map(gerenciaFilterLabel).filter(Boolean))).sort((a, b) =>
+      a.localeCompare(b, "es-AR", { numeric: true }),
+    );
+  }, [threads]);
+
   const filteredThreads = useMemo(() => {
     const term = search.trim().toLowerCase();
     return threads.filter((thread) => {
       if (tagFilter !== "all" && thread.tag !== tagFilter) return false;
+      if (gerenciaFilter && gerenciaFilterLabel(thread) !== gerenciaFilter) return false;
       if (!term) return true;
       return [
         thread.profile_name,
@@ -303,11 +329,11 @@ export default function WhatsAppCloudApiInboxPageContent({ mode }: Props) {
         thread.ctwa_clid,
       ].some((value) => value.toLowerCase().includes(term));
     });
-  }, [search, tagFilter, threads]);
+  }, [gerenciaFilter, search, tagFilter, threads]);
 
   const selectedThread = useMemo(
-    () => threads.find((thread) => thread.contact_id === selectedId) ?? filteredThreads[0] ?? null,
-    [filteredThreads, selectedId, threads],
+    () => filteredThreads.find((thread) => thread.contact_id === selectedId) ?? filteredThreads[0] ?? null,
+    [filteredThreads, selectedId],
   );
 
   const selectedMessages = useMemo(() => selectedThread?.messages ?? [], [selectedThread]);
@@ -351,13 +377,67 @@ export default function WhatsAppCloudApiInboxPageContent({ mode }: Props) {
         title="Inbox WhatsApp Cloud API"
         description="Conversaciones recibidas desde el numero oficial conectado a Meta."
         actions={
-          <div className="flex flex-wrap gap-2">
+          <div className="relative flex flex-wrap gap-2">
+            <button
+              type="button"
+              className={`ui-button ui-button-secondary ${gerenciaFilter ? "border-[var(--color-primary-soft-border)] text-[var(--color-primary)]" : ""}`}
+              onClick={() => {
+                setDraftGerenciaFilter(gerenciaFilter);
+                setGerenciaFilterOpen((value) => !value);
+              }}
+            >
+              <FilterIcon />
+              Aplicar filtro{gerenciaFilter ? " (1)" : ""}
+            </button>
             <button type="button" className="ui-button ui-button-secondary" onClick={() => void loadThreads()} disabled={loading}>
               Actualizar
             </button>
             <Link href={basePath} className="ui-button ui-button-secondary">
               Volver
             </Link>
+            {gerenciaFilterOpen ? (
+              <div className="absolute right-0 top-12 z-20 w-80 rounded-2xl border border-[var(--color-border)] bg-[var(--color-bg-1)] p-4 text-left shadow-2xl">
+                <label className="text-xs font-semibold text-[var(--color-text-muted)]" htmlFor="whatsapp-cloud-inbox-gerencia-filter">
+                  Gerencia asignada
+                </label>
+                <select
+                  id="whatsapp-cloud-inbox-gerencia-filter"
+                  value={draftGerenciaFilter}
+                  onChange={(event) => setDraftGerenciaFilter(event.target.value)}
+                  className="mt-2 h-10 w-full rounded-xl border border-[var(--color-border)] bg-[var(--color-bg-2)] px-3 text-sm text-[var(--color-text-strong)] outline-none"
+                >
+                  <option value="">Todas las gerencias</option>
+                  {gerenciaOptions.map((label) => (
+                    <option key={label} value={label}>
+                      {label}
+                    </option>
+                  ))}
+                </select>
+                <div className="mt-4 flex justify-end gap-2">
+                  <button
+                    type="button"
+                    className="ui-button ui-button-secondary"
+                    onClick={() => {
+                      setDraftGerenciaFilter("");
+                      setGerenciaFilter("");
+                      setGerenciaFilterOpen(false);
+                    }}
+                  >
+                    Limpiar
+                  </button>
+                  <button
+                    type="button"
+                    className="ui-button ui-button-primary"
+                    onClick={() => {
+                      setGerenciaFilter(draftGerenciaFilter);
+                      setGerenciaFilterOpen(false);
+                    }}
+                  >
+                    Aplicar
+                  </button>
+                </div>
+              </div>
+            ) : null}
           </div>
         }
       />
@@ -435,8 +515,18 @@ export default function WhatsAppCloudApiInboxPageContent({ mode }: Props) {
                     <span className="mt-1 block truncate text-xs text-[var(--color-text-muted)]">
                       {thread.last_message_text || "Sin mensajes"}
                     </span>
-                    <span className={`mt-2 inline-flex rounded-full border px-2 py-0.5 text-[10px] font-semibold ${TAG_CLASSES[thread.tag]}`}>
-                      {TAG_LABELS[thread.tag]}
+                    <span className="mt-2 flex flex-wrap gap-1.5">
+                      <span className={`inline-flex rounded-full border px-2 py-0.5 text-[10px] font-semibold ${TAG_CLASSES[thread.tag]}`}>
+                        {TAG_LABELS[thread.tag]}
+                      </span>
+                      {gerenciaFilterLabel(thread) ? (
+                        <span
+                          className="inline-flex max-w-full rounded-full border border-[var(--color-border-subtle)] bg-[rgba(148,163,184,0.07)] px-2 py-0.5 text-[10px] font-medium text-[var(--color-text-muted)]"
+                          title={`Gerencia: ${gerenciaFilterLabel(thread)}`}
+                        >
+                          <span className="truncate">{gerenciaFilterLabel(thread)}</span>
+                        </span>
+                      ) : null}
                     </span>
                   </span>
                 </button>
