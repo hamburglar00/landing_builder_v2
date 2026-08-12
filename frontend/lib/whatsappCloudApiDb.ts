@@ -54,6 +54,46 @@ export interface WhatsappCloudApiLogEntry {
   payload: Record<string, unknown> | null;
 }
 
+export interface WhatsappCloudApiInboxMessage {
+  created_at: string;
+  direction: "inbound" | "outbound";
+  body: string;
+  status: string;
+  meta_message_id: string;
+  error: string;
+}
+
+export interface WhatsappCloudApiInboxThread {
+  contact_id: string;
+  config_id: string;
+  config_name: string;
+  user_id: string;
+  wa_id: string;
+  phone: string;
+  profile_name: string;
+  first_message_at: string | null;
+  last_message_at: string | null;
+  last_message_text: string;
+  last_message_direction: string;
+  last_message_status: string;
+  assigned_phone: string;
+  assigned_gerencia_id: number | null;
+  assigned_gerencia_label: string;
+  promo_code: string;
+  ctwa_clid: string;
+  source_url: string;
+  source_type: string;
+  headline: string;
+  conversion_id: string | null;
+  lead_count: number;
+  purchase_count: number;
+  repeat_purchase_count: number;
+  total_loaded: number;
+  last_purchase_at: string | null;
+  tag: "nuevo" | "lead" | "cargo" | "recompra" | "vip";
+  messages: WhatsappCloudApiInboxMessage[];
+}
+
 export async function fetchWhatsappCloudApiConfig(
   userId: string,
 ): Promise<WhatsappCloudApiConfig | null> {
@@ -341,4 +381,63 @@ export async function fetchWhatsappCloudApiLogs(input: {
     .filter((log) => log.created_at)
     .sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime())
     .slice(0, limit);
+}
+
+function normalizeInboxMessage(value: unknown): WhatsappCloudApiInboxMessage | null {
+  const row = asRecord(value);
+  if (!row) return null;
+  const direction = firstString(row.direction) === "outbound" ? "outbound" : "inbound";
+  return {
+    created_at: firstString(row.created_at),
+    direction,
+    body: firstString(row.body),
+    status: firstString(row.status),
+    meta_message_id: firstString(row.meta_message_id),
+    error: firstString(row.error),
+  };
+}
+
+export async function fetchWhatsappCloudApiInboxThreads(limit = 50): Promise<WhatsappCloudApiInboxThread[]> {
+  const { data, error } = await supabase.rpc("get_whatsapp_cloud_api_inbox_threads", {
+    p_limit: limit,
+  });
+  if (error) throw error;
+  return ((data ?? []) as Array<Record<string, unknown>>).map((row) => {
+    const messages = Array.isArray(row.messages)
+      ? row.messages.map(normalizeInboxMessage).filter((msg): msg is WhatsappCloudApiInboxMessage => Boolean(msg))
+      : [];
+    const tag = firstString(row.tag) as WhatsappCloudApiInboxThread["tag"];
+    return {
+      contact_id: firstString(row.contact_id),
+      config_id: firstString(row.config_id),
+      config_name: firstString(row.config_name),
+      user_id: firstString(row.user_id),
+      wa_id: firstString(row.wa_id),
+      phone: firstString(row.phone),
+      profile_name: firstString(row.profile_name),
+      first_message_at: firstString(row.first_message_at) || null,
+      last_message_at: firstString(row.last_message_at) || null,
+      last_message_text: firstString(row.last_message_text),
+      last_message_direction: firstString(row.last_message_direction),
+      last_message_status: firstString(row.last_message_status),
+      assigned_phone: firstString(row.assigned_phone),
+      assigned_gerencia_id: row.assigned_gerencia_id === null || row.assigned_gerencia_id === undefined
+        ? null
+        : Number(row.assigned_gerencia_id),
+      assigned_gerencia_label: firstString(row.assigned_gerencia_label),
+      promo_code: firstString(row.promo_code),
+      ctwa_clid: firstString(row.ctwa_clid),
+      source_url: firstString(row.source_url),
+      source_type: firstString(row.source_type),
+      headline: firstString(row.headline),
+      conversion_id: firstString(row.conversion_id) || null,
+      lead_count: Number(row.lead_count ?? 0),
+      purchase_count: Number(row.purchase_count ?? 0),
+      repeat_purchase_count: Number(row.repeat_purchase_count ?? 0),
+      total_loaded: Number(row.total_loaded ?? 0),
+      last_purchase_at: firstString(row.last_purchase_at) || null,
+      tag: ["nuevo", "lead", "cargo", "recompra", "vip"].includes(tag) ? tag : "nuevo",
+      messages,
+    };
+  });
 }

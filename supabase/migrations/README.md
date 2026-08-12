@@ -21,6 +21,7 @@ Este directorio está reservado para las migraciones SQL del proyecto.
 | `20260810172000_whatsapp_cloud_api_module.sql` | Crea el modulo `whatsapp_cloud_api`: configuracion, asignacion de gerencias, auditoria de webhooks Meta y RPC `get_phone_for_whatsapp_cloud_api`. |
 | `20260810181000_whatsapp_cloud_api_increment_phone_usage.sql` | Agrega RPC atomica para incrementar `usage_count` cuando WhatsApp Cloud API envia una derivacion exitosa. |
 | `20260811120000_gerencia_phone_assignment_role.sql` | Agrega `assignment_role` a `gerencia_phones` para excluir WhatsApp de venta de la asignacion automatica sin desactivarlos. |
+| `20260811223000_whatsapp_cloud_api_inbox_rpc.sql` | Agrega RPC read-only para alimentar el Inbox de WhatsApp Cloud API con threads, mensajes y tags derivados de conversions. |
 
 ### Cron: sincronizar teléfonos cada 5 minutos
 
