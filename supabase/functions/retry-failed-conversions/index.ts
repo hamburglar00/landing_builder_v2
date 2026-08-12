@@ -1,7 +1,13 @@
-import { createClient, type SupabaseClient } from "https://esm.sh/@supabase/supabase-js@2";
+import {
+  createClient,
+  type SupabaseClient,
+} from "https://esm.sh/@supabase/supabase-js@2";
 import {
   buildMetaBusinessMessagingPurchaseRequest,
+  buildMetaBusinessMessagingRequest,
   buildMetaRequest,
+  type ConversionRow,
+  type ConversionsConfig,
   normalizeCtwaClid,
   normalizeCurrencyCode,
   normalizePurchaseAmount,
@@ -10,8 +16,6 @@ import {
   resolvePurchaseCapiRoute,
   resolvePurchaseRetryIdentity,
   shouldSkipCapiForNonMetaOrigin,
-  type ConversionRow,
-  type ConversionsConfig,
 } from "../conversions/shared.ts";
 import {
   resolvePurchasePixelAttribution,
@@ -31,7 +35,7 @@ const MIN_CONTACT_LEAD_RETRY_INTERVAL_MS = 5 * 60 * 1000;
 const CONTACT_LEAD_CAPI_RETRY_SELECT = `
   id, landing_id, user_id, landing_name,
   phone, email, fn, ln, ct, st, zip, country,
-  fbp, fbc, from_meta_ads, source_platform, pixel_id,
+  fbp, fbc, from_meta_ads, source_platform, ctwa_clid, pixel_id,
   contact_event_id, contact_event_time, contact_payload_raw,
   lead_event_id, lead_event_time, lead_payload_raw,
   purchase_event_id, purchase_event_time, purchase_payload_raw,
@@ -111,10 +115,13 @@ Deno.serve(async (req) => {
       .limit(100);
 
     if (contactRetryError) {
-      return new Response(JSON.stringify({ error: "Error al buscar Contact CAPI retry" }), {
-        status: 500,
-        headers: { ...corsHeaders, "Content-Type": "application/json" },
-      });
+      return new Response(
+        JSON.stringify({ error: "Error al buscar Contact CAPI retry" }),
+        {
+          status: 500,
+          headers: { ...corsHeaders, "Content-Type": "application/json" },
+        },
+      );
     }
 
     const { data: leadRetryRowsData, error: leadRetryError } = await db
@@ -127,40 +134,56 @@ Deno.serve(async (req) => {
       .limit(100);
 
     if (leadRetryError) {
-      return new Response(JSON.stringify({ error: "Error al buscar Lead CAPI retry" }), {
-        status: 500,
-        headers: { ...corsHeaders, "Content-Type": "application/json" },
-      });
+      return new Response(
+        JSON.stringify({ error: "Error al buscar Lead CAPI retry" }),
+        {
+          status: 500,
+          headers: { ...corsHeaders, "Content-Type": "application/json" },
+        },
+      );
     }
 
-    const contactRetryRows = (contactRetryRowsData ?? []) as unknown as CapiRetryRow[];
-    const leadRetryRows = (leadRetryRowsData ?? []) as unknown as CapiRetryRow[];
+    const contactRetryRows =
+      (contactRetryRowsData ?? []) as unknown as CapiRetryRow[];
+    const leadRetryRows =
+      (leadRetryRowsData ?? []) as unknown as CapiRetryRow[];
 
     // Find purchases that need retry
     const { data: rows, error } = await db
       .from("conversions")
-      .select("id, landing_id, user_id, phone, source_platform, ctwa_clid, pixel_id, meta_pixel_id, pixel_attribution_source, pixel_attribution_conversion_id, contact_event_id, contact_payload_raw, lead_payload_raw, purchase_payload_raw, promo_code, purchase_event_id, purchase_event_time, purchase_type, purchase_capi_route, purchase_capi_route_reason, valor, currency, event_source_url, email, fn, ln, ct, st, zip, country, fbp, fbc, from_meta_ads, client_ip, agent_user, external_id, observaciones")
+      .select(
+        "id, landing_id, user_id, phone, source_platform, ctwa_clid, pixel_id, meta_pixel_id, pixel_attribution_source, pixel_attribution_conversion_id, contact_event_id, contact_payload_raw, lead_payload_raw, purchase_payload_raw, promo_code, purchase_event_id, purchase_event_time, purchase_type, purchase_capi_route, purchase_capi_route_reason, valor, currency, event_source_url, email, fn, ln, ct, st, zip, country, fbp, fbc, from_meta_ads, client_ip, agent_user, external_id, observaciones",
+      )
       .eq("estado", "purchase")
-      .not("purchase_status_capi", "in", "(enviado,skipped_old_event_time,skipped_chatrace_capi_disabled,skipped_not_meta_ads,skipped_purchase_capi_disabled,skipped_first_purchase_capi_disabled,skipped_repeat_purchase_capi_disabled)")
+      .not(
+        "purchase_status_capi",
+        "in",
+        "(enviado,skipped_old_event_time,skipped_chatrace_capi_disabled,skipped_not_meta_ads,skipped_purchase_capi_disabled,skipped_first_purchase_capi_disabled,skipped_repeat_purchase_capi_disabled)",
+      )
       .gt("valor", 0)
       .order("created_at", { ascending: true })
       .limit(100);
 
     if (error) {
-      return new Response(JSON.stringify({ error: "Error al buscar conversiones" }), {
-        status: 500,
-        headers: { ...corsHeaders, "Content-Type": "application/json" },
-      });
+      return new Response(
+        JSON.stringify({ error: "Error al buscar conversiones" }),
+        {
+          status: 500,
+          headers: { ...corsHeaders, "Content-Type": "application/json" },
+        },
+      );
     }
 
     const purchaseRows = rows ?? [];
 
     // Group by user to get their legacy and per-pixel configs
-    const userIds = [...new Set([
-      ...purchaseRows.map((r) => String(r.user_id)),
-      ...contactRetryRows.map((r) => String(r.user_id)),
-      ...leadRetryRows.map((r) => String(r.user_id)),
-    ].filter(Boolean))];
+    const userIds = [
+      ...new Set([
+        ...purchaseRows.map((r) => String(r.user_id)),
+        ...contactRetryRows.map((r) => String(r.user_id)),
+        ...leadRetryRows.map((r) => String(r.user_id)),
+      ].filter(Boolean)),
+    ];
     const { data: configs } = userIds.length > 0
       ? await db
         .from("conversions_config")
@@ -170,13 +193,25 @@ Deno.serve(async (req) => {
     const { data: pixelConfigs } = userIds.length > 0
       ? await db
         .from("conversions_pixel_configs")
-        .select("user_id, pixel_id, meta_access_token, meta_currency, meta_api_version, send_contact_capi, send_lead_capi, meta_ads_only_capi, send_purchase_capi, include_purchase_type_capi, send_first_purchase_capi, send_repeat_purchase_capi, send_geo_capi, is_default")
+        .select(
+          "user_id, pixel_id, meta_access_token, meta_currency, meta_api_version, send_contact_capi, send_lead_capi, meta_ads_only_capi, send_purchase_capi, include_purchase_type_capi, send_first_purchase_capi, send_repeat_purchase_capi, send_geo_capi, is_default",
+        )
         .in("user_id", userIds)
       : { data: [] };
     const { data: chatraceConfigs } = userIds.length > 0
       ? await db
         .from("chatrace_client_configs")
-        .select("user_id, active, send_meta_capi_events, send_business_messaging_purchase_capi, whatsapp_business_account_id, meta_messaging_dataset_id, meta_messaging_access_token")
+        .select(
+          "user_id, active, send_meta_capi_events, send_business_messaging_purchase_capi, whatsapp_business_account_id, meta_messaging_dataset_id, meta_messaging_access_token",
+        )
+        .in("user_id", userIds)
+      : { data: [] };
+    const { data: whatsappCloudApiConfigs } = userIds.length > 0
+      ? await db
+        .from("whatsapp_cloud_api_configs")
+        .select(
+          "user_id, active, phone_number_id, whatsapp_business_account_id, pixel_id",
+        )
         .in("user_id", userIds)
       : { data: [] };
 
@@ -193,8 +228,20 @@ Deno.serve(async (req) => {
     const chatraceMetaCapiMap = new Map<string, boolean>();
     const chatraceConfigMap = new Map<string, Record<string, unknown>>();
     for (const cc of chatraceConfigs ?? []) {
-      chatraceMetaCapiMap.set(String(cc.user_id), cc.active !== false && cc.send_meta_capi_events !== false);
+      chatraceMetaCapiMap.set(
+        String(cc.user_id),
+        cc.active !== false && cc.send_meta_capi_events !== false,
+      );
       chatraceConfigMap.set(String(cc.user_id), cc as Record<string, unknown>);
+    }
+    const whatsappCloudApiConfigMap = new Map<
+      string,
+      Array<Record<string, unknown>>
+    >();
+    for (const wc of whatsappCloudApiConfigs ?? []) {
+      const list = whatsappCloudApiConfigMap.get(String(wc.user_id)) ?? [];
+      list.push(wc as Record<string, unknown>);
+      whatsappCloudApiConfigMap.set(String(wc.user_id), list);
     }
 
     const contactLeadRetryStats = await retryContactLeadCapiEvents(
@@ -204,6 +251,7 @@ Deno.serve(async (req) => {
       configMap,
       pixelConfigMap,
       chatraceMetaCapiMap,
+      whatsappCloudApiConfigMap,
     );
 
     let retried = 0;
@@ -213,7 +261,10 @@ Deno.serve(async (req) => {
       const cfg = configMap.get(row.user_id);
       if (!cfg) continue;
       if (isChatraceMetaCapiDisabled(row, chatraceMetaCapiMap)) {
-        const obs = appendObs(row.observaciones ?? "", "PURCHASE CAPI OMITIDO CHATRACE DESACTIVADO");
+        const obs = appendObs(
+          row.observaciones ?? "",
+          "PURCHASE CAPI OMITIDO CHATRACE DESACTIVADO",
+        );
         await db.from("conversions").update({
           purchase_status_capi: "skipped_chatrace_capi_disabled",
           observaciones: obs,
@@ -233,23 +284,68 @@ Deno.serve(async (req) => {
 
       const userPixelConfigs = pixelConfigMap.get(String(row.user_id)) ?? [];
       const chatraceCfg = chatraceConfigMap.get(String(row.user_id)) ?? null;
-      const ctwaClid = normalizeCtwaClid(row.ctwa_clid);
-      const businessMessagingConfigured = Boolean(
-        normalizeText(chatraceCfg?.whatsapp_business_account_id) &&
-        normalizeText(chatraceCfg?.meta_messaging_dataset_id) &&
-        normalizeText(chatraceCfg?.meta_messaging_access_token),
+      const whatsappCloudApiCfg = resolveWhatsappCloudApiRetryConfig(
+        row,
+        whatsappCloudApiConfigMap,
       );
+      const ctwaClid = normalizeCtwaClid(row.ctwa_clid);
+      const sourcePlatform = normalizeText(row.source_platform).toLowerCase();
+      const isWhatsappCloudApi = sourcePlatform === "whatsapp_cloud_api";
       let purchaseCapiRoute =
-        row.purchase_capi_route === "business_messaging" || row.purchase_capi_route === "website"
+        row.purchase_capi_route === "business_messaging" ||
+          row.purchase_capi_route === "website"
           ? row.purchase_capi_route
           : "";
-      let purchaseCapiRouteReason = normalizeText(row.purchase_capi_route_reason);
+      let purchaseCapiRouteReason = normalizeText(
+        row.purchase_capi_route_reason,
+      );
 
-      if (!purchaseCapiRoute) {
+      const rowPixelForRoute = String(row.pixel_id ?? "").trim();
+      const matchedPixelCfgForRoute = rowPixelForRoute
+        ? userPixelConfigs.find((pc) =>
+          String(pc.pixel_id ?? "").trim() === rowPixelForRoute
+        )
+        : null;
+      const defaultPixelCfgForRoute = userPixelConfigs.find((pc) =>
+        Boolean(pc.is_default)
+      );
+      const selectedForBusinessRoute = matchedPixelCfgForRoute ??
+        defaultPixelCfgForRoute ?? null;
+      const businessMessagingDatasetId = isWhatsappCloudApi
+        ? normalizeText(
+          selectedForBusinessRoute?.pixel_id ?? cfg.pixel_id ?? row.pixel_id,
+        )
+        : normalizeText(chatraceCfg?.meta_messaging_dataset_id);
+      const businessMessagingAccessToken = isWhatsappCloudApi
+        ? normalizeText(
+          selectedForBusinessRoute?.meta_access_token ?? cfg.meta_access_token,
+        )
+        : normalizeText(chatraceCfg?.meta_messaging_access_token);
+      const businessMessagingWabaId = isWhatsappCloudApi
+        ? normalizeText(whatsappCloudApiCfg?.whatsapp_business_account_id)
+        : normalizeText(chatraceCfg?.whatsapp_business_account_id);
+      const businessMessagingEnabled = isWhatsappCloudApi
+        ? true
+        : chatraceCfg?.send_business_messaging_purchase_capi === true;
+      const businessMessagingConfigured = Boolean(
+        businessMessagingWabaId &&
+          businessMessagingDatasetId &&
+          businessMessagingAccessToken,
+      );
+
+      const shouldReevaluateLegacyWhatsappCloudApiRoute = isWhatsappCloudApi &&
+        purchaseCapiRoute === "website" &&
+        Boolean(ctwaClid) &&
+        (
+          !purchaseCapiRouteReason ||
+          purchaseCapiRouteReason === "source_not_chatrace" ||
+          purchaseCapiRouteReason === "source_not_click_to_whatsapp"
+        );
+
+      if (!purchaseCapiRoute || shouldReevaluateLegacyWhatsappCloudApiRoute) {
         const decision = resolvePurchaseCapiRoute({
           source_platform: row.source_platform,
-          business_messaging_enabled:
-            chatraceCfg?.send_business_messaging_purchase_capi === true,
+          business_messaging_enabled: businessMessagingEnabled,
           business_messaging_configured: businessMessagingConfigured,
           ctwa_clid: ctwaClid,
         });
@@ -261,6 +357,35 @@ Deno.serve(async (req) => {
         }).eq("id", row.id);
       }
       const useBusinessMessaging = purchaseCapiRoute === "business_messaging";
+      if (isWhatsappCloudApi && !useBusinessMessaging) {
+        const reason = purchaseCapiRouteReason || "unknown";
+        const skippedMsg = reason === "missing_ctwa_clid"
+          ? "PURCHASE CAPI OMITIDO SIN CTWA_CLID"
+          : "ERROR PURCHASE NO CONFIG";
+        await db.from("conversions").update({
+          purchase_status_capi: reason === "missing_ctwa_clid"
+            ? "skipped_missing_ctwa_clid"
+            : "error",
+          observaciones: appendObs(row.observaciones ?? "", skippedMsg),
+        }).eq("id", row.id);
+        await writeConversionLog(
+          db,
+          row.user_id,
+          row.id,
+          reason === "missing_ctwa_clid" ? "WARN" : "ERROR",
+          "Meta CAPI retry Purchase WhatsApp Cloud API sin ruta Business Messaging",
+          JSON.stringify({
+            reason,
+            has_ctwa_clid: Boolean(ctwaClid),
+            has_waba: Boolean(businessMessagingWabaId),
+            has_destination: Boolean(businessMessagingDatasetId),
+            has_token: Boolean(businessMessagingAccessToken),
+          }),
+          "",
+          "",
+        );
+        continue;
+      }
 
       if (!useBusinessMessaging) {
         const attribution = await resolvePurchasePixelAttribution(db, {
@@ -294,7 +419,9 @@ Deno.serve(async (req) => {
               landing_id: row.landing_id ?? "",
               configured_pixel_count: new Set([
                 normalizeText(cfg.pixel_id),
-                ...userPixelConfigs.map((pixel) => normalizeText(pixel.pixel_id)),
+                ...userPixelConfigs.map((pixel) =>
+                  normalizeText(pixel.pixel_id)
+                ),
               ].filter(Boolean)).size,
             }),
             "",
@@ -332,9 +459,13 @@ Deno.serve(async (req) => {
 
       const rowPixel = String(row.pixel_id ?? "").trim();
       const matchedPixelCfg = rowPixel
-        ? userPixelConfigs.find((pc) => String(pc.pixel_id ?? "").trim() === rowPixel)
+        ? userPixelConfigs.find((pc) =>
+          String(pc.pixel_id ?? "").trim() === rowPixel
+        )
         : null;
-      const defaultPixelCfg = userPixelConfigs.find((pc) => Boolean(pc.is_default));
+      const defaultPixelCfg = userPixelConfigs.find((pc) =>
+        Boolean(pc.is_default)
+      );
       const selected = useBusinessMessaging
         ? matchedPixelCfg ?? defaultPixelCfg ?? null
         : matchedPixelCfg ?? null;
@@ -342,10 +473,12 @@ Deno.serve(async (req) => {
         ? selected.meta_ads_only_capi === true
         : cfg.meta_ads_only_capi === true;
 
-      if (shouldSkipCapiForNonMetaOrigin(
-        { meta_ads_only_capi: metaAdsOnlyCapi },
-        row,
-      )) {
+      if (
+        shouldSkipCapiForNonMetaOrigin(
+          { meta_ads_only_capi: metaAdsOnlyCapi },
+          row,
+        )
+      ) {
         const skippedMsg = "PURCHASE CAPI OMITIDO ORIGEN NO META ADS";
         await db.from("conversions").update({
           purchase_status_capi: "skipped_not_meta_ads",
@@ -381,9 +514,10 @@ Deno.serve(async (req) => {
         ? String(selected.meta_currency ?? "ARS")
         : String(cfg.meta_currency ?? "ARS");
       const currency = normalizeCurrencyCode(row.currency, configuredCurrency);
-      let purchaseType: "first" | "repeat" | null = row.purchase_type === "repeat"
-        ? "repeat"
-        : row.purchase_type === "first"
+      let purchaseType: "first" | "repeat" | null =
+        row.purchase_type === "repeat"
+          ? "repeat"
+          : row.purchase_type === "first"
           ? "first"
           : null;
       if (!purchaseType) {
@@ -416,8 +550,8 @@ Deno.serve(async (req) => {
         const skippedStatus = masterDisabled
           ? "skipped_purchase_capi_disabled"
           : purchaseType === "repeat"
-            ? "skipped_repeat_purchase_capi_disabled"
-            : "skipped_first_purchase_capi_disabled";
+          ? "skipped_repeat_purchase_capi_disabled"
+          : "skipped_first_purchase_capi_disabled";
         const obs = appendObs(
           row.observaciones ?? "",
           masterDisabled
@@ -452,13 +586,16 @@ Deno.serve(async (req) => {
       const missingRouteConfig = useBusinessMessaging
         ? (
           !ctwaClid ||
-          !normalizeText(chatraceCfg?.whatsapp_business_account_id) ||
-          !normalizeText(chatraceCfg?.meta_messaging_dataset_id) ||
-          !normalizeText(chatraceCfg?.meta_messaging_access_token)
+          !businessMessagingWabaId ||
+          !businessMessagingDatasetId ||
+          !businessMessagingAccessToken
         )
         : (!accessToken || !pixelId);
       if (missingRouteConfig) {
-        const obs = appendObs(row.observaciones ?? "", "ERROR PURCHASE NO CONFIG");
+        const obs = appendObs(
+          row.observaciones ?? "",
+          "ERROR PURCHASE NO CONFIG",
+        );
         await db.from("conversions").update({
           purchase_status_capi: "error",
           observaciones: obs,
@@ -473,12 +610,12 @@ Deno.serve(async (req) => {
             route: purchaseCapiRoute,
             reason: purchaseCapiRouteReason,
             has_ctwa_clid: Boolean(ctwaClid),
-            has_waba: Boolean(normalizeText(chatraceCfg?.whatsapp_business_account_id)),
+            has_waba: Boolean(businessMessagingWabaId),
             has_destination: useBusinessMessaging
-              ? Boolean(normalizeText(chatraceCfg?.meta_messaging_dataset_id))
+              ? Boolean(businessMessagingDatasetId)
               : Boolean(pixelId),
             has_token: useBusinessMessaging
-              ? Boolean(normalizeText(chatraceCfg?.meta_messaging_access_token))
+              ? Boolean(businessMessagingAccessToken)
               : Boolean(accessToken),
           }),
           "",
@@ -536,7 +673,10 @@ Deno.serve(async (req) => {
       }
 
       if (isEventTimeTooOldForMetaCapi(Number(eventTime))) {
-        const obs = appendObs(row.observaciones ?? "", "PURCHASE CAPI OMITIDO EVENT_TIME ANTIGUO");
+        const obs = appendObs(
+          row.observaciones ?? "",
+          "PURCHASE CAPI OMITIDO EVENT_TIME ANTIGUO",
+        );
         await db.from("conversions").update({
           purchase_status_capi: "skipped_old_event_time",
           purchase_event_id: eventId,
@@ -554,7 +694,7 @@ Deno.serve(async (req) => {
         purchase_type: isRepeat ? "repeat" : "first",
       };
       const metaCustomData = useBusinessMessaging
-        ? customData
+        ? { currency, value: amount }
         : preparePurchaseCustomDataForMeta(
           customData,
           purchaseDecision.includePurchaseType,
@@ -627,9 +767,9 @@ Deno.serve(async (req) => {
       const metaReq = useBusinessMessaging
         ? buildMetaBusinessMessagingPurchaseRequest(
           {
-            dataset_id: normalizeText(chatraceCfg?.meta_messaging_dataset_id),
-            whatsapp_business_account_id: normalizeText(chatraceCfg?.whatsapp_business_account_id),
-            meta_access_token: normalizeText(chatraceCfg?.meta_messaging_access_token),
+            dataset_id: businessMessagingDatasetId,
+            whatsapp_business_account_id: businessMessagingWabaId,
+            meta_access_token: businessMessagingAccessToken,
             meta_api_version: apiVersion,
             meta_currency: currency,
           },
@@ -656,7 +796,9 @@ Deno.serve(async (req) => {
         });
         const resText = await res.text();
 
-        const successMsg = isRepeat ? "✅ PURCHASE REPEAT OK" : "✅ PURCHASE OK";
+        const successMsg = isRepeat
+          ? "✅ PURCHASE REPEAT OK"
+          : "✅ PURCHASE OK";
 
         if (res.status === 200 && isMetaResponseOk(resText)) {
           const obs = appendObs(row.observaciones ?? "", successMsg);
@@ -761,7 +903,10 @@ Deno.serve(async (req) => {
 
         let payload: Record<string, unknown> = {};
         try {
-          payload = JSON.parse(row.payload_raw || "{}") as Record<string, unknown>;
+          payload = JSON.parse(row.payload_raw || "{}") as Record<
+            string,
+            unknown
+          >;
         } catch {
           payload = {};
         }
@@ -775,7 +920,9 @@ Deno.serve(async (req) => {
         payload.__inbox_id = row.id;
         payload.action = "LEAD";
 
-        const replayUrl = `${supabaseUrl}/functions/v1/conversions?name=${encodeURIComponent(clientName)}`;
+        const replayUrl = `${supabaseUrl}/functions/v1/conversions?name=${
+          encodeURIComponent(clientName)
+        }`;
         try {
           const replayRes = await fetch(replayUrl, {
             method: "POST",
@@ -829,7 +976,8 @@ Deno.serve(async (req) => {
             .update({
               status: "error",
               http_status: 500,
-              response_body: "Deferred PURCHASE retry error: client name not found",
+              response_body:
+                "Deferred PURCHASE retry error: client name not found",
               processed_at: new Date().toISOString(),
             })
             .eq("id", row.id);
@@ -839,7 +987,10 @@ Deno.serve(async (req) => {
 
         let payload: Record<string, unknown> = {};
         try {
-          payload = JSON.parse(row.payload_raw || "{}") as Record<string, unknown>;
+          payload = JSON.parse(row.payload_raw || "{}") as Record<
+            string,
+            unknown
+          >;
         } catch {
           payload = {};
         }
@@ -853,7 +1004,9 @@ Deno.serve(async (req) => {
         payload.__inbox_id = row.id;
         payload.action = "PURCHASE";
 
-        const replayUrl = `${supabaseUrl}/functions/v1/conversions?name=${encodeURIComponent(clientName)}`;
+        const replayUrl = `${supabaseUrl}/functions/v1/conversions?name=${
+          encodeURIComponent(clientName)
+        }`;
         try {
           const replayRes = await fetch(replayUrl, {
             method: "POST",
@@ -879,7 +1032,9 @@ Deno.serve(async (req) => {
 
     const { data: createdNewLeads } = await db
       .from("conversions")
-      .select("id, user_id, phone, email, cuit_cuil, fn, ln, ct, st, zip, country, geo_city, geo_region, geo_country, lead_event_id, lead_event_time, lead_payload_raw, observaciones, created_at")
+      .select(
+        "id, user_id, phone, email, cuit_cuil, fn, ln, ct, st, zip, country, geo_city, geo_region, geo_country, lead_event_id, lead_event_time, lead_payload_raw, observaciones, created_at",
+      )
       .eq("estado", "lead")
       .ilike("observaciones", "%match_source:created_new%")
       .or("promo_code.is.null,promo_code.eq.")
@@ -892,16 +1047,23 @@ Deno.serve(async (req) => {
       const botPhone = sanitizePhone(
         typeof payload.bot_phone === "string" ? payload.bot_phone : "",
       );
-      const leadTs = toEpochFromIso(payload.dateTime)
-        ?? toEpochFromIso(payload.datetime)
-        ?? Math.floor(new Date(String(lead.created_at ?? new Date().toISOString())).getTime() / 1000);
+      const leadTs = toEpochFromIso(payload.dateTime) ??
+        toEpochFromIso(payload.datetime) ??
+        Math.floor(
+          new Date(String(lead.created_at ?? new Date().toISOString()))
+            .getTime() / 1000,
+        );
       if (!botPhone || !leadTs) continue;
 
-      const fromIso = new Date((leadTs - BACKFILL_WINDOW_BEFORE_SECONDS) * 1000).toISOString();
-      const toIso = new Date((leadTs + BACKFILL_WINDOW_AFTER_SECONDS) * 1000).toISOString();
+      const fromIso = new Date((leadTs - BACKFILL_WINDOW_BEFORE_SECONDS) * 1000)
+        .toISOString();
+      const toIso = new Date((leadTs + BACKFILL_WINDOW_AFTER_SECONDS) * 1000)
+        .toISOString();
       const { data: contacts } = await db
         .from("conversions")
-        .select("id, phone, email, cuit_cuil, fn, ln, ct, st, zip, country, geo_city, geo_region, geo_country, observaciones")
+        .select(
+          "id, phone, email, cuit_cuil, fn, ln, ct, st, zip, country, geo_city, geo_region, geo_country, observaciones",
+        )
         .eq("user_id", lead.user_id)
         .eq("estado", "contact")
         .eq("telefono_asignado", botPhone)
@@ -922,11 +1084,16 @@ Deno.serve(async (req) => {
         lead_event_id: lead.lead_event_id ?? "",
         lead_event_time: lead.lead_event_time ?? null,
         lead_payload_raw: lead.lead_payload_raw ?? "",
-        observaciones: appendObs(String(target.observaciones ?? ""), "match_source:bot_phone_timestamp_backfill"),
+        observaciones: appendObs(
+          String(target.observaciones ?? ""),
+          "match_source:bot_phone_timestamp_backfill",
+        ),
       };
       if (!target.phone && lead.phone) updates.phone = lead.phone;
       if (!target.email && lead.email) updates.email = lead.email;
-      if (!target.cuit_cuil && lead.cuit_cuil) updates.cuit_cuil = lead.cuit_cuil;
+      if (!target.cuit_cuil && lead.cuit_cuil) {
+        updates.cuit_cuil = lead.cuit_cuil;
+      }
       if (!target.fn && lead.fn) updates.fn = lead.fn;
       if (!target.ln && lead.ln) updates.ln = lead.ln;
       if (!target.ct && lead.ct) updates.ct = lead.ct;
@@ -934,8 +1101,12 @@ Deno.serve(async (req) => {
       if (!target.zip && lead.zip) updates.zip = lead.zip;
       if (!target.country && lead.country) updates.country = lead.country;
       if (!target.geo_city && lead.geo_city) updates.geo_city = lead.geo_city;
-      if (!target.geo_region && lead.geo_region) updates.geo_region = lead.geo_region;
-      if (!target.geo_country && lead.geo_country) updates.geo_country = lead.geo_country;
+      if (!target.geo_region && lead.geo_region) {
+        updates.geo_region = lead.geo_region;
+      }
+      if (!target.geo_country && lead.geo_country) {
+        updates.geo_country = lead.geo_country;
+      }
       await db.from("conversions").update(updates).eq("id", target.id);
 
       await db
@@ -973,7 +1144,9 @@ Deno.serve(async (req) => {
 
     const duplicateLogs = (duplicateActionLogs ?? []) as DuplicateLeadLogRow[];
     if (duplicateLogs.length > 0) {
-      const userIdsForLogs = [...new Set(duplicateLogs.map((r) => String(r.user_id)))];
+      const userIdsForLogs = [
+        ...new Set(duplicateLogs.map((r) => String(r.user_id))),
+      ];
       const { data: profiles } = await db
         .from("profiles")
         .select("id, nombre")
@@ -988,8 +1161,12 @@ Deno.serve(async (req) => {
         const payload = parseJsonObject(String(log.payload_received ?? ""));
         const action = String(payload.action ?? "").trim().toUpperCase();
         const actionEventId = normalizeText(payload.action_event_id);
-        const promoCode = normalizePromoCode(payload.promo_code ?? payload.promoCode);
-        const phone = sanitizePhone(typeof payload.phone === "string" ? payload.phone : "");
+        const promoCode = normalizePromoCode(
+          payload.promo_code ?? payload.promoCode,
+        );
+        const phone = sanitizePhone(
+          typeof payload.phone === "string" ? payload.phone : "",
+        );
         const clientName = profileNameByUserId.get(String(log.user_id)) ?? "";
 
         const mark = async (
@@ -1024,9 +1201,14 @@ Deno.serve(async (req) => {
           await mark("error", "client name not found");
           continue;
         }
-        if (!actionEventId || !isFullPromoCodeForBackfill(promoCode) || !phone) {
+        if (
+          !actionEventId || !isFullPromoCodeForBackfill(promoCode) || !phone
+        ) {
           duplicateLeadLogsSkipped++;
-          await mark("skipped", "payload incompleto: action_event_id, promo_code valido o phone faltante");
+          await mark(
+            "skipped",
+            "payload incompleto: action_event_id, promo_code valido o phone faltante",
+          );
           continue;
         }
 
@@ -1055,12 +1237,19 @@ Deno.serve(async (req) => {
           .maybeSingle();
         if (String(existingConversion?.lead_event_id ?? "").trim()) {
           duplicateLeadLogsSkipped++;
-          await mark("skipped", `conversion ya tiene lead_event_id: ${existingConversion?.id ?? "-"}`);
+          await mark(
+            "skipped",
+            `conversion ya tiene lead_event_id: ${
+              existingConversion?.id ?? "-"
+            }`,
+          );
           continue;
         }
 
         if (!hasPositiveEpoch(payload.event_time)) {
-          const createdAtEpoch = Math.floor(Date.parse(String(log.created_at)) / 1000);
+          const createdAtEpoch = Math.floor(
+            Date.parse(String(log.created_at)) / 1000,
+          );
           if (Number.isFinite(createdAtEpoch) && createdAtEpoch > 0) {
             payload.event_time = createdAtEpoch;
           }
@@ -1069,7 +1258,9 @@ Deno.serve(async (req) => {
         payload.__backfill_duplicate_action_event_id = true;
         payload.__source_log_id = log.id;
 
-        const replayUrl = `${supabaseUrl}/functions/v1/conversions?name=${encodeURIComponent(clientName)}`;
+        const replayUrl = `${supabaseUrl}/functions/v1/conversions?name=${
+          encodeURIComponent(clientName)
+        }`;
         try {
           const replayRes = await fetch(replayUrl, {
             method: "POST",
@@ -1079,10 +1270,20 @@ Deno.serve(async (req) => {
           const responseBody = await replayRes.text().catch(() => "");
           if (replayRes.status >= 200 && replayRes.status < 400) {
             duplicateLeadLogsReplayed++;
-            await mark("replayed", "replayed through conversions endpoint", replayRes.status, responseBody);
+            await mark(
+              "replayed",
+              "replayed through conversions endpoint",
+              replayRes.status,
+              responseBody,
+            );
           } else {
             duplicateLeadLogsFailed++;
-            await mark("error", "conversions endpoint returned error", replayRes.status, responseBody);
+            await mark(
+              "error",
+              "conversions endpoint returned error",
+              replayRes.status,
+              responseBody,
+            );
           }
         } catch (err) {
           duplicateLeadLogsFailed++;
@@ -1118,7 +1319,10 @@ Deno.serve(async (req) => {
         duplicate_lead_logs_skipped: duplicateLeadLogsSkipped,
         duplicate_lead_logs_failed: duplicateLeadLogsFailed,
       }),
-      { status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" } },
+      {
+        status: 200,
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+      },
     );
   } catch (err) {
     console.error("retry-failed-conversions error:", err);
@@ -1138,6 +1342,33 @@ function appendObs(current: string, token: string): string {
   if (parts.includes(clean)) return cur;
   parts.push(clean);
   return parts.join(" | ");
+}
+
+function whatsappCloudApiPhoneNumberIdFromSourceUrl(value: unknown): string {
+  const raw = normalizeText(value);
+  const prefix = "whatsapp-cloud-api://";
+  if (!raw.toLowerCase().startsWith(prefix)) return "";
+  return raw.slice(prefix.length).replace(/^\/+/, "").split(/[/?#]/)[0].trim();
+}
+
+function resolveWhatsappCloudApiRetryConfig(
+  row: Pick<ConversionRow, "user_id" | "event_source_url" | "pixel_id">,
+  configsByUserId: Map<string, Array<Record<string, unknown>>>,
+): Record<string, unknown> | null {
+  const configs = configsByUserId.get(String(row.user_id)) ?? [];
+  if (configs.length === 0) return null;
+  const phoneNumberId = whatsappCloudApiPhoneNumberIdFromSourceUrl(
+    row.event_source_url,
+  );
+  if (phoneNumberId) {
+    return configs.find((cfg) =>
+      normalizeText(cfg.phone_number_id) === phoneNumberId
+    ) ?? null;
+  }
+  const pixelId = normalizeText(row.pixel_id);
+  if (!pixelId) return configs[0] ?? null;
+  return configs.find((cfg) => normalizeText(cfg.pixel_id) === pixelId) ??
+    configs[0] ?? null;
 }
 
 type CapiRetryEventName = "Contact" | "Lead";
@@ -1169,6 +1400,7 @@ async function retryContactLeadCapiEvents(
   configMap: Map<string, Record<string, unknown>>,
   pixelConfigMap: Map<string, Array<Record<string, unknown>>>,
   chatraceMetaCapiMap: Map<string, boolean>,
+  whatsappCloudApiConfigMap: Map<string, Array<Record<string, unknown>>>,
 ): Promise<CapiRetryStats> {
   const stats: CapiRetryStats = {
     contactRetried: 0,
@@ -1182,10 +1414,28 @@ async function retryContactLeadCapiEvents(
   };
 
   for (const row of contactRows) {
-    await retrySingleContactLeadCapiEvent(db, row, "Contact", configMap, pixelConfigMap, chatraceMetaCapiMap, stats);
+    await retrySingleContactLeadCapiEvent(
+      db,
+      row,
+      "Contact",
+      configMap,
+      pixelConfigMap,
+      chatraceMetaCapiMap,
+      whatsappCloudApiConfigMap,
+      stats,
+    );
   }
   for (const row of leadRows) {
-    await retrySingleContactLeadCapiEvent(db, row, "Lead", configMap, pixelConfigMap, chatraceMetaCapiMap, stats);
+    await retrySingleContactLeadCapiEvent(
+      db,
+      row,
+      "Lead",
+      configMap,
+      pixelConfigMap,
+      chatraceMetaCapiMap,
+      whatsappCloudApiConfigMap,
+      stats,
+    );
   }
 
   return stats;
@@ -1198,6 +1448,7 @@ async function retrySingleContactLeadCapiEvent(
   configMap: Map<string, Record<string, unknown>>,
   pixelConfigMap: Map<string, Array<Record<string, unknown>>>,
   chatraceMetaCapiMap: Map<string, boolean>,
+  whatsappCloudApiConfigMap: Map<string, Array<Record<string, unknown>>>,
   stats: CapiRetryStats,
 ): Promise<void> {
   const isContact = eventName === "Contact";
@@ -1206,16 +1457,29 @@ async function retrySingleContactLeadCapiEvent(
   const failedKey = isContact ? "contactFailed" : "leadFailed";
   const skippedKey = isContact ? "contactSkipped" : "leadSkipped";
   const statusField = isContact ? "contact_status_capi" : "lead_status_capi";
-  const retryableField = isContact ? "contact_capi_retryable" : "lead_capi_retryable";
-  const retryCountField = isContact ? "contact_capi_retry_count" : "lead_capi_retry_count";
-  const lastRetryField = isContact ? "contact_capi_last_retry_at" : "lead_capi_last_retry_at";
-  const eventId = normalizeText(isContact ? row.contact_event_id : row.lead_event_id);
-  const eventTime = Number(isContact ? row.contact_event_time : row.lead_event_time);
+  const retryableField = isContact
+    ? "contact_capi_retryable"
+    : "lead_capi_retryable";
+  const retryCountField = isContact
+    ? "contact_capi_retry_count"
+    : "lead_capi_retry_count";
+  const lastRetryField = isContact
+    ? "contact_capi_last_retry_at"
+    : "lead_capi_last_retry_at";
+  const eventId = normalizeText(
+    isContact ? row.contact_event_id : row.lead_event_id,
+  );
+  const eventTime = Number(
+    isContact ? row.contact_event_time : row.lead_event_time,
+  );
   const retryCount = Number(row[retryCountField] ?? 0);
   const lastRetryAt = normalizeText(row[lastRetryField]);
   const nowIso = new Date().toISOString();
 
-  const skip = async (reason: string, updates: Record<string, unknown> = {}) => {
+  const skip = async (
+    reason: string,
+    updates: Record<string, unknown> = {},
+  ) => {
     stats[skippedKey]++;
     await db.from("conversions").update({
       [retryableField]: false,
@@ -1234,29 +1498,51 @@ async function retrySingleContactLeadCapiEvent(
   };
 
   if (!eventId || !Number.isFinite(eventTime) || eventTime <= 0) {
-    await skip(JSON.stringify({ event_name: eventName, reason: "event_id/event_time invalido", event_id: eventId, event_time: eventTime }));
+    await skip(
+      JSON.stringify({
+        event_name: eventName,
+        reason: "event_id/event_time invalido",
+        event_id: eventId,
+        event_time: eventTime,
+      }),
+    );
     return;
   }
 
   if (lastRetryAt) {
     const lastRetryMs = Date.parse(lastRetryAt);
-    if (Number.isFinite(lastRetryMs) && Date.now() - lastRetryMs < MIN_CONTACT_LEAD_RETRY_INTERVAL_MS) {
+    if (
+      Number.isFinite(lastRetryMs) &&
+      Date.now() - lastRetryMs < MIN_CONTACT_LEAD_RETRY_INTERVAL_MS
+    ) {
       stats[skippedKey]++;
       return;
     }
   }
 
   if (retryCount >= MAX_CONTACT_LEAD_CAPI_RETRIES) {
-    await skip(JSON.stringify({ event_name: eventName, reason: "max retries alcanzado", retry_count: retryCount }));
+    await skip(
+      JSON.stringify({
+        event_name: eventName,
+        reason: "max retries alcanzado",
+        retry_count: retryCount,
+      }),
+    );
     return;
   }
 
   if (isChatraceMetaCapiDisabled(row, chatraceMetaCapiMap)) {
     await skip(
-      JSON.stringify({ event_name: eventName, reason: "chatrace_meta_capi_disabled" }),
+      JSON.stringify({
+        event_name: eventName,
+        reason: "chatrace_meta_capi_disabled",
+      }),
       {
         [statusField]: "skipped_chatrace_capi_disabled",
-        observaciones: appendObs(row.observaciones ?? "", `${eventName.toUpperCase()} CAPI OMITIDO CHATRACE DESACTIVADO`),
+        observaciones: appendObs(
+          row.observaciones ?? "",
+          `${eventName.toUpperCase()} CAPI OMITIDO CHATRACE DESACTIVADO`,
+        ),
       },
     );
     return;
@@ -1265,7 +1551,11 @@ async function retrySingleContactLeadCapiEvent(
   if (isEventTimeTooOldForMetaCapi(eventTime)) {
     const oldMsg = `${eventName.toUpperCase()} CAPI OMITIDO EVENT_TIME ANTIGUO`;
     await skip(
-      JSON.stringify({ event_name: eventName, reason: "event_time mayor a 7 dias", event_time: eventTime }),
+      JSON.stringify({
+        event_name: eventName,
+        reason: "event_time mayor a 7 dias",
+        event_time: eventTime,
+      }),
       {
         [statusField]: "skipped_old_event_time",
         observaciones: appendObs(row.observaciones ?? "", oldMsg),
@@ -1294,8 +1584,28 @@ async function retrySingleContactLeadCapiEvent(
     return;
   }
 
+  const sourcePlatform = normalizeText(row.source_platform).toLowerCase();
+  const isWhatsappCloudApi = sourcePlatform === "whatsapp_cloud_api";
+  if (isContact && isWhatsappCloudApi) {
+    await skip(
+      JSON.stringify({
+        event_name: eventName,
+        reason: "whatsapp_cloud_api_contact_internal_only",
+      }),
+      {
+        [statusField]: "skipped_whatsapp_cloud_api_contact",
+        observaciones: appendObs(
+          row.observaciones ?? "",
+          "CONTACT CAPI OMITIDO WHATSAPP CLOUD API",
+        ),
+      },
+    );
+    return;
+  }
+
   if (shouldSkipCapiForNonMetaOrigin(config, row)) {
-    const skippedMsg = `${eventName.toUpperCase()} CAPI OMITIDO ORIGEN NO META ADS`;
+    const skippedMsg =
+      `${eventName.toUpperCase()} CAPI OMITIDO ORIGEN NO META ADS`;
     await skip(
       JSON.stringify({
         event_name: eventName,
@@ -1331,35 +1641,103 @@ async function retrySingleContactLeadCapiEvent(
 
   if (eventName === "Lead" && config.send_lead_capi === false) {
     await skip(
-      JSON.stringify({ event_name: eventName, reason: "lead_capi_disabled_by_pixel_config", pixel_id: config.pixel_id }),
+      JSON.stringify({
+        event_name: eventName,
+        reason: "lead_capi_disabled_by_pixel_config",
+        pixel_id: config.pixel_id,
+      }),
       {
         [statusField]: "skipped_lead_capi_disabled",
-        observaciones: appendObs(row.observaciones ?? "", "LEAD CAPI OMITIDO CONFIG DESACTIVADA"),
+        observaciones: appendObs(
+          row.observaciones ?? "",
+          "LEAD CAPI OMITIDO CONFIG DESACTIVADA",
+        ),
       },
     );
     return;
   }
 
-  const metaReq = await buildMetaRequest(
-    config,
-    row as ConversionRow,
-    eventName,
-    eventId,
-    eventTime,
-  );
+  const ctwaClid = normalizeCtwaClid(row.ctwa_clid);
+  const whatsappCloudApiCfg = isWhatsappCloudApi
+    ? resolveWhatsappCloudApiRetryConfig(row, whatsappCloudApiConfigMap)
+    : null;
+  const useBusinessMessaging = eventName === "Lead" &&
+    isWhatsappCloudApi &&
+    Boolean(ctwaClid) &&
+    Boolean(normalizeText(whatsappCloudApiCfg?.whatsapp_business_account_id)) &&
+    Boolean(config.pixel_id) &&
+    Boolean(config.meta_access_token);
+  if (eventName === "Lead" && isWhatsappCloudApi && !useBusinessMessaging) {
+    stats[failedKey]++;
+    await db.from("conversions").update({
+      [statusField]: "error",
+      [retryableField]: false,
+      [retryCountField]: retryCount + 1,
+      [lastRetryField]: nowIso,
+      observaciones: appendObs(row.observaciones ?? "", "ERROR LEAD NO CONFIG"),
+    }).eq("id", row.id);
+    await writeConversionLog(
+      db,
+      row.user_id,
+      row.id,
+      "ERROR",
+      "Meta CAPI retry Lead WhatsApp Cloud API sin config Business Messaging",
+      JSON.stringify({
+        has_ctwa_clid: Boolean(ctwaClid),
+        has_waba: Boolean(
+          normalizeText(whatsappCloudApiCfg?.whatsapp_business_account_id),
+        ),
+        has_dataset: Boolean(config.pixel_id),
+        has_token: Boolean(config.meta_access_token),
+      }),
+      "",
+      "",
+    );
+    return;
+  }
+  const metaReq = useBusinessMessaging
+    ? buildMetaBusinessMessagingRequest(
+      {
+        dataset_id: config.pixel_id,
+        whatsapp_business_account_id: normalizeText(
+          whatsappCloudApiCfg?.whatsapp_business_account_id,
+        ),
+        meta_access_token: config.meta_access_token,
+        meta_api_version: config.meta_api_version,
+        meta_currency: config.meta_currency,
+      },
+      "Lead",
+      ctwaClid,
+      eventTime,
+    )
+    : await buildMetaRequest(
+      config,
+      row as ConversionRow,
+      eventName,
+      eventId,
+      eventTime,
+    );
   const metaPayloadRaw = JSON.stringify(metaReq.body);
   stats[retriedKey]++;
 
-  const fail = async (detail: string, responseRaw = "", retryableNext = false) => {
+  const fail = async (
+    detail: string,
+    responseRaw = "",
+    retryableNext = false,
+  ) => {
     stats[failedKey]++;
     const nextRetryCount = retryCount + 1;
-    const shouldKeepRetrying = retryableNext && nextRetryCount < MAX_CONTACT_LEAD_CAPI_RETRIES;
+    const shouldKeepRetrying = retryableNext &&
+      nextRetryCount < MAX_CONTACT_LEAD_CAPI_RETRIES;
     await db.from("conversions").update({
       [statusField]: "error",
       [retryableField]: shouldKeepRetrying,
       [retryCountField]: nextRetryCount,
       [lastRetryField]: nowIso,
-      observaciones: appendObs(row.observaciones ?? "", isContact ? "ERROR CONTACT" : "ERROR LEAD"),
+      observaciones: appendObs(
+        row.observaciones ?? "",
+        isContact ? "ERROR CONTACT" : "ERROR LEAD",
+      ),
     }).eq("id", row.id);
     await writeConversionLog(
       db,
@@ -1380,7 +1758,8 @@ async function retrySingleContactLeadCapiEvent(
       body: JSON.stringify(metaReq.body),
     });
     const resText = await res.text();
-    const isTransientHttp = res.status === 429 || res.status === 408 || res.status >= 500;
+    const isTransientHttp = res.status === 429 || res.status === 408 ||
+      res.status >= 500;
 
     if (res.status === 200 && isMetaResponseOk(resText)) {
       stats[succeededKey]++;
@@ -1389,7 +1768,10 @@ async function retrySingleContactLeadCapiEvent(
         [retryableField]: false,
         [retryCountField]: retryCount + 1,
         [lastRetryField]: nowIso,
-        observaciones: appendObs(row.observaciones ?? "", isContact ? "CONTACT OK" : "LEAD OK"),
+        observaciones: appendObs(
+          row.observaciones ?? "",
+          isContact ? "CONTACT OK" : "LEAD OK",
+        ),
       }).eq("id", row.id);
       await writeConversionLog(
         db,
@@ -1404,9 +1786,21 @@ async function retrySingleContactLeadCapiEvent(
       return;
     }
 
-    await fail(`HTTP ${res.status} retry ${retryCount + 1}/${MAX_CONTACT_LEAD_CAPI_RETRIES}: ${resText}`, resText, isTransientHttp);
+    await fail(
+      `HTTP ${res.status} retry ${
+        retryCount + 1
+      }/${MAX_CONTACT_LEAD_CAPI_RETRIES}: ${resText}`,
+      resText,
+      isTransientHttp,
+    );
   } catch (err) {
-    await fail(`Excepcion retry ${retryCount + 1}/${MAX_CONTACT_LEAD_CAPI_RETRIES}: ${String(err)}`, "", true);
+    await fail(
+      `Excepcion retry ${retryCount + 1}/${MAX_CONTACT_LEAD_CAPI_RETRIES}: ${
+        String(err)
+      }`,
+      "",
+      true,
+    );
   }
 }
 
@@ -1440,9 +1834,7 @@ function resolveRetryConfig(
     meta_access_token: accessToken,
     meta_currency: normalizeCurrencyCode(
       row.currency,
-      selected
-        ? selected.meta_currency
-        : cfg.meta_currency,
+      selected ? selected.meta_currency : cfg.meta_currency,
     ),
     meta_api_version: selected
       ? normalizeText(selected.meta_api_version || "v25.0")
@@ -1471,7 +1863,12 @@ function resolveRetryConfig(
 function resolvePurchaseCapiSettings(
   selected: Record<string, unknown> | null,
   fallback: Record<string, unknown>,
-): { enabled: boolean; includePurchaseType: boolean; first: boolean; repeat: boolean } {
+): {
+  enabled: boolean;
+  includePurchaseType: boolean;
+  first: boolean;
+  repeat: boolean;
+} {
   const source = selected ?? fallback;
   const legacyEnabled = source.send_purchase_capi !== false;
   return {
@@ -1534,7 +1931,10 @@ async function writeConversionLog(
       response_meta: responseMeta.slice(0, 20000),
     });
   } catch (err) {
-    console.error("[retry-failed-conversions] writeConversionLog failed", String(err));
+    console.error(
+      "[retry-failed-conversions] writeConversionLog failed",
+      String(err),
+    );
   }
 }
 
@@ -1562,7 +1962,9 @@ type DuplicateLeadLogRow = {
 function parseJsonObject(raw: string): Record<string, unknown> {
   try {
     const value = JSON.parse(raw || "{}");
-    if (value && typeof value === "object") return value as Record<string, unknown>;
+    if (value && typeof value === "object") {
+      return value as Record<string, unknown>;
+    }
     return {};
   } catch {
     return {};

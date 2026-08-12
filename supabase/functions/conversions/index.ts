@@ -3,7 +3,7 @@ import {
   SupabaseClient,
 } from "https://esm.sh/@supabase/supabase-js@2";
 import {
-  buildMetaBusinessMessagingPurchaseRequest,
+  buildMetaBusinessMessagingRequest,
   buildMetaRequest,
   type ConversionRow as SharedConversionRow,
   type ConversionsConfig as SharedConversionsConfig,
@@ -88,6 +88,13 @@ interface ChatraceCapiConfig {
   meta_messaging_dataset_id: string;
   meta_messaging_access_token: string;
   meta_pixel_id: string;
+}
+
+interface WhatsappCloudApiCapiConfig {
+  active: boolean;
+  phone_number_id: string;
+  whatsapp_business_account_id: string;
+  pixel_id: string;
 }
 
 interface LandingRow {
@@ -279,8 +286,8 @@ const playerUsernameFromPayload = (p: Params): string =>
   norm(p.player_username ?? p.playerUsername ?? p.username);
 const ctwaClidForSource = (value: unknown, sourcePlatform: unknown): string =>
   ["chatrace", "whatsapp_cloud_api"].includes(
-    normalizedSourcePlatform(sourcePlatform),
-  )
+      normalizedSourcePlatform(sourcePlatform),
+    )
     ? normalizeCtwaClid(value)
     : "";
 const isClickToWhatsAppSource = (sourcePlatform: unknown): boolean =>
@@ -1964,6 +1971,49 @@ async function resolveChatraceCapiConfig(
   return data ? data as ChatraceCapiConfig : null;
 }
 
+function whatsappCloudApiPhoneNumberIdFromSourceUrl(value: unknown): string {
+  const raw = norm(value);
+  const prefix = "whatsapp-cloud-api://";
+  if (!raw.toLowerCase().startsWith(prefix)) return "";
+  return raw.slice(prefix.length).replace(/^\/+/, "").split(/[/?#]/)[0].trim();
+}
+
+async function resolveWhatsappCloudApiCapiConfig(
+  db: SupabaseClient,
+  row: Pick<
+    ConversionRow,
+    "user_id" | "event_source_url" | "pixel_id" | "meta_pixel_id"
+  >,
+): Promise<WhatsappCloudApiCapiConfig | null> {
+  const phoneNumberId = whatsappCloudApiPhoneNumberIdFromSourceUrl(
+    row.event_source_url,
+  );
+  let query = db
+    .from("whatsapp_cloud_api_configs")
+    .select("active, phone_number_id, whatsapp_business_account_id, pixel_id")
+    .eq("user_id", row.user_id);
+
+  if (phoneNumberId) {
+    query = query.eq("phone_number_id", phoneNumberId);
+  } else {
+    const pixelId = norm(row.pixel_id || row.meta_pixel_id);
+    if (!pixelId) return null;
+    query = query.eq("pixel_id", pixelId).order("updated_at", {
+      ascending: false,
+    }).limit(1);
+  }
+
+  const { data, error } = await query.maybeSingle();
+  if (error) {
+    console.error(
+      "[conversions] whatsapp_cloud_api config lookup failed",
+      error.message,
+    );
+    return null;
+  }
+  return data ? data as WhatsappCloudApiCapiConfig : null;
+}
+
 async function sendToMetaCAPI(
   db: SupabaseClient,
   config: ConversionsConfig,
@@ -1982,8 +2032,12 @@ async function sendToMetaCAPI(
 ): Promise<boolean> {
   const sourcePlatform = normalizedSourcePlatform(row.source_platform);
   const isChatrace = sourcePlatform === "chatrace";
+  const isWhatsappCloudApi = sourcePlatform === "whatsapp_cloud_api";
   const chatraceConfig = isChatrace
     ? await resolveChatraceCapiConfig(db, row.user_id)
+    : null;
+  const whatsappCloudApiConfig = isWhatsappCloudApi
+    ? await resolveWhatsappCloudApiCapiConfig(db, row)
     : null;
   const rowPixel = norm(row.pixel_id || row.meta_pixel_id);
   const chatracePixelId = isChatrace && !rowPixel
@@ -2118,17 +2172,56 @@ async function sendToMetaCAPI(
       : "";
   let purchaseCapiRouteReason = norm(row.purchase_capi_route_reason);
   const ctwaClid = normalizeCtwaClid(row.ctwa_clid);
+  const businessMessagingConfig = isChatrace
+    ? {
+      enabled: chatraceConfig?.send_business_messaging_purchase_capi === true,
+      datasetId: norm(chatraceConfig?.meta_messaging_dataset_id),
+      wabaId: norm(chatraceConfig?.whatsapp_business_account_id),
+      accessToken: norm(chatraceConfig?.meta_messaging_access_token),
+      apiVersion: effectiveConfig.meta_api_version,
+      source: "chatrace",
+    }
+    : isWhatsappCloudApi
+    ? {
+      enabled: true,
+      datasetId: norm(effectiveConfig.pixel_id),
+      wabaId: norm(whatsappCloudApiConfig?.whatsapp_business_account_id),
+      accessToken: norm(effectiveConfig.meta_access_token),
+      apiVersion: effectiveConfig.meta_api_version,
+      source: "whatsapp_cloud_api",
+    }
+    : {
+      enabled: false,
+      datasetId: "",
+      wabaId: "",
+      accessToken: "",
+      apiVersion: effectiveConfig.meta_api_version,
+      source: sourcePlatform || "unknown",
+    };
   const businessMessagingConfigured = Boolean(
-    norm(chatraceConfig?.whatsapp_business_account_id) &&
-      norm(chatraceConfig?.meta_messaging_dataset_id) &&
-      norm(chatraceConfig?.meta_messaging_access_token),
+    businessMessagingConfig.wabaId &&
+      businessMessagingConfig.datasetId &&
+      businessMessagingConfig.accessToken,
   );
 
-  if (eventName === "Purchase" && !purchaseCapiRoute) {
+  const shouldReevaluateLegacyWhatsappCloudApiRoute =
+    eventName === "Purchase" &&
+    isWhatsappCloudApi &&
+    purchaseCapiRoute === "website" &&
+    Boolean(ctwaClid) &&
+    (
+      !purchaseCapiRouteReason ||
+      purchaseCapiRouteReason === "source_not_chatrace" ||
+      purchaseCapiRouteReason === "source_not_click_to_whatsapp"
+    );
+
+  if (
+    eventName === "Purchase" &&
+    (!purchaseCapiRoute || shouldReevaluateLegacyWhatsappCloudApiRoute)
+  ) {
     const decision = resolvePurchaseCapiRoute({
       source_platform: sourcePlatform,
-      business_messaging_enabled:
-        chatraceConfig?.send_business_messaging_purchase_capi === true,
+      business_messaging_enabled: businessMessagingConfig.enabled,
       business_messaging_configured: businessMessagingConfigured,
       ctwa_clid: ctwaClid,
     });
@@ -2150,15 +2243,111 @@ async function sendToMetaCAPI(
         reason: purchaseCapiRouteReason,
         source_platform: sourcePlatform,
         has_ctwa_clid: Boolean(ctwaClid),
-        business_messaging_enabled:
-          chatraceConfig?.send_business_messaging_purchase_capi === true,
+        business_messaging_enabled: businessMessagingConfig.enabled,
         business_messaging_configured: businessMessagingConfigured,
+        business_messaging_source: businessMessagingConfig.source,
       }),
       rowId,
     );
   }
-  const useBusinessMessaging = eventName === "Purchase" &&
-    purchaseCapiRoute === "business_messaging";
+  const leadCapiRouteDecision = eventName === "Lead"
+    ? resolvePurchaseCapiRoute({
+      source_platform: sourcePlatform,
+      business_messaging_enabled: businessMessagingConfig.enabled,
+      business_messaging_configured: businessMessagingConfigured,
+      ctwa_clid: ctwaClid,
+    })
+    : null;
+  const useBusinessMessaging =
+    (eventName === "Purchase" && purchaseCapiRoute === "business_messaging") ||
+    (eventName === "Lead" &&
+      leadCapiRouteDecision?.route === "business_messaging");
+  if (
+    eventName === "Lead" &&
+    isWhatsappCloudApi &&
+    !useBusinessMessaging
+  ) {
+    const reason = leadCapiRouteDecision?.reason ?? "unknown";
+    const skippedMsg = reason === "missing_ctwa_clid"
+      ? "LEAD CAPI OMITIDO SIN CTWA_CLID"
+      : "ERROR LEAD NO CONFIG";
+    const { data: current } = await db.from("conversions").select(
+      "observaciones",
+    ).eq("id", rowId).single();
+    const updates: Record<string, unknown> = {
+      [statusField]: reason === "missing_ctwa_clid"
+        ? "skipped_missing_ctwa_clid"
+        : "error",
+      observaciones: appendObservation(
+        current?.observaciones ?? "",
+        skippedMsg,
+      ),
+    };
+    if (retryableField) updates[retryableField] = false;
+    await db.from("conversions").update(updates).eq("id", rowId);
+    await writeLog(
+      db,
+      row.user_id,
+      "sendToMetaCAPI",
+      reason === "missing_ctwa_clid" ? "WARN" : "ERROR",
+      "Lead WhatsApp Cloud API no enviado por Business Messaging",
+      JSON.stringify({
+        reason,
+        has_ctwa_clid: Boolean(ctwaClid),
+        has_waba: Boolean(businessMessagingConfig.wabaId),
+        has_dataset: Boolean(businessMessagingConfig.datasetId),
+        has_token: Boolean(businessMessagingConfig.accessToken),
+      }),
+      rowId,
+      undefined,
+      undefined,
+      row.lead_payload_raw,
+      skippedMsg,
+    );
+    return reason === "missing_ctwa_clid";
+  }
+  if (
+    eventName === "Purchase" &&
+    isWhatsappCloudApi &&
+    !useBusinessMessaging
+  ) {
+    const reason = purchaseCapiRouteReason || "unknown";
+    const skippedMsg = reason === "missing_ctwa_clid"
+      ? "PURCHASE CAPI OMITIDO SIN CTWA_CLID"
+      : "ERROR PURCHASE NO CONFIG";
+    const { data: current } = await db.from("conversions").select(
+      "observaciones",
+    ).eq("id", rowId).single();
+    await db.from("conversions").update({
+      purchase_status_capi: reason === "missing_ctwa_clid"
+        ? "skipped_missing_ctwa_clid"
+        : "error",
+      observaciones: appendObservation(
+        current?.observaciones ?? "",
+        skippedMsg,
+      ),
+    }).eq("id", rowId);
+    await writeLog(
+      db,
+      row.user_id,
+      "sendToMetaCAPI",
+      reason === "missing_ctwa_clid" ? "WARN" : "ERROR",
+      "Purchase WhatsApp Cloud API no enviado por Business Messaging",
+      JSON.stringify({
+        reason,
+        has_ctwa_clid: Boolean(ctwaClid),
+        has_waba: Boolean(businessMessagingConfig.wabaId),
+        has_dataset: Boolean(businessMessagingConfig.datasetId),
+        has_token: Boolean(businessMessagingConfig.accessToken),
+      }),
+      rowId,
+      undefined,
+      undefined,
+      row.purchase_payload_raw,
+      skippedMsg,
+    );
+    return reason === "missing_ctwa_clid";
+  }
   if (shouldSkipCapiForNonMetaOrigin(effectiveConfig, row)) {
     const skippedMsg =
       `${eventName.toUpperCase()} CAPI OMITIDO ORIGEN NO META ADS`;
@@ -2396,9 +2585,9 @@ async function sendToMetaCAPI(
   const missingBusinessMessagingConfig = useBusinessMessaging &&
     (
       !ctwaClid ||
-      !norm(chatraceConfig?.whatsapp_business_account_id) ||
-      !norm(chatraceConfig?.meta_messaging_dataset_id) ||
-      !norm(chatraceConfig?.meta_messaging_access_token)
+      !businessMessagingConfig.wabaId ||
+      !businessMessagingConfig.datasetId ||
+      !businessMessagingConfig.accessToken
     );
   const missingWebsiteConfig = !useBusinessMessaging &&
     (!effectiveConfig.meta_access_token || !effectiveConfig.pixel_id);
@@ -2429,15 +2618,16 @@ async function sendToMetaCAPI(
       JSON.stringify({
         route: useBusinessMessaging ? "business_messaging" : "website",
         has_token: useBusinessMessaging
-          ? Boolean(norm(chatraceConfig?.meta_messaging_access_token))
+          ? Boolean(businessMessagingConfig.accessToken)
           : !!effectiveConfig.meta_access_token,
         has_destination: useBusinessMessaging
-          ? Boolean(norm(chatraceConfig?.meta_messaging_dataset_id))
+          ? Boolean(businessMessagingConfig.datasetId)
           : !!effectiveConfig.pixel_id,
-        has_waba: Boolean(norm(chatraceConfig?.whatsapp_business_account_id)),
+        has_waba: Boolean(businessMessagingConfig.wabaId),
         has_ctwa_clid: Boolean(ctwaClid),
         event_name: eventName,
         row_pixel_id: row.pixel_id ?? "",
+        business_messaging_source: businessMessagingConfig.source,
       }),
       rowId,
     );
@@ -2490,23 +2680,32 @@ async function sendToMetaCAPI(
     );
   }
 
+  const businessMessagingCustomData = useBusinessMessaging &&
+      eventName === "Purchase"
+    ? {
+      currency: normalizeCurrencyCode(
+        canonicalCustomData?.currency,
+        effectiveConfig.meta_currency,
+      ),
+      value: Number(canonicalCustomData?.value ?? row.valor),
+    }
+    : undefined;
   const metaRequest = useBusinessMessaging
-    ? buildMetaBusinessMessagingPurchaseRequest(
+    ? buildMetaBusinessMessagingRequest(
       {
-        dataset_id: norm(chatraceConfig?.meta_messaging_dataset_id),
-        whatsapp_business_account_id: norm(
-          chatraceConfig?.whatsapp_business_account_id,
-        ),
-        meta_access_token: norm(chatraceConfig?.meta_messaging_access_token),
-        meta_api_version: effectiveConfig.meta_api_version,
+        dataset_id: businessMessagingConfig.datasetId,
+        whatsapp_business_account_id: businessMessagingConfig.wabaId,
+        meta_access_token: businessMessagingConfig.accessToken,
+        meta_api_version: businessMessagingConfig.apiVersion,
         meta_currency: normalizeCurrencyCode(
           canonicalCustomData?.currency,
           effectiveConfig.meta_currency,
         ),
       },
+      eventName as "Lead" | "Purchase",
       ctwaClid,
       eventTime,
-      Number(canonicalCustomData?.value ?? row.valor),
+      businessMessagingCustomData,
     )
     : await buildMetaRequest(
       effectiveConfig as unknown as SharedConversionsConfig,
@@ -4736,8 +4935,16 @@ async function handlePurchase(
       form_email: firstSource?.form_email || "",
       form_phone: firstSource?.form_phone || "",
       cuit_cuil: payloadCuitCuil || firstSource?.cuit_cuil || "",
-      fn: lineageNameValue(payloadFn, firstSource?.fn, namedReceiverLineage?.fn),
-      ln: lineageNameValue(payloadLn, firstSource?.ln, namedReceiverLineage?.ln),
+      fn: lineageNameValue(
+        payloadFn,
+        firstSource?.fn,
+        namedReceiverLineage?.fn,
+      ),
+      ln: lineageNameValue(
+        payloadLn,
+        firstSource?.ln,
+        namedReceiverLineage?.ln,
+      ),
       ct: geo.ct || firstSource?.ct || "",
       st: geo.st || firstSource?.st || "",
       zip: geo.zip || firstSource?.zip || "",
@@ -4950,10 +5157,9 @@ async function handlePurchase(
   const repeatInheritedPixel = repeatAttribution?.pixelId ?? "";
   const repeatOriginSource = inboundSourcePlatform ||
     norm(repeatSourceRow?.source_platform);
-  const repeatCtwaClid =
-    isClickToWhatsAppSource(repeatOriginSource)
-      ? inboundCtwaClid || normalizeCtwaClid(repeatSourceRow?.ctwa_clid)
-      : "";
+  const repeatCtwaClid = isClickToWhatsAppSource(repeatOriginSource)
+    ? inboundCtwaClid || normalizeCtwaClid(repeatSourceRow?.ctwa_clid)
+    : "";
 
   const newRow: Omit<ConversionRow, "id"> = {
     landing_id: repeatSourceRow?.landing_id ?? (landing.id?.trim() || null),
@@ -4966,8 +5172,16 @@ async function handlePurchase(
     form_email: repeatSourceRow?.form_email || "",
     form_phone: repeatSourceRow?.form_phone || "",
     cuit_cuil: payloadCuitCuil || repeatSourceRow?.cuit_cuil || "",
-    fn: lineageNameValue(payloadFn, repeatSourceRow?.fn, namedReceiverLineage?.fn),
-    ln: lineageNameValue(payloadLn, repeatSourceRow?.ln, namedReceiverLineage?.ln),
+    fn: lineageNameValue(
+      payloadFn,
+      repeatSourceRow?.fn,
+      namedReceiverLineage?.fn,
+    ),
+    ln: lineageNameValue(
+      payloadLn,
+      repeatSourceRow?.ln,
+      namedReceiverLineage?.ln,
+    ),
     ct: geo.ct || repeatSourceRow?.ct || "",
     st: geo.st || repeatSourceRow?.st || "",
     zip: geo.zip || repeatSourceRow?.zip || "",
@@ -5286,14 +5500,15 @@ async function handleSimplePurchase(
       eventGerencia.gerencia_id,
     )
     : (latestAnyRow as ConversionRow | null);
-  const namedSimpleLineage = (!payloadFn || !payloadLn) && eventGerencia.gerencia_id
-    ? await findLatestNamedTrustedGerenciaLineage(
-      db,
-      landing.user_id,
-      cleanPhone,
-      eventGerencia.gerencia_id,
-    )
-    : null;
+  const namedSimpleLineage =
+    (!payloadFn || !payloadLn) && eventGerencia.gerencia_id
+      ? await findLatestNamedTrustedGerenciaLineage(
+        db,
+        landing.user_id,
+        cleanPhone,
+        eventGerencia.gerencia_id,
+      )
+      : null;
   const simpleSourceRow = srcRow as ConversionRow | null;
   const simpleAttribution = await resolvePurchasePixelAttribution(db, {
     userId: landing.user_id,
@@ -5306,10 +5521,9 @@ async function handleSimplePurchase(
   const simpleInheritedPixel = simpleAttribution?.pixelId ?? "";
   const simpleOriginSource = inboundSourcePlatform ||
     norm(srcRow?.source_platform);
-  const simpleCtwaClid =
-    isClickToWhatsAppSource(simpleOriginSource)
-      ? inboundCtwaClid || normalizeCtwaClid(srcRow?.ctwa_clid)
-      : "";
+  const simpleCtwaClid = isClickToWhatsAppSource(simpleOriginSource)
+    ? inboundCtwaClid || normalizeCtwaClid(srcRow?.ctwa_clid)
+    : "";
 
   const purchaseEventId = purchaseClaim.eventId;
   const purchaseEventTime = toValidEventTime(

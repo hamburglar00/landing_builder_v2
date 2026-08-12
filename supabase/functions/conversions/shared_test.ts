@@ -1,6 +1,7 @@
 import {
   buildFakeConversionRow,
   buildMetaBusinessMessagingPurchaseRequest,
+  buildMetaBusinessMessagingRequest,
   buildMetaRequest,
   normalizeCtwaClid,
   normalizeCurrencyCode,
@@ -169,6 +170,46 @@ Deno.test("Business Messaging Purchase matches Meta WhatsApp payload shape", () 
   assert(
     !("purchase_type" in customData),
     "Business Messaging Purchase must stay standard",
+  );
+});
+
+Deno.test("Business Messaging Lead matches Meta WhatsApp payload shape", () => {
+  const request = buildMetaBusinessMessagingRequest(
+    {
+      dataset_id: "123456789",
+      whatsapp_business_account_id: "987654321",
+      meta_access_token: "token",
+      meta_api_version: "v25.0",
+      meta_currency: "ARS",
+    },
+    "Lead",
+    "opaque-ctwa-click-id",
+    1_700_000_000,
+  );
+
+  const data = request.body.data as Array<Record<string, unknown>>;
+  const event = data[0];
+  assert(event.event_name === "Lead", "event_name must be Lead");
+  assert(
+    event.action_source === "business_messaging",
+    "action_source must be business_messaging",
+  );
+  assert(
+    event.messaging_channel === "whatsapp",
+    "messaging_channel must be whatsapp",
+  );
+  assert(!("event_source_url" in event), "website URL must not be sent");
+  assert(!("event_id" in event), "event_id must not be sent");
+  assert(!("custom_data" in event), "Lead must not invent custom_data");
+
+  const userData = event.user_data as Record<string, unknown>;
+  assert(
+    userData.ctwa_clid === "opaque-ctwa-click-id",
+    "ctwa_clid must be raw",
+  );
+  assert(
+    userData.whatsapp_business_account_id === "987654321",
+    "WABA ID must be preserved",
   );
 });
 
@@ -397,7 +438,7 @@ Deno.test("ctwa_clid validation rejects unresolved Chatrace placeholders", () =>
   assert(normalizeCtwaClid("") === "", "Empty ID must be rejected");
 });
 
-Deno.test("Business Messaging routing is exclusive to eligible Chatrace purchases", () => {
+Deno.test("Business Messaging routing is limited to Click-to-WhatsApp sources", () => {
   const landing = resolvePurchaseCapiRoute({
     source_platform: "landing",
     business_messaging_enabled: true,
@@ -409,7 +450,7 @@ Deno.test("Business Messaging routing is exclusive to eligible Chatrace purchase
     "Landing purchases must stay on website CAPI",
   );
   assert(
-    landing.reason === "source_not_chatrace",
+    landing.reason === "source_not_click_to_whatsapp",
     "Landing route must be traceable",
   );
 
@@ -452,6 +493,21 @@ Deno.test("Business Messaging routing is exclusive to eligible Chatrace purchase
   assert(
     eligible.reason === "eligible_chatrace_ctwa",
     "Eligible route must be traceable",
+  );
+
+  const whatsappCloudApi = resolvePurchaseCapiRoute({
+    source_platform: "whatsapp_cloud_api",
+    business_messaging_enabled: false,
+    business_messaging_configured: true,
+    ctwa_clid: "opaque-id",
+  });
+  assert(
+    whatsappCloudApi.route === "business_messaging",
+    "WhatsApp Cloud API with ctwa_clid must use Business Messaging",
+  );
+  assert(
+    whatsappCloudApi.reason === "eligible_whatsapp_cloud_api_ctwa",
+    "WhatsApp Cloud API route must be traceable",
   );
 });
 

@@ -622,7 +622,7 @@ export interface MetaRequest {
   eventPayload: Record<string, unknown>;
 }
 
-export interface MetaBusinessMessagingPurchaseConfig {
+export interface MetaBusinessMessagingConfig {
   dataset_id: string;
   whatsapp_business_account_id: string;
   meta_access_token: string;
@@ -655,16 +655,18 @@ export interface PurchaseCapiRouteDecision {
   route: PurchaseCapiRoute;
   reason:
     | "eligible_chatrace_ctwa"
-    | "source_not_chatrace"
+    | "eligible_whatsapp_cloud_api_ctwa"
+    | "source_not_click_to_whatsapp"
     | "business_messaging_disabled"
     | "missing_ctwa_clid"
     | "missing_business_messaging_config";
 }
 
 /**
- * Business Messaging is deliberately opt-in and exclusive to Chatrace.
- * Every other source, including constructor-powered landings, keeps the
- * existing website CAPI path.
+ * Business Messaging is deliberately limited to Click-to-WhatsApp origins.
+ * Chatrace keeps its explicit opt-in switch. WhatsApp Cloud API is the
+ * official endpoint we control, so it can use the route when attribution data
+ * and destination config are present.
  */
 export function resolvePurchaseCapiRoute(input: {
   source_platform: unknown;
@@ -672,13 +674,13 @@ export function resolvePurchaseCapiRoute(input: {
   business_messaging_configured: boolean;
   ctwa_clid: unknown;
 }): PurchaseCapiRouteDecision {
-  const isChatrace =
-    String(input.source_platform ?? "").trim().toLowerCase() ===
-      "chatrace";
-  if (!isChatrace) {
-    return { route: "website", reason: "source_not_chatrace" };
+  const source = String(input.source_platform ?? "").trim().toLowerCase();
+  const isChatrace = source === "chatrace";
+  const isWhatsappCloudApi = source === "whatsapp_cloud_api";
+  if (!isChatrace && !isWhatsappCloudApi) {
+    return { route: "website", reason: "source_not_click_to_whatsapp" };
   }
-  if (!input.business_messaging_enabled) {
+  if (isChatrace && !input.business_messaging_enabled) {
     return { route: "website", reason: "business_messaging_disabled" };
   }
   if (!normalizeCtwaClid(input.ctwa_clid)) {
@@ -687,21 +689,27 @@ export function resolvePurchaseCapiRoute(input: {
   if (!input.business_messaging_configured) {
     return { route: "website", reason: "missing_business_messaging_config" };
   }
-  return { route: "business_messaging", reason: "eligible_chatrace_ctwa" };
+  return {
+    route: "business_messaging",
+    reason: isWhatsappCloudApi
+      ? "eligible_whatsapp_cloud_api_ctwa"
+      : "eligible_chatrace_ctwa",
+  };
 }
 
 /**
- * Payload kept intentionally aligned with Meta's WhatsApp Business Messaging
- * Purchase example. Attribution uses only the WABA + raw ctwa_clid pair.
+ * Payload aligned with Meta's WhatsApp Business Messaging CAPI shape.
+ * Attribution uses only the WABA + raw ctwa_clid pair.
  */
-export function buildMetaBusinessMessagingPurchaseRequest(
-  config: MetaBusinessMessagingPurchaseConfig,
+export function buildMetaBusinessMessagingRequest(
+  config: MetaBusinessMessagingConfig,
+  eventName: Extract<MetaEventName, "Lead" | "Purchase">,
   ctwaClid: string,
   eventTime: number,
-  value: number,
+  customData?: Record<string, unknown>,
 ): MetaRequest {
   const eventPayload: Record<string, unknown> = {
-    event_name: "Purchase",
+    event_name: eventName,
     event_time: eventTime,
     action_source: "business_messaging",
     messaging_channel: "whatsapp",
@@ -709,11 +717,8 @@ export function buildMetaBusinessMessagingPurchaseRequest(
       whatsapp_business_account_id: config.whatsapp_business_account_id,
       ctwa_clid: ctwaClid,
     },
-    custom_data: {
-      currency: config.meta_currency,
-      value,
-    },
   };
+  if (customData) eventPayload.custom_data = customData;
   const body: Record<string, unknown> = { data: [eventPayload] };
   const apiVersion = String(config.meta_api_version || "v25.0").trim();
   const apiUrl =
@@ -721,6 +726,24 @@ export function buildMetaBusinessMessagingPurchaseRequest(
       encodeURIComponent(config.meta_access_token)
     }`;
   return { apiUrl, body, eventPayload };
+}
+
+export function buildMetaBusinessMessagingPurchaseRequest(
+  config: MetaBusinessMessagingConfig,
+  ctwaClid: string,
+  eventTime: number,
+  value: number,
+): MetaRequest {
+  return buildMetaBusinessMessagingRequest(
+    config,
+    "Purchase",
+    ctwaClid,
+    eventTime,
+    {
+      currency: config.meta_currency,
+      value,
+    },
+  );
 }
 
 export async function buildMetaRequest(
