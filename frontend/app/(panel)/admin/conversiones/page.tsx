@@ -37,6 +37,7 @@ import DateRangeFilter, {
 import {
   ALL_COLUMNS,
   columnsForTableView,
+  conversionMatchesTableSearch,
   formatIntegerWithThousands,
   friendlyPixelAttributionSource,
   friendlyPurchaseType,
@@ -569,7 +570,7 @@ export default function AdminConversionesPage() {
     });
   }, [activeConversions, statsLandingFilter, statsPixelFilter, statsGerenciaFilter, statsTelefonoFilter, statsFromMetaAdsFilter, statsSourcePlatformFilter, statsSexoFilter, statsCampaignFilter, statsDeviceFilter, gerenciaByPhone]);
   const filteredConversions = useMemo(() => {
-    const q = tableSearch.trim().toLowerCase();
+    const q = tableSearch.trim();
     if (!q) return tableConversionsFiltered;
     const conditionalMatch = q.match(/^valor\s*(>=|<=|>|<|==|=)\s*([-+]?[\d.,\s]+)$/i);
     if (conditionalMatch) {
@@ -589,39 +590,7 @@ export default function AdminConversionesPage() {
         });
       }
     }
-    return tableConversionsFiltered.filter((c) => {
-      const hay = [
-        c.phone,
-        c.email,
-        c.promo_code,
-        c.external_id,
-        c.utm_campaign,
-        c.telefono_asignado,
-        c.assigned_gerencia_label,
-        c.landing_name,
-        c.estado,
-        c.purchase_type,
-        c.meta_pixel_id,
-        c.pixel_id,
-        c.source_platform,
-        c.device_type,
-        c.fn,
-        c.ln,
-        c.ct,
-        c.st,
-        c.country,
-        c.geo_city,
-        c.geo_region,
-        c.geo_country,
-        c.contact_event_id,
-        c.lead_event_id,
-        c.purchase_event_id,
-      ]
-        .filter(Boolean)
-        .join(" ")
-        .toLowerCase();
-      return hay.includes(q);
-    });
+    return tableConversionsFiltered.filter((c) => conversionMatchesTableSearch(c as unknown as Record<string, unknown>, q));
   }, [tableConversionsFiltered, tableSearch]);
   const tablePageSize = 50;
   const totalTablePages = Math.max(1, Math.ceil(filteredConversions.length / tablePageSize));

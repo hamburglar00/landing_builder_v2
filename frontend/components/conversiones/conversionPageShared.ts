@@ -283,6 +283,54 @@ export function normalizePhone(value: string | null | undefined): string {
   return String(value ?? "").replace(/\D/g, "");
 }
 
+type TableSearchRow = Record<string, unknown>;
+
+const TABLE_SEARCH_TEXT_FIELDS = [
+  "phone",
+  "email",
+  "promo_code",
+  "external_id",
+  "utm_campaign",
+  "telefono_asignado",
+  "assigned_gerencia_label",
+  "landing_name",
+  "estado",
+  "purchase_type",
+  "meta_pixel_id",
+  "pixel_id",
+  "source_platform",
+  "device_type",
+  "fn",
+  "ln",
+  "ct",
+  "st",
+  "country",
+  "geo_city",
+  "geo_region",
+  "geo_country",
+  "contact_event_id",
+  "lead_event_id",
+  "purchase_event_id",
+] as const;
+
+export function conversionMatchesTableSearch(row: TableSearchRow, rawSearch: string): boolean {
+  const query = rawSearch.trim().toLowerCase();
+  if (!query) return true;
+
+  const queryDigits = normalizePhone(query);
+  const isPhoneSearch = queryDigits.length >= 8 && /^[\d\s()+.-]+$/.test(rawSearch.trim());
+  if (isPhoneSearch) {
+    return normalizePhone(String(row.phone ?? "")) === queryDigits;
+  }
+
+  const hay = TABLE_SEARCH_TEXT_FIELDS
+    .map((field) => row[field])
+    .filter(Boolean)
+    .join(" ")
+    .toLowerCase();
+  return hay.includes(query);
+}
+
 export function normalizeSexValue(value: unknown): string {
   const raw = String(value ?? "").trim().toLowerCase();
   if (!raw) return "";

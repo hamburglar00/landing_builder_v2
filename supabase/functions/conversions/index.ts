@@ -708,6 +708,38 @@ async function findLatestTrustedGerenciaLineage(
   ) ?? null;
 }
 
+async function findLatestNamedTrustedGerenciaLineage(
+  db: SupabaseClient,
+  userId: string,
+  phone: string,
+  gerenciaId: number | null,
+): Promise<ConversionRow | null> {
+  if (!gerenciaId) return null;
+  const { data } = await db
+    .from("conversions")
+    .select("*")
+    .eq("user_id", userId)
+    .eq("phone", phone)
+    .or(
+      `purchase_gerencia_id.eq.${gerenciaId},lead_gerencia_id.eq.${gerenciaId},assigned_gerencia_id.eq.${gerenciaId}`,
+    )
+    .order("created_at", { ascending: false })
+    .limit(100);
+  return ((data ?? []) as ConversionRow[]).find(
+    (row) =>
+      rowIsTrustedLineageForGerencia(row, gerenciaId) &&
+      Boolean(norm(row.fn) || norm(row.ln)),
+  ) ?? null;
+}
+
+function lineageNameValue(
+  payloadValue: string,
+  primaryValue: unknown,
+  fallbackValue: unknown,
+): string {
+  return payloadValue || norm(primaryValue) || norm(fallbackValue);
+}
+
 function leadHasTrustedPromo(row: ConversionRow | null | undefined): boolean {
   if (!row || !isFullPromoCode(row.promo_code)) return false;
   const status = norm(row.lead_attribution_status);
@@ -4311,6 +4343,14 @@ async function handlePurchase(
     cleanPhone,
     eventGerencia.gerencia_id,
   );
+  const namedReceiverLineage = (!payloadFn || !payloadLn)
+    ? await findLatestNamedTrustedGerenciaLineage(
+      db,
+      landing.user_id,
+      cleanPhone,
+      eventGerencia.gerencia_id,
+    )
+    : null;
   const leadIsAfterLatestPurchase = !!(
     receiverLeadRow?.created_at &&
     latestPurchaseRow?.created_at &&
@@ -4523,7 +4563,13 @@ async function handlePurchase(
       }
     }
     if (payloadFn) updates.fn = payloadFn;
+    else if (!norm(existingRow?.fn) && norm(namedReceiverLineage?.fn)) {
+      updates.fn = norm(namedReceiverLineage?.fn);
+    }
     if (payloadLn) updates.ln = payloadLn;
+    else if (!norm(existingRow?.ln) && norm(namedReceiverLineage?.ln)) {
+      updates.ln = norm(namedReceiverLineage?.ln);
+    }
     if (payloadEmail) updates.email = payloadEmail;
     if (payloadCuitCuil) updates.cuit_cuil = payloadCuitCuil;
     if (geo.ct) updates.ct = geo.ct;
@@ -4690,8 +4736,8 @@ async function handlePurchase(
       form_email: firstSource?.form_email || "",
       form_phone: firstSource?.form_phone || "",
       cuit_cuil: payloadCuitCuil || firstSource?.cuit_cuil || "",
-      fn: payloadFn || firstSource?.fn || "",
-      ln: payloadLn || firstSource?.ln || "",
+      fn: lineageNameValue(payloadFn, firstSource?.fn, namedReceiverLineage?.fn),
+      ln: lineageNameValue(payloadLn, firstSource?.ln, namedReceiverLineage?.ln),
       ct: geo.ct || firstSource?.ct || "",
       st: geo.st || firstSource?.st || "",
       zip: geo.zip || firstSource?.zip || "",
@@ -4920,8 +4966,8 @@ async function handlePurchase(
     form_email: repeatSourceRow?.form_email || "",
     form_phone: repeatSourceRow?.form_phone || "",
     cuit_cuil: payloadCuitCuil || repeatSourceRow?.cuit_cuil || "",
-    fn: payloadFn || repeatSourceRow?.fn || "",
-    ln: payloadLn || repeatSourceRow?.ln || "",
+    fn: lineageNameValue(payloadFn, repeatSourceRow?.fn, namedReceiverLineage?.fn),
+    ln: lineageNameValue(payloadLn, repeatSourceRow?.ln, namedReceiverLineage?.ln),
     ct: geo.ct || repeatSourceRow?.ct || "",
     st: geo.st || repeatSourceRow?.st || "",
     zip: geo.zip || repeatSourceRow?.zip || "",
@@ -5240,6 +5286,14 @@ async function handleSimplePurchase(
       eventGerencia.gerencia_id,
     )
     : (latestAnyRow as ConversionRow | null);
+  const namedSimpleLineage = (!payloadFn || !payloadLn) && eventGerencia.gerencia_id
+    ? await findLatestNamedTrustedGerenciaLineage(
+      db,
+      landing.user_id,
+      cleanPhone,
+      eventGerencia.gerencia_id,
+    )
+    : null;
   const simpleSourceRow = srcRow as ConversionRow | null;
   const simpleAttribution = await resolvePurchasePixelAttribution(db, {
     userId: landing.user_id,
@@ -5273,8 +5327,8 @@ async function handleSimplePurchase(
     form_email: srcRow?.form_email || "",
     form_phone: srcRow?.form_phone || "",
     cuit_cuil: payloadCuitCuil || srcRow?.cuit_cuil || "",
-    fn: payloadFn || srcRow?.fn || "",
-    ln: payloadLn || srcRow?.ln || "",
+    fn: lineageNameValue(payloadFn, srcRow?.fn, namedSimpleLineage?.fn),
+    ln: lineageNameValue(payloadLn, srcRow?.ln, namedSimpleLineage?.ln),
     ct: srcRow?.ct ?? "",
     st: srcRow?.st ?? "",
     zip: srcRow?.zip ?? "",
