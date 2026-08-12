@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useState, type CSSProperties } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { PageHeader, SurfaceCard } from "@/components/ui/PanelPrimitives";
@@ -29,6 +29,17 @@ const TAG_CLASSES: Record<WhatsappCloudApiInboxThread["tag"], string> = {
   cargo: "border-emerald-400/25 bg-emerald-400/10 text-emerald-200",
   recompra: "border-amber-400/25 bg-amber-400/10 text-amber-200",
   premium: "border-lime-400/25 bg-lime-400/10 text-lime-200",
+};
+
+const WHATSAPP_CHAT_BACKGROUND: CSSProperties = {
+  backgroundColor: "#0b141a",
+  backgroundImage: [
+    "radial-gradient(circle at 14px 18px, rgba(134,150,160,0.09) 1px, transparent 1.5px)",
+    "radial-gradient(circle at 42px 46px, rgba(134,150,160,0.07) 1px, transparent 1.5px)",
+    "linear-gradient(135deg, rgba(134,150,160,0.035) 12%, transparent 12%, transparent 88%, rgba(134,150,160,0.035) 88%)",
+  ].join(", "),
+  backgroundSize: "56px 56px, 56px 56px, 72px 72px",
+  backgroundPosition: "0 0, 8px 10px, 0 0",
 };
 
 function initials(name: string, fallback: string): string {
@@ -71,19 +82,26 @@ function formatMoney(value: number): string {
   }).format(value || 0);
 }
 
-function CheckIcon({ status }: { status: string }) {
+function StatusCheckIcon({ status }: { status: string }) {
   const normalized = status.toLowerCase();
   if (normalized === "failed") {
     return <span className="text-[10px] font-bold text-rose-300">!</span>;
   }
-  if (normalized === "read") {
-    return <span className="text-[10px] font-bold text-sky-300">✓✓</span>;
-  }
-  if (normalized === "delivered") {
-    return <span className="text-[10px] font-bold text-[var(--color-text-muted)]">✓✓</span>;
+  const color = normalized === "read" ? "#53bdeb" : "#8696a0";
+  if (normalized === "read" || normalized === "delivered") {
+    return (
+      <svg className="h-3.5 w-4" viewBox="0 0 18 12" fill="none" aria-hidden>
+        <path d="M1.4 6.3 4.3 9.2 10.8 2.7" stroke={color} strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round" />
+        <path d="M7.1 8.9 8.5 10.3 16.6 2.2" stroke={color} strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round" />
+      </svg>
+    );
   }
   if (normalized === "sent" || normalized === "accepted") {
-    return <span className="text-[10px] font-bold text-[var(--color-text-muted)]">✓</span>;
+    return (
+      <svg className="h-3.5 w-3.5" viewBox="0 0 12 12" fill="none" aria-hidden>
+        <path d="M1.4 6.3 4.3 9.2 10.8 2.7" stroke={color} strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round" />
+      </svg>
+    );
   }
   return null;
 }
@@ -118,6 +136,18 @@ function EmptyConversationIcon() {
 
 function messageTime(message: WhatsappCloudApiInboxMessage): string {
   return formatTime(message.created_at);
+}
+
+function messageDateLabel(value: string | null): string {
+  if (!value) return "-";
+  const date = new Date(value);
+  if (Number.isNaN(date.getTime())) return "-";
+  const today = new Date();
+  const yesterday = new Date();
+  yesterday.setDate(today.getDate() - 1);
+  if (date.toDateString() === today.toDateString()) return "Hoy";
+  if (date.toDateString() === yesterday.toDateString()) return "Ayer";
+  return new Intl.DateTimeFormat("es-AR", { day: "2-digit", month: "2-digit", year: "numeric" }).format(date);
 }
 
 export default function WhatsAppCloudApiInboxPageContent({ mode }: Props) {
@@ -280,14 +310,14 @@ export default function WhatsAppCloudApiInboxPageContent({ mode }: Props) {
         <section className="flex min-h-[34rem] flex-col border-b border-[var(--color-border-subtle)] xl:border-b-0 xl:border-r">
           {selectedThread ? (
             <>
-              <div className="flex items-center justify-between border-b border-[var(--color-border-subtle)] px-4 py-3">
+              <div className="flex items-center justify-between border-b border-[#26343d] bg-[#111b21] px-4 py-3">
                 <div className="flex min-w-0 items-center gap-3">
-                  <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full border border-[var(--color-border)] bg-[var(--color-bg-2)] text-xs font-semibold text-[var(--color-text-muted)]">
+                  <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full border border-[#2a3942] bg-[#202c33] text-xs font-semibold text-[#aebac1]">
                     {initials(selectedThread.profile_name, selectedThread.wa_id)}
                   </span>
                   <div className="min-w-0">
-                    <p className="truncate text-sm font-semibold text-[var(--color-text-strong)]">{selectedThread.profile_name || selectedThread.wa_id}</p>
-                    <p className="text-xs text-[var(--color-text-muted)]">{selectedThread.phone || selectedThread.wa_id}</p>
+                    <p className="truncate text-sm font-semibold text-[#e9edef]">{selectedThread.profile_name || selectedThread.wa_id}</p>
+                    <p className="text-xs text-[#8696a0]">{selectedThread.phone || selectedThread.wa_id}</p>
                   </div>
                 </div>
                 <span className={`shrink-0 rounded-full border px-2.5 py-1 text-xs font-semibold ${TAG_CLASSES[selectedThread.tag]}`}>
@@ -295,41 +325,54 @@ export default function WhatsAppCloudApiInboxPageContent({ mode }: Props) {
                 </span>
               </div>
 
-              <div className="flex min-h-0 flex-1 flex-col gap-3 overflow-y-auto bg-[radial-gradient(circle_at_16px_16px,rgba(255,255,255,0.025)_1px,transparent_1px)] [background-size:22px_22px] px-4 py-5">
+              <div className="flex min-h-0 flex-1 flex-col gap-2 overflow-y-auto px-5 py-5" style={WHATSAPP_CHAT_BACKGROUND}>
                 {selectedMessages.length === 0 ? (
-                  <div className="m-auto max-w-sm rounded-xl border border-dashed border-[var(--color-border-strong)] bg-[rgba(255,255,255,0.02)] px-5 py-6 text-center">
-                    <p className="text-sm font-semibold text-[var(--color-text-strong)]">Sin mensajes normalizados</p>
-                    <p className="mt-2 text-xs leading-5 text-[var(--color-text-muted)]">El thread existe, pero no hay mensajes disponibles para mostrar.</p>
+                  <div className="m-auto max-w-sm rounded-xl border border-dashed border-[#2a3942] bg-[#111b21]/90 px-5 py-6 text-center shadow-lg">
+                    <p className="text-sm font-semibold text-[#e9edef]">Sin mensajes normalizados</p>
+                    <p className="mt-2 text-xs leading-5 text-[#8696a0]">El thread existe, pero no hay mensajes disponibles para mostrar.</p>
                   </div>
-                ) : selectedMessages.map((message, index) => {
-                  const outbound = message.direction === "outbound";
-                  return (
-                    <div
-                      key={`${message.meta_message_id || message.created_at}-${index}`}
-                      className={`max-w-[76%] rounded-2xl border px-3 py-2 text-sm leading-6 ${
-                        outbound
-                          ? "self-end rounded-br-md border-[var(--color-primary-soft-border)] bg-[var(--color-primary-soft-bg)] text-[var(--color-text-strong)]"
-                          : "self-start rounded-bl-md border-[var(--color-border-subtle)] bg-[var(--color-bg-2)] text-[var(--color-text-strong)]"
-                      }`}
-                    >
-                      <p className="whitespace-pre-wrap break-words">{message.body || "-"}</p>
-                      <span className={`mt-1 flex items-center justify-end gap-1 text-[10px] ${
-                        outbound ? "text-[var(--color-primary)]/70" : "text-[var(--color-text-disabled)]"
-                      }`}>
-                        {messageTime(message)}
-                        {outbound ? <CheckIcon status={message.status} /> : null}
-                      </span>
-                      {message.error ? <p className="mt-1 text-[10px] text-rose-300">{message.error}</p> : null}
+                ) : (
+                  <>
+                    <div className="mb-2 self-center rounded-lg bg-[#182229] px-3 py-1 text-[11px] font-medium text-[#8696a0] shadow">
+                      {messageDateLabel(selectedMessages[0]?.created_at ?? null)}
                     </div>
-                  );
-                })}
+                    {selectedMessages.map((message, index) => {
+                      const outbound = message.direction === "outbound";
+                      return (
+                        <div
+                          key={`${message.meta_message_id || message.created_at}-${index}`}
+                          className={`relative max-w-[78%] px-2.5 py-1.5 text-[13px] leading-5 shadow-sm ${
+                            outbound
+                              ? "self-end rounded-lg rounded-tr-sm bg-[#005c4b] text-[#e9edef]"
+                              : "self-start rounded-lg rounded-tl-sm bg-[#202c33] text-[#e9edef]"
+                          }`}
+                        >
+                          <span
+                            className={`absolute top-0 h-3 w-3 ${
+                              outbound
+                                ? "-right-1 bg-[#005c4b] [clip-path:polygon(0_0,100%_0,0_100%)]"
+                                : "-left-1 bg-[#202c33] [clip-path:polygon(0_0,100%_0,100%_100%)]"
+                            }`}
+                            aria-hidden
+                          />
+                          <p className="whitespace-pre-wrap break-words pr-11">{message.body || "-"}</p>
+                          <span className="float-right -mb-0.5 ml-2 mt-1 flex items-center gap-1 text-[10px] leading-none text-[#8696a0]">
+                            {messageTime(message)}
+                            {outbound ? <StatusCheckIcon status={message.status} /> : null}
+                          </span>
+                          {message.error ? <p className="clear-both mt-2 text-[10px] text-rose-300">{message.error}</p> : null}
+                        </div>
+                      );
+                    })}
+                  </>
+                )}
               </div>
 
-              <div className="flex items-center gap-2 border-t border-[var(--color-border-subtle)] px-4 py-3">
-                <div className="flex-1 rounded-xl border border-[var(--color-border)] bg-[var(--color-bg-2)] px-3 py-2 text-sm text-[var(--color-text-disabled)]">
+              <div className="flex items-center gap-2 border-t border-[#26343d] bg-[#111b21] px-4 py-3">
+                <div className="flex-1 rounded-full border border-[#2a3942] bg-[#202c33] px-4 py-2 text-sm text-[#8696a0]">
                   Respuesta manual no habilitada
                 </div>
-                <button type="button" className="flex h-10 w-10 items-center justify-center rounded-xl border border-[var(--color-primary-soft-border)] bg-[var(--color-primary-soft-bg)] text-[var(--color-primary)]" disabled>
+                <button type="button" className="flex h-10 w-10 items-center justify-center rounded-full bg-[#00a884] text-[#0b141a] opacity-60" disabled>
                   <SendIcon />
                 </button>
               </div>
