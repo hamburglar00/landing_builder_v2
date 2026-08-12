@@ -457,13 +457,13 @@ export default function WhatsAppCloudApiInboxPageContent({ mode }: Props) {
                 className="min-w-0 flex-1 bg-transparent text-sm text-[var(--color-text-strong)] outline-none placeholder:text-[var(--color-text-disabled)]"
               />
             </div>
-            <div className="flex flex-wrap gap-2">
+            <div className="flex gap-2 overflow-x-auto [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
               {(["all", "nuevo", "lead", "cargo", "recompra", "premium"] as const).map((tag) => (
                 <button
                   key={tag}
                   type="button"
                   onClick={() => setTagFilter(tag)}
-                  className={`rounded-full border px-3 py-1 text-xs font-medium ${
+                  className={`shrink-0 rounded-full border px-3 py-1 text-xs font-medium ${
                     tagFilter === tag
                       ? "border-[var(--color-primary-soft-border)] bg-[var(--color-primary-soft-bg)] text-[var(--color-primary)]"
                       : "border-[var(--color-border)] bg-[var(--color-bg-2)] text-[var(--color-text-muted)]"
