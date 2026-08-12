@@ -90,7 +90,7 @@ export interface WhatsappCloudApiInboxThread {
   repeat_purchase_count: number;
   total_loaded: number;
   last_purchase_at: string | null;
-  tag: "nuevo" | "lead" | "cargo" | "recompra" | "vip";
+  tag: "nuevo" | "lead" | "cargo" | "recompra" | "premium";
   messages: WhatsappCloudApiInboxMessage[];
 }
 
@@ -436,7 +436,7 @@ export async function fetchWhatsappCloudApiInboxThreads(limit = 50): Promise<Wha
       repeat_purchase_count: Number(row.repeat_purchase_count ?? 0),
       total_loaded: Number(row.total_loaded ?? 0),
       last_purchase_at: firstString(row.last_purchase_at) || null,
-      tag: ["nuevo", "lead", "cargo", "recompra", "vip"].includes(tag) ? tag : "nuevo",
+      tag: ["nuevo", "lead", "cargo", "recompra", "premium"].includes(tag) ? tag : "nuevo",
       messages,
     };
   });

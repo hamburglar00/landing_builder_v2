@@ -20,7 +20,7 @@ const TAG_LABELS: Record<WhatsappCloudApiInboxThread["tag"], string> = {
   lead: "Lead",
   cargo: "Cargo",
   recompra: "Recompra",
-  vip: "VIP",
+  premium: "Premium",
 };
 
 const TAG_CLASSES: Record<WhatsappCloudApiInboxThread["tag"], string> = {
@@ -28,7 +28,7 @@ const TAG_CLASSES: Record<WhatsappCloudApiInboxThread["tag"], string> = {
   lead: "border-cyan-400/25 bg-cyan-400/10 text-cyan-200",
   cargo: "border-emerald-400/25 bg-emerald-400/10 text-emerald-200",
   recompra: "border-amber-400/25 bg-amber-400/10 text-amber-200",
-  vip: "border-lime-400/25 bg-lime-400/10 text-lime-200",
+  premium: "border-lime-400/25 bg-lime-400/10 text-lime-200",
 };
 
 function initials(name: string, fallback: string): string {
@@ -210,7 +210,7 @@ export default function WhatsAppCloudApiInboxPageContent({ mode }: Props) {
               />
             </div>
             <div className="flex flex-wrap gap-2">
-              {(["all", "nuevo", "lead", "cargo", "recompra", "vip"] as const).map((tag) => (
+              {(["all", "nuevo", "lead", "cargo", "recompra", "premium"] as const).map((tag) => (
                 <button
                   key={tag}
                   type="button"
