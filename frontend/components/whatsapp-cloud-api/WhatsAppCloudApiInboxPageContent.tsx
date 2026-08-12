@@ -168,6 +168,23 @@ function formatMoney(value: number): string {
   }).format(value || 0);
 }
 
+function formatWhatsAppPhone(value: string | null | undefined): string {
+  const digits = String(value ?? "").replace(/\D/g, "");
+  if (!digits) return "";
+
+  if (digits.startsWith("549") && digits.length === 13) {
+    const local = digits.slice(3);
+    return `+54 9 ${local.slice(0, 4)} ${local.slice(4, 6)}-${local.slice(6)}`;
+  }
+
+  if (digits.startsWith("54") && digits.length === 12) {
+    const local = digits.slice(2);
+    return `+54 ${local.slice(0, 4)} ${local.slice(4, 6)}-${local.slice(6)}`;
+  }
+
+  return digits.startsWith("+") ? digits : `+${digits}`;
+}
+
 function StatusCheckIcon({ status }: { status: string }) {
   const normalized = status.toLowerCase();
   if (normalized === "failed") {
@@ -545,7 +562,7 @@ export default function WhatsAppCloudApiInboxPageContent({ mode }: Props) {
                   </span>
                   <div className="min-w-0">
                     <p className="truncate text-sm font-semibold text-[#e9edef]">{selectedThread.profile_name || selectedThread.wa_id}</p>
-                    <p className="text-xs text-[#8696a0]">{selectedThread.phone || selectedThread.wa_id}</p>
+                    <p className="text-xs text-[#8696a0]">{formatWhatsAppPhone(selectedThread.phone || selectedThread.wa_id)}</p>
                   </div>
                 </div>
                 <span className={`shrink-0 rounded-full border px-2.5 py-1 text-xs font-semibold ${TAG_CLASSES[selectedThread.tag]}`}>
@@ -649,7 +666,7 @@ export default function WhatsAppCloudApiInboxPageContent({ mode }: Props) {
                   {initials(selectedThread.profile_name, selectedThread.wa_id)}
                 </span>
                 <p className="mt-3 text-sm font-semibold text-[var(--color-text-strong)]">{selectedThread.profile_name || selectedThread.wa_id}</p>
-                <p className="mt-1 text-xs text-[var(--color-text-muted)]">{selectedThread.phone || selectedThread.wa_id}</p>
+                <p className="mt-1 text-xs text-[var(--color-text-muted)]">{formatWhatsAppPhone(selectedThread.phone || selectedThread.wa_id)}</p>
               </div>
 
               <div className="grid grid-cols-2 gap-2">
@@ -666,7 +683,7 @@ export default function WhatsAppCloudApiInboxPageContent({ mode }: Props) {
               <div>
                 <p className="text-[10px] font-semibold uppercase tracking-[0.16em] text-[var(--color-text-disabled)]">Derivacion</p>
                 <div className="mt-3 space-y-2 text-xs">
-                  <InfoRow label="Telefono" value={selectedThread.assigned_phone || "-"} />
+                  <InfoRow label="Telefono" value={formatWhatsAppPhone(selectedThread.assigned_phone) || "-"} />
                   <InfoRow label="Gerencia" value={selectedThread.assigned_gerencia_label || selectedThread.assigned_gerencia_id?.toString() || "-"} />
                   <InfoRow label="Promo" value={selectedThread.promo_code || "-"} />
                 </div>
