@@ -55,6 +55,10 @@ import EditableConversionEmailCell from "@/components/conversiones/EditableConve
 import ConversionFiltersModal from "@/components/conversiones/ConversionFiltersModal";
 import ConversionLogFilters from "@/components/conversiones/ConversionLogFilters";
 import ConversionConfigurationPanel from "@/components/conversiones/ConversionConfigurationPanel";
+import {
+  exportConversionTablePdf,
+  formatConversionPdfDateRange,
+} from "@/components/conversiones/exportConversionTablePdf";
 import { useConversionStatsFilters } from "@/components/conversiones/useConversionStatsFilters";
 import {
   ConversionPagination,
@@ -598,6 +602,60 @@ export default function AdminConversionesPage() {
     const start = (tablePage - 1) * tablePageSize;
     return filteredConversions.slice(start, start + tablePageSize);
   }, [filteredConversions, tablePage]);
+  const pdfTableColumns = useMemo(
+    () => [
+      "timestamp" as ColKey,
+      ...columnsForTableView(ALL_COLUMNS, "friendly").filter(
+        (column) => column !== "timestamp",
+      ),
+    ],
+    [],
+  );
+  const pdfTableFilters = useMemo(() => {
+    const filters = [
+      `Periodo: ${formatConversionPdfDateRange(dateRange)}`,
+      `Moneda: ${currencyScope === CURRENCY_ALL ? "Todas" : currencyScope}`,
+    ];
+    const gerenciaLabel =
+      statsGerenciaFilter === "__all__"
+        ? ""
+        : statsGerenciaFilter;
+    if (tableSearch.trim()) filters.push(`Busqueda: ${tableSearch.trim()}`);
+    if (statsLandingFilter !== "__all__") filters.push(`Landing: ${statsLandingFilter}`);
+    if (statsPixelFilter !== "__all__") filters.push(`Pixel: ${statsPixelFilter}`);
+    if (gerenciaLabel) filters.push(`Gerencia: ${gerenciaLabel}`);
+    if (statsTelefonoFilter !== "__all__") filters.push(`Telefono: ${statsTelefonoFilter}`);
+    if (statsFromMetaAdsFilter !== "__all__") {
+      filters.push(`Meta Ads: ${statsFromMetaAdsFilter === "true" ? "Si" : "No"}`);
+    }
+    if (statsSourcePlatformFilter !== "__all__") filters.push(`Origen: ${friendlySourcePlatform(statsSourcePlatformFilter)}`);
+    if (statsSexoFilter !== "__all__") filters.push(`Sexo: ${statsSexoFilter}`);
+    if (statsCampaignFilter.length > 0) filters.push(`Campanas: ${statsCampaignFilter.join(", ")}`);
+    if (statsDeviceFilter !== "__all__") filters.push(`Dispositivo: ${statsDeviceFilter}`);
+    return filters;
+  }, [
+    currencyScope,
+    dateRange,
+    statsCampaignFilter,
+    statsDeviceFilter,
+    statsFromMetaAdsFilter,
+    statsGerenciaFilter,
+    statsGerenciaOptions,
+    statsLandingFilter,
+    statsPixelFilter,
+    statsSexoFilter,
+    statsSourcePlatformFilter,
+    statsTelefonoFilter,
+    tableSearch,
+  ]);
+  const handleExportTablePdf = useCallback(() => {
+    void exportConversionTablePdf({
+      rows: filteredConversions,
+      columns: pdfTableColumns,
+      filters: pdfTableFilters,
+      workspaceName: clientName,
+    });
+  }, [clientName, filteredConversions, pdfTableColumns, pdfTableFilters]);
   useEffect(() => {
     setTablePage(1);
   }, [tableSearch, dateRange, statsLandingFilter, statsPixelFilter, statsGerenciaFilter, statsTelefonoFilter, statsFromMetaAdsFilter, statsSourcePlatformFilter, statsSexoFilter, statsCampaignFilter, statsDeviceFilter, demoMode, currencyScope]);
@@ -1173,6 +1231,14 @@ export default function AdminConversionesPage() {
                 }
                 className="h-8 w-full rounded-lg border border-zinc-700 bg-zinc-900 px-3 text-xs text-zinc-100 placeholder:text-zinc-500 sm:w-64"
               />
+              <button
+                type="button"
+                onClick={handleExportTablePdf}
+                disabled={filteredConversions.length === 0}
+                className="h-8 shrink-0 rounded-lg border border-emerald-400/30 bg-emerald-400/10 px-3 text-[11px] font-semibold text-emerald-200 transition hover:bg-emerald-400/15 disabled:cursor-not-allowed disabled:border-zinc-700 disabled:bg-zinc-900 disabled:text-zinc-600"
+              >
+                Exportar PDF
+              </button>
               <ConversionTableViewToggle
                 view={tableView}
                 onToggle={toggleTableView}
