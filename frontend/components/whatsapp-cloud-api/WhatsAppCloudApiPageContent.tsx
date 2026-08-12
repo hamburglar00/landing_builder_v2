@@ -30,6 +30,7 @@ const DEFAULT_REDIRECT_TEMPLATE =
   "Hola, gracias por comunicarte con {{name}}.\n\nPara continuar escribile a tu asesor: {{wa_link}}\n\nTu codigo es: {{promo_code}}";
 const DEFAULT_FALLBACK_TEMPLATE =
   "Hola, gracias por comunicarte. En este momento no hay un asesor disponible. Por favor intenta nuevamente en unos minutos.";
+const DEFAULT_CTA_BUTTON_TITLE = "Ir al asesor";
 
 const INSTRUCTION_CHECKLIST = [
   "Entrar a https://developers.facebook.com/apps y crear una app nueva o abrir la app del cliente.",
@@ -359,6 +360,8 @@ export default function WhatsAppCloudApiPageContent({
   const [fairCriterion, setFairCriterion] = useState<"usage_count" | "messages_received">("usage_count");
   const [redirectTemplate, setRedirectTemplate] = useState(DEFAULT_REDIRECT_TEMPLATE);
   const [fallbackTemplate, setFallbackTemplate] = useState(DEFAULT_FALLBACK_TEMPLATE);
+  const [redirectUseCtaButton, setRedirectUseCtaButton] = useState(false);
+  const [redirectCtaButtonTitle, setRedirectCtaButtonTitle] = useState(DEFAULT_CTA_BUTTON_TITLE);
 
   const webhookUrl = useMemo(() => {
     const base = process.env.NEXT_PUBLIC_SUPABASE_URL?.replace(/\/$/, "") ?? "";
@@ -419,6 +422,8 @@ export default function WhatsAppCloudApiPageContent({
     setFairCriterion(cfg?.gerencia_fair_criterion ?? "usage_count");
     setRedirectTemplate(cfg?.redirect_message_template ?? DEFAULT_REDIRECT_TEMPLATE);
     setFallbackTemplate(cfg?.fallback_message_template ?? DEFAULT_FALLBACK_TEMPLATE);
+    setRedirectUseCtaButton(cfg?.redirect_use_cta_button ?? false);
+    setRedirectCtaButtonTitle(cfg?.redirect_cta_button_title ?? DEFAULT_CTA_BUTTON_TITLE);
     if (cfg?.id) {
       const asg = await fetchWhatsappCloudApiAssignments(cfg.id);
       setAssignments(toAssignments(asg));
@@ -489,6 +494,8 @@ export default function WhatsAppCloudApiPageContent({
       if (!/^\d+$/.test(pixelId.trim())) throw new Error("Pixel ID requerido.");
       if (!redirectTemplate.trim()) throw new Error("Mensaje de derivacion requerido.");
       if (!fallbackTemplate.trim()) throw new Error("Mensaje fallback requerido.");
+      if (redirectUseCtaButton && !redirectCtaButtonTitle.trim()) throw new Error("Titulo del boton requerido.");
+      if (redirectCtaButtonTitle.trim().length > 20) throw new Error("Titulo del boton: maximo 20 caracteres.");
       if (assignments.length === 0) throw new Error("Asigna al menos una gerencia para poder derivar mensajes.");
 
       const saved = await upsertWhatsappCloudApiConfig({
@@ -511,6 +518,8 @@ export default function WhatsAppCloudApiPageContent({
         send_contact_capi: false,
         redirect_message_template: redirectTemplate,
         fallback_message_template: fallbackTemplate,
+        redirect_use_cta_button: redirectUseCtaButton,
+        redirect_cta_button_title: redirectCtaButtonTitle.trim() || DEFAULT_CTA_BUTTON_TITLE,
       });
       await setWhatsappCloudApiAssignments(
         saved.id,
@@ -955,12 +964,36 @@ export default function WhatsAppCloudApiPageContent({
                 />
               </Field>
               <div className="rounded-xl border border-[var(--color-border-subtle)] bg-[rgba(255,255,255,0.025)] p-3">
+                <Toggle
+                  checked={redirectUseCtaButton}
+                  onChange={setRedirectUseCtaButton}
+                  label="Usar boton de redireccion"
+                  description="El link a WhatsApp se envia como boton CTA URL."
+                />
+                {redirectUseCtaButton ? (
+                  <div className="mt-3">
+                    <Field label="Titulo del boton" required>
+                      <input
+                        value={redirectCtaButtonTitle}
+                        onChange={(e) => setRedirectCtaButtonTitle(e.target.value.slice(0, 20))}
+                        className={inputClass}
+                        maxLength={20}
+                        placeholder={DEFAULT_CTA_BUTTON_TITLE}
+                      />
+                    </Field>
+                    <p className="mt-1 text-[11px] text-[var(--color-text-muted)]">
+                      Maximo 20 caracteres. El link se aloja en el boton y no se muestra en el cuerpo del mensaje.
+                    </p>
+                  </div>
+                ) : null}
+              </div>
+              <div className="rounded-xl border border-[var(--color-border-subtle)] bg-[rgba(255,255,255,0.025)] p-3">
                 <p className="text-xs font-medium text-[var(--color-text)]">Variables disponibles</p>
                 <div className="mt-2 grid gap-2 text-[11px] leading-4 text-[var(--color-text-muted)] sm:grid-cols-2">
                   <p><span className="ui-badge font-mono">{"{{name}}"}</span> inserta el nombre interno configurado.</p>
                   <p><span className="ui-badge font-mono">{"{{phone}}"}</span> inserta el telefono asignado.</p>
                   <p><span className="ui-badge font-mono">{"{{promo_code}}"}</span> inserta el codigo generado para tracking.</p>
-                  <p><span className="ui-badge font-mono">{"{{wa_link}}"}</span> inserta el link a WhatsApp con telefono y promo.</p>
+                  <p><span className="ui-badge font-mono">{"{{wa_link}}"}</span> inserta el link a WhatsApp con telefono y promo. Si usas boton, el link queda en el CTA.</p>
                 </div>
               </div>
             </div>

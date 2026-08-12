@@ -5,6 +5,7 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { PageHeader, SurfaceCard } from "@/components/ui/PanelPrimitives";
 import { supabase } from "@/lib/supabaseClient";
+import { invokeFunction } from "@/lib/supabaseFunctions";
 import {
   fetchWhatsappCloudApiInboxThreads,
   type WhatsappCloudApiInboxMessage,
@@ -57,7 +58,7 @@ function formatTime(value: string | null): string {
   const now = new Date();
   const sameDay = date.toDateString() === now.toDateString();
   if (sameDay) {
-    return new Intl.DateTimeFormat("es-AR", { hour: "2-digit", minute: "2-digit" }).format(date);
+    return new Intl.DateTimeFormat("es-AR", { hour: "2-digit", minute: "2-digit", hourCycle: "h23" }).format(date);
   }
   return new Intl.DateTimeFormat("es-AR", { day: "2-digit", month: "2-digit" }).format(date);
 }
@@ -71,6 +72,7 @@ function formatDateTime(value: string | null): string {
     month: "2-digit",
     hour: "2-digit",
     minute: "2-digit",
+    hourCycle: "h23",
   }).format(date);
 }
 
@@ -150,6 +152,16 @@ function messageDateLabel(value: string | null): string {
   return new Intl.DateTimeFormat("es-AR", { day: "2-digit", month: "2-digit", year: "numeric" }).format(date);
 }
 
+function lastInboundMessageAt(messages: WhatsappCloudApiInboxMessage[]): Date | null {
+  for (let index = messages.length - 1; index >= 0; index--) {
+    const message = messages[index];
+    if (message.direction !== "inbound") continue;
+    const date = new Date(message.created_at);
+    if (!Number.isNaN(date.getTime())) return date;
+  }
+  return null;
+}
+
 export default function WhatsAppCloudApiInboxPageContent({ mode }: Props) {
   const router = useRouter();
   const basePath = mode === "admin" ? "/admin/whatsapp-cloud-api" : "/dashboard/whatsapp-cloud-api";
@@ -159,6 +171,9 @@ export default function WhatsAppCloudApiInboxPageContent({ mode }: Props) {
   const [tagFilter, setTagFilter] = useState<"all" | WhatsappCloudApiInboxThread["tag"]>("all");
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [manualMessage, setManualMessage] = useState("");
+  const [sending, setSending] = useState(false);
+  const [sendNotice, setSendNotice] = useState<string | null>(null);
 
   const loadThreads = useCallback(async () => {
     setLoading(true);
@@ -183,6 +198,11 @@ export default function WhatsAppCloudApiInboxPageContent({ mode }: Props) {
     void loadThreads();
   }, [loadThreads]);
 
+  useEffect(() => {
+    setManualMessage("");
+    setSendNotice(null);
+  }, [selectedId]);
+
   const filteredThreads = useMemo(() => {
     const term = search.trim().toLowerCase();
     return threads.filter((thread) => {
@@ -206,7 +226,40 @@ export default function WhatsAppCloudApiInboxPageContent({ mode }: Props) {
     [filteredThreads, selectedId, threads],
   );
 
-  const selectedMessages = selectedThread?.messages ?? [];
+  const selectedMessages = useMemo(() => selectedThread?.messages ?? [], [selectedThread]);
+  const lastInboundAt = useMemo(() => lastInboundMessageAt(selectedMessages), [selectedMessages]);
+  const serviceWindowExpiresAt = useMemo(
+    () => lastInboundAt ? new Date(lastInboundAt.getTime() + 24 * 60 * 60 * 1000) : null,
+    [lastInboundAt],
+  );
+  const serviceWindowActive = Boolean(serviceWindowExpiresAt && Date.now() <= serviceWindowExpiresAt.getTime());
+
+  const sendManualMessage = async () => {
+    if (!selectedThread || !manualMessage.trim() || sending) return;
+    setSending(true);
+    setError(null);
+    setSendNotice(null);
+    try {
+      const { error: sendError } = await invokeFunction<{ ok: boolean }>(
+        supabase,
+        "whatsapp-cloud-send-message",
+        {
+          body: {
+            contact_id: selectedThread.contact_id,
+            body: manualMessage.trim(),
+          },
+        },
+      );
+      if (sendError) throw new Error(sendError.message);
+      setManualMessage("");
+      setSendNotice("Mensaje enviado.");
+      await loadThreads();
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "No se pudo enviar el mensaje.");
+    } finally {
+      setSending(false);
+    }
+  };
 
   return (
     <div className="space-y-6">
@@ -226,6 +279,7 @@ export default function WhatsAppCloudApiInboxPageContent({ mode }: Props) {
       />
 
       {error ? <div className="ui-alert-error">{error}</div> : null}
+      {sendNotice ? <div className="ui-alert ui-alert-success text-sm">{sendNotice}</div> : null}
 
       <SurfaceCard className="grid min-h-[38rem] overflow-hidden xl:grid-cols-[20rem_minmax(0,1fr)_18rem]">
         <aside className="flex min-h-0 flex-col border-b border-[var(--color-border-subtle)] xl:border-b-0 xl:border-r">
@@ -368,13 +422,39 @@ export default function WhatsAppCloudApiInboxPageContent({ mode }: Props) {
                 )}
               </div>
 
-              <div className="flex items-center gap-2 border-t border-[#26343d] bg-[#111b21] px-4 py-3">
-                <div className="flex-1 rounded-full border border-[#2a3942] bg-[#202c33] px-4 py-2 text-sm text-[#8696a0]">
-                  Respuesta manual no habilitada
+              <div className="border-t border-[#26343d] bg-[#111b21] px-4 py-3">
+                <div className="mb-2 text-[11px] text-[#8696a0]">
+                  {serviceWindowExpiresAt
+                    ? serviceWindowActive
+                      ? `Ventana activa hasta ${formatDateTime(serviceWindowExpiresAt.toISOString())}`
+                      : `Ventana vencida el ${formatDateTime(serviceWindowExpiresAt.toISOString())}`
+                    : "Sin mensaje entrante para validar ventana de 24 hs"}
                 </div>
-                <button type="button" className="flex h-10 w-10 items-center justify-center rounded-full bg-[#00a884] text-[#0b141a] opacity-60" disabled>
+                <div className="flex items-center gap-2">
+                  <input
+                    value={manualMessage}
+                    onChange={(event) => setManualMessage(event.target.value)}
+                    onKeyDown={(event) => {
+                      if (event.key === "Enter" && !event.shiftKey) {
+                        event.preventDefault();
+                        void sendManualMessage();
+                      }
+                    }}
+                    disabled={!serviceWindowActive || sending}
+                    className="min-w-0 flex-1 rounded-full border border-[#2a3942] bg-[#202c33] px-4 py-2 text-sm text-[#e9edef] outline-none placeholder:text-[#8696a0] disabled:cursor-not-allowed disabled:opacity-60"
+                    placeholder={serviceWindowActive ? "Escribir respuesta" : "Ventana de 24 hs no disponible"}
+                    maxLength={4096}
+                  />
+                  <button
+                    type="button"
+                    className="flex h-10 w-10 items-center justify-center rounded-full bg-[#00a884] text-[#0b141a] transition hover:bg-[#06cf9c] disabled:cursor-not-allowed disabled:opacity-50"
+                    disabled={!serviceWindowActive || !manualMessage.trim() || sending}
+                    onClick={() => void sendManualMessage()}
+                    title="Enviar respuesta"
+                  >
                   <SendIcon />
-                </button>
+                  </button>
+                </div>
               </div>
             </>
           ) : (

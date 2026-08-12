@@ -21,6 +21,8 @@ export interface WhatsappCloudApiConfig {
   send_contact_capi: boolean;
   redirect_message_template: string;
   fallback_message_template: string;
+  redirect_use_cta_button: boolean;
+  redirect_cta_button_title: string;
   created_at: string;
   updated_at: string;
 }
@@ -128,6 +130,8 @@ export async function upsertWhatsappCloudApiConfig(input: {
   send_contact_capi: boolean;
   redirect_message_template: string;
   fallback_message_template: string;
+  redirect_use_cta_button: boolean;
+  redirect_cta_button_title: string;
 }): Promise<{ id: string }> {
   const body = {
     ...(input.id ? { id: input.id } : {}),
@@ -149,6 +153,8 @@ export async function upsertWhatsappCloudApiConfig(input: {
     send_contact_capi: input.send_contact_capi,
     redirect_message_template: input.redirect_message_template,
     fallback_message_template: input.fallback_message_template,
+    redirect_use_cta_button: input.redirect_use_cta_button,
+    redirect_cta_button_title: input.redirect_cta_button_title,
     updated_at: new Date().toISOString(),
   };
 

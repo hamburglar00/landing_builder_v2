@@ -30,6 +30,8 @@ type WhatsappConfig = {
   send_contact_capi: boolean;
   redirect_message_template: string;
   fallback_message_template: string;
+  redirect_use_cta_button: boolean;
+  redirect_cta_button_title: string;
 };
 
 const MAX_EVENTS = 10;
@@ -219,6 +221,89 @@ async function sendWhatsappText(
     to,
     type: "text",
     text: { preview_url: true, body },
+  };
+  const maxAttempts = 3;
+  for (let attempt = 1; attempt <= maxAttempts; attempt++) {
+    const controller = new AbortController();
+    const timeout = setTimeout(() => controller.abort(), GRAPH_TIMEOUT_MS);
+    try {
+      const res = await fetch(url, {
+        method: "POST",
+        headers: {
+          Authorization: `Bearer ${config.meta_access_token}`,
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(payload),
+        signal: controller.signal,
+      });
+      clearTimeout(timeout);
+      const text = await res.text();
+      let json: Json = {};
+      try {
+        json = text ? JSON.parse(text) as Json : {};
+      } catch {
+        json = { raw: text };
+      }
+      const messages = Array.isArray(json.messages) ? json.messages : [];
+      const first = asRecord(messages[0]);
+      const metaMessageId = str(first.id);
+      if (res.ok && metaMessageId) {
+        return { ok: true, status: res.status, response: json, metaMessageId, error: "" };
+      }
+      const retryable = res.status === 429 || res.status === 408 ||
+        res.status >= 500;
+      if (!retryable || attempt === maxAttempts) {
+        return {
+          ok: false,
+          status: res.status,
+          response: json,
+          metaMessageId,
+          error: `HTTP ${res.status}: ${text}`.slice(0, 4000),
+        };
+      }
+    } catch (error) {
+      clearTimeout(timeout);
+      if (attempt === maxAttempts) {
+        return {
+          ok: false,
+          status: 0,
+          response: {},
+          metaMessageId: "",
+          error: String(error).slice(0, 4000),
+        };
+      }
+    }
+    await new Promise((resolve) => setTimeout(resolve, 250 * attempt));
+  }
+  return { ok: false, status: 0, response: {}, metaMessageId: "", error: "Unknown send failure" };
+}
+
+async function sendWhatsappCtaUrl(
+  config: WhatsappConfig,
+  to: string,
+  body: string,
+  buttonTitle: string,
+  urlToOpen: string,
+): Promise<{ ok: boolean; status: number; response: Json; metaMessageId: string; error: string }> {
+  const apiVersion = str(config.meta_api_version) || "v25.0";
+  const url =
+    `https://graph.facebook.com/${apiVersion}/${encodeURIComponent(config.phone_number_id)}/messages`;
+  const title = str(buttonTitle).slice(0, 20) || "Ir al asesor";
+  const payload = {
+    messaging_product: "whatsapp",
+    to,
+    type: "interactive",
+    interactive: {
+      type: "cta_url",
+      body: { text: body },
+      action: {
+        name: "cta_url",
+        parameters: {
+          display_text: title,
+          url: urlToOpen,
+        },
+      },
+    },
   };
   const maxAttempts = 3;
   for (let attempt = 1; attempt <= maxAttempts; attempt++) {
@@ -516,11 +601,12 @@ async function handleMessage(db: SupabaseDb, event: WebhookEvent): Promise<void>
   const assignedPhone = digits(phonePayload.phone);
   const generatedPromo = promoCode(config.landing_tag);
   const link = waLink(assignedPhone, generatedPromo);
+  const useCtaButton = Boolean(config.redirect_use_cta_button);
   const text = renderTemplate(config.redirect_message_template, {
     name: config.name,
     phone: assignedPhone,
     promo_code: generatedPromo,
-    wa_link: link,
+    wa_link: useCtaButton ? "" : link,
   });
 
   const contactResult = await createInternalContact({
@@ -568,20 +654,45 @@ async function handleMessage(db: SupabaseDb, event: WebhookEvent): Promise<void>
     return;
   }
 
-  const sendResult = await sendWhatsappText(config, waId, text);
+  const sendResult = useCtaButton
+    ? await sendWhatsappCtaUrl(
+      config,
+      waId,
+      text,
+      config.redirect_cta_button_title,
+      link,
+    )
+    : await sendWhatsappText(config, waId, text);
   await db.from("whatsapp_cloud_api_outbound_messages").insert({
     config_id: config.id,
     user_id: config.user_id,
     assignment_id: assignmentRow.id,
     meta_message_id: sendResult.metaMessageId,
     recipient_wa_id: waId,
-    message_type: "text",
-    payload: {
-      messaging_product: "whatsapp",
-      to: waId,
-      type: "text",
-      text: { preview_url: true, body: text },
-    },
+    message_type: useCtaButton ? "interactive_cta_url" : "text",
+    payload: useCtaButton
+      ? {
+        messaging_product: "whatsapp",
+        to: waId,
+        type: "interactive",
+        interactive: {
+          type: "cta_url",
+          body: { text },
+          action: {
+            name: "cta_url",
+            parameters: {
+              display_text: (str(config.redirect_cta_button_title).slice(0, 20) || "Ir al asesor"),
+              url: link,
+            },
+          },
+        },
+      }
+      : {
+        messaging_product: "whatsapp",
+        to: waId,
+        type: "text",
+        text: { preview_url: true, body: text },
+      },
     response: sendResult.response,
     status: sendResult.ok ? "accepted" : "failed",
     last_error: sendResult.error,
