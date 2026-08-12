@@ -75,6 +75,7 @@ export default function ConversionTablePdfExportButton({
         `Eventos: ${EVENT_OPTIONS.filter((option) => selectedEvents[option.key]).map((option) => option.label).join(", ")}`,
       ],
       workspaceName,
+      selectedEventTypes: EVENT_OPTIONS.filter((option) => selectedEvents[option.key]).map((option) => option.key),
     });
     setOpen(false);
   };
