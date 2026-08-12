@@ -248,7 +248,10 @@ function EmptyConversationIcon() {
 }
 
 function messageTime(message: WhatsappCloudApiInboxMessage): string {
-  return formatTime(message.created_at);
+  if (!message.created_at) return "-";
+  const date = new Date(message.created_at);
+  if (Number.isNaN(date.getTime())) return "-";
+  return new Intl.DateTimeFormat("es-AR", { hour: "2-digit", minute: "2-digit", hourCycle: "h23" }).format(date);
 }
 
 function messageDateLabel(value: string | null): string {
