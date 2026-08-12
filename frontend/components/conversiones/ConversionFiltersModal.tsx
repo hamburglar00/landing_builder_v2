@@ -1,5 +1,6 @@
 "use client";
 
+import { useMemo, useState } from "react";
 import ModalPortal from "@/components/ui/ModalPortal";
 import { sexLabel } from "@/components/conversiones/conversionPageShared";
 
@@ -90,6 +91,102 @@ function FilterField({
   );
 }
 
+function SearchableFilterField({
+  id,
+  label,
+  value,
+  allLabel,
+  options,
+  onChange,
+}: {
+  id: string;
+  label: string;
+  value: string;
+  allLabel: string;
+  options: readonly ConversionFilterOption[];
+  onChange: (value: string) => void;
+}) {
+  const [open, setOpen] = useState(false);
+  const [query, setQuery] = useState("");
+  const selectedLabel = value === "__all__"
+    ? allLabel
+    : options.find((option) => option.value === value)?.label || value;
+  const filteredOptions = useMemo(() => {
+    const normalized = query.trim().toLowerCase();
+    if (!normalized) return options;
+    return options.filter((option) =>
+      `${option.label} ${option.value}`.toLowerCase().includes(normalized),
+    );
+  }, [options, query]);
+  const selectValue = (nextValue: string) => {
+    onChange(nextValue);
+    setOpen(false);
+    setQuery("");
+  };
+
+  return (
+    <div className="relative">
+      <label htmlFor={id} className="mb-1 block text-xs text-zinc-400">
+        {label}
+      </label>
+      <button
+        id={id}
+        type="button"
+        onClick={() => setOpen((current) => !current)}
+        className={`${selectClassName} flex items-center justify-between text-left`}
+      >
+        <span className="truncate">{selectedLabel}</span>
+        <span className={`ml-2 text-zinc-500 transition ${open ? "rotate-180" : ""}`}>v</span>
+      </button>
+      {open ? (
+        <div className="absolute z-40 mt-1 w-full rounded-lg border border-zinc-700 bg-zinc-950 p-2 text-xs text-zinc-100 shadow-xl">
+          <div className="mb-2 flex h-8 items-center gap-2 rounded-lg border border-zinc-700 bg-zinc-900 px-2">
+            <span className="text-[10px] font-semibold uppercase tracking-[0.12em] text-zinc-500">
+              Buscar
+            </span>
+            <input
+              autoFocus
+              value={query}
+              onChange={(event) => setQuery(event.target.value)}
+              placeholder="Nombre o ID..."
+              className="min-w-0 flex-1 bg-transparent text-xs text-zinc-100 outline-none placeholder:text-zinc-600"
+            />
+          </div>
+          <div className="max-h-56 overflow-y-auto">
+            <button
+              type="button"
+              onClick={() => selectValue("__all__")}
+              className={`block w-full rounded px-2 py-1.5 text-left hover:bg-zinc-800/70 ${
+                value === "__all__" ? "bg-emerald-500/10 text-emerald-300" : "text-zinc-200"
+              }`}
+            >
+              {allLabel}
+            </button>
+            {filteredOptions.length === 0 ? (
+              <div className="px-2 py-3 text-center text-zinc-500">
+                Sin resultados
+              </div>
+            ) : (
+              filteredOptions.map((option) => (
+                <button
+                  key={option.value}
+                  type="button"
+                  onClick={() => selectValue(option.value)}
+                  className={`block w-full rounded px-2 py-1.5 text-left hover:bg-zinc-800/70 ${
+                    value === option.value ? "bg-emerald-500/10 text-emerald-300" : "text-zinc-200"
+                  }`}
+                >
+                  <span className="block truncate">{option.label}</span>
+                </button>
+              ))
+            )}
+          </div>
+        </div>
+      ) : null}
+    </div>
+  );
+}
+
 function stringOptions(values: readonly string[]): ConversionFilterOption[] {
   return values.map((value) => ({ value, label: value }));
 }
@@ -137,7 +234,7 @@ export default function ConversionFiltersModal({
                 options={stringOptions(options.pixels)}
                 onChange={onChange.pixel}
               />
-              <FilterField
+              <SearchableFilterField
                 id="conversion-filter-gerencia"
                 label="Gerencia (ID)"
                 value={draft.gerencia}
