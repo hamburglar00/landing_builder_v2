@@ -76,6 +76,23 @@ function monthLabel(monthValue: string): string {
   return new Intl.DateTimeFormat("es-AR", { month: "long", year: "numeric" }).format(date);
 }
 
+function formatDateOnly(date: Date): string {
+  return date.toLocaleDateString("es-AR", {
+    year: "numeric",
+    month: "2-digit",
+    day: "2-digit",
+  });
+}
+
+function formatRangeLabel(range: FetchDateRange | null | undefined): string {
+  const startDate = range?.start ? new Date(range.start) : null;
+  const endDate = range?.end ? new Date(range.end) : null;
+  if (!startDate || !endDate || Number.isNaN(startDate.getTime()) || Number.isNaN(endDate.getTime())) return "Maximo";
+  const start = formatDateOnly(startDate);
+  const end = formatDateOnly(endDate);
+  return start === end ? start : `${start} - ${end}`;
+}
+
 function monthOptions(firstMonthValue = FIRST_DATA_MONTH): Array<{ value: string; label: string }> {
   const now = new Date();
   const [firstYearRaw, firstMonthRaw] = firstMonthValue.split("-");
@@ -147,7 +164,6 @@ export default function GerenciasPerformancePanel({
   fetchConversionsForMonth,
   fetchAvailabilityForMonth,
   gerenciaByPhone,
-  activePhonesByGerenciaLabel,
   landingOptions = [],
   globalRows,
   globalRange,
@@ -181,18 +197,6 @@ export default function GerenciasPerformancePanel({
     () => selectedLanding ? new Set(selectedLanding.gerenciaLabels) : null,
     [selectedLanding],
   );
-  const fallbackActivePhonesByLabel = useMemo(() => {
-    const next: Record<string, string[]> = {};
-    for (const [phone, labels] of Object.entries(gerenciaByPhone)) {
-      for (const label of labels) {
-        next[label] = next[label] ?? [];
-        if (!next[label].includes(phone)) next[label].push(phone);
-      }
-    }
-    return next;
-  }, [gerenciaByPhone]);
-  const phonesByGerenciaLabel = activePhonesByGerenciaLabel ?? fallbackActivePhonesByLabel;
-
   useEffect(() => {
     if (landingFilter === "__all__") return;
     if (!landingOptions.some((option) => option.id === landingFilter)) {
@@ -429,29 +433,36 @@ export default function GerenciasPerformancePanel({
   const exportPdf = async () => {
     try {
       const { jsPDF } = await import("jspdf");
-      const reportTitle = `Desempeño por Gerencias - ${currency} - ${monthLabel(month)}`;
-      const landingLabel = selectedLanding?.name || "Todas las landings";
+      const periodLabel = useGlobalFilters ? formatRangeLabel(globalRange) : monthLabel(month);
+      const reportTitle = `Desempeno por Gerencias - ${currency} - ${periodLabel}`;
+      const landingLabel = useGlobalFilters ? "Filtro global" : selectedLanding?.name || "Todas las landings";
       const filters = [
-        `Mes: ${monthLabel(month)}`,
+        `Periodo: ${periodLabel}`,
         `Moneda: ${currency}`,
         `Landing: ${landingLabel}`,
-        `Meta Ads: ${metaAdsOnly ? "Sí" : "No"}`,
-        `Búsqueda: ${searchTerm.trim() || "-"}`,
+        ...(!useGlobalFilters ? [`Meta Ads: ${metaAdsOnly ? "Si" : "No"}`] : []),
+        ...(globalGerenciaLabels.length > 0 ? [`Gerencia: ${globalGerenciaLabels.join(", ")}`] : []),
+        `Busqueda: ${searchTerm.trim() || "-"}`,
         `Orden: ${sortKey} ${sortDirection === "asc" ? "ascendente" : "descendente"}`,
       ];
 
-      const doc = new jsPDF({ orientation: "landscape", unit: "mm", format: "a4", compress: true });
-      doc.setProperties({ title: reportTitle, subject: "Reporte de desempeño por gerencias" });
+      const doc = new jsPDF({ orientation: "landscape", unit: "mm", format: "a3", compress: true });
+      doc.setProperties({ title: reportTitle, subject: "Reporte de desempeno por gerencias" });
 
       const pageWidth = doc.internal.pageSize.getWidth();
       const pageHeight = doc.internal.pageSize.getHeight();
       const margin = 10;
       const tableWidth = pageWidth - (margin * 2);
-      const primary = [15, 118, 110] as const;
-      const primaryDark = [6, 31, 28] as const;
-      const border = [203, 213, 225] as const;
-      const text = [15, 23, 42] as const;
-      const muted = [100, 116, 139] as const;
+      const primary = [78, 216, 135] as const;
+      const primaryDark = [9, 18, 24] as const;
+      const secondaryDark = [13, 24, 32] as const;
+      const tableHead = [20, 32, 43] as const;
+      const border = [43, 58, 74] as const;
+      const text = [225, 232, 240] as const;
+      const muted = [139, 154, 173] as const;
+      const paper = [7, 12, 18] as const;
+      const rowEven = [12, 19, 27] as const;
+      const rowOdd = [16, 24, 34] as const;
 
       const money = (value: number) => formatCurrencyAmount(value, currency).replace(/\s+/g, " ").trim();
       const safeFilename = `${reportTitle}.pdf`.replace(/[\\/:*?"<>|]/g, "-");
@@ -545,34 +556,40 @@ export default function GerenciasPerformancePanel({
         },
       ];
 
+      const drawPageBackground = () => {
+        doc.setFillColor(...paper);
+        doc.rect(0, 0, pageWidth, pageHeight, "F");
+      };
+
       const drawHeader = () => {
         doc.setFillColor(...primaryDark);
-        doc.roundedRect(margin, 10, tableWidth, 28, 4, 4, "F");
+        doc.roundedRect(margin, 9, tableWidth, 30, 4, 4, "F");
         doc.setFillColor(...primary);
-        doc.rect(margin, 34, tableWidth, 4, "F");
+        doc.rect(margin + 8, 35.8, tableWidth - 16, 1.2, "F");
         doc.setTextColor(255, 255, 255);
         doc.setFont("helvetica", "bold");
         doc.setFontSize(17);
-        doc.text("Desempeño por Gerencias", margin + 8, 22);
+        doc.text("Desempeno por Gerencias", margin + 8, 21);
         doc.setFont("helvetica", "normal");
-        doc.setFontSize(9);
-        doc.setTextColor(204, 251, 241);
-        doc.text("Reporte de rendimiento para los filtros aplicados", margin + 8, 30);
+        doc.setFontSize(8);
+        doc.setTextColor(...muted);
+        doc.text("Reporte de rendimiento para los filtros aplicados", margin + 8, 29);
 
-        doc.setFontSize(7.5);
-        let chipX = pageWidth - margin - 2;
+        doc.setFontSize(7.2);
+        let chipX = pageWidth - margin - 8;
         let chipY = 18;
         filters.slice().reverse().forEach((filter) => {
-          const chipText = fitText(filter, 70);
-          const chipWidth = Math.min(doc.getTextWidth(chipText) + 8, 74);
-          if (chipX - chipWidth < margin + 116) {
-            chipX = pageWidth - margin - 2;
-            chipY += 8;
+          const chipText = fitText(filter, 64);
+          const chipWidth = Math.min(doc.getTextWidth(chipText) + 8, 68);
+          if (chipX - chipWidth < margin + 128) {
+            chipX = pageWidth - margin - 8;
+            chipY += 7.2;
           }
           chipX -= chipWidth;
-          doc.setFillColor(18, 83, 75);
-          doc.roundedRect(chipX, chipY - 4.5, chipWidth, 6.2, 3, 3, "F");
-          doc.setTextColor(236, 253, 245);
+          doc.setFillColor(...secondaryDark);
+          doc.setDrawColor(...border);
+          doc.roundedRect(chipX, chipY - 4.5, chipWidth, 6.2, 3, 3, "FD");
+          doc.setTextColor(...text);
           doc.text(chipText, chipX + 4, chipY);
           chipX -= 3;
         });
@@ -585,35 +602,35 @@ export default function GerenciasPerformancePanel({
           { label: "Cargas", value: formatNumber(totals.cargas) },
           { label: "Monto cargado", value: money(totals.montoCargado) },
         ];
-        const gap = 4;
+        const gap = 3.2;
         const cardWidth = (tableWidth - gap * 3) / 4;
         cards.forEach((card, index) => {
           const x = margin + index * (cardWidth + gap);
-          doc.setFillColor(248, 250, 252);
+          doc.setFillColor(...secondaryDark);
           doc.setDrawColor(...border);
-          doc.roundedRect(x, startY, cardWidth, 16, 3, 3, "FD");
+          doc.roundedRect(x, startY, cardWidth, 15.5, 3, 3, "FD");
           doc.setFont("helvetica", "bold");
-          doc.setFontSize(6.5);
+          doc.setFontSize(6.3);
           doc.setTextColor(...muted);
-          doc.text(card.label.toUpperCase(), x + 5, startY + 5.4);
-          doc.setFontSize(11);
+          doc.text(card.label.toUpperCase(), x + 4, startY + 5.2);
+          doc.setFontSize(10.5);
           doc.setTextColor(...text);
-          doc.text(card.value, x + 5, startY + 12);
+          doc.text(fitText(card.value, cardWidth - 8), x + 4, startY + 11.8);
         });
       };
 
       const drawTableHead = (startY: number) => {
         let x = margin;
         doc.setFont("helvetica", "bold");
-        doc.setFontSize(6.2);
-        normalizedColumns.forEach((column, index) => {
-          doc.setFillColor(index === 0 ? 19 : 15, index === 0 ? 78 : 118, index === 0 ? 74 : 110);
-          doc.setDrawColor(13, 148, 136);
-          doc.rect(x, startY, column.width, 9, "FD");
-          doc.setTextColor(255, 255, 255);
+        doc.setFontSize(5.7);
+        normalizedColumns.forEach((column) => {
+          doc.setFillColor(...tableHead);
+          doc.setDrawColor(...border);
+          doc.rect(x, startY, column.width, 8.5, "FD");
+          doc.setTextColor(...text);
           const labelLines = fitLines(column.label, column.width - 2.5, 2);
           const textX = column.align === "left" ? x + 2.2 : x + (column.width / 2);
-          doc.text(labelLines, textX, startY + (labelLines.length > 1 ? 3.7 : 5.8), { align: column.align });
+          doc.text(labelLines, textX, startY + (labelLines.length > 1 ? 3.4 : 5.5), { align: column.align });
           x += column.width;
         });
       };
@@ -622,7 +639,7 @@ export default function GerenciasPerformancePanel({
         let x = margin;
         const rowHeight = kind === "body" ? 7.1 : 7.8;
         const isFooter = kind !== "body";
-        const fill = kind === "total" ? [209, 250, 229] : kind === "average" ? [236, 253, 245] : rowIndex % 2 === 0 ? [255, 255, 255] : [248, 250, 252];
+        const fill = kind === "total" ? [13, 44, 38] : kind === "average" ? [14, 34, 42] : rowIndex % 2 === 0 ? rowEven : rowOdd;
         doc.setFont("helvetica", isFooter ? "bold" : "normal");
         doc.setFontSize(isFooter ? 6.4 : 6.1);
         normalizedColumns.forEach((column, columnIndex) => {
@@ -632,7 +649,7 @@ export default function GerenciasPerformancePanel({
           const rawValue = values[columnIndex] ?? "";
           const isMoneyColumn = ["monto", "gasto"].includes(column.key);
           if (isMoneyColumn) {
-            doc.setTextColor(4, 120, 87);
+            doc.setTextColor(...primary);
           } else {
             doc.setTextColor(...text);
           }
@@ -649,14 +666,15 @@ export default function GerenciasPerformancePanel({
         doc.setFont("helvetica", "normal");
         doc.setFontSize(7);
         doc.setTextColor(...muted);
-        doc.text(`Página ${pageNumber}`, pageWidth - margin, pageHeight - 5, { align: "right" });
+        doc.text(`Pagina ${pageNumber}`, pageWidth - margin, pageHeight - 5, { align: "right" });
       };
 
+      drawPageBackground();
       drawHeader();
       drawSummary(44);
       let y = 67;
       drawTableHead(y);
-      y += 9;
+      y += 8.5;
 
       const allRows = tableRows.length > 0 ? tableRows : [{ kind: "body" as const, values: ["No hay datos para los filtros aplicados.", ...Array(normalizedColumns.length - 1).fill("")] }];
       const rowsToDraw = [...allRows, ...footerRows];
@@ -664,10 +682,12 @@ export default function GerenciasPerformancePanel({
         const neededHeight = row.kind === "body" ? 7.1 : 7.8;
         if (y + neededHeight > pageHeight - 12) {
           drawPageFooter();
-          doc.addPage("a4", "landscape");
+          doc.addPage("a3", "landscape");
+          drawPageBackground();
+          drawHeader();
           y = 16;
           drawTableHead(y);
-          y += 9;
+          y += 8.5;
         }
         y += drawRow(row.values, y, rowIndex, row.kind);
       });
@@ -837,11 +857,6 @@ export default function GerenciasPerformancePanel({
                   <tr key={row.label} className="bg-zinc-950/40">
                     <td className="px-1.5 py-2 text-center font-medium text-zinc-100" title={row.label}>
                       <div className="truncate">{row.label}</div>
-                      <div className="mt-1 truncate text-[9px] font-normal text-zinc-500" title={(phonesByGerenciaLabel[row.label] ?? []).join(" · ")}>
-                        {(phonesByGerenciaLabel[row.label] ?? []).length > 0
-                          ? (phonesByGerenciaLabel[row.label] ?? []).join(" · ")
-                          : "Sin telefono activo"}
-                      </div>
                     </td>
                     <td
                       className="px-1.5 py-2 text-center text-zinc-200"
