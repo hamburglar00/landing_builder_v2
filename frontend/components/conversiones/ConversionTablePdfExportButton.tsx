@@ -69,6 +69,7 @@ export default function ConversionTablePdfExportButton({
     if (!canExport) return;
     void exportConversionTablePdf({
       rows: selectedRows,
+      metricRows: rows,
       columns,
       filters: [
         ...filters,

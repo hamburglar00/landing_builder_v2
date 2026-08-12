@@ -1,4 +1,5 @@
-import type { ConversionRow } from "@/lib/conversionsDb";
+import { buildFunnelContactsFromConversions, type ConversionRow } from "@/lib/conversionsDb";
+import { computeCoreStats } from "@/lib/conversionStats";
 import { formatCurrencyAmount, normalizeCurrencyCode } from "@/lib/currency";
 import {
   columnLabel,
@@ -13,6 +14,7 @@ import type { DateRange } from "@/components/conversiones/DateRangeFilter";
 
 type ExportConversionTablePdfOptions = {
   rows: ConversionRow[];
+  metricRows?: ConversionRow[];
   columns: ConversionColumnKey[];
   filters: string[];
   workspaceName?: string;
@@ -125,7 +127,7 @@ function safeFilename(value: string): string {
 }
 
 export async function exportConversionTablePdf(options: ExportConversionTablePdfOptions): Promise<void> {
-  const { rows, columns, filters, workspaceName, selectedEventTypes } = options;
+  const { rows, metricRows = rows, columns, filters, workspaceName, selectedEventTypes } = options;
   const { jsPDF } = await import("jspdf");
   const doc = new jsPDF({ orientation: "landscape", unit: "mm", format: "a3", compress: true });
 
@@ -149,7 +151,15 @@ export async function exportConversionTablePdf(options: ExportConversionTablePdf
   const selectedEvents = new Set((selectedEventTypes ?? []).map((event) => event.toLowerCase()));
   const shouldShowEventCard = (event: string) =>
     selectedEvents.size === 0 || selectedEvents.has(event);
-  const loadRate = leads.length > 0 ? (purchases.length / leads.length) * 100 : 0;
+  const metricCore = computeCoreStats(
+    metricRows,
+    buildFunnelContactsFromConversions(metricRows),
+    metricRows,
+    0,
+  );
+  const loadRate = metricCore.adLeadJourneysLinkedToContact > 0
+    ? (metricCore.adFirstPurchaseJourneysAttributed / metricCore.adLeadJourneysLinkedToContact) * 100
+    : 0;
   const currencies = Array.from(new Set(purchases.map((row) => normalizeCurrencyCode(row.currency))));
   const totalValue = purchases.reduce((sum, row) => sum + Number(row.valor || 0), 0);
   const totalValueLabel =
