@@ -113,6 +113,11 @@ const CLEAR_VIEW_CONFIRM_MESSAGE =
   "Vas a limpiar la vista de Conversiones.\n\nSe ocultaran los registros que ves ahora en esta seccion.\n\nEsta accion NO borra datos de la base.\nSolo deja de mostrarlos en la vista.\n\nQueres continuar?";
 const TABLE_VIEW_STORAGE_KEY = "conversion-table-view:admin";
 
+function gerenciaFilterMatchesLabels(filters: readonly string[], labels: string[]): boolean {
+  if (filters.length === 0) return true;
+  return filters.some((filter) => labels.includes(filter));
+}
+
 function cellValue(
   c: ConversionRow,
   col: ColKey,
@@ -441,8 +446,9 @@ export default function AdminConversionesPage() {
     }
   }, [statsPixelFilter, statsPixelOptions, setStatsPixelFilter]);
   useEffect(() => {
-    if (statsGerenciaFilter !== "__all__" && !statsGerenciaOptions.includes(statsGerenciaFilter)) {
-      setStatsGerenciaFilter("__all__");
+    const validValues = statsGerenciaFilter.filter((filter) => statsGerenciaOptions.includes(filter));
+    if (validValues.length !== statsGerenciaFilter.length) {
+      setStatsGerenciaFilter(validValues);
     }
   }, [statsGerenciaFilter, statsGerenciaOptions, setStatsGerenciaFilter]);
   useEffect(() => {
@@ -478,7 +484,7 @@ export default function AdminConversionesPage() {
       const assignedPhone = normalizePhone(r.telefono_asignado);
       const byTelefono = statsTelefonoFilter === "__all__" || assignedPhone === statsTelefonoFilter;
       const labels = getConversionGerenciaLabels(r, gerenciaByPhone);
-      const byGerencia = statsGerenciaFilter === "__all__" || labels.includes(statsGerenciaFilter);
+      const byGerencia = gerenciaFilterMatchesLabels(statsGerenciaFilter, labels);
       const byFromMetaAds =
         statsFromMetaAdsFilter === "__all__" ||
         (statsFromMetaAdsFilter === "true" ? !!r.from_meta_ads : !r.from_meta_ads);
@@ -492,12 +498,12 @@ export default function AdminConversionesPage() {
       const byDevice = statsDeviceFilter === "__all__" || String(r.device_type ?? "").trim().toLowerCase() === statsDeviceFilter;
       return byLanding && byPixel && byGerencia && byTelefono && byFromMetaAds && bySourcePlatform && bySexo && byCampaign && byDevice;
     });
-    if (statsGerenciaFilter === "__all__") return filtered;
+    if (statsGerenciaFilter.length === 0) return filtered;
     return filtered
       .map((row) => scopeConversionStagesToGerencia(
         row,
         gerenciaByPhone,
-        (labels) => labels.includes(statsGerenciaFilter),
+        (labels) => gerenciaFilterMatchesLabels(statsGerenciaFilter, labels),
       ))
       .filter((row): row is ConversionRow => row !== null);
   }, [statsConversions, statsLandingFilter, statsPixelFilter, statsGerenciaFilter, statsTelefonoFilter, statsFromMetaAdsFilter, statsSourcePlatformFilter, statsSexoFilter, statsCampaignFilter, statsDeviceFilter, gerenciaByPhone]);
@@ -508,7 +514,7 @@ export default function AdminConversionesPage() {
       const assignedPhone = normalizePhone(r.telefono_asignado);
       const byTelefono = statsTelefonoFilter === "__all__" || assignedPhone === statsTelefonoFilter;
       const labels = getConversionGerenciaLabels(r, gerenciaByPhone);
-      const byGerencia = statsGerenciaFilter === "__all__" || labels.includes(statsGerenciaFilter);
+      const byGerencia = gerenciaFilterMatchesLabels(statsGerenciaFilter, labels);
       const byFromMetaAds =
         statsFromMetaAdsFilter === "__all__" ||
         (statsFromMetaAdsFilter === "true" ? !!r.from_meta_ads : !r.from_meta_ads);
@@ -522,12 +528,12 @@ export default function AdminConversionesPage() {
       const byDevice = statsDeviceFilter === "__all__" || String(r.device_type ?? "").trim().toLowerCase() === statsDeviceFilter;
       return byLanding && byPixel && byGerencia && byTelefono && byFromMetaAds && bySourcePlatform && bySexo && byCampaign && byDevice;
     });
-    if (statsGerenciaFilter === "__all__") return filtered;
+    if (statsGerenciaFilter.length === 0) return filtered;
     return filtered
       .map((row) => scopeConversionStagesToGerencia(
         row,
         gerenciaByPhone,
-        (labels) => labels.includes(statsGerenciaFilter),
+        (labels) => gerenciaFilterMatchesLabels(statsGerenciaFilter, labels),
       ))
       .filter((row): row is ConversionRow => row !== null);
   }, [statsAllConversions, statsLandingFilter, statsPixelFilter, statsGerenciaFilter, statsTelefonoFilter, statsFromMetaAdsFilter, statsSourcePlatformFilter, statsSexoFilter, statsCampaignFilter, statsDeviceFilter, gerenciaByPhone]);
@@ -540,7 +546,7 @@ export default function AdminConversionesPage() {
     [statsConversionsFiltered],
   );
   const activeFunnelFiltered = useMemo(() => {
-    if (statsGerenciaFilter !== "__all__") {
+    if (statsGerenciaFilter.length > 0) {
       return buildFunnelContactsFromConversions(statsConversionsFiltered);
     }
     return activeFunnel.filter((r) => {
@@ -556,7 +562,7 @@ export default function AdminConversionesPage() {
       const assignedPhone = normalizePhone(r.telefono_asignado);
       const byTelefono = statsTelefonoFilter === "__all__" || assignedPhone === statsTelefonoFilter;
       const labels = getConversionTableGerenciaLabels(r, gerenciaByPhone);
-      const byGerencia = statsGerenciaFilter === "__all__" || labels.includes(statsGerenciaFilter);
+      const byGerencia = gerenciaFilterMatchesLabels(statsGerenciaFilter, labels);
       const byFromMetaAds =
         statsFromMetaAdsFilter === "__all__" ||
         (statsFromMetaAdsFilter === "true" ? !!r.from_meta_ads : !r.from_meta_ads);
@@ -615,9 +621,9 @@ export default function AdminConversionesPage() {
       `Moneda: ${currencyScope === CURRENCY_ALL ? "Todas" : currencyScope}`,
     ];
     const gerenciaLabel =
-      statsGerenciaFilter === "__all__"
+      statsGerenciaFilter.length === 0
         ? ""
-        : statsGerenciaFilter;
+        : statsGerenciaFilter.join(", ");
     if (tableSearch.trim()) filters.push(`Busqueda: ${tableSearch.trim()}`);
     if (statsLandingFilter !== "__all__") filters.push(`Landing: ${statsLandingFilter}`);
     if (statsPixelFilter !== "__all__") filters.push(`Pixel: ${statsPixelFilter}`);
@@ -646,6 +652,10 @@ export default function AdminConversionesPage() {
     statsTelefonoFilter,
     tableSearch,
   ]);
+  const selectedPerformanceGerenciaLabels = useMemo(
+    () => [...statsGerenciaFilter],
+    [statsGerenciaFilter],
+  );
   useEffect(() => {
     setTablePage(1);
   }, [tableSearch, dateRange, statsLandingFilter, statsPixelFilter, statsGerenciaFilter, statsTelefonoFilter, statsFromMetaAdsFilter, statsSourcePlatformFilter, statsSexoFilter, statsCampaignFilter, statsDeviceFilter, demoMode, currencyScope]);
@@ -1034,7 +1044,7 @@ export default function AdminConversionesPage() {
       />
 
       {/* Date filter + global actions (funnel, tabla, estadisticas) */}
-      {(tab === "funnel" || tab === "seguimiento" || tab === "tabla" || tab === "estadisticas") && (
+      {(tab === "funnel" || tab === "seguimiento" || tab === "tabla" || tab === "estadisticas" || tab === "desempeno") && (
         <div className="flex flex-col gap-2 pt-1 sm:flex-row sm:items-center sm:justify-between">
           <div className="grid grid-cols-2 gap-2 sm:flex sm:items-center">
             {(tab === "funnel" || tab === "tabla" || tab === "estadisticas") && (
@@ -1076,7 +1086,7 @@ export default function AdminConversionesPage() {
                 </button>
               </>
             )}
-            {(tab === "funnel" || tab === "tabla" || tab === "estadisticas") && (
+            {(tab === "funnel" || tab === "tabla" || tab === "estadisticas" || tab === "desempeno") && (
               <button
                 type="button"
                 onClick={openStatsFilterModal}
@@ -1383,6 +1393,10 @@ export default function AdminConversionesPage() {
             gerenciaByPhone={gerenciaByPhone}
             activePhonesByGerenciaLabel={activePhonesByGerenciaLabel}
             landingOptions={performanceLandingOptions}
+            globalRows={statsConversionsFiltered}
+            globalRange={dateRange}
+            globalGerenciaLabels={selectedPerformanceGerenciaLabels}
+            useGlobalFilters
             premiumThreshold={premiumThreshold}
             storageKey="admin"
             currency={reportingCurrency}

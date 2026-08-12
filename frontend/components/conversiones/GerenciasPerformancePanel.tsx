@@ -18,6 +18,10 @@ type Props = {
   gerenciaByPhone: Record<string, string[]>;
   activePhonesByGerenciaLabel?: Record<string, string[]>;
   landingOptions?: LandingPerformanceFilterOption[];
+  globalRows?: ConversionRow[];
+  globalRange?: FetchDateRange | null;
+  globalGerenciaLabels?: string[];
+  useGlobalFilters?: boolean;
   premiumThreshold: number;
   storageKey: string;
   currency: ReportingCurrency;
@@ -145,6 +149,10 @@ export default function GerenciasPerformancePanel({
   gerenciaByPhone,
   activePhonesByGerenciaLabel,
   landingOptions = [],
+  globalRows,
+  globalRange,
+  globalGerenciaLabels = [],
+  useGlobalFilters = false,
   premiumThreshold,
   storageKey,
   currency,
@@ -219,12 +227,12 @@ export default function GerenciasPerformancePanel({
     setLoading(true);
     setError(null);
     try {
-      const range = monthRange(month);
-      const [data, availability] = await Promise.all([
-        fetchConversionsForMonth(range),
-        fetchAvailabilityForMonth(range),
-      ]);
-      setRows(data);
+      const range = useGlobalFilters ? globalRange : monthRange(month);
+      const availability = range ? await fetchAvailabilityForMonth(range) : [];
+      if (!useGlobalFilters) {
+        const data = await fetchConversionsForMonth(range ?? monthRange(month));
+        setRows(data);
+      }
       setAvailabilityRows(availability);
     } catch (e) {
       console.error(e);
@@ -232,15 +240,21 @@ export default function GerenciasPerformancePanel({
     } finally {
       setLoading(false);
     }
-  }, [fetchAvailabilityForMonth, fetchConversionsForMonth, month]);
+  }, [fetchAvailabilityForMonth, fetchConversionsForMonth, globalRange, month, useGlobalFilters]);
 
   useEffect(() => {
     void loadMonth();
   }, [loadMonth]);
 
   const performanceRows = useMemo<Row[]>(() => {
+    const sourceRows = useGlobalFilters ? (globalRows ?? []) : rows;
+    const selectedGlobalLabelSet = useGlobalFilters && globalGerenciaLabels.length > 0
+      ? new Set(globalGerenciaLabels)
+      : null;
     const allLabels = new Set<string>();
-    if (selectedLandingLabelSet) {
+    if (selectedGlobalLabelSet) {
+      for (const label of selectedGlobalLabelSet) allLabels.add(label);
+    } else if (!useGlobalFilters && selectedLandingLabelSet) {
       for (const label of selectedLandingLabelSet) allLabels.add(label);
     } else {
       for (const labels of Object.values(gerenciaByPhone)) {
@@ -248,15 +262,20 @@ export default function GerenciasPerformancePanel({
       }
     }
     for (const row of availabilityRows) {
-      if (!selectedLandingLabelSet || selectedLandingLabelSet.has(row.label)) allLabels.add(row.label);
+      if (selectedGlobalLabelSet) {
+        if (selectedGlobalLabelSet.has(row.label)) allLabels.add(row.label);
+      } else if (!selectedLandingLabelSet || selectedLandingLabelSet.has(row.label)) {
+        allLabels.add(row.label);
+      }
     }
 
     const rowsByGerencia = new Map<string, ConversionRow[]>();
     const availabilityByLabel = new Map(availabilityRows.map((row) => [row.label, row]));
-    const cleanRows = rows.filter((row) => (
+    const cleanRows = sourceRows.filter((row) => (
       !String(row.test_event_code ?? "").trim() &&
-      (!metaAdsOnly || Boolean(row.from_meta_ads)) &&
+      (useGlobalFilters || !metaAdsOnly || Boolean(row.from_meta_ads)) &&
       (
+        useGlobalFilters ||
         !selectedLanding ||
         String(row.landing_id ?? "").trim() === selectedLanding.id ||
         (
@@ -310,7 +329,7 @@ export default function GerenciasPerformancePanel({
             : 0,
         };
       });
-  }, [availabilityRows, gerenciaByPhone, metaAdsOnly, premiumThreshold, rows, selectedLanding, selectedLandingLabelSet]);
+  }, [availabilityRows, gerenciaByPhone, globalGerenciaLabels, globalRows, metaAdsOnly, premiumThreshold, rows, selectedLanding, selectedLandingLabelSet, useGlobalFilters]);
 
   const visiblePerformanceRows = useMemo(() => {
     const query = searchTerm.trim().toLowerCase();
@@ -677,6 +696,8 @@ export default function GerenciasPerformancePanel({
     <section className="rounded-xl border border-zinc-800 bg-zinc-900/50 p-3 sm:p-4">
       <div className="mb-3 flex flex-wrap items-center gap-2">
         <h3 className="w-full shrink-0 text-sm font-semibold text-zinc-100 md:w-auto md:mr-1">Desempeño por Gerencias</h3>
+        {!useGlobalFilters && (
+          <>
         <select
           value={month}
           onChange={(e) => setMonth(e.target.value || currentMonthValue())}
@@ -713,6 +734,8 @@ export default function GerenciasPerformancePanel({
             <span className={`absolute top-0.5 h-2.5 w-2.5 rounded-full transition ${metaAdsOnly ? "left-3.5 bg-cyan-300" : "left-0.5 bg-zinc-400"}`} />
           </span>
         </button>
+          </>
+        )}
         <input
           value={searchTerm}
           onChange={(e) => setSearchTerm(e.target.value)}

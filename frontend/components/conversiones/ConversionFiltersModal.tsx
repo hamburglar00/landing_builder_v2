@@ -12,7 +12,7 @@ export type ConversionFilterOption = {
 export type ConversionFilterDraft = {
   landing: string;
   pixel: string;
-  gerencia: string;
+  gerencia: string[];
   phone: string;
   fromMetaAds: string;
   sourcePlatform: string;
@@ -33,7 +33,7 @@ type ConversionFilterOptions = {
 type ConversionFilterChanges = {
   landing: (value: string) => void;
   pixel: (value: string) => void;
-  gerencia: (value: string) => void;
+  gerencia: (value: string[]) => void;
   phone: (value: string) => void;
   fromMetaAds: (value: string) => void;
   sourcePlatform: (value: string) => void;
@@ -91,26 +91,28 @@ function FilterField({
   );
 }
 
-function SearchableFilterField({
+function SearchableCheckboxField({
   id,
   label,
-  value,
+  values,
   allLabel,
   options,
   onChange,
 }: {
   id: string;
   label: string;
-  value: string;
+  values: string[];
   allLabel: string;
   options: readonly ConversionFilterOption[];
-  onChange: (value: string) => void;
+  onChange: (value: string[]) => void;
 }) {
   const [open, setOpen] = useState(false);
   const [query, setQuery] = useState("");
-  const selectedLabel = value === "__all__"
+  const selectedLabel = values.length === 0
     ? allLabel
-    : options.find((option) => option.value === value)?.label || value;
+    : values.length === 1
+      ? options.find((option) => option.value === values[0])?.label || values[0]
+      : `${values.length} gerencias seleccionadas`;
   const filteredOptions = useMemo(() => {
     const normalized = query.trim().toLowerCase();
     if (!normalized) return options;
@@ -118,10 +120,12 @@ function SearchableFilterField({
       `${option.label} ${option.value}`.toLowerCase().includes(normalized),
     );
   }, [options, query]);
-  const selectValue = (nextValue: string) => {
-    onChange(nextValue);
-    setOpen(false);
-    setQuery("");
+  const toggleValue = (nextValue: string, checked: boolean) => {
+    onChange(
+      checked
+        ? [...values, nextValue]
+        : values.filter((value) => value !== nextValue),
+    );
   };
 
   return (
@@ -153,31 +157,39 @@ function SearchableFilterField({
             />
           </div>
           <div className="max-h-56 overflow-y-auto">
-            <button
-              type="button"
-              onClick={() => selectValue("__all__")}
-              className={`block w-full rounded px-2 py-1.5 text-left hover:bg-zinc-800/70 ${
-                value === "__all__" ? "bg-emerald-500/10 text-emerald-300" : "text-zinc-200"
+            <label
+              className={`flex cursor-pointer items-center gap-2 rounded px-2 py-1.5 hover:bg-zinc-800/70 ${
+                values.length === 0 ? "bg-emerald-500/10 text-emerald-300" : "text-zinc-200"
               }`}
             >
+              <input
+                type="checkbox"
+                checked={values.length === 0}
+                onChange={() => onChange([])}
+                className="h-3.5 w-3.5 rounded border-zinc-600 bg-zinc-900 accent-emerald-500"
+              />
               {allLabel}
-            </button>
+            </label>
             {filteredOptions.length === 0 ? (
               <div className="px-2 py-3 text-center text-zinc-500">
                 Sin resultados
               </div>
             ) : (
               filteredOptions.map((option) => (
-                <button
+                <label
                   key={option.value}
-                  type="button"
-                  onClick={() => selectValue(option.value)}
-                  className={`block w-full rounded px-2 py-1.5 text-left hover:bg-zinc-800/70 ${
-                    value === option.value ? "bg-emerald-500/10 text-emerald-300" : "text-zinc-200"
+                  className={`flex cursor-pointer items-center gap-2 rounded px-2 py-1.5 hover:bg-zinc-800/70 ${
+                    values.includes(option.value) ? "bg-emerald-500/10 text-emerald-300" : "text-zinc-200"
                   }`}
                 >
+                  <input
+                    type="checkbox"
+                    checked={values.includes(option.value)}
+                    onChange={(event) => toggleValue(option.value, event.target.checked)}
+                    className="h-3.5 w-3.5 rounded border-zinc-600 bg-zinc-900 accent-emerald-500"
+                  />
                   <span className="block truncate">{option.label}</span>
-                </button>
+                </label>
               ))
             )}
           </div>
@@ -234,10 +246,10 @@ export default function ConversionFiltersModal({
                 options={stringOptions(options.pixels)}
                 onChange={onChange.pixel}
               />
-              <SearchableFilterField
+              <SearchableCheckboxField
                 id="conversion-filter-gerencia"
                 label="Gerencia (ID)"
-                value={draft.gerencia}
+                values={draft.gerencia}
                 allLabel="Todas las gerencias"
                 options={options.gerencias}
                 onChange={onChange.gerencia}

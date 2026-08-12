@@ -130,11 +130,15 @@ function extractGerenciaIdFromLabel(label: string | null | undefined): string {
   return match?.[1] ?? "";
 }
 
-function gerenciaFilterMatchesLabels(filter: string, labels: string[]): boolean {
-  if (filter === "__all__") return true;
+function singleGerenciaFilterMatchesLabels(filter: string, labels: string[]): boolean {
   const filterId = /^\d+$/.test(filter) ? filter : extractGerenciaIdFromLabel(filter);
   if (filterId) return labels.some((label) => extractGerenciaIdFromLabel(label) === filterId);
   return labels.includes(filter);
+}
+
+function gerenciaFilterMatchesLabels(filters: readonly string[], labels: string[]): boolean {
+  if (filters.length === 0) return true;
+  return filters.some((filter) => singleGerenciaFilterMatchesLabels(filter, labels));
 }
 
 function parseInboxPayload(raw: string | null | undefined): Record<string, unknown> {
@@ -628,14 +632,16 @@ export default function DashboardConversionesPage() {
     }
   }, [statsPixelFilter, statsPixelOptions, setStatsPixelFilter]);
   useEffect(() => {
-    if (statsGerenciaFilter === "__all__") return;
-    const canonical = extractGerenciaIdFromLabel(statsGerenciaFilter) || statsGerenciaFilter;
-    if (canonical !== statsGerenciaFilter && statsGerenciaOptions.some((g) => g.value === canonical)) {
-      setStatsGerenciaFilter(canonical);
+    if (statsGerenciaFilter.length === 0) return;
+    const canonicalValues = statsGerenciaFilter.map((filter) => extractGerenciaIdFromLabel(filter) || filter);
+    const changed = canonicalValues.some((value, index) => value !== statsGerenciaFilter[index]);
+    if (changed && canonicalValues.every((value) => statsGerenciaOptions.some((g) => g.value === value))) {
+      setStatsGerenciaFilter(canonicalValues);
       return;
     }
-    if (!statsGerenciaOptions.some((g) => g.value === statsGerenciaFilter)) {
-      setStatsGerenciaFilter("__all__");
+    const validValues = statsGerenciaFilter.filter((filter) => statsGerenciaOptions.some((g) => g.value === filter));
+    if (validValues.length !== statsGerenciaFilter.length) {
+      setStatsGerenciaFilter(validValues);
     }
   }, [statsGerenciaFilter, statsGerenciaOptions, setStatsGerenciaFilter]);
   useEffect(() => {
@@ -685,7 +691,7 @@ export default function DashboardConversionesPage() {
       const byDevice = statsDeviceFilter === "__all__" || String(r.device_type ?? "").trim().toLowerCase() === statsDeviceFilter;
       return byLanding && byPixel && byGerencia && byTelefono && byFromMetaAds && bySourcePlatform && bySexo && byCampaign && byDevice;
     });
-    if (statsGerenciaFilter === "__all__") return filtered;
+    if (statsGerenciaFilter.length === 0) return filtered;
     return filtered
       .map((row) => scopeConversionStagesToGerencia(
         row,
@@ -715,7 +721,7 @@ export default function DashboardConversionesPage() {
       const byDevice = statsDeviceFilter === "__all__" || String(r.device_type ?? "").trim().toLowerCase() === statsDeviceFilter;
       return byLanding && byPixel && byGerencia && byTelefono && byFromMetaAds && bySourcePlatform && bySexo && byCampaign && byDevice;
     });
-    if (statsGerenciaFilter === "__all__") return filtered;
+    if (statsGerenciaFilter.length === 0) return filtered;
     return filtered
       .map((row) => scopeConversionStagesToGerencia(
         row,
@@ -733,7 +739,7 @@ export default function DashboardConversionesPage() {
     [statsConversionsFiltered],
   );
   const activeFunnelFiltered = useMemo(() => {
-    if (statsGerenciaFilter !== "__all__") {
+    if (statsGerenciaFilter.length > 0) {
       return buildFunnelContactsFromConversions(statsConversionsFiltered);
     }
     return activeFunnel.filter((r) => {
@@ -953,9 +959,11 @@ export default function DashboardConversionesPage() {
       `Moneda: ${currencyScope === CURRENCY_ALL ? "Todas" : currencyScope}`,
     ];
     const gerenciaLabel =
-      statsGerenciaFilter === "__all__"
+      statsGerenciaFilter.length === 0
         ? ""
-        : statsGerenciaOptions.find((option) => option.value === statsGerenciaFilter)?.label || statsGerenciaFilter;
+        : statsGerenciaFilter
+            .map((filter) => statsGerenciaOptions.find((option) => option.value === filter)?.label || filter)
+            .join(", ");
     if (tableSearch.trim()) filters.push(`Busqueda: ${tableSearch.trim()}`);
     if (statsLandingFilter !== "__all__") filters.push(`Landing: ${statsLandingFilter}`);
     if (statsPixelFilter !== "__all__") filters.push(`Pixel: ${statsPixelFilter}`);
@@ -984,6 +992,13 @@ export default function DashboardConversionesPage() {
     statsTelefonoFilter,
     tableSearch,
   ]);
+  const selectedPerformanceGerenciaLabels = useMemo(
+    () =>
+      statsGerenciaFilter.map((filter) =>
+        statsGerenciaOptions.find((option) => option.value === filter)?.label || filter,
+      ),
+    [statsGerenciaFilter, statsGerenciaOptions],
+  );
   const internalIdByConversionId = useMemo(
     () => new Map(conversions.map((c) => [c.id, c.internal_id])),
     [conversions],
@@ -1400,7 +1415,7 @@ export default function DashboardConversionesPage() {
       />
 
       {/* Date filter + global actions */}
-      {(tab === "funnel" || tab === "seguimiento" || tab === "tabla" || tab === "estadisticas" || tab === "inbox" || tab === "logs") && (
+      {(tab === "funnel" || tab === "seguimiento" || tab === "tabla" || tab === "estadisticas" || tab === "desempeno" || tab === "inbox" || tab === "logs") && (
         <div className="flex flex-col gap-2 pt-1 sm:flex-row sm:items-center sm:justify-between">
           <div className="grid grid-cols-2 gap-2 sm:flex sm:items-center">
             {(tab === "funnel" || tab === "tabla" || tab === "estadisticas" || tab === "inbox" || tab === "logs") && (
@@ -1434,7 +1449,7 @@ export default function DashboardConversionesPage() {
                 </button>
               </>
             )}
-            {(tab === "funnel" || tab === "tabla" || tab === "estadisticas" || tab === "inbox") && (
+            {(tab === "funnel" || tab === "tabla" || tab === "estadisticas" || tab === "desempeno" || tab === "inbox") && (
               <button
                 type="button"
                 onClick={openStatsFilterModal}
@@ -1740,6 +1755,10 @@ export default function DashboardConversionesPage() {
             gerenciaByPhone={gerenciaByPhone}
             activePhonesByGerenciaLabel={activePhonesByGerenciaLabel}
             landingOptions={performanceLandingOptions}
+            globalRows={statsConversionsFiltered}
+            globalRange={dateRange}
+            globalGerenciaLabels={selectedPerformanceGerenciaLabels}
+            useGlobalFilters
             premiumThreshold={premiumThreshold}
             storageKey={`dashboard:${userId ?? "client"}`}
             currency={reportingCurrency}

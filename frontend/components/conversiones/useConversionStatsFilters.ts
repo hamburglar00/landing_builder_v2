@@ -7,7 +7,7 @@ const ALL_FILTER_VALUES = "__all__";
 export function useConversionStatsFilters() {
   const [statsLandingFilter, setStatsLandingFilter] = useState<string>(ALL_FILTER_VALUES);
   const [statsPixelFilter, setStatsPixelFilter] = useState<string>(ALL_FILTER_VALUES);
-  const [statsGerenciaFilter, setStatsGerenciaFilter] = useState<string>(ALL_FILTER_VALUES);
+  const [statsGerenciaFilter, setStatsGerenciaFilter] = useState<string[]>([]);
   const [statsTelefonoFilter, setStatsTelefonoFilter] = useState<string>(ALL_FILTER_VALUES);
   const [statsFromMetaAdsFilter, setStatsFromMetaAdsFilter] = useState<string>(ALL_FILTER_VALUES);
   const [statsSourcePlatformFilter, setStatsSourcePlatformFilter] = useState<string>(ALL_FILTER_VALUES);
@@ -17,7 +17,7 @@ export function useConversionStatsFilters() {
   const [statsFilterModalOpen, setStatsFilterModalOpen] = useState(false);
   const [draftLandingFilter, setDraftLandingFilter] = useState<string>(ALL_FILTER_VALUES);
   const [draftPixelFilter, setDraftPixelFilter] = useState<string>(ALL_FILTER_VALUES);
-  const [draftGerenciaFilter, setDraftGerenciaFilter] = useState<string>(ALL_FILTER_VALUES);
+  const [draftGerenciaFilter, setDraftGerenciaFilter] = useState<string[]>([]);
   const [draftTelefonoFilter, setDraftTelefonoFilter] = useState<string>(ALL_FILTER_VALUES);
   const [draftFromMetaAdsFilter, setDraftFromMetaAdsFilter] = useState<string>(ALL_FILTER_VALUES);
   const [draftSourcePlatformFilter, setDraftSourcePlatformFilter] = useState<string>(ALL_FILTER_VALUES);
@@ -28,7 +28,7 @@ export function useConversionStatsFilters() {
   const openStatsFilterModal = useCallback(() => {
     setDraftLandingFilter(statsLandingFilter);
     setDraftPixelFilter(statsPixelFilter);
-    setDraftGerenciaFilter(statsGerenciaFilter);
+    setDraftGerenciaFilter([...statsGerenciaFilter]);
     setDraftTelefonoFilter(statsTelefonoFilter);
     setDraftFromMetaAdsFilter(statsFromMetaAdsFilter);
     setDraftSourcePlatformFilter(statsSourcePlatformFilter);
@@ -51,7 +51,7 @@ export function useConversionStatsFilters() {
   const applyStatsFilters = useCallback(() => {
     setStatsLandingFilter(draftLandingFilter);
     setStatsPixelFilter(draftPixelFilter);
-    setStatsGerenciaFilter(draftGerenciaFilter);
+    setStatsGerenciaFilter([...draftGerenciaFilter]);
     setStatsTelefonoFilter(draftTelefonoFilter);
     setStatsFromMetaAdsFilter(draftFromMetaAdsFilter);
     setStatsSourcePlatformFilter(draftSourcePlatformFilter);
@@ -74,7 +74,7 @@ export function useConversionStatsFilters() {
   const clearAllStatsFilters = useCallback(() => {
     setStatsLandingFilter(ALL_FILTER_VALUES);
     setStatsPixelFilter(ALL_FILTER_VALUES);
-    setStatsGerenciaFilter(ALL_FILTER_VALUES);
+    setStatsGerenciaFilter([]);
     setStatsTelefonoFilter(ALL_FILTER_VALUES);
     setStatsFromMetaAdsFilter(ALL_FILTER_VALUES);
     setStatsSourcePlatformFilter(ALL_FILTER_VALUES);
@@ -83,7 +83,7 @@ export function useConversionStatsFilters() {
     setStatsDeviceFilter(ALL_FILTER_VALUES);
     setDraftLandingFilter(ALL_FILTER_VALUES);
     setDraftPixelFilter(ALL_FILTER_VALUES);
-    setDraftGerenciaFilter(ALL_FILTER_VALUES);
+    setDraftGerenciaFilter([]);
     setDraftTelefonoFilter(ALL_FILTER_VALUES);
     setDraftFromMetaAdsFilter(ALL_FILTER_VALUES);
     setDraftSourcePlatformFilter(ALL_FILTER_VALUES);
@@ -96,7 +96,9 @@ export function useConversionStatsFilters() {
     () => [
       statsLandingFilter,
       statsPixelFilter,
-      statsGerenciaFilter,
+      statsGerenciaFilter.length > 0
+        ? statsGerenciaFilter.join(", ")
+        : ALL_FILTER_VALUES,
       statsTelefonoFilter,
       statsFromMetaAdsFilter,
       statsSourcePlatformFilter,
