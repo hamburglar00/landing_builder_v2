@@ -12,6 +12,8 @@ export interface WhatsappCloudApiConfig {
   display_phone_number: string;
   meta_access_token: string;
   meta_app_secret: string;
+  has_meta_access_token: boolean;
+  has_meta_app_secret: boolean;
   meta_api_version: string;
   webhook_verify_token: string;
   pixel_id: string;
@@ -23,6 +25,11 @@ export interface WhatsappCloudApiConfig {
   fallback_message_template: string;
   redirect_use_cta_button: boolean;
   redirect_cta_button_title: string;
+  phone_number_status: string;
+  quality_rating: string;
+  messaging_limit_tier: string;
+  health_checked_at: string | null;
+  health_last_error: string;
   created_at: string;
   updated_at: string;
 }
@@ -99,15 +106,12 @@ export interface WhatsappCloudApiInboxThread {
 export async function fetchWhatsappCloudApiConfig(
   userId: string,
 ): Promise<WhatsappCloudApiConfig | null> {
-  const { data, error } = await supabase
-    .from("whatsapp_cloud_api_configs")
-    .select("*")
-    .eq("user_id", userId)
-    .order("created_at", { ascending: false })
-    .limit(1)
-    .maybeSingle();
+  const { data, error } = await supabase.rpc("get_whatsapp_cloud_api_config", {
+    p_user_id: userId,
+  });
   if (error) throw error;
-  return (data ?? null) as WhatsappCloudApiConfig | null;
+  const rows = Array.isArray(data) ? data : [];
+  return (rows[0] ?? null) as WhatsappCloudApiConfig | null;
 }
 
 export async function upsertWhatsappCloudApiConfig(input: {
@@ -119,8 +123,8 @@ export async function upsertWhatsappCloudApiConfig(input: {
   phone_number_id: string;
   whatsapp_business_account_id: string;
   display_phone_number: string;
-  meta_access_token: string;
-  meta_app_secret: string;
+  meta_access_token: string | null;
+  meta_app_secret: string | null;
   meta_api_version: string;
   webhook_verify_token: string;
   pixel_id: string;
@@ -133,39 +137,41 @@ export async function upsertWhatsappCloudApiConfig(input: {
   redirect_use_cta_button: boolean;
   redirect_cta_button_title: string;
 }): Promise<{ id: string }> {
-  const body = {
-    ...(input.id ? { id: input.id } : {}),
-    user_id: input.user_id,
-    name: input.name,
-    active: input.active,
-    workspace_currency: input.workspace_currency,
-    phone_number_id: input.phone_number_id,
-    whatsapp_business_account_id: input.whatsapp_business_account_id,
-    display_phone_number: input.display_phone_number,
-    meta_access_token: input.meta_access_token,
-    meta_app_secret: input.meta_app_secret,
-    meta_api_version: input.meta_api_version,
-    webhook_verify_token: input.webhook_verify_token,
-    pixel_id: input.pixel_id,
-    landing_tag: input.landing_tag,
-    gerencia_selection_mode: input.gerencia_selection_mode,
-    gerencia_fair_criterion: input.gerencia_fair_criterion,
-    send_contact_capi: input.send_contact_capi,
-    redirect_message_template: input.redirect_message_template,
-    fallback_message_template: input.fallback_message_template,
-    redirect_use_cta_button: input.redirect_use_cta_button,
-    redirect_cta_button_title: input.redirect_cta_button_title,
-    updated_at: new Date().toISOString(),
-  };
-
-  const { data, error } = await supabase
-    .from("whatsapp_cloud_api_configs")
-    .upsert(body, { onConflict: "id" })
-    .select("id")
-    .single();
+  const { data, error } = await supabase.rpc(
+    "upsert_whatsapp_cloud_api_config_secure",
+    {
+      p_id: input.id ?? null,
+      p_user_id: input.user_id,
+      p_name: input.name,
+      p_active: input.active,
+      p_workspace_currency: input.workspace_currency,
+      p_phone_number_id: input.phone_number_id,
+      p_whatsapp_business_account_id: input.whatsapp_business_account_id,
+      p_display_phone_number: input.display_phone_number,
+      p_meta_access_token: input.meta_access_token,
+      p_meta_app_secret: input.meta_app_secret,
+      p_meta_api_version: input.meta_api_version,
+      p_webhook_verify_token: input.webhook_verify_token,
+      p_pixel_id: input.pixel_id,
+      p_landing_tag: input.landing_tag,
+      p_gerencia_selection_mode: input.gerencia_selection_mode,
+      p_gerencia_fair_criterion: input.gerencia_fair_criterion,
+      p_redirect_message_template: input.redirect_message_template,
+      p_fallback_message_template: input.fallback_message_template,
+      p_redirect_use_cta_button: input.redirect_use_cta_button,
+      p_redirect_cta_button_title: input.redirect_cta_button_title,
+    },
+  );
   if (error) throw error;
-  if (!data?.id) throw new Error("No se pudo guardar WhatsApp Cloud API.");
-  return { id: String(data.id) };
+  if (!data) throw new Error("No se pudo guardar WhatsApp Cloud API.");
+  return { id: String(data) };
+}
+
+export async function syncWhatsappCloudApiHealth(configId: string): Promise<void> {
+  const { error } = await supabase.functions.invoke("whatsapp-cloud-sync-health", {
+    body: { config_id: configId },
+  });
+  if (error) throw error;
 }
 
 export async function fetchWhatsappCloudApiAssignments(

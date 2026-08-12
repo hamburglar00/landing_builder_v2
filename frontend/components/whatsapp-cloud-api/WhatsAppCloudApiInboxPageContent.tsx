@@ -33,50 +33,49 @@ const TAG_CLASSES: Record<WhatsappCloudApiInboxThread["tag"], string> = {
 };
 
 const WHATSAPP_DOODLE_PATTERN = encodeURIComponent(`
-<svg xmlns="http://www.w3.org/2000/svg" width="300" height="300" viewBox="0 0 300 300">
-  <g fill="none" stroke="#8696a0" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" opacity=".16">
-    <path d="M22 28h32v22H33l-11 9V28Z"/>
-    <path d="M39 34v10M34 39h10"/>
-    <path d="M98 24c11 0 20 8 20 18s-9 18-20 18-20-8-20-18 9-18 20-18Z"/>
-    <path d="M91 38h.1M105 38h.1M91 48c6 4 13 4 19 0"/>
-    <path d="M164 29c12 0 20 8 20 18v7h-40v-7c0-10 8-18 20-18Z"/>
-    <path d="M151 54v12h26V54"/>
-    <path d="M227 22 255 36l-7 32-32-7-7-26 18-13Z"/>
-    <path d="M226 36h18M224 48h22"/>
-    <path d="M35 101c12-15 36-7 33 11-2 13-18 19-31 9l-13 4 5-12c-3-4-2-8 6-12Z"/>
-    <path d="M103 95h46v32h-46z"/>
-    <path d="M112 105h28M112 116h18"/>
-    <path d="M199 100c8-14 31-7 31 9 0 14-17 23-31 13-10 10-27 3-27-12 0-15 19-22 27-10Z"/>
-    <path d="M254 103c-12 0-22 9-22 21 0 7 4 14 10 17l-3 13 14-7h1c12 0 22-9 22-21s-10-23-22-23Z"/>
-    <path d="M248 117h13M248 128h9"/>
-    <path d="M31 179h24l11 19H42l-11-19Z"/>
-    <path d="M31 179l10-13h23l-9 13"/>
-    <path d="M111 166c10 0 18 8 18 18s-8 18-18 18-18-8-18-18 8-18 18-18Z"/>
-    <path d="M103 184h16M111 176v16"/>
-    <path d="M167 170h36v25h-36z"/>
-    <path d="m167 170 18 14 18-14"/>
-    <path d="M240 166c9 0 16 7 16 16s-7 16-16 16h-25v-32h25Z"/>
-    <path d="M226 176h15M226 187h9"/>
-    <path d="M43 241c12-8 30-2 31 12 1 15-17 25-30 15l-15 4 5-14c-4-7 0-13 9-17Z"/>
-    <path d="M113 236 138 260l-25 24-25-24 25-24Z"/>
-    <path d="M107 260h12M113 254v12"/>
-    <path d="M185 240c11 0 21 8 21 19s-10 19-21 19-21-8-21-19 10-19 21-19Z"/>
-    <path d="M178 255h.1M192 255h.1M178 265c5 4 12 4 17 0"/>
-    <path d="M250 238c13 0 23 8 23 19 0 12-10 20-23 20l-10 10v-13c-8-3-13-9-13-17 0-11 10-19 23-19Z"/>
-    <path d="M242 253h17M242 264h11"/>
+<svg xmlns="http://www.w3.org/2000/svg" width="220" height="220" viewBox="0 0 220 220">
+  <g fill="none" stroke="#8696a0" stroke-width="1.25" stroke-linecap="round" stroke-linejoin="round" opacity=".14">
+    <path d="M15 16h22v15H24l-9 7V16Z"/><path d="M22 22h9M22 27h6"/>
+    <path d="M58 13c8 0 14 6 14 13s-6 13-14 13-14-6-14-13 6-13 14-13Z"/><path d="M53 24h.1M63 24h.1M53 30c4 3 9 3 13 0"/>
+    <path d="M96 15h26v18H96z"/><path d="m96 15 13 10 13-10"/>
+    <path d="M154 14c8 0 14 5 14 12s-6 12-14 12h-9l-7 7v-11c-4-2-7-5-7-9 0-6 6-11 14-11Z"/><path d="M147 23h12M147 29h8"/>
+    <path d="M192 13 207 28l-15 15-15-15 15-15Z"/><path d="M187 28h10M192 23v10"/>
+    <path d="M18 62c8-9 23-4 22 7-1 9-12 13-21 7l-9 3 3-8c-2-4 0-7 5-9Z"/>
+    <path d="M60 58h20v24H60z"/><path d="M65 64h10M65 70h7"/>
+    <path d="M108 59c8 0 15 6 15 14s-7 14-15 14-15-6-15-14 7-14 15-14Z"/><path d="M102 73h12M108 67v12"/>
+    <path d="M153 59h21v21h-21z"/><path d="M158 64h11M158 70h8M158 76h5"/>
+    <path d="M196 58c7 0 13 6 13 13s-6 13-13 13h-15V58h15Z"/><path d="M188 67h10M188 74h6"/>
+    <path d="M20 106h17l8 14H27l-7-14Z"/><path d="M20 106l7-10h17l-7 10"/>
+    <path d="M68 99c7 0 12 5 12 12v6H56v-6c0-7 5-12 12-12Z"/><path d="M60 117v8h16v-8"/>
+    <path d="M109 101 125 117l-16 16-16-16 16-16Z"/><path d="M103 117h12M109 111v12"/>
+    <path d="M154 100c6-9 21-5 21 6 0 9-11 15-20 9-7 7-18 2-18-8 0-9 12-14 17-7Z"/>
+    <path d="M197 99c8 0 14 6 14 13s-6 13-14 13-14-6-14-13 6-13 14-13Z"/><path d="M191 108h12M191 115h8"/>
+    <path d="M18 151h24v17H18z"/><path d="M22 156h16M22 162h10"/>
+    <path d="M66 145c9 0 16 6 16 14 0 9-7 15-16 15l-8 8v-10c-5-2-8-7-8-13 0-8 7-14 16-14Z"/>
+    <path d="M109 146c8 0 14 6 14 14s-6 14-14 14-14-6-14-14 6-14 14-14Z"/><path d="M104 157h.1M114 157h.1M104 164c4 3 8 3 12 0"/>
+    <path d="M152 146h24v18h-24z"/><path d="m152 146 12 11 12-11"/>
+    <path d="M197 146c7 0 13 5 13 12s-6 12-13 12h-15v-24h15Z"/><path d="M188 154h11M188 160h7"/>
+    <path d="M27 193c0-7 6-13 13-13s13 6 13 13-6 13-13 13H27v-13Z"/><path d="M34 190h10M34 196h7"/>
+    <path d="M82 183 94 195l-12 12-12-12 12-12Z"/>
+    <path d="M119 182h24v18h-24z"/><path d="M124 188h14M124 194h9"/>
+    <path d="M168 183c8 0 14 5 14 12s-6 12-14 12-14-5-14-12 6-12 14-12Z"/>
+    <path d="M201 181h9v26h-9z"/><path d="M197 186h17M197 202h17"/>
   </g>
-  <g fill="none" stroke="#8696a0" stroke-width="1.6" stroke-linecap="round" opacity=".11">
-    <path d="M12 74c7 5 12 5 18 0M71 71l10 10M83 71 71 83M139 73c4 6 9 8 16 6M203 76l15-10 8 14M273 74c-6 6-6 12 0 18"/>
-    <path d="M15 145c5 5 10 5 15 0M82 146h21M137 144c6 7 13 7 20 0M220 144l16 16M236 144l-16 16M280 147c-4 8-3 14 5 18"/>
-    <path d="M14 218c8 2 14 0 18-6M74 219l16-12 15 12M143 217c3 7 8 10 15 8M219 215h22M272 216c-7 5-9 11-5 18"/>
+  <g fill="none" stroke="#8696a0" stroke-width=".95" stroke-linecap="round" stroke-linejoin="round" opacity=".1">
+    <path d="M8 47c5 4 9 4 14 0M46 48l8 8M54 48l-8 8M84 48c4 5 8 6 13 4M130 49h14M176 48l10-7 6 10M209 46c-4 5-4 9 0 14"/>
+    <path d="M9 90h13M43 90c4 5 9 5 13 0M86 90l8-8 8 8M129 90c2 6 7 8 12 6M178 90h13M211 91c-5 3-7 8-4 13"/>
+    <path d="M7 137c6 2 11 0 14-5M45 137l9-9 9 9M86 137h16M129 137c4 4 9 4 13 0M177 137l8 8M185 137l-8 8M210 137c-4 5-4 9 0 14"/>
+    <path d="M9 177c5 4 9 4 14 0M48 178h14M99 179c3 5 7 6 12 4M146 178l8-8 8 8M188 178c6 2 10 0 13-5"/>
+    <path d="M31 6c3 3 6 3 9 0M77 6h12M128 7l6 6M134 7l-6 6M181 7c3 3 6 3 9 0"/>
+    <path d="M35 213h13M71 211c4 4 8 4 12 0M149 212h12M187 212l7-7 7 7"/>
   </g>
 </svg>
 `);
 
 const WHATSAPP_CHAT_BACKGROUND: CSSProperties = {
   backgroundColor: "#0b141a",
-  backgroundImage: `linear-gradient(rgba(11, 20, 26, 0.78), rgba(11, 20, 26, 0.78)), url("data:image/svg+xml,${WHATSAPP_DOODLE_PATTERN}")`,
-  backgroundSize: "auto, 300px 300px",
+  backgroundImage: `linear-gradient(rgba(11, 20, 26, 0.7), rgba(11, 20, 26, 0.7)), url("data:image/svg+xml,${WHATSAPP_DOODLE_PATTERN}")`,
+  backgroundSize: "auto, 220px 220px",
   backgroundPosition: "0 0, 0 0",
 };
 

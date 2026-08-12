@@ -21,6 +21,7 @@ import {
   fetchWhatsappCloudApiAssignments,
   fetchWhatsappCloudApiConfig,
   setWhatsappCloudApiAssignments,
+  syncWhatsappCloudApiHealth,
   upsertWhatsappCloudApiConfig,
   type WhatsappCloudApiAssignment,
   type WhatsappCloudApiConfig,
@@ -54,6 +55,12 @@ const INSTRUCTION_FLOW = [
   "El usuario recibe por WhatsApp el mensaje configurado con telefono, link y promo_code.",
   "Si el mismo usuario vuelve a escribir sin un nuevo click-to-WhatsApp, no se reenvia otra derivacion durante 24 horas.",
   "LEAD y PURCHASE siguen entrando por el endpoint actual y matchean con el recorrido.",
+];
+
+const OPT_IN_NOTES = [
+  "Opt-in significa que el usuario acepto o inicio una conversacion antes de recibir mensajes del negocio.",
+  "En este flujo el usuario escribe primero al numero Cloud API desde Click-to-WhatsApp, por eso podemos responder dentro de la ventana de servicio de 24 horas.",
+  "No enviamos mensajes proactivos fuera de esa ventana. Para hacerlo harian falta templates aprobados y consentimiento explicito.",
 ];
 
 const PHONE_KIND_OPTIONS: Array<{ value: PhoneKind; label: string }> = [
@@ -333,6 +340,7 @@ export default function WhatsAppCloudApiPageContent({
   const [clients, setClients] = useState<ClientOption[]>([]);
   const [ready, setReady] = useState(false);
   const [saving, setSaving] = useState(false);
+  const [healthSyncing, setHealthSyncing] = useState(false);
   const [message, setMessage] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [instructionsOpen, setInstructionsOpen] = useState(false);
@@ -412,8 +420,8 @@ export default function WhatsAppCloudApiPageContent({
     setPhoneNumberId(cfg?.phone_number_id ?? "");
     setWabaId(cfg?.whatsapp_business_account_id ?? "");
     setDisplayPhone(cfg?.display_phone_number ?? "");
-    setAccessToken(cfg?.meta_access_token ?? "");
-    setAppSecret(cfg?.meta_app_secret ?? "");
+    setAccessToken("");
+    setAppSecret("");
     setApiVersion(cfg?.meta_api_version ?? "v25.0");
     setVerifyToken(cfg?.webhook_verify_token ?? generateVerifyToken());
     setPixelId(cfg?.pixel_id ?? "");
@@ -475,6 +483,22 @@ export default function WhatsAppCloudApiPageContent({
     onCopied?.();
   };
 
+  const handleSyncHealth = async () => {
+    if (!config?.id) return;
+    setHealthSyncing(true);
+    setError(null);
+    setMessage(null);
+    try {
+      await syncWhatsappCloudApiHealth(config.id);
+      setMessage("Estado de Meta actualizado.");
+      await reloadSelected(targetUserId);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "No se pudo actualizar el estado de Meta.");
+    } finally {
+      setHealthSyncing(false);
+    }
+  };
+
   const handleSave = async () => {
     if (!targetUserId) return;
     setSaving(true);
@@ -487,8 +511,8 @@ export default function WhatsAppCloudApiPageContent({
       if (!/^\d+$/.test(phoneNumberId.trim())) throw new Error("Phone Number ID debe ser numerico.");
       if (!/^\d+$/.test(wabaId.trim())) throw new Error("WABA ID debe ser numerico.");
       if (displayPhone.trim() && !/^\d+$/.test(displayPhone.trim())) throw new Error("Telefono visible debe ser numerico.");
-      if (!accessToken.trim()) throw new Error("Meta access token requerido.");
-      if (!appSecret.trim()) throw new Error("App Secret / token de la app requerido.");
+      if (!accessToken.trim() && !config?.has_meta_access_token) throw new Error("Meta access token requerido.");
+      if (!appSecret.trim() && !config?.has_meta_app_secret) throw new Error("App Secret / token de la app requerido.");
       if (!verifyToken.trim()) throw new Error("Verify token requerido.");
       if (!cleanTag(landingTag)) throw new Error("Tag de promo_code requerido.");
       if (!/^\d+$/.test(pixelId.trim())) throw new Error("Pixel ID requerido.");
@@ -507,8 +531,8 @@ export default function WhatsAppCloudApiPageContent({
         phone_number_id: phoneNumberId.trim(),
         whatsapp_business_account_id: wabaId.trim(),
         display_phone_number: displayPhone.trim(),
-        meta_access_token: accessToken.trim(),
-        meta_app_secret: appSecret.trim(),
+        meta_access_token: accessToken.trim() || null,
+        meta_app_secret: appSecret.trim() || null,
         meta_api_version: apiVersion.trim() || "v25.0",
         webhook_verify_token: verifyToken.trim(),
         pixel_id: pixelId.trim(),
@@ -684,6 +708,14 @@ export default function WhatsAppCloudApiPageContent({
                   </li>
                 ))}
               </ol>
+              <div className="mt-4 rounded-lg border border-zinc-800 bg-zinc-900/60 p-3">
+                <p className="text-xs font-semibold text-zinc-100">Opt-in</p>
+                <ul className="mt-2 space-y-1.5 text-xs leading-relaxed text-zinc-400">
+                  {OPT_IN_NOTES.map((item) => (
+                    <li key={item}>{item}</li>
+                  ))}
+                </ul>
+              </div>
             </div>
           </div>
 
@@ -812,6 +844,7 @@ export default function WhatsAppCloudApiPageContent({
                     className={`${inputClass} font-mono text-xs`}
                     type="password"
                     autoComplete="off"
+                    placeholder={config?.has_meta_access_token ? "Token configurado. Pegue uno nuevo para reemplazarlo." : ""}
                   />
                 </Field>
                 <Field label="App Secret / token de la app" required>
@@ -822,7 +855,7 @@ export default function WhatsAppCloudApiPageContent({
                     className={`${inputClass} font-mono text-xs`}
                     type="password"
                     autoComplete="off"
-                    placeholder="Se copia desde Informacion basica de la app en Meta"
+                    placeholder={config?.has_meta_app_secret ? "App Secret configurado. Pegue uno nuevo para reemplazarlo." : "Se copia desde Informacion basica de la app en Meta"}
                   />
                 </Field>
                 <Field label="Version WhatsApp Cloud API" required>
@@ -1253,8 +1286,33 @@ export default function WhatsAppCloudApiPageContent({
               <MetricTile label="Configuracion" value={config ? "Guardada" : "Sin guardar"} tone={config ? "success" : "warning"} />
               <MetricTile label="Webhook" value={webhookUrl ? "URL lista" : "Sin URL"} tone={webhookUrl ? "info" : "warning"} />
               <MetricTile label="Gerencias" value={`${assignments.length} asignadas`} tone={assignments.length > 0 ? "success" : "warning"} />
-              <MetricTile label="Contact CAPI" value="Omitido" tone="neutral" />
+              <MetricTile label="Calidad Meta" value={config?.quality_rating || "Sin dato"} tone={config?.quality_rating ? "info" : "warning"} />
+              <MetricTile label="Limite Meta" value={config?.messaging_limit_tier || "Sin dato"} tone={config?.messaging_limit_tier ? "info" : "warning"} />
+              <MetricTile label="Estado numero" value={config?.phone_number_status || "Sin dato"} tone={config?.phone_number_status ? "success" : "warning"} />
             </div>
+            <button
+              type="button"
+              disabled={!config?.id || healthSyncing}
+              onClick={() => void handleSyncHealth()}
+              className="ui-button ui-button-secondary w-full"
+            >
+              {healthSyncing ? "Actualizando..." : "Actualizar estado Meta"}
+            </button>
+            {config?.health_checked_at ? (
+              <p className="text-[11px] leading-4 text-[var(--color-text-muted)]">
+                Ultima consulta: {new Intl.DateTimeFormat("es-AR", {
+                  day: "2-digit",
+                  month: "2-digit",
+                  hour: "2-digit",
+                  minute: "2-digit",
+                }).format(new Date(config.health_checked_at))}
+              </p>
+            ) : null}
+            {config?.health_last_error ? (
+              <p className="rounded-lg border border-rose-400/20 bg-rose-400/10 p-2 text-[11px] leading-4 text-rose-200">
+                {config.health_last_error}
+              </p>
+            ) : null}
           </SurfaceCard>
         </aside>
       </div>

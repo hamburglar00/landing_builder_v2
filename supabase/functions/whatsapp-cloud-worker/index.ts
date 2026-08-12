@@ -55,11 +55,31 @@ function getDb(): SupabaseDb {
   });
 }
 
-function assertInternalAuth(req: Request): Response | null {
+async function cronSecretMatches(db: SupabaseDb, value: unknown): Promise<boolean> {
+  const candidate = str(value);
+  if (!candidate) return false;
+  const { data, error } = await db
+    .from("cron_config")
+    .select("value")
+    .eq("key", "sync_phones_cron_secret")
+    .maybeSingle();
+  if (error) {
+    console.error("[whatsapp-cloud-worker] cron secret lookup failed", error.message);
+    return false;
+  }
+  return candidate === str((data as { value?: string } | null)?.value);
+}
+
+async function assertInternalAuth(
+  db: SupabaseDb,
+  req: Request,
+  body: Json,
+): Promise<Response | null> {
   const serviceRoleKey = Deno.env.get("SERVICE_ROLE_KEY") ?? "";
   const header = req.headers.get("authorization") ?? "";
   if (!serviceRoleKey || header !== `Bearer ${serviceRoleKey}`) {
-    return jsonResponse({ error: "Unauthorized" }, 401);
+    const allowedByCronSecret = await cronSecretMatches(db, body.cron_secret);
+    if (!allowedByCronSecret) return jsonResponse({ error: "Unauthorized" }, 401);
   }
   return null;
 }
@@ -176,6 +196,40 @@ async function claimEvent(db: SupabaseDb, event: WebhookEvent): Promise<boolean>
     return false;
   }
   return Boolean((data as { id?: string } | null)?.id);
+}
+
+async function requeueStaleProcessingEvents(db: SupabaseDb): Promise<number> {
+  const staleBefore = new Date(Date.now() - 5 * 60 * 1000).toISOString();
+  const { data, error } = await db
+    .from("whatsapp_cloud_api_webhook_events")
+    .update({
+      status: "pending",
+      processing_started_at: null,
+      last_error: "Requeued after processing timeout",
+    })
+    .eq("status", "processing")
+    .lt("processing_started_at", staleBefore)
+    .lt("attempts", 5)
+    .select("id");
+  if (error) {
+    console.error("[whatsapp-cloud-worker] stale requeue failed", error.message);
+    return 0;
+  }
+
+  const { error: failError } = await db
+    .from("whatsapp_cloud_api_webhook_events")
+    .update({
+      status: "failed",
+      processed_at: new Date().toISOString(),
+      last_error: "Processing timeout after max attempts",
+    })
+    .eq("status", "processing")
+    .lt("processing_started_at", staleBefore)
+    .gte("attempts", 5);
+  if (failError) {
+    console.error("[whatsapp-cloud-worker] stale fail update failed", failError.message);
+  }
+  return Array.isArray(data) ? data.length : 0;
 }
 
 async function finalizeEvent(
@@ -518,6 +572,7 @@ async function handleMessage(db: SupabaseDb, event: WebhookEvent): Promise<void>
         first_message_id: messageId,
         first_message_at: messageAt,
         last_message_at: messageAt,
+        last_inbound_at: messageAt,
         external_id: externalId,
       },
       { onConflict: "config_id,wa_id" },
@@ -728,7 +783,8 @@ async function handleMessage(db: SupabaseDb, event: WebhookEvent): Promise<void>
 }
 
 async function processPending(db: SupabaseDb): Promise<Record<string, number>> {
-  const stats = { processed: 0, deduplicated: 0, failed: 0, skipped: 0 };
+  const stats = { processed: 0, deduplicated: 0, failed: 0, skipped: 0, requeued: 0 };
+  stats.requeued = await requeueStaleProcessingEvents(db);
   const { data, error } = await db
     .from("whatsapp_cloud_api_webhook_events")
     .select("id,config_id,user_id,meta_message_id,event_type,payload,attempts")
@@ -771,11 +827,12 @@ async function processPending(db: SupabaseDb): Promise<Record<string, number>> {
 
 Deno.serve(async (req) => {
   if (req.method !== "POST") return jsonResponse({ error: "Method not allowed" }, 405);
-  const auth = assertInternalAuth(req);
-  if (auth) return auth;
 
   try {
     const db = getDb();
+    const body = await req.json().catch(() => ({})) as Json;
+    const auth = await assertInternalAuth(db, req, body);
+    if (auth) return auth;
     const stats = await processPending(db);
     return jsonResponse({ ok: true, ...stats });
   } catch (error) {

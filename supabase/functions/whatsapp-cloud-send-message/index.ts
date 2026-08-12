@@ -76,7 +76,9 @@ async function latestInboundAt(
   db: SupabaseDb,
   configId: string,
   waId: string,
+  contactLastInboundAt = "",
 ): Promise<string> {
+  if (str(contactLastInboundAt)) return str(contactLastInboundAt);
   const { data, error } = await db
     .from("whatsapp_cloud_api_webhook_events")
     .select("received_at")
@@ -173,11 +175,17 @@ Deno.serve(async (req) => {
     const requesterIsAdmin = await isAdmin(db, requesterId);
     const { data: contact, error: contactError } = await db
       .from("whatsapp_cloud_api_contacts")
-      .select("id,config_id,user_id,wa_id")
+      .select("id,config_id,user_id,wa_id,last_inbound_at")
       .eq("id", contactId)
       .maybeSingle();
     if (contactError) throw new Error(contactError.message);
-    const contactRow = contact as { id: string; config_id: string; user_id: string; wa_id: string } | null;
+    const contactRow = contact as {
+      id: string;
+      config_id: string;
+      user_id: string;
+      wa_id: string;
+      last_inbound_at?: string | null;
+    } | null;
     if (!contactRow) return jsonResponse({ error: "Contacto no encontrado." }, 404);
     if (!requesterIsAdmin && contactRow.user_id !== requesterId) {
       return jsonResponse({ error: "No autorizado." }, 403);
@@ -193,7 +201,12 @@ Deno.serve(async (req) => {
     if (!configRow?.active) return jsonResponse({ error: "Integracion inactiva." }, 400);
     if (!str(configRow.meta_access_token)) return jsonResponse({ error: "Meta access token no configurado." }, 400);
 
-    const inboundAt = await latestInboundAt(db, contactRow.config_id, contactRow.wa_id);
+    const inboundAt = await latestInboundAt(
+      db,
+      contactRow.config_id,
+      contactRow.wa_id,
+      str(contactRow.last_inbound_at),
+    );
     if (!inboundAt) {
       await db.from("whatsapp_cloud_api_outbound_messages").insert({
         config_id: contactRow.config_id,
