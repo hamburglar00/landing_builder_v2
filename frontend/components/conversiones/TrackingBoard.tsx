@@ -14,7 +14,10 @@ type SortMode = TrackingRankingConfig["sortMode"];
 type RankRule = TrackingRankingRule;
 
 type TrackingRow = {
+  id: string;
   phone: string;
+  gerenciaId: number | null;
+  gerenciaLabel: string;
   lastActive: string;
   loads: number;
   totalLoaded: number;
@@ -60,6 +63,11 @@ function relDate(iso: string): string {
 
 function waLink(phone: string) {
   return `https://wa.me/${String(phone || "").replace(/\D/g, "")}`;
+}
+
+function finitePositiveNumber(value: unknown): number | null {
+  const n = Number(value);
+  return Number.isFinite(n) && n > 0 ? n : null;
 }
 
 function WaIcon({ className }: { className?: string }) {
@@ -120,6 +128,14 @@ export default function TrackingBoard({
 
   const [openConfig, setOpenConfig] = useState(false);
 
+  const gerenciaLabelById = useMemo(() => {
+    const map = new Map<number, string>();
+    for (const option of gerenciaOptions) {
+      map.set(option.id, option.label);
+    }
+    return map;
+  }, [gerenciaOptions]);
+
   const stripArPrefix = (phone: string) => {
     const digits = String(phone || "").replace(/\D/g, "");
     return digits.startsWith("549") ? digits.slice(3) : digits;
@@ -146,17 +162,39 @@ export default function TrackingBoard({
   }, [rankingConfig]);
 
   const rows = useMemo<TrackingRow[]>(() => {
-    const byPhone = new Map<string, ConversionRow[]>();
+    const resolveGerenciaId = (row: ConversionRow): number | null => {
+      const eventGerenciaId = String(row.purchase_event_id ?? "").trim()
+        ? finitePositiveNumber(row.purchase_gerencia_id)
+        : String(row.registration_event_id ?? "").trim()
+          ? finitePositiveNumber(row.registration_gerencia_id)
+          : String(row.lead_event_id ?? "").trim()
+            ? finitePositiveNumber(row.lead_gerencia_id)
+            : null;
+      if (eventGerenciaId) return eventGerenciaId;
+
+      const historicalId = finitePositiveNumber(row.assigned_gerencia_id);
+      if (historicalId) return historicalId;
+
+      const assignedDigits = String(row.telefono_asignado ?? "").replace(/\D/g, "");
+      if (!assignedDigits) return null;
+      return finitePositiveNumber(assignedPhoneToGerenciaId[assignedDigits]);
+    };
+
+    const byPhoneGerencia = new Map<string, { phone: string; gerenciaId: number | null; rows: ConversionRow[] }>();
     for (const c of conversions) {
       if (!c.phone) continue;
       if (c.estado === "contact") continue;
-      const arr = byPhone.get(c.phone) ?? [];
-      arr.push(c);
-      byPhone.set(c.phone, arr);
+      const phone = String(c.phone ?? "").replace(/\D/g, "") || c.phone;
+      const gerenciaId = resolveGerenciaId(c);
+      const key = `${phone}::${gerenciaId ?? "sin-gerencia"}`;
+      const bucket = byPhoneGerencia.get(key) ?? { phone, gerenciaId, rows: [] };
+      bucket.rows.push(c);
+      byPhoneGerencia.set(key, bucket);
     }
 
     const out: TrackingRow[] = [];
-    for (const [phone, group] of byPhone.entries()) {
+    for (const [key, bucket] of byPhoneGerencia.entries()) {
+      const { phone, gerenciaId, rows: group } = bucket;
       const lastActive = group.reduce((acc, cur) => {
         if (!acc) return cur.created_at;
         return new Date(cur.created_at).getTime() > new Date(acc).getTime()
@@ -167,38 +205,21 @@ export default function TrackingBoard({
       const loads = purchaseRows.length;
       const totalLoaded = purchaseRows.reduce((s, r) => s + Number(r.valor || 0), 0);
       const avgLoad = loads > 0 ? totalLoaded / loads : 0;
-      const gerenciaSet = new Set<number>();
-      for (const row of group) {
-        const eventGerenciaId = String(row.purchase_event_id ?? "").trim()
-          ? Number(row.purchase_gerencia_id)
-          : String(row.lead_event_id ?? "").trim()
-            ? Number(row.lead_gerencia_id)
-            : Number.NaN;
-        if (Number.isFinite(eventGerenciaId)) {
-          gerenciaSet.add(eventGerenciaId);
-          continue;
-        }
-        const historicalId = Number(row.assigned_gerencia_id);
-        if (Number.isFinite(historicalId)) {
-          gerenciaSet.add(historicalId);
-          continue;
-        }
-        const assignedDigits = String(row.telefono_asignado ?? "").replace(/\D/g, "");
-        if (!assignedDigits) continue;
-        const gid = assignedPhoneToGerenciaId[assignedDigits];
-        if (Number.isFinite(gid)) gerenciaSet.add(gid);
-      }
+      const gerenciaIds = gerenciaId ? [gerenciaId] : [];
       out.push({
+        id: key,
         phone,
+        gerenciaId,
+        gerenciaLabel: gerenciaId ? gerenciaLabelById.get(gerenciaId) ?? `Gerencia ${gerenciaId}` : "Sin gerencia",
         lastActive,
         loads,
         totalLoaded,
         avgLoad,
-        gerenciaIds: Array.from(gerenciaSet),
+        gerenciaIds,
       });
     }
     return out;
-  }, [conversions, assignedPhoneToGerenciaId]);
+  }, [conversions, assignedPhoneToGerenciaId, gerenciaLabelById]);
 
   const sortedRows = useMemo(() => {
     const byLastActiveDesc = (a: TrackingRow, b: TrackingRow) =>
@@ -246,6 +267,8 @@ export default function TrackingBoard({
       return (
         String(rank).toLowerCase().includes(q) ||
         String(r.phone).toLowerCase().includes(q) ||
+        String(r.gerenciaId ?? "").toLowerCase().includes(q) ||
+        r.gerenciaLabel.toLowerCase().includes(q) ||
         String(r.loads).toLowerCase().includes(q) ||
         formatCurrencyAmount(r.avgLoad, currency).toLowerCase().includes(q) ||
         formatCurrencyAmount(r.totalLoaded, currency).toLowerCase().includes(q) ||
@@ -314,6 +337,7 @@ export default function TrackingBoard({
     for (const r of filteredRows) {
       const rank = r.loads === 0 ? LEAD_INDICATOR : indicatorFor(r.totalLoaded);
       lines.push(`• ${rank} wa.me/${stripArPrefix(r.phone)}`);
+      lines.push(`Gerencia: ${r.gerenciaLabel}`);
       lines.push(`⏳ Última actividad: ${relDate(r.lastActive)}`);
       lines.push(`💸 Carga promedio: ${formatCurrencyAmount(r.avgLoad, currency)}`);
       lines.push(`🏦 Total cargado: ${formatCurrencyAmount(r.totalLoaded, currency)}`);
@@ -382,11 +406,12 @@ export default function TrackingBoard({
       </p>
 
       <div className="overflow-x-auto rounded-lg border border-zinc-700">
-        <table className="min-w-[840px] text-left text-[11px] md:min-w-full">
+        <table className="min-w-[940px] text-left text-[11px] md:min-w-full">
           <thead className="bg-zinc-800/95">
             <tr>
               <th className="px-2 py-2 font-medium text-zinc-300 whitespace-nowrap">Ranking</th>
               <th className="px-2 py-2 font-medium text-zinc-300 whitespace-nowrap">Numero de telefono</th>
+              <th className="px-2 py-2 font-medium text-zinc-300 whitespace-nowrap">Gerencia</th>
               <th className="px-2 py-2 font-medium text-zinc-300 whitespace-nowrap">Whatsapp</th>
               <th className="px-2 py-2 font-medium text-zinc-300 whitespace-nowrap">
                 <span className="hidden sm:inline">Ultima vez activo</span>
@@ -409,17 +434,20 @@ export default function TrackingBoard({
           <tbody className="divide-y divide-zinc-800">
             {filteredRows.length === 0 ? (
               <tr>
-                <td colSpan={onDeletePhone ? 8 : 7} className="px-2 py-6 text-center text-zinc-500">
+                <td colSpan={onDeletePhone ? 9 : 8} className="px-2 py-6 text-center text-zinc-500">
                   Aun no hay datos para seguimiento.
                 </td>
               </tr>
             ) : (
               pagedRows.map((r) => (
-                <tr key={r.phone} className="bg-zinc-950/40">
+                <tr key={r.id} className="bg-zinc-950/40">
                   <td className="px-2 py-1.5 text-base" title={`Total: ${formatThousands(r.totalLoaded)}`}>
                     {r.loads === 0 ? LEAD_INDICATOR : indicatorFor(r.totalLoaded)}
                   </td>
                   <td className="px-2 py-1.5 whitespace-nowrap text-zinc-200 font-mono">{r.phone}</td>
+                  <td className="px-2 py-1.5 whitespace-nowrap text-zinc-300" title={r.gerenciaLabel}>
+                    {r.gerenciaLabel}
+                  </td>
                   <td className="px-2 py-1.5 whitespace-nowrap">
                     <a
                       href={waLink(r.phone)}
