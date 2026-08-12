@@ -457,7 +457,7 @@ export default function WhatsAppCloudApiInboxPageContent({ mode }: Props) {
                 className="min-w-0 flex-1 bg-transparent text-sm text-[var(--color-text-strong)] outline-none placeholder:text-[var(--color-text-disabled)]"
               />
             </div>
-            <div className="flex gap-2 overflow-x-auto [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
+            <div className="scrollbar-none flex gap-2 overflow-x-auto">
               {(["all", "nuevo", "lead", "cargo", "recompra", "premium"] as const).map((tag) => (
                 <button
                   key={tag}

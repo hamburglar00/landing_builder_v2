@@ -569,6 +569,17 @@ a {
   background-clip: padding-box;
 }
 
+.panel-shell .scrollbar-none {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
+
+.panel-shell .scrollbar-none::-webkit-scrollbar {
+  width: 0;
+  height: 0;
+  display: none;
+}
+
 @keyframes route-progress {
   0% {
     transform: translateX(-110%);
