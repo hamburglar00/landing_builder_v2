@@ -23,6 +23,7 @@ Este directorio está reservado para las migraciones SQL del proyecto.
 | `20260811120000_gerencia_phone_assignment_role.sql` | Agrega `assignment_role` a `gerencia_phones` para excluir WhatsApp de venta de la asignacion automatica sin desactivarlos. |
 | `20260811223000_whatsapp_cloud_api_inbox_rpc.sql` | Agrega RPC read-only para alimentar el Inbox de WhatsApp Cloud API con threads, mensajes y tags derivados de conversions. |
 | `20260811224500_whatsapp_cloud_api_inbox_premium_tag.sql` | Renombra el tag `vip` del Inbox de WhatsApp Cloud API a `premium`, usando el mismo umbral configurado para funnel. |
+| `20260811230000_whatsapp_cloud_api_inbox_inbound_and_labels.sql` | Corrige lectura de mensajes entrantes normalizados y muestra gerencia como `nombre (id)` en el Inbox de WhatsApp Cloud API. |
 
 ### Cron: sincronizar teléfonos cada 5 minutos
 

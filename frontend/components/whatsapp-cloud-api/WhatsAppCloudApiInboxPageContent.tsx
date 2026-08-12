@@ -372,19 +372,20 @@ export default function WhatsAppCloudApiInboxPageContent({ mode }: Props) {
                   <InfoRow label="Telefono" value={selectedThread.assigned_phone || "-"} />
                   <InfoRow label="Gerencia" value={selectedThread.assigned_gerencia_label || selectedThread.assigned_gerencia_id?.toString() || "-"} />
                   <InfoRow label="Promo" value={selectedThread.promo_code || "-"} />
-                  <InfoRow label="Config" value={selectedThread.config_name || "-"} />
                 </div>
               </div>
 
-              <div>
-                <p className="text-[10px] font-semibold uppercase tracking-[0.16em] text-[var(--color-text-disabled)]">Atribucion</p>
-                <div className="mt-3 space-y-2 text-xs">
-                  <InfoRow label="ctwa_clid" value={selectedThread.ctwa_clid || "-"} mono />
-                  <InfoRow label="Tipo" value={selectedThread.source_type || "-"} />
-                  <InfoRow label="Titulo" value={selectedThread.headline || "-"} />
-                  <InfoRow label="Ultima carga" value={formatDateTime(selectedThread.last_purchase_at)} />
+              {(selectedThread.ctwa_clid || selectedThread.source_type || selectedThread.headline || selectedThread.last_purchase_at) ? (
+                <div>
+                  <p className="text-[10px] font-semibold uppercase tracking-[0.16em] text-[var(--color-text-disabled)]">Atribucion</p>
+                  <div className="mt-3 space-y-2 text-xs">
+                    {selectedThread.ctwa_clid ? <InfoRow label="ctwa_clid" value={selectedThread.ctwa_clid} mono /> : null}
+                    {selectedThread.source_type ? <InfoRow label="Tipo anuncio" value={selectedThread.source_type} /> : null}
+                    {selectedThread.headline ? <InfoRow label="Titulo anuncio" value={selectedThread.headline} /> : null}
+                    {selectedThread.last_purchase_at ? <InfoRow label="Ultima carga" value={formatDateTime(selectedThread.last_purchase_at)} /> : null}
+                  </div>
                 </div>
-              </div>
+              ) : null}
             </div>
           ) : (
             <p className="text-sm text-[var(--color-text-muted)]">Sin thread seleccionado.</p>
