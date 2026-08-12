@@ -20,7 +20,7 @@ type ExportConversionTablePdfOptions = {
 
 const PAGE_MARGIN = 10;
 const HEADER_HEIGHT = 30;
-const ROW_HEIGHT = 7.4;
+const ROW_HEIGHT = 9.8;
 const TABLE_HEADER_HEIGHT = 8.5;
 
 function formatDateTime(value: string | number | null | undefined): string {
@@ -126,12 +126,12 @@ function safeFilename(value: string): string {
 export async function exportConversionTablePdf(options: ExportConversionTablePdfOptions): Promise<void> {
   const { rows, columns, filters, workspaceName } = options;
   const { jsPDF } = await import("jspdf");
-  const doc = new jsPDF({ orientation: "landscape", unit: "mm", format: "a4", compress: true });
+  const doc = new jsPDF({ orientation: "landscape", unit: "mm", format: "a3", compress: true });
 
   const pageWidth = doc.internal.pageSize.getWidth();
   const pageHeight = doc.internal.pageSize.getHeight();
   const tableWidth = pageWidth - PAGE_MARGIN * 2;
-  const primary = [121, 255, 77] as const;
+  const primary = [78, 216, 135] as const;
   const primaryDark = [9, 18, 24] as const;
   const secondaryDark = [13, 24, 32] as const;
   const tableHead = [20, 32, 43] as const;
@@ -175,7 +175,7 @@ export async function exportConversionTablePdf(options: ExportConversionTablePdf
     doc.setFillColor(...primaryDark);
     doc.roundedRect(PAGE_MARGIN, 9, tableWidth, HEADER_HEIGHT, 4, 4, "F");
     doc.setFillColor(...primary);
-    doc.rect(PAGE_MARGIN, 35, tableWidth, 4, "F");
+    doc.rect(PAGE_MARGIN + 8, 35.8, tableWidth - 16, 1.2, "F");
     doc.setFont("helvetica", "bold");
     doc.setFontSize(17);
     doc.setTextColor(255, 255, 255);
@@ -232,8 +232,9 @@ export async function exportConversionTablePdf(options: ExportConversionTablePdf
 
   const columnWeights = columns.map((column) => {
     if (column === "timestamp") return 1.28;
-    if (column === "email" || column === "observaciones" || column === "utm_campaign") return 1.5;
-    if (column === "telefono_asignado" || column === "assigned_gerencia_label") return 1.22;
+    if (column === "email" || column === "observaciones" || column === "utm_campaign") return 1.8;
+    if (column === "telefono_asignado" || column === "assigned_gerencia_label") return 1.45;
+    if (column === "phone" || column === "promo_code") return 1.25;
     if (column === "valor") return 1.05;
     return 1;
   });
@@ -262,7 +263,7 @@ export async function exportConversionTablePdf(options: ExportConversionTablePdf
   const drawRow = (row: ConversionRow, startY: number, rowIndex: number) => {
     let x = PAGE_MARGIN;
     doc.setFont("helvetica", "normal");
-    doc.setFontSize(5.5);
+    doc.setFontSize(6);
     const fill: readonly [number, number, number] = rowIndex % 2 === 0 ? rowEven : rowOdd;
     normalizedColumns.forEach((column) => {
       doc.setFillColor(...fill);
@@ -270,7 +271,7 @@ export async function exportConversionTablePdf(options: ExportConversionTablePdf
       doc.rect(x, startY, column.width, ROW_HEIGHT, "FD");
       const value = valueForColumn(row, column.key);
       doc.setTextColor(column.key === "valor" ? primary[0] : text[0], column.key === "valor" ? primary[1] : text[1], column.key === "valor" ? primary[2] : text[2]);
-      doc.text(fitText(value, column.width - 2.2), x + 1.7, startY + 4.9);
+      doc.text(fitLines(value, column.width - 2.2, 2), x + 1.7, startY + 4.1);
       x += column.width;
     });
   };

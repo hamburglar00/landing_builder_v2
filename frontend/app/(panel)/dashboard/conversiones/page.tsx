@@ -53,10 +53,8 @@ import EditableConversionEmailCell from "@/components/conversiones/EditableConve
 import ConversionFiltersModal from "@/components/conversiones/ConversionFiltersModal";
 import ConversionLogFilters from "@/components/conversiones/ConversionLogFilters";
 import ConversionConfigurationPanel from "@/components/conversiones/ConversionConfigurationPanel";
-import {
-  exportConversionTablePdf,
-  formatConversionPdfDateRange,
-} from "@/components/conversiones/exportConversionTablePdf";
+import ConversionTablePdfExportButton from "@/components/conversiones/ConversionTablePdfExportButton";
+import { formatConversionPdfDateRange } from "@/components/conversiones/exportConversionTablePdf";
 import { useConversionStatsFilters } from "@/components/conversiones/useConversionStatsFilters";
 import {
   ConversionPagination,
@@ -986,14 +984,6 @@ export default function DashboardConversionesPage() {
     statsTelefonoFilter,
     tableSearch,
   ]);
-  const handleExportTablePdf = useCallback(() => {
-    void exportConversionTablePdf({
-      rows: filteredConversions,
-      columns: pdfTableColumns,
-      filters: pdfTableFilters,
-      workspaceName: clientName,
-    });
-  }, [clientName, filteredConversions, pdfTableColumns, pdfTableFilters]);
   const internalIdByConversionId = useMemo(
     () => new Map(conversions.map((c) => [c.id, c.internal_id])),
     [conversions],
@@ -1587,14 +1577,13 @@ export default function DashboardConversionesPage() {
                 }
                 className="h-8 w-full rounded-lg border border-zinc-700 bg-zinc-900 px-3 text-xs text-zinc-100 placeholder:text-zinc-500 sm:w-64"
               />
-              <button
-                type="button"
-                onClick={handleExportTablePdf}
+              <ConversionTablePdfExportButton
+                rows={filteredConversions}
+                columns={pdfTableColumns}
+                filters={pdfTableFilters}
+                workspaceName={clientName}
                 disabled={filteredConversions.length === 0 || displayedColsWithoutTimestamp.length === 0}
-                className="h-8 shrink-0 rounded-lg border border-emerald-400/30 bg-emerald-400/10 px-3 text-[11px] font-semibold text-emerald-200 transition hover:bg-emerald-400/15 disabled:cursor-not-allowed disabled:border-zinc-700 disabled:bg-zinc-900 disabled:text-zinc-600"
-              >
-                Exportar PDF
-              </button>
+              />
               <ConversionTableViewToggle
                 view={tableView}
                 onToggle={toggleTableView}
