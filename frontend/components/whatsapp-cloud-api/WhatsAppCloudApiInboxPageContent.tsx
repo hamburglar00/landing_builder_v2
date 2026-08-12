@@ -32,15 +32,52 @@ const TAG_CLASSES: Record<WhatsappCloudApiInboxThread["tag"], string> = {
   premium: "border-lime-400/25 bg-lime-400/10 text-lime-200",
 };
 
+const WHATSAPP_DOODLE_PATTERN = encodeURIComponent(`
+<svg xmlns="http://www.w3.org/2000/svg" width="300" height="300" viewBox="0 0 300 300">
+  <g fill="none" stroke="#8696a0" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" opacity=".16">
+    <path d="M22 28h32v22H33l-11 9V28Z"/>
+    <path d="M39 34v10M34 39h10"/>
+    <path d="M98 24c11 0 20 8 20 18s-9 18-20 18-20-8-20-18 9-18 20-18Z"/>
+    <path d="M91 38h.1M105 38h.1M91 48c6 4 13 4 19 0"/>
+    <path d="M164 29c12 0 20 8 20 18v7h-40v-7c0-10 8-18 20-18Z"/>
+    <path d="M151 54v12h26V54"/>
+    <path d="M227 22 255 36l-7 32-32-7-7-26 18-13Z"/>
+    <path d="M226 36h18M224 48h22"/>
+    <path d="M35 101c12-15 36-7 33 11-2 13-18 19-31 9l-13 4 5-12c-3-4-2-8 6-12Z"/>
+    <path d="M103 95h46v32h-46z"/>
+    <path d="M112 105h28M112 116h18"/>
+    <path d="M199 100c8-14 31-7 31 9 0 14-17 23-31 13-10 10-27 3-27-12 0-15 19-22 27-10Z"/>
+    <path d="M254 103c-12 0-22 9-22 21 0 7 4 14 10 17l-3 13 14-7h1c12 0 22-9 22-21s-10-23-22-23Z"/>
+    <path d="M248 117h13M248 128h9"/>
+    <path d="M31 179h24l11 19H42l-11-19Z"/>
+    <path d="M31 179l10-13h23l-9 13"/>
+    <path d="M111 166c10 0 18 8 18 18s-8 18-18 18-18-8-18-18 8-18 18-18Z"/>
+    <path d="M103 184h16M111 176v16"/>
+    <path d="M167 170h36v25h-36z"/>
+    <path d="m167 170 18 14 18-14"/>
+    <path d="M240 166c9 0 16 7 16 16s-7 16-16 16h-25v-32h25Z"/>
+    <path d="M226 176h15M226 187h9"/>
+    <path d="M43 241c12-8 30-2 31 12 1 15-17 25-30 15l-15 4 5-14c-4-7 0-13 9-17Z"/>
+    <path d="M113 236 138 260l-25 24-25-24 25-24Z"/>
+    <path d="M107 260h12M113 254v12"/>
+    <path d="M185 240c11 0 21 8 21 19s-10 19-21 19-21-8-21-19 10-19 21-19Z"/>
+    <path d="M178 255h.1M192 255h.1M178 265c5 4 12 4 17 0"/>
+    <path d="M250 238c13 0 23 8 23 19 0 12-10 20-23 20l-10 10v-13c-8-3-13-9-13-17 0-11 10-19 23-19Z"/>
+    <path d="M242 253h17M242 264h11"/>
+  </g>
+  <g fill="none" stroke="#8696a0" stroke-width="1.6" stroke-linecap="round" opacity=".11">
+    <path d="M12 74c7 5 12 5 18 0M71 71l10 10M83 71 71 83M139 73c4 6 9 8 16 6M203 76l15-10 8 14M273 74c-6 6-6 12 0 18"/>
+    <path d="M15 145c5 5 10 5 15 0M82 146h21M137 144c6 7 13 7 20 0M220 144l16 16M236 144l-16 16M280 147c-4 8-3 14 5 18"/>
+    <path d="M14 218c8 2 14 0 18-6M74 219l16-12 15 12M143 217c3 7 8 10 15 8M219 215h22M272 216c-7 5-9 11-5 18"/>
+  </g>
+</svg>
+`);
+
 const WHATSAPP_CHAT_BACKGROUND: CSSProperties = {
   backgroundColor: "#0b141a",
-  backgroundImage: [
-    "radial-gradient(circle at 14px 18px, rgba(134,150,160,0.09) 1px, transparent 1.5px)",
-    "radial-gradient(circle at 42px 46px, rgba(134,150,160,0.07) 1px, transparent 1.5px)",
-    "linear-gradient(135deg, rgba(134,150,160,0.035) 12%, transparent 12%, transparent 88%, rgba(134,150,160,0.035) 88%)",
-  ].join(", "),
-  backgroundSize: "56px 56px, 56px 56px, 72px 72px",
-  backgroundPosition: "0 0, 8px 10px, 0 0",
+  backgroundImage: `linear-gradient(rgba(11, 20, 26, 0.78), rgba(11, 20, 26, 0.78)), url("data:image/svg+xml,${WHATSAPP_DOODLE_PATTERN}")`,
+  backgroundSize: "auto, 300px 300px",
+  backgroundPosition: "0 0, 0 0",
 };
 
 function initials(name: string, fallback: string): string {
