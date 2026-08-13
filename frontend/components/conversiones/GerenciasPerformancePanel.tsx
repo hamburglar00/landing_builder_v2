@@ -860,7 +860,7 @@ export default function GerenciasPerformancePanel({
                     </td>
                     <td
                       className="px-1.5 py-2 text-center text-zinc-200"
-                      title="Porcentaje del mes en que la gerencia tuvo al menos un telefono activo."
+                      title="Porcentaje de solicitudes reales donde la gerencia era candidata y tenia al menos un telefono activo."
                     >
                       {formatOptionalPercent(row.disponibilidad)}
                     </td>

@@ -1435,26 +1435,6 @@ export async function fetchHomeOverviewStats(
   };
 }
 
-type GerenciaAvailabilitySnapshotRaw = {
-  gerencia_id: number | string | null;
-  active_phone_count: number | string | null;
-  total_phone_count: number | string | null;
-  assigned_landing_count?: number | string | null;
-  checked_at: string | null;
-  gerencias?:
-    | {
-        id?: number | string | null;
-        nombre?: string | null;
-        gerencia_id?: number | string | null;
-      }
-    | Array<{
-        id?: number | string | null;
-        nombre?: string | null;
-        gerencia_id?: number | string | null;
-      }>
-    | null;
-};
-
 type GerenciaAvailabilitySummaryRaw = {
   label: string | null;
   sample_count: number | string | null;
@@ -1488,57 +1468,7 @@ async function fetchGerenciaAvailabilitySummariesInternal(
       .filter((row) => row.label);
   }
 
-  // Fallback temporal: permite desplegar frontend antes de aplicar la migracion remota.
-  if (String(summaryError.message ?? "").toLowerCase().includes("function")) {
-    console.warn("Falling back to client-side availability summaries:", summaryError.message);
-  } else {
-    throw summaryError;
-  }
-
-  const rows: GerenciaAvailabilitySnapshotRaw[] = [];
-  const pageSize = 1000;
-  let offset = 0;
-
-  while (true) {
-    let query = supabase
-      .from("gerencia_phone_availability_snapshots")
-      .select("gerencia_id, active_phone_count, total_phone_count, assigned_landing_count, checked_at, gerencias!inner(id,nombre,gerencia_id)")
-      .order("checked_at", { ascending: true })
-      .range(offset, offset + pageSize - 1);
-    if (userId) query = query.eq("user_id", userId);
-    if (startIso) query = query.gte("checked_at", startIso);
-    if (endIso) query = query.lte("checked_at", endIso);
-
-    const { data, error } = await query;
-    if (error) throw error;
-
-    const chunk = (data ?? []) as unknown as GerenciaAvailabilitySnapshotRaw[];
-    rows.push(...chunk);
-    if (chunk.length < pageSize) break;
-    offset += pageSize;
-  }
-
-  const byLabel = new Map<string, { sampleCount: number; activeSampleCount: number }>();
-  for (const row of rows) {
-    if (Number(row.assigned_landing_count ?? 0) <= 0) continue;
-    const joined = Array.isArray(row.gerencias) ? row.gerencias[0] : row.gerencias;
-    const internalId = Number(joined?.id ?? row.gerencia_id);
-    const externalId = Number(joined?.gerencia_id);
-    const labelId = Number.isFinite(externalId) ? externalId : internalId;
-    const name = String(joined?.nombre ?? "").trim() || `Gerencia ${labelId}`;
-    const label = `${name} (ID ${labelId})`;
-    const current = byLabel.get(label) ?? { sampleCount: 0, activeSampleCount: 0 };
-    current.sampleCount += 1;
-    if (Number(row.active_phone_count ?? 0) > 0) current.activeSampleCount += 1;
-    byLabel.set(label, current);
-  }
-
-  return Array.from(byLabel.entries()).map(([label, value]) => ({
-    label,
-    sampleCount: value.sampleCount,
-    activeSampleCount: value.activeSampleCount,
-    availabilityPct: value.sampleCount > 0 ? (value.activeSampleCount / value.sampleCount) * 100 : null,
-  }));
+  throw summaryError;
 }
 
 export async function fetchGerenciaAvailabilitySummaries(

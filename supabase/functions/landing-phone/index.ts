@@ -13,6 +13,66 @@ function jsonResponse(body: Record<string, unknown>, status: number): Response {
   });
 }
 
+type SupabaseClient = ReturnType<typeof createClient>;
+
+type DemandRecordInput = {
+  name: string;
+  source?: string;
+  requestId: string;
+  status: string;
+  payload?: Record<string, unknown> | null;
+};
+
+function selectedGerenciaId(payload: Record<string, unknown> | null | undefined): number | null {
+  const gerencia = payload?.gerencia as Record<string, unknown> | undefined;
+  const value = Number(gerencia?.id ?? null);
+  return Number.isFinite(value) ? value : null;
+}
+
+function selectedPhoneId(payload: Record<string, unknown> | null | undefined): number | null {
+  const value = Number(payload?.phoneId ?? null);
+  return Number.isFinite(value) ? value : null;
+}
+
+function scheduleBackground(promise: Promise<unknown>) {
+  const runtime = (globalThis as unknown as {
+    EdgeRuntime?: { waitUntil?: (promise: Promise<unknown>) => void };
+  }).EdgeRuntime;
+
+  if (runtime?.waitUntil) {
+    runtime.waitUntil(promise);
+    return;
+  }
+
+  promise.catch((error) => {
+    console.error("Background task failed:", error);
+  });
+}
+
+function recordDemandAvailability(
+  supabase: SupabaseClient,
+  input: DemandRecordInput,
+): Promise<unknown> {
+  if (input.source === "chatrace" || input.source === "warmup") {
+    return Promise.resolve(null);
+  }
+
+  return supabase.rpc("record_landing_phone_availability_demand", {
+    p_landing_name: input.name,
+    p_request_id: input.requestId,
+    p_source: "landing-phone",
+    p_result_status: input.status,
+    p_selected_gerencia_id: selectedGerenciaId(input.payload),
+    p_selected_phone_id: selectedPhoneId(input.payload),
+    p_selected_phone: typeof input.payload?.phone === "string" ? input.payload.phone : null,
+  }).then(({ error }) => {
+    if (error) {
+      console.error("Error recording landing-phone demand availability:", error);
+    }
+    return null;
+  });
+}
+
 /**
  * API público: devuelve 1 número de teléfono para una landing.
  * Toda la lógica corre en la DB (get_phone_for_landing) para 1 solo round-trip.
@@ -40,6 +100,7 @@ Deno.serve(async (req) => {
   try {
     let name: string | undefined;
     let source: string | undefined;
+    const requestId = crypto.randomUUID();
 
     if (req.method === "GET") {
       const url = new URL(req.url);
@@ -146,6 +207,14 @@ Deno.serve(async (req) => {
           typeof payload.phone === "string" &&
           payload.phone
         ) {
+          scheduleBackground(recordDemandAvailability(supabase, {
+            name,
+            source,
+            requestId,
+            status: "ok",
+            payload,
+          }));
+
           return new Response(JSON.stringify(payload), {
             status: 200,
             headers: {
@@ -190,6 +259,14 @@ Deno.serve(async (req) => {
     }
 
     if (status === "no_assignments") {
+      scheduleBackground(recordDemandAvailability(supabase, {
+        name,
+        source,
+        requestId,
+        status,
+        payload: result,
+      }));
+
       return new Response(
         JSON.stringify({ error: "La landing no tiene gerencias asignadas." }),
         {
@@ -200,6 +277,14 @@ Deno.serve(async (req) => {
     }
 
     if (status === "no_phones") {
+      scheduleBackground(recordDemandAvailability(supabase, {
+        name,
+        source,
+        requestId,
+        status,
+        payload: result,
+      }));
+
       return new Response(
         JSON.stringify({
           error:
@@ -217,6 +302,14 @@ Deno.serve(async (req) => {
     // - chatrace:     phoneId, phone, landingName(cliente), integrationSource, phoneMode, phoneKind, gerencia
     const payload = { ...result };
     delete (payload as Record<string, unknown>)._status;
+
+    scheduleBackground(recordDemandAvailability(supabase, {
+      name,
+      source,
+      requestId,
+      status: "ok",
+      payload,
+    }));
 
     return new Response(JSON.stringify(payload), {
       status: 200,
