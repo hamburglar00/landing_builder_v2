@@ -39,6 +39,7 @@ const INSTRUCTION_CHECKLIST = [
   "Ir a Paso 2. Configuracion de produccion y registrar el numero real del cliente.",
   "Copiar el Phone Number ID y el WhatsApp Business Account ID del numero real registrado.",
   "Generar el identificador de acceso para ese numero/WABA y pegarlo en Meta access token.",
+  "Crear u obtener el dataset de Conversions API for Business Messaging del WABA y pegarlo en Dataset Business Messaging ID.",
   "En Configuracion de la app > Informacion basica, copiar App Secret y pegarlo en App Secret / token de la app.",
   "Activar Suscribirse a webhooks sobre el numero registrado.",
   "Pegar la Webhook URL y el Verify token del constructor, verificar y guardar.",
@@ -363,6 +364,7 @@ export default function WhatsAppCloudApiPageContent({
   const [apiVersion, setApiVersion] = useState("v25.0");
   const [verifyToken, setVerifyToken] = useState("");
   const [pixelId, setPixelId] = useState("");
+  const [messagingDatasetId, setMessagingDatasetId] = useState("");
   const [landingTag, setLandingTag] = useState("");
   const [selectionMode, setSelectionMode] = useState<"weighted_random" | "fair">("weighted_random");
   const [fairCriterion, setFairCriterion] = useState<"usage_count" | "messages_received">("usage_count");
@@ -425,6 +427,7 @@ export default function WhatsAppCloudApiPageContent({
     setApiVersion(cfg?.meta_api_version ?? "v25.0");
     setVerifyToken(cfg?.webhook_verify_token ?? generateVerifyToken());
     setPixelId(cfg?.pixel_id ?? "");
+    setMessagingDatasetId(cfg?.meta_messaging_dataset_id ?? "");
     setLandingTag(cfg?.landing_tag ?? "");
     setSelectionMode(cfg?.gerencia_selection_mode ?? "weighted_random");
     setFairCriterion(cfg?.gerencia_fair_criterion ?? "usage_count");
@@ -516,6 +519,7 @@ export default function WhatsAppCloudApiPageContent({
       if (!verifyToken.trim()) throw new Error("Verify token requerido.");
       if (!cleanTag(landingTag)) throw new Error("Tag de promo_code requerido.");
       if (!/^\d+$/.test(pixelId.trim())) throw new Error("Pixel ID requerido.");
+      if (!/^\d+$/.test(messagingDatasetId.trim())) throw new Error("Dataset Business Messaging ID requerido.");
       if (!redirectTemplate.trim()) throw new Error("Mensaje de derivacion requerido.");
       if (!fallbackTemplate.trim()) throw new Error("Mensaje fallback requerido.");
       if (redirectUseCtaButton && !redirectCtaButtonTitle.trim()) throw new Error("Titulo del boton requerido.");
@@ -536,6 +540,7 @@ export default function WhatsAppCloudApiPageContent({
         meta_api_version: apiVersion.trim() || "v25.0",
         webhook_verify_token: verifyToken.trim(),
         pixel_id: pixelId.trim(),
+        meta_messaging_dataset_id: messagingDatasetId.trim(),
         landing_tag: cleanTag(landingTag),
         gerencia_selection_mode: selectionMode,
         gerencia_fair_criterion: fairCriterion,
@@ -908,6 +913,24 @@ export default function WhatsAppCloudApiPageContent({
                     Integraciones
                   </a>
                   .
+                </p>
+              </div>
+
+              <div>
+                <label className="mb-1 block text-xs font-medium text-zinc-400">
+                  Dataset Business Messaging ID <span className="text-red-400">*</span>
+                </label>
+                <input
+                  type="text"
+                  inputMode="numeric"
+                  value={messagingDatasetId}
+                  onChange={(e) => setMessagingDatasetId(onlyDigits(e.target.value))}
+                  className="w-full rounded-lg border border-zinc-700 bg-zinc-900 px-3 py-2 text-sm text-zinc-100"
+                  placeholder="ID del dataset vinculado al WABA"
+                  required
+                />
+                <p className="mt-1 text-[11px] text-zinc-500">
+                  Se usa para enviar LeadSubmitted y Purchase por Conversions API for Business Messaging.
                 </p>
               </div>
 

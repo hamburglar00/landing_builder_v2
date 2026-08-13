@@ -708,8 +708,11 @@ export function buildMetaBusinessMessagingRequest(
   eventTime: number,
   customData?: Record<string, unknown>,
 ): MetaRequest {
+  const businessMessagingEventName = eventName === "Lead"
+    ? "LeadSubmitted"
+    : eventName;
   const eventPayload: Record<string, unknown> = {
-    event_name: eventName,
+    event_name: businessMessagingEventName,
     event_time: eventTime,
     action_source: "business_messaging",
     messaging_channel: "whatsapp",

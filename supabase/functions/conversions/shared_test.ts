@@ -189,7 +189,10 @@ Deno.test("Business Messaging Lead matches Meta WhatsApp payload shape", () => {
 
   const data = request.body.data as Array<Record<string, unknown>>;
   const event = data[0];
-  assert(event.event_name === "Lead", "event_name must be Lead");
+  assert(
+    event.event_name === "LeadSubmitted",
+    "Business Messaging Lead must be LeadSubmitted",
+  );
   assert(
     event.action_source === "business_messaging",
     "action_source must be business_messaging",

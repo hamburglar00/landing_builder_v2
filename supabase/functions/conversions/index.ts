@@ -95,6 +95,7 @@ interface WhatsappCloudApiCapiConfig {
   phone_number_id: string;
   whatsapp_business_account_id: string;
   pixel_id: string;
+  meta_messaging_dataset_id: string;
 }
 
 interface LandingRow {
@@ -1990,7 +1991,7 @@ async function resolveWhatsappCloudApiCapiConfig(
   );
   let query = db
     .from("whatsapp_cloud_api_configs")
-    .select("active, phone_number_id, whatsapp_business_account_id, pixel_id")
+    .select("active, phone_number_id, whatsapp_business_account_id, pixel_id, meta_messaging_dataset_id")
     .eq("user_id", row.user_id);
 
   if (phoneNumberId) {
@@ -2184,7 +2185,7 @@ async function sendToMetaCAPI(
     : isWhatsappCloudApi
     ? {
       enabled: true,
-      datasetId: norm(effectiveConfig.pixel_id),
+      datasetId: norm(whatsappCloudApiConfig?.meta_messaging_dataset_id),
       wabaId: norm(whatsappCloudApiConfig?.whatsapp_business_account_id),
       accessToken: norm(effectiveConfig.meta_access_token),
       apiVersion: effectiveConfig.meta_api_version,

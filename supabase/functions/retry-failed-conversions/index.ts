@@ -210,7 +210,7 @@ Deno.serve(async (req) => {
       ? await db
         .from("whatsapp_cloud_api_configs")
         .select(
-          "user_id, active, phone_number_id, whatsapp_business_account_id, pixel_id",
+          "user_id, active, phone_number_id, whatsapp_business_account_id, pixel_id, meta_messaging_dataset_id",
         )
         .in("user_id", userIds)
       : { data: [] };
@@ -312,9 +312,7 @@ Deno.serve(async (req) => {
       const selectedForBusinessRoute = matchedPixelCfgForRoute ??
         defaultPixelCfgForRoute ?? null;
       const businessMessagingDatasetId = isWhatsappCloudApi
-        ? normalizeText(
-          selectedForBusinessRoute?.pixel_id ?? cfg.pixel_id ?? row.pixel_id,
-        )
+        ? normalizeText(whatsappCloudApiCfg?.meta_messaging_dataset_id)
         : normalizeText(chatraceCfg?.meta_messaging_dataset_id);
       const businessMessagingAccessToken = isWhatsappCloudApi
         ? normalizeText(
@@ -1665,7 +1663,7 @@ async function retrySingleContactLeadCapiEvent(
     isWhatsappCloudApi &&
     Boolean(ctwaClid) &&
     Boolean(normalizeText(whatsappCloudApiCfg?.whatsapp_business_account_id)) &&
-    Boolean(config.pixel_id) &&
+    Boolean(normalizeText(whatsappCloudApiCfg?.meta_messaging_dataset_id)) &&
     Boolean(config.meta_access_token);
   if (eventName === "Lead" && isWhatsappCloudApi && !useBusinessMessaging) {
     stats[failedKey]++;
@@ -1687,7 +1685,9 @@ async function retrySingleContactLeadCapiEvent(
         has_waba: Boolean(
           normalizeText(whatsappCloudApiCfg?.whatsapp_business_account_id),
         ),
-        has_dataset: Boolean(config.pixel_id),
+        has_dataset: Boolean(
+          normalizeText(whatsappCloudApiCfg?.meta_messaging_dataset_id),
+        ),
         has_token: Boolean(config.meta_access_token),
       }),
       "",
@@ -1698,7 +1698,9 @@ async function retrySingleContactLeadCapiEvent(
   const metaReq = useBusinessMessaging
     ? buildMetaBusinessMessagingRequest(
       {
-        dataset_id: config.pixel_id,
+        dataset_id: normalizeText(
+          whatsappCloudApiCfg?.meta_messaging_dataset_id,
+        ),
         whatsapp_business_account_id: normalizeText(
           whatsappCloudApiCfg?.whatsapp_business_account_id,
         ),
