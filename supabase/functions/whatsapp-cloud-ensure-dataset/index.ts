@@ -129,7 +129,7 @@ Deno.serve(async (req) => {
     if (configId) {
       let query = db
         .from("whatsapp_cloud_api_configs")
-        .select("id,user_id,whatsapp_business_account_id,meta_access_token,meta_api_version")
+        .select("id,user_id,whatsapp_business_account_id,meta_access_token,meta_api_version,meta_messaging_dataset_id")
         .eq("id", configId);
       if (!requesterIsAdmin) query = query.eq("user_id", requesterId);
       const { data: config, error } = await query.maybeSingle();
@@ -139,8 +139,17 @@ Deno.serve(async (req) => {
         whatsapp_business_account_id?: string;
         meta_access_token?: string;
         meta_api_version?: string;
+        meta_messaging_dataset_id?: string;
       } | null;
       if (!row) return jsonResponse({ error: "Configuracion no encontrada." }, 404);
+      const storedDatasetId = digits(row.meta_messaging_dataset_id);
+      if (storedDatasetId) {
+        return jsonResponse({
+          ok: true,
+          dataset_id: storedDatasetId,
+          source: "stored",
+        });
+      }
       wabaId = wabaId || digits(row.whatsapp_business_account_id);
       accessToken = accessToken || str(row.meta_access_token);
       apiVersion = apiVersion || str(row.meta_api_version) || "v25.0";
@@ -158,6 +167,7 @@ Deno.serve(async (req) => {
     return jsonResponse({
       ok: true,
       dataset_id: result.datasetId,
+      source: "meta",
       meta_response: result.response,
     });
   } catch (error) {

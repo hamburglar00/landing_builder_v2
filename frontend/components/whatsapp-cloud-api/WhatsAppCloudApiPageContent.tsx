@@ -44,7 +44,7 @@ const INSTRUCTION_CHECKLIST = [
   "En Configuracion de la app > Informacion basica, copiar App Secret y pegarlo en App Secret / token de la app.",
   "Activar Suscribirse a webhooks sobre el numero registrado.",
   "Pegar la Webhook URL y el Verify token del constructor, verificar y guardar.",
-  "En Campos de webhook, suscribirse al campo messages. Los demas campos son opcionales.",
+  "En Campos de webhook, suscribirse a messages y phone_number_quality_update. Los demas campos son opcionales.",
   "Publicar la app. Meta puede pedir URL de politica de privacidad: usar https://mkt.panelbotadmin.com/privacy-policy.",
   "Definir tag, cargar respuesta, asignar gerencias, activar, guardar y probar.",
 ];
@@ -261,16 +261,18 @@ function MetricTile({
 }: {
   label: string;
   value: string;
-  tone?: "neutral" | "success" | "warning" | "info";
+  tone?: "neutral" | "success" | "warning" | "danger" | "info";
 }) {
   const dotClass =
     tone === "success"
       ? "bg-[var(--color-success)]"
       : tone === "warning"
         ? "bg-[var(--color-warning)]"
-        : tone === "info"
-          ? "bg-[var(--color-info)]"
-          : "bg-[var(--color-text-disabled)]";
+        : tone === "danger"
+          ? "bg-[var(--color-danger)]"
+          : tone === "info"
+            ? "bg-[var(--color-info)]"
+            : "bg-[var(--color-text-disabled)]";
   return (
     <div className="rounded-xl border border-[var(--color-border-subtle)] bg-[rgba(255,255,255,0.025)] p-3">
       <div className="flex items-center gap-2">
@@ -282,6 +284,24 @@ function MetricTile({
       <p className="mt-2 truncate text-sm font-semibold text-[var(--color-text-strong)]">{value}</p>
     </div>
   );
+}
+
+function metaQualityTone(value: string): "success" | "warning" | "danger" | "info" {
+  const normalized = value.trim().toUpperCase();
+  if (!normalized) return "warning";
+  if (normalized === "GREEN" || normalized === "HIGH") return "success";
+  if (normalized === "YELLOW" || normalized === "MEDIUM") return "warning";
+  if (normalized === "RED" || normalized === "LOW") return "danger";
+  return "info";
+}
+
+function metaStatusTone(value: string): "success" | "warning" | "danger" | "info" {
+  const normalized = value.trim().toUpperCase();
+  if (!normalized) return "warning";
+  if (["CONNECTED", "AVAILABLE", "QUALITY_UPDATED"].includes(normalized)) return "success";
+  if (["LIMITED", "FLAGGED", "RESTRICTED"].includes(normalized)) return "warning";
+  if (["BLOCKED", "DISABLED", "BANNED"].includes(normalized)) return "danger";
+  return "info";
 }
 
 function CopyIcon() {
@@ -385,6 +405,7 @@ export default function WhatsAppCloudApiPageContent({
 
   const displayGroups = useMemo(() => buildDisplayGroups(gerencias, workGroups), [gerencias, workGroups]);
   const identificationLocked = Boolean(config?.id && !identificationEditing);
+  const storedDatasetLocked = Boolean(config?.meta_messaging_dataset_id);
   const hubPath = mode === "admin" ? "/admin/whatsapp-cloud-api" : "/dashboard/whatsapp-cloud-api";
 
   const loadTarget = useCallback(async (uid: string, ownerId: string) => {
@@ -489,6 +510,11 @@ export default function WhatsAppCloudApiPageContent({
   };
 
   const handleEnsureDataset = async () => {
+    if (messagingDatasetId.trim()) {
+      setError(null);
+      setMessage("Dataset Business Messaging listo para guardar.");
+      return;
+    }
     setDatasetLoading(true);
     setError(null);
     setMessage(null);
@@ -506,7 +532,9 @@ export default function WhatsAppCloudApiPageContent({
         meta_api_version: apiVersion.trim() || "v25.0",
       });
       setMessagingDatasetId(result.dataset_id);
-      setMessage("Dataset Business Messaging obtenido.");
+      setMessage(result.source === "stored"
+        ? "Dataset Business Messaging recuperado de la configuracion."
+        : "Dataset Business Messaging generado.");
     } catch (err) {
       setError(err instanceof Error ? err.message : "No se pudo obtener el dataset.");
     } finally {
@@ -908,21 +936,28 @@ export default function WhatsAppCloudApiPageContent({
                     inputMode="numeric"
                     value={messagingDatasetId}
                     onChange={(e) => setMessagingDatasetId(onlyDigits(e.target.value))}
-                    className="w-full rounded-lg border border-zinc-700 bg-zinc-900 px-3 py-2 text-sm text-zinc-100"
+                    disabled={storedDatasetLocked}
+                    className="w-full rounded-lg border border-zinc-700 bg-zinc-900 px-3 py-2 text-sm text-zinc-100 disabled:cursor-not-allowed disabled:opacity-70"
                     placeholder="ID del dataset vinculado al WABA"
                     required
                   />
-                  <button
-                    type="button"
-                    onClick={() => void handleEnsureDataset()}
-                    disabled={datasetLoading || !/^\d+$/.test(wabaId.trim()) || (!accessToken.trim() && !config?.has_meta_access_token)}
-                    className="rounded-lg border border-zinc-700 bg-zinc-900 px-3 py-2 text-xs font-semibold text-zinc-100 transition hover:border-lime-400 hover:text-lime-300 disabled:cursor-not-allowed disabled:opacity-50"
-                  >
-                    {datasetLoading ? "Generando..." : messagingDatasetId ? "Actualizar" : "Generar"}
-                  </button>
+                  {storedDatasetLocked ? (
+                    <span className="inline-flex h-10 shrink-0 items-center rounded-lg border border-emerald-400/25 bg-emerald-400/10 px-3 text-xs font-semibold text-emerald-300">
+                      Guardado
+                    </span>
+                  ) : (
+                    <button
+                      type="button"
+                      onClick={() => void handleEnsureDataset()}
+                      disabled={datasetLoading || Boolean(messagingDatasetId.trim()) || !/^\d+$/.test(wabaId.trim()) || (!accessToken.trim() && !config?.has_meta_access_token)}
+                      className="rounded-lg border border-zinc-700 bg-zinc-900 px-3 py-2 text-xs font-semibold text-zinc-100 transition hover:border-lime-400 hover:text-lime-300 disabled:cursor-not-allowed disabled:opacity-50"
+                    >
+                      {datasetLoading ? "Generando..." : "Generar dataset"}
+                    </button>
+                  )}
                 </div>
                 <p className="mt-1 text-[11px] text-zinc-500">
-                  Usa el WABA ID y el Meta access token para crear u obtener el dataset en Meta.
+                  Si Meta ya muestra un dataset existente para el WABA, pega ese ID. Si no existe, generarlo una sola vez desde aca.
                 </p>
               </div>
 
@@ -1301,9 +1336,9 @@ export default function WhatsAppCloudApiPageContent({
               <MetricTile label="Configuracion" value={config ? "Guardada" : "Sin guardar"} tone={config ? "success" : "warning"} />
               <MetricTile label="Webhook" value={webhookUrl ? "URL lista" : "Sin URL"} tone={webhookUrl ? "info" : "warning"} />
               <MetricTile label="Gerencias" value={`${assignments.length} asignadas`} tone={assignments.length > 0 ? "success" : "warning"} />
-              <MetricTile label="Calidad Meta" value={config?.quality_rating || "Sin dato"} tone={config?.quality_rating ? "info" : "warning"} />
+              <MetricTile label="Calidad Meta" value={config?.quality_rating || "Sin dato"} tone={metaQualityTone(config?.quality_rating ?? "")} />
               <MetricTile label="Limite Meta" value={config?.messaging_limit_tier || "Sin dato"} tone={config?.messaging_limit_tier ? "info" : "warning"} />
-              <MetricTile label="Estado numero" value={config?.phone_number_status || "Sin dato"} tone={config?.phone_number_status ? "success" : "warning"} />
+              <MetricTile label="Estado numero" value={config?.phone_number_status || "Sin dato"} tone={metaStatusTone(config?.phone_number_status ?? "")} />
             </div>
             <button
               type="button"

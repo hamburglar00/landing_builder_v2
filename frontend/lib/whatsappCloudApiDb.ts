@@ -173,7 +173,7 @@ export async function ensureWhatsappCloudApiDataset(input: {
   whatsapp_business_account_id: string;
   meta_access_token: string | null;
   meta_api_version: string;
-}): Promise<{ dataset_id: string }> {
+}): Promise<{ dataset_id: string; source: "stored" | "meta" | "" }> {
   const { data, error } = await supabase.functions.invoke("whatsapp-cloud-ensure-dataset", {
     body: {
       config_id: input.config_id ?? null,
@@ -186,7 +186,8 @@ export async function ensureWhatsappCloudApiDataset(input: {
   if (error) throw error;
   const datasetId = String((data as { dataset_id?: unknown } | null)?.dataset_id ?? "").replace(/\D/g, "");
   if (!datasetId) throw new Error("Meta no devolvio Dataset ID.");
-  return { dataset_id: datasetId };
+  const source = String((data as { source?: unknown } | null)?.source ?? "");
+  return { dataset_id: datasetId, source: source === "stored" || source === "meta" ? source : "" };
 }
 
 export async function syncWhatsappCloudApiHealth(configId: string): Promise<void> {

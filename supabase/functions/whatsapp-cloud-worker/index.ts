@@ -11,7 +11,7 @@ type WebhookEvent = {
   config_id: string | null;
   user_id: string | null;
   meta_message_id: string;
-  event_type: "message" | "status" | "error" | "unknown";
+  event_type: "message" | "status" | "error" | "quality_update" | "unknown";
   payload: Json;
   attempts: number;
 };
@@ -168,6 +168,42 @@ function payloadStatus(event: WebhookEvent): Json {
 function payloadChangeValue(event: WebhookEvent): Json {
   const change = asRecord(event.payload.change);
   return asRecord(change.value);
+}
+
+function firstText(...values: unknown[]): string {
+  for (const value of values) {
+    if (value && typeof value === "object" && !Array.isArray(value)) {
+      const record = asRecord(value);
+      const nested = firstText(record.code, record.description, record.formatted_amount, record.amount);
+      if (nested) return nested;
+      continue;
+    }
+    const text = str(value);
+    if (text) return text;
+  }
+  return "";
+}
+
+function qualityAlertMessage(quality: string, limit: string, status: string): string {
+  const normalizedQuality = quality.toUpperCase();
+  const normalizedStatus = status.toUpperCase();
+  if (normalizedQuality === "GREEN" || normalizedQuality === "HIGH") return "";
+  if (!quality && !status && !limit) return "";
+  const parts = [
+    quality ? `calidad ${quality}` : "",
+    status ? `estado ${status}` : "",
+    limit ? `limite ${limit}` : "",
+  ].filter(Boolean).join(", ");
+  if (["RED", "LOW"].includes(normalizedQuality)) {
+    return `Alerta Meta: baja reputacion del numero (${parts}).`;
+  }
+  if (["YELLOW", "MEDIUM"].includes(normalizedQuality)) {
+    return `Alerta Meta: reputacion media del numero (${parts}).`;
+  }
+  if (["LIMITED", "BLOCKED", "FLAGGED", "DISABLED", "RESTRICTED"].includes(normalizedStatus)) {
+    return `Alerta Meta: revisar estado del numero (${parts}).`;
+  }
+  return "";
 }
 
 function firstContactProfileName(event: WebhookEvent, waId: string): string {
@@ -596,6 +632,51 @@ async function handleStatus(
   await finalizeEvent(db, event.id, "processed");
 }
 
+async function handleQualityUpdate(
+  db: SupabaseDb,
+  event: WebhookEvent,
+): Promise<void> {
+  if (!event.config_id) {
+    await finalizeEvent(
+      db,
+      event.id,
+      "failed",
+      "No active config for phone_number_quality_update",
+    );
+    return;
+  }
+
+  const value = payloadChangeValue(event);
+  const quality = firstText(
+    value.current_quality_rating,
+    value.quality_rating,
+  );
+  const limit = firstText(
+    value.current_limit,
+    value.messaging_limit_tier,
+    value.messaging_limit,
+  );
+  const status = firstText(value.event, value.status);
+  const update: Json = {
+    health_checked_at: new Date().toISOString(),
+    health_last_error: qualityAlertMessage(quality, limit, status),
+  };
+  if (quality) update.quality_rating = quality;
+  if (limit) update.messaging_limit_tier = limit;
+  if (status) update.phone_number_status = status;
+
+  const { error } = await db
+    .from("whatsapp_cloud_api_configs")
+    .update(update)
+    .eq("id", event.config_id);
+  if (error) {
+    await finalizeEvent(db, event.id, "failed", error.message);
+    return;
+  }
+
+  await finalizeEvent(db, event.id, "processed");
+}
+
 async function handleMessage(
   db: SupabaseDb,
   event: WebhookEvent,
@@ -922,6 +1003,7 @@ async function processPending(db: SupabaseDb): Promise<Record<string, number>> {
     try {
       if (event.event_type === "status") await handleStatus(db, event);
       else if (event.event_type === "message") await handleMessage(db, event);
+      else if (event.event_type === "quality_update") await handleQualityUpdate(db, event);
       else await finalizeEvent(db, event.id, "processed");
     } catch (error) {
       console.error("[whatsapp-cloud-worker] event failed", {

@@ -10,9 +10,15 @@ type SupabaseDb = any;
 type MetaWebhookPayload = {
   object?: string;
   entry?: Array<{
+    id?: string | null;
     changes?: Array<{
+      field?: string | null;
       value?: {
         metadata?: { phone_number_id?: string | null } | null;
+        phone_number_id?: string | null;
+        current_quality_rating?: string | null;
+        quality_rating?: string | null;
+        current_limit?: string | null;
         messages?: Array<Record<string, unknown>> | null;
         statuses?: Array<Record<string, unknown>> | null;
         errors?: Array<Record<string, unknown>> | null;
@@ -131,6 +137,8 @@ function extractPhoneNumberIds(payload: MetaWebhookPayload): string[] {
     for (const change of entry.changes ?? []) {
       const phoneNumberId = normalizeId(change.value?.metadata?.phone_number_id);
       if (phoneNumberId) ids.add(phoneNumberId);
+      const directPhoneNumberId = normalizeId(change.value?.phone_number_id);
+      if (directPhoneNumberId) ids.add(directPhoneNumberId);
     }
   }
   return [...ids];
@@ -157,18 +165,23 @@ async function resolveSignatureSecret(
 
 async function resolveConfig(
   db: SupabaseDb,
-  phoneNumberId: string,
+  input: { phoneNumberId: string; wabaId: string },
 ): Promise<{ id: string; user_id: string } | null> {
-  if (!phoneNumberId) return null;
-  const { data, error } = await db
+  const phoneNumberId = normalizeId(input.phoneNumberId);
+  const wabaId = normalizeId(input.wabaId);
+  if (!phoneNumberId && !wabaId) return null;
+  let query = db
     .from("whatsapp_cloud_api_configs")
     .select("id,user_id")
-    .eq("phone_number_id", phoneNumberId)
-    .eq("active", true)
-    .maybeSingle();
+    .eq("active", true);
+  query = phoneNumberId
+    ? query.eq("phone_number_id", phoneNumberId)
+    : query.eq("whatsapp_business_account_id", wabaId);
+  const { data, error } = await query.maybeSingle();
   if (error) {
     console.error("[whatsapp-cloud-webhook] config lookup failed", {
       phone_number_id: phoneNumberId,
+      waba_id: wabaId,
       error: error.message,
     });
     return null;
@@ -183,7 +196,7 @@ async function insertEvent(
     phoneNumberId: string;
     configId: string | null;
     userId: string | null;
-    eventType: "message" | "status" | "error" | "unknown";
+    eventType: "message" | "status" | "error" | "quality_update" | "unknown";
     metaMessageId?: string;
     metaStatusId?: string;
     payload: Record<string, unknown>;
@@ -267,8 +280,11 @@ Deno.serve(async (req) => {
     for (const entry of payload.entry ?? []) {
       for (const change of entry.changes ?? []) {
         const value = change.value ?? {};
-        const phoneNumberId = normalizeId(value.metadata?.phone_number_id);
-        const config = await resolveConfig(db, phoneNumberId);
+        const entryWabaId = normalizeId(entry.id);
+        const phoneNumberId = normalizeId(value.metadata?.phone_number_id) ||
+          normalizeId(value.phone_number_id);
+        const field = normalizeId(change.field);
+        const config = await resolveConfig(db, { phoneNumberId, wabaId: entryWabaId });
         const basePayload = {
           object,
           entry,
@@ -319,16 +335,19 @@ Deno.serve(async (req) => {
           (value.statuses?.length ?? 0) === 0 &&
           (value.errors?.length ?? 0) === 0
         ) {
+          const eventType = field === "phone_number_quality_update"
+            ? "quality_update"
+            : "unknown";
           const inserted = await insertEvent(db, {
             object,
             phoneNumberId,
             configId: config?.id ?? null,
             userId: config?.user_id ?? null,
-            eventType: "unknown",
+            eventType,
             payload: basePayload,
           });
           results[inserted]++;
-          results.unknown++;
+          if (eventType === "unknown") results.unknown++;
         }
       }
     }

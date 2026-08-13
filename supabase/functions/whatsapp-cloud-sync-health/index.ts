@@ -29,6 +29,28 @@ function str(value: unknown): string {
   return String(value ?? "").trim();
 }
 
+function qualityAlertMessage(quality: string, tier: string, status: string): string {
+  const normalizedQuality = quality.toUpperCase();
+  const normalizedStatus = status.toUpperCase();
+  if (normalizedQuality === "GREEN" || normalizedQuality === "HIGH") return "";
+  if (!quality && !status && !tier) return "";
+  const parts = [
+    quality ? `calidad ${quality}` : "",
+    status ? `estado ${status}` : "",
+    tier ? `limite ${tier}` : "",
+  ].filter(Boolean).join(", ");
+  if (["RED", "LOW"].includes(normalizedQuality)) {
+    return `Alerta Meta: baja reputacion del numero (${parts}).`;
+  }
+  if (["YELLOW", "MEDIUM"].includes(normalizedQuality)) {
+    return `Alerta Meta: reputacion media del numero (${parts}).`;
+  }
+  if (["LIMITED", "BLOCKED", "FLAGGED", "DISABLED", "RESTRICTED"].includes(normalizedStatus)) {
+    return `Alerta Meta: revisar estado del numero (${parts}).`;
+  }
+  return "";
+}
+
 function serviceDb(): SupabaseDb {
   const supabaseUrl = Deno.env.get("SUPABASE_URL");
   const serviceRoleKey = Deno.env.get("SERVICE_ROLE_KEY");
@@ -198,7 +220,7 @@ Deno.serve(async (req) => {
           quality_rating: result.quality,
           messaging_limit_tier: result.tier,
           health_checked_at: new Date().toISOString(),
-          health_last_error: "",
+          health_last_error: qualityAlertMessage(result.quality, result.tier, result.status),
         }
         : {
           health_checked_at: new Date().toISOString(),
