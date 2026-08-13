@@ -23,6 +23,7 @@ type WhatsappConfig = {
   active: boolean;
   phone_number_id: string;
   whatsapp_business_account_id: string;
+  meta_messaging_dataset_id: string;
   meta_access_token: string;
   meta_api_version: string;
   landing_tag: string;
@@ -54,7 +55,10 @@ function getDb(): SupabaseDb {
   });
 }
 
-async function cronSecretMatches(db: SupabaseDb, value: unknown): Promise<boolean> {
+async function cronSecretMatches(
+  db: SupabaseDb,
+  value: unknown,
+): Promise<boolean> {
   const candidate = str(value);
   if (!candidate) return false;
   const { data, error } = await db
@@ -63,7 +67,10 @@ async function cronSecretMatches(db: SupabaseDb, value: unknown): Promise<boolea
     .eq("key", "sync_phones_cron_secret")
     .maybeSingle();
   if (error) {
-    console.error("[whatsapp-cloud-worker] cron secret lookup failed", error.message);
+    console.error(
+      "[whatsapp-cloud-worker] cron secret lookup failed",
+      error.message,
+    );
     return false;
   }
   return candidate === str((data as { value?: string } | null)?.value);
@@ -78,7 +85,9 @@ async function assertInternalAuth(
   const header = req.headers.get("authorization") ?? "";
   if (!serviceRoleKey || header !== `Bearer ${serviceRoleKey}`) {
     const allowedByCronSecret = await cronSecretMatches(db, body.cron_secret);
-    if (!allowedByCronSecret) return jsonResponse({ error: "Unauthorized" }, 401);
+    if (!allowedByCronSecret) {
+      return jsonResponse({ error: "Unauthorized" }, 401);
+    }
   }
   return null;
 }
@@ -142,8 +151,9 @@ function renderTemplate(
   template: string,
   values: Record<string, string>,
 ): string {
-  return template.replace(/\{\{\s*([a-zA-Z0-9_]+)\s*\}\}/g, (_m, key) =>
-    values[String(key)] ?? ""
+  return template.replace(
+    /\{\{\s*([a-zA-Z0-9_]+)\s*\}\}/g,
+    (_m, key) => values[String(key)] ?? "",
   );
 }
 
@@ -177,7 +187,10 @@ function referralFromMessage(message: Json): Json {
   return asRecord(message.referral);
 }
 
-async function claimEvent(db: SupabaseDb, event: WebhookEvent): Promise<boolean> {
+async function claimEvent(
+  db: SupabaseDb,
+  event: WebhookEvent,
+): Promise<boolean> {
   const { data, error } = await db
     .from("whatsapp_cloud_api_webhook_events")
     .update({
@@ -211,7 +224,10 @@ async function requeueStaleProcessingEvents(db: SupabaseDb): Promise<number> {
     .lt("attempts", 5)
     .select("id");
   if (error) {
-    console.error("[whatsapp-cloud-worker] stale requeue failed", error.message);
+    console.error(
+      "[whatsapp-cloud-worker] stale requeue failed",
+      error.message,
+    );
     return 0;
   }
 
@@ -226,7 +242,10 @@ async function requeueStaleProcessingEvents(db: SupabaseDb): Promise<number> {
     .lt("processing_started_at", staleBefore)
     .gte("attempts", 5);
   if (failError) {
-    console.error("[whatsapp-cloud-worker] stale fail update failed", failError.message);
+    console.error(
+      "[whatsapp-cloud-worker] stale fail update failed",
+      failError.message,
+    );
   }
   return Array.isArray(data) ? data.length : 0;
 }
@@ -265,10 +284,19 @@ async function sendWhatsappText(
   config: WhatsappConfig,
   to: string,
   body: string,
-): Promise<{ ok: boolean; status: number; response: Json; metaMessageId: string; error: string }> {
+): Promise<
+  {
+    ok: boolean;
+    status: number;
+    response: Json;
+    metaMessageId: string;
+    error: string;
+  }
+> {
   const apiVersion = str(config.meta_api_version) || "v25.0";
-  const url =
-    `https://graph.facebook.com/${apiVersion}/${encodeURIComponent(config.phone_number_id)}/messages`;
+  const url = `https://graph.facebook.com/${apiVersion}/${
+    encodeURIComponent(config.phone_number_id)
+  }/messages`;
   const payload = {
     messaging_product: "whatsapp",
     to,
@@ -301,7 +329,13 @@ async function sendWhatsappText(
       const first = asRecord(messages[0]);
       const metaMessageId = str(first.id);
       if (res.ok && metaMessageId) {
-        return { ok: true, status: res.status, response: json, metaMessageId, error: "" };
+        return {
+          ok: true,
+          status: res.status,
+          response: json,
+          metaMessageId,
+          error: "",
+        };
       }
       const retryable = res.status === 429 || res.status === 408 ||
         res.status >= 500;
@@ -328,7 +362,13 @@ async function sendWhatsappText(
     }
     await new Promise((resolve) => setTimeout(resolve, 250 * attempt));
   }
-  return { ok: false, status: 0, response: {}, metaMessageId: "", error: "Unknown send failure" };
+  return {
+    ok: false,
+    status: 0,
+    response: {},
+    metaMessageId: "",
+    error: "Unknown send failure",
+  };
 }
 
 async function sendWhatsappCtaUrl(
@@ -337,10 +377,19 @@ async function sendWhatsappCtaUrl(
   body: string,
   buttonTitle: string,
   urlToOpen: string,
-): Promise<{ ok: boolean; status: number; response: Json; metaMessageId: string; error: string }> {
+): Promise<
+  {
+    ok: boolean;
+    status: number;
+    response: Json;
+    metaMessageId: string;
+    error: string;
+  }
+> {
   const apiVersion = str(config.meta_api_version) || "v25.0";
-  const url =
-    `https://graph.facebook.com/${apiVersion}/${encodeURIComponent(config.phone_number_id)}/messages`;
+  const url = `https://graph.facebook.com/${apiVersion}/${
+    encodeURIComponent(config.phone_number_id)
+  }/messages`;
   const title = str(buttonTitle).slice(0, 20) || "Ir al asesor";
   const payload = {
     messaging_product: "whatsapp",
@@ -384,7 +433,13 @@ async function sendWhatsappCtaUrl(
       const first = asRecord(messages[0]);
       const metaMessageId = str(first.id);
       if (res.ok && metaMessageId) {
-        return { ok: true, status: res.status, response: json, metaMessageId, error: "" };
+        return {
+          ok: true,
+          status: res.status,
+          response: json,
+          metaMessageId,
+          error: "",
+        };
       }
       const retryable = res.status === 429 || res.status === 408 ||
         res.status >= 500;
@@ -411,7 +466,13 @@ async function sendWhatsappCtaUrl(
     }
     await new Promise((resolve) => setTimeout(resolve, 250 * attempt));
   }
-  return { ok: false, status: 0, response: {}, metaMessageId: "", error: "Unknown send failure" };
+  return {
+    ok: false,
+    status: 0,
+    response: {},
+    metaMessageId: "",
+    error: "Unknown send failure",
+  };
 }
 
 async function createInternalContact(input: {
@@ -439,7 +500,11 @@ async function createInternalContact(input: {
     .maybeSingle();
   const clientName = str((profile as { nombre?: string } | null)?.nombre);
   if (!clientName) {
-    return { ok: false, conversionId: "", error: "Client profile name not found" };
+    return {
+      ok: false,
+      conversionId: "",
+      error: "Client profile name not found",
+    };
   }
 
   const externalId = await sha256(
@@ -459,6 +524,7 @@ async function createInternalContact(input: {
     telefono_asignado: digits(input.assignedPhone),
     meta_pixel_id: "",
     pixel_id: "",
+    dataset_id: str(input.config.meta_messaging_dataset_id),
     source_platform: "whatsapp_cloud_api",
     ctwa_clid: input.ctwaClid,
     from_meta_ads: Boolean(input.ctwaClid),
@@ -469,7 +535,9 @@ async function createInternalContact(input: {
   };
 
   const res = await fetch(
-    `${supabaseUrl}/functions/v1/conversions?name=${encodeURIComponent(clientName)}`,
+    `${supabaseUrl}/functions/v1/conversions?name=${
+      encodeURIComponent(clientName)
+    }`,
     {
       method: "POST",
       headers: {
@@ -481,7 +549,11 @@ async function createInternalContact(input: {
   );
   const text = await res.text();
   if (!res.ok) {
-    return { ok: false, conversionId: "", error: `Contact failed HTTP ${res.status}: ${text}` };
+    return {
+      ok: false,
+      conversionId: "",
+      error: `Contact failed HTTP ${res.status}: ${text}`,
+    };
   }
 
   const { data } = await db
@@ -497,7 +569,10 @@ async function createInternalContact(input: {
   };
 }
 
-async function handleStatus(db: SupabaseDb, event: WebhookEvent): Promise<void> {
+async function handleStatus(
+  db: SupabaseDb,
+  event: WebhookEvent,
+): Promise<void> {
   const status = payloadStatus(event);
   const metaMessageId = str(status.id);
   const metaStatus = str(status.status);
@@ -513,15 +588,25 @@ async function handleStatus(db: SupabaseDb, event: WebhookEvent): Promise<void> 
     .update({
       status: mapped,
       response: status,
-      last_error: mapped === "failed" ? JSON.stringify(status).slice(0, 4000) : "",
+      last_error: mapped === "failed"
+        ? JSON.stringify(status).slice(0, 4000)
+        : "",
     })
     .eq("meta_message_id", metaMessageId);
   await finalizeEvent(db, event.id, "processed");
 }
 
-async function handleMessage(db: SupabaseDb, event: WebhookEvent): Promise<void> {
+async function handleMessage(
+  db: SupabaseDb,
+  event: WebhookEvent,
+): Promise<void> {
   if (!event.config_id || !event.user_id) {
-    await finalizeEvent(db, event.id, "failed", "No active config for phone_number_id");
+    await finalizeEvent(
+      db,
+      event.id,
+      "failed",
+      "No active config for phone_number_id",
+    );
     return;
   }
   const config = await loadConfig(db, event.config_id);
@@ -538,7 +623,12 @@ async function handleMessage(db: SupabaseDb, event: WebhookEvent): Promise<void>
   const messageId = str(message.id || event.meta_message_id);
   const waId = digits(message.from);
   if (!messageId || !waId) {
-    await finalizeEvent(db, event.id, "failed", "Missing message id or sender wa_id");
+    await finalizeEvent(
+      db,
+      event.id,
+      "failed",
+      "Missing message id or sender wa_id",
+    );
     return;
   }
 
@@ -580,7 +670,12 @@ async function handleMessage(db: SupabaseDb, event: WebhookEvent): Promise<void>
     .single();
   const contactRow = contact as { id?: string } | null;
   if (contactError || !contactRow?.id) {
-    await finalizeEvent(db, event.id, "failed", contactError?.message ?? "Contact upsert failed");
+    await finalizeEvent(
+      db,
+      event.id,
+      "failed",
+      contactError?.message ?? "Contact upsert failed",
+    );
     return;
   }
 
@@ -590,7 +685,10 @@ async function handleMessage(db: SupabaseDb, event: WebhookEvent): Promise<void>
       .select("id,created_at")
       .eq("contact_id", contactRow.id)
       .neq("status", "failed")
-      .gte("created_at", new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString())
+      .gte(
+        "created_at",
+        new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString(),
+      )
       .order("created_at", { ascending: false })
       .limit(1)
       .maybeSingle();
@@ -620,7 +718,12 @@ async function handleMessage(db: SupabaseDb, event: WebhookEvent): Promise<void>
     .single();
   const sessionRow = session as { id?: string } | null;
   if (sessionError || !sessionRow?.id) {
-    await finalizeEvent(db, event.id, "failed", sessionError?.message ?? "Attribution session insert failed");
+    await finalizeEvent(
+      db,
+      event.id,
+      "failed",
+      sessionError?.message ?? "Attribution session insert failed",
+    );
     return;
   }
 
@@ -648,7 +751,12 @@ async function handleMessage(db: SupabaseDb, event: WebhookEvent): Promise<void>
       status: "failed",
       last_error: phoneError?.message || status || "No phone available",
     });
-    await finalizeEvent(db, event.id, "failed", phoneError?.message || status || "No phone available");
+    await finalizeEvent(
+      db,
+      event.id,
+      "failed",
+      phoneError?.message || status || "No phone available",
+    );
     return;
   }
 
@@ -704,7 +812,12 @@ async function handleMessage(db: SupabaseDb, event: WebhookEvent): Promise<void>
     .single();
   const assignmentRow = assignment as { id?: string } | null;
   if (assignmentError || !assignmentRow?.id) {
-    await finalizeEvent(db, event.id, "failed", assignmentError?.message ?? "Assignment insert failed");
+    await finalizeEvent(
+      db,
+      event.id,
+      "failed",
+      assignmentError?.message ?? "Assignment insert failed",
+    );
     return;
   }
 
@@ -735,7 +848,9 @@ async function handleMessage(db: SupabaseDb, event: WebhookEvent): Promise<void>
           action: {
             name: "cta_url",
             parameters: {
-              display_text: (str(config.redirect_cta_button_title).slice(0, 20) || "Ir al asesor"),
+              display_text:
+                str(config.redirect_cta_button_title).slice(0, 20) ||
+                "Ir al asesor",
               url: link,
             },
           },
@@ -782,7 +897,13 @@ async function handleMessage(db: SupabaseDb, event: WebhookEvent): Promise<void>
 }
 
 async function processPending(db: SupabaseDb): Promise<Record<string, number>> {
-  const stats = { processed: 0, deduplicated: 0, failed: 0, skipped: 0, requeued: 0 };
+  const stats = {
+    processed: 0,
+    deduplicated: 0,
+    failed: 0,
+    skipped: 0,
+    requeued: 0,
+  };
   stats.requeued = await requeueStaleProcessingEvents(db);
   const { data, error } = await db
     .from("whatsapp_cloud_api_webhook_events")
@@ -825,7 +946,9 @@ async function processPending(db: SupabaseDb): Promise<Record<string, number>> {
 }
 
 Deno.serve(async (req) => {
-  if (req.method !== "POST") return jsonResponse({ error: "Method not allowed" }, 405);
+  if (req.method !== "POST") {
+    return jsonResponse({ error: "Method not allowed" }, 405);
+  }
 
   try {
     const db = getDb();

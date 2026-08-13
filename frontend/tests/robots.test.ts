@@ -8,7 +8,7 @@ test("permite landings públicas y bloquea el rastreo del panel", () => {
   const wildcard = rules.find((rule) => rule.userAgent === "*");
 
   assert.ok(wildcard);
-  assert.deepEqual(wildcard.allow, ["/l/", "/promo/"]);
+  assert.deepEqual(wildcard.allow, ["/l/", "/promo/", "/privacy-policy"]);
   assert.deepEqual(wildcard.disallow, [
     "/admin",
     "/dashboard",

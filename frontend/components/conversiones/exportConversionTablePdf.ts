@@ -3,6 +3,7 @@ import { computeCoreStats } from "@/lib/conversionStats";
 import { formatCurrencyAmount, normalizeCurrencyCode } from "@/lib/currency";
 import {
   columnLabel,
+  displayConversionStage,
   friendlyPixelAttributionSource,
   friendlyPurchaseType,
   friendlySourcePlatform,
@@ -69,6 +70,8 @@ function valueForColumn(row: ConversionRow, column: ConversionColumnKey): string
       return row.from_meta_ads ? "Si" : "No";
     case "meta_pixel_id":
       return row.meta_pixel_id || row.pixel_id || "-";
+    case "dataset_id":
+      return row.dataset_id || "-";
     case "pixel_attribution_source":
       return friendlyPixelAttributionSource(row.pixel_attribution_source);
     case "pixel_attribution_conversion_id":
@@ -86,7 +89,7 @@ function valueForColumn(row: ConversionRow, column: ConversionColumnKey): string
     case "sendContactPixel":
       return row.sendContactPixel ? "Si" : "No";
     case "estado":
-      return row.estado || "-";
+      return displayConversionStage(row) || "-";
     case "valor":
       return Number(row.valor || 0) > 0
         ? formatCurrencyAmount(Number(row.valor || 0), normalizeCurrencyCode(row.currency))

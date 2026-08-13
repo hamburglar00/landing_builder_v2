@@ -35,7 +35,7 @@ const MIN_CONTACT_LEAD_RETRY_INTERVAL_MS = 5 * 60 * 1000;
 const CONTACT_LEAD_CAPI_RETRY_SELECT = `
   id, landing_id, user_id, landing_name,
   phone, email, fn, ln, ct, st, zip, country,
-  fbp, fbc, from_meta_ads, source_platform, ctwa_clid, pixel_id,
+  fbp, fbc, from_meta_ads, source_platform, ctwa_clid, pixel_id, dataset_id,
   contact_event_id, contact_event_time, contact_payload_raw,
   lead_event_id, lead_event_time, lead_payload_raw,
   purchase_event_id, purchase_event_time, purchase_payload_raw,
@@ -152,7 +152,7 @@ Deno.serve(async (req) => {
     const { data: rows, error } = await db
       .from("conversions")
       .select(
-        "id, landing_id, user_id, phone, source_platform, ctwa_clid, pixel_id, meta_pixel_id, pixel_attribution_source, pixel_attribution_conversion_id, contact_event_id, contact_payload_raw, lead_payload_raw, purchase_payload_raw, promo_code, purchase_event_id, purchase_event_time, purchase_type, purchase_capi_route, purchase_capi_route_reason, valor, currency, event_source_url, email, fn, ln, ct, st, zip, country, fbp, fbc, from_meta_ads, client_ip, agent_user, external_id, observaciones",
+        "id, landing_id, user_id, phone, source_platform, ctwa_clid, pixel_id, dataset_id, meta_pixel_id, pixel_attribution_source, pixel_attribution_conversion_id, contact_event_id, contact_payload_raw, lead_payload_raw, purchase_payload_raw, promo_code, purchase_event_id, purchase_event_time, purchase_type, purchase_capi_route, purchase_capi_route_reason, valor, currency, event_source_url, email, fn, ln, ct, st, zip, country, fbp, fbc, from_meta_ads, client_ip, agent_user, external_id, observaciones",
       )
       .eq("estado", "purchase")
       .not(
@@ -344,6 +344,10 @@ Deno.serve(async (req) => {
         await db.from("conversions").update({
           purchase_capi_route: purchaseCapiRoute,
           purchase_capi_route_reason: purchaseCapiRouteReason,
+          ...(purchaseCapiRoute === "business_messaging" &&
+              businessMessagingDatasetId
+            ? { dataset_id: businessMessagingDatasetId }
+            : {}),
         }).eq("id", row.id);
       }
       const useBusinessMessaging = purchaseCapiRoute === "business_messaging";
@@ -796,6 +800,9 @@ Deno.serve(async (req) => {
             purchase_status_capi: "enviado",
             purchase_event_id: eventId,
             purchase_event_time: eventTime,
+            ...(useBusinessMessaging && businessMessagingDatasetId
+              ? { dataset_id: businessMessagingDatasetId }
+              : {}),
             observaciones: obs,
           }).eq("id", row.id);
           await writeConversionLog(
@@ -815,6 +822,9 @@ Deno.serve(async (req) => {
             purchase_status_capi: "error",
             purchase_event_id: eventId,
             purchase_event_time: eventTime,
+            ...(useBusinessMessaging && businessMessagingDatasetId
+              ? { dataset_id: businessMessagingDatasetId }
+              : {}),
             observaciones: obs,
           }).eq("id", row.id);
           await writeConversionLog(
@@ -832,6 +842,9 @@ Deno.serve(async (req) => {
         const obs = appendObs(row.observaciones ?? "", "ERROR PURCHASE");
         await db.from("conversions").update({
           purchase_status_capi: "error",
+          ...(useBusinessMessaging && businessMessagingDatasetId
+            ? { dataset_id: businessMessagingDatasetId }
+            : {}),
           observaciones: obs,
         }).eq("id", row.id);
         await writeConversionLog(
@@ -1677,7 +1690,9 @@ async function retrySingleContactLeadCapiEvent(
         has_dataset: Boolean(
           normalizeText(whatsappCloudApiCfg?.meta_messaging_dataset_id),
         ),
-        has_token: Boolean(normalizeText(whatsappCloudApiCfg?.meta_access_token)),
+        has_token: Boolean(
+          normalizeText(whatsappCloudApiCfg?.meta_access_token),
+        ),
       }),
       "",
       "",
@@ -1693,8 +1708,11 @@ async function retrySingleContactLeadCapiEvent(
         whatsapp_business_account_id: normalizeText(
           whatsappCloudApiCfg?.whatsapp_business_account_id,
         ),
-        meta_access_token: normalizeText(whatsappCloudApiCfg?.meta_access_token),
-        meta_api_version: normalizeText(whatsappCloudApiCfg?.meta_api_version) ||
+        meta_access_token: normalizeText(
+          whatsappCloudApiCfg?.meta_access_token,
+        ),
+        meta_api_version:
+          normalizeText(whatsappCloudApiCfg?.meta_api_version) ||
           config.meta_api_version,
         meta_currency: config.meta_currency,
       },
@@ -1710,6 +1728,9 @@ async function retrySingleContactLeadCapiEvent(
       eventTime,
     );
   const metaPayloadRaw = JSON.stringify(metaReq.body);
+  const traceDatasetId = useBusinessMessaging
+    ? normalizeText(whatsappCloudApiCfg?.meta_messaging_dataset_id)
+    : "";
   stats[retriedKey]++;
 
   const fail = async (
@@ -1726,6 +1747,7 @@ async function retrySingleContactLeadCapiEvent(
       [retryableField]: shouldKeepRetrying,
       [retryCountField]: nextRetryCount,
       [lastRetryField]: nowIso,
+      ...(traceDatasetId ? { dataset_id: traceDatasetId } : {}),
       observaciones: appendObs(
         row.observaciones ?? "",
         isContact ? "ERROR CONTACT" : "ERROR LEAD",
@@ -1760,6 +1782,7 @@ async function retrySingleContactLeadCapiEvent(
         [retryableField]: false,
         [retryCountField]: retryCount + 1,
         [lastRetryField]: nowIso,
+        ...(traceDatasetId ? { dataset_id: traceDatasetId } : {}),
         observaciones: appendObs(
           row.observaciones ?? "",
           isContact ? "CONTACT OK" : "LEAD OK",

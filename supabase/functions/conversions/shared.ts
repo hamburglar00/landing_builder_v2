@@ -38,6 +38,7 @@ export interface ConversionRow {
   from_meta_ads?: boolean;
   source_platform?: string;
   ctwa_clid?: string;
+  dataset_id?: string;
   pixel_id: string;
   meta_pixel_id?: string;
   pixel_attribution_source?: string;

@@ -1,7 +1,7 @@
 import type { DateRange } from "@/components/conversiones/DateRangeFilter";
 
 export const ALL_COLUMNS = [
-  "phone","email","form_fn","form_ln","form_email","form_phone","fn","ln","ct","st","zip","country","fbp","fbc","from_meta_ads","meta_pixel_id","pixel_id","pixel_attribution_source","pixel_attribution_conversion_id","source_platform","ctwa_clid",
+  "phone","email","form_fn","form_ln","form_email","form_phone","fn","ln","ct","st","zip","country","fbp","fbc","from_meta_ads","meta_pixel_id","pixel_id","dataset_id","pixel_attribution_source","pixel_attribution_conversion_id","source_platform","ctwa_clid",
   "contact_event_id","contact_event_time","sendContactPixel","contact_payload_raw","lead_event_id","lead_event_time","lead_payload_raw",
   "purchase_event_id","purchase_event_time","purchase_payload_raw","timestamp","clientIP","agentuser",
   "estado","valor","currency","purchase_type","purchase_capi_route","purchase_capi_route_reason","contact_status_capi","lead_status_capi","registration_status_capi","purchase_status_capi",
@@ -28,6 +28,7 @@ export const FRIENDLY_HIDDEN_COLUMNS = new Set<ConversionColumnKey>([
   "fbp",
   "meta_pixel_id",
   "pixel_id",
+  "dataset_id",
   "source_platform",
   "ctwa_clid",
   "contact_event_id",
@@ -103,6 +104,7 @@ const FRIENDLY_COLUMN_LABELS: Record<ConversionColumnKey, string> = {
   from_meta_ads: "Origen Meta Ads",
   meta_pixel_id: "Pixel recibido",
   pixel_id: "Pixel utilizado",
+  dataset_id: "Dataset utilizado",
   pixel_attribution_source: "Origen del Pixel",
   pixel_attribution_conversion_id: "Conversión de referencia",
   source_platform: "Plataforma de origen",
@@ -204,6 +206,7 @@ export const COLUMN_NOTES: Partial<Record<ConversionColumnKey | "id", string>> =
   geo_source: "Fuente usada para completar geo: payload, ip, phone_prefix o none.",
   meta_pixel_id: "Pixel ID recibido en el payload de entrada (landing/chatrace/whatsapp_cloud_api/backend).",
   pixel_id: "Pixel ID efectivo usado para CAPI.",
+  dataset_id: "Dataset de Meta usado para Conversions API for Business Messaging en recorridos WhatsApp Cloud API.",
   pixel_attribution_source: "Origen confiable usado para resolver el pixel de Purchase: payload, Contact raiz, landing o configuracion unica.",
   pixel_attribution_conversion_id: "UUID de la conversion raiz que aporto el pixel, cuando la atribucion se resolvio por una fila anterior.",
   source_platform: "Origen declarado del payload (ej: landing, chatrace, whatsapp_cloud_api).",
@@ -302,6 +305,7 @@ const TABLE_SEARCH_TEXT_FIELDS = [
   "purchase_type",
   "meta_pixel_id",
   "pixel_id",
+  "dataset_id",
   "source_platform",
   "device_type",
   "fn",
@@ -341,6 +345,21 @@ export function normalizeSexValue(value: unknown): string {
   if (raw === "m" || raw === "male" || raw === "masculino" || raw === "hombre") return "male";
   if (raw === "f" || raw === "female" || raw === "femenino" || raw === "mujer") return "female";
   return "unknown";
+}
+
+export function displayConversionStage(row: {
+  estado?: string | null;
+  source_platform?: string | null;
+}): string {
+  const estado = String(row.estado ?? "").trim();
+  if (
+    estado === "lead" &&
+    String(row.source_platform ?? "").trim().toLowerCase() ===
+      "whatsapp_cloud_api"
+  ) {
+    return "LeadSubmitted";
+  }
+  return estado;
 }
 
 export function todayRange(): DateRange {

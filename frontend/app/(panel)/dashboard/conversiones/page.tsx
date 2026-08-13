@@ -36,6 +36,7 @@ import {
   ALL_COLUMNS,
   columnsForTableView,
   conversionMatchesTableSearch,
+  displayConversionStage,
   formatIntegerWithThousands,
   friendlyPixelAttributionSource,
   friendlyPurchaseType,
@@ -309,6 +310,7 @@ function cellValue(
       return <td key={col} className={dimMono} title={tip(px)}>{px || "-"}</td>;
     }
     case "pixel_id": return <td key={col} className={dimMono} title={tip(c.pixel_id)}>{c.pixel_id || "-"}</td>;
+    case "dataset_id": return <td key={col} className={dimMono} title={tip(c.dataset_id)}>{c.dataset_id || "-"}</td>;
     case "pixel_attribution_source": return <td key={col} className={dim} title={tip(c.pixel_attribution_source)}>{view === "friendly" ? friendlyPixelAttributionSource(c.pixel_attribution_source) : (c.pixel_attribution_source || "-")}</td>;
     case "pixel_attribution_conversion_id": return <td key={col} className={dimMono} title={tip(c.pixel_attribution_conversion_id)}>{c.pixel_attribution_conversion_id ? truncateId(c.pixel_attribution_conversion_id) : "-"}</td>;
     case "source_platform": return <td key={col} className={dim} title={tip(c.source_platform)}>{view === "friendly" ? friendlySourcePlatform(c.source_platform) : (c.source_platform || "-")}</td>;
@@ -329,7 +331,7 @@ function cellValue(
     case "agentuser": return <td key={col} className={dim} title={c.agent_user || "-"}>{truncateText(c.agent_user || "-", 35)}</td>;
     case "estado": {
       const isRepeat = c.estado === "purchase" && c.observaciones?.includes("REPEAT");
-      return <td key={col} className={cell}>{estadoBadge(c.estado, isRepeat)}</td>;
+      return <td key={col} className={cell}>{estadoBadge(displayConversionStage(c), isRepeat)}</td>;
     }
     case "valor": return <td key={col} className={`${cell} text-zinc-200`} title={tip(c.valor)}>{c.valor > 0 ? formatIntegerWithThousands(c.valor) : "-"}</td>;
     case "currency": return <td key={col} className={dimMono} title={tip(c.currency)}>{c.currency || "ARS"}</td>;

@@ -335,17 +335,18 @@ export function ConversionPagination({
 }
 
 export function estadoBadge(estado: string, isRepeat = false) {
+  const normalized = estado === "LeadSubmitted" ? "lead" : estado;
   const cls =
-    estado === "purchase" && isRepeat
+    normalized === "purchase" && isRepeat
       ? "bg-violet-950 text-violet-300"
-      : estado === "purchase"
+      : normalized === "purchase"
         ? "bg-rose-950 text-rose-300"
-        : estado === "lead"
+        : normalized === "lead"
           ? "bg-amber-950 text-amber-300"
           : "bg-zinc-800 text-zinc-400";
   return (
     <span className={`inline-block rounded-full px-2 py-0.5 text-[10px] font-medium whitespace-nowrap ${cls}`}>
-      {estado === "purchase" && isRepeat ? "purchase repeat" : estado}
+      {normalized === "purchase" && isRepeat ? "purchase repeat" : estado}
     </span>
   );
 }

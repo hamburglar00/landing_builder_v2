@@ -131,6 +131,7 @@ interface ConversionRow {
   from_meta_ads?: boolean;
   geo_source?: string;
   meta_pixel_id: string;
+  dataset_id?: string;
   pixel_attribution_source?: string;
   pixel_attribution_conversion_id?: string | null;
   source_platform?: string;
@@ -1989,7 +1990,9 @@ async function resolveWhatsappCloudApiCapiConfig(
   );
   let query = db
     .from("whatsapp_cloud_api_configs")
-    .select("active, phone_number_id, whatsapp_business_account_id, meta_messaging_dataset_id, meta_access_token, meta_api_version")
+    .select(
+      "active, phone_number_id, whatsapp_business_account_id, meta_messaging_dataset_id, meta_access_token, meta_api_version",
+    )
     .eq("user_id", row.user_id);
 
   if (phoneNumberId) {
@@ -2715,6 +2718,9 @@ async function sendToMetaCAPI(
       overrideTestEventCode || norm(row.test_event_code) || undefined,
     );
   const { apiUrl, body } = metaRequest;
+  const traceDatasetId = useBusinessMessaging
+    ? businessMessagingConfig.datasetId
+    : "";
 
   const maxAttempts = 3;
   const baseDelayMs = 500;
@@ -2733,6 +2739,7 @@ async function sendToMetaCAPI(
       [statusField]: "error",
       observaciones: obs,
     };
+    if (traceDatasetId) updates.dataset_id = traceDatasetId;
     if (retryableField) updates[retryableField] = retryable;
     await db.from("conversions").update(updates).eq("id", rowId);
     await writeLog(
@@ -2812,6 +2819,7 @@ async function sendToMetaCAPI(
           [statusField]: "enviado",
           observaciones: obs,
         };
+        if (traceDatasetId) updates.dataset_id = traceDatasetId;
         if (retryableField) updates[retryableField] = false;
         await db.from("conversions").update(updates).eq("id", rowId);
         const primaryLogOk = await writeLog(
@@ -3065,6 +3073,7 @@ async function handleContact(
   const nowIso = new Date().toISOString();
   const nowSec = Math.floor(Date.now() / 1000);
   const inboundMetaPixelId = norm(p.meta_pixel_id || p.pixel_id);
+  const inboundDatasetId = norm(p.dataset_id || p.meta_messaging_dataset_id);
   const inboundSourcePlatform = norm(p.source_platform);
   const inboundCtwaClid = ctwaClidForSource(p.ctwa_clid, inboundSourcePlatform);
   const inboundContactEventId = norm(p.contact_event_id || p.event_id);
@@ -3143,6 +3152,7 @@ async function handleContact(
     from_meta_ads: toBool(p.from_meta_ads) || Boolean(inboundCtwaClid),
     geo_source: payloadGeoSource,
     meta_pixel_id: inboundMetaPixelId,
+    dataset_id: inboundDatasetId,
     source_platform: inboundSourcePlatform || "",
     ctwa_clid: inboundCtwaClid,
     pixel_id: inboundMetaPixelId,
@@ -3410,6 +3420,7 @@ async function handleLead(
 
   const cleanPhone = sanitizePhone(p.phone);
   const inboundMetaPixelId = norm(p.meta_pixel_id || p.pixel_id);
+  const inboundDatasetId = norm(p.dataset_id || p.meta_messaging_dataset_id);
   const inboundSourcePlatform = norm(p.source_platform);
   const inboundCtwaClid = ctwaClidForSource(p.ctwa_clid, inboundSourcePlatform);
   const botPhone = sanitizePhone(p.bot_phone);
@@ -3678,6 +3689,7 @@ async function handleLead(
         ? payloadGeoSource
         : (norm(trustedLineage?.geo_source) || "none"),
       meta_pixel_id: resolvedPixelId,
+      dataset_id: inboundDatasetId || norm(trustedLineage?.dataset_id),
       pixel_attribution_source: trustedLineage ? "stored_attribution" : "",
       pixel_attribution_conversion_id: trustedLineage?.id ?? null,
       source_platform: inboundSourcePlatform || "",
@@ -3871,7 +3883,7 @@ async function handleLead(
     const { data: cur } = await db
       .from("conversions")
       .select(
-        "promo_code, observaciones, external_id, telefono_asignado, assigned_gerencia_label, source_platform, ctwa_clid",
+        "promo_code, observaciones, external_id, telefono_asignado, assigned_gerencia_label, source_platform, ctwa_clid, dataset_id",
       )
       .eq("id", targetId)
       .single();
@@ -3888,6 +3900,12 @@ async function handleLead(
       inboundCtwaClid
     ) {
       updates.ctwa_clid = inboundCtwaClid;
+    }
+    if (
+      inboundDatasetId &&
+      !norm((cur as Record<string, unknown> | null)?.dataset_id)
+    ) {
+      updates.dataset_id = inboundDatasetId;
     }
     if (payloadFn) updates.fn = payloadFn;
     if (payloadLn) updates.ln = payloadLn;
@@ -4053,6 +4071,7 @@ async function handleCompleteRegistration(
     p.registration_event_time || p.event_time || Math.floor(Date.now() / 1000),
   );
   const inboundMetaPixelId = norm(p.meta_pixel_id || p.pixel_id);
+  const inboundDatasetId = norm(p.dataset_id || p.meta_messaging_dataset_id);
   const eventGerencia = await resolveEventGerenciaSnapshot(
     db,
     landing.user_id,
@@ -4161,6 +4180,9 @@ async function handleCompleteRegistration(
         targetRow.currency,
       );
     }
+    if (inboundDatasetId && !norm(targetRow.dataset_id)) {
+      updates.dataset_id = inboundDatasetId;
+    }
     if (playerUsername && !norm(targetRow.lead_player_username)) {
       updates.lead_player_username = playerUsername;
     }
@@ -4265,6 +4287,7 @@ async function handleCompleteRegistration(
     from_meta_ads: false,
     geo_source: payloadGeoSource,
     meta_pixel_id: resolvedPixelId,
+    dataset_id: inboundDatasetId,
     pixel_attribution_source: "",
     pixel_attribution_conversion_id: null,
     source_platform: norm(p.source_platform),
@@ -4409,6 +4432,7 @@ async function handlePurchase(
 ): Promise<Response> {
   const cleanPhone = sanitizePhone(p.phone);
   const inboundMetaPixelId = norm(p.meta_pixel_id || p.pixel_id);
+  const inboundDatasetId = norm(p.dataset_id || p.meta_messaging_dataset_id);
   const inboundSourcePlatform = norm(p.source_platform);
   const inboundCtwaClid = ctwaClidForSource(p.ctwa_clid, inboundSourcePlatform);
   const botPhone = sanitizePhone(p.bot_phone);
@@ -4740,6 +4764,9 @@ async function handlePurchase(
       updates.meta_pixel_id = inboundMetaPixelId;
       updates.pixel_id = inboundMetaPixelId;
     }
+    if (inboundDatasetId && !norm(existingRow?.dataset_id)) {
+      updates.dataset_id = inboundDatasetId;
+    }
     const currentOriginSource = norm(existingRow?.source_platform);
     const effectiveOriginSource = currentOriginSource || inboundSourcePlatform;
     if (!currentOriginSource && inboundSourcePlatform) {
@@ -4954,6 +4981,7 @@ async function handlePurchase(
         ? payloadGeoSource
         : (norm(firstSource?.geo_source) || "none"),
       meta_pixel_id: firstPixel,
+      dataset_id: inboundDatasetId || norm(firstSource?.dataset_id),
       pixel_attribution_source: firstSource ? "stored_attribution" : "",
       pixel_attribution_conversion_id: firstSource?.id ?? null,
       source_platform: inboundSourcePlatform || firstSource?.source_platform ||
@@ -5191,6 +5219,7 @@ async function handlePurchase(
       ? payloadGeoSource
       : (norm(repeatSourceRow?.geo_source) || "none"),
     meta_pixel_id: repeatInheritedPixel,
+    dataset_id: inboundDatasetId || norm(repeatSourceRow?.dataset_id),
     pixel_attribution_source: repeatAttribution?.source ?? "",
     pixel_attribution_conversion_id: repeatAttribution?.sourceConversionId ??
       null,
@@ -5391,6 +5420,7 @@ async function handleSimplePurchase(
 ): Promise<Response> {
   const cleanPhone = sanitizePhone(p.phone);
   const inboundMetaPixelId = norm(p.meta_pixel_id || p.pixel_id);
+  const inboundDatasetId = norm(p.dataset_id || p.meta_messaging_dataset_id);
   const inboundSourcePlatform = norm(p.source_platform);
   const inboundCtwaClid = ctwaClidForSource(p.ctwa_clid, inboundSourcePlatform);
   const botPhone = sanitizePhone(p.bot_phone);
@@ -5551,6 +5581,7 @@ async function handleSimplePurchase(
     geo_source: norm((srcRow as Record<string, unknown> | null)?.geo_source) ||
       "none",
     meta_pixel_id: simpleInheritedPixel,
+    dataset_id: inboundDatasetId || norm(srcRow?.dataset_id),
     pixel_attribution_source: simpleAttribution?.source ?? "",
     pixel_attribution_conversion_id: simpleAttribution?.sourceConversionId ??
       null,

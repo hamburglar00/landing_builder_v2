@@ -93,6 +93,7 @@ export function generateDemoConversions(count = 80): ConversionRow[] {
       from_meta_ads: !!fbc,
       meta_pixel_id: "",
       pixel_id: "",
+      dataset_id: "",
       contact_event_id: contactEvId,
       contact_event_time: ts,
       sendContactPixel: false,

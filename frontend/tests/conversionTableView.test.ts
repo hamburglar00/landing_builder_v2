@@ -17,6 +17,9 @@ const EXPECTED_HIDDEN_COLUMNS: ConversionColumnKey[] = [
   "fbc",
   "fbp",
   "meta_pixel_id",
+  "pixel_id",
+  "dataset_id",
+  "source_platform",
   "ctwa_clid",
   "contact_event_id",
   "contact_event_time",
@@ -36,6 +39,7 @@ const EXPECTED_HIDDEN_COLUMNS: ConversionColumnKey[] = [
   "lead_status_capi",
   "registration_status_capi",
   "purchase_status_capi",
+  "observaciones",
   "device_type",
   "geo_city",
   "geo_region",
@@ -45,6 +49,7 @@ const EXPECTED_HIDDEN_COLUMNS: ConversionColumnKey[] = [
   "inferred_sex",
   "sex_source",
   "external_id",
+  "test_event_code",
   "lead_bot_phone",
   "lead_player_username",
   "lead_agency_id",
@@ -85,8 +90,6 @@ test("la vista reducida oculta exactamente las columnas técnicas solicitadas", 
   for (const column of [
     "phone",
     "email",
-    "pixel_id",
-    "test_event_code",
   ] satisfies ConversionColumnKey[]) {
     assert.equal(friendlyColumns.includes(column), true, column);
   }
