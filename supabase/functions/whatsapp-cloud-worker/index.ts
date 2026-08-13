@@ -25,7 +25,6 @@ type WhatsappConfig = {
   whatsapp_business_account_id: string;
   meta_access_token: string;
   meta_api_version: string;
-  pixel_id: string;
   landing_tag: string;
   send_contact_capi: boolean;
   redirect_message_template: string;
@@ -458,8 +457,8 @@ async function createInternalContact(input: {
     external_id: externalId,
     promo_code: input.promo,
     telefono_asignado: digits(input.assignedPhone),
-    meta_pixel_id: input.config.pixel_id,
-    pixel_id: input.config.pixel_id,
+    meta_pixel_id: "",
+    pixel_id: "",
     source_platform: "whatsapp_cloud_api",
     ctwa_clid: input.ctwaClid,
     from_meta_ads: Boolean(input.ctwaClid),

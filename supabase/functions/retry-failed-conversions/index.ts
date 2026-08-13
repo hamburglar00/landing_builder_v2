@@ -210,7 +210,7 @@ Deno.serve(async (req) => {
       ? await db
         .from("whatsapp_cloud_api_configs")
         .select(
-          "user_id, active, phone_number_id, whatsapp_business_account_id, pixel_id, meta_messaging_dataset_id",
+          "user_id, active, phone_number_id, whatsapp_business_account_id, meta_messaging_dataset_id, meta_access_token, meta_api_version",
         )
         .in("user_id", userIds)
       : { data: [] };
@@ -300,25 +300,17 @@ Deno.serve(async (req) => {
         row.purchase_capi_route_reason,
       );
 
-      const rowPixelForRoute = String(row.pixel_id ?? "").trim();
-      const matchedPixelCfgForRoute = rowPixelForRoute
-        ? userPixelConfigs.find((pc) =>
-          String(pc.pixel_id ?? "").trim() === rowPixelForRoute
-        )
-        : null;
-      const defaultPixelCfgForRoute = userPixelConfigs.find((pc) =>
-        Boolean(pc.is_default)
-      );
-      const selectedForBusinessRoute = matchedPixelCfgForRoute ??
-        defaultPixelCfgForRoute ?? null;
       const businessMessagingDatasetId = isWhatsappCloudApi
         ? normalizeText(whatsappCloudApiCfg?.meta_messaging_dataset_id)
         : normalizeText(chatraceCfg?.meta_messaging_dataset_id);
       const businessMessagingAccessToken = isWhatsappCloudApi
-        ? normalizeText(
-          selectedForBusinessRoute?.meta_access_token ?? cfg.meta_access_token,
-        )
+        ? normalizeText(whatsappCloudApiCfg?.meta_access_token)
         : normalizeText(chatraceCfg?.meta_messaging_access_token);
+      const businessMessagingApiVersion = isWhatsappCloudApi
+        ? normalizeText(whatsappCloudApiCfg?.meta_api_version) ||
+          normalizeText(cfg.meta_api_version) ||
+          "v25.0"
+        : normalizeText(cfg.meta_api_version) || "v25.0";
       const businessMessagingWabaId = isWhatsappCloudApi
         ? normalizeText(whatsappCloudApiCfg?.whatsapp_business_account_id)
         : normalizeText(chatraceCfg?.whatsapp_business_account_id);
@@ -768,7 +760,7 @@ Deno.serve(async (req) => {
             dataset_id: businessMessagingDatasetId,
             whatsapp_business_account_id: businessMessagingWabaId,
             meta_access_token: businessMessagingAccessToken,
-            meta_api_version: apiVersion,
+            meta_api_version: businessMessagingApiVersion,
             meta_currency: currency,
           },
           ctwaClid,
@@ -1350,7 +1342,7 @@ function whatsappCloudApiPhoneNumberIdFromSourceUrl(value: unknown): string {
 }
 
 function resolveWhatsappCloudApiRetryConfig(
-  row: Pick<ConversionRow, "user_id" | "event_source_url" | "pixel_id">,
+  row: Pick<ConversionRow, "user_id" | "event_source_url">,
   configsByUserId: Map<string, Array<Record<string, unknown>>>,
 ): Record<string, unknown> | null {
   const configs = configsByUserId.get(String(row.user_id)) ?? [];
@@ -1363,10 +1355,7 @@ function resolveWhatsappCloudApiRetryConfig(
       normalizeText(cfg.phone_number_id) === phoneNumberId
     ) ?? null;
   }
-  const pixelId = normalizeText(row.pixel_id);
-  if (!pixelId) return configs[0] ?? null;
-  return configs.find((cfg) => normalizeText(cfg.pixel_id) === pixelId) ??
-    configs[0] ?? null;
+  return configs[0] ?? null;
 }
 
 type CapiRetryEventName = "Contact" | "Lead";
@@ -1664,7 +1653,7 @@ async function retrySingleContactLeadCapiEvent(
     Boolean(ctwaClid) &&
     Boolean(normalizeText(whatsappCloudApiCfg?.whatsapp_business_account_id)) &&
     Boolean(normalizeText(whatsappCloudApiCfg?.meta_messaging_dataset_id)) &&
-    Boolean(config.meta_access_token);
+    Boolean(normalizeText(whatsappCloudApiCfg?.meta_access_token));
   if (eventName === "Lead" && isWhatsappCloudApi && !useBusinessMessaging) {
     stats[failedKey]++;
     await db.from("conversions").update({
@@ -1688,7 +1677,7 @@ async function retrySingleContactLeadCapiEvent(
         has_dataset: Boolean(
           normalizeText(whatsappCloudApiCfg?.meta_messaging_dataset_id),
         ),
-        has_token: Boolean(config.meta_access_token),
+        has_token: Boolean(normalizeText(whatsappCloudApiCfg?.meta_access_token)),
       }),
       "",
       "",
@@ -1704,8 +1693,9 @@ async function retrySingleContactLeadCapiEvent(
         whatsapp_business_account_id: normalizeText(
           whatsappCloudApiCfg?.whatsapp_business_account_id,
         ),
-        meta_access_token: config.meta_access_token,
-        meta_api_version: config.meta_api_version,
+        meta_access_token: normalizeText(whatsappCloudApiCfg?.meta_access_token),
+        meta_api_version: normalizeText(whatsappCloudApiCfg?.meta_api_version) ||
+          config.meta_api_version,
         meta_currency: config.meta_currency,
       },
       "Lead",

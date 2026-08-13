@@ -18,6 +18,7 @@ import {
 } from "@/lib/gerencias/gerenciasDb";
 import { CollapsibleSection } from "@/components/landing/LandingEditorForm";
 import {
+  ensureWhatsappCloudApiDataset,
   fetchWhatsappCloudApiAssignments,
   fetchWhatsappCloudApiConfig,
   setWhatsappCloudApiAssignments,
@@ -39,13 +40,13 @@ const INSTRUCTION_CHECKLIST = [
   "Ir a Paso 2. Configuracion de produccion y registrar el numero real del cliente.",
   "Copiar el Phone Number ID y el WhatsApp Business Account ID del numero real registrado.",
   "Generar el identificador de acceso para ese numero/WABA y pegarlo en Meta access token.",
-  "Crear u obtener el dataset de Conversions API for Business Messaging del WABA y pegarlo en Dataset Business Messaging ID.",
+  "Generar el dataset de Conversions API for Business Messaging desde el constructor.",
   "En Configuracion de la app > Informacion basica, copiar App Secret y pegarlo en App Secret / token de la app.",
   "Activar Suscribirse a webhooks sobre el numero registrado.",
   "Pegar la Webhook URL y el Verify token del constructor, verificar y guardar.",
   "En Campos de webhook, suscribirse al campo messages. Los demas campos son opcionales.",
   "Publicar la app. Meta puede pedir URL de politica de privacidad: usar https://mkt.panelbotadmin.com/privacy-policy.",
-  "Seleccionar pixel, definir tag, cargar respuesta, asignar gerencias, activar, guardar y probar.",
+  "Definir tag, cargar respuesta, asignar gerencias, activar, guardar y probar.",
 ];
 
 const INSTRUCTION_FLOW = [
@@ -341,6 +342,7 @@ export default function WhatsAppCloudApiPageContent({
   const [clients, setClients] = useState<ClientOption[]>([]);
   const [ready, setReady] = useState(false);
   const [saving, setSaving] = useState(false);
+  const [datasetLoading, setDatasetLoading] = useState(false);
   const [healthSyncing, setHealthSyncing] = useState(false);
   const [message, setMessage] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
@@ -349,7 +351,6 @@ export default function WhatsAppCloudApiPageContent({
   const [gerencias, setGerencias] = useState<Gerencia[]>([]);
   const [workGroups, setWorkGroups] = useState<GerenciaWorkGroup[]>([]);
   const [assignments, setAssignments] = useState<LandingGerenciaAssignment[]>([]);
-  const [pixelOptions, setPixelOptions] = useState<Array<{ pixel_id: string; comment: string }>>([]);
   const [webhookUrlCopied, setWebhookUrlCopied] = useState(false);
   const [verifyTokenCopied, setVerifyTokenCopied] = useState(false);
   const [identificationEditing, setIdentificationEditing] = useState(true);
@@ -363,7 +364,6 @@ export default function WhatsAppCloudApiPageContent({
   const [appSecret, setAppSecret] = useState("");
   const [apiVersion, setApiVersion] = useState("v25.0");
   const [verifyToken, setVerifyToken] = useState("");
-  const [pixelId, setPixelId] = useState("");
   const [messagingDatasetId, setMessagingDatasetId] = useState("");
   const [landingTag, setLandingTag] = useState("");
   const [selectionMode, setSelectionMode] = useState<"weighted_random" | "fair">("weighted_random");
@@ -399,23 +399,10 @@ export default function WhatsAppCloudApiPageContent({
       gerenciasPromise,
       fetchGerenciaWorkGroups(uid),
     ]);
-    const { data: pixels } = await supabase
-      .from("conversions_pixel_configs")
-      .select("pixel_id,comment")
-      .eq("user_id", uid)
-      .order("is_default", { ascending: false })
-      .order("created_at", { ascending: true });
-    const options = (pixels ?? [])
-      .map((p) => ({
-        pixel_id: String(p.pixel_id ?? "").trim(),
-        comment: String(p.comment ?? "").trim(),
-      }))
-      .filter((p) => p.pixel_id);
     setConfig(cfg);
     setIdentificationEditing(!cfg?.id);
     setGerencias(gers);
     setWorkGroups(groups);
-    setPixelOptions(options);
     const fallbackName = normalizeInternalName(selectedClientName || "WhatsApp Cloud API") || "WhatsApp Cloud API";
     setName(cfg?.name ?? fallbackName);
     setActive(cfg?.active ?? false);
@@ -426,7 +413,6 @@ export default function WhatsAppCloudApiPageContent({
     setAppSecret("");
     setApiVersion(cfg?.meta_api_version ?? "v25.0");
     setVerifyToken(cfg?.webhook_verify_token ?? generateVerifyToken());
-    setPixelId(cfg?.pixel_id ?? "");
     setMessagingDatasetId(cfg?.meta_messaging_dataset_id ?? "");
     setLandingTag(cfg?.landing_tag ?? "");
     setSelectionMode(cfg?.gerencia_selection_mode ?? "weighted_random");
@@ -502,6 +488,32 @@ export default function WhatsAppCloudApiPageContent({
     }
   };
 
+  const handleEnsureDataset = async () => {
+    setDatasetLoading(true);
+    setError(null);
+    setMessage(null);
+    try {
+      if (!targetUserId) throw new Error("Usuario requerido.");
+      if (!/^\d+$/.test(wabaId.trim())) throw new Error("WABA ID debe ser numerico.");
+      if (!accessToken.trim() && !config?.has_meta_access_token) {
+        throw new Error("Meta access token requerido para generar el dataset.");
+      }
+      const result = await ensureWhatsappCloudApiDataset({
+        config_id: config?.id ?? null,
+        user_id: targetUserId,
+        whatsapp_business_account_id: wabaId.trim(),
+        meta_access_token: accessToken.trim() || null,
+        meta_api_version: apiVersion.trim() || "v25.0",
+      });
+      setMessagingDatasetId(result.dataset_id);
+      setMessage("Dataset Business Messaging obtenido.");
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "No se pudo obtener el dataset.");
+    } finally {
+      setDatasetLoading(false);
+    }
+  };
+
   const handleSave = async () => {
     if (!targetUserId) return;
     setSaving(true);
@@ -518,7 +530,6 @@ export default function WhatsAppCloudApiPageContent({
       if (!appSecret.trim() && !config?.has_meta_app_secret) throw new Error("App Secret / token de la app requerido.");
       if (!verifyToken.trim()) throw new Error("Verify token requerido.");
       if (!cleanTag(landingTag)) throw new Error("Tag de promo_code requerido.");
-      if (!/^\d+$/.test(pixelId.trim())) throw new Error("Pixel ID requerido.");
       if (!/^\d+$/.test(messagingDatasetId.trim())) throw new Error("Dataset Business Messaging ID requerido.");
       if (!redirectTemplate.trim()) throw new Error("Mensaje de derivacion requerido.");
       if (!fallbackTemplate.trim()) throw new Error("Mensaje fallback requerido.");
@@ -539,7 +550,6 @@ export default function WhatsAppCloudApiPageContent({
         meta_app_secret: appSecret.trim() || null,
         meta_api_version: apiVersion.trim() || "v25.0",
         webhook_verify_token: verifyToken.trim(),
-        pixel_id: pixelId.trim(),
         meta_messaging_dataset_id: messagingDatasetId.trim(),
         landing_tag: cleanTag(landingTag),
         gerencia_selection_mode: selectionMode,
@@ -890,47 +900,29 @@ export default function WhatsAppCloudApiPageContent({
             <div className="space-y-3">
               <div>
                 <label className="mb-1 block text-xs font-medium text-zinc-400">
-                  Pixel ID <span className="text-red-400">*</span>
-                </label>
-                <select
-                  value={pixelId}
-                  onChange={(e) => setPixelId(onlyDigits(e.target.value))}
-                  className="w-full rounded-lg border border-zinc-700 bg-zinc-900 px-3 py-2 text-sm text-zinc-100"
-                >
-                  <option value="">Seleccionar pixel</option>
-                  {[...(pixelOptions.some((p) => p.pixel_id === pixelId) || !pixelId ? pixelOptions : [{ pixel_id: pixelId, comment: "" }, ...pixelOptions])].map((pixel) => (
-                    <option key={pixel.pixel_id} value={pixel.pixel_id}>
-                      {pixel.comment ? `${pixel.pixel_id} (${pixel.comment})` : pixel.pixel_id}
-                    </option>
-                  ))}
-                </select>
-                <p className="mt-1 text-[11px] text-zinc-500">
-                  Se configura desde{" "}
-                  <a
-                    href={mode === "admin" ? "/admin/integraciones" : "/dashboard/integraciones"}
-                    className="text-zinc-300 underline hover:text-zinc-100"
-                  >
-                    Integraciones
-                  </a>
-                  .
-                </p>
-              </div>
-
-              <div>
-                <label className="mb-1 block text-xs font-medium text-zinc-400">
                   Dataset Business Messaging ID <span className="text-red-400">*</span>
                 </label>
-                <input
-                  type="text"
-                  inputMode="numeric"
-                  value={messagingDatasetId}
-                  onChange={(e) => setMessagingDatasetId(onlyDigits(e.target.value))}
-                  className="w-full rounded-lg border border-zinc-700 bg-zinc-900 px-3 py-2 text-sm text-zinc-100"
-                  placeholder="ID del dataset vinculado al WABA"
-                  required
-                />
+                <div className="flex gap-2">
+                  <input
+                    type="text"
+                    inputMode="numeric"
+                    value={messagingDatasetId}
+                    onChange={(e) => setMessagingDatasetId(onlyDigits(e.target.value))}
+                    className="w-full rounded-lg border border-zinc-700 bg-zinc-900 px-3 py-2 text-sm text-zinc-100"
+                    placeholder="ID del dataset vinculado al WABA"
+                    required
+                  />
+                  <button
+                    type="button"
+                    onClick={() => void handleEnsureDataset()}
+                    disabled={datasetLoading || !/^\d+$/.test(wabaId.trim()) || (!accessToken.trim() && !config?.has_meta_access_token)}
+                    className="rounded-lg border border-zinc-700 bg-zinc-900 px-3 py-2 text-xs font-semibold text-zinc-100 transition hover:border-lime-400 hover:text-lime-300 disabled:cursor-not-allowed disabled:opacity-50"
+                  >
+                    {datasetLoading ? "Generando..." : messagingDatasetId ? "Actualizar" : "Generar"}
+                  </button>
+                </div>
                 <p className="mt-1 text-[11px] text-zinc-500">
-                  Se usa para enviar LeadSubmitted y Purchase por Conversions API for Business Messaging.
+                  Usa el WABA ID y el Meta access token para crear u obtener el dataset en Meta.
                 </p>
               </div>
 

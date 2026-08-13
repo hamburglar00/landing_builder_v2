@@ -94,8 +94,9 @@ interface WhatsappCloudApiCapiConfig {
   active: boolean;
   phone_number_id: string;
   whatsapp_business_account_id: string;
-  pixel_id: string;
   meta_messaging_dataset_id: string;
+  meta_access_token: string;
+  meta_api_version: string;
 }
 
 interface LandingRow {
@@ -1981,25 +1982,20 @@ function whatsappCloudApiPhoneNumberIdFromSourceUrl(value: unknown): string {
 
 async function resolveWhatsappCloudApiCapiConfig(
   db: SupabaseClient,
-  row: Pick<
-    ConversionRow,
-    "user_id" | "event_source_url" | "pixel_id" | "meta_pixel_id"
-  >,
+  row: Pick<ConversionRow, "user_id" | "event_source_url">,
 ): Promise<WhatsappCloudApiCapiConfig | null> {
   const phoneNumberId = whatsappCloudApiPhoneNumberIdFromSourceUrl(
     row.event_source_url,
   );
   let query = db
     .from("whatsapp_cloud_api_configs")
-    .select("active, phone_number_id, whatsapp_business_account_id, pixel_id, meta_messaging_dataset_id")
+    .select("active, phone_number_id, whatsapp_business_account_id, meta_messaging_dataset_id, meta_access_token, meta_api_version")
     .eq("user_id", row.user_id);
 
   if (phoneNumberId) {
     query = query.eq("phone_number_id", phoneNumberId);
   } else {
-    const pixelId = norm(row.pixel_id || row.meta_pixel_id);
-    if (!pixelId) return null;
-    query = query.eq("pixel_id", pixelId).order("updated_at", {
+    query = query.order("updated_at", {
       ascending: false,
     }).limit(1);
   }
@@ -2187,8 +2183,9 @@ async function sendToMetaCAPI(
       enabled: true,
       datasetId: norm(whatsappCloudApiConfig?.meta_messaging_dataset_id),
       wabaId: norm(whatsappCloudApiConfig?.whatsapp_business_account_id),
-      accessToken: norm(effectiveConfig.meta_access_token),
-      apiVersion: effectiveConfig.meta_api_version,
+      accessToken: norm(whatsappCloudApiConfig?.meta_access_token),
+      apiVersion: norm(whatsappCloudApiConfig?.meta_api_version) ||
+        effectiveConfig.meta_api_version,
       source: "whatsapp_cloud_api",
     }
     : {

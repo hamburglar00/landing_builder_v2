@@ -16,7 +16,6 @@ export interface WhatsappCloudApiConfig {
   has_meta_app_secret: boolean;
   meta_api_version: string;
   webhook_verify_token: string;
-  pixel_id: string;
   meta_messaging_dataset_id: string;
   landing_tag: string;
   gerencia_selection_mode: "weighted_random" | "fair";
@@ -128,7 +127,6 @@ export async function upsertWhatsappCloudApiConfig(input: {
   meta_app_secret: string | null;
   meta_api_version: string;
   webhook_verify_token: string;
-  pixel_id: string;
   meta_messaging_dataset_id: string;
   landing_tag: string;
   gerencia_selection_mode: "weighted_random" | "fair";
@@ -154,7 +152,6 @@ export async function upsertWhatsappCloudApiConfig(input: {
       p_meta_app_secret: input.meta_app_secret,
       p_meta_api_version: input.meta_api_version,
       p_webhook_verify_token: input.webhook_verify_token,
-      p_pixel_id: input.pixel_id,
       p_meta_messaging_dataset_id: input.meta_messaging_dataset_id,
       p_landing_tag: input.landing_tag,
       p_gerencia_selection_mode: input.gerencia_selection_mode,
@@ -168,6 +165,28 @@ export async function upsertWhatsappCloudApiConfig(input: {
   if (error) throw error;
   if (!data) throw new Error("No se pudo guardar WhatsApp Cloud API.");
   return { id: String(data) };
+}
+
+export async function ensureWhatsappCloudApiDataset(input: {
+  config_id?: string | null;
+  user_id: string;
+  whatsapp_business_account_id: string;
+  meta_access_token: string | null;
+  meta_api_version: string;
+}): Promise<{ dataset_id: string }> {
+  const { data, error } = await supabase.functions.invoke("whatsapp-cloud-ensure-dataset", {
+    body: {
+      config_id: input.config_id ?? null,
+      user_id: input.user_id,
+      whatsapp_business_account_id: input.whatsapp_business_account_id,
+      meta_access_token: input.meta_access_token,
+      meta_api_version: input.meta_api_version,
+    },
+  });
+  if (error) throw error;
+  const datasetId = String((data as { dataset_id?: unknown } | null)?.dataset_id ?? "").replace(/\D/g, "");
+  if (!datasetId) throw new Error("Meta no devolvio Dataset ID.");
+  return { dataset_id: datasetId };
 }
 
 export async function syncWhatsappCloudApiHealth(configId: string): Promise<void> {
