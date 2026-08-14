@@ -74,6 +74,10 @@ const formatPhone = (raw: string) => {
   if (!raw) return "";
   const digits = raw.replace(/\D/g, "");
 
+  if (digits.length === 12 && digits.startsWith("595")) {
+    return `595 ${digits.slice(3, 6)} ${digits.slice(6, 9)}-${digits.slice(9)}`;
+  }
+
   // Formato específico para celulares de Argentina tipo:
   // 5493516772507 -> 54 9 3516 77-2507
   if (digits.length === 13 && digits.startsWith("54")) {
@@ -100,6 +104,17 @@ const formatPhoneAvailabilityStatus = (row: GerenciaPhoneRow) => {
 };
 
 const onlyDigits = (raw: string) => raw.replace(/\D/g, "");
+
+const normalizePhoneForWorkspace = (raw: string, workspaceCurrency: string): string | null => {
+  const digits = onlyDigits(raw);
+  if (workspaceCurrency === "PYG") {
+    return digits.startsWith("595") && digits.length === 12 ? digits : null;
+  }
+  return digits.startsWith("549") && digits.length === 13 ? digits : null;
+};
+
+const phoneHelpForWorkspace = (workspaceCurrency: string) =>
+  workspaceCurrency === "PYG" ? "595973123456" : "5493511234567";
 
 export function TelefonosPageContent({
   backLink,
@@ -530,13 +545,13 @@ export function TelefonosPageContent({
 
   const handleAddManualPhone = async (gerenciaId: number) => {
     if (!userId) return;
-    const phone = onlyDigits(manualPhoneInput[gerenciaId] ?? "");
+    const phone = normalizePhoneForWorkspace(manualPhoneInput[gerenciaId] ?? "", workspaceCurrency);
     if (!phone) {
-      setError("Ingresa un telefono valido.");
-      return;
-    }
-    if (!phone.startsWith("549")) {
-      setError("El telefono debe comenzar con 549.");
+      setError(
+        workspaceCurrency === "PYG"
+          ? "El telefono debe comenzar con 595 y tener 12 digitos."
+          : "El telefono debe comenzar con 549 y tener 13 digitos.",
+      );
       return;
     }
     if (!isAdmin && maxPhonesAllowed != null) {
@@ -1226,7 +1241,9 @@ export function TelefonosPageContent({
 
             <div className="space-y-3">
               <div>
-                <label className="mb-1 block text-xs text-zinc-400">Teléfono (debe iniciar con 549)</label>
+                <label className="mb-1 block text-xs text-zinc-400">
+                  Teléfono (debe iniciar con {workspaceCurrency === "PYG" ? "595" : "549"})
+                </label>
                 <input
                   type="text"
                   inputMode="numeric"
@@ -1234,10 +1251,10 @@ export function TelefonosPageContent({
                   onChange={(e) =>
                     setManualPhoneInput((prev) => ({
                       ...prev,
-                      [manualModalGerenciaId]: e.target.value,
+                      [manualModalGerenciaId]: onlyDigits(e.target.value),
                     }))
                   }
-                  placeholder="5493511234567"
+                  placeholder={phoneHelpForWorkspace(workspaceCurrency)}
                   className="w-full rounded-lg border border-zinc-700 bg-zinc-900 px-3 py-2 text-sm text-zinc-100"
                 />
               </div>

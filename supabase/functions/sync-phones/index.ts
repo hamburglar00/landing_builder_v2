@@ -7,6 +7,7 @@ const corsHeaders = {
 };
 
 type PhoneKind = "carga" | "ads" | "mkt" | "assistant";
+type WorkspaceCurrency = "ARS" | "PYG";
 
 type ExternalResponse = {
   code?: string;
@@ -36,6 +37,20 @@ const normalizeAndValidateArPhone = (
   if (!digits.startsWith("549")) return null;
   if (digits.length !== 13) return null;
   return digits;
+};
+
+export const normalizeAndValidatePhone = (
+  raw: string | null | undefined,
+  workspaceCurrency: string | null | undefined = "ARS",
+): string | null => {
+  const digits = String(raw ?? "").replace(/\D/g, "");
+  const currency = String(workspaceCurrency ?? "").trim().toUpperCase() as WorkspaceCurrency;
+  if (currency === "PYG") {
+    if (!digits.startsWith("595")) return null;
+    if (digits.length !== 12) return null;
+    return digits;
+  }
+  return normalizeAndValidateArPhone(raw);
 };
 
 /**
@@ -135,7 +150,7 @@ Deno.serve(async (req) => {
     // 1) Obtener gerencias: cron = todas; si no, del usuario (o solo la indicada)
     let query = supabaseAdmin
       .from("gerencias")
-      .select("id, user_id, gerencia_id, source_type")
+      .select("id, user_id, gerencia_id, source_type, workspace_currency")
       .eq("source_type", "pbadmin");
     if (!isCronMode) {
       query = query.eq("user_id", userId!);
@@ -195,6 +210,7 @@ Deno.serve(async (req) => {
       if (g.user_id) touchedUserIds.add(g.user_id);
       const externalId = g.gerencia_id;
       if (externalId == null) continue;
+      const workspaceCurrency = String(g.workspace_currency ?? "ARS").trim().toUpperCase();
 
       const url = `${externalBaseUrl}/api/v1/agency/${externalId}/random-contact`;
 
@@ -238,22 +254,22 @@ Deno.serve(async (req) => {
       const phoneKindMap = new Map<string, PhoneKind>();
 
       for (const phone of cargaWhatsapps) {
-        const normalized = normalizeAndValidateArPhone(phone);
+        const normalized = normalizeAndValidatePhone(phone, workspaceCurrency);
         if (!normalized) continue;
         phoneKindMap.set(normalized, "carga");
       }
       for (const phone of adsWhatsapps) {
-        const normalized = normalizeAndValidateArPhone(phone);
+        const normalized = normalizeAndValidatePhone(phone, workspaceCurrency);
         if (!normalized) continue;
         phoneKindMap.set(normalized, "ads");
       }
       for (const phone of mktWhatsapps) {
-        const normalized = normalizeAndValidateArPhone(phone);
+        const normalized = normalizeAndValidatePhone(phone, workspaceCurrency);
         if (!normalized) continue;
         phoneKindMap.set(normalized, "mkt");
       }
       for (const phone of assistantWhatsapps) {
-        const normalized = normalizeAndValidateArPhone(phone);
+        const normalized = normalizeAndValidatePhone(phone, workspaceCurrency);
         if (!normalized) continue;
         phoneKindMap.set(normalized, "assistant");
       }
@@ -279,7 +295,7 @@ Deno.serve(async (req) => {
         { status: string; sourceAvailable: boolean; assignmentRole: "acquisition" | "follow_up" }
       >();
       for (const row of existingPhones ?? []) {
-        const phone = normalizeAndValidateArPhone(row.phone);
+        const phone = normalizeAndValidatePhone(row.phone, workspaceCurrency);
         if (!phone) continue;
         const status = String(row.status ?? "").trim();
         const assignmentRole = String(row.assignment_role ?? "").trim() === "follow_up"
