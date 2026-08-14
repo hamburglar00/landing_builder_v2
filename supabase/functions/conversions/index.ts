@@ -104,6 +104,7 @@ interface LandingRow {
   id: string;
   name: string;
   user_id: string;
+  workspace_currency?: string;
 }
 
 interface ConversionRow {
@@ -1951,6 +1952,60 @@ function resolveCurrencyForPixel(
   );
 }
 
+function landingWorkspaceCurrency(landing: LandingRow): string {
+  const currency = norm(landing.workspace_currency).toUpperCase();
+  return currency === "PYG" ? "PYG" : currency === "ARS" ? "ARS" : "";
+}
+
+function resolveContactCurrency(
+  config: ConversionsConfig,
+  pixelConfigs: PixelConfigRow[],
+  pixelId: string,
+  landing: LandingRow,
+  params: Params,
+): string {
+  const explicitCurrency = norm(params.currency || params.workspace_currency)
+    .toUpperCase();
+  if (explicitCurrency === "ARS" || explicitCurrency === "PYG") {
+    return explicitCurrency;
+  }
+  const workspaceCurrency = landingWorkspaceCurrency(landing);
+  if (workspaceCurrency) return workspaceCurrency;
+  return resolveCurrencyForPixel(config, pixelConfigs, pixelId);
+}
+
+async function resolveLandingForInbound(
+  db: SupabaseClient,
+  userId: string,
+  params: Params,
+  landingName: string,
+): Promise<LandingRow> {
+  const landingId = norm(params.landing_id || params.landingId);
+  const select = "id, name, user_id, workspace_currency";
+
+  if (landingId) {
+    const { data } = await db
+      .from("landings")
+      .select(select)
+      .eq("user_id", userId)
+      .eq("id", landingId)
+      .maybeSingle();
+    if (data) return data as LandingRow;
+  }
+
+  if (landingName) {
+    const { data } = await db
+      .from("landings")
+      .select(select)
+      .eq("user_id", userId)
+      .eq("name", landingName)
+      .maybeSingle();
+    if (data) return data as LandingRow;
+  }
+
+  return { id: landingId, name: landingName, user_id: userId };
+}
+
 function resolvePurchaseType(
   row: Pick<ConversionRow, "purchase_type">,
   customData?: Record<string, unknown>,
@@ -3210,10 +3265,12 @@ async function handleContact(
     event_source_url: eventSourceUrl,
     estado: "contact",
     valor: 0,
-    currency: resolveCurrencyForPixel(
+    currency: resolveContactCurrency(
       config,
       pixelConfigs,
       inboundMetaPixelId,
+      landing,
+      p,
     ),
     contact_status_capi: "",
     lead_status_capi: "",
@@ -5925,8 +5982,12 @@ Deno.serve(async (req) => {
     // landing_name can come from the payload (to track which landing sent this)
     const landingName = norm(params.landing_name || params.landingName || "");
 
-    // Build a virtual LandingRow representing the client endpoint
-    const landing: LandingRow = { id: "", name: landingName, user_id: userId };
+    const landing = await resolveLandingForInbound(
+      db,
+      userId,
+      params,
+      landingName,
+    );
 
     const rawAction = canonicalInboundAction(params.action);
     const rawEventName = norm(params.event_name);

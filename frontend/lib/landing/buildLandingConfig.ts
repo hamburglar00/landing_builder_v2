@@ -1,4 +1,4 @@
-import type { LandingThemeConfig } from "./types";
+import type { LandingThemeConfig, LandingWorkspaceCurrency } from "./types";
 import { COLOR_MAP } from "./constants";
 import { buildOptimizedImageUrl, buildResponsiveImageSet } from "./imageUrl";
 
@@ -12,12 +12,15 @@ export interface LandingConfigPayload {
   id: string;
   name: string;
   comment: string;
+  workspaceCurrency?: LandingWorkspaceCurrency;
   tracking: {
     pixelId: string;
     postUrl: string;
     landingTag: string;
     sendContactPixel: boolean;
     phoneCountryCode?: string;
+    currency?: LandingWorkspaceCurrency;
+    workspaceCurrency?: LandingWorkspaceCurrency;
   };
   background?: {
     mode: LandingThemeConfig["backgroundMode"];
@@ -82,6 +85,7 @@ interface BuildArgs {
   id: string;
   name: string;
   comment: string;
+  workspaceCurrency?: LandingWorkspaceCurrency;
   pixelId: string;
   postUrl: string;
   landingTag: string;
@@ -94,6 +98,7 @@ export function buildLandingConfig({
   id,
   name,
   comment,
+  workspaceCurrency = "ARS",
   pixelId,
   postUrl,
   landingTag,
@@ -108,12 +113,15 @@ export function buildLandingConfig({
       id,
       name,
       comment,
+      workspaceCurrency,
       tracking: {
         pixelId,
         postUrl,
         landingTag,
         sendContactPixel: config.sendContactPixel,
         phoneCountryCode: phoneCountryCodeForMarket(config.marketCountry),
+        currency: workspaceCurrency,
+        workspaceCurrency,
       },
       layout: {
         template: 3,
@@ -155,12 +163,15 @@ export function buildLandingConfig({
     id,
     name,
     comment,
+    workspaceCurrency,
     tracking: {
       pixelId,
       postUrl,
       landingTag,
       sendContactPixel: config.sendContactPixel,
       phoneCountryCode: phoneCountryCodeForMarket(config.marketCountry),
+      currency: workspaceCurrency,
+      workspaceCurrency,
     },
     background: {
       mode: themeWithHex.backgroundMode,

@@ -307,6 +307,7 @@ export default function DashboardLandingEditarPage() {
         id: landing.id,
         name: landing.name,
         comment: landing.comment,
+        workspaceCurrency: landing.workspaceCurrency,
         pixelId: pixelIdToSave,
         postUrl: conversionsUrl,
         landingTag: landing.landingTag,

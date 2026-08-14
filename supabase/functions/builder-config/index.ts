@@ -143,7 +143,7 @@ Deno.serve(async (req) => {
     const { data, error } = await supabase
       .from("landings")
       .select(
-        "id, user_id, name, pixel_id, phone_mode, phone_kind, phone_interval_start_hour, phone_interval_end_hour, post_url, landing_tag, comment, config, landing_config, updated_at",
+        "id, user_id, workspace_currency, name, pixel_id, phone_mode, phone_kind, phone_interval_start_hour, phone_interval_end_hour, post_url, landing_tag, comment, config, landing_config, updated_at",
       )
       .eq("name", name)
       .maybeSingle();
@@ -201,6 +201,9 @@ Deno.serve(async (req) => {
 
     const rawConfig = (data.config ?? {}) as Record<string, unknown>;
     const phoneCountryCode = phoneCountryCodeForMarket(rawConfig.marketCountry);
+    const workspaceCurrency = String(data.workspace_currency ?? "ARS").trim().toUpperCase() === "PYG"
+      ? "PYG"
+      : "ARS";
 
     // Si ya existe landing_config persistido, lo devolvemos pero SIEMPRE inyectamos
     // post_url (effectivePostUrl = conversiones, nunca Sheet) y refrescamos
@@ -225,10 +228,13 @@ Deno.serve(async (req) => {
         : [];
       const merged = {
         ...cfg,
+        workspaceCurrency,
         tracking: {
           ...tracking,
           postUrl: effectivePostUrl,
           phoneCountryCode,
+          currency: workspaceCurrency,
+          workspaceCurrency,
           sendContactPixel: typeof tracking.sendContactPixel === "boolean"
             ? tracking.sendContactPixel
             : ((rawConfig.sendContactPixel as boolean | undefined) ?? true),
@@ -322,11 +328,14 @@ Deno.serve(async (req) => {
       id: data.id,
       name: data.name,
       comment: data.comment ?? "",
+      workspaceCurrency,
       tracking: {
         pixelId: data.pixel_id ?? "",
         postUrl: effectivePostUrl,
         landingTag: data.landing_tag ?? "",
         phoneCountryCode,
+        currency: workspaceCurrency,
+        workspaceCurrency,
         sendContactPixel: (rawConfig.sendContactPixel as boolean | undefined) ??
           true,
       },

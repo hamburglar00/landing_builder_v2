@@ -4,12 +4,15 @@ export type PublicLandingConfig = {
   id: string;
   name: string;
   comment: string;
+  workspaceCurrency?: "ARS" | "PYG" | string;
   tracking: {
     pixelId: string;
     postUrl: string;
     landingTag: string;
     sendContactPixel?: boolean;
     phoneCountryCode?: string;
+    currency?: "ARS" | "PYG" | string;
+    workspaceCurrency?: "ARS" | "PYG" | string;
   };
   phoneSelection?: {
     mode: "random" | "fixed" | "fair" | string;
