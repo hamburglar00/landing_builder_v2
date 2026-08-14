@@ -163,9 +163,8 @@ export default function DashboardLandingEditarPage() {
 
       setUserId(user.id);
       try {
-        const [found, groups, assigned, settings, profile] = await Promise.all([
+        const [found, assigned, settings, profile] = await Promise.all([
           fetchLandingById(id),
-          fetchGerenciaWorkGroups(user.id),
           fetchLandingGerencias(id),
           getSettings(),
           supabase.from("profiles").select("nombre").eq("id", user.id).maybeSingle(),
@@ -174,7 +173,10 @@ export default function DashboardLandingEditarPage() {
           router.replace("/dashboard");
           return;
         }
-        const userGerencias = await fetchGerencias(user.id, found.workspaceCurrency);
+        const [userGerencias, groups] = await Promise.all([
+          fetchGerencias(user.id, found.workspaceCurrency),
+          fetchGerenciaWorkGroups(user.id, found.workspaceCurrency),
+        ]);
         setLanding(found);
         if (!initialName) {
           setInitialName(found.name);

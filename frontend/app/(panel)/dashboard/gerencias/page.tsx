@@ -62,7 +62,7 @@ export default function DashboardGerenciasPage() {
       try {
         const [list, groups] = await Promise.all([
           fetchGerencias(user.id, workspaceCurrency),
-          fetchGerenciaWorkGroups(user.id),
+          fetchGerenciaWorkGroups(user.id, workspaceCurrency),
         ]);
         setGerencias(list);
         setWorkGroups(groups);
@@ -194,7 +194,7 @@ export default function DashboardGerenciasPage() {
     setSavingGroup(true);
     setError(null);
     try {
-      const created = await createGerenciaWorkGroup(userId, name, gerenciaIds);
+      const created = await createGerenciaWorkGroup(userId, name, gerenciaIds, workspaceCurrency);
       setWorkGroups((prev) => [...prev, created].sort((a, b) => a.name.localeCompare(b.name, "es")));
     } catch (e) {
       setError(formatGerenciaError(e, "Error al crear grupo"));

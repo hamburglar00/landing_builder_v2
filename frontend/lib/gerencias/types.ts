@@ -18,6 +18,7 @@ export interface GerenciaWorkGroup {
   id: number;
   user_id: string;
   name: string;
+  workspace_currency?: ReportingCurrency;
   gerenciaIds: number[];
   created_at?: string;
   updated_at?: string;

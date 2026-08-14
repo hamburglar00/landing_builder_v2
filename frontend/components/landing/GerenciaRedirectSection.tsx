@@ -37,17 +37,19 @@ function buildDisplayGroups(gerencias: Gerencia[], workGroups: GerenciaWorkGroup
 
   const byId = new Map(gerencias.map((g) => [g.id, g]));
   const groupedIds = new Set<number>();
-  const groups = workGroups.map((group) => {
-    const groupGerencias = group.gerenciaIds
-      .map((id) => byId.get(id))
-      .filter((g): g is Gerencia => Boolean(g));
-    groupGerencias.forEach((g) => groupedIds.add(g.id));
-    return {
-      id: String(group.id),
-      name: group.name,
-      gerencias: groupGerencias,
-    };
-  });
+  const groups = workGroups
+    .map((group) => {
+      const groupGerencias = group.gerenciaIds
+        .map((id) => byId.get(id))
+        .filter((g): g is Gerencia => Boolean(g));
+      groupGerencias.forEach((g) => groupedIds.add(g.id));
+      return {
+        id: String(group.id),
+        name: group.name,
+        gerencias: groupGerencias,
+      };
+    })
+    .filter((group) => group.gerencias.length > 0);
 
   const ungrouped = gerencias.filter((g) => !groupedIds.has(g.id));
   if (ungrouped.length > 0) {

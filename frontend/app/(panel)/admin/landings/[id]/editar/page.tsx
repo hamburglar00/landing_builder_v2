@@ -186,7 +186,7 @@ export default function AdminLandingEditarPage() {
         if (ownerId) {
           setOwnerUserId(ownerId);
           setGerencias(allGerencias.filter((g) => g.user_id === ownerId));
-          const groups = await fetchGerenciaWorkGroups(ownerId);
+          const groups = await fetchGerenciaWorkGroups(ownerId, found.workspaceCurrency);
           setWorkGroups(groups);
         } else {
           setGerencias(allGerencias);

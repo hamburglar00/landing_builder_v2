@@ -204,23 +204,32 @@ type WorkGroupRow = {
   id: number;
   user_id: string;
   name: string;
+  workspace_currency?: string | null;
   created_at?: string;
   updated_at?: string;
   gerencia_work_group_members?: Array<{ gerencia_id: number | null }> | null;
 };
 
-export async function fetchGerenciaWorkGroups(userId: string): Promise<GerenciaWorkGroup[]> {
-  const { data, error } = await supabase
+export async function fetchGerenciaWorkGroups(
+  userId: string,
+  workspaceCurrency?: ReportingCurrency,
+): Promise<GerenciaWorkGroup[]> {
+  let query = supabase
     .from("gerencia_work_groups")
-    .select("id, user_id, name, created_at, updated_at, gerencia_work_group_members(gerencia_id)")
+    .select("id, user_id, name, workspace_currency, created_at, updated_at, gerencia_work_group_members(gerencia_id)")
     .eq("user_id", userId)
     .order("name", { ascending: true });
+
+  if (workspaceCurrency) query = query.eq("workspace_currency", workspaceCurrency);
+
+  const { data, error } = await query;
 
   if (error) throw error;
   return ((data ?? []) as unknown as WorkGroupRow[]).map((row) => ({
     id: Number(row.id),
     user_id: row.user_id,
     name: row.name,
+    workspace_currency: normalizeCurrency(row.workspace_currency),
     created_at: row.created_at,
     updated_at: row.updated_at,
     gerenciaIds: (row.gerencia_work_group_members ?? [])
@@ -233,11 +242,12 @@ export async function createGerenciaWorkGroup(
   userId: string,
   name: string,
   gerenciaIds: number[],
+  workspaceCurrency: ReportingCurrency = "ARS",
 ): Promise<GerenciaWorkGroup> {
   const { data, error } = await supabase
     .from("gerencia_work_groups")
-    .insert({ user_id: userId, name: name.trim() })
-    .select("id, user_id, name, created_at, updated_at")
+    .insert({ user_id: userId, name: name.trim(), workspace_currency: workspaceCurrency })
+    .select("id, user_id, name, workspace_currency, created_at, updated_at")
     .single();
 
   if (error) throw error;
