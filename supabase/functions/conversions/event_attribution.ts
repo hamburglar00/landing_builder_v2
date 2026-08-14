@@ -15,8 +15,37 @@ export type PurchaseJourneyDecision = {
     | "created_repeat";
 };
 
+export type LeadNoPromoDuplicateCandidate = {
+  phone?: unknown;
+  estado?: unknown;
+  created_at?: unknown;
+  lead_event_time?: unknown;
+  purchase_event_time?: unknown;
+  lead_agency_id?: unknown;
+  registration_agency_id?: unknown;
+  purchase_agency_id?: unknown;
+};
+
 function normalizePhone(value: unknown): string {
   return String(value ?? "").replace(/\D/g, "");
+}
+
+function normalizeText(value: unknown): string {
+  return String(value ?? "").trim();
+}
+
+function epochSeconds(value: unknown): number {
+  if (typeof value === "number" && Number.isFinite(value) && value > 0) {
+    return Math.floor(value);
+  }
+  const text = normalizeText(value);
+  if (!text) return 0;
+  if (/^\d+$/.test(text)) {
+    const parsed = Number(text);
+    return Number.isFinite(parsed) && parsed > 0 ? Math.floor(parsed) : 0;
+  }
+  const ms = Date.parse(text);
+  return Number.isFinite(ms) && ms > 0 ? Math.floor(ms / 1000) : 0;
 }
 
 function normalizeGerenciaId(value: unknown): number | null {
@@ -62,6 +91,38 @@ export function canUsePromoForJourney(
   coherence: PromoGerenciaCoherence,
 ): boolean {
   return coherence === "coherent" || coherence === "unverifiable";
+}
+
+export function leadNoPromoDuplicateCandidateMatches(input: {
+  incomingPhone: unknown;
+  incomingAgencyId: unknown;
+  nowSeconds: number;
+  windowSeconds: number;
+  candidate: LeadNoPromoDuplicateCandidate;
+}): boolean {
+  const incomingPhone = normalizePhone(input.incomingPhone);
+  const incomingAgencyId = normalizeText(input.incomingAgencyId);
+  if (!incomingPhone || !incomingAgencyId) return false;
+  if (normalizePhone(input.candidate.phone) !== incomingPhone) return false;
+
+  const status = normalizeText(input.candidate.estado).toLowerCase();
+  if (status !== "lead" && status !== "purchase") return false;
+
+  const agencyMatches = [
+    input.candidate.lead_agency_id,
+    input.candidate.registration_agency_id,
+    input.candidate.purchase_agency_id,
+  ].some((value) => normalizeText(value) === incomingAgencyId);
+  if (!agencyMatches) return false;
+
+  const lastActivity = Math.max(
+    epochSeconds(input.candidate.created_at),
+    epochSeconds(input.candidate.lead_event_time),
+    epochSeconds(input.candidate.purchase_event_time),
+  );
+  if (!lastActivity) return false;
+
+  return input.nowSeconds - lastActivity <= input.windowSeconds;
 }
 
 export function choosePurchaseJourney(input: {

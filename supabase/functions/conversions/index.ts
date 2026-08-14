@@ -32,6 +32,7 @@ import {
   canUsePromoForJourney,
   choosePurchaseJourney,
   evaluatePromoGerenciaCoherence,
+  leadNoPromoDuplicateCandidateMatches,
   type PromoGerenciaCoherence,
 } from "./event_attribution.ts";
 
@@ -3062,6 +3063,42 @@ async function ignoreLeadDuplicateByPromoCode(
   return textResponse("Duplicado LEAD ignorado (promo_code ya procesado)", 200);
 }
 
+async function findRecentLeadWithoutPromoDuplicate(
+  db: SupabaseClient,
+  input: {
+    userId: string;
+    phone: string;
+    agencyId: string;
+    nowSeconds: number;
+  },
+): Promise<ConversionRow | null> {
+  if (!input.phone || !input.agencyId) return null;
+  const { data, error } = await db
+    .from("conversions")
+    .select(
+      "id,created_at,estado,phone,promo_code,lead_event_time,purchase_event_time,lead_agency_id,registration_agency_id,purchase_agency_id",
+    )
+    .eq("user_id", input.userId)
+    .eq("phone", input.phone)
+    .in("estado", ["lead", "purchase"])
+    .order("created_at", { ascending: false })
+    .limit(100);
+  if (error) {
+    console.error("[findRecentLeadWithoutPromoDuplicate]", error.message);
+    return null;
+  }
+
+  return ((data ?? []) as ConversionRow[]).find((candidate) =>
+    leadNoPromoDuplicateCandidateMatches({
+      incomingPhone: input.phone,
+      incomingAgencyId: input.agencyId,
+      nowSeconds: input.nowSeconds,
+      windowSeconds: 24 * 60 * 60,
+      candidate,
+    })
+  ) ?? null;
+}
+
 async function handleContact(
   db: SupabaseClient,
   p: Params,
@@ -3642,6 +3679,48 @@ async function handleLead(
     : null;
   const promoIsConflicting = promoCoherence === "gerencia_conflict" ||
     promoCoherence === "player_phone_conflict";
+
+  if (!targetId && !promoCodeIsFull) {
+    const duplicate = await findRecentLeadWithoutPromoDuplicate(db, {
+      userId: landing.user_id,
+      phone: cleanPhone,
+      agencyId: inboundAgencyId,
+      nowSeconds: Math.floor(Date.now() / 1000),
+    });
+    if (duplicate?.id) {
+      await writeLog(
+        db,
+        landing.user_id,
+        "handleLead",
+        "INFO",
+        "Duplicado LEAD sin promo_code ignorado por phone + agency_id",
+        JSON.stringify({
+          phone: cleanPhone,
+          agency_id: inboundAgencyId,
+          existing_conversion_id: duplicate.id,
+          existing_estado: duplicate.estado,
+          existing_created_at: duplicate.created_at,
+          existing_lead_event_time: duplicate.lead_event_time,
+          existing_purchase_event_time: duplicate.purchase_event_time,
+          window_hours: 24,
+        }),
+        duplicate.id,
+        undefined,
+        undefined,
+        leadPayloadRaw,
+        "duplicado ignorado por phone + agency_id (24h, sin promo_code)",
+      );
+      if (ctx) {
+        ctx.conversionId = duplicate.id;
+        ctx.inboxStatus = "deduplicated";
+        ctx.inboxPromoCode = norm(duplicate.promo_code);
+      }
+      return textResponse(
+        "Duplicado LEAD ignorado (phone + agency_id ya tiene lead/purchase en 24h)",
+        200,
+      );
+    }
+  }
 
   // 2) No match -> create new LEAD row to avoid losing conversion
   if (!targetId) {

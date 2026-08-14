@@ -2,6 +2,7 @@ import {
   actionEventIdempotencyKey,
   choosePurchaseJourney,
   evaluatePromoGerenciaCoherence,
+  leadNoPromoDuplicateCandidateMatches,
 } from "./event_attribution.ts";
 
 function assert(condition: unknown, message: string): asserts condition {
@@ -96,4 +97,59 @@ Deno.test("action_event_id remains stable when the backend changes promo_code", 
     retryAfterAnotherPromo === firstAttempt,
     "promo changes must not create another Purchase identity",
   );
+});
+
+Deno.test("lead without promo deduplicates by phone and agency inside 24 hours", () => {
+  const now = 1_800_000_000;
+  const matched = leadNoPromoDuplicateCandidateMatches({
+    incomingPhone: "+54 9 3518 69-0777",
+    incomingAgencyId: "50",
+    nowSeconds: now,
+    windowSeconds: 24 * 60 * 60,
+    candidate: {
+      phone: "5493518690777",
+      estado: "purchase",
+      purchase_agency_id: "50",
+      purchase_event_time: now - 120,
+      created_at: new Date((now - 30 * 60 * 60) * 1000).toISOString(),
+    },
+  });
+
+  assert(matched, "a recent purchase for the same phone + agency must win");
+});
+
+Deno.test("lead without promo does not deduplicate across agencies", () => {
+  const now = 1_800_000_000;
+  const matched = leadNoPromoDuplicateCandidateMatches({
+    incomingPhone: "5493518690777",
+    incomingAgencyId: "51",
+    nowSeconds: now,
+    windowSeconds: 24 * 60 * 60,
+    candidate: {
+      phone: "5493518690777",
+      estado: "purchase",
+      purchase_agency_id: "50",
+      purchase_event_time: now - 120,
+    },
+  });
+
+  assert(!matched, "same phone on another agency is another journey context");
+});
+
+Deno.test("lead without promo does not deduplicate outside 24 hours", () => {
+  const now = 1_800_000_000;
+  const matched = leadNoPromoDuplicateCandidateMatches({
+    incomingPhone: "5493518690777",
+    incomingAgencyId: "50",
+    nowSeconds: now,
+    windowSeconds: 24 * 60 * 60,
+    candidate: {
+      phone: "5493518690777",
+      estado: "lead",
+      lead_agency_id: "50",
+      lead_event_time: now - (25 * 60 * 60),
+    },
+  });
+
+  assert(!matched, "old rows must not suppress a new lead forever");
 });
