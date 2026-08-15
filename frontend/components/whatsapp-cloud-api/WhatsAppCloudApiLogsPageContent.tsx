@@ -18,6 +18,7 @@ type Props = {
 };
 
 const KIND_LABELS: Record<WhatsappCloudApiLogKind, string> = {
+  request: "Request",
   webhook: "Webhook",
   assignment: "Derivacion",
   outbound: "Saliente",
@@ -25,6 +26,7 @@ const KIND_LABELS: Record<WhatsappCloudApiLogKind, string> = {
 
 const KIND_OPTIONS: Array<{ value: "all" | WhatsappCloudApiLogKind; label: string }> = [
   { value: "all", label: "Todos" },
+  { value: "request", label: "Requests" },
   { value: "webhook", label: "Webhooks" },
   { value: "assignment", label: "Derivaciones" },
   { value: "outbound", label: "Salientes" },
@@ -138,7 +140,7 @@ export default function WhatsAppCloudApiLogsPageContent({ mode }: Props) {
 
   const summary = useMemo(() => ({
     total: logs.length,
-    webhooks: logs.filter((log) => log.kind === "webhook").length,
+    webhooks: logs.filter((log) => log.kind === "request" || log.kind === "webhook").length,
     outbound: logs.filter((log) => log.kind === "outbound").length,
     failed: logs.filter((log) => log.status.toLowerCase() === "failed" || log.error).length,
   }), [logs]);

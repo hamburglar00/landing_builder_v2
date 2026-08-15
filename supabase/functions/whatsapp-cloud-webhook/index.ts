@@ -27,6 +27,13 @@ type MetaWebhookPayload = {
   }> | null;
 };
 
+type WebhookConfig = {
+  id: string;
+  user_id: string;
+  workspace_currency?: string | null;
+  meta_app_secret?: string | null;
+};
+
 function textResponse(body: string, status = 200): Response {
   return new Response(body, {
     status,
@@ -131,6 +138,15 @@ function normalizeId(value: unknown): string {
   return String(value ?? "").trim();
 }
 
+function extractWabaIds(payload: MetaWebhookPayload): string[] {
+  const ids = new Set<string>();
+  for (const entry of payload.entry ?? []) {
+    const id = normalizeId(entry.id);
+    if (id) ids.add(id);
+  }
+  return [...ids];
+}
+
 function extractPhoneNumberIds(payload: MetaWebhookPayload): string[] {
   const ids = new Set<string>();
   for (const entry of payload.entry ?? []) {
@@ -144,35 +160,51 @@ function extractPhoneNumberIds(payload: MetaWebhookPayload): string[] {
   return [...ids];
 }
 
-async function resolveSignatureSecret(
+async function resolveWebhookConfigForSignature(
   db: SupabaseDb,
   phoneNumberIds: string[],
-): Promise<string> {
+wabaIds: string[],
+): Promise<WebhookConfig | null> {
   const ids = phoneNumberIds.filter(Boolean);
-  if (ids.length === 0) return "";
+  if (ids.length > 0) {
+    const { data, error } = await db
+      .from("whatsapp_cloud_api_configs")
+      .select("id,user_id,workspace_currency,meta_app_secret")
+      .in("phone_number_id", ids)
+      .limit(1)
+      .maybeSingle();
+    if (error) {
+      console.error("[whatsapp-cloud-webhook] app secret lookup failed", error);
+      return null;
+    }
+    if (data) return data as WebhookConfig;
+  }
+
+  const waba = wabaIds.filter(Boolean);
+  if (waba.length === 0) return null;
   const { data, error } = await db
     .from("whatsapp_cloud_api_configs")
-    .select("meta_app_secret")
-    .in("phone_number_id", ids)
+    .select("id,user_id,workspace_currency,meta_app_secret")
+    .in("whatsapp_business_account_id", waba)
     .limit(1)
     .maybeSingle();
   if (error) {
-    console.error("[whatsapp-cloud-webhook] app secret lookup failed", error);
-    return "";
+    console.error("[whatsapp-cloud-webhook] app secret lookup failed by waba", error);
+    return null;
   }
-  return normalizeId((data as { meta_app_secret?: string } | null)?.meta_app_secret);
+  return (data as WebhookConfig | null) ?? null;
 }
 
 async function resolveConfig(
   db: SupabaseDb,
   input: { phoneNumberId: string; wabaId: string },
-): Promise<{ id: string; user_id: string } | null> {
+): Promise<WebhookConfig | null> {
   const phoneNumberId = normalizeId(input.phoneNumberId);
   const wabaId = normalizeId(input.wabaId);
   if (!phoneNumberId && !wabaId) return null;
   let query = db
     .from("whatsapp_cloud_api_configs")
-    .select("id,user_id")
+    .select("id,user_id,workspace_currency")
     .eq("active", true);
   query = phoneNumberId
     ? query.eq("phone_number_id", phoneNumberId)
@@ -186,7 +218,46 @@ async function resolveConfig(
     });
     return null;
   }
-  return (data as { id: string; user_id: string } | null) ?? null;
+  return (data as WebhookConfig | null) ?? null;
+}
+
+async function insertRequestLog(
+  db: SupabaseDb,
+  input: {
+    config?: WebhookConfig | null;
+    object?: string;
+    phoneNumberId?: string;
+    wabaId?: string;
+    requestStatus: "received" | "accepted" | "rejected" | "failed";
+    reason: string;
+    httpStatus?: number | null;
+    signatureChecked?: boolean;
+    signatureValid?: boolean | null;
+    payload?: Record<string, unknown>;
+    error?: string;
+  },
+): Promise<void> {
+  const row = {
+    config_id: input.config?.id ?? null,
+    user_id: input.config?.user_id ?? null,
+    workspace_currency: input.config?.workspace_currency ?? null,
+    object: normalizeId(input.object),
+    phone_number_id: normalizeId(input.phoneNumberId),
+    whatsapp_business_account_id: normalizeId(input.wabaId),
+    request_status: input.requestStatus,
+    reason: input.reason,
+    http_status: input.httpStatus ?? null,
+    signature_checked: Boolean(input.signatureChecked),
+    signature_valid: typeof input.signatureValid === "boolean" ? input.signatureValid : null,
+    payload: input.payload ?? {},
+    error: normalizeId(input.error),
+  };
+  const { error } = await db
+    .from("whatsapp_cloud_api_webhook_request_logs")
+    .insert(row);
+  if (error) {
+    console.error("[whatsapp-cloud-webhook] request log insert failed", error.message);
+  }
 }
 
 async function insertEvent(
@@ -250,32 +321,76 @@ Deno.serve(async (req) => {
     const db = getDb();
 
     if (req.method === "GET") return await verifyChallenge(db, req);
-    if (req.method !== "POST") return textResponse("Method not allowed", 405);
+    if (req.method !== "POST") {
+      await insertRequestLog(db, {
+        requestStatus: "rejected",
+        reason: "method_not_allowed",
+        httpStatus: 405,
+        error: req.method,
+      });
+      return textResponse("Method not allowed", 405);
+    }
 
     const rawBody = await req.text();
     let payload: MetaWebhookPayload;
     try {
       payload = JSON.parse(rawBody) as MetaWebhookPayload;
     } catch {
+      await insertRequestLog(db, {
+        requestStatus: "rejected",
+        reason: "invalid_json",
+        httpStatus: 400,
+        payload: { raw_body_preview: rawBody.slice(0, 2000), raw_body_size: rawBody.length },
+      });
       return textResponse("Invalid JSON", 400);
     }
 
     const phoneNumberIds = extractPhoneNumberIds(payload);
-    const appSecret = await resolveSignatureSecret(db, phoneNumberIds);
+    const wabaIds = extractWabaIds(payload);
+    const signatureConfig = await resolveWebhookConfigForSignature(db, phoneNumberIds, wabaIds);
+    const firstPhoneNumberId = phoneNumberIds[0] ?? "";
+    const firstWabaId = wabaIds[0] ?? "";
+    const object = normalizeId(payload.object);
+    const appSecret = normalizeId(signatureConfig?.meta_app_secret);
     if (!appSecret) {
       console.warn("[whatsapp-cloud-webhook] missing app secret for phone number", {
         phone_number_ids: phoneNumberIds,
+        waba_ids: wabaIds,
+      });
+      await insertRequestLog(db, {
+        config: signatureConfig,
+        object,
+        phoneNumberId: firstPhoneNumberId,
+        wabaId: firstWabaId,
+        requestStatus: "rejected",
+        reason: signatureConfig ? "missing_app_secret" : "unmatched_config",
+        httpStatus: 401,
+        signatureChecked: false,
+        signatureValid: null,
+        payload: payload as Record<string, unknown>,
       });
       return textResponse("Missing App Secret", 401);
     }
     const signatureOk = await verifyMetaSignature(req, rawBody, appSecret);
     if (!signatureOk) {
       console.warn("[whatsapp-cloud-webhook] invalid signature");
+      await insertRequestLog(db, {
+        config: signatureConfig,
+        object,
+        phoneNumberId: firstPhoneNumberId,
+        wabaId: firstWabaId,
+        requestStatus: "rejected",
+        reason: "invalid_signature",
+        httpStatus: 401,
+        signatureChecked: true,
+        signatureValid: false,
+        payload: payload as Record<string, unknown>,
+      });
       return textResponse("Invalid signature", 401);
     }
 
-    const object = normalizeId(payload.object);
     const results = { inserted: 0, duplicate: 0, failed: 0, unknown: 0 };
+    const requestConfig = signatureConfig;
 
     for (const entry of payload.entry ?? []) {
       for (const change of entry.changes ?? []) {
@@ -351,6 +466,19 @@ Deno.serve(async (req) => {
         }
       }
     }
+
+    await insertRequestLog(db, {
+      config: requestConfig,
+      object,
+      phoneNumberId: firstPhoneNumberId,
+      wabaId: firstWabaId,
+      requestStatus: results.failed > 0 ? "failed" : "accepted",
+      reason: "accepted",
+      httpStatus: 200,
+      signatureChecked: true,
+      signatureValid: true,
+      payload: payload as Record<string, unknown>,
+    });
 
     const waitUntil = (globalThis as unknown as {
       EdgeRuntime?: { waitUntil?: (promise: Promise<unknown>) => void };

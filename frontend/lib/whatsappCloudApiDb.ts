@@ -43,7 +43,7 @@ export interface WhatsappCloudApiAssignment {
   intervalEndHour: number | null;
 }
 
-export type WhatsappCloudApiLogKind = "webhook" | "assignment" | "outbound";
+export type WhatsappCloudApiLogKind = "request" | "webhook" | "assignment" | "outbound";
 
 export interface WhatsappCloudApiLogEntry {
   id: string;
@@ -343,16 +343,49 @@ export async function fetchWhatsappCloudApiLogs(input: {
     .limit(limit);
   if (!input.isAdmin) outboundQuery.eq("user_id", input.userId);
 
-  const [webhookResult, assignmentResult, outboundResult] = await Promise.all([
+  const requestLogQuery = supabase
+    .from("whatsapp_cloud_api_webhook_request_logs")
+    .select("id,config_id,user_id,request_status,reason,http_status,phone_number_id,whatsapp_business_account_id,payload,error,created_at")
+    .eq("workspace_currency", input.workspaceCurrency)
+    .order("created_at", { ascending: false })
+    .limit(limit);
+  if (!input.isAdmin) requestLogQuery.eq("user_id", input.userId);
+
+  const [webhookResult, assignmentResult, outboundResult, requestLogResult] = await Promise.all([
     webhookQuery,
     assignmentQuery,
     outboundQuery,
+    requestLogQuery,
   ]);
   if (webhookResult.error) throw webhookResult.error;
   if (assignmentResult.error) throw assignmentResult.error;
   if (outboundResult.error) throw outboundResult.error;
+  if (requestLogResult.error) throw requestLogResult.error;
 
   const logs: WhatsappCloudApiLogEntry[] = [];
+
+  for (const row of requestLogResult.data ?? []) {
+    const payload = asRecord(row.payload);
+    const httpStatus = firstString(row.http_status);
+    const reason = firstString(row.reason) || "request";
+    logs.push({
+      id: String(row.id),
+      kind: "request",
+      label: httpStatus ? `Request ${reason} HTTP ${httpStatus}` : `Request ${reason}`,
+      status: String(row.request_status ?? ""),
+      created_at: String(row.created_at ?? ""),
+      config_id: row.config_id ?? null,
+      config_name: row.config_id ? configNames.get(row.config_id) ?? "" : "",
+      phone: readPayloadPhone(payload),
+      phone_number_id: firstString(row.phone_number_id),
+      meta_message_id: firstString(row.whatsapp_business_account_id),
+      promo_code: "",
+      gerencia: "",
+      attempts: null,
+      error: String(row.error ?? ""),
+      payload,
+    });
+  }
 
   for (const row of webhookResult.data ?? []) {
     const payload = asRecord(row.payload);
