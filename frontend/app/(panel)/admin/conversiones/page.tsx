@@ -809,6 +809,7 @@ export default function AdminConversionesPage() {
           limit: 200,
           direction: logDirectionFilter,
           eventType: logEventFilter,
+          workspaceCurrency: currencyScope === CURRENCY_ALL ? null : currencyScope,
         });
         if (requestSeq !== dataRequestSeqRef.current) return;
         setLogs(logRows);
@@ -821,7 +822,7 @@ export default function AdminConversionesPage() {
       }
     };
     void loadDeferredLogs();
-  }, [tab, userId, logDirectionFilter, logEventFilter]);
+  }, [tab, userId, logDirectionFilter, logEventFilter, currencyScope]);
 
   const handleSave = async () => {
     if (!config || !userId) return;
@@ -863,6 +864,7 @@ export default function AdminConversionesPage() {
           limit: 200,
           direction: logDirectionFilterRef.current,
           eventType: logEventFilterRef.current,
+          workspaceCurrency: currencyScope === CURRENCY_ALL ? null : currencyScope,
         });
         if (requestSeq !== dataRequestSeqRef.current) return;
         setLogs(logRows);
@@ -878,7 +880,7 @@ export default function AdminConversionesPage() {
     finally {
       if (requestSeq === dataRequestSeqRef.current) setRefreshingTable(false);
     }
-  }, []);
+  }, [currencyScope]);
 
   const handleDateRangeChange = useCallback((nextRange: DateRange | null) => {
     const previousRange = dateRangeRef.current;

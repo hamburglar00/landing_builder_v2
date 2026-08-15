@@ -1646,6 +1646,12 @@ async function writeLog(
   payloadReceived?: string,
   result?: string,
 ): Promise<boolean> {
+  const workspaceCurrency = await resolveWorkspaceCurrencyForLog(
+    db,
+    userId,
+    conversionId,
+    payloadReceived,
+  );
   const maxAttempts = 3;
   let lastError: unknown = null;
   for (let attempt = 1; attempt <= maxAttempts; attempt++) {
@@ -1653,6 +1659,7 @@ async function writeLog(
       await db.from("conversion_logs").insert({
         user_id: userId,
         conversion_id: conversionId ?? null,
+        workspace_currency: workspaceCurrency,
         function_name: fn,
         level,
         message,
@@ -1678,6 +1685,62 @@ async function writeLog(
     error: String(lastError),
   });
   return false;
+}
+
+async function resolveWorkspaceCurrencyForLog(
+  db: SupabaseClient,
+  userId: string,
+  conversionId?: string,
+  payloadReceived?: string,
+): Promise<string> {
+  if (conversionId) {
+    const { data } = await db
+      .from("conversions")
+      .select("currency")
+      .eq("id", conversionId)
+      .maybeSingle();
+    const conversionWorkspace = normalizeWorkspaceCurrency(data?.currency);
+    if (conversionWorkspace) return conversionWorkspace;
+  }
+
+  let params: Params = {};
+  const rawPayload = norm(payloadReceived);
+  if (rawPayload) {
+    try {
+      const parsed = JSON.parse(rawPayload);
+      if (parsed && typeof parsed === "object" && !Array.isArray(parsed)) {
+        params = parsed as Params;
+      }
+    } catch {
+      params = {};
+    }
+  }
+
+  const explicitWorkspace = workspaceCurrencyFromParams(params);
+  if (explicitWorkspace) return explicitWorkspace;
+
+  const eventGerencia = await resolveEventGerenciaSnapshot(
+    db,
+    userId,
+    params.agency_id,
+    params.bot_phone,
+  );
+  if (eventGerencia.workspace_currency) return eventGerencia.workspace_currency;
+
+  const promoWorkspace = await workspaceCurrencyFromPromoTag(
+    db,
+    userId,
+    params.promo_code ?? params.promoCode,
+  );
+  if (promoWorkspace) return promoWorkspace;
+
+  const landing = await resolveLandingForInbound(
+    db,
+    userId,
+    params,
+    norm(params.landing_name ?? params.landingName ?? params.name),
+  );
+  return landingWorkspaceCurrency(landing) || "ARS";
 }
 
 async function lookupGeoByIp(rawIp: string): Promise<GeoResult | null> {

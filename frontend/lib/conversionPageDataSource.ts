@@ -36,6 +36,7 @@ type VisibleLogsRequest = ViewerRequest & {
   range?: FetchDateRange | null;
   direction?: ConversionLogDirectionFilter;
   eventType?: ConversionLogEventFilter;
+  workspaceCurrency?: ReportingCurrency | null;
 };
 
 type InboxRequest = ViewerRequest & {
@@ -85,10 +86,12 @@ export const adminConversionPageDataSource = {
     offset,
     direction,
     eventType,
+    workspaceCurrency,
   }: VisibleLogsRequest) =>
     fetchConversionLogsForAdminFiltered(viewerId, limit, offset, {
       direction,
       eventType,
+      workspaceCurrency,
     }),
   fetchAvailability: ({
     range,
@@ -115,6 +118,7 @@ export const dashboardConversionPageDataSource = {
     range,
     direction,
     eventType,
+    workspaceCurrency,
   }: VisibleLogsRequest) =>
     fetchConversionLogsFiltered(
       viewerId,
@@ -122,7 +126,7 @@ export const dashboardConversionPageDataSource = {
       limit,
       offset,
       range ?? undefined,
-      { direction, eventType },
+      { direction, eventType, workspaceCurrency },
     ),
   fetchAvailability: ({
     viewerId,

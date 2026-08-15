@@ -1159,7 +1159,7 @@ export default function DashboardConversionesPage() {
 
   useEffect(() => {
     setLogsPage(1);
-  }, [dateRange, logDirectionFilter, logEventFilter]);
+  }, [dateRange, logDirectionFilter, logEventFilter, currencyScope]);
 
   useEffect(() => {
     setInboxPage(1);
@@ -1179,6 +1179,7 @@ export default function DashboardConversionesPage() {
           range: dateRange,
           direction: logDirectionFilter,
           eventType: logEventFilter,
+          workspaceCurrency: currencyScope === CURRENCY_ALL ? null : currencyScope,
         });
         if (requestSeq !== dataRequestSeqRef.current) return;
         setLogs(logRows.slice(0, ACTIVITY_PAGE_SIZE));
@@ -1196,6 +1197,7 @@ export default function DashboardConversionesPage() {
     dateRange,
     logDirectionFilter,
     logEventFilter,
+    currencyScope,
   ]);
 
   useEffect(() => {
@@ -1261,6 +1263,7 @@ export default function DashboardConversionesPage() {
           range,
           direction: logDirectionFilterRef.current,
           eventType: logEventFilterRef.current,
+          workspaceCurrency: currencyScope === CURRENCY_ALL ? null : currencyScope,
         });
         if (requestSeq !== dataRequestSeqRef.current) return;
         setLogs(logRows.slice(0, ACTIVITY_PAGE_SIZE));

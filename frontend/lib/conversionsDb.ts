@@ -206,6 +206,7 @@ export interface ConversionLogRow {
   user_id: string;
   conversion_id: string | null;
   conversion_internal_id?: number | null;
+  workspace_currency?: ReportingCurrency | string | null;
   function_name: string;
   level: string;
   message: string;
@@ -1054,7 +1055,7 @@ export async function fetchFunnelContactsForAdminFiltered(
 // Logs
 
 const LOGS_SELECT =
-  "id, user_id, conversion_id, conversions(internal_id), function_name, level, message, detail, payload_received, result, payload_meta, response_meta, created_at";
+  "id, user_id, conversion_id, conversions(internal_id), workspace_currency, function_name, level, message, detail, payload_received, result, payload_meta, response_meta, created_at";
 const INBOX_SELECT =
   "id, user_id, conversion_id, conversions(internal_id), workspace_currency, landing_name, action, action_event_id, coelsa_id, transaction_id, promo_code, phone, payload_raw, status, http_status, response_body, processed_at, created_at";
 
@@ -1140,17 +1141,20 @@ async function fetchConversionLogsInternal({
   range,
   direction,
   eventType,
+  workspaceCurrency,
 }: ConversionQueryScope & {
   limit: number;
   offset: number;
   range?: FetchDateRange | null;
   direction?: ConversionLogDirectionFilter;
   eventType?: ConversionLogEventFilter;
+  workspaceCurrency?: ReportingCurrency | null;
 }): Promise<ConversionLogRow[]> {
   let query = supabase
     .from("conversion_logs")
     .select(LOGS_SELECT);
   if (userId !== undefined) query = query.eq("user_id", userId);
+  if (workspaceCurrency) query = query.eq("workspace_currency", workspaceCurrency);
 
   const start = toIsoIfValid(range?.start);
   const end = toIsoIfValid(range?.end);
@@ -1184,6 +1188,7 @@ async function fetchVisibleConversionLogs({
   range,
   direction,
   eventType,
+  workspaceCurrency,
 }: ConversionQueryScope & {
   hiddenBy: string;
   limit: number;
@@ -1191,6 +1196,7 @@ async function fetchVisibleConversionLogs({
   range?: FetchDateRange | null;
   direction?: ConversionLogDirectionFilter;
   eventType?: ConversionLogEventFilter;
+  workspaceCurrency?: ReportingCurrency | null;
 }): Promise<ConversionLogRow[]> {
   const visibleFrom = await fetchConversionViewVisibleFrom(hiddenBy);
   const effectiveRange: FetchDateRange = {
@@ -1204,6 +1210,7 @@ async function fetchVisibleConversionLogs({
     range: effectiveRange,
     direction,
     eventType,
+    workspaceCurrency,
   });
   const hiddenIds = await fetchHiddenConversionLogIds(
     hiddenBy,
@@ -1217,8 +1224,9 @@ export async function fetchConversionLogs(
   limit = 200,
   offset = 0,
   range?: FetchDateRange | null,
+  workspaceCurrency?: ReportingCurrency | null,
 ): Promise<ConversionLogRow[]> {
-  return fetchConversionLogsInternal({ userId, limit, offset, range });
+  return fetchConversionLogsInternal({ userId, limit, offset, range, workspaceCurrency });
 }
 
 export async function fetchConversionLogsFiltered(
@@ -1230,6 +1238,7 @@ export async function fetchConversionLogsFiltered(
   filters: {
     direction?: ConversionLogDirectionFilter;
     eventType?: ConversionLogEventFilter;
+    workspaceCurrency?: ReportingCurrency | null;
   } = {},
 ): Promise<ConversionLogRow[]> {
   return fetchVisibleConversionLogs({
@@ -1240,6 +1249,7 @@ export async function fetchConversionLogsFiltered(
     range,
     direction: filters.direction,
     eventType: filters.eventType,
+    workspaceCurrency: filters.workspaceCurrency,
   });
 }
 
@@ -1247,8 +1257,9 @@ export async function fetchConversionLogsForAdmin(
   limit = 200,
   offset = 0,
   range?: FetchDateRange | null,
+  workspaceCurrency?: ReportingCurrency | null,
 ): Promise<ConversionLogRow[]> {
-  return fetchConversionLogsInternal({ limit, offset, range });
+  return fetchConversionLogsInternal({ limit, offset, range, workspaceCurrency });
 }
 
 export async function fetchConversionLogsForAdminFiltered(
@@ -1258,6 +1269,7 @@ export async function fetchConversionLogsForAdminFiltered(
   filters: {
     direction?: ConversionLogDirectionFilter;
     eventType?: ConversionLogEventFilter;
+    workspaceCurrency?: ReportingCurrency | null;
   } = {},
 ): Promise<ConversionLogRow[]> {
   return fetchVisibleConversionLogs({
@@ -1266,6 +1278,7 @@ export async function fetchConversionLogsForAdminFiltered(
     offset,
     direction: filters.direction,
     eventType: filters.eventType,
+    workspaceCurrency: filters.workspaceCurrency,
   });
 }
 
