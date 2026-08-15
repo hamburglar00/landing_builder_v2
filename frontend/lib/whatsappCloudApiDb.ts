@@ -105,9 +105,11 @@ export interface WhatsappCloudApiInboxThread {
 
 export async function fetchWhatsappCloudApiConfig(
   userId: string,
+  workspaceCurrency: "ARS" | "PYG",
 ): Promise<WhatsappCloudApiConfig | null> {
   const { data, error } = await supabase.rpc("get_whatsapp_cloud_api_config", {
     p_user_id: userId,
+    p_workspace_currency: workspaceCurrency,
   });
   if (error) throw error;
   const rows = Array.isArray(data) ? data : [];
@@ -296,13 +298,31 @@ function readPayloadPhone(payload: Record<string, unknown> | null): string {
 export async function fetchWhatsappCloudApiLogs(input: {
   userId: string;
   isAdmin: boolean;
+  workspaceCurrency: "ARS" | "PYG";
   limit?: number;
 }): Promise<WhatsappCloudApiLogEntry[]> {
   const limit = input.limit ?? 40;
+  const configsQuery = supabase
+    .from("whatsapp_cloud_api_configs")
+    .select("id,name,display_phone_number")
+    .eq("workspace_currency", input.workspaceCurrency);
+  if (!input.isAdmin) configsQuery.eq("user_id", input.userId);
+  const { data: configRows, error: configError } = await configsQuery;
+  if (configError) throw configError;
+
+  const configNames = new Map<string, string>();
+  const configIds = (configRows ?? []).map((row) => {
+    const id = String(row.id);
+    const displayPhone = firstString(row.display_phone_number);
+    configNames.set(id, displayPhone ? `${row.name} (${displayPhone})` : String(row.name ?? ""));
+    return id;
+  });
+  if (configIds.length === 0) return [];
 
   const webhookQuery = supabase
     .from("whatsapp_cloud_api_webhook_events")
     .select("id,config_id,user_id,event_type,status,phone_number_id,meta_message_id,meta_status_id,payload,attempts,received_at,processed_at,last_error")
+    .in("config_id", configIds)
     .order("received_at", { ascending: false })
     .limit(limit);
   if (!input.isAdmin) webhookQuery.eq("user_id", input.userId);
@@ -310,6 +330,7 @@ export async function fetchWhatsappCloudApiLogs(input: {
   const assignmentQuery = supabase
     .from("whatsapp_cloud_api_assignments")
     .select("id,config_id,user_id,assigned_phone,assigned_gerencia_id,assigned_gerencia_label,promo_code,redirect_message_id,status,last_error,created_at,redirect_sent_at")
+    .in("config_id", configIds)
     .order("created_at", { ascending: false })
     .limit(limit);
   if (!input.isAdmin) assignmentQuery.eq("user_id", input.userId);
@@ -317,6 +338,7 @@ export async function fetchWhatsappCloudApiLogs(input: {
   const outboundQuery = supabase
     .from("whatsapp_cloud_api_outbound_messages")
     .select("id,config_id,user_id,assignment_id,meta_message_id,recipient_wa_id,message_type,status,payload,response,last_error,created_at,sent_at")
+    .in("config_id", configIds)
     .order("created_at", { ascending: false })
     .limit(limit);
   if (!input.isAdmin) outboundQuery.eq("user_id", input.userId);
@@ -329,25 +351,6 @@ export async function fetchWhatsappCloudApiLogs(input: {
   if (webhookResult.error) throw webhookResult.error;
   if (assignmentResult.error) throw assignmentResult.error;
   if (outboundResult.error) throw outboundResult.error;
-
-  const rawConfigIds = [
-    ...(webhookResult.data ?? []).map((row) => row.config_id),
-    ...(assignmentResult.data ?? []).map((row) => row.config_id),
-    ...(outboundResult.data ?? []).map((row) => row.config_id),
-  ];
-  const configIds = Array.from(new Set(rawConfigIds.filter((id): id is string => typeof id === "string" && Boolean(id))));
-  const configNames = new Map<string, string>();
-  if (configIds.length > 0) {
-    const { data, error } = await supabase
-      .from("whatsapp_cloud_api_configs")
-      .select("id,name,display_phone_number")
-      .in("id", configIds);
-    if (error) throw error;
-    for (const row of data ?? []) {
-      const displayPhone = firstString(row.display_phone_number);
-      configNames.set(String(row.id), displayPhone ? `${row.name} (${displayPhone})` : String(row.name ?? ""));
-    }
-  }
 
   const logs: WhatsappCloudApiLogEntry[] = [];
 

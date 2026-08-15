@@ -4,6 +4,8 @@ import { useCallback, useEffect, useMemo, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { PageHeader, SurfaceCard } from "@/components/ui/PanelPrimitives";
+import { CURRENCY_ALL } from "@/lib/currency";
+import { SingleCurrencyRequired, useCurrencyScope } from "@/components/currency/CurrencyScope";
 import { supabase } from "@/lib/supabaseClient";
 import {
   fetchWhatsappCloudApiLogs,
@@ -72,6 +74,8 @@ function payloadSummary(payload: Record<string, unknown> | null): string {
 
 export default function WhatsAppCloudApiLogsPageContent({ mode }: Props) {
   const router = useRouter();
+  const { currencyScope, isAllCurrencies } = useCurrencyScope();
+  const workspaceCurrency = currencyScope === CURRENCY_ALL ? "ARS" : currencyScope;
   const basePath = mode === "admin" ? "/admin/whatsapp-cloud-api" : "/dashboard/whatsapp-cloud-api";
   const [logs, setLogs] = useState<WhatsappCloudApiLogEntry[]>([]);
   const [loading, setLoading] = useState(true);
@@ -92,6 +96,7 @@ export default function WhatsAppCloudApiLogsPageContent({ mode }: Props) {
       const rows = await fetchWhatsappCloudApiLogs({
         userId: auth.user.id,
         isAdmin: mode === "admin",
+        workspaceCurrency,
         limit: 80,
       });
       setLogs(rows);
@@ -100,7 +105,7 @@ export default function WhatsAppCloudApiLogsPageContent({ mode }: Props) {
     } finally {
       setLoading(false);
     }
-  }, [mode, router]);
+  }, [mode, router, workspaceCurrency]);
 
   useEffect(() => {
     void loadLogs();
@@ -137,6 +142,10 @@ export default function WhatsAppCloudApiLogsPageContent({ mode }: Props) {
     outbound: logs.filter((log) => log.kind === "outbound").length,
     failed: logs.filter((log) => log.status.toLowerCase() === "failed" || log.error).length,
   }), [logs]);
+
+  if (isAllCurrencies) {
+    return <SingleCurrencyRequired title="Elegi ARS o PYG para ver logs de WhatsApp Cloud API" />;
+  }
 
   return (
     <div className="space-y-6">

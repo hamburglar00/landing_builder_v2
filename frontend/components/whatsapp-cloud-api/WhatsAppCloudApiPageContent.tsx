@@ -324,6 +324,34 @@ function GenerateIcon() {
   );
 }
 
+function EyeIcon({ open }: { open: boolean }) {
+  return (
+    <svg
+      className="h-4 w-4"
+      fill="none"
+      viewBox="0 0 24 24"
+      stroke="currentColor"
+      strokeWidth={2}
+      strokeLinecap="round"
+      strokeLinejoin="round"
+    >
+      {open ? (
+        <>
+          <path d="M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7-10-7-10-7Z" />
+          <circle cx="12" cy="12" r="3" />
+        </>
+      ) : (
+        <>
+          <path d="M10.6 10.6a2 2 0 0 0 2.8 2.8" />
+          <path d="M9.9 4.24A10.43 10.43 0 0 1 12 4c6.5 0 10 8 10 8a17.78 17.78 0 0 1-2.24 3.42" />
+          <path d="M6.61 6.61C3.78 8.52 2 12 2 12s3.5 8 10 8a9.75 9.75 0 0 0 5.39-1.61" />
+          <path d="m2 2 20 20" />
+        </>
+      )}
+    </svg>
+  );
+}
+
 function CopyButton({
   copied,
   disabled = false,
@@ -376,6 +404,9 @@ export default function WhatsAppCloudApiPageContent({
   const [webhookUrlCopied, setWebhookUrlCopied] = useState(false);
   const [verifyTokenCopied, setVerifyTokenCopied] = useState(false);
   const [identificationEditing, setIdentificationEditing] = useState(true);
+  const [trackingEditing, setTrackingEditing] = useState(true);
+  const [showAccessToken, setShowAccessToken] = useState(false);
+  const [showAppSecret, setShowAppSecret] = useState(false);
 
   const [name, setName] = useState("whatsapp-cloud-api");
   const [active, setActive] = useState(false);
@@ -407,7 +438,7 @@ export default function WhatsAppCloudApiPageContent({
 
   const displayGroups = useMemo(() => buildDisplayGroups(gerencias, workGroups), [gerencias, workGroups]);
   const identificationLocked = Boolean(config?.id && !identificationEditing);
-  const storedDatasetLocked = Boolean(config?.meta_messaging_dataset_id);
+  const trackingLocked = Boolean(config?.id && !trackingEditing);
   const hubPath = mode === "admin" ? "/admin/whatsapp-cloud-api" : "/dashboard/whatsapp-cloud-api";
 
   const loadTarget = useCallback(async (uid: string, ownerId: string) => {
@@ -418,7 +449,7 @@ export default function WhatsAppCloudApiPageContent({
       )
       : fetchGerencias(uid, workspaceCurrency);
     const [cfg, gers, groups] = await Promise.all([
-      fetchWhatsappCloudApiConfig(uid),
+      fetchWhatsappCloudApiConfig(uid, workspaceCurrency),
       gerenciasPromise,
       fetchGerenciaWorkGroups(uid, workspaceCurrency),
     ]);
@@ -432,12 +463,15 @@ export default function WhatsAppCloudApiPageContent({
     setPhoneNumberId(cfg?.phone_number_id ?? "");
     setWabaId(cfg?.whatsapp_business_account_id ?? "");
     setDisplayPhone(cfg?.display_phone_number ?? "");
-    setAccessToken("");
-    setAppSecret("");
+    setAccessToken(cfg?.meta_access_token ?? "");
+    setAppSecret(cfg?.meta_app_secret ?? "");
     setApiVersion(cfg?.meta_api_version ?? "v25.0");
     setVerifyToken(cfg?.webhook_verify_token ?? generateVerifyToken());
     setMessagingDatasetId(cfg?.meta_messaging_dataset_id ?? "");
     setLandingTag(cfg?.landing_tag ?? "");
+    setTrackingEditing(!cfg?.id);
+    setShowAccessToken(false);
+    setShowAppSecret(false);
     setSelectionMode(cfg?.gerencia_selection_mode ?? "weighted_random");
     setFairCriterion(cfg?.gerencia_fair_criterion ?? "usage_count");
     setRedirectTemplate(cfg?.redirect_message_template ?? DEFAULT_REDIRECT_TEMPLATE);
@@ -596,6 +630,8 @@ export default function WhatsAppCloudApiPageContent({
         assignmentRows(assignments),
       );
       setMessage("Cambios guardados.");
+      setIdentificationEditing(false);
+      setTrackingEditing(false);
       await reloadSelected(targetUserId);
     } catch (err) {
       setError(err instanceof Error ? err.message : "Error al guardar.");
@@ -882,28 +918,52 @@ export default function WhatsAppCloudApiPageContent({
                   </div>
                 </Field>
                 <Field label="Meta access token" required>
-                  <input
-                    value={accessToken}
-                    onChange={(e) => setAccessToken(e.target.value)}
-                    disabled={identificationLocked}
-                    className={`${inputClass} font-mono text-xs`}
-                    type="password"
-                    autoComplete="off"
-                    placeholder={config?.has_meta_access_token ? "Token configurado. Pegue uno nuevo para reemplazarlo." : ""}
-                  />
+                  <div className="flex gap-2">
+                    <input
+                      value={accessToken}
+                      onChange={(e) => setAccessToken(e.target.value)}
+                      disabled={identificationLocked}
+                      className={`${inputClass} font-mono text-xs`}
+                      type={showAccessToken ? "text" : "password"}
+                      autoComplete="off"
+                      placeholder="Pegue el token generado en Meta"
+                    />
+                    <button
+                      type="button"
+                      className="inline-flex h-10 w-10 shrink-0 items-center justify-center rounded-lg border border-zinc-700 bg-zinc-900 text-zinc-300 transition hover:bg-zinc-800 hover:text-zinc-100 disabled:cursor-not-allowed disabled:opacity-50"
+                      disabled={!accessToken}
+                      onClick={() => setShowAccessToken((value) => !value)}
+                      title={showAccessToken ? "Ocultar token" : "Ver token"}
+                      aria-label={showAccessToken ? "Ocultar token" : "Ver token"}
+                    >
+                      <EyeIcon open={showAccessToken} />
+                    </button>
+                  </div>
                 </Field>
                 <Field label="App Secret / token de la app" required>
-                  <input
-                    value={appSecret}
-                    onChange={(e) => setAppSecret(e.target.value.trim())}
-                    disabled={identificationLocked}
-                    className={`${inputClass} font-mono text-xs`}
-                    type="password"
-                    autoComplete="off"
-                    placeholder={config?.has_meta_app_secret ? "App Secret configurado. Pegue uno nuevo para reemplazarlo." : "Se copia desde Informacion basica de la app en Meta"}
-                  />
+                  <div className="flex gap-2">
+                    <input
+                      value={appSecret}
+                      onChange={(e) => setAppSecret(e.target.value.trim())}
+                      disabled={identificationLocked}
+                      className={`${inputClass} font-mono text-xs`}
+                      type={showAppSecret ? "text" : "password"}
+                      autoComplete="off"
+                      placeholder="Se copia desde Informacion basica de la app en Meta"
+                    />
+                    <button
+                      type="button"
+                      className="inline-flex h-10 w-10 shrink-0 items-center justify-center rounded-lg border border-zinc-700 bg-zinc-900 text-zinc-300 transition hover:bg-zinc-800 hover:text-zinc-100 disabled:cursor-not-allowed disabled:opacity-50"
+                      disabled={!appSecret}
+                      onClick={() => setShowAppSecret((value) => !value)}
+                      title={showAppSecret ? "Ocultar App Secret" : "Ver App Secret"}
+                      aria-label={showAppSecret ? "Ocultar App Secret" : "Ver App Secret"}
+                    >
+                      <EyeIcon open={showAppSecret} />
+                    </button>
+                  </div>
                 </Field>
-                <Field label="Version WhatsApp Cloud API" required>
+                <Field label="Version WhatsApp Cloud API">
                   <select
                     value={apiVersion}
                     onChange={(e) => setApiVersion(e.target.value)}
@@ -928,6 +988,21 @@ export default function WhatsAppCloudApiPageContent({
 
           <CollapsibleSection title="Tracking" defaultOpen>
             <div className="space-y-3">
+              {config?.id ? (
+                <div className="flex justify-end">
+                  {trackingLocked ? (
+                    <button
+                      type="button"
+                      onClick={() => setTrackingEditing(true)}
+                      className="ui-button ui-button-secondary h-9"
+                    >
+                      Editar
+                    </button>
+                  ) : (
+                    <StatusBadge tone="warning">Editando</StatusBadge>
+                  )}
+                </div>
+              ) : null}
               <div>
                 <label className="mb-1 block text-xs font-medium text-zinc-400">
                   Dataset Business Messaging ID <span className="text-red-400">*</span>
@@ -938,25 +1013,19 @@ export default function WhatsAppCloudApiPageContent({
                     inputMode="numeric"
                     value={messagingDatasetId}
                     onChange={(e) => setMessagingDatasetId(onlyDigits(e.target.value))}
-                    disabled={storedDatasetLocked}
+                    disabled={trackingLocked}
                     className="w-full rounded-lg border border-zinc-700 bg-zinc-900 px-3 py-2 text-sm text-zinc-100 disabled:cursor-not-allowed disabled:opacity-70"
                     placeholder="ID del dataset vinculado al WABA"
                     required
                   />
-                  {storedDatasetLocked ? (
-                    <span className="inline-flex h-10 shrink-0 items-center rounded-lg border border-emerald-400/25 bg-emerald-400/10 px-3 text-xs font-semibold text-emerald-300">
-                      Guardado
-                    </span>
-                  ) : (
-                    <button
-                      type="button"
-                      onClick={() => void handleEnsureDataset()}
-                      disabled={datasetLoading || Boolean(messagingDatasetId.trim()) || !/^\d+$/.test(wabaId.trim()) || (!accessToken.trim() && !config?.has_meta_access_token)}
-                      className="rounded-lg border border-zinc-700 bg-zinc-900 px-3 py-2 text-xs font-semibold text-zinc-100 transition hover:border-lime-400 hover:text-lime-300 disabled:cursor-not-allowed disabled:opacity-50"
-                    >
-                      {datasetLoading ? "Generando..." : "Generar dataset"}
-                    </button>
-                  )}
+                  <button
+                    type="button"
+                    onClick={() => void handleEnsureDataset()}
+                    disabled={trackingLocked || datasetLoading || Boolean(messagingDatasetId.trim()) || !/^\d+$/.test(wabaId.trim()) || (!accessToken.trim() && !config?.has_meta_access_token)}
+                    className="rounded-lg border border-zinc-700 bg-zinc-900 px-3 py-2 text-xs font-semibold text-zinc-100 transition hover:border-lime-400 hover:text-lime-300 disabled:cursor-not-allowed disabled:opacity-50"
+                  >
+                    {datasetLoading ? "Generando..." : "Generar dataset"}
+                  </button>
                 </div>
                 <p className="mt-1 text-[11px] text-zinc-500">
                   Si Meta ya muestra un dataset existente para el WABA, pega ese ID. Si no existe, generarlo una sola vez desde aca.
@@ -1014,7 +1083,8 @@ export default function WhatsAppCloudApiPageContent({
                   type="text"
                   value={landingTag}
                   onChange={(e) => setLandingTag(cleanTag(e.target.value))}
-                  className="w-full rounded-lg border border-zinc-700 bg-zinc-900 px-3 py-2 text-sm text-zinc-100"
+                  disabled={trackingLocked}
+                  className="w-full rounded-lg border border-zinc-700 bg-zinc-900 px-3 py-2 text-sm text-zinc-100 disabled:cursor-not-allowed disabled:opacity-70"
                   placeholder="ej: miTag123"
                   required
                 />
