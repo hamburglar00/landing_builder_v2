@@ -39,7 +39,7 @@ const INSTRUCTION_CHECKLIST = [
   "Agregar el caso de uso Conecta con los clientes a traves de WhatsApp.",
   "Ir a Paso 2. Configuracion de produccion y registrar el numero real del cliente.",
   "Copiar el Phone Number ID y el WhatsApp Business Account ID del numero real registrado.",
-  "Generar el identificador de acceso para ese numero/WABA y pegarlo en Meta access token.",
+  "En Business Settings > Usuarios del sistema, crear un System User, asignarle la app y el WABA con control total, generar un token permanente y pegarlo en Meta access token.",
   "Generar el dataset de Conversions API for Business Messaging desde el constructor.",
   "En Configuracion de la app > Informacion basica, copiar App Secret y pegarlo en App Secret / token de la app.",
   "Activar Suscribirse a webhooks sobre el numero registrado.",
@@ -407,6 +407,7 @@ export default function WhatsAppCloudApiPageContent({
   const [trackingEditing, setTrackingEditing] = useState(true);
   const [showAccessToken, setShowAccessToken] = useState(false);
   const [showAppSecret, setShowAppSecret] = useState(false);
+  const [datasetConfirmOpen, setDatasetConfirmOpen] = useState(false);
 
   const [name, setName] = useState("whatsapp-cloud-api");
   const [active, setActive] = useState(false);
@@ -516,9 +517,26 @@ export default function WhatsAppCloudApiPageContent({
     });
   }, [loadTarget, mode, router]);
 
+  useEffect(() => {
+    if (!message) return;
+    const timeout = window.setTimeout(() => setMessage(null), 3500);
+    return () => window.clearTimeout(timeout);
+  }, [message]);
+
   const reloadSelected = async (uid = targetUserId) => {
     if (!uid || !currentUserId) return;
     await loadTarget(uid, currentUserId);
+  };
+
+  const cancelIdentificationEdit = () => {
+    setIdentificationEditing(false);
+    void reloadSelected(targetUserId);
+  };
+
+  const cancelTrackingEdit = () => {
+    setTrackingEditing(false);
+    setDatasetConfirmOpen(false);
+    void reloadSelected(targetUserId);
   };
 
   const copyText = async (value: string, label: string, onCopied?: () => void) => {
@@ -545,12 +563,7 @@ export default function WhatsAppCloudApiPageContent({
     }
   };
 
-  const handleEnsureDataset = async () => {
-    if (messagingDatasetId.trim()) {
-      setError(null);
-      setMessage("Dataset Business Messaging listo para guardar.");
-      return;
-    }
+  const handleEnsureDataset = async (forceCreate = false) => {
     setDatasetLoading(true);
     setError(null);
     setMessage(null);
@@ -566,11 +579,13 @@ export default function WhatsAppCloudApiPageContent({
         whatsapp_business_account_id: wabaId.trim(),
         meta_access_token: accessToken.trim() || null,
         meta_api_version: apiVersion.trim() || "v25.0",
+        force_create: forceCreate,
       });
       setMessagingDatasetId(result.dataset_id);
       setMessage(result.source === "stored"
         ? "Dataset Business Messaging recuperado de la configuracion."
         : "Dataset Business Messaging generado.");
+      setDatasetConfirmOpen(false);
     } catch (err) {
       setError(err instanceof Error ? err.message : "No se pudo obtener el dataset.");
     } finally {
@@ -836,7 +851,13 @@ export default function WhatsAppCloudApiPageContent({
                         Editar
                       </button>
                     ) : config?.id ? (
-                      <StatusBadge tone="warning">Editando</StatusBadge>
+                      <button
+                        type="button"
+                        onClick={cancelIdentificationEdit}
+                        className="ui-button ui-button-secondary h-10"
+                      >
+                        Cancelar
+                      </button>
                     ) : null}
                     <Toggle
                       checked={active}
@@ -848,140 +869,171 @@ export default function WhatsAppCloudApiPageContent({
                 }
               />
 
-              <div className="grid gap-3 md:grid-cols-2">
-                <Field label="Nombre interno" required>
-                  <input
-                    value={name}
-                    onChange={(e) => setName(e.target.value)}
-                    disabled={identificationLocked}
-                    className={inputClass}
-                    placeholder="Ej: WhatsApp Martin Test"
-                  />
-                </Field>
-                <Field label="Telefono visible">
-                  <input
-                    value={displayPhone}
-                    onChange={(e) => setDisplayPhone(onlyDigits(e.target.value))}
-                    disabled={identificationLocked}
-                    className={inputClass}
-                    inputMode="numeric"
-                    pattern="[0-9]*"
-                    placeholder="549..."
-                  />
-                </Field>
-                <Field label="Phone Number ID" required>
-                  <input
-                    value={phoneNumberId}
-                    onChange={(e) => setPhoneNumberId(onlyDigits(e.target.value))}
-                    disabled={identificationLocked}
-                    className={inputClass}
-                    inputMode="numeric"
-                    pattern="[0-9]*"
-                  />
-                </Field>
-                <Field label="WhatsApp Business Account ID" required>
-                  <input
-                    value={wabaId}
-                    onChange={(e) => setWabaId(onlyDigits(e.target.value))}
-                    disabled={identificationLocked}
-                    className={inputClass}
-                    inputMode="numeric"
-                    pattern="[0-9]*"
-                  />
-                </Field>
-                <Field label="Verify token" required>
-                  <div className="flex gap-2">
-                    <input
-                      value={verifyToken}
-                      onChange={(e) => setVerifyToken(e.target.value.trim())}
-                      disabled={identificationLocked}
-                      className={`${inputClass} font-mono text-xs`}
-                    />
-                    <CopyButton
-                      copied={verifyTokenCopied}
-                      disabled={false}
-                      title={verifyToken ? "Copiar Verify token" : "Generar Verify token"}
-                      variant={verifyToken ? "copy" : "generate"}
-                      onClick={() => {
-                        if (!verifyToken) {
-                          setError(null);
-                          setVerifyToken(generateVerifyToken());
-                          setMessage("Verify token generado.");
-                          return;
-                        }
-                        void copyText(verifyToken, "Verify token", () => {
-                          setVerifyTokenCopied(true);
-                          window.setTimeout(() => setVerifyTokenCopied(false), 1200);
-                        });
-                      }}
-                    />
+              <div className="space-y-5">
+                <div>
+                  <p className="mb-3 text-[10px] font-semibold uppercase tracking-[0.14em] text-[var(--color-primary)]">Campos del constructor</p>
+                  <div className="grid gap-3 md:grid-cols-2">
+                    <Field label="Nombre interno" required tooltip="Campo nuestro. Nombre visible en el constructor y usado por {{name}} en la respuesta automatica.">
+                      <input
+                        value={name}
+                        onChange={(e) => setName(e.target.value)}
+                        disabled={identificationLocked}
+                        className={inputClass}
+                        placeholder="Ej: WhatsApp Martin Test"
+                      />
+                    </Field>
+                    <Field label="Verify token" required tooltip="Campo nuestro. Token que Meta usa para validar la Callback URL cuando configuras el webhook.">
+                      <div className="flex gap-2">
+                        <input
+                          value={verifyToken}
+                          onChange={(e) => setVerifyToken(e.target.value.trim())}
+                          disabled={identificationLocked}
+                          className={`${inputClass} font-mono text-xs`}
+                        />
+                        <CopyButton
+                          copied={verifyTokenCopied}
+                          disabled={false}
+                          title={verifyToken ? "Copiar Verify token" : "Generar Verify token"}
+                          variant={verifyToken ? "copy" : "generate"}
+                          onClick={() => {
+                            if (!verifyToken) {
+                              setError(null);
+                              setVerifyToken(generateVerifyToken());
+                              setMessage("Verify token generado.");
+                              return;
+                            }
+                            void copyText(verifyToken, "Verify token", () => {
+                              setVerifyTokenCopied(true);
+                              window.setTimeout(() => setVerifyTokenCopied(false), 1200);
+                            });
+                          }}
+                        />
+                      </div>
+                    </Field>
+                    <Field label="Webhook URL / Callback URL" required tooltip="Campo nuestro. URL publica de Supabase que tenes que pegar en Meta para recibir webhooks.">
+                      <div className="flex gap-2">
+                        <input
+                          type="text"
+                          value={webhookUrl}
+                          disabled
+                          className={`${inputClass} font-mono text-xs`}
+                          placeholder="Se completa automaticamente desde Supabase"
+                        />
+                        <CopyButton
+                          copied={webhookUrlCopied}
+                          disabled={!webhookUrl}
+                          title="Copiar Webhook URL"
+                          onClick={() => void copyText(webhookUrl, "Webhook URL", () => {
+                            setWebhookUrlCopied(true);
+                            window.setTimeout(() => setWebhookUrlCopied(false), 1200);
+                          })}
+                        />
+                      </div>
+                    </Field>
                   </div>
-                </Field>
-                <Field label="Meta access token" required>
-                  <div className="flex gap-2">
-                    <input
-                      value={accessToken}
-                      onChange={(e) => setAccessToken(e.target.value)}
-                      disabled={identificationLocked}
-                      className={`${inputClass} font-mono text-xs`}
-                      type={showAccessToken ? "text" : "password"}
-                      autoComplete="off"
-                      placeholder="Pegue el token generado en Meta"
-                    />
-                    <button
-                      type="button"
-                      className="inline-flex h-10 w-10 shrink-0 items-center justify-center rounded-lg border border-zinc-700 bg-zinc-900 text-zinc-300 transition hover:bg-zinc-800 hover:text-zinc-100 disabled:cursor-not-allowed disabled:opacity-50"
-                      disabled={!accessToken}
-                      onClick={() => setShowAccessToken((value) => !value)}
-                      title={showAccessToken ? "Ocultar token" : "Ver token"}
-                      aria-label={showAccessToken ? "Ocultar token" : "Ver token"}
-                    >
-                      <EyeIcon open={showAccessToken} />
-                    </button>
+                </div>
+
+                <div>
+                  <p className="mb-3 text-[10px] font-semibold uppercase tracking-[0.14em] text-sky-300">Campos de Meta</p>
+                  <div className="grid gap-3 md:grid-cols-2">
+                    <Field label="Telefono visible" tooltip="Campo de Meta. Numero registrado en WhatsApp Manager; sirve para identificar la cuenta conectada.">
+                      <input
+                        value={displayPhone}
+                        onChange={(e) => setDisplayPhone(onlyDigits(e.target.value))}
+                        disabled={identificationLocked}
+                        className={inputClass}
+                        inputMode="numeric"
+                        pattern="[0-9]*"
+                        placeholder="549..."
+                      />
+                    </Field>
+                    <Field label="Phone Number ID" required tooltip="Campo de Meta. Se obtiene en el Paso 2 de WhatsApp Cloud API, junto al numero registrado.">
+                      <input
+                        value={phoneNumberId}
+                        onChange={(e) => setPhoneNumberId(onlyDigits(e.target.value))}
+                        disabled={identificationLocked}
+                        className={inputClass}
+                        inputMode="numeric"
+                        pattern="[0-9]*"
+                      />
+                    </Field>
+                    <Field label="WhatsApp Business Account ID" required tooltip="Campo de Meta. ID del WABA asociado al numero, visible en el Paso 2 o en WhatsApp Manager.">
+                      <input
+                        value={wabaId}
+                        onChange={(e) => setWabaId(onlyDigits(e.target.value))}
+                        disabled={identificationLocked}
+                        className={inputClass}
+                        inputMode="numeric"
+                        pattern="[0-9]*"
+                      />
+                    </Field>
+                    <Field label="Meta access token" required tooltip="Campo de Meta. Para produccion debe ser un token permanente de System User creado en Business Settings.">
+                      <div className="flex gap-2">
+                        <input
+                          value={accessToken}
+                          onChange={(e) => setAccessToken(e.target.value)}
+                          disabled={identificationLocked}
+                          className={`${inputClass} font-mono text-xs`}
+                          type={showAccessToken ? "text" : "password"}
+                          autoComplete="off"
+                          placeholder="Pegue el token permanente de System User"
+                        />
+                        <button
+                          type="button"
+                          className="inline-flex h-10 w-10 shrink-0 items-center justify-center rounded-lg border border-zinc-700 bg-zinc-900 text-zinc-300 transition hover:bg-zinc-800 hover:text-zinc-100 disabled:cursor-not-allowed disabled:opacity-50"
+                          disabled={!accessToken}
+                          onClick={() => setShowAccessToken((value) => !value)}
+                          title={showAccessToken ? "Ocultar token" : "Ver token"}
+                          aria-label={showAccessToken ? "Ocultar token" : "Ver token"}
+                        >
+                          <EyeIcon open={showAccessToken} />
+                        </button>
+                      </div>
+                    </Field>
+                    <Field label="App Secret / token de la app" required tooltip="Campo de Meta. Se copia desde Meta Developers > Configuracion de la app > Informacion basica.">
+                      <div className="flex gap-2">
+                        <input
+                          value={appSecret}
+                          onChange={(e) => setAppSecret(e.target.value.trim())}
+                          disabled={identificationLocked}
+                          className={`${inputClass} font-mono text-xs`}
+                          type={showAppSecret ? "text" : "password"}
+                          autoComplete="off"
+                          placeholder="Se copia desde Informacion basica de la app en Meta"
+                        />
+                        <button
+                          type="button"
+                          className="inline-flex h-10 w-10 shrink-0 items-center justify-center rounded-lg border border-zinc-700 bg-zinc-900 text-zinc-300 transition hover:bg-zinc-800 hover:text-zinc-100 disabled:cursor-not-allowed disabled:opacity-50"
+                          disabled={!appSecret}
+                          onClick={() => setShowAppSecret((value) => !value)}
+                          title={showAppSecret ? "Ocultar App Secret" : "Ver App Secret"}
+                          aria-label={showAppSecret ? "Ocultar App Secret" : "Ver App Secret"}
+                        >
+                          <EyeIcon open={showAppSecret} />
+                        </button>
+                      </div>
+                    </Field>
+                    <Field label="Version WhatsApp Cloud API" tooltip="Campo de Meta. Version Graph API usada para enviar mensajes por WhatsApp Cloud API.">
+                      <select
+                        value={apiVersion}
+                        onChange={(e) => setApiVersion(e.target.value)}
+                        disabled={identificationLocked}
+                        className={inputClass}
+                      >
+                        {[...(GRAPH_API_VERSION_OPTIONS.includes(apiVersion) ? GRAPH_API_VERSION_OPTIONS : [apiVersion, ...GRAPH_API_VERSION_OPTIONS])]
+                          .filter(Boolean)
+                          .map((version) => (
+                            <option key={version} value={version}>
+                              {version}
+                            </option>
+                          ))}
+                      </select>
+                      <p className="mt-1 text-[11px] leading-4 text-[var(--color-text-muted)]">
+                        Solo aplica al envio de mensajes de WhatsApp Cloud API; CAPI se configura desde Integraciones.
+                      </p>
+                    </Field>
                   </div>
-                </Field>
-                <Field label="App Secret / token de la app" required>
-                  <div className="flex gap-2">
-                    <input
-                      value={appSecret}
-                      onChange={(e) => setAppSecret(e.target.value.trim())}
-                      disabled={identificationLocked}
-                      className={`${inputClass} font-mono text-xs`}
-                      type={showAppSecret ? "text" : "password"}
-                      autoComplete="off"
-                      placeholder="Se copia desde Informacion basica de la app en Meta"
-                    />
-                    <button
-                      type="button"
-                      className="inline-flex h-10 w-10 shrink-0 items-center justify-center rounded-lg border border-zinc-700 bg-zinc-900 text-zinc-300 transition hover:bg-zinc-800 hover:text-zinc-100 disabled:cursor-not-allowed disabled:opacity-50"
-                      disabled={!appSecret}
-                      onClick={() => setShowAppSecret((value) => !value)}
-                      title={showAppSecret ? "Ocultar App Secret" : "Ver App Secret"}
-                      aria-label={showAppSecret ? "Ocultar App Secret" : "Ver App Secret"}
-                    >
-                      <EyeIcon open={showAppSecret} />
-                    </button>
-                  </div>
-                </Field>
-                <Field label="Version WhatsApp Cloud API">
-                  <select
-                    value={apiVersion}
-                    onChange={(e) => setApiVersion(e.target.value)}
-                    disabled={identificationLocked}
-                    className={inputClass}
-                  >
-                    {[...(GRAPH_API_VERSION_OPTIONS.includes(apiVersion) ? GRAPH_API_VERSION_OPTIONS : [apiVersion, ...GRAPH_API_VERSION_OPTIONS])]
-                      .filter(Boolean)
-                      .map((version) => (
-                        <option key={version} value={version}>
-                          {version}
-                        </option>
-                      ))}
-                  </select>
-                  <p className="mt-1 text-[11px] leading-4 text-[var(--color-text-muted)]">
-                    Solo aplica al envio de mensajes de WhatsApp Cloud API; CAPI se configura desde Integraciones.
-                  </p>
-                </Field>
+                </div>
               </div>
             </div>
           </SurfaceCard>
@@ -999,7 +1051,13 @@ export default function WhatsAppCloudApiPageContent({
                       Editar
                     </button>
                   ) : (
-                    <StatusBadge tone="warning">Editando</StatusBadge>
+                    <button
+                      type="button"
+                      onClick={cancelTrackingEdit}
+                      className="ui-button ui-button-secondary h-9"
+                    >
+                      Cancelar
+                    </button>
                   )}
                 </div>
               ) : null}
@@ -1020,8 +1078,8 @@ export default function WhatsAppCloudApiPageContent({
                   />
                   <button
                     type="button"
-                    onClick={() => void handleEnsureDataset()}
-                    disabled={trackingLocked || datasetLoading || Boolean(messagingDatasetId.trim()) || !/^\d+$/.test(wabaId.trim()) || (!accessToken.trim() && !config?.has_meta_access_token)}
+                    onClick={() => setDatasetConfirmOpen(true)}
+                    disabled={trackingLocked || datasetLoading || !/^\d+$/.test(wabaId.trim()) || (!accessToken.trim() && !config?.has_meta_access_token)}
                     className="rounded-lg border border-zinc-700 bg-zinc-900 px-3 py-2 text-xs font-semibold text-zinc-100 transition hover:border-lime-400 hover:text-lime-300 disabled:cursor-not-allowed disabled:opacity-50"
                   >
                     {datasetLoading ? "Generando..." : "Generar dataset"}
@@ -1438,6 +1496,35 @@ export default function WhatsAppCloudApiPageContent({
           </SurfaceCard>
         </aside>
       </div>
+
+      {datasetConfirmOpen ? (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 p-4">
+          <div className="w-full max-w-md rounded-2xl border border-[var(--color-border)] bg-[var(--color-bg-1)] p-5 shadow-2xl">
+            <p className="text-base font-semibold text-[var(--color-text-strong)]">Generar dataset en Meta</p>
+            <p className="mt-2 text-sm leading-6 text-[var(--color-text-muted)]">
+              Se hara una solicitud a Meta para crear un Dataset Business Messaging para el WABA configurado. Si ya tenias un ID cargado, el nuevo ID reemplazara el valor en pantalla y deberas guardar los cambios.
+            </p>
+            <div className="mt-5 flex justify-end gap-2">
+              <button
+                type="button"
+                className="ui-button ui-button-secondary"
+                onClick={() => setDatasetConfirmOpen(false)}
+                disabled={datasetLoading}
+              >
+                Cancelar
+              </button>
+              <button
+                type="button"
+                className="ui-button ui-button-primary"
+                onClick={() => void handleEnsureDataset(Boolean(messagingDatasetId.trim()))}
+                disabled={datasetLoading}
+              >
+                {datasetLoading ? "Generando..." : "Confirmar"}
+              </button>
+            </div>
+          </div>
+        </div>
+      ) : null}
     </div>
   );
 }
@@ -1446,15 +1533,22 @@ function Field({
   label,
   children,
   required = false,
+  tooltip,
 }: {
   label: string;
   children: React.ReactNode;
   required?: boolean;
+  tooltip?: string;
 }) {
   return (
     <label className="block space-y-1.5">
-      <span className="text-xs font-medium text-[var(--color-text-muted)]">
+      <span className="inline-flex items-center gap-1 text-xs font-medium text-[var(--color-text-muted)]" title={tooltip}>
         {label} {required ? <span className="text-red-400">*</span> : null}
+        {tooltip ? (
+          <span className="inline-flex h-3.5 w-3.5 items-center justify-center rounded-full border border-[var(--color-border)] text-[9px] text-[var(--color-text-disabled)]">
+            ?
+          </span>
+        ) : null}
       </span>
       {children}
     </label>

@@ -239,6 +239,15 @@ function SendIcon() {
   );
 }
 
+function CtaArrowIcon() {
+  return (
+    <svg className="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.8} strokeLinecap="round" strokeLinejoin="round" aria-hidden>
+      <path d="M7 17 17 7" />
+      <path d="M8 7h9v9" />
+    </svg>
+  );
+}
+
 function EmptyConversationIcon() {
   return (
     <svg className="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.8} strokeLinecap="round" strokeLinejoin="round" aria-hidden>
@@ -329,6 +338,12 @@ export default function WhatsAppCloudApiInboxPageContent({ mode }: Props) {
     setManualMessage("");
     setSendNotice(null);
   }, [selectedId]);
+
+  useEffect(() => {
+    if (!sendNotice) return;
+    const timeout = window.setTimeout(() => setSendNotice(null), 3500);
+    return () => window.clearTimeout(timeout);
+  }, [sendNotice]);
 
   const gerenciaOptions = useMemo(() => {
     return Array.from(new Set(threads.map(gerenciaFilterLabel).filter(Boolean))).sort((a, b) =>
@@ -590,6 +605,8 @@ export default function WhatsAppCloudApiInboxPageContent({ mode }: Props) {
                     </div>
                     {selectedMessages.map((message, index) => {
                       const outbound = message.direction === "outbound";
+                      const ctaTitle = message.button_title || "";
+                      const ctaUrl = message.button_url || "";
                       return (
                         <div
                           key={`${message.meta_message_id || message.created_at}-${index}`}
@@ -608,6 +625,20 @@ export default function WhatsAppCloudApiInboxPageContent({ mode }: Props) {
                             aria-hidden
                           />
                           <p className="whitespace-pre-wrap break-words pr-11">{message.body || "-"}</p>
+                          {outbound && ctaTitle ? (
+                            <a
+                              href={ctaUrl || undefined}
+                              target={ctaUrl ? "_blank" : undefined}
+                              rel={ctaUrl ? "noreferrer" : undefined}
+                              className="clear-both mt-2 flex items-center justify-center gap-2 border-t border-white/10 pt-2 text-xs font-semibold uppercase tracking-wide text-[#53bdeb] hover:text-[#7fd0ff]"
+                              onClick={(event) => {
+                                if (!ctaUrl) event.preventDefault();
+                              }}
+                            >
+                              <CtaArrowIcon />
+                              {ctaTitle}
+                            </a>
+                          ) : null}
                           <span className="float-right -mb-0.5 ml-2 mt-1 flex items-center gap-1 text-[10px] leading-none text-[#8696a0]">
                             {messageTime(message)}
                             {outbound ? <StatusCheckIcon status={message.status} /> : null}

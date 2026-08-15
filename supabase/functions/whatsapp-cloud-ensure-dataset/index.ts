@@ -125,6 +125,7 @@ Deno.serve(async (req) => {
     let wabaId = digits(body.whatsapp_business_account_id);
     let accessToken = str(body.meta_access_token);
     let apiVersion = str(body.meta_api_version) || "v25.0";
+    const forceCreate = Boolean(body.force_create);
 
     if (configId) {
       let query = db
@@ -143,7 +144,7 @@ Deno.serve(async (req) => {
       } | null;
       if (!row) return jsonResponse({ error: "Configuracion no encontrada." }, 404);
       const storedDatasetId = digits(row.meta_messaging_dataset_id);
-      if (storedDatasetId) {
+      if (storedDatasetId && !forceCreate) {
         return jsonResponse({
           ok: true,
           dataset_id: storedDatasetId,

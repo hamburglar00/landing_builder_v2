@@ -69,6 +69,9 @@ export interface WhatsappCloudApiInboxMessage {
   body: string;
   status: string;
   meta_message_id: string;
+  message_type: string;
+  button_title: string;
+  button_url: string;
   error: string;
 }
 
@@ -175,6 +178,7 @@ export async function ensureWhatsappCloudApiDataset(input: {
   whatsapp_business_account_id: string;
   meta_access_token: string | null;
   meta_api_version: string;
+  force_create?: boolean;
 }): Promise<{ dataset_id: string; source: "stored" | "meta" | "" }> {
   const { data, error } = await supabase.functions.invoke("whatsapp-cloud-ensure-dataset", {
     body: {
@@ -183,6 +187,7 @@ export async function ensureWhatsappCloudApiDataset(input: {
       whatsapp_business_account_id: input.whatsapp_business_account_id,
       meta_access_token: input.meta_access_token,
       meta_api_version: input.meta_api_version,
+      force_create: input.force_create ?? false,
     },
   });
   if (error) throw error;
@@ -464,6 +469,9 @@ function normalizeInboxMessage(value: unknown): WhatsappCloudApiInboxMessage | n
     body: firstString(row.body),
     status: firstString(row.status),
     meta_message_id: firstString(row.meta_message_id),
+    message_type: firstString(row.message_type),
+    button_title: firstString(row.button_title),
+    button_url: firstString(row.button_url),
     error: firstString(row.error),
   };
 }
