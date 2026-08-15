@@ -11,6 +11,8 @@ import {
   type WhatsappCloudApiInboxMessage,
   type WhatsappCloudApiInboxThread,
 } from "@/lib/whatsappCloudApiDb";
+import { useCurrencyScope } from "@/components/currency/CurrencyScope";
+import { CURRENCY_ALL } from "@/lib/currency";
 
 type Props = {
   mode: "admin" | "dashboard";
@@ -284,6 +286,8 @@ function gerenciaFilterLabel(thread: WhatsappCloudApiInboxThread): string {
 
 export default function WhatsAppCloudApiInboxPageContent({ mode }: Props) {
   const router = useRouter();
+  const { currencyScope } = useCurrencyScope();
+  const workspaceCurrency = currencyScope === CURRENCY_ALL ? null : currencyScope;
   const basePath = mode === "admin" ? "/admin/whatsapp-cloud-api" : "/dashboard/whatsapp-cloud-api";
   const [threads, setThreads] = useState<WhatsappCloudApiInboxThread[]>([]);
   const [selectedId, setSelectedId] = useState<string>("");
@@ -307,7 +311,7 @@ export default function WhatsAppCloudApiInboxPageContent({ mode }: Props) {
         router.replace("/login");
         return;
       }
-      const rows = await fetchWhatsappCloudApiInboxThreads(80);
+      const rows = await fetchWhatsappCloudApiInboxThreads(80, workspaceCurrency);
       setThreads(rows);
       setSelectedId((current) => current || rows[0]?.contact_id || "");
     } catch (err) {
@@ -315,7 +319,7 @@ export default function WhatsAppCloudApiInboxPageContent({ mode }: Props) {
     } finally {
       setLoading(false);
     }
-  }, [router]);
+  }, [router, workspaceCurrency]);
 
   useEffect(() => {
     void loadThreads();

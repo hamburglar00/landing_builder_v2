@@ -432,9 +432,13 @@ function normalizeInboxMessage(value: unknown): WhatsappCloudApiInboxMessage | n
   };
 }
 
-export async function fetchWhatsappCloudApiInboxThreads(limit = 50): Promise<WhatsappCloudApiInboxThread[]> {
+export async function fetchWhatsappCloudApiInboxThreads(
+  limit = 50,
+  workspaceCurrency?: "ARS" | "PYG" | null,
+): Promise<WhatsappCloudApiInboxThread[]> {
   const { data, error } = await supabase.rpc("get_whatsapp_cloud_api_inbox_threads", {
     p_limit: limit,
+    p_workspace_currency: workspaceCurrency ?? null,
   });
   if (error) throw error;
   return ((data ?? []) as Array<Record<string, unknown>>).map((row) => {

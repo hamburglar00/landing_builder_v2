@@ -19,6 +19,7 @@ import type {
   ConversionLogDirectionFilter,
   ConversionLogEventFilter,
 } from "@/lib/conversionLogFilters";
+import type { ReportingCurrency } from "@/lib/currency";
 
 type ViewerRequest = {
   viewerId: string;
@@ -43,6 +44,7 @@ type InboxRequest = ViewerRequest & {
   range?: FetchDateRange | null;
   action?: "all" | "CONTACT" | "LEAD" | "COMPLETEREGISTRATION" | "PURCHASE";
   search?: string;
+  workspaceCurrency?: ReportingCurrency | null;
 };
 
 export interface ConversionPageDataSource {
@@ -134,6 +136,7 @@ export const dashboardConversionPageDataSource = {
     range,
     action,
     search,
+    workspaceCurrency,
   }: InboxRequest) =>
     fetchConversionInboxFiltered(viewerId, viewerId, {
       limit,
@@ -141,6 +144,7 @@ export const dashboardConversionPageDataSource = {
       range: range ?? undefined,
       action,
       search,
+      workspaceCurrency,
     }),
   setVisibleFrom: ({
     viewerId,

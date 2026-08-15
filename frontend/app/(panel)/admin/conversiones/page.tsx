@@ -370,8 +370,8 @@ export default function AdminConversionesPage() {
     [activeConversions],
   );
   const statsAllConversions = useMemo(
-    () => rawConversions.filter((r) => !String(r.test_event_code ?? "").trim()),
-    [rawConversions],
+    () => scopedConversions.filter((r) => !String(r.test_event_code ?? "").trim()),
+    [scopedConversions],
   );
   const statsLandingOptions = useMemo(() => {
     const set = new Set<string>();
@@ -718,9 +718,12 @@ export default function AdminConversionesPage() {
           .from("profiles").select("nombre").eq("id", user.id).maybeSingle();
         setClientName(profile?.nombre ?? "");
 
-        const { data: gerencias } = await supabase
+        const workspaceFilter = currencyScope === CURRENCY_ALL ? null : currencyScope;
+        let gerenciasQuery = supabase
           .from("gerencias")
           .select("id,nombre,gerencia_id");
+        if (workspaceFilter) gerenciasQuery = gerenciasQuery.eq("workspace_currency", workspaceFilter);
+        const { data: gerencias } = await gerenciasQuery;
         const gerenciasList = gerencias ?? [];
         const gerenciasById = new Map<number, string>();
         for (const g of gerenciasList) {
@@ -756,10 +759,12 @@ export default function AdminConversionesPage() {
           setActivePhonesByGerenciaLabel({});
         }
 
-        const { data: landings } = await supabase
+        let landingsQuery = supabase
           .from("landings")
           .select("id,user_id,name")
           .order("name", { ascending: true });
+        if (workspaceFilter) landingsQuery = landingsQuery.eq("workspace_currency", workspaceFilter);
+        const { data: landings } = await landingsQuery;
         const landingRows = landings ?? [];
         if (landingRows.length > 0 && gerenciasById.size > 0) {
           const landingIds = landingRows.map((landing) => String(landing.id)).filter(Boolean);
@@ -791,7 +796,7 @@ export default function AdminConversionesPage() {
       finally { setLoading(false); }
     };
     void init();
-  }, []);
+  }, [currencyScope]);
 
   useEffect(() => {
     const loadDeferredLogs = async () => {

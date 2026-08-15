@@ -542,8 +542,8 @@ export default function DashboardConversionesPage() {
     [activeConversions],
   );
   const statsAllConversions = useMemo(
-    () => conversions.filter((r) => !String(r.test_event_code ?? "").trim()),
-    [conversions],
+    () => scopedConversions.filter((r) => !String(r.test_event_code ?? "").trim()),
+    [scopedConversions],
   );
   const statsLandingOptions = useMemo(() => {
     const set = new Set<string>();
@@ -1071,10 +1071,13 @@ export default function DashboardConversionesPage() {
           .from("profiles").select("nombre").eq("id", user.id).maybeSingle();
         setClientName(profile?.nombre ?? "");
 
-        const { data: gerencias } = await supabase
+        const workspaceFilter = currencyScope === CURRENCY_ALL ? null : currencyScope;
+        let gerenciasQuery = supabase
           .from("gerencias")
           .select("id,nombre,gerencia_id")
           .eq("user_id", user.id);
+        if (workspaceFilter) gerenciasQuery = gerenciasQuery.eq("workspace_currency", workspaceFilter);
+        const { data: gerencias } = await gerenciasQuery;
         const gerenciasList = gerencias ?? [];
         const gerenciasById = new Map<number, string>();
         const currentLabelsById: Record<string, string> = {};
@@ -1114,11 +1117,13 @@ export default function DashboardConversionesPage() {
           setActivePhonesByGerenciaLabel({});
         }
 
-        const { data: landings } = await supabase
+        let landingsQuery = supabase
           .from("landings")
           .select("id,user_id,name")
           .eq("user_id", user.id)
           .order("name", { ascending: true });
+        if (workspaceFilter) landingsQuery = landingsQuery.eq("workspace_currency", workspaceFilter);
+        const { data: landings } = await landingsQuery;
         const landingRows = landings ?? [];
         if (landingRows.length > 0 && gerenciasById.size > 0) {
           const landingIds = landingRows.map((landing) => String(landing.id)).filter(Boolean);
@@ -1150,7 +1155,7 @@ export default function DashboardConversionesPage() {
       finally { setLoading(false); }
     };
     void init();
-  }, []);
+  }, [currencyScope]);
 
   useEffect(() => {
     setLogsPage(1);
@@ -1158,7 +1163,7 @@ export default function DashboardConversionesPage() {
 
   useEffect(() => {
     setInboxPage(1);
-  }, [inboxSearch, inboxActionFilter, dateRange]);
+  }, [inboxSearch, inboxActionFilter, dateRange, currencyScope]);
 
   useEffect(() => {
     if (tab !== "logs" || !userId) return;
@@ -1208,6 +1213,7 @@ export default function DashboardConversionesPage() {
           range: dateRange,
           action: inboxActionFilter,
           search,
+          workspaceCurrency: currencyScope === CURRENCY_ALL ? null : currencyScope,
         });
         if (requestSeq !== dataRequestSeqRef.current) return;
         setInboxRows(inbox.slice(0, ACTIVITY_PAGE_SIZE));
@@ -1219,7 +1225,7 @@ export default function DashboardConversionesPage() {
       }
     }, search ? 300 : 0);
     return () => window.clearTimeout(timer);
-  }, [tab, userId, inboxSearch, inboxActionFilter, inboxPage, dateRange]);
+  }, [tab, userId, inboxSearch, inboxActionFilter, inboxPage, dateRange, currencyScope]);
 
   const handleSave = async () => {
     if (!config || !userId) return;
@@ -1270,6 +1276,7 @@ export default function DashboardConversionesPage() {
           range,
           action: inboxActionFilterRef.current,
           search,
+          workspaceCurrency: currencyScope === CURRENCY_ALL ? null : currencyScope,
         });
         if (requestSeq !== dataRequestSeqRef.current) return;
         setInboxRows(inbox.slice(0, ACTIVITY_PAGE_SIZE));
@@ -1286,7 +1293,7 @@ export default function DashboardConversionesPage() {
     finally {
       if (requestSeq === dataRequestSeqRef.current) setRefreshingTable(false);
     }
-  }, []);
+  }, [currencyScope]);
 
   const handleDateRangeChange = useCallback((nextRange: DateRange | null) => {
     const previousRange = dateRangeRef.current;

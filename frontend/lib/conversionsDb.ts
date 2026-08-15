@@ -222,6 +222,7 @@ export interface ConversionInboxRow {
   user_id: string;
   conversion_id: string | null;
   conversion_internal_id?: number | null;
+  workspace_currency?: ReportingCurrency | string | null;
   landing_name: string;
   action: string;
   action_event_id?: string | null;
@@ -1055,7 +1056,7 @@ export async function fetchFunnelContactsForAdminFiltered(
 const LOGS_SELECT =
   "id, user_id, conversion_id, conversions(internal_id), function_name, level, message, detail, payload_received, result, payload_meta, response_meta, created_at";
 const INBOX_SELECT =
-  "id, user_id, conversion_id, conversions(internal_id), landing_name, action, action_event_id, coelsa_id, transaction_id, promo_code, phone, payload_raw, status, http_status, response_body, processed_at, created_at";
+  "id, user_id, conversion_id, conversions(internal_id), workspace_currency, landing_name, action, action_event_id, coelsa_id, transaction_id, promo_code, phone, payload_raw, status, http_status, response_body, processed_at, created_at";
 
 function normalizeLogRows(rows: unknown[]): ConversionLogRow[] {
   return rows.map((row) => {
@@ -1273,12 +1274,14 @@ export async function fetchConversionInbox(
   hiddenBy: string,
   limit = 300,
   offset = 0,
+  workspaceCurrency?: ReportingCurrency | null,
 ): Promise<ConversionInboxRow[]> {
   const visibleFrom = await fetchConversionViewVisibleFrom(hiddenBy);
   let query = supabase
     .from("conversion_inbox")
     .select(INBOX_SELECT)
     .eq("user_id", userId);
+  if (workspaceCurrency) query = query.eq("workspace_currency", workspaceCurrency);
   if (visibleFrom) query = query.gte("created_at", visibleFrom);
   const { data, error } = await query
     .order("created_at", { ascending: false })
@@ -1301,6 +1304,7 @@ export async function fetchConversionInboxFiltered(
     range?: FetchDateRange | null;
     action?: "all" | "CONTACT" | "LEAD" | "COMPLETEREGISTRATION" | "PURCHASE";
     search?: string;
+    workspaceCurrency?: ReportingCurrency | null;
   } = {},
 ): Promise<ConversionInboxRow[]> {
   const limit = options.limit ?? 400;
@@ -1310,6 +1314,9 @@ export async function fetchConversionInboxFiltered(
     .from("conversion_inbox")
     .select(INBOX_SELECT)
     .eq("user_id", userId);
+  if (options.workspaceCurrency) {
+    query = query.eq("workspace_currency", options.workspaceCurrency);
+  }
 
   const start = latestIso(options.range?.start, visibleFrom);
   const end = toIsoIfValid(options.range?.end);
