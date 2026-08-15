@@ -2,8 +2,10 @@ import type { LandingThemeConfig, LandingWorkspaceCurrency } from "./types";
 import { COLOR_MAP } from "./constants";
 import { buildOptimizedImageUrl, buildResponsiveImageSet } from "./imageUrl";
 
-function phoneCountryCodeForMarket(country: LandingThemeConfig["marketCountry"]): "54" | "595" {
-  return country === "PY" ? "595" : "54";
+function phoneCountryCodeForWorkspace(
+  workspaceCurrency: LandingWorkspaceCurrency,
+): "54" | "595" {
+  return workspaceCurrency === "PYG" ? "595" : "54";
 }
 
 export interface LandingConfigPayload {
@@ -106,6 +108,8 @@ export function buildLandingConfig({
   phoneMode,
   updatedAt,
 }: BuildArgs): LandingConfigPayload {
+  const phoneCountryCode = phoneCountryCodeForWorkspace(workspaceCurrency);
+
   if (config.template === "template3") {
     return {
       schemaVersion: 1,
@@ -119,7 +123,7 @@ export function buildLandingConfig({
         postUrl,
         landingTag,
         sendContactPixel: config.sendContactPixel,
-        phoneCountryCode: phoneCountryCodeForMarket(config.marketCountry),
+        phoneCountryCode,
         currency: workspaceCurrency,
         workspaceCurrency,
       },
@@ -169,7 +173,7 @@ export function buildLandingConfig({
       postUrl,
       landingTag,
       sendContactPixel: config.sendContactPixel,
-      phoneCountryCode: phoneCountryCodeForMarket(config.marketCountry),
+      phoneCountryCode,
       currency: workspaceCurrency,
       workspaceCurrency,
     },

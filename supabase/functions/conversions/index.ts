@@ -1734,6 +1734,9 @@ async function resolveWorkspaceCurrencyForLog(
   );
   if (promoWorkspace) return promoWorkspace;
 
+  const phoneWorkspace = workspaceCurrencyFromCustomerPhone(params);
+  if (phoneWorkspace) return phoneWorkspace;
+
   const landing = await resolveLandingForInbound(
     db,
     userId,
@@ -2045,6 +2048,15 @@ function workspaceCurrencyFromParams(params: Params): string {
   return normalizeWorkspaceCurrency(params.workspace_currency || params.currency);
 }
 
+function workspaceCurrencyFromCustomerPhone(params: Params): string {
+  const phone = sanitizePhone(
+    params.phone || params.player_username || params.form_phone,
+  );
+  if (phone.startsWith("595")) return "PYG";
+  if (phone.startsWith("549") || phone.startsWith("54")) return "ARS";
+  return "";
+}
+
 function promoCodePrefix(promoCode: unknown): string {
   const promo = normalizePromoCode(promoCode);
   const dashIndex = promo.indexOf("-");
@@ -2161,6 +2173,9 @@ async function resolveCanonicalWorkspaceCurrency(
     options.promoCode ?? params.promo_code ?? params.promoCode,
   );
   if (promoWorkspace) return promoWorkspace;
+
+  const phoneWorkspace = workspaceCurrencyFromCustomerPhone(params);
+  if (phoneWorkspace) return phoneWorkspace;
 
   return landingWorkspaceCurrency(landing);
 }

@@ -590,7 +590,11 @@ export default function DashboardLandingEditarPage() {
 
         <CollapsibleSection title="Tracking" defaultOpen>
           <div className="space-y-3">
-            <LandingMarketCountryField config={landing.config} setConfig={setConfig} />
+            <LandingMarketCountryField
+              config={landing.config}
+              setConfig={setConfig}
+              workspaceCurrency={landing.workspaceCurrency}
+            />
             <div>
               <label className="block text-xs font-medium text-zinc-400 mb-1">
                 Pixel ID <span className="text-red-400">*</span>

@@ -1,5 +1,5 @@
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
-import { phoneCountryCodeForMarket } from "./market.ts";
+import { phoneCountryCodeForWorkspace } from "./market.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -200,10 +200,10 @@ Deno.serve(async (req) => {
     };
 
     const rawConfig = (data.config ?? {}) as Record<string, unknown>;
-    const phoneCountryCode = phoneCountryCodeForMarket(rawConfig.marketCountry);
     const workspaceCurrency = String(data.workspace_currency ?? "ARS").trim().toUpperCase() === "PYG"
       ? "PYG"
       : "ARS";
+    const phoneCountryCode = phoneCountryCodeForWorkspace(workspaceCurrency);
 
     // Si ya existe landing_config persistido, lo devolvemos pero SIEMPRE inyectamos
     // post_url (effectivePostUrl = conversiones, nunca Sheet) y refrescamos

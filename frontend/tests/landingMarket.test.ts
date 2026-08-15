@@ -3,11 +3,15 @@ import test from "node:test";
 import { buildLandingConfig } from "../lib/landing/buildLandingConfig";
 import { DEFAULT_CONFIG } from "../lib/landing/mocks";
 
-function buildForMarket(marketCountry: "AR" | "PY") {
+function buildForWorkspace(
+  workspaceCurrency: "ARS" | "PYG",
+  marketCountry: "AR" | "PY",
+) {
   return buildLandingConfig({
     id: "landing-test",
     name: "landing-test",
     comment: "",
+    workspaceCurrency,
     pixelId: "123456789",
     postUrl: "https://example.com/conversions",
     landingTag: "TEST",
@@ -15,10 +19,10 @@ function buildForMarket(marketCountry: "AR" | "PY") {
   });
 }
 
-test("Argentina publica el prefijo telefónico 54", () => {
-  assert.equal(buildForMarket("AR").tracking.phoneCountryCode, "54");
+test("ARS publica el prefijo telefonico 54 aunque la config vieja diga PY", () => {
+  assert.equal(buildForWorkspace("ARS", "PY").tracking.phoneCountryCode, "54");
 });
 
-test("Paraguay publica el prefijo telefónico 595", () => {
-  assert.equal(buildForMarket("PY").tracking.phoneCountryCode, "595");
+test("PYG publica el prefijo telefonico 595 aunque la config vieja diga AR", () => {
+  assert.equal(buildForWorkspace("PYG", "AR").tracking.phoneCountryCode, "595");
 });
