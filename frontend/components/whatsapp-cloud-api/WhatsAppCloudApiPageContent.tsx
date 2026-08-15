@@ -99,6 +99,28 @@ function onlyDigits(value: string): string {
   return value.replace(/\D/g, "");
 }
 
+function formatDisplayPhone(value: string): string {
+  const digits = onlyDigits(value);
+  if (!digits) return "";
+
+  if (digits.startsWith("549") && digits.length >= 13) {
+    const local = digits.slice(3);
+    return `+54 9 ${local.slice(0, 4)} ${local.slice(4, 6)}-${local.slice(6, 10)}`;
+  }
+
+  if (digits.startsWith("54") && digits.length >= 12) {
+    const local = digits.slice(2);
+    return `+54 ${local.slice(0, 4)} ${local.slice(4, 6)}-${local.slice(6, 10)}`;
+  }
+
+  if (digits.startsWith("595") && digits.length >= 12) {
+    const local = digits.slice(3);
+    return `+595 ${local.slice(0, 3)} ${local.slice(3, 6)}-${local.slice(6, 9)}`;
+  }
+
+  return `+${digits}`;
+}
+
 function cleanTag(value: string): string {
   return value.replace(/[^a-zA-Z0-9]/g, "");
 }
@@ -946,6 +968,11 @@ export default function WhatsAppCloudApiPageContent({
                         pattern="[0-9]*"
                         placeholder="549..."
                       />
+                      {displayPhone ? (
+                        <p className="mt-1 text-[11px] leading-4 text-[var(--color-text-muted)]">
+                          Se mostrara como <span className="font-semibold text-[var(--color-text)]">{formatDisplayPhone(displayPhone)}</span>
+                        </p>
+                      ) : null}
                     </Field>
                     <Field label="Phone Number ID" required tooltip="Campo de Meta. Se obtiene en el Paso 2 de WhatsApp Cloud API, junto al numero registrado.">
                       <input
