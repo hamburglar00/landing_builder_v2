@@ -437,3 +437,6 @@ verify_jwt = false
 
 [functions.telegram-webhook]
 verify_jwt = false
+
+[functions.whatsapp-cloud-webhook]
+verify_jwt = false
