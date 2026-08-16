@@ -411,6 +411,7 @@ export default function WhatsAppCloudApiPageContent({
   const workspaceCurrency = currencyScope === CURRENCY_ALL ? "ARS" : currencyScope;
   const [currentUserId, setCurrentUserId] = useState<string | null>(null);
   const [targetUserId, setTargetUserId] = useState<string | null>(null);
+  const [clientTrackingName, setClientTrackingName] = useState("");
   const [clients, setClients] = useState<ClientOption[]>([]);
   const [ready, setReady] = useState(false);
   const [saving, setSaving] = useState(false);
@@ -424,6 +425,7 @@ export default function WhatsAppCloudApiPageContent({
   const [workGroups, setWorkGroups] = useState<GerenciaWorkGroup[]>([]);
   const [assignments, setAssignments] = useState<LandingGerenciaAssignment[]>([]);
   const [webhookUrlCopied, setWebhookUrlCopied] = useState(false);
+  const [trackingUrlCopied, setTrackingUrlCopied] = useState(false);
   const [verifyTokenCopied, setVerifyTokenCopied] = useState(false);
   const [identificationEditing, setIdentificationEditing] = useState(true);
   const [trackingEditing, setTrackingEditing] = useState(true);
@@ -459,6 +461,14 @@ export default function WhatsAppCloudApiPageContent({
     return selected?.nombre || selected?.email || "";
   }, [clients, targetUserId]);
 
+  const trackingUrl = useMemo(() => {
+    const base = process.env.NEXT_PUBLIC_SUPABASE_URL?.replace(/\/$/, "") ?? "";
+    const clientName = (clientTrackingName || selectedClientName).trim();
+    return base && clientName
+      ? `${base}/functions/v1/conversions?name=${encodeURIComponent(clientName)}`
+      : "";
+  }, [clientTrackingName, selectedClientName]);
+
   const displayGroups = useMemo(() => buildDisplayGroups(gerencias, workGroups), [gerencias, workGroups]);
   const identificationLocked = Boolean(config?.id && !identificationEditing);
   const trackingLocked = Boolean(config?.id && !trackingEditing);
@@ -471,12 +481,14 @@ export default function WhatsAppCloudApiPageContent({
         rows.filter((row) => row.user_id === uid)
       )
       : fetchGerencias(uid, workspaceCurrency);
-    const [cfg, gers, groups] = await Promise.all([
+    const [cfg, gers, groups, profile] = await Promise.all([
       fetchWhatsappCloudApiConfig(uid, workspaceCurrency),
       gerenciasPromise,
       fetchGerenciaWorkGroups(uid, workspaceCurrency),
+      supabase.from("profiles").select("nombre,email").eq("id", uid).maybeSingle(),
     ]);
     setConfig(cfg);
+    setClientTrackingName(String(profile.data?.nombre || profile.data?.email || selectedClientName || ""));
     setIdentificationEditing(!cfg?.id);
     setGerencias(gers);
     setWorkGroups(groups);
@@ -932,26 +944,29 @@ export default function WhatsAppCloudApiPageContent({
                         />
                       </div>
                     </Field>
-                    <Field label="Webhook URL / Callback URL" required tooltip="Campo nuestro. URL publica de Supabase que tenes que pegar en Meta para recibir webhooks.">
-                      <div className="flex gap-2">
-                        <input
-                          type="text"
-                          value={webhookUrl}
-                          disabled
-                          className={`${inputClass} font-mono text-xs`}
-                          placeholder="Se completa automaticamente desde Supabase"
-                        />
-                        <CopyButton
-                          copied={webhookUrlCopied}
-                          disabled={!webhookUrl}
-                          title="Copiar Webhook URL"
-                          onClick={() => void copyText(webhookUrl, "Webhook URL", () => {
-                            setWebhookUrlCopied(true);
-                            window.setTimeout(() => setWebhookUrlCopied(false), 1200);
-                          })}
-                        />
-                      </div>
-                    </Field>
+                    <div className="md:col-span-2">
+                      <Field label="Callback URL Meta" required tooltip="Campo nuestro. URL publica de Supabase que tenes que pegar en Meta para recibir webhooks.">
+                        <div className="flex gap-2">
+                          <input
+                            type="text"
+                            value={webhookUrl}
+                            disabled
+                            title={webhookUrl}
+                            className={`${inputClass} font-mono text-[11px]`}
+                            placeholder="Se completa automaticamente desde Supabase"
+                          />
+                          <CopyButton
+                            copied={webhookUrlCopied}
+                            disabled={!webhookUrl}
+                            title="Copiar Callback URL Meta"
+                            onClick={() => void copyText(webhookUrl, "Callback URL Meta", () => {
+                              setWebhookUrlCopied(true);
+                              window.setTimeout(() => setWebhookUrlCopied(false), 1200);
+                            })}
+                          />
+                        </div>
+                      </Field>
+                    </div>
                   </div>
                 </div>
 
@@ -1135,28 +1150,29 @@ export default function WhatsAppCloudApiPageContent({
 
               <div>
                 <label className="mb-1 block text-xs font-medium text-zinc-400">
-                  Webhook URL <span className="text-red-400">*</span>
+                  URL Post / Tracking <span className="text-red-400">*</span>
                 </label>
                 <div className="flex gap-2">
                   <input
                     type="text"
-                    value={webhookUrl}
+                    value={trackingUrl}
                     disabled
-                    className="w-full rounded-lg border border-zinc-700 bg-zinc-900 px-3 py-2 font-mono text-xs text-zinc-100 disabled:cursor-not-allowed disabled:opacity-60"
+                    title={trackingUrl}
+                    className="w-full rounded-lg border border-zinc-700 bg-zinc-900 px-3 py-2 font-mono text-[11px] text-zinc-100 disabled:cursor-not-allowed disabled:opacity-60"
                     placeholder="Se completa automaticamente desde Supabase"
                   />
                   <CopyButton
-                    copied={webhookUrlCopied}
-                    disabled={!webhookUrl}
-                    title="Copiar Webhook URL"
-                    onClick={() => void copyText(webhookUrl, "Webhook URL", () => {
-                      setWebhookUrlCopied(true);
-                      window.setTimeout(() => setWebhookUrlCopied(false), 1200);
+                    copied={trackingUrlCopied}
+                    disabled={!trackingUrl}
+                    title="Copiar URL Post / Tracking"
+                    onClick={() => void copyText(trackingUrl, "URL Post / Tracking", () => {
+                      setTrackingUrlCopied(true);
+                      window.setTimeout(() => setTrackingUrlCopied(false), 1200);
                     })}
                   />
                 </div>
                 <p className="mt-1 text-[11px] text-zinc-500">
-                  URL para configurar el webhook del numero en Meta.
+                  Endpoint donde se registran Contact, LeadSubmitted y Purchase del flujo WhatsApp Cloud API.
                 </p>
               </div>
 
