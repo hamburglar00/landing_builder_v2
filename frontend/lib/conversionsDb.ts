@@ -149,6 +149,7 @@ export interface ConversionRow {
   estado: string;
   valor: number;
   currency: string;
+  workspace_resolution_source?: string | null;
   contact_status_capi: string;
   lead_status_capi: string;
   registration_status_capi?: string;
@@ -728,7 +729,7 @@ const CONVERSIONS_SELECT = `
   test_event_code,
   purchase_type, purchase_capi_route, purchase_capi_route_reason,
   client_ip, agent_user, device_type, event_source_url,
-  estado, valor, currency,
+  estado, valor, currency, workspace_resolution_source,
   contact_status_capi, lead_status_capi, registration_status_capi, purchase_status_capi,
   observaciones,
   external_id, utm_campaign, telefono_asignado,

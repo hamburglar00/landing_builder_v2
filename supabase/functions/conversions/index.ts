@@ -161,6 +161,7 @@ interface ConversionRow {
   estado: string;
   valor: number;
   currency: string;
+  workspace_resolution_source?: string;
   contact_status_capi: string;
   lead_status_capi: string;
   registration_status_capi?: string;
@@ -253,6 +254,10 @@ type EventGerenciaSnapshot = {
   bot_phone: string;
   agency_id: string;
   resolution_status: string;
+};
+type WorkspaceResolution = {
+  currency: string;
+  source: string;
 };
 type ContactDuplicateReason = "contact_event_id" | "promo_code";
 type ContactDuplicateMatch = { id: string; reason: ContactDuplicateReason };
@@ -1413,8 +1418,12 @@ async function insertInboundEvent(
   payload: Params,
 ): Promise<string | null> {
   const normalizedAction = canonicalInboundAction(action) || "CONTACT";
-  const workspaceCurrency =
-    await resolveCanonicalWorkspaceCurrency(db, userId, payload, landing);
+  const workspaceResolution = await resolveCanonicalWorkspaceResolution(
+    db,
+    userId,
+    payload,
+    landing,
+  );
   const actionEventId = normalizedAction === "CONTACT"
     ? norm(
       payload.action_event_id || payload.contact_event_id || payload.event_id,
@@ -1425,7 +1434,7 @@ async function insertInboundEvent(
     .insert({
       user_id: userId,
       landing_name: landing.name,
-      workspace_currency: workspaceCurrency || "ARS",
+      workspace_currency: workspaceResolution.currency || "ARS",
       action: normalizedAction,
       action_event_id: actionEventId,
       coelsa_id: normalizeCoelsaId(payload.coelsa_id),
@@ -2045,7 +2054,9 @@ function normalizeWorkspaceCurrency(value: unknown): string {
 }
 
 function workspaceCurrencyFromParams(params: Params): string {
-  return normalizeWorkspaceCurrency(params.workspace_currency || params.currency);
+  return normalizeWorkspaceCurrency(
+    params.workspace_currency || params.currency,
+  );
 }
 
 function workspaceCurrencyFromCustomerPhone(params: Params): string {
@@ -2091,9 +2102,11 @@ async function workspaceCurrencyFromConversionLineage(
   userId: string,
   rows: Array<ConversionRow | null | undefined>,
 ): Promise<string> {
-  const landingIds = Array.from(new Set(
-    rows.map((row) => norm(row?.landing_id)).filter(Boolean),
-  ));
+  const landingIds = Array.from(
+    new Set(
+      rows.map((row) => norm(row?.landing_id)).filter(Boolean),
+    ),
+  );
   if (landingIds.length > 0) {
     const { data } = await db
       .from("landings")
@@ -2111,13 +2124,15 @@ async function workspaceCurrencyFromConversionLineage(
     if (currencies.length === 1) return currencies[0];
   }
 
-  const gerenciaIds = Array.from(new Set(
-    rows.flatMap((row) => [
-      Number(row?.purchase_gerencia_id),
-      Number(row?.lead_gerencia_id),
-      Number(row?.assigned_gerencia_id),
-    ]).filter((id) => Number.isInteger(id) && id > 0),
-  ));
+  const gerenciaIds = Array.from(
+    new Set(
+      rows.flatMap((row) => [
+        Number(row?.purchase_gerencia_id),
+        Number(row?.lead_gerencia_id),
+        Number(row?.assigned_gerencia_id),
+      ]).filter((id) => Number.isInteger(id) && id > 0),
+    ),
+  );
   if (gerenciaIds.length > 0) {
     const { data } = await db
       .from("gerencias")
@@ -2135,9 +2150,13 @@ async function workspaceCurrencyFromConversionLineage(
     if (currencies.length === 1) return currencies[0];
   }
 
-  const rowCurrencies = Array.from(new Set(
-    rows.map((row) => normalizeWorkspaceCurrency(row?.currency)).filter(Boolean),
-  ));
+  const rowCurrencies = Array.from(
+    new Set(
+      rows.map((row) => normalizeWorkspaceCurrency(row?.currency)).filter(
+        Boolean,
+      ),
+    ),
+  );
   return rowCurrencies.length === 1 ? rowCurrencies[0] : "";
 }
 
@@ -2152,32 +2171,63 @@ async function resolveCanonicalWorkspaceCurrency(
     promoCode?: string;
   } = {},
 ): Promise<string> {
+  return (await resolveCanonicalWorkspaceResolution(
+    db,
+    userId,
+    params,
+    landing,
+    options,
+  )).currency;
+}
+
+async function resolveCanonicalWorkspaceResolution(
+  db: SupabaseClient,
+  userId: string,
+  params: Params,
+  landing: LandingRow,
+  options: {
+    eventGerencia?: EventGerenciaSnapshot | null;
+    rows?: Array<ConversionRow | null | undefined>;
+    promoCode?: string;
+  } = {},
+): Promise<WorkspaceResolution> {
   const explicit = workspaceCurrencyFromParams(params);
-  if (explicit) return explicit;
+  if (explicit) return { currency: explicit, source: "payload" };
 
   const eventWorkspace = normalizeWorkspaceCurrency(
     options.eventGerencia?.workspace_currency,
   );
-  if (eventWorkspace) return eventWorkspace;
+  if (eventWorkspace) {
+    return { currency: eventWorkspace, source: "event_gerencia" };
+  }
 
   const lineageWorkspace = await workspaceCurrencyFromConversionLineage(
     db,
     userId,
     options.rows ?? [],
   );
-  if (lineageWorkspace) return lineageWorkspace;
+  if (lineageWorkspace) {
+    return { currency: lineageWorkspace, source: "lineage" };
+  }
 
   const promoWorkspace = await workspaceCurrencyFromPromoTag(
     db,
     userId,
     options.promoCode ?? params.promo_code ?? params.promoCode,
   );
-  if (promoWorkspace) return promoWorkspace;
+  if (promoWorkspace) return { currency: promoWorkspace, source: "promo_tag" };
 
   const phoneWorkspace = workspaceCurrencyFromCustomerPhone(params);
-  if (phoneWorkspace) return phoneWorkspace;
+  if (phoneWorkspace) {
+    return { currency: phoneWorkspace, source: "phone_prefix" };
+  }
 
-  return landingWorkspaceCurrency(landing);
+  const landingWorkspace = landingWorkspaceCurrency(landing);
+  if (landingWorkspace) {
+    return { currency: landingWorkspace, source: "landing" };
+  }
+
+  return { currency: "", source: "legacy_default" };
 }
 
 function resolveContactCurrency(
@@ -2195,6 +2245,26 @@ function resolveContactCurrency(
   const workspaceCurrency = landingWorkspaceCurrency(landing);
   if (workspaceCurrency) return workspaceCurrency;
   return resolveCurrencyForPixel(config, pixelConfigs, pixelId);
+}
+
+function resolveContactWorkspaceResolution(
+  landing: LandingRow,
+  params: Params,
+): WorkspaceResolution {
+  const explicitCurrency = norm(params.currency || params.workspace_currency)
+    .toUpperCase();
+  if (explicitCurrency === "ARS" || explicitCurrency === "PYG") {
+    return { currency: explicitCurrency, source: "payload" };
+  }
+  const workspaceCurrency = landingWorkspaceCurrency(landing);
+  if (workspaceCurrency) {
+    return { currency: workspaceCurrency, source: "landing" };
+  }
+  const phoneWorkspace = workspaceCurrencyFromCustomerPhone(params);
+  if (phoneWorkspace) {
+    return { currency: phoneWorkspace, source: "phone_prefix" };
+  }
+  return { currency: "", source: "pixel_config" };
 }
 
 async function resolveLandingForInbound(
@@ -3444,6 +3514,10 @@ async function handleContact(
     p.telefono_asignado,
     landing.id,
   );
+  const contactWorkspaceResolution = resolveContactWorkspaceResolution(
+    landing,
+    p,
+  );
 
   const row: Omit<ConversionRow, "id"> = {
     landing_id: landing.id?.trim() || null,
@@ -3495,6 +3569,7 @@ async function handleContact(
       landing,
       p,
     ),
+    workspace_resolution_source: contactWorkspaceResolution.source,
     contact_status_capi: "",
     lead_status_capi: "",
     purchase_status_capi: "",
@@ -3959,17 +4034,20 @@ async function handleLead(
     : null;
   const promoIsConflicting = promoCoherence === "gerencia_conflict" ||
     promoCoherence === "player_phone_conflict";
-  const canonicalLeadWorkspaceCurrency = await resolveCanonicalWorkspaceCurrency(
-    db,
-    landing.user_id,
-    p,
-    landing,
-    {
-      eventGerencia,
-      rows: [promoRow, trustedLineage],
-      promoCode,
-    },
-  );
+  const canonicalLeadWorkspaceResolution =
+    await resolveCanonicalWorkspaceResolution(
+      db,
+      landing.user_id,
+      p,
+      landing,
+      {
+        eventGerencia,
+        rows: [promoRow, trustedLineage],
+        promoCode,
+      },
+    );
+  const canonicalLeadWorkspaceCurrency =
+    canonicalLeadWorkspaceResolution.currency;
 
   if (!targetId && !promoCodeIsFull) {
     const duplicate = await findRecentLeadWithoutPromoDuplicate(db, {
@@ -4095,6 +4173,7 @@ async function handleLead(
           ),
         },
       ),
+      workspace_resolution_source: canonicalLeadWorkspaceResolution.source,
       contact_status_capi: "",
       lead_status_capi: "",
       purchase_status_capi: "",
@@ -4262,7 +4341,7 @@ async function handleLead(
       .eq("id", targetId)
       .single();
     const currentRow = cur as ConversionRow | null;
-    const updateWorkspaceCurrency = await resolveCanonicalWorkspaceCurrency(
+    const updateWorkspaceResolution = await resolveCanonicalWorkspaceResolution(
       db,
       landing.user_id,
       p,
@@ -4273,14 +4352,17 @@ async function handleLead(
         promoCode,
       },
     );
+    const updateWorkspaceCurrency = updateWorkspaceResolution.currency;
     if (updateWorkspaceCurrency) {
       updates.currency = resolveCurrencyForPixel(
         config,
         pixelConfigs,
-        inboundMetaPixelId || norm(currentRow?.pixel_id || currentRow?.meta_pixel_id),
+        inboundMetaPixelId ||
+          norm(currentRow?.pixel_id || currentRow?.meta_pixel_id),
         updateWorkspaceCurrency,
         { preferFallbackWithoutPixel: true },
       );
+      updates.workspace_resolution_source = updateWorkspaceResolution.source;
     }
     const currentOriginSource = norm(
       (cur as Record<string, unknown> | null)?.source_platform,
@@ -4548,8 +4630,28 @@ async function handleCompleteRegistration(
   const { fn: payloadFn, ln: payloadLn } = deriveNameFromPayload(p);
   const payloadEmail = sanitizeEmail(p.email);
   const payloadCuitCuil = deriveCuitCuilFromPayload(p);
+  const registrationWorkspaceResolution =
+    await resolveCanonicalWorkspaceResolution(
+      db,
+      landing.user_id,
+      p,
+      landing,
+      { eventGerencia, rows: [targetRow], promoCode },
+    );
+  const registrationWorkspaceCurrency =
+    registrationWorkspaceResolution.currency;
 
   if (targetRow?.id) {
+    const targetRegistrationWorkspaceResolution =
+      await resolveCanonicalWorkspaceResolution(
+        db,
+        landing.user_id,
+        p,
+        landing,
+        { eventGerencia, rows: [targetRow], promoCode },
+      );
+    const targetRegistrationWorkspaceCurrency =
+      targetRegistrationWorkspaceResolution.currency;
     const updates: Record<string, unknown> = {
       phone: cleanPhone,
       estado: norm(targetRow.estado) === "purchase" ? "purchase" : "lead",
@@ -4568,12 +4670,22 @@ async function handleCompleteRegistration(
     if (inboundMetaPixelId) {
       updates.meta_pixel_id = inboundMetaPixelId;
       updates.pixel_id = inboundMetaPixelId;
-      updates.currency = resolveCurrencyForPixel(
-        config,
-        pixelConfigs,
-        inboundMetaPixelId,
-        targetRow.currency,
-      );
+    }
+    const resolvedRegistrationCurrency = resolveCurrencyForPixel(
+      config,
+      pixelConfigs,
+      inboundMetaPixelId || norm(targetRow.pixel_id),
+      targetRegistrationWorkspaceCurrency || targetRow.currency,
+      {
+        preferFallbackWithoutPixel: Boolean(
+          targetRegistrationWorkspaceCurrency,
+        ),
+      },
+    );
+    if (resolvedRegistrationCurrency) {
+      updates.currency = resolvedRegistrationCurrency;
+      updates.workspace_resolution_source =
+        targetRegistrationWorkspaceResolution.source;
     }
     if (inboundDatasetId && !norm(targetRow.dataset_id)) {
       updates.dataset_id = inboundDatasetId;
@@ -4705,7 +4817,14 @@ async function handleCompleteRegistration(
     event_source_url: eventSourceUrl,
     estado: "lead",
     valor: 0,
-    currency: resolveCurrencyForPixel(config, pixelConfigs, resolvedPixelId),
+    currency: resolveCurrencyForPixel(
+      config,
+      pixelConfigs,
+      resolvedPixelId,
+      registrationWorkspaceCurrency,
+      { preferFallbackWithoutPixel: Boolean(registrationWorkspaceCurrency) },
+    ),
+    workspace_resolution_source: registrationWorkspaceResolution.source,
     contact_status_capi: "",
     lead_status_capi: "",
     purchase_status_capi: "",
@@ -4921,13 +5040,15 @@ async function handlePurchase(
     inboundAgencyId,
     botPhone,
   );
-  const preliminaryWorkspaceCurrency = await resolveCanonicalWorkspaceCurrency(
-    db,
-    landing.user_id,
-    p,
-    landing,
-    { eventGerencia, promoCode },
-  );
+  const preliminaryWorkspaceResolution =
+    await resolveCanonicalWorkspaceResolution(
+      db,
+      landing.user_id,
+      p,
+      landing,
+      { eventGerencia, promoCode },
+    );
+  const preliminaryWorkspaceCurrency = preliminaryWorkspaceResolution.currency;
   let latestPurchaseQuery = db
     .from("conversions")
     .select("*")
@@ -5129,7 +5250,7 @@ async function handlePurchase(
       .eq("id", targetId)
       .single();
     const existingRow = existing as ConversionRow;
-    const targetWorkspaceCurrency = await resolveCanonicalWorkspaceCurrency(
+    const targetWorkspaceResolution = await resolveCanonicalWorkspaceResolution(
       db,
       landing.user_id,
       p,
@@ -5145,6 +5266,7 @@ async function handlePurchase(
         promoCode,
       },
     );
+    const targetWorkspaceCurrency = targetWorkspaceResolution.currency;
     const purchaseCurrency = resolveCurrencyForPixel(
       config,
       pixelConfigs,
@@ -5164,6 +5286,7 @@ async function handlePurchase(
       estado: "purchase",
       valor: amount,
       currency: purchaseCurrency,
+      workspace_resolution_source: targetWorkspaceResolution.source,
       event_source_url: eventSourceUrl || existingRow?.event_source_url || "",
       purchase_event_id: purchaseEventId,
       purchase_event_time: purchaseEventTime,
@@ -5371,7 +5494,7 @@ async function handlePurchase(
     const firstSource = trustedReceiverLineage;
     const firstPixel = inboundMetaPixelId ||
       norm(firstSource?.pixel_id || firstSource?.meta_pixel_id);
-    const firstWorkspaceCurrency = await resolveCanonicalWorkspaceCurrency(
+    const firstWorkspaceResolution = await resolveCanonicalWorkspaceResolution(
       db,
       landing.user_id,
       p,
@@ -5382,6 +5505,7 @@ async function handlePurchase(
         promoCode,
       },
     );
+    const firstWorkspaceCurrency = firstWorkspaceResolution.currency;
     const firstExternalId = norm(p.external_id) ||
       norm(firstSource?.external_id) || await sha256(cleanPhone);
     const newRow: Omit<ConversionRow, "id"> = {
@@ -5457,6 +5581,7 @@ async function handlePurchase(
           preferFallbackWithoutPixel: Boolean(firstWorkspaceCurrency),
         },
       ),
+      workspace_resolution_source: firstWorkspaceResolution.source,
       contact_status_capi: "",
       lead_status_capi: "",
       purchase_status_capi: "",
@@ -5621,7 +5746,7 @@ async function handlePurchase(
   const repeatCtwaClid = isClickToWhatsAppSource(repeatOriginSource)
     ? inboundCtwaClid || normalizeCtwaClid(repeatSourceRow?.ctwa_clid)
     : "";
-  const repeatWorkspaceCurrency = await resolveCanonicalWorkspaceCurrency(
+  const repeatWorkspaceResolution = await resolveCanonicalWorkspaceResolution(
     db,
     landing.user_id,
     p,
@@ -5632,6 +5757,7 @@ async function handlePurchase(
       promoCode,
     },
   );
+  const repeatWorkspaceCurrency = repeatWorkspaceResolution.currency;
 
   const newRow: Omit<ConversionRow, "id"> = {
     landing_id: repeatSourceRow?.landing_id ?? (landing.id?.trim() || null),
@@ -5705,6 +5831,7 @@ async function handlePurchase(
       repeatWorkspaceCurrency || repeatSourceRow?.currency,
       { preferFallbackWithoutPixel: Boolean(repeatWorkspaceCurrency) },
     ),
+    workspace_resolution_source: repeatWorkspaceResolution.source,
     // DO NOT inherit statuses
     contact_status_capi: "",
     lead_status_capi: "",
@@ -5950,13 +6077,14 @@ async function handleSimplePurchase(
     inboundAgencyId,
     botPhone,
   );
-  const simpleWorkspaceCurrency = await resolveCanonicalWorkspaceCurrency(
+  const simpleWorkspaceResolution = await resolveCanonicalWorkspaceResolution(
     db,
     landing.user_id,
     p,
     landing,
     { eventGerencia },
   );
+  const simpleWorkspaceCurrency = simpleWorkspaceResolution.currency;
   let previousSimplePurchaseQuery = db
     .from("conversions")
     .select("id")
@@ -5970,8 +6098,8 @@ async function handleSimplePurchase(
       simpleWorkspaceCurrency,
     );
   }
-  const { data: previousSimplePurchase } =
-    await previousSimplePurchaseQuery.maybeSingle();
+  const { data: previousSimplePurchase } = await previousSimplePurchaseQuery
+    .maybeSingle();
   const isRepeatSimple = Boolean(previousSimplePurchase?.id);
 
   // Legacy payloads without action still inherit only from the real receiver
@@ -6084,6 +6212,7 @@ async function handleSimplePurchase(
       simpleWorkspaceCurrency || srcRow?.currency,
       { preferFallbackWithoutPixel: Boolean(simpleWorkspaceCurrency) },
     ),
+    workspace_resolution_source: simpleWorkspaceResolution.source,
     contact_status_capi: "",
     lead_status_capi: "",
     purchase_status_capi: "",

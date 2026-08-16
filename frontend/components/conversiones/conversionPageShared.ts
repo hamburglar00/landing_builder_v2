@@ -4,7 +4,7 @@ export const ALL_COLUMNS = [
   "phone","email","form_fn","form_ln","form_email","form_phone","fn","ln","ct","st","zip","country","fbp","fbc","from_meta_ads","meta_pixel_id","pixel_id","dataset_id","pixel_attribution_source","pixel_attribution_conversion_id","source_platform","ctwa_clid",
   "contact_event_id","contact_event_time","sendContactPixel","contact_payload_raw","lead_event_id","lead_event_time","lead_payload_raw",
   "purchase_event_id","purchase_event_time","purchase_payload_raw","timestamp","clientIP","agentuser",
-  "estado","valor","currency","purchase_type","purchase_capi_route","purchase_capi_route_reason","contact_status_capi","lead_status_capi","registration_status_capi","purchase_status_capi",
+  "estado","valor","currency","workspace_resolution_source","purchase_type","purchase_capi_route","purchase_capi_route_reason","contact_status_capi","lead_status_capi","registration_status_capi","purchase_status_capi",
   "observaciones","external_id","test_event_code","utm_campaign","telefono_asignado","assigned_gerencia_label","promo_code",
   "lead_bot_phone","lead_player_username","lead_agency_id","lead_gerencia_label","lead_incoming_promo_code","lead_attribution_status","lead_attribution_conversion_id",
   "registration_event_id","registration_event_time","registration_player_username","registration_payload_raw",
@@ -124,7 +124,8 @@ const FRIENDLY_COLUMN_LABELS: Record<ConversionColumnKey, string> = {
   agentuser: "Navegador",
   estado: "Etapa",
   valor: "Valor",
-  currency: "Moneda",
+  currency: "Workspace",
+  workspace_resolution_source: "Resolucion workspace",
   purchase_type: "Tipo de compra",
   purchase_capi_route: "Ruta de Purchase",
   purchase_capi_route_reason: "Motivo de la ruta",
@@ -225,7 +226,8 @@ export const COLUMN_NOTES: Partial<Record<ConversionColumnKey | "id", string>> =
   agentuser: "User-Agent recibido en payload (agentuser/client_user_agent).",
   estado: "Estado actual de la conversion (contact, lead o purchase).",
   valor: "Monto de compra/carga recibido para Purchase.",
-  currency: "Moneda ISO asociada a la conversion y al monto (por ejemplo ARS o PYG).",
+  currency: "Workspace/moneda asociada a la conversion y al monto (por ejemplo ARS o PYG).",
+  workspace_resolution_source: "Senal usada por backend para resolver el workspace: payload, event_gerencia, lineage, promo_tag, phone_prefix, landing, pixel_config o legacy_default.",
   purchase_type: "Tipo de compra: first (primera) o repeat (recompra).",
   purchase_capi_route: "Ruta fijada antes del primer envío de Purchase: website o business_messaging.",
   purchase_capi_route_reason: "Motivo por el que se eligió la ruta de envío de Purchase.",
@@ -303,6 +305,8 @@ const TABLE_SEARCH_TEXT_FIELDS = [
   "landing_name",
   "estado",
   "purchase_type",
+  "currency",
+  "workspace_resolution_source",
   "meta_pixel_id",
   "pixel_id",
   "dataset_id",
@@ -418,6 +422,21 @@ export function friendlyPixelAttributionSource(value: unknown): string {
     landing_id: "Landing asignada",
     landing_tag: "Etiqueta de la landing",
     single_configured_pixel: "Único Pixel configurado",
+  };
+  return labels[normalized] ?? (normalized || "-");
+}
+
+export function friendlyWorkspaceResolutionSource(value: unknown): string {
+  const normalized = String(value ?? "").trim().toLowerCase();
+  const labels: Record<string, string> = {
+    payload: "Payload",
+    event_gerencia: "Gerencia",
+    lineage: "Linaje",
+    promo_tag: "Promo tag",
+    phone_prefix: "Prefijo phone",
+    landing: "Landing",
+    pixel_config: "Pixel/config",
+    legacy_default: "Historico",
   };
   return labels[normalized] ?? (normalized || "-");
 }

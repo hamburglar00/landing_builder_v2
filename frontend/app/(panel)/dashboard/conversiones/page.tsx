@@ -41,6 +41,7 @@ import {
   friendlyPixelAttributionSource,
   friendlyPurchaseType,
   friendlySourcePlatform,
+  friendlyWorkspaceResolutionSource,
   isSameDateRange,
   normalizePhone,
   normalizeSexValue,
@@ -335,6 +336,7 @@ function cellValue(
     }
     case "valor": return <td key={col} className={`${cell} text-zinc-200`} title={tip(c.valor)}>{c.valor > 0 ? formatIntegerWithThousands(c.valor) : "-"}</td>;
     case "currency": return <td key={col} className={dimMono} title={tip(c.currency)}>{c.currency || "ARS"}</td>;
+    case "workspace_resolution_source": return <td key={col} className={dim} title={tip(c.workspace_resolution_source)}>{view === "friendly" ? friendlyWorkspaceResolutionSource(c.workspace_resolution_source) : (c.workspace_resolution_source || "-")}</td>;
     case "purchase_type": return <td key={col} className={dim} title={tip(c.purchase_type)}>{view === "friendly" ? friendlyPurchaseType(c.purchase_type) : (c.purchase_type || "-")}</td>;
     case "purchase_capi_route": return <td key={col} className={dim} title={tip(c.purchase_capi_route)}>{c.purchase_capi_route || "-"}</td>;
     case "purchase_capi_route_reason": return <td key={col} className={dim} title={tip(c.purchase_capi_route_reason)}>{c.purchase_capi_route_reason || "-"}</td>;
@@ -931,6 +933,18 @@ export default function DashboardConversionesPage() {
   const displayedCols = useMemo(
     () => {
       const cols = ALL_COLUMNS.filter((c) => visibleCols.has(c));
+      if (!cols.includes("currency")) {
+        const valueIndex = cols.indexOf("valor");
+        cols.splice(valueIndex >= 0 ? valueIndex + 1 : cols.length, 0, "currency");
+      }
+      if (!cols.includes("workspace_resolution_source")) {
+        const workspaceIndex = cols.indexOf("currency");
+        cols.splice(
+          workspaceIndex >= 0 ? workspaceIndex + 1 : cols.length,
+          0,
+          "workspace_resolution_source",
+        );
+      }
       if (cols.includes("telefono_asignado") && !cols.includes("assigned_gerencia_label")) {
         const phoneIndex = cols.indexOf("telefono_asignado");
         cols.splice(phoneIndex + 1, 0, "assigned_gerencia_label");

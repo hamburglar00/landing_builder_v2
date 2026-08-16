@@ -7,6 +7,7 @@ import {
   friendlyPixelAttributionSource,
   friendlyPurchaseType,
   friendlySourcePlatform,
+  friendlyWorkspaceResolutionSource,
   formatIntegerWithThousands,
   truncateId,
   type ConversionColumnKey,
@@ -96,6 +97,8 @@ function valueForColumn(row: ConversionRow, column: ConversionColumnKey): string
         : "-";
     case "currency":
       return normalizeCurrencyCode(row.currency);
+    case "workspace_resolution_source":
+      return friendlyWorkspaceResolutionSource(row.workspace_resolution_source);
     case "purchase_type":
       return friendlyPurchaseType(row.purchase_type);
     case "contact_payload_raw":
