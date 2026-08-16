@@ -227,7 +227,7 @@ export const COLUMN_NOTES: Partial<Record<ConversionColumnKey | "id", string>> =
   estado: "Estado actual de la conversion (contact, lead o purchase).",
   valor: "Monto de compra/carga recibido para Purchase.",
   currency: "Workspace/moneda asociada a la conversion y al monto (por ejemplo ARS o PYG).",
-  workspace_resolution_source: "Senal usada por backend para resolver el workspace: payload, event_gerencia, lineage, promo_tag, phone_prefix, landing, pixel_config o legacy_default.",
+  workspace_resolution_source: "Senal usada por backend para resolver el workspace: payload recibido, gerencia del evento, fila previa, tag de promo, prefijo del telefono, landing, configuracion del pixel o historico.",
   purchase_type: "Tipo de compra: first (primera) o repeat (recompra).",
   purchase_capi_route: "Ruta fijada antes del primer envío de Purchase: website o business_messaging.",
   purchase_capi_route_reason: "Motivo por el que se eligió la ruta de envío de Purchase.",
@@ -391,6 +391,8 @@ export function columnLabel(
   view: ConversionTableView = "technical",
 ): string {
   if (view === "friendly") return FRIENDLY_COLUMN_LABELS[col];
+  if (col === "currency") return "Workspace";
+  if (col === "workspace_resolution_source") return "Resolución workspace";
   if (col === "assigned_gerencia_label") return "Nombre gerencia (ID)";
   return col;
 }
@@ -429,13 +431,13 @@ export function friendlyPixelAttributionSource(value: unknown): string {
 export function friendlyWorkspaceResolutionSource(value: unknown): string {
   const normalized = String(value ?? "").trim().toLowerCase();
   const labels: Record<string, string> = {
-    payload: "Payload",
-    event_gerencia: "Gerencia",
-    lineage: "Linaje",
-    promo_tag: "Promo tag",
-    phone_prefix: "Prefijo phone",
-    landing: "Landing",
-    pixel_config: "Pixel/config",
+    payload: "Por payload",
+    event_gerencia: "Por gerencia del evento",
+    lineage: "Por fila previa",
+    promo_tag: "Por tag de promo",
+    phone_prefix: "Por prefijo del telefono",
+    landing: "Por landing",
+    pixel_config: "Por config del pixel",
     legacy_default: "Historico",
   };
   return labels[normalized] ?? (normalized || "-");

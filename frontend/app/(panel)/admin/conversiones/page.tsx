@@ -192,7 +192,7 @@ function cellValue(
     }
     case "valor": return <td key={col} className={`${cell} text-zinc-200`} title={tip(c.valor)}>{c.valor > 0 ? formatIntegerWithThousands(c.valor) : "-"}</td>;
     case "currency": return <td key={col} className={dimMono} title={tip(c.currency)}>{c.currency || "ARS"}</td>;
-    case "workspace_resolution_source": return <td key={col} className={dim} title={tip(c.workspace_resolution_source)}>{view === "friendly" ? friendlyWorkspaceResolutionSource(c.workspace_resolution_source) : (c.workspace_resolution_source || "-")}</td>;
+    case "workspace_resolution_source": return <td key={col} className={dim} title={tip(c.workspace_resolution_source)}>{friendlyWorkspaceResolutionSource(c.workspace_resolution_source)}</td>;
     case "purchase_type": return <td key={col} className={dim} title={tip(c.purchase_type)}>{view === "friendly" ? friendlyPurchaseType(c.purchase_type) : (c.purchase_type || "-")}</td>;
     case "purchase_capi_route": return <td key={col} className={dim} title={tip(c.purchase_capi_route)}>{c.purchase_capi_route || "-"}</td>;
     case "purchase_capi_route_reason": return <td key={col} className={dim} title={tip(c.purchase_capi_route_reason)}>{c.purchase_capi_route_reason || "-"}</td>;
