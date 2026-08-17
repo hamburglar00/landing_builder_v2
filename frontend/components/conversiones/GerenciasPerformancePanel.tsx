@@ -128,6 +128,33 @@ function formatOptionalPercent(value: number | null): string {
   return value === null ? "-" : formatPercent(value);
 }
 
+function extractDisplayGerenciaId(label: string): string {
+  const match = String(label ?? "").match(/\(ID\s*(\d+)\)/i);
+  return match?.[1] ?? "";
+}
+
+function availabilityKeyForSummary(row: GerenciaAvailabilitySummary): string {
+  if (row.gerenciaExternalId !== null && Number.isFinite(row.gerenciaExternalId)) {
+    return `external:${row.gerenciaExternalId}`;
+  }
+  if (row.gerenciaId !== null && Number.isFinite(row.gerenciaId)) {
+    return `internal:${row.gerenciaId}`;
+  }
+  return "";
+}
+
+function findAvailabilityForLabel(
+  label: string,
+  byLabel: Map<string, GerenciaAvailabilitySummary>,
+  byId: Map<string, GerenciaAvailabilitySummary>,
+): GerenciaAvailabilitySummary | null {
+  const displayId = extractDisplayGerenciaId(label);
+  if (displayId) {
+    return byId.get(`external:${displayId}`) ?? byId.get(`internal:${displayId}`) ?? byLabel.get(label) ?? null;
+  }
+  return byLabel.get(label) ?? null;
+}
+
 function formatRoas(value: number): string {
   return `${new Intl.NumberFormat("es-AR", {
     minimumFractionDigits: 2,
@@ -275,6 +302,11 @@ export default function GerenciasPerformancePanel({
 
     const rowsByGerencia = new Map<string, ConversionRow[]>();
     const availabilityByLabel = new Map(availabilityRows.map((row) => [row.label, row]));
+    const availabilityById = new Map<string, GerenciaAvailabilitySummary>();
+    for (const row of availabilityRows) {
+      const key = availabilityKeyForSummary(row);
+      if (key) availabilityById.set(key, row);
+    }
     const cleanRows = sourceRows.filter((row) => (
       !String(row.test_event_code ?? "").trim() &&
       (useGlobalFilters || !metaAdsOnly || Boolean(row.from_meta_ads)) &&
@@ -319,6 +351,7 @@ export default function GerenciasPerformancePanel({
         const attributedPurchaseRows = getAttributedPurchaseRows(gerenciaRows);
         const cargas = attributedPurchaseRows.length;
         const montoCargado = attributedPurchaseRows.reduce((sum, row) => sum + (Number(row.valor) || 0), 0);
+        const availability = findAvailabilityForLabel(label, availabilityByLabel, availabilityById);
         return {
           label,
           contactos,
@@ -326,7 +359,7 @@ export default function GerenciasPerformancePanel({
           mensajes,
           cargas,
           montoCargado,
-          disponibilidad: availabilityByLabel.get(label)?.availabilityPct ?? null,
+          disponibilidad: availability?.availabilityPct ?? null,
           pctCarga: mensajes > 0 ? (core.firstLoadPurchasersAttributed / mensajes) * 100 : 0,
           pctRecarga: core.firstLoadPurchasersAttributed > 0
             ? (core.repeatFromAttributedFirstInRange / core.firstLoadPurchasersAttributed) * 100

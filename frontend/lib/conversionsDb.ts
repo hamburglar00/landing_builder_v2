@@ -88,6 +88,8 @@ export interface HomeOverviewStats {
 }
 
 export interface GerenciaAvailabilitySummary {
+  gerenciaId: number | null;
+  gerenciaExternalId: number | null;
   label: string;
   sampleCount: number;
   activeSampleCount: number;
@@ -1458,18 +1460,28 @@ export async function fetchHomeOverviewStats(
 }
 
 type GerenciaAvailabilitySummaryRaw = {
+  gerencia_id: number | string | null;
+  gerencia_external_id: number | string | null;
   label: string | null;
   sample_count: number | string | null;
   active_sample_count: number | string | null;
   availability_pct: number | string | null;
 };
 
+function nullableNumber(value: unknown): number | null {
+  if (value === null || value === undefined || value === "") return null;
+  const parsed = Number(value);
+  return Number.isFinite(parsed) ? parsed : null;
+}
+
 async function fetchGerenciaAvailabilitySummariesInternal(
   range: FetchDateRange,
   userId?: string,
+  workspaceCurrency?: ReportingCurrency | string | null,
 ): Promise<GerenciaAvailabilitySummary[]> {
   const startIso = toIsoIfValid(range.start);
   const endIso = toIsoIfValid(range.end);
+  const workspace = String(workspaceCurrency ?? "").trim().toUpperCase();
 
   const { data: summaryData, error: summaryError } = await supabase.rpc(
     "get_gerencia_availability_summaries",
@@ -1477,11 +1489,14 @@ async function fetchGerenciaAvailabilitySummariesInternal(
       p_user_id: userId ?? null,
       p_start: startIso ?? null,
       p_end: endIso ?? null,
+      p_workspace_currency: workspace || null,
     },
   );
   if (!summaryError) {
     return ((summaryData ?? []) as unknown as GerenciaAvailabilitySummaryRaw[])
       .map((row) => ({
+        gerenciaId: nullableNumber(row.gerencia_id),
+        gerenciaExternalId: nullableNumber(row.gerencia_external_id),
         label: String(row.label ?? "").trim(),
         sampleCount: Number(row.sample_count ?? 0),
         activeSampleCount: Number(row.active_sample_count ?? 0),
@@ -1496,14 +1511,16 @@ async function fetchGerenciaAvailabilitySummariesInternal(
 export async function fetchGerenciaAvailabilitySummaries(
   userId: string,
   range: FetchDateRange,
+  workspaceCurrency?: ReportingCurrency | string | null,
 ): Promise<GerenciaAvailabilitySummary[]> {
-  return fetchGerenciaAvailabilitySummariesInternal(range, userId);
+  return fetchGerenciaAvailabilitySummariesInternal(range, userId, workspaceCurrency);
 }
 
 export async function fetchGerenciaAvailabilitySummariesForAdmin(
   range: FetchDateRange,
+  workspaceCurrency?: ReportingCurrency | string | null,
 ): Promise<GerenciaAvailabilitySummary[]> {
-  return fetchGerenciaAvailabilitySummariesInternal(range);
+  return fetchGerenciaAvailabilitySummariesInternal(range, undefined, workspaceCurrency);
 }
 
 export async function updateConversionEmail(

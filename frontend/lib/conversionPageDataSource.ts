@@ -59,7 +59,7 @@ export interface ConversionPageDataSource {
     request: VisibleLogsRequest,
   ): Promise<ConversionLogRow[]>;
   fetchAvailability(
-    request: ViewerRequest & { range: FetchDateRange },
+    request: ViewerRequest & { range: FetchDateRange; workspaceCurrency?: ReportingCurrency | null },
   ): Promise<GerenciaAvailabilitySummary[]>;
   fetchInbox?(
     request: InboxRequest,
@@ -95,8 +95,9 @@ export const adminConversionPageDataSource = {
     }),
   fetchAvailability: ({
     range,
-  }: ViewerRequest & { range: FetchDateRange }) =>
-    fetchGerenciaAvailabilitySummariesForAdmin(range),
+    workspaceCurrency,
+  }: ViewerRequest & { range: FetchDateRange; workspaceCurrency?: ReportingCurrency | null }) =>
+    fetchGerenciaAvailabilitySummariesForAdmin(range, workspaceCurrency),
 } satisfies ConversionPageDataSource;
 
 /**
@@ -131,8 +132,9 @@ export const dashboardConversionPageDataSource = {
   fetchAvailability: ({
     viewerId,
     range,
-  }: ViewerRequest & { range: FetchDateRange }) =>
-    fetchGerenciaAvailabilitySummaries(viewerId, range),
+    workspaceCurrency,
+  }: ViewerRequest & { range: FetchDateRange; workspaceCurrency?: ReportingCurrency | null }) =>
+    fetchGerenciaAvailabilitySummaries(viewerId, range, workspaceCurrency),
   fetchInbox: ({
     viewerId,
     limit,

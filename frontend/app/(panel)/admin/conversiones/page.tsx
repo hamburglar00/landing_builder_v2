@@ -657,8 +657,15 @@ export default function AdminConversionesPage() {
     tableSearch,
   ]);
   const selectedPerformanceGerenciaLabels = useMemo(
-    () => [...statsGerenciaFilter],
-    [statsGerenciaFilter],
+    () => {
+      if (statsGerenciaFilter.length > 0) return [...statsGerenciaFilter];
+      if (statsLandingFilter === "__all__") return [];
+      const labels = performanceLandingOptions
+        .filter((option) => option.name === statsLandingFilter)
+        .flatMap((option) => option.gerenciaLabels);
+      return Array.from(new Set(labels)).sort((a, b) => a.localeCompare(b, "es"));
+    },
+    [performanceLandingOptions, statsGerenciaFilter, statsLandingFilter],
   );
   useEffect(() => {
     setTablePage(1);
@@ -905,8 +912,9 @@ export default function AdminConversionesPage() {
     return adminConversionPageDataSource.fetchAvailability({
       viewerId: userIdRef.current ?? "",
       range,
+      workspaceCurrency: currencyScope === CURRENCY_ALL ? null : currencyScope,
     });
-  }, []);
+  }, [currencyScope]);
 
   const clearTableDisplay = useCallback(async () => {
     if (!userId || activeConversions.length === 0 || demoMode) return;

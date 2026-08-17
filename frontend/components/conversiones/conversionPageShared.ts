@@ -125,7 +125,7 @@ const FRIENDLY_COLUMN_LABELS: Record<ConversionColumnKey, string> = {
   estado: "Etapa",
   valor: "Valor",
   currency: "Workspace",
-  workspace_resolution_source: "Resolucion workspace",
+  workspace_resolution_source: "Como se resolvio el workspace",
   purchase_type: "Tipo de compra",
   purchase_capi_route: "Ruta de Purchase",
   purchase_capi_route_reason: "Motivo de la ruta",
@@ -227,7 +227,7 @@ export const COLUMN_NOTES: Partial<Record<ConversionColumnKey | "id", string>> =
   estado: "Estado actual de la conversion (contact, lead o purchase).",
   valor: "Monto de compra/carga recibido para Purchase.",
   currency: "Workspace/moneda asociada a la conversion y al monto (por ejemplo ARS o PYG).",
-  workspace_resolution_source: "Senal usada por backend para resolver el workspace: payload recibido, gerencia del evento, fila previa, tag de promo, prefijo del telefono, landing, configuracion del pixel o historico.",
+  workspace_resolution_source: "Nota de trazabilidad sobre la senal usada por backend para separar ARS/PYG.",
   purchase_type: "Tipo de compra: first (primera) o repeat (recompra).",
   purchase_capi_route: "Ruta fijada antes del primer envío de Purchase: website o business_messaging.",
   purchase_capi_route_reason: "Motivo por el que se eligió la ruta de envío de Purchase.",
@@ -392,7 +392,7 @@ export function columnLabel(
 ): string {
   if (view === "friendly") return FRIENDLY_COLUMN_LABELS[col];
   if (col === "currency") return "Workspace";
-  if (col === "workspace_resolution_source") return "Resolución workspace";
+  if (col === "workspace_resolution_source") return "Como se resolvio el workspace";
   if (col === "assigned_gerencia_label") return "Nombre gerencia (ID)";
   return col;
 }
@@ -431,14 +431,14 @@ export function friendlyPixelAttributionSource(value: unknown): string {
 export function friendlyWorkspaceResolutionSource(value: unknown): string {
   const normalized = String(value ?? "").trim().toLowerCase();
   const labels: Record<string, string> = {
-    payload: "Por payload",
-    event_gerencia: "Por gerencia del evento",
-    lineage: "Por fila previa",
-    promo_tag: "Por tag de promo",
-    phone_prefix: "Por prefijo del telefono",
-    landing: "Por landing",
-    pixel_config: "Por config del pixel",
-    legacy_default: "Historico",
+    payload: "Informado por la landing",
+    event_gerencia: "Detectado por la gerencia que recibio el evento",
+    lineage: "Heredado del recorrido previo",
+    promo_tag: "Detectado por el codigo promocional",
+    phone_prefix: "Detectado por el pais del telefono",
+    landing: "Detectado por la landing",
+    pixel_config: "Detectado por la configuracion del pixel",
+    legacy_default: "Registro historico",
   };
   return labels[normalized] ?? (normalized || "-");
 }

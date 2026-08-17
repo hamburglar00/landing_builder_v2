@@ -25,6 +25,7 @@ Este directorio está reservado para las migraciones SQL del proyecto.
 | `20260811224500_whatsapp_cloud_api_inbox_premium_tag.sql` | Renombra el tag `vip` del Inbox de WhatsApp Cloud API a `premium`, usando el mismo umbral configurado para funnel. |
 | `20260811230000_whatsapp_cloud_api_inbox_inbound_and_labels.sql` | Corrige lectura de mensajes entrantes normalizados y muestra gerencia como `nombre (id)` en el Inbox de WhatsApp Cloud API. |
 | `20260812143000_landing_phone_demand_availability.sql` | Cambia la disponibilidad de Desempeno a demanda real: registra candidatas cuando `landing-phone` recibe trafico y deja de depender del snapshot operativo. |
+| `20260817233335_availability_summary_workspace_ids.sql` | Devuelve IDs en el resumen de disponibilidad y permite filtrar la disponibilidad por workspace ARS/PYG. |
 
 ### Cron: sincronizar teléfonos cada 5 minutos
 

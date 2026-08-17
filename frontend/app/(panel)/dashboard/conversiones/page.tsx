@@ -1009,11 +1009,18 @@ export default function DashboardConversionesPage() {
     tableSearch,
   ]);
   const selectedPerformanceGerenciaLabels = useMemo(
-    () =>
-      statsGerenciaFilter.map((filter) =>
+    () => {
+      const explicitLabels = statsGerenciaFilter.map((filter) =>
         statsGerenciaOptions.find((option) => option.value === filter)?.label || filter,
-      ),
-    [statsGerenciaFilter, statsGerenciaOptions],
+      );
+      if (explicitLabels.length > 0) return explicitLabels;
+      if (statsLandingFilter === "__all__") return [];
+      const labels = performanceLandingOptions
+        .filter((option) => option.name === statsLandingFilter)
+        .flatMap((option) => option.gerenciaLabels);
+      return Array.from(new Set(labels)).sort((a, b) => a.localeCompare(b, "es"));
+    },
+    [performanceLandingOptions, statsGerenciaFilter, statsGerenciaOptions, statsLandingFilter],
   );
   const internalIdByConversionId = useMemo(
     () => new Map(conversions.map((c) => [c.id, c.internal_id])),
@@ -1337,8 +1344,9 @@ export default function DashboardConversionesPage() {
     return dashboardConversionPageDataSource.fetchAvailability({
       viewerId: currentUserId,
       range,
+      workspaceCurrency: currencyScope === CURRENCY_ALL ? null : currencyScope,
     });
-  }, []);
+  }, [currencyScope]);
 
   const clearGlobalDisplay = useCallback(() => {
     if (!userId) return;
