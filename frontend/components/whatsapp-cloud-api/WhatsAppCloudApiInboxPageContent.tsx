@@ -19,20 +19,22 @@ type Props = {
 };
 
 const TAG_LABELS: Record<WhatsappCloudApiInboxThread["tag"], string> = {
-  nuevo: "Nuevo",
+  contacto: "Contacto",
   lead: "Lead",
   cargo: "Cargo",
-  recompra: "Recarga",
+  recompra: "Recargo",
   premium: "Premium",
 };
 
 const TAG_CLASSES: Record<WhatsappCloudApiInboxThread["tag"], string> = {
-  nuevo: "border-sky-400/25 bg-sky-400/10 text-sky-200",
-  lead: "border-cyan-400/25 bg-cyan-400/10 text-cyan-200",
-  cargo: "border-emerald-400/25 bg-emerald-400/10 text-emerald-200",
+  contacto: "border-sky-400/25 bg-sky-400/10 text-sky-200",
+  lead: "border-[#facc15]/25 bg-[#facc15]/10 text-[#fde68a]",
+  cargo: "border-[#34d399]/25 bg-[#34d399]/10 text-[#a7f3d0]",
   recompra: "border-amber-400/25 bg-amber-400/10 text-amber-200",
   premium: "border-lime-400/25 bg-lime-400/10 text-lime-200",
 };
+
+const REDIRECTED_TAG_CLASS = "border-teal-400/25 bg-teal-400/10 text-teal-200";
 
 const WHATSAPP_DOODLE_PATTERN = encodeURIComponent(`
 <svg xmlns="http://www.w3.org/2000/svg" width="320" height="320" viewBox="0 0 320 320">
@@ -497,7 +499,7 @@ export default function WhatsAppCloudApiInboxPageContent({ mode }: Props) {
               />
             </div>
             <div className="scrollbar-none flex gap-2 overflow-x-auto">
-              {(["all", "nuevo", "lead", "cargo", "recompra", "premium"] as const).map((tag) => (
+              {(["all", "contacto", "lead", "cargo", "recompra", "premium"] as const).map((tag) => (
                 <button
                   key={tag}
                   type="button"
@@ -566,6 +568,14 @@ export default function WhatsAppCloudApiInboxPageContent({ mode }: Props) {
                           <span className="truncate">{gerenciaFilterLabel(thread)}</span>
                         </span>
                       ) : null}
+                      {thread.redirect_clicked ? (
+                        <span
+                          className={`inline-flex max-w-full rounded-full border px-2 py-0.5 text-[10px] font-semibold ${REDIRECTED_TAG_CLASS}`}
+                          title={thread.redirect_last_clicked_at ? `Ultima redireccion: ${formatDateTime(thread.redirect_last_clicked_at)}` : "Redirigido"}
+                        >
+                          Redirigido
+                        </span>
+                      ) : null}
                     </span>
                   </span>
                 </button>
@@ -587,9 +597,19 @@ export default function WhatsAppCloudApiInboxPageContent({ mode }: Props) {
                     <p className="text-xs text-[#8696a0]">{formatWhatsAppPhone(selectedThread.phone || selectedThread.wa_id)}</p>
                   </div>
                 </div>
-                <span className={`shrink-0 rounded-full border px-2.5 py-1 text-xs font-semibold ${TAG_CLASSES[selectedThread.tag]}`}>
-                  {TAG_LABELS[selectedThread.tag]}
-                </span>
+                <div className="flex shrink-0 items-center gap-2">
+                  <span className={`rounded-full border px-2.5 py-1 text-xs font-semibold ${TAG_CLASSES[selectedThread.tag]}`}>
+                    {TAG_LABELS[selectedThread.tag]}
+                  </span>
+                  {selectedThread.redirect_clicked ? (
+                    <span
+                      className={`rounded-full border px-2.5 py-1 text-xs font-semibold ${REDIRECTED_TAG_CLASS}`}
+                      title={selectedThread.redirect_last_clicked_at ? `Ultima redireccion: ${formatDateTime(selectedThread.redirect_last_clicked_at)}` : "Redirigido"}
+                    >
+                      Redirigido
+                    </span>
+                  ) : null}
+                </div>
               </div>
 
               <div className="flex min-h-0 flex-1 flex-col gap-2 overflow-y-auto px-5 py-5" style={WHATSAPP_CHAT_BACKGROUND}>
@@ -724,6 +744,12 @@ export default function WhatsAppCloudApiInboxPageContent({ mode }: Props) {
                   <InfoRow label="Telefono" value={formatWhatsAppPhone(selectedThread.assigned_phone) || "-"} />
                   <InfoRow label="Gerencia" value={selectedThread.assigned_gerencia_label || selectedThread.assigned_gerencia_id?.toString() || "-"} />
                   <InfoRow label="Promo" value={selectedThread.promo_code || "-"} />
+                  <InfoRow
+                    label="Redireccion"
+                    value={selectedThread.redirect_clicked
+                      ? `${selectedThread.redirect_click_count} click${selectedThread.redirect_click_count === 1 ? "" : "s"}`
+                      : "-"}
+                  />
                 </div>
               </div>
 

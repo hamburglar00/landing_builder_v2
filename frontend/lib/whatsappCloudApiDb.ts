@@ -102,7 +102,10 @@ export interface WhatsappCloudApiInboxThread {
   repeat_purchase_count: number;
   total_loaded: number;
   last_purchase_at: string | null;
-  tag: "nuevo" | "lead" | "cargo" | "recompra" | "premium";
+  tag: "contacto" | "lead" | "cargo" | "recompra" | "premium";
+  redirect_clicked: boolean;
+  redirect_click_count: number;
+  redirect_last_clicked_at: string | null;
   messages: WhatsappCloudApiInboxMessage[];
 }
 
@@ -489,7 +492,8 @@ export async function fetchWhatsappCloudApiInboxThreads(
     const messages = Array.isArray(row.messages)
       ? row.messages.map(normalizeInboxMessage).filter((msg): msg is WhatsappCloudApiInboxMessage => Boolean(msg))
       : [];
-    const tag = firstString(row.tag) as WhatsappCloudApiInboxThread["tag"];
+    const rawTag = firstString(row.tag);
+    const tag = (rawTag === "nuevo" ? "contacto" : rawTag) as WhatsappCloudApiInboxThread["tag"];
     return {
       contact_id: firstString(row.contact_id),
       config_id: firstString(row.config_id),
@@ -519,7 +523,10 @@ export async function fetchWhatsappCloudApiInboxThreads(
       repeat_purchase_count: Number(row.repeat_purchase_count ?? 0),
       total_loaded: Number(row.total_loaded ?? 0),
       last_purchase_at: firstString(row.last_purchase_at) || null,
-      tag: ["nuevo", "lead", "cargo", "recompra", "premium"].includes(tag) ? tag : "nuevo",
+      tag: ["contacto", "lead", "cargo", "recompra", "premium"].includes(tag) ? tag : "contacto",
+      redirect_clicked: Boolean(row.redirect_clicked),
+      redirect_click_count: Number(row.redirect_click_count ?? 0),
+      redirect_last_clicked_at: firstString(row.redirect_last_clicked_at) || null,
       messages,
     };
   });

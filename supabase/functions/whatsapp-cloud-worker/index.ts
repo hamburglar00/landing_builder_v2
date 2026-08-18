@@ -147,6 +147,17 @@ function waLink(phone: string, promo: string): string {
   return `https://wa.me/${digits(phone)}?text=${text}`;
 }
 
+function redirectToken(): string {
+  return crypto.randomUUID().replace(/-/g, "");
+}
+
+function trackedRedirectUrl(token: string): string {
+  const supabaseUrl = str(Deno.env.get("SUPABASE_URL"));
+  return `${supabaseUrl}/functions/v1/whatsapp-cloud-redirect?t=${
+    encodeURIComponent(token)
+  }`;
+}
+
 function renderTemplate(
   template: string,
   values: Record<string, string>,
@@ -843,14 +854,8 @@ async function handleMessage(
 
   const assignedPhone = digits(phonePayload.phone);
   const generatedPromo = promoCode(config.landing_tag);
-  const link = waLink(assignedPhone, generatedPromo);
+  const advisorLink = waLink(assignedPhone, generatedPromo);
   const useCtaButton = Boolean(config.redirect_use_cta_button);
-  const text = renderTemplate(config.redirect_message_template, {
-    name: config.name,
-    phone: assignedPhone,
-    promo_code: generatedPromo,
-    wa_link: useCtaButton ? "" : link,
-  });
 
   const contactResult = await createInternalContact({
     config,
@@ -902,13 +907,47 @@ async function handleMessage(
     return;
   }
 
+  const token = redirectToken();
+  const trackedLink = trackedRedirectUrl(token);
+  const { error: redirectError } = await db
+    .from("whatsapp_cloud_api_redirects")
+    .insert({
+      token,
+      config_id: config.id,
+      user_id: config.user_id,
+      contact_id: contactRow.id,
+      assignment_id: assignmentRow.id,
+      attribution_session_id: sessionRow.id,
+      webhook_event_id: event.id,
+      assigned_phone: assignedPhone,
+      assigned_gerencia_id: Number(gerencia.id) || null,
+      promo_code: generatedPromo,
+      wa_link: advisorLink,
+    });
+  if (redirectError) {
+    await finalizeEvent(
+      db,
+      event.id,
+      "failed",
+      redirectError.message || "Redirect insert failed",
+    );
+    return;
+  }
+
+  const text = renderTemplate(config.redirect_message_template, {
+    name: config.name,
+    phone: assignedPhone,
+    promo_code: generatedPromo,
+    wa_link: useCtaButton ? "" : trackedLink,
+  });
+
   const sendResult = useCtaButton
     ? await sendWhatsappCtaUrl(
       config,
       waId,
       text,
       config.redirect_cta_button_title,
-      link,
+      trackedLink,
     )
     : await sendWhatsappText(config, waId, text);
   await db.from("whatsapp_cloud_api_outbound_messages").insert({
@@ -932,7 +971,7 @@ async function handleMessage(
               display_text:
                 str(config.redirect_cta_button_title).slice(0, 20) ||
                 "Ir al asesor",
-              url: link,
+              url: trackedLink,
             },
           },
         },
