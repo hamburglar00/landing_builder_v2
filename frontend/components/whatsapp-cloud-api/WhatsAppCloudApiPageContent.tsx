@@ -874,7 +874,7 @@ export default function WhatsAppCloudApiPageContent({
         </section>
       ) : null}
 
-      <div className="grid gap-4 xl:grid-cols-[minmax(0,1fr)_22rem]">
+      <div className="grid items-start gap-4 xl:grid-cols-[minmax(0,1fr)_22rem]">
         <div className="space-y-4">
           <SurfaceCard className="overflow-hidden">
             <div className="space-y-4 p-4 sm:p-5">
@@ -1504,7 +1504,7 @@ export default function WhatsAppCloudApiPageContent({
           </CollapsibleSection>
         </div>
 
-        <aside className="space-y-4 xl:sticky xl:top-24 xl:self-start">
+        <aside className="space-y-4 xl:self-start">
           <SurfaceCard className="space-y-3 p-4">
             <SectionTitle title="Estado" />
             <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-1">
