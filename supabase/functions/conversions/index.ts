@@ -730,6 +730,74 @@ async function findLatestTrustedGerenciaLineage(
   ) ?? null;
 }
 
+function rowRecentEnoughForPhoneFallback(
+  row: ConversionRow,
+  nowSeconds: number,
+  windowSeconds: number,
+): boolean {
+  const candidates = [
+    row.created_at ? Date.parse(row.created_at) / 1000 : 0,
+    Number(row.contact_event_time),
+  ].filter((value) => Number.isFinite(value) && value > 0);
+  const lastActivity = Math.max(0, ...candidates);
+  return Boolean(lastActivity) && nowSeconds - lastActivity <= windowSeconds;
+}
+
+async function findWhatsappCloudApiContactPhoneFallback(
+  db: SupabaseClient,
+  input: {
+    userId: string;
+    phone: string;
+    eventGerenciaId: number | null;
+    botPhone: string;
+    nowSeconds: number;
+    windowSeconds: number;
+  },
+): Promise<ConversionRow | null> {
+  if (!input.phone) return null;
+  if (!input.eventGerenciaId && !input.botPhone) return null;
+
+  const { data, error } = await db
+    .from("conversions")
+    .select("*")
+    .eq("user_id", input.userId)
+    .eq("phone", input.phone)
+    .eq("estado", "contact")
+    .eq("source_platform", "whatsapp_cloud_api")
+    .order("created_at", { ascending: false })
+    .limit(50);
+  if (error) {
+    console.error(
+      "[findWhatsappCloudApiContactPhoneFallback]",
+      error.message,
+    );
+    return null;
+  }
+
+  return ((data ?? []) as ConversionRow[]).find((candidate) => {
+    if (norm(candidate.lead_event_id) || norm(candidate.purchase_event_id)) {
+      return false;
+    }
+    if (
+      !rowRecentEnoughForPhoneFallback(
+        candidate,
+        input.nowSeconds,
+        input.windowSeconds,
+      )
+    ) {
+      return false;
+    }
+    const assignedGerencia = Number(candidate.assigned_gerencia_id);
+    const gerenciaMatches = input.eventGerenciaId
+      ? assignedGerencia === input.eventGerenciaId
+      : false;
+    const assignedPhoneMatches = input.botPhone
+      ? sanitizePhone(candidate.telefono_asignado) === input.botPhone
+      : false;
+    return gerenciaMatches || assignedPhoneMatches;
+  }) ?? null;
+}
+
 async function findLatestNamedTrustedGerenciaLineage(
   db: SupabaseClient,
   userId: string,
@@ -4052,6 +4120,7 @@ async function handleLead(
   let targetId: string | null = null;
   let leadMatchMode:
     | "promo_code"
+    | "whatsapp_cloud_api_phone_fallback"
     | "bot_phone_timestamp_fallback"
     | "created_new" = "promo_code";
   let promoRow: ConversionRow | null = null;
@@ -4170,7 +4239,25 @@ async function handleLead(
     }
   }
 
-  // 1.b) Fallback ONLY when promo_code is missing: bot_phone + dateTime window (for CONTACT -> LEAD linking).
+  // 1.b) WhatsApp Cloud API fallback when promo_code is missing. Unlike
+  // landing contacts, Cloud API contacts already know the user's phone.
+  if (!targetId && !promoCodeIsFull) {
+    const contactFallback = await findWhatsappCloudApiContactPhoneFallback(db, {
+      userId: landing.user_id,
+      phone: cleanPhone,
+      eventGerenciaId: eventGerencia.gerencia_id,
+      botPhone,
+      nowSeconds: Math.floor(Date.now() / 1000),
+      windowSeconds: 24 * 60 * 60,
+    });
+    if (contactFallback?.id) {
+      targetId = contactFallback.id;
+      leadMatchMode = "whatsapp_cloud_api_phone_fallback";
+      leadAttributionStatus = "whatsapp_cloud_api_phone_fallback";
+    }
+  }
+
+  // 1.c) Fallback ONLY when promo_code is missing: bot_phone + dateTime window (for CONTACT -> LEAD linking).
   if (!targetId && !promoCodeIsFull) {
     if (botPhone && inboundBotTimestampSec) {
       const fromIso = new Date(
@@ -4253,6 +4340,8 @@ async function handleLead(
   );
   const matchSourceToken = leadMatchMode === "promo_code"
     ? "match_source:promo_code"
+    : leadMatchMode === "whatsapp_cloud_api_phone_fallback"
+    ? "match_source:whatsapp_cloud_api_phone_fallback"
     : leadMatchMode === "bot_phone_timestamp_fallback"
     ? "match_source:bot_phone_timestamp_fallback"
     : "match_source:created_new";
@@ -4547,7 +4636,6 @@ async function handleLead(
     const updates: Record<string, unknown> = {
       phone: cleanPhone,
       estado: "lead",
-      event_source_url: eventSourceUrl,
       lead_event_id: leadEventId,
       lead_event_time: leadEventTime,
       lead_payload_raw: leadPayloadRaw,
@@ -4585,6 +4673,8 @@ async function handleLead(
       .eq("id", targetId)
       .single();
     const currentRow = cur as ConversionRow | null;
+    updates.event_source_url = eventSourceUrl || currentRow?.event_source_url ||
+      "";
     const updateWorkspaceResolution = await resolveCanonicalWorkspaceResolution(
       db,
       landing.user_id,
@@ -5352,6 +5442,25 @@ async function handlePurchase(
       new Date(latestPurchaseRow.created_at).getTime()
   );
   const canUseLeadFallback = !hasPreviousPurchase || leadIsAfterLatestPurchase;
+  const rawReceiverContactRow = !promoCodeIsFull
+    ? await findWhatsappCloudApiContactPhoneFallback(db, {
+      userId: landing.user_id,
+      phone: cleanPhone,
+      eventGerenciaId: eventGerencia.gerencia_id,
+      botPhone,
+      nowSeconds: Math.floor(Date.now() / 1000),
+      windowSeconds: 24 * 60 * 60,
+    })
+    : null;
+  const contactIsAfterLatestPurchase = !!(
+    rawReceiverContactRow?.created_at &&
+    latestPurchaseRow?.created_at &&
+    new Date(rawReceiverContactRow.created_at).getTime() >
+      new Date(latestPurchaseRow.created_at).getTime()
+  );
+  const receiverContactRow = !latestPurchaseRow || contactIsAfterLatestPurchase
+    ? rawReceiverContactRow
+    : null;
 
   // 1) Primary match by full promo_code only.
   let promoRow: ConversionRow | null = null;
@@ -5447,13 +5556,18 @@ async function handlePurchase(
     receiverLeadId: receiverLeadRow?.id,
     receiverLeadIsEligible: canUseLeadFallback,
     receiverLeadHasTrustedPromo: leadHasTrustedPromo(receiverLeadRow),
+    receiverContactId: receiverContactRow?.id,
     hasPreviousPurchase,
   });
   const targetId = decision.targetId;
   const purchaseType = decision.purchaseType;
   const matchMethod = decision.matchMethod;
   const receiverAttributionSource = targetId
-    ? receiverLeadRow?.id === targetId ? receiverLeadRow : promoRow
+    ? receiverLeadRow?.id === targetId
+      ? receiverLeadRow
+      : receiverContactRow?.id === targetId
+      ? receiverContactRow
+      : promoRow
     : (whatsappCloudApiAssignmentLineage &&
         canUsePromoForJourney(promoCoherence)
       ? whatsappCloudApiAssignmentLineage.row
@@ -5529,6 +5643,7 @@ async function handlePurchase(
           existingRow,
           promoRow,
           receiverAttributionSource,
+          receiverContactRow,
           whatsappCloudApiAssignmentLineage?.row,
           latestGlobalPurchase,
         ],

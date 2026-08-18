@@ -11,6 +11,7 @@ export type PurchaseJourneyDecision = {
   matchMethod:
     | "promo_code"
     | "receiver_lead"
+    | "receiver_contact"
     | "created_first"
     | "created_repeat";
 };
@@ -132,6 +133,7 @@ export function choosePurchaseJourney(input: {
   receiverLeadId?: string | null;
   receiverLeadIsEligible?: boolean;
   receiverLeadHasTrustedPromo?: boolean;
+  receiverContactId?: string | null;
   hasPreviousPurchase: boolean;
 }): PurchaseJourneyDecision {
   if (input.promoRowId && canUsePromoForJourney(input.promoCoherence)) {
@@ -160,11 +162,17 @@ export function choosePurchaseJourney(input: {
     };
   }
 
+  if (input.receiverContactId) {
+    return {
+      targetId: input.receiverContactId,
+      purchaseType: input.hasPreviousPurchase ? "repeat" : "first",
+      matchMethod: "receiver_contact",
+    };
+  }
+
   return {
     targetId: null,
     purchaseType: input.hasPreviousPurchase ? "repeat" : "first",
-    matchMethod: input.hasPreviousPurchase
-      ? "created_repeat"
-      : "created_first",
+    matchMethod: input.hasPreviousPurchase ? "created_repeat" : "created_first",
   };
 }
