@@ -461,13 +461,18 @@ export default function WhatsAppCloudApiPageContent({
     return selected?.nombre || selected?.email || "";
   }, [clients, targetUserId]);
 
+  const selectedClientTrackingName = useMemo(() => {
+    const selected = clients.find((client) => client.id === targetUserId);
+    return selected?.nombre?.trim() || "";
+  }, [clients, targetUserId]);
+
   const trackingUrl = useMemo(() => {
     const base = process.env.NEXT_PUBLIC_SUPABASE_URL?.replace(/\/$/, "") ?? "";
-    const clientName = (clientTrackingName || selectedClientName).trim();
+    const clientName = (clientTrackingName || selectedClientTrackingName).trim();
     return base && clientName
       ? `${base}/functions/v1/conversions?name=${encodeURIComponent(clientName)}`
       : "";
-  }, [clientTrackingName, selectedClientName]);
+  }, [clientTrackingName, selectedClientTrackingName]);
 
   const displayGroups = useMemo(() => buildDisplayGroups(gerencias, workGroups), [gerencias, workGroups]);
   const identificationLocked = Boolean(config?.id && !identificationEditing);
@@ -485,10 +490,10 @@ export default function WhatsAppCloudApiPageContent({
       fetchWhatsappCloudApiConfig(uid, workspaceCurrency),
       gerenciasPromise,
       fetchGerenciaWorkGroups(uid, workspaceCurrency),
-      supabase.from("profiles").select("nombre,email").eq("id", uid).maybeSingle(),
+      supabase.from("profiles").select("nombre").eq("id", uid).maybeSingle(),
     ]);
     setConfig(cfg);
-    setClientTrackingName(String(profile.data?.nombre || profile.data?.email || selectedClientName || ""));
+    setClientTrackingName(String(profile.data?.nombre || selectedClientTrackingName || ""));
     setIdentificationEditing(!cfg?.id);
     setGerencias(gers);
     setWorkGroups(groups);
@@ -519,7 +524,7 @@ export default function WhatsAppCloudApiPageContent({
     } else {
       setAssignments([]);
     }
-  }, [mode, selectedClientName, workspaceCurrency]);
+  }, [mode, selectedClientName, selectedClientTrackingName, workspaceCurrency]);
 
   useEffect(() => {
     const init = async () => {

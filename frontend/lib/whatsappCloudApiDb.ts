@@ -106,6 +106,8 @@ export interface WhatsappCloudApiInboxThread {
   redirect_clicked: boolean;
   redirect_click_count: number;
   redirect_last_clicked_at: string | null;
+  unread_count: number;
+  unread_last_message_at: string | null;
   messages: WhatsappCloudApiInboxMessage[];
 }
 
@@ -527,7 +529,17 @@ export async function fetchWhatsappCloudApiInboxThreads(
       redirect_clicked: Boolean(row.redirect_clicked),
       redirect_click_count: Number(row.redirect_click_count ?? 0),
       redirect_last_clicked_at: firstString(row.redirect_last_clicked_at) || null,
+      unread_count: Number(row.unread_count ?? 0),
+      unread_last_message_at: firstString(row.unread_last_message_at) || null,
       messages,
     };
   });
+}
+
+export async function markWhatsappCloudApiThreadRead(contactId: string): Promise<void> {
+  if (!contactId) return;
+  const { error } = await supabase.rpc("mark_whatsapp_cloud_api_thread_read", {
+    p_contact_id: contactId,
+  });
+  if (error) throw error;
 }

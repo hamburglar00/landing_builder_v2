@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useEffect, useMemo, useState, type CSSProperties } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState, type CSSProperties } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { PageHeader, SurfaceCard } from "@/components/ui/PanelPrimitives";
@@ -8,6 +8,7 @@ import { supabase } from "@/lib/supabaseClient";
 import { invokeFunction } from "@/lib/supabaseFunctions";
 import {
   fetchWhatsappCloudApiInboxThreads,
+  markWhatsappCloudApiThreadRead,
   type WhatsappCloudApiInboxMessage,
   type WhatsappCloudApiInboxThread,
 } from "@/lib/whatsappCloudApiDb";
@@ -27,11 +28,11 @@ const TAG_LABELS: Record<WhatsappCloudApiInboxThread["tag"], string> = {
 };
 
 const TAG_CLASSES: Record<WhatsappCloudApiInboxThread["tag"], string> = {
-  contacto: "border-sky-400/25 bg-sky-400/10 text-sky-200",
-  lead: "border-[#facc15]/25 bg-[#facc15]/10 text-[#fde68a]",
-  cargo: "border-[#34d399]/25 bg-[#34d399]/10 text-[#a7f3d0]",
-  recompra: "border-amber-400/25 bg-amber-400/10 text-amber-200",
-  premium: "border-lime-400/25 bg-lime-400/10 text-lime-200",
+  contacto: "border-zinc-600/35 bg-zinc-950/40 text-zinc-300",
+  lead: "border-amber-800/40 bg-amber-950/18 text-amber-300",
+  cargo: "border-rose-800/40 bg-rose-950/18 text-rose-300",
+  recompra: "border-violet-800/40 bg-violet-950/20 text-violet-300",
+  premium: "border-amber-500/20 bg-amber-500/8 text-amber-300",
 };
 
 const REDIRECTED_TAG_CLASS = "border-teal-400/25 bg-teal-400/10 text-teal-200";
@@ -312,6 +313,7 @@ export default function WhatsAppCloudApiInboxPageContent({ mode }: Props) {
   const [manualMessage, setManualMessage] = useState("");
   const [sending, setSending] = useState(false);
   const [sendNotice, setSendNotice] = useState<string | null>(null);
+  const lastMarkedReadRef = useRef("");
 
   const loadThreads = useCallback(async () => {
     setLoading(true);
@@ -384,6 +386,28 @@ export default function WhatsAppCloudApiInboxPageContent({ mode }: Props) {
     [lastInboundAt],
   );
   const serviceWindowActive = Boolean(serviceWindowExpiresAt && Date.now() <= serviceWindowExpiresAt.getTime());
+
+  useEffect(() => {
+    if (!selectedThread || selectedThread.unread_count <= 0) return;
+    const markKey = `${selectedThread.contact_id}:${selectedThread.unread_last_message_at ?? ""}:${selectedThread.unread_count}`;
+    if (lastMarkedReadRef.current === markKey) return;
+    lastMarkedReadRef.current = markKey;
+
+    void markWhatsappCloudApiThreadRead(selectedThread.contact_id)
+      .then(() => {
+        setThreads((current) =>
+          current.map((thread) =>
+            thread.contact_id === selectedThread.contact_id
+              ? { ...thread, unread_count: 0, unread_last_message_at: null }
+              : thread,
+          ),
+        );
+      })
+      .catch((err) => {
+        console.error("[whatsapp-cloud-inbox] mark read failed", err);
+        lastMarkedReadRef.current = "";
+      });
+  }, [selectedThread]);
 
   const sendManualMessage = async () => {
     if (!selectedThread || !manualMessage.trim() || sending) return;
@@ -531,6 +555,7 @@ export default function WhatsAppCloudApiInboxPageContent({ mode }: Props) {
               </div>
             ) : filteredThreads.map((thread) => {
               const selected = selectedThread?.contact_id === thread.contact_id;
+              const unreadCount = Math.max(0, Number(thread.unread_count || 0));
               return (
                 <button
                   key={thread.contact_id}
@@ -546,14 +571,21 @@ export default function WhatsAppCloudApiInboxPageContent({ mode }: Props) {
                   </span>
                   <span className="min-w-0 flex-1">
                     <span className="flex items-start justify-between gap-2">
-                      <span className="truncate text-sm font-semibold text-[var(--color-text-strong)]">
+                      <span className={`truncate text-sm text-[var(--color-text-strong)] ${unreadCount > 0 ? "font-bold" : "font-semibold"}`}>
                         {thread.profile_name || thread.wa_id}
                       </span>
-                      <span className="shrink-0 text-[10px] text-[var(--color-text-disabled)]">
-                        {formatTime(thread.last_message_at || thread.first_message_at)}
+                      <span className="flex shrink-0 flex-col items-end gap-1">
+                        <span className={`text-[10px] ${unreadCount > 0 ? "font-semibold text-[#25d366]" : "text-[var(--color-text-disabled)]"}`}>
+                          {formatTime(thread.last_message_at || thread.first_message_at)}
+                        </span>
+                        {unreadCount > 0 ? (
+                          <span className="flex h-5 min-w-5 items-center justify-center rounded-full bg-[#25d366] px-1.5 text-[10px] font-bold leading-none text-[#0b141a]">
+                            {unreadCount > 99 ? "99+" : unreadCount}
+                          </span>
+                        ) : null}
                       </span>
                     </span>
-                    <span className="mt-1 block truncate text-xs text-[var(--color-text-muted)]">
+                    <span className={`mt-1 block truncate text-xs ${unreadCount > 0 ? "font-semibold text-[var(--color-text-strong)]" : "text-[var(--color-text-muted)]"}`}>
                       {thread.last_message_text || "Sin mensajes"}
                     </span>
                     <span className="mt-2 flex flex-wrap gap-1.5">
