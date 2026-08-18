@@ -43,7 +43,8 @@ export interface WhatsappCloudApiAssignment {
   intervalEndHour: number | null;
 }
 
-export type WhatsappCloudApiLogKind = "request" | "webhook" | "assignment" | "outbound";
+export type WhatsappCloudApiLogKind =
+  "request" | "webhook" | "assignment" | "outbound";
 
 export interface WhatsappCloudApiLogEntry {
   id: string;
@@ -102,7 +103,7 @@ export interface WhatsappCloudApiInboxThread {
   repeat_purchase_count: number;
   total_loaded: number;
   last_purchase_at: string | null;
-  tag: "contacto" | "lead" | "cargo" | "recompra" | "premium";
+  tag: "nuevo" | "contacto" | "lead" | "cargo" | "recompra" | "premium";
   redirect_clicked: boolean;
   redirect_click_count: number;
   redirect_last_clicked_at: string | null;
@@ -185,27 +186,40 @@ export async function ensureWhatsappCloudApiDataset(input: {
   meta_api_version: string;
   force_create?: boolean;
 }): Promise<{ dataset_id: string; source: "stored" | "meta" | "" }> {
-  const { data, error } = await supabase.functions.invoke("whatsapp-cloud-ensure-dataset", {
-    body: {
-      config_id: input.config_id ?? null,
-      user_id: input.user_id,
-      whatsapp_business_account_id: input.whatsapp_business_account_id,
-      meta_access_token: input.meta_access_token,
-      meta_api_version: input.meta_api_version,
-      force_create: input.force_create ?? false,
+  const { data, error } = await supabase.functions.invoke(
+    "whatsapp-cloud-ensure-dataset",
+    {
+      body: {
+        config_id: input.config_id ?? null,
+        user_id: input.user_id,
+        whatsapp_business_account_id: input.whatsapp_business_account_id,
+        meta_access_token: input.meta_access_token,
+        meta_api_version: input.meta_api_version,
+        force_create: input.force_create ?? false,
+      },
     },
-  });
+  );
   if (error) throw error;
-  const datasetId = String((data as { dataset_id?: unknown } | null)?.dataset_id ?? "").replace(/\D/g, "");
+  const datasetId = String(
+    (data as { dataset_id?: unknown } | null)?.dataset_id ?? "",
+  ).replace(/\D/g, "");
   if (!datasetId) throw new Error("Meta no devolvio Dataset ID.");
   const source = String((data as { source?: unknown } | null)?.source ?? "");
-  return { dataset_id: datasetId, source: source === "stored" || source === "meta" ? source : "" };
+  return {
+    dataset_id: datasetId,
+    source: source === "stored" || source === "meta" ? source : "",
+  };
 }
 
-export async function syncWhatsappCloudApiHealth(configId: string): Promise<void> {
-  const { error } = await supabase.functions.invoke("whatsapp-cloud-sync-health", {
-    body: { config_id: configId },
-  });
+export async function syncWhatsappCloudApiHealth(
+  configId: string,
+): Promise<void> {
+  const { error } = await supabase.functions.invoke(
+    "whatsapp-cloud-sync-health",
+    {
+      body: { config_id: configId },
+    },
+  );
   if (error) throw error;
 }
 
@@ -214,7 +228,9 @@ export async function fetchWhatsappCloudApiAssignments(
 ): Promise<WhatsappCloudApiAssignment[]> {
   const { data, error } = await supabase
     .from("whatsapp_cloud_api_gerencias")
-    .select("gerencia_id, weight, phone_mode, phone_kind, interval_start_hour, interval_end_hour")
+    .select(
+      "gerencia_id, weight, phone_mode, phone_kind, interval_start_hour, interval_end_hour",
+    )
     .eq("config_id", configId);
   if (error) throw error;
   return (data ?? []).map((row) => ({
@@ -255,7 +271,9 @@ export async function setWhatsappCloudApiAssignments(
   if (error) throw error;
 }
 
-export async function fetchWhatsappCloudApiRecentEvents(configId: string): Promise<
+export async function fetchWhatsappCloudApiRecentEvents(
+  configId: string,
+): Promise<
   Array<{
     id: string;
     event_type: string;
@@ -284,24 +302,33 @@ export async function fetchWhatsappCloudApiRecentEvents(configId: string): Promi
 
 function asRecord(value: unknown): Record<string, unknown> | null {
   return value && typeof value === "object" && !Array.isArray(value)
-    ? value as Record<string, unknown>
+    ? (value as Record<string, unknown>)
     : null;
 }
 
 function firstString(...values: unknown[]): string {
   for (const value of values) {
     if (typeof value === "string" && value.trim()) return value.trim();
-    if (typeof value === "number" && Number.isFinite(value)) return String(value);
+    if (typeof value === "number" && Number.isFinite(value))
+      return String(value);
   }
   return "";
 }
 
 function readPayloadPhone(payload: Record<string, unknown> | null): string {
-  const entry = Array.isArray(payload?.entry) ? asRecord(payload.entry[0]) : null;
-  const changes = Array.isArray(entry?.changes) ? asRecord(entry.changes[0]) : null;
+  const entry = Array.isArray(payload?.entry)
+    ? asRecord(payload.entry[0])
+    : null;
+  const changes = Array.isArray(entry?.changes)
+    ? asRecord(entry.changes[0])
+    : null;
   const value = asRecord(changes?.value);
-  const contacts = Array.isArray(value?.contacts) ? asRecord(value.contacts[0]) : null;
-  const messages = Array.isArray(value?.messages) ? asRecord(value.messages[0]) : null;
+  const contacts = Array.isArray(value?.contacts)
+    ? asRecord(value.contacts[0])
+    : null;
+  const messages = Array.isArray(value?.messages)
+    ? asRecord(value.messages[0])
+    : null;
   return firstString(messages?.from, contacts?.wa_id);
 }
 
@@ -324,14 +351,19 @@ export async function fetchWhatsappCloudApiLogs(input: {
   const configIds = (configRows ?? []).map((row) => {
     const id = String(row.id);
     const displayPhone = firstString(row.display_phone_number);
-    configNames.set(id, displayPhone ? `${row.name} (${displayPhone})` : String(row.name ?? ""));
+    configNames.set(
+      id,
+      displayPhone ? `${row.name} (${displayPhone})` : String(row.name ?? ""),
+    );
     return id;
   });
   if (configIds.length === 0) return [];
 
   const webhookQuery = supabase
     .from("whatsapp_cloud_api_webhook_events")
-    .select("id,config_id,user_id,event_type,status,phone_number_id,meta_message_id,meta_status_id,payload,attempts,received_at,processed_at,last_error")
+    .select(
+      "id,config_id,user_id,event_type,status,phone_number_id,meta_message_id,meta_status_id,payload,attempts,received_at,processed_at,last_error",
+    )
     .in("config_id", configIds)
     .order("received_at", { ascending: false })
     .limit(limit);
@@ -339,7 +371,9 @@ export async function fetchWhatsappCloudApiLogs(input: {
 
   const assignmentQuery = supabase
     .from("whatsapp_cloud_api_assignments")
-    .select("id,config_id,user_id,assigned_phone,assigned_gerencia_id,assigned_gerencia_label,promo_code,redirect_message_id,status,last_error,created_at,redirect_sent_at")
+    .select(
+      "id,config_id,user_id,assigned_phone,assigned_gerencia_id,assigned_gerencia_label,promo_code,redirect_message_id,status,last_error,created_at,redirect_sent_at",
+    )
     .in("config_id", configIds)
     .order("created_at", { ascending: false })
     .limit(limit);
@@ -347,7 +381,9 @@ export async function fetchWhatsappCloudApiLogs(input: {
 
   const outboundQuery = supabase
     .from("whatsapp_cloud_api_outbound_messages")
-    .select("id,config_id,user_id,assignment_id,meta_message_id,recipient_wa_id,message_type,status,payload,response,last_error,created_at,sent_at")
+    .select(
+      "id,config_id,user_id,assignment_id,meta_message_id,recipient_wa_id,message_type,status,payload,response,last_error,created_at,sent_at",
+    )
     .in("config_id", configIds)
     .order("created_at", { ascending: false })
     .limit(limit);
@@ -355,18 +391,21 @@ export async function fetchWhatsappCloudApiLogs(input: {
 
   const requestLogQuery = supabase
     .from("whatsapp_cloud_api_webhook_request_logs")
-    .select("id,config_id,user_id,request_status,reason,http_status,phone_number_id,whatsapp_business_account_id,payload,error,created_at")
+    .select(
+      "id,config_id,user_id,request_status,reason,http_status,phone_number_id,whatsapp_business_account_id,payload,error,created_at",
+    )
     .eq("workspace_currency", input.workspaceCurrency)
     .order("created_at", { ascending: false })
     .limit(limit);
   if (!input.isAdmin) requestLogQuery.eq("user_id", input.userId);
 
-  const [webhookResult, assignmentResult, outboundResult, requestLogResult] = await Promise.all([
-    webhookQuery,
-    assignmentQuery,
-    outboundQuery,
-    requestLogQuery,
-  ]);
+  const [webhookResult, assignmentResult, outboundResult, requestLogResult] =
+    await Promise.all([
+      webhookQuery,
+      assignmentQuery,
+      outboundQuery,
+      requestLogQuery,
+    ]);
   if (webhookResult.error) throw webhookResult.error;
   if (assignmentResult.error) throw assignmentResult.error;
   if (outboundResult.error) throw outboundResult.error;
@@ -381,11 +420,13 @@ export async function fetchWhatsappCloudApiLogs(input: {
     logs.push({
       id: String(row.id),
       kind: "request",
-      label: httpStatus ? `Request ${reason} HTTP ${httpStatus}` : `Request ${reason}`,
+      label: httpStatus
+        ? `Request ${reason} HTTP ${httpStatus}`
+        : `Request ${reason}`,
       status: String(row.request_status ?? ""),
       created_at: String(row.created_at ?? ""),
       config_id: row.config_id ?? null,
-      config_name: row.config_id ? configNames.get(row.config_id) ?? "" : "",
+      config_name: row.config_id ? (configNames.get(row.config_id) ?? "") : "",
       phone: readPayloadPhone(payload),
       phone_number_id: firstString(row.phone_number_id),
       meta_message_id: firstString(row.whatsapp_business_account_id),
@@ -406,7 +447,7 @@ export async function fetchWhatsappCloudApiLogs(input: {
       status: String(row.status ?? ""),
       created_at: String(row.received_at ?? ""),
       config_id: row.config_id ?? null,
-      config_name: row.config_id ? configNames.get(row.config_id) ?? "" : "",
+      config_name: row.config_id ? (configNames.get(row.config_id) ?? "") : "",
       phone: readPayloadPhone(payload),
       phone_number_id: firstString(row.phone_number_id),
       meta_message_id: firstString(row.meta_message_id, row.meta_status_id),
@@ -426,12 +467,15 @@ export async function fetchWhatsappCloudApiLogs(input: {
       status: String(row.status ?? ""),
       created_at: String(row.created_at ?? ""),
       config_id: row.config_id ?? null,
-      config_name: row.config_id ? configNames.get(row.config_id) ?? "" : "",
+      config_name: row.config_id ? (configNames.get(row.config_id) ?? "") : "",
       phone: firstString(row.assigned_phone),
       phone_number_id: "",
       meta_message_id: firstString(row.redirect_message_id),
       promo_code: firstString(row.promo_code),
-      gerencia: firstString(row.assigned_gerencia_label, row.assigned_gerencia_id),
+      gerencia: firstString(
+        row.assigned_gerencia_label,
+        row.assigned_gerencia_id,
+      ),
       attempts: null,
       error: String(row.last_error ?? ""),
       payload: null,
@@ -446,7 +490,7 @@ export async function fetchWhatsappCloudApiLogs(input: {
       status: String(row.status ?? ""),
       created_at: String(row.created_at ?? ""),
       config_id: row.config_id ?? null,
-      config_name: row.config_id ? configNames.get(row.config_id) ?? "" : "",
+      config_name: row.config_id ? (configNames.get(row.config_id) ?? "") : "",
       phone: firstString(row.recipient_wa_id),
       phone_number_id: "",
       meta_message_id: firstString(row.meta_message_id),
@@ -460,14 +504,20 @@ export async function fetchWhatsappCloudApiLogs(input: {
 
   return logs
     .filter((log) => log.created_at)
-    .sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime())
+    .sort(
+      (a, b) =>
+        new Date(b.created_at).getTime() - new Date(a.created_at).getTime(),
+    )
     .slice(0, limit);
 }
 
-function normalizeInboxMessage(value: unknown): WhatsappCloudApiInboxMessage | null {
+function normalizeInboxMessage(
+  value: unknown,
+): WhatsappCloudApiInboxMessage | null {
   const row = asRecord(value);
   if (!row) return null;
-  const direction = firstString(row.direction) === "outbound" ? "outbound" : "inbound";
+  const direction =
+    firstString(row.direction) === "outbound" ? "outbound" : "inbound";
   return {
     created_at: firstString(row.created_at),
     direction,
@@ -485,17 +535,22 @@ export async function fetchWhatsappCloudApiInboxThreads(
   limit = 50,
   workspaceCurrency?: "ARS" | "PYG" | null,
 ): Promise<WhatsappCloudApiInboxThread[]> {
-  const { data, error } = await supabase.rpc("get_whatsapp_cloud_api_inbox_threads", {
-    p_limit: limit,
-    p_workspace_currency: workspaceCurrency ?? null,
-  });
+  const { data, error } = await supabase.rpc(
+    "get_whatsapp_cloud_api_inbox_threads",
+    {
+      p_limit: limit,
+      p_workspace_currency: workspaceCurrency ?? null,
+    },
+  );
   if (error) throw error;
   return ((data ?? []) as Array<Record<string, unknown>>).map((row) => {
     const messages = Array.isArray(row.messages)
-      ? row.messages.map(normalizeInboxMessage).filter((msg): msg is WhatsappCloudApiInboxMessage => Boolean(msg))
+      ? row.messages
+          .map(normalizeInboxMessage)
+          .filter((msg): msg is WhatsappCloudApiInboxMessage => Boolean(msg))
       : [];
     const rawTag = firstString(row.tag);
-    const tag = (rawTag === "nuevo" ? "contacto" : rawTag) as WhatsappCloudApiInboxThread["tag"];
+    const tag = rawTag as WhatsappCloudApiInboxThread["tag"];
     return {
       contact_id: firstString(row.contact_id),
       config_id: firstString(row.config_id),
@@ -510,9 +565,11 @@ export async function fetchWhatsappCloudApiInboxThreads(
       last_message_direction: firstString(row.last_message_direction),
       last_message_status: firstString(row.last_message_status),
       assigned_phone: firstString(row.assigned_phone),
-      assigned_gerencia_id: row.assigned_gerencia_id === null || row.assigned_gerencia_id === undefined
-        ? null
-        : Number(row.assigned_gerencia_id),
+      assigned_gerencia_id:
+        row.assigned_gerencia_id === null ||
+        row.assigned_gerencia_id === undefined
+          ? null
+          : Number(row.assigned_gerencia_id),
       assigned_gerencia_label: firstString(row.assigned_gerencia_label),
       promo_code: firstString(row.promo_code),
       ctwa_clid: firstString(row.ctwa_clid),
@@ -525,10 +582,20 @@ export async function fetchWhatsappCloudApiInboxThreads(
       repeat_purchase_count: Number(row.repeat_purchase_count ?? 0),
       total_loaded: Number(row.total_loaded ?? 0),
       last_purchase_at: firstString(row.last_purchase_at) || null,
-      tag: ["contacto", "lead", "cargo", "recompra", "premium"].includes(tag) ? tag : "contacto",
+      tag: [
+        "nuevo",
+        "contacto",
+        "lead",
+        "cargo",
+        "recompra",
+        "premium",
+      ].includes(tag)
+        ? tag
+        : "nuevo",
       redirect_clicked: Boolean(row.redirect_clicked),
       redirect_click_count: Number(row.redirect_click_count ?? 0),
-      redirect_last_clicked_at: firstString(row.redirect_last_clicked_at) || null,
+      redirect_last_clicked_at:
+        firstString(row.redirect_last_clicked_at) || null,
       unread_count: Number(row.unread_count ?? 0),
       unread_last_message_at: firstString(row.unread_last_message_at) || null,
       messages,
@@ -536,7 +603,9 @@ export async function fetchWhatsappCloudApiInboxThreads(
   });
 }
 
-export async function markWhatsappCloudApiThreadRead(contactId: string): Promise<void> {
+export async function markWhatsappCloudApiThreadRead(
+  contactId: string,
+): Promise<void> {
   if (!contactId) return;
   const { error } = await supabase.rpc("mark_whatsapp_cloud_api_thread_read", {
     p_contact_id: contactId,

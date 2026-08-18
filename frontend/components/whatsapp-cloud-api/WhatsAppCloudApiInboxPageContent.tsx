@@ -1,6 +1,13 @@
 "use client";
 
-import { useCallback, useEffect, useMemo, useRef, useState, type CSSProperties } from "react";
+import {
+  useCallback,
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+  type CSSProperties,
+} from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { PageHeader, SurfaceCard } from "@/components/ui/PanelPrimitives";
@@ -20,6 +27,7 @@ type Props = {
 };
 
 const TAG_LABELS: Record<WhatsappCloudApiInboxThread["tag"], string> = {
+  nuevo: "Nuevo",
   contacto: "Contacto",
   lead: "Lead",
   cargo: "Cargo",
@@ -28,14 +36,13 @@ const TAG_LABELS: Record<WhatsappCloudApiInboxThread["tag"], string> = {
 };
 
 const TAG_CLASSES: Record<WhatsappCloudApiInboxThread["tag"], string> = {
+  nuevo: "border-sky-400/25 bg-sky-400/10 text-sky-200",
   contacto: "border-zinc-600/35 bg-zinc-950/40 text-zinc-300",
   lead: "border-amber-800/40 bg-amber-950/18 text-amber-300",
   cargo: "border-rose-800/40 bg-rose-950/18 text-rose-300",
   recompra: "border-violet-800/40 bg-violet-950/20 text-violet-300",
   premium: "border-amber-500/20 bg-amber-500/8 text-amber-300",
 };
-
-const REDIRECTED_TAG_CLASS = "border-teal-400/25 bg-teal-400/10 text-teal-200";
 
 const WHATSAPP_DOODLE_PATTERN = encodeURIComponent(`
 <svg xmlns="http://www.w3.org/2000/svg" width="320" height="320" viewBox="0 0 320 320">
@@ -147,9 +154,16 @@ function formatTime(value: string | null): string {
   const now = new Date();
   const sameDay = date.toDateString() === now.toDateString();
   if (sameDay) {
-    return new Intl.DateTimeFormat("es-AR", { hour: "2-digit", minute: "2-digit", hourCycle: "h23" }).format(date);
+    return new Intl.DateTimeFormat("es-AR", {
+      hour: "2-digit",
+      minute: "2-digit",
+      hourCycle: "h23",
+    }).format(date);
   }
-  return new Intl.DateTimeFormat("es-AR", { day: "2-digit", month: "2-digit" }).format(date);
+  return new Intl.DateTimeFormat("es-AR", {
+    day: "2-digit",
+    month: "2-digit",
+  }).format(date);
 }
 
 function formatDateTime(value: string | null): string {
@@ -199,15 +213,33 @@ function StatusCheckIcon({ status }: { status: string }) {
   if (normalized === "read" || normalized === "delivered") {
     return (
       <svg className="h-3.5 w-4" viewBox="0 0 18 12" fill="none" aria-hidden>
-        <path d="M1.4 6.3 4.3 9.2 10.8 2.7" stroke={color} strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round" />
-        <path d="M7.1 8.9 8.5 10.3 16.6 2.2" stroke={color} strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round" />
+        <path
+          d="M1.4 6.3 4.3 9.2 10.8 2.7"
+          stroke={color}
+          strokeWidth="1.7"
+          strokeLinecap="round"
+          strokeLinejoin="round"
+        />
+        <path
+          d="M7.1 8.9 8.5 10.3 16.6 2.2"
+          stroke={color}
+          strokeWidth="1.7"
+          strokeLinecap="round"
+          strokeLinejoin="round"
+        />
       </svg>
     );
   }
   if (normalized === "sent" || normalized === "accepted") {
     return (
       <svg className="h-3.5 w-3.5" viewBox="0 0 12 12" fill="none" aria-hidden>
-        <path d="M1.4 6.3 4.3 9.2 10.8 2.7" stroke={color} strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round" />
+        <path
+          d="M1.4 6.3 4.3 9.2 10.8 2.7"
+          stroke={color}
+          strokeWidth="1.7"
+          strokeLinecap="round"
+          strokeLinejoin="round"
+        />
       </svg>
     );
   }
@@ -216,7 +248,16 @@ function StatusCheckIcon({ status }: { status: string }) {
 
 function SearchIcon() {
   return (
-    <svg className="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.8} strokeLinecap="round" strokeLinejoin="round" aria-hidden>
+    <svg
+      className="h-4 w-4"
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth={1.8}
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      aria-hidden
+    >
       <circle cx="11" cy="11" r="7" />
       <path d="m21 21-4.3-4.3" />
     </svg>
@@ -225,7 +266,16 @@ function SearchIcon() {
 
 function FilterIcon() {
   return (
-    <svg className="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.8} strokeLinecap="round" strokeLinejoin="round" aria-hidden>
+    <svg
+      className="h-4 w-4"
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth={1.8}
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      aria-hidden
+    >
       <path d="M4 5h16" />
       <path d="M7 12h10" />
       <path d="M10 19h4" />
@@ -235,7 +285,16 @@ function FilterIcon() {
 
 function SendIcon() {
   return (
-    <svg className="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.8} strokeLinecap="round" strokeLinejoin="round" aria-hidden>
+    <svg
+      className="h-4 w-4"
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth={1.8}
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      aria-hidden
+    >
       <path d="m22 2-7 20-4-9-9-4Z" />
       <path d="M22 2 11 13" />
     </svg>
@@ -244,7 +303,16 @@ function SendIcon() {
 
 function CtaArrowIcon() {
   return (
-    <svg className="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.8} strokeLinecap="round" strokeLinejoin="round" aria-hidden>
+    <svg
+      className="h-4 w-4"
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth={1.8}
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      aria-hidden
+    >
       <path d="M7 17 17 7" />
       <path d="M8 7h9v9" />
     </svg>
@@ -253,7 +321,16 @@ function CtaArrowIcon() {
 
 function EmptyConversationIcon() {
   return (
-    <svg className="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.8} strokeLinecap="round" strokeLinejoin="round" aria-hidden>
+    <svg
+      className="h-5 w-5"
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth={1.8}
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      aria-hidden
+    >
       <path d="M4 5.5A2.5 2.5 0 0 1 6.5 3h11A2.5 2.5 0 0 1 20 5.5v8a2.5 2.5 0 0 1-2.5 2.5H9l-5 4v-14.5Z" />
       <path d="M8 8h8" />
       <path d="M8 11.5h5" />
@@ -265,7 +342,11 @@ function messageTime(message: WhatsappCloudApiInboxMessage): string {
   if (!message.created_at) return "-";
   const date = new Date(message.created_at);
   if (Number.isNaN(date.getTime())) return "-";
-  return new Intl.DateTimeFormat("es-AR", { hour: "2-digit", minute: "2-digit", hourCycle: "h23" }).format(date);
+  return new Intl.DateTimeFormat("es-AR", {
+    hour: "2-digit",
+    minute: "2-digit",
+    hourCycle: "h23",
+  }).format(date);
 }
 
 function messageDateLabel(value: string | null): string {
@@ -277,10 +358,16 @@ function messageDateLabel(value: string | null): string {
   yesterday.setDate(today.getDate() - 1);
   if (date.toDateString() === today.toDateString()) return "Hoy";
   if (date.toDateString() === yesterday.toDateString()) return "Ayer";
-  return new Intl.DateTimeFormat("es-AR", { day: "2-digit", month: "2-digit", year: "numeric" }).format(date);
+  return new Intl.DateTimeFormat("es-AR", {
+    day: "2-digit",
+    month: "2-digit",
+    year: "numeric",
+  }).format(date);
 }
 
-function lastInboundMessageAt(messages: WhatsappCloudApiInboxMessage[]): Date | null {
+function lastInboundMessageAt(
+  messages: WhatsappCloudApiInboxMessage[],
+): Date | null {
   for (let index = messages.length - 1; index >= 0; index--) {
     const message = messages[index];
     if (message.direction !== "inbound") continue;
@@ -293,18 +380,26 @@ function lastInboundMessageAt(messages: WhatsappCloudApiInboxMessage[]): Date | 
 function gerenciaFilterLabel(thread: WhatsappCloudApiInboxThread): string {
   const label = String(thread.assigned_gerencia_label ?? "").trim();
   if (label) return label;
-  return thread.assigned_gerencia_id ? `Gerencia ${thread.assigned_gerencia_id}` : "";
+  return thread.assigned_gerencia_id
+    ? `Gerencia ${thread.assigned_gerencia_id}`
+    : "";
 }
 
 export default function WhatsAppCloudApiInboxPageContent({ mode }: Props) {
   const router = useRouter();
   const { currencyScope } = useCurrencyScope();
-  const workspaceCurrency = currencyScope === CURRENCY_ALL ? null : currencyScope;
-  const basePath = mode === "admin" ? "/admin/whatsapp-cloud-api" : "/dashboard/whatsapp-cloud-api";
+  const workspaceCurrency =
+    currencyScope === CURRENCY_ALL ? null : currencyScope;
+  const basePath =
+    mode === "admin"
+      ? "/admin/whatsapp-cloud-api"
+      : "/dashboard/whatsapp-cloud-api";
   const [threads, setThreads] = useState<WhatsappCloudApiInboxThread[]>([]);
   const [selectedId, setSelectedId] = useState<string>("");
   const [search, setSearch] = useState("");
-  const [tagFilter, setTagFilter] = useState<"all" | WhatsappCloudApiInboxThread["tag"]>("all");
+  const [tagFilter, setTagFilter] = useState<
+    "all" | WhatsappCloudApiInboxThread["tag"]
+  >("all");
   const [gerenciaFilter, setGerenciaFilter] = useState("");
   const [draftGerenciaFilter, setDraftGerenciaFilter] = useState("");
   const [gerenciaFilterOpen, setGerenciaFilterOpen] = useState(false);
@@ -324,11 +419,16 @@ export default function WhatsAppCloudApiInboxPageContent({ mode }: Props) {
         router.replace("/login");
         return;
       }
-      const rows = await fetchWhatsappCloudApiInboxThreads(80, workspaceCurrency);
+      const rows = await fetchWhatsappCloudApiInboxThreads(
+        80,
+        workspaceCurrency,
+      );
       setThreads(rows);
       setSelectedId((current) => current || rows[0]?.contact_id || "");
     } catch (err) {
-      setError(err instanceof Error ? err.message : "No se pudo cargar el Inbox.");
+      setError(
+        err instanceof Error ? err.message : "No se pudo cargar el Inbox.",
+      );
     } finally {
       setLoading(false);
     }
@@ -350,16 +450,17 @@ export default function WhatsAppCloudApiInboxPageContent({ mode }: Props) {
   }, [sendNotice]);
 
   const gerenciaOptions = useMemo(() => {
-    return Array.from(new Set(threads.map(gerenciaFilterLabel).filter(Boolean))).sort((a, b) =>
-      a.localeCompare(b, "es-AR", { numeric: true }),
-    );
+    return Array.from(
+      new Set(threads.map(gerenciaFilterLabel).filter(Boolean)),
+    ).sort((a, b) => a.localeCompare(b, "es-AR", { numeric: true }));
   }, [threads]);
 
   const filteredThreads = useMemo(() => {
     const term = search.trim().toLowerCase();
     return threads.filter((thread) => {
       if (tagFilter !== "all" && thread.tag !== tagFilter) return false;
-      if (gerenciaFilter && gerenciaFilterLabel(thread) !== gerenciaFilter) return false;
+      if (gerenciaFilter && gerenciaFilterLabel(thread) !== gerenciaFilter)
+        return false;
       if (!term) return true;
       return [
         thread.profile_name,
@@ -375,17 +476,31 @@ export default function WhatsAppCloudApiInboxPageContent({ mode }: Props) {
   }, [gerenciaFilter, search, tagFilter, threads]);
 
   const selectedThread = useMemo(
-    () => filteredThreads.find((thread) => thread.contact_id === selectedId) ?? filteredThreads[0] ?? null,
+    () =>
+      filteredThreads.find((thread) => thread.contact_id === selectedId) ??
+      filteredThreads[0] ??
+      null,
     [filteredThreads, selectedId],
   );
 
-  const selectedMessages = useMemo(() => selectedThread?.messages ?? [], [selectedThread]);
-  const lastInboundAt = useMemo(() => lastInboundMessageAt(selectedMessages), [selectedMessages]);
+  const selectedMessages = useMemo(
+    () => selectedThread?.messages ?? [],
+    [selectedThread],
+  );
+  const lastInboundAt = useMemo(
+    () => lastInboundMessageAt(selectedMessages),
+    [selectedMessages],
+  );
   const serviceWindowExpiresAt = useMemo(
-    () => lastInboundAt ? new Date(lastInboundAt.getTime() + 24 * 60 * 60 * 1000) : null,
+    () =>
+      lastInboundAt
+        ? new Date(lastInboundAt.getTime() + 24 * 60 * 60 * 1000)
+        : null,
     [lastInboundAt],
   );
-  const serviceWindowActive = Boolean(serviceWindowExpiresAt && Date.now() <= serviceWindowExpiresAt.getTime());
+  const serviceWindowActive = Boolean(
+    serviceWindowExpiresAt && Date.now() <= serviceWindowExpiresAt.getTime(),
+  );
 
   useEffect(() => {
     if (!selectedThread || selectedThread.unread_count <= 0) return;
@@ -430,7 +545,9 @@ export default function WhatsAppCloudApiInboxPageContent({ mode }: Props) {
       setSendNotice("Mensaje enviado.");
       await loadThreads();
     } catch (err) {
-      setError(err instanceof Error ? err.message : "No se pudo enviar el mensaje.");
+      setError(
+        err instanceof Error ? err.message : "No se pudo enviar el mensaje.",
+      );
     } finally {
       setSending(false);
     }
@@ -454,7 +571,12 @@ export default function WhatsAppCloudApiInboxPageContent({ mode }: Props) {
               <FilterIcon />
               Aplicar filtro{gerenciaFilter ? " (1)" : ""}
             </button>
-            <button type="button" className="ui-button ui-button-secondary" onClick={() => void loadThreads()} disabled={loading}>
+            <button
+              type="button"
+              className="ui-button ui-button-secondary"
+              onClick={() => void loadThreads()}
+              disabled={loading}
+            >
               Actualizar
             </button>
             <Link href={basePath} className="ui-button ui-button-secondary">
@@ -462,13 +584,18 @@ export default function WhatsAppCloudApiInboxPageContent({ mode }: Props) {
             </Link>
             {gerenciaFilterOpen ? (
               <div className="absolute right-0 top-12 z-20 w-80 rounded-2xl border border-[var(--color-border)] bg-[var(--color-bg-1)] p-4 text-left shadow-2xl">
-                <label className="text-xs font-semibold text-[var(--color-text-muted)]" htmlFor="whatsapp-cloud-inbox-gerencia-filter">
+                <label
+                  className="text-xs font-semibold text-[var(--color-text-muted)]"
+                  htmlFor="whatsapp-cloud-inbox-gerencia-filter"
+                >
                   Gerencia asignada
                 </label>
                 <select
                   id="whatsapp-cloud-inbox-gerencia-filter"
                   value={draftGerenciaFilter}
-                  onChange={(event) => setDraftGerenciaFilter(event.target.value)}
+                  onChange={(event) =>
+                    setDraftGerenciaFilter(event.target.value)
+                  }
                   className="mt-2 h-10 w-full rounded-xl border border-[var(--color-border)] bg-[var(--color-bg-2)] px-3 text-sm text-[var(--color-text-strong)] outline-none"
                 >
                   <option value="">Todas las gerencias</option>
@@ -508,7 +635,9 @@ export default function WhatsAppCloudApiInboxPageContent({ mode }: Props) {
       />
 
       {error ? <div className="ui-alert-error">{error}</div> : null}
-      {sendNotice ? <div className="ui-alert ui-alert-success text-sm">{sendNotice}</div> : null}
+      {sendNotice ? (
+        <div className="ui-alert ui-alert-success text-sm">{sendNotice}</div>
+      ) : null}
 
       <SurfaceCard className="grid min-h-[38rem] overflow-hidden xl:grid-cols-[20rem_minmax(0,1fr)_18rem]">
         <aside className="flex min-h-0 flex-col border-b border-[var(--color-border-subtle)] xl:border-b-0 xl:border-r">
@@ -523,7 +652,17 @@ export default function WhatsAppCloudApiInboxPageContent({ mode }: Props) {
               />
             </div>
             <div className="scrollbar-none flex gap-2 overflow-x-auto">
-              {(["all", "contacto", "lead", "cargo", "recompra", "premium"] as const).map((tag) => (
+              {(
+                [
+                  "all",
+                  "nuevo",
+                  "contacto",
+                  "lead",
+                  "cargo",
+                  "recompra",
+                  "premium",
+                ] as const
+              ).map((tag) => (
                 <button
                   key={tag}
                   type="button"
@@ -542,77 +681,95 @@ export default function WhatsAppCloudApiInboxPageContent({ mode }: Props) {
 
           <div className="min-h-0 flex-1 overflow-y-auto">
             {loading ? (
-              <div className="p-4 text-sm text-[var(--color-text-muted)]">Cargando conversaciones...</div>
+              <div className="p-4 text-sm text-[var(--color-text-muted)]">
+                Cargando conversaciones...
+              </div>
             ) : filteredThreads.length === 0 ? (
               <div className="flex h-full items-center justify-center p-6 text-center">
                 <div className="max-w-xs">
                   <span className="mx-auto flex h-11 w-11 items-center justify-center rounded-xl border border-[var(--color-primary-soft-border)] bg-[var(--color-primary-soft-bg)] text-[var(--color-primary)]">
                     <EmptyConversationIcon />
                   </span>
-                  <p className="mt-4 text-sm font-semibold text-[var(--color-text-strong)]">Sin conversaciones</p>
-                  <p className="mt-2 text-xs leading-5 text-[var(--color-text-muted)]">No hay threads para los filtros seleccionados.</p>
+                  <p className="mt-4 text-sm font-semibold text-[var(--color-text-strong)]">
+                    Sin conversaciones
+                  </p>
+                  <p className="mt-2 text-xs leading-5 text-[var(--color-text-muted)]">
+                    No hay threads para los filtros seleccionados.
+                  </p>
                 </div>
               </div>
-            ) : filteredThreads.map((thread) => {
-              const selected = selectedThread?.contact_id === thread.contact_id;
-              const unreadCount = Math.max(0, Number(thread.unread_count || 0));
-              return (
-                <button
-                  key={thread.contact_id}
-                  type="button"
-                  onClick={() => setSelectedId(thread.contact_id)}
-                  className={`relative flex w-full gap-3 border-b border-[var(--color-border-subtle)] px-4 py-3 text-left transition hover:bg-[rgba(148,163,184,0.06)] ${
-                    selected ? "bg-[rgba(148,163,184,0.08)]" : ""
-                  }`}
-                >
-                  {selected ? <span className="absolute bottom-0 left-0 top-0 w-1 bg-[var(--color-primary)]" /> : null}
-                  <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full border border-[var(--color-border)] bg-[var(--color-bg-2)] text-xs font-semibold text-[var(--color-text-muted)]">
-                    {initials(thread.profile_name, thread.wa_id)}
-                  </span>
-                  <span className="min-w-0 flex-1">
-                    <span className="flex items-start justify-between gap-2">
-                      <span className={`truncate text-sm text-[var(--color-text-strong)] ${unreadCount > 0 ? "font-bold" : "font-semibold"}`}>
-                        {thread.profile_name || thread.wa_id}
-                      </span>
-                      <span className="flex shrink-0 flex-col items-end gap-1">
-                        <span className={`text-[10px] ${unreadCount > 0 ? "font-semibold text-[#25d366]" : "text-[var(--color-text-disabled)]"}`}>
-                          {formatTime(thread.last_message_at || thread.first_message_at)}
+            ) : (
+              filteredThreads.map((thread) => {
+                const selected =
+                  selectedThread?.contact_id === thread.contact_id;
+                const unreadCount = Math.max(
+                  0,
+                  Number(thread.unread_count || 0),
+                );
+                return (
+                  <button
+                    key={thread.contact_id}
+                    type="button"
+                    onClick={() => setSelectedId(thread.contact_id)}
+                    className={`relative flex w-full gap-3 border-b border-[var(--color-border-subtle)] px-4 py-3 text-left transition hover:bg-[rgba(148,163,184,0.06)] ${
+                      selected ? "bg-[rgba(148,163,184,0.08)]" : ""
+                    }`}
+                  >
+                    {selected ? (
+                      <span className="absolute bottom-0 left-0 top-0 w-1 bg-[var(--color-primary)]" />
+                    ) : null}
+                    <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full border border-[var(--color-border)] bg-[var(--color-bg-2)] text-xs font-semibold text-[var(--color-text-muted)]">
+                      {initials(thread.profile_name, thread.wa_id)}
+                    </span>
+                    <span className="min-w-0 flex-1">
+                      <span className="flex items-start justify-between gap-2">
+                        <span
+                          className={`truncate text-sm text-[var(--color-text-strong)] ${unreadCount > 0 ? "font-bold" : "font-semibold"}`}
+                        >
+                          {thread.profile_name || thread.wa_id}
                         </span>
-                        {unreadCount > 0 ? (
-                          <span className="flex h-5 min-w-5 items-center justify-center rounded-full bg-[#25d366] px-1.5 text-[10px] font-bold leading-none text-[#0b141a]">
-                            {unreadCount > 99 ? "99+" : unreadCount}
+                        <span className="flex shrink-0 flex-col items-end gap-1">
+                          <span
+                            className={`text-[10px] ${unreadCount > 0 ? "font-semibold text-[#25d366]" : "text-[var(--color-text-disabled)]"}`}
+                          >
+                            {formatTime(
+                              thread.last_message_at || thread.first_message_at,
+                            )}
+                          </span>
+                          {unreadCount > 0 ? (
+                            <span className="flex h-5 min-w-5 items-center justify-center rounded-full bg-[#25d366] px-1.5 text-[10px] font-bold leading-none text-[#0b141a]">
+                              {unreadCount > 99 ? "99+" : unreadCount}
+                            </span>
+                          ) : null}
+                        </span>
+                      </span>
+                      <span
+                        className={`mt-1 block truncate text-xs ${unreadCount > 0 ? "font-semibold text-[var(--color-text-strong)]" : "text-[var(--color-text-muted)]"}`}
+                      >
+                        {thread.last_message_text || "Sin mensajes"}
+                      </span>
+                      <span className="mt-2 flex flex-wrap gap-1.5">
+                        <span
+                          className={`inline-flex rounded-full border px-2 py-0.5 text-[10px] font-semibold ${TAG_CLASSES[thread.tag]}`}
+                        >
+                          {TAG_LABELS[thread.tag]}
+                        </span>
+                        {gerenciaFilterLabel(thread) ? (
+                          <span
+                            className="inline-flex max-w-full rounded-full border border-[var(--color-border-subtle)] bg-[rgba(148,163,184,0.07)] px-2 py-0.5 text-[10px] font-medium text-[var(--color-text-muted)]"
+                            title={`Gerencia: ${gerenciaFilterLabel(thread)}`}
+                          >
+                            <span className="truncate">
+                              {gerenciaFilterLabel(thread)}
+                            </span>
                           </span>
                         ) : null}
                       </span>
                     </span>
-                    <span className={`mt-1 block truncate text-xs ${unreadCount > 0 ? "font-semibold text-[var(--color-text-strong)]" : "text-[var(--color-text-muted)]"}`}>
-                      {thread.last_message_text || "Sin mensajes"}
-                    </span>
-                    <span className="mt-2 flex flex-wrap gap-1.5">
-                      <span className={`inline-flex rounded-full border px-2 py-0.5 text-[10px] font-semibold ${TAG_CLASSES[thread.tag]}`}>
-                        {TAG_LABELS[thread.tag]}
-                      </span>
-                      {gerenciaFilterLabel(thread) ? (
-                        <span
-                          className="inline-flex max-w-full rounded-full border border-[var(--color-border-subtle)] bg-[rgba(148,163,184,0.07)] px-2 py-0.5 text-[10px] font-medium text-[var(--color-text-muted)]"
-                          title={`Gerencia: ${gerenciaFilterLabel(thread)}`}
-                        >
-                          <span className="truncate">{gerenciaFilterLabel(thread)}</span>
-                        </span>
-                      ) : null}
-                      {thread.redirect_clicked ? (
-                        <span
-                          className={`inline-flex max-w-full rounded-full border px-2 py-0.5 text-[10px] font-semibold ${REDIRECTED_TAG_CLASS}`}
-                          title={thread.redirect_last_clicked_at ? `Ultima redireccion: ${formatDateTime(thread.redirect_last_clicked_at)}` : "Redirigido"}
-                        >
-                          Redirigido
-                        </span>
-                      ) : null}
-                    </span>
-                  </span>
-                </button>
-              );
-            })}
+                  </button>
+                );
+              })
+            )}
           </div>
         </aside>
 
@@ -622,38 +779,51 @@ export default function WhatsAppCloudApiInboxPageContent({ mode }: Props) {
               <div className="flex items-center justify-between border-b border-[#26343d] bg-[#111b21] px-4 py-3">
                 <div className="flex min-w-0 items-center gap-3">
                   <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full border border-[#2a3942] bg-[#202c33] text-xs font-semibold text-[#aebac1]">
-                    {initials(selectedThread.profile_name, selectedThread.wa_id)}
+                    {initials(
+                      selectedThread.profile_name,
+                      selectedThread.wa_id,
+                    )}
                   </span>
                   <div className="min-w-0">
-                    <p className="truncate text-sm font-semibold text-[#e9edef]">{selectedThread.profile_name || selectedThread.wa_id}</p>
-                    <p className="text-xs text-[#8696a0]">{formatWhatsAppPhone(selectedThread.phone || selectedThread.wa_id)}</p>
+                    <p className="truncate text-sm font-semibold text-[#e9edef]">
+                      {selectedThread.profile_name || selectedThread.wa_id}
+                    </p>
+                    <p className="text-xs text-[#8696a0]">
+                      {formatWhatsAppPhone(
+                        selectedThread.phone || selectedThread.wa_id,
+                      )}
+                    </p>
                   </div>
                 </div>
                 <div className="flex shrink-0 items-center gap-2">
-                  <span className={`rounded-full border px-2.5 py-1 text-xs font-semibold ${TAG_CLASSES[selectedThread.tag]}`}>
+                  <span
+                    className={`rounded-full border px-2.5 py-1 text-xs font-semibold ${TAG_CLASSES[selectedThread.tag]}`}
+                  >
                     {TAG_LABELS[selectedThread.tag]}
                   </span>
-                  {selectedThread.redirect_clicked ? (
-                    <span
-                      className={`rounded-full border px-2.5 py-1 text-xs font-semibold ${REDIRECTED_TAG_CLASS}`}
-                      title={selectedThread.redirect_last_clicked_at ? `Ultima redireccion: ${formatDateTime(selectedThread.redirect_last_clicked_at)}` : "Redirigido"}
-                    >
-                      Redirigido
-                    </span>
-                  ) : null}
                 </div>
               </div>
 
-              <div className="flex min-h-0 flex-1 flex-col gap-2 overflow-y-auto px-5 py-5" style={WHATSAPP_CHAT_BACKGROUND}>
+              <div
+                className="flex min-h-0 flex-1 flex-col gap-2 overflow-y-auto px-5 py-5"
+                style={WHATSAPP_CHAT_BACKGROUND}
+              >
                 {selectedMessages.length === 0 ? (
                   <div className="m-auto max-w-sm rounded-xl border border-dashed border-[#2a3942] bg-[#111b21]/90 px-5 py-6 text-center shadow-lg">
-                    <p className="text-sm font-semibold text-[#e9edef]">Sin mensajes normalizados</p>
-                    <p className="mt-2 text-xs leading-5 text-[#8696a0]">El thread existe, pero no hay mensajes disponibles para mostrar.</p>
+                    <p className="text-sm font-semibold text-[#e9edef]">
+                      Sin mensajes normalizados
+                    </p>
+                    <p className="mt-2 text-xs leading-5 text-[#8696a0]">
+                      El thread existe, pero no hay mensajes disponibles para
+                      mostrar.
+                    </p>
                   </div>
                 ) : (
                   <>
                     <div className="mb-2 self-center rounded-lg bg-[#182229] px-3 py-1 text-[11px] font-medium text-[#8696a0] shadow">
-                      {messageDateLabel(selectedMessages[0]?.created_at ?? null)}
+                      {messageDateLabel(
+                        selectedMessages[0]?.created_at ?? null,
+                      )}
                     </div>
                     {selectedMessages.map((message, index) => {
                       const outbound = message.direction === "outbound";
@@ -676,7 +846,9 @@ export default function WhatsAppCloudApiInboxPageContent({ mode }: Props) {
                             }`}
                             aria-hidden
                           />
-                          <p className="whitespace-pre-wrap break-words pr-11">{message.body || "-"}</p>
+                          <p className="whitespace-pre-wrap break-words pr-11">
+                            {message.body || "-"}
+                          </p>
                           {outbound && ctaTitle ? (
                             <a
                               href={ctaUrl || undefined}
@@ -693,9 +865,15 @@ export default function WhatsAppCloudApiInboxPageContent({ mode }: Props) {
                           ) : null}
                           <span className="float-right -mb-0.5 ml-2 mt-1 flex items-center gap-1 text-[10px] leading-none text-[#8696a0]">
                             {messageTime(message)}
-                            {outbound ? <StatusCheckIcon status={message.status} /> : null}
+                            {outbound ? (
+                              <StatusCheckIcon status={message.status} />
+                            ) : null}
                           </span>
-                          {message.error ? <p className="clear-both mt-2 text-[10px] text-rose-300">{message.error}</p> : null}
+                          {message.error ? (
+                            <p className="clear-both mt-2 text-[10px] text-rose-300">
+                              {message.error}
+                            </p>
+                          ) : null}
                         </div>
                       );
                     })}
@@ -723,17 +901,23 @@ export default function WhatsAppCloudApiInboxPageContent({ mode }: Props) {
                     }}
                     disabled={!serviceWindowActive || sending}
                     className="min-w-0 flex-1 rounded-full border border-[#2a3942] bg-[#202c33] px-4 py-2 text-sm text-[#e9edef] outline-none placeholder:text-[#8696a0] disabled:cursor-not-allowed disabled:opacity-60"
-                    placeholder={serviceWindowActive ? "Escribir respuesta" : "Ventana de 24 hs no disponible"}
+                    placeholder={
+                      serviceWindowActive
+                        ? "Escribir respuesta"
+                        : "Ventana de 24 hs no disponible"
+                    }
                     maxLength={4096}
                   />
                   <button
                     type="button"
                     className="flex h-10 w-10 items-center justify-center rounded-full bg-[#00a884] text-[#0b141a] transition hover:bg-[#06cf9c] disabled:cursor-not-allowed disabled:opacity-50"
-                    disabled={!serviceWindowActive || !manualMessage.trim() || sending}
+                    disabled={
+                      !serviceWindowActive || !manualMessage.trim() || sending
+                    }
                     onClick={() => void sendManualMessage()}
                     title="Enviar respuesta"
                   >
-                  <SendIcon />
+                    <SendIcon />
                   </button>
                 </div>
               </div>
@@ -741,8 +925,12 @@ export default function WhatsAppCloudApiInboxPageContent({ mode }: Props) {
           ) : (
             <div className="flex h-full items-center justify-center p-6 text-center">
               <div className="max-w-sm rounded-xl border border-dashed border-[var(--color-border-strong)] bg-[rgba(255,255,255,0.02)] px-5 py-6">
-                <p className="text-sm font-semibold text-[var(--color-text-strong)]">Selecciona una conversacion</p>
-                <p className="mt-2 text-xs leading-5 text-[var(--color-text-muted)]">El detalle se muestra al seleccionar un thread.</p>
+                <p className="text-sm font-semibold text-[var(--color-text-strong)]">
+                  Selecciona una conversacion
+                </p>
+                <p className="mt-2 text-xs leading-5 text-[var(--color-text-muted)]">
+                  El detalle se muestra al seleccionar un thread.
+                </p>
               </div>
             </div>
           )}
@@ -755,50 +943,111 @@ export default function WhatsAppCloudApiInboxPageContent({ mode }: Props) {
                 <span className="mx-auto flex h-14 w-14 items-center justify-center rounded-full border border-[var(--color-border)] bg-[var(--color-bg-2)] text-sm font-semibold text-[var(--color-text-muted)]">
                   {initials(selectedThread.profile_name, selectedThread.wa_id)}
                 </span>
-                <p className="mt-3 text-sm font-semibold text-[var(--color-text-strong)]">{selectedThread.profile_name || selectedThread.wa_id}</p>
-                <p className="mt-1 text-xs text-[var(--color-text-muted)]">{formatWhatsAppPhone(selectedThread.phone || selectedThread.wa_id)}</p>
+                <p className="mt-3 text-sm font-semibold text-[var(--color-text-strong)]">
+                  {selectedThread.profile_name || selectedThread.wa_id}
+                </p>
+                <p className="mt-1 text-xs text-[var(--color-text-muted)]">
+                  {formatWhatsAppPhone(
+                    selectedThread.phone || selectedThread.wa_id,
+                  )}
+                </p>
               </div>
 
               <div className="grid grid-cols-2 gap-2">
                 <div className="rounded-xl border border-[var(--color-border-subtle)] bg-[var(--color-bg-2)] p-3">
-                  <p className="text-[10px] uppercase tracking-[0.14em] text-[var(--color-text-disabled)]">Cargas</p>
-                  <p className="mt-1 text-lg font-semibold text-[var(--color-text-strong)]">{selectedThread.purchase_count}</p>
+                  <p className="text-[10px] uppercase tracking-[0.14em] text-[var(--color-text-disabled)]">
+                    Cargas
+                  </p>
+                  <p className="mt-1 text-lg font-semibold text-[var(--color-text-strong)]">
+                    {selectedThread.purchase_count}
+                  </p>
                 </div>
                 <div className="rounded-xl border border-[var(--color-border-subtle)] bg-[var(--color-bg-2)] p-3">
-                  <p className="text-[10px] uppercase tracking-[0.14em] text-[var(--color-text-disabled)]">Total</p>
-                  <p className="mt-1 text-sm font-semibold text-[var(--color-primary)]">{formatMoney(selectedThread.total_loaded)}</p>
+                  <p className="text-[10px] uppercase tracking-[0.14em] text-[var(--color-text-disabled)]">
+                    Total
+                  </p>
+                  <p className="mt-1 text-sm font-semibold text-[var(--color-primary)]">
+                    {formatMoney(selectedThread.total_loaded)}
+                  </p>
                 </div>
               </div>
 
               <div>
-                <p className="text-[10px] font-semibold uppercase tracking-[0.16em] text-[var(--color-text-disabled)]">Derivacion</p>
+                <p className="text-[10px] font-semibold uppercase tracking-[0.16em] text-[var(--color-text-disabled)]">
+                  Derivacion
+                </p>
                 <div className="mt-3 space-y-2 text-xs">
-                  <InfoRow label="Telefono" value={formatWhatsAppPhone(selectedThread.assigned_phone) || "-"} />
-                  <InfoRow label="Gerencia" value={selectedThread.assigned_gerencia_label || selectedThread.assigned_gerencia_id?.toString() || "-"} />
-                  <InfoRow label="Promo" value={selectedThread.promo_code || "-"} />
+                  <InfoRow
+                    label="Telefono"
+                    value={
+                      formatWhatsAppPhone(selectedThread.assigned_phone) || "-"
+                    }
+                  />
+                  <InfoRow
+                    label="Gerencia"
+                    value={
+                      selectedThread.assigned_gerencia_label ||
+                      selectedThread.assigned_gerencia_id?.toString() ||
+                      "-"
+                    }
+                  />
+                  <InfoRow
+                    label="Promo"
+                    value={selectedThread.promo_code || "-"}
+                  />
                   <InfoRow
                     label="Redireccion"
-                    value={selectedThread.redirect_clicked
-                      ? `${selectedThread.redirect_click_count} click${selectedThread.redirect_click_count === 1 ? "" : "s"}`
-                      : "-"}
+                    value={
+                      selectedThread.redirect_clicked
+                        ? `${selectedThread.redirect_click_count} click${selectedThread.redirect_click_count === 1 ? "" : "s"}`
+                        : "-"
+                    }
                   />
                 </div>
               </div>
 
-              {(selectedThread.ctwa_clid || selectedThread.source_type || selectedThread.headline || selectedThread.last_purchase_at) ? (
+              {selectedThread.ctwa_clid ||
+              selectedThread.source_type ||
+              selectedThread.headline ||
+              selectedThread.last_purchase_at ? (
                 <div>
-                  <p className="text-[10px] font-semibold uppercase tracking-[0.16em] text-[var(--color-text-disabled)]">Atribucion</p>
+                  <p className="text-[10px] font-semibold uppercase tracking-[0.16em] text-[var(--color-text-disabled)]">
+                    Atribucion
+                  </p>
                   <div className="mt-3 space-y-2 text-xs">
-                    {selectedThread.ctwa_clid ? <InfoRow label="ctwa_clid" value={selectedThread.ctwa_clid} mono /> : null}
-                    {selectedThread.source_type ? <InfoRow label="Tipo anuncio" value={selectedThread.source_type} /> : null}
-                    {selectedThread.headline ? <InfoRow label="Titulo anuncio" value={selectedThread.headline} /> : null}
-                    {selectedThread.last_purchase_at ? <InfoRow label="Ultima carga" value={formatDateTime(selectedThread.last_purchase_at)} /> : null}
+                    {selectedThread.ctwa_clid ? (
+                      <InfoRow
+                        label="ctwa_clid"
+                        value={selectedThread.ctwa_clid}
+                        mono
+                      />
+                    ) : null}
+                    {selectedThread.source_type ? (
+                      <InfoRow
+                        label="Tipo anuncio"
+                        value={selectedThread.source_type}
+                      />
+                    ) : null}
+                    {selectedThread.headline ? (
+                      <InfoRow
+                        label="Titulo anuncio"
+                        value={selectedThread.headline}
+                      />
+                    ) : null}
+                    {selectedThread.last_purchase_at ? (
+                      <InfoRow
+                        label="Ultima carga"
+                        value={formatDateTime(selectedThread.last_purchase_at)}
+                      />
+                    ) : null}
                   </div>
                 </div>
               ) : null}
             </div>
           ) : (
-            <p className="text-sm text-[var(--color-text-muted)]">Sin thread seleccionado.</p>
+            <p className="text-sm text-[var(--color-text-muted)]">
+              Sin thread seleccionado.
+            </p>
           )}
         </aside>
       </SurfaceCard>
@@ -806,11 +1055,21 @@ export default function WhatsAppCloudApiInboxPageContent({ mode }: Props) {
   );
 }
 
-function InfoRow({ label, value, mono = false }: { label: string; value: string; mono?: boolean }) {
+function InfoRow({
+  label,
+  value,
+  mono = false,
+}: {
+  label: string;
+  value: string;
+  mono?: boolean;
+}) {
   return (
     <div className="flex items-start justify-between gap-3 rounded-lg border border-[var(--color-border-subtle)] bg-[rgba(255,255,255,0.02)] px-3 py-2">
       <span className="shrink-0 text-[var(--color-text-muted)]">{label}</span>
-      <span className={`min-w-0 break-words text-right font-medium text-[var(--color-text-strong)] ${mono ? "font-mono text-[10px]" : ""}`}>
+      <span
+        className={`min-w-0 break-words text-right font-medium text-[var(--color-text-strong)] ${mono ? "font-mono text-[10px]" : ""}`}
+      >
         {value}
       </span>
     </div>

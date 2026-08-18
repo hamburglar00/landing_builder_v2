@@ -220,6 +220,12 @@ type AssignedGerenciaSnapshot = {
   assigned_gerencia_label: string;
 };
 
+type WhatsappCloudApiAssignmentLineage = {
+  assignmentId: string;
+  conversionId: string;
+  row: ConversionRow;
+};
+
 interface GeoResult {
   geo_city: string;
   geo_region: string;
@@ -754,6 +760,187 @@ function lineageNameValue(
   fallbackValue: unknown,
 ): string {
   return payloadValue || norm(primaryValue) || norm(fallbackValue);
+}
+
+function splitProfileName(fullName: unknown): { fn: string; ln: string } {
+  const parts = norm(fullName).split(/\s+/).filter(Boolean);
+  if (parts.length <= 1) return { fn: parts[0] ?? "", ln: "" };
+  return {
+    fn: parts.slice(0, -1).join(" "),
+    ln: parts[parts.length - 1],
+  };
+}
+
+async function findWhatsappCloudApiAssignmentLineage(
+  db: SupabaseClient,
+  userId: string,
+  promoCode: string,
+): Promise<WhatsappCloudApiAssignmentLineage | null> {
+  if (!isFullPromoCode(promoCode)) return null;
+
+  const { data: assignment } = await db
+    .from("whatsapp_cloud_api_assignments")
+    .select("*")
+    .eq("user_id", userId)
+    .eq("promo_code", promoCode)
+    .order("created_at", { ascending: true })
+    .limit(1)
+    .maybeSingle();
+  const assignmentRow = assignment as Record<string, unknown> | null;
+  if (!assignmentRow?.id) return null;
+
+  const linkedConversionId = norm(assignmentRow.conversion_id);
+  if (linkedConversionId) {
+    const { data: linked } = await db
+      .from("conversions")
+      .select("*")
+      .eq("user_id", userId)
+      .eq("id", linkedConversionId)
+      .maybeSingle();
+    if (linked) {
+      return {
+        assignmentId: norm(assignmentRow.id),
+        conversionId: linkedConversionId,
+        row: linked as ConversionRow,
+      };
+    }
+  }
+
+  const [configResult, contactResult, sessionResult] = await Promise.all([
+    db
+      .from("whatsapp_cloud_api_configs")
+      .select(
+        "name,workspace_currency,phone_number_id,meta_messaging_dataset_id",
+      )
+      .eq("user_id", userId)
+      .eq("id", norm(assignmentRow.config_id))
+      .maybeSingle(),
+    db
+      .from("whatsapp_cloud_api_contacts")
+      .select("wa_id,phone,profile_name,external_id,first_message_at")
+      .eq("user_id", userId)
+      .eq("id", norm(assignmentRow.contact_id))
+      .maybeSingle(),
+    norm(assignmentRow.attribution_session_id)
+      ? db
+        .from("whatsapp_cloud_api_attribution_sessions")
+        .select("ctwa_clid,source_url,source_type,headline,referral")
+        .eq("user_id", userId)
+        .eq("id", norm(assignmentRow.attribution_session_id))
+        .maybeSingle()
+      : Promise.resolve({ data: null }),
+  ]);
+
+  const configRow = configResult.data as Record<string, unknown> | null;
+  const contactRow = contactResult.data as Record<string, unknown> | null;
+  const sessionRow = sessionResult.data as Record<string, unknown> | null;
+  if (!configRow || !contactRow) return null;
+
+  const phone = sanitizePhone(contactRow.wa_id || contactRow.phone);
+  const profileName = norm(contactRow.profile_name);
+  const profile = splitProfileName(profileName);
+  const workspaceCurrency = normalizeWorkspaceCurrency(
+    configRow.workspace_currency,
+  );
+  const ctwaClid = normalizeCtwaClid(sessionRow?.ctwa_clid);
+  const externalId = norm(contactRow.external_id) ||
+    (phone
+      ? await sha256(`whatsapp_cloud_api:${assignmentRow.config_id}:${phone}`)
+      : "");
+  const assignedGerenciaId = Number(assignmentRow.assigned_gerencia_id);
+  const assignedGerenciaExternalId = Number(
+    assignmentRow.assigned_gerencia_external_id,
+  );
+  const assignedGerenciaLabel = norm(assignmentRow.assigned_gerencia_label);
+
+  const row: ConversionRow = {
+    landing_id: null,
+    user_id: userId,
+    landing_name: "WhatsApp Cloud API",
+    phone,
+    email: "",
+    form_fn: "",
+    form_ln: "",
+    form_email: "",
+    form_phone: "",
+    cuit_cuil: "",
+    fn: profile.fn,
+    ln: profile.ln,
+    ct: "",
+    st: "",
+    zip: "",
+    country: "",
+    fbp: "",
+    fbc: "",
+    from_meta_ads: Boolean(ctwaClid),
+    geo_source: "none",
+    meta_pixel_id: "",
+    dataset_id: norm(configRow.meta_messaging_dataset_id),
+    pixel_attribution_source: "whatsapp_cloud_api_assignment",
+    pixel_attribution_conversion_id: null,
+    source_platform: "whatsapp_cloud_api",
+    ctwa_clid: ctwaClid,
+    pixel_id: "",
+    contact_event_id: "",
+    contact_event_time: null,
+    sendContactPixel: false,
+    contact_payload_raw: "",
+    lead_event_id: "",
+    lead_event_time: null,
+    lead_payload_raw: "",
+    purchase_event_id: "",
+    purchase_event_time: null,
+    purchase_payload_raw: "",
+    client_ip: "",
+    agent_user: "",
+    device_type: "",
+    event_source_url: `whatsapp-cloud-api://${norm(configRow.phone_number_id)}`,
+    estado: "contact",
+    valor: 0,
+    currency: workspaceCurrency || "ARS",
+    workspace_resolution_source: "whatsapp_cloud_api_assignment",
+    contact_status_capi: "pending_redirect_contact",
+    lead_status_capi: "",
+    purchase_status_capi: "",
+    observaciones: "whatsapp_cloud_api_assignment_context",
+    external_id: externalId,
+    utm_campaign: "",
+    telefono_asignado: sanitizePhone(assignmentRow.assigned_phone),
+    assigned_gerencia_id: Number.isInteger(assignedGerenciaId) &&
+        assignedGerenciaId > 0
+      ? assignedGerenciaId
+      : null,
+    assigned_gerencia_external_id:
+      Number.isInteger(assignedGerenciaExternalId) &&
+        assignedGerenciaExternalId > 0
+        ? assignedGerenciaExternalId
+        : null,
+    assigned_gerencia_name: assignedGerenciaLabel,
+    assigned_gerencia_label: assignedGerenciaLabel,
+    promo_code: promoCode,
+    geo_city: "",
+    geo_region: "",
+    geo_country: "",
+  };
+
+  return {
+    assignmentId: norm(assignmentRow.id),
+    conversionId: "",
+    row,
+  };
+}
+
+async function linkWhatsappCloudApiAssignmentToConversion(
+  db: SupabaseClient,
+  lineage: WhatsappCloudApiAssignmentLineage | null | undefined,
+  conversionId: string,
+): Promise<void> {
+  if (!lineage?.assignmentId || !conversionId || lineage.conversionId) return;
+  await db
+    .from("whatsapp_cloud_api_assignments")
+    .update({ conversion_id: conversionId })
+    .eq("id", lineage.assignmentId)
+    .is("conversion_id", null);
 }
 
 function leadHasTrustedPromo(row: ConversionRow | null | undefined): boolean {
@@ -3869,6 +4056,9 @@ async function handleLead(
     | "created_new" = "promo_code";
   let promoRow: ConversionRow | null = null;
   let promoCoherence: PromoGerenciaCoherence = "not_found";
+  let whatsappCloudApiAssignmentLineage:
+    | WhatsappCloudApiAssignmentLineage
+    | null = null;
   let leadAttributionStatus = "created_new";
   if (promoCodeIsFull) {
     const { data } = await db
@@ -3934,7 +4124,49 @@ async function handleLead(
         "promo recibido conservado solo como trazabilidad; no se atribuye a esa fila",
       );
     } else if (promoCoherence === "not_found") {
-      leadAttributionStatus = "promo_not_found";
+      whatsappCloudApiAssignmentLineage =
+        await findWhatsappCloudApiAssignmentLineage(
+          db,
+          landing.user_id,
+          promoCode,
+        );
+      if (whatsappCloudApiAssignmentLineage) {
+        promoRow = whatsappCloudApiAssignmentLineage.row;
+        promoCoherence = evaluatePromoGerenciaCoherence({
+          promoFound: true,
+          promoPlayerPhone: promoRow.phone,
+          eventPlayerPhone: cleanPhone,
+          promoGerenciaId: promoJourneyGerenciaId(promoRow),
+          eventGerenciaId: eventGerencia.gerencia_id,
+        });
+        if (
+          whatsappCloudApiAssignmentLineage.conversionId &&
+          promoRow.id &&
+          canUsePromoForJourney(promoCoherence)
+        ) {
+          if (norm(promoRow.lead_event_id)) {
+            return ignoreLeadDuplicateByPromoCode(
+              db,
+              landing.user_id,
+              promoRow.id,
+              promoCode,
+              leadPayloadRaw,
+              ctx,
+              {
+                dedupe_source: "whatsapp_cloud_api_assignment",
+                action_event_id: norm(p.action_event_id),
+                promo_coherence: promoCoherence,
+                event_gerencia_id: eventGerencia.gerencia_id,
+              },
+            );
+          }
+          targetId = promoRow.id;
+        }
+        leadAttributionStatus =
+          `whatsapp_cloud_api_assignment_${promoCoherence}`;
+      } else {
+        leadAttributionStatus = "promo_not_found";
+      }
     }
   }
 
@@ -4025,12 +4257,15 @@ async function handleLead(
     ? "match_source:bot_phone_timestamp_fallback"
     : "match_source:created_new";
   const trustedLineage = !targetId
-    ? await findLatestTrustedGerenciaLineage(
-      db,
-      landing.user_id,
-      cleanPhone,
-      eventGerencia.gerencia_id,
-    )
+    ? (whatsappCloudApiAssignmentLineage &&
+        canUsePromoForJourney(promoCoherence)
+      ? whatsappCloudApiAssignmentLineage.row
+      : await findLatestTrustedGerenciaLineage(
+        db,
+        landing.user_id,
+        cleanPhone,
+        eventGerencia.gerencia_id,
+      ))
     : null;
   const promoIsConflicting = promoCoherence === "gerencia_conflict" ||
     promoCoherence === "player_phone_conflict";
@@ -4140,7 +4375,9 @@ async function handleLead(
       dataset_id: inboundDatasetId || norm(trustedLineage?.dataset_id),
       pixel_attribution_source: trustedLineage ? "stored_attribution" : "",
       pixel_attribution_conversion_id: trustedLineage?.id ?? null,
-      source_platform: inboundSourcePlatform || "",
+      source_platform: inboundSourcePlatform ||
+        trustedLineage?.source_platform ||
+        "",
       ctwa_clid: inboundCtwaClid || trustedLineage?.ctwa_clid || "",
       pixel_id: resolvedPixelId,
       contact_event_id: "",
@@ -4256,6 +4493,11 @@ async function handleLead(
     const createdId = inserted.id;
     targetId = createdId;
     leadMatchMode = "created_new";
+    await linkWhatsappCloudApiAssignmentToConversion(
+      db,
+      whatsappCloudApiAssignmentLineage,
+      createdId,
+    );
 
     await writeLog(
       db,
@@ -4271,6 +4513,8 @@ async function handleLead(
         bot_phone: botPhone,
         event_gerencia_id: eventGerencia.gerencia_id,
         attribution_source_conversion_id: trustedLineage?.id ?? null,
+        whatsapp_cloud_api_assignment_id:
+          whatsappCloudApiAssignmentLineage?.assignmentId ?? null,
         conversion_id: createdId,
       }),
       createdId,
@@ -5112,6 +5356,9 @@ async function handlePurchase(
   // 1) Primary match by full promo_code only.
   let promoRow: ConversionRow | null = null;
   let promoCoherence: PromoGerenciaCoherence = "not_found";
+  let whatsappCloudApiAssignmentLineage:
+    | WhatsappCloudApiAssignmentLineage
+    | null = null;
   if (promoCode && promoCodeIsFull) {
     const { data } = await db
       .from("conversions")
@@ -5129,6 +5376,24 @@ async function handlePurchase(
       promoGerenciaId: promoJourneyGerenciaId(promoRow),
       eventGerenciaId: eventGerencia.gerencia_id,
     });
+    if (promoCoherence === "not_found") {
+      whatsappCloudApiAssignmentLineage =
+        await findWhatsappCloudApiAssignmentLineage(
+          db,
+          landing.user_id,
+          promoCode,
+        );
+      if (whatsappCloudApiAssignmentLineage) {
+        promoRow = whatsappCloudApiAssignmentLineage.row;
+        promoCoherence = evaluatePromoGerenciaCoherence({
+          promoFound: true,
+          promoPlayerPhone: promoRow.phone,
+          eventPlayerPhone: cleanPhone,
+          promoGerenciaId: promoJourneyGerenciaId(promoRow),
+          eventGerenciaId: eventGerencia.gerencia_id,
+        });
+      }
+    }
   } else if (promoCode) {
     const fallbackCandidateId = receiverLeadRow?.id ?? latestPurchaseRow?.id ??
       undefined;
@@ -5189,7 +5454,10 @@ async function handlePurchase(
   const matchMethod = decision.matchMethod;
   const receiverAttributionSource = targetId
     ? receiverLeadRow?.id === targetId ? receiverLeadRow : promoRow
-    : (receiverPurchaseLineage ?? trustedReceiverLineage);
+    : (whatsappCloudApiAssignmentLineage &&
+        canUsePromoForJourney(promoCoherence)
+      ? whatsappCloudApiAssignmentLineage.row
+      : (receiverPurchaseLineage ?? trustedReceiverLineage));
   const attributedPromoCode =
     promoRow?.id && canUsePromoForJourney(promoCoherence)
       ? promoCode
@@ -5261,6 +5529,7 @@ async function handlePurchase(
           existingRow,
           promoRow,
           receiverAttributionSource,
+          whatsappCloudApiAssignmentLineage?.row,
           latestGlobalPurchase,
         ],
         promoCode,
@@ -5491,7 +5760,10 @@ async function handlePurchase(
   // 4) No existing row was selected: create a first or repeat row according
   // to the player's global history, but inherit only from the real receiver.
   if (purchaseType === "first") {
-    const firstSource = trustedReceiverLineage;
+    const firstSource = whatsappCloudApiAssignmentLineage &&
+        canUsePromoForJourney(promoCoherence)
+      ? whatsappCloudApiAssignmentLineage.row
+      : trustedReceiverLineage;
     const firstPixel = inboundMetaPixelId ||
       norm(firstSource?.pixel_id || firstSource?.meta_pixel_id);
     const firstWorkspaceResolution = await resolveCanonicalWorkspaceResolution(
@@ -5501,7 +5773,12 @@ async function handlePurchase(
       landing,
       {
         eventGerencia,
-        rows: [firstSource, promoRow, latestGlobalPurchase],
+        rows: [
+          firstSource,
+          promoRow,
+          whatsappCloudApiAssignmentLineage?.row,
+          latestGlobalPurchase,
+        ],
         promoCode,
       },
     );
@@ -5614,6 +5891,11 @@ async function handlePurchase(
     if (error || !ins) return textResponse("Error al crear fila PURCHASE", 500);
     const createdId = ins.id;
     if (ctx) ctx.conversionId = createdId;
+    await linkWhatsappCloudApiAssignmentToConversion(
+      db,
+      whatsappCloudApiAssignmentLineage,
+      createdId,
+    );
 
     const { data: row } = await db.from("conversions").select("*").eq(
       "id",
@@ -5697,6 +5979,8 @@ async function handlePurchase(
         bot_phone: botPhone,
         event_gerencia_id: eventGerencia.gerencia_id,
         attribution_source_conversion_id: firstSource?.id ?? null,
+        whatsapp_cloud_api_assignment_id:
+          whatsappCloudApiAssignmentLineage?.assignmentId ?? null,
         match_method: "created_first",
       }),
       createdId,
@@ -5731,7 +6015,10 @@ async function handlePurchase(
 
   // Repeat purchase => inherit only from the same receiver gerencia. If no
   // trustworthy lineage exists there, keep the event direct/unattributed.
-  const repeatSourceRow = receiverPurchaseLineage ?? trustedReceiverLineage;
+  const repeatSourceRow = whatsappCloudApiAssignmentLineage &&
+      canUsePromoForJourney(promoCoherence)
+    ? whatsappCloudApiAssignmentLineage.row
+    : (receiverPurchaseLineage ?? trustedReceiverLineage);
   const repeatAttribution = await resolvePurchasePixelAttribution(db, {
     userId: landing.user_id,
     inboundPixelId: inboundMetaPixelId,
@@ -5753,7 +6040,12 @@ async function handlePurchase(
     landing,
     {
       eventGerencia,
-      rows: [repeatSourceRow, promoRow, latestGlobalPurchase],
+      rows: [
+        repeatSourceRow,
+        promoRow,
+        whatsappCloudApiAssignmentLineage?.row,
+        latestGlobalPurchase,
+      ],
       promoCode,
     },
   );
@@ -5870,6 +6162,11 @@ async function handlePurchase(
   if (error || !ins) return textResponse("Error al crear fila recompra", 500);
   const newId = ins.id;
   if (ctx) ctx.conversionId = newId;
+  await linkWhatsappCloudApiAssignmentToConversion(
+    db,
+    whatsappCloudApiAssignmentLineage,
+    newId,
+  );
 
   const effectiveRepeatConfig = resolveEffectiveConfigForPixel(
     config,
@@ -5933,6 +6230,8 @@ async function handlePurchase(
       bot_phone: botPhone,
       event_gerencia_id: eventGerencia.gerencia_id,
       inherited_from: repeatSourceRow?.id ?? null,
+      whatsapp_cloud_api_assignment_id:
+        whatsappCloudApiAssignmentLineage?.assignmentId ?? null,
       match_method: "created_repeat",
     }),
     newId,

@@ -112,22 +112,6 @@ function metaTimestamp(value: unknown): string {
   return new Date(n * 1000).toISOString();
 }
 
-function unixSeconds(value: unknown): number {
-  const n = Number(value);
-  if (Number.isFinite(n) && n > 0) return Math.floor(n);
-  return Math.floor(Date.now() / 1000);
-}
-
-function firstName(fullName: string): string {
-  return fullName.split(/\s+/).filter(Boolean).slice(0, -1).join(" ") ||
-    fullName;
-}
-
-function lastName(fullName: string): string {
-  const parts = fullName.split(/\s+/).filter(Boolean);
-  return parts.length > 1 ? parts[parts.length - 1] : "";
-}
-
 async function sha256(value: string): Promise<string> {
   const data = new TextEncoder().encode(value.trim().toLowerCase());
   const hash = await crypto.subtle.digest("SHA-256", data);
@@ -185,7 +169,12 @@ function firstText(...values: unknown[]): string {
   for (const value of values) {
     if (value && typeof value === "object" && !Array.isArray(value)) {
       const record = asRecord(value);
-      const nested = firstText(record.code, record.description, record.formatted_amount, record.amount);
+      const nested = firstText(
+        record.code,
+        record.description,
+        record.formatted_amount,
+        record.amount,
+      );
       if (nested) return nested;
       continue;
     }
@@ -195,7 +184,11 @@ function firstText(...values: unknown[]): string {
   return "";
 }
 
-function qualityAlertMessage(quality: string, limit: string, status: string): string {
+function qualityAlertMessage(
+  quality: string,
+  limit: string,
+  status: string,
+): string {
   const normalizedQuality = quality.toUpperCase();
   const normalizedStatus = status.toUpperCase();
   if (normalizedQuality === "GREEN" || normalizedQuality === "HIGH") return "";
@@ -211,7 +204,11 @@ function qualityAlertMessage(quality: string, limit: string, status: string): st
   if (["YELLOW", "MEDIUM"].includes(normalizedQuality)) {
     return `Alerta Meta: reputacion media del numero (${parts}).`;
   }
-  if (["LIMITED", "BLOCKED", "FLAGGED", "DISABLED", "RESTRICTED"].includes(normalizedStatus)) {
+  if (
+    ["LIMITED", "BLOCKED", "FLAGGED", "DISABLED", "RESTRICTED"].includes(
+      normalizedStatus,
+    )
+  ) {
     return `Alerta Meta: revisar estado del numero (${parts}).`;
   }
   return "";
@@ -522,100 +519,6 @@ async function sendWhatsappCtaUrl(
   };
 }
 
-async function createInternalContact(input: {
-  config: WhatsappConfig;
-  profileName: string;
-  waId: string;
-  messageId: string;
-  messageTimestamp: number;
-  assignedPhone: string;
-  promo: string;
-  ctwaClid: string;
-  referral: Json;
-}): Promise<{ ok: boolean; conversionId: string; error: string }> {
-  const supabaseUrl = Deno.env.get("SUPABASE_URL")?.replace(/\/$/, "") ?? "";
-  const serviceRoleKey = Deno.env.get("SERVICE_ROLE_KEY") ?? "";
-  if (!supabaseUrl || !serviceRoleKey) {
-    return { ok: false, conversionId: "", error: "Missing Supabase env" };
-  }
-
-  const db = getDb();
-  const { data: profile } = await db
-    .from("profiles")
-    .select("nombre")
-    .eq("id", input.config.user_id)
-    .maybeSingle();
-  const clientName = str((profile as { nombre?: string } | null)?.nombre);
-  if (!clientName) {
-    return {
-      ok: false,
-      conversionId: "",
-      error: "Client profile name not found",
-    };
-  }
-
-  const externalId = await sha256(
-    `whatsapp_cloud_api:${input.config.id}:${input.waId}`,
-  );
-  const payload = {
-    event_name: "Contact",
-    event_id: input.messageId,
-    contact_event_id: input.messageId,
-    event_time: input.messageTimestamp,
-    contact_event_time: input.messageTimestamp,
-    phone: digits(input.waId),
-    fn: firstName(input.profileName),
-    ln: lastName(input.profileName),
-    external_id: externalId,
-    promo_code: input.promo,
-    telefono_asignado: digits(input.assignedPhone),
-    meta_pixel_id: "",
-    pixel_id: "",
-    dataset_id: str(input.config.meta_messaging_dataset_id),
-    source_platform: "whatsapp_cloud_api",
-    ctwa_clid: input.ctwaClid,
-    from_meta_ads: Boolean(input.ctwaClid),
-    sendContactPixel: false,
-    event_source_url: `whatsapp-cloud-api://${input.config.phone_number_id}`,
-    whatsapp_cloud_api_config_id: input.config.id,
-    whatsapp_cloud_api_referral: input.referral,
-  };
-
-  const res = await fetch(
-    `${supabaseUrl}/functions/v1/conversions?name=${
-      encodeURIComponent(clientName)
-    }`,
-    {
-      method: "POST",
-      headers: {
-        Authorization: `Bearer ${serviceRoleKey}`,
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify(payload),
-    },
-  );
-  const text = await res.text();
-  if (!res.ok) {
-    return {
-      ok: false,
-      conversionId: "",
-      error: `Contact failed HTTP ${res.status}: ${text}`,
-    };
-  }
-
-  const { data } = await db
-    .from("conversions")
-    .select("id")
-    .eq("user_id", input.config.user_id)
-    .eq("contact_event_id", input.messageId)
-    .maybeSingle();
-  return {
-    ok: true,
-    conversionId: str((data as { id?: string } | null)?.id),
-    error: "",
-  };
-}
-
 async function handleStatus(
   db: SupabaseDb,
   event: WebhookEvent,
@@ -736,7 +639,6 @@ async function handleMessage(
 
   const profileName = firstContactProfileName(event, waId);
   const messageAt = metaTimestamp(message.timestamp);
-  const messageTime = unixSeconds(message.timestamp);
   const referral = referralFromMessage(message);
   const ctwaClid = str(referral.ctwa_clid);
 
@@ -857,22 +759,6 @@ async function handleMessage(
   const advisorLink = waLink(assignedPhone, generatedPromo);
   const useCtaButton = Boolean(config.redirect_use_cta_button);
 
-  const contactResult = await createInternalContact({
-    config,
-    profileName,
-    waId,
-    messageId,
-    messageTimestamp: messageTime,
-    assignedPhone,
-    promo: generatedPromo,
-    ctwaClid,
-    referral,
-  });
-  if (!contactResult.ok) {
-    await finalizeEvent(db, event.id, "failed", contactResult.error);
-    return;
-  }
-
   const gerencia = asRecord(phonePayload.gerencia);
   const { data: assignment, error: assignmentError } = await db
     .from("whatsapp_cloud_api_assignments")
@@ -891,7 +777,6 @@ async function handleMessage(
         ? `Gerencia ${gerencia.externalId}`
         : "",
       promo_code: generatedPromo,
-      conversion_id: contactResult.conversionId || null,
       status: "pending",
     })
     .select("id")
@@ -1042,8 +927,9 @@ async function processPending(db: SupabaseDb): Promise<Record<string, number>> {
     try {
       if (event.event_type === "status") await handleStatus(db, event);
       else if (event.event_type === "message") await handleMessage(db, event);
-      else if (event.event_type === "quality_update") await handleQualityUpdate(db, event);
-      else await finalizeEvent(db, event.id, "processed");
+      else if (event.event_type === "quality_update") {
+        await handleQualityUpdate(db, event);
+      } else await finalizeEvent(db, event.id, "processed");
     } catch (error) {
       console.error("[whatsapp-cloud-worker] event failed", {
         event_id: event.id,
