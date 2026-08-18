@@ -110,6 +110,9 @@ function formatDisplayPhone(value: string): string {
 
   if (digits.startsWith("54") && digits.length >= 12) {
     const local = digits.slice(2);
+    if (local.length === 10) {
+      return `+54 9 ${local.slice(0, 4)} ${local.slice(4, 6)}-${local.slice(6, 10)}`;
+    }
     return `+54 ${local.slice(0, 4)} ${local.slice(4, 6)}-${local.slice(6, 10)}`;
   }
 
@@ -980,19 +983,13 @@ export default function WhatsAppCloudApiPageContent({
                   <div className="grid gap-3 md:grid-cols-2">
                     <Field label="Telefono visible" tooltip="Campo de Meta. Numero registrado en WhatsApp Manager; sirve para identificar la cuenta conectada.">
                       <input
-                        value={displayPhone}
+                        value={formatDisplayPhone(displayPhone)}
                         onChange={(e) => setDisplayPhone(onlyDigits(e.target.value))}
                         disabled={identificationLocked}
                         className={inputClass}
-                        inputMode="numeric"
-                        pattern="[0-9]*"
-                        placeholder="549..."
+                        inputMode="tel"
+                        placeholder="+54 9 3518 57-1452"
                       />
-                      {displayPhone ? (
-                        <p className="mt-1 text-[11px] leading-4 text-[var(--color-text-muted)]">
-                          Se mostrara como <span className="font-semibold text-[var(--color-text)]">{formatDisplayPhone(displayPhone)}</span>
-                        </p>
-                      ) : null}
                     </Field>
                     <Field label="Phone Number ID" required tooltip="Campo de Meta. Se obtiene en el Paso 2 de WhatsApp Cloud API, junto al numero registrado.">
                       <input
