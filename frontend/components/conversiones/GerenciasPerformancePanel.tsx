@@ -467,7 +467,8 @@ export default function GerenciasPerformancePanel({
     try {
       const { jsPDF } = await import("jspdf");
       const periodLabel = useGlobalFilters ? formatRangeLabel(globalRange) : monthLabel(month);
-      const reportTitle = `Desempeno por Gerencias - ${currency} - ${periodLabel}`;
+      const visibleTitle = `Desempeno por Gerencias - ${periodLabel}`;
+      const reportTitle = `${visibleTitle} - ${currency}`;
       const landingLabel = useGlobalFilters ? "Filtro global" : selectedLanding?.name || "Todas las landings";
       const filters = [
         `Periodo: ${periodLabel}`,
@@ -602,7 +603,7 @@ export default function GerenciasPerformancePanel({
         doc.setTextColor(255, 255, 255);
         doc.setFont("helvetica", "bold");
         doc.setFontSize(17);
-        doc.text("Desempeno por Gerencias", margin + 8, 21);
+        doc.text(fitText(visibleTitle, 145), margin + 8, 21);
         doc.setFont("helvetica", "normal");
         doc.setFontSize(8);
         doc.setTextColor(...muted);

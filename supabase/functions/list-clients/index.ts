@@ -169,8 +169,8 @@ Deno.serve(async (req) => {
       );
     }
 
-    const clientUsers = usersData.users.filter((u) => !u.is_sso_user);
-    const ids = clientUsers.map((u) => u.id);
+    const authUsers = usersData.users.filter((u) => !u.is_sso_user);
+    const ids = authUsers.map((u) => u.id);
 
     const { data: profiles } = await supabaseAdmin
       .from("profiles")
@@ -189,6 +189,7 @@ Deno.serve(async (req) => {
     const profileById = new Map(
       (profiles ?? []).map((p) => [p.id, { nombre: p.nombre ?? null, role: p.role ?? "cliente" }]),
     );
+    const clientUsers = authUsers.filter((u) => profileById.has(u.id));
     const cfgByUserId = new Map(
       (cfgRows ?? []).map((r) => [r.user_id, {
         visible_columns: r.visible_columns ?? [],
