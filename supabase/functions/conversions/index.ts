@@ -265,6 +265,15 @@ type WorkspaceResolution = {
   currency: string;
   source: string;
 };
+type WorkspaceGuard = {
+  conflict: boolean;
+  verified: boolean;
+  observation: string;
+  primaryCurrency: string;
+  primarySource: string;
+  eventWorkspace: string;
+  phoneWorkspace: string;
+};
 type ContactDuplicateReason = "contact_event_id" | "promo_code";
 type ContactDuplicateMatch = { id: string; reason: ContactDuplicateReason };
 type PurchaseEventClaim = {
@@ -281,6 +290,7 @@ type Params = Record<string, any>;
 
 const norm = (s: unknown): string => String(s ?? "").trim();
 const normalizedSourcePlatform = (s: unknown): string => norm(s).toLowerCase();
+const WORKSPACE_CONFLICT_CAPI_STATUS = "skipped_workspace_conflict";
 const canonicalInboundAction = (value: unknown): string => {
   const raw = norm(value);
   if (!raw) return "";
@@ -1665,6 +1675,52 @@ function textResponse(msg: string, status = 200): Response {
   });
 }
 
+async function skipMetaCapiForWorkspaceConflict(
+  db: SupabaseClient,
+  row: ConversionRow,
+  rowId: string,
+  eventName: "Lead" | "Purchase",
+  eventId: string,
+  guard: WorkspaceGuard,
+  payloadRaw: string,
+): Promise<void> {
+  const statusField = eventName === "Lead"
+    ? "lead_status_capi"
+    : "purchase_status_capi";
+  const retryableField = eventName === "Lead" ? "lead_capi_retryable" : "";
+  const observation = guard.observation ||
+    `workspace_conflict:primary_${guard.primaryCurrency}_event_gerencia_${guard.eventWorkspace}`;
+  const updates: Record<string, unknown> = {
+    [statusField]: WORKSPACE_CONFLICT_CAPI_STATUS,
+    observaciones: appendObservation(row.observaciones ?? "", observation),
+  };
+  if (retryableField) updates[retryableField] = false;
+
+  await db.from("conversions").update(updates).eq("id", rowId);
+  await writeLog(
+    db,
+    row.user_id,
+    "sendToMetaCAPI",
+    "WARN",
+    `${eventName} CAPI omitido por conflicto de workspace`,
+    JSON.stringify({
+      event_name: eventName,
+      event_id: eventId,
+      row_id: rowId,
+      primary_workspace: guard.primaryCurrency,
+      primary_source: guard.primarySource,
+      event_gerencia_workspace: guard.eventWorkspace,
+      phone_prefix_workspace: guard.phoneWorkspace,
+      status: WORKSPACE_CONFLICT_CAPI_STATUS,
+    }),
+    rowId,
+    undefined,
+    undefined,
+    payloadRaw,
+    `${eventName} CAPI omitido por conflicto de workspace`,
+  );
+}
+
 async function insertInboundEvent(
   db: SupabaseClient,
   userId: string,
@@ -2415,6 +2471,138 @@ async function workspaceCurrencyFromConversionLineage(
   return rowCurrencies.length === 1 ? rowCurrencies[0] : "";
 }
 
+function workspaceResolutionFromTrustedRows(
+  rows: Array<ConversionRow | null | undefined>,
+): WorkspaceResolution | null {
+  const trustedSources = new Set([
+    "payload",
+    "landing",
+    "lineage",
+    "promo_tag",
+    "whatsapp_cloud_api_assignment",
+  ]);
+  for (const row of rows) {
+    const currency = normalizeWorkspaceCurrency(row?.currency);
+    const source = norm(row?.workspace_resolution_source).toLowerCase();
+    if (currency && trustedSources.has(source)) {
+      return { currency, source };
+    }
+  }
+  return null;
+}
+
+function evaluateWorkspaceGuard(
+  resolution: WorkspaceResolution,
+  params: Params,
+  eventGerencia?: EventGerenciaSnapshot | null,
+): WorkspaceGuard {
+  const primaryCurrency = normalizeWorkspaceCurrency(resolution.currency);
+  const primarySource = norm(resolution.source) || "legacy_default";
+  const eventWorkspace = normalizeWorkspaceCurrency(
+    eventGerencia?.workspace_currency,
+  );
+  const phoneWorkspace = workspaceCurrencyFromCustomerPhone(params);
+
+  if (!primaryCurrency) {
+    return {
+      conflict: false,
+      verified: false,
+      observation: "",
+      primaryCurrency: "",
+      primarySource,
+      eventWorkspace,
+      phoneWorkspace,
+    };
+  }
+
+  if (eventWorkspace) {
+    if (eventWorkspace === primaryCurrency) {
+      return {
+        conflict: false,
+        verified: primarySource !== "event_gerencia",
+        observation: primarySource === "event_gerencia"
+          ? ""
+          : "workspace_verified:event_gerencia",
+        primaryCurrency,
+        primarySource,
+        eventWorkspace,
+        phoneWorkspace,
+      };
+    }
+    return {
+      conflict: true,
+      verified: false,
+      observation:
+        `workspace_conflict:primary_${primaryCurrency}_event_gerencia_${eventWorkspace}`,
+      primaryCurrency,
+      primarySource,
+      eventWorkspace,
+      phoneWorkspace,
+    };
+  }
+
+  if (phoneWorkspace && phoneWorkspace !== primaryCurrency) {
+    return {
+      conflict: true,
+      verified: false,
+      observation:
+        `workspace_conflict:primary_${primaryCurrency}_phone_prefix_${phoneWorkspace}`,
+      primaryCurrency,
+      primarySource,
+      eventWorkspace,
+      phoneWorkspace,
+    };
+  }
+
+  if (phoneWorkspace && phoneWorkspace === primaryCurrency) {
+    return {
+      conflict: false,
+      verified: primarySource !== "phone_prefix",
+      observation: primarySource === "phone_prefix"
+        ? ""
+        : "workspace_verified:phone_prefix",
+      primaryCurrency,
+      primarySource,
+      eventWorkspace,
+      phoneWorkspace,
+    };
+  }
+
+  return {
+    conflict: false,
+    verified: false,
+    observation: "",
+    primaryCurrency,
+    primarySource,
+    eventWorkspace,
+    phoneWorkspace,
+  };
+}
+
+async function resolveGuardedWorkspaceResolution(
+  db: SupabaseClient,
+  userId: string,
+  params: Params,
+  landing: LandingRow,
+  options: {
+    eventGerencia?: EventGerenciaSnapshot | null;
+    rows?: Array<ConversionRow | null | undefined>;
+    promoCode?: string;
+  } = {},
+): Promise<{ resolution: WorkspaceResolution; guard: WorkspaceGuard }> {
+  const resolution = await resolveCanonicalWorkspaceResolution(
+    db,
+    userId,
+    params,
+    landing,
+    { ...options, preferLineage: true },
+  );
+  return {
+    resolution,
+    guard: evaluateWorkspaceGuard(resolution, params, options.eventGerencia),
+  };
+}
+
 async function resolveCanonicalWorkspaceCurrency(
   db: SupabaseClient,
   userId: string,
@@ -2444,18 +2632,29 @@ async function resolveCanonicalWorkspaceResolution(
     eventGerencia?: EventGerenciaSnapshot | null;
     rows?: Array<ConversionRow | null | undefined>;
     promoCode?: string;
+    preferLineage?: boolean;
   } = {},
 ): Promise<WorkspaceResolution> {
+  if (options.preferLineage) {
+    const trustedRowResolution = workspaceResolutionFromTrustedRows(
+      options.rows ?? [],
+    );
+    if (trustedRowResolution) return trustedRowResolution;
+  }
+
   const explicit = workspaceCurrencyFromParams(params);
   if (explicit) return { currency: explicit, source: "payload" };
+
+  if (!options.preferLineage) {
+    const trustedRowResolution = workspaceResolutionFromTrustedRows(
+      options.rows ?? [],
+    );
+    if (trustedRowResolution) return trustedRowResolution;
+  }
 
   const eventWorkspace = normalizeWorkspaceCurrency(
     options.eventGerencia?.workspace_currency,
   );
-  if (eventWorkspace) {
-    return { currency: eventWorkspace, source: "event_gerencia" };
-  }
-
   const lineageWorkspace = await workspaceCurrencyFromConversionLineage(
     db,
     userId,
@@ -2471,6 +2670,10 @@ async function resolveCanonicalWorkspaceResolution(
     options.promoCode ?? params.promo_code ?? params.promoCode,
   );
   if (promoWorkspace) return { currency: promoWorkspace, source: "promo_tag" };
+
+  if (eventWorkspace) {
+    return { currency: eventWorkspace, source: "event_gerencia" };
+  }
 
   const phoneWorkspace = workspaceCurrencyFromCustomerPhone(params);
   if (phoneWorkspace) {
@@ -4358,8 +4561,9 @@ async function handleLead(
     : null;
   const promoIsConflicting = promoCoherence === "gerencia_conflict" ||
     promoCoherence === "player_phone_conflict";
-  const canonicalLeadWorkspaceResolution =
-    await resolveCanonicalWorkspaceResolution(
+  let leadWorkspaceGuard: WorkspaceGuard | null = null;
+  const guardedLeadWorkspaceResolution =
+    await resolveGuardedWorkspaceResolution(
       db,
       landing.user_id,
       p,
@@ -4370,6 +4574,9 @@ async function handleLead(
         promoCode,
       },
     );
+  const canonicalLeadWorkspaceResolution =
+    guardedLeadWorkspaceResolution.resolution;
+  leadWorkspaceGuard = guardedLeadWorkspaceResolution.guard;
   const canonicalLeadWorkspaceCurrency =
     canonicalLeadWorkspaceResolution.currency;
 
@@ -4504,7 +4711,7 @@ async function handleLead(
       lead_status_capi: "",
       purchase_status_capi: "",
       observaciones: appendObservation(
-        matchSourceToken,
+        appendObservation(matchSourceToken, leadWorkspaceGuard.observation),
         promoIsConflicting ? `promo_conflict:${promoCoherence}` : "",
       ),
       external_id: generatedExternalId,
@@ -4675,17 +4882,21 @@ async function handleLead(
     const currentRow = cur as ConversionRow | null;
     updates.event_source_url = eventSourceUrl || currentRow?.event_source_url ||
       "";
-    const updateWorkspaceResolution = await resolveCanonicalWorkspaceResolution(
-      db,
-      landing.user_id,
-      p,
-      landing,
-      {
-        eventGerencia,
-        rows: [promoRow, currentRow],
-        promoCode,
-      },
-    );
+    const guardedUpdateWorkspaceResolution =
+      await resolveGuardedWorkspaceResolution(
+        db,
+        landing.user_id,
+        p,
+        landing,
+        {
+          eventGerencia,
+          rows: [promoRow, currentRow],
+          promoCode,
+        },
+      );
+    const updateWorkspaceResolution =
+      guardedUpdateWorkspaceResolution.resolution;
+    leadWorkspaceGuard = guardedUpdateWorkspaceResolution.guard;
     const updateWorkspaceCurrency = updateWorkspaceResolution.currency;
     if (updateWorkspaceCurrency) {
       updates.currency = resolveCurrencyForPixel(
@@ -4748,8 +4959,8 @@ async function handleLead(
       );
     }
     updates.observaciones = appendObservation(
-      cur?.observaciones ?? "",
-      matchSourceToken,
+      appendObservation(cur?.observaciones ?? "", matchSourceToken),
+      leadWorkspaceGuard.observation,
     );
     await db.from("conversions").update(updates).eq("id", targetId);
   }
@@ -4817,6 +5028,21 @@ async function handleLead(
     safePayloadRaw(p),
     `lead procesado (match: ${leadMatchMode})`,
   );
+
+  if (leadWorkspaceGuard?.conflict) {
+    await skipMetaCapiForWorkspaceConflict(
+      db,
+      fullRow,
+      targetId!,
+      "Lead",
+      leadEventId,
+      leadWorkspaceGuard,
+      leadPayloadRaw,
+    );
+    return textResponse(
+      `Fila LEAD procesada. CAPI omitido por conflicto de workspace. match_mode:${leadMatchMode}`,
+    );
+  }
 
   const ok = await sendToMetaCAPI(
     db,
@@ -5582,6 +5808,7 @@ async function handlePurchase(
     receiverAttributionSource?.sendContactPixel ??
       latestGlobalPurchase?.sendContactPixel,
   );
+  let purchaseWorkspaceGuard: WorkspaceGuard | null = null;
 
   // 2.b) If the matching LEAD is still waiting for its CONTACT window, keep PURCHASE queued.
   // PURCHASE never uses the CONTACT->LEAD time window directly; it only waits for the LEAD to settle.
@@ -5632,24 +5859,28 @@ async function handlePurchase(
       .eq("id", targetId)
       .single();
     const existingRow = existing as ConversionRow;
-    const targetWorkspaceResolution = await resolveCanonicalWorkspaceResolution(
-      db,
-      landing.user_id,
-      p,
-      landing,
-      {
-        eventGerencia,
-        rows: [
-          existingRow,
-          promoRow,
-          receiverAttributionSource,
-          receiverContactRow,
-          whatsappCloudApiAssignmentLineage?.row,
-          latestGlobalPurchase,
-        ],
-        promoCode,
-      },
-    );
+    const guardedTargetWorkspaceResolution =
+      await resolveGuardedWorkspaceResolution(
+        db,
+        landing.user_id,
+        p,
+        landing,
+        {
+          eventGerencia,
+          rows: [
+            existingRow,
+            promoRow,
+            receiverAttributionSource,
+            receiverContactRow,
+            whatsappCloudApiAssignmentLineage?.row,
+            latestGlobalPurchase,
+          ],
+          promoCode,
+        },
+      );
+    const targetWorkspaceResolution =
+      guardedTargetWorkspaceResolution.resolution;
+    purchaseWorkspaceGuard = guardedTargetWorkspaceResolution.guard;
     const targetWorkspaceCurrency = targetWorkspaceResolution.currency;
     const purchaseCurrency = resolveCurrencyForPixel(
       config,
@@ -5751,6 +5982,12 @@ async function handlePurchase(
         ),
       );
     }
+    if (purchaseWorkspaceGuard.observation) {
+      updates.observaciones = appendObservation(
+        existingRow?.observaciones ?? "",
+        purchaseWorkspaceGuard.observation,
+      );
+    }
     await db.from("conversions").update(updates).eq("id", targetId);
 
     const { data: row } = await db.from("conversions").select("*").eq(
@@ -5849,6 +6086,21 @@ async function handlePurchase(
       } procesada (match: ${matchMethod})`,
     );
 
+    if (purchaseWorkspaceGuard?.conflict) {
+      await skipMetaCapiForWorkspaceConflict(
+        db,
+        fullRow,
+        targetId,
+        "Purchase",
+        purchaseEventId,
+        purchaseWorkspaceGuard,
+        purchasePayloadRaw,
+      );
+      return textResponse(
+        `Fila PURCHASE procesada. CAPI omitido por conflicto de workspace. match_mode:${matchMethod}`,
+      );
+    }
+
     const ok = await sendToMetaCAPI(
       db,
       purchaseConfig,
@@ -5881,22 +6133,25 @@ async function handlePurchase(
       : trustedReceiverLineage;
     const firstPixel = inboundMetaPixelId ||
       norm(firstSource?.pixel_id || firstSource?.meta_pixel_id);
-    const firstWorkspaceResolution = await resolveCanonicalWorkspaceResolution(
-      db,
-      landing.user_id,
-      p,
-      landing,
-      {
-        eventGerencia,
-        rows: [
-          firstSource,
-          promoRow,
-          whatsappCloudApiAssignmentLineage?.row,
-          latestGlobalPurchase,
-        ],
-        promoCode,
-      },
-    );
+    const guardedFirstWorkspaceResolution =
+      await resolveGuardedWorkspaceResolution(
+        db,
+        landing.user_id,
+        p,
+        landing,
+        {
+          eventGerencia,
+          rows: [
+            firstSource,
+            promoRow,
+            whatsappCloudApiAssignmentLineage?.row,
+            latestGlobalPurchase,
+          ],
+          promoCode,
+        },
+      );
+    const firstWorkspaceResolution = guardedFirstWorkspaceResolution.resolution;
+    purchaseWorkspaceGuard = guardedFirstWorkspaceResolution.guard;
     const firstWorkspaceCurrency = firstWorkspaceResolution.currency;
     const firstExternalId = norm(p.external_id) ||
       norm(firstSource?.external_id) || await sha256(cleanPhone);
@@ -5977,10 +6232,13 @@ async function handlePurchase(
       contact_status_capi: "",
       lead_status_capi: "",
       purchase_status_capi: "",
-      observaciones: promoCoherence === "gerencia_conflict" ||
+      observaciones: appendObservation(
+        purchaseWorkspaceGuard.observation,
+        promoCoherence === "gerencia_conflict" ||
           promoCoherence === "player_phone_conflict"
-        ? `promo_conflict:${promoCoherence}`
-        : "",
+          ? `promo_conflict:${promoCoherence}`
+          : "",
+      ),
       external_id: firstExternalId,
       utm_campaign: firstSource?.utm_campaign || "",
       telefono_asignado: firstSource?.telefono_asignado || "",
@@ -6105,6 +6363,21 @@ async function handlePurchase(
       "primera compra procesada (match: created_first)",
     );
 
+    if (purchaseWorkspaceGuard?.conflict) {
+      await skipMetaCapiForWorkspaceConflict(
+        db,
+        fullRow,
+        createdId,
+        "Purchase",
+        purchaseEventId,
+        purchaseWorkspaceGuard,
+        purchasePayloadRaw,
+      );
+      return textResponse(
+        "Fila PURCHASE procesada. CAPI omitido por conflicto de workspace. match_mode:created_first",
+      );
+    }
+
     const ok = await sendToMetaCAPI(
       db,
       purchaseConfig,
@@ -6148,22 +6421,25 @@ async function handlePurchase(
   const repeatCtwaClid = isClickToWhatsAppSource(repeatOriginSource)
     ? inboundCtwaClid || normalizeCtwaClid(repeatSourceRow?.ctwa_clid)
     : "";
-  const repeatWorkspaceResolution = await resolveCanonicalWorkspaceResolution(
-    db,
-    landing.user_id,
-    p,
-    landing,
-    {
-      eventGerencia,
-      rows: [
-        repeatSourceRow,
-        promoRow,
-        whatsappCloudApiAssignmentLineage?.row,
-        latestGlobalPurchase,
-      ],
-      promoCode,
-    },
-  );
+  const guardedRepeatWorkspaceResolution =
+    await resolveGuardedWorkspaceResolution(
+      db,
+      landing.user_id,
+      p,
+      landing,
+      {
+        eventGerencia,
+        rows: [
+          repeatSourceRow,
+          promoRow,
+          whatsappCloudApiAssignmentLineage?.row,
+          latestGlobalPurchase,
+        ],
+        promoCode,
+      },
+    );
+  const repeatWorkspaceResolution = guardedRepeatWorkspaceResolution.resolution;
+  purchaseWorkspaceGuard = guardedRepeatWorkspaceResolution.guard;
   const repeatWorkspaceCurrency = repeatWorkspaceResolution.currency;
 
   const newRow: Omit<ConversionRow, "id"> = {
@@ -6244,7 +6520,7 @@ async function handlePurchase(
     lead_status_capi: "",
     purchase_status_capi: "",
     observaciones: appendObservation(
-      "REPEAT",
+      appendObservation("REPEAT", purchaseWorkspaceGuard.observation),
       promoCoherence === "gerencia_conflict" ||
         promoCoherence === "player_phone_conflict"
         ? `promo_conflict:${promoCoherence}`
@@ -6371,6 +6647,21 @@ async function handlePurchase(
         landing_id: norm(repeatSourceRow?.landing_id ?? landing.id),
       }),
       newId,
+    );
+  }
+
+  if (purchaseWorkspaceGuard?.conflict) {
+    await skipMetaCapiForWorkspaceConflict(
+      db,
+      fullRow,
+      newId,
+      "Purchase",
+      purchaseEventId,
+      purchaseWorkspaceGuard,
+      purchasePayloadRaw,
+    );
+    return textResponse(
+      "Fila PURCHASE procesada. CAPI omitido por conflicto de workspace. match_mode:created_repeat",
     );
   }
 
@@ -6558,6 +6849,21 @@ async function handleSimplePurchase(
   const simpleCtwaClid = isClickToWhatsAppSource(simpleOriginSource)
     ? inboundCtwaClid || normalizeCtwaClid(srcRow?.ctwa_clid)
     : "";
+  const guardedSimpleWorkspaceResolution =
+    await resolveGuardedWorkspaceResolution(
+      db,
+      landing.user_id,
+      p,
+      landing,
+      {
+        eventGerencia,
+        rows: [simpleSourceRow, latestAnyRow as ConversionRow | null],
+      },
+    );
+  const simpleRowWorkspaceResolution =
+    guardedSimpleWorkspaceResolution.resolution;
+  const simpleWorkspaceGuard = guardedSimpleWorkspaceResolution.guard;
+  const simpleRowWorkspaceCurrency = simpleRowWorkspaceResolution.currency;
 
   const purchaseEventId = purchaseClaim.eventId;
   const purchaseEventTime = toValidEventTime(
@@ -6623,14 +6929,14 @@ async function handleSimplePurchase(
       config,
       pixelConfigs,
       simpleInheritedPixel,
-      simpleWorkspaceCurrency || srcRow?.currency,
-      { preferFallbackWithoutPixel: Boolean(simpleWorkspaceCurrency) },
+      simpleRowWorkspaceCurrency || srcRow?.currency,
+      { preferFallbackWithoutPixel: Boolean(simpleRowWorkspaceCurrency) },
     ),
-    workspace_resolution_source: simpleWorkspaceResolution.source,
+    workspace_resolution_source: simpleRowWorkspaceResolution.source,
     contact_status_capi: "",
     lead_status_capi: "",
     purchase_status_capi: "",
-    observaciones: "",
+    observaciones: simpleWorkspaceGuard.observation,
     external_id: norm(p.external_id) || srcRow?.external_id ||
       await sha256(cleanPhone),
     utm_campaign: srcRow?.utm_campaign ?? "",
@@ -6739,6 +7045,21 @@ async function handleSimplePurchase(
         landing_id: norm(simpleSourceRow?.landing_id ?? landing.id),
       }),
       newId,
+    );
+  }
+
+  if (simpleWorkspaceGuard.conflict) {
+    await skipMetaCapiForWorkspaceConflict(
+      db,
+      fullRow,
+      newId,
+      "Purchase",
+      purchaseEventId,
+      simpleWorkspaceGuard,
+      purchasePayloadRaw,
+    );
+    return textResponse(
+      "Purchase procesado. CAPI omitido por conflicto de workspace.",
     );
   }
 

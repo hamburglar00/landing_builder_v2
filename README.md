@@ -226,6 +226,51 @@ Notas:
 - Si un valor no cumple formato esperado, se limpia o se omite para evitar ruido.
 - Se mantiene dedupe Pixel + CAPI con `event_id` en Contact.
 
+### 8.1 Workspaces ARS/PYG y moneda
+
+El proyecto usa una sola tabla `public.conversions`, pero cada fila queda separada por
+workspace mediante `currency`:
+
+- `ARS`: workspace Argentina.
+- `PYG`: workspace Paraguay.
+
+La columna `workspace_resolution_source` guarda la senal que resolvio el
+workspace. La UI la muestra como nota legible para auditoria.
+
+Orden general de resolucion:
+1. Workspace informado por payload/landing cuando existe.
+2. Workspace heredado del recorrido previo de la conversion.
+3. Workspace inferido por promo/tag/landing asociada.
+4. Workspace de la gerencia que recibio el evento.
+5. Workspace inferido por prefijo del telefono (`549/54` => ARS, `595` => PYG).
+6. Fallback historico.
+
+Para `LEAD` y `PURCHASE` se preserva el workspace primario del recorrido. Si el
+evento posterior llega por una gerencia del mismo workspace, se agrega
+trazabilidad de verificacion. Si llega por una gerencia de otro workspace, la
+fila se procesa internamente, pero el envio CAPI de ese evento se omite con
+estado `skipped_workspace_conflict` para evitar enviar moneda o dataset
+incorrectos a Meta.
+
+### 8.2 Landing vs WhatsApp Cloud API
+
+- Landing page -> WhatsApp:
+  - `action_source = website`.
+  - Usa Pixel CAPI.
+  - Conserva `fbp/fbc` del navegador.
+  - Si `fbc` esta vencido, debe omitirse o reemplazarse solo por uno mas nuevo
+    y confiable del mismo recorrido.
+
+- Click-to-WhatsApp directo via WhatsApp Cloud API:
+  - `action_source = business_messaging`.
+  - Usa Dataset Business Messaging, no Pixel.
+  - Evento Meta para Lead: `LeadSubmitted`.
+  - Eventos enviados al endpoint del dataset:
+    `/{DATASET_ID}/events`.
+  - User data clave: `whatsapp_business_account_id` y `ctwa_clid`.
+  - `ctwa_clid` se guarda desde el `referral` del primer mensaje entrante y no
+    se hashea.
+
 ---
 
 ## 9. Dashboard de Conversiones
@@ -241,6 +286,8 @@ Tabs principales:
 - Muestra filas de `conversions`.
 - Soporta columnas configurables por cliente/admin.
 - Incluye payloads raw (`contact/lead/purchase`) para trazabilidad.
+- Incluye columnas de workspace y resolucion para auditar separacion ARS/PYG.
+- La exportacion PDF usa la tabla reducida y respeta filtros/eventos elegidos.
 
 ### 9.2 Logs
 - Muestra entradas de `conversion_logs`.
@@ -250,6 +297,16 @@ Tabs principales:
 - Filtro de fecha.
 - Filtro por landing (visualizacion, no altera datos).
 - Excluye filas de prueba (`test_event_code`) donde corresponda.
+- Graficos de distribucion por hora, dia y dia de semana.
+- Curva de ingresos y curva de variacion horaria del embudo con suavizado
+  visual.
+- La SMA aparece apagada por defecto en graficos.
+
+### 9.4 Desempeno
+- Respeta los filtros globales de Conversiones.
+- La disponibilidad se calcula por demanda, a partir de solicitudes reales de
+  telefono, y no por cron operativo recurrente.
+- El PDF de desempeno usa el mismo estilo visual que el PDF de tabla.
 
 ---
 
@@ -261,6 +318,9 @@ Vista operativa para contacto de jugadores:
 - Cargas, carga promedio, total cargado.
 - Integracion directa a WhatsApp para seguimiento.
 - Paginacion y busqueda para rendimiento/operatividad.
+- El ranking agrupa por `phone + gerencia_id` para evitar cruces entre
+  recorridos de distintas gerencias.
+- Eliminar jugador actua sobre la fila/relacion `phone + gerencia_id`.
 
 ---
 
@@ -301,6 +361,78 @@ Para landing externa:
 - Usa endpoint de conversiones del constructor.
 - Debe enviar payload compatible (event_id, external_id, promo_code, fbp/fbc, etc.).
 - Debe integrar obtencion de telefono (`landing-phone`) si usa rotacion/asignacion.
+- Debe enviar el workspace de la landing cuando aplica, para separar ARS/PYG
+  desde el Contact.
+
+### 12.1 WhatsApp Cloud API
+
+La seccion `WhatsApp Cloud API` permite usar un numero oficial de Meta como
+entrada directa Click-to-WhatsApp. Internamente se comporta como una landing:
+recibe un mensaje, asigna una gerencia/telefono, responde con un enlace/boton
+al asesor y conserva el recorrido para `LeadSubmitted` y `Purchase`.
+
+Componentes:
+- Configuracion de identidad Meta:
+  - nombre interno,
+  - telefono visible,
+  - Phone Number ID,
+  - WhatsApp Business Account ID,
+  - verify token,
+  - access token permanente de System User,
+  - app secret,
+  - version Graph API.
+- Tracking:
+  - Dataset Business Messaging ID,
+  - URL Post/Tracking,
+  - tag del flujo.
+- Redireccion:
+  - mismas reglas visuales y operativas que el editor de landings.
+  - asignacion por gerencia, modo, tipo y criterio.
+- Respuesta automatica:
+  - variables disponibles: `{{name}}`, `{{phone}}`, `{{promo_code}}`,
+    `{{wa_link}}`.
+  - puede usar link directo o boton CTA.
+- Inbox:
+  - muestra mensajes entrantes/salientes,
+  - estado no leido,
+  - tags de estado (`Nuevo`, `Contact`, `Lead`, `Cargo`, `Recargo`,
+    `Premium`),
+  - gerencia asignada,
+  - datos de derivacion y metricas del contacto.
+- Logs:
+  - webhooks,
+  - worker,
+  - respuestas salientes,
+  - errores de integracion.
+
+Semantica de eventos:
+- Mensaje entrante inicial: crea conversacion/inbox con estado `Nuevo`, pero no
+  crea `Contact` en `conversions`.
+- Click en el link/boton al asesor: crea el `Contact` interno, igual que el CTA
+  de una landing.
+- `LeadSubmitted` y `Purchase`: matchean primero por `promo_code`; si no hay
+  promo, WhatsApp Cloud API puede matchear por `phone + gerencia/telefono
+  asignado` dentro de la ventana configurada.
+
+Seguridad operativa:
+- El webhook debe estar desplegado sin `verify_jwt`, porque Meta no envia JWT de
+  Supabase.
+- El webhook valida la firma `X-Hub-Signature-256`.
+- El webhook guarda el evento antes de procesarlo.
+- El worker separado evita bloquear la respuesta a Meta.
+- Existe reintento para eventos pendientes/trabados.
+- Los mensajes manuales solo se permiten dentro de la ventana de 24 horas.
+- Fuera de la ventana de 24 horas se requieren templates aprobados por Meta.
+
+### 12.2 Telefonos de gerencia
+
+Los telefonos sincronizados desde PanelBotAdmin pueden marcarse como:
+- WhatsApp publicitario: entra al pool de seleccion para publicidad/landing.
+- WhatsApp de venta: queda fuera del pool de seleccion, pero conserva metricas y
+  trazabilidad si pertenece a la misma gerencia.
+
+La sincronizacion respeta la marca previa; no vuelve automaticamente un WhatsApp
+de venta al pool publicitario.
 
 ---
 
@@ -311,6 +443,18 @@ Automatizaciones principales:
 - `sync-phones`: sincroniza/actualiza disponibilidad de telefonos.
 - `notify-inactive-contacts`: envio de resumentes Telegram.
 - `warm-landing-phone`: precalentamiento de telefonos por cron.
+- `refresh_constructor_landing_phone_cache`: cachea disponibilidad rapida para
+  landings del constructor.
+- `refresh_phone_metrics`: recalcula metricas UI de telefonos con menor
+  frecuencia para reducir carga.
+
+Notas recientes:
+- La disponibilidad de desempeno paso de un cron recurrente pesado a medicion
+  por demanda.
+- `gerencia_phone_availability_snapshots` ya no se usa como fuente operativa
+  para desempeno.
+- Las metricas de telefonos son UI/cache; la seleccion real de telefono para CTA
+  usa la logica directa de asignacion.
 
 Recomendacion:
 - Revisar periodicamente `cron.job` y `cron.job_run_details`.

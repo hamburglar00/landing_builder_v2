@@ -432,12 +432,13 @@ export function friendlyWorkspaceResolutionSource(value: unknown): string {
   const normalized = String(value ?? "").trim().toLowerCase();
   const labels: Record<string, string> = {
     payload: "Informado por la landing",
-    event_gerencia: "Detectado por la gerencia que recibio el evento",
+    event_gerencia: "Resuelto por la gerencia receptora",
     lineage: "Heredado del recorrido previo",
     promo_tag: "Detectado por el codigo promocional",
     phone_prefix: "Detectado por el pais del telefono",
     landing: "Detectado por la landing",
     pixel_config: "Detectado por la configuracion del pixel",
+    whatsapp_cloud_api_assignment: "Heredado de WhatsApp Cloud API",
     legacy_default: "Registro historico",
   };
   return labels[normalized] ?? (normalized || "-");
