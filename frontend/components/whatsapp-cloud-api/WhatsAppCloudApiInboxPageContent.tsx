@@ -151,15 +151,30 @@ function formatTime(value: string | null): string {
   if (!value) return "-";
   const date = new Date(value);
   if (Number.isNaN(date.getTime())) return "-";
+
   const now = new Date();
-  const sameDay = date.toDateString() === now.toDateString();
-  if (sameDay) {
+  const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+  const day = new Date(date.getFullYear(), date.getMonth(), date.getDate());
+  const diffDays = Math.floor(
+    (today.getTime() - day.getTime()) / (24 * 60 * 60 * 1000),
+  );
+
+  if (diffDays === 0) {
     return new Intl.DateTimeFormat("es-AR", {
       hour: "2-digit",
       minute: "2-digit",
       hourCycle: "h23",
     }).format(date);
   }
+
+  if (diffDays === 1) return "ayer";
+
+  if (diffDays > 1 && diffDays < 7) {
+    return new Intl.DateTimeFormat("es-AR", {
+      weekday: "long",
+    }).format(date).toLowerCase();
+  }
+
   return new Intl.DateTimeFormat("es-AR", {
     day: "2-digit",
     month: "2-digit",
