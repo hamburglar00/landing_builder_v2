@@ -97,6 +97,12 @@ Funciones clave en `supabase/functions/`:
 - `create-client`, `update-client`, `delete-client`, `list-clients`
 - `landing-phone`, `sync-phones`, `phone-click`, `reset-phone-counters`
 
+Alta de clientes:
+- Los signups publicos de Supabase Auth estan bloqueados por trigger en `auth.users`.
+- La unica ruta valida para crear clientes es `create-client`, invocada por un usuario `admin`.
+- `create-client` marca el usuario con `app_metadata.panelbot_admin_created = true`; esa marca permite el insert en Auth y crea el `profile`.
+- `list-clients` solo lista usuarios con `profile` completo y `nombre` asignado, evitando mostrar cuentas externas o incompletas.
+
 ---
 
 ## 5. Modelo de datos (resumen)

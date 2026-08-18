@@ -146,8 +146,8 @@ Deno.serve(async (req) => {
       }
     }
 
-    const { data: usersData, error: listError } =
-      await supabaseAdmin.auth.admin.listUsers({
+    const { data: usersData, error: listError } = await supabaseAdmin.auth.admin
+      .listUsers({
         page,
         perPage,
       });
@@ -155,8 +155,7 @@ Deno.serve(async (req) => {
     if (listError || !usersData?.users) {
       return new Response(
         JSON.stringify({
-          error:
-            listError?.message ??
+          error: listError?.message ??
             "No se pudieron obtener los usuarios clientes.",
         }),
         {
@@ -179,17 +178,27 @@ Deno.serve(async (req) => {
 
     const { data: cfgRows } = await supabaseAdmin
       .from("conversions_config")
-      .select("user_id, visible_columns, show_logs, show_inbox, show_ai_assistant, show_promotions")
+      .select(
+        "user_id, visible_columns, show_logs, show_inbox, show_ai_assistant, show_promotions",
+      )
       .in("user_id", ids);
     const { data: subsRows } = await supabaseAdmin
       .from("client_subscriptions")
-      .select("user_id, plan_code, max_landings, max_phones, status, expires_at, grace_days")
+      .select(
+        "user_id, plan_code, max_landings, max_phones, status, expires_at, grace_days",
+      )
       .in("user_id", ids);
 
     const profileById = new Map(
-      (profiles ?? []).map((p) => [p.id, { nombre: p.nombre ?? null, role: p.role ?? "cliente" }]),
+      (profiles ?? []).map((
+        p,
+      ) => [p.id, { nombre: p.nombre ?? null, role: p.role ?? "cliente" }]),
     );
-    const clientUsers = authUsers.filter((u) => profileById.has(u.id));
+    const clientUsers = authUsers.filter((u) => {
+      const userProfile = profileById.get(u.id);
+      if (!userProfile || userProfile.role === "admin") return false;
+      return String(userProfile.nombre ?? "").trim().length > 0;
+    });
     const cfgByUserId = new Map(
       (cfgRows ?? []).map((r) => [r.user_id, {
         visible_columns: r.visible_columns ?? [],
@@ -257,4 +266,3 @@ Deno.serve(async (req) => {
     );
   }
 });
-

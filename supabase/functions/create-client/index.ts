@@ -1,4 +1,4 @@
-﻿import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
+import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -22,7 +22,9 @@ function isValidClientName(value: string): boolean {
   return /^[a-z0-9]+$/i.test(value);
 }
 
-function getPlanDefaults(planCode: PlanCode): { maxLandings: number; maxPhones: number } {
+function getPlanDefaults(
+  planCode: PlanCode,
+): { maxLandings: number; maxPhones: number } {
   switch (planCode) {
     case "plus":
       return { maxLandings: 2, maxPhones: 5 };
@@ -189,9 +191,10 @@ Deno.serve(async (req) => {
     const requestedShowLogs = typeof payload.showLogs === "boolean"
       ? payload.showLogs
       : null;
-    const requestedShowAiAssistant = typeof payload.showAiAssistant === "boolean"
-      ? payload.showAiAssistant
-      : null;
+    const requestedShowAiAssistant =
+      typeof payload.showAiAssistant === "boolean"
+        ? payload.showAiAssistant
+        : null;
     const requestedShowPromotions = typeof payload.showPromotions === "boolean"
       ? payload.showPromotions
       : null;
@@ -243,18 +246,22 @@ Deno.serve(async (req) => {
       );
     }
 
-    const { data: created, error: createError } =
-      await supabaseAdmin.auth.admin.createUser({
+    const { data: created, error: createError } = await supabaseAdmin.auth.admin
+      .createUser({
         email,
         password,
         email_confirm: true,
+        app_metadata: {
+          panelbot_admin_created: true,
+          panelbot_created_by: user.id,
+          panelbot_role: "client",
+        },
       });
 
     if (createError || !created.user) {
       return new Response(
         JSON.stringify({
-          error:
-            createError?.message ??
+          error: createError?.message ??
             "No se pudo crear el usuario cliente en Supabase Auth.",
         }),
         {
@@ -274,13 +281,16 @@ Deno.serve(async (req) => {
 
     const { data: adminCfg } = await supabaseAdmin
       .from("conversions_config")
-      .select("visible_columns, funnel_premium_threshold, funnel_premium_thresholds, tracking_ranking_config, tracking_ranking_configs")
+      .select(
+        "visible_columns, funnel_premium_threshold, funnel_premium_thresholds, tracking_ranking_config, tracking_ranking_configs",
+      )
       .eq("user_id", user.id)
       .maybeSingle();
 
-    const finalVisibleColumns = requestedVisibleColumns && requestedVisibleColumns.length > 0
-      ? requestedVisibleColumns
-      : FALLBACK_VISIBLE_COLUMNS;
+    const finalVisibleColumns =
+      requestedVisibleColumns && requestedVisibleColumns.length > 0
+        ? requestedVisibleColumns
+        : FALLBACK_VISIBLE_COLUMNS;
     const finalShowLogs = requestedShowLogs ?? true;
     const finalShowAiAssistant = requestedShowAiAssistant ?? false;
     const finalShowPromotions = requestedShowPromotions ?? false;
@@ -296,25 +306,21 @@ Deno.serve(async (req) => {
           funnel_premium_threshold: Number.isFinite(premiumThreshold)
             ? premiumThreshold
             : 50000,
-          funnel_premium_thresholds:
-            adminCfg?.funnel_premium_thresholds &&
+          funnel_premium_thresholds: adminCfg?.funnel_premium_thresholds &&
               typeof adminCfg.funnel_premium_thresholds === "object" &&
               !Array.isArray(adminCfg.funnel_premium_thresholds)
-              ? adminCfg.funnel_premium_thresholds
-              : {
-                ARS: Number.isFinite(premiumThreshold)
-                  ? premiumThreshold
-                  : 50000,
-              },
+            ? adminCfg.funnel_premium_thresholds
+            : {
+              ARS: Number.isFinite(premiumThreshold) ? premiumThreshold : 50000,
+            },
           tracking_ranking_config: adminCfg?.tracking_ranking_config ?? null,
-          tracking_ranking_configs:
-            adminCfg?.tracking_ranking_configs &&
+          tracking_ranking_configs: adminCfg?.tracking_ranking_configs &&
               typeof adminCfg.tracking_ranking_configs === "object" &&
               !Array.isArray(adminCfg.tracking_ranking_configs)
-              ? adminCfg.tracking_ranking_configs
-              : adminCfg?.tracking_ranking_config
-                ? { ARS: adminCfg.tracking_ranking_config }
-                : {},
+            ? adminCfg.tracking_ranking_configs
+            : adminCfg?.tracking_ranking_config
+            ? { ARS: adminCfg.tracking_ranking_config }
+            : {},
           show_logs: finalShowLogs,
           show_ai_assistant: finalShowAiAssistant,
           show_promotions: finalShowPromotions,
@@ -324,7 +330,10 @@ Deno.serve(async (req) => {
       );
 
     if (cfgError) {
-      console.error("Error inicializando conversions_config para cliente:", cfgError);
+      console.error(
+        "Error inicializando conversions_config para cliente:",
+        cfgError,
+      );
     }
 
     const defaults = getPlanDefaults("starter");
@@ -338,14 +347,18 @@ Deno.serve(async (req) => {
           max_phones: defaults.maxPhones,
           status: "active",
           starts_at: new Date().toISOString(),
-          expires_at: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString(),
+          expires_at: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000)
+            .toISOString(),
           grace_days: 5,
         },
         { onConflict: "user_id" },
       );
 
     if (subError) {
-      console.error("Error inicializando client_subscriptions para cliente:", subError);
+      console.error(
+        "Error inicializando client_subscriptions para cliente:",
+        subError,
+      );
     }
 
     return new Response(
@@ -380,4 +393,3 @@ Deno.serve(async (req) => {
     );
   }
 });
-
