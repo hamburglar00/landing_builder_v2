@@ -55,6 +55,7 @@ function NavIcon({
     | "inicio"
     | "clientes"
     | "landings"
+    | "atrio"
     | "gerencias"
     | "telefonos"
     | "conversiones"
@@ -110,6 +111,27 @@ function NavIcon({
           <path d="M3 11L12 3l9 8" className={accent} />
           <path d="M5 10v10h14V10" />
           <path d="M10 21v-6h4v6" />
+        </svg>
+      </span>
+    );
+  }
+
+  if (variant === "atrio") {
+    return (
+      <span className={base}>
+        <svg
+          className="h-4 w-4"
+          viewBox="0 0 24 24"
+          fill="none"
+          stroke="currentColor"
+          strokeWidth={1.7}
+          strokeLinecap="round"
+          strokeLinejoin="round"
+        >
+          <circle cx="12" cy="12" r="8" className={accent} />
+          <path d="M8 13.4c.9 1.2 2.2 1.8 4 1.8s3.1-.6 4-1.8" />
+          <path d="M8.8 9.3h.01M15.2 9.3h.01" />
+          <path d="M6.1 17.7 5 21l3.4-1.2" />
         </svg>
       </span>
     );
@@ -560,6 +582,19 @@ export default function AdminLayout({
               active={Boolean(pathname?.startsWith("/admin/landings"))}
             />
             <span>LANDINGS</span>
+          </Link>
+
+          <Link
+            href="/admin/atrio"
+            {...getNavLinkProps("/admin/atrio")}
+            className={`flex items-center gap-2 rounded-lg px-3 py-2 text-xs font-medium tracking-[0.18em] transition ${
+              pathname?.startsWith("/admin/atrio")
+                ? "bg-[var(--color-primary-soft-bg)] text-[var(--color-primary)] border border-[var(--color-primary-soft-border)]"
+                : "text-[var(--color-text-muted)] hover:bg-[var(--color-bg-3)] hover:text-[var(--color-text)]"
+            }`}
+          >
+            <NavIcon variant="atrio" active={Boolean(pathname?.startsWith("/admin/atrio"))} />
+            <span>ATRIO</span>
           </Link>
 
           <Link

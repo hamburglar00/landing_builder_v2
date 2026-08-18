@@ -14,6 +14,7 @@ const SETUP_GUIDE_STORAGE_PREFIX = "constructor_setup_guide_hidden:";
 const DASHBOARD_PREFETCH_ROUTES = [
   "/dashboard/inicio",
   "/dashboard/landings",
+  "/dashboard/atrio",
   "/dashboard/conversiones",
   "/dashboard/seguimiento",
   "/dashboard/whatsapp-cloud-api",
@@ -69,7 +70,7 @@ function NavIcon({
   variant,
   active,
 }: {
-  variant: "inicio" | "landings" | "promociones" | "gerencias" | "telefonos" | "conversiones" | "integraciones" | "seguimiento" | "whatsapp" | "notificaciones";
+  variant: "inicio" | "landings" | "atrio" | "promociones" | "gerencias" | "telefonos" | "conversiones" | "integraciones" | "seguimiento" | "whatsapp" | "notificaciones";
   active: boolean;
 }) {
   const base = active
@@ -154,6 +155,27 @@ function NavIcon({
         >
           <polyline points="22 7 13.5 15.5 8.5 10.5 2 17" className={accent} />
           <polyline points="16 7 22 7 22 13" />
+        </svg>
+      </span>
+    );
+  }
+
+  if (variant === "atrio") {
+    return (
+      <span className={`${base}`}>
+        <svg
+          className="h-4 w-4"
+          viewBox="0 0 24 24"
+          fill="none"
+          stroke="currentColor"
+          strokeWidth={1.7}
+          strokeLinecap="round"
+          strokeLinejoin="round"
+        >
+          <circle cx="12" cy="12" r="8" className={accent} />
+          <path d="M8 13.4c.9 1.2 2.2 1.8 4 1.8s3.1-.6 4-1.8" />
+          <path d="M8.8 9.3h.01M15.2 9.3h.01" />
+          <path d="M6.1 17.7 5 21l3.4-1.2" />
         </svg>
       </span>
     );
@@ -598,6 +620,19 @@ export default function DashboardLayout({
           >
             <NavIcon variant="landings" active={Boolean(pathname?.startsWith("/dashboard/landings"))} />
             <span>LANDINGS</span>
+          </Link>
+
+          <Link
+            href="/dashboard/atrio"
+            onClick={(event) => handleNavClick("/dashboard/atrio", event)}
+            className={`flex items-center gap-2 rounded-lg px-3 py-2 text-xs font-medium tracking-[0.18em] transition ${
+              pathname?.startsWith("/dashboard/atrio")
+                ? "bg-[var(--color-primary-soft-bg)] text-[var(--color-primary)] border border-[var(--color-primary-soft-border)]"
+                : "text-[var(--color-text-muted)] hover:bg-[var(--color-bg-3)] hover:text-[var(--color-text)]"
+            }`}
+          >
+            <NavIcon variant="atrio" active={Boolean(pathname?.startsWith("/dashboard/atrio"))} />
+            <span>ATRIO</span>
           </Link>
 
           <Link
