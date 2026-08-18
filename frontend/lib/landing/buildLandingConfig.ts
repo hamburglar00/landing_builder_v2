@@ -20,6 +20,8 @@ export interface LandingConfigPayload {
     postUrl: string;
     landingTag: string;
     sendContactPixel: boolean;
+    ctaDestination?: "whatsapp" | "atrio";
+    atrioRedirectUrl?: string;
     phoneCountryCode?: string;
     currency?: LandingWorkspaceCurrency;
     workspaceCurrency?: LandingWorkspaceCurrency;
@@ -123,6 +125,8 @@ export function buildLandingConfig({
         postUrl,
         landingTag,
         sendContactPixel: config.sendContactPixel,
+        ctaDestination: config.ctaDestination === "atrio" ? "atrio" : "whatsapp",
+        atrioRedirectUrl: config.atrioRedirectUrl.trim(),
         phoneCountryCode,
         currency: workspaceCurrency,
         workspaceCurrency,
@@ -173,6 +177,8 @@ export function buildLandingConfig({
       postUrl,
       landingTag,
       sendContactPixel: config.sendContactPixel,
+      ctaDestination: config.ctaDestination === "atrio" ? "atrio" : "whatsapp",
+      atrioRedirectUrl: config.atrioRedirectUrl.trim(),
       phoneCountryCode,
       currency: workspaceCurrency,
       workspaceCurrency,

@@ -4276,10 +4276,16 @@ async function handleLead(
   const botPhone = sanitizePhone(p.bot_phone);
   const inboundAgencyId = norm(p.agency_id);
   const leadPlayerUsername = playerUsernameFromPayload(p);
+  const promoCode = derivePromoCodeFromPayload(p);
+  const promoCodeIsFull = isFullPromoCode(
+    p.promo_code ?? p.promoCode ?? promoCode,
+  );
+  const isAtrioSource = normalizedSourcePlatform(inboundSourcePlatform) ===
+    "atrio";
   const inboundBotTimestampSec =
     toEpochFromIso((p as Record<string, unknown>).dateTime) ??
       toEpochFromIso((p as Record<string, unknown>).datetime);
-  if (!cleanPhone) {
+  if (!cleanPhone && !(isAtrioSource && promoCodeIsFull)) {
     await writeLog(
       db,
       landing.user_id,
@@ -4295,10 +4301,6 @@ async function handleLead(
     );
     return textResponse("Faltan parametros: phone requerido", 400);
   }
-  const promoCode = derivePromoCodeFromPayload(p);
-  const promoCodeIsFull = isFullPromoCode(
-    p.promo_code ?? p.promoCode ?? promoCode,
-  );
   const testEventCode = norm(p.test_event_code);
   const leadPayloadRaw = safePayloadRaw(p);
 
@@ -4440,6 +4442,33 @@ async function handleLead(
         leadAttributionStatus = "promo_not_found";
       }
     }
+  }
+
+  if (
+    isAtrioSource && !cleanPhone && promoCodeIsFull &&
+    (!targetId || !canUsePromoForJourney(promoCoherence))
+  ) {
+    await writeLog(
+      db,
+      landing.user_id,
+      "handleLead",
+      "ERROR",
+      "LEAD Atrio no procesado: promo_code sin Contact previo usable",
+      JSON.stringify({
+        promo_code: promoCode,
+        promo_coherence: promoCoherence,
+        source_platform: inboundSourcePlatform,
+      }),
+      undefined,
+      undefined,
+      undefined,
+      leadPayloadRaw,
+      "rechazado: Atrio sin Contact previo usable para promo_code",
+    );
+    return textResponse(
+      "LEAD Atrio rechazado: promo_code sin Contact previo usable",
+      400,
+    );
   }
 
   // 1.b) WhatsApp Cloud API fallback when promo_code is missing. Unlike
@@ -4841,7 +4870,7 @@ async function handleLead(
   } else {
     // 4) Update existing row
     const updates: Record<string, unknown> = {
-      phone: cleanPhone,
+      ...(cleanPhone ? { phone: cleanPhone } : {}),
       estado: "lead",
       lead_event_id: leadEventId,
       lead_event_time: leadEventTime,
@@ -5513,11 +5542,17 @@ async function handlePurchase(
   const inboundAgencyId = norm(p.agency_id);
   const purchasePlayerUsername = playerUsernameFromPayload(p);
   const normalizedAmount = normalizePurchaseAmount(p.amount);
-  if (!cleanPhone || !normalizedAmount.ok) {
-    let rejectionReason = "missing_phone";
-    if (cleanPhone && !normalizedAmount.ok) {
-      rejectionReason = normalizedAmount.reason;
-    }
+  const promoCode = derivePromoCodeFromPayload(p);
+  const promoCodeIsFull = isFullPromoCode(
+    p.promo_code ?? p.promoCode ?? promoCode,
+  );
+  const isAtrioSource = normalizedSourcePlatform(inboundSourcePlatform) ===
+    "atrio";
+  const allowNoPhonePromoMatch = isAtrioSource && promoCodeIsFull;
+  if (!normalizedAmount.ok || (!cleanPhone && !allowNoPhonePromoMatch)) {
+    const rejectionReason = !normalizedAmount.ok
+      ? normalizedAmount.reason
+      : "missing_phone";
     await writeLog(
       db,
       landing.user_id,
@@ -5576,10 +5611,6 @@ async function handlePurchase(
   }
   if (ctx && purchaseClaim.claimId) ctx.purchaseClaimId = purchaseClaim.claimId;
 
-  const promoCode = derivePromoCodeFromPayload(p);
-  const promoCodeIsFull = isFullPromoCode(
-    p.promo_code ?? p.promoCode ?? promoCode,
-  );
   const { fn: payloadFn, ln: payloadLn } = deriveNameFromPayload(p);
   const payloadEmail = sanitizeEmail(p.email);
   const payloadCuitCuil = deriveCuitCuilFromPayload(p);
@@ -5609,37 +5640,45 @@ async function handlePurchase(
       { eventGerencia, promoCode },
     );
   const preliminaryWorkspaceCurrency = preliminaryWorkspaceResolution.currency;
-  let latestPurchaseQuery = db
-    .from("conversions")
-    .select("*")
-    .eq("user_id", landing.user_id)
-    .eq("phone", cleanPhone)
-    .eq("estado", "purchase")
-    .order("created_at", { ascending: false })
-    .limit(1);
-  if (preliminaryWorkspaceCurrency) {
-    latestPurchaseQuery = latestPurchaseQuery.eq(
-      "currency",
-      preliminaryWorkspaceCurrency,
-    );
+  let latestPurchaseRow: ConversionRow | null = null;
+  if (cleanPhone) {
+    let latestPurchaseQuery = db
+      .from("conversions")
+      .select("*")
+      .eq("user_id", landing.user_id)
+      .eq("phone", cleanPhone)
+      .eq("estado", "purchase")
+      .order("created_at", { ascending: false })
+      .limit(1);
+    if (preliminaryWorkspaceCurrency) {
+      latestPurchaseQuery = latestPurchaseQuery.eq(
+        "currency",
+        preliminaryWorkspaceCurrency,
+      );
+    }
+    const { data } = await latestPurchaseQuery.maybeSingle();
+    latestPurchaseRow = data as ConversionRow | null;
   }
-  const { data: latestPurchaseRow } = await latestPurchaseQuery.maybeSingle();
   const latestGlobalPurchase = latestPurchaseRow as ConversionRow | null;
   const hasPreviousPurchase = !!latestPurchaseRow;
-  const receiverLeadRow = await findLatestRowForEventGerencia(
-    db,
-    landing.user_id,
-    cleanPhone,
-    eventGerencia.gerencia_id,
-    "lead",
-  );
-  const receiverPurchaseRow = await findLatestRowForEventGerencia(
-    db,
-    landing.user_id,
-    cleanPhone,
-    eventGerencia.gerencia_id,
-    "purchase",
-  );
+  const receiverLeadRow = cleanPhone
+    ? await findLatestRowForEventGerencia(
+      db,
+      landing.user_id,
+      cleanPhone,
+      eventGerencia.gerencia_id,
+      "lead",
+    )
+    : null;
+  const receiverPurchaseRow = cleanPhone
+    ? await findLatestRowForEventGerencia(
+      db,
+      landing.user_id,
+      cleanPhone,
+      eventGerencia.gerencia_id,
+      "purchase",
+    )
+    : null;
   const receiverPurchaseLineage = !eventGerencia.gerencia_id ||
       (receiverPurchaseRow && rowIsTrustedLineageForGerencia(
         receiverPurchaseRow,
@@ -5647,13 +5686,15 @@ async function handlePurchase(
       ))
     ? receiverPurchaseRow
     : null;
-  const trustedReceiverLineage = await findLatestTrustedGerenciaLineage(
-    db,
-    landing.user_id,
-    cleanPhone,
-    eventGerencia.gerencia_id,
-  );
-  const namedReceiverLineage = (!payloadFn || !payloadLn)
+  const trustedReceiverLineage = cleanPhone
+    ? await findLatestTrustedGerenciaLineage(
+      db,
+      landing.user_id,
+      cleanPhone,
+      eventGerencia.gerencia_id,
+    )
+    : null;
+  const namedReceiverLineage = cleanPhone && (!payloadFn || !payloadLn)
     ? await findLatestNamedTrustedGerenciaLineage(
       db,
       landing.user_id,
@@ -5668,7 +5709,7 @@ async function handlePurchase(
       new Date(latestPurchaseRow.created_at).getTime()
   );
   const canUseLeadFallback = !hasPreviousPurchase || leadIsAfterLatestPurchase;
-  const rawReceiverContactRow = !promoCodeIsFull
+  const rawReceiverContactRow = cleanPhone && !promoCodeIsFull
     ? await findWhatsappCloudApiContactPhoneFallback(db, {
       userId: landing.user_id,
       phone: cleanPhone,
@@ -5744,6 +5785,33 @@ async function handlePurchase(
       undefined,
       safePayloadRaw(p),
       "fallback por phone/lead (match pendiente)",
+    );
+  }
+
+  if (
+    isAtrioSource && !cleanPhone && promoCodeIsFull &&
+    (!promoRow?.id || !canUsePromoForJourney(promoCoherence))
+  ) {
+    await writeLog(
+      db,
+      landing.user_id,
+      "handlePurchase",
+      "ERROR",
+      "PURCHASE Atrio no procesado: promo_code sin Contact previo usable",
+      JSON.stringify({
+        promo_code: promoCode,
+        promo_coherence: promoCoherence,
+        source_platform: inboundSourcePlatform,
+      }),
+      undefined,
+      undefined,
+      undefined,
+      purchasePayloadRaw,
+      "rechazado: Atrio sin Contact previo usable para promo_code",
+    );
+    return textResponse(
+      "PURCHASE Atrio rechazado: promo_code sin Contact previo usable",
+      400,
     );
   }
 
@@ -5897,7 +5965,7 @@ async function handlePurchase(
       : `${matchMethod}_${promoCoherence}`;
 
     const updates: Record<string, unknown> = {
-      phone: cleanPhone,
+      phone: cleanPhone || existingRow?.phone || "",
       estado: "purchase",
       valor: amount,
       currency: purchaseCurrency,

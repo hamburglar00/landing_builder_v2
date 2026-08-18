@@ -32,6 +32,10 @@ import {
 } from "@/components/landing/LandingEditorForm";
 import { PublishTargetSection } from "@/components/landing/PublishTargetSection";
 import { LandingMarketCountryField } from "@/components/landing/LandingMarketCountryField";
+import {
+  CtaDestinationSection,
+  isAtrioUrlValidForSave,
+} from "@/components/landing/CtaDestinationSection";
 import { buildLandingConfig } from "@/lib/landing/buildLandingConfig";
 import { publishLandingChanges } from "@/lib/landing/publishLanding";
 import { getSettings } from "@/lib/settingsDb";
@@ -279,6 +283,10 @@ export default function DashboardLandingEditarPage() {
       setSaveError("Pixel ID inválido. Debe contener solo números.");
       return;
     }
+    if (!isAtrioUrlValidForSave(landing.config)) {
+      setSaveError("URL de Atrio inválida. Debe comenzar con http:// o https://.");
+      return;
+    }
     if (
       initialName &&
       initialName.startsWith("Nueva-landing-") &&
@@ -316,11 +324,13 @@ export default function DashboardLandingEditarPage() {
         updatedAt: undefined,
       });
 
-      await assertLandingGerenciasWorkspaceCompatible(
-        landing.id,
-        assignments,
-        landing.workspaceCurrency,
-      );
+      if (landing.config.ctaDestination !== "atrio") {
+        await assertLandingGerenciasWorkspaceCompatible(
+          landing.id,
+          assignments,
+          landing.workspaceCurrency,
+        );
+      }
 
       await updateLanding(landing.id, {
         landingType: landing.landingType,
@@ -595,6 +605,7 @@ export default function DashboardLandingEditarPage() {
               setConfig={setConfig}
               workspaceCurrency={landing.workspaceCurrency}
             />
+            <CtaDestinationSection config={landing.config} setConfig={setConfig} />
             <div>
               <label className="block text-xs font-medium text-zinc-400 mb-1">
                 Pixel ID <span className="text-red-400">*</span>
@@ -731,15 +742,24 @@ export default function DashboardLandingEditarPage() {
           </div>
         </CollapsibleSection>
 
-        <GerenciaRedirectSection
-          landing={landing}
-          setLanding={setLanding}
-          gerencias={gerencias}
-          workGroups={workGroups}
-          assignments={assignments}
-          setAssignments={setAssignments}
-          createGerenciasHref="/dashboard/gerencias"
-        />
+        {landing.config.ctaDestination === "atrio" ? (
+          <section className="rounded-2xl border border-zinc-800 bg-zinc-950/40 p-4">
+            <p className="text-sm font-semibold text-zinc-200">Redireccion</p>
+            <p className="mt-1 text-xs text-zinc-500">
+              Esta landing redirige al webchat de Atrio configurado en Tracking.
+            </p>
+          </section>
+        ) : (
+          <GerenciaRedirectSection
+            landing={landing}
+            setLanding={setLanding}
+            gerencias={gerencias}
+            workGroups={workGroups}
+            assignments={assignments}
+            setAssignments={setAssignments}
+            createGerenciasHref="/dashboard/gerencias"
+          />
+        )}
 
         {landing.landingType !== "external" && (
           <LandingEditorForm

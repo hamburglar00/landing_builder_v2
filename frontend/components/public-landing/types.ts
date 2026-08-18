@@ -10,6 +10,8 @@ export type PublicLandingConfig = {
     postUrl: string;
     landingTag: string;
     sendContactPixel?: boolean;
+    ctaDestination?: "whatsapp" | "atrio" | string;
+    atrioRedirectUrl?: string;
     phoneCountryCode?: string;
     currency?: "ARS" | "PYG" | string;
     workspaceCurrency?: "ARS" | "PYG" | string;

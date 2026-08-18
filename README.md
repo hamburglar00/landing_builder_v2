@@ -568,3 +568,15 @@ El proyecto esta preparado para:
 - Robustez de ingestion + retries + logs.
 - Envio Meta CAPI con normalizacion consistente.
 - Seguimiento comercial + notificaciones Telegram productivas.
+# Checkpoints operativos
+
+- `checkpoint-before-atrio-20260818`: estado estable del constructor antes de iniciar la integracion de Atrio.
+
+# Integracion Atrio
+
+Atrio se integra como un destino alternativo del CTA de una landing. La landing conserva el flujo actual de tracking: genera `external_id`, `event_id`, `promo_code`, captura parametros Meta y envia `Contact` al endpoint de conversiones. La diferencia es solo la redireccion final:
+
+- `WhatsApp`: obtiene un telefono ganador desde `landing-phone`, registra `phone-click` y abre `wa.me`.
+- `Atrio`: no consulta `landing-phone`; redirige a la URL configurada de Atrio agregando solo `promo_code` como query param.
+
+Para trazabilidad, el payload de `Contact` incluye `cta_destination` y `redirect_channel`. `LEAD` y `PURCHASE` de Atrio deben matchear por `promo_code` completo contra el `Contact` previo. Si Atrio no trae `phone`, no se aplican fallbacks por telefono.

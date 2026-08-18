@@ -42,6 +42,8 @@ export const DEFAULT_CONFIG: LandingThemeConfig = {
   ctaBackgroundColor: "gold",
   ctaGlowColor: "gold",
   sendContactPixel: true,
+  ctaDestination: "whatsapp",
+  atrioRedirectUrl: "",
   socialProofEnabled: false,
   interactionsEnabled: false,
   whatsappPrefillText: "",

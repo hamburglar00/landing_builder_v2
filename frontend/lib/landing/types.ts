@@ -64,6 +64,8 @@ export type BackgroundMode = "single" | "rotating";
 
 export type PhoneKind = "carga" | "ads" | "mkt" | "assistant";
 
+export type LandingCtaDestination = "whatsapp" | "atrio";
+
 export interface LandingLeadCaptureConfig {
   enabled: boolean;
   title: string;
@@ -128,6 +130,12 @@ export interface LandingThemeConfig {
    * Si es false, solo envia al endpoint de conversiones/CAPI.
    */
   sendContactPixel: boolean;
+  /**
+   * Canal final del CTA. WhatsApp mantiene el flujo actual con phone ganador;
+   * Atrio conserva el tracking de Contact y redirige a un webchat con promo_code.
+   */
+  ctaDestination: LandingCtaDestination;
+  atrioRedirectUrl: string;
   /**
    * Activa o desactiva el bloque de prueba social de la landing publica.
    */

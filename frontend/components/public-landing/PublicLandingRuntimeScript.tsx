@@ -71,6 +71,8 @@ export default function PublicLandingRuntimeScript({ slug, config }: Props) {
     postUrl: config.tracking?.postUrl || "",
     landingTag: config.tracking?.landingTag || "LP",
     sendContactPixel: config.tracking?.sendContactPixel !== false,
+    ctaDestination: config.tracking?.ctaDestination === "atrio" ? "atrio" : "whatsapp",
+    atrioRedirectUrl: config.tracking?.atrioRedirectUrl || "",
     phoneCountryCode: config.tracking?.phoneCountryCode || "54",
     workspaceCurrency: String(config.workspaceCurrency || config.tracking?.workspaceCurrency || config.tracking?.currency || "ARS").trim().toUpperCase(),
     ctaText: config.content?.ctaText || "¡Contactar ya!",
@@ -145,6 +147,23 @@ export default function PublicLandingRuntimeScript({ slug, config }: Props) {
         var baseMessage = ("Hola! quiero mas informacion por favor! Mi codigo es: " + promoCode + " y mi nombre es:").trim();
         var extraText = String(cfg.whatsappPrefillText || "").trim();
         return extraText ? baseMessage + "\\n\\n" + extraText : baseMessage;
+      }
+
+      function isAtrioDestination() {
+        return String(cfg.ctaDestination || "whatsapp").toLowerCase() === "atrio";
+      }
+
+      function buildAtrioRedirectUrl(promoCode) {
+        try {
+          var raw = String(cfg.atrioRedirectUrl || "").trim();
+          if (!raw) return "";
+          var url = new URL(raw, window.location.href);
+          if (url.protocol !== "http:" && url.protocol !== "https:") return "";
+          url.searchParams.set("promo_code", promoCode);
+          return url.toString();
+        } catch (e) {
+          return "";
+        }
       }
 
       function safeUUID() {
@@ -562,6 +581,7 @@ export default function PublicLandingRuntimeScript({ slug, config }: Props) {
       }
 
       function ensurePhonePromise() {
+        if (isAtrioDestination()) return Promise.resolve(null);
         window.__PUBLIC_LANDING_PHONE_PROMISES = window.__PUBLIC_LANDING_PHONE_PROMISES || {};
         var existing = window.__PUBLIC_LANDING_PHONE_PROMISES[cfg.slug];
         if (existing) return existing;
@@ -930,19 +950,25 @@ export default function PublicLandingRuntimeScript({ slug, config }: Props) {
           refreshMetaTracking(params, tracking)
             .then(function (freshTracking) {
               tracking = freshTracking;
+              if (isAtrioDestination()) return null;
               return waitWithTimeout(ensurePhonePromise(), 1500);
             })
             .then(function (phoneData) {
+              if (isAtrioDestination()) return null;
               if (phoneData && phoneData.phone) return phoneData;
               clearPrewarmedPhonePromise();
               return waitWithTimeout(ensurePhonePromise(), 2500);
             })
             .then(function (phoneData) {
-              var phone = normalizePhone(
+              var atrioMode = isAtrioDestination();
+              var phone = atrioMode ? "" : normalizePhone(
                 (phoneData && phoneData.phone) || "",
                 cfg.phoneCountryCode
               );
-              if (!phone) {
+              var redirectUrl = atrioMode
+                ? buildAtrioRedirectUrl(promoCode)
+                : "https://wa.me/" + phone + "?text=" + encodeURIComponent(message);
+              if ((!atrioMode && !phone) || (atrioMode && !redirectUrl)) {
                 setNoPhoneState(button);
                 return;
               }
@@ -951,7 +977,9 @@ export default function PublicLandingRuntimeScript({ slug, config }: Props) {
                 firePixelContact(eventId);
               }
 
-              notifyPhoneClick(phoneData, phone);
+              if (!atrioMode) {
+                notifyPhoneClick(phoneData, phone);
+              }
 
               var payload = {
                 event_name: "Contact",
@@ -984,10 +1012,13 @@ export default function PublicLandingRuntimeScript({ slug, config }: Props) {
                 client_ip_issued_at: tracking.clientIpIssuedAt || undefined,
                 client_ip_proof: tracking.clientIpProof || undefined,
                 client_user_agent: navigator.userAgent || undefined,
-                telefono_asignado: phone,
+                telefono_asignado: atrioMode ? "" : phone,
                 promo_code: promoCode,
                 source: "main_button",
                 source_platform: "landing",
+                cta_destination: atrioMode ? "atrio" : "whatsapp",
+                redirect_channel: atrioMode ? "atrio" : "whatsapp",
+                atrio_redirect_url: atrioMode ? String(cfg.atrioRedirectUrl || "").trim() : undefined,
                 brand: cfg.landingName,
                 landing_id: cfg.landingId,
                 landing_name: cfg.landingName,
@@ -1009,7 +1040,7 @@ export default function PublicLandingRuntimeScript({ slug, config }: Props) {
               if (!shouldSkipContact) markContactSent(cfg.slug, identity.externalId);
 
               window.setTimeout(function () {
-                window.location.assign("https://wa.me/" + phone + "?text=" + encodeURIComponent(message));
+                window.location.assign(redirectUrl);
               }, 180);
             })
             .catch(function () {
@@ -1137,7 +1168,7 @@ export default function PublicLandingRuntimeScript({ slug, config }: Props) {
 
       function init() {
         prearmContactContext();
-        ensurePhonePromise();
+        if (!isAtrioDestination()) ensurePhonePromise();
         scheduleMetaClientIpCollection();
         scheduleOfficialMetaParamBuilder();
         window.setTimeout(prearmContactContext, 700);

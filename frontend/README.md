@@ -197,3 +197,9 @@ Ver **supabase/migrations/README.md** para el listado completo y pasos del cron 
 
 - Nuevas métricas en teléfonos: columnas en `gerencia_phones`; actualización desde `phone-click` o funciones específicas.
 - Mantener esta documentación actualizada al agregar tablas, políticas RLS, Edge Functions o flujos nuevos.
+# Destino del CTA
+
+El editor permite elegir el destino del CTA:
+
+- `WhatsApp`: comportamiento historico, con asignacion de telefono por gerencia y redireccion a `wa.me`.
+- `Atrio`: redireccion al webchat configurado con `promo_code` en la URL. El tracking de `Contact` se conserva igual que en WhatsApp, pero no se solicita telefono ganador.
