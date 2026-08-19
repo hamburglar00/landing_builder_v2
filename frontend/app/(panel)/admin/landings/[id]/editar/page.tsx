@@ -39,6 +39,10 @@ import {
 } from "@/lib/gerencias/gerenciasDb";
 import { GerenciaRedirectSection } from "@/components/landing/GerenciaRedirectSection";
 import { getSettings } from "@/lib/settingsDb";
+import {
+  fetchAtrioClients,
+  type AtrioClient,
+} from "@/lib/atrio/atrioDb";
 import { useAppConfirm, useAppPrompt } from "@/components/ui/AppConfirmDialog";
 import { PageHeader } from "@/components/ui/PanelPrimitives";
 
@@ -152,6 +156,7 @@ export default function AdminLandingEditarPage() {
   const [clientName, setClientName] = useState<string | null>(null);
   const [ownerUserId, setOwnerUserId] = useState<string | null>(null);
   const [pixelOptions, setPixelOptions] = useState<Array<{ pixel_id: string; comment: string }>>([]);
+  const [atrioClients, setAtrioClients] = useState<AtrioClient[]>([]);
   const [postUrlCopied, setPostUrlCopied] = useState(false);
 
   useEffect(() => {
@@ -190,11 +195,16 @@ export default function AdminLandingEditarPage() {
         if (ownerId) {
           setOwnerUserId(ownerId);
           setGerencias(allGerencias.filter((g) => g.user_id === ownerId));
-          const groups = await fetchGerenciaWorkGroups(ownerId, found.workspaceCurrency);
+          const [groups, clients] = await Promise.all([
+            fetchGerenciaWorkGroups(ownerId, found.workspaceCurrency),
+            fetchAtrioClients(ownerId, found.workspaceCurrency),
+          ]);
           setWorkGroups(groups);
+          setAtrioClients(clients);
         } else {
           setGerencias(allGerencias);
           setWorkGroups([]);
+          setAtrioClients([]);
         }
         if (ownerId) {
           const { data: profile } = await supabase
@@ -296,7 +306,7 @@ export default function AdminLandingEditarPage() {
       return;
     }
     if (!isAtrioUrlValidForSave(landing.config)) {
-      setSaveError("URL de Atrio inválida. Debe comenzar con http:// o https://.");
+      setSaveError("Seleccioná un cliente Atrio válido para este workspace.");
       return;
     }
     if (
@@ -609,7 +619,11 @@ export default function AdminLandingEditarPage() {
               setConfig={setConfig}
               workspaceCurrency={landing.workspaceCurrency}
             />
-            <CtaDestinationSection config={landing.config} setConfig={setConfig} />
+            <CtaDestinationSection
+              config={landing.config}
+              setConfig={setConfig}
+              atrioClients={atrioClients}
+            />
             <div>
               <label className="block text-xs font-medium text-zinc-400 mb-1">Pixel ID <span className="text-red-400">*</span></label>
               <select

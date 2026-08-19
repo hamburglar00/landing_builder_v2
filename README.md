@@ -173,6 +173,27 @@ sequenceDiagram
   - se responde sin reprocesar,
 - queda trazabilidad en inbox/log.
 
+### 6.5 Atrio como destino de CTA
+- El modulo **ATRIO** permite cargar clientes de Atrio por workspace con:
+  - `slug` publico (`https://www.atrio.website/<slug>`),
+  - `atrio_id` unico del cliente en Atrio.
+- En el editor de landing se elige `Destino del CTA = Atrio` y se selecciona un cliente Atrio del workspace actual.
+- WhatsApp no cambia: si el destino es WhatsApp, la landing sigue pidiendo telefono ganador y armando `wa.me`.
+- Atrio conserva el flujo de tracking de landing:
+  - la landing genera `Contact`,
+  - genera `promo_code`,
+  - redirige al webchat con `promo_code` y `atrio_id`,
+  - guarda en `conversions` los campos `atrio_id`, `atrio_client_id` y `atrio_slug`.
+- Los eventos `LEAD` y `PURCHASE` de Atrio deben enviar:
+  - `source_platform: "atrio"`,
+  - `atrio_id`,
+  - `promo_code` cuando exista,
+  - `phone` si Atrio lo conoce.
+- Matching Atrio:
+  - principal: `promo_code` con validacion de `atrio_id` compatible,
+  - fallback conservador: `phone + atrio_id` dentro de 24 horas cuando no hay `promo_code`,
+  - si no hay `promo_code` ni match por `phone + atrio_id`, no se atribuye automaticamente.
+
 ---
 
 ## 7. Multi-pixel (implementacion actual)

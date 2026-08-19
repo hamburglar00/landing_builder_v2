@@ -73,6 +73,9 @@ export default function PublicLandingRuntimeScript({ slug, config }: Props) {
     sendContactPixel: config.tracking?.sendContactPixel !== false,
     ctaDestination: config.tracking?.ctaDestination === "atrio" ? "atrio" : "whatsapp",
     atrioRedirectUrl: config.tracking?.atrioRedirectUrl || "",
+    atrioClientId: config.tracking?.atrioClientId || "",
+    atrioId: config.tracking?.atrioId || "",
+    atrioSlug: config.tracking?.atrioSlug || "",
     phoneCountryCode: config.tracking?.phoneCountryCode || "54",
     workspaceCurrency: String(config.workspaceCurrency || config.tracking?.workspaceCurrency || config.tracking?.currency || "ARS").trim().toUpperCase(),
     ctaText: config.content?.ctaText || "¡Contactar ya!",
@@ -160,6 +163,7 @@ export default function PublicLandingRuntimeScript({ slug, config }: Props) {
           var url = new URL(raw, window.location.href);
           if (url.protocol !== "http:" && url.protocol !== "https:") return "";
           url.searchParams.set("promo_code", promoCode);
+          if (cfg.atrioId) url.searchParams.set("atrio_id", String(cfg.atrioId));
           return url.toString();
         } catch (e) {
           return "";
@@ -1019,6 +1023,9 @@ export default function PublicLandingRuntimeScript({ slug, config }: Props) {
                 cta_destination: atrioMode ? "atrio" : "whatsapp",
                 redirect_channel: atrioMode ? "atrio" : "whatsapp",
                 atrio_redirect_url: atrioMode ? String(cfg.atrioRedirectUrl || "").trim() : undefined,
+                atrio_client_id: atrioMode ? String(cfg.atrioClientId || "").trim() : undefined,
+                atrio_id: atrioMode ? String(cfg.atrioId || "").trim() : undefined,
+                atrio_slug: atrioMode ? String(cfg.atrioSlug || "").trim() : undefined,
                 brand: cfg.landingName,
                 landing_id: cfg.landingId,
                 landing_name: cfg.landingName,

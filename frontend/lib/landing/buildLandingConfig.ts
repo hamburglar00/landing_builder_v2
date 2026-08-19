@@ -22,6 +22,9 @@ export interface LandingConfigPayload {
     sendContactPixel: boolean;
     ctaDestination?: "whatsapp" | "atrio";
     atrioRedirectUrl?: string;
+    atrioClientId?: string;
+    atrioId?: string;
+    atrioSlug?: string;
     phoneCountryCode?: string;
     currency?: LandingWorkspaceCurrency;
     workspaceCurrency?: LandingWorkspaceCurrency;
@@ -127,6 +130,9 @@ export function buildLandingConfig({
         sendContactPixel: config.sendContactPixel,
         ctaDestination: config.ctaDestination === "atrio" ? "atrio" : "whatsapp",
         atrioRedirectUrl: config.atrioRedirectUrl.trim(),
+        atrioClientId: (config.atrioClientId ?? "").trim(),
+        atrioId: (config.atrioId ?? "").trim(),
+        atrioSlug: (config.atrioSlug ?? "").trim(),
         phoneCountryCode,
         currency: workspaceCurrency,
         workspaceCurrency,
@@ -179,6 +185,9 @@ export function buildLandingConfig({
       sendContactPixel: config.sendContactPixel,
       ctaDestination: config.ctaDestination === "atrio" ? "atrio" : "whatsapp",
       atrioRedirectUrl: config.atrioRedirectUrl.trim(),
+      atrioClientId: (config.atrioClientId ?? "").trim(),
+      atrioId: (config.atrioId ?? "").trim(),
+      atrioSlug: (config.atrioSlug ?? "").trim(),
       phoneCountryCode,
       currency: workspaceCurrency,
       workspaceCurrency,

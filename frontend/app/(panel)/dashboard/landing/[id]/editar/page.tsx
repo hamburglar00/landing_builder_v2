@@ -39,6 +39,10 @@ import {
 import { buildLandingConfig } from "@/lib/landing/buildLandingConfig";
 import { publishLandingChanges } from "@/lib/landing/publishLanding";
 import { getSettings } from "@/lib/settingsDb";
+import {
+  fetchAtrioClients,
+  type AtrioClient,
+} from "@/lib/atrio/atrioDb";
 import { useAppConfirm, useAppPrompt } from "@/components/ui/AppConfirmDialog";
 import { PageHeader } from "@/components/ui/PanelPrimitives";
 
@@ -151,6 +155,7 @@ export default function DashboardLandingEditarPage() {
   const [revalidateSecret, setRevalidateSecret] = useState<string | null>(null);
   const [clientName, setClientName] = useState<string | null>(null);
   const [pixelOptions, setPixelOptions] = useState<Array<{ pixel_id: string; comment: string }>>([]);
+  const [atrioClients, setAtrioClients] = useState<AtrioClient[]>([]);
   const [postUrlCopied, setPostUrlCopied] = useState(false);
 
   useEffect(() => {
@@ -181,12 +186,14 @@ export default function DashboardLandingEditarPage() {
           fetchGerencias(user.id, found.workspaceCurrency),
           fetchGerenciaWorkGroups(user.id, found.workspaceCurrency),
         ]);
+        const clients = await fetchAtrioClients(user.id, found.workspaceCurrency);
         setLanding(found);
         if (!initialName) {
           setInitialName(found.name);
         }
         setGerencias(userGerencias);
         setWorkGroups(groups);
+        setAtrioClients(clients);
         setAssignments(assigned);
         setShowPreview(settings.show_client_landing_preview ?? true);
         setUrlBase(settings.url_base ?? null);
@@ -284,7 +291,7 @@ export default function DashboardLandingEditarPage() {
       return;
     }
     if (!isAtrioUrlValidForSave(landing.config)) {
-      setSaveError("URL de Atrio inválida. Debe comenzar con http:// o https://.");
+      setSaveError("Seleccioná un cliente Atrio válido para este workspace.");
       return;
     }
     if (
@@ -605,7 +612,11 @@ export default function DashboardLandingEditarPage() {
               setConfig={setConfig}
               workspaceCurrency={landing.workspaceCurrency}
             />
-            <CtaDestinationSection config={landing.config} setConfig={setConfig} />
+            <CtaDestinationSection
+              config={landing.config}
+              setConfig={setConfig}
+              atrioClients={atrioClients}
+            />
             <div>
               <label className="block text-xs font-medium text-zinc-400 mb-1">
                 Pixel ID <span className="text-red-400">*</span>

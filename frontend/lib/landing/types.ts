@@ -136,6 +136,9 @@ export interface LandingThemeConfig {
    */
   ctaDestination: LandingCtaDestination;
   atrioRedirectUrl: string;
+  atrioClientId: string;
+  atrioId: string;
+  atrioSlug: string;
   /**
    * Activa o desactiva el bloque de prueba social de la landing publica.
    */
@@ -182,5 +185,4 @@ export interface Landing {
   comment: string;
   config: LandingThemeConfig;
 }
-
 

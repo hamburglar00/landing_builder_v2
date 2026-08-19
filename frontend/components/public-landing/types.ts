@@ -12,6 +12,9 @@ export type PublicLandingConfig = {
     sendContactPixel?: boolean;
     ctaDestination?: "whatsapp" | "atrio" | string;
     atrioRedirectUrl?: string;
+    atrioClientId?: string;
+    atrioId?: string;
+    atrioSlug?: string;
     phoneCountryCode?: string;
     currency?: "ARS" | "PYG" | string;
     workspaceCurrency?: "ARS" | "PYG" | string;

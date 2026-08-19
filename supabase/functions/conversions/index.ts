@@ -137,6 +137,9 @@ interface ConversionRow {
   pixel_attribution_conversion_id?: string | null;
   source_platform?: string;
   ctwa_clid?: string;
+  atrio_id?: string;
+  atrio_client_id?: string | null;
+  atrio_slug?: string;
   pixel_id: string;
   contact_event_id: string;
   contact_event_time: number | null;
@@ -182,6 +185,7 @@ interface ConversionRow {
   lead_gerencia_name?: string | null;
   lead_gerencia_label?: string | null;
   lead_incoming_promo_code?: string;
+  lead_atrio_id?: string;
   lead_attribution_status?: string;
   lead_attribution_conversion_id?: string | null;
   registration_event_id?: string;
@@ -195,6 +199,7 @@ interface ConversionRow {
   registration_gerencia_name?: string;
   registration_gerencia_label?: string;
   registration_incoming_promo_code?: string;
+  registration_atrio_id?: string;
   registration_attribution_status?: string;
   registration_attribution_conversion_id?: string | null;
   purchase_bot_phone?: string;
@@ -205,6 +210,7 @@ interface ConversionRow {
   purchase_gerencia_name?: string | null;
   purchase_gerencia_label?: string | null;
   purchase_incoming_promo_code?: string;
+  purchase_atrio_id?: string;
   purchase_attribution_status?: string;
   purchase_attribution_conversion_id?: string | null;
   promo_code: string;
@@ -309,6 +315,17 @@ const canonicalInboundAction = (value: unknown): string => {
 };
 const playerUsernameFromPayload = (p: Params): string =>
   norm(p.player_username ?? p.playerUsername ?? p.username);
+const atrioIdFromPayload = (p: Params): string =>
+  norm(p.atrio_id ?? p.atrioId ?? p.atrio_client_uuid ?? p.atrioClientUuid);
+const atrioClientIdFromPayload = (p: Params): string => {
+  const value = norm(p.atrio_client_id ?? p.atrioClientId);
+  return /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i
+    .test(value)
+    ? value
+    : "";
+};
+const atrioSlugFromPayload = (p: Params): string =>
+  norm(p.atrio_slug ?? p.atrioSlug);
 const ctwaClidForSource = (value: unknown, sourcePlatform: unknown): string =>
   ["chatrace", "whatsapp_cloud_api"].includes(
       normalizedSourcePlatform(sourcePlatform),
@@ -805,6 +822,51 @@ async function findWhatsappCloudApiContactPhoneFallback(
       ? sanitizePhone(candidate.telefono_asignado) === input.botPhone
       : false;
     return gerenciaMatches || assignedPhoneMatches;
+  }) ?? null;
+}
+
+function atrioIdsCompatible(
+  storedAtrioId: unknown,
+  inboundAtrioId: string,
+): boolean {
+  const stored = norm(storedAtrioId);
+  return !stored || !inboundAtrioId || stored === inboundAtrioId;
+}
+
+async function findAtrioContactPhoneFallback(
+  db: SupabaseClient,
+  input: {
+    userId: string;
+    phone: string;
+    atrioId: string;
+    nowSeconds: number;
+    windowSeconds: number;
+  },
+): Promise<ConversionRow | null> {
+  if (!input.phone || !input.atrioId) return null;
+
+  const { data, error } = await db
+    .from("conversions")
+    .select("*")
+    .eq("user_id", input.userId)
+    .eq("phone", input.phone)
+    .eq("atrio_id", input.atrioId)
+    .order("created_at", { ascending: false })
+    .limit(50);
+  if (error) {
+    console.error("[findAtrioContactPhoneFallback]", error.message);
+    return null;
+  }
+
+  return ((data ?? []) as ConversionRow[]).find((candidate) => {
+    if (norm(candidate.lead_event_id) || norm(candidate.purchase_event_id)) {
+      return false;
+    }
+    return rowRecentEnoughForPhoneFallback(
+      candidate,
+      input.nowSeconds,
+      input.windowSeconds,
+    );
   }) ?? null;
 }
 
@@ -3919,6 +3981,9 @@ async function handleContact(
   const inboundDatasetId = norm(p.dataset_id || p.meta_messaging_dataset_id);
   const inboundSourcePlatform = norm(p.source_platform);
   const inboundCtwaClid = ctwaClidForSource(p.ctwa_clid, inboundSourcePlatform);
+  const inboundAtrioId = atrioIdFromPayload(p);
+  const inboundAtrioClientId = atrioClientIdFromPayload(p);
+  const inboundAtrioSlug = atrioSlugFromPayload(p);
   const inboundContactEventId = norm(p.contact_event_id || p.event_id);
   const inboundPromoCode = derivePromoCodeFromPayload(p);
   const payloadRaw = safePayloadRaw(p);
@@ -4002,6 +4067,9 @@ async function handleContact(
     dataset_id: inboundDatasetId,
     source_platform: inboundSourcePlatform || "",
     ctwa_clid: inboundCtwaClid,
+    atrio_id: inboundAtrioId,
+    atrio_client_id: inboundAtrioClientId || null,
+    atrio_slug: inboundAtrioSlug,
     pixel_id: inboundMetaPixelId,
     contact_event_id: contactEventId,
     contact_event_time: contactEventTime,
@@ -4273,6 +4341,7 @@ async function handleLead(
   const inboundDatasetId = norm(p.dataset_id || p.meta_messaging_dataset_id);
   const inboundSourcePlatform = norm(p.source_platform);
   const inboundCtwaClid = ctwaClidForSource(p.ctwa_clid, inboundSourcePlatform);
+  const inboundAtrioId = atrioIdFromPayload(p);
   const botPhone = sanitizePhone(p.bot_phone);
   const inboundAgencyId = norm(p.agency_id);
   const leadPlayerUsername = playerUsernameFromPayload(p);
@@ -4325,6 +4394,7 @@ async function handleLead(
   let targetId: string | null = null;
   let leadMatchMode:
     | "promo_code"
+    | "atrio_phone_fallback"
     | "whatsapp_cloud_api_phone_fallback"
     | "bot_phone_timestamp_fallback"
     | "created_new" = "promo_code";
@@ -4344,6 +4414,35 @@ async function handleLead(
       .limit(1)
       .maybeSingle();
     promoRow = data as ConversionRow | null;
+    if (
+      isAtrioSource &&
+      promoRow?.id &&
+      inboundAtrioId &&
+      !atrioIdsCompatible(promoRow.atrio_id, inboundAtrioId)
+    ) {
+      await writeLog(
+        db,
+        landing.user_id,
+        "handleLead",
+        "ERROR",
+        "LEAD Atrio rechazado: atrio_id incompatible con Contact",
+        JSON.stringify({
+          promo_code: promoCode,
+          inbound_atrio_id: inboundAtrioId,
+          contact_atrio_id: promoRow.atrio_id ?? "",
+          conversion_id: promoRow.id,
+        }),
+        promoRow.id,
+        undefined,
+        undefined,
+        leadPayloadRaw,
+        "rechazado: atrio_id incompatible con Contact",
+      );
+      return textResponse(
+        "LEAD Atrio rechazado: atrio_id incompatible con Contact",
+        400,
+      );
+    }
     promoCoherence = evaluatePromoGerenciaCoherence({
       promoFound: Boolean(promoRow?.id),
       promoPlayerPhone: promoRow?.phone,
@@ -4445,7 +4544,7 @@ async function handleLead(
   }
 
   if (
-    isAtrioSource && !cleanPhone && promoCodeIsFull &&
+    isAtrioSource && promoCodeIsFull &&
     (!targetId || !canUsePromoForJourney(promoCoherence))
   ) {
     await writeLog(
@@ -4471,9 +4570,47 @@ async function handleLead(
     );
   }
 
+  if (isAtrioSource && !targetId && !promoCodeIsFull) {
+    const atrioFallback = await findAtrioContactPhoneFallback(db, {
+      userId: landing.user_id,
+      phone: cleanPhone,
+      atrioId: inboundAtrioId,
+      nowSeconds: Math.floor(Date.now() / 1000),
+      windowSeconds: 24 * 60 * 60,
+    });
+    if (atrioFallback?.id) {
+      targetId = atrioFallback.id;
+      leadMatchMode = "atrio_phone_fallback";
+      leadAttributionStatus = "atrio_phone_fallback";
+      promoRow = atrioFallback;
+    } else {
+      await writeLog(
+        db,
+        landing.user_id,
+        "handleLead",
+        "ERROR",
+        "LEAD Atrio no procesado: sin promo_code y sin match por phone + atrio_id",
+        JSON.stringify({
+          phone: cleanPhone,
+          atrio_id: inboundAtrioId,
+          window_hours: 24,
+        }),
+        undefined,
+        undefined,
+        undefined,
+        leadPayloadRaw,
+        "rechazado: Atrio sin promo_code y sin match phone+atrio_id",
+      );
+      return textResponse(
+        "LEAD Atrio rechazado: sin promo_code y sin match phone+atrio_id",
+        400,
+      );
+    }
+  }
+
   // 1.b) WhatsApp Cloud API fallback when promo_code is missing. Unlike
   // landing contacts, Cloud API contacts already know the user's phone.
-  if (!targetId && !promoCodeIsFull) {
+  if (!isAtrioSource && !targetId && !promoCodeIsFull) {
     const contactFallback = await findWhatsappCloudApiContactPhoneFallback(db, {
       userId: landing.user_id,
       phone: cleanPhone,
@@ -4490,7 +4627,7 @@ async function handleLead(
   }
 
   // 1.c) Fallback ONLY when promo_code is missing: bot_phone + dateTime window (for CONTACT -> LEAD linking).
-  if (!targetId && !promoCodeIsFull) {
+  if (!isAtrioSource && !targetId && !promoCodeIsFull) {
     if (botPhone && inboundBotTimestampSec) {
       const fromIso = new Date(
         (inboundBotTimestampSec - TIMESTAMP_FALLBACK_WINDOW_SECONDS_BEFORE) *
@@ -4572,6 +4709,8 @@ async function handleLead(
   );
   const matchSourceToken = leadMatchMode === "promo_code"
     ? "match_source:promo_code"
+    : leadMatchMode === "atrio_phone_fallback"
+    ? "match_source:atrio_phone_fallback"
     : leadMatchMode === "whatsapp_cloud_api_phone_fallback"
     ? "match_source:whatsapp_cloud_api_phone_fallback"
     : leadMatchMode === "bot_phone_timestamp_fallback"
@@ -4704,6 +4843,10 @@ async function handleLead(
         trustedLineage?.source_platform ||
         "",
       ctwa_clid: inboundCtwaClid || trustedLineage?.ctwa_clid || "",
+      atrio_id: inboundAtrioId || trustedLineage?.atrio_id || "",
+      atrio_client_id: trustedLineage?.atrio_client_id ?? null,
+      atrio_slug: trustedLineage?.atrio_slug || "",
+      lead_atrio_id: inboundAtrioId,
       pixel_id: resolvedPixelId,
       contact_event_id: "",
       contact_event_time: null,
@@ -4876,6 +5019,7 @@ async function handleLead(
       lead_event_time: leadEventTime,
       lead_payload_raw: leadPayloadRaw,
       lead_player_username: leadPlayerUsername,
+      lead_atrio_id: inboundAtrioId,
       ...eventGerenciaPatch(
         "lead",
         eventGerencia,
@@ -4957,6 +5101,10 @@ async function handleLead(
       !norm((cur as Record<string, unknown> | null)?.dataset_id)
     ) {
       updates.dataset_id = inboundDatasetId;
+    }
+    if (inboundAtrioId) {
+      updates.lead_atrio_id = inboundAtrioId;
+      if (!norm(currentRow?.atrio_id)) updates.atrio_id = inboundAtrioId;
     }
     if (payloadFn) updates.fn = payloadFn;
     if (payloadLn) updates.ln = payloadLn;
@@ -5538,6 +5686,7 @@ async function handlePurchase(
   const inboundDatasetId = norm(p.dataset_id || p.meta_messaging_dataset_id);
   const inboundSourcePlatform = norm(p.source_platform);
   const inboundCtwaClid = ctwaClidForSource(p.ctwa_clid, inboundSourcePlatform);
+  const inboundAtrioId = atrioIdFromPayload(p);
   const botPhone = sanitizePhone(p.bot_phone);
   const inboundAgencyId = norm(p.agency_id);
   const purchasePlayerUsername = playerUsernameFromPayload(p);
@@ -5710,14 +5859,22 @@ async function handlePurchase(
   );
   const canUseLeadFallback = !hasPreviousPurchase || leadIsAfterLatestPurchase;
   const rawReceiverContactRow = cleanPhone && !promoCodeIsFull
-    ? await findWhatsappCloudApiContactPhoneFallback(db, {
-      userId: landing.user_id,
-      phone: cleanPhone,
-      eventGerenciaId: eventGerencia.gerencia_id,
-      botPhone,
-      nowSeconds: Math.floor(Date.now() / 1000),
-      windowSeconds: 24 * 60 * 60,
-    })
+    ? isAtrioSource
+      ? await findAtrioContactPhoneFallback(db, {
+        userId: landing.user_id,
+        phone: cleanPhone,
+        atrioId: inboundAtrioId,
+        nowSeconds: Math.floor(Date.now() / 1000),
+        windowSeconds: 24 * 60 * 60,
+      })
+      : await findWhatsappCloudApiContactPhoneFallback(db, {
+        userId: landing.user_id,
+        phone: cleanPhone,
+        eventGerenciaId: eventGerencia.gerencia_id,
+        botPhone,
+        nowSeconds: Math.floor(Date.now() / 1000),
+        windowSeconds: 24 * 60 * 60,
+      })
     : null;
   const contactIsAfterLatestPurchase = !!(
     rawReceiverContactRow?.created_at &&
@@ -5728,6 +5885,30 @@ async function handlePurchase(
   const receiverContactRow = !latestPurchaseRow || contactIsAfterLatestPurchase
     ? rawReceiverContactRow
     : null;
+
+  if (isAtrioSource && !promoCodeIsFull && !receiverContactRow?.id) {
+    await writeLog(
+      db,
+      landing.user_id,
+      "handlePurchase",
+      "ERROR",
+      "PURCHASE Atrio no procesado: sin promo_code y sin match por phone + atrio_id",
+      JSON.stringify({
+        phone: cleanPhone,
+        atrio_id: inboundAtrioId,
+        window_hours: 24,
+      }),
+      undefined,
+      undefined,
+      undefined,
+      purchasePayloadRaw,
+      "rechazado: Atrio sin promo_code y sin match phone+atrio_id",
+    );
+    return textResponse(
+      "PURCHASE Atrio rechazado: sin promo_code y sin match phone+atrio_id",
+      400,
+    );
+  }
 
   // 1) Primary match by full promo_code only.
   let promoRow: ConversionRow | null = null;
@@ -5745,6 +5926,35 @@ async function handlePurchase(
       .limit(1)
       .maybeSingle();
     promoRow = data as ConversionRow | null;
+    if (
+      isAtrioSource &&
+      promoRow?.id &&
+      inboundAtrioId &&
+      !atrioIdsCompatible(promoRow.atrio_id, inboundAtrioId)
+    ) {
+      await writeLog(
+        db,
+        landing.user_id,
+        "handlePurchase",
+        "ERROR",
+        "PURCHASE Atrio rechazado: atrio_id incompatible con Contact",
+        JSON.stringify({
+          promo_code: promoCode,
+          inbound_atrio_id: inboundAtrioId,
+          contact_atrio_id: promoRow.atrio_id ?? "",
+          conversion_id: promoRow.id,
+        }),
+        promoRow.id,
+        undefined,
+        undefined,
+        purchasePayloadRaw,
+        "rechazado: atrio_id incompatible con Contact",
+      );
+      return textResponse(
+        "PURCHASE Atrio rechazado: atrio_id incompatible con Contact",
+        400,
+      );
+    }
     promoCoherence = evaluatePromoGerenciaCoherence({
       promoFound: Boolean(promoRow?.id),
       promoPlayerPhone: promoRow?.phone,
@@ -5789,7 +5999,7 @@ async function handlePurchase(
   }
 
   if (
-    isAtrioSource && !cleanPhone && promoCodeIsFull &&
+    isAtrioSource && promoCodeIsFull &&
     (!promoRow?.id || !canUsePromoForJourney(promoCoherence))
   ) {
     await writeLog(
@@ -5977,6 +6187,7 @@ async function handlePurchase(
       purchase_player_username: purchasePlayerUsername ||
         norm(existingRow?.registration_player_username) ||
         norm(existingRow?.lead_player_username),
+      purchase_atrio_id: inboundAtrioId,
       purchase_coelsa_id: coelsaId,
       purchase_transaction_id: transactionId,
       purchase_type: purchaseType,
@@ -5996,6 +6207,10 @@ async function handlePurchase(
     }
     if (inboundDatasetId && !norm(existingRow?.dataset_id)) {
       updates.dataset_id = inboundDatasetId;
+    }
+    if (inboundAtrioId) {
+      updates.purchase_atrio_id = inboundAtrioId;
+      if (!norm(existingRow?.atrio_id)) updates.atrio_id = inboundAtrioId;
     }
     const currentOriginSource = norm(existingRow?.source_platform);
     const effectiveOriginSource = currentOriginSource || inboundSourcePlatform;
@@ -6227,7 +6442,7 @@ async function handlePurchase(
       landing_id: firstSource?.landing_id ?? (landing.id?.trim() || null),
       user_id: landing.user_id,
       landing_name: firstSource?.landing_name || landing.name,
-      phone: cleanPhone,
+      phone: cleanPhone || firstSource?.phone || "",
       email: payloadEmail || firstSource?.email || "",
       form_fn: firstSource?.form_fn || "",
       form_ln: firstSource?.form_ln || "",
@@ -6261,6 +6476,9 @@ async function handlePurchase(
       source_platform: inboundSourcePlatform || firstSource?.source_platform ||
         "",
       ctwa_clid: inboundCtwaClid || firstSource?.ctwa_clid || "",
+      atrio_id: inboundAtrioId || firstSource?.atrio_id || "",
+      atrio_client_id: firstSource?.atrio_client_id ?? null,
+      atrio_slug: firstSource?.atrio_slug || "",
       pixel_id: firstPixel,
       contact_event_id: "",
       contact_event_time: null,
@@ -6275,6 +6493,7 @@ async function handlePurchase(
       purchase_player_username: purchasePlayerUsername ||
         norm(firstSource?.registration_player_username) ||
         norm(firstSource?.lead_player_username),
+      purchase_atrio_id: inboundAtrioId,
       purchase_coelsa_id: coelsaId,
       purchase_transaction_id: transactionId,
       test_event_code: testEventCode,
@@ -6471,7 +6690,10 @@ async function handlePurchase(
 
   // Repeat purchase => inherit only from the same receiver gerencia. If no
   // trustworthy lineage exists there, keep the event direct/unattributed.
-  const repeatSourceRow = whatsappCloudApiAssignmentLineage &&
+  const repeatSourceRow = isAtrioSource && promoRow?.id &&
+      canUsePromoForJourney(promoCoherence)
+    ? promoRow
+    : whatsappCloudApiAssignmentLineage &&
       canUsePromoForJourney(promoCoherence)
     ? whatsappCloudApiAssignmentLineage.row
     : (receiverPurchaseLineage ?? trustedReceiverLineage);
@@ -6514,7 +6736,7 @@ async function handlePurchase(
     landing_id: repeatSourceRow?.landing_id ?? (landing.id?.trim() || null),
     user_id: landing.user_id,
     landing_name: repeatSourceRow?.landing_name ?? landing.name,
-    phone: cleanPhone,
+    phone: cleanPhone || repeatSourceRow?.phone || "",
     email: payloadEmail || repeatSourceRow?.email || "",
     form_fn: repeatSourceRow?.form_fn || "",
     form_ln: repeatSourceRow?.form_ln || "",
@@ -6548,6 +6770,9 @@ async function handlePurchase(
       null,
     source_platform: repeatOriginSource,
     ctwa_clid: repeatCtwaClid,
+    atrio_id: inboundAtrioId || repeatSourceRow?.atrio_id || "",
+    atrio_client_id: repeatSourceRow?.atrio_client_id ?? null,
+    atrio_slug: repeatSourceRow?.atrio_slug || "",
     pixel_id: repeatInheritedPixel,
     // DO NOT inherit event IDs
     contact_event_id: "",
@@ -6563,6 +6788,7 @@ async function handlePurchase(
     purchase_player_username: purchasePlayerUsername ||
       norm(repeatSourceRow?.registration_player_username) ||
       norm(repeatSourceRow?.lead_player_username),
+    purchase_atrio_id: inboundAtrioId,
     purchase_coelsa_id: coelsaId,
     purchase_transaction_id: transactionId,
     test_event_code: testEventCode || repeatSourceRow?.test_event_code || "",

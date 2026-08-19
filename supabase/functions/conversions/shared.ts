@@ -38,6 +38,12 @@ export interface ConversionRow {
   from_meta_ads?: boolean;
   source_platform?: string;
   ctwa_clid?: string;
+  atrio_id?: string;
+  atrio_client_id?: string | null;
+  atrio_slug?: string;
+  lead_atrio_id?: string;
+  purchase_atrio_id?: string;
+  registration_atrio_id?: string;
   dataset_id?: string;
   pixel_id: string;
   meta_pixel_id?: string;
