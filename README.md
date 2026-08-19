@@ -4,6 +4,7 @@ Plataforma multi-tenant para:
 - Crear/gestionar landings.
 - Capturar conversiones (`Contact`, `Lead`, `Purchase`) con trazabilidad completa.
 - Enviar eventos a Meta CAPI con deduplicacion Pixel+CAPI.
+- Redirigir landings a WhatsApp o Atrio conservando el mismo recorrido de conversiones.
 - Operar seguimiento comercial y notificaciones de inactividad por Telegram.
 
 Stack principal:
@@ -30,6 +31,7 @@ No se limita a reporting: tambien ejecuta logica operativa (dedupe, retries, not
 ### 2.1 Captura
 - **Contact**: llega desde la landing publica al endpoint `conversions`.
 - **Lead/Purchase**: llegan por JSON desde backend externo/chatbot/kommo-intermediarios.
+- **Atrio**: la landing crea `Contact` y redirige al webchat con `promo_code` + `atrio_id`. Luego Atrio envia `LEAD`/`PURCHASE` con `source_platform: "atrio"`, `atrio_id` y, si existe, `players_id` para trazabilidad del jugador.
 
 ### 2.2 Persistencia
 - Se guarda cada conversion en `public.conversions`.
@@ -62,6 +64,7 @@ No se limita a reporting: tambien ejecuta logica operativa (dedupe, retries, not
 flowchart LR
   A[Landing Publica] -->|POST Contact| B[Edge Function: conversions]
   X[Backend externo / chatbot / kommo bridge] -->|POST action LEAD/PURCHASE| B
+  Y[Atrio Webchat] -->|POST action LEAD/PURCHASE + atrio_id + players_id| B
   B --> C[(Postgres: conversions)]
   B --> D[Meta Graph API CAPI]
   B --> E[(conversion_logs / conversion_inbox)]

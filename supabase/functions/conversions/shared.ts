@@ -41,9 +41,13 @@ export interface ConversionRow {
   atrio_id?: string;
   atrio_client_id?: string | null;
   atrio_slug?: string;
+  atrio_players_id?: string;
   lead_atrio_id?: string;
   purchase_atrio_id?: string;
   registration_atrio_id?: string;
+  lead_atrio_players_id?: string;
+  purchase_atrio_players_id?: string;
+  registration_atrio_players_id?: string;
   dataset_id?: string;
   pixel_id: string;
   meta_pixel_id?: string;

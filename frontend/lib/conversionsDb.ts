@@ -125,6 +125,10 @@ export interface ConversionRow {
   dataset_id: string;
   source_platform?: string;
   ctwa_clid?: string;
+  atrio_id?: string | null;
+  atrio_client_id?: string | null;
+  atrio_slug?: string | null;
+  atrio_players_id?: string | null;
   pixel_id: string;
   pixel_attribution_source?: string;
   pixel_attribution_conversion_id?: string | null;
@@ -172,6 +176,8 @@ export interface ConversionRow {
   lead_gerencia_name?: string | null;
   lead_gerencia_label?: string | null;
   lead_incoming_promo_code?: string | null;
+  lead_atrio_id?: string | null;
+  lead_atrio_players_id?: string | null;
   lead_attribution_status?: string | null;
   lead_attribution_conversion_id?: string | null;
   registration_event_id?: string | null;
@@ -185,6 +191,8 @@ export interface ConversionRow {
   registration_gerencia_name?: string | null;
   registration_gerencia_label?: string | null;
   registration_incoming_promo_code?: string | null;
+  registration_atrio_id?: string | null;
+  registration_atrio_players_id?: string | null;
   registration_attribution_status?: string | null;
   registration_attribution_conversion_id?: string | null;
   purchase_bot_phone?: string | null;
@@ -195,6 +203,8 @@ export interface ConversionRow {
   purchase_gerencia_name?: string | null;
   purchase_gerencia_label?: string | null;
   purchase_incoming_promo_code?: string | null;
+  purchase_atrio_id?: string | null;
+  purchase_atrio_players_id?: string | null;
   purchase_attribution_status?: string | null;
   purchase_attribution_conversion_id?: string | null;
   promo_code: string;
@@ -724,7 +734,7 @@ const CONVERSIONS_SELECT = `
   phone, email, form_fn, form_ln, form_email, form_phone, cuit_cuil, inferred_sex, sex_source, fn, ln, ct, st, zip, country,
   fbp, fbc, from_meta_ads, geo_source, meta_pixel_id, pixel_id, dataset_id,
   pixel_attribution_source, pixel_attribution_conversion_id,
-  source_platform, ctwa_clid,
+  source_platform, ctwa_clid, atrio_id, atrio_client_id, atrio_slug, atrio_players_id,
   contact_event_id, contact_event_time, sendContactPixel, contact_payload_raw,
   lead_event_id, lead_event_time, lead_payload_raw,
   purchase_event_id, purchase_event_time, purchase_payload_raw, purchase_coelsa_id, purchase_transaction_id,
@@ -737,13 +747,13 @@ const CONVERSIONS_SELECT = `
   external_id, utm_campaign, telefono_asignado,
   assigned_gerencia_id, assigned_gerencia_external_id, assigned_gerencia_name, assigned_gerencia_label,
   lead_bot_phone, lead_player_username, lead_agency_id, lead_gerencia_id, lead_gerencia_external_id, lead_gerencia_name, lead_gerencia_label,
-  lead_incoming_promo_code, lead_attribution_status, lead_attribution_conversion_id,
+  lead_incoming_promo_code, lead_atrio_id, lead_atrio_players_id, lead_attribution_status, lead_attribution_conversion_id,
   registration_event_id, registration_event_time, registration_payload_raw, registration_player_username,
   registration_bot_phone, registration_agency_id, registration_gerencia_id, registration_gerencia_external_id,
-  registration_gerencia_name, registration_gerencia_label, registration_incoming_promo_code,
+  registration_gerencia_name, registration_gerencia_label, registration_incoming_promo_code, registration_atrio_id, registration_atrio_players_id,
   registration_attribution_status, registration_attribution_conversion_id,
   purchase_bot_phone, purchase_player_username, purchase_agency_id, purchase_gerencia_id, purchase_gerencia_external_id, purchase_gerencia_name, purchase_gerencia_label,
-  purchase_incoming_promo_code, purchase_attribution_status, purchase_attribution_conversion_id,
+  purchase_incoming_promo_code, purchase_atrio_id, purchase_atrio_players_id, purchase_attribution_status, purchase_attribution_conversion_id,
   promo_code,
   geo_city, geo_region, geo_country,
   created_at

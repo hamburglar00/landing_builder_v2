@@ -140,6 +140,7 @@ interface ConversionRow {
   atrio_id?: string;
   atrio_client_id?: string | null;
   atrio_slug?: string;
+  atrio_players_id?: string;
   pixel_id: string;
   contact_event_id: string;
   contact_event_time: number | null;
@@ -186,6 +187,7 @@ interface ConversionRow {
   lead_gerencia_label?: string | null;
   lead_incoming_promo_code?: string;
   lead_atrio_id?: string;
+  lead_atrio_players_id?: string;
   lead_attribution_status?: string;
   lead_attribution_conversion_id?: string | null;
   registration_event_id?: string;
@@ -200,6 +202,7 @@ interface ConversionRow {
   registration_gerencia_label?: string;
   registration_incoming_promo_code?: string;
   registration_atrio_id?: string;
+  registration_atrio_players_id?: string;
   registration_attribution_status?: string;
   registration_attribution_conversion_id?: string | null;
   purchase_bot_phone?: string;
@@ -211,6 +214,7 @@ interface ConversionRow {
   purchase_gerencia_label?: string | null;
   purchase_incoming_promo_code?: string;
   purchase_atrio_id?: string;
+  purchase_atrio_players_id?: string;
   purchase_attribution_status?: string;
   purchase_attribution_conversion_id?: string | null;
   promo_code: string;
@@ -326,6 +330,8 @@ const atrioClientIdFromPayload = (p: Params): string => {
 };
 const atrioSlugFromPayload = (p: Params): string =>
   norm(p.atrio_slug ?? p.atrioSlug);
+const atrioPlayersIdFromPayload = (p: Params): string =>
+  norm(p.players_id ?? p.playersId ?? p.player_id ?? p.playerId);
 const ctwaClidForSource = (value: unknown, sourcePlatform: unknown): string =>
   ["chatrace", "whatsapp_cloud_api"].includes(
       normalizedSourcePlatform(sourcePlatform),
@@ -3984,6 +3990,7 @@ async function handleContact(
   const inboundAtrioId = atrioIdFromPayload(p);
   const inboundAtrioClientId = atrioClientIdFromPayload(p);
   const inboundAtrioSlug = atrioSlugFromPayload(p);
+  const inboundAtrioPlayersId = atrioPlayersIdFromPayload(p);
   const inboundContactEventId = norm(p.contact_event_id || p.event_id);
   const inboundPromoCode = derivePromoCodeFromPayload(p);
   const payloadRaw = safePayloadRaw(p);
@@ -4070,6 +4077,7 @@ async function handleContact(
     atrio_id: inboundAtrioId,
     atrio_client_id: inboundAtrioClientId || null,
     atrio_slug: inboundAtrioSlug,
+    atrio_players_id: inboundAtrioPlayersId,
     pixel_id: inboundMetaPixelId,
     contact_event_id: contactEventId,
     contact_event_time: contactEventTime,
@@ -4342,6 +4350,7 @@ async function handleLead(
   const inboundSourcePlatform = norm(p.source_platform);
   const inboundCtwaClid = ctwaClidForSource(p.ctwa_clid, inboundSourcePlatform);
   const inboundAtrioId = atrioIdFromPayload(p);
+  const inboundAtrioPlayersId = atrioPlayersIdFromPayload(p);
   const botPhone = sanitizePhone(p.bot_phone);
   const inboundAgencyId = norm(p.agency_id);
   const leadPlayerUsername = playerUsernameFromPayload(p);
@@ -4846,7 +4855,10 @@ async function handleLead(
       atrio_id: inboundAtrioId || trustedLineage?.atrio_id || "",
       atrio_client_id: trustedLineage?.atrio_client_id ?? null,
       atrio_slug: trustedLineage?.atrio_slug || "",
+      atrio_players_id: inboundAtrioPlayersId ||
+        trustedLineage?.atrio_players_id || "",
       lead_atrio_id: inboundAtrioId,
+      lead_atrio_players_id: inboundAtrioPlayersId,
       pixel_id: resolvedPixelId,
       contact_event_id: "",
       contact_event_time: null,
@@ -5020,6 +5032,7 @@ async function handleLead(
       lead_payload_raw: leadPayloadRaw,
       lead_player_username: leadPlayerUsername,
       lead_atrio_id: inboundAtrioId,
+      lead_atrio_players_id: inboundAtrioPlayersId,
       ...eventGerenciaPatch(
         "lead",
         eventGerencia,
@@ -5105,6 +5118,12 @@ async function handleLead(
     if (inboundAtrioId) {
       updates.lead_atrio_id = inboundAtrioId;
       if (!norm(currentRow?.atrio_id)) updates.atrio_id = inboundAtrioId;
+    }
+    if (inboundAtrioPlayersId) {
+      updates.lead_atrio_players_id = inboundAtrioPlayersId;
+      if (!norm(currentRow?.atrio_players_id)) {
+        updates.atrio_players_id = inboundAtrioPlayersId;
+      }
     }
     if (payloadFn) updates.fn = payloadFn;
     if (payloadLn) updates.ln = payloadLn;
@@ -5273,6 +5292,7 @@ async function handleCompleteRegistration(
   const botPhone = sanitizePhone(p.bot_phone);
   const inboundAgencyId = norm(p.agency_id);
   const playerUsername = playerUsernameFromPayload(p);
+  const inboundAtrioPlayersId = atrioPlayersIdFromPayload(p);
   const promoCode = derivePromoCodeFromPayload(p);
   const promoCodeIsFull = isFullPromoCode(
     p.promo_code ?? p.promoCode ?? promoCode,
@@ -5396,6 +5416,7 @@ async function handleCompleteRegistration(
       registration_event_time: registrationEventTime,
       registration_payload_raw: registrationPayloadRaw,
       registration_player_username: playerUsername,
+      registration_atrio_players_id: inboundAtrioPlayersId,
       ...eventGerenciaPatch(
         "registration",
         eventGerencia,
@@ -5429,6 +5450,12 @@ async function handleCompleteRegistration(
     }
     if (playerUsername && !norm(targetRow.lead_player_username)) {
       updates.lead_player_username = playerUsername;
+    }
+    if (inboundAtrioPlayersId) {
+      updates.registration_atrio_players_id = inboundAtrioPlayersId;
+      if (!norm(targetRow.atrio_players_id)) {
+        updates.atrio_players_id = inboundAtrioPlayersId;
+      }
     }
     if (payloadFn) updates.fn = payloadFn;
     if (payloadLn) updates.ln = payloadLn;
@@ -5575,6 +5602,8 @@ async function handleCompleteRegistration(
     registration_event_time: registrationEventTime,
     registration_payload_raw: registrationPayloadRaw,
     registration_player_username: playerUsername,
+    atrio_players_id: inboundAtrioPlayersId,
+    registration_atrio_players_id: inboundAtrioPlayersId,
     ...eventGerenciaPatch(
       "registration",
       eventGerencia,
@@ -5687,6 +5716,7 @@ async function handlePurchase(
   const inboundSourcePlatform = norm(p.source_platform);
   const inboundCtwaClid = ctwaClidForSource(p.ctwa_clid, inboundSourcePlatform);
   const inboundAtrioId = atrioIdFromPayload(p);
+  const inboundAtrioPlayersId = atrioPlayersIdFromPayload(p);
   const botPhone = sanitizePhone(p.bot_phone);
   const inboundAgencyId = norm(p.agency_id);
   const purchasePlayerUsername = playerUsernameFromPayload(p);
@@ -6188,6 +6218,7 @@ async function handlePurchase(
         norm(existingRow?.registration_player_username) ||
         norm(existingRow?.lead_player_username),
       purchase_atrio_id: inboundAtrioId,
+      purchase_atrio_players_id: inboundAtrioPlayersId,
       purchase_coelsa_id: coelsaId,
       purchase_transaction_id: transactionId,
       purchase_type: purchaseType,
@@ -6211,6 +6242,12 @@ async function handlePurchase(
     if (inboundAtrioId) {
       updates.purchase_atrio_id = inboundAtrioId;
       if (!norm(existingRow?.atrio_id)) updates.atrio_id = inboundAtrioId;
+    }
+    if (inboundAtrioPlayersId) {
+      updates.purchase_atrio_players_id = inboundAtrioPlayersId;
+      if (!norm(existingRow?.atrio_players_id)) {
+        updates.atrio_players_id = inboundAtrioPlayersId;
+      }
     }
     const currentOriginSource = norm(existingRow?.source_platform);
     const effectiveOriginSource = currentOriginSource || inboundSourcePlatform;
@@ -6479,6 +6516,8 @@ async function handlePurchase(
       atrio_id: inboundAtrioId || firstSource?.atrio_id || "",
       atrio_client_id: firstSource?.atrio_client_id ?? null,
       atrio_slug: firstSource?.atrio_slug || "",
+      atrio_players_id: inboundAtrioPlayersId ||
+        firstSource?.atrio_players_id || "",
       pixel_id: firstPixel,
       contact_event_id: "",
       contact_event_time: null,
@@ -6494,6 +6533,7 @@ async function handlePurchase(
         norm(firstSource?.registration_player_username) ||
         norm(firstSource?.lead_player_username),
       purchase_atrio_id: inboundAtrioId,
+      purchase_atrio_players_id: inboundAtrioPlayersId,
       purchase_coelsa_id: coelsaId,
       purchase_transaction_id: transactionId,
       test_event_code: testEventCode,
@@ -6773,6 +6813,8 @@ async function handlePurchase(
     atrio_id: inboundAtrioId || repeatSourceRow?.atrio_id || "",
     atrio_client_id: repeatSourceRow?.atrio_client_id ?? null,
     atrio_slug: repeatSourceRow?.atrio_slug || "",
+    atrio_players_id: inboundAtrioPlayersId ||
+      repeatSourceRow?.atrio_players_id || "",
     pixel_id: repeatInheritedPixel,
     // DO NOT inherit event IDs
     contact_event_id: "",
@@ -6789,6 +6831,7 @@ async function handlePurchase(
       norm(repeatSourceRow?.registration_player_username) ||
       norm(repeatSourceRow?.lead_player_username),
     purchase_atrio_id: inboundAtrioId,
+    purchase_atrio_players_id: inboundAtrioPlayersId,
     purchase_coelsa_id: coelsaId,
     purchase_transaction_id: transactionId,
     test_event_code: testEventCode || repeatSourceRow?.test_event_code || "",
@@ -6995,6 +7038,8 @@ async function handleSimplePurchase(
   const inboundDatasetId = norm(p.dataset_id || p.meta_messaging_dataset_id);
   const inboundSourcePlatform = norm(p.source_platform);
   const inboundCtwaClid = ctwaClidForSource(p.ctwa_clid, inboundSourcePlatform);
+  const inboundAtrioId = atrioIdFromPayload(p);
+  const inboundAtrioPlayersId = atrioPlayersIdFromPayload(p);
   const botPhone = sanitizePhone(p.bot_phone);
   const inboundAgencyId = norm(p.agency_id);
   const purchasePlayerUsername = playerUsernameFromPayload(p);
@@ -7193,6 +7238,10 @@ async function handleSimplePurchase(
       null,
     source_platform: simpleOriginSource,
     ctwa_clid: simpleCtwaClid,
+    atrio_id: inboundAtrioId || srcRow?.atrio_id || "",
+    atrio_client_id: srcRow?.atrio_client_id ?? null,
+    atrio_slug: srcRow?.atrio_slug || "",
+    atrio_players_id: inboundAtrioPlayersId || srcRow?.atrio_players_id || "",
     pixel_id: simpleInheritedPixel,
     contact_event_id: "",
     contact_event_time: null,
@@ -7207,6 +7256,8 @@ async function handleSimplePurchase(
     purchase_player_username: purchasePlayerUsername ||
       norm(srcRow?.registration_player_username) ||
       norm(srcRow?.lead_player_username),
+    purchase_atrio_id: inboundAtrioId,
+    purchase_atrio_players_id: inboundAtrioPlayersId,
     purchase_coelsa_id: coelsaId,
     purchase_transaction_id: transactionId,
     test_event_code: testEventCode,
