@@ -4,13 +4,7 @@ import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { supabase } from "@/lib/supabaseClient";
 import type { HomeOverviewStats } from "@/lib/conversionsDb";
-import {
-  fetchConversionsConfig,
-  fetchConversionsFiltered,
-  getPremiumThreshold,
-} from "@/lib/conversionsDb";
-import { computeHomeOverviewStatsFromConversions } from "@/lib/conversionStats";
-import { fetchLandings } from "@/lib/landing/landingsDb";
+import { fetchHomeOverviewStats } from "@/lib/conversionsDb";
 import { HomeOverview } from "@/components/conversiones/HomeOverview";
 import { DashboardSkeleton } from "@/components/ui/DashboardSkeleton";
 import {
@@ -18,15 +12,6 @@ import {
   useCurrencyScope,
 } from "@/components/currency/CurrencyScope";
 import { CURRENCY_ALL } from "@/lib/currency";
-import { filterConversionsByCurrency } from "@/lib/currency";
-
-function currentMonthRange() {
-  const now = new Date();
-  return {
-    start: new Date(now.getFullYear(), now.getMonth(), 1, 0, 0, 0, 0),
-    end: now,
-  };
-}
 
 export default function DashboardInicioPage() {
   const router = useRouter();
@@ -58,18 +43,7 @@ export default function DashboardInicioPage() {
           return;
         }
 
-        const range = currentMonthRange();
-        const [config, rows, landings] = await Promise.all([
-          fetchConversionsConfig(user.id),
-          fetchConversionsFiltered(user.id, user.id, undefined, range),
-          fetchLandings(user.id, reportingCurrency),
-        ]);
-        const scopedRows = filterConversionsByCurrency(rows, reportingCurrency);
-        const stats = computeHomeOverviewStatsFromConversions({
-          conversions: scopedRows,
-          landingsCount: landings.length,
-          premiumThreshold: getPremiumThreshold(config, reportingCurrency),
-        });
+        const stats = await fetchHomeOverviewStats(user.id, reportingCurrency);
         if (active) setOverviewStats(stats);
       } catch (e) {
         const msg =

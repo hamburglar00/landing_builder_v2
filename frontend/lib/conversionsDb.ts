@@ -1451,7 +1451,7 @@ export async function fetchHomeOverviewStats(
   userId: string,
   currency: ReportingCurrency = "ARS",
 ): Promise<HomeOverviewStats> {
-  const { data, error } = await supabase.rpc("get_home_overview_stats_by_currency", {
+  const { data, error } = await supabase.rpc("get_home_overview_stats_cached_by_currency", {
     p_user_id: userId,
     p_hidden_by: userId,
     p_currency: currency,
