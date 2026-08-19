@@ -2422,6 +2422,23 @@ function resolveCurrencyForPixel(
   );
 }
 
+function resolveConversionRowCurrency(
+  baseConfig: ConversionsConfig,
+  pixelConfigs: PixelConfigRow[],
+  pixelId: string | undefined,
+  workspaceCurrency: unknown,
+  fallbackCurrency: unknown = "ARS",
+): string {
+  const resolvedWorkspace = normalizeWorkspaceCurrency(workspaceCurrency);
+  if (resolvedWorkspace) return resolvedWorkspace;
+  return resolveCurrencyForPixel(
+    baseConfig,
+    pixelConfigs,
+    pixelId,
+    fallbackCurrency,
+  );
+}
+
 function landingWorkspaceCurrency(landing: LandingRow): string {
   const currency = norm(landing.workspace_currency).toUpperCase();
   return currency === "PYG" ? "PYG" : currency === "ARS" ? "ARS" : "";
@@ -4879,16 +4896,12 @@ async function handleLead(
         "",
       estado: "lead",
       valor: 0,
-      currency: resolveCurrencyForPixel(
+      currency: resolveConversionRowCurrency(
         config,
         pixelConfigs,
         resolvedPixelId,
-        canonicalLeadWorkspaceCurrency || trustedLineage?.currency,
-        {
-          preferFallbackWithoutPixel: Boolean(
-            canonicalLeadWorkspaceCurrency,
-          ),
-        },
+        canonicalLeadWorkspaceCurrency,
+        trustedLineage?.currency,
       ),
       workspace_resolution_source: canonicalLeadWorkspaceResolution.source,
       contact_status_capi: "",
@@ -5085,13 +5098,13 @@ async function handleLead(
     leadWorkspaceGuard = guardedUpdateWorkspaceResolution.guard;
     const updateWorkspaceCurrency = updateWorkspaceResolution.currency;
     if (updateWorkspaceCurrency) {
-      updates.currency = resolveCurrencyForPixel(
+      updates.currency = resolveConversionRowCurrency(
         config,
         pixelConfigs,
         inboundMetaPixelId ||
           norm(currentRow?.pixel_id || currentRow?.meta_pixel_id),
         updateWorkspaceCurrency,
-        { preferFallbackWithoutPixel: true },
+        currentRow?.currency,
       );
       updates.workspace_resolution_source = updateWorkspaceResolution.source;
     }
@@ -5429,16 +5442,12 @@ async function handleCompleteRegistration(
       updates.meta_pixel_id = inboundMetaPixelId;
       updates.pixel_id = inboundMetaPixelId;
     }
-    const resolvedRegistrationCurrency = resolveCurrencyForPixel(
+    const resolvedRegistrationCurrency = resolveConversionRowCurrency(
       config,
       pixelConfigs,
       inboundMetaPixelId || norm(targetRow.pixel_id),
-      targetRegistrationWorkspaceCurrency || targetRow.currency,
-      {
-        preferFallbackWithoutPixel: Boolean(
-          targetRegistrationWorkspaceCurrency,
-        ),
-      },
+      targetRegistrationWorkspaceCurrency,
+      targetRow.currency,
     );
     if (resolvedRegistrationCurrency) {
       updates.currency = resolvedRegistrationCurrency;
@@ -5581,12 +5590,11 @@ async function handleCompleteRegistration(
     event_source_url: eventSourceUrl,
     estado: "lead",
     valor: 0,
-    currency: resolveCurrencyForPixel(
+    currency: resolveConversionRowCurrency(
       config,
       pixelConfigs,
       resolvedPixelId,
       registrationWorkspaceCurrency,
-      { preferFallbackWithoutPixel: Boolean(registrationWorkspaceCurrency) },
     ),
     workspace_resolution_source: registrationWorkspaceResolution.source,
     contact_status_capi: "",
@@ -6190,12 +6198,12 @@ async function handlePurchase(
       guardedTargetWorkspaceResolution.resolution;
     purchaseWorkspaceGuard = guardedTargetWorkspaceResolution.guard;
     const targetWorkspaceCurrency = targetWorkspaceResolution.currency;
-    const purchaseCurrency = resolveCurrencyForPixel(
+    const purchaseCurrency = resolveConversionRowCurrency(
       config,
       pixelConfigs,
       inboundMetaPixelId || norm(existingRow?.pixel_id),
-      targetWorkspaceCurrency || existingRow?.currency,
-      { preferFallbackWithoutPixel: Boolean(targetWorkspaceCurrency) },
+      targetWorkspaceCurrency,
+      existingRow?.currency,
     );
     const attributionSourceId =
       norm(existingRow?.lead_attribution_conversion_id) || targetId;
@@ -6546,14 +6554,12 @@ async function handlePurchase(
       event_source_url: eventSourceUrl || firstSource?.event_source_url || "",
       estado: "purchase",
       valor: amount,
-      currency: resolveCurrencyForPixel(
+      currency: resolveConversionRowCurrency(
         config,
         pixelConfigs,
         firstPixel,
-        firstWorkspaceCurrency || firstSource?.currency,
-        {
-          preferFallbackWithoutPixel: Boolean(firstWorkspaceCurrency),
-        },
+        firstWorkspaceCurrency,
+        firstSource?.currency,
       ),
       workspace_resolution_source: firstWorkspaceResolution.source,
       contact_status_capi: "",
@@ -6844,12 +6850,12 @@ async function handlePurchase(
     event_source_url: eventSourceUrl || repeatSourceRow?.event_source_url || "",
     estado: "purchase",
     valor: amount,
-    currency: resolveCurrencyForPixel(
+    currency: resolveConversionRowCurrency(
       config,
       pixelConfigs,
       repeatInheritedPixel,
-      repeatWorkspaceCurrency || repeatSourceRow?.currency,
-      { preferFallbackWithoutPixel: Boolean(repeatWorkspaceCurrency) },
+      repeatWorkspaceCurrency,
+      repeatSourceRow?.currency,
     ),
     workspace_resolution_source: repeatWorkspaceResolution.source,
     // DO NOT inherit statuses
@@ -7270,12 +7276,12 @@ async function handleSimplePurchase(
     event_source_url: eventSourceUrl || srcRow?.event_source_url || "",
     estado: "purchase",
     valor: amount,
-    currency: resolveCurrencyForPixel(
+    currency: resolveConversionRowCurrency(
       config,
       pixelConfigs,
       simpleInheritedPixel,
-      simpleRowWorkspaceCurrency || srcRow?.currency,
-      { preferFallbackWithoutPixel: Boolean(simpleRowWorkspaceCurrency) },
+      simpleRowWorkspaceCurrency,
+      srcRow?.currency,
     ),
     workspace_resolution_source: simpleRowWorkspaceResolution.source,
     contact_status_capi: "",
