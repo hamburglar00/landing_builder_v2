@@ -253,7 +253,7 @@ export default function AtrioClientsPageContent({ mode }: { mode: Mode }) {
     <div className="space-y-6">
       <PageHeader
         eyebrow="Integracion"
-        title="ATRIO"
+        title="Atrio"
         description="Administra los clientes de Atrio disponibles como destino del CTA."
         actions={
           <button type="button" onClick={openCreateModal} className="ui-button ui-button-primary">
