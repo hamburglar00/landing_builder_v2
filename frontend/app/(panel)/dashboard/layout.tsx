@@ -161,34 +161,20 @@ function NavIcon({
   }
 
   if (variant === "atrio") {
-    const tokenFill = active ? "#E7C238" : "#A88925";
-    const tokenStroke = active ? "#F4D35E" : "#C8A93A";
-    const markStroke = "#1B1B21";
     return (
-      <span className="text-[#E7C238]">
+      <span className={`${base}`}>
         <svg
           className="h-4 w-4"
           viewBox="0 0 24 24"
           fill="none"
+          stroke="currentColor"
+          strokeWidth={1.6}
           strokeLinecap="round"
           strokeLinejoin="round"
-          aria-hidden
         >
-          <circle cx="12" cy="12" r="9.2" fill={tokenFill} stroke={tokenStroke} strokeWidth="1.2" />
-          <circle
-            cx="12"
-            cy="12"
-            r="5.9"
-            stroke={markStroke}
-            strokeWidth="1.5"
-            strokeDasharray="3 2.4"
-          />
-          <path
-            d="M8.35 11.15c0-1.55 1.45-2.8 3.25-2.8h.8c1.8 0 3.25 1.25 3.25 2.8s-1.45 2.8-3.25 2.8h-.55l-2.45 1.35.62-1.82c-1-.48-1.67-1.34-1.67-2.33Z"
-            fill="none"
-            stroke={markStroke}
-            strokeWidth="1.35"
-          />
+          <circle cx="12" cy="12" r="8.5" className={accent} />
+          <circle cx="12" cy="12" r="5.5" strokeDasharray="2.8 2.4" />
+          <path d="M8.5 11.15c0-1.45 1.35-2.65 3.1-2.65h.8c1.75 0 3.1 1.2 3.1 2.65s-1.35 2.65-3.1 2.65h-.55L9.6 15.05l.55-1.65c-.98-.46-1.65-1.28-1.65-2.25Z" />
         </svg>
       </span>
     );

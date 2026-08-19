@@ -331,12 +331,7 @@ export default function AtrioClientsPageContent({ mode }: { mode: Mode }) {
                   filteredClients.map((client) => (
                     <tr key={client.id} className="bg-[rgba(255,255,255,0.012)]">
                       <td className="px-4 py-3">
-                        <div className="flex items-center gap-2">
-                          <span className="flex h-8 w-8 items-center justify-center rounded-xl border border-[rgba(224,189,55,0.28)] bg-[rgba(224,189,55,0.08)] text-[#e0bd37]">
-                            <AtrioMark className="h-4 w-4" />
-                          </span>
-                          <span className="font-semibold text-[var(--color-text-strong)]">{client.slug}</span>
-                        </div>
+                        <span className="font-semibold text-[var(--color-text-strong)]">{client.slug}</span>
                       </td>
                       <td className="px-4 py-3">
                         <a
