@@ -2,7 +2,7 @@
 
 import { useMemo, useState } from "react";
 import ModalPortal from "@/components/ui/ModalPortal";
-import { sexLabel } from "@/components/conversiones/conversionPageShared";
+import { friendlySourcePlatform, sexLabel } from "@/components/conversiones/conversionPageShared";
 
 export type ConversionFilterOption = {
   value: string;
@@ -45,7 +45,6 @@ type ConversionFiltersModalProps = {
   title: string;
   draft: ConversionFilterDraft;
   options: ConversionFilterOptions;
-  phoneGerenciaLabels: Readonly<Record<string, string[]>>;
   onChange: ConversionFilterChanges;
   onClose: () => void;
   onApply: () => void;
@@ -203,11 +202,14 @@ function stringOptions(values: readonly string[]): ConversionFilterOption[] {
   return values.map((value) => ({ value, label: value }));
 }
 
+function sourcePlatformOptions(values: readonly string[]): ConversionFilterOption[] {
+  return values.map((value) => ({ value, label: friendlySourcePlatform(value) }));
+}
+
 export default function ConversionFiltersModal({
   title,
   draft,
   options,
-  phoneGerenciaLabels,
   onChange,
   onClose,
   onApply,
@@ -255,18 +257,6 @@ export default function ConversionFiltersModal({
                 onChange={onChange.gerencia}
               />
               <FilterField
-                id="conversion-filter-phone"
-                label="Telefono asignado"
-                value={draft.phone}
-                allLabel="Todos los telefonos"
-                options={options.phones.map((phone) => {
-                  const labels = phoneGerenciaLabels[phone] ?? [];
-                  const extra = labels.length > 0 ? ` [${labels.join(" | ")}]` : "";
-                  return { value: phone, label: `${phone}${extra}` };
-                })}
-                onChange={onChange.phone}
-              />
-              <FilterField
                 id="conversion-filter-meta-origin"
                 label="Origen Meta Ads"
                 value={draft.fromMetaAds}
@@ -282,7 +272,7 @@ export default function ConversionFiltersModal({
                 label="Plataforma de origen"
                 value={draft.sourcePlatform}
                 allLabel="Todas"
-                options={stringOptions(options.sourcePlatforms)}
+                options={sourcePlatformOptions(options.sourcePlatforms)}
                 onChange={onChange.sourcePlatform}
               />
               <FilterField

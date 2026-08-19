@@ -230,7 +230,7 @@ export const COLUMN_NOTES: Partial<Record<ConversionColumnKey | "id", string>> =
   dataset_id: "Dataset de Meta usado para Conversions API for Business Messaging en recorridos WhatsApp Cloud API.",
   pixel_attribution_source: "Origen confiable usado para resolver el pixel de Purchase: payload, Contact raiz, landing o configuracion unica.",
   pixel_attribution_conversion_id: "UUID de la conversion raiz que aporto el pixel, cuando la atribucion se resolvio por una fila anterior.",
-  source_platform: "Origen declarado del payload (ej: landing, chatrace, whatsapp_cloud_api).",
+  source_platform: "Origen declarado del payload (ej: landing, chatrace, whatsapp_cloud_api, atrio).",
   ctwa_clid: "Click ID crudo de anuncios Click-to-WhatsApp. Solo se conserva para recorridos Click-to-WhatsApp controlados.",
   atrio_id: "ID unico del cliente/asesor de Atrio asociado al recorrido. Cumple el rol de agency_id para Atrio.",
   atrio_client_id: "UUID interno de la configuracion Atrio seleccionada en el constructor.",
@@ -444,6 +444,7 @@ export function friendlySourcePlatform(value: unknown): string {
   if (normalized === "landing") return "Landing";
   if (normalized === "chatrace") return "Chatrace";
   if (normalized === "whatsapp_cloud_api") return "WhatsApp Cloud API";
+  if (normalized === "atrio") return "Atrio";
   return normalized || "-";
 }
 

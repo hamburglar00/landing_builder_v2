@@ -1572,7 +1572,6 @@ export default function DashboardConversionesPage() {
             sexes: statsSexoOptions,
             campaigns: statsCampaignOptions,
           }}
-          phoneGerenciaLabels={gerenciaByPhone}
           onChange={{
             landing: setDraftLandingFilter,
             pixel: setDraftPixelFilter,
