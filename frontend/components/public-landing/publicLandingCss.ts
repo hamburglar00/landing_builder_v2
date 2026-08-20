@@ -1253,6 +1253,10 @@ body.public-lead-capture-open {
   overflow: hidden;
 }
 
+.public-landing.template4 ~ .public-privacy-footer {
+  bottom: max(6px, env(safe-area-inset-bottom));
+}
+
 .public-landing.template4 .template4__phone {
   display: flex;
   flex-direction: column;
@@ -1308,7 +1312,8 @@ body.public-lead-capture-open {
   height: 42px;
   border-radius: 999px;
   color: rgba(203, 213, 225, 0.74);
-  background: repeating-linear-gradient(135deg, #425357 0 6px, #344448 6px 12px);
+  background: #050608;
+  border: 1px solid rgba(255, 255, 255, 0.12);
   font: 700 8px/1.25 "IBM Plex Mono", ui-monospace, SFMono-Regular, Menlo, monospace;
   text-align: center;
   text-transform: lowercase;
@@ -1423,7 +1428,7 @@ body.public-lead-capture-open {
   display: flex;
   flex-direction: column;
   overflow: hidden;
-  padding: 8px 16px 6px;
+  padding: clamp(26px, 8vh, 78px) 16px 6px;
 }
 
 .public-landing.template4 .template4__stack {
@@ -1432,7 +1437,8 @@ body.public-lead-capture-open {
   display: flex;
   flex-direction: column;
   gap: 7px;
-  margin-top: auto;
+  margin-top: 0;
+  margin-bottom: auto;
 }
 
 .public-landing.template4 .template4__live-pill {
@@ -1533,7 +1539,7 @@ body.public-lead-capture-open {
   position: relative;
   z-index: 1;
   flex: 0 0 auto;
-  padding: 9px 14px max(16px, env(safe-area-inset-bottom));
+  padding: 9px 14px max(38px, calc(env(safe-area-inset-bottom) + 34px));
   background: #203033;
   border-top: 1px solid rgba(148, 163, 184, 0.16);
 }
@@ -1543,7 +1549,7 @@ body.public-lead-capture-open {
   gap: 10px;
   min-height: 54px;
   padding: 8px 18px;
-  color: #092213;
+  color: #ffffff;
   background: #25d366;
   border: 1px solid rgba(8, 112, 55, 0.64);
   box-shadow:
@@ -1554,7 +1560,7 @@ body.public-lead-capture-open {
 }
 
 .public-landing.template4 .template4__cta span {
-  color: #092213;
+  color: inherit;
   font-size: 17px;
   line-height: 1.15;
   font-weight: 900;
@@ -1565,7 +1571,7 @@ body.public-lead-capture-open {
   width: 24px;
   height: 24px;
   flex: 0 0 auto;
-  color: #092213;
+  color: inherit;
 }
 
 .public-landing.template4 .template4__cta-sub {
@@ -1819,6 +1825,37 @@ body.public-lead-capture-open {
 
   .public-landing .description {
     margin-bottom: 32px;
+  }
+}
+
+@media (max-height: 720px) {
+  .public-landing.template4 .template4__header {
+    min-height: 60px;
+    padding: calc(8px + env(safe-area-inset-top)) 14px 8px;
+  }
+
+  .public-landing.template4 .template4__thread {
+    padding-top: clamp(16px, 4vh, 34px);
+  }
+
+  .public-landing.template4 .template4__bubble {
+    padding: 6px 11px 16px;
+  }
+
+  .public-landing.template4 .template4__bubble p {
+    font-size: 13px;
+  }
+
+  .public-landing.template4 .template4__bubble li {
+    font-size: 12px;
+  }
+
+  .public-landing.template4 .template4__cta {
+    min-height: 50px;
+  }
+
+  .public-landing.template4 .template4__footer {
+    padding-top: 7px;
   }
 }
 

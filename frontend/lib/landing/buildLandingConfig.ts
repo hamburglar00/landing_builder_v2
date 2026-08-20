@@ -190,6 +190,19 @@ export function buildLandingConfig({
     ctaGlowColor: COLOR_MAP[config.ctaGlowColor],
   };
   const fixedVisualTemplate = isFixedVisualTemplate(themeWithHex.template);
+  const isTemplate4 = themeWithHex.template === "template4";
+  const effectiveCtaText =
+    isTemplate4 && (!themeWithHex.ctaText.trim() || themeWithHex.ctaText === "Acceder")
+      ? "ABRIR WHATSAPP"
+      : themeWithHex.ctaText;
+  const effectiveCtaTextColor =
+    isTemplate4 && themeWithHex.ctaTextColor === "#000000"
+      ? "#FFFFFF"
+      : themeWithHex.ctaTextColor;
+  const effectiveCtaBackgroundColor =
+    isTemplate4 && themeWithHex.ctaBackgroundColor === "#FFD700"
+      ? "#25D366"
+      : themeWithHex.ctaBackgroundColor;
 
   return {
     schemaVersion: 1,
@@ -239,7 +252,7 @@ export function buildLandingConfig({
         themeWithHex.footerBadgeLine2,
         themeWithHex.footerBadgeLine3,
       ],
-      ctaText: themeWithHex.ctaText,
+      ctaText: effectiveCtaText,
       template4: {
         profileImageUrl: themeWithHex.template4Chat?.profileImageUrl || "",
         bubble1Text:
@@ -284,8 +297,8 @@ export function buildLandingConfig({
       title: themeWithHex.titleColor,
       subtitle: themeWithHex.subtitleColor,
       badge: themeWithHex.footerBadgeColor,
-      ctaText: themeWithHex.ctaTextColor,
-      ctaBackground: themeWithHex.ctaBackgroundColor,
+      ctaText: effectiveCtaTextColor,
+      ctaBackground: effectiveCtaBackgroundColor,
       ctaGlow: themeWithHex.ctaGlowColor,
     },
     ...(phoneMode && {

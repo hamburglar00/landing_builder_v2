@@ -389,6 +389,60 @@ export function LandingPreview({
       chat.bubble2Item2,
       chat.bubble2Item3,
     ].filter((item) => item.trim().length > 0);
+    const template4CtaText =
+      config.ctaText.trim() && config.ctaText !== "Acceder"
+        ? config.ctaText
+        : "ABRIR WHATSAPP";
+    const template4CtaTextColor = getColorHex(
+      config.ctaTextColor === "black" ? "white" : config.ctaTextColor,
+    );
+    const template4CtaBackgroundColor = getColorHex(
+      config.ctaBackgroundColor === "gold" ? "whatsapp_green" : config.ctaBackgroundColor,
+    );
+
+    if (gallery) {
+      return (
+        <div className={outerClass} style={{ fontFamily }}>
+          <div
+            className="pointer-events-none absolute inset-0 opacity-[0.2]"
+            style={{
+              backgroundImage:
+                "url(\"data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='180' height='180' viewBox='0 0 180 180'%3E%3Cg fill='none' stroke='%236ee7b7' stroke-width='2' stroke-linecap='round' stroke-linejoin='round' opacity='.72'%3E%3Ccircle cx='24' cy='24' r='16'/%3E%3Ccircle cx='24' cy='24' r='8'/%3E%3Cpath d='M24 8v7M24 33v7M8 24h7M33 24h7M14 14l5 5M34 14l-5 5M14 34l5-5M34 34l-5-5'/%3E%3Crect x='60' y='10' width='34' height='46' rx='5' transform='rotate(-10 77 33)'/%3E%3Cpath d='M77 22c-6 8-13 16 0 23 13-7 6-15 0-23zM72 45h10'/%3E%3Crect x='122' y='14' width='38' height='31' rx='5'/%3E%3Cpath d='M131 24h20M131 35h20M129 30h.5M153 30h.5'/%3E%3Cpath d='M28 76c8-11 20-1 10 10 10-11 22-1 10 10-8 8-20 4-20-4 0 8-12 12-20 4-12-11 0-21 10-10-10-11 2-21 10-10zM28 96v12'/%3E%3Cpath d='M82 72l16 16-16 16-16-16zM82 80v16M74 88h16'/%3E%3Crect x='124' y='70' width='34' height='34' rx='7'/%3E%3Ccircle cx='134' cy='80' r='1.5'/%3E%3Ccircle cx='148' cy='80' r='1.5'/%3E%3Ccircle cx='141' cy='87' r='1.5'/%3E%3Ccircle cx='134' cy='94' r='1.5'/%3E%3Ccircle cx='148' cy='94' r='1.5'/%3E%3Cpath d='M25 124c-8 10-16 18 0 28 16-10 8-18 0-28zM18 152h14'/%3E%3Crect x='62' y='122' width='48' height='30' rx='6'/%3E%3Cpath d='M73 132l6 10 6-10M92 132l6 10 6-10'/%3E%3Cpath d='M130 130c0-9 8-16 17-16s17 7 17 16-8 16-17 16-17-7-17-16zM139 128l8-8 8 8M139 136l8 8 8-8'/%3E%3C/g%3E%3Cg fill='%23e5bd42' opacity='.58'%3E%3Ccircle cx='48' cy='54' r='2'/%3E%3Ccircle cx='112' cy='58' r='2'/%3E%3Ccircle cx='164' cy='60' r='2'/%3E%3Ccircle cx='52' cy='112' r='2'/%3E%3Ccircle cx='112' cy='112' r='2'/%3E%3Ccircle cx='166' cy='162' r='2'/%3E%3Cpath d='M48 150l3 6 6 3-6 3-3 6-3-6-6-3 6-3zM114 20l2 4 4 2-4 2-2 4-2-4-4-2 4-2z'/%3E%3C/g%3E%3C/svg%3E\")",
+              backgroundSize: "180px 180px",
+              backgroundPosition: "-18px 2px",
+            }}
+          />
+          <div className="relative z-[1] flex h-full flex-col">
+            <div className="flex min-h-[54px] items-center gap-2 border-b border-slate-400/15 bg-[#263639] px-3">
+              <div className="grid h-8 w-8 place-items-center overflow-hidden rounded-full border border-white/10 bg-black text-[7px] font-bold text-slate-300/70">
+                {profileImageUrl ? (
+                  // eslint-disable-next-line @next/next/no-img-element
+                  <img src={profileImageUrl} alt="" className="h-full w-full object-cover" />
+                ) : (
+                  "foto"
+                )}
+              </div>
+              <div className="min-w-0">
+                <p className="truncate text-[12px] font-extrabold text-white">{name} · Asesora</p>
+                <p className="truncate text-[10px] font-bold text-[#25d366]">En linea · responde en ~40 seg</p>
+              </div>
+            </div>
+            <div className="flex flex-col gap-2 px-3 pt-5">
+              <div className="mx-auto inline-flex items-center gap-1.5 rounded-full border border-[#25d366]/30 bg-[#25d366]/10 px-2.5 py-1.5 text-[9px] font-bold text-slate-100">
+                <span className="h-1.5 w-1.5 rounded-full bg-[#25d366]" />
+                <span><b>{template4LiveCount}</b> personas en chat</span>
+              </div>
+              <div className="max-w-[82%] rounded-[12px] rounded-bl bg-[#344448] px-2.5 py-2 text-[10px] leading-snug text-white shadow">
+                {template4Text(chat.bubble1Text, name)}
+              </div>
+              <div className="max-w-[82%] rounded-[12px] rounded-bl bg-[#344448] px-2.5 py-2 text-[10px] leading-snug text-white shadow">
+                {template4Text(chat.bubble2Intro, name)}
+              </div>
+            </div>
+          </div>
+        </div>
+      );
+    }
 
     return (
       <div className={outerClass} style={{ fontFamily }}>
@@ -403,7 +457,7 @@ export function LandingPreview({
         />
         <div className="absolute inset-0 z-20 grid place-items-center bg-[#11191b] opacity-0">
           <div className="text-center">
-            <div className="mx-auto grid h-[74px] w-[74px] place-items-center rounded-full bg-[repeating-linear-gradient(135deg,#425357_0_6px,#344448_6px_12px)] text-[9px] font-bold leading-tight text-slate-300/70">
+            <div className="mx-auto grid h-[74px] w-[74px] place-items-center overflow-hidden rounded-full border border-white/10 bg-black text-[9px] font-bold leading-tight text-slate-300/70">
               {profileImageUrl ? (
                 // eslint-disable-next-line @next/next/no-img-element
                 <img src={profileImageUrl} alt="" className="h-full w-full rounded-full object-cover" />
@@ -425,7 +479,7 @@ export function LandingPreview({
         </div>
         <div className="flex h-full flex-col">
           <div className="flex min-h-[66px] items-center gap-3 border-b border-slate-400/15 bg-[#263639] px-4 pt-2.5">
-            <div className="relative grid h-10 w-10 place-items-center rounded-full bg-[repeating-linear-gradient(135deg,#425357_0_6px,#344448_6px_12px)] text-[8px] font-bold text-slate-300/70">
+            <div className="relative grid h-10 w-10 place-items-center overflow-hidden rounded-full border border-white/10 bg-black text-[8px] font-bold text-slate-300/70">
               {profileImageUrl ? (
                 // eslint-disable-next-line @next/next/no-img-element
                 <img src={profileImageUrl} alt="" className="h-full w-full rounded-full object-cover" />
@@ -448,7 +502,7 @@ export function LandingPreview({
               <i className="not-italic text-[#e5bd42]">24/7</i>
             </span>
           </div>
-          <div className="relative z-[1] flex flex-1 flex-col justify-end gap-[7px] overflow-hidden px-4 py-3">
+          <div className="relative z-[1] flex flex-1 flex-col justify-start gap-[7px] overflow-hidden px-4 pb-3 pt-[clamp(26px,8vh,78px)]">
             <div className="mx-auto inline-flex items-center gap-2 rounded-full border border-[#25d366]/30 bg-[#25d366]/10 px-3 py-2 text-[10px] font-bold text-slate-100">
               <span className="h-1.5 w-1.5 rounded-full bg-[#25d366]" />
               <span>
@@ -481,13 +535,19 @@ export function LandingPreview({
           </div>
           {!gallery && (
             <div className="relative z-[1] border-t border-slate-400/15 bg-[#203033] px-4 pb-4 pt-2.5">
-              <button className="flex h-[54px] w-full items-center justify-center gap-2.5 rounded-full bg-[#25d366] px-5 text-center text-[15px] font-black text-[#092213] shadow-[0_0_0_0_rgba(37,211,102,.5)]">
+              <button
+                className="flex h-[54px] w-full items-center justify-center gap-2.5 rounded-full px-5 text-center text-[15px] font-black shadow-[0_0_0_0_rgba(37,211,102,.5)]"
+                style={{
+                  color: template4CtaTextColor,
+                  backgroundColor: template4CtaBackgroundColor,
+                }}
+              >
                 <svg className="h-6 w-6" viewBox="0 0 48 48" aria-hidden="true">
                   <g transform="translate(-700 -360)">
                     <path fill="currentColor" fillRule="evenodd" d={WHATSAPP_ICON_PATH} />
                   </g>
                 </svg>
-                <span>Abrir WhatsApp</span>
+                <span>{template4CtaText}</span>
               </button>
             </div>
           )}

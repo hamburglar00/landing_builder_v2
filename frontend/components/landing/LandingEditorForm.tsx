@@ -148,7 +148,21 @@ export function LandingTemplateSection({
                 name="landing-template"
                 value={opt.value}
                 checked={config.template === opt.value}
-                onChange={() => updateConfig(setConfig, { template: opt.value })}
+                onChange={() =>
+                  updateConfig(setConfig, {
+                    template: opt.value,
+                    ...(opt.value === "template4" &&
+                    (!config.ctaText.trim() || config.ctaText === "Acceder")
+                      ? { ctaText: "ABRIR WHATSAPP" }
+                      : {}),
+                    ...(opt.value === "template4" && config.ctaTextColor === "black"
+                      ? { ctaTextColor: "white" as const }
+                      : {}),
+                    ...(opt.value === "template4" && config.ctaBackgroundColor === "gold"
+                      ? { ctaBackgroundColor: "whatsapp_green" as const }
+                      : {}),
+                  })
+                }
                 className="h-3.5 w-3.5 rounded-full border-zinc-500"
               />
               <span>{opt.label}</span>
@@ -219,6 +233,14 @@ export function LandingEditorForm({
     ...TEMPLATE4_CHAT_DEFAULTS,
     ...(config.template4Chat ?? {}),
   };
+  const template4CtaText =
+    config.ctaText.trim() && config.ctaText !== "Acceder"
+      ? config.ctaText
+      : "ABRIR WHATSAPP";
+  const template4CtaTextColor =
+    config.ctaTextColor === "black" ? "white" : config.ctaTextColor;
+  const template4CtaBackgroundColor =
+    config.ctaBackgroundColor === "gold" ? "whatsapp_green" : config.ctaBackgroundColor;
   const leadCapture = config.leadCapture ?? {
     enabled: false,
     title: LEAD_CAPTURE_DEFAULT_TITLE,
@@ -578,6 +600,40 @@ export function LandingEditorForm({
             <p className="text-[11px] text-zinc-500">
               Formato .avif. Se usa en la intro y en el avatar del chat.
             </p>
+
+            <div className="space-y-3 border-t border-zinc-800 pt-4">
+              <label
+                htmlFor={fieldId("template4-cta-text")}
+                className="block text-xs font-medium text-zinc-400"
+              >
+                Texto del CTA
+              </label>
+              <input
+                id={fieldId("template4-cta-text")}
+                type="text"
+                value={template4CtaText}
+                onChange={(e) =>
+                  updateConfig(setConfig, { ctaText: e.target.value })
+                }
+                className="w-full rounded-lg border border-zinc-700 bg-zinc-900 px-3 py-2 text-sm text-zinc-100"
+              />
+              <div className="grid gap-3 sm:grid-cols-2">
+                <ColorSelect
+                  label="Color texto e icono"
+                  value={template4CtaTextColor}
+                  onChange={(ctaTextColor) =>
+                    updateConfig(setConfig, { ctaTextColor })
+                  }
+                />
+                <ColorSelect
+                  label="Color de fondo"
+                  value={template4CtaBackgroundColor}
+                  onChange={(ctaBackgroundColor) =>
+                    updateConfig(setConfig, { ctaBackgroundColor })
+                  }
+                />
+              </div>
+            </div>
 
             <div className="space-y-3 border-t border-zinc-800 pt-4">
               <label
