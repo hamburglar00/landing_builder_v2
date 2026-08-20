@@ -413,14 +413,22 @@ export function computeHomeOverviewStatsFromConversions({
     cleanAllConversions,
     premiumThreshold,
   );
+  const metaAdsConversions = cleanConversions.filter((row) => row.from_meta_ads === true);
+  const metaAdsFunnelContacts = buildFunnelContactsFromConversions(metaAdsConversions);
+  const metaAdsCore = computeCoreStats(
+    metaAdsConversions,
+    metaAdsFunnelContacts,
+    cleanAllConversions,
+    premiumThreshold,
+  );
 
   return {
     landingsCount,
-    porcentajeCarga: core.adLeadJourneysLinkedToContact > 0
-      ? (core.adFirstPurchaseJourneysAttributed / core.adLeadJourneysLinkedToContact) * 100
+    porcentajeCarga: metaAdsCore.adLeadJourneysLinkedToContact > 0
+      ? (metaAdsCore.adFirstPurchaseJourneysAttributed / metaAdsCore.adLeadJourneysLinkedToContact) * 100
       : 0,
-    cargaPromedio: core.totalPurchaseCount > 0 ? core.totalRevenue / core.totalPurchaseCount : 0,
-    totalCargado: core.totalRevenue,
+    cargaPromedio: metaAdsCore.totalPurchaseCount > 0 ? metaAdsCore.totalRevenue / metaAdsCore.totalPurchaseCount : 0,
+    totalCargado: metaAdsCore.totalRevenue,
     premium: core.premiumPlayers,
     retencionActiva30d: core.activeRetention30d,
   };
