@@ -393,12 +393,12 @@ export function LandingPreview({
     return (
       <div className={outerClass} style={{ fontFamily }}>
         <div
-          className="pointer-events-none absolute inset-0 opacity-[0.12]"
+          className="pointer-events-none absolute inset-0 opacity-[0.2]"
           style={{
             backgroundImage:
-              "url(\"data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='220' height='220' viewBox='0 0 220 220'%3E%3Cg fill='none' stroke='%23a7f3d0' stroke-width='2' stroke-linecap='round' stroke-linejoin='round' opacity='.78'%3E%3Ccircle cx='34' cy='36' r='19'/%3E%3Ccircle cx='34' cy='36' r='10'/%3E%3Cpath d='M34 17v9M34 46v9M15 36h9M44 36h9'/%3E%3Cpath d='M91 22l18 18-18 18-18-18zM91 28v24M79 40h24'/%3E%3Cpath d='M161 24c9-11 27-2 20 10 14-3 20 14 7 21 6 12-12 20-22 8-10 12-28 4-21-9-14 3-20-15-7-22-6-11 12-21 23-8z'/%3E%3Cpath d='M29 94h42a7 7 0 017 7v28a7 7 0 01-7 7H29a7 7 0 01-7-7v-28a7 7 0 017-7zM33 107l7 7 7-7M64 123l-7-7-7 7'/%3E%3Cpath d='M126 91c10 7 11 22 0 29-11-7-10-22 0-29zM113 106h26M126 121v9'/%3E%3Cpath d='M179 92h18a9 9 0 019 9v18a9 9 0 01-9 9h-18a9 9 0 01-9-9v-18a9 9 0 019-9zM181 103h.5M194 103h.5M181 117h.5M194 117h.5M187 110h.5'/%3E%3Cpath d='M49 165l16 16-16 16-16-16zM126 161c15 0 21 17 9 28-14-7-23-17-9-28zM114 188h30M182 163c10 0 18 8 18 18s-8 18-18 18-18-8-18-18 8-18 18-18zM174 181h16'/%3E%3C/g%3E%3Cg fill='%23e5bd42' opacity='.48'%3E%3Ccircle cx='14' cy='71' r='2'/%3E%3Ccircle cx='115' cy='16' r='2'/%3E%3Ccircle cx='205' cy='54' r='2'/%3E%3Ccircle cx='96' cy='145' r='2'/%3E%3Ccircle cx='18' cy='205' r='2'/%3E%3Cpath d='M205 151l3 6 6 3-6 3-3 6-3-6-6-3 6-3z'/%3E%3C/g%3E%3C/svg%3E\")",
-            backgroundSize: "220px 220px",
-            backgroundPosition: "-24px 12px",
+              "url(\"data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='180' height='180' viewBox='0 0 180 180'%3E%3Cg fill='none' stroke='%236ee7b7' stroke-width='2' stroke-linecap='round' stroke-linejoin='round' opacity='.72'%3E%3Ccircle cx='24' cy='24' r='16'/%3E%3Ccircle cx='24' cy='24' r='8'/%3E%3Cpath d='M24 8v7M24 33v7M8 24h7M33 24h7M14 14l5 5M34 14l-5 5M14 34l5-5M34 34l-5-5'/%3E%3Crect x='60' y='10' width='34' height='46' rx='5' transform='rotate(-10 77 33)'/%3E%3Cpath d='M77 22c-6 8-13 16 0 23 13-7 6-15 0-23zM72 45h10'/%3E%3Crect x='122' y='14' width='38' height='31' rx='5'/%3E%3Cpath d='M131 24h20M131 35h20M129 30h.5M153 30h.5'/%3E%3Cpath d='M28 76c8-11 20-1 10 10 10-11 22-1 10 10-8 8-20 4-20-4 0 8-12 12-20 4-12-11 0-21 10-10-10-11 2-21 10-10zM28 96v12'/%3E%3Cpath d='M82 72l16 16-16 16-16-16zM82 80v16M74 88h16'/%3E%3Crect x='124' y='70' width='34' height='34' rx='7'/%3E%3Ccircle cx='134' cy='80' r='1.5'/%3E%3Ccircle cx='148' cy='80' r='1.5'/%3E%3Ccircle cx='141' cy='87' r='1.5'/%3E%3Ccircle cx='134' cy='94' r='1.5'/%3E%3Ccircle cx='148' cy='94' r='1.5'/%3E%3Cpath d='M25 124c-8 10-16 18 0 28 16-10 8-18 0-28zM18 152h14'/%3E%3Crect x='62' y='122' width='48' height='30' rx='6'/%3E%3Cpath d='M73 132l6 10 6-10M92 132l6 10 6-10'/%3E%3Cpath d='M130 130c0-9 8-16 17-16s17 7 17 16-8 16-17 16-17-7-17-16zM139 128l8-8 8 8M139 136l8 8 8-8'/%3E%3C/g%3E%3Cg fill='%23e5bd42' opacity='.58'%3E%3Ccircle cx='48' cy='54' r='2'/%3E%3Ccircle cx='112' cy='58' r='2'/%3E%3Ccircle cx='164' cy='60' r='2'/%3E%3Ccircle cx='52' cy='112' r='2'/%3E%3Ccircle cx='112' cy='112' r='2'/%3E%3Ccircle cx='166' cy='162' r='2'/%3E%3Cpath d='M48 150l3 6 6 3-6 3-3 6-3-6-6-3 6-3zM114 20l2 4 4 2-4 2-2 4-2-4-4-2 4-2z'/%3E%3C/g%3E%3C/svg%3E\")",
+            backgroundSize: "180px 180px",
+            backgroundPosition: "-18px 2px",
           }}
         />
         <div className="absolute inset-0 z-20 grid place-items-center bg-[#11191b] opacity-0">
@@ -424,7 +424,7 @@ export function LandingPreview({
           </div>
         </div>
         <div className="flex h-full flex-col">
-          <div className="flex min-h-[70px] items-center gap-3 border-b border-slate-400/15 bg-[#263639] px-4 pt-3">
+          <div className="flex min-h-[66px] items-center gap-3 border-b border-slate-400/15 bg-[#263639] px-4 pt-2.5">
             <div className="relative grid h-10 w-10 place-items-center rounded-full bg-[repeating-linear-gradient(135deg,#425357_0_6px,#344448_6px_12px)] text-[8px] font-bold text-slate-300/70">
               {profileImageUrl ? (
                 // eslint-disable-next-line @next/next/no-img-element
@@ -448,22 +448,22 @@ export function LandingPreview({
               <i className="not-italic text-[#e5bd42]">24/7</i>
             </span>
           </div>
-          <div className="relative z-[1] flex flex-1 flex-col justify-end gap-2 px-4 py-4">
+          <div className="relative z-[1] flex flex-1 flex-col justify-end gap-[7px] overflow-hidden px-4 py-3">
             <div className="mx-auto inline-flex items-center gap-2 rounded-full border border-[#25d366]/30 bg-[#25d366]/10 px-3 py-2 text-[10px] font-bold text-slate-100">
               <span className="h-1.5 w-1.5 rounded-full bg-[#25d366]" />
               <span>
                 <b>{template4LiveCount}</b> personas en chat ahora mismo
               </span>
             </div>
-            <div className="max-w-[84%] rounded-[14px] rounded-bl rounded-tl bg-[#344448] px-3 py-2.5 pb-5 text-[12px] leading-snug text-white shadow">
+            <div className="max-w-[84%] rounded-[14px] rounded-bl rounded-tl bg-[#344448] px-3 py-2 pb-5 text-[12px] leading-snug text-white shadow">
               {template4Text(chat.bubble1Text, name)}
               <span className="float-right -mb-3 mt-1 text-[9px] text-slate-300/70">
                 {messageTime}
               </span>
             </div>
-            <div className="max-w-[84%] rounded-[14px] rounded-bl rounded-tl bg-[#344448] px-3 py-2.5 pb-5 text-[12px] leading-snug text-white shadow">
+            <div className="max-w-[84%] rounded-[14px] rounded-bl rounded-tl bg-[#344448] px-3 py-2 pb-5 text-[12px] leading-snug text-white shadow">
               {template4Text(chat.bubble2Intro, name)}
-              <ul className="mt-2 space-y-1 text-[11px]">
+              <ul className="mt-2 space-y-0.5 text-[11px]">
                 {bubble2Items.map((item) => (
                   <li key={item}>{template4Text(item, name)}</li>
                 ))}
@@ -472,7 +472,7 @@ export function LandingPreview({
                 {messageTime}
               </span>
             </div>
-            <div className="max-w-[84%] rounded-[14px] rounded-bl rounded-tl bg-[#344448] px-3 py-2.5 pb-5 text-[12px] leading-snug text-white shadow">
+            <div className="max-w-[84%] rounded-[14px] rounded-bl rounded-tl bg-[#344448] px-3 py-2 pb-5 text-[12px] leading-snug text-white shadow">
               {template4Text(chat.bubble3Text, name)}
               <span className="float-right -mb-3 mt-1 text-[9px] text-slate-300/70">
                 {messageTime}
@@ -480,8 +480,8 @@ export function LandingPreview({
             </div>
           </div>
           {!gallery && (
-            <div className="relative z-[1] border-t border-slate-400/15 bg-[#203033] px-4 pb-5 pt-3">
-              <button className="flex h-[62px] w-full items-center justify-center gap-2.5 rounded-full bg-[#25d366] px-5 text-center text-[15px] font-black text-[#092213] shadow-[0_0_0_0_rgba(37,211,102,.5)]">
+            <div className="relative z-[1] border-t border-slate-400/15 bg-[#203033] px-4 pb-4 pt-2.5">
+              <button className="flex h-[54px] w-full items-center justify-center gap-2.5 rounded-full bg-[#25d366] px-5 text-center text-[15px] font-black text-[#092213] shadow-[0_0_0_0_rgba(37,211,102,.5)]">
                 <svg className="h-6 w-6" viewBox="0 0 48 48" aria-hidden="true">
                   <g transform="translate(-700 -360)">
                     <path fill="currentColor" fillRule="evenodd" d={WHATSAPP_ICON_PATH} />
