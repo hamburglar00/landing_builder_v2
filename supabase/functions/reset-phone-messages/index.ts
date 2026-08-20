@@ -144,6 +144,21 @@ Deno.serve(async (req) => {
       );
     }
 
+    const { error: metricsError } = await supabaseAdmin
+      .from("phone_metrics")
+      .update({ messages_received: 0, calculated_at: resetAt })
+      .in("gerencia_phone_id", phoneIds);
+
+    if (metricsError) {
+      return new Response(
+        JSON.stringify({ error: "Se reiniciaron los telefonos, pero no se pudo actualizar la metrica visible." }),
+        {
+          status: 500,
+          headers: { ...corsHeaders, "Content-Type": "application/json" },
+        },
+      );
+    }
+
     return new Response(
       JSON.stringify({
         success: true,
