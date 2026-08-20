@@ -85,6 +85,16 @@ export interface LandingLeadCaptureConfig {
   };
 }
 
+export interface LandingTemplate4ChatConfig {
+  profileImageUrl: string;
+  bubble1Text: string;
+  bubble2Intro: string;
+  bubble2Item1: string;
+  bubble2Item2: string;
+  bubble2Item3: string;
+  bubble3Text: string;
+}
+
 /**
  * Configuracin completa del tema de la landing (plantilla fija).
  * El usuario solo puede editar estos campos; no puede mover elementos ni cambiar layout.
@@ -160,6 +170,7 @@ export interface LandingThemeConfig {
    * Apagado por defecto para no agregar friccion.
    */
   leadCapture: LandingLeadCaptureConfig;
+  template4Chat?: LandingTemplate4ChatConfig;
 }
 
 /**

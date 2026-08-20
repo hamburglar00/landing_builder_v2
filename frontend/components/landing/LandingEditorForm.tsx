@@ -2,6 +2,7 @@
 
 import { useId, useState } from "react";
 import type {
+  LandingTemplate4ChatConfig,
   LandingThemeConfig,
   CtaPositionOption,
   TemplateOption,
@@ -113,6 +114,16 @@ const LEAD_CAPTURE_DEFAULT_TITLE =
 const LEAD_CAPTURE_DEFAULT_DESCRIPTION =
   "Completá tus datos o seguí directo a WhatsApp.";
 
+const TEMPLATE4_CHAT_DEFAULTS: LandingTemplate4ChatConfig = {
+  profileImageUrl: "",
+  bubble1Text: "Hola, soy {{name}}, enviame un mensaje y comenzamos ya mismo.",
+  bubble2Intro: "Te acompano en todo el proceso",
+  bubble2Item1: "💸 Cargas y retiros las 24hs",
+  bubble2Item2: "👤 Atencion personalizada",
+  bubble2Item3: "🛡️ Respaldo y mas de 5 anos de experiencia",
+  bubble3Text: "Arrancamos? Toca abajo y comenzamos",
+};
+
 export function LandingTemplateSection({
   config,
   setConfig,
@@ -200,9 +211,14 @@ export function LandingEditorForm({
   ];
 
   const isTemplate3 = config.template === "template3";
+  const isTemplate4 = config.template === "template4";
   const isFixedVisualTemplate =
     config.template === "template4" || config.template === "template5";
   const hidesVisualControls = isTemplate3 || isFixedVisualTemplate;
+  const template4Chat = {
+    ...TEMPLATE4_CHAT_DEFAULTS,
+    ...(config.template4Chat ?? {}),
+  };
   const leadCapture = config.leadCapture ?? {
     enabled: false,
     title: LEAD_CAPTURE_DEFAULT_TITLE,
@@ -228,6 +244,17 @@ export function LandingEditorForm({
           ...leadCapture.fields,
           ...(patch.fields ?? {}),
         },
+      },
+    });
+  };
+
+  const updateTemplate4Chat = (
+    patch: Partial<LandingTemplate4ChatConfig>,
+  ) => {
+    updateConfig(setConfig, {
+      template4Chat: {
+        ...template4Chat,
+        ...patch,
       },
     });
   };
@@ -533,6 +560,100 @@ export function LandingEditorForm({
             />
           </div>
         </div>
+        </CollapsibleSection>
+      )}
+
+      {isTemplate4 && (
+        <CollapsibleSection title="Chat" defaultOpen>
+          <div className="space-y-5">
+            <ImageUploader
+              label="Foto de perfil"
+              multiple={false}
+              value={template4Chat.profileImageUrl ? [template4Chat.profileImageUrl] : []}
+              onChange={(urls) =>
+                updateTemplate4Chat({ profileImageUrl: urls[0] ?? "" })
+              }
+              onUpload={uploadImage}
+            />
+            <p className="text-[11px] text-zinc-500">
+              Formato .avif. Se usa en la intro y en el avatar del chat.
+            </p>
+
+            <div className="space-y-3 border-t border-zinc-800 pt-4">
+              <label
+                htmlFor={fieldId("template4-bubble-1")}
+                className="block text-xs font-medium text-zinc-400"
+              >
+                Burbuja 1
+              </label>
+              <textarea
+                id={fieldId("template4-bubble-1")}
+                value={template4Chat.bubble1Text}
+                onChange={(e) =>
+                  updateTemplate4Chat({ bubble1Text: e.target.value })
+                }
+                rows={2}
+                className="w-full resize-none rounded-lg border border-zinc-700 bg-zinc-900 px-3 py-2 text-sm text-zinc-100"
+              />
+              <p className="text-[11px] text-zinc-500">
+                Podés usar {"{{name}}"} para insertar el nombre configurado.
+              </p>
+            </div>
+
+            <div className="space-y-3 border-t border-zinc-800 pt-4">
+              <label
+                htmlFor={fieldId("template4-bubble-2-intro")}
+                className="block text-xs font-medium text-zinc-400"
+              >
+                Burbuja 2
+              </label>
+              <input
+                id={fieldId("template4-bubble-2-intro")}
+                type="text"
+                value={template4Chat.bubble2Intro}
+                onChange={(e) =>
+                  updateTemplate4Chat({ bubble2Intro: e.target.value })
+                }
+                className="w-full rounded-lg border border-zinc-700 bg-zinc-900 px-3 py-2 text-sm text-zinc-100"
+              />
+              {(
+                [
+                  ["bubble2Item1", "Ítem 1"],
+                  ["bubble2Item2", "Ítem 2"],
+                  ["bubble2Item3", "Ítem 3"],
+                ] as const
+              ).map(([key, label]) => (
+                <input
+                  key={key}
+                  type="text"
+                  aria-label={label}
+                  value={template4Chat[key]}
+                  onChange={(e) =>
+                    updateTemplate4Chat({ [key]: e.target.value })
+                  }
+                  className="w-full rounded-lg border border-zinc-700 bg-zinc-900 px-3 py-2 text-sm text-zinc-100"
+                />
+              ))}
+            </div>
+
+            <div className="space-y-3 border-t border-zinc-800 pt-4">
+              <label
+                htmlFor={fieldId("template4-bubble-3")}
+                className="block text-xs font-medium text-zinc-400"
+              >
+                Burbuja 3
+              </label>
+              <textarea
+                id={fieldId("template4-bubble-3")}
+                value={template4Chat.bubble3Text}
+                onChange={(e) =>
+                  updateTemplate4Chat({ bubble3Text: e.target.value })
+                }
+                rows={2}
+                className="w-full resize-none rounded-lg border border-zinc-700 bg-zinc-900 px-3 py-2 text-sm text-zinc-100"
+              />
+            </div>
+          </div>
         </CollapsibleSection>
       )}
 

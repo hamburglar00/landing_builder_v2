@@ -57,6 +57,13 @@ export interface LandingConfigPayload {
     subtitle: [string, string, string];
     footerBadge: [string, string, string];
     ctaText: string;
+    template4?: {
+      profileImageUrl: string;
+      bubble1Text: string;
+      bubble2Intro: string;
+      bubble2Items: string[];
+      bubble3Text: string;
+    };
   };
   typography?: {
     fontFamily: LandingThemeConfig["fontFamily"];
@@ -233,6 +240,26 @@ export function buildLandingConfig({
         themeWithHex.footerBadgeLine3,
       ],
       ctaText: themeWithHex.ctaText,
+      template4: {
+        profileImageUrl: themeWithHex.template4Chat?.profileImageUrl || "",
+        bubble1Text:
+          themeWithHex.template4Chat?.bubble1Text ||
+          "Hola, soy {{name}}, enviame un mensaje y comenzamos ya mismo.",
+        bubble2Intro:
+          themeWithHex.template4Chat?.bubble2Intro ||
+          "Te acompano en todo el proceso",
+        bubble2Items: [
+          themeWithHex.template4Chat?.bubble2Item1 ||
+            "💸 Cargas y retiros las 24hs",
+          themeWithHex.template4Chat?.bubble2Item2 ||
+            "👤 Atencion personalizada",
+          themeWithHex.template4Chat?.bubble2Item3 ||
+            "🛡️ Respaldo y mas de 5 anos de experiencia",
+        ].filter((item) => item.trim().length > 0),
+        bubble3Text:
+          themeWithHex.template4Chat?.bubble3Text ||
+          "Arrancamos? Toca abajo y comenzamos",
+      },
     },
     typography: {
       fontFamily: "system",

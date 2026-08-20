@@ -196,6 +196,20 @@ function formatTemplate4Time(offsetMinutes = 0) {
   }).format(new Date(Date.now() + offsetMinutes * 60 * 1000));
 }
 
+function renderTemplate4Avatar(profileImageUrl: string, large = false) {
+  const className = large
+    ? "template4__photo template4__photo--large"
+    : "template4__photo";
+  if (profileImageUrl) {
+    return `<img src="${escapeHtml(profileImageUrl)}" alt="" class="${className}" decoding="async" loading="eager">`;
+  }
+  return `<div class="${className}">foto${large ? "<br>asesora" : ""}</div>`;
+}
+
+function template4Text(value: string | undefined, fallback: string, name: string) {
+  return escapeHtml((value || fallback).replace(/\{\{\s*name\s*\}\}/gi, name));
+}
+
 function renderPrivacyFooter(config: PublicLandingConfig) {
   const businessName = config.name || "el responsable de esta landing";
 
@@ -419,12 +433,36 @@ function renderTemplate3({ config }: RenderParams) {
 }
 
 function renderTemplate4({ config }: RenderParams) {
-  const name = escapeHtml(config.name || "tu asesor");
+  const rawName = config.name || "tu asesor";
+  const name = escapeHtml(rawName);
+  const chat = config.content?.template4;
+  const profileImageUrl = chat?.profileImageUrl || "";
+  const bubble1 = template4Text(
+    chat?.bubble1Text,
+    "Hola, soy {{name}}, enviame un mensaje y comenzamos ya mismo.",
+    rawName,
+  );
+  const bubble2Intro = template4Text(
+    chat?.bubble2Intro,
+    "Te acompano en todo el proceso",
+    rawName,
+  );
+  const bubble2Items =
+    chat?.bubble2Items?.filter((item) => item.trim().length > 0) || [
+      "💸 Cargas y retiros las 24hs",
+      "👤 Atencion personalizada",
+      "🛡️ Respaldo y mas de 5 anos de experiencia",
+    ];
+  const bubble3 = template4Text(
+    chat?.bubble3Text,
+    "Arrancamos? Toca abajo y comenzamos",
+    rawName,
+  );
   const timeOne = formatTemplate4Time(-2);
   const timeTwo = formatTemplate4Time(-1);
   const timeThree = formatTemplate4Time();
 
-  return `<main class="public-landing template4"><section class="template4__phone" aria-label="Chat en vivo"><div class="template4__intro"><div class="template4__spinner"><div class="template4__photo template4__photo--large">foto<br>asesora</div></div><div class="template4__intro-copy"><span>Abriendo sala</span><strong>Abriendo tu chat con ${name}</strong><p>Atencion abierta ahora</p></div></div><header class="template4__header"><div class="template4__avatar-wrap"><div class="template4__photo">foto</div><i class="template4__online-dot"></i></div><div class="template4__who"><b>${name} · Asesora</b><span>En linea · responde en ~40 seg</span></div><time class="template4__time" data-template4-current-time>${timeThree}<br><i>24/7</i></time></header><div class="template4__thread" data-public-landing-trigger><div class="template4__stack"><div class="template4__live-pill"><i></i><span><b data-template4-live-count>14</b> personas en chat ahora mismo</span></div><div class="template4__bubble template4__bubble--in template4__bubble--delay-1"><p>Hola, soy ${name}, enviame un mensaje y comenzamos ya mismo.</p><span data-template4-message-time>${timeOne}</span></div><div class="template4__bubble template4__bubble--in template4__bubble--delay-2"><p>Te acompano en todo el proceso</p><ul><li>💸 Cargas y retiros las 24hs</li><li>👤 Atencion personalizada</li><li>🛡️ Respaldo y mas de 5 anos de experiencia</li></ul><span data-template4-message-time>${timeTwo}</span></div><div class="template4__bubble template4__bubble--in template4__bubble--delay-3"><p>Arrancamos? Toca abajo y comenzamos</p><span data-template4-message-time>${timeThree}</span></div></div></div><footer class="template4__footer"><button type="button" class="template4__cta" data-public-landing-cta data-public-landing-rest-label="Abrir WhatsApp" data-public-landing-loading-label="Abriendo..." data-public-landing-disabled-label="Sin numero disponible" aria-label="Abrir WhatsApp">${renderWhatsAppIcon("template4__cta-icon")}<span data-public-landing-cta-label>Abrir WhatsApp</span></button></footer></section></main>`;
+  return `<main class="public-landing template4"><section class="template4__phone" aria-label="Chat en vivo"><div class="template4__intro"><div class="template4__spinner">${renderTemplate4Avatar(profileImageUrl, true)}</div><div class="template4__intro-copy"><span>Abriendo sala</span><strong>Abriendo tu chat con ${name}</strong><p>Atencion abierta ahora</p></div></div><header class="template4__header"><div class="template4__avatar-wrap">${renderTemplate4Avatar(profileImageUrl)}<i class="template4__online-dot"></i></div><div class="template4__who"><b>${name} · Asesora</b><span>En linea · responde en ~40 seg</span></div><time class="template4__time" data-template4-current-time>${timeThree}<br><i>24/7</i></time></header><div class="template4__thread" data-public-landing-trigger><div class="template4__stack"><div class="template4__live-pill"><i></i><span><b data-template4-live-count>14</b> personas en chat ahora mismo</span></div><div class="template4__bubble template4__bubble--in template4__bubble--delay-1"><p>${bubble1}</p><span data-template4-message-time>${timeOne}</span></div><div class="template4__bubble template4__bubble--in template4__bubble--delay-2"><p>${bubble2Intro}</p><ul>${bubble2Items.map((item) => `<li>${template4Text(item, "", rawName)}</li>`).join("")}</ul><span data-template4-message-time>${timeTwo}</span></div><div class="template4__bubble template4__bubble--in template4__bubble--delay-3"><p>${bubble3}</p><span data-template4-message-time>${timeThree}</span></div></div></div><footer class="template4__footer"><button type="button" class="template4__cta" data-public-landing-cta data-public-landing-rest-label="Abrir WhatsApp" data-public-landing-loading-label="Abriendo..." data-public-landing-disabled-label="Sin numero disponible" aria-label="Abrir WhatsApp">${renderWhatsAppIcon("template4__cta-icon")}<span data-public-landing-cta-label>Abrir WhatsApp</span></button></footer></section></main>`;
 }
 
 function renderTemplate5({ config }: RenderParams) {

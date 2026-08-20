@@ -11,6 +11,20 @@ const WHATSAPP_ICON_PATH =
 const TEMPLATE3_WHATSAPP_ICON_PATH =
   "M16.04 3A12.82 12.82 0 0 0 5.08 22.47L3 30l7.72-2.02A12.88 12.88 0 1 0 16.04 3Zm0 23.58a10.66 10.66 0 0 1-5.43-1.49l-.39-.23-4.58 1.2 1.22-4.46-.25-.4a10.68 10.68 0 1 1 9.43 5.38Zm5.85-7.99c-.32-.16-1.9-.94-2.2-1.05-.29-.11-.5-.16-.72.16-.21.32-.82 1.05-1.01 1.26-.19.21-.37.24-.69.08-.32-.16-1.35-.5-2.57-1.59a9.63 9.63 0 0 1-1.78-2.22c-.19-.32-.02-.49.14-.65.15-.14.32-.37.48-.56.16-.18.21-.32.32-.53.11-.21.06-.4-.03-.56-.08-.16-.72-1.73-.98-2.37-.26-.62-.52-.54-.72-.55h-.61c-.21 0-.56.08-.85.4-.29.32-1.12 1.1-1.12 2.67s1.15 3.1 1.31 3.31c.16.21 2.26 3.45 5.47 4.84.77.33 1.36.53 1.83.68.77.24 1.46.21 2.01.13.61-.09 1.9-.78 2.17-1.52.27-.75.27-1.39.19-1.52-.08-.14-.29-.22-.61-.38Z";
 
+const TEMPLATE4_CHAT_DEFAULTS = {
+  profileImageUrl: "",
+  bubble1Text: "Hola, soy {{name}}, enviame un mensaje y comenzamos ya mismo.",
+  bubble2Intro: "Te acompano en todo el proceso",
+  bubble2Item1: "💸 Cargas y retiros las 24hs",
+  bubble2Item2: "👤 Atencion personalizada",
+  bubble2Item3: "🛡️ Respaldo y mas de 5 anos de experiencia",
+  bubble3Text: "Arrancamos? Toca abajo y comenzamos",
+};
+
+function template4Text(value: string, name: string) {
+  return value.replace(/\{\{\s*name\s*\}\}/gi, name);
+}
+
 interface LandingPreviewProps {
   config: LandingThemeConfig;
   /** Modo compacto para miniaturas (sin borde externo, ocupa todo el alto disponible). */
@@ -362,9 +376,19 @@ export function LandingPreview({
   const renderTemplate4 = () => {
     const outerClass = compact
       ? "relative h-full w-full overflow-hidden rounded-3xl bg-[#182629] shadow-[0_14px_32px_rgba(0,0,0,0.9)]"
-      : "relative mx-auto aspect-[9/16] w-full max-w-[380px] overflow-hidden rounded-3xl bg-[#182629] shadow-[0_18px_40px_rgba(0,0,0,1)]";
+      : "relative mx-auto aspect-[9/16] w-full max-w-[360px] overflow-hidden rounded-3xl bg-[#182629] shadow-[0_18px_40px_rgba(0,0,0,1)]";
     const name = config.titleLine1?.trim() || "Asesor";
     const messageTime = template4Now === "--:--" ? "19:36" : template4Now;
+    const chat = {
+      ...TEMPLATE4_CHAT_DEFAULTS,
+      ...(config.template4Chat ?? {}),
+    };
+    const profileImageUrl = chat.profileImageUrl;
+    const bubble2Items = [
+      chat.bubble2Item1,
+      chat.bubble2Item2,
+      chat.bubble2Item3,
+    ].filter((item) => item.trim().length > 0);
 
     return (
       <div className={outerClass} style={{ fontFamily }}>
@@ -372,17 +396,24 @@ export function LandingPreview({
           className="pointer-events-none absolute inset-0 opacity-[0.12]"
           style={{
             backgroundImage:
-              "url(\"data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='210' height='210' viewBox='0 0 210 210'%3E%3Cg fill='none' stroke='%2394a3b8' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Ccircle cx='30' cy='35' r='15'/%3E%3Ccircle cx='30' cy='35' r='8'/%3E%3Cpath d='M82 24c11 8 11 24 0 31-11-7-11-23 0-31zM70 40h24M82 55v9'/%3E%3Cpath d='M145 26c8-10 24-2 19 10 12-4 19 12 8 19 5 10-10 18-19 8-8 10-24 2-18-9-12 3-18-13-7-19-5-10 10-18 17-9z'/%3E%3Cpath d='M181 92l12 12-12 12-12-12zM52 91c14 0 20 16 8 25-13-6-21-15-8-25zM42 115h25'/%3E%3Cpath d='M108 88h35a9 9 0 019 9v16a9 9 0 01-9 9h-20l-12 12v-12h-3a9 9 0 01-9-9V97a9 9 0 019-9z'/%3E%3Cpath d='M24 156h47M31 169h32M125 164c7-15 30-15 37 0M116 178h55M23 189l13-25 13 25M189 159c-8 0-13 6-13 13s5 13 13 13 13-6 13-13-5-13-13-13z'/%3E%3C/g%3E%3Cg fill='%2394a3b8' fill-opacity='.75'%3E%3Ccircle cx='15' cy='86' r='2'/%3E%3Ccircle cx='101' cy='20' r='2'/%3E%3Ccircle cx='190' cy='42' r='2'/%3E%3Ccircle cx='91' cy='149' r='2'/%3E%3Ccircle cx='12' cy='197' r='2'/%3E%3C/g%3E%3C/svg%3E\")",
-            backgroundSize: "210px 210px",
-            backgroundPosition: "-18px 18px",
+              "url(\"data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='220' height='220' viewBox='0 0 220 220'%3E%3Cg fill='none' stroke='%23a7f3d0' stroke-width='2' stroke-linecap='round' stroke-linejoin='round' opacity='.78'%3E%3Ccircle cx='34' cy='36' r='19'/%3E%3Ccircle cx='34' cy='36' r='10'/%3E%3Cpath d='M34 17v9M34 46v9M15 36h9M44 36h9'/%3E%3Cpath d='M91 22l18 18-18 18-18-18zM91 28v24M79 40h24'/%3E%3Cpath d='M161 24c9-11 27-2 20 10 14-3 20 14 7 21 6 12-12 20-22 8-10 12-28 4-21-9-14 3-20-15-7-22-6-11 12-21 23-8z'/%3E%3Cpath d='M29 94h42a7 7 0 017 7v28a7 7 0 01-7 7H29a7 7 0 01-7-7v-28a7 7 0 017-7zM33 107l7 7 7-7M64 123l-7-7-7 7'/%3E%3Cpath d='M126 91c10 7 11 22 0 29-11-7-10-22 0-29zM113 106h26M126 121v9'/%3E%3Cpath d='M179 92h18a9 9 0 019 9v18a9 9 0 01-9 9h-18a9 9 0 01-9-9v-18a9 9 0 019-9zM181 103h.5M194 103h.5M181 117h.5M194 117h.5M187 110h.5'/%3E%3Cpath d='M49 165l16 16-16 16-16-16zM126 161c15 0 21 17 9 28-14-7-23-17-9-28zM114 188h30M182 163c10 0 18 8 18 18s-8 18-18 18-18-8-18-18 8-18 18-18zM174 181h16'/%3E%3C/g%3E%3Cg fill='%23e5bd42' opacity='.48'%3E%3Ccircle cx='14' cy='71' r='2'/%3E%3Ccircle cx='115' cy='16' r='2'/%3E%3Ccircle cx='205' cy='54' r='2'/%3E%3Ccircle cx='96' cy='145' r='2'/%3E%3Ccircle cx='18' cy='205' r='2'/%3E%3Cpath d='M205 151l3 6 6 3-6 3-3 6-3-6-6-3 6-3z'/%3E%3C/g%3E%3C/svg%3E\")",
+            backgroundSize: "220px 220px",
+            backgroundPosition: "-24px 12px",
           }}
         />
         <div className="absolute inset-0 z-20 grid place-items-center bg-[#11191b] opacity-0">
           <div className="text-center">
             <div className="mx-auto grid h-[74px] w-[74px] place-items-center rounded-full bg-[repeating-linear-gradient(135deg,#425357_0_6px,#344448_6px_12px)] text-[9px] font-bold leading-tight text-slate-300/70">
-              foto
-              <br />
-              asesora
+              {profileImageUrl ? (
+                // eslint-disable-next-line @next/next/no-img-element
+                <img src={profileImageUrl} alt="" className="h-full w-full rounded-full object-cover" />
+              ) : (
+                <>
+                  foto
+                  <br />
+                  asesora
+                </>
+              )}
             </div>
             <p className="mt-4 text-[11px] font-black uppercase tracking-[0.14em] text-[#25d366]">
               Abriendo sala
@@ -395,7 +426,12 @@ export function LandingPreview({
         <div className="flex h-full flex-col">
           <div className="flex min-h-[70px] items-center gap-3 border-b border-slate-400/15 bg-[#263639] px-4 pt-3">
             <div className="relative grid h-10 w-10 place-items-center rounded-full bg-[repeating-linear-gradient(135deg,#425357_0_6px,#344448_6px_12px)] text-[8px] font-bold text-slate-300/70">
-              foto
+              {profileImageUrl ? (
+                // eslint-disable-next-line @next/next/no-img-element
+                <img src={profileImageUrl} alt="" className="h-full w-full rounded-full object-cover" />
+              ) : (
+                "foto"
+              )}
               <span className="absolute -bottom-0.5 -right-0.5 h-3 w-3 rounded-full border-2 border-[#263639] bg-[#25d366]" />
             </div>
             <div className="min-w-0 flex-1">
@@ -420,24 +456,24 @@ export function LandingPreview({
               </span>
             </div>
             <div className="max-w-[84%] rounded-[14px] rounded-bl rounded-tl bg-[#344448] px-3 py-2.5 pb-5 text-[12px] leading-snug text-white shadow">
-              Hola, soy {name}, enviame un mensaje y comenzamos ya mismo.
+              {template4Text(chat.bubble1Text, name)}
               <span className="float-right -mb-3 mt-1 text-[9px] text-slate-300/70">
                 {messageTime}
               </span>
             </div>
             <div className="max-w-[84%] rounded-[14px] rounded-bl rounded-tl bg-[#344448] px-3 py-2.5 pb-5 text-[12px] leading-snug text-white shadow">
-              Te acompano en todo el proceso
+              {template4Text(chat.bubble2Intro, name)}
               <ul className="mt-2 space-y-1 text-[11px]">
-                <li>💸 Cargas y retiros las 24hs</li>
-                <li>👤 Atencion personalizada</li>
-                <li>🛡️ Respaldo y mas de 5 anos de experiencia</li>
+                {bubble2Items.map((item) => (
+                  <li key={item}>{template4Text(item, name)}</li>
+                ))}
               </ul>
               <span className="float-right -mb-3 mt-1 text-[9px] text-slate-300/70">
                 {messageTime}
               </span>
             </div>
             <div className="max-w-[84%] rounded-[14px] rounded-bl rounded-tl bg-[#344448] px-3 py-2.5 pb-5 text-[12px] leading-snug text-white shadow">
-              Arrancamos? Toca abajo y comenzamos
+              {template4Text(chat.bubble3Text, name)}
               <span className="float-right -mb-3 mt-1 text-[9px] text-slate-300/70">
                 {messageTime}
               </span>
