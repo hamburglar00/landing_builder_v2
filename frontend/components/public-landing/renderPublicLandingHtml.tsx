@@ -187,6 +187,15 @@ function renderWhatsAppIcon(className: string) {
   )}" viewBox="0 0 48 48" aria-hidden="true" focusable="false"><g transform="translate(-700 -360)"><path fill="currentColor" fill-rule="evenodd" d="${WHATSAPP_ICON_PATH}"/></g></svg>`;
 }
 
+function formatTemplate4Time(offsetMinutes = 0) {
+  return new Intl.DateTimeFormat("es-AR", {
+    hour: "2-digit",
+    minute: "2-digit",
+    hour12: false,
+    timeZone: "America/Argentina/Buenos_Aires",
+  }).format(new Date(Date.now() + offsetMinutes * 60 * 1000));
+}
+
 function renderPrivacyFooter(config: PublicLandingConfig) {
   const businessName = config.name || "el responsable de esta landing";
 
@@ -411,8 +420,11 @@ function renderTemplate3({ config }: RenderParams) {
 
 function renderTemplate4({ config }: RenderParams) {
   const name = escapeHtml(config.name || "tu asesor");
+  const timeOne = formatTemplate4Time(-2);
+  const timeTwo = formatTemplate4Time(-1);
+  const timeThree = formatTemplate4Time();
 
-  return `<main class="public-landing template4"><section class="template4__phone" aria-label="Chat en vivo"><div class="template4__intro"><div class="template4__spinner"><div class="template4__photo template4__photo--large">foto<br>asesora</div></div><div class="template4__intro-copy"><span>Abriendo sala</span><strong>Abriendo tu chat con ${name}</strong><p>Atencion abierta ahora</p></div></div><header class="template4__header"><div class="template4__avatar-wrap"><div class="template4__photo">foto</div><i class="template4__online-dot"></i></div><div class="template4__who"><b>${name} · Asesora</b><span>En linea · responde en ~40 seg</span></div><time class="template4__time">Ahora<br><i>24/7</i></time></header><div class="template4__thread" data-public-landing-trigger><div class="template4__stack"><div class="template4__live-pill"><i></i><span><b>14</b> personas en chat ahora mismo</span></div><div class="template4__bubble template4__bubble--in"><p>Hola, soy ${name}. Estoy en linea ahora, no es un bot.</p><span>12:04</span></div><div class="template4__bubble template4__bubble--in"><p>Te acompano en todo: registro, primer deposito y tu primer retiro.</p><ul><li>Retiros rapidos, verificados por mi</li><li>Asesor personal 24/7</li><li>Te aviso cuando el pago sale</li></ul><span>12:05</span></div><div class="template4__bubble template4__bubble--in"><p>Arrancamos? Toca abajo y te contesto de una.</p><span>12:06</span></div><div class="template4__typing" aria-label="Escribiendo"><i></i><i></i><i></i></div><div class="template4__draft"><p>Hola, vengo del anuncio y quiero empezar ahora.</p><span>sin enviar<i></i></span></div></div></div><footer class="template4__footer"><button type="button" class="template4__cta" data-public-landing-cta data-public-landing-rest-label="Enviar y hablar con ${name}" data-public-landing-loading-label="Abriendo..." data-public-landing-disabled-label="Sin numero disponible" aria-label="Enviar y hablar con ${name}"><span data-public-landing-cta-label>Enviar y hablar con ${name}</span><b aria-hidden="true">&gt;</b></button><div class="template4__cta-sub"><i></i>Te responde una persona real, ahora mismo</div><small>+18 · Juego responsable · Licencia [nro.] · Jugar puede causar adiccion</small></footer></section></main>`;
+  return `<main class="public-landing template4"><section class="template4__phone" aria-label="Chat en vivo"><div class="template4__intro"><div class="template4__spinner"><div class="template4__photo template4__photo--large">foto<br>asesora</div></div><div class="template4__intro-copy"><span>Abriendo sala</span><strong>Abriendo tu chat con ${name}</strong><p>Atencion abierta ahora</p></div></div><header class="template4__header"><div class="template4__avatar-wrap"><div class="template4__photo">foto</div><i class="template4__online-dot"></i></div><div class="template4__who"><b>${name} · Asesora</b><span>En linea · responde en ~40 seg</span></div><time class="template4__time" data-template4-current-time>${timeThree}<br><i>24/7</i></time></header><div class="template4__thread" data-public-landing-trigger><div class="template4__stack"><div class="template4__live-pill"><i></i><span><b data-template4-live-count>14</b> personas en chat ahora mismo</span></div><div class="template4__bubble template4__bubble--in template4__bubble--delay-1"><p>Hola, soy ${name}, enviame un mensaje y comenzamos ya mismo.</p><span data-template4-message-time>${timeOne}</span></div><div class="template4__bubble template4__bubble--in template4__bubble--delay-2"><p>Te acompano en todo el proceso</p><ul><li>💸 Cargas y retiros las 24hs</li><li>👤 Atencion personalizada</li><li>🛡️ Respaldo y mas de 5 anos de experiencia</li></ul><span data-template4-message-time>${timeTwo}</span></div><div class="template4__bubble template4__bubble--in template4__bubble--delay-3"><p>Arrancamos? Toca abajo y comenzamos</p><span data-template4-message-time>${timeThree}</span></div></div></div><footer class="template4__footer"><button type="button" class="template4__cta" data-public-landing-cta data-public-landing-rest-label="Abrir WhatsApp" data-public-landing-loading-label="Abriendo..." data-public-landing-disabled-label="Sin numero disponible" aria-label="Abrir WhatsApp">${renderWhatsAppIcon("template4__cta-icon")}<span data-public-landing-cta-label>Abrir WhatsApp</span></button></footer></section></main>`;
 }
 
 function renderTemplate5({ config }: RenderParams) {

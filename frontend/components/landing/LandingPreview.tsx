@@ -1,5 +1,6 @@
 "use client";
 
+import { useEffect, useState } from "react";
 import type { LandingThemeConfig } from "@/lib/landing/types";
 import { getColorHex, SYSTEM_FONT_FAMILY } from "@/lib/landing/helpers";
 import { buildResponsiveImageSet } from "@/lib/landing/imageUrl";
@@ -39,6 +40,8 @@ export function LandingPreview({
   const ctaBgHex = getColorHex(config.ctaBackgroundColor);
   const ctaGlowHex = getColorHex(config.ctaGlowColor);
   const fontFamily = SYSTEM_FONT_FAMILY;
+  const [template4LiveCount, setTemplate4LiveCount] = useState(14);
+  const [template4Now, setTemplate4Now] = useState("--:--");
   const template =
     config.template === "template2"
       ? 2
@@ -50,6 +53,29 @@ export function LandingPreview({
             ? 5
             : 1;
   const ctaPosition = config.ctaPosition ?? "between_title_and_info";
+
+  useEffect(() => {
+    const formatTime = () =>
+      new Intl.DateTimeFormat("es-AR", {
+        hour: "2-digit",
+        minute: "2-digit",
+        hour12: false,
+      }).format(new Date());
+
+    setTemplate4Now(formatTime());
+    const timeTimer = window.setInterval(() => setTemplate4Now(formatTime()), 30000);
+    const countTimer = window.setInterval(() => {
+      setTemplate4LiveCount((current) => {
+        const delta = Math.random() > 0.5 ? 1 : -1;
+        return Math.max(9, Math.min(24, current + delta));
+      });
+    }, 3200);
+
+    return () => {
+      window.clearInterval(timeTimer);
+      window.clearInterval(countTimer);
+    };
+  }, []);
 
   // CTA común a ambas plantillas (botón con icono WhatsApp)
   const CtaButton = ({ template2Like = false }: { template2Like?: boolean } = {}) => {
@@ -338,9 +364,19 @@ export function LandingPreview({
       ? "relative h-full w-full overflow-hidden rounded-3xl bg-[#182629] shadow-[0_14px_32px_rgba(0,0,0,0.9)]"
       : "relative mx-auto aspect-[9/16] w-full max-w-[380px] overflow-hidden rounded-3xl bg-[#182629] shadow-[0_18px_40px_rgba(0,0,0,1)]";
     const name = config.titleLine1?.trim() || "Asesor";
+    const messageTime = template4Now === "--:--" ? "19:36" : template4Now;
 
     return (
       <div className={outerClass} style={{ fontFamily }}>
+        <div
+          className="pointer-events-none absolute inset-0 opacity-[0.12]"
+          style={{
+            backgroundImage:
+              "url(\"data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='210' height='210' viewBox='0 0 210 210'%3E%3Cg fill='none' stroke='%2394a3b8' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Ccircle cx='30' cy='35' r='15'/%3E%3Ccircle cx='30' cy='35' r='8'/%3E%3Cpath d='M82 24c11 8 11 24 0 31-11-7-11-23 0-31zM70 40h24M82 55v9'/%3E%3Cpath d='M145 26c8-10 24-2 19 10 12-4 19 12 8 19 5 10-10 18-19 8-8 10-24 2-18-9-12 3-18-13-7-19-5-10 10-18 17-9z'/%3E%3Cpath d='M181 92l12 12-12 12-12-12zM52 91c14 0 20 16 8 25-13-6-21-15-8-25zM42 115h25'/%3E%3Cpath d='M108 88h35a9 9 0 019 9v16a9 9 0 01-9 9h-20l-12 12v-12h-3a9 9 0 01-9-9V97a9 9 0 019-9z'/%3E%3Cpath d='M24 156h47M31 169h32M125 164c7-15 30-15 37 0M116 178h55M23 189l13-25 13 25M189 159c-8 0-13 6-13 13s5 13 13 13 13-6 13-13-5-13-13-13z'/%3E%3C/g%3E%3Cg fill='%2394a3b8' fill-opacity='.75'%3E%3Ccircle cx='15' cy='86' r='2'/%3E%3Ccircle cx='101' cy='20' r='2'/%3E%3Ccircle cx='190' cy='42' r='2'/%3E%3Ccircle cx='91' cy='149' r='2'/%3E%3Ccircle cx='12' cy='197' r='2'/%3E%3C/g%3E%3C/svg%3E\")",
+            backgroundSize: "210px 210px",
+            backgroundPosition: "-18px 18px",
+          }}
+        />
         <div className="absolute inset-0 z-20 grid place-items-center bg-[#11191b] opacity-0">
           <div className="text-center">
             <div className="mx-auto grid h-[74px] w-[74px] place-items-center rounded-full bg-[repeating-linear-gradient(135deg,#425357_0_6px,#344448_6px_12px)] text-[9px] font-bold leading-tight text-slate-300/70">
@@ -371,64 +407,52 @@ export function LandingPreview({
               </p>
             </div>
             <span className="text-right text-[10px] font-bold leading-snug text-slate-300/70">
-              Ahora
+              {messageTime}
               <br />
               <i className="not-italic text-[#e5bd42]">24/7</i>
             </span>
           </div>
-          <div className="flex flex-1 flex-col justify-end gap-2 px-4 py-4">
+          <div className="relative z-[1] flex flex-1 flex-col justify-end gap-2 px-4 py-4">
             <div className="mx-auto inline-flex items-center gap-2 rounded-full border border-[#25d366]/30 bg-[#25d366]/10 px-3 py-2 text-[10px] font-bold text-slate-100">
               <span className="h-1.5 w-1.5 rounded-full bg-[#25d366]" />
               <span>
-                <b>14</b> personas en chat ahora mismo
+                <b>{template4LiveCount}</b> personas en chat ahora mismo
               </span>
             </div>
             <div className="max-w-[84%] rounded-[14px] rounded-bl rounded-tl bg-[#344448] px-3 py-2.5 pb-5 text-[12px] leading-snug text-white shadow">
-              Hola, soy {name}. Estoy en linea ahora, no es un bot.
+              Hola, soy {name}, enviame un mensaje y comenzamos ya mismo.
               <span className="float-right -mb-3 mt-1 text-[9px] text-slate-300/70">
-                12:04
+                {messageTime}
               </span>
             </div>
             <div className="max-w-[84%] rounded-[14px] rounded-bl rounded-tl bg-[#344448] px-3 py-2.5 pb-5 text-[12px] leading-snug text-white shadow">
-              Te acompano en todo: registro, primer deposito y tu primer retiro.
+              Te acompano en todo el proceso
               <ul className="mt-2 space-y-1 text-[11px]">
-                <li>Retiros rapidos, verificados por mi</li>
-                <li>Asesor personal 24/7</li>
+                <li>💸 Cargas y retiros las 24hs</li>
+                <li>👤 Atencion personalizada</li>
+                <li>🛡️ Respaldo y mas de 5 anos de experiencia</li>
               </ul>
               <span className="float-right -mb-3 mt-1 text-[9px] text-slate-300/70">
-                12:05
+                {messageTime}
               </span>
             </div>
             <div className="max-w-[84%] rounded-[14px] rounded-bl rounded-tl bg-[#344448] px-3 py-2.5 pb-5 text-[12px] leading-snug text-white shadow">
-              Arrancamos? Toca abajo y te contesto de una.
+              Arrancamos? Toca abajo y comenzamos
               <span className="float-right -mb-3 mt-1 text-[9px] text-slate-300/70">
-                12:06
-              </span>
-            </div>
-            <div className="inline-flex w-max gap-1 rounded-[14px] rounded-bl rounded-tl bg-[#344448] px-4 py-3">
-              <i className="h-1.5 w-1.5 rounded-full bg-white/70" />
-              <i className="h-1.5 w-1.5 rounded-full bg-white/70" />
-              <i className="h-1.5 w-1.5 rounded-full bg-white/70" />
-            </div>
-            <div className="ml-auto max-w-[82%] rounded-[14px] rounded-br bg-emerald-700/80 px-3 py-2.5 pb-5 text-[12px] leading-snug text-white shadow">
-              Hola, vengo del anuncio y quiero empezar ahora.
-              <span className="float-right -mb-3 mt-1 text-[9px] text-emerald-100/80">
-                sin enviar
+                {messageTime}
               </span>
             </div>
           </div>
           {!gallery && (
-            <div className="border-t border-slate-400/15 bg-[#203033] px-4 pb-5 pt-3">
-              <button className="flex h-[62px] w-full items-center justify-between rounded-full bg-[#25d366] py-2 pl-[18px] pr-2 text-left text-[15px] font-black text-[#092213] shadow-[0_0_0_0_rgba(37,211,102,.5)]">
-                <span>Enviar y hablar con {name}</span>
-                <b className="grid h-[46px] w-[46px] place-items-center rounded-full bg-[#183d2b] text-[20px] leading-none text-emerald-100">
-                  &gt;
-                </b>
+            <div className="relative z-[1] border-t border-slate-400/15 bg-[#203033] px-4 pb-5 pt-3">
+              <button className="flex h-[62px] w-full items-center justify-center gap-2.5 rounded-full bg-[#25d366] px-5 text-center text-[15px] font-black text-[#092213] shadow-[0_0_0_0_rgba(37,211,102,.5)]">
+                <svg className="h-6 w-6" viewBox="0 0 48 48" aria-hidden="true">
+                  <g transform="translate(-700 -360)">
+                    <path fill="currentColor" fillRule="evenodd" d={WHATSAPP_ICON_PATH} />
+                  </g>
+                </svg>
+                <span>Abrir WhatsApp</span>
               </button>
-              <p className="mt-2 flex items-center justify-center gap-2 text-[10px] font-semibold text-slate-300/75">
-                <span className="h-1.5 w-1.5 rounded-full bg-[#25d366]" />
-                Te responde una persona real, ahora mismo
-              </p>
             </div>
           )}
         </div>

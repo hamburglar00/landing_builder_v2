@@ -1173,6 +1173,33 @@ export default function PublicLandingRuntimeScript({ slug, config }: Props) {
         });
       }
 
+      function formatLiveTime(offsetMinutes) {
+        var date = new Date(Date.now() + (offsetMinutes || 0) * 60 * 1000);
+        var hours = String(date.getHours()).padStart(2, "0");
+        var minutes = String(date.getMinutes()).padStart(2, "0");
+        return hours + ":" + minutes;
+      }
+
+      function initTemplate4LiveDetails() {
+        var count = document.querySelector("[data-template4-live-count]");
+        if (count) {
+          var current = Number(count.textContent) || 14;
+          window.setInterval(function () {
+            var delta = Math.random() > 0.5 ? 1 : -1;
+            current = Math.max(9, Math.min(24, current + delta));
+            count.textContent = String(current);
+          }, 2600 + Math.floor(Math.random() * 1800));
+        }
+
+        var currentTime = document.querySelector("[data-template4-current-time]");
+        if (currentTime) {
+          currentTime.innerHTML = formatLiveTime(0) + "<br><i>24/7</i>";
+        }
+        Array.prototype.slice.call(document.querySelectorAll("[data-template4-message-time]")).forEach(function (node, index, nodes) {
+          node.textContent = formatLiveTime(index - nodes.length + 1);
+        });
+      }
+
       function init() {
         prearmContactContext();
         if (!isAtrioDestination()) ensurePhonePromise();
@@ -1182,6 +1209,7 @@ export default function PublicLandingRuntimeScript({ slug, config }: Props) {
         initRotatingBackgrounds();
         initCtas();
         initSocialProof();
+        initTemplate4LiveDetails();
         initPrivacyDialog();
       }
 
