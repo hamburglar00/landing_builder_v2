@@ -2,7 +2,7 @@
 
 import { useEffect, useState, useCallback, useMemo, useRef } from "react";
 import dynamic from "next/dynamic";
-import { useSearchParams } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import { supabase } from "@/lib/supabaseClient";
 import {
   fetchConversionsConfig,
@@ -114,6 +114,15 @@ const TAB_LABELS: Record<Tab, string> = {
 const CLEAR_VIEW_CONFIRM_MESSAGE =
   "Vas a limpiar la vista de Conversiones.\n\nSe ocultaran los registros que ves ahora en esta seccion.\n\nEsta accion NO borra datos de la base.\nSolo deja de mostrarlos en la vista.\n\nQueres continuar?";
 const TABLE_VIEW_STORAGE_KEY = "conversion-table-view:admin";
+const URL_TABS = new Set<Tab>([
+  "funnel",
+  "seguimiento",
+  "tabla",
+  "estadisticas",
+  "desempeno",
+  "configuracion",
+  "logs",
+]);
 
 function gerenciaFilterMatchesLabels(filters: readonly string[], labels: string[]): boolean {
   if (filters.length === 0) return true;
@@ -239,6 +248,7 @@ function cellValue(
 
 export default function AdminConversionesPage() {
   const confirmAction = useAppConfirm();
+  const router = useRouter();
   const searchParams = useSearchParams();
   const { currencyScope, isAllCurrencies } = useCurrencyScope();
   const reportingCurrency = currencyScope === CURRENCY_ALL ? "ARS" : currencyScope;
@@ -356,14 +366,25 @@ export default function AdminConversionesPage() {
   useEffect(() => {
     const view = (searchParams.get("view") || "").toLowerCase();
     const tabParam = (searchParams.get("tab") || "").toLowerCase();
-    if (tabParam === "configuracion") {
-      setTab("configuracion");
+    if (URL_TABS.has(tabParam as Tab)) {
+      setTab(tabParam as Tab);
       return;
     }
     if (view === "seguimiento") {
       setTab("seguimiento");
     }
   }, [searchParams]);
+
+  const handleTabChange = useCallback((nextTab: Tab) => {
+    setTab(nextTab);
+    const params = new URLSearchParams(searchParams.toString());
+    params.set("tab", nextTab);
+    params.delete("view");
+    const query = params.toString();
+    router.replace(query ? `/admin/conversiones?${query}` : "/admin/conversiones", {
+      scroll: false,
+    });
+  }, [router, searchParams]);
 
   const demoConversions = useMemo(() => generateDemoConversions(80), []);
   const rawConversions = demoMode ? demoConversions : conversions;
@@ -1056,7 +1077,7 @@ export default function AdminConversionesPage() {
         utilityTabs={["configuracion", "logs"]}
         labels={TAB_LABELS}
         activeTab={tab}
-        onTabChange={setTab}
+        onTabChange={handleTabChange}
         trailing={(
           <label className="flex items-center gap-2 select-none">
             <input

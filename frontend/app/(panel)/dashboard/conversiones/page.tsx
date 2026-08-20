@@ -2,7 +2,7 @@
 
 import { useEffect, useState, useCallback, useMemo, useRef } from "react";
 import dynamic from "next/dynamic";
-import { useSearchParams } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import { supabase } from "@/lib/supabaseClient";
 import {
   fetchConversionsConfig,
@@ -116,6 +116,16 @@ const TAB_LABELS: Record<Tab, string> = {
 
 const ACTIVITY_PAGE_SIZE = 200;
 const TABLE_VIEW_STORAGE_KEY = "conversion-table-view:dashboard";
+const URL_TABS = new Set<Tab>([
+  "funnel",
+  "seguimiento",
+  "tabla",
+  "estadisticas",
+  "desempeno",
+  "configuracion",
+  "inbox",
+  "logs",
+]);
 
 function formatRawPayload(value: unknown) {
   const s = String(value ?? "").trim();
@@ -381,6 +391,7 @@ function cellValue(
 }
 
 export default function DashboardConversionesPage() {
+  const router = useRouter();
   const searchParams = useSearchParams();
   const { currencyScope, isAllCurrencies } = useCurrencyScope();
   const reportingCurrency = currencyScope === CURRENCY_ALL ? "ARS" : currencyScope;
@@ -526,14 +537,25 @@ export default function DashboardConversionesPage() {
   useEffect(() => {
     const view = (searchParams.get("view") || "").toLowerCase();
     const tabParam = (searchParams.get("tab") || "").toLowerCase();
-    if (tabParam === "configuracion") {
-      setTab("configuracion");
+    if (URL_TABS.has(tabParam as Tab)) {
+      setTab(tabParam as Tab);
       return;
     }
     if (view === "seguimiento") {
       setTab("seguimiento");
     }
   }, [searchParams]);
+
+  const handleTabChange = useCallback((nextTab: Tab) => {
+    setTab(nextTab);
+    const params = new URLSearchParams(searchParams.toString());
+    params.set("tab", nextTab);
+    params.delete("view");
+    const query = params.toString();
+    router.replace(query ? `/dashboard/conversiones?${query}` : "/dashboard/conversiones", {
+      scroll: false,
+    });
+  }, [router, searchParams]);
 
   const [pixelConfigs, setPixelConfigs] = useState<PixelConfig[]>([]);
 
@@ -1455,7 +1477,7 @@ export default function DashboardConversionesPage() {
         utilityTabs={["configuracion", "inbox", "logs"]}
         labels={TAB_LABELS}
         activeTab={tab}
-        onTabChange={setTab}
+        onTabChange={handleTabChange}
       />
 
       {/* Date filter + global actions */}
