@@ -367,7 +367,7 @@ export function LandingPreview({
                 {name} · Asesora
               </p>
               <p className="mt-1 text-[11px] font-bold text-[#25d366]">
-                escribiendo...
+                En linea · responde en ~40 seg
               </p>
             </div>
             <span className="text-right text-[10px] font-bold leading-snug text-slate-300/70">
@@ -420,7 +420,7 @@ export function LandingPreview({
           {!gallery && (
             <div className="border-t border-slate-400/15 bg-[#203033] px-4 pb-5 pt-3">
               <button className="flex h-[62px] w-full items-center justify-between rounded-full bg-[#25d366] py-2 pl-[18px] pr-2 text-left text-[15px] font-black text-[#092213] shadow-[0_0_0_0_rgba(37,211,102,.5)]">
-                <span>Enviar mensaje</span>
+                <span>Enviar y hablar con {name}</span>
                 <b className="grid h-[46px] w-[46px] place-items-center rounded-full bg-[#183d2b] text-[20px] leading-none text-emerald-100">
                   &gt;
                 </b>

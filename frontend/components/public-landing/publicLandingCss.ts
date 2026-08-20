@@ -1429,7 +1429,7 @@ body.public-lead-capture-open {
   min-height: 0;
   display: flex;
   flex-direction: column;
-  overflow: hidden;
+  overflow-y: auto;
   padding: 14px 16px 10px;
 }
 
@@ -1584,7 +1584,11 @@ body.public-lead-capture-open {
   padding: 8px 8px 8px 18px;
   color: #092213;
   background: #25d366;
-  box-shadow: 0 0 0 0 rgba(37, 211, 102, 0.5);
+  border: 1px solid rgba(8, 112, 55, 0.64);
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.22),
+    0 0 0 0 rgba(37, 211, 102, 0.5),
+    0 10px 22px rgba(0, 0, 0, 0.18);
   animation: publicLandingTemplate4Pulse 2.4s ease-out infinite;
 }
 
