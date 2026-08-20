@@ -335,70 +335,103 @@ export function LandingPreview({
 
   const renderTemplate4 = () => {
     const outerClass = compact
-      ? "relative h-full w-full overflow-hidden rounded-3xl bg-[#071013] shadow-[0_14px_32px_rgba(0,0,0,0.9)]"
-      : "relative mx-auto aspect-[9/16] w-full max-w-[380px] overflow-hidden rounded-3xl bg-[#071013] shadow-[0_18px_40px_rgba(0,0,0,1)]";
+      ? "relative h-full w-full overflow-hidden rounded-3xl bg-[#182629] shadow-[0_14px_32px_rgba(0,0,0,0.9)]"
+      : "relative mx-auto aspect-[9/16] w-full max-w-[380px] overflow-hidden rounded-3xl bg-[#182629] shadow-[0_18px_40px_rgba(0,0,0,1)]";
     const name = config.titleLine1?.trim() || "Asesor";
 
     return (
       <div className={outerClass} style={{ fontFamily }}>
-        <div
-          className="absolute inset-0 opacity-[0.16]"
-          style={{
-            backgroundImage:
-              "radial-gradient(circle at 20px 20px, transparent 0 6px, rgba(148,163,184,.45) 7px, transparent 8px), radial-gradient(circle at 76px 58px, transparent 0 8px, rgba(148,163,184,.3) 9px, transparent 10px), linear-gradient(45deg, transparent 0 44%, rgba(148,163,184,.26) 45% 55%, transparent 56%)",
-            backgroundSize: "96px 96px, 120px 120px, 86px 86px",
-          }}
-        />
-        <div className="relative z-10 flex min-h-[70px] items-center gap-3 border-b border-slate-400/10 bg-[#081014]/95 px-4 pt-3">
-          <div className="grid h-10 w-10 place-items-center rounded-full border border-lime-300/20 bg-[#14282d] text-xs font-black text-lime-300">
-            PB
-          </div>
-          <div>
-            <p className="text-[15px] font-extrabold leading-tight text-white">
-              {name}
+        <div className="absolute inset-0 z-20 grid place-items-center bg-[#11191b] opacity-0">
+          <div className="text-center">
+            <div className="mx-auto grid h-[74px] w-[74px] place-items-center rounded-full bg-[repeating-linear-gradient(135deg,#425357_0_6px,#344448_6px_12px)] text-[9px] font-bold leading-tight text-slate-300/70">
+              foto
+              <br />
+              asesora
+            </div>
+            <p className="mt-4 text-[11px] font-black uppercase tracking-[0.14em] text-[#25d366]">
+              Abriendo sala
             </p>
-            <p className="mt-1 flex items-center gap-1.5 text-[11px] font-semibold text-slate-300/70">
-              <span className="h-1.5 w-1.5 rounded-full bg-lime-300" />
-              En linea ahora
+            <p className="mt-2 text-[20px] font-black leading-tight text-white">
+              Abriendo tu chat con {name}
             </p>
-          </div>
-          <span className="ml-auto text-[10px] font-bold text-slate-400/70">
-            Ahora
-          </span>
-        </div>
-        <div className="relative z-10 space-y-2 px-4 py-4">
-          <div className="mx-auto w-max rounded-full bg-slate-900/70 px-3 py-1 text-[10px] font-bold text-slate-300/80">
-            Hoy
-          </div>
-          <div className="max-w-[83%] rounded-2xl rounded-tl-md bg-[#202c31] px-3 py-2.5 pb-5 text-[12px] leading-snug text-white shadow-lg">
-            Hola, soy {name}. Estoy en linea ahora, no es un bot.
-            <span className="float-right -mb-3 mt-1 text-[9px] text-slate-400">
-              12:04
-            </span>
-          </div>
-          <div className="max-w-[83%] rounded-2xl rounded-tl-md bg-[#202c31] px-3 py-2.5 pb-5 text-[12px] leading-snug text-white shadow-lg">
-            Te acompano en todo: registro, primer deposito y seguimiento.
-            <span className="float-right -mb-3 mt-1 text-[9px] text-slate-400">
-              12:04
-            </span>
-          </div>
-          <div className="ml-auto max-w-[72%] rounded-2xl rounded-tr-md bg-[#075e54] px-3 py-2.5 pb-5 text-[12px] leading-snug text-white shadow-lg">
-            Quiero continuar
-            <span className="float-right -mb-3 mt-1 text-[9px] text-emerald-100/60">
-              12:05
-            </span>
           </div>
         </div>
-        {!gallery && (
-          <div className="absolute inset-x-0 bottom-0 z-20 bg-gradient-to-t from-[#071013] via-[#071013]/95 to-transparent px-4 pb-5 pt-12">
-            <p className="mb-2 text-center text-[11px] font-bold text-slate-300/70">
-              Respuesta inmediata disponible
-            </p>
-            <button className="h-12 w-full rounded-full bg-lime-300 text-[13px] font-black text-[#04130a] shadow-[0_16px_34px_rgba(124,248,110,.22)]">
-              Enviar mensaje
-            </button>
+        <div className="flex h-full flex-col">
+          <div className="flex min-h-[70px] items-center gap-3 border-b border-slate-400/15 bg-[#263639] px-4 pt-3">
+            <div className="relative grid h-10 w-10 place-items-center rounded-full bg-[repeating-linear-gradient(135deg,#425357_0_6px,#344448_6px_12px)] text-[8px] font-bold text-slate-300/70">
+              foto
+              <span className="absolute -bottom-0.5 -right-0.5 h-3 w-3 rounded-full border-2 border-[#263639] bg-[#25d366]" />
+            </div>
+            <div className="min-w-0 flex-1">
+              <p className="truncate text-[15px] font-extrabold leading-tight text-white">
+                {name} · Asesora
+              </p>
+              <p className="mt-1 text-[11px] font-bold text-[#25d366]">
+                escribiendo...
+              </p>
+            </div>
+            <span className="text-right text-[10px] font-bold leading-snug text-slate-300/70">
+              Ahora
+              <br />
+              <i className="not-italic text-[#e5bd42]">24/7</i>
+            </span>
           </div>
-        )}
+          <div className="flex flex-1 flex-col justify-end gap-2 px-4 py-4">
+            <div className="mx-auto inline-flex items-center gap-2 rounded-full border border-[#25d366]/30 bg-[#25d366]/10 px-3 py-2 text-[10px] font-bold text-slate-100">
+              <span className="h-1.5 w-1.5 rounded-full bg-[#25d366]" />
+              <span>
+                <b>14</b> personas en chat ahora mismo
+              </span>
+            </div>
+            <div className="max-w-[84%] rounded-[14px] rounded-bl rounded-tl bg-[#344448] px-3 py-2.5 pb-5 text-[12px] leading-snug text-white shadow">
+              Hola, soy {name}. Estoy en linea ahora, no es un bot.
+              <span className="float-right -mb-3 mt-1 text-[9px] text-slate-300/70">
+                12:04
+              </span>
+            </div>
+            <div className="max-w-[84%] rounded-[14px] rounded-bl rounded-tl bg-[#344448] px-3 py-2.5 pb-5 text-[12px] leading-snug text-white shadow">
+              Te acompano en todo: registro, primer deposito y tu primer retiro.
+              <ul className="mt-2 space-y-1 text-[11px]">
+                <li>Retiros rapidos, verificados por mi</li>
+                <li>Asesor personal 24/7</li>
+              </ul>
+              <span className="float-right -mb-3 mt-1 text-[9px] text-slate-300/70">
+                12:05
+              </span>
+            </div>
+            <div className="max-w-[84%] rounded-[14px] rounded-bl rounded-tl bg-[#344448] px-3 py-2.5 pb-5 text-[12px] leading-snug text-white shadow">
+              Arrancamos? Toca abajo y te contesto de una.
+              <span className="float-right -mb-3 mt-1 text-[9px] text-slate-300/70">
+                12:06
+              </span>
+            </div>
+            <div className="inline-flex w-max gap-1 rounded-[14px] rounded-bl rounded-tl bg-[#344448] px-4 py-3">
+              <i className="h-1.5 w-1.5 rounded-full bg-white/70" />
+              <i className="h-1.5 w-1.5 rounded-full bg-white/70" />
+              <i className="h-1.5 w-1.5 rounded-full bg-white/70" />
+            </div>
+            <div className="ml-auto max-w-[82%] rounded-[14px] rounded-br bg-emerald-700/80 px-3 py-2.5 pb-5 text-[12px] leading-snug text-white shadow">
+              Hola, vengo del anuncio y quiero empezar ahora.
+              <span className="float-right -mb-3 mt-1 text-[9px] text-emerald-100/80">
+                sin enviar
+              </span>
+            </div>
+          </div>
+          {!gallery && (
+            <div className="border-t border-slate-400/15 bg-[#203033] px-4 pb-5 pt-3">
+              <button className="flex h-[62px] w-full items-center justify-between rounded-full bg-[#25d366] py-2 pl-[18px] pr-2 text-left text-[15px] font-black text-[#092213] shadow-[0_0_0_0_rgba(37,211,102,.5)]">
+                <span>Enviar mensaje</span>
+                <b className="grid h-[46px] w-[46px] place-items-center rounded-full bg-[#183d2b] text-[20px] leading-none text-emerald-100">
+                  &gt;
+                </b>
+              </button>
+              <p className="mt-2 flex items-center justify-center gap-2 text-[10px] font-semibold text-slate-300/75">
+                <span className="h-1.5 w-1.5 rounded-full bg-[#25d366]" />
+                Te responde una persona real, ahora mismo
+              </p>
+            </div>
+          )}
+        </div>
       </div>
     );
   };
