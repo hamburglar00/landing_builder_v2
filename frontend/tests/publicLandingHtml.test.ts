@@ -225,6 +225,26 @@ test("genera scripts públicos con JavaScript válido", () => {
   });
 });
 
+test("renderiza plantillas fijas 4 y 5 con CTA operativo", () => {
+  for (const template of [4, 5]) {
+    const html = renderPublicLandingHtml({
+      slug: `template-${template}`,
+      config: {
+        ...baseConfig,
+        layout: {
+          ...baseConfig.layout,
+          template,
+        },
+      },
+    });
+
+    assert.match(html, new RegExp(`public-landing template${template}`));
+    assert.equal(occurrences(html, `class="template${template}__cta"`), 1);
+    assert.match(html, /data-public-landing-cta-label/);
+    assert.match(html, /contact_sent:/);
+  }
+});
+
 test("omite completamente el pixel cuando no hay Pixel ID", () => {
   const html = renderPublicLandingHtml({
     slug: "sin-pixel",

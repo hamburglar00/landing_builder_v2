@@ -40,8 +40,15 @@ export type CtaPositionOption =
  * template1: layout actual (CTA + multimedia + textos).
  * template2: variante visual 2.
  * template3: sin UI visual (redirect directo).
+ * template4: chat visual fijo.
+ * template5: live/urgencia visual fijo.
  */
-export type TemplateOption = "template1" | "template2" | "template3";
+export type TemplateOption =
+  | "template1"
+  | "template2"
+  | "template3"
+  | "template4"
+  | "template5";
 
 /**
  * Motor que sirve la URL publica de una landing creada en el constructor.
@@ -185,4 +192,3 @@ export interface Landing {
   comment: string;
   config: LandingThemeConfig;
 }
-

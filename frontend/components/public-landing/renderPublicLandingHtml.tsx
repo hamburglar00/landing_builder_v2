@@ -409,7 +409,21 @@ function renderTemplate3({ config }: RenderParams) {
   })}</div></section></main>`;
 }
 
+function renderTemplate4({ config }: RenderParams) {
+  const name = escapeHtml(config.name || "tu asesor");
+
+  return `<main class="public-landing template4"><section class="template4__phone" aria-label="Chat de atencion"><div class="template4__intro"><span>Abriendo tu chat</span><strong>${name}</strong></div><header class="template4__header"><div class="template4__avatar" aria-hidden="true">PB</div><div><p class="template4__name">${name}</p><p class="template4__status"><span></span>En linea ahora</p></div><time class="template4__time">Ahora</time></header><div class="template4__thread" data-public-landing-trigger><div class="template4__date">Hoy</div><div class="template4__bubble template4__bubble--in">Hola, soy ${name}. Estoy en linea ahora, no es un bot.<span>12:04</span></div><div class="template4__bubble template4__bubble--in">Te acompano en todo: registro, primer deposito y tu primer retiro.<ul><li>Retiros rapidos cuando esta todo correcto</li><li>Asesor personal para cada consulta</li><li>Seguimiento simple por WhatsApp</li></ul><span>12:04</span></div><div class="template4__bubble template4__bubble--out">Quiero continuar<span>12:05</span></div><div class="template4__typing" aria-label="Escribiendo"><i></i><i></i><i></i></div></div><footer class="template4__footer"><p>Respuesta inmediata disponible</p><button type="button" class="template4__cta" data-public-landing-cta data-public-landing-rest-label="Enviar mensaje" data-public-landing-loading-label="Abriendo..." data-public-landing-disabled-label="Sin numero disponible" aria-label="Enviar mensaje"><span data-public-landing-cta-label>Enviar mensaje</span><b aria-hidden="true">&gt;</b></button><small>Al continuar se abrira el canal asignado para atenderte.</small></footer></section></main>`;
+}
+
+function renderTemplate5({ config }: RenderParams) {
+  const name = escapeHtml(config.name || "asesor");
+
+  return `<main class="public-landing template5"><section class="template5__phone" aria-label="Atencion en vivo"><div class="template5__curtain"><span>EN VIVO</span><strong>Entrando...</strong></div><div class="template5__topbar"><span class="template5__live-dot"></span><span>EN VIVO</span><time>Ahora</time></div><section class="template5__hero" data-public-landing-trigger><p class="template5__kicker">Atencion personalizada</p><h1>Esta pasando ahora mismo.</h1><p>Un asesor esta disponible para ayudarte por el canal asignado.</p></section><section class="template5__advisor"><div class="template5__avatar" aria-hidden="true">PB</div><div><strong>${name}</strong><span>Disponible para responder</span></div></section><div class="template5__progress" aria-hidden="true"><span></span></div><section class="template5__feed" aria-label="Actividad reciente"><div><strong>RETIROS PAGADOS</strong><span>EN VIVO</span></div><p><b>12:02</b> Solicitud recibida y atendida</p><p><b>12:04</b> Asesor asignado correctamente</p><p><b>12:06</b> Seguimiento activo por WhatsApp</p></section><footer class="template5__footer"><button type="button" class="template5__cta" data-public-landing-cta data-public-landing-rest-label="Hablar ahora" data-public-landing-loading-label="Abriendo..." data-public-landing-disabled-label="Sin numero disponible" aria-label="Hablar ahora"><span data-public-landing-cta-label>Hablar ahora</span>${renderWhatsAppIcon("template5__cta-icon")}</button><small>Continuas con un asesor asignado segun disponibilidad.</small></footer></section></main>`;
+}
+
 function renderTemplate(params: RenderParams) {
+  if (params.config.layout?.template === 5) return renderTemplate5(params);
+  if (params.config.layout?.template === 4) return renderTemplate4(params);
   if (params.config.layout?.template === 3) return renderTemplate3(params);
   if (params.config.layout?.template === 2) return renderTemplate2(params);
   return renderTemplate1(params);

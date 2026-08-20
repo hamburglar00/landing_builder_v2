@@ -464,6 +464,20 @@ Los telefonos sincronizados desde PanelBotAdmin pueden marcarse como:
 La sincronizacion respeta la marca previa; no vuelve automaticamente un WhatsApp
 de venta al pool publicitario.
 
+### 12.3 Plantillas publicas
+
+El constructor soporta cinco plantillas:
+- `template1`: layout configurable historico.
+- `template2`: layout tipo telefono con frame visual.
+- `template3`: redirect directo.
+- `template4`: visual fijo estilo chat.
+- `template5`: visual fijo estilo vivo/urgencia.
+
+Las plantillas 4 y 5 no exponen edicion de textos, imagenes, prueba social,
+formulario ni mensaje prellenado. Funcionan como piel visual fija: el CTA sigue
+usando la misma logica central de la landing para generar `promo_code`, enviar
+`Contact`, resolver WhatsApp/Atrio y redirigir.
+
 ---
 
 ## 13. Operacion, cron y retries

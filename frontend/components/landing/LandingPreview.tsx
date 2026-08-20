@@ -44,7 +44,11 @@ export function LandingPreview({
       ? 2
       : config.template === "template3"
         ? 3
-        : 1;
+        : config.template === "template4"
+          ? 4
+          : config.template === "template5"
+            ? 5
+            : 1;
   const ctaPosition = config.ctaPosition ?? "between_title_and_info";
 
   // CTA común a ambas plantillas (botón con icono WhatsApp)
@@ -329,6 +333,153 @@ export function LandingPreview({
     );
   };
 
+  const renderTemplate4 = () => {
+    const outerClass = compact
+      ? "relative h-full w-full overflow-hidden rounded-3xl bg-[#071013] shadow-[0_14px_32px_rgba(0,0,0,0.9)]"
+      : "relative mx-auto aspect-[9/16] w-full max-w-[380px] overflow-hidden rounded-3xl bg-[#071013] shadow-[0_18px_40px_rgba(0,0,0,1)]";
+    const name = config.titleLine1?.trim() || "Asesor";
+
+    return (
+      <div className={outerClass} style={{ fontFamily }}>
+        <div
+          className="absolute inset-0 opacity-[0.16]"
+          style={{
+            backgroundImage:
+              "radial-gradient(circle at 20px 20px, transparent 0 6px, rgba(148,163,184,.45) 7px, transparent 8px), radial-gradient(circle at 76px 58px, transparent 0 8px, rgba(148,163,184,.3) 9px, transparent 10px), linear-gradient(45deg, transparent 0 44%, rgba(148,163,184,.26) 45% 55%, transparent 56%)",
+            backgroundSize: "96px 96px, 120px 120px, 86px 86px",
+          }}
+        />
+        <div className="relative z-10 flex min-h-[70px] items-center gap-3 border-b border-slate-400/10 bg-[#081014]/95 px-4 pt-3">
+          <div className="grid h-10 w-10 place-items-center rounded-full border border-lime-300/20 bg-[#14282d] text-xs font-black text-lime-300">
+            PB
+          </div>
+          <div>
+            <p className="text-[15px] font-extrabold leading-tight text-white">
+              {name}
+            </p>
+            <p className="mt-1 flex items-center gap-1.5 text-[11px] font-semibold text-slate-300/70">
+              <span className="h-1.5 w-1.5 rounded-full bg-lime-300" />
+              En linea ahora
+            </p>
+          </div>
+          <span className="ml-auto text-[10px] font-bold text-slate-400/70">
+            Ahora
+          </span>
+        </div>
+        <div className="relative z-10 space-y-2 px-4 py-4">
+          <div className="mx-auto w-max rounded-full bg-slate-900/70 px-3 py-1 text-[10px] font-bold text-slate-300/80">
+            Hoy
+          </div>
+          <div className="max-w-[83%] rounded-2xl rounded-tl-md bg-[#202c31] px-3 py-2.5 pb-5 text-[12px] leading-snug text-white shadow-lg">
+            Hola, soy {name}. Estoy en linea ahora, no es un bot.
+            <span className="float-right -mb-3 mt-1 text-[9px] text-slate-400">
+              12:04
+            </span>
+          </div>
+          <div className="max-w-[83%] rounded-2xl rounded-tl-md bg-[#202c31] px-3 py-2.5 pb-5 text-[12px] leading-snug text-white shadow-lg">
+            Te acompano en todo: registro, primer deposito y seguimiento.
+            <span className="float-right -mb-3 mt-1 text-[9px] text-slate-400">
+              12:04
+            </span>
+          </div>
+          <div className="ml-auto max-w-[72%] rounded-2xl rounded-tr-md bg-[#075e54] px-3 py-2.5 pb-5 text-[12px] leading-snug text-white shadow-lg">
+            Quiero continuar
+            <span className="float-right -mb-3 mt-1 text-[9px] text-emerald-100/60">
+              12:05
+            </span>
+          </div>
+        </div>
+        {!gallery && (
+          <div className="absolute inset-x-0 bottom-0 z-20 bg-gradient-to-t from-[#071013] via-[#071013]/95 to-transparent px-4 pb-5 pt-12">
+            <p className="mb-2 text-center text-[11px] font-bold text-slate-300/70">
+              Respuesta inmediata disponible
+            </p>
+            <button className="h-12 w-full rounded-full bg-lime-300 text-[13px] font-black text-[#04130a] shadow-[0_16px_34px_rgba(124,248,110,.22)]">
+              Enviar mensaje
+            </button>
+          </div>
+        )}
+      </div>
+    );
+  };
+
+  const renderTemplate5 = () => {
+    const outerClass = compact
+      ? "relative h-full w-full overflow-hidden rounded-3xl bg-[#071013] shadow-[0_14px_32px_rgba(0,0,0,0.9)]"
+      : "relative mx-auto aspect-[9/16] w-full max-w-[380px] overflow-hidden rounded-3xl bg-[#071013] shadow-[0_18px_40px_rgba(0,0,0,1)]";
+    const name = config.titleLine1?.trim() || "Asesor";
+
+    return (
+      <div className={outerClass} style={{ fontFamily }}>
+        <div
+          className="absolute inset-0 opacity-[0.16]"
+          style={{
+            backgroundImage:
+              "radial-gradient(circle at 20px 20px, transparent 0 6px, rgba(148,163,184,.45) 7px, transparent 8px), radial-gradient(circle at 76px 58px, transparent 0 8px, rgba(148,163,184,.3) 9px, transparent 10px), linear-gradient(45deg, transparent 0 44%, rgba(148,163,184,.26) 45% 55%, transparent 56%)",
+            backgroundSize: "96px 96px, 120px 120px, 86px 86px",
+          }}
+        />
+        <div className="relative z-10 flex min-h-14 items-center justify-center gap-2 border-b border-slate-400/10 bg-[#081014]/95 px-4 pt-2 text-[11px] font-black uppercase tracking-[0.16em] text-white">
+          <span className="h-2 w-2 rounded-full bg-lime-300 shadow-[0_0_0_4px_rgba(124,248,110,.12)]" />
+          EN VIVO
+          <span className="text-[10px] normal-case tracking-normal text-slate-400">
+            Ahora
+          </span>
+        </div>
+        <div className="relative z-10 px-6 pt-12">
+          <p className="text-[11px] font-black uppercase tracking-[0.16em] text-lime-300">
+            Atencion personalizada
+          </p>
+          <h1 className="mt-2 text-[44px] font-black leading-[0.92] text-white">
+            Esta pasando ahora mismo.
+          </h1>
+          <p className="mt-4 text-[13px] leading-snug text-slate-300/80">
+            Un asesor esta disponible para ayudarte por el canal asignado.
+          </p>
+        </div>
+        <div className="relative z-10 mx-5 mt-5 flex items-center gap-3 rounded-2xl border border-slate-400/15 bg-slate-900/60 p-3">
+          <div className="grid h-10 w-10 place-items-center rounded-full border border-lime-300/20 bg-[#14282d] text-xs font-black text-lime-300">
+            PB
+          </div>
+          <div>
+            <strong className="block text-sm text-white">{name}</strong>
+            <span className="mt-1 block text-[11px] font-semibold text-slate-300/70">
+              Disponible para responder
+            </span>
+          </div>
+        </div>
+        <div className="relative z-10 mx-5 mt-4 h-2 overflow-hidden rounded-full bg-slate-400/15">
+          <span className="block h-full w-[68%] rounded-full bg-lime-300" />
+        </div>
+        <div className="relative z-10 mx-5 mt-4 rounded-2xl border border-slate-400/15 bg-slate-900/60 p-4">
+          <div className="flex items-center justify-between border-b border-slate-400/10 pb-2">
+            <strong className="text-[11px] tracking-[0.08em] text-white">
+              RETIROS PAGADOS
+            </strong>
+            <span className="text-[10px] font-black tracking-[0.12em] text-lime-300">
+              EN VIVO
+            </span>
+          </div>
+          {["Solicitud recibida", "Asesor asignado", "Seguimiento activo"].map(
+            (item, index) => (
+              <p key={item} className="mt-2 flex gap-2 text-[11px] text-slate-300/75">
+                <b className="text-slate-200">12:0{index + 2}</b>
+                {item}
+              </p>
+            ),
+          )}
+        </div>
+        {!gallery && (
+          <div className="absolute inset-x-0 bottom-0 z-20 bg-gradient-to-t from-[#071013] via-[#071013]/95 to-transparent px-4 pb-5 pt-12">
+            <button className="h-12 w-full rounded-full bg-lime-300 text-[13px] font-black text-[#04130a] shadow-[0_16px_34px_rgba(124,248,110,.22)]">
+              Hablar ahora
+            </button>
+          </div>
+        )}
+      </div>
+    );
+  };
+
   if (template === 3) {
     const outerClass = compact
       ? "relative h-full w-full overflow-hidden rounded-3xl bg-[#f2f4f5] shadow-[0_14px_32px_rgba(0,0,0,0.55)]"
@@ -391,6 +542,12 @@ export function LandingPreview({
   // En modo galería y sin template especial, priorizamos la vista simple
   if (template === 2) {
     return renderTemplate2();
+  }
+  if (template === 4) {
+    return renderTemplate4();
+  }
+  if (template === 5) {
+    return renderTemplate5();
   }
   return renderTemplate1();
 }

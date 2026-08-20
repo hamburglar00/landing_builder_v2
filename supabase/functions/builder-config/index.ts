@@ -73,6 +73,15 @@ function buildResponsiveImageSet(rawUrl: string): {
   };
 }
 
+function templateNumberForOption(template: unknown): number {
+  const value = String(template || "").trim().toLowerCase();
+  if (value === "template2") return 2;
+  if (value === "template3") return 3;
+  if (value === "template4") return 4;
+  if (value === "template5") return 5;
+  return 1;
+}
+
 /**
  * API público: devuelve toda la configuración de una landing por su nombre.
  * Uso: GET /functions/v1/builder-config?name=MiLanding
@@ -319,6 +328,8 @@ Deno.serve(async (req) => {
       ctaBackgroundColor: toHex(rawConfig.ctaBackgroundColor, "#25D366"),
       ctaGlowColor: toHex(rawConfig.ctaGlowColor, "#000000"),
     } as Record<string, unknown>;
+    const templateNumber = templateNumberForOption(themeWithHex.template);
+    const fixedVisualTemplate = templateNumber === 4 || templateNumber === 5;
     const rawImages = (themeWithHex.backgroundImages as string[]) ?? [];
 
     const payload = {
@@ -398,14 +409,19 @@ Deno.serve(async (req) => {
           "random",
       },
       interactions: {
-        enabled: (themeWithHex.interactionsEnabled as boolean | undefined) ??
-          false,
-        whatsappPrefillText: (themeWithHex.whatsappPrefillText as string) ?? "",
+        enabled: fixedVisualTemplate
+          ? false
+          : ((themeWithHex.interactionsEnabled as boolean | undefined) ??
+            false),
+        whatsappPrefillText: fixedVisualTemplate
+          ? ""
+          : ((themeWithHex.whatsappPrefillText as string) ?? ""),
       },
       leadCapture: {
-        enabled:
-          ((themeWithHex.leadCapture as Record<string, unknown> | undefined)
-            ?.enabled as boolean | undefined) ?? false,
+        enabled: fixedVisualTemplate
+          ? false
+          : (((themeWithHex.leadCapture as Record<string, unknown> | undefined)
+            ?.enabled as boolean | undefined) ?? false),
         title:
           ((themeWithHex.leadCapture as Record<string, unknown> | undefined)
             ?.title as string | undefined) ?? "",
@@ -437,7 +453,7 @@ Deno.serve(async (req) => {
           | "between_title_and_info"
           | "between_info_and_badge"
           | "bottom") ?? "between_title_and_info",
-        template: (themeWithHex.template as string) === "template2" ? 2 : 1,
+        template: templateNumber,
       },
     };
 

@@ -8,6 +8,18 @@ function phoneCountryCodeForWorkspace(
   return workspaceCurrency === "PYG" ? "595" : "54";
 }
 
+function templateNumberForOption(template: LandingThemeConfig["template"]) {
+  if (template === "template2") return 2;
+  if (template === "template3") return 3;
+  if (template === "template4") return 4;
+  if (template === "template5") return 5;
+  return 1;
+}
+
+function isFixedVisualTemplate(template: LandingThemeConfig["template"]) {
+  return template === "template4" || template === "template5";
+}
+
 export interface LandingConfigPayload {
   schemaVersion: number;
   updatedAt: string;
@@ -138,7 +150,7 @@ export function buildLandingConfig({
         workspaceCurrency,
       },
       layout: {
-        template: 3,
+        template: templateNumberForOption(config.template),
       },
       socialProof: {
         enabled: config.socialProofEnabled,
@@ -170,6 +182,7 @@ export function buildLandingConfig({
     ctaBackgroundColor: COLOR_MAP[config.ctaBackgroundColor],
     ctaGlowColor: COLOR_MAP[config.ctaGlowColor],
   };
+  const fixedVisualTemplate = isFixedVisualTemplate(themeWithHex.template);
 
   return {
     schemaVersion: 1,
@@ -255,22 +268,19 @@ export function buildLandingConfig({
     }),
     layout: {
       ctaPosition: themeWithHex.ctaPosition,
-      template:
-        themeWithHex.template === "template2"
-          ? 2
-          : themeWithHex.template === "template3"
-            ? 3
-            : 1,
+      template: templateNumberForOption(themeWithHex.template),
     },
     socialProof: {
       enabled: themeWithHex.socialProofEnabled,
     },
     interactions: {
-      enabled: themeWithHex.interactionsEnabled,
-      whatsappPrefillText: themeWithHex.whatsappPrefillText.trim(),
+      enabled: fixedVisualTemplate ? false : themeWithHex.interactionsEnabled,
+      whatsappPrefillText: fixedVisualTemplate
+        ? ""
+        : themeWithHex.whatsappPrefillText.trim(),
     },
     leadCapture: {
-      enabled: themeWithHex.leadCapture?.enabled === true,
+      enabled: fixedVisualTemplate ? false : themeWithHex.leadCapture?.enabled === true,
       title: themeWithHex.leadCapture?.title?.trim() || "",
       description: themeWithHex.leadCapture?.description?.trim() || "",
       fields: {

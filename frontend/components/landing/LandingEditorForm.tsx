@@ -104,6 +104,8 @@ const TEMPLATE_OPTIONS: { label: string; value: TemplateOption }[] = [
   { label: "Plantilla 1", value: "template1" },
   { label: "Plantilla 2", value: "template2" },
   { label: "Plantilla 3 (redirect)", value: "template3" },
+  { label: "Plantilla 4 (chat)", value: "template4" },
+  { label: "Plantilla 5 (live)", value: "template5" },
 ];
 
 const LEAD_CAPTURE_DEFAULT_TITLE =
@@ -198,6 +200,9 @@ export function LandingEditorForm({
   ];
 
   const isTemplate3 = config.template === "template3";
+  const isFixedVisualTemplate =
+    config.template === "template4" || config.template === "template5";
+  const hidesVisualControls = isTemplate3 || isFixedVisualTemplate;
   const leadCapture = config.leadCapture ?? {
     enabled: false,
     title: LEAD_CAPTURE_DEFAULT_TITLE,
@@ -295,7 +300,7 @@ export function LandingEditorForm({
         <LandingTemplateSection config={config} setConfig={setConfig} />
       )}
 
-      {!isTemplate3 && (
+      {!hidesVisualControls && (
         <CollapsibleSection title="CTA">
         <div className="space-y-3">
           <div>
@@ -435,7 +440,7 @@ export function LandingEditorForm({
         </CollapsibleSection>
       )}
 
-      {!isTemplate3 && (
+      {!hidesVisualControls && (
         <CollapsibleSection title="Multimedia">
         <div className="space-y-6">
           <div className="space-y-4">
@@ -531,7 +536,7 @@ export function LandingEditorForm({
         </CollapsibleSection>
       )}
 
-      {!isTemplate3 && (
+      {!hidesVisualControls && (
         <CollapsibleSection title="Textos">
         <div className="space-y-6">
           <div className="space-y-3">
@@ -821,7 +826,7 @@ export function LandingEditorForm({
         </CollapsibleSection>
       )}
 
-      {!isTemplate3 && (
+      {!hidesVisualControls && (
         <section className="rounded-xl border border-zinc-800 bg-zinc-900/50 p-4">
           <div className="flex items-center justify-between gap-4">
             <div>
@@ -848,7 +853,7 @@ export function LandingEditorForm({
         </section>
       )}
 
-      {!isTemplate3 && (
+      {!hidesVisualControls && (
         <section className="rounded-xl border border-zinc-800 bg-zinc-900/50 p-4">
           <div className="flex items-center justify-between gap-4">
             <div>
@@ -941,6 +946,7 @@ export function LandingEditorForm({
         </section>
       )}
 
+      {!isFixedVisualTemplate && (
       <section className="rounded-xl border border-zinc-800 bg-zinc-900/50 p-4">
         <div className="flex items-center justify-between gap-4">
           <div>
@@ -986,6 +992,7 @@ export function LandingEditorForm({
           </div>
         )}
       </section>
+      )}
 
       {/* Acciones */}
       <div className="flex flex-wrap gap-3 border-t border-zinc-800 pt-6">
