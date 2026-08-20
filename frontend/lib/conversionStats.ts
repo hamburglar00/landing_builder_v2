@@ -406,19 +406,13 @@ export function computeHomeOverviewStatsFromConversions({
 }): HomeOverviewStats {
   const cleanConversions = conversions.filter((row) => !String(row.test_event_code ?? "").trim());
   const cleanAllConversions = (allConversions ?? cleanConversions).filter((row) => !String(row.test_event_code ?? "").trim());
-  const funnelContacts = buildFunnelContactsFromConversions(cleanConversions);
-  const core = computeCoreStats(
-    cleanConversions,
-    funnelContacts,
-    cleanAllConversions,
-    premiumThreshold,
-  );
   const metaAdsConversions = cleanConversions.filter((row) => row.from_meta_ads === true);
+  const metaAdsAllConversions = cleanAllConversions.filter((row) => row.from_meta_ads === true);
   const metaAdsFunnelContacts = buildFunnelContactsFromConversions(metaAdsConversions);
   const metaAdsCore = computeCoreStats(
     metaAdsConversions,
     metaAdsFunnelContacts,
-    cleanAllConversions,
+    metaAdsAllConversions,
     premiumThreshold,
   );
 
@@ -429,8 +423,8 @@ export function computeHomeOverviewStatsFromConversions({
       : 0,
     cargaPromedio: metaAdsCore.totalPurchaseCount > 0 ? metaAdsCore.totalRevenue / metaAdsCore.totalPurchaseCount : 0,
     totalCargado: metaAdsCore.totalRevenue,
-    premium: core.premiumPlayers,
-    retencionActiva30d: core.activeRetention30d,
+    premium: metaAdsCore.premiumPlayers,
+    retencionActiva30d: metaAdsCore.activeRetention30d,
   };
 }
 
