@@ -260,7 +260,7 @@ export function buildLandingConfig({
           "Hola, soy {{name}}, enviame un mensaje y comenzamos ya mismo.",
         bubble2Intro:
           themeWithHex.template4Chat?.bubble2Intro ||
-          "Te acompano en todo el proceso",
+          "Te acompaño en todo el proceso",
         bubble2Items: [
           themeWithHex.template4Chat?.bubble2Item1 ||
             "💸 Cargas y retiros las 24hs",

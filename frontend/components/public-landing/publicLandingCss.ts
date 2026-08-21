@@ -1474,9 +1474,10 @@ body.public-lead-capture-open {
   max-width: 82%;
   margin: 0;
   border-radius: 14px 14px 14px 4px;
-  padding: 7px 12px 17px;
-  background: #344448;
-  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.36);
+  padding: 8px 13px 18px;
+  background: #223237;
+  color: #ffffff;
+  box-shadow: 0 3px 12px rgba(0, 0, 0, 0.34);
   animation: publicLandingTemplate4Rise 0.38s cubic-bezier(0.2, 0.8, 0.2, 1) both;
 }
 
@@ -1494,8 +1495,10 @@ body.public-lead-capture-open {
 
 .public-landing.template4 .template4__bubble p {
   margin: 0;
-  font-size: 14px;
-  line-height: 1.36;
+  color: #ffffff;
+  font-size: 15.5px;
+  font-weight: 650;
+  line-height: 1.38;
 }
 
 .public-landing.template4 .template4__bubble ul {
@@ -1511,9 +1514,10 @@ body.public-lead-capture-open {
   display: flex;
   align-items: flex-start;
   gap: 9px;
-  color: rgba(248, 250, 252, 0.9);
-  font-size: 13px;
-  line-height: 1.26;
+  color: #f8fafc;
+  font-size: 14px;
+  font-weight: 600;
+  line-height: 1.34;
 }
 
 .public-landing.template4 .template4__bubble li::before {
@@ -1531,7 +1535,7 @@ body.public-lead-capture-open {
   position: absolute;
   right: 11px;
   bottom: 4px;
-  color: rgba(203, 213, 225, 0.68);
+  color: rgba(226, 232, 240, 0.82);
   font: 700 10px/1 ui-monospace, SFMono-Regular, Menlo, monospace;
 }
 

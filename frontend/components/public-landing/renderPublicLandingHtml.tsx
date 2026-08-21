@@ -444,7 +444,7 @@ function renderTemplate4({ config }: RenderParams) {
   );
   const bubble2Intro = template4Text(
     chat?.bubble2Intro,
-    "Te acompano en todo el proceso",
+    "Te acompaño en todo el proceso",
     rawName,
   );
   const bubble2Items =

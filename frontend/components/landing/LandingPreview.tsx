@@ -14,7 +14,7 @@ const TEMPLATE3_WHATSAPP_ICON_PATH =
 const TEMPLATE4_CHAT_DEFAULTS = {
   profileImageUrl: "",
   bubble1Text: "Hola, soy {{name}}, enviame un mensaje y comenzamos ya mismo.",
-  bubble2Intro: "Te acompano en todo el proceso",
+  bubble2Intro: "Te acompaño en todo el proceso",
   bubble2Item1: "💸 Cargas y retiros las 24hs",
   bubble2Item2: "👤 Atencion personalizada",
   bubble2Item3: "🛡️ Respaldo y mas de 5 anos de experiencia",
@@ -432,10 +432,10 @@ export function LandingPreview({
                 <span className="h-1.5 w-1.5 rounded-full bg-[#25d366]" />
                 <span><b>{template4LiveCount}</b> personas en chat</span>
               </div>
-              <div className="max-w-[82%] rounded-[12px] rounded-bl bg-[#344448] px-2.5 py-2 text-[10px] leading-snug text-white shadow">
+              <div className="max-w-[82%] rounded-[12px] rounded-bl bg-[#223237] px-2.5 py-2 text-[10px] font-semibold leading-snug text-white shadow-[0_3px_12px_rgba(0,0,0,0.34)]">
                 {template4Text(chat.bubble1Text, name)}
               </div>
-              <div className="max-w-[82%] rounded-[12px] rounded-bl bg-[#344448] px-2.5 py-2 text-[10px] leading-snug text-white shadow">
+              <div className="max-w-[82%] rounded-[12px] rounded-bl bg-[#223237] px-2.5 py-2 text-[10px] font-semibold leading-snug text-white shadow-[0_3px_12px_rgba(0,0,0,0.34)]">
                 {template4Text(chat.bubble2Intro, name)}
               </div>
             </div>
@@ -509,26 +509,26 @@ export function LandingPreview({
                 <b>{template4LiveCount}</b> personas en chat ahora mismo
               </span>
             </div>
-            <div className="max-w-[84%] rounded-[14px] rounded-bl rounded-tl bg-[#344448] px-3 py-2 pb-5 text-[12px] leading-snug text-white shadow">
+            <div className="max-w-[84%] rounded-[14px] rounded-bl rounded-tl bg-[#223237] px-3 py-2 pb-5 text-[13px] font-semibold leading-snug text-white shadow-[0_3px_12px_rgba(0,0,0,0.34)]">
               {template4Text(chat.bubble1Text, name)}
-              <span className="float-right -mb-3 mt-1 text-[9px] text-slate-300/70">
+              <span className="float-right -mb-3 mt-1 text-[9px] text-slate-200/80">
                 {messageTime}
               </span>
             </div>
-            <div className="max-w-[84%] rounded-[14px] rounded-bl rounded-tl bg-[#344448] px-3 py-2 pb-5 text-[12px] leading-snug text-white shadow">
+            <div className="max-w-[84%] rounded-[14px] rounded-bl rounded-tl bg-[#223237] px-3 py-2 pb-5 text-[13px] font-semibold leading-snug text-white shadow-[0_3px_12px_rgba(0,0,0,0.34)]">
               {template4Text(chat.bubble2Intro, name)}
-              <ul className="mt-2 space-y-0.5 text-[11px]">
+              <ul className="mt-2 space-y-0.5 text-[12px] font-semibold text-slate-50">
                 {bubble2Items.map((item) => (
                   <li key={item}>{template4Text(item, name)}</li>
                 ))}
               </ul>
-              <span className="float-right -mb-3 mt-1 text-[9px] text-slate-300/70">
+              <span className="float-right -mb-3 mt-1 text-[9px] text-slate-200/80">
                 {messageTime}
               </span>
             </div>
-            <div className="max-w-[84%] rounded-[14px] rounded-bl rounded-tl bg-[#344448] px-3 py-2 pb-5 text-[12px] leading-snug text-white shadow">
+            <div className="max-w-[84%] rounded-[14px] rounded-bl rounded-tl bg-[#223237] px-3 py-2 pb-5 text-[13px] font-semibold leading-snug text-white shadow-[0_3px_12px_rgba(0,0,0,0.34)]">
               {template4Text(chat.bubble3Text, name)}
-              <span className="float-right -mb-3 mt-1 text-[9px] text-slate-300/70">
+              <span className="float-right -mb-3 mt-1 text-[9px] text-slate-200/80">
                 {messageTime}
               </span>
             </div>
