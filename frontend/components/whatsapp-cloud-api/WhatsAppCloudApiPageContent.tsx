@@ -40,7 +40,7 @@ const INSTRUCTION_CHECKLIST = [
   "Ir a Paso 2. Configuracion de produccion y registrar el numero real del cliente.",
   "Copiar el Phone Number ID y el WhatsApp Business Account ID del numero real registrado.",
   "En Business Settings > Usuarios del sistema, crear un System User, asignarle la app y el WABA con control total, generar un token permanente y pegarlo en Meta access token.",
-  "Generar el dataset de Conversions API for Business Messaging desde el constructor.",
+  "Obtener el dataset de Conversions API for Business Messaging desde el constructor.",
   "En Configuracion de la app > Informacion basica, copiar App Secret y pegarlo en App Secret / token de la app.",
   "Activar Suscribirse a webhooks sobre el numero registrado.",
   "Pegar la Webhook URL y el Verify token del constructor, verificar y guardar.",
@@ -613,7 +613,7 @@ export default function WhatsAppCloudApiPageContent({
       if (!targetUserId) throw new Error("Usuario requerido.");
       if (!/^\d+$/.test(wabaId.trim())) throw new Error("WABA ID debe ser numerico.");
       if (!accessToken.trim() && !config?.has_meta_access_token) {
-        throw new Error("Meta access token requerido para generar el dataset.");
+        throw new Error("Meta access token requerido para obtener el dataset.");
       }
       const result = await ensureWhatsappCloudApiDataset({
         config_id: config?.id ?? null,
@@ -624,9 +624,13 @@ export default function WhatsAppCloudApiPageContent({
         force_create: forceCreate,
       });
       setMessagingDatasetId(result.dataset_id);
-      setMessage(result.source === "stored"
-        ? "Dataset Business Messaging recuperado de la configuracion."
-        : "Dataset Business Messaging generado.");
+      setMessage(
+        result.source === "stored"
+          ? "Dataset Business Messaging recuperado de la configuracion."
+          : result.source === "meta_existing"
+            ? "Dataset Business Messaging existente recuperado desde Meta."
+            : "Dataset Business Messaging obtenido desde Meta.",
+      );
       setDatasetConfirmOpen(false);
     } catch (err) {
       setError(err instanceof Error ? err.message : "No se pudo obtener el dataset.");
@@ -1126,11 +1130,11 @@ export default function WhatsAppCloudApiPageContent({
                     disabled={trackingLocked || datasetLoading || !/^\d+$/.test(wabaId.trim()) || (!accessToken.trim() && !config?.has_meta_access_token)}
                     className="rounded-lg border border-zinc-700 bg-zinc-900 px-3 py-2 text-xs font-semibold text-zinc-100 transition hover:border-lime-400 hover:text-lime-300 disabled:cursor-not-allowed disabled:opacity-50"
                   >
-                    {datasetLoading ? "Generando..." : "Generar dataset"}
+                    {datasetLoading ? "Obteniendo..." : "Obtener dataset"}
                   </button>
                 </div>
                 <p className="mt-1 text-[11px] text-zinc-500">
-                  Si Meta ya muestra un dataset existente para el WABA, pega ese ID. Si no existe, generarlo una sola vez desde aca.
+                  Consulta el dataset asociado al WABA. Si Meta no devuelve uno existente, se solicita a Meta obtenerlo para ese WABA.
                 </p>
               </div>
 
@@ -1545,9 +1549,9 @@ export default function WhatsAppCloudApiPageContent({
       {datasetConfirmOpen ? (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 p-4">
           <div className="w-full max-w-md rounded-2xl border border-[var(--color-border)] bg-[var(--color-bg-1)] p-5 shadow-2xl">
-            <p className="text-base font-semibold text-[var(--color-text-strong)]">Generar dataset en Meta</p>
+            <p className="text-base font-semibold text-[var(--color-text-strong)]">Obtener dataset de Meta</p>
             <p className="mt-2 text-sm leading-6 text-[var(--color-text-muted)]">
-              Se hara una solicitud a Meta para crear un Dataset Business Messaging para el WABA configurado. Si ya tenias un ID cargado, el nuevo ID reemplazara el valor en pantalla y deberas guardar los cambios.
+              Se consultara el Dataset Business Messaging asociado al WABA configurado. Si Meta no devuelve uno existente, se hara la solicitud de obtenerlo para ese WABA y luego deberas guardar los cambios.
             </p>
             <div className="mt-5 flex justify-end gap-2">
               <button
@@ -1561,10 +1565,10 @@ export default function WhatsAppCloudApiPageContent({
               <button
                 type="button"
                 className="ui-button ui-button-primary"
-                onClick={() => void handleEnsureDataset(Boolean(messagingDatasetId.trim()))}
+                onClick={() => void handleEnsureDataset(false)}
                 disabled={datasetLoading}
               >
-                {datasetLoading ? "Generando..." : "Confirmar"}
+                {datasetLoading ? "Obteniendo..." : "Confirmar"}
               </button>
             </div>
           </div>

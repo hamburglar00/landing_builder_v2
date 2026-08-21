@@ -185,7 +185,7 @@ export async function ensureWhatsappCloudApiDataset(input: {
   meta_access_token: string | null;
   meta_api_version: string;
   force_create?: boolean;
-}): Promise<{ dataset_id: string; source: "stored" | "meta" | "" }> {
+}): Promise<{ dataset_id: string; source: "stored" | "meta_existing" | "meta_ensure" | "" }> {
   const { data, error } = await supabase.functions.invoke(
     "whatsapp-cloud-ensure-dataset",
     {
@@ -207,7 +207,9 @@ export async function ensureWhatsappCloudApiDataset(input: {
   const source = String((data as { source?: unknown } | null)?.source ?? "");
   return {
     dataset_id: datasetId,
-    source: source === "stored" || source === "meta" ? source : "",
+    source: ["stored", "meta_existing", "meta_ensure"].includes(source)
+      ? (source as "stored" | "meta_existing" | "meta_ensure")
+      : "",
   };
 }
 

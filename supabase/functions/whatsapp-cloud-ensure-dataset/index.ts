@@ -66,7 +66,8 @@ async function callMetaDatasetEndpoint(input: {
   wabaId: string;
   accessToken: string;
   apiVersion: string;
-}): Promise<{ datasetId: string; response: Json }> {
+  method: "GET" | "POST";
+}): Promise<{ datasetId: string; response: Json; status: number; ok: boolean; detail: string }> {
   const url =
     `https://graph.facebook.com/${encodeURIComponent(input.apiVersion)}/${
       encodeURIComponent(input.wabaId)
@@ -75,7 +76,7 @@ async function callMetaDatasetEndpoint(input: {
   const timeout = setTimeout(() => controller.abort(), 8000);
   try {
     const res = await fetch(url, {
-      method: "POST",
+      method: input.method,
       headers: { "Content-Type": "application/json" },
       signal: controller.signal,
     });
@@ -87,13 +88,11 @@ async function callMetaDatasetEndpoint(input: {
     } catch {
       json = { raw: text };
     }
-    const datasetId = digits(json.id);
-    if (!res.ok || !datasetId) {
-      const errorObj = asRecord(json.error);
-      const detail = str(errorObj.message) || text || "Meta no devolvio dataset_id.";
-      throw new Error(`Meta dataset HTTP ${res.status}: ${detail}`);
-    }
-    return { datasetId, response: json };
+    const firstData = Array.isArray(json.data) ? asRecord(json.data[0]) : {};
+    const datasetId = digits(json.id) || digits(firstData.id);
+    const errorObj = asRecord(json.error);
+    const detail = str(errorObj.message) || text || "Meta no devolvio dataset_id.";
+    return { datasetId, response: json, status: res.status, ok: res.ok, detail };
   } catch (error) {
     clearTimeout(timeout);
     throw error;
@@ -144,7 +143,9 @@ Deno.serve(async (req) => {
       } | null;
       if (!row) return jsonResponse({ error: "Configuracion no encontrada." }, 404);
       const storedDatasetId = digits(row.meta_messaging_dataset_id);
-      if (storedDatasetId && !forceCreate) {
+      const storedWabaId = digits(row.whatsapp_business_account_id);
+      const requestedSameWaba = !wabaId || wabaId === storedWabaId;
+      if (storedDatasetId && !forceCreate && requestedSameWaba) {
         return jsonResponse({
           ok: true,
           dataset_id: storedDatasetId,
@@ -159,16 +160,43 @@ Deno.serve(async (req) => {
     if (!wabaId) return jsonResponse({ error: "WABA ID requerido." }, 400);
     if (!accessToken) return jsonResponse({ error: "Meta access token requerido." }, 400);
 
+    if (!forceCreate) {
+      const existing = await callMetaDatasetEndpoint({
+        wabaId,
+        accessToken,
+        apiVersion,
+        method: "GET",
+      });
+      if (existing.ok && existing.datasetId) {
+        return jsonResponse({
+          ok: true,
+          dataset_id: existing.datasetId,
+          source: "meta_existing",
+          meta_response: existing.response,
+        });
+      }
+      if (!existing.ok && existing.status !== 404) {
+        console.warn("[whatsapp-cloud-ensure-dataset] GET dataset failed, trying POST", {
+          status: existing.status,
+          detail: existing.detail,
+        });
+      }
+    }
+
     const result = await callMetaDatasetEndpoint({
       wabaId,
       accessToken,
       apiVersion,
+      method: "POST",
     });
+    if (!result.ok || !result.datasetId) {
+      throw new Error(`Meta dataset HTTP ${result.status}: ${result.detail}`);
+    }
 
     return jsonResponse({
       ok: true,
       dataset_id: result.datasetId,
-      source: "meta",
+      source: "meta_ensure",
       meta_response: result.response,
     });
   } catch (error) {
