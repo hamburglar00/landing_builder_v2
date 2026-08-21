@@ -264,7 +264,7 @@ Deno.test("Business Messaging Lead matches Meta WhatsApp payload shape", () => {
   );
 });
 
-Deno.test("Business Messaging Lead can enrich user_data with hashed PII", async () => {
+Deno.test("Business Messaging Lead enrichment omits WhatsApp profile names", async () => {
   const row = buildFakeConversionRow("Lead");
   row.email = "Cliente@Test.com";
   row.phone = "5493518690777";
@@ -274,7 +274,9 @@ Deno.test("Business Messaging Lead can enrich user_data with hashed PII", async 
   row.st = "Cordoba";
   row.zip = "5000";
   row.country = "Argentina";
-  const additionalUserData = await buildBusinessMessagingUserData(row);
+  const additionalUserData = await buildBusinessMessagingUserData(row, true, {
+    includeNames: false,
+  });
   const request = buildMetaBusinessMessagingRequest(
     {
       dataset_id: "123456789",
@@ -295,7 +297,9 @@ Deno.test("Business Messaging Lead can enrich user_data with hashed PII", async 
   const userData = event.user_data as Record<string, unknown>;
   assert(userData.ctwa_clid === "opaque-ctwa-click-id", "ctwa_clid stays raw");
   assert(userData.whatsapp_business_account_id === "987654321", "WABA stays raw");
-  for (const key of ["em", "ph", "fn", "ln", "ct", "st", "zp", "country"]) {
+  assert(!("fn" in userData), "Lead must not send WhatsApp profile first name");
+  assert(!("ln" in userData), "Lead must not send WhatsApp profile last name");
+  for (const key of ["em", "ph", "ct", "st", "zp", "country"]) {
     const value = String(userData[key] ?? "");
     assert(value.length === 64, `${key} must be a SHA-256 hex hash`);
   }

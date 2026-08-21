@@ -7,7 +7,7 @@ type Props = {
   mode: "admin" | "dashboard";
 };
 
-function HubIcon({ variant }: { variant: "settings" | "inbox" }) {
+function HubIcon({ variant }: { variant: "settings" | "inbox" | "contacts" }) {
   if (variant === "settings") {
     return (
       <svg className="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.8} strokeLinecap="round" strokeLinejoin="round" aria-hidden>
@@ -17,11 +17,22 @@ function HubIcon({ variant }: { variant: "settings" | "inbox" }) {
     );
   }
 
+  if (variant === "inbox") {
+    return (
+      <svg className="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.8} strokeLinecap="round" strokeLinejoin="round" aria-hidden>
+        <path d="M4 5.5A2.5 2.5 0 0 1 6.5 3h11A2.5 2.5 0 0 1 20 5.5v8a2.5 2.5 0 0 1-2.5 2.5H9l-5 4v-14.5Z" />
+        <path d="M8 8h8" />
+        <path d="M8 11.5h5" />
+      </svg>
+    );
+  }
+
   return (
     <svg className="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.8} strokeLinecap="round" strokeLinejoin="round" aria-hidden>
-      <path d="M4 5.5A2.5 2.5 0 0 1 6.5 3h11A2.5 2.5 0 0 1 20 5.5v8a2.5 2.5 0 0 1-2.5 2.5H9l-5 4v-14.5Z" />
-      <path d="M8 8h8" />
-      <path d="M8 11.5h5" />
+      <path d="M16 21v-2a4 4 0 0 0-4-4H7a4 4 0 0 0-4 4v2" />
+      <circle cx="9.5" cy="7" r="4" />
+      <path d="M22 21v-2a4 4 0 0 0-3-3.87" />
+      <path d="M16 3.13a4 4 0 0 1 0 7.75" />
     </svg>
   );
 }
@@ -34,7 +45,7 @@ function HubCard({
   meta,
 }: {
   href: string;
-  icon: "settings" | "inbox";
+  icon: "settings" | "inbox" | "contacts";
   title: string;
   description: string;
   meta: string;
@@ -69,7 +80,7 @@ export default function WhatsAppCloudApiHubContent({ mode }: Props) {
         description="Gestiona la configuracion del canal oficial y las conversaciones recibidas."
       />
 
-      <div className="grid gap-4 lg:grid-cols-2">
+      <div className="grid gap-4 lg:grid-cols-3">
         <HubCard
           href={`${basePath}/configuracion`}
           icon="settings"
@@ -83,6 +94,13 @@ export default function WhatsAppCloudApiHubContent({ mode }: Props) {
           title="Inbox"
           description="Bandeja separada para revisar conversaciones, mensajes entrantes, respuestas y derivaciones."
           meta="Operativo"
+        />
+        <HubCard
+          href={`${basePath}/contactos`}
+          icon="contacts"
+          title="Contactos"
+          description="Listado paginado de contactos recibidos, telefono visible y estado comercial."
+          meta="CRM"
         />
       </div>
 

@@ -45,6 +45,8 @@ const TAG_CLASSES: Record<WhatsappCloudApiInboxThread["tag"], string> = {
   premium: "border-amber-500/20 bg-amber-500/8 text-amber-300",
 };
 
+const INBOX_PAGE_SIZE = 20;
+
 const WHATSAPP_DOODLE_PATTERN = encodeURIComponent(`
 <svg xmlns="http://www.w3.org/2000/svg" width="320" height="320" viewBox="0 0 320 320">
   <defs>
@@ -415,6 +417,7 @@ export default function WhatsAppCloudApiInboxPageContent({ mode }: Props) {
       ? "/admin/whatsapp-cloud-api"
       : "/dashboard/whatsapp-cloud-api";
   const [threads, setThreads] = useState<WhatsappCloudApiInboxThread[]>([]);
+  const [pageIndex, setPageIndex] = useState(0);
   const [selectedId, setSelectedId] = useState<string>("");
   const [search, setSearch] = useState("");
   const [tagFilter, setTagFilter] = useState<
@@ -445,11 +448,16 @@ export default function WhatsAppCloudApiInboxPageContent({ mode }: Props) {
         return;
       }
       const rows = await fetchWhatsappCloudApiInboxThreads(
-        80,
+        INBOX_PAGE_SIZE,
         workspaceCurrency,
+        pageIndex * INBOX_PAGE_SIZE,
       );
       setThreads(rows);
-      setSelectedId((current) => current || rows[0]?.contact_id || "");
+      setSelectedId((current) =>
+        rows.some((row) => row.contact_id === current)
+          ? current
+          : rows[0]?.contact_id || ""
+      );
     } catch (err) {
       setError(
         err instanceof Error ? err.message : "No se pudo cargar el Inbox.",
@@ -457,11 +465,17 @@ export default function WhatsAppCloudApiInboxPageContent({ mode }: Props) {
     } finally {
       setLoading(false);
     }
-  }, [router, workspaceCurrency]);
+  }, [pageIndex, router, workspaceCurrency]);
 
   useEffect(() => {
     void loadThreads();
   }, [loadThreads]);
+
+  useEffect(() => {
+    setPageIndex(0);
+    setSelectedId("");
+    setHiddenThreadIds(new Set());
+  }, [workspaceCurrency]);
 
   useEffect(() => {
     setManualMessage("");
@@ -527,6 +541,8 @@ export default function WhatsAppCloudApiInboxPageContent({ mode }: Props) {
   const serviceWindowActive = Boolean(
     serviceWindowExpiresAt && Date.now() <= serviceWindowExpiresAt.getTime(),
   );
+  const canGoPrevious = pageIndex > 0;
+  const canGoNext = threads.length === INBOX_PAGE_SIZE;
 
   const hideThreadFromUi = () => {
     if (!threadToHide) return;
@@ -822,6 +838,34 @@ export default function WhatsAppCloudApiInboxPageContent({ mode }: Props) {
                 );
               })
             )}
+            {!loading && threads.length > 0 ? (
+              <div className="sticky bottom-0 flex items-center justify-between gap-2 border-t border-[var(--color-border-subtle)] bg-[var(--color-bg-1)] px-3 py-2">
+                <span className="text-[10px] font-medium text-[var(--color-text-disabled)]">
+                  {pageIndex * INBOX_PAGE_SIZE + 1}-
+                  {pageIndex * INBOX_PAGE_SIZE + threads.length}
+                </span>
+                <span className="flex gap-2">
+                  <button
+                    type="button"
+                    className="ui-button ui-button-secondary h-8 px-3 text-xs"
+                    onClick={() =>
+                      setPageIndex((current) => Math.max(0, current - 1))
+                    }
+                    disabled={!canGoPrevious || loading}
+                  >
+                    Anterior
+                  </button>
+                  <button
+                    type="button"
+                    className="ui-button ui-button-secondary h-8 px-3 text-xs"
+                    onClick={() => setPageIndex((current) => current + 1)}
+                    disabled={!canGoNext || loading}
+                  >
+                    Siguiente
+                  </button>
+                </span>
+              </div>
+            ) : null}
           </div>
         </aside>
 

@@ -12,10 +12,16 @@ type Json = Record<string, unknown>;
 type ConfigRow = {
   id: string;
   user_id: string;
+  name?: string;
   active: boolean;
   phone_number_id: string;
+  display_phone_number?: string;
   meta_access_token: string;
   meta_api_version: string;
+  phone_number_status?: string | null;
+  quality_rating?: string | null;
+  messaging_limit_tier?: string | null;
+  health_checked_at?: string | null;
 };
 
 function jsonResponse(body: Json, status = 200): Response {
@@ -27,6 +33,28 @@ function jsonResponse(body: Json, status = 200): Response {
 
 function str(value: unknown): string {
   return String(value ?? "").trim();
+}
+
+function escapeHtml(value: string): string {
+  return value
+    .replaceAll("&", "&amp;")
+    .replaceAll("<", "&lt;")
+    .replaceAll(">", "&gt;")
+    .replaceAll('"', "&quot;");
+}
+
+async function sendTelegramMessage(token: string, chatId: string, text: string) {
+  const res = await fetch(`https://api.telegram.org/bot${token}/sendMessage`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({
+      chat_id: chatId,
+      text,
+      parse_mode: "HTML",
+      disable_web_page_preview: true,
+    }),
+  });
+  return { ok: res.ok, body: await res.text().catch(() => "") };
 }
 
 function qualityAlertMessage(quality: string, tier: string, status: string): string {
@@ -49,6 +77,75 @@ function qualityAlertMessage(quality: string, tier: string, status: string): str
     return `Alerta Meta: revisar estado del numero (${parts}).`;
   }
   return "";
+}
+
+function healthChanged(config: ConfigRow, result: {
+  status: string;
+  quality: string;
+  tier: string;
+}): boolean {
+  if (!config.health_checked_at) return false;
+  return (
+    str(config.phone_number_status) !== str(result.status) ||
+    str(config.quality_rating) !== str(result.quality) ||
+    str(config.messaging_limit_tier) !== str(result.tier)
+  );
+}
+
+async function notifyHealthChange(
+  db: SupabaseDb,
+  config: ConfigRow,
+  result: { status: string; quality: string; tier: string },
+): Promise<number> {
+  if (!healthChanged(config, result)) return 0;
+
+  const { data: botRow } = await db
+    .from("notification_bot_config")
+    .select("telegram_bot_token")
+    .eq("id", 1)
+    .maybeSingle();
+  const token = str((botRow as { telegram_bot_token?: string } | null)?.telegram_bot_token);
+  if (!token) return 0;
+
+  const { data: settingsRow } = await db
+    .from("notification_settings")
+    .select("enabled, channel")
+    .eq("user_id", config.user_id)
+    .maybeSingle();
+  if (
+    settingsRow &&
+    ((settingsRow as { enabled?: boolean }).enabled === false ||
+      str((settingsRow as { channel?: string }).channel) !== "telegram")
+  ) {
+    return 0;
+  }
+
+  const { data: destinations } = await db
+    .from("notification_telegram_destinations")
+    .select("telegram_chat_id")
+    .eq("user_id", config.user_id)
+    .eq("is_active", true);
+  const rows = (destinations ?? []) as Array<{ telegram_chat_id?: string }>;
+  if (!rows.length) return 0;
+
+  const label = str(config.name) || str(config.display_phone_number) ||
+    str(config.phone_number_id);
+  const text = [
+    "<b>Alerta WhatsApp Cloud API</b>",
+    `Numero: ${escapeHtml(label)}`,
+    `Calidad: ${escapeHtml(str(config.quality_rating) || "-")} -> ${escapeHtml(str(result.quality) || "-")}`,
+    `Limite: ${escapeHtml(str(config.messaging_limit_tier) || "-")} -> ${escapeHtml(str(result.tier) || "-")}`,
+    `Estado: ${escapeHtml(str(config.phone_number_status) || "-")} -> ${escapeHtml(str(result.status) || "-")}`,
+  ].join("\n");
+
+  let sent = 0;
+  for (const destination of rows) {
+    const chatId = str(destination.telegram_chat_id);
+    if (!chatId) continue;
+    const res = await sendTelegramMessage(token, chatId, text);
+    if (res.ok) sent += 1;
+  }
+  return sent;
 }
 
 function serviceDb(): SupabaseDb {
@@ -197,7 +294,7 @@ Deno.serve(async (req) => {
     const configId = str(body.config_id);
     let query = db
       .from("whatsapp_cloud_api_configs")
-      .select("id,user_id,active,phone_number_id,meta_access_token,meta_api_version")
+      .select("id,user_id,name,active,phone_number_id,display_phone_number,meta_access_token,meta_api_version,phone_number_status,quality_rating,messaging_limit_tier,health_checked_at")
       .not("phone_number_id", "eq", "")
       .not("meta_access_token", "eq", "");
 
@@ -212,6 +309,7 @@ Deno.serve(async (req) => {
 
     let ok = 0;
     let failed = 0;
+    let notified = 0;
     for (const config of configs) {
       const result = await fetchMetaHealth(config);
       const update = result.ok
@@ -230,11 +328,14 @@ Deno.serve(async (req) => {
         .from("whatsapp_cloud_api_configs")
         .update(update)
         .eq("id", config.id);
+      if (result.ok && !updateError) {
+        notified += await notifyHealthChange(db, config, result);
+      }
       if (result.ok && !updateError) ok++;
       else failed++;
     }
 
-    return jsonResponse({ ok: true, checked: configs.length, updated: ok, failed });
+    return jsonResponse({ ok: true, checked: configs.length, updated: ok, failed, notified });
   } catch (error) {
     console.error("[whatsapp-cloud-sync-health] unexpected error", String(error));
     return jsonResponse({ error: "Unexpected error" }, 500);

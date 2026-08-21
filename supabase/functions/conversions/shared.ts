@@ -632,16 +632,18 @@ export async function buildUserData(
 export async function buildBusinessMessagingUserData(
   row: ConversionRow,
   includeGeo = true,
+  options: { includeNames?: boolean } = {},
 ): Promise<MetaUserData> {
   const ud: MetaUserData = {};
+  const includeNames = options.includeNames !== false;
   const normalizedCountry = includeGeo ? normalizeCountry(row.country) : "";
   const normalizedState = includeGeo ? normalizeState(row.st, row.country) : "";
   const normalizedCity = includeGeo ? normalizeCity(row.ct) : "";
   const normalizedZip = includeGeo ? normalizePostalCode(row.zip) : "";
   const email = normalizeEmail(String(row.email ?? ""));
   const phone = normalizePhoneForMeta(String(row.phone ?? ""));
-  const firstName = normalizeName(String(row.fn ?? ""));
-  const lastName = normalizeName(String(row.ln ?? ""));
+  const firstName = includeNames ? normalizeName(String(row.fn ?? "")) : "";
+  const lastName = includeNames ? normalizeName(String(row.ln ?? "")) : "";
   const externalId = normalizeExternalId(String(row.external_id ?? ""));
 
   if (email) ud.em = await sha256(email);

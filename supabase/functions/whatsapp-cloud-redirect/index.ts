@@ -11,6 +11,7 @@ type RedirectClickRow = {
   conversion_id?: string | null;
   phone_number_id?: string;
   config_name?: string;
+  workspace_currency?: string;
   meta_messaging_dataset_id?: string;
   assigned_phone?: string;
   promo_code?: string;
@@ -152,6 +153,8 @@ async function ensureInternalContactOnRedirect(
     meta_pixel_id: "",
     pixel_id: "",
     dataset_id: firstString(row.meta_messaging_dataset_id),
+    currency: firstString(row.workspace_currency),
+    workspace_currency: firstString(row.workspace_currency),
     source_platform: "whatsapp_cloud_api",
     ctwa_clid: firstString(row.ctwa_clid),
     from_meta_ads: Boolean(firstString(row.ctwa_clid)),

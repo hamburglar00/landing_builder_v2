@@ -113,6 +113,18 @@ export interface WhatsappCloudApiInboxThread {
   messages: WhatsappCloudApiInboxMessage[];
 }
 
+export interface WhatsappCloudApiContactsPageRow {
+  contact_id: string;
+  config_id: string;
+  config_name: string;
+  wa_id: string;
+  phone: string;
+  profile_name: string;
+  last_message_at: string | null;
+  tag: WhatsappCloudApiInboxThread["tag"];
+  total_contacts: number;
+}
+
 export async function fetchWhatsappCloudApiConfig(
   userId: string,
   workspaceCurrency: "ARS" | "PYG",
@@ -538,13 +550,15 @@ function normalizeInboxMessage(
 }
 
 export async function fetchWhatsappCloudApiInboxThreads(
-  limit = 50,
+  limit = 20,
   workspaceCurrency?: "ARS" | "PYG" | null,
+  offset = 0,
 ): Promise<WhatsappCloudApiInboxThread[]> {
   const { data, error } = await supabase.rpc(
-    "get_whatsapp_cloud_api_inbox_threads",
+    "get_whatsapp_cloud_api_inbox_threads_page",
     {
       p_limit: limit,
+      p_offset: offset,
       p_workspace_currency: workspaceCurrency ?? null,
     },
   );
@@ -605,6 +619,46 @@ export async function fetchWhatsappCloudApiInboxThreads(
       unread_count: Number(row.unread_count ?? 0),
       unread_last_message_at: firstString(row.unread_last_message_at) || null,
       messages,
+    };
+  });
+}
+
+export async function fetchWhatsappCloudApiContactsPage(
+  limit = 20,
+  workspaceCurrency?: "ARS" | "PYG" | null,
+  offset = 0,
+): Promise<WhatsappCloudApiContactsPageRow[]> {
+  const { data, error } = await supabase.rpc(
+    "get_whatsapp_cloud_api_contacts_page",
+    {
+      p_limit: limit,
+      p_offset: offset,
+      p_workspace_currency: workspaceCurrency ?? null,
+    },
+  );
+  if (error) throw error;
+  return ((data ?? []) as Array<Record<string, unknown>>).map((row) => {
+    const rawTag = firstString(row.tag);
+    const tag = rawTag as WhatsappCloudApiInboxThread["tag"];
+    return {
+      contact_id: firstString(row.contact_id),
+      config_id: firstString(row.config_id),
+      config_name: firstString(row.config_name),
+      wa_id: firstString(row.wa_id),
+      phone: firstString(row.phone),
+      profile_name: firstString(row.profile_name),
+      last_message_at: firstString(row.last_message_at) || null,
+      tag: [
+        "nuevo",
+        "contacto",
+        "lead",
+        "cargo",
+        "recompra",
+        "premium",
+      ].includes(tag)
+        ? tag
+        : "nuevo",
+      total_contacts: Number(row.total_contacts ?? 0),
     };
   });
 }

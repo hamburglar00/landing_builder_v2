@@ -1714,6 +1714,7 @@ async function retrySingleContactLeadCapiEvent(
     ? await buildBusinessMessagingUserData(
       row as ConversionRow,
       config.send_geo_capi !== false,
+      { includeNames: false },
     )
     : undefined;
   const metaReq = useBusinessMessaging

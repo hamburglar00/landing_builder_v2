@@ -2803,6 +2803,15 @@ function resolveContactWorkspaceResolution(
   const explicitCurrency = norm(params.currency || params.workspace_currency)
     .toUpperCase();
   if (explicitCurrency === "ARS" || explicitCurrency === "PYG") {
+    if (
+      norm(params.source_platform).toLowerCase() === "whatsapp_cloud_api" ||
+      norm(params.whatsapp_cloud_api_config_id)
+    ) {
+      return {
+        currency: explicitCurrency,
+        source: "whatsapp_cloud_api_assignment",
+      };
+    }
     return { currency: explicitCurrency, source: "payload" };
   }
   const workspaceCurrency = landingWorkspaceCurrency(landing);
@@ -3598,6 +3607,7 @@ async function sendToMetaCAPI(
     ? await buildBusinessMessagingUserData(
       row as unknown as SharedConversionRow,
       effectiveConfig.send_geo_capi !== false,
+      { includeNames: eventName === "Purchase" },
     )
     : undefined;
   const metaRequest = useBusinessMessaging
