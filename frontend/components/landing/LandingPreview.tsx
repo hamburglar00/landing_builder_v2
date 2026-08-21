@@ -565,72 +565,82 @@ export function LandingPreview({
       ? "relative h-full w-full overflow-hidden rounded-3xl bg-[#071013] shadow-[0_14px_32px_rgba(0,0,0,0.9)]"
       : "relative mx-auto aspect-[9/16] w-full max-w-[380px] overflow-hidden rounded-3xl bg-[#071013] shadow-[0_18px_40px_rgba(0,0,0,1)]";
     const name = config.titleLine1?.trim() || "Asesor";
+    const now = template4Now === "--:--" ? "23:11" : template4Now;
 
     return (
       <div className={outerClass} style={{ fontFamily }}>
         <div
-          className="absolute inset-0 opacity-[0.16]"
+          className="absolute inset-0 bg-[radial-gradient(circle_at_16%_12%,rgba(229,189,66,0.08),transparent_28%),linear-gradient(180deg,#120d09_0%,#080403_100%)] opacity-100"
           style={{
             backgroundImage:
               "radial-gradient(circle at 20px 20px, transparent 0 6px, rgba(148,163,184,.45) 7px, transparent 8px), radial-gradient(circle at 76px 58px, transparent 0 8px, rgba(148,163,184,.3) 9px, transparent 10px), linear-gradient(45deg, transparent 0 44%, rgba(148,163,184,.26) 45% 55%, transparent 56%)",
             backgroundSize: "96px 96px, 120px 120px, 86px 86px",
           }}
         />
-        <div className="relative z-10 flex min-h-14 items-center justify-center gap-2 border-b border-slate-400/10 bg-[#081014]/95 px-4 pt-2 text-[11px] font-black uppercase tracking-[0.16em] text-white">
-          <span className="h-2 w-2 rounded-full bg-lime-300 shadow-[0_0_0_4px_rgba(124,248,110,.12)]" />
-          EN VIVO
-          <span className="text-[10px] normal-case tracking-normal text-slate-400">
-            Ahora
+        <div className="relative z-10 flex items-center justify-between gap-3 px-[18px] pt-4">
+          <div className="inline-flex min-h-7 items-center gap-2 rounded-full bg-[#f51d38] px-3 text-[10px] font-black tracking-[0.08em] text-white">
+            <span className="h-1.5 w-1.5 rounded-full bg-white/95" />
+            <strong>EN VIVO</strong>
+            <time className="font-mono">{now}</time>
+          </div>
+          <span className="whitespace-nowrap font-mono text-[10px] font-bold text-slate-200/80">
+            1.278 viendo
           </span>
         </div>
-        <div className="relative z-10 px-6 pt-12">
-          <p className="text-[11px] font-black uppercase tracking-[0.16em] text-lime-300">
-            Atencion personalizada
-          </p>
-          <h1 className="mt-2 text-[44px] font-black leading-[0.92] text-white">
-            Esta pasando ahora mismo.
+        <div className="relative z-10 px-[18px] pt-6">
+          <h1 className="text-[42px] font-black uppercase leading-[0.86] tracking-[-0.055em] text-white">
+            <span className="block">ESTA PASANDO</span>
+            <b className="block text-[#e5bd42]">AHORA MISMO.</b>
           </h1>
-          <p className="mt-4 text-[13px] leading-snug text-slate-300/80">
-            Un asesor esta disponible para ayudarte por el canal asignado.
+          <p className="mt-4 text-[14px] leading-snug text-zinc-100/80">
+            Un asesor te abre la cuenta en 2 minutos por WhatsApp y te acompaña en todo el proceso...
           </p>
         </div>
-        <div className="relative z-10 mx-5 mt-5 flex items-center gap-3 rounded-2xl border border-slate-400/15 bg-slate-900/60 p-3">
-          <div className="grid h-10 w-10 place-items-center rounded-full border border-lime-300/20 bg-[#14282d] text-xs font-black text-lime-300">
-            PB
+        <div className="relative z-10 mx-[18px] mt-5 flex items-center gap-3 rounded-[18px] border border-[#e5bd42]/20 bg-[#160f09]/80 p-3.5">
+          <div className="grid h-11 w-11 place-items-center rounded-full border border-lime-300/20 bg-[#14282d] text-[8px] font-black leading-tight text-lime-300">
+            foto<br />asesor
           </div>
-          <div>
-            <strong className="block text-sm text-white">{name}</strong>
-            <span className="mt-1 block text-[11px] font-semibold text-slate-300/70">
-              Disponible para responder
+          <div className="min-w-0 flex-1">
+            <strong className="block truncate text-[14px] font-black text-white">{name} · tu asesora</strong>
+            <span className="mt-1 block truncate text-[11px] font-extrabold text-[#25d366]">
+              En linea · responde en ~40 seg
             </span>
           </div>
+          <i className="h-3 w-3 rounded-full bg-[#25d366] shadow-[0_0_0_6px_rgba(37,211,102,.12)]" />
         </div>
-        <div className="relative z-10 mx-5 mt-4 h-2 overflow-hidden rounded-full bg-slate-400/15">
-          <span className="block h-full w-[68%] rounded-full bg-lime-300" />
+        <div className="relative z-10 mx-[18px] mt-4 h-1 overflow-hidden rounded-full bg-slate-400/15">
+          <span className="block h-full w-[97%] rounded-full bg-gradient-to-r from-[#f3ce58] to-[#ff2b44]" />
         </div>
-        <div className="relative z-10 mx-5 mt-4 rounded-2xl border border-slate-400/15 bg-slate-900/60 p-4">
-          <div className="flex items-center justify-between border-b border-slate-400/10 pb-2">
-            <strong className="text-[11px] tracking-[0.08em] text-white">
-              RETIROS PAGADOS
+        <div className="relative z-10 mx-[18px] mt-5 overflow-hidden rounded-[18px] border border-[#e5bd42]/20 bg-[#160f09]/80">
+          <div className="flex items-center border-b border-[#e5bd42]/15 px-3.5 py-3">
+            <strong className="text-[10px] font-extrabold tracking-[0.16em] text-white">
+              <span className="mr-1.5 inline-block h-1.5 w-1.5 rounded-full bg-[#25d366]" />
+              RETIROS PAGADOS · EN VIVO
             </strong>
-            <span className="text-[10px] font-black tracking-[0.12em] text-lime-300">
-              EN VIVO
-            </span>
           </div>
-          {["Solicitud recibida", "Asesor asignado", "Seguimiento activo"].map(
-            (item, index) => (
-              <p key={item} className="mt-2 flex gap-2 text-[11px] text-slate-300/75">
-                <b className="text-slate-200">12:0{index + 2}</b>
-                {item}
-              </p>
-            ),
-          )}
+          {[
+            ["Camilo A.", "hace 5 s", "$ 1.150.000"],
+            ["Sebastian G.", "hace 17 s", "$ 260.000"],
+            ["Laura P.", "hace 29 s", "$ 780.000"],
+          ].map(([who, when, amount]) => (
+            <p key={who} className="mx-3.5 flex items-center justify-between gap-3 border-b border-[#e5bd42]/10 py-2.5">
+              <span>
+                <b className="block text-[13px] font-black text-white">{who}</b>
+                <small className="mt-0.5 block text-[10px] font-bold text-slate-300/60">{when}</small>
+              </span>
+              <strong className="whitespace-nowrap font-mono text-[13px] font-black text-[#25d366]">{amount}</strong>
+            </p>
+          ))}
         </div>
         {!gallery && (
           <div className="absolute inset-x-0 bottom-0 z-20 bg-gradient-to-t from-[#071013] via-[#071013]/95 to-transparent px-4 pb-5 pt-12">
-            <button className="h-12 w-full rounded-full bg-lime-300 text-[13px] font-black text-[#04130a] shadow-[0_16px_34px_rgba(124,248,110,.22)]">
-              Hablar ahora
+            <button className="flex h-[66px] w-full items-center justify-center gap-3 rounded-full bg-[#25d366] text-[18px] font-black tracking-[-0.02em] text-[#04130a] shadow-[0_0_0_12px_rgba(37,211,102,.14),0_18px_34px_rgba(37,211,102,.22)]">
+              <span className="text-xl">●</span>
+              ENTRAR POR WHATSAPP
             </button>
+            <small className="mt-3 block text-center text-[11px] text-slate-300/60">
+              {name} te contesta en persona, ahora mismo
+            </small>
           </div>
         )}
       </div>
