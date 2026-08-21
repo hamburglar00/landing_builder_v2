@@ -9,6 +9,8 @@ import { SingleCurrencyRequired, useCurrencyScope } from "@/components/currency/
 import { supabase } from "@/lib/supabaseClient";
 import {
   fetchWhatsappCloudApiLogs,
+  formatWhatsappCloudApiError,
+  logWhatsappCloudApiError,
   type WhatsappCloudApiLogEntry,
   type WhatsappCloudApiLogKind,
 } from "@/lib/whatsappCloudApiDb";
@@ -157,7 +159,12 @@ export default function WhatsAppCloudApiLogsPageContent({ mode }: Props) {
       });
       setLogs(rows);
     } catch (err) {
-      setError(err instanceof Error ? err.message : "No se pudieron cargar los logs.");
+      logWhatsappCloudApiError("logs page load failed", err, {
+        mode,
+        workspaceCurrency,
+        limit: 80,
+      });
+      setError(formatWhatsappCloudApiError(err, "No se pudieron cargar los logs."));
     } finally {
       setLoading(false);
     }

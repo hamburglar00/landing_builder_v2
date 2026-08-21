@@ -9,6 +9,8 @@ import { CURRENCY_ALL } from "@/lib/currency";
 import { supabase } from "@/lib/supabaseClient";
 import {
   fetchWhatsappCloudApiContactsPage,
+  formatWhatsappCloudApiError,
+  logWhatsappCloudApiError,
   type WhatsappCloudApiContactsPageRow,
   type WhatsappCloudApiInboxThread,
 } from "@/lib/whatsappCloudApiDb";
@@ -86,13 +88,20 @@ export default function WhatsAppCloudApiContactsPageContent({ mode }: Props) {
         pageRows[0]?.total_contacts ?? (pageIndex === 0 ? 0 : current)
       );
     } catch (err) {
+      logWhatsappCloudApiError("contacts page load failed", err, {
+        mode,
+        workspaceCurrency,
+        pageIndex,
+        limit: CONTACTS_PAGE_SIZE,
+        offset: pageIndex * CONTACTS_PAGE_SIZE,
+      });
       setError(
-        err instanceof Error ? err.message : "No se pudieron cargar contactos.",
+        formatWhatsappCloudApiError(err, "No se pudieron cargar contactos."),
       );
     } finally {
       setLoading(false);
     }
-  }, [pageIndex, router, workspaceCurrency]);
+  }, [mode, pageIndex, router, workspaceCurrency]);
 
   useEffect(() => {
     void loadContacts();

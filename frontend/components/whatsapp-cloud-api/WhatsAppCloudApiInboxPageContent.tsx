@@ -15,6 +15,8 @@ import { supabase } from "@/lib/supabaseClient";
 import { invokeFunction } from "@/lib/supabaseFunctions";
 import {
   fetchWhatsappCloudApiInboxThreads,
+  formatWhatsappCloudApiError,
+  logWhatsappCloudApiError,
   markWhatsappCloudApiThreadRead,
   type WhatsappCloudApiInboxMessage,
   type WhatsappCloudApiInboxThread,
@@ -459,13 +461,18 @@ export default function WhatsAppCloudApiInboxPageContent({ mode }: Props) {
           : rows[0]?.contact_id || ""
       );
     } catch (err) {
-      setError(
-        err instanceof Error ? err.message : "No se pudo cargar el Inbox.",
-      );
+      logWhatsappCloudApiError("inbox page load failed", err, {
+        mode,
+        workspaceCurrency,
+        pageIndex,
+        limit: INBOX_PAGE_SIZE,
+        offset: pageIndex * INBOX_PAGE_SIZE,
+      });
+      setError(formatWhatsappCloudApiError(err, "No se pudo cargar el Inbox."));
     } finally {
       setLoading(false);
     }
-  }, [pageIndex, router, workspaceCurrency]);
+  }, [mode, pageIndex, router, workspaceCurrency]);
 
   useEffect(() => {
     void loadThreads();

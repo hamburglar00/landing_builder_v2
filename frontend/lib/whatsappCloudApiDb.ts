@@ -335,6 +335,55 @@ function firstString(...values: unknown[]): string {
   return "";
 }
 
+export function formatWhatsappCloudApiError(
+  error: unknown,
+  fallback: string,
+): string {
+  const record = asRecord(error);
+  const code = firstString(record?.code, record?.status);
+  const message = firstString(
+    record?.message,
+    record?.error_description,
+    record?.error,
+    error instanceof Error ? error.message : "",
+  );
+  const details = firstString(record?.details);
+  const hint = firstString(record?.hint);
+  const parts = [
+    fallback,
+    code ? `[${code}]` : "",
+    message,
+    details ? `Detalle: ${details}` : "",
+    hint ? `Hint: ${hint}` : "",
+  ].filter(Boolean);
+  return parts.join(" ");
+}
+
+export function logWhatsappCloudApiError(
+  context: string,
+  error: unknown,
+  meta: Record<string, unknown> = {},
+): void {
+  console.error(`[whatsapp-cloud-api] ${context}`, {
+    ...meta,
+    error,
+    formatted: formatWhatsappCloudApiError(error, "Error WhatsApp Cloud API."),
+  });
+}
+
+async function rpcSessionState(): Promise<{
+  hasSession: boolean;
+  hasAccessToken: boolean;
+  userId: string;
+}> {
+  const { data, error } = await supabase.auth.getSession();
+  return {
+    hasSession: Boolean(data.session),
+    hasAccessToken: Boolean(data.session?.access_token),
+    userId: data.session?.user?.id ?? firstString(asRecord(error)?.message),
+  };
+}
+
 function readPayloadPhone(payload: Record<string, unknown> | null): string {
   const entry = Array.isArray(payload?.entry)
     ? asRecord(payload.entry[0])
@@ -693,6 +742,18 @@ export async function fetchWhatsappCloudApiInboxThreads(
   workspaceCurrency?: "ARS" | "PYG" | null,
   offset = 0,
 ): Promise<WhatsappCloudApiInboxThread[]> {
+  const sessionState = await rpcSessionState();
+  if (!sessionState.hasAccessToken) {
+    const error = new Error("Sesion de Supabase no disponible para consultar Inbox.");
+    logWhatsappCloudApiError("fetch inbox threads missing session", error, {
+      limit,
+      offset,
+      workspaceCurrency: workspaceCurrency ?? null,
+      sessionState,
+    });
+    throw error;
+  }
+
   const { data, error } = await supabase.rpc(
     "get_whatsapp_cloud_api_inbox_threads_page",
     {
@@ -701,7 +762,18 @@ export async function fetchWhatsappCloudApiInboxThreads(
       p_workspace_currency: workspaceCurrency ?? null,
     },
   );
-  if (error) throw error;
+  if (error) {
+    logWhatsappCloudApiError("fetch inbox threads rpc failed", error, {
+      rpc: "get_whatsapp_cloud_api_inbox_threads_page",
+      limit,
+      offset,
+      workspaceCurrency: workspaceCurrency ?? null,
+      sessionState,
+    });
+    throw new Error(
+      formatWhatsappCloudApiError(error, "No se pudo cargar el Inbox."),
+    );
+  }
   return ((data ?? []) as Array<Record<string, unknown>>).map((row) => {
     const messages = Array.isArray(row.messages)
       ? row.messages
@@ -767,6 +839,18 @@ export async function fetchWhatsappCloudApiContactsPage(
   workspaceCurrency?: "ARS" | "PYG" | null,
   offset = 0,
 ): Promise<WhatsappCloudApiContactsPageRow[]> {
+  const sessionState = await rpcSessionState();
+  if (!sessionState.hasAccessToken) {
+    const error = new Error("Sesion de Supabase no disponible para consultar contactos.");
+    logWhatsappCloudApiError("fetch contacts missing session", error, {
+      limit,
+      offset,
+      workspaceCurrency: workspaceCurrency ?? null,
+      sessionState,
+    });
+    throw error;
+  }
+
   const { data, error } = await supabase.rpc(
     "get_whatsapp_cloud_api_contacts_page",
     {
@@ -775,7 +859,18 @@ export async function fetchWhatsappCloudApiContactsPage(
       p_workspace_currency: workspaceCurrency ?? null,
     },
   );
-  if (error) throw error;
+  if (error) {
+    logWhatsappCloudApiError("fetch contacts rpc failed", error, {
+      rpc: "get_whatsapp_cloud_api_contacts_page",
+      limit,
+      offset,
+      workspaceCurrency: workspaceCurrency ?? null,
+      sessionState,
+    });
+    throw new Error(
+      formatWhatsappCloudApiError(error, "No se pudieron cargar contactos."),
+    );
+  }
   return ((data ?? []) as Array<Record<string, unknown>>).map((row) => {
     const rawTag = firstString(row.tag);
     const tag = rawTag as WhatsappCloudApiInboxThread["tag"];
