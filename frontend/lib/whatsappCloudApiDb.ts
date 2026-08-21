@@ -17,6 +17,7 @@ export interface WhatsappCloudApiConfig {
   meta_api_version: string;
   webhook_verify_token: string;
   meta_messaging_dataset_id: string;
+  enrich_business_messaging_user_data: boolean;
   landing_tag: string;
   gerencia_selection_mode: "weighted_random" | "fair";
   gerencia_fair_criterion: "usage_count" | "messages_received";
@@ -139,6 +140,7 @@ export async function upsertWhatsappCloudApiConfig(input: {
   meta_api_version: string;
   webhook_verify_token: string;
   meta_messaging_dataset_id: string;
+  enrich_business_messaging_user_data: boolean;
   landing_tag: string;
   gerencia_selection_mode: "weighted_random" | "fair";
   gerencia_fair_criterion: "usage_count" | "messages_received";
@@ -164,6 +166,8 @@ export async function upsertWhatsappCloudApiConfig(input: {
       p_meta_api_version: input.meta_api_version,
       p_webhook_verify_token: input.webhook_verify_token,
       p_meta_messaging_dataset_id: input.meta_messaging_dataset_id,
+      p_enrich_business_messaging_user_data:
+        input.enrich_business_messaging_user_data,
       p_landing_tag: input.landing_tag,
       p_gerencia_selection_mode: input.gerencia_selection_mode,
       p_gerencia_fair_criterion: input.gerencia_fair_criterion,

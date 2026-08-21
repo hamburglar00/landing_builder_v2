@@ -3,6 +3,7 @@ import {
   type SupabaseClient,
 } from "https://esm.sh/@supabase/supabase-js@2";
 import {
+  buildBusinessMessagingUserData,
   buildMetaBusinessMessagingPurchaseRequest,
   buildMetaBusinessMessagingRequest,
   buildMetaRequest,
@@ -210,7 +211,7 @@ Deno.serve(async (req) => {
       ? await db
         .from("whatsapp_cloud_api_configs")
         .select(
-          "user_id, active, phone_number_id, whatsapp_business_account_id, meta_messaging_dataset_id, meta_access_token, meta_api_version",
+          "user_id, active, phone_number_id, whatsapp_business_account_id, meta_messaging_dataset_id, enrich_business_messaging_user_data, meta_access_token, meta_api_version",
         )
         .in("user_id", userIds)
       : { data: [] };
@@ -758,6 +759,14 @@ Deno.serve(async (req) => {
         geo_fill_only_when_missing: false,
       };
 
+      const businessMessagingUserData = useBusinessMessaging &&
+          isWhatsappCloudApi &&
+          whatsappCloudApiCfg?.enrich_business_messaging_user_data === true
+        ? await buildBusinessMessagingUserData(
+          conversionRow,
+          cfgObj.send_geo_capi !== false,
+        )
+        : undefined;
       const metaReq = useBusinessMessaging
         ? buildMetaBusinessMessagingPurchaseRequest(
           {
@@ -770,6 +779,7 @@ Deno.serve(async (req) => {
           ctwaClid,
           Number(eventTime),
           amount,
+          businessMessagingUserData,
         )
         : await buildMetaRequest(
           cfgObj,
@@ -1699,6 +1709,13 @@ async function retrySingleContactLeadCapiEvent(
     );
     return;
   }
+  const businessMessagingUserData = useBusinessMessaging &&
+      whatsappCloudApiCfg?.enrich_business_messaging_user_data === true
+    ? await buildBusinessMessagingUserData(
+      row as ConversionRow,
+      config.send_geo_capi !== false,
+    )
+    : undefined;
   const metaReq = useBusinessMessaging
     ? buildMetaBusinessMessagingRequest(
       {
@@ -1719,6 +1736,8 @@ async function retrySingleContactLeadCapiEvent(
       "Lead",
       ctwaClid,
       eventTime,
+      undefined,
+      businessMessagingUserData,
     )
     : await buildMetaRequest(
       config,

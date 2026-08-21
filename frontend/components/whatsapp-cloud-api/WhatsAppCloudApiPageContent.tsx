@@ -188,12 +188,14 @@ function Toggle({
   onChange,
   label,
   description,
+  title,
   disabled = false,
 }: {
   checked: boolean;
   onChange: (next: boolean) => void;
   label: string;
   description?: string;
+  title?: string;
   disabled?: boolean;
 }) {
   return (
@@ -201,6 +203,7 @@ function Toggle({
       type="button"
       role="switch"
       aria-checked={checked}
+      title={title}
       disabled={disabled}
       onClick={() => onChange(!checked)}
       className="flex min-w-0 items-center justify-between gap-3 rounded-xl border border-[var(--color-border-subtle)] bg-[rgba(255,255,255,0.025)] px-3 py-2 text-left transition hover:border-[var(--color-border-strong)] hover:bg-[rgba(255,255,255,0.045)] disabled:cursor-not-allowed disabled:opacity-60"
@@ -446,6 +449,7 @@ export default function WhatsAppCloudApiPageContent({
   const [apiVersion, setApiVersion] = useState("v25.0");
   const [verifyToken, setVerifyToken] = useState("");
   const [messagingDatasetId, setMessagingDatasetId] = useState("");
+  const [enrichBusinessMessagingUserData, setEnrichBusinessMessagingUserData] = useState(false);
   const [landingTag, setLandingTag] = useState("");
   const [selectionMode, setSelectionMode] = useState<"weighted_random" | "fair">("weighted_random");
   const [fairCriterion, setFairCriterion] = useState<"usage_count" | "messages_received">("usage_count");
@@ -511,6 +515,7 @@ export default function WhatsAppCloudApiPageContent({
     setApiVersion(cfg?.meta_api_version ?? "v25.0");
     setVerifyToken(cfg?.webhook_verify_token ?? generateVerifyToken());
     setMessagingDatasetId(cfg?.meta_messaging_dataset_id ?? "");
+    setEnrichBusinessMessagingUserData(cfg?.enrich_business_messaging_user_data ?? false);
     setLandingTag(cfg?.landing_tag ?? "");
     setTrackingEditing(!cfg?.id);
     setShowAccessToken(false);
@@ -676,6 +681,7 @@ export default function WhatsAppCloudApiPageContent({
         meta_api_version: apiVersion.trim() || "v25.0",
         webhook_verify_token: verifyToken.trim(),
         meta_messaging_dataset_id: messagingDatasetId.trim(),
+        enrich_business_messaging_user_data: enrichBusinessMessagingUserData,
         landing_tag: cleanTag(landingTag),
         gerencia_selection_mode: selectionMode,
         gerencia_fair_criterion: fairCriterion,
@@ -1137,6 +1143,15 @@ export default function WhatsAppCloudApiPageContent({
                   Consulta el dataset asociado al WABA. Si Meta no devuelve uno existente, se solicita a Meta obtenerlo para ese WABA.
                 </p>
               </div>
+
+              <Toggle
+                checked={enrichBusinessMessagingUserData}
+                onChange={setEnrichBusinessMessagingUserData}
+                disabled={trackingLocked}
+                label="Enriquecer user_data"
+                description="Off usa solo WABA y ctwa_clid. On agrega PII hasheada disponible."
+                title="Si esta activo se agregan al payload, solo cuando existen: telefono, email, nombre, apellido, ciudad, provincia, codigo postal, pais y external_id; todos hasheados con SHA-256. WABA y ctwa_clid se envian sin hash."
+              />
 
               <div className="rounded-lg border border-zinc-800 bg-zinc-950/30 px-3 py-2">
                 <div className="flex items-center justify-between gap-3">

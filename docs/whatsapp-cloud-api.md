@@ -108,6 +108,21 @@ No es la version de Meta CAPI para eventos de conversion. CAPI se configura desd
 
 Esta card mantiene la misma logica visual del editor de landings, pero adaptada a WhatsApp Cloud API.
 
+### Dataset Business Messaging ID
+
+Identificador del dataset de Conversions API for Business Messaging asociado al WABA.
+
+Por defecto, `LeadSubmitted` y `Purchase` se envian con el `user_data` minimo documentado para WhatsApp:
+
+```json
+{
+  "whatsapp_business_account_id": "WABA_ID",
+  "ctwa_clid": "CTWA_CLID"
+}
+```
+
+La opcion `Enriquecer user_data` es opt-in. Si se activa, se agregan solamente los datos disponibles en la fila de `conversions`: telefono, email, nombre, apellido, ciudad, provincia, codigo postal, pais y `external_id`. Esos valores se envian hasheados con SHA-256. No se inventan datos faltantes y `ctwa_clid` nunca se hashea.
+
 ### Pixel ID
 
 Se selecciona desde los pixels cargados en Integraciones.

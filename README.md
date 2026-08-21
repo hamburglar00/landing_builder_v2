@@ -301,6 +301,10 @@ incorrectos a Meta.
   - User data clave: `whatsapp_business_account_id` y `ctwa_clid`.
   - `ctwa_clid` se guarda desde el `referral` del primer mensaje entrante y no
     se hashea.
+  - El payload usa ese `user_data` minimo por defecto. La configuracion de
+    WhatsApp Cloud API puede activar enriquecimiento opt-in para agregar PII
+    hasheada disponible (`ph`, `em`, `fn`, `ln`, `ct`, `st`, `zp`, `country`,
+    `external_id`), sin inventar valores faltantes.
 
 ---
 

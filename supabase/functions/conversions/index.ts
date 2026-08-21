@@ -96,6 +96,7 @@ interface WhatsappCloudApiCapiConfig {
   phone_number_id: string;
   whatsapp_business_account_id: string;
   meta_messaging_dataset_id: string;
+  enrich_business_messaging_user_data?: boolean;
   meta_access_token: string;
   meta_api_version: string;
 }
@@ -2884,7 +2885,7 @@ async function resolveWhatsappCloudApiCapiConfig(
   let query = db
     .from("whatsapp_cloud_api_configs")
     .select(
-      "active, phone_number_id, whatsapp_business_account_id, meta_messaging_dataset_id, meta_access_token, meta_api_version",
+      "active, phone_number_id, whatsapp_business_account_id, meta_messaging_dataset_id, enrich_business_messaging_user_data, meta_access_token, meta_api_version",
     )
     .eq("user_id", row.user_id);
 
@@ -3072,6 +3073,7 @@ async function sendToMetaCAPI(
       wabaId: norm(chatraceConfig?.whatsapp_business_account_id),
       accessToken: norm(chatraceConfig?.meta_messaging_access_token),
       apiVersion: effectiveConfig.meta_api_version,
+      enrichUserData: false,
       source: "chatrace",
     }
     : isWhatsappCloudApi
@@ -3082,6 +3084,8 @@ async function sendToMetaCAPI(
       accessToken: norm(whatsappCloudApiConfig?.meta_access_token),
       apiVersion: norm(whatsappCloudApiConfig?.meta_api_version) ||
         effectiveConfig.meta_api_version,
+      enrichUserData:
+        whatsappCloudApiConfig?.enrich_business_messaging_user_data === true,
       source: "whatsapp_cloud_api",
     }
     : {
@@ -3090,6 +3094,7 @@ async function sendToMetaCAPI(
       wabaId: "",
       accessToken: "",
       apiVersion: effectiveConfig.meta_api_version,
+      enrichUserData: false,
       source: sourcePlatform || "unknown",
     };
   const businessMessagingConfigured = Boolean(
@@ -3585,6 +3590,7 @@ async function sendToMetaCAPI(
     }
     : undefined;
   const businessMessagingUserData = useBusinessMessaging
+      && businessMessagingConfig.enrichUserData
     ? await buildBusinessMessagingUserData(
       row as unknown as SharedConversionRow,
       effectiveConfig.send_geo_capi !== false,

@@ -776,6 +776,7 @@ export function buildMetaBusinessMessagingPurchaseRequest(
   ctwaClid: string,
   eventTime: number,
   value: number,
+  additionalUserData: MetaUserData = {},
 ): MetaRequest {
   return buildMetaBusinessMessagingRequest(
     config,
@@ -786,6 +787,7 @@ export function buildMetaBusinessMessagingPurchaseRequest(
       currency: config.meta_currency,
       value,
     },
+    additionalUserData,
   );
 }
 

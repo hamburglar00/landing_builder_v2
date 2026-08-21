@@ -174,6 +174,39 @@ Deno.test("Business Messaging Purchase matches Meta WhatsApp payload shape", () 
   );
 });
 
+Deno.test("Business Messaging Purchase can enrich user_data with hashed PII", async () => {
+  const row = buildFakeConversionRow("Purchase");
+  row.email = "comprador@test.com";
+  row.phone = "5493518690777";
+  row.fn = "Geraldine";
+  row.ln = "Perez";
+  row.external_id = "external-123";
+  const additionalUserData = await buildBusinessMessagingUserData(row, false);
+  const request = buildMetaBusinessMessagingPurchaseRequest(
+    {
+      dataset_id: "123456789",
+      whatsapp_business_account_id: "987654321",
+      meta_access_token: "token",
+      meta_api_version: "v25.0",
+      meta_currency: "ARS",
+    },
+    "opaque-ctwa-click-id",
+    1_700_000_000,
+    12500,
+    additionalUserData,
+  );
+
+  const data = request.body.data as Array<Record<string, unknown>>;
+  const event = data[0];
+  const userData = event.user_data as Record<string, unknown>;
+  for (const key of ["em", "ph", "fn", "ln", "external_id"]) {
+    const value = String(userData[key] ?? "");
+    assert(value.length === 64, `${key} must be a SHA-256 hex hash`);
+  }
+  assert(userData.ctwa_clid === "opaque-ctwa-click-id", "ctwa_clid stays raw");
+  assert(userData.whatsapp_business_account_id === "987654321", "WABA stays raw");
+});
+
 Deno.test("Business Messaging Lead matches Meta WhatsApp payload shape", () => {
   const request = buildMetaBusinessMessagingRequest(
     {
