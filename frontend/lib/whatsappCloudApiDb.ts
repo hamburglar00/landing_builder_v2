@@ -437,37 +437,22 @@ export async function fetchWhatsappCloudApiLogs(input: {
     .limit(limit);
   if (!input.isAdmin) requestLogQuery.eq("user_id", input.userId);
 
-  const capiLogQuery = supabase
-    .from("conversion_logs")
-    .select(
-      "id,user_id,conversion_id,function_name,level,message,detail,created_at,payload_meta,response_meta,result,workspace_currency,conversions!inner(source_platform,phone,promo_code,telefono_asignado,assigned_gerencia_label,lead_gerencia_label,purchase_gerencia_label)",
-    )
-    .eq("workspace_currency", input.workspaceCurrency)
-    .eq("conversions.source_platform", "whatsapp_cloud_api")
-    .not("payload_meta", "eq", "")
-    .order("created_at", { ascending: false })
-    .limit(limit);
-  if (!input.isAdmin) capiLogQuery.eq("user_id", input.userId);
-
   const [
     webhookResult,
     assignmentResult,
     outboundResult,
     requestLogResult,
-    capiLogResult,
   ] =
     await Promise.all([
       webhookQuery,
       assignmentQuery,
       outboundQuery,
       requestLogQuery,
-      capiLogQuery,
     ]);
   if (webhookResult.error) throw webhookResult.error;
   if (assignmentResult.error) throw assignmentResult.error;
   if (outboundResult.error) throw outboundResult.error;
   if (requestLogResult.error) throw requestLogResult.error;
-  if (capiLogResult.error) throw capiLogResult.error;
 
   const logs: WhatsappCloudApiLogEntry[] = [];
 
@@ -568,51 +553,7 @@ export async function fetchWhatsappCloudApiLogs(input: {
     });
   }
 
-  for (const row of capiLogResult.data ?? []) {
-    const metaPayload = parseJsonRecord(row.payload_meta);
-    const metaResponse = parseJsonRecord(row.response_meta);
-    const eventName = readMetaEventName(metaPayload);
-    const conversion = asRecord(row.conversions);
-    const responseStatus = firstString(row.level).toUpperCase() === "ERROR"
-      ? "error"
-      : firstString(metaResponse?.events_received) === "1"
-      ? "enviado"
-      : firstString(row.level).toLowerCase() || "info";
-    logs.push({
-      id: `capi-${String(row.id)}`,
-      kind: "meta_capi",
-      direction: "us_to_meta",
-      meta_event_name: eventName,
-      label: eventName ? `Meta CAPI ${eventName}` : "Meta CAPI",
-      status: responseStatus,
-      created_at: String(row.created_at ?? ""),
-      config_id: null,
-      config_name: "",
-      phone: firstString(conversion?.phone),
-      phone_number_id: firstString(
-        asRecord(
-          Array.isArray(metaPayload?.data)
-            ? asRecord(metaPayload.data[0])?.user_data
-            : null,
-        )?.whatsapp_business_account_id,
-      ),
-      meta_message_id: readMetaResponseId(metaResponse),
-      promo_code: firstString(conversion?.promo_code),
-      gerencia: firstString(
-        conversion?.purchase_gerencia_label,
-        conversion?.lead_gerencia_label,
-        conversion?.assigned_gerencia_label,
-      ),
-      attempts: null,
-      error: firstString(row.level).toUpperCase() === "ERROR"
-        ? firstString(row.result, row.detail, row.message)
-        : "",
-      payload: {
-        request: metaPayload ?? row.payload_meta,
-        response: metaResponse ?? row.response_meta,
-      },
-    });
-  }
+  await appendMetaCapiLogs(logs, input, limit);
 
   return logs
     .filter((log) => log.created_at)
@@ -621,6 +562,110 @@ export async function fetchWhatsappCloudApiLogs(input: {
         new Date(b.created_at).getTime() - new Date(a.created_at).getTime(),
     )
     .slice(0, limit);
+}
+
+async function appendMetaCapiLogs(
+  logs: WhatsappCloudApiLogEntry[],
+  input: {
+    userId: string;
+    isAdmin: boolean;
+    workspaceCurrency: "ARS" | "PYG";
+  },
+  limit: number,
+): Promise<void> {
+  try {
+    const capiLogQuery = supabase
+      .from("conversion_logs")
+      .select(
+        "id,user_id,conversion_id,function_name,level,message,detail,created_at,payload_meta,response_meta,result,workspace_currency",
+      )
+      .eq("workspace_currency", input.workspaceCurrency)
+      .not("payload_meta", "eq", "")
+      .not("conversion_id", "is", null)
+      .order("created_at", { ascending: false })
+      .limit(limit);
+    if (!input.isAdmin) capiLogQuery.eq("user_id", input.userId);
+
+    const { data: capiRows, error: capiError } = await capiLogQuery;
+    if (capiError) throw capiError;
+
+    const conversionIds = Array.from(
+      new Set(
+        (capiRows ?? [])
+          .map((row) => firstString(row.conversion_id))
+          .filter(Boolean),
+      ),
+    );
+    if (!conversionIds.length) return;
+
+    const conversionQuery = supabase
+      .from("conversions")
+      .select(
+        "id,source_platform,phone,promo_code,telefono_asignado,assigned_gerencia_label,lead_gerencia_label,purchase_gerencia_label",
+      )
+      .eq("source_platform", "whatsapp_cloud_api")
+      .in("id", conversionIds);
+    if (!input.isAdmin) conversionQuery.eq("user_id", input.userId);
+
+    const { data: conversionRows, error: conversionError } =
+      await conversionQuery;
+    if (conversionError) throw conversionError;
+
+    const conversionsById = new Map(
+      (conversionRows ?? []).map((row) => [String(row.id), row]),
+    );
+
+    for (const row of capiRows ?? []) {
+      const conversion = asRecord(
+        conversionsById.get(firstString(row.conversion_id)),
+      );
+      if (!conversion) continue;
+      const metaPayload = parseJsonRecord(row.payload_meta);
+      const metaResponse = parseJsonRecord(row.response_meta);
+      const eventName = readMetaEventName(metaPayload);
+      const responseStatus = firstString(row.level).toUpperCase() === "ERROR"
+        ? "error"
+        : firstString(metaResponse?.events_received) === "1"
+        ? "enviado"
+        : firstString(row.level).toLowerCase() || "info";
+      logs.push({
+        id: `capi-${String(row.id)}`,
+        kind: "meta_capi",
+        direction: "us_to_meta",
+        meta_event_name: eventName,
+        label: eventName ? `Meta CAPI ${eventName}` : "Meta CAPI",
+        status: responseStatus,
+        created_at: String(row.created_at ?? ""),
+        config_id: null,
+        config_name: "",
+        phone: firstString(conversion.phone),
+        phone_number_id: firstString(
+          asRecord(
+            Array.isArray(metaPayload?.data)
+              ? asRecord(metaPayload.data[0])?.user_data
+              : null,
+          )?.whatsapp_business_account_id,
+        ),
+        meta_message_id: readMetaResponseId(metaResponse),
+        promo_code: firstString(conversion.promo_code),
+        gerencia: firstString(
+          conversion.purchase_gerencia_label,
+          conversion.lead_gerencia_label,
+          conversion.assigned_gerencia_label,
+        ),
+        attempts: null,
+        error: firstString(row.level).toUpperCase() === "ERROR"
+          ? firstString(row.result, row.detail, row.message)
+          : "",
+        payload: {
+          request: metaPayload ?? row.payload_meta,
+          response: metaResponse ?? row.response_meta,
+        },
+      });
+    }
+  } catch (error) {
+    console.warn("[whatsapp-cloud-api-logs] meta capi logs skipped", error);
+  }
 }
 
 function normalizeInboxMessage(
