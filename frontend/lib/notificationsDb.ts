@@ -9,6 +9,7 @@ export interface NotificationSettings {
   user_id: string;
   enabled: boolean;
   promotion_winner_notifications_enabled: boolean;
+  whatsapp_cloud_api_health_notifications_enabled: boolean;
   channel: "telegram";
   telegram_chat_id: string;
   telegram_start_token: string;
@@ -34,6 +35,7 @@ const DEFAULT_SETTINGS: NotificationSettings = {
   user_id: "",
   enabled: true,
   promotion_winner_notifications_enabled: true,
+  whatsapp_cloud_api_health_notifications_enabled: true,
   channel: "telegram",
   telegram_chat_id: "",
   telegram_start_token: "",
@@ -101,6 +103,8 @@ export async function fetchNotificationSettings(userId: string): Promise<Notific
       ...(data as NotificationSettings),
       promotion_winner_notifications_enabled:
         (data as Partial<NotificationSettings>).promotion_winner_notifications_enabled ?? true,
+      whatsapp_cloud_api_health_notifications_enabled:
+        (data as Partial<NotificationSettings>).whatsapp_cloud_api_health_notifications_enabled ?? true,
     };
     if (String(row.telegram_start_token || "").trim()) return row;
     const fixedToken = generateStartToken();
@@ -132,6 +136,8 @@ export async function fetchNotificationSettings(userId: string): Promise<Notific
     ...(created as NotificationSettings),
     promotion_winner_notifications_enabled:
       (created as Partial<NotificationSettings>).promotion_winner_notifications_enabled ?? true,
+    whatsapp_cloud_api_health_notifications_enabled:
+      (created as Partial<NotificationSettings>).whatsapp_cloud_api_health_notifications_enabled ?? true,
   };
 }
 
@@ -144,6 +150,8 @@ export async function upsertNotificationSettings(settings: NotificationSettings)
         user_id: settings.user_id,
         enabled: settings.enabled,
         promotion_winner_notifications_enabled: settings.promotion_winner_notifications_enabled ?? true,
+        whatsapp_cloud_api_health_notifications_enabled:
+          settings.whatsapp_cloud_api_health_notifications_enabled ?? true,
         channel: "telegram",
         telegram_chat_id: settings.telegram_chat_id ?? "",
         telegram_start_token: startToken,

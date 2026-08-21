@@ -109,13 +109,16 @@ async function notifyHealthChange(
 
   const { data: settingsRow } = await db
     .from("notification_settings")
-    .select("enabled, channel")
+    .select("enabled, channel, whatsapp_cloud_api_health_notifications_enabled")
     .eq("user_id", config.user_id)
     .maybeSingle();
   if (
     settingsRow &&
     ((settingsRow as { enabled?: boolean }).enabled === false ||
-      str((settingsRow as { channel?: string }).channel) !== "telegram")
+      str((settingsRow as { channel?: string }).channel) !== "telegram" ||
+      (settingsRow as {
+        whatsapp_cloud_api_health_notifications_enabled?: boolean;
+      }).whatsapp_cloud_api_health_notifications_enabled === false)
   ) {
     return 0;
   }
@@ -128,11 +131,12 @@ async function notifyHealthChange(
   const rows = (destinations ?? []) as Array<{ telegram_chat_id?: string }>;
   if (!rows.length) return 0;
 
-  const label = str(config.name) || str(config.display_phone_number) ||
-    str(config.phone_number_id);
+  const internalName = str(config.name) || "-";
+  const visiblePhone = str(config.display_phone_number) || "-";
   const text = [
     "<b>Alerta WhatsApp Cloud API</b>",
-    `Numero: ${escapeHtml(label)}`,
+    `Nombre interno: ${escapeHtml(internalName)}`,
+    `Telefono visible: ${escapeHtml(visiblePhone)}`,
     `Calidad: ${escapeHtml(str(config.quality_rating) || "-")} -> ${escapeHtml(str(result.quality) || "-")}`,
     `Limite: ${escapeHtml(str(config.messaging_limit_tier) || "-")} -> ${escapeHtml(str(result.tier) || "-")}`,
     `Estado: ${escapeHtml(str(config.phone_number_status) || "-")} -> ${escapeHtml(str(result.status) || "-")}`,

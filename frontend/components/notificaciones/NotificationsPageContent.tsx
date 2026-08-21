@@ -489,6 +489,64 @@ export default function NotificationsPageContent({
         </div>
       </section>
 
+      <section className="rounded-xl border border-zinc-800 bg-zinc-900/50 p-4">
+        <div className="flex flex-wrap items-center justify-between gap-3">
+          <div>
+            <h3 className="text-sm font-semibold text-zinc-200">
+              WhatsApp Cloud API
+            </h3>
+            <p className="mt-1 text-xs text-zinc-500">
+              Recibi por Telegram cambios de calidad, limite o conexion del numero oficial.
+            </p>
+            <p className="mt-1 text-xs text-zinc-500">
+              El aviso incluye el nombre interno y el telefono visible configurado.
+            </p>
+          </div>
+          <div className="flex items-center gap-2">
+            <span
+              className={`text-xs font-medium ${
+                cfg.whatsapp_cloud_api_health_notifications_enabled
+                  ? "text-emerald-300"
+                  : "text-zinc-500"
+              }`}
+            >
+              {cfg.whatsapp_cloud_api_health_notifications_enabled
+                ? "Activadas"
+                : "Desactivadas"}
+            </span>
+            <ToggleSwitch
+              checked={cfg.whatsapp_cloud_api_health_notifications_enabled ?? true}
+              label="Activar notificaciones de estado WhatsApp Cloud API"
+              onChange={(checked) =>
+                setCfg((prev) =>
+                  prev
+                    ? {
+                      ...prev,
+                      whatsapp_cloud_api_health_notifications_enabled: checked,
+                    }
+                    : prev,
+                )
+              }
+            />
+          </div>
+        </div>
+        <div className="mt-3 flex justify-end">
+          <button
+            type="button"
+            disabled={saving}
+            onClick={async () => {
+              await onSaveSettings(cfg);
+              setMsgType("success");
+              setMsg("Configuracion de WhatsApp Cloud API guardada.");
+              setTimeout(() => setMsg(null), 3000);
+            }}
+            className="rounded-lg border border-zinc-700 bg-zinc-100 px-3 py-1.5 text-xs font-medium text-zinc-900 hover:bg-zinc-200 disabled:opacity-50"
+          >
+            Guardar WhatsApp Cloud API
+          </button>
+        </div>
+      </section>
+
       {showPromotionsNotifications && (
         <section className="rounded-xl border border-zinc-800 bg-zinc-900/50 p-4">
           <div className="flex flex-wrap items-center justify-between gap-3">
