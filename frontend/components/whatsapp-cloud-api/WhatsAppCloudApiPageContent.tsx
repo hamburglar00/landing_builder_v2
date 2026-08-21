@@ -893,7 +893,7 @@ export default function WhatsAppCloudApiPageContent({
               <div className="mt-4 rounded-lg border border-sky-900/70 bg-sky-950/30 p-3">
                 <p className="text-xs font-semibold text-sky-100">Dataset en otro portafolio</p>
                 <p className="mt-1 text-xs leading-relaxed text-zinc-400">
-                  Si la cuenta publicitaria y el dataset/WABA estan en portafolios distintos, no crees otro dataset. Desde el portafolio dueno del dataset, compartilo o asignalo al portafolio/cuenta publicitaria que pauta en Meta Business Settings &gt; Data sources &gt; Datasets &gt; Assign partners/ad accounts. Despues elegi ese dataset en el conjunto de anuncios.
+                  Si la cuenta publicitaria y el dataset/WABA estan en portafolios distintos debes compartir el dataset al portafolio donde se encuentra la cuenta publicitaria.
                 </p>
               </div>
             </div>

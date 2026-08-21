@@ -112,7 +112,7 @@ Esta card mantiene la misma logica visual del editor de landings, pero adaptada 
 
 Identificador del dataset de Conversions API for Business Messaging asociado al WABA.
 
-Si la cuenta publicitaria y el dataset/WABA estan en portafolios distintos, no conviene crear un dataset nuevo. Desde el portafolio que es dueno del dataset, compartir o asignar ese dataset al portafolio/cuenta publicitaria que pauta en `Meta Business Settings > Data sources > Datasets > Assign partners/ad accounts`. Luego seleccionar ese dataset en el conjunto de anuncios correspondiente.
+Si la cuenta publicitaria y el dataset/WABA estan en portafolios distintos debes compartir el dataset al portafolio donde se encuentra la cuenta publicitaria.
 
 Por defecto, `LeadSubmitted` y `Purchase` se envian con el `user_data` minimo documentado para WhatsApp:
 
