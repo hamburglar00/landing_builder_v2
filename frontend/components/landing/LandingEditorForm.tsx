@@ -129,7 +129,7 @@ const TEMPLATE4_CHAT_DEFAULTS: LandingTemplate4ChatConfig = {
 const TEMPLATE5_LIVE_DEFAULTS: LandingTemplate5LiveConfig = {
   titleText: "ESTA PASANDO\nAHORA MISMO.",
   subtitleText:
-    "Un asesor te abre la cuenta en 2 minutos por WhatsApp y te acompana en todo el proceso...",
+    "Un asesor te abre la cuenta en 2 minutos por WhatsApp y te acompaña en todo el proceso...",
   profileImageUrl: "",
   backgroundImageUrl: "",
 };

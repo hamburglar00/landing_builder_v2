@@ -74,7 +74,7 @@ export const DEFAULT_CONFIG: LandingThemeConfig = {
   template5Live: {
     titleText: "ESTA PASANDO\nAHORA MISMO.",
     subtitleText:
-      "Un asesor te abre la cuenta en 2 minutos por WhatsApp y te acompana en todo el proceso...",
+      "Un asesor te abre la cuenta en 2 minutos por WhatsApp y te acompaña en todo el proceso...",
     profileImageUrl: "",
     backgroundImageUrl: "",
   },

@@ -287,7 +287,7 @@ export function buildLandingConfig({
           "ESTA PASANDO\nAHORA MISMO.",
         subtitleText:
           themeWithHex.template5Live?.subtitleText ||
-          "Un asesor te abre la cuenta en 2 minutos por WhatsApp y te acompana en todo el proceso...",
+          "Un asesor te abre la cuenta en 2 minutos por WhatsApp y te acompaña en todo el proceso...",
         profileImageUrl: themeWithHex.template5Live?.profileImageUrl || "",
         backgroundImageUrl: themeWithHex.template5Live?.backgroundImageUrl || "",
       },

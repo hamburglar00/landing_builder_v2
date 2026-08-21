@@ -1178,7 +1178,9 @@ body.public-lead-capture-open {
   margin-top: 15px;
   color: rgba(244, 244, 245, 0.78);
   font-size: 16px;
+  font-weight: 850;
   line-height: 1.45;
+  text-shadow: 0 2px 10px rgba(0, 0, 0, 0.42);
 }
 
 .template5__advisor,
@@ -1637,7 +1639,9 @@ body.public-lead-capture-open {
 }
 
 .public-landing.template5 .template5__footer {
-  padding-top: 34px;
+  bottom: 18px;
+  padding-top: 28px;
+  padding-bottom: max(18px, env(safe-area-inset-bottom));
   background: linear-gradient(180deg, rgba(7, 3, 2, 0), rgba(7, 3, 2, 0.94) 30%, #070302 100%);
 }
 
