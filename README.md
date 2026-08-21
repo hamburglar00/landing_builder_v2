@@ -32,6 +32,7 @@ No se limita a reporting: tambien ejecuta logica operativa (dedupe, retries, not
 - **Contact**: llega desde la landing publica al endpoint `conversions`.
 - **Lead/Purchase**: llegan por JSON desde backend externo/chatbot/kommo-intermediarios.
 - **Atrio**: la landing crea `Contact` y redirige al webchat con `promo_code` + `atrio_id`. Luego Atrio envia `LEAD`/`PURCHASE` con `source_platform: "atrio"`, `atrio_id` y, si existe, `players_id` para trazabilidad del jugador.
+- **WhatsApp Cloud API**: el usuario escribe al numero oficial, el sistema responde con una derivacion al asesor y el `Contact` interno se crea cuando el usuario toca el link/boton de redireccion.
 
 ### 2.2 Persistencia
 - Se guarda cada conversion en `public.conversions`.
@@ -401,6 +402,63 @@ entrada directa Click-to-WhatsApp. Internamente se comporta como una landing:
 recibe un mensaje, asigna una gerencia/telefono, responde con un enlace/boton
 al asesor y conserva el recorrido para `LeadSubmitted` y `Purchase`.
 
+Flujo completo:
+1. Se conecta un numero oficial de WhatsApp Cloud API a una app/WABA de Meta y
+   se asocia a la configuracion del cliente en el constructor.
+2. El cliente crea un anuncio Click-to-WhatsApp.
+3. El usuario toca el anuncio y WhatsApp abre el chat contra el numero oficial.
+4. Cuando el usuario envia el primer mensaje, Meta manda el webhook completo al
+   constructor.
+5. El constructor guarda el payload crudo y el contexto de atribucion cuando
+   existe (`referral`, `ctwa_clid`, `source_id`, `source_url`, etc.).
+6. El sistema selecciona una gerencia/telefono del pool asignado, genera
+   `promo_code` y responde por WhatsApp con el mensaje automatico configurado.
+7. Si el usuario toca el link/boton intermedio hacia el asesor, el constructor
+   registra el click y crea el `Contact` interno en `conversions`.
+8. Si luego el usuario escribe al WhatsApp del asesor, el backend del bot envia
+   `action: "LEAD"` al endpoint de conversiones.
+9. Si el usuario carga, el backend del bot envia `action: "PURCHASE"`.
+10. `LEAD` y `PURCHASE` matchean primero por `promo_code`; si no viene promo,
+    el fallback es conservador usando el telefono del usuario y la asignacion
+    del recorrido.
+11. Las filas quedan con `source_platform = "whatsapp_cloud_api"` para filtros,
+    reportes, trazabilidad y payload CAPI de Business Messaging.
+
+Diagrama:
+
+```mermaid
+sequenceDiagram
+  autonumber
+  participant U as Usuario
+  participant A as Anuncio CTWA
+  participant W as WhatsApp Cloud API
+  participant C as Constructor
+  participant DB as Postgres
+  participant R as Redirect intermedio
+  participant S as WhatsApp asesor
+  participant B as Backend bot
+  participant M as Meta CAPI
+
+  U->>A: toca anuncio Click-to-WhatsApp
+  A->>W: abre chat con numero oficial
+  U->>W: envia primer mensaje
+  W->>C: webhook messages + referral/ctwa_clid
+  C->>DB: guarda evento raw e inbox (estado Nuevo)
+  C->>DB: selecciona gerencia/telefono y genera promo_code
+  C->>W: envia respuesta automatica con link/boton al asesor
+  U->>R: toca link/boton de redireccion
+  R->>DB: registra click y crea Contact interno
+  R-->>U: redirige a wa.me del asesor con promo_code
+  U->>S: escribe al asesor
+  B->>C: POST action LEAD
+  C->>DB: matchea por promo_code o fallback phone/asignacion
+  C->>M: LeadSubmitted (business_messaging)
+  U->>S: realiza carga
+  B->>C: POST action PURCHASE
+  C->>DB: matchea por promo_code o fallback phone/asignacion
+  C->>M: Purchase (business_messaging)
+```
+
 Componentes:
 - Configuracion de identidad Meta:
   - nombre interno,
@@ -440,6 +498,8 @@ Semantica de eventos:
   crea `Contact` en `conversions`.
 - Click en el link/boton al asesor: crea el `Contact` interno, igual que el CTA
   de una landing.
+- `source_platform` queda en `whatsapp_cloud_api` para el `Contact` y para los
+  eventos posteriores que matchean contra ese recorrido.
 - `LeadSubmitted` y `Purchase`: matchean primero por `promo_code`; si no hay
   promo, WhatsApp Cloud API puede matchear por `phone + gerencia/telefono
   asignado` dentro de la ventana configurada.
