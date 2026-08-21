@@ -65,6 +65,26 @@ const OPT_IN_NOTES = [
   "No enviamos mensajes proactivos fuera de esa ventana. Para hacerlo harian falta templates aprobados y consentimiento explicito.",
 ];
 
+type InstructionHelpKey = "webhook" | "verifyToken" | "contactCapi";
+
+const INSTRUCTION_FIELD_HELP: Record<InstructionHelpKey, { title: string; description: string }> = {
+  webhook: {
+    title: "Webhook URL",
+    description:
+      "Es la URL publica del constructor que se pega en Meta Developers como Callback URL. Meta la usa para enviar los mensajes entrantes y eventos de calidad del numero.",
+  },
+  verifyToken: {
+    title: "Verify token",
+    description:
+      "Es un token nuestro que Meta pide una sola vez para verificar el webhook. Tiene que coincidir exactamente con el valor pegado en Meta Developers.",
+  },
+  contactCapi: {
+    title: "Contact CAPI",
+    description:
+      "En WhatsApp Cloud API el Contact se guarda interno cuando el usuario toca la derivacion, pero no se envia a Meta. Los eventos enviados a Meta son LeadSubmitted y Purchase por Business Messaging.",
+  },
+};
+
 const PHONE_KIND_OPTIONS: Array<{ value: PhoneKind; label: string }> = [
   { value: "carga", label: "Carga" },
   { value: "assistant", label: "Asistente" },
@@ -407,6 +427,33 @@ function CopyButton({
   );
 }
 
+function InstructionInfoButton({
+  active,
+  label,
+  onClick,
+}: {
+  active: boolean;
+  label: string;
+  onClick: () => void;
+}) {
+  return (
+    <button
+      type="button"
+      aria-label={label}
+      aria-pressed={active}
+      title={label}
+      onClick={onClick}
+      className={`inline-flex h-4 w-4 shrink-0 items-center justify-center rounded-full border text-[10px] font-semibold transition ${
+        active
+          ? "border-sky-300 bg-sky-400/20 text-sky-100"
+          : "border-zinc-600 bg-zinc-950 text-zinc-400 hover:border-sky-400 hover:text-sky-200"
+      }`}
+    >
+      i
+    </button>
+  );
+}
+
 export default function WhatsAppCloudApiPageContent({
   mode,
 }: {
@@ -426,6 +473,7 @@ export default function WhatsAppCloudApiPageContent({
   const [message, setMessage] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [instructionsOpen, setInstructionsOpen] = useState(false);
+  const [instructionInfoKey, setInstructionInfoKey] = useState<InstructionHelpKey | null>(null);
   const [config, setConfig] = useState<WhatsappCloudApiConfig | null>(null);
   const [gerencias, setGerencias] = useState<Gerencia[]>([]);
   const [workGroups, setWorkGroups] = useState<GerenciaWorkGroup[]>([]);
@@ -842,6 +890,12 @@ export default function WhatsAppCloudApiPageContent({
                   </li>
                 ))}
               </ol>
+              <div className="mt-4 rounded-lg border border-sky-900/70 bg-sky-950/30 p-3">
+                <p className="text-xs font-semibold text-sky-100">Dataset en otro portafolio</p>
+                <p className="mt-1 text-xs leading-relaxed text-zinc-400">
+                  Si la cuenta publicitaria y el dataset/WABA estan en portafolios distintos, no crees otro dataset. Desde el portafolio dueno del dataset, compartilo o asignalo al portafolio/cuenta publicitaria que pauta en Meta Business Settings &gt; Data sources &gt; Datasets &gt; Assign partners/ad accounts. Despues elegi ese dataset en el conjunto de anuncios.
+                </p>
+              </div>
             </div>
 
             <div className="rounded-xl border border-zinc-800 bg-zinc-950/50 p-4">
@@ -869,16 +923,46 @@ export default function WhatsAppCloudApiPageContent({
 
           <div className="mt-4 grid gap-3 text-xs text-zinc-300 lg:grid-cols-3">
             <div className="rounded-lg border border-zinc-800 bg-zinc-900/60 p-3">
-              <p className="font-semibold text-zinc-100">Webhook URL</p>
+              <div className="flex items-center gap-1.5">
+                <p className="font-semibold text-zinc-100">Webhook URL</p>
+                <InstructionInfoButton
+                  active={instructionInfoKey === "webhook"}
+                  label="Que es Webhook URL"
+                  onClick={() => setInstructionInfoKey((current) => current === "webhook" ? null : "webhook")}
+                />
+              </div>
               <p className="mt-1 break-all font-mono text-[11px] text-sky-200">{webhookUrl || "Sin URL disponible"}</p>
+              {instructionInfoKey === "webhook" ? (
+                <p className="mt-2 text-[11px] leading-4 text-zinc-400">{INSTRUCTION_FIELD_HELP.webhook.description}</p>
+              ) : null}
             </div>
             <div className="rounded-lg border border-zinc-800 bg-zinc-900/60 p-3">
-              <p className="font-semibold text-zinc-100">Verify token</p>
+              <div className="flex items-center gap-1.5">
+                <p className="font-semibold text-zinc-100">Verify token</p>
+                <InstructionInfoButton
+                  active={instructionInfoKey === "verifyToken"}
+                  label="Que es Verify token"
+                  onClick={() => setInstructionInfoKey((current) => current === "verifyToken" ? null : "verifyToken")}
+                />
+              </div>
               <p className="mt-1 font-mono text-[11px] text-zinc-300">{verifyToken || "Se genera al cargar"}</p>
+              {instructionInfoKey === "verifyToken" ? (
+                <p className="mt-2 text-[11px] leading-4 text-zinc-400">{INSTRUCTION_FIELD_HELP.verifyToken.description}</p>
+              ) : null}
             </div>
             <div className="rounded-lg border border-zinc-800 bg-zinc-900/60 p-3">
-              <p className="font-semibold text-zinc-100">Contact CAPI</p>
+              <div className="flex items-center gap-1.5">
+                <p className="font-semibold text-zinc-100">Contact CAPI</p>
+                <InstructionInfoButton
+                  active={instructionInfoKey === "contactCapi"}
+                  label="Que es Contact CAPI"
+                  onClick={() => setInstructionInfoKey((current) => current === "contactCapi" ? null : "contactCapi")}
+                />
+              </div>
               <p className="mt-1 text-zinc-400">Omitido por diseno para este flujo. El Contact queda interno.</p>
+              {instructionInfoKey === "contactCapi" ? (
+                <p className="mt-2 text-[11px] leading-4 text-zinc-400">{INSTRUCTION_FIELD_HELP.contactCapi.description}</p>
+              ) : null}
             </div>
           </div>
         </section>
