@@ -344,6 +344,10 @@ const isClickToWhatsAppSource = (sourcePlatform: unknown): boolean =>
   ["chatrace", "whatsapp_cloud_api"].includes(
     normalizedSourcePlatform(sourcePlatform),
   );
+const fromMetaAdsForRow = (
+  explicit: unknown,
+  ctwaClid: unknown,
+): boolean => toBool(explicit) || Boolean(normalizeCtwaClid(ctwaClid));
 const META_CAPI_MAX_EVENT_AGE_SECONDS = 7 * 24 * 60 * 60;
 const META_CAPI_FETCH_TIMEOUT_MS = 8000;
 const PURCHASE_UNPROTECTED_OBSERVATION =
@@ -4871,7 +4875,10 @@ async function handleLead(
       country: norm(geo.country) || trustedLineage?.country || "",
       fbp: norm(p.fbp) || trustedLineage?.fbp || "",
       fbc: norm(p.fbc) || trustedLineage?.fbc || "",
-      from_meta_ads: trustedLineage?.from_meta_ads ?? false,
+      from_meta_ads: fromMetaAdsForRow(
+        trustedLineage?.from_meta_ads,
+        inboundCtwaClid || trustedLineage?.ctwa_clid,
+      ),
       geo_source: payloadGeoSource !== "none"
         ? payloadGeoSource
         : (norm(trustedLineage?.geo_source) || "none"),
@@ -5137,6 +5144,14 @@ async function handleLead(
       updates.ctwa_clid = inboundCtwaClid;
     }
     if (
+      fromMetaAdsForRow(
+        currentRow?.from_meta_ads,
+        inboundCtwaClid || currentRow?.ctwa_clid,
+      )
+    ) {
+      updates.from_meta_ads = true;
+    }
+    if (
       inboundDatasetId &&
       !norm((cur as Record<string, unknown> | null)?.dataset_id)
     ) {
@@ -5333,6 +5348,8 @@ async function handleCompleteRegistration(
   );
   const inboundMetaPixelId = norm(p.meta_pixel_id || p.pixel_id);
   const inboundDatasetId = norm(p.dataset_id || p.meta_messaging_dataset_id);
+  const inboundSourcePlatform = norm(p.source_platform);
+  const inboundCtwaClid = ctwaClidForSource(p.ctwa_clid, inboundSourcePlatform);
   const eventGerencia = await resolveEventGerenciaSnapshot(
     db,
     landing.user_id,
@@ -5578,14 +5595,14 @@ async function handleCompleteRegistration(
     country: norm(geo.country),
     fbp: norm(p.fbp),
     fbc: norm(p.fbc),
-    from_meta_ads: false,
+    from_meta_ads: fromMetaAdsForRow(p.from_meta_ads, inboundCtwaClid),
     geo_source: payloadGeoSource,
     meta_pixel_id: resolvedPixelId,
     dataset_id: inboundDatasetId,
     pixel_attribution_source: "",
     pixel_attribution_conversion_id: null,
-    source_platform: norm(p.source_platform),
-    ctwa_clid: ctwaClidForSource(p.ctwa_clid, p.source_platform),
+    source_platform: inboundSourcePlatform,
+    ctwa_clid: inboundCtwaClid,
     pixel_id: resolvedPixelId,
     contact_event_id: "",
     contact_event_time: null,
@@ -6283,6 +6300,14 @@ async function handlePurchase(
     ) {
       updates.ctwa_clid = inboundCtwaClid;
     }
+    if (
+      fromMetaAdsForRow(
+        existingRow?.from_meta_ads,
+        inboundCtwaClid || existingRow?.ctwa_clid,
+      )
+    ) {
+      updates.from_meta_ads = true;
+    }
     if (testEventCode) updates.test_event_code = testEventCode;
     if (existingRow?.lead_event_id) {
       updates.lead_event_id = existingRow.lead_event_id;
@@ -6524,7 +6549,10 @@ async function handlePurchase(
       country: geo.country || firstSource?.country || "",
       fbp: firstSource?.fbp || "",
       fbc: firstSource?.fbc || "",
-      from_meta_ads: firstSource?.from_meta_ads ?? false,
+      from_meta_ads: fromMetaAdsForRow(
+        firstSource?.from_meta_ads,
+        inboundCtwaClid || firstSource?.ctwa_clid,
+      ),
       geo_source: payloadGeoSource !== "none"
         ? payloadGeoSource
         : (norm(firstSource?.geo_source) || "none"),
@@ -6819,7 +6847,10 @@ async function handlePurchase(
     country: geo.country || repeatSourceRow?.country || "",
     fbp: repeatSourceRow?.fbp ?? "",
     fbc: repeatSourceRow?.fbc ?? "",
-    from_meta_ads: repeatSourceRow?.from_meta_ads ?? false,
+    from_meta_ads: fromMetaAdsForRow(
+      repeatSourceRow?.from_meta_ads,
+      repeatCtwaClid || repeatSourceRow?.ctwa_clid,
+    ),
     geo_source: payloadGeoSource !== "none"
       ? payloadGeoSource
       : (norm(repeatSourceRow?.geo_source) || "none"),
@@ -7248,7 +7279,10 @@ async function handleSimplePurchase(
     country: srcRow?.country ?? "",
     fbp: srcRow?.fbp ?? "",
     fbc: srcRow?.fbc ?? "",
-    from_meta_ads: srcRow?.from_meta_ads ?? false,
+    from_meta_ads: fromMetaAdsForRow(
+      srcRow?.from_meta_ads,
+      simpleCtwaClid || srcRow?.ctwa_clid,
+    ),
     geo_source: norm((srcRow as Record<string, unknown> | null)?.geo_source) ||
       "none",
     meta_pixel_id: simpleInheritedPixel,

@@ -94,9 +94,11 @@ export interface ConversionRow {
 
 export function shouldSkipCapiForNonMetaOrigin(
   config: Pick<ConversionsConfig, "meta_ads_only_capi">,
-  row: Pick<ConversionRow, "from_meta_ads">,
+  row: Pick<ConversionRow, "from_meta_ads" | "ctwa_clid">,
 ): boolean {
-  return config.meta_ads_only_capi === true && row.from_meta_ads !== true;
+  return config.meta_ads_only_capi === true &&
+    row.from_meta_ads !== true &&
+    !normalizeCtwaClid(row.ctwa_clid);
 }
 
 export type PurchaseType = "first" | "repeat";

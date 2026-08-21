@@ -91,21 +91,35 @@ Deno.test("Meta Ads-only CAPI policy filters every non-Meta origin", () => {
   assert(
     shouldSkipCapiForNonMetaOrigin(
       { meta_ads_only_capi: true },
-      { from_meta_ads: false },
+      { from_meta_ads: false, ctwa_clid: "" },
     ),
     "non-Meta rows must be skipped when the policy is enabled",
   );
   assert(
     !shouldSkipCapiForNonMetaOrigin(
       { meta_ads_only_capi: true },
-      { from_meta_ads: true },
+      { from_meta_ads: true, ctwa_clid: "" },
     ),
     "Meta Ads rows must still be sent",
   );
   assert(
     !shouldSkipCapiForNonMetaOrigin(
+      { meta_ads_only_capi: true },
+      { from_meta_ads: false, ctwa_clid: "opaque-ctwa-click-id" },
+    ),
+    "ctwa_clid rows must still be sent",
+  );
+  assert(
+    shouldSkipCapiForNonMetaOrigin(
+      { meta_ads_only_capi: true },
+      { from_meta_ads: false, ctwa_clid: "{{ctwa_clid}}" },
+    ),
+    "unresolved ctwa_clid placeholders must not bypass the policy",
+  );
+  assert(
+    !shouldSkipCapiForNonMetaOrigin(
       { meta_ads_only_capi: false },
-      { from_meta_ads: false },
+      { from_meta_ads: false, ctwa_clid: "" },
     ),
     "all origins must be allowed when the policy is disabled",
   );
