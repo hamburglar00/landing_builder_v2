@@ -7,6 +7,7 @@ import { supabase } from "@/lib/supabaseClient";
 import { invokeFunction } from "@/lib/supabaseFunctions";
 import { PageHeader, SurfaceCard } from "@/components/ui/PanelPrimitives";
 import { CURRENCY_ALL } from "@/lib/currency";
+import { formatWhatsAppDisplayPhone } from "@/lib/phoneFormatting";
 import { SingleCurrencyRequired, useCurrencyScope } from "@/components/currency/CurrencyScope";
 import type { Gerencia, GerenciaWorkGroup } from "@/lib/gerencias/types";
 import type { PhoneKind } from "@/lib/landing/types";
@@ -117,31 +118,6 @@ function normalizeInternalName(value: string): string {
 
 function onlyDigits(value: string): string {
   return value.replace(/\D/g, "");
-}
-
-function formatDisplayPhone(value: string): string {
-  const digits = onlyDigits(value);
-  if (!digits) return "";
-
-  if (digits.startsWith("549") && digits.length >= 13) {
-    const local = digits.slice(3);
-    return `+54 9 ${local.slice(0, 4)} ${local.slice(4, 6)}-${local.slice(6, 10)}`;
-  }
-
-  if (digits.startsWith("54") && digits.length >= 12) {
-    const local = digits.slice(2);
-    if (local.length === 10) {
-      return `+54 9 ${local.slice(0, 4)} ${local.slice(4, 6)}-${local.slice(6, 10)}`;
-    }
-    return `+54 ${local.slice(0, 4)} ${local.slice(4, 6)}-${local.slice(6, 10)}`;
-  }
-
-  if (digits.startsWith("595") && digits.length >= 12) {
-    const local = digits.slice(3);
-    return `+595 ${local.slice(0, 3)} ${local.slice(3, 6)}-${local.slice(6, 9)}`;
-  }
-
-  return `+${digits}`;
 }
 
 function cleanTag(value: string): string {
@@ -1077,7 +1053,7 @@ export default function WhatsAppCloudApiPageContent({
                   <div className="grid gap-3 md:grid-cols-2">
                     <Field label="Telefono visible" tooltip="Campo de Meta. Numero registrado en WhatsApp Manager; sirve para identificar la cuenta conectada.">
                       <input
-                        value={formatDisplayPhone(displayPhone)}
+                        value={formatWhatsAppDisplayPhone(displayPhone)}
                         onChange={(e) => setDisplayPhone(onlyDigits(e.target.value))}
                         disabled={identificationLocked}
                         className={inputClass}

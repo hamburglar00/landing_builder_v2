@@ -21,6 +21,7 @@ import {
 } from "@/lib/whatsappCloudApiDb";
 import { useCurrencyScope } from "@/components/currency/CurrencyScope";
 import { CURRENCY_ALL } from "@/lib/currency";
+import { formatWhatsAppDisplayPhone } from "@/lib/phoneFormatting";
 
 type Props = {
   mode: "admin" | "dashboard";
@@ -200,23 +201,6 @@ function formatMoney(value: number): string {
     currency: "ARS",
     maximumFractionDigits: 0,
   }).format(value || 0);
-}
-
-function formatWhatsAppPhone(value: string | null | undefined): string {
-  const digits = String(value ?? "").replace(/\D/g, "");
-  if (!digits) return "";
-
-  if (digits.startsWith("549") && digits.length === 13) {
-    const local = digits.slice(3);
-    return `+54 9 ${local.slice(0, 4)} ${local.slice(4, 6)}-${local.slice(6)}`;
-  }
-
-  if (digits.startsWith("54") && digits.length === 12) {
-    const local = digits.slice(2);
-    return `+54 ${local.slice(0, 4)} ${local.slice(4, 6)}-${local.slice(6)}`;
-  }
-
-  return digits.startsWith("+") ? digits : `+${digits}`;
 }
 
 function StatusCheckIcon({ status }: { status: string }) {
@@ -804,7 +788,7 @@ export default function WhatsAppCloudApiInboxPageContent({ mode }: Props) {
                       {selectedThread.profile_name || selectedThread.wa_id}
                     </p>
                     <p className="text-xs text-[#8696a0]">
-                      {formatWhatsAppPhone(
+                      {formatWhatsAppDisplayPhone(
                         selectedThread.phone || selectedThread.wa_id,
                       )}
                     </p>
@@ -962,7 +946,7 @@ export default function WhatsAppCloudApiInboxPageContent({ mode }: Props) {
                   {selectedThread.profile_name || selectedThread.wa_id}
                 </p>
                 <p className="mt-1 text-xs text-[var(--color-text-muted)]">
-                  {formatWhatsAppPhone(
+                  {formatWhatsAppDisplayPhone(
                     selectedThread.phone || selectedThread.wa_id,
                   )}
                 </p>
@@ -995,7 +979,7 @@ export default function WhatsAppCloudApiInboxPageContent({ mode }: Props) {
                   <InfoRow
                     label="Telefono"
                     value={
-                      formatWhatsAppPhone(selectedThread.assigned_phone) || "-"
+                      formatWhatsAppDisplayPhone(selectedThread.assigned_phone) || "-"
                     }
                   />
                   <InfoRow
