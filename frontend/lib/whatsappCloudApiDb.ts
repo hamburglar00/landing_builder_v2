@@ -45,11 +45,13 @@ export interface WhatsappCloudApiAssignment {
 }
 
 export type WhatsappCloudApiLogKind =
-  "request" | "webhook" | "assignment" | "outbound";
+  "request" | "webhook" | "assignment" | "outbound" | "meta_capi";
 
 export interface WhatsappCloudApiLogEntry {
   id: string;
   kind: WhatsappCloudApiLogKind;
+  direction: "meta_to_us" | "us_to_meta" | "us_to_whatsapp" | "internal";
+  meta_event_name: string;
   label: string;
   status: string;
   created_at: string;
@@ -350,6 +352,24 @@ function readPayloadPhone(payload: Record<string, unknown> | null): string {
   return firstString(messages?.from, contacts?.wa_id);
 }
 
+function parseJsonRecord(value: unknown): Record<string, unknown> | null {
+  if (typeof value !== "string" || !value.trim()) return null;
+  try {
+    return asRecord(JSON.parse(value));
+  } catch {
+    return null;
+  }
+}
+
+function readMetaEventName(payload: Record<string, unknown> | null): string {
+  const data = Array.isArray(payload?.data) ? asRecord(payload.data[0]) : null;
+  return firstString(data?.event_name);
+}
+
+function readMetaResponseId(payload: Record<string, unknown> | null): string {
+  return firstString(payload?.fbtrace_id);
+}
+
 export async function fetchWhatsappCloudApiLogs(input: {
   userId: string;
   isAdmin: boolean;
@@ -417,17 +437,37 @@ export async function fetchWhatsappCloudApiLogs(input: {
     .limit(limit);
   if (!input.isAdmin) requestLogQuery.eq("user_id", input.userId);
 
-  const [webhookResult, assignmentResult, outboundResult, requestLogResult] =
+  const capiLogQuery = supabase
+    .from("conversion_logs")
+    .select(
+      "id,user_id,conversion_id,function_name,level,message,detail,created_at,payload_meta,response_meta,result,workspace_currency,conversions!inner(source_platform,phone,promo_code,telefono_asignado,assigned_gerencia_label,lead_gerencia_label,purchase_gerencia_label)",
+    )
+    .eq("workspace_currency", input.workspaceCurrency)
+    .eq("conversions.source_platform", "whatsapp_cloud_api")
+    .not("payload_meta", "eq", "")
+    .order("created_at", { ascending: false })
+    .limit(limit);
+  if (!input.isAdmin) capiLogQuery.eq("user_id", input.userId);
+
+  const [
+    webhookResult,
+    assignmentResult,
+    outboundResult,
+    requestLogResult,
+    capiLogResult,
+  ] =
     await Promise.all([
       webhookQuery,
       assignmentQuery,
       outboundQuery,
       requestLogQuery,
+      capiLogQuery,
     ]);
   if (webhookResult.error) throw webhookResult.error;
   if (assignmentResult.error) throw assignmentResult.error;
   if (outboundResult.error) throw outboundResult.error;
   if (requestLogResult.error) throw requestLogResult.error;
+  if (capiLogResult.error) throw capiLogResult.error;
 
   const logs: WhatsappCloudApiLogEntry[] = [];
 
@@ -438,6 +478,8 @@ export async function fetchWhatsappCloudApiLogs(input: {
     logs.push({
       id: String(row.id),
       kind: "request",
+      direction: "meta_to_us",
+      meta_event_name: "",
       label: httpStatus
         ? `Request ${reason} HTTP ${httpStatus}`
         : `Request ${reason}`,
@@ -461,6 +503,8 @@ export async function fetchWhatsappCloudApiLogs(input: {
     logs.push({
       id: String(row.id),
       kind: "webhook",
+      direction: "meta_to_us",
+      meta_event_name: "",
       label: row.event_type ? `Webhook ${row.event_type}` : "Webhook",
       status: String(row.status ?? ""),
       created_at: String(row.received_at ?? ""),
@@ -481,6 +525,8 @@ export async function fetchWhatsappCloudApiLogs(input: {
     logs.push({
       id: String(row.id),
       kind: "assignment",
+      direction: "internal",
+      meta_event_name: "",
       label: "Derivacion",
       status: String(row.status ?? ""),
       created_at: String(row.created_at ?? ""),
@@ -504,6 +550,8 @@ export async function fetchWhatsappCloudApiLogs(input: {
     logs.push({
       id: String(row.id),
       kind: "outbound",
+      direction: "us_to_whatsapp",
+      meta_event_name: "",
       label: `Mensaje saliente ${firstString(row.message_type) || "text"}`,
       status: String(row.status ?? ""),
       created_at: String(row.created_at ?? ""),
@@ -517,6 +565,52 @@ export async function fetchWhatsappCloudApiLogs(input: {
       attempts: null,
       error: String(row.last_error ?? ""),
       payload: asRecord(row.response) ?? asRecord(row.payload),
+    });
+  }
+
+  for (const row of capiLogResult.data ?? []) {
+    const metaPayload = parseJsonRecord(row.payload_meta);
+    const metaResponse = parseJsonRecord(row.response_meta);
+    const eventName = readMetaEventName(metaPayload);
+    const conversion = asRecord(row.conversions);
+    const responseStatus = firstString(row.level).toUpperCase() === "ERROR"
+      ? "error"
+      : firstString(metaResponse?.events_received) === "1"
+      ? "enviado"
+      : firstString(row.level).toLowerCase() || "info";
+    logs.push({
+      id: `capi-${String(row.id)}`,
+      kind: "meta_capi",
+      direction: "us_to_meta",
+      meta_event_name: eventName,
+      label: eventName ? `Meta CAPI ${eventName}` : "Meta CAPI",
+      status: responseStatus,
+      created_at: String(row.created_at ?? ""),
+      config_id: null,
+      config_name: "",
+      phone: firstString(conversion?.phone),
+      phone_number_id: firstString(
+        asRecord(
+          Array.isArray(metaPayload?.data)
+            ? asRecord(metaPayload.data[0])?.user_data
+            : null,
+        )?.whatsapp_business_account_id,
+      ),
+      meta_message_id: readMetaResponseId(metaResponse),
+      promo_code: firstString(conversion?.promo_code),
+      gerencia: firstString(
+        conversion?.purchase_gerencia_label,
+        conversion?.lead_gerencia_label,
+        conversion?.assigned_gerencia_label,
+      ),
+      attempts: null,
+      error: firstString(row.level).toUpperCase() === "ERROR"
+        ? firstString(row.result, row.detail, row.message)
+        : "",
+      payload: {
+        request: metaPayload ?? row.payload_meta,
+        response: metaResponse ?? row.response_meta,
+      },
     });
   }
 

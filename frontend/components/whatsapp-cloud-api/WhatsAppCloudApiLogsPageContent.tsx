@@ -22,6 +22,7 @@ const KIND_LABELS: Record<WhatsappCloudApiLogKind, string> = {
   webhook: "Webhook",
   assignment: "Derivacion",
   outbound: "Saliente",
+  meta_capi: "Meta CAPI",
 };
 
 const KIND_OPTIONS: Array<{ value: "all" | WhatsappCloudApiLogKind; label: string }> = [
@@ -30,6 +31,7 @@ const KIND_OPTIONS: Array<{ value: "all" | WhatsappCloudApiLogKind; label: strin
   { value: "webhook", label: "Webhooks" },
   { value: "assignment", label: "Derivaciones" },
   { value: "outbound", label: "Salientes" },
+  { value: "meta_capi", label: "Meta CAPI" },
 ];
 
 function formatDateTime(value: string): string {
@@ -47,7 +49,7 @@ function formatDateTime(value: string): string {
 
 function statusClass(status: string): string {
   const normalized = status.toLowerCase();
-  if (["processed", "accepted", "sent", "delivered", "read"].includes(normalized)) {
+  if (["processed", "accepted", "sent", "delivered", "read", "enviado"].includes(normalized)) {
     return "border-emerald-400/25 bg-emerald-400/10 text-emerald-200";
   }
   if (["failed", "error"].includes(normalized)) {
@@ -57,6 +59,58 @@ function statusClass(status: string): string {
     return "border-amber-400/25 bg-amber-400/10 text-amber-200";
   }
   return "border-[var(--color-border)] bg-[var(--color-bg-2)] text-[var(--color-text-muted)]";
+}
+
+function directionLabel(log: WhatsappCloudApiLogEntry): string {
+  if (log.direction === "meta_to_us") return "Meta -> nosotros";
+  if (log.direction === "us_to_meta") return "Nosotros -> Meta";
+  if (log.direction === "us_to_whatsapp") return "Nosotros -> WhatsApp";
+  return "Interno";
+}
+
+function directionClass(log: WhatsappCloudApiLogEntry): string {
+  if (log.direction === "meta_to_us") {
+    return "border-sky-400/25 bg-sky-400/10 text-sky-200";
+  }
+  if (log.direction === "us_to_meta") {
+    return "border-emerald-400/25 bg-emerald-400/10 text-emerald-200";
+  }
+  if (log.direction === "us_to_whatsapp") {
+    return "border-teal-400/25 bg-teal-400/10 text-teal-200";
+  }
+  return "border-zinc-600/35 bg-zinc-950/40 text-zinc-300";
+}
+
+function metaEventClass(eventName: string): string {
+  const normalized = eventName.toLowerCase();
+  if (normalized === "purchase") {
+    return "border-rose-800/40 bg-rose-950/18 text-rose-300";
+  }
+  if (normalized === "leadsubmitted" || normalized === "lead") {
+    return "border-amber-800/40 bg-amber-950/18 text-amber-300";
+  }
+  if (normalized === "completeregistration") {
+    return "border-sky-400/25 bg-sky-400/10 text-sky-200";
+  }
+  if (normalized === "contact") {
+    return "border-zinc-600/35 bg-zinc-950/40 text-zinc-300";
+  }
+  return "border-[var(--color-border)] bg-[var(--color-bg-2)] text-[var(--color-text-muted)]";
+}
+
+function logRowClass(log: WhatsappCloudApiLogEntry): string {
+  if (log.kind !== "meta_capi") return "";
+  const normalized = log.meta_event_name.toLowerCase();
+  if (normalized === "purchase") {
+    return "bg-rose-950/12 hover:bg-rose-950/20";
+  }
+  if (normalized === "leadsubmitted" || normalized === "lead") {
+    return "bg-amber-950/12 hover:bg-amber-950/20";
+  }
+  if (normalized === "completeregistration") {
+    return "bg-sky-950/14 hover:bg-sky-950/22";
+  }
+  return "bg-zinc-950/20 hover:bg-zinc-950/30";
 }
 
 function compactId(value: string): string {
@@ -131,6 +185,8 @@ export default function WhatsAppCloudApiLogsPageContent({ mode }: Props) {
         log.phone,
         log.phone_number_id,
         log.meta_message_id,
+        log.meta_event_name,
+        directionLabel(log),
         log.promo_code,
         log.gerencia,
         log.error,
@@ -140,8 +196,8 @@ export default function WhatsAppCloudApiLogsPageContent({ mode }: Props) {
 
   const summary = useMemo(() => ({
     total: logs.length,
-    webhooks: logs.filter((log) => log.kind === "request" || log.kind === "webhook").length,
-    outbound: logs.filter((log) => log.kind === "outbound").length,
+    inboundMeta: logs.filter((log) => log.direction === "meta_to_us").length,
+    outboundMeta: logs.filter((log) => log.direction === "us_to_meta").length,
     failed: logs.filter((log) => log.status.toLowerCase() === "failed" || log.error).length,
   }), [logs]);
 
@@ -174,12 +230,12 @@ export default function WhatsAppCloudApiLogsPageContent({ mode }: Props) {
           <p className="mt-2 text-2xl font-semibold text-[var(--color-text-strong)]">{summary.total}</p>
         </SurfaceCard>
         <SurfaceCard className="p-4">
-          <p className="text-xs uppercase tracking-[0.18em] text-[var(--color-text-muted)]">Webhooks</p>
-          <p className="mt-2 text-2xl font-semibold text-sky-200">{summary.webhooks}</p>
+          <p className="text-xs uppercase tracking-[0.18em] text-[var(--color-text-muted)]">{"Meta -> nosotros"}</p>
+          <p className="mt-2 text-2xl font-semibold text-sky-200">{summary.inboundMeta}</p>
         </SurfaceCard>
         <SurfaceCard className="p-4">
-          <p className="text-xs uppercase tracking-[0.18em] text-[var(--color-text-muted)]">Salientes</p>
-          <p className="mt-2 text-2xl font-semibold text-emerald-200">{summary.outbound}</p>
+          <p className="text-xs uppercase tracking-[0.18em] text-[var(--color-text-muted)]">{"Nosotros -> Meta"}</p>
+          <p className="mt-2 text-2xl font-semibold text-emerald-200">{summary.outboundMeta}</p>
         </SurfaceCard>
         <SurfaceCard className="p-4">
           <p className="text-xs uppercase tracking-[0.18em] text-[var(--color-text-muted)]">Con error</p>
@@ -221,6 +277,7 @@ export default function WhatsAppCloudApiLogsPageContent({ mode }: Props) {
             <thead className="bg-[rgba(148,163,184,0.08)] text-xs uppercase tracking-[0.12em] text-[var(--color-text-muted)]">
               <tr>
                 <th className="px-4 py-3 font-semibold">Hora</th>
+                <th className="px-4 py-3 font-semibold">Flujo</th>
                 <th className="px-4 py-3 font-semibold">Tipo</th>
                 <th className="px-4 py-3 font-semibold">Estado</th>
                 <th className="px-4 py-3 font-semibold">Cuenta</th>
@@ -233,20 +290,30 @@ export default function WhatsAppCloudApiLogsPageContent({ mode }: Props) {
             <tbody className="divide-y divide-[var(--color-border-subtle)]">
               {loading ? (
                 <tr>
-                  <td colSpan={8} className="px-4 py-10 text-center text-sm text-[var(--color-text-muted)]">Cargando logs...</td>
+                  <td colSpan={9} className="px-4 py-10 text-center text-sm text-[var(--color-text-muted)]">Cargando logs...</td>
                 </tr>
               ) : filteredLogs.length === 0 ? (
                 <tr>
-                  <td colSpan={8} className="px-4 py-10 text-center text-sm text-[var(--color-text-muted)]">No hay logs para los filtros seleccionados.</td>
+                  <td colSpan={9} className="px-4 py-10 text-center text-sm text-[var(--color-text-muted)]">No hay logs para los filtros seleccionados.</td>
                 </tr>
               ) : filteredLogs.map((log) => {
                 const payload = payloadSummary(log.payload);
                 return (
-                  <tr key={`${log.kind}-${log.id}`} className="align-top text-[var(--color-text)]">
+                  <tr key={`${log.kind}-${log.id}`} className={`align-top text-[var(--color-text)] transition ${logRowClass(log)}`}>
                     <td className="whitespace-nowrap px-4 py-3 text-xs text-[var(--color-text-muted)]">{formatDateTime(log.created_at)}</td>
+                    <td className="px-4 py-3">
+                      <span className={`inline-flex rounded-full border px-2.5 py-1 text-xs font-medium ${directionClass(log)}`}>
+                        {directionLabel(log)}
+                      </span>
+                    </td>
                     <td className="px-4 py-3">
                       <div className="font-medium text-[var(--color-text-strong)]">{KIND_LABELS[log.kind]}</div>
                       <div className="mt-1 text-xs text-[var(--color-text-muted)]">{log.label}</div>
+                      {log.meta_event_name ? (
+                        <span className={`mt-2 inline-flex rounded-full border px-2 py-0.5 text-[10px] font-semibold ${metaEventClass(log.meta_event_name)}`}>
+                          {log.meta_event_name}
+                        </span>
+                      ) : null}
                     </td>
                     <td className="px-4 py-3">
                       <span className={`inline-flex rounded-full border px-2.5 py-1 text-xs font-medium ${statusClass(log.status)}`}>
