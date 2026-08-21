@@ -756,21 +756,23 @@ export function LandingEditorForm({
 
       {isTemplate5 && (
         <CollapsibleSection title="Live" defaultOpen>
-          <div className="space-y-5">
-            <ImageUploader
-              label="Foto de perfil"
-              multiple={false}
-              value={template5Live.profileImageUrl ? [template5Live.profileImageUrl] : []}
-              onChange={(urls) =>
-                updateTemplate5Live({ profileImageUrl: urls[0] ?? "" })
-              }
-              onUpload={uploadImage}
-            />
-            <p className="text-[11px] text-zinc-500">
-              Formato .avif. Se usa en la card del asesor.
-            </p>
-
-            <div className="space-y-2 border-t border-zinc-800 pt-4">
+          <div className="space-y-6">
+            <div className="grid gap-4 sm:grid-cols-2">
+              <div className="space-y-2">
+                <ImageUploader
+                  label="Foto de perfil"
+                  multiple={false}
+                  value={template5Live.profileImageUrl ? [template5Live.profileImageUrl] : []}
+                  onChange={(urls) =>
+                    updateTemplate5Live({ profileImageUrl: urls[0] ?? "" })
+                  }
+                  onUpload={uploadImage}
+                />
+                <p className="text-[11px] text-zinc-500">
+                  Formato .avif. Se usa en la card del asesor.
+                </p>
+              </div>
+              <div className="space-y-2">
               <ImageUploader
                 label="Foto de fondo"
                 multiple={false}
@@ -783,47 +785,78 @@ export function LandingEditorForm({
               <p className="text-[11px] text-zinc-500">
                 Formato .avif. Reemplaza el fondo visual de la plantilla.
               </p>
+              </div>
             </div>
 
             <div className="space-y-3 border-t border-zinc-800 pt-4">
-              <label
-                htmlFor={fieldId("template5-title")}
-                className="block text-xs font-medium text-zinc-400"
-              >
+              <span className="block text-xs font-medium text-zinc-400">
                 Título
-              </label>
-              <textarea
-                id={fieldId("template5-title")}
-                value={template5Live.titleText}
-                onChange={(e) => {
-                  const next = e.target.value.split(/\r?\n/).slice(0, 3).join("\n");
-                  updateTemplate5Live({ titleText: next });
-                }}
-                rows={3}
-                className="w-full resize-none rounded-lg border border-zinc-700 bg-zinc-900 px-3 py-2 text-sm text-zinc-100"
-              />
+              </span>
+              <div className="space-y-3">
+                {Array.from({ length: 3 }, (_, index) => {
+                  const lines = template5Live.titleText.split(/\r?\n/);
+                  return (
+                    <div key={`template5-title-${index}`}>
+                      <label
+                        htmlFor={fieldId(`template5-title-${index + 1}`)}
+                        className="block text-xs font-medium text-zinc-400 mb-1"
+                      >
+                        Línea {index + 1}
+                      </label>
+                      <input
+                        id={fieldId(`template5-title-${index + 1}`)}
+                        type="text"
+                        value={lines[index] ?? ""}
+                        onChange={(e) => {
+                          const next = [...lines];
+                          next[index] = e.target.value;
+                          updateTemplate5Live({
+                            titleText: next.slice(0, 3).join("\n"),
+                          });
+                        }}
+                        className="w-full rounded-lg border border-zinc-700 bg-zinc-900 px-3 py-2 text-sm text-zinc-100"
+                      />
+                    </div>
+                  );
+                })}
+              </div>
               <p className="text-[11px] text-zinc-500">
                 Hasta 3 líneas. La primera se muestra en blanco y las siguientes en dorado.
               </p>
             </div>
 
             <div className="space-y-3 border-t border-zinc-800 pt-4">
-              <label
-                htmlFor={fieldId("template5-subtitle")}
-                className="block text-xs font-medium text-zinc-400"
-              >
+              <span className="block text-xs font-medium text-zinc-400">
                 Subtítulo
-              </label>
-              <textarea
-                id={fieldId("template5-subtitle")}
-                value={template5Live.subtitleText}
-                onChange={(e) => {
-                  const next = e.target.value.split(/\r?\n/).slice(0, 2).join("\n");
-                  updateTemplate5Live({ subtitleText: next });
-                }}
-                rows={2}
-                className="w-full resize-none rounded-lg border border-zinc-700 bg-zinc-900 px-3 py-2 text-sm text-zinc-100"
-              />
+              </span>
+              <div className="space-y-3">
+                {Array.from({ length: 2 }, (_, index) => {
+                  const lines = template5Live.subtitleText.split(/\r?\n/);
+                  return (
+                    <div key={`template5-subtitle-${index}`}>
+                      <label
+                        htmlFor={fieldId(`template5-subtitle-${index + 1}`)}
+                        className="block text-xs font-medium text-zinc-400 mb-1"
+                      >
+                        Línea {index + 1}
+                      </label>
+                      <input
+                        id={fieldId(`template5-subtitle-${index + 1}`)}
+                        type="text"
+                        value={lines[index] ?? ""}
+                        onChange={(e) => {
+                          const next = [...lines];
+                          next[index] = e.target.value;
+                          updateTemplate5Live({
+                            subtitleText: next.slice(0, 2).join("\n"),
+                          });
+                        }}
+                        className="w-full rounded-lg border border-zinc-700 bg-zinc-900 px-3 py-2 text-sm text-zinc-100"
+                      />
+                    </div>
+                  );
+                })}
+              </div>
             </div>
           </div>
         </CollapsibleSection>

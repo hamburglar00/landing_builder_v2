@@ -658,7 +658,7 @@ export function LandingPreview({
             backgroundPosition: backgroundImage ? "center" : undefined,
           }}
         />
-        <div className="relative z-10 h-full overflow-y-auto pb-[122px] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
+        <div className="relative z-10 h-full overflow-hidden pb-[104px]">
         <div className="relative z-10 flex animate-[template5EnterUp_.7s_cubic-bezier(.16,1,.3,1)_forwards] items-center justify-between gap-3 px-[18px] pt-4">
           <div className="inline-flex min-h-7 items-center gap-2 rounded-full bg-[#f51d38] px-3 text-[10px] font-black tracking-[0.08em] text-white">
             <span className="h-1.5 w-1.5 animate-pulse rounded-full bg-white" />
@@ -670,7 +670,7 @@ export function LandingPreview({
           </span>
         </div>
         <div className="relative z-10 px-[18px] pt-6">
-          <h1 className="text-[42px] font-black uppercase leading-[0.86] tracking-[-0.055em] text-white">
+          <h1 className="text-[38px] font-black uppercase leading-[0.88] tracking-[-0.055em] text-white">
             {titleLines.map((line, index) => (
               <span
                 key={`${line}-${index}`}
@@ -680,16 +680,16 @@ export function LandingPreview({
               </span>
             ))}
           </h1>
-          <p className="mt-4 text-[14px] leading-snug text-zinc-100/80">
+          <p className="mt-3 text-[14px] font-extrabold leading-snug text-zinc-100/85">
             Un asesor te abre la cuenta en 2 minutos por WhatsApp y te acompaña en todo el proceso...
           </p>
         </div>
-        <div className="relative z-10 mx-[18px] mt-5 flex items-center gap-3 rounded-[18px] border border-[#e5bd42]/20 bg-black/85 p-3.5">
-          <div className="grid h-11 w-11 place-items-center rounded-full border border-lime-300/20 bg-[#14282d] text-[8px] font-black leading-tight text-lime-300">
+        <div className="relative z-10 mx-[18px] mt-4 flex items-center gap-3 rounded-[18px] border border-[#e5bd42]/20 bg-black/85 p-3">
+          <div className="grid h-[50px] w-[50px] place-items-center rounded-full border border-lime-300/20 bg-[#14282d] text-[8px] font-black leading-tight text-lime-300">
             foto<br />asesor
           </div>
           <div className="min-w-0 flex-1">
-            <strong className="block truncate text-[13px] font-black text-white">{name} · tu asesora designada</strong>
+            <strong className="block truncate text-[14px] font-black text-white">{name} · tu asesora designada</strong>
             <span className="mt-0.5 block truncate text-[10px] font-extrabold text-[#25d366]">
               En linea · responde en ~40 seg
             </span>
@@ -713,16 +713,16 @@ export function LandingPreview({
           ].map(([who, when, amount]) => (
             <p key={who} className="mx-3.5 flex items-center justify-between gap-3 border-b border-[#e5bd42]/10 py-2">
               <span>
-                <b className="block text-[12px] font-black text-white">{who}</b>
+                <b className="block text-[13px] font-black text-white">{who}</b>
                 <small className="mt-0.5 block text-[10px] font-bold text-slate-300/60">{when}</small>
               </span>
-              <strong className="whitespace-nowrap font-mono text-[12px] font-black text-[#25d366]">{amount}</strong>
+              <strong className="whitespace-nowrap font-mono text-[13px] font-black text-[#25d366]">{amount}</strong>
             </p>
           ))}
         </div>
         </div>
         {!gallery && (
-          <div className="absolute inset-x-0 bottom-0 z-20 bg-transparent px-4 pb-4 pt-9">
+          <div className="absolute inset-x-0 bottom-[58px] z-20 bg-transparent px-4 pb-4 pt-9">
             <button className="flex h-[58px] w-full items-center justify-center gap-3 rounded-full bg-[#25d366] text-[16px] font-black tracking-[-0.02em] text-[#04130a] shadow-[0_0_0_9px_rgba(37,211,102,.13),0_14px_28px_rgba(37,211,102,.2)]">
               <span className="text-xl">●</span>
               ENTRAR POR WHATSAPP
@@ -790,7 +790,7 @@ export function LandingPreview({
             </span>
           </div>
           <div className="relative z-10 px-[18px] pt-4">
-            <h1 className="text-[36px] font-black uppercase leading-[0.88] tracking-[-0.055em] text-white">
+            <h1 className="text-[38px] font-black uppercase leading-[0.88] tracking-[-0.055em] text-white">
               {titleLines.map((line, index) => (
                 <span
                   key={`${line}-${index}`}
@@ -800,7 +800,7 @@ export function LandingPreview({
                 </span>
               ))}
             </h1>
-            <p className="mt-2.5 text-[13px] font-extrabold leading-snug text-zinc-100/85">
+            <p className="mt-3 text-[14px] font-extrabold leading-snug text-zinc-100/85">
               {subtitleLines.map((line, index) => (
                 <span key={`${line}-${index}`} className="block">
                   {line}
@@ -809,23 +809,23 @@ export function LandingPreview({
             </p>
           </div>
           <div className="relative z-10 mx-[18px] mt-4 flex items-center gap-3 rounded-[18px] border border-[#e5bd42]/20 bg-black/85 p-2.5">
-            <div className="relative h-10 w-10 shrink-0">
+            <div className="relative h-[50px] w-[50px] shrink-0">
               {live.profileImageUrl ? (
                 // eslint-disable-next-line @next/next/no-img-element
                 <img
                   src={live.profileImageUrl}
                   alt=""
-                  className="h-10 w-10 rounded-full border border-lime-300/20 bg-black object-cover"
+                  className="h-[50px] w-[50px] rounded-full border border-lime-300/20 bg-black object-cover"
                 />
               ) : (
-                <div className="grid h-10 w-10 place-items-center rounded-full border border-lime-300/20 bg-black text-[7px] font-black leading-tight text-lime-300">
+                <div className="grid h-[50px] w-[50px] place-items-center rounded-full border border-lime-300/20 bg-black text-[7px] font-black leading-tight text-lime-300">
                   foto<br />asesor
                 </div>
               )}
               <span className="absolute bottom-0 right-0 h-3 w-3 animate-pulse rounded-full border-2 border-[#160f09] bg-[#25d366] shadow-[0_0_0_4px_rgba(37,211,102,.12)]" />
             </div>
             <div className="min-w-0 flex-1">
-              <strong className="block truncate text-[13px] font-black text-white">{name} · tu asesora designada</strong>
+              <strong className="block truncate text-[14px] font-black text-white">{name} · tu asesora designada</strong>
               <span className="mt-0.5 block truncate text-[10px] font-extrabold text-[#25d366]">
                 En linea · responde en ~40 seg
               </span>
@@ -844,10 +844,10 @@ export function LandingPreview({
             {template5VisibleFeed.map(([who, when, amount]) => (
               <p key={`${who}-${when}`} className="mx-3.5 flex items-center justify-between gap-3 border-b border-[#e5bd42]/10 py-2">
                 <span>
-                  <b className="block text-[12px] font-black text-white">{who}</b>
+                  <b className="block text-[13px] font-black text-white">{who}</b>
                   <small className="mt-0.5 block text-[10px] font-bold text-slate-300/60">{when}</small>
                 </span>
-                <strong className="whitespace-nowrap font-mono text-[12px] font-black text-[#25d366]">{amount}</strong>
+                <strong className="whitespace-nowrap font-mono text-[13px] font-black text-[#25d366]">{amount}</strong>
               </p>
             ))}
           </div>
@@ -863,7 +863,7 @@ export function LandingPreview({
           </div>
         </div>
         {!gallery && (
-          <div className="absolute inset-x-0 bottom-7 z-20 bg-transparent px-4 pb-4 pt-9">
+          <div className="absolute inset-x-0 bottom-[58px] z-20 bg-transparent px-4 pb-4 pt-9">
             <button className="flex h-[58px] w-full items-center justify-center gap-3 rounded-full bg-[#25d366] text-[16px] font-black tracking-[-0.02em] text-white shadow-[0_0_0_9px_rgba(37,211,102,.13),0_14px_28px_rgba(37,211,102,.2)]">
               <svg className="h-6 w-6" viewBox="0 0 48 48" aria-hidden="true">
                 <g transform="translate(-700 -360)">
