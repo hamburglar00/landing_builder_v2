@@ -84,7 +84,7 @@ Deno.serve(async (req) => {
     // 1) Obtener landing por nombre
     const { data: landing, error: landingError } = await supabase
       .from("landings")
-      .select("id, name")
+      .select("id, name, user_id")
       .eq("name", landingName)
       .maybeSingle();
 
@@ -168,12 +168,17 @@ Deno.serve(async (req) => {
       );
     }
 
-    // 4) Incrementar usage_count
-    const currentCount = Number(phoneRow.usage_count) || 0;
-    const { error: updateError } = await supabase
-      .from("gerencia_phones")
-      .update({ usage_count: currentCount + 1 })
-      .eq("id", phoneRow.id);
+    // 4) Incrementar usage_count global y el contador aislado de esta landing
+    const { error: updateError } = await supabase.rpc(
+      "increment_phone_assignment_scope_usage",
+      {
+        p_phone_id: phoneRow.id,
+        p_scope_type: "landing",
+        p_scope_id: landing.id,
+        p_user_id: landing.user_id,
+        p_gerencia_id: phoneRow.gerencia_id,
+      },
+    );
 
     if (updateError) {
       // No rompemos la experiencia si falla la métrica

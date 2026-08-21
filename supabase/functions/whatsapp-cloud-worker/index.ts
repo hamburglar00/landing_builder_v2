@@ -887,8 +887,14 @@ async function handleMessage(
   const assignedPhoneId = Number(phonePayload.phoneId) || 0;
   if (assignedPhoneId > 0) {
     const { error: usageError } = await db.rpc(
-      "increment_gerencia_phone_usage",
-      { p_phone_id: assignedPhoneId },
+      "increment_phone_assignment_scope_usage",
+      {
+        p_phone_id: assignedPhoneId,
+        p_scope_type: "whatsapp_cloud_api",
+        p_scope_id: config.id,
+        p_user_id: config.user_id,
+        p_gerencia_id: Number(gerencia.id) || null,
+      },
     );
     if (usageError) {
       console.error("[whatsapp-cloud-worker] usage_count increment failed", {

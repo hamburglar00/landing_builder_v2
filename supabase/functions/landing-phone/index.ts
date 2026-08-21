@@ -34,6 +34,13 @@ function selectedPhoneId(payload: Record<string, unknown> | null | undefined): n
   return Number.isFinite(value) ? value : null;
 }
 
+function isFairAssignmentPayload(
+  payload: Record<string, unknown> | null | undefined,
+): boolean {
+  return String(payload?.gerenciaSelectionMode ?? "").toLowerCase() === "fair" ||
+    String(payload?.phoneMode ?? "").toLowerCase() === "fair";
+}
+
 function scheduleBackground(promise: Promise<unknown>) {
   const runtime = (globalThis as unknown as {
     EdgeRuntime?: { waitUntil?: (promise: Promise<unknown>) => void };
@@ -46,6 +53,30 @@ function scheduleBackground(promise: Promise<unknown>) {
 
   promise.catch((error) => {
     console.error("Background task failed:", error);
+  });
+}
+
+function incrementChatraceScopeUsage(
+  supabase: SupabaseClient,
+  input: {
+    ownerUserId: string;
+    payload: Record<string, unknown> | null | undefined;
+  },
+): Promise<unknown> {
+  const phoneId = selectedPhoneId(input.payload);
+  if (!phoneId || !input.ownerUserId) return Promise.resolve(null);
+
+  return supabase.rpc("increment_phone_assignment_scope_usage", {
+    p_phone_id: phoneId,
+    p_scope_type: "chatrace",
+    p_scope_id: input.ownerUserId,
+    p_user_id: input.ownerUserId,
+    p_gerencia_id: selectedGerenciaId(input.payload),
+  }).then(({ error }) => {
+    if (error) {
+      console.error("Error incrementing Chatrace scoped phone usage:", error);
+    }
+    return null;
   });
 }
 
@@ -205,7 +236,8 @@ Deno.serve(async (req) => {
           isFresh &&
           payload &&
           typeof payload.phone === "string" &&
-          payload.phone
+          payload.phone &&
+          !isFairAssignmentPayload(payload)
         ) {
           scheduleBackground(recordDemandAvailability(supabase, {
             name,
@@ -310,6 +342,13 @@ Deno.serve(async (req) => {
       status: "ok",
       payload,
     }));
+
+    if (source === "chatrace") {
+      scheduleBackground(incrementChatraceScopeUsage(supabase, {
+        ownerUserId,
+        payload,
+      }));
+    }
 
     return new Response(JSON.stringify(payload), {
       status: 200,
