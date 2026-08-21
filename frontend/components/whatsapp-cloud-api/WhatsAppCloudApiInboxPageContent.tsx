@@ -337,6 +337,27 @@ function EmptyConversationIcon() {
   );
 }
 
+function TrashIcon() {
+  return (
+    <svg
+      className="h-3.5 w-3.5"
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth={1.9}
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      aria-hidden
+    >
+      <path d="M3 6h18" />
+      <path d="M8 6V4h8v2" />
+      <path d="m19 6-1 14H6L5 6" />
+      <path d="M10 11v5" />
+      <path d="M14 11v5" />
+    </svg>
+  );
+}
+
 function messageTime(message: WhatsappCloudApiInboxMessage): string {
   if (!message.created_at) return "-";
   const date = new Date(message.created_at);
@@ -407,6 +428,11 @@ export default function WhatsAppCloudApiInboxPageContent({ mode }: Props) {
   const [manualMessage, setManualMessage] = useState("");
   const [sending, setSending] = useState(false);
   const [sendNotice, setSendNotice] = useState<string | null>(null);
+  const [hiddenThreadIds, setHiddenThreadIds] = useState<Set<string>>(
+    () => new Set(),
+  );
+  const [threadToHide, setThreadToHide] =
+    useState<WhatsappCloudApiInboxThread | null>(null);
   const lastMarkedReadRef = useRef("");
 
   const loadThreads = useCallback(async () => {
@@ -457,6 +483,7 @@ export default function WhatsAppCloudApiInboxPageContent({ mode }: Props) {
   const filteredThreads = useMemo(() => {
     const term = search.trim().toLowerCase();
     return threads.filter((thread) => {
+      if (hiddenThreadIds.has(thread.contact_id)) return false;
       if (tagFilter !== "all" && thread.tag !== tagFilter) return false;
       if (gerenciaFilter && gerenciaFilterLabel(thread) !== gerenciaFilter)
         return false;
@@ -472,7 +499,7 @@ export default function WhatsAppCloudApiInboxPageContent({ mode }: Props) {
         thread.ctwa_clid,
       ].some((value) => value.toLowerCase().includes(term));
     });
-  }, [gerenciaFilter, search, tagFilter, threads]);
+  }, [gerenciaFilter, hiddenThreadIds, search, tagFilter, threads]);
 
   const selectedThread = useMemo(
     () =>
@@ -500,6 +527,18 @@ export default function WhatsAppCloudApiInboxPageContent({ mode }: Props) {
   const serviceWindowActive = Boolean(
     serviceWindowExpiresAt && Date.now() <= serviceWindowExpiresAt.getTime(),
   );
+
+  const hideThreadFromUi = () => {
+    if (!threadToHide) return;
+    const contactId = threadToHide.contact_id;
+    setHiddenThreadIds((current) => {
+      const next = new Set(current);
+      next.add(contactId);
+      return next;
+    });
+    if (selectedId === contactId) setSelectedId("");
+    setThreadToHide(null);
+  };
 
   useEffect(() => {
     if (!selectedThread || selectedThread.unread_count <= 0) return;
@@ -678,7 +717,7 @@ export default function WhatsAppCloudApiInboxPageContent({ mode }: Props) {
             </div>
           </div>
 
-          <div className="min-h-0 flex-1 overflow-y-auto">
+          <div className="min-h-0 max-h-[27.5rem] overflow-y-auto">
             {loading ? (
               <div className="p-4 text-sm text-[var(--color-text-muted)]">
                 Cargando conversaciones...
@@ -706,66 +745,80 @@ export default function WhatsAppCloudApiInboxPageContent({ mode }: Props) {
                   Number(thread.unread_count || 0),
                 );
                 return (
-                  <button
+                  <div
                     key={thread.contact_id}
-                    type="button"
-                    onClick={() => setSelectedId(thread.contact_id)}
-                    className={`relative flex w-full gap-3 border-b border-[var(--color-border-subtle)] px-4 py-3 text-left transition hover:bg-[rgba(148,163,184,0.06)] ${
+                    className={`relative border-b border-[var(--color-border-subtle)] transition hover:bg-[rgba(148,163,184,0.06)] ${
                       selected ? "bg-[rgba(148,163,184,0.08)]" : ""
                     }`}
                   >
                     {selected ? (
                       <span className="absolute bottom-0 left-0 top-0 w-1 bg-[var(--color-primary)]" />
                     ) : null}
-                    <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full border border-[var(--color-border)] bg-[var(--color-bg-2)] text-xs font-semibold text-[var(--color-text-muted)]">
-                      {initials(thread.profile_name, thread.wa_id)}
-                    </span>
-                    <span className="min-w-0 flex-1">
-                      <span className="flex items-start justify-between gap-2">
-                        <span
-                          className={`truncate text-sm text-[var(--color-text-strong)] ${unreadCount > 0 ? "font-bold" : "font-semibold"}`}
-                        >
-                          {thread.profile_name || thread.wa_id}
-                        </span>
-                        <span className="flex shrink-0 flex-col items-end gap-1">
+                    <button
+                      type="button"
+                      onClick={() => setSelectedId(thread.contact_id)}
+                      className="flex w-full gap-3 px-4 py-3 pr-12 text-left"
+                    >
+                      <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full border border-[var(--color-border)] bg-[var(--color-bg-2)] text-xs font-semibold text-[var(--color-text-muted)]">
+                        {initials(thread.profile_name, thread.wa_id)}
+                      </span>
+                      <span className="min-w-0 flex-1">
+                        <span className="flex items-start justify-between gap-2">
                           <span
-                            className={`text-[10px] ${unreadCount > 0 ? "font-semibold text-[#25d366]" : "text-[var(--color-text-disabled)]"}`}
+                            className={`truncate text-sm text-[var(--color-text-strong)] ${unreadCount > 0 ? "font-bold" : "font-semibold"}`}
                           >
-                            {formatTime(
-                              thread.last_message_at || thread.first_message_at,
-                            )}
+                            {thread.profile_name || thread.wa_id}
                           </span>
-                          {unreadCount > 0 ? (
-                            <span className="flex h-5 min-w-5 items-center justify-center rounded-full bg-[#25d366] px-1.5 text-[10px] font-bold leading-none text-[#0b141a]">
-                              {unreadCount > 99 ? "99+" : unreadCount}
+                          <span className="flex shrink-0 flex-col items-end gap-1">
+                            <span
+                              className={`text-[10px] ${unreadCount > 0 ? "font-semibold text-[#25d366]" : "text-[var(--color-text-disabled)]"}`}
+                            >
+                              {formatTime(
+                                thread.last_message_at ||
+                                  thread.first_message_at,
+                              )}
+                            </span>
+                            {unreadCount > 0 ? (
+                              <span className="flex h-5 min-w-5 items-center justify-center rounded-full bg-[#25d366] px-1.5 text-[10px] font-bold leading-none text-[#0b141a]">
+                                {unreadCount > 99 ? "99+" : unreadCount}
+                              </span>
+                            ) : null}
+                          </span>
+                        </span>
+                        <span
+                          className={`mt-1 block truncate text-xs ${unreadCount > 0 ? "font-semibold text-[var(--color-text-strong)]" : "text-[var(--color-text-muted)]"}`}
+                        >
+                          {thread.last_message_text || "Sin mensajes"}
+                        </span>
+                        <span className="mt-2 flex flex-wrap gap-1.5">
+                          <span
+                            className={`inline-flex rounded-full border px-2 py-0.5 text-[10px] font-semibold ${TAG_CLASSES[thread.tag]}`}
+                          >
+                            {TAG_LABELS[thread.tag]}
+                          </span>
+                          {gerenciaFilterLabel(thread) ? (
+                            <span
+                              className="inline-flex max-w-full rounded-full border border-[var(--color-border-subtle)] bg-[rgba(148,163,184,0.07)] px-2 py-0.5 text-[10px] font-medium text-[var(--color-text-muted)]"
+                              title={`Gerencia: ${gerenciaFilterLabel(thread)}`}
+                            >
+                              <span className="truncate">
+                                {gerenciaFilterLabel(thread)}
+                              </span>
                             </span>
                           ) : null}
                         </span>
                       </span>
-                      <span
-                        className={`mt-1 block truncate text-xs ${unreadCount > 0 ? "font-semibold text-[var(--color-text-strong)]" : "text-[var(--color-text-muted)]"}`}
-                      >
-                        {thread.last_message_text || "Sin mensajes"}
-                      </span>
-                      <span className="mt-2 flex flex-wrap gap-1.5">
-                        <span
-                          className={`inline-flex rounded-full border px-2 py-0.5 text-[10px] font-semibold ${TAG_CLASSES[thread.tag]}`}
-                        >
-                          {TAG_LABELS[thread.tag]}
-                        </span>
-                        {gerenciaFilterLabel(thread) ? (
-                          <span
-                            className="inline-flex max-w-full rounded-full border border-[var(--color-border-subtle)] bg-[rgba(148,163,184,0.07)] px-2 py-0.5 text-[10px] font-medium text-[var(--color-text-muted)]"
-                            title={`Gerencia: ${gerenciaFilterLabel(thread)}`}
-                          >
-                            <span className="truncate">
-                              {gerenciaFilterLabel(thread)}
-                            </span>
-                          </span>
-                        ) : null}
-                      </span>
-                    </span>
-                  </button>
+                    </button>
+                    <button
+                      type="button"
+                      aria-label="Ocultar chat"
+                      title="Ocultar chat"
+                      onClick={() => setThreadToHide(thread)}
+                      className="absolute bottom-2 right-3 flex h-7 w-7 items-center justify-center rounded-lg border border-transparent text-[var(--color-text-disabled)] transition hover:border-rose-400/25 hover:bg-rose-400/10 hover:text-rose-200"
+                    >
+                      <TrashIcon />
+                    </button>
+                  </div>
                 );
               })
             )}
@@ -1050,6 +1103,36 @@ export default function WhatsAppCloudApiInboxPageContent({ mode }: Props) {
           )}
         </aside>
       </SurfaceCard>
+
+      {threadToHide ? (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 p-4">
+          <div className="w-full max-w-md rounded-2xl border border-[var(--color-border)] bg-[var(--color-bg-1)] p-5 shadow-2xl">
+            <p className="text-sm font-semibold text-[var(--color-text-strong)]">
+              Ocultar chat
+            </p>
+            <p className="mt-2 text-sm leading-5 text-[var(--color-text-muted)]">
+              {threadToHide.profile_name || threadToHide.wa_id} se quitara de
+              esta vista. No se elimina de la base de datos.
+            </p>
+            <div className="mt-5 flex justify-end gap-2">
+              <button
+                type="button"
+                className="ui-button ui-button-secondary"
+                onClick={() => setThreadToHide(null)}
+              >
+                Cancelar
+              </button>
+              <button
+                type="button"
+                className="ui-button ui-button-primary"
+                onClick={hideThreadFromUi}
+              >
+                Ocultar
+              </button>
+            </div>
+          </div>
+        </div>
+      ) : null}
     </div>
   );
 }
