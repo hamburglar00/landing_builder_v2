@@ -1,5 +1,6 @@
 import {
   buildFakeConversionRow,
+  buildBusinessMessagingUserData,
   buildMetaBusinessMessagingPurchaseRequest,
   buildMetaBusinessMessagingRequest,
   buildMetaRequest,
@@ -214,6 +215,45 @@ Deno.test("Business Messaging Lead matches Meta WhatsApp payload shape", () => {
     userData.whatsapp_business_account_id === "987654321",
     "WABA ID must be preserved",
   );
+});
+
+Deno.test("Business Messaging Lead can enrich user_data with hashed PII", async () => {
+  const row = buildFakeConversionRow("Lead");
+  row.email = "Cliente@Test.com";
+  row.phone = "5493518690777";
+  row.fn = "Geraldine";
+  row.ln = "Perez";
+  row.ct = "Cordoba";
+  row.st = "Cordoba";
+  row.zip = "5000";
+  row.country = "Argentina";
+  const additionalUserData = await buildBusinessMessagingUserData(row);
+  const request = buildMetaBusinessMessagingRequest(
+    {
+      dataset_id: "123456789",
+      whatsapp_business_account_id: "987654321",
+      meta_access_token: "token",
+      meta_api_version: "v25.0",
+      meta_currency: "ARS",
+    },
+    "Lead",
+    "opaque-ctwa-click-id",
+    1_700_000_000,
+    undefined,
+    additionalUserData,
+  );
+
+  const data = request.body.data as Array<Record<string, unknown>>;
+  const event = data[0];
+  const userData = event.user_data as Record<string, unknown>;
+  assert(userData.ctwa_clid === "opaque-ctwa-click-id", "ctwa_clid stays raw");
+  assert(userData.whatsapp_business_account_id === "987654321", "WABA stays raw");
+  for (const key of ["em", "ph", "fn", "ln", "ct", "st", "zp", "country"]) {
+    const value = String(userData[key] ?? "");
+    assert(value.length === 64, `${key} must be a SHA-256 hex hash`);
+  }
+  assert(userData.ph !== row.phone, "phone must not be sent raw");
+  assert(!("event_id" in event), "Business Messaging Lead still omits event_id");
 });
 
 Deno.test("CompleteRegistration website CAPI uses Meta standard event shape", async () => {

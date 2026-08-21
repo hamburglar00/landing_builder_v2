@@ -627,6 +627,33 @@ export async function buildUserData(
   return ud;
 }
 
+export async function buildBusinessMessagingUserData(
+  row: ConversionRow,
+  includeGeo = true,
+): Promise<MetaUserData> {
+  const ud: MetaUserData = {};
+  const normalizedCountry = includeGeo ? normalizeCountry(row.country) : "";
+  const normalizedState = includeGeo ? normalizeState(row.st, row.country) : "";
+  const normalizedCity = includeGeo ? normalizeCity(row.ct) : "";
+  const normalizedZip = includeGeo ? normalizePostalCode(row.zip) : "";
+  const email = normalizeEmail(String(row.email ?? ""));
+  const phone = normalizePhoneForMeta(String(row.phone ?? ""));
+  const firstName = normalizeName(String(row.fn ?? ""));
+  const lastName = normalizeName(String(row.ln ?? ""));
+  const externalId = normalizeExternalId(String(row.external_id ?? ""));
+
+  if (email) ud.em = await sha256(email);
+  if (phone) ud.ph = await sha256(phone);
+  if (firstName) ud.fn = await sha256(firstName);
+  if (lastName) ud.ln = await sha256(lastName);
+  if (normalizedCity) ud.ct = await sha256(normalizedCity);
+  if (normalizedState) ud.st = await sha256(normalizedState);
+  if (normalizedZip) ud.zp = await sha256(normalizedZip);
+  if (normalizedCountry) ud.country = await sha256(normalizedCountry);
+  if (externalId) ud.external_id = await sha256(externalId);
+  return ud;
+}
+
 export interface MetaRequest {
   apiUrl: string;
   body: Record<string, unknown>;
@@ -718,6 +745,7 @@ export function buildMetaBusinessMessagingRequest(
   ctwaClid: string,
   eventTime: number,
   customData?: Record<string, unknown>,
+  additionalUserData: MetaUserData = {},
 ): MetaRequest {
   const businessMessagingEventName = eventName === "Lead"
     ? "LeadSubmitted"
@@ -728,6 +756,7 @@ export function buildMetaBusinessMessagingRequest(
     action_source: "business_messaging",
     messaging_channel: "whatsapp",
     user_data: {
+      ...additionalUserData,
       whatsapp_business_account_id: config.whatsapp_business_account_id,
       ctwa_clid: ctwaClid,
     },

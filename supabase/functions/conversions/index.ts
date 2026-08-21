@@ -3,6 +3,7 @@ import {
   SupabaseClient,
 } from "https://esm.sh/@supabase/supabase-js@2";
 import {
+  buildBusinessMessagingUserData,
   buildMetaBusinessMessagingRequest,
   buildMetaRequest,
   type ConversionRow as SharedConversionRow,
@@ -3583,6 +3584,12 @@ async function sendToMetaCAPI(
       value: Number(canonicalCustomData?.value ?? row.valor),
     }
     : undefined;
+  const businessMessagingUserData = useBusinessMessaging
+    ? await buildBusinessMessagingUserData(
+      row as unknown as SharedConversionRow,
+      effectiveConfig.send_geo_capi !== false,
+    )
+    : undefined;
   const metaRequest = useBusinessMessaging
     ? buildMetaBusinessMessagingRequest(
       {
@@ -3599,6 +3606,7 @@ async function sendToMetaCAPI(
       ctwaClid,
       eventTime,
       businessMessagingCustomData,
+      businessMessagingUserData,
     )
     : await buildMetaRequest(
       effectiveConfig as unknown as SharedConversionsConfig,
