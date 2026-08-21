@@ -1428,13 +1428,10 @@ body.public-lead-capture-open {
 
 @keyframes template5ProgressLoop {
   0% {
-    transform: translateX(-72%) scaleX(0.32);
-  }
-  46% {
-    transform: translateX(0) scaleX(1);
+    transform: scaleX(1);
   }
   100% {
-    transform: translateX(112%) scaleX(0.42);
+    transform: scaleX(0.03);
   }
 }
 
@@ -1460,7 +1457,7 @@ body.public-lead-capture-open {
 }
 
 .public-landing.template5 ~ .public-privacy-footer {
-  bottom: max(5px, env(safe-area-inset-bottom));
+  bottom: max(1px, calc(env(safe-area-inset-bottom) - 4px));
   z-index: 25;
 }
 
@@ -1595,9 +1592,7 @@ body.public-lead-capture-open {
 .public-landing.template5 .template5__advisor,
 .public-landing.template5 .template5__feed,
 .template5__activity article {
-  background:
-    linear-gradient(180deg, rgba(36, 23, 11, 0.88), rgba(14, 8, 5, 0.88)),
-    rgba(22, 15, 9, 0.86);
+  background: rgba(0, 0, 0, 0.88);
   box-shadow:
     inset 0 1px 0 rgba(255, 255, 255, 0.05),
     0 18px 40px rgba(0, 0, 0, 0.28);
@@ -1609,9 +1604,9 @@ body.public-lead-capture-open {
 }
 
 .public-landing.template5 .template5__progress span {
-  width: 68%;
+  width: 100%;
   transform-origin: left center;
-  animation: template5ProgressLoop 3.3s cubic-bezier(0.5, 0, 0.16, 1) infinite;
+  animation: template5ProgressLoop 5.2s linear infinite;
 }
 
 .template5__feed-row--pulse {
@@ -1654,9 +1649,9 @@ body.public-lead-capture-open {
 }
 
 .public-landing.template5 .template5__footer {
-  bottom: 18px;
+  bottom: max(32px, calc(env(safe-area-inset-bottom) + 18px));
   padding-top: 28px;
-  padding-bottom: max(18px, env(safe-area-inset-bottom));
+  padding-bottom: 14px;
   background: linear-gradient(180deg, rgba(7, 3, 2, 0), rgba(7, 3, 2, 0.94) 30%, #070302 100%);
 }
 
@@ -1677,7 +1672,7 @@ body.public-lead-capture-open {
 }
 
 .public-landing.template4 ~ .public-privacy-footer {
-  bottom: max(6px, env(safe-area-inset-bottom));
+  bottom: max(1px, calc(env(safe-area-inset-bottom) - 4px));
 }
 
 .public-landing.template4 .template4__phone {
@@ -1968,7 +1963,7 @@ body.public-lead-capture-open {
   position: relative;
   z-index: 1;
   flex: 0 0 auto;
-  padding: 9px 14px max(57px, calc(env(safe-area-inset-bottom) + 51px));
+  padding: 9px 14px max(68px, calc(env(safe-area-inset-bottom) + 58px));
   background: #102326;
   border-top: 1px solid rgba(148, 163, 184, 0.16);
 }
@@ -2291,7 +2286,7 @@ body.public-lead-capture-open {
 
   .public-landing.template4 .template4__footer {
     padding-top: 7px;
-    padding-bottom: max(40px, calc(env(safe-area-inset-bottom) + 36px));
+    padding-bottom: max(58px, calc(env(safe-area-inset-bottom) + 52px));
   }
 }
 

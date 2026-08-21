@@ -684,7 +684,7 @@ export function LandingPreview({
             Un asesor te abre la cuenta en 2 minutos por WhatsApp y te acompaña en todo el proceso...
           </p>
         </div>
-        <div className="relative z-10 mx-[18px] mt-5 flex items-center gap-3 rounded-[18px] border border-[#e5bd42]/20 bg-[#160f09]/80 p-3.5">
+        <div className="relative z-10 mx-[18px] mt-5 flex items-center gap-3 rounded-[18px] border border-[#e5bd42]/20 bg-black/85 p-3.5">
           <div className="grid h-11 w-11 place-items-center rounded-full border border-lime-300/20 bg-[#14282d] text-[8px] font-black leading-tight text-lime-300">
             foto<br />asesor
           </div>
@@ -696,10 +696,10 @@ export function LandingPreview({
           </div>
           <i className="h-3 w-3 animate-pulse rounded-full bg-[#25d366] shadow-[0_0_0_6px_rgba(37,211,102,.12)]" />
         </div>
-        <div className="relative z-10 mx-[18px] mt-4 h-1 overflow-hidden rounded-full bg-slate-400/15">
-          <span className="block h-full w-[68%] animate-[template5ProgressLoop_3.3s_cubic-bezier(.5,0,.16,1)_infinite] rounded-full bg-gradient-to-r from-[#f3ce58] to-[#ff2b44]" />
+        <div className="relative z-10 mx-[18px] mt-4 h-1 overflow-hidden rounded-full bg-[#f51d38]/25">
+          <span className="block h-full w-full origin-left animate-[template5ProgressLoop_5.2s_linear_infinite] rounded-full bg-gradient-to-r from-[#f3ce58] to-[#ff2b44]" />
         </div>
-        <div className="relative z-10 mx-[18px] mt-5 overflow-hidden rounded-[18px] border border-[#e5bd42]/20 bg-[#160f09]/80">
+        <div className="relative z-10 mx-[18px] mt-5 overflow-hidden rounded-[18px] border border-[#e5bd42]/20 bg-black/85">
           <div className="flex items-center border-b border-[#e5bd42]/15 px-3.5 py-3">
             <strong className="text-[10px] font-extrabold tracking-[0.16em] text-white">
               <span className="mr-1.5 inline-block h-1.5 w-1.5 animate-pulse rounded-full bg-[#25d366]" />
@@ -808,7 +808,7 @@ export function LandingPreview({
               ))}
             </p>
           </div>
-          <div className="relative z-10 mx-[18px] mt-5 flex items-center gap-3 rounded-[18px] border border-[#e5bd42]/20 bg-[#160f09]/80 p-3.5">
+          <div className="relative z-10 mx-[18px] mt-5 flex items-center gap-3 rounded-[18px] border border-[#e5bd42]/20 bg-black/85 p-3.5">
             <div className="relative h-11 w-11 shrink-0">
               {live.profileImageUrl ? (
                 // eslint-disable-next-line @next/next/no-img-element
@@ -831,10 +831,10 @@ export function LandingPreview({
               </span>
             </div>
           </div>
-          <div className="relative z-10 mx-[18px] mt-4 h-1 overflow-hidden rounded-full bg-slate-400/15">
-            <span className="block h-full w-[68%] animate-[template5ProgressLoop_3.3s_cubic-bezier(.5,0,.16,1)_infinite] rounded-full bg-gradient-to-r from-[#f3ce58] to-[#ff2b44]" />
+          <div className="relative z-10 mx-[18px] mt-4 h-1 overflow-hidden rounded-full bg-[#f51d38]/25">
+            <span className="block h-full w-full origin-left animate-[template5ProgressLoop_5.2s_linear_infinite] rounded-full bg-gradient-to-r from-[#f3ce58] to-[#ff2b44]" />
           </div>
-          <div className="relative z-10 mx-[18px] mt-5 overflow-hidden rounded-[18px] border border-[#e5bd42]/20 bg-[#160f09]/80">
+          <div className="relative z-10 mx-[18px] mt-5 overflow-hidden rounded-[18px] border border-[#e5bd42]/20 bg-black/85">
             <div className="flex items-center border-b border-[#e5bd42]/15 px-3.5 py-3">
               <strong className="text-[10px] font-extrabold tracking-[0.16em] text-white">
                 <span className="mr-1.5 inline-block h-1.5 w-1.5 animate-pulse rounded-full bg-[#25d366]" />
@@ -852,18 +852,18 @@ export function LandingPreview({
             ))}
           </div>
           <div className="relative z-10 mx-[18px] mt-4 grid grid-cols-2 gap-2.5">
-            <article className="rounded-2xl border border-[#e5bd42]/20 bg-[#160f09]/80 p-3">
+            <article className="rounded-2xl border border-[#e5bd42]/20 bg-black/85 p-3">
               <span className="block text-[10px] font-black uppercase tracking-[0.12em] text-slate-200/70">Cuentas creadas</span>
               <strong className="mt-1 block text-[14px] font-black text-[#e5bd42]">{createdCount}</strong>
             </article>
-            <article className="rounded-2xl border border-[#e5bd42]/20 bg-[#160f09]/80 p-3">
+            <article className="rounded-2xl border border-[#e5bd42]/20 bg-black/85 p-3">
               <span className="block text-[10px] font-black uppercase tracking-[0.12em] text-slate-200/70">Asesores disponibles</span>
               <strong className="mt-1 block text-[14px] font-black text-[#e5bd42]">{advisorCount} en vivo</strong>
             </article>
           </div>
         </div>
         {!gallery && (
-          <div className="absolute inset-x-0 bottom-5 z-20 bg-gradient-to-t from-[#071013] via-[#071013]/95 to-transparent px-4 pb-5 pt-12">
+          <div className="absolute inset-x-0 bottom-9 z-20 bg-gradient-to-t from-[#071013] via-[#071013]/95 to-transparent px-4 pb-5 pt-12">
             <button className="flex h-[66px] w-full items-center justify-center gap-3 rounded-full bg-[#25d366] text-[18px] font-black tracking-[-0.02em] text-white shadow-[0_0_0_12px_rgba(37,211,102,.14),0_18px_34px_rgba(37,211,102,.22)]">
               <svg className="h-7 w-7" viewBox="0 0 48 48" aria-hidden="true">
                 <g transform="translate(-700 -360)">
