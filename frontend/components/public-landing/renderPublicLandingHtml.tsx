@@ -210,6 +210,34 @@ function template4Text(value: string | undefined, fallback: string, name: string
   return escapeHtml((value || fallback).replace(/\{\{\s*name\s*\}\}/gi, name));
 }
 
+function template5Lines(value: string | undefined, fallback: string, maxLines: number) {
+  const lines = String(value || fallback)
+    .split(/\r?\n/)
+    .map((line) => line.trim())
+    .filter(Boolean)
+    .slice(0, maxLines);
+
+  return lines.length > 0 ? lines : fallback.split(/\r?\n/).slice(0, maxLines);
+}
+
+function renderTemplate5Title(lines: string[]) {
+  return lines
+    .map((line, index) =>
+      index === 0
+        ? `<span>${escapeHtml(line)}</span>`
+        : `<b>${escapeHtml(line)}</b>`,
+    )
+    .join("");
+}
+
+function renderTemplate5Avatar(profileImageUrl: string) {
+  if (profileImageUrl) {
+    return `<img src="${escapeHtml(profileImageUrl)}" alt="" class="template5__avatar-img" decoding="async" loading="eager">`;
+  }
+
+  return `<div class="template5__avatar-placeholder">foto<br>asesor</div>`;
+}
+
 function renderPrivacyFooter(config: PublicLandingConfig) {
   const businessName = config.name || "el responsable de esta landing";
 
@@ -472,6 +500,7 @@ function renderTemplate4({ config }: RenderParams) {
   return `<main class="public-landing template4"><section class="template4__phone" aria-label="Chat en vivo"${backgroundStyle}><div class="template4__intro"><div class="template4__spinner">${renderTemplate4Avatar(profileImageUrl, true)}</div><div class="template4__intro-copy"><span>Abriendo sala</span><strong>Abriendo tu chat con ${name}</strong><p>Atencion abierta ahora</p></div></div><header class="template4__header"><div class="template4__avatar-wrap">${renderTemplate4Avatar(profileImageUrl)}<i class="template4__online-dot"></i></div><div class="template4__who"><b>${name} · Asesora</b><span>En linea · responde en ~40 seg</span></div><time class="template4__time" data-template4-current-time>${timeThree}<br><i>24/7</i></time></header><div class="template4__thread" data-public-landing-trigger><div class="template4__stack"><div class="template4__live-pill"><i></i><span><b data-template4-live-count>14</b> personas en chat ahora mismo</span></div><div class="template4__bubble template4__bubble--in template4__bubble--delay-1"><p>${bubble1}</p><span data-template4-message-time>${timeOne}</span></div><div class="template4__bubble template4__bubble--in template4__bubble--delay-2"><p>${bubble2Intro}</p><ul>${bubble2Items.map((item) => `<li>${template4Text(item, "", rawName)}</li>`).join("")}</ul><span data-template4-message-time>${timeTwo}</span></div><div class="template4__bubble template4__bubble--in template4__bubble--delay-3"><p>${bubble3}</p><span data-template4-message-time>${timeThree}</span></div></div></div><footer class="template4__footer"><button type="button" class="template4__cta" style="color:${escapeHtml(ctaColor)};background:${escapeHtml(ctaBackground)}" data-public-landing-cta data-public-landing-rest-label="${escapeHtml(ctaText)}" data-public-landing-loading-label="Abriendo..." data-public-landing-disabled-label="Sin numero disponible" aria-label="${escapeHtml(ctaText)}">${renderWhatsAppIcon("template4__cta-icon")}<span data-public-landing-cta-label>${escapeHtml(ctaText)}</span></button></footer></section></main>`;
 }
 
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
 function renderTemplate5({ config }: RenderParams) {
   const name = escapeHtml(config.name || "asesor");
   const currentTime = formatTemplate4Time();
@@ -479,8 +508,33 @@ function renderTemplate5({ config }: RenderParams) {
   return `<main class="public-landing template5"><section class="template5__phone" aria-label="Atencion en vivo"><div class="template5__ambient" aria-hidden="true"></div><div class="template5__curtain"><span>EN VIVO</span><strong>Entrando...</strong></div><div class="template5__scroll"><div class="template5__topline"><div class="template5__live-badge"><span class="template5__live-dot"></span><strong>EN VIVO</strong><time data-template5-current-time>${currentTime}</time></div><span class="template5__viewers"><b data-template5-viewer-count>1.278</b> viendo</span></div><section class="template5__hero" data-public-landing-trigger><h1><span>ESTA PASANDO</span><b>AHORA MISMO.</b></h1><p>Un asesor te abre la cuenta en 2 minutos por WhatsApp y te acompaña en todo el proceso...</p></section><section class="template5__advisor"><div class="template5__avatar" aria-hidden="true">foto<br>asesor</div><div><strong>${name} · tu asesora</strong><span>En linea · responde en ~40 seg</span></div><i></i></section><div class="template5__progress" aria-hidden="true"><span></span></div><section class="template5__feed" aria-label="Retiros pagados en vivo"><div><strong><span class="template5__feed-dot"></span> RETIROS PAGADOS · EN VIVO</strong></div><p data-template5-feed-row><span><b>Camilo A.</b><small data-template5-feed-time>hace 5 s</small></span><strong>$ 1.150.000</strong></p><p data-template5-feed-row><span><b>Sebastian G.</b><small data-template5-feed-time>hace 17 s</small></span><strong>$ 260.000</strong></p><p data-template5-feed-row><span><b>Laura P.</b><small data-template5-feed-time>hace 29 s</small></span><strong>$ 780.000</strong></p></section><section class="template5__activity" aria-label="Actividad de asesores"><article><span>Cuenta creada</span><strong>hace 12 s</strong></article><article><span>Asesor disponible</span><strong>ahora</strong></article></section></div><footer class="template5__footer"><button type="button" class="template5__cta" data-public-landing-cta data-public-landing-rest-label="ENTRAR POR WHATSAPP" data-public-landing-loading-label="Abriendo..." data-public-landing-disabled-label="Sin numero disponible" aria-label="ENTRAR POR WHATSAPP">${renderWhatsAppIcon("template5__cta-icon")}<span data-public-landing-cta-label>ENTRAR POR WHATSAPP</span></button><small>${name} te contesta en persona, ahora mismo</small></footer></section></main>`;
 }
 
+function renderTemplate5Configured({ config }: RenderParams) {
+  const name = escapeHtml(config.name || "asesor");
+  const currentTime = formatTemplate4Time();
+  const live = config.content?.template5;
+  const titleLines = template5Lines(
+    live?.titleText,
+    "ESTA PASANDO\nAHORA MISMO.",
+    3,
+  );
+  const subtitle = template5Lines(
+    live?.subtitleText,
+    "Un asesor te abre la cuenta en 2 minutos por WhatsApp y te acompana en todo el proceso...",
+    2,
+  )
+    .map(escapeHtml)
+    .join("<br>");
+  const profileImageUrl = live?.profileImageUrl?.trim() || "";
+  const backgroundImageUrl = live?.backgroundImageUrl?.trim() || "";
+  const backgroundStyle = backgroundImageUrl
+    ? ` style="--template5-background-image:url(&quot;${escapeHtml(backgroundImageUrl)}&quot;);--template5-background-opacity:0.72"`
+    : "";
+
+  return `<main class="public-landing template5"><section class="template5__phone" aria-label="Atencion en vivo"${backgroundStyle}><div class="template5__ambient" aria-hidden="true"></div><div class="template5__curtain"><span>EN VIVO</span><strong>Entrando...</strong></div><div class="template5__scroll"><div class="template5__topline"><div class="template5__live-badge"><span class="template5__live-dot"></span><strong>EN VIVO</strong><time data-template5-current-time>${currentTime}</time></div><span class="template5__viewers"><b data-template5-viewer-count>1.278</b> viendo</span></div><section class="template5__hero" data-public-landing-trigger><h1>${renderTemplate5Title(titleLines)}</h1><p>${subtitle}</p></section><section class="template5__advisor"><div class="template5__avatar-wrap">${renderTemplate5Avatar(profileImageUrl)}<i class="template5__advisor-dot"></i></div><div><strong>${name} · tu asesora</strong><span>En linea · responde en ~40 seg</span></div></section><div class="template5__progress" aria-hidden="true"><span></span></div><section class="template5__feed" aria-label="Actividad en vivo"><div><strong><span class="template5__feed-dot"></span> EN VIVO</strong></div><p data-template5-feed-row><span><b>Camilo A.</b><small data-template5-feed-time>hace 5 s</small></span><strong>$ 1.150.000</strong></p><p data-template5-feed-row><span><b>Sebastian G.</b><small data-template5-feed-time>hace 17 s</small></span><strong>$ 260.000</strong></p><p data-template5-feed-row><span><b>Laura P.</b><small data-template5-feed-time>hace 29 s</small></span><strong>$ 780.000</strong></p></section><section class="template5__activity" aria-label="Actividad de asesores"><article><span>Cuentas creadas</span><strong><b data-template5-created-count>1323</b></strong></article><article><span>Asesores disponibles</span><strong><b data-template5-advisor-count>6</b> en vivo</strong></article></section></div><footer class="template5__footer"><button type="button" class="template5__cta" data-public-landing-cta data-public-landing-rest-label="ENTRAR POR WHATSAPP" data-public-landing-loading-label="Abriendo..." data-public-landing-disabled-label="Sin numero disponible" aria-label="ENTRAR POR WHATSAPP">${renderWhatsAppIcon("template5__cta-icon")}<span data-public-landing-cta-label>ENTRAR POR WHATSAPP</span></button></footer></section></main>`;
+}
+
 function renderTemplate(params: RenderParams) {
-  if (params.config.layout?.template === 5) return renderTemplate5(params);
+  if (params.config.layout?.template === 5) return renderTemplate5Configured(params);
   if (params.config.layout?.template === 4) return renderTemplate4(params);
   if (params.config.layout?.template === 3) return renderTemplate3(params);
   if (params.config.layout?.template === 2) return renderTemplate2(params);

@@ -1214,6 +1214,22 @@ export default function PublicLandingRuntimeScript({ slug, config }: Props) {
           }, 2200);
         }
 
+        var createdCount = document.querySelector("[data-template5-created-count]");
+        if (createdCount) {
+          var created = Number(String(createdCount.textContent || "").replace(/\\D/g, "")) || 1323;
+          window.setInterval(function () {
+            created += 1 + Math.floor(Math.random() * 3);
+            createdCount.textContent = created.toLocaleString("es-AR");
+          }, 4300);
+        }
+
+        var advisorCount = document.querySelector("[data-template5-advisor-count]");
+        if (advisorCount) {
+          window.setInterval(function () {
+            advisorCount.textContent = String(2 + Math.floor(Math.random() * 9));
+          }, 2700);
+        }
+
         var feedRows = Array.prototype.slice.call(document.querySelectorAll("[data-template5-feed-row]"));
         var feedItems = [
           ["Camilo A.", "hace 5 s", "$ 1.150.000"],

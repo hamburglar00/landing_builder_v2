@@ -96,6 +96,13 @@ export interface LandingTemplate4ChatConfig {
   bubble3Text: string;
 }
 
+export interface LandingTemplate5LiveConfig {
+  titleText: string;
+  subtitleText: string;
+  profileImageUrl: string;
+  backgroundImageUrl: string;
+}
+
 /**
  * Configuracin completa del tema de la landing (plantilla fija).
  * El usuario solo puede editar estos campos; no puede mover elementos ni cambiar layout.
@@ -172,6 +179,7 @@ export interface LandingThemeConfig {
    */
   leadCapture: LandingLeadCaptureConfig;
   template4Chat?: LandingTemplate4ChatConfig;
+  template5Live?: LandingTemplate5LiveConfig;
 }
 
 /**

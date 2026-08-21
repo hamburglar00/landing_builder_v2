@@ -22,8 +22,34 @@ const TEMPLATE4_CHAT_DEFAULTS = {
   bubble3Text: "Arrancamos? Toca abajo y comenzamos",
 };
 
+const TEMPLATE5_LIVE_DEFAULTS = {
+  titleText: "ESTA PASANDO\nAHORA MISMO.",
+  subtitleText:
+    "Un asesor te abre la cuenta en 2 minutos por WhatsApp y te acompana en todo el proceso...",
+  profileImageUrl: "",
+  backgroundImageUrl: "",
+};
+
 function template4Text(value: string, name: string) {
   return value.replace(/\{\{\s*name\s*\}\}/gi, name);
+}
+
+function template5Lines(value: string | undefined, fallback: string, maxLines: number) {
+  const lines = String(value || fallback)
+    .split(/\r?\n/)
+    .map((line) => line.trim())
+    .filter(Boolean)
+    .slice(0, maxLines);
+
+  return lines.length > 0 ? lines : fallback.split(/\r?\n/).slice(0, maxLines);
+}
+
+function formatPreviewTime() {
+  return new Intl.DateTimeFormat("es-AR", {
+    hour: "2-digit",
+    minute: "2-digit",
+    hour12: false,
+  }).format(new Date());
 }
 
 interface LandingPreviewProps {
@@ -56,7 +82,7 @@ export function LandingPreview({
   const ctaGlowHex = getColorHex(config.ctaGlowColor);
   const fontFamily = SYSTEM_FONT_FAMILY;
   const [template4LiveCount, setTemplate4LiveCount] = useState(14);
-  const [template4Now, setTemplate4Now] = useState("--:--");
+  const [template4Now, setTemplate4Now] = useState(() => formatPreviewTime());
   const template =
     config.template === "template2"
       ? 2
@@ -70,15 +96,7 @@ export function LandingPreview({
   const ctaPosition = config.ctaPosition ?? "between_title_and_info";
 
   useEffect(() => {
-    const formatTime = () =>
-      new Intl.DateTimeFormat("es-AR", {
-        hour: "2-digit",
-        minute: "2-digit",
-        hour12: false,
-      }).format(new Date());
-
-    setTemplate4Now(formatTime());
-    const timeTimer = window.setInterval(() => setTemplate4Now(formatTime()), 30000);
+    const timeTimer = window.setInterval(() => setTemplate4Now(formatPreviewTime()), 30000);
     const countTimer = window.setInterval(() => {
       setTemplate4LiveCount((current) => {
         const delta = Math.random() > 0.5 ? 1 : -1;
@@ -560,6 +578,7 @@ export function LandingPreview({
     );
   };
 
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const renderTemplate5 = () => {
     const outerClass = compact
       ? "relative h-full w-full overflow-hidden rounded-3xl bg-[#071013] shadow-[0_14px_32px_rgba(0,0,0,0.9)]"
@@ -567,15 +586,29 @@ export function LandingPreview({
     const name = config.titleLine1?.trim() || "Asesor";
     const now = template4Now === "--:--" ? "23:11" : template4Now;
     const viewers = (1278 + template4LiveCount * 3).toLocaleString("es-AR");
+    const live = {
+      ...TEMPLATE5_LIVE_DEFAULTS,
+      ...(config.template5Live ?? {}),
+    };
+    const titleLines = template5Lines(
+      live.titleText,
+      TEMPLATE5_LIVE_DEFAULTS.titleText,
+      3,
+    );
+    const backgroundImage = live.backgroundImageUrl;
 
     return (
       <div className={outerClass} style={{ fontFamily }}>
         <div
           className="absolute -inset-7 animate-[template5AmbientDrift_18s_ease-in-out_infinite] bg-[radial-gradient(circle_at_16%_12%,rgba(229,189,66,0.16),transparent_28%),radial-gradient(circle_at_92%_16%,rgba(245,29,56,0.11),transparent_30%),linear-gradient(180deg,#120806_0%,#070302_100%)] opacity-100"
           style={{
-            backgroundImage:
-              "radial-gradient(circle at 20px 20px, transparent 0 11px, rgba(229,189,66,.52) 12px, transparent 14px), radial-gradient(circle at 118px 76px, transparent 0 14px, rgba(37,211,102,.32) 15px, transparent 17px), linear-gradient(45deg, transparent 0 43%, rgba(229,189,66,.34) 44% 56%, transparent 57%), linear-gradient(135deg, transparent 0 43%, rgba(245,29,56,.24) 44% 56%, transparent 57%)",
-            backgroundSize: "118px 118px, 156px 156px, 92px 92px, 138px 138px",
+            backgroundImage: backgroundImage
+              ? `linear-gradient(rgba(7,3,2,.58),rgba(7,3,2,.76)), url("${backgroundImage}")`
+              : "radial-gradient(circle at 20px 20px, transparent 0 11px, rgba(229,189,66,.52) 12px, transparent 14px), radial-gradient(circle at 118px 76px, transparent 0 14px, rgba(37,211,102,.32) 15px, transparent 17px), linear-gradient(45deg, transparent 0 43%, rgba(229,189,66,.34) 44% 56%, transparent 57%), linear-gradient(135deg, transparent 0 43%, rgba(245,29,56,.24) 44% 56%, transparent 57%)",
+            backgroundSize: backgroundImage
+              ? "cover"
+              : "118px 118px, 156px 156px, 92px 92px, 138px 138px",
+            backgroundPosition: backgroundImage ? "center" : undefined,
           }}
         />
         <div className="relative z-10 h-full overflow-y-auto pb-[122px] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
@@ -591,8 +624,14 @@ export function LandingPreview({
         </div>
         <div className="relative z-10 px-[18px] pt-6">
           <h1 className="text-[42px] font-black uppercase leading-[0.86] tracking-[-0.055em] text-white">
-            <span className="block">ESTA PASANDO</span>
-            <b className="block text-[#e5bd42]">AHORA MISMO.</b>
+            {titleLines.map((line, index) => (
+              <span
+                key={`${line}-${index}`}
+                className={index === 0 ? "block" : "block text-[#e5bd42]"}
+              >
+                {line}
+              </span>
+            ))}
           </h1>
           <p className="mt-4 text-[14px] leading-snug text-zinc-100/80">
             Un asesor te abre la cuenta en 2 minutos por WhatsApp y te acompaña en todo el proceso...
@@ -644,6 +683,152 @@ export function LandingPreview({
             <small className="mt-3 block text-center text-[11px] text-slate-300/60">
               {name} te contesta en persona, ahora mismo
             </small>
+          </div>
+        )}
+      </div>
+    );
+  };
+
+  const renderTemplate5Configured = () => {
+    const outerClass = compact
+      ? "relative h-full w-full overflow-hidden rounded-3xl bg-[#071013] shadow-[0_14px_32px_rgba(0,0,0,0.9)]"
+      : "relative mx-auto aspect-[9/16] w-full max-w-[380px] overflow-hidden rounded-3xl bg-[#071013] shadow-[0_18px_40px_rgba(0,0,0,1)]";
+    const name = config.titleLine1?.trim() || "Asesor";
+    const now = template4Now === "--:--" ? "23:11" : template4Now;
+    const viewers = (1278 + template4LiveCount * 3).toLocaleString("es-AR");
+    const live = {
+      ...TEMPLATE5_LIVE_DEFAULTS,
+      ...(config.template5Live ?? {}),
+    };
+    const titleLines = template5Lines(
+      live.titleText,
+      TEMPLATE5_LIVE_DEFAULTS.titleText,
+      3,
+    );
+    const subtitleLines = template5Lines(
+      live.subtitleText,
+      TEMPLATE5_LIVE_DEFAULTS.subtitleText,
+      2,
+    );
+    const advisorCount = 2 + (template4LiveCount % 9);
+    const createdCount = (1323 + template4LiveCount).toLocaleString("es-AR");
+    const galleryScaleClass = gallery ? "scale-[0.82] origin-top" : "";
+    const scrollClass = gallery
+      ? "relative z-10 h-full overflow-hidden pb-[96px]"
+      : "relative z-10 h-full overflow-y-auto pb-[122px] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden";
+
+    return (
+      <div className={outerClass} style={{ fontFamily }}>
+        <div
+          className="absolute -inset-7 animate-[template5AmbientDrift_18s_ease-in-out_infinite] opacity-100"
+          style={{
+            backgroundImage: live.backgroundImageUrl
+              ? `linear-gradient(rgba(7,3,2,.58),rgba(7,3,2,.76)), url("${live.backgroundImageUrl}")`
+              : "radial-gradient(circle at 20px 20px, transparent 0 11px, rgba(229,189,66,.52) 12px, transparent 14px), radial-gradient(circle at 118px 76px, transparent 0 14px, rgba(37,211,102,.32) 15px, transparent 17px), linear-gradient(45deg, transparent 0 43%, rgba(229,189,66,.34) 44% 56%, transparent 57%), linear-gradient(135deg, transparent 0 43%, rgba(245,29,56,.24) 44% 56%, transparent 57%)",
+            backgroundSize: live.backgroundImageUrl
+              ? "cover"
+              : "118px 118px, 156px 156px, 92px 92px, 138px 138px",
+            backgroundPosition: live.backgroundImageUrl ? "center" : undefined,
+          }}
+        />
+        <div className={`${scrollClass} ${galleryScaleClass}`}>
+          <div className="relative z-10 flex animate-[template5EnterUp_.7s_cubic-bezier(.16,1,.3,1)_forwards] items-center justify-between gap-3 px-[18px] pt-4">
+            <div className="inline-flex min-h-7 animate-[template5Pulse_1.55s_ease-in-out_infinite] items-center gap-2 rounded-full bg-[#f51d38] px-3 text-[10px] font-black tracking-[0.08em] text-white">
+              <span className="h-1.5 w-1.5 rounded-full bg-[#25d366]" />
+              <strong>EN VIVO</strong>
+              <time className="font-mono">{now}</time>
+            </div>
+            <span className="whitespace-nowrap font-mono text-[10px] font-bold text-slate-200/80">
+              {viewers} viendo
+            </span>
+          </div>
+          <div className="relative z-10 px-[18px] pt-6">
+            <h1 className="text-[42px] font-black uppercase leading-[0.86] tracking-[-0.055em] text-white">
+              {titleLines.map((line, index) => (
+                <span
+                  key={`${line}-${index}`}
+                  className={index === 0 ? "block" : "block text-[#e5bd42]"}
+                >
+                  {line}
+                </span>
+              ))}
+            </h1>
+            <p className="mt-4 text-[14px] leading-snug text-zinc-100/80">
+              {subtitleLines.map((line, index) => (
+                <span key={`${line}-${index}`} className="block">
+                  {line}
+                </span>
+              ))}
+            </p>
+          </div>
+          <div className="relative z-10 mx-[18px] mt-5 flex items-center gap-3 rounded-[18px] border border-[#e5bd42]/20 bg-[#160f09]/80 p-3.5">
+            <div className="relative h-11 w-11 shrink-0">
+              {live.profileImageUrl ? (
+                // eslint-disable-next-line @next/next/no-img-element
+                <img
+                  src={live.profileImageUrl}
+                  alt=""
+                  className="h-11 w-11 rounded-full border border-lime-300/20 bg-black object-cover"
+                />
+              ) : (
+                <div className="grid h-11 w-11 place-items-center rounded-full border border-lime-300/20 bg-black text-[8px] font-black leading-tight text-lime-300">
+                  foto<br />asesor
+                </div>
+              )}
+              <span className="absolute bottom-0 right-0 h-3 w-3 rounded-full border-2 border-[#160f09] bg-[#25d366] shadow-[0_0_0_4px_rgba(37,211,102,.12)]" />
+            </div>
+            <div className="min-w-0 flex-1">
+              <strong className="block truncate text-[14px] font-black text-white">{name} · tu asesora</strong>
+              <span className="mt-1 block truncate text-[11px] font-extrabold text-[#25d366]">
+                En linea · responde en ~40 seg
+              </span>
+            </div>
+          </div>
+          <div className="relative z-10 mx-[18px] mt-4 h-1 overflow-hidden rounded-full bg-slate-400/15">
+            <span className="block h-full w-[68%] animate-[template5ProgressLoop_3.3s_cubic-bezier(.5,0,.16,1)_infinite] rounded-full bg-gradient-to-r from-[#f3ce58] to-[#ff2b44]" />
+          </div>
+          <div className="relative z-10 mx-[18px] mt-5 overflow-hidden rounded-[18px] border border-[#e5bd42]/20 bg-[#160f09]/80">
+            <div className="flex items-center border-b border-[#e5bd42]/15 px-3.5 py-3">
+              <strong className="text-[10px] font-extrabold tracking-[0.16em] text-white">
+                <span className="mr-1.5 inline-block h-1.5 w-1.5 rounded-full bg-[#25d366]" />
+                EN VIVO
+              </strong>
+            </div>
+            {[
+              ["Camilo A.", "hace 5 s", "$ 1.150.000"],
+              ["Sebastian G.", "hace 17 s", "$ 260.000"],
+              ["Laura P.", "hace 29 s", "$ 780.000"],
+            ].map(([who, when, amount]) => (
+              <p key={who} className="mx-3.5 flex items-center justify-between gap-3 border-b border-[#e5bd42]/10 py-2.5">
+                <span>
+                  <b className="block text-[13px] font-black text-white">{who}</b>
+                  <small className="mt-0.5 block text-[10px] font-bold text-slate-300/60">{when}</small>
+                </span>
+                <strong className="whitespace-nowrap font-mono text-[13px] font-black text-[#25d366]">{amount}</strong>
+              </p>
+            ))}
+          </div>
+          <div className="relative z-10 mx-[18px] mt-4 grid grid-cols-2 gap-2.5">
+            <article className="rounded-2xl border border-[#e5bd42]/20 bg-[#160f09]/80 p-3">
+              <span className="block text-[10px] font-black uppercase tracking-[0.12em] text-slate-200/70">Cuentas creadas</span>
+              <strong className="mt-1 block text-[14px] font-black text-[#e5bd42]">{createdCount}</strong>
+            </article>
+            <article className="rounded-2xl border border-[#e5bd42]/20 bg-[#160f09]/80 p-3">
+              <span className="block text-[10px] font-black uppercase tracking-[0.12em] text-slate-200/70">Asesores disponibles</span>
+              <strong className="mt-1 block text-[14px] font-black text-[#e5bd42]">{advisorCount} en vivo</strong>
+            </article>
+          </div>
+        </div>
+        {!gallery && (
+          <div className="absolute inset-x-0 bottom-0 z-20 bg-gradient-to-t from-[#071013] via-[#071013]/95 to-transparent px-4 pb-5 pt-12">
+            <button className="flex h-[66px] w-full items-center justify-center gap-3 rounded-full bg-[#25d366] text-[18px] font-black tracking-[-0.02em] text-white shadow-[0_0_0_12px_rgba(37,211,102,.14),0_18px_34px_rgba(37,211,102,.22)]">
+              <svg className="h-7 w-7" viewBox="0 0 48 48" aria-hidden="true">
+                <g transform="translate(-700 -360)">
+                  <path fill="currentColor" fillRule="evenodd" d={WHATSAPP_ICON_PATH} />
+                </g>
+              </svg>
+              ENTRAR POR WHATSAPP
+            </button>
           </div>
         )}
       </div>
@@ -717,7 +902,7 @@ export function LandingPreview({
     return renderTemplate4();
   }
   if (template === 5) {
-    return renderTemplate5();
+    return renderTemplate5Configured();
   }
   return renderTemplate1();
 }

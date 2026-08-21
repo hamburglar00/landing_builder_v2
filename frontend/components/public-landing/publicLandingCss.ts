@@ -1211,6 +1211,44 @@ body.public-lead-capture-open {
   text-align: center;
 }
 
+.template5__avatar-wrap {
+  position: relative;
+  flex: 0 0 auto;
+  width: 52px;
+  height: 52px;
+}
+
+.template5__avatar-img,
+.template5__avatar-placeholder {
+  display: grid;
+  width: 52px;
+  height: 52px;
+  place-items: center;
+  overflow: hidden;
+  border: 1px solid rgba(229, 189, 66, 0.18);
+  border-radius: 999px;
+  background: #050505;
+  color: rgba(226, 232, 240, 0.72);
+  font: 800 9px/1.05 ui-monospace, SFMono-Regular, Menlo, monospace;
+  text-align: center;
+}
+
+.template5__avatar-img {
+  object-fit: cover;
+}
+
+.template5__advisor-dot {
+  position: absolute;
+  right: -1px;
+  bottom: 2px;
+  width: 13px;
+  height: 13px;
+  border: 2px solid rgba(22, 15, 9, 0.98);
+  border-radius: 999px;
+  background: #25d366;
+  box-shadow: 0 0 0 4px rgba(37, 211, 102, 0.12);
+}
+
 .template5__advisor > div:nth-child(2) {
   min-width: 0;
   flex: 1 1 auto;
@@ -1433,6 +1471,20 @@ body.public-lead-capture-open {
   animation: template5AmbientDrift 16s ease-in-out infinite;
 }
 
+.public-landing.template5 .template5__phone::after {
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  pointer-events: none;
+  content: "";
+  opacity: var(--template5-background-opacity, 0);
+  background:
+    linear-gradient(rgba(7, 3, 2, 0.58), rgba(7, 3, 2, 0.76)),
+    var(--template5-background-image, none);
+  background-position: center;
+  background-size: cover;
+}
+
 .template5__ambient {
   position: absolute;
   inset: -28px;
@@ -1513,8 +1565,8 @@ body.public-lead-capture-open {
 
 .public-landing.template5 .template5__live-dot,
 .public-landing.template5 .template5__feed-dot {
-  background: #fff;
-  box-shadow: 0 0 12px rgba(255, 255, 255, 0.8);
+  background: #25d366;
+  box-shadow: 0 0 12px rgba(37, 211, 102, 0.8);
 }
 
 .public-landing.template5 .template5__hero h1 {
@@ -1590,8 +1642,9 @@ body.public-lead-capture-open {
 }
 
 .public-landing.template5 .template5__cta {
-  color: #04130a;
+  color: #ffffff;
   background: linear-gradient(180deg, #2af071 0%, #10c858 100%);
+  text-shadow: 0 1px 0 rgba(0, 0, 0, 0.24);
   transform: translateZ(0);
   animation: template5Pulse 2.3s ease-in-out infinite;
 }

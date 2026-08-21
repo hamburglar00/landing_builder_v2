@@ -65,6 +65,12 @@ export interface LandingConfigPayload {
       bubble2Items: string[];
       bubble3Text: string;
     };
+    template5?: {
+      titleText: string;
+      subtitleText: string;
+      profileImageUrl: string;
+      backgroundImageUrl: string;
+    };
   };
   typography?: {
     fontFamily: LandingThemeConfig["fontFamily"];
@@ -274,6 +280,16 @@ export function buildLandingConfig({
         bubble3Text:
           themeWithHex.template4Chat?.bubble3Text ||
           "Arrancamos? Toca abajo y comenzamos",
+      },
+      template5: {
+        titleText:
+          themeWithHex.template5Live?.titleText ||
+          "ESTA PASANDO\nAHORA MISMO.",
+        subtitleText:
+          themeWithHex.template5Live?.subtitleText ||
+          "Un asesor te abre la cuenta en 2 minutos por WhatsApp y te acompana en todo el proceso...",
+        profileImageUrl: themeWithHex.template5Live?.profileImageUrl || "",
+        backgroundImageUrl: themeWithHex.template5Live?.backgroundImageUrl || "",
       },
     },
     typography: {

@@ -3,6 +3,7 @@
 import { useId, useState } from "react";
 import type {
   LandingTemplate4ChatConfig,
+  LandingTemplate5LiveConfig,
   LandingThemeConfig,
   CtaPositionOption,
   TemplateOption,
@@ -125,6 +126,14 @@ const TEMPLATE4_CHAT_DEFAULTS: LandingTemplate4ChatConfig = {
   bubble3Text: "Arrancamos? Toca abajo y comenzamos",
 };
 
+const TEMPLATE5_LIVE_DEFAULTS: LandingTemplate5LiveConfig = {
+  titleText: "ESTA PASANDO\nAHORA MISMO.",
+  subtitleText:
+    "Un asesor te abre la cuenta en 2 minutos por WhatsApp y te acompana en todo el proceso...",
+  profileImageUrl: "",
+  backgroundImageUrl: "",
+};
+
 export function LandingTemplateSection({
   config,
   setConfig,
@@ -227,12 +236,17 @@ export function LandingEditorForm({
 
   const isTemplate3 = config.template === "template3";
   const isTemplate4 = config.template === "template4";
+  const isTemplate5 = config.template === "template5";
   const isFixedVisualTemplate =
     config.template === "template4" || config.template === "template5";
   const hidesVisualControls = isTemplate3 || isFixedVisualTemplate;
   const template4Chat = {
     ...TEMPLATE4_CHAT_DEFAULTS,
     ...(config.template4Chat ?? {}),
+  };
+  const template5Live = {
+    ...TEMPLATE5_LIVE_DEFAULTS,
+    ...(config.template5Live ?? {}),
   };
   const template4CtaText =
     config.ctaText.trim() && config.ctaText !== "Acceder"
@@ -277,6 +291,17 @@ export function LandingEditorForm({
     updateConfig(setConfig, {
       template4Chat: {
         ...template4Chat,
+        ...patch,
+      },
+    });
+  };
+
+  const updateTemplate5Live = (
+    patch: Partial<LandingTemplate5LiveConfig>,
+  ) => {
+    updateConfig(setConfig, {
+      template5Live: {
+        ...template5Live,
         ...patch,
       },
     });
@@ -721,6 +746,81 @@ export function LandingEditorForm({
                 onChange={(e) =>
                   updateTemplate4Chat({ bubble3Text: e.target.value })
                 }
+                rows={2}
+                className="w-full resize-none rounded-lg border border-zinc-700 bg-zinc-900 px-3 py-2 text-sm text-zinc-100"
+              />
+            </div>
+          </div>
+        </CollapsibleSection>
+      )}
+
+      {isTemplate5 && (
+        <CollapsibleSection title="Live" defaultOpen>
+          <div className="space-y-5">
+            <ImageUploader
+              label="Foto de perfil"
+              multiple={false}
+              value={template5Live.profileImageUrl ? [template5Live.profileImageUrl] : []}
+              onChange={(urls) =>
+                updateTemplate5Live({ profileImageUrl: urls[0] ?? "" })
+              }
+              onUpload={uploadImage}
+            />
+            <p className="text-[11px] text-zinc-500">
+              Formato .avif. Se usa en la card del asesor.
+            </p>
+
+            <div className="space-y-2 border-t border-zinc-800 pt-4">
+              <ImageUploader
+                label="Foto de fondo"
+                multiple={false}
+                value={template5Live.backgroundImageUrl ? [template5Live.backgroundImageUrl] : []}
+                onChange={(urls) =>
+                  updateTemplate5Live({ backgroundImageUrl: urls[0] ?? "" })
+                }
+                onUpload={uploadImage}
+              />
+              <p className="text-[11px] text-zinc-500">
+                Formato .avif. Reemplaza el fondo visual de la plantilla.
+              </p>
+            </div>
+
+            <div className="space-y-3 border-t border-zinc-800 pt-4">
+              <label
+                htmlFor={fieldId("template5-title")}
+                className="block text-xs font-medium text-zinc-400"
+              >
+                Título
+              </label>
+              <textarea
+                id={fieldId("template5-title")}
+                value={template5Live.titleText}
+                onChange={(e) => {
+                  const next = e.target.value.split(/\r?\n/).slice(0, 3).join("\n");
+                  updateTemplate5Live({ titleText: next });
+                }}
+                rows={3}
+                className="w-full resize-none rounded-lg border border-zinc-700 bg-zinc-900 px-3 py-2 text-sm text-zinc-100"
+              />
+              <p className="text-[11px] text-zinc-500">
+                Hasta 3 líneas. La primera se muestra en blanco y las siguientes en dorado.
+              </p>
+            </div>
+
+            <div className="space-y-3 border-t border-zinc-800 pt-4">
+              <label
+                htmlFor={fieldId("template5-subtitle")}
+                className="block text-xs font-medium text-zinc-400"
+              >
+                Subtítulo
+              </label>
+              <textarea
+                id={fieldId("template5-subtitle")}
+                value={template5Live.subtitleText}
+                onChange={(e) => {
+                  const next = e.target.value.split(/\r?\n/).slice(0, 2).join("\n");
+                  updateTemplate5Live({ subtitleText: next });
+                }}
                 rows={2}
                 className="w-full resize-none rounded-lg border border-zinc-700 bg-zinc-900 px-3 py-2 text-sm text-zinc-100"
               />

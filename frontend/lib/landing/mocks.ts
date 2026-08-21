@@ -71,4 +71,11 @@ export const DEFAULT_CONFIG: LandingThemeConfig = {
     bubble2Item3: "🛡️ Respaldo y mas de 5 anos de experiencia",
     bubble3Text: "Arrancamos? Toca abajo y comenzamos",
   },
+  template5Live: {
+    titleText: "ESTA PASANDO\nAHORA MISMO.",
+    subtitleText:
+      "Un asesor te abre la cuenta en 2 minutos por WhatsApp y te acompana en todo el proceso...",
+    profileImageUrl: "",
+    backgroundImageUrl: "",
+  },
 };
