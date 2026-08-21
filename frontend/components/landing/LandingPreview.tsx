@@ -722,7 +722,7 @@ export function LandingPreview({
         </div>
         </div>
         {!gallery && (
-          <div className="absolute inset-x-0 bottom-0 z-20 bg-gradient-to-t from-[#071013] via-[#071013]/95 to-transparent px-4 pb-4 pt-9">
+          <div className="absolute inset-x-0 bottom-0 z-20 bg-transparent px-4 pb-4 pt-9">
             <button className="flex h-[58px] w-full items-center justify-center gap-3 rounded-full bg-[#25d366] text-[16px] font-black tracking-[-0.02em] text-[#04130a] shadow-[0_0_0_9px_rgba(37,211,102,.13),0_14px_28px_rgba(37,211,102,.2)]">
               <span className="text-xl">●</span>
               ENTRAR POR WHATSAPP
@@ -863,7 +863,7 @@ export function LandingPreview({
           </div>
         </div>
         {!gallery && (
-          <div className="absolute inset-x-0 bottom-7 z-20 bg-gradient-to-t from-[#071013] via-[#071013]/95 to-transparent px-4 pb-4 pt-9">
+          <div className="absolute inset-x-0 bottom-7 z-20 bg-transparent px-4 pb-4 pt-9">
             <button className="flex h-[58px] w-full items-center justify-center gap-3 rounded-full bg-[#25d366] text-[16px] font-black tracking-[-0.02em] text-white shadow-[0_0_0_9px_rgba(37,211,102,.13),0_14px_28px_rgba(37,211,102,.2)]">
               <svg className="h-6 w-6" viewBox="0 0 48 48" aria-hidden="true">
                 <g transform="translate(-700 -360)">

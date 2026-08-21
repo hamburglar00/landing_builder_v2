@@ -1652,7 +1652,7 @@ body.public-lead-capture-open {
   bottom: max(24px, calc(env(safe-area-inset-bottom) + 12px));
   padding-top: 22px;
   padding-bottom: 12px;
-  background: linear-gradient(180deg, rgba(7, 3, 2, 0), rgba(7, 3, 2, 0.94) 30%, #070302 100%);
+  background: transparent;
 }
 
 .public-landing.template5 .template5__cta {
