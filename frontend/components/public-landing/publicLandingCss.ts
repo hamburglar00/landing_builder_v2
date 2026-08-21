@@ -1403,6 +1403,18 @@ body.public-lead-capture-open {
   }
 }
 
+@keyframes template5DotBlink {
+  0%,
+  100% {
+    opacity: 1;
+    transform: scale(1);
+  }
+  50% {
+    opacity: 0.38;
+    transform: scale(0.86);
+  }
+}
+
 @keyframes template5EnterUp {
   from {
     opacity: 0;
@@ -1561,14 +1573,17 @@ body.public-lead-capture-open {
   animation-delay: 1.14s;
 }
 
-.public-landing.template5 .template5__live-badge {
-  animation: template5Pulse 1.55s ease-in-out infinite;
+.public-landing.template5 .template5__live-dot {
+  background: #ffffff;
+  box-shadow: 0 0 12px rgba(255, 255, 255, 0.82);
+  animation: template5DotBlink 1.35s ease-in-out infinite;
 }
 
-.public-landing.template5 .template5__live-dot,
+.public-landing.template5 .template5__advisor-dot,
 .public-landing.template5 .template5__feed-dot {
   background: #25d366;
   box-shadow: 0 0 12px rgba(37, 211, 102, 0.8);
+  animation: template5DotBlink 1.35s ease-in-out infinite;
 }
 
 .public-landing.template5 .template5__hero h1 {

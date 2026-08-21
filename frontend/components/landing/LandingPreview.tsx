@@ -660,8 +660,8 @@ export function LandingPreview({
         />
         <div className="relative z-10 h-full overflow-y-auto pb-[122px] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
         <div className="relative z-10 flex animate-[template5EnterUp_.7s_cubic-bezier(.16,1,.3,1)_forwards] items-center justify-between gap-3 px-[18px] pt-4">
-          <div className="inline-flex min-h-7 animate-[template5Pulse_1.55s_ease-in-out_infinite] items-center gap-2 rounded-full bg-[#f51d38] px-3 text-[10px] font-black tracking-[0.08em] text-white">
-            <span className="h-1.5 w-1.5 rounded-full bg-white/95" />
+          <div className="inline-flex min-h-7 items-center gap-2 rounded-full bg-[#f51d38] px-3 text-[10px] font-black tracking-[0.08em] text-white">
+            <span className="h-1.5 w-1.5 animate-pulse rounded-full bg-white" />
             <strong>EN VIVO</strong>
             <time className="font-mono">{now}</time>
           </div>
@@ -689,12 +689,12 @@ export function LandingPreview({
             foto<br />asesor
           </div>
           <div className="min-w-0 flex-1">
-            <strong className="block truncate text-[14px] font-black text-white">{name} · tu asesora</strong>
+            <strong className="block truncate text-[14px] font-black text-white">{name} · tu asesora designada</strong>
             <span className="mt-1 block truncate text-[11px] font-extrabold text-[#25d366]">
               En linea · responde en ~40 seg
             </span>
           </div>
-          <i className="h-3 w-3 rounded-full bg-[#25d366] shadow-[0_0_0_6px_rgba(37,211,102,.12)]" />
+          <i className="h-3 w-3 animate-pulse rounded-full bg-[#25d366] shadow-[0_0_0_6px_rgba(37,211,102,.12)]" />
         </div>
         <div className="relative z-10 mx-[18px] mt-4 h-1 overflow-hidden rounded-full bg-slate-400/15">
           <span className="block h-full w-[68%] animate-[template5ProgressLoop_3.3s_cubic-bezier(.5,0,.16,1)_infinite] rounded-full bg-gradient-to-r from-[#f3ce58] to-[#ff2b44]" />
@@ -702,8 +702,8 @@ export function LandingPreview({
         <div className="relative z-10 mx-[18px] mt-5 overflow-hidden rounded-[18px] border border-[#e5bd42]/20 bg-[#160f09]/80">
           <div className="flex items-center border-b border-[#e5bd42]/15 px-3.5 py-3">
             <strong className="text-[10px] font-extrabold tracking-[0.16em] text-white">
-              <span className="mr-1.5 inline-block h-1.5 w-1.5 rounded-full bg-[#25d366]" />
-              RETIROS PAGADOS · EN VIVO
+              <span className="mr-1.5 inline-block h-1.5 w-1.5 animate-pulse rounded-full bg-[#25d366]" />
+              EN VIVO
             </strong>
           </div>
           {[
@@ -780,8 +780,8 @@ export function LandingPreview({
         />
         <div className={`${scrollClass} ${galleryScaleClass}`}>
           <div className="relative z-10 flex animate-[template5EnterUp_.7s_cubic-bezier(.16,1,.3,1)_forwards] items-center justify-between gap-3 px-[18px] pt-4">
-            <div className="inline-flex min-h-7 animate-[template5Pulse_1.55s_ease-in-out_infinite] items-center gap-2 rounded-full bg-[#f51d38] px-3 text-[10px] font-black tracking-[0.08em] text-white">
-              <span className="h-1.5 w-1.5 rounded-full bg-[#25d366]" />
+            <div className="inline-flex min-h-7 items-center gap-2 rounded-full bg-[#f51d38] px-3 text-[10px] font-black tracking-[0.08em] text-white">
+              <span className="h-1.5 w-1.5 animate-pulse rounded-full bg-white" />
               <strong>EN VIVO</strong>
               <time className="font-mono">{now}</time>
             </div>
@@ -822,10 +822,10 @@ export function LandingPreview({
                   foto<br />asesor
                 </div>
               )}
-              <span className="absolute bottom-0 right-0 h-3 w-3 rounded-full border-2 border-[#160f09] bg-[#25d366] shadow-[0_0_0_4px_rgba(37,211,102,.12)]" />
+              <span className="absolute bottom-0 right-0 h-3 w-3 animate-pulse rounded-full border-2 border-[#160f09] bg-[#25d366] shadow-[0_0_0_4px_rgba(37,211,102,.12)]" />
             </div>
             <div className="min-w-0 flex-1">
-              <strong className="block truncate text-[14px] font-black text-white">{name} · tu asesora</strong>
+              <strong className="block truncate text-[14px] font-black text-white">{name} · tu asesora designada</strong>
               <span className="mt-1 block truncate text-[11px] font-extrabold text-[#25d366]">
                 En linea · responde en ~40 seg
               </span>
@@ -837,7 +837,7 @@ export function LandingPreview({
           <div className="relative z-10 mx-[18px] mt-5 overflow-hidden rounded-[18px] border border-[#e5bd42]/20 bg-[#160f09]/80">
             <div className="flex items-center border-b border-[#e5bd42]/15 px-3.5 py-3">
               <strong className="text-[10px] font-extrabold tracking-[0.16em] text-white">
-                <span className="mr-1.5 inline-block h-1.5 w-1.5 rounded-full bg-[#25d366]" />
+                <span className="mr-1.5 inline-block h-1.5 w-1.5 animate-pulse rounded-full bg-[#25d366]" />
                 EN VIVO
               </strong>
             </div>
