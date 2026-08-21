@@ -13,6 +13,7 @@ const TEMPLATE3_WHATSAPP_ICON_PATH =
 
 const TEMPLATE4_CHAT_DEFAULTS = {
   profileImageUrl: "",
+  backgroundImageUrl: "",
   bubble1Text: "Hola, soy {{name}}, enviame un mensaje y comenzamos ya mismo.",
   bubble2Intro: "Te acompaño en todo el proceso",
   bubble2Item1: "💸 Cargas y retiros las 24hs",
@@ -384,6 +385,19 @@ export function LandingPreview({
       ...(config.template4Chat ?? {}),
     };
     const profileImageUrl = chat.profileImageUrl;
+    const backgroundImageUrl = chat.backgroundImageUrl;
+    const backgroundLayerStyle = backgroundImageUrl
+      ? {
+          backgroundImage: `linear-gradient(rgba(7, 16, 19, 0.42), rgba(7, 16, 19, 0.42)), url("${backgroundImageUrl}")`,
+          backgroundSize: "cover",
+          backgroundPosition: "center",
+        }
+      : {
+          backgroundImage:
+            "url(\"data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='180' height='180' viewBox='0 0 180 180'%3E%3Cg fill='none' stroke='%236ee7b7' stroke-width='2' stroke-linecap='round' stroke-linejoin='round' opacity='.72'%3E%3Ccircle cx='24' cy='24' r='16'/%3E%3Ccircle cx='24' cy='24' r='8'/%3E%3Cpath d='M24 8v7M24 33v7M8 24h7M33 24h7M14 14l5 5M34 14l-5 5M14 34l5-5M34 34l-5-5'/%3E%3Crect x='60' y='10' width='34' height='46' rx='5' transform='rotate(-10 77 33)'/%3E%3Cpath d='M77 22c-6 8-13 16 0 23 13-7 6-15 0-23zM72 45h10'/%3E%3Crect x='122' y='14' width='38' height='31' rx='5'/%3E%3Cpath d='M131 24h20M131 35h20M129 30h.5M153 30h.5'/%3E%3Cpath d='M28 76c8-11 20-1 10 10 10-11 22-1 10 10-8 8-20 4-20-4 0 8-12 12-20 4-12-11 0-21 10-10-10-11 2-21 10-10zM28 96v12'/%3E%3Cpath d='M82 72l16 16-16 16-16-16zM82 80v16M74 88h16'/%3E%3Crect x='124' y='70' width='34' height='34' rx='7'/%3E%3Ccircle cx='134' cy='80' r='1.5'/%3E%3Ccircle cx='148' cy='80' r='1.5'/%3E%3Ccircle cx='141' cy='87' r='1.5'/%3E%3Ccircle cx='134' cy='94' r='1.5'/%3E%3Ccircle cx='148' cy='94' r='1.5'/%3E%3Cpath d='M25 124c-8 10-16 18 0 28 16-10 8-18 0-28zM18 152h14'/%3E%3Crect x='62' y='122' width='48' height='30' rx='6'/%3E%3Cpath d='M73 132l6 10 6-10M92 132l6 10 6-10'/%3E%3Cpath d='M130 130c0-9 8-16 17-16s17 7 17 16-8 16-17 16-17-7-17-16zM139 128l8-8 8 8M139 136l8 8 8-8'/%3E%3C/g%3E%3Cg fill='%23e5bd42' opacity='.58'%3E%3Ccircle cx='48' cy='54' r='2'/%3E%3Ccircle cx='112' cy='58' r='2'/%3E%3Ccircle cx='164' cy='60' r='2'/%3E%3Ccircle cx='52' cy='112' r='2'/%3E%3Ccircle cx='112' cy='112' r='2'/%3E%3Ccircle cx='166' cy='162' r='2'/%3E%3Cpath d='M48 150l3 6 6 3-6 3-3 6-3-6-6-3 6-3zM114 20l2 4 4 2-4 2-2 4-2-4-4-2 4-2z'/%3E%3C/g%3E%3C/svg%3E\")",
+          backgroundSize: "180px 180px",
+          backgroundPosition: "-18px 2px",
+        };
     const bubble2Items = [
       chat.bubble2Item1,
       chat.bubble2Item2,
@@ -404,16 +418,11 @@ export function LandingPreview({
       return (
         <div className={outerClass} style={{ fontFamily }}>
           <div
-            className="pointer-events-none absolute inset-0 opacity-[0.2]"
-            style={{
-              backgroundImage:
-                "url(\"data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='180' height='180' viewBox='0 0 180 180'%3E%3Cg fill='none' stroke='%236ee7b7' stroke-width='2' stroke-linecap='round' stroke-linejoin='round' opacity='.72'%3E%3Ccircle cx='24' cy='24' r='16'/%3E%3Ccircle cx='24' cy='24' r='8'/%3E%3Cpath d='M24 8v7M24 33v7M8 24h7M33 24h7M14 14l5 5M34 14l-5 5M14 34l5-5M34 34l-5-5'/%3E%3Crect x='60' y='10' width='34' height='46' rx='5' transform='rotate(-10 77 33)'/%3E%3Cpath d='M77 22c-6 8-13 16 0 23 13-7 6-15 0-23zM72 45h10'/%3E%3Crect x='122' y='14' width='38' height='31' rx='5'/%3E%3Cpath d='M131 24h20M131 35h20M129 30h.5M153 30h.5'/%3E%3Cpath d='M28 76c8-11 20-1 10 10 10-11 22-1 10 10-8 8-20 4-20-4 0 8-12 12-20 4-12-11 0-21 10-10-10-11 2-21 10-10zM28 96v12'/%3E%3Cpath d='M82 72l16 16-16 16-16-16zM82 80v16M74 88h16'/%3E%3Crect x='124' y='70' width='34' height='34' rx='7'/%3E%3Ccircle cx='134' cy='80' r='1.5'/%3E%3Ccircle cx='148' cy='80' r='1.5'/%3E%3Ccircle cx='141' cy='87' r='1.5'/%3E%3Ccircle cx='134' cy='94' r='1.5'/%3E%3Ccircle cx='148' cy='94' r='1.5'/%3E%3Cpath d='M25 124c-8 10-16 18 0 28 16-10 8-18 0-28zM18 152h14'/%3E%3Crect x='62' y='122' width='48' height='30' rx='6'/%3E%3Cpath d='M73 132l6 10 6-10M92 132l6 10 6-10'/%3E%3Cpath d='M130 130c0-9 8-16 17-16s17 7 17 16-8 16-17 16-17-7-17-16zM139 128l8-8 8 8M139 136l8 8 8-8'/%3E%3C/g%3E%3Cg fill='%23e5bd42' opacity='.58'%3E%3Ccircle cx='48' cy='54' r='2'/%3E%3Ccircle cx='112' cy='58' r='2'/%3E%3Ccircle cx='164' cy='60' r='2'/%3E%3Ccircle cx='52' cy='112' r='2'/%3E%3Ccircle cx='112' cy='112' r='2'/%3E%3Ccircle cx='166' cy='162' r='2'/%3E%3Cpath d='M48 150l3 6 6 3-6 3-3 6-3-6-6-3 6-3zM114 20l2 4 4 2-4 2-2 4-2-4-4-2 4-2z'/%3E%3C/g%3E%3C/svg%3E\")",
-              backgroundSize: "180px 180px",
-              backgroundPosition: "-18px 2px",
-            }}
+            className={`pointer-events-none absolute inset-0 ${backgroundImageUrl ? "opacity-100" : "opacity-[0.2]"}`}
+            style={backgroundLayerStyle}
           />
           <div className="relative z-[1] flex h-full flex-col">
-            <div className="flex min-h-[54px] items-center gap-2 border-b border-slate-400/15 bg-[#263639] px-3">
+            <div className="flex min-h-[54px] items-center gap-2 border-b border-slate-400/15 bg-[#102326] px-3">
               <div className="grid h-8 w-8 place-items-center overflow-hidden rounded-full border border-white/10 bg-black text-[7px] font-bold text-slate-300/70">
                 {profileImageUrl ? (
                   // eslint-disable-next-line @next/next/no-img-element
@@ -447,13 +456,8 @@ export function LandingPreview({
     return (
       <div className={outerClass} style={{ fontFamily }}>
         <div
-          className="pointer-events-none absolute inset-0 opacity-[0.2]"
-          style={{
-            backgroundImage:
-              "url(\"data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='180' height='180' viewBox='0 0 180 180'%3E%3Cg fill='none' stroke='%236ee7b7' stroke-width='2' stroke-linecap='round' stroke-linejoin='round' opacity='.72'%3E%3Ccircle cx='24' cy='24' r='16'/%3E%3Ccircle cx='24' cy='24' r='8'/%3E%3Cpath d='M24 8v7M24 33v7M8 24h7M33 24h7M14 14l5 5M34 14l-5 5M14 34l5-5M34 34l-5-5'/%3E%3Crect x='60' y='10' width='34' height='46' rx='5' transform='rotate(-10 77 33)'/%3E%3Cpath d='M77 22c-6 8-13 16 0 23 13-7 6-15 0-23zM72 45h10'/%3E%3Crect x='122' y='14' width='38' height='31' rx='5'/%3E%3Cpath d='M131 24h20M131 35h20M129 30h.5M153 30h.5'/%3E%3Cpath d='M28 76c8-11 20-1 10 10 10-11 22-1 10 10-8 8-20 4-20-4 0 8-12 12-20 4-12-11 0-21 10-10-10-11 2-21 10-10zM28 96v12'/%3E%3Cpath d='M82 72l16 16-16 16-16-16zM82 80v16M74 88h16'/%3E%3Crect x='124' y='70' width='34' height='34' rx='7'/%3E%3Ccircle cx='134' cy='80' r='1.5'/%3E%3Ccircle cx='148' cy='80' r='1.5'/%3E%3Ccircle cx='141' cy='87' r='1.5'/%3E%3Ccircle cx='134' cy='94' r='1.5'/%3E%3Ccircle cx='148' cy='94' r='1.5'/%3E%3Cpath d='M25 124c-8 10-16 18 0 28 16-10 8-18 0-28zM18 152h14'/%3E%3Crect x='62' y='122' width='48' height='30' rx='6'/%3E%3Cpath d='M73 132l6 10 6-10M92 132l6 10 6-10'/%3E%3Cpath d='M130 130c0-9 8-16 17-16s17 7 17 16-8 16-17 16-17-7-17-16zM139 128l8-8 8 8M139 136l8 8 8-8'/%3E%3C/g%3E%3Cg fill='%23e5bd42' opacity='.58'%3E%3Ccircle cx='48' cy='54' r='2'/%3E%3Ccircle cx='112' cy='58' r='2'/%3E%3Ccircle cx='164' cy='60' r='2'/%3E%3Ccircle cx='52' cy='112' r='2'/%3E%3Ccircle cx='112' cy='112' r='2'/%3E%3Ccircle cx='166' cy='162' r='2'/%3E%3Cpath d='M48 150l3 6 6 3-6 3-3 6-3-6-6-3 6-3zM114 20l2 4 4 2-4 2-2 4-2-4-4-2 4-2z'/%3E%3C/g%3E%3C/svg%3E\")",
-            backgroundSize: "180px 180px",
-            backgroundPosition: "-18px 2px",
-          }}
+          className={`pointer-events-none absolute inset-0 ${backgroundImageUrl ? "opacity-100" : "opacity-[0.2]"}`}
+          style={backgroundLayerStyle}
         />
         <div className="absolute inset-0 z-20 grid place-items-center bg-[#11191b] opacity-0">
           <div className="text-center">
@@ -478,7 +482,7 @@ export function LandingPreview({
           </div>
         </div>
         <div className="flex h-full flex-col">
-          <div className="flex min-h-[66px] items-center gap-3 border-b border-slate-400/15 bg-[#263639] px-4 pt-2.5">
+          <div className="flex min-h-[66px] items-center gap-3 border-b border-slate-400/15 bg-[#102326] px-4 pt-2.5">
             <div className="relative grid h-10 w-10 place-items-center overflow-hidden rounded-full border border-white/10 bg-black text-[8px] font-bold text-slate-300/70">
               {profileImageUrl ? (
                 // eslint-disable-next-line @next/next/no-img-element
@@ -534,7 +538,7 @@ export function LandingPreview({
             </div>
           </div>
           {!gallery && (
-            <div className="relative z-[1] border-t border-slate-400/15 bg-[#203033] px-4 pb-4 pt-2.5">
+            <div className="relative z-[1] border-t border-slate-400/15 bg-[#102326] px-4 pb-6 pt-2.5">
               <button
                 className="flex h-[54px] w-full items-center justify-center gap-2.5 rounded-full px-5 text-center text-[15px] font-black shadow-[0_0_0_0_rgba(37,211,102,.5)]"
                 style={{

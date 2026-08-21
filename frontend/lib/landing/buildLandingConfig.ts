@@ -59,6 +59,7 @@ export interface LandingConfigPayload {
     ctaText: string;
     template4?: {
       profileImageUrl: string;
+      backgroundImageUrl: string;
       bubble1Text: string;
       bubble2Intro: string;
       bubble2Items: string[];
@@ -255,6 +256,7 @@ export function buildLandingConfig({
       ctaText: effectiveCtaText,
       template4: {
         profileImageUrl: themeWithHex.template4Chat?.profileImageUrl || "",
+        backgroundImageUrl: themeWithHex.template4Chat?.backgroundImageUrl || "",
         bubble1Text:
           themeWithHex.template4Chat?.bubble1Text ||
           "Hola, soy {{name}}, enviame un mensaje y comenzamos ya mismo.",

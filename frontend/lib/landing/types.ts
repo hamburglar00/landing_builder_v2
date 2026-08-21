@@ -87,6 +87,7 @@ export interface LandingLeadCaptureConfig {
 
 export interface LandingTemplate4ChatConfig {
   profileImageUrl: string;
+  backgroundImageUrl: string;
   bubble1Text: string;
   bubble2Intro: string;
   bubble2Item1: string;

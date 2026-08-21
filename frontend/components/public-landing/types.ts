@@ -41,6 +41,7 @@ export type PublicLandingConfig = {
     ctaText: string;
     template4?: {
       profileImageUrl?: string;
+      backgroundImageUrl?: string;
       bubble1Text?: string;
       bubble2Intro?: string;
       bubble2Items?: string[];

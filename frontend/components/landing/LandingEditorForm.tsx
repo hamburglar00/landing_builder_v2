@@ -116,6 +116,7 @@ const LEAD_CAPTURE_DEFAULT_DESCRIPTION =
 
 const TEMPLATE4_CHAT_DEFAULTS: LandingTemplate4ChatConfig = {
   profileImageUrl: "",
+  backgroundImageUrl: "",
   bubble1Text: "Hola, soy {{name}}, enviame un mensaje y comenzamos ya mismo.",
   bubble2Intro: "Te acompaño en todo el proceso",
   bubble2Item1: "💸 Cargas y retiros las 24hs",
@@ -600,6 +601,21 @@ export function LandingEditorForm({
             <p className="text-[11px] text-zinc-500">
               Formato .avif. Se usa en la intro y en el avatar del chat.
             </p>
+
+            <div className="space-y-2 border-t border-zinc-800 pt-4">
+              <ImageUploader
+                label="Fondo del chat"
+                multiple={false}
+                value={template4Chat.backgroundImageUrl ? [template4Chat.backgroundImageUrl] : []}
+                onChange={(urls) =>
+                  updateTemplate4Chat({ backgroundImageUrl: urls[0] ?? "" })
+                }
+                onUpload={uploadImage}
+              />
+              <p className="text-[11px] text-zinc-500">
+                Formato .avif. Reemplaza el patrón del área de mensajes.
+              </p>
+            </div>
 
             <div className="space-y-3 border-t border-zinc-800 pt-4">
               <label

@@ -63,6 +63,7 @@ export const DEFAULT_CONFIG: LandingThemeConfig = {
   },
   template4Chat: {
     profileImageUrl: "",
+    backgroundImageUrl: "",
     bubble1Text: "Hola, soy {{name}}, enviame un mensaje y comenzamos ya mismo.",
     bubble2Intro: "Te acompaño en todo el proceso",
     bubble2Item1: "💸 Cargas y retiros las 24hs",
