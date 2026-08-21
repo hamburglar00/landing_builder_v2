@@ -2160,6 +2160,12 @@ body.public-lead-capture-open {
     animation: none !important;
   }
 
+  .template4__intro,
+  .template5__curtain {
+    opacity: 0;
+    visibility: hidden;
+  }
+
   .public-landing .whatsapp-button,
   .public-landing.lp .cta {
     transition: none;
