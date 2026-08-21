@@ -1200,6 +1200,54 @@ export default function PublicLandingRuntimeScript({ slug, config }: Props) {
         });
       }
 
+      function initTemplate5LiveDetails() {
+        var currentTime = document.querySelector("[data-template5-current-time]");
+        if (currentTime) currentTime.textContent = formatLiveTime(0);
+
+        var viewerCount = document.querySelector("[data-template5-viewer-count]");
+        if (viewerCount) {
+          var current = Number(String(viewerCount.textContent || "").replace(/\\D/g, "")) || 1278;
+          window.setInterval(function () {
+            var delta = Math.floor(Math.random() * 23) - 9;
+            current = Math.max(1160, Math.min(1420, current + delta));
+            viewerCount.textContent = current.toLocaleString("es-AR");
+          }, 2200);
+        }
+
+        var feedRows = Array.prototype.slice.call(document.querySelectorAll("[data-template5-feed-row]"));
+        var feedItems = [
+          ["Camilo A.", "hace 5 s", "$ 1.150.000"],
+          ["Sebastian G.", "hace 17 s", "$ 260.000"],
+          ["Laura P.", "hace 29 s", "$ 780.000"],
+          ["Mica R.", "hace 34 s", "$ 540.000"],
+          ["Tomas D.", "hace 42 s", "$ 1.320.000"],
+          ["Rocio M.", "hace 51 s", "$ 690.000"]
+        ];
+        var feedIndex = 0;
+
+        function renderFeed() {
+          feedRows.forEach(function (row, index) {
+            var item = feedItems[(feedIndex + index) % feedItems.length];
+            var name = row.querySelector("b");
+            var time = row.querySelector("[data-template5-feed-time]");
+            var amount = row.querySelector(":scope > strong") || row.lastElementChild;
+            if (name) name.textContent = item[0];
+            if (time) time.textContent = item[1];
+            if (amount) amount.textContent = item[2];
+            row.classList.remove("template5__feed-row--pulse");
+            void row.offsetHeight;
+            row.classList.add("template5__feed-row--pulse");
+          });
+        }
+
+        if (feedRows.length) {
+          window.setInterval(function () {
+            feedIndex = (feedIndex + 1) % feedItems.length;
+            renderFeed();
+          }, 3600);
+        }
+      }
+
       function init() {
         prearmContactContext();
         if (!isAtrioDestination()) ensurePhonePromise();
@@ -1210,6 +1258,7 @@ export default function PublicLandingRuntimeScript({ slug, config }: Props) {
         initCtas();
         initSocialProof();
         initTemplate4LiveDetails();
+        initTemplate5LiveDetails();
         initPrivacyDialog();
       }
 

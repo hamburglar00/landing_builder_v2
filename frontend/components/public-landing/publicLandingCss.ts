@@ -1339,6 +1339,263 @@ body.public-lead-capture-open {
   height: 28px;
 }
 
+@keyframes template5AmbientDrift {
+  0% {
+    transform: translate3d(0, 0, 0) scale(1);
+  }
+  50% {
+    transform: translate3d(-18px, 14px, 0) scale(1.03);
+  }
+  100% {
+    transform: translate3d(0, 0, 0) scale(1);
+  }
+}
+
+@keyframes template5Pulse {
+  0%,
+  100% {
+    transform: scale(1);
+    box-shadow: 0 0 0 0 rgba(245, 29, 56, 0.32);
+  }
+  50% {
+    transform: scale(1.035);
+    box-shadow: 0 0 0 9px rgba(245, 29, 56, 0);
+  }
+}
+
+@keyframes template5EnterUp {
+  from {
+    opacity: 0;
+    transform: translate3d(0, 18px, 0);
+  }
+  to {
+    opacity: 1;
+    transform: translate3d(0, 0, 0);
+  }
+}
+
+@keyframes template5ProgressLoop {
+  0% {
+    transform: translateX(-72%) scaleX(0.32);
+  }
+  46% {
+    transform: translateX(0) scaleX(1);
+  }
+  100% {
+    transform: translateX(112%) scaleX(0.42);
+  }
+}
+
+@keyframes template5FeedPulse {
+  0% {
+    background: rgba(37, 211, 102, 0.12);
+  }
+  100% {
+    background: transparent;
+  }
+}
+
+.public-landing.template5 {
+  min-height: 100vh;
+  min-height: 100dvh;
+  height: 100vh;
+  height: 100dvh;
+  overflow: hidden;
+  background:
+    radial-gradient(circle at 50% -18%, rgba(229, 189, 66, 0.18), transparent 32%),
+    radial-gradient(circle at 92% 16%, rgba(245, 29, 56, 0.12), transparent 28%),
+    #070403;
+}
+
+.public-landing.template5 ~ .public-privacy-footer {
+  bottom: max(5px, env(safe-area-inset-bottom));
+  z-index: 25;
+}
+
+.public-landing.template5 .template5__phone {
+  display: flex;
+  flex-direction: column;
+  height: 100vh;
+  height: 100dvh;
+  overflow: hidden;
+  background:
+    radial-gradient(circle at 82% 14%, rgba(245, 29, 56, 0.13), transparent 30%),
+    radial-gradient(circle at 12% 8%, rgba(229, 189, 66, 0.13), transparent 34%),
+    linear-gradient(180deg, #120806 0%, #070302 100%);
+}
+
+.public-landing.template5 .template5__phone::before {
+  opacity: 0.08;
+  background-image:
+    linear-gradient(90deg, rgba(229, 189, 66, 0.14) 1px, transparent 1px),
+    linear-gradient(rgba(229, 189, 66, 0.1) 1px, transparent 1px);
+  background-size: 36px 36px;
+  animation: template5AmbientDrift 16s ease-in-out infinite;
+}
+
+.template5__ambient {
+  position: absolute;
+  inset: -28px;
+  opacity: 0.23;
+  pointer-events: none;
+  background-image:
+    radial-gradient(circle at 20px 20px, transparent 0 11px, rgba(229, 189, 66, 0.8) 12px, transparent 14px),
+    radial-gradient(circle at 118px 76px, transparent 0 14px, rgba(37, 211, 102, 0.44) 15px, transparent 17px),
+    linear-gradient(45deg, transparent 0 43%, rgba(229, 189, 66, 0.58) 44% 56%, transparent 57%),
+    linear-gradient(135deg, transparent 0 43%, rgba(245, 29, 56, 0.42) 44% 56%, transparent 57%);
+  background-position: 0 0, 32px 18px, 9px 14px, -24px 10px;
+  background-size: 118px 118px, 156px 156px, 92px 92px, 138px 138px;
+  filter: drop-shadow(0 0 12px rgba(229, 189, 66, 0.14));
+  animation: template5AmbientDrift 18s ease-in-out infinite;
+}
+
+.template5__scroll {
+  position: relative;
+  z-index: 1;
+  flex: 1 1 auto;
+  min-height: 0;
+  overflow-y: auto;
+  padding-bottom: 122px;
+  scrollbar-width: none;
+  -webkit-overflow-scrolling: touch;
+}
+
+.template5__scroll::-webkit-scrollbar {
+  display: none;
+}
+
+.public-landing.template5 .template5__curtain {
+  background:
+    radial-gradient(circle at 50% 34%, rgba(229, 189, 66, 0.18), transparent 24%),
+    #080403;
+  animation: publicLandingCurtain 1.85s ease forwards;
+}
+
+.public-landing.template5 .template5__topline,
+.public-landing.template5 .template5__hero,
+.public-landing.template5 .template5__advisor,
+.public-landing.template5 .template5__progress,
+.public-landing.template5 .template5__feed,
+.public-landing.template5 .template5__activity {
+  opacity: 0;
+  animation: template5EnterUp 0.72s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+.public-landing.template5 .template5__topline {
+  padding-top: calc(18px + env(safe-area-inset-top));
+  animation-delay: 0.2s;
+}
+
+.public-landing.template5 .template5__hero {
+  padding-top: 22px;
+  animation-delay: 0.42s;
+}
+
+.public-landing.template5 .template5__advisor {
+  animation-delay: 0.66s;
+}
+
+.public-landing.template5 .template5__progress {
+  animation-delay: 0.82s;
+}
+
+.public-landing.template5 .template5__feed {
+  animation-delay: 1s;
+}
+
+.public-landing.template5 .template5__activity {
+  animation-delay: 1.14s;
+}
+
+.public-landing.template5 .template5__live-badge {
+  animation: template5Pulse 1.55s ease-in-out infinite;
+}
+
+.public-landing.template5 .template5__live-dot,
+.public-landing.template5 .template5__feed-dot {
+  background: #fff;
+  box-shadow: 0 0 12px rgba(255, 255, 255, 0.8);
+}
+
+.public-landing.template5 .template5__hero h1 {
+  text-shadow:
+    0 2px 0 rgba(0, 0, 0, 0.95),
+    0 16px 30px rgba(0, 0, 0, 0.42);
+}
+
+.public-landing.template5 .template5__advisor,
+.public-landing.template5 .template5__feed,
+.template5__activity article {
+  background:
+    linear-gradient(180deg, rgba(36, 23, 11, 0.88), rgba(14, 8, 5, 0.88)),
+    rgba(22, 15, 9, 0.86);
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.05),
+    0 18px 40px rgba(0, 0, 0, 0.28);
+}
+
+.public-landing.template5 .template5__progress {
+  height: 7px;
+  background: rgba(245, 29, 56, 0.22);
+}
+
+.public-landing.template5 .template5__progress span {
+  width: 68%;
+  transform-origin: left center;
+  animation: template5ProgressLoop 3.3s cubic-bezier(0.5, 0, 0.16, 1) infinite;
+}
+
+.template5__feed-row--pulse {
+  animation: template5FeedPulse 0.9s ease-out;
+}
+
+.template5__activity {
+  position: relative;
+  z-index: 1;
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+  margin: 14px 18px 0;
+}
+
+.template5__activity article {
+  border: 1px solid rgba(229, 189, 66, 0.14);
+  border-radius: 16px;
+  padding: 12px;
+}
+
+.template5__activity span,
+.template5__activity strong {
+  display: block;
+}
+
+.template5__activity span {
+  color: rgba(226, 232, 240, 0.66);
+  font-size: 11px;
+  font-weight: 850;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.template5__activity strong {
+  margin-top: 5px;
+  color: #e5bd42;
+  font-size: 14px;
+  font-weight: 950;
+}
+
+.public-landing.template5 .template5__footer {
+  padding-top: 34px;
+  background: linear-gradient(180deg, rgba(7, 3, 2, 0), rgba(7, 3, 2, 0.94) 30%, #070302 100%);
+}
+
+.public-landing.template5 .template5__cta {
+  color: #04130a;
+  background: linear-gradient(180deg, #2af071 0%, #10c858 100%);
+  transform: translateZ(0);
+  animation: template5Pulse 2.3s ease-in-out infinite;
+}
+
 .public-landing.template4 {
   background: #0f191b;
   font-family: Manrope, Inter, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;

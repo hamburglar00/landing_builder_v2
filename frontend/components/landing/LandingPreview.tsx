@@ -566,25 +566,27 @@ export function LandingPreview({
       : "relative mx-auto aspect-[9/16] w-full max-w-[380px] overflow-hidden rounded-3xl bg-[#071013] shadow-[0_18px_40px_rgba(0,0,0,1)]";
     const name = config.titleLine1?.trim() || "Asesor";
     const now = template4Now === "--:--" ? "23:11" : template4Now;
+    const viewers = (1278 + template4LiveCount * 3).toLocaleString("es-AR");
 
     return (
       <div className={outerClass} style={{ fontFamily }}>
         <div
-          className="absolute inset-0 bg-[radial-gradient(circle_at_16%_12%,rgba(229,189,66,0.08),transparent_28%),linear-gradient(180deg,#120d09_0%,#080403_100%)] opacity-100"
+          className="absolute -inset-7 animate-[template5AmbientDrift_18s_ease-in-out_infinite] bg-[radial-gradient(circle_at_16%_12%,rgba(229,189,66,0.16),transparent_28%),radial-gradient(circle_at_92%_16%,rgba(245,29,56,0.11),transparent_30%),linear-gradient(180deg,#120806_0%,#070302_100%)] opacity-100"
           style={{
             backgroundImage:
-              "radial-gradient(circle at 20px 20px, transparent 0 6px, rgba(148,163,184,.45) 7px, transparent 8px), radial-gradient(circle at 76px 58px, transparent 0 8px, rgba(148,163,184,.3) 9px, transparent 10px), linear-gradient(45deg, transparent 0 44%, rgba(148,163,184,.26) 45% 55%, transparent 56%)",
-            backgroundSize: "96px 96px, 120px 120px, 86px 86px",
+              "radial-gradient(circle at 20px 20px, transparent 0 11px, rgba(229,189,66,.52) 12px, transparent 14px), radial-gradient(circle at 118px 76px, transparent 0 14px, rgba(37,211,102,.32) 15px, transparent 17px), linear-gradient(45deg, transparent 0 43%, rgba(229,189,66,.34) 44% 56%, transparent 57%), linear-gradient(135deg, transparent 0 43%, rgba(245,29,56,.24) 44% 56%, transparent 57%)",
+            backgroundSize: "118px 118px, 156px 156px, 92px 92px, 138px 138px",
           }}
         />
-        <div className="relative z-10 flex items-center justify-between gap-3 px-[18px] pt-4">
-          <div className="inline-flex min-h-7 items-center gap-2 rounded-full bg-[#f51d38] px-3 text-[10px] font-black tracking-[0.08em] text-white">
+        <div className="relative z-10 h-full overflow-y-auto pb-[122px] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
+        <div className="relative z-10 flex animate-[template5EnterUp_.7s_cubic-bezier(.16,1,.3,1)_forwards] items-center justify-between gap-3 px-[18px] pt-4">
+          <div className="inline-flex min-h-7 animate-[template5Pulse_1.55s_ease-in-out_infinite] items-center gap-2 rounded-full bg-[#f51d38] px-3 text-[10px] font-black tracking-[0.08em] text-white">
             <span className="h-1.5 w-1.5 rounded-full bg-white/95" />
             <strong>EN VIVO</strong>
             <time className="font-mono">{now}</time>
           </div>
           <span className="whitespace-nowrap font-mono text-[10px] font-bold text-slate-200/80">
-            1.278 viendo
+            {viewers} viendo
           </span>
         </div>
         <div className="relative z-10 px-[18px] pt-6">
@@ -609,7 +611,7 @@ export function LandingPreview({
           <i className="h-3 w-3 rounded-full bg-[#25d366] shadow-[0_0_0_6px_rgba(37,211,102,.12)]" />
         </div>
         <div className="relative z-10 mx-[18px] mt-4 h-1 overflow-hidden rounded-full bg-slate-400/15">
-          <span className="block h-full w-[97%] rounded-full bg-gradient-to-r from-[#f3ce58] to-[#ff2b44]" />
+          <span className="block h-full w-[68%] animate-[template5ProgressLoop_3.3s_cubic-bezier(.5,0,.16,1)_infinite] rounded-full bg-gradient-to-r from-[#f3ce58] to-[#ff2b44]" />
         </div>
         <div className="relative z-10 mx-[18px] mt-5 overflow-hidden rounded-[18px] border border-[#e5bd42]/20 bg-[#160f09]/80">
           <div className="flex items-center border-b border-[#e5bd42]/15 px-3.5 py-3">
@@ -631,6 +633,7 @@ export function LandingPreview({
               <strong className="whitespace-nowrap font-mono text-[13px] font-black text-[#25d366]">{amount}</strong>
             </p>
           ))}
+        </div>
         </div>
         {!gallery && (
           <div className="absolute inset-x-0 bottom-0 z-20 bg-gradient-to-t from-[#071013] via-[#071013]/95 to-transparent px-4 pb-5 pt-12">
