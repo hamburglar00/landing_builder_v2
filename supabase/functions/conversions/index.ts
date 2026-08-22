@@ -97,6 +97,7 @@ interface WhatsappCloudApiCapiConfig {
   whatsapp_business_account_id: string;
   meta_messaging_dataset_id: string;
   enrich_business_messaging_user_data?: boolean;
+  send_business_messaging_purchase_type_capi?: boolean;
   meta_access_token: string;
   meta_api_version: string;
 }
@@ -326,7 +327,7 @@ const atrioIdFromPayload = (p: Params): string =>
 const atrioClientIdFromPayload = (p: Params): string => {
   const value = norm(p.atrio_client_id ?? p.atrioClientId);
   return /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i
-    .test(value)
+      .test(value)
     ? value
     : "";
 };
@@ -2898,7 +2899,7 @@ async function resolveWhatsappCloudApiCapiConfig(
   let query = db
     .from("whatsapp_cloud_api_configs")
     .select(
-      "active, phone_number_id, whatsapp_business_account_id, meta_messaging_dataset_id, enrich_business_messaging_user_data, meta_access_token, meta_api_version",
+      "active, phone_number_id, whatsapp_business_account_id, meta_messaging_dataset_id, enrich_business_messaging_user_data, send_business_messaging_purchase_type_capi, meta_access_token, meta_api_version",
     )
     .eq("user_id", row.user_id);
 
@@ -3087,6 +3088,7 @@ async function sendToMetaCAPI(
       accessToken: norm(chatraceConfig?.meta_messaging_access_token),
       apiVersion: effectiveConfig.meta_api_version,
       enrichUserData: false,
+      includePurchaseType: false,
       source: "chatrace",
     }
     : isWhatsappCloudApi
@@ -3099,6 +3101,9 @@ async function sendToMetaCAPI(
         effectiveConfig.meta_api_version,
       enrichUserData:
         whatsappCloudApiConfig?.enrich_business_messaging_user_data === true,
+      includePurchaseType:
+        whatsappCloudApiConfig?.send_business_messaging_purchase_type_capi ===
+          true,
       source: "whatsapp_cloud_api",
     }
     : {
@@ -3108,6 +3113,7 @@ async function sendToMetaCAPI(
       accessToken: "",
       apiVersion: effectiveConfig.meta_api_version,
       enrichUserData: false,
+      includePurchaseType: false,
       source: sourcePlatform || "unknown",
     };
   const businessMessagingConfigured = Boolean(
@@ -3574,19 +3580,23 @@ async function sendToMetaCAPI(
       JSON.stringify({
         route: useBusinessMessaging ? "business_messaging" : "website",
         payload_mode: useBusinessMessaging
-          ? "business_messaging_standard"
+          ? businessMessagingConfig.includePurchaseType
+            ? "business_messaging_segmented"
+            : "business_messaging_standard"
           : purchaseCapiDecision?.includePurchaseType
           ? "segmented"
           : "standard",
         purchase_type_internal: purchaseType,
         currency: canonicalCustomData?.currency,
-        purchase_type_sent: Boolean(
-          metaCustomData &&
-            Object.prototype.hasOwnProperty.call(
-              metaCustomData,
-              "purchase_type",
-            ),
-        ),
+        purchase_type_sent: useBusinessMessaging
+          ? Boolean(businessMessagingConfig.includePurchaseType && purchaseType)
+          : Boolean(
+            metaCustomData &&
+              Object.prototype.hasOwnProperty.call(
+                metaCustomData,
+                "purchase_type",
+              ),
+          ),
       }),
       rowId,
     );
@@ -3600,10 +3610,13 @@ async function sendToMetaCAPI(
         effectiveConfig.meta_currency,
       ),
       value: Number(canonicalCustomData?.value ?? row.valor),
+      ...(businessMessagingConfig.includePurchaseType && purchaseType
+        ? { purchase_type: purchaseType }
+        : {}),
     }
     : undefined;
-  const businessMessagingUserData = useBusinessMessaging
-      && businessMessagingConfig.enrichUserData
+  const businessMessagingUserData = useBusinessMessaging &&
+      businessMessagingConfig.enrichUserData
     ? await buildBusinessMessagingUserData(
       row as unknown as SharedConversionRow,
       effectiveConfig.send_geo_capi !== false,
@@ -6792,7 +6805,7 @@ async function handlePurchase(
       canUsePromoForJourney(promoCoherence)
     ? promoRow
     : whatsappCloudApiAssignmentLineage &&
-      canUsePromoForJourney(promoCoherence)
+        canUsePromoForJourney(promoCoherence)
     ? whatsappCloudApiAssignmentLineage.row
     : (receiverPurchaseLineage ?? trustedReceiverLineage);
   const repeatAttribution = await resolvePurchasePixelAttribution(db, {

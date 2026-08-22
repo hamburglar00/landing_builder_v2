@@ -211,7 +211,7 @@ Deno.serve(async (req) => {
       ? await db
         .from("whatsapp_cloud_api_configs")
         .select(
-          "user_id, active, phone_number_id, whatsapp_business_account_id, meta_messaging_dataset_id, enrich_business_messaging_user_data, meta_access_token, meta_api_version",
+          "user_id, active, phone_number_id, whatsapp_business_account_id, meta_messaging_dataset_id, enrich_business_messaging_user_data, send_business_messaging_purchase_type_capi, meta_access_token, meta_api_version",
         )
         .in("user_id", userIds)
       : { data: [] };
@@ -688,8 +688,18 @@ Deno.serve(async (req) => {
         value: amount,
         purchase_type: isRepeat ? "repeat" : "first",
       };
+      const shouldSendBusinessMessagingPurchaseType = useBusinessMessaging &&
+        isWhatsappCloudApi &&
+        whatsappCloudApiCfg?.send_business_messaging_purchase_type_capi ===
+          true;
       const metaCustomData = useBusinessMessaging
-        ? { currency, value: amount }
+        ? {
+          currency,
+          value: amount,
+          ...(shouldSendBusinessMessagingPurchaseType && purchaseType
+            ? { purchase_type: purchaseType }
+            : {}),
+        }
         : preparePurchaseCustomDataForMeta(
           customData,
           purchaseDecision.includePurchaseType,
@@ -780,6 +790,7 @@ Deno.serve(async (req) => {
           Number(eventTime),
           amount,
           businessMessagingUserData,
+          shouldSendBusinessMessagingPurchaseType ? purchaseType : null,
         )
         : await buildMetaRequest(
           cfgObj,

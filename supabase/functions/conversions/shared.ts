@@ -781,6 +781,7 @@ export function buildMetaBusinessMessagingPurchaseRequest(
   eventTime: number,
   value: number,
   additionalUserData: MetaUserData = {},
+  purchaseType: "first" | "repeat" | null = null,
 ): MetaRequest {
   return buildMetaBusinessMessagingRequest(
     config,
@@ -790,6 +791,7 @@ export function buildMetaBusinessMessagingPurchaseRequest(
     {
       currency: config.meta_currency,
       value,
+      ...(purchaseType ? { purchase_type: purchaseType } : {}),
     },
     additionalUserData,
   );

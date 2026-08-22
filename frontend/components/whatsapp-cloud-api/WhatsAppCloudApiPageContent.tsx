@@ -474,6 +474,7 @@ export default function WhatsAppCloudApiPageContent({
   const [verifyToken, setVerifyToken] = useState("");
   const [messagingDatasetId, setMessagingDatasetId] = useState("");
   const [enrichBusinessMessagingUserData, setEnrichBusinessMessagingUserData] = useState(false);
+  const [sendBusinessMessagingPurchaseType, setSendBusinessMessagingPurchaseType] = useState(false);
   const [landingTag, setLandingTag] = useState("");
   const [selectionMode, setSelectionMode] = useState<"weighted_random" | "fair">("weighted_random");
   const [fairCriterion, setFairCriterion] = useState<"usage_count" | "messages_received">("usage_count");
@@ -540,6 +541,7 @@ export default function WhatsAppCloudApiPageContent({
     setVerifyToken(cfg?.webhook_verify_token ?? generateVerifyToken());
     setMessagingDatasetId(cfg?.meta_messaging_dataset_id ?? "");
     setEnrichBusinessMessagingUserData(cfg?.enrich_business_messaging_user_data ?? false);
+    setSendBusinessMessagingPurchaseType(cfg?.send_business_messaging_purchase_type_capi ?? false);
     setLandingTag(cfg?.landing_tag ?? "");
     setTrackingEditing(!cfg?.id);
     setShowAccessToken(false);
@@ -706,6 +708,7 @@ export default function WhatsAppCloudApiPageContent({
         webhook_verify_token: verifyToken.trim(),
         meta_messaging_dataset_id: messagingDatasetId.trim(),
         enrich_business_messaging_user_data: enrichBusinessMessagingUserData,
+        send_business_messaging_purchase_type_capi: sendBusinessMessagingPurchaseType,
         landing_tag: cleanTag(landingTag),
         gerencia_selection_mode: selectionMode,
         gerencia_fair_criterion: fairCriterion,
@@ -1211,6 +1214,15 @@ export default function WhatsAppCloudApiPageContent({
                 label="Enriquecer user_data"
                 description="Off usa solo WABA y ctwa_clid. On agrega PII hasheada disponible."
                 title="Si esta activo se agregan al payload, solo cuando existen: telefono, email, nombre, apellido, ciudad, provincia, codigo postal, pais y external_id; todos hasheados con SHA-256. WABA y ctwa_clid se envian sin hash."
+              />
+
+              <Toggle
+                checked={sendBusinessMessagingPurchaseType}
+                onChange={setSendBusinessMessagingPurchaseType}
+                disabled={trackingLocked}
+                label="Enviar purchase_type"
+                description="Off envia Purchase estandar. On agrega first o repeat solo cuando el dato existe."
+                title="Si esta activo, los Purchase de WhatsApp Cloud API agregan custom_data.purchase_type con first o repeat. Sirve para crear conversiones personalizadas en Meta. No afecta LeadSubmitted ni inventa datos."
               />
 
               <div className="rounded-lg border border-zinc-800 bg-zinc-950/30 px-3 py-2">
