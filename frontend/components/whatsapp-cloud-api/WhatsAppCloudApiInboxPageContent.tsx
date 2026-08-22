@@ -14,6 +14,7 @@ import { PageHeader, SurfaceCard } from "@/components/ui/PanelPrimitives";
 import { supabase } from "@/lib/supabaseClient";
 import { invokeFunction } from "@/lib/supabaseFunctions";
 import {
+  fetchWhatsappCloudApiContactsPage,
   fetchWhatsappCloudApiInboxThreads,
   formatWhatsappCloudApiError,
   logWhatsappCloudApiError,
@@ -419,6 +420,7 @@ export default function WhatsAppCloudApiInboxPageContent({ mode }: Props) {
       ? "/admin/whatsapp-cloud-api"
       : "/dashboard/whatsapp-cloud-api";
   const [threads, setThreads] = useState<WhatsappCloudApiInboxThread[]>([]);
+  const [totalThreads, setTotalThreads] = useState(0);
   const [pageIndex, setPageIndex] = useState(0);
   const [selectedId, setSelectedId] = useState<string>("");
   const [search, setSearch] = useState("");
@@ -449,12 +451,18 @@ export default function WhatsAppCloudApiInboxPageContent({ mode }: Props) {
         router.replace("/login");
         return;
       }
-      const rows = await fetchWhatsappCloudApiInboxThreads(
-        INBOX_PAGE_SIZE,
-        workspaceCurrency,
-        pageIndex * INBOX_PAGE_SIZE,
-      );
+      const [rows, contactPage] = await Promise.all([
+        fetchWhatsappCloudApiInboxThreads(
+          INBOX_PAGE_SIZE,
+          workspaceCurrency,
+          pageIndex * INBOX_PAGE_SIZE,
+        ),
+        fetchWhatsappCloudApiContactsPage(1, workspaceCurrency, 0),
+      ]);
       setThreads(rows);
+      setTotalThreads(
+        contactPage[0]?.total_contacts ?? (pageIndex === 0 ? rows.length : 0),
+      );
       setSelectedId((current) =>
         rows.some((row) => row.contact_id === current)
           ? current
@@ -480,6 +488,7 @@ export default function WhatsAppCloudApiInboxPageContent({ mode }: Props) {
 
   useEffect(() => {
     setPageIndex(0);
+    setTotalThreads(0);
     setSelectedId("");
     setHiddenThreadIds(new Set());
   }, [workspaceCurrency]);
@@ -549,7 +558,11 @@ export default function WhatsAppCloudApiInboxPageContent({ mode }: Props) {
     serviceWindowExpiresAt && Date.now() <= serviceWindowExpiresAt.getTime(),
   );
   const canGoPrevious = pageIndex > 0;
-  const canGoNext = threads.length === INBOX_PAGE_SIZE;
+  const pageEnd = Math.min(
+    totalThreads,
+    pageIndex * INBOX_PAGE_SIZE + threads.length,
+  );
+  const canGoNext = pageEnd < totalThreads;
 
   const hideThreadFromUi = () => {
     if (!threadToHide) return;
@@ -848,8 +861,7 @@ export default function WhatsAppCloudApiInboxPageContent({ mode }: Props) {
             {!loading && threads.length > 0 ? (
               <div className="sticky bottom-0 flex items-center justify-between gap-2 border-t border-[var(--color-border-subtle)] bg-[var(--color-bg-1)] px-3 py-2">
                 <span className="text-[10px] font-medium text-[var(--color-text-disabled)]">
-                  {pageIndex * INBOX_PAGE_SIZE + 1}-
-                  {pageIndex * INBOX_PAGE_SIZE + threads.length}
+                  {pageEnd}/{totalThreads}
                 </span>
                 <span className="flex gap-2">
                   <button

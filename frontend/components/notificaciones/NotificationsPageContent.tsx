@@ -1,6 +1,6 @@
 ﻿"use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import type {
   NotificationBotConfig,
   NotificationTelegramDestination,
@@ -13,6 +13,25 @@ import ModalPortal from "@/components/ui/ModalPortal";
 function normalizeHour(v: number) {
   if (!Number.isFinite(v)) return 10;
   return Math.min(22, Math.max(8, Math.round(v)));
+}
+
+function notificationSettingsKey(cfg: NotificationSettings | null) {
+  if (!cfg) return "";
+  return JSON.stringify({
+    user_id: cfg.user_id,
+    enabled: cfg.enabled,
+    promotion_winner_notifications_enabled:
+      cfg.promotion_winner_notifications_enabled ?? true,
+    whatsapp_cloud_api_health_notifications_enabled:
+      cfg.whatsapp_cloud_api_health_notifications_enabled ?? true,
+    channel: cfg.channel,
+    telegram_chat_id: cfg.telegram_chat_id ?? "",
+    telegram_start_token: cfg.telegram_start_token ?? "",
+    inactive_days: cfg.inactive_days,
+    renotify_days: cfg.renotify_days,
+    notify_hour: cfg.notify_hour,
+    timezone: cfg.timezone,
+  });
 }
 
 function ToggleSwitch({
@@ -74,6 +93,12 @@ export default function NotificationsPageContent({
   const [botEditable, setBotEditable] = useState(false);
   const [showConnectModal, setShowConnectModal] = useState(false);
   const [copyOk, setCopyOk] = useState(false);
+  const onSaveSettingsRef = useRef(onSaveSettings);
+  const lastSavedSettingsKeyRef = useRef(notificationSettingsKey(settings));
+
+  useEffect(() => {
+    onSaveSettingsRef.current = onSaveSettings;
+  }, [onSaveSettings]);
 
   useEffect(() => {
     setBot(botConfig ?? { telegram_bot_token: "", telegram_bot_username: "" });
@@ -86,7 +111,26 @@ export default function NotificationsPageContent({
 
   useEffect(() => {
     setCfg(settings);
+    lastSavedSettingsKeyRef.current = notificationSettingsKey(settings);
   }, [settings]);
+
+  useEffect(() => {
+    if (!cfg) return;
+    const nextKey = notificationSettingsKey(cfg);
+    if (nextKey === lastSavedSettingsKeyRef.current) return;
+    const timeout = window.setTimeout(async () => {
+      try {
+        await onSaveSettingsRef.current(cfg);
+        lastSavedSettingsKeyRef.current = notificationSettingsKey(cfg);
+      } catch (e) {
+        console.error(e);
+        setMsgType("error");
+        setMsg("No se pudo guardar la configuracion de notificaciones.");
+        setTimeout(() => setMsg(null), 3000);
+      }
+    }, 700);
+    return () => window.clearTimeout(timeout);
+  }, [cfg]);
 
   const connectUrl = useMemo(() => {
     const username = String(bot.telegram_bot_username || "").trim().replace(/^@/, "");
@@ -98,10 +142,6 @@ export default function NotificationsPageContent({
     if (!connectUrl) return "";
     return `https://api.qrserver.com/v1/create-qr-code/?size=240x240&data=${encodeURIComponent(connectUrl)}`;
   }, [connectUrl]);
-  const startCommand = useMemo(
-    () => `/start ${String(cfg?.telegram_start_token || "").trim()}`,
-    [cfg?.telegram_start_token],
-  );
   const connectWithCommandUrl = useMemo(() => connectUrl, [connectUrl]);
   const fullStartToken = String(cfg?.telegram_start_token || "").trim();
   const hasLegacyChat = Boolean(String(cfg?.telegram_chat_id || "").trim());
@@ -472,21 +512,6 @@ export default function NotificationsPageContent({
         <p className="mt-3 text-xs text-zinc-500">
           Recibiras un resumen de tus contactos inactivos por Telegram para que puedas hacerles seguimiento y fidelizarlos.
         </p>
-        <div className="mt-3 flex justify-end">
-          <button
-            type="button"
-            disabled={saving}
-            onClick={async () => {
-              await onSaveSettings(cfg);
-              setMsgType("success");
-              setMsg("Configuracion de notificaciones guardada.");
-              setTimeout(() => setMsg(null), 3000);
-            }}
-            className="rounded-lg border border-zinc-700 bg-zinc-100 px-3 py-1.5 text-xs font-medium text-zinc-900 hover:bg-zinc-200 disabled:opacity-50"
-          >
-            Guardar seguimiento
-          </button>
-        </div>
       </section>
 
       <section className="rounded-xl border border-zinc-800 bg-zinc-900/50 p-4">
@@ -530,21 +555,6 @@ export default function NotificationsPageContent({
             />
           </div>
         </div>
-        <div className="mt-3 flex justify-end">
-          <button
-            type="button"
-            disabled={saving}
-            onClick={async () => {
-              await onSaveSettings(cfg);
-              setMsgType("success");
-              setMsg("Configuracion de WhatsApp Cloud API guardada.");
-              setTimeout(() => setMsg(null), 3000);
-            }}
-            className="rounded-lg border border-zinc-700 bg-zinc-100 px-3 py-1.5 text-xs font-medium text-zinc-900 hover:bg-zinc-200 disabled:opacity-50"
-          >
-            Guardar WhatsApp Cloud API
-          </button>
-        </div>
       </section>
 
       {showPromotionsNotifications && (
@@ -574,21 +584,6 @@ export default function NotificationsPageContent({
                 }
               />
             </div>
-          </div>
-          <div className="mt-3 flex justify-end">
-            <button
-              type="button"
-              disabled={saving}
-              onClick={async () => {
-                await onSaveSettings(cfg);
-                setMsgType("success");
-                setMsg("Configuracion de promociones guardada.");
-                setTimeout(() => setMsg(null), 3000);
-              }}
-              className="rounded-lg border border-zinc-700 bg-zinc-100 px-3 py-1.5 text-xs font-medium text-zinc-900 hover:bg-zinc-200 disabled:opacity-50"
-            >
-              Guardar promociones
-            </button>
           </div>
         </section>
       )}
