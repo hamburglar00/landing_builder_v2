@@ -25,6 +25,7 @@ import {
 import { useCurrencyScope } from "@/components/currency/CurrencyScope";
 import { CURRENCY_ALL } from "@/lib/currency";
 import { formatWhatsAppDisplayPhone } from "@/lib/phoneFormatting";
+import { useWhatsappCloudApiHiddenContacts } from "@/lib/whatsappCloudApiHiddenContacts";
 
 type Props = {
   mode: "admin" | "dashboard";
@@ -435,8 +436,8 @@ export default function WhatsAppCloudApiInboxPageContent({ mode }: Props) {
   const [manualMessage, setManualMessage] = useState("");
   const [sending, setSending] = useState(false);
   const [sendNotice, setSendNotice] = useState<string | null>(null);
-  const [hiddenThreadIds, setHiddenThreadIds] = useState<Set<string>>(
-    () => new Set(),
+  const { hiddenContactIds, hideContactId } = useWhatsappCloudApiHiddenContacts(
+    workspaceCurrency,
   );
   const [threadToHide, setThreadToHide] =
     useState<WhatsappCloudApiInboxThread | null>(null);
@@ -490,7 +491,6 @@ export default function WhatsAppCloudApiInboxPageContent({ mode }: Props) {
     setPageIndex(0);
     setTotalThreads(0);
     setSelectedId("");
-    setHiddenThreadIds(new Set());
   }, [workspaceCurrency]);
 
   useEffect(() => {
@@ -513,7 +513,7 @@ export default function WhatsAppCloudApiInboxPageContent({ mode }: Props) {
   const filteredThreads = useMemo(() => {
     const term = search.trim().toLowerCase();
     return threads.filter((thread) => {
-      if (hiddenThreadIds.has(thread.contact_id)) return false;
+      if (hiddenContactIds.has(thread.contact_id)) return false;
       if (tagFilter !== "all" && thread.tag !== tagFilter) return false;
       if (gerenciaFilter && gerenciaFilterLabel(thread) !== gerenciaFilter)
         return false;
@@ -529,7 +529,7 @@ export default function WhatsAppCloudApiInboxPageContent({ mode }: Props) {
         thread.ctwa_clid,
       ].some((value) => value.toLowerCase().includes(term));
     });
-  }, [gerenciaFilter, hiddenThreadIds, search, tagFilter, threads]);
+  }, [gerenciaFilter, hiddenContactIds, search, tagFilter, threads]);
 
   const selectedThread = useMemo(
     () =>
@@ -558,20 +558,20 @@ export default function WhatsAppCloudApiInboxPageContent({ mode }: Props) {
     serviceWindowExpiresAt && Date.now() <= serviceWindowExpiresAt.getTime(),
   );
   const canGoPrevious = pageIndex > 0;
+  const visibleTotalThreads = Math.max(0, totalThreads - hiddenContactIds.size);
+  const visiblePageThreadCount = threads.filter(
+    (thread) => !hiddenContactIds.has(thread.contact_id),
+  ).length;
   const pageEnd = Math.min(
-    totalThreads,
-    pageIndex * INBOX_PAGE_SIZE + threads.length,
+    visibleTotalThreads,
+    pageIndex * INBOX_PAGE_SIZE + visiblePageThreadCount,
   );
-  const canGoNext = pageEnd < totalThreads;
+  const canGoNext = pageEnd < visibleTotalThreads;
 
   const hideThreadFromUi = () => {
     if (!threadToHide) return;
     const contactId = threadToHide.contact_id;
-    setHiddenThreadIds((current) => {
-      const next = new Set(current);
-      next.add(contactId);
-      return next;
-    });
+    hideContactId(contactId);
     if (selectedId === contactId) setSelectedId("");
     setThreadToHide(null);
   };

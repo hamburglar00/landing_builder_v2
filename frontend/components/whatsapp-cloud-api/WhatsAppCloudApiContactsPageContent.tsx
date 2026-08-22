@@ -15,6 +15,7 @@ import {
   type WhatsappCloudApiInboxThread,
 } from "@/lib/whatsappCloudApiDb";
 import { formatWhatsAppDisplayPhone } from "@/lib/phoneFormatting";
+import { useWhatsappCloudApiHiddenContacts } from "@/lib/whatsappCloudApiHiddenContacts";
 
 type Props = {
   mode: "admin" | "dashboard";
@@ -54,6 +55,27 @@ function formatDate(value: string | null): string {
   }).format(date);
 }
 
+function TrashIcon() {
+  return (
+    <svg
+      className="h-3.5 w-3.5"
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth={1.9}
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      aria-hidden
+    >
+      <path d="M3 6h18" />
+      <path d="M8 6V4h8v2" />
+      <path d="m19 6-1 14H6L5 6" />
+      <path d="M10 11v5" />
+      <path d="M14 11v5" />
+    </svg>
+  );
+}
+
 export default function WhatsAppCloudApiContactsPageContent({ mode }: Props) {
   const router = useRouter();
   const { currencyScope } = useCurrencyScope();
@@ -68,6 +90,11 @@ export default function WhatsAppCloudApiContactsPageContent({ mode }: Props) {
   const [totalContacts, setTotalContacts] = useState(0);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [contactToHide, setContactToHide] =
+    useState<WhatsappCloudApiContactsPageRow | null>(null);
+  const { hiddenContactIds, hideContactId } = useWhatsappCloudApiHiddenContacts(
+    workspaceCurrency,
+  );
 
   const loadContacts = useCallback(async () => {
     setLoading(true);
@@ -111,13 +138,29 @@ export default function WhatsAppCloudApiContactsPageContent({ mode }: Props) {
     setPageIndex(0);
   }, [workspaceCurrency]);
 
-  const pageStart = useMemo(
-    () => (rows.length ? pageIndex * CONTACTS_PAGE_SIZE + 1 : 0),
-    [pageIndex, rows.length],
+  const visibleRows = useMemo(
+    () => rows.filter((row) => !hiddenContactIds.has(row.contact_id)),
+    [hiddenContactIds, rows],
   );
-  const pageEnd = pageIndex * CONTACTS_PAGE_SIZE + rows.length;
+  const totalVisibleContacts = Math.max(
+    0,
+    totalContacts - hiddenContactIds.size,
+  );
+  const pageEnd = Math.min(
+    totalVisibleContacts,
+    pageIndex * CONTACTS_PAGE_SIZE + visibleRows.length,
+  );
+  const pageStart = visibleRows.length
+    ? Math.min(pageIndex * CONTACTS_PAGE_SIZE + 1, pageEnd)
+    : 0;
   const canGoPrevious = pageIndex > 0;
-  const canGoNext = pageEnd < totalContacts;
+  const canGoNext = pageEnd < totalVisibleContacts;
+
+  const hideContactFromUi = () => {
+    if (!contactToHide) return;
+    hideContactId(contactToHide.contact_id);
+    setContactToHide(null);
+  };
 
   return (
     <div className="space-y-6">
@@ -150,11 +193,11 @@ export default function WhatsAppCloudApiContactsPageContent({ mode }: Props) {
               Total de contactos
             </p>
             <p className="mt-1 text-2xl font-semibold text-[var(--color-text-strong)]">
-              {totalContacts.toLocaleString("es-AR")}
+              {totalVisibleContacts.toLocaleString("es-AR")}
             </p>
           </div>
           <p className="text-xs font-medium text-[var(--color-text-muted)]">
-            {pageStart}-{pageEnd} de {totalContacts}
+            {pageStart}-{pageEnd} de {totalVisibleContacts}
           </p>
         </div>
 
@@ -166,13 +209,14 @@ export default function WhatsAppCloudApiContactsPageContent({ mode }: Props) {
                 <th className="px-4 py-3 font-semibold">Telefono</th>
                 <th className="px-4 py-3 font-semibold">Estado</th>
                 <th className="px-4 py-3 font-semibold">Ultimo mensaje</th>
+                <th className="px-4 py-3 text-right font-semibold">Accion</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-[var(--color-border-subtle)]">
               {loading ? (
                 <tr>
                   <td
-                    colSpan={4}
+                    colSpan={5}
                     className="px-4 py-8 text-center text-sm text-[var(--color-text-muted)]"
                   >
                     Cargando contactos...
@@ -181,14 +225,23 @@ export default function WhatsAppCloudApiContactsPageContent({ mode }: Props) {
               ) : rows.length === 0 ? (
                 <tr>
                   <td
-                    colSpan={4}
+                    colSpan={5}
                     className="px-4 py-8 text-center text-sm text-[var(--color-text-muted)]"
                   >
                     Sin contactos.
                   </td>
                 </tr>
+              ) : visibleRows.length === 0 ? (
+                <tr>
+                  <td
+                    colSpan={5}
+                    className="px-4 py-8 text-center text-sm text-[var(--color-text-muted)]"
+                  >
+                    No hay contactos visibles en esta pagina.
+                  </td>
+                </tr>
               ) : (
-                rows.map((row) => (
+                visibleRows.map((row) => (
                   <tr
                     key={row.contact_id}
                     className="transition hover:bg-[rgba(148,163,184,0.06)]"
@@ -213,6 +266,17 @@ export default function WhatsAppCloudApiContactsPageContent({ mode }: Props) {
                     </td>
                     <td className="px-4 py-3 text-xs text-[var(--color-text-muted)]">
                       {formatDate(row.last_message_at)}
+                    </td>
+                    <td className="px-4 py-3 text-right">
+                      <button
+                        type="button"
+                        aria-label="Ocultar contacto"
+                        title="Ocultar contacto"
+                        onClick={() => setContactToHide(row)}
+                        className="inline-flex h-8 w-8 items-center justify-center rounded-lg border border-transparent text-[var(--color-text-disabled)] transition hover:border-rose-400/25 hover:bg-rose-400/10 hover:text-rose-200"
+                      >
+                        <TrashIcon />
+                      </button>
                     </td>
                   </tr>
                 ))
@@ -240,6 +304,36 @@ export default function WhatsAppCloudApiContactsPageContent({ mode }: Props) {
           </button>
         </div>
       </SurfaceCard>
+
+      {contactToHide ? (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 p-4">
+          <div className="w-full max-w-md rounded-2xl border border-[var(--color-border)] bg-[var(--color-bg-1)] p-5 shadow-2xl">
+            <p className="text-sm font-semibold text-[var(--color-text-strong)]">
+              Ocultar contacto
+            </p>
+            <p className="mt-2 text-sm leading-5 text-[var(--color-text-muted)]">
+              {contactToHide.profile_name || contactToHide.wa_id} se quitara de
+              Contactos y del Inbox. No se elimina de la base de datos.
+            </p>
+            <div className="mt-5 flex justify-end gap-2">
+              <button
+                type="button"
+                className="ui-button ui-button-secondary"
+                onClick={() => setContactToHide(null)}
+              >
+                Cancelar
+              </button>
+              <button
+                type="button"
+                className="ui-button ui-button-primary"
+                onClick={hideContactFromUi}
+              >
+                Ocultar
+              </button>
+            </div>
+          </div>
+        </div>
+      ) : null}
     </div>
   );
 }
