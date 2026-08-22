@@ -20,6 +20,8 @@ export interface LandingRow {
   pixel_id: string;
   gerencia_selection_mode: "weighted_random" | "fair";
   gerencia_fair_criterion: "usage_count" | "messages_received";
+  atrio_selection_mode: "weighted_random" | "fair";
+  atrio_fair_criterion: "usage_count" | "messages_received";
   phone_mode: "random" | "fair";
   phone_kind: PhoneKind;
   phone_interval_start_hour: number | null;
@@ -49,6 +51,8 @@ function rowToLanding(row: LandingRow): Landing {
     pixelId: row.pixel_id ?? "",
     gerenciaSelectionMode: row.gerencia_selection_mode ?? "weighted_random",
     gerenciaFairCriterion: row.gerencia_fair_criterion ?? "usage_count",
+    atrioSelectionMode: row.atrio_selection_mode ?? "weighted_random",
+    atrioFairCriterion: row.atrio_fair_criterion ?? "usage_count",
     phoneMode: row.phone_mode ?? "random",
     phoneKind: row.phone_kind ?? "carga",
     phoneIntervalStartHour: row.phone_interval_start_hour ?? null,
@@ -71,7 +75,7 @@ export async function fetchLandings(
 }
 
 const LANDINGS_SELECT =
-  "id, user_id, workspace_currency, landing_type, publish_target, external_domain, name, pixel_id, gerencia_selection_mode, gerencia_fair_criterion, phone_mode, phone_kind, phone_interval_start_hour, phone_interval_end_hour, post_url, landing_tag, comment, config, created_at, updated_at";
+  "id, user_id, workspace_currency, landing_type, publish_target, external_domain, name, pixel_id, gerencia_selection_mode, gerencia_fair_criterion, atrio_selection_mode, atrio_fair_criterion, phone_mode, phone_kind, phone_interval_start_hour, phone_interval_end_hour, post_url, landing_tag, comment, config, created_at, updated_at";
 
 /**
  * Lista landings de un usuario por su id. Los admins pueden listar landings de cualquier usuario (RLS).
@@ -156,6 +160,8 @@ export async function createLanding(
     pixelId?: string;
     gerenciaSelectionMode?: "weighted_random" | "fair";
     gerenciaFairCriterion?: "usage_count" | "messages_received";
+    atrioSelectionMode?: "weighted_random" | "fair";
+    atrioFairCriterion?: "usage_count" | "messages_received";
     phoneMode?: "random" | "fair";
     phoneKind?: PhoneKind;
     phoneIntervalStartHour?: number | null;
@@ -196,6 +202,8 @@ export async function createLanding(
       pixel_id: pixelId,
       gerencia_selection_mode: payload.gerenciaSelectionMode ?? "weighted_random",
       gerencia_fair_criterion: payload.gerenciaFairCriterion ?? "usage_count",
+      atrio_selection_mode: payload.atrioSelectionMode ?? "weighted_random",
+      atrio_fair_criterion: payload.atrioFairCriterion ?? "usage_count",
       phone_mode: payload.phoneMode ?? "random",
       phone_kind: payload.phoneKind ?? "carga",
       phone_interval_start_hour: payload.phoneIntervalStartHour ?? null,
@@ -227,6 +235,8 @@ export async function updateLanding(
     pixelId?: string;
     gerenciaSelectionMode?: "weighted_random" | "fair";
     gerenciaFairCriterion?: "usage_count" | "messages_received";
+    atrioSelectionMode?: "weighted_random" | "fair";
+    atrioFairCriterion?: "usage_count" | "messages_received";
     phoneMode?: "random" | "fair";
     phoneKind?: PhoneKind;
     phoneIntervalStartHour?: number | null;
@@ -249,6 +259,10 @@ export async function updateLanding(
     body.gerencia_selection_mode = payload.gerenciaSelectionMode;
   if (payload.gerenciaFairCriterion !== undefined)
     body.gerencia_fair_criterion = payload.gerenciaFairCriterion;
+  if (payload.atrioSelectionMode !== undefined)
+    body.atrio_selection_mode = payload.atrioSelectionMode;
+  if (payload.atrioFairCriterion !== undefined)
+    body.atrio_fair_criterion = payload.atrioFairCriterion;
   if (payload.phoneMode !== undefined) body.phone_mode = payload.phoneMode;
   if (payload.phoneKind !== undefined) body.phone_kind = payload.phoneKind;
   if (payload.phoneIntervalStartHour !== undefined)

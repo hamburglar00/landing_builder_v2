@@ -9,8 +9,14 @@ export type AtrioClient = {
   workspace_currency: ReportingCurrency;
   slug: string;
   atrio_id: string;
+  usage_count: number;
   created_at?: string | null;
   updated_at?: string | null;
+};
+
+export type LandingAtrioAssignment = {
+  atrioClientId: string;
+  weight: number;
 };
 
 type DbErrorLike = {
@@ -89,6 +95,7 @@ function mapAtrioClient(row: Record<string, unknown>): AtrioClient {
     workspace_currency: normalizeCurrency(row.workspace_currency),
     slug: String(row.slug ?? ""),
     atrio_id: String(row.atrio_id ?? ""),
+    usage_count: Number(row.usage_count ?? 0) || 0,
     created_at: typeof row.created_at === "string" ? row.created_at : null,
     updated_at: typeof row.updated_at === "string" ? row.updated_at : null,
   };
@@ -100,7 +107,7 @@ export async function fetchAtrioClients(
 ): Promise<AtrioClient[]> {
   const { data, error } = await supabase
     .from("atrio_clients")
-    .select("id, user_id, workspace_currency, slug, atrio_id, created_at, updated_at")
+    .select("id, user_id, workspace_currency, slug, atrio_id, usage_count, created_at, updated_at")
     .eq("user_id", userId)
     .eq("workspace_currency", workspaceCurrency)
     .order("slug", { ascending: true });
@@ -115,7 +122,7 @@ export async function fetchAtrioClientsForAdmin(
 ): Promise<AtrioClient[]> {
   const { data, error } = await supabase
     .from("atrio_clients")
-    .select("id, user_id, workspace_currency, slug, atrio_id, created_at, updated_at")
+    .select("id, user_id, workspace_currency, slug, atrio_id, usage_count, created_at, updated_at")
     .eq("workspace_currency", workspaceCurrency)
     .order("slug", { ascending: true });
 
@@ -142,7 +149,7 @@ export async function createAtrioClient(
       slug: normalizeAtrioSlug(payload.slug),
       atrio_id: payload.atrioId.trim(),
     })
-    .select("id, user_id, workspace_currency, slug, atrio_id, created_at, updated_at")
+    .select("id, user_id, workspace_currency, slug, atrio_id, usage_count, created_at, updated_at")
     .single();
 
   if (error) throw error;
@@ -163,7 +170,7 @@ export async function updateAtrioClient(
       atrio_id: payload.atrioId.trim(),
     })
     .eq("id", id)
-    .select("id, user_id, workspace_currency, slug, atrio_id, created_at, updated_at")
+    .select("id, user_id, workspace_currency, slug, atrio_id, usage_count, created_at, updated_at")
     .single();
 
   if (error) throw error;
@@ -172,5 +179,43 @@ export async function updateAtrioClient(
 
 export async function deleteAtrioClient(id: string): Promise<void> {
   const { error } = await supabase.from("atrio_clients").delete().eq("id", id);
+  if (error) throw error;
+}
+
+export async function fetchLandingAtrioAssignments(
+  landingId: string,
+): Promise<LandingAtrioAssignment[]> {
+  const { data, error } = await supabase
+    .from("landings_atrio_clients")
+    .select("atrio_client_id, weight")
+    .eq("landing_id", landingId);
+
+  if (error) throw error;
+  return (data ?? []).map((row) => ({
+    atrioClientId: String(row.atrio_client_id ?? ""),
+    weight: Number(row.weight ?? 0) || 0,
+  })).filter((row) => row.atrioClientId);
+}
+
+export async function setLandingAtrioAssignments(
+  landingId: string,
+  assignments: LandingAtrioAssignment[],
+): Promise<void> {
+  const { error: deleteError } = await supabase
+    .from("landings_atrio_clients")
+    .delete()
+    .eq("landing_id", landingId);
+  if (deleteError) throw deleteError;
+
+  const rows = assignments
+    .filter((assignment) => assignment.atrioClientId)
+    .map((assignment) => ({
+      landing_id: landingId,
+      atrio_client_id: assignment.atrioClientId,
+      weight: Math.max(0, Number(assignment.weight) || 0),
+    }));
+
+  if (rows.length === 0) return;
+  const { error } = await supabase.from("landings_atrio_clients").insert(rows);
   if (error) throw error;
 }

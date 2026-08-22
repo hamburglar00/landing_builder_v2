@@ -8,6 +8,7 @@ import type { Landing } from "@/lib/landing/types";
 import { fetchLandings, createLanding } from "@/lib/landing/landingsDb";
 import { buildLandingPublicUrl } from "@/lib/landing/publicUrls";
 import { fetchLandingGerencias, setLandingGerencias } from "@/lib/gerencias/gerenciasDb";
+import { fetchLandingAtrioAssignments, setLandingAtrioAssignments } from "@/lib/atrio/atrioDb";
 import { DEFAULT_CONFIG } from "@/lib/landing/mocks";
 import { LandingPreview } from "@/components/landing/LandingPreview";
 import { getSettings } from "@/lib/settingsDb";
@@ -176,6 +177,8 @@ export default function DashboardLandingsPage() {
         pixelId: landing.pixelId,
         gerenciaSelectionMode: landing.gerenciaSelectionMode,
         gerenciaFairCriterion: landing.gerenciaFairCriterion,
+        atrioSelectionMode: landing.atrioSelectionMode,
+        atrioFairCriterion: landing.atrioFairCriterion,
         phoneMode: landing.phoneMode,
         phoneKind: landing.phoneKind,
         phoneIntervalStartHour: landing.phoneIntervalStartHour,
@@ -187,6 +190,10 @@ export default function DashboardLandingsPage() {
       const assignments = await fetchLandingGerencias(landing.id);
       if (assignments.length > 0) {
         await setLandingGerencias(id, assignments);
+      }
+      const atrioAssignments = await fetchLandingAtrioAssignments(landing.id);
+      if (atrioAssignments.length > 0) {
+        await setLandingAtrioAssignments(id, atrioAssignments);
       }
       router.push(`/dashboard/landing/${id}/editar`);
     } catch (e) {

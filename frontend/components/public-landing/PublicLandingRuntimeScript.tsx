@@ -156,14 +156,23 @@ export default function PublicLandingRuntimeScript({ slug, config }: Props) {
         return String(cfg.ctaDestination || "whatsapp").toLowerCase() === "atrio";
       }
 
-      function buildAtrioRedirectUrl(promoCode) {
+      function buildAtrioRedirectUrl(promoCode, atrioData) {
         try {
-          var raw = String(cfg.atrioRedirectUrl || "").trim();
+          var raw = firstNonEmpty([
+            atrioData && atrioData.atrioRedirectUrl,
+            atrioData && atrioData.atrio_redirect_url,
+            cfg.atrioRedirectUrl
+          ]);
           if (!raw) return "";
           var url = new URL(raw, window.location.href);
           if (url.protocol !== "http:" && url.protocol !== "https:") return "";
           url.searchParams.set("promo_code", promoCode);
-          if (cfg.atrioId) url.searchParams.set("atrio_id", String(cfg.atrioId));
+          var atrioId = firstNonEmpty([
+            atrioData && atrioData.atrioId,
+            atrioData && atrioData.atrio_id,
+            cfg.atrioId
+          ]);
+          if (atrioId) url.searchParams.set("atrio_id", atrioId);
           return url.toString();
         } catch (e) {
           return "";
@@ -615,6 +624,37 @@ export default function PublicLandingRuntimeScript({ slug, config }: Props) {
         } catch (e) {}
       }
 
+      function ensureAtrioPromise() {
+        if (!isAtrioDestination()) return Promise.resolve(null);
+        window.__PUBLIC_LANDING_ATRIO_PROMISES = window.__PUBLIC_LANDING_ATRIO_PROMISES || {};
+        var existing = window.__PUBLIC_LANDING_ATRIO_PROMISES[cfg.slug];
+        if (existing) return existing;
+        var baseUrl = cfg.supabaseUrl;
+        var anonKey = cfg.supabaseAnonKey;
+        if (!baseUrl || !anonKey) return Promise.resolve(null);
+        var endpoint = baseUrl.replace(/\\/+$/, "") + "/functions/v1/landing-atrio?name=" + encodeURIComponent(cfg.slug);
+        var promise = fetch(endpoint, {
+          headers: { apikey: anonKey, Authorization: "Bearer " + anonKey },
+          cache: "no-store",
+          keepalive: true
+        }).then(function (response) {
+          if (!response.ok) return null;
+          return response.json();
+        }).catch(function () {
+          return null;
+        });
+        window.__PUBLIC_LANDING_ATRIO_PROMISES[cfg.slug] = promise;
+        return promise;
+      }
+
+      function clearPrewarmedAtrioPromise() {
+        try {
+          if (window.__PUBLIC_LANDING_ATRIO_PROMISES) {
+            delete window.__PUBLIC_LANDING_ATRIO_PROMISES[cfg.slug];
+          }
+        } catch (e) {}
+      }
+
       function sendTrackBestEffort(body) {
         if (navigator && "sendBeacon" in navigator) {
           try {
@@ -726,6 +766,33 @@ export default function PublicLandingRuntimeScript({ slug, config }: Props) {
               keepalive: true
             }).catch(function () {});
           }
+        } catch (e) {}
+      }
+
+      function notifyAtrioClick(atrioData) {
+        try {
+          var baseUrl = cfg.supabaseUrl;
+          var anonKey = cfg.supabaseAnonKey;
+          var atrioClientId = firstNonEmpty([
+            atrioData && atrioData.atrioClientId,
+            atrioData && atrioData.atrio_client_id,
+            cfg.atrioClientId
+          ]);
+          if (!baseUrl || !anonKey || !atrioClientId) return;
+          var notifyUrl = baseUrl.replace(/\\/+$/, "") + "/functions/v1/atrio-click";
+          fetch(notifyUrl, {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+              apikey: anonKey,
+              Authorization: "Bearer " + anonKey
+            },
+            body: JSON.stringify({
+              landingName: cfg.landingName || cfg.slug,
+              atrioClientId: atrioClientId
+            }),
+            keepalive: true
+          }).catch(function () {});
         } catch (e) {}
       }
 
@@ -954,23 +1021,29 @@ export default function PublicLandingRuntimeScript({ slug, config }: Props) {
           refreshMetaTracking(params, tracking)
             .then(function (freshTracking) {
               tracking = freshTracking;
-              if (isAtrioDestination()) return null;
+              if (isAtrioDestination()) return waitWithTimeout(ensureAtrioPromise(), 1500);
               return waitWithTimeout(ensurePhonePromise(), 1500);
             })
-            .then(function (phoneData) {
-              if (isAtrioDestination()) return null;
-              if (phoneData && phoneData.phone) return phoneData;
+            .then(function (targetData) {
+              if (isAtrioDestination()) {
+                if (targetData && (targetData.atrioRedirectUrl || targetData.atrio_redirect_url)) return targetData;
+                clearPrewarmedAtrioPromise();
+                return waitWithTimeout(ensureAtrioPromise(), 2500);
+              }
+              if (targetData && targetData.phone) return targetData;
               clearPrewarmedPhonePromise();
               return waitWithTimeout(ensurePhonePromise(), 2500);
             })
-            .then(function (phoneData) {
+            .then(function (targetData) {
               var atrioMode = isAtrioDestination();
+              var atrioData = atrioMode ? (targetData || {}) : null;
+              var phoneData = atrioMode ? null : targetData;
               var phone = atrioMode ? "" : normalizePhone(
                 (phoneData && phoneData.phone) || "",
                 cfg.phoneCountryCode
               );
               var redirectUrl = atrioMode
-                ? buildAtrioRedirectUrl(promoCode)
+                ? buildAtrioRedirectUrl(promoCode, atrioData)
                 : "https://wa.me/" + phone + "?text=" + encodeURIComponent(message);
               if ((!atrioMode && !phone) || (atrioMode && !redirectUrl)) {
                 setNoPhoneState(button);
@@ -983,6 +1056,8 @@ export default function PublicLandingRuntimeScript({ slug, config }: Props) {
 
               if (!atrioMode) {
                 notifyPhoneClick(phoneData, phone);
+              } else {
+                notifyAtrioClick(atrioData);
               }
 
               var payload = {
@@ -1022,10 +1097,10 @@ export default function PublicLandingRuntimeScript({ slug, config }: Props) {
                 source_platform: "landing",
                 cta_destination: atrioMode ? "atrio" : "whatsapp",
                 redirect_channel: atrioMode ? "atrio" : "whatsapp",
-                atrio_redirect_url: atrioMode ? String(cfg.atrioRedirectUrl || "").trim() : undefined,
-                atrio_client_id: atrioMode ? String(cfg.atrioClientId || "").trim() : undefined,
-                atrio_id: atrioMode ? String(cfg.atrioId || "").trim() : undefined,
-                atrio_slug: atrioMode ? String(cfg.atrioSlug || "").trim() : undefined,
+                atrio_redirect_url: atrioMode ? firstNonEmpty([atrioData && atrioData.atrioRedirectUrl, atrioData && atrioData.atrio_redirect_url, cfg.atrioRedirectUrl]) : undefined,
+                atrio_client_id: atrioMode ? firstNonEmpty([atrioData && atrioData.atrioClientId, atrioData && atrioData.atrio_client_id, cfg.atrioClientId]) : undefined,
+                atrio_id: atrioMode ? firstNonEmpty([atrioData && atrioData.atrioId, atrioData && atrioData.atrio_id, cfg.atrioId]) : undefined,
+                atrio_slug: atrioMode ? firstNonEmpty([atrioData && atrioData.atrioSlug, atrioData && atrioData.atrio_slug, cfg.atrioSlug]) : undefined,
                 brand: cfg.landingName,
                 landing_id: cfg.landingId,
                 landing_name: cfg.landingName,
@@ -1293,7 +1368,8 @@ export default function PublicLandingRuntimeScript({ slug, config }: Props) {
 
       function init() {
         prearmContactContext();
-        if (!isAtrioDestination()) ensurePhonePromise();
+        if (isAtrioDestination()) ensureAtrioPromise();
+        else ensurePhonePromise();
         scheduleMetaClientIpCollection();
         scheduleOfficialMetaParamBuilder();
         window.setTimeout(prearmContactContext, 700);

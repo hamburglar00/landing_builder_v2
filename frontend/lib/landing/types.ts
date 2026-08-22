@@ -199,6 +199,10 @@ export interface Landing {
   gerenciaSelectionMode: "weighted_random" | "fair";
   /** Criterio para reparto equitativo de gerencias: por contador o por mensajes recibidos. */
   gerenciaFairCriterion: "usage_count" | "messages_received";
+  /** Modo de seleccion de clientes Atrio: 'weighted_random' (aleatorio por peso) o 'fair' (equitativo). */
+  atrioSelectionMode: "weighted_random" | "fair";
+  /** Criterio para reparto equitativo de clientes Atrio. */
+  atrioFairCriterion: "usage_count" | "messages_received";
   /** Modo de seleccion de tel?fono: 'random' (aleatorio) o 'fair' (equitativo). */
   phoneMode: "random" | "fair";
   /** Tipo de nmero de telfono a usar. */

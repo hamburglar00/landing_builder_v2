@@ -2,10 +2,7 @@
 
 import Image from "next/image";
 import type { SetStateAction } from "react";
-import {
-  buildAtrioUrl,
-  type AtrioClient,
-} from "@/lib/atrio/atrioDb";
+import type { AtrioClient } from "@/lib/atrio/atrioDb";
 import type { LandingThemeConfig } from "@/lib/landing/types";
 
 type Props = {
@@ -14,19 +11,8 @@ type Props = {
   atrioClients?: AtrioClient[];
 };
 
-function isValidAtrioUrl(value: string) {
-  try {
-    const url = new URL(value.trim());
-    return url.protocol === "http:" || url.protocol === "https:";
-  } catch {
-    return false;
-  }
-}
-
 export function isAtrioUrlValidForSave(config: LandingThemeConfig) {
-  return config.ctaDestination !== "atrio" ||
-    (Boolean((config.atrioId ?? "").trim()) &&
-      isValidAtrioUrl(config.atrioRedirectUrl ?? ""));
+  return config.ctaDestination !== "atrio" || Boolean(config.ctaDestination);
 }
 
 function AtrioLogo() {
@@ -68,10 +54,6 @@ export function CtaDestinationSection({
   atrioClients = [],
 }: Props) {
   const destination = config.ctaDestination === "atrio" ? "atrio" : "whatsapp";
-  const selectedAtrioClient = atrioClients.find((client) =>
-    client.id === config.atrioClientId ||
-    client.atrio_id === config.atrioId
-  );
   const targets = [
     {
       value: "whatsapp" as const,
@@ -144,38 +126,12 @@ export function CtaDestinationSection({
       </div>
       {destination === "atrio" ? (
         <div className="mt-4 rounded-lg border border-zinc-800 bg-zinc-950/40 p-3">
-          <label className="mb-1 block text-xs font-medium text-zinc-400">
-            Cliente Atrio <span className="text-red-400">*</span>
-          </label>
-          <select
-            value={selectedAtrioClient?.id ?? ""}
-            onChange={(event) => {
-              const client = atrioClients.find((item) => item.id === event.target.value);
-              setConfig((prev) => ({
-                ...prev,
-                atrioClientId: client?.id ?? "",
-                atrioId: client?.atrio_id ?? "",
-                atrioSlug: client?.slug ?? "",
-                atrioRedirectUrl: client ? buildAtrioUrl(client.slug) : "",
-              }));
-            }}
-            className="w-full rounded-lg border border-zinc-700 bg-zinc-900 px-3 py-2 text-sm text-zinc-100"
-          >
-            <option value="">Seleccionar cliente Atrio</option>
-            {atrioClients.map((client) => (
-              <option key={client.id} value={client.id}>
-                {client.slug} ({client.atrio_id})
-              </option>
-            ))}
-          </select>
-          <p className="mt-1 text-[11px] text-zinc-500">
-            Se carga desde el modulo ATRIO. La landing agregara promo_code y atrio_id al abrir el webchat.
+          <p className="text-xs font-medium text-zinc-300">
+            Atrio usa la card Redireccion
           </p>
-          {config.atrioRedirectUrl ? (
-            <p className="mt-2 rounded-lg border border-zinc-800 bg-zinc-900/60 px-3 py-2 text-[11px] text-zinc-400">
-              URL base: <span className="text-zinc-200">{config.atrioRedirectUrl}</span>
-            </p>
-          ) : null}
+          <p className="mt-1 text-[11px] text-zinc-500">
+            Hay {atrioClients.length} cliente(s) Atrio disponibles para este workspace. Selecciona los slugs y el modo de reparto en la card Redireccion.
+          </p>
         </div>
       ) : null}
     </div>

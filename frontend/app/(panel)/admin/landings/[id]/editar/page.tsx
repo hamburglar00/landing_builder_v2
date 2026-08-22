@@ -41,8 +41,12 @@ import { GerenciaRedirectSection } from "@/components/landing/GerenciaRedirectSe
 import { getSettings } from "@/lib/settingsDb";
 import {
   fetchAtrioClients,
+  fetchLandingAtrioAssignments,
+  setLandingAtrioAssignments,
   type AtrioClient,
+  type LandingAtrioAssignment,
 } from "@/lib/atrio/atrioDb";
+import { AtrioRedirectSection } from "@/components/landing/AtrioRedirectSection";
 import { useAppConfirm, useAppPrompt } from "@/components/ui/AppConfirmDialog";
 import { PageHeader } from "@/components/ui/PanelPrimitives";
 
@@ -135,6 +139,20 @@ function buildExternalIntegrationGuide(): string {
   ].join("\n");
 }
 
+function seedAtrioAssignments(
+  landing: Landing,
+  clients: AtrioClient[],
+  stored: LandingAtrioAssignment[],
+): LandingAtrioAssignment[] {
+  if (stored.length > 0 || landing.config.ctaDestination !== "atrio") return stored;
+  const match = clients.find((client) =>
+    client.id === landing.config.atrioClientId ||
+    client.atrio_id === landing.config.atrioId ||
+    client.slug === landing.config.atrioSlug
+  );
+  return match ? [{ atrioClientId: match.id, weight: 1 }] : stored;
+}
+
 export default function AdminLandingEditarPage() {
   const confirmAction = useAppConfirm();
   const promptAction = useAppPrompt();
@@ -157,6 +175,7 @@ export default function AdminLandingEditarPage() {
   const [ownerUserId, setOwnerUserId] = useState<string | null>(null);
   const [pixelOptions, setPixelOptions] = useState<Array<{ pixel_id: string; comment: string }>>([]);
   const [atrioClients, setAtrioClients] = useState<AtrioClient[]>([]);
+  const [atrioAssignments, setAtrioAssignments] = useState<LandingAtrioAssignment[]>([]);
   const [postUrlCopied, setPostUrlCopied] = useState(false);
 
   useEffect(() => {
@@ -173,9 +192,10 @@ export default function AdminLandingEditarPage() {
 
       setUserId(user.id);
       try {
-        const [found, assigned, settings, owner] = await Promise.all([
+        const [found, assigned, assignedAtrio, settings, owner] = await Promise.all([
           fetchLandingById(id),
           fetchLandingGerencias(id),
+          fetchLandingAtrioAssignments(id),
           getSettings(),
           supabase.from("landings").select("user_id").eq("id", id).maybeSingle(),
         ]);
@@ -201,10 +221,12 @@ export default function AdminLandingEditarPage() {
           ]);
           setWorkGroups(groups);
           setAtrioClients(clients);
+          setAtrioAssignments(seedAtrioAssignments(found, clients, assignedAtrio));
         } else {
           setGerencias(allGerencias);
           setWorkGroups([]);
           setAtrioClients([]);
+          setAtrioAssignments(assignedAtrio);
         }
         if (ownerId) {
           const { data: profile } = await supabase
@@ -309,6 +331,10 @@ export default function AdminLandingEditarPage() {
       setSaveError("Seleccioná un cliente Atrio válido para este workspace.");
       return;
     }
+    if (landing.config.ctaDestination === "atrio" && atrioAssignments.length === 0) {
+      setSaveError("Selecciona al menos un cliente Atrio para la redireccion.");
+      return;
+    }
     if (
       initialName &&
       initialName.startsWith("Nueva-landing-") &&
@@ -367,6 +393,8 @@ export default function AdminLandingEditarPage() {
         pixelId: pixelIdToSave,
         gerenciaSelectionMode: landing.gerenciaSelectionMode,
         gerenciaFairCriterion: landing.gerenciaFairCriterion,
+        atrioSelectionMode: landing.atrioSelectionMode,
+        atrioFairCriterion: landing.atrioFairCriterion,
         phoneMode: effectivePhoneMode,
         phoneKind: landing.phoneKind,
         phoneIntervalStartHour: landing.phoneIntervalStartHour,
@@ -378,6 +406,7 @@ export default function AdminLandingEditarPage() {
         landingConfig,
       });
       await setLandingGerencias(landing.id, assignments);
+      await setLandingAtrioAssignments(landing.id, atrioAssignments);
       await publishLandingChanges({
         name: landing.name,
         publishTarget: landing.publishTarget,
@@ -767,17 +796,25 @@ export default function AdminLandingEditarPage() {
                   /functions/v1/landing-phone?name={landing.name}
                 </span>
               </p>
+              <p className="mt-0.5 text-[11px] text-zinc-500">
+                <span className="font-mono text-[11px]">landing-atrio</span>:{" "}
+                <span className="font-mono break-all text-[11px]">
+                  /functions/v1/landing-atrio?name={landing.name}
+                </span>
+              </p>
             </div>
           </div>
         </CollapsibleSection>
 
         {landing.config.ctaDestination === "atrio" ? (
-          <section className="rounded-2xl border border-zinc-800 bg-zinc-950/40 p-4">
-            <p className="text-sm font-semibold text-zinc-200">Redireccion</p>
-            <p className="mt-1 text-xs text-zinc-500">
-              Esta landing redirige al webchat de Atrio configurado en Tracking.
-            </p>
-          </section>
+          <AtrioRedirectSection
+            landing={landing}
+            setLanding={setLanding}
+            atrioClients={atrioClients}
+            assignments={atrioAssignments}
+            setAssignments={setAtrioAssignments}
+            createAtrioHref="/admin/atrio"
+          />
         ) : (
           <GerenciaRedirectSection
             landing={landing}
@@ -806,7 +843,7 @@ export default function AdminLandingEditarPage() {
             pixelId={landing.pixelId}
             postUrl={landing.postUrl}
             landingTag={landing.landingTag}
-            getPhoneForPreview={async () => {
+            getPhoneForPreview={landing.config.ctaDestination === "atrio" ? undefined : async () => {
               try {
                 const base =
                   process.env.NEXT_PUBLIC_SUPABASE_URL?.replace(/\/$/, "") ?? "";
