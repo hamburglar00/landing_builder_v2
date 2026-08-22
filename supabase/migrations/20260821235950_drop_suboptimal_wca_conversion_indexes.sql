@@ -1,0 +1,2 @@
+drop index if exists public.conversions_wca_promo_currency_expr_idx;
+drop index if exists public.conversions_wca_external_currency_expr_idx;
