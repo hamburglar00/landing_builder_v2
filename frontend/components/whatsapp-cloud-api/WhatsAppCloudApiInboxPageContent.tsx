@@ -490,7 +490,7 @@ export default function WhatsAppCloudApiInboxPageContent({ mode }: Props) {
       setSelectedId((current) =>
         rows.some((row) => row.contact_id === current)
           ? current
-          : rows[0]?.contact_id || ""
+          : ""
       );
     } catch (err) {
       logWhatsappCloudApiError("inbox page load failed", err, {
@@ -559,7 +559,6 @@ export default function WhatsAppCloudApiInboxPageContent({ mode }: Props) {
   const selectedThread = useMemo(
     () =>
       filteredThreads.find((thread) => thread.contact_id === selectedId) ??
-      filteredThreads[0] ??
       null,
     [filteredThreads, selectedId],
   );
