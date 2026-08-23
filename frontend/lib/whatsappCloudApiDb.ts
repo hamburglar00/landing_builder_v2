@@ -19,6 +19,7 @@ export interface WhatsappCloudApiConfig {
   meta_messaging_dataset_id: string;
   enrich_business_messaging_user_data: boolean;
   send_business_messaging_purchase_type_capi: boolean;
+  retargeting_enabled: boolean;
   landing_tag: string;
   gerencia_selection_mode: "weighted_random" | "fair";
   gerencia_fair_criterion: "usage_count" | "messages_received";
@@ -157,6 +158,7 @@ export async function upsertWhatsappCloudApiConfig(input: {
   meta_messaging_dataset_id: string;
   enrich_business_messaging_user_data: boolean;
   send_business_messaging_purchase_type_capi: boolean;
+  retargeting_enabled: boolean;
   landing_tag: string;
   gerencia_selection_mode: "weighted_random" | "fair";
   gerencia_fair_criterion: "usage_count" | "messages_received";
@@ -186,6 +188,7 @@ export async function upsertWhatsappCloudApiConfig(input: {
         input.enrich_business_messaging_user_data,
       p_send_business_messaging_purchase_type_capi:
         input.send_business_messaging_purchase_type_capi,
+      p_retargeting_enabled: input.retargeting_enabled,
       p_landing_tag: input.landing_tag,
       p_gerencia_selection_mode: input.gerencia_selection_mode,
       p_gerencia_fair_criterion: input.gerencia_fair_criterion,

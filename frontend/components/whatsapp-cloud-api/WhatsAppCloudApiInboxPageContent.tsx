@@ -346,7 +346,7 @@ function EmptyConversationIcon() {
 function TrashIcon() {
   return (
     <svg
-      className="h-3.5 w-3.5"
+      className="h-2 w-2"
       viewBox="0 0 24 24"
       fill="none"
       stroke="currentColor"
@@ -713,7 +713,7 @@ export default function WhatsAppCloudApiInboxPageContent({ mode }: Props) {
         <div className="ui-alert ui-alert-success text-sm">{sendNotice}</div>
       ) : null}
 
-      <SurfaceCard className="grid min-h-[38rem] overflow-hidden xl:grid-cols-[20rem_minmax(0,1fr)_18rem]">
+      <SurfaceCard className="grid h-[38rem] overflow-hidden xl:grid-cols-[20rem_minmax(0,1fr)_18rem]">
         <aside className="flex min-h-0 flex-col border-b border-[var(--color-border-subtle)] xl:border-b-0 xl:border-r">
           <div className="space-y-3 border-b border-[var(--color-border-subtle)] p-4">
             <div className="flex h-10 items-center gap-2 rounded-xl border border-[var(--color-border)] bg-[var(--color-bg-2)] px-3 text-[var(--color-text-muted)]">
@@ -793,7 +793,7 @@ export default function WhatsAppCloudApiInboxPageContent({ mode }: Props) {
                     <button
                       type="button"
                       onClick={() => setSelectedId(thread.contact_id)}
-                      className="flex w-full gap-3 px-4 py-3 pr-12 text-left"
+                      className="flex w-full gap-3 px-4 py-3 pr-9 text-left"
                     >
                       <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full border border-[var(--color-border)] bg-[var(--color-bg-2)] text-xs font-semibold text-[var(--color-text-muted)]">
                         {initials(thread.profile_name, thread.wa_id)}
@@ -850,7 +850,7 @@ export default function WhatsAppCloudApiInboxPageContent({ mode }: Props) {
                       aria-label="Ocultar chat"
                       title="Ocultar chat"
                       onClick={() => setThreadToHide(thread)}
-                      className="absolute bottom-2 right-3 flex h-7 w-7 items-center justify-center rounded-lg border border-transparent text-[var(--color-text-disabled)] transition hover:border-rose-400/25 hover:bg-rose-400/10 hover:text-rose-200"
+                      className="absolute bottom-3 right-3 flex h-4 w-4 items-center justify-center rounded border border-transparent text-[var(--color-text-disabled)] transition hover:border-rose-400/25 hover:bg-rose-400/10 hover:text-rose-200"
                     >
                       <TrashIcon />
                     </button>
@@ -858,34 +858,34 @@ export default function WhatsAppCloudApiInboxPageContent({ mode }: Props) {
                 );
               })
             )}
-            {!loading && threads.length > 0 ? (
-              <div className="sticky bottom-0 flex items-center justify-between gap-2 border-t border-[var(--color-border-subtle)] bg-[var(--color-bg-1)] px-3 py-2">
-                <span className="text-[10px] font-medium text-[var(--color-text-disabled)]">
-                  {pageEnd}/{totalThreads}
-                </span>
-                <span className="flex gap-2">
-                  <button
-                    type="button"
-                    className="ui-button ui-button-secondary h-8 px-3 text-xs"
-                    onClick={() =>
-                      setPageIndex((current) => Math.max(0, current - 1))
-                    }
-                    disabled={!canGoPrevious || loading}
-                  >
-                    Anterior
-                  </button>
-                  <button
-                    type="button"
-                    className="ui-button ui-button-secondary h-8 px-3 text-xs"
-                    onClick={() => setPageIndex((current) => current + 1)}
-                    disabled={!canGoNext || loading}
-                  >
-                    Siguiente
-                  </button>
-                </span>
-              </div>
-            ) : null}
           </div>
+          {!loading && threads.length > 0 ? (
+            <div className="flex shrink-0 items-center justify-between gap-2 border-t border-[var(--color-border-subtle)] bg-[var(--color-bg-1)] px-3 py-2">
+              <span className="text-[10px] font-medium text-[var(--color-text-disabled)]">
+                {pageEnd}/{totalThreads}
+              </span>
+              <span className="flex gap-2">
+                <button
+                  type="button"
+                  className="ui-button ui-button-secondary h-8 px-3 text-xs"
+                  onClick={() =>
+                    setPageIndex((current) => Math.max(0, current - 1))
+                  }
+                  disabled={!canGoPrevious || loading}
+                >
+                  Anterior
+                </button>
+                <button
+                  type="button"
+                  className="ui-button ui-button-secondary h-8 px-3 text-xs"
+                  onClick={() => setPageIndex((current) => current + 1)}
+                  disabled={!canGoNext || loading}
+                >
+                  Siguiente
+                </button>
+              </span>
+            </div>
+          ) : null}
         </aside>
 
         <section className="flex min-h-[34rem] flex-col border-b border-[var(--color-border-subtle)] xl:border-b-0 xl:border-r">

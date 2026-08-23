@@ -475,6 +475,7 @@ export default function WhatsAppCloudApiPageContent({
   const [messagingDatasetId, setMessagingDatasetId] = useState("");
   const [enrichBusinessMessagingUserData, setEnrichBusinessMessagingUserData] = useState(false);
   const [sendBusinessMessagingPurchaseType, setSendBusinessMessagingPurchaseType] = useState(false);
+  const [retargetingEnabled, setRetargetingEnabled] = useState(true);
   const [landingTag, setLandingTag] = useState("");
   const [selectionMode, setSelectionMode] = useState<"weighted_random" | "fair">("weighted_random");
   const [fairCriterion, setFairCriterion] = useState<"usage_count" | "messages_received">("usage_count");
@@ -542,6 +543,7 @@ export default function WhatsAppCloudApiPageContent({
     setMessagingDatasetId(cfg?.meta_messaging_dataset_id ?? "");
     setEnrichBusinessMessagingUserData(cfg?.enrich_business_messaging_user_data ?? false);
     setSendBusinessMessagingPurchaseType(cfg?.send_business_messaging_purchase_type_capi ?? false);
+    setRetargetingEnabled(cfg?.retargeting_enabled ?? true);
     setLandingTag(cfg?.landing_tag ?? "");
     setTrackingEditing(!cfg?.id);
     setShowAccessToken(false);
@@ -709,6 +711,7 @@ export default function WhatsAppCloudApiPageContent({
         meta_messaging_dataset_id: messagingDatasetId.trim(),
         enrich_business_messaging_user_data: enrichBusinessMessagingUserData,
         send_business_messaging_purchase_type_capi: sendBusinessMessagingPurchaseType,
+        retargeting_enabled: retargetingEnabled,
         landing_tag: cleanTag(landingTag),
         gerencia_selection_mode: selectionMode,
         gerencia_fair_criterion: fairCriterion,
@@ -1223,6 +1226,15 @@ export default function WhatsAppCloudApiPageContent({
                 label="Enviar purchase_type"
                 description="Off envia Purchase estandar. On agrega first o repeat solo cuando el dato existe."
                 title="Si esta activo, los Purchase de WhatsApp Cloud API agregan custom_data.purchase_type con first o repeat. Sirve para crear conversiones personalizadas en Meta. No afecta LeadSubmitted ni inventa datos."
+              />
+
+              <Toggle
+                checked={retargetingEnabled}
+                onChange={setRetargetingEnabled}
+                disabled={trackingLocked}
+                label="Retargeting automatico"
+                description="On envia un recordatorio unico a chats nuevo/contacto recientes."
+                title="Si esta activo, el cron revisa cada 15 minutos chats nuevos o contactos sin Lead/Purchase cuyo ultimo mensaje inbound fue hace menos de 30 minutos. Se envia una sola vez por contacto y solo con ventana activa."
               />
 
               <div className="rounded-lg border border-zinc-800 bg-zinc-950/30 px-3 py-2">

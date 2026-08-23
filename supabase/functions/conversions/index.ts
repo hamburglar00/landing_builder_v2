@@ -416,6 +416,55 @@ function buildGerenciaLabel(
   };
 }
 
+function positiveIntegerOrNull(value: unknown): number | null {
+  const n = Number(value);
+  return Number.isInteger(n) && n > 0 ? n : null;
+}
+
+function emptyAssignedGerenciaSnapshot(): AssignedGerenciaSnapshot {
+  return {
+    assigned_gerencia_id: null,
+    assigned_gerencia_external_id: null,
+    assigned_gerencia_name: "",
+    assigned_gerencia_label: "",
+  };
+}
+
+function snapshotFromAssignedGerenciaFields(
+  row: Record<string, unknown> | null | undefined,
+): AssignedGerenciaSnapshot {
+  const empty = emptyAssignedGerenciaSnapshot();
+  if (!row) return empty;
+  const id = positiveIntegerOrNull(row.assigned_gerencia_id);
+  const externalId = positiveIntegerOrNull(
+    row.assigned_gerencia_external_id,
+  );
+  const label = norm(row.assigned_gerencia_label);
+  const name = norm(row.assigned_gerencia_name) ||
+    (label && !label.startsWith("Gerencia ") ? label : "");
+  if (!id && !externalId && !label && !name) return empty;
+  const effectiveExternalId = externalId ?? id;
+  const effectiveName = name ||
+    (label && !/^Gerencia\s+\d+$/i.test(label) ? label : "") ||
+    (effectiveExternalId ? `Gerencia ${effectiveExternalId}` : "Gerencia");
+  return {
+    assigned_gerencia_id: id,
+    assigned_gerencia_external_id: effectiveExternalId,
+    assigned_gerencia_name: effectiveName,
+    assigned_gerencia_label: label ||
+      (effectiveExternalId
+        ? `${effectiveName} (ID ${effectiveExternalId})`
+        : effectiveName),
+  };
+}
+
+function firstAssignedGerenciaSnapshot(
+  ...snapshots: AssignedGerenciaSnapshot[]
+): AssignedGerenciaSnapshot {
+  return snapshots.find((snapshot) => norm(snapshot.assigned_gerencia_label)) ??
+    emptyAssignedGerenciaSnapshot();
+}
+
 async function resolveAssignedGerenciaSnapshot(
   db: SupabaseClient,
   userId: string,
@@ -423,33 +472,64 @@ async function resolveAssignedGerenciaSnapshot(
   landingId?: string | null,
 ): Promise<AssignedGerenciaSnapshot> {
   const phone = sanitizePhone(assignedPhone);
-  const empty: AssignedGerenciaSnapshot = {
-    assigned_gerencia_id: null,
-    assigned_gerencia_external_id: null,
-    assigned_gerencia_name: "",
-    assigned_gerencia_label: "",
-  };
+  const empty = emptyAssignedGerenciaSnapshot();
   if (!phone) return empty;
 
-  const { data: phoneRows } = await db
+  const { data: phoneRows, error: phoneError } = await db
     .from("gerencia_phones")
-    .select("gerencia_id,status,gerencias!inner(id,nombre,gerencia_id,user_id)")
-    .eq("phone", phone)
-    .eq("gerencias.user_id", userId);
+    .select("gerencia_id,status")
+    .eq("phone", phone);
+  if (phoneError) {
+    console.error("[conversions] resolveAssignedGerenciaSnapshot phone lookup", {
+      phone,
+      message: phoneError.message,
+      details: phoneError.details,
+    });
+    return empty;
+  }
 
-  const candidates = (phoneRows ?? [])
-    .map((row: Record<string, unknown>) => {
-      const joined = Array.isArray(row.gerencias)
-        ? row.gerencias[0]
-        : row.gerencias;
-      return {
-        phoneGerenciaId: Number(row.gerencia_id),
-        status: norm(row.status),
-        gerencia: (joined ?? {}) as Record<string, unknown>,
-      };
-    })
+  const rawCandidates = (phoneRows ?? [])
+    .map((row: Record<string, unknown>) => ({
+      phoneGerenciaId: Number(row.gerencia_id),
+      status: norm(row.status),
+    }))
     .filter((row) => Number.isFinite(row.phoneGerenciaId));
 
+  if (rawCandidates.length === 0) return empty;
+
+  const gerenciaIds = Array.from(
+    new Set(rawCandidates.map((row) => row.phoneGerenciaId)),
+  );
+  const { data: gerencias, error: gerenciasError } = await db
+    .from("gerencias")
+    .select("id,nombre,gerencia_id,user_id")
+    .eq("user_id", userId)
+    .in("id", gerenciaIds);
+  if (gerenciasError) {
+    console.error(
+      "[conversions] resolveAssignedGerenciaSnapshot gerencias lookup",
+      {
+        phone,
+        userId,
+        message: gerenciasError.message,
+        details: gerenciasError.details,
+      },
+    );
+    return empty;
+  }
+
+  const gerenciasById = new Map(
+    (gerencias ?? []).map((row: Record<string, unknown>) => [
+      Number(row.id),
+      row,
+    ]),
+  );
+  const candidates = rawCandidates
+    .map((row) => ({
+      ...row,
+      gerencia: gerenciasById.get(row.phoneGerenciaId) ?? null,
+    }))
+    .filter((row) => row.gerencia);
   if (candidates.length === 0) return empty;
 
   let assignedIds = new Set<number>();
@@ -475,7 +555,51 @@ async function resolveAssignedGerenciaSnapshot(
     return a.phoneGerenciaId - b.phoneGerenciaId;
   });
 
-  return buildGerenciaLabel(ranked[0].gerencia);
+  const selectedGerencia = ranked[0]?.gerencia;
+  return selectedGerencia ? buildGerenciaLabel(selectedGerencia) : empty;
+}
+
+async function resolveWhatsappCloudApiAssignmentSnapshot(
+  db: SupabaseClient,
+  userId: string,
+  promoCode: string,
+): Promise<AssignedGerenciaSnapshot> {
+  const empty = emptyAssignedGerenciaSnapshot();
+  if (!isFullPromoCode(promoCode)) return empty;
+
+  const { data: assignment, error } = await db
+    .from("whatsapp_cloud_api_assignments")
+    .select(
+      "assigned_gerencia_id,assigned_gerencia_external_id,assigned_gerencia_label",
+    )
+    .eq("user_id", userId)
+    .eq("promo_code", promoCode)
+    .order("created_at", { ascending: true })
+    .limit(1)
+    .maybeSingle();
+  if (error) {
+    console.error(
+      "[conversions] resolveWhatsappCloudApiAssignmentSnapshot lookup",
+      { promoCode, message: error.message, details: error.details },
+    );
+    return empty;
+  }
+
+  const assignmentSnapshot = snapshotFromAssignedGerenciaFields(
+    assignment as Record<string, unknown> | null,
+  );
+  const assignedId = assignmentSnapshot.assigned_gerencia_id;
+  if (!assignedId) return assignmentSnapshot;
+
+  const { data: gerencia } = await db
+    .from("gerencias")
+    .select("id,nombre,gerencia_id")
+    .eq("user_id", userId)
+    .eq("id", assignedId)
+    .maybeSingle();
+  return gerencia
+    ? buildGerenciaLabel(gerencia as Record<string, unknown>)
+    : assignmentSnapshot;
 }
 
 function snapshotPatch(
@@ -4096,11 +4220,19 @@ async function handleContact(
     norm(p.event_source_url),
   );
   const payloadCuitCuil = deriveCuitCuilFromPayload(p);
-  const assignedGerencia = await resolveAssignedGerenciaSnapshot(
-    db,
-    landing.user_id,
-    p.telefono_asignado,
-    landing.id,
+  const assignedGerencia = firstAssignedGerenciaSnapshot(
+    await resolveWhatsappCloudApiAssignmentSnapshot(
+      db,
+      landing.user_id,
+      inboundPromoCode,
+    ),
+    await resolveAssignedGerenciaSnapshot(
+      db,
+      landing.user_id,
+      p.telefono_asignado,
+      landing.id,
+    ),
+    snapshotFromAssignedGerenciaFields(p),
   );
   const contactWorkspaceResolution = resolveContactWorkspaceResolution(
     landing,
@@ -4865,19 +4997,23 @@ async function handleLead(
     const generatedExternalId = inboundExternalId ||
       norm(trustedLineage?.external_id) ||
       (cleanPhone ? await sha256(cleanPhone) : generateEventId());
-    const assignedGerencia: AssignedGerenciaSnapshot = trustedLineage
-      ? {
-        assigned_gerencia_id: trustedLineage.assigned_gerencia_id ?? null,
-        assigned_gerencia_external_id:
-          trustedLineage.assigned_gerencia_external_id ?? null,
-        assigned_gerencia_name: norm(trustedLineage.assigned_gerencia_name),
-        assigned_gerencia_label: norm(trustedLineage.assigned_gerencia_label),
-      }
-      : await resolveAssignedGerenciaSnapshot(
-        db,
-        landing.user_id,
-        p.telefono_asignado,
-        landing.id,
+    const assignedGerencia: AssignedGerenciaSnapshot =
+      firstAssignedGerenciaSnapshot(
+        snapshotFromAssignedGerenciaFields(
+          trustedLineage as Record<string, unknown> | null,
+        ),
+        await resolveWhatsappCloudApiAssignmentSnapshot(
+          db,
+          landing.user_id,
+          promoCode,
+        ),
+        await resolveAssignedGerenciaSnapshot(
+          db,
+          landing.user_id,
+          p.telefono_asignado,
+          landing.id,
+        ),
+        snapshotFromAssignedGerenciaFields(p),
       );
     const newRow: Omit<ConversionRow, "id"> = {
       landing_id: trustedLineage?.landing_id ?? (landing.id?.trim() || null),
@@ -5210,11 +5346,19 @@ async function handleLead(
       Object.assign(
         updates,
         snapshotPatch(
-          await resolveAssignedGerenciaSnapshot(
-            db,
-            landing.user_id,
-            assignedPhone,
-            landing.id,
+          firstAssignedGerenciaSnapshot(
+            await resolveWhatsappCloudApiAssignmentSnapshot(
+              db,
+              landing.user_id,
+              promoCode,
+            ),
+            await resolveAssignedGerenciaSnapshot(
+              db,
+              landing.user_id,
+              assignedPhone,
+              landing.id,
+            ),
+            snapshotFromAssignedGerenciaFields(p),
           ),
         ),
       );
@@ -6363,11 +6507,22 @@ async function handlePurchase(
       Object.assign(
         updates,
         snapshotPatch(
-          await resolveAssignedGerenciaSnapshot(
-            db,
-            landing.user_id,
-            existingRow?.telefono_asignado,
-            landing.id,
+          firstAssignedGerenciaSnapshot(
+            snapshotFromAssignedGerenciaFields(
+              receiverAttributionSource as Record<string, unknown> | null,
+            ),
+            await resolveWhatsappCloudApiAssignmentSnapshot(
+              db,
+              landing.user_id,
+              attributedPromoCode || promoCode,
+            ),
+            await resolveAssignedGerenciaSnapshot(
+              db,
+              landing.user_id,
+              existingRow?.telefono_asignado,
+              landing.id,
+            ),
+            snapshotFromAssignedGerenciaFields(p),
           ),
         ),
       );

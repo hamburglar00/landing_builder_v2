@@ -710,6 +710,28 @@ export default function PublicLandingRuntimeScript({ slug, config }: Props) {
         return null;
       }
 
+      function extractAssignedGerenciaSnapshot(phoneData) {
+        if (!phoneData || typeof phoneData !== "object") return {};
+        var gerencia = phoneData.gerencia && typeof phoneData.gerencia === "object"
+          ? phoneData.gerencia
+          : {};
+        var internalId = gerencia.id != null ? Number(gerencia.id) : null;
+        var externalId = firstNonEmpty([
+          gerencia.externalId,
+          gerencia.external_id,
+          gerencia.gerencia_id,
+          internalId
+        ]);
+        var name = firstNonEmpty([gerencia.name, gerencia.nombre]);
+        var label = name && externalId ? name + " (ID " + externalId + ")" : name;
+        return {
+          assigned_gerencia_id: isFinite(internalId) && internalId > 0 ? internalId : undefined,
+          assigned_gerencia_external_id: externalId || undefined,
+          assigned_gerencia_name: name || undefined,
+          assigned_gerencia_label: label || undefined
+        };
+      }
+
       function setButtonText(button, text) {
         var label = button.querySelector("[data-public-landing-cta-label]");
         if (label) label.textContent = text;
@@ -1060,6 +1082,7 @@ export default function PublicLandingRuntimeScript({ slug, config }: Props) {
                 notifyAtrioClick(atrioData);
               }
 
+              var assignedGerenciaSnapshot = atrioMode ? {} : extractAssignedGerenciaSnapshot(phoneData);
               var payload = {
                 event_name: "Contact",
                 meta_pixel_id: String(cfg.pixelId || "").trim() || undefined,
@@ -1092,6 +1115,10 @@ export default function PublicLandingRuntimeScript({ slug, config }: Props) {
                 client_ip_proof: tracking.clientIpProof || undefined,
                 client_user_agent: navigator.userAgent || undefined,
                 telefono_asignado: atrioMode ? "" : phone,
+                assigned_gerencia_id: assignedGerenciaSnapshot.assigned_gerencia_id,
+                assigned_gerencia_external_id: assignedGerenciaSnapshot.assigned_gerencia_external_id,
+                assigned_gerencia_name: assignedGerenciaSnapshot.assigned_gerencia_name,
+                assigned_gerencia_label: assignedGerenciaSnapshot.assigned_gerencia_label,
                 promo_code: promoCode,
                 source: "main_button",
                 source_platform: "landing",

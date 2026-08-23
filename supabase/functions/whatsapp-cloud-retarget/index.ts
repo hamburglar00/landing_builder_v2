@@ -51,14 +51,14 @@ const RETARGET_COPY: Record<
 > = {
   new: {
     message:
-      "Hola! Para comenzar, toca el boton de abajo y envia el mensaje al asesor asignado. Asi podemos guiarte paso a paso y darte atencion personalizada.",
-    button: "IR AL ASESOR",
+      "👋 ¡Hola! Tu asesor ya está listo para atenderte 🙋‍♂️💬\n\n👇 Tocá el botón de abajo y enviale el mensaje para comenzar ahora. Te va a guiar paso a paso y brindarte atención personalizada. 🚀✨",
+    button: "ABRIR WHATSAPP",
     messageType: "retarget_new_cta_url",
   },
   contact: {
     message:
-      "Hola! Vimos que iniciaste el contacto. Para avanzar, toca el boton de abajo y continua con tu asesor asignado. Te va a guiar paso a paso.",
-    button: "IR AL ASESOR",
+      "👋 ¡Hola! Tu asesor ya está listo para atenderte 🙋‍♂️💬\n\n👇 Tocá el botón de abajo y enviale el mensaje para comenzar ahora. Te va a guiar paso a paso y brindarte atención personalizada. 🚀✨",
+    button: "ABRIR WHATSAPP",
     messageType: "retarget_contact_cta_url",
   },
 };

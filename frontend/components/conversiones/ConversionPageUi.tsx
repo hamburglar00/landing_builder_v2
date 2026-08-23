@@ -1,7 +1,7 @@
 import type { ReactNode } from "react";
 import {
-  COLUMN_NOTES,
   columnLabel,
+  columnTooltip,
   type ConversionColumnKey,
   type ConversionTableView,
 } from "@/components/conversiones/conversionPageShared";
@@ -220,13 +220,13 @@ export function ConversionTableHeader({
       <tr>
         <th
           className="px-2 py-2 font-medium text-zinc-300 whitespace-nowrap cursor-help"
-          title={COLUMN_NOTES.id}
+          title={columnTooltip("id", view)}
         >
           {friendly ? "Registro" : "ID"}
         </th>
         <th
           className="px-2 py-2 font-medium text-zinc-300 whitespace-nowrap cursor-help"
-          title={COLUMN_NOTES.timestamp}
+          title={columnTooltip("timestamp", view)}
         >
           {friendly ? "Fecha y hora" : "timestamp"}
         </th>
@@ -234,7 +234,7 @@ export function ConversionTableHeader({
           <th
             key={column}
             className="px-2 py-2 font-medium text-zinc-300 whitespace-nowrap cursor-help"
-            title={COLUMN_NOTES[column] ?? column}
+            title={columnTooltip(column, view)}
           >
             {columnLabel(column, view)}
           </th>

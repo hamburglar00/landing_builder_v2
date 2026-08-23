@@ -3,6 +3,7 @@ import test from "node:test";
 import {
   ALL_COLUMNS,
   columnLabel,
+  columnTooltip,
   columnsForTableView,
   FRIENDLY_HIDDEN_COLUMNS,
   type ConversionColumnKey,
@@ -117,4 +118,17 @@ test("la vista reducida usa encabezados comprensibles", () => {
   assert.equal(columnLabel("phone", "friendly"), "Teléfono");
   assert.equal(columnLabel("timestamp", "friendly"), "Fecha y hora");
   assert.equal(columnLabel("test_event_code", "friendly"), "Test Event Code");
+});
+
+test("los tooltips cambian segun la vista de tabla", () => {
+  assert.match(
+    columnTooltip("assigned_gerencia_label", "friendly"),
+    /derivo el cliente/i,
+  );
+  assert.match(
+    columnTooltip("assigned_gerencia_label", "technical"),
+    /Gerencia historica/i,
+  );
+  assert.match(columnTooltip("phone", "friendly"), /cliente/i);
+  assert.match(columnTooltip("phone", "technical"), /payload/i);
 });

@@ -302,6 +302,40 @@ export const COLUMN_NOTES: Partial<Record<ConversionColumnKey | "id", string>> =
   purchase_player_username: "player_username recibido con action=PURCHASE.",
 };
 
+const FRIENDLY_COLUMN_NOTES: Partial<Record<ConversionColumnKey | "id", string>> = {
+  id: "Numero interno del registro para poder ubicarlo rapido.",
+  timestamp: "Momento en que se registro este contacto o movimiento.",
+  phone: "Telefono del cliente o jugador que llego al sistema.",
+  email: "Correo del cliente, si lo tenemos.",
+  fn: "Nombre del cliente. Puede venir de WhatsApp, formulario o del bot.",
+  ln: "Apellido del cliente, si lo tenemos disponible.",
+  ct: "Ciudad informada o detectada para este contacto.",
+  st: "Provincia o estado informado o detectado.",
+  country: "Pais asociado al contacto.",
+  from_meta_ads: "Indica si el recorrido parece venir de una publicidad de Meta.",
+  pixel_attribution_source: "De donde tomamos el Pixel usado para atribuir la conversion.",
+  pixel_attribution_conversion_id: "Registro anterior usado como referencia para mantener la atribucion.",
+  estado: "Etapa actual del recorrido: contacto, lead o compra.",
+  valor: "Monto cargado o comprado en este evento.",
+  currency: "Workspace/moneda donde quedo registrado el movimiento.",
+  workspace_resolution_source: "Como decidimos en que workspace guardar el registro.",
+  purchase_type: "Indica si fue primera compra o recompra.",
+  utm_campaign: "Campana UTM que venia en el enlace, si existia.",
+  telefono_asignado: "Telefono o asesor al que derivamos originalmente al cliente.",
+  assigned_gerencia_label: "Gerencia a la que se derivo el cliente al inicio del recorrido.",
+  promo_code: "Codigo unico usado para unir contacto, lead y compra.",
+};
+
+export function columnTooltip(
+  col: ConversionColumnKey | "id",
+  view: ConversionTableView = "technical",
+): string {
+  if (view === "friendly") {
+    return FRIENDLY_COLUMN_NOTES[col] ?? COLUMN_NOTES[col] ?? String(col);
+  }
+  return COLUMN_NOTES[col] ?? String(col);
+}
+
 export function truncateId(id: string, len = 8): string {
   if (!id) return "-";
   return id.length > len ? `${id.slice(0, len)}...` : id;

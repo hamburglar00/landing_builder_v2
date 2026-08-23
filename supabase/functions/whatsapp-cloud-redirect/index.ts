@@ -14,6 +14,9 @@ type RedirectClickRow = {
   workspace_currency?: string;
   meta_messaging_dataset_id?: string;
   assigned_phone?: string;
+  assigned_gerencia_id?: number | null;
+  assigned_gerencia_external_id?: number | null;
+  assigned_gerencia_label?: string | null;
   promo_code?: string;
   wa_id?: string;
   profile_name?: string;
@@ -150,6 +153,9 @@ async function ensureInternalContactOnRedirect(
     external_id: await sha256(`whatsapp_cloud_api:${row.config_id}:${waId}`),
     promo_code: promoCode,
     telefono_asignado: digits(row.assigned_phone),
+    assigned_gerencia_id: row.assigned_gerencia_id ?? null,
+    assigned_gerencia_external_id: row.assigned_gerencia_external_id ?? null,
+    assigned_gerencia_label: firstString(row.assigned_gerencia_label),
     meta_pixel_id: "",
     pixel_id: "",
     dataset_id: firstString(row.meta_messaging_dataset_id),
