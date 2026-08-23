@@ -115,6 +115,7 @@ export interface WhatsappCloudApiInboxThread {
   unread_count: number;
   unread_last_message_at: string | null;
   messages: WhatsappCloudApiInboxMessage[];
+  total_threads: number;
 }
 
 export interface WhatsappCloudApiContactsPageRow {
@@ -748,6 +749,8 @@ export async function fetchWhatsappCloudApiInboxThreads(
   limit = 20,
   workspaceCurrency?: "ARS" | "PYG" | null,
   offset = 0,
+  tagFilter: "all" | WhatsappCloudApiInboxThread["tag"] = "all",
+  unreadOnly = false,
 ): Promise<WhatsappCloudApiInboxThread[]> {
   const sessionState = await rpcSessionState();
   if (!sessionState.hasAccessToken) {
@@ -767,6 +770,8 @@ export async function fetchWhatsappCloudApiInboxThreads(
       p_limit: limit,
       p_offset: offset,
       p_workspace_currency: workspaceCurrency ?? null,
+      p_tag_filter: tagFilter,
+      p_unread_only: unreadOnly,
     },
   );
   if (error) {
@@ -837,6 +842,7 @@ export async function fetchWhatsappCloudApiInboxThreads(
       unread_count: Number(row.unread_count ?? 0),
       unread_last_message_at: firstString(row.unread_last_message_at) || null,
       messages,
+      total_threads: Number(row.total_threads ?? 0),
     };
   });
 }
@@ -912,4 +918,19 @@ export async function markWhatsappCloudApiThreadRead(
     p_contact_id: contactId,
   });
   if (error) throw error;
+}
+
+export async function markWhatsappCloudApiThreadsRead(
+  workspaceCurrency?: "ARS" | "PYG" | null,
+  tagFilter: "all" | WhatsappCloudApiInboxThread["tag"] = "all",
+): Promise<number> {
+  const { data, error } = await supabase.rpc(
+    "mark_whatsapp_cloud_api_threads_read",
+    {
+      p_workspace_currency: workspaceCurrency ?? null,
+      p_tag_filter: tagFilter,
+    },
+  );
+  if (error) throw error;
+  return Number(data ?? 0);
 }

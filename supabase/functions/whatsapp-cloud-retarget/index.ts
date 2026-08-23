@@ -42,8 +42,8 @@ type SendResult = {
 
 const GRAPH_TIMEOUT_MS = 8000;
 const MAX_CANDIDATES = 25;
-const MAX_AGE_MINUTES = 30;
-const MIN_AGE_MINUTES = 5;
+const MAX_AGE_MINUTES = 24 * 60;
+const MIN_AGE_MINUTES = 30;
 
 const RETARGET_COPY: Record<
   RetargetKind,

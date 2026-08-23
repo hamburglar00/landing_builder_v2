@@ -1234,7 +1234,7 @@ export default function WhatsAppCloudApiPageContent({
                 disabled={trackingLocked}
                 label="Retargeting automatico"
                 description="On envia un recordatorio unico a chats nuevo/contacto recientes."
-                title="Si esta activo, el cron revisa cada 15 minutos chats nuevos o contactos sin Lead/Purchase cuyo ultimo mensaje inbound fue hace menos de 30 minutos. Se envia una sola vez por contacto y solo con ventana activa."
+                title="Si esta activo, el cron revisa cada 15 minutos chats nuevos o contactos sin Lead/Purchase cuyo ultimo mensaje inbound ya paso los 30 minutos y sigue dentro de la ventana activa. Se envia una sola vez por contacto."
               />
 
               <div className="rounded-lg border border-zinc-800 bg-zinc-950/30 px-3 py-2">

@@ -24,6 +24,7 @@ type RedirectClickRow = {
   first_message_at?: string;
   ctwa_clid?: string;
   referral?: Json;
+  first_click?: boolean;
 };
 
 function getDb() {
@@ -290,13 +291,15 @@ Deno.serve(async (req: Request) => {
       return textResponse("Redirect target blocked", 400);
     }
 
-    try {
-      await ensureInternalContactOnRedirect(db, clickRow);
-    } catch (error) {
-      console.error(
-        "[whatsapp-cloud-redirect] contact ensure unexpected error",
-        error,
-      );
+    if (clickRow.first_click === true) {
+      try {
+        await ensureInternalContactOnRedirect(db, clickRow);
+      } catch (error) {
+        console.error(
+          "[whatsapp-cloud-redirect] contact ensure unexpected error",
+          error,
+        );
+      }
     }
 
     return redirectResponse(target);

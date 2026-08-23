@@ -14,11 +14,11 @@ import { PageHeader, SurfaceCard } from "@/components/ui/PanelPrimitives";
 import { supabase } from "@/lib/supabaseClient";
 import { invokeFunction } from "@/lib/supabaseFunctions";
 import {
-  fetchWhatsappCloudApiContactsPage,
   fetchWhatsappCloudApiInboxThreads,
   formatWhatsappCloudApiError,
   logWhatsappCloudApiError,
   markWhatsappCloudApiThreadRead,
+  markWhatsappCloudApiThreadsRead,
   type WhatsappCloudApiInboxMessage,
   type WhatsappCloudApiInboxThread,
 } from "@/lib/whatsappCloudApiDb";
@@ -50,6 +50,8 @@ const TAG_CLASSES: Record<WhatsappCloudApiInboxThread["tag"], string> = {
 };
 
 const INBOX_PAGE_SIZE = 20;
+type InboxTag = WhatsappCloudApiInboxThread["tag"];
+type InboxFilter = "all" | InboxTag | "unread";
 
 const WHATSAPP_DOODLE_PATTERN = encodeURIComponent(`
 <svg xmlns="http://www.w3.org/2000/svg" width="320" height="320" viewBox="0 0 320 320">
@@ -288,6 +290,25 @@ function FilterIcon() {
   );
 }
 
+function MoreVerticalIcon() {
+  return (
+    <svg
+      className="h-4 w-4"
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth={1.8}
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      aria-hidden
+    >
+      <circle cx="12" cy="5" r="1.4" />
+      <circle cx="12" cy="12" r="1.4" />
+      <circle cx="12" cy="19" r="1.4" />
+    </svg>
+  );
+}
+
 function SendIcon() {
   return (
     <svg
@@ -425,16 +446,16 @@ export default function WhatsAppCloudApiInboxPageContent({ mode }: Props) {
   const [pageIndex, setPageIndex] = useState(0);
   const [selectedId, setSelectedId] = useState<string>("");
   const [search, setSearch] = useState("");
-  const [tagFilter, setTagFilter] = useState<
-    "all" | WhatsappCloudApiInboxThread["tag"]
-  >("all");
+  const [tagFilter, setTagFilter] = useState<InboxFilter>("all");
   const [gerenciaFilter, setGerenciaFilter] = useState("");
   const [draftGerenciaFilter, setDraftGerenciaFilter] = useState("");
   const [gerenciaFilterOpen, setGerenciaFilterOpen] = useState(false);
+  const [threadActionsOpen, setThreadActionsOpen] = useState(false);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [manualMessage, setManualMessage] = useState("");
   const [sending, setSending] = useState(false);
+  const [markingAllRead, setMarkingAllRead] = useState(false);
   const [sendNotice, setSendNotice] = useState<string | null>(null);
   const { hiddenContactIds, hideContactId } = useWhatsappCloudApiHiddenContacts(
     workspaceCurrency,
@@ -442,6 +463,9 @@ export default function WhatsAppCloudApiInboxPageContent({ mode }: Props) {
   const [threadToHide, setThreadToHide] =
     useState<WhatsappCloudApiInboxThread | null>(null);
   const lastMarkedReadRef = useRef("");
+  const serverTagFilter: "all" | InboxTag =
+    tagFilter === "unread" ? "all" : tagFilter;
+  const unreadOnly = tagFilter === "unread";
 
   const loadThreads = useCallback(async () => {
     setLoading(true);
@@ -452,17 +476,16 @@ export default function WhatsAppCloudApiInboxPageContent({ mode }: Props) {
         router.replace("/login");
         return;
       }
-      const [rows, contactPage] = await Promise.all([
-        fetchWhatsappCloudApiInboxThreads(
-          INBOX_PAGE_SIZE,
-          workspaceCurrency,
-          pageIndex * INBOX_PAGE_SIZE,
-        ),
-        fetchWhatsappCloudApiContactsPage(1, workspaceCurrency, 0),
-      ]);
+      const rows = await fetchWhatsappCloudApiInboxThreads(
+        INBOX_PAGE_SIZE,
+        workspaceCurrency,
+        pageIndex * INBOX_PAGE_SIZE,
+        serverTagFilter,
+        unreadOnly,
+      );
       setThreads(rows);
       setTotalThreads(
-        contactPage[0]?.total_contacts ?? (pageIndex === 0 ? rows.length : 0),
+        rows[0]?.total_threads ?? (pageIndex === 0 ? rows.length : 0),
       );
       setSelectedId((current) =>
         rows.some((row) => row.contact_id === current)
@@ -476,12 +499,13 @@ export default function WhatsAppCloudApiInboxPageContent({ mode }: Props) {
         pageIndex,
         limit: INBOX_PAGE_SIZE,
         offset: pageIndex * INBOX_PAGE_SIZE,
+        tagFilter,
       });
       setError(formatWhatsappCloudApiError(err, "No se pudo cargar el Inbox."));
     } finally {
       setLoading(false);
     }
-  }, [mode, pageIndex, router, workspaceCurrency]);
+  }, [mode, pageIndex, router, serverTagFilter, tagFilter, unreadOnly, workspaceCurrency]);
 
   useEffect(() => {
     void loadThreads();
@@ -491,7 +515,7 @@ export default function WhatsAppCloudApiInboxPageContent({ mode }: Props) {
     setPageIndex(0);
     setTotalThreads(0);
     setSelectedId("");
-  }, [workspaceCurrency]);
+  }, [tagFilter, workspaceCurrency]);
 
   useEffect(() => {
     setManualMessage("");
@@ -514,7 +538,8 @@ export default function WhatsAppCloudApiInboxPageContent({ mode }: Props) {
     const term = search.trim().toLowerCase();
     return threads.filter((thread) => {
       if (hiddenContactIds.has(thread.contact_id)) return false;
-      if (tagFilter !== "all" && thread.tag !== tagFilter) return false;
+      if (tagFilter === "unread" && thread.unread_count <= 0) return false;
+      if (tagFilter !== "all" && tagFilter !== "unread" && thread.tag !== tagFilter) return false;
       if (gerenciaFilter && gerenciaFilterLabel(thread) !== gerenciaFilter)
         return false;
       if (!term) return true;
@@ -558,10 +583,8 @@ export default function WhatsAppCloudApiInboxPageContent({ mode }: Props) {
     serviceWindowExpiresAt && Date.now() <= serviceWindowExpiresAt.getTime(),
   );
   const canGoPrevious = pageIndex > 0;
-  const visibleTotalThreads = Math.max(0, totalThreads - hiddenContactIds.size);
-  const visiblePageThreadCount = threads.filter(
-    (thread) => !hiddenContactIds.has(thread.contact_id),
-  ).length;
+  const visibleTotalThreads = Math.max(0, totalThreads);
+  const visiblePageThreadCount = threads.length;
   const pageEnd = Math.min(
     visibleTotalThreads,
     pageIndex * INBOX_PAGE_SIZE + visiblePageThreadCount,
@@ -624,6 +647,34 @@ export default function WhatsAppCloudApiInboxPageContent({ mode }: Props) {
       );
     } finally {
       setSending(false);
+    }
+  };
+
+  const markAllRead = async () => {
+    if (markingAllRead) return;
+    setMarkingAllRead(true);
+    setError(null);
+    setSendNotice(null);
+    try {
+      const count = await markWhatsappCloudApiThreadsRead(
+        workspaceCurrency,
+        serverTagFilter,
+      );
+      setThreadActionsOpen(false);
+      setSendNotice(
+        count > 0
+          ? `${count} chat${count === 1 ? "" : "s"} marcado${count === 1 ? "" : "s"} como leido${count === 1 ? "" : "s"}.`
+          : "No habia chats sin leer.",
+      );
+      await loadThreads();
+    } catch (err) {
+      setError(
+        err instanceof Error
+          ? err.message
+          : "No se pudieron marcar los chats como leidos.",
+      );
+    } finally {
+      setMarkingAllRead(false);
     }
   };
 
@@ -716,7 +767,7 @@ export default function WhatsAppCloudApiInboxPageContent({ mode }: Props) {
       <SurfaceCard className="grid h-[38rem] overflow-hidden xl:grid-cols-[20rem_minmax(0,1fr)_18rem]">
         <aside className="flex min-h-0 flex-col border-b border-[var(--color-border-subtle)] xl:border-b-0 xl:border-r">
           <div className="space-y-3 border-b border-[var(--color-border-subtle)] p-4">
-            <div className="flex h-10 items-center gap-2 rounded-xl border border-[var(--color-border)] bg-[var(--color-bg-2)] px-3 text-[var(--color-text-muted)]">
+            <div className="relative flex h-10 items-center gap-2 rounded-xl border border-[var(--color-border)] bg-[var(--color-bg-2)] px-3 text-[var(--color-text-muted)]">
               <SearchIcon />
               <input
                 value={search}
@@ -724,11 +775,33 @@ export default function WhatsAppCloudApiInboxPageContent({ mode }: Props) {
                 placeholder="Buscar contacto"
                 className="min-w-0 flex-1 bg-transparent text-sm text-[var(--color-text-strong)] outline-none placeholder:text-[var(--color-text-disabled)]"
               />
+              <button
+                type="button"
+                aria-label="Acciones del inbox"
+                title="Acciones"
+                className="flex h-7 w-7 shrink-0 items-center justify-center rounded-lg border border-transparent text-[var(--color-text-muted)] transition hover:border-[var(--color-border-subtle)] hover:bg-[rgba(148,163,184,0.08)] hover:text-[var(--color-text-strong)]"
+                onClick={() => setThreadActionsOpen((value) => !value)}
+              >
+                <MoreVerticalIcon />
+              </button>
+              {threadActionsOpen ? (
+                <div className="absolute right-2 top-11 z-20 w-52 rounded-xl border border-[var(--color-border)] bg-[var(--color-bg-1)] p-1.5 shadow-2xl">
+                  <button
+                    type="button"
+                    className="flex w-full items-center rounded-lg px-3 py-2 text-left text-xs font-medium text-[var(--color-text-strong)] transition hover:bg-[rgba(148,163,184,0.08)] disabled:cursor-not-allowed disabled:opacity-60"
+                    disabled={markingAllRead}
+                    onClick={() => void markAllRead()}
+                  >
+                    {markingAllRead ? "Marcando..." : "Marcar todos como leidos"}
+                  </button>
+                </div>
+              ) : null}
             </div>
             <div className="scrollbar-none flex gap-2 overflow-x-auto">
               {(
                 [
                   "all",
+                  "unread",
                   "nuevo",
                   "contacto",
                   "lead",
@@ -736,7 +809,7 @@ export default function WhatsAppCloudApiInboxPageContent({ mode }: Props) {
                   "recompra",
                   "premium",
                 ] as const
-              ).map((tag) => (
+              ).map((tag: InboxFilter) => (
                 <button
                   key={tag}
                   type="button"
@@ -747,7 +820,11 @@ export default function WhatsAppCloudApiInboxPageContent({ mode }: Props) {
                       : "border-[var(--color-border)] bg-[var(--color-bg-2)] text-[var(--color-text-muted)]"
                   }`}
                 >
-                  {tag === "all" ? "Todos" : TAG_LABELS[tag]}
+                  {tag === "all"
+                    ? "Todos"
+                    : tag === "unread"
+                      ? "No leidos"
+                      : TAG_LABELS[tag]}
                 </button>
               ))}
             </div>
