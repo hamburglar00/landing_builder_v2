@@ -196,6 +196,16 @@ Para continuar escribile a tu asesor: {{wa_link}}
 Tu codigo es: {{promo_code}}
 ```
 
+`{{wa_link}}` se muestra como un link corto propio:
+
+```text
+https://mkt.panelbotadmin.com/w/{token}
+```
+
+Ese link conserva el tracking: registra el click, crea/asegura el Contact interno
+si corresponde y despues redirige al `wa.me` real del asesor con el `promo_code`
+precargado.
+
 Tambien existe un mensaje fallback para cuando no hay telefonos disponibles.
 
 ## 6. Card Redireccion

@@ -136,8 +136,10 @@ function redirectToken(): string {
 }
 
 function trackedRedirectUrl(token: string): string {
-  const supabaseUrl = str(Deno.env.get("SUPABASE_URL"));
-  return `${supabaseUrl}/functions/v1/whatsapp-cloud-redirect?t=${
+  const shortlinkBaseUrl = str(
+    Deno.env.get("WHATSAPP_CLOUD_SHORTLINK_BASE_URL"),
+  ) || "https://mkt.panelbotadmin.com";
+  return `${shortlinkBaseUrl.replace(/\/+$/, "")}/w/${
     encodeURIComponent(token)
   }`;
 }
