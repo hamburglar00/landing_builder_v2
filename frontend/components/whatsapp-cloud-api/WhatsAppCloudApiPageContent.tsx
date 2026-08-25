@@ -463,6 +463,7 @@ export default function WhatsAppCloudApiPageContent({
   const [verifyTokenCopied, setVerifyTokenCopied] = useState(false);
   const [identificationEditing, setIdentificationEditing] = useState(true);
   const [trackingEditing, setTrackingEditing] = useState(true);
+  const [responseEditing, setResponseEditing] = useState(true);
   const [showAccessToken, setShowAccessToken] = useState(false);
   const [showAppSecret, setShowAppSecret] = useState(false);
   const [datasetConfirmOpen, setDatasetConfirmOpen] = useState(false);
@@ -516,6 +517,7 @@ export default function WhatsAppCloudApiPageContent({
   const displayGroups = useMemo(() => buildDisplayGroups(gerencias, workGroups), [gerencias, workGroups]);
   const identificationLocked = Boolean(config?.id && !identificationEditing);
   const trackingLocked = Boolean(config?.id && !trackingEditing);
+  const responseLocked = Boolean(config?.id && !responseEditing);
   const hubPath = mode === "admin" ? "/admin/whatsapp-cloud-api" : "/dashboard/whatsapp-cloud-api";
 
   const loadTarget = useCallback(async (uid: string, ownerId: string) => {
@@ -534,6 +536,7 @@ export default function WhatsAppCloudApiPageContent({
     setConfig(cfg);
     setClientTrackingName(String(profile.data?.nombre || selectedClientTrackingName || ""));
     setIdentificationEditing(!cfg?.id);
+    setResponseEditing(!cfg?.id);
     setGerencias(gers);
     setWorkGroups(groups);
     const fallbackName = normalizeInternalName(selectedClientName || "WhatsApp Cloud API") || "WhatsApp Cloud API";
@@ -619,6 +622,11 @@ export default function WhatsAppCloudApiPageContent({
   const cancelTrackingEdit = () => {
     setTrackingEditing(false);
     setDatasetConfirmOpen(false);
+    void reloadSelected(targetUserId);
+  };
+
+  const cancelResponseEdit = () => {
+    setResponseEditing(false);
     void reloadSelected(targetUserId);
   };
 
@@ -744,6 +752,7 @@ export default function WhatsAppCloudApiPageContent({
       setMessage("Cambios guardados.");
       setIdentificationEditing(false);
       setTrackingEditing(false);
+      setResponseEditing(false);
       await reloadSelected(targetUserId);
     } catch (err) {
       setError(err instanceof Error ? err.message : "Error al guardar.");
@@ -1313,11 +1322,31 @@ export default function WhatsAppCloudApiPageContent({
                 eyebrow="Respuesta"
                 title="Mensaje automatico"
                 description="Texto que recibe el usuario cuando escriba al numero Cloud API."
+                action={config?.id ? (
+                  responseLocked ? (
+                    <button
+                      type="button"
+                      onClick={() => setResponseEditing(true)}
+                      className="ui-button ui-button-secondary h-9"
+                    >
+                      Editar
+                    </button>
+                  ) : (
+                    <button
+                      type="button"
+                      onClick={cancelResponseEdit}
+                      className="ui-button ui-button-secondary h-9"
+                    >
+                      Cancelar
+                    </button>
+                  )
+                ) : null}
               />
               <Field label="Mensaje de derivacion" required>
                 <textarea
                   value={redirectTemplate}
                   onChange={(e) => setRedirectTemplate(e.target.value)}
+                  disabled={responseLocked}
                   rows={6}
                   className={`${textareaClass} min-h-36`}
                 />
@@ -1326,6 +1355,7 @@ export default function WhatsAppCloudApiPageContent({
                 <textarea
                   value={fallbackTemplate}
                   onChange={(e) => setFallbackTemplate(e.target.value)}
+                  disabled={responseLocked}
                   rows={3}
                   className={textareaClass}
                 />
@@ -1334,6 +1364,7 @@ export default function WhatsAppCloudApiPageContent({
                 <Toggle
                   checked={retargetingEnabled}
                   onChange={setRetargetingEnabled}
+                  disabled={responseLocked}
                   label="Retargeting automatico"
                   description="On envia un recordatorio unico a chats nuevo/contacto recientes."
                   title="Si esta activo, el cron revisa chats nuevos o contactos sin Lead/Purchase y envia un unico recordatorio despues de los minutos configurados."
@@ -1344,6 +1375,7 @@ export default function WhatsAppCloudApiPageContent({
                       <textarea
                         value={retargetTemplate}
                         onChange={(e) => setRetargetTemplate(e.target.value)}
+                        disabled={responseLocked}
                         rows={5}
                         className={`${textareaClass} min-h-28`}
                       />
@@ -1364,6 +1396,7 @@ export default function WhatsAppCloudApiPageContent({
                                 : DEFAULT_RETARGET_DELAY_MINUTES,
                             );
                           }}
+                          disabled={responseLocked}
                           className={inputClass}
                         />
                         <span className="shrink-0 text-xs text-[var(--color-text-muted)]">min</span>
@@ -1379,6 +1412,7 @@ export default function WhatsAppCloudApiPageContent({
                 <Toggle
                   checked={redirectUseCtaButton}
                   onChange={setRedirectUseCtaButton}
+                  disabled={responseLocked}
                   label="Usar boton de redireccion"
                   description="El link a WhatsApp se envia como boton CTA URL."
                 />
@@ -1388,6 +1422,7 @@ export default function WhatsAppCloudApiPageContent({
                       <input
                         value={redirectCtaButtonTitle}
                         onChange={(e) => setRedirectCtaButtonTitle(e.target.value.slice(0, 20))}
+                        disabled={responseLocked}
                         className={inputClass}
                         maxLength={20}
                         placeholder={DEFAULT_CTA_BUTTON_TITLE}
