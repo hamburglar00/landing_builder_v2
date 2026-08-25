@@ -214,6 +214,40 @@ export interface ConversionRow {
   created_at: string;
 }
 
+export interface ConversionJourneyStartRow {
+  id: string;
+  user_id: string;
+  source_platform: "landing" | "whatsapp_cloud_api" | string;
+  start_identity_key: string;
+  landing_id: string | null;
+  landing_name: string;
+  workspace_currency: string;
+  external_id: string;
+  phone: string;
+  wa_id: string;
+  email: string;
+  utm_campaign: string;
+  fbp: string;
+  fbc: string;
+  from_meta_ads: boolean;
+  meta_pixel_id: string;
+  dataset_id: string;
+  ctwa_clid: string;
+  telefono_asignado: string;
+  assigned_gerencia_id?: number | null;
+  assigned_gerencia_external_id?: number | null;
+  assigned_gerencia_name?: string | null;
+  assigned_gerencia_label?: string | null;
+  device_type: string;
+  event_source_url: string;
+  client_ip: string;
+  agent_user: string;
+  first_seen_at: string;
+  last_seen_at: string;
+  created_at: string;
+  updated_at: string;
+}
+
 export interface ConversionLogRow {
   id: number;
   user_id: string;
@@ -372,6 +406,20 @@ export function getConversionTableGerenciaLabels(
   if (String(row.registration_event_id ?? "").trim()) return registrationLabels();
   if (String(row.lead_event_id ?? "").trim()) return leadLabels();
   return assignedLabels();
+}
+
+export function getJourneyStartGerenciaLabels(
+  row: Pick<
+    ConversionJourneyStartRow,
+    | "telefono_asignado"
+    | "assigned_gerencia_label"
+  >,
+  gerenciaByPhone: Record<string, string[]>,
+): string[] {
+  const historicalLabel = String(row.assigned_gerencia_label ?? "").trim();
+  if (historicalLabel) return [historicalLabel];
+  const assignedPhone = String(row.telefono_asignado ?? "").replace(/\D/g, "");
+  return assignedPhone ? (gerenciaByPhone[assignedPhone] ?? []) : [];
 }
 
 export function scopeConversionStagesToGerencia(
@@ -759,6 +807,17 @@ const CONVERSIONS_SELECT = `
   created_at
 `.replace(/\s+/g, " ").trim();
 
+const CONVERSION_JOURNEY_STARTS_SELECT = `
+  id, user_id, source_platform, start_identity_key,
+  landing_id, landing_name, workspace_currency,
+  external_id, phone, wa_id, email, utm_campaign,
+  fbp, fbc, from_meta_ads, meta_pixel_id, dataset_id, ctwa_clid,
+  telefono_asignado,
+  assigned_gerencia_id, assigned_gerencia_external_id, assigned_gerencia_name, assigned_gerencia_label,
+  device_type, event_source_url, client_ip, agent_user,
+  first_seen_at, last_seen_at, created_at, updated_at
+`.replace(/\s+/g, " ").trim();
+
 type ConversionQueryScope = {
   userId?: string;
 };
@@ -818,6 +877,48 @@ async function fetchConversionRowsInternal({
     if (error) throw error;
 
     const chunk = (data ?? []) as unknown as ConversionRow[];
+    rows.push(...chunk);
+    if (chunk.length < chunkSize) break;
+    offset += chunkSize;
+  }
+
+  return rows;
+}
+
+async function fetchConversionJourneyStartRowsInternal({
+  userId,
+  limit,
+  range,
+  visibleFrom,
+}: ConversionQueryScope & {
+  limit?: number;
+  range?: FetchDateRange;
+  visibleFrom?: Date | string | null;
+}): Promise<ConversionJourneyStartRow[]> {
+  const pageSize = 1000;
+  const rows: ConversionJourneyStartRow[] = [];
+  const startIso = latestIso(range?.start, visibleFrom);
+  const endIso = toIsoIfValid(range?.end);
+  let offset = 0;
+
+  while (true) {
+    let query = supabase
+      .from("conversion_journey_starts")
+      .select(CONVERSION_JOURNEY_STARTS_SELECT);
+    if (userId !== undefined) query = query.eq("user_id", userId);
+    query = query.order("first_seen_at", { ascending: false });
+    if (startIso) query = query.gte("first_seen_at", startIso);
+    if (endIso) query = query.lte("first_seen_at", endIso);
+
+    const chunkSize = typeof limit === "number"
+      ? Math.min(pageSize, Math.max(limit - offset, 0))
+      : pageSize;
+    if (chunkSize <= 0) break;
+
+    const { data, error } = await query.range(offset, offset + chunkSize - 1);
+    if (error) throw error;
+
+    const chunk = (data ?? []) as unknown as ConversionJourneyStartRow[];
     rows.push(...chunk);
     if (chunk.length < chunkSize) break;
     offset += chunkSize;
@@ -897,6 +998,34 @@ export async function fetchConversionsForAdminFiltered(
     visibleFrom,
   });
   return excludeHiddenConversions(rows, hiddenBy);
+}
+
+export async function fetchConversionJourneyStartsFiltered(
+  userId: string,
+  hiddenBy: string,
+  limit?: number,
+  range?: FetchDateRange,
+): Promise<ConversionJourneyStartRow[]> {
+  const visibleFrom = await fetchConversionViewVisibleFrom(hiddenBy);
+  return fetchConversionJourneyStartRowsInternal({
+    userId,
+    limit,
+    range,
+    visibleFrom,
+  });
+}
+
+export async function fetchConversionJourneyStartsForAdminFiltered(
+  hiddenBy: string,
+  limit?: number,
+  range?: FetchDateRange,
+): Promise<ConversionJourneyStartRow[]> {
+  const visibleFrom = await fetchConversionViewVisibleFrom(hiddenBy);
+  return fetchConversionJourneyStartRowsInternal({
+    limit,
+    range,
+    visibleFrom,
+  });
 }
 
 // Funnel contacts (aggregated by phone + agency/bot, with player username as display/fallback)

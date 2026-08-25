@@ -1,6 +1,6 @@
 import assert from "node:assert/strict";
 import test from "node:test";
-import type { ConversionRow } from "../lib/conversionsDb";
+import type { ConversionJourneyStartRow, ConversionRow } from "../lib/conversionsDb";
 
 process.env.NEXT_PUBLIC_SUPABASE_URL ??= "https://example.supabase.co";
 process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY ??= "test-anon-key";
@@ -39,6 +39,42 @@ function conversionRow(
     valor: 0,
     ...extra,
   } as ConversionRow;
+}
+
+function journeyStartRow(
+  id: string,
+  extra: Partial<ConversionJourneyStartRow>,
+): ConversionJourneyStartRow {
+  return {
+    id,
+    user_id: "client-1",
+    source_platform: "landing",
+    start_identity_key: `start-${id}`,
+    landing_id: null,
+    landing_name: "",
+    workspace_currency: "ARS",
+    external_id: "",
+    phone: "",
+    wa_id: "",
+    email: "",
+    utm_campaign: "",
+    fbp: "",
+    fbc: "",
+    from_meta_ads: false,
+    meta_pixel_id: "",
+    dataset_id: "",
+    ctwa_clid: "",
+    telefono_asignado: "",
+    device_type: "",
+    event_source_url: "",
+    client_ip: "",
+    agent_user: "",
+    first_seen_at: "2026-07-31T12:00:00.000Z",
+    last_seen_at: "2026-07-31T12:00:00.000Z",
+    created_at: "2026-07-31T12:00:00.000Z",
+    updated_at: "2026-07-31T12:00:00.000Z",
+    ...extra,
+  } as ConversionJourneyStartRow;
 }
 
 test("separa jugadores que recargaron, recargas totales y cohorte del período", async () => {
@@ -262,4 +298,74 @@ test("el funnel agrupa por phone + agency aunque cambie player_username", async 
   assert.equal(contacts[0].total_valor, 350);
   assert.equal(contacts[0].purchase_count, 2);
   assert.equal(contacts[0].player_username, "guille2737");
+});
+
+test("deduplica visitas unicas de landing por recorrido antes del Contact", async () => {
+  const { computeJourneyStartStats } = await import("../lib/conversionStats");
+  const starts = [
+    journeyStartRow("view-a-1", {
+      source_platform: "landing",
+      start_identity_key: "landing:landing-1:external-a",
+      landing_id: "landing-1",
+      external_id: "external-a",
+    }),
+    journeyStartRow("view-a-2", {
+      source_platform: "landing",
+      start_identity_key: "landing:landing-1:external-a",
+      landing_id: "landing-1",
+      external_id: "external-a",
+    }),
+    journeyStartRow("view-b", {
+      source_platform: "landing",
+      start_identity_key: "landing:landing-1:external-b",
+      landing_id: "landing-1",
+      external_id: "external-b",
+    }),
+  ];
+  const conversions = [
+    conversionRow("contact-a", {
+      source_platform: "landing",
+      landing_id: "landing-1",
+      external_id: "external-a",
+      contact_event_id: "contact-a",
+    }),
+  ];
+
+  const stats = computeJourneyStartStats(starts, conversions);
+
+  assert.equal(stats.starts, 2);
+  assert.equal(stats.contacts, 1);
+});
+
+test("mide chats iniciados de WhatsApp Cloud API antes del click al CTA", async () => {
+  const { computeJourneyStartStats } = await import("../lib/conversionStats");
+  const starts = [
+    journeyStartRow("chat-a", {
+      source_platform: "whatsapp_cloud_api",
+      start_identity_key: "whatsapp_cloud_api:config-1:5491111111111",
+      external_id: "wca-external-a",
+      phone: "5491111111111",
+      wa_id: "5491111111111",
+    }),
+    journeyStartRow("chat-b", {
+      source_platform: "whatsapp_cloud_api",
+      start_identity_key: "whatsapp_cloud_api:config-1:5492222222222",
+      external_id: "wca-external-b",
+      phone: "5492222222222",
+      wa_id: "5492222222222",
+    }),
+  ];
+  const conversions = [
+    conversionRow("contact-a", {
+      source_platform: "whatsapp_cloud_api",
+      external_id: "wca-external-a",
+      phone: "5491111111111",
+      contact_event_id: "contact-a",
+    }),
+  ];
+
+  const stats = computeJourneyStartStats(starts, conversions);
+
+  assert.equal(stats.starts, 2);
+  assert.equal(stats.contacts, 1);
 });

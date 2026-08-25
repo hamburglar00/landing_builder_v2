@@ -21,6 +21,7 @@ type WhatsappConfig = {
   user_id: string;
   name: string;
   active: boolean;
+  workspace_currency: string;
   phone_number_id: string;
   whatsapp_business_account_id: string;
   meta_messaging_dataset_id: string;
@@ -142,6 +143,64 @@ function trackedRedirectUrl(token: string): string {
   return `${shortlinkBaseUrl.replace(/\/+$/, "")}/w/${
     encodeURIComponent(token)
   }`;
+}
+
+async function recordWhatsappCloudJourneyStart(
+  db: SupabaseDb,
+  {
+    config,
+    waId,
+    externalId,
+    messageAt,
+    ctwaClid,
+    sourceUrl,
+    assignedPhone = "",
+    assignedGerenciaId = null,
+    assignedGerenciaExternalId = null,
+    assignedGerenciaName = "",
+    assignedGerenciaLabel = "",
+  }: {
+    config: WhatsappConfig;
+    waId: string;
+    externalId: string;
+    messageAt: string;
+    ctwaClid: string;
+    sourceUrl: string;
+    assignedPhone?: string;
+    assignedGerenciaId?: number | null;
+    assignedGerenciaExternalId?: number | null;
+    assignedGerenciaName?: string;
+    assignedGerenciaLabel?: string;
+  },
+): Promise<void> {
+  const { error } = await db.rpc("record_conversion_journey_start", {
+    p_user_id: config.user_id,
+    p_source_platform: "whatsapp_cloud_api",
+    p_start_identity_key: `whatsapp_cloud_api:${config.id}:${waId}`,
+    p_landing_name: config.name,
+    p_workspace_currency: str(config.workspace_currency) || "ARS",
+    p_external_id: externalId,
+    p_phone: waId,
+    p_wa_id: waId,
+    p_from_meta_ads: Boolean(ctwaClid),
+    p_dataset_id: config.meta_messaging_dataset_id,
+    p_ctwa_clid: ctwaClid,
+    p_telefono_asignado: assignedPhone,
+    p_assigned_gerencia_id: assignedGerenciaId,
+    p_assigned_gerencia_external_id: assignedGerenciaExternalId,
+    p_assigned_gerencia_name: assignedGerenciaName || null,
+    p_assigned_gerencia_label: assignedGerenciaLabel || null,
+    p_event_source_url: sourceUrl || `whatsapp-cloud-api://${config.phone_number_id}`,
+    p_first_seen_at: messageAt,
+    p_last_seen_at: messageAt,
+  });
+  if (error) {
+    console.error("[whatsapp-cloud-worker] journey start record failed", {
+      configId: config.id,
+      waId,
+      error: error.message,
+    });
+  }
 }
 
 function renderTemplate(
@@ -723,6 +782,15 @@ async function handleMessage(
     return;
   }
 
+  await recordWhatsappCloudJourneyStart(db, {
+    config,
+    waId,
+    externalId,
+    messageAt,
+    ctwaClid,
+    sourceUrl: str(referral.source_url),
+  });
+
   const { data: phoneResult, error: phoneError } = await db.rpc(
     "get_phone_for_whatsapp_cloud_api",
     { p_config_id: config.id },
@@ -762,6 +830,12 @@ async function handleMessage(
   const useCtaButton = Boolean(config.redirect_use_cta_button);
 
   const gerencia = asRecord(phonePayload.gerencia);
+  const assignedGerenciaId = Number(gerencia.id) || null;
+  const assignedGerenciaExternalId = Number(gerencia.externalId) || null;
+  const assignedGerenciaName = str(gerencia.name || gerencia.nombre);
+  const assignedGerenciaLabel = gerencia.externalId
+    ? `Gerencia ${gerencia.externalId}`
+    : "";
   const { data: assignment, error: assignmentError } = await db
     .from("whatsapp_cloud_api_assignments")
     .insert({
@@ -773,11 +847,9 @@ async function handleMessage(
       first_message_id: messageId,
       assigned_phone: assignedPhone,
       assigned_phone_id: Number(phonePayload.phoneId) || null,
-      assigned_gerencia_id: Number(gerencia.id) || null,
-      assigned_gerencia_external_id: Number(gerencia.externalId) || null,
-      assigned_gerencia_label: gerencia.externalId
-        ? `Gerencia ${gerencia.externalId}`
-        : "",
+      assigned_gerencia_id: assignedGerenciaId,
+      assigned_gerencia_external_id: assignedGerenciaExternalId,
+      assigned_gerencia_label: assignedGerenciaLabel,
       promo_code: generatedPromo,
       status: "pending",
     })
@@ -793,6 +865,20 @@ async function handleMessage(
     );
     return;
   }
+
+  await recordWhatsappCloudJourneyStart(db, {
+    config,
+    waId,
+    externalId,
+    messageAt,
+    ctwaClid,
+    sourceUrl: str(referral.source_url),
+    assignedPhone,
+    assignedGerenciaId,
+    assignedGerenciaExternalId,
+    assignedGerenciaName,
+    assignedGerenciaLabel,
+  });
 
   const token = redirectToken();
   const trackedLink = trackedRedirectUrl(token);

@@ -8,6 +8,7 @@ import {
   fetchConversionsConfig,
   fetchPixelConfigs,
   getConversionGerenciaLabels,
+  getJourneyStartGerenciaLabels,
   getConversionTableGerenciaLabels,
   scopeConversionStagesToGerencia,
   buildFunnelContactsFromConversions,
@@ -21,6 +22,7 @@ import {
   type ConversionsConfig,
   type PixelConfig,
   type ConversionRow,
+  type ConversionJourneyStartRow,
   type ConversionLogRow,
 } from "@/lib/conversionsDb";
 import { adminConversionPageDataSource } from "@/lib/conversionPageDataSource";
@@ -77,6 +79,7 @@ import {
 import {
   CURRENCY_ALL,
   filterConversionsByCurrency,
+  normalizeCurrencyCode,
 } from "@/lib/currency";
 import type {
   ConversionLogDirectionFilter,
@@ -255,6 +258,7 @@ export default function AdminConversionesPage() {
   const [userId, setUserId] = useState<string | null>(null);
   const [config, setConfig] = useState<ConversionsConfig | null>(null);
   const [conversions, setConversions] = useState<ConversionRow[]>([]);
+  const [journeyStarts, setJourneyStarts] = useState<ConversionJourneyStartRow[]>([]);
   const [logs, setLogs] = useState<ConversionLogRow[]>([]);
   const [clientName, setClientName] = useState("");
   const [loading, setLoading] = useState(true);
@@ -388,9 +392,19 @@ export default function AdminConversionesPage() {
 
   const demoConversions = useMemo(() => generateDemoConversions(80), []);
   const rawConversions = demoMode ? demoConversions : conversions;
+  const rawJourneyStarts = useMemo(
+    () => demoMode ? [] : journeyStarts,
+    [demoMode, journeyStarts],
+  );
   const scopedConversions = useMemo(
     () => filterConversionsByCurrency(rawConversions, currencyScope),
     [rawConversions, currencyScope],
+  );
+  const scopedJourneyStarts = useMemo(
+    () => currencyScope === CURRENCY_ALL
+      ? rawJourneyStarts
+      : rawJourneyStarts.filter((row) => normalizeCurrencyCode(row.workspace_currency) === currencyScope),
+    [rawJourneyStarts, currencyScope],
   );
   const activeConversions = useMemo(() => filterByDateRange(scopedConversions, dateRange), [scopedConversions, dateRange]);
   const activeFunnel = useMemo(
@@ -412,40 +426,60 @@ export default function AdminConversionesPage() {
       const name = String(r.landing_name ?? "").trim();
       if (name) set.add(name);
     }
+    for (const r of scopedJourneyStarts) {
+      const name = String(r.landing_name ?? "").trim();
+      if (name) set.add(name);
+    }
     return Array.from(set).sort((a, b) => a.localeCompare(b, "es"));
-  }, [statsAllConversions]);
+  }, [statsAllConversions, scopedJourneyStarts]);
   const statsPixelOptions = useMemo(() => {
     const set = new Set<string>();
     for (const r of statsAllConversions) {
       const px = String(r.meta_pixel_id ?? r.pixel_id ?? "").trim();
       if (px) set.add(px);
     }
+    for (const r of scopedJourneyStarts) {
+      const px = String(r.meta_pixel_id ?? "").trim();
+      if (px) set.add(px);
+    }
     return Array.from(set).sort((a, b) => a.localeCompare(b));
-  }, [statsAllConversions]);
+  }, [statsAllConversions, scopedJourneyStarts]);
   const statsTelefonoOptions = useMemo(() => {
     const set = new Set<string>();
     for (const r of statsAllConversions) {
       const phone = normalizePhone(r.telefono_asignado);
       if (phone) set.add(phone);
     }
+    for (const r of scopedJourneyStarts) {
+      const phone = normalizePhone(r.telefono_asignado);
+      if (phone) set.add(phone);
+    }
     return Array.from(set).sort((a, b) => a.localeCompare(b));
-  }, [statsAllConversions]);
+  }, [statsAllConversions, scopedJourneyStarts]);
   const statsGerenciaOptions = useMemo(() => {
     const set = new Set<string>();
     for (const r of statsAllConversions) {
       const labels = getConversionGerenciaLabels(r, gerenciaByPhone);
       for (const label of labels) set.add(label);
     }
+    for (const r of scopedJourneyStarts) {
+      const labels = getJourneyStartGerenciaLabels(r, gerenciaByPhone);
+      for (const label of labels) set.add(label);
+    }
     return Array.from(set).sort((a, b) => a.localeCompare(b, "es"));
-  }, [statsAllConversions, gerenciaByPhone]);
+  }, [statsAllConversions, scopedJourneyStarts, gerenciaByPhone]);
   const statsSourcePlatformOptions = useMemo(() => {
     const set = new Set<string>();
     for (const r of statsAllConversions) {
       const src = String(r.source_platform ?? "").trim().toLowerCase();
       if (src) set.add(src);
     }
+    for (const r of scopedJourneyStarts) {
+      const src = String(r.source_platform ?? "").trim().toLowerCase();
+      if (src) set.add(src);
+    }
     return Array.from(set).sort((a, b) => a.localeCompare(b, "es"));
-  }, [statsAllConversions]);
+  }, [statsAllConversions, scopedJourneyStarts]);
   const statsSexoOptions = useMemo(() => {
     const set = new Set<string>();
     for (const r of statsAllConversions) {
@@ -460,16 +494,24 @@ export default function AdminConversionesPage() {
       const campaign = String(r.utm_campaign ?? "").trim();
       if (campaign) set.add(campaign);
     }
+    for (const r of scopedJourneyStarts) {
+      const campaign = String(r.utm_campaign ?? "").trim();
+      if (campaign) set.add(campaign);
+    }
     return Array.from(set).sort((a, b) => a.localeCompare(b, "es"));
-  }, [statsAllConversions]);
+  }, [statsAllConversions, scopedJourneyStarts]);
   const statsDeviceOptions = useMemo(() => {
     const set = new Set<string>();
     for (const r of statsAllConversions) {
       const device = String(r.device_type ?? "").trim().toLowerCase();
       if (device) set.add(device);
     }
+    for (const r of scopedJourneyStarts) {
+      const device = String(r.device_type ?? "").trim().toLowerCase();
+      if (device) set.add(device);
+    }
     return Array.from(set).sort((a, b) => a.localeCompare(b, "es"));
-  }, [statsAllConversions]);
+  }, [statsAllConversions, scopedJourneyStarts]);
   useEffect(() => {
     if (statsLandingFilter !== "__all__" && !statsLandingOptions.includes(statsLandingFilter)) {
       setStatsLandingFilter("__all__");
@@ -572,6 +614,26 @@ export default function AdminConversionesPage() {
       ))
       .filter((row): row is ConversionRow => row !== null);
   }, [statsAllConversions, statsLandingFilter, statsPixelFilter, statsGerenciaFilter, statsTelefonoFilter, statsFromMetaAdsFilter, statsSourcePlatformFilter, statsSexoFilter, statsCampaignFilter, statsDeviceFilter, gerenciaByPhone]);
+  const statsJourneyStartsFiltered = useMemo(() => {
+    return scopedJourneyStarts.filter((r) => {
+      const byLanding = statsLandingFilter === "__all__" || String(r.landing_name ?? "").trim() === statsLandingFilter;
+      const byPixel = statsPixelFilter === "__all__" || String(r.meta_pixel_id ?? "").trim() === statsPixelFilter;
+      const assignedPhone = normalizePhone(r.telefono_asignado);
+      const byTelefono = statsTelefonoFilter === "__all__" || assignedPhone === statsTelefonoFilter;
+      const labels = getJourneyStartGerenciaLabels(r, gerenciaByPhone);
+      const byGerencia = gerenciaFilterMatchesLabels(statsGerenciaFilter, labels);
+      const byFromMetaAds =
+        statsFromMetaAdsFilter === "__all__" ||
+        (statsFromMetaAdsFilter === "true" ? !!r.from_meta_ads : !r.from_meta_ads);
+      const bySourcePlatform =
+        statsSourcePlatformFilter === "__all__" ||
+        String(r.source_platform ?? "").trim().toLowerCase() === statsSourcePlatformFilter;
+      const bySexo = statsSexoFilter === "__all__";
+      const byCampaign = statsCampaignFilter.length === 0 || statsCampaignFilter.includes(String(r.utm_campaign ?? "").trim());
+      const byDevice = statsDeviceFilter === "__all__" || String(r.device_type ?? "").trim().toLowerCase() === statsDeviceFilter;
+      return byLanding && byPixel && byGerencia && byTelefono && byFromMetaAds && bySourcePlatform && bySexo && byCampaign && byDevice;
+    });
+  }, [scopedJourneyStarts, statsLandingFilter, statsPixelFilter, statsGerenciaFilter, statsTelefonoFilter, statsFromMetaAdsFilter, statsSourcePlatformFilter, statsSexoFilter, statsCampaignFilter, statsDeviceFilter, gerenciaByPhone]);
   const filteredPhoneSet = useMemo(
     () => new Set(
       statsConversionsFiltered
@@ -679,7 +741,6 @@ export default function AdminConversionesPage() {
     statsDeviceFilter,
     statsFromMetaAdsFilter,
     statsGerenciaFilter,
-    statsGerenciaOptions,
     statsLandingFilter,
     statsPixelFilter,
     statsSexoFilter,
@@ -740,9 +801,13 @@ export default function AdminConversionesPage() {
       setUserId(user.id);
       const requestSeq = ++dataRequestSeqRef.current;
       try {
-        const [cfg, rows, pixels] = await Promise.all([
+        const [cfg, rows, starts, pixels] = await Promise.all([
           fetchConversionsConfig(user.id),
           adminConversionPageDataSource.fetchVisibleConversions({
+            viewerId: user.id,
+            range: initialDateRangeRef.current,
+          }),
+          adminConversionPageDataSource.fetchJourneyStarts({
             viewerId: user.id,
             range: initialDateRangeRef.current,
           }),
@@ -751,6 +816,7 @@ export default function AdminConversionesPage() {
         setConfig(cfg);
         if (requestSeq === dataRequestSeqRef.current) {
           setConversions(rows);
+          setJourneyStarts(starts);
         }
         setPixelConfigs(pixels);
 
@@ -909,12 +975,19 @@ export default function AdminConversionesPage() {
         if (requestSeq !== dataRequestSeqRef.current) return;
         setLogs(logRows);
       } else {
-        const rows = await adminConversionPageDataSource.fetchVisibleConversions({
-          viewerId: currentUserId,
-          range,
-        });
+        const [rows, starts] = await Promise.all([
+          adminConversionPageDataSource.fetchVisibleConversions({
+            viewerId: currentUserId,
+            range,
+          }),
+          adminConversionPageDataSource.fetchJourneyStarts({
+            viewerId: currentUserId,
+            range,
+          }),
+        ]);
         if (requestSeq !== dataRequestSeqRef.current) return;
         setConversions(rows);
+        setJourneyStarts(starts);
       }
     } catch (e) { console.error(e); }
     finally {
@@ -1407,7 +1480,7 @@ export default function AdminConversionesPage() {
           </div>
           {isAllCurrencies ? (
             <SingleCurrencyRequired title="Elegí ARS o PYG para calcular estadísticas" />
-          ) : activeFunnelFiltered.length === 0 && statsConversionsFiltered.length === 0 ? (
+          ) : activeFunnelFiltered.length === 0 && statsConversionsFiltered.length === 0 && statsJourneyStartsFiltered.length === 0 ? (
             refreshingTable ? (
               <div className="flex min-h-[120px] flex-col items-center justify-center gap-3 text-sm text-zinc-500">
                 <div className="h-1 w-40 overflow-hidden rounded-full bg-zinc-800">
@@ -1423,9 +1496,11 @@ export default function AdminConversionesPage() {
               funnelContacts={activeFunnelFiltered}
               conversions={statsConversionsFiltered}
               allConversions={statsAllConversionsFiltered}
+              journeyStarts={statsJourneyStartsFiltered}
               premiumThreshold={premiumThreshold}
               currency={reportingCurrency}
               dateRange={dateRange}
+              sourcePlatformFilter={statsSourcePlatformFilter}
             />
           )}
         </section>

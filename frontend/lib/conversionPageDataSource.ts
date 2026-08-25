@@ -1,5 +1,7 @@
 import {
   fetchConversionInboxFiltered,
+  fetchConversionJourneyStartsFiltered,
+  fetchConversionJourneyStartsForAdminFiltered,
   fetchConversionLogsFiltered,
   fetchConversionLogsForAdminFiltered,
   fetchConversionsFiltered,
@@ -10,6 +12,7 @@ import {
   fetchGerenciaAvailabilitySummariesForAdmin,
   setConversionViewVisibleFrom,
   type ConversionInboxRow,
+  type ConversionJourneyStartRow,
   type ConversionLogRow,
   type ConversionRow,
   type FetchDateRange,
@@ -26,6 +29,11 @@ type ViewerRequest = {
 };
 
 type VisibleConversionsRequest = ViewerRequest & {
+  limit?: number;
+  range?: FetchDateRange | null;
+};
+
+type VisibleJourneyStartsRequest = ViewerRequest & {
   limit?: number;
   range?: FetchDateRange | null;
 };
@@ -55,6 +63,9 @@ export interface ConversionPageDataSource {
   fetchReportingConversions(
     request: ViewerRequest & { range?: FetchDateRange },
   ): Promise<ConversionRow[]>;
+  fetchJourneyStarts(
+    request: VisibleJourneyStartsRequest,
+  ): Promise<ConversionJourneyStartRow[]>;
   fetchVisibleLogs(
     request: VisibleLogsRequest,
   ): Promise<ConversionLogRow[]>;
@@ -80,6 +91,8 @@ export const adminConversionPageDataSource = {
     range,
   }: ViewerRequest & { range?: FetchDateRange }) =>
     fetchConversionsForAdminUnfiltered(range),
+  fetchJourneyStarts: ({ viewerId, limit, range }: VisibleJourneyStartsRequest) =>
+    fetchConversionJourneyStartsForAdminFiltered(viewerId, limit, range ?? undefined),
   fetchVisibleLogs: ({
     viewerId,
     limit,
@@ -112,6 +125,8 @@ export const dashboardConversionPageDataSource = {
     range,
   }: ViewerRequest & { range?: FetchDateRange }) =>
     fetchConversionsUnfiltered(viewerId, range),
+  fetchJourneyStarts: ({ viewerId, limit, range }: VisibleJourneyStartsRequest) =>
+    fetchConversionJourneyStartsFiltered(viewerId, viewerId, limit, range ?? undefined),
   fetchVisibleLogs: ({
     viewerId,
     limit,

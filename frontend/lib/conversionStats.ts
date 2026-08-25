@@ -1,4 +1,4 @@
-import type { ConversionRow, FunnelContact, HomeOverviewStats } from "@/lib/conversionsDb";
+import type { ConversionJourneyStartRow, ConversionRow, FunnelContact, HomeOverviewStats } from "@/lib/conversionsDb";
 import { buildFunnelContactsFromConversions, classifyContact } from "@/lib/conversionsDb";
 
 export interface CoreStats {
@@ -36,6 +36,11 @@ export interface CoreStats {
   activeRetention30d: number;
   purchaseValues: number[];
   leadPurchaseHours: number[];
+}
+
+export interface JourneyStartStats {
+  starts: number;
+  contacts: number;
 }
 
 type JourneyStage = "contact" | "lead" | "purchase";
@@ -130,6 +135,100 @@ function adJourneyKey(row: ConversionRow, stage: JourneyStage): string {
   const promo = keyPart("promo", row.promo_code) || keyPart("promo", `${stage}:${row.id || row.created_at}`);
   const scopedIdentity = phoneScopedIdentityKey(row, stage);
   return `${cleanText(row.user_id)}::${scopedIdentity}::${promo}`;
+}
+
+function normalizeSourcePlatform(value: unknown): string {
+  return cleanText(value).toLowerCase();
+}
+
+function normalizeUuidish(value: unknown): string {
+  return cleanText(value).toLowerCase();
+}
+
+function journeyStartPersonKeyFromParts({
+  userId,
+  sourcePlatform,
+  landingId,
+  externalId,
+  phone,
+  waId,
+  fallback,
+}: {
+  userId: unknown;
+  sourcePlatform: unknown;
+  landingId?: unknown;
+  externalId?: unknown;
+  phone?: unknown;
+  waId?: unknown;
+  fallback?: unknown;
+}): string {
+  const user = normalizeUuidish(userId);
+  const source = normalizeSourcePlatform(sourcePlatform);
+  if (!user || !source) return "";
+
+  const external = keyPart("external", externalId);
+  const landing = normalizeUuidish(landingId);
+  const normalizedPhone = phoneKeyPart("phone", phone);
+  const normalizedWaId = phoneKeyPart("wa", waId);
+
+  if (source === "landing") {
+    if (landing && external) return `${user}::landing::landing:${landing}::${external}`;
+    if (external) return `${user}::landing::${external}`;
+  }
+
+  if (source === "whatsapp_cloud_api") {
+    if (external) return `${user}::whatsapp_cloud_api::${external}`;
+    if (normalizedWaId) return `${user}::whatsapp_cloud_api::${normalizedWaId}`;
+    if (normalizedPhone) return `${user}::whatsapp_cloud_api::${normalizedPhone}`;
+  }
+
+  const rawFallback = keyPart("start", fallback);
+  return rawFallback ? `${user}::${source}::${rawFallback}` : "";
+}
+
+function journeyStartPersonKey(row: ConversionJourneyStartRow): string {
+  return journeyStartPersonKeyFromParts({
+    userId: row.user_id,
+    sourcePlatform: row.source_platform,
+    landingId: row.landing_id,
+    externalId: row.external_id,
+    phone: row.phone,
+    waId: row.wa_id,
+    fallback: row.start_identity_key || row.id || row.created_at,
+  });
+}
+
+function conversionContactJourneyStartKey(row: ConversionRow): string {
+  return journeyStartPersonKeyFromParts({
+    userId: row.user_id,
+    sourcePlatform: row.source_platform,
+    landingId: row.landing_id,
+    externalId: row.external_id,
+    phone: row.phone,
+    waId: row.phone,
+    fallback: row.id || row.created_at,
+  });
+}
+
+export function computeJourneyStartStats(
+  journeyStarts: ConversionJourneyStartRow[],
+  conversions: ConversionRow[],
+): JourneyStartStats {
+  const startKeys = new Set(
+    journeyStarts
+      .map(journeyStartPersonKey)
+      .filter(Boolean),
+  );
+  const contactKeys = new Set<string>();
+  for (const row of conversions) {
+    if (!String(row.contact_event_id ?? "").trim()) continue;
+    const key = conversionContactJourneyStartKey(row);
+    if (key && startKeys.has(key)) contactKeys.add(key);
+  }
+  return {
+    starts: startKeys.size,
+    contacts: contactKeys.size,
+  };
 }
 
 export function dedupeByUserPhone(rows: ConversionRow[]): Map<string, ConversionRow> {

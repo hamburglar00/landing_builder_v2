@@ -2,10 +2,11 @@
 
 import { useEffect, useMemo, useState } from "react";
 import {
+  type ConversionJourneyStartRow,
   type FunnelContact,
   type ConversionRow,
 } from "@/lib/conversionsDb";
-import { computeCoreStats } from "@/lib/conversionStats";
+import { computeCoreStats, computeJourneyStartStats } from "@/lib/conversionStats";
 import { formatCompactCurrency, formatCurrencyAmount, type ReportingCurrency } from "@/lib/currency";
 import ArgentinaMap from "./ArgentinaMap";
 import { supabase } from "@/lib/supabaseClient";
@@ -197,8 +198,10 @@ export default function StatsPanel({
   funnelContacts,
   conversions,
   allConversions,
+  journeyStarts,
   premiumThreshold,
   dateRange,
+  sourcePlatformFilter = "__all__",
   compactTooltips = false,
   showAssistant = true,
   currency,
@@ -206,8 +209,10 @@ export default function StatsPanel({
   funnelContacts: FunnelContact[];
   conversions: ConversionRow[];
   allConversions: ConversionRow[];
+  journeyStarts: ConversionJourneyStartRow[];
   premiumThreshold: number;
   dateRange?: { start: Date; end: Date } | null;
+  sourcePlatformFilter?: string;
   compactTooltips?: boolean;
   showAssistant?: boolean;
   currency: ReportingCurrency;
@@ -244,6 +249,7 @@ export default function StatsPanel({
 
   const stats = useMemo(() => {
     const core = computeCoreStats(conversions, funnelContacts, allConversions, premiumThreshold);
+    const journeyStartStats = computeJourneyStartStats(journeyStarts, conversions);
     const isRepeatPurchase = (c: ConversionRow): boolean => {
       if ((c.purchase_event_id ?? "") === "") return false;
       if (c.purchase_type === "repeat") return true;
@@ -467,6 +473,8 @@ export default function StatsPanel({
           : undefined;
 
     return {
+      journeyStarts: journeyStartStats.starts,
+      journeyStartContacts: journeyStartStats.contacts,
       uniqueContacts,
       uniqueLeads,
       realLeadsLinkedToContact,
@@ -505,7 +513,7 @@ export default function StatsPanel({
       revenueToday,
       revenueYesterday,
     };
-  }, [funnelContacts, conversions, allConversions, premiumThreshold, dateRange]);
+  }, [funnelContacts, conversions, allConversions, journeyStarts, premiumThreshold, dateRange]);
 
   const parsedAdSpend = parseFloat(adSpend.replace(/\D/g, "")) || 0;
   const roasFirstPurchase = parsedAdSpend > 0 ? stats.firstPurchaseRevenue / parsedAdSpend : 0;
@@ -862,6 +870,36 @@ export default function StatsPanel({
   };
   const sortedCampaignRows = useMemo(() => sortRows(stats.byCampaign, campaignSort), [stats.byCampaign, campaignSort, parsedAdSpend]);
   const sortedLandingRows = useMemo(() => sortRows(stats.byLanding, landingSort), [stats.byLanding, landingSort, parsedAdSpend]);
+  const sourceContext = sourcePlatformFilter === "landing"
+    ? "landing"
+    : sourcePlatformFilter === "whatsapp_cloud_api"
+      ? "whatsapp_cloud_api"
+      : "all";
+  const startSummaryLabel = sourceContext === "landing"
+    ? "Visitas unicas"
+    : sourceContext === "whatsapp_cloud_api"
+      ? "Chats iniciados"
+      : "Recorridos iniciados";
+  const startSummaryTooltip = sourceContext === "landing"
+    ? "Page views internos deduplicados por recorrido de landing. No se envian a Meta via CAPI."
+    : sourceContext === "whatsapp_cloud_api"
+      ? "Primeros mensajes entrantes recibidos por WhatsApp Cloud API, antes del click al asesor."
+      : "Inicios unicos de recorrido: visitas unicas de landing y chats iniciados en WhatsApp Cloud API.";
+  const contactSummaryLabel = sourceContext === "whatsapp_cloud_api"
+    ? "Clicks en el CTA"
+    : sourceContext === "landing"
+      ? "Clicks en el boton"
+      : "Clicks de contacto";
+  const contactSummaryTooltip = sourceContext === "whatsapp_cloud_api"
+    ? "Eventos Contact registrados cuando el cliente toca el link o el boton CTA hacia el asesor."
+    : sourceContext === "landing"
+      ? "Eventos Contact registrados al tocar el boton de la landing."
+      : "Eventos Contact registrados al tocar un CTA de contacto.";
+  const startToContactLabel = sourceContext === "landing"
+    ? "Contactos / visitas unicas"
+    : sourceContext === "whatsapp_cloud_api"
+      ? "Contactos / chats iniciados"
+      : "Contactos / recorridos iniciados";
 
   const assistantContext = useMemo(() => ({
     isTodayRange,
@@ -984,11 +1022,17 @@ export default function StatsPanel({
       {/*  RESUMEN GENERAL  */}
       <div>
         <SectionTitle>Resumen general</SectionTitle>
-        <div className="mt-3 grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-6">
+        <div className="mt-3 grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-7">
           <KpiCard
-            label="Clicks en el boton de la landing"
+            label={startSummaryLabel}
+            value={stats.journeyStarts}
+            color="text-emerald-300"
+            tooltip={startSummaryTooltip}
+          />
+          <KpiCard
+            label={contactSummaryLabel}
             value={stats.uniqueContacts}
-            tooltip="Eventos Contact registrados al tocar el boton de la landing."
+            tooltip={contactSummaryTooltip}
           />
           <KpiCard
             label="Mensajes recibidos"
@@ -1033,7 +1077,14 @@ export default function StatsPanel({
       {/*  EMBUDO DE CONVERSIN  */}
       <div>
         <SectionTitle>Embudo de conversión</SectionTitle>
-        <div className="mt-3 grid grid-cols-1 gap-3 sm:grid-cols-3">
+        <div className="mt-3 grid grid-cols-1 gap-3 sm:grid-cols-2 xl:grid-cols-4">
+          <KpiCard
+            label={startToContactLabel}
+            value={pct(stats.journeyStartContacts, stats.journeyStarts)}
+            sub={`${stats.journeyStartContacts} de ${stats.journeyStarts} recorridos`}
+            color="text-emerald-400"
+            tooltip="Porcentaje de inicios unicos que llegaron a Contact. Es la fase anterior al embudo existente."
+          />
           <KpiCard
             label="Porcentaje de inicio de conversación"
             value={pct(stats.uniqueLeadsLinkedToContact, stats.uniqueContacts)}

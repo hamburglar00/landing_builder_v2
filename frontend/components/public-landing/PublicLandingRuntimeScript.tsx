@@ -123,6 +123,7 @@ export default function PublicLandingRuntimeScript({ slug, config }: Props) {
       var metaParamBuilderPromise = null;
       var officialMetaTracking = null;
       var prearmedContact = null;
+      var journeyStartInFlight = false;
       var leadCaptureModal = null;
       var pendingLeadCaptureButton = null;
       var CONTACT_DEDUP_TTL_MS = 5 * 60 * 1000;
@@ -670,6 +671,21 @@ export default function PublicLandingRuntimeScript({ slug, config }: Props) {
         }).catch(function () {});
       }
 
+      function sendJourneyStartBestEffort(body) {
+        if (navigator && "sendBeacon" in navigator) {
+          try {
+            var blob = new Blob([body], { type: "application/json" });
+            if (navigator.sendBeacon("/api/journey-start", blob)) return Promise.resolve();
+          } catch (e) {}
+        }
+        return fetch("/api/journey-start", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: body,
+          keepalive: true
+        }).catch(function () {});
+      }
+
       function contactDedupKey(slug, externalId) {
         return "contact_sent:" + slug + ":" + externalId;
       }
@@ -697,6 +713,26 @@ export default function PublicLandingRuntimeScript({ slug, config }: Props) {
         if (!slug || !externalId) return;
         try {
           window.localStorage.setItem(contactDedupKey(slug, externalId), String(Date.now()));
+        } catch (e) {}
+      }
+
+      function journeyStartDedupKey(slug, externalId) {
+        return "journey_start_sent:" + slug + ":" + externalId;
+      }
+
+      function wasJourneyStartSent(slug, externalId) {
+        if (!slug || !externalId) return false;
+        try {
+          return window.localStorage.getItem(journeyStartDedupKey(slug, externalId)) === "1";
+        } catch (e) {
+          return false;
+        }
+      }
+
+      function markJourneyStartSent(slug, externalId) {
+        if (!slug || !externalId) return;
+        try {
+          window.localStorage.setItem(journeyStartDedupKey(slug, externalId), "1");
         } catch (e) {}
       }
 
@@ -730,6 +766,60 @@ export default function PublicLandingRuntimeScript({ slug, config }: Props) {
           assigned_gerencia_name: name || undefined,
           assigned_gerencia_label: label || undefined
         };
+      }
+
+      function recordLandingJourneyStart() {
+        if (journeyStartInFlight || !cfg.landingId) return;
+        var params = queryParams();
+        var identity = resolveIdentity(params);
+        if (wasJourneyStartSent(cfg.slug, identity.externalId)) return;
+        journeyStartInFlight = true;
+        var tracking = collectMetaTrackingParams(params);
+        refreshMetaTracking(params, tracking)
+          .then(function (freshTracking) {
+            tracking = freshTracking;
+            if (isAtrioDestination()) return waitWithTimeout(ensureAtrioPromise(), 1200);
+            return waitWithTimeout(ensurePhonePromise(), 1200);
+          })
+          .then(function (targetData) {
+            var atrioMode = isAtrioDestination();
+            var phoneData = atrioMode ? null : targetData;
+            var assignedPhone = atrioMode ? "" : normalizePhone(
+              (phoneData && phoneData.phone) || "",
+              cfg.phoneCountryCode
+            );
+            var assignedGerenciaSnapshot = atrioMode ? {} : extractAssignedGerenciaSnapshot(phoneData);
+            var payload = {
+              event_name: "LandingPageView",
+              slug: cfg.slug,
+              landing_id: cfg.landingId,
+              landing_name: cfg.landingName,
+              workspace_currency: cfg.workspaceCurrency || undefined,
+              external_id: identity.externalId,
+              event_source_url: safeEventSourceUrl(),
+              utm_campaign: params.get("utm_campaign") || "",
+              fbp: tracking.fbp,
+              fbc: tracking.fbc,
+              from_meta_ads: !!tracking.fbc,
+              meta_pixel_id: String(cfg.pixelId || "").trim() || undefined,
+              telefono_asignado: assignedPhone || undefined,
+              assigned_gerencia_id: assignedGerenciaSnapshot.assigned_gerencia_id,
+              assigned_gerencia_external_id: assignedGerenciaSnapshot.assigned_gerencia_external_id,
+              assigned_gerencia_name: assignedGerenciaSnapshot.assigned_gerencia_name,
+              assigned_gerencia_label: assignedGerenciaSnapshot.assigned_gerencia_label,
+              device_type: deviceType(),
+              client_ip_address: tracking.clientIpAddress || undefined,
+              client_user_agent: navigator.userAgent || undefined
+            };
+            return sendJourneyStartBestEffort(JSON.stringify(payload));
+          })
+          .then(function () {
+            markJourneyStartSent(cfg.slug, identity.externalId);
+          })
+          .catch(function () {})
+          .then(function () {
+            journeyStartInFlight = false;
+          });
       }
 
       function setButtonText(button, text) {
@@ -1394,6 +1484,7 @@ export default function PublicLandingRuntimeScript({ slug, config }: Props) {
       }
 
       function init() {
+        recordLandingJourneyStart();
         prearmContactContext();
         if (isAtrioDestination()) ensureAtrioPromise();
         else ensurePhonePromise();
