@@ -126,6 +126,61 @@ function KpiCard({
   );
 }
 
+type JourneyPathStep = {
+  label: string;
+  value: number;
+  color: string;
+};
+
+function JourneyPathCard({
+  steps,
+  rates,
+}: {
+  steps: JourneyPathStep[];
+  rates: string[];
+}) {
+  return (
+    <div className="mt-3 overflow-x-auto rounded-xl border border-zinc-800 bg-zinc-900/50 p-4">
+      <div className="flex min-w-[860px] items-center">
+        {steps.map((step, index) => (
+          <div key={`${step.label}-${index}`} className="flex flex-1 items-center">
+            <div className="w-32 shrink-0 text-center">
+              <p className="mx-auto min-h-[2rem] max-w-32 text-[11px] leading-snug text-zinc-500">
+                {step.label}
+              </p>
+              <p className={`mt-1 text-xl font-bold tabular-nums ${step.color}`}>
+                {step.value}
+              </p>
+            </div>
+            {index < rates.length && (
+              <div className="min-w-24 flex-1 px-2">
+                <p className="mb-1 text-center text-[11px] font-semibold tabular-nums text-zinc-300">
+                  {rates[index]}
+                </p>
+                <div className="flex items-center">
+                  <div className="h-px flex-1 bg-zinc-700" />
+                  <svg
+                    viewBox="0 0 16 16"
+                    className="h-4 w-4 shrink-0 text-zinc-600"
+                    fill="none"
+                    stroke="currentColor"
+                    strokeWidth="2"
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    aria-hidden="true"
+                  >
+                    <path d="M6 3l5 5-5 5" />
+                  </svg>
+                </div>
+              </div>
+            )}
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+}
+
 function SectionTitle({ children }: { children: React.ReactNode }) {
   return (
     <h3 className="text-sm font-semibold text-zinc-200 flex items-center gap-2">
@@ -898,6 +953,52 @@ export default function StatsPanel({
   const startToContactTooltip = sourceContext === "landing"
     ? "Porcentaje de clientes que luego de abrir la landing page tocan el CTA. Se calcula como Contactos / visitas unicas."
     : "Porcentaje de clientes que luego de iniciar un chat en WhatsApp Cloud API tocan el CTA del mensaje de bienvenida. Se calcula como Contactos / chats iniciados.";
+  const journeyPathSteps = useMemo<JourneyPathStep[]>(() => [
+    {
+      label: startSummaryLabel,
+      value: stats.journeyStarts,
+      color: "text-emerald-300",
+    },
+    {
+      label: "Clicks en el CTA",
+      value: stats.journeyStartContacts,
+      color: "text-zinc-100",
+    },
+    {
+      label: "Mensajes recibidos",
+      value: stats.uniqueLeadsLinkedToContact,
+      color: "text-amber-300",
+    },
+    {
+      label: "Primeras cargas",
+      value: stats.firstLoadPurchasersLinkedToLead,
+      color: "text-sky-300",
+    },
+    {
+      label: "Cargas -> recargas del periodo",
+      value: stats.repeatFromFirstInRange,
+      color: "text-fuchsia-300",
+    },
+  ], [
+    startSummaryLabel,
+    stats.firstLoadPurchasersLinkedToLead,
+    stats.journeyStartContacts,
+    stats.journeyStarts,
+    stats.repeatFromFirstInRange,
+    stats.uniqueLeadsLinkedToContact,
+  ]);
+  const journeyPathRates = useMemo(() => [
+    pct(stats.journeyStartContacts, stats.journeyStarts),
+    pct(stats.uniqueLeadsLinkedToContact, stats.journeyStartContacts),
+    pct(stats.firstLoadPurchasersLinkedToLead, stats.uniqueLeadsLinkedToContact),
+    pct(stats.repeatFromFirstInRange, stats.firstLoadPurchasersLinkedToLead),
+  ], [
+    stats.firstLoadPurchasersLinkedToLead,
+    stats.journeyStartContacts,
+    stats.journeyStarts,
+    stats.repeatFromFirstInRange,
+    stats.uniqueLeadsLinkedToContact,
+  ]);
 
   const assistantContext = useMemo(() => ({
     isTodayRange,
@@ -1073,6 +1174,16 @@ export default function StatsPanel({
           />
         </div>
       </div>
+
+      {showJourneyStartMetrics && (
+        <div>
+          <SectionTitle>Recorrido</SectionTitle>
+          <JourneyPathCard
+            steps={journeyPathSteps}
+            rates={journeyPathRates}
+          />
+        </div>
+      )}
 
       {/*  EMBUDO DE CONVERSIN  */}
       <div>
