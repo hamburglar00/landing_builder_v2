@@ -103,7 +103,7 @@ function KpiCard({
 }) {
   return (
     <div className="rounded-xl border border-zinc-800 bg-zinc-900/60 p-4 group relative">
-      <p className="text-[11px] text-zinc-500 mb-1 min-h-[2.5rem] leading-snug">{label}</p>
+      <p className="text-[11px] font-semibold text-zinc-400 mb-1 min-h-[2.5rem] leading-snug">{label}</p>
       <p className={`text-xl font-bold ${color} flex min-h-[2rem] items-baseline flex-wrap`}>
         {value}
         {trendInfo && (
@@ -116,7 +116,7 @@ function KpiCard({
           />
         )}
       </p>
-      {sub && <p className="text-[10px] text-zinc-500 mt-1">{sub}</p>}
+      {sub && <p className="text-[10px] font-semibold text-zinc-400 mt-1">{sub}</p>}
       {tooltip && (
         <div className="pointer-events-none absolute left-1/2 -translate-x-1/2 bottom-full mb-2 w-56 rounded-lg border border-zinc-700/60 bg-zinc-900/95 backdrop-blur-sm px-3 py-2 shadow-xl opacity-0 group-hover:opacity-100 transition-opacity duration-150 [transition-delay:0ms] group-hover:[transition-delay:1000ms] z-50">
           <p className="text-[10px] text-zinc-400 leading-relaxed">{tooltip}</p>
@@ -145,7 +145,7 @@ function JourneyPathCard({
         {steps.map((step, index) => (
           <div key={`${step.label}-${index}`} className="flex flex-1 items-center">
             <div className="w-32 shrink-0 text-center">
-              <p className="mx-auto min-h-[2rem] max-w-32 text-[11px] leading-snug text-zinc-500">
+              <p className="mx-auto min-h-[2rem] max-w-32 text-[11px] font-semibold leading-snug text-zinc-400">
                 {step.label}
               </p>
               <p className={`mt-1 text-xl font-bold tabular-nums ${step.color}`}>
@@ -154,7 +154,7 @@ function JourneyPathCard({
             </div>
             {index < rates.length && (
               <div className="min-w-24 flex-1 px-2">
-                <p className="mb-1 text-center text-[11px] font-semibold tabular-nums text-zinc-300">
+                <p className="mb-1 text-center text-[11px] font-bold tabular-nums text-zinc-200">
                   {rates[index]}
                 </p>
                 <div className="flex items-center">
