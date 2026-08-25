@@ -1,5 +1,6 @@
 import { supabase } from "@/lib/supabaseClient";
 import type { PhoneKind } from "@/lib/landing/types";
+import type { DateRange } from "@/components/conversiones/DateRangeFilter";
 
 export interface WhatsappCloudApiConfig {
   id: string;
@@ -757,6 +758,7 @@ export async function fetchWhatsappCloudApiInboxThreads(
   offset = 0,
   tagFilter: "all" | WhatsappCloudApiInboxThread["tag"] = "all",
   unreadOnly = false,
+  range?: DateRange | null,
 ): Promise<WhatsappCloudApiInboxThread[]> {
   const sessionState = await rpcSessionState();
   if (!sessionState.hasAccessToken) {
@@ -778,6 +780,8 @@ export async function fetchWhatsappCloudApiInboxThreads(
       p_workspace_currency: workspaceCurrency ?? null,
       p_tag_filter: tagFilter,
       p_unread_only: unreadOnly,
+      p_from: range?.start.toISOString() ?? null,
+      p_to: range?.end.toISOString() ?? null,
     },
   );
   if (error) {
@@ -786,6 +790,12 @@ export async function fetchWhatsappCloudApiInboxThreads(
       limit,
       offset,
       workspaceCurrency: workspaceCurrency ?? null,
+      range: range
+        ? {
+            start: range.start.toISOString(),
+            end: range.end.toISOString(),
+          }
+        : null,
       sessionState,
     });
     throw new Error(
@@ -929,12 +939,15 @@ export async function markWhatsappCloudApiThreadRead(
 export async function markWhatsappCloudApiThreadsRead(
   workspaceCurrency?: "ARS" | "PYG" | null,
   tagFilter: "all" | WhatsappCloudApiInboxThread["tag"] = "all",
+  range?: DateRange | null,
 ): Promise<number> {
   const { data, error } = await supabase.rpc(
     "mark_whatsapp_cloud_api_threads_read",
     {
       p_workspace_currency: workspaceCurrency ?? null,
       p_tag_filter: tagFilter,
+      p_from: range?.start.toISOString() ?? null,
+      p_to: range?.end.toISOString() ?? null,
     },
   );
   if (error) throw error;

@@ -11,6 +11,13 @@ import {
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { PageHeader, SurfaceCard } from "@/components/ui/PanelPrimitives";
+import DateRangeFilter, {
+  type DateRange,
+} from "@/components/conversiones/DateRangeFilter";
+import {
+  isSameDateRange,
+  todayRange,
+} from "@/components/conversiones/conversionPageShared";
 import { supabase } from "@/lib/supabaseClient";
 import { invokeFunction } from "@/lib/supabaseFunctions";
 import {
@@ -446,6 +453,8 @@ export default function WhatsAppCloudApiInboxPageContent({ mode }: Props) {
   const [pageIndex, setPageIndex] = useState(0);
   const [selectedId, setSelectedId] = useState<string>("");
   const [search, setSearch] = useState("");
+  const [dateRange, setDateRange] = useState<DateRange | null>(todayRange());
+  const dateRangeRef = useRef<DateRange | null>(dateRange);
   const [tagFilter, setTagFilter] = useState<InboxFilter>("all");
   const [gerenciaFilter, setGerenciaFilter] = useState("");
   const [draftGerenciaFilter, setDraftGerenciaFilter] = useState("");
@@ -482,6 +491,7 @@ export default function WhatsAppCloudApiInboxPageContent({ mode }: Props) {
         pageIndex * INBOX_PAGE_SIZE,
         serverTagFilter,
         unreadOnly,
+        dateRange,
       );
       setThreads(rows);
       setTotalThreads(
@@ -500,12 +510,18 @@ export default function WhatsAppCloudApiInboxPageContent({ mode }: Props) {
         limit: INBOX_PAGE_SIZE,
         offset: pageIndex * INBOX_PAGE_SIZE,
         tagFilter,
+        dateRange: dateRange
+          ? {
+              start: dateRange.start.toISOString(),
+              end: dateRange.end.toISOString(),
+            }
+          : null,
       });
       setError(formatWhatsappCloudApiError(err, "No se pudo cargar el Inbox."));
     } finally {
       setLoading(false);
     }
-  }, [mode, pageIndex, router, serverTagFilter, tagFilter, unreadOnly, workspaceCurrency]);
+  }, [dateRange, mode, pageIndex, router, serverTagFilter, tagFilter, unreadOnly, workspaceCurrency]);
 
   useEffect(() => {
     void loadThreads();
@@ -515,7 +531,17 @@ export default function WhatsAppCloudApiInboxPageContent({ mode }: Props) {
     setPageIndex(0);
     setTotalThreads(0);
     setSelectedId("");
-  }, [tagFilter, workspaceCurrency]);
+  }, [dateRange, tagFilter, workspaceCurrency]);
+
+  const handleDateRangeChange = useCallback((nextRange: DateRange | null) => {
+    const previousRange = dateRangeRef.current;
+    if (isSameDateRange(previousRange, nextRange)) return;
+    dateRangeRef.current = nextRange;
+    setDateRange(nextRange);
+    setPageIndex(0);
+    setTotalThreads(0);
+    setSelectedId("");
+  }, []);
 
   useEffect(() => {
     setManualMessage("");
@@ -658,6 +684,7 @@ export default function WhatsAppCloudApiInboxPageContent({ mode }: Props) {
       const count = await markWhatsappCloudApiThreadsRead(
         workspaceCurrency,
         serverTagFilter,
+        dateRange,
       );
       setThreadActionsOpen(false);
       setSendNotice(
@@ -684,6 +711,10 @@ export default function WhatsAppCloudApiInboxPageContent({ mode }: Props) {
         description="Conversaciones recibidas desde el numero oficial conectado a Meta."
         actions={
           <div className="relative flex flex-wrap gap-2">
+            <DateRangeFilter
+              onChange={handleDateRangeChange}
+              initialPreset="hoy"
+            />
             <button
               type="button"
               className={`ui-button ui-button-secondary ${gerenciaFilter ? "border-[var(--color-primary-soft-border)] text-[var(--color-primary)]" : ""}`}
