@@ -672,6 +672,12 @@ export default function PublicLandingRuntimeScript({ slug, config }: Props) {
       }
 
       function sendJourneyStartBestEffort(body) {
+        if (navigator && "sendBeacon" in navigator) {
+          try {
+            var blob = new Blob([body], { type: "application/json" });
+            if (navigator.sendBeacon("/api/journey-start", blob)) return Promise.resolve(true);
+          } catch (e) {}
+        }
         return fetch("/api/journey-start", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
@@ -766,6 +772,38 @@ export default function PublicLandingRuntimeScript({ slug, config }: Props) {
         };
       }
 
+      function buildLandingJourneyStartPayload(params, identity, tracking, targetData) {
+        var atrioMode = isAtrioDestination();
+        var phoneData = atrioMode ? null : targetData;
+        var assignedPhone = atrioMode ? "" : normalizePhone(
+          (phoneData && phoneData.phone) || "",
+          cfg.phoneCountryCode
+        );
+        var assignedGerenciaSnapshot = atrioMode ? {} : extractAssignedGerenciaSnapshot(phoneData);
+        return {
+          event_name: "LandingPageView",
+          slug: cfg.slug,
+          landing_id: cfg.landingId,
+          landing_name: cfg.landingName,
+          workspace_currency: cfg.workspaceCurrency || undefined,
+          external_id: identity.externalId,
+          event_source_url: safeEventSourceUrl(),
+          utm_campaign: params.get("utm_campaign") || "",
+          fbp: tracking.fbp,
+          fbc: tracking.fbc,
+          from_meta_ads: !!tracking.fbc,
+          meta_pixel_id: String(cfg.pixelId || "").trim() || undefined,
+          telefono_asignado: assignedPhone || undefined,
+          assigned_gerencia_id: assignedGerenciaSnapshot.assigned_gerencia_id,
+          assigned_gerencia_external_id: assignedGerenciaSnapshot.assigned_gerencia_external_id,
+          assigned_gerencia_name: assignedGerenciaSnapshot.assigned_gerencia_name,
+          assigned_gerencia_label: assignedGerenciaSnapshot.assigned_gerencia_label,
+          device_type: deviceType(),
+          client_ip_address: tracking.clientIpAddress || undefined,
+          client_user_agent: navigator.userAgent || undefined
+        };
+      }
+
       function recordLandingJourneyStart() {
         if (journeyStartInFlight || !cfg.landingId) return;
         var params = queryParams();
@@ -773,6 +811,11 @@ export default function PublicLandingRuntimeScript({ slug, config }: Props) {
         if (wasJourneyStartSent(cfg.slug, identity.externalId)) return;
         journeyStartInFlight = true;
         var tracking = collectMetaTrackingParams(params);
+        sendJourneyStartBestEffort(JSON.stringify(
+          buildLandingJourneyStartPayload(params, identity, tracking, null)
+        )).then(function (sent) {
+          if (sent) markJourneyStartSent(cfg.slug, identity.externalId);
+        });
         refreshMetaTracking(params, tracking)
           .then(function (freshTracking) {
             tracking = freshTracking;
@@ -780,35 +823,7 @@ export default function PublicLandingRuntimeScript({ slug, config }: Props) {
             return waitWithTimeout(ensurePhonePromise(), 1200);
           })
           .then(function (targetData) {
-            var atrioMode = isAtrioDestination();
-            var phoneData = atrioMode ? null : targetData;
-            var assignedPhone = atrioMode ? "" : normalizePhone(
-              (phoneData && phoneData.phone) || "",
-              cfg.phoneCountryCode
-            );
-            var assignedGerenciaSnapshot = atrioMode ? {} : extractAssignedGerenciaSnapshot(phoneData);
-            var payload = {
-              event_name: "LandingPageView",
-              slug: cfg.slug,
-              landing_id: cfg.landingId,
-              landing_name: cfg.landingName,
-              workspace_currency: cfg.workspaceCurrency || undefined,
-              external_id: identity.externalId,
-              event_source_url: safeEventSourceUrl(),
-              utm_campaign: params.get("utm_campaign") || "",
-              fbp: tracking.fbp,
-              fbc: tracking.fbc,
-              from_meta_ads: !!tracking.fbc,
-              meta_pixel_id: String(cfg.pixelId || "").trim() || undefined,
-              telefono_asignado: assignedPhone || undefined,
-              assigned_gerencia_id: assignedGerenciaSnapshot.assigned_gerencia_id,
-              assigned_gerencia_external_id: assignedGerenciaSnapshot.assigned_gerencia_external_id,
-              assigned_gerencia_name: assignedGerenciaSnapshot.assigned_gerencia_name,
-              assigned_gerencia_label: assignedGerenciaSnapshot.assigned_gerencia_label,
-              device_type: deviceType(),
-              client_ip_address: tracking.clientIpAddress || undefined,
-              client_user_agent: navigator.userAgent || undefined
-            };
+            var payload = buildLandingJourneyStartPayload(params, identity, tracking, targetData);
             return sendJourneyStartBestEffort(JSON.stringify(payload));
           })
           .then(function (sent) {

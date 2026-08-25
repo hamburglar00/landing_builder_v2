@@ -98,7 +98,7 @@ export async function POST(request: NextRequest) {
       p_from_meta_ads: fromMetaAds,
       p_meta_pixel_id: cleanDigits(payload.meta_pixel_id) || cleanDigits(landing.pixel_id),
       p_telefono_asignado: cleanDigits(payload.telefono_asignado),
-      p_assigned_gerencia_id: Number(payload.assigned_gerencia_id) || null,
+      p_assigned_gerencia_id: null,
       p_assigned_gerencia_external_id: Number(payload.assigned_gerencia_external_id) || null,
       p_assigned_gerencia_name: cleanText(payload.assigned_gerencia_name, 180) || null,
       p_assigned_gerencia_label: cleanText(payload.assigned_gerencia_label, 220) || null,
