@@ -634,6 +634,8 @@ export default function AdminConversionesPage() {
       return byLanding && byPixel && byGerencia && byTelefono && byFromMetaAds && bySourcePlatform && bySexo && byCampaign && byDevice;
     });
   }, [scopedJourneyStarts, statsLandingFilter, statsPixelFilter, statsGerenciaFilter, statsTelefonoFilter, statsFromMetaAdsFilter, statsSourcePlatformFilter, statsSexoFilter, statsCampaignFilter, statsDeviceFilter, gerenciaByPhone]);
+  const showJourneyStartStats = statsSourcePlatformFilter === "landing" ||
+    statsSourcePlatformFilter === "whatsapp_cloud_api";
   const filteredPhoneSet = useMemo(
     () => new Set(
       statsConversionsFiltered
@@ -1480,7 +1482,7 @@ export default function AdminConversionesPage() {
           </div>
           {isAllCurrencies ? (
             <SingleCurrencyRequired title="Elegí ARS o PYG para calcular estadísticas" />
-          ) : activeFunnelFiltered.length === 0 && statsConversionsFiltered.length === 0 && statsJourneyStartsFiltered.length === 0 ? (
+          ) : activeFunnelFiltered.length === 0 && statsConversionsFiltered.length === 0 && (!showJourneyStartStats || statsJourneyStartsFiltered.length === 0) ? (
             refreshingTable ? (
               <div className="flex min-h-[120px] flex-col items-center justify-center gap-3 text-sm text-zinc-500">
                 <div className="h-1 w-40 overflow-hidden rounded-full bg-zinc-800">

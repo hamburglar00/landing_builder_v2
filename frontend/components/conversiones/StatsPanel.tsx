@@ -875,16 +875,13 @@ export default function StatsPanel({
     : sourcePlatformFilter === "whatsapp_cloud_api"
       ? "whatsapp_cloud_api"
       : "all";
+  const showJourneyStartMetrics = sourceContext !== "all";
   const startSummaryLabel = sourceContext === "landing"
     ? "Visitas unicas"
-    : sourceContext === "whatsapp_cloud_api"
-      ? "Chats iniciados"
-      : "Recorridos iniciados";
+    : "Chats iniciados";
   const startSummaryTooltip = sourceContext === "landing"
     ? "Page views internos deduplicados por recorrido de landing. No se envian a Meta via CAPI."
-    : sourceContext === "whatsapp_cloud_api"
-      ? "Primeros mensajes entrantes recibidos por WhatsApp Cloud API, antes del click al asesor."
-      : "Inicios unicos de recorrido: visitas unicas de landing y chats iniciados en WhatsApp Cloud API.";
+    : "Primeros mensajes entrantes recibidos por WhatsApp Cloud API, antes del click al asesor.";
   const contactSummaryLabel = sourceContext === "whatsapp_cloud_api"
     ? "Clicks en el CTA"
     : sourceContext === "landing"
@@ -897,9 +894,7 @@ export default function StatsPanel({
       : "Eventos Contact registrados al tocar un CTA de contacto.";
   const startToContactLabel = sourceContext === "landing"
     ? "Contactos / visitas unicas"
-    : sourceContext === "whatsapp_cloud_api"
-      ? "Contactos / chats iniciados"
-      : "Contactos / recorridos iniciados";
+    : "Contactos / chats iniciados";
 
   const assistantContext = useMemo(() => ({
     isTodayRange,
@@ -1022,13 +1017,15 @@ export default function StatsPanel({
       {/*  RESUMEN GENERAL  */}
       <div>
         <SectionTitle>Resumen general</SectionTitle>
-        <div className="mt-3 grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-7">
-          <KpiCard
-            label={startSummaryLabel}
-            value={stats.journeyStarts}
-            color="text-emerald-300"
-            tooltip={startSummaryTooltip}
-          />
+        <div className={`mt-3 grid grid-cols-2 gap-3 sm:grid-cols-3 ${showJourneyStartMetrics ? "lg:grid-cols-7" : "lg:grid-cols-6"}`}>
+          {showJourneyStartMetrics && (
+            <KpiCard
+              label={startSummaryLabel}
+              value={stats.journeyStarts}
+              color="text-emerald-300"
+              tooltip={startSummaryTooltip}
+            />
+          )}
           <KpiCard
             label={contactSummaryLabel}
             value={stats.uniqueContacts}
@@ -1077,14 +1074,16 @@ export default function StatsPanel({
       {/*  EMBUDO DE CONVERSIN  */}
       <div>
         <SectionTitle>Embudo de conversión</SectionTitle>
-        <div className="mt-3 grid grid-cols-1 gap-3 sm:grid-cols-2 xl:grid-cols-4">
-          <KpiCard
-            label={startToContactLabel}
-            value={pct(stats.journeyStartContacts, stats.journeyStarts)}
-            sub={`${stats.journeyStartContacts} de ${stats.journeyStarts} recorridos`}
-            color="text-emerald-400"
-            tooltip="Porcentaje de inicios unicos que llegaron a Contact. Es la fase anterior al embudo existente."
-          />
+        <div className={`mt-3 grid grid-cols-1 gap-3 ${showJourneyStartMetrics ? "sm:grid-cols-2 xl:grid-cols-4" : "sm:grid-cols-3"}`}>
+          {showJourneyStartMetrics && (
+            <KpiCard
+              label={startToContactLabel}
+              value={pct(stats.journeyStartContacts, stats.journeyStarts)}
+              sub={`${stats.journeyStartContacts} de ${stats.journeyStarts} recorridos`}
+              color="text-emerald-400"
+              tooltip="Porcentaje de inicios unicos que llegaron a Contact. Es la fase anterior al embudo existente."
+            />
+          )}
           <KpiCard
             label="Porcentaje de inicio de conversación"
             value={pct(stats.uniqueLeadsLinkedToContact, stats.uniqueContacts)}
