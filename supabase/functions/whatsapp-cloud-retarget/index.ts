@@ -23,6 +23,7 @@ type RetargetCandidate = {
   meta_api_version: string;
   redirect_token: string;
   promo_code: string;
+  retarget_message_template: string;
 };
 
 type WhatsappConfig = {
@@ -42,12 +43,14 @@ type SendResult = {
 
 const GRAPH_TIMEOUT_MS = 8000;
 const MAX_CANDIDATES = 25;
-const MAX_AGE_MINUTES = 24 * 60;
-const MIN_AGE_MINUTES = 30;
+const MAX_AGE_MINUTES = 23 * 60;
+const DEFAULT_MIN_AGE_MINUTES = 30;
+const DEFAULT_RETARGET_MESSAGE =
+  "👋 ¡Hola! Tu asesor ya está listo para atenderte 🙋‍♂️💬\n\n👇 Tocá el botón de abajo y enviale el mensaje para comenzar ahora. Te va a guiar paso a paso y brindarte atención personalizada. 🚀✨";
 
 const RETARGET_COPY: Record<
   RetargetKind,
-  { message: string; button: string; messageType: string }
+  { message?: string; button: string; messageType: string }
 > = {
   new: {
     message:
@@ -296,7 +299,7 @@ Deno.serve(async (req) => {
     {
       p_limit: limit,
       p_max_age_minutes: MAX_AGE_MINUTES,
-      p_min_age_minutes: MIN_AGE_MINUTES,
+      p_min_age_minutes: DEFAULT_MIN_AGE_MINUTES,
     },
   );
 
@@ -339,7 +342,7 @@ Deno.serve(async (req) => {
         meta_api_version: candidate.meta_api_version,
       },
       candidate.wa_id,
-      copy.message,
+      str(candidate.retarget_message_template) || DEFAULT_RETARGET_MESSAGE,
       copy.button,
       trackedRedirectUrl(token),
     );
@@ -412,7 +415,7 @@ Deno.serve(async (req) => {
     failed,
     skipped,
     window_minutes: MAX_AGE_MINUTES,
-    min_age_minutes: MIN_AGE_MINUTES,
+    default_min_age_minutes: DEFAULT_MIN_AGE_MINUTES,
     results,
   });
 });

@@ -34,6 +34,10 @@ const DEFAULT_REDIRECT_TEMPLATE =
 const DEFAULT_FALLBACK_TEMPLATE =
   "Hola, gracias por comunicarte. En este momento no hay un asesor disponible. Por favor intenta nuevamente en unos minutos.";
 const DEFAULT_CTA_BUTTON_TITLE = "Ir al asesor";
+const DEFAULT_RETARGET_TEMPLATE =
+  "👋 ¡Hola! Tu asesor ya está listo para atenderte 🙋‍♂️💬\n\n👇 Tocá el botón de abajo y enviale el mensaje para comenzar ahora. Te va a guiar paso a paso y brindarte atención personalizada. 🚀✨";
+const DEFAULT_RETARGET_DELAY_MINUTES = 30;
+const MAX_RETARGET_DELAY_MINUTES = 23 * 60;
 
 const INSTRUCTION_CHECKLIST = [
   "Entrar a https://developers.facebook.com/apps y crear una app nueva o abrir la app del cliente.",
@@ -476,6 +480,8 @@ export default function WhatsAppCloudApiPageContent({
   const [enrichBusinessMessagingUserData, setEnrichBusinessMessagingUserData] = useState(false);
   const [sendBusinessMessagingPurchaseType, setSendBusinessMessagingPurchaseType] = useState(false);
   const [retargetingEnabled, setRetargetingEnabled] = useState(true);
+  const [retargetTemplate, setRetargetTemplate] = useState(DEFAULT_RETARGET_TEMPLATE);
+  const [retargetDelayMinutes, setRetargetDelayMinutes] = useState(DEFAULT_RETARGET_DELAY_MINUTES);
   const [landingTag, setLandingTag] = useState("");
   const [selectionMode, setSelectionMode] = useState<"weighted_random" | "fair">("weighted_random");
   const [fairCriterion, setFairCriterion] = useState<"usage_count" | "messages_received">("usage_count");
@@ -544,6 +550,8 @@ export default function WhatsAppCloudApiPageContent({
     setEnrichBusinessMessagingUserData(cfg?.enrich_business_messaging_user_data ?? false);
     setSendBusinessMessagingPurchaseType(cfg?.send_business_messaging_purchase_type_capi ?? false);
     setRetargetingEnabled(cfg?.retargeting_enabled ?? true);
+    setRetargetTemplate(cfg?.retarget_message_template ?? DEFAULT_RETARGET_TEMPLATE);
+    setRetargetDelayMinutes(cfg?.retarget_delay_minutes ?? DEFAULT_RETARGET_DELAY_MINUTES);
     setLandingTag(cfg?.landing_tag ?? "");
     setTrackingEditing(!cfg?.id);
     setShowAccessToken(false);
@@ -691,6 +699,11 @@ export default function WhatsAppCloudApiPageContent({
       if (!/^\d+$/.test(messagingDatasetId.trim())) throw new Error("Dataset Business Messaging ID requerido.");
       if (!redirectTemplate.trim()) throw new Error("Mensaje de derivacion requerido.");
       if (!fallbackTemplate.trim()) throw new Error("Mensaje fallback requerido.");
+      if (retargetingEnabled && !retargetTemplate.trim()) throw new Error("Mensaje de retargeting requerido.");
+      if (!Number.isFinite(retargetDelayMinutes)) throw new Error("Minutos de retargeting requeridos.");
+      if (retargetDelayMinutes < 1 || retargetDelayMinutes > MAX_RETARGET_DELAY_MINUTES) {
+        throw new Error("Retargeting permite entre 1 y 1380 minutos.");
+      }
       if (redirectUseCtaButton && !redirectCtaButtonTitle.trim()) throw new Error("Titulo del boton requerido.");
       if (redirectCtaButtonTitle.trim().length > 20) throw new Error("Titulo del boton: maximo 20 caracteres.");
       if (assignments.length === 0) throw new Error("Asigna al menos una gerencia para poder derivar mensajes.");
@@ -712,6 +725,8 @@ export default function WhatsAppCloudApiPageContent({
         enrich_business_messaging_user_data: enrichBusinessMessagingUserData,
         send_business_messaging_purchase_type_capi: sendBusinessMessagingPurchaseType,
         retargeting_enabled: retargetingEnabled,
+        retarget_message_template: retargetTemplate.trim() || DEFAULT_RETARGET_TEMPLATE,
+        retarget_delay_minutes: Math.trunc(retargetDelayMinutes),
         landing_tag: cleanTag(landingTag),
         gerencia_selection_mode: selectionMode,
         gerencia_fair_criterion: fairCriterion,
@@ -1228,15 +1243,6 @@ export default function WhatsAppCloudApiPageContent({
                 title="Si esta activo, los Purchase de WhatsApp Cloud API agregan custom_data.purchase_type con first o repeat. Sirve para crear conversiones personalizadas en Meta. No afecta LeadSubmitted ni inventa datos."
               />
 
-              <Toggle
-                checked={retargetingEnabled}
-                onChange={setRetargetingEnabled}
-                disabled={trackingLocked}
-                label="Retargeting automatico"
-                description="On envia un recordatorio unico a chats nuevo/contacto recientes."
-                title="Si esta activo, el cron revisa cada 15 minutos chats nuevos o contactos sin Lead/Purchase cuyo ultimo mensaje inbound ya paso los 30 minutos y sigue dentro de la ventana activa. Se envia una sola vez por contacto."
-              />
-
               <div className="rounded-lg border border-zinc-800 bg-zinc-950/30 px-3 py-2">
                 <div className="flex items-center justify-between gap-3">
                   <div>
@@ -1326,6 +1332,51 @@ export default function WhatsAppCloudApiPageContent({
               </Field>
               <div className="rounded-xl border border-[var(--color-border-subtle)] bg-[rgba(255,255,255,0.025)] p-3">
                 <Toggle
+                  checked={retargetingEnabled}
+                  onChange={setRetargetingEnabled}
+                  label="Retargeting automatico"
+                  description="On envia un recordatorio unico a chats nuevo/contacto recientes."
+                  title="Si esta activo, el cron revisa chats nuevos o contactos sin Lead/Purchase y envia un unico recordatorio despues de los minutos configurados."
+                />
+                {retargetingEnabled ? (
+                  <div className="mt-3 grid gap-3 lg:grid-cols-[minmax(0,1fr)_180px]">
+                    <Field label="Mensaje de retargeting" required>
+                      <textarea
+                        value={retargetTemplate}
+                        onChange={(e) => setRetargetTemplate(e.target.value)}
+                        rows={5}
+                        className={`${textareaClass} min-h-28`}
+                      />
+                    </Field>
+                    <Field label="Enviar despues de" required>
+                      <div className="flex items-center gap-2">
+                        <input
+                          type="number"
+                          min={1}
+                          max={MAX_RETARGET_DELAY_MINUTES}
+                          step={1}
+                          value={retargetDelayMinutes}
+                          onChange={(e) => {
+                            const value = Number(e.target.value);
+                            setRetargetDelayMinutes(
+                              Number.isFinite(value)
+                                ? Math.trunc(value)
+                                : DEFAULT_RETARGET_DELAY_MINUTES,
+                            );
+                          }}
+                          className={inputClass}
+                        />
+                        <span className="shrink-0 text-xs text-[var(--color-text-muted)]">min</span>
+                      </div>
+                      <p className="mt-1 text-[11px] leading-4 text-[var(--color-text-muted)]">
+                        Maximo 1380 minutos.
+                      </p>
+                    </Field>
+                  </div>
+                ) : null}
+              </div>
+              <div className="rounded-xl border border-[var(--color-border-subtle)] bg-[rgba(255,255,255,0.025)] p-3">
+                <Toggle
                   checked={redirectUseCtaButton}
                   onChange={setRedirectUseCtaButton}
                   label="Usar boton de redireccion"
@@ -1343,7 +1394,7 @@ export default function WhatsAppCloudApiPageContent({
                       />
                     </Field>
                     <p className="mt-1 text-[11px] text-[var(--color-text-muted)]">
-                      Maximo 20 caracteres. El link se aloja en el boton y no se muestra en el cuerpo del mensaje.
+                      Maximo 20 caracteres. El boton usa el mismo link corto que {"{{wa_link}}"}.
                     </p>
                   </div>
                 ) : null}
@@ -1354,7 +1405,7 @@ export default function WhatsAppCloudApiPageContent({
                   <p><span className="ui-badge font-mono">{"{{name}}"}</span> inserta el nombre interno configurado.</p>
                   <p><span className="ui-badge font-mono">{"{{phone}}"}</span> inserta el telefono asignado.</p>
                   <p><span className="ui-badge font-mono">{"{{promo_code}}"}</span> inserta el codigo generado para tracking.</p>
-                  <p><span className="ui-badge font-mono">{"{{wa_link}}"}</span> inserta el link a WhatsApp con telefono y promo. Si usas boton, el link queda en el CTA.</p>
+                  <p><span className="ui-badge font-mono">{"{{wa_link}}"}</span> inserta el link corto a WhatsApp con telefono y promo.</p>
                 </div>
               </div>
             </div>
