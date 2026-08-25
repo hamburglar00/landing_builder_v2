@@ -893,8 +893,11 @@ export default function StatsPanel({
       ? "Eventos Contact registrados al tocar el boton de la landing."
       : "Eventos Contact registrados al tocar un CTA de contacto.";
   const startToContactLabel = sourceContext === "landing"
-    ? "Contactos / visitas unicas"
-    : "Contactos / chats iniciados";
+    ? "Porcentaje de conversion de la landing"
+    : "Porcentaje de conversion de WhatsApp API";
+  const startToContactTooltip = sourceContext === "landing"
+    ? "Porcentaje de clientes que luego de abrir la landing page tocan el CTA. Se calcula como Contactos / visitas unicas."
+    : "Porcentaje de clientes que luego de iniciar un chat en WhatsApp Cloud API tocan el CTA del mensaje de bienvenida. Se calcula como Contactos / chats iniciados.";
 
   const assistantContext = useMemo(() => ({
     isTodayRange,
@@ -1081,7 +1084,7 @@ export default function StatsPanel({
               value={pct(stats.journeyStartContacts, stats.journeyStarts)}
               sub={`${stats.journeyStartContacts} de ${stats.journeyStarts} recorridos`}
               color="text-emerald-400"
-              tooltip="Porcentaje de inicios unicos que llegaron a Contact. Es la fase anterior al embudo existente."
+              tooltip={startToContactTooltip}
             />
           )}
           <KpiCard
