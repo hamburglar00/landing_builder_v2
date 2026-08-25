@@ -672,18 +672,16 @@ export default function PublicLandingRuntimeScript({ slug, config }: Props) {
       }
 
       function sendJourneyStartBestEffort(body) {
-        if (navigator && "sendBeacon" in navigator) {
-          try {
-            var blob = new Blob([body], { type: "application/json" });
-            if (navigator.sendBeacon("/api/journey-start", blob)) return Promise.resolve();
-          } catch (e) {}
-        }
         return fetch("/api/journey-start", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: body,
           keepalive: true
-        }).catch(function () {});
+        }).then(function (response) {
+          return !!(response && response.ok);
+        }).catch(function () {
+          return false;
+        });
       }
 
       function contactDedupKey(slug, externalId) {
@@ -813,8 +811,8 @@ export default function PublicLandingRuntimeScript({ slug, config }: Props) {
             };
             return sendJourneyStartBestEffort(JSON.stringify(payload));
           })
-          .then(function () {
-            markJourneyStartSent(cfg.slug, identity.externalId);
+          .then(function (sent) {
+            if (sent) markJourneyStartSent(cfg.slug, identity.externalId);
           })
           .catch(function () {})
           .then(function () {

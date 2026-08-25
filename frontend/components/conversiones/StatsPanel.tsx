@@ -961,7 +961,7 @@ export default function StatsPanel({
     },
     {
       label: "Clicks en el CTA",
-      value: stats.journeyStartContacts,
+      value: stats.uniqueContacts,
       color: "text-zinc-100",
     },
     {
@@ -971,32 +971,32 @@ export default function StatsPanel({
     },
     {
       label: "Primeras cargas",
-      value: stats.firstLoadPurchasersLinkedToLead,
+      value: stats.purchaseFirstCount,
       color: "text-sky-300",
     },
     {
       label: "Cargas -> recargas del periodo",
-      value: stats.repeatFromFirstInRange,
+      value: stats.repeatEventsFromFirstInRange,
       color: "text-fuchsia-300",
     },
   ], [
     startSummaryLabel,
-    stats.firstLoadPurchasersLinkedToLead,
-    stats.journeyStartContacts,
     stats.journeyStarts,
-    stats.repeatFromFirstInRange,
+    stats.purchaseFirstCount,
+    stats.repeatEventsFromFirstInRange,
+    stats.uniqueContacts,
     stats.uniqueLeadsLinkedToContact,
   ]);
   const journeyPathRates = useMemo(() => [
-    pct(stats.journeyStartContacts, stats.journeyStarts),
-    pct(stats.uniqueLeadsLinkedToContact, stats.journeyStartContacts),
-    pct(stats.firstLoadPurchasersLinkedToLead, stats.uniqueLeadsLinkedToContact),
-    pct(stats.repeatFromFirstInRange, stats.firstLoadPurchasersLinkedToLead),
+    pct(stats.uniqueContacts, stats.journeyStarts),
+    pct(stats.uniqueLeadsLinkedToContact, stats.uniqueContacts),
+    pct(stats.purchaseFirstCount, stats.uniqueLeadsLinkedToContact),
+    pct(stats.repeatEventsFromFirstInRange, stats.purchaseFirstCount),
   ], [
-    stats.firstLoadPurchasersLinkedToLead,
-    stats.journeyStartContacts,
     stats.journeyStarts,
-    stats.repeatFromFirstInRange,
+    stats.purchaseFirstCount,
+    stats.repeatEventsFromFirstInRange,
+    stats.uniqueContacts,
     stats.uniqueLeadsLinkedToContact,
   ]);
 
@@ -1192,8 +1192,8 @@ export default function StatsPanel({
           {showJourneyStartMetrics && (
             <KpiCard
               label={startToContactLabel}
-              value={pct(stats.journeyStartContacts, stats.journeyStarts)}
-              sub={`${stats.journeyStartContacts} de ${stats.journeyStarts} recorridos`}
+              value={pct(stats.uniqueContacts, stats.journeyStarts)}
+              sub={`${stats.uniqueContacts} de ${stats.journeyStarts} recorridos`}
               color="text-emerald-400"
               tooltip={startToContactTooltip}
             />
