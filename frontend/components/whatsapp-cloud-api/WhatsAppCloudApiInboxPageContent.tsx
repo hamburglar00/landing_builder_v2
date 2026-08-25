@@ -710,35 +710,37 @@ export default function WhatsAppCloudApiInboxPageContent({ mode }: Props) {
         title="Inbox WhatsApp Cloud API"
         description="Conversaciones recibidas desde el numero oficial conectado a Meta."
         actions={
-          <div className="relative flex flex-wrap gap-2">
+          <div className="relative flex flex-col items-end gap-2">
+            <div className="flex flex-wrap justify-end gap-2">
+              <button
+                type="button"
+                className={`ui-button ui-button-secondary ${gerenciaFilter ? "border-[var(--color-primary-soft-border)] text-[var(--color-primary)]" : ""}`}
+                onClick={() => {
+                  setDraftGerenciaFilter(gerenciaFilter);
+                  setGerenciaFilterOpen((value) => !value);
+                }}
+              >
+                <FilterIcon />
+                Aplicar filtro{gerenciaFilter ? " (1)" : ""}
+              </button>
+              <button
+                type="button"
+                className="ui-button ui-button-secondary"
+                onClick={() => void loadThreads()}
+                disabled={loading}
+              >
+                Actualizar
+              </button>
+              <Link href={basePath} className="ui-button ui-button-secondary">
+                Volver
+              </Link>
+            </div>
             <DateRangeFilter
               onChange={handleDateRangeChange}
               initialPreset="hoy"
             />
-            <button
-              type="button"
-              className={`ui-button ui-button-secondary ${gerenciaFilter ? "border-[var(--color-primary-soft-border)] text-[var(--color-primary)]" : ""}`}
-              onClick={() => {
-                setDraftGerenciaFilter(gerenciaFilter);
-                setGerenciaFilterOpen((value) => !value);
-              }}
-            >
-              <FilterIcon />
-              Aplicar filtro{gerenciaFilter ? " (1)" : ""}
-            </button>
-            <button
-              type="button"
-              className="ui-button ui-button-secondary"
-              onClick={() => void loadThreads()}
-              disabled={loading}
-            >
-              Actualizar
-            </button>
-            <Link href={basePath} className="ui-button ui-button-secondary">
-              Volver
-            </Link>
             {gerenciaFilterOpen ? (
-              <div className="absolute right-0 top-12 z-20 w-80 rounded-2xl border border-[var(--color-border)] bg-[var(--color-bg-1)] p-4 text-left shadow-2xl">
+              <div className="absolute right-0 top-full z-20 mt-2 w-80 rounded-2xl border border-[var(--color-border)] bg-[var(--color-bg-1)] p-4 text-left shadow-2xl">
                 <label
                   className="text-xs font-semibold text-[var(--color-text-muted)]"
                   htmlFor="whatsapp-cloud-inbox-gerencia-filter"
