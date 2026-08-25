@@ -206,6 +206,10 @@ Ese link conserva el tracking: registra el click, crea/asegura el Contact intern
 si corresponde y despues redirige al `wa.me` real del asesor con el `promo_code`
 precargado.
 
+Si el boton CTA esta activo, `{{wa_link}}` y el boton usan el mismo link corto y
+el mismo token. El cliente puede tocar cualquiera de los dos caminos sin crear
+Contacts duplicados.
+
 Tambien existe un mensaje fallback para cuando no hay telefonos disponibles.
 
 ## 6. Card Redireccion

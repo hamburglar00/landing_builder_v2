@@ -825,7 +825,7 @@ async function handleMessage(
     name: config.name,
     phone: assignedPhone,
     promo_code: generatedPromo,
-    wa_link: useCtaButton ? "" : trackedLink,
+    wa_link: trackedLink,
   });
 
   const sendResult = useCtaButton
