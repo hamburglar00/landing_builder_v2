@@ -32,6 +32,7 @@ import { META_CURRENCY_OPTIONS } from "@/lib/currency";
 import { DashboardSkeleton } from "@/components/ui/DashboardSkeleton";
 import { PageHeader } from "@/components/ui/PanelPrimitives";
 import { useAppConfirm } from "@/components/ui/AppConfirmDialog";
+import CustomSelect from "@/components/ui/CustomSelect";
 import ModalPortal from "@/components/ui/ModalPortal";
 
 const PHONE_KIND_OPTIONS: Array<{ value: PhoneKind; label: string }> = [
@@ -1922,14 +1923,17 @@ export default function IntegracionesMetaCapi() {
             <h3 className="text-sm font-semibold text-zinc-100">Añadir pixel</h3>
             <div className="mt-3 grid gap-3 sm:grid-cols-2">
               <input value={quickPixelId} onChange={(e) => setQuickPixelId(e.target.value.replace(/\D/g, ""))} placeholder="Pixel ID" className="h-9 rounded-lg border border-zinc-700 bg-zinc-900 px-3 text-sm text-zinc-100" />
-              <label className="space-y-1">
-                <span className="text-[11px] font-semibold uppercase tracking-wide text-zinc-500">
-                  Moneda default CAPI del pixel
-                </span>
-                <select value={quickCurrency} onChange={(e) => setQuickCurrency(e.target.value)} className="h-9 w-full rounded-lg border border-zinc-700 bg-zinc-900 px-3 text-sm text-zinc-100">
-                  {META_CURRENCY_OPTIONS.map((c) => <option key={c} value={c}>{c}</option>)}
-                </select>
-              </label>
+              <CustomSelect
+                label="Moneda default CAPI del pixel"
+                value={quickCurrency}
+                options={META_CURRENCY_OPTIONS.map((currency) => ({
+                  value: currency,
+                  label: currency,
+                }))}
+                onChange={setQuickCurrency}
+                labelClassName="text-[11px] font-semibold uppercase tracking-wide text-zinc-500"
+                buttonClassName="h-9 px-3 text-sm"
+              />
               <input value={quickComment} onChange={(e) => setQuickComment(e.target.value)} placeholder="Comentario opcional" className="h-9 rounded-lg border border-zinc-700 bg-zinc-900 px-3 text-sm text-zinc-100 sm:col-span-2" />
               <input value={quickToken} onChange={(e) => setQuickToken(e.target.value)} placeholder="Access token" className="h-9 rounded-lg border border-zinc-700 bg-zinc-900 px-3 text-sm text-zinc-100 sm:col-span-2" />
             </div>
@@ -1988,22 +1992,23 @@ export default function IntegracionesMetaCapi() {
                     placeholder="Pixel ID"
                     className="h-9 rounded-lg border border-zinc-700 bg-zinc-900 px-3 text-sm text-zinc-100 disabled:cursor-not-allowed disabled:border-zinc-800 disabled:bg-zinc-950 disabled:text-zinc-500"
                   />
-                  <label className="space-y-1">
-                    <span className="text-[11px] font-semibold uppercase tracking-wide text-zinc-500">
-                      Moneda default CAPI del pixel
-                    </span>
-                    <select
+                  <div>
+                    <CustomSelect
+                      label="Moneda default CAPI del pixel"
                       value={draft.meta_currency}
                       disabled={!editSensitiveFields}
-                      onChange={(e) => setDraft((p) => (p ? { ...p, meta_currency: e.target.value } : p))}
-                      className="h-9 w-full rounded-lg border border-zinc-700 bg-zinc-900 px-3 text-sm text-zinc-100 disabled:cursor-not-allowed disabled:border-zinc-800 disabled:bg-zinc-950 disabled:text-zinc-500"
-                    >
-                      {META_CURRENCY_OPTIONS.map((c) => <option key={c} value={c}>{c}</option>)}
-                    </select>
+                      options={META_CURRENCY_OPTIONS.map((currency) => ({
+                        value: currency,
+                        label: currency,
+                      }))}
+                      onChange={(nextValue) => setDraft((p) => (p ? { ...p, meta_currency: nextValue } : p))}
+                      labelClassName="text-[11px] font-semibold uppercase tracking-wide text-zinc-500"
+                      buttonClassName="h-9 px-3 text-sm"
+                    />
                     <span className="block text-[10px] leading-relaxed text-zinc-500">
                       Se usa solo como fallback para Purchase CAPI cuando el evento no trae workspace resuelto.
                     </span>
-                  </label>
+                  </div>
                   <input
                     value={draft.meta_access_token}
                     disabled={!editSensitiveFields}

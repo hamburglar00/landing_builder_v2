@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useRef, useEffect } from "react";
+import CustomSelect from "@/components/ui/CustomSelect";
 
 export interface DateRange {
   start: Date;
@@ -116,18 +117,20 @@ export default function DateRangeFilter({
 
   return (
     <div ref={ref} className="relative w-full sm:w-auto">
-      <select
+      <CustomSelect
         value={preset}
-        onChange={(e) => handlePreset(e.target.value as Preset)}
-        aria-label="Seleccionar rango de fechas"
-        className="h-8 w-full rounded-lg border border-zinc-800 bg-[#0d0d11] px-2 text-[11px] font-medium text-zinc-200 outline-none sm:hidden"
-      >
-        {(Object.keys(PRESET_LABELS) as Preset[]).map((p) => (
-          <option key={p} value={p}>
-            {p === "personalizado" && preset === "personalizado" && customStart ? activeLabel : PRESET_LABELS[p]}
-          </option>
-        ))}
-      </select>
+        onChange={(nextValue) => handlePreset(nextValue as Preset)}
+        options={(Object.keys(PRESET_LABELS) as Preset[]).map((p) => ({
+          value: p,
+          label: p === "personalizado" && preset === "personalizado" && customStart
+            ? activeLabel
+            : PRESET_LABELS[p],
+        }))}
+        className="w-full sm:hidden"
+        buttonClassName="h-8 border-zinc-800 bg-[#0d0d11] px-2 text-[11px] font-medium text-zinc-200"
+        menuClassName="right-0"
+        title="Seleccionar rango de fechas"
+      />
       <div className="hidden flex-wrap items-center gap-1 rounded-lg border border-zinc-800/50 bg-[#0d0d11] p-0.5 sm:flex sm:flex-nowrap">
         {(Object.keys(PRESET_LABELS) as Preset[]).map((p) => (
           <button

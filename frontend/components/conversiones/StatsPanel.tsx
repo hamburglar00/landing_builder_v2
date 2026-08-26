@@ -10,6 +10,7 @@ import { computeCoreStats, computeJourneyStartStats, computeStatsTruthMetrics } 
 import { formatCompactCurrency, formatCurrencyAmount, type ReportingCurrency } from "@/lib/currency";
 import ArgentinaMap from "./ArgentinaMap";
 import { supabase } from "@/lib/supabaseClient";
+import CustomSelect from "@/components/ui/CustomSelect";
 import {
   ComposedChart, Area, Bar, Line,
   XAxis, YAxis, CartesianGrid, Tooltip, Legend,
@@ -1504,15 +1505,16 @@ export default function StatsPanel({
           <div className="mb-4 flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
             <h4 className="text-xs font-semibold text-zinc-200">{LOAD_METRIC_LABELS[hourlyLoadMetric]} [distribucion por hora]</h4>
             <div className="flex items-center gap-2">
-              <select
+              <CustomSelect
                 value={hourlyLoadMetric}
-                onChange={(e) => setHourlyLoadMetric(e.target.value as LoadMetric)}
-                className="h-7 rounded-lg border border-zinc-700 bg-zinc-900 px-2 text-[11px] text-zinc-200 outline-none hover:bg-zinc-800 focus:border-zinc-500"
-              >
-                <option value="first">Primeras cargas</option>
-                <option value="repeat">Recargas</option>
-                <option value="total">Cargas totales</option>
-              </select>
+                options={(Object.keys(LOAD_METRIC_LABELS) as LoadMetric[]).map((metric) => ({
+                  value: metric,
+                  label: LOAD_METRIC_LABELS[metric],
+                }))}
+                onChange={(nextValue) => setHourlyLoadMetric(nextValue as LoadMetric)}
+                className="w-36"
+                buttonClassName="h-7 px-2 text-[11px] text-zinc-200"
+              />
               <label className="inline-flex h-7 items-center gap-2 rounded-lg border border-zinc-700 bg-zinc-900 px-2 text-[11px] text-zinc-300">
                 <span>SMA</span>
                 <button
@@ -1562,15 +1564,16 @@ export default function StatsPanel({
           <div className="mb-4 flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
             <h4 className="text-xs font-semibold text-zinc-200">{LOAD_METRIC_LABELS[dailyLoadMetric]} [distribucion por dia]</h4>
             <div className="flex items-center gap-2">
-              <select
+              <CustomSelect
                 value={dailyLoadMetric}
-                onChange={(e) => setDailyLoadMetric(e.target.value as LoadMetric)}
-                className="h-7 rounded-lg border border-zinc-700 bg-zinc-900 px-2 text-[11px] text-zinc-200 outline-none hover:bg-zinc-800 focus:border-zinc-500"
-              >
-                <option value="first">Primeras cargas</option>
-                <option value="repeat">Recargas</option>
-                <option value="total">Cargas totales</option>
-              </select>
+                options={(Object.keys(LOAD_METRIC_LABELS) as LoadMetric[]).map((metric) => ({
+                  value: metric,
+                  label: LOAD_METRIC_LABELS[metric],
+                }))}
+                onChange={(nextValue) => setDailyLoadMetric(nextValue as LoadMetric)}
+                className="w-36"
+                buttonClassName="h-7 px-2 text-[11px] text-zinc-200"
+              />
               <label className="inline-flex h-7 items-center gap-2 rounded-lg border border-zinc-700 bg-zinc-900 px-2 text-[11px] text-zinc-300">
                 <span>SMA</span>
                 <button
@@ -1946,20 +1949,20 @@ export default function StatsPanel({
           <div className="mt-3">
             <TableCard title={`Top ${topContactsLimit} jugadores`}>
               <div className="mb-3 flex items-center justify-end">
-                <label className="inline-flex items-center gap-2 text-[11px] text-zinc-400">
-                  Mostrar
-                  <select
-                    value={topContactsLimit}
-                    onChange={(e) => setTopContactsLimit(Number(e.target.value) as TopContactsLimit)}
-                    className="h-7 rounded-lg border border-zinc-700 bg-zinc-900 px-2 text-[11px] text-zinc-200 outline-none hover:bg-zinc-800 focus:border-zinc-500"
-                  >
-                    {TOP_CONTACT_LIMIT_OPTIONS.map((limit) => (
-                      <option key={limit} value={limit}>
-                        Top {limit}
-                      </option>
-                    ))}
-                  </select>
-                </label>
+                <div className="inline-flex items-center gap-2 text-[11px] text-zinc-400">
+                  <span>Mostrar</span>
+                  <CustomSelect
+                    value={String(topContactsLimit)}
+                    options={TOP_CONTACT_LIMIT_OPTIONS.map((limit) => ({
+                      value: String(limit),
+                      label: `Top ${limit}`,
+                    }))}
+                    onChange={(nextValue) => setTopContactsLimit(Number(nextValue) as TopContactsLimit)}
+                    className="w-24"
+                    buttonClassName="h-7 px-2 text-[11px] text-zinc-200"
+                    menuClassName="right-0"
+                  />
+                </div>
               </div>
               <table className="w-full text-[11px]">
                 <thead><tr className="text-zinc-500">

@@ -15,6 +15,7 @@ import {
 import { DashboardSkeleton } from "@/components/ui/DashboardSkeleton";
 import { PageHeader } from "@/components/ui/PanelPrimitives";
 import { useAppConfirm } from "@/components/ui/AppConfirmDialog";
+import CustomSelect from "@/components/ui/CustomSelect";
 import ModalPortal from "@/components/ui/ModalPortal";
 import { CURRENCY_ALL } from "@/lib/currency";
 import { SingleCurrencyRequired, useCurrencyScope } from "@/components/currency/CurrencyScope";
@@ -219,20 +220,18 @@ export default function AdminGerenciasPage() {
               </button>
             </div>
             <form onSubmit={handleCreate} className="space-y-4">
-              <div>
-                <label htmlFor="new-gerencia-type" className="mb-1 block text-xs font-medium text-zinc-400">
-                  Tipo de gerencia
-                </label>
-                <select
-                  id="new-gerencia-type"
-                  value={newSourceType}
-                  onChange={(e) => setNewSourceType(e.target.value as "pbadmin" | "manual")}
-                  className="w-full rounded-lg border border-[var(--color-border)] bg-[var(--color-bg-2)] px-3 py-2 text-sm text-[var(--color-text-strong)] focus:border-[var(--color-primary)] focus:outline-none focus:ring-2 focus:ring-[var(--color-ring-primary)]"
-                >
-                  <option value="pbadmin">Gerencia PBadmin</option>
-                  <option value="manual">Gerencia Manual</option>
-                </select>
-              </div>
+              <CustomSelect
+                id="new-gerencia-type"
+                label="Tipo de gerencia"
+                value={newSourceType}
+                options={[
+                  { value: "pbadmin", label: "Gerencia PBadmin" },
+                  { value: "manual", label: "Gerencia Manual" },
+                ]}
+                onChange={(nextValue) => setNewSourceType(nextValue as "pbadmin" | "manual")}
+                labelClassName="font-medium"
+                buttonClassName="h-10 border-[var(--color-border)] bg-[var(--color-bg-2)] px-3 py-2 text-sm text-[var(--color-text-strong)] focus:border-[var(--color-primary)] focus:ring-[var(--color-ring-primary)]"
+              />
               <div>
                 <label htmlFor="new-gerencia-nombre" className="mb-1 block text-xs font-medium text-zinc-400">
                   Nombre

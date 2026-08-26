@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import ModalPortal from "@/components/ui/ModalPortal";
+import CustomSelect from "@/components/ui/CustomSelect";
 import type {
   ConversionLogDirectionFilter,
   ConversionLogEventFilter,
@@ -15,9 +16,6 @@ type ConversionLogFiltersProps = {
     eventType: ConversionLogEventFilter,
   ) => void;
 };
-
-const selectClassName =
-  "h-9 w-full rounded-lg border border-zinc-700 bg-zinc-900 px-2 text-xs text-zinc-100";
 
 export default function ConversionLogFilters({
   direction,
@@ -116,51 +114,35 @@ export default function ConversionLogFilters({
               </div>
 
               <div className="min-h-0 flex-1 space-y-3 overflow-y-auto px-4 py-3">
-                <div>
-                  <label
-                    htmlFor="conversion-log-direction"
-                    className="mb-1 block text-xs text-zinc-400"
-                  >
-                    Origen del log
-                  </label>
-                  <select
-                    id="conversion-log-direction"
-                    value={draftDirection}
-                    onChange={(event) =>
-                      setDraftDirection(
-                        event.target.value as ConversionLogDirectionFilter,
-                      )}
-                    className={selectClassName}
-                  >
-                    <option value="all">Todos los logs</option>
-                    <option value="received">Eventos recibidos</option>
-                    <option value="meta">Eventos enviados a Meta</option>
-                  </select>
-                </div>
+                <CustomSelect
+                  id="conversion-log-direction"
+                  label="Origen del log"
+                  value={draftDirection}
+                  options={[
+                    { value: "all", label: "Todos los logs" },
+                    { value: "received", label: "Eventos recibidos" },
+                    { value: "meta", label: "Eventos enviados a Meta" },
+                  ]}
+                  onChange={(nextValue) =>
+                    setDraftDirection(nextValue as ConversionLogDirectionFilter)
+                  }
+                />
 
-                <div>
-                  <label
-                    htmlFor="conversion-log-event"
-                    className="mb-1 block text-xs text-zinc-400"
-                  >
-                    Tipo de evento
-                  </label>
-                  <select
-                    id="conversion-log-event"
-                    value={draftEventType}
-                    onChange={(event) =>
-                      setDraftEventType(
-                        event.target.value as ConversionLogEventFilter,
-                      )}
-                    className={selectClassName}
-                  >
-                    <option value="all">Todos los eventos</option>
-                    <option value="CONTACT">Contact</option>
-                    <option value="LEAD">Lead</option>
-                    <option value="COMPLETEREGISTRATION">CompleteRegistration</option>
-                    <option value="PURCHASE">Purchase</option>
-                  </select>
-                </div>
+                <CustomSelect
+                  id="conversion-log-event"
+                  label="Tipo de evento"
+                  value={draftEventType}
+                  options={[
+                    { value: "all", label: "Todos los eventos" },
+                    { value: "CONTACT", label: "Contact" },
+                    { value: "LEAD", label: "Lead" },
+                    { value: "COMPLETEREGISTRATION", label: "CompleteRegistration" },
+                    { value: "PURCHASE", label: "Purchase" },
+                  ]}
+                  onChange={(nextValue) =>
+                    setDraftEventType(nextValue as ConversionLogEventFilter)
+                  }
+                />
               </div>
 
               <div className="flex shrink-0 items-center justify-between gap-2 border-t border-zinc-800 px-4 py-3">

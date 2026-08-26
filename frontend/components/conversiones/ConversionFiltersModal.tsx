@@ -2,6 +2,7 @@
 
 import { useMemo, useState } from "react";
 import ModalPortal from "@/components/ui/ModalPortal";
+import CustomSelect from "@/components/ui/CustomSelect";
 import { friendlySourcePlatform, sexLabel } from "@/components/conversiones/conversionPageShared";
 import {
   trackingFilterAllLabel,
@@ -74,24 +75,17 @@ function FilterField({
   onChange: (value: string) => void;
 }) {
   return (
-    <div>
-      <label htmlFor={id} className="mb-1 block text-xs text-zinc-400">
-        {label}
-      </label>
-      <select
-        id={id}
-        value={value}
-        onChange={(event) => onChange(event.target.value)}
-        className={selectClassName}
-      >
-        <option value="__all__">{allLabel}</option>
-        {options.map((option) => (
-          <option key={option.value} value={option.value}>
-            {option.label}
-          </option>
-        ))}
-      </select>
-    </div>
+    <CustomSelect
+      id={id}
+      label={label}
+      value={value}
+      options={[
+        { value: "__all__", label: allLabel },
+        ...options,
+      ]}
+      onChange={onChange}
+      placeholder={allLabel}
+    />
   );
 }
 
@@ -100,6 +94,7 @@ function SearchableCheckboxField({
   label,
   values,
   allLabel,
+  selectedPluralLabel = "opciones seleccionadas",
   options,
   onChange,
 }: {
@@ -107,6 +102,7 @@ function SearchableCheckboxField({
   label: string;
   values: string[];
   allLabel: string;
+  selectedPluralLabel?: string;
   options: readonly ConversionFilterOption[];
   onChange: (value: string[]) => void;
 }) {
@@ -116,7 +112,7 @@ function SearchableCheckboxField({
     ? allLabel
     : values.length === 1
       ? options.find((option) => option.value === values[0])?.label || values[0]
-      : `${values.length} gerencias seleccionadas`;
+      : `${values.length} ${selectedPluralLabel}`;
   const filteredOptions = useMemo(() => {
     const normalized = query.trim().toLowerCase();
     if (!normalized) return options;
@@ -275,6 +271,7 @@ export default function ConversionFiltersModal({
                 label="Gerencia (ID)"
                 values={draft.gerencia}
                 allLabel="Todas las gerencias"
+                selectedPluralLabel="gerencias seleccionadas"
                 options={options.gerencias}
                 onChange={onChange.gerencia}
               />
@@ -300,55 +297,15 @@ export default function ConversionFiltersModal({
                 }))}
                 onChange={onChange.sex}
               />
-              <div>
-                <span className="mb-1 block text-xs text-zinc-400">Campaña</span>
-                <details className="group relative">
-                  <summary className="flex h-9 w-full cursor-pointer list-none items-center justify-between rounded-lg border border-zinc-700 bg-zinc-900 px-2 text-xs text-zinc-100 marker:hidden">
-                    <span className="truncate">
-                      {draft.campaigns.length === 0
-                        ? "Todas"
-                        : draft.campaigns.length === 1
-                          ? draft.campaigns[0]
-                          : `${draft.campaigns.length} campañas seleccionadas`}
-                    </span>
-                    <span className="ml-2 text-zinc-500 transition group-open:rotate-180">v</span>
-                  </summary>
-                  <div className="absolute z-30 mt-1 max-h-56 w-full overflow-y-auto rounded-lg border border-zinc-700 bg-zinc-950 px-2 py-1.5 text-xs text-zinc-100 shadow-xl">
-                    <label className="flex cursor-pointer items-center gap-2 rounded px-1 py-1 hover:bg-zinc-800/70">
-                      <input
-                        type="checkbox"
-                        checked={draft.campaigns.length === 0}
-                        onChange={() => onChange.campaigns([])}
-                        className="h-3.5 w-3.5 rounded border-zinc-600 bg-zinc-900 accent-emerald-500"
-                      />
-                      Todas
-                    </label>
-                    {options.campaigns.map((campaign) => {
-                      const checked = draft.campaigns.includes(campaign);
-                      return (
-                        <label
-                          key={campaign}
-                          className="flex cursor-pointer items-center gap-2 rounded px-1 py-1 hover:bg-zinc-800/70"
-                        >
-                          <input
-                            type="checkbox"
-                            checked={checked}
-                            onChange={(event) => {
-                              onChange.campaigns(
-                                event.target.checked
-                                  ? [...draft.campaigns, campaign]
-                                  : draft.campaigns.filter((item) => item !== campaign),
-                              );
-                            }}
-                            className="h-3.5 w-3.5 rounded border-zinc-600 bg-zinc-900 accent-emerald-500"
-                          />
-                          <span className="truncate">{campaign}</span>
-                        </label>
-                      );
-                    })}
-                  </div>
-                </details>
-              </div>
+              <SearchableCheckboxField
+                id="conversion-filter-campaign"
+                label="Campaña"
+                values={draft.campaigns}
+                allLabel="Todas"
+                selectedPluralLabel="campañas seleccionadas"
+                options={stringOptions(options.campaigns)}
+                onChange={onChange.campaigns}
+              />
             </div>
           </div>
           <div className="flex shrink-0 justify-end gap-2 border-t border-zinc-800 px-4 py-3">

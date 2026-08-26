@@ -30,6 +30,7 @@ import ClearConversionsViewModal, {
 } from "@/components/conversiones/ClearConversionsViewModal";
 import { DashboardSkeleton, PanelSkeleton } from "@/components/ui/DashboardSkeleton";
 import { PageHeader } from "@/components/ui/PanelPrimitives";
+import CustomSelect from "@/components/ui/CustomSelect";
 import DateRangeFilter, {
   type DateRange,
   filterByDateRange,
@@ -1954,18 +1955,22 @@ export default function DashboardConversionesPage() {
               </span>
             </h3>
             <div className="flex items-center gap-2">
-              <select
+              <CustomSelect
                 value={inboxActionFilter}
-                onChange={(e) => setInboxActionFilter(e.target.value as "all" | "CONTACT" | "LEAD" | "COMPLETEREGISTRATION" | "PURCHASE")}
-                className="h-8 rounded-lg border border-zinc-700 bg-zinc-900 px-2 text-xs text-zinc-100"
+                options={[
+                  { value: "all", label: "Todos" },
+                  { value: "CONTACT", label: "Contact" },
+                  { value: "LEAD", label: "Lead" },
+                  { value: "COMPLETEREGISTRATION", label: "CompleteRegistration" },
+                  { value: "PURCHASE", label: "Purchase" },
+                ]}
+                onChange={(nextValue) =>
+                  setInboxActionFilter(nextValue as "all" | "CONTACT" | "LEAD" | "COMPLETEREGISTRATION" | "PURCHASE")
+                }
+                className="w-40"
+                buttonClassName="h-8 text-xs"
                 title="Filtrar por tipo de evento"
-              >
-                <option value="all">Todos</option>
-                <option value="CONTACT">Contact</option>
-                <option value="LEAD">Lead</option>
-                <option value="COMPLETEREGISTRATION">CompleteRegistration</option>
-                <option value="PURCHASE">Purchase</option>
-              </select>
+              />
               <input
                 value={inboxSearch}
                 onChange={(e) => setInboxSearch(e.target.value)}

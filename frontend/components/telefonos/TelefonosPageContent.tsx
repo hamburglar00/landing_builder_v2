@@ -10,6 +10,7 @@ import type { PhoneKind } from "@/lib/landing/types";
 import { DashboardSkeleton } from "@/components/ui/DashboardSkeleton";
 import { PageHeader } from "@/components/ui/PanelPrimitives";
 import { useAppConfirm } from "@/components/ui/AppConfirmDialog";
+import CustomSelect from "@/components/ui/CustomSelect";
 import ModalPortal from "@/components/ui/ModalPortal";
 import { CURRENCY_ALL } from "@/lib/currency";
 import { SingleCurrencyRequired, useCurrencyScope } from "@/components/currency/CurrencyScope";
@@ -1259,25 +1260,21 @@ export function TelefonosPageContent({
                 />
               </div>
 
-              <div>
-                <label className="mb-1 block text-xs text-zinc-400">Tipo</label>
-                <select
-                  value={manualPhoneKind[manualModalGerenciaId] ?? "carga"}
-                  onChange={(e) =>
-                    setManualPhoneKind((prev) => ({
-                      ...prev,
-                      [manualModalGerenciaId]: e.target.value as PhoneKind,
-                    }))
-                  }
-                  className="w-full rounded-lg border border-zinc-700 bg-zinc-900 px-3 py-2 text-sm text-zinc-100"
-                >
-                  {PHONE_KIND_OPTIONS.map((kind) => (
-                    <option key={kind} value={kind}>
-                      {PHONE_KIND_LABELS[kind]}
-                    </option>
-                  ))}
-                </select>
-              </div>
+              <CustomSelect
+                label="Tipo"
+                value={manualPhoneKind[manualModalGerenciaId] ?? "carga"}
+                options={PHONE_KIND_OPTIONS.map((kind) => ({
+                  value: kind,
+                  label: PHONE_KIND_LABELS[kind],
+                }))}
+                onChange={(nextValue) =>
+                  setManualPhoneKind((prev) => ({
+                    ...prev,
+                    [manualModalGerenciaId]: nextValue as PhoneKind,
+                  }))
+                }
+                buttonClassName="h-10 px-3 py-2 text-sm"
+              />
 
               <div className="flex justify-end">
                 <button

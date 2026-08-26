@@ -11,6 +11,7 @@ import {
 } from "@/lib/conversionsDb";
 import { computeStatsTruthMetrics } from "@/lib/conversionStats";
 import { formatCurrencyAmount, type ReportingCurrency } from "@/lib/currency";
+import CustomSelect from "@/components/ui/CustomSelect";
 
 type Props = {
   fetchConversionsForMonth: (range: FetchDateRange) => Promise<ConversionRow[]>;
@@ -731,30 +732,28 @@ export default function GerenciasPerformancePanel({
         <h3 className="w-full shrink-0 text-sm font-semibold text-zinc-100 md:w-auto md:mr-1">Desempeño por Gerencias</h3>
         {!useGlobalFilters && (
           <>
-        <select
+        <CustomSelect
           value={month}
-          onChange={(e) => setMonth(e.target.value || currentMonthValue())}
-          aria-label="Seleccionar mes"
-          className="h-8 w-full shrink-0 rounded-lg border border-zinc-700 bg-zinc-950 px-2 text-xs font-medium text-zinc-100 sm:w-[126px]"
-        >
-          {monthSelectOptions.map((option) => (
-            <option key={option.value} value={option.value}>{option.label}</option>
-          ))}
-        </select>
-        <select
+          options={monthSelectOptions}
+          onChange={(nextValue) => setMonth(nextValue || currentMonthValue())}
+          className="w-full shrink-0 sm:w-[126px]"
+          buttonClassName="h-8 bg-zinc-950 text-xs font-medium"
+          title="Seleccionar mes"
+        />
+        <CustomSelect
           value={landingFilter}
-          onChange={(e) => setLandingFilter(e.target.value || "__all__")}
-          aria-label="Filtrar por landing"
-          className="h-8 w-full shrink-0 rounded-lg border border-zinc-700 bg-zinc-950 px-2 text-xs font-medium text-zinc-100 sm:w-[180px] lg:w-[190px]"
+          options={[
+            { value: "__all__", label: "Todas las landings" },
+            ...landingOptions.map((option) => ({
+              value: option.id,
+              label: option.name || "Landing sin nombre",
+            })),
+          ]}
+          onChange={(nextValue) => setLandingFilter(nextValue || "__all__")}
+          className="w-full shrink-0 sm:w-[180px] lg:w-[190px]"
+          buttonClassName="h-8 bg-zinc-950 text-xs font-medium"
           title="Filtrar desempeno por landing"
-        >
-          <option value="__all__">Todas las landings</option>
-          {landingOptions.map((option) => (
-            <option key={option.id} value={option.id}>
-              {option.name || "Landing sin nombre"}
-            </option>
-          ))}
-        </select>
+        />
         <button
           type="button"
           onClick={() => setMetaAdsOnly((value) => !value)}

@@ -8,6 +8,7 @@ import type {
 } from "@/lib/conversionsDb";
 import { formatCurrencyAmount, type ReportingCurrency } from "@/lib/currency";
 import { useAppConfirm } from "@/components/ui/AppConfirmDialog";
+import CustomSelect from "@/components/ui/CustomSelect";
 import ModalPortal from "@/components/ui/ModalPortal";
 
 type SortMode = TrackingRankingConfig["sortMode"];
@@ -577,34 +578,37 @@ export default function TrackingBoard({
               </div>
             </div>
 
-            <div className="mb-3 flex flex-col items-start gap-2 sm:flex-row sm:items-center">
-              <label className="text-xs text-zinc-400">Criterio de sort</label>
-              <select
+            <div className="mb-3">
+              <CustomSelect
+                label="Criterio de sort"
                 value={draftSortMode}
-                onChange={(e) => setDraftSortMode(e.target.value as SortMode)}
-                className="w-full sm:w-auto rounded-lg border border-zinc-700 bg-zinc-900 px-2 py-1.5 text-xs text-zinc-100"
-              >
-                <option value="last_active_desc">Ultima vez activo</option>
-                <option value="total_loaded_desc">Total cargado</option>
-                <option value="loads_desc">Cargas</option>
-                <option value="avg_load_desc">Carga promedio</option>
-              </select>
+                options={[
+                  { value: "last_active_desc", label: "Ultima vez activo" },
+                  { value: "total_loaded_desc", label: "Total cargado" },
+                  { value: "loads_desc", label: "Cargas" },
+                  { value: "avg_load_desc", label: "Carga promedio" },
+                ]}
+                onChange={(nextValue) => setDraftSortMode(nextValue as SortMode)}
+                className="w-full sm:w-56"
+                buttonClassName="h-8 py-1.5"
+              />
             </div>
 
-            <div className="mb-3 flex flex-col items-start gap-2 sm:flex-row sm:items-center">
-              <label className="text-xs text-zinc-400">Filtrar por gerencia</label>
-              <select
+            <div className="mb-3">
+              <CustomSelect
+                label="Filtrar por gerencia"
                 value={draftGerenciaFilter}
-                onChange={(e) => setDraftGerenciaFilter(e.target.value)}
-                className="w-full sm:w-auto rounded-lg border border-zinc-700 bg-zinc-900 px-2 py-1.5 text-xs text-zinc-100"
-              >
-                <option value="">Todas</option>
-                {gerenciaOptions.map((g) => (
-                  <option key={g.id} value={String(g.id)}>
-                    {g.label}
-                  </option>
-                ))}
-              </select>
+                options={[
+                  { value: "", label: "Todas" },
+                  ...gerenciaOptions.map((g) => ({
+                    value: String(g.id),
+                    label: g.label,
+                  })),
+                ]}
+                onChange={setDraftGerenciaFilter}
+                className="w-full sm:w-64"
+                buttonClassName="h-8 py-1.5"
+              />
             </div>
 
             <div className="overflow-x-auto rounded-lg border border-zinc-800">
