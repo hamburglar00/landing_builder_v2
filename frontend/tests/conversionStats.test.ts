@@ -370,6 +370,54 @@ test("mide chats iniciados de WhatsApp Cloud API antes del click al CTA", async 
   assert.equal(stats.contacts, 1);
 });
 
+test("expone la misma familia de metricas que usa Estadisticas", async () => {
+  const { computeStatsTruthMetrics } = await import("../lib/conversionStats");
+  const conversions = [
+    conversionRow("contact-a", {
+      contact_event_id: "contact-a",
+      external_id: "player-a",
+    }),
+    conversionRow("lead-a", {
+      lead_event_id: "lead-a",
+      external_id: "player-a",
+    }),
+    conversionRow("purchase-a-first", {
+      purchase_event_id: "purchase-a-first",
+      purchase_type: "first",
+      external_id: "player-a",
+      valor: 100,
+    }),
+    conversionRow("purchase-a-repeat", {
+      purchase_event_id: "purchase-a-repeat",
+      purchase_type: "repeat",
+      external_id: "player-a",
+      valor: 50,
+    }),
+    conversionRow("purchase-b-inferred", {
+      contact_event_id: "contact-b",
+      purchase_event_id: "purchase-b-inferred",
+      purchase_type: "first",
+      external_id: "player-b",
+      promo_code: "PROMO-b",
+      valor: 300,
+    }),
+  ];
+
+  const stats = computeStatsTruthMetrics({
+    conversions,
+    funnelContacts: [],
+    allConversions: conversions,
+    premiumThreshold: 200,
+  });
+
+  assert.equal(stats.uniqueContacts, 2);
+  assert.equal(stats.uniqueLeadsLinkedToContact, 1);
+  assert.equal(stats.inferredLeadsFromContactPurchase, 1);
+  assert.equal(stats.firstLoadPurchasersLinkedToLead, 2);
+  assert.equal(stats.totalPurchases, 3);
+  assert.equal(stats.totalRevenue, 450);
+});
+
 test("expone ID de gerencia en chats iniciados aunque el label historico sea generico", async () => {
   const { getJourneyStartGerenciaLabels } = await import("../lib/conversionsDb");
 

@@ -517,11 +517,18 @@ export default function AdminConversionesPage() {
     }
     return Array.from(set).sort((a, b) => a.localeCompare(b, "es"));
   }, [statsAllConversions, scopedJourneyStarts]);
+  const effectiveStatsLandingFilter = statsSourcePlatformFilter === "landing"
+    ? statsLandingFilter
+    : "__all__";
   useEffect(() => {
+    if (statsSourcePlatformFilter !== "landing") {
+      if (statsLandingFilter !== "__all__") setStatsLandingFilter("__all__");
+      return;
+    }
     if (statsLandingFilter !== "__all__" && !statsLandingOptions.includes(statsLandingFilter)) {
       setStatsLandingFilter("__all__");
     }
-  }, [statsLandingFilter, statsLandingOptions, setStatsLandingFilter]);
+  }, [statsLandingFilter, statsLandingOptions, statsSourcePlatformFilter, setStatsLandingFilter]);
   useEffect(() => {
     if (statsPixelFilter !== "__all__" && !statsPixelOptions.includes(statsPixelFilter)) {
       setStatsPixelFilter("__all__");
@@ -561,7 +568,7 @@ export default function AdminConversionesPage() {
   }, [statsDeviceFilter, statsDeviceOptions, setStatsDeviceFilter]);
   const statsConversionsFiltered = useMemo(() => {
     const filtered = statsConversions.filter((r) => {
-      const byLanding = statsLandingFilter === "__all__" || String(r.landing_name ?? "").trim() === statsLandingFilter;
+      const byLanding = effectiveStatsLandingFilter === "__all__" || String(r.landing_name ?? "").trim() === effectiveStatsLandingFilter;
       const byPixel = statsPixelFilter === "__all__" || String(r.meta_pixel_id ?? r.pixel_id ?? "").trim() === statsPixelFilter;
       const assignedPhone = normalizePhone(r.telefono_asignado);
       const byTelefono = statsTelefonoFilter === "__all__" || assignedPhone === statsTelefonoFilter;
@@ -588,10 +595,10 @@ export default function AdminConversionesPage() {
         (labels) => gerenciaFilterMatchesLabels(statsGerenciaFilter, labels),
       ))
       .filter((row): row is ConversionRow => row !== null);
-  }, [statsConversions, statsLandingFilter, statsPixelFilter, statsGerenciaFilter, statsTelefonoFilter, statsFromMetaAdsFilter, statsSourcePlatformFilter, statsSexoFilter, statsCampaignFilter, statsDeviceFilter, gerenciaByPhone]);
+  }, [statsConversions, effectiveStatsLandingFilter, statsPixelFilter, statsGerenciaFilter, statsTelefonoFilter, statsFromMetaAdsFilter, statsSourcePlatformFilter, statsSexoFilter, statsCampaignFilter, statsDeviceFilter, gerenciaByPhone]);
   const statsAllConversionsFiltered = useMemo(() => {
     const filtered = statsAllConversions.filter((r) => {
-      const byLanding = statsLandingFilter === "__all__" || String(r.landing_name ?? "").trim() === statsLandingFilter;
+      const byLanding = effectiveStatsLandingFilter === "__all__" || String(r.landing_name ?? "").trim() === effectiveStatsLandingFilter;
       const byPixel = statsPixelFilter === "__all__" || String(r.meta_pixel_id ?? r.pixel_id ?? "").trim() === statsPixelFilter;
       const assignedPhone = normalizePhone(r.telefono_asignado);
       const byTelefono = statsTelefonoFilter === "__all__" || assignedPhone === statsTelefonoFilter;
@@ -618,10 +625,10 @@ export default function AdminConversionesPage() {
         (labels) => gerenciaFilterMatchesLabels(statsGerenciaFilter, labels),
       ))
       .filter((row): row is ConversionRow => row !== null);
-  }, [statsAllConversions, statsLandingFilter, statsPixelFilter, statsGerenciaFilter, statsTelefonoFilter, statsFromMetaAdsFilter, statsSourcePlatformFilter, statsSexoFilter, statsCampaignFilter, statsDeviceFilter, gerenciaByPhone]);
+  }, [statsAllConversions, effectiveStatsLandingFilter, statsPixelFilter, statsGerenciaFilter, statsTelefonoFilter, statsFromMetaAdsFilter, statsSourcePlatformFilter, statsSexoFilter, statsCampaignFilter, statsDeviceFilter, gerenciaByPhone]);
   const statsJourneyStartsFiltered = useMemo(() => {
     return scopedJourneyStarts.filter((r) => {
-      const byLanding = statsLandingFilter === "__all__" || String(r.landing_name ?? "").trim() === statsLandingFilter;
+      const byLanding = effectiveStatsLandingFilter === "__all__" || String(r.landing_name ?? "").trim() === effectiveStatsLandingFilter;
       const byPixel = statsPixelFilter === "__all__" || String(r.meta_pixel_id ?? "").trim() === statsPixelFilter;
       const assignedPhone = normalizePhone(r.telefono_asignado);
       const byTelefono = statsTelefonoFilter === "__all__" || assignedPhone === statsTelefonoFilter;
@@ -638,7 +645,7 @@ export default function AdminConversionesPage() {
       const byDevice = statsDeviceFilter === "__all__" || String(r.device_type ?? "").trim().toLowerCase() === statsDeviceFilter;
       return byLanding && byPixel && byGerencia && byTelefono && byFromMetaAds && bySourcePlatform && bySexo && byCampaign && byDevice;
     });
-  }, [scopedJourneyStarts, statsLandingFilter, statsPixelFilter, statsGerenciaFilter, statsTelefonoFilter, statsFromMetaAdsFilter, statsSourcePlatformFilter, statsSexoFilter, statsCampaignFilter, statsDeviceFilter, gerenciaByPhone]);
+  }, [scopedJourneyStarts, effectiveStatsLandingFilter, statsPixelFilter, statsGerenciaFilter, statsTelefonoFilter, statsFromMetaAdsFilter, statsSourcePlatformFilter, statsSexoFilter, statsCampaignFilter, statsDeviceFilter, gerenciaByPhone]);
   const showJourneyStartStats = statsSourcePlatformFilter === "landing" ||
     statsSourcePlatformFilter === "whatsapp_cloud_api";
   const filteredPhoneSet = useMemo(
@@ -654,14 +661,14 @@ export default function AdminConversionesPage() {
       return buildFunnelContactsFromConversions(statsConversionsFiltered);
     }
     return activeFunnel.filter((r) => {
-      const byLanding = statsLandingFilter === "__all__" || String(r.landing_name ?? "").trim() === statsLandingFilter;
+      const byLanding = effectiveStatsLandingFilter === "__all__" || String(r.landing_name ?? "").trim() === effectiveStatsLandingFilter;
       const byPhone = filteredPhoneSet.has(String(r.phone ?? "").trim());
       return byLanding && byPhone;
     });
-  }, [activeFunnel, statsLandingFilter, filteredPhoneSet, statsGerenciaFilter, statsConversionsFiltered]);
+  }, [activeFunnel, effectiveStatsLandingFilter, filteredPhoneSet, statsGerenciaFilter, statsConversionsFiltered]);
   const tableConversionsFiltered = useMemo(() => {
     return activeConversions.filter((r) => {
-      const byLanding = statsLandingFilter === "__all__" || String(r.landing_name ?? "").trim() === statsLandingFilter;
+      const byLanding = effectiveStatsLandingFilter === "__all__" || String(r.landing_name ?? "").trim() === effectiveStatsLandingFilter;
       const byPixel = statsPixelFilter === "__all__" || String(r.meta_pixel_id ?? r.pixel_id ?? "").trim() === statsPixelFilter;
       const assignedPhone = normalizePhone(r.telefono_asignado);
       const byTelefono = statsTelefonoFilter === "__all__" || assignedPhone === statsTelefonoFilter;
@@ -680,7 +687,7 @@ export default function AdminConversionesPage() {
       const byDevice = statsDeviceFilter === "__all__" || String(r.device_type ?? "").trim().toLowerCase() === statsDeviceFilter;
       return byLanding && byPixel && byGerencia && byTelefono && byFromMetaAds && bySourcePlatform && bySexo && byCampaign && byDevice;
     });
-  }, [activeConversions, statsLandingFilter, statsPixelFilter, statsGerenciaFilter, statsTelefonoFilter, statsFromMetaAdsFilter, statsSourcePlatformFilter, statsSexoFilter, statsCampaignFilter, statsDeviceFilter, gerenciaByPhone]);
+  }, [activeConversions, effectiveStatsLandingFilter, statsPixelFilter, statsGerenciaFilter, statsTelefonoFilter, statsFromMetaAdsFilter, statsSourcePlatformFilter, statsSexoFilter, statsCampaignFilter, statsDeviceFilter, gerenciaByPhone]);
   const filteredConversions = useMemo(() => {
     const q = tableSearch.trim();
     if (!q) return tableConversionsFiltered;
@@ -729,7 +736,7 @@ export default function AdminConversionesPage() {
         ? ""
         : statsGerenciaFilter.join(", ");
     if (tableSearch.trim()) filters.push(`Busqueda: ${tableSearch.trim()}`);
-    if (statsLandingFilter !== "__all__") filters.push(`Landing: ${statsLandingFilter}`);
+    if (effectiveStatsLandingFilter !== "__all__") filters.push(`Landing: ${effectiveStatsLandingFilter}`);
     if (statsPixelFilter !== "__all__") filters.push(`Pixel: ${statsPixelFilter}`);
     if (gerenciaLabel) filters.push(`Gerencia: ${gerenciaLabel}`);
     if (statsTelefonoFilter !== "__all__") filters.push(`Telefono: ${statsTelefonoFilter}`);
@@ -748,7 +755,7 @@ export default function AdminConversionesPage() {
     statsDeviceFilter,
     statsFromMetaAdsFilter,
     statsGerenciaFilter,
-    statsLandingFilter,
+    effectiveStatsLandingFilter,
     statsPixelFilter,
     statsSexoFilter,
     statsSourcePlatformFilter,
@@ -758,17 +765,17 @@ export default function AdminConversionesPage() {
   const selectedPerformanceGerenciaLabels = useMemo(
     () => {
       if (statsGerenciaFilter.length > 0) return [...statsGerenciaFilter];
-      if (statsLandingFilter === "__all__") return [];
+      if (effectiveStatsLandingFilter === "__all__") return [];
       const labels = performanceLandingOptions
-        .filter((option) => option.name === statsLandingFilter)
+        .filter((option) => option.name === effectiveStatsLandingFilter)
         .flatMap((option) => option.gerenciaLabels);
       return Array.from(new Set(labels)).sort((a, b) => a.localeCompare(b, "es"));
     },
-    [performanceLandingOptions, statsGerenciaFilter, statsLandingFilter],
+    [performanceLandingOptions, statsGerenciaFilter, effectiveStatsLandingFilter],
   );
   useEffect(() => {
     setTablePage(1);
-  }, [tableSearch, dateRange, statsLandingFilter, statsPixelFilter, statsGerenciaFilter, statsTelefonoFilter, statsFromMetaAdsFilter, statsSourcePlatformFilter, statsSexoFilter, statsCampaignFilter, statsDeviceFilter, demoMode, currencyScope]);
+  }, [tableSearch, dateRange, effectiveStatsLandingFilter, statsPixelFilter, statsGerenciaFilter, statsTelefonoFilter, statsFromMetaAdsFilter, statsSourcePlatformFilter, statsSexoFilter, statsCampaignFilter, statsDeviceFilter, demoMode, currencyScope]);
   useEffect(() => {
     if (tablePage > totalTablePages) setTablePage(totalTablePages);
   }, [tablePage, totalTablePages]);

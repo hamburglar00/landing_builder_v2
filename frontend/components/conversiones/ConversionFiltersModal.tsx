@@ -215,6 +215,11 @@ export default function ConversionFiltersModal({
   onApply,
 }: ConversionFiltersModalProps) {
   const titleId = "conversion-filters-title";
+  const showLandingFilter = draft.sourcePlatform === "landing";
+  const handleSourcePlatformChange = (value: string) => {
+    onChange.sourcePlatform(value);
+    if (value !== "landing") onChange.landing("__all__");
+  };
 
   return (
     <ModalPortal>
@@ -233,13 +238,23 @@ export default function ConversionFiltersModal({
           <div className="min-h-0 flex-1 overflow-y-auto px-4 py-3">
             <div className="grid grid-cols-1 gap-3">
               <FilterField
-                id="conversion-filter-landing"
-                label="Landing"
-                value={draft.landing}
-                allLabel="Todas las landings"
-                options={stringOptions(options.landings)}
-                onChange={onChange.landing}
+                id="conversion-filter-platform"
+                label="Plataforma de origen"
+                value={draft.sourcePlatform}
+                allLabel="Todas"
+                options={sourcePlatformOptions(options.sourcePlatforms)}
+                onChange={handleSourcePlatformChange}
               />
+              {showLandingFilter ? (
+                <FilterField
+                  id="conversion-filter-landing"
+                  label="Landing"
+                  value={draft.landing}
+                  allLabel="Todas las landings"
+                  options={stringOptions(options.landings)}
+                  onChange={onChange.landing}
+                />
+              ) : null}
               <FilterField
                 id="conversion-filter-pixel"
                 label="Pixel"
@@ -266,14 +281,6 @@ export default function ConversionFiltersModal({
                   { value: "false", label: "No" },
                 ]}
                 onChange={onChange.fromMetaAds}
-              />
-              <FilterField
-                id="conversion-filter-platform"
-                label="Plataforma de origen"
-                value={draft.sourcePlatform}
-                allLabel="Todas"
-                options={sourcePlatformOptions(options.sourcePlatforms)}
-                onChange={onChange.sourcePlatform}
               />
               <FilterField
                 id="conversion-filter-sex"

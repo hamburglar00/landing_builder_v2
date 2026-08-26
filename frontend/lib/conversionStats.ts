@@ -43,6 +43,35 @@ export interface JourneyStartStats {
   contacts: number;
 }
 
+export interface StatsTruthMetrics {
+  core: CoreStats;
+  uniqueContacts: number;
+  uniqueLeads: number;
+  realLeadsLinkedToContact: number;
+  inferredLeadsFromContactPurchase: number;
+  uniqueLeadsLinkedToContact: number;
+  firstLoadPurchasers: number;
+  firstLoadPurchasersLinkedToLead: number;
+  firstLoadPlayersAttributed: number;
+  totalPurchases: number;
+  primera: number;
+  recurrente: number;
+  premium: number;
+  purchasers: number;
+  reachedRepeat: number;
+  repeatPlayersReached: number;
+  purchaseFirstCount: number;
+  purchaseRepeatCount: number;
+  repeatFromFirstInRange: number;
+  repeatEventsFromFirstInRange: number;
+  repeatPlayersFromFirstInRange: number;
+  totalRevenue: number;
+  firstPurchaseRevenue: number;
+  totalPurchaseCount: number;
+  avgTicket: number;
+  avgLoadsPerPlayer: number;
+}
+
 type JourneyStage = "contact" | "lead" | "purchase";
 
 function cleanText(value: unknown): string {
@@ -497,6 +526,64 @@ export function computeCoreStats(
     activeRetention30d,
     purchaseValues,
     leadPurchaseHours,
+  };
+}
+
+export function computeStatsTruthMetrics({
+  conversions,
+  funnelContacts,
+  allConversions,
+  premiumThreshold,
+}: {
+  conversions: ConversionRow[];
+  funnelContacts: FunnelContact[];
+  allConversions: ConversionRow[];
+  premiumThreshold: number;
+}): StatsTruthMetrics {
+  const core = computeCoreStats(conversions, funnelContacts, allConversions, premiumThreshold);
+  const isRepeatPurchase = (c: ConversionRow): boolean => {
+    if ((c.purchase_event_id ?? "") === "") return false;
+    if (c.purchase_type === "repeat") return true;
+    if (c.purchase_type === "first") return false;
+    return (c.observaciones ?? "").includes("REPEAT");
+  };
+  const isFirstPurchase = (c: ConversionRow): boolean => {
+    if ((c.purchase_event_id ?? "") === "") return false;
+    if (c.purchase_type === "first") return true;
+    if (c.purchase_type === "repeat") return false;
+    return !(c.observaciones ?? "").includes("REPEAT");
+  };
+  const firstLoadPurchasers = core.firstLoadPurchasers;
+  const totalPurchaseCount = core.totalPurchaseCount;
+  const totalRevenue = core.totalRevenue;
+
+  return {
+    core,
+    uniqueContacts: core.adContactJourneys,
+    uniqueLeads: core.uniqueLeads,
+    realLeadsLinkedToContact: core.adLeadJourneysLinkedToContact,
+    inferredLeadsFromContactPurchase: core.adInferredLeadJourneys,
+    uniqueLeadsLinkedToContact: core.adLeadJourneysLinkedToContact,
+    firstLoadPurchasers,
+    firstLoadPurchasersLinkedToLead: core.adFirstPurchaseJourneysAttributed,
+    firstLoadPlayersAttributed: core.firstLoadPurchasersAttributed,
+    totalPurchases: core.totalPurchases,
+    primera: core.firstLoadPlayers,
+    recurrente: core.repeatPlayers,
+    premium: core.premiumPlayers,
+    purchasers: firstLoadPurchasers,
+    reachedRepeat: core.adRepeatJourneys,
+    repeatPlayersReached: core.purchaseRepeat,
+    purchaseFirstCount: conversions.filter(isFirstPurchase).length,
+    purchaseRepeatCount: conversions.filter(isRepeatPurchase).length,
+    repeatFromFirstInRange: core.adRepeatJourneysFromAttributedFirstInRange,
+    repeatEventsFromFirstInRange: core.adRepeatEventsFromAttributedFirstInRange,
+    repeatPlayersFromFirstInRange: core.repeatFromAttributedFirstInRange,
+    totalRevenue,
+    firstPurchaseRevenue: core.firstPurchaseEventRevenue,
+    totalPurchaseCount,
+    avgTicket: totalPurchaseCount > 0 ? totalRevenue / totalPurchaseCount : 0,
+    avgLoadsPerPlayer: firstLoadPurchasers > 0 ? totalPurchaseCount / firstLoadPurchasers : 0,
   };
 }
 

@@ -9,7 +9,7 @@ import {
   type FetchDateRange,
   type GerenciaAvailabilitySummary,
 } from "@/lib/conversionsDb";
-import { computeCoreStats } from "@/lib/conversionStats";
+import { computeStatsTruthMetrics } from "@/lib/conversionStats";
 import { formatCurrencyAmount, type ReportingCurrency } from "@/lib/currency";
 
 type Props = {
@@ -160,31 +160,6 @@ function formatRoas(value: number): string {
     minimumFractionDigits: 2,
     maximumFractionDigits: 2,
   }).format(value || 0)}x`;
-}
-
-function externalKey(row: ConversionRow): string {
-  const ext = String(row.external_id ?? "").trim();
-  return ext ? `${row.user_id}::${ext}` : "";
-}
-
-function getAttributedPurchaseRows(rows: ConversionRow[]): ConversionRow[] {
-  const contactKeys = new Set(
-    rows
-      .filter((row) => String(row.contact_event_id ?? "").trim())
-      .map(externalKey)
-      .filter(Boolean),
-  );
-  const leadLinkedKeys = new Set(
-    rows
-      .filter((row) => String(row.lead_event_id ?? "").trim())
-      .map(externalKey)
-      .filter((key) => key && contactKeys.has(key)),
-  );
-
-  return rows.filter((row) => (
-    String(row.purchase_event_id ?? "").trim() !== "" &&
-    (leadLinkedKeys.has(externalKey(row)) || contactKeys.has(externalKey(row)))
-  ));
 }
 
 export default function GerenciasPerformancePanel({
@@ -345,12 +320,16 @@ export default function GerenciasPerformancePanel({
       .map((label) => {
         const gerenciaRows = rowsByGerencia.get(label) ?? [];
         const funnel = buildFunnelContactsFromConversions(gerenciaRows);
-        const core = computeCoreStats(gerenciaRows, funnel, gerenciaRows, premiumThreshold);
-        const contactos = core.uniqueContacts;
-        const mensajes = core.uniqueLeadsLinkedToContactWithInferred;
-        const attributedPurchaseRows = getAttributedPurchaseRows(gerenciaRows);
-        const cargas = attributedPurchaseRows.length;
-        const montoCargado = attributedPurchaseRows.reduce((sum, row) => sum + (Number(row.valor) || 0), 0);
+        const truth = computeStatsTruthMetrics({
+          conversions: gerenciaRows,
+          funnelContacts: funnel,
+          allConversions: gerenciaRows,
+          premiumThreshold,
+        });
+        const contactos = truth.uniqueContacts;
+        const mensajes = truth.uniqueLeadsLinkedToContact;
+        const cargas = truth.totalPurchases;
+        const montoCargado = truth.totalRevenue;
         const availability = findAvailabilityForLabel(label, availabilityByLabel, availabilityById);
         return {
           label,
@@ -360,9 +339,9 @@ export default function GerenciasPerformancePanel({
           cargas,
           montoCargado,
           disponibilidad: availability?.availabilityPct ?? null,
-          pctCarga: mensajes > 0 ? (core.firstLoadPurchasersAttributed / mensajes) * 100 : 0,
-          pctRecarga: core.firstLoadPurchasersAttributed > 0
-            ? (core.repeatFromAttributedFirstInRange / core.firstLoadPurchasersAttributed) * 100
+          pctCarga: mensajes > 0 ? (truth.firstLoadPurchasersLinkedToLead / mensajes) * 100 : 0,
+          pctRecarga: truth.firstLoadPurchasersLinkedToLead > 0
+            ? (truth.repeatFromFirstInRange / truth.firstLoadPurchasersLinkedToLead) * 100
             : 0,
         };
       });

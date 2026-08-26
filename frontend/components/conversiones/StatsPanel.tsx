@@ -6,7 +6,7 @@ import {
   type FunnelContact,
   type ConversionRow,
 } from "@/lib/conversionsDb";
-import { computeCoreStats, computeJourneyStartStats } from "@/lib/conversionStats";
+import { computeCoreStats, computeJourneyStartStats, computeStatsTruthMetrics } from "@/lib/conversionStats";
 import { formatCompactCurrency, formatCurrencyAmount, type ReportingCurrency } from "@/lib/currency";
 import ArgentinaMap from "./ArgentinaMap";
 import { supabase } from "@/lib/supabaseClient";
@@ -303,7 +303,13 @@ export default function StatsPanel({
   }, [currency]);
 
   const stats = useMemo(() => {
-    const core = computeCoreStats(conversions, funnelContacts, allConversions, premiumThreshold);
+    const truth = computeStatsTruthMetrics({
+      conversions,
+      funnelContacts,
+      allConversions,
+      premiumThreshold,
+    });
+    const core = truth.core;
     const journeyStartStats = computeJourneyStartStats(journeyStarts, conversions);
     const isRepeatPurchase = (c: ConversionRow): boolean => {
       if ((c.purchase_event_id ?? "") === "") return false;
@@ -317,30 +323,30 @@ export default function StatsPanel({
       if (c.purchase_type === "repeat") return false;
       return !(c.observaciones ?? "").includes("REPEAT");
     };
-    const uniqueContacts = core.adContactJourneys;
-    const uniqueLeads = core.uniqueLeads;
-    const realLeadsLinkedToContact = core.adLeadJourneysLinkedToContact;
-    const inferredLeadsFromContactPurchase = core.adInferredLeadJourneys;
-    const uniqueLeadsLinkedToContact = core.adLeadJourneysLinkedToContact;
-    const firstLoadPurchasers = core.firstLoadPurchasers;
-    const firstLoadPurchasersLinkedToLead = core.adFirstPurchaseJourneysAttributed;
-    const firstLoadPlayersAttributed = core.firstLoadPurchasersAttributed;
-    const totalPurchases = core.totalPurchases;
-    const primera = core.firstLoadPlayers;
-    const recurrente = core.repeatPlayers;
-    const premium = core.premiumPlayers;
-    const totalRevenue = core.totalRevenue;
-    const totalPurchaseCount = core.totalPurchaseCount;
-    const firstPurchaseRevenue = core.firstPurchaseEventRevenue;
-    const reachedRepeat = core.adRepeatJourneys;
-    const repeatPlayersReached = core.purchaseRepeat;
-    const purchaseFirstCount = conversions.filter(isFirstPurchase).length;
-    const purchaseRepeatCount = conversions.filter(isRepeatPurchase).length;
+    const uniqueContacts = truth.uniqueContacts;
+    const uniqueLeads = truth.uniqueLeads;
+    const realLeadsLinkedToContact = truth.realLeadsLinkedToContact;
+    const inferredLeadsFromContactPurchase = truth.inferredLeadsFromContactPurchase;
+    const uniqueLeadsLinkedToContact = truth.uniqueLeadsLinkedToContact;
+    const firstLoadPurchasers = truth.firstLoadPurchasers;
+    const firstLoadPurchasersLinkedToLead = truth.firstLoadPurchasersLinkedToLead;
+    const firstLoadPlayersAttributed = truth.firstLoadPlayersAttributed;
+    const totalPurchases = truth.totalPurchases;
+    const primera = truth.primera;
+    const recurrente = truth.recurrente;
+    const premium = truth.premium;
+    const totalRevenue = truth.totalRevenue;
+    const totalPurchaseCount = truth.totalPurchaseCount;
+    const firstPurchaseRevenue = truth.firstPurchaseRevenue;
+    const reachedRepeat = truth.reachedRepeat;
+    const repeatPlayersReached = truth.repeatPlayersReached;
+    const purchaseFirstCount = truth.purchaseFirstCount;
+    const purchaseRepeatCount = truth.purchaseRepeatCount;
     const leads = uniqueLeads;
 
-    const purchasers = firstLoadPurchasers;
-    const avgTicket = totalPurchaseCount > 0 ? totalRevenue / totalPurchaseCount : 0;
-    const avgLoadsPerPlayer = purchasers > 0 ? totalPurchaseCount / purchasers : 0;
+    const purchasers = truth.purchasers;
+    const avgTicket = truth.avgTicket;
+    const avgLoadsPerPlayer = truth.avgLoadsPerPlayer;
     type SliceStats = {
       mensajes: number;
       cargas: number;

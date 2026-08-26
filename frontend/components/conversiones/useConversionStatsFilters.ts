@@ -26,7 +26,7 @@ export function useConversionStatsFilters() {
   const [draftDeviceFilter, setDraftDeviceFilter] = useState<string>(ALL_FILTER_VALUES);
 
   const openStatsFilterModal = useCallback(() => {
-    setDraftLandingFilter(statsLandingFilter);
+    setDraftLandingFilter(statsSourcePlatformFilter === "landing" ? statsLandingFilter : ALL_FILTER_VALUES);
     setDraftPixelFilter(statsPixelFilter);
     setDraftGerenciaFilter([...statsGerenciaFilter]);
     setDraftTelefonoFilter(statsTelefonoFilter);
@@ -49,7 +49,7 @@ export function useConversionStatsFilters() {
   ]);
 
   const applyStatsFilters = useCallback(() => {
-    setStatsLandingFilter(draftLandingFilter);
+    setStatsLandingFilter(draftSourcePlatformFilter === "landing" ? draftLandingFilter : ALL_FILTER_VALUES);
     setStatsPixelFilter(draftPixelFilter);
     setStatsGerenciaFilter([...draftGerenciaFilter]);
     setStatsTelefonoFilter(draftTelefonoFilter);
@@ -94,7 +94,7 @@ export function useConversionStatsFilters() {
 
   const statsFilterValues = useMemo(
     () => [
-      statsLandingFilter,
+      statsSourcePlatformFilter === "landing" ? statsLandingFilter : ALL_FILTER_VALUES,
       statsPixelFilter,
       statsGerenciaFilter.length > 0
         ? statsGerenciaFilter.join(", ")
