@@ -20,6 +20,7 @@ import {
 } from "@/components/conversiones/conversionPageShared";
 import { supabase } from "@/lib/supabaseClient";
 import { invokeFunction } from "@/lib/supabaseFunctions";
+import { ensureRealtimeAuth } from "@/lib/supabaseRealtimeAuth";
 import {
   fetchWhatsappCloudApiInboxThreads,
   formatWhatsappCloudApiError,
@@ -928,10 +929,14 @@ export default function WhatsAppCloudApiInboxPageContent({ mode }: Props) {
     let active = true;
     let channel: ReturnType<typeof supabase.channel> | null = null;
 
-    void supabase.auth.getUser().then(({ data, error: authError }) => {
-      if (!active || authError || !data.user) return;
+    void ensureRealtimeAuth(supabase).then((auth) => {
+      if (!active) return;
+      if (!auth.ok) {
+        console.warn("[whatsapp-cloud-inbox] realtime auth unavailable", auth.error);
+        return;
+      }
       channel = supabase
-        .channel(`whatsapp-cloud-inbox:${mode}:${data.user.id}`)
+        .channel(`whatsapp-cloud-inbox:${mode}:${auth.userId}`)
         .on(
           "postgres_changes",
           {
