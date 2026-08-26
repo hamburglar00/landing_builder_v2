@@ -774,7 +774,7 @@ export default function PublicLandingRuntimeScript({ slug, config }: Props) {
           internalId
         ]);
         var name = firstNonEmpty([gerencia.name, gerencia.nombre]);
-        var label = name && externalId ? name + " (ID " + externalId + ")" : name;
+        var label = name && externalId ? name + " (ID " + externalId + ")" : (name || (externalId ? "Gerencia " + externalId : ""));
         return {
           assigned_gerencia_id: isFinite(internalId) && internalId > 0 ? internalId : undefined,
           assigned_gerencia_external_id: externalId || undefined,
@@ -822,10 +822,21 @@ export default function PublicLandingRuntimeScript({ slug, config }: Props) {
         if (wasJourneyStartSent(cfg.slug, identity.externalId)) return;
         journeyStartInFlight = true;
         var tracking = collectMetaTrackingParams(params);
-        sendJourneyStartBestEffort(JSON.stringify(
+        var immediateBody = JSON.stringify(
           buildLandingJourneyStartPayload(params, identity, tracking, null)
-        )).then(function (sent) {
+        );
+        sendJourneyStartBestEffort(immediateBody).then(function (sent) {
           if (sent) markJourneyStartSent(cfg.slug, identity.externalId);
+          if (isAtrioDestination()) return sent;
+          return waitWithTimeout(ensurePhonePromise(), 1500).then(function (phoneData) {
+            if (!phoneData || !phoneData.phone) return sent;
+            return sendJourneyStartBestEffort(JSON.stringify(
+              buildLandingJourneyStartPayload(params, identity, tracking, phoneData)
+            )).then(function (enrichedSent) {
+              if (enrichedSent) markJourneyStartSent(cfg.slug, identity.externalId);
+              return sent || enrichedSent;
+            });
+          });
         }).catch(function () {}).then(function () {
           journeyStartInFlight = false;
         });
