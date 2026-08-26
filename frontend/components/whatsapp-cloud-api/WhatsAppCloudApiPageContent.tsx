@@ -5,7 +5,7 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { supabase } from "@/lib/supabaseClient";
 import { invokeFunction } from "@/lib/supabaseFunctions";
-import { PageHeader, SurfaceCard } from "@/components/ui/PanelPrimitives";
+import { ModalShell, PageHeader, SurfaceCard } from "@/components/ui/PanelPrimitives";
 import { CURRENCY_ALL } from "@/lib/currency";
 import { formatWhatsAppDisplayPhone } from "@/lib/phoneFormatting";
 import { SingleCurrencyRequired, useCurrencyScope } from "@/components/currency/CurrencyScope";
@@ -1732,34 +1732,36 @@ export default function WhatsAppCloudApiPageContent({
         </aside>
       </div>
 
-      {datasetConfirmOpen ? (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 p-4">
-          <div className="w-full max-w-md rounded-2xl border border-[var(--color-border)] bg-[var(--color-bg-1)] p-5 shadow-2xl">
-            <p className="text-base font-semibold text-[var(--color-text-strong)]">Obtener dataset de Meta</p>
-            <p className="mt-2 text-sm leading-6 text-[var(--color-text-muted)]">
-              Se consultara el Dataset Business Messaging asociado al WABA configurado. Si Meta no devuelve uno existente, se hara la solicitud de obtenerlo para ese WABA y luego deberas guardar los cambios.
-            </p>
-            <div className="mt-5 flex justify-end gap-2">
-              <button
-                type="button"
-                className="ui-button ui-button-secondary"
-                onClick={() => setDatasetConfirmOpen(false)}
-                disabled={datasetLoading}
-              >
-                Cancelar
-              </button>
-              <button
-                type="button"
-                className="ui-button ui-button-primary"
-                onClick={() => void handleEnsureDataset(false)}
-                disabled={datasetLoading}
-              >
-                {datasetLoading ? "Obteniendo..." : "Confirmar"}
-              </button>
-            </div>
-          </div>
-        </div>
-      ) : null}
+      <ModalShell
+        open={datasetConfirmOpen}
+        title="Obtener dataset de Meta"
+        description="Se consultara el Dataset Business Messaging asociado al WABA configurado. Si Meta no devuelve uno existente, se hara la solicitud de obtenerlo para ese WABA y luego deberas guardar los cambios."
+        onClose={() => setDatasetConfirmOpen(false)}
+        closeDisabled={datasetLoading}
+        width="sm"
+        footer={
+          <>
+            <button
+              type="button"
+              className="ui-button ui-button-secondary"
+              onClick={() => setDatasetConfirmOpen(false)}
+              disabled={datasetLoading}
+            >
+              Cancelar
+            </button>
+            <button
+              type="button"
+              className="ui-button ui-button-primary"
+              onClick={() => void handleEnsureDataset(false)}
+              disabled={datasetLoading}
+            >
+              {datasetLoading ? "Obteniendo..." : "Confirmar"}
+            </button>
+          </>
+        }
+      >
+        {null}
+      </ModalShell>
     </div>
   );
 }

@@ -10,7 +10,7 @@ import {
 } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { PageHeader, SurfaceCard } from "@/components/ui/PanelPrimitives";
+import { ModalShell, PageHeader, SurfaceCard } from "@/components/ui/PanelPrimitives";
 import DateRangeFilter, {
   type DateRange,
 } from "@/components/conversiones/DateRangeFilter";
@@ -59,6 +59,8 @@ const TAG_CLASSES: Record<WhatsappCloudApiInboxThread["tag"], string> = {
 const INBOX_PAGE_SIZE = 20;
 type InboxTag = WhatsappCloudApiInboxThread["tag"];
 type InboxFilter = "all" | InboxTag | "unread";
+const headerButtonClassName =
+  "inline-flex h-8 items-center justify-center gap-1.5 rounded-lg border border-zinc-700 bg-zinc-900 px-2 text-[11px] font-medium text-zinc-200 transition hover:bg-zinc-800 hover:text-zinc-100 disabled:cursor-not-allowed disabled:opacity-60 sm:h-7";
 
 const WHATSAPP_DOODLE_PATTERN = encodeURIComponent(`
 <svg xmlns="http://www.w3.org/2000/svg" width="320" height="320" viewBox="0 0 320 320">
@@ -615,6 +617,7 @@ export default function WhatsAppCloudApiInboxPageContent({ mode }: Props) {
     pageIndex * INBOX_PAGE_SIZE + visiblePageThreadCount,
   );
   const canGoNext = pageEnd < visibleTotalThreads;
+  const hasGerenciaFilter = Boolean(gerenciaFilter);
 
   const hideThreadFromUi = () => {
     if (!threadToHide) return;
@@ -714,24 +717,60 @@ export default function WhatsAppCloudApiInboxPageContent({ mode }: Props) {
             <div className="flex flex-wrap justify-end gap-2">
               <button
                 type="button"
-                className={`ui-button ui-button-secondary ${gerenciaFilter ? "border-[var(--color-primary-soft-border)] text-[var(--color-primary)]" : ""}`}
+                className={`col-span-2 ${headerButtonClassName} ${
+                  hasGerenciaFilter
+                    ? "border-emerald-700 bg-emerald-950/40 text-emerald-300"
+                    : ""
+                }`}
                 onClick={() => {
                   setDraftGerenciaFilter(gerenciaFilter);
                   setGerenciaFilterOpen((value) => !value);
                 }}
               >
                 <FilterIcon />
-                Aplicar filtro{gerenciaFilter ? " (1)" : ""}
+                Aplicar filtro
+                {hasGerenciaFilter ? (
+                  <>
+                    <span className="inline-flex h-4 min-w-4 items-center justify-center rounded-full bg-red-600 px-1 text-[10px] font-bold text-white">
+                      1
+                    </span>
+                    <span
+                      role="button"
+                      tabIndex={0}
+                      onClick={(event) => {
+                        event.preventDefault();
+                        event.stopPropagation();
+                        setDraftGerenciaFilter("");
+                        setGerenciaFilter("");
+                        setGerenciaFilterOpen(false);
+                      }}
+                      onKeyDown={(event) => {
+                        if (event.key === "Enter" || event.key === " ") {
+                          event.preventDefault();
+                          event.stopPropagation();
+                          setDraftGerenciaFilter("");
+                          setGerenciaFilter("");
+                          setGerenciaFilterOpen(false);
+                        }
+                      }}
+                      className="inline-flex h-4 w-4 items-center justify-center rounded-full border border-red-500/70 bg-red-950/70 text-[10px] font-bold leading-none text-red-200 hover:bg-red-900/80"
+                      title="Quitar filtro"
+                      aria-label="Quitar filtro"
+                    >
+                      x
+                    </span>
+                  </>
+                ) : null}
               </button>
               <button
                 type="button"
-                className="ui-button ui-button-secondary"
+                className={headerButtonClassName}
                 onClick={() => void loadThreads()}
                 disabled={loading}
               >
                 Actualizar
               </button>
-              <Link href={basePath} className="ui-button ui-button-secondary">
+              <Link href={basePath} className={headerButtonClassName}>
                 Volver
               </Link>
             </div>
@@ -740,32 +779,46 @@ export default function WhatsAppCloudApiInboxPageContent({ mode }: Props) {
               initialPreset="hoy"
             />
             {gerenciaFilterOpen ? (
-              <div className="absolute right-0 top-full z-20 mt-2 w-80 rounded-2xl border border-[var(--color-border)] bg-[var(--color-bg-1)] p-4 text-left shadow-2xl">
-                <label
-                  className="text-xs font-semibold text-[var(--color-text-muted)]"
-                  htmlFor="whatsapp-cloud-inbox-gerencia-filter"
-                >
+              <div className="absolute right-0 top-full z-20 mt-2 w-80 rounded-lg border border-[var(--color-border)] bg-[var(--color-bg-1)] p-3 text-left shadow-2xl">
+                <p className="text-xs font-semibold text-[var(--color-text-muted)]">
                   Gerencia asignada
-                </label>
-                <select
-                  id="whatsapp-cloud-inbox-gerencia-filter"
-                  value={draftGerenciaFilter}
-                  onChange={(event) =>
-                    setDraftGerenciaFilter(event.target.value)
-                  }
-                  className="mt-2 h-10 w-full rounded-xl border border-[var(--color-border)] bg-[var(--color-bg-2)] px-3 text-sm text-[var(--color-text-strong)] outline-none"
-                >
-                  <option value="">Todas las gerencias</option>
-                  {gerenciaOptions.map((label) => (
-                    <option key={label} value={label}>
-                      {label}
-                    </option>
-                  ))}
-                </select>
+                </p>
+                <div className="mt-2 max-h-64 overflow-y-auto rounded-lg border border-[var(--color-border-subtle)] bg-[var(--color-bg-2)] p-1">
+                  <button
+                    type="button"
+                    className={`flex w-full items-center justify-between rounded-md px-2.5 py-2 text-left text-xs transition hover:bg-zinc-800/70 ${
+                      !draftGerenciaFilter
+                        ? "bg-emerald-500/10 text-emerald-300"
+                        : "text-[var(--color-text)]"
+                    }`}
+                    onClick={() => setDraftGerenciaFilter("")}
+                  >
+                    <span>Todas las gerencias</span>
+                    {!draftGerenciaFilter ? <span className="h-1.5 w-1.5 rounded-full bg-emerald-300" aria-hidden /> : null}
+                  </button>
+                  {gerenciaOptions.map((label) => {
+                    const selected = draftGerenciaFilter === label;
+                    return (
+                      <button
+                        key={label}
+                        type="button"
+                        className={`mt-1 flex w-full items-center justify-between gap-2 rounded-md px-2.5 py-2 text-left text-xs transition hover:bg-zinc-800/70 ${
+                          selected
+                            ? "bg-emerald-500/10 text-emerald-300"
+                            : "text-[var(--color-text)]"
+                        }`}
+                        onClick={() => setDraftGerenciaFilter(label)}
+                      >
+                        <span className="min-w-0 truncate">{label}</span>
+                        {selected ? <span className="h-1.5 w-1.5 shrink-0 rounded-full bg-emerald-300" aria-hidden /> : null}
+                      </button>
+                    );
+                  })}
+                </div>
                 <div className="mt-4 flex justify-end gap-2">
                   <button
                     type="button"
-                    className="ui-button ui-button-secondary"
+                    className={headerButtonClassName}
                     onClick={() => {
                       setDraftGerenciaFilter("");
                       setGerenciaFilter("");
@@ -776,7 +829,7 @@ export default function WhatsAppCloudApiInboxPageContent({ mode }: Props) {
                   </button>
                   <button
                     type="button"
-                    className="ui-button ui-button-primary"
+                    className="inline-flex h-8 items-center justify-center gap-1.5 rounded-lg border border-emerald-700 bg-emerald-600 px-2 text-[11px] font-semibold text-zinc-950 transition hover:bg-emerald-500 sm:h-7"
                     onClick={() => {
                       setGerenciaFilter(draftGerenciaFilter);
                       setGerenciaFilterOpen(false);
@@ -1276,35 +1329,37 @@ export default function WhatsAppCloudApiInboxPageContent({ mode }: Props) {
         </aside>
       </SurfaceCard>
 
-      {threadToHide ? (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 p-4">
-          <div className="w-full max-w-md rounded-2xl border border-[var(--color-border)] bg-[var(--color-bg-1)] p-5 shadow-2xl">
-            <p className="text-sm font-semibold text-[var(--color-text-strong)]">
-              Ocultar chat
-            </p>
-            <p className="mt-2 text-sm leading-5 text-[var(--color-text-muted)]">
-              {threadToHide.profile_name || threadToHide.wa_id} se quitara de
-              esta vista. No se elimina de la base de datos.
-            </p>
-            <div className="mt-5 flex justify-end gap-2">
-              <button
-                type="button"
-                className="ui-button ui-button-secondary"
-                onClick={() => setThreadToHide(null)}
-              >
-                Cancelar
-              </button>
-              <button
-                type="button"
-                className="ui-button ui-button-primary"
-                onClick={hideThreadFromUi}
-              >
-                Ocultar
-              </button>
-            </div>
-          </div>
-        </div>
-      ) : null}
+      <ModalShell
+        open={Boolean(threadToHide)}
+        title="Ocultar chat"
+        description={
+          threadToHide
+            ? `${threadToHide.profile_name || threadToHide.wa_id} se quitara de esta vista. No se elimina de la base de datos.`
+            : undefined
+        }
+        onClose={() => setThreadToHide(null)}
+        width="sm"
+        footer={
+          <>
+            <button
+              type="button"
+              className="ui-button ui-button-secondary"
+              onClick={() => setThreadToHide(null)}
+            >
+              Cancelar
+            </button>
+            <button
+              type="button"
+              className="ui-button ui-button-danger"
+              onClick={hideThreadFromUi}
+            >
+              Ocultar
+            </button>
+          </>
+        }
+      >
+        {null}
+      </ModalShell>
     </div>
   );
 }

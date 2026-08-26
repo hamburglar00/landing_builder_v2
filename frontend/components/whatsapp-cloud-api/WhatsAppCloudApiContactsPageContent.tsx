@@ -3,7 +3,7 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { PageHeader, SurfaceCard } from "@/components/ui/PanelPrimitives";
+import { ModalShell, PageHeader, SurfaceCard } from "@/components/ui/PanelPrimitives";
 import { useCurrencyScope } from "@/components/currency/CurrencyScope";
 import { CURRENCY_ALL } from "@/lib/currency";
 import { supabase } from "@/lib/supabaseClient";
@@ -305,35 +305,37 @@ export default function WhatsAppCloudApiContactsPageContent({ mode }: Props) {
         </div>
       </SurfaceCard>
 
-      {contactToHide ? (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 p-4">
-          <div className="w-full max-w-md rounded-2xl border border-[var(--color-border)] bg-[var(--color-bg-1)] p-5 shadow-2xl">
-            <p className="text-sm font-semibold text-[var(--color-text-strong)]">
-              Ocultar contacto
-            </p>
-            <p className="mt-2 text-sm leading-5 text-[var(--color-text-muted)]">
-              {contactToHide.profile_name || contactToHide.wa_id} se quitara de
-              Contactos y del Inbox. No se elimina de la base de datos.
-            </p>
-            <div className="mt-5 flex justify-end gap-2">
-              <button
-                type="button"
-                className="ui-button ui-button-secondary"
-                onClick={() => setContactToHide(null)}
-              >
-                Cancelar
-              </button>
-              <button
-                type="button"
-                className="ui-button ui-button-primary"
-                onClick={hideContactFromUi}
-              >
-                Ocultar
-              </button>
-            </div>
-          </div>
-        </div>
-      ) : null}
+      <ModalShell
+        open={Boolean(contactToHide)}
+        title="Ocultar contacto"
+        description={
+          contactToHide
+            ? `${contactToHide.profile_name || contactToHide.wa_id} se quitara de Contactos y del Inbox. No se elimina de la base de datos.`
+            : undefined
+        }
+        onClose={() => setContactToHide(null)}
+        width="sm"
+        footer={
+          <>
+            <button
+              type="button"
+              className="ui-button ui-button-secondary"
+              onClick={() => setContactToHide(null)}
+            >
+              Cancelar
+            </button>
+            <button
+              type="button"
+              className="ui-button ui-button-danger"
+              onClick={hideContactFromUi}
+            >
+              Ocultar
+            </button>
+          </>
+        }
+      >
+        {null}
+      </ModalShell>
     </div>
   );
 }
