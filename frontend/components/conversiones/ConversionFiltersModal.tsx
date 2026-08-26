@@ -3,6 +3,11 @@
 import { useMemo, useState } from "react";
 import ModalPortal from "@/components/ui/ModalPortal";
 import { friendlySourcePlatform, sexLabel } from "@/components/conversiones/conversionPageShared";
+import {
+  trackingFilterAllLabel,
+  trackingFilterKindForSource,
+  trackingFilterLabel,
+} from "@/components/conversiones/trackingFilter";
 
 export type ConversionFilterOption = {
   value: string;
@@ -216,9 +221,11 @@ export default function ConversionFiltersModal({
 }: ConversionFiltersModalProps) {
   const titleId = "conversion-filters-title";
   const showLandingFilter = draft.sourcePlatform === "landing";
+  const trackingKind = trackingFilterKindForSource(draft.sourcePlatform);
   const handleSourcePlatformChange = (value: string) => {
     onChange.sourcePlatform(value);
     if (value !== "landing") onChange.landing("__all__");
+    onChange.pixel("__all__");
   };
 
   return (
@@ -257,9 +264,9 @@ export default function ConversionFiltersModal({
               ) : null}
               <FilterField
                 id="conversion-filter-pixel"
-                label="Pixel"
+                label={trackingFilterLabel(trackingKind)}
                 value={draft.pixel}
-                allLabel="Todos los pixeles"
+                allLabel={trackingFilterAllLabel(trackingKind)}
                 options={stringOptions(options.pixels)}
                 onChange={onChange.pixel}
               />
