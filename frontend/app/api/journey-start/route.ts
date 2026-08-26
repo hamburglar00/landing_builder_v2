@@ -51,7 +51,7 @@ export async function POST(request: NextRequest) {
         ? (body as Record<string, unknown>)
         : {};
     const eventName = cleanText(payload.event_name, 80);
-    if (eventName !== "LandingPageView") {
+    if (eventName !== "LandingPageView" && eventName !== "PageView") {
       return NextResponse.json({ error: "evento invalido" }, { status: 400 });
     }
 
@@ -81,7 +81,10 @@ export async function POST(request: NextRequest) {
 
     const fbc = cleanText(payload.fbc, 500);
     const fromMetaAds = Boolean(payload.from_meta_ads) || fbc !== "";
-    const startIdentityKey = `landing:${landing.id}:${externalId}`;
+    const eventSuffix =
+      globalThis.crypto?.randomUUID?.() ||
+      `${Date.now().toString(36)}-${Math.random().toString(36).slice(2, 10)}`;
+    const startIdentityKey = `landing:${landing.id}:${externalId}:${eventSuffix}`;
     const { error } = await supabase.rpc("record_conversion_journey_start", {
       p_user_id: landing.user_id,
       p_source_platform: "landing",

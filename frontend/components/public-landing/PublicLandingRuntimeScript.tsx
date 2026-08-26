@@ -127,6 +127,7 @@ export default function PublicLandingRuntimeScript({ slug, config }: Props) {
       var leadCaptureModal = null;
       var pendingLeadCaptureButton = null;
       var CONTACT_DEDUP_TTL_MS = 5 * 60 * 1000;
+      var JOURNEY_START_DEDUP_TTL_MS = CONTACT_DEDUP_TTL_MS;
       var SOCIAL_PROOF_INTERVAL_MS = 5000;
 
       function queryParams() {
@@ -727,7 +728,17 @@ export default function PublicLandingRuntimeScript({ slug, config }: Props) {
       function wasJourneyStartSent(slug, externalId) {
         if (!slug || !externalId) return false;
         try {
-          return window.localStorage.getItem(journeyStartDedupKey(slug, externalId)) === "1";
+          var key = journeyStartDedupKey(slug, externalId);
+          var raw = window.localStorage.getItem(key);
+          if (!raw) return false;
+          var sentAt = Number(raw);
+          if (!isFinite(sentAt)) {
+            window.localStorage.removeItem(key);
+            return false;
+          }
+          var isFresh = Date.now() - sentAt < JOURNEY_START_DEDUP_TTL_MS;
+          if (!isFresh) window.localStorage.removeItem(key);
+          return isFresh;
         } catch (e) {
           return false;
         }
@@ -736,7 +747,7 @@ export default function PublicLandingRuntimeScript({ slug, config }: Props) {
       function markJourneyStartSent(slug, externalId) {
         if (!slug || !externalId) return;
         try {
-          window.localStorage.setItem(journeyStartDedupKey(slug, externalId), "1");
+          window.localStorage.setItem(journeyStartDedupKey(slug, externalId), String(Date.now()));
         } catch (e) {}
       }
 
@@ -815,24 +826,9 @@ export default function PublicLandingRuntimeScript({ slug, config }: Props) {
           buildLandingJourneyStartPayload(params, identity, tracking, null)
         )).then(function (sent) {
           if (sent) markJourneyStartSent(cfg.slug, identity.externalId);
+        }).catch(function () {}).then(function () {
+          journeyStartInFlight = false;
         });
-        refreshMetaTracking(params, tracking)
-          .then(function (freshTracking) {
-            tracking = freshTracking;
-            if (isAtrioDestination()) return waitWithTimeout(ensureAtrioPromise(), 1200);
-            return waitWithTimeout(ensurePhonePromise(), 1200);
-          })
-          .then(function (targetData) {
-            var payload = buildLandingJourneyStartPayload(params, identity, tracking, targetData);
-            return sendJourneyStartBestEffort(JSON.stringify(payload));
-          })
-          .then(function (sent) {
-            if (sent) markJourneyStartSent(cfg.slug, identity.externalId);
-          })
-          .catch(function () {})
-          .then(function () {
-            journeyStartInFlight = false;
-          });
       }
 
       function setButtonText(button, text) {

@@ -216,6 +216,14 @@ export function computeJourneyStartStats(
 ): JourneyStartStats {
   const startKeys = new Set(
     journeyStarts
+      .map((row) => firstNonEmpty(
+        keyPart("start", row.start_identity_key),
+        keyPart("row", row.id),
+      ))
+      .filter(Boolean),
+  );
+  const startPersonKeys = new Set(
+    journeyStarts
       .map(journeyStartPersonKey)
       .filter(Boolean),
   );
@@ -223,7 +231,7 @@ export function computeJourneyStartStats(
   for (const row of conversions) {
     if (!String(row.contact_event_id ?? "").trim()) continue;
     const key = conversionContactJourneyStartKey(row);
-    if (key && startKeys.has(key)) contactKeys.add(key);
+    if (key && startPersonKeys.has(key)) contactKeys.add(key);
   }
   return {
     starts: startKeys.size,

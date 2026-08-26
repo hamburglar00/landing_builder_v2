@@ -300,24 +300,24 @@ test("el funnel agrupa por phone + agency aunque cambie player_username", async 
   assert.equal(contacts[0].player_username, "guille2737");
 });
 
-test("deduplica visitas unicas de landing por recorrido antes del Contact", async () => {
+test("cuenta PageViews de landing por recorrido antes del Contact", async () => {
   const { computeJourneyStartStats } = await import("../lib/conversionStats");
   const starts = [
     journeyStartRow("view-a-1", {
       source_platform: "landing",
-      start_identity_key: "landing:landing-1:external-a",
+      start_identity_key: "landing:landing-1:external-a:view-1",
       landing_id: "landing-1",
       external_id: "external-a",
     }),
     journeyStartRow("view-a-2", {
       source_platform: "landing",
-      start_identity_key: "landing:landing-1:external-a",
+      start_identity_key: "landing:landing-1:external-a:view-2",
       landing_id: "landing-1",
       external_id: "external-a",
     }),
     journeyStartRow("view-b", {
       source_platform: "landing",
-      start_identity_key: "landing:landing-1:external-b",
+      start_identity_key: "landing:landing-1:external-b:view-1",
       landing_id: "landing-1",
       external_id: "external-b",
     }),
@@ -333,7 +333,7 @@ test("deduplica visitas unicas de landing por recorrido antes del Contact", asyn
 
   const stats = computeJourneyStartStats(starts, conversions);
 
-  assert.equal(stats.starts, 2);
+  assert.equal(stats.starts, 3);
   assert.equal(stats.contacts, 1);
 });
 
