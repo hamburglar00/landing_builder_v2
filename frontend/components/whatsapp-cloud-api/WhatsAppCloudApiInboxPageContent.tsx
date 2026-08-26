@@ -222,6 +222,9 @@ function formatMoney(value: number): string {
 
 function StatusCheckIcon({ status }: { status: string }) {
   const normalized = status.toLowerCase();
+  if (normalized === "sending") {
+    return <span className="text-[10px] font-semibold text-[#8696a0]">...</span>;
+  }
   if (normalized === "failed") {
     return <span className="text-[10px] font-bold text-rose-300">!</span>;
   }
@@ -441,6 +444,193 @@ function gerenciaFilterLabel(thread: WhatsappCloudApiInboxThread): string {
     : "";
 }
 
+type RealtimeRow = Record<string, unknown>;
+
+function asRecord(value: unknown): RealtimeRow {
+  return value && typeof value === "object" && !Array.isArray(value)
+    ? (value as RealtimeRow)
+    : {};
+}
+
+function firstString(...values: unknown[]): string {
+  for (const value of values) {
+    if (value === null || value === undefined) continue;
+    const text = String(value).trim();
+    if (text) return text;
+  }
+  return "";
+}
+
+function readPath(source: unknown, path: Array<string | number>): unknown {
+  let current: unknown = source;
+  for (const segment of path) {
+    if (Array.isArray(current) && typeof segment === "number") {
+      current = current[segment];
+      continue;
+    }
+    if (current && typeof current === "object" && !Array.isArray(current)) {
+      current = (current as RealtimeRow)[String(segment)];
+      continue;
+    }
+    return undefined;
+  }
+  return current;
+}
+
+function messageTimestamp(message: WhatsappCloudApiInboxMessage): number {
+  const time = new Date(message.created_at).getTime();
+  return Number.isFinite(time) ? time : 0;
+}
+
+function isOptimisticMessage(message: WhatsappCloudApiInboxMessage): boolean {
+  return message.meta_message_id.startsWith("manual:");
+}
+
+function mergeMessages(
+  current: WhatsappCloudApiInboxMessage[],
+  nextMessage: WhatsappCloudApiInboxMessage,
+  replaceMetaMessageId = "",
+): WhatsappCloudApiInboxMessage[] {
+  const next = current.filter(
+    (message) => !replaceMetaMessageId || message.meta_message_id !== replaceMetaMessageId,
+  );
+  const metaId = nextMessage.meta_message_id.trim();
+  let existingIndex = metaId
+    ? next.findIndex((message) => message.meta_message_id === metaId)
+    : -1;
+
+  if (existingIndex < 0 && metaId && nextMessage.direction === "outbound") {
+    const nextTime = messageTimestamp(nextMessage);
+    existingIndex = next.findIndex((message) => {
+      if (!isOptimisticMessage(message)) return false;
+      if (message.direction !== "outbound") return false;
+      if (message.body !== nextMessage.body) return false;
+      return Math.abs(messageTimestamp(message) - nextTime) < 15_000;
+    });
+  }
+
+  if (existingIndex >= 0) {
+    const existing = next[existingIndex];
+    next[existingIndex] = {
+      ...existing,
+      ...nextMessage,
+      created_at: existing.created_at || nextMessage.created_at,
+      body: nextMessage.body || existing.body,
+      error: nextMessage.error || existing.error,
+    };
+  } else {
+    next.push(nextMessage);
+  }
+
+  return next.sort((a, b) => messageTimestamp(a) - messageTimestamp(b));
+}
+
+function applyMessageToThread(
+  thread: WhatsappCloudApiInboxThread,
+  message: WhatsappCloudApiInboxMessage,
+  options: { replaceMetaMessageId?: string; incrementUnread?: boolean } = {},
+): WhatsappCloudApiInboxThread {
+  const messages = mergeMessages(
+    thread.messages,
+    message,
+    options.replaceMetaMessageId,
+  );
+  const lastMessage = messages[messages.length - 1] ?? message;
+  return {
+    ...thread,
+    messages,
+    last_message_at: lastMessage.created_at || thread.last_message_at,
+    last_message_text: lastMessage.body || thread.last_message_text,
+    last_message_direction: lastMessage.direction || thread.last_message_direction,
+    last_message_status: lastMessage.status || thread.last_message_status,
+    unread_count: options.incrementUnread
+      ? thread.unread_count + 1
+      : thread.unread_count,
+    unread_last_message_at: options.incrementUnread
+      ? message.created_at
+      : thread.unread_last_message_at,
+  };
+}
+
+function sortThreadsByActivity(
+  rows: WhatsappCloudApiInboxThread[],
+): WhatsappCloudApiInboxThread[] {
+  return [...rows].sort((a, b) => {
+    const aTime = new Date(a.last_message_at || a.first_message_at || "").getTime();
+    const bTime = new Date(b.last_message_at || b.first_message_at || "").getTime();
+    return (Number.isFinite(bTime) ? bTime : 0) - (Number.isFinite(aTime) ? aTime : 0);
+  });
+}
+
+function inboundMessageFromWebhookRow(row: RealtimeRow): {
+  configId: string;
+  waId: string;
+  message: WhatsappCloudApiInboxMessage;
+} | null {
+  if (firstString(row.event_type) !== "message") return null;
+  const payload = asRecord(row.payload);
+  const waId = firstString(
+    readPath(payload, ["message", "from"]),
+    readPath(payload, ["entry", 0, "changes", 0, "value", "messages", 0, "from"]),
+  );
+  const body = firstString(
+    readPath(payload, ["message", "text", "body"]),
+    readPath(payload, ["message", "button", "text"]),
+    readPath(payload, ["message", "interactive", "button_reply", "title"]),
+    readPath(payload, ["entry", 0, "changes", 0, "value", "messages", 0, "text", "body"]),
+    readPath(payload, ["entry", 0, "changes", 0, "value", "messages", 0, "button", "text"]),
+    readPath(payload, ["entry", 0, "changes", 0, "value", "messages", 0, "interactive", "button_reply", "title"]),
+    row.event_type,
+  );
+  const configId = firstString(row.config_id);
+  if (!configId || !waId) return null;
+  return {
+    configId,
+    waId,
+    message: {
+      created_at: firstString(row.received_at, new Date().toISOString()),
+      direction: "inbound",
+      body,
+      status: firstString(row.status, "pending"),
+      meta_message_id: firstString(row.meta_message_id),
+      message_type: "text",
+      button_title: "",
+      button_url: "",
+      error: firstString(row.last_error),
+    },
+  };
+}
+
+function outboundMessageFromRow(row: RealtimeRow): {
+  configId: string;
+  waId: string;
+  message: WhatsappCloudApiInboxMessage;
+} | null {
+  const payload = asRecord(row.payload);
+  const configId = firstString(row.config_id);
+  const waId = firstString(row.recipient_wa_id);
+  if (!configId || !waId) return null;
+  return {
+    configId,
+    waId,
+    message: {
+      created_at: firstString(row.created_at, row.sent_at, new Date().toISOString()),
+      direction: "outbound",
+      body: firstString(
+        readPath(payload, ["text", "body"]),
+        readPath(payload, ["interactive", "body", "text"]),
+        row.message_type,
+      ),
+      status: firstString(row.status, "accepted"),
+      meta_message_id: firstString(row.meta_message_id),
+      message_type: firstString(row.message_type, readPath(payload, ["type"]), "text"),
+      button_title: firstString(readPath(payload, ["interactive", "action", "parameters", "display_text"])),
+      button_url: firstString(readPath(payload, ["interactive", "action", "parameters", "url"])),
+      error: firstString(row.last_error),
+    },
+  };
+}
+
 export default function WhatsAppCloudApiInboxPageContent({ mode }: Props) {
   const router = useRouter();
   const { currencyScope } = useCurrencyScope();
@@ -474,12 +664,15 @@ export default function WhatsAppCloudApiInboxPageContent({ mode }: Props) {
   const [threadToHide, setThreadToHide] =
     useState<WhatsappCloudApiInboxThread | null>(null);
   const lastMarkedReadRef = useRef("");
+  const selectedIdRef = useRef(selectedId);
+  const chatScrollRef = useRef<HTMLDivElement>(null);
+  const silentRefreshTimeoutRef = useRef<number | null>(null);
   const serverTagFilter: "all" | InboxTag =
     tagFilter === "unread" ? "all" : tagFilter;
   const unreadOnly = tagFilter === "unread";
 
-  const loadThreads = useCallback(async () => {
-    setLoading(true);
+  const loadThreads = useCallback(async (options: { silent?: boolean } = {}) => {
+    if (!options.silent) setLoading(true);
     setError(null);
     try {
       const { data: auth, error: authError } = await supabase.auth.getUser();
@@ -521,13 +714,17 @@ export default function WhatsAppCloudApiInboxPageContent({ mode }: Props) {
       });
       setError(formatWhatsappCloudApiError(err, "No se pudo cargar el Inbox."));
     } finally {
-      setLoading(false);
+      if (!options.silent) setLoading(false);
     }
   }, [dateRange, mode, pageIndex, router, serverTagFilter, tagFilter, unreadOnly, workspaceCurrency]);
 
   useEffect(() => {
     void loadThreads();
   }, [loadThreads]);
+
+  useEffect(() => {
+    selectedIdRef.current = selectedId;
+  }, [selectedId]);
 
   useEffect(() => {
     setPageIndex(0);
@@ -595,6 +792,7 @@ export default function WhatsAppCloudApiInboxPageContent({ mode }: Props) {
     () => selectedThread?.messages ?? [],
     [selectedThread],
   );
+  const lastSelectedMessage = selectedMessages[selectedMessages.length - 1];
   const lastInboundAt = useMemo(
     () => lastInboundMessageAt(selectedMessages),
     [selectedMessages],
@@ -618,6 +816,71 @@ export default function WhatsAppCloudApiInboxPageContent({ mode }: Props) {
   );
   const canGoNext = pageEnd < visibleTotalThreads;
   const hasGerenciaFilter = Boolean(gerenciaFilter);
+
+  const messageIsInsideCurrentRange = useCallback((createdAt: string) => {
+    const range = dateRangeRef.current;
+    if (!range) return true;
+    const time = new Date(createdAt).getTime();
+    if (!Number.isFinite(time)) return true;
+    return time >= range.start.getTime() && time <= range.end.getTime();
+  }, []);
+
+  const updateThreadMessage = useCallback(
+    (
+      contactId: string,
+      message: WhatsappCloudApiInboxMessage,
+      options: { replaceMetaMessageId?: string; incrementUnread?: boolean } = {},
+    ) => {
+      if (!messageIsInsideCurrentRange(message.created_at)) return;
+      setThreads((current) =>
+        sortThreadsByActivity(
+          current.map((thread) =>
+            thread.contact_id === contactId
+              ? applyMessageToThread(thread, message, options)
+              : thread,
+          ),
+        ),
+      );
+    },
+    [messageIsInsideCurrentRange],
+  );
+
+  const updateMatchingThreadMessage = useCallback(
+    (
+      configId: string,
+      waId: string,
+      message: WhatsappCloudApiInboxMessage,
+    ): boolean => {
+      if (!messageIsInsideCurrentRange(message.created_at)) return true;
+      let matched = false;
+      setThreads((current) => {
+        const next = current.map((thread) => {
+          const sameThread = thread.config_id === configId && thread.wa_id === waId;
+          if (!sameThread) return thread;
+          matched = true;
+          return applyMessageToThread(thread, message, {
+            incrementUnread:
+              message.direction === "inbound" &&
+              thread.contact_id !== selectedIdRef.current,
+          });
+        });
+        return matched ? sortThreadsByActivity(next) : current;
+      });
+      return matched;
+    },
+    [messageIsInsideCurrentRange],
+  );
+
+  const scheduleSilentRefresh = useCallback(() => {
+    if (silentRefreshTimeoutRef.current !== null) return;
+    silentRefreshTimeoutRef.current = window.setTimeout(() => {
+      void loadThreads({ silent: true });
+      silentRefreshTimeoutRef.current = window.setTimeout(() => {
+        silentRefreshTimeoutRef.current = null;
+        void loadThreads({ silent: true });
+      }, 1800);
+    }, 900);
+  }, [loadThreads]);
 
   const hideThreadFromUi = () => {
     if (!threadToHide) return;
@@ -649,30 +912,157 @@ export default function WhatsAppCloudApiInboxPageContent({ mode }: Props) {
       });
   }, [selectedThread]);
 
+  useEffect(() => {
+    const node = chatScrollRef.current;
+    if (!node || !selectedThread) return;
+    node.scrollTo({ top: node.scrollHeight, behavior: "smooth" });
+  }, [
+    selectedId,
+    selectedMessages.length,
+    lastSelectedMessage?.meta_message_id,
+    lastSelectedMessage?.status,
+    selectedThread,
+  ]);
+
+  useEffect(() => {
+    let active = true;
+    let channel: ReturnType<typeof supabase.channel> | null = null;
+
+    void supabase.auth.getUser().then(({ data, error: authError }) => {
+      if (!active || authError || !data.user) return;
+      channel = supabase
+        .channel(`whatsapp-cloud-inbox:${mode}:${data.user.id}`)
+        .on(
+          "postgres_changes",
+          {
+            event: "INSERT",
+            schema: "public",
+            table: "whatsapp_cloud_api_outbound_messages",
+          },
+          (payload) => {
+            const update = outboundMessageFromRow(asRecord(payload.new));
+            if (!update) return;
+            updateMatchingThreadMessage(
+              update.configId,
+              update.waId,
+              update.message,
+            );
+          },
+        )
+        .on(
+          "postgres_changes",
+          {
+            event: "UPDATE",
+            schema: "public",
+            table: "whatsapp_cloud_api_outbound_messages",
+          },
+          (payload) => {
+            const update = outboundMessageFromRow(asRecord(payload.new));
+            if (!update) return;
+            updateMatchingThreadMessage(
+              update.configId,
+              update.waId,
+              update.message,
+            );
+          },
+        )
+        .on(
+          "postgres_changes",
+          {
+            event: "INSERT",
+            schema: "public",
+            table: "whatsapp_cloud_api_webhook_events",
+          },
+          (payload) => {
+            const update = inboundMessageFromWebhookRow(asRecord(payload.new));
+            if (!update) return;
+            const matched = updateMatchingThreadMessage(
+              update.configId,
+              update.waId,
+              update.message,
+            );
+            if (!matched) scheduleSilentRefresh();
+          },
+        )
+        .subscribe((status) => {
+          if (status === "CHANNEL_ERROR") {
+            console.warn("[whatsapp-cloud-inbox] realtime channel error");
+          }
+        });
+    });
+
+    return () => {
+      active = false;
+      if (silentRefreshTimeoutRef.current !== null) {
+        window.clearTimeout(silentRefreshTimeoutRef.current);
+        silentRefreshTimeoutRef.current = null;
+      }
+      if (channel) void supabase.removeChannel(channel);
+    };
+  }, [mode, scheduleSilentRefresh, updateMatchingThreadMessage]);
+
   const sendManualMessage = async () => {
     if (!selectedThread || !manualMessage.trim() || sending) return;
+    const contactId = selectedThread.contact_id;
+    const body = manualMessage.trim();
+    const createdAt = new Date().toISOString();
+    const tempMetaMessageId = `manual:${contactId}:${Date.now()}`;
+    const optimisticMessage: WhatsappCloudApiInboxMessage = {
+      created_at: createdAt,
+      direction: "outbound",
+      body,
+      status: "sending",
+      meta_message_id: tempMetaMessageId,
+      message_type: "manual_text",
+      button_title: "",
+      button_url: "",
+      error: "",
+    };
+
     setSending(true);
     setError(null);
     setSendNotice(null);
+    setManualMessage("");
+    updateThreadMessage(contactId, optimisticMessage);
     try {
-      const { error: sendError } = await invokeFunction<{ ok: boolean }>(
+      const { data, error: sendError } = await invokeFunction<{
+        ok: boolean;
+        meta_message_id?: string;
+        customer_service_window_expires_at?: string;
+      }>(
         supabase,
         "whatsapp-cloud-send-message",
         {
           body: {
-            contact_id: selectedThread.contact_id,
-            body: manualMessage.trim(),
+            contact_id: contactId,
+            body,
           },
         },
       );
       if (sendError) throw new Error(sendError.message);
-      setManualMessage("");
-      setSendNotice("Mensaje enviado.");
-      await loadThreads();
-    } catch (err) {
-      setError(
-        err instanceof Error ? err.message : "No se pudo enviar el mensaje.",
+      updateThreadMessage(
+        contactId,
+        {
+          ...optimisticMessage,
+          status: "accepted",
+          meta_message_id: data?.meta_message_id || tempMetaMessageId,
+        },
+        { replaceMetaMessageId: tempMetaMessageId },
       );
+      setSendNotice("Mensaje enviado.");
+    } catch (err) {
+      const message =
+        err instanceof Error ? err.message : "No se pudo enviar el mensaje.";
+      updateThreadMessage(
+        contactId,
+        {
+          ...optimisticMessage,
+          status: "failed",
+          error: message,
+        },
+        { replaceMetaMessageId: tempMetaMessageId },
+      );
+      setError(message);
     } finally {
       setSending(false);
     }
@@ -1082,6 +1472,7 @@ export default function WhatsAppCloudApiInboxPageContent({ mode }: Props) {
               </div>
 
               <div
+                ref={chatScrollRef}
                 className="flex min-h-0 flex-1 flex-col gap-2 overflow-y-auto px-5 py-5"
                 style={WHATSAPP_CHAT_BACKGROUND}
               >
