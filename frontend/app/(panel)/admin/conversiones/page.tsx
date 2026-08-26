@@ -129,7 +129,12 @@ const URL_TABS = new Set<Tab>([
 
 function gerenciaFilterMatchesLabels(filters: readonly string[], labels: string[]): boolean {
   if (filters.length === 0) return true;
-  return filters.some((filter) => labels.includes(filter));
+  const extractId = (value: string) => String(value ?? "").match(/\(ID\s*(\d+)\)/i)?.[1] ?? "";
+  return filters.some((filter) => {
+    if (labels.includes(filter)) return true;
+    const filterId = /^\d+$/.test(filter) ? filter : extractId(filter);
+    return filterId ? labels.some((label) => extractId(label) === filterId) : false;
+  });
 }
 
 function cellValue(

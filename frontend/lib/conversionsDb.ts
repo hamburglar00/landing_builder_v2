@@ -10,6 +10,10 @@ function normalizePixelId(value: string): string {
   return String(value ?? "").replace(/\D/g, "");
 }
 
+function cleanGerenciaText(value: unknown): string {
+  return String(value ?? "").trim();
+}
+
 // Types
 
 export interface ConversionsConfig {
@@ -412,14 +416,32 @@ export function getJourneyStartGerenciaLabels(
   row: Pick<
     ConversionJourneyStartRow,
     | "telefono_asignado"
+    | "assigned_gerencia_id"
+    | "assigned_gerencia_external_id"
+    | "assigned_gerencia_name"
     | "assigned_gerencia_label"
   >,
   gerenciaByPhone: Record<string, string[]>,
 ): string[] {
+  const labels = new Set<string>();
   const historicalLabel = String(row.assigned_gerencia_label ?? "").trim();
-  if (historicalLabel) return [historicalLabel];
+  if (historicalLabel) labels.add(historicalLabel);
+
+  const gerenciaId = cleanGerenciaText(row.assigned_gerencia_external_id) ||
+    cleanGerenciaText(row.assigned_gerencia_id);
+  if (gerenciaId) {
+    const gerenciaName = cleanGerenciaText(row.assigned_gerencia_name) || historicalLabel.replace(/\s*\(ID\s*\d+\)\s*$/i, "") || "Gerencia";
+    labels.add(`${gerenciaName} (ID ${gerenciaId})`);
+  }
+
   const assignedPhone = String(row.telefono_asignado ?? "").replace(/\D/g, "");
-  return assignedPhone ? (gerenciaByPhone[assignedPhone] ?? []) : [];
+  if (assignedPhone) {
+    for (const label of gerenciaByPhone[assignedPhone] ?? []) {
+      if (label) labels.add(label);
+    }
+  }
+
+  return Array.from(labels);
 }
 
 export function scopeConversionStagesToGerencia(

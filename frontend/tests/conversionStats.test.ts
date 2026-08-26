@@ -369,3 +369,20 @@ test("mide chats iniciados de WhatsApp Cloud API antes del click al CTA", async 
   assert.equal(stats.starts, 2);
   assert.equal(stats.contacts, 1);
 });
+
+test("expone ID de gerencia en chats iniciados aunque el label historico sea generico", async () => {
+  const { getJourneyStartGerenciaLabels } = await import("../lib/conversionsDb");
+
+  const labels = getJourneyStartGerenciaLabels(
+    journeyStartRow("chat-gerencia", {
+      source_platform: "whatsapp_cloud_api",
+      assigned_gerencia_id: 17,
+      assigned_gerencia_external_id: 17,
+      assigned_gerencia_label: "Gerencia 17",
+    }),
+    {},
+  );
+
+  assert(labels.includes("Gerencia 17"));
+  assert(labels.some((label) => /\(ID\s*17\)/i.test(label)));
+});
