@@ -828,7 +828,7 @@ export default function PublicLandingRuntimeScript({ slug, config }: Props) {
         sendJourneyStartBestEffort(immediateBody).then(function (sent) {
           if (sent) markJourneyStartSent(cfg.slug, identity.externalId);
           if (isAtrioDestination()) return sent;
-          return waitWithTimeout(ensurePhonePromise(), 1500).then(function (phoneData) {
+          return ensurePhonePromise().then(function (phoneData) {
             if (!phoneData || !phoneData.phone) return sent;
             return sendJourneyStartBestEffort(JSON.stringify(
               buildLandingJourneyStartPayload(params, identity, tracking, phoneData)
