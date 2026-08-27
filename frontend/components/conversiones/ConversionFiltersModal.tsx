@@ -1,8 +1,8 @@
 "use client";
 
-import { useMemo, useState } from "react";
-import ModalPortal from "@/components/ui/ModalPortal";
+import { useEffect, useMemo, useRef, useState } from "react";
 import CustomSelect from "@/components/ui/CustomSelect";
+import { ModalShell } from "@/components/ui/PanelPrimitives";
 import { friendlySourcePlatform, sexLabel } from "@/components/conversiones/conversionPageShared";
 import {
   trackingFilterAllLabel,
@@ -108,6 +108,7 @@ function SearchableCheckboxField({
 }) {
   const [open, setOpen] = useState(false);
   const [query, setQuery] = useState("");
+  const rootRef = useRef<HTMLDivElement>(null);
   const selectedLabel = values.length === 0
     ? allLabel
     : values.length === 1
@@ -128,8 +129,24 @@ function SearchableCheckboxField({
     );
   };
 
+  useEffect(() => {
+    if (!open) return;
+    const onPointerDown = (event: MouseEvent) => {
+      if (!rootRef.current?.contains(event.target as Node)) setOpen(false);
+    };
+    const onKeyDown = (event: KeyboardEvent) => {
+      if (event.key === "Escape") setOpen(false);
+    };
+    document.addEventListener("mousedown", onPointerDown);
+    document.addEventListener("keydown", onKeyDown);
+    return () => {
+      document.removeEventListener("mousedown", onPointerDown);
+      document.removeEventListener("keydown", onKeyDown);
+    };
+  }, [open]);
+
   return (
-    <div className="relative">
+    <div ref={rootRef} className="relative">
       <label htmlFor={id} className="mb-1 block text-xs text-zinc-400">
         {label}
       </label>
@@ -157,40 +174,53 @@ function SearchableCheckboxField({
             />
           </div>
           <div className="max-h-56 overflow-y-auto">
-            <label
+            <button
+              type="button"
+              aria-pressed={values.length === 0}
+              onClick={() => onChange([])}
               className={`flex cursor-pointer items-center gap-2 rounded px-2 py-1.5 hover:bg-zinc-800/70 ${
                 values.length === 0 ? "bg-emerald-500/10 text-emerald-300" : "text-zinc-200"
               }`}
             >
-              <input
-                type="checkbox"
-                checked={values.length === 0}
-                onChange={() => onChange([])}
-                className="h-3.5 w-3.5 rounded border-zinc-600 bg-zinc-900 accent-emerald-500"
+              <span
+                aria-hidden
+                className={`flex h-3.5 w-3.5 shrink-0 items-center justify-center rounded border text-[9px] ${
+                  values.length === 0
+                    ? "border-emerald-400 bg-emerald-400 text-zinc-950"
+                    : "border-zinc-600 bg-zinc-900 text-transparent"
+                }`}
               />
-              {allLabel}
-            </label>
+              <span className="block truncate">{allLabel}</span>
+            </button>
             {filteredOptions.length === 0 ? (
               <div className="px-2 py-3 text-center text-zinc-500">
                 Sin resultados
               </div>
             ) : (
-              filteredOptions.map((option) => (
-                <label
-                  key={option.value}
-                  className={`flex cursor-pointer items-center gap-2 rounded px-2 py-1.5 hover:bg-zinc-800/70 ${
-                    values.includes(option.value) ? "bg-emerald-500/10 text-emerald-300" : "text-zinc-200"
-                  }`}
-                >
-                  <input
-                    type="checkbox"
-                    checked={values.includes(option.value)}
-                    onChange={(event) => toggleValue(option.value, event.target.checked)}
-                    className="h-3.5 w-3.5 rounded border-zinc-600 bg-zinc-900 accent-emerald-500"
-                  />
-                  <span className="block truncate">{option.label}</span>
-                </label>
-              ))
+              filteredOptions.map((option) => {
+                const checked = values.includes(option.value);
+                return (
+                  <button
+                    key={option.value}
+                    type="button"
+                    aria-pressed={checked}
+                    onClick={() => toggleValue(option.value, !checked)}
+                    className={`flex w-full cursor-pointer items-center gap-2 rounded px-2 py-1.5 text-left hover:bg-zinc-800/70 ${
+                      checked ? "bg-emerald-500/10 text-emerald-300" : "text-zinc-200"
+                    }`}
+                  >
+                    <span
+                      aria-hidden
+                      className={`flex h-3.5 w-3.5 shrink-0 items-center justify-center rounded border text-[9px] ${
+                        checked
+                          ? "border-emerald-400 bg-emerald-400 text-zinc-950"
+                          : "border-zinc-600 bg-zinc-900 text-transparent"
+                      }`}
+                    />
+                    <span className="block min-w-0 truncate">{option.label}</span>
+                  </button>
+                );
+              })
             )}
           </div>
         </div>
@@ -215,7 +245,6 @@ export default function ConversionFiltersModal({
   onClose,
   onApply,
 }: ConversionFiltersModalProps) {
-  const titleId = "conversion-filters-title";
   const showLandingFilter = draft.sourcePlatform === "landing";
   const trackingKind = trackingFilterKindForSource(draft.sourcePlatform);
   const handleSourcePlatformChange = (value: string) => {
@@ -225,20 +254,30 @@ export default function ConversionFiltersModal({
   };
 
   return (
-    <ModalPortal>
-      <div className="fixed inset-0 z-[70] flex items-center justify-center overflow-hidden bg-black/70 p-3 sm:p-4">
-        <section
-          role="dialog"
-          aria-modal="true"
-          aria-labelledby={titleId}
-          className="flex max-h-[calc(100dvh-1.5rem)] w-full max-w-xl flex-col overflow-hidden rounded-xl border border-zinc-700 bg-zinc-950 shadow-2xl"
-        >
-          <div className="shrink-0 border-b border-zinc-800 px-4 py-3">
-            <h3 id={titleId} className="text-sm font-semibold text-zinc-100">
-              {title}
-            </h3>
-          </div>
-          <div className="min-h-0 flex-1 overflow-y-auto px-4 py-3">
+    <ModalShell
+      open
+      title={title}
+      onClose={onClose}
+      width="md"
+      footer={
+        <>
+          <button
+            type="button"
+            onClick={onClose}
+            className="ui-button ui-button-secondary"
+          >
+            Cerrar
+          </button>
+          <button
+            type="button"
+            onClick={onApply}
+            className="ui-button ui-button-primary"
+          >
+            Guardar
+          </button>
+        </>
+      }
+    >
             <div className="grid grid-cols-1 gap-3">
               <FilterField
                 id="conversion-filter-platform"
@@ -307,25 +346,6 @@ export default function ConversionFiltersModal({
                 onChange={onChange.campaigns}
               />
             </div>
-          </div>
-          <div className="flex shrink-0 justify-end gap-2 border-t border-zinc-800 px-4 py-3">
-            <button
-              type="button"
-              onClick={onClose}
-              className="cursor-pointer rounded-md border border-zinc-600 px-3 py-1.5 text-xs text-zinc-300 hover:bg-zinc-800"
-            >
-              Cerrar
-            </button>
-            <button
-              type="button"
-              onClick={onApply}
-              className="cursor-pointer rounded-md border border-emerald-700 bg-emerald-600 px-3 py-1.5 text-xs font-semibold text-zinc-950 hover:bg-emerald-500"
-            >
-              Guardar
-            </button>
-          </div>
-        </section>
-      </div>
-    </ModalPortal>
+    </ModalShell>
   );
 }

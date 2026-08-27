@@ -1729,33 +1729,60 @@ export default function StatsPanel({
             </button>
             {funnelPctMenuOpen && (
               <div className="absolute right-0 top-8 z-20 w-52 rounded-lg border border-zinc-700 bg-zinc-900/95 p-2 shadow-xl">
-                <label className="flex cursor-pointer items-center gap-2 rounded px-1.5 py-1 text-[11px] text-zinc-300 hover:bg-zinc-800/80">
-                  <input
-                    type="checkbox"
-                    checked={funnelPctEnabled.inicio}
-                    onChange={(e) => setFunnelPctEnabled((prev) => ({ ...prev, inicio: e.target.checked }))}
-                    className="h-3.5 w-3.5 rounded border-zinc-600 bg-zinc-900 accent-emerald-500"
+                <button
+                  type="button"
+                  aria-pressed={funnelPctEnabled.inicio}
+                  onClick={() => setFunnelPctEnabled((prev) => ({ ...prev, inicio: !prev.inicio }))}
+                  className={`flex w-full cursor-pointer items-center gap-2 rounded px-1.5 py-1 text-left text-[11px] hover:bg-zinc-800/80 ${
+                    funnelPctEnabled.inicio ? "text-emerald-300" : "text-zinc-300"
+                  }`}
+                >
+                  <span
+                    aria-hidden
+                    className={`h-3.5 w-3.5 shrink-0 rounded border ${
+                      funnelPctEnabled.inicio
+                        ? "border-emerald-400 bg-emerald-400"
+                        : "border-zinc-600 bg-zinc-950"
+                    }`}
                   />
                   % inicio de conversación
-                </label>
-                <label className="flex cursor-pointer items-center gap-2 rounded px-1.5 py-1 text-[11px] text-zinc-300 hover:bg-zinc-800/80">
-                  <input
-                    type="checkbox"
-                    checked={funnelPctEnabled.carga}
-                    onChange={(e) => setFunnelPctEnabled((prev) => ({ ...prev, carga: e.target.checked }))}
-                    className="h-3.5 w-3.5 rounded border-zinc-600 bg-zinc-900 accent-emerald-500"
+                </button>
+                <button
+                  type="button"
+                  aria-pressed={funnelPctEnabled.carga}
+                  onClick={() => setFunnelPctEnabled((prev) => ({ ...prev, carga: !prev.carga }))}
+                  className={`flex w-full cursor-pointer items-center gap-2 rounded px-1.5 py-1 text-left text-[11px] hover:bg-zinc-800/80 ${
+                    funnelPctEnabled.carga ? "text-emerald-300" : "text-zinc-300"
+                  }`}
+                >
+                  <span
+                    aria-hidden
+                    className={`h-3.5 w-3.5 shrink-0 rounded border ${
+                      funnelPctEnabled.carga
+                        ? "border-emerald-400 bg-emerald-400"
+                        : "border-zinc-600 bg-zinc-950"
+                    }`}
                   />
                   % de carga
-                </label>
-                <label className="flex cursor-pointer items-center gap-2 rounded px-1.5 py-1 text-[11px] text-zinc-300 hover:bg-zinc-800/80">
-                  <input
-                    type="checkbox"
-                    checked={funnelPctEnabled.recarga}
-                    onChange={(e) => setFunnelPctEnabled((prev) => ({ ...prev, recarga: e.target.checked }))}
-                    className="h-3.5 w-3.5 rounded border-zinc-600 bg-zinc-900 accent-emerald-500"
+                </button>
+                <button
+                  type="button"
+                  aria-pressed={funnelPctEnabled.recarga}
+                  onClick={() => setFunnelPctEnabled((prev) => ({ ...prev, recarga: !prev.recarga }))}
+                  className={`flex w-full cursor-pointer items-center gap-2 rounded px-1.5 py-1 text-left text-[11px] hover:bg-zinc-800/80 ${
+                    funnelPctEnabled.recarga ? "text-emerald-300" : "text-zinc-300"
+                  }`}
+                >
+                  <span
+                    aria-hidden
+                    className={`h-3.5 w-3.5 shrink-0 rounded border ${
+                      funnelPctEnabled.recarga
+                        ? "border-emerald-400 bg-emerald-400"
+                        : "border-zinc-600 bg-zinc-950"
+                    }`}
                   />
                   % de recarga
-                </label>
+                </button>
               </div>
             )}
           </div>
