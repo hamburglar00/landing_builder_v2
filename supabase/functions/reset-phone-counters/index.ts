@@ -164,10 +164,28 @@ Deno.serve(async (req) => {
       );
     }
 
+    const { error: scopedUpdateError } = await supabaseAdmin
+      .from("phone_assignment_scope_metrics")
+      .update({ usage_count: 0 })
+      .in("phone_id", phoneIds);
+
+    if (scopedUpdateError) {
+      return new Response(
+        JSON.stringify({
+          error: "No se pudieron resetear los contadores por landing/flujo.",
+        }),
+        {
+          status: 500,
+          headers: { ...corsHeaders, "Content-Type": "application/json" },
+        },
+      );
+    }
+
     return new Response(
       JSON.stringify({
         success: true,
         reset_count: phoneIds.length,
+        scoped_reset: true,
       }),
       {
         status: 200,
