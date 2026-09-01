@@ -434,3 +434,11 @@ test("expone ID de gerencia en chats iniciados aunque el label historico sea gen
   assert(labels.includes("Gerencia 17"));
   assert(labels.some((label) => /\(ID\s*17\)/i.test(label)));
 });
+
+test("desempeno matchea gerencias por ID aunque cambie el texto historico", async () => {
+  const { labelsMatchGerenciaLabel } = await import("../components/conversiones/GerenciasPerformancePanel");
+
+  assert.equal(labelsMatchGerenciaLabel("chiva77bot (ID 17)", ["Gerencia 17"]), true);
+  assert.equal(labelsMatchGerenciaLabel("chiva77bot (ID 17)", ["chiva77bot (ID 17)"]), true);
+  assert.equal(labelsMatchGerenciaLabel("chiva77bot (ID 17)", ["pikman_mkt (ID 125)"]), false);
+});

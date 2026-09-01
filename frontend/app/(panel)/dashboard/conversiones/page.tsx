@@ -1491,6 +1491,8 @@ export default function DashboardConversionesPage() {
     });
   }, [currencyScope]);
 
+  const refreshPerformanceData = useCallback(() => refreshTable(), [refreshTable]);
+
   const clearGlobalDisplay = useCallback(() => {
     if (!userId) return;
     setClearViewOpen(true);
@@ -1936,6 +1938,8 @@ export default function DashboardConversionesPage() {
             globalRows={statsConversionsFiltered}
             globalRange={dateRange}
             globalGerenciaLabels={selectedPerformanceGerenciaLabels}
+            globalRefreshing={refreshingTable}
+            onGlobalRefresh={refreshPerformanceData}
             useGlobalFilters
             premiumThreshold={premiumThreshold}
             storageKey={`dashboard:${userId ?? "client"}`}

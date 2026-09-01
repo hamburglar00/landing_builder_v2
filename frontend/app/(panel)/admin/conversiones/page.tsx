@@ -1056,6 +1056,8 @@ export default function AdminConversionesPage() {
     });
   }, [currencyScope]);
 
+  const refreshPerformanceData = useCallback(() => refreshTable(), [refreshTable]);
+
   const clearTableDisplay = useCallback(async () => {
     if (!userId || activeConversions.length === 0 || demoMode) return;
     const ok = await confirmAction({
@@ -1556,6 +1558,8 @@ export default function AdminConversionesPage() {
             globalRows={statsConversionsFiltered}
             globalRange={dateRange}
             globalGerenciaLabels={selectedPerformanceGerenciaLabels}
+            globalRefreshing={refreshingTable}
+            onGlobalRefresh={refreshPerformanceData}
             useGlobalFilters
             premiumThreshold={premiumThreshold}
             storageKey="admin"

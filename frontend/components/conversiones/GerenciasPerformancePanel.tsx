@@ -22,6 +22,8 @@ type Props = {
   globalRows?: ConversionRow[];
   globalRange?: FetchDateRange | null;
   globalGerenciaLabels?: string[];
+  globalRefreshing?: boolean;
+  onGlobalRefresh?: () => Promise<void> | void;
   useGlobalFilters?: boolean;
   premiumThreshold: number;
   storageKey: string;
@@ -130,8 +132,35 @@ function formatOptionalPercent(value: number | null): string {
 }
 
 function extractDisplayGerenciaId(label: string): string {
-  const match = String(label ?? "").match(/\(ID\s*(\d+)\)/i);
-  return match?.[1] ?? "";
+  const text = String(label ?? "");
+  const explicit = text.match(/\(ID\s*(\d+)\)/i);
+  if (explicit?.[1]) return explicit[1];
+  const legacy = text.match(/\bGerencia\s+(\d+)\b/i);
+  return legacy?.[1] ?? "";
+}
+
+export function labelsMatchGerenciaLabel(targetLabel: string, labels: string[]): boolean {
+  const target = String(targetLabel ?? "").trim();
+  if (!target) return false;
+  const targetId = extractDisplayGerenciaId(target);
+  return labels.some((label) => {
+    const candidate = String(label ?? "").trim();
+    if (!candidate) return false;
+    const candidateId = extractDisplayGerenciaId(candidate);
+    if (targetId && candidateId) return targetId === candidateId;
+    return candidate === target;
+  });
+}
+
+function canonicalGerenciaLabel(
+  label: string,
+  availabilityById: Map<string, GerenciaAvailabilitySummary>,
+): string {
+  const displayId = extractDisplayGerenciaId(label);
+  if (!displayId) return label;
+  return availabilityById.get(`external:${displayId}`)?.label ??
+    availabilityById.get(`internal:${displayId}`)?.label ??
+    label;
 }
 
 function availabilityKeyForSummary(row: GerenciaAvailabilitySummary): string {
@@ -171,6 +200,8 @@ export default function GerenciasPerformancePanel({
   globalRows,
   globalRange,
   globalGerenciaLabels = [],
+  globalRefreshing = false,
+  onGlobalRefresh,
   useGlobalFilters = false,
   premiumThreshold,
   storageKey,
@@ -235,7 +266,10 @@ export default function GerenciasPerformancePanel({
     setError(null);
     try {
       const range = useGlobalFilters ? globalRange : monthRange(month);
-      const availability = range ? await fetchAvailabilityForMonth(range) : [];
+      const [availability] = await Promise.all([
+        range ? fetchAvailabilityForMonth(range) : Promise.resolve([]),
+        useGlobalFilters ? Promise.resolve(onGlobalRefresh?.()) : Promise.resolve(),
+      ]);
       if (!useGlobalFilters) {
         const data = await fetchConversionsForMonth(range ?? monthRange(month));
         setRows(data);
@@ -247,7 +281,7 @@ export default function GerenciasPerformancePanel({
     } finally {
       setLoading(false);
     }
-  }, [fetchAvailabilityForMonth, fetchConversionsForMonth, globalRange, month, useGlobalFilters]);
+  }, [fetchAvailabilityForMonth, fetchConversionsForMonth, globalRange, month, onGlobalRefresh, useGlobalFilters]);
 
   useEffect(() => {
     void loadMonth();
@@ -299,14 +333,17 @@ export default function GerenciasPerformancePanel({
     for (const row of cleanRows) {
       const labels = getConversionGerenciaLabels(row, gerenciaByPhone);
       if (labels.length === 0) continue;
-      for (const label of labels) {
+      const targetLabels = selectedGlobalLabelSet
+        ? Array.from(selectedGlobalLabelSet).filter((label) => labelsMatchGerenciaLabel(label, labels))
+        : labels.map((label) => canonicalGerenciaLabel(label, availabilityById));
+      for (const label of targetLabels) {
         // A historical row can contain Contact from one landing and Purchase
         // received by another gerencia. Scope each stage independently so the
         // same physical DB row does not move all three metrics together.
         const scopedRow = scopeConversionStagesToGerencia(
           row,
           gerenciaByPhone,
-          (stageLabels) => stageLabels.includes(label),
+          (stageLabels) => labelsMatchGerenciaLabel(label, stageLabels),
         );
         if (!scopedRow) continue;
         allLabels.add(label);
@@ -347,6 +384,8 @@ export default function GerenciasPerformancePanel({
         };
       });
   }, [availabilityRows, gerenciaByPhone, globalGerenciaLabels, globalRows, metaAdsOnly, premiumThreshold, rows, selectedLanding, selectedLandingLabelSet, useGlobalFilters]);
+
+  const effectiveLoading = loading || globalRefreshing;
 
   const visiblePerformanceRows = useMemo(() => {
     const query = searchTerm.trim().toLowerCase();
@@ -778,15 +817,15 @@ export default function GerenciasPerformancePanel({
         <button
           type="button"
           onClick={() => void loadMonth()}
-          disabled={loading}
+          disabled={effectiveLoading}
           className="h-8 w-full shrink-0 rounded-lg border border-zinc-700 bg-zinc-800 px-3 text-xs font-medium text-zinc-200 transition hover:bg-zinc-700 disabled:opacity-60 sm:w-[104px]"
         >
-          {loading ? "Actualizando..." : "Actualizar"}
+          {effectiveLoading ? "Actualizando..." : "Actualizar"}
         </button>
         <button
           type="button"
           onClick={exportPdf}
-          disabled={loading}
+          disabled={effectiveLoading}
           className="h-8 w-full shrink-0 rounded-lg border border-emerald-700 bg-emerald-900/20 px-3 text-xs font-semibold text-emerald-300 transition hover:bg-emerald-900/35 disabled:opacity-60 sm:w-[108px]"
         >
           Exportar PDF
