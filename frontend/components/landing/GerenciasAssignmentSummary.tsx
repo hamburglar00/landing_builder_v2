@@ -60,7 +60,7 @@ export function GerenciasAssignmentSummary({
           Sin gerencias asignadas.
         </p>
       ) : (
-        <ul className="max-h-64 space-y-2 overflow-y-auto pr-1">
+        <ul className="space-y-2">
           {assignedRows.map(({ assignment, gerencia }) => {
             const externalId = gerencia?.gerencia_id ?? assignment.gerencia_id;
             const interval = formatInterval(assignment);
