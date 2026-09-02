@@ -38,6 +38,7 @@ import {
   setLandingGerencias,
 } from "@/lib/gerencias/gerenciasDb";
 import { GerenciaRedirectSection } from "@/components/landing/GerenciaRedirectSection";
+import { GerenciasAssignmentSummary } from "@/components/landing/GerenciasAssignmentSummary";
 import { getSettings } from "@/lib/settingsDb";
 import {
   fetchAtrioClients,
@@ -878,6 +879,11 @@ export default function AdminLandingEditarPage() {
         <p className="mt-2 w-full text-[11px] text-zinc-500">
           La vista previa es aproximada. Para una vista certera, abrí el enlace de la landing.
         </p>
+        <GerenciasAssignmentSummary
+          assignments={assignments}
+          gerencias={gerencias}
+          selectionMode={landing.gerenciaSelectionMode}
+        />
       </div>}
       {/* Desktop: preview sticky dentro de la grilla del editor */}
       {landing.landingType !== "external" && <aside className="sticky top-20 hidden h-fit w-[360px] self-start rounded-2xl border border-[var(--color-border)] bg-[rgba(11,15,21,0.72)] p-3 shadow-[var(--shadow-card)] lg:block">
@@ -895,6 +901,11 @@ export default function AdminLandingEditarPage() {
         <p className="mt-2 w-full text-[11px] leading-4 text-[var(--color-text-disabled)]">
           La vista previa es aproximada. Para una vista certera, abrí el enlace de la landing.
         </p>
+        <GerenciasAssignmentSummary
+          assignments={assignments}
+          gerencias={gerencias}
+          selectionMode={landing.gerenciaSelectionMode}
+        />
       </aside>}
     </div>
   );

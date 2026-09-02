@@ -1,4 +1,7 @@
-import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
+import {
+  createClient,
+  type SupabaseClient,
+} from "https://esm.sh/@supabase/supabase-js@2";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -58,6 +61,30 @@ const FALLBACK_VISIBLE_COLUMNS = [
   "telefono_asignado",
   "promo_code",
 ];
+
+async function cleanupSignupApproval(
+  supabaseAdmin: SupabaseClient,
+  email: string,
+) {
+  const { error } = await supabaseAdmin
+    .from("auth_signup_approvals")
+    .delete()
+    .eq("email", email);
+
+  if (error) {
+    console.error("Error limpiando aprobacion temporal de alta:", error);
+  }
+}
+
+async function rollbackCreatedUser(
+  supabaseAdmin: SupabaseClient,
+  userId: string,
+) {
+  const { error } = await supabaseAdmin.auth.admin.deleteUser(userId);
+  if (error) {
+    console.error("Error revirtiendo usuario creado parcialmente:", error);
+  }
+}
 
 Deno.serve(async (req) => {
   if (req.method === "OPTIONS") {
@@ -246,8 +273,44 @@ Deno.serve(async (req) => {
       );
     }
 
+    const approvedUserId = crypto.randomUUID();
+
+    const { error: approvalError } = await supabaseAdmin
+      .from("auth_signup_approvals")
+      .upsert(
+        {
+          email,
+          user_id: approvedUserId,
+          requested_by: user.id,
+          role: "client",
+          created_at: new Date().toISOString(),
+          expires_at: new Date(Date.now() + 5 * 60 * 1000).toISOString(),
+        },
+        { onConflict: "email" },
+      );
+
+    if (approvalError) {
+      console.error(
+        "Error creando aprobacion temporal de alta:",
+        approvalError,
+      );
+      return new Response(
+        JSON.stringify({
+          error: "No se pudo autorizar temporalmente el alta del cliente.",
+        }),
+        {
+          status: 500,
+          headers: {
+            ...corsHeaders,
+            "Content-Type": "application/json",
+          },
+        },
+      );
+    }
+
     const { data: created, error: createError } = await supabaseAdmin.auth.admin
       .createUser({
+        id: approvedUserId,
         email,
         password,
         email_confirm: true,
@@ -259,6 +322,7 @@ Deno.serve(async (req) => {
       });
 
     if (createError || !created.user) {
+      await cleanupSignupApproval(supabaseAdmin, email);
       return new Response(
         JSON.stringify({
           error: createError?.message ??
@@ -274,10 +338,37 @@ Deno.serve(async (req) => {
       );
     }
 
-    await supabaseAdmin
+    const { error: profileWriteError } = await supabaseAdmin
       .from("profiles")
-      .update({ nombre })
-      .eq("id", created.user.id);
+      .upsert(
+        {
+          id: created.user.id,
+          role: "client",
+          nombre,
+        },
+        { onConflict: "id" },
+      );
+
+    if (profileWriteError) {
+      console.error(
+        "Error inicializando profile para cliente:",
+        profileWriteError,
+      );
+      await cleanupSignupApproval(supabaseAdmin, email);
+      await rollbackCreatedUser(supabaseAdmin, created.user.id);
+      return new Response(
+        JSON.stringify({
+          error: "No se pudo inicializar el perfil del cliente.",
+        }),
+        {
+          status: 500,
+          headers: {
+            ...corsHeaders,
+            "Content-Type": "application/json",
+          },
+        },
+      );
+    }
 
     const { data: adminCfg } = await supabaseAdmin
       .from("conversions_config")
@@ -334,6 +425,21 @@ Deno.serve(async (req) => {
         "Error inicializando conversions_config para cliente:",
         cfgError,
       );
+      await cleanupSignupApproval(supabaseAdmin, email);
+      await rollbackCreatedUser(supabaseAdmin, created.user.id);
+      return new Response(
+        JSON.stringify({
+          error:
+            "No se pudo inicializar la configuracion de conversiones del cliente.",
+        }),
+        {
+          status: 500,
+          headers: {
+            ...corsHeaders,
+            "Content-Type": "application/json",
+          },
+        },
+      );
     }
 
     const defaults = getPlanDefaults("starter");
@@ -359,7 +465,23 @@ Deno.serve(async (req) => {
         "Error inicializando client_subscriptions para cliente:",
         subError,
       );
+      await cleanupSignupApproval(supabaseAdmin, email);
+      await rollbackCreatedUser(supabaseAdmin, created.user.id);
+      return new Response(
+        JSON.stringify({
+          error: "No se pudo inicializar el plan del cliente.",
+        }),
+        {
+          status: 500,
+          headers: {
+            ...corsHeaders,
+            "Content-Type": "application/json",
+          },
+        },
+      );
     }
+
+    await cleanupSignupApproval(supabaseAdmin, email);
 
     return new Response(
       JSON.stringify({

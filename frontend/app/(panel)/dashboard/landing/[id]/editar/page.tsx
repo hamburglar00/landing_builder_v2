@@ -24,6 +24,7 @@ import {
   setLandingGerencias,
 } from "@/lib/gerencias/gerenciasDb";
 import { GerenciaRedirectSection } from "@/components/landing/GerenciaRedirectSection";
+import { GerenciasAssignmentSummary } from "@/components/landing/GerenciasAssignmentSummary";
 import { LandingPreview } from "@/components/landing/LandingPreview";
 import {
   CollapsibleSection,
@@ -861,6 +862,11 @@ export default function DashboardLandingEditarPage() {
             <p className="mt-2 w-full text-[11px] text-zinc-500">
               La vista previa es aproximada. Para una vista certera, abrí el enlace de la landing.
             </p>
+            <GerenciasAssignmentSummary
+              assignments={assignments}
+              gerencias={gerencias}
+              selectionMode={landing.gerenciaSelectionMode}
+            />
           </div>
 
           {/* Desktop: preview fijo que acompaña el scroll y siempre queda visible */}
@@ -879,6 +885,11 @@ export default function DashboardLandingEditarPage() {
             <p className="mt-2 w-full text-[11px] leading-4 text-[var(--color-text-disabled)]">
               La vista previa es aproximada. Para una vista certera, abrí el enlace de la landing.
             </p>
+            <GerenciasAssignmentSummary
+              assignments={assignments}
+              gerencias={gerencias}
+              selectionMode={landing.gerenciaSelectionMode}
+            />
           </aside>
         </>
       )}
