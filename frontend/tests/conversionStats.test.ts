@@ -418,44 +418,56 @@ test("expone la misma familia de metricas que usa Estadisticas", async () => {
   assert.equal(stats.totalRevenue, 450);
 });
 
-test("calcula frecuencia de leads por phone y resumen por landing tag", async () => {
+test("calcula frecuencia de leads por cliente y resumen por landing tag", async () => {
   const { computeLeadRepeatStats } = await import("../components/conversiones/StatsPanel");
   const leads = [
     conversionRow("reb-a-1", {
       phone: "+54 9 11 1111-1111",
       promo_code: "ReB-a",
+      contact_event_id: "contact-reb-a-1",
       lead_event_id: "lead-reb-a-1",
       lead_event_time: 100,
     }),
     conversionRow("reb-a-2", {
       phone: "5491111111111",
       promo_code: "ReB-b",
+      contact_event_id: "contact-reb-a-2",
       lead_event_id: "lead-reb-a-2",
       lead_event_time: 200,
     }),
     conversionRow("reb-b-1", {
       phone: "5492222222222",
       promo_code: "ReB-c",
+      contact_event_id: "contact-reb-b-1",
       lead_event_id: "lead-reb-b-1",
       lead_event_time: 300,
     }),
     conversionRow("abc-a-1", {
       phone: "5491111111111",
       promo_code: "ABC-a",
+      contact_event_id: "contact-abc-a-1",
       lead_event_id: "lead-abc-a-1",
       lead_event_time: 400,
     }),
     conversionRow("abc-a-2", {
       phone: "5491111111111",
       promo_code: "ABC-b",
+      contact_event_id: "contact-abc-a-2",
       lead_event_id: "lead-abc-a-2",
       lead_event_time: 500,
     }),
     conversionRow("abc-a-3", {
       phone: "5491111111111",
       promo_code: "ABC-c",
+      contact_event_id: "contact-abc-a-3",
       lead_event_id: "lead-abc-a-3",
       lead_event_time: 600,
+    }),
+    conversionRow("orphan-lead", {
+      phone: "5494444444444",
+      promo_code: "ABC-orphan",
+      lead_event_id: "lead-orphan",
+      lead_event_time: 700,
     }),
     conversionRow("not-a-lead", {
       phone: "5493333333333",
@@ -478,8 +490,8 @@ test("calcula frecuencia de leads por phone y resumen por landing tag", async ()
       leads: bucket.leads,
     })),
     [
-      { label: "1 lead", phones: 1, leads: 1 },
-      { label: "5 leads", phones: 1, leads: 5 },
+      { label: "1 vez", phones: 1, leads: 1 },
+      { label: "5 veces", phones: 1, leads: 5 },
     ],
   );
 

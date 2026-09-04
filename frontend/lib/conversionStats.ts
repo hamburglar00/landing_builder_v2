@@ -160,7 +160,7 @@ function phoneScopedIdentityKey(row: ConversionRow, stage: JourneyStage): string
   );
 }
 
-function adJourneyKey(row: ConversionRow, stage: JourneyStage): string {
+export function adJourneyKey(row: ConversionRow, stage: JourneyStage): string {
   const promo = keyPart("promo", row.promo_code) || keyPart("promo", `${stage}:${row.id || row.created_at}`);
   const scopedIdentity = phoneScopedIdentityKey(row, stage);
   return `${cleanText(row.user_id)}::${scopedIdentity}::${promo}`;
