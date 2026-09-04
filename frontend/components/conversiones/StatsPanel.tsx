@@ -514,7 +514,7 @@ export default function StatsPanel({
     const avgLoadsPerPlayer = truth.avgLoadsPerPlayer;
     const leadRepeatStats = computeLeadRepeatStats(conversions);
     const dominantLeadFrequencyBucket = leadRepeatStats.buckets.reduce<LeadFrequencyBucket | null>(
-      (best, bucket) => !best || bucket.phones > best.phones ? bucket : best,
+      (best, bucket) => !best || bucket.leads > best.leads ? bucket : best,
       null,
     );
     type SliceStats = {
@@ -1382,7 +1382,7 @@ export default function StatsPanel({
       {stats.leadRepeatStats.totalLeads > 0 && (
         <div>
           <SectionTitle>Frecuencia de leads por telefono</SectionTitle>
-          <div className="mt-3 grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-7">
+          <div className="mt-3 grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-6">
             <KpiCard
               label="Leads totales"
               value={stats.leadRepeatStats.totalLeads}
@@ -1417,13 +1417,8 @@ export default function StatsPanel({
             <KpiCard
               label="Bucket dominante"
               value={stats.dominantLeadFrequencyBucket?.label ?? "-"}
-              sub={`${fmtInt(stats.dominantLeadFrequencyBucket?.phones ?? 0)} phones`}
-              tooltip="Grupo de frecuencia con mayor volumen de telefonos."
-            />
-            <KpiCard
-              label="Uso interno"
-              value="Reporting"
-              tooltip="Esta lectura no modifica payloads, eventos, deduplicacion ni envios a Meta CAPI."
+              sub={`${fmtInt(stats.dominantLeadFrequencyBucket?.leads ?? 0)} leads`}
+              tooltip="Grupo de frecuencia con mayor volumen de Leads."
             />
           </div>
 
@@ -1434,7 +1429,7 @@ export default function StatsPanel({
                   Distribucion por cantidad de leads del mismo phone
                 </h4>
                 <p className="text-[10px] text-zinc-500">
-                  X = leads por telefono · Y = cantidad de phones
+                  X = frecuencia del phone · Y = cantidad de leads
                 </p>
               </div>
               <ResponsiveContainer width="100%" height={280}>
@@ -1456,17 +1451,8 @@ export default function StatsPanel({
                     cursor={{ fill: "rgba(82,82,91,0.18)" }}
                     contentStyle={{ backgroundColor: "#18181b", border: "1px solid #3f3f46", borderRadius: 8, fontSize: 11, boxShadow: "0 18px 36px rgba(0,0,0,0.35)" }}
                     labelStyle={{ color: "#a1a1aa" }}
-                    formatter={(value, name) => {
-                      const label = name === "phones"
-                        ? "Phones"
-                        : name === "leads"
-                          ? "Leads"
-                          : "Repeat leads";
-                      return [fmtInt(Number(value) || 0), label];
-                    }}
+                    formatter={(value) => [fmtInt(Number(value) || 0), "Leads"]}
                   />
-                  <Legend wrapperStyle={{ fontSize: 10, color: "#a1a1aa" }} />
-                  <Bar dataKey="phones" name="Phones" fill="#22c55e" radius={[5, 5, 0, 0]} />
                   <Bar dataKey="leads" name="Leads" fill="#f59e0b" radius={[5, 5, 0, 0]} />
                 </ComposedChart>
               </ResponsiveContainer>
