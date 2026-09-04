@@ -215,6 +215,37 @@ type TableSortKey = "name" | "mensajes" | "cargas" | "pct" | "revenue" | "roas1"
 type SortDirection = "asc" | "desc";
 type TopContactsLimit = 10 | 25 | 50 | 100;
 
+type LeadFrequencyBucket = {
+  bucket: number;
+  label: string;
+  phones: number;
+  leads: number;
+  repeatLeads: number;
+};
+
+type LeadLandingTagSummary = {
+  landingTag: string;
+  totalLeads: number;
+  uniquePhones: number;
+  firstLeads: number;
+  repeatLeads: number;
+  repeatPct: number;
+  golondrinaPhones: number;
+  golondrinaPct: number;
+};
+
+type LeadRepeatStats = {
+  totalLeads: number;
+  uniquePhones: number;
+  firstLeads: number;
+  repeatLeads: number;
+  repeatPct: number;
+  golondrinaPhones: number;
+  golondrinaPct: number;
+  buckets: LeadFrequencyBucket[];
+  byLandingTag: LeadLandingTagSummary[];
+};
+
 const LOAD_METRIC_LABELS: Record<LoadMetric, string> = {
   first: "Primeras cargas",
   repeat: "Recargas",
@@ -222,6 +253,139 @@ const LOAD_METRIC_LABELS: Record<LoadMetric, string> = {
 };
 
 const TOP_CONTACT_LIMIT_OPTIONS: TopContactsLimit[] = [10, 25, 50, 100];
+const LEAD_FREQUENCY_BUCKET_CAP = 6;
+
+function fmtInt(value: number): string {
+  return Math.round(value).toLocaleString("es-AR");
+}
+
+function normalizeLeadPhone(value: unknown): string {
+  return String(value ?? "").replace(/\D/g, "");
+}
+
+function leadTimestamp(row: ConversionRow): number {
+  const eventTime = Number(row.lead_event_time ?? 0);
+  if (Number.isFinite(eventTime) && eventTime > 0) return eventTime * 1000;
+  const created = new Date(row.created_at ?? "").getTime();
+  return Number.isFinite(created) ? created : 0;
+}
+
+function promoCodePrefix(value: unknown): string {
+  const promo = String(value ?? "").trim();
+  const match = promo.match(/^([A-Za-z0-9]+)-[A-Za-z0-9]+$/);
+  return match?.[1] ?? "";
+}
+
+function landingTagForLead(row: ConversionRow): string {
+  return (
+    promoCodePrefix(row.promo_code) ||
+    promoCodePrefix(row.lead_incoming_promo_code) ||
+    "Sin tag"
+  );
+}
+
+function bucketLabel(bucket: number): string {
+  return bucket >= LEAD_FREQUENCY_BUCKET_CAP
+    ? `${LEAD_FREQUENCY_BUCKET_CAP}+ leads`
+    : `${bucket} ${bucket === 1 ? "lead" : "leads"}`;
+}
+
+function summarizeLeadGroups(
+  groups: Map<string, Array<{ tag: string; ts: number }>>,
+) {
+  let totalLeads = 0;
+  let repeatLeads = 0;
+  let golondrinaPhones = 0;
+  const bucketCounts = new Map<number, LeadFrequencyBucket>();
+
+  for (const leads of groups.values()) {
+    const leadCount = leads.length;
+    if (leadCount <= 0) continue;
+    totalLeads += leadCount;
+    repeatLeads += Math.max(0, leadCount - 1);
+    if (leadCount > 1) golondrinaPhones += 1;
+
+    const bucket = Math.min(leadCount, LEAD_FREQUENCY_BUCKET_CAP);
+    const entry = bucketCounts.get(bucket) ?? {
+      bucket,
+      label: bucketLabel(bucket),
+      phones: 0,
+      leads: 0,
+      repeatLeads: 0,
+    };
+    entry.phones += 1;
+    entry.leads += leadCount;
+    entry.repeatLeads += Math.max(0, leadCount - 1);
+    bucketCounts.set(bucket, entry);
+  }
+
+  const uniquePhones = groups.size;
+  const firstLeads = uniquePhones;
+  return {
+    totalLeads,
+    uniquePhones,
+    firstLeads,
+    repeatLeads,
+    repeatPct: totalLeads > 0 ? (repeatLeads / totalLeads) * 100 : 0,
+    golondrinaPhones,
+    golondrinaPct: uniquePhones > 0 ? (golondrinaPhones / uniquePhones) * 100 : 0,
+    buckets: Array.from(bucketCounts.values()).sort((a, b) => a.bucket - b.bucket),
+  };
+}
+
+export function computeLeadRepeatStats(rows: ConversionRow[]): LeadRepeatStats {
+  const byPhone = new Map<string, Array<{ tag: string; ts: number }>>();
+  const byTagPhone = new Map<string, Array<{ tag: string; ts: number }>>();
+
+  for (const row of rows) {
+    if (!String(row.lead_event_id ?? "").trim()) continue;
+    const phone = normalizeLeadPhone(row.phone);
+    if (!phone) continue;
+    const tag = landingTagForLead(row);
+    const lead = { tag, ts: leadTimestamp(row) };
+    const phoneKey = `${row.user_id}::${phone}`;
+    const tagPhoneKey = `${tag}::${row.user_id}::${phone}`;
+    byPhone.set(phoneKey, [...(byPhone.get(phoneKey) ?? []), lead]);
+    byTagPhone.set(tagPhoneKey, [...(byTagPhone.get(tagPhoneKey) ?? []), lead]);
+  }
+
+  for (const leads of byPhone.values()) {
+    leads.sort((a, b) => a.ts - b.ts);
+  }
+  for (const leads of byTagPhone.values()) {
+    leads.sort((a, b) => a.ts - b.ts);
+  }
+
+  const globalSummary = summarizeLeadGroups(byPhone);
+  const tagGroups = new Map<string, Map<string, Array<{ tag: string; ts: number }>>>();
+  for (const [tagPhoneKey, leads] of byTagPhone.entries()) {
+    const tag = leads[0]?.tag || tagPhoneKey.split("::")[0] || "Sin tag";
+    const tagMap = tagGroups.get(tag) ?? new Map<string, Array<{ tag: string; ts: number }>>();
+    tagMap.set(tagPhoneKey, leads);
+    tagGroups.set(tag, tagMap);
+  }
+
+  const byLandingTag = Array.from(tagGroups.entries())
+    .map(([landingTag, groups]) => {
+      const summary = summarizeLeadGroups(groups);
+      return {
+        landingTag,
+        totalLeads: summary.totalLeads,
+        uniquePhones: summary.uniquePhones,
+        firstLeads: summary.firstLeads,
+        repeatLeads: summary.repeatLeads,
+        repeatPct: summary.repeatPct,
+        golondrinaPhones: summary.golondrinaPhones,
+        golondrinaPct: summary.golondrinaPct,
+      };
+    })
+    .sort((a, b) => b.totalLeads - a.totalLeads || a.landingTag.localeCompare(b.landingTag, "es"));
+
+  return {
+    ...globalSummary,
+    byLandingTag,
+  };
+}
 
 function SortButton({
   active,
@@ -348,6 +512,11 @@ export default function StatsPanel({
     const purchasers = truth.purchasers;
     const avgTicket = truth.avgTicket;
     const avgLoadsPerPlayer = truth.avgLoadsPerPlayer;
+    const leadRepeatStats = computeLeadRepeatStats(conversions);
+    const dominantLeadFrequencyBucket = leadRepeatStats.buckets.reduce<LeadFrequencyBucket | null>(
+      (best, bucket) => !best || bucket.phones > best.phones ? bucket : best,
+      null,
+    );
     type SliceStats = {
       mensajes: number;
       cargas: number;
@@ -563,6 +732,8 @@ export default function StatsPanel({
       totalPurchaseCount,
       avgTicket,
       avgLoadsPerPlayer,
+      leadRepeatStats,
+      dominantLeadFrequencyBucket,
       byCampaign,
       byDevice,
       byLanding,
@@ -1029,6 +1200,21 @@ export default function StatsPanel({
       carga: stats.uniqueLeadsLinkedToContact > 0 ? Number(((stats.firstLoadPurchasersLinkedToLead / stats.uniqueLeadsLinkedToContact) * 100).toFixed(1)) : 0,
       recarga: stats.firstLoadPurchasersLinkedToLead > 0 ? Number(((stats.repeatFromFirstInRange / stats.firstLoadPurchasersLinkedToLead) * 100).toFixed(1)) : 0,
     },
+    lead_frequency: {
+      total_leads: stats.leadRepeatStats.totalLeads,
+      unique_phones: stats.leadRepeatStats.uniquePhones,
+      first_leads: stats.leadRepeatStats.firstLeads,
+      repeat_leads: stats.leadRepeatStats.repeatLeads,
+      repeat_pct: Number(stats.leadRepeatStats.repeatPct.toFixed(1)),
+      golondrina_phones: stats.leadRepeatStats.golondrinaPhones,
+      golondrina_pct: Number(stats.leadRepeatStats.golondrinaPct.toFixed(1)),
+      buckets: stats.leadRepeatStats.buckets.map((bucket) => ({
+        bucket: bucket.label,
+        phones: bucket.phones,
+        leads: bucket.leads,
+        repeat_leads: bucket.repeatLeads,
+      })),
+    },
     charts: {
       hourly_total_cargas_last24: stats.hourlyBuckets.map((r) => ({ hour: r.hour, cargas: r.cargas })),
       hourly_mensajes_vs_cargas_last24: hourlyMessagesLoadsData.map((r) => ({
@@ -1059,6 +1245,7 @@ export default function StatsPanel({
         cargas: r.cargas,
         revenue: r.revenue,
       })),
+      by_landing_tag_lead_frequency_top5: stats.leadRepeatStats.byLandingTag.slice(0, 5),
     },
   }), [isTodayRange, currency, stats, hourlyMessagesLoadsData, dailyMessagesLoadsData, dailyFunnelPctData]);
 
@@ -1189,6 +1376,136 @@ export default function StatsPanel({
             steps={journeyPathSteps}
             rates={journeyPathRates}
           />
+        </div>
+      )}
+
+      {stats.leadRepeatStats.totalLeads > 0 && (
+        <div>
+          <SectionTitle>Frecuencia de leads por telefono</SectionTitle>
+          <div className="mt-3 grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-7">
+            <KpiCard
+              label="Leads totales"
+              value={stats.leadRepeatStats.totalLeads}
+              color="text-amber-300"
+              tooltip="Eventos Lead internos dentro de los filtros actuales. No se envia nada nuevo a Meta CAPI."
+            />
+            <KpiCard
+              label="Phones unicos"
+              value={stats.leadRepeatStats.uniquePhones}
+              tooltip="Telefonos distintos que generaron al menos un Lead dentro de los filtros actuales."
+            />
+            <KpiCard
+              label="First leads"
+              value={stats.leadRepeatStats.firstLeads}
+              color="text-emerald-300"
+              tooltip="Primer Lead de cada telefono dentro del universo filtrado."
+            />
+            <KpiCard
+              label="Repeat leads"
+              value={stats.leadRepeatStats.repeatLeads}
+              sub={`${stats.leadRepeatStats.repeatPct.toFixed(1)}%`}
+              color="text-fuchsia-300"
+              tooltip="Leads posteriores del mismo telefono dentro del universo filtrado."
+            />
+            <KpiCard
+              label="Phones golondrina"
+              value={stats.leadRepeatStats.golondrinaPhones}
+              sub={`${stats.leadRepeatStats.golondrinaPct.toFixed(1)}%`}
+              color="text-sky-300"
+              tooltip="Telefonos que generaron 2 o mas Leads dentro del universo filtrado."
+            />
+            <KpiCard
+              label="Bucket dominante"
+              value={stats.dominantLeadFrequencyBucket?.label ?? "-"}
+              sub={`${fmtInt(stats.dominantLeadFrequencyBucket?.phones ?? 0)} phones`}
+              tooltip="Grupo de frecuencia con mayor volumen de telefonos."
+            />
+            <KpiCard
+              label="Uso interno"
+              value="Reporting"
+              tooltip="Esta lectura no modifica payloads, eventos, deduplicacion ni envios a Meta CAPI."
+            />
+          </div>
+
+          <div className="mt-4 grid grid-cols-1 gap-4 xl:grid-cols-[minmax(0,1.25fr)_minmax(460px,0.75fr)]">
+            <div className="rounded-xl border border-zinc-800 bg-zinc-900/50 p-4">
+              <div className="mb-4 flex flex-col gap-1 sm:flex-row sm:items-end sm:justify-between">
+                <h4 className="text-xs font-semibold text-zinc-200">
+                  Distribucion por cantidad de leads del mismo phone
+                </h4>
+                <p className="text-[10px] text-zinc-500">
+                  X = leads por telefono · Y = cantidad de phones
+                </p>
+              </div>
+              <ResponsiveContainer width="100%" height={280}>
+                <ComposedChart data={stats.leadRepeatStats.buckets} margin={{ top: 8, right: 18, bottom: 0, left: -8 }}>
+                  <CartesianGrid strokeDasharray="3 3" stroke="#27272a" />
+                  <XAxis
+                    dataKey="label"
+                    tick={{ fill: "#71717a", fontSize: 10 }}
+                    axisLine={{ stroke: "#3f3f46" }}
+                    tickLine={false}
+                  />
+                  <YAxis
+                    tick={{ fill: "#71717a", fontSize: 10 }}
+                    axisLine={false}
+                    tickLine={false}
+                    allowDecimals={false}
+                  />
+                  <Tooltip
+                    cursor={{ fill: "rgba(82,82,91,0.18)" }}
+                    contentStyle={{ backgroundColor: "#18181b", border: "1px solid #3f3f46", borderRadius: 8, fontSize: 11, boxShadow: "0 18px 36px rgba(0,0,0,0.35)" }}
+                    labelStyle={{ color: "#a1a1aa" }}
+                    formatter={(value, name) => {
+                      const label = name === "phones"
+                        ? "Phones"
+                        : name === "leads"
+                          ? "Leads"
+                          : "Repeat leads";
+                      return [fmtInt(Number(value) || 0), label];
+                    }}
+                  />
+                  <Legend wrapperStyle={{ fontSize: 10, color: "#a1a1aa" }} />
+                  <Bar dataKey="phones" name="Phones" fill="#22c55e" radius={[5, 5, 0, 0]} />
+                  <Bar dataKey="leads" name="Leads" fill="#f59e0b" radius={[5, 5, 0, 0]} />
+                </ComposedChart>
+              </ResponsiveContainer>
+            </div>
+
+            {stats.leadRepeatStats.byLandingTag.length > 0 && (
+              <TableCard title="Resumen por landing tag">
+                <table className="w-full text-[11px]" style={{ minWidth: 620 }}>
+                  <thead>
+                    <tr className="text-zinc-500">
+                      <th className="pb-2 text-left font-medium">Tag</th>
+                      <th className="pb-2 text-center font-medium">Leads</th>
+                      <th className="pb-2 text-center font-medium">Phones</th>
+                      <th className="pb-2 text-center font-medium">First</th>
+                      <th className="pb-2 text-center font-medium">Repeat</th>
+                      <th className="pb-2 text-center font-medium">% Repeat</th>
+                      <th className="pb-2 text-center font-medium">Golondrinas</th>
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y divide-zinc-800/60">
+                    {stats.leadRepeatStats.byLandingTag.slice(0, 12).map((row) => (
+                      <tr key={row.landingTag}>
+                        <td className="py-1.5 font-mono text-zinc-300">{row.landingTag}</td>
+                        <td className="py-1.5 text-center text-zinc-400 tabular-nums">{fmtInt(row.totalLeads)}</td>
+                        <td className="py-1.5 text-center text-zinc-400 tabular-nums">{fmtInt(row.uniquePhones)}</td>
+                        <td className="py-1.5 text-center text-emerald-300 tabular-nums">{fmtInt(row.firstLeads)}</td>
+                        <td className="py-1.5 text-center text-fuchsia-300 tabular-nums">{fmtInt(row.repeatLeads)}</td>
+                        <td className="py-1.5 text-center text-zinc-400 tabular-nums">{row.repeatPct.toFixed(1)}%</td>
+                        <td className="py-1.5 text-center text-sky-300 tabular-nums">
+                          {fmtInt(row.golondrinaPhones)}
+                          <span className="ml-1 text-zinc-500">({row.golondrinaPct.toFixed(1)}%)</span>
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </TableCard>
+            )}
+          </div>
         </div>
       )}
 

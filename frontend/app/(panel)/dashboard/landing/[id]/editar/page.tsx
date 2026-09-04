@@ -38,6 +38,7 @@ import {
   isAtrioUrlValidForSave,
 } from "@/components/landing/CtaDestinationSection";
 import { buildLandingConfig } from "@/lib/landing/buildLandingConfig";
+import { withCurrentTemplateSnapshot } from "@/lib/landing/templateVariants";
 import { publishLandingChanges } from "@/lib/landing/publishLanding";
 import { getSettings } from "@/lib/settingsDb";
 import {
@@ -343,6 +344,7 @@ export default function DashboardLandingEditarPage() {
         clientName && supabaseBase
           ? `${supabaseBase}/functions/v1/conversions?name=${encodeURIComponent(clientName)}`
           : landing.postUrl;
+      const configToSave = withCurrentTemplateSnapshot(landing.config);
 
       const landingConfig = buildLandingConfig({
         id: landing.id,
@@ -352,12 +354,12 @@ export default function DashboardLandingEditarPage() {
         pixelId: pixelIdToSave,
         postUrl: conversionsUrl,
         landingTag: landing.landingTag,
-        config: landing.config,
+        config: configToSave,
         phoneMode: effectivePhoneMode,
         updatedAt: undefined,
       });
 
-      if (landing.config.ctaDestination !== "atrio") {
+      if (configToSave.ctaDestination !== "atrio") {
         await assertLandingGerenciasWorkspaceCompatible(
           landing.id,
           assignments,
@@ -387,7 +389,7 @@ export default function DashboardLandingEditarPage() {
         postUrl: conversionsUrl,
         landingTag: landing.landingTag,
         comment: landing.comment,
-        config: landing.config,
+        config: configToSave,
         landingConfig,
       });
       await setLandingGerencias(landing.id, assignments);

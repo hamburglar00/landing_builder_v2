@@ -11,6 +11,10 @@ import type {
 import { ColorSelect } from "./ColorSelect";
 import { ImageUploader } from "./ImageUploader";
 import { buildLandingConfig } from "@/lib/landing/buildLandingConfig";
+import {
+  switchLandingTemplate,
+  withCurrentTemplateSnapshot,
+} from "@/lib/landing/templateVariants";
 import ModalPortal from "@/components/ui/ModalPortal";
 
 interface LandingEditorFormProps {
@@ -159,19 +163,7 @@ export function LandingTemplateSection({
                 value={opt.value}
                 checked={config.template === opt.value}
                 onChange={() =>
-                  updateConfig(setConfig, {
-                    template: opt.value,
-                    ...(opt.value === "template4" &&
-                    (!config.ctaText.trim() || config.ctaText === "Acceder")
-                      ? { ctaText: "ABRIR WHATSAPP" }
-                      : {}),
-                    ...(opt.value === "template4" && config.ctaTextColor === "black"
-                      ? { ctaTextColor: "white" as const }
-                      : {}),
-                    ...(opt.value === "template4" && config.ctaBackgroundColor === "gold"
-                      ? { ctaBackgroundColor: "whatsapp_green" as const }
-                      : {}),
-                  })
+                  setConfig((current) => switchLandingTemplate(current, opt.value))
                 }
                 className="h-3.5 w-3.5 rounded-full border-zinc-500"
               />
@@ -343,7 +335,7 @@ export function LandingEditorForm({
       pixelId: pixelId ?? "",
       postUrl: postUrl ?? "",
       landingTag: landingTag ?? "",
-      config,
+      config: withCurrentTemplateSnapshot(config),
       phoneMode: undefined,
       updatedAt: undefined,
     });

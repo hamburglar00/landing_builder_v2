@@ -418,6 +418,81 @@ test("expone la misma familia de metricas que usa Estadisticas", async () => {
   assert.equal(stats.totalRevenue, 450);
 });
 
+test("calcula frecuencia de leads por phone y resumen por landing tag", async () => {
+  const { computeLeadRepeatStats } = await import("../components/conversiones/StatsPanel");
+  const leads = [
+    conversionRow("reb-a-1", {
+      phone: "+54 9 11 1111-1111",
+      promo_code: "ReB-a",
+      lead_event_id: "lead-reb-a-1",
+      lead_event_time: 100,
+    }),
+    conversionRow("reb-a-2", {
+      phone: "5491111111111",
+      promo_code: "ReB-b",
+      lead_event_id: "lead-reb-a-2",
+      lead_event_time: 200,
+    }),
+    conversionRow("reb-b-1", {
+      phone: "5492222222222",
+      promo_code: "ReB-c",
+      lead_event_id: "lead-reb-b-1",
+      lead_event_time: 300,
+    }),
+    conversionRow("abc-a-1", {
+      phone: "5491111111111",
+      promo_code: "ABC-a",
+      lead_event_id: "lead-abc-a-1",
+      lead_event_time: 400,
+    }),
+    conversionRow("abc-a-2", {
+      phone: "5491111111111",
+      promo_code: "ABC-b",
+      lead_event_id: "lead-abc-a-2",
+      lead_event_time: 500,
+    }),
+    conversionRow("abc-a-3", {
+      phone: "5491111111111",
+      promo_code: "ABC-c",
+      lead_event_id: "lead-abc-a-3",
+      lead_event_time: 600,
+    }),
+    conversionRow("not-a-lead", {
+      phone: "5493333333333",
+      promo_code: "ABC-d",
+      lead_event_id: "",
+    }),
+  ];
+
+  const stats = computeLeadRepeatStats(leads);
+
+  assert.equal(stats.totalLeads, 6);
+  assert.equal(stats.uniquePhones, 2);
+  assert.equal(stats.firstLeads, 2);
+  assert.equal(stats.repeatLeads, 4);
+  assert.equal(stats.golondrinaPhones, 1);
+  assert.deepEqual(
+    stats.buckets.map((bucket) => ({
+      label: bucket.label,
+      phones: bucket.phones,
+      leads: bucket.leads,
+    })),
+    [
+      { label: "1 lead", phones: 1, leads: 1 },
+      { label: "5 leads", phones: 1, leads: 5 },
+    ],
+  );
+
+  const reb = stats.byLandingTag.find((row) => row.landingTag === "ReB");
+  const abc = stats.byLandingTag.find((row) => row.landingTag === "ABC");
+  assert.equal(reb?.totalLeads, 3);
+  assert.equal(reb?.uniquePhones, 2);
+  assert.equal(reb?.repeatLeads, 1);
+  assert.equal(abc?.totalLeads, 3);
+  assert.equal(abc?.uniquePhones, 1);
+  assert.equal(abc?.repeatLeads, 2);
+});
+
 test("expone ID de gerencia en chats iniciados aunque el label historico sea generico", async () => {
   const { getJourneyStartGerenciaLabels } = await import("../lib/conversionsDb");
 

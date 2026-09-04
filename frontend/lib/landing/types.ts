@@ -180,7 +180,17 @@ export interface LandingThemeConfig {
   leadCapture: LandingLeadCaptureConfig;
   template4Chat?: LandingTemplate4ChatConfig;
   template5Live?: LandingTemplate5LiveConfig;
+  /**
+   * Borradores visuales independientes por plantilla.
+   * El constructor los usa para recordar como quedo cada template; la landing
+   * publica sigue recibiendo solo el payload compilado de la plantilla activa.
+   */
+  templateConfigs?: Partial<Record<TemplateOption, LandingTemplateVariantConfig>>;
 }
+
+export type LandingTemplateVariantConfig = Partial<
+  Omit<LandingThemeConfig, "template" | "templateConfigs">
+>;
 
 /**
  * Entidad landing: un cliente puede tener muchas.

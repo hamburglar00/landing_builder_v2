@@ -82,6 +82,46 @@ function templateNumberForOption(template: unknown): number {
   return 1;
 }
 
+function isRecord(value: unknown): value is Record<string, unknown> {
+  return typeof value === "object" && value !== null && !Array.isArray(value);
+}
+
+const GLOBAL_CONFIG_KEYS = [
+  "marketCountry",
+  "sendContactPixel",
+  "ctaDestination",
+  "atrioRedirectUrl",
+  "atrioClientId",
+  "atrioId",
+  "atrioSlug",
+];
+
+function resolveActiveTemplateRawConfig(
+  rawConfig: Record<string, unknown>,
+): Record<string, unknown> {
+  const template = String(rawConfig.template || "template1").trim();
+  const templateConfigs = isRecord(rawConfig.templateConfigs)
+    ? rawConfig.templateConfigs
+    : null;
+  const activeVariant = templateConfigs && isRecord(templateConfigs[template])
+    ? templateConfigs[template] as Record<string, unknown>
+    : null;
+
+  if (!activeVariant) return rawConfig;
+
+  const merged = {
+    ...rawConfig,
+    ...activeVariant,
+    template,
+  };
+
+  for (const key of GLOBAL_CONFIG_KEYS) {
+    if (rawConfig[key] !== undefined) merged[key] = rawConfig[key];
+  }
+
+  return merged;
+}
+
 /**
  * API público: devuelve toda la configuración de una landing por su nombre.
  * Uso: GET /functions/v1/builder-config?name=MiLanding
@@ -208,7 +248,9 @@ Deno.serve(async (req) => {
       phone_mode?: "random" | "fair" | null;
     };
 
-    const rawConfig = (data.config ?? {}) as Record<string, unknown>;
+    const rawConfig = resolveActiveTemplateRawConfig(
+      (data.config ?? {}) as Record<string, unknown>,
+    );
     const workspaceCurrency = String(data.workspace_currency ?? "ARS").trim().toUpperCase() === "PYG"
       ? "PYG"
       : "ARS";
