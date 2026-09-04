@@ -1591,22 +1591,22 @@ export default function StatsPanel({
 
       {stats.leadRepeatStats.totalLeads > 0 && (
         <div>
-          <SectionTitle>Frecuencia de leads por cliente</SectionTitle>
+          <SectionTitle>Frecuencia de mensajes por cliente</SectionTitle>
           <div className="mt-3 grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-5">
             <KpiCard
-              label="Leads totales"
+              label="Mensajes recibidos"
               value={stats.leadRepeatStats.totalLeads}
               color="text-amber-300"
               tooltip="Mensajes recibidos que entran en los filtros actuales."
             />
             <KpiCard
-              label="Leads nuevos"
+              label="Primer mensaje por cliente"
               value={stats.leadRepeatStats.firstLeads}
               color="text-emerald-300"
               tooltip="Primer mensaje recibido de cada cliente dentro del periodo y filtros seleccionados."
             />
             <KpiCard
-              label="Leads repetidos"
+              label="Mensajes repetidos por cliente"
               value={stats.leadRepeatStats.repeatLeads}
               sub={`${stats.leadRepeatStats.repeatPct.toFixed(1)}%`}
               color="text-fuchsia-300"
@@ -1622,8 +1622,8 @@ export default function StatsPanel({
             <KpiCard
               label="Frecuencia principal"
               value={stats.dominantLeadFrequencyBucket?.label ?? "-"}
-              sub={`${fmtInt(stats.dominantLeadFrequencyBucket?.leads ?? 0)} leads`}
-              tooltip="El grupo que concentra mayor cantidad de leads."
+              sub={`${fmtInt(stats.dominantLeadFrequencyBucket?.leads ?? 0)} mensajes`}
+              tooltip="El grupo que concentra mayor cantidad de mensajes."
             />
           </div>
 
@@ -1634,7 +1634,7 @@ export default function StatsPanel({
                   Veces que escribio el mismo cliente
                 </h4>
                 <p className="text-[10px] text-zinc-500">
-                  Horizontal: leads recibidos · Vertical: frecuencia por cliente
+                  Horizontal: mensajes recibidos · Vertical: frecuencia por cliente
                 </p>
               </div>
               <ResponsiveContainer width="100%" height={Math.max(220, stats.leadRepeatStats.buckets.length * 42)}>
@@ -1646,7 +1646,7 @@ export default function StatsPanel({
                     axisLine={{ stroke: "#3f3f46" }}
                     tickLine={false}
                     allowDecimals={false}
-                    label={{ value: "Leads recibidos", position: "insideBottom", offset: -12, fill: "#71717a", fontSize: 10 }}
+                    label={{ value: "Mensajes recibidos", position: "insideBottom", offset: -12, fill: "#71717a", fontSize: 10 }}
                   />
                   <YAxis
                     type="category"
@@ -1660,10 +1660,10 @@ export default function StatsPanel({
                     cursor={{ fill: "rgba(82,82,91,0.18)" }}
                     contentStyle={{ backgroundColor: "#18181b", border: "1px solid #3f3f46", borderRadius: 8, fontSize: 11, boxShadow: "0 18px 36px rgba(0,0,0,0.35)" }}
                     labelStyle={{ color: "#a1a1aa" }}
-                    formatter={(value) => [`${fmtInt(Number(value) || 0)} leads`, "Total"]}
+                    formatter={(value) => [`${fmtInt(Number(value) || 0)} mensajes`, "Total"]}
                     labelFormatter={(label) => `Clientes que escribieron ${label}`}
                   />
-                  <Bar dataKey="leads" name="Leads recibidos" fill="#f59e0b" radius={[0, 5, 5, 0]} barSize={14} />
+                  <Bar dataKey="leads" name="Mensajes recibidos" fill="#f59e0b" radius={[0, 5, 5, 0]} barSize={14} />
                 </BarChart>
               </ResponsiveContainer>
             </div>
@@ -1674,10 +1674,10 @@ export default function StatsPanel({
                   <thead>
                     <tr className="text-zinc-500">
                       <th className="pb-2 text-left font-medium">Tag</th>
-                      <th className="pb-2 text-center font-medium">Leads</th>
+                      <th className="pb-2 text-center font-medium">Mensajes</th>
                       <th className="pb-2 text-center font-medium">Clientes</th>
-                      <th className="pb-2 text-center font-medium">Nuevos</th>
-                      <th className="pb-2 text-center font-medium">Repetidos</th>
+                      <th className="pb-2 text-center font-medium">Primer mensaje</th>
+                      <th className="pb-2 text-center font-medium">Mensajes repetidos</th>
                       <th className="pb-2 text-center font-medium">% repetidos</th>
                       <th className="pb-2 text-center font-medium">Clientes repetidos</th>
                     </tr>
