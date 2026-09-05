@@ -154,6 +154,7 @@ export function TelefonosPageContent({
   const [switchingGerenciaId, setSwitchingGerenciaId] = useState<number | null>(null);
   const [openGerenciaId, setOpenGerenciaId] = useState<number | null>(null);
   const [gerenciaSearch, setGerenciaSearch] = useState("");
+  const [showOnlyActiveGerencias, setShowOnlyActiveGerencias] = useState(false);
   const [nextSyncCountdown, setNextSyncCountdown] = useState<string>("--:--");
   const [manualPhoneInput, setManualPhoneInput] = useState<Record<number, string>>({});
   const [manualPhoneKind, setManualPhoneKind] = useState<Record<number, PhoneKind>>({});
@@ -712,23 +713,28 @@ export function TelefonosPageContent({
 
   const normalizedGerenciaSearch = gerenciaSearch.trim().toLowerCase();
   const normalizedPhoneSearch = onlyDigits(gerenciaSearch);
-  const filteredGerencias = normalizedGerenciaSearch
-    ? gerencias.filter((g) => {
-        const id = String(g.gerencia_id ?? g.id ?? "").toLowerCase();
-        const internalId = String(g.id ?? "").toLowerCase();
-        const name = String(g.nombre ?? "").toLowerCase();
-        const phones = phonesByGerencia[g.id] ?? [];
-        const hasPhoneMatch =
-          normalizedPhoneSearch.length > 0 &&
-          phones.some((p) => onlyDigits(p.phone).includes(normalizedPhoneSearch));
-        return (
-          name.includes(normalizedGerenciaSearch) ||
-          id.includes(normalizedGerenciaSearch) ||
-          internalId.includes(normalizedGerenciaSearch) ||
-          hasPhoneMatch
-        );
-      })
-    : gerencias;
+  const gerenciaHasActivePhone = (g: Gerencia) =>
+    (phonesByGerencia[g.id] ?? []).some(
+      (p) => p.status === "active" && p.source_available !== false,
+    );
+  const activeGerenciasCount = gerencias.filter(gerenciaHasActivePhone).length;
+  const filteredGerencias = gerencias.filter((g) => {
+    if (showOnlyActiveGerencias && !gerenciaHasActivePhone(g)) return false;
+    if (!normalizedGerenciaSearch) return true;
+    const id = String(g.gerencia_id ?? g.id ?? "").toLowerCase();
+    const internalId = String(g.id ?? "").toLowerCase();
+    const name = String(g.nombre ?? "").toLowerCase();
+    const phones = phonesByGerencia[g.id] ?? [];
+    const hasPhoneMatch =
+      normalizedPhoneSearch.length > 0 &&
+      phones.some((p) => onlyDigits(p.phone).includes(normalizedPhoneSearch));
+    return (
+      name.includes(normalizedGerenciaSearch) ||
+      id.includes(normalizedGerenciaSearch) ||
+      internalId.includes(normalizedGerenciaSearch) ||
+      hasPhoneMatch
+    );
+  });
   const latestPhoneMetricsAt = Object.values(phoneMetricsById).reduce((latest, metric) => {
     const timestamp = Date.parse(metric.calculatedAt);
     return Number.isFinite(timestamp) ? Math.max(latest, timestamp) : latest;
@@ -798,6 +804,26 @@ export function TelefonosPageContent({
             const hasPbadmin = gerencias.some((g) => (g.source_type ?? "pbadmin") === "pbadmin");
             return (
           <div className="ml-auto flex flex-wrap items-center gap-2">
+            <button
+              type="button"
+              onClick={() => setShowOnlyActiveGerencias((prev) => !prev)}
+              aria-pressed={showOnlyActiveGerencias}
+              title={
+                showOnlyActiveGerencias
+                  ? "Volver a mostrar todas las gerencias."
+                  : "Mostrar solo gerencias que tienen al menos un teléfono activo."
+              }
+              className={`inline-flex h-8 items-center gap-2 rounded-lg border px-3 text-xs font-medium transition ${
+                showOnlyActiveGerencias
+                  ? "border-emerald-500/60 bg-emerald-500/15 text-emerald-200 hover:bg-emerald-500/20"
+                  : "border-zinc-700 bg-zinc-800 text-zinc-200 hover:bg-zinc-700"
+              }`}
+            >
+              <span>{showOnlyActiveGerencias ? "Mostrando activas" : "Solo activas"}</span>
+              <span className="text-[10px] text-zinc-400">
+                {activeGerenciasCount}/{gerencias.length}
+              </span>
+            </button>
             {!isAdmin ? (
               <button
                 type="button"
@@ -885,7 +911,9 @@ export function TelefonosPageContent({
         <div className="space-y-2">
           {filteredGerencias.length === 0 ? (
             <div className="rounded-xl border border-zinc-800 bg-zinc-950/40 px-4 py-6 text-center text-sm text-zinc-500">
-              No hay gerencias que coincidan con la búsqueda.
+              {showOnlyActiveGerencias
+                ? "No hay gerencias con teléfonos activos para mostrar."
+                : "No hay gerencias que coincidan con la búsqueda."}
             </div>
           ) : null}
           {filteredGerencias.map((g) => {
