@@ -264,7 +264,10 @@ Deno.serve(async (req) => {
       : "get_phone_for_landing";
     const rpcParams = source === "chatrace"
       ? { p_client_name: name }
-      : { p_landing_name: name };
+      : {
+        p_landing_name: name,
+        p_create_reservation: source !== "warmup",
+      };
     const { data, error } = await supabase.rpc(rpcName, rpcParams);
 
     if (error) {

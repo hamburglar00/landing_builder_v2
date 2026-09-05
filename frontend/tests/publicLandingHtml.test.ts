@@ -170,6 +170,10 @@ test("conserva Contact con eventID y deduplicación local", () => {
   assert.match(html, /client_ip_issued_at: tracking\.clientIpIssuedAt/);
   assert.match(html, /client_ip_proof: tracking\.clientIpProof/);
   assert.match(html, /requestIdleCallback/);
+  assert.match(
+    html,
+    /reservationId: \(phoneData && phoneData\.assignmentReservationId\) \|\| undefined/,
+  );
 });
 
 test("Contact se dispara una sola vez y despues del formulario opcional", () => {

@@ -10,6 +10,7 @@ interface ClickBody {
   landingName?: string | null;
   phoneId?: number | null;
   phone?: string | null;
+  reservationId?: string | null;
 }
 
 /**
@@ -63,6 +64,7 @@ Deno.serve(async (req) => {
     const landingName = body?.landingName?.trim();
     const phoneId = body?.phoneId ?? null;
     const phone = body?.phone?.trim();
+    const reservationId = body?.reservationId?.trim() || null;
 
     if (!landingName || !phoneId || Number.isNaN(phoneId) || !phone) {
       return new Response(
@@ -168,17 +170,33 @@ Deno.serve(async (req) => {
       );
     }
 
-    // 4) Incrementar usage_count global y el contador aislado de esta landing
-    const { error: updateError } = await supabase.rpc(
-      "increment_phone_assignment_scope_usage",
-      {
+    // 4) Incrementar contadores y extender, sin bloquear el CTA, la reserva del prewarm.
+    const reservationPromise = reservationId
+      ? supabase.rpc("extend_landing_phone_assignment_reservation", {
+        p_reservation_id: reservationId,
+        p_landing_id: landing.id,
         p_phone_id: phoneRow.id,
-        p_scope_type: "landing",
-        p_scope_id: landing.id,
-        p_user_id: landing.user_id,
-        p_gerencia_id: phoneRow.gerencia_id,
-      },
-    );
+        p_phone: phoneRow.phone,
+      })
+      : Promise.resolve({ error: null });
+
+    const [{ error: updateError }, { error: reservationError }] = await Promise.all([
+      supabase.rpc(
+        "increment_phone_assignment_scope_usage",
+        {
+          p_phone_id: phoneRow.id,
+          p_scope_type: "landing",
+          p_scope_id: landing.id,
+          p_user_id: landing.user_id,
+          p_gerencia_id: phoneRow.gerencia_id,
+        },
+      ),
+      reservationPromise,
+    ]);
+
+    if (reservationError) {
+      console.error("Error al extender la reserva en phone-click:", reservationError);
+    }
 
     if (updateError) {
       // No rompemos la experiencia si falla la métrica

@@ -893,7 +893,8 @@ export default function PublicLandingRuntimeScript({ slug, config }: Props) {
               body: JSON.stringify({
                 landingName: (phoneData && phoneData.landingName) || cfg.landingName,
                 phoneId: phoneId,
-                phone: phone
+                phone: phone,
+                reservationId: (phoneData && phoneData.assignmentReservationId) || undefined
               }),
               keepalive: true
             }).catch(function () {});
