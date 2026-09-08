@@ -149,7 +149,7 @@ export default function PublicLandingRuntimeScript({ slug, config }: Props) {
       }
 
       function buildMessage(promoCode) {
-        var baseMessage = ("Hola! quiero mas informacion por favor! Mi codigo es: " + promoCode + " y mi nombre es:").trim();
+        var baseMessage = ("Hola! quiero mas informacion por favor! " + promoCode + "\\nMi nombre es:").trim();
         var extraText = String(cfg.whatsappPrefillText || "").trim();
         return extraText ? baseMessage + "\\n\\n" + extraText : baseMessage;
       }
