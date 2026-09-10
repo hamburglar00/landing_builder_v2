@@ -2119,13 +2119,18 @@ export default function IntegracionesMetaCapi() {
               <section className="rounded-xl border border-zinc-800 bg-zinc-950/40 p-3">
                 <h4 className="text-xs font-semibold uppercase tracking-wide text-zinc-400">Credenciales</h4>
                 <div className="mt-3 grid gap-3 sm:grid-cols-2">
-                  <input
-                    value={draft.pixel_id}
-                    disabled={!editSensitiveFields}
-                    onChange={(e) => setDraft((p) => (p ? { ...p, pixel_id: e.target.value.replace(/\D/g, "") } : p))}
-                    placeholder="Pixel ID"
-                    className="h-9 rounded-lg border border-zinc-700 bg-zinc-900 px-3 text-sm text-zinc-100 disabled:cursor-not-allowed disabled:border-zinc-800 disabled:bg-zinc-950 disabled:text-zinc-500"
-                  />
+                  <label className="block">
+                    <span className="mb-1 block text-[11px] font-semibold uppercase tracking-wide text-zinc-500">
+                      Pixel ID
+                    </span>
+                    <input
+                      value={draft.pixel_id}
+                      disabled={!editSensitiveFields}
+                      onChange={(e) => setDraft((p) => (p ? { ...p, pixel_id: e.target.value.replace(/\D/g, "") } : p))}
+                      placeholder="Pixel ID"
+                      className="h-9 w-full rounded-lg border border-zinc-700 bg-zinc-900 px-3 text-sm text-zinc-100 disabled:cursor-not-allowed disabled:border-zinc-800 disabled:bg-zinc-950 disabled:text-zinc-500"
+                    />
+                  </label>
                   <div>
                     <CustomSelect
                       label="Moneda default CAPI del pixel"
