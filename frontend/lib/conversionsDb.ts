@@ -1,6 +1,6 @@
 import { supabase } from "@/lib/supabaseClient";
 import {
-  META_CURRENCY_OPTIONS,
+  REPORTING_CURRENCIES,
   type ReportingCurrency,
 } from "@/lib/currency";
 import {
@@ -23,7 +23,7 @@ function normalizeNonNegativeAmount(value: unknown): number {
 }
 
 const DEFAULT_PURCHASE_CAPI_MIN_AMOUNTS: Record<string, number> =
-  Object.fromEntries(META_CURRENCY_OPTIONS.map((currency) => [currency, 0]));
+  Object.fromEntries(REPORTING_CURRENCIES.map((currency) => [currency, 0]));
 
 function normalizePurchaseMinimumAmounts(
   value: unknown,

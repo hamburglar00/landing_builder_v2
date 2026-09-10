@@ -28,7 +28,10 @@ import {
 } from "@/lib/gerencias/gerenciasDb";
 import type { PhoneKind } from "@/lib/landing/types";
 import type { Gerencia } from "@/lib/gerencias/types";
-import { META_CURRENCY_OPTIONS } from "@/lib/currency";
+import {
+  META_CURRENCY_OPTIONS,
+  REPORTING_CURRENCIES,
+} from "@/lib/currency";
 import { DashboardSkeleton } from "@/components/ui/DashboardSkeleton";
 import { PageHeader } from "@/components/ui/PanelPrimitives";
 import { useAppConfirm } from "@/components/ui/AppConfirmDialog";
@@ -189,7 +192,7 @@ function parsePurchaseMinimumAmount(value: string): number | null {
 
 function emptyPurchaseMinimumInputs(): Record<string, string> {
   return Object.fromEntries(
-    META_CURRENCY_OPTIONS.map((currency) => [currency, "0"]),
+    REPORTING_CURRENCIES.map((currency) => [currency, "0"]),
   );
 }
 
@@ -303,7 +306,7 @@ export default function IntegracionesMetaCapi() {
     setConfig(cfg);
     setPurchaseMinimumEnabled(cfg.purchase_capi_min_amount_enabled);
     setPurchaseMinimumAmounts(Object.fromEntries(
-      META_CURRENCY_OPTIONS.map((currency) => [
+      REPORTING_CURRENCIES.map((currency) => [
         currency,
         String(cfg.purchase_capi_min_amounts[currency] ?? 0),
       ]),
@@ -348,7 +351,7 @@ export default function IntegracionesMetaCapi() {
   const handlePurchaseMinimumSave = useCallback(async () => {
     if (!userId || !config) return;
     const minimumAmounts: Record<string, number> = {};
-    for (const currency of META_CURRENCY_OPTIONS) {
+    for (const currency of REPORTING_CURRENCIES) {
       const amount = parsePurchaseMinimumAmount(
         purchaseMinimumAmounts[currency] ?? "",
       );
@@ -1901,8 +1904,8 @@ export default function IntegracionesMetaCapi() {
             onChange={() => setPurchaseMinimumEnabled((enabled) => !enabled)}
           />
           {purchaseMinimumEnabled ? (
-            <div className="mt-3 grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
-              {META_CURRENCY_OPTIONS.map((currency) => (
+            <div className="mt-3 grid gap-3 sm:grid-cols-2">
+              {REPORTING_CURRENCIES.map((currency) => (
                 <label
                   key={currency}
                   className="text-[11px] font-semibold uppercase tracking-wide text-zinc-500"
@@ -1974,6 +1977,19 @@ export default function IntegracionesMetaCapi() {
                     <div className="min-w-0">
                       <p className="font-mono text-xs text-zinc-200">{px.pixel_id}</p>
                       <p className="truncate text-[11px] text-zinc-500">{tokenMasked}</p>
+                      <p
+                        className="mt-1 inline-flex items-center gap-1 text-[10px] text-zinc-400"
+                        title="Se usa para Purchase CAPI únicamente cuando el evento o su workspace no tienen una moneda resuelta. No convierte el monto."
+                      >
+                        Moneda default: <span className="font-semibold text-zinc-300">{px.meta_currency || "ARS"}</span>
+                        <span
+                          aria-label="Información sobre la moneda default"
+                          tabIndex={0}
+                          className="inline-flex h-3.5 w-3.5 items-center justify-center rounded-full border border-zinc-700 text-[9px] text-zinc-500"
+                        >
+                          ?
+                        </span>
+                      </p>
                       {comment ? (
                         <p className="mt-0.5 truncate text-[11px] text-cyan-300/80">{comment}</p>
                       ) : null}

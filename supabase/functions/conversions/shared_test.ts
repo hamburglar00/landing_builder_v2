@@ -97,7 +97,7 @@ Deno.test("Purchase CAPI minimum filter is disabled by default", () => {
 Deno.test("Purchase CAPI minimum filter applies inclusive thresholds per currency", () => {
   const config = {
     purchase_capi_min_amount_enabled: true,
-    purchase_capi_min_amounts: { ARS: 100, PYG: 5000, EUR: 25 },
+    purchase_capi_min_amounts: { ARS: 100, PYG: 5000 },
   };
 
   assert(
@@ -115,10 +115,6 @@ Deno.test("Purchase CAPI minimum filter applies inclusive thresholds per currenc
   assert(
     resolvePurchaseCapiMinimumDecision(config, 5000, "PYG").enabled,
     "a PYG purchase equal to its threshold must be sent",
-  );
-  assert(
-    !resolvePurchaseCapiMinimumDecision(config, 24.99, "EUR").enabled,
-    "the filter must use any supported currency in the configured map",
   );
 });
 

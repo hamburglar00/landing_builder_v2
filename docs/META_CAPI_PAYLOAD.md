@@ -53,9 +53,9 @@ El timestamp Unix es siempre UTC; la hora en Argentina es solo para visualizaci�
 ## Filtro opcional de Purchase por monto
 
 La configuración Meta CAPI de cada cliente permite activar un monto mínimo
-independiente para cada moneda admitida (ARS, PYG, USD, EUR, BRL, CLP, MXN y
-COP). El filtro está apagado por defecto. Cuando está activo, un `Purchase` se
-envía a Meta si su valor es mayor o igual al umbral de su moneda.
+independiente para cada workspace monetario (ARS y PYG). El filtro está apagado
+por defecto. Cuando está activo, un `Purchase` se envía a Meta si su valor es
+mayor o igual al umbral de su moneda.
 
 El control se aplica únicamente antes de la llamada a Meta CAPI y no modifica
 el registro, la clasificación, la atribución ni los reportes internos. Aplica a
