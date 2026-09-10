@@ -9,6 +9,7 @@ import {
   normalizePurchaseAmount,
   preparePurchaseCustomDataForMeta,
   resolvePurchaseCapiDecision,
+  resolvePurchaseCapiMinimumDecision,
   resolvePurchaseCapiRoute,
   resolvePurchaseRetryIdentity,
   shouldSkipCapiForNonMetaOrigin,
@@ -85,6 +86,59 @@ Deno.test("Purchase amounts reject partial, ambiguous and unsafe input", () => {
     const result = normalizePurchaseAmount(input);
     assert(!result.ok, `Expected an invalid amount for ${String(input)}`);
   }
+});
+
+Deno.test("Purchase CAPI minimum filter is disabled by default", () => {
+  const decision = resolvePurchaseCapiMinimumDecision({}, 1, "ARS");
+  assert(decision.enabled, "all purchases must pass when the filter is off");
+  assert(decision.reason === "filter_disabled", "the reason must be explicit");
+});
+
+Deno.test("Purchase CAPI minimum filter applies inclusive thresholds per currency", () => {
+  const config = {
+    purchase_capi_min_amount_enabled: true,
+    purchase_capi_min_amounts: { ARS: 100, PYG: 5000, EUR: 25 },
+  };
+
+  assert(
+    !resolvePurchaseCapiMinimumDecision(config, 99.99, "ARS").enabled,
+    "an ARS purchase below its threshold must be skipped",
+  );
+  assert(
+    resolvePurchaseCapiMinimumDecision(config, 100, "ARS").enabled,
+    "an ARS purchase equal to its threshold must be sent",
+  );
+  assert(
+    !resolvePurchaseCapiMinimumDecision(config, 4999, "pyg").enabled,
+    "a PYG purchase below its own threshold must be skipped",
+  );
+  assert(
+    resolvePurchaseCapiMinimumDecision(config, 5000, "PYG").enabled,
+    "a PYG purchase equal to its threshold must be sent",
+  );
+  assert(
+    !resolvePurchaseCapiMinimumDecision(config, 24.99, "EUR").enabled,
+    "the filter must use any supported currency in the configured map",
+  );
+});
+
+Deno.test("Purchase CAPI minimum filter preserves unconfigured currencies", () => {
+  const decision = resolvePurchaseCapiMinimumDecision(
+    {
+      purchase_capi_min_amount_enabled: true,
+      purchase_capi_min_amounts: { ARS: 100, PYG: 5000 },
+    },
+    1,
+    "USD",
+  );
+  assert(
+    decision.enabled,
+    "currencies without a configured threshold must pass",
+  );
+  assert(
+    decision.reason === "currency_without_threshold",
+    "the unconfigured currency decision must be explicit",
+  );
 });
 
 Deno.test("Meta Ads-only CAPI policy filters every non-Meta origin", () => {

@@ -14,6 +14,7 @@ import {
   normalizePurchaseAmount,
   preparePurchaseCustomDataForMeta,
   resolvePurchaseCapiDecision,
+  resolvePurchaseCapiMinimumDecision,
   resolvePurchaseCapiRoute,
   resolvePurchaseRetryIdentity,
   shouldSkipCapiForNonMetaOrigin,
@@ -159,7 +160,7 @@ Deno.serve(async (req) => {
       .not(
         "purchase_status_capi",
         "in",
-        "(enviado,skipped_old_event_time,skipped_chatrace_capi_disabled,skipped_not_meta_ads,skipped_purchase_capi_disabled,skipped_first_purchase_capi_disabled,skipped_repeat_purchase_capi_disabled)",
+        "(enviado,skipped_old_event_time,skipped_chatrace_capi_disabled,skipped_not_meta_ads,skipped_purchase_capi_disabled,skipped_first_purchase_capi_disabled,skipped_repeat_purchase_capi_disabled,skipped_purchase_below_min_amount)",
       )
       .gt("valor", 0)
       .order("created_at", { ascending: true })
@@ -261,6 +262,46 @@ Deno.serve(async (req) => {
     for (const row of purchaseRows) {
       const cfg = configMap.get(row.user_id);
       if (!cfg) continue;
+      const minimumDecision = resolvePurchaseCapiMinimumDecision(
+        {
+          purchase_capi_min_amount_enabled:
+            cfg.purchase_capi_min_amount_enabled === true,
+          purchase_capi_min_amounts: cfg.purchase_capi_min_amounts &&
+              typeof cfg.purchase_capi_min_amounts === "object" &&
+              !Array.isArray(cfg.purchase_capi_min_amounts)
+            ? cfg.purchase_capi_min_amounts as Record<string, number>
+            : {},
+        },
+        row.valor,
+        row.currency,
+      );
+      if (!minimumDecision.enabled) {
+        const obs = appendObs(
+          row.observaciones ?? "",
+          "PURCHASE CAPI OMITIDO POR MONTO MINIMO",
+        );
+        await db.from("conversions").update({
+          purchase_status_capi: "skipped_purchase_below_min_amount",
+          observaciones: obs,
+        }).eq("id", row.id);
+        await writeConversionLog(
+          db,
+          row.user_id,
+          row.id,
+          "INFO",
+          "Meta CAPI retry Purchase omitido por monto minimo",
+          JSON.stringify({
+            source_platform: row.source_platform ?? "",
+            amount: minimumDecision.amount,
+            currency: minimumDecision.currency,
+            threshold: minimumDecision.threshold,
+            reason: minimumDecision.reason,
+          }),
+          row.purchase_payload_raw ?? "",
+          "PURCHASE CAPI OMITIDO POR MONTO MINIMO",
+        );
+        continue;
+      }
       if (isChatraceMetaCapiDisabled(row, chatraceMetaCapiMap)) {
         const obs = appendObs(
           row.observaciones ?? "",

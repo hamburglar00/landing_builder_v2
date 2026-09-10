@@ -14,6 +14,7 @@ import {
   normalizePurchaseAmount,
   preparePurchaseCustomDataForMeta,
   resolvePurchaseCapiDecision,
+  resolvePurchaseCapiMinimumDecision,
   resolvePurchaseCapiRoute,
   shouldSkipCapiForNonMetaOrigin,
   toValidEventTime,
@@ -56,6 +57,8 @@ interface ConversionsConfig {
   send_first_purchase_capi?: boolean;
   send_repeat_purchase_capi?: boolean;
   send_purchase_capi: boolean;
+  purchase_capi_min_amount_enabled?: boolean;
+  purchase_capi_min_amounts?: Record<string, number>;
   send_geo_capi: boolean;
   geo_use_ipapi: boolean;
   geo_fill_only_when_missing: boolean;
@@ -3114,6 +3117,50 @@ async function sendToMetaCAPI(
     : eventName === "CompleteRegistration"
     ? "ERROR COMPLETEREGISTRATION"
     : "ERROR PURCHASE";
+
+  if (eventName === "Purchase") {
+    const minimumDecision = resolvePurchaseCapiMinimumDecision(
+      config,
+      row.valor,
+      row.currency,
+    );
+    if (!minimumDecision.enabled) {
+      const skippedMsg = "PURCHASE CAPI OMITIDO POR MONTO MINIMO";
+      const { data: current } = await db.from("conversions").select(
+        "observaciones",
+      ).eq("id", rowId).single();
+      await db.from("conversions").update({
+        purchase_status_capi: "skipped_purchase_below_min_amount",
+        observaciones: appendObservation(
+          current?.observaciones ?? "",
+          skippedMsg,
+        ),
+      }).eq("id", rowId);
+      await writeLog(
+        db,
+        row.user_id,
+        "sendToMetaCAPI",
+        "INFO",
+        "Meta CAPI Purchase omitido por monto minimo",
+        JSON.stringify({
+          event_name: eventName,
+          row_id: rowId,
+          event_id: eventId,
+          source_platform: sourcePlatform,
+          amount: minimumDecision.amount,
+          currency: minimumDecision.currency,
+          threshold: minimumDecision.threshold,
+          reason: minimumDecision.reason,
+        }),
+        rowId,
+        undefined,
+        undefined,
+        row.purchase_payload_raw,
+        skippedMsg,
+      );
+      return true;
+    }
+  }
 
   if (eventName === "Contact") {
     const metaCrawlerMatch = detectMetaCrawlerContact(row);
@@ -7726,6 +7773,8 @@ Deno.serve(async (req) => {
       send_first_purchase_capi: true,
       send_repeat_purchase_capi: true,
       send_purchase_capi: true,
+      purchase_capi_min_amount_enabled: false,
+      purchase_capi_min_amounts: {},
       send_geo_capi: true,
       geo_use_ipapi: false,
       geo_fill_only_when_missing: false,

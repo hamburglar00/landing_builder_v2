@@ -1,5 +1,8 @@
 import { supabase } from "@/lib/supabaseClient";
-import type { ReportingCurrency } from "@/lib/currency";
+import {
+  META_CURRENCY_OPTIONS,
+  type ReportingCurrency,
+} from "@/lib/currency";
 import {
   buildConversionLogQueryFilter,
   type ConversionLogDirectionFilter,
@@ -12,6 +15,28 @@ function normalizePixelId(value: string): string {
 
 function cleanGerenciaText(value: unknown): string {
   return String(value ?? "").trim();
+}
+
+function normalizeNonNegativeAmount(value: unknown): number {
+  const amount = Number(value);
+  return Number.isFinite(amount) && amount >= 0 ? amount : 0;
+}
+
+const DEFAULT_PURCHASE_CAPI_MIN_AMOUNTS: Record<string, number> =
+  Object.fromEntries(META_CURRENCY_OPTIONS.map((currency) => [currency, 0]));
+
+function normalizePurchaseMinimumAmounts(
+  value: unknown,
+): Record<string, number> {
+  const stored = value && typeof value === "object" && !Array.isArray(value)
+    ? value as Record<string, unknown>
+    : {};
+  return Object.fromEntries(
+    Object.keys(DEFAULT_PURCHASE_CAPI_MIN_AMOUNTS).map((currency) => [
+      currency,
+      normalizeNonNegativeAmount(stored[currency]),
+    ]),
+  );
 }
 
 // Types
@@ -31,6 +56,8 @@ export interface ConversionsConfig {
   include_purchase_type_capi: boolean;
   send_first_purchase_capi: boolean;
   send_repeat_purchase_capi: boolean;
+  purchase_capi_min_amount_enabled: boolean;
+  purchase_capi_min_amounts: Record<string, number>;
   send_geo_capi: boolean;
   geo_use_ipapi: boolean;
   geo_fill_only_when_missing: boolean;
@@ -568,6 +595,8 @@ const DEFAULT_CONFIG: ConversionsConfig = {
   include_purchase_type_capi: true,
   send_first_purchase_capi: true,
   send_repeat_purchase_capi: true,
+  purchase_capi_min_amount_enabled: false,
+  purchase_capi_min_amounts: { ...DEFAULT_PURCHASE_CAPI_MIN_AMOUNTS },
   send_geo_capi: true,
   geo_use_ipapi: false,
   geo_fill_only_when_missing: false,
@@ -631,6 +660,11 @@ export async function fetchConversionsConfig(
       stored.send_first_purchase_capi ?? legacyPurchaseEnabled,
     send_repeat_purchase_capi:
       stored.send_repeat_purchase_capi ?? legacyPurchaseEnabled,
+    purchase_capi_min_amount_enabled:
+      stored.purchase_capi_min_amount_enabled === true,
+    purchase_capi_min_amounts: normalizePurchaseMinimumAmounts(
+      stored.purchase_capi_min_amounts,
+    ),
     send_geo_capi: stored.send_geo_capi !== false,
   };
 }
@@ -656,6 +690,11 @@ export async function upsertConversionsConfig(
         include_purchase_type_capi: config.include_purchase_type_capi !== false,
         send_first_purchase_capi: config.send_first_purchase_capi !== false,
         send_repeat_purchase_capi: config.send_repeat_purchase_capi !== false,
+        purchase_capi_min_amount_enabled:
+          config.purchase_capi_min_amount_enabled === true,
+        purchase_capi_min_amounts: normalizePurchaseMinimumAmounts(
+          config.purchase_capi_min_amounts,
+        ),
         send_geo_capi: config.send_geo_capi !== false,
         geo_use_ipapi: config.geo_use_ipapi,
         geo_fill_only_when_missing: config.geo_fill_only_when_missing,

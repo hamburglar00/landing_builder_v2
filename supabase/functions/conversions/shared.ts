@@ -15,6 +15,8 @@ export interface ConversionsConfig {
   include_purchase_type_capi?: boolean;
   send_first_purchase_capi?: boolean;
   send_repeat_purchase_capi?: boolean;
+  purchase_capi_min_amount_enabled?: boolean;
+  purchase_capi_min_amounts?: Record<string, number>;
   send_geo_capi: boolean;
   geo_use_ipapi: boolean;
   geo_fill_only_when_missing: boolean;
@@ -102,6 +104,71 @@ export function shouldSkipCapiForNonMetaOrigin(
 }
 
 export type PurchaseType = "first" | "repeat";
+
+export type PurchaseCapiMinimumDecision = {
+  enabled: boolean;
+  amount: number;
+  currency: string;
+  threshold: number;
+  reason:
+    | "filter_disabled"
+    | "currency_without_threshold"
+    | "meets_threshold"
+    | "below_threshold";
+};
+
+/**
+ * Applies the client-wide monetary gate only to Meta CAPI delivery. Unknown
+ * currencies remain unfiltered because the client can configure ARS and PYG.
+ */
+export function resolvePurchaseCapiMinimumDecision(
+  config: Pick<
+    ConversionsConfig,
+    | "purchase_capi_min_amount_enabled"
+    | "purchase_capi_min_amounts"
+  >,
+  amountInput: unknown,
+  currencyInput: unknown,
+): PurchaseCapiMinimumDecision {
+  const amount = Number(amountInput);
+  const currency = String(currencyInput ?? "").trim().toUpperCase();
+
+  if (config.purchase_capi_min_amount_enabled !== true) {
+    return {
+      enabled: true,
+      amount,
+      currency,
+      threshold: 0,
+      reason: "filter_disabled",
+    };
+  }
+
+  const configuredThreshold = config.purchase_capi_min_amounts?.[currency];
+
+  if (configuredThreshold === undefined || configuredThreshold === null) {
+    return {
+      enabled: true,
+      amount,
+      currency,
+      threshold: 0,
+      reason: "currency_without_threshold",
+    };
+  }
+
+  const numericThreshold = Number(configuredThreshold);
+  const threshold = Number.isFinite(numericThreshold) && numericThreshold >= 0
+    ? numericThreshold
+    : 0;
+  const enabled = Number.isFinite(amount) && amount >= threshold;
+
+  return {
+    enabled,
+    amount,
+    currency,
+    threshold,
+    reason: enabled ? "meets_threshold" : "below_threshold",
+  };
+}
 
 export type PurchaseCapiDecision = {
   enabled: boolean;

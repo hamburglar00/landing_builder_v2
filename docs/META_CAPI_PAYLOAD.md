@@ -49,3 +49,15 @@ El timestamp Unix es siempre UTC; la hora en Argentina es solo para visualizaci�
 - `event_time`: hasta 7 días en el pasado, no futuro.
 - Al menos un parámetro en `user_data` con formato correcto.
 - `client_user_agent` obligatorio para eventos website.
+
+## Filtro opcional de Purchase por monto
+
+La configuración Meta CAPI de cada cliente permite activar un monto mínimo
+independiente para cada moneda admitida (ARS, PYG, USD, EUR, BRL, CLP, MXN y
+COP). El filtro está apagado por defecto. Cuando está activo, un `Purchase` se
+envía a Meta si su valor es mayor o igual al umbral de su moneda.
+
+El control se aplica únicamente antes de la llamada a Meta CAPI y no modifica
+el registro, la clasificación, la atribución ni los reportes internos. Aplica a
+compras de landing, Chatrace y WhatsApp Cloud API. Las monedas que no tienen un
+umbral configurable continúan enviándose.

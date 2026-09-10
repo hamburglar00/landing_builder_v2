@@ -180,6 +180,19 @@ function SettingsSwitch({
   );
 }
 
+function parsePurchaseMinimumAmount(value: string): number | null {
+  const normalized = value.trim().replace(",", ".");
+  if (!/^\d{1,18}(?:\.\d{1,2})?$/.test(normalized)) return null;
+  const amount = Number(normalized);
+  return Number.isFinite(amount) && amount >= 0 ? amount : null;
+}
+
+function emptyPurchaseMinimumInputs(): Record<string, string> {
+  return Object.fromEntries(
+    META_CURRENCY_OPTIONS.map((currency) => [currency, "0"]),
+  );
+}
+
 export default function IntegracionesMetaCapi() {
   const confirmAction = useAppConfirm();
   const [userId, setUserId] = useState<string | null>(null);
@@ -190,6 +203,10 @@ export default function IntegracionesMetaCapi() {
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [saveMsg, setSaveMsg] = useState<string | null>(null);
+  const [purchaseMinimumEnabled, setPurchaseMinimumEnabled] = useState(false);
+  const [purchaseMinimumAmounts, setPurchaseMinimumAmounts] = useState<
+    Record<string, string>
+  >(emptyPurchaseMinimumInputs);
 
   const [quickOpen, setQuickOpen] = useState(false);
   const [quickPixelId, setQuickPixelId] = useState("");
@@ -284,6 +301,13 @@ export default function IntegracionesMetaCapi() {
       adminView ? fetchGerenciasForAdmin(uid) : fetchGerencias(uid),
     ]);
     setConfig(cfg);
+    setPurchaseMinimumEnabled(cfg.purchase_capi_min_amount_enabled);
+    setPurchaseMinimumAmounts(Object.fromEntries(
+      META_CURRENCY_OPTIONS.map((currency) => [
+        currency,
+        String(cfg.purchase_capi_min_amounts[currency] ?? 0),
+      ]),
+    ));
     setPixelConfigs(pixels);
     setKommoConfig(kommo);
     setKommoBaseUrl(kommo?.kommo_api_base_url ?? "");
@@ -320,6 +344,55 @@ export default function IntegracionesMetaCapi() {
     setClientName(String(p?.nombre ?? ""));
     setIsAdmin(adminView);
   }, []);
+
+  const handlePurchaseMinimumSave = useCallback(async () => {
+    if (!userId || !config) return;
+    const minimumAmounts: Record<string, number> = {};
+    for (const currency of META_CURRENCY_OPTIONS) {
+      const amount = parsePurchaseMinimumAmount(
+        purchaseMinimumAmounts[currency] ?? "",
+      );
+      if (amount === null) {
+        setSaveMsg(
+          `Ingresá un monto válido para ${currency}, positivo o cero, con hasta 2 decimales.`,
+        );
+        return;
+      }
+      minimumAmounts[currency] = amount;
+    }
+
+    setSaving(true);
+    setSaveMsg(null);
+    try {
+      const next: ConversionsConfig = {
+        ...config,
+        purchase_capi_min_amount_enabled: purchaseMinimumEnabled,
+        purchase_capi_min_amounts: minimumAmounts,
+      };
+      await upsertConversionsConfig(next);
+      setConfig(next);
+      setPurchaseMinimumAmounts(Object.fromEntries(
+        Object.entries(minimumAmounts).map(([currency, amount]) => [
+          currency,
+          String(amount),
+        ]),
+      ));
+      setSaveMsg(
+        purchaseMinimumEnabled
+          ? "Filtro de Purchase por monto guardado."
+          : "Filtro de Purchase por monto desactivado.",
+      );
+    } catch (e) {
+      setSaveMsg(e instanceof Error ? e.message : "Error al guardar el filtro");
+    } finally {
+      setSaving(false);
+    }
+  }, [
+    userId,
+    config,
+    purchaseMinimumEnabled,
+    purchaseMinimumAmounts,
+  ]);
 
   const maskToken = useCallback((value: string) => {
     const v = String(value ?? "");
@@ -1817,6 +1890,51 @@ export default function IntegracionesMetaCapi() {
               className="rounded-lg border border-zinc-700 px-3 py-1.5 text-xs text-zinc-300 hover:bg-zinc-800"
             >
               Volver
+            </button>
+          </div>
+        </div>
+        <div className="rounded-lg border border-zinc-800 bg-zinc-950/40 p-3">
+          <SettingsSwitch
+            checked={purchaseMinimumEnabled}
+            label="Filtrar Purchase por monto mínimo"
+            description="Configuración general del cliente para el envío a Meta CAPI. Aplica a landing, Chatrace y WhatsApp Cloud API; el procesamiento interno continúa igual."
+            onChange={() => setPurchaseMinimumEnabled((enabled) => !enabled)}
+          />
+          {purchaseMinimumEnabled ? (
+            <div className="mt-3 grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
+              {META_CURRENCY_OPTIONS.map((currency) => (
+                <label
+                  key={currency}
+                  className="text-[11px] font-semibold uppercase tracking-wide text-zinc-500"
+                >
+                  Monto mínimo {currency}
+                  <input
+                    type="text"
+                    inputMode="decimal"
+                    value={purchaseMinimumAmounts[currency] ?? "0"}
+                    onChange={(event) =>
+                      setPurchaseMinimumAmounts((current) => ({
+                        ...current,
+                        [currency]: event.target.value,
+                      }))}
+                    placeholder="0"
+                    className="mt-1 h-9 w-full rounded-lg border border-zinc-700 bg-zinc-900 px-3 text-sm font-normal text-zinc-100"
+                  />
+                </label>
+              ))}
+            </div>
+          ) : null}
+          <div className="mt-3 flex items-center justify-between gap-3">
+            <p className="text-[11px] text-zinc-500">
+              Se envía cuando el valor es igual o mayor al umbral de su moneda.
+            </p>
+            <button
+              type="button"
+              disabled={saving}
+              onClick={() => void handlePurchaseMinimumSave()}
+              className="rounded-lg bg-emerald-500 px-3 py-1.5 text-xs font-semibold text-zinc-900 disabled:opacity-60"
+            >
+              {saving ? "Guardando..." : "Guardar filtro"}
             </button>
           </div>
         </div>
