@@ -177,6 +177,28 @@ function SummaryCard({ label, value, detail }: { label: string; value: string; d
   );
 }
 
+function InfoTooltip({ id, text }: { id: string; text: string }) {
+  return (
+    <span className="group relative inline-flex shrink-0">
+      <button
+        type="button"
+        aria-label="Más información"
+        aria-describedby={id}
+        className="flex h-4 w-4 items-center justify-center rounded-full border border-zinc-600 text-[9px] font-bold text-zinc-400 outline-none transition hover:border-emerald-600 hover:text-emerald-300 focus:border-emerald-600 focus:text-emerald-300 focus:ring-2 focus:ring-emerald-500/20"
+      >
+        i
+      </button>
+      <span
+        id={id}
+        role="tooltip"
+        className="pointer-events-none absolute left-1/2 top-full z-[60] mt-2 w-64 -translate-x-1/2 rounded-lg border border-zinc-700 bg-zinc-950 px-3 py-2 text-[11px] font-normal leading-relaxed text-zinc-300 opacity-0 shadow-2xl shadow-black/60 transition-opacity group-hover:opacity-100 group-focus-within:opacity-100"
+      >
+        {text}
+      </span>
+    </span>
+  );
+}
+
 function RuleRow({
   rule,
   index,
@@ -504,7 +526,16 @@ export default function MetaAudiencesPanel({ currency, loadBuyers }: Props) {
       </div>
 
       <div className="mt-5 grid gap-3 md:grid-cols-2">
-        <CustomSelect id="meta-audience-scope" label="3. Compras que activan el segmento" value={purchaseScope} onChange={(value) => setPurchaseScope(value as MetaAudiencePurchaseScope)} options={SCOPE_OPTIONS} />
+        <div>
+          <div className="mb-1 flex items-center gap-1.5">
+            <label htmlFor="meta-audience-scope" className="text-xs text-zinc-400">3. Compras que activan el segmento</label>
+            <InfoTooltip
+              id="meta-audience-scope-help"
+              text="Define qué actividad debe tener la persona dentro del período: cualquier carga, una primera carga o una recarga. Es la condición base del segmento."
+            />
+          </div>
+          <CustomSelect id="meta-audience-scope" value={purchaseScope} onChange={(value) => setPurchaseScope(value as MetaAudiencePurchaseScope)} options={SCOPE_OPTIONS} />
+        </div>
         <div className="rounded-lg border border-zinc-800 bg-zinc-950/45 px-3 py-2">
           <p className="text-[10px] font-semibold uppercase tracking-[0.1em] text-zinc-500">Condición base</p>
           <p className="mt-1 text-xs text-zinc-200">{scopeBaseLabel(purchaseScope)}</p>
@@ -537,8 +568,28 @@ export default function MetaAudiencesPanel({ currency, loadBuyers }: Props) {
       </div>
 
       <div className={`mt-5 grid gap-3 ${audienceType === "value_based" ? "md:grid-cols-2" : "md:grid-cols-1"}`}>
-        <CustomSelect id="meta-audience-summary-value" label="5. Resumen económico" value={summaryValueMetric} onChange={(value) => setSummaryValueMetric(value as MetaAudienceSummaryValueMetric)} options={META_AUDIENCE_SUMMARY_METRICS} />
-        {audienceType === "value_based" ? <CustomSelect id="meta-audience-export-value" label="6. Valor individual para Meta" value={exportValueMetric} onChange={(value) => setExportValueMetric(value as MetaAudienceSummaryValueMetric)} options={META_AUDIENCE_SUMMARY_METRICS} /> : null}
+        <div>
+          <div className="mb-1 flex items-center gap-1.5">
+            <label htmlFor="meta-audience-summary-value" className="text-xs text-zinc-400">5. Resumen económico</label>
+            <InfoTooltip
+              id="meta-audience-summary-value-help"
+              text="Elige qué monto muestran las tarjetas económicas y la columna “Valor del resumen”. No modifica las personas del segmento."
+            />
+          </div>
+          <CustomSelect id="meta-audience-summary-value" value={summaryValueMetric} onChange={(value) => setSummaryValueMetric(value as MetaAudienceSummaryValueMetric)} options={META_AUDIENCE_SUMMARY_METRICS} />
+        </div>
+        {audienceType === "value_based" ? (
+          <div>
+            <div className="mb-1 flex items-center gap-1.5">
+              <label htmlFor="meta-audience-export-value" className="text-xs text-zinc-400">6. Valor individual para Meta</label>
+              <InfoTooltip
+                id="meta-audience-export-value-help"
+                text="Elige qué monto individual se escribe en la columna value del CSV. No modifica el segmento; las personas sin un valor positivo no entran en ese archivo."
+              />
+            </div>
+            <CustomSelect id="meta-audience-export-value" value={exportValueMetric} onChange={(value) => setExportValueMetric(value as MetaAudienceSummaryValueMetric)} options={META_AUDIENCE_SUMMARY_METRICS} />
+          </div>
+        ) : null}
       </div>
       <p className="mt-2 text-[11px] text-zinc-500">El resumen económico y el valor exportado son independientes y nunca modifican las personas del segmento.</p>
 
