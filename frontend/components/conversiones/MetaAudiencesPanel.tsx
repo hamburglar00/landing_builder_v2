@@ -3,23 +3,24 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
 import type { DateRange } from "@/components/conversiones/DateRangeFilter";
 import CustomSelect from "@/components/ui/CustomSelect";
-import type { ConversionRow } from "@/lib/conversionsDb";
+import type { MetaAudienceBuyersRequest } from "@/lib/metaAudienceDb";
 import {
   META_AUDIENCE_FIELDS,
   RECOMMENDED_META_AUDIENCE_FIELDS,
-  buildMetaAudience,
   buildMetaAudienceCsv,
   fieldCoverage,
+  filterMetaAudienceByValue,
   personHasSelectedIdentifier,
   type MetaAudienceField,
+  type MetaAudiencePerson,
   type MetaAudiencePurchaseScope,
   type MetaAudienceType,
   type MetaAudienceValueMetric,
 } from "@/lib/metaAudienceExport";
 
 type Props = {
-  currency: string;
-  loadConversions: (range: DateRange | null) => Promise<ConversionRow[]>;
+  currency: "ARS" | "PYG";
+  loadBuyers: (request: MetaAudienceBuyersRequest) => Promise<MetaAudiencePerson[]>;
 };
 
 type PeriodPreset = 30 | 60 | 90 | 180 | "custom";
@@ -40,6 +41,15 @@ function formatAmount(value: number, currency: string): string {
     currency,
     maximumFractionDigits: 2,
   }).format(value);
+}
+
+function median(values: readonly number[]): number {
+  if (values.length === 0) return 0;
+  const sorted = [...values].sort((left, right) => left - right);
+  const middle = Math.floor(sorted.length / 2);
+  return sorted.length % 2 === 0
+    ? (sorted[middle - 1] + sorted[middle]) / 2
+    : sorted[middle];
 }
 
 function formatPeriod(range: DateRange | null): string {
@@ -157,12 +167,12 @@ function SummaryCard({ label, value, detail }: { label: string; value: string; d
   );
 }
 
-export default function MetaAudiencesPanel({ currency, loadConversions }: Props) {
+export default function MetaAudiencesPanel({ currency, loadBuyers }: Props) {
   const [dateRange, setDateRange] = useState<DateRange>(() => recentDateRange(30));
   const [periodPreset, setPeriodPreset] = useState<PeriodPreset>(30);
   const [draftStartDate, setDraftStartDate] = useState(() => dateInputValue(recentDateRange(30).start));
   const [draftEndDate, setDraftEndDate] = useState(() => dateInputValue(recentDateRange(30).end));
-  const [rows, setRows] = useState<ConversionRow[]>([]);
+  const [buyers, setBuyers] = useState<MetaAudiencePerson[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [audienceType, setAudienceType] = useState<MetaAudienceType>("segmented");
@@ -202,29 +212,39 @@ export default function MetaAudiencesPanel({ currency, loadConversions }: Props)
     setLoading(true);
     setError(null);
     try {
-      setRows(await loadConversions(dateRange));
+      setBuyers(await loadBuyers({
+        currency,
+        range: dateRange,
+        purchaseScope: valueMetric === "first_purchase" ? "all" : purchaseScope,
+        valueMetric,
+      }));
     } catch (cause) {
       console.error(cause);
-      setRows([]);
-      setError(cause instanceof Error ? cause.message : "No se pudieron cargar las conversiones.");
+      setBuyers([]);
+      setError(cause instanceof Error ? cause.message : "No se pudo calcular la audiencia.");
     } finally {
       setLoading(false);
     }
-  }, [dateRange, loadConversions]);
+  }, [currency, dateRange, loadBuyers, purchaseScope, valueMetric]);
 
   useEffect(() => {
     let active = true;
     setLoading(true);
     setError(null);
-    void loadConversions(dateRange)
-      .then((loadedRows) => {
-        if (active) setRows(loadedRows);
+    void loadBuyers({
+      currency,
+      range: dateRange,
+      purchaseScope: valueMetric === "first_purchase" ? "all" : purchaseScope,
+      valueMetric,
+    })
+      .then((loadedBuyers) => {
+        if (active) setBuyers(loadedBuyers);
       })
       .catch((cause) => {
         console.error(cause);
         if (!active) return;
-        setRows([]);
-        setError(cause instanceof Error ? cause.message : "No se pudieron cargar las conversiones.");
+        setBuyers([]);
+        setError(cause instanceof Error ? cause.message : "No se pudo calcular la audiencia.");
       })
       .finally(() => {
         if (active) setLoading(false);
@@ -232,33 +252,30 @@ export default function MetaAudiencesPanel({ currency, loadConversions }: Props)
     return () => {
       active = false;
     };
-  }, [dateRange, loadConversions]);
+  }, [currency, dateRange, loadBuyers, purchaseScope, valueMetric]);
 
   const minimum = audienceType === "segmented" ? parseOptionalAmount(minimumValue) : null;
   const maximum = audienceType === "segmented" ? parseOptionalAmount(maximumValue) : null;
   const invalidRange = minimum != null && maximum != null && maximum < minimum;
 
-  const result = useMemo(
-    () => buildMetaAudience(rows, {
-      valueMetric,
-      purchaseScope,
-      countryCallingCode: currency === "PYG" ? "595" : "54",
-      minimumValue: audienceType === "value_based"
-        ? Number.MIN_VALUE
-        : invalidRange ? null : minimum,
-      maximumValue: invalidRange ? null : maximum,
-    }),
-    [audienceType, currency, invalidRange, maximum, minimum, purchaseScope, rows, valueMetric],
+  const people = useMemo(
+    () => filterMetaAudienceByValue(
+      buyers,
+      audienceType === "value_based" ? Number.MIN_VALUE : invalidRange ? null : minimum,
+      invalidRange ? null : maximum,
+    ),
+    [audienceType, buyers, invalidRange, maximum, minimum],
   );
-  const coverage = useMemo(() => fieldCoverage(result.people), [result.people]);
+  const excludedByValue = buyers.length - people.length;
+  const coverage = useMemo(() => fieldCoverage(people), [people]);
   const eligiblePeople = useMemo(
-    () => result.people.filter((person) => personHasSelectedIdentifier(person, selectedFields)),
-    [result.people, selectedFields],
+    () => people.filter((person) => personHasSelectedIdentifier(person, selectedFields)),
+    [people, selectedFields],
   );
-  const missingIdentifierCount = result.people.length - eligiblePeople.length;
+  const missingIdentifierCount = people.length - eligiblePeople.length;
   const csv = useMemo(
-    () => buildMetaAudienceCsv({ people: result.people, selectedFields, audienceType }),
-    [audienceType, result.people, selectedFields],
+    () => buildMetaAudienceCsv({ people, selectedFields, audienceType }),
+    [audienceType, people, selectedFields],
   );
 
   const toggleField = (field: MetaAudienceField) => {
@@ -279,6 +296,19 @@ export default function MetaAudiencesPanel({ currency, loadConversions }: Props)
   };
 
   const totalAudienceValue = eligiblePeople.reduce((sum, person) => sum + person.value, 0);
+  const representedPurchases = eligiblePeople.reduce((sum, person) => sum + person.purchaseCount, 0);
+  const averageBuyerValue = eligiblePeople.length > 0
+    ? totalAudienceValue / eligiblePeople.length
+    : 0;
+  const medianBuyerValue = median(eligiblePeople.map((person) => person.value));
+  const peopleWithPhone = people.filter((person) => Boolean(person.fields.phone)).length;
+  const peopleWithEmail = people.filter((person) => Boolean(person.fields.email)).length;
+  const peopleWithPhoneOrEmail = people.filter(
+    (person) => Boolean(person.fields.phone || person.fields.email),
+  ).length;
+  const exportablePercentage = buyers.length > 0
+    ? Math.round((eligiblePeople.length / buyers.length) * 100)
+    : 0;
   const hasPrimaryIdentifier = selectedFields.includes("email") || selectedFields.includes("phone");
 
   return (
@@ -455,7 +485,7 @@ export default function MetaAudiencesPanel({ currency, loadConversions }: Props)
           ) : (
             <div className="rounded-lg border border-zinc-800 bg-zinc-900/50 px-3 py-2">
               <p className="text-[10px] font-semibold uppercase tracking-[0.1em] text-zinc-500">Compras incluidas</p>
-              <p className="mt-1 text-xs text-zinc-300">Solo eventos identificados como primera carga</p>
+              <p className="mt-1 text-xs text-zinc-300">Primera carga histórica de compradores activos en el periodo</p>
             </div>
           )}
         </div>
@@ -539,8 +569,8 @@ export default function MetaAudiencesPanel({ currency, loadConversions }: Props)
           {META_AUDIENCE_FIELDS.map((field) => {
             const selected = selectedFields.includes(field.key);
             const available = coverage[field.key];
-            const percentage = result.people.length > 0
-              ? Math.round((available / result.people.length) * 100)
+            const percentage = people.length > 0
+              ? Math.round((available / people.length) * 100)
               : 0;
             return (
               <label
@@ -560,7 +590,7 @@ export default function MetaAudiencesPanel({ currency, loadConversions }: Props)
                 <span className="min-w-0">
                   <span className="block text-xs font-medium text-zinc-200">{field.label}</span>
                   <span className="mt-0.5 block text-[10px] text-zinc-500">
-                    {available}/{result.people.length} · {percentage}% disponible
+                    {available}/{people.length} · {percentage}% disponible
                   </span>
                 </span>
               </label>
@@ -584,26 +614,66 @@ export default function MetaAudiencesPanel({ currency, loadConversions }: Props)
           {loading ? <span className="text-[11px] text-zinc-500">Calculando audiencia...</span> : null}
         </div>
 
-        <div className="mt-3 grid gap-2 sm:grid-cols-2 lg:grid-cols-4">
+        <div className="mt-3 grid gap-2 sm:grid-cols-2 xl:grid-cols-4">
           <SummaryCard
-            label="Compras analizadas"
-            value={loading ? "—" : String(result.purchaseEvents)}
-            detail="Eventos únicos del periodo"
+            label="Personas encontradas"
+            value={loading ? "—" : String(buyers.length)}
+            detail="Compradores con actividad en el periodo"
           />
           <SummaryCard
-            label="Compradores"
-            value={loading ? "—" : String(result.buyersBeforeValueFilter)}
-            detail="Personas antes del filtro de monto"
-          />
-          <SummaryCard
-            label="Audiencia exportable"
+            label="Personas exportables"
             value={loading ? "—" : String(eligiblePeople.length)}
-            detail={`${result.excludedByValue} fuera del monto · ${missingIdentifierCount} sin datos`}
+            detail="Cumplen monto e identificadores elegidos"
           />
           <SummaryCard
-            label="Valor representado"
+            label="Excluidas por monto"
+            value={loading ? "—" : String(excludedByValue)}
+            detail="Fuera del mínimo o máximo configurado"
+          />
+          <SummaryCard
+            label="Sin identificadores"
+            value={loading ? "—" : String(missingIdentifierCount)}
+            detail="Sin teléfono o email entre los campos elegidos"
+          />
+          <SummaryCard
+            label="Compras representadas"
+            value={loading ? "—" : String(representedPurchases)}
+            detail="Eventos únicos que aportan al valor"
+          />
+          <SummaryCard
+            label="Valor total representado"
             value={loading ? "—" : formatAmount(totalAudienceValue, currency)}
-            detail={valueMetric === "first_purchase" ? "Suma de primeras cargas" : "Suma del valor calculado"}
+            detail={valueMetric === "first_purchase" ? "Suma de primeras cargas históricas" : "Suma del valor calculado"}
+          />
+          <SummaryCard
+            label="Promedio por comprador"
+            value={loading ? "—" : formatAmount(averageBuyerValue, currency)}
+            detail="Promedio de las personas exportables"
+          />
+          <SummaryCard
+            label="Mediana por comprador"
+            value={loading ? "—" : formatAmount(medianBuyerValue, currency)}
+            detail="Punto medio del valor exportable"
+          />
+          <SummaryCard
+            label="Con teléfono"
+            value={loading ? "—" : String(peopleWithPhone)}
+            detail="Después del filtro de monto"
+          />
+          <SummaryCard
+            label="Con email"
+            value={loading ? "—" : String(peopleWithEmail)}
+            detail="Después del filtro de monto"
+          />
+          <SummaryCard
+            label="Con teléfono o email"
+            value={loading ? "—" : String(peopleWithPhoneOrEmail)}
+            detail="Identificación principal disponible"
+          />
+          <SummaryCard
+            label="Porcentaje exportable"
+            value={loading ? "—" : `${exportablePercentage}%`}
+            detail="Sobre todas las personas encontradas"
           />
         </div>
 

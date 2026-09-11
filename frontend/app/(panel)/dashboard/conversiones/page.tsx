@@ -24,6 +24,7 @@ import {
   type ConversionInboxRow,
 } from "@/lib/conversionsDb";
 import { dashboardConversionPageDataSource } from "@/lib/conversionPageDataSource";
+import { fetchMetaAudienceBuyers } from "@/lib/metaAudienceDb";
 import { saveConversionPageConfig } from "@/lib/conversionPageConfig";
 import ClearConversionsViewModal, {
   type ClearConversionsViewMode,
@@ -1486,18 +1487,6 @@ export default function DashboardConversionesPage() {
     return filterConversionsByCurrency(rows, currencyScope);
   }, [currencyScope]);
 
-  const fetchAudienceConversions = useCallback(async (range: DateRange | null) => {
-    const currentUserId = userIdRef.current;
-    if (!currentUserId) return [];
-    const rows = await dashboardConversionPageDataSource.fetchReportingConversions({
-      viewerId: currentUserId,
-      range: range ?? undefined,
-    });
-    return filterConversionsByCurrency(rows, currencyScope).filter(
-      (row) => !String(row.test_event_code ?? "").trim(),
-    );
-  }, [currencyScope]);
-
   const fetchPerformanceAvailability = useCallback(async (range: FetchDateRange) => {
     const currentUserId = userIdRef.current;
     if (!currentUserId) return [];
@@ -1948,7 +1937,7 @@ export default function DashboardConversionesPage() {
         ) : (
           <MetaAudiencesPanel
             currency={reportingCurrency}
-            loadConversions={fetchAudienceConversions}
+            loadBuyers={fetchMetaAudienceBuyers}
           />
         )
       )}

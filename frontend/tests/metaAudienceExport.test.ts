@@ -5,6 +5,9 @@ import {
   buildMetaAudience,
   buildMetaAudienceCsv,
   fieldCoverage,
+  filterMetaAudienceByValue,
+  mapMetaAudienceBuyerRows,
+  personHasSelectedIdentifier,
 } from "../lib/metaAudienceExport";
 
 function purchaseRow(
@@ -164,4 +167,82 @@ test("completa el código de país de teléfonos locales según el workspace", (
 
   assert.equal(argentina.people[0].fields.phone, "541122223333");
   assert.equal(paraguay.people[0].fields.phone, "595981123456");
+});
+
+test("mapea la respuesta agregada de la RPC sin inventar código de país", () => {
+  const [buyer] = mapMetaAudienceBuyerRows([{
+    customer_key: " phone:0981123456 ",
+    phone: "(0981) 123-456",
+    email: " PERSONA@EXAMPLE.COM ",
+    fn: "María",
+    ln: "Pérez",
+    ct: "Asunción",
+    st: "Central",
+    zip: " 1234 ",
+    country: "Paraguay",
+    currency: "PYG",
+    purchase_count: "3",
+    first_purchase_count: "1",
+    reload_count: "2",
+    total_value: "450.50",
+    average_purchase_value: "150.166",
+    max_purchase_value: "250",
+    first_purchase_at: "2026-01-10T12:00:00Z",
+    last_purchase_at: "2026-09-10T12:00:00Z",
+  }]);
+
+  assert.equal(buyer.key, "phone:0981123456");
+  assert.equal(buyer.fields.phone, "0981123456");
+  assert.equal(buyer.fields.email, "persona@example.com");
+  assert.equal(buyer.fields.fn, "maria");
+  assert.equal(buyer.currency, "PYG");
+  assert.equal(buyer.purchaseCount, 3);
+  assert.equal(buyer.value, 450.5);
+  assert.equal(buyer.firstPurchaseAt, "2026-01-10T12:00:00.000Z");
+});
+
+test("filtra compradores agregados por valor y exige teléfono o email seleccionados", () => {
+  const people = mapMetaAudienceBuyerRows([
+    {
+      customer_key: "phone:1", phone: "1", email: "", fn: "Ana", ln: "", ct: "", st: "", zip: "", country: "",
+      currency: "ARS", purchase_count: 1, first_purchase_count: 1, reload_count: 0,
+      total_value: 100, average_purchase_value: 100, max_purchase_value: 100,
+      first_purchase_at: "2026-09-01T00:00:00Z", last_purchase_at: "2026-09-01T00:00:00Z",
+    },
+    {
+      customer_key: "row:2", phone: "", email: "", fn: "Beto", ln: "", ct: "", st: "", zip: "", country: "",
+      currency: "ARS", purchase_count: 2, first_purchase_count: 1, reload_count: 1,
+      total_value: 300, average_purchase_value: 150, max_purchase_value: 200,
+      first_purchase_at: "2026-09-01T00:00:00Z", last_purchase_at: "2026-09-02T00:00:00Z",
+    },
+  ]);
+
+  const filtered = filterMetaAudienceByValue(people, 50, 200);
+  assert.deepEqual(filtered.map((person) => person.key), ["phone:1"]);
+  assert.equal(personHasSelectedIdentifier(filtered[0], ["phone", "fn"]), true);
+  assert.equal(personHasSelectedIdentifier(people[1], ["fn"]), false);
+});
+
+test("escapa comillas, comas y saltos de línea en el CSV manual", () => {
+  const [buyer] = mapMetaAudienceBuyerRows([{
+    customer_key: "email:one@example.com",
+    phone: "",
+    email: "one@example.com",
+    fn: "Ana, María\n\"A\"",
+    ln: "", ct: "", st: "", zip: "", country: "Argentina",
+    currency: "ARS", purchase_count: 1, first_purchase_count: 1, reload_count: 0,
+    total_value: 10.5, average_purchase_value: 10.5, max_purchase_value: 10.5,
+    first_purchase_at: "2026-09-01T00:00:00Z", last_purchase_at: "2026-09-01T00:00:00Z",
+  }]);
+  buyer.fields.fn = 'ana, "a"\nsegunda línea';
+
+  const csv = buildMetaAudienceCsv({
+    people: [buyer],
+    selectedFields: ["email", "fn"],
+    audienceType: "value_based",
+  });
+  assert.equal(
+    csv,
+    '"email","fn","value"\r\n"one@example.com","ana, ""a""\nsegunda línea","10.5"',
+  );
 });

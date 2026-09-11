@@ -40,10 +40,36 @@ export const RECOMMENDED_META_AUDIENCE_FIELDS: MetaAudienceField[] = [
 export type MetaAudiencePerson = {
   key: string;
   fields: Record<MetaAudienceField, string>;
+  currency: "ARS" | "PYG";
   value: number;
   purchaseCount: number;
+  firstPurchaseCount: number;
+  reloadCount: number;
+  averagePurchaseValue: number;
+  maxPurchaseValue: number;
   firstPurchaseAt: string;
   lastPurchaseAt: string;
+};
+
+export type MetaAudienceBuyerRpcRow = {
+  customer_key: unknown;
+  phone: unknown;
+  email: unknown;
+  fn: unknown;
+  ln: unknown;
+  ct: unknown;
+  st: unknown;
+  zip: unknown;
+  country: unknown;
+  currency: unknown;
+  purchase_count: unknown;
+  first_purchase_count: unknown;
+  reload_count: unknown;
+  total_value: unknown;
+  average_purchase_value: unknown;
+  max_purchase_value: unknown;
+  first_purchase_at: unknown;
+  last_purchase_at: unknown;
 };
 
 export type MetaAudienceBuildOptions = {
@@ -140,6 +166,58 @@ function fieldsFromRow(
     zip: normalizePostalCode(row.zip),
     country: normalizeCountry(firstNonEmpty(row.country, row.geo_country)),
   };
+}
+
+export function normalizeMetaAudienceFields(
+  fields: Partial<Record<MetaAudienceField, unknown>>,
+): Record<MetaAudienceField, string> {
+  return {
+    email: normalizeMetaEmail(fields.email),
+    phone: normalizeMetaPhone(fields.phone),
+    fn: normalizeLatinText(fields.fn),
+    ln: normalizeLatinText(fields.ln),
+    ct: normalizeLatinText(fields.ct),
+    st: normalizeLatinText(fields.st),
+    zip: normalizePostalCode(fields.zip),
+    country: normalizeCountry(fields.country),
+  };
+}
+
+function nonNegativeNumber(value: unknown): number {
+  const parsed = Number(value);
+  return Number.isFinite(parsed) ? Math.max(0, parsed) : 0;
+}
+
+function isoDate(value: unknown): string {
+  const parsed = new Date(String(value ?? ""));
+  return Number.isFinite(parsed.getTime()) ? parsed.toISOString() : "";
+}
+
+export function mapMetaAudienceBuyerRows(
+  rows: readonly MetaAudienceBuyerRpcRow[],
+): MetaAudiencePerson[] {
+  return rows.map((row) => ({
+    key: String(row.customer_key ?? "").trim(),
+    fields: normalizeMetaAudienceFields({
+      phone: row.phone,
+      email: row.email,
+      fn: row.fn,
+      ln: row.ln,
+      ct: row.ct,
+      st: row.st,
+      zip: row.zip,
+      country: row.country,
+    }),
+    currency: rowCurrency(row.currency),
+    purchaseCount: nonNegativeNumber(row.purchase_count),
+    firstPurchaseCount: nonNegativeNumber(row.first_purchase_count),
+    reloadCount: nonNegativeNumber(row.reload_count),
+    value: nonNegativeNumber(row.total_value),
+    averagePurchaseValue: nonNegativeNumber(row.average_purchase_value),
+    maxPurchaseValue: nonNegativeNumber(row.max_purchase_value),
+    firstPurchaseAt: isoDate(row.first_purchase_at),
+    lastPurchaseAt: isoDate(row.last_purchase_at),
+  }));
 }
 
 function purchaseType(row: ConversionRow): "first" | "repeat" {
@@ -296,8 +374,13 @@ export function buildMetaAudience(
     peopleBeforeValueFilter.push({
       key: first.aliases[0] || `row:${first.row.id || first.eventKey}`,
       fields: allGroupFields,
+      currency: rowCurrency(first.row.currency),
       value,
       purchaseCount: scopedRecords.length,
+      firstPurchaseCount: scopedRecords.filter((record) => record.purchaseType === "first").length,
+      reloadCount: scopedRecords.filter((record) => record.purchaseType === "repeat").length,
+      averagePurchaseValue: value / scopedRecords.length,
+      maxPurchaseValue: Math.max(...scopedRecords.map((record) => record.value)),
       firstPurchaseAt: first.row.created_at,
       lastPurchaseAt: last.row.created_at,
     });
@@ -333,7 +416,28 @@ export function personHasSelectedIdentifier(
   person: MetaAudiencePerson,
   selectedFields: readonly MetaAudienceField[],
 ): boolean {
-  return selectedFields.some((field) => Boolean(person.fields[field]));
+  return selectedFields.some(
+    (field) => (field === "email" || field === "phone") && Boolean(person.fields[field]),
+  );
+}
+
+export function filterMetaAudienceByValue(
+  people: readonly MetaAudiencePerson[],
+  minimumValue?: number | null,
+  maximumValue?: number | null,
+): MetaAudiencePerson[] {
+  const minimum = Math.max(0, Number(minimumValue) || 0);
+  const maximum = maximumValue == null || maximumValue === 0
+    ? null
+    : Math.max(0, Number(maximumValue) || 0);
+  return people
+    .filter((person) => person.value >= minimum)
+    .filter((person) => maximum == null || person.value <= maximum)
+    .sort((left, right) => right.value - left.value || left.key.localeCompare(right.key));
+}
+
+function rowCurrency(value: unknown): "ARS" | "PYG" {
+  return String(value ?? "").trim().toUpperCase() === "PYG" ? "PYG" : "ARS";
 }
 
 function csvCell(value: string | number): string {
