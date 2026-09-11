@@ -1,7 +1,7 @@
 import { normalizeInternationalPhone } from "@/lib/phoneNormalization";
 
 export type MetaAudienceType = "segmented" | "value_based";
-export type MetaAudiencePurchaseScope = "all" | "first" | "repeat";
+export type MetaAudiencePurchaseScope = "all" | "first" | "repeat" | "none";
 export type MetaAudienceField =
   | "email"
   | "phone"

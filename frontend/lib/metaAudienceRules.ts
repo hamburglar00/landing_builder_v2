@@ -86,6 +86,7 @@ export const META_AUDIENCE_RULE_OPERATORS: ReadonlyArray<{
 ];
 
 export const META_AUDIENCE_TOP_PERCENTAGES = [50, 25, 10, 5, 1] as const;
+export const META_AUDIENCE_MAX_RULES = 20;
 
 export function createInitialMetaAudienceRules(): MetaAudienceRule[] {
   return [{
@@ -145,16 +146,19 @@ export function validateMetaAudienceRule(rule: MetaAudienceRule): string | null 
 }
 
 export function validateMetaAudienceRules(rules: readonly MetaAudienceRule[]): string[] {
-  return rules.flatMap((rule, index) => {
+  const errors = rules.flatMap((rule, index) => {
     const error = validateMetaAudienceRule(rule);
     return error ? [`Condición ${index + 1}: ${error}`] : [];
   });
+  if (rules.length > META_AUDIENCE_MAX_RULES) errors.unshift(`La audiencia admite hasta ${META_AUDIENCE_MAX_RULES} condiciones.`);
+  return errors;
 }
 
 export function personMatchesMetaAudienceScope(
   person: MetaAudiencePerson,
   scope: MetaAudiencePurchaseScope,
 ): boolean {
+  if (scope === "none") return true;
   if (scope === "first") return person.periodFirstPurchaseCount >= 1;
   if (scope === "repeat") return person.periodReloadCount >= 1;
   return person.periodPurchaseCount >= 1;

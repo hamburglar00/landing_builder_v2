@@ -30,3 +30,25 @@ test("conserva el fin de día de un período histórico", async () => {
   }, new Date("2026-09-11T15:30:00-03:00"));
   assert.equal(params.p_period_end_at, historicalEnd.toISOString());
 });
+
+test("fetch usa el asOf provisto por la resolución del período", async () => {
+  const { fetchMetaAudienceBuyersWithClient } = await import("../lib/metaAudienceDb");
+  const asOf = new Date("2026-09-11T18:30:00.000Z");
+  let received: Record<string, unknown> | undefined;
+  const client = {
+    rpc: async (_name: string, params: Record<string, unknown>) => {
+      received = params;
+      return { data: { version: 2, rows: [] }, error: null };
+    },
+  };
+  await fetchMetaAudienceBuyersWithClient(client as never, {
+    currency: "ARS",
+    range: {
+      start: new Date("2026-08-13T03:00:00.000Z"),
+      end: asOf,
+    },
+    asOf,
+  });
+  assert.equal(received?.p_as_of, asOf.toISOString());
+  assert.equal(received?.p_period_end_at, asOf.toISOString());
+});

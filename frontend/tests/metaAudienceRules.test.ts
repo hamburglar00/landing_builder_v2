@@ -6,6 +6,7 @@ import {
   createInitialMetaAudienceRules,
   personMatchesMetaAudienceScope,
   validateMetaAudienceRule,
+  validateMetaAudienceRules,
   type MetaAudienceRule,
 } from "../lib/metaAudienceRules";
 import type { MetaAudiencePerson } from "../lib/metaAudienceExport";
@@ -80,6 +81,11 @@ test("valida porcentajes, rangos y valores vacíos", () => {
   assert.match(validateMetaAudienceRule({ id: "x", metric: "period_total_value", operator: "gte", value: "" }) ?? "", /valor válido/);
 });
 
+test("limita la cantidad de condiciones", () => {
+  const rules = Array.from({ length: 21 }, (_, index): MetaAudienceRule => ({ id: `rule-${index}`, metric: "period_total_value", operator: "gte", value: 0 }));
+  assert.match(validateMetaAudienceRules(rules)[0] ?? "", /hasta 20 condiciones/);
+});
+
 test("scope reemplaza solo la condición base de actividad", () => {
   const all = buyer("all", { periodPurchaseCount: 1, periodFirstPurchaseCount: 0, periodReloadCount: 0 });
   const first = buyer("first", { periodPurchaseCount: 1, periodFirstPurchaseCount: 1, periodReloadCount: 0 });
@@ -87,9 +93,20 @@ test("scope reemplaza solo la condición base de actividad", () => {
   assert.equal(personMatchesMetaAudienceScope(all, "all"), true);
   assert.equal(personMatchesMetaAudienceScope(all, "first"), false);
   assert.equal(personMatchesMetaAudienceScope(all, "repeat"), false);
+  assert.equal(personMatchesMetaAudienceScope(buyer("inactive", { periodPurchaseCount: 0 }), "none"), true);
   assert.deepEqual([all, first, repeat].filter((item) => personMatchesMetaAudienceScope(item, "first")).map((item) => item.key), ["first"]);
   assert.deepEqual([all, first, repeat].filter((item) => personMatchesMetaAudienceScope(item, "repeat")).map((item) => item.key), ["repeat"]);
   assert.equal(createInitialMetaAudienceRules()[0].metric, "historical_first_purchase_value");
+});
+
+test("scope none permite presets históricos con compradores inactivos", () => {
+  const inactive = buyer("inactive", { periodPurchaseCount: 0, periodFirstPurchaseCount: 0, periodReloadCount: 0, historicalTotalValue: 500 });
+  const result = applyMetaAudienceRules({
+    people: [inactive],
+    scope: "none",
+    rules: [{ id: "historical", metric: "historical_total_value", operator: "gte", value: 100 }],
+  });
+  assert.deepEqual(result.people.map((item) => item.key), ["inactive"]);
 });
 
 test("percentiles incluyen empates y se calculan antes de las otras reglas", () => {

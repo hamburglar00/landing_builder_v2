@@ -4,6 +4,34 @@ import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import type { DateRange } from "@/components/conversiones/DateRangeFilter";
 import CustomSelect from "@/components/ui/CustomSelect";
 import ModalPortal from "@/components/ui/ModalPortal";
+import {
+  AudienceNameModal,
+  PresetPickerModal,
+  SavedAudiencesModal,
+  type AudienceNameAction,
+} from "@/components/conversiones/MetaAudienceConfigModals";
+import {
+  META_AUDIENCE_PRESETS,
+  META_AUDIENCE_TIMEZONE,
+  applyMetaAudiencePreset,
+  canReplaceMetaAudienceDraft,
+  cloneMetaAudienceConfig,
+  createDefaultMetaAudienceConfig,
+  dateInputValue,
+  metaAudienceConfigFingerprint,
+  resolveMetaAudiencePeriod,
+  type MetaAudienceConfig,
+  type MetaAudiencePresetId,
+} from "@/lib/metaAudienceConfig";
+import {
+  createSavedMetaAudienceConfig,
+  deleteSavedMetaAudienceConfig,
+  duplicateSavedMetaAudienceConfig,
+  listSavedMetaAudienceConfigs,
+  renameSavedMetaAudienceConfig,
+  updateSavedMetaAudienceConfig,
+  type SavedMetaAudienceConfig,
+} from "@/lib/metaAudienceConfigDb";
 import type { MetaAudienceBuyersRequest } from "@/lib/metaAudienceDb";
 import {
   META_AUDIENCE_FIELDS,
@@ -22,10 +50,10 @@ import {
 } from "@/lib/metaAudienceExport";
 import {
   META_AUDIENCE_RULE_METRICS,
+  META_AUDIENCE_MAX_RULES,
   META_AUDIENCE_RULE_OPERATORS,
   META_AUDIENCE_TOP_PERCENTAGES,
   applyMetaAudienceRules,
-  createInitialMetaAudienceRules,
   type MetaAudienceRule,
   type MetaAudienceRuleMetric,
   type MetaAudienceRuleOperator,
@@ -35,8 +63,6 @@ type Props = {
   currency: "ARS" | "PYG";
   loadBuyers: (request: MetaAudienceBuyersRequest) => Promise<MetaAudiencePerson[]>;
 };
-
-type PeriodPreset = 30 | 60 | 90 | 180 | "custom";
 
 const PERIOD_PRESETS: ReadonlyArray<{ days: 30 | 60 | 90 | 180; label: string }> = [
   { days: 30, label: "Últimos 30 días" },
@@ -49,6 +75,7 @@ const SCOPE_OPTIONS = [
   { value: "all", label: "Primeras cargas y recargas" },
   { value: "first", label: "Solo primeras cargas" },
   { value: "repeat", label: "Solo recargas" },
+  { value: "none", label: "Sin requisito de actividad en el período" },
 ] as const;
 
 const CONDITION_HELP_ROWS = [
@@ -80,34 +107,8 @@ function formatAmount(value: number, currency: string): string {
   }).format(value);
 }
 
-function startOfDay(date: Date): Date {
-  return new Date(date.getFullYear(), date.getMonth(), date.getDate());
-}
-
-function endOfDay(date: Date): Date {
-  return new Date(date.getFullYear(), date.getMonth(), date.getDate(), 23, 59, 59, 999);
-}
-
-function recentDateRange(days: number, now = new Date()): DateRange {
-  const start = startOfDay(now);
-  start.setDate(start.getDate() - (days - 1));
-  return { start, end: endOfDay(now) };
-}
-
-function dateInputValue(date: Date): string {
-  return [
-    date.getFullYear(),
-    String(date.getMonth() + 1).padStart(2, "0"),
-    String(date.getDate()).padStart(2, "0"),
-  ].join("-");
-}
-
-function rangeFromDateInputs(start: string, end: string): DateRange | null {
-  if (!start || !end) return null;
-  const parsedStart = new Date(`${start}T00:00:00`);
-  const parsedEnd = new Date(`${end}T23:59:59.999`);
-  if (!Number.isFinite(parsedStart.getTime()) || !Number.isFinite(parsedEnd.getTime()) || parsedStart > parsedEnd) return null;
-  return { start: parsedStart, end: parsedEnd };
+function validDateInputs(start: string, end: string): boolean {
+  return /^\d{4}-\d{2}-\d{2}$/.test(start) && /^\d{4}-\d{2}-\d{2}$/.test(end) && start <= end;
 }
 
 function formatPeriod(range: DateRange): string {
@@ -133,6 +134,7 @@ function downloadCsv(contents: string, filename: string): void {
 }
 
 function scopeBaseLabel(scope: MetaAudiencePurchaseScope): string {
+  if (scope === "none") return "Sin condición base de actividad";
   if (scope === "first") return "Primera carga en el período ≥ 1";
   if (scope === "repeat") return "Recargas en el período ≥ 1";
   return "Cargas en el período ≥ 1";
@@ -361,28 +363,46 @@ function ConditionsHelpModal({
 }
 
 export default function MetaAudiencesPanel({ currency, loadBuyers }: Props) {
-  const initialRange = useMemo(() => recentDateRange(30), []);
+  const initialConfig = useMemo(() => createDefaultMetaAudienceConfig(currency), [currency]);
+  const initialRange = useMemo(() => resolveMetaAudiencePeriod(initialConfig.period), [initialConfig]);
+  const [config, setConfig] = useState<MetaAudienceConfig>(initialConfig);
   const [dateRange, setDateRange] = useState<DateRange>(initialRange);
-  const [periodPreset, setPeriodPreset] = useState<PeriodPreset>(30);
   const [draftStartDate, setDraftStartDate] = useState(() => dateInputValue(initialRange.start));
   const [draftEndDate, setDraftEndDate] = useState(() => dateInputValue(initialRange.end));
   const [buyers, setBuyers] = useState<MetaAudiencePerson[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [conditionsHelpOpen, setConditionsHelpOpen] = useState(false);
-  const [audienceType, setAudienceType] = useState<MetaAudienceType>("segmented");
-  const [purchaseScope, setPurchaseScope] = useState<MetaAudiencePurchaseScope>("all");
-  const [rules, setRules] = useState<MetaAudienceRule[]>(createInitialMetaAudienceRules);
-  const [summaryValueMetric, setSummaryValueMetric] = useState<MetaAudienceSummaryValueMetric>("historical_first_purchase_value");
-  const [exportValueMetric, setExportValueMetric] = useState<MetaAudienceSummaryValueMetric>("historical_first_purchase_value");
-  const [selectedFields, setSelectedFields] = useState<MetaAudienceField[]>(RECOMMENDED_META_AUDIENCE_FIELDS);
+  const [presetModalOpen, setPresetModalOpen] = useState(false);
+  const [savedModalOpen, setSavedModalOpen] = useState(false);
+  const [savedConfigs, setSavedConfigs] = useState<SavedMetaAudienceConfig[]>([]);
+  const [savedLoading, setSavedLoading] = useState(false);
+  const [activeSaved, setActiveSaved] = useState<SavedMetaAudienceConfig | null>(null);
+  const [draftLabel, setDraftLabel] = useState<string | null>(null);
+  const [baselineFingerprint, setBaselineFingerprint] = useState(() => metaAudienceConfigFingerprint(initialConfig));
+  const [nameModal, setNameModal] = useState<{ action: AudienceNameAction; item: SavedMetaAudienceConfig | null; initialName: string } | null>(null);
+  const [saving, setSaving] = useState(false);
+  const [modalError, setModalError] = useState<string | null>(null);
   const nextRuleId = useRef(1);
   const loadRequestId = useRef(0);
   const valueAudienceInitialized = useRef(false);
+  const previousCurrency = useRef(currency);
 
-  const draftDateRange = useMemo(() => rangeFromDateInputs(draftStartDate, draftEndDate), [draftEndDate, draftStartDate]);
-  const periodChanged = draftDateRange != null && (
-    dateInputValue(dateRange.start) !== draftStartDate || dateInputValue(dateRange.end) !== draftEndDate
+  const { audienceType, purchaseScope, rules, summaryValueMetric, exportValueMetric, selectedFields } = config;
+  const configFingerprint = useMemo(() => metaAudienceConfigFingerprint(config), [config]);
+  const dirty = baselineFingerprint === "" || configFingerprint !== baselineFingerprint;
+  const periodPreset = config.period.kind === "relative" ? config.period.days : "custom";
+
+  const setRules = useCallback((update: MetaAudienceRule[] | ((current: MetaAudienceRule[]) => MetaAudienceRule[])) => {
+    setConfig((current) => ({ ...current, rules: typeof update === "function" ? update(current.rules) : update }));
+  }, []);
+  const setSelectedFields = useCallback((update: MetaAudienceField[] | ((current: MetaAudienceField[]) => MetaAudienceField[])) => {
+    setConfig((current) => ({ ...current, selectedFields: typeof update === "function" ? update(current.selectedFields) : update }));
+  }, []);
+
+  const validDraftPeriod = validDateInputs(draftStartDate, draftEndDate);
+  const periodChanged = validDraftPeriod && (
+    config.period.kind !== "custom" || config.period.startDate !== draftStartDate || config.period.endDate !== draftEndDate
   );
 
   const load = useCallback(async () => {
@@ -391,8 +411,13 @@ export default function MetaAudiencesPanel({ currency, loadBuyers }: Props) {
     setLoading(true);
     setError(null);
     try {
-      const loadedBuyers = await loadBuyers({ currency, range: dateRange });
-      if (loadRequestId.current === requestId) setBuyers(loadedBuyers);
+      const asOf = new Date();
+      const range = resolveMetaAudiencePeriod(config.period, asOf);
+      const loadedBuyers = await loadBuyers({ currency: config.currency, range, asOf });
+      if (loadRequestId.current === requestId) {
+        setDateRange(range);
+        setBuyers(loadedBuyers);
+      }
     } catch (cause) {
       console.error(cause);
       if (loadRequestId.current === requestId) {
@@ -402,12 +427,27 @@ export default function MetaAudiencesPanel({ currency, loadBuyers }: Props) {
     } finally {
       if (loadRequestId.current === requestId) setLoading(false);
     }
-  }, [currency, dateRange, loadBuyers]);
+  }, [config.currency, config.period, loadBuyers]);
 
   useEffect(() => {
     void load();
     return () => { loadRequestId.current += 1; };
   }, [load]);
+
+  useEffect(() => {
+    if (previousCurrency.current === currency) return;
+    previousCurrency.current = currency;
+    const next = createDefaultMetaAudienceConfig(currency);
+    const range = resolveMetaAudiencePeriod(next.period);
+    setConfig(next);
+    setDateRange(range);
+    setDraftStartDate(dateInputValue(range.start));
+    setDraftEndDate(dateInputValue(range.end));
+    setActiveSaved(null);
+    setDraftLabel(null);
+    setBaselineFingerprint(metaAudienceConfigFingerprint(next));
+    setSavedConfigs([]);
+  }, [currency]);
 
   const evaluation = useMemo(
     () => applyMetaAudienceRules({ people: buyers, scope: purchaseScope, rules }),
@@ -431,17 +471,19 @@ export default function MetaAudiencesPanel({ currency, loadBuyers }: Props) {
   const canExport = evaluation.errors.length === 0 && selectedFields.length > 0 && exportStats.exportablePeople.length > 0;
 
   const applyPeriodPreset = (days: 30 | 60 | 90 | 180) => {
-    const range = recentDateRange(days);
-    setPeriodPreset(days);
+    const period: MetaAudienceConfig["period"] = { kind: "relative", days, timezone: META_AUDIENCE_TIMEZONE };
+    const range = resolveMetaAudiencePeriod(period);
     setDraftStartDate(dateInputValue(range.start));
     setDraftEndDate(dateInputValue(range.end));
-    setDateRange(range);
+    setConfig((current) => ({ ...current, period }));
   };
 
   const applyCustomPeriod = () => {
-    if (!draftDateRange) return;
-    setPeriodPreset("custom");
-    setDateRange(draftDateRange);
+    if (!validDraftPeriod) return;
+    setConfig((current) => ({
+      ...current,
+      period: { kind: "custom", startDate: draftStartDate, endDate: draftEndDate, timezone: META_AUDIENCE_TIMEZONE },
+    }));
   };
 
   const toggleField = (field: MetaAudienceField) => {
@@ -451,23 +493,153 @@ export default function MetaAudiencesPanel({ currency, loadBuyers }: Props) {
   };
 
   const addRule = () => {
-    const id = `rule-${nextRuleId.current}`;
-    nextRuleId.current += 1;
-    setRules((current) => [...current, { id, metric: "period_total_value", operator: "gte", value: 0 }]);
+    setRules((current) => {
+      if (current.length >= META_AUDIENCE_MAX_RULES) return current;
+      let id = "";
+      do {
+        id = `rule-${nextRuleId.current}`;
+        nextRuleId.current += 1;
+      } while (current.some((rule) => rule.id === id));
+      return [...current, { id, metric: "period_total_value", operator: "gte", value: 0 }];
+    });
   };
 
   const handleAudienceType = (next: MetaAudienceType) => {
     if (next === "value_based" && !valueAudienceInitialized.current) {
       valueAudienceInitialized.current = true;
-      setExportValueMetric(summaryValueMetric);
+      setConfig((current) => ({ ...current, audienceType: next, exportValueMetric: current.summaryValueMetric }));
+      return;
     }
-    setAudienceType(next);
+    setConfig((current) => ({ ...current, audienceType: next }));
   };
 
   const handleExport = () => {
     if (!canExport) return;
     const typePart = audienceType === "value_based" ? "basada-en-valor" : "segmentada";
     downloadCsv(csv, `audiencia-meta-${typePart}-${currency.toLowerCase()}-${safeDateForFilename(dateRange)}.csv`);
+  };
+
+  const canReplaceDraft = () => canReplaceMetaAudienceDraft(dirty, () => window.confirm("Hay cambios sin guardar. ¿Querés descartarlos?"));
+
+  const applyPreset = (presetId: MetaAudiencePresetId) => {
+    if (!canReplaceDraft()) return;
+    const next = applyMetaAudiencePreset(presetId, currency);
+    const range = resolveMetaAudiencePeriod(next.period);
+    setConfig(next);
+    setDraftStartDate(dateInputValue(range.start));
+    setDraftEndDate(dateInputValue(range.end));
+    setActiveSaved(null);
+    setDraftLabel(META_AUDIENCE_PRESETS.find((preset) => preset.id === presetId)?.name ?? null);
+    setBaselineFingerprint("");
+    setPresetModalOpen(false);
+    valueAudienceInitialized.current = false;
+  };
+
+  const refreshSavedConfigs = useCallback(async () => {
+    setSavedLoading(true);
+    setModalError(null);
+    try {
+      setSavedConfigs(await listSavedMetaAudienceConfigs(currency));
+    } catch (cause) {
+      const message = cause instanceof Error ? cause.message : "No se pudieron cargar las audiencias guardadas.";
+      setError(message);
+      setModalError(message);
+    } finally {
+      setSavedLoading(false);
+    }
+  }, [currency]);
+
+  const showSavedConfigs = () => {
+    setModalError(null);
+    setSavedModalOpen(true);
+    void refreshSavedConfigs();
+  };
+
+  const openSavedConfig = (saved: SavedMetaAudienceConfig) => {
+    if (!canReplaceDraft()) return;
+    const next = cloneMetaAudienceConfig(saved.config);
+    const range = resolveMetaAudiencePeriod(next.period);
+    setConfig(next);
+    setDraftStartDate(dateInputValue(range.start));
+    setDraftEndDate(dateInputValue(range.end));
+    setActiveSaved(saved);
+    setDraftLabel(saved.name);
+    setBaselineFingerprint(metaAudienceConfigFingerprint(next));
+    setSavedModalOpen(false);
+    valueAudienceInitialized.current = next.audienceType === "value_based";
+  };
+
+  const handleSave = async () => {
+    if (!activeSaved) {
+      setModalError(null);
+      setNameModal({ action: "create", item: null, initialName: draftLabel ?? "" });
+      return;
+    }
+    setSaving(true);
+    setError(null);
+    setModalError(null);
+    try {
+      const saved = await updateSavedMetaAudienceConfig(activeSaved, activeSaved.name, config);
+      setActiveSaved(saved);
+      setDraftLabel(saved.name);
+      setBaselineFingerprint(metaAudienceConfigFingerprint(saved.config));
+      setSavedConfigs((current) => current.map((item) => item.id === saved.id ? saved : item));
+    } catch (cause) {
+      setError(cause instanceof Error ? cause.message : "No se pudo guardar la audiencia.");
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  const submitNameAction = async (name: string) => {
+    if (!nameModal) return;
+    setSaving(true);
+    setError(null);
+    setModalError(null);
+    try {
+      if (nameModal.action === "create") {
+        const saved = await createSavedMetaAudienceConfig(name, config);
+        setActiveSaved(saved);
+        setDraftLabel(saved.name);
+        setBaselineFingerprint(metaAudienceConfigFingerprint(saved.config));
+        setSavedConfigs((current) => [saved, ...current.filter((item) => item.id !== saved.id)]);
+      } else if (nameModal.action === "rename" && nameModal.item) {
+        const saved = await renameSavedMetaAudienceConfig(nameModal.item, name);
+        setSavedConfigs((current) => current.map((item) => item.id === saved.id ? saved : item));
+        if (activeSaved?.id === saved.id) {
+          setActiveSaved(saved);
+          setDraftLabel(saved.name);
+        }
+      } else if (nameModal.action === "duplicate" && nameModal.item) {
+        const saved = await duplicateSavedMetaAudienceConfig(nameModal.item, name);
+        setSavedConfigs((current) => [saved, ...current]);
+      }
+      setNameModal(null);
+    } catch (cause) {
+      const message = cause instanceof Error ? cause.message : "No se pudo completar la operación.";
+      setError(message);
+      setModalError(message);
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  const removeSavedConfig = async (saved: SavedMetaAudienceConfig) => {
+    if (!window.confirm(`¿Eliminar la audiencia “${saved.name}”?`)) return;
+    setError(null);
+    try {
+      await deleteSavedMetaAudienceConfig(saved);
+      setSavedConfigs((current) => current.filter((item) => item.id !== saved.id));
+      if (activeSaved?.id === saved.id) {
+        setActiveSaved(null);
+        setDraftLabel(saved.name);
+        setBaselineFingerprint("");
+      }
+    } catch (cause) {
+      const message = cause instanceof Error ? cause.message : "No se pudo eliminar la audiencia.";
+      setError(message);
+      setModalError(message);
+    }
   };
 
   const closeConditionsHelp = useCallback(() => setConditionsHelpOpen(false), []);
@@ -483,10 +655,14 @@ export default function MetaAudiencesPanel({ currency, loadBuyers }: Props) {
           <p className="mt-1 max-w-3xl text-xs leading-relaxed text-zinc-400">
             Construí segmentos de compradores y descargalos para cargarlos manualmente en Meta. No envía eventos, no usa CAPI y no modifica Conversiones.
           </p>
+          {draftLabel || dirty ? <p className="mt-2 text-[11px] font-medium text-emerald-300">{draftLabel ?? "Nueva audiencia"}{dirty ? " · Cambios sin guardar" : ""}</p> : null}
         </div>
-        <button type="button" onClick={() => void load()} disabled={loading} className="inline-flex h-8 shrink-0 items-center justify-center rounded-lg border border-zinc-700 bg-zinc-900 px-3 text-[11px] text-zinc-300 hover:bg-zinc-800 disabled:opacity-50">
-          {loading ? "Cargando..." : "Actualizar datos"}
-        </button>
+        <div className="flex flex-wrap gap-2">
+          <button type="button" onClick={() => setPresetModalOpen(true)} className="inline-flex h-8 items-center justify-center rounded-lg border border-zinc-700 bg-zinc-900 px-3 text-[11px] text-zinc-300 hover:bg-zinc-800">Usar preset</button>
+          <button type="button" onClick={showSavedConfigs} className="inline-flex h-8 items-center justify-center rounded-lg border border-zinc-700 bg-zinc-900 px-3 text-[11px] text-zinc-300 hover:bg-zinc-800">Mis audiencias</button>
+          <button type="button" onClick={() => void handleSave()} disabled={saving || (!dirty && activeSaved != null)} className="inline-flex h-8 items-center justify-center rounded-lg bg-emerald-600 px-3 text-[11px] font-semibold text-white hover:bg-emerald-500 disabled:opacity-45">{saving ? "Guardando…" : activeSaved ? "Guardar cambios" : "Guardar audiencia"}</button>
+          <button type="button" onClick={() => void load()} disabled={loading} className="inline-flex h-8 items-center justify-center rounded-lg border border-zinc-700 bg-zinc-900 px-3 text-[11px] text-zinc-300 hover:bg-zinc-800 disabled:opacity-50">{loading ? "Cargando..." : "Actualizar datos"}</button>
+        </div>
       </div>
 
       {error ? <div className="mt-4 rounded-lg border border-red-900/60 bg-red-950/25 px-3 py-2 text-xs text-red-300" role="alert">Error al cargar los datos: {error}</div> : null}
@@ -518,11 +694,11 @@ export default function MetaAudiencesPanel({ currency, loadBuyers }: Props) {
           {periodPreset === "custom" ? <span className="rounded-lg border border-sky-700/50 bg-sky-950/25 px-2.5 py-1.5 text-[10px] text-sky-300">Personalizado</span> : null}
         </div>
         <div className="mt-3 grid gap-3 sm:grid-cols-[minmax(0,1fr)_minmax(0,1fr)_auto] sm:items-end">
-          <label><span className="mb-1 block text-xs text-zinc-400">Desde</span><input type="date" value={draftStartDate} max={draftEndDate || undefined} onChange={(event) => { setDraftStartDate(event.target.value); setPeriodPreset("custom"); }} className={inputClass} /></label>
-          <label><span className="mb-1 block text-xs text-zinc-400">Hasta</span><input type="date" value={draftEndDate} min={draftStartDate || undefined} max={dateInputValue(new Date())} onChange={(event) => { setDraftEndDate(event.target.value); setPeriodPreset("custom"); }} className={inputClass} /></label>
-          <button type="button" onClick={applyCustomPeriod} disabled={!draftDateRange || !periodChanged} className="ui-button h-9 border border-zinc-700 bg-zinc-800 px-3 text-zinc-200 hover:bg-zinc-700 disabled:opacity-45">Aplicar período</button>
+          <label><span className="mb-1 block text-xs text-zinc-400">Desde</span><input type="date" value={draftStartDate} max={draftEndDate || undefined} onChange={(event) => setDraftStartDate(event.target.value)} className={inputClass} /></label>
+          <label><span className="mb-1 block text-xs text-zinc-400">Hasta</span><input type="date" value={draftEndDate} min={draftStartDate || undefined} max={dateInputValue(new Date())} onChange={(event) => setDraftEndDate(event.target.value)} className={inputClass} /></label>
+          <button type="button" onClick={applyCustomPeriod} disabled={!validDraftPeriod || !periodChanged} className="ui-button h-9 border border-zinc-700 bg-zinc-800 px-3 text-zinc-200 hover:bg-zinc-700 disabled:opacity-45">Aplicar período</button>
         </div>
-        {!draftDateRange ? <p className="mt-2 text-[11px] text-red-300">Seleccioná fechas válidas.</p> : null}
+        {!validDraftPeriod ? <p className="mt-2 text-[11px] text-red-300">Seleccioná fechas válidas.</p> : null}
       </div>
 
       <div className="mt-5 grid gap-3 md:grid-cols-2">
@@ -531,22 +707,22 @@ export default function MetaAudiencesPanel({ currency, loadBuyers }: Props) {
             <label htmlFor="meta-audience-scope" className="text-xs text-zinc-400">3. Compras que activan el segmento</label>
             <InfoTooltip
               id="meta-audience-scope-help"
-              text="Define qué actividad debe tener la persona dentro del período: cualquier carga, una primera carga o una recarga. Es la condición base del segmento."
+              text="Define qué actividad debe tener la persona dentro del período. También podés quitar este requisito para trabajar solo con métricas históricas."
             />
           </div>
-          <CustomSelect id="meta-audience-scope" value={purchaseScope} onChange={(value) => setPurchaseScope(value as MetaAudiencePurchaseScope)} options={SCOPE_OPTIONS} />
+          <CustomSelect id="meta-audience-scope" value={purchaseScope} onChange={(value) => setConfig((current) => ({ ...current, purchaseScope: value as MetaAudiencePurchaseScope }))} options={SCOPE_OPTIONS} />
         </div>
         <div className="rounded-lg border border-zinc-800 bg-zinc-950/45 px-3 py-2">
           <p className="text-[10px] font-semibold uppercase tracking-[0.1em] text-zinc-500">Condición base</p>
           <p className="mt-1 text-xs text-zinc-200">{scopeBaseLabel(purchaseScope)}</p>
-          <p className="mt-1 text-[10px] text-zinc-500">Cambia únicamente al elegir otro tipo de compra.</p>
+          <p className="mt-1 text-[10px] text-zinc-500">Se aplica antes de las condiciones adicionales.</p>
         </div>
       </div>
 
       <div className="mt-5 rounded-xl border border-zinc-800 bg-zinc-950/30 p-3 sm:p-4">
         <div className="flex items-start justify-between gap-3">
           <div><p className="text-xs font-semibold text-zinc-200">4. Condiciones</p><p className="mt-0.5 text-[11px] text-zinc-500">Todas las condiciones se unen con “Y”.</p></div>
-          <button type="button" onClick={addRule} className="h-8 rounded-lg border border-emerald-700/60 bg-emerald-950/25 px-3 text-[11px] font-medium text-emerald-300 hover:bg-emerald-950/45">Agregar condición</button>
+          <button type="button" onClick={addRule} disabled={rules.length >= META_AUDIENCE_MAX_RULES} className="h-8 rounded-lg border border-emerald-700/60 bg-emerald-950/25 px-3 text-[11px] font-medium text-emerald-300 hover:bg-emerald-950/45 disabled:opacity-45">Agregar condición</button>
         </div>
         <div className="mt-3">
           {rules.length === 0 ? <p className="rounded-lg border border-dashed border-zinc-800 p-3 text-xs text-zinc-500">No hay condiciones adicionales.</p> : rules.map((rule, index) => (
@@ -576,7 +752,7 @@ export default function MetaAudiencesPanel({ currency, loadBuyers }: Props) {
               text="Elige qué monto muestran las tarjetas económicas y la columna “Valor del resumen”. No modifica las personas del segmento."
             />
           </div>
-          <CustomSelect id="meta-audience-summary-value" value={summaryValueMetric} onChange={(value) => setSummaryValueMetric(value as MetaAudienceSummaryValueMetric)} options={META_AUDIENCE_SUMMARY_METRICS} />
+          <CustomSelect id="meta-audience-summary-value" value={summaryValueMetric} onChange={(value) => setConfig((current) => ({ ...current, summaryValueMetric: value as MetaAudienceSummaryValueMetric }))} options={META_AUDIENCE_SUMMARY_METRICS} />
         </div>
         {audienceType === "value_based" ? (
           <div>
@@ -587,7 +763,7 @@ export default function MetaAudiencesPanel({ currency, loadBuyers }: Props) {
                 text="Elige qué monto individual se escribe en la columna value del CSV. No modifica el segmento; las personas sin un valor positivo no entran en ese archivo."
               />
             </div>
-            <CustomSelect id="meta-audience-export-value" value={exportValueMetric} onChange={(value) => setExportValueMetric(value as MetaAudienceSummaryValueMetric)} options={META_AUDIENCE_SUMMARY_METRICS} />
+            <CustomSelect id="meta-audience-export-value" value={exportValueMetric} onChange={(value) => setConfig((current) => ({ ...current, exportValueMetric: value as MetaAudienceSummaryValueMetric }))} options={META_AUDIENCE_SUMMARY_METRICS} />
           </div>
         ) : null}
       </div>
@@ -645,6 +821,29 @@ export default function MetaAudiencesPanel({ currency, loadBuyers }: Props) {
       </div>
 
       <ConditionsHelpModal open={conditionsHelpOpen} onClose={closeConditionsHelp} />
+      <PresetPickerModal open={presetModalOpen} onClose={() => setPresetModalOpen(false)} onApply={applyPreset} />
+      <SavedAudiencesModal
+        open={savedModalOpen}
+        loading={savedLoading}
+        items={savedConfigs}
+        error={modalError}
+        onClose={() => setSavedModalOpen(false)}
+        onOpen={openSavedConfig}
+        onRename={(item) => { setModalError(null); setSavedModalOpen(false); setNameModal({ action: "rename", item, initialName: item.name }); }}
+        onDuplicate={(item) => { setModalError(null); setSavedModalOpen(false); setNameModal({ action: "duplicate", item, initialName: `${item.name} (copia)` }); }}
+        onDelete={(item) => void removeSavedConfig(item)}
+      />
+      {nameModal ? (
+        <AudienceNameModal
+          open
+          action={nameModal.action}
+          initialName={nameModal.initialName}
+          saving={saving}
+          error={modalError}
+          onClose={() => { setModalError(null); setNameModal(null); }}
+          onSubmit={(name) => void submitNameAction(name)}
+        />
+      ) : null}
     </section>
   );
 }

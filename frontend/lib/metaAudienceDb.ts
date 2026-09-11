@@ -1,16 +1,18 @@
 import type { DateRange } from "@/components/conversiones/DateRangeFilter";
 import type { SupabaseClient } from "@supabase/supabase-js";
+import type { MetaAudienceCurrency } from "@/lib/metaAudienceConfig";
 import {
   mapMetaAudienceBuyerPayload,
   type MetaAudiencePerson,
 } from "@/lib/metaAudienceExport";
 import { supabase } from "@/lib/supabaseClient";
 
-export type MetaAudienceCurrency = "ARS" | "PYG";
+export type { MetaAudienceCurrency } from "@/lib/metaAudienceConfig";
 
 export type MetaAudienceBuyersRequest = {
   currency: MetaAudienceCurrency;
   range: DateRange;
+  asOf?: Date;
 };
 
 export type MetaAudienceRpcParams = {
@@ -53,7 +55,7 @@ export async function fetchMetaAudienceBuyersWithClient(
   client: Pick<SupabaseClient, "rpc">,
   request: MetaAudienceBuyersRequest,
 ): Promise<MetaAudiencePerson[]> {
-  const params = buildMetaAudienceRpcParams(request);
+  const params = buildMetaAudienceRpcParams(request, request.asOf ?? new Date());
   const { data, error } = await client.rpc("get_meta_audience_buyers_v2_payload", params);
   if (error) throw error;
   const people = mapMetaAudienceBuyerPayload(data);
