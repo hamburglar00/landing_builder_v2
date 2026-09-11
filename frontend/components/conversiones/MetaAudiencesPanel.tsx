@@ -51,57 +51,23 @@ const SCOPE_OPTIONS = [
   { value: "repeat", label: "Solo recargas" },
 ] as const;
 
-const CONDITION_HELP_GROUPS = [
-  {
-    title: "Historial de cargas",
-    description: "Considera todas las compras conocidas hasta el momento de la consulta.",
-    items: [
-      ["Cantidad histórica de cargas", "Cantidad total de primeras cargas y recargas."],
-      ["Primeras cargas históricas", "Cantidad de eventos registrados explícitamente como primera carga."],
-      ["Recargas históricas", "Cantidad total de eventos registrados como recarga."],
-    ],
-  },
-  {
-    title: "Actividad del período",
-    description: "Considera solamente las compras realizadas entre las fechas seleccionadas.",
-    items: [
-      ["Cantidad de cargas en el período", "Cantidad de primeras cargas y recargas dentro del período."],
-      ["Primeras cargas en el período", "Cantidad de primeras cargas dentro del período."],
-      ["Recargas en el período", "Cantidad de recargas dentro del período."],
-    ],
-  },
-  {
-    title: "Importes",
-    description: "Permite comparar montos históricos o montos correspondientes al período.",
-    items: [
-      ["Valor histórico cargado", "Suma de todas las cargas conocidas de la persona."],
-      ["Promedio histórico por carga", "Valor histórico cargado dividido por la cantidad de cargas."],
-      ["Mayor carga histórica", "Importe de la carga individual más grande del historial."],
-      ["Primera carga histórica", "Importe de la primera compra histórica registrada explícitamente como primera carga."],
-      ["Valor cargado en el período", "Suma de primeras cargas y recargas dentro del período."],
-      ["Primeras cargas del período", "Suma de los importes de primeras cargas dentro del período."],
-      ["Recargas del período", "Suma de los importes de recargas dentro del período."],
-      ["Promedio por carga en el período", "Promedio de las cargas realizadas dentro del período."],
-      ["Mayor carga del período", "Importe de la carga individual más grande del período."],
-    ],
-  },
-  {
-    title: "Recencia",
-    description: "Mide cuánto tiempo pasó desde la actividad más reciente.",
-    items: [
-      ["Días desde la última compra", "Cantidad de días completos desde la última carga histórica."],
-    ],
-  },
-] as const;
-
-const CONDITION_HELP_OPERATORS = [
-  ["Mayor que", "El valor debe superar el límite."],
-  ["Mayor o igual", "El valor puede coincidir con el límite o superarlo."],
-  ["Menor que", "El valor debe quedar por debajo del límite."],
-  ["Menor o igual", "El valor puede coincidir con el límite o quedar por debajo."],
-  ["Igual a", "El valor debe coincidir exactamente."],
-  ["Entre", "Incluye ambos extremos del rango."],
-  ["Top %", "Selecciona el porcentaje superior de compradores e incluye los empates del límite."],
+const CONDITION_HELP_ROWS = [
+  ["Históricas", "Cantidad histórica de cargas", "Todas las cargas conocidas de la persona"],
+  ["Históricas", "Primeras cargas históricas", "Eventos registrados explícitamente como primera carga"],
+  ["Históricas", "Recargas históricas", "Todas las recargas conocidas"],
+  ["Período", "Cantidad de cargas en el período", "Cargas realizadas entre las fechas elegidas"],
+  ["Período", "Primeras cargas en el período", "Primeras cargas realizadas dentro del período"],
+  ["Período", "Recargas en el período", "Recargas realizadas dentro del período"],
+  ["Valor histórico", "Valor histórico cargado", "Total de dinero cargado hasta ahora"],
+  ["Valor histórico", "Promedio histórico por carga", "Promedio de todas sus cargas"],
+  ["Valor histórico", "Mayor carga histórica", "La carga individual más grande"],
+  ["Valor histórico", "Primera carga histórica", "Importe de su primera carga conocida"],
+  ["Valor del período", "Valor cargado en el período", "Total cargado entre las fechas elegidas"],
+  ["Valor del período", "Primeras cargas del período", "Suma de primeras cargas dentro del período"],
+  ["Valor del período", "Recargas del período", "Suma de recargas dentro del período"],
+  ["Valor del período", "Promedio por carga", "Promedio de las cargas del período"],
+  ["Valor del período", "Mayor carga", "Mayor carga individual del período"],
+  ["Actividad", "Días desde la última compra", "Cuántos días pasaron desde su última carga"],
 ] as const;
 
 const inputClass = "h-9 w-full rounded-lg border border-zinc-700 bg-zinc-950 px-3 text-xs text-zinc-100 outline-none transition placeholder:text-zinc-600 focus:border-emerald-600 focus:ring-2 focus:ring-emerald-500/10";
@@ -328,18 +294,10 @@ function ConditionsHelpModal({
           aria-labelledby="meta-audience-conditions-help-title"
           className="flex max-h-[calc(100dvh-1.5rem)] w-full max-w-4xl flex-col overflow-hidden rounded-2xl border border-zinc-700 bg-zinc-950 shadow-2xl shadow-black/60"
         >
-          <header className="flex shrink-0 items-start justify-between gap-4 border-b border-zinc-800 px-4 py-4 sm:px-5">
-            <div>
-              <p className="text-[10px] font-semibold uppercase tracking-[0.18em] text-emerald-300">
-                Ayuda de segmentación
-              </p>
-              <h2 id="meta-audience-conditions-help-title" className="mt-1 text-base font-semibold text-zinc-100">
-                Cómo funcionan las condiciones
-              </h2>
-              <p className="mt-1 max-w-2xl text-xs leading-relaxed text-zinc-400">
-                Cada condición compara una métrica con un valor. Si agregás varias, la persona debe cumplirlas todas porque se unen con “Y”.
-              </p>
-            </div>
+          <header className="flex shrink-0 items-center justify-between gap-4 border-b border-zinc-800 px-4 py-3 sm:px-5">
+            <h2 id="meta-audience-conditions-help-title" className="text-sm font-semibold text-zinc-100">
+              Guía de condiciones
+            </h2>
             <button
               type="button"
               aria-label="Cerrar ayuda de condiciones"
@@ -351,63 +309,29 @@ function ConditionsHelpModal({
           </header>
 
           <div className="min-h-0 flex-1 overflow-y-auto px-4 py-4 sm:px-5">
-            <div className="rounded-xl border border-sky-900/60 bg-sky-950/20 p-3 text-xs leading-relaxed text-sky-100">
-              <span className="font-semibold">La condición base también se aplica.</span>{" "}
-              “Todas”, “Primeras” o “Recargas” determina qué actividad del período activa el segmento. Las condiciones de esta sección se suman a esa base.
-            </div>
-
-            <div className="mt-4 grid gap-3 lg:grid-cols-2">
-              {CONDITION_HELP_GROUPS.map((group) => (
-                <article key={group.title} className="rounded-xl border border-zinc-800 bg-zinc-900/45 p-3">
-                  <h3 className="text-sm font-semibold text-zinc-100">{group.title}</h3>
-                  <p className="mt-1 text-[11px] leading-relaxed text-zinc-500">{group.description}</p>
-                  <dl className="mt-3 space-y-2">
-                    {group.items.map(([term, detail]) => (
-                      <div key={term} className="border-t border-zinc-800/80 pt-2 first:border-0 first:pt-0">
-                        <dt className="text-xs font-medium text-zinc-200">{term}</dt>
-                        <dd className="mt-0.5 text-[11px] leading-relaxed text-zinc-500">{detail}</dd>
-                      </div>
+            <div className="overflow-hidden rounded-xl border border-zinc-800">
+              <div className="overflow-x-auto">
+                <table className="min-w-[760px] w-full text-left text-xs">
+                  <thead className="bg-zinc-900 text-[10px] uppercase tracking-[0.08em] text-zinc-500">
+                    <tr>
+                      <th className="px-3 py-2.5">Grupo</th>
+                      <th className="px-3 py-2.5">Condición</th>
+                      <th className="px-3 py-2.5">Significado</th>
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y divide-zinc-800 bg-zinc-950/30">
+                    {CONDITION_HELP_ROWS.map(([group, condition, meaning]) => (
+                      <tr key={condition}>
+                        <td className="whitespace-nowrap px-3 py-2.5 font-medium text-emerald-300">{group}</td>
+                        <td className="px-3 py-2.5 font-medium text-zinc-200">{condition}</td>
+                        <td className="px-3 py-2.5 text-zinc-400">{meaning}</td>
+                      </tr>
                     ))}
-                  </dl>
-                </article>
-              ))}
-            </div>
-
-            <div className="mt-4 rounded-xl border border-zinc-800 bg-zinc-900/45 p-3">
-              <h3 className="text-sm font-semibold text-zinc-100">Operadores</h3>
-              <div className="mt-3 grid gap-2 sm:grid-cols-2 lg:grid-cols-3">
-                {CONDITION_HELP_OPERATORS.map(([operator, detail]) => (
-                  <div key={operator} className="rounded-lg border border-zinc-800 bg-zinc-950/45 px-3 py-2">
-                    <p className="text-xs font-medium text-zinc-200">{operator}</p>
-                    <p className="mt-0.5 text-[11px] leading-relaxed text-zinc-500">{detail}</p>
-                  </div>
-                ))}
+                  </tbody>
+                </table>
               </div>
-              <p className="mt-2 text-[11px] leading-relaxed text-zinc-500">
-                Cada métrica muestra solamente los operadores que admite. Por ejemplo, “Top %” no se ofrece para recencia ni para todos los conteos.
-              </p>
-            </div>
-
-            <div className="mt-4 rounded-xl border border-amber-900/60 bg-amber-950/20 p-3">
-              <p className="text-xs font-semibold text-amber-200">Valor del resumen</p>
-              <p className="mt-1 text-[11px] leading-relaxed text-zinc-300">
-                La última columna de la tabla usa la métrica elegida en “Resumen económico”. Sirve para leer y resumir el segmento; no cambia quién lo integra. En una audiencia basada en valor, “Valor individual para Meta” decide por separado qué monto se escribe en el CSV.
-              </p>
-            </div>
-
-            <div className="mt-4 rounded-xl border border-emerald-900/60 bg-emerald-950/20 p-3">
-              <p className="text-xs font-semibold text-emerald-200">Ejemplo</p>
-              <p className="mt-1 text-[11px] leading-relaxed text-zinc-300">
-                “Valor cargado en el período ≥ 100.000” Y “Días desde la última compra ≤ 30” incluye personas que cargaron al menos 100.000 en las fechas elegidas y cuya última carga fue hace 30 días o menos.
-              </p>
             </div>
           </div>
-
-          <footer className="flex shrink-0 justify-end border-t border-zinc-800 px-4 py-3 sm:px-5">
-            <button type="button" onClick={onClose} className="ui-button h-8 border border-zinc-700 bg-zinc-800 px-4 text-xs text-zinc-200 hover:bg-zinc-700">
-              Entendido
-            </button>
-          </footer>
         </section>
       </div>
     </ModalPortal>
