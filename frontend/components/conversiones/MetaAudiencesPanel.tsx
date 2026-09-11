@@ -3,6 +3,7 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import type { DateRange } from "@/components/conversiones/DateRangeFilter";
 import CustomSelect from "@/components/ui/CustomSelect";
+import ModalPortal from "@/components/ui/ModalPortal";
 import type { MetaAudienceBuyersRequest } from "@/lib/metaAudienceDb";
 import {
   META_AUDIENCE_FIELDS,
@@ -48,6 +49,59 @@ const SCOPE_OPTIONS = [
   { value: "all", label: "Primeras cargas y recargas" },
   { value: "first", label: "Solo primeras cargas" },
   { value: "repeat", label: "Solo recargas" },
+] as const;
+
+const CONDITION_HELP_GROUPS = [
+  {
+    title: "Historial de cargas",
+    description: "Considera todas las compras conocidas hasta el momento de la consulta.",
+    items: [
+      ["Cantidad histórica de cargas", "Cantidad total de primeras cargas y recargas."],
+      ["Primeras cargas históricas", "Cantidad de eventos registrados explícitamente como primera carga."],
+      ["Recargas históricas", "Cantidad total de eventos registrados como recarga."],
+    ],
+  },
+  {
+    title: "Actividad del período",
+    description: "Considera solamente las compras realizadas entre las fechas seleccionadas.",
+    items: [
+      ["Cantidad de cargas en el período", "Cantidad de primeras cargas y recargas dentro del período."],
+      ["Primeras cargas en el período", "Cantidad de primeras cargas dentro del período."],
+      ["Recargas en el período", "Cantidad de recargas dentro del período."],
+    ],
+  },
+  {
+    title: "Importes",
+    description: "Permite comparar montos históricos o montos correspondientes al período.",
+    items: [
+      ["Valor histórico cargado", "Suma de todas las cargas conocidas de la persona."],
+      ["Promedio histórico por carga", "Valor histórico cargado dividido por la cantidad de cargas."],
+      ["Mayor carga histórica", "Importe de la carga individual más grande del historial."],
+      ["Primera carga histórica", "Importe de la primera compra histórica registrada explícitamente como primera carga."],
+      ["Valor cargado en el período", "Suma de primeras cargas y recargas dentro del período."],
+      ["Primeras cargas del período", "Suma de los importes de primeras cargas dentro del período."],
+      ["Recargas del período", "Suma de los importes de recargas dentro del período."],
+      ["Promedio por carga en el período", "Promedio de las cargas realizadas dentro del período."],
+      ["Mayor carga del período", "Importe de la carga individual más grande del período."],
+    ],
+  },
+  {
+    title: "Recencia",
+    description: "Mide cuánto tiempo pasó desde la actividad más reciente.",
+    items: [
+      ["Días desde la última compra", "Cantidad de días completos desde la última carga histórica."],
+    ],
+  },
+] as const;
+
+const CONDITION_HELP_OPERATORS = [
+  ["Mayor que", "El valor debe superar el límite."],
+  ["Mayor o igual", "El valor puede coincidir con el límite o superarlo."],
+  ["Menor que", "El valor debe quedar por debajo del límite."],
+  ["Menor o igual", "El valor puede coincidir con el límite o quedar por debajo."],
+  ["Igual a", "El valor debe coincidir exactamente."],
+  ["Entre", "Incluye ambos extremos del rango."],
+  ["Top %", "Selecciona el porcentaje superior de compradores e incluye los empates del límite."],
 ] as const;
 
 const inputClass = "h-9 w-full rounded-lg border border-zinc-700 bg-zinc-950 px-3 text-xs text-zinc-100 outline-none transition placeholder:text-zinc-600 focus:border-emerald-600 focus:ring-2 focus:ring-emerald-500/10";
@@ -241,6 +295,125 @@ function RuleRow({
   );
 }
 
+function ConditionsHelpModal({
+  open,
+  onClose,
+}: {
+  open: boolean;
+  onClose: () => void;
+}) {
+  useEffect(() => {
+    if (!open) return;
+    const closeOnEscape = (event: KeyboardEvent) => {
+      if (event.key === "Escape") onClose();
+    };
+    window.addEventListener("keydown", closeOnEscape);
+    return () => window.removeEventListener("keydown", closeOnEscape);
+  }, [onClose, open]);
+
+  if (!open) return null;
+
+  return (
+    <ModalPortal>
+      <div
+        className="fixed inset-0 z-[70] flex items-center justify-center bg-black/75 p-3 backdrop-blur-[2px] sm:p-4"
+        role="presentation"
+        onMouseDown={(event) => {
+          if (event.target === event.currentTarget) onClose();
+        }}
+      >
+        <section
+          role="dialog"
+          aria-modal="true"
+          aria-labelledby="meta-audience-conditions-help-title"
+          className="flex max-h-[calc(100dvh-1.5rem)] w-full max-w-4xl flex-col overflow-hidden rounded-2xl border border-zinc-700 bg-zinc-950 shadow-2xl shadow-black/60"
+        >
+          <header className="flex shrink-0 items-start justify-between gap-4 border-b border-zinc-800 px-4 py-4 sm:px-5">
+            <div>
+              <p className="text-[10px] font-semibold uppercase tracking-[0.18em] text-emerald-300">
+                Ayuda de segmentación
+              </p>
+              <h2 id="meta-audience-conditions-help-title" className="mt-1 text-base font-semibold text-zinc-100">
+                Cómo funcionan las condiciones
+              </h2>
+              <p className="mt-1 max-w-2xl text-xs leading-relaxed text-zinc-400">
+                Cada condición compara una métrica con un valor. Si agregás varias, la persona debe cumplirlas todas porque se unen con “Y”.
+              </p>
+            </div>
+            <button
+              type="button"
+              aria-label="Cerrar ayuda de condiciones"
+              onClick={onClose}
+              className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg border border-zinc-700 text-lg text-zinc-400 transition hover:bg-zinc-800 hover:text-zinc-100"
+            >
+              ×
+            </button>
+          </header>
+
+          <div className="min-h-0 flex-1 overflow-y-auto px-4 py-4 sm:px-5">
+            <div className="rounded-xl border border-sky-900/60 bg-sky-950/20 p-3 text-xs leading-relaxed text-sky-100">
+              <span className="font-semibold">La condición base también se aplica.</span>{" "}
+              “Todas”, “Primeras” o “Recargas” determina qué actividad del período activa el segmento. Las condiciones de esta sección se suman a esa base.
+            </div>
+
+            <div className="mt-4 grid gap-3 lg:grid-cols-2">
+              {CONDITION_HELP_GROUPS.map((group) => (
+                <article key={group.title} className="rounded-xl border border-zinc-800 bg-zinc-900/45 p-3">
+                  <h3 className="text-sm font-semibold text-zinc-100">{group.title}</h3>
+                  <p className="mt-1 text-[11px] leading-relaxed text-zinc-500">{group.description}</p>
+                  <dl className="mt-3 space-y-2">
+                    {group.items.map(([term, detail]) => (
+                      <div key={term} className="border-t border-zinc-800/80 pt-2 first:border-0 first:pt-0">
+                        <dt className="text-xs font-medium text-zinc-200">{term}</dt>
+                        <dd className="mt-0.5 text-[11px] leading-relaxed text-zinc-500">{detail}</dd>
+                      </div>
+                    ))}
+                  </dl>
+                </article>
+              ))}
+            </div>
+
+            <div className="mt-4 rounded-xl border border-zinc-800 bg-zinc-900/45 p-3">
+              <h3 className="text-sm font-semibold text-zinc-100">Operadores</h3>
+              <div className="mt-3 grid gap-2 sm:grid-cols-2 lg:grid-cols-3">
+                {CONDITION_HELP_OPERATORS.map(([operator, detail]) => (
+                  <div key={operator} className="rounded-lg border border-zinc-800 bg-zinc-950/45 px-3 py-2">
+                    <p className="text-xs font-medium text-zinc-200">{operator}</p>
+                    <p className="mt-0.5 text-[11px] leading-relaxed text-zinc-500">{detail}</p>
+                  </div>
+                ))}
+              </div>
+              <p className="mt-2 text-[11px] leading-relaxed text-zinc-500">
+                Cada métrica muestra solamente los operadores que admite. Por ejemplo, “Top %” no se ofrece para recencia ni para todos los conteos.
+              </p>
+            </div>
+
+            <div className="mt-4 rounded-xl border border-amber-900/60 bg-amber-950/20 p-3">
+              <p className="text-xs font-semibold text-amber-200">Valor del resumen</p>
+              <p className="mt-1 text-[11px] leading-relaxed text-zinc-300">
+                La última columna de la tabla usa la métrica elegida en “Resumen económico”. Sirve para leer y resumir el segmento; no cambia quién lo integra. En una audiencia basada en valor, “Valor individual para Meta” decide por separado qué monto se escribe en el CSV.
+              </p>
+            </div>
+
+            <div className="mt-4 rounded-xl border border-emerald-900/60 bg-emerald-950/20 p-3">
+              <p className="text-xs font-semibold text-emerald-200">Ejemplo</p>
+              <p className="mt-1 text-[11px] leading-relaxed text-zinc-300">
+                “Valor cargado en el período ≥ 100.000” Y “Días desde la última compra ≤ 30” incluye personas que cargaron al menos 100.000 en las fechas elegidas y cuya última carga fue hace 30 días o menos.
+              </p>
+            </div>
+          </div>
+
+          <footer className="flex shrink-0 justify-end border-t border-zinc-800 px-4 py-3 sm:px-5">
+            <button type="button" onClick={onClose} className="ui-button h-8 border border-zinc-700 bg-zinc-800 px-4 text-xs text-zinc-200 hover:bg-zinc-700">
+              Entendido
+            </button>
+          </footer>
+        </section>
+      </div>
+    </ModalPortal>
+  );
+}
+
 export default function MetaAudiencesPanel({ currency, loadBuyers }: Props) {
   const initialRange = useMemo(() => recentDateRange(30), []);
   const [dateRange, setDateRange] = useState<DateRange>(initialRange);
@@ -250,6 +423,7 @@ export default function MetaAudiencesPanel({ currency, loadBuyers }: Props) {
   const [buyers, setBuyers] = useState<MetaAudiencePerson[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [conditionsHelpOpen, setConditionsHelpOpen] = useState(false);
   const [audienceType, setAudienceType] = useState<MetaAudienceType>("segmented");
   const [purchaseScope, setPurchaseScope] = useState<MetaAudiencePurchaseScope>("all");
   const [rules, setRules] = useState<MetaAudienceRule[]>(createInitialMetaAudienceRules);
@@ -350,6 +524,8 @@ export default function MetaAudiencesPanel({ currency, loadBuyers }: Props) {
     downloadCsv(csv, `audiencia-meta-${typePart}-${currency.toLowerCase()}-${safeDateForFilename(dateRange)}.csv`);
   };
 
+  const closeConditionsHelp = useCallback(() => setConditionsHelpOpen(false), []);
+
   return (
     <section className="rounded-xl border border-zinc-800 bg-zinc-900/50 p-3 sm:p-4">
       <div className="flex flex-col gap-3 border-b border-zinc-800 pb-4 sm:flex-row sm:items-start sm:justify-between">
@@ -423,6 +599,17 @@ export default function MetaAudiencesPanel({ currency, loadBuyers }: Props) {
           ))}
         </div>
         {evaluation.errors.length > 0 ? <div className="mt-3 rounded-lg border border-red-900/60 bg-red-950/25 px-3 py-2 text-[11px] text-red-300" role="alert">{evaluation.errors.map((message) => <p key={message}>{message}</p>)}</div> : null}
+        <div className="mt-3 flex justify-end">
+          <button
+            type="button"
+            aria-haspopup="dialog"
+            onClick={() => setConditionsHelpOpen(true)}
+            className="inline-flex items-center gap-2 rounded-lg px-2 py-1 text-[11px] text-zinc-400 transition hover:bg-zinc-900 hover:text-zinc-200"
+          >
+            <span aria-hidden className="flex h-5 w-5 items-center justify-center rounded-full border border-zinc-600 text-[11px] font-bold text-emerald-300">i</span>
+            Entender métricas y operadores
+          </button>
+        </div>
       </div>
 
       <div className={`mt-5 grid gap-3 ${audienceType === "value_based" ? "md:grid-cols-2" : "md:grid-cols-1"}`}>
@@ -481,6 +668,8 @@ export default function MetaAudiencesPanel({ currency, loadBuyers }: Props) {
         <div><p className="text-xs font-semibold text-zinc-200">9. CSV</p><p className="mt-1 text-[11px] leading-relaxed text-zinc-500">El archivo incluye únicamente las personas exportables del preview y mantiene {currency} separado.</p></div>
         <button type="button" onClick={handleExport} disabled={!canExport || loading} className="ui-button h-9 bg-emerald-600 px-4 text-xs font-semibold text-white hover:bg-emerald-500 disabled:opacity-45">Descargar CSV ({exportStats.exportablePeople.length.toLocaleString("es-AR")})</button>
       </div>
+
+      <ConditionsHelpModal open={conditionsHelpOpen} onClose={closeConditionsHelp} />
     </section>
   );
 }
