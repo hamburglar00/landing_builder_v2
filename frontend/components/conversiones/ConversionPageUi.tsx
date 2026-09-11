@@ -11,6 +11,7 @@ export type ConversionTabId =
   | "seguimiento"
   | "tabla"
   | "estadisticas"
+  | "audiencias"
   | "desempeno"
   | "configuracion"
   | "inbox"
@@ -72,6 +73,16 @@ export function StatsTabIcon() {
       <rect x="6" y="11" width="3" height="6" rx="1" />
       <rect x="11" y="8" width="3" height="9" rx="1" />
       <rect x="16" y="5" width="3" height="12" rx="1" />
+    </svg>
+  );
+}
+
+export function AudiencesTabIcon() {
+  return (
+    <svg className="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2.1}>
+      <circle cx="9" cy="8" r="3" />
+      <circle cx="17" cy="10" r="2" />
+      <path strokeLinecap="round" strokeLinejoin="round" d="M3.5 19a5.5 5.5 0 0 1 11 0M14 16a4 4 0 0 1 6.5 3" />
     </svg>
   );
 }
@@ -143,6 +154,7 @@ function iconForTab(tab: ConversionTabId): ReactNode {
   if (tab === "seguimiento") return <TrackingTabIcon />;
   if (tab === "tabla") return <TableTabIcon />;
   if (tab === "estadisticas") return <StatsTabIcon />;
+  if (tab === "audiencias") return <AudiencesTabIcon />;
   if (tab === "desempeno") return <PerformanceTabIcon />;
   if (tab === "configuracion") return <GearTabIcon />;
   if (tab === "inbox") return <InboxTabIcon />;

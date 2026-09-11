@@ -103,20 +103,24 @@ const StatsPanel = dynamic(() => import("@/components/conversiones/StatsPanel"),
 const GerenciasPerformancePanel = dynamic(() => import("@/components/conversiones/GerenciasPerformancePanel"), {
   loading: () => <PanelSkeleton title="Cargando desempeño..." />,
 });
+const MetaAudiencesPanel = dynamic(() => import("@/components/conversiones/MetaAudiencesPanel"), {
+  loading: () => <PanelSkeleton title="Cargando audiencias..." />,
+});
 
-type Tab = "funnel" | "seguimiento" | "tabla" | "estadisticas" | "desempeno" | "configuracion" | "inbox" | "logs";
+type Tab = "funnel" | "seguimiento" | "tabla" | "estadisticas" | "audiencias" | "desempeno" | "configuracion" | "inbox" | "logs";
 type GerenciaFilterOption = {
   value: string;
   label: string;
 };
 
-const TAB_ORDER_BASE: Tab[] = ["funnel", "tabla", "estadisticas", "desempeno", "configuracion"];
+const TAB_ORDER_BASE: Tab[] = ["funnel", "tabla", "estadisticas", "audiencias", "desempeno", "configuracion"];
 
 const TAB_LABELS: Record<Tab, string> = {
   funnel: "Funnel",
   seguimiento: "Seguimiento",
   tabla: "Tabla",
   estadisticas: "Estadísticas",
+  audiencias: "Audiencias Meta",
   desempeno: "Desempeño",
   configuracion: "Configuracion",
   inbox: "Inbox",
@@ -130,6 +134,7 @@ const URL_TABS = new Set<Tab>([
   "seguimiento",
   "tabla",
   "estadisticas",
+  "audiencias",
   "desempeno",
   "configuracion",
   "inbox",
@@ -1481,6 +1486,18 @@ export default function DashboardConversionesPage() {
     return filterConversionsByCurrency(rows, currencyScope);
   }, [currencyScope]);
 
+  const fetchAudienceConversions = useCallback(async (range: DateRange | null) => {
+    const currentUserId = userIdRef.current;
+    if (!currentUserId) return [];
+    const rows = await dashboardConversionPageDataSource.fetchReportingConversions({
+      viewerId: currentUserId,
+      range: range ?? undefined,
+    });
+    return filterConversionsByCurrency(rows, currencyScope).filter(
+      (row) => !String(row.test_event_code ?? "").trim(),
+    );
+  }, [currencyScope]);
+
   const fetchPerformanceAvailability = useCallback(async (range: FetchDateRange) => {
     const currentUserId = userIdRef.current;
     if (!currentUserId) return [];
@@ -1594,7 +1611,7 @@ export default function DashboardConversionesPage() {
       />
 
       {/* Date filter + global actions */}
-      {(tab === "funnel" || tab === "seguimiento" || tab === "tabla" || tab === "estadisticas" || tab === "desempeno" || tab === "inbox" || tab === "logs") && (
+      {(tab === "funnel" || tab === "seguimiento" || tab === "tabla" || tab === "estadisticas" || tab === "audiencias" || tab === "desempeno" || tab === "inbox" || tab === "logs") && (
         <div className="flex flex-col gap-2 pt-1 sm:flex-row sm:items-center sm:justify-between">
           <div className="grid grid-cols-2 gap-2 sm:flex sm:items-center">
             {(tab === "funnel" || tab === "tabla" || tab === "estadisticas" || tab === "inbox" || tab === "logs") && (
@@ -1922,6 +1939,19 @@ export default function DashboardConversionesPage() {
             />
           )}
         </section>
+      )}
+
+      {/* TAB: AUDIENCIAS META */}
+      {tab === "audiencias" && (
+        isAllCurrencies ? (
+          <SingleCurrencyRequired title="Elegí ARS o PYG para crear una audiencia" />
+        ) : (
+          <MetaAudiencesPanel
+            currency={reportingCurrency}
+            dateRange={dateRange}
+            loadConversions={fetchAudienceConversions}
+          />
+        )
       )}
 
       {/* TAB: DESEMPENO */}
