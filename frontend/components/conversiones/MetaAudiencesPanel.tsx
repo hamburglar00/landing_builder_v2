@@ -19,9 +19,17 @@ import {
 
 type Props = {
   currency: string;
-  dateRange: DateRange | null;
   loadConversions: (range: DateRange | null) => Promise<ConversionRow[]>;
 };
+
+type PeriodPreset = 30 | 60 | 90 | 180 | "custom";
+
+const PERIOD_PRESETS: ReadonlyArray<{ days: 30 | 60 | 90 | 180; label: string }> = [
+  { days: 30, label: "Últimos 30 días" },
+  { days: 60, label: "Últimos 60 días" },
+  { days: 90, label: "Últimos 90 días" },
+  { days: 180, label: "Últimos 180 días" },
+];
 
 const inputClass =
   "h-9 w-full rounded-lg border border-zinc-700 bg-zinc-950 px-3 text-xs text-zinc-100 outline-none transition placeholder:text-zinc-600 focus:border-emerald-600 focus:ring-2 focus:ring-emerald-500/10";
@@ -42,6 +50,37 @@ function formatPeriod(range: DateRange | null): string {
     year: "numeric",
   });
   return `${formatter.format(range.start)} al ${formatter.format(range.end)}`;
+}
+
+function startOfDay(date: Date): Date {
+  return new Date(date.getFullYear(), date.getMonth(), date.getDate());
+}
+
+function endOfDay(date: Date): Date {
+  return new Date(date.getFullYear(), date.getMonth(), date.getDate(), 23, 59, 59, 999);
+}
+
+function recentDateRange(days: number, now = new Date()): DateRange {
+  const start = startOfDay(now);
+  start.setDate(start.getDate() - (days - 1));
+  return { start, end: endOfDay(now) };
+}
+
+function dateInputValue(date: Date): string {
+  return [
+    date.getFullYear(),
+    String(date.getMonth() + 1).padStart(2, "0"),
+    String(date.getDate()).padStart(2, "0"),
+  ].join("-");
+}
+
+function rangeFromDateInputs(start: string, end: string): DateRange | null {
+  if (!start || !end) return null;
+  const parsedStart = new Date(`${start}T00:00:00`);
+  const parsedEnd = new Date(`${end}T23:59:59.999`);
+  if (!Number.isFinite(parsedStart.getTime()) || !Number.isFinite(parsedEnd.getTime())) return null;
+  if (parsedStart > parsedEnd) return null;
+  return { start: parsedStart, end: parsedEnd };
 }
 
 function parseOptionalAmount(value: string): number | null {
@@ -118,7 +157,11 @@ function SummaryCard({ label, value, detail }: { label: string; value: string; d
   );
 }
 
-export default function MetaAudiencesPanel({ currency, dateRange, loadConversions }: Props) {
+export default function MetaAudiencesPanel({ currency, loadConversions }: Props) {
+  const [dateRange, setDateRange] = useState<DateRange>(() => recentDateRange(30));
+  const [periodPreset, setPeriodPreset] = useState<PeriodPreset>(30);
+  const [draftStartDate, setDraftStartDate] = useState(() => dateInputValue(recentDateRange(30).start));
+  const [draftEndDate, setDraftEndDate] = useState(() => dateInputValue(recentDateRange(30).end));
   const [rows, setRows] = useState<ConversionRow[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -130,6 +173,30 @@ export default function MetaAudiencesPanel({ currency, dateRange, loadConversion
   const [selectedFields, setSelectedFields] = useState<MetaAudienceField[]>(
     RECOMMENDED_META_AUDIENCE_FIELDS,
   );
+
+  const draftDateRange = useMemo(
+    () => rangeFromDateInputs(draftStartDate, draftEndDate),
+    [draftEndDate, draftStartDate],
+  );
+  const invalidDateRange = draftDateRange == null;
+  const periodChanged = !invalidDateRange && (
+    dateInputValue(dateRange.start) !== draftStartDate ||
+    dateInputValue(dateRange.end) !== draftEndDate
+  );
+
+  const applyPeriodPreset = (days: 30 | 60 | 90 | 180) => {
+    const nextRange = recentDateRange(days);
+    setPeriodPreset(days);
+    setDraftStartDate(dateInputValue(nextRange.start));
+    setDraftEndDate(dateInputValue(nextRange.end));
+    setDateRange(nextRange);
+  };
+
+  const applyCustomPeriod = () => {
+    if (!draftDateRange) return;
+    setPeriodPreset("custom");
+    setDateRange(draftDateRange);
+  };
 
   const refresh = useCallback(async () => {
     setLoading(true);
@@ -278,7 +345,7 @@ export default function MetaAudiencesPanel({ currency, dateRange, loadConversion
           <div>
             <p className="text-xs font-semibold text-zinc-200">2. Periodo y cálculo</p>
             <p className="mt-0.5 text-[11px] text-zinc-500">
-              El periodo se controla con el selector superior de CONVERSIONES.
+              Elegí un periodo rápido o definí las fechas exactas desde el calendario.
             </p>
           </div>
           <div className="flex flex-wrap gap-2 text-[10px]">
@@ -289,6 +356,77 @@ export default function MetaAudiencesPanel({ currency, dateRange, loadConversion
               {currency}
             </span>
           </div>
+        </div>
+
+        <div className="mt-4 rounded-xl border border-zinc-800 bg-zinc-950/35 p-3">
+          <div className="flex flex-wrap gap-1.5">
+            {PERIOD_PRESETS.map((preset) => {
+              const selected = periodPreset === preset.days;
+              return (
+                <button
+                  key={preset.days}
+                  type="button"
+                  onClick={() => applyPeriodPreset(preset.days)}
+                  aria-pressed={selected}
+                  className={`rounded-lg border px-2.5 py-1.5 text-[10px] font-medium transition ${
+                    selected
+                      ? "border-emerald-600/60 bg-emerald-500/10 text-emerald-300"
+                      : "border-zinc-800 bg-zinc-900/60 text-zinc-400 hover:border-zinc-700 hover:text-zinc-200"
+                  }`}
+                >
+                  {preset.label}
+                </button>
+              );
+            })}
+            {periodPreset === "custom" ? (
+              <span className="rounded-lg border border-sky-700/50 bg-sky-950/25 px-2.5 py-1.5 text-[10px] font-medium text-sky-300">
+                Personalizado
+              </span>
+            ) : null}
+          </div>
+
+          <div className="mt-3 grid gap-3 sm:grid-cols-[minmax(0,1fr)_minmax(0,1fr)_auto] sm:items-end">
+            <label className="block">
+              <span className="mb-1 block text-xs text-zinc-400">Desde</span>
+              <input
+                type="date"
+                value={draftStartDate}
+                max={draftEndDate || undefined}
+                onChange={(event) => {
+                  setDraftStartDate(event.target.value);
+                  setPeriodPreset("custom");
+                }}
+                className={inputClass}
+              />
+            </label>
+            <label className="block">
+              <span className="mb-1 block text-xs text-zinc-400">Hasta</span>
+              <input
+                type="date"
+                value={draftEndDate}
+                min={draftStartDate || undefined}
+                max={dateInputValue(new Date())}
+                onChange={(event) => {
+                  setDraftEndDate(event.target.value);
+                  setPeriodPreset("custom");
+                }}
+                className={inputClass}
+              />
+            </label>
+            <button
+              type="button"
+              onClick={applyCustomPeriod}
+              disabled={invalidDateRange || !periodChanged}
+              className="ui-button h-9 border border-zinc-700 bg-zinc-800 px-3 text-zinc-200 hover:bg-zinc-700 disabled:opacity-45"
+            >
+              Aplicar periodo
+            </button>
+          </div>
+          {invalidDateRange ? (
+            <p className="mt-2 text-[11px] text-red-300" role="alert">
+              Seleccioná una fecha desde y hasta válidas.
+            </p>
+          ) : null}
         </div>
 
         <div className="mt-4 grid gap-3 md:grid-cols-2">

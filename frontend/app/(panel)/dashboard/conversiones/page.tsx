@@ -1611,7 +1611,7 @@ export default function DashboardConversionesPage() {
       />
 
       {/* Date filter + global actions */}
-      {(tab === "funnel" || tab === "seguimiento" || tab === "tabla" || tab === "estadisticas" || tab === "audiencias" || tab === "desempeno" || tab === "inbox" || tab === "logs") && (
+      {(tab === "funnel" || tab === "seguimiento" || tab === "tabla" || tab === "estadisticas" || tab === "desempeno" || tab === "inbox" || tab === "logs") && (
         <div className="flex flex-col gap-2 pt-1 sm:flex-row sm:items-center sm:justify-between">
           <div className="grid grid-cols-2 gap-2 sm:flex sm:items-center">
             {(tab === "funnel" || tab === "tabla" || tab === "estadisticas" || tab === "inbox" || tab === "logs") && (
@@ -1948,7 +1948,6 @@ export default function DashboardConversionesPage() {
         ) : (
           <MetaAudiencesPanel
             currency={reportingCurrency}
-            dateRange={dateRange}
             loadConversions={fetchAudienceConversions}
           />
         )
