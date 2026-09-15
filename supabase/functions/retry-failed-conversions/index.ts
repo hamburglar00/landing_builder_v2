@@ -34,6 +34,7 @@ const DUPLICATE_LEAD_LOG_BACKFILL_LIMIT = 75;
 const META_CAPI_MAX_EVENT_AGE_SECONDS = 7 * 24 * 60 * 60;
 const MAX_CONTACT_LEAD_CAPI_RETRIES = 6;
 const MIN_CONTACT_LEAD_RETRY_INTERVAL_MS = 5 * 60 * 1000;
+const PURCHASE_CAPI_RETRYABLE_STATUSES = ["", "error"];
 const CONTACT_LEAD_CAPI_RETRY_SELECT = `
   id, landing_id, user_id, landing_name,
   phone, email, fn, ln, ct, st, zip, country,
@@ -157,16 +158,16 @@ Deno.serve(async (req) => {
         "id, landing_id, user_id, phone, source_platform, ctwa_clid, pixel_id, dataset_id, meta_pixel_id, pixel_attribution_source, pixel_attribution_conversion_id, contact_event_id, contact_payload_raw, lead_payload_raw, purchase_payload_raw, promo_code, purchase_event_id, purchase_event_time, purchase_type, purchase_capi_route, purchase_capi_route_reason, valor, currency, event_source_url, email, fn, ln, ct, st, zip, country, fbp, fbc, from_meta_ads, client_ip, agent_user, external_id, observaciones",
       )
       .eq("estado", "purchase")
-      .not(
-        "purchase_status_capi",
-        "in",
-        "(enviado,skipped_old_event_time,skipped_chatrace_capi_disabled,skipped_not_meta_ads,skipped_purchase_capi_disabled,skipped_first_purchase_capi_disabled,skipped_repeat_purchase_capi_disabled,skipped_purchase_below_min_amount)",
-      )
+      .in("purchase_status_capi", PURCHASE_CAPI_RETRYABLE_STATUSES)
       .gt("valor", 0)
       .order("created_at", { ascending: true })
       .limit(100);
 
     if (error) {
+      console.error(
+        "[retry-failed-conversions] purchase retry selection failed",
+        error.message,
+      );
       return new Response(
         JSON.stringify({ error: "Error al buscar conversiones" }),
         {

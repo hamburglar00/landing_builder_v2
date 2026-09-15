@@ -143,6 +143,9 @@ verify_jwt = false
 [functions.whatsapp-cloud-sync-health]
 verify_jwt = false
 
+[functions.whatsapp-cloud-worker]
+verify_jwt = false
+
 # Analytics Buckets is available to Supabase Pro plan.
 # [storage.analytics.buckets.my-warehouse]
 
