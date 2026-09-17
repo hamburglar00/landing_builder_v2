@@ -1,0 +1,77 @@
+{
+  "phase": "1A",
+  "status": "design_complete_no_implementation",
+  "baseCommit": "f3153676c0bbaccd29840f365b86f480920d7598",
+  "branch": "main",
+  "initialWorkingTree": "clean",
+  "filesCreated": [
+    "docs/security/phase-1a/README.md",
+    "docs/security/phase-1a/endpoints.md",
+    "docs/security/phase-1a/functions.md",
+    "docs/security/phase-1a/relations.md",
+    "docs/security/phase-1a/evidence.json",
+    "docs/security/phase-1a/review.json"
+  ],
+  "trackedFilesModified": [],
+  "deletions": [],
+  "stagedFiles": [],
+  "remoteApplicationDataRead": false,
+  "remoteWrites": 0,
+  "businessEndpointsInvoked": 0,
+  "deploys": 0,
+  "commits": 0,
+  "pushes": 0,
+  "validation": {
+    "applicationSuites": "Not rerun: no application changes. 446 is historical Phase 0 evidence only.",
+    "sourceAndEvidenceReview": "89 signatures, including 65 definers; 71 relations; 152 policies; 31 deployed Edge functions; nine Next routes.",
+    "documentChecks": "JSON parsing, UTF-8, no terminal blank lines/trailing whitespace, inventory completeness, unchanged tracked/index/HEAD, scoped secret/path scan.",
+    "auditScope": "Only the six newly created design artifacts; metadata provenance and source references reviewed. This is not a scan of production secrets or the entire Git history.",
+    "notAnOfficialHookRun": true,
+    "correctionDuringReview": "Removed extra terminal blank lines from three newly generated documentation files; no source file changed."
+  },
+  "env": {
+    "physicallyPresent": true,
+    "ignored": true,
+    "tracked": false,
+    "valuesRead": false,
+    "valuesCopied": false
+  },
+  "criticalNewFindings": [
+    "authenticated UPDATE profiles.role + own-row policy; constraint permits admin; no application trigger protects role",
+    "manual phone actions accept client-supplied user_id without user authentication",
+    "legacy get_home_overview_stats allows null auth.uid branch",
+    "gerencia_phones ALL policy has uncorrelated g.id=g.gerencia_id; authenticated SELECT true",
+    "settings.revalidate_secret selectable by authenticated"
+  ],
+  "notRemediated": [
+    "conversions anonymous/mixed ingress",
+    "42 application tables with anon/authenticated TRUNCATE",
+    "PUBLIC execution of internal SECURITY DEFINER routines",
+    "credentials returned by existing configuration reads",
+    "Lead concurrency duplication",
+    "CAPI retries duplication",
+    "deferred Lead duplication",
+    "pg_net PUBLIC grants"
+  ],
+  "gatesBeforeImplementation": [
+    "Hosted Data API schema and gateway configuration",
+    "Remote deployed bundle provenance against reviewed source",
+    "External legitimate caller census and authentication capability",
+    "Business-owner approval of access scope and secret-administration UX",
+    "Local tests of each privilege/guard transition and rollback",
+    "No alteration of business contracts, event payloads, identities, time, currency, attribution or deduplication"
+  ],
+  "finalWorkingTreeExpected": "Only these six untracked documentation files; existing tracked files/index unchanged.",
+  "artifactCredentials": "No values of real credentials or productive personal data collected; scoped scan passed on all six design artifacts.",
+  "finalDocumentAudit": {
+    "status": "passed",
+    "filesScanned": 6,
+    "findings": 0,
+    "inventoryConsistencyChecks": 12,
+    "trackedDiffCheck": "passed; no tracked changes",
+    "stagedDiffCheck": "passed; index unchanged",
+    "untrackedDocumentWhitespaceAndUtf8": "passed",
+    "applicationTestsExecuted": 0,
+    "note": "These are documentation checks, not security tests or remediation results."
+  }
+}
