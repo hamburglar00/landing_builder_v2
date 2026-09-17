@@ -1,0 +1,1 @@
+{"date":"2026-09-17","readOnly":true,"statementTimeout":"8s","lockTimeout":"1s","remoteApplicationCatalogUnchanged":true,"remotePlatformCatalogUnchanged":true,"sourceQueries":["scripts/phase0/bootstrap-catalog.sql","scripts/phase0/bootstrap-platform-catalog.sql","scripts/phase0/bootstrap-net-diagnostic.sql"],"applicationRowsRead":0,"remoteInvocations":0,"remoteWrites":0}

@@ -1,0 +1,91 @@
+{
+  "verdict": "Fase 0B bloqueada",
+  "reason": "Historical migration 20260325201000 calls setval with 0 on an empty table, below sequence minimum 1; changing this migration or inserting pre-schema fixtures is not authorized.",
+  "manifestSha256": "f4507cb9991c9db1741daa480ddc1d56468d87f3d5f377efabffcbbe2810dad5",
+  "manifestNote": "The tracking provider dependency was corrected after discovery/recovery. This changes only entries beyond the failing prefix. Both attempted prefixes match the final sealed manifest; its remaining order is not runtime validated.",
+  "attempts": [
+    {
+      "attempt": 1,
+      "complete": false,
+      "bootstrapMs": 41605,
+      "passed": 35,
+      "failed": 1,
+      "notRun": 232,
+      "failedVersion": "20260325201000",
+      "sqlstate": "22003",
+      "cleanup": "only runner-owned resources removed",
+      "executedPrefixMatchesFinalManifest": true
+    },
+    {
+      "attempt": 2,
+      "complete": false,
+      "bootstrapMs": 34752,
+      "passed": 35,
+      "failed": 1,
+      "notRun": 232,
+      "failedVersion": "20260325201000",
+      "sqlstate": "22003",
+      "cleanup": "only runner-owned resources removed",
+      "executedPrefixMatchesFinalManifest": true
+    }
+  ],
+  "completedReconstructions": 0,
+  "equalFinalFingerprints": null,
+  "structuralComparison": "blocked: no complete local schema",
+  "tests": {
+    "existing": {
+      "passed": 299,
+      "failed": 0,
+      "skipped": 1
+    },
+    "bootstrapSafety": {
+      "exitCode": 0,
+      "passed": 19,
+      "failed": 0,
+      "skipped": 0
+    },
+    "totalPassed": 318
+  },
+  "build": {
+    "command": "next build",
+    "syntheticSupabase": true,
+    "exitCode": 0,
+    "durationMs": 83684,
+    "timedOut": false,
+    "compiled": true,
+    "rawOutputPersisted": false
+  },
+  "typescript": {
+    "name": "typescript",
+    "exitCode": 0,
+    "durationMs": 72876.9497
+  },
+  "eslint": {
+    "exitCode": 0,
+    "errors": 0,
+    "warnings": 18
+  },
+  "remoteWrites": 0,
+  "deployed": false,
+  "committed": false,
+  "pushed": false,
+  "phase0CImplemented": false,
+  "phase1Implemented": false,
+  "integrity": {
+    "migrationFilesChecked": 268,
+    "hashMismatches": [],
+    "trackedFilesChanged": [
+      "supabase/migrations/20260427180000_remote_sync_placeholder.sql",
+      "supabase/migrations/20260427190000_remote_sync_placeholder.sql"
+    ],
+    "onlyAuthorizedHistoricalFilesChanged": true,
+    "originalArtifactsPreserved": 19
+  },
+  "security": {
+    "credentialInspection": "phase0b-credential-inspection.json",
+    "newArtifactsContainHistoricalBearer": false,
+    "preExistingTrackedFinding": "Public anon JWT in .env; unchanged and value not copied"
+  },
+  "historicalReport": true,
+  "supersededBy": "bootstrap-final-summary.json"
+}

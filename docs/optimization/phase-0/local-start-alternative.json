@@ -1,0 +1,237 @@
+{
+  "mode": "alternative-without-observability",
+  "cli": "2.75.0",
+  "docker": {
+    "cpus": 8,
+    "memoryBytes": 7205425152,
+    "version": "29.7.2"
+  },
+  "localOnly": true,
+  "linked": false,
+  "seedEnabled": false,
+  "migrationCount": 268,
+  "stages": [
+    {
+      "kind": "database-start",
+      "atMs": 751
+    },
+    {
+      "kind": "schema-bootstrap",
+      "atMs": 12597
+    },
+    {
+      "kind": "services-start",
+      "atMs": 44844
+    },
+    {
+      "kind": "healthy",
+      "atMs": 79740
+    }
+  ],
+  "snapshots": [
+    {
+      "atMs": 10026,
+      "containers": [
+        "supabase_db_[test-project]|Up 8 seconds (health: starting)"
+      ]
+    },
+    {
+      "atMs": 20030,
+      "containers": [
+        "supabase_db_[test-project]|Up 18 seconds (healthy)"
+      ]
+    },
+    {
+      "atMs": 30041,
+      "containers": [
+        "supabase_db_[test-project]|Up 28 seconds (healthy)"
+      ]
+    },
+    {
+      "atMs": 40055,
+      "containers": [
+        "supabase_db_[test-project]|Up 38 seconds (healthy)"
+      ]
+    },
+    {
+      "atMs": 50065,
+      "containers": [
+        "supabase_realtime_[test-project]|Created",
+        "supabase_inbucket_[test-project]|Up 1 second (health: starting)",
+        "supabase_auth_[test-project]|Up 3 seconds (health: starting)",
+        "supabase_kong_[test-project]|Up 4 seconds (health: starting)",
+        "supabase_db_[test-project]|Up 48 seconds (healthy)"
+      ]
+    },
+    {
+      "atMs": 60070,
+      "containers": [
+        "supabase_studio_[test-project]|Up 4 seconds (health: starting)",
+        "supabase_pg_meta_[test-project]|Up 5 seconds (health: starting)",
+        "supabase_edge_runtime_[test-project]|Up 6 seconds",
+        "supabase_storage_[test-project]|Up 7 seconds (health: starting)",
+        "supabase_rest_[test-project]|Up 9 seconds",
+        "supabase_realtime_[test-project]|Up 10 seconds (health: starting)",
+        "supabase_inbucket_[test-project]|Up 11 seconds (healthy)",
+        "supabase_auth_[test-project]|Up 13 seconds (healthy)",
+        "supabase_kong_[test-project]|Up 14 seconds (healthy)",
+        "supabase_db_[test-project]|Up 58 seconds (healthy)"
+      ]
+    },
+    {
+      "atMs": 70071,
+      "containers": [
+        "supabase_studio_[test-project]|Up 14 seconds (health: starting)",
+        "supabase_pg_meta_[test-project]|Up 15 seconds (healthy)",
+        "supabase_edge_runtime_[test-project]|Up 16 seconds",
+        "supabase_storage_[test-project]|Up 17 seconds (health: starting)",
+        "supabase_rest_[test-project]|Up 18 seconds",
+        "supabase_realtime_[test-project]|Up 20 seconds (health: starting)",
+        "supabase_inbucket_[test-project]|Up 21 seconds (healthy)",
+        "supabase_auth_[test-project]|Up 23 seconds (healthy)",
+        "supabase_kong_[test-project]|Up 24 seconds (healthy)",
+        "supabase_db_[test-project]|Up About a minute (healthy)"
+      ]
+    },
+    {
+      "atMs": 80078,
+      "containers": [
+        "supabase_studio_[test-project]|Up 24 seconds (healthy)",
+        "supabase_pg_meta_[test-project]|Up 25 seconds (healthy)",
+        "supabase_edge_runtime_[test-project]|Up 26 seconds",
+        "supabase_storage_[test-project]|Up 27 seconds (healthy)",
+        "supabase_rest_[test-project]|Up 28 seconds",
+        "supabase_realtime_[test-project]|Up 30 seconds (healthy)",
+        "supabase_inbucket_[test-project]|Up 31 seconds (healthy)",
+        "supabase_auth_[test-project]|Up 33 seconds (healthy)",
+        "supabase_kong_[test-project]|Up 34 seconds (healthy)",
+        "supabase_db_[test-project]|Up About a minute (healthy)"
+      ]
+    },
+    {
+      "container": "supabase_studio_[test-project]",
+      "state": "running",
+      "exitCode": 0,
+      "oomKilled": false,
+      "health": "healthy"
+    },
+    {
+      "container": "supabase_pg_meta_[test-project]",
+      "state": "running",
+      "exitCode": 0,
+      "oomKilled": false,
+      "health": "healthy"
+    },
+    {
+      "container": "supabase_edge_runtime_[test-project]",
+      "state": "running",
+      "exitCode": 0,
+      "oomKilled": false,
+      "health": null
+    },
+    {
+      "container": "supabase_storage_[test-project]",
+      "state": "running",
+      "exitCode": 0,
+      "oomKilled": false,
+      "health": "healthy"
+    },
+    {
+      "container": "supabase_rest_[test-project]",
+      "state": "running",
+      "exitCode": 0,
+      "oomKilled": false,
+      "health": null
+    },
+    {
+      "container": "supabase_realtime_[test-project]",
+      "state": "running",
+      "exitCode": 0,
+      "oomKilled": false,
+      "health": "healthy"
+    },
+    {
+      "container": "supabase_inbucket_[test-project]",
+      "state": "running",
+      "exitCode": 0,
+      "oomKilled": false,
+      "health": "healthy"
+    },
+    {
+      "container": "supabase_auth_[test-project]",
+      "state": "running",
+      "exitCode": 0,
+      "oomKilled": false,
+      "health": "healthy"
+    },
+    {
+      "container": "supabase_kong_[test-project]",
+      "state": "running",
+      "exitCode": 0,
+      "oomKilled": false,
+      "health": "healthy"
+    }
+  ],
+  "migrations": [],
+  "bootstrap": {
+    "exitCode": 0,
+    "timedOut": false,
+    "extended": false,
+    "elapsedMs": 81195
+  },
+  "errorCategories": [],
+  "debugTailCategories": [
+    "Starting database...",
+    "Initialising schema...",
+    "Starting containers...",
+    "Waiting for health checks..."
+  ],
+  "logEvidence": [
+    {
+      "container": "supabase_studio_[test-project]",
+      "dockerConnectionRefused": false,
+      "outOfMemory": false
+    },
+    {
+      "container": "supabase_pg_meta_[test-project]",
+      "dockerConnectionRefused": false,
+      "outOfMemory": false
+    },
+    {
+      "container": "supabase_edge_runtime_[test-project]",
+      "dockerConnectionRefused": false,
+      "outOfMemory": false
+    },
+    {
+      "container": "supabase_storage_[test-project]",
+      "dockerConnectionRefused": false,
+      "outOfMemory": false
+    },
+    {
+      "container": "supabase_rest_[test-project]",
+      "dockerConnectionRefused": false,
+      "outOfMemory": false
+    },
+    {
+      "container": "supabase_realtime_[test-project]",
+      "dockerConnectionRefused": false,
+      "outOfMemory": false
+    },
+    {
+      "container": "supabase_inbucket_[test-project]",
+      "dockerConnectionRefused": false,
+      "outOfMemory": false
+    },
+    {
+      "container": "supabase_auth_[test-project]",
+      "dockerConnectionRefused": false,
+      "outOfMemory": false
+    },
+    {
+      "container": "supabase_kong_[test-project]",
+      "dockerConnectionRefused": false,
+      "outOfMemory": false
+    }
+  ],
+  "temporaryProject": "OS temporary directory / phase0-diagnose-*; only synthetic local config; no secrets retained"
+}

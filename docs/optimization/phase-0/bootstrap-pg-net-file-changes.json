@@ -1,0 +1,63 @@
+{
+  "scope": "Current pg_net closure continuation only",
+  "implementationAdded": [
+    "scripts/phase0/bootstrap-net-diagnostic.sql",
+    "scripts/phase0/bootstrap-net.mjs",
+    "scripts/phase0/bootstrap-net.test.mjs",
+    "scripts/phase0/run-net-diagnostic.mjs",
+    "scripts/phase0/write-phase0b-pg-net-closure.mjs",
+    "scripts/phase0/catalog-canonical.mjs"
+  ],
+  "implementationModified": [
+    "scripts/phase0/bootstrap-runtime.mjs",
+    "scripts/phase0/run-bootstrap-validation.mjs",
+    "scripts/phase0/compare-schema-metadata.mjs"
+  ],
+  "documentationUpdated": [
+    "supabase/bootstrap/README.md",
+    "docs/optimization/phase-0/README.md",
+    "docs/optimization/phase-0/closure.md",
+    "docs/optimization/phase-0/phase0b-migration-repair-plan.md",
+    "docs/optimization/phase-0/phase0b-local-security-compatibility.md",
+    "docs/optimization/phase-0/phase0b-net-security-pending.md",
+    "docs/optimization/phase-0/phase0b-bootstrap-report.md",
+    "docs/optimization/phase-0/phase0b-schema-review.md",
+    "docs/optimization/phase-0/phase0b-pg-net-resolution.md"
+  ],
+  "evidenceCreatedOrRefreshed": [
+    "docs/optimization/phase-0/bootstrap-net-diagnostic-remote.json",
+    "docs/optimization/phase-0/bootstrap-net-diagnostic-local.json",
+    "docs/optimization/phase-0/bootstrap-net-native-diagnostic.json",
+    "docs/optimization/phase-0/bootstrap-before-pg-net-alignment.json",
+    "docs/optimization/phase-0/bootstrap-net-provenance.json",
+    "docs/optimization/phase-0/bootstrap-net-remote-read-validation.json",
+    "docs/optimization/phase-0/bootstrap-net-final-1.json",
+    "docs/optimization/phase-0/bootstrap-net-final-2.json",
+    "docs/optimization/phase-0/bootstrap-net-access-matrix.json",
+    "docs/optimization/phase-0/bootstrap-net-security-diff.json",
+    "docs/optimization/phase-0/bootstrap-validation.json",
+    "docs/optimization/phase-0/bootstrap-catalog-1.json",
+    "docs/optimization/phase-0/bootstrap-catalog-2.json",
+    "docs/optimization/phase-0/bootstrap-platform-1.json",
+    "docs/optimization/phase-0/bootstrap-platform-2.json",
+    "docs/optimization/phase-0/bootstrap-schema-diff.json",
+    "docs/optimization/phase-0/bootstrap-schema-review.json",
+    "docs/optimization/phase-0/bootstrap-final-summary.json",
+    "docs/optimization/phase-0/bootstrap-unit-results.json",
+    "docs/optimization/phase-0/bootstrap-sequence-contracts.json",
+    "docs/optimization/phase-0/verification-results.json",
+    "docs/optimization/phase-0/bootstrap-build-results.json",
+    "docs/optimization/phase-0/bootstrap-isolation-1.json",
+    "docs/optimization/phase-0/bootstrap-isolation-2.json",
+    "docs/optimization/phase-0/bootstrap-repository-audit.json",
+    "docs/optimization/phase-0/bootstrap-compatibility-integrity.json",
+    "docs/optimization/phase-0/bootstrap-pg-net-file-changes.json",
+    "docs/optimization/phase-0/artifact-audit.json",
+    "docs/optimization/phase-0/concurrency-results.json",
+    "docs/optimization/phase-0/handler-concurrency-results.json"
+  ],
+  "additionalHistoricalMigrationEdits": 0,
+  "productiveFilesModifiedThisContinuation": 0,
+  "original19Preserved": true,
+  "contentHashes": "artifact-audit.json"
+}

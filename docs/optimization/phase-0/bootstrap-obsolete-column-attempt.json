@@ -1,0 +1,1035 @@
+{
+  "phase": "0B",
+  "localOnly": true,
+  "remoteWrites": 0,
+  "legacyCount": 268,
+  "expectedTotal": 268,
+  "manifestSha256": "bdfe3f0fdaf51fd3a560c08b9360edb1e7a3ea38aec5aeac82fb2e4f5db61d2f",
+  "sanitizedException": "20260427190000",
+  "runs": [
+    {
+      "number": 1,
+      "migrations": [
+        {
+          "version": "0001",
+          "file": "0001_base_schema.sql",
+          "sha256": "5e5857e0088d85ab20f4f7abb908046abfc4d56e4a0e4eedc3a2f2731c477b58",
+          "executionOrder": 1,
+          "transaction": true,
+          "status": "passed",
+          "durationMs": 1267.1777000000002
+        },
+        {
+          "version": "20260227100000",
+          "file": "20260227100000_landings.sql",
+          "sha256": "96ffba56858883c9ce88091cbe3cd21d0a80474c6088cb5b1bf509be3786fb1c",
+          "executionOrder": 2,
+          "transaction": true,
+          "status": "passed",
+          "durationMs": 1438.005299999997
+        },
+        {
+          "version": "20260227110000",
+          "file": "20260227110000_storage_landing_images.sql",
+          "sha256": "c48a74d926cf42c13ece6e75c5c4c4e25025e137a9a722e52007e2e20a2f714c",
+          "executionOrder": 3,
+          "transaction": true,
+          "status": "passed",
+          "durationMs": 1332.5673000000024
+        },
+        {
+          "version": "20260227120000",
+          "file": "20260227120000_landings_name_unique_index.sql",
+          "sha256": "da97b0009b97f7fac3dfb0a3debe23c7bf696daa6929123b0ef532e829077d43",
+          "executionOrder": 4,
+          "transaction": true,
+          "status": "passed",
+          "durationMs": 1688.1607000000004
+        },
+        {
+          "version": "20260227130000",
+          "file": "20260227130000_settings.sql",
+          "sha256": "951bfce0f96521b25fd846abd24c34e847a67264bc84548fa3b6456de95e8d09",
+          "executionOrder": 5,
+          "transaction": true,
+          "status": "passed",
+          "durationMs": 1583.2739999999976
+        },
+        {
+          "version": "20260227140000",
+          "file": "20260227140000_gerencias.sql",
+          "sha256": "f0b731547342bb5798470e396d0c9ab28e93a5597a5150ceca038c4ae5b82bef",
+          "executionOrder": 6,
+          "transaction": true,
+          "status": "passed",
+          "durationMs": 1457.5773000000045
+        },
+        {
+          "version": "20260227150000",
+          "file": "20260227150000_landings_pixel_id_gerencias_gerencia_id.sql",
+          "sha256": "8377e0b28a8cf97019a091aa3b32ef24712d504141514d3e1c860b90ccb305f1",
+          "executionOrder": 7,
+          "transaction": true,
+          "status": "passed",
+          "durationMs": 1373.0597999999954
+        },
+        {
+          "version": "20260227184152",
+          "file": "20260227184152_base_schema.sql",
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+          "executionOrder": 8,
+          "transaction": true,
+          "status": "passed",
+          "durationMs": 1326.765099999997
+        },
+        {
+          "version": "20260228000000",
+          "file": "20260228000000_add_nombre_to_profiles.sql",
+          "sha256": "be68ff6f278a2dec2ea0ba006de52ad86564189c82aa1701e9961e2f07c53052",
+          "executionOrder": 9,
+          "transaction": true,
+          "status": "passed",
+          "durationMs": 1510.7724999999991
+        },
+        {
+          "version": "20260228110000",
+          "file": "20260228110000_require_pixel_id_and_gerencia_id.sql",
+          "sha256": "7b74231aba555a7a64f2859c72b8a4f4766929be98485a8c183efba8ef0a3bcc",
+          "executionOrder": 10,
+          "transaction": true,
+          "status": "passed",
+          "durationMs": 1367.0040999999983
+        },
+        {
+          "version": "20260228120000",
+          "file": "20260228120000_landings_gerencias_weight.sql",
+          "sha256": "e5a13247776ffeb3833e967c1f84307bda618b03b6dbdbe6bf3e470c9669b2af",
+          "executionOrder": 11,
+          "transaction": true,
+          "status": "passed",
+          "durationMs": 1324.232299999996
+        },
+        {
+          "version": "20260228130000",
+          "file": "20260228130000_landings_tracking_fields.sql",
+          "sha256": "2b4b93dfc22aca2778e7112e6cf77979ea9b3e84c91cc8b45391d98c8365ebfc",
+          "executionOrder": 12,
+          "transaction": true,
+          "status": "passed",
+          "durationMs": 1389.8098000000027
+        },
+        {
+          "version": "20260228131000",
+          "file": "20260228131000_phone_mode_and_gerencia_phones.sql",
+          "sha256": "e80bb3cdc29293620398446ca33d9cd6a7796554093ba589f7dc9ac0ab9f4f1c",
+          "executionOrder": 13,
+          "transaction": true,
+          "status": "passed",
+          "durationMs": 1774.2695999999996
+        },
+        {
+          "version": "20260228132000",
+          "file": "20260228132000_phone_kind_and_phone_type.sql",
+          "sha256": "3944e360bf5633b011296deff8b929eb18af478dee817a2568e46e468c4c4441",
+          "executionOrder": 14,
+          "transaction": true,
+          "status": "passed",
+          "durationMs": 1610.8344999999972
+        },
+        {
+          "version": "20260228133000",
+          "file": "20260228133000_landings_phone_interval.sql",
+          "sha256": "44d401027161ac0c3828aa2bad4c6d37312fb881f38ff38c65259029b8a466fd",
+          "executionOrder": 15,
+          "transaction": true,
+          "status": "passed",
+          "durationMs": 1910.4654999999984
+        },
+        {
+          "version": "20260228134000",
+          "file": "20260228134000_landings_phone_interval_hours.sql",
+          "sha256": "92e409f8fa50cd4aab797420f47f6cbfe06127e84bcf8ec63582a0fc5271dd93",
+          "executionOrder": 16,
+          "transaction": true,
+          "status": "passed",
+          "durationMs": 1570.9565999999977
+        },
+        {
+          "version": "20260228135000",
+          "file": "20260228135000_landings_gerencias_phone_config.sql",
+          "sha256": "501eca6acc1fb6258fd493eda71b276367ed6cfa2d3090eec3f0a6183d026b61",
+          "executionOrder": 17,
+          "transaction": true,
+          "status": "passed",
+          "durationMs": 1545.0094000000026
+        },
+        {
+          "version": "20260304170000",
+          "file": "20260304170000_gerencias_gerencia_id_unique.sql",
+          "sha256": "9e0f54507b2b3c34df6dd52f33d4f769b098675e8e139a92e540448b3830880e",
+          "executionOrder": 18,
+          "transaction": true,
+          "status": "passed",
+          "durationMs": 1589.762999999999
+        },
+        {
+          "version": "20260304173000",
+          "file": "20260304173000_gerencia_phones_select_policy.sql",
+          "sha256": "58d42802f70b5ea077fe57ab13512014f8c2659c0de012a9889bbfc23402c981",
+          "executionOrder": 19,
+          "transaction": true,
+          "status": "passed",
+          "durationMs": 2016.638500000001
+        },
+        {
+          "version": "20260304180000",
+          "file": "20260304180000_gerencias_id_equals_gerencia_id.sql",
+          "sha256": "a7c40b9b7e593906c98db3ffa6d75e4dceeac5b225dddd765a0c1ac64666d57e",
+          "executionOrder": 20,
+          "transaction": true,
+          "status": "passed",
+          "durationMs": 1486.008600000001
+        },
+        {
+          "version": "20260304181500",
+          "file": "20260304181500_clear_gerencias_for_testing.sql",
+          "sha256": "910485e69a9d10d4ebe6fb54df19a8654bb0c63913d54572d7037b4f9ba8b547",
+          "executionOrder": 21,
+          "transaction": true,
+          "status": "passed",
+          "durationMs": 1396.503199999992
+        },
+        {
+          "version": "20260305120000",
+          "file": "20260305120000_cron_sync_phones.sql",
+          "sha256": "23491d19f2c2557c61a0c8543b02b15f77fdb7b074c76c53795b9d9d5856ce43",
+          "executionOrder": 22,
+          "transaction": true,
+          "status": "passed",
+          "durationMs": 1597.6081000000122
+        },
+        {
+          "version": "20260305130000",
+          "file": "20260305130000_landing_typography_config.sql",
+          "sha256": "e89626d6cfa7b626028d8252a577d44addda7f7855c4266c41c632c863a79db1",
+          "executionOrder": 23,
+          "transaction": true,
+          "status": "passed",
+          "durationMs": 1400.7266999999993
+        },
+        {
+          "version": "20260306120000",
+          "file": "20260306120000_add_landing_config_column.sql",
+          "sha256": "057d40e37d78e7490415722a00e8404d6addcdba8bbf8c5215df72d40cfaa67f",
+          "executionOrder": 24,
+          "transaction": true,
+          "status": "passed",
+          "durationMs": 1418.1108000000095
+        },
+        {
+          "version": "20260306130000",
+          "file": "20260306130000_lock_landing_name.sql",
+          "sha256": "c018b682e143425941dbab0183827b9ca3a8277946da776e1b1a830da93b32d3",
+          "executionOrder": 25,
+          "transaction": true,
+          "status": "passed",
+          "durationMs": 1630.6983999999939
+        },
+        {
+          "version": "20260307100000",
+          "file": "20260307100000_settings_preview_flag.sql",
+          "sha256": "7fd15892b60fdf51e30499c8fa432121f0c86eb99346bc73270327f62613a3e9",
+          "executionOrder": 26,
+          "transaction": true,
+          "status": "passed",
+          "durationMs": 1390.0271999999968
+        },
+        {
+          "version": "20260307110000",
+          "file": "20260307110000_settings_revalidate_secret.sql",
+          "sha256": "4d2fdadd8f035df60af7a267d12cd7fc1f60cbe2c0cabae8120e141f60ed7d0a",
+          "executionOrder": 27,
+          "transaction": true,
+          "status": "passed",
+          "durationMs": 1395.9523999999947
+        },
+        {
+          "version": "20260416100000",
+          "file": "20260416100000_conversions_config.sql",
+          "sha256": "ca8c6aabb806a79daf6d4c2d60aad0d4dac960b925f590d4c29059d72a1a3466",
+          "executionOrder": 28,
+          "transaction": true,
+          "status": "passed",
+          "durationMs": 1444.1805000000022
+        },
+        {
+          "version": "20260323183000",
+          "file": "20260323183000_drop_test_event_code_from_conversions_config.sql",
+          "sha256": "eec0e877ccb26164dca0572203a9d79237e29b10f0ac46409c41a77e7bbcdf67",
+          "executionOrder": 29,
+          "transaction": true,
+          "status": "passed",
+          "durationMs": 1410.9059999999881
+        },
+        {
+          "version": "20260416100001",
+          "file": "20260416100001_conversions.sql",
+          "sha256": "ab65ca6ea99a44317a6ae262b78e22380c233d306552caa5bde8439aeb575580",
+          "executionOrder": 30,
+          "transaction": true,
+          "status": "passed",
+          "durationMs": 1429.2276999999885
+        },
+        {
+          "version": "20260323201000",
+          "file": "20260323201000_conversions_add_test_event_code.sql",
+          "sha256": "2ad9e6a7f99062907b94b75c8866057393cd72930bf4c2914a9ef78e26ce7bbf",
+          "executionOrder": 31,
+          "transaction": true,
+          "status": "passed",
+          "durationMs": 1410.3274999999994
+        },
+        {
+          "version": "20260416200000",
+          "file": "20260416200000_conversion_logs.sql",
+          "sha256": "d62c5506be7b07dcb303d93ed1bcf5a2a99c347e727d7a09a6884b63961025c0",
+          "executionOrder": 32,
+          "transaction": true,
+          "status": "passed",
+          "durationMs": 1598.4213000000018
+        },
+        {
+          "version": "20260325190000",
+          "file": "20260325190000_add_meta_payload_response_to_conversion_logs.sql",
+          "sha256": "c4990df3d2cbc6c8f81ff35020716721d0a06321703d5f44a50be2f093e83330",
+          "executionOrder": 33,
+          "transaction": true,
+          "status": "passed",
+          "durationMs": 1282.3049000000028
+        },
+        {
+          "version": "20260325193000",
+          "file": "20260325193000_add_show_logs_to_conversions_config.sql",
+          "sha256": "e91619ddc21193b08e479ea30ae3e80b6c797d361e1aead6640175510269c9ec",
+          "executionOrder": 34,
+          "transaction": true,
+          "status": "passed",
+          "durationMs": 1256.450199999992
+        },
+        {
+          "version": "20260325193500",
+          "file": "20260325193500_backfill_conversions_config_show_logs.sql",
+          "sha256": "de7fb842460fc203e627b951a97ba3bcc03c342b6f674d502358c4823acec3bd",
+          "executionOrder": 35,
+          "transaction": true,
+          "status": "passed",
+          "durationMs": 1276.642399999997
+        },
+        {
+          "version": "20260325201000",
+          "file": "20260325201000_add_internal_id_to_conversions.sql",
+          "sha256": "9a97b61ee91045c20fb62f9daddd1124592ceb8f2bd389b2aebf6e1eef233b9f",
+          "executionOrder": 36,
+          "transaction": true,
+          "status": "passed",
+          "durationMs": 1302.3021000000008
+        },
+        {
+          "version": "20260326121000",
+          "file": "20260326121000_add_tracking_ranking_config.sql",
+          "sha256": "cbe0560c6e77a0f00ae40000eda6de4bc702aab405ff2a08923f23922674763c",
+          "executionOrder": 37,
+          "transaction": true,
+          "status": "passed",
+          "durationMs": 1312.483500000002
+        },
+        {
+          "version": "20260326133000",
+          "file": "20260326133000_notifications_module.sql",
+          "sha256": "a03bd3639353e667e6e6e56772b96195273fd46e6be70ee8c5e402e34b53e7b0",
+          "executionOrder": 38,
+          "transaction": true,
+          "status": "passed",
+          "durationMs": 1302.4992000000057
+        },
+        {
+          "version": "20260326183000",
+          "file": "20260326183000_notify_cron_every_5_min.sql",
+          "sha256": "8136fca4dae91c4f43a1cfa4f3800704e4d8f91b0223933310fe01fb28d71aac",
+          "executionOrder": 39,
+          "transaction": true,
+          "status": "passed",
+          "durationMs": 1258.8290000000125
+        },
+        {
+          "version": "20260326193000",
+          "file": "20260326193000_notifications_bot_insert_policy.sql",
+          "sha256": "cfa3fa1ac0354fcdb4524eca027a7c12067d1896a8a6034d6a16c826f6149740",
+          "executionOrder": 40,
+          "transaction": true,
+          "status": "passed",
+          "durationMs": 1377.2289000000019
+        },
+        {
+          "version": "20260326195500",
+          "file": "20260326195500_notification_welcome_sent_at.sql",
+          "sha256": "ce4d46b7da52c5c3671f6bf9e79c305fc5a17afcf3bad2c0b2ac3b15f74bbf97",
+          "executionOrder": 41,
+          "transaction": true,
+          "status": "passed",
+          "durationMs": 1259.3138999999937
+        },
+        {
+          "version": "20260326235900",
+          "file": "20260326235900_conversion_inbox.sql",
+          "sha256": "f33fab3b09b10bd7b94ed4b0ae9725b130f4a2a2b262d55169b2383a8c87516a",
+          "executionOrder": 42,
+          "transaction": true,
+          "status": "passed",
+          "durationMs": 1261.7400000000052
+        },
+        {
+          "version": "20260327191000",
+          "file": "20260327191000_landings_external_mode.sql",
+          "sha256": "3675e432a159eadde6d43d03210e0269b125ffa7886236cc34bc0caac36e816a",
+          "executionOrder": 43,
+          "transaction": true,
+          "status": "passed",
+          "durationMs": 1478.136400000003
+        },
+        {
+          "version": "20260327200000",
+          "file": "20260327200000_admins_can_update_delete_landings.sql",
+          "sha256": "e235aea4f4d14bb512b93b25db05e1df470b71080f31549d1fb7ee6ae23f4a96",
+          "executionOrder": 44,
+          "transaction": true,
+          "status": "passed",
+          "durationMs": 1485.9242999999988
+        },
+        {
+          "version": "20260327210000",
+          "file": "20260327210000_get_phone_for_landing_rpc.sql",
+          "sha256": "2d9a88a8f2e34ad64542154e70d7d2768be5324646515ade53765d76531e2b14",
+          "executionOrder": 45,
+          "transaction": true,
+          "status": "passed",
+          "durationMs": 1528.1399000000092
+        },
+        {
+          "version": "20260327220000",
+          "file": "20260327220000_cron_warm_landing_phone.sql",
+          "sha256": "681ade7748b07f924c2c8203b7a9437fb6634240631e0e46ea56bf7b37b33e08",
+          "executionOrder": 46,
+          "transaction": true,
+          "status": "passed",
+          "durationMs": 1372.4285999999993
+        },
+        {
+          "version": "20260327220100",
+          "file": "20260327220100_notification_telegram_destinations.sql",
+          "sha256": "d64ddb902bc53ca6ffda917786ca5c16b58c3e1b1d2596047486625238ffc881",
+          "executionOrder": 47,
+          "transaction": true,
+          "status": "passed",
+          "durationMs": 1678.6285000000062
+        },
+        {
+          "version": "20260327232000",
+          "file": "20260327232000_backfill_legacy_telegram_chats.sql",
+          "sha256": "b6bf9d1f8462c72e2d9ef0414a0857982f9ba1c815d5fa565f6e56689d4b86e0",
+          "executionOrder": 48,
+          "transaction": true,
+          "status": "passed",
+          "durationMs": 1242.1045000000013
+        },
+        {
+          "version": "20260327234000",
+          "file": "20260327234000_cron_sync_telegram_connections.sql",
+          "sha256": "b1497e05ddc078d4e368cb71ed3287026efaaa7f4189e97a2788b89b53678cc7",
+          "executionOrder": 49,
+          "transaction": true,
+          "status": "passed",
+          "durationMs": 1300.6643999999942
+        },
+        {
+          "version": "20260327235500",
+          "file": "20260327235500_disable_sync_telegram_polling_cron.sql",
+          "sha256": "dd58cae995ac33c4961143b50d2b9bde450040be38815625110fc5a61a9e114c",
+          "executionOrder": 50,
+          "transaction": true,
+          "status": "passed",
+          "durationMs": 1280.076700000005
+        },
+        {
+          "version": "20260328001000",
+          "file": "20260328001000_conversion_inbox_action_event_id.sql",
+          "sha256": "94306fea6c5c695ce0b3957d46030cef8dd61276706aaf55173f0e3e6c259f79",
+          "executionOrder": 51,
+          "transaction": true,
+          "status": "passed",
+          "durationMs": 1319.228299999988
+        },
+        {
+          "version": "20260330160000",
+          "file": "20260330160000_conversions_multi_pixel_configs.sql",
+          "sha256": "0efa40e64b5d76f4ecaae97a410360cdbc76000f7a7be6d380e0c0fe3a6bc015",
+          "executionOrder": 52,
+          "transaction": true,
+          "status": "passed",
+          "durationMs": 1330.2409000000043
+        },
+        {
+          "version": "20260330193000",
+          "file": "20260330193000_conversions_pixel_configs_add_delivery_flags.sql",
+          "sha256": "a7c793cdc715941882135f25663ddba5697bf33651e1030f32f03128d7c51ef9",
+          "executionOrder": 53,
+          "transaction": true,
+          "status": "passed",
+          "durationMs": 1428.4042000000045
+        },
+        {
+          "version": "20260417090000",
+          "file": "20260417090000_conversions_visible_columns.sql",
+          "sha256": "e445f98ca57932dba5bd955932cd9b589743b57a5ae9eea44acddd6668c718e2",
+          "executionOrder": 54,
+          "transaction": true,
+          "status": "passed",
+          "durationMs": 1706.818299999999
+        },
+        {
+          "version": "20260426007000",
+          "file": "20260426007000_conversions_add_pixel_id.sql",
+          "sha256": "3b3b47f85087b2016bddd2f82440ffb1f19e1cee538182372bee5f8c5e4a2b43",
+          "executionOrder": 55,
+          "transaction": true,
+          "emptyTableGates": [
+            {
+              "relation": "public.conversions",
+              "empty": true
+            },
+            {
+              "relation": "public.conversions_config",
+              "empty": true
+            }
+          ],
+          "status": "passed",
+          "durationMs": 2949.6141999999963
+        },
+        {
+          "version": "20260330193500",
+          "file": "20260330193500_conversions_add_meta_pixel_id.sql",
+          "sha256": "503e46e6131110ce5bad614bfe667be018496707d0f1f3836ed3570140b43911",
+          "executionOrder": 56,
+          "transaction": true,
+          "status": "passed",
+          "durationMs": 1468.9824999999983
+        },
+        {
+          "version": "20260331213000",
+          "file": "20260331213000_kommo_client_configs.sql",
+          "sha256": "fbf74fa6822e9904e2396a6883e3a074c922268233750bcde7e3b48dd346ff5c",
+          "executionOrder": 57,
+          "transaction": true,
+          "status": "passed",
+          "durationMs": 1599.9768999999942
+        },
+        {
+          "version": "20260331221000",
+          "file": "20260331221000_gerencias_source_type.sql",
+          "sha256": "46d9a284ff68911a1acd472ac29c4f7f3826ee474aba570b08e23d3a75a7cab0",
+          "executionOrder": 58,
+          "transaction": true,
+          "status": "passed",
+          "durationMs": 1707.7958999999973
+        },
+        {
+          "version": "20260401093000",
+          "file": "20260401093000_gerencia_phones_comment.sql",
+          "sha256": "5220cc919eb0793cd8bce2725808a2d9d2cb7f62ccc16704c17b9750ceb586ce",
+          "executionOrder": 59,
+          "transaction": true,
+          "status": "passed",
+          "durationMs": 1788.1375000000116
+        },
+        {
+          "version": "20260401102000",
+          "file": "20260401102000_conversions_delete_policy.sql",
+          "sha256": "33b9433aa813a41bf7a59058f20007ac3787b79657422502480a2e54947ca1a8",
+          "executionOrder": 60,
+          "transaction": true,
+          "status": "passed",
+          "durationMs": 1568.1927999999898
+        },
+        {
+          "version": "20260403110000",
+          "file": "20260403110000_client_subscriptions_plans.sql",
+          "sha256": "70570ee675ccdc75cfe78ed2af6e3412cb8f31c8bfbe941a9ea4d85f4f7f775b",
+          "executionOrder": 61,
+          "transaction": true,
+          "status": "passed",
+          "durationMs": 1678.2042999999976
+        },
+        {
+          "version": "20260426008000",
+          "file": "20260426008000_conversions_add_send_contact_pixel.sql",
+          "sha256": "db1935b92816c43cc35bc2d462f828d82aef9ef0b223fa13e43ed083b0e64a9e",
+          "executionOrder": 62,
+          "transaction": true,
+          "status": "passed",
+          "durationMs": 1581.3032999999996
+        },
+        {
+          "version": "20260404000100",
+          "file": "20260404000100_rename_send_contact_pixel_to_sendContactPixel.sql",
+          "sha256": "97c0ed7b038461b640da5557e5ba49436c65dcc80c4a28a8f4b5a8f10ef2b7e3",
+          "executionOrder": 63,
+          "transaction": true,
+          "status": "passed",
+          "durationMs": 1692.826700000005
+        },
+        {
+          "version": "20260404000200",
+          "file": "20260404000200_restore_default_visible_columns_after_sendContactPixel.sql",
+          "sha256": "f67d8d0be5b8ba0094b5d600359a04676e77300bf0cb486388bd67cfee4f046b",
+          "executionOrder": 64,
+          "transaction": true,
+          "status": "passed",
+          "durationMs": 1473.0578999999998
+        },
+        {
+          "version": "20260405114411",
+          "file": "20260405114411_drop_wazzup_integration_tables.sql",
+          "sha256": "331baa71470e81c16495bd418a722dec8c107f980b84543ddd43c779d7e63735",
+          "executionOrder": 65,
+          "transaction": true,
+          "status": "passed",
+          "durationMs": 2169.3852999999945
+        },
+        {
+          "version": "20260406203000",
+          "file": "20260406203000_hidden_conversion_logs.sql",
+          "sha256": "bbe96824a77faf699e50d5b557a254f6ca48a0c6ca07c79ef6cc2bb2d3e30992",
+          "executionOrder": 66,
+          "transaction": true,
+          "status": "passed",
+          "durationMs": 1688.0243999999948
+        },
+        {
+          "version": "20260406235900",
+          "file": "20260406235900_logs_payload_received_result.sql",
+          "sha256": "d8276612cb61fdcb8219f55980bf227fe4d22de2e76018c979382b35320d29ae",
+          "executionOrder": 67,
+          "transaction": true,
+          "status": "passed",
+          "durationMs": 1681.4588999999978
+        },
+        {
+          "version": "20260407000000",
+          "file": "20260407000000_phone_kind_add_mkt.sql",
+          "sha256": "440e3694c80b248af4ddf7d9d9054b6c85ad97c9d36c8989d9dc43b7c177869a",
+          "executionOrder": 68,
+          "transaction": true,
+          "status": "passed",
+          "durationMs": 1506.8044999999984
+        },
+        {
+          "version": "20260407001000",
+          "file": "20260407001000_backfill_latency_payload_received.sql",
+          "sha256": "26ebe78a09f04d49eda9b3bdfa550b49d9318e61c7c64eebe653e7dac8993a67",
+          "executionOrder": 69,
+          "transaction": true,
+          "status": "passed",
+          "durationMs": 1476.1203000000096
+        },
+        {
+          "version": "20260407190000",
+          "file": "20260407190000_get_phone_for_chatrace_client.sql",
+          "sha256": "0762e46de103d6790546a26c7fb3f60de539a5ab500ffb17d167d10a9868f3e7",
+          "executionOrder": 70,
+          "transaction": true,
+          "status": "passed",
+          "durationMs": 1631.6009000000195
+        },
+        {
+          "version": "20260426009000",
+          "file": "20260426009000_chatrace_client_configs.sql",
+          "sha256": "ce51b2eef03b5ec3038e06bc7616f18165076c3d677086622e2fbf2b11dd067c",
+          "executionOrder": 71,
+          "transaction": true,
+          "status": "passed",
+          "durationMs": 1967.0596000000078
+        },
+        {
+          "version": "20260407203000",
+          "file": "20260407203000_chatrace_gerencia_selection_mode.sql",
+          "sha256": "c7a61f57fd05491df0be2368e70b60412a04c5f18d5bb41da9d9b36dcf862164",
+          "executionOrder": 72,
+          "transaction": true,
+          "status": "passed",
+          "durationMs": 1831.550900000002
+        },
+        {
+          "version": "20260407205000",
+          "file": "20260407205000_get_phone_for_chatrace_client_with_selection_mode.sql",
+          "sha256": "b57d8705463fbba982461970dd6a6faa7307206116f87e4112d6277b319bc62a",
+          "executionOrder": 73,
+          "transaction": true,
+          "status": "passed",
+          "durationMs": 1667.6212999999989
+        },
+        {
+          "version": "20260408200000",
+          "file": "20260408200000_lock_landing_tag.sql",
+          "sha256": "852b09e00b10b52d0ed82a50758b2f76b68106e1afd2e478e0b88ab4604a162c",
+          "executionOrder": 74,
+          "transaction": true,
+          "status": "passed",
+          "durationMs": 1762.6216000000131
+        },
+        {
+          "version": "20260408213000",
+          "file": "20260408213000_fair_gerencia_counter_include_inactive.sql",
+          "sha256": "c25e8f5a25a99b8b921908ecb57ec5071c2997bdc046b6b2d134c8a67e252f62",
+          "executionOrder": 75,
+          "transaction": true,
+          "status": "passed",
+          "durationMs": 1636.8225000000093
+        },
+        {
+          "version": "20260408220000",
+          "file": "20260408220000_fair_gerencia_messages_include_inactive.sql",
+          "sha256": "9052e8ea38b5cb0219f9879fdd4140cbfb9c9fb504ab64606ca05678bc5ca15d",
+          "executionOrder": 76,
+          "transaction": true,
+          "status": "passed",
+          "durationMs": 1794.350299999991
+        },
+        {
+          "version": "20260426120000",
+          "file": "20260426120000_conversions_add_from_meta_ads.sql",
+          "sha256": "90ef28e82778deb91a282ca78644301782e52ce5b63302cfbf60455f9ff6381d",
+          "executionOrder": 77,
+          "transaction": true,
+          "status": "passed",
+          "durationMs": 2152.0553000000073
+        },
+        {
+          "version": "20260415113000",
+          "file": "20260415113000_from_meta_ads_fbc_or_valid_promo_code.sql",
+          "sha256": "7846c9312e80a071a55ed5c2e107412d28903912edce13ca60fb4654672a006a",
+          "executionOrder": 78,
+          "transaction": true,
+          "status": "passed",
+          "durationMs": 1943.7284000000218
+        },
+        {
+          "version": "20260416000000",
+          "file": "20260416000000_landing_tag_unique_alphanumeric.sql",
+          "sha256": "5132fac98189e6fb541218882d5cb246e23fcf45245d067f6101efaa96dd858b",
+          "executionOrder": 79,
+          "transaction": true,
+          "status": "passed",
+          "durationMs": 1827.0246000000043
+        },
+        {
+          "version": "20260416100002",
+          "file": "20260416100002_sync_pixel_trigger.sql",
+          "sha256": "a6280ae7f9d5effcda1e2b9df7c799bb58673190ca1a161b10521de91f93430f",
+          "executionOrder": 80,
+          "transaction": true,
+          "status": "passed",
+          "durationMs": 1805.3992000000144
+        },
+        {
+          "version": "20260416100003",
+          "file": "20260416100003_cron_retry_conversions.sql",
+          "sha256": "2794fa813af5bc6c56fcee0277a46db0f04550b75e08ad4fcd48bd180d89997f",
+          "executionOrder": 81,
+          "transaction": true,
+          "status": "passed",
+          "durationMs": 1756.887400000007
+        },
+        {
+          "version": "20260416300000",
+          "file": "20260416300000_conversions_config_slug.sql",
+          "sha256": "3035637d38382226794199311d96473a125324570bc48c5644f65cc37f273516",
+          "executionOrder": 82,
+          "transaction": true,
+          "status": "passed",
+          "durationMs": 1947.2018000000098
+        },
+        {
+          "version": "20260416400000",
+          "file": "20260416400000_conversions_update_policy.sql",
+          "sha256": "f27576142e7c5fec6e0573c40248f326391fc41ed3b933aa6ced5435eec5a2a1",
+          "executionOrder": 83,
+          "transaction": true,
+          "status": "passed",
+          "durationMs": 1690.6205999999947
+        },
+        {
+          "version": "20260416500000",
+          "file": "20260416500000_funnel_view.sql",
+          "sha256": "4e66c1b6cf0eccb2696a5323d877d0c10ebd22c544c662cd630d7c4214c4cf97",
+          "executionOrder": 84,
+          "transaction": true,
+          "status": "passed",
+          "durationMs": 1625.012400000007
+        },
+        {
+          "version": "20260416600000",
+          "file": "20260416600000_funnel_reached_indicators.sql",
+          "sha256": "73c54d5017a91e601d42b7c0c583a276e3720a34fad86fd47f65615d1b8b5ea0",
+          "executionOrder": 85,
+          "transaction": true,
+          "status": "passed",
+          "durationMs": 1779.1120999999985
+        },
+        {
+          "version": "20260418000000",
+          "file": "20260418000000_backfill_landings_post_url.sql",
+          "sha256": "acd34f1301809d3bb6a7a6eb69616be7eaede9ece576d23f0f7fc27bc4ccfe70",
+          "executionOrder": 86,
+          "transaction": true,
+          "status": "passed",
+          "durationMs": 1896.6426999999967
+        },
+        {
+          "version": "20260418100000",
+          "file": "20260418100000_force_landings_post_url.sql",
+          "sha256": "4b4e062d4b890c55a2009e9562198b0a6d7d8ba44bbbea68c0c0133fe3569e1e",
+          "executionOrder": 87,
+          "transaction": true,
+          "status": "passed",
+          "durationMs": 1742.1877000000095
+        },
+        {
+          "version": "20260418200000",
+          "file": "20260418200000_hidden_conversions.sql",
+          "sha256": "c9ec08a3fa40b4e4328d35956c9d10c3813bfa0797f9a5fb92d80ba40536df20",
+          "executionOrder": 88,
+          "transaction": true,
+          "status": "passed",
+          "durationMs": 2240.482099999994
+        },
+        {
+          "version": "20260419000000",
+          "file": "20260419000000_funnel_contacts_telefono_asignado.sql",
+          "sha256": "884af607b8d868d3482c666bfb569abb3700c617bc221d0608b8a78ac3c887cf",
+          "executionOrder": 89,
+          "transaction": true,
+          "status": "passed",
+          "durationMs": 1957.548999999999
+        },
+        {
+          "version": "20260419100000",
+          "file": "20260419100000_revert_funnel_telefono_asignado.sql",
+          "sha256": "784b611d26121c6fd7c2519dbe228cc80e54324a90f7153af8f97791be2f1ab8",
+          "executionOrder": 90,
+          "transaction": true,
+          "status": "passed",
+          "durationMs": 3882.8547000000253
+        },
+        {
+          "version": "20260420000000",
+          "file": "20260420000000_funnel_reached_repeat_by_purchase_count.sql",
+          "sha256": "8b5b4e3a9746d14feb3099ea809709e364f348b416c626864f437435a6ec261a",
+          "executionOrder": 91,
+          "transaction": true,
+          "status": "passed",
+          "durationMs": 3562.1875
+        },
+        {
+          "version": "20260421000000",
+          "file": "20260421000000_funnel_only_leads_and_beyond.sql",
+          "sha256": "270e27914b6ad1dec9ab2c1fbd1d8ef04b76e7e61e28ec16b90b63e134aa691d",
+          "executionOrder": 92,
+          "transaction": true,
+          "status": "passed",
+          "durationMs": 4892.873800000001
+        },
+        {
+          "version": "20260422000000",
+          "file": "20260422000000_gerencias_fair_criterion.sql",
+          "sha256": "457cb8bb9cb56546e228696e498c5eb6dfc70ece67b2366740ca64cd2690576f",
+          "executionOrder": 93,
+          "transaction": true,
+          "status": "passed",
+          "durationMs": 2488.7179999999935
+        },
+        {
+          "version": "20260423000000",
+          "file": "20260423000000_landing_gerencia_selection_mode.sql",
+          "sha256": "6c06cf6816ba82e7b62800554681083564ba7eb9e7917a43eac51d5050645c68",
+          "executionOrder": 94,
+          "transaction": true,
+          "status": "passed",
+          "durationMs": 2172.9324999999953
+        },
+        {
+          "version": "20260424000000",
+          "file": "20260424000000_warm_landing_phone_every_2min.sql",
+          "sha256": "425b2b5ff67063ea0c4ebcb15dfcb06a00b1b410f8f25dcd52c5fc126816e6c1",
+          "executionOrder": 95,
+          "transaction": true,
+          "status": "passed",
+          "durationMs": 1509.6555999999982
+        },
+        {
+          "version": "20260424000100",
+          "file": "20260424000100_conversions_config_add_show_inbox.sql",
+          "sha256": "2209826def9c2e8586c69af5385fad038afeb4e419a8f7c2e805d5a154b5379f",
+          "executionOrder": 96,
+          "transaction": true,
+          "status": "passed",
+          "durationMs": 1490.5054999999993
+        },
+        {
+          "version": "20260424000200",
+          "file": "20260424000200_cleanup_backfill_merged_leads.sql",
+          "sha256": "bbdb9bfda242bc9c92537ecd447110178ba3ecd9caab46554c8dd585f3d32c10",
+          "executionOrder": 97,
+          "transaction": true,
+          "status": "passed",
+          "durationMs": 1402.8759999999893
+        },
+        {
+          "version": "20260424000300",
+          "file": "20260424000300_backfill_created_new_lead_external_id_hash.sql",
+          "sha256": "c90074cdf124f10d31d565b26895befe5c6551a1221516cf453ff8e8deb1a97d",
+          "executionOrder": 98,
+          "transaction": true,
+          "status": "passed",
+          "durationMs": 1391.555800000002
+        },
+        {
+          "version": "20260424003000",
+          "file": "20260424003000_warm_landing_phone_back_to_5min.sql",
+          "sha256": "cc2affe54c67fca11da8222f84735c570e0119cde29373ba617b201e1b53859e",
+          "executionOrder": 99,
+          "transaction": true,
+          "status": "passed",
+          "durationMs": 1448.5009999999893
+        },
+        {
+          "version": "20260426130000",
+          "file": "20260426130000_create_ar_phone_area_codes.sql",
+          "sha256": "59055a18e5582eb367f00931b9998f9ad36c05b96f010da9dfb41a4a043675d2",
+          "executionOrder": 100,
+          "transaction": true,
+          "status": "passed",
+          "durationMs": 1479.4604000000108
+        },
+        {
+          "version": "20260426140000",
+          "file": "20260426140000_conversions_add_geo_source.sql",
+          "sha256": "baf5d3b2da49817e9e61df3f0b4de5432fa0627743e9a05cce9aefa0f3b660e3",
+          "executionOrder": 101,
+          "transaction": true,
+          "emptyTableGates": [
+            {
+              "relation": "public.conversions",
+              "empty": true
+            },
+            {
+              "relation": "public.conversions_config",
+              "empty": true
+            }
+          ],
+          "status": "passed",
+          "durationMs": 2895.9697999999917
+        },
+        {
+          "version": "20260424222000",
+          "file": "20260424222000_sanitize_phone_prefix_localidad.sql",
+          "sha256": "d72410a659aab35c868bffed889f5942b3812af1c42661728d75ded38bb297eb",
+          "executionOrder": 102,
+          "transaction": true,
+          "status": "passed",
+          "durationMs": 1465.6447000000044
+        },
+        {
+          "version": "20260426004000",
+          "file": "20260426004000_conversions_add_action_payload_raw.sql",
+          "sha256": "4ebbe83bf7252ec7d48fbe7bc68af3a2a0447fe41d1b127f366bd0d5b9a93b8c",
+          "executionOrder": 103,
+          "transaction": true,
+          "emptyTableGates": [
+            {
+              "relation": "public.conversions",
+              "empty": true
+            },
+            {
+              "relation": "public.conversions_config",
+              "empty": true
+            }
+          ],
+          "status": "passed",
+          "durationMs": 3632.8712000000232
+        },
+        {
+          "version": "20260424224500",
+          "file": "20260424224500_backfill_inbox_conversion_id_for_leads.sql",
+          "sha256": "64aa50f9218967a3f97378678fd3f02e5b47778cac792b4cad8e2c5a819bb66b",
+          "executionOrder": 104,
+          "transaction": true,
+          "status": "passed",
+          "durationMs": 1417.0852000000014
+        },
+        {
+          "version": "20260424233000",
+          "file": "20260424233000_backfill_inbox_response_match_mode_promo.sql",
+          "sha256": "1b80808e524c02bf4e044eff2e59a6b95f72dd2f08c0b7ba5c642e9f86983e23",
+          "executionOrder": 105,
+          "transaction": true,
+          "status": "passed",
+          "durationMs": 1620.5597000000125
+        },
+        {
+          "version": "20260425000000",
+          "file": "20260425000000_conversions_purchase_type.sql",
+          "sha256": "cbe752e2d8137a5e81a547ee08608c12bba53ab69fa44454c447070ef5d5c4ca",
+          "executionOrder": 106,
+          "transaction": true,
+          "status": "passed",
+          "durationMs": 1412.5354999999981
+        },
+        {
+          "version": "20260425212000",
+          "file": "20260425212000_backfill_inbox_purchase_match_mode.sql",
+          "sha256": "825614438909919e9edfdb762b999053c88042ed19618db86c3b25f95e431fc7",
+          "executionOrder": 107,
+          "transaction": true,
+          "status": "passed",
+          "durationMs": 1441.3199000000022
+        },
+        {
+          "version": "20260425235500",
+          "file": "20260425235500_backfill_inbox_created_new_message.sql",
+          "sha256": "111dbc7c11f02e50ee9109a254e862690083be12c882e55d63aa4a46470ed8c1",
+          "executionOrder": 108,
+          "transaction": true,
+          "status": "passed",
+          "durationMs": 1498.9077000000107
+        },
+        {
+          "version": "20260426000000",
+          "file": "20260426000000_backfill_conversions_config_for_clients.sql",
+          "sha256": "246640574ab2dbccf871093c551d529dbad12636337c31a36d6abbae8b9ba5b2",
+          "executionOrder": 109,
+          "transaction": true,
+          "status": "failed",
+          "error": "relation \"conversions_config\" does not exist",
+          "sqlstate": "42703",
+          "durationMs": 1509.3261000000057
+        }
+      ],
+      "complete": false,
+      "bootstrapMs": 33954,
+      "target": "runner-created Supabase PostgreSQL / unix socket / isolated network / cron.launch_active_jobs=off",
+      "cleanup": "only runner-owned resources removed"
+    }
+  ],
+  "passed": false,
+  "error": "relation \"conversions_config\" does not exist"
+}

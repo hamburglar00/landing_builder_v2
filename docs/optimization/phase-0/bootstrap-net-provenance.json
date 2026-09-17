@@ -1,0 +1,30 @@
+{
+  "date": "2026-09-17",
+  "sources": [
+    {
+      "kind": "cli",
+      "url": "https://raw.githubusercontent.com/supabase/cli/v2.75.0/internal/utils/templates/initial_schemas/14.sql",
+      "sha256": "927b020b28b1e66667bbbfeb2a84cf7ce822166e7fc74cf6acfab9594323014c",
+      "securityDefinerInHttpGet": true,
+      "hasPublicTableAndSequenceGrants": false
+    },
+    {
+      "kind": "upstream",
+      "url": "https://raw.githubusercontent.com/supabase/pg_net/v0.19.5/sql/pg_net.sql",
+      "sha256": "a87097c3b19d4583c5b0eefe28f97e34495e2acb67b8f7bde24ed75ccdead8b5",
+      "securityDefinerInHttpGet": false,
+      "hasPublicTableAndSequenceGrants": true
+    },
+    {
+      "kind": "upstream-current",
+      "url": "https://raw.githubusercontent.com/supabase/pg_net/master/sql/pg_net.sql",
+      "sha256": "a2854f625cfaed3119d05a9ff11a769d7e904615244ac2bfa74647d16ba1db19",
+      "securityDefinerInHttpGet": false,
+      "hasPublicTableAndSequenceGrants": true
+    }
+  ],
+  "documentation": "https://supabase.com/docs/guides/database/extensions/pg_net",
+  "postgresMechanism": "https://www.postgresql.org/docs/17/runtime-config-client.html#GUC-EVENT-TRIGGERS",
+  "changelog": "https://supabase.com/changelog/extension-version-pinning-ignored",
+  "notes": "Hosted version pinning deprecation does not affect this local superuser installation. No upstream source files were installed or modified."
+}

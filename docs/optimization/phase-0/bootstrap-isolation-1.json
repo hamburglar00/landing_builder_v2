@@ -1,0 +1,11 @@
+{
+  "run": 1,
+  "readOnly": true,
+  "localDocker": true,
+  "soleNetworkInternal": true,
+  "runningJobs": 0,
+  "jobRunHistoryRows": 0,
+  "launch_active_jobs": "off",
+  "enabledJobDefinitions": 7,
+  "observedAt": "2026-09-17T03:39:17.298Z"
+}

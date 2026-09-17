@@ -23,10 +23,12 @@ where c.id = r.id;
 
 select setval(
   'public.conversions_internal_id_seq',
-  coalesce((select max(internal_id) from public.conversions), 0),
-  true
+  coalesce(
+    (select max(internal_id) from public.conversions),
+    (select seqmin from pg_sequence where seqrelid = 'public.conversions_internal_id_seq'::regclass)
+  ),
+  exists (select 1 from public.conversions)
 );
 
 create unique index if not exists conversions_internal_id_key
   on public.conversions(internal_id);
-

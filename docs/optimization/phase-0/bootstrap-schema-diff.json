@@ -1,0 +1,3150 @@
+{
+  "status": "normalized_with_evidence",
+  "rawDifferences": 7,
+  "normalized": [
+    {
+      "category": "relations",
+      "object": "public||conversions_config|",
+      "local": {
+        "columns": [
+          {
+            "default_md5": null,
+            "generated": "",
+            "identity": "",
+            "name": "user_id",
+            "not_null": true,
+            "type": "uuid"
+          },
+          {
+            "default_md5": "86e751880b3791dd7c2efae188915799",
+            "generated": "",
+            "identity": "",
+            "name": "pixel_id",
+            "not_null": true,
+            "type": "text"
+          },
+          {
+            "default_md5": "86e751880b3791dd7c2efae188915799",
+            "generated": "",
+            "identity": "",
+            "name": "meta_access_token",
+            "not_null": true,
+            "type": "text"
+          },
+          {
+            "default_md5": "42f17cfcd6ae245c198b0b3b9f10cd54",
+            "generated": "",
+            "identity": "",
+            "name": "meta_currency",
+            "not_null": true,
+            "type": "text"
+          },
+          {
+            "default_md5": "ebfcdfb9653b8ab1fa9874fed43fd063",
+            "generated": "",
+            "identity": "",
+            "name": "meta_api_version",
+            "not_null": true,
+            "type": "text"
+          },
+          {
+            "default_md5": "68934a3e9455fa72420237eb05902327",
+            "generated": "",
+            "identity": "",
+            "name": "send_contact_capi",
+            "not_null": true,
+            "type": "boolean"
+          },
+          {
+            "default_md5": "68934a3e9455fa72420237eb05902327",
+            "generated": "",
+            "identity": "",
+            "name": "geo_use_ipapi",
+            "not_null": true,
+            "type": "boolean"
+          },
+          {
+            "default_md5": "68934a3e9455fa72420237eb05902327",
+            "generated": "",
+            "identity": "",
+            "name": "geo_fill_only_when_missing",
+            "not_null": true,
+            "type": "boolean"
+          },
+          {
+            "default_md5": "75230039beb12ce952f24927f2bfa2f2",
+            "generated": "",
+            "identity": "",
+            "name": "created_at",
+            "not_null": true,
+            "type": "timestamp with time zone"
+          },
+          {
+            "default_md5": "75230039beb12ce952f24927f2bfa2f2",
+            "generated": "",
+            "identity": "",
+            "name": "updated_at",
+            "not_null": true,
+            "type": "timestamp with time zone"
+          },
+          {
+            "default_md5": "69d085974f68bd46eb86bf48489ffc33",
+            "generated": "",
+            "identity": "",
+            "name": "visible_columns",
+            "not_null": true,
+            "type": "text[]"
+          },
+          {
+            "default_md5": "1017bfd4673955ffee4641ad3d481b1c",
+            "generated": "",
+            "identity": "",
+            "name": "funnel_premium_threshold",
+            "not_null": true,
+            "type": "numeric"
+          },
+          {
+            "default_md5": "b326b5062b2f0e69046810717534cb09",
+            "generated": "",
+            "identity": "",
+            "name": "show_logs",
+            "not_null": true,
+            "type": "boolean"
+          },
+          {
+            "default_md5": null,
+            "generated": "",
+            "identity": "",
+            "name": "tracking_ranking_config",
+            "not_null": false,
+            "type": "jsonb"
+          },
+          {
+            "default_md5": "86e751880b3791dd7c2efae188915799",
+            "generated": "",
+            "identity": "",
+            "name": "slug",
+            "not_null": true,
+            "type": "text"
+          },
+          {
+            "default_md5": "68934a3e9455fa72420237eb05902327",
+            "generated": "",
+            "identity": "",
+            "name": "show_inbox",
+            "not_null": true,
+            "type": "boolean"
+          },
+          {
+            "default_md5": "68934a3e9455fa72420237eb05902327",
+            "generated": "",
+            "identity": "",
+            "name": "show_ai_assistant",
+            "not_null": true,
+            "type": "boolean"
+          },
+          {
+            "default_md5": "68934a3e9455fa72420237eb05902327",
+            "generated": "",
+            "identity": "",
+            "name": "show_promotions",
+            "not_null": true,
+            "type": "boolean"
+          },
+          {
+            "default_md5": "68934a3e9455fa72420237eb05902327",
+            "generated": "",
+            "identity": "",
+            "name": "phone_auto_reset_daily",
+            "not_null": true,
+            "type": "boolean"
+          },
+          {
+            "default_md5": null,
+            "generated": "",
+            "identity": "",
+            "name": "phone_auto_reset_last_date",
+            "not_null": false,
+            "type": "date"
+          },
+          {
+            "default_md5": "b326b5062b2f0e69046810717534cb09",
+            "generated": "",
+            "identity": "",
+            "name": "send_lead_capi",
+            "not_null": true,
+            "type": "boolean"
+          },
+          {
+            "default_md5": "b326b5062b2f0e69046810717534cb09",
+            "generated": "",
+            "identity": "",
+            "name": "send_purchase_capi",
+            "not_null": true,
+            "type": "boolean"
+          },
+          {
+            "default_md5": "b326b5062b2f0e69046810717534cb09",
+            "generated": "",
+            "identity": "",
+            "name": "send_first_purchase_capi",
+            "not_null": true,
+            "type": "boolean"
+          },
+          {
+            "default_md5": "b326b5062b2f0e69046810717534cb09",
+            "generated": "",
+            "identity": "",
+            "name": "send_repeat_purchase_capi",
+            "not_null": true,
+            "type": "boolean"
+          },
+          {
+            "default_md5": "b326b5062b2f0e69046810717534cb09",
+            "generated": "",
+            "identity": "",
+            "name": "send_geo_capi",
+            "not_null": true,
+            "type": "boolean"
+          },
+          {
+            "default_md5": "b326b5062b2f0e69046810717534cb09",
+            "generated": "",
+            "identity": "",
+            "name": "include_purchase_type_capi",
+            "not_null": true,
+            "type": "boolean"
+          },
+          {
+            "default_md5": "7623f8a62552e5e736702595d474bd55",
+            "generated": "",
+            "identity": "",
+            "name": "funnel_premium_thresholds",
+            "not_null": true,
+            "type": "jsonb"
+          },
+          {
+            "default_md5": "f3db357cf4f4a03883484fa3281a056c",
+            "generated": "",
+            "identity": "",
+            "name": "tracking_ranking_configs",
+            "not_null": true,
+            "type": "jsonb"
+          },
+          {
+            "default_md5": "68934a3e9455fa72420237eb05902327",
+            "generated": "",
+            "identity": "",
+            "name": "meta_ads_only_capi",
+            "not_null": true,
+            "type": "boolean"
+          },
+          {
+            "default_md5": "68934a3e9455fa72420237eb05902327",
+            "generated": "",
+            "identity": "",
+            "name": "send_complete_registration_capi",
+            "not_null": true,
+            "type": "boolean"
+          },
+          {
+            "default_md5": "68934a3e9455fa72420237eb05902327",
+            "generated": "",
+            "identity": "",
+            "name": "purchase_capi_min_amount_enabled",
+            "not_null": true,
+            "type": "boolean"
+          },
+          {
+            "default_md5": "960cdc59e6b14cdf97bc2a1819737aab",
+            "generated": "",
+            "identity": "",
+            "name": "purchase_capi_min_amounts",
+            "not_null": true,
+            "type": "jsonb"
+          }
+        ],
+        "force_rls": false,
+        "kind": "r",
+        "name": "conversions_config",
+        "options": null,
+        "owner": "postgres",
+        "rls": true,
+        "schema": "public",
+        "view_md5": null
+      },
+      "remote": {
+        "columns": [
+          {
+            "default_md5": null,
+            "generated": "",
+            "identity": "",
+            "name": "user_id",
+            "not_null": true,
+            "type": "uuid"
+          },
+          {
+            "default_md5": "86e751880b3791dd7c2efae188915799",
+            "generated": "",
+            "identity": "",
+            "name": "pixel_id",
+            "not_null": true,
+            "type": "text"
+          },
+          {
+            "default_md5": "86e751880b3791dd7c2efae188915799",
+            "generated": "",
+            "identity": "",
+            "name": "meta_access_token",
+            "not_null": true,
+            "type": "text"
+          },
+          {
+            "default_md5": "42f17cfcd6ae245c198b0b3b9f10cd54",
+            "generated": "",
+            "identity": "",
+            "name": "meta_currency",
+            "not_null": true,
+            "type": "text"
+          },
+          {
+            "default_md5": "ebfcdfb9653b8ab1fa9874fed43fd063",
+            "generated": "",
+            "identity": "",
+            "name": "meta_api_version",
+            "not_null": true,
+            "type": "text"
+          },
+          {
+            "default_md5": "68934a3e9455fa72420237eb05902327",
+            "generated": "",
+            "identity": "",
+            "name": "send_contact_capi",
+            "not_null": true,
+            "type": "boolean"
+          },
+          {
+            "default_md5": "68934a3e9455fa72420237eb05902327",
+            "generated": "",
+            "identity": "",
+            "name": "geo_use_ipapi",
+            "not_null": true,
+            "type": "boolean"
+          },
+          {
+            "default_md5": "68934a3e9455fa72420237eb05902327",
+            "generated": "",
+            "identity": "",
+            "name": "geo_fill_only_when_missing",
+            "not_null": true,
+            "type": "boolean"
+          },
+          {
+            "default_md5": "75230039beb12ce952f24927f2bfa2f2",
+            "generated": "",
+            "identity": "",
+            "name": "created_at",
+            "not_null": true,
+            "type": "timestamp with time zone"
+          },
+          {
+            "default_md5": "75230039beb12ce952f24927f2bfa2f2",
+            "generated": "",
+            "identity": "",
+            "name": "updated_at",
+            "not_null": true,
+            "type": "timestamp with time zone"
+          },
+          {
+            "default_md5": "86e751880b3791dd7c2efae188915799",
+            "generated": "",
+            "identity": "",
+            "name": "slug",
+            "not_null": true,
+            "type": "text"
+          },
+          {
+            "default_md5": "1017bfd4673955ffee4641ad3d481b1c",
+            "generated": "",
+            "identity": "",
+            "name": "funnel_premium_threshold",
+            "not_null": true,
+            "type": "numeric"
+          },
+          {
+            "default_md5": "69d085974f68bd46eb86bf48489ffc33",
+            "generated": "",
+            "identity": "",
+            "name": "visible_columns",
+            "not_null": true,
+            "type": "text[]"
+          },
+          {
+            "default_md5": "b326b5062b2f0e69046810717534cb09",
+            "generated": "",
+            "identity": "",
+            "name": "show_logs",
+            "not_null": true,
+            "type": "boolean"
+          },
+          {
+            "default_md5": null,
+            "generated": "",
+            "identity": "",
+            "name": "tracking_ranking_config",
+            "not_null": false,
+            "type": "jsonb"
+          },
+          {
+            "default_md5": "68934a3e9455fa72420237eb05902327",
+            "generated": "",
+            "identity": "",
+            "name": "show_ai_assistant",
+            "not_null": true,
+            "type": "boolean"
+          },
+          {
+            "default_md5": "68934a3e9455fa72420237eb05902327",
+            "generated": "",
+            "identity": "",
+            "name": "show_inbox",
+            "not_null": true,
+            "type": "boolean"
+          },
+          {
+            "default_md5": "68934a3e9455fa72420237eb05902327",
+            "generated": "",
+            "identity": "",
+            "name": "show_promotions",
+            "not_null": true,
+            "type": "boolean"
+          },
+          {
+            "default_md5": "68934a3e9455fa72420237eb05902327",
+            "generated": "",
+            "identity": "",
+            "name": "phone_auto_reset_daily",
+            "not_null": true,
+            "type": "boolean"
+          },
+          {
+            "default_md5": null,
+            "generated": "",
+            "identity": "",
+            "name": "phone_auto_reset_last_date",
+            "not_null": false,
+            "type": "date"
+          },
+          {
+            "default_md5": "b326b5062b2f0e69046810717534cb09",
+            "generated": "",
+            "identity": "",
+            "name": "send_lead_capi",
+            "not_null": true,
+            "type": "boolean"
+          },
+          {
+            "default_md5": "b326b5062b2f0e69046810717534cb09",
+            "generated": "",
+            "identity": "",
+            "name": "send_purchase_capi",
+            "not_null": true,
+            "type": "boolean"
+          },
+          {
+            "default_md5": "b326b5062b2f0e69046810717534cb09",
+            "generated": "",
+            "identity": "",
+            "name": "send_first_purchase_capi",
+            "not_null": true,
+            "type": "boolean"
+          },
+          {
+            "default_md5": "b326b5062b2f0e69046810717534cb09",
+            "generated": "",
+            "identity": "",
+            "name": "send_repeat_purchase_capi",
+            "not_null": true,
+            "type": "boolean"
+          },
+          {
+            "default_md5": "b326b5062b2f0e69046810717534cb09",
+            "generated": "",
+            "identity": "",
+            "name": "send_geo_capi",
+            "not_null": true,
+            "type": "boolean"
+          },
+          {
+            "default_md5": "b326b5062b2f0e69046810717534cb09",
+            "generated": "",
+            "identity": "",
+            "name": "include_purchase_type_capi",
+            "not_null": true,
+            "type": "boolean"
+          },
+          {
+            "default_md5": "7623f8a62552e5e736702595d474bd55",
+            "generated": "",
+            "identity": "",
+            "name": "funnel_premium_thresholds",
+            "not_null": true,
+            "type": "jsonb"
+          },
+          {
+            "default_md5": "f3db357cf4f4a03883484fa3281a056c",
+            "generated": "",
+            "identity": "",
+            "name": "tracking_ranking_configs",
+            "not_null": true,
+            "type": "jsonb"
+          },
+          {
+            "default_md5": "68934a3e9455fa72420237eb05902327",
+            "generated": "",
+            "identity": "",
+            "name": "meta_ads_only_capi",
+            "not_null": true,
+            "type": "boolean"
+          },
+          {
+            "default_md5": "68934a3e9455fa72420237eb05902327",
+            "generated": "",
+            "identity": "",
+            "name": "send_complete_registration_capi",
+            "not_null": true,
+            "type": "boolean"
+          },
+          {
+            "default_md5": "68934a3e9455fa72420237eb05902327",
+            "generated": "",
+            "identity": "",
+            "name": "purchase_capi_min_amount_enabled",
+            "not_null": true,
+            "type": "boolean"
+          },
+          {
+            "default_md5": "960cdc59e6b14cdf97bc2a1819737aab",
+            "generated": "",
+            "identity": "",
+            "name": "purchase_capi_min_amounts",
+            "not_null": true,
+            "type": "jsonb"
+          }
+        ],
+        "force_rls": false,
+        "kind": "r",
+        "name": "conversions_config",
+        "options": null,
+        "owner": "postgres",
+        "rls": true,
+        "schema": "public",
+        "view_md5": null
+      },
+      "justification": "Physical column order only; every named column attribute and every other relation property matches.",
+      "status": "normalized_with_evidence"
+    },
+    {
+      "category": "relations",
+      "object": "public||conversions|",
+      "local": {
+        "columns": [
+          {
+            "default_md5": "f3b72bb359a50b640590970a2ab8e514",
+            "generated": "",
+            "identity": "",
+            "name": "id",
+            "not_null": true,
+            "type": "uuid"
+          },
+          {
+            "default_md5": null,
+            "generated": "",
+            "identity": "",
+            "name": "landing_id",
+            "not_null": false,
+            "type": "uuid"
+          },
+          {
+            "default_md5": null,
+            "generated": "",
+            "identity": "",
+            "name": "user_id",
+            "not_null": true,
+            "type": "uuid"
+          },
+          {
+            "default_md5": "86e751880b3791dd7c2efae188915799",
+            "generated": "",
+            "identity": "",
+            "name": "landing_name",
+            "not_null": true,
+            "type": "text"
+          },
+          {
+            "default_md5": "86e751880b3791dd7c2efae188915799",
+            "generated": "",
+            "identity": "",
+            "name": "phone",
+            "not_null": true,
+            "type": "text"
+          },
+          {
+            "default_md5": "86e751880b3791dd7c2efae188915799",
+            "generated": "",
+            "identity": "",
+            "name": "email",
+            "not_null": true,
+            "type": "text"
+          },
+          {
+            "default_md5": "86e751880b3791dd7c2efae188915799",
+            "generated": "",
+            "identity": "",
+            "name": "fn",
+            "not_null": true,
+            "type": "text"
+          },
+          {
+            "default_md5": "86e751880b3791dd7c2efae188915799",
+            "generated": "",
+            "identity": "",
+            "name": "ln",
+            "not_null": true,
+            "type": "text"
+          },
+          {
+            "default_md5": "86e751880b3791dd7c2efae188915799",
+            "generated": "",
+            "identity": "",
+            "name": "ct",
+            "not_null": true,
+            "type": "text"
+          },
+          {
+            "default_md5": "86e751880b3791dd7c2efae188915799",
+            "generated": "",
+            "identity": "",
+            "name": "st",
+            "not_null": true,
+            "type": "text"
+          },
+          {
+            "default_md5": "86e751880b3791dd7c2efae188915799",
+            "generated": "",
+            "identity": "",
+            "name": "zip",
+            "not_null": true,
+            "type": "text"
+          },
+          {
+            "default_md5": "86e751880b3791dd7c2efae188915799",
+            "generated": "",
+            "identity": "",
+            "name": "country",
+            "not_null": true,
+            "type": "text"
+          },
+          {
+            "default_md5": "86e751880b3791dd7c2efae188915799",
+            "generated": "",
+            "identity": "",
+            "name": "fbp",
+            "not_null": true,
+            "type": "text"
+          },
+          {
+            "default_md5": "86e751880b3791dd7c2efae188915799",
+            "generated": "",
+            "identity": "",
+            "name": "fbc",
+            "not_null": true,
+            "type": "text"
+          },
+          {
+            "default_md5": "86e751880b3791dd7c2efae188915799",
+            "generated": "",
+            "identity": "",
+            "name": "contact_event_id",
+            "not_null": true,
+            "type": "text"
+          },
+          {
+            "default_md5": null,
+            "generated": "",
+            "identity": "",
+            "name": "contact_event_time",
+            "not_null": false,
+            "type": "bigint"
+          },
+          {
+            "default_md5": "86e751880b3791dd7c2efae188915799",
+            "generated": "",
+            "identity": "",
+            "name": "lead_event_id",
+            "not_null": true,
+            "type": "text"
+          },
+          {
+            "default_md5": null,
+            "generated": "",
+            "identity": "",
+            "name": "lead_event_time",
+            "not_null": false,
+            "type": "bigint"
+          },
+          {
+            "default_md5": "86e751880b3791dd7c2efae188915799",
+            "generated": "",
+            "identity": "",
+            "name": "purchase_event_id",
+            "not_null": true,
+            "type": "text"
+          },
+          {
+            "default_md5": null,
+            "generated": "",
+            "identity": "",
+            "name": "purchase_event_time",
+            "not_null": false,
+            "type": "bigint"
+          },
+          {
+            "default_md5": "86e751880b3791dd7c2efae188915799",
+            "generated": "",
+            "identity": "",
+            "name": "client_ip",
+            "not_null": true,
+            "type": "text"
+          },
+          {
+            "default_md5": "86e751880b3791dd7c2efae188915799",
+            "generated": "",
+            "identity": "",
+            "name": "agent_user",
+            "not_null": true,
+            "type": "text"
+          },
+          {
+            "default_md5": "86e751880b3791dd7c2efae188915799",
+            "generated": "",
+            "identity": "",
+            "name": "device_type",
+            "not_null": true,
+            "type": "text"
+          },
+          {
+            "default_md5": "86e751880b3791dd7c2efae188915799",
+            "generated": "",
+            "identity": "",
+            "name": "event_source_url",
+            "not_null": true,
+            "type": "text"
+          },
+          {
+            "default_md5": "a5d4748bfee25bae147a4ffa7490f699",
+            "generated": "",
+            "identity": "",
+            "name": "estado",
+            "not_null": true,
+            "type": "text"
+          },
+          {
+            "default_md5": "cfcd208495d565ef66e7dff9f98764da",
+            "generated": "",
+            "identity": "",
+            "name": "valor",
+            "not_null": true,
+            "type": "numeric"
+          },
+          {
+            "default_md5": "86e751880b3791dd7c2efae188915799",
+            "generated": "",
+            "identity": "",
+            "name": "contact_status_capi",
+            "not_null": true,
+            "type": "text"
+          },
+          {
+            "default_md5": "86e751880b3791dd7c2efae188915799",
+            "generated": "",
+            "identity": "",
+            "name": "lead_status_capi",
+            "not_null": true,
+            "type": "text"
+          },
+          {
+            "default_md5": "86e751880b3791dd7c2efae188915799",
+            "generated": "",
+            "identity": "",
+            "name": "purchase_status_capi",
+            "not_null": true,
+            "type": "text"
+          },
+          {
+            "default_md5": "86e751880b3791dd7c2efae188915799",
+            "generated": "",
+            "identity": "",
+            "name": "observaciones",
+            "not_null": true,
+            "type": "text"
+          },
+          {
+            "default_md5": "86e751880b3791dd7c2efae188915799",
+            "generated": "",
+            "identity": "",
+            "name": "external_id",
+            "not_null": true,
+            "type": "text"
+          },
+          {
+            "default_md5": "86e751880b3791dd7c2efae188915799",
+            "generated": "",
+            "identity": "",
+            "name": "utm_campaign",
+            "not_null": true,
+            "type": "text"
+          },
+          {
+            "default_md5": "86e751880b3791dd7c2efae188915799",
+            "generated": "",
+            "identity": "",
+            "name": "telefono_asignado",
+            "not_null": true,
+            "type": "text"
+          },
+          {
+            "default_md5": "86e751880b3791dd7c2efae188915799",
+            "generated": "",
+            "identity": "",
+            "name": "promo_code",
+            "not_null": true,
+            "type": "text"
+          },
+          {
+            "default_md5": "86e751880b3791dd7c2efae188915799",
+            "generated": "",
+            "identity": "",
+            "name": "geo_city",
+            "not_null": true,
+            "type": "text"
+          },
+          {
+            "default_md5": "86e751880b3791dd7c2efae188915799",
+            "generated": "",
+            "identity": "",
+            "name": "geo_region",
+            "not_null": true,
+            "type": "text"
+          },
+          {
+            "default_md5": "86e751880b3791dd7c2efae188915799",
+            "generated": "",
+            "identity": "",
+            "name": "geo_country",
+            "not_null": true,
+            "type": "text"
+          },
+          {
+            "default_md5": "75230039beb12ce952f24927f2bfa2f2",
+            "generated": "",
+            "identity": "",
+            "name": "created_at",
+            "not_null": true,
+            "type": "timestamp with time zone"
+          },
+          {
+            "default_md5": "86e751880b3791dd7c2efae188915799",
+            "generated": "",
+            "identity": "",
+            "name": "test_event_code",
+            "not_null": true,
+            "type": "text"
+          },
+          {
+            "default_md5": "4cf14687154577bab6da72804ce1bbbd",
+            "generated": "",
+            "identity": "",
+            "name": "internal_id",
+            "not_null": false,
+            "type": "bigint"
+          },
+          {
+            "default_md5": "86e751880b3791dd7c2efae188915799",
+            "generated": "",
+            "identity": "",
+            "name": "pixel_id",
+            "not_null": true,
+            "type": "text"
+          },
+          {
+            "default_md5": "86e751880b3791dd7c2efae188915799",
+            "generated": "",
+            "identity": "",
+            "name": "meta_pixel_id",
+            "not_null": true,
+            "type": "text"
+          },
+          {
+            "default_md5": "68934a3e9455fa72420237eb05902327",
+            "generated": "",
+            "identity": "",
+            "name": "sendContactPixel",
+            "not_null": true,
+            "type": "boolean"
+          },
+          {
+            "default_md5": "68934a3e9455fa72420237eb05902327",
+            "generated": "",
+            "identity": "",
+            "name": "from_meta_ads",
+            "not_null": true,
+            "type": "boolean"
+          },
+          {
+            "default_md5": "3efd06564e0691c4ca7f3df332cbb312",
+            "generated": "",
+            "identity": "",
+            "name": "geo_source",
+            "not_null": true,
+            "type": "text"
+          },
+          {
+            "default_md5": "86e751880b3791dd7c2efae188915799",
+            "generated": "",
+            "identity": "",
+            "name": "lead_payload_raw",
+            "not_null": true,
+            "type": "text"
+          },
+          {
+            "default_md5": "86e751880b3791dd7c2efae188915799",
+            "generated": "",
+            "identity": "",
+            "name": "purchase_payload_raw",
+            "not_null": true,
+            "type": "text"
+          },
+          {
+            "default_md5": null,
+            "generated": "",
+            "identity": "",
+            "name": "purchase_type",
+            "not_null": false,
+            "type": "text"
+          },
+          {
+            "default_md5": "86e751880b3791dd7c2efae188915799",
+            "generated": "",
+            "identity": "",
+            "name": "contact_payload_raw",
+            "not_null": true,
+            "type": "text"
+          },
+          {
+            "default_md5": "86e751880b3791dd7c2efae188915799",
+            "generated": "",
+            "identity": "",
+            "name": "source_platform",
+            "not_null": true,
+            "type": "text"
+          },
+          {
+            "default_md5": "86e751880b3791dd7c2efae188915799",
+            "generated": "",
+            "identity": "",
+            "name": "cuit_cuil",
+            "not_null": true,
+            "type": "text"
+          },
+          {
+            "default_md5": "01ef3e7e55bf7555349ed3a07036fcb6",
+            "generated": "",
+            "identity": "",
+            "name": "inferred_sex",
+            "not_null": true,
+            "type": "text"
+          },
+          {
+            "default_md5": "01ef3e7e55bf7555349ed3a07036fcb6",
+            "generated": "",
+            "identity": "",
+            "name": "sex_source",
+            "not_null": true,
+            "type": "text"
+          },
+          {
+            "default_md5": "86e751880b3791dd7c2efae188915799",
+            "generated": "",
+            "identity": "",
+            "name": "purchase_coelsa_id",
+            "not_null": true,
+            "type": "text"
+          },
+          {
+            "default_md5": "86e751880b3791dd7c2efae188915799",
+            "generated": "",
+            "identity": "",
+            "name": "purchase_transaction_id",
+            "not_null": true,
+            "type": "text"
+          },
+          {
+            "default_md5": null,
+            "generated": "",
+            "identity": "",
+            "name": "assigned_gerencia_id",
+            "not_null": false,
+            "type": "integer"
+          },
+          {
+            "default_md5": null,
+            "generated": "",
+            "identity": "",
+            "name": "assigned_gerencia_external_id",
+            "not_null": false,
+            "type": "integer"
+          },
+          {
+            "default_md5": null,
+            "generated": "",
+            "identity": "",
+            "name": "assigned_gerencia_name",
+            "not_null": false,
+            "type": "text"
+          },
+          {
+            "default_md5": null,
+            "generated": "",
+            "identity": "",
+            "name": "assigned_gerencia_label",
+            "not_null": false,
+            "type": "text"
+          },
+          {
+            "default_md5": "68934a3e9455fa72420237eb05902327",
+            "generated": "",
+            "identity": "",
+            "name": "contact_capi_retryable",
+            "not_null": true,
+            "type": "boolean"
+          },
+          {
+            "default_md5": "68934a3e9455fa72420237eb05902327",
+            "generated": "",
+            "identity": "",
+            "name": "lead_capi_retryable",
+            "not_null": true,
+            "type": "boolean"
+          },
+          {
+            "default_md5": "cfcd208495d565ef66e7dff9f98764da",
+            "generated": "",
+            "identity": "",
+            "name": "contact_capi_retry_count",
+            "not_null": true,
+            "type": "integer"
+          },
+          {
+            "default_md5": "cfcd208495d565ef66e7dff9f98764da",
+            "generated": "",
+            "identity": "",
+            "name": "lead_capi_retry_count",
+            "not_null": true,
+            "type": "integer"
+          },
+          {
+            "default_md5": null,
+            "generated": "",
+            "identity": "",
+            "name": "contact_capi_last_retry_at",
+            "not_null": false,
+            "type": "timestamp with time zone"
+          },
+          {
+            "default_md5": null,
+            "generated": "",
+            "identity": "",
+            "name": "lead_capi_last_retry_at",
+            "not_null": false,
+            "type": "timestamp with time zone"
+          },
+          {
+            "default_md5": "86e751880b3791dd7c2efae188915799",
+            "generated": "",
+            "identity": "",
+            "name": "ctwa_clid",
+            "not_null": true,
+            "type": "text"
+          },
+          {
+            "default_md5": "86e751880b3791dd7c2efae188915799",
+            "generated": "",
+            "identity": "",
+            "name": "purchase_capi_route",
+            "not_null": true,
+            "type": "text"
+          },
+          {
+            "default_md5": "86e751880b3791dd7c2efae188915799",
+            "generated": "",
+            "identity": "",
+            "name": "purchase_capi_route_reason",
+            "not_null": true,
+            "type": "text"
+          },
+          {
+            "default_md5": "42f17cfcd6ae245c198b0b3b9f10cd54",
+            "generated": "",
+            "identity": "",
+            "name": "currency",
+            "not_null": true,
+            "type": "text"
+          },
+          {
+            "default_md5": "86e751880b3791dd7c2efae188915799",
+            "generated": "",
+            "identity": "",
+            "name": "pixel_attribution_source",
+            "not_null": true,
+            "type": "text"
+          },
+          {
+            "default_md5": null,
+            "generated": "",
+            "identity": "",
+            "name": "pixel_attribution_conversion_id",
+            "not_null": false,
+            "type": "uuid"
+          },
+          {
+            "default_md5": "86e751880b3791dd7c2efae188915799",
+            "generated": "",
+            "identity": "",
+            "name": "lead_bot_phone",
+            "not_null": true,
+            "type": "text"
+          },
+          {
+            "default_md5": "86e751880b3791dd7c2efae188915799",
+            "generated": "",
+            "identity": "",
+            "name": "lead_agency_id",
+            "not_null": true,
+            "type": "text"
+          },
+          {
+            "default_md5": null,
+            "generated": "",
+            "identity": "",
+            "name": "lead_gerencia_id",
+            "not_null": false,
+            "type": "integer"
+          },
+          {
+            "default_md5": null,
+            "generated": "",
+            "identity": "",
+            "name": "lead_gerencia_external_id",
+            "not_null": false,
+            "type": "integer"
+          },
+          {
+            "default_md5": "86e751880b3791dd7c2efae188915799",
+            "generated": "",
+            "identity": "",
+            "name": "lead_gerencia_name",
+            "not_null": true,
+            "type": "text"
+          },
+          {
+            "default_md5": "86e751880b3791dd7c2efae188915799",
+            "generated": "",
+            "identity": "",
+            "name": "lead_gerencia_label",
+            "not_null": true,
+            "type": "text"
+          },
+          {
+            "default_md5": "86e751880b3791dd7c2efae188915799",
+            "generated": "",
+            "identity": "",
+            "name": "lead_incoming_promo_code",
+            "not_null": true,
+            "type": "text"
+          },
+          {
+            "default_md5": "86e751880b3791dd7c2efae188915799",
+            "generated": "",
+            "identity": "",
+            "name": "lead_attribution_status",
+            "not_null": true,
+            "type": "text"
+          },
+          {
+            "default_md5": null,
+            "generated": "",
+            "identity": "",
+            "name": "lead_attribution_conversion_id",
+            "not_null": false,
+            "type": "uuid"
+          },
+          {
+            "default_md5": "86e751880b3791dd7c2efae188915799",
+            "generated": "",
+            "identity": "",
+            "name": "purchase_bot_phone",
+            "not_null": true,
+            "type": "text"
+          },
+          {
+            "default_md5": "86e751880b3791dd7c2efae188915799",
+            "generated": "",
+            "identity": "",
+            "name": "purchase_agency_id",
+            "not_null": true,
+            "type": "text"
+          },
+          {
+            "default_md5": null,
+            "generated": "",
+            "identity": "",
+            "name": "purchase_gerencia_id",
+            "not_null": false,
+            "type": "integer"
+          },
+          {
+            "default_md5": null,
+            "generated": "",
+            "identity": "",
+            "name": "purchase_gerencia_external_id",
+            "not_null": false,
+            "type": "integer"
+          },
+          {
+            "default_md5": "86e751880b3791dd7c2efae188915799",
+            "generated": "",
+            "identity": "",
+            "name": "purchase_gerencia_name",
+            "not_null": true,
+            "type": "text"
+          },
+          {
+            "default_md5": "86e751880b3791dd7c2efae188915799",
+            "generated": "",
+            "identity": "",
+            "name": "purchase_gerencia_label",
+            "not_null": true,
+            "type": "text"
+          },
+          {
+            "default_md5": "86e751880b3791dd7c2efae188915799",
+            "generated": "",
+            "identity": "",
+            "name": "purchase_incoming_promo_code",
+            "not_null": true,
+            "type": "text"
+          },
+          {
+            "default_md5": "86e751880b3791dd7c2efae188915799",
+            "generated": "",
+            "identity": "",
+            "name": "purchase_attribution_status",
+            "not_null": true,
+            "type": "text"
+          },
+          {
+            "default_md5": null,
+            "generated": "",
+            "identity": "",
+            "name": "purchase_attribution_conversion_id",
+            "not_null": false,
+            "type": "uuid"
+          },
+          {
+            "default_md5": "86e751880b3791dd7c2efae188915799",
+            "generated": "",
+            "identity": "",
+            "name": "lead_player_username",
+            "not_null": true,
+            "type": "text"
+          },
+          {
+            "default_md5": "86e751880b3791dd7c2efae188915799",
+            "generated": "",
+            "identity": "",
+            "name": "registration_event_id",
+            "not_null": true,
+            "type": "text"
+          },
+          {
+            "default_md5": null,
+            "generated": "",
+            "identity": "",
+            "name": "registration_event_time",
+            "not_null": false,
+            "type": "bigint"
+          },
+          {
+            "default_md5": "86e751880b3791dd7c2efae188915799",
+            "generated": "",
+            "identity": "",
+            "name": "registration_payload_raw",
+            "not_null": true,
+            "type": "text"
+          },
+          {
+            "default_md5": "86e751880b3791dd7c2efae188915799",
+            "generated": "",
+            "identity": "",
+            "name": "registration_player_username",
+            "not_null": true,
+            "type": "text"
+          },
+          {
+            "default_md5": "86e751880b3791dd7c2efae188915799",
+            "generated": "",
+            "identity": "",
+            "name": "registration_bot_phone",
+            "not_null": true,
+            "type": "text"
+          },
+          {
+            "default_md5": "86e751880b3791dd7c2efae188915799",
+            "generated": "",
+            "identity": "",
+            "name": "registration_agency_id",
+            "not_null": true,
+            "type": "text"
+          },
+          {
+            "default_md5": null,
+            "generated": "",
+            "identity": "",
+            "name": "registration_gerencia_id",
+            "not_null": false,
+            "type": "integer"
+          },
+          {
+            "default_md5": null,
+            "generated": "",
+            "identity": "",
+            "name": "registration_gerencia_external_id",
+            "not_null": false,
+            "type": "integer"
+          },
+          {
+            "default_md5": "86e751880b3791dd7c2efae188915799",
+            "generated": "",
+            "identity": "",
+            "name": "registration_gerencia_name",
+            "not_null": true,
+            "type": "text"
+          },
+          {
+            "default_md5": "86e751880b3791dd7c2efae188915799",
+            "generated": "",
+            "identity": "",
+            "name": "registration_gerencia_label",
+            "not_null": true,
+            "type": "text"
+          },
+          {
+            "default_md5": "86e751880b3791dd7c2efae188915799",
+            "generated": "",
+            "identity": "",
+            "name": "registration_incoming_promo_code",
+            "not_null": true,
+            "type": "text"
+          },
+          {
+            "default_md5": "86e751880b3791dd7c2efae188915799",
+            "generated": "",
+            "identity": "",
+            "name": "registration_attribution_status",
+            "not_null": true,
+            "type": "text"
+          },
+          {
+            "default_md5": null,
+            "generated": "",
+            "identity": "",
+            "name": "registration_attribution_conversion_id",
+            "not_null": false,
+            "type": "uuid"
+          },
+          {
+            "default_md5": "86e751880b3791dd7c2efae188915799",
+            "generated": "",
+            "identity": "",
+            "name": "purchase_player_username",
+            "not_null": true,
+            "type": "text"
+          },
+          {
+            "default_md5": "86e751880b3791dd7c2efae188915799",
+            "generated": "",
+            "identity": "",
+            "name": "registration_status_capi",
+            "not_null": true,
+            "type": "text"
+          },
+          {
+            "default_md5": "86e751880b3791dd7c2efae188915799",
+            "generated": "",
+            "identity": "",
+            "name": "form_fn",
+            "not_null": true,
+            "type": "text"
+          },
+          {
+            "default_md5": "86e751880b3791dd7c2efae188915799",
+            "generated": "",
+            "identity": "",
+            "name": "form_ln",
+            "not_null": true,
+            "type": "text"
+          },
+          {
+            "default_md5": "86e751880b3791dd7c2efae188915799",
+            "generated": "",
+            "identity": "",
+            "name": "form_email",
+            "not_null": true,
+            "type": "text"
+          },
+          {
+            "default_md5": "86e751880b3791dd7c2efae188915799",
+            "generated": "",
+            "identity": "",
+            "name": "form_phone",
+            "not_null": true,
+            "type": "text"
+          },
+          {
+            "default_md5": "86e751880b3791dd7c2efae188915799",
+            "generated": "",
+            "identity": "",
+            "name": "dataset_id",
+            "not_null": true,
+            "type": "text"
+          },
+          {
+            "default_md5": "48fbc4242d68880cfcf9317bafea3562",
+            "generated": "",
+            "identity": "",
+            "name": "workspace_resolution_source",
+            "not_null": true,
+            "type": "text"
+          },
+          {
+            "default_md5": null,
+            "generated": "",
+            "identity": "",
+            "name": "atrio_id",
+            "not_null": false,
+            "type": "text"
+          },
+          {
+            "default_md5": null,
+            "generated": "",
+            "identity": "",
+            "name": "atrio_client_id",
+            "not_null": false,
+            "type": "uuid"
+          },
+          {
+            "default_md5": null,
+            "generated": "",
+            "identity": "",
+            "name": "atrio_slug",
+            "not_null": false,
+            "type": "text"
+          },
+          {
+            "default_md5": null,
+            "generated": "",
+            "identity": "",
+            "name": "lead_atrio_id",
+            "not_null": false,
+            "type": "text"
+          },
+          {
+            "default_md5": null,
+            "generated": "",
+            "identity": "",
+            "name": "purchase_atrio_id",
+            "not_null": false,
+            "type": "text"
+          },
+          {
+            "default_md5": null,
+            "generated": "",
+            "identity": "",
+            "name": "registration_atrio_id",
+            "not_null": false,
+            "type": "text"
+          },
+          {
+            "default_md5": "86e751880b3791dd7c2efae188915799",
+            "generated": "",
+            "identity": "",
+            "name": "atrio_players_id",
+            "not_null": true,
+            "type": "text"
+          },
+          {
+            "default_md5": "86e751880b3791dd7c2efae188915799",
+            "generated": "",
+            "identity": "",
+            "name": "lead_atrio_players_id",
+            "not_null": true,
+            "type": "text"
+          },
+          {
+            "default_md5": "86e751880b3791dd7c2efae188915799",
+            "generated": "",
+            "identity": "",
+            "name": "purchase_atrio_players_id",
+            "not_null": true,
+            "type": "text"
+          },
+          {
+            "default_md5": "86e751880b3791dd7c2efae188915799",
+            "generated": "",
+            "identity": "",
+            "name": "registration_atrio_players_id",
+            "not_null": true,
+            "type": "text"
+          }
+        ],
+        "force_rls": false,
+        "kind": "r",
+        "name": "conversions",
+        "options": null,
+        "owner": "postgres",
+        "rls": true,
+        "schema": "public",
+        "view_md5": null
+      },
+      "remote": {
+        "columns": [
+          {
+            "default_md5": "f3b72bb359a50b640590970a2ab8e514",
+            "generated": "",
+            "identity": "",
+            "name": "id",
+            "not_null": true,
+            "type": "uuid"
+          },
+          {
+            "default_md5": null,
+            "generated": "",
+            "identity": "",
+            "name": "landing_id",
+            "not_null": false,
+            "type": "uuid"
+          },
+          {
+            "default_md5": null,
+            "generated": "",
+            "identity": "",
+            "name": "user_id",
+            "not_null": true,
+            "type": "uuid"
+          },
+          {
+            "default_md5": "86e751880b3791dd7c2efae188915799",
+            "generated": "",
+            "identity": "",
+            "name": "landing_name",
+            "not_null": true,
+            "type": "text"
+          },
+          {
+            "default_md5": "86e751880b3791dd7c2efae188915799",
+            "generated": "",
+            "identity": "",
+            "name": "phone",
+            "not_null": true,
+            "type": "text"
+          },
+          {
+            "default_md5": "86e751880b3791dd7c2efae188915799",
+            "generated": "",
+            "identity": "",
+            "name": "email",
+            "not_null": true,
+            "type": "text"
+          },
+          {
+            "default_md5": "86e751880b3791dd7c2efae188915799",
+            "generated": "",
+            "identity": "",
+            "name": "fn",
+            "not_null": true,
+            "type": "text"
+          },
+          {
+            "default_md5": "86e751880b3791dd7c2efae188915799",
+            "generated": "",
+            "identity": "",
+            "name": "ln",
+            "not_null": true,
+            "type": "text"
+          },
+          {
+            "default_md5": "86e751880b3791dd7c2efae188915799",
+            "generated": "",
+            "identity": "",
+            "name": "ct",
+            "not_null": true,
+            "type": "text"
+          },
+          {
+            "default_md5": "86e751880b3791dd7c2efae188915799",
+            "generated": "",
+            "identity": "",
+            "name": "st",
+            "not_null": true,
+            "type": "text"
+          },
+          {
+            "default_md5": "86e751880b3791dd7c2efae188915799",
+            "generated": "",
+            "identity": "",
+            "name": "zip",
+            "not_null": true,
+            "type": "text"
+          },
+          {
+            "default_md5": "86e751880b3791dd7c2efae188915799",
+            "generated": "",
+            "identity": "",
+            "name": "country",
+            "not_null": true,
+            "type": "text"
+          },
+          {
+            "default_md5": "86e751880b3791dd7c2efae188915799",
+            "generated": "",
+            "identity": "",
+            "name": "fbp",
+            "not_null": true,
+            "type": "text"
+          },
+          {
+            "default_md5": "86e751880b3791dd7c2efae188915799",
+            "generated": "",
+            "identity": "",
+            "name": "fbc",
+            "not_null": true,
+            "type": "text"
+          },
+          {
+            "default_md5": "86e751880b3791dd7c2efae188915799",
+            "generated": "",
+            "identity": "",
+            "name": "contact_event_id",
+            "not_null": true,
+            "type": "text"
+          },
+          {
+            "default_md5": null,
+            "generated": "",
+            "identity": "",
+            "name": "contact_event_time",
+            "not_null": false,
+            "type": "bigint"
+          },
+          {
+            "default_md5": "86e751880b3791dd7c2efae188915799",
+            "generated": "",
+            "identity": "",
+            "name": "lead_event_id",
+            "not_null": true,
+            "type": "text"
+          },
+          {
+            "default_md5": null,
+            "generated": "",
+            "identity": "",
+            "name": "lead_event_time",
+            "not_null": false,
+            "type": "bigint"
+          },
+          {
+            "default_md5": "86e751880b3791dd7c2efae188915799",
+            "generated": "",
+            "identity": "",
+            "name": "purchase_event_id",
+            "not_null": true,
+            "type": "text"
+          },
+          {
+            "default_md5": null,
+            "generated": "",
+            "identity": "",
+            "name": "purchase_event_time",
+            "not_null": false,
+            "type": "bigint"
+          },
+          {
+            "default_md5": "86e751880b3791dd7c2efae188915799",
+            "generated": "",
+            "identity": "",
+            "name": "client_ip",
+            "not_null": true,
+            "type": "text"
+          },
+          {
+            "default_md5": "86e751880b3791dd7c2efae188915799",
+            "generated": "",
+            "identity": "",
+            "name": "agent_user",
+            "not_null": true,
+            "type": "text"
+          },
+          {
+            "default_md5": "86e751880b3791dd7c2efae188915799",
+            "generated": "",
+            "identity": "",
+            "name": "device_type",
+            "not_null": true,
+            "type": "text"
+          },
+          {
+            "default_md5": "86e751880b3791dd7c2efae188915799",
+            "generated": "",
+            "identity": "",
+            "name": "event_source_url",
+            "not_null": true,
+            "type": "text"
+          },
+          {
+            "default_md5": "a5d4748bfee25bae147a4ffa7490f699",
+            "generated": "",
+            "identity": "",
+            "name": "estado",
+            "not_null": true,
+            "type": "text"
+          },
+          {
+            "default_md5": "cfcd208495d565ef66e7dff9f98764da",
+            "generated": "",
+            "identity": "",
+            "name": "valor",
+            "not_null": true,
+            "type": "numeric"
+          },
+          {
+            "default_md5": "86e751880b3791dd7c2efae188915799",
+            "generated": "",
+            "identity": "",
+            "name": "contact_status_capi",
+            "not_null": true,
+            "type": "text"
+          },
+          {
+            "default_md5": "86e751880b3791dd7c2efae188915799",
+            "generated": "",
+            "identity": "",
+            "name": "lead_status_capi",
+            "not_null": true,
+            "type": "text"
+          },
+          {
+            "default_md5": "86e751880b3791dd7c2efae188915799",
+            "generated": "",
+            "identity": "",
+            "name": "purchase_status_capi",
+            "not_null": true,
+            "type": "text"
+          },
+          {
+            "default_md5": "86e751880b3791dd7c2efae188915799",
+            "generated": "",
+            "identity": "",
+            "name": "observaciones",
+            "not_null": true,
+            "type": "text"
+          },
+          {
+            "default_md5": "86e751880b3791dd7c2efae188915799",
+            "generated": "",
+            "identity": "",
+            "name": "external_id",
+            "not_null": true,
+            "type": "text"
+          },
+          {
+            "default_md5": "86e751880b3791dd7c2efae188915799",
+            "generated": "",
+            "identity": "",
+            "name": "utm_campaign",
+            "not_null": true,
+            "type": "text"
+          },
+          {
+            "default_md5": "86e751880b3791dd7c2efae188915799",
+            "generated": "",
+            "identity": "",
+            "name": "telefono_asignado",
+            "not_null": true,
+            "type": "text"
+          },
+          {
+            "default_md5": "86e751880b3791dd7c2efae188915799",
+            "generated": "",
+            "identity": "",
+            "name": "promo_code",
+            "not_null": true,
+            "type": "text"
+          },
+          {
+            "default_md5": "86e751880b3791dd7c2efae188915799",
+            "generated": "",
+            "identity": "",
+            "name": "geo_city",
+            "not_null": true,
+            "type": "text"
+          },
+          {
+            "default_md5": "86e751880b3791dd7c2efae188915799",
+            "generated": "",
+            "identity": "",
+            "name": "geo_region",
+            "not_null": true,
+            "type": "text"
+          },
+          {
+            "default_md5": "86e751880b3791dd7c2efae188915799",
+            "generated": "",
+            "identity": "",
+            "name": "geo_country",
+            "not_null": true,
+            "type": "text"
+          },
+          {
+            "default_md5": "75230039beb12ce952f24927f2bfa2f2",
+            "generated": "",
+            "identity": "",
+            "name": "created_at",
+            "not_null": true,
+            "type": "timestamp with time zone"
+          },
+          {
+            "default_md5": null,
+            "generated": "",
+            "identity": "",
+            "name": "purchase_type",
+            "not_null": false,
+            "type": "text"
+          },
+          {
+            "default_md5": "86e751880b3791dd7c2efae188915799",
+            "generated": "",
+            "identity": "",
+            "name": "test_event_code",
+            "not_null": true,
+            "type": "text"
+          },
+          {
+            "default_md5": "86e751880b3791dd7c2efae188915799",
+            "generated": "",
+            "identity": "",
+            "name": "lead_payload_raw",
+            "not_null": true,
+            "type": "text"
+          },
+          {
+            "default_md5": "86e751880b3791dd7c2efae188915799",
+            "generated": "",
+            "identity": "",
+            "name": "purchase_payload_raw",
+            "not_null": true,
+            "type": "text"
+          },
+          {
+            "default_md5": "4cf14687154577bab6da72804ce1bbbd",
+            "generated": "",
+            "identity": "",
+            "name": "internal_id",
+            "not_null": false,
+            "type": "bigint"
+          },
+          {
+            "default_md5": "86e751880b3791dd7c2efae188915799",
+            "generated": "",
+            "identity": "",
+            "name": "contact_payload_raw",
+            "not_null": true,
+            "type": "text"
+          },
+          {
+            "default_md5": "86e751880b3791dd7c2efae188915799",
+            "generated": "",
+            "identity": "",
+            "name": "pixel_id",
+            "not_null": true,
+            "type": "text"
+          },
+          {
+            "default_md5": "86e751880b3791dd7c2efae188915799",
+            "generated": "",
+            "identity": "",
+            "name": "meta_pixel_id",
+            "not_null": true,
+            "type": "text"
+          },
+          {
+            "default_md5": "68934a3e9455fa72420237eb05902327",
+            "generated": "",
+            "identity": "",
+            "name": "sendContactPixel",
+            "not_null": true,
+            "type": "boolean"
+          },
+          {
+            "default_md5": "86e751880b3791dd7c2efae188915799",
+            "generated": "",
+            "identity": "",
+            "name": "source_platform",
+            "not_null": true,
+            "type": "text"
+          },
+          {
+            "default_md5": "68934a3e9455fa72420237eb05902327",
+            "generated": "",
+            "identity": "",
+            "name": "from_meta_ads",
+            "not_null": true,
+            "type": "boolean"
+          },
+          {
+            "default_md5": "3efd06564e0691c4ca7f3df332cbb312",
+            "generated": "",
+            "identity": "",
+            "name": "geo_source",
+            "not_null": true,
+            "type": "text"
+          },
+          {
+            "default_md5": "86e751880b3791dd7c2efae188915799",
+            "generated": "",
+            "identity": "",
+            "name": "cuit_cuil",
+            "not_null": true,
+            "type": "text"
+          },
+          {
+            "default_md5": "01ef3e7e55bf7555349ed3a07036fcb6",
+            "generated": "",
+            "identity": "",
+            "name": "inferred_sex",
+            "not_null": true,
+            "type": "text"
+          },
+          {
+            "default_md5": "01ef3e7e55bf7555349ed3a07036fcb6",
+            "generated": "",
+            "identity": "",
+            "name": "sex_source",
+            "not_null": true,
+            "type": "text"
+          },
+          {
+            "default_md5": "86e751880b3791dd7c2efae188915799",
+            "generated": "",
+            "identity": "",
+            "name": "purchase_coelsa_id",
+            "not_null": true,
+            "type": "text"
+          },
+          {
+            "default_md5": "86e751880b3791dd7c2efae188915799",
+            "generated": "",
+            "identity": "",
+            "name": "purchase_transaction_id",
+            "not_null": true,
+            "type": "text"
+          },
+          {
+            "default_md5": null,
+            "generated": "",
+            "identity": "",
+            "name": "assigned_gerencia_id",
+            "not_null": false,
+            "type": "integer"
+          },
+          {
+            "default_md5": null,
+            "generated": "",
+            "identity": "",
+            "name": "assigned_gerencia_external_id",
+            "not_null": false,
+            "type": "integer"
+          },
+          {
+            "default_md5": null,
+            "generated": "",
+            "identity": "",
+            "name": "assigned_gerencia_name",
+            "not_null": false,
+            "type": "text"
+          },
+          {
+            "default_md5": null,
+            "generated": "",
+            "identity": "",
+            "name": "assigned_gerencia_label",
+            "not_null": false,
+            "type": "text"
+          },
+          {
+            "default_md5": "68934a3e9455fa72420237eb05902327",
+            "generated": "",
+            "identity": "",
+            "name": "contact_capi_retryable",
+            "not_null": true,
+            "type": "boolean"
+          },
+          {
+            "default_md5": "68934a3e9455fa72420237eb05902327",
+            "generated": "",
+            "identity": "",
+            "name": "lead_capi_retryable",
+            "not_null": true,
+            "type": "boolean"
+          },
+          {
+            "default_md5": "cfcd208495d565ef66e7dff9f98764da",
+            "generated": "",
+            "identity": "",
+            "name": "contact_capi_retry_count",
+            "not_null": true,
+            "type": "integer"
+          },
+          {
+            "default_md5": "cfcd208495d565ef66e7dff9f98764da",
+            "generated": "",
+            "identity": "",
+            "name": "lead_capi_retry_count",
+            "not_null": true,
+            "type": "integer"
+          },
+          {
+            "default_md5": null,
+            "generated": "",
+            "identity": "",
+            "name": "contact_capi_last_retry_at",
+            "not_null": false,
+            "type": "timestamp with time zone"
+          },
+          {
+            "default_md5": null,
+            "generated": "",
+            "identity": "",
+            "name": "lead_capi_last_retry_at",
+            "not_null": false,
+            "type": "timestamp with time zone"
+          },
+          {
+            "default_md5": "86e751880b3791dd7c2efae188915799",
+            "generated": "",
+            "identity": "",
+            "name": "ctwa_clid",
+            "not_null": true,
+            "type": "text"
+          },
+          {
+            "default_md5": "86e751880b3791dd7c2efae188915799",
+            "generated": "",
+            "identity": "",
+            "name": "purchase_capi_route",
+            "not_null": true,
+            "type": "text"
+          },
+          {
+            "default_md5": "86e751880b3791dd7c2efae188915799",
+            "generated": "",
+            "identity": "",
+            "name": "purchase_capi_route_reason",
+            "not_null": true,
+            "type": "text"
+          },
+          {
+            "default_md5": "42f17cfcd6ae245c198b0b3b9f10cd54",
+            "generated": "",
+            "identity": "",
+            "name": "currency",
+            "not_null": true,
+            "type": "text"
+          },
+          {
+            "default_md5": "86e751880b3791dd7c2efae188915799",
+            "generated": "",
+            "identity": "",
+            "name": "pixel_attribution_source",
+            "not_null": true,
+            "type": "text"
+          },
+          {
+            "default_md5": null,
+            "generated": "",
+            "identity": "",
+            "name": "pixel_attribution_conversion_id",
+            "not_null": false,
+            "type": "uuid"
+          },
+          {
+            "default_md5": "86e751880b3791dd7c2efae188915799",
+            "generated": "",
+            "identity": "",
+            "name": "lead_bot_phone",
+            "not_null": true,
+            "type": "text"
+          },
+          {
+            "default_md5": "86e751880b3791dd7c2efae188915799",
+            "generated": "",
+            "identity": "",
+            "name": "lead_agency_id",
+            "not_null": true,
+            "type": "text"
+          },
+          {
+            "default_md5": null,
+            "generated": "",
+            "identity": "",
+            "name": "lead_gerencia_id",
+            "not_null": false,
+            "type": "integer"
+          },
+          {
+            "default_md5": null,
+            "generated": "",
+            "identity": "",
+            "name": "lead_gerencia_external_id",
+            "not_null": false,
+            "type": "integer"
+          },
+          {
+            "default_md5": "86e751880b3791dd7c2efae188915799",
+            "generated": "",
+            "identity": "",
+            "name": "lead_gerencia_name",
+            "not_null": true,
+            "type": "text"
+          },
+          {
+            "default_md5": "86e751880b3791dd7c2efae188915799",
+            "generated": "",
+            "identity": "",
+            "name": "lead_gerencia_label",
+            "not_null": true,
+            "type": "text"
+          },
+          {
+            "default_md5": "86e751880b3791dd7c2efae188915799",
+            "generated": "",
+            "identity": "",
+            "name": "lead_incoming_promo_code",
+            "not_null": true,
+            "type": "text"
+          },
+          {
+            "default_md5": "86e751880b3791dd7c2efae188915799",
+            "generated": "",
+            "identity": "",
+            "name": "lead_attribution_status",
+            "not_null": true,
+            "type": "text"
+          },
+          {
+            "default_md5": null,
+            "generated": "",
+            "identity": "",
+            "name": "lead_attribution_conversion_id",
+            "not_null": false,
+            "type": "uuid"
+          },
+          {
+            "default_md5": "86e751880b3791dd7c2efae188915799",
+            "generated": "",
+            "identity": "",
+            "name": "purchase_bot_phone",
+            "not_null": true,
+            "type": "text"
+          },
+          {
+            "default_md5": "86e751880b3791dd7c2efae188915799",
+            "generated": "",
+            "identity": "",
+            "name": "purchase_agency_id",
+            "not_null": true,
+            "type": "text"
+          },
+          {
+            "default_md5": null,
+            "generated": "",
+            "identity": "",
+            "name": "purchase_gerencia_id",
+            "not_null": false,
+            "type": "integer"
+          },
+          {
+            "default_md5": null,
+            "generated": "",
+            "identity": "",
+            "name": "purchase_gerencia_external_id",
+            "not_null": false,
+            "type": "integer"
+          },
+          {
+            "default_md5": "86e751880b3791dd7c2efae188915799",
+            "generated": "",
+            "identity": "",
+            "name": "purchase_gerencia_name",
+            "not_null": true,
+            "type": "text"
+          },
+          {
+            "default_md5": "86e751880b3791dd7c2efae188915799",
+            "generated": "",
+            "identity": "",
+            "name": "purchase_gerencia_label",
+            "not_null": true,
+            "type": "text"
+          },
+          {
+            "default_md5": "86e751880b3791dd7c2efae188915799",
+            "generated": "",
+            "identity": "",
+            "name": "purchase_incoming_promo_code",
+            "not_null": true,
+            "type": "text"
+          },
+          {
+            "default_md5": "86e751880b3791dd7c2efae188915799",
+            "generated": "",
+            "identity": "",
+            "name": "purchase_attribution_status",
+            "not_null": true,
+            "type": "text"
+          },
+          {
+            "default_md5": null,
+            "generated": "",
+            "identity": "",
+            "name": "purchase_attribution_conversion_id",
+            "not_null": false,
+            "type": "uuid"
+          },
+          {
+            "default_md5": "86e751880b3791dd7c2efae188915799",
+            "generated": "",
+            "identity": "",
+            "name": "lead_player_username",
+            "not_null": true,
+            "type": "text"
+          },
+          {
+            "default_md5": "86e751880b3791dd7c2efae188915799",
+            "generated": "",
+            "identity": "",
+            "name": "registration_event_id",
+            "not_null": true,
+            "type": "text"
+          },
+          {
+            "default_md5": null,
+            "generated": "",
+            "identity": "",
+            "name": "registration_event_time",
+            "not_null": false,
+            "type": "bigint"
+          },
+          {
+            "default_md5": "86e751880b3791dd7c2efae188915799",
+            "generated": "",
+            "identity": "",
+            "name": "registration_payload_raw",
+            "not_null": true,
+            "type": "text"
+          },
+          {
+            "default_md5": "86e751880b3791dd7c2efae188915799",
+            "generated": "",
+            "identity": "",
+            "name": "registration_player_username",
+            "not_null": true,
+            "type": "text"
+          },
+          {
+            "default_md5": "86e751880b3791dd7c2efae188915799",
+            "generated": "",
+            "identity": "",
+            "name": "registration_bot_phone",
+            "not_null": true,
+            "type": "text"
+          },
+          {
+            "default_md5": "86e751880b3791dd7c2efae188915799",
+            "generated": "",
+            "identity": "",
+            "name": "registration_agency_id",
+            "not_null": true,
+            "type": "text"
+          },
+          {
+            "default_md5": null,
+            "generated": "",
+            "identity": "",
+            "name": "registration_gerencia_id",
+            "not_null": false,
+            "type": "integer"
+          },
+          {
+            "default_md5": null,
+            "generated": "",
+            "identity": "",
+            "name": "registration_gerencia_external_id",
+            "not_null": false,
+            "type": "integer"
+          },
+          {
+            "default_md5": "86e751880b3791dd7c2efae188915799",
+            "generated": "",
+            "identity": "",
+            "name": "registration_gerencia_name",
+            "not_null": true,
+            "type": "text"
+          },
+          {
+            "default_md5": "86e751880b3791dd7c2efae188915799",
+            "generated": "",
+            "identity": "",
+            "name": "registration_gerencia_label",
+            "not_null": true,
+            "type": "text"
+          },
+          {
+            "default_md5": "86e751880b3791dd7c2efae188915799",
+            "generated": "",
+            "identity": "",
+            "name": "registration_incoming_promo_code",
+            "not_null": true,
+            "type": "text"
+          },
+          {
+            "default_md5": "86e751880b3791dd7c2efae188915799",
+            "generated": "",
+            "identity": "",
+            "name": "registration_attribution_status",
+            "not_null": true,
+            "type": "text"
+          },
+          {
+            "default_md5": null,
+            "generated": "",
+            "identity": "",
+            "name": "registration_attribution_conversion_id",
+            "not_null": false,
+            "type": "uuid"
+          },
+          {
+            "default_md5": "86e751880b3791dd7c2efae188915799",
+            "generated": "",
+            "identity": "",
+            "name": "purchase_player_username",
+            "not_null": true,
+            "type": "text"
+          },
+          {
+            "default_md5": "86e751880b3791dd7c2efae188915799",
+            "generated": "",
+            "identity": "",
+            "name": "registration_status_capi",
+            "not_null": true,
+            "type": "text"
+          },
+          {
+            "default_md5": "86e751880b3791dd7c2efae188915799",
+            "generated": "",
+            "identity": "",
+            "name": "form_fn",
+            "not_null": true,
+            "type": "text"
+          },
+          {
+            "default_md5": "86e751880b3791dd7c2efae188915799",
+            "generated": "",
+            "identity": "",
+            "name": "form_ln",
+            "not_null": true,
+            "type": "text"
+          },
+          {
+            "default_md5": "86e751880b3791dd7c2efae188915799",
+            "generated": "",
+            "identity": "",
+            "name": "form_email",
+            "not_null": true,
+            "type": "text"
+          },
+          {
+            "default_md5": "86e751880b3791dd7c2efae188915799",
+            "generated": "",
+            "identity": "",
+            "name": "form_phone",
+            "not_null": true,
+            "type": "text"
+          },
+          {
+            "default_md5": "86e751880b3791dd7c2efae188915799",
+            "generated": "",
+            "identity": "",
+            "name": "dataset_id",
+            "not_null": true,
+            "type": "text"
+          },
+          {
+            "default_md5": "48fbc4242d68880cfcf9317bafea3562",
+            "generated": "",
+            "identity": "",
+            "name": "workspace_resolution_source",
+            "not_null": true,
+            "type": "text"
+          },
+          {
+            "default_md5": null,
+            "generated": "",
+            "identity": "",
+            "name": "atrio_id",
+            "not_null": false,
+            "type": "text"
+          },
+          {
+            "default_md5": null,
+            "generated": "",
+            "identity": "",
+            "name": "atrio_client_id",
+            "not_null": false,
+            "type": "uuid"
+          },
+          {
+            "default_md5": null,
+            "generated": "",
+            "identity": "",
+            "name": "atrio_slug",
+            "not_null": false,
+            "type": "text"
+          },
+          {
+            "default_md5": null,
+            "generated": "",
+            "identity": "",
+            "name": "lead_atrio_id",
+            "not_null": false,
+            "type": "text"
+          },
+          {
+            "default_md5": null,
+            "generated": "",
+            "identity": "",
+            "name": "purchase_atrio_id",
+            "not_null": false,
+            "type": "text"
+          },
+          {
+            "default_md5": null,
+            "generated": "",
+            "identity": "",
+            "name": "registration_atrio_id",
+            "not_null": false,
+            "type": "text"
+          },
+          {
+            "default_md5": "86e751880b3791dd7c2efae188915799",
+            "generated": "",
+            "identity": "",
+            "name": "atrio_players_id",
+            "not_null": true,
+            "type": "text"
+          },
+          {
+            "default_md5": "86e751880b3791dd7c2efae188915799",
+            "generated": "",
+            "identity": "",
+            "name": "lead_atrio_players_id",
+            "not_null": true,
+            "type": "text"
+          },
+          {
+            "default_md5": "86e751880b3791dd7c2efae188915799",
+            "generated": "",
+            "identity": "",
+            "name": "purchase_atrio_players_id",
+            "not_null": true,
+            "type": "text"
+          },
+          {
+            "default_md5": "86e751880b3791dd7c2efae188915799",
+            "generated": "",
+            "identity": "",
+            "name": "registration_atrio_players_id",
+            "not_null": true,
+            "type": "text"
+          }
+        ],
+        "force_rls": false,
+        "kind": "r",
+        "name": "conversions",
+        "options": null,
+        "owner": "postgres",
+        "rls": true,
+        "schema": "public",
+        "view_md5": null
+      },
+      "justification": "Physical column order only; every named column attribute and every other relation property matches.",
+      "status": "normalized_with_evidence"
+    },
+    {
+      "category": "relations",
+      "object": "public||gerencias|",
+      "local": {
+        "columns": [
+          {
+            "default_md5": null,
+            "generated": "",
+            "identity": "",
+            "name": "id",
+            "not_null": true,
+            "type": "integer"
+          },
+          {
+            "default_md5": null,
+            "generated": "",
+            "identity": "",
+            "name": "user_id",
+            "not_null": true,
+            "type": "uuid"
+          },
+          {
+            "default_md5": null,
+            "generated": "",
+            "identity": "",
+            "name": "nombre",
+            "not_null": true,
+            "type": "text"
+          },
+          {
+            "default_md5": null,
+            "generated": "",
+            "identity": "",
+            "name": "gerencia_id",
+            "not_null": true,
+            "type": "integer"
+          },
+          {
+            "default_md5": "112c179b3e007f542cbf9024090fdd0e",
+            "generated": "",
+            "identity": "",
+            "name": "source_type",
+            "not_null": true,
+            "type": "text"
+          },
+          {
+            "default_md5": "74a6acd3cd2f243cbd05fc5e9823efe8",
+            "generated": "",
+            "identity": "",
+            "name": "fair_criterion",
+            "not_null": true,
+            "type": "text"
+          },
+          {
+            "default_md5": "42f17cfcd6ae245c198b0b3b9f10cd54",
+            "generated": "",
+            "identity": "",
+            "name": "workspace_currency",
+            "not_null": true,
+            "type": "text"
+          }
+        ],
+        "force_rls": false,
+        "kind": "r",
+        "name": "gerencias",
+        "options": null,
+        "owner": "postgres",
+        "rls": true,
+        "schema": "public",
+        "view_md5": null
+      },
+      "remote": {
+        "columns": [
+          {
+            "default_md5": null,
+            "generated": "",
+            "identity": "",
+            "name": "id",
+            "not_null": true,
+            "type": "integer"
+          },
+          {
+            "default_md5": null,
+            "generated": "",
+            "identity": "",
+            "name": "user_id",
+            "not_null": true,
+            "type": "uuid"
+          },
+          {
+            "default_md5": null,
+            "generated": "",
+            "identity": "",
+            "name": "nombre",
+            "not_null": true,
+            "type": "text"
+          },
+          {
+            "default_md5": null,
+            "generated": "",
+            "identity": "",
+            "name": "gerencia_id",
+            "not_null": true,
+            "type": "integer"
+          },
+          {
+            "default_md5": "74a6acd3cd2f243cbd05fc5e9823efe8",
+            "generated": "",
+            "identity": "",
+            "name": "fair_criterion",
+            "not_null": true,
+            "type": "text"
+          },
+          {
+            "default_md5": "112c179b3e007f542cbf9024090fdd0e",
+            "generated": "",
+            "identity": "",
+            "name": "source_type",
+            "not_null": true,
+            "type": "text"
+          },
+          {
+            "default_md5": "42f17cfcd6ae245c198b0b3b9f10cd54",
+            "generated": "",
+            "identity": "",
+            "name": "workspace_currency",
+            "not_null": true,
+            "type": "text"
+          }
+        ],
+        "force_rls": false,
+        "kind": "r",
+        "name": "gerencias",
+        "options": null,
+        "owner": "postgres",
+        "rls": true,
+        "schema": "public",
+        "view_md5": null
+      },
+      "justification": "Physical column order only; every named column attribute and every other relation property matches.",
+      "status": "normalized_with_evidence"
+    },
+    {
+      "category": "relations",
+      "object": "public||landings|",
+      "local": {
+        "columns": [
+          {
+            "default_md5": "f3b72bb359a50b640590970a2ab8e514",
+            "generated": "",
+            "identity": "",
+            "name": "id",
+            "not_null": true,
+            "type": "uuid"
+          },
+          {
+            "default_md5": null,
+            "generated": "",
+            "identity": "",
+            "name": "user_id",
+            "not_null": true,
+            "type": "uuid"
+          },
+          {
+            "default_md5": "d87152bb2fab6892f9162ffc338213f6",
+            "generated": "",
+            "identity": "",
+            "name": "name",
+            "not_null": true,
+            "type": "text"
+          },
+          {
+            "default_md5": "86e751880b3791dd7c2efae188915799",
+            "generated": "",
+            "identity": "",
+            "name": "comment",
+            "not_null": true,
+            "type": "text"
+          },
+          {
+            "default_md5": "f3db357cf4f4a03883484fa3281a056c",
+            "generated": "",
+            "identity": "",
+            "name": "config",
+            "not_null": true,
+            "type": "jsonb"
+          },
+          {
+            "default_md5": "2d7c7bd3307f7b76d00e49a4dcd7f2d4",
+            "generated": "",
+            "identity": "",
+            "name": "created_at",
+            "not_null": true,
+            "type": "timestamp with time zone"
+          },
+          {
+            "default_md5": "2d7c7bd3307f7b76d00e49a4dcd7f2d4",
+            "generated": "",
+            "identity": "",
+            "name": "updated_at",
+            "not_null": true,
+            "type": "timestamp with time zone"
+          },
+          {
+            "default_md5": "86e751880b3791dd7c2efae188915799",
+            "generated": "",
+            "identity": "",
+            "name": "pixel_id",
+            "not_null": true,
+            "type": "text"
+          },
+          {
+            "default_md5": "86e751880b3791dd7c2efae188915799",
+            "generated": "",
+            "identity": "",
+            "name": "post_url",
+            "not_null": true,
+            "type": "text"
+          },
+          {
+            "default_md5": "86e751880b3791dd7c2efae188915799",
+            "generated": "",
+            "identity": "",
+            "name": "landing_tag",
+            "not_null": true,
+            "type": "text"
+          },
+          {
+            "default_md5": "e05f819f6540078a0a46ab101fcab8d8",
+            "generated": "",
+            "identity": "",
+            "name": "phone_mode",
+            "not_null": true,
+            "type": "text"
+          },
+          {
+            "default_md5": "4fb0e884983c18b4997e3afedfe1d12c",
+            "generated": "",
+            "identity": "",
+            "name": "phone_kind",
+            "not_null": true,
+            "type": "text"
+          },
+          {
+            "default_md5": "cfcd208495d565ef66e7dff9f98764da",
+            "generated": "",
+            "identity": "",
+            "name": "phone_interval_minutes",
+            "not_null": true,
+            "type": "integer"
+          },
+          {
+            "default_md5": null,
+            "generated": "",
+            "identity": "",
+            "name": "phone_interval_start_hour",
+            "not_null": false,
+            "type": "integer"
+          },
+          {
+            "default_md5": null,
+            "generated": "",
+            "identity": "",
+            "name": "phone_interval_end_hour",
+            "not_null": false,
+            "type": "integer"
+          },
+          {
+            "default_md5": null,
+            "generated": "",
+            "identity": "",
+            "name": "landing_config",
+            "not_null": false,
+            "type": "jsonb"
+          },
+          {
+            "default_md5": "c39196b6ca750c9b4e300929e332de2c",
+            "generated": "",
+            "identity": "",
+            "name": "landing_type",
+            "not_null": true,
+            "type": "text"
+          },
+          {
+            "default_md5": "86e751880b3791dd7c2efae188915799",
+            "generated": "",
+            "identity": "",
+            "name": "external_domain",
+            "not_null": true,
+            "type": "text"
+          },
+          {
+            "default_md5": "161b1572e8f04ebf5eb8f96945de223a",
+            "generated": "",
+            "identity": "",
+            "name": "gerencia_selection_mode",
+            "not_null": true,
+            "type": "text"
+          },
+          {
+            "default_md5": "74a6acd3cd2f243cbd05fc5e9823efe8",
+            "generated": "",
+            "identity": "",
+            "name": "gerencia_fair_criterion",
+            "not_null": true,
+            "type": "text"
+          },
+          {
+            "default_md5": "34182b11af24a62b352c6eef9861dd52",
+            "generated": "",
+            "identity": "",
+            "name": "publish_target",
+            "not_null": true,
+            "type": "text"
+          },
+          {
+            "default_md5": "42f17cfcd6ae245c198b0b3b9f10cd54",
+            "generated": "",
+            "identity": "",
+            "name": "workspace_currency",
+            "not_null": true,
+            "type": "text"
+          },
+          {
+            "default_md5": "161b1572e8f04ebf5eb8f96945de223a",
+            "generated": "",
+            "identity": "",
+            "name": "atrio_selection_mode",
+            "not_null": true,
+            "type": "text"
+          },
+          {
+            "default_md5": "74a6acd3cd2f243cbd05fc5e9823efe8",
+            "generated": "",
+            "identity": "",
+            "name": "atrio_fair_criterion",
+            "not_null": true,
+            "type": "text"
+          }
+        ],
+        "force_rls": false,
+        "kind": "r",
+        "name": "landings",
+        "options": null,
+        "owner": "postgres",
+        "rls": true,
+        "schema": "public",
+        "view_md5": null
+      },
+      "remote": {
+        "columns": [
+          {
+            "default_md5": "f3b72bb359a50b640590970a2ab8e514",
+            "generated": "",
+            "identity": "",
+            "name": "id",
+            "not_null": true,
+            "type": "uuid"
+          },
+          {
+            "default_md5": null,
+            "generated": "",
+            "identity": "",
+            "name": "user_id",
+            "not_null": true,
+            "type": "uuid"
+          },
+          {
+            "default_md5": "d87152bb2fab6892f9162ffc338213f6",
+            "generated": "",
+            "identity": "",
+            "name": "name",
+            "not_null": true,
+            "type": "text"
+          },
+          {
+            "default_md5": "86e751880b3791dd7c2efae188915799",
+            "generated": "",
+            "identity": "",
+            "name": "comment",
+            "not_null": true,
+            "type": "text"
+          },
+          {
+            "default_md5": "f3db357cf4f4a03883484fa3281a056c",
+            "generated": "",
+            "identity": "",
+            "name": "config",
+            "not_null": true,
+            "type": "jsonb"
+          },
+          {
+            "default_md5": "2d7c7bd3307f7b76d00e49a4dcd7f2d4",
+            "generated": "",
+            "identity": "",
+            "name": "created_at",
+            "not_null": true,
+            "type": "timestamp with time zone"
+          },
+          {
+            "default_md5": "2d7c7bd3307f7b76d00e49a4dcd7f2d4",
+            "generated": "",
+            "identity": "",
+            "name": "updated_at",
+            "not_null": true,
+            "type": "timestamp with time zone"
+          },
+          {
+            "default_md5": "86e751880b3791dd7c2efae188915799",
+            "generated": "",
+            "identity": "",
+            "name": "pixel_id",
+            "not_null": true,
+            "type": "text"
+          },
+          {
+            "default_md5": "86e751880b3791dd7c2efae188915799",
+            "generated": "",
+            "identity": "",
+            "name": "post_url",
+            "not_null": true,
+            "type": "text"
+          },
+          {
+            "default_md5": "86e751880b3791dd7c2efae188915799",
+            "generated": "",
+            "identity": "",
+            "name": "landing_tag",
+            "not_null": true,
+            "type": "text"
+          },
+          {
+            "default_md5": "e05f819f6540078a0a46ab101fcab8d8",
+            "generated": "",
+            "identity": "",
+            "name": "phone_mode",
+            "not_null": true,
+            "type": "text"
+          },
+          {
+            "default_md5": "4fb0e884983c18b4997e3afedfe1d12c",
+            "generated": "",
+            "identity": "",
+            "name": "phone_kind",
+            "not_null": true,
+            "type": "text"
+          },
+          {
+            "default_md5": "cfcd208495d565ef66e7dff9f98764da",
+            "generated": "",
+            "identity": "",
+            "name": "phone_interval_minutes",
+            "not_null": true,
+            "type": "integer"
+          },
+          {
+            "default_md5": null,
+            "generated": "",
+            "identity": "",
+            "name": "phone_interval_start_hour",
+            "not_null": false,
+            "type": "integer"
+          },
+          {
+            "default_md5": null,
+            "generated": "",
+            "identity": "",
+            "name": "phone_interval_end_hour",
+            "not_null": false,
+            "type": "integer"
+          },
+          {
+            "default_md5": null,
+            "generated": "",
+            "identity": "",
+            "name": "landing_config",
+            "not_null": false,
+            "type": "jsonb"
+          },
+          {
+            "default_md5": "161b1572e8f04ebf5eb8f96945de223a",
+            "generated": "",
+            "identity": "",
+            "name": "gerencia_selection_mode",
+            "not_null": true,
+            "type": "text"
+          },
+          {
+            "default_md5": "74a6acd3cd2f243cbd05fc5e9823efe8",
+            "generated": "",
+            "identity": "",
+            "name": "gerencia_fair_criterion",
+            "not_null": true,
+            "type": "text"
+          },
+          {
+            "default_md5": "c39196b6ca750c9b4e300929e332de2c",
+            "generated": "",
+            "identity": "",
+            "name": "landing_type",
+            "not_null": true,
+            "type": "text"
+          },
+          {
+            "default_md5": "86e751880b3791dd7c2efae188915799",
+            "generated": "",
+            "identity": "",
+            "name": "external_domain",
+            "not_null": true,
+            "type": "text"
+          },
+          {
+            "default_md5": "34182b11af24a62b352c6eef9861dd52",
+            "generated": "",
+            "identity": "",
+            "name": "publish_target",
+            "not_null": true,
+            "type": "text"
+          },
+          {
+            "default_md5": "42f17cfcd6ae245c198b0b3b9f10cd54",
+            "generated": "",
+            "identity": "",
+            "name": "workspace_currency",
+            "not_null": true,
+            "type": "text"
+          },
+          {
+            "default_md5": "161b1572e8f04ebf5eb8f96945de223a",
+            "generated": "",
+            "identity": "",
+            "name": "atrio_selection_mode",
+            "not_null": true,
+            "type": "text"
+          },
+          {
+            "default_md5": "74a6acd3cd2f243cbd05fc5e9823efe8",
+            "generated": "",
+            "identity": "",
+            "name": "atrio_fair_criterion",
+            "not_null": true,
+            "type": "text"
+          }
+        ],
+        "force_rls": false,
+        "kind": "r",
+        "name": "landings",
+        "options": null,
+        "owner": "postgres",
+        "rls": true,
+        "schema": "public",
+        "view_md5": null
+      },
+      "justification": "Physical column order only; every named column attribute and every other relation property matches.",
+      "status": "normalized_with_evidence"
+    },
+    {
+      "category": "event_triggers",
+      "object": "||graphql_watch_ddl|",
+      "local": {
+        "enabled": "O",
+        "event": "ddl_command_end",
+        "function": "increment_schema_version",
+        "function_schema": "graphql",
+        "name": "graphql_watch_ddl",
+        "tags": null
+      },
+      "remote": null,
+      "justification": "Official local provider pg_graphql 1.5.11 and its own extension-member event triggers; absent remotely; application code contains no GraphQL calls. Optional provider API difference accepted explicitly; not application/security parity normalization.",
+      "status": "normalized_with_evidence"
+    },
+    {
+      "category": "event_triggers",
+      "object": "||graphql_watch_drop|",
+      "local": {
+        "enabled": "O",
+        "event": "sql_drop",
+        "function": "increment_schema_version",
+        "function_schema": "graphql",
+        "name": "graphql_watch_drop",
+        "tags": null
+      },
+      "remote": null,
+      "justification": "Official local provider pg_graphql 1.5.11 and its own extension-member event triggers; absent remotely; application code contains no GraphQL calls. Optional provider API difference accepted explicitly; not application/security parity normalization.",
+      "status": "normalized_with_evidence"
+    },
+    {
+      "category": "extensions",
+      "object": "graphql||pg_graphql|",
+      "local": {
+        "name": "pg_graphql",
+        "schema": "graphql",
+        "version": "1.5.11"
+      },
+      "remote": null,
+      "justification": "Official local provider pg_graphql 1.5.11 and its own extension-member event triggers; absent remotely; application code contains no GraphQL calls. Optional provider API difference accepted explicitly; not application/security parity normalization.",
+      "status": "normalized_with_evidence"
+    },
+    {
+      "category": "provider_hooks",
+      "object": "extensions.grant_pg_net_access()",
+      "local": [
+        {
+          "acl": "{=X/supabase_admin,supabase_admin=X*/supabase_admin,dashboard_user=X/supabase_admin}",
+          "name": "grant_pg_net_access",
+          "owner": "supabase_admin",
+          "definition": "CREATE OR REPLACE FUNCTION extensions.grant_pg_net_access()\n RETURNS event_trigger\n LANGUAGE plpgsql\nAS $function$\nBEGIN\n  IF EXISTS (\n    SELECT 1\n    FROM pg_event_trigger_ddl_commands() AS ev\n    JOIN pg_extension AS ext\n    ON ev.objid = ext.oid\n    WHERE ext.extname = 'pg_net'\n  )\n  THEN\n    GRANT USAGE ON SCHEMA net TO supabase_functions_admin, postgres, anon, authenticated, service_role;\n\n    ALTER function net.http_get(url text, params jsonb, headers jsonb, timeout_milliseconds integer) SECURITY DEFINER;\n    ALTER function net.http_post(url text, body jsonb, params jsonb, headers jsonb, timeout_milliseconds integer) SECURITY DEFINER;\n\n    ALTER function net.http_get(url text, params jsonb, headers jsonb, timeout_milliseconds integer) SET search_path = net;\n    ALTER function net.http_post(url text, body jsonb, params jsonb, headers jsonb, timeout_milliseconds integer) SET search_path = net;\n\n    REVOKE ALL ON FUNCTION net.http_get(url text, params jsonb, headers jsonb, timeout_milliseconds integer) FROM PUBLIC;\n    REVOKE ALL ON FUNCTION net.http_post(url text, body jsonb, params jsonb, headers jsonb, timeout_milliseconds integer) FROM PUBLIC;\n\n    GRANT EXECUTE ON FUNCTION net.http_get(url text, params jsonb, headers jsonb, timeout_milliseconds integer) TO supabase_functions_admin, postgres, anon, authenticated, service_role;\n    GRANT EXECUTE ON FUNCTION net.http_post(url text, body jsonb, params jsonb, headers jsonb, timeout_milliseconds integer) TO supabase_functions_admin, postgres, anon, authenticated, service_role;\n  END IF;\nEND;\n$function$\n"
+        }
+      ],
+      "remote": [
+        {
+          "acl": "{=X/supabase_admin,supabase_admin=X*/supabase_admin,dashboard_user=X/supabase_admin}",
+          "name": "grant_pg_net_access",
+          "owner": "supabase_admin",
+          "definition": "CREATE OR REPLACE FUNCTION extensions.grant_pg_net_access()\n RETURNS event_trigger\n LANGUAGE plpgsql\n SET search_path TO ''\nAS $function$\nBEGIN\n  IF EXISTS (\n    SELECT 1\n    FROM pg_event_trigger_ddl_commands() AS ev\n    JOIN pg_extension AS ext\n    ON ev.objid = ext.oid\n    WHERE ext.extname = 'pg_net'\n  )\n  THEN\n    IF NOT EXISTS (\n      SELECT 1\n      FROM pg_roles\n      WHERE rolname = 'supabase_functions_admin'\n    )\n    THEN\n      CREATE USER supabase_functions_admin NOINHERIT CREATEROLE LOGIN NOREPLICATION;\n    END IF;\n\n    GRANT USAGE ON SCHEMA net TO supabase_functions_admin, postgres, anon, authenticated, service_role;\n\n    IF EXISTS (\n      SELECT FROM pg_extension\n      WHERE extname = 'pg_net'\n      -- all versions in use on existing projects as of 2025-02-20\n      -- version 0.12.0 onwards don't need these applied\n      AND extversion IN ('0.2', '0.6', '0.7', '0.7.1', '0.8.0', '0.10.0', '0.11.0')\n    ) THEN\n      ALTER function net.http_get(url text, params jsonb, headers jsonb, timeout_milliseconds integer) SECURITY DEFINER;\n      ALTER function net.http_post(url text, body jsonb, params jsonb, headers jsonb, timeout_milliseconds integer) SECURITY DEFINER;\n\n      ALTER function net.http_get(url text, params jsonb, headers jsonb, timeout_milliseconds integer) SET search_path = net;\n      ALTER function net.http_post(url text, body jsonb, params jsonb, headers jsonb, timeout_milliseconds integer) SET search_path = net;\n\n      REVOKE ALL ON FUNCTION net.http_get(url text, params jsonb, headers jsonb, timeout_milliseconds integer) FROM PUBLIC;\n      REVOKE ALL ON FUNCTION net.http_post(url text, body jsonb, params jsonb, headers jsonb, timeout_milliseconds integer) FROM PUBLIC;\n\n      GRANT EXECUTE ON FUNCTION net.http_get(url text, params jsonb, headers jsonb, timeout_milliseconds integer) TO supabase_functions_admin, postgres, anon, authenticated, service_role;\n      GRANT EXECUTE ON FUNCTION net.http_post(url text, body jsonb, params jsonb, headers jsonb, timeout_milliseconds integer) TO supabase_functions_admin, postgres, anon, authenticated, service_role;\n    END IF;\n  END IF;\nEND;\n$function$\n"
+        }
+      ],
+      "status": "normalized_with_evidence",
+      "justification": "Exact CLI 2.75.0 hook is retained. Its unconditional CREATE EXTENSION overrides are avoided only during native 0.19.5 installation on an empty isolated database with SET LOCAL event_triggers=false. Trigger is restored immediately. All 12 installed functions and all effective privileges of the five roles match remote after all 268 migrations. Future extension lifecycle changes must rerun this comparison; this is not a generic extension exclusion."
+    }
+  ],
+  "pending": [],
+  "unresolved": 0,
+  "fullComparisonPerformed": true,
+  "platform": {
+    "pgNetFunctionsIdentical": true,
+    "graphqlTriggerMembershipVerified": true,
+    "pgNetSecurityAndRolePrivilegesExact": true,
+    "repeatable": true
+  },
+  "securityReferenceVerified": true,
+  "compositeFingerprints": [
+    "182bbc25af1c91fc8e275513ec1cb564fb031fb9091e98caf357ce6ed4b902b5",
+    "182bbc25af1c91fc8e275513ec1cb564fb031fb9091e98caf357ce6ed4b902b5"
+  ],
+  "additionalPlatformDifferences": 1,
+  "totalDifferences": 8
+}

@@ -1,0 +1,221 @@
+{
+  "cli": "2.75.0",
+  "docker": {
+    "cpus": 8,
+    "memoryBytes": 7205425152,
+    "version": "29.7.2"
+  },
+  "localOnly": true,
+  "linked": false,
+  "seedEnabled": false,
+  "migrationCount": 268,
+  "stages": [
+    {
+      "kind": "database-start",
+      "atMs": 677
+    },
+    {
+      "kind": "schema-bootstrap",
+      "atMs": 12300
+    },
+    {
+      "kind": "services-start",
+      "atMs": 39584
+    }
+  ],
+  "snapshots": [
+    {
+      "atMs": 10029,
+      "containers": [
+        "supabase_db_[test-project]|Up 8 seconds (health: starting)"
+      ]
+    },
+    {
+      "atMs": 20033,
+      "containers": [
+        "supabase_db_[test-project]|Up 18 seconds (healthy)"
+      ]
+    },
+    {
+      "atMs": 30048,
+      "containers": [
+        "supabase_db_[test-project]|Up 28 seconds (healthy)"
+      ]
+    },
+    {
+      "atMs": 40052,
+      "containers": [
+        "supabase_db_[test-project]|Up 38 seconds (healthy)"
+      ]
+    },
+    {
+      "atMs": 50060,
+      "containers": [
+        "supabase_inbucket_[test-project]|Created",
+        "supabase_auth_[test-project]|Up 3 seconds (health: starting)",
+        "supabase_kong_[test-project]|Up 6 seconds (health: starting)",
+        "supabase_vector_[test-project]|Restarting (0) 1 second ago",
+        "supabase_analytics_[test-project]|Up 9 seconds (health: starting)",
+        "supabase_db_[test-project]|Up 48 seconds (healthy)"
+      ]
+    },
+    {
+      "atMs": 60063,
+      "containers": [
+        "supabase_storage_[test-project]|Up 3 seconds (health: starting)",
+        "supabase_rest_[test-project]|Up 5 seconds",
+        "supabase_realtime_[test-project]|Up 8 seconds (health: starting)",
+        "supabase_inbucket_[test-project]|Up 10 seconds (healthy)",
+        "supabase_auth_[test-project]|Up 13 seconds (healthy)",
+        "supabase_kong_[test-project]|Up 17 seconds (healthy)",
+        "supabase_vector_[test-project]|Up 2 seconds (health: starting)",
+        "supabase_analytics_[test-project]|Up 19 seconds (health: starting)",
+        "supabase_db_[test-project]|Up 58 seconds (healthy)"
+      ]
+    },
+    {
+      "atMs": 70072,
+      "containers": [
+        "supabase_studio_[test-project]|Up 3 seconds (health: starting)",
+        "supabase_pg_meta_[test-project]|Up 6 seconds (health: starting)",
+        "supabase_edge_runtime_[test-project]|Up 9 seconds",
+        "supabase_storage_[test-project]|Up 13 seconds (health: starting)",
+        "supabase_rest_[test-project]|Up 15 seconds",
+        "supabase_realtime_[test-project]|Up 18 seconds (health: starting)",
+        "supabase_inbucket_[test-project]|Up 20 seconds (healthy)",
+        "supabase_auth_[test-project]|Up 23 seconds (healthy)",
+        "supabase_kong_[test-project]|Up 26 seconds (healthy)",
+        "supabase_vector_[test-project]|Restarting (0) 5 seconds ago",
+        "supabase_analytics_[test-project]|Up 29 seconds (health: starting)",
+        "supabase_db_[test-project]|Up About a minute (healthy)"
+      ]
+    },
+    {
+      "atMs": 80085,
+      "containers": [
+        "supabase_studio_[test-project]|Up 13 seconds (health: starting)",
+        "supabase_pg_meta_[test-project]|Up 16 seconds (health: starting)",
+        "supabase_edge_runtime_[test-project]|Up 19 seconds",
+        "supabase_storage_[test-project]|Up 23 seconds (health: starting)",
+        "supabase_rest_[test-project]|Up 25 seconds",
+        "supabase_realtime_[test-project]|Up 28 seconds (health: starting)",
+        "supabase_inbucket_[test-project]|Up 31 seconds (healthy)",
+        "supabase_auth_[test-project]|Up 33 seconds (healthy)",
+        "supabase_kong_[test-project]|Up 37 seconds (healthy)",
+        "supabase_vector_[test-project]|Up 1 second (health: starting)",
+        "supabase_analytics_[test-project]|Up 39 seconds (unhealthy)",
+        "supabase_db_[test-project]|Up About a minute (healthy)"
+      ]
+    },
+    {
+      "atMs": 90091,
+      "containers": [
+        "supabase_studio_[test-project]|Up 23 seconds (health: starting)",
+        "supabase_pg_meta_[test-project]|Up 26 seconds (healthy)",
+        "supabase_edge_runtime_[test-project]|Up 29 seconds",
+        "supabase_storage_[test-project]|Up 33 seconds (healthy)",
+        "supabase_rest_[test-project]|Up 35 seconds",
+        "supabase_realtime_[test-project]|Up 38 seconds (unhealthy)",
+        "supabase_inbucket_[test-project]|Up 40 seconds (healthy)",
+        "supabase_auth_[test-project]|Up 43 seconds (healthy)",
+        "supabase_kong_[test-project]|Up 46 seconds (healthy)",
+        "supabase_vector_[test-project]|Restarting (0) 8 seconds ago",
+        "supabase_analytics_[test-project]|Up 49 seconds (unhealthy)",
+        "supabase_db_[test-project]|Up About a minute (healthy)"
+      ]
+    },
+    {
+      "atMs": 100105,
+      "containers": [
+        "supabase_studio_[test-project]|Up 33 seconds (health: starting)",
+        "supabase_pg_meta_[test-project]|Up 36 seconds (healthy)",
+        "supabase_edge_runtime_[test-project]|Up 39 seconds",
+        "supabase_storage_[test-project]|Up 43 seconds (healthy)",
+        "supabase_rest_[test-project]|Up 45 seconds",
+        "supabase_realtime_[test-project]|Up 48 seconds (unhealthy)",
+        "supabase_inbucket_[test-project]|Up 50 seconds (healthy)",
+        "supabase_auth_[test-project]|Up 53 seconds (healthy)",
+        "supabase_kong_[test-project]|Up 56 seconds (healthy)",
+        "supabase_vector_[test-project]|Restarting (0) 2 seconds ago",
+        "supabase_analytics_[test-project]|Up 59 seconds (unhealthy)",
+        "supabase_db_[test-project]|Up About a minute (healthy)"
+      ]
+    },
+    {
+      "atMs": 110113,
+      "containers": [
+        "supabase_studio_[test-project]|Up 43 seconds (healthy)",
+        "supabase_pg_meta_[test-project]|Up 46 seconds (healthy)",
+        "supabase_edge_runtime_[test-project]|Up 49 seconds",
+        "supabase_storage_[test-project]|Up 53 seconds (healthy)",
+        "supabase_rest_[test-project]|Up 55 seconds",
+        "supabase_realtime_[test-project]|Up 58 seconds (healthy)",
+        "supabase_inbucket_[test-project]|Up About a minute (healthy)",
+        "supabase_auth_[test-project]|Up About a minute (healthy)",
+        "supabase_kong_[test-project]|Up About a minute (healthy)",
+        "supabase_vector_[test-project]|Restarting (0) 12 seconds ago",
+        "supabase_analytics_[test-project]|Up About a minute (unhealthy)",
+        "supabase_db_[test-project]|Up About a minute (healthy)"
+      ]
+    },
+    {
+      "atMs": 120117,
+      "containers": [
+        "supabase_studio_[test-project]|Up 53 seconds (healthy)",
+        "supabase_pg_meta_[test-project]|Up 56 seconds (healthy)",
+        "supabase_edge_runtime_[test-project]|Up 59 seconds",
+        "supabase_storage_[test-project]|Up About a minute (healthy)",
+        "supabase_rest_[test-project]|Up About a minute",
+        "supabase_realtime_[test-project]|Up About a minute (healthy)",
+        "supabase_inbucket_[test-project]|Up About a minute (healthy)",
+        "supabase_auth_[test-project]|Up About a minute (healthy)",
+        "supabase_kong_[test-project]|Up About a minute (healthy)",
+        "supabase_vector_[test-project]|Restarting (0) 22 seconds ago",
+        "supabase_analytics_[test-project]|Up About a minute (unhealthy)",
+        "supabase_db_[test-project]|Up About a minute (healthy)"
+      ]
+    },
+    {
+      "atMs": 130117,
+      "containers": [
+        "supabase_studio_[test-project]|Exited (0) 4 seconds ago",
+        "supabase_pg_meta_[test-project]|Exited (137) 1 second ago",
+        "supabase_edge_runtime_[test-project]|Exited (137) 1 second ago",
+        "supabase_storage_[test-project]|Up About a minute (healthy)",
+        "supabase_rest_[test-project]|Exited (255) 4 seconds ago",
+        "supabase_realtime_[test-project]|Exited (0) 2 seconds ago",
+        "supabase_inbucket_[test-project]|Exited (0) 4 seconds ago",
+        "supabase_auth_[test-project]|Exited (0) 4 seconds ago",
+        "supabase_kong_[test-project]|Exited (137) 1 second ago",
+        "supabase_vector_[test-project]|Restarting (0) 1 second ago",
+        "supabase_analytics_[test-project]|Up About a minute (healthy)",
+        "supabase_db_[test-project]|Exited (137) 1 second ago"
+      ]
+    },
+    {
+      "container": "supabase_vector_[test-project]",
+      "state": "restarting",
+      "exitCode": 0,
+      "oomKilled": false,
+      "health": "unhealthy"
+    }
+  ],
+  "migrations": [],
+  "bootstrap": {
+    "exitCode": 1,
+    "timedOut": false,
+    "extended": false,
+    "elapsedMs": 135600
+  },
+  "errorCategories": [
+    "unhealthy"
+  ],
+  "debugTailCategories": [
+    "Starting database...",
+    "Initialising schema...",
+    "Starting containers...",
+    "Waiting for health checks..."
+  ],
+  "completeBackend": false,
+  "temporaryProject": "OS temporary directory / phase0-diagnose-*; only synthetic local config; no secrets retained"
+}

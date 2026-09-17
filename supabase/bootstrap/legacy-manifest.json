@@ -1,0 +1,5055 @@
+{
+  "formatVersion": 1,
+  "legacyCutoff": "20260915190657",
+  "legacyCount": 268,
+  "authorization": "User approved legacy bootstrap and two recoveries; new legacy exceptions require a separate decision.",
+  "sources": "Original supabase/migrations files, never copied into a second schema.",
+  "exceptions": {
+    "20260427180000": {
+      "kind": "exact-statements-recovered",
+      "remoteLedgerMd5": "6bbd4ef6d971e9e2a9d24db227844990"
+    },
+    "20260427190000": {
+      "kind": "authorized-sanitized-scheduler",
+      "remoteLedgerMd5": "34162945f0a3ae6cf9cd926cdf9b588f",
+      "transformation": "URL and Bearer literal replaced by phase0.tracking_retry_url and phase0.tracking_retry_token settings; synthetic only, cron disabled."
+    },
+    "20260325201000": {
+      "kind": "authorized-empty-sequence-correction",
+      "remoteLedgerMd5": "309aa67e73dffb3b91235f037f9a140c",
+      "previousFileSha256": "27e0a385c7790d07449435fb89faa30efa9df0a789ef36803dbaf12971c37f12",
+      "correctedFileSha256": "9a97b61ee91045c20fb62f9daddd1124592ceb8f2bd389b2aebf6e1eef233b9f",
+      "transformation": "Only setval arguments: empty table uses pg_sequence.seqmin with is_called=false; populated table keeps MAX(internal_id), true.",
+      "authorization": "User explicitly authorized this correction and independent before/after equivalence tests."
+    }
+  },
+  "entries": [
+    {
+      "version": "0001",
+      "file": "0001_base_schema.sql",
+      "sha256": "5e5857e0088d85ab20f4f7abb908046abfc4d56e4a0e4eedc3a2f2731c477b58",
+      "chronologicalOrder": 1,
+      "executionOrder": 1,
+      "transaction": true,
+      "dependencies": [],
+      "orderReason": "Chronological position preserved."
+    },
+    {
+      "version": "20260227100000",
+      "file": "20260227100000_landings.sql",
+      "sha256": "96ffba56858883c9ce88091cbe3cd21d0a80474c6088cb5b1bf509be3786fb1c",
+      "chronologicalOrder": 2,
+      "executionOrder": 2,
+      "transaction": true,
+      "dependencies": [
+        {
+          "version": "0001",
+          "reason": "Referenced relation profiles must exist before this migration."
+        }
+      ],
+      "orderReason": "Chronological position preserved."
+    },
+    {
+      "version": "20260227110000",
+      "file": "20260227110000_storage_landing_images.sql",
+      "sha256": "c48a74d926cf42c13ece6e75c5c4c4e25025e137a9a722e52007e2e20a2f714c",
+      "chronologicalOrder": 3,
+      "executionOrder": 3,
+      "transaction": true,
+      "dependencies": [],
+      "orderReason": "Chronological position preserved."
+    },
+    {
+      "version": "20260227120000",
+      "file": "20260227120000_landings_name_unique_index.sql",
+      "sha256": "da97b0009b97f7fac3dfb0a3debe23c7bf696daa6929123b0ef532e829077d43",
+      "chronologicalOrder": 4,
+      "executionOrder": 4,
+      "transaction": true,
+      "dependencies": [
+        {
+          "version": "20260227100000",
+          "reason": "Referenced relation landings must exist before this migration."
+        }
+      ],
+      "orderReason": "Chronological position preserved."
+    },
+    {
+      "version": "20260227130000",
+      "file": "20260227130000_settings.sql",
+      "sha256": "951bfce0f96521b25fd846abd24c34e847a67264bc84548fa3b6456de95e8d09",
+      "chronologicalOrder": 5,
+      "executionOrder": 5,
+      "transaction": true,
+      "dependencies": [
+        {
+          "version": "0001",
+          "reason": "Referenced relation profiles must exist before this migration."
+        }
+      ],
+      "orderReason": "Chronological position preserved."
+    },
+    {
+      "version": "20260227140000",
+      "file": "20260227140000_gerencias.sql",
+      "sha256": "f0b731547342bb5798470e396d0c9ab28e93a5597a5150ceca038c4ae5b82bef",
+      "chronologicalOrder": 6,
+      "executionOrder": 6,
+      "transaction": true,
+      "dependencies": [
+        {
+          "version": "0001",
+          "reason": "Referenced relation profiles must exist before this migration."
+        },
+        {
+          "version": "20260227100000",
+          "reason": "Referenced relation landings must exist before this migration."
+        }
+      ],
+      "orderReason": "Chronological position preserved."
+    },
+    {
+      "version": "20260227150000",
+      "file": "20260227150000_landings_pixel_id_gerencias_gerencia_id.sql",
+      "sha256": "8377e0b28a8cf97019a091aa3b32ef24712d504141514d3e1c860b90ccb305f1",
+      "chronologicalOrder": 7,
+      "executionOrder": 7,
+      "transaction": true,
+      "dependencies": [
+        {
+          "version": "20260227100000",
+          "reason": "Referenced relation landings must exist before this migration."
+        },
+        {
+          "version": "20260227140000",
+          "reason": "Referenced relation gerencias must exist before this migration."
+        }
+      ],
+      "orderReason": "Chronological position preserved."
+    },
+    {
+      "version": "20260227184152",
+      "file": "20260227184152_base_schema.sql",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "chronologicalOrder": 8,
+      "executionOrder": 8,
+      "transaction": true,
+      "dependencies": [],
+      "orderReason": "Chronological position preserved."
+    },
+    {
+      "version": "20260228000000",
+      "file": "20260228000000_add_nombre_to_profiles.sql",
+      "sha256": "be68ff6f278a2dec2ea0ba006de52ad86564189c82aa1701e9961e2f07c53052",
+      "chronologicalOrder": 9,
+      "executionOrder": 9,
+      "transaction": true,
+      "dependencies": [
+        {
+          "version": "0001",
+          "reason": "Referenced relation profiles must exist before this migration."
+        }
+      ],
+      "orderReason": "Chronological position preserved."
+    },
+    {
+      "version": "20260228110000",
+      "file": "20260228110000_require_pixel_id_and_gerencia_id.sql",
+      "sha256": "7b74231aba555a7a64f2859c72b8a4f4766929be98485a8c183efba8ef0a3bcc",
+      "chronologicalOrder": 10,
+      "executionOrder": 10,
+      "transaction": true,
+      "dependencies": [
+        {
+          "version": "20260227100000",
+          "reason": "Referenced relation landings must exist before this migration."
+        },
+        {
+          "version": "20260227140000",
+          "reason": "Referenced relation gerencias must exist before this migration."
+        }
+      ],
+      "orderReason": "Chronological position preserved."
+    },
+    {
+      "version": "20260228120000",
+      "file": "20260228120000_landings_gerencias_weight.sql",
+      "sha256": "e5a13247776ffeb3833e967c1f84307bda618b03b6dbdbe6bf3e470c9669b2af",
+      "chronologicalOrder": 11,
+      "executionOrder": 11,
+      "transaction": true,
+      "dependencies": [
+        {
+          "version": "20260227140000",
+          "reason": "Referenced relation landings_gerencias must exist before this migration."
+        }
+      ],
+      "orderReason": "Chronological position preserved."
+    },
+    {
+      "version": "20260228130000",
+      "file": "20260228130000_landings_tracking_fields.sql",
+      "sha256": "2b4b93dfc22aca2778e7112e6cf77979ea9b3e84c91cc8b45391d98c8365ebfc",
+      "chronologicalOrder": 12,
+      "executionOrder": 12,
+      "transaction": true,
+      "dependencies": [
+        {
+          "version": "20260227100000",
+          "reason": "Referenced relation landings must exist before this migration."
+        }
+      ],
+      "orderReason": "Chronological position preserved."
+    },
+    {
+      "version": "20260228131000",
+      "file": "20260228131000_phone_mode_and_gerencia_phones.sql",
+      "sha256": "e80bb3cdc29293620398446ca33d9cd6a7796554093ba589f7dc9ac0ab9f4f1c",
+      "chronologicalOrder": 13,
+      "executionOrder": 13,
+      "transaction": true,
+      "dependencies": [
+        {
+          "version": "0001",
+          "reason": "Referenced relation profiles must exist before this migration."
+        },
+        {
+          "version": "20260227100000",
+          "reason": "Referenced relation landings must exist before this migration."
+        },
+        {
+          "version": "20260227140000",
+          "reason": "Referenced relation gerencias must exist before this migration."
+        }
+      ],
+      "orderReason": "Chronological position preserved."
+    },
+    {
+      "version": "20260228132000",
+      "file": "20260228132000_phone_kind_and_phone_type.sql",
+      "sha256": "3944e360bf5633b011296deff8b929eb18af478dee817a2568e46e468c4c4441",
+      "chronologicalOrder": 14,
+      "executionOrder": 14,
+      "transaction": true,
+      "dependencies": [
+        {
+          "version": "20260227100000",
+          "reason": "Referenced relation landings must exist before this migration."
+        },
+        {
+          "version": "20260228131000",
+          "reason": "Referenced relation gerencia_phones must exist before this migration."
+        }
+      ],
+      "orderReason": "Chronological position preserved."
+    },
+    {
+      "version": "20260228133000",
+      "file": "20260228133000_landings_phone_interval.sql",
+      "sha256": "44d401027161ac0c3828aa2bad4c6d37312fb881f38ff38c65259029b8a466fd",
+      "chronologicalOrder": 15,
+      "executionOrder": 15,
+      "transaction": true,
+      "dependencies": [
+        {
+          "version": "20260227100000",
+          "reason": "Referenced relation landings must exist before this migration."
+        }
+      ],
+      "orderReason": "Chronological position preserved."
+    },
+    {
+      "version": "20260228134000",
+      "file": "20260228134000_landings_phone_interval_hours.sql",
+      "sha256": "92e409f8fa50cd4aab797420f47f6cbfe06127e84bcf8ec63582a0fc5271dd93",
+      "chronologicalOrder": 16,
+      "executionOrder": 16,
+      "transaction": true,
+      "dependencies": [
+        {
+          "version": "20260227100000",
+          "reason": "Referenced relation landings must exist before this migration."
+        }
+      ],
+      "orderReason": "Chronological position preserved."
+    },
+    {
+      "version": "20260228135000",
+      "file": "20260228135000_landings_gerencias_phone_config.sql",
+      "sha256": "501eca6acc1fb6258fd493eda71b276367ed6cfa2d3090eec3f0a6183d026b61",
+      "chronologicalOrder": 17,
+      "executionOrder": 17,
+      "transaction": true,
+      "dependencies": [
+        {
+          "version": "20260227140000",
+          "reason": "Referenced relation landings_gerencias must exist before this migration."
+        }
+      ],
+      "orderReason": "Chronological position preserved."
+    },
+    {
+      "version": "20260304170000",
+      "file": "20260304170000_gerencias_gerencia_id_unique.sql",
+      "sha256": "9e0f54507b2b3c34df6dd52f33d4f769b098675e8e139a92e540448b3830880e",
+      "chronologicalOrder": 18,
+      "executionOrder": 18,
+      "transaction": true,
+      "dependencies": [
+        {
+          "version": "20260227140000",
+          "reason": "Referenced relation gerencias must exist before this migration."
+        },
+        {
+          "version": "20260228131000",
+          "reason": "Referenced relation gerencia_phones must exist before this migration."
+        }
+      ],
+      "orderReason": "Chronological position preserved."
+    },
+    {
+      "version": "20260304173000",
+      "file": "20260304173000_gerencia_phones_select_policy.sql",
+      "sha256": "58d42802f70b5ea077fe57ab13512014f8c2659c0de012a9889bbfc23402c981",
+      "chronologicalOrder": 19,
+      "executionOrder": 19,
+      "transaction": true,
+      "dependencies": [
+        {
+          "version": "20260228131000",
+          "reason": "Referenced relation gerencia_phones must exist before this migration."
+        }
+      ],
+      "orderReason": "Chronological position preserved."
+    },
+    {
+      "version": "20260304180000",
+      "file": "20260304180000_gerencias_id_equals_gerencia_id.sql",
+      "sha256": "a7c40b9b7e593906c98db3ffa6d75e4dceeac5b225dddd765a0c1ac64666d57e",
+      "chronologicalOrder": 20,
+      "executionOrder": 20,
+      "transaction": true,
+      "dependencies": [
+        {
+          "version": "20260227140000",
+          "reason": "Referenced relation gerencias must exist before this migration."
+        },
+        {
+          "version": "20260228131000",
+          "reason": "Referenced relation gerencia_phones must exist before this migration."
+        }
+      ],
+      "orderReason": "Chronological position preserved."
+    },
+    {
+      "version": "20260304181500",
+      "file": "20260304181500_clear_gerencias_for_testing.sql",
+      "sha256": "910485e69a9d10d4ebe6fb54df19a8654bb0c63913d54572d7037b4f9ba8b547",
+      "chronologicalOrder": 21,
+      "executionOrder": 21,
+      "transaction": true,
+      "dependencies": [
+        {
+          "version": "20260227140000",
+          "reason": "Referenced relation gerencias must exist before this migration."
+        }
+      ],
+      "orderReason": "Chronological position preserved."
+    },
+    {
+      "version": "20260305120000",
+      "file": "20260305120000_cron_sync_phones.sql",
+      "sha256": "23491d19f2c2557c61a0c8543b02b15f77fdb7b074c76c53795b9d9d5856ce43",
+      "chronologicalOrder": 22,
+      "executionOrder": 22,
+      "transaction": true,
+      "dependencies": [],
+      "orderReason": "Chronological position preserved."
+    },
+    {
+      "version": "20260305130000",
+      "file": "20260305130000_landing_typography_config.sql",
+      "sha256": "e89626d6cfa7b626028d8252a577d44addda7f7855c4266c41c632c863a79db1",
+      "chronologicalOrder": 23,
+      "executionOrder": 23,
+      "transaction": true,
+      "dependencies": [
+        {
+          "version": "20260227100000",
+          "reason": "Referenced relation landings must exist before this migration."
+        }
+      ],
+      "orderReason": "Chronological position preserved."
+    },
+    {
+      "version": "20260306120000",
+      "file": "20260306120000_add_landing_config_column.sql",
+      "sha256": "057d40e37d78e7490415722a00e8404d6addcdba8bbf8c5215df72d40cfaa67f",
+      "chronologicalOrder": 24,
+      "executionOrder": 24,
+      "transaction": true,
+      "dependencies": [
+        {
+          "version": "20260227100000",
+          "reason": "Referenced relation landings must exist before this migration."
+        }
+      ],
+      "orderReason": "Chronological position preserved."
+    },
+    {
+      "version": "20260306130000",
+      "file": "20260306130000_lock_landing_name.sql",
+      "sha256": "c018b682e143425941dbab0183827b9ca3a8277946da776e1b1a830da93b32d3",
+      "chronologicalOrder": 25,
+      "executionOrder": 25,
+      "transaction": true,
+      "dependencies": [
+        {
+          "version": "20260227100000",
+          "reason": "Referenced relation landings must exist before this migration."
+        }
+      ],
+      "orderReason": "Chronological position preserved."
+    },
+    {
+      "version": "20260307100000",
+      "file": "20260307100000_settings_preview_flag.sql",
+      "sha256": "7fd15892b60fdf51e30499c8fa432121f0c86eb99346bc73270327f62613a3e9",
+      "chronologicalOrder": 26,
+      "executionOrder": 26,
+      "transaction": true,
+      "dependencies": [
+        {
+          "version": "20260227130000",
+          "reason": "Referenced relation settings must exist before this migration."
+        }
+      ],
+      "orderReason": "Chronological position preserved."
+    },
+    {
+      "version": "20260307110000",
+      "file": "20260307110000_settings_revalidate_secret.sql",
+      "sha256": "4d2fdadd8f035df60af7a267d12cd7fc1f60cbe2c0cabae8120e141f60ed7d0a",
+      "chronologicalOrder": 27,
+      "executionOrder": 27,
+      "transaction": true,
+      "dependencies": [
+        {
+          "version": "20260227130000",
+          "reason": "Referenced relation settings must exist before this migration."
+        }
+      ],
+      "orderReason": "Chronological position preserved."
+    },
+    {
+      "version": "20260416100000",
+      "file": "20260416100000_conversions_config.sql",
+      "sha256": "ca8c6aabb806a79daf6d4c2d60aad0d4dac960b925f590d4c29059d72a1a3466",
+      "chronologicalOrder": 72,
+      "executionOrder": 28,
+      "transaction": true,
+      "dependencies": [
+        {
+          "version": "0001",
+          "reason": "Referenced relation profiles must exist before this migration."
+        }
+      ],
+      "orderReason": "Stable dependency-first traversal; provider moves and resulting shifts are justified by explicit dependency edges."
+    },
+    {
+      "version": "20260417090000",
+      "file": "20260417090000_conversions_visible_columns.sql",
+      "sha256": "e445f98ca57932dba5bd955932cd9b589743b57a5ae9eea44acddd6668c718e2",
+      "chronologicalOrder": 81,
+      "executionOrder": 29,
+      "transaction": true,
+      "dependencies": [
+        {
+          "version": "20260416100000",
+          "reason": "Referenced relation conversions_config must exist before this migration."
+        }
+      ],
+      "orderReason": "Stable dependency-first traversal; provider moves and resulting shifts are justified by explicit dependency edges."
+    },
+    {
+      "version": "20260416100001",
+      "file": "20260416100001_conversions.sql",
+      "sha256": "ab65ca6ea99a44317a6ae262b78e22380c233d306552caa5bde8439aeb575580",
+      "chronologicalOrder": 73,
+      "executionOrder": 30,
+      "transaction": true,
+      "dependencies": [
+        {
+          "version": "0001",
+          "reason": "Referenced relation profiles must exist before this migration."
+        },
+        {
+          "version": "20260227100000",
+          "reason": "Referenced relation landings must exist before this migration."
+        }
+      ],
+      "orderReason": "Stable dependency-first traversal; provider moves and resulting shifts are justified by explicit dependency edges."
+    },
+    {
+      "version": "20260416500000",
+      "file": "20260416500000_funnel_view.sql",
+      "sha256": "4e66c1b6cf0eccb2696a5323d877d0c10ebd22c544c662cd630d7c4214c4cf97",
+      "chronologicalOrder": 79,
+      "executionOrder": 31,
+      "transaction": true,
+      "dependencies": [
+        {
+          "version": "20260416100000",
+          "reason": "Referenced relation conversions_config must exist before this migration."
+        },
+        {
+          "version": "20260416100001",
+          "reason": "Referenced relation conversions must exist before this migration."
+        }
+      ],
+      "orderReason": "Stable dependency-first traversal; provider moves and resulting shifts are justified by explicit dependency edges."
+    },
+    {
+      "version": "20260426000000",
+      "file": "20260426000000_backfill_conversions_config_for_clients.sql",
+      "sha256": "246640574ab2dbccf871093c551d529dbad12636337c31a36d6abbae8b9ba5b2",
+      "chronologicalOrder": 102,
+      "executionOrder": 32,
+      "transaction": true,
+      "dependencies": [
+        {
+          "version": "0001",
+          "reason": "Referenced relation profiles must exist before this migration."
+        },
+        {
+          "version": "20260416100000",
+          "reason": "Referenced relation conversions_config must exist before this migration."
+        },
+        {
+          "version": "20260417090000",
+          "reason": "Backfill reads and writes visible_columns."
+        },
+        {
+          "version": "20260416500000",
+          "reason": "Backfill reads and writes funnel_premium_threshold; entire original provider must precede it."
+        }
+      ],
+      "orderReason": "Git introduced backfill 2026-03-22 before column removal 2026-03-23 despite filenames. Replay unchanged before removal; profiles/config must be empty, so no data decisions.",
+      "requiredEmptyRelations": [
+        "public.profiles",
+        "public.conversions_config"
+      ]
+    },
+    {
+      "version": "20260323183000",
+      "file": "20260323183000_drop_test_event_code_from_conversions_config.sql",
+      "sha256": "eec0e877ccb26164dca0572203a9d79237e29b10f0ac46409c41a77e7bbcdf67",
+      "chronologicalOrder": 28,
+      "executionOrder": 33,
+      "transaction": true,
+      "dependencies": [
+        {
+          "version": "20260416100000",
+          "reason": "Reviewed legacy dependency: conversions_config (potential/conditional)."
+        },
+        {
+          "version": "20260426000000",
+          "reason": "Remove deprecated test_event_code only after its original backfill consumer. Git introduction chronology confirms backfill-before-removal."
+        }
+      ],
+      "orderReason": "Stable dependency-first traversal; provider moves and resulting shifts are justified by explicit dependency edges."
+    },
+    {
+      "version": "20260323201000",
+      "file": "20260323201000_conversions_add_test_event_code.sql",
+      "sha256": "2ad9e6a7f99062907b94b75c8866057393cd72930bf4c2914a9ef78e26ce7bbf",
+      "chronologicalOrder": 29,
+      "executionOrder": 34,
+      "transaction": true,
+      "dependencies": [
+        {
+          "version": "20260416100001",
+          "reason": "Reviewed legacy dependency: conversions (direct-SQL)."
+        }
+      ],
+      "orderReason": "Stable dependency-first traversal; provider moves and resulting shifts are justified by explicit dependency edges."
+    },
+    {
+      "version": "20260416200000",
+      "file": "20260416200000_conversion_logs.sql",
+      "sha256": "d62c5506be7b07dcb303d93ed1bcf5a2a99c347e727d7a09a6884b63961025c0",
+      "chronologicalOrder": 76,
+      "executionOrder": 35,
+      "transaction": true,
+      "dependencies": [
+        {
+          "version": "0001",
+          "reason": "Referenced relation profiles must exist before this migration."
+        },
+        {
+          "version": "20260416100001",
+          "reason": "Referenced relation conversions must exist before this migration."
+        }
+      ],
+      "orderReason": "Stable dependency-first traversal; provider moves and resulting shifts are justified by explicit dependency edges."
+    },
+    {
+      "version": "20260325190000",
+      "file": "20260325190000_add_meta_payload_response_to_conversion_logs.sql",
+      "sha256": "c4990df3d2cbc6c8f81ff35020716721d0a06321703d5f44a50be2f093e83330",
+      "chronologicalOrder": 30,
+      "executionOrder": 36,
+      "transaction": true,
+      "dependencies": [
+        {
+          "version": "20260416200000",
+          "reason": "Reviewed legacy dependency: conversion_logs (potential/conditional)."
+        }
+      ],
+      "orderReason": "Stable dependency-first traversal; provider moves and resulting shifts are justified by explicit dependency edges."
+    },
+    {
+      "version": "20260325193000",
+      "file": "20260325193000_add_show_logs_to_conversions_config.sql",
+      "sha256": "e91619ddc21193b08e479ea30ae3e80b6c797d361e1aead6640175510269c9ec",
+      "chronologicalOrder": 31,
+      "executionOrder": 37,
+      "transaction": true,
+      "dependencies": [
+        {
+          "version": "20260416100000",
+          "reason": "Reviewed legacy dependency: conversions_config (direct-SQL)."
+        }
+      ],
+      "orderReason": "Stable dependency-first traversal; provider moves and resulting shifts are justified by explicit dependency edges."
+    },
+    {
+      "version": "20260325193500",
+      "file": "20260325193500_backfill_conversions_config_show_logs.sql",
+      "sha256": "de7fb842460fc203e627b951a97ba3bcc03c342b6f674d502358c4823acec3bd",
+      "chronologicalOrder": 32,
+      "executionOrder": 38,
+      "transaction": true,
+      "dependencies": [
+        {
+          "version": "0001",
+          "reason": "Referenced relation profiles must exist before this migration."
+        },
+        {
+          "version": "20260416100000",
+          "reason": "Reviewed legacy dependency: conversions_config (direct-SQL)."
+        }
+      ],
+      "orderReason": "Stable dependency-first traversal; provider moves and resulting shifts are justified by explicit dependency edges."
+    },
+    {
+      "version": "20260325201000",
+      "file": "20260325201000_add_internal_id_to_conversions.sql",
+      "sha256": "9a97b61ee91045c20fb62f9daddd1124592ceb8f2bd389b2aebf6e1eef233b9f",
+      "chronologicalOrder": 33,
+      "executionOrder": 39,
+      "transaction": true,
+      "dependencies": [
+        {
+          "version": "20260416100001",
+          "reason": "Reviewed legacy dependency: conversions (direct-SQL)."
+        }
+      ],
+      "orderReason": "Stable dependency-first traversal; provider moves and resulting shifts are justified by explicit dependency edges."
+    },
+    {
+      "version": "20260326121000",
+      "file": "20260326121000_add_tracking_ranking_config.sql",
+      "sha256": "cbe0560c6e77a0f00ae40000eda6de4bc702aab405ff2a08923f23922674763c",
+      "chronologicalOrder": 34,
+      "executionOrder": 40,
+      "transaction": true,
+      "dependencies": [
+        {
+          "version": "20260416100000",
+          "reason": "Reviewed legacy dependency: conversions_config (direct-SQL)."
+        }
+      ],
+      "orderReason": "Stable dependency-first traversal; provider moves and resulting shifts are justified by explicit dependency edges."
+    },
+    {
+      "version": "20260326133000",
+      "file": "20260326133000_notifications_module.sql",
+      "sha256": "a03bd3639353e667e6e6e56772b96195273fd46e6be70ee8c5e402e34b53e7b0",
+      "chronologicalOrder": 35,
+      "executionOrder": 41,
+      "transaction": true,
+      "dependencies": [
+        {
+          "version": "0001",
+          "reason": "Referenced relation profiles must exist before this migration."
+        },
+        {
+          "version": "20260305120000",
+          "reason": "Referenced relation cron_config must exist before this migration."
+        }
+      ],
+      "orderReason": "Stable dependency-first traversal; provider moves and resulting shifts are justified by explicit dependency edges."
+    },
+    {
+      "version": "20260326183000",
+      "file": "20260326183000_notify_cron_every_5_min.sql",
+      "sha256": "8136fca4dae91c4f43a1cfa4f3800704e4d8f91b0223933310fe01fb28d71aac",
+      "chronologicalOrder": 36,
+      "executionOrder": 42,
+      "transaction": true,
+      "dependencies": [],
+      "orderReason": "Stable dependency-first traversal; provider moves and resulting shifts are justified by explicit dependency edges."
+    },
+    {
+      "version": "20260326193000",
+      "file": "20260326193000_notifications_bot_insert_policy.sql",
+      "sha256": "cfa3fa1ac0354fcdb4524eca027a7c12067d1896a8a6034d6a16c826f6149740",
+      "chronologicalOrder": 37,
+      "executionOrder": 43,
+      "transaction": true,
+      "dependencies": [
+        {
+          "version": "0001",
+          "reason": "Referenced relation profiles must exist before this migration."
+        },
+        {
+          "version": "20260326133000",
+          "reason": "Referenced relation notification_bot_config must exist before this migration."
+        }
+      ],
+      "orderReason": "Stable dependency-first traversal; provider moves and resulting shifts are justified by explicit dependency edges."
+    },
+    {
+      "version": "20260326195500",
+      "file": "20260326195500_notification_welcome_sent_at.sql",
+      "sha256": "ce4d46b7da52c5c3671f6bf9e79c305fc5a17afcf3bad2c0b2ac3b15f74bbf97",
+      "chronologicalOrder": 38,
+      "executionOrder": 44,
+      "transaction": true,
+      "dependencies": [
+        {
+          "version": "20260326133000",
+          "reason": "Referenced relation notification_settings must exist before this migration."
+        }
+      ],
+      "orderReason": "Stable dependency-first traversal; provider moves and resulting shifts are justified by explicit dependency edges."
+    },
+    {
+      "version": "20260326235900",
+      "file": "20260326235900_conversion_inbox.sql",
+      "sha256": "f33fab3b09b10bd7b94ed4b0ae9725b130f4a2a2b262d55169b2383a8c87516a",
+      "chronologicalOrder": 39,
+      "executionOrder": 45,
+      "transaction": true,
+      "dependencies": [
+        {
+          "version": "20260416100001",
+          "reason": "Reviewed legacy dependency: conversions (direct-SQL)."
+        }
+      ],
+      "orderReason": "Stable dependency-first traversal; provider moves and resulting shifts are justified by explicit dependency edges."
+    },
+    {
+      "version": "20260327191000",
+      "file": "20260327191000_landings_external_mode.sql",
+      "sha256": "3675e432a159eadde6d43d03210e0269b125ffa7886236cc34bc0caac36e816a",
+      "chronologicalOrder": 40,
+      "executionOrder": 46,
+      "transaction": true,
+      "dependencies": [
+        {
+          "version": "20260227100000",
+          "reason": "Referenced relation landings must exist before this migration."
+        }
+      ],
+      "orderReason": "Stable dependency-first traversal; provider moves and resulting shifts are justified by explicit dependency edges."
+    },
+    {
+      "version": "20260327200000",
+      "file": "20260327200000_admins_can_update_delete_landings.sql",
+      "sha256": "e235aea4f4d14bb512b93b25db05e1df470b71080f31549d1fb7ee6ae23f4a96",
+      "chronologicalOrder": 41,
+      "executionOrder": 47,
+      "transaction": true,
+      "dependencies": [
+        {
+          "version": "0001",
+          "reason": "Referenced relation profiles must exist before this migration."
+        },
+        {
+          "version": "20260227100000",
+          "reason": "Referenced relation landings must exist before this migration."
+        },
+        {
+          "version": "20260227140000",
+          "reason": "Referenced relation landings_gerencias must exist before this migration."
+        }
+      ],
+      "orderReason": "Stable dependency-first traversal; provider moves and resulting shifts are justified by explicit dependency edges."
+    },
+    {
+      "version": "20260327210000",
+      "file": "20260327210000_get_phone_for_landing_rpc.sql",
+      "sha256": "2d9a88a8f2e34ad64542154e70d7d2768be5324646515ade53765d76531e2b14",
+      "chronologicalOrder": 42,
+      "executionOrder": 48,
+      "transaction": true,
+      "dependencies": [],
+      "orderReason": "Stable dependency-first traversal; provider moves and resulting shifts are justified by explicit dependency edges."
+    },
+    {
+      "version": "20260327220000",
+      "file": "20260327220000_cron_warm_landing_phone.sql",
+      "sha256": "681ade7748b07f924c2c8203b7a9437fb6634240631e0e46ea56bf7b37b33e08",
+      "chronologicalOrder": 43,
+      "executionOrder": 49,
+      "transaction": true,
+      "dependencies": [
+        {
+          "version": "20260227100000",
+          "reason": "Referenced relation landings must exist before this migration."
+        },
+        {
+          "version": "20260305120000",
+          "reason": "Referenced relation cron_config must exist before this migration."
+        }
+      ],
+      "orderReason": "Stable dependency-first traversal; provider moves and resulting shifts are justified by explicit dependency edges."
+    },
+    {
+      "version": "20260327220100",
+      "file": "20260327220100_notification_telegram_destinations.sql",
+      "sha256": "d64ddb902bc53ca6ffda917786ca5c16b58c3e1b1d2596047486625238ffc881",
+      "chronologicalOrder": 44,
+      "executionOrder": 50,
+      "transaction": true,
+      "dependencies": [
+        {
+          "version": "0001",
+          "reason": "Referenced relation profiles must exist before this migration."
+        },
+        {
+          "version": "20260326133000",
+          "reason": "Referenced relation notification_settings must exist before this migration."
+        }
+      ],
+      "orderReason": "Stable dependency-first traversal; provider moves and resulting shifts are justified by explicit dependency edges."
+    },
+    {
+      "version": "20260327232000",
+      "file": "20260327232000_backfill_legacy_telegram_chats.sql",
+      "sha256": "b6bf9d1f8462c72e2d9ef0414a0857982f9ba1c815d5fa565f6e56689d4b86e0",
+      "chronologicalOrder": 45,
+      "executionOrder": 51,
+      "transaction": true,
+      "dependencies": [
+        {
+          "version": "20260326133000",
+          "reason": "Referenced relation notification_settings must exist before this migration."
+        },
+        {
+          "version": "20260327220100",
+          "reason": "Referenced relation notification_telegram_destinations must exist before this migration."
+        }
+      ],
+      "orderReason": "Stable dependency-first traversal; provider moves and resulting shifts are justified by explicit dependency edges."
+    },
+    {
+      "version": "20260327234000",
+      "file": "20260327234000_cron_sync_telegram_connections.sql",
+      "sha256": "b1497e05ddc078d4e368cb71ed3287026efaaa7f4189e97a2788b89b53678cc7",
+      "chronologicalOrder": 46,
+      "executionOrder": 52,
+      "transaction": true,
+      "dependencies": [
+        {
+          "version": "20260305120000",
+          "reason": "Referenced relation cron_config must exist before this migration."
+        }
+      ],
+      "orderReason": "Stable dependency-first traversal; provider moves and resulting shifts are justified by explicit dependency edges."
+    },
+    {
+      "version": "20260327235500",
+      "file": "20260327235500_disable_sync_telegram_polling_cron.sql",
+      "sha256": "dd58cae995ac33c4961143b50d2b9bde450040be38815625110fc5a61a9e114c",
+      "chronologicalOrder": 47,
+      "executionOrder": 53,
+      "transaction": true,
+      "dependencies": [],
+      "orderReason": "Stable dependency-first traversal; provider moves and resulting shifts are justified by explicit dependency edges."
+    },
+    {
+      "version": "20260328001000",
+      "file": "20260328001000_conversion_inbox_action_event_id.sql",
+      "sha256": "94306fea6c5c695ce0b3957d46030cef8dd61276706aaf55173f0e3e6c259f79",
+      "chronologicalOrder": 48,
+      "executionOrder": 54,
+      "transaction": true,
+      "dependencies": [
+        {
+          "version": "20260326235900",
+          "reason": "Referenced relation conversion_inbox must exist before this migration."
+        }
+      ],
+      "orderReason": "Stable dependency-first traversal; provider moves and resulting shifts are justified by explicit dependency edges."
+    },
+    {
+      "version": "20260330160000",
+      "file": "20260330160000_conversions_multi_pixel_configs.sql",
+      "sha256": "0efa40e64b5d76f4ecaae97a410360cdbc76000f7a7be6d380e0c0fe3a6bc015",
+      "chronologicalOrder": 49,
+      "executionOrder": 55,
+      "transaction": true,
+      "dependencies": [
+        {
+          "version": "0001",
+          "reason": "Referenced relation profiles must exist before this migration."
+        },
+        {
+          "version": "20260416100000",
+          "reason": "Reviewed legacy dependency: conversions_config (direct-SQL)."
+        }
+      ],
+      "orderReason": "Stable dependency-first traversal; provider moves and resulting shifts are justified by explicit dependency edges."
+    },
+    {
+      "version": "20260330193000",
+      "file": "20260330193000_conversions_pixel_configs_add_delivery_flags.sql",
+      "sha256": "a7c793cdc715941882135f25663ddba5697bf33651e1030f32f03128d7c51ef9",
+      "chronologicalOrder": 50,
+      "executionOrder": 56,
+      "transaction": true,
+      "dependencies": [
+        {
+          "version": "20260330160000",
+          "reason": "Referenced relation conversions_pixel_configs must exist before this migration."
+        },
+        {
+          "version": "20260416100000",
+          "reason": "Reviewed legacy dependency: conversions_config (direct-SQL)."
+        }
+      ],
+      "orderReason": "Stable dependency-first traversal; provider moves and resulting shifts are justified by explicit dependency edges."
+    },
+    {
+      "version": "20260426007000",
+      "file": "20260426007000_conversions_add_pixel_id.sql",
+      "sha256": "3b3b47f85087b2016bddd2f82440ffb1f19e1cee538182372bee5f8c5e4a2b43",
+      "chronologicalOrder": 108,
+      "executionOrder": 57,
+      "transaction": true,
+      "dependencies": [
+        {
+          "version": "20260416100000",
+          "reason": "Referenced relation conversions_config must exist before this migration."
+        },
+        {
+          "version": "20260416100001",
+          "reason": "Referenced relation conversions must exist before this migration."
+        },
+        {
+          "version": "20260417090000",
+          "reason": "The complete pixel_id provider also updates visible_columns; its prerequisite must exist."
+        }
+      ],
+      "orderReason": "Explicitly approved dependency ordering, discovered during replay. Move whole original file before meta_pixel_id backfill; runtime empty-table gates prevent any choice about existing data.",
+      "requiredEmptyRelations": [
+        "public.conversions",
+        "public.conversions_config"
+      ]
+    },
+    {
+      "version": "20260330193500",
+      "file": "20260330193500_conversions_add_meta_pixel_id.sql",
+      "sha256": "503e46e6131110ce5bad614bfe667be018496707d0f1f3836ed3570140b43911",
+      "chronologicalOrder": 51,
+      "executionOrder": 58,
+      "transaction": true,
+      "dependencies": [
+        {
+          "version": "20260416100000",
+          "reason": "Reviewed legacy dependency: conversions_config (direct-SQL)."
+        },
+        {
+          "version": "20260416100001",
+          "reason": "Reviewed legacy dependency: conversions (direct-SQL)."
+        },
+        {
+          "version": "20260417090000",
+          "reason": "Requires conversions_config.visible_columns."
+        },
+        {
+          "version": "20260426007000",
+          "reason": "Verified SQLSTATE 42703: backfill reads conversions.pixel_id, supplied only by this original migration. Whole provider moves unchanged; both affected tables must be empty."
+        }
+      ],
+      "orderReason": "Stable dependency-first traversal; provider moves and resulting shifts are justified by explicit dependency edges."
+    },
+    {
+      "version": "20260331213000",
+      "file": "20260331213000_kommo_client_configs.sql",
+      "sha256": "fbf74fa6822e9904e2396a6883e3a074c922268233750bcde7e3b48dd346ff5c",
+      "chronologicalOrder": 52,
+      "executionOrder": 59,
+      "transaction": true,
+      "dependencies": [
+        {
+          "version": "0001",
+          "reason": "Referenced relation profiles must exist before this migration."
+        }
+      ],
+      "orderReason": "Stable dependency-first traversal; provider moves and resulting shifts are justified by explicit dependency edges."
+    },
+    {
+      "version": "20260331221000",
+      "file": "20260331221000_gerencias_source_type.sql",
+      "sha256": "46d9a284ff68911a1acd472ac29c4f7f3826ee474aba570b08e23d3a75a7cab0",
+      "chronologicalOrder": 53,
+      "executionOrder": 60,
+      "transaction": true,
+      "dependencies": [
+        {
+          "version": "20260227140000",
+          "reason": "Referenced relation gerencias must exist before this migration."
+        }
+      ],
+      "orderReason": "Stable dependency-first traversal; provider moves and resulting shifts are justified by explicit dependency edges."
+    },
+    {
+      "version": "20260401093000",
+      "file": "20260401093000_gerencia_phones_comment.sql",
+      "sha256": "5220cc919eb0793cd8bce2725808a2d9d2cb7f62ccc16704c17b9750ceb586ce",
+      "chronologicalOrder": 54,
+      "executionOrder": 61,
+      "transaction": true,
+      "dependencies": [
+        {
+          "version": "20260228131000",
+          "reason": "Referenced relation gerencia_phones must exist before this migration."
+        }
+      ],
+      "orderReason": "Stable dependency-first traversal; provider moves and resulting shifts are justified by explicit dependency edges."
+    },
+    {
+      "version": "20260401102000",
+      "file": "20260401102000_conversions_delete_policy.sql",
+      "sha256": "33b9433aa813a41bf7a59058f20007ac3787b79657422502480a2e54947ca1a8",
+      "chronologicalOrder": 55,
+      "executionOrder": 62,
+      "transaction": true,
+      "dependencies": [
+        {
+          "version": "0001",
+          "reason": "Referenced relation profiles must exist before this migration."
+        },
+        {
+          "version": "20260416100001",
+          "reason": "Reviewed legacy dependency: conversions (direct-SQL)."
+        }
+      ],
+      "orderReason": "Stable dependency-first traversal; provider moves and resulting shifts are justified by explicit dependency edges."
+    },
+    {
+      "version": "20260403110000",
+      "file": "20260403110000_client_subscriptions_plans.sql",
+      "sha256": "70570ee675ccdc75cfe78ed2af6e3412cb8f31c8bfbe941a9ea4d85f4f7f775b",
+      "chronologicalOrder": 56,
+      "executionOrder": 63,
+      "transaction": true,
+      "dependencies": [
+        {
+          "version": "0001",
+          "reason": "Referenced relation profiles must exist before this migration."
+        },
+        {
+          "version": "20260227100000",
+          "reason": "Referenced relation landings must exist before this migration."
+        }
+      ],
+      "orderReason": "Stable dependency-first traversal; provider moves and resulting shifts are justified by explicit dependency edges."
+    },
+    {
+      "version": "20260426008000",
+      "file": "20260426008000_conversions_add_send_contact_pixel.sql",
+      "sha256": "db1935b92816c43cc35bc2d462f828d82aef9ef0b223fa13e43ed083b0e64a9e",
+      "chronologicalOrder": 109,
+      "executionOrder": 64,
+      "transaction": true,
+      "dependencies": [
+        {
+          "version": "20260416100000",
+          "reason": "Referenced relation conversions_config must exist before this migration."
+        },
+        {
+          "version": "20260416100001",
+          "reason": "Referenced relation conversions must exist before this migration."
+        },
+        {
+          "version": "20260417090000",
+          "reason": "Requires conversions_config.visible_columns."
+        }
+      ],
+      "orderReason": "Stable dependency-first traversal; provider moves and resulting shifts are justified by explicit dependency edges."
+    },
+    {
+      "version": "20260404000100",
+      "file": "20260404000100_rename_send_contact_pixel_to_sendContactPixel.sql",
+      "sha256": "97c0ed7b038461b640da5557e5ba49436c65dcc80c4a28a8f4b5a8f10ef2b7e3",
+      "chronologicalOrder": 57,
+      "executionOrder": 65,
+      "transaction": true,
+      "dependencies": [
+        {
+          "version": "20260416100000",
+          "reason": "Reviewed legacy dependency: conversions_config (direct-SQL)."
+        },
+        {
+          "version": "20260416100001",
+          "reason": "Reviewed legacy dependency: conversions (potential/conditional)."
+        },
+        {
+          "version": "20260417090000",
+          "reason": "Requires conversions_config.visible_columns."
+        },
+        {
+          "version": "20260426008000",
+          "reason": "Rename must follow creation of send_contact_pixel."
+        }
+      ],
+      "orderReason": "Stable dependency-first traversal; provider moves and resulting shifts are justified by explicit dependency edges."
+    },
+    {
+      "version": "20260404000200",
+      "file": "20260404000200_restore_default_visible_columns_after_sendContactPixel.sql",
+      "sha256": "f67d8d0be5b8ba0094b5d600359a04676e77300bf0cb486388bd67cfee4f046b",
+      "chronologicalOrder": 58,
+      "executionOrder": 66,
+      "transaction": true,
+      "dependencies": [
+        {
+          "version": "20260416100000",
+          "reason": "Reviewed legacy dependency: conversions_config (direct-SQL)."
+        },
+        {
+          "version": "20260417090000",
+          "reason": "Requires conversions_config.visible_columns."
+        }
+      ],
+      "orderReason": "Stable dependency-first traversal; provider moves and resulting shifts are justified by explicit dependency edges."
+    },
+    {
+      "version": "20260405114411",
+      "file": "20260405114411_drop_wazzup_integration_tables.sql",
+      "sha256": "331baa71470e81c16495bd418a722dec8c107f980b84543ddd43c779d7e63735",
+      "chronologicalOrder": 59,
+      "executionOrder": 67,
+      "transaction": true,
+      "dependencies": [],
+      "orderReason": "Stable dependency-first traversal; provider moves and resulting shifts are justified by explicit dependency edges."
+    },
+    {
+      "version": "20260406203000",
+      "file": "20260406203000_hidden_conversion_logs.sql",
+      "sha256": "bbe96824a77faf699e50d5b557a254f6ca48a0c6ca07c79ef6cc2bb2d3e30992",
+      "chronologicalOrder": 60,
+      "executionOrder": 68,
+      "transaction": true,
+      "dependencies": [
+        {
+          "version": "20260416200000",
+          "reason": "Reviewed legacy dependency: conversion_logs (direct-SQL)."
+        }
+      ],
+      "orderReason": "Stable dependency-first traversal; provider moves and resulting shifts are justified by explicit dependency edges."
+    },
+    {
+      "version": "20260406235900",
+      "file": "20260406235900_logs_payload_received_result.sql",
+      "sha256": "d8276612cb61fdcb8219f55980bf227fe4d22de2e76018c979382b35320d29ae",
+      "chronologicalOrder": 61,
+      "executionOrder": 69,
+      "transaction": true,
+      "dependencies": [
+        {
+          "version": "20260416200000",
+          "reason": "Reviewed legacy dependency: conversion_logs (direct-SQL)."
+        }
+      ],
+      "orderReason": "Stable dependency-first traversal; provider moves and resulting shifts are justified by explicit dependency edges."
+    },
+    {
+      "version": "20260407000000",
+      "file": "20260407000000_phone_kind_add_mkt.sql",
+      "sha256": "440e3694c80b248af4ddf7d9d9054b6c85ad97c9d36c8989d9dc43b7c177869a",
+      "chronologicalOrder": 62,
+      "executionOrder": 70,
+      "transaction": true,
+      "dependencies": [
+        {
+          "version": "20260227100000",
+          "reason": "Referenced relation landings must exist before this migration."
+        },
+        {
+          "version": "20260227140000",
+          "reason": "Referenced relation landings_gerencias must exist before this migration."
+        },
+        {
+          "version": "20260228131000",
+          "reason": "Referenced relation gerencia_phones must exist before this migration."
+        }
+      ],
+      "orderReason": "Stable dependency-first traversal; provider moves and resulting shifts are justified by explicit dependency edges."
+    },
+    {
+      "version": "20260407001000",
+      "file": "20260407001000_backfill_latency_payload_received.sql",
+      "sha256": "26ebe78a09f04d49eda9b3bdfa550b49d9318e61c7c64eebe653e7dac8993a67",
+      "chronologicalOrder": 63,
+      "executionOrder": 71,
+      "transaction": true,
+      "dependencies": [
+        {
+          "version": "20260416200000",
+          "reason": "Reviewed legacy dependency: conversion_logs (direct-SQL)."
+        }
+      ],
+      "orderReason": "Stable dependency-first traversal; provider moves and resulting shifts are justified by explicit dependency edges."
+    },
+    {
+      "version": "20260407190000",
+      "file": "20260407190000_get_phone_for_chatrace_client.sql",
+      "sha256": "0762e46de103d6790546a26c7fb3f60de539a5ab500ffb17d167d10a9868f3e7",
+      "chronologicalOrder": 64,
+      "executionOrder": 72,
+      "transaction": true,
+      "dependencies": [
+        {
+          "version": "20260416100001",
+          "reason": "Reviewed legacy dependency: conversions (potential/conditional)."
+        }
+      ],
+      "orderReason": "Stable dependency-first traversal; provider moves and resulting shifts are justified by explicit dependency edges."
+    },
+    {
+      "version": "20260426009000",
+      "file": "20260426009000_chatrace_client_configs.sql",
+      "sha256": "ce51b2eef03b5ec3038e06bc7616f18165076c3d677086622e2fbf2b11dd067c",
+      "chronologicalOrder": 110,
+      "executionOrder": 73,
+      "transaction": true,
+      "dependencies": [
+        {
+          "version": "0001",
+          "reason": "Referenced relation profiles must exist before this migration."
+        }
+      ],
+      "orderReason": "Stable dependency-first traversal; provider moves and resulting shifts are justified by explicit dependency edges."
+    },
+    {
+      "version": "20260407203000",
+      "file": "20260407203000_chatrace_gerencia_selection_mode.sql",
+      "sha256": "c7a61f57fd05491df0be2368e70b60412a04c5f18d5bb41da9d9b36dcf862164",
+      "chronologicalOrder": 65,
+      "executionOrder": 74,
+      "transaction": true,
+      "dependencies": [
+        {
+          "version": "20260426009000",
+          "reason": "Reviewed legacy dependency: chatrace_client_configs (direct-SQL)."
+        }
+      ],
+      "orderReason": "Stable dependency-first traversal; provider moves and resulting shifts are justified by explicit dependency edges."
+    },
+    {
+      "version": "20260407205000",
+      "file": "20260407205000_get_phone_for_chatrace_client_with_selection_mode.sql",
+      "sha256": "b57d8705463fbba982461970dd6a6faa7307206116f87e4112d6277b319bc62a",
+      "chronologicalOrder": 66,
+      "executionOrder": 75,
+      "transaction": true,
+      "dependencies": [
+        {
+          "version": "20260416100001",
+          "reason": "Reviewed legacy dependency: conversions (potential/conditional)."
+        }
+      ],
+      "orderReason": "Stable dependency-first traversal; provider moves and resulting shifts are justified by explicit dependency edges."
+    },
+    {
+      "version": "20260408200000",
+      "file": "20260408200000_lock_landing_tag.sql",
+      "sha256": "852b09e00b10b52d0ed82a50758b2f76b68106e1afd2e478e0b88ab4604a162c",
+      "chronologicalOrder": 67,
+      "executionOrder": 76,
+      "transaction": true,
+      "dependencies": [
+        {
+          "version": "20260227100000",
+          "reason": "Referenced relation landings must exist before this migration."
+        }
+      ],
+      "orderReason": "Stable dependency-first traversal; provider moves and resulting shifts are justified by explicit dependency edges."
+    },
+    {
+      "version": "20260408213000",
+      "file": "20260408213000_fair_gerencia_counter_include_inactive.sql",
+      "sha256": "c25e8f5a25a99b8b921908ecb57ec5071c2997bdc046b6b2d134c8a67e252f62",
+      "chronologicalOrder": 68,
+      "executionOrder": 77,
+      "transaction": true,
+      "dependencies": [
+        {
+          "version": "20260227100000",
+          "reason": "Referenced relation landings must exist before this migration."
+        },
+        {
+          "version": "20260416100001",
+          "reason": "Reviewed legacy dependency: conversions (potential/conditional)."
+        }
+      ],
+      "orderReason": "Stable dependency-first traversal; provider moves and resulting shifts are justified by explicit dependency edges."
+    },
+    {
+      "version": "20260408220000",
+      "file": "20260408220000_fair_gerencia_messages_include_inactive.sql",
+      "sha256": "9052e8ea38b5cb0219f9879fdd4140cbfb9c9fb504ab64606ca05678bc5ca15d",
+      "chronologicalOrder": 69,
+      "executionOrder": 78,
+      "transaction": true,
+      "dependencies": [
+        {
+          "version": "20260227100000",
+          "reason": "Referenced relation landings must exist before this migration."
+        },
+        {
+          "version": "20260416100001",
+          "reason": "Reviewed legacy dependency: conversions (potential/conditional)."
+        }
+      ],
+      "orderReason": "Stable dependency-first traversal; provider moves and resulting shifts are justified by explicit dependency edges."
+    },
+    {
+      "version": "20260426120000",
+      "file": "20260426120000_conversions_add_from_meta_ads.sql",
+      "sha256": "90ef28e82778deb91a282ca78644301782e52ce5b63302cfbf60455f9ff6381d",
+      "chronologicalOrder": 113,
+      "executionOrder": 79,
+      "transaction": true,
+      "dependencies": [
+        {
+          "version": "20260416100000",
+          "reason": "Referenced relation conversions_config must exist before this migration."
+        },
+        {
+          "version": "20260416100001",
+          "reason": "Referenced relation conversions must exist before this migration."
+        },
+        {
+          "version": "20260417090000",
+          "reason": "Requires conversions_config.visible_columns."
+        }
+      ],
+      "orderReason": "Stable dependency-first traversal; provider moves and resulting shifts are justified by explicit dependency edges."
+    },
+    {
+      "version": "20260415113000",
+      "file": "20260415113000_from_meta_ads_fbc_or_valid_promo_code.sql",
+      "sha256": "7846c9312e80a071a55ed5c2e107412d28903912edce13ca60fb4654672a006a",
+      "chronologicalOrder": 70,
+      "executionOrder": 80,
+      "transaction": true,
+      "dependencies": [
+        {
+          "version": "20260416100001",
+          "reason": "Reviewed legacy dependency: conversions (direct-SQL)."
+        },
+        {
+          "version": "20260426120000",
+          "reason": "COMMENT and backfill require from_meta_ads column."
+        }
+      ],
+      "orderReason": "Stable dependency-first traversal; provider moves and resulting shifts are justified by explicit dependency edges."
+    },
+    {
+      "version": "20260416000000",
+      "file": "20260416000000_landing_tag_unique_alphanumeric.sql",
+      "sha256": "5132fac98189e6fb541218882d5cb246e23fcf45245d067f6101efaa96dd858b",
+      "chronologicalOrder": 71,
+      "executionOrder": 81,
+      "transaction": true,
+      "dependencies": [
+        {
+          "version": "20260227100000",
+          "reason": "Referenced relation landings must exist before this migration."
+        }
+      ],
+      "orderReason": "Stable dependency-first traversal; provider moves and resulting shifts are justified by explicit dependency edges."
+    },
+    {
+      "version": "20260416100002",
+      "file": "20260416100002_sync_pixel_trigger.sql",
+      "sha256": "a6280ae7f9d5effcda1e2b9df7c799bb58673190ca1a161b10521de91f93430f",
+      "chronologicalOrder": 74,
+      "executionOrder": 82,
+      "transaction": true,
+      "dependencies": [
+        {
+          "version": "20260227100000",
+          "reason": "Referenced relation landings must exist before this migration."
+        },
+        {
+          "version": "20260416100000",
+          "reason": "Referenced relation conversions_config must exist before this migration."
+        }
+      ],
+      "orderReason": "Stable dependency-first traversal; provider moves and resulting shifts are justified by explicit dependency edges."
+    },
+    {
+      "version": "20260416100003",
+      "file": "20260416100003_cron_retry_conversions.sql",
+      "sha256": "2794fa813af5bc6c56fcee0277a46db0f04550b75e08ad4fcd48bd180d89997f",
+      "chronologicalOrder": 75,
+      "executionOrder": 83,
+      "transaction": true,
+      "dependencies": [
+        {
+          "version": "20260305120000",
+          "reason": "Referenced relation cron_config must exist before this migration."
+        }
+      ],
+      "orderReason": "Stable dependency-first traversal; provider moves and resulting shifts are justified by explicit dependency edges."
+    },
+    {
+      "version": "20260416300000",
+      "file": "20260416300000_conversions_config_slug.sql",
+      "sha256": "3035637d38382226794199311d96473a125324570bc48c5644f65cc37f273516",
+      "chronologicalOrder": 77,
+      "executionOrder": 84,
+      "transaction": true,
+      "dependencies": [
+        {
+          "version": "20260416100000",
+          "reason": "Referenced relation conversions_config must exist before this migration."
+        }
+      ],
+      "orderReason": "Stable dependency-first traversal; provider moves and resulting shifts are justified by explicit dependency edges."
+    },
+    {
+      "version": "20260416400000",
+      "file": "20260416400000_conversions_update_policy.sql",
+      "sha256": "f27576142e7c5fec6e0573c40248f326391fc41ed3b933aa6ced5435eec5a2a1",
+      "chronologicalOrder": 78,
+      "executionOrder": 85,
+      "transaction": true,
+      "dependencies": [
+        {
+          "version": "0001",
+          "reason": "Referenced relation profiles must exist before this migration."
+        },
+        {
+          "version": "20260416100001",
+          "reason": "Referenced relation conversions must exist before this migration."
+        }
+      ],
+      "orderReason": "Stable dependency-first traversal; provider moves and resulting shifts are justified by explicit dependency edges."
+    },
+    {
+      "version": "20260416600000",
+      "file": "20260416600000_funnel_reached_indicators.sql",
+      "sha256": "73c54d5017a91e601d42b7c0c583a276e3720a34fad86fd47f65615d1b8b5ea0",
+      "chronologicalOrder": 80,
+      "executionOrder": 86,
+      "transaction": true,
+      "dependencies": [
+        {
+          "version": "20260416100001",
+          "reason": "Referenced relation conversions must exist before this migration."
+        }
+      ],
+      "orderReason": "Stable dependency-first traversal; provider moves and resulting shifts are justified by explicit dependency edges."
+    },
+    {
+      "version": "20260418000000",
+      "file": "20260418000000_backfill_landings_post_url.sql",
+      "sha256": "acd34f1301809d3bb6a7a6eb69616be7eaede9ece576d23f0f7fc27bc4ccfe70",
+      "chronologicalOrder": 82,
+      "executionOrder": 87,
+      "transaction": true,
+      "dependencies": [
+        {
+          "version": "0001",
+          "reason": "Referenced relation profiles must exist before this migration."
+        },
+        {
+          "version": "20260227100000",
+          "reason": "Referenced relation landings must exist before this migration."
+        }
+      ],
+      "orderReason": "Stable dependency-first traversal; provider moves and resulting shifts are justified by explicit dependency edges."
+    },
+    {
+      "version": "20260418100000",
+      "file": "20260418100000_force_landings_post_url.sql",
+      "sha256": "4b4e062d4b890c55a2009e9562198b0a6d7d8ba44bbbea68c0c0133fe3569e1e",
+      "chronologicalOrder": 83,
+      "executionOrder": 88,
+      "transaction": true,
+      "dependencies": [
+        {
+          "version": "0001",
+          "reason": "Referenced relation profiles must exist before this migration."
+        },
+        {
+          "version": "20260227100000",
+          "reason": "Referenced relation landings must exist before this migration."
+        }
+      ],
+      "orderReason": "Stable dependency-first traversal; provider moves and resulting shifts are justified by explicit dependency edges."
+    },
+    {
+      "version": "20260418200000",
+      "file": "20260418200000_hidden_conversions.sql",
+      "sha256": "c9ec08a3fa40b4e4328d35956c9d10c3813bfa0797f9a5fb92d80ba40536df20",
+      "chronologicalOrder": 84,
+      "executionOrder": 89,
+      "transaction": true,
+      "dependencies": [
+        {
+          "version": "20260416100001",
+          "reason": "Referenced relation conversions must exist before this migration."
+        }
+      ],
+      "orderReason": "Stable dependency-first traversal; provider moves and resulting shifts are justified by explicit dependency edges."
+    },
+    {
+      "version": "20260419000000",
+      "file": "20260419000000_funnel_contacts_telefono_asignado.sql",
+      "sha256": "884af607b8d868d3482c666bfb569abb3700c617bc221d0608b8a78ac3c887cf",
+      "chronologicalOrder": 85,
+      "executionOrder": 90,
+      "transaction": true,
+      "dependencies": [
+        {
+          "version": "20260416100001",
+          "reason": "Referenced relation conversions must exist before this migration."
+        }
+      ],
+      "orderReason": "Stable dependency-first traversal; provider moves and resulting shifts are justified by explicit dependency edges."
+    },
+    {
+      "version": "20260419100000",
+      "file": "20260419100000_revert_funnel_telefono_asignado.sql",
+      "sha256": "784b611d26121c6fd7c2519dbe228cc80e54324a90f7153af8f97791be2f1ab8",
+      "chronologicalOrder": 86,
+      "executionOrder": 91,
+      "transaction": true,
+      "dependencies": [
+        {
+          "version": "20260416100001",
+          "reason": "Referenced relation conversions must exist before this migration."
+        }
+      ],
+      "orderReason": "Stable dependency-first traversal; provider moves and resulting shifts are justified by explicit dependency edges."
+    },
+    {
+      "version": "20260420000000",
+      "file": "20260420000000_funnel_reached_repeat_by_purchase_count.sql",
+      "sha256": "8b5b4e3a9746d14feb3099ea809709e364f348b416c626864f437435a6ec261a",
+      "chronologicalOrder": 87,
+      "executionOrder": 92,
+      "transaction": true,
+      "dependencies": [
+        {
+          "version": "20260416100001",
+          "reason": "Referenced relation conversions must exist before this migration."
+        }
+      ],
+      "orderReason": "Stable dependency-first traversal; provider moves and resulting shifts are justified by explicit dependency edges."
+    },
+    {
+      "version": "20260421000000",
+      "file": "20260421000000_funnel_only_leads_and_beyond.sql",
+      "sha256": "270e27914b6ad1dec9ab2c1fbd1d8ef04b76e7e61e28ec16b90b63e134aa691d",
+      "chronologicalOrder": 88,
+      "executionOrder": 93,
+      "transaction": true,
+      "dependencies": [
+        {
+          "version": "20260416100001",
+          "reason": "Referenced relation conversions must exist before this migration."
+        }
+      ],
+      "orderReason": "Stable dependency-first traversal; provider moves and resulting shifts are justified by explicit dependency edges."
+    },
+    {
+      "version": "20260422000000",
+      "file": "20260422000000_gerencias_fair_criterion.sql",
+      "sha256": "457cb8bb9cb56546e228696e498c5eb6dfc70ece67b2366740ca64cd2690576f",
+      "chronologicalOrder": 89,
+      "executionOrder": 94,
+      "transaction": true,
+      "dependencies": [
+        {
+          "version": "0001",
+          "reason": "Referenced relation profiles must exist before this migration."
+        },
+        {
+          "version": "20260227140000",
+          "reason": "Referenced relation gerencias must exist before this migration."
+        }
+      ],
+      "orderReason": "Stable dependency-first traversal; provider moves and resulting shifts are justified by explicit dependency edges."
+    },
+    {
+      "version": "20260423000000",
+      "file": "20260423000000_landing_gerencia_selection_mode.sql",
+      "sha256": "6c06cf6816ba82e7b62800554681083564ba7eb9e7917a43eac51d5050645c68",
+      "chronologicalOrder": 90,
+      "executionOrder": 95,
+      "transaction": true,
+      "dependencies": [
+        {
+          "version": "20260227100000",
+          "reason": "Referenced relation landings must exist before this migration."
+        }
+      ],
+      "orderReason": "Stable dependency-first traversal; provider moves and resulting shifts are justified by explicit dependency edges."
+    },
+    {
+      "version": "20260424000000",
+      "file": "20260424000000_warm_landing_phone_every_2min.sql",
+      "sha256": "425b2b5ff67063ea0c4ebcb15dfcb06a00b1b410f8f25dcd52c5fc126816e6c1",
+      "chronologicalOrder": 91,
+      "executionOrder": 96,
+      "transaction": true,
+      "dependencies": [],
+      "orderReason": "Stable dependency-first traversal; provider moves and resulting shifts are justified by explicit dependency edges."
+    },
+    {
+      "version": "20260424000100",
+      "file": "20260424000100_conversions_config_add_show_inbox.sql",
+      "sha256": "2209826def9c2e8586c69af5385fad038afeb4e419a8f7c2e805d5a154b5379f",
+      "chronologicalOrder": 92,
+      "executionOrder": 97,
+      "transaction": true,
+      "dependencies": [
+        {
+          "version": "20260416100000",
+          "reason": "Referenced relation conversions_config must exist before this migration."
+        }
+      ],
+      "orderReason": "Stable dependency-first traversal; provider moves and resulting shifts are justified by explicit dependency edges."
+    },
+    {
+      "version": "20260424000200",
+      "file": "20260424000200_cleanup_backfill_merged_leads.sql",
+      "sha256": "bbdb9bfda242bc9c92537ecd447110178ba3ecd9caab46554c8dd585f3d32c10",
+      "chronologicalOrder": 93,
+      "executionOrder": 98,
+      "transaction": true,
+      "dependencies": [
+        {
+          "version": "20260416100001",
+          "reason": "Referenced relation conversions must exist before this migration."
+        }
+      ],
+      "orderReason": "Stable dependency-first traversal; provider moves and resulting shifts are justified by explicit dependency edges."
+    },
+    {
+      "version": "20260424000300",
+      "file": "20260424000300_backfill_created_new_lead_external_id_hash.sql",
+      "sha256": "c90074cdf124f10d31d565b26895befe5c6551a1221516cf453ff8e8deb1a97d",
+      "chronologicalOrder": 94,
+      "executionOrder": 99,
+      "transaction": true,
+      "dependencies": [
+        {
+          "version": "20260416100001",
+          "reason": "Referenced relation conversions must exist before this migration."
+        }
+      ],
+      "orderReason": "Stable dependency-first traversal; provider moves and resulting shifts are justified by explicit dependency edges."
+    },
+    {
+      "version": "20260424003000",
+      "file": "20260424003000_warm_landing_phone_back_to_5min.sql",
+      "sha256": "cc2affe54c67fca11da8222f84735c570e0119cde29373ba617b201e1b53859e",
+      "chronologicalOrder": 95,
+      "executionOrder": 100,
+      "transaction": true,
+      "dependencies": [],
+      "orderReason": "Stable dependency-first traversal; provider moves and resulting shifts are justified by explicit dependency edges."
+    },
+    {
+      "version": "20260426130000",
+      "file": "20260426130000_create_ar_phone_area_codes.sql",
+      "sha256": "59055a18e5582eb367f00931b9998f9ad36c05b96f010da9dfb41a4a043675d2",
+      "chronologicalOrder": 114,
+      "executionOrder": 101,
+      "transaction": true,
+      "dependencies": [],
+      "orderReason": "Stable dependency-first traversal; provider moves and resulting shifts are justified by explicit dependency edges."
+    },
+    {
+      "version": "20260426140000",
+      "file": "20260426140000_conversions_add_geo_source.sql",
+      "sha256": "baf5d3b2da49817e9e61df3f0b4de5432fa0627743e9a05cce9aefa0f3b660e3",
+      "chronologicalOrder": 115,
+      "executionOrder": 102,
+      "transaction": true,
+      "dependencies": [
+        {
+          "version": "20260416100000",
+          "reason": "Referenced relation conversions_config must exist before this migration."
+        },
+        {
+          "version": "20260416100001",
+          "reason": "Referenced relation conversions must exist before this migration."
+        },
+        {
+          "version": "20260417090000",
+          "reason": "Complete original provider also updates visible_columns; its prerequisite must exist."
+        }
+      ],
+      "orderReason": "Approved dependency ordering only; original SQL unchanged; empty-table gates prevent choices about populated backfill behavior.",
+      "requiredEmptyRelations": [
+        "public.conversions",
+        "public.conversions_config"
+      ]
+    },
+    {
+      "version": "20260424222000",
+      "file": "20260424222000_sanitize_phone_prefix_localidad.sql",
+      "sha256": "d72410a659aab35c868bffed889f5942b3812af1c42661728d75ded38bb297eb",
+      "chronologicalOrder": 96,
+      "executionOrder": 103,
+      "transaction": true,
+      "dependencies": [
+        {
+          "version": "20260416100001",
+          "reason": "Referenced relation conversions must exist before this migration."
+        },
+        {
+          "version": "20260426130000",
+          "reason": "Reviewed legacy dependency: ar_phone_area_codes (direct-SQL)."
+        },
+        {
+          "version": "20260426140000",
+          "reason": "Backfill requires conversions.geo_source. Whole original provider moves unchanged; both affected tables must be empty."
+        }
+      ],
+      "orderReason": "Stable dependency-first traversal; provider moves and resulting shifts are justified by explicit dependency edges."
+    },
+    {
+      "version": "20260426004000",
+      "file": "20260426004000_conversions_add_action_payload_raw.sql",
+      "sha256": "4ebbe83bf7252ec7d48fbe7bc68af3a2a0447fe41d1b127f366bd0d5b9a93b8c",
+      "chronologicalOrder": 105,
+      "executionOrder": 104,
+      "transaction": true,
+      "dependencies": [
+        {
+          "version": "20260416100000",
+          "reason": "Referenced relation conversions_config must exist before this migration."
+        },
+        {
+          "version": "20260416100001",
+          "reason": "Referenced relation conversions must exist before this migration."
+        },
+        {
+          "version": "20260417090000",
+          "reason": "Complete original provider also updates visible_columns; its prerequisite must exist."
+        }
+      ],
+      "orderReason": "Approved dependency ordering only; original SQL unchanged; empty-table gates prevent choices about populated backfill behavior.",
+      "requiredEmptyRelations": [
+        "public.conversions",
+        "public.conversions_config"
+      ]
+    },
+    {
+      "version": "20260424224500",
+      "file": "20260424224500_backfill_inbox_conversion_id_for_leads.sql",
+      "sha256": "64aa50f9218967a3f97378678fd3f02e5b47778cac792b4cad8e2c5a819bb66b",
+      "chronologicalOrder": 97,
+      "executionOrder": 105,
+      "transaction": true,
+      "dependencies": [
+        {
+          "version": "20260326235900",
+          "reason": "Referenced relation conversion_inbox must exist before this migration."
+        },
+        {
+          "version": "20260416100001",
+          "reason": "Referenced relation conversions must exist before this migration."
+        },
+        {
+          "version": "20260426004000",
+          "reason": "Backfill requires conversions.lead_payload_raw. Whole original provider moves unchanged; both affected tables must be empty."
+        }
+      ],
+      "orderReason": "Stable dependency-first traversal; provider moves and resulting shifts are justified by explicit dependency edges."
+    },
+    {
+      "version": "20260424233000",
+      "file": "20260424233000_backfill_inbox_response_match_mode_promo.sql",
+      "sha256": "1b80808e524c02bf4e044eff2e59a6b95f72dd2f08c0b7ba5c642e9f86983e23",
+      "chronologicalOrder": 98,
+      "executionOrder": 106,
+      "transaction": true,
+      "dependencies": [
+        {
+          "version": "20260326235900",
+          "reason": "Referenced relation conversion_inbox must exist before this migration."
+        }
+      ],
+      "orderReason": "Stable dependency-first traversal; provider moves and resulting shifts are justified by explicit dependency edges."
+    },
+    {
+      "version": "20260425000000",
+      "file": "20260425000000_conversions_purchase_type.sql",
+      "sha256": "cbe752e2d8137a5e81a547ee08608c12bba53ab69fa44454c447070ef5d5c4ca",
+      "chronologicalOrder": 99,
+      "executionOrder": 107,
+      "transaction": true,
+      "dependencies": [
+        {
+          "version": "20260416100001",
+          "reason": "Referenced relation conversions must exist before this migration."
+        }
+      ],
+      "orderReason": "Stable dependency-first traversal; provider moves and resulting shifts are justified by explicit dependency edges."
+    },
+    {
+      "version": "20260425212000",
+      "file": "20260425212000_backfill_inbox_purchase_match_mode.sql",
+      "sha256": "825614438909919e9edfdb762b999053c88042ed19618db86c3b25f95e431fc7",
+      "chronologicalOrder": 100,
+      "executionOrder": 108,
+      "transaction": true,
+      "dependencies": [
+        {
+          "version": "20260326235900",
+          "reason": "Referenced relation conversion_inbox must exist before this migration."
+        },
+        {
+          "version": "20260416100001",
+          "reason": "Referenced relation conversions must exist before this migration."
+        }
+      ],
+      "orderReason": "Stable dependency-first traversal; provider moves and resulting shifts are justified by explicit dependency edges."
+    },
+    {
+      "version": "20260425235500",
+      "file": "20260425235500_backfill_inbox_created_new_message.sql",
+      "sha256": "111dbc7c11f02e50ee9109a254e862690083be12c882e55d63aa4a46470ed8c1",
+      "chronologicalOrder": 101,
+      "executionOrder": 109,
+      "transaction": true,
+      "dependencies": [
+        {
+          "version": "20260326235900",
+          "reason": "Referenced relation conversion_inbox must exist before this migration."
+        }
+      ],
+      "orderReason": "Stable dependency-first traversal; provider moves and resulting shifts are justified by explicit dependency edges."
+    },
+    {
+      "version": "20260426001000",
+      "file": "20260426001000_fill_empty_visible_columns.sql",
+      "sha256": "136e42c287749f89aaac96100d2940dea8e462d636c0c541c7a0a49de1a3bfab",
+      "chronologicalOrder": 103,
+      "executionOrder": 110,
+      "transaction": true,
+      "dependencies": [
+        {
+          "version": "0001",
+          "reason": "Referenced relation profiles must exist before this migration."
+        },
+        {
+          "version": "20260416100000",
+          "reason": "Referenced relation conversions_config must exist before this migration."
+        }
+      ],
+      "orderReason": "Stable dependency-first traversal; provider moves and resulting shifts are justified by explicit dependency edges."
+    },
+    {
+      "version": "20260426002000",
+      "file": "20260426002000_enforce_numeric_pixel_id.sql",
+      "sha256": "4b59b5e9659f98d1034b9ac60f0d475d3632dd136a31d82b2b865b4541d33c17",
+      "chronologicalOrder": 104,
+      "executionOrder": 111,
+      "transaction": true,
+      "dependencies": [
+        {
+          "version": "20260227100000",
+          "reason": "Referenced relation landings must exist before this migration."
+        },
+        {
+          "version": "20260416100000",
+          "reason": "Referenced relation conversions_config must exist before this migration."
+        }
+      ],
+      "orderReason": "Stable dependency-first traversal; provider moves and resulting shifts are justified by explicit dependency edges."
+    },
+    {
+      "version": "20260426005000",
+      "file": "20260426005000_conversions_fix_observaciones_encoding.sql",
+      "sha256": "6548cbda668d21517c8af05582a4248c1362661140df32925739170b5f8bce1f",
+      "chronologicalOrder": 106,
+      "executionOrder": 112,
+      "transaction": true,
+      "dependencies": [
+        {
+          "version": "20260416100001",
+          "reason": "Referenced relation conversions must exist before this migration."
+        }
+      ],
+      "orderReason": "Stable dependency-first traversal; provider moves and resulting shifts are justified by explicit dependency edges."
+    },
+    {
+      "version": "20260426006000",
+      "file": "20260426006000_conversions_add_contact_payload_raw.sql",
+      "sha256": "cb36feb3d3b92e60e3c5665550af5b3fc0a03a989a47534781aa71d4baf292f0",
+      "chronologicalOrder": 107,
+      "executionOrder": 113,
+      "transaction": true,
+      "dependencies": [
+        {
+          "version": "20260416100000",
+          "reason": "Referenced relation conversions_config must exist before this migration."
+        },
+        {
+          "version": "20260416100001",
+          "reason": "Referenced relation conversions must exist before this migration."
+        }
+      ],
+      "orderReason": "Stable dependency-first traversal; provider moves and resulting shifts are justified by explicit dependency edges."
+    },
+    {
+      "version": "20260426010000",
+      "file": "20260426010000_conversions_add_source_platform.sql",
+      "sha256": "b5f60b4e2c6811f5ee0389b91090d46b06de8c87ea11a104938a3cec870b7576",
+      "chronologicalOrder": 111,
+      "executionOrder": 114,
+      "transaction": true,
+      "dependencies": [
+        {
+          "version": "20260416100001",
+          "reason": "Referenced relation conversions must exist before this migration."
+        }
+      ],
+      "orderReason": "Stable dependency-first traversal; provider moves and resulting shifts are justified by explicit dependency edges."
+    },
+    {
+      "version": "20260426011000",
+      "file": "20260426011000_chatrace_gerencias.sql",
+      "sha256": "950b1b4b16c8835cd8ecbee0a28d5ec3e7a77fe9d1ee02379995f604889926f9",
+      "chronologicalOrder": 112,
+      "executionOrder": 115,
+      "transaction": true,
+      "dependencies": [
+        {
+          "version": "0001",
+          "reason": "Referenced relation profiles must exist before this migration."
+        },
+        {
+          "version": "20260227140000",
+          "reason": "Referenced relation gerencias must exist before this migration."
+        }
+      ],
+      "orderReason": "Stable dependency-first traversal; provider moves and resulting shifts are justified by explicit dependency edges."
+    },
+    {
+      "version": "20260427110000",
+      "file": "20260427110000_conversions_add_cuit_cuil.sql",
+      "sha256": "687106a8ccaec47c6c1e6b4c41e9d578f3ea60b5b38c4a59c1dd7d8a6bb2cbd8",
+      "chronologicalOrder": 116,
+      "executionOrder": 116,
+      "transaction": true,
+      "dependencies": [
+        {
+          "version": "20260416100000",
+          "reason": "Referenced relation conversions_config must exist before this migration."
+        },
+        {
+          "version": "20260416100001",
+          "reason": "Referenced relation conversions must exist before this migration."
+        }
+      ],
+      "orderReason": "Chronological position preserved."
+    },
+    {
+      "version": "20260427120000",
+      "file": "20260427120000_conversions_add_inferred_sex.sql",
+      "sha256": "dcda23d819fe42faec1b295d1440fb4e0142baa9e91a93352e33ef4893fd2a59",
+      "chronologicalOrder": 117,
+      "executionOrder": 117,
+      "transaction": true,
+      "dependencies": [
+        {
+          "version": "20260416100000",
+          "reason": "Referenced relation conversions_config must exist before this migration."
+        },
+        {
+          "version": "20260416100001",
+          "reason": "Referenced relation conversions must exist before this migration."
+        }
+      ],
+      "orderReason": "Chronological position preserved."
+    },
+    {
+      "version": "20260427133000",
+      "file": "20260427133000_create_ar_name_inferred_sex.sql",
+      "sha256": "fdc92dc1858b1eab4719df76ca33b8d8025a7cada5e844d3836f79e959c1715b",
+      "chronologicalOrder": 118,
+      "executionOrder": 118,
+      "transaction": true,
+      "dependencies": [],
+      "orderReason": "Chronological position preserved."
+    },
+    {
+      "version": "20260427140000",
+      "file": "20260427140000_conversions_add_sex_source.sql",
+      "sha256": "45e9488c06f6dbea02c8cca179b307ea6b481b0de161f8f32bbd2056556e6aa9",
+      "chronologicalOrder": 119,
+      "executionOrder": 119,
+      "transaction": true,
+      "dependencies": [
+        {
+          "version": "20260416100000",
+          "reason": "Referenced relation conversions_config must exist before this migration."
+        },
+        {
+          "version": "20260416100001",
+          "reason": "Referenced relation conversions must exist before this migration."
+        }
+      ],
+      "orderReason": "Chronological position preserved."
+    },
+    {
+      "version": "20260427143000",
+      "file": "20260427143000_backfill_sex_from_name_catalog.sql",
+      "sha256": "1260de4e81130f4b51be2555e15f9ed40aa832eb7e4b3b8446e3dedf124b0ea5",
+      "chronologicalOrder": 120,
+      "executionOrder": 120,
+      "transaction": true,
+      "dependencies": [
+        {
+          "version": "20260416100001",
+          "reason": "Referenced relation conversions must exist before this migration."
+        },
+        {
+          "version": "20260427133000",
+          "reason": "Referenced relation ar_name_inferred_sex must exist before this migration."
+        }
+      ],
+      "orderReason": "Chronological position preserved."
+    },
+    {
+      "version": "20260427150000",
+      "file": "20260427150000_ai_assistant_monthly_quota.sql",
+      "sha256": "881d5a0304a65ec58f6138b598cd7124f8f4d9a358bbb6ee20654598800857b2",
+      "chronologicalOrder": 121,
+      "executionOrder": 121,
+      "transaction": true,
+      "dependencies": [],
+      "orderReason": "Chronological position preserved."
+    },
+    {
+      "version": "20260427170000",
+      "file": "20260427170000_conversions_config_add_show_ai_assistant.sql",
+      "sha256": "1c11331ec6eb41057c5ba11ec55507b1bc5197db76100005c52e3186e7088a39",
+      "chronologicalOrder": 122,
+      "executionOrder": 122,
+      "transaction": true,
+      "dependencies": [
+        {
+          "version": "20260416100000",
+          "reason": "Referenced relation conversions_config must exist before this migration."
+        }
+      ],
+      "orderReason": "Chronological position preserved."
+    },
+    {
+      "version": "20260427180000",
+      "file": "20260427180000_remote_sync_placeholder.sql",
+      "sha256": "797075744db09bdf77241d734d3d43d3d6e9925866a248a3da887c5beddbefbf",
+      "chronologicalOrder": 123,
+      "executionOrder": 123,
+      "transaction": true,
+      "dependencies": [],
+      "orderReason": "Chronological position preserved."
+    },
+    {
+      "version": "20260427190000",
+      "file": "20260427190000_remote_sync_placeholder.sql",
+      "sha256": "6e5f4ea0aada8847bac9633fe600b6a181191cca8eee780eca96494c87decec4",
+      "chronologicalOrder": 124,
+      "executionOrder": 124,
+      "transaction": true,
+      "dependencies": [
+        {
+          "version": "20260427180000",
+          "reason": "The recovered queue must precede its historical retry scheduler."
+        }
+      ],
+      "orderReason": "Chronological position preserved."
+    },
+    {
+      "version": "20260427200000",
+      "file": "20260427200000_conversions_contact_dedupe_unique_indexes.sql",
+      "sha256": "05b4dbbd986e9357da4a478b0dc7a5e2e6a46973232a37237be9e3215c02d34d",
+      "chronologicalOrder": 125,
+      "executionOrder": 125,
+      "transaction": true,
+      "dependencies": [
+        {
+          "version": "20260416100001",
+          "reason": "Referenced relation conversions must exist before this migration."
+        }
+      ],
+      "orderReason": "Chronological position preserved."
+    },
+    {
+      "version": "20260427201000",
+      "file": "20260427201000_cleanup_contact_dedupe_test_rows.sql",
+      "sha256": "71776c03778150a9318b4423c70308a0d20046a7295da8339d450348781805b0",
+      "chronologicalOrder": 126,
+      "executionOrder": 126,
+      "transaction": true,
+      "dependencies": [
+        {
+          "version": "0001",
+          "reason": "Referenced relation profiles must exist before this migration."
+        },
+        {
+          "version": "20260416100001",
+          "reason": "Referenced relation conversions must exist before this migration."
+        }
+      ],
+      "orderReason": "Chronological position preserved."
+    },
+    {
+      "version": "20260428120000",
+      "file": "20260428120000_phone_kind_add_assistant.sql",
+      "sha256": "5da0a0522642d6b226eb2d56418a898c584e625117b0e136aa29d9e4fef88b08",
+      "chronologicalOrder": 127,
+      "executionOrder": 127,
+      "transaction": true,
+      "dependencies": [
+        {
+          "version": "20260227100000",
+          "reason": "Referenced relation landings must exist before this migration."
+        },
+        {
+          "version": "20260227140000",
+          "reason": "Referenced relation landings_gerencias must exist before this migration."
+        },
+        {
+          "version": "20260228131000",
+          "reason": "Referenced relation gerencia_phones must exist before this migration."
+        },
+        {
+          "version": "20260426011000",
+          "reason": "Referenced relation chatrace_gerencias must exist before this migration."
+        }
+      ],
+      "orderReason": "Chronological position preserved."
+    },
+    {
+      "version": "20260429100000",
+      "file": "20260429100000_from_meta_ads_promo_code_fallback.sql",
+      "sha256": "7846c9312e80a071a55ed5c2e107412d28903912edce13ca60fb4654672a006a",
+      "chronologicalOrder": 128,
+      "executionOrder": 128,
+      "transaction": true,
+      "dependencies": [
+        {
+          "version": "20260416100001",
+          "reason": "Referenced relation conversions must exist before this migration."
+        }
+      ],
+      "orderReason": "Chronological position preserved."
+    },
+    {
+      "version": "20260430170000",
+      "file": "20260430170000_conversion_inbox_deferred_status.sql",
+      "sha256": "33c00df50a70448fb902ac1b86d27b878ae805c62d9736ff816ae071663d5606",
+      "chronologicalOrder": 129,
+      "executionOrder": 129,
+      "transaction": true,
+      "dependencies": [
+        {
+          "version": "20260326235900",
+          "reason": "Referenced relation conversion_inbox must exist before this migration."
+        }
+      ],
+      "orderReason": "Chronological position preserved."
+    },
+    {
+      "version": "20260430193000",
+      "file": "20260430193000_align_plan_limits.sql",
+      "sha256": "2fbce9c4cbce6f9c9f64294eb9486d774061035f6d9cf99be781deb6de91086b",
+      "chronologicalOrder": 130,
+      "executionOrder": 130,
+      "transaction": true,
+      "dependencies": [
+        {
+          "version": "20260403110000",
+          "reason": "Referenced relation client_subscriptions must exist before this migration."
+        }
+      ],
+      "orderReason": "Chronological position preserved."
+    },
+    {
+      "version": "20260430203000",
+      "file": "20260430203000_home_overview_stats.sql",
+      "sha256": "747f9ea6cec0ac48b7c3829c3f619a34c5d0ba3e04e8db1aa753cca4667c1904",
+      "chronologicalOrder": 131,
+      "executionOrder": 131,
+      "transaction": true,
+      "dependencies": [
+        {
+          "version": "0001",
+          "reason": "Referenced relation profiles must exist before this migration."
+        },
+        {
+          "version": "20260227100000",
+          "reason": "Referenced relation landings must exist before this migration."
+        },
+        {
+          "version": "20260416100000",
+          "reason": "Referenced relation conversions_config must exist before this migration."
+        },
+        {
+          "version": "20260416100001",
+          "reason": "Referenced relation conversions must exist before this migration."
+        },
+        {
+          "version": "20260418200000",
+          "reason": "Referenced relation hidden_conversions must exist before this migration."
+        }
+      ],
+      "orderReason": "Chronological position preserved."
+    },
+    {
+      "version": "20260502160000",
+      "file": "20260502160000_promotions_module.sql",
+      "sha256": "2c1ed60a8c1fd547126d8daf308ea04b2fcc312b7533c1a973d6d652d1f9bd2a",
+      "chronologicalOrder": 132,
+      "executionOrder": 132,
+      "transaction": true,
+      "dependencies": [
+        {
+          "version": "0001",
+          "reason": "Referenced relation profiles must exist before this migration."
+        }
+      ],
+      "orderReason": "Chronological position preserved."
+    },
+    {
+      "version": "20260502163000",
+      "file": "20260502163000_promotions_due_cron.sql",
+      "sha256": "16b02477d5f4f88096059d7318783e9b5945441bd9333c1ccd750d11bf7a57cf",
+      "chronologicalOrder": 133,
+      "executionOrder": 133,
+      "transaction": true,
+      "dependencies": [
+        {
+          "version": "20260305120000",
+          "reason": "Referenced relation cron_config must exist before this migration."
+        }
+      ],
+      "orderReason": "Chronological position preserved."
+    },
+    {
+      "version": "20260502170000",
+      "file": "20260502170000_promotions_due_cron_hourly.sql",
+      "sha256": "959858f13484415a8dd8ed9651ebef625e5a6a504fa883106653fbc2c937b27f",
+      "chronologicalOrder": 134,
+      "executionOrder": 134,
+      "transaction": true,
+      "dependencies": [],
+      "orderReason": "Chronological position preserved."
+    },
+    {
+      "version": "20260502173000",
+      "file": "20260502173000_promotions_draw_status.sql",
+      "sha256": "1e98a2aae26efe3ed6c86f1960e1cf28e93f0396f4beee0074e9251b713e2098",
+      "chronologicalOrder": 135,
+      "executionOrder": 135,
+      "transaction": true,
+      "dependencies": [
+        {
+          "version": "20260502160000",
+          "reason": "Referenced relation promotions must exist before this migration."
+        }
+      ],
+      "orderReason": "Chronological position preserved."
+    },
+    {
+      "version": "20260502180000",
+      "file": "20260502180000_promotions_background_image.sql",
+      "sha256": "edd3655f4833e5a9f947922edd5b6b6133342c416f27b3da1492e86700f08413",
+      "chronologicalOrder": 136,
+      "executionOrder": 136,
+      "transaction": true,
+      "dependencies": [
+        {
+          "version": "20260502160000",
+          "reason": "Referenced relation promotions must exist before this migration."
+        }
+      ],
+      "orderReason": "Chronological position preserved."
+    },
+    {
+      "version": "20260502223000",
+      "file": "20260502223000_promotions_public_design_fields.sql",
+      "sha256": "0011a53d78a08e058cad49f71f2b3d2849e1d2fd46f93b96d1942292675da169",
+      "chronologicalOrder": 137,
+      "executionOrder": 137,
+      "transaction": true,
+      "dependencies": [
+        {
+          "version": "20260502160000",
+          "reason": "Referenced relation promotions must exist before this migration."
+        }
+      ],
+      "orderReason": "Chronological position preserved."
+    },
+    {
+      "version": "20260503090000",
+      "file": "20260503090000_conversions_config_add_show_promotions.sql",
+      "sha256": "91f689d87dec9785f3fca2cd91000242609227385d0f6c5784c778600d712188",
+      "chronologicalOrder": 138,
+      "executionOrder": 138,
+      "transaction": true,
+      "dependencies": [
+        {
+          "version": "0001",
+          "reason": "Referenced relation profiles must exist before this migration."
+        },
+        {
+          "version": "20260416100000",
+          "reason": "Referenced relation conversions_config must exist before this migration."
+        }
+      ],
+      "orderReason": "Chronological position preserved."
+    },
+    {
+      "version": "20260504163000",
+      "file": "20260504163000_promotion_participants_delete_policy.sql",
+      "sha256": "37dcb27d1650209f32fa57c48a296a1d7ea29bae5cd1514ede33380bf7142071",
+      "chronologicalOrder": 139,
+      "executionOrder": 139,
+      "transaction": true,
+      "dependencies": [
+        {
+          "version": "0001",
+          "reason": "Referenced relation profiles must exist before this migration."
+        },
+        {
+          "version": "20260502160000",
+          "reason": "Referenced relation promotion_participants must exist before this migration."
+        }
+      ],
+      "orderReason": "Chronological position preserved."
+    },
+    {
+      "version": "20260504174500",
+      "file": "20260504174500_home_overview_match_stats_logic.sql",
+      "sha256": "1853c7ed608f973d7cdcecc66bdcfc21fdb9b6a663793c654ce88fc188ea5507",
+      "chronologicalOrder": 140,
+      "executionOrder": 140,
+      "transaction": true,
+      "dependencies": [
+        {
+          "version": "0001",
+          "reason": "Referenced relation profiles must exist before this migration."
+        },
+        {
+          "version": "20260227100000",
+          "reason": "Referenced relation landings must exist before this migration."
+        },
+        {
+          "version": "20260416100000",
+          "reason": "Referenced relation conversions_config must exist before this migration."
+        },
+        {
+          "version": "20260416100001",
+          "reason": "Referenced relation conversions must exist before this migration."
+        },
+        {
+          "version": "20260418200000",
+          "reason": "Referenced relation hidden_conversions must exist before this migration."
+        }
+      ],
+      "orderReason": "Chronological position preserved."
+    },
+    {
+      "version": "20260505120000",
+      "file": "20260505120000_notification_promotions_toggle.sql",
+      "sha256": "14dc29ce3bae2795a5bc694ab9a4244f18559e35a0720fc19a3beadb0451739d",
+      "chronologicalOrder": 141,
+      "executionOrder": 141,
+      "transaction": true,
+      "dependencies": [
+        {
+          "version": "20260326133000",
+          "reason": "Referenced relation notification_settings must exist before this migration."
+        }
+      ],
+      "orderReason": "Chronological position preserved."
+    },
+    {
+      "version": "20260505131500",
+      "file": "20260505131500_from_meta_ads_include_utm_campaign.sql",
+      "sha256": "fd1653095149544b6e3893f67ce4c71a16e8575423a21a4fb05a0b1967719c17",
+      "chronologicalOrder": 142,
+      "executionOrder": 142,
+      "transaction": true,
+      "dependencies": [
+        {
+          "version": "20260416100001",
+          "reason": "Referenced relation conversions must exist before this migration."
+        }
+      ],
+      "orderReason": "Chronological position preserved."
+    },
+    {
+      "version": "20260506103000",
+      "file": "20260506103000_purchase_coelsa_id_dedupe.sql",
+      "sha256": "605ce649476b6c8d951bf9e88f9feb79c5366a227e216dd480fe4a83d14264e7",
+      "chronologicalOrder": 143,
+      "executionOrder": 143,
+      "transaction": true,
+      "dependencies": [
+        {
+          "version": "20260326235900",
+          "reason": "Referenced relation conversion_inbox must exist before this migration."
+        },
+        {
+          "version": "20260416100001",
+          "reason": "Referenced relation conversions must exist before this migration."
+        }
+      ],
+      "orderReason": "Chronological position preserved."
+    },
+    {
+      "version": "20260507193000",
+      "file": "20260507193000_phone_messages_operational_reset.sql",
+      "sha256": "1e31be17498d2e915a2bb011de3313598abfba1b4511de8981872c09d982842b",
+      "chronologicalOrder": 144,
+      "executionOrder": 144,
+      "transaction": true,
+      "dependencies": [
+        {
+          "version": "20260227100000",
+          "reason": "Referenced relation landings must exist before this migration."
+        },
+        {
+          "version": "20260228131000",
+          "reason": "Referenced relation gerencia_phones must exist before this migration."
+        },
+        {
+          "version": "20260416100001",
+          "reason": "Referenced relation conversions must exist before this migration."
+        }
+      ],
+      "orderReason": "Chronological position preserved."
+    },
+    {
+      "version": "20260512120000",
+      "file": "20260512120000_hidden_conversion_inbox.sql",
+      "sha256": "34d2887a742d34c4fed0a07b1ce3d0984a5d523202d9b295015520c760dcedfb",
+      "chronologicalOrder": 145,
+      "executionOrder": 145,
+      "transaction": true,
+      "dependencies": [
+        {
+          "version": "20260326235900",
+          "reason": "Referenced relation conversion_inbox must exist before this migration."
+        }
+      ],
+      "orderReason": "Chronological position preserved."
+    },
+    {
+      "version": "20260512133000",
+      "file": "20260512133000_gerencia_phone_availability_snapshots.sql",
+      "sha256": "5fddaa2d5e25c945a48363d8ede7928e8cd43b1b0d298d2ddce1c95dbfa2a88a",
+      "chronologicalOrder": 146,
+      "executionOrder": 146,
+      "transaction": true,
+      "dependencies": [
+        {
+          "version": "0001",
+          "reason": "Referenced relation profiles must exist before this migration."
+        },
+        {
+          "version": "20260227140000",
+          "reason": "Referenced relation gerencias must exist before this migration."
+        }
+      ],
+      "orderReason": "Chronological position preserved."
+    },
+    {
+      "version": "20260513103000",
+      "file": "20260513103000_availability_snapshots_assignment_count.sql",
+      "sha256": "de8991def69cc44b2938229bec618e8eb64a32c4f4d501a77c9bba91a9b344ce",
+      "chronologicalOrder": 147,
+      "executionOrder": 147,
+      "transaction": true,
+      "dependencies": [
+        {
+          "version": "20260512133000",
+          "reason": "Referenced relation gerencia_phone_availability_snapshots must exist before this migration."
+        }
+      ],
+      "orderReason": "Chronological position preserved."
+    },
+    {
+      "version": "20260514120000",
+      "file": "20260514120000_purchase_transaction_id_dedupe.sql",
+      "sha256": "7181c50b95c9a86591b70bf5c2a2af53c10e8b2138c9533b4e3e778ed8b439c9",
+      "chronologicalOrder": 148,
+      "executionOrder": 148,
+      "transaction": true,
+      "dependencies": [
+        {
+          "version": "20260326235900",
+          "reason": "Referenced relation conversion_inbox must exist before this migration."
+        },
+        {
+          "version": "20260416100001",
+          "reason": "Referenced relation conversions must exist before this migration."
+        }
+      ],
+      "orderReason": "Chronological position preserved."
+    },
+    {
+      "version": "20260514183000",
+      "file": "20260514183000_home_overview_inferred_leads.sql",
+      "sha256": "84d90b051095267253464442eae8d6a6e9ca2b07c81cf0833460eeb84dc9faff",
+      "chronologicalOrder": 149,
+      "executionOrder": 149,
+      "transaction": true,
+      "dependencies": [
+        {
+          "version": "0001",
+          "reason": "Referenced relation profiles must exist before this migration."
+        },
+        {
+          "version": "20260227100000",
+          "reason": "Referenced relation landings must exist before this migration."
+        },
+        {
+          "version": "20260416100000",
+          "reason": "Referenced relation conversions_config must exist before this migration."
+        },
+        {
+          "version": "20260416100001",
+          "reason": "Referenced relation conversions must exist before this migration."
+        },
+        {
+          "version": "20260418200000",
+          "reason": "Referenced relation hidden_conversions must exist before this migration."
+        }
+      ],
+      "orderReason": "Chronological position preserved."
+    },
+    {
+      "version": "20260514193000",
+      "file": "20260514193000_phone_auto_daily_reset.sql",
+      "sha256": "fe05ce9ea4656779c39ecd935df5b8e8a446fa8ac036d3b1eb4d3e5a3f49a422",
+      "chronologicalOrder": 150,
+      "executionOrder": 150,
+      "transaction": true,
+      "dependencies": [
+        {
+          "version": "20260227140000",
+          "reason": "Referenced relation gerencias must exist before this migration."
+        },
+        {
+          "version": "20260228131000",
+          "reason": "Referenced relation gerencia_phones must exist before this migration."
+        },
+        {
+          "version": "20260416100000",
+          "reason": "Referenced relation conversions_config must exist before this migration."
+        }
+      ],
+      "orderReason": "Chronological position preserved."
+    },
+    {
+      "version": "20260519143000",
+      "file": "20260519143000_gerencia_availability_summary_rpc.sql",
+      "sha256": "32f1000a65561f14700dea04f6372ad39051517c1b73856e63704fef50209f02",
+      "chronologicalOrder": 151,
+      "executionOrder": 151,
+      "transaction": true,
+      "dependencies": [
+        {
+          "version": "0001",
+          "reason": "Referenced relation profiles must exist before this migration."
+        },
+        {
+          "version": "20260227140000",
+          "reason": "Referenced relation gerencias must exist before this migration."
+        },
+        {
+          "version": "20260512133000",
+          "reason": "Referenced relation gerencia_phone_availability_snapshots must exist before this migration."
+        }
+      ],
+      "orderReason": "Chronological position preserved."
+    },
+    {
+      "version": "20260519144500",
+      "file": "20260519144500_gerencia_availability_summary_auth_guard.sql",
+      "sha256": "d0270673daa3ebb10a3975b9e9a8fa0dcf6ad1f67a5e8446b7c7c91c9cb23ac0",
+      "chronologicalOrder": 152,
+      "executionOrder": 152,
+      "transaction": true,
+      "dependencies": [
+        {
+          "version": "0001",
+          "reason": "Referenced relation profiles must exist before this migration."
+        },
+        {
+          "version": "20260227140000",
+          "reason": "Referenced relation gerencias must exist before this migration."
+        },
+        {
+          "version": "20260512133000",
+          "reason": "Referenced relation gerencia_phone_availability_snapshots must exist before this migration."
+        }
+      ],
+      "orderReason": "Chronological position preserved."
+    },
+    {
+      "version": "20260519160000",
+      "file": "20260519160000_gerencia_work_groups.sql",
+      "sha256": "6f1991022330253cd90a9a234f096b78f9add613f9082611a73ffbe288fde256",
+      "chronologicalOrder": 153,
+      "executionOrder": 153,
+      "transaction": true,
+      "dependencies": [
+        {
+          "version": "0001",
+          "reason": "Referenced relation profiles must exist before this migration."
+        },
+        {
+          "version": "20260227140000",
+          "reason": "Referenced relation gerencias must exist before this migration."
+        }
+      ],
+      "orderReason": "Chronological position preserved."
+    },
+    {
+      "version": "20260519172000",
+      "file": "20260519172000_conversions_assigned_gerencia_snapshot.sql",
+      "sha256": "f262fd4d3949e109144a3a99bbeb7e9c4c4e75353fd6fb800061ccb3edc2821b",
+      "chronologicalOrder": 154,
+      "executionOrder": 154,
+      "transaction": true,
+      "dependencies": [
+        {
+          "version": "20260227140000",
+          "reason": "Referenced relation gerencias must exist before this migration."
+        },
+        {
+          "version": "20260228131000",
+          "reason": "Referenced relation gerencia_phones must exist before this migration."
+        },
+        {
+          "version": "20260416100001",
+          "reason": "Referenced relation conversions must exist before this migration."
+        }
+      ],
+      "orderReason": "Chronological position preserved."
+    },
+    {
+      "version": "20260604120000",
+      "file": "20260604120000_gerencia_phones_source_available.sql",
+      "sha256": "417924b69ad2c77c1dc29261ebb57c2edc05994fd6cfe9603d91cf85799cdcf4",
+      "chronologicalOrder": 155,
+      "executionOrder": 155,
+      "transaction": true,
+      "dependencies": [
+        {
+          "version": "20260227140000",
+          "reason": "Referenced relation gerencias must exist before this migration."
+        },
+        {
+          "version": "20260228131000",
+          "reason": "Referenced relation gerencia_phones must exist before this migration."
+        }
+      ],
+      "orderReason": "Chronological position preserved."
+    },
+    {
+      "version": "20260605100000",
+      "file": "20260605100000_conversions_pixel_configs_comment.sql",
+      "sha256": "74fdb8395f91760a919e08b48801e7c0022d8526fd30f9bd2c5906baf4b77c48",
+      "chronologicalOrder": 156,
+      "executionOrder": 156,
+      "transaction": true,
+      "dependencies": [
+        {
+          "version": "20260330160000",
+          "reason": "Referenced relation conversions_pixel_configs must exist before this migration."
+        }
+      ],
+      "orderReason": "Chronological position preserved."
+    },
+    {
+      "version": "20260609120000",
+      "file": "20260609120000_lead_inbox_dedupe_by_promo.sql",
+      "sha256": "761ce0d00cb0d0738785ef3749352196591986730b279d568a82e7208397a334",
+      "chronologicalOrder": 157,
+      "executionOrder": 157,
+      "transaction": true,
+      "dependencies": [
+        {
+          "version": "20260326235900",
+          "reason": "Referenced relation conversion_inbox must exist before this migration."
+        }
+      ],
+      "orderReason": "Chronological position preserved."
+    },
+    {
+      "version": "20260609123000",
+      "file": "20260609123000_purchase_inbox_dedupe_by_promo_without_strong_ids.sql",
+      "sha256": "59f90fb461f88a4f4e05068637e527a6a2684f8d04f8a3f80eeb2e2bbd823c4e",
+      "chronologicalOrder": 158,
+      "executionOrder": 158,
+      "transaction": true,
+      "dependencies": [
+        {
+          "version": "20260326235900",
+          "reason": "Referenced relation conversion_inbox must exist before this migration."
+        }
+      ],
+      "orderReason": "Chronological position preserved."
+    },
+    {
+      "version": "20260609213000",
+      "file": "20260609213000_conversion_log_lead_backfill_replays.sql",
+      "sha256": "692262aa1ee33ab6e033ad1521a6b3085ddc4009b176dba93715688f6d22c52e",
+      "chronologicalOrder": 159,
+      "executionOrder": 159,
+      "transaction": true,
+      "dependencies": [
+        {
+          "version": "20260416200000",
+          "reason": "Referenced relation conversion_logs must exist before this migration."
+        }
+      ],
+      "orderReason": "Chronological position preserved."
+    },
+    {
+      "version": "20260610173000",
+      "file": "20260610173000_backfill_inbox_promo_code_from_conversion.sql",
+      "sha256": "12419a6a84029979b13fe944aaf8b8c514a9441d0d370f9faf23c0b3a9a5b7d3",
+      "chronologicalOrder": 160,
+      "executionOrder": 160,
+      "transaction": true,
+      "dependencies": [
+        {
+          "version": "20260326235900",
+          "reason": "Referenced relation conversion_inbox must exist before this migration."
+        },
+        {
+          "version": "20260416100001",
+          "reason": "Referenced relation conversions must exist before this migration."
+        }
+      ],
+      "orderReason": "Chronological position preserved."
+    },
+    {
+      "version": "20260610203000",
+      "file": "20260610203000_conversions_main_promo_unique.sql",
+      "sha256": "51bd52f45b566308c0fa690416ca901c2c4d71eace3e2eef1dc19a90096364c8",
+      "chronologicalOrder": 161,
+      "executionOrder": 161,
+      "transaction": true,
+      "dependencies": [
+        {
+          "version": "20260326235900",
+          "reason": "Referenced relation conversion_inbox must exist before this migration."
+        },
+        {
+          "version": "20260416100001",
+          "reason": "Referenced relation conversions must exist before this migration."
+        }
+      ],
+      "orderReason": "Chronological position preserved."
+    },
+    {
+      "version": "20260613090000",
+      "file": "20260613090000_public_landing_runtime_switch.sql",
+      "sha256": "835c5f25c3ed505648ce47290fb69f0402e01327de3485009fcd2d87f0f134d0",
+      "chronologicalOrder": 162,
+      "executionOrder": 162,
+      "transaction": true,
+      "dependencies": [
+        {
+          "version": "20260227130000",
+          "reason": "Referenced relation settings must exist before this migration."
+        }
+      ],
+      "orderReason": "Chronological position preserved."
+    },
+    {
+      "version": "20260613120000",
+      "file": "20260613120000_contact_lead_capi_retry_flags.sql",
+      "sha256": "e5c46f22e9fc57af457489dcca728463ba334cf12b6ff1ea5a76921619be3f73",
+      "chronologicalOrder": 163,
+      "executionOrder": 163,
+      "transaction": true,
+      "dependencies": [
+        {
+          "version": "20260416100001",
+          "reason": "Referenced relation conversions must exist before this migration."
+        }
+      ],
+      "orderReason": "Chronological position preserved."
+    },
+    {
+      "version": "20260614120000",
+      "file": "20260614120000_landings_publish_target.sql",
+      "sha256": "9599bbcaada664e7928a6eefe82e51d804f736e763887af20fba24656a871ce2",
+      "chronologicalOrder": 164,
+      "executionOrder": 164,
+      "transaction": true,
+      "dependencies": [
+        {
+          "version": "20260227100000",
+          "reason": "Referenced relation landings must exist before this migration."
+        }
+      ],
+      "orderReason": "Chronological position preserved."
+    },
+    {
+      "version": "20260614130000",
+      "file": "20260614130000_constructor_landing_phone_cache.sql",
+      "sha256": "4c217baa5c30db39ece448243bc8296740c4e1309b34f7ccb1ae98654636bb6d",
+      "chronologicalOrder": 165,
+      "executionOrder": 165,
+      "transaction": true,
+      "dependencies": [
+        {
+          "version": "20260227100000",
+          "reason": "Referenced relation landings must exist before this migration."
+        }
+      ],
+      "orderReason": "Chronological position preserved."
+    },
+    {
+      "version": "20260614133000",
+      "file": "20260614133000_cached_constructor_landing_phone_rpc.sql",
+      "sha256": "74901c3488407ea5e63fc4d82ecb8233e75d08a06b8c1a82809e0aa6b4a4b75b",
+      "chronologicalOrder": 166,
+      "executionOrder": 166,
+      "transaction": true,
+      "dependencies": [
+        {
+          "version": "20260227100000",
+          "reason": "Referenced relation landings must exist before this migration."
+        },
+        {
+          "version": "20260614130000",
+          "reason": "Referenced relation landing_phone_cache must exist before this migration."
+        }
+      ],
+      "orderReason": "Chronological position preserved."
+    },
+    {
+      "version": "20260627183000",
+      "file": "20260627183000_promotion_match_backfill_cron.sql",
+      "sha256": "92a9a562a402fe905922c7658fe64c8a089a2869af9c6d45a56db83c454e582d",
+      "chronologicalOrder": 167,
+      "executionOrder": 167,
+      "transaction": true,
+      "dependencies": [
+        {
+          "version": "20260305120000",
+          "reason": "Referenced relation cron_config must exist before this migration."
+        },
+        {
+          "version": "20260416100001",
+          "reason": "Referenced relation conversions must exist before this migration."
+        },
+        {
+          "version": "20260502160000",
+          "reason": "Referenced relation promotion_participants must exist before this migration."
+        }
+      ],
+      "orderReason": "Chronological position preserved."
+    },
+    {
+      "version": "20260629190000",
+      "file": "20260629190000_constructor_tracking_queue.sql",
+      "sha256": "0704ca68b2cc35fd368fdccfe051f99ac309683dd68f5a1f992a70cca50c7ad1",
+      "chronologicalOrder": 168,
+      "executionOrder": 168,
+      "transaction": true,
+      "dependencies": [
+        {
+          "version": "20260305120000",
+          "reason": "Referenced relation cron_config must exist before this migration."
+        },
+        {
+          "version": "20260427180000",
+          "reason": "Preserve the recovered table definition before the later idempotent declaration and scheduler replacement."
+        }
+      ],
+      "orderReason": "Chronological position preserved."
+    },
+    {
+      "version": "20260710120000",
+      "file": "20260710120000_chatrace_meta_capi_switch.sql",
+      "sha256": "695a39a14c02ea14963f163270c53c3e3f5ff0803c1e514572df332425762cef",
+      "chronologicalOrder": 169,
+      "executionOrder": 169,
+      "transaction": true,
+      "dependencies": [
+        {
+          "version": "20260426009000",
+          "reason": "Referenced relation chatrace_client_configs must exist before this migration."
+        }
+      ],
+      "orderReason": "Chronological position preserved."
+    },
+    {
+      "version": "20260722120000",
+      "file": "20260722120000_from_meta_ads_promo_only_chatrace.sql",
+      "sha256": "5e7bd9daf65b13e6b1b66d1160245c8ece4c3eac62a0e66e78157ce1c33fd458",
+      "chronologicalOrder": 170,
+      "executionOrder": 170,
+      "transaction": true,
+      "dependencies": [
+        {
+          "version": "20260416100001",
+          "reason": "Referenced relation conversions must exist before this migration."
+        }
+      ],
+      "orderReason": "Chronological position preserved."
+    },
+    {
+      "version": "20260722133000",
+      "file": "20260722133000_pixel_capi_event_switches.sql",
+      "sha256": "3e39dc79da70d15e203682655db4dbc3d88f78318eeb9b2135b684339af3e2e6",
+      "chronologicalOrder": 171,
+      "executionOrder": 171,
+      "transaction": true,
+      "dependencies": [
+        {
+          "version": "20260330160000",
+          "reason": "Referenced relation conversions_pixel_configs must exist before this migration."
+        },
+        {
+          "version": "20260416100000",
+          "reason": "Referenced relation conversions_config must exist before this migration."
+        }
+      ],
+      "orderReason": "Chronological position preserved."
+    },
+    {
+      "version": "20260724120000",
+      "file": "20260724120000_split_purchase_capi_switches.sql",
+      "sha256": "b89b3d54aa6447ac80b63132e10e518e36e6ce2b456f39bd9a6c35805e74d1ec",
+      "chronologicalOrder": 172,
+      "executionOrder": 172,
+      "transaction": true,
+      "dependencies": [
+        {
+          "version": "20260330160000",
+          "reason": "Referenced relation conversions_pixel_configs must exist before this migration."
+        },
+        {
+          "version": "20260416100000",
+          "reason": "Referenced relation conversions_config must exist before this migration."
+        },
+        {
+          "version": "20260416100001",
+          "reason": "Referenced relation conversions must exist before this migration."
+        }
+      ],
+      "orderReason": "Chronological position preserved."
+    },
+    {
+      "version": "20260725120000",
+      "file": "20260725120000_pixel_capi_geo_delivery_switch.sql",
+      "sha256": "74849807f130df6d12790e0010d870f60a9fc2c22662ff94bf408730f99b70f9",
+      "chronologicalOrder": 173,
+      "executionOrder": 173,
+      "transaction": true,
+      "dependencies": [
+        {
+          "version": "20260330160000",
+          "reason": "Referenced relation conversions_pixel_configs must exist before this migration."
+        },
+        {
+          "version": "20260416100000",
+          "reason": "Referenced relation conversions_config must exist before this migration."
+        }
+      ],
+      "orderReason": "Chronological position preserved."
+    },
+    {
+      "version": "20260725170000",
+      "file": "20260725170000_chatrace_business_messaging_capi.sql",
+      "sha256": "fa89cdb15076a7cc65a5738e2fdfce6de62fbc7cb2e2e297e16ad700895ea096",
+      "chronologicalOrder": 174,
+      "executionOrder": 174,
+      "transaction": true,
+      "dependencies": [
+        {
+          "version": "20260416100000",
+          "reason": "Referenced relation conversions_config must exist before this migration."
+        },
+        {
+          "version": "20260416100001",
+          "reason": "Referenced relation conversions must exist before this migration."
+        },
+        {
+          "version": "20260426009000",
+          "reason": "Referenced relation chatrace_client_configs must exist before this migration."
+        }
+      ],
+      "orderReason": "Chronological position preserved."
+    },
+    {
+      "version": "20260727183000",
+      "file": "20260727183000_purchase_capi_payload_modes.sql",
+      "sha256": "500c8ebd916e7112000eca8d26c74786bd59e3501c2a559eb081db46ad8fc4e7",
+      "chronologicalOrder": 175,
+      "executionOrder": 175,
+      "transaction": true,
+      "dependencies": [
+        {
+          "version": "20260330160000",
+          "reason": "Referenced relation conversions_pixel_configs must exist before this migration."
+        },
+        {
+          "version": "20260416100000",
+          "reason": "Referenced relation conversions_config must exist before this migration."
+        }
+      ],
+      "orderReason": "Chronological position preserved."
+    },
+    {
+      "version": "20260727220000",
+      "file": "20260727220000_conversions_currency.sql",
+      "sha256": "591651eea61180d8f496a0e7dc082fb9972c1a0357b19edb4d7f32fd0468ac8d",
+      "chronologicalOrder": 176,
+      "executionOrder": 176,
+      "transaction": true,
+      "dependencies": [
+        {
+          "version": "20260416100000",
+          "reason": "Referenced relation conversions_config must exist before this migration."
+        },
+        {
+          "version": "20260416100001",
+          "reason": "Referenced relation conversions must exist before this migration."
+        }
+      ],
+      "orderReason": "Chronological position preserved."
+    },
+    {
+      "version": "20260727223000",
+      "file": "20260727223000_currency_scoped_reporting.sql",
+      "sha256": "bcb32c5babc5af0d4ea87f5210553965741ddb48b143fa2b6774c61121a33bbb",
+      "chronologicalOrder": 177,
+      "executionOrder": 177,
+      "transaction": true,
+      "dependencies": [
+        {
+          "version": "0001",
+          "reason": "Referenced relation profiles must exist before this migration."
+        },
+        {
+          "version": "20260227100000",
+          "reason": "Referenced relation landings must exist before this migration."
+        },
+        {
+          "version": "20260416100000",
+          "reason": "Referenced relation conversions_config must exist before this migration."
+        },
+        {
+          "version": "20260416100001",
+          "reason": "Referenced relation conversions must exist before this migration."
+        },
+        {
+          "version": "20260418200000",
+          "reason": "Referenced relation hidden_conversions must exist before this migration."
+        }
+      ],
+      "orderReason": "Chronological position preserved."
+    },
+    {
+      "version": "20260728010000",
+      "file": "20260728010000_purchase_pixel_attribution.sql",
+      "sha256": "41f7276c8c5aef998838aeaebe7d522a6f0e4e76e7fd1219275bfee76cccbafb",
+      "chronologicalOrder": 178,
+      "executionOrder": 178,
+      "transaction": true,
+      "dependencies": [
+        {
+          "version": "20260227100000",
+          "reason": "Referenced relation landings must exist before this migration."
+        },
+        {
+          "version": "20260330160000",
+          "reason": "Referenced relation conversions_pixel_configs must exist before this migration."
+        },
+        {
+          "version": "20260416100001",
+          "reason": "Referenced relation conversions must exist before this migration."
+        }
+      ],
+      "orderReason": "Chronological position preserved."
+    },
+    {
+      "version": "20260728013000",
+      "file": "20260728013000_capi_meta_ads_only.sql",
+      "sha256": "a212d6626eb8fa1b6c1b8f7c4361bb3150ff21f238b5de32773edc586efe1291",
+      "chronologicalOrder": 179,
+      "executionOrder": 179,
+      "transaction": true,
+      "dependencies": [
+        {
+          "version": "20260330160000",
+          "reason": "Referenced relation conversions_pixel_configs must exist before this migration."
+        },
+        {
+          "version": "20260416100000",
+          "reason": "Referenced relation conversions_config must exist before this migration."
+        }
+      ],
+      "orderReason": "Chronological position preserved."
+    },
+    {
+      "version": "20260728120000",
+      "file": "20260728120000_conversion_view_preferences.sql",
+      "sha256": "fef1eb1970c05c904d5a94226318cf2fb10917c7f9937c4ed447f7a7feaad438",
+      "chronologicalOrder": 180,
+      "executionOrder": 180,
+      "transaction": true,
+      "dependencies": [],
+      "orderReason": "Chronological position preserved."
+    },
+    {
+      "version": "20260728163000",
+      "file": "20260728163000_purchase_event_atomic_claims.sql",
+      "sha256": "53050cb82a4c894ce2244ff6a470e4b4f9a365f34b5f35592a02e2af49240830",
+      "chronologicalOrder": 181,
+      "executionOrder": 181,
+      "transaction": true,
+      "dependencies": [
+        {
+          "version": "20260416100001",
+          "reason": "Referenced relation conversions must exist before this migration."
+        }
+      ],
+      "orderReason": "Chronological position preserved."
+    },
+    {
+      "version": "20260731120000",
+      "file": "20260731120000_conversion_event_gerencia_attribution.sql",
+      "sha256": "9f4a286d6eaa38ec44ce33797d88a4bce3c01acc24465fcc99c5afc11a127478",
+      "chronologicalOrder": 182,
+      "executionOrder": 182,
+      "transaction": true,
+      "dependencies": [
+        {
+          "version": "20260227140000",
+          "reason": "Referenced relation gerencias must exist before this migration."
+        },
+        {
+          "version": "20260228131000",
+          "reason": "Referenced relation gerencia_phones must exist before this migration."
+        },
+        {
+          "version": "20260416100000",
+          "reason": "Referenced relation conversions_config must exist before this migration."
+        },
+        {
+          "version": "20260416100001",
+          "reason": "Referenced relation conversions must exist before this migration."
+        }
+      ],
+      "orderReason": "Chronological position preserved."
+    },
+    {
+      "version": "20260801163000",
+      "file": "20260801163000_conversion_player_username.sql",
+      "sha256": "ad9e4489b079ac0197054263592b9f2ef64b2d53bf049ce7e022112b3d286000",
+      "chronologicalOrder": 183,
+      "executionOrder": 183,
+      "transaction": true,
+      "dependencies": [
+        {
+          "version": "20260416100001",
+          "reason": "Referenced relation conversions must exist before this migration."
+        }
+      ],
+      "orderReason": "Chronological position preserved."
+    },
+    {
+      "version": "20260801190000",
+      "file": "20260801190000_workspace_currency_scope.sql",
+      "sha256": "6f447703a1724b8f5d9387adca82f148ef7e92b9e519c5ae213cc2e2e33e3e18",
+      "chronologicalOrder": 184,
+      "executionOrder": 184,
+      "transaction": true,
+      "dependencies": [
+        {
+          "version": "20260227100000",
+          "reason": "Referenced relation landings must exist before this migration."
+        },
+        {
+          "version": "20260227140000",
+          "reason": "Referenced relation gerencias must exist before this migration."
+        },
+        {
+          "version": "20260502160000",
+          "reason": "Referenced relation promotions must exist before this migration."
+        }
+      ],
+      "orderReason": "Chronological position preserved."
+    },
+    {
+      "version": "20260801203000",
+      "file": "20260801203000_complete_registration_capi_switch.sql",
+      "sha256": "21f5451afcf251f2a2963d392de0dfeacb71a527808df241c55a4b709fb98dde",
+      "chronologicalOrder": 185,
+      "executionOrder": 185,
+      "transaction": true,
+      "dependencies": [
+        {
+          "version": "20260330160000",
+          "reason": "Referenced relation conversions_pixel_configs must exist before this migration."
+        },
+        {
+          "version": "20260416100000",
+          "reason": "Referenced relation conversions_config must exist before this migration."
+        },
+        {
+          "version": "20260416100001",
+          "reason": "Referenced relation conversions must exist before this migration."
+        }
+      ],
+      "orderReason": "Chronological position preserved."
+    },
+    {
+      "version": "20260801213000",
+      "file": "20260801213000_contact_form_fields.sql",
+      "sha256": "c0f15949be1294381a18509c2c2a9deed774b6d6880cfedae6f0d8adc467a2b6",
+      "chronologicalOrder": 186,
+      "executionOrder": 186,
+      "transaction": true,
+      "dependencies": [
+        {
+          "version": "20260416100000",
+          "reason": "Referenced relation conversions_config must exist before this migration."
+        },
+        {
+          "version": "20260416100001",
+          "reason": "Referenced relation conversions must exist before this migration."
+        }
+      ],
+      "orderReason": "Chronological position preserved."
+    },
+    {
+      "version": "20260802143000",
+      "file": "20260802143000_backfill_event_agency_context.sql",
+      "sha256": "4490939da14a4b4323e57418d44db6cd70840d9cb9450a07c72f05ffc2831c8d",
+      "chronologicalOrder": 187,
+      "executionOrder": 187,
+      "transaction": true,
+      "dependencies": [
+        {
+          "version": "20260227140000",
+          "reason": "Referenced relation gerencias must exist before this migration."
+        },
+        {
+          "version": "20260228131000",
+          "reason": "Referenced relation gerencia_phones must exist before this migration."
+        },
+        {
+          "version": "20260416100001",
+          "reason": "Referenced relation conversions must exist before this migration."
+        }
+      ],
+      "orderReason": "Chronological position preserved."
+    },
+    {
+      "version": "20260802144500",
+      "file": "20260802144500_ensure_event_agency_context_backfill.sql",
+      "sha256": "cec87ba1c7df4243074e5c0748040a87793a5c3425f0d167fe99fb396ca6367e",
+      "chronologicalOrder": 188,
+      "executionOrder": 188,
+      "transaction": true,
+      "dependencies": [
+        {
+          "version": "20260227140000",
+          "reason": "Referenced relation gerencias must exist before this migration."
+        },
+        {
+          "version": "20260416100001",
+          "reason": "Referenced relation conversions must exist before this migration."
+        }
+      ],
+      "orderReason": "Chronological position preserved."
+    },
+    {
+      "version": "20260803110000",
+      "file": "20260803110000_phone_metrics_summary.sql",
+      "sha256": "a2d78bb1d237bb8a300af5bd5850db93db760ceabacf08c3276d8a9998a1ae4b",
+      "chronologicalOrder": 189,
+      "executionOrder": 189,
+      "transaction": true,
+      "dependencies": [
+        {
+          "version": "0001",
+          "reason": "Referenced relation profiles must exist before this migration."
+        },
+        {
+          "version": "20260227140000",
+          "reason": "Referenced relation gerencias must exist before this migration."
+        },
+        {
+          "version": "20260228131000",
+          "reason": "Referenced relation gerencia_phones must exist before this migration."
+        },
+        {
+          "version": "20260416100001",
+          "reason": "Referenced relation conversions must exist before this migration."
+        },
+        {
+          "version": "20260418200000",
+          "reason": "Referenced relation hidden_conversions must exist before this migration."
+        }
+      ],
+      "orderReason": "Chronological position preserved."
+    },
+    {
+      "version": "20260805210000",
+      "file": "20260805210000_constructor_landing_phone_cache_every_5min.sql",
+      "sha256": "6721f01731de78f0e70b2857b6eb2ac9b59bce118991d69f3a5f359647ec5ff7",
+      "chronologicalOrder": 190,
+      "executionOrder": 190,
+      "transaction": true,
+      "dependencies": [],
+      "orderReason": "Chronological position preserved."
+    },
+    {
+      "version": "20260805211000",
+      "file": "20260805211000_phone_metrics_refresh_every_10min.sql",
+      "sha256": "77727a9416f10ff8b551b5c997e7288e74f5808f5f726a85341bf2e5aff7c386",
+      "chronologicalOrder": 191,
+      "executionOrder": 191,
+      "transaction": true,
+      "dependencies": [],
+      "orderReason": "Chronological position preserved."
+    },
+    {
+      "version": "20260805212000",
+      "file": "20260805212000_optimize_message_based_phone_assignment.sql",
+      "sha256": "400338f7041afb87ec9da9d213d8c830f1594cf0bd1a321bbee272d2468fd558",
+      "chronologicalOrder": 192,
+      "executionOrder": 192,
+      "transaction": true,
+      "dependencies": [
+        {
+          "version": "20260228131000",
+          "reason": "Referenced relation gerencia_phones must exist before this migration."
+        },
+        {
+          "version": "20260416100001",
+          "reason": "Referenced relation conversions must exist before this migration."
+        }
+      ],
+      "orderReason": "Chronological position preserved."
+    },
+    {
+      "version": "20260805213000",
+      "file": "20260805213000_add_fk_and_inbox_hot_path_indexes.sql",
+      "sha256": "ca5ff43630d114ffed9534f6f4ee5d5c96dd266f7c938a69fce02eaf0b773453",
+      "chronologicalOrder": 193,
+      "executionOrder": 193,
+      "transaction": true,
+      "dependencies": [
+        {
+          "version": "20260326235900",
+          "reason": "Referenced relation conversion_inbox must exist before this migration."
+        },
+        {
+          "version": "20260416100001",
+          "reason": "Referenced relation conversions must exist before this migration."
+        },
+        {
+          "version": "20260416200000",
+          "reason": "Referenced relation conversion_logs must exist before this migration."
+        },
+        {
+          "version": "20260426011000",
+          "reason": "Referenced relation chatrace_gerencias must exist before this migration."
+        },
+        {
+          "version": "20260502160000",
+          "reason": "Referenced relation promotions must exist before this migration."
+        },
+        {
+          "version": "20260728163000",
+          "reason": "Referenced relation purchase_event_claims must exist before this migration."
+        },
+        {
+          "version": "20260803110000",
+          "reason": "Referenced relation phone_metrics must exist before this migration."
+        }
+      ],
+      "orderReason": "Chronological position preserved."
+    },
+    {
+      "version": "20260805214000",
+      "file": "20260805214000_stagger_frequent_cron_jobs.sql",
+      "sha256": "3a4c4a67231bfdddb567245b056e0812bf9c45013912104d6b2a7c835d907797",
+      "chronologicalOrder": 194,
+      "executionOrder": 194,
+      "transaction": true,
+      "dependencies": [],
+      "orderReason": "Chronological position preserved."
+    },
+    {
+      "version": "20260805215000",
+      "file": "20260805215000_optimize_pg_stat_top_queries.sql",
+      "sha256": "83c0f0f4c2ce66ea9e88aeab91750696ebb37ab03e32dc39d484b17de060bf89",
+      "chronologicalOrder": 195,
+      "executionOrder": 195,
+      "transaction": true,
+      "dependencies": [
+        {
+          "version": "20260326235900",
+          "reason": "Referenced relation conversion_inbox must exist before this migration."
+        },
+        {
+          "version": "20260416100001",
+          "reason": "Referenced relation conversions must exist before this migration."
+        },
+        {
+          "version": "20260416200000",
+          "reason": "Referenced relation conversion_logs must exist before this migration."
+        }
+      ],
+      "orderReason": "Chronological position preserved."
+    },
+    {
+      "version": "20260806103000",
+      "file": "20260806103000_optimize_phone_metrics_refresh_30min.sql",
+      "sha256": "3a44d4e90fe7b83d8714ff15e776be7066558d03fe379c15066adda077600d8a",
+      "chronologicalOrder": 196,
+      "executionOrder": 196,
+      "transaction": true,
+      "dependencies": [
+        {
+          "version": "20260227140000",
+          "reason": "Referenced relation gerencias must exist before this migration."
+        },
+        {
+          "version": "20260228131000",
+          "reason": "Referenced relation gerencia_phones must exist before this migration."
+        },
+        {
+          "version": "20260416100001",
+          "reason": "Referenced relation conversions must exist before this migration."
+        },
+        {
+          "version": "20260418200000",
+          "reason": "Referenced relation hidden_conversions must exist before this migration."
+        },
+        {
+          "version": "20260803110000",
+          "reason": "Referenced relation phone_metrics must exist before this migration."
+        }
+      ],
+      "orderReason": "Chronological position preserved."
+    },
+    {
+      "version": "20260808120000",
+      "file": "20260808120000_optimize_rls_auth_uid_initplan.sql",
+      "sha256": "22ce50bb59f6eb2484606d7ab52581412398727a9e79b3017325f63098e87fde",
+      "chronologicalOrder": 197,
+      "executionOrder": 197,
+      "transaction": true,
+      "dependencies": [],
+      "orderReason": "Chronological position preserved."
+    },
+    {
+      "version": "20260810172000",
+      "file": "20260810172000_whatsapp_cloud_api_module.sql",
+      "sha256": "e14d1b606d38453b4e15fca8c64b2e95c26d50567ab9902c0302a83cc8e5295a",
+      "chronologicalOrder": 198,
+      "executionOrder": 198,
+      "transaction": true,
+      "dependencies": [
+        {
+          "version": "0001",
+          "reason": "Referenced relation profiles must exist before this migration."
+        },
+        {
+          "version": "20260227140000",
+          "reason": "Referenced relation gerencias must exist before this migration."
+        },
+        {
+          "version": "20260228131000",
+          "reason": "Referenced relation gerencia_phones must exist before this migration."
+        },
+        {
+          "version": "20260416100001",
+          "reason": "Referenced relation conversions must exist before this migration."
+        }
+      ],
+      "orderReason": "Chronological position preserved."
+    },
+    {
+      "version": "20260810181000",
+      "file": "20260810181000_whatsapp_cloud_api_increment_phone_usage.sql",
+      "sha256": "29c12a5a6f19b6aa428a1bc0d7c224204e31d6b947ad28129ad34e2adb29a9ec",
+      "chronologicalOrder": 199,
+      "executionOrder": 199,
+      "transaction": true,
+      "dependencies": [
+        {
+          "version": "20260228131000",
+          "reason": "Referenced relation gerencia_phones must exist before this migration."
+        }
+      ],
+      "orderReason": "Chronological position preserved."
+    },
+    {
+      "version": "20260811120000",
+      "file": "20260811120000_gerencia_phone_assignment_role.sql",
+      "sha256": "4f05092fa45a13bc81839b57e4c4e1f74e3af9c8d644cd084b7db8d781217a7c",
+      "chronologicalOrder": 200,
+      "executionOrder": 200,
+      "transaction": true,
+      "dependencies": [
+        {
+          "version": "20260227140000",
+          "reason": "Referenced relation landings_gerencias must exist before this migration."
+        },
+        {
+          "version": "20260228131000",
+          "reason": "Referenced relation gerencia_phones must exist before this migration."
+        },
+        {
+          "version": "20260614130000",
+          "reason": "Referenced relation landing_phone_cache must exist before this migration."
+        }
+      ],
+      "orderReason": "Chronological position preserved."
+    },
+    {
+      "version": "20260811193000",
+      "file": "20260811193000_whatsapp_cloud_api_ui_credentials.sql",
+      "sha256": "d1245333f04a17c69519c0ae389bbe877c2b004a14502c1395386fb4b711a17b",
+      "chronologicalOrder": 201,
+      "executionOrder": 201,
+      "transaction": true,
+      "dependencies": [
+        {
+          "version": "20260810172000",
+          "reason": "Referenced relation whatsapp_cloud_api_configs must exist before this migration."
+        }
+      ],
+      "orderReason": "Chronological position preserved."
+    },
+    {
+      "version": "20260811223000",
+      "file": "20260811223000_whatsapp_cloud_api_inbox_rpc.sql",
+      "sha256": "2e326ee5678c42348ea46a518f2d2fffa07ac1adfec43714b38c38b796183410",
+      "chronologicalOrder": 202,
+      "executionOrder": 202,
+      "transaction": true,
+      "dependencies": [
+        {
+          "version": "0001",
+          "reason": "Referenced relation profiles must exist before this migration."
+        },
+        {
+          "version": "20260416100000",
+          "reason": "Referenced relation conversions_config must exist before this migration."
+        },
+        {
+          "version": "20260416100001",
+          "reason": "Referenced relation conversions must exist before this migration."
+        },
+        {
+          "version": "20260810172000",
+          "reason": "Referenced relation whatsapp_cloud_api_outbound_messages must exist before this migration."
+        }
+      ],
+      "orderReason": "Chronological position preserved."
+    },
+    {
+      "version": "20260811224500",
+      "file": "20260811224500_whatsapp_cloud_api_inbox_premium_tag.sql",
+      "sha256": "97d5f661cfde81fc5d7d755d76a75328470d8bb797d3508ff85455f7df6b4dad",
+      "chronologicalOrder": 203,
+      "executionOrder": 203,
+      "transaction": true,
+      "dependencies": [],
+      "orderReason": "Chronological position preserved."
+    },
+    {
+      "version": "20260811230000",
+      "file": "20260811230000_whatsapp_cloud_api_inbox_inbound_and_labels.sql",
+      "sha256": "d75e1f5936b17bfcd2b4fa5caea74113491e4d07c6edac378567aec83ee5dd82",
+      "chronologicalOrder": 204,
+      "executionOrder": 204,
+      "transaction": true,
+      "dependencies": [
+        {
+          "version": "0001",
+          "reason": "Referenced relation profiles must exist before this migration."
+        },
+        {
+          "version": "20260227140000",
+          "reason": "Referenced relation gerencias must exist before this migration."
+        },
+        {
+          "version": "20260416100000",
+          "reason": "Referenced relation conversions_config must exist before this migration."
+        },
+        {
+          "version": "20260416100001",
+          "reason": "Referenced relation conversions must exist before this migration."
+        },
+        {
+          "version": "20260810172000",
+          "reason": "Referenced relation whatsapp_cloud_api_outbound_messages must exist before this migration."
+        }
+      ],
+      "orderReason": "Chronological position preserved."
+    },
+    {
+      "version": "20260812001000",
+      "file": "20260812001000_whatsapp_cloud_api_cta_and_manual_send.sql",
+      "sha256": "90908b0752147072b7d545ebd3311bc03dbbd2caedb598fa4474fb80051243c8",
+      "chronologicalOrder": 205,
+      "executionOrder": 205,
+      "transaction": true,
+      "dependencies": [
+        {
+          "version": "20260810172000",
+          "reason": "Referenced relation whatsapp_cloud_api_configs must exist before this migration."
+        }
+      ],
+      "orderReason": "Chronological position preserved."
+    },
+    {
+      "version": "20260812113000",
+      "file": "20260812113000_whatsapp_cloud_api_resilience_health.sql",
+      "sha256": "192c2d8eb1a095c6d8cab23ea198800680532df142df3356bdcb7310eddf2d1f",
+      "chronologicalOrder": 206,
+      "executionOrder": 206,
+      "transaction": true,
+      "dependencies": [
+        {
+          "version": "0001",
+          "reason": "Referenced relation profiles must exist before this migration."
+        },
+        {
+          "version": "20260305120000",
+          "reason": "Referenced relation cron_config must exist before this migration."
+        },
+        {
+          "version": "20260810172000",
+          "reason": "Referenced relation whatsapp_cloud_api_configs must exist before this migration."
+        }
+      ],
+      "orderReason": "Chronological position preserved."
+    },
+    {
+      "version": "20260812143000",
+      "file": "20260812143000_landing_phone_demand_availability.sql",
+      "sha256": "12ca734c2c4ae0b2a744c2c789f1d84f0775102afb8c7c98c0521b1656696938",
+      "chronologicalOrder": 207,
+      "executionOrder": 207,
+      "transaction": true,
+      "dependencies": [
+        {
+          "version": "0001",
+          "reason": "Referenced relation profiles must exist before this migration."
+        },
+        {
+          "version": "20260227100000",
+          "reason": "Referenced relation landings must exist before this migration."
+        },
+        {
+          "version": "20260227140000",
+          "reason": "Referenced relation gerencias must exist before this migration."
+        },
+        {
+          "version": "20260228131000",
+          "reason": "Referenced relation gerencia_phones must exist before this migration."
+        },
+        {
+          "version": "20260305120000",
+          "reason": "Referenced relation cron_config must exist before this migration."
+        }
+      ],
+      "orderReason": "Chronological position preserved."
+    },
+    {
+      "version": "20260812170000",
+      "file": "20260812170000_whatsapp_cloud_api_messaging_dataset.sql",
+      "sha256": "280bac54b653d57e48b5fbac9334fac6847ec24791429afd054e1263da21127b",
+      "chronologicalOrder": 208,
+      "executionOrder": 208,
+      "transaction": true,
+      "dependencies": [
+        {
+          "version": "0001",
+          "reason": "Referenced relation profiles must exist before this migration."
+        },
+        {
+          "version": "20260810172000",
+          "reason": "Referenced relation whatsapp_cloud_api_configs must exist before this migration."
+        }
+      ],
+      "orderReason": "Chronological position preserved."
+    },
+    {
+      "version": "20260812173000",
+      "file": "20260812173000_whatsapp_cloud_api_dataset_only.sql",
+      "sha256": "ad59743b4f1914bcbba95a99cae80e7f583386a4aefb326690f3221814a90100",
+      "chronologicalOrder": 209,
+      "executionOrder": 209,
+      "transaction": true,
+      "dependencies": [
+        {
+          "version": "0001",
+          "reason": "Referenced relation profiles must exist before this migration."
+        },
+        {
+          "version": "20260810172000",
+          "reason": "Referenced relation whatsapp_cloud_api_configs must exist before this migration."
+        }
+      ],
+      "orderReason": "Chronological position preserved."
+    },
+    {
+      "version": "20260812190000",
+      "file": "20260812190000_conversions_dataset_id.sql",
+      "sha256": "8265e22f86ba49731d59297d83b5506350c67809ce544f3e1bf9c720ec8933b2",
+      "chronologicalOrder": 210,
+      "executionOrder": 210,
+      "transaction": true,
+      "dependencies": [
+        {
+          "version": "20260416100000",
+          "reason": "Referenced relation conversions_config must exist before this migration."
+        },
+        {
+          "version": "20260416100001",
+          "reason": "Referenced relation conversions must exist before this migration."
+        }
+      ],
+      "orderReason": "Chronological position preserved."
+    },
+    {
+      "version": "20260812203000",
+      "file": "20260812203000_whatsapp_cloud_api_quality_update_events.sql",
+      "sha256": "5e228921b78ac478f02717e063b15aaf9c03882a891b33c0c7a541581a77856d",
+      "chronologicalOrder": 211,
+      "executionOrder": 211,
+      "transaction": true,
+      "dependencies": [
+        {
+          "version": "20260810172000",
+          "reason": "Referenced relation whatsapp_cloud_api_webhook_events must exist before this migration."
+        }
+      ],
+      "orderReason": "Chronological position preserved."
+    },
+    {
+      "version": "20260814020108",
+      "file": "20260814020108_scope_gerencia_work_groups_by_workspace.sql",
+      "sha256": "7948906dad0addf0bb24c5357f217e7803ce83c75429562d361c506eecedcb36",
+      "chronologicalOrder": 212,
+      "executionOrder": 212,
+      "transaction": true,
+      "dependencies": [
+        {
+          "version": "20260227140000",
+          "reason": "Referenced relation gerencias must exist before this migration."
+        },
+        {
+          "version": "20260519160000",
+          "reason": "Referenced relation gerencia_work_groups must exist before this migration."
+        }
+      ],
+      "orderReason": "Chronological position preserved."
+    },
+    {
+      "version": "20260815161719",
+      "file": "20260815161719_workspace_isolation_conversions_inbox.sql",
+      "sha256": "b98bfe845b44b991cabdf18b16ddae59bf6a16648e65c14416d17966aa46f42e",
+      "chronologicalOrder": 213,
+      "executionOrder": 213,
+      "transaction": true,
+      "dependencies": [
+        {
+          "version": "0001",
+          "reason": "Referenced relation profiles must exist before this migration."
+        },
+        {
+          "version": "20260227100000",
+          "reason": "Referenced relation landings must exist before this migration."
+        },
+        {
+          "version": "20260227140000",
+          "reason": "Referenced relation gerencias must exist before this migration."
+        },
+        {
+          "version": "20260326235900",
+          "reason": "Referenced relation conversion_inbox must exist before this migration."
+        },
+        {
+          "version": "20260416100000",
+          "reason": "Referenced relation conversions_config must exist before this migration."
+        },
+        {
+          "version": "20260416100001",
+          "reason": "Referenced relation conversions must exist before this migration."
+        },
+        {
+          "version": "20260810172000",
+          "reason": "Referenced relation whatsapp_cloud_api_outbound_messages must exist before this migration."
+        }
+      ],
+      "orderReason": "Chronological position preserved."
+    },
+    {
+      "version": "20260815163940",
+      "file": "20260815163940_scope_conversion_logs_by_workspace.sql",
+      "sha256": "5d04f4edf07f67a169b5ee73e03e6657f3dccd9486dd61a035c295850b4c01c1",
+      "chronologicalOrder": 214,
+      "executionOrder": 214,
+      "transaction": true,
+      "dependencies": [
+        {
+          "version": "20260416100001",
+          "reason": "Referenced relation conversions must exist before this migration."
+        },
+        {
+          "version": "20260416200000",
+          "reason": "Referenced relation conversion_logs must exist before this migration."
+        }
+      ],
+      "orderReason": "Chronological position preserved."
+    },
+    {
+      "version": "20260815173613",
+      "file": "20260815173613_scope_whatsapp_cloud_api_config_by_workspace.sql",
+      "sha256": "93c410e7b932f5f79e2acf631904221103754a1ec2ee9827f4f88bfcbf2cf0bd",
+      "chronologicalOrder": 215,
+      "executionOrder": 215,
+      "transaction": true,
+      "dependencies": [
+        {
+          "version": "0001",
+          "reason": "Referenced relation profiles must exist before this migration."
+        },
+        {
+          "version": "20260227140000",
+          "reason": "Referenced relation gerencias must exist before this migration."
+        },
+        {
+          "version": "20260810172000",
+          "reason": "Referenced relation whatsapp_cloud_api_configs must exist before this migration."
+        }
+      ],
+      "orderReason": "Chronological position preserved."
+    },
+    {
+      "version": "20260815205004",
+      "file": "20260815205004_whatsapp_cloud_api_webhook_request_audit.sql",
+      "sha256": "eacde6058f417acb3d8445e1d59cb9b85c02dea149321fc41fa4626a5374e966",
+      "chronologicalOrder": 216,
+      "executionOrder": 216,
+      "transaction": true,
+      "dependencies": [
+        {
+          "version": "0001",
+          "reason": "Referenced relation profiles must exist before this migration."
+        },
+        {
+          "version": "20260810172000",
+          "reason": "Referenced relation whatsapp_cloud_api_configs must exist before this migration."
+        }
+      ],
+      "orderReason": "Chronological position preserved."
+    },
+    {
+      "version": "20260815212157",
+      "file": "20260815212157_whatsapp_cloud_api_inbox_interactive_messages.sql",
+      "sha256": "e1f7d8ff1f1109ff3b08c4c56f2975ea5a3512eae2d2125827f448796c3f1ad3",
+      "chronologicalOrder": 217,
+      "executionOrder": 217,
+      "transaction": true,
+      "dependencies": [
+        {
+          "version": "0001",
+          "reason": "Referenced relation profiles must exist before this migration."
+        },
+        {
+          "version": "20260227140000",
+          "reason": "Referenced relation gerencias must exist before this migration."
+        },
+        {
+          "version": "20260416100000",
+          "reason": "Referenced relation conversions_config must exist before this migration."
+        },
+        {
+          "version": "20260416100001",
+          "reason": "Referenced relation conversions must exist before this migration."
+        },
+        {
+          "version": "20260810172000",
+          "reason": "Referenced relation whatsapp_cloud_api_outbound_messages must exist before this migration."
+        }
+      ],
+      "orderReason": "Chronological position preserved."
+    },
+    {
+      "version": "20260816012132",
+      "file": "20260816012132_conversion_workspace_resolution_source.sql",
+      "sha256": "6263915fd4943a147e0ea07d3e0d663295da09646036a675cdc5d8ac74f5bb63",
+      "chronologicalOrder": 218,
+      "executionOrder": 218,
+      "transaction": true,
+      "dependencies": [
+        {
+          "version": "20260227100000",
+          "reason": "Referenced relation landings must exist before this migration."
+        },
+        {
+          "version": "20260227140000",
+          "reason": "Referenced relation gerencias must exist before this migration."
+        },
+        {
+          "version": "20260416100001",
+          "reason": "Referenced relation conversions must exist before this migration."
+        }
+      ],
+      "orderReason": "Chronological position preserved."
+    },
+    {
+      "version": "20260817233335",
+      "file": "20260817233335_availability_summary_workspace_ids.sql",
+      "sha256": "57117f907671c35c4b8f2f868d0bbf819ca8f7500a180303dcea929820b73de9",
+      "chronologicalOrder": 219,
+      "executionOrder": 219,
+      "transaction": true,
+      "dependencies": [
+        {
+          "version": "0001",
+          "reason": "Referenced relation profiles must exist before this migration."
+        },
+        {
+          "version": "20260227140000",
+          "reason": "Referenced relation gerencias must exist before this migration."
+        },
+        {
+          "version": "20260812143000",
+          "reason": "Referenced relation landing_phone_availability_demands must exist before this migration."
+        }
+      ],
+      "orderReason": "Chronological position preserved."
+    },
+    {
+      "version": "20260818031119",
+      "file": "20260818031119_whatsapp_cloud_api_redirect_tracking.sql",
+      "sha256": "79b9d0da92265e69847794186ac858c2b81803396817a46e2d34d0d0d3b3291e",
+      "chronologicalOrder": 220,
+      "executionOrder": 220,
+      "transaction": true,
+      "dependencies": [
+        {
+          "version": "0001",
+          "reason": "Referenced relation profiles must exist before this migration."
+        },
+        {
+          "version": "20260227140000",
+          "reason": "Referenced relation gerencias must exist before this migration."
+        },
+        {
+          "version": "20260416100000",
+          "reason": "Referenced relation conversions_config must exist before this migration."
+        },
+        {
+          "version": "20260416100001",
+          "reason": "Referenced relation conversions must exist before this migration."
+        },
+        {
+          "version": "20260810172000",
+          "reason": "Referenced relation whatsapp_cloud_api_outbound_messages must exist before this migration."
+        }
+      ],
+      "orderReason": "Chronological position preserved."
+    },
+    {
+      "version": "20260818032740",
+      "file": "20260818032740_whatsapp_cloud_api_unread_state.sql",
+      "sha256": "6ec42f33fd71d7f622acae2bb2e54d0e2b7612d7c0e2b2d0dd3695446bd2f3fb",
+      "chronologicalOrder": 221,
+      "executionOrder": 221,
+      "transaction": true,
+      "dependencies": [
+        {
+          "version": "0001",
+          "reason": "Referenced relation profiles must exist before this migration."
+        },
+        {
+          "version": "20260227140000",
+          "reason": "Referenced relation gerencias must exist before this migration."
+        },
+        {
+          "version": "20260416100000",
+          "reason": "Referenced relation conversions_config must exist before this migration."
+        },
+        {
+          "version": "20260416100001",
+          "reason": "Referenced relation conversions must exist before this migration."
+        },
+        {
+          "version": "20260810172000",
+          "reason": "Referenced relation whatsapp_cloud_api_outbound_messages must exist before this migration."
+        },
+        {
+          "version": "20260818031119",
+          "reason": "Referenced relation whatsapp_cloud_api_redirects must exist before this migration."
+        }
+      ],
+      "orderReason": "Chronological position preserved."
+    },
+    {
+      "version": "20260818134748",
+      "file": "20260818134748_whatsapp_cloud_api_contact_on_redirect.sql",
+      "sha256": "7410e9598a4daaa992e5302c616e34e515f9a589ca71ce1385513a4e0ecc2a58",
+      "chronologicalOrder": 222,
+      "executionOrder": 222,
+      "transaction": true,
+      "dependencies": [
+        {
+          "version": "0001",
+          "reason": "Referenced relation profiles must exist before this migration."
+        },
+        {
+          "version": "20260227140000",
+          "reason": "Referenced relation gerencias must exist before this migration."
+        },
+        {
+          "version": "20260416100000",
+          "reason": "Referenced relation conversions_config must exist before this migration."
+        },
+        {
+          "version": "20260416100001",
+          "reason": "Referenced relation conversions must exist before this migration."
+        },
+        {
+          "version": "20260810172000",
+          "reason": "Referenced relation whatsapp_cloud_api_outbound_messages must exist before this migration."
+        },
+        {
+          "version": "20260818031119",
+          "reason": "Referenced relation whatsapp_cloud_api_redirects must exist before this migration."
+        },
+        {
+          "version": "20260818032740",
+          "reason": "Referenced relation whatsapp_cloud_api_thread_reads must exist before this migration."
+        }
+      ],
+      "orderReason": "Chronological position preserved."
+    },
+    {
+      "version": "20260818141444",
+      "file": "20260818141444_whatsapp_cloud_api_contact_phone_fallback_index.sql",
+      "sha256": "a934412c5d6c868e2b47eee08b2b5c88cb14ecaa5cfb5201fd8238c69e5f7241",
+      "chronologicalOrder": 223,
+      "executionOrder": 223,
+      "transaction": true,
+      "dependencies": [
+        {
+          "version": "20260416100001",
+          "reason": "Referenced relation conversions must exist before this migration."
+        }
+      ],
+      "orderReason": "Chronological position preserved."
+    },
+    {
+      "version": "20260818170134",
+      "file": "20260818170134_restrict_public_auth_signups.sql",
+      "sha256": "363de8f3bb9ba616af40efcdafd6dfc70212aa3bd19314754a25ae1cefdca518",
+      "chronologicalOrder": 224,
+      "executionOrder": 224,
+      "transaction": true,
+      "dependencies": [
+        {
+          "version": "0001",
+          "reason": "Referenced relation profiles must exist before this migration."
+        }
+      ],
+      "orderReason": "Chronological position preserved."
+    },
+    {
+      "version": "20260818223130",
+      "file": "20260818223130_atrio_clients_module.sql",
+      "sha256": "3c10001b1b83979b4f8789e0efcd3f02bf1cb3a5df7e5d79377197d2d04f21df",
+      "chronologicalOrder": 225,
+      "executionOrder": 225,
+      "transaction": true,
+      "dependencies": [
+        {
+          "version": "0001",
+          "reason": "Referenced relation profiles must exist before this migration."
+        }
+      ],
+      "orderReason": "Chronological position preserved."
+    },
+    {
+      "version": "20260819013754",
+      "file": "20260819013754_atrio_conversion_identifiers.sql",
+      "sha256": "e3467015c38dee20847b3a0e8c29caf4c520ca8e55fb189b75aa440392fea7f0",
+      "chronologicalOrder": 226,
+      "executionOrder": 226,
+      "transaction": true,
+      "dependencies": [
+        {
+          "version": "20260416100001",
+          "reason": "Referenced relation conversions must exist before this migration."
+        }
+      ],
+      "orderReason": "Chronological position preserved."
+    },
+    {
+      "version": "20260819025607",
+      "file": "20260819025607_atrio_players_id_tracking.sql",
+      "sha256": "724a7f97c9b8be4f3f16479e3a13d1ca2ce70052a2effdea6fa23498426aa677",
+      "chronologicalOrder": 227,
+      "executionOrder": 227,
+      "transaction": true,
+      "dependencies": [
+        {
+          "version": "20260416100001",
+          "reason": "Referenced relation conversions must exist before this migration."
+        }
+      ],
+      "orderReason": "Chronological position preserved."
+    },
+    {
+      "version": "20260819175021",
+      "file": "20260819175021_home_overview_stats_cache_hourly.sql",
+      "sha256": "eeee17da35b9b98c7cc51d86366a32b162a84ef5c9457fbe51c1c6a406ee419d",
+      "chronologicalOrder": 228,
+      "executionOrder": 228,
+      "transaction": true,
+      "dependencies": [
+        {
+          "version": "0001",
+          "reason": "Referenced relation profiles must exist before this migration."
+        },
+        {
+          "version": "20260227100000",
+          "reason": "Referenced relation landings must exist before this migration."
+        },
+        {
+          "version": "20260416100000",
+          "reason": "Referenced relation conversions_config must exist before this migration."
+        },
+        {
+          "version": "20260416100001",
+          "reason": "Referenced relation conversions must exist before this migration."
+        },
+        {
+          "version": "20260418200000",
+          "reason": "Referenced relation hidden_conversions must exist before this migration."
+        }
+      ],
+      "orderReason": "Chronological position preserved."
+    },
+    {
+      "version": "20260820015442",
+      "file": "20260820015442_home_overview_meta_ads_revenue.sql",
+      "sha256": "e6e2abc4f03777f47ca4fd57c40c4c96e0273ed8648d5b0e1ea4476661f2af91",
+      "chronologicalOrder": 229,
+      "executionOrder": 229,
+      "transaction": true,
+      "dependencies": [
+        {
+          "version": "20260227100000",
+          "reason": "Referenced relation landings must exist before this migration."
+        },
+        {
+          "version": "20260416100000",
+          "reason": "Referenced relation conversions_config must exist before this migration."
+        },
+        {
+          "version": "20260416100001",
+          "reason": "Referenced relation conversions must exist before this migration."
+        },
+        {
+          "version": "20260418200000",
+          "reason": "Referenced relation hidden_conversions must exist before this migration."
+        }
+      ],
+      "orderReason": "Chronological position preserved."
+    },
+    {
+      "version": "20260820020527",
+      "file": "20260820020527_home_overview_meta_ads_load_rate.sql",
+      "sha256": "2e9b7f7e892cc90a64e48d8c3ddc9796288dba234aa1e83401ffa51745fa494b",
+      "chronologicalOrder": 230,
+      "executionOrder": 230,
+      "transaction": true,
+      "dependencies": [
+        {
+          "version": "20260227100000",
+          "reason": "Referenced relation landings must exist before this migration."
+        },
+        {
+          "version": "20260416100000",
+          "reason": "Referenced relation conversions_config must exist before this migration."
+        },
+        {
+          "version": "20260416100001",
+          "reason": "Referenced relation conversions must exist before this migration."
+        },
+        {
+          "version": "20260418200000",
+          "reason": "Referenced relation hidden_conversions must exist before this migration."
+        }
+      ],
+      "orderReason": "Chronological position preserved."
+    },
+    {
+      "version": "20260820020830",
+      "file": "20260820020830_home_overview_meta_ads_full_summary.sql",
+      "sha256": "9be0e7f17b4f68e7b8b8fe2e4e61638e5c84b6e9fdba6e7f5f60e461a60b0e39",
+      "chronologicalOrder": 231,
+      "executionOrder": 231,
+      "transaction": true,
+      "dependencies": [
+        {
+          "version": "20260227100000",
+          "reason": "Referenced relation landings must exist before this migration."
+        },
+        {
+          "version": "20260416100000",
+          "reason": "Referenced relation conversions_config must exist before this migration."
+        },
+        {
+          "version": "20260416100001",
+          "reason": "Referenced relation conversions must exist before this migration."
+        },
+        {
+          "version": "20260418200000",
+          "reason": "Referenced relation hidden_conversions must exist before this migration."
+        }
+      ],
+      "orderReason": "Chronological position preserved."
+    },
+    {
+      "version": "20260821193606",
+      "file": "20260821193606_whatsapp_cloud_api_user_data_enrichment_switch.sql",
+      "sha256": "7b01f4f0246188e2f21b20596c4bca8e5be0eeab6ffada521eb33a6cf9a7f780",
+      "chronologicalOrder": 232,
+      "executionOrder": 232,
+      "transaction": true,
+      "dependencies": [
+        {
+          "version": "0001",
+          "reason": "Referenced relation profiles must exist before this migration."
+        },
+        {
+          "version": "20260810172000",
+          "reason": "Referenced relation whatsapp_cloud_api_configs must exist before this migration."
+        }
+      ],
+      "orderReason": "Chronological position preserved."
+    },
+    {
+      "version": "20260821220917",
+      "file": "20260821220917_include_ctwa_in_meta_ads_origin.sql",
+      "sha256": "37e476ec3e2cd78d42bc4eec86c43b4b539582c2da97f4f840cebea3c797d7bf",
+      "chronologicalOrder": 233,
+      "executionOrder": 233,
+      "transaction": true,
+      "dependencies": [
+        {
+          "version": "20260416100001",
+          "reason": "Referenced relation conversions must exist before this migration."
+        }
+      ],
+      "orderReason": "Chronological position preserved."
+    },
+    {
+      "version": "20260821231132",
+      "file": "20260821231132_whatsapp_cloud_health_notifications_toggle.sql",
+      "sha256": "bdd21dd44d372bfe6e819c917b14fba199c7245142c9781d3b4fbe8c6293b8d3",
+      "chronologicalOrder": 234,
+      "executionOrder": 234,
+      "transaction": true,
+      "dependencies": [
+        {
+          "version": "20260326133000",
+          "reason": "Referenced relation notification_settings must exist before this migration."
+        }
+      ],
+      "orderReason": "Chronological position preserved."
+    },
+    {
+      "version": "20260821232500",
+      "file": "20260821232500_scoped_phone_assignment_metrics.sql",
+      "sha256": "982fcb09a49c84d34863f1c8e2f467c2596a4ef821f62c34d5c5b64038c7f585",
+      "chronologicalOrder": 235,
+      "executionOrder": 235,
+      "transaction": true,
+      "dependencies": [
+        {
+          "version": "0001",
+          "reason": "Referenced relation profiles must exist before this migration."
+        },
+        {
+          "version": "20260227140000",
+          "reason": "Referenced relation gerencias must exist before this migration."
+        },
+        {
+          "version": "20260228131000",
+          "reason": "Referenced relation gerencia_phones must exist before this migration."
+        },
+        {
+          "version": "20260810172000",
+          "reason": "Referenced relation whatsapp_cloud_api_assignments must exist before this migration."
+        }
+      ],
+      "orderReason": "Chronological position preserved."
+    },
+    {
+      "version": "20260821232818",
+      "file": "20260821232818_scope_messages_received_for_phone_assignment.sql",
+      "sha256": "398c597c4e3dc97abf2299d1f5ab3401c87f627e13d79f2309ca49fc7b5872e4",
+      "chronologicalOrder": 236,
+      "executionOrder": 236,
+      "transaction": true,
+      "dependencies": [],
+      "orderReason": "Chronological position preserved."
+    },
+    {
+      "version": "20260821233000",
+      "file": "20260821233000_whatsapp_cloud_api_inbox_contacts_pagination.sql",
+      "sha256": "28b92da3c892a1c979c6064ebeea16a45c9b21a4b894bf2fd1374409c370d1c9",
+      "chronologicalOrder": 237,
+      "executionOrder": 237,
+      "transaction": true,
+      "dependencies": [
+        {
+          "version": "0001",
+          "reason": "Referenced relation profiles must exist before this migration."
+        },
+        {
+          "version": "20260227140000",
+          "reason": "Referenced relation gerencias must exist before this migration."
+        },
+        {
+          "version": "20260416100000",
+          "reason": "Referenced relation conversions_config must exist before this migration."
+        },
+        {
+          "version": "20260416100001",
+          "reason": "Referenced relation conversions must exist before this migration."
+        },
+        {
+          "version": "20260810172000",
+          "reason": "Referenced relation whatsapp_cloud_api_assignments must exist before this migration."
+        },
+        {
+          "version": "20260818031119",
+          "reason": "Referenced relation whatsapp_cloud_api_redirects must exist before this migration."
+        },
+        {
+          "version": "20260818032740",
+          "reason": "Referenced relation whatsapp_cloud_api_thread_reads must exist before this migration."
+        }
+      ],
+      "orderReason": "Chronological position preserved."
+    },
+    {
+      "version": "20260821235015",
+      "file": "20260821235015_optimize_whatsapp_cloud_api_inbox_contacts_queries.sql",
+      "sha256": "396d6f6461cd40e17a34c66d90940998d12c553431ebf45c81bafd255d506587",
+      "chronologicalOrder": 238,
+      "executionOrder": 238,
+      "transaction": true,
+      "dependencies": [
+        {
+          "version": "0001",
+          "reason": "Referenced relation profiles must exist before this migration."
+        },
+        {
+          "version": "20260227140000",
+          "reason": "Referenced relation gerencias must exist before this migration."
+        },
+        {
+          "version": "20260416100000",
+          "reason": "Referenced relation conversions_config must exist before this migration."
+        },
+        {
+          "version": "20260416100001",
+          "reason": "Referenced relation conversions must exist before this migration."
+        },
+        {
+          "version": "20260810172000",
+          "reason": "Referenced relation whatsapp_cloud_api_assignments must exist before this migration."
+        },
+        {
+          "version": "20260818031119",
+          "reason": "Referenced relation whatsapp_cloud_api_redirects must exist before this migration."
+        },
+        {
+          "version": "20260818032740",
+          "reason": "Referenced relation whatsapp_cloud_api_thread_reads must exist before this migration."
+        }
+      ],
+      "orderReason": "Chronological position preserved."
+    },
+    {
+      "version": "20260821235359",
+      "file": "20260821235359_add_wca_conversion_expression_indexes.sql",
+      "sha256": "6b2f282af6f144d53bbdcf5bf07ae4bbcda58d282c0e19bd6920158e76d42b09",
+      "chronologicalOrder": 239,
+      "executionOrder": 239,
+      "transaction": true,
+      "dependencies": [
+        {
+          "version": "20260416100001",
+          "reason": "Referenced relation conversions must exist before this migration."
+        }
+      ],
+      "orderReason": "Chronological position preserved."
+    },
+    {
+      "version": "20260821235712",
+      "file": "20260821235712_optimize_wca_conversion_lateral_matches.sql",
+      "sha256": "1333d61b3e96ca35fe5f8b3b24e1c0ef4cba0ee5fc7233f6e667ea9c432643ed",
+      "chronologicalOrder": 240,
+      "executionOrder": 240,
+      "transaction": true,
+      "dependencies": [
+        {
+          "version": "20260416100001",
+          "reason": "Referenced relation conversions must exist before this migration."
+        }
+      ],
+      "orderReason": "Chronological position preserved."
+    },
+    {
+      "version": "20260821235823",
+      "file": "20260821235823_add_wca_promo_first_conversion_index.sql",
+      "sha256": "2da453145c4223f2aa18d623dce82de327645f5e030ef342cc3920ddda83f38d",
+      "chronologicalOrder": 241,
+      "executionOrder": 241,
+      "transaction": true,
+      "dependencies": [
+        {
+          "version": "20260416100001",
+          "reason": "Referenced relation conversions must exist before this migration."
+        }
+      ],
+      "orderReason": "Chronological position preserved."
+    },
+    {
+      "version": "20260821235950",
+      "file": "20260821235950_drop_suboptimal_wca_conversion_indexes.sql",
+      "sha256": "908a7029479fe5016b2a8d2f1029dd3e3c822219d700fb8558ce4d70f5c87748",
+      "chronologicalOrder": 242,
+      "executionOrder": 242,
+      "transaction": true,
+      "dependencies": [],
+      "orderReason": "Chronological position preserved."
+    },
+    {
+      "version": "20260822000120",
+      "file": "20260822000120_optimize_wca_meta_capi_logs_query.sql",
+      "sha256": "1df7ed976290e6dd0ec66ac81c5557e120aa73f0244544e09be5daca0b2b9865",
+      "chronologicalOrder": 243,
+      "executionOrder": 243,
+      "transaction": true,
+      "dependencies": [
+        {
+          "version": "20260416200000",
+          "reason": "Referenced relation conversion_logs must exist before this migration."
+        }
+      ],
+      "orderReason": "Chronological position preserved."
+    },
+    {
+      "version": "20260822004552",
+      "file": "20260822004552_whatsapp_cloud_api_business_messaging_purchase_type_switch.sql",
+      "sha256": "15b64b5d286cf09be2b2e7ac603ac7a0d66d9a06fa94e53345da14260e447749",
+      "chronologicalOrder": 244,
+      "executionOrder": 244,
+      "transaction": true,
+      "dependencies": [
+        {
+          "version": "0001",
+          "reason": "Referenced relation profiles must exist before this migration."
+        },
+        {
+          "version": "20260810172000",
+          "reason": "Referenced relation whatsapp_cloud_api_configs must exist before this migration."
+        }
+      ],
+      "orderReason": "Chronological position preserved."
+    },
+    {
+      "version": "20260822162110",
+      "file": "20260822162110_landing_atrio_redirect_assignments.sql",
+      "sha256": "6cf41029aa16d550844e4e44db1c0b64c7241f1b9e904e2c721caec856c5d7f5",
+      "chronologicalOrder": 245,
+      "executionOrder": 245,
+      "transaction": true,
+      "dependencies": [
+        {
+          "version": "0001",
+          "reason": "Referenced relation profiles must exist before this migration."
+        },
+        {
+          "version": "20260227100000",
+          "reason": "Referenced relation landings must exist before this migration."
+        },
+        {
+          "version": "20260416100001",
+          "reason": "Referenced relation conversions must exist before this migration."
+        },
+        {
+          "version": "20260818223130",
+          "reason": "Referenced relation atrio_clients must exist before this migration."
+        }
+      ],
+      "orderReason": "Chronological position preserved."
+    },
+    {
+      "version": "20260822172211",
+      "file": "20260822172211_whatsapp_cloud_api_retarget_cron.sql",
+      "sha256": "3f063e196c3ba455a028c58f9530c96107f322c559947acc606af8b54544c5c7",
+      "chronologicalOrder": 246,
+      "executionOrder": 246,
+      "transaction": true,
+      "dependencies": [
+        {
+          "version": "0001",
+          "reason": "Referenced relation profiles must exist before this migration."
+        },
+        {
+          "version": "20260305120000",
+          "reason": "Referenced relation cron_config must exist before this migration."
+        },
+        {
+          "version": "20260416100001",
+          "reason": "Referenced relation conversions must exist before this migration."
+        },
+        {
+          "version": "20260810172000",
+          "reason": "Referenced relation whatsapp_cloud_api_configs must exist before this migration."
+        },
+        {
+          "version": "20260818031119",
+          "reason": "Referenced relation whatsapp_cloud_api_redirects must exist before this migration."
+        }
+      ],
+      "orderReason": "Chronological position preserved."
+    },
+    {
+      "version": "20260822173226",
+      "file": "20260822173226_whatsapp_cloud_api_retarget_once_per_contact.sql",
+      "sha256": "eb1c5e54896628cd487e1cf5bc8b6de49c539d7a25017bd816fee6a9cef0d71c",
+      "chronologicalOrder": 247,
+      "executionOrder": 247,
+      "transaction": true,
+      "dependencies": [
+        {
+          "version": "20260416100001",
+          "reason": "Referenced relation conversions must exist before this migration."
+        },
+        {
+          "version": "20260810172000",
+          "reason": "Referenced relation whatsapp_cloud_api_configs must exist before this migration."
+        },
+        {
+          "version": "20260818031119",
+          "reason": "Referenced relation whatsapp_cloud_api_redirects must exist before this migration."
+        },
+        {
+          "version": "20260822172211",
+          "reason": "Referenced relation whatsapp_cloud_api_retarget_messages must exist before this migration."
+        }
+      ],
+      "orderReason": "Chronological position preserved."
+    },
+    {
+      "version": "20260822192456",
+      "file": "20260822192456_whatsapp_cloud_api_retargeting_switch.sql",
+      "sha256": "38504663028418dc81446f0ea678672c5d694250123a235188df74bc9d163088",
+      "chronologicalOrder": 248,
+      "executionOrder": 248,
+      "transaction": true,
+      "dependencies": [
+        {
+          "version": "0001",
+          "reason": "Referenced relation profiles must exist before this migration."
+        },
+        {
+          "version": "20260416100001",
+          "reason": "Referenced relation conversions must exist before this migration."
+        },
+        {
+          "version": "20260810172000",
+          "reason": "Referenced relation whatsapp_cloud_api_configs must exist before this migration."
+        },
+        {
+          "version": "20260818031119",
+          "reason": "Referenced relation whatsapp_cloud_api_redirects must exist before this migration."
+        },
+        {
+          "version": "20260822172211",
+          "reason": "Referenced relation whatsapp_cloud_api_retarget_messages must exist before this migration."
+        }
+      ],
+      "orderReason": "Chronological position preserved."
+    },
+    {
+      "version": "20260823202650",
+      "file": "20260823202650_fix_wca_retarget_inbox_filters.sql",
+      "sha256": "f25a3b97bc4b41733810dee18675335e1b5e608f2692809f4e97214ae0893d6b",
+      "chronologicalOrder": 249,
+      "executionOrder": 249,
+      "transaction": true,
+      "dependencies": [
+        {
+          "version": "0001",
+          "reason": "Referenced relation profiles must exist before this migration."
+        },
+        {
+          "version": "20260227140000",
+          "reason": "Referenced relation gerencias must exist before this migration."
+        },
+        {
+          "version": "20260416100000",
+          "reason": "Referenced relation conversions_config must exist before this migration."
+        },
+        {
+          "version": "20260416100001",
+          "reason": "Referenced relation conversions must exist before this migration."
+        },
+        {
+          "version": "20260810172000",
+          "reason": "Referenced relation whatsapp_cloud_api_webhook_events must exist before this migration."
+        },
+        {
+          "version": "20260818031119",
+          "reason": "Referenced relation whatsapp_cloud_api_redirects must exist before this migration."
+        },
+        {
+          "version": "20260818032740",
+          "reason": "Referenced relation whatsapp_cloud_api_thread_reads must exist before this migration."
+        },
+        {
+          "version": "20260822172211",
+          "reason": "Referenced relation whatsapp_cloud_api_retarget_messages must exist before this migration."
+        }
+      ],
+      "orderReason": "Chronological position preserved."
+    },
+    {
+      "version": "20260823203423",
+      "file": "20260823203423_enforce_wca_retarget_min_age.sql",
+      "sha256": "b997319f3e0873311b48d7eada495cd4b3768aa17cb02bef97ec2b9301146dde",
+      "chronologicalOrder": 250,
+      "executionOrder": 250,
+      "transaction": true,
+      "dependencies": [
+        {
+          "version": "20260416100001",
+          "reason": "Referenced relation conversions must exist before this migration."
+        },
+        {
+          "version": "20260810172000",
+          "reason": "Referenced relation whatsapp_cloud_api_configs must exist before this migration."
+        },
+        {
+          "version": "20260818031119",
+          "reason": "Referenced relation whatsapp_cloud_api_redirects must exist before this migration."
+        },
+        {
+          "version": "20260822172211",
+          "reason": "Referenced relation whatsapp_cloud_api_retarget_messages must exist before this migration."
+        }
+      ],
+      "orderReason": "Chronological position preserved."
+    },
+    {
+      "version": "20260825172003",
+      "file": "20260825172003_whatsapp_cloud_api_retarget_config.sql",
+      "sha256": "dba88f2ecb2d107b84701da4aba6395ec4a465f6384a8fcee0b8e29df6b18d2a",
+      "chronologicalOrder": 251,
+      "executionOrder": 251,
+      "transaction": true,
+      "dependencies": [
+        {
+          "version": "0001",
+          "reason": "Referenced relation profiles must exist before this migration."
+        },
+        {
+          "version": "20260416100001",
+          "reason": "Referenced relation conversions must exist before this migration."
+        },
+        {
+          "version": "20260810172000",
+          "reason": "Referenced relation whatsapp_cloud_api_configs must exist before this migration."
+        },
+        {
+          "version": "20260818031119",
+          "reason": "Referenced relation whatsapp_cloud_api_redirects must exist before this migration."
+        },
+        {
+          "version": "20260822172211",
+          "reason": "Referenced relation whatsapp_cloud_api_retarget_messages must exist before this migration."
+        }
+      ],
+      "orderReason": "Chronological position preserved."
+    },
+    {
+      "version": "20260825180041",
+      "file": "20260825180041_conversion_journey_starts.sql",
+      "sha256": "cb50b0ef8e2a79e4227137c795925caa293deb7de2a004849d6f047db4031572",
+      "chronologicalOrder": 252,
+      "executionOrder": 252,
+      "transaction": true,
+      "dependencies": [
+        {
+          "version": "0001",
+          "reason": "Referenced relation profiles must exist before this migration."
+        },
+        {
+          "version": "20260227100000",
+          "reason": "Referenced relation landings must exist before this migration."
+        },
+        {
+          "version": "20260227140000",
+          "reason": "Referenced relation gerencias must exist before this migration."
+        },
+        {
+          "version": "20260810172000",
+          "reason": "Referenced relation whatsapp_cloud_api_configs must exist before this migration."
+        }
+      ],
+      "orderReason": "Chronological position preserved."
+    },
+    {
+      "version": "20260825192821",
+      "file": "20260825192821_whatsapp_cloud_api_inbox_date_filter.sql",
+      "sha256": "87a772f82dcec70247f0fe46227c5f322fbc7bfdf307a1ce3167cbc93ba66ebf",
+      "chronologicalOrder": 253,
+      "executionOrder": 253,
+      "transaction": true,
+      "dependencies": [
+        {
+          "version": "0001",
+          "reason": "Referenced relation profiles must exist before this migration."
+        },
+        {
+          "version": "20260227140000",
+          "reason": "Referenced relation gerencias must exist before this migration."
+        },
+        {
+          "version": "20260416100000",
+          "reason": "Referenced relation conversions_config must exist before this migration."
+        },
+        {
+          "version": "20260416100001",
+          "reason": "Referenced relation conversions must exist before this migration."
+        },
+        {
+          "version": "20260810172000",
+          "reason": "Referenced relation whatsapp_cloud_api_webhook_events must exist before this migration."
+        },
+        {
+          "version": "20260818031119",
+          "reason": "Referenced relation whatsapp_cloud_api_redirects must exist before this migration."
+        },
+        {
+          "version": "20260818032740",
+          "reason": "Referenced relation whatsapp_cloud_api_thread_reads must exist before this migration."
+        }
+      ],
+      "orderReason": "Chronological position preserved."
+    },
+    {
+      "version": "20260825223328",
+      "file": "20260825223328_backfill_landing_journey_starts_from_contacts.sql",
+      "sha256": "df9def7a3f0b9e676b8cf3bcb3c77d71af23baffb8bcbec259073b813fdb9b02",
+      "chronologicalOrder": 254,
+      "executionOrder": 254,
+      "transaction": true,
+      "dependencies": [
+        {
+          "version": "20260227100000",
+          "reason": "Referenced relation landings must exist before this migration."
+        },
+        {
+          "version": "20260416100001",
+          "reason": "Referenced relation conversions must exist before this migration."
+        },
+        {
+          "version": "20260825180041",
+          "reason": "Referenced relation conversion_journey_starts must exist before this migration."
+        }
+      ],
+      "orderReason": "Chronological position preserved."
+    },
+    {
+      "version": "20260826011620",
+      "file": "20260826011620_landing_pageview_ttl_remove_backfill.sql",
+      "sha256": "0e508adc48035edf4cf7405046efcaa9c3b0931cc3dd3bbb6953db369014ee0a",
+      "chronologicalOrder": 255,
+      "executionOrder": 255,
+      "transaction": true,
+      "dependencies": [
+        {
+          "version": "20260825180041",
+          "reason": "Referenced relation conversion_journey_starts must exist before this migration."
+        }
+      ],
+      "orderReason": "Chronological position preserved."
+    },
+    {
+      "version": "20260826150935",
+      "file": "20260826150935_whatsapp_cloud_api_inbox_realtime.sql",
+      "sha256": "52e98b39145b2b0cdef299243319651a770715fae4d8495a52161e3ccafa28c0",
+      "chronologicalOrder": 256,
+      "executionOrder": 256,
+      "transaction": true,
+      "dependencies": [
+        {
+          "version": "20260810172000",
+          "reason": "Referenced relation whatsapp_cloud_api_outbound_messages must exist before this migration."
+        }
+      ],
+      "orderReason": "Chronological position preserved."
+    },
+    {
+      "version": "20260829013755",
+      "file": "20260829013755_reset_scoped_phone_counters.sql",
+      "sha256": "58d844930bc082851f25713fe033ac2e5433d5d322c7e60704fc0691138c3e23",
+      "chronologicalOrder": 257,
+      "executionOrder": 257,
+      "transaction": true,
+      "dependencies": [
+        {
+          "version": "20260227140000",
+          "reason": "Referenced relation gerencias must exist before this migration."
+        },
+        {
+          "version": "20260228131000",
+          "reason": "Referenced relation gerencia_phones must exist before this migration."
+        },
+        {
+          "version": "20260416100000",
+          "reason": "Referenced relation conversions_config must exist before this migration."
+        },
+        {
+          "version": "20260821232500",
+          "reason": "Referenced relation phone_assignment_scope_metrics must exist before this migration."
+        }
+      ],
+      "orderReason": "Chronological position preserved."
+    },
+    {
+      "version": "20260902154745",
+      "file": "20260902154745_admin_signup_approvals.sql",
+      "sha256": "1f360dddb22c04c1349043c0799b2cfdad61ac48d9fc0230be8fcffbb9126711",
+      "chronologicalOrder": 258,
+      "executionOrder": 258,
+      "transaction": true,
+      "dependencies": [
+        {
+          "version": "0001",
+          "reason": "Referenced relation profiles must exist before this migration."
+        }
+      ],
+      "orderReason": "Chronological position preserved."
+    },
+    {
+      "version": "20260905012831",
+      "file": "20260905012831_fair_message_assignment_reservations.sql",
+      "sha256": "c67d2af7296229ac03b229b1bd39b6ae6c3acca56f04f4e2db432c6acd5a2dfc",
+      "chronologicalOrder": 259,
+      "executionOrder": 259,
+      "transaction": true,
+      "dependencies": [
+        {
+          "version": "20260227100000",
+          "reason": "Referenced relation landings must exist before this migration."
+        },
+        {
+          "version": "20260227140000",
+          "reason": "Referenced relation gerencias must exist before this migration."
+        },
+        {
+          "version": "20260228131000",
+          "reason": "Referenced relation gerencia_phones must exist before this migration."
+        },
+        {
+          "version": "20260416100001",
+          "reason": "Referenced relation conversions must exist before this migration."
+        }
+      ],
+      "orderReason": "Chronological position preserved."
+    },
+    {
+      "version": "20260910192920",
+      "file": "20260910192920_purchase_capi_minimum_thresholds.sql",
+      "sha256": "bd1a1e27381e9b16bd9da0d302a02dddc55ce15e4f06eea11a26eca04a681688",
+      "chronologicalOrder": 260,
+      "executionOrder": 260,
+      "transaction": true,
+      "dependencies": [
+        {
+          "version": "20260416100000",
+          "reason": "Referenced relation conversions_config must exist before this migration."
+        }
+      ],
+      "orderReason": "Chronological position preserved."
+    },
+    {
+      "version": "20260910200641",
+      "file": "20260910200641_restrict_purchase_capi_thresholds_to_workspaces.sql",
+      "sha256": "487ee14ba8405e30f935a4394fcc5061e6464912f6e60e016cbc1412f548e90b",
+      "chronologicalOrder": 261,
+      "executionOrder": 261,
+      "transaction": true,
+      "dependencies": [
+        {
+          "version": "20260416100000",
+          "reason": "Referenced relation conversions_config must exist before this migration."
+        }
+      ],
+      "orderReason": "Chronological position preserved."
+    },
+    {
+      "version": "20260911175635",
+      "file": "20260911175635_meta_audience_buyers_rpc.sql",
+      "sha256": "ba2d7e50378ea17fac924d6034ddcb0267bd77b5b140fc088ee2de9f73c64f21",
+      "chronologicalOrder": 262,
+      "executionOrder": 262,
+      "transaction": true,
+      "dependencies": [
+        {
+          "version": "20260416100001",
+          "reason": "Referenced relation conversions must exist before this migration."
+        }
+      ],
+      "orderReason": "Chronological position preserved."
+    },
+    {
+      "version": "20260911180151",
+      "file": "20260911180151_optimize_meta_audience_buyers_rpc.sql",
+      "sha256": "f99f068f9417339dfb7d4fe9c3ecec1c751a51d616f92bfb940a379fff30ddab",
+      "chronologicalOrder": 263,
+      "executionOrder": 263,
+      "transaction": true,
+      "dependencies": [
+        {
+          "version": "20260416100001",
+          "reason": "Referenced relation conversions must exist before this migration."
+        }
+      ],
+      "orderReason": "Chronological position preserved."
+    },
+    {
+      "version": "20260911180712",
+      "file": "20260911180712_speed_up_meta_audience_buyers_rpc.sql",
+      "sha256": "51bcdc5968c80d311d47e106936afcdc00c1f29cc5e7c0638e85452b1e93f69f",
+      "chronologicalOrder": 264,
+      "executionOrder": 264,
+      "transaction": true,
+      "dependencies": [
+        {
+          "version": "20260416100001",
+          "reason": "Referenced relation conversions must exist before this migration."
+        }
+      ],
+      "orderReason": "Chronological position preserved."
+    },
+    {
+      "version": "20260911200034",
+      "file": "20260911200034_meta_audience_buyers_v2.sql",
+      "sha256": "1274a936a4b240b56a4644859327a389538e9902b05ee5a375d87c6525c8eca1",
+      "chronologicalOrder": 265,
+      "executionOrder": 265,
+      "transaction": true,
+      "dependencies": [
+        {
+          "version": "20260416100001",
+          "reason": "Referenced relation conversions must exist before this migration."
+        }
+      ],
+      "orderReason": "Chronological position preserved."
+    },
+    {
+      "version": "20260911201101",
+      "file": "20260911201101_compact_meta_audience_buyers_v2_payload.sql",
+      "sha256": "836ed6d0d264abb90dd429ee7d33b1d8460a7c572f343468edb10126ffe91136",
+      "chronologicalOrder": 266,
+      "executionOrder": 266,
+      "transaction": true,
+      "dependencies": [],
+      "orderReason": "Chronological position preserved."
+    },
+    {
+      "version": "20260911213912",
+      "file": "20260911213912_meta_audience_configs.sql",
+      "sha256": "91f47995469204e27a8fef693689afeb0314c73338055b6d489e7104f1fdfb82",
+      "chronologicalOrder": 267,
+      "executionOrder": 267,
+      "transaction": true,
+      "dependencies": [],
+      "orderReason": "Chronological position preserved."
+    },
+    {
+      "version": "20260915190657",
+      "file": "20260915190657_optimize_purchase_capi_retry_queue.sql",
+      "sha256": "32d2cd7f2179930433f0ac61962b4a08ece8acdb381ef62b2334dd5623b66d7f",
+      "chronologicalOrder": 268,
+      "executionOrder": 268,
+      "transaction": true,
+      "dependencies": [
+        {
+          "version": "20260416100001",
+          "reason": "Referenced relation conversions must exist before this migration."
+        }
+      ],
+      "orderReason": "Chronological position preserved."
+    }
+  ]
+}

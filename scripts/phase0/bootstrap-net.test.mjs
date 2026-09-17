@@ -1,0 +1,12 @@
+import test from 'node:test';
+import assert from 'node:assert/strict';
+import {netReferences,assertNetSecurity,assertPackagedHook} from './bootstrap-net.mjs';
+const {remote,initial}=netReferences();
+test('same native version is available in both catalogs',()=>{assert.equal(remote.installed.version,'0.19.5');assert.equal(initial.installed.version,remote.installed.version);assert.ok(initial.available.some(v=>v.version===remote.installed.version));});
+test('both packaged bodies and full signatures equal the accredited remote',()=>{for(const f of initial.functions){const r=remote.functions.find(x=>x.name===f.name);assert.equal(f.body_md5,r.body_md5);assert.equal(f.arguments,r.arguments);assert.equal(f.extension,'pg_net');}});
+test('remote exact security reference passes unchanged',()=>assert.doesNotThrow(()=>assertNetSecurity(remote,structuredClone(remote))));
+test('SECURITY DEFINER drift fails',()=>{const r=structuredClone(remote);r.functions[0].security_definer=true;assert.throws(()=>assertNetSecurity(r,remote));});
+test('search_path or ACL drift fails',()=>{for(const patch of [{settings:['search_path=net']},{acl:'changed'}]){const r=structuredClone(remote);Object.assign(r.functions[0],patch);assert.throws(()=>assertNetSecurity(r,remote));}});
+test('internal table, sequence and role privilege drift fails',()=>{for(const field of ['relations','roles']){const r=structuredClone(remote);r[field].pop();assert.throws(()=>assertNetSecurity(r,remote));}});
+test('unknown provider hook cannot qualify as a platform difference',()=>{const r=structuredClone(initial);r.provider_hooks[0].definition+=' -- changed';assert.throws(()=>assertPackagedHook(r,initial));});
+test('the original authenticator EXECUTE difference is detected',()=>{assert.equal(initial.roles.find(r=>r.name==='authenticator').execute[0].allowed,false);assert.equal(remote.roles.find(r=>r.name==='authenticator').execute[0].allowed,true);assert.throws(()=>assertNetSecurity(initial,remote));});

@@ -1,0 +1,22 @@
+{
+  "verdict": "Fase 0 bloqueada",
+  "tests": {
+    "passed": 299,
+    "failed": 0,
+    "skipped": 1
+  },
+  "migrations": {
+    "passed": 28,
+    "failed": 1,
+    "notRun": 239,
+    "total": 268
+  },
+  "screenSamples": 24,
+  "screenSamplesValid": 24,
+  "handlerCharacterizations": {
+    "passed": 20,
+    "failed": 0
+  },
+  "reason": "Fresh migration replay fails before conversions exists; complete backend cannot be reconstructed without changing the migration baseline.",
+  "phase1Implemented": false
+}

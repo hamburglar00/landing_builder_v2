@@ -1,0 +1,9 @@
+{
+  "image": "public.ecr.aws/supabase/vector:0.28.1-alpine",
+  "dockerHost": "DOCKER_HOST=http://host.docker.internal:2375",
+  "oomKilled": false,
+  "restarts": 13,
+  "error": "Listing currently running containers failed: Connection refused (os error 111)",
+  "errorConfirmed": true,
+  "observedHostPort2375Listening": false
+}

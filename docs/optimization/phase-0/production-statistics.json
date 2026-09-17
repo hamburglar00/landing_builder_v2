@@ -1,0 +1,118 @@
+{
+  "queries": [
+    {
+      "rows": 7,
+      "calls": 7,
+      "max_ms": 32217.58,
+      "mean_ms": 26130.96,
+      "queryid": "2916406993742520638",
+      "category": "refresh_home_cache",
+      "total_ms": 182916.71,
+      "temp_blks_written": 13699
+    },
+    {
+      "rows": 14,
+      "calls": 14,
+      "max_ms": 16114.83,
+      "mean_ms": 11509.71,
+      "queryid": "-163945903147851050",
+      "category": "refresh_phone",
+      "total_ms": 161135.97,
+      "temp_blks_written": 24468
+    },
+    {
+      "rows": 453,
+      "calls": 453,
+      "max_ms": 2354.89,
+      "mean_ms": 187.29,
+      "queryid": "-2307287805504608533",
+      "category": "phone_assignment",
+      "total_ms": 84840.78,
+      "temp_blks_written": 0
+    },
+    {
+      "rows": 1,
+      "calls": 1,
+      "max_ms": 31070.22,
+      "mean_ms": 31070.22,
+      "queryid": "7376769198094419615",
+      "category": "audiences_payload (may include outer measurement)",
+      "total_ms": 31070.22,
+      "temp_blks_written": 8074
+    },
+    {
+      "rows": 1,
+      "calls": 1,
+      "max_ms": 10760.37,
+      "mean_ms": 10760.37,
+      "queryid": "4130662948609739016",
+      "category": "phone_assignment",
+      "total_ms": 10760.37,
+      "temp_blks_written": 0
+    },
+    {
+      "rows": 4,
+      "calls": 4,
+      "max_ms": 174.6,
+      "mean_ms": 127.4,
+      "queryid": "85891595938737239",
+      "category": "availability",
+      "total_ms": 509.62,
+      "temp_blks_written": 0
+    },
+    {
+      "rows": 1,
+      "calls": 1,
+      "max_ms": 94.63,
+      "mean_ms": 94.63,
+      "queryid": "-5237269588343723353",
+      "category": "audiences_payload (may include outer measurement)",
+      "total_ms": 94.63,
+      "temp_blks_written": 0
+    },
+    {
+      "rows": 2,
+      "calls": 2,
+      "max_ms": 11.38,
+      "mean_ms": 10.39,
+      "queryid": "3205715446031622095",
+      "category": "home_cached",
+      "total_ms": 20.77,
+      "temp_blks_written": 0
+    }
+  ],
+  "functions": [
+    {
+      "name": "get_gerencia_availability_summaries",
+      "volatility": "v",
+      "definition_md5": "a929f7a6fd1178184044ad1d800a9241"
+    },
+    {
+      "name": "get_home_overview_stats_cached_by_currency",
+      "volatility": "v",
+      "definition_md5": "f676c18cf4294bf619b3481d0d4100c5"
+    },
+    {
+      "name": "get_meta_audience_buyers_v2",
+      "volatility": "s",
+      "definition_md5": "1659c3114fde6a378d9c9f0b525e7995"
+    },
+    {
+      "name": "get_meta_audience_buyers_v2_payload",
+      "volatility": "s",
+      "definition_md5": "28a690f0705a55ccb86dc68e957b8aa4"
+    },
+    {
+      "name": "get_phone_for_landing",
+      "volatility": "v",
+      "definition_md5": "12b7815a341afd9867f2a0a9c4d4317d"
+    },
+    {
+      "name": "get_phone_for_landing",
+      "volatility": "v",
+      "definition_md5": "63e4ec1ce039e9f45939a80610f503e8"
+    }
+  ],
+  "measured_at": "2026-09-15T23:52:21.601289+00:00",
+  "stats_reset": "2026-09-15T16:50:07.591847+00:00"
+}

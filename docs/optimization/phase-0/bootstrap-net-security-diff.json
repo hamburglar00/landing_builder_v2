@@ -1,0 +1,22 @@
+{
+  "status": "resolved",
+  "resolution": "native-installation-local-only",
+  "version": "0.19.5",
+  "remoteSecurityExact": true,
+  "functionsCompared": 12,
+  "rolesCompared": 5,
+  "remainingFunctionDifferences": 0,
+  "remainingAclDifferences": 0,
+  "installationHook": "individually explained platform lifecycle difference; exact definitions and hash-sealed references",
+  "historicalEvidence": [
+    "bootstrap-net-security-local.json",
+    "bootstrap-net-security-remote.json",
+    "bootstrap-before-pg-net-alignment.json"
+  ],
+  "currentEvidence": [
+    "bootstrap-net-final-1.json",
+    "bootstrap-net-final-2.json",
+    "bootstrap-net-access-matrix.json",
+    "bootstrap-schema-diff.json"
+  ]
+}

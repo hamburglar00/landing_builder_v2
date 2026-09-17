@@ -1,0 +1,12 @@
+{
+  "exitCode": 0,
+  "nextVersion": "16.1.6",
+  "generatedStaticPages": 52,
+  "compiledSuccessfully": true,
+  "typescriptPassed": true,
+  "environment": "Synthetic loopback API and placeholder public key; project env files unchanged",
+  "warnings": [
+    "Multiple lockfiles: Next inferred workspace root"
+  ],
+  "phase1Implemented": false
+}

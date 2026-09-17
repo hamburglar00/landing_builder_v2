@@ -1,0 +1,10 @@
+{
+  "officialSource": "https://supabase.com/docs/guides/database/postgres/row-level-security",
+  "bodyIdenticalIgnoringWhitespace": true,
+  "eventTagsMatch": true,
+  "securityDefinerMatch": true,
+  "searchPathMatch": true,
+  "remoteBodyMd5": "99be20677b456ea8d3be47bdd44fb369",
+  "originOfRemoteInstallation": "Unknown installer; official functional equivalence established",
+  "verifiedDate": "2026-09-16"
+}

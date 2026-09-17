@@ -1,0 +1,137 @@
+{
+  "method": "Read-only remote catalog vs lexical declarations; NOT a replayed full-schema diff. Version equality is not SQL-content equality.",
+  "history": {
+    "localCount": 268,
+    "remoteCount": 268,
+    "localOnly": [],
+    "remoteOnly": [],
+    "nameDifferences": [
+      {
+        "version": "20260427180000",
+        "local": "remote_sync_placeholder",
+        "remote": "tracking_queue"
+      },
+      {
+        "version": "20260427190000",
+        "local": "remote_sync_placeholder",
+        "remote": "tracking_retry_scheduler"
+      }
+    ],
+    "checksumNote": "Local SHA256 hashes exact UTF-8 text; remote stored_text_md5 hashes statement-array text. Different serialization: no equality/drift inferred across these two hash fields."
+  },
+  "publicCatalogCounts": {
+    "indexes": 267,
+    "policies": 152,
+    "triggers": 30,
+    "functions": 84,
+    "relations": 71,
+    "constraints": 316
+  },
+  "remoteRelationsWithoutLocalCreate": [],
+  "localDeclaredRelationsNotCurrentlyRemote": [],
+  "remotePublicFunctionsWithoutLocalCreate": [
+    {
+      "name": "rls_auto_enable",
+      "arguments": ""
+    }
+  ],
+  "privateFunctions": [
+    {
+      "name": "close_landing_phone_reservation_on_lead",
+      "hasLocalCreate": true
+    },
+    {
+      "name": "is_valid_meta_audience_fields",
+      "hasLocalCreate": true
+    },
+    {
+      "name": "is_valid_meta_audience_rules",
+      "hasLocalCreate": true
+    },
+    {
+      "name": "landing_phone_message_load",
+      "hasLocalCreate": true
+    },
+    {
+      "name": "set_meta_audience_config_updated_at",
+      "hasLocalCreate": true
+    }
+  ],
+  "implicitSequences": [
+    "chatrace_gerencias_id_seq",
+    "conversion_logs_id_seq",
+    "gerencia_phone_availability_snapshots_id_seq",
+    "gerencia_phones_id_seq",
+    "gerencia_work_group_members_id_seq",
+    "gerencia_work_groups_id_seq",
+    "gerencias_id_seq",
+    "landing_phone_availability_demands_id_seq",
+    "notification_telegram_destinations_id_seq"
+  ],
+  "columns": [
+    {
+      "table": "conversions",
+      "remoteCount": 121,
+      "staticDeclaredCount": 122,
+      "remoteNotFoundInStaticDeclarations": [],
+      "declaredNotCurrentlyRemote": [
+        "send_contact_pixel"
+      ]
+    },
+    {
+      "table": "conversions_config",
+      "remoteCount": 32,
+      "staticDeclaredCount": 33,
+      "remoteNotFoundInStaticDeclarations": [],
+      "declaredNotCurrentlyRemote": [
+        "test_event_code"
+      ]
+    },
+    {
+      "table": "conversion_logs",
+      "remoteCount": 13,
+      "staticDeclaredCount": 13,
+      "remoteNotFoundInStaticDeclarations": [],
+      "declaredNotCurrentlyRemote": []
+    }
+  ],
+  "fromMetaAdsDefinitionLineage": [
+    {
+      "file": "20260415113000_from_meta_ads_fbc_or_valid_promo_code.sql",
+      "body_md5": "c27c6543f864a65f3305854c61b58eef",
+      "matchesRemoteBody": false
+    },
+    {
+      "file": "20260426120000_conversions_add_from_meta_ads.sql",
+      "body_md5": "c37d149e7d9763f14e1711763f723a68",
+      "matchesRemoteBody": false
+    },
+    {
+      "file": "20260429100000_from_meta_ads_promo_code_fallback.sql",
+      "body_md5": "c27c6543f864a65f3305854c61b58eef",
+      "matchesRemoteBody": false
+    },
+    {
+      "file": "20260505131500_from_meta_ads_include_utm_campaign.sql",
+      "body_md5": "632d6e22e28614a71c7169d978b68c45",
+      "matchesRemoteBody": false
+    },
+    {
+      "file": "20260722120000_from_meta_ads_promo_only_chatrace.sql",
+      "body_md5": "bb3358834b3b098d3e21179e2b5ced6d",
+      "matchesRemoteBody": false
+    },
+    {
+      "file": "20260821220917_include_ctwa_in_meta_ads_origin.sql",
+      "body_md5": "f1a0aa5a98b2767ae0c8becde61bb79b",
+      "matchesRemoteBody": true
+    }
+  ],
+  "unresolved": [
+    "Static diagnosis only: current full replay status must be read from bootstrap-validation.json.",
+    "Recovered tracking history includes an explicitly authorized sanitized scheduler; provenance is recorded separately.",
+    "public.rls_auto_enable and event trigger ensure_rls have no local migration declaration; origin unproven.",
+    "Static names and hashes do not prove equivalence of ACLs, default privileges, function settings, views, sequences, extension versions, triggers or policy semantics.",
+    "pg_depend alone omits dependencies resolved dynamically by function bodies; lexical graph requires semantic review."
+  ]
+}

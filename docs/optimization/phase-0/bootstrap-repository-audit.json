@@ -1,0 +1,14 @@
+{
+  "scope": "Current tracked text files; matched values are neither returned nor retained. Ignored local .env is excluded; new artifacts are audited separately.",
+  "trackedFiles": 568,
+  "findings": [],
+  "resolvedFinding": {
+    "file": ".env",
+    "classification": "public legacy anon JWT, not confirmed privileged leak",
+    "tracked": false,
+    "ignored": true,
+    "physicalFileUntouchedThisContinuation": true,
+    "evidence": "bootstrap-env-hygiene.json"
+  },
+  "historyRewritten": false
+}

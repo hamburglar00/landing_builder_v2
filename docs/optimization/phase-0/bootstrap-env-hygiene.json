@@ -1,0 +1,21 @@
+{
+  "status": "hygiene_resolved_not_confirmed_privileged_leak",
+  "variables": [
+    {
+      "name": "NEXT_PUBLIC_SUPABASE_URL",
+      "classification": "public endpoint URL"
+    },
+    {
+      "name": "NEXT_PUBLIC_SUPABASE_ANON_KEY",
+      "classification": "Supabase legacy public anon JWT"
+    }
+  ],
+  "valuesPersisted": false,
+  "privilegedCredentialDetected": false,
+  "localFilePreservedByteForByte": true,
+  "trackedByGit": false,
+  "ignoredByGit": true,
+  "indexChange": "Only removal of .env from tracking is staged; no commit made",
+  "futureRecommendation": "Migrate legacy anon JWT to sb_publishable_ in a separate authorized change; not implemented",
+  "remoteChanges": 0
+}

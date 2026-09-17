@@ -1,0 +1,30 @@
+{
+  "filesChecked": 268,
+  "manifestSha256": "76ad2e803e3c9f94b7e2141b900f08a4ac96883d08c887f7632963325aa1bf22",
+  "hashMismatches": [],
+  "modifiedHistoricalFiles": [
+    "supabase/migrations/20260325201000_add_internal_id_to_conversions.sql",
+    "supabase/migrations/20260427180000_remote_sync_placeholder.sql",
+    "supabase/migrations/20260427190000_remote_sync_placeholder.sql"
+  ],
+  "onlyAuthorizedHistoricalFilesChanged": true,
+  "historicalExceptions": {
+    "20260427180000": {
+      "kind": "exact-statements-recovered",
+      "remoteLedgerMd5": "6bbd4ef6d971e9e2a9d24db227844990"
+    },
+    "20260427190000": {
+      "kind": "authorized-sanitized-scheduler",
+      "remoteLedgerMd5": "34162945f0a3ae6cf9cd926cdf9b588f",
+      "transformation": "URL and Bearer literal replaced by phase0.tracking_retry_url and phase0.tracking_retry_token settings; synthetic only, cron disabled."
+    },
+    "20260325201000": {
+      "kind": "authorized-empty-sequence-correction",
+      "remoteLedgerMd5": "309aa67e73dffb3b91235f037f9a140c",
+      "previousFileSha256": "27e0a385c7790d07449435fb89faa30efa9df0a789ef36803dbaf12971c37f12",
+      "correctedFileSha256": "9a97b61ee91045c20fb62f9daddd1124592ceb8f2bd389b2aebf6e1eef233b9f",
+      "transformation": "Only setval arguments: empty table uses pg_sequence.seqmin with is_called=false; populated table keeps MAX(internal_id), true.",
+      "authorization": "User explicitly authorized this correction and independent before/after equivalence tests."
+    }
+  }
+}

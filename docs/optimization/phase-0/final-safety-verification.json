@@ -1,0 +1,96 @@
+{
+  "date": "2026-09-17",
+  "formalizationOnly": true,
+  "env": {
+    "exists": true,
+    "tracked": false,
+    "ignored": true,
+    "variables": [
+      {
+        "name": "NEXT_PUBLIC_SUPABASE_URL",
+        "classification": "public endpoint"
+      },
+      {
+        "name": "NEXT_PUBLIC_SUPABASE_ANON_KEY",
+        "classification": "legacy public JWT role=anon"
+      }
+    ],
+    "exampleSynthetic": true,
+    "exampleNamesMatch": true,
+    "valuesPrintedOrCopied": false,
+    "physicalBytesUnchangedThisFormalization": true,
+    "privilegedCredentialDetected": false,
+    "valuesPersisted": false,
+    "historyRewritten": false
+  },
+  "git": {
+    "branch": "main",
+    "head": "a4e752cf58f628813d3979d598b60d480caaac8d",
+    "upstream": "origin/main",
+    "counts": {
+      "created": 168,
+      "modified": 4,
+      "removedFromTracking": 1,
+      "total": 173
+    },
+    "unmerged": [],
+    "stagingChanged": false,
+    "commitPerformed": false,
+    "pushPerformed": false,
+    "fetchPerformed": false,
+    "fullInventory": "final-inventory.json"
+  },
+  "changesThisFormalization": {
+    "modified": [
+      "docs/optimization/phase-0/README.md",
+      "docs/optimization/phase-0/closure.md",
+      "docs/optimization/phase-0/final-summary.json",
+      "docs/optimization/phase-0/artifact-audit.json"
+    ],
+    "created": [
+      "docs/optimization/phase-0/README-history.md",
+      "docs/optimization/phase-0/checkpoint-proposal.md",
+      "docs/optimization/phase-0/closure-history.md",
+      "docs/optimization/phase-0/final-inventory.json",
+      "docs/optimization/phase-0/final-safety-verification.json",
+      "docs/optimization/phase-0/final-summary-history.json",
+      "docs/optimization/phase-0/pending-findings.md"
+    ],
+    "nonDocumentationFilesModified": 0,
+    "sourceFilesUnchanged": true,
+    "historicalMigrationsUnchanged": true,
+    "envExampleUnchanged": true
+  },
+  "safety": {
+    "remoteWrites": 0,
+    "remoteCallsThisFormalization": 0,
+    "realExternalEventTrafficInTests": 0,
+    "realNetHttpRequestsCommitted": 0,
+    "runnerOwnedResidualResources": {
+      "containers": [],
+      "networks": [],
+      "volumes": []
+    },
+    "remoteDataScope": "Schema metadata and aggregate statistics only; no copied production application rows or personal fixtures.",
+    "externalTrafficScope": "Historical read-only Supabase metadata access, documentation and dependency downloads are not denied. No external event delivery.",
+    "cleanupScope": "Runner-owned resources only. Unrelated or unattributed Docker resources, previous Chromium profiles and bootstrap config directories are retained; no deletion attempted."
+  },
+  "artifactReview": {
+    "report": "artifact-audit.json",
+    "method": "Static credential, personal-path and email scan; provenance of schema-only catalogs and synthetic fixtures reviewed; new content reviewed. Unchanged original artifacts retain the previously reviewed hashes except the documented documentation edits.",
+    "findings": 0,
+    "productionRowsInFixtures": 0,
+    "filesReviewed": 171,
+    "originalArtifactsPreserved": 19
+  },
+  "suites": {
+    "rerunThisFormalization": false,
+    "source": "bootstrap-final-summary.json",
+    "passed": 446,
+    "failed": 0,
+    "uniqueOmitted": 0
+  },
+  "pendingFindingsCorrected": false,
+  "phase0CImplemented": false,
+  "phase1Implemented": false
+}

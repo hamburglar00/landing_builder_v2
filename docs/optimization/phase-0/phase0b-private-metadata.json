@@ -1,0 +1,76 @@
+{
+  "private_functions": [
+    {
+      "name": "close_landing_phone_reservation_on_lead",
+      "result": "trigger",
+      "schema": "private",
+      "language": "plpgsql",
+      "arguments": "",
+      "definition_md5": "238fc180e7c3e916aa24630b772b8d64",
+      "security_definer": true,
+      "references_conversions": false
+    },
+    {
+      "name": "is_valid_meta_audience_fields",
+      "result": "boolean",
+      "schema": "private",
+      "language": "sql",
+      "arguments": "p_fields text[]",
+      "definition_md5": "eed8332c7ead439b4f935c6fab137316",
+      "security_definer": false,
+      "references_conversions": false
+    },
+    {
+      "name": "is_valid_meta_audience_rules",
+      "result": "boolean",
+      "schema": "private",
+      "language": "plpgsql",
+      "arguments": "p_rules jsonb",
+      "definition_md5": "883354f0a1bc451ed6b3b9b156cd906f",
+      "security_definer": false,
+      "references_conversions": false
+    },
+    {
+      "name": "landing_phone_message_load",
+      "result": "bigint",
+      "schema": "private",
+      "language": "sql",
+      "arguments": "p_landing_id uuid, p_gerencia_id integer, p_phone_kind text, p_owner_user_id uuid, p_phone_id bigint",
+      "definition_md5": "ecfae7d1bc3b65ba1bd42c3630089063",
+      "security_definer": false,
+      "references_conversions": true
+    },
+    {
+      "name": "set_meta_audience_config_updated_at",
+      "result": "trigger",
+      "schema": "private",
+      "language": "plpgsql",
+      "arguments": "",
+      "definition_md5": "7327b6bc99d158e8431f01f7756b7f31",
+      "security_definer": false,
+      "references_conversions": false
+    }
+  ],
+  "trigger_functions": [
+    {
+      "schema": "private",
+      "trigger": "close_landing_phone_reservation_on_lead",
+      "function": "close_landing_phone_reservation_on_lead"
+    },
+    {
+      "schema": "public",
+      "trigger": "trg_set_conversions_from_meta_ads",
+      "function": "set_conversions_from_meta_ads"
+    },
+    {
+      "schema": "public",
+      "trigger": "trg_set_conversions_sex_fields",
+      "function": "set_conversions_sex_fields"
+    }
+  ],
+  "from_meta_ads_definition": {
+    "body_md5": "f1a0aa5a98b2767ae0c8becde61bb79b",
+    "mentions_fbc": true,
+    "mentions_promo_code": true
+  }
+}

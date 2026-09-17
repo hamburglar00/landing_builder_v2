@@ -1,0 +1,354 @@
+{
+  "verdict": "Fase 0 cerrada",
+  "formalizedOn": "2026-09-17",
+  "scope": "Safety baseline, characterization, local/CI reconstruction and rollback documentation; known defects remain open.",
+  "evidenceRun": "Final Fase 0B run on 2026-09-17; suites were not rerun for this documentation-only formalization.",
+  "branch": "main",
+  "head": "a4e752cf58f628813d3979d598b60d480caaac8d",
+  "reconstructions": [
+    {
+      "number": 1,
+      "passed": 268,
+      "failed": 0,
+      "bootstrapMs": 34341,
+      "migrationMs": 447006,
+      "fingerprint": "fb5a310693c0aeb8e0825bb09c1bf33aa26aa1e108d1b78e9938c1819a793671",
+      "provider": {
+        "cli": "2.75.0",
+        "image": "public.ecr.aws/supabase/postgres:17.6.1.075",
+        "imageId": "sha256:82a04ba6c05f60950a74ae46be3726abb18d06ee44da936276fd782e72e36855"
+      },
+      "pgNetInstallation": {
+        "applied": true,
+        "version": "0.19.5",
+        "method": "Native DROP/CREATE EXTENSION on empty owned local database; transaction-local event_triggers=false; no extension file/function edits",
+        "remoteSecurityExact": true
+      },
+      "compatibility": {
+        "applied": true,
+        "afterHistoricalCount": 268,
+        "sourceSha256": "a1438097df4712541298838af32dacf8a90feb77b0cb1ee5e5e2ca849df26d6a",
+        "referenceMatched": true
+      },
+      "securityAccess": {
+        "passed": 61,
+        "failed": 0
+      },
+      "netAccess": {
+        "passed": 46,
+        "failed": 0,
+        "residue": {
+          "cron": "off",
+          "queue": 0,
+          "responses": 0,
+          "probeColumn": false,
+          "eventTriggers": "on"
+        }
+      },
+      "pgNetIdempotence": {
+        "passed": 1,
+        "failed": 0
+      },
+      "cronExecutionDisabled": true,
+      "cleanup": "only runner-owned resources removed"
+    },
+    {
+      "number": 2,
+      "passed": 268,
+      "failed": 0,
+      "bootstrapMs": 34701,
+      "migrationMs": 346792,
+      "fingerprint": "fb5a310693c0aeb8e0825bb09c1bf33aa26aa1e108d1b78e9938c1819a793671",
+      "provider": {
+        "cli": "2.75.0",
+        "image": "public.ecr.aws/supabase/postgres:17.6.1.075",
+        "imageId": "sha256:82a04ba6c05f60950a74ae46be3726abb18d06ee44da936276fd782e72e36855"
+      },
+      "pgNetInstallation": {
+        "applied": true,
+        "version": "0.19.5",
+        "method": "Native DROP/CREATE EXTENSION on empty owned local database; transaction-local event_triggers=false; no extension file/function edits",
+        "remoteSecurityExact": true
+      },
+      "compatibility": {
+        "applied": true,
+        "afterHistoricalCount": 268,
+        "sourceSha256": "a1438097df4712541298838af32dacf8a90feb77b0cb1ee5e5e2ca849df26d6a",
+        "referenceMatched": true
+      },
+      "securityAccess": {
+        "passed": 61,
+        "failed": 0
+      },
+      "netAccess": {
+        "passed": 46,
+        "failed": 0,
+        "residue": {
+          "cron": "off",
+          "queue": 0,
+          "responses": 0,
+          "probeColumn": false,
+          "eventTriggers": "on"
+        }
+      },
+      "pgNetIdempotence": {
+        "passed": 1,
+        "failed": 0
+      },
+      "cronExecutionDisabled": true,
+      "cleanup": "only runner-owned resources removed"
+    }
+  ],
+  "tests": {
+    "existingRequestedPassed": 391,
+    "newUniquePassed": 55,
+    "totalUniquePassed": 446,
+    "totalUniqueFailed": 0,
+    "uniqueTestsLeftOmitted": 0,
+    "frontendInvocationSkips": 1,
+    "skipExplanation": "The generic frontend invocation skips the Data API integration; that same test passes separately against local Data API and is counted once.",
+    "suites": [
+      {
+        "name": "collector",
+        "exitCode": 0,
+        "durationMs": 1962.4300000000003,
+        "passed": 5,
+        "failed": 0,
+        "skipped": 0
+      },
+      {
+        "name": "deno",
+        "exitCode": 0,
+        "durationMs": 5433.3349,
+        "passed": 41,
+        "failed": 0,
+        "skipped": 0
+      },
+      {
+        "name": "frontend",
+        "exitCode": 0,
+        "durationMs": 10375.072699999999,
+        "passed": 99,
+        "failed": 0,
+        "skipped": 1
+      },
+      {
+        "name": "typescript",
+        "exitCode": 0,
+        "durationMs": 67447.17289999999
+      },
+      {
+        "name": "sql-and-integration",
+        "exitCode": 0,
+        "durationMs": 80337.0283,
+        "sql": [
+          {
+            "file": "meta_audience_buyers.test.sql",
+            "passed": 18,
+            "planned": 18
+          },
+          {
+            "file": "meta_audience_buyers_v2.test.sql",
+            "passed": 34,
+            "planned": 34
+          },
+          {
+            "file": "meta_audience_configs.test.sql",
+            "passed": 35,
+            "planned": 35
+          },
+          {
+            "file": "phase0_audience_boundaries.test.sql",
+            "passed": 12,
+            "planned": 12
+          },
+          {
+            "file": "phase0_purchase_claims.test.sql",
+            "passed": 12,
+            "planned": 12
+          }
+        ],
+        "passed": 112,
+        "failed": 0,
+        "skipped": 0
+      },
+      {
+        "name": "eslint",
+        "exitCode": 0,
+        "durationMs": 81407.55410000001,
+        "errors": 0,
+        "warnings": 18,
+        "findings": [
+          {
+            "file": "app/(panel)/dashboard/layout.tsx",
+            "errors": 0,
+            "warnings": 4,
+            "rules": [
+              "@typescript-eslint/no-unused-vars"
+            ]
+          },
+          {
+            "file": "app/(panel)/promo/[slug]/page.tsx",
+            "errors": 0,
+            "warnings": 1,
+            "rules": [
+              "@typescript-eslint/no-unused-vars"
+            ]
+          },
+          {
+            "file": "components/conversiones/StatsPanel.tsx",
+            "errors": 0,
+            "warnings": 2,
+            "rules": [
+              "react-hooks/exhaustive-deps"
+            ]
+          },
+          {
+            "file": "components/conversiones/TrackingBoard.tsx",
+            "errors": 0,
+            "warnings": 2,
+            "rules": [
+              "react-hooks/exhaustive-deps"
+            ]
+          },
+          {
+            "file": "components/integraciones/IntegracionesMetaCapi.tsx",
+            "errors": 0,
+            "warnings": 6,
+            "rules": [
+              "@typescript-eslint/no-unused-vars",
+              "react-hooks/exhaustive-deps",
+              "@next/next/no-img-element"
+            ]
+          },
+          {
+            "file": "components/notificaciones/NotificationsPageContent.tsx",
+            "errors": 0,
+            "warnings": 1,
+            "rules": [
+              "@next/next/no-img-element"
+            ]
+          },
+          {
+            "file": "lib/conversionsDb.ts",
+            "errors": 0,
+            "warnings": 2,
+            "rules": [
+              "@typescript-eslint/no-unused-vars"
+            ]
+          }
+        ]
+      },
+      {
+        "name": "concurrency",
+        "exitCode": 0,
+        "durationMs": 123013.8524,
+        "passed": 22,
+        "failed": 0,
+        "skipped": 0
+      },
+      {
+        "name": "handler-concurrency",
+        "exitCode": 0,
+        "durationMs": 156983.32770000002,
+        "passed": 20,
+        "failed": 0,
+        "skipped": 0
+      }
+    ],
+    "units": [
+      {
+        "file": "bootstrap-safety.test.mjs",
+        "exitCode": 0,
+        "passed": 19,
+        "failed": 0,
+        "skipped": 0
+      },
+      {
+        "file": "bootstrap-compatibility.test.mjs",
+        "exitCode": 0,
+        "passed": 6,
+        "failed": 0,
+        "skipped": 0
+      },
+      {
+        "file": "bootstrap-net.test.mjs",
+        "exitCode": 0,
+        "passed": 8,
+        "failed": 0,
+        "skipped": 0
+      }
+    ],
+    "sequencePassed": 6,
+    "rlsAccessUnique": 61,
+    "netAccessUnique": 46,
+    "idempotenceUnique": 1,
+    "repeatedAcrossReconstructions": 108,
+    "totalCheckExecutions": 554
+  },
+  "build": {
+    "exitCode": 0,
+    "durationMs": 73928,
+    "syntheticEnvironment": true,
+    "rawOutputPersisted": false
+  },
+  "structuralComparison": {
+    "status": "normalized_with_evidence",
+    "totalDifferences": 8,
+    "normalizedWithEvidence": 8,
+    "pendingEntries": 0,
+    "compositeFingerprints": [
+      "182bbc25af1c91fc8e275513ec1cb564fb031fb9091e98caf357ce6ed4b902b5",
+      "182bbc25af1c91fc8e275513ec1cb564fb031fb9091e98caf357ce6ed4b902b5"
+    ],
+    "platform": {
+      "pgNetFunctionsIdentical": true,
+      "graphqlTriggerMembershipVerified": true,
+      "pgNetSecurityAndRolePrivilegesExact": true,
+      "repeatable": true
+    }
+  },
+  "pgNetResolved": true,
+  "remoteWrites": 0,
+  "realExternalEventDeliveries": 0,
+  "realHttpRequestsCommittedByNetTests": 0,
+  "remoteCallsThisFormalization": 0,
+  "productionRowsInFixtures": 0,
+  "localEnv": {
+    "exists": true,
+    "ignored": true,
+    "tracked": false,
+    "exampleSynthetic": true,
+    "valuesRecorded": false
+  },
+  "pendingFindingsDocument": "pending-findings.md",
+  "pendingFindingsCorrected": false,
+  "phase0CImplemented": false,
+  "phase1Implemented": false,
+  "checkpointCommitExecuted": false,
+  "pushExecuted": false,
+  "limitations": [
+    "No external event traffic; historical documentation/dependency downloads and read-only Supabase metadata access are not claimed absent.",
+    "No runner-owned database/network/queue resources remain; prior Chromium profiles and bootstrap config directories are retained.",
+    "Browser API fixtures are synthetic; this does not certify full Supabase stack or production latency.",
+    "Static scanning plus provenance/fixture review is not a universal DLP or production security certification."
+  ],
+  "gitInventory": "final-inventory.json",
+  "audit": "artifact-audit.json",
+  "checkpointProposal": "checkpoint-proposal.md",
+  "auditResult": {
+    "filesReviewed": 171,
+    "findings": 0,
+    "originalArtifactsPreserved": 19
+  },
+  "gitState": {
+    "created": 168,
+    "modified": 4,
+    "removedFromTracking": 1,
+    "total": 173,
+    "stagedRemovalOnly": ".env",
+    "otherStagedChanges": 0,
+    "unmerged": 0,
+    "upstreamLocalOnly": true
+  }
+}

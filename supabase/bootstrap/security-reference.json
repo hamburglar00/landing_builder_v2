@@ -1,0 +1,198 @@
+{
+  "roles": [
+    {
+      "name": "anon",
+      "inherit": true,
+      "bypassrls": false,
+      "superuser": false
+    },
+    {
+      "name": "authenticated",
+      "inherit": true,
+      "bypassrls": false,
+      "superuser": false
+    },
+    {
+      "name": "service_role",
+      "inherit": true,
+      "bypassrls": true,
+      "superuser": false
+    }
+  ],
+  "tables": [
+    {
+      "acl": "{postgres=arwdDxtm/postgres,anon=arwdDxtm/postgres,authenticated=arwdDxtm/postgres,service_role=arwdDxtm/postgres}",
+      "rls": true,
+      "name": "ar_name_inferred_sex",
+      "owner": "postgres",
+      "force_rls": false
+    },
+    {
+      "acl": "{postgres=arwdDxtm/postgres,anon=arwdDxtm/postgres,authenticated=arwdDxtm/postgres,service_role=arwdDxtm/postgres}",
+      "rls": true,
+      "name": "ar_phone_area_codes",
+      "owner": "postgres",
+      "force_rls": false
+    },
+    {
+      "acl": "{postgres=arwdDxtm/postgres,anon=arwdDxtm/postgres,authenticated=arwdDxtm/postgres,service_role=arwdDxtm/postgres}",
+      "rls": true,
+      "name": "cron_config",
+      "owner": "postgres",
+      "force_rls": false
+    },
+    {
+      "acl": "{postgres=arwdDxtm/postgres,anon=arwdDxtm/postgres,authenticated=arwdDxtm/postgres,service_role=arwdDxtm/postgres}",
+      "rls": true,
+      "name": "tracking_queue",
+      "owner": "postgres",
+      "force_rls": false
+    }
+  ],
+  "function": {
+    "acl": "{=X/postgres,postgres=X/postgres,anon=X/postgres,authenticated=X/postgres,service_role=X/postgres}",
+    "body": "\nDECLARE\n  cmd record;\nBEGIN\n  FOR cmd IN\n    SELECT *\n    FROM pg_event_trigger_ddl_commands()\n    WHERE command_tag IN ('CREATE TABLE', 'CREATE TABLE AS', 'SELECT INTO')\n      AND object_type IN ('table','partitioned table')\n  LOOP\n     IF cmd.schema_name IS NOT NULL AND cmd.schema_name IN ('public') AND cmd.schema_name NOT IN ('pg_catalog','information_schema') AND cmd.schema_name NOT LIKE 'pg_toast%' AND cmd.schema_name NOT LIKE 'pg_temp%' THEN\n      BEGIN\n        EXECUTE format('alter table if exists %s enable row level security', cmd.object_identity);\n        RAISE LOG 'rls_auto_enable: enabled RLS on %', cmd.object_identity;\n      EXCEPTION\n        WHEN OTHERS THEN\n          RAISE LOG 'rls_auto_enable: failed to enable RLS on %', cmd.object_identity;\n      END;\n     ELSE\n        RAISE LOG 'rls_auto_enable: skip % (either system schema or not in enforced list: %.)', cmd.object_identity, cmd.schema_name;\n     END IF;\n  END LOOP;\nEND;\n",
+    "owner": "postgres",
+    "body_md5": "99be20677b456ea8d3be47bdd44fb369",
+    "settings": [
+      "search_path=pg_catalog"
+    ],
+    "definition": "CREATE OR REPLACE FUNCTION public.rls_auto_enable()\n RETURNS event_trigger\n LANGUAGE plpgsql\n SECURITY DEFINER\n SET search_path TO 'pg_catalog'\nAS $function$\nDECLARE\n  cmd record;\nBEGIN\n  FOR cmd IN\n    SELECT *\n    FROM pg_event_trigger_ddl_commands()\n    WHERE command_tag IN ('CREATE TABLE', 'CREATE TABLE AS', 'SELECT INTO')\n      AND object_type IN ('table','partitioned table')\n  LOOP\n     IF cmd.schema_name IS NOT NULL AND cmd.schema_name IN ('public') AND cmd.schema_name NOT IN ('pg_catalog','information_schema') AND cmd.schema_name NOT LIKE 'pg_toast%' AND cmd.schema_name NOT LIKE 'pg_temp%' THEN\n      BEGIN\n        EXECUTE format('alter table if exists %s enable row level security', cmd.object_identity);\n        RAISE LOG 'rls_auto_enable: enabled RLS on %', cmd.object_identity;\n      EXCEPTION\n        WHEN OTHERS THEN\n          RAISE LOG 'rls_auto_enable: failed to enable RLS on %', cmd.object_identity;\n      END;\n     ELSE\n        RAISE LOG 'rls_auto_enable: skip % (either system schema or not in enforced list: %.)', cmd.object_identity, cmd.schema_name;\n     END IF;\n  END LOOP;\nEND;\n$function$\n",
+    "security_definer": true
+  },
+  "policies": [],
+  "event_trigger": {
+    "name": "ensure_rls",
+    "tags": [
+      "CREATE TABLE",
+      "CREATE TABLE AS",
+      "SELECT INTO"
+    ],
+    "event": "ddl_command_end",
+    "owner": "postgres",
+    "enabled": "O",
+    "function": "rls_auto_enable()"
+  },
+  "effective_privileges": [
+    {
+      "role": "anon",
+      "table": "ar_name_inferred_sex",
+      "delete": true,
+      "insert": true,
+      "select": true,
+      "update": true,
+      "truncate": true,
+      "schema_usage": true
+    },
+    {
+      "role": "anon",
+      "table": "ar_phone_area_codes",
+      "delete": true,
+      "insert": true,
+      "select": true,
+      "update": true,
+      "truncate": true,
+      "schema_usage": true
+    },
+    {
+      "role": "anon",
+      "table": "cron_config",
+      "delete": true,
+      "insert": true,
+      "select": true,
+      "update": true,
+      "truncate": true,
+      "schema_usage": true
+    },
+    {
+      "role": "anon",
+      "table": "tracking_queue",
+      "delete": true,
+      "insert": true,
+      "select": true,
+      "update": true,
+      "truncate": true,
+      "schema_usage": true
+    },
+    {
+      "role": "authenticated",
+      "table": "ar_name_inferred_sex",
+      "delete": true,
+      "insert": true,
+      "select": true,
+      "update": true,
+      "truncate": true,
+      "schema_usage": true
+    },
+    {
+      "role": "authenticated",
+      "table": "ar_phone_area_codes",
+      "delete": true,
+      "insert": true,
+      "select": true,
+      "update": true,
+      "truncate": true,
+      "schema_usage": true
+    },
+    {
+      "role": "authenticated",
+      "table": "cron_config",
+      "delete": true,
+      "insert": true,
+      "select": true,
+      "update": true,
+      "truncate": true,
+      "schema_usage": true
+    },
+    {
+      "role": "authenticated",
+      "table": "tracking_queue",
+      "delete": true,
+      "insert": true,
+      "select": true,
+      "update": true,
+      "truncate": true,
+      "schema_usage": true
+    },
+    {
+      "role": "service_role",
+      "table": "ar_name_inferred_sex",
+      "delete": true,
+      "insert": true,
+      "select": true,
+      "update": true,
+      "truncate": true,
+      "schema_usage": true
+    },
+    {
+      "role": "service_role",
+      "table": "ar_phone_area_codes",
+      "delete": true,
+      "insert": true,
+      "select": true,
+      "update": true,
+      "truncate": true,
+      "schema_usage": true
+    },
+    {
+      "role": "service_role",
+      "table": "cron_config",
+      "delete": true,
+      "insert": true,
+      "select": true,
+      "update": true,
+      "truncate": true,
+      "schema_usage": true
+    },
+    {
+      "role": "service_role",
+      "table": "tracking_queue",
+      "delete": true,
+      "insert": true,
+      "select": true,
+      "update": true,
+      "truncate": true,
+      "schema_usage": true
+    }
+  ]
+}

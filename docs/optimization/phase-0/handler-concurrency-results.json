@@ -1,0 +1,214 @@
+{
+  "scope": "Entire unchanged HTTP callbacks and local modules; real disposable Postgres/PostgREST, scoped dependency schema; simulated Meta transport; no external service IO",
+  "sourceHashes": {
+    "conversions/index.ts": "b56628cc42de95d44ea0f2cdf9078c3550c0efec354f11a5b6af1a45defc2295",
+    "conversions/shared.ts": "06bfd243c8375766df27a44bf667c382682977b9bfb7ed40e882ffe4415a2844",
+    "conversions/pixel_attribution.ts": "a1b354af39b434786b741424f8032970d82e45f81dfd9bb2c1ae1d375a49369d",
+    "conversions/event_attribution.ts": "da323552ea1d5ba22117801aa3211e71840a7e3ab1c31682cbf2c40e2d805ff1",
+    "conversions/inbound_tracking.ts": "202a568bcf9dfc9ec4981b8d665235074ac0d9d34b59eff6c1ca86aeeea620a7",
+    "retry-failed-conversions/index.ts": "3778c44cd8578013fc1aa6e44a457f0f6a15156fe67532316f0040b49810d8a9"
+  },
+  "limitation": "Deno.serve and environment are injected in a Node VM; application TypeScript is transpiled unchanged. Scoped schema is not full RLS/trigger/Edge-isolate parity. Passing characterizations include known delivery defects, not exactly-once guarantees.",
+  "results": [
+    {
+      "name": "HTTP validation: invalid action and unauthorized retry cannot send CAPI",
+      "status": "passed"
+    },
+    {
+      "name": "ARS: 8 simultaneous Contact requests persist once and send once",
+      "status": "passed"
+    },
+    {
+      "name": "ARS: simultaneous Lead requests characterize duplicate outbound sends on one journey",
+      "status": "passed"
+    },
+    {
+      "name": "ARS: 8 simultaneous Purchase requests elect one claim and send once",
+      "status": "passed"
+    },
+    {
+      "name": "PYG: 8 simultaneous Contact requests persist once and send once",
+      "status": "passed"
+    },
+    {
+      "name": "PYG: simultaneous Lead requests characterize duplicate outbound sends on one journey",
+      "status": "passed"
+    },
+    {
+      "name": "PYG: 8 simultaneous Purchase requests elect one claim and send once",
+      "status": "passed"
+    },
+    {
+      "name": "Replay of a processed Purchase keeps the same CAPI identity without sending again",
+      "status": "passed"
+    },
+    {
+      "name": "ARS CONTACT: transient failure then 4 concurrent CAPI retries (current behavior)",
+      "status": "passed"
+    },
+    {
+      "name": "ARS LEAD: transient failure then 4 concurrent CAPI retries (current behavior)",
+      "status": "passed"
+    },
+    {
+      "name": "ARS PURCHASE: transient failure then 4 concurrent CAPI retries (current behavior)",
+      "status": "passed"
+    },
+    {
+      "name": "PYG CONTACT: transient failure then 4 concurrent CAPI retries (current behavior)",
+      "status": "passed"
+    },
+    {
+      "name": "PYG LEAD: transient failure then 4 concurrent CAPI retries (current behavior)",
+      "status": "passed"
+    },
+    {
+      "name": "PYG PURCHASE: transient failure then 4 concurrent CAPI retries (current behavior)",
+      "status": "passed"
+    },
+    {
+      "name": "CONTACT: failed retry, five-minute backoff and recovery preserve identity",
+      "status": "passed"
+    },
+    {
+      "name": "LEAD: failed retry, five-minute backoff and recovery preserve identity",
+      "status": "passed"
+    },
+    {
+      "name": "Contact: retry budget terminates at six attempts",
+      "status": "passed"
+    },
+    {
+      "name": "Purchase: network failure during retry remains pending, recovers with identical event ID and then drains",
+      "status": "passed"
+    },
+    {
+      "name": "Deferred Lead: concurrent workers drain an aged local inbox through the real HTTP handler",
+      "status": "passed"
+    },
+    {
+      "name": "No forbidden external IO or unexpected database errors",
+      "status": "passed"
+    }
+  ],
+  "observations": [
+    {
+      "currency": "ARS",
+      "action": "LEAD",
+      "scenario": "simultaneous-handler",
+      "workers": 8,
+      "barrierArrivals": 8,
+      "outboundRequests": 8,
+      "distinctEventIds": 8,
+      "exactlyOnce": false
+    },
+    {
+      "currency": "PYG",
+      "action": "LEAD",
+      "scenario": "simultaneous-handler",
+      "workers": 8,
+      "barrierArrivals": 8,
+      "outboundRequests": 8,
+      "distinctEventIds": 8,
+      "exactlyOnce": false
+    },
+    {
+      "currency": "ARS",
+      "action": "CONTACT",
+      "scenario": "concurrent-retry",
+      "workers": 4,
+      "barrierArrivals": 4,
+      "outboundRequests": 4,
+      "distinctEventIds": 1,
+      "exactlyOnce": false
+    },
+    {
+      "currency": "ARS",
+      "action": "CONTACT",
+      "scenario": "concurrent-retry-counter",
+      "actualRequests": 4,
+      "persistedRetryCount": 1
+    },
+    {
+      "currency": "ARS",
+      "action": "LEAD",
+      "scenario": "concurrent-retry",
+      "workers": 4,
+      "barrierArrivals": 4,
+      "outboundRequests": 4,
+      "distinctEventIds": 1,
+      "exactlyOnce": false
+    },
+    {
+      "currency": "ARS",
+      "action": "LEAD",
+      "scenario": "concurrent-retry-counter",
+      "actualRequests": 4,
+      "persistedRetryCount": 1
+    },
+    {
+      "currency": "ARS",
+      "action": "PURCHASE",
+      "scenario": "concurrent-retry",
+      "workers": 4,
+      "barrierArrivals": 4,
+      "outboundRequests": 4,
+      "distinctEventIds": 1,
+      "exactlyOnce": false
+    },
+    {
+      "currency": "PYG",
+      "action": "CONTACT",
+      "scenario": "concurrent-retry",
+      "workers": 4,
+      "barrierArrivals": 4,
+      "outboundRequests": 4,
+      "distinctEventIds": 1,
+      "exactlyOnce": false
+    },
+    {
+      "currency": "PYG",
+      "action": "CONTACT",
+      "scenario": "concurrent-retry-counter",
+      "actualRequests": 4,
+      "persistedRetryCount": 1
+    },
+    {
+      "currency": "PYG",
+      "action": "LEAD",
+      "scenario": "concurrent-retry",
+      "workers": 4,
+      "barrierArrivals": 4,
+      "outboundRequests": 4,
+      "distinctEventIds": 1,
+      "exactlyOnce": false
+    },
+    {
+      "currency": "PYG",
+      "action": "LEAD",
+      "scenario": "concurrent-retry-counter",
+      "actualRequests": 4,
+      "persistedRetryCount": 1
+    },
+    {
+      "currency": "PYG",
+      "action": "PURCHASE",
+      "scenario": "concurrent-retry",
+      "workers": 4,
+      "barrierArrivals": 4,
+      "outboundRequests": 4,
+      "distinctEventIds": 1,
+      "exactlyOnce": false
+    },
+    {
+      "scenario": "deferred-lead",
+      "workers": 4,
+      "rows": 4,
+      "outboundRequests": 4,
+      "distinctEventIds": 4,
+      "exactlyOnce": false
+    }
+  ],
+  "passed": 20,
+  "failed": 0
+}

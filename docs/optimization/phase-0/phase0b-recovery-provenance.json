@@ -1,0 +1,129 @@
+{
+  "scope": "Read-only recovery inspection; no raw scheduler SQL, credentials, remote URL or application rows persisted",
+  "status": "recovered_and_sanitized_under_explicit_user_authorization",
+  "source": {
+    "relation": "supabase_migrations.schema_migrations",
+    "mode": "BEGIN READ ONLY; statement_timeout=8s; lock_timeout=1s; ROLLBACK",
+    "project": "same linked project verified in Phase 0B; identifier not persisted"
+  },
+  "migrations": [
+    {
+      "version": "20260427180000",
+      "name": "tracking_queue",
+      "statementCount": 6,
+      "storedTextMd5": "6bbd4ef6d971e9e2a9d24db227844990",
+      "previousDiagnosisHashMatched": true,
+      "placeholderReplaced": true,
+      "literalCredentialDetected": false,
+      "fileSha256": "797075744db09bdf77241d734d3d43d3d6e9925866a248a3da887c5beddbefbf",
+      "sixStatementsExactAfterAddingSqlTerminators": true
+    },
+    {
+      "version": "20260427190000",
+      "name": "tracking_retry_scheduler",
+      "statementCount": 1,
+      "storedTextMd5": "34162945f0a3ae6cf9cd926cdf9b588f",
+      "previousDiagnosisHashMatched": true,
+      "placeholderReplaced": true,
+      "literalCredentialDetected": true,
+      "fileSha256": "6e5f4ea0aada8847bac9633fe600b6a181191cca8eee780eca96494c87decec4"
+    }
+  ],
+  "checksumDefinition": "MD5 of array_to_string(statements, LF), with CR removed; this is ledger serialization, not a migration-file checksum",
+  "semanticComparison": {
+    "trackingQueue": {
+      "matches": [
+        {
+          "statement": 1,
+          "appearsInLaterLocalMigration": true
+        },
+        {
+          "statement": 2,
+          "appearsInLaterLocalMigration": true
+        },
+        {
+          "statement": 3,
+          "appearsInLaterLocalMigration": true
+        },
+        {
+          "statement": 4,
+          "appearsInLaterLocalMigration": true
+        },
+        {
+          "statement": 5,
+          "appearsInLaterLocalMigration": true
+        },
+        {
+          "statement": 6,
+          "appearsInLaterLocalMigration": true
+        }
+      ],
+      "bodyMd5": "9b1889f56258bf9d6554213c05019c76"
+    },
+    "currentMetadata": {
+      "jobs": [
+        {
+          "name": "tracking-retry-every-5m",
+          "active": true,
+          "schedule": "3-59/5 * * * *",
+          "command_md5": "78c10fc9054b449b8ee3a673f5ec51ba",
+          "calls_current_wrapper": true,
+          "contains_literal_authorization": false
+        }
+      ],
+      "table": {
+        "rls": true,
+        "name": "tracking_queue",
+        "force_rls": false
+      },
+      "function": {
+        "name": "set_tracking_queue_updated_at",
+        "body_md5": "9b1889f56258bf9d6554213c05019c76",
+        "security_definer": false
+      }
+    },
+    "laterTableMigration": "20260629190000_constructor_tracking_queue.sql",
+    "laterScheduleMigration": "20260805214000_stagger_frequent_cron_jobs.sql",
+    "notes": [
+      "All six recovered tracking_queue statements occur in the later local migration after whitespace normalization.",
+      "Recovered updated_at function body matches current remote body MD5.",
+      "Current scheduler uses wrapper function; historical scheduler had inline HTTP with literal credential.",
+      "Current schedule 3-59/5 is explained by later stagger migration; original schedule was */5.",
+      "RLS enabled on current tracking_queue is not declared by the six recovered statements; ensure_rls origin remains unresolved."
+    ]
+  },
+  "execution": {
+    "completeReconstructions": 2,
+    "successfulPerReconstruction": 268,
+    "equalFingerprints": true,
+    "applicationSuitesRerun": true,
+    "remoteWrites": 0,
+    "bootstrapReport": "bootstrap-final-summary.json",
+    "suiteReport": "verification-results.json",
+    "previousAttemptsRetained": true
+  },
+  "transformation": {
+    "version": "20260427190000",
+    "reason": "Historical SQL contained a literal Bearer; user authorized local/CI parametrization.",
+    "changed": [
+      "HTTP URL literal replaced by current_setting(phase0.tracking_retry_url,true)",
+      "Bearer literal replaced by Bearer prefix plus current_setting(phase0.tracking_retry_token,true)"
+    ],
+    "preserved": [
+      "version and filename",
+      "DO block",
+      "existing-job unschedule behavior",
+      "job name",
+      "historical schedule",
+      "POST call",
+      "Content-Type header",
+      "JSON limit 50"
+    ],
+    "deliberateDifferences": [
+      "synthetic endpoint and authorization only",
+      "cron.launch_active_jobs=off during bootstrap",
+      "database network has no external egress"
+    ],
+    "remoteCredentialPersisted": false
+  }
+}

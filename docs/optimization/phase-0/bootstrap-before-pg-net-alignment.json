@@ -1,0 +1,390 @@
+{
+  "verdict": "Fase 0B bloqueada",
+  "reason": "Requested RLS compatibility achieved. Remaining pg_net http_get/http_post security mode, search_path and ACL differences are not normalized.",
+  "branch": "main",
+  "head": "a4e752cf58f628813d3979d598b60d480caaac8d",
+  "manifestSha256": "76ad2e803e3c9f94b7e2141b900f08a4ac96883d08c887f7632963325aa1bf22",
+  "completedReconstructions": 2,
+  "equalFinalFingerprints": true,
+  "runs": [
+    {
+      "number": 1,
+      "passed": 268,
+      "failed": 0,
+      "notRun": 0,
+      "bootstrapMs": 84916,
+      "migrationMs": 469411,
+      "fingerprint": "d4bd5d583f028414df8da69fe17614a8beba67f6c8264392bcf3c2f91dbd9e53",
+      "compatibility": {
+        "applied": true,
+        "afterHistoricalCount": 268,
+        "sourceSha256": "a1438097df4712541298838af32dacf8a90feb77b0cb1ee5e5e2ca849df26d6a",
+        "referenceMatched": true
+      },
+      "securityAccess": {
+        "passed": 61,
+        "failed": 0,
+        "rolledBack": true
+      },
+      "cronExecutionDisabled": true,
+      "cleanup": "only runner-owned resources removed"
+    },
+    {
+      "number": 2,
+      "passed": 268,
+      "failed": 0,
+      "notRun": 0,
+      "bootstrapMs": 34813,
+      "migrationMs": 360711,
+      "fingerprint": "d4bd5d583f028414df8da69fe17614a8beba67f6c8264392bcf3c2f91dbd9e53",
+      "compatibility": {
+        "applied": true,
+        "afterHistoricalCount": 268,
+        "sourceSha256": "a1438097df4712541298838af32dacf8a90feb77b0cb1ee5e5e2ca849df26d6a",
+        "referenceMatched": true
+      },
+      "securityAccess": {
+        "passed": 61,
+        "failed": 0,
+        "rolledBack": true
+      },
+      "cronExecutionDisabled": true,
+      "cleanup": "only runner-owned resources removed"
+    }
+  ],
+  "previousSequenceFailures": "Historical, superseded; bootstrap-before-sequence-fix.json",
+  "structuralComparison": {
+    "status": "pending",
+    "rawApplicationDifferences": 9,
+    "additionalPlatformDifferences": 2,
+    "totalDifferences": 11,
+    "normalizedWithEvidence": 7,
+    "pendingEntries": 4,
+    "materialPendingFunctions": [
+      "net.http_get",
+      "net.http_post"
+    ],
+    "compositeFingerprints": [
+      "8ad9ddbbd5606b73919ef713f4bb33771c2b7bdf583568bae41394b45a49734f",
+      "8ad9ddbbd5606b73919ef713f4bb33771c2b7bdf583568bae41394b45a49734f"
+    ],
+    "platform": {
+      "pgNetFunctionsIdentical": false,
+      "graphqlTriggerMembershipVerified": true,
+      "repeatable": true
+    },
+    "requestedSecurityReferenceMatched": true
+  },
+  "tests": {
+    "existingRequestedPassed": 324,
+    "existingRequestedFailed": 0,
+    "compatibilityUnitPassed": 6,
+    "securityAccessUniquePassed": 61,
+    "securityAccessExecutionsAcrossTwoReconstructions": 122,
+    "totalUniquePassed": 391,
+    "totalUniqueFailed": 0,
+    "skippedInFrontendInvocation": 1,
+    "uniqueTestsLeftOmitted": 0,
+    "skipExplanation": "Generic frontend integration was run and passed separately once against local Data API.",
+    "suites": [
+      {
+        "name": "collector",
+        "exitCode": 0,
+        "durationMs": 2037.1228,
+        "passed": 5,
+        "failed": 0,
+        "skipped": 0
+      },
+      {
+        "name": "deno",
+        "exitCode": 0,
+        "durationMs": 16056.2578,
+        "passed": 41,
+        "failed": 0,
+        "skipped": 0
+      },
+      {
+        "name": "frontend",
+        "exitCode": 0,
+        "durationMs": 53099.62530000001,
+        "passed": 99,
+        "failed": 0,
+        "skipped": 1
+      },
+      {
+        "name": "sql-and-integration",
+        "exitCode": 0,
+        "durationMs": 70923.4866,
+        "sql": [
+          {
+            "file": "meta_audience_buyers.test.sql",
+            "passed": 18,
+            "planned": 18
+          },
+          {
+            "file": "meta_audience_buyers_v2.test.sql",
+            "passed": 34,
+            "planned": 34
+          },
+          {
+            "file": "meta_audience_configs.test.sql",
+            "passed": 35,
+            "planned": 35
+          },
+          {
+            "file": "phase0_audience_boundaries.test.sql",
+            "passed": 12,
+            "planned": 12
+          },
+          {
+            "file": "phase0_purchase_claims.test.sql",
+            "passed": 12,
+            "planned": 12
+          }
+        ],
+        "passed": 112,
+        "failed": 0,
+        "skipped": 0
+      },
+      {
+        "name": "typescript",
+        "exitCode": 0,
+        "durationMs": 81310.98650000001
+      },
+      {
+        "name": "concurrency",
+        "exitCode": 0,
+        "durationMs": 137739.2343,
+        "passed": 22,
+        "failed": 0,
+        "skipped": 0
+      },
+      {
+        "name": "handler-concurrency",
+        "exitCode": 0,
+        "durationMs": 197801.91439999998,
+        "passed": 20,
+        "failed": 0,
+        "skipped": 0
+      },
+      {
+        "name": "eslint",
+        "exitCode": 0,
+        "durationMs": 215914.6774,
+        "errors": 0,
+        "warnings": 18,
+        "findings": [
+          {
+            "file": "app/(panel)/dashboard/layout.tsx",
+            "errors": 0,
+            "warnings": 4,
+            "rules": [
+              "@typescript-eslint/no-unused-vars"
+            ]
+          },
+          {
+            "file": "app/(panel)/promo/[slug]/page.tsx",
+            "errors": 0,
+            "warnings": 1,
+            "rules": [
+              "@typescript-eslint/no-unused-vars"
+            ]
+          },
+          {
+            "file": "components/conversiones/StatsPanel.tsx",
+            "errors": 0,
+            "warnings": 2,
+            "rules": [
+              "react-hooks/exhaustive-deps"
+            ]
+          },
+          {
+            "file": "components/conversiones/TrackingBoard.tsx",
+            "errors": 0,
+            "warnings": 2,
+            "rules": [
+              "react-hooks/exhaustive-deps"
+            ]
+          },
+          {
+            "file": "components/integraciones/IntegracionesMetaCapi.tsx",
+            "errors": 0,
+            "warnings": 6,
+            "rules": [
+              "@typescript-eslint/no-unused-vars",
+              "react-hooks/exhaustive-deps",
+              "@next/next/no-img-element"
+            ]
+          },
+          {
+            "file": "components/notificaciones/NotificationsPageContent.tsx",
+            "errors": 0,
+            "warnings": 1,
+            "rules": [
+              "@next/next/no-img-element"
+            ]
+          },
+          {
+            "file": "lib/conversionsDb.ts",
+            "errors": 0,
+            "warnings": 2,
+            "rules": [
+              "@typescript-eslint/no-unused-vars"
+            ]
+          }
+        ]
+      }
+    ],
+    "sequence": {
+      "passed": 6,
+      "failed": 0
+    },
+    "bootstrapSafety": {
+      "exitCode": 0,
+      "passed": 19,
+      "failed": 0,
+      "skipped": 0
+    },
+    "compatibilityUnits": {
+      "exitCode": 0,
+      "passed": 6,
+      "failed": 0,
+      "skipped": 0
+    }
+  },
+  "build": {
+    "exitCode": 0,
+    "durationMs": 142777,
+    "syntheticEnvironment": true,
+    "rawOutputPersisted": false
+  },
+  "integrity": {
+    "filesChecked": 268,
+    "manifestSha256": "76ad2e803e3c9f94b7e2141b900f08a4ac96883d08c887f7632963325aa1bf22",
+    "hashMismatches": [],
+    "modifiedHistoricalFiles": [
+      "supabase/migrations/20260325201000_add_internal_id_to_conversions.sql",
+      "supabase/migrations/20260427180000_remote_sync_placeholder.sql",
+      "supabase/migrations/20260427190000_remote_sync_placeholder.sql"
+    ],
+    "onlyAuthorizedHistoricalFilesChanged": true,
+    "historicalExceptions": {
+      "20260427180000": {
+        "kind": "exact-statements-recovered",
+        "remoteLedgerMd5": "6bbd4ef6d971e9e2a9d24db227844990"
+      },
+      "20260427190000": {
+        "kind": "authorized-sanitized-scheduler",
+        "remoteLedgerMd5": "34162945f0a3ae6cf9cd926cdf9b588f",
+        "transformation": "URL and Bearer literal replaced by phase0.tracking_retry_url and phase0.tracking_retry_token settings; synthetic only, cron disabled."
+      },
+      "20260325201000": {
+        "kind": "authorized-empty-sequence-correction",
+        "remoteLedgerMd5": "309aa67e73dffb3b91235f037f9a140c",
+        "previousFileSha256": "27e0a385c7790d07449435fb89faa30efa9df0a789ef36803dbaf12971c37f12",
+        "correctedFileSha256": "9a97b61ee91045c20fb62f9daddd1124592ceb8f2bd389b2aebf6e1eef233b9f",
+        "transformation": "Only setval arguments: empty table uses pg_sequence.seqmin with is_called=false; populated table keeps MAX(internal_id), true.",
+        "authorization": "User explicitly authorized this correction and independent before/after equivalence tests."
+      }
+    }
+  },
+  "envHygiene": {
+    "status": "hygiene_resolved_not_confirmed_privileged_leak",
+    "variables": [
+      {
+        "name": "NEXT_PUBLIC_SUPABASE_URL",
+        "classification": "public endpoint URL"
+      },
+      {
+        "name": "NEXT_PUBLIC_SUPABASE_ANON_KEY",
+        "classification": "Supabase legacy public anon JWT"
+      }
+    ],
+    "valuesPersisted": false,
+    "privilegedCredentialDetected": false,
+    "localFilePreservedByteForByte": true,
+    "trackedByGit": false,
+    "ignoredByGit": true,
+    "indexChange": "Only removal of .env from tracking is staged; no commit made",
+    "futureRecommendation": "Migrate legacy anon JWT to sb_publishable_ in a separate authorized change; not implemented",
+    "remoteChanges": 0
+  },
+  "security": {
+    "credentialInspection": "phase0b-credential-inspection.json",
+    "historicalBearerPersisted": false,
+    "privilegedEnvCredentialDetected": false,
+    "personalApplicationRowsCopied": false
+  },
+  "environment": {
+    "supabaseCLI": "2.75.0",
+    "bootstrapImage": "public.ecr.aws/supabase/postgres:17.6.1.075",
+    "scopedTestImage": "public.ecr.aws/supabase/postgres:17.6.1.063",
+    "fullSupabaseServicesStarted": false,
+    "mode": "Approved isolated PostgreSQL-only bootstrap; no full Edge/Auth service parity claim"
+  },
+  "remoteWrites": 0,
+  "deployed": false,
+  "committed": false,
+  "pushed": false,
+  "phase0CImplemented": false,
+  "phase1Implemented": false,
+  "historicalReport": false,
+  "date": "2026-09-17",
+  "phase": "0B",
+  "newHistoricalEdits": 0,
+  "advisors": {
+    "cli": "2.75.0",
+    "discovery": "supabase db --help",
+    "availableCommands": [
+      "diff",
+      "dump",
+      "lint",
+      "pull",
+      "push",
+      "reset",
+      "start"
+    ],
+    "localSecurityAdvisorsAvailable": false,
+    "executed": false,
+    "status": "not_available",
+    "reason": "Installed CLI does not expose db advisors; db lint is a typing check, not a security advisor. No remote advisor substituted and no CLI upgrade performed."
+  },
+  "isolation": {
+    "run": 2,
+    "readOnly": true,
+    "localDocker": true,
+    "soleNetworkInternal": true,
+    "runningJobs": 0,
+    "jobRunHistoryRows": 0,
+    "launch_active_jobs": "off",
+    "enabledJobDefinitions": 14,
+    "observedAt": "2026-09-17T03:14:01.479Z"
+  },
+  "knownPreservedSecurityRisk": "anon/authenticated TRUNCATE grants on four tables bypass RLS; demonstrated only locally with synthetic data and rollback, not corrected",
+  "historicalAttemptsBeforeCompatibility": [
+    {
+      "file": "bootstrap-missing-pixel-dependency-attempt.json",
+      "passed": 54,
+      "failed": 1,
+      "notRun": 213,
+      "failedVersion": "20260330193500",
+      "sqlstate": "42703"
+    },
+    {
+      "file": "bootstrap-missing-geo-dependency-attempt.json",
+      "passed": 100,
+      "failed": 1,
+      "notRun": 167,
+      "failedVersion": "20260424222000",
+      "sqlstate": "42703"
+    },
+    {
+      "file": "bootstrap-obsolete-column-attempt.json",
+      "passed": 108,
+      "failed": 1,
+      "notRun": 159,
+      "failedVersion": "20260426000000",
+      "sqlstate": "42703"
+    }
+  ]
+}

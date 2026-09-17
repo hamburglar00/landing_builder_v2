@@ -1,0 +1,95 @@
+{
+  "scope": "synthetic local dependency schema; production SQL definitions and actual WhatsApp claim/requeue functions",
+  "passed": 22,
+  "failed": 0,
+  "results": [
+    {
+      "name": "phone reservations: 8 concurrent assignments preserve 8 distinct reservations and balance 4/4",
+      "status": "passed"
+    },
+    {
+      "name": "phone warmup: concurrent reads create no additional reservation",
+      "status": "passed"
+    },
+    {
+      "name": "phone confirmation: concurrent extensions preserve one reservation identity",
+      "status": "passed"
+    },
+    {
+      "name": "phone counters: no lost increments in global or scope UPSERT",
+      "status": "passed"
+    },
+    {
+      "name": "Contact simultaneous duplicates: unique contact_event_id",
+      "status": "passed"
+    },
+    {
+      "name": "Contact simultaneous duplicates: unique promo_code",
+      "status": "passed"
+    },
+    {
+      "name": "LEAD inbox simultaneous duplicates: without promo",
+      "status": "passed"
+    },
+    {
+      "name": "LEAD inbox simultaneous duplicates: with promo",
+      "status": "passed"
+    },
+    {
+      "name": "PURCHASE inbox simultaneous duplicates: without promo",
+      "status": "passed"
+    },
+    {
+      "name": "PURCHASE inbox simultaneous duplicates: with promo",
+      "status": "passed"
+    },
+    {
+      "name": "Purchase simultaneous duplicates: strong purchase_transaction_id",
+      "status": "passed"
+    },
+    {
+      "name": "Purchase simultaneous duplicates: strong purchase_coelsa_id",
+      "status": "passed"
+    },
+    {
+      "name": "Purchase claims: overlapping keys in reversed order elect one owner without deadlock",
+      "status": "passed"
+    },
+    {
+      "name": "Purchase retry after failure: concurrent reclaim elects one worker and retains event ID",
+      "status": "passed"
+    },
+    {
+      "name": "Purchase processed: all concurrent replays rejected",
+      "status": "passed"
+    },
+    {
+      "name": "WhatsApp queue actual claimEvent: 8 concurrent API workers elect one",
+      "status": "passed"
+    },
+    {
+      "name": "WhatsApp stale requeue: concurrent sweepers move event once, retry is singly claimed",
+      "status": "passed"
+    },
+    {
+      "name": "WhatsApp max attempts: concurrent sweepers fail instead of requeue",
+      "status": "passed"
+    },
+    {
+      "name": "Tracking queue actual persist: concurrent identical events create one row",
+      "status": "passed"
+    },
+    {
+      "name": "Tracking queue actual claim: concurrent workers return the pending item once",
+      "status": "passed"
+    },
+    {
+      "name": "Tracking retries: backoff excludes future work; due work claimed once",
+      "status": "passed"
+    },
+    {
+      "name": "Tracking delivered: concurrent persistence replays retain sent identity",
+      "status": "passed"
+    }
+  ]
+}

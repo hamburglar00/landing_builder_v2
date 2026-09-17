@@ -1,0 +1,346 @@
+{
+  "phase": "0B",
+  "localOnly": true,
+  "remoteWrites": 0,
+  "legacyCount": 268,
+  "sanitizedException": "20260427190000",
+  "runs": [
+    {
+      "number": 1,
+      "migrations": [
+        {
+          "version": "0001",
+          "file": "0001_base_schema.sql",
+          "sha256": "5e5857e0088d85ab20f4f7abb908046abfc4d56e4a0e4eedc3a2f2731c477b58",
+          "executionOrder": 1,
+          "transaction": true,
+          "status": "passed",
+          "durationMs": 1374.285100000001
+        },
+        {
+          "version": "20260227100000",
+          "file": "20260227100000_landings.sql",
+          "sha256": "96ffba56858883c9ce88091cbe3cd21d0a80474c6088cb5b1bf509be3786fb1c",
+          "executionOrder": 2,
+          "transaction": true,
+          "status": "passed",
+          "durationMs": 1707.6342000000004
+        },
+        {
+          "version": "20260227110000",
+          "file": "20260227110000_storage_landing_images.sql",
+          "sha256": "c48a74d926cf42c13ece6e75c5c4c4e25025e137a9a722e52007e2e20a2f714c",
+          "executionOrder": 3,
+          "transaction": true,
+          "status": "passed",
+          "durationMs": 1429.8061000000016
+        },
+        {
+          "version": "20260227120000",
+          "file": "20260227120000_landings_name_unique_index.sql",
+          "sha256": "da97b0009b97f7fac3dfb0a3debe23c7bf696daa6929123b0ef532e829077d43",
+          "executionOrder": 4,
+          "transaction": true,
+          "status": "passed",
+          "durationMs": 1292.0285999999978
+        },
+        {
+          "version": "20260227130000",
+          "file": "20260227130000_settings.sql",
+          "sha256": "951bfce0f96521b25fd846abd24c34e847a67264bc84548fa3b6456de95e8d09",
+          "executionOrder": 5,
+          "transaction": true,
+          "status": "passed",
+          "durationMs": 1330.5575000000026
+        },
+        {
+          "version": "20260227140000",
+          "file": "20260227140000_gerencias.sql",
+          "sha256": "f0b731547342bb5798470e396d0c9ab28e93a5597a5150ceca038c4ae5b82bef",
+          "executionOrder": 6,
+          "transaction": true,
+          "status": "passed",
+          "durationMs": 1385.1684000000023
+        },
+        {
+          "version": "20260227150000",
+          "file": "20260227150000_landings_pixel_id_gerencias_gerencia_id.sql",
+          "sha256": "8377e0b28a8cf97019a091aa3b32ef24712d504141514d3e1c860b90ccb305f1",
+          "executionOrder": 7,
+          "transaction": true,
+          "status": "passed",
+          "durationMs": 1363.5367999999944
+        },
+        {
+          "version": "20260227184152",
+          "file": "20260227184152_base_schema.sql",
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+          "executionOrder": 8,
+          "transaction": true,
+          "status": "passed",
+          "durationMs": 1343.6181999999972
+        },
+        {
+          "version": "20260228000000",
+          "file": "20260228000000_add_nombre_to_profiles.sql",
+          "sha256": "be68ff6f278a2dec2ea0ba006de52ad86564189c82aa1701e9961e2f07c53052",
+          "executionOrder": 9,
+          "transaction": true,
+          "status": "passed",
+          "durationMs": 1715.1455999999962
+        },
+        {
+          "version": "20260228110000",
+          "file": "20260228110000_require_pixel_id_and_gerencia_id.sql",
+          "sha256": "7b74231aba555a7a64f2859c72b8a4f4766929be98485a8c183efba8ef0a3bcc",
+          "executionOrder": 10,
+          "transaction": true,
+          "status": "passed",
+          "durationMs": 1353.3998999999967
+        },
+        {
+          "version": "20260228120000",
+          "file": "20260228120000_landings_gerencias_weight.sql",
+          "sha256": "e5a13247776ffeb3833e967c1f84307bda618b03b6dbdbe6bf3e470c9669b2af",
+          "executionOrder": 11,
+          "transaction": true,
+          "status": "passed",
+          "durationMs": 1385.9121999999988
+        },
+        {
+          "version": "20260228130000",
+          "file": "20260228130000_landings_tracking_fields.sql",
+          "sha256": "2b4b93dfc22aca2778e7112e6cf77979ea9b3e84c91cc8b45391d98c8365ebfc",
+          "executionOrder": 12,
+          "transaction": true,
+          "status": "passed",
+          "durationMs": 1450.7058999999936
+        },
+        {
+          "version": "20260228131000",
+          "file": "20260228131000_phone_mode_and_gerencia_phones.sql",
+          "sha256": "e80bb3cdc29293620398446ca33d9cd6a7796554093ba589f7dc9ac0ab9f4f1c",
+          "executionOrder": 13,
+          "transaction": true,
+          "status": "passed",
+          "durationMs": 1374.3283999999985
+        },
+        {
+          "version": "20260228132000",
+          "file": "20260228132000_phone_kind_and_phone_type.sql",
+          "sha256": "3944e360bf5633b011296deff8b929eb18af478dee817a2568e46e468c4c4441",
+          "executionOrder": 14,
+          "transaction": true,
+          "status": "passed",
+          "durationMs": 1350.9530999999988
+        },
+        {
+          "version": "20260228133000",
+          "file": "20260228133000_landings_phone_interval.sql",
+          "sha256": "44d401027161ac0c3828aa2bad4c6d37312fb881f38ff38c65259029b8a466fd",
+          "executionOrder": 15,
+          "transaction": true,
+          "status": "passed",
+          "durationMs": 1363.2214000000022
+        },
+        {
+          "version": "20260228134000",
+          "file": "20260228134000_landings_phone_interval_hours.sql",
+          "sha256": "92e409f8fa50cd4aab797420f47f6cbfe06127e84bcf8ec63582a0fc5271dd93",
+          "executionOrder": 16,
+          "transaction": true,
+          "status": "passed",
+          "durationMs": 1499.277599999994
+        },
+        {
+          "version": "20260228135000",
+          "file": "20260228135000_landings_gerencias_phone_config.sql",
+          "sha256": "501eca6acc1fb6258fd493eda71b276367ed6cfa2d3090eec3f0a6183d026b61",
+          "executionOrder": 17,
+          "transaction": true,
+          "status": "passed",
+          "durationMs": 1369.361899999989
+        },
+        {
+          "version": "20260304170000",
+          "file": "20260304170000_gerencias_gerencia_id_unique.sql",
+          "sha256": "9e0f54507b2b3c34df6dd52f33d4f769b098675e8e139a92e540448b3830880e",
+          "executionOrder": 18,
+          "transaction": true,
+          "status": "passed",
+          "durationMs": 1474.9091000000044
+        },
+        {
+          "version": "20260304173000",
+          "file": "20260304173000_gerencia_phones_select_policy.sql",
+          "sha256": "58d42802f70b5ea077fe57ab13512014f8c2659c0de012a9889bbfc23402c981",
+          "executionOrder": 19,
+          "transaction": true,
+          "status": "passed",
+          "durationMs": 1356.157600000006
+        },
+        {
+          "version": "20260304180000",
+          "file": "20260304180000_gerencias_id_equals_gerencia_id.sql",
+          "sha256": "a7c40b9b7e593906c98db3ffa6d75e4dceeac5b225dddd765a0c1ac64666d57e",
+          "executionOrder": 20,
+          "transaction": true,
+          "status": "passed",
+          "durationMs": 1391.8280000000086
+        },
+        {
+          "version": "20260304181500",
+          "file": "20260304181500_clear_gerencias_for_testing.sql",
+          "sha256": "910485e69a9d10d4ebe6fb54df19a8654bb0c63913d54572d7037b4f9ba8b547",
+          "executionOrder": 21,
+          "transaction": true,
+          "status": "passed",
+          "durationMs": 1334.5167999999976
+        },
+        {
+          "version": "20260305120000",
+          "file": "20260305120000_cron_sync_phones.sql",
+          "sha256": "23491d19f2c2557c61a0c8543b02b15f77fdb7b074c76c53795b9d9d5856ce43",
+          "executionOrder": 22,
+          "transaction": true,
+          "status": "passed",
+          "durationMs": 1879.8031000000046
+        },
+        {
+          "version": "20260305130000",
+          "file": "20260305130000_landing_typography_config.sql",
+          "sha256": "e89626d6cfa7b626028d8252a577d44addda7f7855c4266c41c632c863a79db1",
+          "executionOrder": 23,
+          "transaction": true,
+          "status": "passed",
+          "durationMs": 1600.4706000000006
+        },
+        {
+          "version": "20260306120000",
+          "file": "20260306120000_add_landing_config_column.sql",
+          "sha256": "057d40e37d78e7490415722a00e8404d6addcdba8bbf8c5215df72d40cfaa67f",
+          "executionOrder": 24,
+          "transaction": true,
+          "status": "passed",
+          "durationMs": 1320.8162000000011
+        },
+        {
+          "version": "20260306130000",
+          "file": "20260306130000_lock_landing_name.sql",
+          "sha256": "c018b682e143425941dbab0183827b9ca3a8277946da776e1b1a830da93b32d3",
+          "executionOrder": 25,
+          "transaction": true,
+          "status": "passed",
+          "durationMs": 1335.9042000000045
+        },
+        {
+          "version": "20260307100000",
+          "file": "20260307100000_settings_preview_flag.sql",
+          "sha256": "7fd15892b60fdf51e30499c8fa432121f0c86eb99346bc73270327f62613a3e9",
+          "executionOrder": 26,
+          "transaction": true,
+          "status": "passed",
+          "durationMs": 1479.3914000000077
+        },
+        {
+          "version": "20260307110000",
+          "file": "20260307110000_settings_revalidate_secret.sql",
+          "sha256": "4d2fdadd8f035df60af7a267d12cd7fc1f60cbe2c0cabae8120e141f60ed7d0a",
+          "executionOrder": 27,
+          "transaction": true,
+          "status": "passed",
+          "durationMs": 1484.664699999994
+        },
+        {
+          "version": "20260416100000",
+          "file": "20260416100000_conversions_config.sql",
+          "sha256": "ca8c6aabb806a79daf6d4c2d60aad0d4dac960b925f590d4c29059d72a1a3466",
+          "executionOrder": 28,
+          "transaction": true,
+          "status": "passed",
+          "durationMs": 1455.6728999999905
+        },
+        {
+          "version": "20260323183000",
+          "file": "20260323183000_drop_test_event_code_from_conversions_config.sql",
+          "sha256": "eec0e877ccb26164dca0572203a9d79237e29b10f0ac46409c41a77e7bbcdf67",
+          "executionOrder": 29,
+          "transaction": true,
+          "status": "passed",
+          "durationMs": 1465.1065999999992
+        },
+        {
+          "version": "20260416100001",
+          "file": "20260416100001_conversions.sql",
+          "sha256": "ab65ca6ea99a44317a6ae262b78e22380c233d306552caa5bde8439aeb575580",
+          "executionOrder": 30,
+          "transaction": true,
+          "status": "passed",
+          "durationMs": 1473.0060999999987
+        },
+        {
+          "version": "20260323201000",
+          "file": "20260323201000_conversions_add_test_event_code.sql",
+          "sha256": "2ad9e6a7f99062907b94b75c8866057393cd72930bf4c2914a9ef78e26ce7bbf",
+          "executionOrder": 31,
+          "transaction": true,
+          "status": "passed",
+          "durationMs": 1279.876700000008
+        },
+        {
+          "version": "20260416200000",
+          "file": "20260416200000_conversion_logs.sql",
+          "sha256": "d62c5506be7b07dcb303d93ed1bcf5a2a99c347e727d7a09a6884b63961025c0",
+          "executionOrder": 32,
+          "transaction": true,
+          "status": "passed",
+          "durationMs": 1353.9321999999956
+        },
+        {
+          "version": "20260325190000",
+          "file": "20260325190000_add_meta_payload_response_to_conversion_logs.sql",
+          "sha256": "c4990df3d2cbc6c8f81ff35020716721d0a06321703d5f44a50be2f093e83330",
+          "executionOrder": 33,
+          "transaction": true,
+          "status": "passed",
+          "durationMs": 1360.3222000000096
+        },
+        {
+          "version": "20260325193000",
+          "file": "20260325193000_add_show_logs_to_conversions_config.sql",
+          "sha256": "e91619ddc21193b08e479ea30ae3e80b6c797d361e1aead6640175510269c9ec",
+          "executionOrder": 34,
+          "transaction": true,
+          "status": "passed",
+          "durationMs": 1709.5898000000016
+        },
+        {
+          "version": "20260325193500",
+          "file": "20260325193500_backfill_conversions_config_show_logs.sql",
+          "sha256": "de7fb842460fc203e627b951a97ba3bcc03c342b6f674d502358c4823acec3bd",
+          "executionOrder": 35,
+          "transaction": true,
+          "status": "passed",
+          "durationMs": 1692.0752999999968
+        },
+        {
+          "version": "20260325201000",
+          "file": "20260325201000_add_internal_id_to_conversions.sql",
+          "sha256": "27e0a385c7790d07449435fb89faa30efa9df0a789ef36803dbaf12971c37f12",
+          "executionOrder": 36,
+          "transaction": true,
+          "status": "failed",
+          "error": "Local command failed SQLSTATE 22003",
+          "sqlstate": "22003",
+          "durationMs": 1381.458500000008
+        }
+      ],
+      "complete": false,
+      "bootstrapMs": 41605,
+      "target": "runner-created Supabase PostgreSQL / unix socket / isolated network / cron.launch_active_jobs=off",
+      "cleanup": "only runner-owned resources removed"
+    }
+  ],
+  "passed": false,
+  "error": "Local command failed SQLSTATE 22003"
+}

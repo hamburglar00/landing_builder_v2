@@ -1,0 +1,9 @@
+{
+  "readOnly": true,
+  "statementTimeoutSeconds": 8,
+  "lockTimeoutSeconds": 1,
+  "savedCatalogMatchesFreshQuery": true,
+  "applicationRowsReturned": 0,
+  "remoteWrites": 0,
+  "checkedAt": "2026-09-17T03:05:27.529Z"
+}

@@ -1,0 +1,10 @@
+{
+  "success": false,
+  "exitCode": null,
+  "attempted": 0,
+  "lastMigration": null,
+  "sqlState": null,
+  "reason": null,
+  "bootstrapTimedOut": true,
+  "bootstrapStages": []
+}

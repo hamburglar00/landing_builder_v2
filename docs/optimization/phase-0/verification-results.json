@@ -1,0 +1,152 @@
+{
+  "completed": true,
+  "suites": [
+    {
+      "name": "collector",
+      "exitCode": 0,
+      "durationMs": 1962.4300000000003,
+      "passed": 5,
+      "failed": 0,
+      "skipped": 0
+    },
+    {
+      "name": "deno",
+      "exitCode": 0,
+      "durationMs": 5433.3349,
+      "passed": 41,
+      "failed": 0,
+      "skipped": 0
+    },
+    {
+      "name": "frontend",
+      "exitCode": 0,
+      "durationMs": 10375.072699999999,
+      "passed": 99,
+      "failed": 0,
+      "skipped": 1
+    },
+    {
+      "name": "typescript",
+      "exitCode": 0,
+      "durationMs": 67447.17289999999
+    },
+    {
+      "name": "sql-and-integration",
+      "exitCode": 0,
+      "durationMs": 80337.0283,
+      "sql": [
+        {
+          "file": "meta_audience_buyers.test.sql",
+          "passed": 18,
+          "planned": 18
+        },
+        {
+          "file": "meta_audience_buyers_v2.test.sql",
+          "passed": 34,
+          "planned": 34
+        },
+        {
+          "file": "meta_audience_configs.test.sql",
+          "passed": 35,
+          "planned": 35
+        },
+        {
+          "file": "phase0_audience_boundaries.test.sql",
+          "passed": 12,
+          "planned": 12
+        },
+        {
+          "file": "phase0_purchase_claims.test.sql",
+          "passed": 12,
+          "planned": 12
+        }
+      ],
+      "passed": 112,
+      "failed": 0,
+      "skipped": 0
+    },
+    {
+      "name": "eslint",
+      "exitCode": 0,
+      "durationMs": 81407.55410000001,
+      "errors": 0,
+      "warnings": 18,
+      "findings": [
+        {
+          "file": "app/(panel)/dashboard/layout.tsx",
+          "errors": 0,
+          "warnings": 4,
+          "rules": [
+            "@typescript-eslint/no-unused-vars"
+          ]
+        },
+        {
+          "file": "app/(panel)/promo/[slug]/page.tsx",
+          "errors": 0,
+          "warnings": 1,
+          "rules": [
+            "@typescript-eslint/no-unused-vars"
+          ]
+        },
+        {
+          "file": "components/conversiones/StatsPanel.tsx",
+          "errors": 0,
+          "warnings": 2,
+          "rules": [
+            "react-hooks/exhaustive-deps"
+          ]
+        },
+        {
+          "file": "components/conversiones/TrackingBoard.tsx",
+          "errors": 0,
+          "warnings": 2,
+          "rules": [
+            "react-hooks/exhaustive-deps"
+          ]
+        },
+        {
+          "file": "components/integraciones/IntegracionesMetaCapi.tsx",
+          "errors": 0,
+          "warnings": 6,
+          "rules": [
+            "@typescript-eslint/no-unused-vars",
+            "react-hooks/exhaustive-deps",
+            "@next/next/no-img-element"
+          ]
+        },
+        {
+          "file": "components/notificaciones/NotificationsPageContent.tsx",
+          "errors": 0,
+          "warnings": 1,
+          "rules": [
+            "@next/next/no-img-element"
+          ]
+        },
+        {
+          "file": "lib/conversionsDb.ts",
+          "errors": 0,
+          "warnings": 2,
+          "rules": [
+            "@typescript-eslint/no-unused-vars"
+          ]
+        }
+      ]
+    },
+    {
+      "name": "concurrency",
+      "exitCode": 0,
+      "durationMs": 123013.8524,
+      "passed": 22,
+      "failed": 0,
+      "skipped": 0
+    },
+    {
+      "name": "handler-concurrency",
+      "exitCode": 0,
+      "durationMs": 156983.32770000002,
+      "passed": 20,
+      "failed": 0,
+      "skipped": 0
+    }
+  ]
+}

@@ -1,0 +1,5 @@
+{
+  "legacyCutoff": "20260915190657",
+  "policy": "Only explicitly registered later migrations, in chronological order. No legacy exception edits.",
+  "entries": []
+}

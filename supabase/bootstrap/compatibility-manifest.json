@@ -1,0 +1,11 @@
+{
+  "version": 1,
+  "localOnly": true,
+  "afterHistoricalCount": 268,
+  "beforeIncremental": true,
+  "file": "supabase/bootstrap/local-security-compatibility.sql",
+  "sha256": "1ff365d11204bd8a20668b1d821df138a9310f05d94ed1b53c398f6762bb6f5c",
+  "reference": "supabase/bootstrap/security-reference.json",
+  "referenceSha256": "f433a7d979277f62f2373f990f26a29b9e474df6e248e5f9d11260a316f2d7e8",
+  "authorization": "Explicit user authorization for post-historical local security compatibility; no remote migration"
+}

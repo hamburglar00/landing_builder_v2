@@ -1,0 +1,21 @@
+// Read-only observation of the currently running disposable bootstrap, never a target for writes.
+import {readFileSync,writeFileSync} from 'node:fs';
+import {join} from 'node:path';
+import {command,root} from './local-runtime.mjs';
+import {assertSafeEnvironment} from './bootstrap-manifest.mjs';
+assertSafeEnvironment();
+const docker=args=>command('docker',args);
+const endpoint=docker(['context','inspect','--format','{{.Endpoints.docker.Host}}']).trim();
+if(!/^(npipe:\/\/\/\/\.\/pipe\/|unix:\/\/\/)/.test(endpoint))throw Error('Docker must be local');
+const ids=docker(['ps','-q','--filter','name=supabase_db_phase0b-']).trim().split(/\r?\n/).filter(Boolean);
+if(ids.length!==1)throw Error('Observation requires exactly one local bootstrap container');
+const c=JSON.parse(docker(['inspect',ids[0]]))[0],names=Object.keys(c.NetworkSettings.Networks),project=c.Name.replace('/supabase_db_','');
+if(!/^phase0b-[a-f0-9]{8}$/.test(project)||!Object.values(c.Config.Labels??{}).includes(project)||names.length!==1||names[0]!==project+'-isolated')throw Error('Unexpected bootstrap identity or network');
+const n=JSON.parse(docker(['network','inspect',names[0]]))[0];
+if(!n.Internal||!n.Labels?.['phase0b.owner'])throw Error('Network not isolated');
+const query="BEGIN READ ONLY; SET LOCAL statement_timeout='5s'; SELECT jsonb_build_object('launch_active_jobs',current_setting('cron.launch_active_jobs'),'jobRunHistoryRows',(select count(*) from cron.job_run_details),'runningJobs',(select count(*) from cron.job_run_details where status='running'),'enabledJobDefinitions',(select count(*) from cron.job where active)); ROLLBACK;";
+const state=JSON.parse(command('docker',['exec','-i',ids[0],'psql','-X','-U','postgres','-d','postgres','-Atq','-v','ON_ERROR_STOP=1'],{input:query}));
+if(state.launch_active_jobs!=='off'||state.jobRunHistoryRows!==0||state.runningJobs!==0)throw Error('Cron execution gate failed');
+const run=JSON.parse(readFileSync(join(root,'docs/optimization/phase-0/bootstrap-validation.json'))).runs.at(-1).number;
+const report={run,readOnly:true,localDocker:true,soleNetworkInternal:true,...state,observedAt:new Date().toISOString()};
+writeFileSync(join(root,`docs/optimization/phase-0/bootstrap-isolation-${run}.json`),JSON.stringify(report,null,2)+'\n');console.log(JSON.stringify(report));

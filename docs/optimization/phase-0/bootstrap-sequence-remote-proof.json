@@ -1,0 +1,10 @@
+{
+  "start": "1",
+  "minimum": "1",
+  "sequence": "public.conversions_internal_id_seq",
+  "increment": "1",
+  "remote_name": "add_internal_id_to_conversions",
+  "remote_version": "20260325201000",
+  "remote_text_md5": "309aa67e73dffb3b91235f037f9a140c",
+  "remote_statement_count": 6
+}

@@ -1,0 +1,423 @@
+{
+  "verdict": "Fase 0B bloqueada",
+  "reason": "Two complete identical local reconstructions achieved; security parity remains blocked by remote-only ensure_rls/rls_auto_enable, five function grants and four RLS flags. No authorization to change security.",
+  "branch": "main",
+  "head": "a4e752cf58f628813d3979d598b60d480caaac8d",
+  "manifestSha256": "76ad2e803e3c9f94b7e2141b900f08a4ac96883d08c887f7632963325aa1bf22",
+  "completedReconstructions": 2,
+  "equalFinalFingerprints": true,
+  "runs": [
+    {
+      "number": 1,
+      "passed": 268,
+      "failed": 0,
+      "notRun": 0,
+      "bootstrapMs": 36251,
+      "migrationMs": 368675,
+      "fingerprint": "86e5478df3f80b264413572e4ad8f5f704e0e248762066e2f6e559f64390aa5f",
+      "cronExecutionDisabled": true,
+      "emptyTableGates": [
+        {
+          "version": "20260426000000",
+          "gates": [
+            {
+              "relation": "public.profiles",
+              "empty": true
+            },
+            {
+              "relation": "public.conversions_config",
+              "empty": true
+            }
+          ]
+        },
+        {
+          "version": "20260426007000",
+          "gates": [
+            {
+              "relation": "public.conversions",
+              "empty": true
+            },
+            {
+              "relation": "public.conversions_config",
+              "empty": true
+            }
+          ]
+        },
+        {
+          "version": "20260426140000",
+          "gates": [
+            {
+              "relation": "public.conversions",
+              "empty": true
+            },
+            {
+              "relation": "public.conversions_config",
+              "empty": true
+            }
+          ]
+        },
+        {
+          "version": "20260426004000",
+          "gates": [
+            {
+              "relation": "public.conversions",
+              "empty": true
+            },
+            {
+              "relation": "public.conversions_config",
+              "empty": true
+            }
+          ]
+        }
+      ],
+      "cleanup": "only runner-owned resources removed"
+    },
+    {
+      "number": 2,
+      "passed": 268,
+      "failed": 0,
+      "notRun": 0,
+      "bootstrapMs": 35538,
+      "migrationMs": 392074,
+      "fingerprint": "86e5478df3f80b264413572e4ad8f5f704e0e248762066e2f6e559f64390aa5f",
+      "cronExecutionDisabled": true,
+      "emptyTableGates": [
+        {
+          "version": "20260426000000",
+          "gates": [
+            {
+              "relation": "public.profiles",
+              "empty": true
+            },
+            {
+              "relation": "public.conversions_config",
+              "empty": true
+            }
+          ]
+        },
+        {
+          "version": "20260426007000",
+          "gates": [
+            {
+              "relation": "public.conversions",
+              "empty": true
+            },
+            {
+              "relation": "public.conversions_config",
+              "empty": true
+            }
+          ]
+        },
+        {
+          "version": "20260426140000",
+          "gates": [
+            {
+              "relation": "public.conversions",
+              "empty": true
+            },
+            {
+              "relation": "public.conversions_config",
+              "empty": true
+            }
+          ]
+        },
+        {
+          "version": "20260426004000",
+          "gates": [
+            {
+              "relation": "public.conversions",
+              "empty": true
+            },
+            {
+              "relation": "public.conversions_config",
+              "empty": true
+            }
+          ]
+        }
+      ],
+      "cleanup": "only runner-owned resources removed"
+    }
+  ],
+  "unsuccessfulDependencyAttemptsThisContinuation": [
+    {
+      "file": "bootstrap-missing-pixel-dependency-attempt.json",
+      "passed": 54,
+      "failed": 1,
+      "notRun": 213,
+      "failedVersion": "20260330193500",
+      "sqlstate": "42703"
+    },
+    {
+      "file": "bootstrap-missing-geo-dependency-attempt.json",
+      "passed": 100,
+      "failed": 1,
+      "notRun": 167,
+      "failedVersion": "20260424222000",
+      "sqlstate": "42703"
+    },
+    {
+      "file": "bootstrap-obsolete-column-attempt.json",
+      "passed": 108,
+      "failed": 1,
+      "notRun": 159,
+      "failedVersion": "20260426000000",
+      "sqlstate": "42703"
+    }
+  ],
+  "previousSequenceFailures": "Historical, superseded; bootstrap-before-sequence-fix.json",
+  "structuralComparison": {
+    "fullComparisonPerformed": true,
+    "diffEntries": 20,
+    "blocked_requires_authorization": 11,
+    "explained_platform_difference_not_accepted": 5,
+    "explained_not_normalized": 4,
+    "review": "bootstrap-schema-review.json",
+    "remoteReadRevalidated": true,
+    "securityObjectsOriginUnproven": true
+  },
+  "tests": {
+    "suites": [
+      {
+        "name": "collector",
+        "exitCode": 0,
+        "durationMs": 2256.7714000000005,
+        "passed": 5,
+        "failed": 0,
+        "skipped": 0
+      },
+      {
+        "name": "deno",
+        "exitCode": 0,
+        "durationMs": 17053.1113,
+        "passed": 41,
+        "failed": 0,
+        "skipped": 0
+      },
+      {
+        "name": "frontend",
+        "exitCode": 0,
+        "durationMs": 63121.3469,
+        "passed": 99,
+        "failed": 0,
+        "skipped": 1
+      },
+      {
+        "name": "sql-and-integration",
+        "exitCode": 0,
+        "durationMs": 95813.4978,
+        "sql": [
+          {
+            "file": "meta_audience_buyers.test.sql",
+            "passed": 18,
+            "planned": 18
+          },
+          {
+            "file": "meta_audience_buyers_v2.test.sql",
+            "passed": 34,
+            "planned": 34
+          },
+          {
+            "file": "meta_audience_configs.test.sql",
+            "passed": 35,
+            "planned": 35
+          },
+          {
+            "file": "phase0_audience_boundaries.test.sql",
+            "passed": 12,
+            "planned": 12
+          },
+          {
+            "file": "phase0_purchase_claims.test.sql",
+            "passed": 12,
+            "planned": 12
+          }
+        ],
+        "passed": 112,
+        "failed": 0,
+        "skipped": 0
+      },
+      {
+        "name": "typescript",
+        "exitCode": 0,
+        "durationMs": 101545.7044
+      },
+      {
+        "name": "concurrency",
+        "exitCode": 0,
+        "durationMs": 190156.5629,
+        "passed": 22,
+        "failed": 0,
+        "skipped": 0
+      },
+      {
+        "name": "handler-concurrency",
+        "exitCode": 0,
+        "durationMs": 222727.5177,
+        "passed": 20,
+        "failed": 0,
+        "skipped": 0
+      },
+      {
+        "name": "eslint",
+        "exitCode": 0,
+        "durationMs": 226678.96329999997,
+        "errors": 0,
+        "warnings": 18,
+        "findings": [
+          {
+            "file": "app/(panel)/dashboard/layout.tsx",
+            "errors": 0,
+            "warnings": 4,
+            "rules": [
+              "@typescript-eslint/no-unused-vars"
+            ]
+          },
+          {
+            "file": "app/(panel)/promo/[slug]/page.tsx",
+            "errors": 0,
+            "warnings": 1,
+            "rules": [
+              "@typescript-eslint/no-unused-vars"
+            ]
+          },
+          {
+            "file": "components/conversiones/StatsPanel.tsx",
+            "errors": 0,
+            "warnings": 2,
+            "rules": [
+              "react-hooks/exhaustive-deps"
+            ]
+          },
+          {
+            "file": "components/conversiones/TrackingBoard.tsx",
+            "errors": 0,
+            "warnings": 2,
+            "rules": [
+              "react-hooks/exhaustive-deps"
+            ]
+          },
+          {
+            "file": "components/integraciones/IntegracionesMetaCapi.tsx",
+            "errors": 0,
+            "warnings": 6,
+            "rules": [
+              "@typescript-eslint/no-unused-vars",
+              "react-hooks/exhaustive-deps",
+              "@next/next/no-img-element"
+            ]
+          },
+          {
+            "file": "components/notificaciones/NotificationsPageContent.tsx",
+            "errors": 0,
+            "warnings": 1,
+            "rules": [
+              "@next/next/no-img-element"
+            ]
+          },
+          {
+            "file": "lib/conversionsDb.ts",
+            "errors": 0,
+            "warnings": 2,
+            "rules": [
+              "@typescript-eslint/no-unused-vars"
+            ]
+          }
+        ]
+      }
+    ],
+    "bootstrapSafety": {
+      "exitCode": 0,
+      "passed": 19,
+      "failed": 0,
+      "skipped": 0
+    },
+    "sequence": {
+      "passed": 6,
+      "failed": 0,
+      "skipped": 0
+    },
+    "totalPassed": 324,
+    "totalFailed": 0,
+    "skippedInFrontendInvocation": 1,
+    "uniqueTestsLeftOmitted": 0,
+    "skipExplanation": "The one frontend integration skipped in the generic command passed separately against local PostgREST; counted once."
+  },
+  "build": {
+    "exitCode": 0,
+    "durationMs": 164674,
+    "syntheticEnvironment": true,
+    "rawOutputPersisted": false
+  },
+  "integrity": {
+    "filesChecked": 268,
+    "manifestSha256": "76ad2e803e3c9f94b7e2141b900f08a4ac96883d08c887f7632963325aa1bf22",
+    "hashMismatches": [],
+    "modifiedHistoricalFiles": [
+      "supabase/migrations/20260325201000_add_internal_id_to_conversions.sql",
+      "supabase/migrations/20260427180000_remote_sync_placeholder.sql",
+      "supabase/migrations/20260427190000_remote_sync_placeholder.sql"
+    ],
+    "onlyAuthorizedHistoricalFilesChanged": true,
+    "historicalExceptions": {
+      "20260427180000": {
+        "kind": "exact-statements-recovered",
+        "remoteLedgerMd5": "6bbd4ef6d971e9e2a9d24db227844990"
+      },
+      "20260427190000": {
+        "kind": "authorized-sanitized-scheduler",
+        "remoteLedgerMd5": "34162945f0a3ae6cf9cd926cdf9b588f",
+        "transformation": "URL and Bearer literal replaced by phase0.tracking_retry_url and phase0.tracking_retry_token settings; synthetic only, cron disabled."
+      },
+      "20260325201000": {
+        "kind": "authorized-empty-sequence-correction",
+        "remoteLedgerMd5": "309aa67e73dffb3b91235f037f9a140c",
+        "previousFileSha256": "27e0a385c7790d07449435fb89faa30efa9df0a789ef36803dbaf12971c37f12",
+        "correctedFileSha256": "9a97b61ee91045c20fb62f9daddd1124592ceb8f2bd389b2aebf6e1eef233b9f",
+        "transformation": "Only setval arguments: empty table uses pg_sequence.seqmin with is_called=false; populated table keeps MAX(internal_id), true.",
+        "authorization": "User explicitly authorized this correction and independent before/after equivalence tests."
+      }
+    }
+  },
+  "envHygiene": {
+    "status": "hygiene_resolved_not_confirmed_privileged_leak",
+    "variables": [
+      {
+        "name": "NEXT_PUBLIC_SUPABASE_URL",
+        "classification": "public endpoint URL"
+      },
+      {
+        "name": "NEXT_PUBLIC_SUPABASE_ANON_KEY",
+        "classification": "Supabase legacy public anon JWT"
+      }
+    ],
+    "valuesPersisted": false,
+    "privilegedCredentialDetected": false,
+    "localFilePreservedByteForByte": true,
+    "trackedByGit": false,
+    "ignoredByGit": true,
+    "indexChange": "Only removal of .env from tracking is staged; no commit made",
+    "futureRecommendation": "Migrate legacy anon JWT to sb_publishable_ in a separate authorized change; not implemented",
+    "remoteChanges": 0
+  },
+  "security": {
+    "credentialInspection": "phase0b-credential-inspection.json",
+    "historicalBearerPersisted": false,
+    "privilegedEnvCredentialDetected": false,
+    "personalApplicationRowsCopied": false
+  },
+  "environment": {
+    "supabaseCLI": "2.75.0",
+    "bootstrapImage": "public.ecr.aws/supabase/postgres:17.6.1.075",
+    "scopedTestImage": "public.ecr.aws/supabase/postgres:17.6.1.063",
+    "fullSupabaseServicesStarted": false,
+    "mode": "Approved isolated PostgreSQL-only bootstrap; no full Edge/Auth service parity claim"
+  },
+  "remoteWrites": 0,
+  "deployed": false,
+  "committed": false,
+  "pushed": false,
+  "phase0CImplemented": false,
+  "phase1Implemented": false,
+  "historicalReport": true,
+  "supersededBy": "bootstrap-final-summary.json"
+}

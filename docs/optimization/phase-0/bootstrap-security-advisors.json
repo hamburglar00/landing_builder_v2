@@ -1,0 +1,17 @@
+{
+  "cli": "2.75.0",
+  "discovery": "supabase db --help",
+  "availableCommands": [
+    "diff",
+    "dump",
+    "lint",
+    "pull",
+    "push",
+    "reset",
+    "start"
+  ],
+  "localSecurityAdvisorsAvailable": false,
+  "executed": false,
+  "status": "not_available",
+  "reason": "Installed CLI does not expose db advisors; db lint is a typing check, not a security advisor. No remote advisor substituted and no CLI upgrade performed."
+}

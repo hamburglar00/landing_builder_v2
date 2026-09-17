@@ -1,0 +1,149 @@
+{
+  "localOnly": true,
+  "fixturesIndependentOfBootstrap": true,
+  "originalSource": "git HEAD migration before authorized correction",
+  "originalFileSha256": "27e0a385c7790d07449435fb89faa30efa9df0a789ef36803dbaf12971c37f12",
+  "correctedFileSha256": "9a97b61ee91045c20fb62f9daddd1124592ceb8f2bd389b2aebf6e1eef233b9f",
+  "cases": [
+    {
+      "name": "empty table",
+      "status": "passed",
+      "rowCount": 0,
+      "populatedEquivalence": null,
+      "outcomes": [
+        {
+          "variant": "historical",
+          "expectedFailure": "setval(0) outside sequence range",
+          "rowsUnchanged": true
+        },
+        {
+          "variant": "corrected",
+          "minimum": 1,
+          "rowsUnchanged": true,
+          "isCalledBeforeNextval": false,
+          "nextval": 1,
+          "expected": 1
+        }
+      ]
+    },
+    {
+      "name": "one row",
+      "status": "passed",
+      "rowCount": 1,
+      "populatedEquivalence": true,
+      "outcomes": [
+        {
+          "variant": "historical",
+          "minimum": 1,
+          "rowsUnchanged": true,
+          "isCalledBeforeNextval": true,
+          "nextval": 8,
+          "expected": 8
+        },
+        {
+          "variant": "corrected",
+          "minimum": 1,
+          "rowsUnchanged": true,
+          "isCalledBeforeNextval": true,
+          "nextval": 8,
+          "expected": 8
+        }
+      ]
+    },
+    {
+      "name": "non-consecutive IDs",
+      "status": "passed",
+      "rowCount": 3,
+      "populatedEquivalence": true,
+      "outcomes": [
+        {
+          "variant": "historical",
+          "minimum": 1,
+          "rowsUnchanged": true,
+          "isCalledBeforeNextval": true,
+          "nextval": 32,
+          "expected": 32
+        },
+        {
+          "variant": "corrected",
+          "minimum": 1,
+          "rowsUnchanged": true,
+          "isCalledBeforeNextval": true,
+          "nextval": 32,
+          "expected": 32
+        }
+      ]
+    },
+    {
+      "name": "sequence behind MAX",
+      "status": "passed",
+      "rowCount": 2,
+      "populatedEquivalence": true,
+      "outcomes": [
+        {
+          "variant": "historical",
+          "minimum": 1,
+          "rowsUnchanged": true,
+          "isCalledBeforeNextval": true,
+          "nextval": 20,
+          "expected": 20
+        },
+        {
+          "variant": "corrected",
+          "minimum": 1,
+          "rowsUnchanged": true,
+          "isCalledBeforeNextval": true,
+          "nextval": 20,
+          "expected": 20
+        }
+      ]
+    },
+    {
+      "name": "sequence ahead of MAX retains historical max synchronization",
+      "status": "passed",
+      "rowCount": 2,
+      "populatedEquivalence": true,
+      "outcomes": [
+        {
+          "variant": "historical",
+          "minimum": 1,
+          "rowsUnchanged": true,
+          "isCalledBeforeNextval": true,
+          "nextval": 20,
+          "expected": 20
+        },
+        {
+          "variant": "corrected",
+          "minimum": 1,
+          "rowsUnchanged": true,
+          "isCalledBeforeNextval": true,
+          "nextval": 20,
+          "expected": 20
+        }
+      ]
+    },
+    {
+      "name": "empty sequence with non-default minimum",
+      "status": "passed",
+      "rowCount": 0,
+      "populatedEquivalence": null,
+      "outcomes": [
+        {
+          "variant": "historical",
+          "expectedFailure": "setval(0) outside sequence range",
+          "rowsUnchanged": true
+        },
+        {
+          "variant": "corrected",
+          "minimum": 37,
+          "rowsUnchanged": true,
+          "isCalledBeforeNextval": false,
+          "nextval": 37,
+          "expected": 37
+        }
+      ]
+    }
+  ],
+  "passed": 6,
+  "failed": 0
+}

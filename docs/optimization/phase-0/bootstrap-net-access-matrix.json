@@ -1,0 +1,91 @@
+{
+  "roles": [
+    {
+      "role": "anon",
+      "executeGet": true,
+      "executePost": true,
+      "queueAndSequenceAccess": true,
+      "actualGet": "passed with caller identity",
+      "actualPost": "passed with caller identity",
+      "queueRevoked": "42501 for GET and POST",
+      "sequenceRevoked": "42501 for GET and POST",
+      "executeRevoked": "42501 for GET and POST",
+      "checksPerReconstruction": 9
+    },
+    {
+      "role": "authenticated",
+      "executeGet": true,
+      "executePost": true,
+      "queueAndSequenceAccess": true,
+      "actualGet": "passed with caller identity",
+      "actualPost": "passed with caller identity",
+      "queueRevoked": "42501 for GET and POST",
+      "sequenceRevoked": "42501 for GET and POST",
+      "executeRevoked": "42501 for GET and POST",
+      "checksPerReconstruction": 9
+    },
+    {
+      "role": "authenticator",
+      "executeGet": true,
+      "executePost": true,
+      "queueAndSequenceAccess": true,
+      "actualGet": "passed with caller identity",
+      "actualPost": "passed with caller identity",
+      "queueRevoked": "42501 for GET and POST",
+      "sequenceRevoked": "42501 for GET and POST",
+      "executeRevoked": "42501 for GET and POST",
+      "checksPerReconstruction": 9
+    },
+    {
+      "role": "service_role",
+      "executeGet": true,
+      "executePost": true,
+      "queueAndSequenceAccess": true,
+      "actualGet": "passed with caller identity",
+      "actualPost": "passed with caller identity",
+      "queueRevoked": "42501 for GET and POST",
+      "sequenceRevoked": "42501 for GET and POST",
+      "executeRevoked": "42501 for GET and POST",
+      "checksPerReconstruction": 9
+    },
+    {
+      "role": "postgres",
+      "executeGet": true,
+      "executePost": true,
+      "queueAndSequenceAccess": true,
+      "actualGet": "passed with caller identity",
+      "actualPost": "passed with caller identity",
+      "queueRevoked": "42501 for GET and POST",
+      "sequenceRevoked": "42501 for GET and POST",
+      "executeRevoked": "42501 for GET and POST",
+      "checksPerReconstruction": 9
+    }
+  ],
+  "cleanupChecksPerReconstruction": 1,
+  "totalUnique": 46,
+  "totalExecutions": 92,
+  "transactionsRolledBack": true,
+  "remoteInvocations": 0,
+  "runs": [
+    {
+      "number": 1,
+      "residue": {
+        "cron": "off",
+        "queue": 0,
+        "responses": 0,
+        "probeColumn": false,
+        "eventTriggers": "on"
+      }
+    },
+    {
+      "number": 2,
+      "residue": {
+        "cron": "off",
+        "queue": 0,
+        "responses": 0,
+        "probeColumn": false,
+        "eventTriggers": "on"
+      }
+    }
+  ]
+}

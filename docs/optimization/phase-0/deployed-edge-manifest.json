@@ -1,0 +1,44 @@
+[
+  {
+    "slug": "builder-config",
+    "version": 25,
+    "status": "ACTIVE",
+    "verify_jwt": false,
+    "ezbr_sha256": "64692d35ca6ad11a915c4ee53bcd0420cfc8cee9144cd98c3f42b6424b1929e1"
+  },
+  {
+    "slug": "landing-phone",
+    "version": 21,
+    "status": "ACTIVE",
+    "verify_jwt": false,
+    "ezbr_sha256": "91989231e45c7cd72f02560d0182d1616ff226e4dea56f3238d507158b42517d"
+  },
+  {
+    "slug": "phone-click",
+    "version": 11,
+    "status": "ACTIVE",
+    "verify_jwt": false,
+    "ezbr_sha256": "6fdf240da779a9bd53ae1901816b6ef057eb3b0ad897c191015796439efec4ac"
+  },
+  {
+    "slug": "conversions",
+    "version": 158,
+    "status": "ACTIVE",
+    "verify_jwt": false,
+    "ezbr_sha256": "388bae74bcad8987e6b059bbcd919626a3f2b86136a8fcefaafd3703bf2f61fd"
+  },
+  {
+    "slug": "retry-failed-conversions",
+    "version": 44,
+    "status": "ACTIVE",
+    "verify_jwt": false,
+    "ezbr_sha256": "bb3dd97624f873543773a656686dc77419db5bd553f8da0707811a4bf538607b"
+  },
+  {
+    "slug": "whatsapp-cloud-worker",
+    "version": 12,
+    "status": "ACTIVE",
+    "verify_jwt": false,
+    "ezbr_sha256": "4a697ad168614bb931edcd52e53c4cb53e32713c89a47f6f43bb9b24c6918e9d"
+  }
+]

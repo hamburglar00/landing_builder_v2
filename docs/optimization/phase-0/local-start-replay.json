@@ -1,0 +1,233 @@
+{
+  "mode": "migration-replay-database-only",
+  "cli": "2.75.0",
+  "docker": {
+    "cpus": 8,
+    "memoryBytes": 7205425152,
+    "version": "29.7.2"
+  },
+  "localOnly": true,
+  "linked": false,
+  "seedEnabled": false,
+  "migrationCount": 268,
+  "stages": [
+    {
+      "kind": "database-start",
+      "atMs": 3773
+    },
+    {
+      "kind": "schema-bootstrap",
+      "atMs": 27733
+    },
+    {
+      "kind": "services-start",
+      "atMs": 63444
+    },
+    {
+      "kind": "healthy",
+      "atMs": 63447
+    }
+  ],
+  "snapshots": [
+    {
+      "atMs": 10249,
+      "containers": [
+        "supabase_db_[test-project]|Up 4 seconds (health: starting)"
+      ]
+    },
+    {
+      "atMs": 20262,
+      "containers": [
+        "supabase_db_[test-project]|Up 14 seconds (health: starting)"
+      ]
+    },
+    {
+      "atMs": 30276,
+      "containers": [
+        "supabase_db_[test-project]|Up 24 seconds (healthy)"
+      ]
+    },
+    {
+      "atMs": 40288,
+      "containers": [
+        "supabase_db_[test-project]|Up 34 seconds (healthy)"
+      ]
+    },
+    {
+      "atMs": 50303,
+      "containers": [
+        "supabase_db_[test-project]|Up 44 seconds (healthy)"
+      ]
+    },
+    {
+      "atMs": 60312,
+      "containers": [
+        "supabase_db_[test-project]|Up 55 seconds (healthy)"
+      ]
+    }
+  ],
+  "migrations": [
+    {
+      "file": "0001_base_schema.sql",
+      "sha256": "5e5857e0088d85ab20f4f7abb908046abfc4d56e4a0e4eedc3a2f2731c477b58",
+      "status": "passed"
+    },
+    {
+      "file": "20260227100000_landings.sql",
+      "sha256": "96ffba56858883c9ce88091cbe3cd21d0a80474c6088cb5b1bf509be3786fb1c",
+      "status": "passed"
+    },
+    {
+      "file": "20260227110000_storage_landing_images.sql",
+      "sha256": "c48a74d926cf42c13ece6e75c5c4c4e25025e137a9a722e52007e2e20a2f714c",
+      "status": "passed"
+    },
+    {
+      "file": "20260227120000_landings_name_unique_index.sql",
+      "sha256": "da97b0009b97f7fac3dfb0a3debe23c7bf696daa6929123b0ef532e829077d43",
+      "status": "passed"
+    },
+    {
+      "file": "20260227130000_settings.sql",
+      "sha256": "951bfce0f96521b25fd846abd24c34e847a67264bc84548fa3b6456de95e8d09",
+      "status": "passed"
+    },
+    {
+      "file": "20260227140000_gerencias.sql",
+      "sha256": "f0b731547342bb5798470e396d0c9ab28e93a5597a5150ceca038c4ae5b82bef",
+      "status": "passed"
+    },
+    {
+      "file": "20260227150000_landings_pixel_id_gerencias_gerencia_id.sql",
+      "sha256": "8377e0b28a8cf97019a091aa3b32ef24712d504141514d3e1c860b90ccb305f1",
+      "status": "passed"
+    },
+    {
+      "file": "20260227184152_base_schema.sql",
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "status": "passed"
+    },
+    {
+      "file": "20260228000000_add_nombre_to_profiles.sql",
+      "sha256": "be68ff6f278a2dec2ea0ba006de52ad86564189c82aa1701e9961e2f07c53052",
+      "status": "passed"
+    },
+    {
+      "file": "20260228110000_require_pixel_id_and_gerencia_id.sql",
+      "sha256": "7b74231aba555a7a64f2859c72b8a4f4766929be98485a8c183efba8ef0a3bcc",
+      "status": "passed"
+    },
+    {
+      "file": "20260228120000_landings_gerencias_weight.sql",
+      "sha256": "e5a13247776ffeb3833e967c1f84307bda618b03b6dbdbe6bf3e470c9669b2af",
+      "status": "passed"
+    },
+    {
+      "file": "20260228130000_landings_tracking_fields.sql",
+      "sha256": "2b4b93dfc22aca2778e7112e6cf77979ea9b3e84c91cc8b45391d98c8365ebfc",
+      "status": "passed"
+    },
+    {
+      "file": "20260228131000_phone_mode_and_gerencia_phones.sql",
+      "sha256": "e80bb3cdc29293620398446ca33d9cd6a7796554093ba589f7dc9ac0ab9f4f1c",
+      "status": "passed"
+    },
+    {
+      "file": "20260228132000_phone_kind_and_phone_type.sql",
+      "sha256": "3944e360bf5633b011296deff8b929eb18af478dee817a2568e46e468c4c4441",
+      "status": "passed"
+    },
+    {
+      "file": "20260228133000_landings_phone_interval.sql",
+      "sha256": "44d401027161ac0c3828aa2bad4c6d37312fb881f38ff38c65259029b8a466fd",
+      "status": "passed"
+    },
+    {
+      "file": "20260228134000_landings_phone_interval_hours.sql",
+      "sha256": "92e409f8fa50cd4aab797420f47f6cbfe06127e84bcf8ec63582a0fc5271dd93",
+      "status": "passed"
+    },
+    {
+      "file": "20260228135000_landings_gerencias_phone_config.sql",
+      "sha256": "501eca6acc1fb6258fd493eda71b276367ed6cfa2d3090eec3f0a6183d026b61",
+      "status": "passed"
+    },
+    {
+      "file": "20260304170000_gerencias_gerencia_id_unique.sql",
+      "sha256": "9e0f54507b2b3c34df6dd52f33d4f769b098675e8e139a92e540448b3830880e",
+      "status": "passed"
+    },
+    {
+      "file": "20260304173000_gerencia_phones_select_policy.sql",
+      "sha256": "58d42802f70b5ea077fe57ab13512014f8c2659c0de012a9889bbfc23402c981",
+      "status": "passed"
+    },
+    {
+      "file": "20260304180000_gerencias_id_equals_gerencia_id.sql",
+      "sha256": "a7c40b9b7e593906c98db3ffa6d75e4dceeac5b225dddd765a0c1ac64666d57e",
+      "status": "passed"
+    },
+    {
+      "file": "20260304181500_clear_gerencias_for_testing.sql",
+      "sha256": "910485e69a9d10d4ebe6fb54df19a8654bb0c63913d54572d7037b4f9ba8b547",
+      "status": "passed"
+    },
+    {
+      "file": "20260305120000_cron_sync_phones.sql",
+      "sha256": "23491d19f2c2557c61a0c8543b02b15f77fdb7b074c76c53795b9d9d5856ce43",
+      "status": "passed"
+    },
+    {
+      "file": "20260305130000_landing_typography_config.sql",
+      "sha256": "e89626d6cfa7b626028d8252a577d44addda7f7855c4266c41c632c863a79db1",
+      "status": "passed"
+    },
+    {
+      "file": "20260306120000_add_landing_config_column.sql",
+      "sha256": "057d40e37d78e7490415722a00e8404d6addcdba8bbf8c5215df72d40cfaa67f",
+      "status": "passed"
+    },
+    {
+      "file": "20260306130000_lock_landing_name.sql",
+      "sha256": "c018b682e143425941dbab0183827b9ca3a8277946da776e1b1a830da93b32d3",
+      "status": "passed"
+    },
+    {
+      "file": "20260307100000_settings_preview_flag.sql",
+      "sha256": "7fd15892b60fdf51e30499c8fa432121f0c86eb99346bc73270327f62613a3e9",
+      "status": "passed"
+    },
+    {
+      "file": "20260307110000_settings_revalidate_secret.sql",
+      "sha256": "4d2fdadd8f035df60af7a267d12cd7fc1f60cbe2c0cabae8120e141f60ed7d0a",
+      "status": "passed"
+    },
+    {
+      "file": "20260323183000_drop_test_event_code_from_conversions_config.sql",
+      "sha256": "eec0e877ccb26164dca0572203a9d79237e29b10f0ac46409c41a77e7bbcdf67",
+      "status": "passed"
+    },
+    {
+      "file": "20260323201000_conversions_add_test_event_code.sql",
+      "sha256": "2ad9e6a7f99062907b94b75c8866057393cd72930bf4c2914a9ef78e26ce7bbf",
+      "status": "failed",
+      "reason": " relation \"public.conversions\" does not exist"
+    }
+  ],
+  "bootstrap": {
+    "exitCode": 0,
+    "timedOut": false,
+    "extended": false,
+    "elapsedMs": 65083
+  },
+  "errorCategories": [],
+  "debugTailCategories": [
+    "Starting database...",
+    "Initialising schema...",
+    "Starting containers...",
+    "Waiting for health checks..."
+  ],
+  "migrationTarget": "temporary Docker database / unix socket / internal network / cron disabled",
+  "completeBackend": false,
+  "temporaryProject": "OS temporary directory / phase0-diagnose-*; only synthetic local config; no secrets retained"
+}

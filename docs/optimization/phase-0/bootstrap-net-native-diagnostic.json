@@ -1,0 +1,503 @@
+{
+  "provider": {
+    "cli": "2.75.0",
+    "image": "public.ecr.aws/supabase/postgres:17.6.1.075",
+    "imageId": "sha256:82a04ba6c05f60950a74ae46be3726abb18d06ee44da936276fd782e72e36855"
+  },
+  "metadata": {
+    "roles": [
+      {
+        "name": "anon",
+        "execute": [
+          {
+            "name": "http_get",
+            "allowed": true
+          },
+          {
+            "name": "http_post",
+            "allowed": true
+          }
+        ],
+        "inherit": true,
+        "bypassrls": false,
+        "relations": [
+          {
+            "name": "_http_response",
+            "privileges": {
+              "DELETE": true,
+              "INSERT": true,
+              "SELECT": true,
+              "UPDATE": true,
+              "TRIGGER": true,
+              "TRUNCATE": true,
+              "REFERENCES": true
+            }
+          },
+          {
+            "name": "http_request_queue",
+            "privileges": {
+              "DELETE": true,
+              "INSERT": true,
+              "SELECT": true,
+              "UPDATE": true,
+              "TRIGGER": true,
+              "TRUNCATE": true,
+              "REFERENCES": true
+            }
+          },
+          {
+            "name": "http_request_queue_id_seq",
+            "privileges": {
+              "USAGE": true,
+              "SELECT": true,
+              "UPDATE": true
+            }
+          }
+        ],
+        "superuser": false,
+        "schema_usage": true,
+        "schema_create": false
+      },
+      {
+        "name": "authenticated",
+        "execute": [
+          {
+            "name": "http_get",
+            "allowed": true
+          },
+          {
+            "name": "http_post",
+            "allowed": true
+          }
+        ],
+        "inherit": true,
+        "bypassrls": false,
+        "relations": [
+          {
+            "name": "_http_response",
+            "privileges": {
+              "DELETE": true,
+              "INSERT": true,
+              "SELECT": true,
+              "UPDATE": true,
+              "TRIGGER": true,
+              "TRUNCATE": true,
+              "REFERENCES": true
+            }
+          },
+          {
+            "name": "http_request_queue",
+            "privileges": {
+              "DELETE": true,
+              "INSERT": true,
+              "SELECT": true,
+              "UPDATE": true,
+              "TRIGGER": true,
+              "TRUNCATE": true,
+              "REFERENCES": true
+            }
+          },
+          {
+            "name": "http_request_queue_id_seq",
+            "privileges": {
+              "USAGE": true,
+              "SELECT": true,
+              "UPDATE": true
+            }
+          }
+        ],
+        "superuser": false,
+        "schema_usage": true,
+        "schema_create": false
+      },
+      {
+        "name": "authenticator",
+        "execute": [
+          {
+            "name": "http_get",
+            "allowed": true
+          },
+          {
+            "name": "http_post",
+            "allowed": true
+          }
+        ],
+        "inherit": false,
+        "bypassrls": false,
+        "relations": [
+          {
+            "name": "_http_response",
+            "privileges": {
+              "DELETE": true,
+              "INSERT": true,
+              "SELECT": true,
+              "UPDATE": true,
+              "TRIGGER": true,
+              "TRUNCATE": true,
+              "REFERENCES": true
+            }
+          },
+          {
+            "name": "http_request_queue",
+            "privileges": {
+              "DELETE": true,
+              "INSERT": true,
+              "SELECT": true,
+              "UPDATE": true,
+              "TRIGGER": true,
+              "TRUNCATE": true,
+              "REFERENCES": true
+            }
+          },
+          {
+            "name": "http_request_queue_id_seq",
+            "privileges": {
+              "USAGE": true,
+              "SELECT": true,
+              "UPDATE": true
+            }
+          }
+        ],
+        "superuser": false,
+        "schema_usage": true,
+        "schema_create": false
+      },
+      {
+        "name": "postgres",
+        "execute": [
+          {
+            "name": "http_get",
+            "allowed": true
+          },
+          {
+            "name": "http_post",
+            "allowed": true
+          }
+        ],
+        "inherit": true,
+        "bypassrls": true,
+        "relations": [
+          {
+            "name": "_http_response",
+            "privileges": {
+              "DELETE": true,
+              "INSERT": true,
+              "SELECT": true,
+              "UPDATE": true,
+              "TRIGGER": true,
+              "TRUNCATE": true,
+              "REFERENCES": true
+            }
+          },
+          {
+            "name": "http_request_queue",
+            "privileges": {
+              "DELETE": true,
+              "INSERT": true,
+              "SELECT": true,
+              "UPDATE": true,
+              "TRIGGER": true,
+              "TRUNCATE": true,
+              "REFERENCES": true
+            }
+          },
+          {
+            "name": "http_request_queue_id_seq",
+            "privileges": {
+              "USAGE": true,
+              "SELECT": true,
+              "UPDATE": true
+            }
+          }
+        ],
+        "superuser": false,
+        "schema_usage": true,
+        "schema_create": false
+      },
+      {
+        "name": "service_role",
+        "execute": [
+          {
+            "name": "http_get",
+            "allowed": true
+          },
+          {
+            "name": "http_post",
+            "allowed": true
+          }
+        ],
+        "inherit": true,
+        "bypassrls": true,
+        "relations": [
+          {
+            "name": "_http_response",
+            "privileges": {
+              "DELETE": true,
+              "INSERT": true,
+              "SELECT": true,
+              "UPDATE": true,
+              "TRIGGER": true,
+              "TRUNCATE": true,
+              "REFERENCES": true
+            }
+          },
+          {
+            "name": "http_request_queue",
+            "privileges": {
+              "DELETE": true,
+              "INSERT": true,
+              "SELECT": true,
+              "UPDATE": true,
+              "TRIGGER": true,
+              "TRUNCATE": true,
+              "REFERENCES": true
+            }
+          },
+          {
+            "name": "http_request_queue_id_seq",
+            "privileges": {
+              "USAGE": true,
+              "SELECT": true,
+              "UPDATE": true
+            }
+          }
+        ],
+        "superuser": false,
+        "schema_usage": true,
+        "schema_create": false
+      }
+    ],
+    "postgres": "PostgreSQL 17.6 on x86_64-pc-linux-gnu, compiled by gcc (GCC) 15.2.0, 64-bit",
+    "available": [
+      {
+        "name": "pg_net",
+        "schema": null,
+        "comment": "Async HTTP",
+        "trusted": false,
+        "version": "0.11.0",
+        "requires": null,
+        "installed": false,
+        "superuser": true,
+        "relocatable": false
+      },
+      {
+        "name": "pg_net",
+        "schema": null,
+        "comment": "Async HTTP",
+        "trusted": false,
+        "version": "0.12.0",
+        "requires": null,
+        "installed": false,
+        "superuser": true,
+        "relocatable": false
+      },
+      {
+        "name": "pg_net",
+        "schema": null,
+        "comment": "Async HTTP",
+        "trusted": false,
+        "version": "0.13.0",
+        "requires": null,
+        "installed": false,
+        "superuser": true,
+        "relocatable": false
+      },
+      {
+        "name": "pg_net",
+        "schema": null,
+        "comment": "Async HTTP",
+        "trusted": false,
+        "version": "0.14.0",
+        "requires": null,
+        "installed": false,
+        "superuser": true,
+        "relocatable": false
+      },
+      {
+        "name": "pg_net",
+        "schema": null,
+        "comment": "Async HTTP",
+        "trusted": false,
+        "version": "0.15.0",
+        "requires": null,
+        "installed": false,
+        "superuser": true,
+        "relocatable": false
+      },
+      {
+        "name": "pg_net",
+        "schema": null,
+        "comment": "Async HTTP",
+        "trusted": false,
+        "version": "0.16.0",
+        "requires": null,
+        "installed": false,
+        "superuser": true,
+        "relocatable": false
+      },
+      {
+        "name": "pg_net",
+        "schema": null,
+        "comment": "Async HTTP",
+        "trusted": false,
+        "version": "0.17.0",
+        "requires": null,
+        "installed": false,
+        "superuser": true,
+        "relocatable": false
+      },
+      {
+        "name": "pg_net",
+        "schema": null,
+        "comment": "Async HTTP",
+        "trusted": false,
+        "version": "0.18.0",
+        "requires": null,
+        "installed": false,
+        "superuser": true,
+        "relocatable": false
+      },
+      {
+        "name": "pg_net",
+        "schema": null,
+        "comment": "Async HTTP",
+        "trusted": false,
+        "version": "0.19.0",
+        "requires": null,
+        "installed": false,
+        "superuser": true,
+        "relocatable": false
+      },
+      {
+        "name": "pg_net",
+        "schema": null,
+        "comment": "Async HTTP",
+        "trusted": false,
+        "version": "0.19.1",
+        "requires": null,
+        "installed": false,
+        "superuser": true,
+        "relocatable": false
+      },
+      {
+        "name": "pg_net",
+        "schema": null,
+        "comment": "Async HTTP",
+        "trusted": false,
+        "version": "0.19.2",
+        "requires": null,
+        "installed": false,
+        "superuser": true,
+        "relocatable": false
+      },
+      {
+        "name": "pg_net",
+        "schema": null,
+        "comment": "Async HTTP",
+        "trusted": false,
+        "version": "0.19.3",
+        "requires": null,
+        "installed": false,
+        "superuser": true,
+        "relocatable": false
+      },
+      {
+        "name": "pg_net",
+        "schema": null,
+        "comment": "Async HTTP",
+        "trusted": false,
+        "version": "0.19.4",
+        "requires": null,
+        "installed": false,
+        "superuser": true,
+        "relocatable": false
+      },
+      {
+        "name": "pg_net",
+        "schema": null,
+        "comment": "Async HTTP",
+        "trusted": false,
+        "version": "0.19.5",
+        "requires": null,
+        "installed": true,
+        "superuser": true,
+        "relocatable": false
+      }
+    ],
+    "functions": [
+      {
+        "acl": null,
+        "name": "http_get",
+        "owner": "supabase_admin",
+        "body_md5": "7ceed451732f43e56af7605659fb10cc",
+        "settings": null,
+        "arguments": "url text, params jsonb, headers jsonb, timeout_milliseconds integer",
+        "extension": "pg_net",
+        "definition": "CREATE OR REPLACE FUNCTION net.http_get(url text, params jsonb DEFAULT '{}'::jsonb, headers jsonb DEFAULT '{}'::jsonb, timeout_milliseconds integer DEFAULT 5000)\n RETURNS bigint\n LANGUAGE plpgsql\nAS $function$\ndeclare\n    request_id bigint;\n    params_array text[];\nbegin\n    select coalesce(array_agg(net._urlencode_string(key) || '=' || net._urlencode_string(value)), '{}')\n    into params_array\n    from jsonb_each_text(params);\n\n    -- Add to the request queue\n    insert into net.http_request_queue(method, url, headers, timeout_milliseconds)\n    values (\n        'GET',\n        net._encode_url_with_params_array(url, params_array),\n        headers,\n        timeout_milliseconds\n    )\n    returning id\n    into request_id;\n\n    perform net.wake();\n\n    return request_id;\nend\n$function$\n",
+        "security_definer": false
+      },
+      {
+        "acl": null,
+        "name": "http_post",
+        "owner": "supabase_admin",
+        "body_md5": "249e2190ab91f8313d4deec6d6e687be",
+        "settings": null,
+        "arguments": "url text, body jsonb, params jsonb, headers jsonb, timeout_milliseconds integer",
+        "extension": "pg_net",
+        "definition": "CREATE OR REPLACE FUNCTION net.http_post(url text, body jsonb DEFAULT '{}'::jsonb, params jsonb DEFAULT '{}'::jsonb, headers jsonb DEFAULT '{\"Content-Type\": \"application/json\"}'::jsonb, timeout_milliseconds integer DEFAULT 5000)\n RETURNS bigint\n LANGUAGE plpgsql\nAS $function$\ndeclare\n    request_id bigint;\n    params_array text[];\n    content_type text;\nbegin\n\n    -- Exctract the content_type from headers\n    select\n        header_value into content_type\n    from\n        jsonb_each_text(coalesce(headers, '{}'::jsonb)) r(header_name, header_value)\n    where\n        lower(header_name) = 'content-type'\n    limit\n        1;\n\n    -- If the user provided new headers and omitted the content type\n    -- add it back in automatically\n    if content_type is null then\n        select headers || '{\"Content-Type\": \"application/json\"}'::jsonb into headers;\n    end if;\n\n    -- Confirm that the content-type is set as \"application/json\"\n    if content_type <> 'application/json' then\n        raise exception 'Content-Type header must be \"application/json\"';\n    end if;\n\n    select\n        coalesce(array_agg(net._urlencode_string(key) || '=' || net._urlencode_string(value)), '{}')\n    into\n        params_array\n    from\n        jsonb_each_text(params);\n\n    -- Add to the request queue\n    insert into net.http_request_queue(method, url, headers, body, timeout_milliseconds)\n    values (\n        'POST',\n        net._encode_url_with_params_array(url, params_array),\n        headers,\n        convert_to(body::text, 'UTF8'),\n        timeout_milliseconds\n    )\n    returning id\n    into request_id;\n\n    perform net.wake();\n\n    return request_id;\nend\n$function$\n",
+        "security_definer": false
+      }
+    ],
+    "installed": {
+      "owner": "supabase_admin",
+      "schema": "public",
+      "version": "0.19.5"
+    },
+    "relations": [
+      {
+        "acl": "{supabase_admin=arwdDxtm/supabase_admin,=arwdDxtm/supabase_admin}",
+        "rls": false,
+        "kind": "r",
+        "name": "_http_response",
+        "owner": "supabase_admin",
+        "force_rls": false
+      },
+      {
+        "acl": "{supabase_admin=arwdDxtm/supabase_admin,=arwdDxtm/supabase_admin}",
+        "rls": false,
+        "kind": "r",
+        "name": "http_request_queue",
+        "owner": "supabase_admin",
+        "force_rls": false
+      },
+      {
+        "acl": "{supabase_admin=rwU/supabase_admin,=rwU/supabase_admin}",
+        "rls": false,
+        "kind": "S",
+        "name": "http_request_queue_id_seq",
+        "owner": "supabase_admin",
+        "force_rls": false
+      }
+    ],
+    "event_triggers": [
+      {
+        "name": "issue_pg_net_access",
+        "tags": [
+          "CREATE EXTENSION"
+        ],
+        "owner": "supabase_admin",
+        "enabled": "O",
+        "function": "grant_pg_net_access"
+      }
+    ],
+    "provider_hooks": [
+      {
+        "acl": "{=X/supabase_admin,supabase_admin=X*/supabase_admin,dashboard_user=X/supabase_admin}",
+        "name": "grant_pg_net_access",
+        "owner": "supabase_admin",
+        "definition": "CREATE OR REPLACE FUNCTION extensions.grant_pg_net_access()\n RETURNS event_trigger\n LANGUAGE plpgsql\nAS $function$\nBEGIN\n  IF EXISTS (\n    SELECT 1\n    FROM pg_event_trigger_ddl_commands() AS ev\n    JOIN pg_extension AS ext\n    ON ev.objid = ext.oid\n    WHERE ext.extname = 'pg_net'\n  )\n  THEN\n    GRANT USAGE ON SCHEMA net TO supabase_functions_admin, postgres, anon, authenticated, service_role;\n\n    ALTER function net.http_get(url text, params jsonb, headers jsonb, timeout_milliseconds integer) SECURITY DEFINER;\n    ALTER function net.http_post(url text, body jsonb, params jsonb, headers jsonb, timeout_milliseconds integer) SECURITY DEFINER;\n\n    ALTER function net.http_get(url text, params jsonb, headers jsonb, timeout_milliseconds integer) SET search_path = net;\n    ALTER function net.http_post(url text, body jsonb, params jsonb, headers jsonb, timeout_milliseconds integer) SET search_path = net;\n\n    REVOKE ALL ON FUNCTION net.http_get(url text, params jsonb, headers jsonb, timeout_milliseconds integer) FROM PUBLIC;\n    REVOKE ALL ON FUNCTION net.http_post(url text, body jsonb, params jsonb, headers jsonb, timeout_milliseconds integer) FROM PUBLIC;\n\n    GRANT EXECUTE ON FUNCTION net.http_get(url text, params jsonb, headers jsonb, timeout_milliseconds integer) TO supabase_functions_admin, postgres, anon, authenticated, service_role;\n    GRANT EXECUTE ON FUNCTION net.http_post(url text, body jsonb, params jsonb, headers jsonb, timeout_milliseconds integer) TO supabase_functions_admin, postgres, anon, authenticated, service_role;\n  END IF;\nEND;\n$function$\n"
+      }
+    ],
+    "server_version": "17.6"
+  }
+}

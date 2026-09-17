@@ -1,0 +1,34 @@
+{
+  "mode": "READ ONLY",
+  "remoteWrites": 0,
+  "rls_tables": [
+    {
+      "rls": true,
+      "name": "ar_name_inferred_sex",
+      "force_rls": false
+    },
+    {
+      "rls": true,
+      "name": "ar_phone_area_codes",
+      "force_rls": false
+    },
+    {
+      "rls": true,
+      "name": "cron_config",
+      "force_rls": false
+    },
+    {
+      "rls": true,
+      "name": "tracking_queue",
+      "force_rls": false
+    }
+  ],
+  "rls_auto_enable": {
+    "owner": "postgres",
+    "body_md5": "99be20677b456ea8d3be47bdd44fb369",
+    "extension_member": false,
+    "security_definer": true,
+    "mentions_enable_row_level_security": true
+  },
+  "ledger_versions_referencing_security_objects": []
+}

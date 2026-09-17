@@ -1,0 +1,9 @@
+{
+  "jsonFilesParsed": 50,
+  "migrationHashesValidated": 268,
+  "localEnvStillExists": true,
+  "localEnvIgnored": true,
+  "localEnvTracked": false,
+  "stagedChanges": "D\t.env",
+  "unexpectedHistoricalChanges": false
+}

@@ -1,0 +1,945 @@
+{
+  "environment": "isolated local synthetic minimal schema; estimates are not production plans",
+  "asOf": "2026-09-15T23:40:00Z",
+  "procedure": "same rows, dates, role, values and limit for both currencies; EXPLAIN without ANALYZE of unchanged inner SELECT; one measured call per case",
+  "results": [
+    {
+      "currency": "ARS",
+      "inputRows": 200,
+      "statementTimeoutMs": 8000,
+      "status": "measured",
+      "measurement": {
+        "rpcMs": 43.24,
+        "buyers": 200,
+        "jsonTextBytes": 48480
+      },
+      "processElapsedMs": 443.62850000000617,
+      "estimatedNodes": [
+        {
+          "node": "Nested Loop",
+          "relation": null,
+          "totalCost": 8.78,
+          "rows": 1,
+          "join": "Left"
+        },
+        {
+          "node": "Result",
+          "relation": null,
+          "totalCost": 8.41,
+          "rows": 1,
+          "join": null
+        },
+        {
+          "node": "Result",
+          "relation": null,
+          "totalCost": 0.03,
+          "rows": 1,
+          "join": null
+        },
+        {
+          "node": "Index Scan",
+          "relation": "conversions",
+          "totalCost": 8.17,
+          "rows": 1,
+          "join": null
+        },
+        {
+          "node": "Unique",
+          "relation": null,
+          "totalCost": 0.09,
+          "rows": 1,
+          "join": null
+        },
+        {
+          "node": "Sort",
+          "relation": null,
+          "totalCost": 0.09,
+          "rows": 1,
+          "join": null
+        },
+        {
+          "node": "CTE Scan",
+          "relation": "raw_purchases",
+          "totalCost": 0.08,
+          "rows": 1,
+          "join": null
+        },
+        {
+          "node": "Unique",
+          "relation": null,
+          "totalCost": 0.04,
+          "rows": 1,
+          "join": null
+        },
+        {
+          "node": "Sort",
+          "relation": null,
+          "totalCost": 0.04,
+          "rows": 1,
+          "join": null
+        },
+        {
+          "node": "CTE Scan",
+          "relation": "deduplicated_purchases",
+          "totalCost": 0.02,
+          "rows": 1,
+          "join": null
+        },
+        {
+          "node": "Aggregate",
+          "relation": null,
+          "totalCost": 0.18,
+          "rows": 1,
+          "join": null
+        },
+        {
+          "node": "Sort",
+          "relation": null,
+          "totalCost": 0.04,
+          "rows": 1,
+          "join": null
+        },
+        {
+          "node": "CTE Scan",
+          "relation": "deduplicated_purchases",
+          "totalCost": 0.02,
+          "rows": 1,
+          "join": null
+        },
+        {
+          "node": "CTE Scan",
+          "relation": "historical_first_purchases",
+          "totalCost": 0.02,
+          "rows": 1,
+          "join": null
+        }
+      ]
+    },
+    {
+      "currency": "PYG",
+      "inputRows": 200,
+      "statementTimeoutMs": 8000,
+      "status": "measured",
+      "measurement": {
+        "rpcMs": 38.835,
+        "buyers": 200,
+        "jsonTextBytes": 48480
+      },
+      "processElapsedMs": 373.9496999999974,
+      "estimatedNodes": [
+        {
+          "node": "Nested Loop",
+          "relation": null,
+          "totalCost": 8.78,
+          "rows": 1,
+          "join": "Left"
+        },
+        {
+          "node": "Result",
+          "relation": null,
+          "totalCost": 8.41,
+          "rows": 1,
+          "join": null
+        },
+        {
+          "node": "Result",
+          "relation": null,
+          "totalCost": 0.03,
+          "rows": 1,
+          "join": null
+        },
+        {
+          "node": "Index Scan",
+          "relation": "conversions",
+          "totalCost": 8.17,
+          "rows": 1,
+          "join": null
+        },
+        {
+          "node": "Unique",
+          "relation": null,
+          "totalCost": 0.09,
+          "rows": 1,
+          "join": null
+        },
+        {
+          "node": "Sort",
+          "relation": null,
+          "totalCost": 0.09,
+          "rows": 1,
+          "join": null
+        },
+        {
+          "node": "CTE Scan",
+          "relation": "raw_purchases",
+          "totalCost": 0.08,
+          "rows": 1,
+          "join": null
+        },
+        {
+          "node": "Unique",
+          "relation": null,
+          "totalCost": 0.04,
+          "rows": 1,
+          "join": null
+        },
+        {
+          "node": "Sort",
+          "relation": null,
+          "totalCost": 0.04,
+          "rows": 1,
+          "join": null
+        },
+        {
+          "node": "CTE Scan",
+          "relation": "deduplicated_purchases",
+          "totalCost": 0.02,
+          "rows": 1,
+          "join": null
+        },
+        {
+          "node": "Aggregate",
+          "relation": null,
+          "totalCost": 0.18,
+          "rows": 1,
+          "join": null
+        },
+        {
+          "node": "Sort",
+          "relation": null,
+          "totalCost": 0.04,
+          "rows": 1,
+          "join": null
+        },
+        {
+          "node": "CTE Scan",
+          "relation": "deduplicated_purchases",
+          "totalCost": 0.02,
+          "rows": 1,
+          "join": null
+        },
+        {
+          "node": "CTE Scan",
+          "relation": "historical_first_purchases",
+          "totalCost": 0.02,
+          "rows": 1,
+          "join": null
+        }
+      ]
+    },
+    {
+      "currency": "ARS",
+      "inputRows": 2815,
+      "statementTimeoutMs": 8000,
+      "status": "measured",
+      "measurement": {
+        "rpcMs": 246.88,
+        "buyers": 2815,
+        "jsonTextBytes": 688630
+      },
+      "processElapsedMs": 670.9566999999952,
+      "estimatedNodes": [
+        {
+          "node": "Merge Join",
+          "relation": null,
+          "totalCost": 36.18,
+          "rows": 5,
+          "join": "Left"
+        },
+        {
+          "node": "Result",
+          "relation": null,
+          "totalCost": 34.32,
+          "rows": 14,
+          "join": null
+        },
+        {
+          "node": "Result",
+          "relation": null,
+          "totalCost": 0.03,
+          "rows": 1,
+          "join": null
+        },
+        {
+          "node": "Index Scan",
+          "relation": "conversions",
+          "totalCost": 31.31,
+          "rows": 14,
+          "join": null
+        },
+        {
+          "node": "Unique",
+          "relation": null,
+          "totalCost": 0.66,
+          "rows": 5,
+          "join": null
+        },
+        {
+          "node": "Sort",
+          "relation": null,
+          "totalCost": 0.65,
+          "rows": 5,
+          "join": null
+        },
+        {
+          "node": "CTE Scan",
+          "relation": "raw_purchases",
+          "totalCost": 0.58,
+          "rows": 5,
+          "join": null
+        },
+        {
+          "node": "Unique",
+          "relation": null,
+          "totalCost": 0.13,
+          "rows": 1,
+          "join": null
+        },
+        {
+          "node": "Sort",
+          "relation": null,
+          "totalCost": 0.13,
+          "rows": 1,
+          "join": null
+        },
+        {
+          "node": "CTE Scan",
+          "relation": "deduplicated_purchases",
+          "totalCost": 0.11,
+          "rows": 1,
+          "join": null
+        },
+        {
+          "node": "Aggregate",
+          "relation": null,
+          "totalCost": 0.91,
+          "rows": 5,
+          "join": null
+        },
+        {
+          "node": "Sort",
+          "relation": null,
+          "totalCost": 0.17,
+          "rows": 5,
+          "join": null
+        },
+        {
+          "node": "CTE Scan",
+          "relation": "deduplicated_purchases",
+          "totalCost": 0.1,
+          "rows": 5,
+          "join": null
+        },
+        {
+          "node": "Materialize",
+          "relation": null,
+          "totalCost": 0.02,
+          "rows": 1,
+          "join": null
+        },
+        {
+          "node": "CTE Scan",
+          "relation": "historical_first_purchases",
+          "totalCost": 0.02,
+          "rows": 1,
+          "join": null
+        }
+      ]
+    },
+    {
+      "currency": "PYG",
+      "inputRows": 2815,
+      "statementTimeoutMs": 8000,
+      "status": "measured",
+      "measurement": {
+        "rpcMs": 361.003,
+        "buyers": 2815,
+        "jsonTextBytes": 688630
+      },
+      "processElapsedMs": 798.6656999999977,
+      "estimatedNodes": [
+        {
+          "node": "Merge Join",
+          "relation": null,
+          "totalCost": 36.18,
+          "rows": 5,
+          "join": "Left"
+        },
+        {
+          "node": "Result",
+          "relation": null,
+          "totalCost": 34.32,
+          "rows": 14,
+          "join": null
+        },
+        {
+          "node": "Result",
+          "relation": null,
+          "totalCost": 0.03,
+          "rows": 1,
+          "join": null
+        },
+        {
+          "node": "Index Scan",
+          "relation": "conversions",
+          "totalCost": 31.31,
+          "rows": 14,
+          "join": null
+        },
+        {
+          "node": "Unique",
+          "relation": null,
+          "totalCost": 0.66,
+          "rows": 5,
+          "join": null
+        },
+        {
+          "node": "Sort",
+          "relation": null,
+          "totalCost": 0.65,
+          "rows": 5,
+          "join": null
+        },
+        {
+          "node": "CTE Scan",
+          "relation": "raw_purchases",
+          "totalCost": 0.58,
+          "rows": 5,
+          "join": null
+        },
+        {
+          "node": "Unique",
+          "relation": null,
+          "totalCost": 0.13,
+          "rows": 1,
+          "join": null
+        },
+        {
+          "node": "Sort",
+          "relation": null,
+          "totalCost": 0.13,
+          "rows": 1,
+          "join": null
+        },
+        {
+          "node": "CTE Scan",
+          "relation": "deduplicated_purchases",
+          "totalCost": 0.11,
+          "rows": 1,
+          "join": null
+        },
+        {
+          "node": "Aggregate",
+          "relation": null,
+          "totalCost": 0.91,
+          "rows": 5,
+          "join": null
+        },
+        {
+          "node": "Sort",
+          "relation": null,
+          "totalCost": 0.17,
+          "rows": 5,
+          "join": null
+        },
+        {
+          "node": "CTE Scan",
+          "relation": "deduplicated_purchases",
+          "totalCost": 0.1,
+          "rows": 5,
+          "join": null
+        },
+        {
+          "node": "Materialize",
+          "relation": null,
+          "totalCost": 0.02,
+          "rows": 1,
+          "join": null
+        },
+        {
+          "node": "CTE Scan",
+          "relation": "historical_first_purchases",
+          "totalCost": 0.02,
+          "rows": 1,
+          "join": null
+        }
+      ]
+    },
+    {
+      "currency": "ARS",
+      "inputRows": 8000,
+      "statementTimeoutMs": 8000,
+      "status": "measured",
+      "measurement": {
+        "rpcMs": 723.182,
+        "buyers": 8000,
+        "jsonTextBytes": 1961210
+      },
+      "processElapsedMs": 1215.1507999999885,
+      "estimatedNodes": [
+        {
+          "node": "Merge Join",
+          "relation": null,
+          "totalCost": 87.38,
+          "rows": 13,
+          "join": "Left"
+        },
+        {
+          "node": "Result",
+          "relation": null,
+          "totalCost": 82.37,
+          "rows": 40,
+          "join": null
+        },
+        {
+          "node": "Result",
+          "relation": null,
+          "totalCost": 0.03,
+          "rows": 1,
+          "join": null
+        },
+        {
+          "node": "Index Scan",
+          "relation": "conversions",
+          "totalCost": 73.84,
+          "rows": 40,
+          "join": null
+        },
+        {
+          "node": "Unique",
+          "relation": null,
+          "totalCost": 1.89,
+          "rows": 13,
+          "join": null
+        },
+        {
+          "node": "Sort",
+          "relation": null,
+          "totalCost": 1.86,
+          "rows": 13,
+          "join": null
+        },
+        {
+          "node": "CTE Scan",
+          "relation": "raw_purchases",
+          "totalCost": 1.58,
+          "rows": 13,
+          "join": null
+        },
+        {
+          "node": "Unique",
+          "relation": null,
+          "totalCost": 0.31,
+          "rows": 1,
+          "join": null
+        },
+        {
+          "node": "Sort",
+          "relation": null,
+          "totalCost": 0.31,
+          "rows": 1,
+          "join": null
+        },
+        {
+          "node": "CTE Scan",
+          "relation": "deduplicated_purchases",
+          "totalCost": 0.29,
+          "rows": 1,
+          "join": null
+        },
+        {
+          "node": "Aggregate",
+          "relation": null,
+          "totalCost": 2.45,
+          "rows": 13,
+          "join": null
+        },
+        {
+          "node": "Sort",
+          "relation": null,
+          "totalCost": 0.53,
+          "rows": 13,
+          "join": null
+        },
+        {
+          "node": "CTE Scan",
+          "relation": "deduplicated_purchases",
+          "totalCost": 0.26,
+          "rows": 13,
+          "join": null
+        },
+        {
+          "node": "Materialize",
+          "relation": null,
+          "totalCost": 0.02,
+          "rows": 1,
+          "join": null
+        },
+        {
+          "node": "CTE Scan",
+          "relation": "historical_first_purchases",
+          "totalCost": 0.02,
+          "rows": 1,
+          "join": null
+        }
+      ]
+    },
+    {
+      "currency": "PYG",
+      "inputRows": 8000,
+      "statementTimeoutMs": 8000,
+      "status": "measured",
+      "measurement": {
+        "rpcMs": 632.231,
+        "buyers": 8000,
+        "jsonTextBytes": 1961210
+      },
+      "processElapsedMs": 1019.7044000000024,
+      "estimatedNodes": [
+        {
+          "node": "Merge Join",
+          "relation": null,
+          "totalCost": 87.38,
+          "rows": 13,
+          "join": "Left"
+        },
+        {
+          "node": "Result",
+          "relation": null,
+          "totalCost": 82.37,
+          "rows": 40,
+          "join": null
+        },
+        {
+          "node": "Result",
+          "relation": null,
+          "totalCost": 0.03,
+          "rows": 1,
+          "join": null
+        },
+        {
+          "node": "Index Scan",
+          "relation": "conversions",
+          "totalCost": 73.84,
+          "rows": 40,
+          "join": null
+        },
+        {
+          "node": "Unique",
+          "relation": null,
+          "totalCost": 1.89,
+          "rows": 13,
+          "join": null
+        },
+        {
+          "node": "Sort",
+          "relation": null,
+          "totalCost": 1.86,
+          "rows": 13,
+          "join": null
+        },
+        {
+          "node": "CTE Scan",
+          "relation": "raw_purchases",
+          "totalCost": 1.58,
+          "rows": 13,
+          "join": null
+        },
+        {
+          "node": "Unique",
+          "relation": null,
+          "totalCost": 0.31,
+          "rows": 1,
+          "join": null
+        },
+        {
+          "node": "Sort",
+          "relation": null,
+          "totalCost": 0.31,
+          "rows": 1,
+          "join": null
+        },
+        {
+          "node": "CTE Scan",
+          "relation": "deduplicated_purchases",
+          "totalCost": 0.29,
+          "rows": 1,
+          "join": null
+        },
+        {
+          "node": "Aggregate",
+          "relation": null,
+          "totalCost": 2.45,
+          "rows": 13,
+          "join": null
+        },
+        {
+          "node": "Sort",
+          "relation": null,
+          "totalCost": 0.53,
+          "rows": 13,
+          "join": null
+        },
+        {
+          "node": "CTE Scan",
+          "relation": "deduplicated_purchases",
+          "totalCost": 0.26,
+          "rows": 13,
+          "join": null
+        },
+        {
+          "node": "Materialize",
+          "relation": null,
+          "totalCost": 0.02,
+          "rows": 1,
+          "join": null
+        },
+        {
+          "node": "CTE Scan",
+          "relation": "historical_first_purchases",
+          "totalCost": 0.02,
+          "rows": 1,
+          "join": null
+        }
+      ]
+    },
+    {
+      "currency": "ARS",
+      "inputRows": 42449,
+      "statementTimeoutMs": 8000,
+      "status": "measured",
+      "measurement": {
+        "rpcMs": 3066.006,
+        "buyers": 42449,
+        "jsonTextBytes": 10480783
+      },
+      "processElapsedMs": 3806.3592999999964,
+      "estimatedNodes": [
+        {
+          "node": "Merge Join",
+          "relation": null,
+          "totalCost": 434.22,
+          "rows": 69,
+          "join": "Left"
+        },
+        {
+          "node": "Result",
+          "relation": null,
+          "totalCost": 406.13,
+          "rows": 211,
+          "join": null
+        },
+        {
+          "node": "Result",
+          "relation": null,
+          "totalCost": 0.03,
+          "rows": 1,
+          "join": null
+        },
+        {
+          "node": "Index Scan",
+          "relation": "conversions",
+          "totalCost": 361.26,
+          "rows": 211,
+          "join": null
+        },
+        {
+          "node": "Unique",
+          "relation": null,
+          "totalCost": 10.92,
+          "rows": 69,
+          "join": null
+        },
+        {
+          "node": "Sort",
+          "relation": null,
+          "totalCost": 10.74,
+          "rows": 70,
+          "join": null
+        },
+        {
+          "node": "CTE Scan",
+          "relation": "raw_purchases",
+          "totalCost": 8.42,
+          "rows": 70,
+          "join": null
+        },
+        {
+          "node": "Unique",
+          "relation": null,
+          "totalCost": 1.57,
+          "rows": 1,
+          "join": null
+        },
+        {
+          "node": "Sort",
+          "relation": null,
+          "totalCost": 1.57,
+          "rows": 1,
+          "join": null
+        },
+        {
+          "node": "CTE Scan",
+          "relation": "deduplicated_purchases",
+          "totalCost": 1.55,
+          "rows": 1,
+          "join": null
+        },
+        {
+          "node": "Aggregate",
+          "relation": null,
+          "totalCost": 13.84,
+          "rows": 69,
+          "join": null
+        },
+        {
+          "node": "Sort",
+          "relation": null,
+          "totalCost": 3.66,
+          "rows": 69,
+          "join": null
+        },
+        {
+          "node": "CTE Scan",
+          "relation": "deduplicated_purchases",
+          "totalCost": 1.38,
+          "rows": 69,
+          "join": null
+        },
+        {
+          "node": "Materialize",
+          "relation": null,
+          "totalCost": 0.02,
+          "rows": 1,
+          "join": null
+        },
+        {
+          "node": "CTE Scan",
+          "relation": "historical_first_purchases",
+          "totalCost": 0.02,
+          "rows": 1,
+          "join": null
+        }
+      ]
+    },
+    {
+      "currency": "PYG",
+      "inputRows": 42449,
+      "statementTimeoutMs": 8000,
+      "status": "measured",
+      "measurement": {
+        "rpcMs": 5601.351,
+        "buyers": 42449,
+        "jsonTextBytes": 10480783
+      },
+      "processElapsedMs": 6597.9914000000135,
+      "estimatedNodes": [
+        {
+          "node": "Merge Join",
+          "relation": null,
+          "totalCost": 438.83,
+          "rows": 70,
+          "join": "Left"
+        },
+        {
+          "node": "Result",
+          "relation": null,
+          "totalCost": 410.33,
+          "rows": 214,
+          "join": null
+        },
+        {
+          "node": "Result",
+          "relation": null,
+          "totalCost": 0.03,
+          "rows": 1,
+          "join": null
+        },
+        {
+          "node": "Index Scan",
+          "relation": "conversions",
+          "totalCost": 364.82,
+          "rows": 214,
+          "join": null
+        },
+        {
+          "node": "Unique",
+          "relation": null,
+          "totalCost": 11.08,
+          "rows": 70,
+          "join": null
+        },
+        {
+          "node": "Sort",
+          "relation": null,
+          "totalCost": 10.9,
+          "rows": 71,
+          "join": null
+        },
+        {
+          "node": "CTE Scan",
+          "relation": "raw_purchases",
+          "totalCost": 8.54,
+          "rows": 71,
+          "join": null
+        },
+        {
+          "node": "Unique",
+          "relation": null,
+          "totalCost": 1.59,
+          "rows": 1,
+          "join": null
+        },
+        {
+          "node": "Sort",
+          "relation": null,
+          "totalCost": 1.59,
+          "rows": 1,
+          "join": null
+        },
+        {
+          "node": "CTE Scan",
+          "relation": "deduplicated_purchases",
+          "totalCost": 1.57,
+          "rows": 1,
+          "join": null
+        },
+        {
+          "node": "Aggregate",
+          "relation": null,
+          "totalCost": 14.05,
+          "rows": 70,
+          "join": null
+        },
+        {
+          "node": "Sort",
+          "relation": null,
+          "totalCost": 3.72,
+          "rows": 70,
+          "join": null
+        },
+        {
+          "node": "CTE Scan",
+          "relation": "deduplicated_purchases",
+          "totalCost": 1.4,
+          "rows": 70,
+          "join": null
+        },
+        {
+          "node": "Materialize",
+          "relation": null,
+          "totalCost": 0.02,
+          "rows": 1,
+          "join": null
+        },
+        {
+          "node": "CTE Scan",
+          "relation": "historical_first_purchases",
+          "totalCost": 0.02,
+          "rows": 1,
+          "join": null
+        }
+      ]
+    }
+  ]
+}

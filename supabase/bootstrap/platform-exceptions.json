@@ -1,0 +1,65 @@
+{
+  "entries": [
+    {
+      "category": "event_triggers",
+      "object": "||graphql_watch_ddl|",
+      "local": {
+        "enabled": "O",
+        "event": "ddl_command_end",
+        "function": "increment_schema_version",
+        "function_schema": "graphql",
+        "name": "graphql_watch_ddl",
+        "tags": null
+      },
+      "remote": null,
+      "evidence": "Official local provider pg_graphql 1.5.11 and its own extension-member event triggers; absent remotely; application code contains no GraphQL calls. Optional provider API difference accepted explicitly; not application/security parity normalization."
+    },
+    {
+      "category": "event_triggers",
+      "object": "||graphql_watch_drop|",
+      "local": {
+        "enabled": "O",
+        "event": "sql_drop",
+        "function": "increment_schema_version",
+        "function_schema": "graphql",
+        "name": "graphql_watch_drop",
+        "tags": null
+      },
+      "remote": null,
+      "evidence": "Official local provider pg_graphql 1.5.11 and its own extension-member event triggers; absent remotely; application code contains no GraphQL calls. Optional provider API difference accepted explicitly; not application/security parity normalization."
+    },
+    {
+      "category": "extensions",
+      "object": "extensions||pg_net|",
+      "local": {
+        "name": "pg_net",
+        "schema": "extensions",
+        "version": "0.19.5"
+      },
+      "remote": null,
+      "evidence": "Same pg_net version; all 12 extension function definitions, owners and ACLs must match the separately queried catalog. Installation extnamespace only."
+    },
+    {
+      "category": "extensions",
+      "object": "graphql||pg_graphql|",
+      "local": {
+        "name": "pg_graphql",
+        "schema": "graphql",
+        "version": "1.5.11"
+      },
+      "remote": null,
+      "evidence": "Official local provider pg_graphql 1.5.11 and its own extension-member event triggers; absent remotely; application code contains no GraphQL calls. Optional provider API difference accepted explicitly; not application/security parity normalization."
+    },
+    {
+      "category": "extensions",
+      "object": "public||pg_net|",
+      "local": null,
+      "remote": {
+        "name": "pg_net",
+        "schema": "public",
+        "version": "0.19.5"
+      },
+      "evidence": "Same pg_net version; all 12 extension function definitions, owners and ACLs must match the separately queried catalog. Installation extnamespace only."
+    }
+  ]
+}

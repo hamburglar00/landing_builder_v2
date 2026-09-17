@@ -1,0 +1,36 @@
+[
+  {
+    "version": "20260427180000",
+    "name": "tracking_queue",
+    "created_tables": [
+      "public.tracking_queue"
+    ],
+    "created_functions": [
+      "public.set_tracking_queue_updated_at"
+    ],
+    "schedules_cron": false,
+    "has_http_call": false
+  },
+  {
+    "version": "20260427190000",
+    "name": "tracking_retry_scheduler",
+    "created_tables": [],
+    "created_functions": [],
+    "schedules_cron": true,
+    "has_http_call": true
+  },
+  {
+    "version": "20260629190000",
+    "name": "constructor_tracking_queue",
+    "created_tables": [
+      "public.tracking_queue",
+      "public.cron_config"
+    ],
+    "created_functions": [
+      "public.set_tracking_queue_updated_at",
+      "public.cron_retry_tracking_queue"
+    ],
+    "schedules_cron": true,
+    "has_http_call": true
+  }
+]

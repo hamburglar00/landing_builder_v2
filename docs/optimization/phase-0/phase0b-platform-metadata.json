@@ -1,0 +1,2744 @@
+{
+  "extensions": [
+    {
+      "name": "pg_cron",
+      "schema": "pg_catalog",
+      "version": "1.6.4"
+    },
+    {
+      "name": "pg_net",
+      "schema": "public",
+      "version": "0.19.5"
+    },
+    {
+      "name": "pg_stat_statements",
+      "schema": "extensions",
+      "version": "1.11"
+    },
+    {
+      "name": "pgcrypto",
+      "schema": "extensions",
+      "version": "1.3"
+    },
+    {
+      "name": "plpgsql",
+      "schema": "pg_catalog",
+      "version": "1.0"
+    },
+    {
+      "name": "supabase_vault",
+      "schema": "vault",
+      "version": "0.3.1"
+    },
+    {
+      "name": "uuid-ossp",
+      "schema": "extensions",
+      "version": "1.1"
+    }
+  ],
+  "event_triggers": [
+    {
+      "name": "issue_pg_graphql_access",
+      "tags": [
+        "CREATE FUNCTION"
+      ],
+      "event": "ddl_command_end",
+      "enabled": "O",
+      "function": "grant_pg_graphql_access",
+      "function_schema": "extensions"
+    },
+    {
+      "name": "issue_graphql_placeholder",
+      "tags": [
+        "DROP EXTENSION"
+      ],
+      "event": "sql_drop",
+      "enabled": "O",
+      "function": "set_graphql_placeholder",
+      "function_schema": "extensions"
+    },
+    {
+      "name": "pgrst_ddl_watch",
+      "tags": null,
+      "event": "ddl_command_end",
+      "enabled": "O",
+      "function": "pgrst_ddl_watch",
+      "function_schema": "extensions"
+    },
+    {
+      "name": "pgrst_drop_watch",
+      "tags": null,
+      "event": "sql_drop",
+      "enabled": "O",
+      "function": "pgrst_drop_watch",
+      "function_schema": "extensions"
+    },
+    {
+      "name": "issue_pg_cron_access",
+      "tags": [
+        "CREATE EXTENSION"
+      ],
+      "event": "ddl_command_end",
+      "enabled": "O",
+      "function": "grant_pg_cron_access",
+      "function_schema": "extensions"
+    },
+    {
+      "name": "issue_pg_net_access",
+      "tags": [
+        "CREATE EXTENSION"
+      ],
+      "event": "ddl_command_end",
+      "enabled": "O",
+      "function": "grant_pg_net_access",
+      "function_schema": "extensions"
+    },
+    {
+      "name": "ensure_rls",
+      "tags": [
+        "CREATE TABLE",
+        "CREATE TABLE AS",
+        "SELECT INTO"
+      ],
+      "event": "ddl_command_end",
+      "enabled": "O",
+      "function": "rls_auto_enable",
+      "function_schema": "public"
+    }
+  ],
+  "related_dependencies": [
+    {
+      "name": "conversions",
+      "type": "type",
+      "schema": "public",
+      "identity_md5": "634535ae1f78241d320757cf4ecddd6f",
+      "dependency_type": "i"
+    },
+    {
+      "name": "pg_toast_45184",
+      "type": "toast table",
+      "schema": "pg_toast",
+      "identity_md5": "98e7153bf1902edb2fd29f4e8926e47e",
+      "dependency_type": "i"
+    },
+    {
+      "name": null,
+      "type": "trigger",
+      "schema": null,
+      "identity_md5": "d6b85b42a01d1619eea7e93472b9935b",
+      "dependency_type": "a"
+    },
+    {
+      "name": null,
+      "type": "trigger",
+      "schema": null,
+      "identity_md5": "a1601f2aef7d652f5c5d3ba1df0898f8",
+      "dependency_type": "a"
+    },
+    {
+      "name": null,
+      "type": "policy",
+      "schema": null,
+      "identity_md5": "45783e0d0af649abc1cbfec20e5e1ae7",
+      "dependency_type": "a"
+    },
+    {
+      "name": null,
+      "type": "policy",
+      "schema": null,
+      "identity_md5": "cc745057ee0481fd313f9ac28cace477",
+      "dependency_type": "a"
+    },
+    {
+      "name": null,
+      "type": "policy",
+      "schema": null,
+      "identity_md5": "22bf8db2688ec6dbe0bd55f290308964",
+      "dependency_type": "a"
+    },
+    {
+      "name": null,
+      "type": "policy",
+      "schema": null,
+      "identity_md5": "d4aeaa267105a5aaad06ce1807cf0164",
+      "dependency_type": "a"
+    },
+    {
+      "name": null,
+      "type": "policy",
+      "schema": null,
+      "identity_md5": "a8f4ce3ce2c0a93e51d8e11fc76e8f58",
+      "dependency_type": "a"
+    },
+    {
+      "name": null,
+      "type": "policy",
+      "schema": null,
+      "identity_md5": "abaad90faa10df446def2cb2d49b3104",
+      "dependency_type": "a"
+    },
+    {
+      "name": null,
+      "type": "trigger",
+      "schema": null,
+      "identity_md5": "dca5047e06c41d9226c941bb0860f42a",
+      "dependency_type": "a"
+    },
+    {
+      "name": null,
+      "type": "table constraint",
+      "schema": "public",
+      "identity_md5": "bd21a8a26b1fe3967cad3631d9818548",
+      "dependency_type": "n"
+    },
+    {
+      "name": null,
+      "type": "table constraint",
+      "schema": "public",
+      "identity_md5": "4c40a58ffd16a761f9b8732bd040047c",
+      "dependency_type": "n"
+    },
+    {
+      "name": null,
+      "type": "default value",
+      "schema": null,
+      "identity_md5": "c9d8eb86e995f563ce2570bc45f5819d",
+      "dependency_type": "a"
+    },
+    {
+      "name": null,
+      "type": "table constraint",
+      "schema": "public",
+      "identity_md5": "53da60ea3e329c5c1a4ca771d9f2c27e",
+      "dependency_type": "a"
+    },
+    {
+      "name": null,
+      "type": "table constraint",
+      "schema": "public",
+      "identity_md5": "67175d1b1d1225c8382b45b04abf47bf",
+      "dependency_type": "n"
+    },
+    {
+      "name": null,
+      "type": "table constraint",
+      "schema": "public",
+      "identity_md5": "1f165121c03a76b84caec9f0baaa1d38",
+      "dependency_type": "n"
+    },
+    {
+      "name": null,
+      "type": "table constraint",
+      "schema": "public",
+      "identity_md5": "a03979b739920571bc477fcc947123cf",
+      "dependency_type": "n"
+    },
+    {
+      "name": null,
+      "type": "table constraint",
+      "schema": "public",
+      "identity_md5": "fea94a67b7c6245747709b52164b8d70",
+      "dependency_type": "n"
+    },
+    {
+      "name": null,
+      "type": "table constraint",
+      "schema": "public",
+      "identity_md5": "8fd3537d07e61dcfc48691189a8d908e",
+      "dependency_type": "n"
+    },
+    {
+      "name": null,
+      "type": "table constraint",
+      "schema": "public",
+      "identity_md5": "d294ff944a99381fec086d3a09a9a1c1",
+      "dependency_type": "n"
+    },
+    {
+      "name": "conversions_purchase_coelsa_lookup_idx",
+      "type": "index",
+      "schema": "public",
+      "identity_md5": "677c880eec920681c47fb24a8b3bbbcc",
+      "dependency_type": "a"
+    },
+    {
+      "name": "conversions_purchase_transaction_lookup_idx",
+      "type": "index",
+      "schema": "public",
+      "identity_md5": "2ae9993865dc8d8a41cb8acce67a02f3",
+      "dependency_type": "a"
+    },
+    {
+      "name": null,
+      "type": "table constraint",
+      "schema": "public",
+      "identity_md5": "17e09d9447add7d3c70e13f309f67652",
+      "dependency_type": "n"
+    },
+    {
+      "name": null,
+      "type": "table constraint",
+      "schema": "public",
+      "identity_md5": "81b810d5483341d586654467a17b73ba",
+      "dependency_type": "a"
+    },
+    {
+      "name": "idx_conversions_landing_id",
+      "type": "index",
+      "schema": "public",
+      "identity_md5": "b3c77fa77fc46dc59d6df1632c18cc08",
+      "dependency_type": "a"
+    },
+    {
+      "name": "conversions_landing_assignment_messages_lookup_idx",
+      "type": "index",
+      "schema": "public",
+      "identity_md5": "77450e9b494405a4049899c6efcfb494",
+      "dependency_type": "a"
+    },
+    {
+      "name": "conversions_user_contact_event_id_uidx",
+      "type": "index",
+      "schema": "public",
+      "identity_md5": "26702381dae585fbb8dd82e0dbf87e15",
+      "dependency_type": "a"
+    },
+    {
+      "name": "conversions_user_promo_code_contact_uidx",
+      "type": "index",
+      "schema": "public",
+      "identity_md5": "a19744e0e28949aa62ff44c599148d1f",
+      "dependency_type": "a"
+    },
+    {
+      "name": "conversions_user_assigned_phone_lead_time_idx",
+      "type": "index",
+      "schema": "public",
+      "identity_md5": "cc54d919311eb1416446e970c54b7cda",
+      "dependency_type": "a"
+    },
+    {
+      "name": "idx_conversions_user_purchase_type",
+      "type": "index",
+      "schema": "public",
+      "identity_md5": "991382fd8e942ae0d147269a140f35a0",
+      "dependency_type": "a"
+    },
+    {
+      "name": "conversions_user_atrio_promo_idx",
+      "type": "index",
+      "schema": "public",
+      "identity_md5": "93dd413260f74d149ae654cd1a118129",
+      "dependency_type": "a"
+    },
+    {
+      "name": "conversions_user_atrio_phone_created_idx",
+      "type": "index",
+      "schema": "public",
+      "identity_md5": "9d63b5ec58338093a544bd4372a75980",
+      "dependency_type": "a"
+    },
+    {
+      "name": "conversions_user_lead_atrio_phone_created_idx",
+      "type": "index",
+      "schema": "public",
+      "identity_md5": "010e8aca63251d20e111c0f5819dd014",
+      "dependency_type": "a"
+    },
+    {
+      "name": "conversions_user_purchase_atrio_phone_created_idx",
+      "type": "index",
+      "schema": "public",
+      "identity_md5": "a712f691cc5489e96953b3310930c2f2",
+      "dependency_type": "a"
+    },
+    {
+      "name": "conversions_user_currency_created_idx",
+      "type": "index",
+      "schema": "public",
+      "identity_md5": "4c8b41fabd1c0e1376cd67a7c5654686",
+      "dependency_type": "a"
+    },
+    {
+      "name": "conversions_wca_contact_phone_fallback_idx",
+      "type": "index",
+      "schema": "public",
+      "identity_md5": "fb867109220a0da6486057b7da712787",
+      "dependency_type": "a"
+    },
+    {
+      "name": null,
+      "type": "table constraint",
+      "schema": "public",
+      "identity_md5": "772498c28cc3820af80774d96e1e2a5d",
+      "dependency_type": "a"
+    },
+    {
+      "name": "idx_conversions_user_id",
+      "type": "index",
+      "schema": "public",
+      "identity_md5": "7ffb24a73fa9e1d8fa51aba16c602d02",
+      "dependency_type": "a"
+    },
+    {
+      "name": null,
+      "type": "rule",
+      "schema": null,
+      "identity_md5": "2e51b2b5e6edace287c8e429a9062713",
+      "dependency_type": "n"
+    },
+    {
+      "name": "conversions_user_atrio_players_idx",
+      "type": "index",
+      "schema": "public",
+      "identity_md5": "c8bdc0dc6fa3f59dfebfbbb9714a40dd",
+      "dependency_type": "a"
+    },
+    {
+      "name": "conversions_user_lead_atrio_players_idx",
+      "type": "index",
+      "schema": "public",
+      "identity_md5": "0b9d3d33eb74124e0c55bbbe606c59ae",
+      "dependency_type": "a"
+    },
+    {
+      "name": "conversions_user_purchase_atrio_players_idx",
+      "type": "index",
+      "schema": "public",
+      "identity_md5": "ce4a5428fcc78d5aa1e62e28c34d8aac",
+      "dependency_type": "a"
+    },
+    {
+      "name": "conversions_purchase_coelsa_id_uidx",
+      "type": "index",
+      "schema": "public",
+      "identity_md5": "2122a639363a0daabe686be23f2db7a9",
+      "dependency_type": "a"
+    },
+    {
+      "name": "idx_conversions_user_currency_created_at",
+      "type": "index",
+      "schema": "public",
+      "identity_md5": "d7f64ca45e81233cf8c46075291ed3f4",
+      "dependency_type": "a"
+    },
+    {
+      "name": "conversions_user_phone_lead_gerencia_idx",
+      "type": "index",
+      "schema": "public",
+      "identity_md5": "6a9edfa6659ce54cf3d53bc0491e346b",
+      "dependency_type": "a"
+    },
+    {
+      "name": "conversions_user_phone_purchase_gerencia_idx",
+      "type": "index",
+      "schema": "public",
+      "identity_md5": "73c486f5929615e6e7dc7fec7097d4bc",
+      "dependency_type": "a"
+    },
+    {
+      "name": "conversions_user_assigned_gerencia_idx",
+      "type": "index",
+      "schema": "public",
+      "identity_md5": "58b3e9a7d01765efc89cb7f80938c9af",
+      "dependency_type": "a"
+    },
+    {
+      "name": "idx_conversions_lead_player_username",
+      "type": "index",
+      "schema": "public",
+      "identity_md5": "055fd9167267af4920aad021361c0fae",
+      "dependency_type": "a"
+    },
+    {
+      "name": "idx_conversions_registration_player_username",
+      "type": "index",
+      "schema": "public",
+      "identity_md5": "216fd6ad69e0d017ab8e936ac2fa02cb",
+      "dependency_type": "a"
+    },
+    {
+      "name": "idx_conversions_purchase_player_username",
+      "type": "index",
+      "schema": "public",
+      "identity_md5": "39146590f60d3eca35f5bd60c924fcaa",
+      "dependency_type": "a"
+    },
+    {
+      "name": "conversions_purchase_transaction_id_uidx",
+      "type": "index",
+      "schema": "public",
+      "identity_md5": "6c507afe917e87e47fbe687de32ba3f8",
+      "dependency_type": "a"
+    },
+    {
+      "name": "conversions_user_main_promo_code_uidx",
+      "type": "index",
+      "schema": "public",
+      "identity_md5": "8b73ab0b2d118e1b8ac9ecc2510fd437",
+      "dependency_type": "a"
+    },
+    {
+      "name": "conversions_phone_metrics_contacts_idx",
+      "type": "index",
+      "schema": "public",
+      "identity_md5": "caac61c559a61cce8203ee24369494f1",
+      "dependency_type": "a"
+    },
+    {
+      "name": "conversions_phone_metrics_leads_idx",
+      "type": "index",
+      "schema": "public",
+      "identity_md5": "1e5b5a9df735a268b1502295b12753d2",
+      "dependency_type": "a"
+    },
+    {
+      "name": "conversions_assignment_messages_lookup_idx",
+      "type": "index",
+      "schema": "public",
+      "identity_md5": "becbc8813a223ea10004669e30a08c46",
+      "dependency_type": "a"
+    },
+    {
+      "name": null,
+      "type": "policy",
+      "schema": null,
+      "identity_md5": "45783e0d0af649abc1cbfec20e5e1ae7",
+      "dependency_type": "n"
+    },
+    {
+      "name": null,
+      "type": "policy",
+      "schema": null,
+      "identity_md5": "22bf8db2688ec6dbe0bd55f290308964",
+      "dependency_type": "n"
+    },
+    {
+      "name": null,
+      "type": "policy",
+      "schema": null,
+      "identity_md5": "22bf8db2688ec6dbe0bd55f290308964",
+      "dependency_type": "n"
+    },
+    {
+      "name": null,
+      "type": "policy",
+      "schema": null,
+      "identity_md5": "a8f4ce3ce2c0a93e51d8e11fc76e8f58",
+      "dependency_type": "n"
+    },
+    {
+      "name": "conversions_purchase_coelsa_lookup_idx",
+      "type": "index",
+      "schema": "public",
+      "identity_md5": "677c880eec920681c47fb24a8b3bbbcc",
+      "dependency_type": "a"
+    },
+    {
+      "name": "conversions_purchase_transaction_lookup_idx",
+      "type": "index",
+      "schema": "public",
+      "identity_md5": "2ae9993865dc8d8a41cb8acce67a02f3",
+      "dependency_type": "a"
+    },
+    {
+      "name": "conversions_user_created_at_lookup_idx",
+      "type": "index",
+      "schema": "public",
+      "identity_md5": "589f2a789e1faaafb175bb86ae143302",
+      "dependency_type": "a"
+    },
+    {
+      "name": "conversions_phone_metrics_contacts_normalized_idx",
+      "type": "index",
+      "schema": "public",
+      "identity_md5": "58f95d67a86b0867c0d3ecf895313139",
+      "dependency_type": "a"
+    },
+    {
+      "name": "conversions_phone_metrics_leads_normalized_idx",
+      "type": "index",
+      "schema": "public",
+      "identity_md5": "71412b5eb20ba000b70b1524fa29f8d9",
+      "dependency_type": "a"
+    },
+    {
+      "name": "conversions_wca_user_promo_currency_expr_idx",
+      "type": "index",
+      "schema": "public",
+      "identity_md5": "9aa55cb9199587170726f50d3b29103a",
+      "dependency_type": "a"
+    },
+    {
+      "name": "conversions_wca_user_external_currency_expr_idx",
+      "type": "index",
+      "schema": "public",
+      "identity_md5": "daf98278d1a989dd1e9f2ffdd85a7440",
+      "dependency_type": "a"
+    },
+    {
+      "name": "conversions_wca_external_match_idx",
+      "type": "index",
+      "schema": "public",
+      "identity_md5": "40473c538cdaa75f9c33c2b58671cd4c",
+      "dependency_type": "a"
+    },
+    {
+      "name": "conversions_wca_promo_match_idx",
+      "type": "index",
+      "schema": "public",
+      "identity_md5": "2ca7821e1e795dc95b088528343cf817",
+      "dependency_type": "a"
+    },
+    {
+      "name": "conversions_landing_assignment_messages_lookup_idx",
+      "type": "index",
+      "schema": "public",
+      "identity_md5": "77450e9b494405a4049899c6efcfb494",
+      "dependency_type": "a"
+    },
+    {
+      "name": "conversions_meta_audience_purchase_idx",
+      "type": "index",
+      "schema": "public",
+      "identity_md5": "57d381ca497e7c5fee21890918402e26",
+      "dependency_type": "a"
+    },
+    {
+      "name": null,
+      "type": "default value",
+      "schema": null,
+      "identity_md5": "d07f75799ca4afebb03531401fe595b7",
+      "dependency_type": "a"
+    },
+    {
+      "name": null,
+      "type": "rule",
+      "schema": null,
+      "identity_md5": "2e51b2b5e6edace287c8e429a9062713",
+      "dependency_type": "n"
+    },
+    {
+      "name": "conversions_user_atrio_phone_created_idx",
+      "type": "index",
+      "schema": "public",
+      "identity_md5": "9d63b5ec58338093a544bd4372a75980",
+      "dependency_type": "a"
+    },
+    {
+      "name": "conversions_user_atrio_phone_created_idx",
+      "type": "index",
+      "schema": "public",
+      "identity_md5": "9d63b5ec58338093a544bd4372a75980",
+      "dependency_type": "a"
+    },
+    {
+      "name": "conversions_user_lead_atrio_phone_created_idx",
+      "type": "index",
+      "schema": "public",
+      "identity_md5": "010e8aca63251d20e111c0f5819dd014",
+      "dependency_type": "a"
+    },
+    {
+      "name": "conversions_user_lead_atrio_phone_created_idx",
+      "type": "index",
+      "schema": "public",
+      "identity_md5": "010e8aca63251d20e111c0f5819dd014",
+      "dependency_type": "a"
+    },
+    {
+      "name": "conversions_user_purchase_atrio_phone_created_idx",
+      "type": "index",
+      "schema": "public",
+      "identity_md5": "a712f691cc5489e96953b3310930c2f2",
+      "dependency_type": "a"
+    },
+    {
+      "name": "conversions_user_purchase_atrio_phone_created_idx",
+      "type": "index",
+      "schema": "public",
+      "identity_md5": "a712f691cc5489e96953b3310930c2f2",
+      "dependency_type": "a"
+    },
+    {
+      "name": "conversions_wca_contact_phone_fallback_idx",
+      "type": "index",
+      "schema": "public",
+      "identity_md5": "fb867109220a0da6486057b7da712787",
+      "dependency_type": "a"
+    },
+    {
+      "name": null,
+      "type": "default value",
+      "schema": null,
+      "identity_md5": "58558a1d43bb58c46b6bee0c7c73b603",
+      "dependency_type": "a"
+    },
+    {
+      "name": "idx_conversions_phone",
+      "type": "index",
+      "schema": "public",
+      "identity_md5": "284d28f35df648d49be316a130ee3c53",
+      "dependency_type": "a"
+    },
+    {
+      "name": "idx_conversions_phone",
+      "type": "index",
+      "schema": "public",
+      "identity_md5": "284d28f35df648d49be316a130ee3c53",
+      "dependency_type": "a"
+    },
+    {
+      "name": null,
+      "type": "rule",
+      "schema": null,
+      "identity_md5": "2e51b2b5e6edace287c8e429a9062713",
+      "dependency_type": "n"
+    },
+    {
+      "name": "conversions_user_phone_lead_gerencia_idx",
+      "type": "index",
+      "schema": "public",
+      "identity_md5": "6a9edfa6659ce54cf3d53bc0491e346b",
+      "dependency_type": "a"
+    },
+    {
+      "name": "conversions_user_phone_purchase_gerencia_idx",
+      "type": "index",
+      "schema": "public",
+      "identity_md5": "73c486f5929615e6e7dc7fec7097d4bc",
+      "dependency_type": "a"
+    },
+    {
+      "name": "idx_conversions_phone_empty_email",
+      "type": "index",
+      "schema": "public",
+      "identity_md5": "ddf24cb9015fdb0f0f30ffbfc41a91d6",
+      "dependency_type": "a"
+    },
+    {
+      "name": "idx_conversions_phone_empty_email",
+      "type": "index",
+      "schema": "public",
+      "identity_md5": "ddf24cb9015fdb0f0f30ffbfc41a91d6",
+      "dependency_type": "a"
+    },
+    {
+      "name": "conversions_user_created_at_lookup_idx",
+      "type": "index",
+      "schema": "public",
+      "identity_md5": "589f2a789e1faaafb175bb86ae143302",
+      "dependency_type": "a"
+    },
+    {
+      "name": null,
+      "type": "default value",
+      "schema": null,
+      "identity_md5": "5414d03673effc41072c691a86d5ddff",
+      "dependency_type": "a"
+    },
+    {
+      "name": null,
+      "type": "rule",
+      "schema": null,
+      "identity_md5": "2e51b2b5e6edace287c8e429a9062713",
+      "dependency_type": "n"
+    },
+    {
+      "name": "idx_conversions_phone_empty_email",
+      "type": "index",
+      "schema": "public",
+      "identity_md5": "ddf24cb9015fdb0f0f30ffbfc41a91d6",
+      "dependency_type": "a"
+    },
+    {
+      "name": null,
+      "type": "default value",
+      "schema": null,
+      "identity_md5": "d4fb4fe8ea07a1645b255dfacc0312f4",
+      "dependency_type": "a"
+    },
+    {
+      "name": null,
+      "type": "rule",
+      "schema": null,
+      "identity_md5": "2e51b2b5e6edace287c8e429a9062713",
+      "dependency_type": "n"
+    },
+    {
+      "name": null,
+      "type": "default value",
+      "schema": null,
+      "identity_md5": "9df63f54e1bcee8154937780abfbf365",
+      "dependency_type": "a"
+    },
+    {
+      "name": null,
+      "type": "rule",
+      "schema": null,
+      "identity_md5": "2e51b2b5e6edace287c8e429a9062713",
+      "dependency_type": "n"
+    },
+    {
+      "name": null,
+      "type": "default value",
+      "schema": null,
+      "identity_md5": "a6f4904d63c268a5f431f90e206eab53",
+      "dependency_type": "a"
+    },
+    {
+      "name": null,
+      "type": "rule",
+      "schema": null,
+      "identity_md5": "2e51b2b5e6edace287c8e429a9062713",
+      "dependency_type": "n"
+    },
+    {
+      "name": null,
+      "type": "default value",
+      "schema": null,
+      "identity_md5": "a4656c37f863ca1f545d6329cdd1d280",
+      "dependency_type": "a"
+    },
+    {
+      "name": null,
+      "type": "rule",
+      "schema": null,
+      "identity_md5": "2e51b2b5e6edace287c8e429a9062713",
+      "dependency_type": "n"
+    },
+    {
+      "name": null,
+      "type": "default value",
+      "schema": null,
+      "identity_md5": "7fb4aba623678d7dfab9a026741b9859",
+      "dependency_type": "a"
+    },
+    {
+      "name": null,
+      "type": "default value",
+      "schema": null,
+      "identity_md5": "fc1f3773c69b89852bbc3357a720e70c",
+      "dependency_type": "a"
+    },
+    {
+      "name": null,
+      "type": "rule",
+      "schema": null,
+      "identity_md5": "2e51b2b5e6edace287c8e429a9062713",
+      "dependency_type": "n"
+    },
+    {
+      "name": null,
+      "type": "default value",
+      "schema": null,
+      "identity_md5": "d623f20e17cbc345ef8d6692bc4e7f09",
+      "dependency_type": "a"
+    },
+    {
+      "name": null,
+      "type": "default value",
+      "schema": null,
+      "identity_md5": "ab2f2b03a908caaa975059270f62373d",
+      "dependency_type": "a"
+    },
+    {
+      "name": "conversions_user_contact_event_id_uidx",
+      "type": "index",
+      "schema": "public",
+      "identity_md5": "26702381dae585fbb8dd82e0dbf87e15",
+      "dependency_type": "a"
+    },
+    {
+      "name": "conversions_user_contact_event_id_uidx",
+      "type": "index",
+      "schema": "public",
+      "identity_md5": "26702381dae585fbb8dd82e0dbf87e15",
+      "dependency_type": "a"
+    },
+    {
+      "name": null,
+      "type": "default value",
+      "schema": null,
+      "identity_md5": "29cf1f478befc6cba4a043d6e1c1a46f",
+      "dependency_type": "a"
+    },
+    {
+      "name": null,
+      "type": "rule",
+      "schema": null,
+      "identity_md5": "2e51b2b5e6edace287c8e429a9062713",
+      "dependency_type": "n"
+    },
+    {
+      "name": "conversions_phone_metrics_contacts_idx",
+      "type": "index",
+      "schema": "public",
+      "identity_md5": "caac61c559a61cce8203ee24369494f1",
+      "dependency_type": "a"
+    },
+    {
+      "name": "conversions_phone_metrics_contacts_normalized_idx",
+      "type": "index",
+      "schema": "public",
+      "identity_md5": "58f95d67a86b0867c0d3ecf895313139",
+      "dependency_type": "a"
+    },
+    {
+      "name": "conversions_user_assigned_phone_lead_time_idx",
+      "type": "index",
+      "schema": "public",
+      "identity_md5": "cc54d919311eb1416446e970c54b7cda",
+      "dependency_type": "a"
+    },
+    {
+      "name": null,
+      "type": "default value",
+      "schema": null,
+      "identity_md5": "ed9dbff8969b2d75d33d9a1c381ca71e",
+      "dependency_type": "a"
+    },
+    {
+      "name": null,
+      "type": "rule",
+      "schema": null,
+      "identity_md5": "2e51b2b5e6edace287c8e429a9062713",
+      "dependency_type": "n"
+    },
+    {
+      "name": "conversions_user_phone_lead_gerencia_idx",
+      "type": "index",
+      "schema": "public",
+      "identity_md5": "6a9edfa6659ce54cf3d53bc0491e346b",
+      "dependency_type": "a"
+    },
+    {
+      "name": "conversions_phone_metrics_leads_idx",
+      "type": "index",
+      "schema": "public",
+      "identity_md5": "1e5b5a9df735a268b1502295b12753d2",
+      "dependency_type": "a"
+    },
+    {
+      "name": "conversions_assignment_messages_lookup_idx",
+      "type": "index",
+      "schema": "public",
+      "identity_md5": "becbc8813a223ea10004669e30a08c46",
+      "dependency_type": "a"
+    },
+    {
+      "name": "conversions_phone_metrics_leads_normalized_idx",
+      "type": "index",
+      "schema": "public",
+      "identity_md5": "71412b5eb20ba000b70b1524fa29f8d9",
+      "dependency_type": "a"
+    },
+    {
+      "name": "conversions_landing_assignment_messages_lookup_idx",
+      "type": "index",
+      "schema": "public",
+      "identity_md5": "77450e9b494405a4049899c6efcfb494",
+      "dependency_type": "a"
+    },
+    {
+      "name": null,
+      "type": "trigger",
+      "schema": null,
+      "identity_md5": "dca5047e06c41d9226c941bb0860f42a",
+      "dependency_type": "n"
+    },
+    {
+      "name": null,
+      "type": "trigger",
+      "schema": null,
+      "identity_md5": "dca5047e06c41d9226c941bb0860f42a",
+      "dependency_type": "n"
+    },
+    {
+      "name": "conversions_user_assigned_phone_lead_time_idx",
+      "type": "index",
+      "schema": "public",
+      "identity_md5": "cc54d919311eb1416446e970c54b7cda",
+      "dependency_type": "a"
+    },
+    {
+      "name": "conversions_phone_metrics_leads_idx",
+      "type": "index",
+      "schema": "public",
+      "identity_md5": "1e5b5a9df735a268b1502295b12753d2",
+      "dependency_type": "a"
+    },
+    {
+      "name": "conversions_assignment_messages_lookup_idx",
+      "type": "index",
+      "schema": "public",
+      "identity_md5": "becbc8813a223ea10004669e30a08c46",
+      "dependency_type": "a"
+    },
+    {
+      "name": "conversions_phone_metrics_leads_normalized_idx",
+      "type": "index",
+      "schema": "public",
+      "identity_md5": "71412b5eb20ba000b70b1524fa29f8d9",
+      "dependency_type": "a"
+    },
+    {
+      "name": "conversions_landing_assignment_messages_lookup_idx",
+      "type": "index",
+      "schema": "public",
+      "identity_md5": "77450e9b494405a4049899c6efcfb494",
+      "dependency_type": "a"
+    },
+    {
+      "name": null,
+      "type": "default value",
+      "schema": null,
+      "identity_md5": "0959c763d60d88b30ba655f133830296",
+      "dependency_type": "a"
+    },
+    {
+      "name": null,
+      "type": "rule",
+      "schema": null,
+      "identity_md5": "2e51b2b5e6edace287c8e429a9062713",
+      "dependency_type": "n"
+    },
+    {
+      "name": "conversions_user_phone_purchase_gerencia_idx",
+      "type": "index",
+      "schema": "public",
+      "identity_md5": "73c486f5929615e6e7dc7fec7097d4bc",
+      "dependency_type": "a"
+    },
+    {
+      "name": "conversions_purchase_coelsa_lookup_idx",
+      "type": "index",
+      "schema": "public",
+      "identity_md5": "677c880eec920681c47fb24a8b3bbbcc",
+      "dependency_type": "a"
+    },
+    {
+      "name": "conversions_purchase_transaction_lookup_idx",
+      "type": "index",
+      "schema": "public",
+      "identity_md5": "2ae9993865dc8d8a41cb8acce67a02f3",
+      "dependency_type": "a"
+    },
+    {
+      "name": "conversions_user_created_at_lookup_idx",
+      "type": "index",
+      "schema": "public",
+      "identity_md5": "589f2a789e1faaafb175bb86ae143302",
+      "dependency_type": "a"
+    },
+    {
+      "name": "conversions_meta_audience_purchase_idx",
+      "type": "index",
+      "schema": "public",
+      "identity_md5": "57d381ca497e7c5fee21890918402e26",
+      "dependency_type": "a"
+    },
+    {
+      "name": "conversions_meta_audience_purchase_idx",
+      "type": "index",
+      "schema": "public",
+      "identity_md5": "57d381ca497e7c5fee21890918402e26",
+      "dependency_type": "a"
+    },
+    {
+      "name": null,
+      "type": "default value",
+      "schema": null,
+      "identity_md5": "43919ddbb25218e3d65ff808795633c8",
+      "dependency_type": "a"
+    },
+    {
+      "name": null,
+      "type": "default value",
+      "schema": null,
+      "identity_md5": "6e2258fc4fc59342fa72ce952c1e4e15",
+      "dependency_type": "a"
+    },
+    {
+      "name": null,
+      "type": "default value",
+      "schema": null,
+      "identity_md5": "6d3817113856455c876ec9c69857449f",
+      "dependency_type": "a"
+    },
+    {
+      "name": null,
+      "type": "rule",
+      "schema": null,
+      "identity_md5": "2e51b2b5e6edace287c8e429a9062713",
+      "dependency_type": "n"
+    },
+    {
+      "name": null,
+      "type": "default value",
+      "schema": null,
+      "identity_md5": "1a8a73e0026b3b26b9b91c2723f05403",
+      "dependency_type": "a"
+    },
+    {
+      "name": "conversions_user_promo_code_contact_uidx",
+      "type": "index",
+      "schema": "public",
+      "identity_md5": "a19744e0e28949aa62ff44c599148d1f",
+      "dependency_type": "a"
+    },
+    {
+      "name": "conversions_purchase_capi_retryable_created_idx",
+      "type": "index",
+      "schema": "public",
+      "identity_md5": "f553107950ecb4c17a6ef64837e9c095",
+      "dependency_type": "a"
+    },
+    {
+      "name": "conversions_wca_contact_phone_fallback_idx",
+      "type": "index",
+      "schema": "public",
+      "identity_md5": "fb867109220a0da6486057b7da712787",
+      "dependency_type": "a"
+    },
+    {
+      "name": null,
+      "type": "default value",
+      "schema": null,
+      "identity_md5": "fd01d3017fbaa533c112ebea00a88dca",
+      "dependency_type": "a"
+    },
+    {
+      "name": null,
+      "type": "table constraint",
+      "schema": "public",
+      "identity_md5": "5ffc5e4c28d902680e04b03af40e0ecc",
+      "dependency_type": "a"
+    },
+    {
+      "name": null,
+      "type": "table constraint",
+      "schema": "public",
+      "identity_md5": "5ffc5e4c28d902680e04b03af40e0ecc",
+      "dependency_type": "n"
+    },
+    {
+      "name": "idx_conversions_retry",
+      "type": "index",
+      "schema": "public",
+      "identity_md5": "f6e610c2cd4c2af399066bfaa693a904",
+      "dependency_type": "a"
+    },
+    {
+      "name": "idx_conversions_retry",
+      "type": "index",
+      "schema": "public",
+      "identity_md5": "f6e610c2cd4c2af399066bfaa693a904",
+      "dependency_type": "a"
+    },
+    {
+      "name": null,
+      "type": "rule",
+      "schema": null,
+      "identity_md5": "2e51b2b5e6edace287c8e429a9062713",
+      "dependency_type": "n"
+    },
+    {
+      "name": "conversions_purchase_coelsa_lookup_idx",
+      "type": "index",
+      "schema": "public",
+      "identity_md5": "677c880eec920681c47fb24a8b3bbbcc",
+      "dependency_type": "a"
+    },
+    {
+      "name": "conversions_purchase_transaction_lookup_idx",
+      "type": "index",
+      "schema": "public",
+      "identity_md5": "2ae9993865dc8d8a41cb8acce67a02f3",
+      "dependency_type": "a"
+    },
+    {
+      "name": "conversions_purchase_retry_created_idx",
+      "type": "index",
+      "schema": "public",
+      "identity_md5": "858d4637b96f435f08e7e50b886d07e5",
+      "dependency_type": "a"
+    },
+    {
+      "name": "conversions_user_created_at_lookup_idx",
+      "type": "index",
+      "schema": "public",
+      "identity_md5": "589f2a789e1faaafb175bb86ae143302",
+      "dependency_type": "a"
+    },
+    {
+      "name": "conversions_meta_audience_purchase_idx",
+      "type": "index",
+      "schema": "public",
+      "identity_md5": "57d381ca497e7c5fee21890918402e26",
+      "dependency_type": "a"
+    },
+    {
+      "name": "conversions_purchase_capi_retryable_created_idx",
+      "type": "index",
+      "schema": "public",
+      "identity_md5": "f553107950ecb4c17a6ef64837e9c095",
+      "dependency_type": "a"
+    },
+    {
+      "name": null,
+      "type": "default value",
+      "schema": null,
+      "identity_md5": "22b0e5320e43a8ae75522664237a4bc1",
+      "dependency_type": "a"
+    },
+    {
+      "name": null,
+      "type": "rule",
+      "schema": null,
+      "identity_md5": "2e51b2b5e6edace287c8e429a9062713",
+      "dependency_type": "n"
+    },
+    {
+      "name": "conversions_purchase_retry_created_idx",
+      "type": "index",
+      "schema": "public",
+      "identity_md5": "858d4637b96f435f08e7e50b886d07e5",
+      "dependency_type": "a"
+    },
+    {
+      "name": "conversions_user_created_at_lookup_idx",
+      "type": "index",
+      "schema": "public",
+      "identity_md5": "589f2a789e1faaafb175bb86ae143302",
+      "dependency_type": "a"
+    },
+    {
+      "name": null,
+      "type": "default value",
+      "schema": null,
+      "identity_md5": "560ec2f0aa7878720543c9409b2f921a",
+      "dependency_type": "a"
+    },
+    {
+      "name": "idx_conversions_contact_capi_retry",
+      "type": "index",
+      "schema": "public",
+      "identity_md5": "abeee34b60b916836f1987d8bc8d86f0",
+      "dependency_type": "a"
+    },
+    {
+      "name": null,
+      "type": "default value",
+      "schema": null,
+      "identity_md5": "ca61c4559397c776313d373559d7223f",
+      "dependency_type": "a"
+    },
+    {
+      "name": "idx_conversions_lead_capi_retry",
+      "type": "index",
+      "schema": "public",
+      "identity_md5": "a92ec592ed83901b8dad78bbc3704297",
+      "dependency_type": "a"
+    },
+    {
+      "name": "conversions_purchase_capi_retryable_created_idx",
+      "type": "index",
+      "schema": "public",
+      "identity_md5": "f553107950ecb4c17a6ef64837e9c095",
+      "dependency_type": "a"
+    },
+    {
+      "name": null,
+      "type": "default value",
+      "schema": null,
+      "identity_md5": "7d1c7332927ec6cccf9bb9c79fbca4b0",
+      "dependency_type": "a"
+    },
+    {
+      "name": "idx_conversions_retry",
+      "type": "index",
+      "schema": "public",
+      "identity_md5": "f6e610c2cd4c2af399066bfaa693a904",
+      "dependency_type": "a"
+    },
+    {
+      "name": "idx_conversions_retry",
+      "type": "index",
+      "schema": "public",
+      "identity_md5": "f6e610c2cd4c2af399066bfaa693a904",
+      "dependency_type": "a"
+    },
+    {
+      "name": "conversions_purchase_retry_created_idx",
+      "type": "index",
+      "schema": "public",
+      "identity_md5": "858d4637b96f435f08e7e50b886d07e5",
+      "dependency_type": "a"
+    },
+    {
+      "name": null,
+      "type": "default value",
+      "schema": null,
+      "identity_md5": "d93b4aba3dcac1899b2e26db45b939f6",
+      "dependency_type": "a"
+    },
+    {
+      "name": null,
+      "type": "rule",
+      "schema": null,
+      "identity_md5": "2e51b2b5e6edace287c8e429a9062713",
+      "dependency_type": "n"
+    },
+    {
+      "name": null,
+      "type": "default value",
+      "schema": null,
+      "identity_md5": "9873ffee55843aedffbae4880f705805",
+      "dependency_type": "a"
+    },
+    {
+      "name": "conversions_phone_metrics_contacts_idx",
+      "type": "index",
+      "schema": "public",
+      "identity_md5": "caac61c559a61cce8203ee24369494f1",
+      "dependency_type": "a"
+    },
+    {
+      "name": "conversions_phone_metrics_contacts_idx",
+      "type": "index",
+      "schema": "public",
+      "identity_md5": "caac61c559a61cce8203ee24369494f1",
+      "dependency_type": "a"
+    },
+    {
+      "name": "conversions_phone_metrics_leads_idx",
+      "type": "index",
+      "schema": "public",
+      "identity_md5": "1e5b5a9df735a268b1502295b12753d2",
+      "dependency_type": "a"
+    },
+    {
+      "name": "conversions_phone_metrics_leads_idx",
+      "type": "index",
+      "schema": "public",
+      "identity_md5": "1e5b5a9df735a268b1502295b12753d2",
+      "dependency_type": "a"
+    },
+    {
+      "name": "conversions_phone_metrics_contacts_normalized_idx",
+      "type": "index",
+      "schema": "public",
+      "identity_md5": "58f95d67a86b0867c0d3ecf895313139",
+      "dependency_type": "a"
+    },
+    {
+      "name": "conversions_phone_metrics_contacts_normalized_idx",
+      "type": "index",
+      "schema": "public",
+      "identity_md5": "58f95d67a86b0867c0d3ecf895313139",
+      "dependency_type": "a"
+    },
+    {
+      "name": "conversions_phone_metrics_leads_normalized_idx",
+      "type": "index",
+      "schema": "public",
+      "identity_md5": "71412b5eb20ba000b70b1524fa29f8d9",
+      "dependency_type": "a"
+    },
+    {
+      "name": "conversions_phone_metrics_leads_normalized_idx",
+      "type": "index",
+      "schema": "public",
+      "identity_md5": "71412b5eb20ba000b70b1524fa29f8d9",
+      "dependency_type": "a"
+    },
+    {
+      "name": "conversions_wca_user_external_currency_expr_idx",
+      "type": "index",
+      "schema": "public",
+      "identity_md5": "daf98278d1a989dd1e9f2ffdd85a7440",
+      "dependency_type": "a"
+    },
+    {
+      "name": "conversions_wca_user_external_currency_expr_idx",
+      "type": "index",
+      "schema": "public",
+      "identity_md5": "daf98278d1a989dd1e9f2ffdd85a7440",
+      "dependency_type": "a"
+    },
+    {
+      "name": "conversions_wca_external_match_idx",
+      "type": "index",
+      "schema": "public",
+      "identity_md5": "40473c538cdaa75f9c33c2b58671cd4c",
+      "dependency_type": "a"
+    },
+    {
+      "name": "conversions_wca_external_match_idx",
+      "type": "index",
+      "schema": "public",
+      "identity_md5": "40473c538cdaa75f9c33c2b58671cd4c",
+      "dependency_type": "a"
+    },
+    {
+      "name": null,
+      "type": "default value",
+      "schema": null,
+      "identity_md5": "8b73fde51d8bf5505962060eac2483d0",
+      "dependency_type": "a"
+    },
+    {
+      "name": null,
+      "type": "rule",
+      "schema": null,
+      "identity_md5": "2e51b2b5e6edace287c8e429a9062713",
+      "dependency_type": "n"
+    },
+    {
+      "name": "conversions_user_assigned_phone_lead_time_idx",
+      "type": "index",
+      "schema": "public",
+      "identity_md5": "cc54d919311eb1416446e970c54b7cda",
+      "dependency_type": "a"
+    },
+    {
+      "name": "conversions_wca_contact_phone_fallback_idx",
+      "type": "index",
+      "schema": "public",
+      "identity_md5": "fb867109220a0da6486057b7da712787",
+      "dependency_type": "a"
+    },
+    {
+      "name": null,
+      "type": "default value",
+      "schema": null,
+      "identity_md5": "c5438eed4c34d79634357738d6fe3e25",
+      "dependency_type": "a"
+    },
+    {
+      "name": "conversions_phone_metrics_contacts_idx",
+      "type": "index",
+      "schema": "public",
+      "identity_md5": "caac61c559a61cce8203ee24369494f1",
+      "dependency_type": "a"
+    },
+    {
+      "name": "conversions_phone_metrics_leads_idx",
+      "type": "index",
+      "schema": "public",
+      "identity_md5": "1e5b5a9df735a268b1502295b12753d2",
+      "dependency_type": "a"
+    },
+    {
+      "name": "conversions_phone_metrics_leads_idx",
+      "type": "index",
+      "schema": "public",
+      "identity_md5": "1e5b5a9df735a268b1502295b12753d2",
+      "dependency_type": "a"
+    },
+    {
+      "name": "conversions_assignment_messages_lookup_idx",
+      "type": "index",
+      "schema": "public",
+      "identity_md5": "becbc8813a223ea10004669e30a08c46",
+      "dependency_type": "a"
+    },
+    {
+      "name": "conversions_assignment_messages_lookup_idx",
+      "type": "index",
+      "schema": "public",
+      "identity_md5": "becbc8813a223ea10004669e30a08c46",
+      "dependency_type": "a"
+    },
+    {
+      "name": "conversions_phone_metrics_contacts_normalized_idx",
+      "type": "index",
+      "schema": "public",
+      "identity_md5": "58f95d67a86b0867c0d3ecf895313139",
+      "dependency_type": "a"
+    },
+    {
+      "name": "conversions_phone_metrics_leads_normalized_idx",
+      "type": "index",
+      "schema": "public",
+      "identity_md5": "71412b5eb20ba000b70b1524fa29f8d9",
+      "dependency_type": "a"
+    },
+    {
+      "name": "conversions_phone_metrics_leads_normalized_idx",
+      "type": "index",
+      "schema": "public",
+      "identity_md5": "71412b5eb20ba000b70b1524fa29f8d9",
+      "dependency_type": "a"
+    },
+    {
+      "name": "conversions_landing_assignment_messages_lookup_idx",
+      "type": "index",
+      "schema": "public",
+      "identity_md5": "77450e9b494405a4049899c6efcfb494",
+      "dependency_type": "a"
+    },
+    {
+      "name": "conversions_landing_assignment_messages_lookup_idx",
+      "type": "index",
+      "schema": "public",
+      "identity_md5": "77450e9b494405a4049899c6efcfb494",
+      "dependency_type": "a"
+    },
+    {
+      "name": "conversions_user_promo_code_contact_uidx",
+      "type": "index",
+      "schema": "public",
+      "identity_md5": "a19744e0e28949aa62ff44c599148d1f",
+      "dependency_type": "a"
+    },
+    {
+      "name": "conversions_user_promo_code_contact_uidx",
+      "type": "index",
+      "schema": "public",
+      "identity_md5": "a19744e0e28949aa62ff44c599148d1f",
+      "dependency_type": "a"
+    },
+    {
+      "name": "conversions_user_atrio_promo_idx",
+      "type": "index",
+      "schema": "public",
+      "identity_md5": "93dd413260f74d149ae654cd1a118129",
+      "dependency_type": "a"
+    },
+    {
+      "name": "conversions_user_atrio_promo_idx",
+      "type": "index",
+      "schema": "public",
+      "identity_md5": "93dd413260f74d149ae654cd1a118129",
+      "dependency_type": "a"
+    },
+    {
+      "name": null,
+      "type": "default value",
+      "schema": null,
+      "identity_md5": "622c0ce6109335ea5a7b139e290aa4e7",
+      "dependency_type": "a"
+    },
+    {
+      "name": "idx_conversions_promo_code",
+      "type": "index",
+      "schema": "public",
+      "identity_md5": "f699dab990837ebec0675cbfea58917e",
+      "dependency_type": "a"
+    },
+    {
+      "name": "idx_conversions_promo_code",
+      "type": "index",
+      "schema": "public",
+      "identity_md5": "f699dab990837ebec0675cbfea58917e",
+      "dependency_type": "a"
+    },
+    {
+      "name": "conversions_user_main_promo_code_uidx",
+      "type": "index",
+      "schema": "public",
+      "identity_md5": "8b73ab0b2d118e1b8ac9ecc2510fd437",
+      "dependency_type": "a"
+    },
+    {
+      "name": "conversions_user_main_promo_code_uidx",
+      "type": "index",
+      "schema": "public",
+      "identity_md5": "8b73ab0b2d118e1b8ac9ecc2510fd437",
+      "dependency_type": "a"
+    },
+    {
+      "name": "conversions_wca_user_promo_currency_expr_idx",
+      "type": "index",
+      "schema": "public",
+      "identity_md5": "9aa55cb9199587170726f50d3b29103a",
+      "dependency_type": "a"
+    },
+    {
+      "name": "conversions_wca_user_promo_currency_expr_idx",
+      "type": "index",
+      "schema": "public",
+      "identity_md5": "9aa55cb9199587170726f50d3b29103a",
+      "dependency_type": "a"
+    },
+    {
+      "name": "conversions_wca_promo_match_idx",
+      "type": "index",
+      "schema": "public",
+      "identity_md5": "2ca7821e1e795dc95b088528343cf817",
+      "dependency_type": "a"
+    },
+    {
+      "name": "conversions_wca_promo_match_idx",
+      "type": "index",
+      "schema": "public",
+      "identity_md5": "2ca7821e1e795dc95b088528343cf817",
+      "dependency_type": "a"
+    },
+    {
+      "name": null,
+      "type": "default value",
+      "schema": null,
+      "identity_md5": "a8189be0e26e705d52bb50e3ec8b75b7",
+      "dependency_type": "a"
+    },
+    {
+      "name": null,
+      "type": "default value",
+      "schema": null,
+      "identity_md5": "cf08045c806426cb5ed56c70f9476032",
+      "dependency_type": "a"
+    },
+    {
+      "name": null,
+      "type": "rule",
+      "schema": null,
+      "identity_md5": "2e51b2b5e6edace287c8e429a9062713",
+      "dependency_type": "n"
+    },
+    {
+      "name": null,
+      "type": "default value",
+      "schema": null,
+      "identity_md5": "5b53fbabd2691293a7f6ac069a726a67",
+      "dependency_type": "a"
+    },
+    {
+      "name": "conversions_purchase_capi_retryable_created_idx",
+      "type": "index",
+      "schema": "public",
+      "identity_md5": "f553107950ecb4c17a6ef64837e9c095",
+      "dependency_type": "a"
+    },
+    {
+      "name": "conversions_user_atrio_phone_created_idx",
+      "type": "index",
+      "schema": "public",
+      "identity_md5": "9d63b5ec58338093a544bd4372a75980",
+      "dependency_type": "a"
+    },
+    {
+      "name": "conversions_user_lead_atrio_phone_created_idx",
+      "type": "index",
+      "schema": "public",
+      "identity_md5": "010e8aca63251d20e111c0f5819dd014",
+      "dependency_type": "a"
+    },
+    {
+      "name": "conversions_user_currency_created_idx",
+      "type": "index",
+      "schema": "public",
+      "identity_md5": "4c8b41fabd1c0e1376cd67a7c5654686",
+      "dependency_type": "a"
+    },
+    {
+      "name": "conversions_user_purchase_atrio_phone_created_idx",
+      "type": "index",
+      "schema": "public",
+      "identity_md5": "a712f691cc5489e96953b3310930c2f2",
+      "dependency_type": "a"
+    },
+    {
+      "name": "conversions_wca_contact_phone_fallback_idx",
+      "type": "index",
+      "schema": "public",
+      "identity_md5": "fb867109220a0da6486057b7da712787",
+      "dependency_type": "a"
+    },
+    {
+      "name": null,
+      "type": "default value",
+      "schema": null,
+      "identity_md5": "d9f6e7ebb113642aaa82b072b970e9a5",
+      "dependency_type": "a"
+    },
+    {
+      "name": "idx_conversions_created_at",
+      "type": "index",
+      "schema": "public",
+      "identity_md5": "dc130aec65582a9a35c3cb9f8c53106c",
+      "dependency_type": "a"
+    },
+    {
+      "name": null,
+      "type": "rule",
+      "schema": null,
+      "identity_md5": "2e51b2b5e6edace287c8e429a9062713",
+      "dependency_type": "n"
+    },
+    {
+      "name": "conversions_user_atrio_players_idx",
+      "type": "index",
+      "schema": "public",
+      "identity_md5": "c8bdc0dc6fa3f59dfebfbbb9714a40dd",
+      "dependency_type": "a"
+    },
+    {
+      "name": "conversions_user_lead_atrio_players_idx",
+      "type": "index",
+      "schema": "public",
+      "identity_md5": "0b9d3d33eb74124e0c55bbbe606c59ae",
+      "dependency_type": "a"
+    },
+    {
+      "name": "conversions_user_purchase_atrio_players_idx",
+      "type": "index",
+      "schema": "public",
+      "identity_md5": "ce4a5428fcc78d5aa1e62e28c34d8aac",
+      "dependency_type": "a"
+    },
+    {
+      "name": "idx_conversions_user_currency_created_at",
+      "type": "index",
+      "schema": "public",
+      "identity_md5": "d7f64ca45e81233cf8c46075291ed3f4",
+      "dependency_type": "a"
+    },
+    {
+      "name": "conversions_user_phone_lead_gerencia_idx",
+      "type": "index",
+      "schema": "public",
+      "identity_md5": "6a9edfa6659ce54cf3d53bc0491e346b",
+      "dependency_type": "a"
+    },
+    {
+      "name": "conversions_user_phone_purchase_gerencia_idx",
+      "type": "index",
+      "schema": "public",
+      "identity_md5": "73c486f5929615e6e7dc7fec7097d4bc",
+      "dependency_type": "a"
+    },
+    {
+      "name": "idx_conversions_contact_capi_retry",
+      "type": "index",
+      "schema": "public",
+      "identity_md5": "abeee34b60b916836f1987d8bc8d86f0",
+      "dependency_type": "a"
+    },
+    {
+      "name": "idx_conversions_lead_capi_retry",
+      "type": "index",
+      "schema": "public",
+      "identity_md5": "a92ec592ed83901b8dad78bbc3704297",
+      "dependency_type": "a"
+    },
+    {
+      "name": "conversions_assignment_messages_lookup_idx",
+      "type": "index",
+      "schema": "public",
+      "identity_md5": "becbc8813a223ea10004669e30a08c46",
+      "dependency_type": "a"
+    },
+    {
+      "name": "conversions_purchase_coelsa_lookup_idx",
+      "type": "index",
+      "schema": "public",
+      "identity_md5": "677c880eec920681c47fb24a8b3bbbcc",
+      "dependency_type": "a"
+    },
+    {
+      "name": "conversions_purchase_transaction_lookup_idx",
+      "type": "index",
+      "schema": "public",
+      "identity_md5": "2ae9993865dc8d8a41cb8acce67a02f3",
+      "dependency_type": "a"
+    },
+    {
+      "name": "conversions_purchase_retry_created_idx",
+      "type": "index",
+      "schema": "public",
+      "identity_md5": "858d4637b96f435f08e7e50b886d07e5",
+      "dependency_type": "a"
+    },
+    {
+      "name": "conversions_user_created_at_lookup_idx",
+      "type": "index",
+      "schema": "public",
+      "identity_md5": "589f2a789e1faaafb175bb86ae143302",
+      "dependency_type": "a"
+    },
+    {
+      "name": "conversions_landing_assignment_messages_lookup_idx",
+      "type": "index",
+      "schema": "public",
+      "identity_md5": "77450e9b494405a4049899c6efcfb494",
+      "dependency_type": "a"
+    },
+    {
+      "name": "conversions_meta_audience_purchase_idx",
+      "type": "index",
+      "schema": "public",
+      "identity_md5": "57d381ca497e7c5fee21890918402e26",
+      "dependency_type": "a"
+    },
+    {
+      "name": null,
+      "type": "table constraint",
+      "schema": "public",
+      "identity_md5": "2e0400cde2e55a4cdb9a871ea02e897f",
+      "dependency_type": "a"
+    },
+    {
+      "name": null,
+      "type": "table constraint",
+      "schema": "public",
+      "identity_md5": "2e0400cde2e55a4cdb9a871ea02e897f",
+      "dependency_type": "n"
+    },
+    {
+      "name": "idx_conversions_user_purchase_type",
+      "type": "index",
+      "schema": "public",
+      "identity_md5": "991382fd8e942ae0d147269a140f35a0",
+      "dependency_type": "a"
+    },
+    {
+      "name": "conversions_user_main_promo_code_uidx",
+      "type": "index",
+      "schema": "public",
+      "identity_md5": "8b73ab0b2d118e1b8ac9ecc2510fd437",
+      "dependency_type": "a"
+    },
+    {
+      "name": null,
+      "type": "default value",
+      "schema": null,
+      "identity_md5": "93a8cea8250ddbaad43e36bfb44a9a1e",
+      "dependency_type": "a"
+    },
+    {
+      "name": "conversions_phone_metrics_contacts_idx",
+      "type": "index",
+      "schema": "public",
+      "identity_md5": "caac61c559a61cce8203ee24369494f1",
+      "dependency_type": "a"
+    },
+    {
+      "name": "conversions_phone_metrics_leads_idx",
+      "type": "index",
+      "schema": "public",
+      "identity_md5": "1e5b5a9df735a268b1502295b12753d2",
+      "dependency_type": "a"
+    },
+    {
+      "name": "conversions_user_created_at_lookup_idx",
+      "type": "index",
+      "schema": "public",
+      "identity_md5": "589f2a789e1faaafb175bb86ae143302",
+      "dependency_type": "a"
+    },
+    {
+      "name": "conversions_phone_metrics_contacts_normalized_idx",
+      "type": "index",
+      "schema": "public",
+      "identity_md5": "58f95d67a86b0867c0d3ecf895313139",
+      "dependency_type": "a"
+    },
+    {
+      "name": "conversions_phone_metrics_leads_normalized_idx",
+      "type": "index",
+      "schema": "public",
+      "identity_md5": "71412b5eb20ba000b70b1524fa29f8d9",
+      "dependency_type": "a"
+    },
+    {
+      "name": "conversions_wca_user_promo_currency_expr_idx",
+      "type": "index",
+      "schema": "public",
+      "identity_md5": "9aa55cb9199587170726f50d3b29103a",
+      "dependency_type": "a"
+    },
+    {
+      "name": "conversions_wca_user_external_currency_expr_idx",
+      "type": "index",
+      "schema": "public",
+      "identity_md5": "daf98278d1a989dd1e9f2ffdd85a7440",
+      "dependency_type": "a"
+    },
+    {
+      "name": "conversions_wca_external_match_idx",
+      "type": "index",
+      "schema": "public",
+      "identity_md5": "40473c538cdaa75f9c33c2b58671cd4c",
+      "dependency_type": "a"
+    },
+    {
+      "name": "conversions_wca_promo_match_idx",
+      "type": "index",
+      "schema": "public",
+      "identity_md5": "2ca7821e1e795dc95b088528343cf817",
+      "dependency_type": "a"
+    },
+    {
+      "name": "conversions_meta_audience_purchase_idx",
+      "type": "index",
+      "schema": "public",
+      "identity_md5": "57d381ca497e7c5fee21890918402e26",
+      "dependency_type": "a"
+    },
+    {
+      "name": null,
+      "type": "default value",
+      "schema": null,
+      "identity_md5": "f5120137047d30be03f85a67ad7027d6",
+      "dependency_type": "a"
+    },
+    {
+      "name": null,
+      "type": "default value",
+      "schema": null,
+      "identity_md5": "9590cb9ac5dd9e48bfcc6813a242b0a0",
+      "dependency_type": "a"
+    },
+    {
+      "name": null,
+      "type": "default value",
+      "schema": null,
+      "identity_md5": "0f0d10784f72a9d3a0bfd1539ca93189",
+      "dependency_type": "a"
+    },
+    {
+      "name": "conversions_internal_id_key",
+      "type": "index",
+      "schema": "public",
+      "identity_md5": "884e5de120ebd99ce68c2d60edbc7995",
+      "dependency_type": "a"
+    },
+    {
+      "name": null,
+      "type": "default value",
+      "schema": null,
+      "identity_md5": "3871ce9774e672d897bc7e397827f48a",
+      "dependency_type": "a"
+    },
+    {
+      "name": null,
+      "type": "default value",
+      "schema": null,
+      "identity_md5": "cb8132a4002d8fae15992ef925491e41",
+      "dependency_type": "a"
+    },
+    {
+      "name": null,
+      "type": "default value",
+      "schema": null,
+      "identity_md5": "91f81deb2a511024abf493d5cfbdd099",
+      "dependency_type": "a"
+    },
+    {
+      "name": null,
+      "type": "default value",
+      "schema": null,
+      "identity_md5": "d8c9816ab3e2876f0fa41359a062edb6",
+      "dependency_type": "a"
+    },
+    {
+      "name": "conversions_wca_contact_phone_fallback_idx",
+      "type": "index",
+      "schema": "public",
+      "identity_md5": "fb867109220a0da6486057b7da712787",
+      "dependency_type": "a"
+    },
+    {
+      "name": null,
+      "type": "default value",
+      "schema": null,
+      "identity_md5": "65cb1e5319936d8475363e1a8630bbb3",
+      "dependency_type": "a"
+    },
+    {
+      "name": null,
+      "type": "default value",
+      "schema": null,
+      "identity_md5": "15aaf7fe5ff987d03878ffc4caa8b3b0",
+      "dependency_type": "a"
+    },
+    {
+      "name": null,
+      "type": "default value",
+      "schema": null,
+      "identity_md5": "2c1e76ef6fb6ea7d5ca5d99cafe6a4eb",
+      "dependency_type": "a"
+    },
+    {
+      "name": null,
+      "type": "table constraint",
+      "schema": "public",
+      "identity_md5": "567e219872401a4e4e9320c4ff7a600c",
+      "dependency_type": "a"
+    },
+    {
+      "name": null,
+      "type": "table constraint",
+      "schema": "public",
+      "identity_md5": "567e219872401a4e4e9320c4ff7a600c",
+      "dependency_type": "n"
+    },
+    {
+      "name": null,
+      "type": "trigger",
+      "schema": null,
+      "identity_md5": "d6b85b42a01d1619eea7e93472b9935b",
+      "dependency_type": "n"
+    },
+    {
+      "name": null,
+      "type": "default value",
+      "schema": null,
+      "identity_md5": "8926713072afc72e299342ee8617c488",
+      "dependency_type": "a"
+    },
+    {
+      "name": null,
+      "type": "default value",
+      "schema": null,
+      "identity_md5": "4fcffcbeda742ac219ede7039182a838",
+      "dependency_type": "a"
+    },
+    {
+      "name": null,
+      "type": "table constraint",
+      "schema": "public",
+      "identity_md5": "804346e8e386d1a483e15f34acc1a3b6",
+      "dependency_type": "a"
+    },
+    {
+      "name": null,
+      "type": "table constraint",
+      "schema": "public",
+      "identity_md5": "804346e8e386d1a483e15f34acc1a3b6",
+      "dependency_type": "n"
+    },
+    {
+      "name": null,
+      "type": "default value",
+      "schema": null,
+      "identity_md5": "78998f82b8469b489dfbfad957aa36f9",
+      "dependency_type": "a"
+    },
+    {
+      "name": null,
+      "type": "table constraint",
+      "schema": "public",
+      "identity_md5": "dd2a4f802a2b0a3d915a7834a6aeb3fe",
+      "dependency_type": "a"
+    },
+    {
+      "name": null,
+      "type": "table constraint",
+      "schema": "public",
+      "identity_md5": "dd2a4f802a2b0a3d915a7834a6aeb3fe",
+      "dependency_type": "n"
+    },
+    {
+      "name": null,
+      "type": "default value",
+      "schema": null,
+      "identity_md5": "7c632e983d4de4345c0af5a1bc454a0a",
+      "dependency_type": "a"
+    },
+    {
+      "name": "conversions_purchase_coelsa_id_uidx",
+      "type": "index",
+      "schema": "public",
+      "identity_md5": "2122a639363a0daabe686be23f2db7a9",
+      "dependency_type": "a"
+    },
+    {
+      "name": "conversions_purchase_coelsa_id_uidx",
+      "type": "index",
+      "schema": "public",
+      "identity_md5": "2122a639363a0daabe686be23f2db7a9",
+      "dependency_type": "a"
+    },
+    {
+      "name": "conversions_purchase_coelsa_lookup_idx",
+      "type": "index",
+      "schema": "public",
+      "identity_md5": "677c880eec920681c47fb24a8b3bbbcc",
+      "dependency_type": "a"
+    },
+    {
+      "name": null,
+      "type": "default value",
+      "schema": null,
+      "identity_md5": "b90fe4ab4dbe64e6a8241bb4215d5c87",
+      "dependency_type": "a"
+    },
+    {
+      "name": "conversions_purchase_transaction_id_uidx",
+      "type": "index",
+      "schema": "public",
+      "identity_md5": "6c507afe917e87e47fbe687de32ba3f8",
+      "dependency_type": "a"
+    },
+    {
+      "name": "conversions_purchase_transaction_id_uidx",
+      "type": "index",
+      "schema": "public",
+      "identity_md5": "6c507afe917e87e47fbe687de32ba3f8",
+      "dependency_type": "a"
+    },
+    {
+      "name": "conversions_purchase_transaction_lookup_idx",
+      "type": "index",
+      "schema": "public",
+      "identity_md5": "2ae9993865dc8d8a41cb8acce67a02f3",
+      "dependency_type": "a"
+    },
+    {
+      "name": "conversions_wca_contact_phone_fallback_idx",
+      "type": "index",
+      "schema": "public",
+      "identity_md5": "fb867109220a0da6486057b7da712787",
+      "dependency_type": "a"
+    },
+    {
+      "name": "conversions_user_assigned_gerencia_idx",
+      "type": "index",
+      "schema": "public",
+      "identity_md5": "58b3e9a7d01765efc89cb7f80938c9af",
+      "dependency_type": "a"
+    },
+    {
+      "name": "conversions_assigned_gerencia_label_idx",
+      "type": "index",
+      "schema": "public",
+      "identity_md5": "04b83866c82959ae21be0dfa7ceee014",
+      "dependency_type": "a"
+    },
+    {
+      "name": null,
+      "type": "default value",
+      "schema": null,
+      "identity_md5": "76275b7917d9cb1a298f79e8b4f4b5f0",
+      "dependency_type": "a"
+    },
+    {
+      "name": "idx_conversions_contact_capi_retry",
+      "type": "index",
+      "schema": "public",
+      "identity_md5": "abeee34b60b916836f1987d8bc8d86f0",
+      "dependency_type": "a"
+    },
+    {
+      "name": null,
+      "type": "default value",
+      "schema": null,
+      "identity_md5": "91dd3a26cd742f91307ab8484d34f2c9",
+      "dependency_type": "a"
+    },
+    {
+      "name": "idx_conversions_lead_capi_retry",
+      "type": "index",
+      "schema": "public",
+      "identity_md5": "a92ec592ed83901b8dad78bbc3704297",
+      "dependency_type": "a"
+    },
+    {
+      "name": null,
+      "type": "default value",
+      "schema": null,
+      "identity_md5": "32c11d6e97cdcab42867fc0cd4fe8d50",
+      "dependency_type": "a"
+    },
+    {
+      "name": null,
+      "type": "default value",
+      "schema": null,
+      "identity_md5": "de7afa294732ffec213219f5e0585c99",
+      "dependency_type": "a"
+    },
+    {
+      "name": null,
+      "type": "default value",
+      "schema": null,
+      "identity_md5": "6e00d6d83cec783b84fa9662602fc462",
+      "dependency_type": "a"
+    },
+    {
+      "name": null,
+      "type": "default value",
+      "schema": null,
+      "identity_md5": "b163c8c855fc6f80e198572cc94ba712",
+      "dependency_type": "a"
+    },
+    {
+      "name": null,
+      "type": "table constraint",
+      "schema": "public",
+      "identity_md5": "76d6d6d9ce9e60e9e4ea040cda58ecd6",
+      "dependency_type": "a"
+    },
+    {
+      "name": null,
+      "type": "table constraint",
+      "schema": "public",
+      "identity_md5": "76d6d6d9ce9e60e9e4ea040cda58ecd6",
+      "dependency_type": "n"
+    },
+    {
+      "name": null,
+      "type": "default value",
+      "schema": null,
+      "identity_md5": "af537f48d0ae95a4332d57dfc6e32fc6",
+      "dependency_type": "a"
+    },
+    {
+      "name": "conversions_user_currency_created_idx",
+      "type": "index",
+      "schema": "public",
+      "identity_md5": "4c8b41fabd1c0e1376cd67a7c5654686",
+      "dependency_type": "a"
+    },
+    {
+      "name": null,
+      "type": "default value",
+      "schema": null,
+      "identity_md5": "9f644eed0f996d56d023d14d7f78c3a0",
+      "dependency_type": "a"
+    },
+    {
+      "name": null,
+      "type": "table constraint",
+      "schema": "public",
+      "identity_md5": "576fb717f8653052e51e5e080da7888d",
+      "dependency_type": "a"
+    },
+    {
+      "name": null,
+      "type": "table constraint",
+      "schema": "public",
+      "identity_md5": "576fb717f8653052e51e5e080da7888d",
+      "dependency_type": "n"
+    },
+    {
+      "name": "idx_conversions_user_currency_created_at",
+      "type": "index",
+      "schema": "public",
+      "identity_md5": "d7f64ca45e81233cf8c46075291ed3f4",
+      "dependency_type": "a"
+    },
+    {
+      "name": "conversions_user_created_at_lookup_idx",
+      "type": "index",
+      "schema": "public",
+      "identity_md5": "589f2a789e1faaafb175bb86ae143302",
+      "dependency_type": "a"
+    },
+    {
+      "name": "conversions_wca_user_promo_currency_expr_idx",
+      "type": "index",
+      "schema": "public",
+      "identity_md5": "9aa55cb9199587170726f50d3b29103a",
+      "dependency_type": "a"
+    },
+    {
+      "name": "conversions_wca_user_external_currency_expr_idx",
+      "type": "index",
+      "schema": "public",
+      "identity_md5": "daf98278d1a989dd1e9f2ffdd85a7440",
+      "dependency_type": "a"
+    },
+    {
+      "name": "conversions_wca_external_match_idx",
+      "type": "index",
+      "schema": "public",
+      "identity_md5": "40473c538cdaa75f9c33c2b58671cd4c",
+      "dependency_type": "a"
+    },
+    {
+      "name": "conversions_wca_promo_match_idx",
+      "type": "index",
+      "schema": "public",
+      "identity_md5": "2ca7821e1e795dc95b088528343cf817",
+      "dependency_type": "a"
+    },
+    {
+      "name": "conversions_meta_audience_purchase_idx",
+      "type": "index",
+      "schema": "public",
+      "identity_md5": "57d381ca497e7c5fee21890918402e26",
+      "dependency_type": "a"
+    },
+    {
+      "name": null,
+      "type": "default value",
+      "schema": null,
+      "identity_md5": "c1ec28676f3399d0d82b909dad3090e4",
+      "dependency_type": "a"
+    },
+    {
+      "name": null,
+      "type": "table constraint",
+      "schema": "public",
+      "identity_md5": "1f165121c03a76b84caec9f0baaa1d38",
+      "dependency_type": "a"
+    },
+    {
+      "name": "idx_conversions_pixel_attribution_conversion",
+      "type": "index",
+      "schema": "public",
+      "identity_md5": "27db2564b676426d34a56e94b8d11cc7",
+      "dependency_type": "a"
+    },
+    {
+      "name": "idx_conversions_pixel_attribution_conversion",
+      "type": "index",
+      "schema": "public",
+      "identity_md5": "27db2564b676426d34a56e94b8d11cc7",
+      "dependency_type": "a"
+    },
+    {
+      "name": null,
+      "type": "default value",
+      "schema": null,
+      "identity_md5": "4d2254c6deca2888f5ea883d6ac7534f",
+      "dependency_type": "a"
+    },
+    {
+      "name": null,
+      "type": "default value",
+      "schema": null,
+      "identity_md5": "7d1a335faaff75c3310b67e7bd52094f",
+      "dependency_type": "a"
+    },
+    {
+      "name": "conversions_user_phone_lead_gerencia_idx",
+      "type": "index",
+      "schema": "public",
+      "identity_md5": "6a9edfa6659ce54cf3d53bc0491e346b",
+      "dependency_type": "a"
+    },
+    {
+      "name": null,
+      "type": "default value",
+      "schema": null,
+      "identity_md5": "0c15696a73b9b8a84a4db9c8e57f79b1",
+      "dependency_type": "a"
+    },
+    {
+      "name": null,
+      "type": "default value",
+      "schema": null,
+      "identity_md5": "350519f43c208e6f06cced106a9b9b5e",
+      "dependency_type": "a"
+    },
+    {
+      "name": null,
+      "type": "default value",
+      "schema": null,
+      "identity_md5": "c1a509a4310de1e7cc7adf8a70e842b5",
+      "dependency_type": "a"
+    },
+    {
+      "name": null,
+      "type": "default value",
+      "schema": null,
+      "identity_md5": "08fbcc26b3e922ee97efc557e1df34a6",
+      "dependency_type": "a"
+    },
+    {
+      "name": null,
+      "type": "table constraint",
+      "schema": "public",
+      "identity_md5": "a03979b739920571bc477fcc947123cf",
+      "dependency_type": "a"
+    },
+    {
+      "name": "conversions_lead_attribution_conversion_id_idx",
+      "type": "index",
+      "schema": "public",
+      "identity_md5": "adce528e620b001837f5510a77b52ed6",
+      "dependency_type": "a"
+    },
+    {
+      "name": "conversions_lead_attribution_conversion_id_idx",
+      "type": "index",
+      "schema": "public",
+      "identity_md5": "adce528e620b001837f5510a77b52ed6",
+      "dependency_type": "a"
+    },
+    {
+      "name": null,
+      "type": "default value",
+      "schema": null,
+      "identity_md5": "5a55d451601dfdad493e1411caf45405",
+      "dependency_type": "a"
+    },
+    {
+      "name": null,
+      "type": "default value",
+      "schema": null,
+      "identity_md5": "c859e84b01002f7e2aed2e92a2ee5fa0",
+      "dependency_type": "a"
+    },
+    {
+      "name": "conversions_user_phone_purchase_gerencia_idx",
+      "type": "index",
+      "schema": "public",
+      "identity_md5": "73c486f5929615e6e7dc7fec7097d4bc",
+      "dependency_type": "a"
+    },
+    {
+      "name": null,
+      "type": "default value",
+      "schema": null,
+      "identity_md5": "aec3dc603feb1cd1eb4756f14ef6a71c",
+      "dependency_type": "a"
+    },
+    {
+      "name": null,
+      "type": "default value",
+      "schema": null,
+      "identity_md5": "4960c71fdf950a8277f3767d17271cc6",
+      "dependency_type": "a"
+    },
+    {
+      "name": null,
+      "type": "default value",
+      "schema": null,
+      "identity_md5": "393f950f2b8147da11ab8580ba583e59",
+      "dependency_type": "a"
+    },
+    {
+      "name": null,
+      "type": "default value",
+      "schema": null,
+      "identity_md5": "f5586a9d3d7d75bb52d26b5f8db28ce0",
+      "dependency_type": "a"
+    },
+    {
+      "name": null,
+      "type": "table constraint",
+      "schema": "public",
+      "identity_md5": "fea94a67b7c6245747709b52164b8d70",
+      "dependency_type": "a"
+    },
+    {
+      "name": "conversions_purchase_attribution_conversion_id_idx",
+      "type": "index",
+      "schema": "public",
+      "identity_md5": "ef81a799e33a33b0ceea64ebbd0f76a0",
+      "dependency_type": "a"
+    },
+    {
+      "name": "conversions_purchase_attribution_conversion_id_idx",
+      "type": "index",
+      "schema": "public",
+      "identity_md5": "ef81a799e33a33b0ceea64ebbd0f76a0",
+      "dependency_type": "a"
+    },
+    {
+      "name": null,
+      "type": "default value",
+      "schema": null,
+      "identity_md5": "7627ffd47cffc244b2003e015b1093ae",
+      "dependency_type": "a"
+    },
+    {
+      "name": "idx_conversions_lead_player_username",
+      "type": "index",
+      "schema": "public",
+      "identity_md5": "055fd9167267af4920aad021361c0fae",
+      "dependency_type": "a"
+    },
+    {
+      "name": "idx_conversions_lead_player_username",
+      "type": "index",
+      "schema": "public",
+      "identity_md5": "055fd9167267af4920aad021361c0fae",
+      "dependency_type": "a"
+    },
+    {
+      "name": null,
+      "type": "default value",
+      "schema": null,
+      "identity_md5": "a0629bc987db7c1f5ecbbfc654e5f72b",
+      "dependency_type": "a"
+    },
+    {
+      "name": null,
+      "type": "default value",
+      "schema": null,
+      "identity_md5": "614a77935d6093845dcb49767ab675c6",
+      "dependency_type": "a"
+    },
+    {
+      "name": null,
+      "type": "default value",
+      "schema": null,
+      "identity_md5": "f7493ad80466a7621e92168faae15d34",
+      "dependency_type": "a"
+    },
+    {
+      "name": "idx_conversions_registration_player_username",
+      "type": "index",
+      "schema": "public",
+      "identity_md5": "216fd6ad69e0d017ab8e936ac2fa02cb",
+      "dependency_type": "a"
+    },
+    {
+      "name": "idx_conversions_registration_player_username",
+      "type": "index",
+      "schema": "public",
+      "identity_md5": "216fd6ad69e0d017ab8e936ac2fa02cb",
+      "dependency_type": "a"
+    },
+    {
+      "name": null,
+      "type": "default value",
+      "schema": null,
+      "identity_md5": "fe3de1293597d167977a83de104ba7b0",
+      "dependency_type": "a"
+    },
+    {
+      "name": null,
+      "type": "default value",
+      "schema": null,
+      "identity_md5": "1e9ec76e2a38aebfcf77f8c7b397f621",
+      "dependency_type": "a"
+    },
+    {
+      "name": null,
+      "type": "default value",
+      "schema": null,
+      "identity_md5": "94b8b486469b59d52cfdc128edde5b04",
+      "dependency_type": "a"
+    },
+    {
+      "name": null,
+      "type": "default value",
+      "schema": null,
+      "identity_md5": "ddea15ea5fc0f6d3338e6f5d40c11dc6",
+      "dependency_type": "a"
+    },
+    {
+      "name": null,
+      "type": "default value",
+      "schema": null,
+      "identity_md5": "b35416f4589585c2ecf575141eddbea5",
+      "dependency_type": "a"
+    },
+    {
+      "name": null,
+      "type": "default value",
+      "schema": null,
+      "identity_md5": "a2a956076def26a320fb3b0fd8e2c837",
+      "dependency_type": "a"
+    },
+    {
+      "name": null,
+      "type": "default value",
+      "schema": null,
+      "identity_md5": "ec3db1c86cefa420518c999337eda59c",
+      "dependency_type": "a"
+    },
+    {
+      "name": "idx_conversions_purchase_player_username",
+      "type": "index",
+      "schema": "public",
+      "identity_md5": "39146590f60d3eca35f5bd60c924fcaa",
+      "dependency_type": "a"
+    },
+    {
+      "name": "idx_conversions_purchase_player_username",
+      "type": "index",
+      "schema": "public",
+      "identity_md5": "39146590f60d3eca35f5bd60c924fcaa",
+      "dependency_type": "a"
+    },
+    {
+      "name": null,
+      "type": "default value",
+      "schema": null,
+      "identity_md5": "eca94a68ec3450ae0248ef063acf98f7",
+      "dependency_type": "a"
+    },
+    {
+      "name": null,
+      "type": "default value",
+      "schema": null,
+      "identity_md5": "2ba3c0f5911e6779658f947625a6706a",
+      "dependency_type": "a"
+    },
+    {
+      "name": null,
+      "type": "default value",
+      "schema": null,
+      "identity_md5": "1c4bec21096a50b7a603c10a602ab4a7",
+      "dependency_type": "a"
+    },
+    {
+      "name": null,
+      "type": "default value",
+      "schema": null,
+      "identity_md5": "0d29249779e7fb3a58f85a1ca8415b1a",
+      "dependency_type": "a"
+    },
+    {
+      "name": null,
+      "type": "default value",
+      "schema": null,
+      "identity_md5": "e79e056f292971515cbb9b562ed6d4ee",
+      "dependency_type": "a"
+    },
+    {
+      "name": null,
+      "type": "default value",
+      "schema": null,
+      "identity_md5": "e5f8beb3112b5a89bf9518ebc4380c8e",
+      "dependency_type": "a"
+    },
+    {
+      "name": "conversions_dataset_id_idx",
+      "type": "index",
+      "schema": "public",
+      "identity_md5": "417e8fd8f933e8ac155037b65e61116d",
+      "dependency_type": "a"
+    },
+    {
+      "name": "conversions_dataset_id_idx",
+      "type": "index",
+      "schema": "public",
+      "identity_md5": "417e8fd8f933e8ac155037b65e61116d",
+      "dependency_type": "a"
+    },
+    {
+      "name": null,
+      "type": "default value",
+      "schema": null,
+      "identity_md5": "b88ad1efb5b6ae01a5431f9549a6495b",
+      "dependency_type": "a"
+    },
+    {
+      "name": "conversions_user_atrio_promo_idx",
+      "type": "index",
+      "schema": "public",
+      "identity_md5": "93dd413260f74d149ae654cd1a118129",
+      "dependency_type": "a"
+    },
+    {
+      "name": "conversions_user_atrio_promo_idx",
+      "type": "index",
+      "schema": "public",
+      "identity_md5": "93dd413260f74d149ae654cd1a118129",
+      "dependency_type": "a"
+    },
+    {
+      "name": "conversions_user_atrio_phone_created_idx",
+      "type": "index",
+      "schema": "public",
+      "identity_md5": "9d63b5ec58338093a544bd4372a75980",
+      "dependency_type": "a"
+    },
+    {
+      "name": "conversions_user_atrio_phone_created_idx",
+      "type": "index",
+      "schema": "public",
+      "identity_md5": "9d63b5ec58338093a544bd4372a75980",
+      "dependency_type": "a"
+    },
+    {
+      "name": "conversions_user_lead_atrio_phone_created_idx",
+      "type": "index",
+      "schema": "public",
+      "identity_md5": "010e8aca63251d20e111c0f5819dd014",
+      "dependency_type": "a"
+    },
+    {
+      "name": "conversions_user_lead_atrio_phone_created_idx",
+      "type": "index",
+      "schema": "public",
+      "identity_md5": "010e8aca63251d20e111c0f5819dd014",
+      "dependency_type": "a"
+    },
+    {
+      "name": "conversions_user_purchase_atrio_phone_created_idx",
+      "type": "index",
+      "schema": "public",
+      "identity_md5": "a712f691cc5489e96953b3310930c2f2",
+      "dependency_type": "a"
+    },
+    {
+      "name": "conversions_user_purchase_atrio_phone_created_idx",
+      "type": "index",
+      "schema": "public",
+      "identity_md5": "a712f691cc5489e96953b3310930c2f2",
+      "dependency_type": "a"
+    },
+    {
+      "name": null,
+      "type": "default value",
+      "schema": null,
+      "identity_md5": "8ee1b0962d261326884da1a9015387ff",
+      "dependency_type": "a"
+    },
+    {
+      "name": "conversions_user_atrio_players_idx",
+      "type": "index",
+      "schema": "public",
+      "identity_md5": "c8bdc0dc6fa3f59dfebfbbb9714a40dd",
+      "dependency_type": "a"
+    },
+    {
+      "name": "conversions_user_atrio_players_idx",
+      "type": "index",
+      "schema": "public",
+      "identity_md5": "c8bdc0dc6fa3f59dfebfbbb9714a40dd",
+      "dependency_type": "a"
+    },
+    {
+      "name": null,
+      "type": "default value",
+      "schema": null,
+      "identity_md5": "5fcd2e1b9a5bc1960cd744f79ee63f87",
+      "dependency_type": "a"
+    },
+    {
+      "name": "conversions_user_lead_atrio_players_idx",
+      "type": "index",
+      "schema": "public",
+      "identity_md5": "0b9d3d33eb74124e0c55bbbe606c59ae",
+      "dependency_type": "a"
+    },
+    {
+      "name": "conversions_user_lead_atrio_players_idx",
+      "type": "index",
+      "schema": "public",
+      "identity_md5": "0b9d3d33eb74124e0c55bbbe606c59ae",
+      "dependency_type": "a"
+    },
+    {
+      "name": null,
+      "type": "default value",
+      "schema": null,
+      "identity_md5": "5fe475feee968c2b8a26ecaf097ececa",
+      "dependency_type": "a"
+    },
+    {
+      "name": "conversions_user_purchase_atrio_players_idx",
+      "type": "index",
+      "schema": "public",
+      "identity_md5": "ce4a5428fcc78d5aa1e62e28c34d8aac",
+      "dependency_type": "a"
+    },
+    {
+      "name": "conversions_user_purchase_atrio_players_idx",
+      "type": "index",
+      "schema": "public",
+      "identity_md5": "ce4a5428fcc78d5aa1e62e28c34d8aac",
+      "dependency_type": "a"
+    },
+    {
+      "name": null,
+      "type": "default value",
+      "schema": null,
+      "identity_md5": "eeceeda4a190e6e622e90fdeeb35587d",
+      "dependency_type": "a"
+    }
+  ],
+  "rls_auto_enable_extension": null
+}
