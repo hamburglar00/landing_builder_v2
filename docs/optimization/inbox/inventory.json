@@ -1,0 +1,236 @@
+{
+  "task": "WhatsApp Cloud API Inbox optimization",
+  "date": "2026-09-18",
+  "baseCommit": "ad436ff1ee3a329c1d6c702d0ce2cbfd05f92981",
+  "branch": "main",
+  "status": "implemented_and_locally_validated",
+  "implemented": true,
+  "readyForCheckpoint": true,
+  "checkpoint": {
+    "message": "perf(inbox): optimize conversation loading",
+    "scope": "local commit only; final hash belongs to Git history",
+    "requires": "passing final audit, exact staged inventory and unchanged hook output"
+  },
+  "migration": {
+    "number": 274,
+    "file": "supabase/migrations/20260918194918_optimize_whatsapp_cloud_api_inbox_loading.sql",
+    "sha256": "75e6461e6a12d68f05b4620eb90a069dbeadcb29e3ff31cd5334fa1c9f38d087",
+    "createdVia": "supabase migration new after consulting --help",
+    "historicalCount": 273,
+    "historicalMigrationsSha256": "d95ea0156c39b945226d0701dc736fe053d3bd26118cce7fa56a193b445392e5",
+    "historicalMigrationsIntact": true
+  },
+  "validation": {
+    "reconstruction": "274/274",
+    "sqlAndDataApiChecks": 36,
+    "pgTap": {
+      "assertions": 10,
+      "includedInSqlChecks": true
+    },
+    "browserChecks": 12,
+    "frontendTests": {
+      "exitCode": 0,
+      "tests": 11,
+      "passed": 11,
+      "failed": 0
+    },
+    "typescript": {
+      "exitCode": 0
+    },
+    "build": {
+      "exitCode": 0,
+      "bundler": "webpack",
+      "isolatedTemporaryCopy": true,
+      "environmentFilesCopied": 0
+    },
+    "eslint": {
+      "errors": 0,
+      "warnings": 18,
+      "warningScope": "unchanged files"
+    },
+    "assets": {
+      "scope": ".next/static browser assets",
+      "serverArtifactsExcluded": ".next/server",
+      "files": 125,
+      "privateSyntheticMarkerFound": false,
+      "newSummaryRpcAssets": 1,
+      "newDetailRpcAssets": 1,
+      "legacyPreloadRpcAssets": 0
+    },
+    "unrelatedHistoricalSuites": "not repeated; no affected source or dependency changes"
+  },
+  "scope": {
+    "businessLogicChanged": false,
+    "phase1b5": "deferred and untouched",
+    "productionWrites": 0,
+    "productionExplainAnalyze": false,
+    "productionPersonalRowsPersisted": false,
+    "siblingRepositoriesAccessed": false,
+    "realEnvironmentFilesRead": false
+  },
+  "environment": {
+    "present": true,
+    "ignored": true,
+    "tracked": false,
+    "bytes": 307,
+    "modifiedAt": "2026-03-10T19:16:01.528Z",
+    "contentRead": false
+  },
+  "docker": {
+    "ownResidualResources": 0,
+    "foreignContainer": "codex-p8-mysql remains stopped and untouched",
+    "foreignNetworks": 3,
+    "foreignVolumes": 8,
+    "foreignResourceInventoryUnchanged": true,
+    "verification": "read-only docker ps -a, network ls and volume ls after runner cleanup"
+  },
+  "inventory": {
+    "count": 28,
+    "modified": 3,
+    "added": 25,
+    "algorithm": "SHA-256 raw bytes; files use LF",
+    "selfHashPolicy": "inventory.json has null self hash; audit excludes itself and inventory to avoid a cycle.",
+    "files": [
+      {
+        "file": "docs/optimization/inbox/README.md",
+        "status": "new",
+        "sha256": "ab4c64d80a5d79702a089dc1859135fa4b38cd669eca8417f6c0fe2d1e668b15"
+      },
+      {
+        "file": "docs/optimization/inbox/audit.json",
+        "status": "new",
+        "sha256": "f75af0494ee9004695e8962d29a7728b4f21581686b5b47b0906b8a4e5006a87"
+      },
+      {
+        "file": "docs/optimization/inbox/browser.json",
+        "status": "new",
+        "sha256": "b4d14b276c2c5661efd6ff0dae847434f7c252a48b507b3493c5f4a5a0362a8e"
+      },
+      {
+        "file": "docs/optimization/inbox/frontend-validation.json",
+        "status": "new",
+        "sha256": "959678f7432906c50fa8c565eb96e8bfcc27b31096172c26786067ae162661cc"
+      },
+      {
+        "file": "docs/optimization/inbox/inventory.json",
+        "status": "new",
+        "sha256": null
+      },
+      {
+        "file": "docs/optimization/inbox/measurements.json",
+        "status": "new",
+        "sha256": "35094373a699508a4dcfec0d68e66bddc14a361969d09b8728189c289a93c928"
+      },
+      {
+        "file": "docs/optimization/inbox/remote-reproduction.json",
+        "status": "new",
+        "sha256": "1d5c12ca6ee927c748bd6af8585b7fc259cbc3a9b7a1952a72c9ea60857e2c07"
+      },
+      {
+        "file": "docs/optimization/inbox/rollback.md",
+        "status": "new",
+        "sha256": "3fc1ae44d74be524c9df5bce8e40009cb178fc06db72b43b942511bbcc539e74"
+      },
+      {
+        "file": "docs/optimization/inbox/sql-measurements.json",
+        "status": "new",
+        "sha256": "d39800ad800aa6aa9b76b2d57b2d0134fcf9a1f77af751bd8e3d695fe73c8589"
+      },
+      {
+        "file": "docs/optimization/inbox/synthetic-diagnostic.json",
+        "status": "new",
+        "sha256": "7eb0dbbdc9c50229edcf020892cb8ef49f8f3ed14f7e2d721722cd77b799c7c7"
+      },
+      {
+        "file": "docs/optimization/inbox/tests.json",
+        "status": "new",
+        "sha256": "5cf7ba12768d8a3613e432d8b1ba3ac5f59149fe42f4d480359b78faa21469fc"
+      },
+      {
+        "file": "docs/optimization/inbox/validation.md",
+        "status": "new",
+        "sha256": "6a5336449f76020ee0b59fae3203aa37e970d51f3b1435966d39589270dd5c0e"
+      },
+      {
+        "file": "frontend/components/whatsapp-cloud-api/WhatsAppCloudApiInboxPageContent.tsx",
+        "status": "modified",
+        "sha256": "7856a3ea2e08ed08caed17b9bad657bab334a518f4ec2c80702cf4c096504c44"
+      },
+      {
+        "file": "frontend/lib/whatsappCloudApiDb.ts",
+        "status": "modified",
+        "sha256": "2265076f9980e5e2e7c19f9f11ac30ed6a1e8c41b47f89c4104260263023c634"
+      },
+      {
+        "file": "frontend/lib/whatsappInboxMessages.ts",
+        "status": "new",
+        "sha256": "06d50abd1f71dacb0323527bb57dcf4ec792235c702b331737514d79f10e39cc"
+      },
+      {
+        "file": "frontend/tests/inboxLoading.test.ts",
+        "status": "new",
+        "sha256": "7b50efb6fe9cdbe8f229710598f49fea9281df68ff926dfc77fafcbe82c8892d"
+      },
+      {
+        "file": "scripts/optimization/audit-inbox.mjs",
+        "status": "new",
+        "sha256": "f2fb0ab09d64a536cca00ca212bea710d9b7ff17dd21ccee52f703c2fbd804bc"
+      },
+      {
+        "file": "scripts/optimization/diagnose-inbox.mjs",
+        "status": "new",
+        "sha256": "4b931b2232d36e90bcfae6d8a4b3446b896a68fb3fd0ffa4a41f999b1377b13f"
+      },
+      {
+        "file": "scripts/optimization/inbox-browser.mjs",
+        "status": "new",
+        "sha256": "d3c344f45a3ac779db354091de3d8e701de47bd2680e9a2cef26c91c3f7c3a6b"
+      },
+      {
+        "file": "scripts/optimization/inbox-diagnostic-fixture.sql",
+        "status": "new",
+        "sha256": "2ab917ffbb76a2c5fea397423b5ab8f067343a4e340b388fe01111b1256eef4f"
+      },
+      {
+        "file": "scripts/optimization/inbox-functional-fixture.sql",
+        "status": "new",
+        "sha256": "9b5a6902880aa74a88820fe9c6f69ec936e5471265d2a35ac8ae2c9a72012161"
+      },
+      {
+        "file": "scripts/optimization/inbox-measure.mjs",
+        "status": "new",
+        "sha256": "c5ddfc595813bf38a6626a95166959287eed64efdeea938103b5703bbfebdcd1"
+      },
+      {
+        "file": "scripts/optimization/inbox-pgtap.sql",
+        "status": "new",
+        "sha256": "8740760fdffd65d564ce2e2a7a0c8144a1393221f56f4de27ad4f3ee5018e46b"
+      },
+      {
+        "file": "scripts/optimization/inbox-tests.mjs",
+        "status": "new",
+        "sha256": "ef12342f19a33fc2f917c4b063abbc9571c020fa2f3b659bc37cc63c93e3c304"
+      },
+      {
+        "file": "scripts/optimization/run-inbox.mjs",
+        "status": "new",
+        "sha256": "5e5a610b34fd9fcb85a94c5edf42ff901d54597c424f7aa22a4d5d8514ded8a2"
+      },
+      {
+        "file": "scripts/optimization/validate-inbox-frontend.mjs",
+        "status": "new",
+        "sha256": "01bc50ad383bf4c4e26643a6c61614e63a2201e7bc01218237483ae2be6d9c23"
+      },
+      {
+        "file": "supabase/bootstrap/incremental-manifest.json",
+        "status": "modified",
+        "sha256": "a981749495d3d89ea8c8465a6d1070a1e62517b4563378587b4da36de22e60b9"
+      },
+      {
+        "file": "supabase/migrations/20260918194918_optimize_whatsapp_cloud_api_inbox_loading.sql",
+        "status": "new",
+        "sha256": "75e6461e6a12d68f05b4620eb90a069dbeadcb29e3ff31cd5334fa1c9f38d087"
+      }
+    ]
+  }
+}

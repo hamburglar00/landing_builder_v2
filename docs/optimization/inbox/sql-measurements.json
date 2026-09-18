@@ -1,0 +1,498 @@
+{
+  "localOnly": true,
+  "fixtureHashes": {
+    "scripts/optimization/inbox-diagnostic-fixture.sql": "2ab917ffbb76a2c5fea397423b5ab8f067343a4e340b388fe01111b1256eef4f",
+    "scripts/optimization/inbox-functional-fixture.sql": "9b5a6902880aa74a88820fe9c6f69ec936e5471265d2a35ac8ae2c9a72012161"
+  },
+  "measurements": [
+    {
+      "label": "original_today",
+      "timeoutMs": 60000,
+      "sqlstate": "57014"
+    },
+    {
+      "label": "predicates_today",
+      "timeoutMs": 8000,
+      "sqlMs": 5894.122,
+      "planningMs": 17.952,
+      "rows": 20,
+      "hits": 4854623,
+      "reads": 106,
+      "scans": [
+        {
+          "table": "profiles",
+          "type": "Index Scan",
+          "index": "profiles_pkey",
+          "rows": 0,
+          "loops": 1,
+          "rowsRemovedByFilter": 1,
+          "hits": 2,
+          "reads": 0
+        },
+        {
+          "table": "whatsapp_cloud_api_contacts",
+          "type": "Seq Scan",
+          "index": null,
+          "rows": 271,
+          "loops": 1,
+          "rowsRemovedByFilter": 0,
+          "hits": 6,
+          "reads": 0
+        },
+        {
+          "table": "whatsapp_cloud_api_configs",
+          "type": "Seq Scan",
+          "index": null,
+          "rows": 1,
+          "loops": 271,
+          "rowsRemovedByFilter": 0,
+          "hits": 271,
+          "reads": 0
+        },
+        {
+          "table": "whatsapp_cloud_api_assignments",
+          "type": "Index Only Scan",
+          "index": "whatsapp_cloud_api_assignments_contact_latest_cover_idx",
+          "rows": 1,
+          "loops": 269,
+          "rowsRemovedByFilter": 0,
+          "hits": 806,
+          "reads": 0
+        },
+        {
+          "table": "gerencias",
+          "type": "Index Scan",
+          "index": "gerencias_pkey",
+          "rows": 0,
+          "loops": 268,
+          "rowsRemovedByFilter": 0,
+          "hits": 0,
+          "reads": 0
+        },
+        {
+          "table": "conversions",
+          "type": "Index Scan",
+          "index": "conversions_wca_user_external_currency_expr_idx",
+          "rows": 1,
+          "loops": 268,
+          "rowsRemovedByFilter": 0,
+          "hits": 1068,
+          "reads": 4
+        },
+        {
+          "table": "conversions",
+          "type": "Index Scan",
+          "index": "idx_conversions_promo_code",
+          "rows": 0,
+          "loops": 268,
+          "rowsRemovedByFilter": 0,
+          "hits": 268,
+          "reads": 0
+        },
+        {
+          "table": "conversions",
+          "type": "Index Scan",
+          "index": "conversions_pkey",
+          "rows": 0,
+          "loops": 268,
+          "rowsRemovedByFilter": 0,
+          "hits": 0,
+          "reads": 0
+        },
+        {
+          "table": "conversions_config",
+          "type": "Index Scan",
+          "index": "conversions_config_pkey",
+          "rows": 0,
+          "loops": 72361,
+          "rowsRemovedByFilter": 0,
+          "hits": 144722,
+          "reads": 0
+        },
+        {
+          "table": "whatsapp_cloud_api_redirects",
+          "type": "Index Only Scan",
+          "index": "whatsapp_cloud_api_redirects_contact_metrics_idx",
+          "rows": 0,
+          "loops": 269,
+          "rowsRemovedByFilter": 0,
+          "hits": 538,
+          "reads": 0
+        },
+        {
+          "table": "whatsapp_cloud_api_thread_reads",
+          "type": "Index Scan",
+          "index": "whatsapp_cloud_api_thread_reads_pkey",
+          "rows": 0,
+          "loops": 72361,
+          "rowsRemovedByFilter": 0,
+          "hits": 144722,
+          "reads": 0
+        },
+        {
+          "table": "whatsapp_cloud_api_webhook_events",
+          "type": "Index Scan",
+          "index": "whatsapp_cloud_api_webhook_message_sender_created_idx",
+          "rows": 60,
+          "loops": 72361,
+          "rowsRemovedByFilter": 0,
+          "hits": 4561062,
+          "reads": 102
+        },
+        {
+          "table": "whatsapp_cloud_api_webhook_events",
+          "type": "Index Scan",
+          "index": "whatsapp_cloud_api_webhook_message_sender_created_idx",
+          "rows": 50,
+          "loops": 20,
+          "rowsRemovedByFilter": 0,
+          "hits": 1066,
+          "reads": 0
+        },
+        {
+          "table": "whatsapp_cloud_api_outbound_messages",
+          "type": "Index Scan",
+          "index": "whatsapp_cloud_api_outbound_contact_created_idx",
+          "rows": 0,
+          "loops": 20,
+          "rowsRemovedByFilter": 0,
+          "hits": 40,
+          "reads": 0
+        },
+        {
+          "table": "whatsapp_cloud_api_attribution_sessions",
+          "type": "Index Only Scan",
+          "index": "whatsapp_cloud_api_attr_contact_latest_cover_idx",
+          "rows": 0,
+          "loops": 20,
+          "rowsRemovedByFilter": 0,
+          "hits": 40,
+          "reads": 0
+        }
+      ]
+    },
+    {
+      "label": "predicates_materialized_unread_today",
+      "timeoutMs": 8000,
+      "sqlMs": 188.232,
+      "planningMs": 18.782,
+      "rows": 20,
+      "hits": 166337,
+      "reads": 0,
+      "scans": [
+        {
+          "table": "profiles",
+          "type": "Index Scan",
+          "index": "profiles_pkey",
+          "rows": 0,
+          "loops": 1,
+          "rowsRemovedByFilter": 1,
+          "hits": 2,
+          "reads": 0
+        },
+        {
+          "table": "whatsapp_cloud_api_contacts",
+          "type": "Seq Scan",
+          "index": null,
+          "rows": 271,
+          "loops": 1,
+          "rowsRemovedByFilter": 0,
+          "hits": 6,
+          "reads": 0
+        },
+        {
+          "table": "whatsapp_cloud_api_configs",
+          "type": "Seq Scan",
+          "index": null,
+          "rows": 1,
+          "loops": 271,
+          "rowsRemovedByFilter": 0,
+          "hits": 271,
+          "reads": 0
+        },
+        {
+          "table": "whatsapp_cloud_api_assignments",
+          "type": "Index Only Scan",
+          "index": "whatsapp_cloud_api_assignments_contact_latest_cover_idx",
+          "rows": 1,
+          "loops": 269,
+          "rowsRemovedByFilter": 0,
+          "hits": 806,
+          "reads": 0
+        },
+        {
+          "table": "gerencias",
+          "type": "Index Scan",
+          "index": "gerencias_pkey",
+          "rows": 0,
+          "loops": 268,
+          "rowsRemovedByFilter": 0,
+          "hits": 0,
+          "reads": 0
+        },
+        {
+          "table": "whatsapp_cloud_api_thread_reads",
+          "type": "Index Scan",
+          "index": "whatsapp_cloud_api_thread_reads_pkey",
+          "rows": 0,
+          "loops": 269,
+          "rowsRemovedByFilter": 0,
+          "hits": 538,
+          "reads": 0
+        },
+        {
+          "table": "whatsapp_cloud_api_webhook_events",
+          "type": "Index Scan",
+          "index": "whatsapp_cloud_api_webhook_message_sender_created_idx",
+          "rows": 60,
+          "loops": 269,
+          "rowsRemovedByFilter": 0,
+          "hits": 16956,
+          "reads": 0
+        },
+        {
+          "table": "conversions",
+          "type": "Index Scan",
+          "index": "conversions_wca_user_external_currency_expr_idx",
+          "rows": 1,
+          "loops": 268,
+          "rowsRemovedByFilter": 0,
+          "hits": 1072,
+          "reads": 0
+        },
+        {
+          "table": "conversions",
+          "type": "Index Scan",
+          "index": "idx_conversions_promo_code",
+          "rows": 0,
+          "loops": 268,
+          "rowsRemovedByFilter": 0,
+          "hits": 268,
+          "reads": 0
+        },
+        {
+          "table": "conversions",
+          "type": "Index Scan",
+          "index": "conversions_pkey",
+          "rows": 0,
+          "loops": 268,
+          "rowsRemovedByFilter": 0,
+          "hits": 0,
+          "reads": 0
+        },
+        {
+          "table": "conversions_config",
+          "type": "Index Scan",
+          "index": "conversions_config_pkey",
+          "rows": 0,
+          "loops": 72361,
+          "rowsRemovedByFilter": 0,
+          "hits": 144722,
+          "reads": 0
+        },
+        {
+          "table": "whatsapp_cloud_api_redirects",
+          "type": "Index Only Scan",
+          "index": "whatsapp_cloud_api_redirects_contact_metrics_idx",
+          "rows": 0,
+          "loops": 269,
+          "rowsRemovedByFilter": 0,
+          "hits": 538,
+          "reads": 0
+        },
+        {
+          "table": "whatsapp_cloud_api_webhook_events",
+          "type": "Index Scan",
+          "index": "whatsapp_cloud_api_webhook_message_sender_created_idx",
+          "rows": 50,
+          "loops": 20,
+          "rowsRemovedByFilter": 0,
+          "hits": 1066,
+          "reads": 0
+        },
+        {
+          "table": "whatsapp_cloud_api_outbound_messages",
+          "type": "Index Scan",
+          "index": "whatsapp_cloud_api_outbound_contact_created_idx",
+          "rows": 0,
+          "loops": 20,
+          "rowsRemovedByFilter": 0,
+          "hits": 40,
+          "reads": 0
+        },
+        {
+          "table": "whatsapp_cloud_api_attribution_sessions",
+          "type": "Index Only Scan",
+          "index": "whatsapp_cloud_api_attr_contact_latest_cover_idx",
+          "rows": 0,
+          "loops": 20,
+          "rowsRemovedByFilter": 0,
+          "hits": 40,
+          "reads": 0
+        }
+      ]
+    },
+    {
+      "label": "predicates_materialized_unread_thresholds_today",
+      "timeoutMs": 8000,
+      "sqlMs": 149.355,
+      "planningMs": 55.142,
+      "rows": 20,
+      "hits": 21387,
+      "reads": 774,
+      "scans": [
+        {
+          "table": "profiles",
+          "type": "Index Scan",
+          "index": "profiles_pkey",
+          "rows": 0,
+          "loops": 1,
+          "rowsRemovedByFilter": 1,
+          "hits": 2,
+          "reads": 0
+        },
+        {
+          "table": "whatsapp_cloud_api_contacts",
+          "type": "Seq Scan",
+          "index": null,
+          "rows": 271,
+          "loops": 1,
+          "rowsRemovedByFilter": 0,
+          "hits": 1,
+          "reads": 5
+        },
+        {
+          "table": "whatsapp_cloud_api_configs",
+          "type": "Seq Scan",
+          "index": null,
+          "rows": 1,
+          "loops": 271,
+          "rowsRemovedByFilter": 0,
+          "hits": 271,
+          "reads": 0
+        },
+        {
+          "table": "whatsapp_cloud_api_assignments",
+          "type": "Index Only Scan",
+          "index": "whatsapp_cloud_api_assignments_contact_latest_cover_idx",
+          "rows": 1,
+          "loops": 269,
+          "rowsRemovedByFilter": 0,
+          "hits": 799,
+          "reads": 7
+        },
+        {
+          "table": "gerencias",
+          "type": "Index Scan",
+          "index": "gerencias_pkey",
+          "rows": 0,
+          "loops": 268,
+          "rowsRemovedByFilter": 0,
+          "hits": 0,
+          "reads": 0
+        },
+        {
+          "table": "conversions_config",
+          "type": "Index Scan",
+          "index": "conversions_config_pkey",
+          "rows": 0,
+          "loops": 269,
+          "rowsRemovedByFilter": 0,
+          "hits": 538,
+          "reads": 0
+        },
+        {
+          "table": "whatsapp_cloud_api_thread_reads",
+          "type": "Index Scan",
+          "index": "whatsapp_cloud_api_thread_reads_pkey",
+          "rows": 0,
+          "loops": 269,
+          "rowsRemovedByFilter": 0,
+          "hits": 538,
+          "reads": 0
+        },
+        {
+          "table": "whatsapp_cloud_api_webhook_events",
+          "type": "Index Scan",
+          "index": "whatsapp_cloud_api_webhook_message_sender_created_idx",
+          "rows": 60,
+          "loops": 269,
+          "rowsRemovedByFilter": 0,
+          "hits": 16248,
+          "reads": 708
+        },
+        {
+          "table": "conversions",
+          "type": "Index Scan",
+          "index": "conversions_wca_user_external_currency_expr_idx",
+          "rows": 1,
+          "loops": 268,
+          "rowsRemovedByFilter": 0,
+          "hits": 1026,
+          "reads": 54
+        },
+        {
+          "table": "conversions",
+          "type": "Index Scan",
+          "index": "idx_conversions_promo_code",
+          "rows": 0,
+          "loops": 268,
+          "rowsRemovedByFilter": 0,
+          "hits": 268,
+          "reads": 0
+        },
+        {
+          "table": "conversions",
+          "type": "Index Scan",
+          "index": "conversions_pkey",
+          "rows": 0,
+          "loops": 268,
+          "rowsRemovedByFilter": 0,
+          "hits": 0,
+          "reads": 0
+        },
+        {
+          "table": "whatsapp_cloud_api_redirects",
+          "type": "Index Only Scan",
+          "index": "whatsapp_cloud_api_redirects_contact_metrics_idx",
+          "rows": 0,
+          "loops": 269,
+          "rowsRemovedByFilter": 0,
+          "hits": 538,
+          "reads": 0
+        },
+        {
+          "table": "whatsapp_cloud_api_webhook_events",
+          "type": "Index Scan",
+          "index": "whatsapp_cloud_api_webhook_message_sender_created_idx",
+          "rows": 50,
+          "loops": 20,
+          "rowsRemovedByFilter": 0,
+          "hits": 1066,
+          "reads": 0
+        },
+        {
+          "table": "whatsapp_cloud_api_outbound_messages",
+          "type": "Index Scan",
+          "index": "whatsapp_cloud_api_outbound_contact_created_idx",
+          "rows": 0,
+          "loops": 20,
+          "rowsRemovedByFilter": 0,
+          "hits": 40,
+          "reads": 0
+        },
+        {
+          "table": "whatsapp_cloud_api_attribution_sessions",
+          "type": "Index Only Scan",
+          "index": "whatsapp_cloud_api_attr_contact_latest_cover_idx",
+          "rows": 0,
+          "loops": 20,
+          "rowsRemovedByFilter": 0,
+          "hits": 40,
+          "reads": 0
+        }
+      ]
+    }
+  ],
+  "source": "Historical SQL body retained without logical edits; physical variants in inbox-measure.mjs; final RPC timings in tests.json."
+}

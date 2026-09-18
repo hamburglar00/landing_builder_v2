@@ -1,0 +1,97 @@
+{
+  "kind": "local_synthetic_component_browser",
+  "realBackendDuringBrowser": false,
+  "backendCoverage": "tests.json real isolated PostgREST",
+  "sourceHashes": {
+    "frontend/components/whatsapp-cloud-api/WhatsAppCloudApiInboxPageContent.tsx": "7856a3ea2e08ed08caed17b9bad657bab334a518f4ec2c80702cf4c096504c44",
+    "frontend/lib/whatsappCloudApiDb.ts": "2265076f9980e5e2e7c19f9f11ac30ed6a1e8c41b47f89c4104260263023c634",
+    "frontend/lib/whatsappInboxMessages.ts": "06d50abd1f71dacb0323527bb57dcf4ec792235c702b331737514d79f10e39cc"
+  },
+  "fixtureSha256": "17c859ec01cf73536b97cdbd8898f0583330d296dee47a1d4356472517c1c5fa",
+  "additionalPresentationFixtures": [
+    "gerencia labels",
+    "empty selection"
+  ],
+  "before": {
+    "initial": {
+      "requests": 2,
+      "rows": 20,
+      "bytes": 257491,
+      "rpcBytes": 257446,
+      "elapsedMs": 442.7540999999999,
+      "http": [
+        {
+          "endpoint": "/auth/v1/user",
+          "responseMs": 3.6780000082217157,
+          "encodedBytes": 200
+        },
+        {
+          "endpoint": "/rest/v1/rpc/get_whatsapp_cloud_api_inbox_threads_page",
+          "responseMs": 6.5230000036535785,
+          "encodedBytes": 257605
+        }
+      ],
+      "taskCpuMs": 203.60600000000002,
+      "scriptCpuMs": 118.811,
+      "heapDeltaBytes": 1397296,
+      "messageObjects": 1000,
+      "normalizedMessages": 1000
+    },
+    "selection": {
+      "requests": 1,
+      "bytes": 4,
+      "detailRequests": 0,
+      "normalizedMessages": 0
+    },
+    "bundleBytes": 256274,
+    "browserErrors": 0
+  },
+  "after": {
+    "initial": {
+      "requests": 2,
+      "rows": 20,
+      "bytes": 21032,
+      "rpcBytes": 20987,
+      "elapsedMs": 475.2008000000001,
+      "http": [
+        {
+          "endpoint": "/auth/v1/user",
+          "responseMs": 6.393000003299676,
+          "encodedBytes": 200
+        },
+        {
+          "endpoint": "/rest/v1/rpc/get_whatsapp_cloud_api_inbox_summaries",
+          "responseMs": 6.640999999945052,
+          "encodedBytes": 21145
+        }
+      ],
+      "taskCpuMs": 210.707,
+      "scriptCpuMs": 128.82299999999998,
+      "heapDeltaBytes": 1389168,
+      "messageObjects": 0,
+      "normalizedMessages": 0
+    },
+    "selection": {
+      "requests": 2,
+      "bytes": 12004,
+      "detailRequests": 1,
+      "normalizedMessages": 50
+    },
+    "bundleBytes": 260395,
+    "browserErrors": 0
+  },
+  "checks": [
+    "an old unselected message status cannot replace the latest preview",
+    "selected history first and older page rendered",
+    "no message request before selection",
+    "initial browser parameters match ARS/Today/All/offset 0",
+    "60 outbound realtime messages preserve the inbound service window",
+    "next and previous conversation pages do not preload details",
+    "historical page-local search filters the bounded summaries without downloads",
+    "all tags and unread filter request and render their SQL projection",
+    "ARS and PYG switch correctly; reload keeps details unloaded",
+    "Today and maximum date presets preserve the server date contract",
+    "gerencia presentation fixture filters only the current 20 summaries without requests",
+    "empty selected conversation renders its empty detail"
+  ]
+}

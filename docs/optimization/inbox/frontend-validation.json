@@ -1,0 +1,184 @@
+{
+  "syntheticOnly": true,
+  "environmentFilesCopied": 0,
+  "sourceHashes": {
+    "frontend/components/whatsapp-cloud-api/WhatsAppCloudApiInboxPageContent.tsx": "7856a3ea2e08ed08caed17b9bad657bab334a518f4ec2c80702cf4c096504c44",
+    "frontend/lib/whatsappCloudApiDb.ts": "2265076f9980e5e2e7c19f9f11ac30ed6a1e8c41b47f89c4104260263023c634",
+    "frontend/lib/whatsappInboxMessages.ts": "06d50abd1f71dacb0323527bb57dcf4ec792235c702b331737514d79f10e39cc",
+    "frontend/tests/inboxLoading.test.ts": "7b50efb6fe9cdbe8f229710598f49fea9281df68ff926dfc77fafcbe82c8892d"
+  },
+  "typescript": {
+    "exitCode": 0
+  },
+  "build": {
+    "exitCode": 0,
+    "bundler": "webpack",
+    "isolatedTemporaryCopy": true,
+    "environmentFilesCopied": 0
+  },
+  "bundle": {
+    "scope": ".next/static browser assets",
+    "serverArtifactsExcluded": ".next/server",
+    "files": 125,
+    "privateSyntheticMarkerFound": false,
+    "newSummaryRpcAssets": 1,
+    "newDetailRpcAssets": 1,
+    "legacyPreloadRpcAssets": 0
+  },
+  "eslint": {
+    "exitCode": 0,
+    "errors": 0,
+    "warnings": 18,
+    "findings": [
+      {
+        "file": "app/(panel)/dashboard/layout.tsx",
+        "messages": [
+          {
+            "rule": "@typescript-eslint/no-unused-vars",
+            "line": 327,
+            "severity": 1,
+            "message": "'planStartsAt' is assigned a value but never used."
+          },
+          {
+            "rule": "@typescript-eslint/no-unused-vars",
+            "line": 329,
+            "severity": 1,
+            "message": "'planMaxLandings' is assigned a value but never used."
+          },
+          {
+            "rule": "@typescript-eslint/no-unused-vars",
+            "line": 330,
+            "severity": 1,
+            "message": "'planMaxPhones' is assigned a value but never used."
+          },
+          {
+            "rule": "@typescript-eslint/no-unused-vars",
+            "line": 331,
+            "severity": 1,
+            "message": "'planGraceDays' is assigned a value but never used."
+          }
+        ]
+      },
+      {
+        "file": "app/(panel)/promo/[slug]/page.tsx",
+        "messages": [
+          {
+            "rule": "@typescript-eslint/no-unused-vars",
+            "line": 35,
+            "severity": 1,
+            "message": "'formatDateTime' is defined but never used."
+          }
+        ]
+      },
+      {
+        "file": "components/conversiones/StatsPanel.tsx",
+        "messages": [
+          {
+            "rule": "react-hooks/exhaustive-deps",
+            "line": 1120,
+            "severity": 1,
+            "message": "React Hook useMemo has a missing dependency: 'sortRows'. Either include it or remove the dependency array."
+          },
+          {
+            "rule": "react-hooks/exhaustive-deps",
+            "line": 1121,
+            "severity": 1,
+            "message": "React Hook useMemo has a missing dependency: 'sortRows'. Either include it or remove the dependency array."
+          }
+        ]
+      },
+      {
+        "file": "components/conversiones/TrackingBoard.tsx",
+        "messages": [
+          {
+            "rule": "react-hooks/exhaustive-deps",
+            "line": 279,
+            "severity": 1,
+            "message": "React Hook useMemo has a missing dependency: 'indicatorFor'. Either include it or remove the dependency array."
+          },
+          {
+            "rule": "react-hooks/exhaustive-deps",
+            "line": 348,
+            "severity": 1,
+            "message": "React Hook useMemo has a missing dependency: 'indicatorFor'. Either include it or remove the dependency array."
+          }
+        ]
+      },
+      {
+        "file": "components/integraciones/IntegracionesMetaCapi.tsx",
+        "messages": [
+          {
+            "rule": "@typescript-eslint/no-unused-vars",
+            "line": 269,
+            "severity": 1,
+            "message": "'landingPhoneUrl' is assigned a value but never used."
+          },
+          {
+            "rule": "@typescript-eslint/no-unused-vars",
+            "line": 400,
+            "severity": 1,
+            "message": "'maskToken' is assigned a value but never used."
+          },
+          {
+            "rule": "react-hooks/exhaustive-deps",
+            "line": 569,
+            "severity": 1,
+            "message": "React Hook useCallback has an unnecessary dependency: 'chatraceConfig'. Either exclude it or remove the dependency array."
+          },
+          {
+            "rule": "@next/next/no-img-element",
+            "line": 965,
+            "severity": 1,
+            "message": "Using `<img>` could result in slower LCP and higher bandwidth. Consider using `<Image />` from `next/image` or a custom image loader to automatically optimize images. This may incur additional usage or cost from your provider. See: https://nextjs.org/docs/messages/no-img-element"
+          },
+          {
+            "rule": "@next/next/no-img-element",
+            "line": 984,
+            "severity": 1,
+            "message": "Using `<img>` could result in slower LCP and higher bandwidth. Consider using `<Image />` from `next/image` or a custom image loader to automatically optimize images. This may incur additional usage or cost from your provider. See: https://nextjs.org/docs/messages/no-img-element"
+          },
+          {
+            "rule": "@next/next/no-img-element",
+            "line": 1003,
+            "severity": 1,
+            "message": "Using `<img>` could result in slower LCP and higher bandwidth. Consider using `<Image />` from `next/image` or a custom image loader to automatically optimize images. This may incur additional usage or cost from your provider. See: https://nextjs.org/docs/messages/no-img-element"
+          }
+        ]
+      },
+      {
+        "file": "components/notificaciones/NotificationsPageContent.tsx",
+        "messages": [
+          {
+            "rule": "@next/next/no-img-element",
+            "line": 409,
+            "severity": 1,
+            "message": "Using `<img>` could result in slower LCP and higher bandwidth. Consider using `<Image />` from `next/image` or a custom image loader to automatically optimize images. This may incur additional usage or cost from your provider. See: https://nextjs.org/docs/messages/no-img-element"
+          }
+        ]
+      },
+      {
+        "file": "lib/conversionsDb.ts",
+        "messages": [
+          {
+            "rule": "@typescript-eslint/no-unused-vars",
+            "line": 1273,
+            "severity": 1,
+            "message": "'_conversions' is assigned a value but never used."
+          },
+          {
+            "rule": "@typescript-eslint/no-unused-vars",
+            "line": 1289,
+            "severity": 1,
+            "message": "'_conversions' is assigned a value but never used."
+          }
+        ]
+      }
+    ]
+  },
+  "unitTests": {
+    "exitCode": 0,
+    "tests": 11,
+    "passed": 11,
+    "failed": 0
+  }
+}

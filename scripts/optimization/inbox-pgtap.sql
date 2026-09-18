@@ -1,0 +1,17 @@
+BEGIN;
+SET LOCAL statement_timeout='8s';
+CREATE EXTENSION IF NOT EXISTS pgtap WITH SCHEMA extensions;
+SET LOCAL search_path=public,extensions;
+SELECT plan(10);
+SELECT ok(NOT has_function_privilege('anon','public.get_whatsapp_cloud_api_inbox_summaries(integer,integer,text,text,boolean,timestamptz,timestamptz)','EXECUTE'),'anon cannot list');
+SELECT ok(NOT has_function_privilege('anon','public.get_whatsapp_cloud_api_inbox_messages(uuid,timestamptz,integer,uuid)','EXECUTE'),'anon cannot read history');
+SELECT ok(has_function_privilege('authenticated','public.get_whatsapp_cloud_api_inbox_summaries(integer,integer,text,text,boolean,timestamptz,timestamptz)','EXECUTE'),'authenticated summary entry point');
+SELECT ok(has_function_privilege('authenticated','public.get_whatsapp_cloud_api_inbox_messages(uuid,timestamptz,integer,uuid)','EXECUTE'),'authenticated history entry point');
+SELECT is((SELECT role FROM public.profiles WHERE id='74000000-0000-4000-8000-000000000002'),'client','editable metadata did not create an admin');
+SELECT is((SELECT role FROM public.profiles WHERE id='74000000-0000-4000-8000-000000000003'),'admin','trusted admin role preserved');
+SELECT ok(NOT has_schema_privilege('anon','inbox_private','USAGE'),'anonymous helper schema denied');
+SELECT ok((SELECT bool_and(NOT prosecdef) FROM pg_proc WHERE proname IN('get_whatsapp_cloud_api_inbox_summaries','get_whatsapp_cloud_api_inbox_messages')),'public entry points use invoker');
+SELECT ok(NOT EXISTS(SELECT 1 FROM pg_proc p JOIN pg_namespace n ON n.oid=p.pronamespace CROSS JOIN LATERAL aclexplode(p.proacl) a WHERE n.nspname='inbox_private' AND a.grantee=0),'helpers have no PUBLIC execute');
+SELECT ok(has_function_privilege('service_role','public.get_whatsapp_cloud_api_inbox_threads_page(integer,integer,text,text,boolean,timestamptz,timestamptz)','EXECUTE'),'existing backend ACL preserved');
+SELECT * FROM finish();
+ROLLBACK;

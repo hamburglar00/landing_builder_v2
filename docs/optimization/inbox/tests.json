@@ -1,0 +1,732 @@
+{
+  "localOnly": true,
+  "complete": true,
+  "migrationsApplied": 274,
+  "failures": [],
+  "checks": [
+    {
+      "name": "274/274 migration ledger",
+      "status": "passed"
+    },
+    {
+      "name": "new privileged helpers are unexposed and public wrappers are invokers",
+      "status": "passed"
+    },
+    {
+      "name": "complete historical projection equivalence case 1",
+      "status": "passed"
+    },
+    {
+      "name": "complete historical projection equivalence case 2",
+      "status": "passed"
+    },
+    {
+      "name": "complete historical projection equivalence case 3",
+      "status": "passed"
+    },
+    {
+      "name": "complete historical projection equivalence case 4",
+      "status": "passed"
+    },
+    {
+      "name": "complete historical projection equivalence case 5",
+      "status": "passed"
+    },
+    {
+      "name": "complete historical projection equivalence case 6",
+      "status": "passed"
+    },
+    {
+      "name": "complete historical projection equivalence case 7",
+      "status": "passed"
+    },
+    {
+      "name": "complete historical projection equivalence case 8",
+      "status": "passed"
+    },
+    {
+      "name": "complete historical projection equivalence case 9",
+      "status": "passed"
+    },
+    {
+      "name": "complete historical projection equivalence case 10",
+      "status": "passed"
+    },
+    {
+      "name": "complete historical projection equivalence case 11",
+      "status": "passed"
+    },
+    {
+      "name": "complete historical projection equivalence case 12",
+      "status": "passed"
+    },
+    {
+      "name": "complete historical projection equivalence case 13",
+      "status": "passed"
+    },
+    {
+      "name": "complete historical projection equivalence case 14",
+      "status": "passed"
+    },
+    {
+      "name": "complete historical projection equivalence case 15",
+      "status": "passed"
+    },
+    {
+      "name": "first page is bounded at 20 and excludes another tenant",
+      "status": "passed"
+    },
+    {
+      "name": "second tenant sees only its own rows",
+      "status": "passed"
+    },
+    {
+      "name": "protected admin role can read both tenants",
+      "status": "passed"
+    },
+    {
+      "name": "null auth uid exposes no summaries or history",
+      "status": "passed"
+    },
+    {
+      "name": "foreign contact id cannot read history",
+      "status": "passed"
+    },
+    {
+      "name": "first detail page equals historical latest 50 messages",
+      "status": "passed"
+    },
+    {
+      "name": "message cursor next and final page have no gaps or duplicates",
+      "status": "passed"
+    },
+    {
+      "name": "empty conversation has empty detail",
+      "status": "passed"
+    },
+    {
+      "name": "stable conversation pages including equal activity timestamps",
+      "status": "passed"
+    },
+    {
+      "name": "read state is preserved and calculated per authenticated reader",
+      "status": "passed"
+    },
+    {
+      "name": "positive Contacto filter retains redirect-derived state",
+      "status": "passed"
+    },
+    {
+      "name": "mixed stream timestamp ties paginate with no lost or duplicate messages",
+      "status": "passed"
+    },
+    {
+      "name": "pgTAP access contracts (10 assertions)",
+      "status": "passed"
+    },
+    {
+      "name": "existing authenticated RPC no longer times out",
+      "status": "passed"
+    },
+    {
+      "name": "Data API authenticated summary projection",
+      "status": "passed"
+    },
+    {
+      "name": "Data API selected history and cursor",
+      "status": "passed"
+    },
+    {
+      "name": "Data API anonymous cannot list or read messages",
+      "status": "passed"
+    },
+    {
+      "name": "Data API cannot inject tenant identity",
+      "status": "passed"
+    },
+    {
+      "name": "Data API foreign selected contact returns no messages",
+      "status": "passed"
+    }
+  ],
+  "remoteWrites": 0,
+  "historicalMigrationsSha256": "d95ea0156c39b945226d0701dc736fe053d3bd26118cce7fa56a193b445392e5",
+  "provider": {
+    "cli": "2.75.0",
+    "image": "public.ecr.aws/supabase/postgres:17.6.1.075",
+    "imageId": "sha256:82a04ba6c05f60950a74ae46be3726abb18d06ee44da936276fd782e72e36855"
+  },
+  "nativeCompatibility": {
+    "applied": true,
+    "version": "0.19.5",
+    "method": "Native DROP/CREATE EXTENSION on empty owned local database; transaction-local event_triggers=false; no extension file/function edits",
+    "remoteSecurityExact": true
+  },
+  "compatibility": {
+    "applied": true,
+    "afterHistoricalCount": 268,
+    "sourceSha256": "1ff365d11204bd8a20668b1d821df138a9310f05d94ed1b53c398f6762bb6f5c",
+    "referenceMatched": true
+  },
+  "migrationSha256": "75e6461e6a12d68f05b4620eb90a069dbeadcb29e3ff31cd5334fa1c9f38d087",
+  "todayMeasurements": [
+    {
+      "label": "original_today",
+      "timeoutMs": 60000,
+      "sqlstate": "57014"
+    },
+    {
+      "label": "predicates_today",
+      "timeoutMs": 8000,
+      "sqlMs": 5894.122,
+      "planningMs": 17.952,
+      "rows": 20,
+      "hits": 4854623,
+      "reads": 106,
+      "scans": [
+        {
+          "table": "profiles",
+          "type": "Index Scan",
+          "index": "profiles_pkey",
+          "rows": 0,
+          "loops": 1,
+          "rowsRemovedByFilter": 1,
+          "hits": 2,
+          "reads": 0
+        },
+        {
+          "table": "whatsapp_cloud_api_contacts",
+          "type": "Seq Scan",
+          "index": null,
+          "rows": 271,
+          "loops": 1,
+          "rowsRemovedByFilter": 0,
+          "hits": 6,
+          "reads": 0
+        },
+        {
+          "table": "whatsapp_cloud_api_configs",
+          "type": "Seq Scan",
+          "index": null,
+          "rows": 1,
+          "loops": 271,
+          "rowsRemovedByFilter": 0,
+          "hits": 271,
+          "reads": 0
+        },
+        {
+          "table": "whatsapp_cloud_api_assignments",
+          "type": "Index Only Scan",
+          "index": "whatsapp_cloud_api_assignments_contact_latest_cover_idx",
+          "rows": 1,
+          "loops": 269,
+          "rowsRemovedByFilter": 0,
+          "hits": 806,
+          "reads": 0
+        },
+        {
+          "table": "gerencias",
+          "type": "Index Scan",
+          "index": "gerencias_pkey",
+          "rows": 0,
+          "loops": 268,
+          "rowsRemovedByFilter": 0,
+          "hits": 0,
+          "reads": 0
+        },
+        {
+          "table": "conversions",
+          "type": "Index Scan",
+          "index": "conversions_wca_user_external_currency_expr_idx",
+          "rows": 1,
+          "loops": 268,
+          "rowsRemovedByFilter": 0,
+          "hits": 1068,
+          "reads": 4
+        },
+        {
+          "table": "conversions",
+          "type": "Index Scan",
+          "index": "idx_conversions_promo_code",
+          "rows": 0,
+          "loops": 268,
+          "rowsRemovedByFilter": 0,
+          "hits": 268,
+          "reads": 0
+        },
+        {
+          "table": "conversions",
+          "type": "Index Scan",
+          "index": "conversions_pkey",
+          "rows": 0,
+          "loops": 268,
+          "rowsRemovedByFilter": 0,
+          "hits": 0,
+          "reads": 0
+        },
+        {
+          "table": "conversions_config",
+          "type": "Index Scan",
+          "index": "conversions_config_pkey",
+          "rows": 0,
+          "loops": 72361,
+          "rowsRemovedByFilter": 0,
+          "hits": 144722,
+          "reads": 0
+        },
+        {
+          "table": "whatsapp_cloud_api_redirects",
+          "type": "Index Only Scan",
+          "index": "whatsapp_cloud_api_redirects_contact_metrics_idx",
+          "rows": 0,
+          "loops": 269,
+          "rowsRemovedByFilter": 0,
+          "hits": 538,
+          "reads": 0
+        },
+        {
+          "table": "whatsapp_cloud_api_thread_reads",
+          "type": "Index Scan",
+          "index": "whatsapp_cloud_api_thread_reads_pkey",
+          "rows": 0,
+          "loops": 72361,
+          "rowsRemovedByFilter": 0,
+          "hits": 144722,
+          "reads": 0
+        },
+        {
+          "table": "whatsapp_cloud_api_webhook_events",
+          "type": "Index Scan",
+          "index": "whatsapp_cloud_api_webhook_message_sender_created_idx",
+          "rows": 60,
+          "loops": 72361,
+          "rowsRemovedByFilter": 0,
+          "hits": 4561062,
+          "reads": 102
+        },
+        {
+          "table": "whatsapp_cloud_api_webhook_events",
+          "type": "Index Scan",
+          "index": "whatsapp_cloud_api_webhook_message_sender_created_idx",
+          "rows": 50,
+          "loops": 20,
+          "rowsRemovedByFilter": 0,
+          "hits": 1066,
+          "reads": 0
+        },
+        {
+          "table": "whatsapp_cloud_api_outbound_messages",
+          "type": "Index Scan",
+          "index": "whatsapp_cloud_api_outbound_contact_created_idx",
+          "rows": 0,
+          "loops": 20,
+          "rowsRemovedByFilter": 0,
+          "hits": 40,
+          "reads": 0
+        },
+        {
+          "table": "whatsapp_cloud_api_attribution_sessions",
+          "type": "Index Only Scan",
+          "index": "whatsapp_cloud_api_attr_contact_latest_cover_idx",
+          "rows": 0,
+          "loops": 20,
+          "rowsRemovedByFilter": 0,
+          "hits": 40,
+          "reads": 0
+        }
+      ]
+    },
+    {
+      "label": "predicates_materialized_unread_today",
+      "timeoutMs": 8000,
+      "sqlMs": 188.232,
+      "planningMs": 18.782,
+      "rows": 20,
+      "hits": 166337,
+      "reads": 0,
+      "scans": [
+        {
+          "table": "profiles",
+          "type": "Index Scan",
+          "index": "profiles_pkey",
+          "rows": 0,
+          "loops": 1,
+          "rowsRemovedByFilter": 1,
+          "hits": 2,
+          "reads": 0
+        },
+        {
+          "table": "whatsapp_cloud_api_contacts",
+          "type": "Seq Scan",
+          "index": null,
+          "rows": 271,
+          "loops": 1,
+          "rowsRemovedByFilter": 0,
+          "hits": 6,
+          "reads": 0
+        },
+        {
+          "table": "whatsapp_cloud_api_configs",
+          "type": "Seq Scan",
+          "index": null,
+          "rows": 1,
+          "loops": 271,
+          "rowsRemovedByFilter": 0,
+          "hits": 271,
+          "reads": 0
+        },
+        {
+          "table": "whatsapp_cloud_api_assignments",
+          "type": "Index Only Scan",
+          "index": "whatsapp_cloud_api_assignments_contact_latest_cover_idx",
+          "rows": 1,
+          "loops": 269,
+          "rowsRemovedByFilter": 0,
+          "hits": 806,
+          "reads": 0
+        },
+        {
+          "table": "gerencias",
+          "type": "Index Scan",
+          "index": "gerencias_pkey",
+          "rows": 0,
+          "loops": 268,
+          "rowsRemovedByFilter": 0,
+          "hits": 0,
+          "reads": 0
+        },
+        {
+          "table": "whatsapp_cloud_api_thread_reads",
+          "type": "Index Scan",
+          "index": "whatsapp_cloud_api_thread_reads_pkey",
+          "rows": 0,
+          "loops": 269,
+          "rowsRemovedByFilter": 0,
+          "hits": 538,
+          "reads": 0
+        },
+        {
+          "table": "whatsapp_cloud_api_webhook_events",
+          "type": "Index Scan",
+          "index": "whatsapp_cloud_api_webhook_message_sender_created_idx",
+          "rows": 60,
+          "loops": 269,
+          "rowsRemovedByFilter": 0,
+          "hits": 16956,
+          "reads": 0
+        },
+        {
+          "table": "conversions",
+          "type": "Index Scan",
+          "index": "conversions_wca_user_external_currency_expr_idx",
+          "rows": 1,
+          "loops": 268,
+          "rowsRemovedByFilter": 0,
+          "hits": 1072,
+          "reads": 0
+        },
+        {
+          "table": "conversions",
+          "type": "Index Scan",
+          "index": "idx_conversions_promo_code",
+          "rows": 0,
+          "loops": 268,
+          "rowsRemovedByFilter": 0,
+          "hits": 268,
+          "reads": 0
+        },
+        {
+          "table": "conversions",
+          "type": "Index Scan",
+          "index": "conversions_pkey",
+          "rows": 0,
+          "loops": 268,
+          "rowsRemovedByFilter": 0,
+          "hits": 0,
+          "reads": 0
+        },
+        {
+          "table": "conversions_config",
+          "type": "Index Scan",
+          "index": "conversions_config_pkey",
+          "rows": 0,
+          "loops": 72361,
+          "rowsRemovedByFilter": 0,
+          "hits": 144722,
+          "reads": 0
+        },
+        {
+          "table": "whatsapp_cloud_api_redirects",
+          "type": "Index Only Scan",
+          "index": "whatsapp_cloud_api_redirects_contact_metrics_idx",
+          "rows": 0,
+          "loops": 269,
+          "rowsRemovedByFilter": 0,
+          "hits": 538,
+          "reads": 0
+        },
+        {
+          "table": "whatsapp_cloud_api_webhook_events",
+          "type": "Index Scan",
+          "index": "whatsapp_cloud_api_webhook_message_sender_created_idx",
+          "rows": 50,
+          "loops": 20,
+          "rowsRemovedByFilter": 0,
+          "hits": 1066,
+          "reads": 0
+        },
+        {
+          "table": "whatsapp_cloud_api_outbound_messages",
+          "type": "Index Scan",
+          "index": "whatsapp_cloud_api_outbound_contact_created_idx",
+          "rows": 0,
+          "loops": 20,
+          "rowsRemovedByFilter": 0,
+          "hits": 40,
+          "reads": 0
+        },
+        {
+          "table": "whatsapp_cloud_api_attribution_sessions",
+          "type": "Index Only Scan",
+          "index": "whatsapp_cloud_api_attr_contact_latest_cover_idx",
+          "rows": 0,
+          "loops": 20,
+          "rowsRemovedByFilter": 0,
+          "hits": 40,
+          "reads": 0
+        }
+      ]
+    },
+    {
+      "label": "predicates_materialized_unread_thresholds_today",
+      "timeoutMs": 8000,
+      "sqlMs": 149.355,
+      "planningMs": 55.142,
+      "rows": 20,
+      "hits": 21387,
+      "reads": 774,
+      "scans": [
+        {
+          "table": "profiles",
+          "type": "Index Scan",
+          "index": "profiles_pkey",
+          "rows": 0,
+          "loops": 1,
+          "rowsRemovedByFilter": 1,
+          "hits": 2,
+          "reads": 0
+        },
+        {
+          "table": "whatsapp_cloud_api_contacts",
+          "type": "Seq Scan",
+          "index": null,
+          "rows": 271,
+          "loops": 1,
+          "rowsRemovedByFilter": 0,
+          "hits": 1,
+          "reads": 5
+        },
+        {
+          "table": "whatsapp_cloud_api_configs",
+          "type": "Seq Scan",
+          "index": null,
+          "rows": 1,
+          "loops": 271,
+          "rowsRemovedByFilter": 0,
+          "hits": 271,
+          "reads": 0
+        },
+        {
+          "table": "whatsapp_cloud_api_assignments",
+          "type": "Index Only Scan",
+          "index": "whatsapp_cloud_api_assignments_contact_latest_cover_idx",
+          "rows": 1,
+          "loops": 269,
+          "rowsRemovedByFilter": 0,
+          "hits": 799,
+          "reads": 7
+        },
+        {
+          "table": "gerencias",
+          "type": "Index Scan",
+          "index": "gerencias_pkey",
+          "rows": 0,
+          "loops": 268,
+          "rowsRemovedByFilter": 0,
+          "hits": 0,
+          "reads": 0
+        },
+        {
+          "table": "conversions_config",
+          "type": "Index Scan",
+          "index": "conversions_config_pkey",
+          "rows": 0,
+          "loops": 269,
+          "rowsRemovedByFilter": 0,
+          "hits": 538,
+          "reads": 0
+        },
+        {
+          "table": "whatsapp_cloud_api_thread_reads",
+          "type": "Index Scan",
+          "index": "whatsapp_cloud_api_thread_reads_pkey",
+          "rows": 0,
+          "loops": 269,
+          "rowsRemovedByFilter": 0,
+          "hits": 538,
+          "reads": 0
+        },
+        {
+          "table": "whatsapp_cloud_api_webhook_events",
+          "type": "Index Scan",
+          "index": "whatsapp_cloud_api_webhook_message_sender_created_idx",
+          "rows": 60,
+          "loops": 269,
+          "rowsRemovedByFilter": 0,
+          "hits": 16248,
+          "reads": 708
+        },
+        {
+          "table": "conversions",
+          "type": "Index Scan",
+          "index": "conversions_wca_user_external_currency_expr_idx",
+          "rows": 1,
+          "loops": 268,
+          "rowsRemovedByFilter": 0,
+          "hits": 1026,
+          "reads": 54
+        },
+        {
+          "table": "conversions",
+          "type": "Index Scan",
+          "index": "idx_conversions_promo_code",
+          "rows": 0,
+          "loops": 268,
+          "rowsRemovedByFilter": 0,
+          "hits": 268,
+          "reads": 0
+        },
+        {
+          "table": "conversions",
+          "type": "Index Scan",
+          "index": "conversions_pkey",
+          "rows": 0,
+          "loops": 268,
+          "rowsRemovedByFilter": 0,
+          "hits": 0,
+          "reads": 0
+        },
+        {
+          "table": "whatsapp_cloud_api_redirects",
+          "type": "Index Only Scan",
+          "index": "whatsapp_cloud_api_redirects_contact_metrics_idx",
+          "rows": 0,
+          "loops": 269,
+          "rowsRemovedByFilter": 0,
+          "hits": 538,
+          "reads": 0
+        },
+        {
+          "table": "whatsapp_cloud_api_webhook_events",
+          "type": "Index Scan",
+          "index": "whatsapp_cloud_api_webhook_message_sender_created_idx",
+          "rows": 50,
+          "loops": 20,
+          "rowsRemovedByFilter": 0,
+          "hits": 1066,
+          "reads": 0
+        },
+        {
+          "table": "whatsapp_cloud_api_outbound_messages",
+          "type": "Index Scan",
+          "index": "whatsapp_cloud_api_outbound_contact_created_idx",
+          "rows": 0,
+          "loops": 20,
+          "rowsRemovedByFilter": 0,
+          "hits": 40,
+          "reads": 0
+        },
+        {
+          "table": "whatsapp_cloud_api_attribution_sessions",
+          "type": "Index Only Scan",
+          "index": "whatsapp_cloud_api_attr_contact_latest_cover_idx",
+          "rows": 0,
+          "loops": 20,
+          "rowsRemovedByFilter": 0,
+          "hits": 40,
+          "reads": 0
+        }
+      ]
+    }
+  ],
+  "equivalenceOracle": {
+    "source": "historical SELECT with every CTE materialized; no logical expression, predicate, projection or order changed",
+    "localPlannerOnly": {
+      "enable_nestloop": false,
+      "jit": false
+    },
+    "reason": "Obtain complete reference rows without the known repeated execution plan; candidate uses default planner and unchanged 8-second timeout."
+  },
+  "fixtureExtended": true,
+  "pgTap": {
+    "assertions": 10,
+    "passed": true
+  },
+  "optimizedExistingRpcMs": 97.962,
+  "transfers": {
+    "oldRows": 20,
+    "oldMessages": 1000,
+    "oldJsonBytes": 257446,
+    "newRows": 20,
+    "newMessages": 0,
+    "newJsonBytes": 20987,
+    "selectedMessageRows": 50
+  },
+  "dataApi": {
+    "image": "public.ecr.aws/supabase/postgrest:v14.1",
+    "localOnly": true,
+    "publishedPorts": 0
+  },
+  "dataApiCleanup": {
+    "container": "db2d46ebc6cf6bed0c7d570fb97bfac4aad70b819e3dd27b5fc77f54a47ba1d4",
+    "remaining": 0
+  },
+  "rpcMeasurements": {
+    "summaries": {
+      "sqlMs": 94.521,
+      "planningMs": 0.158,
+      "rows": 20,
+      "hits": 22328,
+      "reads": 0,
+      "timeoutMs": 8000
+    },
+    "selectedDetail": {
+      "sqlMs": 12.26,
+      "planningMs": 0.467,
+      "rows": 1,
+      "hits": 1508,
+      "reads": 0,
+      "timeoutMs": 8000
+    }
+  },
+  "cleanup": {
+    "project": "phase0b-6510c1ce",
+    "owned": {
+      "containers": [
+        "04ae24a50e5796be7fe0aafb4b361c894a6c10c49203cd0f875c430310d530a6"
+      ],
+      "networks": [
+        "836933f1e626c0a69c862dfe97ee57ced62d544d0af65d044ec2fd642bf93be3",
+        "d25271a5c8d046acd154d77523f89c7a7e6e646901b85d5cf67e319387c45f9c"
+      ],
+      "volumes": [
+        "supabase_db_phase0b-6510c1ce"
+      ]
+    },
+    "remaining": {
+      "containers": [],
+      "networks": [],
+      "volumes": []
+    }
+  }
+}

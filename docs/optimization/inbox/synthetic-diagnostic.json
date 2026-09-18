@@ -1,0 +1,206 @@
+{
+  "kind": "synthetic_diagnosis",
+  "complete": false,
+  "migrationsApplied": 273,
+  "productionData": false,
+  "remoteCalls": 0,
+  "measurements": [
+    {
+      "label": "before",
+      "sqlMs": 212.203,
+      "planningMs": 19.373,
+      "planCost": 50734.87,
+      "sharedHitBlocks": 48420,
+      "sharedReadBlocks": 2456,
+      "conversionScans": [
+        {
+          "type": "Seq Scan",
+          "index": null,
+          "actualRows": 82000,
+          "loops": 1
+        },
+        {
+          "type": "Seq Scan",
+          "index": null,
+          "actualRows": 82000,
+          "loops": 1
+        },
+        {
+          "type": "Index Scan",
+          "index": "conversions_pkey",
+          "actualRows": 0,
+          "loops": 268
+        }
+      ],
+      "rows": 20,
+      "messages": 1000,
+      "jsonBytes": 275381,
+      "resultHash": "3b88212fe288ca9463394c4bf8bcc7f3"
+    },
+    {
+      "label": "predicate_candidate",
+      "sqlMs": 43.474,
+      "planningMs": 23.913,
+      "planCost": 16611.4,
+      "sharedHitBlocks": 18123,
+      "sharedReadBlocks": 60,
+      "conversionScans": [
+        {
+          "type": "Index Scan",
+          "index": "conversions_wca_user_external_currency_expr_idx",
+          "actualRows": 269,
+          "loops": 1
+        },
+        {
+          "type": "Index Scan",
+          "index": "idx_conversions_promo_code",
+          "actualRows": 0,
+          "loops": 1
+        },
+        {
+          "type": "Index Scan",
+          "index": "conversions_pkey",
+          "actualRows": 0,
+          "loops": 268
+        }
+      ],
+      "rows": 20,
+      "messages": 1000,
+      "jsonBytes": 275381,
+      "resultHash": "3b88212fe288ca9463394c4bf8bcc7f3"
+    }
+  ],
+  "priorAttempts": [
+    {
+      "complete": false,
+      "migrationsApplied": 268,
+      "failure": {
+        "message": "relation \"supabase_migrations.schema_migrations\" does not exist",
+        "sqlstate": "42P01"
+      },
+      "cleanup": {
+        "project": "phase0b-9786483b",
+        "owned": {
+          "containers": [
+            "3671669b8b6d10a4553d69bf0d25050a7d73612a7783a493d9adc91e09327d33"
+          ],
+          "networks": [
+            "1c21faf9cba847788db02d1a49b024e6bbc40617cc11db61a468a586296b3350",
+            "4e9ac315f7ec91c71bde882a1b9bb267e57f31b832d727bc359b68c6a2c4e6e1"
+          ],
+          "volumes": [
+            "supabase_db_phase0b-9786483b"
+          ]
+        },
+        "remaining": {
+          "containers": [],
+          "networks": [],
+          "volumes": []
+        }
+      }
+    },
+    {
+      "complete": false,
+      "migrationsApplied": 273,
+      "failure": {
+        "stage": "measurement_before",
+        "message": "Local command failed SQLSTATE 42601",
+        "sqlstate": "42601"
+      },
+      "cleanup": {
+        "project": "phase0b-73cecdae",
+        "owned": {
+          "containers": [
+            "08670c31c7e052357ed6ea83578efb31524cafb6eb5470ff70224e43224002db"
+          ],
+          "networks": [
+            "046548b173f96ac23d4038e024ea09ede409b13414324d490bb4a957c1941c08",
+            "b845432f803a8c5413728ae84cc604028eec83a22684b62de9fe6ce44d610bf2"
+          ],
+          "volumes": [
+            "supabase_db_phase0b-73cecdae"
+          ]
+        },
+        "remaining": {
+          "containers": [],
+          "networks": [],
+          "volumes": []
+        }
+      }
+    },
+    {
+      "complete": false,
+      "migrationsApplied": 0,
+      "failure": {
+        "stage": "baseline",
+        "message": "Bootstrap accepts no target arguments or URL overrides",
+        "sqlstate": null
+      }
+    }
+  ],
+  "harnessCorrections": [
+    {
+      "number": 1,
+      "reason": "Static review: strip the embedded statement terminator before wrapping it in a CTE; distinguish fixture timeouts from Inbox SELECT timeouts."
+    },
+    {
+      "number": 2,
+      "reason": "Provide and populate the migration ledger required by the accredited compatibility harness; first attempt stopped at 268 with SQLSTATE 42P01."
+    },
+    {
+      "number": 3,
+      "reason": "Terminate the EXPLAIN statement before ROLLBACK; retain the delimiter-free expression only inside the measurement CTE."
+    }
+  ],
+  "stage": "existing_authenticated_rpc",
+  "migrationManifestSha256": "d95ea0156c39b945226d0701dc736fe053d3bd26118cce7fa56a193b445392e5",
+  "provider": {
+    "cli": "2.75.0",
+    "image": "public.ecr.aws/supabase/postgres:17.6.1.075",
+    "imageId": "sha256:82a04ba6c05f60950a74ae46be3726abb18d06ee44da936276fd782e72e36855"
+  },
+  "nativeCompatibility": {
+    "applied": true,
+    "version": "0.19.5",
+    "method": "Native DROP/CREATE EXTENSION on empty owned local database; transaction-local event_triggers=false; no extension file/function edits",
+    "remoteSecurityExact": true
+  },
+  "compatibility": {
+    "applied": true,
+    "afterHistoricalCount": 268,
+    "sourceSha256": "1ff365d11204bd8a20668b1d821df138a9310f05d94ed1b53c398f6762bb6f5c",
+    "referenceMatched": true
+  },
+  "fixture": {
+    "contacts": 268,
+    "conversions": 82000,
+    "messages": 16080,
+    "conversionBytes": 183312384
+  },
+  "failure": {
+    "stage": "existing_authenticated_rpc",
+    "message": "Local command failed SQLSTATE 57014",
+    "sqlstate": "57014"
+  },
+  "observedTimeoutReproduced": true,
+  "cleanup": {
+    "project": "phase0b-3d20ab6e",
+    "owned": {
+      "containers": [
+        "5f73982485157ae8fc45f8f0d4fbb6c17b31161b6ae2858915d24cd4c4d43bb6"
+      ],
+      "networks": [
+        "03d8d880208f47940c3fb785ef0ca60ee8a23544582911556e518daeded63c06",
+        "37aea1e862563bf8c628789aea431629ffdaf12f9d6f745065950874ab5e4f97"
+      ],
+      "volumes": [
+        "supabase_db_phase0b-3d20ab6e"
+      ]
+    },
+    "remaining": {
+      "containers": [],
+      "networks": [],
+      "volumes": []
+    }
+  }
+}

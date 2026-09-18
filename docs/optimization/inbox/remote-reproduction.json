@@ -1,0 +1,39 @@
+{
+  "readOnly": true,
+  "statementTimeoutMs": 8000,
+  "lockTimeoutMs": 250,
+  "scope": "first configured WCA owner; identifier not output or persisted",
+  "parameters": {
+    "p_limit": 20,
+    "p_offset": 0,
+    "p_workspace_currency": "ARS",
+    "p_tag_filter": "all",
+    "p_unread_only": false,
+    "p_from": "2026-09-17T03:00:00Z",
+    "p_to": "2026-09-18T02:59:59.999Z"
+  },
+  "result": {
+    "sqlstate": "57014",
+    "message": "canceling statement due to statement timeout",
+    "context": "SQL function get_whatsapp_cloud_api_inbox_threads_page statement 1"
+  },
+  "sameDateAsScreenshot": "not established",
+  "reasonForDate": "latest production activity day",
+  "candidate": {
+    "kind": "read-only parameterized SELECT; two redundant partial-index predicates; force_generic_plan",
+    "statementTimeoutMs": 1500,
+    "completed": true,
+    "aggregates": [
+      {
+        "conversations": 1,
+        "message_objects": 4,
+        "json_bytes": 3721
+      }
+    ]
+  },
+  "catalogLogAccess": {
+    "available": false,
+    "reason": "pg_read_file and pg_stat_file denied; no privilege changes attempted"
+  },
+  "note": "Current date had zero active contacts; representative reproduction uses last active day. No actual personal values or credentials persisted."
+}

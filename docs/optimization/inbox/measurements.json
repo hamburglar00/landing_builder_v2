@@ -1,0 +1,281 @@
+{
+  "kind": "implemented_and_locally_validated",
+  "baseCommit": "ad436ff1ee3a329c1d6c702d0ce2cbfd05f92981",
+  "production": {
+    "readOnly": true,
+    "lockTimeoutMs": 250,
+    "transactionEnd": "ROLLBACK",
+    "explainAnalyze": false,
+    "personalValuesReadOrStored": false,
+    "rpc": "public.get_whatsapp_cloud_api_inbox_threads_page(integer,integer,text,text,boolean,timestamptz,timestamptz)",
+    "localSource": "supabase/migrations/20260825192821_whatsapp_cloud_api_inbox_date_filter.sql",
+    "bodyMd5": "793e4ed5e583d31ce9c63857d83649d9",
+    "localBodyMatchesDeployed": true,
+    "roleTimeouts": [
+      {
+        "role": "anon",
+        "setting": "statement_timeout=3s"
+      },
+      {
+        "role": "authenticated",
+        "setting": "statement_timeout=8s"
+      },
+      {
+        "role": "authenticator",
+        "setting": "statement_timeout=8s"
+      }
+    ],
+    "statementStatistics": [
+      {
+        "rows": 2,
+        "calls": 2,
+        "max_ms": 167.627856,
+        "min_ms": 138.826536,
+        "mean_ms": 153.227196,
+        "queryid": "4361930155207359526",
+        "total_ms": 306.454392
+      }
+    ],
+    "relationEstimates": [
+      {
+        "name": "whatsapp_cloud_api_webhook_request_logs",
+        "estimatedRows": 1266,
+        "totalBytes": 2310144,
+        "rls": true
+      },
+      {
+        "name": "whatsapp_cloud_api_redirects",
+        "estimatedRows": 247,
+        "totalBytes": 376832,
+        "rls": true
+      },
+      {
+        "name": "whatsapp_cloud_api_assignments",
+        "estimatedRows": 248,
+        "totalBytes": 466944,
+        "rls": true
+      },
+      {
+        "name": "whatsapp_cloud_api_outbound_messages",
+        "estimatedRows": 357,
+        "totalBytes": 843776,
+        "rls": true
+      },
+      {
+        "name": "whatsapp_cloud_api_gerencias",
+        "estimatedRows": 10,
+        "totalBytes": 98304,
+        "rls": true
+      },
+      {
+        "name": "whatsapp_cloud_api_webhook_events",
+        "estimatedRows": 1366,
+        "totalBytes": 2777088,
+        "rls": true
+      },
+      {
+        "name": "whatsapp_cloud_api_contacts",
+        "estimatedRows": 244,
+        "totalBytes": 327680,
+        "rls": true
+      },
+      {
+        "name": "whatsapp_cloud_api_attribution_sessions",
+        "estimatedRows": 238,
+        "totalBytes": 745472,
+        "rls": true
+      },
+      {
+        "name": "whatsapp_cloud_api_thread_reads",
+        "estimatedRows": 216,
+        "totalBytes": 155648,
+        "rls": true
+      },
+      {
+        "name": "whatsapp_cloud_api_configs",
+        "estimatedRows": 1,
+        "totalBytes": 466944,
+        "rls": true
+      },
+      {
+        "name": "whatsapp_cloud_api_retarget_messages",
+        "estimatedRows": 84,
+        "totalBytes": 155648,
+        "rls": true
+      }
+    ],
+    "conversionEstimates": [
+      {
+        "bytes": 172032,
+        "table": "conversions_config",
+        "estimated_rows": 7
+      },
+      {
+        "bytes": 494149632,
+        "table": "conversions",
+        "estimated_rows": 81258
+      }
+    ],
+    "representativePlan": {
+      "parameters": {
+        "limit": 20,
+        "offset": 0,
+        "workspace": "ARS",
+        "tag": "all",
+        "unreadOnly": false,
+        "from": null,
+        "to": null
+      },
+      "viewer": "Planning-only owner subquery from WCA config; no user identifier read, supplied, emitted or impersonated. Not the actual failed session.",
+      "before": {
+        "totalEstimatedCost": 55713.3,
+        "resultEstimatedRows": 20,
+        "conversionScans": [
+          {
+            "type": "Seq Scan",
+            "index": null,
+            "cost": 26940.72,
+            "estimatedRows": 406
+          },
+          {
+            "type": "Seq Scan",
+            "index": null,
+            "cost": 26940.72,
+            "estimatedRows": 406
+          },
+          {
+            "type": "Index Scan",
+            "index": "conversions_pkey",
+            "cost": 2.42,
+            "estimatedRows": 1
+          }
+        ]
+      },
+      "redundantPredicatesCandidate": {
+        "totalEstimatedCost": 2451.99,
+        "resultEstimatedRows": 20,
+        "conversionScans": [
+          {
+            "type": "Index Scan",
+            "index": "conversions_wca_user_external_currency_expr_idx",
+            "cost": 404.93,
+            "estimatedRows": 406
+          },
+          {
+            "type": "Index Scan",
+            "index": "conversions_wca_user_promo_currency_expr_idx",
+            "cost": 297.5,
+            "estimatedRows": 297
+          },
+          {
+            "type": "Index Scan",
+            "index": "conversions_pkey",
+            "cost": 2.42,
+            "estimatedRows": 1
+          }
+        ]
+      },
+      "candidateApplied": false,
+      "runtimeMeasured": false,
+      "notTheActualFailedRequest": true
+    },
+    "statementStatisticsRowMeaning": "pg_stat_statements rows are not a count of conversations or normalized messages delivered by PostgREST.",
+    "metadataAndPlanTimeoutMs": 1500,
+    "exactRpcReproductionTimeoutMs": 8000,
+    "exactRpcReproduction": "remote-reproduction.json",
+    "originalScreenshotDateKnown": false
+  },
+  "causalGate": {
+    "passed": true,
+    "reportedError": "57014 canceling statement due to statement timeout",
+    "evidence": [
+      "remote-reproduction.json",
+      "synthetic-diagnostic.json",
+      "sql-measurements.json"
+    ],
+    "finding": "Missing redundant partial-index predicates and repeated lateral work under date filtering; additional eager loading of up to 1000 messages.",
+    "exactOriginalScreenshotDateKnown": false
+  },
+  "synthetic": {
+    "dataSource": "Synthetic only; no production rows copied",
+    "fixture": {
+      "baseContacts": 268,
+      "conversions": 82000,
+      "inboundMessages": 16080,
+      "extendedContacts": 271,
+      "eligibleArsTenantAContacts": 269
+    },
+    "sql": {
+      "referenceRpc": {
+        "timeoutMs": 8000,
+        "sqlstate": "57014",
+        "report": "synthetic-diagnostic.json"
+      },
+      "historicalBodyBenchmark": {
+        "timeoutMs": 60000,
+        "sqlstate": "57014",
+        "localOnly": true,
+        "applicationTimeoutChanged": false
+      },
+      "variantPlans": "sql-measurements.json",
+      "finalActualRpc": {
+        "summaries": {
+          "sqlMs": 94.521,
+          "planningMs": 0.158,
+          "rows": 20,
+          "hits": 22328,
+          "reads": 0,
+          "timeoutMs": 8000
+        },
+        "selectedDetail": {
+          "sqlMs": 12.26,
+          "planningMs": 0.467,
+          "rows": 1,
+          "hits": 1508,
+          "reads": 0,
+          "timeoutMs": 8000
+        }
+      },
+      "compatibleHistoricalRpcMs": 97.962
+    },
+    "browser": {
+      "report": "browser.json",
+      "backend": "HTTP loopback replay of SQL-backed synthetic responses; real PostgREST tested separately",
+      "before": {
+        "initialRequests": 2,
+        "summaryRows": 20,
+        "messageObjects": 1000,
+        "rpcPayloadBytes": 257446,
+        "selectedDetailRequests": 0
+      },
+      "after": {
+        "initialRequests": 2,
+        "summaryRows": 20,
+        "messageObjects": 0,
+        "rpcPayloadBytes": 20987,
+        "selectedDetailRequests": 1,
+        "selectedMessageRows": 50
+      },
+      "rpcPayloadReductionPercent": 91.848,
+      "clientWork": "No initial message-array normalization; bounded 20-summary display filters and selected-history/Realtime reconciliation remain.",
+      "measurementLimit": "Single instrumented samples, no statistical CPU/heap claim or production latency extrapolation."
+    }
+  },
+  "trafficStaticTrace": {
+    "componentInitial": 2,
+    "dashboardLayoutAdditional": 4,
+    "totalExplicitPath": 6,
+    "notObservedProductionTotal": true,
+    "possibleAdditional": "Widgets, navigation, session renewal and Realtime lifecycle"
+  },
+  "contract": {
+    "conversationPageSize": 20,
+    "conversationPagination": "historical offset with deterministic ties",
+    "detailPageSize": 50,
+    "detailPagination": "exclusive keyset timestamp/stream/id",
+    "columnsBefore": 34,
+    "summaryColumnsAfter": 35,
+    "searchGerenciaHiddenScope": "current conversation page preserved"
+  },
+  "remoteWrites": 0
+}

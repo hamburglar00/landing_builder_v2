@@ -84,6 +84,17 @@ export interface WhatsappCloudApiInboxMessage {
   error: string;
 }
 
+export interface WhatsappCloudApiInboxCursor {
+  at: string;
+  stream: number;
+  id: string;
+}
+
+export interface WhatsappCloudApiInboxMessagesPage {
+  messages: WhatsappCloudApiInboxMessage[];
+  nextCursor: WhatsappCloudApiInboxCursor | null;
+}
+
 export interface WhatsappCloudApiInboxThread {
   contact_id: string;
   config_id: string;
@@ -97,6 +108,8 @@ export interface WhatsappCloudApiInboxThread {
   last_message_text: string;
   last_message_direction: string;
   last_message_status: string;
+  preview_created_at?: string | null;
+  preview_meta_message_id?: string;
   assigned_phone: string;
   assigned_gerencia_id: number | null;
   assigned_gerencia_label: string;
@@ -119,6 +132,7 @@ export interface WhatsappCloudApiInboxThread {
   unread_last_message_at: string | null;
   messages: WhatsappCloudApiInboxMessage[];
   total_threads: number;
+  service_window_last_inbound_at?: string | null;
 }
 
 export interface WhatsappCloudApiContactsPageRow {
@@ -773,7 +787,7 @@ export async function fetchWhatsappCloudApiInboxThreads(
   }
 
   const { data, error } = await supabase.rpc(
-    "get_whatsapp_cloud_api_inbox_threads_page",
+    "get_whatsapp_cloud_api_inbox_summaries",
     {
       p_limit: limit,
       p_offset: offset,
@@ -786,7 +800,7 @@ export async function fetchWhatsappCloudApiInboxThreads(
   );
   if (error) {
     logWhatsappCloudApiError("fetch inbox threads rpc failed", error, {
-      rpc: "get_whatsapp_cloud_api_inbox_threads_page",
+      rpc: "get_whatsapp_cloud_api_inbox_summaries",
       limit,
       offset,
       workspaceCurrency: workspaceCurrency ?? null,
@@ -803,11 +817,6 @@ export async function fetchWhatsappCloudApiInboxThreads(
     );
   }
   return ((data ?? []) as Array<Record<string, unknown>>).map((row) => {
-    const messages = Array.isArray(row.messages)
-      ? row.messages
-          .map(normalizeInboxMessage)
-          .filter((msg): msg is WhatsappCloudApiInboxMessage => Boolean(msg))
-      : [];
     const rawTag = firstString(row.tag);
     const tag = rawTag as WhatsappCloudApiInboxThread["tag"];
     return {
@@ -823,6 +832,8 @@ export async function fetchWhatsappCloudApiInboxThreads(
       last_message_text: firstString(row.last_message_text),
       last_message_direction: firstString(row.last_message_direction),
       last_message_status: firstString(row.last_message_status),
+      preview_created_at: firstString(row.preview_created_at) || null,
+      preview_meta_message_id: firstString(row.preview_meta_message_id),
       assigned_phone: firstString(row.assigned_phone),
       assigned_gerencia_id:
         row.assigned_gerencia_id === null ||
@@ -857,10 +868,41 @@ export async function fetchWhatsappCloudApiInboxThreads(
         firstString(row.redirect_last_clicked_at) || null,
       unread_count: Number(row.unread_count ?? 0),
       unread_last_message_at: firstString(row.unread_last_message_at) || null,
-      messages,
+      messages: [],
       total_threads: Number(row.total_threads ?? 0),
     };
   });
+}
+
+export async function fetchWhatsappCloudApiInboxMessages(
+  contactId: string,
+  cursor: WhatsappCloudApiInboxCursor | null = null,
+): Promise<WhatsappCloudApiInboxMessagesPage> {
+  const { data, error } = await supabase.rpc(
+    "get_whatsapp_cloud_api_inbox_messages",
+    {
+      p_contact_id: contactId,
+      p_before_at: cursor?.at ?? null,
+      p_before_stream: cursor?.stream ?? null,
+      p_before_id: cursor?.id ?? null,
+    },
+  );
+  if (error) {
+    throw new Error(formatWhatsappCloudApiError(error, "No se pudieron cargar los mensajes."));
+  }
+  const page = asRecord(data) ?? {};
+  const next = asRecord(page.next_cursor) ?? {};
+  return {
+    messages: Array.isArray(page.messages)
+      ? page.messages.map(normalizeInboxMessage).filter(
+          (message): message is WhatsappCloudApiInboxMessage => Boolean(message),
+        )
+      : [],
+    nextCursor: typeof next.at === "string" && typeof next.id === "string" &&
+      (next.stream === 0 || next.stream === 1)
+      ? { at: next.at, id: next.id, stream: next.stream }
+      : null,
+  };
 }
 
 export async function fetchWhatsappCloudApiContactsPage(

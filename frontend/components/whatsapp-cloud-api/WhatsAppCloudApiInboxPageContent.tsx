@@ -9,6 +9,7 @@ import {
   type CSSProperties,
 } from "react";
 import Link from "next/link";
+import { inboundWindowAfterEvent, mergeMessageWithPreview, reconcileLoadedMessages } from "@/lib/whatsappInboxMessages";
 import { useRouter } from "next/navigation";
 import { ModalShell, PageHeader, SurfaceCard } from "@/components/ui/PanelPrimitives";
 import DateRangeFilter, {
@@ -23,12 +24,14 @@ import { invokeFunction } from "@/lib/supabaseFunctions";
 import { ensureRealtimeAuth } from "@/lib/supabaseRealtimeAuth";
 import {
   fetchWhatsappCloudApiInboxThreads,
+  fetchWhatsappCloudApiInboxMessages,
   formatWhatsappCloudApiError,
   logWhatsappCloudApiError,
   markWhatsappCloudApiThreadRead,
   markWhatsappCloudApiThreadsRead,
   type WhatsappCloudApiInboxMessage,
   type WhatsappCloudApiInboxThread,
+  type WhatsappCloudApiInboxCursor,
 } from "@/lib/whatsappCloudApiDb";
 import { useCurrencyScope } from "@/components/currency/CurrencyScope";
 import { CURRENCY_ALL } from "@/lib/currency";
@@ -478,72 +481,33 @@ function readPath(source: unknown, path: Array<string | number>): unknown {
   return current;
 }
 
-function messageTimestamp(message: WhatsappCloudApiInboxMessage): number {
-  const time = new Date(message.created_at).getTime();
-  return Number.isFinite(time) ? time : 0;
-}
-
-function isOptimisticMessage(message: WhatsappCloudApiInboxMessage): boolean {
-  return message.meta_message_id.startsWith("manual:");
-}
-
-function mergeMessages(
-  current: WhatsappCloudApiInboxMessage[],
-  nextMessage: WhatsappCloudApiInboxMessage,
-  replaceMetaMessageId = "",
-): WhatsappCloudApiInboxMessage[] {
-  const next = current.filter(
-    (message) => !replaceMetaMessageId || message.meta_message_id !== replaceMetaMessageId,
-  );
-  const metaId = nextMessage.meta_message_id.trim();
-  let existingIndex = metaId
-    ? next.findIndex((message) => message.meta_message_id === metaId)
-    : -1;
-
-  if (existingIndex < 0 && metaId && nextMessage.direction === "outbound") {
-    const nextTime = messageTimestamp(nextMessage);
-    existingIndex = next.findIndex((message) => {
-      if (!isOptimisticMessage(message)) return false;
-      if (message.direction !== "outbound") return false;
-      if (message.body !== nextMessage.body) return false;
-      return Math.abs(messageTimestamp(message) - nextTime) < 15_000;
-    });
-  }
-
-  if (existingIndex >= 0) {
-    const existing = next[existingIndex];
-    next[existingIndex] = {
-      ...existing,
-      ...nextMessage,
-      created_at: existing.created_at || nextMessage.created_at,
-      body: nextMessage.body || existing.body,
-      error: nextMessage.error || existing.error,
-    };
-  } else {
-    next.push(nextMessage);
-  }
-
-  return next.sort((a, b) => messageTimestamp(a) - messageTimestamp(b));
-}
-
 function applyMessageToThread(
   thread: WhatsappCloudApiInboxThread,
   message: WhatsappCloudApiInboxMessage,
   options: { replaceMetaMessageId?: string; incrementUnread?: boolean } = {},
 ): WhatsappCloudApiInboxThread {
-  const messages = mergeMessages(
+  const preview: WhatsappCloudApiInboxMessage[] = thread.preview_created_at &&
+    (thread.last_message_direction === "inbound" || thread.last_message_direction === "outbound")
+    ? [{ created_at: thread.preview_created_at, direction: thread.last_message_direction,
+        body: thread.last_message_text, status: thread.last_message_status,
+        meta_message_id: thread.preview_meta_message_id ?? "", message_type: "text",
+        button_title: "", button_url: "", error: "" }] : [];
+  const { messages, lastMessage } = mergeMessageWithPreview(
     thread.messages,
     message,
+    preview[0] ?? null,
     options.replaceMetaMessageId,
   );
-  const lastMessage = messages[messages.length - 1] ?? message;
   return {
     ...thread,
     messages,
+    service_window_last_inbound_at: inboundWindowAfterEvent(thread.service_window_last_inbound_at, message),
     last_message_at: lastMessage.created_at || thread.last_message_at,
     last_message_text: lastMessage.body || thread.last_message_text,
     last_message_direction: lastMessage.direction || thread.last_message_direction,
     last_message_status: lastMessage.status || thread.last_message_status,
+    preview_created_at: lastMessage.created_at,
+    preview_meta_message_id: lastMessage.meta_message_id,
     unread_count: options.incrementUnread
       ? thread.unread_count + 1
       : thread.unread_count,
@@ -655,6 +619,18 @@ export default function WhatsAppCloudApiInboxPageContent({ mode }: Props) {
   const [threadActionsOpen, setThreadActionsOpen] = useState(false);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [messagesLoading, setMessagesLoading] = useState(false);
+  const [messagesError, setMessagesError] = useState<string | null>(null);
+  const [messagesCursor, setMessagesCursor] = useState<WhatsappCloudApiInboxCursor | null>(null);
+  const [detailRevision, setDetailRevision] = useState(0);
+  const threadsRef = useRef(threads);
+  useEffect(() => { threadsRef.current = threads; }, [threads]);
+  const listRequestRef = useRef(0);
+  const detailRequestRef = useRef(0);
+  const invalidateListRequest = useCallback(() => { listRequestRef.current++; }, []);
+  const invalidateDetailRequest = useCallback(() => { detailRequestRef.current++; }, []);
+  const olderRequestRef = useRef(false);
+  const olderScrollRef = useRef<{ height: number; top: number } | null>(null);
   const [manualMessage, setManualMessage] = useState("");
   const [sending, setSending] = useState(false);
   const [markingAllRead, setMarkingAllRead] = useState(false);
@@ -673,10 +649,12 @@ export default function WhatsAppCloudApiInboxPageContent({ mode }: Props) {
   const unreadOnly = tagFilter === "unread";
 
   const loadThreads = useCallback(async (options: { silent?: boolean } = {}) => {
+    const request = ++listRequestRef.current;
     if (!options.silent) setLoading(true);
     setError(null);
     try {
       const { data: auth, error: authError } = await supabase.auth.getUser();
+      if (request !== listRequestRef.current) return;
       if (authError || !auth.user) {
         router.replace("/login");
         return;
@@ -689,7 +667,17 @@ export default function WhatsAppCloudApiInboxPageContent({ mode }: Props) {
         unreadOnly,
         dateRange,
       );
-      setThreads(rows);
+      if (request !== listRequestRef.current) return;
+      setThreads((current) => rows.map((row) => ({
+        ...row,
+        messages: row.contact_id === selectedIdRef.current
+          ? current.find((previous) => previous.contact_id === row.contact_id)?.messages ?? []
+          : [],
+        service_window_last_inbound_at: row.contact_id === selectedIdRef.current
+          ? current.find((previous) => previous.contact_id === row.contact_id)?.service_window_last_inbound_at
+          : null,
+      })));
+      setDetailRevision((revision) => revision + 1);
       setTotalThreads(
         rows[0]?.total_threads ?? (pageIndex === 0 ? rows.length : 0),
       );
@@ -699,6 +687,7 @@ export default function WhatsAppCloudApiInboxPageContent({ mode }: Props) {
           : ""
       );
     } catch (err) {
+      if (request !== listRequestRef.current) return;
       logWhatsappCloudApiError("inbox page load failed", err, {
         mode,
         workspaceCurrency,
@@ -715,13 +704,14 @@ export default function WhatsAppCloudApiInboxPageContent({ mode }: Props) {
       });
       setError(formatWhatsappCloudApiError(err, "No se pudo cargar el Inbox."));
     } finally {
-      if (!options.silent) setLoading(false);
+      if (!options.silent && request === listRequestRef.current) setLoading(false);
     }
   }, [dateRange, mode, pageIndex, router, serverTagFilter, tagFilter, unreadOnly, workspaceCurrency]);
 
   useEffect(() => {
     void loadThreads();
-  }, [loadThreads]);
+    return invalidateListRequest;
+  }, [loadThreads, invalidateListRequest]);
 
   useEffect(() => {
     selectedIdRef.current = selectedId;
@@ -793,10 +783,66 @@ export default function WhatsAppCloudApiInboxPageContent({ mode }: Props) {
     () => selectedThread?.messages ?? [],
     [selectedThread],
   );
+  const selectedContactId = selectedThread?.contact_id ?? "";
+
+  useEffect(() => {
+    const request = ++detailRequestRef.current;
+    olderRequestRef.current = false;
+    setMessagesCursor(null);
+    setMessagesError(null);
+    setMessagesLoading(Boolean(selectedContactId));
+    setThreads((current) => current.map((thread) => thread.contact_id === selectedContactId
+      ? thread : { ...thread, messages: [] }));
+    if (!selectedContactId) return;
+    const atRequestStart = threadsRef.current.find(thread => thread.contact_id === selectedContactId)?.messages ?? [];
+    void fetchWhatsappCloudApiInboxMessages(selectedContactId).then((page) => {
+      if (request !== detailRequestRef.current) return;
+      setThreads((current) => current.map((thread) => {
+        if (thread.contact_id !== selectedContactId) return thread;
+        const messages = reconcileLoadedMessages(page.messages, atRequestStart, thread.messages);
+        return { ...thread, messages, service_window_last_inbound_at: lastInboundMessageAt(messages)?.toISOString() ?? null };
+      }));
+      setMessagesCursor(page.nextCursor);
+    }).catch((err) => {
+      if (request === detailRequestRef.current) {
+        setMessagesError(formatWhatsappCloudApiError(err, "No se pudieron cargar los mensajes."));
+      }
+    }).finally(() => {
+      if (request === detailRequestRef.current) setMessagesLoading(false);
+    });
+    return invalidateDetailRequest;
+  }, [selectedContactId, detailRevision, invalidateDetailRequest]);
+
+  const loadOlderMessages = async () => {
+    if (!selectedContactId || !messagesCursor || messagesLoading || olderRequestRef.current) return;
+    const request = detailRequestRef.current;
+    olderRequestRef.current = true;
+    setMessagesLoading(true);
+    setMessagesError(null);
+    try {
+      const page = await fetchWhatsappCloudApiInboxMessages(selectedContactId, messagesCursor);
+      if (request !== detailRequestRef.current) return;
+      const scroll = chatScrollRef.current;
+      olderScrollRef.current = scroll ? { height: scroll.scrollHeight, top: scroll.scrollTop } : null;
+      setThreads((current) => current.map((thread) => thread.contact_id === selectedContactId
+        ? { ...thread, messages: [...page.messages, ...thread.messages] } : thread));
+      setMessagesCursor(page.nextCursor);
+    } catch (err) {
+      if (request === detailRequestRef.current) {
+        setMessagesError(formatWhatsappCloudApiError(err, "No se pudieron cargar los mensajes."));
+      }
+    } finally {
+      if (request === detailRequestRef.current) {
+        olderRequestRef.current = false;
+        setMessagesLoading(false);
+      }
+    }
+  };
   const lastSelectedMessage = selectedMessages[selectedMessages.length - 1];
   const lastInboundAt = useMemo(
-    () => lastInboundMessageAt(selectedMessages),
-    [selectedMessages],
+    () => selectedThread?.service_window_last_inbound_at
+      ? new Date(selectedThread.service_window_last_inbound_at) : null,
+    [selectedThread?.service_window_last_inbound_at],
   );
   const serviceWindowExpiresAt = useMemo(
     () =>
@@ -859,11 +905,13 @@ export default function WhatsAppCloudApiInboxPageContent({ mode }: Props) {
           const sameThread = thread.config_id === configId && thread.wa_id === waId;
           if (!sameThread) return thread;
           matched = true;
-          return applyMessageToThread(thread, message, {
+          const updated = applyMessageToThread(thread, message, {
             incrementUnread:
               message.direction === "inbound" &&
               thread.contact_id !== selectedIdRef.current,
           });
+          return thread.contact_id === selectedIdRef.current
+            ? updated : { ...updated, messages: updated.messages.slice(-1) };
         });
         return matched ? sortThreadsByActivity(next) : current;
       });
@@ -916,6 +964,12 @@ export default function WhatsAppCloudApiInboxPageContent({ mode }: Props) {
   useEffect(() => {
     const node = chatScrollRef.current;
     if (!node || !selectedThread) return;
+    if (olderScrollRef.current) {
+      const previous = olderScrollRef.current;
+      olderScrollRef.current = null;
+      node.scrollTop = node.scrollHeight - previous.height + previous.top;
+      return;
+    }
     node.scrollTo({ top: node.scrollHeight, behavior: "smooth" });
   }, [
     selectedId,
@@ -1293,7 +1347,7 @@ export default function WhatsAppCloudApiInboxPageContent({ mode }: Props) {
                 <button
                   key={tag}
                   type="button"
-                  onClick={() => setTagFilter(tag)}
+                  onClick={() => { setPageIndex(0); setTagFilter(tag); }}
                   className={`shrink-0 rounded-full border px-3 py-1 text-xs font-medium ${
                     tagFilter === tag
                       ? "border-[var(--color-primary-soft-border)] bg-[var(--color-primary-soft-bg)] text-[var(--color-primary)]"
@@ -1481,7 +1535,16 @@ export default function WhatsAppCloudApiInboxPageContent({ mode }: Props) {
                 className="flex min-h-0 flex-1 flex-col gap-2 overflow-y-auto px-5 py-5"
                 style={WHATSAPP_CHAT_BACKGROUND}
               >
-                {selectedMessages.length === 0 ? (
+                {messagesError ? <p role="alert" className="text-sm text-rose-300">{messagesError}</p> : null}
+                {messagesCursor ? (
+                  <button type="button" className="ui-button ui-button-secondary self-center"
+                    onClick={() => void loadOlderMessages()} disabled={messagesLoading}>
+                    {messagesLoading ? "Cargando mensajes..." : "Mensajes anteriores"}
+                  </button>
+                ) : null}
+                {messagesLoading && selectedMessages.length === 0 ? (
+                  <p role="status" className="m-auto text-sm text-[#8696a0]">Cargando mensajes...</p>
+                ) : selectedMessages.length === 0 ? (
                   <div className="m-auto max-w-sm rounded-xl border border-dashed border-[#2a3942] bg-[#111b21]/90 px-5 py-6 text-center shadow-lg">
                     <p className="text-sm font-semibold text-[#e9edef]">
                       Sin mensajes normalizados
