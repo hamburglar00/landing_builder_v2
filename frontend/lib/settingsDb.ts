@@ -4,26 +4,25 @@ export interface SettingsRow {
   id: number;
   url_base: string;
   show_client_landing_preview: boolean;
-  revalidate_secret: string;
 }
 
 const SETTINGS_ROW_ID = 1;
 
 /**
- * Obtiene la configuracion global. Solo admins (RLS).
+ * Proyeccion no sensible; RLS autoriza las filas accesibles.
  */
 export async function getSettings(): Promise<SettingsRow> {
   const { data, error } = await supabase
     .from("settings")
     .select(
-      "id, url_base, show_client_landing_preview, revalidate_secret",
+      "id, url_base, show_client_landing_preview",
     )
     .eq("id", SETTINGS_ROW_ID)
     .single();
 
   if (error) throw error;
   if (!data) throw new Error("No se encontro la configuracion.");
-  return data as SettingsRow;
+  return { id: data.id, url_base: data.url_base, show_client_landing_preview: data.show_client_landing_preview };
 }
 
 /**
@@ -32,15 +31,15 @@ export async function getSettings(): Promise<SettingsRow> {
 export async function updateSettings(params: {
   urlBase?: string;
   showClientLandingPreview?: boolean;
-  revalidateSecret?: string;
 }): Promise<void> {
+  if (!params || typeof params !== "object" || Array.isArray(params)
+    || Object.keys(params).some(key => !["urlBase", "showClientLandingPreview"].includes(key))) {
+    throw new Error("Actualizacion de configuracion no permitida.");
+  }
   const body: Record<string, unknown> = {};
   if (params.urlBase !== undefined) body.url_base = params.urlBase;
   if (params.showClientLandingPreview !== undefined) {
     body.show_client_landing_preview = params.showClientLandingPreview;
-  }
-  if (params.revalidateSecret !== undefined) {
-    body.revalidate_secret = params.revalidateSecret;
   }
 
   if (Object.keys(body).length === 0) return;

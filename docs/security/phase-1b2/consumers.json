@@ -1,0 +1,383 @@
+{
+  "formatVersion": 1,
+  "phase": "1B.2",
+  "baseCommit": "31babbb9eec24afa37930fc616b6d97448b4c7e9",
+  "scope": "Repository sources and prior catalog reports only; no production rows, env values or network calls to application services.",
+  "directSdkSettingsCalls": 3,
+  "browserScreensCallingSettings": 6,
+  "consumers": [
+    {
+      "id": "C01",
+      "file": "frontend/lib/settingsDb.ts",
+      "line": 15,
+      "kind": "browser SDK reader",
+      "object": "public.settings",
+      "operation": "SELECT",
+      "columns": [
+        "id",
+        "url_base",
+        "show_client_landing_preview",
+        "revalidate_secret"
+      ],
+      "effect": "Shared accessor returns the stored secret to every successful browser caller."
+    },
+    {
+      "id": "C02",
+      "file": "frontend/lib/settingsDb.ts",
+      "line": 32,
+      "kind": "browser SDK writer",
+      "object": "public.settings",
+      "operation": "UPDATE",
+      "columns": [
+        "url_base",
+        "show_client_landing_preview",
+        "revalidate_secret"
+      ],
+      "effect": "Admin-controlled payload can update destination URL and secret together."
+    },
+    {
+      "id": "C03",
+      "file": "frontend/app/(panel)/admin/settings/page.tsx",
+      "line": 28,
+      "kind": "client component",
+      "operation": "read and update through settingsDb",
+      "receivesSecret": true,
+      "sendsSecret": true,
+      "effect": "React state and visible/password input expose the stored value; submit sends it."
+    },
+    {
+      "id": "C04",
+      "file": "frontend/app/(panel)/admin/tests/page.tsx",
+      "line": 249,
+      "kind": "client component",
+      "operation": "read and outbound POST",
+      "receivesSecret": true,
+      "sendsSecret": true,
+      "effect": "Sends name and secret to settings.url_base/api/revalidate and displays arbitrary response text."
+    },
+    {
+      "id": "C05",
+      "file": "frontend/app/(panel)/admin/landings/[id]/editar/page.tsx",
+      "line": 201,
+      "kind": "client component",
+      "operation": "read; publish on save",
+      "receivesSecret": true,
+      "sendsSecret": true,
+      "publishCallLine": 413
+    },
+    {
+      "id": "C06",
+      "file": "frontend/app/(panel)/dashboard/landing/[id]/editar/page.tsx",
+      "line": 200,
+      "kind": "client component",
+      "operation": "read; publish on save",
+      "receivesSecret": true,
+      "sendsSecret": true,
+      "publishCallLine": 397
+    },
+    {
+      "id": "C07",
+      "file": "frontend/app/(panel)/admin/landings/page.tsx",
+      "line": 51,
+      "kind": "client component",
+      "operation": "read for URL only",
+      "receivesSecret": true,
+      "sendsSecret": false,
+      "effect": "Unneeded secret is still in getSettings response."
+    },
+    {
+      "id": "C08",
+      "file": "frontend/app/(panel)/dashboard/landings/page.tsx",
+      "line": 51,
+      "kind": "client component",
+      "operation": "read for URL only",
+      "receivesSecret": true,
+      "sendsSecret": false,
+      "effect": "Unneeded secret is still in getSettings response."
+    },
+    {
+      "id": "C09",
+      "file": "frontend/lib/landing/publishLanding.ts",
+      "line": 60,
+      "kind": "browser transport",
+      "operation": "POST name and secret",
+      "receivesSecret": true,
+      "sendsSecret": true,
+      "effect": "Constructor failures throw; classic failures return revalidated=false. Destination resolved by publicUrls."
+    },
+    {
+      "id": "C10",
+      "file": "frontend/lib/landing/publicUrls.ts",
+      "line": 17,
+      "kind": "browser destination resolver",
+      "operation": "resolve classic/constructor URLs",
+      "effect": "Classic prefers mutable settings URL; constructor uses public env or default. Neither is a separately approved outbound trust policy."
+    },
+    {
+      "id": "C11",
+      "file": "frontend/app/api/revalidate/route.ts",
+      "line": 58,
+      "kind": "Next.js server route",
+      "operation": "receive and verify secret; invalidate and warm",
+      "receivesSecret": true,
+      "returnsStoredSecret": false,
+      "auth": "Shared secret only; fallback env or anon-key RPC; no user session/landing ownership check."
+    },
+    {
+      "id": "C12",
+      "file": "supabase/migrations/20260613090000_public_landing_runtime_switch.sql",
+      "line": 24,
+      "kind": "existing SQL function",
+      "object": "public.get_public_landing_routing()",
+      "operation": "SELECT projection from settings",
+      "columns": [
+        "public_landing_runtime",
+        "public_landing_legacy_base_url"
+      ],
+      "securityDefiner": true,
+      "returnsStoredSecret": false,
+      "knownDirectApplicationCallers": 0,
+      "externalCallersNotExcluded": true
+    },
+    {
+      "id": "C13",
+      "file": "supabase/migrations/20260613090000_public_landing_runtime_switch.sql",
+      "line": 44,
+      "kind": "existing SQL function",
+      "object": "public.verify_revalidate_secret(text)",
+      "operation": "compare secret and return boolean",
+      "columns": [
+        "id",
+        "revalidate_secret"
+      ],
+      "securityDefiner": true,
+      "executeRoles": [
+        "anon",
+        "authenticated"
+      ],
+      "returnsStoredSecret": false,
+      "caller": "C11"
+    },
+    {
+      "id": "C14",
+      "file": "supabase/functions/conversions/index.ts",
+      "line": 4048,
+      "kind": "backend reader; outside edit scope",
+      "operation": "SELECT",
+      "columns": [
+        "url_base"
+      ],
+      "readsSecret": false,
+      "sourceModified": false,
+      "effect": "deriveEventSourceUrl must preserve existing behavior."
+    },
+    {
+      "id": "C15",
+      "file": "scripts/phase0/screen-fixtures.mjs",
+      "line": 19,
+      "kind": "test fixture only",
+      "operation": "synthetic settings response",
+      "secretFixture": "empty string",
+      "productionConsumer": false
+    },
+    {
+      "id": "C16",
+      "file": "frontend/README.md",
+      "line": 145,
+      "kind": "documented external receiver contract",
+      "operation": "Classic landing accepts shared-secret POST; public deployment config uses matching server secret",
+      "implementationOfEveryDeployedReceiverAccredited": false
+    }
+  ],
+  "schemaSources": [
+    "supabase/migrations/20260227130000_settings.sql",
+    "supabase/migrations/20260307100000_settings_preview_flag.sql",
+    "supabase/migrations/20260307110000_settings_revalidate_secret.sql",
+    "supabase/migrations/20260613090000_public_landing_runtime_switch.sql"
+  ],
+  "sources": [
+    {
+      "file": "docs/security/phase-1a/functions.md",
+      "bytes": 121695,
+      "sha256": "33e3f7eb02a74109460bc46d34f8031fca365dc9526a8fbc8c06698aeec11a40"
+    },
+    {
+      "file": "docs/security/phase-1a/relations.md",
+      "bytes": 151036,
+      "sha256": "a9a4c7842bd9b3bb25b10c7b5c630d01e6ba3eca5d959cfcfdf83a088c52deb8"
+    },
+    {
+      "file": "frontend/README.md",
+      "bytes": 11242,
+      "sha256": "d2f70ae62e5b145d4ef3125066f90b686c73e397af514d00a6a94644d809665f"
+    },
+    {
+      "file": "frontend/app/(panel)/admin/landings/[id]/editar/page.tsx",
+      "bytes": 38536,
+      "sha256": "7928fff7a4bdd446bdabec8e839989168e7dcfd766ea28485a908f3db0fab072"
+    },
+    {
+      "file": "frontend/app/(panel)/admin/landings/page.tsx",
+      "bytes": 12736,
+      "sha256": "499264afe21fe19dcd5aa4bf2360055a92b2f327fcd9133f460f457068cb202e"
+    },
+    {
+      "file": "frontend/app/(panel)/admin/settings/page.tsx",
+      "bytes": 7325,
+      "sha256": "a638baf6d529da64504cb16edc64ccb3f8b1613f1d861b30b926b2a1261befb6"
+    },
+    {
+      "file": "frontend/app/(panel)/admin/tests/page.tsx",
+      "bytes": 22266,
+      "sha256": "bf8c7335f48bff2f8e06ffcd42cf9d77a0cc7ffbedd6faaaa1f5bcad05a26b85"
+    },
+    {
+      "file": "frontend/app/(panel)/dashboard/landing/[id]/editar/page.tsx",
+      "bytes": 37449,
+      "sha256": "1c7f4ad7173ac4bc99ae3d5ea27a67163d6e4fdf7fce9bf2c4e8dcacadd4cef8"
+    },
+    {
+      "file": "frontend/app/(panel)/dashboard/landings/page.tsx",
+      "bytes": 16370,
+      "sha256": "024c909e4a7f24e45150e01e246acd199ec1df0c3a362498aae614dce0cf9f6d"
+    },
+    {
+      "file": "frontend/app/api/revalidate/route.ts",
+      "bytes": 4719,
+      "sha256": "f437902d49865ce58abab2edbfe7d44a9db22b6ec11452bcf630d762e8f7c9ce"
+    },
+    {
+      "file": "frontend/lib/landing/publicUrls.ts",
+      "bytes": 1379,
+      "sha256": "225d2a0166430a342878098524fcbb7d42d4281046f650633f065ba675c249ad"
+    },
+    {
+      "file": "frontend/lib/landing/publishLanding.ts",
+      "bytes": 2476,
+      "sha256": "9b48cc46bda67b440d14e4013425c42b8613fc7c3ac859b9b4606374355d221a"
+    },
+    {
+      "file": "frontend/lib/settingsDb.ts",
+      "bytes": 1430,
+      "sha256": "95f79129e1a1a003039c49a38743c97c8625f8e13d8f2ae4b7d014a5d250c4e2"
+    },
+    {
+      "file": "frontend/lib/supabase/server.ts",
+      "bytes": 656,
+      "sha256": "10c021cba45ba4ad39500d4569c9f5a3938795479365dcd6f5d7ccf871b84205"
+    },
+    {
+      "file": "frontend/lib/supabaseClient.ts",
+      "bytes": 1188,
+      "sha256": "ee3089490808bfc92fc147cccb4a8dcb056362ff35e0d72672158c5bf69a3ed3"
+    },
+    {
+      "file": "frontend/next.config.ts",
+      "bytes": 372,
+      "sha256": "cfada0a0a1ee32e66fdedaae993872d070cd8ff3115d58f60e2714cd16d7576a"
+    },
+    {
+      "file": "scripts/phase0/screen-fixtures.mjs",
+      "bytes": 4586,
+      "sha256": "ef78ac79cc7005ae4a4bbf076a14a6797c1b41f2f8f2564774b745749cb16572"
+    },
+    {
+      "file": "supabase/functions/conversions/index.ts",
+      "bytes": 254676,
+      "sha256": "b56628cc42de95d44ea0f2cdf9078c3550c0efec354f11a5b6af1a45defc2295"
+    },
+    {
+      "file": "supabase/migrations/20260227130000_settings.sql",
+      "bytes": 1324,
+      "sha256": "951bfce0f96521b25fd846abd24c34e847a67264bc84548fa3b6456de95e8d09"
+    },
+    {
+      "file": "supabase/migrations/20260307100000_settings_preview_flag.sql",
+      "bytes": 689,
+      "sha256": "7fd15892b60fdf51e30499c8fa432121f0c86eb99346bc73270327f62613a3e9"
+    },
+    {
+      "file": "supabase/migrations/20260307110000_settings_revalidate_secret.sql",
+      "bytes": 358,
+      "sha256": "4d2fdadd8f035df60af7a267d12cd7fc1f60cbe2c0cabae8120e141f60ed7d0a"
+    },
+    {
+      "file": "supabase/migrations/20260613090000_public_landing_runtime_switch.sql",
+      "bytes": 2004,
+      "sha256": "835c5f25c3ed505648ce47290fb69f0402e01327de3485009fcd2d87f0f134d0"
+    }
+  ],
+  "externalDependency": {
+    "kind": "configurable classic revalidation receiver",
+    "source": "C04/C09/C10/C16",
+    "approvedOutboundOriginsKnown": false,
+    "liveDestinationRead": false,
+    "receiverRuntimeContractAccredited": false
+  },
+  "staticCredentialInspection": {
+    "kind": "read-only static inspection; not a browser bundle or runtime test",
+    "frontendSourceFiles": 206,
+    "clientRoots": 78,
+    "clientReachableLocalModules": 121,
+    "nextPublicNames": [
+      "NEXT_PUBLIC_CLASSIC_LANDING_BASE_URL",
+      "NEXT_PUBLIC_CONSTRUCTOR_LANDING_BASE_URL",
+      "NEXT_PUBLIC_META_IP_COLLECTOR_URL",
+      "NEXT_PUBLIC_PROMOTIONS_PUBLIC_BASE_URL",
+      "NEXT_PUBLIC_SUPABASE_ANON_KEY",
+      "NEXT_PUBLIC_SUPABASE_URL"
+    ],
+    "privateEnvReferences": [
+      {
+        "file": "frontend/app/api/integrations/kommo/sync/route.ts",
+        "line": 102,
+        "name": "KOMMO_INTERMEDIARY_ADMIN_SECRET"
+      },
+      {
+        "file": "frontend/app/api/revalidate/route.ts",
+        "line": 59,
+        "name": "REVALIDATE_SECRET"
+      },
+      {
+        "file": "frontend/app/api/track/retry/route.ts",
+        "line": 30,
+        "name": "TRACK_RETRY_SECRET"
+      },
+      {
+        "file": "frontend/app/api/track/retry/route.ts",
+        "line": 31,
+        "name": "CRON_SECRET"
+      },
+      {
+        "file": "frontend/app/api/track/route.ts",
+        "line": 120,
+        "name": "META_IP_PROOF_SECRET"
+      },
+      {
+        "file": "frontend/lib/supabase/server.ts",
+        "line": 6,
+        "name": "SUPABASE_SERVICE_ROLE_KEY"
+      },
+      {
+        "file": "frontend/lib/supabase/server.ts",
+        "line": 6,
+        "name": "SERVICE_ROLE_KEY"
+      }
+    ],
+    "privateEnvReferencesReachableFromClient": [],
+    "limitations": [
+      "Only statically resolvable local imports and process.env property names inspected.",
+      "No env values, production config or existing generated bundles read.",
+      "Dependency internals and dynamic environment access are outside this check."
+    ],
+    "migrationFiles": 269,
+    "registeredMigrations": 269,
+    "migrationHashMismatches": [],
+    "env": {
+      "exists": true,
+      "ignored": true,
+      "tracked": false,
+      "contentRead": false
+    }
+  }
+}

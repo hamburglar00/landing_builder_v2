@@ -1,0 +1,105 @@
+{
+  "formatVersion": 1,
+  "phase": "1B.2",
+  "status": "blocked_before_implementation",
+  "baseCommit": "31babbb9eec24afa37930fc616b6d97448b4c7e9",
+  "branch": "main",
+  "initialWorkingTreeClean": true,
+  "createdAt": "2026-09-18T00:32:55.674Z",
+  "blocker": {
+    "kind": "architecture_and_external_dependency",
+    "statement": "Browser-editable settings.url_base selects the classic recipient of the stored secret. A naive server relay leaks it to a destination chosen by an authenticated administrator.",
+    "provenance": [
+      "C02",
+      "C03",
+      "C04",
+      "C09",
+      "C10",
+      "C16"
+    ],
+    "attackExecuted": false,
+    "decisionRequired": [
+      "Define server-owned trusted destinations, or an approved outbound-origin allowlist independent of browser-controlled settings, including redirect policy.",
+      "Accredit the classic receiver authentication contract and coordinate server-only secret use and later rotation."
+    ],
+    "defaultDomainsAreNotAnApprovedAllowlist": true,
+    "stopReason": "User explicitly requires stopping and documenting ambiguous dependencies before implementation."
+  },
+  "implementation": {
+    "started": false,
+    "applicationFilesChanged": 0,
+    "migrationsCreated": 0,
+    "expectedFutureMigrationNumber": 270,
+    "cliInvoked": false,
+    "permissionsChanged": false,
+    "securityDefinerAdded": false,
+    "secretRead": false,
+    "secretRotated": false
+  },
+  "verified": {
+    "baseAndCleanInitialState": true,
+    "registeredMigrationCount": 269,
+    "migrationHashesMatched": 269,
+    "sourceConsumerInventory": true,
+    "documentationReviewed": true,
+    "staticPrivateEnvReferencesInClientGraph": 0,
+    "privateEnvValueOrDeploymentAuditPerformed": false,
+    "browserReceivesStoredSecretBySource": true
+  },
+  "tests": {
+    "executed": 0,
+    "failed": 0,
+    "status": "not_run_blocked_before_implementation",
+    "phase1b1PassesReusedForThisPhase": 0,
+    "pending": [
+      "SQL and Data API anon deny read/write",
+      "SQL and Data API authenticated deny explicit column and wildcard read/write",
+      "Effective column and table grants plus RLS",
+      "Mixed-payload atomic rejection",
+      "Minimum backend access",
+      "Explicit safe consumer projections",
+      "Frontend/API response secret non-disclosure",
+      "Isolated synthetic build and browser bundle audit",
+      "Synthetic authorized administrative flow and destination validation",
+      "Complete 270/270 reconstruction",
+      "Affected suites",
+      "TypeScript",
+      "Build",
+      "ESLint",
+      "Implementation secret/path audit"
+    ],
+    "documentationAudit": "audit.json; separate from runtime security validation"
+  },
+  "rollout": {
+    "authorized": false,
+    "ready": false,
+    "secretRotationNeededDuringCoordinatedDeployment": true,
+    "reason": "Existing source and prior policy evidence allow the stored secret to reach authenticated browser sessions; no extraction is asserted.",
+    "rollback": "No implementation to revert. Future rollback must retain browser non-disclosure and an operational server-only alternative."
+  },
+  "env": {
+    "exists": true,
+    "ignored": true,
+    "tracked": false,
+    "contentRead": false
+  },
+  "remoteApplicationReads": 0,
+  "remoteWrites": 0,
+  "documentationWebReadsOnly": true,
+  "dockerOperations": 0,
+  "stagingChanges": 0,
+  "commits": 0,
+  "pushes": 0,
+  "deploys": 0,
+  "inventory": {
+    "modified": [],
+    "new": [
+      "docs/security/phase-1b2/README.md",
+      "docs/security/phase-1b2/audit.json",
+      "docs/security/phase-1b2/consumers.json",
+      "docs/security/phase-1b2/review.json"
+    ],
+    "deleted": [],
+    "total": 4
+  }
+}

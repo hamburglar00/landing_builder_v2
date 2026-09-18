@@ -2,7 +2,7 @@
 
 import { useState, useCallback, useRef, useEffect } from "react";
 import { supabase } from "@/lib/supabaseClient";
-import { getSettings } from "@/lib/settingsDb";
+import { requestRevalidation } from "@/lib/revalidation/client";
 import { PageHeader } from "@/components/ui/PanelPrimitives";
 
 type LogLevel = "info" | "warn" | "error";
@@ -241,62 +241,19 @@ export default function AdminTestsPage() {
     if (!landingName.trim()) return;
     setLoadingRevalidate(true);
     setError(null);
-    const name = landingName.trim();
-    addLog("info", `revalidate: inicio (name=${name})`);
     try {
-      let settings: Awaited<ReturnType<typeof getSettings>>;
-      try {
-        settings = await getSettings();
-      } catch (e) {
-        const msg =
-          "No se pudo cargar la configuración (Supabase). Revisá conexión y que el proyecto no esté pausado.";
-        addLog("error", msg, e);
-        setError(msg);
-        return;
-      }
-      const rawBase = settings.url_base ?? "";
-      const secret = settings.revalidate_secret ?? "";
-      if (!rawBase) {
-        const msg = "Falta URL base en Configuración.";
-        addLog("error", msg);
-        setError(msg);
-        return;
-      }
-      if (!secret) {
-        const msg = "Falta secreto de revalidación en Configuración.";
-        addLog("error", msg);
-        setError(msg);
-        return;
-      }
-      const base = rawBase.replace(/\/$/, "");
-      const url = `${base}/api/revalidate`;
-      addLog("info", `POST ${url}`, { name });
-      let res: Response;
-      try {
-        res = await fetch(url, {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-          },
-          body: JSON.stringify({
-            name,
-            secret,
-          }),
-        });
-      } catch (e) {
-        const msg =
-          "No se pudo conectar con la landing (Failed to fetch). Verificá que esté corriendo en la URL base y que permita peticiones desde este origen (CORS).";
-        addLog("error", msg, e);
-        setError(msg);
-        return;
-      }
-      const text = await res.text();
-      if (res.ok) {
-        addLog("info", `revalidate OK (${res.status})`, text);
-      } else {
-        addLog("error", `revalidate ${res.status} ${res.statusText}`, text);
-        setError(`Error revalidate: ${res.status} ${res.statusText}`);
-      }
+      const { data: landing, error: lookupError } = await supabase
+        .from("landings").select("id").eq("name", landingName.trim()).maybeSingle();
+      if (lookupError || !landing) throw new Error("No se encontró una landing accesible con ese nombre.");
+      addLog("info", "Revalidación clásica: inicio");
+      const result = await requestRevalidation({
+        action: "test-classic", landingId: landing.id, publishTarget: "classic",
+      });
+      addLog("info", "Revalidación clásica completada", result);
+    } catch {
+      const message = "No se pudo revalidar la landing. Revisá el nombre, el acceso y la configuración del servicio.";
+      addLog("error", message);
+      setError(message);
     } finally {
       setLoadingRevalidate(false);
     }

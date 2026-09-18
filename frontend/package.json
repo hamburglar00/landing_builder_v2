@@ -7,7 +7,7 @@
     "build": "next build",
     "start": "next start",
     "lint": "eslint",
-    "test": "tsx --test tests/**/*.test.ts",
+    "test": "tsx --import ./tests/revalidation-server-loader.mjs --test tests/**/*.test.ts",
     "sync:meta-sdk": "node scripts/sync-meta-param-builder.mjs",
     "postinstall": "npm run sync:meta-sdk",
     "check:encoding": "node ../scripts/check-encoding.js",

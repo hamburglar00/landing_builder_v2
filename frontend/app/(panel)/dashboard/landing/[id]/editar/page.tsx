@@ -172,7 +172,6 @@ export default function DashboardLandingEditarPage() {
   const [initialName, setInitialName] = useState<string | null>(null);
   const [showPreview, setShowPreview] = useState(true);
   const [urlBase, setUrlBase] = useState<string | null>(null);
-  const [revalidateSecret, setRevalidateSecret] = useState<string | null>(null);
   const [clientName, setClientName] = useState<string | null>(null);
   const [pixelOptions, setPixelOptions] = useState<Array<{ pixel_id: string; comment: string }>>([]);
   const [atrioClients, setAtrioClients] = useState<AtrioClient[]>([]);
@@ -220,7 +219,6 @@ export default function DashboardLandingEditarPage() {
         setAtrioAssignments(seedAtrioAssignments(found, clients, assignedAtrio));
         setShowPreview(settings.show_client_landing_preview ?? true);
         setUrlBase(settings.url_base ?? null);
-        setRevalidateSecret(settings.revalidate_secret || null);
         setClientName(profile.data?.nombre ?? null);
         const { data: pixels } = await supabase
           .from("conversions_pixel_configs")
@@ -395,10 +393,10 @@ export default function DashboardLandingEditarPage() {
       await setLandingGerencias(landing.id, assignments);
       await setLandingAtrioAssignments(landing.id, atrioAssignments);
       await publishLandingChanges({
+        landingId: landing.id,
         name: landing.name,
         publishTarget: landing.publishTarget,
         classicBaseUrl: urlBase,
-        revalidateSecret,
       });
       router.push("/dashboard/landings");
     } catch (e: unknown) {

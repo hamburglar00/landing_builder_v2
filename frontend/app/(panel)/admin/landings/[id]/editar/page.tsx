@@ -172,7 +172,6 @@ export default function AdminLandingEditarPage() {
   const [assignments, setAssignments] = useState<LandingGerenciaAssignment[]>([]);
   const [initialName, setInitialName] = useState<string | null>(null);
   const [urlBase, setUrlBase] = useState<string | null>(null);
-  const [revalidateSecret, setRevalidateSecret] = useState<string | null>(null);
   const [clientName, setClientName] = useState<string | null>(null);
   const [ownerUserId, setOwnerUserId] = useState<string | null>(null);
   const [pixelOptions, setPixelOptions] = useState<Array<{ pixel_id: string; comment: string }>>([]);
@@ -211,7 +210,6 @@ export default function AdminLandingEditarPage() {
         }
         setAssignments(assigned);
         setUrlBase(settings.url_base ?? null);
-        setRevalidateSecret(settings.revalidate_secret || null);
         const ownerId = owner.data?.user_id ?? "";
         const allGerencias = await fetchGerenciasForAdmin(user.id, found.workspaceCurrency);
         if (ownerId) {
@@ -411,10 +409,10 @@ export default function AdminLandingEditarPage() {
       await setLandingGerencias(landing.id, assignments);
       await setLandingAtrioAssignments(landing.id, atrioAssignments);
       await publishLandingChanges({
+        landingId: landing.id,
         name: landing.name,
         publishTarget: landing.publishTarget,
         classicBaseUrl: urlBase,
-        revalidateSecret,
       });
       router.push(BASE);
     } catch (e: unknown) {

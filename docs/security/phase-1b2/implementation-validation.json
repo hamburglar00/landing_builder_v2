@@ -1,0 +1,572 @@
+{
+  "phase": "1B.2",
+  "complete": true,
+  "localOnly": true,
+  "startedAt": "2026-09-18T02:21:32.556Z",
+  "finishedAt": "2026-09-18T02:29:36.700Z",
+  "rawOutputPersisted": false,
+  "remoteWrites": 0,
+  "productionRequests": 0,
+  "previousAttempt": {
+    "phase": "1B.2",
+    "complete": false,
+    "localOnly": true,
+    "rawOutputPersisted": false,
+    "remoteWrites": 0,
+    "productionRequests": 0,
+    "suites": [
+      {
+        "name": "reconstruction-settings-profiles-data-api",
+        "exitCode": 0,
+        "durationMs": 475407,
+        "complete": true,
+        "passed": 119,
+        "failed": 0,
+        "migrations": 270,
+        "failure": null
+      },
+      {
+        "name": "revalidation-security-and-client",
+        "exitCode": 0,
+        "durationMs": 3628,
+        "passed": 17,
+        "failed": 0,
+        "skipped": 0,
+        "failedCases": []
+      },
+      {
+        "name": "historical-bootstrap-safety",
+        "exitCode": 0,
+        "durationMs": 660,
+        "passed": 34,
+        "failed": 0,
+        "skipped": 0,
+        "failedCases": []
+      },
+      {
+        "name": "historical-landing-contracts",
+        "exitCode": 0,
+        "durationMs": 1803,
+        "passed": 16,
+        "failed": 0,
+        "skipped": 0,
+        "failedCases": []
+      },
+      {
+        "name": "typescript",
+        "exitCode": 2,
+        "durationMs": 24342,
+        "diagnostics": [
+          {
+            "file": "tests/revalidationSecurity.test.ts",
+            "line": 47,
+            "column": 97,
+            "code": "TS2345"
+          },
+          {
+            "file": "tests/revalidationSecurity.test.ts",
+            "line": 135,
+            "column": 52,
+            "code": "TS2345"
+          },
+          {
+            "file": "tests/revalidationSecurity.test.ts",
+            "line": 136,
+            "column": 57,
+            "code": "TS2345"
+          },
+          {
+            "file": "tests/revalidationSecurity.test.ts",
+            "line": 151,
+            "column": 48,
+            "code": "TS2345"
+          }
+        ]
+      }
+    ],
+    "startedAt": "2026-09-18T01:35:03.504Z",
+    "buildCopy": {
+      "directory": "phase1b2-build-MEgOrT",
+      "outsideRepository": true,
+      "environmentFilesCopied": 0,
+      "retained": true
+    },
+    "failure": "Validation stopped at typescript",
+    "finishedAt": "2026-09-18T01:43:29.913Z"
+  },
+  "previousAttemptSha256": "5f696dd8b7d8c5ea922710852502bd631cb1c1bdfb565d6c8e3d99a608b5f653",
+  "previousFailureResolved": true,
+  "suites": [
+    {
+      "name": "typescript",
+      "exitCode": 0,
+      "durationMs": 22868,
+      "finishedAt": "2026-09-18T02:21:55.488Z",
+      "diagnostics": [],
+      "reused": false,
+      "executedInThisContinuation": true
+    },
+    {
+      "name": "security",
+      "exitCode": 0,
+      "durationMs": 3154,
+      "finishedAt": "2026-09-18T02:22:05.785Z",
+      "passed": 17,
+      "failed": 0,
+      "skipped": 0,
+      "cases": [
+        "settings projection discards an unexpected sensitive field",
+        "unknown settings updates fail before any network call",
+        "administrative status exposes only a boolean",
+        "public URL edits cannot change the request destination or body",
+        "classic failure remains best effort; constructor warns after saving",
+        "safe settings, status and publication preserve client behavior without secret transport",
+        "only explicitly configured production/local environments are enabled",
+        "production catalog contains only the two approved exact destinations",
+        "all non-public address families are denied; DNS is pinned to validated results",
+        "session, role, ownership and persisted publication target precede secret access",
+        "arbitrary URLs, targets, secret writes and mixed request payloads are rejected",
+        "administrative classic diagnostic validates landing access without changing its motor",
+        "configuration status is an admin-only boolean, including the empty state",
+        "all backend and upstream errors are projected without details or canary",
+        "constructor receiver verifies in backend and never reflects incoming bodies",
+        "backend requires synthetic local database address and scopes user lookups",
+        "real local HTTP retains classic contract, blocks redirects and sanitizes responses"
+      ],
+      "reused": false,
+      "executedInThisContinuation": true
+    },
+    {
+      "name": "build",
+      "exitCode": 0,
+      "durationMs": 119032,
+      "finishedAt": "2026-09-18T02:24:10.017Z",
+      "compiledSuccessfully": true,
+      "warnings": [],
+      "reused": false,
+      "executedInThisContinuation": true
+    },
+    {
+      "name": "eslint",
+      "exitCode": 0,
+      "durationMs": 82067,
+      "finishedAt": "2026-09-18T02:27:23.696Z",
+      "errors": 0,
+      "warnings": 18,
+      "findings": [
+        {
+          "file": "app/(panel)/dashboard/layout.tsx",
+          "errors": 0,
+          "warnings": 4,
+          "messages": [
+            {
+              "line": 327,
+              "column": 10,
+              "severity": 1,
+              "rule": "@typescript-eslint/no-unused-vars",
+              "message": "'planStartsAt' is assigned a value but never used."
+            },
+            {
+              "line": 329,
+              "column": 10,
+              "severity": 1,
+              "rule": "@typescript-eslint/no-unused-vars",
+              "message": "'planMaxLandings' is assigned a value but never used."
+            },
+            {
+              "line": 330,
+              "column": 10,
+              "severity": 1,
+              "rule": "@typescript-eslint/no-unused-vars",
+              "message": "'planMaxPhones' is assigned a value but never used."
+            },
+            {
+              "line": 331,
+              "column": 10,
+              "severity": 1,
+              "rule": "@typescript-eslint/no-unused-vars",
+              "message": "'planGraceDays' is assigned a value but never used."
+            }
+          ]
+        },
+        {
+          "file": "app/(panel)/promo/[slug]/page.tsx",
+          "errors": 0,
+          "warnings": 1,
+          "messages": [
+            {
+              "line": 35,
+              "column": 10,
+              "severity": 1,
+              "rule": "@typescript-eslint/no-unused-vars",
+              "message": "'formatDateTime' is defined but never used."
+            }
+          ]
+        },
+        {
+          "file": "components/conversiones/StatsPanel.tsx",
+          "errors": 0,
+          "warnings": 2,
+          "messages": [
+            {
+              "line": 1120,
+              "column": 86,
+              "severity": 1,
+              "rule": "react-hooks/exhaustive-deps",
+              "message": "React Hook useMemo has a missing dependency: 'sortRows'. Either include it or remove the dependency array."
+            },
+            {
+              "line": 1121,
+              "column": 83,
+              "severity": 1,
+              "rule": "react-hooks/exhaustive-deps",
+              "message": "React Hook useMemo has a missing dependency: 'sortRows'. Either include it or remove the dependency array."
+            }
+          ]
+        },
+        {
+          "file": "components/conversiones/TrackingBoard.tsx",
+          "errors": 0,
+          "warnings": 2,
+          "messages": [
+            {
+              "line": 279,
+              "column": 6,
+              "severity": 1,
+              "rule": "react-hooks/exhaustive-deps",
+              "message": "React Hook useMemo has a missing dependency: 'indicatorFor'. Either include it or remove the dependency array."
+            },
+            {
+              "line": 348,
+              "column": 6,
+              "severity": 1,
+              "rule": "react-hooks/exhaustive-deps",
+              "message": "React Hook useMemo has a missing dependency: 'indicatorFor'. Either include it or remove the dependency array."
+            }
+          ]
+        },
+        {
+          "file": "components/integraciones/IntegracionesMetaCapi.tsx",
+          "errors": 0,
+          "warnings": 6,
+          "messages": [
+            {
+              "line": 269,
+              "column": 9,
+              "severity": 1,
+              "rule": "@typescript-eslint/no-unused-vars",
+              "message": "'landingPhoneUrl' is assigned a value but never used."
+            },
+            {
+              "line": 400,
+              "column": 9,
+              "severity": 1,
+              "rule": "@typescript-eslint/no-unused-vars",
+              "message": "'maskToken' is assigned a value but never used."
+            },
+            {
+              "line": 569,
+              "column": 6,
+              "severity": 1,
+              "rule": "react-hooks/exhaustive-deps",
+              "message": "React Hook useCallback has an unnecessary dependency: 'chatraceConfig'. Either exclude it or remove the dependency array."
+            },
+            {
+              "line": 965,
+              "column": 17,
+              "severity": 1,
+              "rule": "@next/next/no-img-element",
+              "message": "Using `<img>` could result in slower LCP and higher bandwidth. Consider using `<Image />` from `next/image` or a custom image loader to automatically optimize images. This may incur additional usage or cost from your provider. See: https://nextjs.org/docs/messages/no-img-element"
+            },
+            {
+              "line": 984,
+              "column": 17,
+              "severity": 1,
+              "rule": "@next/next/no-img-element",
+              "message": "Using `<img>` could result in slower LCP and higher bandwidth. Consider using `<Image />` from `next/image` or a custom image loader to automatically optimize images. This may incur additional usage or cost from your provider. See: https://nextjs.org/docs/messages/no-img-element"
+            },
+            {
+              "line": 1003,
+              "column": 17,
+              "severity": 1,
+              "rule": "@next/next/no-img-element",
+              "message": "Using `<img>` could result in slower LCP and higher bandwidth. Consider using `<Image />` from `next/image` or a custom image loader to automatically optimize images. This may incur additional usage or cost from your provider. See: https://nextjs.org/docs/messages/no-img-element"
+            }
+          ]
+        },
+        {
+          "file": "components/notificaciones/NotificationsPageContent.tsx",
+          "errors": 0,
+          "warnings": 1,
+          "messages": [
+            {
+              "line": 409,
+              "column": 17,
+              "severity": 1,
+              "rule": "@next/next/no-img-element",
+              "message": "Using `<img>` could result in slower LCP and higher bandwidth. Consider using `<Image />` from `next/image` or a custom image loader to automatically optimize images. This may incur additional usage or cost from your provider. See: https://nextjs.org/docs/messages/no-img-element"
+            }
+          ]
+        },
+        {
+          "file": "lib/conversionsDb.ts",
+          "errors": 0,
+          "warnings": 2,
+          "messages": [
+            {
+              "line": 1273,
+              "column": 26,
+              "severity": 1,
+              "rule": "@typescript-eslint/no-unused-vars",
+              "message": "'_conversions' is assigned a value but never used."
+            },
+            {
+              "line": 1289,
+              "column": 26,
+              "severity": 1,
+              "rule": "@typescript-eslint/no-unused-vars",
+              "message": "'_conversions' is assigned a value but never used."
+            }
+          ]
+        }
+      ],
+      "reused": false,
+      "executedInThisContinuation": true
+    },
+    {
+      "name": "reconstruction-settings-profiles-data-api",
+      "exitCode": 0,
+      "durationMs": 475407,
+      "complete": true,
+      "passed": 119,
+      "failed": 0,
+      "migrations": 270,
+      "failure": null,
+      "reused": true,
+      "executedInThisContinuation": false
+    },
+    {
+      "name": "historical-bootstrap-safety",
+      "exitCode": 0,
+      "durationMs": 660,
+      "passed": 34,
+      "failed": 0,
+      "skipped": 0,
+      "failedCases": [],
+      "reused": true,
+      "executedInThisContinuation": false
+    },
+    {
+      "name": "historical-landing-contracts",
+      "exitCode": 0,
+      "durationMs": 1803,
+      "passed": 16,
+      "failed": 0,
+      "skipped": 0,
+      "failedCases": [],
+      "reused": true,
+      "executedInThisContinuation": false
+    }
+  ],
+  "bundle": {
+    "inspectedAt": "2026-09-18T02:24:42.364Z",
+    "passed": true,
+    "clientStaticFiles": 125,
+    "publicFiles": 19,
+    "serializedClientResponses": 443,
+    "serverOnlyArtifacts": 166,
+    "findings": [],
+    "serverOnlyOccurrences": [
+      {
+        "file": ".next/server/app/api/journey-start/route.js",
+        "markers": [
+          "privateCredentialName"
+        ]
+      },
+      {
+        "file": ".next/server/app/api/track/retry/route.js",
+        "markers": [
+          "privateCredentialName"
+        ]
+      },
+      {
+        "file": ".next/server/app/api/track/route.js",
+        "markers": [
+          "privateCredentialName"
+        ]
+      },
+      {
+        "file": ".next/server/chunks/4979.js",
+        "markers": [
+          "column",
+          "privateCredentialName"
+        ]
+      }
+    ],
+    "publicSyntheticInputPositiveControl": true,
+    "syntheticMarkers": {
+      "secretCanary": "phase1b2-local-only-synthetic-0000000000000000",
+      "serviceCanary": "phase1b2-local-service-canary-0000000000000000",
+      "column": "revalidate_secret",
+      "clientSecretProperty": "revalidateSecret",
+      "privateCredentialName": "SUPABASE_SERVICE_ROLE_KEY",
+      "legacySecretVariable": "REVALIDATE_SECRET",
+      "legacySecretRpc": "verify_revalidate_secret"
+    },
+    "realEnvironmentValuesRead": false,
+    "environmentFilesCopied": 0,
+    "serverArtifactsAreNotBrowserAssets": true,
+    "serializedServerOutputsIncludedInClientScan": true,
+    "note": "Private build inputs are synthetic; application secret access remains runtime database access. Synthetic HTTP tests separately verify response bodies and client payloads.",
+    "literalMarkerScreen": {
+      "passed": false,
+      "findings": [
+        {
+          "file": ".next/server/app/admin/documentacion.html",
+          "markers": [
+            "privateCredentialName",
+            "legacySecretVariable"
+          ]
+        },
+        {
+          "file": ".next/server/app/admin/documentacion.rsc",
+          "markers": [
+            "privateCredentialName",
+            "legacySecretVariable"
+          ]
+        },
+        {
+          "file": ".next/server/app/admin/documentacion.segments/!KHBhbmVsKQ/admin/documentacion/__PAGE__.segment.rsc",
+          "markers": [
+            "privateCredentialName",
+            "legacySecretVariable"
+          ]
+        },
+        {
+          "file": ".next/server/app/admin/documentacion.segments/_full.segment.rsc",
+          "markers": [
+            "privateCredentialName",
+            "legacySecretVariable"
+          ]
+        }
+      ],
+      "exitCode": 1,
+      "note": "Initial broad screen also matched variable identifiers in rendered documentation; retained for traceability."
+    },
+    "contextualReview": {
+      "source": "frontend/app/(panel)/admin/documentacion/page.tsx",
+      "documentation": "frontend/README.md",
+      "sourceMatchesBuild": true,
+      "findings": [
+        {
+          "file": ".next/server/app/admin/documentacion.html",
+          "markers": [
+            "privateCredentialName",
+            "legacySecretVariable"
+          ],
+          "classification": "literal variable names rendered from README, not values or executable transport",
+          "resolved": true
+        },
+        {
+          "file": ".next/server/app/admin/documentacion.rsc",
+          "markers": [
+            "privateCredentialName",
+            "legacySecretVariable"
+          ],
+          "classification": "literal variable names rendered from README, not values or executable transport",
+          "resolved": true
+        },
+        {
+          "file": ".next/server/app/admin/documentacion.segments/!KHBhbmVsKQ/admin/documentacion/__PAGE__.segment.rsc",
+          "markers": [
+            "privateCredentialName",
+            "legacySecretVariable"
+          ],
+          "classification": "literal variable names rendered from README, not values or executable transport",
+          "resolved": true
+        },
+        {
+          "file": ".next/server/app/admin/documentacion.segments/_full.segment.rsc",
+          "markers": [
+            "privateCredentialName",
+            "legacySecretVariable"
+          ],
+          "classification": "literal variable names rendered from README, not values or executable transport",
+          "resolved": true
+        }
+      ],
+      "applicationChanges": 0
+    },
+    "completedAt": "2026-09-18T02:25:54.793Z"
+  },
+  "buildCopy": {
+    "directory": "phase1b2-fixtures-tTW0r5",
+    "frontendSubdirectory": "frontend",
+    "outsideRepository": true,
+    "environmentFilesCopied": 0,
+    "retained": true,
+    "copiedFrontendFiles": 240
+  },
+  "historicalEvidence": {
+    "databaseReportUnchanged": true,
+    "relatedSourcesUnchanged": true,
+    "reconstructionRepeated": false,
+    "sqlSuitesRepeated": false
+  },
+  "eslintWarningFilesUnchanged": true,
+  "artifactAudit": {
+    "file": "docs/security/phase-1b2/implementation-audit.json",
+    "passed": true,
+    "findings": 0,
+    "finalHashSeal": "The referenced audit is generated after documentation and hashes the final files."
+  },
+  "diffCheck": {
+    "exitCode": 0,
+    "whitespaceErrors": 0,
+    "lineEndingWarningsOnly": true
+  },
+  "fixtureCorrection": {
+    "file": "frontend/tests/revalidationSecurity.test.ts",
+    "expectedType": "NodeJS.ProcessEnv",
+    "requiredNodeEnvLiterals": [
+      "development",
+      "production",
+      "test"
+    ],
+    "originalErrorLines": [
+      47,
+      135,
+      136,
+      151
+    ],
+    "arrayBefore": "Uncontextualized heterogeneous union; NODE_ENV optional or string",
+    "backendBefore": "Three string-valued fields, missing required NODE_ENV",
+    "after": "Array and shared backend fixture explicitly typed NodeJS.ProcessEnv; missing NODE_ENV supplied as test",
+    "productiveTypesChanged": false,
+    "castsAdded": false,
+    "suppressionsAdded": false
+  },
+  "sourceChangesThisContinuation": [
+    "frontend/tests/revalidationSecurity.test.ts"
+  ],
+  "integrityBeforeDocumentation": {
+    "changedSincePreviousReview": [
+      "frontend/tests/revalidationSecurity.test.ts"
+    ],
+    "historicalMigrations": 269,
+    "historicalMigrationsUnchanged": true,
+    "migration270Unchanged": true,
+    "databaseReportUnchanged": true,
+    "protectedDocumentsUnchanged": true,
+    "branch": "main",
+    "head": "31babbb9eec24afa37930fc616b6d97448b4c7e9",
+    "staging": "",
+    "conflicts": "",
+    "environmentFile": {
+      "present": true,
+      "ignored": true,
+      "tracked": false,
+      "contentsRead": false
+    }
+  }
+}

@@ -6,6 +6,11 @@
       "version": "20260917183837",
       "file": "20260917183837_protect_profile_administrative_fields.sql",
       "sha256": "119b70e25ffea319e4f4decbdf37c4b5681be1427f09e3ada93f07b6c7c9da87"
+    },
+    {
+      "version": "20260918010532",
+      "file": "20260918010532_protect_settings_revalidation_secret.sql",
+      "sha256": "865034edefb66e41155b724fc80ded7bf3894a7e04e8eeeee9b2121bf107cbff"
     }
   ]
 }

@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import { supabase } from "@/lib/supabaseClient";
 import { getSettings, updateSettings } from "@/lib/settingsDb";
+import { getRevalidationStatus } from "@/lib/revalidation/client";
 import { DashboardSkeleton } from "@/components/ui/DashboardSkeleton";
 import { PageHeader } from "@/components/ui/PanelPrimitives";
 
@@ -10,8 +11,7 @@ export default function AdminSettingsPage() {
   const [urlBase, setUrlBase] = useState("");
   const [showClientLandingPreview, setShowClientLandingPreview] =
     useState(true);
-  const [revalidateSecret, setRevalidateSecret] = useState("");
-  const [showSecret, setShowSecret] = useState(false);
+  const [revalidationConfigured, setRevalidationConfigured] = useState<boolean | null>(null);
   const [adminNombre, setAdminNombre] = useState("");
   const [ready, setReady] = useState(false);
   const [saving, setSaving] = useState(false);
@@ -30,7 +30,9 @@ export default function AdminSettingsPage() {
         setShowClientLandingPreview(
           settings.show_client_landing_preview ?? true,
         );
-        setRevalidateSecret(settings.revalidate_secret ?? "");
+        void getRevalidationStatus().then(setRevalidationConfigured).catch(() => {
+          setError("No se pudo consultar el estado de revalidación.");
+        });
 
         const { data: profile } = await supabase
           .from("profiles")
@@ -58,7 +60,6 @@ export default function AdminSettingsPage() {
       await updateSettings({
         urlBase: urlBase.trim(),
         showClientLandingPreview,
-        revalidateSecret: revalidateSecret.trim(),
       });
       if (user) {
         await supabase
@@ -133,39 +134,21 @@ export default function AdminSettingsPage() {
           />
           <p className="mt-2 text-[11px] leading-relaxed text-zinc-500">
             <strong>Para que se usa:</strong> Es la URL publica que ven los
-            usuarios y Meta Ads. Se usa para revalidar cache, calentar landings
-            y armar los links &quot;Abrir landing&quot;.
+            usuarios y Meta Ads. Se usa para armar los links
+            &quot;Abrir landing&quot;. La revalidación se configura por separado.
           </p>
         </div>
 
         <div>
-          <label
-            htmlFor="revalidate_secret"
-            className="mb-1 block text-xs font-medium text-zinc-400"
-          >
-            Secreto para revalidar landing publica (ISR)
-          </label>
-          <div className="relative">
-            <input
-              id="revalidate_secret"
-              type={showSecret ? "text" : "password"}
-              value={revalidateSecret}
-              onChange={(event) => setRevalidateSecret(event.target.value)}
-              placeholder="Secreto compartido con /api/revalidate"
-              className="w-full rounded-lg border border-zinc-700 bg-zinc-900 px-3 py-2 pr-10 text-sm text-zinc-100"
-            />
-            <button
-              type="button"
-              onClick={() => setShowSecret((value) => !value)}
-              className="absolute inset-y-0 right-2 flex items-center text-[11px] text-zinc-400 hover:text-zinc-200"
-            >
-              {showSecret ? "Ocultar" : "Ver"}
-            </button>
-          </div>
+          <p className="mb-1 block text-xs font-medium text-zinc-400">
+            Revalidación de la landing pública
+          </p>
+          <p role="status" className="text-sm text-zinc-100">
+            {revalidationConfigured === null ? "Estado no disponible" : revalidationConfigured ? "Configurado" : "No configurado"}
+          </p>
           <p className="mt-2 text-[11px] leading-relaxed text-zinc-500">
-            <strong>Para que se usa:</strong> Es una clave interna para que
-            solo el constructor pueda decirle a la landing publica que refresque
-            su cache.
+            Permite refrescar la landing después de guardar cambios.
+            Su configuración se administra de forma interna.
           </p>
         </div>
 

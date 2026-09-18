@@ -1,0 +1,44 @@
+{
+  "formatVersion": 1,
+  "phase": "1B.2",
+  "kind": "documentation-only audit of a pre-implementation blocker",
+  "status": "passed",
+  "generatedAt": "2026-09-18T00:34:37.984Z",
+  "filesReviewedIncludingSelf": 4,
+  "findings": [],
+  "inventory": [
+    {
+      "file": "docs/security/phase-1b2/README.md",
+      "bytes": 11857,
+      "sha256": "e83aed3fc54c54ed6e10ea5233d7c4a51a7b4866e55983528ad6d9c59a80cc37"
+    },
+    {
+      "file": "docs/security/phase-1b2/consumers.json",
+      "bytes": 12651,
+      "sha256": "dd513c34613b459a823e74178f5b1110e755c825501f4e557d22ed9c20a8ba6f"
+    },
+    {
+      "file": "docs/security/phase-1b2/review.json",
+      "bytes": 3675,
+      "sha256": "58df6748f62a0b97fe1520c6c5cbb6648d5a42d7ec8d90b63f528cfd1a062cd2"
+    }
+  ],
+  "auditSelf": "Scanned in memory; excluded from its own hash inventory.",
+  "sourceHashesMatched": 22,
+  "registeredMigrationHashesMatched": 269,
+  "trackedChanges": 0,
+  "stagedFiles": 0,
+  "conflicts": 0,
+  "env": {
+    "present": true,
+    "ignored": true,
+    "tracked": false,
+    "valuesRead": false
+  },
+  "runtimeOrBundleTestsExecuted": 0,
+  "initialScannerAttempt": {
+    "executed": false,
+    "reason": "Inline helper failed to parse after shell pipe replaced non-ASCII regex characters. No scan, tests or writes occurred. Unicode escapes used for this document-only scan."
+  },
+  "limitation": "Static document scan only; does not establish the requested protection, deployment configuration or absence of previously exposed secrets."
+}

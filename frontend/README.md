@@ -63,8 +63,8 @@ La página **Admin → Documentación** muestra el contenido de este archivo par
   - `usage_count`: se incrementa **solo** cuando la landing pública notifica un clic vía `phone-click`, no al obtener el número.
 
 - **Configuración global** (`settings`)
-  - `url_base`: URL de la landing pública (para revalidación y enlaces).
-  - `revalidate_secret`: secreto compartido con la landing para `POST /api/revalidate`.
+  - `url_base`: URL de la landing pública para enlaces; nunca determina destinos con credenciales.
+  - La configuración de revalidación se muestra como estado; su credencial se administra exclusivamente desde servidor.
   - `show_client_landing_preview`: si los clientes ven el preview en el editor.
 
 ---
@@ -144,9 +144,14 @@ Función: `supabase/functions/phone-click/index.ts`
 
 - **Revalidación (ISR)**  
   Tras guardar una landing en el constructor, este hace:
-  1. `POST {url_base}/api/revalidate` con body `{ "name": "<landingName>", "secret": "<revalidate_secret>" }`.
-  2. `GET {url_base}/{landingName}?warm=1` para calentar la caché.
-  - En **Configuración** (admin) se definen `url_base` y `revalidate_secret`. La landing pública debe exponer `/api/revalidate` y aceptar CORS desde el origen del constructor (variable de entorno `ALLOWED_ORIGINS` en la landing, por ejemplo `http://localhost:3001,https://tu-constructor.vercel.app`).
+  1. El navegador llama a `POST /api/landings/revalidate` con sesión, acción, ID de landing y motor. El servidor valida usuario, rol, acceso y motor persistido.
+  2. El servidor consulta la credencial protegida en `settings` y envía `POST {name, secret}` al receptor del catálogo. El navegador no recibe ni envía esa credencial.
+  3. Los receptores invalidan y calientan sus cachés. No se usa `url_base` ni se siguen redirects para el transporte.
+  - Producción: clásico `https://landing.panelbotadmin.com/api/revalidate`; constructor `https://mkt.panelbotadmin.com/api/revalidate`.
+  - Configuración privada del builder: `REVALIDATION_ENV=production`, `SUPABASE_SERVICE_ROLE_KEY` y URL Supabase del proyecto. Staging/previews quedan deshabilitados. No usar prefijos `NEXT_PUBLIC_` para configuración privada.
+  - Local: `REVALIDATION_ENV=local`, `REVALIDATION_LOCAL_SYNTHETIC=1`, modo desarrollo/test, Supabase local en puerto 54321, receptor clásico en 3000 y constructor en 3001. Sólo acepta credenciales sintéticas con formato `phase1b2-local-` seguido de 16 a 128 caracteres alfanuméricos, guiones o guiones bajos.
+  - Configuración muestra “Configurado / No configurado”; no ofrece edición de credenciales. La rotación futura es un procedimiento servidor coordinado con los receptores.
+  - Detalles de implementación y límites: `../docs/security/phase-1b2/implementation.md`. El receptor clásico del repositorio hermano no fue modificado.
 
 - **Tests (admin)**  
   En **Admin → Tests** se puede probar builder-config, landing-phone, sync-phones y el endpoint de revalidación de la landing pública.
@@ -171,7 +176,7 @@ Función: `supabase/functions/phone-click/index.ts`
 - `20260327210000_get_phone_for_landing_rpc.sql`: función `get_phone_for_landing(p_landing_name)` que concentra la lógica de selección de teléfono (1 round-trip desde la Edge).
 - `20260327220000_cron_warm_landing_phone.sql`: cron cada 5 min entre 8:00 y 2:00 para invocar landing-phone y mantener la función caliente.
 - `20260305120000_cron_sync_phones.sql`: cron cada 5 min para sync-phones.
-- Settings: `show_client_landing_preview`, `revalidate_secret` (migraciones en `settings`).
+- Settings: proyección explícita `id, url_base, show_client_landing_preview`; la credencial sólo es legible desde backend.
 
 Ver **supabase/migrations/README.md** para el listado completo y pasos del cron de teléfonos.
 
@@ -189,7 +194,7 @@ Ver **supabase/migrations/README.md** para el listado completo y pasos del cron 
   npx supabase functions deploy phone-click
   npx supabase functions deploy builder-config
   ```
-- **Landing pública:** Configurar `ALLOWED_ORIGINS` (origen del constructor) y `REVALIDATE_SECRET` (mismo valor que en Configuración del constructor).
+- **Landing pública clásica:** su variable servidor `REVALIDATE_SECRET` debe coincidir con la credencial protegida del backend. Su configuración y rotación no se realizan desde el navegador. El POST nuevo es entre servidores y no necesita CORS del navegador al receptor.
 
 ---
 

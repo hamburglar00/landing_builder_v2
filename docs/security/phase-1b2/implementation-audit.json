@@ -1,0 +1,194 @@
+{
+  "phase": "1B.2",
+  "passed": true,
+  "files": [
+    "docs/security/phase-1b2/README.md",
+    "docs/security/phase-1b2/audit.json",
+    "docs/security/phase-1b2/consumers.json",
+    "docs/security/phase-1b2/implementation-audit.json",
+    "docs/security/phase-1b2/implementation-database-validation.json",
+    "docs/security/phase-1b2/implementation-review.json",
+    "docs/security/phase-1b2/implementation-validation.json",
+    "docs/security/phase-1b2/implementation.md",
+    "docs/security/phase-1b2/revalidation-contract-diagnostic.md",
+    "docs/security/phase-1b2/review.json",
+    "frontend/README.md",
+    "frontend/app/(panel)/admin/landings/[id]/editar/page.tsx",
+    "frontend/app/(panel)/admin/settings/page.tsx",
+    "frontend/app/(panel)/admin/tests/page.tsx",
+    "frontend/app/(panel)/dashboard/landing/[id]/editar/page.tsx",
+    "frontend/app/api/landings/revalidate/route.ts",
+    "frontend/app/api/revalidate/route.ts",
+    "frontend/lib/landing/publishLanding.ts",
+    "frontend/lib/revalidation/catalog.server.ts",
+    "frontend/lib/revalidation/client.ts",
+    "frontend/lib/revalidation/service.server.ts",
+    "frontend/lib/revalidation/supabase.server.ts",
+    "frontend/lib/revalidation/transport.server.ts",
+    "frontend/lib/revalidation/types.ts",
+    "frontend/lib/settingsDb.ts",
+    "frontend/package.json",
+    "frontend/tests/revalidation-server-loader.mjs",
+    "frontend/tests/revalidation-server-resolver.mjs",
+    "frontend/tests/revalidationClient.test.ts",
+    "frontend/tests/revalidationSecurity.test.ts",
+    "scripts/security/audit-settings-artifacts.mjs",
+    "scripts/security/run-settings-security.mjs",
+    "scripts/security/run-settings-validation.mjs",
+    "scripts/security/settings-security-tests.mjs",
+    "supabase/bootstrap/incremental-manifest.json",
+    "supabase/migrations/20260918010532_protect_settings_revalidation_secret.sql"
+  ],
+  "hashes": [
+    {
+      "file": "docs/security/phase-1b2/README.md",
+      "sha256": "e83aed3fc54c54ed6e10ea5233d7c4a51a7b4866e55983528ad6d9c59a80cc37"
+    },
+    {
+      "file": "docs/security/phase-1b2/audit.json",
+      "sha256": "e8a6284a8ab0ac7aa46e86b85cd128bacc9441eb68b3e23b40705d94689d251c"
+    },
+    {
+      "file": "docs/security/phase-1b2/consumers.json",
+      "sha256": "dd513c34613b459a823e74178f5b1110e755c825501f4e557d22ed9c20a8ba6f"
+    },
+    {
+      "file": "docs/security/phase-1b2/implementation-database-validation.json",
+      "sha256": "5aaa6cfe156dab3a22a48db8fcb2bd713c8b12887db0606f44c468271ee2357d"
+    },
+    {
+      "file": "docs/security/phase-1b2/implementation-review.json",
+      "sha256": "56fb0e76f73d69df9eaf83b79eee5bbe55d44e9578b6f37b3aaa7e27a011277e"
+    },
+    {
+      "file": "docs/security/phase-1b2/implementation-validation.json",
+      "sha256": "d92ccec094a88048787b6e4c4844bdf112266acbb84a4220c6f1916d3345af4f"
+    },
+    {
+      "file": "docs/security/phase-1b2/implementation.md",
+      "sha256": "a8cecf52fcb9b851f5bdf5ed51ea03a4dcbedfa8237a6816eb9b01970cb7b979"
+    },
+    {
+      "file": "docs/security/phase-1b2/revalidation-contract-diagnostic.md",
+      "sha256": "2396472f83fbb8d406613e385439ccb361bfcb323dd6cae874cf751d163da800"
+    },
+    {
+      "file": "docs/security/phase-1b2/review.json",
+      "sha256": "58df6748f62a0b97fe1520c6c5cbb6648d5a42d7ec8d90b63f528cfd1a062cd2"
+    },
+    {
+      "file": "frontend/README.md",
+      "sha256": "f3acc29d072320a69b89143a20fd8bece04fc4e33e530651ab32087babf0e8e4"
+    },
+    {
+      "file": "frontend/app/(panel)/admin/landings/[id]/editar/page.tsx",
+      "sha256": "6e55acac0dadb32354f7bb5942971b8718c7cb79ac5aa4e170342908e567c3f8"
+    },
+    {
+      "file": "frontend/app/(panel)/admin/settings/page.tsx",
+      "sha256": "576e13fcbbe20523e178f1c0cefd591881fdfe8838b39a4fb6080938c936820f"
+    },
+    {
+      "file": "frontend/app/(panel)/admin/tests/page.tsx",
+      "sha256": "388f2489cde9704aeda42994996d6d291d765572c321651f60d6d29871dad6e4"
+    },
+    {
+      "file": "frontend/app/(panel)/dashboard/landing/[id]/editar/page.tsx",
+      "sha256": "897efb8e29b6e35ea3af217b8399a8cbbd16a08e1bf11a1ac602a17168aa7114"
+    },
+    {
+      "file": "frontend/app/api/landings/revalidate/route.ts",
+      "sha256": "f9f87aa26178217427e024e102eab1b05398b0756fe72bfcdf4a6007cea0a172"
+    },
+    {
+      "file": "frontend/app/api/revalidate/route.ts",
+      "sha256": "2e21412b5e3c7b31737b0a5dba017ca40bfaf5abafd017ecf2935e1c7ad72e11"
+    },
+    {
+      "file": "frontend/lib/landing/publishLanding.ts",
+      "sha256": "6da2b504581ca76ba99e18167b86a04236a3325e3a9cf6703355620afdd8c5ff"
+    },
+    {
+      "file": "frontend/lib/revalidation/catalog.server.ts",
+      "sha256": "453707dda24c3ed1075818b08116b32876f6d3a475a50e8ee0f83a65df8b9cd8"
+    },
+    {
+      "file": "frontend/lib/revalidation/client.ts",
+      "sha256": "0cca44e362f6caa8f37e0ba88e8546216254de6f70b364578febb265811cfef3"
+    },
+    {
+      "file": "frontend/lib/revalidation/service.server.ts",
+      "sha256": "1bf99ec5f8db0757c928892488e89ff7a6cd79b0a88c28192a7f84c7082c0453"
+    },
+    {
+      "file": "frontend/lib/revalidation/supabase.server.ts",
+      "sha256": "2c4c5284352fbaaffb0ffd444bd85e8fb957b2ba40ac41777cb75ff64219805f"
+    },
+    {
+      "file": "frontend/lib/revalidation/transport.server.ts",
+      "sha256": "db96d366bcd0ddd028c28673de493ffa9dc83bbfb0f9979dd4f1dab08ae2b026"
+    },
+    {
+      "file": "frontend/lib/revalidation/types.ts",
+      "sha256": "5199f9d77c9b338016afa64ab34e9e4f7b52fe6b607799b07cc70fa65d1049d2"
+    },
+    {
+      "file": "frontend/lib/settingsDb.ts",
+      "sha256": "344601e527c2db6eb694f4e45c9e9305b8dcd19324f24602526ca57bec01b474"
+    },
+    {
+      "file": "frontend/package.json",
+      "sha256": "af1a151862809d644ed8cd8ef1bbc91efd13a9371961b97e484acb5c5d123d6b"
+    },
+    {
+      "file": "frontend/tests/revalidation-server-loader.mjs",
+      "sha256": "dce65a85df0acf492cfd665284d6d158ff0845e0d56ea1a217885d4485e21752"
+    },
+    {
+      "file": "frontend/tests/revalidation-server-resolver.mjs",
+      "sha256": "c64b93c73a59825527019a1ff94e263b81715d04702b20aefc96d0cbe344ed9f"
+    },
+    {
+      "file": "frontend/tests/revalidationClient.test.ts",
+      "sha256": "c8348b34f933331ffb45e6f5e6a412c12669fd44dbc47faf955d4a1f99379ea6"
+    },
+    {
+      "file": "frontend/tests/revalidationSecurity.test.ts",
+      "sha256": "06ed9e2a085cb6b160a8c30ee6cbb06d7763e9b3742cce26fee6e4659f5d05c9"
+    },
+    {
+      "file": "scripts/security/audit-settings-artifacts.mjs",
+      "sha256": "59a6ca67b921524a7459990f224f95bd9ebb5cfa2d59ae54c2788fba2334190b"
+    },
+    {
+      "file": "scripts/security/run-settings-security.mjs",
+      "sha256": "446872a21c626448b64a22b461d2b8c03dffb498e70c27732d16c89af036b859"
+    },
+    {
+      "file": "scripts/security/run-settings-validation.mjs",
+      "sha256": "819511b7093cf2c3e7e0a455d618b9882395997f31845aeab54a12f611b7186b"
+    },
+    {
+      "file": "scripts/security/settings-security-tests.mjs",
+      "sha256": "d4f6f57f3c63a4d68b1b3ecf1b9baad23a51a9e3ca294895bc180efa35dcac67"
+    },
+    {
+      "file": "supabase/bootstrap/incremental-manifest.json",
+      "sha256": "cde2537c396e04722514111cb0b9cc5da9282b44b9695c0e3b8dad0ea35234f8"
+    },
+    {
+      "file": "supabase/migrations/20260918010532_protect_settings_revalidation_secret.sql",
+      "sha256": "865034edefb66e41155b724fc80ded7bf3894a7e04e8eeeee9b2121bf107cbff"
+    }
+  ],
+  "selfHashExcluded": true,
+  "protectedDocumentsUnchanged": true,
+  "historicalMigrations": 269,
+  "environmentFile": {
+    "present": true,
+    "ignored": true,
+    "tracked": false
+  },
+  "findings": [],
+  "remoteWrites": 0
+}

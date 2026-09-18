@@ -1,0 +1,732 @@
+{
+  "phase": "1B.2",
+  "status": "ready_for_local_checkpoint",
+  "baseCommit": "31babbb9eec24afa37930fc616b6d97448b4c7e9",
+  "baseline": {
+    "docs": [
+      {
+        "file": "docs/security/phase-1b2/audit.json",
+        "sha256": "e8a6284a8ab0ac7aa46e86b85cd128bacc9441eb68b3e23b40705d94689d251c"
+      },
+      {
+        "file": "docs/security/phase-1b2/consumers.json",
+        "sha256": "dd513c34613b459a823e74178f5b1110e755c825501f4e557d22ed9c20a8ba6f"
+      },
+      {
+        "file": "docs/security/phase-1b2/README.md",
+        "sha256": "e83aed3fc54c54ed6e10ea5233d7c4a51a7b4866e55983528ad6d9c59a80cc37"
+      },
+      {
+        "file": "docs/security/phase-1b2/revalidation-contract-diagnostic.md",
+        "sha256": "2396472f83fbb8d406613e385439ccb361bfcb323dd6cae874cf751d163da800"
+      },
+      {
+        "file": "docs/security/phase-1b2/review.json",
+        "sha256": "58df6748f62a0b97fe1520c6c5cbb6648d5a42d7ec8d90b63f528cfd1a062cd2"
+      }
+    ],
+    "migrationCount": 269,
+    "migrationsSha256": "1c4ea2ca84e97f9c085b9d297850b2d4d9b71833ba8a1cfd2fcb78742dd4f6ee"
+  },
+  "migration": {
+    "file": "20260918010532_protect_settings_revalidation_secret.sql",
+    "sha256": "865034edefb66e41155b724fc80ded7bf3894a7e04e8eeeee9b2121bf107cbff",
+    "registeredCount": 270,
+    "reconstructionPassed": true
+  },
+  "testsExecuted": [
+    {
+      "name": "typescript",
+      "exitCode": 0,
+      "durationMs": 22868,
+      "finishedAt": "2026-09-18T02:21:55.488Z",
+      "diagnostics": [],
+      "reused": false,
+      "executedInThisContinuation": true
+    },
+    {
+      "name": "security",
+      "exitCode": 0,
+      "durationMs": 3154,
+      "finishedAt": "2026-09-18T02:22:05.785Z",
+      "passed": 17,
+      "failed": 0,
+      "skipped": 0,
+      "cases": [
+        "settings projection discards an unexpected sensitive field",
+        "unknown settings updates fail before any network call",
+        "administrative status exposes only a boolean",
+        "public URL edits cannot change the request destination or body",
+        "classic failure remains best effort; constructor warns after saving",
+        "safe settings, status and publication preserve client behavior without secret transport",
+        "only explicitly configured production/local environments are enabled",
+        "production catalog contains only the two approved exact destinations",
+        "all non-public address families are denied; DNS is pinned to validated results",
+        "session, role, ownership and persisted publication target precede secret access",
+        "arbitrary URLs, targets, secret writes and mixed request payloads are rejected",
+        "administrative classic diagnostic validates landing access without changing its motor",
+        "configuration status is an admin-only boolean, including the empty state",
+        "all backend and upstream errors are projected without details or canary",
+        "constructor receiver verifies in backend and never reflects incoming bodies",
+        "backend requires synthetic local database address and scopes user lookups",
+        "real local HTTP retains classic contract, blocks redirects and sanitizes responses"
+      ],
+      "reused": false,
+      "executedInThisContinuation": true
+    },
+    {
+      "name": "build",
+      "exitCode": 0,
+      "durationMs": 119032,
+      "finishedAt": "2026-09-18T02:24:10.017Z",
+      "compiledSuccessfully": true,
+      "warnings": [],
+      "reused": false,
+      "executedInThisContinuation": true
+    },
+    {
+      "name": "eslint",
+      "exitCode": 0,
+      "durationMs": 82067,
+      "finishedAt": "2026-09-18T02:27:23.696Z",
+      "errors": 0,
+      "warnings": 18,
+      "findings": [
+        {
+          "file": "app/(panel)/dashboard/layout.tsx",
+          "errors": 0,
+          "warnings": 4,
+          "messages": [
+            {
+              "line": 327,
+              "column": 10,
+              "severity": 1,
+              "rule": "@typescript-eslint/no-unused-vars",
+              "message": "'planStartsAt' is assigned a value but never used."
+            },
+            {
+              "line": 329,
+              "column": 10,
+              "severity": 1,
+              "rule": "@typescript-eslint/no-unused-vars",
+              "message": "'planMaxLandings' is assigned a value but never used."
+            },
+            {
+              "line": 330,
+              "column": 10,
+              "severity": 1,
+              "rule": "@typescript-eslint/no-unused-vars",
+              "message": "'planMaxPhones' is assigned a value but never used."
+            },
+            {
+              "line": 331,
+              "column": 10,
+              "severity": 1,
+              "rule": "@typescript-eslint/no-unused-vars",
+              "message": "'planGraceDays' is assigned a value but never used."
+            }
+          ]
+        },
+        {
+          "file": "app/(panel)/promo/[slug]/page.tsx",
+          "errors": 0,
+          "warnings": 1,
+          "messages": [
+            {
+              "line": 35,
+              "column": 10,
+              "severity": 1,
+              "rule": "@typescript-eslint/no-unused-vars",
+              "message": "'formatDateTime' is defined but never used."
+            }
+          ]
+        },
+        {
+          "file": "components/conversiones/StatsPanel.tsx",
+          "errors": 0,
+          "warnings": 2,
+          "messages": [
+            {
+              "line": 1120,
+              "column": 86,
+              "severity": 1,
+              "rule": "react-hooks/exhaustive-deps",
+              "message": "React Hook useMemo has a missing dependency: 'sortRows'. Either include it or remove the dependency array."
+            },
+            {
+              "line": 1121,
+              "column": 83,
+              "severity": 1,
+              "rule": "react-hooks/exhaustive-deps",
+              "message": "React Hook useMemo has a missing dependency: 'sortRows'. Either include it or remove the dependency array."
+            }
+          ]
+        },
+        {
+          "file": "components/conversiones/TrackingBoard.tsx",
+          "errors": 0,
+          "warnings": 2,
+          "messages": [
+            {
+              "line": 279,
+              "column": 6,
+              "severity": 1,
+              "rule": "react-hooks/exhaustive-deps",
+              "message": "React Hook useMemo has a missing dependency: 'indicatorFor'. Either include it or remove the dependency array."
+            },
+            {
+              "line": 348,
+              "column": 6,
+              "severity": 1,
+              "rule": "react-hooks/exhaustive-deps",
+              "message": "React Hook useMemo has a missing dependency: 'indicatorFor'. Either include it or remove the dependency array."
+            }
+          ]
+        },
+        {
+          "file": "components/integraciones/IntegracionesMetaCapi.tsx",
+          "errors": 0,
+          "warnings": 6,
+          "messages": [
+            {
+              "line": 269,
+              "column": 9,
+              "severity": 1,
+              "rule": "@typescript-eslint/no-unused-vars",
+              "message": "'landingPhoneUrl' is assigned a value but never used."
+            },
+            {
+              "line": 400,
+              "column": 9,
+              "severity": 1,
+              "rule": "@typescript-eslint/no-unused-vars",
+              "message": "'maskToken' is assigned a value but never used."
+            },
+            {
+              "line": 569,
+              "column": 6,
+              "severity": 1,
+              "rule": "react-hooks/exhaustive-deps",
+              "message": "React Hook useCallback has an unnecessary dependency: 'chatraceConfig'. Either exclude it or remove the dependency array."
+            },
+            {
+              "line": 965,
+              "column": 17,
+              "severity": 1,
+              "rule": "@next/next/no-img-element",
+              "message": "Using `<img>` could result in slower LCP and higher bandwidth. Consider using `<Image />` from `next/image` or a custom image loader to automatically optimize images. This may incur additional usage or cost from your provider. See: https://nextjs.org/docs/messages/no-img-element"
+            },
+            {
+              "line": 984,
+              "column": 17,
+              "severity": 1,
+              "rule": "@next/next/no-img-element",
+              "message": "Using `<img>` could result in slower LCP and higher bandwidth. Consider using `<Image />` from `next/image` or a custom image loader to automatically optimize images. This may incur additional usage or cost from your provider. See: https://nextjs.org/docs/messages/no-img-element"
+            },
+            {
+              "line": 1003,
+              "column": 17,
+              "severity": 1,
+              "rule": "@next/next/no-img-element",
+              "message": "Using `<img>` could result in slower LCP and higher bandwidth. Consider using `<Image />` from `next/image` or a custom image loader to automatically optimize images. This may incur additional usage or cost from your provider. See: https://nextjs.org/docs/messages/no-img-element"
+            }
+          ]
+        },
+        {
+          "file": "components/notificaciones/NotificationsPageContent.tsx",
+          "errors": 0,
+          "warnings": 1,
+          "messages": [
+            {
+              "line": 409,
+              "column": 17,
+              "severity": 1,
+              "rule": "@next/next/no-img-element",
+              "message": "Using `<img>` could result in slower LCP and higher bandwidth. Consider using `<Image />` from `next/image` or a custom image loader to automatically optimize images. This may incur additional usage or cost from your provider. See: https://nextjs.org/docs/messages/no-img-element"
+            }
+          ]
+        },
+        {
+          "file": "lib/conversionsDb.ts",
+          "errors": 0,
+          "warnings": 2,
+          "messages": [
+            {
+              "line": 1273,
+              "column": 26,
+              "severity": 1,
+              "rule": "@typescript-eslint/no-unused-vars",
+              "message": "'_conversions' is assigned a value but never used."
+            },
+            {
+              "line": 1289,
+              "column": 26,
+              "severity": 1,
+              "rule": "@typescript-eslint/no-unused-vars",
+              "message": "'_conversions' is assigned a value but never used."
+            }
+          ]
+        }
+      ],
+      "reused": false,
+      "executedInThisContinuation": true
+    },
+    {
+      "name": "reconstruction-settings-profiles-data-api",
+      "exitCode": 0,
+      "durationMs": 475407,
+      "complete": true,
+      "passed": 119,
+      "failed": 0,
+      "migrations": 270,
+      "failure": null,
+      "reused": true,
+      "executedInThisContinuation": false
+    },
+    {
+      "name": "historical-bootstrap-safety",
+      "exitCode": 0,
+      "durationMs": 660,
+      "passed": 34,
+      "failed": 0,
+      "skipped": 0,
+      "failedCases": [],
+      "reused": true,
+      "executedInThisContinuation": false
+    },
+    {
+      "name": "historical-landing-contracts",
+      "exitCode": 0,
+      "durationMs": 1803,
+      "passed": 16,
+      "failed": 0,
+      "skipped": 0,
+      "failedCases": [],
+      "reused": true,
+      "executedInThisContinuation": false
+    }
+  ],
+  "remoteWrites": 0,
+  "productionRequests": 0,
+  "siblingModified": false,
+  "readyForCheckpoint": true,
+  "finishedAt": "2026-09-18T02:29:36.700Z",
+  "testsPassedCountsArePerRunnerNotDeduplicated": true,
+  "failure": null,
+  "pending": [],
+  "evidence": [
+    {
+      "file": "docs/security/phase-1b2/implementation-database-validation.json",
+      "sha256": "5aaa6cfe156dab3a22a48db8fcb2bd713c8b12887db0606f44c468271ee2357d",
+      "reused": true
+    },
+    {
+      "file": "docs/security/phase-1b2/implementation-validation.json",
+      "sha256": "d92ccec094a88048787b6e4c4844bdf112266acbb84a4220c6f1916d3345af4f",
+      "reused": false
+    }
+  ],
+  "preserved": {
+    "documents": [
+      {
+        "file": "docs/security/phase-1b2/audit.json",
+        "sha256": "e8a6284a8ab0ac7aa46e86b85cd128bacc9441eb68b3e23b40705d94689d251c",
+        "unchanged": true
+      },
+      {
+        "file": "docs/security/phase-1b2/consumers.json",
+        "sha256": "dd513c34613b459a823e74178f5b1110e755c825501f4e557d22ed9c20a8ba6f",
+        "unchanged": true
+      },
+      {
+        "file": "docs/security/phase-1b2/README.md",
+        "sha256": "e83aed3fc54c54ed6e10ea5233d7c4a51a7b4866e55983528ad6d9c59a80cc37",
+        "unchanged": true
+      },
+      {
+        "file": "docs/security/phase-1b2/revalidation-contract-diagnostic.md",
+        "sha256": "2396472f83fbb8d406613e385439ccb361bfcb323dd6cae874cf751d163da800",
+        "unchanged": true
+      },
+      {
+        "file": "docs/security/phase-1b2/review.json",
+        "sha256": "58df6748f62a0b97fe1520c6c5cbb6648d5a42d7ec8d90b63f528cfd1a062cd2",
+        "unchanged": true
+      }
+    ],
+    "historicalMigrationCount": 269,
+    "historicalMigrationDigest": "1c4ea2ca84e97f9c085b9d297850b2d4d9b71833ba8a1cfd2fcb78742dd4f6ee",
+    "historicalMigrationsUnchanged": true
+  },
+  "git": {
+    "branch": "main",
+    "head": "31babbb9eec24afa37930fc616b6d97448b4c7e9",
+    "staging": "",
+    "conflicts": "",
+    "modified": 10,
+    "untracked": 26,
+    "total": 36
+  },
+  "environmentFile": {
+    "present": true,
+    "ignored": true,
+    "tracked": false,
+    "contentsRead": false
+  },
+  "cleanup": {
+    "api": {
+      "container": "af40309ca5d3afbbeba07850a79e21a209cf334b171c30dd842e5ac44308bd80",
+      "remaining": 0
+    },
+    "database": {
+      "project": "phase0b-45320836",
+      "owned": {
+        "containers": [
+          "606c9a20005d60566dd6369f87e29240bb4427e7c50eb1310658a9c9b26f9f44"
+        ],
+        "networks": [
+          "14a54647bbd388e6f5617844e2f911754e2c24e8c5c6eab2beacd072c3cb9977",
+          "f890881fe9c9a41b66d109ecaca60c01d70c4736d78d079d776228d2a19d863a"
+        ],
+        "volumes": [
+          "supabase_db_phase0b-45320836"
+        ]
+      },
+      "remaining": {
+        "containers": [],
+        "networks": [],
+        "volumes": []
+      }
+    }
+  },
+  "temporaryDirectories": {
+    "historicalBootstrapDirectoriesRetained": true,
+    "bootstrapDirectoriesPresent": 23,
+    "build": {
+      "directory": "phase1b2-build-MEgOrT",
+      "outsideRepository": true,
+      "environmentFilesCopied": 0,
+      "retained": true
+    },
+    "deleted": 0,
+    "continuation": {
+      "directory": "phase1b2-fixtures-tTW0r5",
+      "frontendSubdirectory": "frontend",
+      "outsideRepository": true,
+      "environmentFilesCopied": 0,
+      "retained": true,
+      "copiedFrontendFiles": 240
+    }
+  },
+  "sibling": {
+    "head": "3322b634a06504ae469a4faee0383148707bc9b5",
+    "status": "",
+    "modifiedByThisTask": false
+  },
+  "inventory": [
+    {
+      "file": "docs/security/phase-1b2/README.md",
+      "status": "untracked",
+      "preexistingProtectedDocument": true,
+      "sha256": "e83aed3fc54c54ed6e10ea5233d7c4a51a7b4866e55983528ad6d9c59a80cc37"
+    },
+    {
+      "file": "docs/security/phase-1b2/audit.json",
+      "status": "untracked",
+      "preexistingProtectedDocument": true,
+      "sha256": "e8a6284a8ab0ac7aa46e86b85cd128bacc9441eb68b3e23b40705d94689d251c"
+    },
+    {
+      "file": "docs/security/phase-1b2/consumers.json",
+      "status": "untracked",
+      "preexistingProtectedDocument": true,
+      "sha256": "dd513c34613b459a823e74178f5b1110e755c825501f4e557d22ed9c20a8ba6f"
+    },
+    {
+      "file": "docs/security/phase-1b2/implementation-audit.json",
+      "status": "untracked",
+      "preexistingProtectedDocument": false,
+      "sha256": null
+    },
+    {
+      "file": "docs/security/phase-1b2/implementation-database-validation.json",
+      "status": "untracked",
+      "preexistingProtectedDocument": false,
+      "sha256": "5aaa6cfe156dab3a22a48db8fcb2bd713c8b12887db0606f44c468271ee2357d"
+    },
+    {
+      "file": "docs/security/phase-1b2/implementation-review.json",
+      "status": "untracked",
+      "preexistingProtectedDocument": false,
+      "sha256": null
+    },
+    {
+      "file": "docs/security/phase-1b2/implementation-validation.json",
+      "status": "untracked",
+      "preexistingProtectedDocument": false,
+      "sha256": "d92ccec094a88048787b6e4c4844bdf112266acbb84a4220c6f1916d3345af4f"
+    },
+    {
+      "file": "docs/security/phase-1b2/implementation.md",
+      "status": "untracked",
+      "preexistingProtectedDocument": false,
+      "sha256": "a8cecf52fcb9b851f5bdf5ed51ea03a4dcbedfa8237a6816eb9b01970cb7b979"
+    },
+    {
+      "file": "docs/security/phase-1b2/revalidation-contract-diagnostic.md",
+      "status": "untracked",
+      "preexistingProtectedDocument": true,
+      "sha256": "2396472f83fbb8d406613e385439ccb361bfcb323dd6cae874cf751d163da800"
+    },
+    {
+      "file": "docs/security/phase-1b2/review.json",
+      "status": "untracked",
+      "preexistingProtectedDocument": true,
+      "sha256": "58df6748f62a0b97fe1520c6c5cbb6648d5a42d7ec8d90b63f528cfd1a062cd2"
+    },
+    {
+      "file": "frontend/README.md",
+      "status": "modified",
+      "preexistingProtectedDocument": false,
+      "sha256": "f3acc29d072320a69b89143a20fd8bece04fc4e33e530651ab32087babf0e8e4"
+    },
+    {
+      "file": "frontend/app/(panel)/admin/landings/[id]/editar/page.tsx",
+      "status": "modified",
+      "preexistingProtectedDocument": false,
+      "sha256": "6e55acac0dadb32354f7bb5942971b8718c7cb79ac5aa4e170342908e567c3f8"
+    },
+    {
+      "file": "frontend/app/(panel)/admin/settings/page.tsx",
+      "status": "modified",
+      "preexistingProtectedDocument": false,
+      "sha256": "576e13fcbbe20523e178f1c0cefd591881fdfe8838b39a4fb6080938c936820f"
+    },
+    {
+      "file": "frontend/app/(panel)/admin/tests/page.tsx",
+      "status": "modified",
+      "preexistingProtectedDocument": false,
+      "sha256": "388f2489cde9704aeda42994996d6d291d765572c321651f60d6d29871dad6e4"
+    },
+    {
+      "file": "frontend/app/(panel)/dashboard/landing/[id]/editar/page.tsx",
+      "status": "modified",
+      "preexistingProtectedDocument": false,
+      "sha256": "897efb8e29b6e35ea3af217b8399a8cbbd16a08e1bf11a1ac602a17168aa7114"
+    },
+    {
+      "file": "frontend/app/api/landings/revalidate/route.ts",
+      "status": "untracked",
+      "preexistingProtectedDocument": false,
+      "sha256": "f9f87aa26178217427e024e102eab1b05398b0756fe72bfcdf4a6007cea0a172"
+    },
+    {
+      "file": "frontend/app/api/revalidate/route.ts",
+      "status": "modified",
+      "preexistingProtectedDocument": false,
+      "sha256": "2e21412b5e3c7b31737b0a5dba017ca40bfaf5abafd017ecf2935e1c7ad72e11"
+    },
+    {
+      "file": "frontend/lib/landing/publishLanding.ts",
+      "status": "modified",
+      "preexistingProtectedDocument": false,
+      "sha256": "6da2b504581ca76ba99e18167b86a04236a3325e3a9cf6703355620afdd8c5ff"
+    },
+    {
+      "file": "frontend/lib/revalidation/catalog.server.ts",
+      "status": "untracked",
+      "preexistingProtectedDocument": false,
+      "sha256": "453707dda24c3ed1075818b08116b32876f6d3a475a50e8ee0f83a65df8b9cd8"
+    },
+    {
+      "file": "frontend/lib/revalidation/client.ts",
+      "status": "untracked",
+      "preexistingProtectedDocument": false,
+      "sha256": "0cca44e362f6caa8f37e0ba88e8546216254de6f70b364578febb265811cfef3"
+    },
+    {
+      "file": "frontend/lib/revalidation/service.server.ts",
+      "status": "untracked",
+      "preexistingProtectedDocument": false,
+      "sha256": "1bf99ec5f8db0757c928892488e89ff7a6cd79b0a88c28192a7f84c7082c0453"
+    },
+    {
+      "file": "frontend/lib/revalidation/supabase.server.ts",
+      "status": "untracked",
+      "preexistingProtectedDocument": false,
+      "sha256": "2c4c5284352fbaaffb0ffd444bd85e8fb957b2ba40ac41777cb75ff64219805f"
+    },
+    {
+      "file": "frontend/lib/revalidation/transport.server.ts",
+      "status": "untracked",
+      "preexistingProtectedDocument": false,
+      "sha256": "db96d366bcd0ddd028c28673de493ffa9dc83bbfb0f9979dd4f1dab08ae2b026"
+    },
+    {
+      "file": "frontend/lib/revalidation/types.ts",
+      "status": "untracked",
+      "preexistingProtectedDocument": false,
+      "sha256": "5199f9d77c9b338016afa64ab34e9e4f7b52fe6b607799b07cc70fa65d1049d2"
+    },
+    {
+      "file": "frontend/lib/settingsDb.ts",
+      "status": "modified",
+      "preexistingProtectedDocument": false,
+      "sha256": "344601e527c2db6eb694f4e45c9e9305b8dcd19324f24602526ca57bec01b474"
+    },
+    {
+      "file": "frontend/package.json",
+      "status": "modified",
+      "preexistingProtectedDocument": false,
+      "sha256": "af1a151862809d644ed8cd8ef1bbc91efd13a9371961b97e484acb5c5d123d6b"
+    },
+    {
+      "file": "frontend/tests/revalidation-server-loader.mjs",
+      "status": "untracked",
+      "preexistingProtectedDocument": false,
+      "sha256": "dce65a85df0acf492cfd665284d6d158ff0845e0d56ea1a217885d4485e21752"
+    },
+    {
+      "file": "frontend/tests/revalidation-server-resolver.mjs",
+      "status": "untracked",
+      "preexistingProtectedDocument": false,
+      "sha256": "c64b93c73a59825527019a1ff94e263b81715d04702b20aefc96d0cbe344ed9f"
+    },
+    {
+      "file": "frontend/tests/revalidationClient.test.ts",
+      "status": "untracked",
+      "preexistingProtectedDocument": false,
+      "sha256": "c8348b34f933331ffb45e6f5e6a412c12669fd44dbc47faf955d4a1f99379ea6"
+    },
+    {
+      "file": "frontend/tests/revalidationSecurity.test.ts",
+      "status": "untracked",
+      "preexistingProtectedDocument": false,
+      "sha256": "06ed9e2a085cb6b160a8c30ee6cbb06d7763e9b3742cce26fee6e4659f5d05c9"
+    },
+    {
+      "file": "scripts/security/audit-settings-artifacts.mjs",
+      "status": "untracked",
+      "preexistingProtectedDocument": false,
+      "sha256": "59a6ca67b921524a7459990f224f95bd9ebb5cfa2d59ae54c2788fba2334190b"
+    },
+    {
+      "file": "scripts/security/run-settings-security.mjs",
+      "status": "untracked",
+      "preexistingProtectedDocument": false,
+      "sha256": "446872a21c626448b64a22b461d2b8c03dffb498e70c27732d16c89af036b859"
+    },
+    {
+      "file": "scripts/security/run-settings-validation.mjs",
+      "status": "untracked",
+      "preexistingProtectedDocument": false,
+      "sha256": "819511b7093cf2c3e7e0a455d618b9882395997f31845aeab54a12f611b7186b"
+    },
+    {
+      "file": "scripts/security/settings-security-tests.mjs",
+      "status": "untracked",
+      "preexistingProtectedDocument": false,
+      "sha256": "d4f6f57f3c63a4d68b1b3ecf1b9baad23a51a9e3ca294895bc180efa35dcac67"
+    },
+    {
+      "file": "supabase/bootstrap/incremental-manifest.json",
+      "status": "modified",
+      "preexistingProtectedDocument": false,
+      "sha256": "cde2537c396e04722514111cb0b9cc5da9282b44b9695c0e3b8dad0ea35234f8"
+    },
+    {
+      "file": "supabase/migrations/20260918010532_protect_settings_revalidation_secret.sql",
+      "status": "untracked",
+      "preexistingProtectedDocument": false,
+      "sha256": "865034edefb66e41155b724fc80ded7bf3894a7e04e8eeeee9b2121bf107cbff"
+    }
+  ],
+  "inventorySelfHashExcluded": true,
+  "stagingChanges": 0,
+  "commits": 0,
+  "pushes": 0,
+  "deploys": 0,
+  "nextAction": "Local checkpoint only when separately authorized. Do not stage, commit, push, deploy or start another phase as part of this continuation.",
+  "previousFailure": {
+    "suite": "typescript",
+    "exitCode": 2,
+    "errors": [
+      {
+        "file": "tests/revalidationSecurity.test.ts",
+        "line": 47,
+        "column": 97,
+        "code": "TS2345"
+      },
+      {
+        "file": "tests/revalidationSecurity.test.ts",
+        "line": 135,
+        "column": 52,
+        "code": "TS2345"
+      },
+      {
+        "file": "tests/revalidationSecurity.test.ts",
+        "line": 136,
+        "column": 57,
+        "code": "TS2345"
+      },
+      {
+        "file": "tests/revalidationSecurity.test.ts",
+        "line": 151,
+        "column": 48,
+        "code": "TS2345"
+      }
+    ],
+    "cause": "Static inspection: environment fixtures do not satisfy Next NodeJS.ProcessEnv.NODE_ENV requirements; no repair or rerun performed.",
+    "resolved": true,
+    "resolvedBy": "Correctly typed NodeJS.ProcessEnv test fixtures; subsequent TypeScript exit 0",
+    "previousValidationSha256": "5f696dd8b7d8c5ea922710852502bd631cb1c1bdfb565d6c8e3d99a608b5f653"
+  },
+  "fixtureCorrection": {
+    "file": "frontend/tests/revalidationSecurity.test.ts",
+    "expectedType": "NodeJS.ProcessEnv",
+    "requiredNodeEnvLiterals": [
+      "development",
+      "production",
+      "test"
+    ],
+    "originalErrorLines": [
+      47,
+      135,
+      136,
+      151
+    ],
+    "arrayBefore": "Uncontextualized heterogeneous union; NODE_ENV optional or string",
+    "backendBefore": "Three string-valued fields, missing required NODE_ENV",
+    "after": "Array and shared backend fixture explicitly typed NodeJS.ProcessEnv; missing NODE_ENV supplied as test",
+    "productiveTypesChanged": false,
+    "castsAdded": false,
+    "suppressionsAdded": false
+  },
+  "sourceChangesThisContinuation": [
+    "frontend/tests/revalidationSecurity.test.ts"
+  ],
+  "bundleInspection": {
+    "passed": true,
+    "clientStaticFiles": 125,
+    "publicFiles": 19,
+    "serializedClientResponses": 443,
+    "serverOnlyArtifacts": 166,
+    "syntheticValuesOnly": true,
+    "literalDocumentationMatchesClassified": 4,
+    "unresolvedFindings": 0,
+    "evidence": "docs/security/phase-1b2/implementation-validation.json"
+  },
+  "artifactAudit": {
+    "file": "docs/security/phase-1b2/implementation-audit.json",
+    "passed": true,
+    "findings": 0,
+    "hashOmittedToAvoidCircularReference": true
+  },
+  "diffCheck": {
+    "exitCode": 0,
+    "whitespaceErrors": 0,
+    "lineEndingWarningsOnly": true
+  },
+  "cleanupEvidenceReusedWithoutDockerOperations": true,
+  "inventoryAuditHashExcludedToAvoidCycle": true
+}
