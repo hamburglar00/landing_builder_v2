@@ -11,6 +11,11 @@
       "version": "20260918010532",
       "file": "20260918010532_protect_settings_revalidation_secret.sql",
       "sha256": "865034edefb66e41155b724fc80ded7bf3894a7e04e8eeeee9b2121bf107cbff"
+    },
+    {
+      "version": "20260918140931",
+      "file": "20260918140931_protect_phone_administration.sql",
+      "sha256": "22e1c94a48888748d2e005d581f64145d88aa2e08e636ed69bb3f1fbc57f217c"
     }
   ]
 }

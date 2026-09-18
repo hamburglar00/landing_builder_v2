@@ -1,0 +1,230 @@
+{
+  "phase": "1B.3",
+  "status": "initial_diagnostic_completed_then_permission_exception_authorized",
+  "baseCommit": "d7d57637032b02f93639481d8483b1800ad1bac3",
+  "branch": "main",
+  "blocker": {
+    "reason": "Closing phone administration requires removing public EXECUTE on two cron entrypoints explicitly excluded by the user. Authorization is required before implementing.",
+    "requestedException": "Revoke only EXECUTE from PUBLIC, anon and authenticated on the two listed functions in a future migration; preserve function bodies, scheduled jobs, configuration, secrets and postgres execution.",
+    "authorized": true,
+    "evidence": [
+      {
+        "function": "public.cron_sync_phones_all()",
+        "file": "supabase/migrations/20260305120000_cron_sync_phones.sql",
+        "line": 59,
+        "sourceSha256": "23491d19f2c2557c61a0c8543b02b15f77fdb7b074c76c53795b9d9d5856ce43",
+        "historicalBodyMd5": "cfbb40068e8bcea6da0f8f5e884bc2bb",
+        "currentBodyMd5": "cfbb40068e8bcea6da0f8f5e884bc2bb",
+        "bodyMatches": true,
+        "owner": "postgres",
+        "securityDefiner": true,
+        "searchPath": [
+          "search_path=public"
+        ],
+        "execute": [
+          "anon",
+          "authenticated",
+          "postgres",
+          "PUBLIC",
+          "service_role"
+        ],
+        "guards": {
+          "jwt": false,
+          "name": "cron_sync_phones_all",
+          "schema": "public",
+          "auth_uid": false,
+          "body_md5": "cfbb40068e8bcea6da0f8f5e884bc2bb",
+          "arguments": "",
+          "auth_role": false,
+          "uses_profiles": false,
+          "dynamic_execute": false
+        },
+        "jobs": [
+          {
+            "job": "sync-phones-every-5min",
+            "active": true,
+            "function": "cron_sync_phones_all",
+            "username": "postgres"
+          }
+        ],
+        "executed": false
+      },
+      {
+        "function": "public.cron_reset_phone_operational_daily()",
+        "file": "supabase/migrations/20260829013755_reset_scoped_phone_counters.sql",
+        "line": 1,
+        "sourceSha256": "58d844930bc082851f25713fe033ac2e5433d5d322c7e60704fc0691138c3e23",
+        "historicalBodyMd5": "e70bcb929d325477032ed4253391e1e2",
+        "currentBodyMd5": "e70bcb929d325477032ed4253391e1e2",
+        "bodyMatches": true,
+        "owner": "postgres",
+        "securityDefiner": true,
+        "searchPath": [
+          "search_path=public"
+        ],
+        "execute": [
+          "anon",
+          "authenticated",
+          "postgres",
+          "PUBLIC",
+          "service_role"
+        ],
+        "guards": {
+          "jwt": false,
+          "name": "cron_reset_phone_operational_daily",
+          "schema": "public",
+          "auth_uid": false,
+          "body_md5": "e70bcb929d325477032ed4253391e1e2",
+          "arguments": "",
+          "auth_role": false,
+          "uses_profiles": false,
+          "dynamic_execute": false
+        },
+        "jobs": [
+          {
+            "job": "reset-phone-operational-daily-argentina-midnight",
+            "active": true,
+            "function": "cron_reset_phone_operational_daily",
+            "username": "postgres"
+          }
+        ],
+        "executed": false
+      }
+    ],
+    "authorizationScope": "Only removal of EXECUTE for PUBLIC, anon and authenticated on the two listed functions; preserve bodies, owners, parameters, search_path, jobs, schedules and existing postgres execution; no compensating grants."
+  },
+  "baseline": {
+    "initialWorkingTreeClean": true,
+    "initialIndexEmpty": true,
+    "initialConflicts": false,
+    "migrations": {
+      "count": 270,
+      "sha256": "f4f3c2f2a6ffce00e6d0220ed8943987cab47e90703e2dfaa2cce096b9f8a953",
+      "hashMethod": "SHA-256 of JSON.stringify(sorted [{file,sha256(raw bytes)}])",
+      "historicalFilesUnchanged": true,
+      "migration271Created": false
+    },
+    "environmentFile": {
+      "present": true,
+      "ignored": true,
+      "tracked": false,
+      "contentRead": false
+    }
+  },
+  "implementation": {
+    "applicationFilesChanged": 0,
+    "configurationFilesChanged": 0,
+    "migrationFilesChanged": 0,
+    "databaseOperations": 0,
+    "cliMigrationCommandExecuted": false,
+    "newSecurityDefinerFunctions": 0,
+    "scopeExpanded": false
+  },
+  "validation": {
+    "phaseTestsExecuted": 0,
+    "phaseTestAssertionsPassed": 0,
+    "reconstruction271Executed": false,
+    "remoteWrites": 0,
+    "productionRequests": 0,
+    "buildExecuted": false,
+    "typeScriptExecuted": false,
+    "eslintExecuted": false,
+    "bundleInspectionExecuted": false,
+    "diagnosticIntegrity": "passed; diagnostic document checks only, no behavioral test executed",
+    "projectDataReads": 0,
+    "publicDocumentationConsulted": true
+  },
+  "pendingTests": [
+    "own-phone list and CRUD",
+    "deny foreign read/create/update/delete and owner reassignment",
+    "spoofed URL/body/Data API user_id does not change identity",
+    "atomic rejection of mixed payload and compatible own upsert",
+    "anon denied administrative access",
+    "authorized admin manages any client",
+    "editable metadata cannot grant admin",
+    "actual grants plus RLS and blocked EXECUTE entrypoints",
+    "minimum necessary backend/service_role access",
+    "same landing-phone and cached public contracts with synthetic data",
+    "same reservation and confirmation concurrency",
+    "full reconstruction 271/271",
+    "SQL/pgTAP and Data API",
+    "Edge/Next and affected frontend",
+    "relevant historical suites",
+    "TypeScript",
+    "build and client-bundle synthetic-only inspection",
+    "ESLint",
+    "final secrets/personal-data/paths/scope audit",
+    "git diff --check and exact inventory"
+  ],
+  "rolloutAndRollback": "access-model.md; proposals only, no execution authorized.",
+  "inventory": {
+    "count": 4,
+    "modified": 0,
+    "added": 4,
+    "files": [
+      {
+        "file": "docs/security/phase-1b3/README.md",
+        "status": "untracked",
+        "sha256": "928732422cde36758d2202e559f9454d7059d89bb52a665e75e6e77a4408d5e4"
+      },
+      {
+        "file": "docs/security/phase-1b3/access-model.md",
+        "status": "untracked",
+        "sha256": "4ea85d8ee2a3c65f90e8d245fdb8b1a4005bf42c219146b34510cd523e8815e8"
+      },
+      {
+        "file": "docs/security/phase-1b3/consumers.json",
+        "status": "untracked",
+        "sha256": "01ae0f94110013859c359a0e299a324d9cd4f49370c37a67fcede5444f08fb1f"
+      },
+      {
+        "file": "docs/security/phase-1b3/review.json",
+        "status": "untracked",
+        "sha256": null
+      }
+    ],
+    "selfHashExcluded": "docs/security/phase-1b3/review.json",
+    "selfHashReason": "Avoid recursive self-hash; all other document hashes covered and review verified externally.",
+    "scope": "The four initial diagnostic documents only; current full working-tree inventory is in implementation-review.json."
+  },
+  "prohibitedActions": {
+    "gitStaging": false,
+    "commit": false,
+    "push": false,
+    "deploy": false,
+    "remoteWrites": false,
+    "resourceDeletion": false,
+    "siblingModified": false
+  },
+  "diagnosticAudit": {
+    "passed": true,
+    "scope": "Four diagnostic documents only; no claim of implementation or security test success.",
+    "checks": [
+      "exact changed-file inventory",
+      "SHA-256 of documents other than self-hashed review",
+      "current blocker function body MD5 equals historical catalog",
+      "UTF-8 and JSON validity",
+      "whitespace including untracked documents",
+      "credential patterns",
+      "synthetic credential literals",
+      "personal paths",
+      "email patterns and URL credentials",
+      "all existing tracked files unchanged",
+      "270 historical migrations unchanged",
+      "git diff --check",
+      "empty index and no conflicts",
+      "environment presence, ignore status and unchanged metadata without reading content"
+    ],
+    "findings": [],
+    "selfHashExcluded": "docs/security/phase-1b3/review.json",
+    "environmentFile": {
+      "present": true,
+      "ignored": true,
+      "tracked": false,
+      "metadataUnchanged": true,
+      "contentRead": false
+    }
+  },
+  "recordType": "initial_diagnostic_record_not_current_implementation_status",
+  "currentImplementation": "docs/security/phase-1b3/implementation-review.json"
+}

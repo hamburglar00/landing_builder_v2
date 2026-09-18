@@ -1,4 +1,5 @@
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
+import { authorizePhoneAdministration } from "../_shared/phone-administration.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -50,25 +51,18 @@ Deno.serve(async (req) => {
     const body = (await req.json().catch(() => null)) as
       | { user_id?: string | null; gerencia_id?: number | null }
       | null;
-    const userId = body?.user_id ?? null;
-    const singleGerenciaId = body?.gerencia_id ?? null;
-
-    if (!userId) {
-      return new Response(
-        JSON.stringify({ error: "Falta user_id en el cuerpo de la petición." }),
-        {
-          status: 400,
-          headers: { ...corsHeaders, "Content-Type": "application/json" },
-        },
-      );
-    }
-
     const supabaseAdmin = createClient(supabaseUrl, serviceRoleKey, {
-      auth: {
-        autoRefreshToken: false,
-        persistSession: false,
-      },
+      auth: { autoRefreshToken: false, persistSession: false },
     });
+    const authorization = await authorizePhoneAdministration(req, body, supabaseAdmin);
+    if (!authorization.ok) {
+      return new Response(JSON.stringify({ error: authorization.error }), {
+        status: authorization.status,
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
+    const userId = authorization.userId;
+    const singleGerenciaId = authorization.gerenciaId;
 
     let query = supabaseAdmin
       .from("gerencias")

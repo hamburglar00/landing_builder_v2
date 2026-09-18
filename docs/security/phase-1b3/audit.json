@@ -1,0 +1,164 @@
+{
+  "phase": "1B.3",
+  "passed": true,
+  "scope": "Source/artifact audit; behavioral validation remains separately reported.",
+  "files": [
+    "docs/security/phase-1b3/README.md",
+    "docs/security/phase-1b3/access-model.md",
+    "docs/security/phase-1b3/audit.json",
+    "docs/security/phase-1b3/consumers.json",
+    "docs/security/phase-1b3/database-validation.json",
+    "docs/security/phase-1b3/implementation-review.json",
+    "docs/security/phase-1b3/implementation.md",
+    "docs/security/phase-1b3/pending-validation.json",
+    "docs/security/phase-1b3/review.json",
+    "docs/security/phase-1b3/validation.json",
+    "frontend/app/(panel)/admin/tests/page.tsx",
+    "frontend/components/telefonos/TelefonosPageContent.tsx",
+    "frontend/lib/phones/administrationClient.ts",
+    "frontend/tests/phoneAdministrationClient.test.ts",
+    "scripts/security/audit-phone-artifacts.mjs",
+    "scripts/security/phone-concurrency-tests.mjs",
+    "scripts/security/phone-data-api.mjs",
+    "scripts/security/phone-edge-tests.mjs",
+    "scripts/security/phone-security-tests.mjs",
+    "scripts/security/phone-upsert-diagnostic.mjs",
+    "scripts/security/run-phone-pending.mjs",
+    "scripts/security/run-phone-security.mjs",
+    "scripts/security/run-phone-validation.mjs",
+    "supabase/bootstrap/incremental-manifest.json",
+    "supabase/functions/_shared/phone-administration.ts",
+    "supabase/functions/reset-phone-counters/index.ts",
+    "supabase/functions/reset-phone-messages/index.ts",
+    "supabase/functions/sync-phones/index.ts",
+    "supabase/migrations/20260918140931_protect_phone_administration.sql",
+    "supabase/tests/phone_administration.test.sql"
+  ],
+  "hashes": [
+    {
+      "file": "docs/security/phase-1b3/README.md",
+      "sha256": "928732422cde36758d2202e559f9454d7059d89bb52a665e75e6e77a4408d5e4"
+    },
+    {
+      "file": "docs/security/phase-1b3/access-model.md",
+      "sha256": "4ea85d8ee2a3c65f90e8d245fdb8b1a4005bf42c219146b34510cd523e8815e8"
+    },
+    {
+      "file": "docs/security/phase-1b3/consumers.json",
+      "sha256": "01ae0f94110013859c359a0e299a324d9cd4f49370c37a67fcede5444f08fb1f"
+    },
+    {
+      "file": "docs/security/phase-1b3/database-validation.json",
+      "sha256": "920ad21da4726b0cde828a2af73e801c8164b2f35527497663b16b557e66b406"
+    },
+    {
+      "file": "docs/security/phase-1b3/implementation.md",
+      "sha256": "5e78cba28d01cb6628c6692853fc42cc111c33ee62479c6c85afc6d3b670c04f"
+    },
+    {
+      "file": "docs/security/phase-1b3/pending-validation.json",
+      "sha256": "1ea9a0b7c5b269e852718d9b8d1d1cd562cbe383cbe559d105643b00371ad8f8"
+    },
+    {
+      "file": "docs/security/phase-1b3/review.json",
+      "sha256": "82638015d97c5d20a85874a1163f5c4755312a69e53bbc9b18e2d2f5c9d31fb5"
+    },
+    {
+      "file": "docs/security/phase-1b3/validation.json",
+      "sha256": "0d1a5d3b041847a434392d3069bdc01f1d05c95ce91b2f8b9c06b24314ed1a5c"
+    },
+    {
+      "file": "frontend/app/(panel)/admin/tests/page.tsx",
+      "sha256": "68c3898af7e67bb5f6e92180de3713f97cfaba6d7fb8ba249235e5ab9dc13a9e"
+    },
+    {
+      "file": "frontend/components/telefonos/TelefonosPageContent.tsx",
+      "sha256": "8b2c45f48fb38f656862b0b937f8fd33943fb5835bb9eb1c476edd39dbb23f84"
+    },
+    {
+      "file": "frontend/lib/phones/administrationClient.ts",
+      "sha256": "91c33b94bccfe961b364218f7a54a11b50fe7e1dc4b3a893f345a1d18cfc619c"
+    },
+    {
+      "file": "frontend/tests/phoneAdministrationClient.test.ts",
+      "sha256": "3d5d42f93f5b7bfa435c70d32ef8544949fb655564b07bd23895822fc323f78a"
+    },
+    {
+      "file": "scripts/security/audit-phone-artifacts.mjs",
+      "sha256": "3e7b536a57ebe97105035ecb0db4e8bd899370ceb0eec3487fba3df588e0e062"
+    },
+    {
+      "file": "scripts/security/phone-concurrency-tests.mjs",
+      "sha256": "b7e4866142ef21ea69e259264a33b0452121d90898ff4748e573f2b48ba8ea30"
+    },
+    {
+      "file": "scripts/security/phone-data-api.mjs",
+      "sha256": "97571707cdc5e6d576a8a548ef373f005795883b298f4749c7161e6bdeca3476"
+    },
+    {
+      "file": "scripts/security/phone-edge-tests.mjs",
+      "sha256": "81418fa267b7e3df051a76bbf7c5a05ebfa4f422284ca37ccb55b2b7c9f68337"
+    },
+    {
+      "file": "scripts/security/phone-security-tests.mjs",
+      "sha256": "a9795b2dc8a85fcbf537c608a7077b6d2d66c3366ffa53407140cf27e3796b80"
+    },
+    {
+      "file": "scripts/security/phone-upsert-diagnostic.mjs",
+      "sha256": "8cfdbfca21fce60b67f9ec1846bb67bcaefa4a253a17871ef436fae39866c093"
+    },
+    {
+      "file": "scripts/security/run-phone-pending.mjs",
+      "sha256": "d5babebf841fe382fa28da53c3437e1325d78b02e7da7bca630a691728f7e6ef"
+    },
+    {
+      "file": "scripts/security/run-phone-security.mjs",
+      "sha256": "d0aba6668017fbbfa4ed473d6a9749c0f985490065c6872bce2fc76e1b7b87b1"
+    },
+    {
+      "file": "scripts/security/run-phone-validation.mjs",
+      "sha256": "7428a714960e22eb3271a38f094b675d8a8de6d63c02fb39cf6dda27e629b1d5"
+    },
+    {
+      "file": "supabase/bootstrap/incremental-manifest.json",
+      "sha256": "547e49104c2f35aa914dbe0763c4452166b50562eca2e42f831faab556b0ab14"
+    },
+    {
+      "file": "supabase/functions/_shared/phone-administration.ts",
+      "sha256": "761617bd0d166fec7647494934eaeb666f15cb7035188aba2e71fc6d24c61bcc"
+    },
+    {
+      "file": "supabase/functions/reset-phone-counters/index.ts",
+      "sha256": "88e0967a51aa69adda71a6a531b85a19de2c46f1a46e4b886ae557d1e5b759b2"
+    },
+    {
+      "file": "supabase/functions/reset-phone-messages/index.ts",
+      "sha256": "2690d84a71abdbd2998119b662557334acbf31c459bda8b835cd01f46a7357c0"
+    },
+    {
+      "file": "supabase/functions/sync-phones/index.ts",
+      "sha256": "31fff3ae2489e050e3c111282f42a9337eb96644857ab8da94dc8db9aa95892f"
+    },
+    {
+      "file": "supabase/migrations/20260918140931_protect_phone_administration.sql",
+      "sha256": "22e1c94a48888748d2e005d581f64145d88aa2e08e636ed69bb3f1fbc57f217c"
+    },
+    {
+      "file": "supabase/tests/phone_administration.test.sql",
+      "sha256": "f8819de85126e8e053e333e51f1d29b9a6ee56c13028360bc044d5c9e369d463"
+    }
+  ],
+  "hashExclusions": [
+    "docs/security/phase-1b3/audit.json",
+    "docs/security/phase-1b3/implementation-review.json"
+  ],
+  "environmentFile": {
+    "present": true,
+    "ignored": true,
+    "tracked": false,
+    "contentRead": false
+  },
+  "findings": [],
+  "remoteWrites": 0,
+  "realSecretValuesRead": 0
+}

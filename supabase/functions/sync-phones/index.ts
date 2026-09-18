@@ -1,4 +1,5 @@
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
+import { authorizePhoneAdministration } from "../_shared/phone-administration.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -115,7 +116,7 @@ Deno.serve(async (req) => {
           cron_secret?: string | null;
         }
       | null;
-    const userId = body?.user_id ?? null;
+    let userId = body?.user_id ?? null;
     const singleGerenciaId = body?.gerencia_id ?? null;
     const cronSecret = body?.cron_secret ?? null;
 
@@ -137,14 +138,15 @@ Deno.serve(async (req) => {
       }
     }
 
-    if (!isCronMode && !userId) {
-      return new Response(
-        JSON.stringify({ error: "Falta user_id en el cuerpo de la petición." }),
-        {
-          status: 400,
+    if (!isCronMode) {
+      const authorization = await authorizePhoneAdministration(req, body, supabaseAdmin);
+      if (!authorization.ok) {
+        return new Response(JSON.stringify({ error: authorization.error }), {
+          status: authorization.status,
           headers: { ...corsHeaders, "Content-Type": "application/json" },
-        },
-      );
+        });
+      }
+      userId = authorization.userId;
     }
 
     // 1) Obtener gerencias: cron = todas; si no, del usuario (o solo la indicada)

@@ -4,6 +4,7 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import Image from "next/image";
 import { supabase } from "@/lib/supabaseClient";
+import { phoneAdministrationHeaders } from "@/lib/phones/administrationClient";
 import type { Gerencia } from "@/lib/gerencias/types";
 import { fetchGerencias, fetchGerenciasForAdmin } from "@/lib/gerencias/gerenciasDb";
 import type { PhoneKind } from "@/lib/landing/types";
@@ -180,7 +181,6 @@ export function TelefonosPageContent({
 
   const base =
     process.env.NEXT_PUBLIC_SUPABASE_URL?.replace(/\/$/, "") ?? "";
-  const apiKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY ?? "";
 
   const loadData = useCallback(async (uid: string) => {
     if (!isAdmin) {
@@ -351,12 +351,8 @@ export function TelefonosPageContent({
     try {
       const res = await fetch(`${base}/functions/v1/sync-phones`, {
         method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          ...(apiKey ? { apikey: apiKey, Authorization: `Bearer ${apiKey}` } : {}),
-        },
+        headers: await phoneAdministrationHeaders(),
         body: JSON.stringify({
-          user_id: userId,
           ...(gerenciaId !== null ? { gerencia_id: gerenciaId } : {}),
         }),
       });
@@ -401,12 +397,8 @@ export function TelefonosPageContent({
     try {
       const res = await fetch(`${base}/functions/v1/reset-phone-counters`, {
         method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          ...(apiKey ? { apikey: apiKey, Authorization: `Bearer ${apiKey}` } : {}),
-        },
+        headers: await phoneAdministrationHeaders(),
         body: JSON.stringify({
-          user_id: userId,
           ...(gerenciaId !== null ? { gerencia_id: gerenciaId } : {}),
         }),
       });
@@ -432,12 +424,8 @@ export function TelefonosPageContent({
     try {
       const res = await fetch(`${base}/functions/v1/reset-phone-messages`, {
         method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          ...(apiKey ? { apikey: apiKey, Authorization: `Bearer ${apiKey}` } : {}),
-        },
+        headers: await phoneAdministrationHeaders(),
         body: JSON.stringify({
-          user_id: userId,
           ...(gerenciaId !== null ? { gerencia_id: gerenciaId } : {}),
         }),
       });

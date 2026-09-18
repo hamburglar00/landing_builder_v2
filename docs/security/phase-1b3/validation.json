@@ -1,0 +1,137 @@
+{
+  "phase": "1B.3",
+  "complete": true,
+  "localOnly": true,
+  "rawOutputPersisted": false,
+  "remoteWrites": 0,
+  "productionRequests": 0,
+  "suites": [
+    {
+      "name": "phone-frontend-and-public-handler-contracts",
+      "exitCode": 0,
+      "durationMs": 4804,
+      "passed": 13,
+      "failed": 0,
+      "skipped": 0,
+      "failedCases": []
+    },
+    {
+      "name": "historical-bootstrap-safety",
+      "exitCode": 0,
+      "durationMs": 666,
+      "passed": 34,
+      "failed": 0,
+      "skipped": 0,
+      "failedCases": []
+    },
+    {
+      "name": "historical-landing-contracts",
+      "exitCode": 0,
+      "durationMs": 1816,
+      "passed": 16,
+      "failed": 0,
+      "skipped": 0,
+      "failedCases": []
+    },
+    {
+      "name": "typescript",
+      "exitCode": 0,
+      "durationMs": 24162
+    },
+    {
+      "name": "build",
+      "exitCode": 0,
+      "durationMs": 117513
+    },
+    {
+      "name": "eslint",
+      "exitCode": 0,
+      "durationMs": 84949,
+      "errors": 0,
+      "warnings": 18,
+      "findings": [
+        {
+          "file": "app/(panel)/dashboard/layout.tsx",
+          "errors": 0,
+          "warnings": 4,
+          "rules": [
+            "@typescript-eslint/no-unused-vars"
+          ]
+        },
+        {
+          "file": "app/(panel)/promo/[slug]/page.tsx",
+          "errors": 0,
+          "warnings": 1,
+          "rules": [
+            "@typescript-eslint/no-unused-vars"
+          ]
+        },
+        {
+          "file": "components/conversiones/StatsPanel.tsx",
+          "errors": 0,
+          "warnings": 2,
+          "rules": [
+            "react-hooks/exhaustive-deps"
+          ]
+        },
+        {
+          "file": "components/conversiones/TrackingBoard.tsx",
+          "errors": 0,
+          "warnings": 2,
+          "rules": [
+            "react-hooks/exhaustive-deps"
+          ]
+        },
+        {
+          "file": "components/integraciones/IntegracionesMetaCapi.tsx",
+          "errors": 0,
+          "warnings": 6,
+          "rules": [
+            "@typescript-eslint/no-unused-vars",
+            "react-hooks/exhaustive-deps",
+            "@next/next/no-img-element"
+          ]
+        },
+        {
+          "file": "components/notificaciones/NotificationsPageContent.tsx",
+          "errors": 0,
+          "warnings": 1,
+          "rules": [
+            "@next/next/no-img-element"
+          ]
+        },
+        {
+          "file": "lib/conversionsDb.ts",
+          "errors": 0,
+          "warnings": 2,
+          "rules": [
+            "@typescript-eslint/no-unused-vars"
+          ]
+        }
+      ]
+    }
+  ],
+  "startedAt": "2026-09-18T14:56:46.022Z",
+  "databaseEvidence": {
+    "reusedFile": "docs/security/phase-1b3/database-validation.json",
+    "pendingFile": "docs/security/phase-1b3/pending-validation.json",
+    "reusedPassed": 120,
+    "pendingPassed": 65,
+    "migrations": 271
+  },
+  "buildCopy": {
+    "directory": "phase1b3-build-AOBHun",
+    "outsideRepository": true,
+    "environmentFilesCopied": 0,
+    "retained": true
+  },
+  "bundle": {
+    "scope": ".next/static browser assets",
+    "excludedServerArtifacts": ".next/server",
+    "files": 124,
+    "findings": [],
+    "secretValuesUsed": "synthetic only",
+    "browserContainsPrivateCredential": false
+  },
+  "finishedAt": "2026-09-18T15:00:40.698Z"
+}

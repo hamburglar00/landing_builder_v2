@@ -2,6 +2,7 @@
 
 import { useState, useCallback, useRef, useEffect } from "react";
 import { supabase } from "@/lib/supabaseClient";
+import { phoneAdministrationHeaders } from "@/lib/phones/administrationClient";
 import { requestRevalidation } from "@/lib/revalidation/client";
 import { PageHeader } from "@/components/ui/PanelPrimitives";
 
@@ -151,7 +152,6 @@ export default function AdminTestsPage() {
       }
       const base =
         process.env.NEXT_PUBLIC_SUPABASE_URL?.replace(/\/$/, "") ?? "";
-      const apiKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY ?? "";
       if (!base) {
         addLog("error", "Falta NEXT_PUBLIC_SUPABASE_URL en el frontend.");
         setError("Falta NEXT_PUBLIC_SUPABASE_URL en el frontend.");
@@ -160,10 +160,7 @@ export default function AdminTestsPage() {
       addLog("info", `POST /functions/v1/sync-phones`, { user_id: user.id });
       const res = await fetch(`${base}/functions/v1/sync-phones`, {
         method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          ...(apiKey ? { apikey: apiKey } : {}),
-        },
+        headers: await phoneAdministrationHeaders(),
         body: JSON.stringify({ user_id: user.id }),
       });
       const text = await res.text();

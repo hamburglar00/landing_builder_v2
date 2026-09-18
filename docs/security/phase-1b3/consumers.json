@@ -1,0 +1,6775 @@
+{
+  "phase": "1B.3",
+  "status": "diagnostic_only_blocked_before_implementation",
+  "baseCommit": "d7d57637032b02f93639481d8483b1800ad1bac3",
+  "provenance": {
+    "currentSource": "Tracked files at baseCommit; static literal callsites and named references, not runtime traffic.",
+    "historicalCatalog": {
+      "file": "docs/security/phase-1a/evidence.json",
+      "sha256": "bfcfbcfe09fbe8763ac008f4a09db8f4efa40f1a84d0717ff6939f169a13a45d",
+      "date": "2026-09-17",
+      "baseCommit": "f3153676c0bbaccd29840f365b86f480920d7598",
+      "queriedAgain": false
+    },
+    "limitations": [
+      "No remote database state or real records consulted.",
+      "Historical deployment metadata is not proof of current deployment.",
+      "Textual dependency references are candidates, not execution traces.",
+      "SQL body source matches may include identical bodies under other names; empty matches include dynamically rewritten historical routines.",
+      "No dynamic integration, bundle or permission test executed in this phase."
+    ]
+  },
+  "ownership": {
+    "phoneTable": "public.gerencia_phones",
+    "phoneOwnerColumn": null,
+    "chain": [
+      "gerencia_phones.gerencia_id",
+      "gerencias.id",
+      "gerencias.user_id"
+    ],
+    "adminRole": "public.profiles.role",
+    "roleProtectionMigration": "supabase/migrations/20260917183837_protect_profile_administrative_fields.sql",
+    "editableUserMetadataAccepted": false
+  },
+  "relations": [
+    {
+      "schema": "public",
+      "name": "ar_phone_area_codes",
+      "kind": "r",
+      "owner": "postgres",
+      "rls": true,
+      "forceRls": false,
+      "columns": [
+        {
+          "name": "codigo_de_area",
+          "type": "text"
+        },
+        {
+          "name": "localidad",
+          "type": "text"
+        },
+        {
+          "name": "provincia",
+          "type": "text"
+        },
+        {
+          "name": "zip_exacto",
+          "type": "text"
+        },
+        {
+          "name": "zip_aproximado",
+          "type": "text"
+        }
+      ],
+      "historicalCrudGrants": [
+        {
+          "role": "anon",
+          "privilege": "DELETE"
+        },
+        {
+          "role": "anon",
+          "privilege": "INSERT"
+        },
+        {
+          "role": "anon",
+          "privilege": "SELECT"
+        },
+        {
+          "role": "anon",
+          "privilege": "UPDATE"
+        },
+        {
+          "role": "authenticated",
+          "privilege": "DELETE"
+        },
+        {
+          "role": "authenticated",
+          "privilege": "INSERT"
+        },
+        {
+          "role": "authenticated",
+          "privilege": "SELECT"
+        },
+        {
+          "role": "authenticated",
+          "privilege": "UPDATE"
+        },
+        {
+          "role": "postgres",
+          "privilege": "DELETE"
+        },
+        {
+          "role": "postgres",
+          "privilege": "INSERT"
+        },
+        {
+          "role": "postgres",
+          "privilege": "SELECT"
+        },
+        {
+          "role": "postgres",
+          "privilege": "UPDATE"
+        },
+        {
+          "role": "service_role",
+          "privilege": "DELETE"
+        },
+        {
+          "role": "service_role",
+          "privilege": "INSERT"
+        },
+        {
+          "role": "service_role",
+          "privilege": "SELECT"
+        },
+        {
+          "role": "service_role",
+          "privilege": "UPDATE"
+        }
+      ],
+      "otherPrivileges": "Not assessed or modified by this blocked implementation; see source catalog."
+    },
+    {
+      "schema": "public",
+      "name": "chatrace_gerencias",
+      "kind": "r",
+      "owner": "postgres",
+      "rls": true,
+      "forceRls": false,
+      "columns": [
+        {
+          "name": "id",
+          "type": "bigint"
+        },
+        {
+          "name": "user_id",
+          "type": "uuid"
+        },
+        {
+          "name": "gerencia_id",
+          "type": "bigint"
+        },
+        {
+          "name": "weight",
+          "type": "integer"
+        },
+        {
+          "name": "phone_mode",
+          "type": "text"
+        },
+        {
+          "name": "phone_kind",
+          "type": "text"
+        },
+        {
+          "name": "interval_start_hour",
+          "type": "integer"
+        },
+        {
+          "name": "interval_end_hour",
+          "type": "integer"
+        },
+        {
+          "name": "created_at",
+          "type": "timestamp with time zone"
+        },
+        {
+          "name": "updated_at",
+          "type": "timestamp with time zone"
+        }
+      ],
+      "historicalCrudGrants": [
+        {
+          "role": "anon",
+          "privilege": "DELETE"
+        },
+        {
+          "role": "anon",
+          "privilege": "INSERT"
+        },
+        {
+          "role": "anon",
+          "privilege": "SELECT"
+        },
+        {
+          "role": "anon",
+          "privilege": "UPDATE"
+        },
+        {
+          "role": "authenticated",
+          "privilege": "DELETE"
+        },
+        {
+          "role": "authenticated",
+          "privilege": "INSERT"
+        },
+        {
+          "role": "authenticated",
+          "privilege": "SELECT"
+        },
+        {
+          "role": "authenticated",
+          "privilege": "UPDATE"
+        },
+        {
+          "role": "postgres",
+          "privilege": "DELETE"
+        },
+        {
+          "role": "postgres",
+          "privilege": "INSERT"
+        },
+        {
+          "role": "postgres",
+          "privilege": "SELECT"
+        },
+        {
+          "role": "postgres",
+          "privilege": "UPDATE"
+        },
+        {
+          "role": "service_role",
+          "privilege": "DELETE"
+        },
+        {
+          "role": "service_role",
+          "privilege": "INSERT"
+        },
+        {
+          "role": "service_role",
+          "privilege": "SELECT"
+        },
+        {
+          "role": "service_role",
+          "privilege": "UPDATE"
+        }
+      ],
+      "otherPrivileges": "Not assessed or modified by this blocked implementation; see source catalog."
+    },
+    {
+      "schema": "public",
+      "name": "chatrace_gerencias_id_seq",
+      "kind": "S",
+      "owner": "postgres",
+      "rls": false,
+      "forceRls": false,
+      "columns": [
+        {
+          "name": "last_value",
+          "type": "bigint"
+        },
+        {
+          "name": "log_cnt",
+          "type": "bigint"
+        },
+        {
+          "name": "is_called",
+          "type": "boolean"
+        }
+      ],
+      "historicalCrudGrants": [
+        {
+          "role": "anon",
+          "privilege": "SELECT"
+        },
+        {
+          "role": "anon",
+          "privilege": "UPDATE"
+        },
+        {
+          "role": "authenticated",
+          "privilege": "SELECT"
+        },
+        {
+          "role": "authenticated",
+          "privilege": "UPDATE"
+        },
+        {
+          "role": "postgres",
+          "privilege": "SELECT"
+        },
+        {
+          "role": "postgres",
+          "privilege": "UPDATE"
+        },
+        {
+          "role": "service_role",
+          "privilege": "SELECT"
+        },
+        {
+          "role": "service_role",
+          "privilege": "UPDATE"
+        }
+      ],
+      "otherPrivileges": "Not assessed or modified by this blocked implementation; see source catalog."
+    },
+    {
+      "schema": "public",
+      "name": "gerencia_phone_availability_snapshots",
+      "kind": "r",
+      "owner": "postgres",
+      "rls": true,
+      "forceRls": false,
+      "columns": [
+        {
+          "name": "id",
+          "type": "bigint"
+        },
+        {
+          "name": "user_id",
+          "type": "uuid"
+        },
+        {
+          "name": "gerencia_id",
+          "type": "integer"
+        },
+        {
+          "name": "checked_at",
+          "type": "timestamp with time zone"
+        },
+        {
+          "name": "active_phone_count",
+          "type": "integer"
+        },
+        {
+          "name": "total_phone_count",
+          "type": "integer"
+        },
+        {
+          "name": "created_at",
+          "type": "timestamp with time zone"
+        },
+        {
+          "name": "assigned_landing_count",
+          "type": "integer"
+        }
+      ],
+      "historicalCrudGrants": [
+        {
+          "role": "anon",
+          "privilege": "DELETE"
+        },
+        {
+          "role": "anon",
+          "privilege": "INSERT"
+        },
+        {
+          "role": "anon",
+          "privilege": "SELECT"
+        },
+        {
+          "role": "anon",
+          "privilege": "UPDATE"
+        },
+        {
+          "role": "authenticated",
+          "privilege": "DELETE"
+        },
+        {
+          "role": "authenticated",
+          "privilege": "INSERT"
+        },
+        {
+          "role": "authenticated",
+          "privilege": "SELECT"
+        },
+        {
+          "role": "authenticated",
+          "privilege": "UPDATE"
+        },
+        {
+          "role": "postgres",
+          "privilege": "DELETE"
+        },
+        {
+          "role": "postgres",
+          "privilege": "INSERT"
+        },
+        {
+          "role": "postgres",
+          "privilege": "SELECT"
+        },
+        {
+          "role": "postgres",
+          "privilege": "UPDATE"
+        },
+        {
+          "role": "service_role",
+          "privilege": "DELETE"
+        },
+        {
+          "role": "service_role",
+          "privilege": "INSERT"
+        },
+        {
+          "role": "service_role",
+          "privilege": "SELECT"
+        },
+        {
+          "role": "service_role",
+          "privilege": "UPDATE"
+        }
+      ],
+      "otherPrivileges": "Not assessed or modified by this blocked implementation; see source catalog."
+    },
+    {
+      "schema": "public",
+      "name": "gerencia_phone_availability_snapshots_id_seq",
+      "kind": "S",
+      "owner": "postgres",
+      "rls": false,
+      "forceRls": false,
+      "columns": [
+        {
+          "name": "last_value",
+          "type": "bigint"
+        },
+        {
+          "name": "log_cnt",
+          "type": "bigint"
+        },
+        {
+          "name": "is_called",
+          "type": "boolean"
+        }
+      ],
+      "historicalCrudGrants": [
+        {
+          "role": "anon",
+          "privilege": "SELECT"
+        },
+        {
+          "role": "anon",
+          "privilege": "UPDATE"
+        },
+        {
+          "role": "authenticated",
+          "privilege": "SELECT"
+        },
+        {
+          "role": "authenticated",
+          "privilege": "UPDATE"
+        },
+        {
+          "role": "postgres",
+          "privilege": "SELECT"
+        },
+        {
+          "role": "postgres",
+          "privilege": "UPDATE"
+        },
+        {
+          "role": "service_role",
+          "privilege": "SELECT"
+        },
+        {
+          "role": "service_role",
+          "privilege": "UPDATE"
+        }
+      ],
+      "otherPrivileges": "Not assessed or modified by this blocked implementation; see source catalog."
+    },
+    {
+      "schema": "public",
+      "name": "gerencia_phones",
+      "kind": "r",
+      "owner": "postgres",
+      "rls": true,
+      "forceRls": false,
+      "columns": [
+        {
+          "name": "id",
+          "type": "bigint"
+        },
+        {
+          "name": "gerencia_id",
+          "type": "integer"
+        },
+        {
+          "name": "phone",
+          "type": "text"
+        },
+        {
+          "name": "status",
+          "type": "text"
+        },
+        {
+          "name": "usage_count",
+          "type": "bigint"
+        },
+        {
+          "name": "last_seen_at",
+          "type": "timestamp with time zone"
+        },
+        {
+          "name": "created_at",
+          "type": "timestamp with time zone"
+        },
+        {
+          "name": "updated_at",
+          "type": "timestamp with time zone"
+        },
+        {
+          "name": "kind",
+          "type": "text"
+        },
+        {
+          "name": "comment",
+          "type": "text"
+        },
+        {
+          "name": "messages_reset_at",
+          "type": "timestamp with time zone"
+        },
+        {
+          "name": "source_available",
+          "type": "boolean"
+        },
+        {
+          "name": "assignment_role",
+          "type": "text"
+        }
+      ],
+      "historicalCrudGrants": [
+        {
+          "role": "anon",
+          "privilege": "DELETE"
+        },
+        {
+          "role": "anon",
+          "privilege": "INSERT"
+        },
+        {
+          "role": "anon",
+          "privilege": "SELECT"
+        },
+        {
+          "role": "anon",
+          "privilege": "UPDATE"
+        },
+        {
+          "role": "authenticated",
+          "privilege": "DELETE"
+        },
+        {
+          "role": "authenticated",
+          "privilege": "INSERT"
+        },
+        {
+          "role": "authenticated",
+          "privilege": "SELECT"
+        },
+        {
+          "role": "authenticated",
+          "privilege": "UPDATE"
+        },
+        {
+          "role": "postgres",
+          "privilege": "DELETE"
+        },
+        {
+          "role": "postgres",
+          "privilege": "INSERT"
+        },
+        {
+          "role": "postgres",
+          "privilege": "SELECT"
+        },
+        {
+          "role": "postgres",
+          "privilege": "UPDATE"
+        },
+        {
+          "role": "service_role",
+          "privilege": "DELETE"
+        },
+        {
+          "role": "service_role",
+          "privilege": "INSERT"
+        },
+        {
+          "role": "service_role",
+          "privilege": "SELECT"
+        },
+        {
+          "role": "service_role",
+          "privilege": "UPDATE"
+        }
+      ],
+      "otherPrivileges": "Not assessed or modified by this blocked implementation; see source catalog."
+    },
+    {
+      "schema": "public",
+      "name": "gerencia_phones_id_seq",
+      "kind": "S",
+      "owner": "postgres",
+      "rls": false,
+      "forceRls": false,
+      "columns": [
+        {
+          "name": "last_value",
+          "type": "bigint"
+        },
+        {
+          "name": "log_cnt",
+          "type": "bigint"
+        },
+        {
+          "name": "is_called",
+          "type": "boolean"
+        }
+      ],
+      "historicalCrudGrants": [
+        {
+          "role": "anon",
+          "privilege": "SELECT"
+        },
+        {
+          "role": "anon",
+          "privilege": "UPDATE"
+        },
+        {
+          "role": "authenticated",
+          "privilege": "SELECT"
+        },
+        {
+          "role": "authenticated",
+          "privilege": "UPDATE"
+        },
+        {
+          "role": "postgres",
+          "privilege": "SELECT"
+        },
+        {
+          "role": "postgres",
+          "privilege": "UPDATE"
+        },
+        {
+          "role": "service_role",
+          "privilege": "SELECT"
+        },
+        {
+          "role": "service_role",
+          "privilege": "UPDATE"
+        }
+      ],
+      "otherPrivileges": "Not assessed or modified by this blocked implementation; see source catalog."
+    },
+    {
+      "schema": "public",
+      "name": "gerencia_work_group_members",
+      "kind": "r",
+      "owner": "postgres",
+      "rls": true,
+      "forceRls": false,
+      "columns": [
+        {
+          "name": "id",
+          "type": "bigint"
+        },
+        {
+          "name": "group_id",
+          "type": "bigint"
+        },
+        {
+          "name": "gerencia_id",
+          "type": "integer"
+        },
+        {
+          "name": "created_at",
+          "type": "timestamp with time zone"
+        }
+      ],
+      "historicalCrudGrants": [
+        {
+          "role": "anon",
+          "privilege": "DELETE"
+        },
+        {
+          "role": "anon",
+          "privilege": "INSERT"
+        },
+        {
+          "role": "anon",
+          "privilege": "SELECT"
+        },
+        {
+          "role": "anon",
+          "privilege": "UPDATE"
+        },
+        {
+          "role": "authenticated",
+          "privilege": "DELETE"
+        },
+        {
+          "role": "authenticated",
+          "privilege": "INSERT"
+        },
+        {
+          "role": "authenticated",
+          "privilege": "SELECT"
+        },
+        {
+          "role": "authenticated",
+          "privilege": "UPDATE"
+        },
+        {
+          "role": "postgres",
+          "privilege": "DELETE"
+        },
+        {
+          "role": "postgres",
+          "privilege": "INSERT"
+        },
+        {
+          "role": "postgres",
+          "privilege": "SELECT"
+        },
+        {
+          "role": "postgres",
+          "privilege": "UPDATE"
+        },
+        {
+          "role": "service_role",
+          "privilege": "DELETE"
+        },
+        {
+          "role": "service_role",
+          "privilege": "INSERT"
+        },
+        {
+          "role": "service_role",
+          "privilege": "SELECT"
+        },
+        {
+          "role": "service_role",
+          "privilege": "UPDATE"
+        }
+      ],
+      "otherPrivileges": "Not assessed or modified by this blocked implementation; see source catalog."
+    },
+    {
+      "schema": "public",
+      "name": "gerencia_work_group_members_id_seq",
+      "kind": "S",
+      "owner": "postgres",
+      "rls": false,
+      "forceRls": false,
+      "columns": [
+        {
+          "name": "last_value",
+          "type": "bigint"
+        },
+        {
+          "name": "log_cnt",
+          "type": "bigint"
+        },
+        {
+          "name": "is_called",
+          "type": "boolean"
+        }
+      ],
+      "historicalCrudGrants": [
+        {
+          "role": "anon",
+          "privilege": "SELECT"
+        },
+        {
+          "role": "anon",
+          "privilege": "UPDATE"
+        },
+        {
+          "role": "authenticated",
+          "privilege": "SELECT"
+        },
+        {
+          "role": "authenticated",
+          "privilege": "UPDATE"
+        },
+        {
+          "role": "postgres",
+          "privilege": "SELECT"
+        },
+        {
+          "role": "postgres",
+          "privilege": "UPDATE"
+        },
+        {
+          "role": "service_role",
+          "privilege": "SELECT"
+        },
+        {
+          "role": "service_role",
+          "privilege": "UPDATE"
+        }
+      ],
+      "otherPrivileges": "Not assessed or modified by this blocked implementation; see source catalog."
+    },
+    {
+      "schema": "public",
+      "name": "gerencia_work_groups",
+      "kind": "r",
+      "owner": "postgres",
+      "rls": true,
+      "forceRls": false,
+      "columns": [
+        {
+          "name": "id",
+          "type": "bigint"
+        },
+        {
+          "name": "user_id",
+          "type": "uuid"
+        },
+        {
+          "name": "name",
+          "type": "text"
+        },
+        {
+          "name": "created_at",
+          "type": "timestamp with time zone"
+        },
+        {
+          "name": "updated_at",
+          "type": "timestamp with time zone"
+        },
+        {
+          "name": "workspace_currency",
+          "type": "text"
+        }
+      ],
+      "historicalCrudGrants": [
+        {
+          "role": "anon",
+          "privilege": "DELETE"
+        },
+        {
+          "role": "anon",
+          "privilege": "INSERT"
+        },
+        {
+          "role": "anon",
+          "privilege": "SELECT"
+        },
+        {
+          "role": "anon",
+          "privilege": "UPDATE"
+        },
+        {
+          "role": "authenticated",
+          "privilege": "DELETE"
+        },
+        {
+          "role": "authenticated",
+          "privilege": "INSERT"
+        },
+        {
+          "role": "authenticated",
+          "privilege": "SELECT"
+        },
+        {
+          "role": "authenticated",
+          "privilege": "UPDATE"
+        },
+        {
+          "role": "postgres",
+          "privilege": "DELETE"
+        },
+        {
+          "role": "postgres",
+          "privilege": "INSERT"
+        },
+        {
+          "role": "postgres",
+          "privilege": "SELECT"
+        },
+        {
+          "role": "postgres",
+          "privilege": "UPDATE"
+        },
+        {
+          "role": "service_role",
+          "privilege": "DELETE"
+        },
+        {
+          "role": "service_role",
+          "privilege": "INSERT"
+        },
+        {
+          "role": "service_role",
+          "privilege": "SELECT"
+        },
+        {
+          "role": "service_role",
+          "privilege": "UPDATE"
+        }
+      ],
+      "otherPrivileges": "Not assessed or modified by this blocked implementation; see source catalog."
+    },
+    {
+      "schema": "public",
+      "name": "gerencia_work_groups_id_seq",
+      "kind": "S",
+      "owner": "postgres",
+      "rls": false,
+      "forceRls": false,
+      "columns": [
+        {
+          "name": "last_value",
+          "type": "bigint"
+        },
+        {
+          "name": "log_cnt",
+          "type": "bigint"
+        },
+        {
+          "name": "is_called",
+          "type": "boolean"
+        }
+      ],
+      "historicalCrudGrants": [
+        {
+          "role": "anon",
+          "privilege": "SELECT"
+        },
+        {
+          "role": "anon",
+          "privilege": "UPDATE"
+        },
+        {
+          "role": "authenticated",
+          "privilege": "SELECT"
+        },
+        {
+          "role": "authenticated",
+          "privilege": "UPDATE"
+        },
+        {
+          "role": "postgres",
+          "privilege": "SELECT"
+        },
+        {
+          "role": "postgres",
+          "privilege": "UPDATE"
+        },
+        {
+          "role": "service_role",
+          "privilege": "SELECT"
+        },
+        {
+          "role": "service_role",
+          "privilege": "UPDATE"
+        }
+      ],
+      "otherPrivileges": "Not assessed or modified by this blocked implementation; see source catalog."
+    },
+    {
+      "schema": "public",
+      "name": "gerencias",
+      "kind": "r",
+      "owner": "postgres",
+      "rls": true,
+      "forceRls": false,
+      "columns": [
+        {
+          "name": "id",
+          "type": "integer"
+        },
+        {
+          "name": "user_id",
+          "type": "uuid"
+        },
+        {
+          "name": "nombre",
+          "type": "text"
+        },
+        {
+          "name": "gerencia_id",
+          "type": "integer"
+        },
+        {
+          "name": "fair_criterion",
+          "type": "text"
+        },
+        {
+          "name": "source_type",
+          "type": "text"
+        },
+        {
+          "name": "workspace_currency",
+          "type": "text"
+        }
+      ],
+      "historicalCrudGrants": [
+        {
+          "role": "anon",
+          "privilege": "DELETE"
+        },
+        {
+          "role": "anon",
+          "privilege": "INSERT"
+        },
+        {
+          "role": "anon",
+          "privilege": "SELECT"
+        },
+        {
+          "role": "anon",
+          "privilege": "UPDATE"
+        },
+        {
+          "role": "authenticated",
+          "privilege": "DELETE"
+        },
+        {
+          "role": "authenticated",
+          "privilege": "INSERT"
+        },
+        {
+          "role": "authenticated",
+          "privilege": "SELECT"
+        },
+        {
+          "role": "authenticated",
+          "privilege": "UPDATE"
+        },
+        {
+          "role": "postgres",
+          "privilege": "DELETE"
+        },
+        {
+          "role": "postgres",
+          "privilege": "INSERT"
+        },
+        {
+          "role": "postgres",
+          "privilege": "SELECT"
+        },
+        {
+          "role": "postgres",
+          "privilege": "UPDATE"
+        },
+        {
+          "role": "service_role",
+          "privilege": "DELETE"
+        },
+        {
+          "role": "service_role",
+          "privilege": "INSERT"
+        },
+        {
+          "role": "service_role",
+          "privilege": "SELECT"
+        },
+        {
+          "role": "service_role",
+          "privilege": "UPDATE"
+        }
+      ],
+      "otherPrivileges": "Not assessed or modified by this blocked implementation; see source catalog."
+    },
+    {
+      "schema": "public",
+      "name": "gerencias_id_seq",
+      "kind": "S",
+      "owner": "postgres",
+      "rls": false,
+      "forceRls": false,
+      "columns": [
+        {
+          "name": "last_value",
+          "type": "bigint"
+        },
+        {
+          "name": "log_cnt",
+          "type": "bigint"
+        },
+        {
+          "name": "is_called",
+          "type": "boolean"
+        }
+      ],
+      "historicalCrudGrants": [
+        {
+          "role": "anon",
+          "privilege": "SELECT"
+        },
+        {
+          "role": "anon",
+          "privilege": "UPDATE"
+        },
+        {
+          "role": "authenticated",
+          "privilege": "SELECT"
+        },
+        {
+          "role": "authenticated",
+          "privilege": "UPDATE"
+        },
+        {
+          "role": "postgres",
+          "privilege": "SELECT"
+        },
+        {
+          "role": "postgres",
+          "privilege": "UPDATE"
+        },
+        {
+          "role": "service_role",
+          "privilege": "SELECT"
+        },
+        {
+          "role": "service_role",
+          "privilege": "UPDATE"
+        }
+      ],
+      "otherPrivileges": "Not assessed or modified by this blocked implementation; see source catalog."
+    },
+    {
+      "schema": "public",
+      "name": "landing_phone_assignment_reservations",
+      "kind": "r",
+      "owner": "postgres",
+      "rls": true,
+      "forceRls": false,
+      "columns": [
+        {
+          "name": "id",
+          "type": "uuid"
+        },
+        {
+          "name": "landing_id",
+          "type": "uuid"
+        },
+        {
+          "name": "gerencia_id",
+          "type": "integer"
+        },
+        {
+          "name": "phone_id",
+          "type": "bigint"
+        },
+        {
+          "name": "phone",
+          "type": "text"
+        },
+        {
+          "name": "phone_kind",
+          "type": "text"
+        },
+        {
+          "name": "status",
+          "type": "text"
+        },
+        {
+          "name": "reserved_at",
+          "type": "timestamp with time zone"
+        },
+        {
+          "name": "clicked_at",
+          "type": "timestamp with time zone"
+        },
+        {
+          "name": "expires_at",
+          "type": "timestamp with time zone"
+        },
+        {
+          "name": "converted_at",
+          "type": "timestamp with time zone"
+        },
+        {
+          "name": "conversion_id",
+          "type": "uuid"
+        }
+      ],
+      "historicalCrudGrants": [
+        {
+          "role": "postgres",
+          "privilege": "DELETE"
+        },
+        {
+          "role": "postgres",
+          "privilege": "INSERT"
+        },
+        {
+          "role": "postgres",
+          "privilege": "SELECT"
+        },
+        {
+          "role": "postgres",
+          "privilege": "UPDATE"
+        },
+        {
+          "role": "service_role",
+          "privilege": "DELETE"
+        },
+        {
+          "role": "service_role",
+          "privilege": "INSERT"
+        },
+        {
+          "role": "service_role",
+          "privilege": "SELECT"
+        },
+        {
+          "role": "service_role",
+          "privilege": "UPDATE"
+        }
+      ],
+      "otherPrivileges": "Not assessed or modified by this blocked implementation; see source catalog."
+    },
+    {
+      "schema": "public",
+      "name": "landing_phone_availability_demands",
+      "kind": "r",
+      "owner": "postgres",
+      "rls": true,
+      "forceRls": false,
+      "columns": [
+        {
+          "name": "id",
+          "type": "bigint"
+        },
+        {
+          "name": "request_id",
+          "type": "uuid"
+        },
+        {
+          "name": "user_id",
+          "type": "uuid"
+        },
+        {
+          "name": "landing_id",
+          "type": "uuid"
+        },
+        {
+          "name": "landing_name",
+          "type": "text"
+        },
+        {
+          "name": "gerencia_id",
+          "type": "integer"
+        },
+        {
+          "name": "gerencia_external_id",
+          "type": "integer"
+        },
+        {
+          "name": "gerencia_label",
+          "type": "text"
+        },
+        {
+          "name": "phone_kind",
+          "type": "text"
+        },
+        {
+          "name": "had_active_phone",
+          "type": "boolean"
+        },
+        {
+          "name": "active_phone_count",
+          "type": "integer"
+        },
+        {
+          "name": "total_phone_count",
+          "type": "integer"
+        },
+        {
+          "name": "was_selected",
+          "type": "boolean"
+        },
+        {
+          "name": "selected_phone_id",
+          "type": "bigint"
+        },
+        {
+          "name": "selected_phone",
+          "type": "text"
+        },
+        {
+          "name": "result_status",
+          "type": "text"
+        },
+        {
+          "name": "source",
+          "type": "text"
+        },
+        {
+          "name": "checked_at",
+          "type": "timestamp with time zone"
+        },
+        {
+          "name": "created_at",
+          "type": "timestamp with time zone"
+        }
+      ],
+      "historicalCrudGrants": [
+        {
+          "role": "anon",
+          "privilege": "DELETE"
+        },
+        {
+          "role": "anon",
+          "privilege": "INSERT"
+        },
+        {
+          "role": "anon",
+          "privilege": "SELECT"
+        },
+        {
+          "role": "anon",
+          "privilege": "UPDATE"
+        },
+        {
+          "role": "authenticated",
+          "privilege": "DELETE"
+        },
+        {
+          "role": "authenticated",
+          "privilege": "INSERT"
+        },
+        {
+          "role": "authenticated",
+          "privilege": "SELECT"
+        },
+        {
+          "role": "authenticated",
+          "privilege": "UPDATE"
+        },
+        {
+          "role": "postgres",
+          "privilege": "DELETE"
+        },
+        {
+          "role": "postgres",
+          "privilege": "INSERT"
+        },
+        {
+          "role": "postgres",
+          "privilege": "SELECT"
+        },
+        {
+          "role": "postgres",
+          "privilege": "UPDATE"
+        },
+        {
+          "role": "service_role",
+          "privilege": "DELETE"
+        },
+        {
+          "role": "service_role",
+          "privilege": "INSERT"
+        },
+        {
+          "role": "service_role",
+          "privilege": "SELECT"
+        },
+        {
+          "role": "service_role",
+          "privilege": "UPDATE"
+        }
+      ],
+      "otherPrivileges": "Not assessed or modified by this blocked implementation; see source catalog."
+    },
+    {
+      "schema": "public",
+      "name": "landing_phone_availability_demands_id_seq",
+      "kind": "S",
+      "owner": "postgres",
+      "rls": false,
+      "forceRls": false,
+      "columns": [
+        {
+          "name": "last_value",
+          "type": "bigint"
+        },
+        {
+          "name": "log_cnt",
+          "type": "bigint"
+        },
+        {
+          "name": "is_called",
+          "type": "boolean"
+        }
+      ],
+      "historicalCrudGrants": [
+        {
+          "role": "anon",
+          "privilege": "SELECT"
+        },
+        {
+          "role": "anon",
+          "privilege": "UPDATE"
+        },
+        {
+          "role": "authenticated",
+          "privilege": "SELECT"
+        },
+        {
+          "role": "authenticated",
+          "privilege": "UPDATE"
+        },
+        {
+          "role": "postgres",
+          "privilege": "SELECT"
+        },
+        {
+          "role": "postgres",
+          "privilege": "UPDATE"
+        },
+        {
+          "role": "service_role",
+          "privilege": "SELECT"
+        },
+        {
+          "role": "service_role",
+          "privilege": "UPDATE"
+        }
+      ],
+      "otherPrivileges": "Not assessed or modified by this blocked implementation; see source catalog."
+    },
+    {
+      "schema": "public",
+      "name": "landing_phone_cache",
+      "kind": "r",
+      "owner": "postgres",
+      "rls": true,
+      "forceRls": false,
+      "columns": [
+        {
+          "name": "landing_id",
+          "type": "uuid"
+        },
+        {
+          "name": "landing_name",
+          "type": "text"
+        },
+        {
+          "name": "status",
+          "type": "text"
+        },
+        {
+          "name": "payload",
+          "type": "jsonb"
+        },
+        {
+          "name": "refreshed_at",
+          "type": "timestamp with time zone"
+        },
+        {
+          "name": "created_at",
+          "type": "timestamp with time zone"
+        },
+        {
+          "name": "updated_at",
+          "type": "timestamp with time zone"
+        }
+      ],
+      "historicalCrudGrants": [
+        {
+          "role": "anon",
+          "privilege": "DELETE"
+        },
+        {
+          "role": "anon",
+          "privilege": "INSERT"
+        },
+        {
+          "role": "anon",
+          "privilege": "SELECT"
+        },
+        {
+          "role": "anon",
+          "privilege": "UPDATE"
+        },
+        {
+          "role": "authenticated",
+          "privilege": "DELETE"
+        },
+        {
+          "role": "authenticated",
+          "privilege": "INSERT"
+        },
+        {
+          "role": "authenticated",
+          "privilege": "SELECT"
+        },
+        {
+          "role": "authenticated",
+          "privilege": "UPDATE"
+        },
+        {
+          "role": "postgres",
+          "privilege": "DELETE"
+        },
+        {
+          "role": "postgres",
+          "privilege": "INSERT"
+        },
+        {
+          "role": "postgres",
+          "privilege": "SELECT"
+        },
+        {
+          "role": "postgres",
+          "privilege": "UPDATE"
+        },
+        {
+          "role": "service_role",
+          "privilege": "DELETE"
+        },
+        {
+          "role": "service_role",
+          "privilege": "INSERT"
+        },
+        {
+          "role": "service_role",
+          "privilege": "SELECT"
+        },
+        {
+          "role": "service_role",
+          "privilege": "UPDATE"
+        }
+      ],
+      "otherPrivileges": "Not assessed or modified by this blocked implementation; see source catalog."
+    },
+    {
+      "schema": "public",
+      "name": "landings_gerencias",
+      "kind": "r",
+      "owner": "postgres",
+      "rls": true,
+      "forceRls": false,
+      "columns": [
+        {
+          "name": "landing_id",
+          "type": "uuid"
+        },
+        {
+          "name": "gerencia_id",
+          "type": "integer"
+        },
+        {
+          "name": "weight",
+          "type": "integer"
+        },
+        {
+          "name": "phone_mode",
+          "type": "text"
+        },
+        {
+          "name": "phone_kind",
+          "type": "text"
+        },
+        {
+          "name": "interval_start_hour",
+          "type": "integer"
+        },
+        {
+          "name": "interval_end_hour",
+          "type": "integer"
+        }
+      ],
+      "historicalCrudGrants": [
+        {
+          "role": "anon",
+          "privilege": "DELETE"
+        },
+        {
+          "role": "anon",
+          "privilege": "INSERT"
+        },
+        {
+          "role": "anon",
+          "privilege": "SELECT"
+        },
+        {
+          "role": "anon",
+          "privilege": "UPDATE"
+        },
+        {
+          "role": "authenticated",
+          "privilege": "DELETE"
+        },
+        {
+          "role": "authenticated",
+          "privilege": "INSERT"
+        },
+        {
+          "role": "authenticated",
+          "privilege": "SELECT"
+        },
+        {
+          "role": "authenticated",
+          "privilege": "UPDATE"
+        },
+        {
+          "role": "postgres",
+          "privilege": "DELETE"
+        },
+        {
+          "role": "postgres",
+          "privilege": "INSERT"
+        },
+        {
+          "role": "postgres",
+          "privilege": "SELECT"
+        },
+        {
+          "role": "postgres",
+          "privilege": "UPDATE"
+        },
+        {
+          "role": "service_role",
+          "privilege": "DELETE"
+        },
+        {
+          "role": "service_role",
+          "privilege": "INSERT"
+        },
+        {
+          "role": "service_role",
+          "privilege": "SELECT"
+        },
+        {
+          "role": "service_role",
+          "privilege": "UPDATE"
+        }
+      ],
+      "otherPrivileges": "Not assessed or modified by this blocked implementation; see source catalog."
+    },
+    {
+      "schema": "public",
+      "name": "phone_assignment_scope_metrics",
+      "kind": "r",
+      "owner": "postgres",
+      "rls": true,
+      "forceRls": false,
+      "columns": [
+        {
+          "name": "user_id",
+          "type": "uuid"
+        },
+        {
+          "name": "scope_type",
+          "type": "text"
+        },
+        {
+          "name": "scope_id",
+          "type": "uuid"
+        },
+        {
+          "name": "gerencia_id",
+          "type": "integer"
+        },
+        {
+          "name": "phone_id",
+          "type": "bigint"
+        },
+        {
+          "name": "usage_count",
+          "type": "bigint"
+        },
+        {
+          "name": "created_at",
+          "type": "timestamp with time zone"
+        },
+        {
+          "name": "updated_at",
+          "type": "timestamp with time zone"
+        }
+      ],
+      "historicalCrudGrants": [
+        {
+          "role": "authenticated",
+          "privilege": "SELECT"
+        },
+        {
+          "role": "postgres",
+          "privilege": "DELETE"
+        },
+        {
+          "role": "postgres",
+          "privilege": "INSERT"
+        },
+        {
+          "role": "postgres",
+          "privilege": "SELECT"
+        },
+        {
+          "role": "postgres",
+          "privilege": "UPDATE"
+        },
+        {
+          "role": "service_role",
+          "privilege": "DELETE"
+        },
+        {
+          "role": "service_role",
+          "privilege": "INSERT"
+        },
+        {
+          "role": "service_role",
+          "privilege": "SELECT"
+        },
+        {
+          "role": "service_role",
+          "privilege": "UPDATE"
+        }
+      ],
+      "otherPrivileges": "Not assessed or modified by this blocked implementation; see source catalog."
+    },
+    {
+      "schema": "public",
+      "name": "phone_metrics",
+      "kind": "r",
+      "owner": "postgres",
+      "rls": true,
+      "forceRls": false,
+      "columns": [
+        {
+          "name": "gerencia_phone_id",
+          "type": "bigint"
+        },
+        {
+          "name": "user_id",
+          "type": "uuid"
+        },
+        {
+          "name": "gerencia_id",
+          "type": "integer"
+        },
+        {
+          "name": "phone",
+          "type": "text"
+        },
+        {
+          "name": "messages_received",
+          "type": "integer"
+        },
+        {
+          "name": "messages_received_historical",
+          "type": "integer"
+        },
+        {
+          "name": "calculated_at",
+          "type": "timestamp with time zone"
+        }
+      ],
+      "historicalCrudGrants": [
+        {
+          "role": "authenticated",
+          "privilege": "SELECT"
+        },
+        {
+          "role": "postgres",
+          "privilege": "DELETE"
+        },
+        {
+          "role": "postgres",
+          "privilege": "INSERT"
+        },
+        {
+          "role": "postgres",
+          "privilege": "SELECT"
+        },
+        {
+          "role": "postgres",
+          "privilege": "UPDATE"
+        },
+        {
+          "role": "service_role",
+          "privilege": "DELETE"
+        },
+        {
+          "role": "service_role",
+          "privilege": "INSERT"
+        },
+        {
+          "role": "service_role",
+          "privilege": "SELECT"
+        },
+        {
+          "role": "service_role",
+          "privilege": "UPDATE"
+        }
+      ],
+      "otherPrivileges": "Not assessed or modified by this blocked implementation; see source catalog."
+    },
+    {
+      "schema": "public",
+      "name": "whatsapp_cloud_api_gerencias",
+      "kind": "r",
+      "owner": "postgres",
+      "rls": true,
+      "forceRls": false,
+      "columns": [
+        {
+          "name": "config_id",
+          "type": "uuid"
+        },
+        {
+          "name": "user_id",
+          "type": "uuid"
+        },
+        {
+          "name": "gerencia_id",
+          "type": "integer"
+        },
+        {
+          "name": "weight",
+          "type": "integer"
+        },
+        {
+          "name": "phone_mode",
+          "type": "text"
+        },
+        {
+          "name": "phone_kind",
+          "type": "text"
+        },
+        {
+          "name": "interval_start_hour",
+          "type": "integer"
+        },
+        {
+          "name": "interval_end_hour",
+          "type": "integer"
+        },
+        {
+          "name": "created_at",
+          "type": "timestamp with time zone"
+        }
+      ],
+      "historicalCrudGrants": [
+        {
+          "role": "anon",
+          "privilege": "DELETE"
+        },
+        {
+          "role": "anon",
+          "privilege": "INSERT"
+        },
+        {
+          "role": "anon",
+          "privilege": "SELECT"
+        },
+        {
+          "role": "anon",
+          "privilege": "UPDATE"
+        },
+        {
+          "role": "authenticated",
+          "privilege": "DELETE"
+        },
+        {
+          "role": "authenticated",
+          "privilege": "INSERT"
+        },
+        {
+          "role": "authenticated",
+          "privilege": "SELECT"
+        },
+        {
+          "role": "authenticated",
+          "privilege": "UPDATE"
+        },
+        {
+          "role": "postgres",
+          "privilege": "DELETE"
+        },
+        {
+          "role": "postgres",
+          "privilege": "INSERT"
+        },
+        {
+          "role": "postgres",
+          "privilege": "SELECT"
+        },
+        {
+          "role": "postgres",
+          "privilege": "UPDATE"
+        },
+        {
+          "role": "service_role",
+          "privilege": "DELETE"
+        },
+        {
+          "role": "service_role",
+          "privilege": "INSERT"
+        },
+        {
+          "role": "service_role",
+          "privilege": "SELECT"
+        },
+        {
+          "role": "service_role",
+          "privilege": "UPDATE"
+        }
+      ],
+      "otherPrivileges": "Not assessed or modified by this blocked implementation; see source catalog."
+    }
+  ],
+  "views": [
+    {
+      "schema": "public",
+      "name": "funnel_contacts",
+      "classification": "Adjacent conversion/contact view; explicitly excluded and unchanged."
+    }
+  ],
+  "functions": [
+    {
+      "schema": "private",
+      "name": "close_landing_phone_reservation_on_lead",
+      "arguments": "",
+      "owner": "postgres",
+      "securityDefiner": true,
+      "settings": [
+        "search_path=\"\""
+      ],
+      "execute": [
+        "postgres"
+      ],
+      "bodyMd5": "0fefb642db0f304591d43a6253de9669",
+      "sourceMatches": [
+        [
+          "supabase/migrations/20260905012831_fair_message_assignment_reservations.sql",
+          145
+        ]
+      ],
+      "classification": "adjacent_dependency_preserve_business_contract"
+    },
+    {
+      "schema": "private",
+      "name": "landing_phone_message_load",
+      "arguments": "p_landing_id uuid, p_gerencia_id integer, p_phone_kind text, p_owner_user_id uuid, p_phone_id bigint",
+      "owner": "postgres",
+      "securityDefiner": false,
+      "settings": [
+        "search_path=\"\""
+      ],
+      "execute": [
+        "postgres"
+      ],
+      "bodyMd5": "075edab9745f59b538ada972537e41df",
+      "sourceMatches": [
+        [
+          "supabase/migrations/20260905012831_fair_message_assignment_reservations.sql",
+          61
+        ]
+      ],
+      "classification": "phone_related_routine"
+    },
+    {
+      "schema": "public",
+      "name": "cron_reset_phone_operational_daily",
+      "arguments": "",
+      "owner": "postgres",
+      "securityDefiner": true,
+      "settings": [
+        "search_path=public"
+      ],
+      "execute": [
+        "anon",
+        "authenticated",
+        "postgres",
+        "PUBLIC",
+        "service_role"
+      ],
+      "bodyMd5": "e70bcb929d325477032ed4253391e1e2",
+      "sourceMatches": [
+        [
+          "supabase/migrations/20260829013755_reset_scoped_phone_counters.sql",
+          1
+        ]
+      ],
+      "classification": "backend_or_scheduled_preserve_body"
+    },
+    {
+      "schema": "public",
+      "name": "cron_sync_phones_all",
+      "arguments": "",
+      "owner": "postgres",
+      "securityDefiner": true,
+      "settings": [
+        "search_path=public"
+      ],
+      "execute": [
+        "anon",
+        "authenticated",
+        "postgres",
+        "PUBLIC",
+        "service_role"
+      ],
+      "bodyMd5": "cfbb40068e8bcea6da0f8f5e884bc2bb",
+      "sourceMatches": [
+        [
+          "supabase/migrations/20260305120000_cron_sync_phones.sql",
+          59
+        ]
+      ],
+      "classification": "backend_or_scheduled_preserve_body"
+    },
+    {
+      "schema": "public",
+      "name": "cron_warm_landing_phone",
+      "arguments": "",
+      "owner": "postgres",
+      "securityDefiner": true,
+      "settings": [
+        "search_path=public"
+      ],
+      "execute": [
+        "anon",
+        "authenticated",
+        "postgres",
+        "PUBLIC",
+        "service_role"
+      ],
+      "bodyMd5": "2856519c163d640adb4e3750c7e2876b",
+      "sourceMatches": [
+        [
+          "supabase/migrations/20260812143000_landing_phone_demand_availability.sql",
+          261
+        ]
+      ],
+      "classification": "backend_or_scheduled_preserve_body"
+    },
+    {
+      "schema": "public",
+      "name": "enforce_whatsapp_cloud_api_assignment_workspace",
+      "arguments": "",
+      "owner": "postgres",
+      "securityDefiner": true,
+      "settings": [
+        "search_path=public, pg_temp"
+      ],
+      "execute": [
+        "postgres",
+        "service_role"
+      ],
+      "bodyMd5": "4e6af453ab77b44a52735ac170e0c9e1",
+      "sourceMatches": [
+        [
+          "supabase/migrations/20260815173613_scope_whatsapp_cloud_api_config_by_workspace.sql",
+          21
+        ]
+      ],
+      "classification": "adjacent_dependency_preserve_business_contract"
+    },
+    {
+      "schema": "public",
+      "name": "extend_landing_phone_assignment_reservation",
+      "arguments": "p_reservation_id uuid, p_landing_id uuid, p_phone_id bigint, p_phone text",
+      "owner": "postgres",
+      "securityDefiner": false,
+      "settings": [
+        "search_path=\"\""
+      ],
+      "execute": [
+        "postgres",
+        "service_role"
+      ],
+      "bodyMd5": "dc89e987fc553a4dcd026849d5faf0b5",
+      "sourceMatches": [
+        [
+          "supabase/migrations/20260905012831_fair_message_assignment_reservations.sql",
+          109
+        ]
+      ],
+      "classification": "phone_related_routine"
+    },
+    {
+      "schema": "public",
+      "name": "get_cached_constructor_landing_phone",
+      "arguments": "p_landing_name text",
+      "owner": "postgres",
+      "securityDefiner": true,
+      "settings": [
+        "search_path=public"
+      ],
+      "execute": [
+        "anon",
+        "authenticated",
+        "postgres",
+        "service_role"
+      ],
+      "bodyMd5": "cd96516e60fb601049c68e2d4daa1d82",
+      "sourceMatches": [
+        [
+          "supabase/migrations/20260614133000_cached_constructor_landing_phone_rpc.sql",
+          1
+        ]
+      ],
+      "classification": "phone_related_routine"
+    },
+    {
+      "schema": "public",
+      "name": "get_gerencia_availability_summaries",
+      "arguments": "p_user_id uuid, p_start timestamp with time zone, p_end timestamp with time zone, p_workspace_currency text",
+      "owner": "postgres",
+      "securityDefiner": true,
+      "settings": [
+        "search_path=public"
+      ],
+      "execute": [
+        "anon",
+        "authenticated",
+        "postgres",
+        "PUBLIC",
+        "service_role"
+      ],
+      "bodyMd5": "f959c22b6d2f5be87e42ade8ea740577",
+      "sourceMatches": [
+        [
+          "supabase/migrations/20260817233335_availability_summary_workspace_ids.sql",
+          3
+        ]
+      ],
+      "classification": "phone_related_routine"
+    },
+    {
+      "schema": "public",
+      "name": "get_phone_for_chatrace_client",
+      "arguments": "p_client_name text",
+      "owner": "postgres",
+      "securityDefiner": true,
+      "settings": [
+        "search_path=public"
+      ],
+      "execute": [
+        "anon",
+        "authenticated",
+        "postgres",
+        "PUBLIC",
+        "service_role"
+      ],
+      "bodyMd5": "3c67f01f5e3dbf3fe3078a47669c70cc",
+      "sourceMatches": [],
+      "classification": "adjacent_dependency_preserve_business_contract"
+    },
+    {
+      "schema": "public",
+      "name": "get_phone_for_landing",
+      "arguments": "p_landing_name text",
+      "owner": "postgres",
+      "securityDefiner": true,
+      "settings": [
+        "search_path=\"\""
+      ],
+      "execute": [
+        "anon",
+        "authenticated",
+        "postgres",
+        "PUBLIC",
+        "service_role"
+      ],
+      "bodyMd5": "0616b0126da59b5984cdd4e1e8769ae3",
+      "sourceMatches": [
+        [
+          "supabase/migrations/20260905012831_fair_message_assignment_reservations.sql",
+          509
+        ]
+      ],
+      "classification": "phone_related_routine"
+    },
+    {
+      "schema": "public",
+      "name": "get_phone_for_landing",
+      "arguments": "p_landing_name text, p_create_reservation boolean",
+      "owner": "postgres",
+      "securityDefiner": true,
+      "settings": [
+        "search_path=public"
+      ],
+      "execute": [
+        "postgres",
+        "service_role"
+      ],
+      "bodyMd5": "78f4d47add31bb52c9014fcc25d9a75e",
+      "sourceMatches": [
+        [
+          "supabase/migrations/20260905012831_fair_message_assignment_reservations.sql",
+          198
+        ]
+      ],
+      "classification": "phone_related_routine"
+    },
+    {
+      "schema": "public",
+      "name": "get_phone_for_whatsapp_cloud_api",
+      "arguments": "p_config_id uuid",
+      "owner": "postgres",
+      "securityDefiner": true,
+      "settings": [
+        "search_path=public, pg_temp"
+      ],
+      "execute": [
+        "postgres",
+        "service_role"
+      ],
+      "bodyMd5": "faa946180acda9b6ab4e45d6ca55fa1c",
+      "sourceMatches": [],
+      "classification": "adjacent_dependency_preserve_business_contract"
+    },
+    {
+      "schema": "public",
+      "name": "get_whatsapp_cloud_api_inbox_threads",
+      "arguments": "p_limit integer, p_workspace_currency text",
+      "owner": "postgres",
+      "securityDefiner": true,
+      "settings": [
+        "search_path=public, pg_temp"
+      ],
+      "execute": [
+        "authenticated",
+        "postgres",
+        "service_role"
+      ],
+      "bodyMd5": "411507000b579833c0ce81268046c9ad",
+      "sourceMatches": [
+        [
+          "supabase/migrations/20260818134748_whatsapp_cloud_api_contact_on_redirect.sql",
+          76
+        ]
+      ],
+      "classification": "adjacent_dependency_preserve_business_contract"
+    },
+    {
+      "schema": "public",
+      "name": "get_whatsapp_cloud_api_inbox_threads_page",
+      "arguments": "p_limit integer, p_offset integer, p_workspace_currency text",
+      "owner": "postgres",
+      "securityDefiner": true,
+      "settings": [
+        "search_path=public, pg_temp"
+      ],
+      "execute": [
+        "authenticated",
+        "postgres",
+        "service_role"
+      ],
+      "bodyMd5": "ab346e501d0e9405703410d969225c1d",
+      "sourceMatches": [],
+      "classification": "adjacent_dependency_preserve_business_contract"
+    },
+    {
+      "schema": "public",
+      "name": "get_whatsapp_cloud_api_inbox_threads_page",
+      "arguments": "p_limit integer, p_offset integer, p_workspace_currency text, p_tag_filter text, p_unread_only boolean",
+      "owner": "postgres",
+      "securityDefiner": true,
+      "settings": [
+        "search_path=public, pg_temp"
+      ],
+      "execute": [
+        "authenticated",
+        "postgres",
+        "service_role"
+      ],
+      "bodyMd5": "64967808143dfc90ebec553744cf3f58",
+      "sourceMatches": [
+        [
+          "supabase/migrations/20260823202650_fix_wca_retarget_inbox_filters.sql",
+          311
+        ]
+      ],
+      "classification": "adjacent_dependency_preserve_business_contract"
+    },
+    {
+      "schema": "public",
+      "name": "get_whatsapp_cloud_api_inbox_threads_page",
+      "arguments": "p_limit integer, p_offset integer, p_workspace_currency text, p_tag_filter text, p_unread_only boolean, p_from timestamp with time zone, p_to timestamp with time zone",
+      "owner": "postgres",
+      "securityDefiner": true,
+      "settings": [
+        "search_path=public, pg_temp"
+      ],
+      "execute": [
+        "authenticated",
+        "postgres",
+        "service_role"
+      ],
+      "bodyMd5": "793e4ed5e583d31ce9c63857d83649d9",
+      "sourceMatches": [
+        [
+          "supabase/migrations/20260825192821_whatsapp_cloud_api_inbox_date_filter.sql",
+          1
+        ]
+      ],
+      "classification": "adjacent_dependency_preserve_business_contract"
+    },
+    {
+      "schema": "public",
+      "name": "increment_gerencia_phone_usage",
+      "arguments": "p_phone_id bigint",
+      "owner": "postgres",
+      "securityDefiner": true,
+      "settings": [
+        "search_path=public, pg_temp"
+      ],
+      "execute": [
+        "postgres",
+        "service_role"
+      ],
+      "bodyMd5": "2ba6b6f4b4fa061c0a58d927d40407fb",
+      "sourceMatches": [
+        [
+          "supabase/migrations/20260810181000_whatsapp_cloud_api_increment_phone_usage.sql",
+          4
+        ]
+      ],
+      "classification": "phone_related_routine"
+    },
+    {
+      "schema": "public",
+      "name": "increment_phone_assignment_scope_usage",
+      "arguments": "p_phone_id bigint, p_scope_type text, p_scope_id uuid, p_user_id uuid, p_gerencia_id integer",
+      "owner": "postgres",
+      "securityDefiner": true,
+      "settings": [
+        "search_path=public, pg_temp"
+      ],
+      "execute": [
+        "postgres",
+        "service_role"
+      ],
+      "bodyMd5": "99c8c45f69529b31c1a4c3c565eaf578",
+      "sourceMatches": [
+        [
+          "supabase/migrations/20260821232500_scoped_phone_assignment_metrics.sql",
+          87
+        ]
+      ],
+      "classification": "phone_related_routine"
+    },
+    {
+      "schema": "public",
+      "name": "invalidate_landing_phone_cache_for_assignment_role",
+      "arguments": "",
+      "owner": "postgres",
+      "securityDefiner": true,
+      "settings": [
+        "search_path=public, pg_temp"
+      ],
+      "execute": [
+        "anon",
+        "authenticated",
+        "postgres",
+        "PUBLIC",
+        "service_role"
+      ],
+      "bodyMd5": "f534ad18bd8f3eed2a62d0e16a7236c6",
+      "sourceMatches": [
+        [
+          "supabase/migrations/20260811120000_gerencia_phone_assignment_role.sql",
+          133
+        ]
+      ],
+      "classification": "phone_related_routine"
+    },
+    {
+      "schema": "public",
+      "name": "phone_assignment_scope_usage",
+      "arguments": "p_scope_type text, p_scope_id uuid, p_gerencia_id integer, p_phone_kind text, p_phone_id bigint",
+      "owner": "postgres",
+      "securityDefiner": true,
+      "settings": [
+        "search_path=public, pg_temp"
+      ],
+      "execute": [
+        "postgres",
+        "service_role"
+      ],
+      "bodyMd5": "e0024aa98394bd755eb47ce713e393c3",
+      "sourceMatches": [
+        [
+          "supabase/migrations/20260821232500_scoped_phone_assignment_metrics.sql",
+          55
+        ]
+      ],
+      "classification": "phone_related_routine"
+    },
+    {
+      "schema": "public",
+      "name": "record_landing_phone_availability_demand",
+      "arguments": "p_landing_name text, p_request_id uuid, p_source text, p_result_status text, p_selected_gerencia_id integer, p_selected_phone_id bigint, p_selected_phone text",
+      "owner": "postgres",
+      "securityDefiner": true,
+      "settings": [
+        "search_path=public"
+      ],
+      "execute": [
+        "anon",
+        "authenticated",
+        "postgres",
+        "service_role"
+      ],
+      "bodyMd5": "341a7526be357d6bf8e1aaa26c90ae54",
+      "sourceMatches": [
+        [
+          "supabase/migrations/20260812143000_landing_phone_demand_availability.sql",
+          66
+        ]
+      ],
+      "classification": "phone_related_routine"
+    },
+    {
+      "schema": "public",
+      "name": "record_whatsapp_cloud_api_redirect_click",
+      "arguments": "p_token text, p_ip text, p_user_agent text",
+      "owner": "postgres",
+      "securityDefiner": true,
+      "settings": [
+        "search_path=public, pg_temp"
+      ],
+      "execute": [
+        "postgres",
+        "service_role"
+      ],
+      "bodyMd5": "07b6045a14161a7dc71549a16f9384aa",
+      "sourceMatches": [
+        [
+          "supabase/migrations/20260823202650_fix_wca_retarget_inbox_filters.sql",
+          3
+        ]
+      ],
+      "classification": "adjacent_dependency_preserve_business_contract"
+    },
+    {
+      "schema": "public",
+      "name": "refresh_constructor_landing_phone_cache",
+      "arguments": "",
+      "owner": "postgres",
+      "securityDefiner": true,
+      "settings": [
+        "search_path=public"
+      ],
+      "execute": [
+        "anon",
+        "authenticated",
+        "postgres",
+        "service_role"
+      ],
+      "bodyMd5": "b7b830679263ec2bab6d727104c1586b",
+      "sourceMatches": [
+        [
+          "supabase/migrations/20260614130000_constructor_landing_phone_cache.sql",
+          22
+        ]
+      ],
+      "classification": "backend_or_scheduled_preserve_body"
+    },
+    {
+      "schema": "public",
+      "name": "refresh_phone_metrics",
+      "arguments": "",
+      "owner": "postgres",
+      "securityDefiner": true,
+      "settings": [
+        "search_path=public"
+      ],
+      "execute": [
+        "postgres",
+        "service_role"
+      ],
+      "bodyMd5": "75823e3e1d59ce10d9bda0677058388c",
+      "sourceMatches": [
+        [
+          "supabase/migrations/20260806103000_optimize_phone_metrics_refresh_30min.sql",
+          7
+        ]
+      ],
+      "classification": "backend_or_scheduled_preserve_body"
+    },
+    {
+      "schema": "public",
+      "name": "set_gerencia_phones_updated_at",
+      "arguments": "",
+      "owner": "postgres",
+      "securityDefiner": true,
+      "settings": [
+        "search_path=public"
+      ],
+      "execute": [
+        "anon",
+        "authenticated",
+        "postgres",
+        "PUBLIC",
+        "service_role"
+      ],
+      "bodyMd5": "98c445da624def56331f5e3b2700a76c",
+      "sourceMatches": [
+        [
+          "supabase/migrations/20260227100000_landings.sql",
+          41
+        ],
+        [
+          "supabase/migrations/20260228131000_phone_mode_and_gerencia_phones.sql",
+          36
+        ]
+      ],
+      "classification": "phone_related_routine"
+    },
+    {
+      "schema": "public",
+      "name": "set_gerencia_work_groups_updated_at",
+      "arguments": "",
+      "owner": "postgres",
+      "securityDefiner": false,
+      "settings": null,
+      "execute": [
+        "anon",
+        "authenticated",
+        "postgres",
+        "PUBLIC",
+        "service_role"
+      ],
+      "bodyMd5": "9b1889f56258bf9d6554213c05019c76",
+      "sourceMatches": [
+        [
+          "supabase/migrations/20260427180000_remote_sync_placeholder.sql",
+          22
+        ],
+        [
+          "supabase/migrations/20260502160000_promotions_module.sql",
+          127
+        ],
+        [
+          "supabase/migrations/20260519160000_gerencia_work_groups.sql",
+          31
+        ],
+        [
+          "supabase/migrations/20260629190000_constructor_tracking_queue.sql",
+          43
+        ],
+        [
+          "supabase/migrations/20260810172000_whatsapp_cloud_api_module.sql",
+          196
+        ],
+        [
+          "supabase/migrations/20260818223130_atrio_clients_module.sql",
+          25
+        ],
+        [
+          "supabase/migrations/20260825180041_conversion_journey_starts.sql",
+          58
+        ]
+      ],
+      "classification": "phone_related_routine"
+    },
+    {
+      "schema": "public",
+      "name": "validate_gerencia_workspace_update",
+      "arguments": "",
+      "owner": "postgres",
+      "securityDefiner": true,
+      "settings": [
+        "search_path=public"
+      ],
+      "execute": [
+        "anon",
+        "authenticated",
+        "postgres",
+        "PUBLIC",
+        "service_role"
+      ],
+      "bodyMd5": "4ee78c2db64d3834d7d9c40161fd512f",
+      "sourceMatches": [
+        [
+          "supabase/migrations/20260801190000_workspace_currency_scope.sql",
+          161
+        ]
+      ],
+      "classification": "phone_related_routine"
+    },
+    {
+      "schema": "public",
+      "name": "validate_landing_gerencia_workspace_assignment",
+      "arguments": "",
+      "owner": "postgres",
+      "securityDefiner": true,
+      "settings": [
+        "search_path=public"
+      ],
+      "execute": [
+        "anon",
+        "authenticated",
+        "postgres",
+        "PUBLIC",
+        "service_role"
+      ],
+      "bodyMd5": "c64a89815fdbc39d442a334a6ef3edc4",
+      "sourceMatches": [
+        [
+          "supabase/migrations/20260801190000_workspace_currency_scope.sql",
+          58
+        ]
+      ],
+      "classification": "phone_related_routine"
+    },
+    {
+      "schema": "public",
+      "name": "validate_landing_workspace_update",
+      "arguments": "",
+      "owner": "postgres",
+      "securityDefiner": true,
+      "settings": [
+        "search_path=public"
+      ],
+      "execute": [
+        "anon",
+        "authenticated",
+        "postgres",
+        "PUBLIC",
+        "service_role"
+      ],
+      "bodyMd5": "a9b1f9a116a093ae7795bdf876941c61",
+      "sourceMatches": [
+        [
+          "supabase/migrations/20260801190000_workspace_currency_scope.sql",
+          115
+        ]
+      ],
+      "classification": "phone_related_routine"
+    }
+  ],
+  "sqlNameDependencies": [
+    {
+      "name": "get_phone_for_whatsapp_cloud_api",
+      "schema": "public",
+      "arguments": "p_config_id uuid",
+      "function_name_mentions": [
+        "public.phone_assignment_scope_usage"
+      ],
+      "relation_name_mentions": [
+        "public.gerencias",
+        "public.gerencia_phones",
+        "public.conversions",
+        "public.whatsapp_cloud_api_gerencias",
+        "public.whatsapp_cloud_api_assignments",
+        "public.whatsapp_cloud_api_configs"
+      ]
+    },
+    {
+      "name": "increment_gerencia_phone_usage",
+      "schema": "public",
+      "arguments": "p_phone_id bigint",
+      "function_name_mentions": [],
+      "relation_name_mentions": [
+        "public.gerencia_phones"
+      ]
+    },
+    {
+      "name": "invalidate_landing_phone_cache_for_assignment_role",
+      "schema": "public",
+      "arguments": "",
+      "function_name_mentions": [],
+      "relation_name_mentions": [
+        "public.landings_gerencias",
+        "public.landing_phone_cache"
+      ]
+    },
+    {
+      "name": "get_phone_for_chatrace_client",
+      "schema": "public",
+      "arguments": "p_client_name text",
+      "function_name_mentions": [
+        "public.phone_assignment_scope_usage"
+      ],
+      "relation_name_mentions": [
+        "public.profiles",
+        "public.chatrace_gerencias",
+        "public.gerencias",
+        "public.chatrace_client_configs",
+        "public.gerencia_phones",
+        "public.conversions"
+      ]
+    },
+    {
+      "name": "cron_reset_phone_operational_daily",
+      "schema": "public",
+      "arguments": "",
+      "function_name_mentions": [],
+      "relation_name_mentions": [
+        "public.gerencias",
+        "public.gerencia_phones",
+        "public.phone_assignment_scope_metrics",
+        "public.conversions_config"
+      ]
+    },
+    {
+      "name": "get_cached_constructor_landing_phone",
+      "schema": "public",
+      "arguments": "p_landing_name text",
+      "function_name_mentions": [],
+      "relation_name_mentions": [
+        "public.landing_phone_cache",
+        "public.landings"
+      ]
+    },
+    {
+      "name": "refresh_constructor_landing_phone_cache",
+      "schema": "public",
+      "arguments": "",
+      "function_name_mentions": [
+        "public.get_phone_for_landing"
+      ],
+      "relation_name_mentions": [
+        "public.landing_phone_cache",
+        "public.landings"
+      ]
+    },
+    {
+      "name": "validate_landing_gerencia_workspace_assignment",
+      "schema": "public",
+      "arguments": "",
+      "function_name_mentions": [],
+      "relation_name_mentions": [
+        "public.gerencias",
+        "public.landings"
+      ]
+    },
+    {
+      "name": "validate_landing_workspace_update",
+      "schema": "public",
+      "arguments": "",
+      "function_name_mentions": [],
+      "relation_name_mentions": [
+        "public.landings_gerencias",
+        "public.gerencias"
+      ]
+    },
+    {
+      "name": "validate_gerencia_workspace_update",
+      "schema": "public",
+      "arguments": "",
+      "function_name_mentions": [],
+      "relation_name_mentions": [
+        "public.landings_gerencias",
+        "public.landings"
+      ]
+    },
+    {
+      "name": "refresh_phone_metrics",
+      "schema": "public",
+      "arguments": "",
+      "function_name_mentions": [],
+      "relation_name_mentions": [
+        "public.phone_metrics",
+        "public.gerencias",
+        "public.hidden_conversions",
+        "public.gerencia_phones",
+        "public.conversions"
+      ]
+    },
+    {
+      "name": "record_landing_phone_availability_demand",
+      "schema": "public",
+      "arguments": "p_landing_name text, p_request_id uuid, p_source text, p_result_status text, p_selected_gerencia_id integer, p_selected_phone_id bigint, p_selected_phone text",
+      "function_name_mentions": [],
+      "relation_name_mentions": [
+        "public.landings_gerencias",
+        "public.gerencias",
+        "public.gerencia_phones",
+        "public.landing_phone_availability_demands",
+        "public.landings"
+      ]
+    },
+    {
+      "name": "enforce_whatsapp_cloud_api_assignment_workspace",
+      "schema": "public",
+      "arguments": "",
+      "function_name_mentions": [],
+      "relation_name_mentions": [
+        "public.gerencias",
+        "public.whatsapp_cloud_api_configs"
+      ]
+    },
+    {
+      "name": "get_whatsapp_cloud_api_inbox_threads_page",
+      "schema": "public",
+      "arguments": "p_limit integer, p_offset integer, p_workspace_currency text, p_tag_filter text, p_unread_only boolean",
+      "function_name_mentions": [],
+      "relation_name_mentions": [
+        "public.profiles",
+        "public.gerencias",
+        "public.whatsapp_cloud_api_redirects",
+        "public.conversions",
+        "public.whatsapp_cloud_api_attribution_sessions",
+        "public.whatsapp_cloud_api_assignments",
+        "public.whatsapp_cloud_api_outbound_messages",
+        "public.whatsapp_cloud_api_contacts",
+        "public.whatsapp_cloud_api_thread_reads",
+        "public.whatsapp_cloud_api_webhook_events",
+        "public.whatsapp_cloud_api_configs",
+        "public.conversions_config"
+      ]
+    },
+    {
+      "name": "get_gerencia_availability_summaries",
+      "schema": "public",
+      "arguments": "p_user_id uuid, p_start timestamp with time zone, p_end timestamp with time zone, p_workspace_currency text",
+      "function_name_mentions": [],
+      "relation_name_mentions": [
+        "public.profiles",
+        "public.gerencias",
+        "public.landing_phone_availability_demands"
+      ]
+    },
+    {
+      "name": "get_whatsapp_cloud_api_inbox_threads",
+      "schema": "public",
+      "arguments": "p_limit integer, p_workspace_currency text",
+      "function_name_mentions": [],
+      "relation_name_mentions": [
+        "public.profiles",
+        "public.gerencias",
+        "public.whatsapp_cloud_api_redirects",
+        "public.conversions",
+        "public.whatsapp_cloud_api_attribution_sessions",
+        "public.whatsapp_cloud_api_assignments",
+        "public.whatsapp_cloud_api_outbound_messages",
+        "public.whatsapp_cloud_api_contacts",
+        "public.whatsapp_cloud_api_thread_reads",
+        "public.whatsapp_cloud_api_webhook_events",
+        "public.whatsapp_cloud_api_configs",
+        "public.conversions_config"
+      ]
+    },
+    {
+      "name": "phone_assignment_scope_usage",
+      "schema": "public",
+      "arguments": "p_scope_type text, p_scope_id uuid, p_gerencia_id integer, p_phone_kind text, p_phone_id bigint",
+      "function_name_mentions": [],
+      "relation_name_mentions": [
+        "public.gerencia_phones",
+        "public.phone_assignment_scope_metrics"
+      ]
+    },
+    {
+      "name": "get_whatsapp_cloud_api_inbox_threads_page",
+      "schema": "public",
+      "arguments": "p_limit integer, p_offset integer, p_workspace_currency text",
+      "function_name_mentions": [],
+      "relation_name_mentions": [
+        "public.profiles",
+        "public.gerencias",
+        "public.whatsapp_cloud_api_redirects",
+        "public.conversions",
+        "public.whatsapp_cloud_api_attribution_sessions",
+        "public.whatsapp_cloud_api_assignments",
+        "public.whatsapp_cloud_api_outbound_messages",
+        "public.whatsapp_cloud_api_contacts",
+        "public.whatsapp_cloud_api_thread_reads",
+        "public.whatsapp_cloud_api_webhook_events",
+        "public.whatsapp_cloud_api_configs",
+        "public.conversions_config"
+      ]
+    },
+    {
+      "name": "increment_phone_assignment_scope_usage",
+      "schema": "public",
+      "arguments": "p_phone_id bigint, p_scope_type text, p_scope_id uuid, p_user_id uuid, p_gerencia_id integer",
+      "function_name_mentions": [],
+      "relation_name_mentions": [
+        "public.gerencias",
+        "public.gerencia_phones",
+        "public.phone_assignment_scope_metrics"
+      ]
+    },
+    {
+      "name": "record_whatsapp_cloud_api_redirect_click",
+      "schema": "public",
+      "arguments": "p_token text, p_ip text, p_user_agent text",
+      "function_name_mentions": [],
+      "relation_name_mentions": [
+        "public.gerencias",
+        "public.whatsapp_cloud_api_redirects",
+        "public.whatsapp_cloud_api_attribution_sessions",
+        "public.whatsapp_cloud_api_assignments",
+        "public.whatsapp_cloud_api_contacts",
+        "public.whatsapp_cloud_api_configs"
+      ]
+    },
+    {
+      "name": "get_whatsapp_cloud_api_inbox_threads_page",
+      "schema": "public",
+      "arguments": "p_limit integer, p_offset integer, p_workspace_currency text, p_tag_filter text, p_unread_only boolean, p_from timestamp with time zone, p_to timestamp with time zone",
+      "function_name_mentions": [],
+      "relation_name_mentions": [
+        "public.profiles",
+        "public.gerencias",
+        "public.whatsapp_cloud_api_redirects",
+        "public.conversions",
+        "public.whatsapp_cloud_api_attribution_sessions",
+        "public.whatsapp_cloud_api_assignments",
+        "public.whatsapp_cloud_api_outbound_messages",
+        "public.whatsapp_cloud_api_contacts",
+        "public.whatsapp_cloud_api_thread_reads",
+        "public.whatsapp_cloud_api_webhook_events",
+        "public.whatsapp_cloud_api_configs",
+        "public.conversions_config"
+      ]
+    },
+    {
+      "name": "landing_phone_message_load",
+      "schema": "private",
+      "arguments": "p_landing_id uuid, p_gerencia_id integer, p_phone_kind text, p_owner_user_id uuid, p_phone_id bigint",
+      "function_name_mentions": [],
+      "relation_name_mentions": [
+        "public.gerencia_phones",
+        "public.conversions",
+        "public.landing_phone_assignment_reservations"
+      ]
+    },
+    {
+      "name": "extend_landing_phone_assignment_reservation",
+      "schema": "public",
+      "arguments": "p_reservation_id uuid, p_landing_id uuid, p_phone_id bigint, p_phone text",
+      "function_name_mentions": [],
+      "relation_name_mentions": [
+        "public.landing_phone_assignment_reservations"
+      ]
+    },
+    {
+      "name": "close_landing_phone_reservation_on_lead",
+      "schema": "private",
+      "arguments": "",
+      "function_name_mentions": [],
+      "relation_name_mentions": [
+        "public.landing_phone_assignment_reservations"
+      ]
+    },
+    {
+      "name": "get_phone_for_landing",
+      "schema": "public",
+      "arguments": "p_landing_name text, p_create_reservation boolean",
+      "function_name_mentions": [
+        "private.landing_phone_message_load",
+        "public.phone_assignment_scope_usage"
+      ],
+      "relation_name_mentions": [
+        "public.landings_gerencias",
+        "public.gerencias",
+        "public.gerencia_phones",
+        "public.landings",
+        "public.landing_phone_assignment_reservations"
+      ]
+    }
+  ],
+  "historicalPhonePolicies": [
+    {
+      "name": "Admins can read all gerencia phones",
+      "roles": [
+        "public"
+      ],
+      "table": "gerencia_phones",
+      "schema": "public",
+      "command": "SELECT",
+      "check_md5": null,
+      "using_md5": "3aaa7a9e7662891c44e71dee42905f28",
+      "permissive": "PERMISSIVE",
+      "cmd": "SELECT",
+      "check_masked": null,
+      "using_masked": "(EXISTS ( SELECT 1\n   FROM profiles\n  WHERE ((profiles.id = ( SELECT auth.uid() AS uid)) AND (profiles.role = '<literal>'::text))))",
+      "mentions_admin": true
+    },
+    {
+      "name": "All users can select gerencia phones",
+      "roles": [
+        "authenticated"
+      ],
+      "table": "gerencia_phones",
+      "schema": "public",
+      "command": "SELECT",
+      "check_md5": null,
+      "using_md5": "b326b5062b2f0e69046810717534cb09",
+      "permissive": "PERMISSIVE",
+      "cmd": "SELECT",
+      "check_masked": null,
+      "using_masked": "true",
+      "mentions_admin": false
+    },
+    {
+      "name": "Users manage own gerencia phones",
+      "roles": [
+        "public"
+      ],
+      "table": "gerencia_phones",
+      "schema": "public",
+      "command": "ALL",
+      "check_md5": "bf58b1cdf25d0306837813154bd5a065",
+      "using_md5": "bf58b1cdf25d0306837813154bd5a065",
+      "permissive": "PERMISSIVE",
+      "cmd": "ALL",
+      "check_masked": "(EXISTS ( SELECT 1\n   FROM gerencias g\n  WHERE ((g.id = g.gerencia_id) AND (g.user_id = ( SELECT auth.uid() AS uid)))))",
+      "using_masked": "(EXISTS ( SELECT 1\n   FROM gerencias g\n  WHERE ((g.id = g.gerencia_id) AND (g.user_id = ( SELECT auth.uid() AS uid)))))",
+      "mentions_admin": false
+    },
+    {
+      "name": "Admins can read all gerencias",
+      "roles": [
+        "public"
+      ],
+      "table": "gerencias",
+      "schema": "public",
+      "command": "SELECT",
+      "check_md5": null,
+      "using_md5": "3aaa7a9e7662891c44e71dee42905f28",
+      "permissive": "PERMISSIVE",
+      "cmd": "SELECT",
+      "check_masked": null,
+      "using_masked": "(EXISTS ( SELECT 1\n   FROM profiles\n  WHERE ((profiles.id = ( SELECT auth.uid() AS uid)) AND (profiles.role = '<literal>'::text))))",
+      "mentions_admin": true
+    },
+    {
+      "name": "Admins can update all gerencias",
+      "roles": [
+        "public"
+      ],
+      "table": "gerencias",
+      "schema": "public",
+      "command": "UPDATE",
+      "check_md5": "3aaa7a9e7662891c44e71dee42905f28",
+      "using_md5": "3aaa7a9e7662891c44e71dee42905f28",
+      "permissive": "PERMISSIVE",
+      "cmd": "UPDATE",
+      "check_masked": "(EXISTS ( SELECT 1\n   FROM profiles\n  WHERE ((profiles.id = ( SELECT auth.uid() AS uid)) AND (profiles.role = '<literal>'::text))))",
+      "using_masked": "(EXISTS ( SELECT 1\n   FROM profiles\n  WHERE ((profiles.id = ( SELECT auth.uid() AS uid)) AND (profiles.role = '<literal>'::text))))",
+      "mentions_admin": true
+    },
+    {
+      "name": "Users manage own gerencias",
+      "roles": [
+        "public"
+      ],
+      "table": "gerencias",
+      "schema": "public",
+      "command": "ALL",
+      "check_md5": "ff452c766f1dd1d84c376129b36406c1",
+      "using_md5": "ff452c766f1dd1d84c376129b36406c1",
+      "permissive": "PERMISSIVE",
+      "cmd": "ALL",
+      "check_masked": "(( SELECT auth.uid() AS uid) = user_id)",
+      "using_masked": "(( SELECT auth.uid() AS uid) = user_id)",
+      "mentions_admin": false
+    },
+    {
+      "name": "Admins read all landing phone availability demands",
+      "roles": [
+        "public"
+      ],
+      "table": "landing_phone_availability_demands",
+      "schema": "public",
+      "command": "SELECT",
+      "check_md5": null,
+      "using_md5": "787d8c38f72e6a03d54005aa3f18d39a",
+      "permissive": "PERMISSIVE",
+      "cmd": "SELECT",
+      "check_masked": null,
+      "using_masked": "(EXISTS ( SELECT 1\n   FROM profiles p\n  WHERE ((p.id = auth.uid()) AND (p.role = '<literal>'::text))))",
+      "mentions_admin": true
+    },
+    {
+      "name": "Users read own landing phone availability demands",
+      "roles": [
+        "public"
+      ],
+      "table": "landing_phone_availability_demands",
+      "schema": "public",
+      "command": "SELECT",
+      "check_md5": null,
+      "using_md5": "19300d155780585259ede73ac370586c",
+      "permissive": "PERMISSIVE",
+      "cmd": "SELECT",
+      "check_masked": null,
+      "using_masked": "(auth.uid() = user_id)",
+      "mentions_admin": false
+    },
+    {
+      "name": "Admins can read all phone assignment scope metrics",
+      "roles": [
+        "authenticated"
+      ],
+      "table": "phone_assignment_scope_metrics",
+      "schema": "public",
+      "command": "SELECT",
+      "check_md5": null,
+      "using_md5": "67e9ba5dbda3e3507e3a7be50f198cb3",
+      "permissive": "PERMISSIVE",
+      "cmd": "SELECT",
+      "check_masked": null,
+      "using_masked": "(EXISTS ( SELECT 1\n   FROM profiles p\n  WHERE ((p.id = ( SELECT auth.uid() AS uid)) AND (p.role = '<literal>'::text))))",
+      "mentions_admin": true
+    },
+    {
+      "name": "Users can read own phone assignment scope metrics",
+      "roles": [
+        "authenticated"
+      ],
+      "table": "phone_assignment_scope_metrics",
+      "schema": "public",
+      "command": "SELECT",
+      "check_md5": null,
+      "using_md5": "ff452c766f1dd1d84c376129b36406c1",
+      "permissive": "PERMISSIVE",
+      "cmd": "SELECT",
+      "check_masked": null,
+      "using_masked": "(( SELECT auth.uid() AS uid) = user_id)",
+      "mentions_admin": false
+    },
+    {
+      "name": "phone_metrics_select_own_or_admin",
+      "roles": [
+        "public"
+      ],
+      "table": "phone_metrics",
+      "schema": "public",
+      "command": "SELECT",
+      "check_md5": null,
+      "using_md5": "0afb8bf00d4f207eb17bc77d407d9ff0",
+      "permissive": "PERMISSIVE",
+      "cmd": "SELECT",
+      "check_masked": null,
+      "using_masked": "((user_id = ( SELECT auth.uid() AS uid)) OR (EXISTS ( SELECT 1\n   FROM profiles p\n  WHERE ((p.id = ( SELECT auth.uid() AS uid)) AND (p.role = '<literal>'::text)))))",
+      "mentions_admin": true
+    }
+  ],
+  "edgeDeploymentMetadata": [
+    {
+      "slug": "landing-phone",
+      "version": 21,
+      "status": "ACTIVE",
+      "verify_jwt": false,
+      "bundle_sha256": "91989231e45c7cd72f02560d0182d1616ff226e4dea56f3238d507158b42517d"
+    },
+    {
+      "slug": "reset-phone-counters",
+      "version": 11,
+      "status": "ACTIVE",
+      "verify_jwt": false,
+      "bundle_sha256": "f662f5134ae6deb896b333d8cb3014cb4d7c00ca3147e6edcb2fe1e04f70d99a"
+    },
+    {
+      "slug": "sync-phones",
+      "version": 27,
+      "status": "ACTIVE",
+      "verify_jwt": false,
+      "bundle_sha256": "0da6f2c9f195091855db1c40f3e888191f5ae34d2a633deb99470773b2cf3084"
+    },
+    {
+      "slug": "phone-click",
+      "version": 11,
+      "status": "ACTIVE",
+      "verify_jwt": false,
+      "bundle_sha256": "6fdf240da779a9bd53ae1901816b6ef057eb3b0ad897c191015796439efec4ac"
+    },
+    {
+      "slug": "reset-phone-messages",
+      "version": 4,
+      "status": "ACTIVE",
+      "verify_jwt": true,
+      "bundle_sha256": "5bd0116acbaf580a4cf29e2fa7d6f9fb00840876c6fe7725347e955443891089"
+    }
+  ],
+  "localEdgeConfig": {
+    "file": "supabase/config.toml",
+    "sha256": "38331a3ba144f481dde5859ca2e89331a09e14bafa9f0a767cce375b80f462a6",
+    "explicitVerifyJwtFalse": [
+      "landing-phone",
+      "sync-phones",
+      "reset-phone-counters"
+    ],
+    "note": "Other endpoint settings must not be inferred from historical deployed values. No config edited."
+  },
+  "identityIngress": [
+    {
+      "file": "frontend/components/telefonos/TelefonosPageContent.tsx",
+      "kind": "browser",
+      "accepts": "State from browser getUser; body user_id for three administrative Edge endpoints; filters and direct writes by row/gerencia id.",
+      "trust": "Not an authorization boundary; toggling daily reset belongs to excluded cron/config behavior.",
+      "sha256": "ebafe2c76b07dc6e19f9cbfbe2bcefd441c5d53bd85ed856c1bf6e365c654469",
+      "identityRelatedLines": [
+        136,
+        173,
+        178,
+        179,
+        190,
+        197,
+        329,
+        347,
+        356,
+        359,
+        386,
+        397,
+        406,
+        409,
+        417,
+        428,
+        437,
+        440,
+        448,
+        459,
+        470,
+        474,
+        486,
+        510,
+        549,
+        592
+      ]
+    },
+    {
+      "file": "frontend/app/(panel)/admin/tests/page.tsx",
+      "kind": "browser",
+      "accepts": "Test sync-phones body user_id from browser auth.getUser; apikey without session Authorization.",
+      "trust": "Must send verified user token for administrative action; unrelated revalidation unchanged.",
+      "sha256": "388f2489cde9704aeda42994996d6d291d765572c321651f60d6d29871dad6e4",
+      "identityRelatedLines": [
+        67,
+        117,
+        160,
+        167,
+        220
+      ]
+    },
+    {
+      "file": "frontend/lib/gerencias/gerenciasDb.ts",
+      "kind": "browser_helper",
+      "accepts": "userId/adminId helper arguments become user_id filters/inserts; gerencia ids and landing assignment arrays come from browser.",
+      "trust": "Database must enforce effective session identity, admin role and ownership; filters are not authorization.",
+      "sha256": "994fd29e8f158f6bb591c8724fc6f8ce7059885c38ca7468e578a286839e1913",
+      "identityRelatedLines": [
+        64,
+        70,
+        91,
+        104,
+        114,
+        140,
+        205,
+        214,
+        219,
+        220,
+        230,
+        242,
+        249,
+        250
+      ]
+    },
+    {
+      "file": "supabase/functions/sync-phones/index.ts",
+      "kind": "edge_administration_and_backend",
+      "accepts": "body.user_id, body.gerencia_id; separate backend credential selects scheduled mode.",
+      "trust": "Interactive path currently trusts body user_id; no handler getUser check. Scheduled body/algorithm excluded.",
+      "sha256": "6610774d1c436cd86c3914d8c4845e2b0825b2b43a64595592e245723f2f536c",
+      "identityRelatedLines": [
+        68,
+        111,
+        113,
+        118,
+        140,
+        142,
+        153,
+        156,
+        210,
+        396,
+        412,
+        438
+      ]
+    },
+    {
+      "file": "supabase/functions/reset-phone-counters/index.ts",
+      "kind": "edge_administration",
+      "accepts": "body.user_id, optional body.gerencia_id.",
+      "trust": "Handler service_role queries use body identity without verified session/role.",
+      "sha256": "0a4fa1b24401790e70a9943dfe8e1f78421d4a361e93063b0d3c7e3ccbf1a0c5",
+      "identityRelatedLines": [
+        11,
+        50,
+        51,
+        53,
+        56,
+        58,
+        76
+      ]
+    },
+    {
+      "file": "supabase/functions/reset-phone-messages/index.ts",
+      "kind": "edge_administration",
+      "accepts": "body.user_id, optional body.gerencia_id.",
+      "trust": "Handler lacks identity/role check; historical platform verify_jwt=true does not authorize owner selection.",
+      "sha256": "0b667d7a62417826c6993d3ede61160cd6f483e559933425954128b1d4a377c2",
+      "identityRelatedLines": [
+        12,
+        45,
+        46,
+        48,
+        51,
+        53,
+        71
+      ]
+    },
+    {
+      "file": "supabase/migrations/20260817233335_availability_summary_workspace_ids.sql",
+      "kind": "data_api_rpc_read",
+      "accepts": "p_user_id and filters sent by frontend.",
+      "trust": "Already checks auth.uid; target different from caller or null requires protected profiles.role=admin.",
+      "sha256": "57117f907671c35c4b8f2f868d0bbf819ca8f7500a180303dcea929820b73de9",
+      "identityRelatedLines": [
+        4,
+        22,
+        30,
+        58
+      ]
+    },
+    {
+      "file": "supabase/functions/landing-phone/index.ts",
+      "kind": "public_assignment",
+      "accepts": "name and source from query/body; owner loaded by backend from landing/profile.",
+      "trust": "No browser-supplied administrative user_id; public assignment contract must be preserved.",
+      "sha256": "5cc50a2feeec0294c35e25c1651b86c1557ccccf95808070a2af2ce8cb21d949",
+      "identityRelatedLines": [
+        62,
+        67,
+        72,
+        73,
+        138,
+        139,
+        141,
+        181,
+        188,
+        190,
+        192,
+        201,
+        351
+      ]
+    },
+    {
+      "file": "supabase/functions/phone-click/index.ts",
+      "kind": "public_click",
+      "accepts": "landingName, phoneId, optional phone and reservationId from body.",
+      "trust": "Owner derived from landing and phone/landing association checked; preserve current contract.",
+      "sha256": "9f5d846d488f0c32acd6495816c533540affddb64087e6efe62cf01252e6dc92",
+      "identityRelatedLines": [
+        63,
+        89,
+        190
+      ]
+    },
+    {
+      "file": "frontend/components/public-landing/getCachedLandingPhone.ts",
+      "kind": "next_server_consumer",
+      "accepts": "Landing name passed by public route; RPC p_landing_name with public key.",
+      "trust": "Invoked by server route; changing RPC grants requires backend-only credentials or accredited server projection with same behavior.",
+      "sha256": "78d9f6b5260f48cdfdbd5b2ac4ae8259187360faac424918521a53e0921fbb78",
+      "identityRelatedLines": [
+        24
+      ]
+    }
+  ],
+  "currentLiteralCallsites": [
+    {
+      "file": "frontend/app/(panel)/admin/conversiones/page.tsx",
+      "line": 865,
+      "operation": "from",
+      "object": "gerencias",
+      "test": false
+    },
+    {
+      "file": "frontend/app/(panel)/admin/conversiones/page.tsx",
+      "line": 880,
+      "operation": "from",
+      "object": "gerencia_phones",
+      "test": false
+    },
+    {
+      "file": "frontend/app/(panel)/admin/conversiones/page.tsx",
+      "line": 914,
+      "operation": "from",
+      "object": "landings_gerencias",
+      "test": false
+    },
+    {
+      "file": "frontend/app/(panel)/admin/seguimiento/page.tsx",
+      "line": 116,
+      "operation": "from",
+      "object": "gerencias",
+      "test": false
+    },
+    {
+      "file": "frontend/app/(panel)/admin/seguimiento/page.tsx",
+      "line": 128,
+      "operation": "from",
+      "object": "gerencia_phones",
+      "test": false
+    },
+    {
+      "file": "frontend/app/(panel)/dashboard/conversiones/page.tsx",
+      "line": 1239,
+      "operation": "from",
+      "object": "gerencias",
+      "test": false
+    },
+    {
+      "file": "frontend/app/(panel)/dashboard/conversiones/page.tsx",
+      "line": 1259,
+      "operation": "from",
+      "object": "gerencia_phones",
+      "test": false
+    },
+    {
+      "file": "frontend/app/(panel)/dashboard/conversiones/page.tsx",
+      "line": 1294,
+      "operation": "from",
+      "object": "landings_gerencias",
+      "test": false
+    },
+    {
+      "file": "frontend/app/(panel)/dashboard/promociones/page.tsx",
+      "line": 119,
+      "operation": "from",
+      "object": "gerencias",
+      "test": false
+    },
+    {
+      "file": "frontend/app/(panel)/dashboard/promociones/page.tsx",
+      "line": 136,
+      "operation": "from",
+      "object": "gerencia_phones",
+      "test": false
+    },
+    {
+      "file": "frontend/app/(panel)/dashboard/seguimiento/page.tsx",
+      "line": 196,
+      "operation": "from",
+      "object": "gerencias",
+      "test": false
+    },
+    {
+      "file": "frontend/app/(panel)/dashboard/seguimiento/page.tsx",
+      "line": 209,
+      "operation": "from",
+      "object": "gerencia_phones",
+      "test": false
+    },
+    {
+      "file": "frontend/components/integraciones/IntegracionesMetaCapi.tsx",
+      "line": 334,
+      "operation": "from",
+      "object": "chatrace_gerencias",
+      "test": false
+    },
+    {
+      "file": "frontend/components/integraciones/IntegracionesMetaCapi.tsx",
+      "line": 548,
+      "operation": "from",
+      "object": "chatrace_gerencias",
+      "test": false
+    },
+    {
+      "file": "frontend/components/integraciones/IntegracionesMetaCapi.tsx",
+      "line": 559,
+      "operation": "from",
+      "object": "chatrace_gerencias",
+      "test": false
+    },
+    {
+      "file": "frontend/components/telefonos/TelefonosPageContent.tsx",
+      "line": 221,
+      "operation": "from",
+      "object": "gerencia_phones",
+      "test": false
+    },
+    {
+      "file": "frontend/components/telefonos/TelefonosPageContent.tsx",
+      "line": 247,
+      "operation": "from",
+      "object": "phone_metrics",
+      "test": false
+    },
+    {
+      "file": "frontend/components/telefonos/TelefonosPageContent.tsx",
+      "line": 506,
+      "operation": "from",
+      "object": "gerencia_phones",
+      "test": false
+    },
+    {
+      "file": "frontend/components/telefonos/TelefonosPageContent.tsx",
+      "line": 532,
+      "operation": "from",
+      "object": "gerencias",
+      "test": false
+    },
+    {
+      "file": "frontend/components/telefonos/TelefonosPageContent.tsx",
+      "line": 587,
+      "operation": "from",
+      "object": "gerencia_phones",
+      "test": false
+    },
+    {
+      "file": "frontend/components/telefonos/TelefonosPageContent.tsx",
+      "line": 626,
+      "operation": "from",
+      "object": "gerencia_phones",
+      "test": false
+    },
+    {
+      "file": "frontend/components/telefonos/TelefonosPageContent.tsx",
+      "line": 665,
+      "operation": "from",
+      "object": "gerencia_phones",
+      "test": false
+    },
+    {
+      "file": "frontend/components/telefonos/TelefonosPageContent.tsx",
+      "line": 688,
+      "operation": "from",
+      "object": "gerencia_phones",
+      "test": false
+    },
+    {
+      "file": "frontend/lib/conversionsDb.ts",
+      "line": 1686,
+      "operation": "rpc",
+      "object": "get_gerencia_availability_summaries",
+      "test": false
+    },
+    {
+      "file": "frontend/lib/gerencias/gerenciasDb.ts",
+      "line": 68,
+      "operation": "from",
+      "object": "gerencias",
+      "test": false
+    },
+    {
+      "file": "frontend/lib/gerencias/gerenciasDb.ts",
+      "line": 90,
+      "operation": "from",
+      "object": "gerencias",
+      "test": false
+    },
+    {
+      "file": "frontend/lib/gerencias/gerenciasDb.ts",
+      "line": 127,
+      "operation": "from",
+      "object": "gerencias",
+      "test": false
+    },
+    {
+      "file": "frontend/lib/gerencias/gerenciasDb.ts",
+      "line": 138,
+      "operation": "from",
+      "object": "gerencias",
+      "test": false
+    },
+    {
+      "file": "frontend/lib/gerencias/gerenciasDb.ts",
+      "line": 175,
+      "operation": "from",
+      "object": "gerencias",
+      "test": false
+    },
+    {
+      "file": "frontend/lib/gerencias/gerenciasDb.ts",
+      "line": 198,
+      "operation": "from",
+      "object": "gerencias",
+      "test": false
+    },
+    {
+      "file": "frontend/lib/gerencias/gerenciasDb.ts",
+      "line": 218,
+      "operation": "from",
+      "object": "gerencia_work_groups",
+      "test": false
+    },
+    {
+      "file": "frontend/lib/gerencias/gerenciasDb.ts",
+      "line": 248,
+      "operation": "from",
+      "object": "gerencia_work_groups",
+      "test": false
+    },
+    {
+      "file": "frontend/lib/gerencias/gerenciasDb.ts",
+      "line": 265,
+      "operation": "from",
+      "object": "gerencia_work_groups",
+      "test": false
+    },
+    {
+      "file": "frontend/lib/gerencias/gerenciasDb.ts",
+      "line": 275,
+      "operation": "from",
+      "object": "gerencia_work_groups",
+      "test": false
+    },
+    {
+      "file": "frontend/lib/gerencias/gerenciasDb.ts",
+      "line": 285,
+      "operation": "from",
+      "object": "gerencia_work_group_members",
+      "test": false
+    },
+    {
+      "file": "frontend/lib/gerencias/gerenciasDb.ts",
+      "line": 293,
+      "operation": "from",
+      "object": "gerencia_work_group_members",
+      "test": false
+    },
+    {
+      "file": "frontend/lib/gerencias/gerenciasDb.ts",
+      "line": 345,
+      "operation": "from",
+      "object": "gerencias",
+      "test": false
+    },
+    {
+      "file": "frontend/lib/gerencias/gerenciasDb.ts",
+      "line": 381,
+      "operation": "from",
+      "object": "landings_gerencias",
+      "test": false
+    },
+    {
+      "file": "frontend/lib/gerencias/gerenciasDb.ts",
+      "line": 418,
+      "operation": "from",
+      "object": "landings_gerencias",
+      "test": false
+    },
+    {
+      "file": "frontend/lib/gerencias/gerenciasDb.ts",
+      "line": 446,
+      "operation": "from",
+      "object": "landings_gerencias",
+      "test": false
+    },
+    {
+      "file": "frontend/lib/whatsappCloudApiDb.ts",
+      "line": 265,
+      "operation": "from",
+      "object": "whatsapp_cloud_api_gerencias",
+      "test": false
+    },
+    {
+      "file": "frontend/lib/whatsappCloudApiDb.ts",
+      "line": 287,
+      "operation": "from",
+      "object": "whatsapp_cloud_api_gerencias",
+      "test": false
+    },
+    {
+      "file": "frontend/lib/whatsappCloudApiDb.ts",
+      "line": 304,
+      "operation": "from",
+      "object": "whatsapp_cloud_api_gerencias",
+      "test": false
+    },
+    {
+      "file": "frontend/lib/whatsappCloudApiDb.ts",
+      "line": 775,
+      "operation": "rpc",
+      "object": "get_whatsapp_cloud_api_inbox_threads_page",
+      "test": false
+    },
+    {
+      "file": "supabase/functions/conversions/index.ts",
+      "line": 482,
+      "operation": "from",
+      "object": "gerencia_phones",
+      "test": false
+    },
+    {
+      "file": "supabase/functions/conversions/index.ts",
+      "line": 507,
+      "operation": "from",
+      "object": "gerencias",
+      "test": false
+    },
+    {
+      "file": "supabase/functions/conversions/index.ts",
+      "line": 541,
+      "operation": "from",
+      "object": "landings_gerencias",
+      "test": false
+    },
+    {
+      "file": "supabase/functions/conversions/index.ts",
+      "line": 598,
+      "operation": "from",
+      "object": "gerencias",
+      "test": false
+    },
+    {
+      "file": "supabase/functions/conversions/index.ts",
+      "line": 690,
+      "operation": "from",
+      "object": "gerencias",
+      "test": false
+    },
+    {
+      "file": "supabase/functions/conversions/index.ts",
+      "line": 706,
+      "operation": "from",
+      "object": "gerencia_phones",
+      "test": false
+    },
+    {
+      "file": "supabase/functions/conversions/index.ts",
+      "line": 2356,
+      "operation": "from",
+      "object": "ar_phone_area_codes",
+      "test": false
+    },
+    {
+      "file": "supabase/functions/conversions/index.ts",
+      "line": 2668,
+      "operation": "from",
+      "object": "gerencias",
+      "test": false
+    },
+    {
+      "file": "supabase/functions/landing-phone/index.ts",
+      "line": 69,
+      "operation": "rpc",
+      "object": "increment_phone_assignment_scope_usage",
+      "test": false
+    },
+    {
+      "file": "supabase/functions/landing-phone/index.ts",
+      "line": 91,
+      "operation": "rpc",
+      "object": "record_landing_phone_availability_demand",
+      "test": false
+    },
+    {
+      "file": "supabase/functions/landing-phone/index.ts",
+      "line": 219,
+      "operation": "from",
+      "object": "landing_phone_cache",
+      "test": false
+    },
+    {
+      "file": "supabase/functions/phone-click/index.ts",
+      "line": 115,
+      "operation": "from",
+      "object": "gerencia_phones",
+      "test": false
+    },
+    {
+      "file": "supabase/functions/phone-click/index.ts",
+      "line": 142,
+      "operation": "from",
+      "object": "landings_gerencias",
+      "test": false
+    },
+    {
+      "file": "supabase/functions/phone-click/index.ts",
+      "line": 175,
+      "operation": "rpc",
+      "object": "extend_landing_phone_assignment_reservation",
+      "test": false
+    },
+    {
+      "file": "supabase/functions/phone-click/index.ts",
+      "line": 184,
+      "operation": "rpc",
+      "object": "increment_phone_assignment_scope_usage",
+      "test": false
+    },
+    {
+      "file": "supabase/functions/reset-phone-counters/index.ts",
+      "line": 74,
+      "operation": "from",
+      "object": "gerencias",
+      "test": false
+    },
+    {
+      "file": "supabase/functions/reset-phone-counters/index.ts",
+      "line": 120,
+      "operation": "from",
+      "object": "gerencia_phones",
+      "test": false
+    },
+    {
+      "file": "supabase/functions/reset-phone-counters/index.ts",
+      "line": 151,
+      "operation": "from",
+      "object": "gerencia_phones",
+      "test": false
+    },
+    {
+      "file": "supabase/functions/reset-phone-counters/index.ts",
+      "line": 168,
+      "operation": "from",
+      "object": "phone_assignment_scope_metrics",
+      "test": false
+    },
+    {
+      "file": "supabase/functions/reset-phone-messages/index.ts",
+      "line": 69,
+      "operation": "from",
+      "object": "gerencias",
+      "test": false
+    },
+    {
+      "file": "supabase/functions/reset-phone-messages/index.ts",
+      "line": 109,
+      "operation": "from",
+      "object": "gerencia_phones",
+      "test": false
+    },
+    {
+      "file": "supabase/functions/reset-phone-messages/index.ts",
+      "line": 133,
+      "operation": "from",
+      "object": "gerencia_phones",
+      "test": false
+    },
+    {
+      "file": "supabase/functions/reset-phone-messages/index.ts",
+      "line": 148,
+      "operation": "from",
+      "object": "phone_metrics",
+      "test": false
+    },
+    {
+      "file": "supabase/functions/sync-phones/index.ts",
+      "line": 152,
+      "operation": "from",
+      "object": "gerencias",
+      "test": false
+    },
+    {
+      "file": "supabase/functions/sync-phones/index.ts",
+      "line": 281,
+      "operation": "from",
+      "object": "gerencia_phones",
+      "test": false
+    },
+    {
+      "file": "supabase/functions/sync-phones/index.ts",
+      "line": 331,
+      "operation": "from",
+      "object": "gerencia_phones",
+      "test": false
+    },
+    {
+      "file": "supabase/functions/sync-phones/index.ts",
+      "line": 357,
+      "operation": "from",
+      "object": "gerencia_phones",
+      "test": false
+    },
+    {
+      "file": "supabase/functions/sync-phones/index.ts",
+      "line": 371,
+      "operation": "from",
+      "object": "gerencia_phones",
+      "test": false
+    },
+    {
+      "file": "supabase/functions/sync-phones/index.ts",
+      "line": 402,
+      "operation": "from",
+      "object": "gerencia_phones",
+      "test": false
+    },
+    {
+      "file": "supabase/functions/sync-phones/index.ts",
+      "line": 410,
+      "operation": "from",
+      "object": "gerencias",
+      "test": false
+    },
+    {
+      "file": "supabase/functions/sync-phones/index.ts",
+      "line": 424,
+      "operation": "from",
+      "object": "gerencia_phones",
+      "test": false
+    },
+    {
+      "file": "supabase/functions/whatsapp-cloud-redirect/index.ts",
+      "line": 266,
+      "operation": "rpc",
+      "object": "record_whatsapp_cloud_api_redirect_click",
+      "test": false
+    },
+    {
+      "file": "supabase/functions/whatsapp-cloud-worker/index.ts",
+      "line": 794,
+      "operation": "rpc",
+      "object": "get_phone_for_whatsapp_cloud_api",
+      "test": false
+    },
+    {
+      "file": "supabase/functions/whatsapp-cloud-worker/index.ts",
+      "line": 977,
+      "operation": "rpc",
+      "object": "increment_phone_assignment_scope_usage",
+      "test": false
+    }
+  ],
+  "currentSourceReferences": [
+    {
+      "file": "frontend/app/(panel)/admin/conversiones/page.tsx",
+      "sha256": "4f1a48e91b143b5bb4a2969f6e16ad924d293fcaa90166c54bc68c9da99794cc",
+      "category": "frontend_source_requires_import_context",
+      "references": [
+        {
+          "line": 865,
+          "symbols": [
+            "gerencias"
+          ]
+        },
+        {
+          "line": 868,
+          "symbols": [
+            "gerencias"
+          ]
+        },
+        {
+          "line": 869,
+          "symbols": [
+            "gerencias"
+          ]
+        },
+        {
+          "line": 880,
+          "symbols": [
+            "gerencia_phones"
+          ]
+        },
+        {
+          "line": 914,
+          "symbols": [
+            "landings_gerencias"
+          ]
+        },
+        {
+          "line": 1311,
+          "symbols": [
+            "gerencias"
+          ]
+        }
+      ]
+    },
+    {
+      "file": "frontend/app/(panel)/admin/gerencias/page.tsx",
+      "sha256": "bb92b30727e1cbb42634c1275efa3f18ee47fcc90c897a6025f16f742e58380f",
+      "category": "frontend_source_requires_import_context",
+      "references": [
+        {
+          "line": 6,
+          "symbols": [
+            "gerencias"
+          ]
+        },
+        {
+          "line": 14,
+          "symbols": [
+            "gerencias"
+          ]
+        },
+        {
+          "line": 28,
+          "symbols": [
+            "gerencias"
+          ]
+        },
+        {
+          "line": 59,
+          "symbols": [
+            "gerencias"
+          ]
+        },
+        {
+          "line": 176,
+          "symbols": [
+            "gerencias"
+          ]
+        },
+        {
+          "line": 180,
+          "symbols": [
+            "gerencias"
+          ]
+        },
+        {
+          "line": 195,
+          "symbols": [
+            "gerencias"
+          ]
+        },
+        {
+          "line": 291,
+          "symbols": [
+            "gerencias"
+          ]
+        },
+        {
+          "line": 294,
+          "symbols": [
+            "gerencias"
+          ]
+        },
+        {
+          "line": 298,
+          "symbols": [
+            "gerencias"
+          ]
+        }
+      ]
+    },
+    {
+      "file": "frontend/app/(panel)/admin/landings/[id]/editar/page.tsx",
+      "sha256": "6e55acac0dadb32354f7bb5942971b8718c7cb79ac5aa4e170342908e567c3f8",
+      "category": "frontend_source_requires_import_context",
+      "references": [
+        {
+          "line": 31,
+          "symbols": [
+            "gerencias"
+          ]
+        },
+        {
+          "line": 32,
+          "symbols": [
+            "gerencias"
+          ]
+        },
+        {
+          "line": 33,
+          "symbols": [
+            "gerencias"
+          ]
+        },
+        {
+          "line": 40,
+          "symbols": [
+            "gerencias"
+          ]
+        },
+        {
+          "line": 58,
+          "symbols": [
+            "landing-phone"
+          ]
+        },
+        {
+          "line": 78,
+          "symbols": [
+            "landing-phone"
+          ]
+        },
+        {
+          "line": 170,
+          "symbols": [
+            "gerencias"
+          ]
+        },
+        {
+          "line": 795,
+          "symbols": [
+            "landing-phone"
+          ]
+        },
+        {
+          "line": 797,
+          "symbols": [
+            "landing-phone"
+          ]
+        },
+        {
+          "line": 823,
+          "symbols": [
+            "gerencias"
+          ]
+        },
+        {
+          "line": 827,
+          "symbols": [
+            "gerencias"
+          ]
+        },
+        {
+          "line": 853,
+          "symbols": [
+            "landing-phone"
+          ]
+        },
+        {
+          "line": 884,
+          "symbols": [
+            "gerencias"
+          ]
+        },
+        {
+          "line": 906,
+          "symbols": [
+            "gerencias"
+          ]
+        }
+      ]
+    },
+    {
+      "file": "frontend/app/(panel)/admin/layout.tsx",
+      "sha256": "be0cb7bd0de292127243ce344a20b35b24f52c9e76d0094c51910ffacc943cff",
+      "category": "frontend_source_requires_import_context",
+      "references": [
+        {
+          "line": 59,
+          "symbols": [
+            "gerencias"
+          ]
+        },
+        {
+          "line": 140,
+          "symbols": [
+            "gerencias"
+          ]
+        },
+        {
+          "line": 649,
+          "symbols": [
+            "gerencias"
+          ]
+        },
+        {
+          "line": 650,
+          "symbols": [
+            "gerencias"
+          ]
+        },
+        {
+          "line": 652,
+          "symbols": [
+            "gerencias"
+          ]
+        },
+        {
+          "line": 658,
+          "symbols": [
+            "gerencias"
+          ]
+        },
+        {
+          "line": 659,
+          "symbols": [
+            "gerencias"
+          ]
+        }
+      ]
+    },
+    {
+      "file": "frontend/app/(panel)/admin/seguimiento/page.tsx",
+      "sha256": "b87e05aa8c627b57905c3079c6e2feb399f15e9b153c8cd3a26043036324efbc",
+      "category": "frontend_source_requires_import_context",
+      "references": [
+        {
+          "line": 115,
+          "symbols": [
+            "gerencias"
+          ]
+        },
+        {
+          "line": 116,
+          "symbols": [
+            "gerencias"
+          ]
+        },
+        {
+          "line": 119,
+          "symbols": [
+            "gerencias"
+          ]
+        },
+        {
+          "line": 125,
+          "symbols": [
+            "gerencias"
+          ]
+        },
+        {
+          "line": 128,
+          "symbols": [
+            "gerencia_phones"
+          ]
+        }
+      ]
+    },
+    {
+      "file": "frontend/app/(panel)/admin/telefonos/page.tsx",
+      "sha256": "02ed274a2175189016a1b5d3bd0a8a73674db5ac5e7d3ac573e5f05922c6182d",
+      "category": "frontend_source_requires_import_context",
+      "references": [
+        {
+          "line": 6,
+          "symbols": [
+            "TelefonosPageContent"
+          ]
+        },
+        {
+          "line": 7,
+          "symbols": [
+            "TelefonosPageContent"
+          ]
+        },
+        {
+          "line": 13,
+          "symbols": [
+            "TelefonosPageContent"
+          ]
+        }
+      ]
+    },
+    {
+      "file": "frontend/app/(panel)/admin/tests/page.tsx",
+      "sha256": "388f2489cde9704aeda42994996d6d291d765572c321651f60d6d29871dad6e4",
+      "category": "test_source_not_executed",
+      "references": [
+        {
+          "line": 100,
+          "symbols": [
+            "landing-phone"
+          ]
+        },
+        {
+          "line": 110,
+          "symbols": [
+            "landing-phone"
+          ]
+        },
+        {
+          "line": 112,
+          "symbols": [
+            "landing-phone"
+          ]
+        },
+        {
+          "line": 124,
+          "symbols": [
+            "landing-phone"
+          ]
+        },
+        {
+          "line": 126,
+          "symbols": [
+            "landing-phone"
+          ]
+        },
+        {
+          "line": 127,
+          "symbols": [
+            "landing-phone"
+          ]
+        },
+        {
+          "line": 130,
+          "symbols": [
+            "landing-phone"
+          ]
+        },
+        {
+          "line": 141,
+          "symbols": [
+            "sync-phones"
+          ]
+        },
+        {
+          "line": 148,
+          "symbols": [
+            "sync-phones"
+          ]
+        },
+        {
+          "line": 149,
+          "symbols": [
+            "sync-phones"
+          ]
+        },
+        {
+          "line": 160,
+          "symbols": [
+            "sync-phones"
+          ]
+        },
+        {
+          "line": 161,
+          "symbols": [
+            "sync-phones"
+          ]
+        },
+        {
+          "line": 171,
+          "symbols": [
+            "sync-phones"
+          ]
+        },
+        {
+          "line": 173,
+          "symbols": [
+            "sync-phones"
+          ]
+        },
+        {
+          "line": 174,
+          "symbols": [
+            "sync-phones"
+          ]
+        },
+        {
+          "line": 177,
+          "symbols": [
+            "sync-phones"
+          ]
+        },
+        {
+          "line": 350,
+          "symbols": [
+            "landing-phone"
+          ]
+        },
+        {
+          "line": 358,
+          "symbols": [
+            "sync-phones"
+          ]
+        }
+      ]
+    },
+    {
+      "file": "frontend/app/(panel)/dashboard/conversiones/page.tsx",
+      "sha256": "b5f5577565736fc3a2eaba0454f5029a860ff207c6322c05580340f320eee20c",
+      "category": "frontend_source_requires_import_context",
+      "references": [
+        {
+          "line": 1239,
+          "symbols": [
+            "gerencias"
+          ]
+        },
+        {
+          "line": 1243,
+          "symbols": [
+            "gerencias"
+          ]
+        },
+        {
+          "line": 1244,
+          "symbols": [
+            "gerencias"
+          ]
+        },
+        {
+          "line": 1259,
+          "symbols": [
+            "gerencia_phones"
+          ]
+        },
+        {
+          "line": 1294,
+          "symbols": [
+            "landings_gerencias"
+          ]
+        },
+        {
+          "line": 1710,
+          "symbols": [
+            "gerencias"
+          ]
+        }
+      ]
+    },
+    {
+      "file": "frontend/app/(panel)/dashboard/gerencias/page.tsx",
+      "sha256": "7ef86fa177a91791f4ca3852bc07afc3eec1784e3b804c3b450bb578c974e73f",
+      "category": "frontend_source_requires_import_context",
+      "references": [
+        {
+          "line": 6,
+          "symbols": [
+            "gerencias"
+          ]
+        },
+        {
+          "line": 18,
+          "symbols": [
+            "gerencias"
+          ]
+        },
+        {
+          "line": 20,
+          "symbols": [
+            "gerencias"
+          ]
+        },
+        {
+          "line": 33,
+          "symbols": [
+            "gerencias"
+          ]
+        },
+        {
+          "line": 71,
+          "symbols": [
+            "gerencias"
+          ]
+        },
+        {
+          "line": 239,
+          "symbols": [
+            "gerencias"
+          ]
+        },
+        {
+          "line": 241,
+          "symbols": [
+            "gerencias"
+          ]
+        },
+        {
+          "line": 247,
+          "symbols": [
+            "gerencias"
+          ]
+        },
+        {
+          "line": 250,
+          "symbols": [
+            "gerencias"
+          ]
+        },
+        {
+          "line": 254,
+          "symbols": [
+            "gerencias"
+          ]
+        },
+        {
+          "line": 269,
+          "symbols": [
+            "gerencias"
+          ]
+        },
+        {
+          "line": 356,
+          "symbols": [
+            "gerencias"
+          ]
+        },
+        {
+          "line": 358,
+          "symbols": [
+            "gerencias"
+          ]
+        },
+        {
+          "line": 362,
+          "symbols": [
+            "gerencias"
+          ]
+        },
+        {
+          "line": 384,
+          "symbols": [
+            "gerencias"
+          ]
+        },
+        {
+          "line": 387,
+          "symbols": [
+            "gerencias"
+          ]
+        },
+        {
+          "line": 391,
+          "symbols": [
+            "gerencias"
+          ]
+        },
+        {
+          "line": 394,
+          "symbols": [
+            "gerencias"
+          ]
+        },
+        {
+          "line": 471,
+          "symbols": [
+            "gerencias"
+          ]
+        }
+      ]
+    },
+    {
+      "file": "frontend/app/(panel)/dashboard/landing/[id]/editar/page.tsx",
+      "sha256": "897efb8e29b6e35ea3af217b8399a8cbbd16a08e1bf11a1ac602a17168aa7114",
+      "category": "frontend_source_requires_import_context",
+      "references": [
+        {
+          "line": 16,
+          "symbols": [
+            "gerencias"
+          ]
+        },
+        {
+          "line": 17,
+          "symbols": [
+            "gerencias"
+          ]
+        },
+        {
+          "line": 18,
+          "symbols": [
+            "gerencias"
+          ]
+        },
+        {
+          "line": 25,
+          "symbols": [
+            "gerencias"
+          ]
+        },
+        {
+          "line": 57,
+          "symbols": [
+            "landing-phone"
+          ]
+        },
+        {
+          "line": 77,
+          "symbols": [
+            "landing-phone"
+          ]
+        },
+        {
+          "line": 169,
+          "symbols": [
+            "gerencias"
+          ]
+        },
+        {
+          "line": 798,
+          "symbols": [
+            "gerencias"
+          ]
+        },
+        {
+          "line": 802,
+          "symbols": [
+            "gerencias"
+          ]
+        },
+        {
+          "line": 830,
+          "symbols": [
+            "landing-phone"
+          ]
+        },
+        {
+          "line": 867,
+          "symbols": [
+            "gerencias"
+          ]
+        },
+        {
+          "line": 890,
+          "symbols": [
+            "gerencias"
+          ]
+        }
+      ]
+    },
+    {
+      "file": "frontend/app/(panel)/dashboard/landings/page.tsx",
+      "sha256": "024c909e4a7f24e45150e01e246acd199ec1df0c3a362498aae614dce0cf9f6d",
+      "category": "frontend_source_requires_import_context",
+      "references": [
+        {
+          "line": 10,
+          "symbols": [
+            "gerencias"
+          ]
+        }
+      ]
+    },
+    {
+      "file": "frontend/app/(panel)/dashboard/layout.tsx",
+      "sha256": "37023f76504708c080140f22ea49dde84af67e74c095274fec0361d7870b7dd8",
+      "category": "frontend_source_requires_import_context",
+      "references": [
+        {
+          "line": 24,
+          "symbols": [
+            "gerencias"
+          ]
+        },
+        {
+          "line": 73,
+          "symbols": [
+            "gerencias"
+          ]
+        },
+        {
+          "line": 124,
+          "symbols": [
+            "gerencias"
+          ]
+        },
+        {
+          "line": 704,
+          "symbols": [
+            "gerencias"
+          ]
+        },
+        {
+          "line": 705,
+          "symbols": [
+            "gerencias"
+          ]
+        },
+        {
+          "line": 707,
+          "symbols": [
+            "gerencias"
+          ]
+        },
+        {
+          "line": 713,
+          "symbols": [
+            "gerencias"
+          ]
+        },
+        {
+          "line": 714,
+          "symbols": [
+            "gerencias"
+          ]
+        }
+      ]
+    },
+    {
+      "file": "frontend/app/(panel)/dashboard/promociones/page.tsx",
+      "sha256": "024e92bac8bbc2fb4e1827ff97db0ff4bf2c187977734e366369fc1c4c8c9595",
+      "category": "frontend_source_requires_import_context",
+      "references": [
+        {
+          "line": 118,
+          "symbols": [
+            "gerencias"
+          ]
+        },
+        {
+          "line": 119,
+          "symbols": [
+            "gerencias"
+          ]
+        },
+        {
+          "line": 125,
+          "symbols": [
+            "gerencias"
+          ]
+        },
+        {
+          "line": 136,
+          "symbols": [
+            "gerencia_phones"
+          ]
+        }
+      ]
+    },
+    {
+      "file": "frontend/app/(panel)/dashboard/seguimiento/page.tsx",
+      "sha256": "03c0154e729596697372ceec90dce684cf03f87b80d949c550697704f60c8a3d",
+      "category": "frontend_source_requires_import_context",
+      "references": [
+        {
+          "line": 195,
+          "symbols": [
+            "gerencias"
+          ]
+        },
+        {
+          "line": 196,
+          "symbols": [
+            "gerencias"
+          ]
+        },
+        {
+          "line": 200,
+          "symbols": [
+            "gerencias"
+          ]
+        },
+        {
+          "line": 206,
+          "symbols": [
+            "gerencias"
+          ]
+        },
+        {
+          "line": 209,
+          "symbols": [
+            "gerencia_phones"
+          ]
+        }
+      ]
+    },
+    {
+      "file": "frontend/app/(panel)/dashboard/telefonos/page.tsx",
+      "sha256": "d742ed61dd6d79e6a2fcad1981b1d340be6c2adc3f5d5158842e2192f8f3783c",
+      "category": "frontend_source_requires_import_context",
+      "references": [
+        {
+          "line": 6,
+          "symbols": [
+            "TelefonosPageContent"
+          ]
+        },
+        {
+          "line": 7,
+          "symbols": [
+            "TelefonosPageContent"
+          ]
+        },
+        {
+          "line": 12,
+          "symbols": [
+            "TelefonosPageContent"
+          ]
+        }
+      ]
+    },
+    {
+      "file": "frontend/app/(panel)/privacy-policy/page.tsx",
+      "sha256": "9c89fefb5059a8d274596ae26aea67065d4af442b8009ab2b73b6d55eb78d64a",
+      "category": "frontend_source_requires_import_context",
+      "references": [
+        {
+          "line": 20,
+          "symbols": [
+            "gerencias"
+          ]
+        },
+        {
+          "line": 26,
+          "symbols": [
+            "gerencias"
+          ]
+        }
+      ]
+    },
+    {
+      "file": "frontend/app/(public)/l/[slug]/route.ts",
+      "sha256": "25b30793b70fe973ea9beba7c2187d686d9b6e8af12375933058f425361cfcf5",
+      "category": "next_server_route",
+      "references": [
+        {
+          "line": 1,
+          "symbols": [
+            "getCachedLandingPhone"
+          ]
+        },
+        {
+          "line": 29,
+          "symbols": [
+            "getCachedLandingPhone"
+          ]
+        }
+      ]
+    },
+    {
+      "file": "frontend/components/conversiones/ConversionFiltersModal.tsx",
+      "sha256": "c902ed0fd9dfe690bd38499075cb8a43c7833e35e0599d4f94e4bea7b45d30af",
+      "category": "frontend_source_requires_import_context",
+      "references": [
+        {
+          "line": 32,
+          "symbols": [
+            "gerencias"
+          ]
+        },
+        {
+          "line": 312,
+          "symbols": [
+            "gerencias"
+          ]
+        },
+        {
+          "line": 313,
+          "symbols": [
+            "gerencias"
+          ]
+        },
+        {
+          "line": 314,
+          "symbols": [
+            "gerencias"
+          ]
+        }
+      ]
+    },
+    {
+      "file": "frontend/components/conversiones/GerenciasPerformancePanel.tsx",
+      "sha256": "a517307d62b41591fe01eec0602e2ab13d74a3790ee4bc39ecbe323ac916b30a",
+      "category": "frontend_source_requires_import_context",
+      "references": [
+        {
+          "line": 224,
+          "symbols": [
+            "gerencias"
+          ]
+        },
+        {
+          "line": 245,
+          "symbols": [
+            "gerencias"
+          ]
+        },
+        {
+          "line": 280,
+          "symbols": [
+            "gerencias"
+          ]
+        },
+        {
+          "line": 503,
+          "symbols": [
+            "gerencias"
+          ]
+        },
+        {
+          "line": 898,
+          "symbols": [
+            "gerencias"
+          ]
+        },
+        {
+          "line": 899,
+          "symbols": [
+            "gerencias"
+          ]
+        }
+      ]
+    },
+    {
+      "file": "frontend/components/gerencias/GerenciaWorkGroupsPanel.tsx",
+      "sha256": "e89b08a3e7cdfb33e608f9ba0d09beef89371ce0ecb6c341ab41bc8a6328106a",
+      "category": "frontend_source_requires_import_context",
+      "references": [
+        {
+          "line": 4,
+          "symbols": [
+            "gerencias"
+          ]
+        },
+        {
+          "line": 8,
+          "symbols": [
+            "gerencias"
+          ]
+        },
+        {
+          "line": 17,
+          "symbols": [
+            "gerencias"
+          ]
+        },
+        {
+          "line": 73,
+          "symbols": [
+            "gerencias"
+          ]
+        },
+        {
+          "line": 80,
+          "symbols": [
+            "gerencias"
+          ]
+        },
+        {
+          "line": 81,
+          "symbols": [
+            "gerencias"
+          ]
+        },
+        {
+          "line": 83,
+          "symbols": [
+            "gerencias"
+          ]
+        },
+        {
+          "line": 109,
+          "symbols": [
+            "gerencias"
+          ]
+        },
+        {
+          "line": 144,
+          "symbols": [
+            "gerencias"
+          ]
+        },
+        {
+          "line": 172,
+          "symbols": [
+            "gerencias"
+          ]
+        }
+      ]
+    },
+    {
+      "file": "frontend/components/integraciones/IntegracionesMetaCapi.tsx",
+      "sha256": "0a5a32d67fe85ee6ae9296956e8b9f9f86caf264246ee677223e0ff442283e38",
+      "category": "frontend_source_requires_import_context",
+      "references": [
+        {
+          "line": 28,
+          "symbols": [
+            "gerencias"
+          ]
+        },
+        {
+          "line": 30,
+          "symbols": [
+            "gerencias"
+          ]
+        },
+        {
+          "line": 272,
+          "symbols": [
+            "landing-phone"
+          ]
+        },
+        {
+          "line": 279,
+          "symbols": [
+            "landing-phone"
+          ]
+        },
+        {
+          "line": 334,
+          "symbols": [
+            "chatrace_gerencias"
+          ]
+        },
+        {
+          "line": 548,
+          "symbols": [
+            "chatrace_gerencias"
+          ]
+        },
+        {
+          "line": 559,
+          "symbols": [
+            "chatrace_gerencias"
+          ]
+        },
+        {
+          "line": 1608,
+          "symbols": [
+            "gerencias"
+          ]
+        },
+        {
+          "line": 1663,
+          "symbols": [
+            "gerencias"
+          ]
+        }
+      ]
+    },
+    {
+      "file": "frontend/components/landing/GerenciaRedirectSection.tsx",
+      "sha256": "fda3f79ed16f8fd5e45916da9afbbd730e765fbd88fa0a5ae305ea2a0366c5ba",
+      "category": "frontend_source_requires_import_context",
+      "references": [
+        {
+          "line": 5,
+          "symbols": [
+            "gerencias"
+          ]
+        },
+        {
+          "line": 6,
+          "symbols": [
+            "gerencias"
+          ]
+        },
+        {
+          "line": 20,
+          "symbols": [
+            "gerencias"
+          ]
+        },
+        {
+          "line": 30,
+          "symbols": [
+            "gerencias"
+          ]
+        },
+        {
+          "line": 33,
+          "symbols": [
+            "gerencias"
+          ]
+        },
+        {
+          "line": 35,
+          "symbols": [
+            "gerencias"
+          ]
+        },
+        {
+          "line": 38,
+          "symbols": [
+            "gerencias"
+          ]
+        },
+        {
+          "line": 49,
+          "symbols": [
+            "gerencias"
+          ]
+        },
+        {
+          "line": 52,
+          "symbols": [
+            "gerencias"
+          ]
+        },
+        {
+          "line": 54,
+          "symbols": [
+            "gerencias"
+          ]
+        },
+        {
+          "line": 56,
+          "symbols": [
+            "gerencias"
+          ]
+        },
+        {
+          "line": 65,
+          "symbols": [
+            "gerencias"
+          ]
+        },
+        {
+          "line": 71,
+          "symbols": [
+            "gerencias"
+          ]
+        },
+        {
+          "line": 97,
+          "symbols": [
+            "gerencias"
+          ]
+        },
+        {
+          "line": 266,
+          "symbols": [
+            "gerencias"
+          ]
+        },
+        {
+          "line": 285,
+          "symbols": [
+            "gerencias"
+          ]
+        },
+        {
+          "line": 318,
+          "symbols": [
+            "gerencias"
+          ]
+        },
+        {
+          "line": 320,
+          "symbols": [
+            "gerencias"
+          ]
+        },
+        {
+          "line": 322,
+          "symbols": [
+            "gerencias"
+          ]
+        },
+        {
+          "line": 324,
+          "symbols": [
+            "gerencias"
+          ]
+        },
+        {
+          "line": 330,
+          "symbols": [
+            "gerencias"
+          ]
+        },
+        {
+          "line": 336,
+          "symbols": [
+            "gerencias"
+          ]
+        },
+        {
+          "line": 354,
+          "symbols": [
+            "gerencias"
+          ]
+        }
+      ]
+    },
+    {
+      "file": "frontend/components/landing/GerenciasAssignmentSummary.tsx",
+      "sha256": "10d770bc80a6cf9e90e06f0b0dd0caaf7f2460bc2bee3db75f50ee340f498e51",
+      "category": "frontend_source_requires_import_context",
+      "references": [
+        {
+          "line": 3,
+          "symbols": [
+            "gerencias"
+          ]
+        },
+        {
+          "line": 4,
+          "symbols": [
+            "gerencias"
+          ]
+        },
+        {
+          "line": 9,
+          "symbols": [
+            "gerencias"
+          ]
+        },
+        {
+          "line": 32,
+          "symbols": [
+            "gerencias"
+          ]
+        },
+        {
+          "line": 35,
+          "symbols": [
+            "gerencias"
+          ]
+        },
+        {
+          "line": 60,
+          "symbols": [
+            "gerencias"
+          ]
+        }
+      ]
+    },
+    {
+      "file": "frontend/components/landing/LandingEditorForm.tsx",
+      "sha256": "0d1684e9137bf4c09e8286189920865ab513dcaa122d37ef744c75d7209cf9d4",
+      "category": "frontend_source_requires_import_context",
+      "references": [
+        {
+          "line": 309,
+          "symbols": [
+            "gerencias"
+          ]
+        },
+        {
+          "line": 1360,
+          "symbols": [
+            "gerencias"
+          ]
+        }
+      ]
+    },
+    {
+      "file": "frontend/components/onboarding/ConstructorSetupGuide.tsx",
+      "sha256": "0ff540cb573e945f4396314b2befd96de4e1ca4c1c73f017f59b0ae7fe8945b2",
+      "category": "frontend_source_requires_import_context",
+      "references": [
+        {
+          "line": 38,
+          "symbols": [
+            "gerencias"
+          ]
+        },
+        {
+          "line": 40,
+          "symbols": [
+            "gerencias"
+          ]
+        },
+        {
+          "line": 41,
+          "symbols": [
+            "gerencias"
+          ]
+        },
+        {
+          "line": 42,
+          "symbols": [
+            "gerencias"
+          ]
+        }
+      ]
+    },
+    {
+      "file": "frontend/components/public-landing/PhonePrewarmScript.tsx",
+      "sha256": "1bc897f5c55ba2cf32331c83d9b7fced12d56f58c693feed7bfc6a45d31dc4c2",
+      "category": "frontend_source_requires_import_context",
+      "references": [
+        {
+          "line": 34,
+          "symbols": [
+            "landing-phone"
+          ]
+        }
+      ]
+    },
+    {
+      "file": "frontend/components/public-landing/PublicLandingRuntimeScript.tsx",
+      "sha256": "2c325d45ec87bdbe78c49bd0a7b0f87d56dd6144743b3c2a2b5ecbac7b29e9ad",
+      "category": "frontend_source_requires_import_context",
+      "references": [
+        {
+          "line": 606,
+          "symbols": [
+            "landing-phone"
+          ]
+        },
+        {
+          "line": 885,
+          "symbols": [
+            "phone-click"
+          ]
+        }
+      ]
+    },
+    {
+      "file": "frontend/components/public-landing/getCachedLandingPhone.ts",
+      "sha256": "78d9f6b5260f48cdfdbd5b2ac4ae8259187360faac424918521a53e0921fbb78",
+      "category": "frontend_source_requires_import_context",
+      "references": [
+        {
+          "line": 8,
+          "symbols": [
+            "getCachedLandingPhone"
+          ]
+        },
+        {
+          "line": 18,
+          "symbols": [
+            "get_cached_constructor_landing_phone"
+          ]
+        },
+        {
+          "line": 29,
+          "symbols": [
+            "landing-phone"
+          ]
+        }
+      ]
+    },
+    {
+      "file": "frontend/components/public-landing/getLandingPhone.ts",
+      "sha256": "f63a1157c3c3b97e447c5c8db89e59593d10a1915c2dc0fe522e74550df2a90a",
+      "category": "frontend_source_requires_import_context",
+      "references": [
+        {
+          "line": 3,
+          "symbols": [
+            "getPublicLandingPhone"
+          ]
+        },
+        {
+          "line": 13,
+          "symbols": [
+            "landing-phone"
+          ]
+        }
+      ]
+    },
+    {
+      "file": "frontend/components/telefonos/TelefonosPageContent.tsx",
+      "sha256": "ebafe2c76b07dc6e19f9cbfbe2bcefd441c5d53bd85ed856c1bf6e365c654469",
+      "category": "frontend_source_requires_import_context",
+      "references": [
+        {
+          "line": 7,
+          "symbols": [
+            "gerencias"
+          ]
+        },
+        {
+          "line": 8,
+          "symbols": [
+            "gerencias"
+          ]
+        },
+        {
+          "line": 57,
+          "symbols": [
+            "gerencias"
+          ]
+        },
+        {
+          "line": 120,
+          "symbols": [
+            "TelefonosPageContent"
+          ]
+        },
+        {
+          "line": 129,
+          "symbols": [
+            "gerencias"
+          ]
+        },
+        {
+          "line": 221,
+          "symbols": [
+            "gerencia_phones"
+          ]
+        },
+        {
+          "line": 247,
+          "symbols": [
+            "phone_metrics"
+          ]
+        },
+        {
+          "line": 352,
+          "symbols": [
+            "sync-phones"
+          ]
+        },
+        {
+          "line": 402,
+          "symbols": [
+            "reset-phone-counters"
+          ]
+        },
+        {
+          "line": 433,
+          "symbols": [
+            "reset-phone-messages"
+          ]
+        },
+        {
+          "line": 506,
+          "symbols": [
+            "gerencia_phones"
+          ]
+        },
+        {
+          "line": 524,
+          "symbols": [
+            "gerencias"
+          ]
+        },
+        {
+          "line": 532,
+          "symbols": [
+            "gerencias"
+          ]
+        },
+        {
+          "line": 587,
+          "symbols": [
+            "gerencia_phones"
+          ]
+        },
+        {
+          "line": 626,
+          "symbols": [
+            "gerencia_phones"
+          ]
+        },
+        {
+          "line": 665,
+          "symbols": [
+            "gerencia_phones"
+          ]
+        },
+        {
+          "line": 688,
+          "symbols": [
+            "gerencia_phones"
+          ]
+        },
+        {
+          "line": 720,
+          "symbols": [
+            "gerencias"
+          ]
+        },
+        {
+          "line": 721,
+          "symbols": [
+            "gerencias"
+          ]
+        },
+        {
+          "line": 794,
+          "symbols": [
+            "gerencias"
+          ]
+        },
+        {
+          "line": 804,
+          "symbols": [
+            "gerencias"
+          ]
+        },
+        {
+          "line": 813,
+          "symbols": [
+            "gerencias"
+          ]
+        },
+        {
+          "line": 814,
+          "symbols": [
+            "gerencias"
+          ]
+        },
+        {
+          "line": 824,
+          "symbols": [
+            "gerencias"
+          ]
+        },
+        {
+          "line": 861,
+          "symbols": [
+            "gerencias"
+          ]
+        },
+        {
+          "line": 869,
+          "symbols": [
+            "gerencias"
+          ]
+        },
+        {
+          "line": 870,
+          "symbols": [
+            "gerencias"
+          ]
+        },
+        {
+          "line": 878,
+          "symbols": [
+            "gerencias"
+          ]
+        },
+        {
+          "line": 887,
+          "symbols": [
+            "gerencias"
+          ]
+        },
+        {
+          "line": 888,
+          "symbols": [
+            "gerencias"
+          ]
+        },
+        {
+          "line": 899,
+          "symbols": [
+            "gerencias"
+          ]
+        },
+        {
+          "line": 901,
+          "symbols": [
+            "gerencias"
+          ]
+        },
+        {
+          "line": 903,
+          "symbols": [
+            "gerencias"
+          ]
+        },
+        {
+          "line": 915,
+          "symbols": [
+            "gerencias"
+          ]
+        },
+        {
+          "line": 916,
+          "symbols": [
+            "gerencias"
+          ]
+        }
+      ]
+    },
+    {
+      "file": "frontend/components/whatsapp-cloud-api/WhatsAppCloudApiInboxPageContent.tsx",
+      "sha256": "debd540b1edf1794e26604f250724169c4bae924eb184c4b1b96f52fad8c36f5",
+      "category": "frontend_source_requires_import_context",
+      "references": [
+        {
+          "line": 1191,
+          "symbols": [
+            "gerencias"
+          ]
+        }
+      ]
+    },
+    {
+      "file": "frontend/components/whatsapp-cloud-api/WhatsAppCloudApiPageContent.tsx",
+      "sha256": "d14bddc2567719e4035f55818022bf5807e280fc4e5e1ce1fe454ff158028b00",
+      "category": "frontend_source_requires_import_context",
+      "references": [
+        {
+          "line": 12,
+          "symbols": [
+            "gerencias"
+          ]
+        },
+        {
+          "line": 19,
+          "symbols": [
+            "gerencias"
+          ]
+        },
+        {
+          "line": 54,
+          "symbols": [
+            "gerencias"
+          ]
+        },
+        {
+          "line": 60,
+          "symbols": [
+            "gerencias"
+          ]
+        },
+        {
+          "line": 116,
+          "symbols": [
+            "gerencias"
+          ]
+        },
+        {
+          "line": 157,
+          "symbols": [
+            "gerencias"
+          ]
+        },
+        {
+          "line": 159,
+          "symbols": [
+            "gerencias"
+          ]
+        },
+        {
+          "line": 162,
+          "symbols": [
+            "gerencias"
+          ]
+        },
+        {
+          "line": 173,
+          "symbols": [
+            "gerencias"
+          ]
+        },
+        {
+          "line": 176,
+          "symbols": [
+            "gerencias"
+          ]
+        },
+        {
+          "line": 178,
+          "symbols": [
+            "gerencias"
+          ]
+        },
+        {
+          "line": 180,
+          "symbols": [
+            "gerencias"
+          ]
+        },
+        {
+          "line": 458,
+          "symbols": [
+            "gerencias"
+          ]
+        },
+        {
+          "line": 517,
+          "symbols": [
+            "gerencias"
+          ]
+        },
+        {
+          "line": 1452,
+          "symbols": [
+            "gerencias"
+          ]
+        },
+        {
+          "line": 1472,
+          "symbols": [
+            "gerencias"
+          ]
+        },
+        {
+          "line": 1507,
+          "symbols": [
+            "gerencias"
+          ]
+        },
+        {
+          "line": 1509,
+          "symbols": [
+            "gerencias"
+          ]
+        },
+        {
+          "line": 1511,
+          "symbols": [
+            "gerencias"
+          ]
+        },
+        {
+          "line": 1512,
+          "symbols": [
+            "gerencias"
+          ]
+        },
+        {
+          "line": 1513,
+          "symbols": [
+            "gerencias"
+          ]
+        },
+        {
+          "line": 1519,
+          "symbols": [
+            "gerencias"
+          ]
+        },
+        {
+          "line": 1525,
+          "symbols": [
+            "gerencias"
+          ]
+        },
+        {
+          "line": 1544,
+          "symbols": [
+            "gerencias"
+          ]
+        },
+        {
+          "line": 1547,
+          "symbols": [
+            "gerencias"
+          ]
+        },
+        {
+          "line": 1551,
+          "symbols": [
+            "gerencias"
+          ]
+        }
+      ]
+    },
+    {
+      "file": "frontend/lib/conversionsDb.ts",
+      "sha256": "c1eaf7b3dafdbd146288f92a327d75096b3eb9e261e97d23955b98413da1036e",
+      "category": "frontend_source_requires_import_context",
+      "references": [
+        {
+          "line": 1687,
+          "symbols": [
+            "get_gerencia_availability_summaries"
+          ]
+        }
+      ]
+    },
+    {
+      "file": "frontend/lib/gerencias/gerenciasDb.ts",
+      "sha256": "994fd29e8f158f6bb591c8724fc6f8ce7059885c38ca7468e578a286839e1913",
+      "category": "frontend_source_requires_import_context",
+      "references": [
+        {
+          "line": 61,
+          "symbols": [
+            "gerencias"
+          ]
+        },
+        {
+          "line": 68,
+          "symbols": [
+            "gerencias"
+          ]
+        },
+        {
+          "line": 83,
+          "symbols": [
+            "gerencias"
+          ]
+        },
+        {
+          "line": 90,
+          "symbols": [
+            "gerencias"
+          ]
+        },
+        {
+          "line": 127,
+          "symbols": [
+            "gerencias"
+          ]
+        },
+        {
+          "line": 138,
+          "symbols": [
+            "gerencias"
+          ]
+        },
+        {
+          "line": 175,
+          "symbols": [
+            "gerencias"
+          ]
+        },
+        {
+          "line": 198,
+          "symbols": [
+            "gerencias"
+          ]
+        },
+        {
+          "line": 210,
+          "symbols": [
+            "gerencia_work_group_members"
+          ]
+        },
+        {
+          "line": 218,
+          "symbols": [
+            "gerencia_work_groups"
+          ]
+        },
+        {
+          "line": 219,
+          "symbols": [
+            "gerencia_work_group_members"
+          ]
+        },
+        {
+          "line": 235,
+          "symbols": [
+            "gerencia_work_group_members"
+          ]
+        },
+        {
+          "line": 248,
+          "symbols": [
+            "gerencia_work_groups"
+          ]
+        },
+        {
+          "line": 265,
+          "symbols": [
+            "gerencia_work_groups"
+          ]
+        },
+        {
+          "line": 275,
+          "symbols": [
+            "gerencia_work_groups"
+          ]
+        },
+        {
+          "line": 285,
+          "symbols": [
+            "gerencia_work_group_members"
+          ]
+        },
+        {
+          "line": 293,
+          "symbols": [
+            "gerencia_work_group_members"
+          ]
+        },
+        {
+          "line": 345,
+          "symbols": [
+            "gerencias"
+          ]
+        },
+        {
+          "line": 359,
+          "symbols": [
+            "gerencias"
+          ]
+        },
+        {
+          "line": 375,
+          "symbols": [
+            "gerencias"
+          ]
+        },
+        {
+          "line": 381,
+          "symbols": [
+            "landings_gerencias"
+          ]
+        },
+        {
+          "line": 399,
+          "symbols": [
+            "gerencias"
+          ]
+        },
+        {
+          "line": 409,
+          "symbols": [
+            "gerencias"
+          ]
+        },
+        {
+          "line": 418,
+          "symbols": [
+            "landings_gerencias"
+          ]
+        },
+        {
+          "line": 446,
+          "symbols": [
+            "landings_gerencias"
+          ]
+        }
+      ]
+    },
+    {
+      "file": "frontend/lib/gerencias/workspaceCompatibility.ts",
+      "sha256": "3255a0a1471ec71a5de4bc4d2bc65dde6a3323b242d31a8d7f5c92d34ed5a979",
+      "category": "frontend_source_requires_import_context",
+      "references": [
+        {
+          "line": 23,
+          "symbols": [
+            "gerencias"
+          ]
+        },
+        {
+          "line": 28,
+          "symbols": [
+            "gerencias"
+          ]
+        }
+      ]
+    },
+    {
+      "file": "frontend/lib/landing/types.ts",
+      "sha256": "65f26c6aa4853717e6f4f7456d26b870a673652ce5e142011621782adb572ef8",
+      "category": "frontend_source_requires_import_context",
+      "references": [
+        {
+          "line": 208,
+          "symbols": [
+            "gerencias"
+          ]
+        },
+        {
+          "line": 210,
+          "symbols": [
+            "gerencias"
+          ]
+        }
+      ]
+    },
+    {
+      "file": "frontend/lib/whatsappCloudApiDb.ts",
+      "sha256": "8a1bc98b22b864c4328ea16ebf5ff6f2efda7f0e8c9b2cc187df924dcde590f7",
+      "category": "frontend_source_requires_import_context",
+      "references": [
+        {
+          "line": 265,
+          "symbols": [
+            "whatsapp_cloud_api_gerencias"
+          ]
+        },
+        {
+          "line": 287,
+          "symbols": [
+            "whatsapp_cloud_api_gerencias"
+          ]
+        },
+        {
+          "line": 304,
+          "symbols": [
+            "whatsapp_cloud_api_gerencias"
+          ]
+        },
+        {
+          "line": 776,
+          "symbols": [
+            "get_whatsapp_cloud_api_inbox_threads_page"
+          ]
+        },
+        {
+          "line": 789,
+          "symbols": [
+            "get_whatsapp_cloud_api_inbox_threads_page"
+          ]
+        }
+      ]
+    },
+    {
+      "file": "frontend/tests/conversionStats.test.ts",
+      "sha256": "335f15bbcc09c00fb4df5d9af2eb6ca8e70ad032614143cb5c9960b79d488237",
+      "category": "test_source_not_executed",
+      "references": [
+        {
+          "line": 525,
+          "symbols": [
+            "gerencias"
+          ]
+        }
+      ]
+    },
+    {
+      "file": "frontend/tests/gerenciaWorkspaceCompatibility.test.ts",
+      "sha256": "f410e9935b30bd21415a0e767a20647987ed40a59b060cc5bdc6109d49295c81",
+      "category": "test_source_not_executed",
+      "references": [
+        {
+          "line": 6,
+          "symbols": [
+            "gerencias"
+          ]
+        },
+        {
+          "line": 8,
+          "symbols": [
+            "gerencias"
+          ]
+        },
+        {
+          "line": 11,
+          "symbols": [
+            "gerencias"
+          ]
+        },
+        {
+          "line": 24,
+          "symbols": [
+            "gerencias"
+          ]
+        },
+        {
+          "line": 27,
+          "symbols": [
+            "gerencias"
+          ]
+        },
+        {
+          "line": 51,
+          "symbols": [
+            "gerencias"
+          ]
+        }
+      ]
+    },
+    {
+      "file": "frontend/tests/phase0LandingContracts.test.ts",
+      "sha256": "deba5cf8eb9c9476f8a521512377749b8fac8ef7a4a258d7888e008d80804330",
+      "category": "test_source_not_executed",
+      "references": [
+        {
+          "line": 3,
+          "symbols": [
+            "getPublicLandingPhone"
+          ]
+        },
+        {
+          "line": 27,
+          "symbols": [
+            "getPublicLandingPhone"
+          ]
+        },
+        {
+          "line": 33,
+          "symbols": [
+            "getPublicLandingPhone"
+          ]
+        },
+        {
+          "line": 36,
+          "symbols": [
+            "getPublicLandingPhone"
+          ]
+        },
+        {
+          "line": 38,
+          "symbols": [
+            "getPublicLandingPhone"
+          ]
+        },
+        {
+          "line": 57,
+          "symbols": [
+            "getPublicLandingPhone"
+          ]
+        }
+      ]
+    },
+    {
+      "file": "frontend/tests/phase0PhoneHandlers.test.ts",
+      "sha256": "5c2f465608546c1173525cadd8b2440f94930718060f47470f1b78028c48dd41",
+      "category": "test_source_not_executed",
+      "references": [
+        {
+          "line": 9,
+          "symbols": [
+            "landing-phone",
+            "phone-click"
+          ]
+        },
+        {
+          "line": 21,
+          "symbols": [
+            "landing_phone_cache"
+          ]
+        },
+        {
+          "line": 22,
+          "symbols": [
+            "gerencia_phones"
+          ]
+        },
+        {
+          "line": 23,
+          "symbols": [
+            "landings_gerencias"
+          ]
+        },
+        {
+          "line": 46,
+          "symbols": [
+            "landing-phone"
+          ]
+        },
+        {
+          "line": 47,
+          "symbols": [
+            "landing-phone"
+          ]
+        },
+        {
+          "line": 48,
+          "symbols": [
+            "landing-phone"
+          ]
+        },
+        {
+          "line": 49,
+          "symbols": [
+            "landing-phone"
+          ]
+        },
+        {
+          "line": 50,
+          "symbols": [
+            "landing-phone"
+          ]
+        },
+        {
+          "line": 51,
+          "symbols": [
+            "landing-phone"
+          ]
+        },
+        {
+          "line": 56,
+          "symbols": [
+            "landing-phone"
+          ]
+        },
+        {
+          "line": 61,
+          "symbols": [
+            "get_phone_for_landing",
+            "landing-phone"
+          ]
+        },
+        {
+          "line": 65,
+          "symbols": [
+            "landing-phone"
+          ]
+        },
+        {
+          "line": 70,
+          "symbols": [
+            "get_phone_for_landing"
+          ]
+        },
+        {
+          "line": 71,
+          "symbols": [
+            "record_landing_phone_availability_demand"
+          ]
+        },
+        {
+          "line": 76,
+          "symbols": [
+            "landing-phone"
+          ]
+        },
+        {
+          "line": 78,
+          "symbols": [
+            "get_phone_for_landing"
+          ]
+        },
+        {
+          "line": 79,
+          "symbols": [
+            "get_phone_for_landing"
+          ]
+        },
+        {
+          "line": 83,
+          "symbols": [
+            "phone-click"
+          ]
+        },
+        {
+          "line": 85,
+          "symbols": [
+            "phone-click"
+          ]
+        },
+        {
+          "line": 86,
+          "symbols": [
+            "phone-click"
+          ]
+        },
+        {
+          "line": 87,
+          "symbols": [
+            "extend_landing_phone_assignment_reservation",
+            "phone-click"
+          ]
+        },
+        {
+          "line": 89,
+          "symbols": [
+            "increment_phone_assignment_scope_usage"
+          ]
+        },
+        {
+          "line": 90,
+          "symbols": [
+            "extend_landing_phone_assignment_reservation"
+          ]
+        },
+        {
+          "line": 91,
+          "symbols": [
+            "increment_phone_assignment_scope_usage",
+            "phone-click"
+          ]
+        }
+      ]
+    },
+    {
+      "file": "supabase/functions/bootstrap-cron-config/index.ts",
+      "sha256": "1d3397f037c008240c7cae62d2e4f62f9d2f681ddc9d8818c37d29cee3df0d3c",
+      "category": "edge_source",
+      "references": [
+        {
+          "line": 10,
+          "symbols": [
+            "sync-phones"
+          ]
+        },
+        {
+          "line": 78,
+          "symbols": [
+            "sync-phones"
+          ]
+        },
+        {
+          "line": 100,
+          "symbols": [
+            "sync-phones"
+          ]
+        }
+      ]
+    },
+    {
+      "file": "supabase/functions/conversions/index.ts",
+      "sha256": "b56628cc42de95d44ea0f2cdf9078c3550c0efec354f11a5b6af1a45defc2295",
+      "category": "edge_source",
+      "references": [
+        {
+          "line": 482,
+          "symbols": [
+            "gerencia_phones"
+          ]
+        },
+        {
+          "line": 506,
+          "symbols": [
+            "gerencias"
+          ]
+        },
+        {
+          "line": 507,
+          "symbols": [
+            "gerencias"
+          ]
+        },
+        {
+          "line": 513,
+          "symbols": [
+            "gerencias"
+          ]
+        },
+        {
+          "line": 525,
+          "symbols": [
+            "gerencias"
+          ]
+        },
+        {
+          "line": 541,
+          "symbols": [
+            "landings_gerencias"
+          ]
+        },
+        {
+          "line": 598,
+          "symbols": [
+            "gerencias"
+          ]
+        },
+        {
+          "line": 690,
+          "symbols": [
+            "gerencias"
+          ]
+        },
+        {
+          "line": 706,
+          "symbols": [
+            "gerencia_phones"
+          ]
+        },
+        {
+          "line": 708,
+          "symbols": [
+            "gerencias"
+          ]
+        },
+        {
+          "line": 711,
+          "symbols": [
+            "gerencias"
+          ]
+        },
+        {
+          "line": 713,
+          "symbols": [
+            "gerencias"
+          ]
+        },
+        {
+          "line": 714,
+          "symbols": [
+            "gerencias"
+          ]
+        },
+        {
+          "line": 715,
+          "symbols": [
+            "gerencias"
+          ]
+        },
+        {
+          "line": 2356,
+          "symbols": [
+            "ar_phone_area_codes"
+          ]
+        },
+        {
+          "line": 2668,
+          "symbols": [
+            "gerencias"
+          ]
+        }
+      ]
+    },
+    {
+      "file": "supabase/functions/landing-phone/index.ts",
+      "sha256": "5cc50a2feeec0294c35e25c1651b86c1557ccccf95808070a2af2ce8cb21d949",
+      "category": "edge_source",
+      "references": [
+        {
+          "line": 69,
+          "symbols": [
+            "increment_phone_assignment_scope_usage"
+          ]
+        },
+        {
+          "line": 91,
+          "symbols": [
+            "record_landing_phone_availability_demand"
+          ]
+        },
+        {
+          "line": 94,
+          "symbols": [
+            "landing-phone"
+          ]
+        },
+        {
+          "line": 101,
+          "symbols": [
+            "landing-phone"
+          ]
+        },
+        {
+          "line": 109,
+          "symbols": [
+            "get_phone_for_landing"
+          ]
+        },
+        {
+          "line": 110,
+          "symbols": [
+            "landing-phone"
+          ]
+        },
+        {
+          "line": 111,
+          "symbols": [
+            "landing-phone"
+          ]
+        },
+        {
+          "line": 219,
+          "symbols": [
+            "landing_phone_cache"
+          ]
+        },
+        {
+          "line": 263,
+          "symbols": [
+            "get_phone_for_chatrace_client"
+          ]
+        },
+        {
+          "line": 264,
+          "symbols": [
+            "get_phone_for_landing"
+          ]
+        },
+        {
+          "line": 306,
+          "symbols": [
+            "gerencias"
+          ]
+        }
+      ]
+    },
+    {
+      "file": "supabase/functions/phone-click/index.ts",
+      "sha256": "9f5d846d488f0c32acd6495816c533540affddb64087e6efe62cf01252e6dc92",
+      "category": "edge_source",
+      "references": [
+        {
+          "line": 20,
+          "symbols": [
+            "phone-click"
+          ]
+        },
+        {
+          "line": 115,
+          "symbols": [
+            "gerencia_phones"
+          ]
+        },
+        {
+          "line": 142,
+          "symbols": [
+            "landings_gerencias"
+          ]
+        },
+        {
+          "line": 175,
+          "symbols": [
+            "extend_landing_phone_assignment_reservation"
+          ]
+        },
+        {
+          "line": 185,
+          "symbols": [
+            "increment_phone_assignment_scope_usage"
+          ]
+        },
+        {
+          "line": 198,
+          "symbols": [
+            "phone-click"
+          ]
+        },
+        {
+          "line": 203,
+          "symbols": [
+            "phone-click"
+          ]
+        }
+      ]
+    },
+    {
+      "file": "supabase/functions/reset-phone-counters/index.ts",
+      "sha256": "0a4fa1b24401790e70a9943dfe8e1f78421d4a361e93063b0d3c7e3ccbf1a0c5",
+      "category": "edge_source",
+      "references": [
+        {
+          "line": 11,
+          "symbols": [
+            "gerencias"
+          ]
+        },
+        {
+          "line": 13,
+          "symbols": [
+            "reset-phone-counters"
+          ]
+        },
+        {
+          "line": 74,
+          "symbols": [
+            "gerencias"
+          ]
+        },
+        {
+          "line": 80,
+          "symbols": [
+            "gerencias"
+          ]
+        },
+        {
+          "line": 85,
+          "symbols": [
+            "gerencias"
+          ]
+        },
+        {
+          "line": 94,
+          "symbols": [
+            "gerencias"
+          ]
+        },
+        {
+          "line": 120,
+          "symbols": [
+            "gerencia_phones"
+          ]
+        },
+        {
+          "line": 151,
+          "symbols": [
+            "gerencia_phones"
+          ]
+        },
+        {
+          "line": 168,
+          "symbols": [
+            "phone_assignment_scope_metrics"
+          ]
+        }
+      ]
+    },
+    {
+      "file": "supabase/functions/reset-phone-messages/index.ts",
+      "sha256": "0b667d7a62417826c6993d3ede61160cd6f483e559933425954128b1d4a377c2",
+      "category": "edge_source",
+      "references": [
+        {
+          "line": 11,
+          "symbols": [
+            "gerencia_phones"
+          ]
+        },
+        {
+          "line": 69,
+          "symbols": [
+            "gerencias"
+          ]
+        },
+        {
+          "line": 76,
+          "symbols": [
+            "gerencias"
+          ]
+        },
+        {
+          "line": 80,
+          "symbols": [
+            "gerencias"
+          ]
+        },
+        {
+          "line": 88,
+          "symbols": [
+            "gerencias"
+          ]
+        },
+        {
+          "line": 109,
+          "symbols": [
+            "gerencia_phones"
+          ]
+        },
+        {
+          "line": 133,
+          "symbols": [
+            "gerencia_phones"
+          ]
+        },
+        {
+          "line": 148,
+          "symbols": [
+            "phone_metrics"
+          ]
+        }
+      ]
+    },
+    {
+      "file": "supabase/functions/sync-phones/index.ts",
+      "sha256": "6610774d1c436cd86c3914d8c4845e2b0825b2b43a64595592e245723f2f536c",
+      "category": "edge_source",
+      "references": [
+        {
+          "line": 57,
+          "symbols": [
+            "gerencias"
+          ]
+        },
+        {
+          "line": 59,
+          "symbols": [
+            "gerencia_phones"
+          ]
+        },
+        {
+          "line": 67,
+          "symbols": [
+            "sync-phones"
+          ]
+        },
+        {
+          "line": 150,
+          "symbols": [
+            "gerencias"
+          ]
+        },
+        {
+          "line": 152,
+          "symbols": [
+            "gerencias"
+          ]
+        },
+        {
+          "line": 161,
+          "symbols": [
+            "gerencias"
+          ]
+        },
+        {
+          "line": 166,
+          "symbols": [
+            "gerencias"
+          ]
+        },
+        {
+          "line": 175,
+          "symbols": [
+            "gerencias"
+          ]
+        },
+        {
+          "line": 281,
+          "symbols": [
+            "gerencia_phones"
+          ]
+        },
+        {
+          "line": 287,
+          "symbols": [
+            "gerencia_phones"
+          ]
+        },
+        {
+          "line": 331,
+          "symbols": [
+            "gerencia_phones"
+          ]
+        },
+        {
+          "line": 338,
+          "symbols": [
+            "gerencia_phones"
+          ]
+        },
+        {
+          "line": 357,
+          "symbols": [
+            "gerencia_phones"
+          ]
+        },
+        {
+          "line": 364,
+          "symbols": [
+            "gerencia_phones"
+          ]
+        },
+        {
+          "line": 371,
+          "symbols": [
+            "gerencia_phones"
+          ]
+        },
+        {
+          "line": 377,
+          "symbols": [
+            "gerencia_phones"
+          ]
+        },
+        {
+          "line": 402,
+          "symbols": [
+            "gerencia_phones"
+          ]
+        },
+        {
+          "line": 410,
+          "symbols": [
+            "gerencias"
+          ]
+        },
+        {
+          "line": 424,
+          "symbols": [
+            "gerencia_phones"
+          ]
+        }
+      ]
+    },
+    {
+      "file": "supabase/functions/whatsapp-cloud-redirect/index.ts",
+      "sha256": "3ae6551aea4c0229725e48589a7b9e86a067b11ad500836b23e7b5a2b3389b09",
+      "category": "edge_source",
+      "references": [
+        {
+          "line": 267,
+          "symbols": [
+            "record_whatsapp_cloud_api_redirect_click"
+          ]
+        }
+      ]
+    },
+    {
+      "file": "supabase/functions/whatsapp-cloud-worker/index.ts",
+      "sha256": "39a335b596c049dc10bb3e6c311f08c9a999c4fae6b16c60739f6362504245d7",
+      "category": "edge_source",
+      "references": [
+        {
+          "line": 795,
+          "symbols": [
+            "get_phone_for_whatsapp_cloud_api"
+          ]
+        },
+        {
+          "line": 978,
+          "symbols": [
+            "increment_phone_assignment_scope_usage"
+          ]
+        }
+      ]
+    }
+  ],
+  "publicContract": {
+    "landingPhone": {
+      "input": "GET/POST name; optional source including chatrace/warmup.",
+      "owner": "Backend lookup from landings.name or profiles.nombre for Chatrace.",
+      "behavior": "Account access check; constructor cache freshness and fair-mode bypass; RPC selection; warmup does not create reservation; public phone projection and existing HTTP error mapping unchanged."
+    },
+    "phoneClick": {
+      "input": "POST landingName, phoneId, optional phone/reservationId.",
+      "behavior": "Landing-phone association check, best-effort reservation extension and scope increment unchanged."
+    },
+    "nextCache": {
+      "consumer": "frontend/app/(public)/l/[slug]/route.ts",
+      "helper": "frontend/components/public-landing/getCachedLandingPhone.ts",
+      "rpc": "get_cached_constructor_landing_phone",
+      "behavior": "Server fetch with revalidate=60 and landing tag; initial public phone payload; errors yield null."
+    }
+  },
+  "existingTestSources": [
+    {
+      "file": "frontend/tests/phase0PhoneHandlers.test.ts",
+      "sha256": "5c2f465608546c1173525cadd8b2440f94930718060f47470f1b78028c48dd41",
+      "executedThisPhase": false
+    },
+    {
+      "file": "frontend/tests/landingPhoneNormalization.test.ts",
+      "sha256": "07a8bf7216c9df7543fdbda9e4c32a8e3a54147272d1af9a2c3f745fa6d25f98",
+      "executedThisPhase": false
+    },
+    {
+      "file": "frontend/tests/whatsappDisplayPhone.test.ts",
+      "sha256": "7578f220cf58df3a6d560284d6e61613b3c667c54aa6abbd31fd17a959cd9ac3",
+      "executedThisPhase": false
+    },
+    {
+      "file": "scripts/phase0/run-concurrency.mjs",
+      "sha256": "585391b44794e485496c46a1431a040993197388e13296d9d73989008d89b1fc",
+      "executedThisPhase": false
+    },
+    {
+      "file": "scripts/phase0/concurrency-schema.sql",
+      "sha256": "952aa1feff396d854d9250aa49ecc5368535ad790b4ea11213cd4e71f58b9163",
+      "executedThisPhase": false
+    }
+  ],
+  "exclusions": [
+    "conversions and CAPI",
+    "Contact/Lead/Purchase and confirmation business logic",
+    "revalidation secrets",
+    "TRUNCATE and other findings",
+    "cron bodies, jobs, schedules and configuration",
+    "WhatsApp/Telegram business behavior",
+    "production and sibling repository"
+  ]
+}
