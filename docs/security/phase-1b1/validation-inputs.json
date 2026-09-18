@@ -1,0 +1,192 @@
+{
+  "formatVersion": 1,
+  "phase": "1B.1",
+  "baseCommit": "ba7b3d3f5e60eb0c2cb907a8c281d4462e15d4bb",
+  "source": "Existing audit at the start of final validation; no report is regenerated or retroactively claimed to have execution-time source hashes.",
+  "auditSha256": "e76828c9686d906378d67abea3c69d03ce0fe51da0f0a16e6f4cc1bad530feca",
+  "inventory": {
+    "modified": [
+      "scripts/phase0/bootstrap-runtime.mjs",
+      "scripts/phase0/bootstrap-safety.test.mjs",
+      "supabase/bootstrap/incremental-manifest.json"
+    ],
+    "new": [
+      "docs/security/phase-1b1/README.md",
+      "docs/security/phase-1b1/audit.json",
+      "docs/security/phase-1b1/auth-delete-diagnostic-audit.json",
+      "docs/security/phase-1b1/auth-delete-diagnostic.json",
+      "docs/security/phase-1b1/auth-delete-diagnostic.md",
+      "docs/security/phase-1b1/auth-delete-diagnostic.mjs",
+      "docs/security/phase-1b1/auth-delete-network-events.json",
+      "docs/security/phase-1b1/consumers.json",
+      "docs/security/phase-1b1/local-profile-metadata.json",
+      "docs/security/phase-1b1/local-validation.json",
+      "docs/security/phase-1b1/reconstruction-diagnostic.json",
+      "docs/security/phase-1b1/reconstruction-diagnostic.md",
+      "docs/security/phase-1b1/regression-validation.json",
+      "docs/security/phase-1b1/remote-profile-metadata.json",
+      "docs/security/phase-1b1/review.json",
+      "scripts/security/artifact-paths.mjs",
+      "scripts/security/audit-profile-artifacts.mjs",
+      "scripts/security/bootstrap-diagnostic-trace.mjs",
+      "scripts/security/diagnostic-tools.test.mjs",
+      "scripts/security/profile-auth-api.mjs",
+      "scripts/security/profile-data-api.mjs",
+      "scripts/security/profile-metadata.sql",
+      "scripts/security/profile-security-tests.mjs",
+      "scripts/security/run-profile-reconstruction-diagnostic.mjs",
+      "scripts/security/run-profile-regressions.mjs",
+      "scripts/security/run-profile-security.mjs",
+      "supabase/migrations/20260917183837_protect_profile_administrative_fields.sql"
+    ],
+    "deleted": [],
+    "total": 30
+  },
+  "files": [
+    {
+      "file": "docs/security/phase-1b1/README.md",
+      "bytes": 18482,
+      "sha256": "522e1fef815a85b4609246ef433a7b26f6ae7d80a316379996fe8eb90723e221"
+    },
+    {
+      "file": "docs/security/phase-1b1/auth-delete-diagnostic-audit.json",
+      "bytes": 2882,
+      "sha256": "a4c7824c86bd904d5f74709c94a9da92b439783d51e5d2186915d6864f9b859c"
+    },
+    {
+      "file": "docs/security/phase-1b1/auth-delete-diagnostic.json",
+      "bytes": 318045,
+      "sha256": "27d699dd736a1d85ce1630ac18c2b375d44e716468987a9265bb94728256e79a"
+    },
+    {
+      "file": "docs/security/phase-1b1/auth-delete-diagnostic.md",
+      "bytes": 12786,
+      "sha256": "96ffff75f803733d915c40bcae9cbacdb76321857ecd43f23826be0a0539b6f5"
+    },
+    {
+      "file": "docs/security/phase-1b1/auth-delete-diagnostic.mjs",
+      "bytes": 14773,
+      "sha256": "144a587d177c5b45a0a08413cde9013a064bbb7698534d09e5f8da55f560a140"
+    },
+    {
+      "file": "docs/security/phase-1b1/auth-delete-network-events.json",
+      "bytes": 2999,
+      "sha256": "87f94feab8011945f5efae07e4ab47d662cf3a4a415711395505d6e5073fd784"
+    },
+    {
+      "file": "docs/security/phase-1b1/consumers.json",
+      "bytes": 36152,
+      "sha256": "6e40c5f184596a9d9a7ca437255b7853432d5b95d0ec93b23624dfc33d581d94"
+    },
+    {
+      "file": "docs/security/phase-1b1/local-profile-metadata.json",
+      "bytes": 7476,
+      "sha256": "126d6fc5167566964052dab3556880e95ebd1eccb0276755031af799404220b3"
+    },
+    {
+      "file": "docs/security/phase-1b1/local-validation.json",
+      "bytes": 97973,
+      "sha256": "290211f5f8af5893117b29dcf9af4d737a173f5783fe5d84843132913167d83c"
+    },
+    {
+      "file": "docs/security/phase-1b1/reconstruction-diagnostic.json",
+      "bytes": 303728,
+      "sha256": "bb03aae86f7ea824958e42f72428e2f4b578fe448248b98854581809f46526a6"
+    },
+    {
+      "file": "docs/security/phase-1b1/reconstruction-diagnostic.md",
+      "bytes": 9274,
+      "sha256": "039550e338cb5a763f0c40f09201a6e45d79aede24300f0f95e2213c710a75ff"
+    },
+    {
+      "file": "docs/security/phase-1b1/regression-validation.json",
+      "bytes": 1124,
+      "sha256": "bf4ffe24499fc36aaf6906429ac862a11e50755c4b1f982088307ca257c67f05"
+    },
+    {
+      "file": "docs/security/phase-1b1/remote-profile-metadata.json",
+      "bytes": 7923,
+      "sha256": "fdacd47d2b43a35d6b4050970625a8bf4f52693d92312b4ffb5295f31caac404"
+    },
+    {
+      "file": "docs/security/phase-1b1/review.json",
+      "bytes": 16456,
+      "sha256": "716e16ea0d97059e8b22bb905253a054304ad72791f7a63b95e918e3a424edb9"
+    },
+    {
+      "file": "scripts/phase0/bootstrap-runtime.mjs",
+      "bytes": 12246,
+      "sha256": "ee287778bde22f9a1c1eda869123b49bd59b631967759e009bdc140ba04fbaa1"
+    },
+    {
+      "file": "scripts/phase0/bootstrap-safety.test.mjs",
+      "bytes": 6595,
+      "sha256": "efb328d972ebf71ce23d4fbf6f3b621dc583c9bc1828c107460c83d10a363c6c"
+    },
+    {
+      "file": "scripts/security/artifact-paths.mjs",
+      "bytes": 375,
+      "sha256": "d5ddcbf3831ee3b61b32a0c58bfe4a98c35b7880ce8a91cdd5b3e16a85decbdb"
+    },
+    {
+      "file": "scripts/security/audit-profile-artifacts.mjs",
+      "bytes": 4418,
+      "sha256": "27838c6ed8f3bc08f4928a1d97a485ab671f3aa0424eb105e376c999bdc63ca7"
+    },
+    {
+      "file": "scripts/security/bootstrap-diagnostic-trace.mjs",
+      "bytes": 9575,
+      "sha256": "38fa7607fd70ec1a7a8a88827c156d36d2f6ee5c9bd7d26ddc34f531058a92b5"
+    },
+    {
+      "file": "scripts/security/diagnostic-tools.test.mjs",
+      "bytes": 3639,
+      "sha256": "b1c9b0547f5857b38fc0b3a2a0fb0b2364bbb22f72a0c230d3e221c7184daee8"
+    },
+    {
+      "file": "scripts/security/profile-auth-api.mjs",
+      "bytes": 4430,
+      "sha256": "f53f24461725ca8c84aeb4c3a8346ac8d97e11e84e19d5e88018ff967ec8124b"
+    },
+    {
+      "file": "scripts/security/profile-data-api.mjs",
+      "bytes": 3858,
+      "sha256": "0a6b8005e29a5a45114f005142ba85dafe163f9740833bd1ddbc6b01d974f588"
+    },
+    {
+      "file": "scripts/security/profile-metadata.sql",
+      "bytes": 1843,
+      "sha256": "166c528e61792f8ad2d509073ffdb54a11510d7952a72e46c932ca0940e97115"
+    },
+    {
+      "file": "scripts/security/profile-security-tests.mjs",
+      "bytes": 12976,
+      "sha256": "a2911ee85080a7b85725d6222536c36e5623d98b8bb6f722c46ab407c900938e"
+    },
+    {
+      "file": "scripts/security/run-profile-reconstruction-diagnostic.mjs",
+      "bytes": 7875,
+      "sha256": "ffc490e4a1dd3717622089eec0ac088102c52ab0044cac2c4a978b62ae43ed23"
+    },
+    {
+      "file": "scripts/security/run-profile-regressions.mjs",
+      "bytes": 9250,
+      "sha256": "97a61b3c956191363396c7b402814f6b7942b63bad726c4a12f2ac62351481c0"
+    },
+    {
+      "file": "scripts/security/run-profile-security.mjs",
+      "bytes": 10776,
+      "sha256": "72d6df2718533ba600cbccebe59b35921f1b79a7cc7e5648ac27ba025ab41525"
+    },
+    {
+      "file": "supabase/bootstrap/incremental-manifest.json",
+      "bytes": 374,
+      "sha256": "5f7d61a89cec1dc10020c5241a8562217e068b02a8b7f94f9c5ce45e0846e6f9"
+    },
+    {
+      "file": "supabase/migrations/20260917183837_protect_profile_administrative_fields.sql",
+      "bytes": 921,
+      "sha256": "119b70e25ffea319e4f4decbdf37c4b5681be1427f09e3ada93f07b6c7c9da87"
+    }
+  ]
+}

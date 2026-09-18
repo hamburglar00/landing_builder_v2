@@ -1,0 +1,711 @@
+{
+  "phase": "1B.1",
+  "status": "closed_local_checkpoint",
+  "branch": "main",
+  "head": "ba7b3d3f5e60eb0c2cb907a8c281d4462e15d4bb",
+  "initialPhaseWorkingTree": "clean",
+  "continuationInitialChangedFiles": 30,
+  "continuationScope": "Separate admission of existing Auth and reconstruction evidence; scoped local integration rerun and final pending regression validation. No full reconstruction repeated and no production-source change.",
+  "remoteReadsThisContinuation": 0,
+  "remoteWrites": 0,
+  "deploys": 0,
+  "commits": 0,
+  "pushes": 0,
+  "stagingChanges": 0,
+  "migration": {
+    "file": "supabase/migrations/20260917183837_protect_profile_administrative_fields.sql",
+    "historicalFilesChanged": 0,
+    "registeredTotal": 269,
+    "sha256": "119b70e25ffea319e4f4decbdf37c4b5681be1427f09e3ada93f07b6c7c9da87",
+    "changedThisContinuation": false
+  },
+  "harnessCorrections": {
+    "authDeletion": {
+      "invalidPostgresSetRoleRemoved": true,
+      "realLocalAdminApi": true,
+      "image": "public.ecr.aws/supabase/gotrue:v2.189.0",
+      "existingDatabaseLogin": "supabase_auth_admin",
+      "newMemberships": 0,
+      "newRoleAttributes": 0,
+      "newGrantsForHarness": 0,
+      "syntheticOnly": true,
+      "creation": true,
+      "backendUpsert": true,
+      "hardDelete": true,
+      "profileCascade": true,
+      "sqlDirectDeleteDenied": [
+        "service_role",
+        "authenticated",
+        "anon"
+      ],
+      "grantAbsenceVerified": true
+    },
+    "cleanup": {
+      "ownedResourcesVerifiedAbsent": true,
+      "globalChangesDiagnosticOnly": true,
+      "unrelatedResourcesRemoved": 0,
+      "bridgeIdChangedAgain": true,
+      "falseFailureAvoided": true
+    }
+  },
+  "reconstructions": [
+    {
+      "number": 1,
+      "passedMigrations": 269,
+      "expectedMigrations": 269,
+      "complete": true,
+      "lastRecordedVersion": "20260917183837",
+      "applicationFingerprint": "ca7fe3870eb5798cd8afa91c9e7cfa0d4e18f7cbf2e0994bad2f313b21fadeba",
+      "profileSecurityFingerprint": "298cfa463a05e1944d09fa724722116466db4b4b923621970c91f9a0a0f90fdf",
+      "cleanup": {
+        "auth": {
+          "container": "8a179326933834be605064e461458f5d90c726a7075767dbbd7fe64f24fd6956",
+          "remaining": 0
+        },
+        "api": {
+          "container": "0ec120c601579c4add42f7e5184e3cc6e783eb882c6f42cfde1444cadc1c6e49",
+          "remaining": 0
+        },
+        "database": {
+          "project": "phase0b-16d56163",
+          "owned": {
+            "containers": [
+              "ad5874fa1e9aee369eff5ad1a53142edcd946679cd1fe755b7037ce03f2b0672"
+            ],
+            "networks": [
+              "94f62d1105a23aedfc0572edf42736a50b459505b9ee52f9e8dc19c51da13716",
+              "b00582ef3a8a5a5301a7f8d6b4970326c68336f9b43862701dd37baf53e6e8a1"
+            ],
+            "volumes": [
+              "supabase_db_phase0b-16d56163"
+            ]
+          },
+          "remaining": {
+            "containers": [],
+            "networks": [],
+            "volumes": []
+          }
+        },
+        "failedOwners": []
+      },
+      "provider": {
+        "cli": "2.75.0",
+        "image": "public.ecr.aws/supabase/postgres:17.6.1.075",
+        "imageId": "sha256:82a04ba6c05f60950a74ae46be3726abb18d06ee44da936276fd782e72e36855"
+      }
+    },
+    {
+      "number": 2,
+      "passedMigrations": 11,
+      "expectedMigrations": 269,
+      "complete": false,
+      "lastRecordedVersion": "20260228120000",
+      "applicationFingerprint": null,
+      "profileSecurityFingerprint": null,
+      "cleanup": {
+        "database": {
+          "project": "phase0b-4c03d4e7",
+          "owned": {
+            "containers": [
+              "6168ec936e377a8dd638da3f3990a15e821ef1b55957e78eacdac8f7999a2171"
+            ],
+            "networks": [
+              "93f7c0d22943db31ea97a0dff45dec0b7226d0b63b4259df0ea256bd29c1664b",
+              "a615601e8d3a9b8ef9bc2de1d7243648c73152fb30ec83f204dbd1b91e8677ac"
+            ],
+            "volumes": [
+              "supabase_db_phase0b-4c03d4e7"
+            ]
+          },
+          "remaining": {
+            "containers": [],
+            "networks": [],
+            "volumes": []
+          }
+        },
+        "failedOwners": []
+      },
+      "provider": {
+        "cli": "2.75.0",
+        "image": "public.ecr.aws/supabase/postgres:17.6.1.075",
+        "imageId": "sha256:82a04ba6c05f60950a74ae46be3726abb18d06ee44da936276fd782e72e36855"
+      }
+    },
+    {
+      "source": "reconstruction-diagnostic.json",
+      "kind": "separately authorized single diagnostic attempt",
+      "passedMigrations": 269,
+      "expectedMigrations": 269,
+      "complete": true,
+      "applicationFingerprint": "ca7fe3870eb5798cd8afa91c9e7cfa0d4e18f7cbf2e0994bad2f313b21fadeba",
+      "profileSecurityFingerprint": "298cfa463a05e1944d09fa724722116466db4b4b923621970c91f9a0a0f90fdf",
+      "cleanup": {
+        "project": "phase0b-ec1a3fd1",
+        "owned": {
+          "containers": [
+            "3eabdba9beb4d1c4524cf9a01705658be61ce717e83a48abe006e7a11e089b2a"
+          ],
+          "networks": [
+            "d9e5393f5f7a7cca69329b24091baf44a6be1c55bf2e95580dcffd9bdc53162e",
+            "f6e049ed2decf03aec69fa16706fc39d6e718831b462fcd3711f1f38d90c58e2"
+          ],
+          "volumes": [
+            "supabase_db_phase0b-ec1a3fd1"
+          ]
+        },
+        "remaining": {
+          "containers": [],
+          "networks": [],
+          "volumes": []
+        }
+      },
+      "provider": {
+        "cli": "2.75.0",
+        "image": "public.ecr.aws/supabase/postgres:17.6.1.075",
+        "imageId": "sha256:82a04ba6c05f60950a74ae46be3726abb18d06ee44da936276fd782e72e36855"
+      }
+    }
+  ],
+  "fingerprintComparison": {
+    "executed": true,
+    "status": "identical",
+    "reference": "First complete run in unchanged local-validation.json",
+    "comparison": "Single complete run in reconstruction-diagnostic.json",
+    "applicationIdentical": true,
+    "profileSecurityIdentical": true
+  },
+  "blocker": null,
+  "checks": {
+    "uniquePassed": 536,
+    "historicalUniquePassed": 446,
+    "newUniquePassed": 90,
+    "executedAssertionsThisContinuation": 422,
+    "admittedPriorUniquePassed": 183,
+    "duplicateProfileInvocationsRemoved": 70,
+    "fingerprintComparisonsCounted": 1,
+    "failedAssertions": 0,
+    "blockingOperationalFailures": 0,
+    "omittedUnique": 0,
+    "invocationSkips": 1,
+    "skipExplanation": "Generic frontend invocation skips one integration, executed separately in sql-and-integration and counted once.",
+    "historicalReexecuted": 338,
+    "historicalRetainedWithValidatedEvidence": 108,
+    "profileUniquePassed": 78,
+    "freshProfileAssertions": 73,
+    "typescript": "passed; exit 0",
+    "build": "passed; exit 0",
+    "eslint": {
+      "exitCode": 0,
+      "errors": 0,
+      "warnings": 18,
+      "changedFrontendFiles": 0
+    },
+    "dataApiProfiles": "12 passed again; real scoped local PostgREST",
+    "authAdmin": "3 passed again; real local GoTrue; hard deletion and ON DELETE CASCADE verified",
+    "grants": "53 SQL/effective-grant checks passed again",
+    "pathAuditorTests": {
+      "passed": 10,
+      "failed": 0,
+      "skipped": 0
+    },
+    "advisors": {
+      "available": false,
+      "cli": "2.75.0",
+      "verifiedUsing": "supabase --version; supabase db --help",
+      "remoteAdvisorUsed": false
+    },
+    "audit": "audit.json generated after final documentation; findings and file hashes are authoritative",
+    "evidenceScope": "422 assertions executed now. 183 previous unique assertions admitted; 70 repeats removed. Add one admitted fingerprint comparison: 536 unique. 108 historical security/pg_net assertions were reused, not rerun.",
+    "complete": true
+  },
+  "securityConfirmed": {
+    "authenticatedEditableColumns": [
+      "nombre"
+    ],
+    "protectedColumns": [
+      "role",
+      "id",
+      "created_at"
+    ],
+    "schemaHasNameColumn": false,
+    "schemaHasUserIdColumn": false,
+    "ownRowOnly": true,
+    "mixedPayloadFailsAtomically": true,
+    "anonUpdateDenied": true,
+    "otherUserUpdateDenied": true,
+    "backendSignupAndUpsertPreserved": true,
+    "authCascadePreserved": true,
+    "applicationCatalogDiffRestrictedToProfileDmlAndUpdatePolicy": true,
+    "roleAttributesAndMembershipsUnchanged": true,
+    "publicConfigurationChanged": false,
+    "realExternalEventTraffic": 0,
+    "localApiPublishedPorts": 0,
+    "firstRunCron": "off",
+    "firstRunNetQueueRows": 0,
+    "firstRunNetResponseRows": 0,
+    "freshScopedRepeatPassed": true,
+    "authAdminDeletionAndCascadeRepeated": true,
+    "productionPermissionsExpanded": false,
+    "authenticatedColumnNamedNombreNotName": true
+  },
+  "cleanup": {
+    "status": "all runner-owned resources verified absent",
+    "ownedResidualContainers": 0,
+    "ownedResidualNetworks": 0,
+    "ownedResidualVolumes": 0,
+    "globalResourceDiagnostics": {
+      "containers": {
+        "added": [],
+        "removed": []
+      },
+      "networks": {
+        "added": [
+          "6ff775d1a927dbd215583ea371bab495016207ab84bb37afb3b3d19fee58888a"
+        ],
+        "removed": [
+          "17760a979cefbb514ea02fd7e1c3ebf0e3bb6b68018c1cb6e500dbfe03e0aaf8"
+        ]
+      },
+      "volumes": {
+        "added": [],
+        "removed": []
+      }
+    },
+    "unrelatedResources": "Existing stopped container and eight prior anonymous volumes retained.",
+    "retainedTemporaryConfigurationDirectories": "Existing bootstrap behavior retains OS temporary config directories; no claim of zero filesystem temporary files.",
+    "currentDiagnostic": {
+      "ownedResidualContainers": 0,
+      "ownedResidualNetworks": 0,
+      "ownedResidualVolumes": 0,
+      "unrelatedResourcesRemoved": 0
+    },
+    "finalValidation": {
+      "owned": {
+        "containers": [
+          "ad5874fa1e9aee369eff5ad1a53142edcd946679cd1fe755b7037ce03f2b0672",
+          "8a179326933834be605064e461458f5d90c726a7075767dbbd7fe64f24fd6956",
+          "0ec120c601579c4add42f7e5184e3cc6e783eb882c6f42cfde1444cadc1c6e49",
+          "6168ec936e377a8dd638da3f3990a15e821ef1b55957e78eacdac8f7999a2171",
+          "3eabdba9beb4d1c4524cf9a01705658be61ce717e83a48abe006e7a11e089b2a",
+          "beebca9a9ce0de291e860d66590449589545dc5e541a0e3348b5f0904e682b5d",
+          "30e544bb38f1ebdfaec3dff2046fca8e5ff712127f0c3ed0387036df5dd51b46",
+          "8858dbcc7a3382fc6555b5d8ebf802512a05eafe03f1facdc73c3d52e8082807",
+          "fddb53b07c43b7670a236c105ca424dfe7a8de1e77c3b7f11b7e6fcf3d479d69",
+          "e21cc8faf36b8f11d87e0796efc997d115e1b8204815cac6b3432d9c2bf09d88",
+          "884a543f31ee6ff1acddd9ef1dda85a1dbdaa734161e5d420e79d61fb6fb80b9",
+          "c68e7b2122f52f9ab33139e315ef2a537fc2879f1c0e9d126e5ed2de6d174bfd",
+          "01cb9b27b400f75d2b4c0536f56fdcae16fdeaaf0c2a5f92de3e07db85d325c7",
+          "f0f86c924db23837f42e9660cd2328bff6da3ebb577ff3c8dda6dbfa50018c96",
+          "69bb04fbaa993099efca94a4d562a6004932d2af22238c5ead09748c8ab2f1bf"
+        ],
+        "networks": [
+          "94f62d1105a23aedfc0572edf42736a50b459505b9ee52f9e8dc19c51da13716",
+          "b00582ef3a8a5a5301a7f8d6b4970326c68336f9b43862701dd37baf53e6e8a1",
+          "93f7c0d22943db31ea97a0dff45dec0b7226d0b63b4259df0ea256bd29c1664b",
+          "a615601e8d3a9b8ef9bc2de1d7243648c73152fb30ec83f204dbd1b91e8677ac",
+          "d9e5393f5f7a7cca69329b24091baf44a6be1c55bf2e95580dcffd9bdc53162e",
+          "f6e049ed2decf03aec69fa16706fc39d6e718831b462fcd3711f1f38d90c58e2",
+          "5e54bbff0c12820cd48876acd4157e9dbf883a481ae988c952287b91821969dc",
+          "65292089d4745c848965aabc7e0e026c30220aad4394d1fae0a1fff2fd370380",
+          "2cabb3a249422f945e4b0484987e6b9c348d7499bd77441cfaadc92f1ff21ce1",
+          "a78788daa85e236b03c8d828bd29ab43b6133aab3a278231a83eb4309f653d8d",
+          "879a0368304e25de8168781e7559e501fbbc374b84683d61ce68be1d11c6ff5e",
+          "ad7d54be9ac6c9ee8e407da57cfaf5dee3cec4cc9e980fb6b0823da0485fef55"
+        ],
+        "volumes": [
+          "supabase_db_phase0b-16d56163",
+          "supabase_db_phase0b-4c03d4e7",
+          "supabase_db_phase0b-ec1a3fd1",
+          "supabase_db_phase0b-38e05207"
+        ]
+      },
+      "remaining": {
+        "containers": [],
+        "networks": [],
+        "volumes": []
+      },
+      "verifiedAt": "2026-09-17T21:35:02.251Z",
+      "unrelatedResourcesModified": 0,
+      "freshFixtureCleanup": {
+        "auth": {
+          "container": "30e544bb38f1ebdfaec3dff2046fca8e5ff712127f0c3ed0387036df5dd51b46",
+          "remaining": 0
+        },
+        "api": {
+          "container": "8858dbcc7a3382fc6555b5d8ebf802512a05eafe03f1facdc73c3d52e8082807",
+          "remaining": 0
+        },
+        "database": {
+          "project": "phase0b-38e05207",
+          "owned": {
+            "containers": [
+              "beebca9a9ce0de291e860d66590449589545dc5e541a0e3348b5f0904e682b5d"
+            ],
+            "networks": [
+              "5e54bbff0c12820cd48876acd4157e9dbf883a481ae988c952287b91821969dc",
+              "65292089d4745c848965aabc7e0e026c30220aad4394d1fae0a1fff2fd370380"
+            ],
+            "volumes": [
+              "supabase_db_phase0b-38e05207"
+            ]
+          },
+          "remaining": {
+            "containers": [],
+            "networks": [],
+            "volumes": []
+          }
+        },
+        "failedOwners": []
+      }
+    }
+  },
+  "businessChanges": false,
+  "frontendChanges": false,
+  "newSecurityDefiner": false,
+  "existingSecurityDefinerChanged": false,
+  "env": {
+    "physicallyPresent": true,
+    "ignored": true,
+    "tracked": false,
+    "modifiedByThisTask": false,
+    "valuesRecorded": false
+  },
+  "inventory": {
+    "modified": [
+      "scripts/phase0/bootstrap-runtime.mjs",
+      "scripts/phase0/bootstrap-safety.test.mjs",
+      "supabase/bootstrap/incremental-manifest.json"
+    ],
+    "new": [
+      "docs/security/phase-1b1/README.md",
+      "docs/security/phase-1b1/audit.json",
+      "docs/security/phase-1b1/auth-delete-diagnostic-audit.json",
+      "docs/security/phase-1b1/auth-delete-diagnostic.json",
+      "docs/security/phase-1b1/auth-delete-diagnostic.md",
+      "docs/security/phase-1b1/auth-delete-diagnostic.mjs",
+      "docs/security/phase-1b1/auth-delete-network-events.json",
+      "docs/security/phase-1b1/consumers.json",
+      "docs/security/phase-1b1/evidence-validation.json",
+      "docs/security/phase-1b1/local-profile-metadata.json",
+      "docs/security/phase-1b1/local-validation.json",
+      "docs/security/phase-1b1/profile-repeat-validation.json",
+      "docs/security/phase-1b1/reconstruction-diagnostic.json",
+      "docs/security/phase-1b1/reconstruction-diagnostic.md",
+      "docs/security/phase-1b1/regression-validation.json",
+      "docs/security/phase-1b1/remote-profile-metadata.json",
+      "docs/security/phase-1b1/review.json",
+      "docs/security/phase-1b1/validation-inputs.json",
+      "scripts/security/artifact-paths.mjs",
+      "scripts/security/audit-profile-artifacts.mjs",
+      "scripts/security/bootstrap-diagnostic-trace.mjs",
+      "scripts/security/diagnostic-tools.test.mjs",
+      "scripts/security/profile-auth-api.mjs",
+      "scripts/security/profile-data-api.mjs",
+      "scripts/security/profile-evidence.mjs",
+      "scripts/security/profile-metadata.sql",
+      "scripts/security/profile-security-tests.mjs",
+      "scripts/security/run-profile-reconstruction-diagnostic.mjs",
+      "scripts/security/run-profile-regressions.mjs",
+      "scripts/security/run-profile-repeat.mjs",
+      "scripts/security/run-profile-security.mjs",
+      "supabase/migrations/20260917183837_protect_profile_administrative_fields.sql"
+    ],
+    "deleted": [],
+    "total": 35
+  },
+  "historicalDiagnosticEvidence": {
+    "files": "auth-delete-diagnostic* and auth-delete-network-events.json",
+    "reexecuted": false,
+    "meaning": "Frozen prior diagnosis; its original 16-file hashes predate the authorized harness corrections."
+  },
+  "regressions": {
+    "runner": "scripts/security/run-profile-regressions.mjs",
+    "prepared": true,
+    "executed": true,
+    "evidence": "regression-validation.json",
+    "historicalReportsOverwritten": false
+  },
+  "remainingDecisions": [],
+  "untouchedFindings": [
+    "TRUNCATE",
+    "other table permissions and SECURITY DEFINER findings",
+    "conversions exposure",
+    "event/CAPI concurrency",
+    "phones and audiences",
+    "production cron and secrets"
+  ],
+  "audit": "audit.json is the authoritative final scan result; no manual success override. Static credential/path/email scanning is not universal DLP certification.",
+  "notProductionReady": true,
+  "auditResult": {
+    "source": "audit.json",
+    "generatedAfterFinalDocumentation": true,
+    "classificationTestsPassed": 10,
+    "rootClassificationOnly": true,
+    "genericFileOrLineExclusions": 0,
+    "secretRulesUnchanged": true,
+    "expectedFilesReviewed": 34,
+    "scope": "All 35 phase artifacts except the self-hash of audit.json; migration hashes, UTF-8, JSON, credential/PII-path/email rules and synthetic fixture review. No claim of universal DLP."
+  },
+  "gitFinal": {
+    "branch": "main",
+    "head": "ba7b3d3f5e60eb0c2cb907a8c281d4462e15d4bb",
+    "stagedFiles": 0,
+    "conflicts": 0,
+    "modifiedTrackedFiles": 3,
+    "newFiles": 32,
+    "deletedFiles": 0,
+    "workingTree": "35 authorized uncommitted Phase 1B.1 changes; ready for checkpoint after clean final audit"
+  },
+  "previousBlocker": {
+    "kind": "operational",
+    "message": "Local command failed",
+    "sqlstate": null,
+    "lastRecordedVersion": "20260228120000",
+    "nextManifestEntry": "20260228130000_landings_tracking_fields.sql",
+    "failedStatementOrSubcommand": "not captured",
+    "cause": "not established",
+    "limitation": "The wrapper suppressed raw stderr and retained no exit status, signal, timeout or command-stage identifier. The next migration may not have been reached; it passed in reconstruction 1.",
+    "retryAfterFailure": false,
+    "newCorrectionAfterFailure": false,
+    "requiredEvidence": "A separately authorized bounded diagnostic must identify the safe command stage, exit status, signal/timeout and sanitized error. Runner-owned database was already removed by finally."
+  },
+  "previousAuditResult": {
+    "exitCode": 1,
+    "approved": false,
+    "filesReviewed": 23,
+    "inventoryFiles": 24,
+    "findings": [
+      {
+        "file": "docs/security/phase-1b1/README.md",
+        "line": 75,
+        "kind": "local personal path"
+      },
+      {
+        "file": "scripts/security/profile-security-tests.mjs",
+        "line": 82,
+        "kind": "local personal path"
+      }
+    ],
+    "manualClassification": "Both path matches are the Auth Admin users endpoint, not filesystem paths. No source or scanner change after detection.",
+    "literalCredentialPatternFindings": 0,
+    "productionDataDetected": false,
+    "limitation": "Static scope only. Audit file hashes freeze the scanned snapshot before the final documentation annotations.",
+    "postScanDocumentationAnnotations": [
+      "README.md",
+      "review.json",
+      "audit.json"
+    ]
+  },
+  "previousValidationGatesFailed": 2,
+  "operationalFailure": {
+    "reproduced": false,
+    "originalCauseEstablished": false,
+    "originalFailurePreserved": true,
+    "automaticRetries": 0,
+    "traceNowAvailable": true
+  },
+  "controlledDiagnostic": {
+    "source": "reconstruction-diagnostic.json",
+    "sha256": "bb03aae86f7ea824958e42f72428e2f4b578fe448248b98854581809f46526a6",
+    "attempts": 1,
+    "complete": true,
+    "migrationsCompleted": 269,
+    "applicationFingerprint": "ca7fe3870eb5798cd8afa91c9e7cfa0d4e18f7cbf2e0994bad2f313b21fadeba",
+    "profileSecurityFingerprint": "298cfa463a05e1944d09fa724722116466db4b4b923621970c91f9a0a0f90fdf",
+    "fingerprintsMatch": true,
+    "failedRunnerCommands": 0,
+    "diagnosticReadFailures": 0,
+    "resourceSamples": 14,
+    "remainingOwnedResources": {
+      "containers": [],
+      "networks": [],
+      "volumes": []
+    },
+    "toolingTests": {
+      "uniquePassed": 10,
+      "failed": 0,
+      "skipped": 0,
+      "source": "scripts/security/diagnostic-tools.test.mjs"
+    },
+    "applicationSuitesExecuted": 0,
+    "remoteCalls": 0,
+    "productionSourceChanges": 0
+  },
+  "readiness": {
+    "evidenceSupportsFinalValidation": true,
+    "validationComplete": true,
+    "readyForCheckpoint": true,
+    "phaseClosed": true,
+    "checkpointCreated": true,
+    "remainingHistoricalChecks": 0,
+    "remainingIncrementalDirectoryUnitCheck": 0,
+    "typescript": "passed",
+    "build": "passed",
+    "eslint": "passed with 18 existing warnings",
+    "orchestratorPrecondition": "Separate schema, version, hash, commit, migration inventory, source-state, cleanup and fingerprint validation passed. Incomplete run is preserved and excluded.",
+    "deploymentAuthorized": false
+  },
+  "priorValidationSummary": {
+    "uniquePassed": 183,
+    "profileRunnerPassed": 75,
+    "historicalPassed": 108,
+    "historical": {
+      "securityAccess": {
+        "passed": 61,
+        "failed": 0
+      },
+      "netAccess": {
+        "passed": 46,
+        "failed": 0
+      },
+      "pgNetIdempotence": {
+        "passed": 1,
+        "failed": 0
+      }
+    },
+    "failedAssertions": 0,
+    "blockingOperationalFailures": 1,
+    "declaredSkips": 0,
+    "plannedUniqueNotReached": 339,
+    "historicalNotReached": 338,
+    "newNotReached": 1,
+    "reconstructionDuplicateChecksCounted": 0,
+    "typescript": "not executed after failure",
+    "build": "not executed after failure",
+    "eslint": "not executed after failure",
+    "dataApiProfiles": "12 passed; real local PostgREST",
+    "authAdmin": "3 passed; real local GoTrue",
+    "grants": "All effective profile column and table grants passed; three Auth DELETE grant checks passed",
+    "syntax": "Six affected or new runtime modules parsed successfully",
+    "advisors": "Installed Supabase CLI 2.75.0 has no local advisors command, confirmed with supabase db --help. No remote advisor executed.",
+    "audit": "See regenerated audit.json; previous rejected scan retained as previousAuditResult.",
+    "evidenceScope": "Prior application validation remains historical: 183 unique passes were not reexecuted. Current diagnostic tooling and reconstruction are separate in controlledDiagnostic.",
+    "fingerprintComparison": "Now passed under the explicit diagnostic authorization; this accounts for one of the previously unreached 340 checks."
+  },
+  "finalValidation": {
+    "report": "regression-validation.json",
+    "sha256": "9b4ea726a539cd7c825ac2fb92bd8ab68d0d04120967d96a94da14debeec2894",
+    "complete": true,
+    "evidenceAdmission": {
+      "file": "evidence-validation.json",
+      "sha256": "87083fb771eb4a4041007b2e39a3ecf5bb464d36439fbfabcd8493ff9795d870",
+      "authReportValid": true,
+      "reconstructionReportValid": true
+    },
+    "inputInventory": {
+      "file": "validation-inputs.json",
+      "sha256": "225b5b365de9b837174c55787f53992d341a7b7636aa232179da760e354a89b8"
+    },
+    "freshProfileReport": {
+      "file": "profile-repeat-validation.json",
+      "sha256": "3975ccc51feb329c12ebbab2b0dcc8f0540f1897d10d599cf5e709350d0c267a",
+      "scope": "Six-source profiles/Auth fixture, with before/after metadata gates against accredited complete reconstruction. Not a full application rebuild.",
+      "passed": 73,
+      "priorCaseRepeats": 70,
+      "newFixtureGates": 3,
+      "fixtureSources": [
+        {
+          "version": "0001",
+          "file": "0001_base_schema.sql",
+          "sha256": "5e5857e0088d85ab20f4f7abb908046abfc4d56e4a0e4eedc3a2f2731c477b58"
+        },
+        {
+          "version": "20260228000000",
+          "file": "20260228000000_add_nombre_to_profiles.sql",
+          "sha256": "be68ff6f278a2dec2ea0ba006de52ad86564189c82aa1701e9961e2f07c53052"
+        },
+        {
+          "version": "20260808120000",
+          "file": "20260808120000_optimize_rls_auth_uid_initplan.sql",
+          "sha256": "22ce50bb59f6eb2484606d7ab52581412398727a9e79b3017325f63098e87fde"
+        },
+        {
+          "version": "20260818170134",
+          "file": "20260818170134_restrict_public_auth_signups.sql",
+          "sha256": "363de8f3bb9ba616af40efcdafd6dfc70212aa3bd19314754a25ae1cefdca518"
+        },
+        {
+          "version": "20260902154745",
+          "file": "20260902154745_admin_signup_approvals.sql",
+          "sha256": "1f360dddb22c04c1349043c0799b2cfdad61ac48d9fc0230be8fcffbb9126711"
+        },
+        {
+          "version": "20260917183837",
+          "file": "20260917183837_protect_profile_administrative_fields.sql",
+          "sha256": "119b70e25ffea319e4f4decbdf37c4b5681be1427f09e3ada93f07b6c7c9da87"
+        }
+      ],
+      "sourceHashesUnchangedAfterRun": true
+    },
+    "newFullReconstructions": 0,
+    "priorReportsModified": false,
+    "legacyReportFormat": "Explicit pinned v1 adapters; no invented execution-time harness hash stamp",
+    "commitBase": "ba7b3d3f5e60eb0c2cb907a8c281d4462e15d4bb"
+  },
+  "checkpointClosure": {
+    "status": "closed_by_containing_commit",
+    "message": "fix(security): prevent profile privilege escalation",
+    "baseCommit": "ba7b3d3f5e60eb0c2cb907a8c281d4462e15d4bb",
+    "commitReference": "The local commit containing this closure is the checkpoint; no self-referential hash is stored.",
+    "previousValidationSnapshot": "Root operation counters, head and gitFinal describe the prior unstaged validation snapshot. This closure and readiness describe the authorized containing commit.",
+    "inventory": {
+      "modified": 3,
+      "new": 32,
+      "total": 35
+    },
+    "docker": {
+      "verifiedAt": "2026-09-18T00:18:48.223Z",
+      "readOnly": true,
+      "checkedProjects": [
+        "phase0b-16d56163",
+        "phase0b-4c03d4e7",
+        "phase0b-2c0a7305",
+        "phase0b-a7b38d60",
+        "phase0b-ec1a3fd1",
+        "phase0b-38e05207"
+      ],
+      "checkedOwnedResourceCounts": {
+        "containers": 15,
+        "networks": 12,
+        "volumes": 4
+      },
+      "remaining": {
+        "containers": [],
+        "networks": [],
+        "volumes": []
+      },
+      "activeContainers": 0,
+      "unrelatedStoppedContainers": [
+        "codex-p8-mysql"
+      ],
+      "unrelatedNetworks": [
+        "bridge",
+        "host",
+        "none"
+      ],
+      "unrelatedPreexistingVolumes": 8,
+      "globalBridgeIdChange": "Unrelated global diagnostic; not a runner residue.",
+      "resourcesModified": 0
+    },
+    "integrity": {
+      "initialAuditSha256": "f46f4560def09e5eb4a6e5ba3ca9dc1641fdbe8abecae1aa08e5c89f3bbf7536",
+      "priorAuditFilesMatched": 34,
+      "finalReportReferencesMatched": true,
+      "historicalMigrationsIntact": 268,
+      "onlyRegisteredIncrement": 269,
+      "unchangedTestsReused": 536,
+      "fullReconstructionsRepeated": 0
+    },
+    "retainedTemporaryDirectories": {
+      "count": 22,
+      "outsideRepository": true,
+      "deleted": 0
+    },
+    "gates": "Final artifact audit and git diff checks must pass before staging; cached diff check and pre-commit hook must pass without file changes before creating the containing commit.",
+    "env": "Present, ignored, untracked and excluded from the checkpoint; content never displayed.",
+    "remoteOperations": 0,
+    "pushes": 0,
+    "deploys": 0,
+    "nextPhaseStarted": false
+  }
+}

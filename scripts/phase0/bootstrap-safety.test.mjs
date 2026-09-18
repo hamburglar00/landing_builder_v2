@@ -3,11 +3,18 @@ import assert from 'node:assert/strict';
 import {readFileSync,readdirSync} from 'node:fs';
 import {join} from 'node:path';
 import {root} from './local-runtime.mjs';
-import {validateSnapshot,assertSafeEnvironment,assertFreshProject,hash} from './bootstrap-manifest.mjs';
+import {validateManifest,validateSnapshot,assertSafeEnvironment,assertFreshProject,hash} from './bootstrap-manifest.mjs';
 import {checkFutureOrder} from './check-future-migrations.mjs';
 import {canonical,structuralDiff} from './compare-schema-metadata.mjs';
 const bytes=readFileSync(join(root,'supabase/bootstrap/legacy-manifest.json'));
-const original=new Map(readdirSync(join(root,'supabase/migrations')).filter(f=>f.endsWith('.sql')).map(f=>[f,readFileSync(join(root,'supabase/migrations',f))]));
+// Historical fixtures remain exactly the approved 268 when real increments exist.
+const legacyFiles=new Set(JSON.parse(bytes).entries.map(e=>e.file));
+const original=new Map(readdirSync(join(root,'supabase/migrations')).filter(f=>legacyFiles.has(f)).map(f=>[f,readFileSync(join(root,'supabase/migrations',f))]));
+
+test('actual migration directory validates including every registered increment',()=>{
+  const registered=JSON.parse(readFileSync(join(root,'supabase/bootstrap/incremental-manifest.json')));
+  assert.equal(validateManifest().entries.length,268+registered.entries.length);
+});
 test('approved 268 migrations and sanitized exception validate before any DB creation',()=>{const r=validateSnapshot(bytes,original);assert.equal(r.entries.length,268);assert.equal(r.manifest.exceptions['20260427190000'].kind,'authorized-sanitized-scheduler');});
 test('modified legacy SQL fails',()=>{const m=new Map(original);m.set(m.keys().next().value,Buffer.from('select 1;'));assert.throws(()=>validateSnapshot(bytes,m),/hash mismatch/);});
 test('missing migration fails',()=>{const m=new Map(original);m.delete(m.keys().next().value);assert.throws(()=>validateSnapshot(bytes,m),/Missing/);});

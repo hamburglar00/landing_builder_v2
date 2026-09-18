@@ -1,0 +1,263 @@
+{
+  "date": "2026-09-17",
+  "mode": "read-only system catalogs; no application rows",
+  "metadata": {
+    "columns": [
+      {
+        "name": "id",
+        "type": "uuid",
+        "notNull": true
+      },
+      {
+        "name": "role",
+        "type": "text",
+        "notNull": true
+      },
+      {
+        "name": "created_at",
+        "type": "timestamp with time zone",
+        "notNull": true
+      },
+      {
+        "name": "nombre",
+        "type": "text",
+        "notNull": false
+      }
+    ],
+    "policies": [
+      {
+        "cmd": "SELECT",
+        "name": "Read own profile",
+        "check": null,
+        "roles": [
+          "public"
+        ],
+        "using": "(( SELECT auth.uid() AS uid) = id)"
+      },
+      {
+        "cmd": "UPDATE",
+        "name": "Update own profile",
+        "check": "(( SELECT auth.uid() AS uid) = id)",
+        "roles": [
+          "public"
+        ],
+        "using": "(( SELECT auth.uid() AS uid) = id)"
+      }
+    ],
+    "security": {
+      "acl": [
+        "postgres=arwdDxtm/postgres",
+        "anon=arwdDxtm/postgres",
+        "authenticated=arwdDxtm/postgres",
+        "service_role=arwdDxtm/postgres"
+      ],
+      "rls": true,
+      "owner": "postgres",
+      "forceRls": false
+    },
+    "columnAcl": [
+      {
+        "acl": null,
+        "column": "id"
+      },
+      {
+        "acl": null,
+        "column": "role"
+      },
+      {
+        "acl": null,
+        "column": "created_at"
+      },
+      {
+        "acl": null,
+        "column": "nombre"
+      }
+    ],
+    "roleGrants": [
+      {
+        "role": "anon",
+        "column": "id",
+        "insert": true,
+        "update": true
+      },
+      {
+        "role": "anon",
+        "column": "role",
+        "insert": true,
+        "update": true
+      },
+      {
+        "role": "anon",
+        "column": "created_at",
+        "insert": true,
+        "update": true
+      },
+      {
+        "role": "anon",
+        "column": "nombre",
+        "insert": true,
+        "update": true
+      },
+      {
+        "role": "authenticated",
+        "column": "id",
+        "insert": true,
+        "update": true
+      },
+      {
+        "role": "authenticated",
+        "column": "role",
+        "insert": true,
+        "update": true
+      },
+      {
+        "role": "authenticated",
+        "column": "created_at",
+        "insert": true,
+        "update": true
+      },
+      {
+        "role": "authenticated",
+        "column": "nombre",
+        "insert": true,
+        "update": true
+      },
+      {
+        "role": "service_role",
+        "column": "id",
+        "insert": true,
+        "update": true
+      },
+      {
+        "role": "service_role",
+        "column": "role",
+        "insert": true,
+        "update": true
+      },
+      {
+        "role": "service_role",
+        "column": "created_at",
+        "insert": true,
+        "update": true
+      },
+      {
+        "role": "service_role",
+        "column": "nombre",
+        "insert": true,
+        "update": true
+      }
+    ],
+    "triggerFunctions": [
+      {
+        "name": "handle_new_user",
+        "owner": "postgres",
+        "config": [
+          "search_path=public"
+        ],
+        "definer": true,
+        "definitionMd5": "31d665fd8d8b0c13286a18caede6106d"
+      },
+      {
+        "name": "prevent_unapproved_auth_user",
+        "owner": "postgres",
+        "config": [
+          "search_path=public"
+        ],
+        "definer": true,
+        "definitionMd5": "7d60d344a2e10a2f449173d68ec45701"
+      }
+    ],
+    "profileReferences": [
+      {
+        "name": "enforce_landing_plan_limit",
+        "identity": "",
+        "sourceMd5": "d91ad1a798afd6f8deb9e42c98548362"
+      },
+      {
+        "name": "get_home_overview_stats",
+        "identity": "p_user_id uuid, p_hidden_by uuid",
+        "sourceMd5": "316fe4cb3672f1a79c0eb1f74951be64"
+      },
+      {
+        "name": "get_phone_for_chatrace_client",
+        "identity": "p_client_name text",
+        "sourceMd5": "f31b81c928b3754f5dfe0dd11cf2ba95"
+      },
+      {
+        "name": "get_home_overview_stats_by_currency",
+        "identity": "p_user_id uuid, p_hidden_by uuid, p_currency text",
+        "sourceMd5": "e1fb7a3a705eadd21d59c5838b7869a9"
+      },
+      {
+        "name": "get_whatsapp_cloud_api_contacts_page",
+        "identity": "p_limit integer, p_offset integer, p_workspace_currency text",
+        "sourceMd5": "ed79a60a3d78080022a3fcc49c146265"
+      },
+      {
+        "name": "get_home_overview_stats_cached_by_currency",
+        "identity": "p_user_id uuid, p_hidden_by uuid, p_currency text",
+        "sourceMd5": "a86066b2991839ba802c5d9a3a7af9a5"
+      },
+      {
+        "name": "get_whatsapp_cloud_api_inbox_threads_page",
+        "identity": "p_limit integer, p_offset integer, p_workspace_currency text, p_tag_filter text, p_unread_only boolean",
+        "sourceMd5": "64967808143dfc90ebec553744cf3f58"
+      },
+      {
+        "name": "mark_whatsapp_cloud_api_threads_read",
+        "identity": "p_workspace_currency text, p_tag_filter text",
+        "sourceMd5": "9194def86eb60b3ea41f6d3f6ceab4b8"
+      },
+      {
+        "name": "mark_whatsapp_cloud_api_threads_read",
+        "identity": "p_workspace_currency text, p_tag_filter text, p_from timestamp with time zone, p_to timestamp with time zone",
+        "sourceMd5": "d82561ff143d00512b11eb8a3ec4a046"
+      },
+      {
+        "name": "get_gerencia_availability_summaries",
+        "identity": "p_user_id uuid, p_start timestamp with time zone, p_end timestamp with time zone, p_workspace_currency text",
+        "sourceMd5": "f959c22b6d2f5be87e42ade8ea740577"
+      },
+      {
+        "name": "mark_whatsapp_cloud_api_thread_read",
+        "identity": "p_contact_id uuid",
+        "sourceMd5": "078c6dcd0f24b444591b387629ee66e7"
+      },
+      {
+        "name": "refresh_home_overview_stats_cache",
+        "identity": "p_user_id uuid, p_currency text",
+        "sourceMd5": "ee4da58fdc22114bd3fc2b9de4ce503a"
+      },
+      {
+        "name": "get_whatsapp_cloud_api_inbox_threads",
+        "identity": "p_limit integer, p_workspace_currency text",
+        "sourceMd5": "411507000b579833c0ce81268046c9ad"
+      },
+      {
+        "name": "get_whatsapp_cloud_api_inbox_threads_page",
+        "identity": "p_limit integer, p_offset integer, p_workspace_currency text",
+        "sourceMd5": "ab346e501d0e9405703410d969225c1d"
+      },
+      {
+        "name": "get_whatsapp_cloud_api_config",
+        "identity": "p_user_id uuid, p_workspace_currency text",
+        "sourceMd5": "d878831c0ec9a954c8f121669e14d5c6"
+      },
+      {
+        "name": "upsert_whatsapp_cloud_api_config_secure",
+        "identity": "p_id uuid, p_user_id uuid, p_name text, p_active boolean, p_workspace_currency text, p_phone_number_id text, p_whatsapp_business_account_id text, p_display_phone_number text, p_meta_access_token text, p_meta_app_secret text, p_meta_api_version text, p_webhook_verify_token text, p_meta_messaging_dataset_id text, p_landing_tag text, p_gerencia_selection_mode text, p_gerencia_fair_criterion text, p_redirect_message_template text, p_fallback_message_template text, p_redirect_use_cta_button boolean, p_redirect_cta_button_title text, p_enrich_business_messaging_user_data boolean, p_send_business_messaging_purchase_type_capi boolean, p_retargeting_enabled boolean, p_retarget_message_template text, p_retarget_delay_minutes integer",
+        "sourceMd5": "e4b4c5392e345ea4a9fe89f3d857a9d9"
+      },
+      {
+        "name": "get_whatsapp_cloud_api_inbox_threads_page",
+        "identity": "p_limit integer, p_offset integer, p_workspace_currency text, p_tag_filter text, p_unread_only boolean, p_from timestamp with time zone, p_to timestamp with time zone",
+        "sourceMd5": "793e4ed5e583d31ce9c63857d83649d9"
+      },
+      {
+        "name": "handle_new_user",
+        "identity": "",
+        "sourceMd5": "163e988752675aa06f2eae46f3377b2b"
+      }
+    ]
+  }
+}

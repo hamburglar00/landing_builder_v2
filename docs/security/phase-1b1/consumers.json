@@ -1,0 +1,1441 @@
+{
+  "baseCommit": "ba7b3d3f5e60eb0c2cb907a8c281d4462e15d4bb",
+  "method": "Reviewed source callsites plus read-only catalog evidence; no application rows",
+  "sdkCallsites": [
+    {
+      "file": "frontend/app/(panel)/admin/clientes/[id]/landings/page.tsx",
+      "line": 37,
+      "runtime": "frontend",
+      "operations": [
+        "select"
+      ],
+      "selectedFields": [
+        "nombre"
+      ],
+      "writtenFields": [],
+      "filterFields": "id",
+      "databaseRole": "authenticated session; own-row RLS remains unchanged"
+    },
+    {
+      "file": "frontend/app/(panel)/admin/conversiones/page.tsx",
+      "line": 860,
+      "runtime": "frontend",
+      "operations": [
+        "select"
+      ],
+      "selectedFields": [
+        "nombre"
+      ],
+      "writtenFields": [],
+      "filterFields": "id",
+      "databaseRole": "authenticated session; own-row RLS remains unchanged"
+    },
+    {
+      "file": "frontend/app/(panel)/admin/landings/[id]/editar/page.tsx",
+      "line": 235,
+      "runtime": "frontend",
+      "operations": [
+        "select"
+      ],
+      "selectedFields": [
+        "nombre"
+      ],
+      "writtenFields": [],
+      "filterFields": "id",
+      "databaseRole": "authenticated session; own-row RLS remains unchanged"
+    },
+    {
+      "file": "frontend/app/(panel)/admin/layout.tsx",
+      "line": 395,
+      "runtime": "frontend",
+      "operations": [
+        "select"
+      ],
+      "selectedFields": [
+        "role"
+      ],
+      "writtenFields": [],
+      "filterFields": "id",
+      "databaseRole": "authenticated session; own-row RLS remains unchanged"
+    },
+    {
+      "file": "frontend/app/(panel)/admin/settings/page.tsx",
+      "line": 36,
+      "runtime": "frontend",
+      "operations": [
+        "select"
+      ],
+      "selectedFields": [
+        "nombre"
+      ],
+      "writtenFields": [],
+      "filterFields": "id",
+      "databaseRole": "authenticated session; own-row RLS remains unchanged"
+    },
+    {
+      "file": "frontend/app/(panel)/admin/settings/page.tsx",
+      "line": 65,
+      "runtime": "frontend",
+      "operations": [
+        "update"
+      ],
+      "selectedFields": [],
+      "writtenFields": [
+        "nombre"
+      ],
+      "filterFields": "id",
+      "databaseRole": "authenticated session; own-row RLS remains unchanged"
+    },
+    {
+      "file": "frontend/app/(panel)/dashboard/conversiones/page.tsx",
+      "line": 1234,
+      "runtime": "frontend",
+      "operations": [
+        "select"
+      ],
+      "selectedFields": [
+        "nombre"
+      ],
+      "writtenFields": [],
+      "filterFields": "id",
+      "databaseRole": "authenticated session; own-row RLS remains unchanged"
+    },
+    {
+      "file": "frontend/app/(panel)/dashboard/landing/[id]/editar/page.tsx",
+      "line": 201,
+      "runtime": "frontend",
+      "operations": [
+        "select"
+      ],
+      "selectedFields": [
+        "nombre"
+      ],
+      "writtenFields": [],
+      "filterFields": "id",
+      "databaseRole": "authenticated session; own-row RLS remains unchanged"
+    },
+    {
+      "file": "frontend/app/(panel)/dashboard/layout.tsx",
+      "line": 352,
+      "runtime": "frontend",
+      "operations": [
+        "select"
+      ],
+      "selectedFields": [
+        "nombre",
+        "role"
+      ],
+      "writtenFields": [],
+      "filterFields": "id",
+      "databaseRole": "authenticated session; own-row RLS remains unchanged"
+    },
+    {
+      "file": "frontend/app/(panel)/login/page.tsx",
+      "line": 37,
+      "runtime": "frontend",
+      "operations": [
+        "select"
+      ],
+      "selectedFields": [
+        "role"
+      ],
+      "writtenFields": [],
+      "filterFields": "id",
+      "databaseRole": "authenticated session; own-row RLS remains unchanged"
+    },
+    {
+      "file": "frontend/components/integraciones/IntegracionesMetaCapi.tsx",
+      "line": 295,
+      "runtime": "frontend",
+      "operations": [
+        "select"
+      ],
+      "selectedFields": [
+        "nombre",
+        "role"
+      ],
+      "writtenFields": [],
+      "filterFields": "id",
+      "databaseRole": "authenticated session; own-row RLS remains unchanged"
+    },
+    {
+      "file": "frontend/components/whatsapp-cloud-api/WhatsAppCloudApiPageContent.tsx",
+      "line": 534,
+      "runtime": "frontend",
+      "operations": [
+        "select"
+      ],
+      "selectedFields": [
+        "nombre"
+      ],
+      "writtenFields": [],
+      "filterFields": "id",
+      "databaseRole": "authenticated session; own-row RLS remains unchanged"
+    },
+    {
+      "file": "frontend/lib/landing/landingsDb.ts",
+      "line": 182,
+      "runtime": "frontend",
+      "operations": [
+        "select"
+      ],
+      "selectedFields": [
+        "nombre"
+      ],
+      "writtenFields": [],
+      "filterFields": "id",
+      "databaseRole": "authenticated session; own-row RLS remains unchanged"
+    },
+    {
+      "file": "supabase/functions/builder-config/index.ts",
+      "line": 233,
+      "runtime": "edge",
+      "operations": [
+        "select"
+      ],
+      "selectedFields": [
+        "nombre"
+      ],
+      "writtenFields": [],
+      "filterFields": "id",
+      "databaseRole": "service_role in backend; existing endpoint authorization remains unchanged"
+    },
+    {
+      "file": "supabase/functions/conversions/index.ts",
+      "line": 7738,
+      "runtime": "edge",
+      "operations": [
+        "select"
+      ],
+      "selectedFields": [
+        "id",
+        "nombre"
+      ],
+      "writtenFields": [],
+      "filterFields": "nombre",
+      "databaseRole": "service_role in backend; existing endpoint authorization remains unchanged"
+    },
+    {
+      "file": "supabase/functions/create-client/index.ts",
+      "line": 175,
+      "runtime": "edge",
+      "operations": [
+        "select"
+      ],
+      "selectedFields": [
+        "role"
+      ],
+      "writtenFields": [],
+      "filterFields": "id",
+      "databaseRole": "service_role in backend; existing endpoint authorization remains unchanged"
+    },
+    {
+      "file": "supabase/functions/create-client/index.ts",
+      "line": 342,
+      "runtime": "edge",
+      "operations": [
+        "upsert"
+      ],
+      "selectedFields": [],
+      "writtenFields": [
+        "id",
+        "role",
+        "nombre"
+      ],
+      "filterFields": null,
+      "databaseRole": "service_role in backend; existing endpoint authorization remains unchanged"
+    },
+    {
+      "file": "supabase/functions/delete-client/index.ts",
+      "line": 99,
+      "runtime": "edge",
+      "operations": [
+        "select"
+      ],
+      "selectedFields": [
+        "role"
+      ],
+      "writtenFields": [],
+      "filterFields": "id",
+      "databaseRole": "service_role in backend; existing endpoint authorization remains unchanged"
+    },
+    {
+      "file": "supabase/functions/landing-phone/index.ts",
+      "line": 180,
+      "runtime": "edge",
+      "operations": [
+        "select"
+      ],
+      "selectedFields": [
+        "id"
+      ],
+      "writtenFields": [],
+      "filterFields": "nombre",
+      "databaseRole": "service_role in backend; existing endpoint authorization remains unchanged"
+    },
+    {
+      "file": "supabase/functions/list-clients/index.ts",
+      "line": 116,
+      "runtime": "edge",
+      "operations": [
+        "select"
+      ],
+      "selectedFields": [
+        "role"
+      ],
+      "writtenFields": [],
+      "filterFields": "id",
+      "databaseRole": "service_role in backend; existing endpoint authorization remains unchanged"
+    },
+    {
+      "file": "supabase/functions/list-clients/index.ts",
+      "line": 175,
+      "runtime": "edge",
+      "operations": [
+        "select"
+      ],
+      "selectedFields": [
+        "id",
+        "nombre",
+        "role"
+      ],
+      "writtenFields": [],
+      "filterFields": null,
+      "databaseRole": "service_role in backend; existing endpoint authorization remains unchanged"
+    },
+    {
+      "file": "supabase/functions/promotion-draw/index.ts",
+      "line": 239,
+      "runtime": "edge",
+      "operations": [
+        "select"
+      ],
+      "selectedFields": [
+        "role"
+      ],
+      "writtenFields": [],
+      "filterFields": "id",
+      "databaseRole": "service_role in backend; existing endpoint authorization remains unchanged"
+    },
+    {
+      "file": "supabase/functions/retry-failed-conversions/index.ts",
+      "line": 946,
+      "runtime": "edge",
+      "operations": [
+        "select"
+      ],
+      "selectedFields": [
+        "id",
+        "nombre"
+      ],
+      "writtenFields": [],
+      "filterFields": null,
+      "databaseRole": "service_role in backend; existing endpoint authorization remains unchanged"
+    },
+    {
+      "file": "supabase/functions/retry-failed-conversions/index.ts",
+      "line": 1029,
+      "runtime": "edge",
+      "operations": [
+        "select"
+      ],
+      "selectedFields": [
+        "id",
+        "nombre"
+      ],
+      "writtenFields": [],
+      "filterFields": null,
+      "databaseRole": "service_role in backend; existing endpoint authorization remains unchanged"
+    },
+    {
+      "file": "supabase/functions/retry-failed-conversions/index.ts",
+      "line": 1217,
+      "runtime": "edge",
+      "operations": [
+        "select"
+      ],
+      "selectedFields": [
+        "id",
+        "nombre"
+      ],
+      "writtenFields": [],
+      "filterFields": null,
+      "databaseRole": "service_role in backend; existing endpoint authorization remains unchanged"
+    },
+    {
+      "file": "supabase/functions/telegram-webhook/index.ts",
+      "line": 124,
+      "runtime": "edge",
+      "operations": [
+        "select"
+      ],
+      "selectedFields": [
+        "id"
+      ],
+      "writtenFields": [],
+      "filterFields": "nombre",
+      "databaseRole": "service_role in backend; existing endpoint authorization remains unchanged"
+    },
+    {
+      "file": "supabase/functions/update-client/index.ts",
+      "line": 131,
+      "runtime": "edge",
+      "operations": [
+        "select"
+      ],
+      "selectedFields": [
+        "role"
+      ],
+      "writtenFields": [],
+      "filterFields": "id",
+      "databaseRole": "service_role in backend; existing endpoint authorization remains unchanged"
+    },
+    {
+      "file": "supabase/functions/update-client/index.ts",
+      "line": 329,
+      "runtime": "edge",
+      "operations": [
+        "select"
+      ],
+      "selectedFields": [
+        "nombre"
+      ],
+      "writtenFields": [],
+      "filterFields": "id",
+      "databaseRole": "service_role in backend; existing endpoint authorization remains unchanged"
+    },
+    {
+      "file": "supabase/functions/whatsapp-cloud-ensure-dataset/index.ts",
+      "line": 58,
+      "runtime": "edge",
+      "operations": [
+        "select"
+      ],
+      "selectedFields": [
+        "role"
+      ],
+      "writtenFields": [],
+      "filterFields": "id",
+      "databaseRole": "service_role in backend; existing endpoint authorization remains unchanged"
+    },
+    {
+      "file": "supabase/functions/whatsapp-cloud-redirect/index.ts",
+      "line": 124,
+      "runtime": "edge",
+      "operations": [
+        "select"
+      ],
+      "selectedFields": [
+        "nombre"
+      ],
+      "writtenFields": [],
+      "filterFields": "id",
+      "databaseRole": "service_role in backend; existing endpoint authorization remains unchanged"
+    },
+    {
+      "file": "supabase/functions/whatsapp-cloud-send-message/index.ts",
+      "line": 68,
+      "runtime": "edge",
+      "operations": [
+        "select"
+      ],
+      "selectedFields": [
+        "role"
+      ],
+      "writtenFields": [],
+      "filterFields": "id",
+      "databaseRole": "service_role in backend; existing endpoint authorization remains unchanged"
+    },
+    {
+      "file": "supabase/functions/whatsapp-cloud-sync-health/index.ts",
+      "line": 180,
+      "runtime": "edge",
+      "operations": [
+        "select"
+      ],
+      "selectedFields": [
+        "role"
+      ],
+      "writtenFields": [],
+      "filterFields": "id",
+      "databaseRole": "service_role in backend; existing endpoint authorization remains unchanged"
+    }
+  ],
+  "rawHttpReaders": [
+    {
+      "file": "frontend/app/api/integrations/kommo/sync/route.ts",
+      "line": 53,
+      "fields": [
+        "nombre"
+      ],
+      "filterFields": [
+        "id"
+      ],
+      "role": "authenticated; bearer forwarded from authenticated user"
+    }
+  ],
+  "sqlFunctions": [
+    {
+      "schema": "public",
+      "name": "enforce_landing_plan_limit",
+      "arguments": "",
+      "access": "SELECT",
+      "sources": [
+        [
+          "supabase/migrations/20260403110000_client_subscriptions_plans.sql",
+          135
+        ]
+      ],
+      "executionRole": "invoker",
+      "fields": [
+        "id",
+        "role"
+      ],
+      "sourceMatchNote": "Source definition matched in Phase 1A"
+    },
+    {
+      "schema": "public",
+      "name": "get_home_overview_stats",
+      "arguments": "p_user_id uuid, p_hidden_by uuid",
+      "access": "SELECT",
+      "sources": [
+        [
+          "supabase/migrations/20260514183000_home_overview_inferred_leads.sql",
+          1
+        ]
+      ],
+      "executionRole": "postgres",
+      "fields": [
+        "id",
+        "role"
+      ],
+      "sourceMatchNote": "Source definition matched in Phase 1A"
+    },
+    {
+      "schema": "public",
+      "name": "get_phone_for_chatrace_client",
+      "arguments": "p_client_name text",
+      "access": "SELECT",
+      "sources": [],
+      "executionRole": "postgres",
+      "fields": [
+        "id",
+        "nombre"
+      ],
+      "sourceMatchNote": "Catalog dependency accredited; see normalized structural evidence in Phase 0B and Phase 1A"
+    },
+    {
+      "schema": "public",
+      "name": "get_home_overview_stats_by_currency",
+      "arguments": "p_user_id uuid, p_hidden_by uuid, p_currency text",
+      "access": "SELECT",
+      "sources": [
+        [
+          "supabase/migrations/20260727223000_currency_scoped_reporting.sql",
+          55
+        ]
+      ],
+      "executionRole": "postgres",
+      "fields": [
+        "id",
+        "role"
+      ],
+      "sourceMatchNote": "Source definition matched in Phase 1A"
+    },
+    {
+      "schema": "public",
+      "name": "get_whatsapp_cloud_api_contacts_page",
+      "arguments": "p_limit integer, p_offset integer, p_workspace_currency text",
+      "access": "SELECT",
+      "sources": [],
+      "executionRole": "postgres",
+      "fields": [
+        "id",
+        "role"
+      ],
+      "sourceMatchNote": "Catalog dependency accredited; see normalized structural evidence in Phase 0B and Phase 1A"
+    },
+    {
+      "schema": "public",
+      "name": "get_home_overview_stats_cached_by_currency",
+      "arguments": "p_user_id uuid, p_hidden_by uuid, p_currency text",
+      "access": "SELECT",
+      "sources": [
+        [
+          "supabase/migrations/20260819175021_home_overview_stats_cache_hourly.sql",
+          332
+        ]
+      ],
+      "executionRole": "postgres",
+      "fields": [
+        "id",
+        "role"
+      ],
+      "sourceMatchNote": "Source definition matched in Phase 1A"
+    },
+    {
+      "schema": "public",
+      "name": "get_whatsapp_cloud_api_inbox_threads_page",
+      "arguments": "p_limit integer, p_offset integer, p_workspace_currency text, p_tag_filter text, p_unread_only boolean",
+      "access": "SELECT",
+      "sources": [
+        [
+          "supabase/migrations/20260823202650_fix_wca_retarget_inbox_filters.sql",
+          311
+        ]
+      ],
+      "executionRole": "postgres",
+      "fields": [
+        "id",
+        "role"
+      ],
+      "sourceMatchNote": "Source definition matched in Phase 1A"
+    },
+    {
+      "schema": "public",
+      "name": "mark_whatsapp_cloud_api_threads_read",
+      "arguments": "p_workspace_currency text, p_tag_filter text",
+      "access": "SELECT",
+      "sources": [
+        [
+          "supabase/migrations/20260823202650_fix_wca_retarget_inbox_filters.sql",
+          796
+        ]
+      ],
+      "executionRole": "postgres",
+      "fields": [
+        "id",
+        "role"
+      ],
+      "sourceMatchNote": "Source definition matched in Phase 1A"
+    },
+    {
+      "schema": "public",
+      "name": "mark_whatsapp_cloud_api_threads_read",
+      "arguments": "p_workspace_currency text, p_tag_filter text, p_from timestamp with time zone, p_to timestamp with time zone",
+      "access": "SELECT",
+      "sources": [
+        [
+          "supabase/migrations/20260825192821_whatsapp_cloud_api_inbox_date_filter.sql",
+          502
+        ]
+      ],
+      "executionRole": "postgres",
+      "fields": [
+        "id",
+        "role"
+      ],
+      "sourceMatchNote": "Source definition matched in Phase 1A"
+    },
+    {
+      "schema": "public",
+      "name": "get_gerencia_availability_summaries",
+      "arguments": "p_user_id uuid, p_start timestamp with time zone, p_end timestamp with time zone, p_workspace_currency text",
+      "access": "SELECT",
+      "sources": [
+        [
+          "supabase/migrations/20260817233335_availability_summary_workspace_ids.sql",
+          3
+        ]
+      ],
+      "executionRole": "postgres",
+      "fields": [
+        "id",
+        "role"
+      ],
+      "sourceMatchNote": "Source definition matched in Phase 1A"
+    },
+    {
+      "schema": "public",
+      "name": "mark_whatsapp_cloud_api_thread_read",
+      "arguments": "p_contact_id uuid",
+      "access": "SELECT",
+      "sources": [
+        [
+          "supabase/migrations/20260818032740_whatsapp_cloud_api_unread_state.sql",
+          44
+        ]
+      ],
+      "executionRole": "postgres",
+      "fields": [
+        "id",
+        "role"
+      ],
+      "sourceMatchNote": "Source definition matched in Phase 1A"
+    },
+    {
+      "schema": "public",
+      "name": "refresh_home_overview_stats_cache",
+      "arguments": "p_user_id uuid, p_currency text",
+      "access": "SELECT",
+      "sources": [
+        [
+          "supabase/migrations/20260819175021_home_overview_stats_cache_hourly.sql",
+          255
+        ]
+      ],
+      "executionRole": "postgres",
+      "fields": [
+        "id"
+      ],
+      "sourceMatchNote": "Source definition matched in Phase 1A"
+    },
+    {
+      "schema": "public",
+      "name": "get_whatsapp_cloud_api_inbox_threads",
+      "arguments": "p_limit integer, p_workspace_currency text",
+      "access": "SELECT",
+      "sources": [
+        [
+          "supabase/migrations/20260818134748_whatsapp_cloud_api_contact_on_redirect.sql",
+          76
+        ]
+      ],
+      "executionRole": "postgres",
+      "fields": [
+        "id",
+        "role"
+      ],
+      "sourceMatchNote": "Source definition matched in Phase 1A"
+    },
+    {
+      "schema": "public",
+      "name": "get_whatsapp_cloud_api_inbox_threads_page",
+      "arguments": "p_limit integer, p_offset integer, p_workspace_currency text",
+      "access": "SELECT",
+      "sources": [],
+      "executionRole": "postgres",
+      "fields": [
+        "id",
+        "role"
+      ],
+      "sourceMatchNote": "Catalog dependency accredited; see normalized structural evidence in Phase 0B and Phase 1A"
+    },
+    {
+      "schema": "public",
+      "name": "get_whatsapp_cloud_api_config",
+      "arguments": "p_user_id uuid, p_workspace_currency text",
+      "access": "SELECT",
+      "sources": [
+        [
+          "supabase/migrations/20260825172003_whatsapp_cloud_api_retarget_config.sql",
+          38
+        ]
+      ],
+      "executionRole": "postgres",
+      "fields": [
+        "id",
+        "role"
+      ],
+      "sourceMatchNote": "Source definition matched in Phase 1A"
+    },
+    {
+      "schema": "public",
+      "name": "upsert_whatsapp_cloud_api_config_secure",
+      "arguments": "p_id uuid, p_user_id uuid, p_name text, p_active boolean, p_workspace_currency text, p_phone_number_id text, p_whatsapp_business_account_id text, p_display_phone_number text, p_meta_access_token text, p_meta_app_secret text, p_meta_api_version text, p_webhook_verify_token text, p_meta_messaging_dataset_id text, p_landing_tag text, p_gerencia_selection_mode text, p_gerencia_fair_criterion text, p_redirect_message_template text, p_fallback_message_template text, p_redirect_use_cta_button boolean, p_redirect_cta_button_title text, p_enrich_business_messaging_user_data boolean, p_send_business_messaging_purchase_type_capi boolean, p_retargeting_enabled boolean, p_retarget_message_template text, p_retarget_delay_minutes integer",
+      "access": "SELECT",
+      "sources": [
+        [
+          "supabase/migrations/20260825172003_whatsapp_cloud_api_retarget_config.sql",
+          209
+        ]
+      ],
+      "executionRole": "postgres",
+      "fields": [
+        "id",
+        "role"
+      ],
+      "sourceMatchNote": "Source definition matched in Phase 1A"
+    },
+    {
+      "schema": "public",
+      "name": "get_whatsapp_cloud_api_inbox_threads_page",
+      "arguments": "p_limit integer, p_offset integer, p_workspace_currency text, p_tag_filter text, p_unread_only boolean, p_from timestamp with time zone, p_to timestamp with time zone",
+      "access": "SELECT",
+      "sources": [
+        [
+          "supabase/migrations/20260825192821_whatsapp_cloud_api_inbox_date_filter.sql",
+          1
+        ]
+      ],
+      "executionRole": "postgres",
+      "fields": [
+        "id",
+        "role"
+      ],
+      "sourceMatchNote": "Source definition matched in Phase 1A"
+    },
+    {
+      "schema": "public",
+      "name": "handle_new_user",
+      "arguments": "",
+      "access": "INSERT id,role / UPDATE role",
+      "sources": [
+        [
+          "supabase/migrations/20260902154745_admin_signup_approvals.sql",
+          48
+        ]
+      ],
+      "executionRole": "postgres",
+      "fields": [
+        "id",
+        "role"
+      ],
+      "sourceMatchNote": "Source definition matched in Phase 1A"
+    }
+  ],
+  "policyReaders": [
+    {
+      "schema": "public",
+      "table": "atrio_assignment_scope_metrics",
+      "name": "Admins can read all atrio assignment scope metrics",
+      "fields": [
+        "id",
+        "role"
+      ]
+    },
+    {
+      "schema": "public",
+      "table": "atrio_clients",
+      "name": "atrio_clients_admin_manage",
+      "fields": [
+        "id",
+        "role"
+      ]
+    },
+    {
+      "schema": "public",
+      "table": "chatrace_client_configs",
+      "name": "Admins can delete all chatrace_client_configs",
+      "fields": [
+        "id",
+        "role"
+      ]
+    },
+    {
+      "schema": "public",
+      "table": "chatrace_client_configs",
+      "name": "Admins can insert all chatrace_client_configs",
+      "fields": [
+        "id",
+        "role"
+      ]
+    },
+    {
+      "schema": "public",
+      "table": "chatrace_client_configs",
+      "name": "Admins can read all chatrace_client_configs",
+      "fields": [
+        "id",
+        "role"
+      ]
+    },
+    {
+      "schema": "public",
+      "table": "chatrace_client_configs",
+      "name": "Admins can update all chatrace_client_configs",
+      "fields": [
+        "id",
+        "role"
+      ]
+    },
+    {
+      "schema": "public",
+      "table": "chatrace_gerencias",
+      "name": "Admins can delete all chatrace_gerencias",
+      "fields": [
+        "id",
+        "role"
+      ]
+    },
+    {
+      "schema": "public",
+      "table": "chatrace_gerencias",
+      "name": "Admins can insert all chatrace_gerencias",
+      "fields": [
+        "id",
+        "role"
+      ]
+    },
+    {
+      "schema": "public",
+      "table": "chatrace_gerencias",
+      "name": "Admins can read all chatrace_gerencias",
+      "fields": [
+        "id",
+        "role"
+      ]
+    },
+    {
+      "schema": "public",
+      "table": "chatrace_gerencias",
+      "name": "Admins can update all chatrace_gerencias",
+      "fields": [
+        "id",
+        "role"
+      ]
+    },
+    {
+      "schema": "public",
+      "table": "client_subscriptions",
+      "name": "Admins can insert client_subscriptions",
+      "fields": [
+        "id",
+        "role"
+      ]
+    },
+    {
+      "schema": "public",
+      "table": "client_subscriptions",
+      "name": "Admins can read all client_subscriptions",
+      "fields": [
+        "id",
+        "role"
+      ]
+    },
+    {
+      "schema": "public",
+      "table": "client_subscriptions",
+      "name": "Admins can update client_subscriptions",
+      "fields": [
+        "id",
+        "role"
+      ]
+    },
+    {
+      "schema": "public",
+      "table": "conversion_journey_starts",
+      "name": "conversion_journey_starts_admin_read",
+      "fields": [
+        "id",
+        "role"
+      ]
+    },
+    {
+      "schema": "public",
+      "table": "conversion_logs",
+      "name": "admins_read_all_logs",
+      "fields": [
+        "id",
+        "role"
+      ]
+    },
+    {
+      "schema": "public",
+      "table": "conversions",
+      "name": "Admins can delete all conversions",
+      "fields": [
+        "id",
+        "role"
+      ]
+    },
+    {
+      "schema": "public",
+      "table": "conversions",
+      "name": "Admins can read all conversions",
+      "fields": [
+        "id",
+        "role"
+      ]
+    },
+    {
+      "schema": "public",
+      "table": "conversions",
+      "name": "Admins can update all conversions",
+      "fields": [
+        "id",
+        "role"
+      ]
+    },
+    {
+      "schema": "public",
+      "table": "conversions_config",
+      "name": "Admins can insert all conversions_config",
+      "fields": [
+        "id",
+        "role"
+      ]
+    },
+    {
+      "schema": "public",
+      "table": "conversions_config",
+      "name": "Admins can read all conversions_config",
+      "fields": [
+        "id",
+        "role"
+      ]
+    },
+    {
+      "schema": "public",
+      "table": "conversions_config",
+      "name": "Admins can update all conversions_config",
+      "fields": [
+        "id",
+        "role"
+      ]
+    },
+    {
+      "schema": "public",
+      "table": "conversions_pixel_configs",
+      "name": "Admins can delete all conversions_pixel_configs",
+      "fields": [
+        "id",
+        "role"
+      ]
+    },
+    {
+      "schema": "public",
+      "table": "conversions_pixel_configs",
+      "name": "Admins can insert all conversions_pixel_configs",
+      "fields": [
+        "id",
+        "role"
+      ]
+    },
+    {
+      "schema": "public",
+      "table": "conversions_pixel_configs",
+      "name": "Admins can read all conversions_pixel_configs",
+      "fields": [
+        "id",
+        "role"
+      ]
+    },
+    {
+      "schema": "public",
+      "table": "conversions_pixel_configs",
+      "name": "Admins can update all conversions_pixel_configs",
+      "fields": [
+        "id",
+        "role"
+      ]
+    },
+    {
+      "schema": "public",
+      "table": "gerencia_phone_availability_snapshots",
+      "name": "Admins read all gerencia phone availability snapshots",
+      "fields": [
+        "id",
+        "role"
+      ]
+    },
+    {
+      "schema": "public",
+      "table": "gerencia_phones",
+      "name": "Admins can read all gerencia phones",
+      "fields": [
+        "id",
+        "role"
+      ]
+    },
+    {
+      "schema": "public",
+      "table": "gerencia_work_group_members",
+      "name": "Users read own gerencia work group members",
+      "fields": [
+        "id",
+        "role"
+      ]
+    },
+    {
+      "schema": "public",
+      "table": "gerencia_work_groups",
+      "name": "Users read own gerencia work groups",
+      "fields": [
+        "id",
+        "role"
+      ]
+    },
+    {
+      "schema": "public",
+      "table": "gerencias",
+      "name": "Admins can read all gerencias",
+      "fields": [
+        "id",
+        "role"
+      ]
+    },
+    {
+      "schema": "public",
+      "table": "gerencias",
+      "name": "Admins can update all gerencias",
+      "fields": [
+        "id",
+        "role"
+      ]
+    },
+    {
+      "schema": "public",
+      "table": "home_overview_stats_cache",
+      "name": "home_overview_stats_cache_admin_read",
+      "fields": [
+        "id",
+        "role"
+      ]
+    },
+    {
+      "schema": "public",
+      "table": "kommo_client_configs",
+      "name": "Admins can delete all kommo_client_configs",
+      "fields": [
+        "id",
+        "role"
+      ]
+    },
+    {
+      "schema": "public",
+      "table": "kommo_client_configs",
+      "name": "Admins can insert all kommo_client_configs",
+      "fields": [
+        "id",
+        "role"
+      ]
+    },
+    {
+      "schema": "public",
+      "table": "kommo_client_configs",
+      "name": "Admins can read all kommo_client_configs",
+      "fields": [
+        "id",
+        "role"
+      ]
+    },
+    {
+      "schema": "public",
+      "table": "kommo_client_configs",
+      "name": "Admins can update all kommo_client_configs",
+      "fields": [
+        "id",
+        "role"
+      ]
+    },
+    {
+      "schema": "public",
+      "table": "landing_phone_availability_demands",
+      "name": "Admins read all landing phone availability demands",
+      "fields": [
+        "id",
+        "role"
+      ]
+    },
+    {
+      "schema": "public",
+      "table": "landings",
+      "name": "Admins can delete all landings",
+      "fields": [
+        "id",
+        "role"
+      ]
+    },
+    {
+      "schema": "public",
+      "table": "landings",
+      "name": "Admins can read all landings",
+      "fields": [
+        "id",
+        "role"
+      ]
+    },
+    {
+      "schema": "public",
+      "table": "landings",
+      "name": "Admins can update all landings",
+      "fields": [
+        "id",
+        "role"
+      ]
+    },
+    {
+      "schema": "public",
+      "table": "landings_atrio_clients",
+      "name": "Admins can manage all landing atrio clients",
+      "fields": [
+        "id",
+        "role"
+      ]
+    },
+    {
+      "schema": "public",
+      "table": "landings_gerencias",
+      "name": "Admins can delete landings_gerencias",
+      "fields": [
+        "id",
+        "role"
+      ]
+    },
+    {
+      "schema": "public",
+      "table": "landings_gerencias",
+      "name": "Admins can insert landings_gerencias",
+      "fields": [
+        "id",
+        "role"
+      ]
+    },
+    {
+      "schema": "public",
+      "table": "landings_gerencias",
+      "name": "Admins can read landings_gerencias",
+      "fields": [
+        "id",
+        "role"
+      ]
+    },
+    {
+      "schema": "public",
+      "table": "notification_bot_config",
+      "name": "Admins can insert bot config",
+      "fields": [
+        "id",
+        "role"
+      ]
+    },
+    {
+      "schema": "public",
+      "table": "notification_bot_config",
+      "name": "Admins can read bot config",
+      "fields": [
+        "id",
+        "role"
+      ]
+    },
+    {
+      "schema": "public",
+      "table": "notification_bot_config",
+      "name": "Admins can update bot config",
+      "fields": [
+        "id",
+        "role"
+      ]
+    },
+    {
+      "schema": "public",
+      "table": "notification_contact_alerts",
+      "name": "Admins can read all notification alerts",
+      "fields": [
+        "id",
+        "role"
+      ]
+    },
+    {
+      "schema": "public",
+      "table": "notification_settings",
+      "name": "Admins can read all notification settings",
+      "fields": [
+        "id",
+        "role"
+      ]
+    },
+    {
+      "schema": "public",
+      "table": "notification_settings",
+      "name": "Admins can update all notification settings",
+      "fields": [
+        "id",
+        "role"
+      ]
+    },
+    {
+      "schema": "public",
+      "table": "notification_telegram_destinations",
+      "name": "Admins can read all telegram destinations",
+      "fields": [
+        "id",
+        "role"
+      ]
+    },
+    {
+      "schema": "public",
+      "table": "notification_telegram_destinations",
+      "name": "Admins can update all telegram destinations",
+      "fields": [
+        "id",
+        "role"
+      ]
+    },
+    {
+      "schema": "public",
+      "table": "phone_assignment_scope_metrics",
+      "name": "Admins can read all phone assignment scope metrics",
+      "fields": [
+        "id",
+        "role"
+      ]
+    },
+    {
+      "schema": "public",
+      "table": "phone_metrics",
+      "name": "phone_metrics_select_own_or_admin",
+      "fields": [
+        "id",
+        "role"
+      ]
+    },
+    {
+      "schema": "public",
+      "table": "promotion_participants",
+      "name": "Admins can delete all promotion participants",
+      "fields": [
+        "id",
+        "role"
+      ]
+    },
+    {
+      "schema": "public",
+      "table": "promotion_participants",
+      "name": "Admins can read all promotion participants",
+      "fields": [
+        "id",
+        "role"
+      ]
+    },
+    {
+      "schema": "public",
+      "table": "promotions",
+      "name": "Admins can read all promotions",
+      "fields": [
+        "id",
+        "role"
+      ]
+    },
+    {
+      "schema": "public",
+      "table": "promotions",
+      "name": "Admins can update all promotions",
+      "fields": [
+        "id",
+        "role"
+      ]
+    },
+    {
+      "schema": "public",
+      "table": "settings",
+      "name": "Admins can insert settings",
+      "fields": [
+        "id",
+        "role"
+      ]
+    },
+    {
+      "schema": "public",
+      "table": "settings",
+      "name": "Admins can read settings",
+      "fields": [
+        "id",
+        "role"
+      ]
+    },
+    {
+      "schema": "public",
+      "table": "settings",
+      "name": "Admins can update settings",
+      "fields": [
+        "id",
+        "role"
+      ]
+    },
+    {
+      "schema": "public",
+      "table": "whatsapp_cloud_api_assignments",
+      "name": "whatsapp_cloud_api_assignments_admin_read",
+      "fields": [
+        "id",
+        "role"
+      ]
+    },
+    {
+      "schema": "public",
+      "table": "whatsapp_cloud_api_attribution_sessions",
+      "name": "whatsapp_cloud_api_attr_admin_read",
+      "fields": [
+        "id",
+        "role"
+      ]
+    },
+    {
+      "schema": "public",
+      "table": "whatsapp_cloud_api_configs",
+      "name": "whatsapp_cloud_api_configs_admin",
+      "fields": [
+        "id",
+        "role"
+      ]
+    },
+    {
+      "schema": "public",
+      "table": "whatsapp_cloud_api_contacts",
+      "name": "whatsapp_cloud_api_contacts_admin_read",
+      "fields": [
+        "id",
+        "role"
+      ]
+    },
+    {
+      "schema": "public",
+      "table": "whatsapp_cloud_api_gerencias",
+      "name": "whatsapp_cloud_api_gerencias_admin",
+      "fields": [
+        "id",
+        "role"
+      ]
+    },
+    {
+      "schema": "public",
+      "table": "whatsapp_cloud_api_outbound_messages",
+      "name": "whatsapp_cloud_api_outbound_admin_read",
+      "fields": [
+        "id",
+        "role"
+      ]
+    },
+    {
+      "schema": "public",
+      "table": "whatsapp_cloud_api_redirects",
+      "name": "whatsapp_cloud_api_redirects_admin_read",
+      "fields": [
+        "id",
+        "role"
+      ]
+    },
+    {
+      "schema": "public",
+      "table": "whatsapp_cloud_api_retarget_messages",
+      "name": "whatsapp_cloud_api_retarget_admin_read",
+      "fields": [
+        "id",
+        "role"
+      ]
+    },
+    {
+      "schema": "public",
+      "table": "whatsapp_cloud_api_webhook_events",
+      "name": "whatsapp_cloud_api_events_admin_read",
+      "fields": [
+        "id",
+        "role"
+      ]
+    },
+    {
+      "schema": "public",
+      "table": "whatsapp_cloud_api_webhook_request_logs",
+      "name": "whatsapp_cloud_api_request_logs_admin_read",
+      "fields": [
+        "id",
+        "role"
+      ]
+    }
+  ],
+  "fieldSummary": {
+    "id": "Read identity/filter/join; Auth trigger insert; create-client service upsert; immutable for clients",
+    "role": "Read authorization; Auth approval/app_metadata assignment; create-client upsert client; backend only",
+    "created_at": "Default only; no explicit application reader/writer found",
+    "nombre": "Application labels/routing identity; admin settings edits own; backend create-client upsert; current validation/semantics preserved"
+  },
+  "authAssignmentSource": "supabase/migrations/20260902154745_admin_signup_approvals.sql",
+  "editableUserMetadataUsedForAuthorization": false,
+  "implicitWriter": {
+    "mechanism": "auth.users deletion cascades to profiles through the existing FK",
+    "consumer": "supabase/functions/delete-client/index.ts",
+    "directProfilesDeleteRequired": false
+  }
+}

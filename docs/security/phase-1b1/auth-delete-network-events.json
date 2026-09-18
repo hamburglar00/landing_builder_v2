@@ -1,0 +1,98 @@
+{
+  "query": "Read-only Docker network events filtered to changed IDs only",
+  "events": [],
+  "networks": [
+    {
+      "id": "17760a979cefbb514ea02fd7e1c3ebf0e3bb6b68018c1cb6e500dbfe03e0aaf8",
+      "name": "bridge",
+      "driver": "bridge",
+      "scope": "local",
+      "internal": false,
+      "labels": {}
+    },
+    {
+      "id": "fb7df4db3bb278b3df6795f24d2344142983e2b6ad750ebd8e101708dc9affa8",
+      "name": "host",
+      "driver": "host",
+      "scope": "local",
+      "internal": false,
+      "labels": {}
+    },
+    {
+      "id": "c1d0138063750f48cc2764d724af2545175a1caf6b69f9926941382c85790fed",
+      "name": "none",
+      "driver": "null",
+      "scope": "local",
+      "internal": false,
+      "labels": {}
+    },
+    {
+      "id": "c826c703d12184bc682700d7d061abab1a4cb48903f2e02a5671f1645e4ca37a",
+      "name": "phase0b-a7b38d60-isolated",
+      "driver": "bridge",
+      "scope": "local",
+      "internal": true,
+      "labels": {
+        "phase0b.owner": "a7b38d60-d5bb-4d93-806c-ddaeec98b824"
+      }
+    },
+    {
+      "id": "74eae846c9e1ee92fc2244bb6af1c121e1af233acbd058750d6c5020a99b1a0d",
+      "name": "supabase_network_phase0b-a7b38d60",
+      "driver": "bridge",
+      "scope": "local",
+      "internal": false,
+      "labels": {
+        "com.docker.compose.project": "phase0b-a7b38d60",
+        "com.supabase.cli.project": "phase0b-a7b38d60"
+      }
+    }
+  ],
+  "observations": [
+    {
+      "observedAt": "2026-09-17T19:14:41.246Z",
+      "bridge": {
+        "id": "17760a979cefbb514ea02fd7e1c3ebf0e3bb6b68018c1cb6e500dbfe03e0aaf8",
+        "name": "bridge",
+        "created": "2026-09-17T19:04:32.899454484Z",
+        "driver": "bridge",
+        "internal": false
+      },
+      "daemon": {
+        "systemTime": "2026-09-17T19:14:41.214821532Z",
+        "serverVersion": "29.7.2",
+        "operatingSystem": "Docker Desktop",
+        "containersRunning": 1
+      }
+    }
+  ],
+  "finalNetworks": [
+    {
+      "id": "17760a979cefbb514ea02fd7e1c3ebf0e3bb6b68018c1cb6e500dbfe03e0aaf8",
+      "name": "bridge",
+      "driver": "bridge",
+      "scope": "local",
+      "internal": false,
+      "created": "2026-09-17T19:04:32.899454484Z"
+    },
+    {
+      "id": "fb7df4db3bb278b3df6795f24d2344142983e2b6ad750ebd8e101708dc9affa8",
+      "name": "host",
+      "driver": "host",
+      "scope": "local",
+      "internal": false,
+      "created": "2026-09-04T01:36:14.438128236Z"
+    },
+    {
+      "id": "c1d0138063750f48cc2764d724af2545175a1caf6b69f9926941382c85790fed",
+      "name": "none",
+      "driver": "null",
+      "scope": "local",
+      "internal": false,
+      "created": "2026-09-04T01:36:14.405014347Z"
+    }
+  ],
+  "ownedResiduals": [],
+  "conclusion": "First run: all owned cleanup commands succeeded; only global bridge ID changed. Second run: cleanup succeeded and global inventory identical. No owned residual resources.",
+  "limit": "No retained Docker event identifies the component that recreated bridge; no engine configuration changes made."
+}

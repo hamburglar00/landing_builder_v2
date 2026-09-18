@@ -1,0 +1,557 @@
+{
+  "formatVersion": 1,
+  "phase": "1B.1",
+  "kind": "fresh scoped profiles/Auth fixture",
+  "baseCommit": "ba7b3d3f5e60eb0c2cb907a8c281d4462e15d4bb",
+  "localOnly": true,
+  "remoteWrites": 0,
+  "fullReconstructions": 0,
+  "complete": true,
+  "checks": [
+    {
+      "name": "Scoped pre-migration profiles metadata matches accredited baseline",
+      "status": "passed"
+    },
+    {
+      "name": "Historical escalation reproduced and rolled back",
+      "status": "passed"
+    },
+    {
+      "name": "Scoped post-migration profiles metadata matches complete reconstruction",
+      "status": "passed"
+    },
+    {
+      "name": "SQL own nombre update",
+      "status": "passed"
+    },
+    {
+      "name": "SQL role escalation denied",
+      "status": "passed"
+    },
+    {
+      "name": "SQL identity id change denied",
+      "status": "passed"
+    },
+    {
+      "name": "SQL nonexistent user_id rejected",
+      "status": "passed"
+    },
+    {
+      "name": "SQL administrative created_at denied",
+      "status": "passed"
+    },
+    {
+      "name": "SQL other profile remains unchanged",
+      "status": "passed"
+    },
+    {
+      "name": "SQL anon update denied",
+      "status": "passed"
+    },
+    {
+      "name": "SQL mixed statement atomic failure",
+      "status": "passed"
+    },
+    {
+      "name": "SQL client insert admin denied",
+      "status": "passed"
+    },
+    {
+      "name": "SQL client delete denied",
+      "status": "passed"
+    },
+    {
+      "name": "SQL missing JWT subject updates zero rows",
+      "status": "passed"
+    },
+    {
+      "name": "SQL admin browser also restricted to own nombre",
+      "status": "passed"
+    },
+    {
+      "name": "SQL approved Auth creation keeps admin role",
+      "status": "passed"
+    },
+    {
+      "name": "SQL trusted app_metadata assigns client and admin; user_metadata ignored",
+      "status": "passed"
+    },
+    {
+      "name": "SQL user_metadata alone cannot authorize signup",
+      "status": "passed"
+    },
+    {
+      "name": "SQL create-client service upsert conflict path",
+      "status": "passed"
+    },
+    {
+      "name": "SQL create-client service upsert insertion path",
+      "status": "passed"
+    },
+    {
+      "name": "SQL service cannot supply created_at",
+      "status": "passed"
+    },
+    {
+      "name": "SQL service direct profile deletion unnecessary and denied",
+      "status": "passed"
+    },
+    {
+      "name": "SQL service_role direct Auth deletion denied",
+      "status": "passed"
+    },
+    {
+      "name": "Effective auth.users DELETE grant absent for service_role",
+      "status": "passed"
+    },
+    {
+      "name": "SQL authenticated direct Auth deletion denied",
+      "status": "passed"
+    },
+    {
+      "name": "Effective auth.users DELETE grant absent for authenticated",
+      "status": "passed"
+    },
+    {
+      "name": "SQL anon direct Auth deletion denied",
+      "status": "passed"
+    },
+    {
+      "name": "Effective auth.users DELETE grant absent for anon",
+      "status": "passed"
+    },
+    {
+      "name": "Effective insert grant anon.id",
+      "status": "passed"
+    },
+    {
+      "name": "Effective update grant anon.id",
+      "status": "passed"
+    },
+    {
+      "name": "Effective insert grant anon.role",
+      "status": "passed"
+    },
+    {
+      "name": "Effective update grant anon.role",
+      "status": "passed"
+    },
+    {
+      "name": "Effective insert grant anon.created_at",
+      "status": "passed"
+    },
+    {
+      "name": "Effective update grant anon.created_at",
+      "status": "passed"
+    },
+    {
+      "name": "Effective insert grant anon.nombre",
+      "status": "passed"
+    },
+    {
+      "name": "Effective update grant anon.nombre",
+      "status": "passed"
+    },
+    {
+      "name": "Effective insert grant authenticated.id",
+      "status": "passed"
+    },
+    {
+      "name": "Effective update grant authenticated.id",
+      "status": "passed"
+    },
+    {
+      "name": "Effective insert grant authenticated.role",
+      "status": "passed"
+    },
+    {
+      "name": "Effective update grant authenticated.role",
+      "status": "passed"
+    },
+    {
+      "name": "Effective insert grant authenticated.created_at",
+      "status": "passed"
+    },
+    {
+      "name": "Effective update grant authenticated.created_at",
+      "status": "passed"
+    },
+    {
+      "name": "Effective insert grant authenticated.nombre",
+      "status": "passed"
+    },
+    {
+      "name": "Effective update grant authenticated.nombre",
+      "status": "passed"
+    },
+    {
+      "name": "Effective insert grant service_role.id",
+      "status": "passed"
+    },
+    {
+      "name": "Effective update grant service_role.id",
+      "status": "passed"
+    },
+    {
+      "name": "Effective insert grant service_role.role",
+      "status": "passed"
+    },
+    {
+      "name": "Effective update grant service_role.role",
+      "status": "passed"
+    },
+    {
+      "name": "Effective insert grant service_role.created_at",
+      "status": "passed"
+    },
+    {
+      "name": "Effective update grant service_role.created_at",
+      "status": "passed"
+    },
+    {
+      "name": "Effective insert grant service_role.nombre",
+      "status": "passed"
+    },
+    {
+      "name": "Effective update grant service_role.nombre",
+      "status": "passed"
+    },
+    {
+      "name": "No table-level DML grant for anon",
+      "status": "passed"
+    },
+    {
+      "name": "No table-level DML grant for authenticated",
+      "status": "passed"
+    },
+    {
+      "name": "No table-level DML grant for service_role",
+      "status": "passed"
+    },
+    {
+      "name": "RLS USING and WITH CHECK scoped to authenticated",
+      "status": "passed"
+    },
+    {
+      "name": "Auth Admin API creates approved synthetic user and profile",
+      "status": "passed"
+    },
+    {
+      "name": "Auth-created profile accepts existing backend upsert",
+      "status": "passed"
+    },
+    {
+      "name": "Auth Admin API hard deletion cascades to profiles",
+      "status": "passed"
+    },
+    {
+      "name": "Data API own nombre update",
+      "status": "passed"
+    },
+    {
+      "name": "Data API protected role",
+      "status": "passed"
+    },
+    {
+      "name": "Data API protected id",
+      "status": "passed"
+    },
+    {
+      "name": "Data API protected created_at",
+      "status": "passed"
+    },
+    {
+      "name": "Data API nonexistent user_id rejected",
+      "status": "passed"
+    },
+    {
+      "name": "Data API other profile cannot be updated",
+      "status": "passed"
+    },
+    {
+      "name": "Data API anon cannot update profile",
+      "status": "passed"
+    },
+    {
+      "name": "Data API mixed payload fails without partial update",
+      "status": "passed"
+    },
+    {
+      "name": "Data API service create-client upsert",
+      "status": "passed"
+    },
+    {
+      "name": "Data API service administrative role capability preserved",
+      "status": "passed"
+    },
+    {
+      "name": "Data API service created_at denied",
+      "status": "passed"
+    },
+    {
+      "name": "Data API admin JWT still cannot edit role",
+      "status": "passed"
+    },
+    {
+      "name": "Scoped Auth and API preserve schema and role attributes/memberships",
+      "status": "passed"
+    },
+    {
+      "name": "Cron stopped, no queued HTTP, no synthetic profiles left",
+      "status": "passed"
+    }
+  ],
+  "fixtureSources": [
+    {
+      "version": "0001",
+      "file": "0001_base_schema.sql",
+      "sha256": "5e5857e0088d85ab20f4f7abb908046abfc4d56e4a0e4eedc3a2f2731c477b58"
+    },
+    {
+      "version": "20260228000000",
+      "file": "20260228000000_add_nombre_to_profiles.sql",
+      "sha256": "be68ff6f278a2dec2ea0ba006de52ad86564189c82aa1701e9961e2f07c53052"
+    },
+    {
+      "version": "20260808120000",
+      "file": "20260808120000_optimize_rls_auth_uid_initplan.sql",
+      "sha256": "22ce50bb59f6eb2484606d7ab52581412398727a9e79b3017325f63098e87fde"
+    },
+    {
+      "version": "20260818170134",
+      "file": "20260818170134_restrict_public_auth_signups.sql",
+      "sha256": "363de8f3bb9ba616af40efcdafd6dfc70212aa3bd19314754a25ae1cefdca518"
+    },
+    {
+      "version": "20260902154745",
+      "file": "20260902154745_admin_signup_approvals.sql",
+      "sha256": "1f360dddb22c04c1349043c0799b2cfdad61ac48d9fc0230be8fcffbb9126711"
+    },
+    {
+      "version": "20260917183837",
+      "file": "20260917183837_protect_profile_administrative_fields.sql",
+      "sha256": "119b70e25ffea319e4f4decbdf37c4b5681be1427f09e3ada93f07b6c7c9da87"
+    }
+  ],
+  "sourceHashes": [
+    {
+      "file": "scripts/security/run-profile-repeat.mjs",
+      "sha256": "543d7c241a4a3102a23fb14155154bf0e6bd135d542332ee9a3ccd38242a823c"
+    },
+    {
+      "file": "scripts/security/profile-security-tests.mjs",
+      "sha256": "a2911ee85080a7b85725d6222536c36e5623d98b8bb6f722c46ab407c900938e"
+    },
+    {
+      "file": "scripts/security/profile-auth-api.mjs",
+      "sha256": "f53f24461725ca8c84aeb4c3a8346ac8d97e11e84e19d5e88018ff967ec8124b"
+    },
+    {
+      "file": "scripts/security/profile-data-api.mjs",
+      "sha256": "0a6b8005e29a5a45114f005142ba85dafe163f9740833bd1ddbc6b01d974f588"
+    },
+    {
+      "file": "scripts/security/profile-metadata.sql",
+      "sha256": "166c528e61792f8ad2d509073ffdb54a11510d7952a72e46c932ca0940e97115"
+    },
+    {
+      "file": "scripts/phase0/bootstrap-runtime.mjs",
+      "sha256": "ee287778bde22f9a1c1eda869123b49bd59b631967759e009bdc140ba04fbaa1"
+    }
+  ],
+  "cleanup": {
+    "auth": {
+      "container": "30e544bb38f1ebdfaec3dff2046fca8e5ff712127f0c3ed0387036df5dd51b46",
+      "remaining": 0
+    },
+    "api": {
+      "container": "8858dbcc7a3382fc6555b5d8ebf802512a05eafe03f1facdc73c3d52e8082807",
+      "remaining": 0
+    },
+    "database": {
+      "project": "phase0b-38e05207",
+      "owned": {
+        "containers": [
+          "beebca9a9ce0de291e860d66590449589545dc5e541a0e3348b5f0904e682b5d"
+        ],
+        "networks": [
+          "5e54bbff0c12820cd48876acd4157e9dbf883a481ae988c952287b91821969dc",
+          "65292089d4745c848965aabc7e0e026c30220aad4394d1fae0a1fff2fd370380"
+        ],
+        "volumes": [
+          "supabase_db_phase0b-38e05207"
+        ]
+      },
+      "remaining": {
+        "containers": [],
+        "networks": [],
+        "volumes": []
+      }
+    },
+    "failedOwners": []
+  },
+  "startedAt": "2026-09-17T21:16:44.115Z",
+  "provider": {
+    "cli": "2.75.0",
+    "image": "public.ecr.aws/supabase/postgres:17.6.1.075",
+    "imageId": "sha256:82a04ba6c05f60950a74ae46be3726abb18d06ee44da936276fd782e72e36855"
+  },
+  "scopedProfileFingerprint": "4dc11941f1c4c2307cf8c656a5e630bd98698bf4c679d87780209932f7890137",
+  "grants": [
+    {
+      "role": "anon",
+      "column": "id",
+      "insert": false,
+      "update": false
+    },
+    {
+      "role": "anon",
+      "column": "role",
+      "insert": false,
+      "update": false
+    },
+    {
+      "role": "anon",
+      "column": "created_at",
+      "insert": false,
+      "update": false
+    },
+    {
+      "role": "anon",
+      "column": "nombre",
+      "insert": false,
+      "update": false
+    },
+    {
+      "role": "authenticated",
+      "column": "id",
+      "insert": false,
+      "update": false
+    },
+    {
+      "role": "authenticated",
+      "column": "role",
+      "insert": false,
+      "update": false
+    },
+    {
+      "role": "authenticated",
+      "column": "created_at",
+      "insert": false,
+      "update": false
+    },
+    {
+      "role": "authenticated",
+      "column": "nombre",
+      "insert": false,
+      "update": true
+    },
+    {
+      "role": "service_role",
+      "column": "id",
+      "insert": true,
+      "update": true
+    },
+    {
+      "role": "service_role",
+      "column": "role",
+      "insert": true,
+      "update": true
+    },
+    {
+      "role": "service_role",
+      "column": "created_at",
+      "insert": false,
+      "update": false
+    },
+    {
+      "role": "service_role",
+      "column": "nombre",
+      "insert": true,
+      "update": true
+    }
+  ],
+  "api": {
+    "image": "public.ecr.aws/supabase/postgrest:v14.1",
+    "publishedPorts": 0
+  },
+  "auth": {
+    "image": "public.ecr.aws/supabase/gotrue:v2.189.0",
+    "publishedPorts": 0
+  },
+  "passed": 73,
+  "failed": 0,
+  "repeatedPriorNames": [
+    "Historical escalation reproduced and rolled back",
+    "SQL own nombre update",
+    "SQL role escalation denied",
+    "SQL identity id change denied",
+    "SQL nonexistent user_id rejected",
+    "SQL administrative created_at denied",
+    "SQL other profile remains unchanged",
+    "SQL anon update denied",
+    "SQL mixed statement atomic failure",
+    "SQL client insert admin denied",
+    "SQL client delete denied",
+    "SQL missing JWT subject updates zero rows",
+    "SQL admin browser also restricted to own nombre",
+    "SQL approved Auth creation keeps admin role",
+    "SQL trusted app_metadata assigns client and admin; user_metadata ignored",
+    "SQL user_metadata alone cannot authorize signup",
+    "SQL create-client service upsert conflict path",
+    "SQL create-client service upsert insertion path",
+    "SQL service cannot supply created_at",
+    "SQL service direct profile deletion unnecessary and denied",
+    "SQL service_role direct Auth deletion denied",
+    "Effective auth.users DELETE grant absent for service_role",
+    "SQL authenticated direct Auth deletion denied",
+    "Effective auth.users DELETE grant absent for authenticated",
+    "SQL anon direct Auth deletion denied",
+    "Effective auth.users DELETE grant absent for anon",
+    "Effective insert grant anon.id",
+    "Effective update grant anon.id",
+    "Effective insert grant anon.role",
+    "Effective update grant anon.role",
+    "Effective insert grant anon.created_at",
+    "Effective update grant anon.created_at",
+    "Effective insert grant anon.nombre",
+    "Effective update grant anon.nombre",
+    "Effective insert grant authenticated.id",
+    "Effective update grant authenticated.id",
+    "Effective insert grant authenticated.role",
+    "Effective update grant authenticated.role",
+    "Effective insert grant authenticated.created_at",
+    "Effective update grant authenticated.created_at",
+    "Effective insert grant authenticated.nombre",
+    "Effective update grant authenticated.nombre",
+    "Effective insert grant service_role.id",
+    "Effective update grant service_role.id",
+    "Effective insert grant service_role.role",
+    "Effective update grant service_role.role",
+    "Effective insert grant service_role.created_at",
+    "Effective update grant service_role.created_at",
+    "Effective insert grant service_role.nombre",
+    "Effective update grant service_role.nombre",
+    "No table-level DML grant for anon",
+    "No table-level DML grant for authenticated",
+    "No table-level DML grant for service_role",
+    "RLS USING and WITH CHECK scoped to authenticated",
+    "Auth Admin API creates approved synthetic user and profile",
+    "Auth-created profile accepts existing backend upsert",
+    "Auth Admin API hard deletion cascades to profiles",
+    "Data API own nombre update",
+    "Data API protected role",
+    "Data API protected id",
+    "Data API protected created_at",
+    "Data API nonexistent user_id rejected",
+    "Data API other profile cannot be updated",
+    "Data API anon cannot update profile",
+    "Data API mixed payload fails without partial update",
+    "Data API service create-client upsert",
+    "Data API service administrative role capability preserved",
+    "Data API service created_at denied",
+    "Data API admin JWT still cannot edit role",
+    "Cron stopped, no queued HTTP, no synthetic profiles left"
+  ],
+  "finishedAt": "2026-09-17T21:20:09.521Z"
+}

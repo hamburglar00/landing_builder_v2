@@ -1,0 +1,877 @@
+{
+  "formatVersion": 1,
+  "phase": "1B.1",
+  "baseCommit": "ba7b3d3f5e60eb0c2cb907a8c281d4462e15d4bb",
+  "localOnly": true,
+  "complete": true,
+  "suites": [
+    {
+      "name": "diagnostic-and-path-auditor",
+      "exitCode": 0,
+      "durationMs": 566,
+      "passed": 10,
+      "failed": 0,
+      "skipped": 0
+    },
+    {
+      "name": "profiles-auth-data-api",
+      "exitCode": 0,
+      "durationMs": 206681,
+      "passed": 73,
+      "failed": 0,
+      "skipped": 0,
+      "complete": true,
+      "repeatedPriorNames": [
+        "Historical escalation reproduced and rolled back",
+        "SQL own nombre update",
+        "SQL role escalation denied",
+        "SQL identity id change denied",
+        "SQL nonexistent user_id rejected",
+        "SQL administrative created_at denied",
+        "SQL other profile remains unchanged",
+        "SQL anon update denied",
+        "SQL mixed statement atomic failure",
+        "SQL client insert admin denied",
+        "SQL client delete denied",
+        "SQL missing JWT subject updates zero rows",
+        "SQL admin browser also restricted to own nombre",
+        "SQL approved Auth creation keeps admin role",
+        "SQL trusted app_metadata assigns client and admin; user_metadata ignored",
+        "SQL user_metadata alone cannot authorize signup",
+        "SQL create-client service upsert conflict path",
+        "SQL create-client service upsert insertion path",
+        "SQL service cannot supply created_at",
+        "SQL service direct profile deletion unnecessary and denied",
+        "SQL service_role direct Auth deletion denied",
+        "Effective auth.users DELETE grant absent for service_role",
+        "SQL authenticated direct Auth deletion denied",
+        "Effective auth.users DELETE grant absent for authenticated",
+        "SQL anon direct Auth deletion denied",
+        "Effective auth.users DELETE grant absent for anon",
+        "Effective insert grant anon.id",
+        "Effective update grant anon.id",
+        "Effective insert grant anon.role",
+        "Effective update grant anon.role",
+        "Effective insert grant anon.created_at",
+        "Effective update grant anon.created_at",
+        "Effective insert grant anon.nombre",
+        "Effective update grant anon.nombre",
+        "Effective insert grant authenticated.id",
+        "Effective update grant authenticated.id",
+        "Effective insert grant authenticated.role",
+        "Effective update grant authenticated.role",
+        "Effective insert grant authenticated.created_at",
+        "Effective update grant authenticated.created_at",
+        "Effective insert grant authenticated.nombre",
+        "Effective update grant authenticated.nombre",
+        "Effective insert grant service_role.id",
+        "Effective update grant service_role.id",
+        "Effective insert grant service_role.role",
+        "Effective update grant service_role.role",
+        "Effective insert grant service_role.created_at",
+        "Effective update grant service_role.created_at",
+        "Effective insert grant service_role.nombre",
+        "Effective update grant service_role.nombre",
+        "No table-level DML grant for anon",
+        "No table-level DML grant for authenticated",
+        "No table-level DML grant for service_role",
+        "RLS USING and WITH CHECK scoped to authenticated",
+        "Auth Admin API creates approved synthetic user and profile",
+        "Auth-created profile accepts existing backend upsert",
+        "Auth Admin API hard deletion cascades to profiles",
+        "Data API own nombre update",
+        "Data API protected role",
+        "Data API protected id",
+        "Data API protected created_at",
+        "Data API nonexistent user_id rejected",
+        "Data API other profile cannot be updated",
+        "Data API anon cannot update profile",
+        "Data API mixed payload fails without partial update",
+        "Data API service create-client upsert",
+        "Data API service administrative role capability preserved",
+        "Data API service created_at denied",
+        "Data API admin JWT still cannot edit role",
+        "Cron stopped, no queued HTTP, no synthetic profiles left"
+      ],
+      "cleanupFailures": []
+    },
+    {
+      "name": "bootstrap-units",
+      "exitCode": 0,
+      "durationMs": 1305,
+      "passed": 34,
+      "failed": 0,
+      "skipped": 0
+    },
+    {
+      "name": "collector",
+      "exitCode": 0,
+      "durationMs": 904,
+      "passed": 5,
+      "failed": 0,
+      "skipped": 0
+    },
+    {
+      "name": "deno",
+      "exitCode": 0,
+      "durationMs": 8109,
+      "passed": 41,
+      "failed": 0,
+      "skipped": 0
+    },
+    {
+      "name": "frontend",
+      "exitCode": 0,
+      "durationMs": 41408,
+      "passed": 99,
+      "failed": 0,
+      "skipped": 1
+    },
+    {
+      "name": "sql-and-integration",
+      "exitCode": 0,
+      "durationMs": 38302,
+      "artifacts": [],
+      "cleanup": {
+        "owned": {
+          "containers": [
+            "fddb53b07c43b7670a236c105ca424dfe7a8de1e77c3b7f11b7e6fcf3d479d69",
+            "e21cc8faf36b8f11d87e0796efc997d115e1b8204815cac6b3432d9c2bf09d88"
+          ],
+          "networks": [
+            "2cabb3a249422f945e4b0484987e6b9c348d7499bd77441cfaadc92f1ff21ce1"
+          ],
+          "volumes": []
+        },
+        "remaining": {
+          "containers": [],
+          "networks": [],
+          "volumes": []
+        }
+      },
+      "sql": [
+        {
+          "file": "meta_audience_buyers.test.sql",
+          "passed": 18,
+          "planned": 18
+        },
+        {
+          "file": "meta_audience_buyers_v2.test.sql",
+          "passed": 34,
+          "planned": 34
+        },
+        {
+          "file": "meta_audience_configs.test.sql",
+          "passed": 35,
+          "planned": 35
+        },
+        {
+          "file": "phase0_audience_boundaries.test.sql",
+          "passed": 12,
+          "planned": 12
+        },
+        {
+          "file": "phase0_purchase_claims.test.sql",
+          "passed": 12,
+          "planned": 12
+        }
+      ],
+      "passed": 112,
+      "failed": 0,
+      "skipped": 0,
+      "ownedResourcesAbsent": true
+    },
+    {
+      "name": "concurrency",
+      "exitCode": 0,
+      "durationMs": 86290,
+      "artifacts": [
+        {
+          "name": "concurrency-results.json",
+          "report": {
+            "scope": "synthetic local dependency schema; production SQL definitions and actual WhatsApp claim/requeue functions",
+            "passed": 22,
+            "failed": 0,
+            "results": [
+              {
+                "name": "phone reservations: 8 concurrent assignments preserve 8 distinct reservations and balance 4/4",
+                "status": "passed"
+              },
+              {
+                "name": "phone warmup: concurrent reads create no additional reservation",
+                "status": "passed"
+              },
+              {
+                "name": "phone confirmation: concurrent extensions preserve one reservation identity",
+                "status": "passed"
+              },
+              {
+                "name": "phone counters: no lost increments in global or scope UPSERT",
+                "status": "passed"
+              },
+              {
+                "name": "Contact simultaneous duplicates: unique contact_event_id",
+                "status": "passed"
+              },
+              {
+                "name": "Contact simultaneous duplicates: unique promo_code",
+                "status": "passed"
+              },
+              {
+                "name": "LEAD inbox simultaneous duplicates: without promo",
+                "status": "passed"
+              },
+              {
+                "name": "LEAD inbox simultaneous duplicates: with promo",
+                "status": "passed"
+              },
+              {
+                "name": "PURCHASE inbox simultaneous duplicates: without promo",
+                "status": "passed"
+              },
+              {
+                "name": "PURCHASE inbox simultaneous duplicates: with promo",
+                "status": "passed"
+              },
+              {
+                "name": "Purchase simultaneous duplicates: strong purchase_transaction_id",
+                "status": "passed"
+              },
+              {
+                "name": "Purchase simultaneous duplicates: strong purchase_coelsa_id",
+                "status": "passed"
+              },
+              {
+                "name": "Purchase claims: overlapping keys in reversed order elect one owner without deadlock",
+                "status": "passed"
+              },
+              {
+                "name": "Purchase retry after failure: concurrent reclaim elects one worker and retains event ID",
+                "status": "passed"
+              },
+              {
+                "name": "Purchase processed: all concurrent replays rejected",
+                "status": "passed"
+              },
+              {
+                "name": "WhatsApp queue actual claimEvent: 8 concurrent API workers elect one",
+                "status": "passed"
+              },
+              {
+                "name": "WhatsApp stale requeue: concurrent sweepers move event once, retry is singly claimed",
+                "status": "passed"
+              },
+              {
+                "name": "WhatsApp max attempts: concurrent sweepers fail instead of requeue",
+                "status": "passed"
+              },
+              {
+                "name": "Tracking queue actual persist: concurrent identical events create one row",
+                "status": "passed"
+              },
+              {
+                "name": "Tracking queue actual claim: concurrent workers return the pending item once",
+                "status": "passed"
+              },
+              {
+                "name": "Tracking retries: backoff excludes future work; due work claimed once",
+                "status": "passed"
+              },
+              {
+                "name": "Tracking delivered: concurrent persistence replays retain sent identity",
+                "status": "passed"
+              }
+            ]
+          }
+        }
+      ],
+      "cleanup": {
+        "owned": {
+          "containers": [
+            "884a543f31ee6ff1acddd9ef1dda85a1dbdaa734161e5d420e79d61fb6fb80b9",
+            "c68e7b2122f52f9ab33139e315ef2a537fc2879f1c0e9d126e5ed2de6d174bfd"
+          ],
+          "networks": [
+            "a78788daa85e236b03c8d828bd29ab43b6133aab3a278231a83eb4309f653d8d"
+          ],
+          "volumes": []
+        },
+        "remaining": {
+          "containers": [],
+          "networks": [],
+          "volumes": []
+        }
+      },
+      "sql": [],
+      "passed": 22,
+      "failed": 0,
+      "skipped": 0,
+      "ownedResourcesAbsent": true
+    },
+    {
+      "name": "handler-concurrency",
+      "exitCode": 0,
+      "durationMs": 106809,
+      "artifacts": [
+        {
+          "name": "handler-concurrency-results.json",
+          "report": {
+            "scope": "Entire unchanged HTTP callbacks and local modules; real disposable Postgres/PostgREST, scoped dependency schema; simulated Meta transport; no external service IO",
+            "sourceHashes": {
+              "conversions/index.ts": "b56628cc42de95d44ea0f2cdf9078c3550c0efec354f11a5b6af1a45defc2295",
+              "conversions/shared.ts": "06bfd243c8375766df27a44bf667c382682977b9bfb7ed40e882ffe4415a2844",
+              "conversions/pixel_attribution.ts": "a1b354af39b434786b741424f8032970d82e45f81dfd9bb2c1ae1d375a49369d",
+              "conversions/event_attribution.ts": "da323552ea1d5ba22117801aa3211e71840a7e3ab1c31682cbf2c40e2d805ff1",
+              "conversions/inbound_tracking.ts": "202a568bcf9dfc9ec4981b8d665235074ac0d9d34b59eff6c1ca86aeeea620a7",
+              "retry-failed-conversions/index.ts": "3778c44cd8578013fc1aa6e44a457f0f6a15156fe67532316f0040b49810d8a9"
+            },
+            "limitation": "Deno.serve and environment are injected in a Node VM; application TypeScript is transpiled unchanged. Scoped schema is not full RLS/trigger/Edge-isolate parity. Passing characterizations include known delivery defects, not exactly-once guarantees.",
+            "results": [
+              {
+                "name": "HTTP validation: invalid action and unauthorized retry cannot send CAPI",
+                "status": "passed"
+              },
+              {
+                "name": "ARS: 8 simultaneous Contact requests persist once and send once",
+                "status": "passed"
+              },
+              {
+                "name": "ARS: simultaneous Lead requests characterize duplicate outbound sends on one journey",
+                "status": "passed"
+              },
+              {
+                "name": "ARS: 8 simultaneous Purchase requests elect one claim and send once",
+                "status": "passed"
+              },
+              {
+                "name": "PYG: 8 simultaneous Contact requests persist once and send once",
+                "status": "passed"
+              },
+              {
+                "name": "PYG: simultaneous Lead requests characterize duplicate outbound sends on one journey",
+                "status": "passed"
+              },
+              {
+                "name": "PYG: 8 simultaneous Purchase requests elect one claim and send once",
+                "status": "passed"
+              },
+              {
+                "name": "Replay of a processed Purchase keeps the same CAPI identity without sending again",
+                "status": "passed"
+              },
+              {
+                "name": "ARS CONTACT: transient failure then 4 concurrent CAPI retries (current behavior)",
+                "status": "passed"
+              },
+              {
+                "name": "ARS LEAD: transient failure then 4 concurrent CAPI retries (current behavior)",
+                "status": "passed"
+              },
+              {
+                "name": "ARS PURCHASE: transient failure then 4 concurrent CAPI retries (current behavior)",
+                "status": "passed"
+              },
+              {
+                "name": "PYG CONTACT: transient failure then 4 concurrent CAPI retries (current behavior)",
+                "status": "passed"
+              },
+              {
+                "name": "PYG LEAD: transient failure then 4 concurrent CAPI retries (current behavior)",
+                "status": "passed"
+              },
+              {
+                "name": "PYG PURCHASE: transient failure then 4 concurrent CAPI retries (current behavior)",
+                "status": "passed"
+              },
+              {
+                "name": "CONTACT: failed retry, five-minute backoff and recovery preserve identity",
+                "status": "passed"
+              },
+              {
+                "name": "LEAD: failed retry, five-minute backoff and recovery preserve identity",
+                "status": "passed"
+              },
+              {
+                "name": "Contact: retry budget terminates at six attempts",
+                "status": "passed"
+              },
+              {
+                "name": "Purchase: network failure during retry remains pending, recovers with identical event ID and then drains",
+                "status": "passed"
+              },
+              {
+                "name": "Deferred Lead: concurrent workers drain an aged local inbox through the real HTTP handler",
+                "status": "passed"
+              },
+              {
+                "name": "No forbidden external IO or unexpected database errors",
+                "status": "passed"
+              }
+            ],
+            "observations": [
+              {
+                "currency": "ARS",
+                "action": "LEAD",
+                "scenario": "simultaneous-handler",
+                "workers": 8,
+                "barrierArrivals": 8,
+                "outboundRequests": 8,
+                "distinctEventIds": 8,
+                "exactlyOnce": false
+              },
+              {
+                "currency": "PYG",
+                "action": "LEAD",
+                "scenario": "simultaneous-handler",
+                "workers": 8,
+                "barrierArrivals": 8,
+                "outboundRequests": 8,
+                "distinctEventIds": 8,
+                "exactlyOnce": false
+              },
+              {
+                "currency": "ARS",
+                "action": "CONTACT",
+                "scenario": "concurrent-retry",
+                "workers": 4,
+                "barrierArrivals": 4,
+                "outboundRequests": 4,
+                "distinctEventIds": 1,
+                "exactlyOnce": false
+              },
+              {
+                "currency": "ARS",
+                "action": "CONTACT",
+                "scenario": "concurrent-retry-counter",
+                "actualRequests": 4,
+                "persistedRetryCount": 1
+              },
+              {
+                "currency": "ARS",
+                "action": "LEAD",
+                "scenario": "concurrent-retry",
+                "workers": 4,
+                "barrierArrivals": 4,
+                "outboundRequests": 4,
+                "distinctEventIds": 1,
+                "exactlyOnce": false
+              },
+              {
+                "currency": "ARS",
+                "action": "LEAD",
+                "scenario": "concurrent-retry-counter",
+                "actualRequests": 4,
+                "persistedRetryCount": 1
+              },
+              {
+                "currency": "ARS",
+                "action": "PURCHASE",
+                "scenario": "concurrent-retry",
+                "workers": 4,
+                "barrierArrivals": 4,
+                "outboundRequests": 4,
+                "distinctEventIds": 1,
+                "exactlyOnce": false
+              },
+              {
+                "currency": "PYG",
+                "action": "CONTACT",
+                "scenario": "concurrent-retry",
+                "workers": 4,
+                "barrierArrivals": 4,
+                "outboundRequests": 4,
+                "distinctEventIds": 1,
+                "exactlyOnce": false
+              },
+              {
+                "currency": "PYG",
+                "action": "CONTACT",
+                "scenario": "concurrent-retry-counter",
+                "actualRequests": 4,
+                "persistedRetryCount": 1
+              },
+              {
+                "currency": "PYG",
+                "action": "LEAD",
+                "scenario": "concurrent-retry",
+                "workers": 4,
+                "barrierArrivals": 4,
+                "outboundRequests": 4,
+                "distinctEventIds": 1,
+                "exactlyOnce": false
+              },
+              {
+                "currency": "PYG",
+                "action": "LEAD",
+                "scenario": "concurrent-retry-counter",
+                "actualRequests": 4,
+                "persistedRetryCount": 1
+              },
+              {
+                "currency": "PYG",
+                "action": "PURCHASE",
+                "scenario": "concurrent-retry",
+                "workers": 4,
+                "barrierArrivals": 4,
+                "outboundRequests": 4,
+                "distinctEventIds": 1,
+                "exactlyOnce": false
+              },
+              {
+                "scenario": "deferred-lead",
+                "workers": 4,
+                "rows": 4,
+                "outboundRequests": 4,
+                "distinctEventIds": 4,
+                "exactlyOnce": false
+              }
+            ],
+            "passed": 20,
+            "failed": 0
+          }
+        }
+      ],
+      "cleanup": {
+        "owned": {
+          "containers": [
+            "01cb9b27b400f75d2b4c0536f56fdcae16fdeaaf0c2a5f92de3e07db85d325c7",
+            "f0f86c924db23837f42e9660cd2328bff6da3ebb577ff3c8dda6dbfa50018c96"
+          ],
+          "networks": [
+            "879a0368304e25de8168781e7559e501fbbc374b84683d61ce68be1d11c6ff5e"
+          ],
+          "volumes": []
+        },
+        "remaining": {
+          "containers": [],
+          "networks": [],
+          "volumes": []
+        }
+      },
+      "sql": [],
+      "passed": 20,
+      "failed": 0,
+      "skipped": 0,
+      "ownedResourcesAbsent": true
+    },
+    {
+      "name": "sequence",
+      "exitCode": 0,
+      "durationMs": 50772,
+      "artifacts": [
+        {
+          "name": "bootstrap-sequence-contracts.json",
+          "report": {
+            "localOnly": true,
+            "fixturesIndependentOfBootstrap": true,
+            "originalSource": "git HEAD migration before authorized correction",
+            "originalFileSha256": "9a97b61ee91045c20fb62f9daddd1124592ceb8f2bd389b2aebf6e1eef233b9f",
+            "correctedFileSha256": "9a97b61ee91045c20fb62f9daddd1124592ceb8f2bd389b2aebf6e1eef233b9f",
+            "cases": [
+              {
+                "name": "empty table",
+                "status": "passed",
+                "rowCount": 0,
+                "populatedEquivalence": null,
+                "outcomes": [
+                  {
+                    "variant": "historical",
+                    "minimum": 1,
+                    "rowsUnchanged": true,
+                    "isCalledBeforeNextval": false,
+                    "nextval": 1,
+                    "expected": 1
+                  },
+                  {
+                    "variant": "corrected",
+                    "minimum": 1,
+                    "rowsUnchanged": true,
+                    "isCalledBeforeNextval": false,
+                    "nextval": 1,
+                    "expected": 1
+                  }
+                ]
+              },
+              {
+                "name": "one row",
+                "status": "passed",
+                "rowCount": 1,
+                "populatedEquivalence": true,
+                "outcomes": [
+                  {
+                    "variant": "historical",
+                    "minimum": 1,
+                    "rowsUnchanged": true,
+                    "isCalledBeforeNextval": true,
+                    "nextval": 8,
+                    "expected": 8
+                  },
+                  {
+                    "variant": "corrected",
+                    "minimum": 1,
+                    "rowsUnchanged": true,
+                    "isCalledBeforeNextval": true,
+                    "nextval": 8,
+                    "expected": 8
+                  }
+                ]
+              },
+              {
+                "name": "non-consecutive IDs",
+                "status": "passed",
+                "rowCount": 3,
+                "populatedEquivalence": true,
+                "outcomes": [
+                  {
+                    "variant": "historical",
+                    "minimum": 1,
+                    "rowsUnchanged": true,
+                    "isCalledBeforeNextval": true,
+                    "nextval": 32,
+                    "expected": 32
+                  },
+                  {
+                    "variant": "corrected",
+                    "minimum": 1,
+                    "rowsUnchanged": true,
+                    "isCalledBeforeNextval": true,
+                    "nextval": 32,
+                    "expected": 32
+                  }
+                ]
+              },
+              {
+                "name": "sequence behind MAX",
+                "status": "passed",
+                "rowCount": 2,
+                "populatedEquivalence": true,
+                "outcomes": [
+                  {
+                    "variant": "historical",
+                    "minimum": 1,
+                    "rowsUnchanged": true,
+                    "isCalledBeforeNextval": true,
+                    "nextval": 20,
+                    "expected": 20
+                  },
+                  {
+                    "variant": "corrected",
+                    "minimum": 1,
+                    "rowsUnchanged": true,
+                    "isCalledBeforeNextval": true,
+                    "nextval": 20,
+                    "expected": 20
+                  }
+                ]
+              },
+              {
+                "name": "sequence ahead of MAX retains historical max synchronization",
+                "status": "passed",
+                "rowCount": 2,
+                "populatedEquivalence": true,
+                "outcomes": [
+                  {
+                    "variant": "historical",
+                    "minimum": 1,
+                    "rowsUnchanged": true,
+                    "isCalledBeforeNextval": true,
+                    "nextval": 20,
+                    "expected": 20
+                  },
+                  {
+                    "variant": "corrected",
+                    "minimum": 1,
+                    "rowsUnchanged": true,
+                    "isCalledBeforeNextval": true,
+                    "nextval": 20,
+                    "expected": 20
+                  }
+                ]
+              },
+              {
+                "name": "empty sequence with non-default minimum",
+                "status": "passed",
+                "rowCount": 0,
+                "populatedEquivalence": null,
+                "outcomes": [
+                  {
+                    "variant": "historical",
+                    "minimum": 37,
+                    "rowsUnchanged": true,
+                    "isCalledBeforeNextval": false,
+                    "nextval": 37,
+                    "expected": 37
+                  },
+                  {
+                    "variant": "corrected",
+                    "minimum": 37,
+                    "rowsUnchanged": true,
+                    "isCalledBeforeNextval": false,
+                    "nextval": 37,
+                    "expected": 37
+                  }
+                ]
+              }
+            ],
+            "passed": 6,
+            "failed": 0
+          }
+        }
+      ],
+      "cleanup": {
+        "owned": {
+          "containers": [
+            "69bb04fbaa993099efca94a4d562a6004932d2af22238c5ead09748c8ab2f1bf"
+          ],
+          "networks": [
+            "ad7d54be9ac6c9ee8e407da57cfaf5dee3cec4cc9e980fb6b0823da0485fef55"
+          ],
+          "volumes": []
+        },
+        "remaining": {
+          "containers": [],
+          "networks": [],
+          "volumes": []
+        }
+      },
+      "sql": [],
+      "passed": 6,
+      "failed": 0,
+      "skipped": 0,
+      "ownedResourcesAbsent": true,
+      "sourceNote": "Both variants resolve to the already corrected current HEAD. Six scenarios revalidate current behavior; original pre-correction evidence remains in Phase 0."
+    },
+    {
+      "name": "typescript",
+      "exitCode": 0,
+      "durationMs": 43500
+    },
+    {
+      "name": "build",
+      "exitCode": 0,
+      "durationMs": 136514
+    },
+    {
+      "name": "eslint",
+      "exitCode": 0,
+      "durationMs": 158876,
+      "errors": 0,
+      "warnings": 18,
+      "findings": [
+        {
+          "file": "app/(panel)/dashboard/layout.tsx",
+          "errors": 0,
+          "warnings": 4,
+          "rules": [
+            "@typescript-eslint/no-unused-vars"
+          ]
+        },
+        {
+          "file": "app/(panel)/promo/[slug]/page.tsx",
+          "errors": 0,
+          "warnings": 1,
+          "rules": [
+            "@typescript-eslint/no-unused-vars"
+          ]
+        },
+        {
+          "file": "components/conversiones/StatsPanel.tsx",
+          "errors": 0,
+          "warnings": 2,
+          "rules": [
+            "react-hooks/exhaustive-deps"
+          ]
+        },
+        {
+          "file": "components/conversiones/TrackingBoard.tsx",
+          "errors": 0,
+          "warnings": 2,
+          "rules": [
+            "react-hooks/exhaustive-deps"
+          ]
+        },
+        {
+          "file": "components/integraciones/IntegracionesMetaCapi.tsx",
+          "errors": 0,
+          "warnings": 6,
+          "rules": [
+            "@typescript-eslint/no-unused-vars",
+            "react-hooks/exhaustive-deps",
+            "@next/next/no-img-element"
+          ]
+        },
+        {
+          "file": "components/notificaciones/NotificationsPageContent.tsx",
+          "errors": 0,
+          "warnings": 1,
+          "rules": [
+            "@next/next/no-img-element"
+          ]
+        },
+        {
+          "file": "lib/conversionsDb.ts",
+          "errors": 0,
+          "warnings": 2,
+          "rules": [
+            "@typescript-eslint/no-unused-vars"
+          ]
+        }
+      ]
+    }
+  ],
+  "remoteWrites": 0,
+  "rawOutputPersisted": false,
+  "admittedEvidence": {
+    "formatVersion": 1,
+    "phase": "1B.1",
+    "baseCommit": "ba7b3d3f5e60eb0c2cb907a8c281d4462e15d4bb",
+    "valid": true,
+    "auth": {
+      "valid": true,
+      "file": "docs/security/phase-1b1/local-validation.json",
+      "sha256": "290211f5f8af5893117b29dcf9af4d737a173f5783fe5d84843132913167d83c",
+      "schema": "pinned legacy profile-report v1",
+      "baseCommit": "ba7b3d3f5e60eb0c2cb907a8c281d4462e15d4bb",
+      "admittedRun": 1,
+      "excludedRun": 2,
+      "profileChecks": 75,
+      "historicalChecks": 108,
+      "reportClaimsFullSuccess": false,
+      "sourceBinding": "Migration hashes and current audited source inventory; legacy report has no execution-time harness hash inventory. No new execution-time provenance is claimed."
+    },
+    "reconstruction": {
+      "valid": true,
+      "file": "docs/security/phase-1b1/reconstruction-diagnostic.json",
+      "sha256": "bb03aae86f7ea824958e42f72428e2f4b578fe448248b98854581809f46526a6",
+      "schema": "pinned legacy reconstruction-report v1",
+      "baseCommit": "ba7b3d3f5e60eb0c2cb907a8c281d4462e15d4bb",
+      "baseCommitProvenance": "SHA256-pinned reference to first report",
+      "provider": {
+        "cli": "2.75.0",
+        "image": "public.ecr.aws/supabase/postgres:17.6.1.075",
+        "imageId": "sha256:82a04ba6c05f60950a74ae46be3726abb18d06ee44da936276fd782e72e36855"
+      },
+      "migrations": 269,
+      "applicationFingerprint": "ca7fe3870eb5798cd8afa91c9e7cfa0d4e18f7cbf2e0994bad2f313b21fadeba",
+      "profileSecurityFingerprint": "298cfa463a05e1944d09fa724722116466db4b4b923621970c91f9a0a0f90fdf",
+      "identical": true
+    },
+    "protectedSourcesChecked": 24,
+    "inventorySnapshotSha256": "225b5b365de9b837174c55787f53992d341a7b7636aa232179da760e354a89b8",
+    "newReconstructions": 0
+  },
+  "newFullReconstructions": 0,
+  "startedAt": "2026-09-17T21:16:42.281Z",
+  "profileUniquePassed": 78,
+  "repeatedProfileInvocations": 70,
+  "fingerprintComparisonPassed": 1,
+  "uniquePassed": 536,
+  "historicalUniquePassed": 446,
+  "newUniquePassed": 90,
+  "failed": 0,
+  "omittedUnique": 0,
+  "invocationSkips": 1,
+  "skipExplanation": "Generic frontend invocation skips one integration, executed separately in sql-and-integration and counted once.",
+  "reconstructionRepeatChecks": 0,
+  "finishedAt": "2026-09-17T21:31:22.376Z"
+}

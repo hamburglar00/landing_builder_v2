@@ -5,27 +5,30 @@ import { join } from 'node:path';
 import { randomUUID } from 'node:crypto';
 import { assertSafeEnvironment, assertFreshProject } from './bootstrap-manifest.mjs';
 
-const checked = (cmd, args, input) => {
+const checkedCommand = (cmd, args, input, diagnostics) => {
+  const started=performance.now();
   const r = spawnSync(cmd, args, {input, encoding:'utf8', timeout:120000, maxBuffer:32*1024*1024, windowsHide:true});
+  const diagnostic=diagnostics?.record({cmd,args,result:r,timeoutMs:120000,durationMs:performance.now()-started,inputPresent:input!==undefined});
   if (r.error || r.status !== 0) {
     // SQL/output may contain old literals: never forward raw output or stderr.
     const code = r.stderr?.match(/ERROR:\s+([A-Z0-9]{5}):/)?.[1];
     const missing = r.stderr?.match(/column "[a-zA-Z0-9_]{1,100}" of relation "[a-zA-Z0-9_]{1,100}" does not exist/)?.[0]
       ?? r.stderr?.match(/(?:relation|column|function|type|schema) "([a-zA-Z0-9_. ]{1,100})" (?:does not exist|already exists)/)?.[0];
     const e = Error(missing ?? `Local command failed${code ? ' SQLSTATE '+code : ''}`);
-    e.sqlstate = code ?? null; throw e;
+    e.sqlstate = code ?? null; e.diagnostic=diagnostic; throw e;
   }
   return r.stdout;
 };
-const docker = (args, input) => checked('docker', args, input);
-const inspect = id => JSON.parse(docker(['inspect', id]))[0];
-
-export async function createBootstrapDatabase() {
+export async function createBootstrapDatabase({diagnostics}={}) {
+  const checked=(cmd,args,input)=>checkedCommand(cmd,args,input,diagnostics);
+  const docker=(args,input)=>checked('docker',args,input);
+  const inspect=id=>JSON.parse(docker(['inspect',id]))[0];
   assertSafeEnvironment();
   const endpoint = docker(['context','inspect','--format','{{.Endpoints.docker.Host}}']).trim();
   if (!/^(npipe:\/\/\/\/\.\/pipe\/|unix:\/\/\/)/.test(endpoint)) throw Error('Docker daemon must be local');
   const nonce = randomUUID();
   const project = `phase0b-${nonce.slice(0,8)}`;
+  diagnostics?.bindOwner({project});
   const name = `supabase_db_${project}`;
   const existingNames=[docker(['ps','-a','--format','{{.Names}}']),docker(['volume','ls','--format','{{.Name}}']),docker(['network','ls','--format','{{.Name}}'])].flatMap(s=>s.trim().split(/\r?\n/).filter(Boolean));
   assertFreshProject(project,existingNames);
@@ -54,29 +57,48 @@ export async function createBootstrapDatabase() {
     return docker(['exec','-i',containerId,'psql','-X','-U','postgres','-d','postgres','-v','ON_ERROR_STOP=1','-v','VERBOSITY=verbose','-Atq'], query);
   };
   const close = () => {
-    if (containerId) { proveOwnership(); docker(['rm','-f','-v',containerId]); containerId=null; }
-    if (networkId) { const n=inspect(networkId); if(n.Name!==networkName || n.Labels?.['phase0b.owner']!==nonce) throw Error('Network ownership lost'); docker(['network','rm',networkId]); networkId=null; }
+    const owned={containers:[],networks:[],volumes:[]};
+    if (containerId) {
+      proveOwnership();
+      owned.containers.push(containerId);
+      owned.volumes.push(...inspect(containerId).Mounts.filter(m=>m.Type==='volume').map(m=>m.Name));
+      docker(['rm','-f','-v',containerId]); containerId=null;
+    }
+    if (networkId) { const n=inspect(networkId); if(n.Name!==networkName || n.Labels?.['phase0b.owner']!==nonce) throw Error('Network ownership lost'); owned.networks.push(networkId); docker(['network','rm',networkId]); networkId=null; }
     // CLI creates its own uniquely named network/volume. Only this generated project's resources qualify.
     for (const type of ['volume','network']) {
       for (const target of docker([type,'ls','--format','{{.Name}}']).trim().split(/\r?\n/).filter(n=>n.endsWith('_'+project))) {
         const item=JSON.parse(docker([type,'inspect',target]))[0];
         const labels=item.Labels ?? {};
         if (!Object.values(labels).includes(project)) throw Error('CLI resource ownership unverified; retained');
+        owned[type==='network'?'networks':'volumes'].push(type==='network'?item.Id:target);
         docker([type,'rm',type==='network'?item.Id:target]);
       }
     }
+    const remaining={};
+    for(const [kind,args] of [['containers',['ps','-aq','--no-trunc']],['networks',['network','ls','-q','--no-trunc']],['volumes',['volume','ls','-q']]]) {
+      owned[kind]=[...new Set(owned[kind])].sort();
+      const live=new Set(docker(args).trim().split(/\r?\n/).filter(Boolean));
+      remaining[kind]=owned[kind].filter(id=>live.has(id));
+      if(remaining[kind].length)throw Error(`Runner-owned ${kind} remain after cleanup`);
+    }
+    return {project,owned,remaining};
   };
   const started = Date.now();
   try {
     const excluded='gotrue,realtime,storage-api,imgproxy,kong,mailpit,postgrest,postgres-meta,studio,edge-runtime,logflare,vector,supavisor';
     const child=spawn(cli,['start','--workdir',dir,'--exclude',excluded],{cwd:dir,env:{...process.env,DO_NOT_TRACK:'1'},windowsHide:true,stdio:['ignore','pipe','pipe']});
-    // Drain output without retaining debug credentials or logging provider statements.
-    child.stdout.on('data',()=>{}); child.stderr.on('data',()=>{});
-    const timer=setTimeout(()=>child.kill(),180000);
-    const exit=await new Promise((resolve,reject)=>{child.on('error',reject);child.on('close',resolve);});clearTimeout(timer);
+    // Raw CLI output exists only in memory when explicitly diagnosing startup.
+    // The observer sanitizes it before any artifact write; never print it here.
+    let stdout='',stderr='',spawnError=null,timedOut=false,signal=null;
+    child.stdout.on('data',data=>{if(diagnostics)stdout=(stdout+data).slice(-131072);});
+    child.stderr.on('data',data=>{if(diagnostics)stderr=(stderr+data).slice(-131072);});
+    const timer=setTimeout(()=>{timedOut=true;child.kill();},180000);
+    const exit=await new Promise(resolve=>{child.on('error',error=>{spawnError=error;});child.on('close',(code,sig)=>{signal=sig;resolve(code);});});clearTimeout(timer);
+    const startupDiagnostic=diagnostics?.record({cmd:cli,args:['start','--workdir',dir,'--exclude',excluded],result:{status:exit,signal,error:spawnError,stdout,stderr},timeoutMs:180000,durationMs:Date.now()-started,timeoutTriggered:timedOut});
     const candidate=docker(['ps','-aq','--filter',`name=^/${name}$`]).trim();
-    if(candidate){const own=inspect(candidate);if(own.Name!=='/'+name || !Object.values(own.Config.Labels??{}).includes(project)) throw Error('CLI container provenance unverified');containerId=own.Id;}
-    if(exit!==0 || !containerId) throw Error('Local Supabase database bootstrap failed within 180 seconds');
+    if(candidate){const own=inspect(candidate);if(own.Name!=='/'+name || !Object.values(own.Config.Labels??{}).includes(project)) throw Error('CLI container provenance unverified');containerId=own.Id;diagnostics?.bindOwner({containerId});}
+    if(exit!==0 || !containerId) {const error=Error('Local Supabase database bootstrap failed within 180 seconds');error.diagnostic=startupDiagnostic;throw error;}
     networkId=docker(['network','create','--internal','--label',`phase0b.owner=${nonce}`,networkName]).trim();
     docker(['network','connect',networkId,containerId]);
     for(const n of Object.keys(inspect(containerId).NetworkSettings.Networks)) if(n!==networkName) docker(['network','disconnect',n,containerId]);
@@ -114,7 +136,15 @@ SELECT net.${fn}(url:='http://127.0.0.1:1/phase0-disabled');
 SELECT jsonb_build_object('role',current_user,'superuser',(SELECT rolsuper FROM pg_roles WHERE rolname=current_user),'rows',(SELECT count(*) FROM net.http_request_queue),'invoker',(SELECT phase0_invoker FROM net.http_request_queue),'sequenceMatches',(SELECT currval('net.http_request_queue_id_seq')=id FROM net.http_request_queue),'responses',(SELECT count(*) FROM net._http_response));
 ROLLBACK;`);
     };
-    return {sql,close,provider,installNativePgNet,netProbe,bootstrapMs:Date.now()-started,target:'runner-created Supabase PostgreSQL / unix socket / isolated network / cron.launch_active_jobs=off',
+    return {sql,close,provider,installNativePgNet,netProbe,
+      // Read-only handle for local integration helpers; sql rechecks ownership and isolation.
+      localApiTarget:()=>{sql('select 1');return {containerId,networkId};},
+      bootstrapMs:Date.now()-started,target:'runner-created Supabase PostgreSQL / unix socket / isolated network / cron.launch_active_jobs=off',
       verify:()=>sql("select current_setting('cron.launch_active_jobs')").trim()==='off'};
-  } catch(error) { close(); throw error; }
+  } catch(error) {
+    if(diagnostics) {
+      try {diagnostics.snapshot('bootstrap failure before cleanup');}catch{}
+    }
+    close(); throw error;
+  }
 }

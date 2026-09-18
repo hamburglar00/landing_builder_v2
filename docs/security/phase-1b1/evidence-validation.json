@@ -1,0 +1,39 @@
+{
+  "formatVersion": 1,
+  "phase": "1B.1",
+  "baseCommit": "ba7b3d3f5e60eb0c2cb907a8c281d4462e15d4bb",
+  "valid": true,
+  "auth": {
+    "valid": true,
+    "file": "docs/security/phase-1b1/local-validation.json",
+    "sha256": "290211f5f8af5893117b29dcf9af4d737a173f5783fe5d84843132913167d83c",
+    "schema": "pinned legacy profile-report v1",
+    "baseCommit": "ba7b3d3f5e60eb0c2cb907a8c281d4462e15d4bb",
+    "admittedRun": 1,
+    "excludedRun": 2,
+    "profileChecks": 75,
+    "historicalChecks": 108,
+    "reportClaimsFullSuccess": false,
+    "sourceBinding": "Migration hashes and current audited source inventory; legacy report has no execution-time harness hash inventory. No new execution-time provenance is claimed."
+  },
+  "reconstruction": {
+    "valid": true,
+    "file": "docs/security/phase-1b1/reconstruction-diagnostic.json",
+    "sha256": "bb03aae86f7ea824958e42f72428e2f4b578fe448248b98854581809f46526a6",
+    "schema": "pinned legacy reconstruction-report v1",
+    "baseCommit": "ba7b3d3f5e60eb0c2cb907a8c281d4462e15d4bb",
+    "baseCommitProvenance": "SHA256-pinned reference to first report",
+    "provider": {
+      "cli": "2.75.0",
+      "image": "public.ecr.aws/supabase/postgres:17.6.1.075",
+      "imageId": "sha256:82a04ba6c05f60950a74ae46be3726abb18d06ee44da936276fd782e72e36855"
+    },
+    "migrations": 269,
+    "applicationFingerprint": "ca7fe3870eb5798cd8afa91c9e7cfa0d4e18f7cbf2e0994bad2f313b21fadeba",
+    "profileSecurityFingerprint": "298cfa463a05e1944d09fa724722116466db4b4b923621970c91f9a0a0f90fdf",
+    "identical": true
+  },
+  "protectedSourcesChecked": 24,
+  "inventorySnapshotSha256": "225b5b365de9b837174c55787f53992d341a7b7636aa232179da760e354a89b8",
+  "newReconstructions": 0
+}

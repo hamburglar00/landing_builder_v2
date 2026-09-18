@@ -1,5 +1,11 @@
 {
   "legacyCutoff": "20260915190657",
   "policy": "Only explicitly registered later migrations, in chronological order. No legacy exception edits.",
-  "entries": []
+  "entries": [
+    {
+      "version": "20260917183837",
+      "file": "20260917183837_protect_profile_administrative_fields.sql",
+      "sha256": "119b70e25ffea319e4f4decbdf37c4b5681be1427f09e3ada93f07b6c7c9da87"
+    }
+  ]
 }

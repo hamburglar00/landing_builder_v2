@@ -1,0 +1,9 @@
+select jsonb_build_object(
+'columns',(select jsonb_agg(jsonb_build_object('name',attname,'type',format_type(atttypid,atttypmod),'notNull',attnotnull) order by attnum) from pg_attribute where attrelid='public.profiles'::regclass and attnum>0 and not attisdropped),
+'security',(select jsonb_build_object('owner',pg_get_userbyid(relowner),'rls',relrowsecurity,'forceRls',relforcerowsecurity,'acl',relacl) from pg_class where oid='public.profiles'::regclass),
+'policies',(select jsonb_agg(jsonb_build_object('name',policyname,'roles',roles,'cmd',cmd,'using',qual,'check',with_check) order by policyname) from pg_policies where schemaname='public' and tablename='profiles'),
+'columnAcl',(select jsonb_agg(jsonb_build_object('column',attname,'acl',attacl) order by attnum) from pg_attribute where attrelid='public.profiles'::regclass and attnum>0 and not attisdropped),
+'roleGrants',(select jsonb_agg(jsonb_build_object('role',r,'column',c,'update',has_column_privilege(r,'public.profiles',c,'UPDATE'),'insert',has_column_privilege(r,'public.profiles',c,'INSERT'))) from unnest(array['anon','authenticated','service_role']) r cross join unnest(array['id','role','created_at','nombre']) c),
+'triggerFunctions',(select jsonb_agg(jsonb_build_object('name',p.proname,'owner',pg_get_userbyid(p.proowner),'definer',p.prosecdef,'config',p.proconfig,'definitionMd5',md5(pg_get_functiondef(p.oid)))) from pg_proc p join pg_namespace n on n.oid=p.pronamespace where n.nspname='public' and p.proname in ('handle_new_user','prevent_unapproved_auth_user')),
+'profileReferences',(select jsonb_agg(jsonb_build_object('name',p.proname,'identity',pg_get_function_identity_arguments(p.oid),'sourceMd5',md5(p.prosrc))) from pg_proc p join pg_namespace n on n.oid=p.pronamespace where n.nspname='public' and p.prokind='f' and p.prosrc ~* '\mprofiles\M')
+) as metadata;

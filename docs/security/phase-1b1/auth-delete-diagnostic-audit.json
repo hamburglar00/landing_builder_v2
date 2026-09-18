@@ -1,0 +1,80 @@
+{
+  "type": "Bounded diagnostic audit, not a full suite",
+  "base": "ba7b3d3f5e60eb0c2cb907a8c281d4462e15d4bb",
+  "branch": "main",
+  "protectedFiles": 16,
+  "protectedFilesByteIdentical": true,
+  "envUnchanged": true,
+  "envLocalIgnoredUntracked": true,
+  "stagingEmpty": true,
+  "conflicts": false,
+  "created": [
+    "docs/security/phase-1b1/auth-delete-diagnostic.mjs",
+    "docs/security/phase-1b1/auth-delete-diagnostic.json",
+    "docs/security/phase-1b1/auth-delete-diagnostic.md",
+    "docs/security/phase-1b1/auth-delete-network-events.json",
+    "docs/security/phase-1b1/auth-delete-diagnostic-audit.json"
+  ],
+  "modifiedExistingFiles": [],
+  "inventory": [
+    {
+      "file": "docs/security/phase-1b1/auth-delete-diagnostic.mjs",
+      "bytes": 14773,
+      "sha256": "144a587d177c5b45a0a08413cde9013a064bbb7698534d09e5f8da55f560a140"
+    },
+    {
+      "file": "docs/security/phase-1b1/auth-delete-diagnostic.json",
+      "bytes": 318045,
+      "sha256": "27d699dd736a1d85ce1630ac18c2b375d44e716468987a9265bb94728256e79a"
+    },
+    {
+      "file": "docs/security/phase-1b1/auth-delete-diagnostic.md",
+      "bytes": 12786,
+      "sha256": "96ffff75f803733d915c40bcae9cbacdb76321857ecd43f23826be0a0539b6f5"
+    },
+    {
+      "file": "docs/security/phase-1b1/auth-delete-network-events.json",
+      "bytes": 2999,
+      "sha256": "87f94feab8011945f5efae07e4ab47d662cf3a4a415711395505d6e5073fd784"
+    }
+  ],
+  "findings": [],
+  "manualReview": "Fixture identities and example.invalid emails are synthetic. Catalogs contain object metadata, not production application rows. No remote operations. No credential values stored.",
+  "comparison": {
+    "sameProvider": true,
+    "sameRoles": true,
+    "sameMemberships": true,
+    "sameConstraints": true,
+    "triggerCount": [
+      116,
+      116
+    ],
+    "rawTriggersIdentical": false,
+    "triggerNormalization": "Only numeric suffix of name/definition RI_ConstraintTrigger_[ac]_<oid> when internal=true; multiset including duplicate entries preserved; every other property compared",
+    "triggersEquivalent": true,
+    "originalFailureSame": true,
+    "originalFailureStatement": "SET LOCAL ROLE supabase_auth_admin",
+    "originalFailureSqlstate": "42501",
+    "postgresDeleteAndCascadeBothSuccessful": true,
+    "roleAndClaimContamination": false
+  },
+  "cleanup": {
+    "ownedResiduals": 0,
+    "headGlobalInventory": "bridge ID changed; close succeeded",
+    "currentGlobalInventory": "identical; close succeeded",
+    "oldIncidentDetailedErrorUnavailable": true,
+    "bridgeRecreationActorNotEstablished": true
+  },
+  "notRun": [
+    "full suites",
+    "Data API",
+    "build",
+    "lint"
+  ],
+  "noRemediation": true,
+  "remoteWrites": 0,
+  "commits": 0,
+  "pushes": 0,
+  "deploys": 0,
+  "auditSelf": "Generated report excluded from its own hash inventory; fields derived only from sanitized checks above"
+}
