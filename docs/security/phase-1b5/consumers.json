@@ -1,8 +1,8 @@
 {
   "phase": "1B.5",
-  "status": "blocked_by_unaccredited_consumer_contracts",
+  "status": "deferred_by_user",
   "implementation": false,
-  "baseCommit": "2aee0e927df7bd72b255c2d5996d405154ddcc22",
+  "baseCommit": "716f920b1c48d41c7ba78bd05582ab668a7fe751",
   "classification": [
     "authenticated_panel",
     "internal_server",
@@ -14,7 +14,7 @@
     {
       "id": "builder",
       "root": ".",
-      "head": "2aee0e927df7bd72b255c2d5996d405154ddcc22",
+      "head": "716f920b1c48d41c7ba78bd05582ab668a7fe751",
       "initialStatus": "clean"
     },
     {
@@ -62,6 +62,16 @@
       "root": "../Otros/landing-venta-asistente",
       "head": "a878a22682d008bdbcc4cffcbcd835cb3f002a5c",
       "initialStatus": "clean"
+    },
+    {
+      "id": "api2",
+      "rootAlias": "api2-checkout",
+      "head": "11045861fb50e626d50f9ad9e31d31fa86036fe7",
+      "branch": "guille_puertas",
+      "initialStatus": "26 modified and 504 untracked pre-existing files; read-only",
+      "readOnly": true,
+      "root": "<api2-checkout>",
+      "pathPolicy": "Resolve externally for audit; no personal machine path stored."
     }
   ],
   "emptyLocalDirectories": [
@@ -167,10 +177,10 @@
     ]
   },
   "counts": {
-    "executablePaths": 12,
+    "executablePaths": 16,
     "documentedExternalChannels": 2,
-    "activeDeployedSenders": "not accredited",
-    "historicalAdditionalSendPaths": 2
+    "historicalAdditionalSendPaths": 2,
+    "activeDeployedSenders": "api2 principal project confirmed by user; Kommo/Chatrace inactive; exact versions/bindings pending"
   },
   "consumers": [
     {
@@ -894,17 +904,16 @@
           ]
         }
       ],
-      "proposedAuthentication": "First accredit a supported origin authentication and trusted tenant mapping; then Kommo-scoped outbound HMAC. Provider signature support remains unknown.",
-      "activityEvidence": "Callsite exists in inspected checkout; deployed version/activity not queried or certified.",
+      "proposedAuthentication": "No active credential or unsigned exception; accredit and authorize before future reactivation.",
+      "activityEvidence": "User explicitly confirms Kommo/Chatrace are not currently in use; source/history retained for future reactivation.",
       "localStatus": "current_code",
-      "deploymentStatus": "uncertain",
+      "deploymentStatus": "inactive_confirmed_by_user",
       "selection": {
         "tenant": "Webhook query name/constructor_name -> queue conversions_name; no verified binding to origin. clientScope is separate.",
         "action": "Existing processor chooses LEAD/PURCHASE from incoming event; preserve rules."
       },
       "projectsToCoordinate": [
-        "kommo: webhook origin/tenant validation + shared sender",
-        "builder: conversions"
+        "Deferred until explicit future reactivation"
       ]
     },
     {
@@ -963,17 +972,16 @@
           ]
         }
       ],
-      "proposedAuthentication": "Pending contract decision; do not silently convert/drop/authorize as Contact.",
-      "activityEvidence": "Callsite exists in inspected checkout; deployed version/activity not queried or certified.",
+      "proposedAuthentication": "No active credential or unsigned exception; accredit and authorize before future reactivation.",
+      "activityEvidence": "User explicitly confirms Kommo/Chatrace are not currently in use; source/history retained for future reactivation.",
       "localStatus": "current_conditional_code",
-      "deploymentStatus": "uncertain",
+      "deploymentStatus": "inactive_confirmed_by_user",
       "selection": {
         "tenant": "No query name appended; actual configurable base not read.",
         "action": "Fixed TEST_EVENT_RECEIVED when enabled."
       },
       "projectsToCoordinate": [
-        "kommo: probe configuration/contract confirmation",
-        "builder: conversions only if a legitimate supported contract is established"
+        "Deferred until explicit future reactivation"
       ]
     },
     {
@@ -1031,17 +1039,16 @@
           ]
         }
       ],
-      "proposedAuthentication": "Pending probe activity and supported contract confirmation.",
-      "activityEvidence": "Callsite exists in inspected checkout; deployed version/activity not queried or certified.",
+      "proposedAuthentication": "No active credential or unsigned exception; accredit and authorize before future reactivation.",
+      "activityEvidence": "User explicitly confirms Kommo/Chatrace are not currently in use; source/history retained for future reactivation.",
       "localStatus": "current_conditional_code",
-      "deploymentStatus": "uncertain",
+      "deploymentStatus": "inactive_confirmed_by_user",
       "selection": {
         "tenant": "No query name appended; actual configurable base not read.",
         "action": "Fixed TEST_EVENT_RESULT when enabled."
       },
       "projectsToCoordinate": [
-        "kommo: probe configuration/contract confirmation",
-        "builder: conversions only if a legitimate supported contract is established"
+        "Deferred until explicit future reactivation"
       ]
     },
     {
@@ -1126,18 +1133,16 @@
           ]
         }
       ],
-      "proposedAuthentication": "Pending sanitized active-flow contract and supported origin auth. Authenticated adapter is conditional, not an assumed solution.",
-      "activityEvidence": "Documentation proves an intended integration channel, not an inventory of active senders.",
+      "proposedAuthentication": "No active credential or unsigned exception; accredit and authorize before future reactivation.",
+      "activityEvidence": "User explicitly confirms Kommo/Chatrace are not currently in use; source/history retained for future reactivation.",
       "localStatus": "documented_contract_only",
-      "deploymentStatus": "uncertain",
+      "deploymentStatus": "inactive_confirmed_by_user",
       "selection": {
         "tenant": "UI-generated endpoint name copied into external flow; active mapping unknown.",
         "action": "Documented Contact in button External Request."
       },
       "projectsToCoordinate": [
-        "external Chatrace published flow",
-        "chatrace intermediary only if authenticated adapter is chosen",
-        "builder: conversions"
+        "Deferred until explicit future reactivation"
       ]
     },
     {
@@ -1189,9 +1194,9 @@
         }
       ],
       "proposedAuthentication": "Deny unknown issuers in final design, but do not implement cutoff while legitimate census remains incomplete.",
-      "activityEvidence": "Documentation proves an intended integration channel, not an inventory of active senders.",
+      "activityEvidence": "User identifies api2 as principal Lead/Purchase sender; no newly invented active external integration. Generic endpoint-copy documentation retained.",
       "localStatus": "documented_contract_only",
-      "deploymentStatus": "uncertain",
+      "deploymentStatus": "principal_subchannel_resolved_as_api2; residual generic endpoint-copy channel not a confirmed additional active sender",
       "selection": {
         "tenant": "Unknown per copied endpoint/automation.",
         "action": "Unknown; includes documented downstream WhatsApp bot LEAD/PURCHASE and possible CompleteRegistration."
@@ -1200,6 +1205,323 @@
         "unidentified external projects pending census",
         "builder: conversions"
       ]
+    },
+    {
+      "id": "C15",
+      "kind": "executable",
+      "name": "api2 business LEAD",
+      "classification": "external_server",
+      "runtime": "api2 Adonis/Node server",
+      "localStatus": "current_code",
+      "deploymentStatus": "principal_project_active_confirmed_by_user; exact subpath/deployed revision not certified",
+      "session": {
+        "available": "API2 session only for C18; business paths use server/channel context",
+        "supabaseSession": false,
+        "forwarded": false
+      },
+      "secretCustody": "Server HMAC possible; no secret read or created.",
+      "currentRequest": {
+        "method": "POST",
+        "target": "Manager.ownerId -> OwnerSetting.urlPost",
+        "headers": "No explicit auth; Axios JSON defaults described in api2Contract.",
+        "body": {
+          "fields": [
+            "action",
+            "promo_code",
+            "promo_code_prefix",
+            "promo_code_suffix",
+            "phone",
+            "amount",
+            "manager_id",
+            "agency_id",
+            "player_username",
+            "full_name",
+            "is_valid_receipt",
+            "action_event_id",
+            "bot_phone",
+            "transaction_id",
+            "coelsa_id",
+            "timestamp",
+            "dateTime"
+          ],
+          "action": "LEAD",
+          "amountRule": "0",
+          "actionEventId": "ManagerPurchaseLog.id"
+        }
+      },
+      "expectedResponse": "Any 2xx is success; response text ignored.",
+      "retryContract": "Three attempts; fixed 5 second waits after first/second failure; no explicit timeout; object reused.",
+      "selection": {
+        "trigger": "Existing first-interaction/promo conditions in channel handlers.",
+        "tenant": "Manager.ownerId selects entire configured URL; receiver name query selects tenant.",
+        "landing": "Not sent explicitly; do not require it as a new API2 field.",
+        "action": "LEAD"
+      },
+      "evidence": [
+        {
+          "repository": "api2",
+          "file": "app/services/purchase_tracking.service.ts",
+          "lines": [
+            158,
+            291
+          ]
+        },
+        {
+          "repository": "api2",
+          "file": "app/services/purchase_tracking.service.ts",
+          "lines": [
+            12,
+            98
+          ]
+        }
+      ],
+      "proposedAuthentication": "Issuer/owner scoped HMAC after approved tenant/target binding, with unchanged JSON and sanitized errors.",
+      "risk": "Signing editable or arbitrary URL without owner/tenant authority would create a signing oracle. Three failed attempts do not establish durable delivery.",
+      "projectsToCoordinate": [
+        "api2: PurchaseTrackingService and approved server auth configuration",
+        "landing-builder: compatible/strict conversions authentication"
+      ],
+      "activityEvidence": "User confirms api2 as active principal Lead/Purchase sender; source establishes callable paths, not per-path production counts."
+    },
+    {
+      "id": "C16",
+      "kind": "executable",
+      "name": "api2 successful-load PURCHASE",
+      "classification": "external_server",
+      "runtime": "api2 Adonis/Node server",
+      "localStatus": "current_code",
+      "deploymentStatus": "principal_project_active_confirmed_by_user; exact subpath/deployed revision not certified",
+      "session": {
+        "available": "API2 session only for C18; business paths use server/channel context",
+        "supabaseSession": false,
+        "forwarded": false
+      },
+      "secretCustody": "Server HMAC possible; no secret read or created.",
+      "currentRequest": {
+        "method": "POST",
+        "target": "Manager.ownerId -> OwnerSetting.urlPost",
+        "headers": "No explicit auth; Axios JSON defaults described in api2Contract.",
+        "body": {
+          "fields": [
+            "action",
+            "promo_code",
+            "promo_code_prefix",
+            "promo_code_suffix",
+            "phone",
+            "amount",
+            "manager_id",
+            "agency_id",
+            "player_username",
+            "full_name",
+            "is_valid_receipt",
+            "action_event_id",
+            "bot_phone",
+            "transaction_id",
+            "coelsa_id",
+            "timestamp",
+            "dateTime"
+          ],
+          "action": "PURCHASE",
+          "amountRule": "Math.round(loadAmount)",
+          "actionEventId": "Operation.id from ActionService"
+        }
+      },
+      "expectedResponse": "Any 2xx is success; response text ignored.",
+      "retryContract": "Three attempts; fixed 5 second waits after first/second failure; no explicit timeout; object reused.",
+      "selection": {
+        "trigger": "After successful load and existing operations/notifications; requires prior NewPlayerPurchase.",
+        "tenant": "Manager.ownerId selects entire configured URL; receiver name query selects tenant.",
+        "landing": "Not sent explicitly; do not require it as a new API2 field.",
+        "action": "PURCHASE"
+      },
+      "evidence": [
+        {
+          "repository": "api2",
+          "file": "app/services/purchase_tracking.service.ts",
+          "lines": [
+            294,
+            403
+          ]
+        },
+        {
+          "repository": "api2",
+          "file": "app/services/purchase_tracking.service.ts",
+          "lines": [
+            12,
+            98
+          ]
+        }
+      ],
+      "proposedAuthentication": "Issuer/owner scoped HMAC after approved tenant/target binding, with unchanged JSON and sanitized errors.",
+      "risk": "Signing editable or arbitrary URL without owner/tenant authority would create a signing oracle. Three failed attempts do not establish durable delivery.",
+      "projectsToCoordinate": [
+        "api2: PurchaseTrackingService and approved server auth configuration",
+        "landing-builder: compatible/strict conversions authentication"
+      ],
+      "activityEvidence": "User confirms api2 as active principal Lead/Purchase sender; source establishes callable paths, not per-path production counts."
+    },
+    {
+      "id": "C17",
+      "kind": "executable",
+      "name": "api2 marketing PURCHASE",
+      "classification": "external_server",
+      "runtime": "api2 Adonis/Node server",
+      "localStatus": "current_code",
+      "deploymentStatus": "principal_project_active_confirmed_by_user; exact subpath/deployed revision not certified",
+      "session": {
+        "available": "API2 session only for C18; business paths use server/channel context",
+        "supabaseSession": false,
+        "forwarded": false
+      },
+      "secretCustody": "Server HMAC possible; no secret read or created.",
+      "currentRequest": {
+        "method": "POST",
+        "target": "Manager.ownerId -> OwnerSetting.urlPost",
+        "headers": "No explicit auth; Axios JSON defaults described in api2Contract.",
+        "body": {
+          "fields": [
+            "action",
+            "promo_code",
+            "promo_code_prefix",
+            "promo_code_suffix",
+            "phone",
+            "amount",
+            "manager_id",
+            "agency_id",
+            "player_username",
+            "full_name",
+            "is_valid_receipt",
+            "action_event_id",
+            "bot_phone",
+            "transaction_id",
+            "coelsa_id",
+            "timestamp",
+            "dateTime"
+          ],
+          "action": "PURCHASE",
+          "amountRule": "Math.round(amount)",
+          "actionEventId": "New ManagerPurchaseLog.id"
+        }
+      },
+      "expectedResponse": "Any 2xx is success; response text ignored.",
+      "retryContract": "Three attempts; fixed 5 second waits after first/second failure; no explicit timeout; object reused.",
+      "selection": {
+        "trigger": "Existing receipt handling by BuilderBot, Callbell/Wazzup or WhatsMiau.",
+        "tenant": "Manager.ownerId selects entire configured URL; receiver name query selects tenant.",
+        "landing": "Not sent explicitly; do not require it as a new API2 field.",
+        "action": "PURCHASE"
+      },
+      "evidence": [
+        {
+          "repository": "api2",
+          "file": "app/services/purchase_tracking.service.ts",
+          "lines": [
+            406,
+            503
+          ]
+        },
+        {
+          "repository": "api2",
+          "file": "app/services/purchase_tracking.service.ts",
+          "lines": [
+            12,
+            98
+          ]
+        }
+      ],
+      "proposedAuthentication": "Issuer/owner scoped HMAC after approved tenant/target binding, with unchanged JSON and sanitized errors.",
+      "risk": "Signing editable or arbitrary URL without owner/tenant authority would create a signing oracle. Three failed attempts do not establish durable delivery.",
+      "projectsToCoordinate": [
+        "api2: PurchaseTrackingService and approved server auth configuration",
+        "landing-builder: compatible/strict conversions authentication"
+      ],
+      "activityEvidence": "User confirms api2 as active principal Lead/Purchase sender; source establishes callable paths, not per-path production counts."
+    },
+    {
+      "id": "C18",
+      "kind": "executable",
+      "name": "api2 administrative URL test",
+      "classification": "authenticated_panel_server_test",
+      "runtime": "api2 Adonis/Node server",
+      "localStatus": "current_code",
+      "deploymentStatus": "conditional_available_not_confirmed_used",
+      "session": {
+        "available": "API2 session only for C18; business paths use server/channel context",
+        "supabaseSession": false,
+        "forwarded": false
+      },
+      "secretCustody": "Server HMAC possible; no secret read or created.",
+      "currentRequest": {
+        "method": "POST",
+        "target": "Caller-supplied url_post",
+        "headers": "No explicit auth; Axios JSON defaults described in api2Contract.",
+        "body": {
+          "fields": [
+            "action",
+            "promo_code",
+            "promo_code_prefix",
+            "promo_code_suffix",
+            "phone",
+            "amount",
+            "manager_id",
+            "agency_id",
+            "player_username",
+            "full_name",
+            "is_valid_receipt",
+            "action_event_id",
+            "bot_phone",
+            "transaction_id",
+            "coelsa_id",
+            "timestamp",
+            "dateTime",
+            "test"
+          ],
+          "action": "LEAD and PURCHASE",
+          "amountRule": "Existing synthetic fixtures; values omitted",
+          "actionEventId": "0"
+        }
+      },
+      "expectedResponse": "Reports status and per-action success/error, not business response body.",
+      "retryContract": "One call per action concurrently; 10 second timeout.",
+      "selection": {
+        "trigger": "Authenticated purchase-settings test controller; superadmin/administrador/cashier.",
+        "tenant": "URL from request, owner authorization needed before future signature.",
+        "landing": "Not sent explicitly; do not require it as a new API2 field.",
+        "action": "LEAD and PURCHASE"
+      },
+      "evidence": [
+        {
+          "repository": "api2",
+          "file": "app/services/purchase_tracking.service.ts",
+          "lines": [
+            100,
+            155
+          ]
+        },
+        {
+          "repository": "api2",
+          "file": "app/services/purchase_tracking.service.ts",
+          "lines": [
+            12,
+            98
+          ]
+        },
+        {
+          "repository": "api2",
+          "file": "app/controllers/purchase_settings.controller.ts",
+          "lines": [
+            394,
+            423
+          ]
+        }
+      ],
+      "proposedAuthentication": "Issuer/owner scoped HMAC after approved tenant/target binding, with unchanged JSON and sanitized errors.",
+      "risk": "Signing editable or arbitrary URL without owner/tenant authority would create a signing oracle. Three failed attempts do not establish durable delivery.",
+      "projectsToCoordinate": [
+        "api2: PurchaseTrackingService and approved server auth configuration",
+        "landing-builder: compatible/strict conversions authentication"
+      ],
+      "activityEvidence": "User confirms api2 as active principal Lead/Purchase sender; source establishes callable paths, not per-path production counts."
     }
   ],
   "relatedButNotIngress": [
@@ -1277,15 +1599,107 @@
   "cronEvidence": "Phase 1A documents postgres tracking-retry-every-5m and retry-failed-conversions jobs. Their outbound route/worker paths are covered; current production schedules, target settings and credential values were not queried.",
   "gate": {
     "passed": false,
+    "principalConsumerContractAccredited": true,
     "reasons": [
-      "External active sender census incomplete, including Chatrace response/auth/retry contract.",
-      "Kommo webhook origin and tenant selection are not authenticated in current sibling source.",
-      "Public proxies and queued post_url need trusted tenant/action/target binding before signature issuance.",
-      "Classic/sibling deployment coordination, optional probes and possible CompleteRegistration consumers remain unaccredited.",
-      "Historical Cloud worker Contact and third Kommo probe require deployed-version confirmation; local references are not deployment evidence."
-    ]
+      "Approved api2 owner -> receiver tenant -> exact destination bindings not yet fixed.",
+      "URL test authorization and legitimate redirects/alternate targets require an explicit compatible contract.",
+      "Actual deployed versions and coverage of other active callers remain to be confirmed before strict rollout.",
+      "No implementation authorized in this diagnostic pass; api2 remains read-only."
+    ],
+    "inactiveIntegrations": "Kommo/Chatrace contracts deferred to reactivation, not treated as current active blockers.",
+    "decision": "Implementation voluntarily deferred; principal sender evidence retained, technical prerequisites remain open."
   },
   "sourceFiles": [
+    {
+      "repository": "api2",
+      "file": "app/controllers/owner_setting.controller.ts",
+      "sha256": "aff9497e91ef4e334151a723f96ad3f83243b1785aa62bc17e2380884548c2bc",
+      "lineCount": 272
+    },
+    {
+      "repository": "api2",
+      "file": "app/controllers/purchase_settings.controller.ts",
+      "sha256": "aaf0d58c24d72f3d11f00a4f363616d4e9882cce9a03a2b90a26bb5a668edc98",
+      "lineCount": 433
+    },
+    {
+      "repository": "api2",
+      "file": "app/models/owner_setting.ts",
+      "sha256": "eee162d0d1c135faf2b2217700cdc77069b3fddb3f40008621620eab55bafe77",
+      "lineCount": 49
+    },
+    {
+      "repository": "api2",
+      "file": "app/services/action.service.ts",
+      "sha256": "4d1be06000f4f4614ae4c150b7a047efcd4dc28258cda87613ad47228014bdcd",
+      "lineCount": 7140
+    },
+    {
+      "repository": "api2",
+      "file": "app/services/assistant_message_handler.service.ts",
+      "sha256": "44a04e64ee43108ee3c79f0e26b07778300ce65811811edb150be2f0afa03d9c",
+      "lineCount": 178
+    },
+    {
+      "repository": "api2",
+      "file": "app/services/builder_bot_webhook.service.ts",
+      "sha256": "e7bd1e5f3aa3a9425afea85699c034d3731c1517de9440f068a756fada39a11b",
+      "lineCount": 4251
+    },
+    {
+      "repository": "api2",
+      "file": "app/services/callbell_webhook.service.ts",
+      "sha256": "75ffe81d62e26459af8966dc6e9a309adb51423d50c101151b094d453d3a57dd",
+      "lineCount": 2257
+    },
+    {
+      "repository": "api2",
+      "file": "app/services/incoming_whatsapp_message_processor.service.ts",
+      "sha256": "a68be90a307f1685685a0ff0d675ada56603be08de63179162d458309299b386",
+      "lineCount": 1081
+    },
+    {
+      "repository": "api2",
+      "file": "app/services/purchase_tracking.service.ts",
+      "sha256": "c794b25f59e05c4e0d62722f3bb3246bf0725e738259729c8800404bed0b717b",
+      "lineCount": 552
+    },
+    {
+      "repository": "api2",
+      "file": "app/services/whatsmiau_webhook.service.ts",
+      "sha256": "bf92a5423f8648169358a9f12523a17369beb343d9442c6db3b2652de8f8f3b9",
+      "lineCount": 1678
+    },
+    {
+      "repository": "api2",
+      "file": "node_modules/axios/lib/adapters/http.js",
+      "sha256": "f24a4658db3dd458b7b2c99f4c04081c864cd477314764c3c1781ce2f64af397",
+      "lineCount": 696
+    },
+    {
+      "repository": "api2",
+      "file": "node_modules/axios/lib/defaults/index.js",
+      "sha256": "5cc745911a62e9011633d0aa12881283e73c707ac2548f0b196a20705916fc85",
+      "lineCount": 162
+    },
+    {
+      "repository": "api2",
+      "file": "start/routes/api_front/api_front_owner_settings.routes.ts",
+      "sha256": "759f283846b327c3fa9061d0712f7271809478ab4a966fd201fc6cc11f3a5193",
+      "lineCount": 34
+    },
+    {
+      "repository": "api2",
+      "file": "start/routes/api_front/api_front_purchase_settings.routes.ts",
+      "sha256": "ba4b20d9bed6e2b24a1f8a3bbf68d84da90b9a6e262b6ecdfee620965e398898",
+      "lineCount": 32
+    },
+    {
+      "repository": "api2",
+      "file": "tests/helpers/bonus_load_action_fixture.ts",
+      "sha256": "6049eff4852ca7760db3e3ab6f40a7007b41f5366edfa00b1ac7c80c89b2f5e1",
+      "lineCount": 133
+    },
     {
       "repository": "builder",
       "file": ".github/workflows/encoding-check.yml",
@@ -1888,13 +2302,14 @@
       ],
       "proposal": "Both current public bodies have landing_id/name. Resolve ownership and exact registered target server-side; cross-check untrusted postUrl, name and action without rewriting body. Signed issuer/key ID plus one-to-one destination audience, signed query tenant and raw-body hash bind issuer/tenant/action/destination. Authorize tuple before business processing.",
       "queueBlocker": "Historical queued payload/destination provenance and missing identifiers cannot be inferred from current source. Do not drop, rewrite or blindly sign old items."
-    }
+    },
+    "supersededByPass3": "The second pass is historical evidence. Its unknown principal sender is now api2; Kommo/Chatrace activity is superseded by explicit user confirmation."
   },
   "historicalConsumers": [
     {
       "id": "H01",
       "status": "historical",
-      "activeDeployment": "uncertain",
+      "activeDeployment": "inactive_by_user_Kommo_confirmation",
       "repository": "kommo",
       "file": "app/api/kommo/webhook/route.ts",
       "commit": "a2799df9037db26bedc808646dbc5583fb0db485",
@@ -2274,5 +2689,366 @@
       "repository": "chatrace",
       "files": []
     }
-  ]
+  ],
+  "investigationPass": 3,
+  "operationalConfirmation": {
+    "source": "Explicit user statement in this pass; no production queries.",
+    "activeFlow": "landing -> assigned phone -> cashier connected by QR -> api2 -> Lead/Purchase JSON -> conversions",
+    "whatsappCloud": "Inside landing-builder",
+    "inactive": [
+      "Kommo via Intermediario-kommo",
+      "Chatrace External Requests via intermediario-chatrace"
+    ],
+    "limitation": "Project activity confirmed; deployed SHA, all owner/target bindings and subpath activity not externally verified."
+  },
+  "api2Contract": {
+    "status": "principal_active_sender_confirmed_by_user_and_locally_traced",
+    "evidence": [
+      {
+        "repository": "api2",
+        "file": "app/services/purchase_tracking.service.ts",
+        "lines": [
+          12,
+          50
+        ]
+      },
+      {
+        "repository": "api2",
+        "file": "app/services/purchase_tracking.service.ts",
+        "lines": [
+          57,
+          98
+        ]
+      },
+      {
+        "repository": "api2",
+        "file": "app/services/purchase_tracking.service.ts",
+        "lines": [
+          100,
+          155
+        ]
+      },
+      {
+        "repository": "api2",
+        "file": "app/services/purchase_tracking.service.ts",
+        "lines": [
+          158,
+          291
+        ]
+      },
+      {
+        "repository": "api2",
+        "file": "app/services/purchase_tracking.service.ts",
+        "lines": [
+          294,
+          403
+        ]
+      },
+      {
+        "repository": "api2",
+        "file": "app/services/purchase_tracking.service.ts",
+        "lines": [
+          406,
+          503
+        ]
+      },
+      {
+        "repository": "api2",
+        "file": "app/models/owner_setting.ts",
+        "lines": [
+          19,
+          38
+        ]
+      },
+      {
+        "repository": "api2",
+        "file": "app/controllers/owner_setting.controller.ts",
+        "lines": [
+          233,
+          258
+        ]
+      },
+      {
+        "repository": "api2",
+        "file": "app/controllers/purchase_settings.controller.ts",
+        "lines": [
+          394,
+          423
+        ]
+      },
+      {
+        "repository": "api2",
+        "file": "start/routes/api_front/api_front_purchase_settings.routes.ts",
+        "lines": [
+          5,
+          30
+        ]
+      },
+      {
+        "repository": "api2",
+        "file": "start/routes/api_front/api_front_owner_settings.routes.ts",
+        "lines": [
+          6,
+          32
+        ]
+      },
+      {
+        "repository": "api2",
+        "file": "app/services/builder_bot_webhook.service.ts",
+        "lines": [
+          576,
+          590
+        ]
+      },
+      {
+        "repository": "api2",
+        "file": "app/services/builder_bot_webhook.service.ts",
+        "lines": [
+          1914,
+          1920
+        ]
+      },
+      {
+        "repository": "api2",
+        "file": "app/services/builder_bot_webhook.service.ts",
+        "lines": [
+          3269,
+          3348
+        ]
+      },
+      {
+        "repository": "api2",
+        "file": "app/services/action.service.ts",
+        "lines": [
+          3223,
+          3242
+        ]
+      },
+      {
+        "repository": "api2",
+        "file": "app/services/callbell_webhook.service.ts",
+        "lines": [
+          1759,
+          1797
+        ]
+      },
+      {
+        "repository": "api2",
+        "file": "app/services/whatsmiau_webhook.service.ts",
+        "lines": [
+          430,
+          468
+        ]
+      },
+      {
+        "repository": "api2",
+        "file": "app/services/incoming_whatsapp_message_processor.service.ts",
+        "lines": [
+          247,
+          265
+        ]
+      },
+      {
+        "repository": "api2",
+        "file": "app/services/assistant_message_handler.service.ts",
+        "lines": [
+          152,
+          172
+        ]
+      },
+      {
+        "repository": "api2",
+        "file": "tests/helpers/bonus_load_action_fixture.ts",
+        "lines": [
+          90,
+          104
+        ]
+      },
+      {
+        "repository": "api2",
+        "file": "node_modules/axios/lib/defaults/index.js",
+        "lines": [
+          90,
+          98
+        ]
+      },
+      {
+        "repository": "api2",
+        "file": "node_modules/axios/lib/defaults/index.js",
+        "lines": [
+          128,
+          159
+        ]
+      },
+      {
+        "repository": "api2",
+        "file": "node_modules/axios/lib/adapters/http.js",
+        "lines": [
+          435,
+          450
+        ]
+      },
+      {
+        "repository": "builder",
+        "file": "supabase/functions/conversions/index.ts",
+        "lines": [
+          1557,
+          1567
+        ]
+      },
+      {
+        "repository": "builder",
+        "file": "supabase/functions/conversions/index.ts",
+        "lines": [
+          7792,
+          7835
+        ]
+      },
+      {
+        "repository": "builder",
+        "file": "supabase/functions/conversions/index.ts",
+        "lines": [
+          4591,
+          4602
+        ]
+      },
+      {
+        "repository": "builder",
+        "file": "supabase/functions/conversions/index.ts",
+        "lines": [
+          1232,
+          1246
+        ]
+      },
+      {
+        "repository": "builder",
+        "file": "supabase/functions/conversions/index.ts",
+        "lines": [
+          8010,
+          8025
+        ]
+      },
+      {
+        "repository": "builder",
+        "file": "supabase/functions/conversions/index.ts",
+        "lines": [
+          8072,
+          8111
+        ]
+      }
+    ],
+    "sourceVersion": {
+      "head": "11045861fb50e626d50f9ad9e31d31fa86036fe7",
+      "branch": "guille_puertas",
+      "coreSenderMatchesHead": true,
+      "coreSenderLastCommit": "8755a461e9020c699023e29713ef24a56f520ec4",
+      "callersHavePreExistingChanges": true,
+      "deployedSha": "not verified"
+    },
+    "transport": {
+      "method": "POST",
+      "library": "Axios installed 1.10.0, source inspected without execution",
+      "explicitAuthenticationHeaders": [],
+      "effectiveContentType": "application/json",
+      "accept": "application/json, text/plain, */*",
+      "destination": "Manager.ownerId -> OwnerSetting.urlPost (owner_settings.url_post); complete URL, implicit https when no scheme; not an environment variable; actual value not read.",
+      "tenant": "Receiver requires name query already configured in urlPost. api2 does not append it; API2 owner/manager/agency IDs are separate from Supabase tenant UUID.",
+      "bodyFields": [
+        "action",
+        "promo_code",
+        "promo_code_prefix",
+        "promo_code_suffix",
+        "phone",
+        "amount",
+        "manager_id",
+        "agency_id",
+        "player_username",
+        "full_name",
+        "is_valid_receipt",
+        "action_event_id",
+        "bot_phone",
+        "transaction_id",
+        "coelsa_id",
+        "timestamp",
+        "dateTime"
+      ],
+      "absentFields": [
+        "landing_id",
+        "landing_name",
+        "user_id",
+        "event_id",
+        "event_time",
+        "currency",
+        "purchase_type"
+      ],
+      "headersCustody": "Server runtime can hold issuer-scoped HMAC credentials; none created/read.",
+      "retry": {
+        "attempts": 3,
+        "delayMs": 5000,
+        "condition": "Every Axios rejection, including non-2xx HTTP; same object reused, no dedicated durable replay found.",
+        "timeoutMs": 0,
+        "timeoutMeaning": "No Axios timeout configured in business path; installed default is zero.",
+        "redirects": "Enabled by installed HTTP adapter; no maxRedirects override at sender.",
+        "success": "All 2xx, ignores functional response text.",
+        "testOverride": "One call per action, LEAD and PURCHASE concurrently, timeout 10000ms, caller-supplied URL, test true and action_event_id 0."
+      }
+    },
+    "identity": {
+      "phone": "Message sender/normalized channel identity for Lead/marketing; Player.playerIdentifier for successful load.",
+      "user": "player_username equals phone; no Supabase user/session forwarded.",
+      "manager": "Channel handler resolves manager by BuilderBot projectId (other supported channel adapters have their own manager resolution).",
+      "tenant": "Owner from Manager.ownerId selects entire url_post; name query selects profiles.nombre at receiver.",
+      "landing": "Not sent explicitly; existing receiver correlation by promo/phone/previous event data remains responsible.",
+      "action": "Set by existing sender methods; uppercase LEAD or PURCHASE.",
+      "eventIdentity": "Lead/marketing use ManagerPurchaseLog.id; successful load uses Operation.id passed by ActionService.",
+      "time": "timestamp milliseconds and dateTime ISO created once per method invocation; event_time absent; receiver sets event_time at request receipt.",
+      "betweenRetries": "action_event_id/timestamp/dateTime and remaining body fields are stable inside postWithRetry. A new method invocation may regenerate timestamps/log IDs. No claim of end-to-end stable event_time."
+    },
+    "responseCompatibility": {
+      "receiver": "name required; Lead/Purchase action aliases and action_event_id supported; payment ID dedupe unchanged.",
+      "acceptedTransportIsNotBusinessSuccess": "202 deferred, 200 duplicate and 200 is_valid_receipt false/null no-op are all success to Axios. Preserve this distinction.",
+      "eventTimeMismatch": "ensurePayloadEventTime does not substitute timestamp/dateTime; adding event_time is outside minimum authentication scope.",
+      "reliability": "Lead log exists before POST and may affect future no-code suppression even after delivery fails; marketing persists payload before POST. No automatic resend contract proven after three failures."
+    },
+    "hmac": {
+      "compatibleWithoutBodyChange": true,
+      "preconditions": [
+        "Owner-to-receiver-tenant binding and approved exact target outside editable urlPost.",
+        "Authorize test route's session/owner against target before signing.",
+        "Serialize exactly once with equivalent Axios bytes; fresh signature timestamp/nonce each HTTP attempt; no business fields added.",
+        "Sanitize Axios errors before adding headers; no logging key/MAC/JWT/body.",
+        "Accredit redirects/alternate URLs before blocking signed redirects.",
+        "Confirm active deployed instances and coordinate other active receiver consumers."
+      ],
+      "notAuthorizedNow": "api2 remains strictly read-only; implementation requires separate future authorization."
+    },
+    "tests": {
+      "existingTransportTestsFound": 0,
+      "searchScope": "tests and test for PurchaseTrackingService/purchase_tracking, postWithRetry, buildEventPayload, action_event_id, trackFirstInteraction/trackLoad/trackPurchaseFromMarketing.",
+      "relatedFixture": "bonus_load_action_fixture.ts:98 replaces trackLoad with a no-op; does not validate HTTP.",
+      "adminTestEndpoint": "Real outbound requests, not a hermetic test; not executed.",
+      "executed": []
+    }
+  },
+  "deferral": {
+    "status": "deferred_by_user",
+    "date": "2026-09-18",
+    "decidedBy": "Explicit user instruction",
+    "reason": "Not currently a priority; requires coordinated changes in api2 and external intermediaries.",
+    "designed": true,
+    "implementationStarted": false,
+    "technicallyClosed": false,
+    "remediated": false,
+    "acceptedRisk": "conversions continues accepting external requests without its own cryptographic authentication. The user consciously retains this exposure while the phase is deferred.",
+    "hmacProtectionImplemented": false,
+    "resumeRequiresUserDecision": true,
+    "resumeRequirementsReference": "README.md#requisitos-para-retomar-y-cerrar-técnicamente"
+  },
+  "evidenceReuse": {
+    "scope": "Prior accreditation is retained without reopening api2 or sibling repositories in this checkpoint.",
+    "sourceHashes": "Recorded evidence from the prior pass; not recomputed against external checkouts now.",
+    "references": "Documentary cross-references and recorded line ranges checked locally.",
+    "api2Modified": false,
+    "api2AccessedThisCheckpoint": false
+  }
 }

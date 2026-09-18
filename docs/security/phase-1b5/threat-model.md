@@ -1,6 +1,8 @@
 # Contrato propuesto y modelo de amenazas
 
-Estado: diseño condicionado; implementación bloqueada. No se crearon credenciales, código de autenticación ni migración. Las cifras y headers de esta propuesta son decisiones técnicas propuestas, no propiedades acreditadas de los emisores externos.
+Estado: **DIFERIDA por decisión voluntaria del usuario**, por prioridad actual y necesidad de cambios coordinados en api2 e intermediarios externos. Fase diseñada y documentada, implementación no iniciada, sin cierre técnico ni remediación. La acreditación anterior del contrato api2 se conserva sin volver a abrir ese repositorio. No se crearon credenciales, código de autenticación ni migración. Kommo y Chatrace están inactivos por confirmación operativa; sus requisitos se aplican antes de una futura reactivación.
+
+**Riesgo aceptado durante la postergación:** conversions sigue aceptando solicitudes externas sin autenticación criptográfica propia. No hay protección HMAC implementada para esos eventos. Todo mecanismo descrito a continuación es propuesto; su aceptación documental no demuestra que opere hoy. Los [requisitos para retomar y cerrar](README.md#requisitos-para-retomar-y-cerrar-técnicamente) incluyen nueva autorización, bindings, contrato del test, versiones, implementación coordinada, tráfico firmado, rechazo estricto y pruebas; este checkpoint sólo registra la decisión de diferir.
 
 ## Límite de confianza
 
@@ -12,8 +14,9 @@ Se deben separar autenticación del emisor, autorización del tenant/acciones e 
 | --- | --- | --- |
 | Panel | JWT de usuario verificado mediante Auth, no simple decode/getSession | C01 pertenece al panel admin: exigir ese rol desde `profiles.role`, protegido desde 1B.1, y un tenant acreditado; nunca user_metadata. No habilitar nuevas acciones de usuarios normales sin consumidor acreditado |
 | Servidores internos | HMAC-SHA256 con clave independiente por emisor y entorno | Registro servidor de tenants, acciones y flags internos permitidos; service_role no se distribuye como credencial de emisor |
+| api2 activo | HMAC en transporte de PurchaseTrackingService | Manager.ownerId vinculado en servidor a tenant y destino; body intacto, misma política de reintentos; no firmar url_post o URL de prueba sin autorización |
 | Landings públicas | `/api/track` mantiene su interfaz y sólo el servidor firma | Resolver/validar tenant, landing y destino exacto con datos servidor; Contact y sus variantes legítimas acreditadas, nunca un firmador genérico |
-| Chatrace/webhooks | Verificación nativa acreditada o adaptador servidor autenticado por un mecanismo soportado | No asumir que Chatrace/Kommo firman; no mover el momento del Contact, ni convertir datos públicos en firma privilegiada |
+| Chatrace/Kommo inactivos | Sin credenciales activas; acreditar mecanismo antes de reactivar | No asumir que firman ni habilitar excepción unsigned; mantener pendientes sus contratos de reactivación |
 | Emisor desconocido | Rechazar | No implementar el corte mientras el censo activo siga incompleto |
 
 El registro de emisores contiene ID opaco, entorno/audiencia, IDs de tenant autorizados, acciones y flags permitidos, key IDs habilitados y referencia a su clave en configuración servidor. Las claves son independientes entre clásico, constructor, worker de replays, WhatsApp y cada integración externa acreditada; no se reutilizan secretos de cron, revalidación, Meta o service_role. No se proponen valores productivos ni se los registra en documentos.
@@ -29,6 +32,18 @@ Para las landings públicas esto acredita al intermediario y limita lo que puede
 En Kommo, validar primero una prueba de origen soportada por la integración real y vinculada al raw body si el mecanismo lo permite. No está acreditado que el proveedor emita HMAC: si sólo admite un secreto servidor, debe comprobarse en un transporte seguro y limitarse al emisor/tenant correspondientes, sin confundirlo con integridad firmada. Un registro servidor debe vincular la identidad autenticada a cuenta/canal y tenant; `name`, `account`, `receiver` y `x-amocrm-requestid` recibidos no bastan por sí solos. Si se conserva el query por compatibilidad, comprobar coincidencia y rechazar discrepancias antes del parser funcional/cola/enriquecimiento. No cambiar `clientScope`, dedupe, normalización ni extracción de Purchase. Firmar la salida sólo después de esa validación.
 
 El historial muestra que el secreto de Kommo se comprobaba y luego se retiró. No permite concluir que restaurarlo funcione hoy ni que un header request ID sea auténtico. La ruta de reconciliación cuenta IDs faltantes y no los reencola. No usarla como promesa de recuperación ante un corte de autenticación.
+
+## Contrato y límite de firma de api2
+
+PurchaseTrackingService concentra tres recorridos de negocio y un test administrativo. La URL completa proviene de owner_settings.url_post mediante Manager.ownerId; el test toma una URL del request. El JSON no lleva identidad Supabase ni landing explícita. Por ello el binding autorizado debe existir fuera del JSON: owner de api2 → ID/nombre de tenant receptor → destino/audiencia registrados. La edición autorizada de url_post no concede permiso para otro tenant. El parámetro name debe coincidir con ese binding; no modificar la query ni el body para corregir una discrepancia silenciosamente.
+
+Firmar los bytes exactos que se entregarán a Axios, luego de la construcción funcional actual del objeto. No cambiar Math.round, campos null, códigos promo, normalización, action_event_id o receipt flags. El serializer y Content-Type deben producir el mismo body que la versión actual; comprobarlo con fixtures sintéticos antes de implementar el rollout. El emisor no envía event_id/event_time: mantener su ausencia. timestamp/dateTime del body se crean una vez y permanecen durante el bucle; el timestamp de firma es otro dato, sólo en headers.
+
+Tres intentos y dos pausas posibles de cinco segundos; nuevo nonce/firma en cada intento sin recrear el body. Mantener timeout de negocio sin límite Axios y test de diez segundos, así como criterios actuales de éxito/error. No introducir una cola ni reinterpretar 200/202. Un log persistido no acredita replay: el log LEAD existe antes de saber si el envío fue exitoso, y una invocación posterior sin promo puede omitirse. La pérdida al agotar intentos es un riesgo existente que exige cobertura antes del corte, no autorización para cambiar dedupe.
+
+El error Axios actual incluye configuración/request y podría revelar futuros headers de firma si se registra completo. La futura capa de transporte debe emitir sólo errores sanitizados con código/status/intento; jamás clave, firma, body ni URL completa. No extender la limpieza a logs ajenos al cambio. El test no puede convertirse en firmador de URLs arbitrarias: la sesión/rol ya comprobados deben vincularse además al owner/tenant autorizado.
+
+Los redirects actuales y cualquier URL alternativa necesitan acreditación antes de deshabilitarlos para solicitudes firmadas. Nunca enviar una firma a un destino fuera del catálogo. La futura implementación debe conservar las funcionalidades legítimas de prueba/otros destinos que se acrediten sin distribuir claves al navegador. Este pase no decide bindings productivos ni consulta valores de configuración.
 
 ## Protocolo de firma propuesto v1
 
@@ -94,19 +109,20 @@ Logs de autenticación: código de motivo acotado, ID de emisor acreditado, requ
 
 ## Rollout, rotación y rollback propuestos
 
-1. Cerrar el censo de emisores activos y de destinos, incluidas automatizaciones fuera de Git, probes y CompleteRegistration. Confirmar qué versiones se despliegan y quién controla cada integración. No solicitar valores secretos.
-2. Acreditar la autenticación del origen Kommo y la capacidad de Chatrace u otro adaptador. Un adaptador sin autenticación no supera la puerta. Mantener el Contact en la acción externa del botón; no enviarlo al pedir el teléfono o preparar el link.
-3. Autorizar y coordinar cambios del constructor, clásico e intermediarios. Validar todo el recorrido con receptores y claves sintéticos, incluidos contratos de respuesta y reintentos existentes. Resolver destino/tenant servidor antes de cualquier firma.
-4. Provisionar claves por emisor/entorno mediante procedimiento servidor fuera de Git. Preparar emisores para agregar headers sin cambiar cuerpo ni planificación. Habilitar el receptor estricto sólo cuando cada consumidor esté acreditado y listo. No existe un modo permanente que acepte unsigned; no se propone un despliegue productivo en esta ejecución.
+1. Confirmar bindings owner api2/tenant/destino, contrato del test y versiones activas, sin valores secretos. Kommo/Chatrace siguen inactivos y no bloquean por sí solos esta preparación. Resolver los demás emisores activos del constructor/clásico antes del corte global.
+2. **Receptor compatible:** preparar y validar localmente verificación JWT/HMAC y estado de replay, con transición explícita para el tráfico unsigned existente. Firma presente pero inválida se rechaza siempre; no permite fallback legacy. Esta etapa no elimina la exposición actual ni declara cerrada la fase.
+3. **api2 firmado:** tras autorización separada, incorporar firma/catálogo y errores sanitizados en su transporte conservando body, respuestas, reintentos y condiciones. Credenciales servidor acotadas por emisor/entorno/bindings. Coordinar panel, proxies y Edge activos. No modificar ni activar integraciones inactivas.
+4. **Verificación de tráfico → receptor estricto:** en un futuro despliegue autorizado, acreditar versiones e instancias y medir aceptación de firma/legacy/denegaciones mediante métricas sanitizadas. No usar sólo el 2xx como prueba de procesamiento funcional ni reenviar eventos financieros para probar. Confirmar cobertura completa antes de exigir autenticación; fijar cierre explícito de la transición, nunca fallback permanente. No se realizan esas operaciones en este pase.
 5. Rotación futura: segundo key ID del mismo emisor, ventana acotada de coexistencia, actualizar emisor y retirar el anterior cuando no pueda quedar un intento firmado válido. Las colas almacenan payload, no firmas de larga duración; cada intento vuelve a firmar. No cambia event_time. El nonce sigue siendo único entre ambas claves. No se ejecutó rotación.
 6. Rollback: conservar la puerta de autenticación y volver sólo a una combinación de código/clave previamente validada. En el primer despliegue no hay una versión anterior segura a la que volver automáticamente: detener el rollout y corregir. No habilitar de nuevo el handler público como rollback silencioso; no vaciar ni reescribir colas/eventos.
 
-Coordinación por proyecto, pendiente de las cinco respuestas del README:
+Coordinación por proyecto, pendiente de bindings y versiones señalados en el README:
 
 - **landing-builder / Next:** C01 requiere sesión y rol admin real; C02/C03 requieren resolver autoridad de firma antes del mismo envío actual. Una pestaña antigua de C01 no adjuntará JWT: confirmar actualización de esa UI antes del corte, sin excepción unsigned para tabs viejas.
 - **landing-prueba-1:** actualizar `/api/track`, el emisor compartido y sus reintentos conjuntamente con el constructor. Las páginas cacheadas conservan el payload y llaman al proxy servidor; confirmar que ninguna versión activa use un destino distinto. No se modifica ese repositorio en este pase.
-- **Intermediario-kommo:** acreditar y proteger primero origen/tenant; luego firmar en el cliente compartido. Resolver el uso de probes antes de autorizar acciones. Los jobs ya encolados deben conservar cuerpo, intentos y dedupe: su procedencia debe quedar acreditada, y cada envío se firma de nuevo sin cambiar event_time.
-- **Chatrace y demás automatizaciones:** migrar la acción que efectivamente envía el evento. El intermediario Chatrace sólo necesitaría cambios si se elige un adaptador autenticado; no añadir Contact a la llamada inicial que prepara el link. Todavía no puede asignarse un proyecto a los emisores desconocidos.
+- **api2:** service de tracking, helper/catálogo servidor, pruebas de transporte y autorización del test por owner. No tocar ActionService, callers ni las reglas que generan Lead/Purchase. El checkout tiene cambios preexistentes; sólo se inspeccionó y no puede modificarse con la autorización actual.
+- **Intermediario-kommo:** inactivo. Antes de reactivarlo, acreditar origen/tenant, probes y colas y firmar en el cliente compartido; no se incorpora al rollout activo actual.
+- **Chatrace:** inactivo. Antes de reactivarlo, acreditar la acción externa; el intermediario sólo cambiaría si se elige un adaptador autenticado. No adelantar Contact a la preparación del link.
 - **landing-builder / Edge:** firmar retries y el emisor WhatsApp que realmente esté desplegado; no reemplazar automáticamente el worker histórico por el redirect actual porque cambia el momento/identidad del Contact. Activar la validación estricta de conversions al final, tras confirmar todas las versiones y pendientes. No ejecutar cron ni cambiar su calendario para conseguirlo.
 
 Preparar emisores antes que el receptor estricto conserva compatibilidad con el receptor existente, pero ese intervalo sigue teniendo la exposición actual: debe ser explícito, acotado y no declararse fase cerrada hasta el corte. No se agrega un fallback que acepte firmas inválidas. Si no se puede acreditar cobertura del backlog y de instancias anteriores sin perder eventos o alterar reintentos, el rollout sigue bloqueado.
@@ -114,6 +130,7 @@ Preparar emisores antes que el receptor estricto conserva compatibilidad con el 
 ## Pruebas pendientes, no ejecutadas
 
 - JWT válido del admin legítimo en C01; usuario sin rol requerido, expirado, token anon, metadatos editables y selección de tenant no autorizada rechazados. Agregar otros permisos de panel sólo si aparecen consumidores legítimos acreditados.
+- api2 C15-C18: bytes idénticos, ausencia preservada de event_id/event_time, action_event_id/timestamp/dateTime estables dentro de retry, nueva firma/nonce, defaults y timeout conservados, test por owner, URL/tenant falsificados y headers ausentes de errores. No hay una suite existente acreditada de este transporte; la fixture de carga lo reemplaza por un no-op.
 - Firma válida e inválida, ausente, truncada, emisor/key ID desconocido, clave revocada, audiencia equivocada, mezcla de modos y timestamps en ambos bordes de ventana.
 - Integridad de query y bytes JSON: espacios, Unicode, orden de propiedades, números y campos opcionales; cambio de cualquier byte firmado rechazado, sin alterar el payload legítimo.
 - Replay secuencial y concurrente; fallo del almacenamiento; respuesta perdida seguida de retry con nonce nuevo y mismo evento; reloj adelantado, evento diferido y rotación sin cambiar deduplicación funcional.

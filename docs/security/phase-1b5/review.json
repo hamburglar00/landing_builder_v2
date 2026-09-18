@@ -1,89 +1,75 @@
 {
   "phase": "1B.5",
-  "status": "blocked_by_unaccredited_consumer_contracts",
+  "status": "deferred_by_user",
   "designed": true,
   "implemented": false,
-  "readyForCheckpoint": false,
-  "baseCommit": "2aee0e927df7bd72b255c2d5996d405154ddcc22",
+  "readyForCheckpoint": true,
+  "baseCommit": "716f920b1c48d41c7ba78bd05582ab668a7fe751",
   "branch": "main",
   "date": "2026-09-18",
   "implementationGate": {
-    "result": "blocked",
+    "result": "deferred_by_user_technical_prerequisites_pending",
+    "principalSenderContractAccredited": true,
+    "canImplementInThisPass": false,
     "conditions": [
       {
-        "condition": "All active consumers and deployed contracts accredited",
-        "result": "not_met",
-        "evidence": "consumers.json C11-C14 and per-consumer activityEvidence"
+        "condition": "Identify principal active Lead/Purchase sender",
+        "result": "met",
+        "evidence": "api2 PurchaseTrackingService, C15-C18 and user operational confirmation"
       },
       {
-        "condition": "Every legitimate sender has a compatible proven authentication mechanism",
-        "result": "not_met",
-        "evidence": "Chatrace origin capability unknown; Kommo incoming identity/tenant not checked; public proxy signing authority unresolved."
+        "condition": "Prove HMAC can be added without changing functional JSON",
+        "result": "supported_by_static_contract; runtime tests pending",
+        "evidence": "Single common transport, body built once per invocation, no browser secret needed."
       },
       {
-        "condition": "No decision about production credential values is required",
-        "result": "no_values_required_for_diagnosis",
-        "evidence": "No credentials read or generated; future provisioning requires an accredited sender registry."
+        "condition": "Owner/tenant/destination authority and test URL compatibility",
+        "result": "pending",
+        "evidence": "Editable owner url_post and arbitrary administrative test target are not signature authority."
       },
       {
-        "condition": "No business/event contract changes",
-        "result": "preserved_by_no_implementation",
-        "evidence": "Only four documentation files added."
+        "condition": "Confirm deployed versions and coverage of active callers before strict mode",
+        "result": "pending",
+        "evidence": "Dirty local api2 callers; active project confirmation does not certify deployed revision or all target bindings."
       },
       {
-        "condition": "Entire proposed rollout can be validated locally",
-        "result": "not_met",
-        "evidence": "External active automation, response/retry and origin authentication contracts missing."
+        "condition": "Keep payload, identity, timing, responses, retries and business logic",
+        "result": "preserved_in_this_diagnostic",
+        "evidence": "No code changed, no calls made."
       },
       {
-        "condition": "No permanent silent unsigned fallback",
-        "result": "required_by_design_not_implemented",
-        "evidence": "threat-model.md"
+        "condition": "Allow edits to api2",
+        "result": "not_authorized",
+        "evidence": "User absolute read-only restriction; future implementation requires separate authorization."
       }
-    ]
+    ],
+    "strictRolloutAuthorized": false
   },
-  "architecture": "Conditional verified user JWT for panel; server HMAC-SHA256 per issuer/environment, tenant/action/flag authorization, raw-body/query integrity, bounded timestamp and atomic nonce. Never blindly sign public proxy input.",
+  "architecture": "Compatible receiver first, then api2 HMAC scoped to trusted owner/tenant/target with unchanged JSON, sanitized traffic verification, strict receiver last. Invalid signatures never downgrade to legacy. Inactive integrations remain excluded.",
   "blockers": [
-    "Published Chatrace flow/capabilities and active external sender census still unavailable locally.",
-    "Kommo actual origin authentication and account/channel-to-tenant binding remain unaccredited; past request-ID bypass must not be restored.",
-    "Public proxy and old queued destinations/landing identifiers require a non-sensitive supported-contract inventory.",
-    "Active deployed revisions are unverified, including historical WhatsApp worker Contact and optional diagnostic probes. Kommo reconciliation does not recover missing events."
+    "Fix trusted api2 owner -> receiver tenant -> exact endpoint/audience bindings independently of editable URL.",
+    "Define authorized administrative URL-test signing and accredit redirects/alternate destinations.",
+    "Confirm deployed versions/instances and coverage of active panel, proxies, Edge and api2 before strict mode.",
+    "api2 remains read-only; no implementation authorization in this pass."
   ],
   "pendingDecisions": [
     {
       "id": "Q1",
-      "data": "Published Chatrace flow and two External Request contracts, placeholders/header names, response/retry behavior and supported server auth capability; no secret values.",
-      "where": "Chatrace flow editor/published automation and API-action settings.",
-      "unlocks": "Direct HMAC versus authenticated adapter at the existing Contact trigger.",
-      "risk": "Lost or duplicate Contact; event timing changed."
+      "data": "Non-secret mapping of api2 owner to authorized receiver tenant/name and exact destination/environment.",
+      "unlocks": "Issuer-scoped signing without trusting editable url_post.",
+      "risk": "Cross-tenant signature authority or credential-bearing request to an arbitrary destination."
     },
     {
       "id": "Q2",
-      "data": "Active bot/integration registry with tenant/action, including WhatsApp downstream LEAD/PURCHASE bot, CompleteRegistration and probe usage.",
-      "where": "Automation owners, constructor Integraciones, webhook/bot configurations.",
-      "unlocks": "Complete issuer registry and scope of projects to migrate.",
-      "risk": "A legitimate unknown sender is rejected; missing events."
+      "data": "Supported URL-test targets/owner authority, alternate destinations and legitimate redirects.",
+      "unlocks": "Preserve administrative test behavior while preventing a signing oracle.",
+      "risk": "Break a legitimate test or disclose signing material via redirects."
     },
     {
       "id": "Q3",
-      "data": "Sanitized Kommo active webhook configuration, supported origin-authentication proof and account/channel-to-tenant mapping.",
-      "where": "Kommo integration/webhook setup and server integration administration.",
-      "unlocks": "Authentication and tenant binding before queue/enrichment; no request-ID bypass.",
-      "risk": "Forged cross-tenant events receive a trusted outbound signature."
-    },
-    {
-      "id": "Q4",
-      "data": "Non-sensitive inventory of proxy/queue destination routes, legitimate redirects and presence of landing identifiers in backlog; no raw events or credentials.",
-      "where": "Configuration/queue operator reports with values redacted except approved public routes and field names/counts.",
-      "unlocks": "Exact target catalog and compatibility checks without rewriting payload/queue.",
-      "risk": "Signature disclosure to wrong destination or rejection/loss of legitimate backlog."
-    },
-    {
-      "id": "Q5",
-      "data": "Active deployment project/domain/root/SHA or Edge code hash/version, sender/retry job destinations and admin UI refresh plan.",
-      "where": "Vercel Deployments, Edge deployment records and sanitized Scheduler definitions.",
-      "unlocks": "Coordinated sender-first, receiver-last rollout for actual deployed versions.",
-      "risk": "Old unsigned callers are cut off or WhatsApp Contact timing/identity is changed."
+      "data": "Actual deployed api2/core/caller revisions and active receiver consumers, including old instances/panel sessions/backlog.",
+      "unlocks": "Complete coverage before strict receiver; no business-event replay as a test.",
+      "risk": "After three failed attempts api2 does not establish durable HTTP recovery."
     }
   ],
   "implementationChanges": {
@@ -108,37 +94,29 @@
       "https://docs.deno.com/api/node/crypto/"
     ],
     "access": "Public documentation and Supabase docs search only; no remote project/data operations. Changelog markdown endpoint unavailable; public HTML changelog used.",
-    "reuse": "Official documentation/changelog consultation from the preceding diagnosis reused; this follow-up consulted local evidence and reread the skill, without implementation."
+    "reuse": "Previously consulted Supabase documentation retained. This pass compares local receiver/source and installed Axios; no remote documentation or project operations."
   },
   "verification": {
     "status": "passed_documentation_checks_only",
     "executed": [
-      "Read-only recursive repository discovery across CURSOR: seven checkouts and two empty directories; no new current external sender found.",
-      "Current-source search and 24 distinct local branch/tag/ref-tip searches; targeted Git history, no fetch.",
-      "Current/historical call tracing, manifest metadata and source-declared environment-variable names only.",
-      "Deployment activity remains uncertain; local current code, historical senders and external documented channels distinguished.",
-      "Exact four-file inventory",
-      "UTF-8/secret-pattern/personal-data/path/whitespace documentation audit",
-      "47 current and 10 historical source hashes and citation ranges",
-      "273 migrations against HEAD",
-      "Unchanged sibling HEAD/status",
-      "git diff --check and untracked-file diff checks"
+      "Confirmed main at the documentary base, exactly four modified phase documents, empty index and no conflicts before checkpoint.",
+      "Verified four-document inventory and SHA-256 hashes; review.json uses an explicit null self-hash policy.",
+      "Validated internal links and evidence references against recorded source metadata without reopening api2 or sibling repositories.",
+      "Documentary audit for UTF-8, secret formats, credential URLs, personal data, machine-dependent paths and whitespace.",
+      "Verified the prior 273 migrations remain identical to HEAD and their recorded raw manifest.",
+      "Verified .env presence/metadata and ignored/untracked Git status without reading its contents.",
+      "git diff --check and exact documentation-only change scope."
     ],
     "notExecuted": [
-      "Authentication positive/negative/replay/concurrency tests",
-      "Reconstruction or SQL/pgTAP/Data API suites",
-      "Frontend/Edge/Next suites",
-      "TypeScript",
-      "Build",
-      "ESLint",
-      "Client bundle inspection"
+      "api2 or sibling repository access",
+      "Environment or secret content reads",
+      "Endpoint or production traffic requests",
+      "Functional suites, SQL/pgTAP/Data API or reconstruction",
+      "TypeScript, build or ESLint",
+      "Application execution, migrations or configuration changes",
+      "Remote operations, push or deploy"
     ],
-    "reasonNotExecuted": "Implementation gate failed; no executable changes. Proposed tests are pending, never counted as passed.",
-    "harnessNotes": [
-      "One documentation citation range corrected to the actual file end.",
-      "git diff --no-index --check may exit 1 for new-file differences without diagnostic output; final harness requires status 0/1, empty stdout/stderr, plus independent whitespace checks. This was not an application/security failure.",
-      "Follow-up history lookup with a mistyped revision was retried using the verified full local commit ID; no application test was executed."
-    ],
+    "reasonNotExecuted": "User authorized documentary deferral and a local checkpoint only.",
     "audit": {
       "utf8": "passed",
       "mojibake": "passed",
@@ -146,53 +124,43 @@
       "credentialFormats": "passed",
       "credentialUrls": "passed",
       "emailAndPhoneLiterals": "passed",
-      "whitespaceIncludingUntracked": "passed",
+      "whitespace": "passed",
       "gitDiffCheck": "passed",
-      "untrackedNoIndexDiffCheck": "passed",
-      "scope": "Only the four new documents; patterns and manual review, no real secret comparison or production data access."
+      "scope": "Four documents only; source evidence retained, no external checkout access."
     },
     "evidenceCounts": {
-      "currentCodePaths": 12,
-      "documentedExternalChannels": 2,
-      "historicalAdditionalSendPaths": 2,
-      "currentSourceHashes": 47,
-      "historicalSourceHashes": 10,
-      "localGitRefTips": 24,
-      "currentCitationRanges": 95,
-      "historicalBlobsVerified": 10
-    },
-    "followupDocker": {
-      "queriedThisPass": false,
-      "changedThisPass": false,
-      "priorObservationOnly": true
+      "recordedSourceHashes": 62,
+      "recordedHistoricalSourceHashes": 10,
+      "recordedCitationRanges": 133,
+      "externalSourceHashesRecomputed": 0
     }
   },
   "inventory": {
     "count": 4,
-    "modified": 0,
-    "added": 4,
+    "modified": 4,
+    "added": 0,
     "hashAlgorithm": "SHA-256 raw file bytes",
-    "selfHashPolicy": "review.json has null self hash to avoid circular hashing; three other documents, 47 current source files and 10 historical blobs have explicit SHA-256 hashes.",
+    "selfHashPolicy": "review.json has null self hash to avoid a circular hash; Git records its committed bytes. The other three documents have current SHA-256 raw-byte hashes. The 62 source and 10 historical hashes are retained prior evidence, not refreshed against external checkouts.",
     "files": [
       {
         "file": "docs/security/phase-1b5/README.md",
-        "status": "new",
-        "sha256": "a49c57e0cfaf72e8ce4805e9366f242284e9a1f4ba07ab658037b3dd39219637"
+        "status": "modified",
+        "sha256": "4c4b0a7c4525088e7b54dd9f5b8537ed9e129962c11ce70301832585ca111862"
       },
       {
         "file": "docs/security/phase-1b5/consumers.json",
-        "status": "new",
-        "sha256": "0d8780b7a9a4b5759eee396f2966a9a91d865f7a7277d0a95dbd30e5e4dbadc0"
+        "status": "modified",
+        "sha256": "42c79dbdb6f19098698e384e7df6a8882f8a0fd7410965c30d566113e6c72863"
       },
       {
         "file": "docs/security/phase-1b5/review.json",
-        "status": "new",
+        "status": "modified",
         "sha256": null
       },
       {
         "file": "docs/security/phase-1b5/threat-model.md",
-        "status": "new",
-        "sha256": "4e658bbe1ac4229eaefd7d7b427d4d5e1b372f3b31ff1bbf047da472c741721f"
+        "status": "modified",
+        "sha256": "a55d3b1fe19c7ed1055f824ba93fdf5589ea57010ad0c65daab6c923fd9804e1"
       }
     ]
   },
@@ -202,24 +170,28 @@
     "remoteWrites": false,
     "deploy": false,
     "push": false,
-    "staging": false,
-    "commit": false,
     "rotation": false,
     "secretsInArtifacts": false,
-    "syntheticSecretsCreated": false
+    "syntheticSecretsCreated": false,
+    "stagingAuthorized": true,
+    "localCommitAuthorized": true,
+    "gitMutationScope": "Only the four phase documents and the requested local documentary checkpoint.",
+    "api2Access": false
   },
   "git": {
     "branch": "main",
-    "head": "2aee0e927df7bd72b255c2d5996d405154ddcc22",
-    "trackedChanges": 0,
-    "untracked": [
+    "head": "716f920b1c48d41c7ba78bd05582ab668a7fe751",
+    "trackedChanges": 4,
+    "untracked": [],
+    "modifiedFiles": [
       "docs/security/phase-1b5/README.md",
       "docs/security/phase-1b5/consumers.json",
       "docs/security/phase-1b5/review.json",
       "docs/security/phase-1b5/threat-model.md"
     ],
     "indexEmpty": true,
-    "conflicts": 0
+    "conflicts": 0,
+    "observationScope": "Pre-checkpoint snapshot; final committed state is verified and reported separately."
   },
   "migrations": {
     "count": 273,
@@ -286,33 +258,151 @@
     "deletedThisTask": 0,
     "foreignResources": "Existing stopped codex-p8-mysql, default networks and eight anonymous volumes remain untouched.",
     "ownershipEvidence": "Resource names and labels inspected; no phase resources; no runner executed.",
-    "observationScope": "Previous diagnosis only; Docker was not queried or changed in follow-up pass 2; no runners executed."
+    "observationScope": "Historical observation from initial diagnosis only. Docker was neither queried nor changed in api2 pass."
   },
-  "investigationPass": 2,
+  "investigationPass": 3,
   "rollout": {
-    "status": "conditional_not_implementable_until_answers",
+    "status": "deferred_by_user_not_executed",
     "order": [
-      "Accredit Q1-Q5; pin actual active versions and non-sensitive contracts.",
-      "Prepare local auth changes and contract tests per actual sender project without changing event payload or scheduling.",
-      "Coordinate origin-protected Kommo, external Chatrace/other automations, constructor and classic proxies/queues, panel and actual Edge sender versions.",
-      "Confirm every active instance, backlog and old panel session is covered; do not rely on Kommo reconciliation to recover failed events.",
-      "Enable strict conversions authentication last; no invalid-signature downgrade or permanent unsigned fallback."
+      "Receiver compatible: prepare JWT/HMAC and explicit bounded legacy transition; invalid signatures always reject.",
+      "api2 signed: trusted owner/tenant/target, exact same business JSON and retries; coordinate other active senders.",
+      "Verify sanitized auth traffic coverage and deployed versions in a future separately authorized rollout; do not replay business operations.",
+      "Receiver strict after coverage proven; no permanent unsigned fallback."
     ],
     "projectsRequired": [
-      "landing-builder: Next and Edge",
-      "landing-prueba-1",
-      "Otros/Intermediario-kommo",
-      "External published Chatrace flow",
-      "Other active external senders pending Q2"
+      "landing-builder: compatible receiver, auth/replay and active internal emitters/panel/proxies",
+      "api2: future transport signer and URL-test authorization, only with separate write authorization",
+      "landing-prueba-1: public proxy/retry coordination"
     ],
-    "projectsConditional": [
-      "Otros/intermediario-chatrace only if chosen as authenticated adapter"
+    "projectsInactive": [
+      "Intermediario-kommo",
+      "intermediario-chatrace and external Chatrace requests"
     ],
-    "noChangeAccreditedFor": [
-      "internal-chat",
-      "link_ganamos_multiowner",
-      "Otros/landing-venta-asistente"
+    "rollback": "Before strict mode stop progression on failure; after strict mode use only validated authenticated sender/receiver combinations. No silent restoration of unsigned acceptance.",
+    "deliveryLimit": "api2 has three in-process attempts; no dedicated durable resend proven. An all-2xx result does not imply business processing."
+  },
+  "principalSender": {
+    "project": "api2",
+    "activeConfirmedBy": "Explicit user statement",
+    "contractAccreditedFrom": "Read-only local source, callers, installed Axios and receiver comparison",
+    "sourceHead": "11045861fb50e626d50f9ad9e31d31fa86036fe7",
+    "sourceBranch": "guille_puertas",
+    "coreSenderMatchesHead": true,
+    "deployedVersionVerified": false
+  },
+  "inactiveIntegrations": {
+    "confirmedBy": "Explicit user statement",
+    "names": [
+      "Kommo",
+      "Chatrace"
     ],
-    "rollback": "Retain strict auth; only validated compatible sender/receiver versions. Never silently return to unsigned acceptance."
-  }
+    "policy": "No active credentials or unsigned exception. Pending contracts apply before future reactivation."
+  },
+  "api2ReadOnly": {
+    "headUnchanged": true,
+    "branchUnchanged": true,
+    "statusUnchanged": true,
+    "metadataUnchanged": true,
+    "metadataFiles": 41163,
+    "sourceFiles": 1277,
+    "sourceSetUnchanged": true,
+    "changedSourceCount": 0,
+    "sensitiveFilesRead": false,
+    "completeTreeByteHashVerified": false,
+    "preExistingModified": 26,
+    "preExistingUntracked": 504,
+    "mutationCommands": [],
+    "optionalGitLocksDisabled": true,
+    "allTreeByteForByteCryptographicProof": false,
+    "verificationLimit": "No-write activity and unchanged hashes prove byte identity for the 1277 compared source/documentation files. Full-tree file names/count/sizes/mtime/ctime match, including credential files by metadata only. Secret/private/generated content was not hashed; no claim of complete-tree byte identity is made.",
+    "observationScope": "Prior accreditation only; api2 was not reopened or modified for this documentary checkpoint.",
+    "accessedThisCheckpoint": false
+  },
+  "deferral": {
+    "status": "deferred_by_user",
+    "date": "2026-09-18",
+    "decidedBy": "Explicit user instruction",
+    "reason": "Not currently a priority; requires coordinated changes in api2 and external intermediaries.",
+    "designed": true,
+    "implementationStarted": false,
+    "technicallyClosed": false,
+    "remediated": false,
+    "acceptedRisk": "conversions continues accepting external requests without its own cryptographic authentication. The user consciously retains this exposure while the phase is deferred.",
+    "hmacProtectionImplemented": false,
+    "resumeRequiresUserDecision": true,
+    "resumeRequirementsReference": "README.md#requisitos-para-retomar-y-cerrar-técnicamente"
+  },
+  "checkpoint": {
+    "type": "documentation_only_deferral",
+    "message": "docs(security): defer conversion ingress hardening",
+    "scope": "Exactly the four existing phase-1b5 documents.",
+    "implementationCheckpoint": false,
+    "readyForCheckpointMeaning": "Documentary deferral only; not implementation completion or risk remediation.",
+    "validationSnapshot": "Pre-commit checks. The local commit, hook and final Git state are verified separately."
+  },
+  "resumeRequirements": [
+    "Define trusted owner -> tenant -> allowed destination bindings.",
+    "Resolve the administrative test-by-URL contract.",
+    "Accredit deployed versions and active sender coverage.",
+    "Implement the compatible receiver in landing-builder.",
+    "Authorize and implement server signing in api2.",
+    "Adapt intermediaries before reactivating Kommo or Chatrace; keep inactive integrations without unsigned exceptions.",
+    "Verify signed traffic and coverage of all active consumers.",
+    "Enable strict rejection of unauthenticated requests.",
+    "Run functional, replay, retries, rollout and rollback tests before the corresponding transitions.",
+    "Create the final implementation checkpoint with remediation evidence."
+  ],
+  "previousAccreditation": {
+    "scope": "Historical results from the api2 accreditation pass; no api2 access or repeated source inspection in this checkpoint.",
+    "verification": {
+      "status": "passed_documentation_checks_only",
+      "executed": [
+        "Verified documentary checkpoint exists and landing-builder was clean before edits.",
+        "Read-only api2 branch/status/instructions and source/caller/receiver inspection; no environment or credential values read.",
+        "Read local installed Axios 1.10.0 source, not runtime execution.",
+        "Static test search: no dedicated sender transport tests; related trackLoad fixture is no-op.",
+        "Compared api2 before/after SHA-256 for 1277 non-sensitive source/documentation files and metadata for 41163 files; branch, HEAD and pre-existing status unchanged.",
+        "Documentation-only audit of four modified files: inventory/hashes, UTF-8, secret formats, personal data/paths and whitespace.",
+        "62 current source hashes, 10 historical blobs and 133 citation ranges verified.",
+        "git diff --check, exact four-file scope, empty index, no conflicts, 273 unchanged migrations and .env ignored/untracked."
+      ],
+      "notExecuted": [
+        "api2 application/scripts/services",
+        "Endpoint or production traffic requests",
+        "Functional suites, SQL/pgTAP/Data API or reconstruction",
+        "TypeScript",
+        "Build",
+        "ESLint",
+        "Migrations",
+        "Remote operations"
+      ],
+      "reasonNotExecuted": "Read-only accreditation and documentation only; current instruction prohibits functional execution and every api2 write.",
+      "harnessNotes": [
+        "An initial documentation patch attempted a replace form unsupported by apply_patch; it failed without edits. README was then replaced only in the authorized documentation directory."
+      ],
+      "audit": {
+        "utf8": "passed",
+        "mojibake": "passed",
+        "personalPaths": "passed",
+        "credentialFormats": "passed",
+        "credentialUrls": "passed",
+        "emailAndPhoneLiterals": "passed",
+        "whitespace": "passed",
+        "gitDiffCheck": "passed",
+        "scope": "Documentation audit only; no functional execution"
+      },
+      "evidenceCounts": {
+        "currentCodePaths": 16,
+        "documentedExternalChannels": 2,
+        "historicalAdditionalSendPaths": 2,
+        "currentSourceHashes": 62,
+        "historicalSourceHashes": 10,
+        "api2SourceFiles": 15,
+        "api2ByteComparedFiles": 1277,
+        "api2MetadataComparedFiles": 41163,
+        "currentCitationRanges": 133
+      }
+    }
+  },
+  "siblingEvidenceScope": "Historical observations retained without reopening sibling repositories."
 }
