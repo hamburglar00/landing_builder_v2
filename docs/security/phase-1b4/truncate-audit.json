@@ -1,0 +1,69 @@
+{
+  "phase": "1B.4",
+  "continuation": "remaining TRUNCATE",
+  "passed": true,
+  "files": [
+    "docs/security/phase-1b4/README.md",
+    "docs/security/phase-1b4/truncate-audit.json",
+    "docs/security/phase-1b4/truncate-review.json",
+    "docs/security/phase-1b4/truncate-scope.json",
+    "docs/security/phase-1b4/truncate-validation.json",
+    "scripts/security/audit-remaining-truncate.mjs",
+    "scripts/security/run-remaining-truncate.mjs",
+    "scripts/security/truncate-privileges-tests.mjs",
+    "supabase/bootstrap/incremental-manifest.json",
+    "supabase/migrations/20260918161631_remove_remaining_client_truncate_privileges.sql",
+    "supabase/tests/remaining_truncate_privileges.test.sql"
+  ],
+  "hashes": [
+    {
+      "file": "docs/security/phase-1b4/README.md",
+      "sha256": "d0da653deb2bb5b45f3f9e8e038f4fc5d09826646e4fce8b842b49559793f62f"
+    },
+    {
+      "file": "docs/security/phase-1b4/truncate-scope.json",
+      "sha256": "fcb97cd8620ec480208f803ade0d0b69dafa340a10237fc7ae0fb8c3ed429278"
+    },
+    {
+      "file": "docs/security/phase-1b4/truncate-validation.json",
+      "sha256": "3951b72a1f960a0f558c428b2c73323aa964ad1f61788b9aa6914477e66db258"
+    },
+    {
+      "file": "scripts/security/audit-remaining-truncate.mjs",
+      "sha256": "cfaa958313295112e29b0642bd7849559af68e14ab9606c07f771263226f1d5c"
+    },
+    {
+      "file": "scripts/security/run-remaining-truncate.mjs",
+      "sha256": "30ef8aae754bba62a2882e3dfd9034e13a450caf5b94738c889b2204749dc6e7"
+    },
+    {
+      "file": "scripts/security/truncate-privileges-tests.mjs",
+      "sha256": "8b248cfb9e45817387328343481c1e7be46dcdfdc6c291706a984e686304d27d"
+    },
+    {
+      "file": "supabase/bootstrap/incremental-manifest.json",
+      "sha256": "71e00e02991a47bda2252cf98dd25b5d574569140e507691c499bca12e7ef571"
+    },
+    {
+      "file": "supabase/migrations/20260918161631_remove_remaining_client_truncate_privileges.sql",
+      "sha256": "185dd457b0e709ab9db0c11fe05263be8be66926f7b54e80b2b79cd4922135e0"
+    },
+    {
+      "file": "supabase/tests/remaining_truncate_privileges.test.sql",
+      "sha256": "2b5699e2e8b1b531ab0aad6699bb28d9a6b7c5f28a2a599835bc7f44f61ab805"
+    }
+  ],
+  "hashExclusions": [
+    "docs/security/phase-1b4/truncate-audit.json",
+    "docs/security/phase-1b4/truncate-review.json"
+  ],
+  "environmentFile": {
+    "present": true,
+    "ignored": true,
+    "tracked": false,
+    "contentRead": false
+  },
+  "findings": [],
+  "realSecretValuesRead": 0,
+  "remoteWrites": 0
+}

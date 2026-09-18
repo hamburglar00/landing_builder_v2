@@ -1,5 +1,23 @@
 # Fase 1B.4: privilegios internos
 
+## Continuación autorizada: TRUNCATE en las 29 tablas restantes
+
+Base: `main`, `aa9c2ac44cfdfed9cfb5d1db7a019034a9b7a174`. Estado: **TRUNCATE completado en 42/42 tablas y validado localmente**. La excepción posterior levanta las exclusiones únicamente para retirar TRUNCATE a PUBLIC, anon y authenticated. La lista exacta proviene de `scope.json.deferredTruncate`; `truncate-scope.json` registra su hash de origen y la unión de 42 tablas.
+
+La migración 273 contiene exclusivamente los 29 REVOKE, sin CASCADE ni grants compensatorios. CRUD, RLS, policies, propietarios, funciones, triggers, payloads y lógica de negocio quedan fuera de esta continuación. Las migraciones 1–272 y los default privileges de objetos futuros se conservan.
+
+El runner reconstruye una sola base hasta 272 y acredita los ACL efectivos antes de crear/aplicar la 273. Compara todos los ACL, incluidos los de columnas y roles heredados, y el catálogo antes/después. Los snapshots completos se comparan en memoria; el reporte conserva hashes, recuentos, diferencias y la matriz de las 42 tablas. Las denegaciones se prueban mediante SQL y pgTAP; el mantenimiento como postgres usa filas sintéticas con rollback. No se repiten frontend, build ni regresiones ajenas.
+
+Resultado: una reconstrucción **273/273**, **93 comprobaciones aprobadas** y **169/169 aserciones pgTAP** incluidas dentro de una de esas comprobaciones. Las 29 tablas tenían grants directos para ambos roles cliente; se retiraron exactamente 58 ACL de TRUNCATE y se agregaron cero permisos. Los otros ACL de 10.647 objetos y los metadatos comparados permanecen idénticos. PUBLIC no conserva grants de TRUNCATE en las 42 tablas. Postgres, owners y backend mantienen sus permisos. Cero recursos Docker propios residuales.
+
+Se corrigió una consulta del harness antes de la 273: la concatenación de `text` con el tipo interno `char` era ambigua (42725). La conversión explícita de `defaclobjtype` a texto resolvió el error sin cambiar permisos ni expectativas; se continuó en la misma base. El fallo y su única corrección están conservados en el reporte.
+
+Evidencia de esta continuación: `truncate-validation.json`. Auditoría e inventario: `truncate-audit.json` y `truncate-review.json`. Los reportes originales de abajo describen el primer checkpoint y mantienen sus hashes; sus 29 pendientes quedan sustituidos únicamente por esta autorización de TRUNCATE. La autenticación de conversions y los demás objetos ambiguos siguen fuera del alcance.
+
+Antes de un despliegue futuro, verificar base 272, nombres, owners y ACL; después, comprobar las 42 denegaciones y la igualdad del resto. Una reversión requeriría acreditar el consumidor y ensayar una corrección específica con los ACL previos del reporte, sin grants generales. El rollback de datos sintéticos no constituye un ensayo de rollback de despliegue. Este trabajo no despliega ni lee secretos.
+
+## Registro histórico del primer checkpoint
+
 Base: `main`, `abfcbd914b3d1bed785467645766697a22e8651e`. Lote acreditado validado exclusivamente en local; auditoría final aprobada. Los objetos excluidos o ambiguos siguen pendientes y no se declara resuelto TRUNCATE en las 42 tablas. Inventario por objeto y referencias estáticas actuales: `scope.json`. Se referencia la evidencia de Fase 1A, sin copiar sus catálogos completos.
 
 ## Alcance acreditado

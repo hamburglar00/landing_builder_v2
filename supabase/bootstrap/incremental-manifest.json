@@ -21,6 +21,11 @@
       "version": "20260918152656",
       "file": "20260918152656_restrict_internal_database_privileges.sql",
       "sha256": "0278468e552ea4053848f5b8f50a2f91234b6b6f29f7cb365e44081489c410d9"
+    },
+    {
+      "version": "20260918161631",
+      "file": "20260918161631_remove_remaining_client_truncate_privileges.sql",
+      "sha256": "185dd457b0e709ab9db0c11fe05263be8be66926f7b54e80b2b79cd4922135e0"
     }
   ]
 }

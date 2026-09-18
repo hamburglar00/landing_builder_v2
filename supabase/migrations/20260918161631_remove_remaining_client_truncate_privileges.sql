@@ -1,0 +1,31 @@
+-- Phase 1B.4 continuation: only the 29 previously deferred TRUNCATE privileges.
+-- Preserve every other ACL, owner, policy, function, trigger and backend grant.
+REVOKE TRUNCATE ON TABLE public.ar_name_inferred_sex FROM PUBLIC, anon, authenticated;
+REVOKE TRUNCATE ON TABLE public.ar_phone_area_codes FROM PUBLIC, anon, authenticated;
+REVOKE TRUNCATE ON TABLE public.chatrace_client_configs FROM PUBLIC, anon, authenticated;
+REVOKE TRUNCATE ON TABLE public.chatrace_gerencias FROM PUBLIC, anon, authenticated;
+REVOKE TRUNCATE ON TABLE public.conversion_inbox FROM PUBLIC, anon, authenticated;
+REVOKE TRUNCATE ON TABLE public.conversion_log_lead_backfill_replays FROM PUBLIC, anon, authenticated;
+REVOKE TRUNCATE ON TABLE public.conversion_logs FROM PUBLIC, anon, authenticated;
+REVOKE TRUNCATE ON TABLE public.conversion_view_preferences FROM PUBLIC, anon, authenticated;
+REVOKE TRUNCATE ON TABLE public.conversions FROM PUBLIC, anon, authenticated;
+REVOKE TRUNCATE ON TABLE public.conversions_config FROM PUBLIC, anon, authenticated;
+REVOKE TRUNCATE ON TABLE public.conversions_pixel_configs FROM PUBLIC, anon, authenticated;
+REVOKE TRUNCATE ON TABLE public.gerencia_phone_availability_snapshots FROM PUBLIC, anon, authenticated;
+REVOKE TRUNCATE ON TABLE public.gerencia_phones FROM PUBLIC, anon, authenticated;
+REVOKE TRUNCATE ON TABLE public.gerencia_work_group_members FROM PUBLIC, anon, authenticated;
+REVOKE TRUNCATE ON TABLE public.gerencia_work_groups FROM PUBLIC, anon, authenticated;
+REVOKE TRUNCATE ON TABLE public.gerencias FROM PUBLIC, anon, authenticated;
+REVOKE TRUNCATE ON TABLE public.hidden_contacts FROM PUBLIC, anon, authenticated;
+REVOKE TRUNCATE ON TABLE public.hidden_conversion_inbox FROM PUBLIC, anon, authenticated;
+REVOKE TRUNCATE ON TABLE public.hidden_conversion_logs FROM PUBLIC, anon, authenticated;
+REVOKE TRUNCATE ON TABLE public.hidden_conversions FROM PUBLIC, anon, authenticated;
+REVOKE TRUNCATE ON TABLE public.landing_phone_availability_demands FROM PUBLIC, anon, authenticated;
+REVOKE TRUNCATE ON TABLE public.landing_phone_cache FROM PUBLIC, anon, authenticated;
+REVOKE TRUNCATE ON TABLE public.landings_gerencias FROM PUBLIC, anon, authenticated;
+REVOKE TRUNCATE ON TABLE public.notification_contact_alerts FROM PUBLIC, anon, authenticated;
+REVOKE TRUNCATE ON TABLE public.settings FROM PUBLIC, anon, authenticated;
+REVOKE TRUNCATE ON TABLE public.tracking_queue FROM PUBLIC, anon, authenticated;
+REVOKE TRUNCATE ON TABLE public.whatsapp_cloud_api_gerencias FROM PUBLIC, anon, authenticated;
+REVOKE TRUNCATE ON TABLE public.whatsapp_cloud_api_redirects FROM PUBLIC, anon, authenticated;
+REVOKE TRUNCATE ON TABLE public.whatsapp_cloud_api_thread_reads FROM PUBLIC, anon, authenticated;
