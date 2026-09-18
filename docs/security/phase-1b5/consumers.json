@@ -1,0 +1,2278 @@
+{
+  "phase": "1B.5",
+  "status": "blocked_by_unaccredited_consumer_contracts",
+  "implementation": false,
+  "baseCommit": "2aee0e927df7bd72b255c2d5996d405154ddcc22",
+  "classification": [
+    "authenticated_panel",
+    "internal_server",
+    "public_landing_server_intermediary",
+    "external_webhook_server",
+    "identity_or_contract_unaccredited"
+  ],
+  "repositories": [
+    {
+      "id": "builder",
+      "root": ".",
+      "head": "2aee0e927df7bd72b255c2d5996d405154ddcc22",
+      "initialStatus": "clean"
+    },
+    {
+      "id": "classic",
+      "root": "../landing-prueba-1",
+      "head": "3322b634a06504ae469a4faee0383148707bc9b5",
+      "initialStatus": "clean"
+    },
+    {
+      "id": "kommo",
+      "root": "../Otros/Intermediario-kommo",
+      "head": "03f339692cfc3274ee27b9ee367e6f2d90da1a42",
+      "initialStatus": "eight pre-existing untracked Supabase CLI metadata files; contents not read",
+      "preExistingUntracked": [
+        "supabase/.temp/cli-latest",
+        "supabase/.temp/gotrue-version",
+        "supabase/.temp/pooler-url",
+        "supabase/.temp/postgres-version",
+        "supabase/.temp/project-ref",
+        "supabase/.temp/rest-version",
+        "supabase/.temp/storage-migration",
+        "supabase/.temp/storage-version"
+      ]
+    },
+    {
+      "id": "chatrace",
+      "root": "../Otros/intermediario-chatrace",
+      "head": "c48e15e5abe42d14ccaed31a4bc5d9d38d5e7935",
+      "initialStatus": "clean"
+    },
+    {
+      "id": "internal-chat",
+      "root": "../internal-chat",
+      "head": "ab0da3482f471ab35a5c0db1af4b398602ac7543",
+      "initialStatus": "clean"
+    },
+    {
+      "id": "link-multiowner",
+      "root": "../link_ganamos_multiowner",
+      "head": "d012404192373387893604907e80463d60c9965f",
+      "initialStatus": "clean"
+    },
+    {
+      "id": "landing-sales",
+      "root": "../Otros/landing-venta-asistente",
+      "head": "a878a22682d008bdbcc4cffcbcd835cb3f002a5c",
+      "initialStatus": "clean"
+    }
+  ],
+  "emptyLocalDirectories": [
+    "../landing-autologuin",
+    "../historial-chats-chatrace-prod"
+  ],
+  "search": {
+    "method": "rg file/content searches followed by sanitized callsite reads and transitive producer/queue/receiver tracing.",
+    "scope": "Available local checkouts and versioned documentation; no claim of exhaustive deployed/remote integrations.",
+    "excluded": [
+      ".env contents",
+      "Supabase .temp contents",
+      ".git contents",
+      "node_modules",
+      ".next",
+      "dist",
+      "runtime logs or datasets"
+    ],
+    "productionCalls": false,
+    "remoteProjectDataQueries": false,
+    "credentialValuesRead": false
+  },
+  "receiver": {
+    "method": "POST; OPTIONS 200; other methods 405",
+    "identityToday": "name query parameter -> profiles.nombre; no authenticated sender or tenant authorization before privileged client.",
+    "gateway": "verify_jwt = false",
+    "privilegedUse": "SERVICE_ROLE_KEY client before payload processing; outer catch may also instantiate a privileged client and write logs.",
+    "payload": "Existing JSON action/event-name normalization and aliases. Internal retry flags remain part of current payload and must be sender-authorized without mutation.",
+    "response": "text/plain functional responses including success/duplicate 200, deferred 202 and current business errors; keep legitimate status/body unchanged.",
+    "evidence": [
+      {
+        "repository": "builder",
+        "file": "supabase/config.toml",
+        "lines": [
+          405,
+          406
+        ]
+      },
+      {
+        "repository": "builder",
+        "file": "supabase/functions/conversions/index.ts",
+        "lines": [
+          40,
+          44
+        ]
+      },
+      {
+        "repository": "builder",
+        "file": "supabase/functions/conversions/index.ts",
+        "lines": [
+          305,
+          322
+        ]
+      },
+      {
+        "repository": "builder",
+        "file": "supabase/functions/conversions/index.ts",
+        "lines": [
+          1873,
+          1877
+        ]
+      },
+      {
+        "repository": "builder",
+        "file": "supabase/functions/conversions/index.ts",
+        "lines": [
+          7713,
+          7755
+        ]
+      },
+      {
+        "repository": "builder",
+        "file": "supabase/functions/conversions/index.ts",
+        "lines": [
+          7792,
+          7825
+        ]
+      },
+      {
+        "repository": "builder",
+        "file": "supabase/functions/conversions/index.ts",
+        "lines": [
+          8010,
+          8040
+        ]
+      },
+      {
+        "repository": "builder",
+        "file": "supabase/functions/conversions/index.ts",
+        "lines": [
+          8110,
+          8136
+        ]
+      },
+      {
+        "repository": "builder",
+        "file": "supabase/functions/conversions/index.ts",
+        "lines": [
+          8180,
+          8204
+        ]
+      }
+    ]
+  },
+  "counts": {
+    "executablePaths": 12,
+    "documentedExternalChannels": 2,
+    "activeDeployedSenders": "not accredited",
+    "historicalAdditionalSendPaths": 2
+  },
+  "consumers": [
+    {
+      "id": "C01",
+      "kind": "executable",
+      "name": "Admin panel Contact test",
+      "classification": "authenticated_panel",
+      "runtime": "browser",
+      "session": {
+        "available": true,
+        "forwarded": false,
+        "evidence": [
+          {
+            "repository": "builder",
+            "file": "frontend/app/(panel)/admin/layout.tsx",
+            "lines": [
+              385,
+              409
+            ]
+          }
+        ]
+      },
+      "secretCustody": "Never in browser. Use a verified user JWT and server-side tenant/admin authorization.",
+      "currentRequest": {
+        "method": "POST",
+        "target": "NEXT_PUBLIC_SUPABASE_URL + /functions/v1/conversions?name=<selected profile name>",
+        "headers": {
+          "Content-Type": "application/json"
+        },
+        "body": {
+          "fields": [
+            "phone",
+            "landing_name"
+          ],
+          "note": "Existing Contact fixture; no action field. Fixture values intentionally omitted."
+        }
+      },
+      "expectedResponse": "Reads text; response.ok is success, otherwise reports status/text.",
+      "retryContract": "Direct test fetch; no queue at this callsite.",
+      "risk": "Global JWT enforcement without forwarding the session breaks the test. Client UI admin guard is not receiver authorization.",
+      "evidence": [
+        {
+          "repository": "builder",
+          "file": "frontend/app/(panel)/admin/tests/page.tsx",
+          "lines": [
+            259,
+            295
+          ]
+        }
+      ],
+      "proposedAuthentication": "Verified Supabase JWT plus protected profiles.role admin check for this existing admin test and authorized target selection; never user_metadata. No new normal-user action without an accredited consumer.",
+      "activityEvidence": "Callsite exists in inspected checkout; deployed version/activity not queried or certified.",
+      "localStatus": "current_code",
+      "deploymentStatus": "uncertain",
+      "selection": {
+        "tenant": "Selected profile name entered/selected in admin UI; no receiver proof currently.",
+        "action": "No action; receiver default Contact."
+      },
+      "projectsToCoordinate": [
+        "builder: Next admin test",
+        "builder: conversions"
+      ]
+    },
+    {
+      "id": "C02",
+      "kind": "executable",
+      "name": "Builder public landing through /api/track",
+      "classification": "public_landing_server_intermediary",
+      "runtime": "browser -> Next.js server -> Edge",
+      "session": {
+        "available": false,
+        "forwarded": false
+      },
+      "secretCustody": "Only Next.js server.",
+      "currentRequest": {
+        "method": "POST",
+        "target": "Browser sends {postUrl,payload} to /api/track; server forwards to postUrl after hostname validation.",
+        "headers": {
+          "Content-Type": "application/json"
+        },
+        "body": {
+          "event_name": "Contact",
+          "fieldsSource": {
+            "repository": "builder",
+            "file": "frontend/components/public-landing/PublicLandingRuntimeScript.tsx",
+            "lines": [
+              1197,
+              1249
+            ]
+          },
+          "note": "Existing contact, attribution, identifiers, form and assignment fields; server normalization already exists and must not change."
+        }
+      },
+      "expectedResponse": "Upstream sender accepts 2xx and retains response text. Proxy preserves existing success/duplicate JSON, queued 202 and failed 502/500. Browser delivery is best effort.",
+      "retryContract": "Upstream up to three attempts, delays 0/250/700 ms, timeout 4 seconds; transient failures can enter existing queue. Contact is marked sent before the existing 180 ms navigation delay.",
+      "risk": "Signing arbitrary browser postUrl/payload would create a signing oracle; hostname allowlist alone does not bind tenant, route or action.",
+      "evidence": [
+        {
+          "repository": "builder",
+          "file": "frontend/components/public-landing/PublicLandingRuntimeScript.tsx",
+          "lines": [
+            660,
+            673
+          ]
+        },
+        {
+          "repository": "builder",
+          "file": "frontend/components/public-landing/PublicLandingRuntimeScript.tsx",
+          "lines": [
+            1252,
+            1264
+          ]
+        },
+        {
+          "repository": "builder",
+          "file": "frontend/app/api/track/route.ts",
+          "lines": [
+            138,
+            249
+          ]
+        },
+        {
+          "repository": "builder",
+          "file": "frontend/app/api/track/route.ts",
+          "lines": [
+            24,
+            30
+          ]
+        },
+        {
+          "repository": "builder",
+          "file": "frontend/lib/tracking/upstream.ts",
+          "lines": [
+            25,
+            80
+          ]
+        },
+        {
+          "repository": "builder",
+          "file": "supabase/functions/builder-config/index.ts",
+          "lines": [
+            225,
+            243
+          ]
+        },
+        {
+          "repository": "builder",
+          "file": "frontend/lib/landing/landingsDb.ts",
+          "lines": [
+            177,
+            191
+          ]
+        }
+      ],
+      "proposedAuthentication": "Server HMAC after exact target and tenant/landing/action binding. Public browser remains without signing secrets.",
+      "activityEvidence": "Callsite exists in inspected checkout; deployed version/activity not queried or certified.",
+      "localStatus": "current_code",
+      "deploymentStatus": "uncertain",
+      "selection": {
+        "tenant": "Browser body landing_id/name and postUrl from public tracking config.",
+        "action": "Contact set by public runtime."
+      },
+      "projectsToCoordinate": [
+        "builder: Next tracking proxy/shared sender/retry",
+        "builder: conversions"
+      ]
+    },
+    {
+      "id": "C03",
+      "kind": "executable",
+      "name": "Builder tracking queue replay",
+      "classification": "internal_server",
+      "runtime": "Next.js server cron/queue",
+      "session": {
+        "available": false,
+        "forwarded": false
+      },
+      "secretCustody": "Server environment only.",
+      "currentRequest": {
+        "method": "POST",
+        "target": "Queued item.post_url",
+        "headers": {
+          "Content-Type": "application/json"
+        },
+        "body": {
+          "note": "Queued item.payload through the same upstream function; no auth added today."
+        }
+      },
+      "expectedResponse": "2xx marks delivered; failed delivery invokes existing scheduleTrackQueueRetry.",
+      "retryContract": "Two upstream attempts per claimed row; CAS claim and queue backoff unchanged.",
+      "risk": "The outer cron secret authenticates the retry route, not conversions. Stored destinations require provenance and tenant binding before signing.",
+      "evidence": [
+        {
+          "repository": "builder",
+          "file": "frontend/app/api/track/retry/route.ts",
+          "lines": [
+            10,
+            104
+          ]
+        },
+        {
+          "repository": "builder",
+          "file": "frontend/lib/tracking/queue.ts",
+          "lines": [
+            172,
+            198
+          ]
+        },
+        {
+          "repository": "builder",
+          "file": "frontend/lib/tracking/queue.ts",
+          "lines": [
+            223,
+            245
+          ]
+        },
+        {
+          "repository": "builder",
+          "file": "frontend/lib/tracking/upstream.ts",
+          "lines": [
+            25,
+            80
+          ]
+        },
+        {
+          "repository": "builder",
+          "file": "docs/security/phase-1a/functions.md",
+          "lines": [
+            201,
+            210
+          ]
+        }
+      ],
+      "proposedAuthentication": "Builder-scoped HMAC on each outbound attempt. Preserve payload and existing queue/dedupe semantics.",
+      "activityEvidence": "Callsite exists in inspected checkout; deployed version/activity not queried or certified.",
+      "localStatus": "current_code",
+      "deploymentStatus": "uncertain",
+      "selection": {
+        "tenant": "Stored post_url query and payload from public queue.",
+        "action": "Stored payload; source provenance must be checked."
+      },
+      "projectsToCoordinate": [
+        "builder: shared upstream/retry",
+        "builder: conversions"
+      ]
+    },
+    {
+      "id": "C04",
+      "kind": "executable",
+      "name": "Classic public landing through /api/track",
+      "classification": "public_landing_server_intermediary",
+      "runtime": "browser -> classic Next.js server -> Edge",
+      "session": {
+        "available": false,
+        "forwarded": false
+      },
+      "secretCustody": "Classic server only.",
+      "currentRequest": {
+        "method": "POST",
+        "target": "Browser sends {postUrl,payload} to classic /api/track; server uses TRACK_ALLOWED_HOSTS then forwards.",
+        "headers": {
+          "Content-Type": "application/json"
+        },
+        "body": {
+          "event_name": "Contact",
+          "fieldsSource": {
+            "repository": "classic",
+            "file": "components/WhatsAppButton.tsx",
+            "lines": [
+              927,
+              974
+            ]
+          },
+          "note": "Lead capture UI is still a Contact event; do not relabel it as LEAD."
+        }
+      },
+      "expectedResponse": "Same family of upstream 2xx, proxy JSON success/queue/error responses; browser uses best-effort delivery.",
+      "retryContract": "Three upstream attempts, same backoff/timeout family. Mark Contact sent and preserve the existing navigation delay.",
+      "risk": "Requires coordinated sibling rollout; source allows configurable public postUrl, whose active targets are not accredited.",
+      "evidence": [
+        {
+          "repository": "classic",
+          "file": "components/WhatsAppButton.tsx",
+          "lines": [
+            402,
+            422
+          ]
+        },
+        {
+          "repository": "classic",
+          "file": "components/WhatsAppButton.tsx",
+          "lines": [
+            978,
+            995
+          ]
+        },
+        {
+          "repository": "classic",
+          "file": "app/api/track/route.ts",
+          "lines": [
+            124,
+            237
+          ]
+        },
+        {
+          "repository": "classic",
+          "file": "lib/tracking/upstream.ts",
+          "lines": [
+            25,
+            81
+          ]
+        },
+        {
+          "repository": "classic",
+          "file": "README.md",
+          "lines": [
+            118,
+            170
+          ]
+        }
+      ],
+      "proposedAuthentication": "Classic-scoped server HMAC with exact target and tenant/action binding. No sibling edits in this task.",
+      "activityEvidence": "Callsite exists in inspected checkout; deployed version/activity not queried or certified.",
+      "localStatus": "current_code",
+      "deploymentStatus": "uncertain",
+      "selection": {
+        "tenant": "Browser config id/name and tracking.postUrl.",
+        "action": "Contact set by classic component."
+      },
+      "projectsToCoordinate": [
+        "classic: tracking proxy/shared sender/retry",
+        "builder: conversions"
+      ]
+    },
+    {
+      "id": "C05",
+      "kind": "executable",
+      "name": "Classic tracking queue replay",
+      "classification": "internal_server",
+      "runtime": "classic Next.js server cron/queue",
+      "session": {
+        "available": false,
+        "forwarded": false
+      },
+      "secretCustody": "Classic server only.",
+      "currentRequest": {
+        "method": "POST",
+        "target": "Queued item.post_url",
+        "headers": {
+          "Content-Type": "application/json"
+        },
+        "body": {
+          "note": "Queued item.payload passed to the shared classic upstream sender."
+        }
+      },
+      "expectedResponse": "2xx marks delivered; otherwise existing retry scheduling.",
+      "retryContract": "Two upstream attempts per claimed item; outer route checks retry secret/Bearer/body cron_secret.",
+      "risk": "Outer route authorization is not forwarded. Actual cron target/version is not verified by reading deployment values.",
+      "evidence": [
+        {
+          "repository": "classic",
+          "file": "app/api/track/retry/route.ts",
+          "lines": [
+            28,
+            104
+          ]
+        },
+        {
+          "repository": "classic",
+          "file": "lib/tracking/upstream.ts",
+          "lines": [
+            25,
+            81
+          ]
+        }
+      ],
+      "proposedAuthentication": "Classic-scoped HMAC per actual send, without storing long-lived signatures in queue rows.",
+      "activityEvidence": "Callsite exists in inspected checkout; deployed version/activity not queried or certified.",
+      "localStatus": "current_code",
+      "deploymentStatus": "uncertain",
+      "selection": {
+        "tenant": "Stored post_url query and payload from classic queue.",
+        "action": "Stored payload; historical provenance unverified."
+      },
+      "projectsToCoordinate": [
+        "classic: shared upstream/retry",
+        "builder: conversions"
+      ]
+    },
+    {
+      "id": "C06",
+      "kind": "executable",
+      "name": "Edge deferred LEAD retry",
+      "classification": "internal_server",
+      "runtime": "Deno Edge worker invoked by cron",
+      "session": {
+        "available": false,
+        "forwarded": false
+      },
+      "secretCustody": "Edge server environment.",
+      "currentRequest": {
+        "method": "POST",
+        "target": "SUPABASE_URL + /functions/v1/conversions?name=<resolved client>",
+        "headers": {
+          "Content-Type": "application/json"
+        },
+        "body": {
+          "note": "Existing payload_raw with existing event_time fallback and action LEAD.",
+          "internalFields": [
+            "__deferred_retry",
+            "__inbox_id"
+          ]
+        }
+      },
+      "expectedResponse": "Worker currently counts HTTP 200 through 399 as success; otherwise failed.",
+      "retryContract": "Existing worker claim/deferred scheduling and counters; must not change.",
+      "risk": "Outer cron_secret authorization does not protect outbound POST. Only this issuer may send its internal replay flags.",
+      "evidence": [
+        {
+          "repository": "builder",
+          "file": "supabase/functions/retry-failed-conversions/index.ts",
+          "lines": [
+            62,
+            104
+          ]
+        },
+        {
+          "repository": "builder",
+          "file": "supabase/functions/retry-failed-conversions/index.ts",
+          "lines": [
+            970,
+            1014
+          ]
+        },
+        {
+          "repository": "builder",
+          "file": "docs/security/phase-1a/functions.md",
+          "lines": [
+            189,
+            199
+          ]
+        }
+      ],
+      "proposedAuthentication": "Retry-worker-scoped HMAC including query and exact outbound bytes; nonce fresh each attempt.",
+      "activityEvidence": "Callsite exists in inspected checkout; deployed version/activity not queried or certified.",
+      "localStatus": "current_code",
+      "deploymentStatus": "uncertain",
+      "selection": {
+        "tenant": "Deferred inbox row client name/user context.",
+        "action": "Worker sets LEAD with internal replay flags."
+      },
+      "projectsToCoordinate": [
+        "builder: retry-failed-conversions",
+        "builder: conversions"
+      ]
+    },
+    {
+      "id": "C07",
+      "kind": "executable",
+      "name": "Edge deferred PURCHASE retry",
+      "classification": "internal_server",
+      "runtime": "Deno Edge worker invoked by cron",
+      "session": {
+        "available": false,
+        "forwarded": false
+      },
+      "secretCustody": "Edge server environment.",
+      "currentRequest": {
+        "method": "POST",
+        "target": "SUPABASE_URL + /functions/v1/conversions?name=<resolved client>",
+        "headers": {
+          "Content-Type": "application/json"
+        },
+        "body": {
+          "note": "Existing payload_raw with existing event_time fallback and action PURCHASE.",
+          "internalFields": [
+            "__deferred_retry",
+            "__inbox_id"
+          ]
+        }
+      },
+      "expectedResponse": "Worker currently counts HTTP 200 through 399 as success.",
+      "retryContract": "Existing deferred worker behavior unchanged.",
+      "risk": "JWT-only ingress would reject the current worker; authentication time must not replace event_time.",
+      "evidence": [
+        {
+          "repository": "builder",
+          "file": "supabase/functions/retry-failed-conversions/index.ts",
+          "lines": [
+            1054,
+            1098
+          ]
+        }
+      ],
+      "proposedAuthentication": "Same narrowly scoped retry-worker issuer, preserving Purchase fields and replay contract.",
+      "activityEvidence": "Callsite exists in inspected checkout; deployed version/activity not queried or certified.",
+      "localStatus": "current_code",
+      "deploymentStatus": "uncertain",
+      "selection": {
+        "tenant": "Deferred inbox row client name/user context.",
+        "action": "Worker sets PURCHASE with internal replay flags."
+      },
+      "projectsToCoordinate": [
+        "builder: retry-failed-conversions",
+        "builder: conversions"
+      ]
+    },
+    {
+      "id": "C08",
+      "kind": "executable",
+      "name": "Edge duplicate LEAD backfill",
+      "classification": "internal_server",
+      "runtime": "Deno Edge worker",
+      "session": {
+        "available": false,
+        "forwarded": false
+      },
+      "secretCustody": "Edge server environment.",
+      "currentRequest": {
+        "method": "POST",
+        "target": "SUPABASE_URL + /functions/v1/conversions?name=<resolved client>",
+        "headers": {
+          "Content-Type": "application/json"
+        },
+        "body": {
+          "note": "Existing reconstructed LEAD body and event_time fallback.",
+          "internalFields": [
+            "__backfill_duplicate_action_event_id",
+            "__source_log_id"
+          ]
+        }
+      },
+      "expectedResponse": "Reads response text; HTTP 200 through 399 follows the existing success/mark path.",
+      "retryContract": "Existing backfill rules, limits, source log identity and dedupe must remain unchanged.",
+      "risk": "Public callers can currently supply internal flags; future authorization must bind these flags to the internal worker.",
+      "evidence": [
+        {
+          "repository": "builder",
+          "file": "supabase/functions/retry-failed-conversions/index.ts",
+          "lines": [
+            1315,
+            1360
+          ]
+        }
+      ],
+      "proposedAuthentication": "Retry-worker-scoped HMAC and explicit permission for backfill flags.",
+      "activityEvidence": "Callsite exists in inspected checkout; deployed version/activity not queried or certified.",
+      "localStatus": "current_code",
+      "deploymentStatus": "uncertain",
+      "selection": {
+        "tenant": "Selected historical log/client context.",
+        "action": "Worker sets LEAD with backfill flags."
+      },
+      "projectsToCoordinate": [
+        "builder: retry-failed-conversions",
+        "builder: conversions"
+      ]
+    },
+    {
+      "id": "C09",
+      "kind": "executable",
+      "name": "WhatsApp Cloud redirect first-click Contact",
+      "classification": "internal_server",
+      "runtime": "Deno Edge redirect endpoint",
+      "session": {
+        "available": false,
+        "forwarded": false
+      },
+      "secretCustody": "Already server-only; SERVICE_ROLE_KEY must not become a distributed sender credential.",
+      "currentRequest": {
+        "method": "POST",
+        "target": "SUPABASE_URL + /functions/v1/conversions?name=<profile-derived name>",
+        "headers": {
+          "Content-Type": "application/json",
+          "Authorization": "Bearer <server SERVICE_ROLE_KEY reference; value not read>"
+        },
+        "body": {
+          "event_name": "Contact",
+          "fieldsSource": {
+            "repository": "builder",
+            "file": "supabase/functions/whatsapp-cloud-redirect/index.ts",
+            "lines": [
+              142,
+              186
+            ]
+          },
+          "note": "Existing redirect-derived event identity, attribution, assignment and currency."
+        }
+      },
+      "expectedResponse": "Reads response text; response.ok accepted, otherwise existing logging/fallback path. Outer endpoint then preserves its WhatsApp redirect.",
+      "retryContract": "Runs ensureInternalContactOnRedirect only on clickRow.first_click; do not change this timing or dedupe.",
+      "risk": "Receiver ignores the current Bearer header. Signature must not change redirect/token/RPC contracts.",
+      "evidence": [
+        {
+          "repository": "builder",
+          "file": "supabase/functions/whatsapp-cloud-redirect/index.ts",
+          "lines": [
+            176,
+            220
+          ]
+        },
+        {
+          "repository": "builder",
+          "file": "supabase/functions/whatsapp-cloud-redirect/index.ts",
+          "lines": [
+            247,
+            305
+          ]
+        }
+      ],
+      "proposedAuthentication": "WhatsApp-redirect-scoped HMAC, tenant from trusted redirect record.",
+      "activityEvidence": "Callsite exists in inspected checkout; deployed version/activity not queried or certified.",
+      "localStatus": "current_code",
+      "deploymentStatus": "uncertain",
+      "selection": {
+        "tenant": "Trusted redirect row -> profile name.",
+        "action": "First-click Contact in current redirect source."
+      },
+      "projectsToCoordinate": [
+        "builder: deployed WhatsApp sender version",
+        "builder: conversions"
+      ]
+    },
+    {
+      "id": "C10",
+      "kind": "executable",
+      "name": "Kommo queued LEAD/PURCHASE",
+      "classification": "external_webhook_server",
+      "runtime": "external Kommo webhook -> sibling Next.js queue/worker -> Edge",
+      "session": {
+        "available": false,
+        "forwarded": false
+      },
+      "secretCustody": "Sibling server can hold credentials, but provider origin is not authenticated by current route.",
+      "currentRequest": {
+        "method": "POST",
+        "target": "CONVERSIONS_BASE_URL + ?name=<webhook query override or configured name>",
+        "headers": {
+          "Content-Type": "application/json"
+        },
+        "body": {
+          "leadFields": [
+            "action",
+            "action_event_id",
+            "promo_code",
+            "phone",
+            "email"
+          ],
+          "purchaseFields": [
+            "action",
+            "action_event_id",
+            "phone",
+            "amount",
+            "fn",
+            "ln",
+            "email",
+            "operationid_or_coelsaid",
+            "promo_code"
+          ],
+          "note": "Existing processor controls optional fields; values omitted."
+        }
+      },
+      "expectedResponse": "Client reads text and parses JSON if possible; 2xx succeeds, worker records existing processed/error result.",
+      "retryContract": "Configured retry count/backoff; 429/5xx and eligible network errors retry. Preserve queue, event identity and counters.",
+      "risk": "Webhook POST accepts name/constructor_name and enqueues without validating KOMMO_WEBHOOK_SECRET. Outbound signing alone would authorize unverified inputs.",
+      "evidence": [
+        {
+          "repository": "kommo",
+          "file": "lib/conversions-client.ts",
+          "lines": [
+            1,
+            79
+          ]
+        },
+        {
+          "repository": "kommo",
+          "file": "lib/kommo-processor.ts",
+          "lines": [
+            244,
+            284
+          ]
+        },
+        {
+          "repository": "kommo",
+          "file": "lib/kommo-processor.ts",
+          "lines": [
+            354,
+            367
+          ]
+        },
+        {
+          "repository": "kommo",
+          "file": "app/api/kommo/webhook/route.ts",
+          "lines": [
+            9,
+            95
+          ]
+        },
+        {
+          "repository": "kommo",
+          "file": "app/api/jobs/process-queue/route.ts",
+          "lines": [
+            61,
+            89
+          ]
+        },
+        {
+          "repository": "kommo",
+          "file": "lib/env.ts",
+          "lines": [
+            1,
+            46
+          ]
+        },
+        {
+          "repository": "kommo",
+          "file": "README.md",
+          "lines": [
+            231,
+            233
+          ]
+        }
+      ],
+      "proposedAuthentication": "First accredit a supported origin authentication and trusted tenant mapping; then Kommo-scoped outbound HMAC. Provider signature support remains unknown.",
+      "activityEvidence": "Callsite exists in inspected checkout; deployed version/activity not queried or certified.",
+      "localStatus": "current_code",
+      "deploymentStatus": "uncertain",
+      "selection": {
+        "tenant": "Webhook query name/constructor_name -> queue conversions_name; no verified binding to origin. clientScope is separate.",
+        "action": "Existing processor chooses LEAD/PURCHASE from incoming event; preserve rules."
+      },
+      "projectsToCoordinate": [
+        "kommo: webhook origin/tenant validation + shared sender",
+        "builder: conversions"
+      ]
+    },
+    {
+      "id": "C11",
+      "kind": "executable",
+      "name": "Kommo optional received probe",
+      "classification": "identity_or_contract_unaccredited",
+      "runtime": "sibling Next.js server",
+      "session": {
+        "available": false,
+        "forwarded": false
+      },
+      "secretCustody": "Server only.",
+      "currentRequest": {
+        "method": "POST",
+        "target": "CONVERSIONS_BASE_URL exactly; no name appended here",
+        "headers": {
+          "Content-Type": "application/json"
+        },
+        "body": {
+          "fields": [
+            "action",
+            "source",
+            "ok",
+            "ts"
+          ],
+          "action": "TEST_EVENT_RECEIVED"
+        }
+      },
+      "expectedResponse": "Response ignored and errors swallowed; not an accredited supported business event.",
+      "retryContract": "Only runs when ENABLE_WEBHOOK_TEST_EVENTS is enabled; actual deployed value not read.",
+      "risk": "Default base has no name; these actions are not supported by the receiver branch. Must determine whether this conditional caller is active/legitimate before rollout.",
+      "evidence": [
+        {
+          "repository": "kommo",
+          "file": "app/api/kommo/webhook/route.ts",
+          "lines": [
+            19,
+            35
+          ]
+        },
+        {
+          "repository": "kommo",
+          "file": "app/api/kommo/webhook/route.ts",
+          "lines": [
+            70,
+            72
+          ]
+        },
+        {
+          "repository": "kommo",
+          "file": "lib/env.ts",
+          "lines": [
+            1,
+            26
+          ]
+        }
+      ],
+      "proposedAuthentication": "Pending contract decision; do not silently convert/drop/authorize as Contact.",
+      "activityEvidence": "Callsite exists in inspected checkout; deployed version/activity not queried or certified.",
+      "localStatus": "current_conditional_code",
+      "deploymentStatus": "uncertain",
+      "selection": {
+        "tenant": "No query name appended; actual configurable base not read.",
+        "action": "Fixed TEST_EVENT_RECEIVED when enabled."
+      },
+      "projectsToCoordinate": [
+        "kommo: probe configuration/contract confirmation",
+        "builder: conversions only if a legitimate supported contract is established"
+      ]
+    },
+    {
+      "id": "C12",
+      "kind": "executable",
+      "name": "Kommo optional result probe",
+      "classification": "identity_or_contract_unaccredited",
+      "runtime": "sibling Next.js queue worker",
+      "session": {
+        "available": false,
+        "forwarded": false
+      },
+      "secretCustody": "Server only.",
+      "currentRequest": {
+        "method": "POST",
+        "target": "CONVERSIONS_BASE_URL exactly; no name appended here",
+        "headers": {
+          "Content-Type": "application/json"
+        },
+        "body": {
+          "fields": [
+            "action",
+            "source",
+            "event_id",
+            "status",
+            "detail",
+            "processed_as",
+            "input_type",
+            "input_text",
+            "input_attachment",
+            "ts"
+          ],
+          "action": "TEST_EVENT_RESULT",
+          "note": "Existing preview is spread into the object; input_text or input_attachment depend on the source event. No sample values copied."
+        }
+      },
+      "expectedResponse": "Response ignored and errors swallowed.",
+      "retryContract": "Controlled by the same optional flag; no deployment value read.",
+      "risk": "Same unaccredited probe contract as C11; must not fabricate a business response to make authentication tests pass.",
+      "evidence": [
+        {
+          "repository": "kommo",
+          "file": "app/api/jobs/process-queue/route.ts",
+          "lines": [
+            12,
+            59
+          ]
+        },
+        {
+          "repository": "kommo",
+          "file": "app/api/jobs/process-queue/route.ts",
+          "lines": [
+            73,
+            78
+          ]
+        }
+      ],
+      "proposedAuthentication": "Pending probe activity and supported contract confirmation.",
+      "activityEvidence": "Callsite exists in inspected checkout; deployed version/activity not queried or certified.",
+      "localStatus": "current_conditional_code",
+      "deploymentStatus": "uncertain",
+      "selection": {
+        "tenant": "No query name appended; actual configurable base not read.",
+        "action": "Fixed TEST_EVENT_RESULT when enabled."
+      },
+      "projectsToCoordinate": [
+        "kommo: probe configuration/contract confirmation",
+        "builder: conversions only if a legitimate supported contract is established"
+      ]
+    },
+    {
+      "id": "C13",
+      "kind": "documented_external_channel",
+      "name": "Chatrace button External Request Contact",
+      "classification": "external_webhook_server",
+      "runtime": "external automation service; active flow not versioned locally",
+      "session": {
+        "available": false,
+        "forwarded": false
+      },
+      "secretCustody": "Unaccredited: need supported secret storage/signing or authenticated adapter capability, without obtaining secret values.",
+      "currentRequest": {
+        "method": "POST",
+        "target": "UI-generated conversions URL with client name",
+        "headers": {
+          "Content-Type": "application/json"
+        },
+        "body": {
+          "event_name": "Contact",
+          "fields": [
+            "event_name",
+            "meta_pixel_id",
+            "event_id",
+            "external_id",
+            "email",
+            "phone",
+            "test_event_code",
+            "telefono_asignado",
+            "promo_code",
+            "ctwa_clid",
+            "source_platform",
+            "device_type",
+            "timestamp",
+            "event_time"
+          ]
+        }
+      },
+      "expectedResponse": "Not specified by the versioned instruction/template; active response parser and retries unknown.",
+      "retryContract": "Documented send occurs in the WhatsApp button External Request, after a separate intermediary call prepares link/assignment data.",
+      "risk": "Cannot assume external platform can generate this HMAC protocol. Moving Contact to the earlier intermediary call changes event timing and may duplicate events.",
+      "evidence": [
+        {
+          "repository": "builder",
+          "file": "frontend/components/integraciones/IntegracionesMetaCapi.tsx",
+          "lines": [
+            63,
+            78
+          ]
+        },
+        {
+          "repository": "builder",
+          "file": "frontend/components/integraciones/IntegracionesMetaCapi.tsx",
+          "lines": [
+            254,
+            260
+          ]
+        },
+        {
+          "repository": "builder",
+          "file": "frontend/components/integraciones/IntegracionesMetaCapi.tsx",
+          "lines": [
+            1336,
+            1392
+          ]
+        },
+        {
+          "repository": "chatrace",
+          "file": "app/api/intermediario-chatrace/route.ts",
+          "lines": [
+            307,
+            374
+          ]
+        },
+        {
+          "repository": "chatrace",
+          "file": "README.md",
+          "lines": [
+            11,
+            19
+          ]
+        }
+      ],
+      "proposedAuthentication": "Pending sanitized active-flow contract and supported origin auth. Authenticated adapter is conditional, not an assumed solution.",
+      "activityEvidence": "Documentation proves an intended integration channel, not an inventory of active senders.",
+      "localStatus": "documented_contract_only",
+      "deploymentStatus": "uncertain",
+      "selection": {
+        "tenant": "UI-generated endpoint name copied into external flow; active mapping unknown.",
+        "action": "Documented Contact in button External Request."
+      },
+      "projectsToCoordinate": [
+        "external Chatrace published flow",
+        "chatrace intermediary only if authenticated adapter is chosen",
+        "builder: conversions"
+      ]
+    },
+    {
+      "id": "C14",
+      "kind": "documented_external_channel",
+      "name": "Other systems instructed to copy the conversions endpoint",
+      "classification": "identity_or_contract_unaccredited",
+      "runtime": "not enumerated in local repository",
+      "session": {
+        "available": "unknown",
+        "forwarded": "unknown"
+      },
+      "secretCustody": "Unknown per external system.",
+      "currentRequest": {
+        "method": "POST",
+        "target": "Copied conversions URL with profile name",
+        "headers": "Not specified by the endpoint-copy instruction.",
+        "body": {
+          "note": "Receiver supports Contact/Lead/Purchase/CompleteRegistration; actual active external payload/response contracts not enumerated."
+        }
+      },
+      "expectedResponse": "Unknown; requires a sanitized integration registry/contract, not production event data.",
+      "retryContract": "Unknown.",
+      "risk": "Cannot prove that all active issuers are migrated or even identified. No evidence of an active CompleteRegistration sender was found.",
+      "evidence": [
+        {
+          "repository": "builder",
+          "file": "frontend/components/conversiones/ConversionConfigurationPanel.tsx",
+          "lines": [
+            40,
+            70
+          ]
+        },
+        {
+          "repository": "builder",
+          "file": "frontend/components/integraciones/IntegracionesMetaCapi.tsx",
+          "lines": [
+            1053,
+            1069
+          ]
+        },
+        {
+          "repository": "builder",
+          "file": "docs/whatsapp-cloud-api.md",
+          "lines": [
+            300,
+            304
+          ]
+        }
+      ],
+      "proposedAuthentication": "Deny unknown issuers in final design, but do not implement cutoff while legitimate census remains incomplete.",
+      "activityEvidence": "Documentation proves an intended integration channel, not an inventory of active senders.",
+      "localStatus": "documented_contract_only",
+      "deploymentStatus": "uncertain",
+      "selection": {
+        "tenant": "Unknown per copied endpoint/automation.",
+        "action": "Unknown; includes documented downstream WhatsApp bot LEAD/PURCHASE and possible CompleteRegistration."
+      },
+      "projectsToCoordinate": [
+        "unidentified external projects pending census",
+        "builder: conversions"
+      ]
+    }
+  ],
+  "relatedButNotIngress": [
+    {
+      "name": "Chatrace intermediary",
+      "finding": "Fetches landing-phone and prepares link/promo/identifiers; does not itself POST Contact to conversions.",
+      "evidence": [
+        {
+          "repository": "chatrace",
+          "file": "app/api/intermediario-chatrace/route.ts",
+          "lines": [
+            235,
+            260
+          ]
+        },
+        {
+          "repository": "chatrace",
+          "file": "app/api/intermediario-chatrace/route.ts",
+          "lines": [
+            307,
+            374
+          ]
+        }
+      ]
+    },
+    {
+      "name": "internal-chat / Atrio",
+      "finding": "Receives the public landing redirect after Contact; no direct conversions POST found in inspected source.",
+      "evidence": [
+        {
+          "repository": "internal-chat",
+          "file": "README.md",
+          "lines": [
+            149,
+            170
+          ]
+        }
+      ]
+    },
+    {
+      "name": "link_ganamos_multiowner and landing-venta-asistente",
+      "finding": "No conversions/postUrl outbound sender found by scoped source search; no deployed absence claim."
+    },
+    {
+      "name": "Journey start / table consumers / conversions-test / direct Meta send",
+      "finding": "SQL RPC/table access, separate test endpoint or downstream Meta API; not this HTTP ingress. No modifications authorized or made.",
+      "evidence": [
+        {
+          "repository": "builder",
+          "file": "frontend/app/api/journey-start/route.ts",
+          "lines": [
+            80,
+            102
+          ]
+        },
+        {
+          "repository": "builder",
+          "file": "supabase/functions/retry-failed-conversions/index.ts",
+          "lines": [
+            840,
+            855
+          ]
+        },
+        {
+          "repository": "builder",
+          "file": "supabase/functions/retry-failed-conversions/index.ts",
+          "lines": [
+            1835,
+            1848
+          ]
+        }
+      ]
+    }
+  ],
+  "cronEvidence": "Phase 1A documents postgres tracking-retry-every-5m and retry-failed-conversions jobs. Their outbound route/worker paths are covered; current production schedules, target settings and credential values were not queried.",
+  "gate": {
+    "passed": false,
+    "reasons": [
+      "External active sender census incomplete, including Chatrace response/auth/retry contract.",
+      "Kommo webhook origin and tenant selection are not authenticated in current sibling source.",
+      "Public proxies and queued post_url need trusted tenant/action/target binding before signature issuance.",
+      "Classic/sibling deployment coordination, optional probes and possible CompleteRegistration consumers remain unaccredited.",
+      "Historical Cloud worker Contact and third Kommo probe require deployed-version confirmation; local references are not deployment evidence."
+    ]
+  },
+  "sourceFiles": [
+    {
+      "repository": "builder",
+      "file": ".github/workflows/encoding-check.yml",
+      "sha256": "529607368d8f134063c04c924d301ad5baaf0f0ef451009c490a6f9e6b77c701",
+      "lineCount": 30
+    },
+    {
+      "repository": "builder",
+      "file": "docs/security/phase-1a/functions.md",
+      "sha256": "33e3f7eb02a74109460bc46d34f8031fca365dc9526a8fbc8c06698aeec11a40",
+      "lineCount": 1084
+    },
+    {
+      "repository": "builder",
+      "file": "docs/whatsapp-cloud-api.md",
+      "sha256": "45a4efeaf1a667ac5422b028e00b4347e84fa6c0173b76d3dab68f4395f26e6c",
+      "lineCount": 391
+    },
+    {
+      "repository": "builder",
+      "file": "frontend/app/(panel)/admin/layout.tsx",
+      "sha256": "be0cb7bd0de292127243ce344a20b35b24f52c9e76d0094c51910ffacc943cff",
+      "lineCount": 813
+    },
+    {
+      "repository": "builder",
+      "file": "frontend/app/(panel)/admin/tests/page.tsx",
+      "sha256": "68c3898af7e67bb5f6e92180de3713f97cfaba6d7fb8ba249235e5ab9dc13a9e",
+      "lineCount": 523
+    },
+    {
+      "repository": "builder",
+      "file": "frontend/app/api/journey-start/route.ts",
+      "sha256": "83ceded0b955a3511ff4155e721b9a5e0538bc54a86416425021a9bc290cc515",
+      "lineCount": 124
+    },
+    {
+      "repository": "builder",
+      "file": "frontend/app/api/track/retry/route.ts",
+      "sha256": "f0458c8a7baa627f9bfe3cfc17ec4c6be9a7da9ece7bfbfcf6e51d971c56cb11",
+      "lineCount": 122
+    },
+    {
+      "repository": "builder",
+      "file": "frontend/app/api/track/route.ts",
+      "sha256": "14d2ccd6aa4e9fed92b1c650dc8ee92b8db7d4ba3c823a0834f86242fd7f8b80",
+      "lineCount": 249
+    },
+    {
+      "repository": "builder",
+      "file": "frontend/components/conversiones/ConversionConfigurationPanel.tsx",
+      "sha256": "15685b999de600d4658914bee24eb4bbac77d6633691bc8fe78b5443aa08743c",
+      "lineCount": 178
+    },
+    {
+      "repository": "builder",
+      "file": "frontend/components/integraciones/IntegracionesMetaCapi.tsx",
+      "sha256": "0a5a32d67fe85ee6ae9296956e8b9f9f86caf264246ee677223e0ff442283e38",
+      "lineCount": 2320
+    },
+    {
+      "repository": "builder",
+      "file": "frontend/components/public-landing/PublicLandingRuntimeScript.tsx",
+      "sha256": "2c325d45ec87bdbe78c49bd0a7b0f87d56dd6144743b3c2a2b5ecbac7b29e9ad",
+      "lineCount": 1533
+    },
+    {
+      "repository": "builder",
+      "file": "frontend/lib/landing/landingsDb.ts",
+      "sha256": "c703d87cb7cdb9c24697737a26d301fd7e3b0a85593dc348be5631d6e7116d2a",
+      "lineCount": 304
+    },
+    {
+      "repository": "builder",
+      "file": "frontend/lib/tracking/queue.ts",
+      "sha256": "1eef114d6754cf735726d7ceaab1a59996181f640dca9bf456032692fb9be6b8",
+      "lineCount": 245
+    },
+    {
+      "repository": "builder",
+      "file": "frontend/lib/tracking/upstream.ts",
+      "sha256": "b962a341fbec29bb54d68fb52270a609352c0f51f9da804385b0aa5ac48bd49a",
+      "lineCount": 80
+    },
+    {
+      "repository": "builder",
+      "file": "supabase/config.toml",
+      "sha256": "38331a3ba144f481dde5859ca2e89331a09e14bafa9f0a767cce375b80f462a6",
+      "lineCount": 463
+    },
+    {
+      "repository": "builder",
+      "file": "supabase/functions/builder-config/index.ts",
+      "sha256": "181e7f5581d16d6f33d8eb14e1dfeac77a31a3896aaf0952a63b79198c8fbb78",
+      "lineCount": 524
+    },
+    {
+      "repository": "builder",
+      "file": "supabase/functions/conversions/config.toml",
+      "sha256": "84664a980c149d36bd8205ba9d4209bad5572f2d26f6e97a9d25931883e31b6d",
+      "lineCount": 2
+    },
+    {
+      "repository": "builder",
+      "file": "supabase/functions/conversions/index.ts",
+      "sha256": "b56628cc42de95d44ea0f2cdf9078c3550c0efec354f11a5b6af1a45defc2295",
+      "lineCount": 8205
+    },
+    {
+      "repository": "builder",
+      "file": "supabase/functions/retry-failed-conversions/index.ts",
+      "sha256": "3778c44cd8578013fc1aa6e44a457f0f6a15156fe67532316f0040b49810d8a9",
+      "lineCount": 2092
+    },
+    {
+      "repository": "builder",
+      "file": "supabase/functions/whatsapp-cloud-redirect/index.ts",
+      "sha256": "3ae6551aea4c0229725e48589a7b9e86a067b11ad500836b23e7b5a2b3389b09",
+      "lineCount": 311
+    },
+    {
+      "repository": "builder",
+      "file": "supabase/functions/whatsapp-cloud-webhook/index.ts",
+      "sha256": "0fbd3e06e42fdb6328382d4222944f66e6bd9171cd7f30b39503b8c289fb657c",
+      "lineCount": 497
+    },
+    {
+      "repository": "builder",
+      "file": "supabase/functions/whatsapp-cloud-worker/index.ts",
+      "sha256": "39a335b596c049dc10bb3e6c311f08c9a999c4fae6b16c60739f6362504245d7",
+      "lineCount": 1066
+    },
+    {
+      "repository": "chatrace",
+      "file": "app/api/intermediario-chatrace/route.ts",
+      "sha256": "7ac37f253c5af3abe701d6d0e7813bae5bc9b22839d545e1c37e77bdb45a00b8",
+      "lineCount": 374
+    },
+    {
+      "repository": "chatrace",
+      "file": "README.md",
+      "sha256": "c1ffd22b1a281372578b14e7931e1d030539137d760e10bdf836e7245d38cd42",
+      "lineCount": 320
+    },
+    {
+      "repository": "chatrace",
+      "file": "vercel.json",
+      "sha256": "b702e471e36622fed438fc1121e92cf9317ea21cb0fbf5324c4c7c6fa1016cbd",
+      "lineCount": 4
+    },
+    {
+      "repository": "classic",
+      "file": "app/api/track/retry/route.ts",
+      "sha256": "4cbac3702be8c707df88d48fc45d0fa5379301df6ec768edf683d578a9fe9173",
+      "lineCount": 111
+    },
+    {
+      "repository": "classic",
+      "file": "app/api/track/route.ts",
+      "sha256": "8771111fe74c2aa36d53a58a3e696b2fd07d6ca38e4cb85d45d1cdbaba7a25fc",
+      "lineCount": 237
+    },
+    {
+      "repository": "classic",
+      "file": "components/WhatsAppButton.tsx",
+      "sha256": "ab3cc06213d6738a9b55e92fd74e57ee3ce4447874c71df6d90eb96489ec2e86",
+      "lineCount": 1255
+    },
+    {
+      "repository": "classic",
+      "file": "lib/tracking/upstream.ts",
+      "sha256": "1de88c4ffa923faee158f7ee31d850db417e6690cfdb046d889c0b2ccc1adad8",
+      "lineCount": 81
+    },
+    {
+      "repository": "classic",
+      "file": "README.md",
+      "sha256": "3d117dfcbb882f9199fb7b86a063754db82a78d620b11a94c1391e5c0901f88f",
+      "lineCount": 222
+    },
+    {
+      "repository": "internal-chat",
+      "file": "README.md",
+      "sha256": "bedab97a4185eb175905c7c5e0644a874446bd19e667d688516b38bb45d5cd15",
+      "lineCount": 300
+    },
+    {
+      "repository": "kommo",
+      "file": "app/api/jobs/process-queue/route.ts",
+      "sha256": "15e18e92356468e600ccceca2631b8be3a105b96a5b463c76dfce0df1a3f17a1",
+      "lineCount": 118
+    },
+    {
+      "repository": "kommo",
+      "file": "app/api/jobs/reconcile-kommo/route.ts",
+      "sha256": "c76fa5c4826265dd22b79ca318c479a7de9e317cfaa621869be416429df297d0",
+      "lineCount": 66
+    },
+    {
+      "repository": "kommo",
+      "file": "app/api/kommo/webhook/route.ts",
+      "sha256": "ff381b7906a403ed172624b57a55c8d8cc2bf18cdf4a98f19135505e6388fc69",
+      "lineCount": 95
+    },
+    {
+      "repository": "kommo",
+      "file": "lib/client-config.ts",
+      "sha256": "bd6560b567122b729152a88b716499364a7a347922c5e204aaa3ac527b45032d",
+      "lineCount": 102
+    },
+    {
+      "repository": "kommo",
+      "file": "lib/conversions-client.ts",
+      "sha256": "ef994427c8b29d563f5d1d0380e9355c86c2532d8e7acb5a371e89e8bd308e7f",
+      "lineCount": 102
+    },
+    {
+      "repository": "kommo",
+      "file": "lib/env.ts",
+      "sha256": "7b8bfc2920a73368e62b97d037d1d2a62608193b0b921f54e4be3b57ee59de8f",
+      "lineCount": 53
+    },
+    {
+      "repository": "kommo",
+      "file": "lib/extractors.ts",
+      "sha256": "557e49ef06c763b42ff919f7495164dcb6859c8a334c3639b5919269937dbda9",
+      "lineCount": 222
+    },
+    {
+      "repository": "kommo",
+      "file": "lib/job-auth.ts",
+      "sha256": "fbee87cd4c020ccf4ba1a2c429471b0b07abab38c27e3a781ea37280f3fbe9d5",
+      "lineCount": 18
+    },
+    {
+      "repository": "kommo",
+      "file": "lib/kommo-client.ts",
+      "sha256": "7bd8cdc9dc8eb06fd0c330ca443eb62376f8d88c8a7e1f635f010d45d53eae0f",
+      "lineCount": 114
+    },
+    {
+      "repository": "kommo",
+      "file": "lib/kommo-parser.ts",
+      "sha256": "51cff39da10f9eb05d4db7b92b03a2d3925daa9c45d33de8b8743e17ab9c7fea",
+      "lineCount": 132
+    },
+    {
+      "repository": "kommo",
+      "file": "lib/kommo-processor.ts",
+      "sha256": "c9c1720833e8bf45200d56467b386b9f920a9bba00a32aeb6893417a125d6492",
+      "lineCount": 424
+    },
+    {
+      "repository": "kommo",
+      "file": "lib/queue.ts",
+      "sha256": "511a6be3da7d67ab7d24eac17f0e50fc4b6187968faa88550717255768b2936e",
+      "lineCount": 78
+    },
+    {
+      "repository": "kommo",
+      "file": "README.md",
+      "sha256": "f90a56d1cd482037b865dedb49b217b1a562871073a96f4db2fc15695fd25d45",
+      "lineCount": 553
+    },
+    {
+      "repository": "kommo",
+      "file": "vercel.json",
+      "sha256": "09ccb233849ac5b1ab2ea69fe8021fcfa6135742e6e9bd608f3727d32efbc40b",
+      "lineCount": 4
+    },
+    {
+      "repository": "landing-sales",
+      "file": "vercel.json",
+      "sha256": "1b6abe4bd70a4c24e8ee72ad4e414394ba8d88b5f242ee8c4f03e7f7759924ba",
+      "lineCount": 29
+    },
+    {
+      "repository": "link-multiowner",
+      "file": "vercel.json",
+      "sha256": "e9c7636ea9b6ea13a09f7fbc717ba29444940720fbf56ae07e3cbe83a7be2a7c",
+      "lineCount": 17
+    }
+  ],
+  "followup": {
+    "investigationPass": 2,
+    "discovery": {
+      "repositories": [
+        "internal-chat",
+        "landing-builder",
+        "landing-prueba-1",
+        "link_ganamos_multiowner",
+        "Otros/intermediario-chatrace",
+        "Otros/Intermediario-kommo",
+        "Otros/landing-venta-asistente"
+      ],
+      "emptyDirectories": [
+        "landing-autologuin",
+        "historial-chats-chatrace-prod"
+      ],
+      "unreadSensitiveFiles": "Environment files, cron-secrets.txt, credential/runtime logs and Supabase CLI .temp values were not opened.",
+      "method": "Recursive directory metadata across CURSOR (excluding dependency/generated internals and symlinks); rg current-source searches; local Git ref-tip search plus targeted history. No fetch or remote deployment query.",
+      "limits": "Seven repositories found; no new current HTTP sender callsite. Does not prove absence of off-machine integrations, unreachable commits, or old deployed copies.",
+      "localRefTipsSearched": {
+        "builder": 11,
+        "classic": 6,
+        "kommo": 1,
+        "chatrace": 1,
+        "internal-chat": 1,
+        "link-multiowner": 2,
+        "landing-sales": 2
+      },
+      "refTipsTotal": 24
+    },
+    "manifests": {
+      "evidence": [
+        {
+          "repository": "kommo",
+          "file": "vercel.json",
+          "lines": [
+            1,
+            4
+          ]
+        },
+        {
+          "repository": "chatrace",
+          "file": "vercel.json",
+          "lines": [
+            1,
+            4
+          ]
+        },
+        {
+          "repository": "link-multiowner",
+          "file": "vercel.json",
+          "lines": [
+            1,
+            17
+          ]
+        },
+        {
+          "repository": "landing-sales",
+          "file": "vercel.json",
+          "lines": [
+            1,
+            29
+          ]
+        },
+        {
+          "repository": "builder",
+          "file": ".github/workflows/encoding-check.yml",
+          "lines": [
+            1,
+            30
+          ]
+        },
+        {
+          "repository": "builder",
+          "file": "supabase/functions/conversions/config.toml",
+          "lines": [
+            1,
+            2
+          ]
+        }
+      ],
+      "conclusions": [
+        "Kommo/Chatrace manifests select Next.js only; no deployed revision or cron definition.",
+        "Constructor root/frontend Vercel project-link IDs compare equal; values intentionally omitted. These local links do not prove active deployment or Root Directory.",
+        "Encoding CI workflow is not a deploy manifest. Supabase config has verify_jwt false at project and function levels.",
+        "Local origin refs are cached observations, not evidence of active Vercel/Edge deployment. No fetch performed."
+      ],
+      "vercelLinkPaths": [
+        ".vercel/project.json",
+        "frontend/.vercel/project.json",
+        "../landing-prueba-1/.vercel/project.json",
+        "../Otros/Intermediario-kommo/.vercel/project.json",
+        "../internal-chat/.vercel/project.json"
+      ],
+      "valuesPersisted": false
+    },
+    "kommoTrace": {
+      "evidence": [
+        {
+          "repository": "kommo",
+          "file": "lib/kommo-parser.ts",
+          "lines": [
+            32,
+            44
+          ]
+        },
+        {
+          "repository": "kommo",
+          "file": "lib/kommo-parser.ts",
+          "lines": [
+            106,
+            130
+          ]
+        },
+        {
+          "repository": "kommo",
+          "file": "lib/queue.ts",
+          "lines": [
+            5,
+            34
+          ]
+        },
+        {
+          "repository": "kommo",
+          "file": "lib/job-auth.ts",
+          "lines": [
+            4,
+            16
+          ]
+        },
+        {
+          "repository": "kommo",
+          "file": "app/api/jobs/process-queue/route.ts",
+          "lines": [
+            61,
+            118
+          ]
+        },
+        {
+          "repository": "kommo",
+          "file": "lib/extractors.ts",
+          "lines": [
+            142,
+            164
+          ]
+        },
+        {
+          "repository": "kommo",
+          "file": "lib/kommo-processor.ts",
+          "lines": [
+            283,
+            319
+          ]
+        },
+        {
+          "repository": "kommo",
+          "file": "lib/kommo-client.ts",
+          "lines": [
+            51,
+            77
+          ]
+        },
+        {
+          "repository": "kommo",
+          "file": "lib/client-config.ts",
+          "lines": [
+            24,
+            42
+          ]
+        },
+        {
+          "repository": "kommo",
+          "file": "app/api/jobs/reconcile-kommo/route.ts",
+          "lines": [
+            18,
+            60
+          ]
+        },
+        {
+          "repository": "kommo",
+          "file": "README.md",
+          "lines": [
+            332,
+            342
+          ]
+        }
+      ],
+      "stages": [
+        "Webhook name/constructor_name is caller supplied; optional account and message data are parsed from JSON/form without origin check.",
+        "Queue stores event/account/conversions_name; async trigger sends x-job-secret to process-queue.",
+        "Job authenticates by x-job-secret or secret query, or Bearer CRON_SECRET; this protects the worker route only.",
+        "Processor independently derives clientScope from event receiver fields with conversionsName fallback; this is a functional dedupe scope, not verified tenant identity.",
+        "Enrichment can select credentials/configuration by client name. Validate caller-to-tenant binding before enqueue/enrichment, not merely before outbound signing.",
+        "Shared client targets configured CONVERSIONS_BASE_URL plus query name and sends existing LEAD/PURCHASE JSON.",
+        "Reconciliation authenticates and counts missing event IDs; it does not enqueue or resend them. Existing errors/requeue/DLQ behavior must not change."
+      ],
+      "requiredOriginValidation": "Accredit the actual provider's supported authentication. Bind the verified integration identity to an approved account/channel and tenant on the server. Cross-check the legacy query, never trust query/account/request ID as proof. HMAC or a header credential must not be assumed supported. Preserve clientScope and business payload.",
+      "historicalWarning": "Do not restore request-ID-presence bypass. Historical header/query secret checks do not prove compatibility with today's active integration."
+    },
+    "chatraceContract": {
+      "evidence": [
+        {
+          "repository": "builder",
+          "file": "frontend/components/integraciones/IntegracionesMetaCapi.tsx",
+          "lines": [
+            1325,
+            1392
+          ]
+        },
+        {
+          "repository": "chatrace",
+          "file": "README.md",
+          "lines": [
+            11,
+            19
+          ]
+        },
+        {
+          "repository": "chatrace",
+          "file": "README.md",
+          "lines": [
+            63,
+            77
+          ]
+        }
+      ],
+      "accredited": "Two-stage documented flow: initial POST to intermediary prepares IDs/link/promo; WhatsApp button External Request separately POSTs Contact to conversions with Content-Type only. Request template exists; deployed automation does not.",
+      "missing": [
+        "Published flow/version and precise trigger ordering for the second External Request.",
+        "Actual headers, variable mapping and placeholders, response success/failure handling, timeout/retries.",
+        "Supported server-side credential custody, HMAC/canonical-byte capability or authenticated adapter header mechanism.",
+        "Which tenant names/accounts use each published flow and who controls deployment."
+      ],
+      "notAValidShortcut": "Sending Contact from the initial phone/link call would move its functional timing."
+    },
+    "whatsappTrace": {
+      "evidence": [
+        {
+          "repository": "builder",
+          "file": "supabase/functions/whatsapp-cloud-webhook/index.ts",
+          "lines": [
+            82,
+            94
+          ]
+        },
+        {
+          "repository": "builder",
+          "file": "supabase/functions/whatsapp-cloud-webhook/index.ts",
+          "lines": [
+            348,
+            389
+          ]
+        },
+        {
+          "repository": "builder",
+          "file": "supabase/functions/whatsapp-cloud-worker/index.ts",
+          "lines": [
+            883,
+            924
+          ]
+        },
+        {
+          "repository": "builder",
+          "file": "supabase/functions/whatsapp-cloud-redirect/index.ts",
+          "lines": [
+            294,
+            305
+          ]
+        },
+        {
+          "repository": "builder",
+          "file": "docs/whatsapp-cloud-api.md",
+          "lines": [
+            11,
+            22
+          ]
+        },
+        {
+          "repository": "builder",
+          "file": "docs/whatsapp-cloud-api.md",
+          "lines": [
+            205,
+            211
+          ]
+        },
+        {
+          "repository": "builder",
+          "file": "docs/whatsapp-cloud-api.md",
+          "lines": [
+            300,
+            304
+          ]
+        }
+      ],
+      "current": "Webhook source validates X-Hub-Signature-256 with selected server configuration. Worker prepares tracked redirect; current Contact ingress originates on first click via C09.",
+      "documentationConflict": "Guide introduction still describes Contact at inbound message time, while redirect section and current source describe first click. Historical worker HTTP sender exists; deployed version must be confirmed.",
+      "unidentifiedDownstream": "Guide says a bot sends subsequent LEAD/PURCHASE to the endpoint, but does not identify its project or contract. Covered as unresolved subchannel of C14, not an invented distinct known sender."
+    },
+    "binding": {
+      "evidence": [
+        {
+          "repository": "builder",
+          "file": "frontend/components/public-landing/PublicLandingRuntimeScript.tsx",
+          "lines": [
+            1197,
+            1249
+          ]
+        },
+        {
+          "repository": "classic",
+          "file": "components/WhatsAppButton.tsx",
+          "lines": [
+            927,
+            974
+          ]
+        }
+      ],
+      "proposal": "Both current public bodies have landing_id/name. Resolve ownership and exact registered target server-side; cross-check untrusted postUrl, name and action without rewriting body. Signed issuer/key ID plus one-to-one destination audience, signed query tenant and raw-body hash bind issuer/tenant/action/destination. Authorize tuple before business processing.",
+      "queueBlocker": "Historical queued payload/destination provenance and missing identifiers cannot be inferred from current source. Do not drop, rewrite or blindly sign old items."
+    }
+  },
+  "historicalConsumers": [
+    {
+      "id": "H01",
+      "status": "historical",
+      "activeDeployment": "uncertain",
+      "repository": "kommo",
+      "file": "app/api/kommo/webhook/route.ts",
+      "commit": "a2799df9037db26bedc808646dbc5583fb0db485",
+      "point": "Historical sendTestEventEnqueued block, lines 38-51",
+      "runtime": "Next server",
+      "session": false,
+      "hmacCustody": "Server capable",
+      "target": "CONVERSIONS_BASE_URL with no name appended",
+      "method": "POST",
+      "headers": {
+        "content-type": "application/json"
+      },
+      "bodyFields": [
+        "action",
+        "source",
+        "event_id",
+        "conversions_name",
+        "ts"
+      ],
+      "action": "TEST_EVENT_ENQUEUED",
+      "tenant": "Webhook-derived conversionsName in diagnostic body",
+      "response": "Diagnostic; no legitimate conversions business response accredited.",
+      "projects": [
+        "kommo if this old revision remains deployed"
+      ],
+      "evidenceLabels": [
+        "H01 optional enqueued probe added",
+        "H01 probe reverted"
+      ]
+    },
+    {
+      "id": "H02",
+      "status": "historical",
+      "activeDeployment": "uncertain",
+      "repository": "builder",
+      "file": "supabase/functions/whatsapp-cloud-worker/index.ts",
+      "commit": "3d9343e57dfe5231324c4ad59a3f4c3a94efcd30",
+      "point": "createInternalContact lines 525-615; caller line 860",
+      "runtime": "Deno Edge",
+      "session": false,
+      "hmacCustody": "Server capable",
+      "target": "SUPABASE_URL + /functions/v1/conversions?name=<profile from config.user_id>",
+      "method": "POST",
+      "headers": {
+        "Authorization": "Bearer <server SERVICE_ROLE_KEY reference; value not read>",
+        "Content-Type": "application/json"
+      },
+      "bodyFields": [
+        "event_name",
+        "event_id",
+        "contact_event_id",
+        "event_time",
+        "contact_event_time",
+        "phone",
+        "fn",
+        "ln",
+        "external_id",
+        "promo_code",
+        "telefono_asignado",
+        "meta_pixel_id",
+        "pixel_id",
+        "dataset_id",
+        "source_platform",
+        "ctwa_clid",
+        "from_meta_ads",
+        "sendContactPixel",
+        "event_source_url",
+        "whatsapp_cloud_api_config_id",
+        "whatsapp_cloud_api_referral"
+      ],
+      "action": "Contact",
+      "tenant": "config.user_id -> profiles.nombre",
+      "response": "response.ok required; reads text then looks up conversion by tenant/contact_event_id.",
+      "projects": [
+        "builder: worker if historical revision is deployed",
+        "builder: conversions"
+      ],
+      "constraint": "Preserve existing message-derived event identity/timing if still active. Do not automatically replace with current redirect semantics.",
+      "evidenceLabels": [
+        "H02 historical Cloud worker Contact sender",
+        "H02 worker sender removed"
+      ]
+    }
+  ],
+  "historicalEvidence": [
+    {
+      "label": "Kommo initial header authorization",
+      "repository": "kommo",
+      "commit": "f1960b60fa4c907e5345d5b2dc1a0c1a3a00c035",
+      "path": "app/api/kommo/webhook/route.ts",
+      "range": [
+        168,
+        171
+      ],
+      "conclusion": "Required x-kommo-secret against server configuration; historical, not current/provider capability proof.",
+      "sha256": "ac1ea3be38af8292321af55d00c0a345f04292b308a56b5706b075bd12f030e8",
+      "lineCount": 214
+    },
+    {
+      "label": "Kommo query credential added",
+      "repository": "kommo",
+      "commit": "207d864adfdeaa99f87962b821232d9e4f3edd52",
+      "path": "app/api/kommo/webhook/route.ts",
+      "conclusion": "Local history permits secret query as alternative; do not copy this URL credential pattern into the new design.",
+      "sha256": "2dd9eea5c3713b5b115846db6de1b3d1cc7e876c48f0c4fe2961736c1ccaf9a1",
+      "lineCount": 220
+    },
+    {
+      "label": "Kommo request ID bypass",
+      "repository": "kommo",
+      "commit": "8827b8ee2716c3c382bd963ccfc2b0e4ad93171e",
+      "path": "app/api/kommo/webhook/route.ts",
+      "range": [
+        187,
+        198
+      ],
+      "conclusion": "Header/query secret OR mere x-amocrm-requestid presence. Presence is forgeable and not authentication.",
+      "sha256": "72dcee72ac61affaad4452861c9644a9206e3982b5b2ca770193c42019631386",
+      "lineCount": 224
+    },
+    {
+      "label": "Kommo authorization removed",
+      "repository": "kommo",
+      "commit": "24d70998cab858ecad20c5b3ddf6a65a452efaa7",
+      "path": "app/api/kommo/webhook/route.ts",
+      "conclusion": "Removes the origin authorization; current route still has no origin check.",
+      "sha256": "8b6de3a5624b25fc49fb4801da99e7d6856e1e4edfb9fcd4b90e881241925aeb",
+      "lineCount": 237
+    },
+    {
+      "label": "H01 optional enqueued probe added",
+      "repository": "kommo",
+      "commit": "a2799df9037db26bedc808646dbc5583fb0db485",
+      "path": "app/api/kommo/webhook/route.ts",
+      "range": [
+        38,
+        51
+      ],
+      "conclusion": "Historical third TEST_EVENT_ENQUEUED diagnostic sender; later reverted.",
+      "sha256": "905a5b6317ba374d311f60de9349ff148d3eb4d2550fbad9593860dd1f7ce0da",
+      "lineCount": 111
+    },
+    {
+      "label": "H01 probe reverted",
+      "repository": "kommo",
+      "commit": "0f15a829e603e0837830dc60ee4b86e93b349fbf",
+      "path": "app/api/kommo/webhook/route.ts",
+      "conclusion": "Third probe absent from current checkout; does not prove no old deployment.",
+      "sha256": "ca915e2a81240c502da656881b8cbbe6f3d7eb0437b52e0c097c10d5cdc25e86",
+      "lineCount": 89
+    },
+    {
+      "label": "H02 historical Cloud worker Contact sender",
+      "repository": "builder",
+      "commit": "3d9343e57dfe5231324c4ad59a3f4c3a94efcd30",
+      "path": "supabase/functions/whatsapp-cloud-worker/index.ts",
+      "range": [
+        525,
+        615
+      ],
+      "conclusion": "Server POST to conversions using server SERVICE_ROLE_KEY Bearer. Profile from config.user_id selects query name; Contact uses message ID/time. Do not silently replace its semantics if deployed.",
+      "sha256": "7106f01f671a72aa863f598378dd5687b307d764d3837faa9b9fa3498fe33f40",
+      "lineCount": 1086
+    },
+    {
+      "label": "H02 worker sender removed",
+      "repository": "builder",
+      "commit": "cf87b9b89a72d2ba75146c6559508aa6153cc811",
+      "path": "supabase/functions/whatsapp-cloud-worker/index.ts",
+      "conclusion": "Contact sender removed from worker; current redirect C09 owns first-click Contact.",
+      "sha256": "2ba244b34e7e12900bde529abd0cdea0d1db36e4d40ef4e9d670720eebaf98ef",
+      "lineCount": 972
+    },
+    {
+      "label": "Historical C01 path alias",
+      "repository": "builder",
+      "commit": "abcef426b0c79f823c83c9dd81ad6ccedeba7f39",
+      "path": "frontend/app/admin/tests/page.tsx",
+      "range": [
+        312,
+        334
+      ],
+      "conclusion": "Earlier location of the same browser Contact test, with no Authorization header.",
+      "sha256": "93b40b3871a15c0c2bf55662d9133df7017361e348bd094fac5a08bc01bf29ce",
+      "lineCount": 568
+    },
+    {
+      "label": "Classic initial proxy contract",
+      "repository": "classic",
+      "commit": "d8e1d61174c6fd8b285a996169a444e971e864cf",
+      "path": "components/WhatsAppButton.tsx",
+      "range": [
+        255,
+        269
+      ],
+      "conclusion": "Initial inspected history already sends postUrl/payload via same-origin /api/track.",
+      "sha256": "a03497bac75bd5a2e55e42dfd3ba2d76e14c1656fb2fe72767d9e609f40b208d",
+      "lineCount": 343
+    }
+  ],
+  "environmentVariableNames": [
+    {
+      "repository": "builder",
+      "files": [
+        {
+          "file": "frontend/app/(panel)/admin/tests/page.tsx",
+          "names": [
+            "NEXT_PUBLIC_SUPABASE_ANON_KEY",
+            "NEXT_PUBLIC_SUPABASE_URL"
+          ]
+        },
+        {
+          "file": "frontend/app/api/track/retry/route.ts",
+          "names": [
+            "CRON_SECRET",
+            "TRACK_RETRY_SECRET"
+          ]
+        },
+        {
+          "file": "frontend/app/api/track/route.ts",
+          "names": [
+            "META_IP_PROOF_SECRET",
+            "NEXT_PUBLIC_SUPABASE_URL",
+            "TRACK_ALLOWED_HOSTS"
+          ]
+        },
+        {
+          "file": "frontend/components/integraciones/IntegracionesMetaCapi.tsx",
+          "names": [
+            "NEXT_PUBLIC_SUPABASE_URL"
+          ]
+        },
+        {
+          "file": "frontend/components/public-landing/PublicLandingRuntimeScript.tsx",
+          "names": [
+            "NEXT_PUBLIC_META_IP_COLLECTOR_URL",
+            "NEXT_PUBLIC_SUPABASE_ANON_KEY",
+            "NEXT_PUBLIC_SUPABASE_URL"
+          ]
+        },
+        {
+          "file": "frontend/lib/landing/landingsDb.ts",
+          "names": [
+            "NEXT_PUBLIC_SUPABASE_URL"
+          ]
+        },
+        {
+          "file": "frontend/lib/tracking/queue.ts",
+          "names": [
+            "NEXT_PUBLIC_SUPABASE_URL"
+          ]
+        },
+        {
+          "file": "supabase/functions/builder-config/index.ts",
+          "names": [
+            "SERVICE_ROLE_KEY",
+            "SUPABASE_URL"
+          ]
+        },
+        {
+          "file": "supabase/functions/conversions/index.ts",
+          "names": [
+            "SERVICE_ROLE_KEY",
+            "SUPABASE_URL"
+          ]
+        },
+        {
+          "file": "supabase/functions/retry-failed-conversions/index.ts",
+          "names": [
+            "CRON_SECRET",
+            "SERVICE_ROLE_KEY",
+            "SUPABASE_URL"
+          ]
+        },
+        {
+          "file": "supabase/functions/whatsapp-cloud-redirect/index.ts",
+          "names": [
+            "SERVICE_ROLE_KEY",
+            "SUPABASE_URL"
+          ]
+        },
+        {
+          "file": "supabase/functions/whatsapp-cloud-webhook/index.ts",
+          "names": [
+            "SERVICE_ROLE_KEY",
+            "SUPABASE_URL",
+            "WHATSAPP_CLOUD_API_VERIFY_TOKEN"
+          ]
+        },
+        {
+          "file": "supabase/functions/whatsapp-cloud-worker/index.ts",
+          "names": [
+            "SERVICE_ROLE_KEY",
+            "SUPABASE_URL",
+            "WHATSAPP_CLOUD_SHORTLINK_BASE_URL"
+          ]
+        }
+      ]
+    },
+    {
+      "repository": "classic",
+      "files": [
+        {
+          "file": "app/api/track/retry/route.ts",
+          "names": [
+            "CRON_SECRET",
+            "TRACK_RETRY_SECRET"
+          ]
+        },
+        {
+          "file": "app/api/track/route.ts",
+          "names": [
+            "META_IP_PROOF_SECRET",
+            "TRACK_ALLOWED_HOSTS"
+          ]
+        },
+        {
+          "file": "components/WhatsAppButton.tsx",
+          "names": [
+            "NEXT_PUBLIC_SUPABASE_ANON_KEY",
+            "NEXT_PUBLIC_SUPABASE_URL"
+          ]
+        }
+      ]
+    },
+    {
+      "repository": "kommo",
+      "files": [
+        {
+          "file": "lib/env.ts",
+          "names": [
+            "ADMIN_DEBUG_SECRET",
+            "ALERTS_ERROR_THRESHOLD_PER_HOUR",
+            "ALLOW_KOMMO_REQUESTID_AUTH",
+            "CONVERSIONS_BASE_URL",
+            "CONVERSIONS_NAME",
+            "CONVERSIONS_RETRY_BASE_DELAY_MS",
+            "CONVERSIONS_RETRY_JITTER_MS",
+            "CONVERSIONS_RETRY_MAX_ATTEMPTS",
+            "CONVERSIONS_TIMEOUT_MS",
+            "DEDUPE_TTL_SECONDS",
+            "DEFAULT_PHONE",
+            "ENABLE_WEBHOOK_TEST_EVENTS",
+            "JOB_RUNNER_SECRET",
+            "KOMMO_ACCESS_TOKEN",
+            "KOMMO_API_BASE_URL",
+            "KOMMO_ATTACHMENT_AUTH_TOKEN",
+            "KOMMO_WEBHOOK_SECRET",
+            "OPENAI_API_KEY",
+            "OPENAI_MODEL",
+            "OPENAI_RECEIPT_STRATEGY",
+            "OPENAI_TIMEOUT_MS",
+            "PROMO_CODE_REGEX",
+            "PURCHASE_INCLUDE_PROMO_CODE",
+            "QUEUE_BATCH_SIZE",
+            "QUEUE_JOB_MAX_ATTEMPTS",
+            "RECONCILIATION_ENABLED",
+            "RECONCILIATION_INTERVAL_MINUTES",
+            "RECONCILIATION_LOOKBACK_MINUTES",
+            "SUPABASE_SERVICE_ROLE_KEY",
+            "SUPABASE_URL",
+            "UPSTASH_REDIS_REST_TOKEN",
+            "UPSTASH_REDIS_REST_URL",
+            "WEBHOOK_RATE_LIMIT_MAX",
+            "WEBHOOK_RATE_LIMIT_WINDOW_SECONDS"
+          ]
+        },
+        {
+          "file": "lib/job-auth.ts",
+          "names": [
+            "CRON_SECRET"
+          ]
+        }
+      ]
+    },
+    {
+      "repository": "chatrace",
+      "files": []
+    }
+  ]
+}

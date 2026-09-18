@@ -1,0 +1,318 @@
+{
+  "phase": "1B.5",
+  "status": "blocked_by_unaccredited_consumer_contracts",
+  "designed": true,
+  "implemented": false,
+  "readyForCheckpoint": false,
+  "baseCommit": "2aee0e927df7bd72b255c2d5996d405154ddcc22",
+  "branch": "main",
+  "date": "2026-09-18",
+  "implementationGate": {
+    "result": "blocked",
+    "conditions": [
+      {
+        "condition": "All active consumers and deployed contracts accredited",
+        "result": "not_met",
+        "evidence": "consumers.json C11-C14 and per-consumer activityEvidence"
+      },
+      {
+        "condition": "Every legitimate sender has a compatible proven authentication mechanism",
+        "result": "not_met",
+        "evidence": "Chatrace origin capability unknown; Kommo incoming identity/tenant not checked; public proxy signing authority unresolved."
+      },
+      {
+        "condition": "No decision about production credential values is required",
+        "result": "no_values_required_for_diagnosis",
+        "evidence": "No credentials read or generated; future provisioning requires an accredited sender registry."
+      },
+      {
+        "condition": "No business/event contract changes",
+        "result": "preserved_by_no_implementation",
+        "evidence": "Only four documentation files added."
+      },
+      {
+        "condition": "Entire proposed rollout can be validated locally",
+        "result": "not_met",
+        "evidence": "External active automation, response/retry and origin authentication contracts missing."
+      },
+      {
+        "condition": "No permanent silent unsigned fallback",
+        "result": "required_by_design_not_implemented",
+        "evidence": "threat-model.md"
+      }
+    ]
+  },
+  "architecture": "Conditional verified user JWT for panel; server HMAC-SHA256 per issuer/environment, tenant/action/flag authorization, raw-body/query integrity, bounded timestamp and atomic nonce. Never blindly sign public proxy input.",
+  "blockers": [
+    "Published Chatrace flow/capabilities and active external sender census still unavailable locally.",
+    "Kommo actual origin authentication and account/channel-to-tenant binding remain unaccredited; past request-ID bypass must not be restored.",
+    "Public proxy and old queued destinations/landing identifiers require a non-sensitive supported-contract inventory.",
+    "Active deployed revisions are unverified, including historical WhatsApp worker Contact and optional diagnostic probes. Kommo reconciliation does not recover missing events."
+  ],
+  "pendingDecisions": [
+    {
+      "id": "Q1",
+      "data": "Published Chatrace flow and two External Request contracts, placeholders/header names, response/retry behavior and supported server auth capability; no secret values.",
+      "where": "Chatrace flow editor/published automation and API-action settings.",
+      "unlocks": "Direct HMAC versus authenticated adapter at the existing Contact trigger.",
+      "risk": "Lost or duplicate Contact; event timing changed."
+    },
+    {
+      "id": "Q2",
+      "data": "Active bot/integration registry with tenant/action, including WhatsApp downstream LEAD/PURCHASE bot, CompleteRegistration and probe usage.",
+      "where": "Automation owners, constructor Integraciones, webhook/bot configurations.",
+      "unlocks": "Complete issuer registry and scope of projects to migrate.",
+      "risk": "A legitimate unknown sender is rejected; missing events."
+    },
+    {
+      "id": "Q3",
+      "data": "Sanitized Kommo active webhook configuration, supported origin-authentication proof and account/channel-to-tenant mapping.",
+      "where": "Kommo integration/webhook setup and server integration administration.",
+      "unlocks": "Authentication and tenant binding before queue/enrichment; no request-ID bypass.",
+      "risk": "Forged cross-tenant events receive a trusted outbound signature."
+    },
+    {
+      "id": "Q4",
+      "data": "Non-sensitive inventory of proxy/queue destination routes, legitimate redirects and presence of landing identifiers in backlog; no raw events or credentials.",
+      "where": "Configuration/queue operator reports with values redacted except approved public routes and field names/counts.",
+      "unlocks": "Exact target catalog and compatibility checks without rewriting payload/queue.",
+      "risk": "Signature disclosure to wrong destination or rejection/loss of legitimate backlog."
+    },
+    {
+      "id": "Q5",
+      "data": "Active deployment project/domain/root/SHA or Edge code hash/version, sender/retry job destinations and admin UI refresh plan.",
+      "where": "Vercel Deployments, Edge deployment records and sanitized Scheduler definitions.",
+      "unlocks": "Coordinated sender-first, receiver-last rollout for actual deployed versions.",
+      "risk": "Old unsigned callers are cut off or WhatsApp Contact timing/identity is changed."
+    }
+  ],
+  "implementationChanges": {
+    "migrationCreated": false,
+    "migrationCount": 273,
+    "applicationChanged": false,
+    "configurationChanged": false,
+    "siblingRepositoriesChanged": false,
+    "businessLogicChanged": false,
+    "payloadsChanged": false,
+    "retryOrDedupeChanged": false
+  },
+  "officialDocumentation": {
+    "skill": "supabase:supabase",
+    "changelog": "https://supabase.com/changelog",
+    "pages": [
+      "https://supabase.com/docs/guides/functions/auth",
+      "https://supabase.com/docs/guides/functions/auth-headers",
+      "https://supabase.com/docs/guides/auth/jwts",
+      "https://supabase.com/docs/guides/functions/secrets",
+      "https://nodejs.org/api/crypto.html#cryptotimingsafeequala-b",
+      "https://docs.deno.com/api/node/crypto/"
+    ],
+    "access": "Public documentation and Supabase docs search only; no remote project/data operations. Changelog markdown endpoint unavailable; public HTML changelog used.",
+    "reuse": "Official documentation/changelog consultation from the preceding diagnosis reused; this follow-up consulted local evidence and reread the skill, without implementation."
+  },
+  "verification": {
+    "status": "passed_documentation_checks_only",
+    "executed": [
+      "Read-only recursive repository discovery across CURSOR: seven checkouts and two empty directories; no new current external sender found.",
+      "Current-source search and 24 distinct local branch/tag/ref-tip searches; targeted Git history, no fetch.",
+      "Current/historical call tracing, manifest metadata and source-declared environment-variable names only.",
+      "Deployment activity remains uncertain; local current code, historical senders and external documented channels distinguished.",
+      "Exact four-file inventory",
+      "UTF-8/secret-pattern/personal-data/path/whitespace documentation audit",
+      "47 current and 10 historical source hashes and citation ranges",
+      "273 migrations against HEAD",
+      "Unchanged sibling HEAD/status",
+      "git diff --check and untracked-file diff checks"
+    ],
+    "notExecuted": [
+      "Authentication positive/negative/replay/concurrency tests",
+      "Reconstruction or SQL/pgTAP/Data API suites",
+      "Frontend/Edge/Next suites",
+      "TypeScript",
+      "Build",
+      "ESLint",
+      "Client bundle inspection"
+    ],
+    "reasonNotExecuted": "Implementation gate failed; no executable changes. Proposed tests are pending, never counted as passed.",
+    "harnessNotes": [
+      "One documentation citation range corrected to the actual file end.",
+      "git diff --no-index --check may exit 1 for new-file differences without diagnostic output; final harness requires status 0/1, empty stdout/stderr, plus independent whitespace checks. This was not an application/security failure.",
+      "Follow-up history lookup with a mistyped revision was retried using the verified full local commit ID; no application test was executed."
+    ],
+    "audit": {
+      "utf8": "passed",
+      "mojibake": "passed",
+      "personalPaths": "passed",
+      "credentialFormats": "passed",
+      "credentialUrls": "passed",
+      "emailAndPhoneLiterals": "passed",
+      "whitespaceIncludingUntracked": "passed",
+      "gitDiffCheck": "passed",
+      "untrackedNoIndexDiffCheck": "passed",
+      "scope": "Only the four new documents; patterns and manual review, no real secret comparison or production data access."
+    },
+    "evidenceCounts": {
+      "currentCodePaths": 12,
+      "documentedExternalChannels": 2,
+      "historicalAdditionalSendPaths": 2,
+      "currentSourceHashes": 47,
+      "historicalSourceHashes": 10,
+      "localGitRefTips": 24,
+      "currentCitationRanges": 95,
+      "historicalBlobsVerified": 10
+    },
+    "followupDocker": {
+      "queriedThisPass": false,
+      "changedThisPass": false,
+      "priorObservationOnly": true
+    }
+  },
+  "inventory": {
+    "count": 4,
+    "modified": 0,
+    "added": 4,
+    "hashAlgorithm": "SHA-256 raw file bytes",
+    "selfHashPolicy": "review.json has null self hash to avoid circular hashing; three other documents, 47 current source files and 10 historical blobs have explicit SHA-256 hashes.",
+    "files": [
+      {
+        "file": "docs/security/phase-1b5/README.md",
+        "status": "new",
+        "sha256": "a49c57e0cfaf72e8ce4805e9366f242284e9a1f4ba07ab658037b3dd39219637"
+      },
+      {
+        "file": "docs/security/phase-1b5/consumers.json",
+        "status": "new",
+        "sha256": "0d8780b7a9a4b5759eee396f2966a9a91d865f7a7277d0a95dbd30e5e4dbadc0"
+      },
+      {
+        "file": "docs/security/phase-1b5/review.json",
+        "status": "new",
+        "sha256": null
+      },
+      {
+        "file": "docs/security/phase-1b5/threat-model.md",
+        "status": "new",
+        "sha256": "4e658bbe1ac4229eaefd7d7b427d4d5e1b372f3b31ff1bbf047da472c741721f"
+      }
+    ]
+  },
+  "restrictions": {
+    "envContentsRead": false,
+    "productionRequests": false,
+    "remoteWrites": false,
+    "deploy": false,
+    "push": false,
+    "staging": false,
+    "commit": false,
+    "rotation": false,
+    "secretsInArtifacts": false,
+    "syntheticSecretsCreated": false
+  },
+  "git": {
+    "branch": "main",
+    "head": "2aee0e927df7bd72b255c2d5996d405154ddcc22",
+    "trackedChanges": 0,
+    "untracked": [
+      "docs/security/phase-1b5/README.md",
+      "docs/security/phase-1b5/consumers.json",
+      "docs/security/phase-1b5/review.json",
+      "docs/security/phase-1b5/threat-model.md"
+    ],
+    "indexEmpty": true,
+    "conflicts": 0
+  },
+  "migrations": {
+    "count": 273,
+    "unchangedAgainstHead": true,
+    "gitNormalizedBlobsCompared": 273,
+    "rawManifestSha256": "c5e90534b53c2b535a6f3925bec12a081fa6f7737869f366445ab05400bf5634"
+  },
+  "siblingRepositories": [
+    {
+      "repository": "classic",
+      "head": "3322b634a06504ae469a4faee0383148707bc9b5",
+      "unchanged": true,
+      "preExistingUntrackedCount": 0
+    },
+    {
+      "repository": "kommo",
+      "head": "03f339692cfc3274ee27b9ee367e6f2d90da1a42",
+      "unchanged": true,
+      "preExistingUntrackedCount": 8
+    },
+    {
+      "repository": "chatrace",
+      "head": "c48e15e5abe42d14ccaed31a4bc5d9d38d5e7935",
+      "unchanged": true,
+      "preExistingUntrackedCount": 0
+    },
+    {
+      "repository": "internal-chat",
+      "head": "ab0da3482f471ab35a5c0db1af4b398602ac7543",
+      "unchanged": true,
+      "preExistingUntrackedCount": 0
+    },
+    {
+      "repository": "link-multiowner",
+      "head": "d012404192373387893604907e80463d60c9965f",
+      "unchanged": true,
+      "preExistingUntrackedCount": 0
+    },
+    {
+      "repository": "landing-sales",
+      "head": "a878a22682d008bdbcc4cffcbcd835cb3f002a5c",
+      "unchanged": true,
+      "preExistingUntrackedCount": 0
+    }
+  ],
+  "env": {
+    "present": true,
+    "size": 307,
+    "mtime": "2026-03-10T19:16:01.528Z",
+    "ignored": true,
+    "tracked": false,
+    "staged": false,
+    "contentRead": false,
+    "verification": "Metadata and Git only; no content hash to avoid reading secret values."
+  },
+  "docker": {
+    "readOnly": true,
+    "runningContainers": 0,
+    "stoppedContainers": 1,
+    "networks": 3,
+    "volumes": 8,
+    "ownResources": 0,
+    "createdThisTask": 0,
+    "deletedThisTask": 0,
+    "foreignResources": "Existing stopped codex-p8-mysql, default networks and eight anonymous volumes remain untouched.",
+    "ownershipEvidence": "Resource names and labels inspected; no phase resources; no runner executed.",
+    "observationScope": "Previous diagnosis only; Docker was not queried or changed in follow-up pass 2; no runners executed."
+  },
+  "investigationPass": 2,
+  "rollout": {
+    "status": "conditional_not_implementable_until_answers",
+    "order": [
+      "Accredit Q1-Q5; pin actual active versions and non-sensitive contracts.",
+      "Prepare local auth changes and contract tests per actual sender project without changing event payload or scheduling.",
+      "Coordinate origin-protected Kommo, external Chatrace/other automations, constructor and classic proxies/queues, panel and actual Edge sender versions.",
+      "Confirm every active instance, backlog and old panel session is covered; do not rely on Kommo reconciliation to recover failed events.",
+      "Enable strict conversions authentication last; no invalid-signature downgrade or permanent unsigned fallback."
+    ],
+    "projectsRequired": [
+      "landing-builder: Next and Edge",
+      "landing-prueba-1",
+      "Otros/Intermediario-kommo",
+      "External published Chatrace flow",
+      "Other active external senders pending Q2"
+    ],
+    "projectsConditional": [
+      "Otros/intermediario-chatrace only if chosen as authenticated adapter"
+    ],
+    "noChangeAccreditedFor": [
+      "internal-chat",
+      "link_ganamos_multiowner",
+      "Otros/landing-venta-asistente"
+    ],
+    "rollback": "Retain strict auth; only validated compatible sender/receiver versions. Never silently return to unsigned acceptance."
+  }
+}
