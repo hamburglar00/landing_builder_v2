@@ -1,0 +1,68 @@
+{
+  "phase": "1B.4",
+  "passed": true,
+  "files": [
+    "docs/security/phase-1b4/README.md",
+    "docs/security/phase-1b4/audit.json",
+    "docs/security/phase-1b4/review.json",
+    "docs/security/phase-1b4/scope.json",
+    "docs/security/phase-1b4/validation.json",
+    "scripts/security/audit-internal-privileges.mjs",
+    "scripts/security/internal-privileges-tests.mjs",
+    "scripts/security/run-internal-privileges.mjs",
+    "supabase/bootstrap/incremental-manifest.json",
+    "supabase/migrations/20260918152656_restrict_internal_database_privileges.sql",
+    "supabase/tests/internal_privileges.test.sql"
+  ],
+  "hashes": [
+    {
+      "file": "docs/security/phase-1b4/README.md",
+      "sha256": "b136833f59de6ce1acf88aa1d8b725e5855323d1753d6e4c42eecd1944cc1537"
+    },
+    {
+      "file": "docs/security/phase-1b4/scope.json",
+      "sha256": "2958909b8b51e9e7d48b078265a7bf2b34482bb94f713b1c618085c385804e78"
+    },
+    {
+      "file": "docs/security/phase-1b4/validation.json",
+      "sha256": "d70cfe6501886703ee714fdcce7758d868cd3d87178fce0ff3ca2d7ab3e26977"
+    },
+    {
+      "file": "scripts/security/audit-internal-privileges.mjs",
+      "sha256": "63733194a2465b0a484f26330682e3fc85ecb822dfba45fe62386ab82596a8a6"
+    },
+    {
+      "file": "scripts/security/internal-privileges-tests.mjs",
+      "sha256": "53efadc903bd86a00cf8bdb98a542500be422cfe74675c767eb14d9c25883243"
+    },
+    {
+      "file": "scripts/security/run-internal-privileges.mjs",
+      "sha256": "2ac75fc2df0945da65ff3b2576f8f42d5c73b99e23a738cc4c346c49b61c0b51"
+    },
+    {
+      "file": "supabase/bootstrap/incremental-manifest.json",
+      "sha256": "77a7ead62c172c731e0d095f20750931dcd7575e5cd4ec65000a490e6195969f"
+    },
+    {
+      "file": "supabase/migrations/20260918152656_restrict_internal_database_privileges.sql",
+      "sha256": "0278468e552ea4053848f5b8f50a2f91234b6b6f29f7cb365e44081489c410d9"
+    },
+    {
+      "file": "supabase/tests/internal_privileges.test.sql",
+      "sha256": "59b5439099be9f0a736292f6b3643ffee52c3a5df3c79760a7fb779afb236f96"
+    }
+  ],
+  "hashExclusions": [
+    "docs/security/phase-1b4/audit.json",
+    "docs/security/phase-1b4/review.json"
+  ],
+  "environmentFile": {
+    "present": true,
+    "ignored": true,
+    "tracked": false,
+    "contentRead": false
+  },
+  "findings": [],
+  "realSecretValuesRead": 0,
+  "remoteWrites": 0
+}

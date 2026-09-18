@@ -1,0 +1,210 @@
+{
+  "phase": "1B.4",
+  "record": "Pre-checkpoint review of the accredited subset; deferred objects are not closed",
+  "status": "accredited_subset_ready_for_local_checkpoint_with_explicit_deferrals",
+  "branch": "main",
+  "baseCommit": "abfcbd914b3d1bed785467645766697a22e8651e",
+  "localOnly": true,
+  "scope": {
+    "file": "docs/security/phase-1b4/scope.json",
+    "classifiedPhase1aObjects": 160,
+    "truncateRevokedTables": 13,
+    "truncateDeferredTables": 29,
+    "all42TruncateResolved": false,
+    "explicitExclusionsPreserved": true,
+    "exceptionForExcludedTablesAuthorized": false,
+    "exceptionQuestionUnanswered": true,
+    "functions": 12,
+    "dataApiDirectAccessRevoked": [
+      "cron_config"
+    ],
+    "newGrants": 0,
+    "applicationFilesChanged": 0
+  },
+  "migration": {
+    "file": "supabase/migrations/20260918152656_restrict_internal_database_privileges.sql",
+    "number": 272,
+    "sha256": "0278468e552ea4053848f5b8f50a2f91234b6b6f29f7cb365e44081489c410d9",
+    "cliHelpConsulted": true,
+    "createdViaCli": true
+  },
+  "historicalMigrations": {
+    "count": 271,
+    "unchanged": true,
+    "sha256": "fceb83adc986d029ad57d4d218a8a4661d5284cf37cad7facb575f8beb33ce63",
+    "hashMethod": "SHA-256 of JSON.stringify of sorted [{file,sha256}] using raw working-tree bytes; no indentation",
+    "gitBaseline": "abfcbd914b3d1bed785467645766697a22e8651e"
+  },
+  "evidenceReferences": [
+    {
+      "file": "docs/security/phase-1a/functions.md",
+      "sha256": "33e3f7eb02a74109460bc46d34f8031fca365dc9526a8fbc8c06698aeec11a40"
+    },
+    {
+      "file": "docs/security/phase-1a/relations.md",
+      "sha256": "a9a4c7842bd9b3bb25b10c7b5c630d01e6ba3eca5d959cfcfdf83a088c52deb8"
+    },
+    {
+      "file": "docs/security/phase-1a/endpoints.md",
+      "sha256": "c84c03022d4ce6d289d7753eb2ebc05fa2d4aa15503f19dbbc5b12b703b5525e"
+    },
+    {
+      "file": "docs/security/phase-1a/evidence.json",
+      "sha256": "bfcfbcfe09fbe8763ac008f4a09db8f4efa40f1a84d0717ff6939f169a13a45d"
+    },
+    {
+      "file": "docs/security/phase-1b3/database-validation.json",
+      "sha256": "920ad21da4726b0cde828a2af73e801c8164b2f35527497663b16b557e66b406"
+    },
+    {
+      "file": "docs/security/phase-1b3/pending-validation.json",
+      "sha256": "1ea9a0b7c5b269e852718d9b8d1d1cd562cbe383cbe559d105643b00371ad8f8"
+    },
+    {
+      "file": "docs/security/phase-1b3/implementation-review.json",
+      "sha256": "0a6d3bf7cbae165c560db945f2e55bf3408b55cfbe36fdd7249d36d1d16c2e51"
+    }
+  ],
+  "validation": {
+    "file": "docs/security/phase-1b4/validation.json",
+    "complete": true,
+    "reconstructions": 1,
+    "migrationsApplied": 272,
+    "passed": 82,
+    "pgTap": {
+      "passed": 8,
+      "failed": 0,
+      "countedInsideOneCheck": true
+    },
+    "fixtureCorrections": 1,
+    "failedUnresolved": 0,
+    "addedAclRows": 0,
+    "catalogBefore": "3ef2d2453c8191811df861befe592c33860ca1eaece76c1dbfcd090209386949",
+    "catalogAfter": "e24cc40cb355e6cf6cc207575317946d20c590ab06017eb8a46df1df6ec8ee7c",
+    "postgresAndBackendPrivilegesPreserved": true,
+    "unauthorizedNullSubjectRejected": true,
+    "authorizedResultsMatchBefore": true,
+    "publicContractsUnchanged": true,
+    "unchangedPhase1b3PhoneConcurrencyEvidenceReused": true,
+    "publicPhoneDirectedFixture": "No assignments; full prior concurrency matrix reused with frozen dependencies",
+    "statisticsDirectedFixture": "Own/admin/backend results with two synthetic landings; conversions remain empty and calculation body remains unchanged",
+    "typescript": "not applicable: no frontend or server code changes",
+    "build": "not applicable: no frontend or server code changes",
+    "unaffectedHistoricalSuitesRepeated": false
+  },
+  "docker": {
+    "checkedAt": "2026-09-18T15:53:46.603Z",
+    "readOnlyQueries": [
+      "containers including stopped",
+      "networks",
+      "volumes"
+    ],
+    "globalCounts": {
+      "containers": 1,
+      "running": 0,
+      "networks": 3,
+      "volumes": 8
+    },
+    "ownResourcesRemaining": {
+      "containers": [],
+      "networks": [],
+      "volumes": []
+    },
+    "cleanupEvidence": "docs/security/phase-1b4/validation.json",
+    "unrelatedResourcesUntouched": true
+  },
+  "environmentFile": {
+    "present": true,
+    "ignored": true,
+    "tracked": false,
+    "staged": false,
+    "bytes": 307,
+    "modifiedAt": "2026-03-10T19:16:01.528Z",
+    "unchangedMetadata": true,
+    "contentsRead": false
+  },
+  "boundaries": {
+    "productionRequests": 0,
+    "remoteWrites": 0,
+    "deploys": 0,
+    "pushes": 0,
+    "otherRepositoriesModified": false,
+    "nextPhaseStarted": false
+  },
+  "checkpoint": {
+    "scope": "Only the accredited subset; 29 TRUNCATE tables and other ambiguous objects remain deferred",
+    "audit": "passed",
+    "diffCheck": "passed",
+    "hook": {
+      "required": true,
+      "command": "git hook run pre-commit",
+      "resultRecordedIn": "Local checkpoint command output after staging"
+    },
+    "message": "fix(security): restrict internal database privileges"
+  },
+  "inventory": {
+    "total": 11,
+    "modified": 1,
+    "added": 10,
+    "files": [
+      {
+        "file": "docs/security/phase-1b4/README.md",
+        "status": "A",
+        "sha256": "b136833f59de6ce1acf88aa1d8b725e5855323d1753d6e4c42eecd1944cc1537"
+      },
+      {
+        "file": "docs/security/phase-1b4/audit.json",
+        "status": "A",
+        "sha256": "a86a56b519432ba1af4c5f5b5988a8b2666d345a103a2861bd3181fcdbca3df3"
+      },
+      {
+        "file": "docs/security/phase-1b4/review.json",
+        "status": "A",
+        "sha256": null
+      },
+      {
+        "file": "docs/security/phase-1b4/scope.json",
+        "status": "A",
+        "sha256": "2958909b8b51e9e7d48b078265a7bf2b34482bb94f713b1c618085c385804e78"
+      },
+      {
+        "file": "docs/security/phase-1b4/validation.json",
+        "status": "A",
+        "sha256": "d70cfe6501886703ee714fdcce7758d868cd3d87178fce0ff3ca2d7ab3e26977"
+      },
+      {
+        "file": "scripts/security/audit-internal-privileges.mjs",
+        "status": "A",
+        "sha256": "63733194a2465b0a484f26330682e3fc85ecb822dfba45fe62386ab82596a8a6"
+      },
+      {
+        "file": "scripts/security/internal-privileges-tests.mjs",
+        "status": "A",
+        "sha256": "53efadc903bd86a00cf8bdb98a542500be422cfe74675c767eb14d9c25883243"
+      },
+      {
+        "file": "scripts/security/run-internal-privileges.mjs",
+        "status": "A",
+        "sha256": "2ac75fc2df0945da65ff3b2576f8f42d5c73b99e23a738cc4c346c49b61c0b51"
+      },
+      {
+        "file": "supabase/bootstrap/incremental-manifest.json",
+        "status": "M",
+        "sha256": "77a7ead62c172c731e0d095f20750931dcd7575e5cd4ec65000a490e6195969f"
+      },
+      {
+        "file": "supabase/migrations/20260918152656_restrict_internal_database_privileges.sql",
+        "status": "A",
+        "sha256": "0278468e552ea4053848f5b8f50a2f91234b6b6f29f7cb365e44081489c410d9"
+      },
+      {
+        "file": "supabase/tests/internal_privileges.test.sql",
+        "status": "A",
+        "sha256": "59b5439099be9f0a736292f6b3643ffee52c3a5df3c79760a7fb779afb236f96"
+      }
+    ],
+    "hashMethod": "SHA-256 of raw file bytes",
+    "selfHashExcluded": "docs/security/phase-1b4/review.json",
+    "auditHashPending": false
+  }
+}

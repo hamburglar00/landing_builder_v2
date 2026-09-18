@@ -1,0 +1,10 @@
+SELECT plan(8);
+SELECT ok(NOT has_table_privilege('anon','public.landings','TRUNCATE'),'anon cannot truncate landings');
+SELECT ok(NOT has_table_privilege('authenticated','public.landings','TRUNCATE'),'authenticated cannot truncate landings');
+SELECT ok(has_table_privilege('postgres','public.landings','TRUNCATE'),'postgres maintenance retained');
+SELECT ok(NOT has_function_privilege('anon','public.cron_process_due_promotions()','EXECUTE'),'anon cannot start internal promotion job');
+SELECT ok(NOT has_function_privilege('authenticated','public.cron_process_due_promotions()','EXECUTE'),'authenticated cannot start internal promotion job');
+SELECT ok(has_function_privilege('postgres','public.cron_process_due_promotions()','EXECUTE'),'postgres job execution retained');
+SELECT ok(NOT has_function_privilege('anon','public.get_home_overview_stats(uuid,uuid)','EXECUTE'),'legacy stats anonymous ACL removed');
+SELECT ok(has_function_privilege('authenticated','public.get_home_overview_stats(uuid,uuid)','EXECUTE'),'authorized stats ACL retained');
+SELECT * FROM finish();

@@ -1,0 +1,3313 @@
+{
+  "phase": "1B.4",
+  "complete": true,
+  "localOnly": true,
+  "reconstructions": 1,
+  "migrationsApplied": 272,
+  "checks": [
+    {
+      "name": "271 baseline catalog matches accredited phase 1B.3",
+      "status": "passed"
+    },
+    {
+      "name": "target function definitions owners paths and consumers match phase 1A",
+      "status": "passed"
+    },
+    {
+      "name": "complete 272/272 ledger",
+      "status": "passed"
+    },
+    {
+      "name": "catalog changes are exactly approved revokes and legacy null-subject guard",
+      "status": "passed"
+    },
+    {
+      "name": "before and after ACL matrix retains all owner and backend privileges",
+      "status": "passed"
+    },
+    {
+      "name": "real authorized trigger RPC backend cron and public behavior unchanged",
+      "status": "passed"
+    },
+    {
+      "name": "TRUNCATE anon ai_assistant_usage_monthly denied with 42501",
+      "status": "passed"
+    },
+    {
+      "name": "TRUNCATE authenticated ai_assistant_usage_monthly denied with 42501",
+      "status": "passed"
+    },
+    {
+      "name": "TRUNCATE anon atrio_clients denied with 42501",
+      "status": "passed"
+    },
+    {
+      "name": "TRUNCATE authenticated atrio_clients denied with 42501",
+      "status": "passed"
+    },
+    {
+      "name": "TRUNCATE anon client_subscriptions denied with 42501",
+      "status": "passed"
+    },
+    {
+      "name": "TRUNCATE authenticated client_subscriptions denied with 42501",
+      "status": "passed"
+    },
+    {
+      "name": "TRUNCATE anon cron_config denied with 42501",
+      "status": "passed"
+    },
+    {
+      "name": "TRUNCATE authenticated cron_config denied with 42501",
+      "status": "passed"
+    },
+    {
+      "name": "TRUNCATE anon home_overview_stats_cache denied with 42501",
+      "status": "passed"
+    },
+    {
+      "name": "TRUNCATE authenticated home_overview_stats_cache denied with 42501",
+      "status": "passed"
+    },
+    {
+      "name": "TRUNCATE anon kommo_client_configs denied with 42501",
+      "status": "passed"
+    },
+    {
+      "name": "TRUNCATE authenticated kommo_client_configs denied with 42501",
+      "status": "passed"
+    },
+    {
+      "name": "TRUNCATE anon landings denied with 42501",
+      "status": "passed"
+    },
+    {
+      "name": "TRUNCATE authenticated landings denied with 42501",
+      "status": "passed"
+    },
+    {
+      "name": "TRUNCATE anon notification_bot_config denied with 42501",
+      "status": "passed"
+    },
+    {
+      "name": "TRUNCATE authenticated notification_bot_config denied with 42501",
+      "status": "passed"
+    },
+    {
+      "name": "TRUNCATE anon notification_settings denied with 42501",
+      "status": "passed"
+    },
+    {
+      "name": "TRUNCATE authenticated notification_settings denied with 42501",
+      "status": "passed"
+    },
+    {
+      "name": "TRUNCATE anon notification_telegram_destinations denied with 42501",
+      "status": "passed"
+    },
+    {
+      "name": "TRUNCATE authenticated notification_telegram_destinations denied with 42501",
+      "status": "passed"
+    },
+    {
+      "name": "TRUNCATE anon profiles denied with 42501",
+      "status": "passed"
+    },
+    {
+      "name": "TRUNCATE authenticated profiles denied with 42501",
+      "status": "passed"
+    },
+    {
+      "name": "TRUNCATE anon promotion_participants denied with 42501",
+      "status": "passed"
+    },
+    {
+      "name": "TRUNCATE authenticated promotion_participants denied with 42501",
+      "status": "passed"
+    },
+    {
+      "name": "TRUNCATE anon promotions denied with 42501",
+      "status": "passed"
+    },
+    {
+      "name": "TRUNCATE authenticated promotions denied with 42501",
+      "status": "passed"
+    },
+    {
+      "name": "PUBLIC has no TRUNCATE ACL on target tables",
+      "status": "passed"
+    },
+    {
+      "name": "postgres TRUNCATE maintenance removes synthetic rows and rolls back",
+      "status": "passed"
+    },
+    {
+      "name": "legacy stats null subject rejected before operations for anon",
+      "status": "passed"
+    },
+    {
+      "name": "legacy stats null subject rejected before operations for authenticated",
+      "status": "passed"
+    },
+    {
+      "name": "legacy stats null subject rejected before operations for service_role",
+      "status": "passed"
+    },
+    {
+      "name": "legacy stats null subject rejected before operations for postgres",
+      "status": "passed"
+    },
+    {
+      "name": "legacy stats forged metadata cannot authorize another tenant",
+      "status": "passed"
+    },
+    {
+      "name": "pgTAP directed privilege checks",
+      "status": "passed"
+    },
+    {
+      "name": "Data API anon cannot execute enforce_landing_plan_limit",
+      "status": "passed"
+    },
+    {
+      "name": "Data API authenticated cannot execute enforce_landing_plan_limit",
+      "status": "passed"
+    },
+    {
+      "name": "Data API anon cannot execute prevent_landing_name_change",
+      "status": "passed"
+    },
+    {
+      "name": "Data API authenticated cannot execute prevent_landing_name_change",
+      "status": "passed"
+    },
+    {
+      "name": "Data API anon cannot execute prevent_landing_tag_change",
+      "status": "passed"
+    },
+    {
+      "name": "Data API authenticated cannot execute prevent_landing_tag_change",
+      "status": "passed"
+    },
+    {
+      "name": "Data API anon cannot execute set_atrio_clients_updated_at",
+      "status": "passed"
+    },
+    {
+      "name": "Data API authenticated cannot execute set_atrio_clients_updated_at",
+      "status": "passed"
+    },
+    {
+      "name": "Data API anon cannot execute set_client_subscriptions_updated_at",
+      "status": "passed"
+    },
+    {
+      "name": "Data API authenticated cannot execute set_client_subscriptions_updated_at",
+      "status": "passed"
+    },
+    {
+      "name": "Data API anon cannot execute set_landings_atrio_clients_owner",
+      "status": "passed"
+    },
+    {
+      "name": "Data API authenticated cannot execute set_landings_atrio_clients_owner",
+      "status": "passed"
+    },
+    {
+      "name": "Data API anon cannot execute set_landings_updated_at",
+      "status": "passed"
+    },
+    {
+      "name": "Data API authenticated cannot execute set_landings_updated_at",
+      "status": "passed"
+    },
+    {
+      "name": "Data API anon cannot execute set_promotions_updated_at",
+      "status": "passed"
+    },
+    {
+      "name": "Data API authenticated cannot execute set_promotions_updated_at",
+      "status": "passed"
+    },
+    {
+      "name": "Data API anon cannot execute cron_process_due_promotions",
+      "status": "passed"
+    },
+    {
+      "name": "Data API authenticated cannot execute cron_process_due_promotions",
+      "status": "passed"
+    },
+    {
+      "name": "Data API anon cannot execute consume_ai_assistant_quota",
+      "status": "passed"
+    },
+    {
+      "name": "Data API anon cannot execute get_notification_bot_username",
+      "status": "passed"
+    },
+    {
+      "name": "Data API anon cannot execute get_home_overview_stats",
+      "status": "passed"
+    },
+    {
+      "name": "denied cron RPC has no queue effects",
+      "status": "passed"
+    },
+    {
+      "name": "Data API legacy stats rejects null subject authenticated",
+      "status": "passed"
+    },
+    {
+      "name": "Data API legacy stats rejects null subject service_role",
+      "status": "passed"
+    },
+    {
+      "name": "Data API legacy stats historical authorized result client",
+      "status": "passed"
+    },
+    {
+      "name": "Data API legacy stats historical authorized result admin",
+      "status": "passed"
+    },
+    {
+      "name": "Data API legacy stats historical authorized result backend",
+      "status": "passed"
+    },
+    {
+      "name": "Data API stats cannot select another tenant",
+      "status": "passed"
+    },
+    {
+      "name": "Data API cron_config anon GET denied",
+      "status": "passed"
+    },
+    {
+      "name": "Data API cron_config anon POST denied",
+      "status": "passed"
+    },
+    {
+      "name": "Data API cron_config anon PATCH denied",
+      "status": "passed"
+    },
+    {
+      "name": "Data API cron_config anon DELETE denied",
+      "status": "passed"
+    },
+    {
+      "name": "Data API cron_config authenticated GET denied",
+      "status": "passed"
+    },
+    {
+      "name": "Data API cron_config authenticated POST denied",
+      "status": "passed"
+    },
+    {
+      "name": "Data API cron_config authenticated PATCH denied",
+      "status": "passed"
+    },
+    {
+      "name": "Data API cron_config authenticated DELETE denied",
+      "status": "passed"
+    },
+    {
+      "name": "Data API legitimate backend cron_config CRUD remains functional",
+      "status": "passed"
+    },
+    {
+      "name": "Data API authenticated quota result unchanged",
+      "status": "passed"
+    },
+    {
+      "name": "Data API authenticated notification username unchanged",
+      "status": "passed"
+    },
+    {
+      "name": "Data API public landing routing unchanged",
+      "status": "passed"
+    },
+    {
+      "name": "Data API public landing-phone legacy contract unchanged",
+      "status": "passed"
+    },
+    {
+      "name": "no remaining synthetic users or network requests and scheduler disabled",
+      "status": "passed"
+    }
+  ],
+  "http": [
+    {
+      "role": "anon",
+      "subject": null,
+      "method": "POST",
+      "endpoint": "rpc/enforce_landing_plan_limit",
+      "status": 404,
+      "code": "PGRST202"
+    },
+    {
+      "role": "authenticated",
+      "subject": "71000000-0000-4000-8000-000000000001",
+      "method": "POST",
+      "endpoint": "rpc/enforce_landing_plan_limit",
+      "status": 404,
+      "code": "PGRST202"
+    },
+    {
+      "role": "anon",
+      "subject": null,
+      "method": "POST",
+      "endpoint": "rpc/prevent_landing_name_change",
+      "status": 404,
+      "code": "PGRST202"
+    },
+    {
+      "role": "authenticated",
+      "subject": "71000000-0000-4000-8000-000000000001",
+      "method": "POST",
+      "endpoint": "rpc/prevent_landing_name_change",
+      "status": 404,
+      "code": "PGRST202"
+    },
+    {
+      "role": "anon",
+      "subject": null,
+      "method": "POST",
+      "endpoint": "rpc/prevent_landing_tag_change",
+      "status": 404,
+      "code": "PGRST202"
+    },
+    {
+      "role": "authenticated",
+      "subject": "71000000-0000-4000-8000-000000000001",
+      "method": "POST",
+      "endpoint": "rpc/prevent_landing_tag_change",
+      "status": 404,
+      "code": "PGRST202"
+    },
+    {
+      "role": "anon",
+      "subject": null,
+      "method": "POST",
+      "endpoint": "rpc/set_atrio_clients_updated_at",
+      "status": 404,
+      "code": "PGRST202"
+    },
+    {
+      "role": "authenticated",
+      "subject": "71000000-0000-4000-8000-000000000001",
+      "method": "POST",
+      "endpoint": "rpc/set_atrio_clients_updated_at",
+      "status": 404,
+      "code": "PGRST202"
+    },
+    {
+      "role": "anon",
+      "subject": null,
+      "method": "POST",
+      "endpoint": "rpc/set_client_subscriptions_updated_at",
+      "status": 404,
+      "code": "PGRST202"
+    },
+    {
+      "role": "authenticated",
+      "subject": "71000000-0000-4000-8000-000000000001",
+      "method": "POST",
+      "endpoint": "rpc/set_client_subscriptions_updated_at",
+      "status": 404,
+      "code": "PGRST202"
+    },
+    {
+      "role": "anon",
+      "subject": null,
+      "method": "POST",
+      "endpoint": "rpc/set_landings_atrio_clients_owner",
+      "status": 404,
+      "code": "PGRST202"
+    },
+    {
+      "role": "authenticated",
+      "subject": "71000000-0000-4000-8000-000000000001",
+      "method": "POST",
+      "endpoint": "rpc/set_landings_atrio_clients_owner",
+      "status": 404,
+      "code": "PGRST202"
+    },
+    {
+      "role": "anon",
+      "subject": null,
+      "method": "POST",
+      "endpoint": "rpc/set_landings_updated_at",
+      "status": 404,
+      "code": "PGRST202"
+    },
+    {
+      "role": "authenticated",
+      "subject": "71000000-0000-4000-8000-000000000001",
+      "method": "POST",
+      "endpoint": "rpc/set_landings_updated_at",
+      "status": 404,
+      "code": "PGRST202"
+    },
+    {
+      "role": "anon",
+      "subject": null,
+      "method": "POST",
+      "endpoint": "rpc/set_promotions_updated_at",
+      "status": 404,
+      "code": "PGRST202"
+    },
+    {
+      "role": "authenticated",
+      "subject": "71000000-0000-4000-8000-000000000001",
+      "method": "POST",
+      "endpoint": "rpc/set_promotions_updated_at",
+      "status": 404,
+      "code": "PGRST202"
+    },
+    {
+      "role": "anon",
+      "subject": null,
+      "method": "POST",
+      "endpoint": "rpc/cron_process_due_promotions",
+      "status": 401,
+      "code": "42501"
+    },
+    {
+      "role": "authenticated",
+      "subject": "71000000-0000-4000-8000-000000000001",
+      "method": "POST",
+      "endpoint": "rpc/cron_process_due_promotions",
+      "status": 403,
+      "code": "42501"
+    },
+    {
+      "role": "anon",
+      "subject": null,
+      "method": "POST",
+      "endpoint": "rpc/consume_ai_assistant_quota",
+      "status": 401,
+      "code": "42501"
+    },
+    {
+      "role": "anon",
+      "subject": null,
+      "method": "POST",
+      "endpoint": "rpc/get_notification_bot_username",
+      "status": 401,
+      "code": "42501"
+    },
+    {
+      "role": "anon",
+      "subject": null,
+      "method": "POST",
+      "endpoint": "rpc/get_home_overview_stats",
+      "status": 401,
+      "code": "42501"
+    },
+    {
+      "role": "authenticated",
+      "subject": null,
+      "method": "POST",
+      "endpoint": "rpc/get_home_overview_stats",
+      "status": 403,
+      "code": "42501"
+    },
+    {
+      "role": "service_role",
+      "subject": null,
+      "method": "POST",
+      "endpoint": "rpc/get_home_overview_stats",
+      "status": 403,
+      "code": "42501"
+    },
+    {
+      "role": "authenticated",
+      "subject": "71000000-0000-4000-8000-000000000001",
+      "method": "POST",
+      "endpoint": "rpc/get_home_overview_stats",
+      "status": 200,
+      "code": null
+    },
+    {
+      "role": "authenticated",
+      "subject": "71000000-0000-4000-8000-000000000003",
+      "method": "POST",
+      "endpoint": "rpc/get_home_overview_stats",
+      "status": 200,
+      "code": null
+    },
+    {
+      "role": "service_role",
+      "subject": "71000000-0000-4000-8000-000000000001",
+      "method": "POST",
+      "endpoint": "rpc/get_home_overview_stats",
+      "status": 200,
+      "code": null
+    },
+    {
+      "role": "authenticated",
+      "subject": "71000000-0000-4000-8000-000000000002",
+      "method": "POST",
+      "endpoint": "rpc/get_home_overview_stats",
+      "status": 400,
+      "code": "P0001"
+    },
+    {
+      "role": "anon",
+      "subject": null,
+      "method": "GET",
+      "endpoint": "cron_config?key=eq.phase1b4-synthetic",
+      "status": 401,
+      "code": "42501"
+    },
+    {
+      "role": "anon",
+      "subject": null,
+      "method": "POST",
+      "endpoint": "cron_config?key=eq.phase1b4-synthetic",
+      "status": 401,
+      "code": "42501"
+    },
+    {
+      "role": "anon",
+      "subject": null,
+      "method": "PATCH",
+      "endpoint": "cron_config?key=eq.phase1b4-synthetic",
+      "status": 401,
+      "code": "42501"
+    },
+    {
+      "role": "anon",
+      "subject": null,
+      "method": "DELETE",
+      "endpoint": "cron_config?key=eq.phase1b4-synthetic",
+      "status": 401,
+      "code": "42501"
+    },
+    {
+      "role": "authenticated",
+      "subject": "71000000-0000-4000-8000-000000000001",
+      "method": "GET",
+      "endpoint": "cron_config?key=eq.phase1b4-synthetic",
+      "status": 403,
+      "code": "42501"
+    },
+    {
+      "role": "authenticated",
+      "subject": "71000000-0000-4000-8000-000000000001",
+      "method": "POST",
+      "endpoint": "cron_config?key=eq.phase1b4-synthetic",
+      "status": 403,
+      "code": "42501"
+    },
+    {
+      "role": "authenticated",
+      "subject": "71000000-0000-4000-8000-000000000001",
+      "method": "PATCH",
+      "endpoint": "cron_config?key=eq.phase1b4-synthetic",
+      "status": 403,
+      "code": "42501"
+    },
+    {
+      "role": "authenticated",
+      "subject": "71000000-0000-4000-8000-000000000001",
+      "method": "DELETE",
+      "endpoint": "cron_config?key=eq.phase1b4-synthetic",
+      "status": 403,
+      "code": "42501"
+    },
+    {
+      "role": "service_role",
+      "subject": null,
+      "method": "POST",
+      "endpoint": "cron_config?key=eq.phase1b4-synthetic",
+      "status": 201,
+      "code": null
+    },
+    {
+      "role": "service_role",
+      "subject": null,
+      "method": "GET",
+      "endpoint": "cron_config?key=eq.phase1b4-synthetic",
+      "status": 200,
+      "code": null
+    },
+    {
+      "role": "service_role",
+      "subject": null,
+      "method": "PATCH",
+      "endpoint": "cron_config?key=eq.phase1b4-synthetic",
+      "status": 200,
+      "code": null
+    },
+    {
+      "role": "service_role",
+      "subject": null,
+      "method": "DELETE",
+      "endpoint": "cron_config?key=eq.phase1b4-synthetic",
+      "status": 200,
+      "code": null
+    },
+    {
+      "role": "authenticated",
+      "subject": "71000000-0000-4000-8000-000000000001",
+      "method": "POST",
+      "endpoint": "rpc/consume_ai_assistant_quota",
+      "status": 200,
+      "code": null
+    },
+    {
+      "role": "authenticated",
+      "subject": "71000000-0000-4000-8000-000000000001",
+      "method": "POST",
+      "endpoint": "rpc/get_notification_bot_username",
+      "status": 200,
+      "code": null
+    },
+    {
+      "role": "anon",
+      "subject": null,
+      "method": "POST",
+      "endpoint": "rpc/get_public_landing_routing",
+      "status": 200,
+      "code": null
+    },
+    {
+      "role": "anon",
+      "subject": null,
+      "method": "POST",
+      "endpoint": "rpc/get_phone_for_landing",
+      "status": 200,
+      "code": null
+    }
+  ],
+  "corrections": [
+    {
+      "stage": "preflight",
+      "cause": "fixture-landing-tag-format",
+      "classification": 1,
+      "correction": "SQLSTATE 23514: the synthetic phase1b4-tag violated existing landings_landing_tag_alphanumeric (^[a-zA-Z0-9]*$). Use alphanumeric synthetic tags; retain immutable-tag assertions and every production constraint."
+    }
+  ],
+  "remoteWrites": 0,
+  "productionRequests": 0,
+  "startedAt": "2026-09-18T15:36:47.609Z",
+  "migration": {
+    "file": "supabase/migrations/20260918152656_restrict_internal_database_privileges.sql",
+    "sha256": "0278468e552ea4053848f5b8f50a2f91234b6b6f29f7cb365e44081489c410d9"
+  },
+  "historicalMigrationsSha256": "e48246d071486609d38ad5923333b00aa90dfbaf1f0365808a786c25b1c896c1",
+  "provider": {
+    "cli": "2.75.0",
+    "image": "public.ecr.aws/supabase/postgres:17.6.1.075",
+    "imageId": "sha256:82a04ba6c05f60950a74ae46be3726abb18d06ee44da936276fd782e72e36855"
+  },
+  "nativeCompatibility": {
+    "applied": true,
+    "version": "0.19.5",
+    "method": "Native DROP/CREATE EXTENSION on empty owned local database; transaction-local event_triggers=false; no extension file/function edits",
+    "remoteSecurityExact": true
+  },
+  "compatibility": {
+    "applied": true,
+    "afterHistoricalCount": 268,
+    "sourceSha256": "1ff365d11204bd8a20668b1d821df138a9310f05d94ed1b53c398f6762bb6f5c",
+    "referenceMatched": true
+  },
+  "catalogBefore": "3ef2d2453c8191811df861befe592c33860ca1eaece76c1dbfcd090209386949",
+  "historicalBehavior": {
+    "stats-client": {
+      "total_cargado": 0,
+      "carga_promedio": 0,
+      "landings_count": 2,
+      "porcentaje_carga": 0,
+      "jugadores_premium": 0,
+      "retencion_activa_30d": 0
+    },
+    "stats-admin": {
+      "total_cargado": 0,
+      "carga_promedio": 0,
+      "landings_count": 2,
+      "porcentaje_carga": 0,
+      "jugadores_premium": 0,
+      "retencion_activa_30d": 0
+    },
+    "stats-backend": {
+      "total_cargado": 0,
+      "carga_promedio": 0,
+      "landings_count": 2,
+      "porcentaje_carga": 0,
+      "jugadores_premium": 0,
+      "retencion_activa_30d": 0
+    },
+    "quota": {
+      "allowed": true,
+      "used": 1,
+      "limit_count": 3,
+      "remaining": 2
+    },
+    "notificationUsername": "phase1b4_synthetic_bot",
+    "publicRouting": [
+      {
+        "public_landing_runtime": "legacy",
+        "public_landing_legacy_base_url": ""
+      }
+    ],
+    "publicPhone": {
+      "_status": "no_assignments"
+    },
+    "cron": [
+      {
+        "url": "http://127.0.0.1:1/functions/v1/promotion-draw-due",
+        "body": {
+          "cron_secret": "phase1b4-synthetic-only"
+        },
+        "method": "POST",
+        "headers": {
+          "Content-Type": "application/json"
+        },
+        "timeout": 60000
+      }
+    ],
+    "triggerDml": {
+      "atrio": true,
+      "landing": true,
+      "promotion": true,
+      "assignment": true,
+      "subscription": true
+    }
+  },
+  "catalogAfter": "e24cc40cb355e6cf6cc207575317946d20c590ab06017eb8a46df1df6ec8ee7c",
+  "removedAclRows": [
+    {
+      "kind": "function",
+      "name": "consume_ai_assistant_quota",
+      "schema": "public",
+      "grantee": "anon",
+      "grantor": "postgres",
+      "arguments": "p_limit integer",
+      "grantable": false,
+      "privilege": "EXECUTE"
+    },
+    {
+      "kind": "function",
+      "name": "consume_ai_assistant_quota",
+      "schema": "public",
+      "grantee": "PUBLIC",
+      "grantor": "postgres",
+      "arguments": "p_limit integer",
+      "grantable": false,
+      "privilege": "EXECUTE"
+    },
+    {
+      "kind": "function",
+      "name": "cron_process_due_promotions",
+      "schema": "public",
+      "grantee": "anon",
+      "grantor": "postgres",
+      "arguments": "",
+      "grantable": false,
+      "privilege": "EXECUTE"
+    },
+    {
+      "kind": "function",
+      "name": "cron_process_due_promotions",
+      "schema": "public",
+      "grantee": "authenticated",
+      "grantor": "postgres",
+      "arguments": "",
+      "grantable": false,
+      "privilege": "EXECUTE"
+    },
+    {
+      "kind": "function",
+      "name": "cron_process_due_promotions",
+      "schema": "public",
+      "grantee": "PUBLIC",
+      "grantor": "postgres",
+      "arguments": "",
+      "grantable": false,
+      "privilege": "EXECUTE"
+    },
+    {
+      "kind": "function",
+      "name": "enforce_landing_plan_limit",
+      "schema": "public",
+      "grantee": "anon",
+      "grantor": "postgres",
+      "arguments": "",
+      "grantable": false,
+      "privilege": "EXECUTE"
+    },
+    {
+      "kind": "function",
+      "name": "enforce_landing_plan_limit",
+      "schema": "public",
+      "grantee": "authenticated",
+      "grantor": "postgres",
+      "arguments": "",
+      "grantable": false,
+      "privilege": "EXECUTE"
+    },
+    {
+      "kind": "function",
+      "name": "enforce_landing_plan_limit",
+      "schema": "public",
+      "grantee": "PUBLIC",
+      "grantor": "postgres",
+      "arguments": "",
+      "grantable": false,
+      "privilege": "EXECUTE"
+    },
+    {
+      "kind": "function",
+      "name": "get_home_overview_stats",
+      "schema": "public",
+      "grantee": "anon",
+      "grantor": "postgres",
+      "arguments": "p_user_id uuid, p_hidden_by uuid",
+      "grantable": false,
+      "privilege": "EXECUTE"
+    },
+    {
+      "kind": "function",
+      "name": "get_home_overview_stats",
+      "schema": "public",
+      "grantee": "PUBLIC",
+      "grantor": "postgres",
+      "arguments": "p_user_id uuid, p_hidden_by uuid",
+      "grantable": false,
+      "privilege": "EXECUTE"
+    },
+    {
+      "kind": "function",
+      "name": "get_notification_bot_username",
+      "schema": "public",
+      "grantee": "anon",
+      "grantor": "postgres",
+      "arguments": "",
+      "grantable": false,
+      "privilege": "EXECUTE"
+    },
+    {
+      "kind": "function",
+      "name": "get_notification_bot_username",
+      "schema": "public",
+      "grantee": "PUBLIC",
+      "grantor": "postgres",
+      "arguments": "",
+      "grantable": false,
+      "privilege": "EXECUTE"
+    },
+    {
+      "kind": "function",
+      "name": "prevent_landing_name_change",
+      "schema": "public",
+      "grantee": "anon",
+      "grantor": "postgres",
+      "arguments": "",
+      "grantable": false,
+      "privilege": "EXECUTE"
+    },
+    {
+      "kind": "function",
+      "name": "prevent_landing_name_change",
+      "schema": "public",
+      "grantee": "authenticated",
+      "grantor": "postgres",
+      "arguments": "",
+      "grantable": false,
+      "privilege": "EXECUTE"
+    },
+    {
+      "kind": "function",
+      "name": "prevent_landing_name_change",
+      "schema": "public",
+      "grantee": "PUBLIC",
+      "grantor": "postgres",
+      "arguments": "",
+      "grantable": false,
+      "privilege": "EXECUTE"
+    },
+    {
+      "kind": "function",
+      "name": "prevent_landing_tag_change",
+      "schema": "public",
+      "grantee": "anon",
+      "grantor": "postgres",
+      "arguments": "",
+      "grantable": false,
+      "privilege": "EXECUTE"
+    },
+    {
+      "kind": "function",
+      "name": "prevent_landing_tag_change",
+      "schema": "public",
+      "grantee": "authenticated",
+      "grantor": "postgres",
+      "arguments": "",
+      "grantable": false,
+      "privilege": "EXECUTE"
+    },
+    {
+      "kind": "function",
+      "name": "prevent_landing_tag_change",
+      "schema": "public",
+      "grantee": "PUBLIC",
+      "grantor": "postgres",
+      "arguments": "",
+      "grantable": false,
+      "privilege": "EXECUTE"
+    },
+    {
+      "kind": "function",
+      "name": "set_atrio_clients_updated_at",
+      "schema": "public",
+      "grantee": "anon",
+      "grantor": "postgres",
+      "arguments": "",
+      "grantable": false,
+      "privilege": "EXECUTE"
+    },
+    {
+      "kind": "function",
+      "name": "set_atrio_clients_updated_at",
+      "schema": "public",
+      "grantee": "authenticated",
+      "grantor": "postgres",
+      "arguments": "",
+      "grantable": false,
+      "privilege": "EXECUTE"
+    },
+    {
+      "kind": "function",
+      "name": "set_atrio_clients_updated_at",
+      "schema": "public",
+      "grantee": "PUBLIC",
+      "grantor": "postgres",
+      "arguments": "",
+      "grantable": false,
+      "privilege": "EXECUTE"
+    },
+    {
+      "kind": "function",
+      "name": "set_client_subscriptions_updated_at",
+      "schema": "public",
+      "grantee": "anon",
+      "grantor": "postgres",
+      "arguments": "",
+      "grantable": false,
+      "privilege": "EXECUTE"
+    },
+    {
+      "kind": "function",
+      "name": "set_client_subscriptions_updated_at",
+      "schema": "public",
+      "grantee": "authenticated",
+      "grantor": "postgres",
+      "arguments": "",
+      "grantable": false,
+      "privilege": "EXECUTE"
+    },
+    {
+      "kind": "function",
+      "name": "set_client_subscriptions_updated_at",
+      "schema": "public",
+      "grantee": "PUBLIC",
+      "grantor": "postgres",
+      "arguments": "",
+      "grantable": false,
+      "privilege": "EXECUTE"
+    },
+    {
+      "kind": "function",
+      "name": "set_landings_atrio_clients_owner",
+      "schema": "public",
+      "grantee": "anon",
+      "grantor": "postgres",
+      "arguments": "",
+      "grantable": false,
+      "privilege": "EXECUTE"
+    },
+    {
+      "kind": "function",
+      "name": "set_landings_atrio_clients_owner",
+      "schema": "public",
+      "grantee": "authenticated",
+      "grantor": "postgres",
+      "arguments": "",
+      "grantable": false,
+      "privilege": "EXECUTE"
+    },
+    {
+      "kind": "function",
+      "name": "set_landings_atrio_clients_owner",
+      "schema": "public",
+      "grantee": "PUBLIC",
+      "grantor": "postgres",
+      "arguments": "",
+      "grantable": false,
+      "privilege": "EXECUTE"
+    },
+    {
+      "kind": "function",
+      "name": "set_landings_updated_at",
+      "schema": "public",
+      "grantee": "anon",
+      "grantor": "postgres",
+      "arguments": "",
+      "grantable": false,
+      "privilege": "EXECUTE"
+    },
+    {
+      "kind": "function",
+      "name": "set_landings_updated_at",
+      "schema": "public",
+      "grantee": "authenticated",
+      "grantor": "postgres",
+      "arguments": "",
+      "grantable": false,
+      "privilege": "EXECUTE"
+    },
+    {
+      "kind": "function",
+      "name": "set_landings_updated_at",
+      "schema": "public",
+      "grantee": "PUBLIC",
+      "grantor": "postgres",
+      "arguments": "",
+      "grantable": false,
+      "privilege": "EXECUTE"
+    },
+    {
+      "kind": "function",
+      "name": "set_promotions_updated_at",
+      "schema": "public",
+      "grantee": "anon",
+      "grantor": "postgres",
+      "arguments": "",
+      "grantable": false,
+      "privilege": "EXECUTE"
+    },
+    {
+      "kind": "function",
+      "name": "set_promotions_updated_at",
+      "schema": "public",
+      "grantee": "authenticated",
+      "grantor": "postgres",
+      "arguments": "",
+      "grantable": false,
+      "privilege": "EXECUTE"
+    },
+    {
+      "kind": "function",
+      "name": "set_promotions_updated_at",
+      "schema": "public",
+      "grantee": "PUBLIC",
+      "grantor": "postgres",
+      "arguments": "",
+      "grantable": false,
+      "privilege": "EXECUTE"
+    },
+    {
+      "kind": "relation",
+      "name": "ai_assistant_usage_monthly",
+      "schema": "public",
+      "grantee": "anon",
+      "grantor": "postgres",
+      "grantable": false,
+      "privilege": "TRUNCATE"
+    },
+    {
+      "kind": "relation",
+      "name": "ai_assistant_usage_monthly",
+      "schema": "public",
+      "grantee": "authenticated",
+      "grantor": "postgres",
+      "grantable": false,
+      "privilege": "TRUNCATE"
+    },
+    {
+      "kind": "relation",
+      "name": "atrio_clients",
+      "schema": "public",
+      "grantee": "anon",
+      "grantor": "postgres",
+      "grantable": false,
+      "privilege": "TRUNCATE"
+    },
+    {
+      "kind": "relation",
+      "name": "atrio_clients",
+      "schema": "public",
+      "grantee": "authenticated",
+      "grantor": "postgres",
+      "grantable": false,
+      "privilege": "TRUNCATE"
+    },
+    {
+      "kind": "relation",
+      "name": "client_subscriptions",
+      "schema": "public",
+      "grantee": "anon",
+      "grantor": "postgres",
+      "grantable": false,
+      "privilege": "TRUNCATE"
+    },
+    {
+      "kind": "relation",
+      "name": "client_subscriptions",
+      "schema": "public",
+      "grantee": "authenticated",
+      "grantor": "postgres",
+      "grantable": false,
+      "privilege": "TRUNCATE"
+    },
+    {
+      "kind": "relation",
+      "name": "cron_config",
+      "schema": "public",
+      "grantee": "anon",
+      "grantor": "postgres",
+      "grantable": false,
+      "privilege": "DELETE"
+    },
+    {
+      "kind": "relation",
+      "name": "cron_config",
+      "schema": "public",
+      "grantee": "anon",
+      "grantor": "postgres",
+      "grantable": false,
+      "privilege": "INSERT"
+    },
+    {
+      "kind": "relation",
+      "name": "cron_config",
+      "schema": "public",
+      "grantee": "anon",
+      "grantor": "postgres",
+      "grantable": false,
+      "privilege": "MAINTAIN"
+    },
+    {
+      "kind": "relation",
+      "name": "cron_config",
+      "schema": "public",
+      "grantee": "anon",
+      "grantor": "postgres",
+      "grantable": false,
+      "privilege": "REFERENCES"
+    },
+    {
+      "kind": "relation",
+      "name": "cron_config",
+      "schema": "public",
+      "grantee": "anon",
+      "grantor": "postgres",
+      "grantable": false,
+      "privilege": "SELECT"
+    },
+    {
+      "kind": "relation",
+      "name": "cron_config",
+      "schema": "public",
+      "grantee": "anon",
+      "grantor": "postgres",
+      "grantable": false,
+      "privilege": "TRIGGER"
+    },
+    {
+      "kind": "relation",
+      "name": "cron_config",
+      "schema": "public",
+      "grantee": "anon",
+      "grantor": "postgres",
+      "grantable": false,
+      "privilege": "TRUNCATE"
+    },
+    {
+      "kind": "relation",
+      "name": "cron_config",
+      "schema": "public",
+      "grantee": "anon",
+      "grantor": "postgres",
+      "grantable": false,
+      "privilege": "UPDATE"
+    },
+    {
+      "kind": "relation",
+      "name": "cron_config",
+      "schema": "public",
+      "grantee": "authenticated",
+      "grantor": "postgres",
+      "grantable": false,
+      "privilege": "DELETE"
+    },
+    {
+      "kind": "relation",
+      "name": "cron_config",
+      "schema": "public",
+      "grantee": "authenticated",
+      "grantor": "postgres",
+      "grantable": false,
+      "privilege": "INSERT"
+    },
+    {
+      "kind": "relation",
+      "name": "cron_config",
+      "schema": "public",
+      "grantee": "authenticated",
+      "grantor": "postgres",
+      "grantable": false,
+      "privilege": "MAINTAIN"
+    },
+    {
+      "kind": "relation",
+      "name": "cron_config",
+      "schema": "public",
+      "grantee": "authenticated",
+      "grantor": "postgres",
+      "grantable": false,
+      "privilege": "REFERENCES"
+    },
+    {
+      "kind": "relation",
+      "name": "cron_config",
+      "schema": "public",
+      "grantee": "authenticated",
+      "grantor": "postgres",
+      "grantable": false,
+      "privilege": "SELECT"
+    },
+    {
+      "kind": "relation",
+      "name": "cron_config",
+      "schema": "public",
+      "grantee": "authenticated",
+      "grantor": "postgres",
+      "grantable": false,
+      "privilege": "TRIGGER"
+    },
+    {
+      "kind": "relation",
+      "name": "cron_config",
+      "schema": "public",
+      "grantee": "authenticated",
+      "grantor": "postgres",
+      "grantable": false,
+      "privilege": "TRUNCATE"
+    },
+    {
+      "kind": "relation",
+      "name": "cron_config",
+      "schema": "public",
+      "grantee": "authenticated",
+      "grantor": "postgres",
+      "grantable": false,
+      "privilege": "UPDATE"
+    },
+    {
+      "kind": "relation",
+      "name": "home_overview_stats_cache",
+      "schema": "public",
+      "grantee": "anon",
+      "grantor": "postgres",
+      "grantable": false,
+      "privilege": "TRUNCATE"
+    },
+    {
+      "kind": "relation",
+      "name": "home_overview_stats_cache",
+      "schema": "public",
+      "grantee": "authenticated",
+      "grantor": "postgres",
+      "grantable": false,
+      "privilege": "TRUNCATE"
+    },
+    {
+      "kind": "relation",
+      "name": "kommo_client_configs",
+      "schema": "public",
+      "grantee": "anon",
+      "grantor": "postgres",
+      "grantable": false,
+      "privilege": "TRUNCATE"
+    },
+    {
+      "kind": "relation",
+      "name": "kommo_client_configs",
+      "schema": "public",
+      "grantee": "authenticated",
+      "grantor": "postgres",
+      "grantable": false,
+      "privilege": "TRUNCATE"
+    },
+    {
+      "kind": "relation",
+      "name": "landings",
+      "schema": "public",
+      "grantee": "anon",
+      "grantor": "postgres",
+      "grantable": false,
+      "privilege": "TRUNCATE"
+    },
+    {
+      "kind": "relation",
+      "name": "landings",
+      "schema": "public",
+      "grantee": "authenticated",
+      "grantor": "postgres",
+      "grantable": false,
+      "privilege": "TRUNCATE"
+    },
+    {
+      "kind": "relation",
+      "name": "notification_bot_config",
+      "schema": "public",
+      "grantee": "anon",
+      "grantor": "postgres",
+      "grantable": false,
+      "privilege": "TRUNCATE"
+    },
+    {
+      "kind": "relation",
+      "name": "notification_bot_config",
+      "schema": "public",
+      "grantee": "authenticated",
+      "grantor": "postgres",
+      "grantable": false,
+      "privilege": "TRUNCATE"
+    },
+    {
+      "kind": "relation",
+      "name": "notification_settings",
+      "schema": "public",
+      "grantee": "anon",
+      "grantor": "postgres",
+      "grantable": false,
+      "privilege": "TRUNCATE"
+    },
+    {
+      "kind": "relation",
+      "name": "notification_settings",
+      "schema": "public",
+      "grantee": "authenticated",
+      "grantor": "postgres",
+      "grantable": false,
+      "privilege": "TRUNCATE"
+    },
+    {
+      "kind": "relation",
+      "name": "notification_telegram_destinations",
+      "schema": "public",
+      "grantee": "anon",
+      "grantor": "postgres",
+      "grantable": false,
+      "privilege": "TRUNCATE"
+    },
+    {
+      "kind": "relation",
+      "name": "notification_telegram_destinations",
+      "schema": "public",
+      "grantee": "authenticated",
+      "grantor": "postgres",
+      "grantable": false,
+      "privilege": "TRUNCATE"
+    },
+    {
+      "kind": "relation",
+      "name": "profiles",
+      "schema": "public",
+      "grantee": "anon",
+      "grantor": "postgres",
+      "grantable": false,
+      "privilege": "TRUNCATE"
+    },
+    {
+      "kind": "relation",
+      "name": "profiles",
+      "schema": "public",
+      "grantee": "authenticated",
+      "grantor": "postgres",
+      "grantable": false,
+      "privilege": "TRUNCATE"
+    },
+    {
+      "kind": "relation",
+      "name": "promotion_participants",
+      "schema": "public",
+      "grantee": "anon",
+      "grantor": "postgres",
+      "grantable": false,
+      "privilege": "TRUNCATE"
+    },
+    {
+      "kind": "relation",
+      "name": "promotion_participants",
+      "schema": "public",
+      "grantee": "authenticated",
+      "grantor": "postgres",
+      "grantable": false,
+      "privilege": "TRUNCATE"
+    },
+    {
+      "kind": "relation",
+      "name": "promotions",
+      "schema": "public",
+      "grantee": "anon",
+      "grantor": "postgres",
+      "grantable": false,
+      "privilege": "TRUNCATE"
+    },
+    {
+      "kind": "relation",
+      "name": "promotions",
+      "schema": "public",
+      "grantee": "authenticated",
+      "grantor": "postgres",
+      "grantable": false,
+      "privilege": "TRUNCATE"
+    }
+  ],
+  "addedAclRows": 0,
+  "aclMatrix": [
+    {
+      "object": "function:consume_ai_assistant_quota",
+      "roles": [
+        {
+          "role": "PUBLIC",
+          "before": [
+            "EXECUTE"
+          ],
+          "after": []
+        },
+        {
+          "role": "anon",
+          "before": [
+            "EXECUTE"
+          ],
+          "after": []
+        },
+        {
+          "role": "authenticated",
+          "before": [
+            "EXECUTE"
+          ],
+          "after": [
+            "EXECUTE"
+          ]
+        },
+        {
+          "role": "postgres",
+          "before": [
+            "EXECUTE"
+          ],
+          "after": [
+            "EXECUTE"
+          ]
+        },
+        {
+          "role": "service_role",
+          "before": [
+            "EXECUTE"
+          ],
+          "after": [
+            "EXECUTE"
+          ]
+        }
+      ]
+    },
+    {
+      "object": "function:cron_process_due_promotions",
+      "roles": [
+        {
+          "role": "PUBLIC",
+          "before": [
+            "EXECUTE"
+          ],
+          "after": []
+        },
+        {
+          "role": "anon",
+          "before": [
+            "EXECUTE"
+          ],
+          "after": []
+        },
+        {
+          "role": "authenticated",
+          "before": [
+            "EXECUTE"
+          ],
+          "after": []
+        },
+        {
+          "role": "postgres",
+          "before": [
+            "EXECUTE"
+          ],
+          "after": [
+            "EXECUTE"
+          ]
+        },
+        {
+          "role": "service_role",
+          "before": [
+            "EXECUTE"
+          ],
+          "after": [
+            "EXECUTE"
+          ]
+        }
+      ]
+    },
+    {
+      "object": "function:enforce_landing_plan_limit",
+      "roles": [
+        {
+          "role": "PUBLIC",
+          "before": [
+            "EXECUTE"
+          ],
+          "after": []
+        },
+        {
+          "role": "anon",
+          "before": [
+            "EXECUTE"
+          ],
+          "after": []
+        },
+        {
+          "role": "authenticated",
+          "before": [
+            "EXECUTE"
+          ],
+          "after": []
+        },
+        {
+          "role": "postgres",
+          "before": [
+            "EXECUTE"
+          ],
+          "after": [
+            "EXECUTE"
+          ]
+        },
+        {
+          "role": "service_role",
+          "before": [
+            "EXECUTE"
+          ],
+          "after": [
+            "EXECUTE"
+          ]
+        }
+      ]
+    },
+    {
+      "object": "function:get_home_overview_stats",
+      "roles": [
+        {
+          "role": "PUBLIC",
+          "before": [
+            "EXECUTE"
+          ],
+          "after": []
+        },
+        {
+          "role": "anon",
+          "before": [
+            "EXECUTE"
+          ],
+          "after": []
+        },
+        {
+          "role": "authenticated",
+          "before": [
+            "EXECUTE"
+          ],
+          "after": [
+            "EXECUTE"
+          ]
+        },
+        {
+          "role": "postgres",
+          "before": [
+            "EXECUTE"
+          ],
+          "after": [
+            "EXECUTE"
+          ]
+        },
+        {
+          "role": "service_role",
+          "before": [
+            "EXECUTE"
+          ],
+          "after": [
+            "EXECUTE"
+          ]
+        }
+      ]
+    },
+    {
+      "object": "function:get_notification_bot_username",
+      "roles": [
+        {
+          "role": "PUBLIC",
+          "before": [
+            "EXECUTE"
+          ],
+          "after": []
+        },
+        {
+          "role": "anon",
+          "before": [
+            "EXECUTE"
+          ],
+          "after": []
+        },
+        {
+          "role": "authenticated",
+          "before": [
+            "EXECUTE"
+          ],
+          "after": [
+            "EXECUTE"
+          ]
+        },
+        {
+          "role": "postgres",
+          "before": [
+            "EXECUTE"
+          ],
+          "after": [
+            "EXECUTE"
+          ]
+        },
+        {
+          "role": "service_role",
+          "before": [
+            "EXECUTE"
+          ],
+          "after": [
+            "EXECUTE"
+          ]
+        }
+      ]
+    },
+    {
+      "object": "function:prevent_landing_name_change",
+      "roles": [
+        {
+          "role": "PUBLIC",
+          "before": [
+            "EXECUTE"
+          ],
+          "after": []
+        },
+        {
+          "role": "anon",
+          "before": [
+            "EXECUTE"
+          ],
+          "after": []
+        },
+        {
+          "role": "authenticated",
+          "before": [
+            "EXECUTE"
+          ],
+          "after": []
+        },
+        {
+          "role": "postgres",
+          "before": [
+            "EXECUTE"
+          ],
+          "after": [
+            "EXECUTE"
+          ]
+        },
+        {
+          "role": "service_role",
+          "before": [
+            "EXECUTE"
+          ],
+          "after": [
+            "EXECUTE"
+          ]
+        }
+      ]
+    },
+    {
+      "object": "function:prevent_landing_tag_change",
+      "roles": [
+        {
+          "role": "PUBLIC",
+          "before": [
+            "EXECUTE"
+          ],
+          "after": []
+        },
+        {
+          "role": "anon",
+          "before": [
+            "EXECUTE"
+          ],
+          "after": []
+        },
+        {
+          "role": "authenticated",
+          "before": [
+            "EXECUTE"
+          ],
+          "after": []
+        },
+        {
+          "role": "postgres",
+          "before": [
+            "EXECUTE"
+          ],
+          "after": [
+            "EXECUTE"
+          ]
+        },
+        {
+          "role": "service_role",
+          "before": [
+            "EXECUTE"
+          ],
+          "after": [
+            "EXECUTE"
+          ]
+        }
+      ]
+    },
+    {
+      "object": "function:set_atrio_clients_updated_at",
+      "roles": [
+        {
+          "role": "PUBLIC",
+          "before": [
+            "EXECUTE"
+          ],
+          "after": []
+        },
+        {
+          "role": "anon",
+          "before": [
+            "EXECUTE"
+          ],
+          "after": []
+        },
+        {
+          "role": "authenticated",
+          "before": [
+            "EXECUTE"
+          ],
+          "after": []
+        },
+        {
+          "role": "postgres",
+          "before": [
+            "EXECUTE"
+          ],
+          "after": [
+            "EXECUTE"
+          ]
+        },
+        {
+          "role": "service_role",
+          "before": [
+            "EXECUTE"
+          ],
+          "after": [
+            "EXECUTE"
+          ]
+        }
+      ]
+    },
+    {
+      "object": "function:set_client_subscriptions_updated_at",
+      "roles": [
+        {
+          "role": "PUBLIC",
+          "before": [
+            "EXECUTE"
+          ],
+          "after": []
+        },
+        {
+          "role": "anon",
+          "before": [
+            "EXECUTE"
+          ],
+          "after": []
+        },
+        {
+          "role": "authenticated",
+          "before": [
+            "EXECUTE"
+          ],
+          "after": []
+        },
+        {
+          "role": "postgres",
+          "before": [
+            "EXECUTE"
+          ],
+          "after": [
+            "EXECUTE"
+          ]
+        },
+        {
+          "role": "service_role",
+          "before": [
+            "EXECUTE"
+          ],
+          "after": [
+            "EXECUTE"
+          ]
+        }
+      ]
+    },
+    {
+      "object": "function:set_landings_atrio_clients_owner",
+      "roles": [
+        {
+          "role": "PUBLIC",
+          "before": [
+            "EXECUTE"
+          ],
+          "after": []
+        },
+        {
+          "role": "anon",
+          "before": [
+            "EXECUTE"
+          ],
+          "after": []
+        },
+        {
+          "role": "authenticated",
+          "before": [
+            "EXECUTE"
+          ],
+          "after": []
+        },
+        {
+          "role": "postgres",
+          "before": [
+            "EXECUTE"
+          ],
+          "after": [
+            "EXECUTE"
+          ]
+        },
+        {
+          "role": "service_role",
+          "before": [
+            "EXECUTE"
+          ],
+          "after": [
+            "EXECUTE"
+          ]
+        }
+      ]
+    },
+    {
+      "object": "function:set_landings_updated_at",
+      "roles": [
+        {
+          "role": "PUBLIC",
+          "before": [
+            "EXECUTE"
+          ],
+          "after": []
+        },
+        {
+          "role": "anon",
+          "before": [
+            "EXECUTE"
+          ],
+          "after": []
+        },
+        {
+          "role": "authenticated",
+          "before": [
+            "EXECUTE"
+          ],
+          "after": []
+        },
+        {
+          "role": "postgres",
+          "before": [
+            "EXECUTE"
+          ],
+          "after": [
+            "EXECUTE"
+          ]
+        },
+        {
+          "role": "service_role",
+          "before": [
+            "EXECUTE"
+          ],
+          "after": [
+            "EXECUTE"
+          ]
+        }
+      ]
+    },
+    {
+      "object": "function:set_promotions_updated_at",
+      "roles": [
+        {
+          "role": "PUBLIC",
+          "before": [
+            "EXECUTE"
+          ],
+          "after": []
+        },
+        {
+          "role": "anon",
+          "before": [
+            "EXECUTE"
+          ],
+          "after": []
+        },
+        {
+          "role": "authenticated",
+          "before": [
+            "EXECUTE"
+          ],
+          "after": []
+        },
+        {
+          "role": "postgres",
+          "before": [
+            "EXECUTE"
+          ],
+          "after": [
+            "EXECUTE"
+          ]
+        },
+        {
+          "role": "service_role",
+          "before": [
+            "EXECUTE"
+          ],
+          "after": [
+            "EXECUTE"
+          ]
+        }
+      ]
+    },
+    {
+      "object": "relation:ai_assistant_usage_monthly",
+      "roles": [
+        {
+          "role": "PUBLIC",
+          "before": [],
+          "after": []
+        },
+        {
+          "role": "anon",
+          "before": [
+            "DELETE",
+            "INSERT",
+            "MAINTAIN",
+            "REFERENCES",
+            "SELECT",
+            "TRIGGER",
+            "TRUNCATE",
+            "UPDATE"
+          ],
+          "after": [
+            "DELETE",
+            "INSERT",
+            "MAINTAIN",
+            "REFERENCES",
+            "SELECT",
+            "TRIGGER",
+            "UPDATE"
+          ]
+        },
+        {
+          "role": "authenticated",
+          "before": [
+            "DELETE",
+            "INSERT",
+            "MAINTAIN",
+            "REFERENCES",
+            "SELECT",
+            "TRIGGER",
+            "TRUNCATE",
+            "UPDATE"
+          ],
+          "after": [
+            "DELETE",
+            "INSERT",
+            "MAINTAIN",
+            "REFERENCES",
+            "SELECT",
+            "TRIGGER",
+            "UPDATE"
+          ]
+        },
+        {
+          "role": "postgres",
+          "before": [
+            "DELETE",
+            "INSERT",
+            "MAINTAIN",
+            "REFERENCES",
+            "SELECT",
+            "TRIGGER",
+            "TRUNCATE",
+            "UPDATE"
+          ],
+          "after": [
+            "DELETE",
+            "INSERT",
+            "MAINTAIN",
+            "REFERENCES",
+            "SELECT",
+            "TRIGGER",
+            "TRUNCATE",
+            "UPDATE"
+          ]
+        },
+        {
+          "role": "service_role",
+          "before": [
+            "DELETE",
+            "INSERT",
+            "MAINTAIN",
+            "REFERENCES",
+            "SELECT",
+            "TRIGGER",
+            "TRUNCATE",
+            "UPDATE"
+          ],
+          "after": [
+            "DELETE",
+            "INSERT",
+            "MAINTAIN",
+            "REFERENCES",
+            "SELECT",
+            "TRIGGER",
+            "TRUNCATE",
+            "UPDATE"
+          ]
+        }
+      ]
+    },
+    {
+      "object": "relation:atrio_clients",
+      "roles": [
+        {
+          "role": "PUBLIC",
+          "before": [],
+          "after": []
+        },
+        {
+          "role": "anon",
+          "before": [
+            "DELETE",
+            "INSERT",
+            "MAINTAIN",
+            "REFERENCES",
+            "SELECT",
+            "TRIGGER",
+            "TRUNCATE",
+            "UPDATE"
+          ],
+          "after": [
+            "DELETE",
+            "INSERT",
+            "MAINTAIN",
+            "REFERENCES",
+            "SELECT",
+            "TRIGGER",
+            "UPDATE"
+          ]
+        },
+        {
+          "role": "authenticated",
+          "before": [
+            "DELETE",
+            "INSERT",
+            "MAINTAIN",
+            "REFERENCES",
+            "SELECT",
+            "TRIGGER",
+            "TRUNCATE",
+            "UPDATE"
+          ],
+          "after": [
+            "DELETE",
+            "INSERT",
+            "MAINTAIN",
+            "REFERENCES",
+            "SELECT",
+            "TRIGGER",
+            "UPDATE"
+          ]
+        },
+        {
+          "role": "postgres",
+          "before": [
+            "DELETE",
+            "INSERT",
+            "MAINTAIN",
+            "REFERENCES",
+            "SELECT",
+            "TRIGGER",
+            "TRUNCATE",
+            "UPDATE"
+          ],
+          "after": [
+            "DELETE",
+            "INSERT",
+            "MAINTAIN",
+            "REFERENCES",
+            "SELECT",
+            "TRIGGER",
+            "TRUNCATE",
+            "UPDATE"
+          ]
+        },
+        {
+          "role": "service_role",
+          "before": [
+            "DELETE",
+            "INSERT",
+            "MAINTAIN",
+            "REFERENCES",
+            "SELECT",
+            "TRIGGER",
+            "TRUNCATE",
+            "UPDATE"
+          ],
+          "after": [
+            "DELETE",
+            "INSERT",
+            "MAINTAIN",
+            "REFERENCES",
+            "SELECT",
+            "TRIGGER",
+            "TRUNCATE",
+            "UPDATE"
+          ]
+        }
+      ]
+    },
+    {
+      "object": "relation:client_subscriptions",
+      "roles": [
+        {
+          "role": "PUBLIC",
+          "before": [],
+          "after": []
+        },
+        {
+          "role": "anon",
+          "before": [
+            "DELETE",
+            "INSERT",
+            "MAINTAIN",
+            "REFERENCES",
+            "SELECT",
+            "TRIGGER",
+            "TRUNCATE",
+            "UPDATE"
+          ],
+          "after": [
+            "DELETE",
+            "INSERT",
+            "MAINTAIN",
+            "REFERENCES",
+            "SELECT",
+            "TRIGGER",
+            "UPDATE"
+          ]
+        },
+        {
+          "role": "authenticated",
+          "before": [
+            "DELETE",
+            "INSERT",
+            "MAINTAIN",
+            "REFERENCES",
+            "SELECT",
+            "TRIGGER",
+            "TRUNCATE",
+            "UPDATE"
+          ],
+          "after": [
+            "DELETE",
+            "INSERT",
+            "MAINTAIN",
+            "REFERENCES",
+            "SELECT",
+            "TRIGGER",
+            "UPDATE"
+          ]
+        },
+        {
+          "role": "postgres",
+          "before": [
+            "DELETE",
+            "INSERT",
+            "MAINTAIN",
+            "REFERENCES",
+            "SELECT",
+            "TRIGGER",
+            "TRUNCATE",
+            "UPDATE"
+          ],
+          "after": [
+            "DELETE",
+            "INSERT",
+            "MAINTAIN",
+            "REFERENCES",
+            "SELECT",
+            "TRIGGER",
+            "TRUNCATE",
+            "UPDATE"
+          ]
+        },
+        {
+          "role": "service_role",
+          "before": [
+            "DELETE",
+            "INSERT",
+            "MAINTAIN",
+            "REFERENCES",
+            "SELECT",
+            "TRIGGER",
+            "TRUNCATE",
+            "UPDATE"
+          ],
+          "after": [
+            "DELETE",
+            "INSERT",
+            "MAINTAIN",
+            "REFERENCES",
+            "SELECT",
+            "TRIGGER",
+            "TRUNCATE",
+            "UPDATE"
+          ]
+        }
+      ]
+    },
+    {
+      "object": "relation:cron_config",
+      "roles": [
+        {
+          "role": "PUBLIC",
+          "before": [],
+          "after": []
+        },
+        {
+          "role": "anon",
+          "before": [
+            "DELETE",
+            "INSERT",
+            "MAINTAIN",
+            "REFERENCES",
+            "SELECT",
+            "TRIGGER",
+            "TRUNCATE",
+            "UPDATE"
+          ],
+          "after": []
+        },
+        {
+          "role": "authenticated",
+          "before": [
+            "DELETE",
+            "INSERT",
+            "MAINTAIN",
+            "REFERENCES",
+            "SELECT",
+            "TRIGGER",
+            "TRUNCATE",
+            "UPDATE"
+          ],
+          "after": []
+        },
+        {
+          "role": "postgres",
+          "before": [
+            "DELETE",
+            "INSERT",
+            "MAINTAIN",
+            "REFERENCES",
+            "SELECT",
+            "TRIGGER",
+            "TRUNCATE",
+            "UPDATE"
+          ],
+          "after": [
+            "DELETE",
+            "INSERT",
+            "MAINTAIN",
+            "REFERENCES",
+            "SELECT",
+            "TRIGGER",
+            "TRUNCATE",
+            "UPDATE"
+          ]
+        },
+        {
+          "role": "service_role",
+          "before": [
+            "DELETE",
+            "INSERT",
+            "MAINTAIN",
+            "REFERENCES",
+            "SELECT",
+            "TRIGGER",
+            "TRUNCATE",
+            "UPDATE"
+          ],
+          "after": [
+            "DELETE",
+            "INSERT",
+            "MAINTAIN",
+            "REFERENCES",
+            "SELECT",
+            "TRIGGER",
+            "TRUNCATE",
+            "UPDATE"
+          ]
+        }
+      ]
+    },
+    {
+      "object": "relation:home_overview_stats_cache",
+      "roles": [
+        {
+          "role": "PUBLIC",
+          "before": [],
+          "after": []
+        },
+        {
+          "role": "anon",
+          "before": [
+            "DELETE",
+            "INSERT",
+            "MAINTAIN",
+            "REFERENCES",
+            "SELECT",
+            "TRIGGER",
+            "TRUNCATE",
+            "UPDATE"
+          ],
+          "after": [
+            "DELETE",
+            "INSERT",
+            "MAINTAIN",
+            "REFERENCES",
+            "SELECT",
+            "TRIGGER",
+            "UPDATE"
+          ]
+        },
+        {
+          "role": "authenticated",
+          "before": [
+            "DELETE",
+            "INSERT",
+            "MAINTAIN",
+            "REFERENCES",
+            "SELECT",
+            "TRIGGER",
+            "TRUNCATE",
+            "UPDATE"
+          ],
+          "after": [
+            "DELETE",
+            "INSERT",
+            "MAINTAIN",
+            "REFERENCES",
+            "SELECT",
+            "TRIGGER",
+            "UPDATE"
+          ]
+        },
+        {
+          "role": "postgres",
+          "before": [
+            "DELETE",
+            "INSERT",
+            "MAINTAIN",
+            "REFERENCES",
+            "SELECT",
+            "TRIGGER",
+            "TRUNCATE",
+            "UPDATE"
+          ],
+          "after": [
+            "DELETE",
+            "INSERT",
+            "MAINTAIN",
+            "REFERENCES",
+            "SELECT",
+            "TRIGGER",
+            "TRUNCATE",
+            "UPDATE"
+          ]
+        },
+        {
+          "role": "service_role",
+          "before": [
+            "DELETE",
+            "INSERT",
+            "MAINTAIN",
+            "REFERENCES",
+            "SELECT",
+            "TRIGGER",
+            "TRUNCATE",
+            "UPDATE"
+          ],
+          "after": [
+            "DELETE",
+            "INSERT",
+            "MAINTAIN",
+            "REFERENCES",
+            "SELECT",
+            "TRIGGER",
+            "TRUNCATE",
+            "UPDATE"
+          ]
+        }
+      ]
+    },
+    {
+      "object": "relation:kommo_client_configs",
+      "roles": [
+        {
+          "role": "PUBLIC",
+          "before": [],
+          "after": []
+        },
+        {
+          "role": "anon",
+          "before": [
+            "DELETE",
+            "INSERT",
+            "MAINTAIN",
+            "REFERENCES",
+            "SELECT",
+            "TRIGGER",
+            "TRUNCATE",
+            "UPDATE"
+          ],
+          "after": [
+            "DELETE",
+            "INSERT",
+            "MAINTAIN",
+            "REFERENCES",
+            "SELECT",
+            "TRIGGER",
+            "UPDATE"
+          ]
+        },
+        {
+          "role": "authenticated",
+          "before": [
+            "DELETE",
+            "INSERT",
+            "MAINTAIN",
+            "REFERENCES",
+            "SELECT",
+            "TRIGGER",
+            "TRUNCATE",
+            "UPDATE"
+          ],
+          "after": [
+            "DELETE",
+            "INSERT",
+            "MAINTAIN",
+            "REFERENCES",
+            "SELECT",
+            "TRIGGER",
+            "UPDATE"
+          ]
+        },
+        {
+          "role": "postgres",
+          "before": [
+            "DELETE",
+            "INSERT",
+            "MAINTAIN",
+            "REFERENCES",
+            "SELECT",
+            "TRIGGER",
+            "TRUNCATE",
+            "UPDATE"
+          ],
+          "after": [
+            "DELETE",
+            "INSERT",
+            "MAINTAIN",
+            "REFERENCES",
+            "SELECT",
+            "TRIGGER",
+            "TRUNCATE",
+            "UPDATE"
+          ]
+        },
+        {
+          "role": "service_role",
+          "before": [
+            "DELETE",
+            "INSERT",
+            "MAINTAIN",
+            "REFERENCES",
+            "SELECT",
+            "TRIGGER",
+            "TRUNCATE",
+            "UPDATE"
+          ],
+          "after": [
+            "DELETE",
+            "INSERT",
+            "MAINTAIN",
+            "REFERENCES",
+            "SELECT",
+            "TRIGGER",
+            "TRUNCATE",
+            "UPDATE"
+          ]
+        }
+      ]
+    },
+    {
+      "object": "relation:landings",
+      "roles": [
+        {
+          "role": "PUBLIC",
+          "before": [],
+          "after": []
+        },
+        {
+          "role": "anon",
+          "before": [
+            "DELETE",
+            "INSERT",
+            "MAINTAIN",
+            "REFERENCES",
+            "SELECT",
+            "TRIGGER",
+            "TRUNCATE",
+            "UPDATE"
+          ],
+          "after": [
+            "DELETE",
+            "INSERT",
+            "MAINTAIN",
+            "REFERENCES",
+            "SELECT",
+            "TRIGGER",
+            "UPDATE"
+          ]
+        },
+        {
+          "role": "authenticated",
+          "before": [
+            "DELETE",
+            "INSERT",
+            "MAINTAIN",
+            "REFERENCES",
+            "SELECT",
+            "TRIGGER",
+            "TRUNCATE",
+            "UPDATE"
+          ],
+          "after": [
+            "DELETE",
+            "INSERT",
+            "MAINTAIN",
+            "REFERENCES",
+            "SELECT",
+            "TRIGGER",
+            "UPDATE"
+          ]
+        },
+        {
+          "role": "postgres",
+          "before": [
+            "DELETE",
+            "INSERT",
+            "MAINTAIN",
+            "REFERENCES",
+            "SELECT",
+            "TRIGGER",
+            "TRUNCATE",
+            "UPDATE"
+          ],
+          "after": [
+            "DELETE",
+            "INSERT",
+            "MAINTAIN",
+            "REFERENCES",
+            "SELECT",
+            "TRIGGER",
+            "TRUNCATE",
+            "UPDATE"
+          ]
+        },
+        {
+          "role": "service_role",
+          "before": [
+            "DELETE",
+            "INSERT",
+            "MAINTAIN",
+            "REFERENCES",
+            "SELECT",
+            "TRIGGER",
+            "TRUNCATE",
+            "UPDATE"
+          ],
+          "after": [
+            "DELETE",
+            "INSERT",
+            "MAINTAIN",
+            "REFERENCES",
+            "SELECT",
+            "TRIGGER",
+            "TRUNCATE",
+            "UPDATE"
+          ]
+        }
+      ]
+    },
+    {
+      "object": "relation:notification_bot_config",
+      "roles": [
+        {
+          "role": "PUBLIC",
+          "before": [],
+          "after": []
+        },
+        {
+          "role": "anon",
+          "before": [
+            "DELETE",
+            "INSERT",
+            "MAINTAIN",
+            "REFERENCES",
+            "SELECT",
+            "TRIGGER",
+            "TRUNCATE",
+            "UPDATE"
+          ],
+          "after": [
+            "DELETE",
+            "INSERT",
+            "MAINTAIN",
+            "REFERENCES",
+            "SELECT",
+            "TRIGGER",
+            "UPDATE"
+          ]
+        },
+        {
+          "role": "authenticated",
+          "before": [
+            "DELETE",
+            "INSERT",
+            "MAINTAIN",
+            "REFERENCES",
+            "SELECT",
+            "TRIGGER",
+            "TRUNCATE",
+            "UPDATE"
+          ],
+          "after": [
+            "DELETE",
+            "INSERT",
+            "MAINTAIN",
+            "REFERENCES",
+            "SELECT",
+            "TRIGGER",
+            "UPDATE"
+          ]
+        },
+        {
+          "role": "postgres",
+          "before": [
+            "DELETE",
+            "INSERT",
+            "MAINTAIN",
+            "REFERENCES",
+            "SELECT",
+            "TRIGGER",
+            "TRUNCATE",
+            "UPDATE"
+          ],
+          "after": [
+            "DELETE",
+            "INSERT",
+            "MAINTAIN",
+            "REFERENCES",
+            "SELECT",
+            "TRIGGER",
+            "TRUNCATE",
+            "UPDATE"
+          ]
+        },
+        {
+          "role": "service_role",
+          "before": [
+            "DELETE",
+            "INSERT",
+            "MAINTAIN",
+            "REFERENCES",
+            "SELECT",
+            "TRIGGER",
+            "TRUNCATE",
+            "UPDATE"
+          ],
+          "after": [
+            "DELETE",
+            "INSERT",
+            "MAINTAIN",
+            "REFERENCES",
+            "SELECT",
+            "TRIGGER",
+            "TRUNCATE",
+            "UPDATE"
+          ]
+        }
+      ]
+    },
+    {
+      "object": "relation:notification_settings",
+      "roles": [
+        {
+          "role": "PUBLIC",
+          "before": [],
+          "after": []
+        },
+        {
+          "role": "anon",
+          "before": [
+            "DELETE",
+            "INSERT",
+            "MAINTAIN",
+            "REFERENCES",
+            "SELECT",
+            "TRIGGER",
+            "TRUNCATE",
+            "UPDATE"
+          ],
+          "after": [
+            "DELETE",
+            "INSERT",
+            "MAINTAIN",
+            "REFERENCES",
+            "SELECT",
+            "TRIGGER",
+            "UPDATE"
+          ]
+        },
+        {
+          "role": "authenticated",
+          "before": [
+            "DELETE",
+            "INSERT",
+            "MAINTAIN",
+            "REFERENCES",
+            "SELECT",
+            "TRIGGER",
+            "TRUNCATE",
+            "UPDATE"
+          ],
+          "after": [
+            "DELETE",
+            "INSERT",
+            "MAINTAIN",
+            "REFERENCES",
+            "SELECT",
+            "TRIGGER",
+            "UPDATE"
+          ]
+        },
+        {
+          "role": "postgres",
+          "before": [
+            "DELETE",
+            "INSERT",
+            "MAINTAIN",
+            "REFERENCES",
+            "SELECT",
+            "TRIGGER",
+            "TRUNCATE",
+            "UPDATE"
+          ],
+          "after": [
+            "DELETE",
+            "INSERT",
+            "MAINTAIN",
+            "REFERENCES",
+            "SELECT",
+            "TRIGGER",
+            "TRUNCATE",
+            "UPDATE"
+          ]
+        },
+        {
+          "role": "service_role",
+          "before": [
+            "DELETE",
+            "INSERT",
+            "MAINTAIN",
+            "REFERENCES",
+            "SELECT",
+            "TRIGGER",
+            "TRUNCATE",
+            "UPDATE"
+          ],
+          "after": [
+            "DELETE",
+            "INSERT",
+            "MAINTAIN",
+            "REFERENCES",
+            "SELECT",
+            "TRIGGER",
+            "TRUNCATE",
+            "UPDATE"
+          ]
+        }
+      ]
+    },
+    {
+      "object": "relation:notification_telegram_destinations",
+      "roles": [
+        {
+          "role": "PUBLIC",
+          "before": [],
+          "after": []
+        },
+        {
+          "role": "anon",
+          "before": [
+            "DELETE",
+            "INSERT",
+            "MAINTAIN",
+            "REFERENCES",
+            "SELECT",
+            "TRIGGER",
+            "TRUNCATE",
+            "UPDATE"
+          ],
+          "after": [
+            "DELETE",
+            "INSERT",
+            "MAINTAIN",
+            "REFERENCES",
+            "SELECT",
+            "TRIGGER",
+            "UPDATE"
+          ]
+        },
+        {
+          "role": "authenticated",
+          "before": [
+            "DELETE",
+            "INSERT",
+            "MAINTAIN",
+            "REFERENCES",
+            "SELECT",
+            "TRIGGER",
+            "TRUNCATE",
+            "UPDATE"
+          ],
+          "after": [
+            "DELETE",
+            "INSERT",
+            "MAINTAIN",
+            "REFERENCES",
+            "SELECT",
+            "TRIGGER",
+            "UPDATE"
+          ]
+        },
+        {
+          "role": "postgres",
+          "before": [
+            "DELETE",
+            "INSERT",
+            "MAINTAIN",
+            "REFERENCES",
+            "SELECT",
+            "TRIGGER",
+            "TRUNCATE",
+            "UPDATE"
+          ],
+          "after": [
+            "DELETE",
+            "INSERT",
+            "MAINTAIN",
+            "REFERENCES",
+            "SELECT",
+            "TRIGGER",
+            "TRUNCATE",
+            "UPDATE"
+          ]
+        },
+        {
+          "role": "service_role",
+          "before": [
+            "DELETE",
+            "INSERT",
+            "MAINTAIN",
+            "REFERENCES",
+            "SELECT",
+            "TRIGGER",
+            "TRUNCATE",
+            "UPDATE"
+          ],
+          "after": [
+            "DELETE",
+            "INSERT",
+            "MAINTAIN",
+            "REFERENCES",
+            "SELECT",
+            "TRIGGER",
+            "TRUNCATE",
+            "UPDATE"
+          ]
+        }
+      ]
+    },
+    {
+      "object": "relation:profiles",
+      "roles": [
+        {
+          "role": "PUBLIC",
+          "before": [],
+          "after": []
+        },
+        {
+          "role": "anon",
+          "before": [
+            "MAINTAIN",
+            "REFERENCES",
+            "SELECT",
+            "TRIGGER",
+            "TRUNCATE"
+          ],
+          "after": [
+            "MAINTAIN",
+            "REFERENCES",
+            "SELECT",
+            "TRIGGER"
+          ]
+        },
+        {
+          "role": "authenticated",
+          "before": [
+            "MAINTAIN",
+            "REFERENCES",
+            "SELECT",
+            "TRIGGER",
+            "TRUNCATE"
+          ],
+          "after": [
+            "MAINTAIN",
+            "REFERENCES",
+            "SELECT",
+            "TRIGGER"
+          ]
+        },
+        {
+          "role": "postgres",
+          "before": [
+            "DELETE",
+            "INSERT",
+            "MAINTAIN",
+            "REFERENCES",
+            "SELECT",
+            "TRIGGER",
+            "TRUNCATE",
+            "UPDATE"
+          ],
+          "after": [
+            "DELETE",
+            "INSERT",
+            "MAINTAIN",
+            "REFERENCES",
+            "SELECT",
+            "TRIGGER",
+            "TRUNCATE",
+            "UPDATE"
+          ]
+        },
+        {
+          "role": "service_role",
+          "before": [
+            "MAINTAIN",
+            "REFERENCES",
+            "SELECT",
+            "TRIGGER",
+            "TRUNCATE"
+          ],
+          "after": [
+            "MAINTAIN",
+            "REFERENCES",
+            "SELECT",
+            "TRIGGER",
+            "TRUNCATE"
+          ]
+        }
+      ]
+    },
+    {
+      "object": "relation:promotion_participants",
+      "roles": [
+        {
+          "role": "PUBLIC",
+          "before": [],
+          "after": []
+        },
+        {
+          "role": "anon",
+          "before": [
+            "DELETE",
+            "INSERT",
+            "MAINTAIN",
+            "REFERENCES",
+            "SELECT",
+            "TRIGGER",
+            "TRUNCATE",
+            "UPDATE"
+          ],
+          "after": [
+            "DELETE",
+            "INSERT",
+            "MAINTAIN",
+            "REFERENCES",
+            "SELECT",
+            "TRIGGER",
+            "UPDATE"
+          ]
+        },
+        {
+          "role": "authenticated",
+          "before": [
+            "DELETE",
+            "INSERT",
+            "MAINTAIN",
+            "REFERENCES",
+            "SELECT",
+            "TRIGGER",
+            "TRUNCATE",
+            "UPDATE"
+          ],
+          "after": [
+            "DELETE",
+            "INSERT",
+            "MAINTAIN",
+            "REFERENCES",
+            "SELECT",
+            "TRIGGER",
+            "UPDATE"
+          ]
+        },
+        {
+          "role": "postgres",
+          "before": [
+            "DELETE",
+            "INSERT",
+            "MAINTAIN",
+            "REFERENCES",
+            "SELECT",
+            "TRIGGER",
+            "TRUNCATE",
+            "UPDATE"
+          ],
+          "after": [
+            "DELETE",
+            "INSERT",
+            "MAINTAIN",
+            "REFERENCES",
+            "SELECT",
+            "TRIGGER",
+            "TRUNCATE",
+            "UPDATE"
+          ]
+        },
+        {
+          "role": "service_role",
+          "before": [
+            "DELETE",
+            "INSERT",
+            "MAINTAIN",
+            "REFERENCES",
+            "SELECT",
+            "TRIGGER",
+            "TRUNCATE",
+            "UPDATE"
+          ],
+          "after": [
+            "DELETE",
+            "INSERT",
+            "MAINTAIN",
+            "REFERENCES",
+            "SELECT",
+            "TRIGGER",
+            "TRUNCATE",
+            "UPDATE"
+          ]
+        }
+      ]
+    },
+    {
+      "object": "relation:promotions",
+      "roles": [
+        {
+          "role": "PUBLIC",
+          "before": [],
+          "after": []
+        },
+        {
+          "role": "anon",
+          "before": [
+            "DELETE",
+            "INSERT",
+            "MAINTAIN",
+            "REFERENCES",
+            "SELECT",
+            "TRIGGER",
+            "TRUNCATE",
+            "UPDATE"
+          ],
+          "after": [
+            "DELETE",
+            "INSERT",
+            "MAINTAIN",
+            "REFERENCES",
+            "SELECT",
+            "TRIGGER",
+            "UPDATE"
+          ]
+        },
+        {
+          "role": "authenticated",
+          "before": [
+            "DELETE",
+            "INSERT",
+            "MAINTAIN",
+            "REFERENCES",
+            "SELECT",
+            "TRIGGER",
+            "TRUNCATE",
+            "UPDATE"
+          ],
+          "after": [
+            "DELETE",
+            "INSERT",
+            "MAINTAIN",
+            "REFERENCES",
+            "SELECT",
+            "TRIGGER",
+            "UPDATE"
+          ]
+        },
+        {
+          "role": "postgres",
+          "before": [
+            "DELETE",
+            "INSERT",
+            "MAINTAIN",
+            "REFERENCES",
+            "SELECT",
+            "TRIGGER",
+            "TRUNCATE",
+            "UPDATE"
+          ],
+          "after": [
+            "DELETE",
+            "INSERT",
+            "MAINTAIN",
+            "REFERENCES",
+            "SELECT",
+            "TRIGGER",
+            "TRUNCATE",
+            "UPDATE"
+          ]
+        },
+        {
+          "role": "service_role",
+          "before": [
+            "DELETE",
+            "INSERT",
+            "MAINTAIN",
+            "REFERENCES",
+            "SELECT",
+            "TRIGGER",
+            "TRUNCATE",
+            "UPDATE"
+          ],
+          "after": [
+            "DELETE",
+            "INSERT",
+            "MAINTAIN",
+            "REFERENCES",
+            "SELECT",
+            "TRIGGER",
+            "TRUNCATE",
+            "UPDATE"
+          ]
+        }
+      ]
+    }
+  ],
+  "pgTap": {
+    "passed": 8,
+    "failed": 0,
+    "countedInsideOneCheck": true
+  },
+  "dataApi": {
+    "image": "public.ecr.aws/supabase/postgrest:v14.1",
+    "publishedPorts": 0,
+    "transport": "Existing isolated PostgREST harness, ephemeral synthetic JWTs only"
+  },
+  "cleanup": {
+    "api": {
+      "container": "488c0e411a1fbb8fdcce000c811f9d96433c614eda8b2869748dc71bb6abe30c",
+      "remaining": 0
+    },
+    "database": {
+      "project": "phase0b-80766a88",
+      "owned": {
+        "containers": [
+          "eddf8d685b5ab616a1991399c1848c1aac73156e9e98162ce96474456989b735"
+        ],
+        "networks": [
+          "7d9f24bcf3fcaead72f89edcd5546a0c09d7b102098ead0ca2d3d53e589d0644",
+          "ae0a7c3e846e6a397d49024f5d37f3b0943d3cc18589cbbf434a2234d4f6756e"
+        ],
+        "volumes": [
+          "supabase_db_phase0b-80766a88"
+        ]
+      },
+      "remaining": {
+        "containers": [],
+        "networks": [],
+        "volumes": []
+      }
+    }
+  },
+  "passed": 82,
+  "finishedAt": "2026-09-18T15:46:53.779Z"
+}

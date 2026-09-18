@@ -1,0 +1,6700 @@
+{
+  "phase": "1B.4",
+  "baseCommit": "abfcbd914b3d1bed785467645766697a22e8651e",
+  "baseEvidence": "docs/security/phase-1a/evidence.json",
+  "baseEvidenceSha256": "bfcfbcfe09fbe8763ac008f4a09db8f4efa40f1a84d0717ff6939f169a13a45d",
+  "method": "Static textual references revalidated in application source; absence alone never proves no external consumer. Prior documentation supplies trigger/job/role classification.",
+  "truncateExceptionForAll42": false,
+  "truncateExceptionPendingClarification": true,
+  "truncateTables": [
+    "ai_assistant_usage_monthly",
+    "atrio_clients",
+    "client_subscriptions",
+    "cron_config",
+    "home_overview_stats_cache",
+    "kommo_client_configs",
+    "landings",
+    "notification_bot_config",
+    "notification_settings",
+    "notification_telegram_destinations",
+    "profiles",
+    "promotion_participants",
+    "promotions"
+  ],
+  "deferredTruncate": [
+    "ar_name_inferred_sex",
+    "ar_phone_area_codes",
+    "chatrace_client_configs",
+    "chatrace_gerencias",
+    "conversion_inbox",
+    "conversion_log_lead_backfill_replays",
+    "conversion_logs",
+    "conversion_view_preferences",
+    "conversions",
+    "conversions_config",
+    "conversions_pixel_configs",
+    "gerencia_phone_availability_snapshots",
+    "gerencia_phones",
+    "gerencia_work_group_members",
+    "gerencia_work_groups",
+    "gerencias",
+    "hidden_contacts",
+    "hidden_conversion_inbox",
+    "hidden_conversion_logs",
+    "hidden_conversions",
+    "landing_phone_availability_demands",
+    "landing_phone_cache",
+    "landings_gerencias",
+    "notification_contact_alerts",
+    "settings",
+    "tracking_queue",
+    "whatsapp_cloud_api_gerencias",
+    "whatsapp_cloud_api_redirects",
+    "whatsapp_cloud_api_thread_reads"
+  ],
+  "functions": [
+    {
+      "name": "enforce_landing_plan_limit",
+      "args": "",
+      "remove": [
+        "PUBLIC",
+        "anon",
+        "authenticated"
+      ],
+      "category": "postgres/cron",
+      "reason": "Existing trigger only; installer/owner and backend retained, ordinary DML tested."
+    },
+    {
+      "name": "prevent_landing_name_change",
+      "args": "",
+      "remove": [
+        "PUBLIC",
+        "anon",
+        "authenticated"
+      ],
+      "category": "postgres/cron",
+      "reason": "Existing trigger only; installer/owner and backend retained, ordinary DML tested."
+    },
+    {
+      "name": "prevent_landing_tag_change",
+      "args": "",
+      "remove": [
+        "PUBLIC",
+        "anon",
+        "authenticated"
+      ],
+      "category": "postgres/cron",
+      "reason": "Existing trigger only; installer/owner and backend retained, ordinary DML tested."
+    },
+    {
+      "name": "set_atrio_clients_updated_at",
+      "args": "",
+      "remove": [
+        "PUBLIC",
+        "anon",
+        "authenticated"
+      ],
+      "category": "postgres/cron",
+      "reason": "Existing trigger only; installer/owner and backend retained, ordinary DML tested."
+    },
+    {
+      "name": "set_client_subscriptions_updated_at",
+      "args": "",
+      "remove": [
+        "PUBLIC",
+        "anon",
+        "authenticated"
+      ],
+      "category": "postgres/cron",
+      "reason": "Existing trigger only; installer/owner and backend retained, ordinary DML tested."
+    },
+    {
+      "name": "set_landings_atrio_clients_owner",
+      "args": "",
+      "remove": [
+        "PUBLIC",
+        "anon",
+        "authenticated"
+      ],
+      "category": "postgres/cron",
+      "reason": "Existing trigger only; installer/owner and backend retained, ordinary DML tested."
+    },
+    {
+      "name": "set_landings_updated_at",
+      "args": "",
+      "remove": [
+        "PUBLIC",
+        "anon",
+        "authenticated"
+      ],
+      "category": "postgres/cron",
+      "reason": "Existing trigger only; installer/owner and backend retained, ordinary DML tested."
+    },
+    {
+      "name": "set_promotions_updated_at",
+      "args": "",
+      "remove": [
+        "PUBLIC",
+        "anon",
+        "authenticated"
+      ],
+      "category": "postgres/cron",
+      "reason": "Existing trigger only; installer/owner and backend retained, ordinary DML tested."
+    },
+    {
+      "name": "cron_process_due_promotions",
+      "args": "",
+      "remove": [
+        "PUBLIC",
+        "anon",
+        "authenticated"
+      ],
+      "category": "postgres/cron",
+      "reason": "Accredited promotion-draw-due-hourly job runs as postgres; no application RPC caller."
+    },
+    {
+      "name": "consume_ai_assistant_quota",
+      "args": "integer",
+      "remove": [
+        "PUBLIC",
+        "anon"
+      ],
+      "category": "authenticated",
+      "reason": "Verified user JWT from stats-assistant; current body already rejects null auth.uid()."
+    },
+    {
+      "name": "get_notification_bot_username",
+      "args": "",
+      "remove": [
+        "PUBLIC",
+        "anon"
+      ],
+      "category": "authenticated",
+      "reason": "Authenticated notification panel; retain authenticated/backend EXECUTE."
+    },
+    {
+      "name": "get_home_overview_stats",
+      "args": "uuid, uuid",
+      "remove": [
+        "PUBLIC",
+        "anon"
+      ],
+      "category": "authenticated",
+      "reason": "Explicitly authorized legacy reporting auth guard; keep calculation byte-for-byte."
+    }
+  ],
+  "dataApiRevokes": [
+    {
+      "table": "cron_config",
+      "roles": [
+        "PUBLIC",
+        "anon",
+        "authenticated"
+      ],
+      "privileges": [
+        "SELECT",
+        "INSERT",
+        "UPDATE",
+        "DELETE",
+        "REFERENCES",
+        "TRIGGER",
+        "MAINTAIN"
+      ],
+      "reason": "Phase 1A documents service-role/cron consumers only and no client policies; preserve every backend grant."
+    }
+  ],
+  "objects": [
+    {
+      "object": "private.close_landing_phone_reservation_on_lead()",
+      "kind": "function",
+      "category": "postgres/cron",
+      "action": "excluded",
+      "reason": "Explicitly excluded subsystem; no ACL/body changes.",
+      "sourceReferences": [],
+      "categories": [
+        "postgres/cron"
+      ]
+    },
+    {
+      "object": "private.is_valid_meta_audience_fields(p_fields text[])",
+      "kind": "function",
+      "category": "authenticated",
+      "action": "preserve",
+      "reason": "Existing CHECK constraint requires authenticated EXECUTE; preserve its explicit grants.",
+      "sourceReferences": [],
+      "categories": [
+        "authenticated"
+      ]
+    },
+    {
+      "object": "private.is_valid_meta_audience_rules(p_rules jsonb)",
+      "kind": "function",
+      "category": "authenticated",
+      "action": "preserve",
+      "reason": "Existing CHECK constraint requires authenticated EXECUTE; preserve its explicit grants.",
+      "sourceReferences": [],
+      "categories": [
+        "authenticated"
+      ]
+    },
+    {
+      "object": "private.landing_phone_message_load(p_landing_id uuid, p_gerencia_id integer, p_phone_kind text, p_owner_user_id uuid, p_phone_id bigint)",
+      "kind": "function",
+      "category": "backend/service_role",
+      "action": "excluded",
+      "reason": "Explicitly excluded subsystem; no ACL/body changes.",
+      "sourceReferences": [],
+      "categories": [
+        "backend/service_role"
+      ]
+    },
+    {
+      "object": "private.set_meta_audience_config_updated_at()",
+      "kind": "function",
+      "category": "postgres/cron",
+      "action": "preserve",
+      "reason": "Existing explicit access retained.",
+      "sourceReferences": [],
+      "categories": [
+        "postgres/cron"
+      ]
+    },
+    {
+      "object": "public.atrio_assignment_scope_usage(p_scope_type text, p_scope_id uuid, p_atrio_client_id uuid)",
+      "kind": "function",
+      "category": "backend/service_role",
+      "action": "preserve",
+      "reason": "Existing explicit access retained.",
+      "sourceReferences": [],
+      "categories": [
+        "backend/service_role"
+      ]
+    },
+    {
+      "object": "public.calculate_home_overview_stats_by_currency(p_user_id uuid, p_hidden_by uuid, p_currency text)",
+      "kind": "function",
+      "category": "backend/service_role",
+      "action": "preserve",
+      "reason": "Existing explicit access retained.",
+      "sourceReferences": [],
+      "categories": [
+        "backend/service_role"
+      ]
+    },
+    {
+      "object": "public.claim_purchase_event(p_user_id uuid, p_idempotency_keys text[], p_candidate_event_id text)",
+      "kind": "function",
+      "category": "backend/service_role",
+      "action": "excluded",
+      "reason": "Explicitly excluded subsystem; no ACL/body changes.",
+      "sourceReferences": [
+        {
+          "file": "supabase/functions/conversions/index.ts",
+          "line": 1267
+        }
+      ],
+      "categories": [
+        "backend/service_role"
+      ]
+    },
+    {
+      "object": "public.claim_whatsapp_cloud_api_retarget_candidates(p_limit integer, p_max_age_minutes integer, p_min_age_minutes integer)",
+      "kind": "function",
+      "category": "backend/service_role",
+      "action": "excluded",
+      "reason": "Explicitly excluded subsystem; no ACL/body changes.",
+      "sourceReferences": [
+        {
+          "file": "supabase/functions/whatsapp-cloud-retarget/index.ts",
+          "line": 298
+        }
+      ],
+      "categories": [
+        "backend/service_role"
+      ]
+    },
+    {
+      "object": "public.complete_purchase_event_claim(p_claim_id uuid, p_conversion_id uuid, p_status text)",
+      "kind": "function",
+      "category": "backend/service_role",
+      "action": "excluded",
+      "reason": "Explicitly excluded subsystem; no ACL/body changes.",
+      "sourceReferences": [
+        {
+          "file": "supabase/functions/conversions/index.ts",
+          "line": 1301
+        }
+      ],
+      "categories": [
+        "backend/service_role"
+      ]
+    },
+    {
+      "object": "public.consume_ai_assistant_quota(p_limit integer)",
+      "kind": "function",
+      "category": "authenticated",
+      "action": "restrict",
+      "reason": "Verified user JWT from stats-assistant; current body already rejects null auth.uid().",
+      "sourceReferences": [
+        {
+          "file": "frontend/app/api/stats-assistant/route.ts",
+          "line": 104
+        }
+      ],
+      "categories": [
+        "authenticated"
+      ],
+      "consumerChain": [
+        {
+          "file": "frontend/app/api/stats-assistant/route.ts",
+          "line": 206,
+          "contract": "Bearer verified via Auth before consuming quota"
+        },
+        {
+          "file": "frontend/app/api/stats-assistant/route.ts",
+          "line": 104,
+          "contract": "RPC receives that same user Bearer, not a service credential"
+        }
+      ]
+    },
+    {
+      "object": "public.cron_match_promotion_participants()",
+      "kind": "function",
+      "category": "postgres/cron",
+      "action": "excluded",
+      "reason": "Explicitly excluded subsystem; no ACL/body changes.",
+      "sourceReferences": [],
+      "categories": [
+        "postgres/cron"
+      ]
+    },
+    {
+      "object": "public.cron_notify_inactive_contacts()",
+      "kind": "function",
+      "category": "postgres/cron",
+      "action": "excluded",
+      "reason": "Explicitly excluded subsystem; no ACL/body changes.",
+      "sourceReferences": [],
+      "categories": [
+        "postgres/cron"
+      ]
+    },
+    {
+      "object": "public.cron_process_due_promotions()",
+      "kind": "function",
+      "category": "postgres/cron",
+      "action": "restrict",
+      "reason": "Accredited promotion-draw-due-hourly job runs as postgres; no application RPC caller.",
+      "sourceReferences": [],
+      "categories": [
+        "postgres/cron"
+      ]
+    },
+    {
+      "object": "public.cron_reset_phone_operational_daily()",
+      "kind": "function",
+      "category": "postgres/cron",
+      "action": "excluded",
+      "reason": "Explicitly excluded subsystem; no ACL/body changes.",
+      "sourceReferences": [],
+      "categories": [
+        "postgres/cron"
+      ]
+    },
+    {
+      "object": "public.cron_retry_failed_conversions()",
+      "kind": "function",
+      "category": "postgres/cron",
+      "action": "excluded",
+      "reason": "Explicitly excluded subsystem; no ACL/body changes.",
+      "sourceReferences": [],
+      "categories": [
+        "postgres/cron"
+      ]
+    },
+    {
+      "object": "public.cron_retry_tracking_queue()",
+      "kind": "function",
+      "category": "postgres/cron",
+      "action": "excluded",
+      "reason": "Explicitly excluded subsystem; no ACL/body changes.",
+      "sourceReferences": [],
+      "categories": [
+        "postgres/cron"
+      ]
+    },
+    {
+      "object": "public.cron_sync_phones_all()",
+      "kind": "function",
+      "category": "postgres/cron",
+      "action": "excluded",
+      "reason": "Explicitly excluded subsystem; no ACL/body changes.",
+      "sourceReferences": [],
+      "categories": [
+        "postgres/cron"
+      ]
+    },
+    {
+      "object": "public.cron_sync_telegram_connections()",
+      "kind": "function",
+      "category": "postgres/cron",
+      "action": "deferred",
+      "reason": "Public/legacy/platform or unconfirmed external consumer; no revocation.",
+      "sourceReferences": [],
+      "categories": [
+        "postgres/cron"
+      ]
+    },
+    {
+      "object": "public.cron_warm_landing_phone()",
+      "kind": "function",
+      "category": "postgres/cron",
+      "action": "excluded",
+      "reason": "Explicitly excluded subsystem; no ACL/body changes.",
+      "sourceReferences": [],
+      "categories": [
+        "postgres/cron"
+      ]
+    },
+    {
+      "object": "public.cron_whatsapp_cloud_api_health()",
+      "kind": "function",
+      "category": "postgres/cron",
+      "action": "excluded",
+      "reason": "Explicitly excluded subsystem; no ACL/body changes.",
+      "sourceReferences": [],
+      "categories": [
+        "postgres/cron"
+      ]
+    },
+    {
+      "object": "public.cron_whatsapp_cloud_api_retarget()",
+      "kind": "function",
+      "category": "postgres/cron",
+      "action": "excluded",
+      "reason": "Explicitly excluded subsystem; no ACL/body changes.",
+      "sourceReferences": [],
+      "categories": [
+        "postgres/cron"
+      ]
+    },
+    {
+      "object": "public.cron_whatsapp_cloud_api_worker()",
+      "kind": "function",
+      "category": "postgres/cron",
+      "action": "excluded",
+      "reason": "Explicitly excluded subsystem; no ACL/body changes.",
+      "sourceReferences": [],
+      "categories": [
+        "postgres/cron"
+      ]
+    },
+    {
+      "object": "public.enforce_landing_plan_limit()",
+      "kind": "function",
+      "category": "postgres/cron",
+      "action": "restrict",
+      "reason": "Existing trigger only; installer/owner and backend retained, ordinary DML tested.",
+      "sourceReferences": [],
+      "categories": [
+        "postgres/cron"
+      ]
+    },
+    {
+      "object": "public.enforce_whatsapp_cloud_api_assignment_workspace()",
+      "kind": "function",
+      "category": "postgres/cron",
+      "action": "excluded",
+      "reason": "Explicitly excluded subsystem; no ACL/body changes.",
+      "sourceReferences": [],
+      "categories": [
+        "postgres/cron"
+      ]
+    },
+    {
+      "object": "public.extend_landing_phone_assignment_reservation(p_reservation_id uuid, p_landing_id uuid, p_phone_id bigint, p_phone text)",
+      "kind": "function",
+      "category": "backend/service_role",
+      "action": "excluded",
+      "reason": "Explicitly excluded subsystem; no ACL/body changes.",
+      "sourceReferences": [
+        {
+          "file": "supabase/functions/phone-click/index.ts",
+          "line": 175
+        }
+      ],
+      "categories": [
+        "backend/service_role"
+      ]
+    },
+    {
+      "object": "public.get_atrio_for_landing(p_landing_name text)",
+      "kind": "function",
+      "category": "backend/service_role",
+      "action": "preserve",
+      "reason": "Existing explicit access retained.",
+      "sourceReferences": [
+        {
+          "file": "supabase/functions/landing-atrio/index.ts",
+          "line": 91
+        },
+        {
+          "file": "supabase/functions/landing-atrio/index.ts",
+          "line": 95
+        }
+      ],
+      "categories": [
+        "backend/service_role"
+      ]
+    },
+    {
+      "object": "public.get_cached_constructor_landing_phone(p_landing_name text)",
+      "kind": "function",
+      "category": "público legítimo",
+      "action": "excluded",
+      "reason": "Explicitly excluded subsystem; no ACL/body changes.",
+      "sourceReferences": [
+        {
+          "file": "frontend/components/public-landing/getCachedLandingPhone.ts",
+          "line": 18
+        }
+      ],
+      "categories": [
+        "público legítimo"
+      ]
+    },
+    {
+      "object": "public.get_client_plan_limits(p_user_id uuid)",
+      "kind": "function",
+      "category": "sin consumidor",
+      "action": "deferred",
+      "reason": "Public/legacy/platform or unconfirmed external consumer; no revocation.",
+      "sourceReferences": [],
+      "categories": [
+        "sin consumidor"
+      ]
+    },
+    {
+      "object": "public.get_gerencia_availability_summaries(p_user_id uuid, p_start timestamp with time zone, p_end timestamp with time zone, p_workspace_currency text)",
+      "kind": "function",
+      "category": "authenticated",
+      "action": "excluded",
+      "reason": "Explicitly excluded subsystem; no ACL/body changes.",
+      "sourceReferences": [
+        {
+          "file": "frontend/lib/conversionsDb.ts",
+          "line": 1687
+        }
+      ],
+      "categories": [
+        "authenticated"
+      ]
+    },
+    {
+      "object": "public.get_home_overview_stats(p_user_id uuid, p_hidden_by uuid)",
+      "kind": "function",
+      "category": "authenticated",
+      "action": "restrict",
+      "reason": "Explicitly authorized legacy reporting auth guard; keep calculation byte-for-byte.",
+      "sourceReferences": [],
+      "categories": [
+        "authenticated",
+        "admin"
+      ]
+    },
+    {
+      "object": "public.get_home_overview_stats_by_currency(p_user_id uuid, p_hidden_by uuid, p_currency text)",
+      "kind": "function",
+      "category": "authenticated",
+      "action": "preserve",
+      "reason": "Existing explicit access retained.",
+      "sourceReferences": [],
+      "categories": [
+        "authenticated"
+      ]
+    },
+    {
+      "object": "public.get_home_overview_stats_cached_by_currency(p_user_id uuid, p_hidden_by uuid, p_currency text)",
+      "kind": "function",
+      "category": "authenticated",
+      "action": "preserve",
+      "reason": "Existing explicit access retained.",
+      "sourceReferences": [
+        {
+          "file": "frontend/lib/conversionsDb.ts",
+          "line": 1644
+        }
+      ],
+      "categories": [
+        "authenticated"
+      ]
+    },
+    {
+      "object": "public.get_meta_audience_buyers(p_currency text, p_start_at timestamp with time zone, p_end_at timestamp with time zone, p_purchase_scope text, p_value_metric text)",
+      "kind": "function",
+      "category": "authenticated",
+      "action": "preserve",
+      "reason": "Existing explicit access retained.",
+      "sourceReferences": [],
+      "categories": [
+        "authenticated"
+      ]
+    },
+    {
+      "object": "public.get_meta_audience_buyers_v2(p_currency text, p_as_of timestamp with time zone, p_period_start_at timestamp with time zone, p_period_end_at timestamp with time zone)",
+      "kind": "function",
+      "category": "authenticated",
+      "action": "preserve",
+      "reason": "Existing explicit access retained.",
+      "sourceReferences": [],
+      "categories": [
+        "authenticated"
+      ]
+    },
+    {
+      "object": "public.get_meta_audience_buyers_v2_payload(p_currency text, p_as_of timestamp with time zone, p_period_start_at timestamp with time zone, p_period_end_at timestamp with time zone)",
+      "kind": "function",
+      "category": "authenticated",
+      "action": "preserve",
+      "reason": "Existing explicit access retained.",
+      "sourceReferences": [
+        {
+          "file": "frontend/lib/metaAudienceDb.ts",
+          "line": 59
+        }
+      ],
+      "categories": [
+        "authenticated"
+      ]
+    },
+    {
+      "object": "public.get_notification_bot_username()",
+      "kind": "function",
+      "category": "authenticated",
+      "action": "restrict",
+      "reason": "Authenticated notification panel; retain authenticated/backend EXECUTE.",
+      "sourceReferences": [
+        {
+          "file": "frontend/lib/notificationsDb.ts",
+          "line": 69
+        }
+      ],
+      "categories": [
+        "authenticated"
+      ],
+      "consumerChain": [
+        {
+          "file": "frontend/app/(panel)/dashboard/notificaciones/page.tsx",
+          "line": 29,
+          "contract": "auth.getUser() precedes fetchNotificationBotUsernamePublic; no unauthenticated caller found"
+        },
+        {
+          "file": "frontend/lib/notificationsDb.ts",
+          "line": 69,
+          "contract": "RPC uses the shared authenticated browser client"
+        }
+      ]
+    },
+    {
+      "object": "public.get_phone_for_chatrace_client(p_client_name text)",
+      "kind": "function",
+      "category": "público legítimo",
+      "action": "excluded",
+      "reason": "Explicitly excluded subsystem; no ACL/body changes.",
+      "sourceReferences": [
+        {
+          "file": "supabase/functions/landing-phone/index.ts",
+          "line": 263
+        }
+      ],
+      "categories": [
+        "público legítimo"
+      ]
+    },
+    {
+      "object": "public.get_phone_for_landing(p_landing_name text)",
+      "kind": "function",
+      "category": "público legítimo",
+      "action": "excluded",
+      "reason": "Explicitly excluded subsystem; no ACL/body changes.",
+      "sourceReferences": [
+        {
+          "file": "supabase/functions/landing-phone/index.ts",
+          "line": 109
+        },
+        {
+          "file": "supabase/functions/landing-phone/index.ts",
+          "line": 264
+        }
+      ],
+      "categories": [
+        "público legítimo"
+      ]
+    },
+    {
+      "object": "public.get_phone_for_landing(p_landing_name text, p_create_reservation boolean)",
+      "kind": "function",
+      "category": "backend/service_role",
+      "action": "excluded",
+      "reason": "Explicitly excluded subsystem; no ACL/body changes.",
+      "sourceReferences": [
+        {
+          "file": "supabase/functions/landing-phone/index.ts",
+          "line": 109
+        },
+        {
+          "file": "supabase/functions/landing-phone/index.ts",
+          "line": 264
+        }
+      ],
+      "categories": [
+        "backend/service_role"
+      ]
+    },
+    {
+      "object": "public.get_phone_for_whatsapp_cloud_api(p_config_id uuid)",
+      "kind": "function",
+      "category": "backend/service_role",
+      "action": "excluded",
+      "reason": "Explicitly excluded subsystem; no ACL/body changes.",
+      "sourceReferences": [
+        {
+          "file": "supabase/functions/whatsapp-cloud-worker/index.ts",
+          "line": 795
+        }
+      ],
+      "categories": [
+        "backend/service_role"
+      ]
+    },
+    {
+      "object": "public.get_public_landing_routing()",
+      "kind": "function",
+      "category": "público legítimo",
+      "action": "preserve",
+      "reason": "Existing explicit access retained.",
+      "sourceReferences": [],
+      "categories": [
+        "público legítimo"
+      ]
+    },
+    {
+      "object": "public.get_whatsapp_cloud_api_config(p_user_id uuid)",
+      "kind": "function",
+      "category": "authenticated",
+      "action": "excluded",
+      "reason": "Explicitly excluded subsystem; no ACL/body changes.",
+      "sourceReferences": [
+        {
+          "file": "frontend/lib/whatsappCloudApiDb.ts",
+          "line": 140
+        }
+      ],
+      "categories": [
+        "authenticated"
+      ]
+    },
+    {
+      "object": "public.get_whatsapp_cloud_api_config(p_user_id uuid, p_workspace_currency text)",
+      "kind": "function",
+      "category": "authenticated",
+      "action": "excluded",
+      "reason": "Explicitly excluded subsystem; no ACL/body changes.",
+      "sourceReferences": [
+        {
+          "file": "frontend/lib/whatsappCloudApiDb.ts",
+          "line": 140
+        }
+      ],
+      "categories": [
+        "authenticated"
+      ]
+    },
+    {
+      "object": "public.get_whatsapp_cloud_api_contacts_page(p_limit integer, p_offset integer, p_workspace_currency text)",
+      "kind": "function",
+      "category": "authenticated",
+      "action": "excluded",
+      "reason": "Explicitly excluded subsystem; no ACL/body changes.",
+      "sourceReferences": [
+        {
+          "file": "frontend/lib/whatsappCloudApiDb.ts",
+          "line": 884
+        },
+        {
+          "file": "frontend/lib/whatsappCloudApiDb.ts",
+          "line": 893
+        }
+      ],
+      "categories": [
+        "authenticated"
+      ]
+    },
+    {
+      "object": "public.get_whatsapp_cloud_api_inbox_threads(p_limit integer, p_workspace_currency text)",
+      "kind": "function",
+      "category": "authenticated",
+      "action": "excluded",
+      "reason": "Explicitly excluded subsystem; no ACL/body changes.",
+      "sourceReferences": [],
+      "categories": [
+        "authenticated"
+      ]
+    },
+    {
+      "object": "public.get_whatsapp_cloud_api_inbox_threads_page(p_limit integer, p_offset integer, p_workspace_currency text)",
+      "kind": "function",
+      "category": "authenticated",
+      "action": "excluded",
+      "reason": "Explicitly excluded subsystem; no ACL/body changes.",
+      "sourceReferences": [
+        {
+          "file": "frontend/lib/whatsappCloudApiDb.ts",
+          "line": 776
+        },
+        {
+          "file": "frontend/lib/whatsappCloudApiDb.ts",
+          "line": 789
+        }
+      ],
+      "categories": [
+        "authenticated"
+      ]
+    },
+    {
+      "object": "public.get_whatsapp_cloud_api_inbox_threads_page(p_limit integer, p_offset integer, p_workspace_currency text, p_tag_filter text, p_unread_only boolean)",
+      "kind": "function",
+      "category": "authenticated",
+      "action": "excluded",
+      "reason": "Explicitly excluded subsystem; no ACL/body changes.",
+      "sourceReferences": [
+        {
+          "file": "frontend/lib/whatsappCloudApiDb.ts",
+          "line": 776
+        },
+        {
+          "file": "frontend/lib/whatsappCloudApiDb.ts",
+          "line": 789
+        }
+      ],
+      "categories": [
+        "authenticated"
+      ]
+    },
+    {
+      "object": "public.get_whatsapp_cloud_api_inbox_threads_page(p_limit integer, p_offset integer, p_workspace_currency text, p_tag_filter text, p_unread_only boolean, p_from timestamp with time zone, p_to timestamp with time zone)",
+      "kind": "function",
+      "category": "authenticated",
+      "action": "excluded",
+      "reason": "Explicitly excluded subsystem; no ACL/body changes.",
+      "sourceReferences": [
+        {
+          "file": "frontend/lib/whatsappCloudApiDb.ts",
+          "line": 776
+        },
+        {
+          "file": "frontend/lib/whatsappCloudApiDb.ts",
+          "line": 789
+        }
+      ],
+      "categories": [
+        "authenticated"
+      ]
+    },
+    {
+      "object": "public.handle_new_user()",
+      "kind": "function",
+      "category": "postgres/cron",
+      "action": "preserve",
+      "reason": "Existing explicit access retained.",
+      "sourceReferences": [],
+      "categories": [
+        "postgres/cron"
+      ]
+    },
+    {
+      "object": "public.increment_atrio_assignment_scope_usage(p_atrio_client_id uuid, p_scope_type text, p_scope_id uuid, p_user_id uuid)",
+      "kind": "function",
+      "category": "backend/service_role",
+      "action": "preserve",
+      "reason": "Existing explicit access retained.",
+      "sourceReferences": [
+        {
+          "file": "supabase/functions/atrio-click/index.ts",
+          "line": 84
+        }
+      ],
+      "categories": [
+        "backend/service_role"
+      ]
+    },
+    {
+      "object": "public.increment_gerencia_phone_usage(p_phone_id bigint)",
+      "kind": "function",
+      "category": "backend/service_role",
+      "action": "excluded",
+      "reason": "Explicitly excluded subsystem; no ACL/body changes.",
+      "sourceReferences": [],
+      "categories": [
+        "backend/service_role"
+      ]
+    },
+    {
+      "object": "public.increment_phone_assignment_scope_usage(p_phone_id bigint, p_scope_type text, p_scope_id uuid, p_user_id uuid, p_gerencia_id integer)",
+      "kind": "function",
+      "category": "backend/service_role",
+      "action": "excluded",
+      "reason": "Explicitly excluded subsystem; no ACL/body changes.",
+      "sourceReferences": [
+        {
+          "file": "supabase/functions/landing-phone/index.ts",
+          "line": 69
+        },
+        {
+          "file": "supabase/functions/phone-click/index.ts",
+          "line": 185
+        },
+        {
+          "file": "supabase/functions/whatsapp-cloud-worker/index.ts",
+          "line": 978
+        }
+      ],
+      "categories": [
+        "backend/service_role"
+      ]
+    },
+    {
+      "object": "public.invalidate_landing_phone_cache_for_assignment_role()",
+      "kind": "function",
+      "category": "postgres/cron",
+      "action": "excluded",
+      "reason": "Explicitly excluded subsystem; no ACL/body changes.",
+      "sourceReferences": [],
+      "categories": [
+        "postgres/cron"
+      ]
+    },
+    {
+      "object": "public.is_client_access_blocked(p_user_id uuid)",
+      "kind": "function",
+      "category": "backend/service_role",
+      "action": "excluded",
+      "reason": "Dependency of landing-phone; preserve this excluded contract and its current grants.",
+      "sourceReferences": [
+        {
+          "file": "supabase/functions/landing-atrio/index.ts",
+          "line": 78
+        },
+        {
+          "file": "supabase/functions/landing-phone/index.ts",
+          "line": 200
+        }
+      ],
+      "categories": [
+        "backend/service_role"
+      ]
+    },
+    {
+      "object": "public.mark_whatsapp_cloud_api_thread_read(p_contact_id uuid)",
+      "kind": "function",
+      "category": "authenticated",
+      "action": "excluded",
+      "reason": "Explicitly excluded subsystem; no ACL/body changes.",
+      "sourceReferences": [
+        {
+          "file": "frontend/lib/whatsappCloudApiDb.ts",
+          "line": 933
+        }
+      ],
+      "categories": [
+        "authenticated"
+      ]
+    },
+    {
+      "object": "public.mark_whatsapp_cloud_api_threads_read(p_workspace_currency text, p_tag_filter text)",
+      "kind": "function",
+      "category": "authenticated",
+      "action": "excluded",
+      "reason": "Explicitly excluded subsystem; no ACL/body changes.",
+      "sourceReferences": [
+        {
+          "file": "frontend/lib/whatsappCloudApiDb.ts",
+          "line": 945
+        }
+      ],
+      "categories": [
+        "authenticated"
+      ]
+    },
+    {
+      "object": "public.mark_whatsapp_cloud_api_threads_read(p_workspace_currency text, p_tag_filter text, p_from timestamp with time zone, p_to timestamp with time zone)",
+      "kind": "function",
+      "category": "authenticated",
+      "action": "excluded",
+      "reason": "Explicitly excluded subsystem; no ACL/body changes.",
+      "sourceReferences": [
+        {
+          "file": "frontend/lib/whatsappCloudApiDb.ts",
+          "line": 945
+        }
+      ],
+      "categories": [
+        "authenticated"
+      ]
+    },
+    {
+      "object": "public.phone_assignment_scope_usage(p_scope_type text, p_scope_id uuid, p_gerencia_id integer, p_phone_kind text, p_phone_id bigint)",
+      "kind": "function",
+      "category": "backend/service_role",
+      "action": "excluded",
+      "reason": "Explicitly excluded subsystem; no ACL/body changes.",
+      "sourceReferences": [],
+      "categories": [
+        "backend/service_role"
+      ]
+    },
+    {
+      "object": "public.prevent_landing_name_change()",
+      "kind": "function",
+      "category": "postgres/cron",
+      "action": "restrict",
+      "reason": "Existing trigger only; installer/owner and backend retained, ordinary DML tested.",
+      "sourceReferences": [],
+      "categories": [
+        "postgres/cron"
+      ]
+    },
+    {
+      "object": "public.prevent_landing_tag_change()",
+      "kind": "function",
+      "category": "postgres/cron",
+      "action": "restrict",
+      "reason": "Existing trigger only; installer/owner and backend retained, ordinary DML tested.",
+      "sourceReferences": [],
+      "categories": [
+        "postgres/cron"
+      ]
+    },
+    {
+      "object": "public.prevent_unapproved_auth_user()",
+      "kind": "function",
+      "category": "postgres/cron",
+      "action": "preserve",
+      "reason": "Existing explicit access retained.",
+      "sourceReferences": [],
+      "categories": [
+        "postgres/cron"
+      ]
+    },
+    {
+      "object": "public.record_conversion_journey_start(p_user_id uuid, p_source_platform text, p_start_identity_key text, p_landing_id uuid, p_landing_name text, p_workspace_currency text, p_external_id text, p_phone text, p_wa_id text, p_email text, p_utm_campaign text, p_fbp text, p_fbc text, p_from_meta_ads boolean, p_meta_pixel_id text, p_dataset_id text, p_ctwa_clid text, p_telefono_asignado text, p_assigned_gerencia_id integer, p_assigned_gerencia_external_id integer, p_assigned_gerencia_name text, p_assigned_gerencia_label text, p_device_type text, p_event_source_url text, p_client_ip text, p_agent_user text, p_first_seen_at timestamp with time zone, p_last_seen_at timestamp with time zone)",
+      "kind": "function",
+      "category": "backend/service_role",
+      "action": "excluded",
+      "reason": "Explicitly excluded subsystem; no ACL/body changes.",
+      "sourceReferences": [
+        {
+          "file": "frontend/app/api/journey-start/route.ts",
+          "line": 88
+        },
+        {
+          "file": "supabase/functions/whatsapp-cloud-worker/index.ts",
+          "line": 176
+        }
+      ],
+      "categories": [
+        "backend/service_role"
+      ]
+    },
+    {
+      "object": "public.record_landing_phone_availability_demand(p_landing_name text, p_request_id uuid, p_source text, p_result_status text, p_selected_gerencia_id integer, p_selected_phone_id bigint, p_selected_phone text)",
+      "kind": "function",
+      "category": "sin consumidor",
+      "action": "excluded",
+      "reason": "Explicitly excluded subsystem; no ACL/body changes.",
+      "sourceReferences": [
+        {
+          "file": "supabase/functions/landing-phone/index.ts",
+          "line": 91
+        }
+      ],
+      "categories": [
+        "sin consumidor"
+      ]
+    },
+    {
+      "object": "public.record_whatsapp_cloud_api_redirect_click(p_token text, p_ip text, p_user_agent text)",
+      "kind": "function",
+      "category": "backend/service_role",
+      "action": "excluded",
+      "reason": "Explicitly excluded subsystem; no ACL/body changes.",
+      "sourceReferences": [
+        {
+          "file": "supabase/functions/whatsapp-cloud-redirect/index.ts",
+          "line": 267
+        }
+      ],
+      "categories": [
+        "backend/service_role"
+      ]
+    },
+    {
+      "object": "public.refresh_constructor_landing_phone_cache()",
+      "kind": "function",
+      "category": "postgres/cron",
+      "action": "excluded",
+      "reason": "Explicitly excluded subsystem; no ACL/body changes.",
+      "sourceReferences": [],
+      "categories": [
+        "postgres/cron"
+      ]
+    },
+    {
+      "object": "public.refresh_home_overview_stats_cache(p_user_id uuid, p_currency text)",
+      "kind": "function",
+      "category": "backend/service_role",
+      "action": "preserve",
+      "reason": "Existing explicit access retained.",
+      "sourceReferences": [],
+      "categories": [
+        "backend/service_role"
+      ]
+    },
+    {
+      "object": "public.refresh_phone_metrics()",
+      "kind": "function",
+      "category": "backend/service_role",
+      "action": "excluded",
+      "reason": "Explicitly excluded subsystem; no ACL/body changes.",
+      "sourceReferences": [],
+      "categories": [
+        "backend/service_role"
+      ]
+    },
+    {
+      "object": "public.rls_auto_enable()",
+      "kind": "function",
+      "category": "postgres/cron",
+      "action": "deferred",
+      "reason": "Public/legacy/platform or unconfirmed external consumer; no revocation.",
+      "sourceReferences": [],
+      "categories": [
+        "postgres/cron"
+      ]
+    },
+    {
+      "object": "public.set_atrio_clients_updated_at()",
+      "kind": "function",
+      "category": "postgres/cron",
+      "action": "restrict",
+      "reason": "Existing trigger only; installer/owner and backend retained, ordinary DML tested.",
+      "sourceReferences": [],
+      "categories": [
+        "postgres/cron"
+      ]
+    },
+    {
+      "object": "public.set_client_subscriptions_updated_at()",
+      "kind": "function",
+      "category": "postgres/cron",
+      "action": "restrict",
+      "reason": "Existing trigger only; installer/owner and backend retained, ordinary DML tested.",
+      "sourceReferences": [],
+      "categories": [
+        "postgres/cron"
+      ]
+    },
+    {
+      "object": "public.set_conversion_journey_starts_updated_at()",
+      "kind": "function",
+      "category": "postgres/cron",
+      "action": "excluded",
+      "reason": "Explicitly excluded subsystem; no ACL/body changes.",
+      "sourceReferences": [],
+      "categories": [
+        "postgres/cron"
+      ]
+    },
+    {
+      "object": "public.set_conversion_log_workspace_currency()",
+      "kind": "function",
+      "category": "postgres/cron",
+      "action": "excluded",
+      "reason": "Explicitly excluded subsystem; no ACL/body changes.",
+      "sourceReferences": [],
+      "categories": [
+        "postgres/cron"
+      ]
+    },
+    {
+      "object": "public.set_conversions_from_meta_ads()",
+      "kind": "function",
+      "category": "postgres/cron",
+      "action": "excluded",
+      "reason": "Explicitly excluded subsystem; no ACL/body changes.",
+      "sourceReferences": [],
+      "categories": [
+        "postgres/cron"
+      ]
+    },
+    {
+      "object": "public.set_conversions_inferred_sex()",
+      "kind": "function",
+      "category": "postgres/cron",
+      "action": "excluded",
+      "reason": "Explicitly excluded subsystem; no ACL/body changes.",
+      "sourceReferences": [],
+      "categories": [
+        "postgres/cron"
+      ]
+    },
+    {
+      "object": "public.set_conversions_sex_fields()",
+      "kind": "function",
+      "category": "postgres/cron",
+      "action": "excluded",
+      "reason": "Explicitly excluded subsystem; no ACL/body changes.",
+      "sourceReferences": [],
+      "categories": [
+        "postgres/cron"
+      ]
+    },
+    {
+      "object": "public.set_gerencia_phones_updated_at()",
+      "kind": "function",
+      "category": "postgres/cron",
+      "action": "excluded",
+      "reason": "Explicitly excluded subsystem; no ACL/body changes.",
+      "sourceReferences": [],
+      "categories": [
+        "postgres/cron"
+      ]
+    },
+    {
+      "object": "public.set_gerencia_work_groups_updated_at()",
+      "kind": "function",
+      "category": "postgres/cron",
+      "action": "excluded",
+      "reason": "Explicitly excluded subsystem; no ACL/body changes.",
+      "sourceReferences": [],
+      "categories": [
+        "postgres/cron"
+      ]
+    },
+    {
+      "object": "public.set_landings_atrio_clients_owner()",
+      "kind": "function",
+      "category": "postgres/cron",
+      "action": "restrict",
+      "reason": "Existing trigger only; installer/owner and backend retained, ordinary DML tested.",
+      "sourceReferences": [],
+      "categories": [
+        "postgres/cron"
+      ]
+    },
+    {
+      "object": "public.set_landings_updated_at()",
+      "kind": "function",
+      "category": "postgres/cron",
+      "action": "restrict",
+      "reason": "Existing trigger only; installer/owner and backend retained, ordinary DML tested.",
+      "sourceReferences": [],
+      "categories": [
+        "postgres/cron"
+      ]
+    },
+    {
+      "object": "public.set_promotions_updated_at()",
+      "kind": "function",
+      "category": "postgres/cron",
+      "action": "restrict",
+      "reason": "Existing trigger only; installer/owner and backend retained, ordinary DML tested.",
+      "sourceReferences": [],
+      "categories": [
+        "postgres/cron"
+      ]
+    },
+    {
+      "object": "public.set_tracking_queue_updated_at()",
+      "kind": "function",
+      "category": "postgres/cron",
+      "action": "excluded",
+      "reason": "Explicitly excluded subsystem; no ACL/body changes.",
+      "sourceReferences": [],
+      "categories": [
+        "postgres/cron"
+      ]
+    },
+    {
+      "object": "public.set_whatsapp_cloud_api_updated_at()",
+      "kind": "function",
+      "category": "postgres/cron",
+      "action": "excluded",
+      "reason": "Explicitly excluded subsystem; no ACL/body changes.",
+      "sourceReferences": [],
+      "categories": [
+        "postgres/cron"
+      ]
+    },
+    {
+      "object": "public.sync_pixel_to_landings()",
+      "kind": "function",
+      "category": "postgres/cron",
+      "action": "excluded",
+      "reason": "Conversion/CAPI configuration trigger explicitly excluded.",
+      "sourceReferences": [],
+      "categories": [
+        "postgres/cron"
+      ]
+    },
+    {
+      "object": "public.upsert_whatsapp_cloud_api_config_secure(p_id uuid, p_user_id uuid, p_name text, p_active boolean, p_workspace_currency text, p_phone_number_id text, p_whatsapp_business_account_id text, p_display_phone_number text, p_meta_access_token text, p_meta_app_secret text, p_meta_api_version text, p_webhook_verify_token text, p_meta_messaging_dataset_id text, p_landing_tag text, p_gerencia_selection_mode text, p_gerencia_fair_criterion text, p_redirect_message_template text, p_fallback_message_template text, p_redirect_use_cta_button boolean, p_redirect_cta_button_title text, p_enrich_business_messaging_user_data boolean, p_send_business_messaging_purchase_type_capi boolean, p_retargeting_enabled boolean, p_retarget_message_template text, p_retarget_delay_minutes integer)",
+      "kind": "function",
+      "category": "authenticated",
+      "action": "excluded",
+      "reason": "Explicitly excluded subsystem; no ACL/body changes.",
+      "sourceReferences": [
+        {
+          "file": "frontend/lib/whatsappCloudApiDb.ts",
+          "line": 178
+        }
+      ],
+      "categories": [
+        "authenticated"
+      ]
+    },
+    {
+      "object": "public.validate_gerencia_workspace_update()",
+      "kind": "function",
+      "category": "postgres/cron",
+      "action": "excluded",
+      "reason": "Explicitly excluded subsystem; no ACL/body changes.",
+      "sourceReferences": [],
+      "categories": [
+        "postgres/cron"
+      ]
+    },
+    {
+      "object": "public.validate_landing_gerencia_workspace_assignment()",
+      "kind": "function",
+      "category": "postgres/cron",
+      "action": "excluded",
+      "reason": "Explicitly excluded subsystem; no ACL/body changes.",
+      "sourceReferences": [],
+      "categories": [
+        "postgres/cron"
+      ]
+    },
+    {
+      "object": "public.validate_landing_workspace_update()",
+      "kind": "function",
+      "category": "postgres/cron",
+      "action": "excluded",
+      "reason": "Landing/gerencia currency guard touches excluded phone assignment relationships; preserve it.",
+      "sourceReferences": [],
+      "categories": [
+        "postgres/cron"
+      ]
+    },
+    {
+      "object": "public.verify_revalidate_secret(p_secret text)",
+      "kind": "function",
+      "category": "sin consumidor",
+      "action": "excluded",
+      "reason": "Explicitly excluded subsystem; no ACL/body changes.",
+      "sourceReferences": [],
+      "categories": [
+        "sin consumidor"
+      ]
+    },
+    {
+      "object": "public.ai_assistant_usage_monthly",
+      "kind": "r",
+      "category": "authenticated",
+      "action": "revoke TRUNCATE",
+      "dataApiAction": "preserve existing CRUD; ambiguity or legitimate contract",
+      "sourceReferences": [
+        {
+          "file": "frontend/app/api/stats-assistant/route.ts",
+          "line": 141
+        }
+      ],
+      "categories": [
+        "authenticated",
+        "backend/service_role"
+      ]
+    },
+    {
+      "object": "public.ar_name_inferred_sex",
+      "kind": "r",
+      "category": "backend/service_role",
+      "action": "deferred TRUNCATE exclusion",
+      "dataApiAction": "preserve existing CRUD; ambiguity or legitimate contract",
+      "sourceReferences": [
+        {
+          "file": "supabase/functions/conversions/index.ts",
+          "line": 1658
+        }
+      ],
+      "categories": [
+        "backend/service_role"
+      ]
+    },
+    {
+      "object": "public.ar_phone_area_codes",
+      "kind": "r",
+      "category": "backend/service_role",
+      "action": "deferred TRUNCATE exclusion",
+      "dataApiAction": "preserve existing CRUD; ambiguity or legitimate contract",
+      "sourceReferences": [
+        {
+          "file": "supabase/functions/conversions/index.ts",
+          "line": 2356
+        }
+      ],
+      "categories": [
+        "backend/service_role"
+      ]
+    },
+    {
+      "object": "public.atrio_assignment_scope_metrics",
+      "kind": "r",
+      "category": "authenticated",
+      "action": "preserve",
+      "dataApiAction": "preserve existing CRUD; ambiguity or legitimate contract",
+      "sourceReferences": [],
+      "categories": [
+        "authenticated",
+        "admin"
+      ]
+    },
+    {
+      "object": "public.atrio_clients",
+      "kind": "r",
+      "category": "authenticated",
+      "action": "revoke TRUNCATE",
+      "dataApiAction": "preserve existing CRUD; ambiguity or legitimate contract",
+      "sourceReferences": [
+        {
+          "file": "frontend/lib/atrio/atrioDb.ts",
+          "line": 109
+        },
+        {
+          "file": "frontend/lib/atrio/atrioDb.ts",
+          "line": 124
+        },
+        {
+          "file": "frontend/lib/atrio/atrioDb.ts",
+          "line": 145
+        },
+        {
+          "file": "frontend/lib/atrio/atrioDb.ts",
+          "line": 167
+        },
+        {
+          "file": "frontend/lib/atrio/atrioDb.ts",
+          "line": 181
+        }
+      ],
+      "categories": [
+        "authenticated",
+        "admin"
+      ]
+    },
+    {
+      "object": "public.auth_signup_approvals",
+      "kind": "r",
+      "category": "backend/service_role",
+      "action": "preserve",
+      "dataApiAction": "preserve existing CRUD; ambiguity or legitimate contract",
+      "sourceReferences": [
+        {
+          "file": "supabase/functions/create-client/index.ts",
+          "line": 70
+        },
+        {
+          "file": "supabase/functions/create-client/index.ts",
+          "line": 279
+        }
+      ],
+      "categories": [
+        "backend/service_role"
+      ]
+    },
+    {
+      "object": "public.chatrace_client_configs",
+      "kind": "r",
+      "category": "authenticated",
+      "action": "deferred TRUNCATE exclusion",
+      "dataApiAction": "preserve existing CRUD; ambiguity or legitimate contract",
+      "sourceReferences": [
+        {
+          "file": "frontend/lib/chatraceDb.ts",
+          "line": 27
+        },
+        {
+          "file": "frontend/lib/chatraceDb.ts",
+          "line": 52
+        },
+        {
+          "file": "supabase/functions/conversions/index.ts",
+          "line": 3003
+        },
+        {
+          "file": "supabase/functions/retry-failed-conversions/index.ts",
+          "line": 206
+        }
+      ],
+      "categories": [
+        "authenticated",
+        "admin",
+        "backend/service_role"
+      ]
+    },
+    {
+      "object": "public.chatrace_gerencias",
+      "kind": "r",
+      "category": "authenticated",
+      "action": "deferred TRUNCATE exclusion",
+      "dataApiAction": "preserve existing CRUD; ambiguity or legitimate contract",
+      "sourceReferences": [
+        {
+          "file": "frontend/components/integraciones/IntegracionesMetaCapi.tsx",
+          "line": 334
+        },
+        {
+          "file": "frontend/components/integraciones/IntegracionesMetaCapi.tsx",
+          "line": 548
+        },
+        {
+          "file": "frontend/components/integraciones/IntegracionesMetaCapi.tsx",
+          "line": 559
+        }
+      ],
+      "categories": [
+        "authenticated",
+        "admin"
+      ]
+    },
+    {
+      "object": "public.chatrace_gerencias_id_seq",
+      "kind": "S",
+      "category": "sin consumidor",
+      "action": "preserve",
+      "dataApiAction": "preserve existing CRUD; ambiguity or legitimate contract",
+      "sourceReferences": [],
+      "categories": [
+        "sin consumidor"
+      ]
+    },
+    {
+      "object": "public.client_subscriptions",
+      "kind": "r",
+      "category": "authenticated",
+      "action": "revoke TRUNCATE",
+      "dataApiAction": "preserve existing CRUD; ambiguity or legitimate contract",
+      "sourceReferences": [
+        {
+          "file": "frontend/app/(panel)/dashboard/landings/page.tsx",
+          "line": 71
+        },
+        {
+          "file": "frontend/app/(panel)/dashboard/landings/page.tsx",
+          "line": 110
+        },
+        {
+          "file": "frontend/app/(panel)/dashboard/landings/page.tsx",
+          "line": 148
+        },
+        {
+          "file": "frontend/app/(panel)/dashboard/layout.tsx",
+          "line": 368
+        },
+        {
+          "file": "frontend/app/(panel)/dashboard/plan/page.tsx",
+          "line": 141
+        },
+        {
+          "file": "frontend/components/telefonos/TelefonosPageContent.tsx",
+          "line": 188
+        },
+        {
+          "file": "supabase/functions/create-client/index.ts",
+          "line": 447
+        },
+        {
+          "file": "supabase/functions/create-client/index.ts",
+          "line": 465
+        },
+        {
+          "file": "supabase/functions/list-clients/index.ts",
+          "line": 186
+        },
+        {
+          "file": "supabase/functions/sync-phones/index.ts",
+          "line": 396
+        },
+        {
+          "file": "supabase/functions/update-client/index.ts",
+          "line": 310
+        },
+        {
+          "file": "supabase/functions/update-client/index.ts",
+          "line": 334
+        }
+      ],
+      "categories": [
+        "authenticated",
+        "admin",
+        "backend/service_role"
+      ]
+    },
+    {
+      "object": "public.conversion_inbox",
+      "kind": "r",
+      "category": "authenticated",
+      "action": "deferred TRUNCATE exclusion",
+      "dataApiAction": "preserve existing CRUD; ambiguity or legitimate contract",
+      "sourceReferences": [
+        {
+          "file": "frontend/lib/conversionsDb.ts",
+          "line": 1497
+        },
+        {
+          "file": "frontend/lib/conversionsDb.ts",
+          "line": 1530
+        },
+        {
+          "file": "supabase/functions/conversions/index.ts",
+          "line": 1946
+        },
+        {
+          "file": "supabase/functions/conversions/index.ts",
+          "line": 2017
+        },
+        {
+          "file": "supabase/functions/conversions/index.ts",
+          "line": 2054
+        },
+        {
+          "file": "supabase/functions/conversions/index.ts",
+          "line": 2108
+        },
+        {
+          "file": "supabase/functions/conversions/index.ts",
+          "line": 2120
+        },
+        {
+          "file": "supabase/functions/retry-failed-conversions/index.ts",
+          "line": 934
+        },
+        {
+          "file": "supabase/functions/retry-failed-conversions/index.ts",
+          "line": 958
+        },
+        {
+          "file": "supabase/functions/retry-failed-conversions/index.ts",
+          "line": 1017
+        },
+        {
+          "file": "supabase/functions/retry-failed-conversions/index.ts",
+          "line": 1041
+        },
+        {
+          "file": "supabase/functions/retry-failed-conversions/index.ts",
+          "line": 1187
+        },
+        {
+          "file": "supabase/functions/retry-failed-conversions/index.ts",
+          "line": 1282
+        }
+      ],
+      "categories": [
+        "authenticated",
+        "backend/service_role"
+      ]
+    },
+    {
+      "object": "public.conversion_journey_starts",
+      "kind": "r",
+      "category": "authenticated",
+      "action": "preserve",
+      "dataApiAction": "preserve existing CRUD; ambiguity or legitimate contract",
+      "sourceReferences": [
+        {
+          "file": "frontend/lib/conversionsDb.ts",
+          "line": 967
+        }
+      ],
+      "categories": [
+        "authenticated",
+        "admin"
+      ]
+    },
+    {
+      "object": "public.conversion_log_lead_backfill_replays",
+      "kind": "r",
+      "category": "backend/service_role",
+      "action": "deferred TRUNCATE exclusion",
+      "dataApiAction": "preserve existing CRUD; ambiguity or legitimate contract",
+      "sourceReferences": [
+        {
+          "file": "supabase/functions/retry-failed-conversions/index.ts",
+          "line": 1197
+        },
+        {
+          "file": "supabase/functions/retry-failed-conversions/index.ts",
+          "line": 1245
+        }
+      ],
+      "categories": [
+        "backend/service_role"
+      ]
+    },
+    {
+      "object": "public.conversion_logs",
+      "kind": "r",
+      "category": "authenticated",
+      "action": "deferred TRUNCATE exclusion",
+      "dataApiAction": "preserve existing CRUD; ambiguity or legitimate contract",
+      "sourceReferences": [
+        {
+          "file": "frontend/lib/conversionsDb.ts",
+          "line": 1357
+        },
+        {
+          "file": "frontend/lib/whatsappCloudApiDb.ts",
+          "line": 642
+        },
+        {
+          "file": "supabase/functions/conversions/index.ts",
+          "line": 2181
+        },
+        {
+          "file": "supabase/functions/retry-failed-conversions/index.ts",
+          "line": 1188
+        },
+        {
+          "file": "supabase/functions/retry-failed-conversions/index.ts",
+          "line": 1203
+        },
+        {
+          "file": "supabase/functions/retry-failed-conversions/index.ts",
+          "line": 2010
+        }
+      ],
+      "categories": [
+        "authenticated",
+        "admin",
+        "backend/service_role"
+      ]
+    },
+    {
+      "object": "public.conversion_logs_id_seq",
+      "kind": "S",
+      "category": "sin consumidor",
+      "action": "preserve",
+      "dataApiAction": "preserve existing CRUD; ambiguity or legitimate contract",
+      "sourceReferences": [],
+      "categories": [
+        "sin consumidor"
+      ]
+    },
+    {
+      "object": "public.conversion_view_preferences",
+      "kind": "r",
+      "category": "authenticated",
+      "action": "deferred TRUNCATE exclusion",
+      "dataApiAction": "preserve existing CRUD; ambiguity or legitimate contract",
+      "sourceReferences": [
+        {
+          "file": "frontend/lib/conversionsDb.ts",
+          "line": 530
+        },
+        {
+          "file": "frontend/lib/conversionsDb.ts",
+          "line": 545
+        }
+      ],
+      "categories": [
+        "authenticated"
+      ]
+    },
+    {
+      "object": "public.conversions",
+      "kind": "r",
+      "category": "authenticated",
+      "action": "deferred TRUNCATE exclusion",
+      "dataApiAction": "preserve existing CRUD; ambiguity or legitimate contract",
+      "sourceReferences": [
+        {
+          "file": "frontend/app/(panel)/admin/conversiones/page.tsx",
+          "line": 270
+        },
+        {
+          "file": "frontend/app/(panel)/admin/conversiones/page.tsx",
+          "line": 404
+        },
+        {
+          "file": "frontend/app/(panel)/admin/conversiones/page.tsx",
+          "line": 805
+        },
+        {
+          "file": "frontend/app/(panel)/admin/conversiones/page.tsx",
+          "line": 806
+        },
+        {
+          "file": "frontend/app/(panel)/admin/conversiones/page.tsx",
+          "line": 1505
+        },
+        {
+          "file": "frontend/app/(panel)/admin/conversiones/page.tsx",
+          "line": 1535
+        },
+        {
+          "file": "frontend/app/(panel)/admin/inicio/page.tsx",
+          "line": 58
+        },
+        {
+          "file": "frontend/app/(panel)/admin/landings/[id]/editar/page.tsx",
+          "line": 57
+        },
+        {
+          "file": "frontend/app/(panel)/admin/landings/[id]/editar/page.tsx",
+          "line": 74
+        },
+        {
+          "file": "frontend/app/(panel)/admin/landings/[id]/editar/page.tsx",
+          "line": 133
+        },
+        {
+          "file": "frontend/app/(panel)/admin/landings/[id]/editar/page.tsx",
+          "line": 359
+        },
+        {
+          "file": "frontend/app/(panel)/admin/landings/[id]/editar/page.tsx",
+          "line": 489
+        },
+        {
+          "file": "frontend/app/(panel)/admin/seguimiento/page.tsx",
+          "line": 38
+        },
+        {
+          "file": "frontend/app/(panel)/admin/seguimiento/page.tsx",
+          "line": 56
+        },
+        {
+          "file": "frontend/app/(panel)/admin/seguimiento/page.tsx",
+          "line": 61
+        },
+        {
+          "file": "frontend/app/(panel)/admin/seguimiento/page.tsx",
+          "line": 182
+        },
+        {
+          "file": "frontend/app/(panel)/admin/tests/page.tsx",
+          "line": 30
+        },
+        {
+          "file": "frontend/app/(panel)/admin/tests/page.tsx",
+          "line": 77
+        },
+        {
+          "file": "frontend/app/(panel)/admin/tests/page.tsx",
+          "line": 194
+        },
+        {
+          "file": "frontend/app/(panel)/admin/tests/page.tsx",
+          "line": 199
+        },
+        {
+          "file": "frontend/app/(panel)/admin/tests/page.tsx",
+          "line": 229
+        },
+        {
+          "file": "frontend/app/(panel)/admin/tests/page.tsx",
+          "line": 264
+        },
+        {
+          "file": "frontend/app/(panel)/admin/tests/page.tsx",
+          "line": 273
+        },
+        {
+          "file": "frontend/app/(panel)/admin/tests/page.tsx",
+          "line": 285
+        },
+        {
+          "file": "frontend/app/(panel)/admin/tests/page.tsx",
+          "line": 287
+        },
+        {
+          "file": "frontend/app/(panel)/admin/tests/page.tsx",
+          "line": 288
+        },
+        {
+          "file": "frontend/app/(panel)/admin/tests/page.tsx",
+          "line": 370
+        },
+        {
+          "file": "frontend/app/(panel)/dashboard/conversiones/page.tsx",
+          "line": 415
+        },
+        {
+          "file": "frontend/app/(panel)/dashboard/conversiones/page.tsx",
+          "line": 579
+        },
+        {
+          "file": "frontend/app/(panel)/dashboard/conversiones/page.tsx",
+          "line": 580
+        },
+        {
+          "file": "frontend/app/(panel)/dashboard/conversiones/page.tsx",
+          "line": 951
+        },
+        {
+          "file": "frontend/app/(panel)/dashboard/conversiones/page.tsx",
+          "line": 952
+        },
+        {
+          "file": "frontend/app/(panel)/dashboard/conversiones/page.tsx",
+          "line": 1163
+        },
+        {
+          "file": "frontend/app/(panel)/dashboard/conversiones/page.tsx",
+          "line": 1164
+        },
+        {
+          "file": "frontend/app/(panel)/dashboard/conversiones/page.tsx",
+          "line": 1889
+        },
+        {
+          "file": "frontend/app/(panel)/dashboard/conversiones/page.tsx",
+          "line": 1919
+        },
+        {
+          "file": "frontend/app/(panel)/dashboard/landing/[id]/editar/page.tsx",
+          "line": 56
+        },
+        {
+          "file": "frontend/app/(panel)/dashboard/landing/[id]/editar/page.tsx",
+          "line": 73
+        },
+        {
+          "file": "frontend/app/(panel)/dashboard/landing/[id]/editar/page.tsx",
+          "line": 132
+        },
+        {
+          "file": "frontend/app/(panel)/dashboard/landing/[id]/editar/page.tsx",
+          "line": 343
+        },
+        {
+          "file": "frontend/app/(panel)/dashboard/landing/[id]/editar/page.tsx",
+          "line": 473
+        },
+        {
+          "file": "frontend/app/(panel)/dashboard/layout.tsx",
+          "line": 473
+        },
+        {
+          "file": "frontend/app/(panel)/dashboard/promociones/page.tsx",
+          "line": 103
+        },
+        {
+          "file": "frontend/app/(panel)/dashboard/seguimiento/page.tsx",
+          "line": 39
+        },
+        {
+          "file": "frontend/app/(panel)/dashboard/seguimiento/page.tsx",
+          "line": 57
+        },
+        {
+          "file": "frontend/app/(panel)/dashboard/seguimiento/page.tsx",
+          "line": 62
+        },
+        {
+          "file": "frontend/app/(panel)/dashboard/seguimiento/page.tsx",
+          "line": 135
+        },
+        {
+          "file": "frontend/app/(panel)/dashboard/seguimiento/page.tsx",
+          "line": 152
+        },
+        {
+          "file": "frontend/app/(panel)/dashboard/seguimiento/page.tsx",
+          "line": 263
+        },
+        {
+          "file": "frontend/components/conversiones/ArgentinaMap.tsx",
+          "line": 199
+        },
+        {
+          "file": "frontend/components/conversiones/ArgentinaMap.tsx",
+          "line": 206
+        },
+        {
+          "file": "frontend/components/conversiones/ArgentinaMap.tsx",
+          "line": 212
+        },
+        {
+          "file": "frontend/components/conversiones/ArgentinaMap.tsx",
+          "line": 318
+        },
+        {
+          "file": "frontend/components/conversiones/ArgentinaMap.tsx",
+          "line": 324
+        },
+        {
+          "file": "frontend/components/conversiones/ArgentinaMap.tsx",
+          "line": 343
+        },
+        {
+          "file": "frontend/components/conversiones/ArgentinaMap.tsx",
+          "line": 344
+        },
+        {
+          "file": "frontend/components/conversiones/ArgentinaMap.tsx",
+          "line": 349
+        },
+        {
+          "file": "frontend/components/conversiones/ArgentinaMap.tsx",
+          "line": 374
+        },
+        {
+          "file": "frontend/components/conversiones/ClearConversionsViewModal.tsx",
+          "line": 51
+        },
+        {
+          "file": "frontend/components/conversiones/ClearConversionsViewModal.tsx",
+          "line": 60
+        },
+        {
+          "file": "frontend/components/conversiones/ConversionConfigurationPanel.tsx",
+          "line": 41
+        },
+        {
+          "file": "frontend/components/conversiones/DateRangeFilter.tsx",
+          "line": 187
+        },
+        {
+          "file": "frontend/components/conversiones/GerenciasPerformancePanel.tsx",
+          "line": 362
+        },
+        {
+          "file": "frontend/components/conversiones/StatsPanel.tsx",
+          "line": 435
+        },
+        {
+          "file": "frontend/components/conversiones/StatsPanel.tsx",
+          "line": 446
+        },
+        {
+          "file": "frontend/components/conversiones/StatsPanel.tsx",
+          "line": 488
+        },
+        {
+          "file": "frontend/components/conversiones/StatsPanel.tsx",
+          "line": 494
+        },
+        {
+          "file": "frontend/components/conversiones/StatsPanel.tsx",
+          "line": 531
+        },
+        {
+          "file": "frontend/components/conversiones/StatsPanel.tsx",
+          "line": 559
+        },
+        {
+          "file": "frontend/components/conversiones/StatsPanel.tsx",
+          "line": 564
+        },
+        {
+          "file": "frontend/components/conversiones/StatsPanel.tsx",
+          "line": 575
+        },
+        {
+          "file": "frontend/components/conversiones/StatsPanel.tsx",
+          "line": 580
+        },
+        {
+          "file": "frontend/components/conversiones/StatsPanel.tsx",
+          "line": 590
+        },
+        {
+          "file": "frontend/components/conversiones/StatsPanel.tsx",
+          "line": 595
+        },
+        {
+          "file": "frontend/components/conversiones/StatsPanel.tsx",
+          "line": 615
+        },
+        {
+          "file": "frontend/components/conversiones/StatsPanel.tsx",
+          "line": 635
+        },
+        {
+          "file": "frontend/components/conversiones/StatsPanel.tsx",
+          "line": 656
+        },
+        {
+          "file": "frontend/components/conversiones/StatsPanel.tsx",
+          "line": 765
+        },
+        {
+          "file": "frontend/components/conversiones/StatsPanel.tsx",
+          "line": 907
+        },
+        {
+          "file": "frontend/components/conversiones/StatsPanel.tsx",
+          "line": 925
+        },
+        {
+          "file": "frontend/components/conversiones/StatsPanel.tsx",
+          "line": 935
+        },
+        {
+          "file": "frontend/components/conversiones/StatsPanel.tsx",
+          "line": 956
+        },
+        {
+          "file": "frontend/components/conversiones/StatsPanel.tsx",
+          "line": 977
+        },
+        {
+          "file": "frontend/components/conversiones/StatsPanel.tsx",
+          "line": 995
+        },
+        {
+          "file": "frontend/components/conversiones/StatsPanel.tsx",
+          "line": 1003
+        },
+        {
+          "file": "frontend/components/conversiones/StatsPanel.tsx",
+          "line": 1021
+        },
+        {
+          "file": "frontend/components/conversiones/StatsPanel.tsx",
+          "line": 1051
+        },
+        {
+          "file": "frontend/components/conversiones/StatsPanel.tsx",
+          "line": 1075
+        },
+        {
+          "file": "frontend/components/conversiones/StatsPanel.tsx",
+          "line": 1715
+        },
+        {
+          "file": "frontend/components/conversiones/TrackingBoard.tsx",
+          "line": 84
+        },
+        {
+          "file": "frontend/components/conversiones/TrackingBoard.tsx",
+          "line": 94
+        },
+        {
+          "file": "frontend/components/conversiones/TrackingBoard.tsx",
+          "line": 185
+        },
+        {
+          "file": "frontend/components/conversiones/TrackingBoard.tsx",
+          "line": 223
+        },
+        {
+          "file": "frontend/components/conversiones/TrackingBoard.tsx",
+          "line": 362
+        },
+        {
+          "file": "frontend/components/integraciones/IntegracionesMetaCapi.tsx",
+          "line": 258
+        },
+        {
+          "file": "frontend/components/integraciones/IntegracionesMetaCapi.tsx",
+          "line": 1387
+        },
+        {
+          "file": "frontend/components/whatsapp-cloud-api/WhatsAppCloudApiPageContent.tsx",
+          "line": 513
+        },
+        {
+          "file": "frontend/lib/conversionStats.ts",
+          "line": 244
+        },
+        {
+          "file": "frontend/lib/conversionStats.ts",
+          "line": 260
+        },
+        {
+          "file": "frontend/lib/conversionStats.ts",
+          "line": 291
+        },
+        {
+          "file": "frontend/lib/conversionStats.ts",
+          "line": 309
+        },
+        {
+          "file": "frontend/lib/conversionStats.ts",
+          "line": 314
+        },
+        {
+          "file": "frontend/lib/conversionStats.ts",
+          "line": 335
+        },
+        {
+          "file": "frontend/lib/conversionStats.ts",
+          "line": 458
+        },
+        {
+          "file": "frontend/lib/conversionStats.ts",
+          "line": 463
+        },
+        {
+          "file": "frontend/lib/conversionStats.ts",
+          "line": 533
+        },
+        {
+          "file": "frontend/lib/conversionStats.ts",
+          "line": 538
+        },
+        {
+          "file": "frontend/lib/conversionStats.ts",
+          "line": 543
+        },
+        {
+          "file": "frontend/lib/conversionStats.ts",
+          "line": 577
+        },
+        {
+          "file": "frontend/lib/conversionStats.ts",
+          "line": 578
+        },
+        {
+          "file": "frontend/lib/conversionStats.ts",
+          "line": 591
+        },
+        {
+          "file": "frontend/lib/conversionStats.ts",
+          "line": 596
+        },
+        {
+          "file": "frontend/lib/conversionStats.ts",
+          "line": 601
+        },
+        {
+          "file": "frontend/lib/conversionsDb.ts",
+          "line": 895
+        },
+        {
+          "file": "frontend/lib/conversionsDb.ts",
+          "line": 925
+        },
+        {
+          "file": "frontend/lib/conversionsDb.ts",
+          "line": 1017
+        },
+        {
+          "file": "frontend/lib/conversionsDb.ts",
+          "line": 1032
+        },
+        {
+          "file": "frontend/lib/conversionsDb.ts",
+          "line": 1049
+        },
+        {
+          "file": "frontend/lib/conversionsDb.ts",
+          "line": 1261
+        },
+        {
+          "file": "frontend/lib/conversionsDb.ts",
+          "line": 1263
+        },
+        {
+          "file": "frontend/lib/conversionsDb.ts",
+          "line": 1268
+        },
+        {
+          "file": "frontend/lib/conversionsDb.ts",
+          "line": 1270
+        },
+        {
+          "file": "frontend/lib/conversionsDb.ts",
+          "line": 1273
+        },
+        {
+          "file": "frontend/lib/conversionsDb.ts",
+          "line": 1284
+        },
+        {
+          "file": "frontend/lib/conversionsDb.ts",
+          "line": 1286
+        },
+        {
+          "file": "frontend/lib/conversionsDb.ts",
+          "line": 1289
+        },
+        {
+          "file": "frontend/lib/conversionsDb.ts",
+          "line": 1731
+        },
+        {
+          "file": "frontend/lib/conversionsDb.ts",
+          "line": 1737
+        },
+        {
+          "file": "frontend/lib/demoData.ts",
+          "line": 137
+        },
+        {
+          "file": "frontend/lib/demoData.ts",
+          "line": 139
+        },
+        {
+          "file": "frontend/lib/landing/landingsDb.ts",
+          "line": 189
+        },
+        {
+          "file": "frontend/lib/whatsappCloudApiDb.ts",
+          "line": 666
+        },
+        {
+          "file": "supabase/functions/builder-config/index.ts",
+          "line": 229
+        },
+        {
+          "file": "supabase/functions/builder-config/index.ts",
+          "line": 239
+        },
+        {
+          "file": "supabase/functions/conversions-test/index.ts",
+          "line": 10
+        },
+        {
+          "file": "supabase/functions/conversions-test/index.ts",
+          "line": 44
+        },
+        {
+          "file": "supabase/functions/conversions-test/index.ts",
+          "line": 194
+        },
+        {
+          "file": "supabase/functions/conversions/index.ts",
+          "line": 486
+        },
+        {
+          "file": "supabase/functions/conversions/index.ts",
+          "line": 513
+        },
+        {
+          "file": "supabase/functions/conversions/index.ts",
+          "line": 585
+        },
+        {
+          "file": "supabase/functions/conversions/index.ts",
+          "line": 852
+        },
+        {
+          "file": "supabase/functions/conversions/index.ts",
+          "line": 886
+        },
+        {
+          "file": "supabase/functions/conversions/index.ts",
+          "line": 928
+        },
+        {
+          "file": "supabase/functions/conversions/index.ts",
+          "line": 989
+        },
+        {
+          "file": "supabase/functions/conversions/index.ts",
+          "line": 1021
+        },
+        {
+          "file": "supabase/functions/conversions/index.ts",
+          "line": 1075
+        },
+        {
+          "file": "supabase/functions/conversions/index.ts",
+          "line": 1327
+        },
+        {
+          "file": "supabase/functions/conversions/index.ts",
+          "line": 1336
+        },
+        {
+          "file": "supabase/functions/conversions/index.ts",
+          "line": 1529
+        },
+        {
+          "file": "supabase/functions/conversions/index.ts",
+          "line": 1678
+        },
+        {
+          "file": "supabase/functions/conversions/index.ts",
+          "line": 1687
+        },
+        {
+          "file": "supabase/functions/conversions/index.ts",
+          "line": 1694
+        },
+        {
+          "file": "supabase/functions/conversions/index.ts",
+          "line": 1901
+        },
+        {
+          "file": "supabase/functions/conversions/index.ts",
+          "line": 1977
+        },
+        {
+          "file": "supabase/functions/conversions/index.ts",
+          "line": 1985
+        },
+        {
+          "file": "supabase/functions/conversions/index.ts",
+          "line": 2087
+        },
+        {
+          "file": "supabase/functions/conversions/index.ts",
+          "line": 2220
+        },
+        {
+          "file": "supabase/functions/conversions/index.ts",
+          "line": 2443
+        },
+        {
+          "file": "supabase/functions/conversions/index.ts",
+          "line": 2452
+        },
+        {
+          "file": "supabase/functions/conversions/index.ts",
+          "line": 2481
+        },
+        {
+          "file": "supabase/functions/conversions/index.ts",
+          "line": 3044
+        },
+        {
+          "file": "supabase/functions/conversions/index.ts",
+          "line": 3129
+        },
+        {
+          "file": "supabase/functions/conversions/index.ts",
+          "line": 3132
+        },
+        {
+          "file": "supabase/functions/conversions/index.ts",
+          "line": 3168
+        },
+        {
+          "file": "supabase/functions/conversions/index.ts",
+          "line": 3180
+        },
+        {
+          "file": "supabase/functions/conversions/index.ts",
+          "line": 3218
+        },
+        {
+          "file": "supabase/functions/conversions/index.ts",
+          "line": 3227
+        },
+        {
+          "file": "supabase/functions/conversions/index.ts",
+          "line": 3320
+        },
+        {
+          "file": "supabase/functions/conversions/index.ts",
+          "line": 3363
+        },
+        {
+          "file": "supabase/functions/conversions/index.ts",
+          "line": 3376
+        },
+        {
+          "file": "supabase/functions/conversions/index.ts",
+          "line": 3407
+        },
+        {
+          "file": "supabase/functions/conversions/index.ts",
+          "line": 3410
+        },
+        {
+          "file": "supabase/functions/conversions/index.ts",
+          "line": 3444
+        },
+        {
+          "file": "supabase/functions/conversions/index.ts",
+          "line": 3454
+        },
+        {
+          "file": "supabase/functions/conversions/index.ts",
+          "line": 3489
+        },
+        {
+          "file": "supabase/functions/conversions/index.ts",
+          "line": 3498
+        },
+        {
+          "file": "supabase/functions/conversions/index.ts",
+          "line": 3554
+        },
+        {
+          "file": "supabase/functions/conversions/index.ts",
+          "line": 3563
+        },
+        {
+          "file": "supabase/functions/conversions/index.ts",
+          "line": 3615
+        },
+        {
+          "file": "supabase/functions/conversions/index.ts",
+          "line": 3646
+        },
+        {
+          "file": "supabase/functions/conversions/index.ts",
+          "line": 3655
+        },
+        {
+          "file": "supabase/functions/conversions/index.ts",
+          "line": 3691
+        },
+        {
+          "file": "supabase/functions/conversions/index.ts",
+          "line": 3700
+        },
+        {
+          "file": "supabase/functions/conversions/index.ts",
+          "line": 3838
+        },
+        {
+          "file": "supabase/functions/conversions/index.ts",
+          "line": 3848
+        },
+        {
+          "file": "supabase/functions/conversions/index.ts",
+          "line": 3918
+        },
+        {
+          "file": "supabase/functions/conversions/index.ts",
+          "line": 3928
+        },
+        {
+          "file": "supabase/functions/conversions/index.ts",
+          "line": 4062
+        },
+        {
+          "file": "supabase/functions/conversions/index.ts",
+          "line": 4076
+        },
+        {
+          "file": "supabase/functions/conversions/index.ts",
+          "line": 4180
+        },
+        {
+          "file": "supabase/functions/conversions/index.ts",
+          "line": 4358
+        },
+        {
+          "file": "supabase/functions/conversions/index.ts",
+          "line": 4501
+        },
+        {
+          "file": "supabase/functions/conversions/index.ts",
+          "line": 4529
+        },
+        {
+          "file": "supabase/functions/conversions/index.ts",
+          "line": 4534
+        },
+        {
+          "file": "supabase/functions/conversions/index.ts",
+          "line": 4655
+        },
+        {
+          "file": "supabase/functions/conversions/index.ts",
+          "line": 4887
+        },
+        {
+          "file": "supabase/functions/conversions/index.ts",
+          "line": 5160
+        },
+        {
+          "file": "supabase/functions/conversions/index.ts",
+          "line": 5168
+        },
+        {
+          "file": "supabase/functions/conversions/index.ts",
+          "line": 5304
+        },
+        {
+          "file": "supabase/functions/conversions/index.ts",
+          "line": 5417
+        },
+        {
+          "file": "supabase/functions/conversions/index.ts",
+          "line": 5421
+        },
+        {
+          "file": "supabase/functions/conversions/index.ts",
+          "line": 5452
+        },
+        {
+          "file": "supabase/functions/conversions/index.ts",
+          "line": 5597
+        },
+        {
+          "file": "supabase/functions/conversions/index.ts",
+          "line": 5633
+        },
+        {
+          "file": "supabase/functions/conversions/index.ts",
+          "line": 5718
+        },
+        {
+          "file": "supabase/functions/conversions/index.ts",
+          "line": 5744
+        },
+        {
+          "file": "supabase/functions/conversions/index.ts",
+          "line": 5875
+        },
+        {
+          "file": "supabase/functions/conversions/index.ts",
+          "line": 5925
+        },
+        {
+          "file": "supabase/functions/conversions/index.ts",
+          "line": 6078
+        },
+        {
+          "file": "supabase/functions/conversions/index.ts",
+          "line": 6204
+        },
+        {
+          "file": "supabase/functions/conversions/index.ts",
+          "line": 6418
+        },
+        {
+          "file": "supabase/functions/conversions/index.ts",
+          "line": 6583
+        },
+        {
+          "file": "supabase/functions/conversions/index.ts",
+          "line": 6585
+        },
+        {
+          "file": "supabase/functions/conversions/index.ts",
+          "line": 6615
+        },
+        {
+          "file": "supabase/functions/conversions/index.ts",
+          "line": 6862
+        },
+        {
+          "file": "supabase/functions/conversions/index.ts",
+          "line": 6873
+        },
+        {
+          "file": "supabase/functions/conversions/index.ts",
+          "line": 6902
+        },
+        {
+          "file": "supabase/functions/conversions/index.ts",
+          "line": 7164
+        },
+        {
+          "file": "supabase/functions/conversions/index.ts",
+          "line": 7199
+        },
+        {
+          "file": "supabase/functions/conversions/index.ts",
+          "line": 7409
+        },
+        {
+          "file": "supabase/functions/conversions/index.ts",
+          "line": 7428
+        },
+        {
+          "file": "supabase/functions/conversions/index.ts",
+          "line": 7586
+        },
+        {
+          "file": "supabase/functions/conversions/index.ts",
+          "line": 7618
+        },
+        {
+          "file": "supabase/functions/conversions/index.ts",
+          "line": 7744
+        },
+        {
+          "file": "supabase/functions/conversions/index.ts",
+          "line": 7755
+        },
+        {
+          "file": "supabase/functions/conversions/index.ts",
+          "line": 8184
+        },
+        {
+          "file": "supabase/functions/conversions/pixel_attribution.ts",
+          "line": 252
+        },
+        {
+          "file": "supabase/functions/conversions/shared.ts",
+          "line": 3
+        },
+        {
+          "file": "supabase/functions/conversions/shared.ts",
+          "line": 940
+        },
+        {
+          "file": "supabase/functions/conversions/shared.ts",
+          "line": 1012
+        },
+        {
+          "file": "supabase/functions/notify-inactive-contacts/index.ts",
+          "line": 171
+        },
+        {
+          "file": "supabase/functions/promotion-draw-due/index.ts",
+          "line": 135
+        },
+        {
+          "file": "supabase/functions/promotion-draw/index.ts",
+          "line": 113
+        },
+        {
+          "file": "supabase/functions/promotion-match-backfill/index.ts",
+          "line": 84
+        },
+        {
+          "file": "supabase/functions/promotion-match-backfill/index.ts",
+          "line": 85
+        },
+        {
+          "file": "supabase/functions/promotion-match-backfill/index.ts",
+          "line": 91
+        },
+        {
+          "file": "supabase/functions/promotion-match-backfill/index.ts",
+          "line": 102
+        },
+        {
+          "file": "supabase/functions/promotion-participate/index.ts",
+          "line": 70
+        },
+        {
+          "file": "supabase/functions/promotion-participate/index.ts",
+          "line": 85
+        },
+        {
+          "file": "supabase/functions/reset-phone-messages/index.ts",
+          "line": 12
+        },
+        {
+          "file": "supabase/functions/retry-failed-conversions/index.ts",
+          "line": 21
+        },
+        {
+          "file": "supabase/functions/retry-failed-conversions/index.ts",
+          "line": 24
+        },
+        {
+          "file": "supabase/functions/retry-failed-conversions/index.ts",
+          "line": 59
+        },
+        {
+          "file": "supabase/functions/retry-failed-conversions/index.ts",
+          "line": 112
+        },
+        {
+          "file": "supabase/functions/retry-failed-conversions/index.ts",
+          "line": 131
+        },
+        {
+          "file": "supabase/functions/retry-failed-conversions/index.ts",
+          "line": 156
+        },
+        {
+          "file": "supabase/functions/retry-failed-conversions/index.ts",
+          "line": 168
+        },
+        {
+          "file": "supabase/functions/retry-failed-conversions/index.ts",
+          "line": 284
+        },
+        {
+          "file": "supabase/functions/retry-failed-conversions/index.ts",
+          "line": 311
+        },
+        {
+          "file": "supabase/functions/retry-failed-conversions/index.ts",
+          "line": 387
+        },
+        {
+          "file": "supabase/functions/retry-failed-conversions/index.ts",
+          "line": 402
+        },
+        {
+          "file": "supabase/functions/retry-failed-conversions/index.ts",
+          "line": 444
+        },
+        {
+          "file": "supabase/functions/retry-failed-conversions/index.ts",
+          "line": 474
+        },
+        {
+          "file": "supabase/functions/retry-failed-conversions/index.ts",
+          "line": 520
+        },
+        {
+          "file": "supabase/functions/retry-failed-conversions/index.ts",
+          "line": 562
+        },
+        {
+          "file": "supabase/functions/retry-failed-conversions/index.ts",
+          "line": 598
+        },
+        {
+          "file": "supabase/functions/retry-failed-conversions/index.ts",
+          "line": 636
+        },
+        {
+          "file": "supabase/functions/retry-failed-conversions/index.ts",
+          "line": 691
+        },
+        {
+          "file": "supabase/functions/retry-failed-conversions/index.ts",
+          "line": 717
+        },
+        {
+          "file": "supabase/functions/retry-failed-conversions/index.ts",
+          "line": 862
+        },
+        {
+          "file": "supabase/functions/retry-failed-conversions/index.ts",
+          "line": 884
+        },
+        {
+          "file": "supabase/functions/retry-failed-conversions/index.ts",
+          "line": 906
+        },
+        {
+          "file": "supabase/functions/retry-failed-conversions/index.ts",
+          "line": 989
+        },
+        {
+          "file": "supabase/functions/retry-failed-conversions/index.ts",
+          "line": 1073
+        },
+        {
+          "file": "supabase/functions/retry-failed-conversions/index.ts",
+          "line": 1100
+        },
+        {
+          "file": "supabase/functions/retry-failed-conversions/index.ts",
+          "line": 1129
+        },
+        {
+          "file": "supabase/functions/retry-failed-conversions/index.ts",
+          "line": 1176
+        },
+        {
+          "file": "supabase/functions/retry-failed-conversions/index.ts",
+          "line": 1179
+        },
+        {
+          "file": "supabase/functions/retry-failed-conversions/index.ts",
+          "line": 1189
+        },
+        {
+          "file": "supabase/functions/retry-failed-conversions/index.ts",
+          "line": 1297
+        },
+        {
+          "file": "supabase/functions/retry-failed-conversions/index.ts",
+          "line": 1327
+        },
+        {
+          "file": "supabase/functions/retry-failed-conversions/index.ts",
+          "line": 1341
+        },
+        {
+          "file": "supabase/functions/retry-failed-conversions/index.ts",
+          "line": 1349
+        },
+        {
+          "file": "supabase/functions/retry-failed-conversions/index.ts",
+          "line": 1394
+        },
+        {
+          "file": "supabase/functions/retry-failed-conversions/index.ts",
+          "line": 1547
+        },
+        {
+          "file": "supabase/functions/retry-failed-conversions/index.ts",
+          "line": 1633
+        },
+        {
+          "file": "supabase/functions/retry-failed-conversions/index.ts",
+          "line": 1735
+        },
+        {
+          "file": "supabase/functions/retry-failed-conversions/index.ts",
+          "line": 1818
+        },
+        {
+          "file": "supabase/functions/retry-failed-conversions/index.ts",
+          "line": 1853
+        },
+        {
+          "file": "supabase/functions/retry-failed-conversions/index.ts",
+          "line": 2013
+        },
+        {
+          "file": "supabase/functions/retry-failed-conversions/index.ts",
+          "line": 2023
+        },
+        {
+          "file": "supabase/functions/whatsapp-cloud-redirect/index.ts",
+          "line": 177
+        },
+        {
+          "file": "supabase/functions/whatsapp-cloud-redirect/index.ts",
+          "line": 200
+        },
+        {
+          "file": "supabase/functions/whatsapp-cloud-redirect/index.ts",
+          "line": 208
+        }
+      ],
+      "categories": [
+        "authenticated",
+        "admin",
+        "backend/service_role"
+      ]
+    },
+    {
+      "object": "public.conversions_config",
+      "kind": "r",
+      "category": "authenticated",
+      "action": "deferred TRUNCATE exclusion",
+      "dataApiAction": "preserve existing CRUD; ambiguity or legitimate contract",
+      "sourceReferences": [
+        {
+          "file": "frontend/app/(panel)/admin/landings/[id]/editar/page.tsx",
+          "line": 304
+        },
+        {
+          "file": "frontend/app/(panel)/dashboard/landing/[id]/editar/page.tsx",
+          "line": 288
+        },
+        {
+          "file": "frontend/app/(panel)/dashboard/layout.tsx",
+          "line": 397
+        },
+        {
+          "file": "frontend/app/(panel)/dashboard/notificaciones/page.tsx",
+          "line": 44
+        },
+        {
+          "file": "frontend/components/telefonos/TelefonosPageContent.tsx",
+          "line": 195
+        },
+        {
+          "file": "frontend/components/telefonos/TelefonosPageContent.tsx",
+          "line": 455
+        },
+        {
+          "file": "frontend/lib/conversionsDb.ts",
+          "line": 620
+        },
+        {
+          "file": "frontend/lib/conversionsDb.ts",
+          "line": 676
+        },
+        {
+          "file": "frontend/lib/conversionsDb.ts",
+          "line": 830
+        },
+        {
+          "file": "frontend/lib/landing/landingsDb.ts",
+          "line": 183
+        },
+        {
+          "file": "supabase/functions/conversions-test/index.ts",
+          "line": 31
+        },
+        {
+          "file": "supabase/functions/conversions-test/index.ts",
+          "line": 115
+        },
+        {
+          "file": "supabase/functions/conversions/index.ts",
+          "line": 7757
+        },
+        {
+          "file": "supabase/functions/create-client/index.ts",
+          "line": 374
+        },
+        {
+          "file": "supabase/functions/create-client/index.ts",
+          "line": 392
+        },
+        {
+          "file": "supabase/functions/create-client/index.ts",
+          "line": 425
+        },
+        {
+          "file": "supabase/functions/list-clients/index.ts",
+          "line": 180
+        },
+        {
+          "file": "supabase/functions/notify-inactive-contacts/index.ts",
+          "line": 214
+        },
+        {
+          "file": "supabase/functions/retry-failed-conversions/index.ts",
+          "line": 192
+        },
+        {
+          "file": "supabase/functions/update-client/index.ts",
+          "line": 266
+        },
+        {
+          "file": "supabase/functions/update-client/index.ts",
+          "line": 271
+        }
+      ],
+      "categories": [
+        "authenticated",
+        "admin",
+        "backend/service_role"
+      ]
+    },
+    {
+      "object": "public.conversions_internal_id_seq",
+      "kind": "S",
+      "category": "sin consumidor",
+      "action": "preserve",
+      "dataApiAction": "preserve existing CRUD; ambiguity or legitimate contract",
+      "sourceReferences": [],
+      "categories": [
+        "sin consumidor"
+      ]
+    },
+    {
+      "object": "public.conversions_pixel_configs",
+      "kind": "r",
+      "category": "authenticated",
+      "action": "deferred TRUNCATE exclusion",
+      "dataApiAction": "preserve existing CRUD; ambiguity or legitimate contract",
+      "sourceReferences": [
+        {
+          "file": "frontend/app/(panel)/admin/landings/[id]/editar/page.tsx",
+          "line": 239
+        },
+        {
+          "file": "frontend/app/(panel)/dashboard/landing/[id]/editar/page.tsx",
+          "line": 224
+        },
+        {
+          "file": "frontend/lib/conversionsDb.ts",
+          "line": 726
+        },
+        {
+          "file": "frontend/lib/conversionsDb.ts",
+          "line": 808
+        },
+        {
+          "file": "frontend/lib/conversionsDb.ts",
+          "line": 819
+        },
+        {
+          "file": "supabase/functions/conversions/index.ts",
+          "line": 7784
+        },
+        {
+          "file": "supabase/functions/retry-failed-conversions/index.ts",
+          "line": 198
+        }
+      ],
+      "categories": [
+        "authenticated",
+        "admin",
+        "backend/service_role"
+      ]
+    },
+    {
+      "object": "public.cron_config",
+      "kind": "r",
+      "category": "backend/service_role",
+      "action": "revoke TRUNCATE",
+      "dataApiAction": "remove client grants",
+      "sourceReferences": [
+        {
+          "file": "frontend/app/api/track/retry/route.ts",
+          "line": 14
+        },
+        {
+          "file": "supabase/functions/bootstrap-cron-config/index.ts",
+          "line": 10
+        },
+        {
+          "file": "supabase/functions/bootstrap-cron-config/index.ts",
+          "line": 81
+        },
+        {
+          "file": "supabase/functions/bootstrap-cron-config/index.ts",
+          "line": 89
+        },
+        {
+          "file": "supabase/functions/bootstrap-cron-config/index.ts",
+          "line": 100
+        },
+        {
+          "file": "supabase/functions/notify-inactive-contacts/index.ts",
+          "line": 110
+        },
+        {
+          "file": "supabase/functions/promotion-draw-due/index.ts",
+          "line": 302
+        },
+        {
+          "file": "supabase/functions/promotion-match-backfill/index.ts",
+          "line": 49
+        },
+        {
+          "file": "supabase/functions/retry-failed-conversions/index.ts",
+          "line": 94
+        },
+        {
+          "file": "supabase/functions/sync-phones/index.ts",
+          "line": 130
+        },
+        {
+          "file": "supabase/functions/sync-telegram-connections/index.ts",
+          "line": 147
+        },
+        {
+          "file": "supabase/functions/whatsapp-cloud-retarget/index.ts",
+          "line": 110
+        },
+        {
+          "file": "supabase/functions/whatsapp-cloud-sync-health/index.ts",
+          "line": 191
+        },
+        {
+          "file": "supabase/functions/whatsapp-cloud-worker/index.ts",
+          "line": 66
+        }
+      ],
+      "categories": [
+        "backend/service_role",
+        "postgres/cron"
+      ]
+    },
+    {
+      "object": "public.funnel_contacts",
+      "kind": "v",
+      "category": "sin consumidor",
+      "action": "preserve",
+      "dataApiAction": "preserve existing CRUD; ambiguity or legitimate contract",
+      "sourceReferences": [],
+      "categories": [
+        "sin consumidor"
+      ]
+    },
+    {
+      "object": "public.gerencia_phone_availability_snapshots",
+      "kind": "r",
+      "category": "authenticated",
+      "action": "deferred TRUNCATE exclusion",
+      "dataApiAction": "preserve existing CRUD; ambiguity or legitimate contract",
+      "sourceReferences": [],
+      "categories": [
+        "authenticated",
+        "admin"
+      ]
+    },
+    {
+      "object": "public.gerencia_phone_availability_snapshots_id_seq",
+      "kind": "S",
+      "category": "sin consumidor",
+      "action": "preserve",
+      "dataApiAction": "preserve existing CRUD; ambiguity or legitimate contract",
+      "sourceReferences": [],
+      "categories": [
+        "sin consumidor"
+      ]
+    },
+    {
+      "object": "public.gerencia_phones",
+      "kind": "r",
+      "category": "authenticated",
+      "action": "deferred TRUNCATE exclusion",
+      "dataApiAction": "preserve existing CRUD; ambiguity or legitimate contract",
+      "sourceReferences": [
+        {
+          "file": "frontend/app/(panel)/admin/conversiones/page.tsx",
+          "line": 880
+        },
+        {
+          "file": "frontend/app/(panel)/admin/seguimiento/page.tsx",
+          "line": 128
+        },
+        {
+          "file": "frontend/app/(panel)/dashboard/conversiones/page.tsx",
+          "line": 1259
+        },
+        {
+          "file": "frontend/app/(panel)/dashboard/promociones/page.tsx",
+          "line": 136
+        },
+        {
+          "file": "frontend/app/(panel)/dashboard/seguimiento/page.tsx",
+          "line": 209
+        },
+        {
+          "file": "frontend/components/telefonos/TelefonosPageContent.tsx",
+          "line": 221
+        },
+        {
+          "file": "frontend/components/telefonos/TelefonosPageContent.tsx",
+          "line": 494
+        },
+        {
+          "file": "frontend/components/telefonos/TelefonosPageContent.tsx",
+          "line": 575
+        },
+        {
+          "file": "frontend/components/telefonos/TelefonosPageContent.tsx",
+          "line": 614
+        },
+        {
+          "file": "frontend/components/telefonos/TelefonosPageContent.tsx",
+          "line": 653
+        },
+        {
+          "file": "frontend/components/telefonos/TelefonosPageContent.tsx",
+          "line": 676
+        },
+        {
+          "file": "supabase/functions/conversions/index.ts",
+          "line": 482
+        },
+        {
+          "file": "supabase/functions/conversions/index.ts",
+          "line": 706
+        },
+        {
+          "file": "supabase/functions/phone-click/index.ts",
+          "line": 115
+        },
+        {
+          "file": "supabase/functions/reset-phone-counters/index.ts",
+          "line": 114
+        },
+        {
+          "file": "supabase/functions/reset-phone-counters/index.ts",
+          "line": 145
+        },
+        {
+          "file": "supabase/functions/reset-phone-messages/index.ts",
+          "line": 12
+        },
+        {
+          "file": "supabase/functions/reset-phone-messages/index.ts",
+          "line": 103
+        },
+        {
+          "file": "supabase/functions/reset-phone-messages/index.ts",
+          "line": 127
+        },
+        {
+          "file": "supabase/functions/sync-phones/index.ts",
+          "line": 60
+        },
+        {
+          "file": "supabase/functions/sync-phones/index.ts",
+          "line": 283
+        },
+        {
+          "file": "supabase/functions/sync-phones/index.ts",
+          "line": 289
+        },
+        {
+          "file": "supabase/functions/sync-phones/index.ts",
+          "line": 333
+        },
+        {
+          "file": "supabase/functions/sync-phones/index.ts",
+          "line": 340
+        },
+        {
+          "file": "supabase/functions/sync-phones/index.ts",
+          "line": 359
+        },
+        {
+          "file": "supabase/functions/sync-phones/index.ts",
+          "line": 366
+        },
+        {
+          "file": "supabase/functions/sync-phones/index.ts",
+          "line": 373
+        },
+        {
+          "file": "supabase/functions/sync-phones/index.ts",
+          "line": 379
+        },
+        {
+          "file": "supabase/functions/sync-phones/index.ts",
+          "line": 404
+        },
+        {
+          "file": "supabase/functions/sync-phones/index.ts",
+          "line": 426
+        }
+      ],
+      "categories": [
+        "authenticated",
+        "admin",
+        "backend/service_role"
+      ]
+    },
+    {
+      "object": "public.gerencia_phones_id_seq",
+      "kind": "S",
+      "category": "sin consumidor",
+      "action": "preserve",
+      "dataApiAction": "preserve existing CRUD; ambiguity or legitimate contract",
+      "sourceReferences": [],
+      "categories": [
+        "sin consumidor"
+      ]
+    },
+    {
+      "object": "public.gerencia_work_group_members",
+      "kind": "r",
+      "category": "authenticated",
+      "action": "deferred TRUNCATE exclusion",
+      "dataApiAction": "preserve existing CRUD; ambiguity or legitimate contract",
+      "sourceReferences": [
+        {
+          "file": "frontend/lib/gerencias/gerenciasDb.ts",
+          "line": 210
+        },
+        {
+          "file": "frontend/lib/gerencias/gerenciasDb.ts",
+          "line": 219
+        },
+        {
+          "file": "frontend/lib/gerencias/gerenciasDb.ts",
+          "line": 235
+        },
+        {
+          "file": "frontend/lib/gerencias/gerenciasDb.ts",
+          "line": 285
+        },
+        {
+          "file": "frontend/lib/gerencias/gerenciasDb.ts",
+          "line": 293
+        }
+      ],
+      "categories": [
+        "authenticated",
+        "admin"
+      ]
+    },
+    {
+      "object": "public.gerencia_work_group_members_id_seq",
+      "kind": "S",
+      "category": "sin consumidor",
+      "action": "preserve",
+      "dataApiAction": "preserve existing CRUD; ambiguity or legitimate contract",
+      "sourceReferences": [],
+      "categories": [
+        "sin consumidor"
+      ]
+    },
+    {
+      "object": "public.gerencia_work_groups",
+      "kind": "r",
+      "category": "authenticated",
+      "action": "deferred TRUNCATE exclusion",
+      "dataApiAction": "preserve existing CRUD; ambiguity or legitimate contract",
+      "sourceReferences": [
+        {
+          "file": "frontend/lib/gerencias/gerenciasDb.ts",
+          "line": 218
+        },
+        {
+          "file": "frontend/lib/gerencias/gerenciasDb.ts",
+          "line": 248
+        },
+        {
+          "file": "frontend/lib/gerencias/gerenciasDb.ts",
+          "line": 265
+        },
+        {
+          "file": "frontend/lib/gerencias/gerenciasDb.ts",
+          "line": 275
+        }
+      ],
+      "categories": [
+        "authenticated",
+        "admin"
+      ]
+    },
+    {
+      "object": "public.gerencia_work_groups_id_seq",
+      "kind": "S",
+      "category": "sin consumidor",
+      "action": "preserve",
+      "dataApiAction": "preserve existing CRUD; ambiguity or legitimate contract",
+      "sourceReferences": [],
+      "categories": [
+        "sin consumidor"
+      ]
+    },
+    {
+      "object": "public.gerencias",
+      "kind": "r",
+      "category": "authenticated",
+      "action": "deferred TRUNCATE exclusion",
+      "dataApiAction": "preserve existing CRUD; ambiguity or legitimate contract",
+      "sourceReferences": [
+        {
+          "file": "frontend/app/(panel)/admin/conversiones/page.tsx",
+          "line": 865
+        },
+        {
+          "file": "frontend/app/(panel)/admin/conversiones/page.tsx",
+          "line": 868
+        },
+        {
+          "file": "frontend/app/(panel)/admin/conversiones/page.tsx",
+          "line": 869
+        },
+        {
+          "file": "frontend/app/(panel)/admin/conversiones/page.tsx",
+          "line": 1311
+        },
+        {
+          "file": "frontend/app/(panel)/admin/gerencias/page.tsx",
+          "line": 6
+        },
+        {
+          "file": "frontend/app/(panel)/admin/gerencias/page.tsx",
+          "line": 14
+        },
+        {
+          "file": "frontend/app/(panel)/admin/gerencias/page.tsx",
+          "line": 28
+        },
+        {
+          "file": "frontend/app/(panel)/admin/gerencias/page.tsx",
+          "line": 59
+        },
+        {
+          "file": "frontend/app/(panel)/admin/gerencias/page.tsx",
+          "line": 176
+        },
+        {
+          "file": "frontend/app/(panel)/admin/gerencias/page.tsx",
+          "line": 180
+        },
+        {
+          "file": "frontend/app/(panel)/admin/gerencias/page.tsx",
+          "line": 195
+        },
+        {
+          "file": "frontend/app/(panel)/admin/gerencias/page.tsx",
+          "line": 291
+        },
+        {
+          "file": "frontend/app/(panel)/admin/gerencias/page.tsx",
+          "line": 294
+        },
+        {
+          "file": "frontend/app/(panel)/admin/gerencias/page.tsx",
+          "line": 298
+        },
+        {
+          "file": "frontend/app/(panel)/admin/landings/[id]/editar/page.tsx",
+          "line": 31
+        },
+        {
+          "file": "frontend/app/(panel)/admin/landings/[id]/editar/page.tsx",
+          "line": 32
+        },
+        {
+          "file": "frontend/app/(panel)/admin/landings/[id]/editar/page.tsx",
+          "line": 33
+        },
+        {
+          "file": "frontend/app/(panel)/admin/landings/[id]/editar/page.tsx",
+          "line": 40
+        },
+        {
+          "file": "frontend/app/(panel)/admin/landings/[id]/editar/page.tsx",
+          "line": 170
+        },
+        {
+          "file": "frontend/app/(panel)/admin/landings/[id]/editar/page.tsx",
+          "line": 823
+        },
+        {
+          "file": "frontend/app/(panel)/admin/landings/[id]/editar/page.tsx",
+          "line": 827
+        },
+        {
+          "file": "frontend/app/(panel)/admin/landings/[id]/editar/page.tsx",
+          "line": 884
+        },
+        {
+          "file": "frontend/app/(panel)/admin/landings/[id]/editar/page.tsx",
+          "line": 906
+        },
+        {
+          "file": "frontend/app/(panel)/admin/layout.tsx",
+          "line": 59
+        },
+        {
+          "file": "frontend/app/(panel)/admin/layout.tsx",
+          "line": 140
+        },
+        {
+          "file": "frontend/app/(panel)/admin/layout.tsx",
+          "line": 649
+        },
+        {
+          "file": "frontend/app/(panel)/admin/layout.tsx",
+          "line": 650
+        },
+        {
+          "file": "frontend/app/(panel)/admin/layout.tsx",
+          "line": 652
+        },
+        {
+          "file": "frontend/app/(panel)/admin/layout.tsx",
+          "line": 658
+        },
+        {
+          "file": "frontend/app/(panel)/admin/layout.tsx",
+          "line": 659
+        },
+        {
+          "file": "frontend/app/(panel)/admin/seguimiento/page.tsx",
+          "line": 115
+        },
+        {
+          "file": "frontend/app/(panel)/admin/seguimiento/page.tsx",
+          "line": 116
+        },
+        {
+          "file": "frontend/app/(panel)/admin/seguimiento/page.tsx",
+          "line": 119
+        },
+        {
+          "file": "frontend/app/(panel)/admin/seguimiento/page.tsx",
+          "line": 125
+        },
+        {
+          "file": "frontend/app/(panel)/dashboard/conversiones/page.tsx",
+          "line": 1239
+        },
+        {
+          "file": "frontend/app/(panel)/dashboard/conversiones/page.tsx",
+          "line": 1243
+        },
+        {
+          "file": "frontend/app/(panel)/dashboard/conversiones/page.tsx",
+          "line": 1244
+        },
+        {
+          "file": "frontend/app/(panel)/dashboard/conversiones/page.tsx",
+          "line": 1710
+        },
+        {
+          "file": "frontend/app/(panel)/dashboard/gerencias/page.tsx",
+          "line": 6
+        },
+        {
+          "file": "frontend/app/(panel)/dashboard/gerencias/page.tsx",
+          "line": 18
+        },
+        {
+          "file": "frontend/app/(panel)/dashboard/gerencias/page.tsx",
+          "line": 20
+        },
+        {
+          "file": "frontend/app/(panel)/dashboard/gerencias/page.tsx",
+          "line": 33
+        },
+        {
+          "file": "frontend/app/(panel)/dashboard/gerencias/page.tsx",
+          "line": 71
+        },
+        {
+          "file": "frontend/app/(panel)/dashboard/gerencias/page.tsx",
+          "line": 239
+        },
+        {
+          "file": "frontend/app/(panel)/dashboard/gerencias/page.tsx",
+          "line": 241
+        },
+        {
+          "file": "frontend/app/(panel)/dashboard/gerencias/page.tsx",
+          "line": 247
+        },
+        {
+          "file": "frontend/app/(panel)/dashboard/gerencias/page.tsx",
+          "line": 250
+        },
+        {
+          "file": "frontend/app/(panel)/dashboard/gerencias/page.tsx",
+          "line": 254
+        },
+        {
+          "file": "frontend/app/(panel)/dashboard/gerencias/page.tsx",
+          "line": 269
+        },
+        {
+          "file": "frontend/app/(panel)/dashboard/gerencias/page.tsx",
+          "line": 356
+        },
+        {
+          "file": "frontend/app/(panel)/dashboard/gerencias/page.tsx",
+          "line": 358
+        },
+        {
+          "file": "frontend/app/(panel)/dashboard/gerencias/page.tsx",
+          "line": 362
+        },
+        {
+          "file": "frontend/app/(panel)/dashboard/gerencias/page.tsx",
+          "line": 384
+        },
+        {
+          "file": "frontend/app/(panel)/dashboard/gerencias/page.tsx",
+          "line": 387
+        },
+        {
+          "file": "frontend/app/(panel)/dashboard/gerencias/page.tsx",
+          "line": 391
+        },
+        {
+          "file": "frontend/app/(panel)/dashboard/gerencias/page.tsx",
+          "line": 394
+        },
+        {
+          "file": "frontend/app/(panel)/dashboard/gerencias/page.tsx",
+          "line": 471
+        },
+        {
+          "file": "frontend/app/(panel)/dashboard/landing/[id]/editar/page.tsx",
+          "line": 16
+        },
+        {
+          "file": "frontend/app/(panel)/dashboard/landing/[id]/editar/page.tsx",
+          "line": 17
+        },
+        {
+          "file": "frontend/app/(panel)/dashboard/landing/[id]/editar/page.tsx",
+          "line": 18
+        },
+        {
+          "file": "frontend/app/(panel)/dashboard/landing/[id]/editar/page.tsx",
+          "line": 25
+        },
+        {
+          "file": "frontend/app/(panel)/dashboard/landing/[id]/editar/page.tsx",
+          "line": 169
+        },
+        {
+          "file": "frontend/app/(panel)/dashboard/landing/[id]/editar/page.tsx",
+          "line": 798
+        },
+        {
+          "file": "frontend/app/(panel)/dashboard/landing/[id]/editar/page.tsx",
+          "line": 802
+        },
+        {
+          "file": "frontend/app/(panel)/dashboard/landing/[id]/editar/page.tsx",
+          "line": 867
+        },
+        {
+          "file": "frontend/app/(panel)/dashboard/landing/[id]/editar/page.tsx",
+          "line": 890
+        },
+        {
+          "file": "frontend/app/(panel)/dashboard/landings/page.tsx",
+          "line": 10
+        },
+        {
+          "file": "frontend/app/(panel)/dashboard/layout.tsx",
+          "line": 24
+        },
+        {
+          "file": "frontend/app/(panel)/dashboard/layout.tsx",
+          "line": 73
+        },
+        {
+          "file": "frontend/app/(panel)/dashboard/layout.tsx",
+          "line": 124
+        },
+        {
+          "file": "frontend/app/(panel)/dashboard/layout.tsx",
+          "line": 704
+        },
+        {
+          "file": "frontend/app/(panel)/dashboard/layout.tsx",
+          "line": 705
+        },
+        {
+          "file": "frontend/app/(panel)/dashboard/layout.tsx",
+          "line": 707
+        },
+        {
+          "file": "frontend/app/(panel)/dashboard/layout.tsx",
+          "line": 713
+        },
+        {
+          "file": "frontend/app/(panel)/dashboard/layout.tsx",
+          "line": 714
+        },
+        {
+          "file": "frontend/app/(panel)/dashboard/promociones/page.tsx",
+          "line": 118
+        },
+        {
+          "file": "frontend/app/(panel)/dashboard/promociones/page.tsx",
+          "line": 119
+        },
+        {
+          "file": "frontend/app/(panel)/dashboard/promociones/page.tsx",
+          "line": 125
+        },
+        {
+          "file": "frontend/app/(panel)/dashboard/seguimiento/page.tsx",
+          "line": 195
+        },
+        {
+          "file": "frontend/app/(panel)/dashboard/seguimiento/page.tsx",
+          "line": 196
+        },
+        {
+          "file": "frontend/app/(panel)/dashboard/seguimiento/page.tsx",
+          "line": 200
+        },
+        {
+          "file": "frontend/app/(panel)/dashboard/seguimiento/page.tsx",
+          "line": 206
+        },
+        {
+          "file": "frontend/app/(panel)/privacy-policy/page.tsx",
+          "line": 20
+        },
+        {
+          "file": "frontend/app/(panel)/privacy-policy/page.tsx",
+          "line": 26
+        },
+        {
+          "file": "frontend/components/conversiones/ConversionFiltersModal.tsx",
+          "line": 32
+        },
+        {
+          "file": "frontend/components/conversiones/ConversionFiltersModal.tsx",
+          "line": 312
+        },
+        {
+          "file": "frontend/components/conversiones/ConversionFiltersModal.tsx",
+          "line": 313
+        },
+        {
+          "file": "frontend/components/conversiones/ConversionFiltersModal.tsx",
+          "line": 314
+        },
+        {
+          "file": "frontend/components/conversiones/GerenciasPerformancePanel.tsx",
+          "line": 224
+        },
+        {
+          "file": "frontend/components/conversiones/GerenciasPerformancePanel.tsx",
+          "line": 245
+        },
+        {
+          "file": "frontend/components/conversiones/GerenciasPerformancePanel.tsx",
+          "line": 280
+        },
+        {
+          "file": "frontend/components/conversiones/GerenciasPerformancePanel.tsx",
+          "line": 503
+        },
+        {
+          "file": "frontend/components/conversiones/GerenciasPerformancePanel.tsx",
+          "line": 898
+        },
+        {
+          "file": "frontend/components/conversiones/GerenciasPerformancePanel.tsx",
+          "line": 899
+        },
+        {
+          "file": "frontend/components/gerencias/GerenciaWorkGroupsPanel.tsx",
+          "line": 4
+        },
+        {
+          "file": "frontend/components/gerencias/GerenciaWorkGroupsPanel.tsx",
+          "line": 8
+        },
+        {
+          "file": "frontend/components/gerencias/GerenciaWorkGroupsPanel.tsx",
+          "line": 17
+        },
+        {
+          "file": "frontend/components/gerencias/GerenciaWorkGroupsPanel.tsx",
+          "line": 73
+        },
+        {
+          "file": "frontend/components/gerencias/GerenciaWorkGroupsPanel.tsx",
+          "line": 80
+        },
+        {
+          "file": "frontend/components/gerencias/GerenciaWorkGroupsPanel.tsx",
+          "line": 81
+        },
+        {
+          "file": "frontend/components/gerencias/GerenciaWorkGroupsPanel.tsx",
+          "line": 83
+        },
+        {
+          "file": "frontend/components/gerencias/GerenciaWorkGroupsPanel.tsx",
+          "line": 109
+        },
+        {
+          "file": "frontend/components/gerencias/GerenciaWorkGroupsPanel.tsx",
+          "line": 144
+        },
+        {
+          "file": "frontend/components/gerencias/GerenciaWorkGroupsPanel.tsx",
+          "line": 172
+        },
+        {
+          "file": "frontend/components/integraciones/IntegracionesMetaCapi.tsx",
+          "line": 28
+        },
+        {
+          "file": "frontend/components/integraciones/IntegracionesMetaCapi.tsx",
+          "line": 30
+        },
+        {
+          "file": "frontend/components/integraciones/IntegracionesMetaCapi.tsx",
+          "line": 1608
+        },
+        {
+          "file": "frontend/components/integraciones/IntegracionesMetaCapi.tsx",
+          "line": 1663
+        },
+        {
+          "file": "frontend/components/landing/GerenciaRedirectSection.tsx",
+          "line": 5
+        },
+        {
+          "file": "frontend/components/landing/GerenciaRedirectSection.tsx",
+          "line": 6
+        },
+        {
+          "file": "frontend/components/landing/GerenciaRedirectSection.tsx",
+          "line": 20
+        },
+        {
+          "file": "frontend/components/landing/GerenciaRedirectSection.tsx",
+          "line": 30
+        },
+        {
+          "file": "frontend/components/landing/GerenciaRedirectSection.tsx",
+          "line": 33
+        },
+        {
+          "file": "frontend/components/landing/GerenciaRedirectSection.tsx",
+          "line": 35
+        },
+        {
+          "file": "frontend/components/landing/GerenciaRedirectSection.tsx",
+          "line": 38
+        },
+        {
+          "file": "frontend/components/landing/GerenciaRedirectSection.tsx",
+          "line": 49
+        },
+        {
+          "file": "frontend/components/landing/GerenciaRedirectSection.tsx",
+          "line": 52
+        },
+        {
+          "file": "frontend/components/landing/GerenciaRedirectSection.tsx",
+          "line": 54
+        },
+        {
+          "file": "frontend/components/landing/GerenciaRedirectSection.tsx",
+          "line": 56
+        },
+        {
+          "file": "frontend/components/landing/GerenciaRedirectSection.tsx",
+          "line": 65
+        },
+        {
+          "file": "frontend/components/landing/GerenciaRedirectSection.tsx",
+          "line": 71
+        },
+        {
+          "file": "frontend/components/landing/GerenciaRedirectSection.tsx",
+          "line": 97
+        },
+        {
+          "file": "frontend/components/landing/GerenciaRedirectSection.tsx",
+          "line": 266
+        },
+        {
+          "file": "frontend/components/landing/GerenciaRedirectSection.tsx",
+          "line": 285
+        },
+        {
+          "file": "frontend/components/landing/GerenciaRedirectSection.tsx",
+          "line": 318
+        },
+        {
+          "file": "frontend/components/landing/GerenciaRedirectSection.tsx",
+          "line": 320
+        },
+        {
+          "file": "frontend/components/landing/GerenciaRedirectSection.tsx",
+          "line": 322
+        },
+        {
+          "file": "frontend/components/landing/GerenciaRedirectSection.tsx",
+          "line": 324
+        },
+        {
+          "file": "frontend/components/landing/GerenciaRedirectSection.tsx",
+          "line": 330
+        },
+        {
+          "file": "frontend/components/landing/GerenciaRedirectSection.tsx",
+          "line": 336
+        },
+        {
+          "file": "frontend/components/landing/GerenciaRedirectSection.tsx",
+          "line": 354
+        },
+        {
+          "file": "frontend/components/landing/GerenciasAssignmentSummary.tsx",
+          "line": 3
+        },
+        {
+          "file": "frontend/components/landing/GerenciasAssignmentSummary.tsx",
+          "line": 4
+        },
+        {
+          "file": "frontend/components/landing/GerenciasAssignmentSummary.tsx",
+          "line": 9
+        },
+        {
+          "file": "frontend/components/landing/GerenciasAssignmentSummary.tsx",
+          "line": 32
+        },
+        {
+          "file": "frontend/components/landing/GerenciasAssignmentSummary.tsx",
+          "line": 35
+        },
+        {
+          "file": "frontend/components/landing/GerenciasAssignmentSummary.tsx",
+          "line": 60
+        },
+        {
+          "file": "frontend/components/landing/LandingEditorForm.tsx",
+          "line": 309
+        },
+        {
+          "file": "frontend/components/landing/LandingEditorForm.tsx",
+          "line": 1360
+        },
+        {
+          "file": "frontend/components/onboarding/ConstructorSetupGuide.tsx",
+          "line": 38
+        },
+        {
+          "file": "frontend/components/onboarding/ConstructorSetupGuide.tsx",
+          "line": 40
+        },
+        {
+          "file": "frontend/components/onboarding/ConstructorSetupGuide.tsx",
+          "line": 41
+        },
+        {
+          "file": "frontend/components/onboarding/ConstructorSetupGuide.tsx",
+          "line": 42
+        },
+        {
+          "file": "frontend/components/telefonos/TelefonosPageContent.tsx",
+          "line": 8
+        },
+        {
+          "file": "frontend/components/telefonos/TelefonosPageContent.tsx",
+          "line": 9
+        },
+        {
+          "file": "frontend/components/telefonos/TelefonosPageContent.tsx",
+          "line": 58
+        },
+        {
+          "file": "frontend/components/telefonos/TelefonosPageContent.tsx",
+          "line": 130
+        },
+        {
+          "file": "frontend/components/telefonos/TelefonosPageContent.tsx",
+          "line": 512
+        },
+        {
+          "file": "frontend/components/telefonos/TelefonosPageContent.tsx",
+          "line": 520
+        },
+        {
+          "file": "frontend/components/telefonos/TelefonosPageContent.tsx",
+          "line": 708
+        },
+        {
+          "file": "frontend/components/telefonos/TelefonosPageContent.tsx",
+          "line": 709
+        },
+        {
+          "file": "frontend/components/telefonos/TelefonosPageContent.tsx",
+          "line": 782
+        },
+        {
+          "file": "frontend/components/telefonos/TelefonosPageContent.tsx",
+          "line": 792
+        },
+        {
+          "file": "frontend/components/telefonos/TelefonosPageContent.tsx",
+          "line": 801
+        },
+        {
+          "file": "frontend/components/telefonos/TelefonosPageContent.tsx",
+          "line": 802
+        },
+        {
+          "file": "frontend/components/telefonos/TelefonosPageContent.tsx",
+          "line": 812
+        },
+        {
+          "file": "frontend/components/telefonos/TelefonosPageContent.tsx",
+          "line": 849
+        },
+        {
+          "file": "frontend/components/telefonos/TelefonosPageContent.tsx",
+          "line": 857
+        },
+        {
+          "file": "frontend/components/telefonos/TelefonosPageContent.tsx",
+          "line": 858
+        },
+        {
+          "file": "frontend/components/telefonos/TelefonosPageContent.tsx",
+          "line": 866
+        },
+        {
+          "file": "frontend/components/telefonos/TelefonosPageContent.tsx",
+          "line": 875
+        },
+        {
+          "file": "frontend/components/telefonos/TelefonosPageContent.tsx",
+          "line": 876
+        },
+        {
+          "file": "frontend/components/telefonos/TelefonosPageContent.tsx",
+          "line": 887
+        },
+        {
+          "file": "frontend/components/telefonos/TelefonosPageContent.tsx",
+          "line": 889
+        },
+        {
+          "file": "frontend/components/telefonos/TelefonosPageContent.tsx",
+          "line": 891
+        },
+        {
+          "file": "frontend/components/telefonos/TelefonosPageContent.tsx",
+          "line": 903
+        },
+        {
+          "file": "frontend/components/telefonos/TelefonosPageContent.tsx",
+          "line": 904
+        },
+        {
+          "file": "frontend/components/whatsapp-cloud-api/WhatsAppCloudApiInboxPageContent.tsx",
+          "line": 1191
+        },
+        {
+          "file": "frontend/components/whatsapp-cloud-api/WhatsAppCloudApiPageContent.tsx",
+          "line": 12
+        },
+        {
+          "file": "frontend/components/whatsapp-cloud-api/WhatsAppCloudApiPageContent.tsx",
+          "line": 19
+        },
+        {
+          "file": "frontend/components/whatsapp-cloud-api/WhatsAppCloudApiPageContent.tsx",
+          "line": 54
+        },
+        {
+          "file": "frontend/components/whatsapp-cloud-api/WhatsAppCloudApiPageContent.tsx",
+          "line": 60
+        },
+        {
+          "file": "frontend/components/whatsapp-cloud-api/WhatsAppCloudApiPageContent.tsx",
+          "line": 116
+        },
+        {
+          "file": "frontend/components/whatsapp-cloud-api/WhatsAppCloudApiPageContent.tsx",
+          "line": 157
+        },
+        {
+          "file": "frontend/components/whatsapp-cloud-api/WhatsAppCloudApiPageContent.tsx",
+          "line": 159
+        },
+        {
+          "file": "frontend/components/whatsapp-cloud-api/WhatsAppCloudApiPageContent.tsx",
+          "line": 162
+        },
+        {
+          "file": "frontend/components/whatsapp-cloud-api/WhatsAppCloudApiPageContent.tsx",
+          "line": 173
+        },
+        {
+          "file": "frontend/components/whatsapp-cloud-api/WhatsAppCloudApiPageContent.tsx",
+          "line": 176
+        },
+        {
+          "file": "frontend/components/whatsapp-cloud-api/WhatsAppCloudApiPageContent.tsx",
+          "line": 178
+        },
+        {
+          "file": "frontend/components/whatsapp-cloud-api/WhatsAppCloudApiPageContent.tsx",
+          "line": 180
+        },
+        {
+          "file": "frontend/components/whatsapp-cloud-api/WhatsAppCloudApiPageContent.tsx",
+          "line": 458
+        },
+        {
+          "file": "frontend/components/whatsapp-cloud-api/WhatsAppCloudApiPageContent.tsx",
+          "line": 517
+        },
+        {
+          "file": "frontend/components/whatsapp-cloud-api/WhatsAppCloudApiPageContent.tsx",
+          "line": 1452
+        },
+        {
+          "file": "frontend/components/whatsapp-cloud-api/WhatsAppCloudApiPageContent.tsx",
+          "line": 1472
+        },
+        {
+          "file": "frontend/components/whatsapp-cloud-api/WhatsAppCloudApiPageContent.tsx",
+          "line": 1507
+        },
+        {
+          "file": "frontend/components/whatsapp-cloud-api/WhatsAppCloudApiPageContent.tsx",
+          "line": 1509
+        },
+        {
+          "file": "frontend/components/whatsapp-cloud-api/WhatsAppCloudApiPageContent.tsx",
+          "line": 1511
+        },
+        {
+          "file": "frontend/components/whatsapp-cloud-api/WhatsAppCloudApiPageContent.tsx",
+          "line": 1512
+        },
+        {
+          "file": "frontend/components/whatsapp-cloud-api/WhatsAppCloudApiPageContent.tsx",
+          "line": 1513
+        },
+        {
+          "file": "frontend/components/whatsapp-cloud-api/WhatsAppCloudApiPageContent.tsx",
+          "line": 1519
+        },
+        {
+          "file": "frontend/components/whatsapp-cloud-api/WhatsAppCloudApiPageContent.tsx",
+          "line": 1525
+        },
+        {
+          "file": "frontend/components/whatsapp-cloud-api/WhatsAppCloudApiPageContent.tsx",
+          "line": 1544
+        },
+        {
+          "file": "frontend/components/whatsapp-cloud-api/WhatsAppCloudApiPageContent.tsx",
+          "line": 1547
+        },
+        {
+          "file": "frontend/components/whatsapp-cloud-api/WhatsAppCloudApiPageContent.tsx",
+          "line": 1551
+        },
+        {
+          "file": "frontend/lib/gerencias/gerenciasDb.ts",
+          "line": 61
+        },
+        {
+          "file": "frontend/lib/gerencias/gerenciasDb.ts",
+          "line": 68
+        },
+        {
+          "file": "frontend/lib/gerencias/gerenciasDb.ts",
+          "line": 83
+        },
+        {
+          "file": "frontend/lib/gerencias/gerenciasDb.ts",
+          "line": 90
+        },
+        {
+          "file": "frontend/lib/gerencias/gerenciasDb.ts",
+          "line": 127
+        },
+        {
+          "file": "frontend/lib/gerencias/gerenciasDb.ts",
+          "line": 138
+        },
+        {
+          "file": "frontend/lib/gerencias/gerenciasDb.ts",
+          "line": 175
+        },
+        {
+          "file": "frontend/lib/gerencias/gerenciasDb.ts",
+          "line": 198
+        },
+        {
+          "file": "frontend/lib/gerencias/gerenciasDb.ts",
+          "line": 345
+        },
+        {
+          "file": "frontend/lib/gerencias/gerenciasDb.ts",
+          "line": 359
+        },
+        {
+          "file": "frontend/lib/gerencias/gerenciasDb.ts",
+          "line": 375
+        },
+        {
+          "file": "frontend/lib/gerencias/gerenciasDb.ts",
+          "line": 399
+        },
+        {
+          "file": "frontend/lib/gerencias/gerenciasDb.ts",
+          "line": 409
+        },
+        {
+          "file": "frontend/lib/gerencias/workspaceCompatibility.ts",
+          "line": 23
+        },
+        {
+          "file": "frontend/lib/gerencias/workspaceCompatibility.ts",
+          "line": 28
+        },
+        {
+          "file": "frontend/lib/landing/types.ts",
+          "line": 208
+        },
+        {
+          "file": "frontend/lib/landing/types.ts",
+          "line": 210
+        },
+        {
+          "file": "supabase/functions/_shared/phone-administration.ts",
+          "line": 39
+        },
+        {
+          "file": "supabase/functions/conversions/index.ts",
+          "line": 506
+        },
+        {
+          "file": "supabase/functions/conversions/index.ts",
+          "line": 507
+        },
+        {
+          "file": "supabase/functions/conversions/index.ts",
+          "line": 513
+        },
+        {
+          "file": "supabase/functions/conversions/index.ts",
+          "line": 525
+        },
+        {
+          "file": "supabase/functions/conversions/index.ts",
+          "line": 598
+        },
+        {
+          "file": "supabase/functions/conversions/index.ts",
+          "line": 690
+        },
+        {
+          "file": "supabase/functions/conversions/index.ts",
+          "line": 708
+        },
+        {
+          "file": "supabase/functions/conversions/index.ts",
+          "line": 711
+        },
+        {
+          "file": "supabase/functions/conversions/index.ts",
+          "line": 713
+        },
+        {
+          "file": "supabase/functions/conversions/index.ts",
+          "line": 714
+        },
+        {
+          "file": "supabase/functions/conversions/index.ts",
+          "line": 715
+        },
+        {
+          "file": "supabase/functions/conversions/index.ts",
+          "line": 2668
+        },
+        {
+          "file": "supabase/functions/landing-phone/index.ts",
+          "line": 306
+        },
+        {
+          "file": "supabase/functions/reset-phone-counters/index.ts",
+          "line": 12
+        },
+        {
+          "file": "supabase/functions/reset-phone-counters/index.ts",
+          "line": 68
+        },
+        {
+          "file": "supabase/functions/reset-phone-counters/index.ts",
+          "line": 74
+        },
+        {
+          "file": "supabase/functions/reset-phone-counters/index.ts",
+          "line": 79
+        },
+        {
+          "file": "supabase/functions/reset-phone-counters/index.ts",
+          "line": 88
+        },
+        {
+          "file": "supabase/functions/reset-phone-messages/index.ts",
+          "line": 63
+        },
+        {
+          "file": "supabase/functions/reset-phone-messages/index.ts",
+          "line": 70
+        },
+        {
+          "file": "supabase/functions/reset-phone-messages/index.ts",
+          "line": 74
+        },
+        {
+          "file": "supabase/functions/reset-phone-messages/index.ts",
+          "line": 82
+        },
+        {
+          "file": "supabase/functions/sync-phones/index.ts",
+          "line": 58
+        },
+        {
+          "file": "supabase/functions/sync-phones/index.ts",
+          "line": 152
+        },
+        {
+          "file": "supabase/functions/sync-phones/index.ts",
+          "line": 154
+        },
+        {
+          "file": "supabase/functions/sync-phones/index.ts",
+          "line": 163
+        },
+        {
+          "file": "supabase/functions/sync-phones/index.ts",
+          "line": 168
+        },
+        {
+          "file": "supabase/functions/sync-phones/index.ts",
+          "line": 177
+        },
+        {
+          "file": "supabase/functions/sync-phones/index.ts",
+          "line": 412
+        }
+      ],
+      "categories": [
+        "authenticated",
+        "admin",
+        "backend/service_role"
+      ]
+    },
+    {
+      "object": "public.gerencias_id_seq",
+      "kind": "S",
+      "category": "sin consumidor",
+      "action": "preserve",
+      "dataApiAction": "preserve existing CRUD; ambiguity or legitimate contract",
+      "sourceReferences": [],
+      "categories": [
+        "sin consumidor"
+      ]
+    },
+    {
+      "object": "public.hidden_contacts",
+      "kind": "r",
+      "category": "authenticated",
+      "action": "deferred TRUNCATE exclusion",
+      "dataApiAction": "preserve existing CRUD; ambiguity or legitimate contract",
+      "sourceReferences": [
+        {
+          "file": "frontend/lib/conversionsDb.ts",
+          "line": 1778
+        },
+        {
+          "file": "frontend/lib/conversionsDb.ts",
+          "line": 1816
+        },
+        {
+          "file": "frontend/lib/supabaseClient.ts",
+          "line": 24
+        }
+      ],
+      "categories": [
+        "authenticated"
+      ]
+    },
+    {
+      "object": "public.hidden_conversion_inbox",
+      "kind": "r",
+      "category": "authenticated",
+      "action": "deferred TRUNCATE exclusion",
+      "dataApiAction": "preserve existing CRUD; ambiguity or legitimate contract",
+      "sourceReferences": [
+        {
+          "file": "frontend/lib/conversionsDb.ts",
+          "line": 1863
+        },
+        {
+          "file": "frontend/lib/conversionsDb.ts",
+          "line": 1909
+        }
+      ],
+      "categories": [
+        "authenticated"
+      ]
+    },
+    {
+      "object": "public.hidden_conversion_logs",
+      "kind": "r",
+      "category": "authenticated",
+      "action": "deferred TRUNCATE exclusion",
+      "dataApiAction": "preserve existing CRUD; ambiguity or legitimate contract",
+      "sourceReferences": [
+        {
+          "file": "frontend/lib/conversionsDb.ts",
+          "line": 1836
+        },
+        {
+          "file": "frontend/lib/conversionsDb.ts",
+          "line": 1891
+        }
+      ],
+      "categories": [
+        "authenticated"
+      ]
+    },
+    {
+      "object": "public.hidden_conversions",
+      "kind": "r",
+      "category": "authenticated",
+      "action": "deferred TRUNCATE exclusion",
+      "dataApiAction": "preserve existing CRUD; ambiguity or legitimate contract",
+      "sourceReferences": [
+        {
+          "file": "frontend/lib/conversionsDb.ts",
+          "line": 1017
+        },
+        {
+          "file": "frontend/lib/conversionsDb.ts",
+          "line": 1025
+        },
+        {
+          "file": "frontend/lib/conversionsDb.ts",
+          "line": 1759
+        },
+        {
+          "file": "frontend/lib/conversionsDb.ts",
+          "line": 1797
+        }
+      ],
+      "categories": [
+        "authenticated"
+      ]
+    },
+    {
+      "object": "public.home_overview_stats_cache",
+      "kind": "r",
+      "category": "authenticated",
+      "action": "revoke TRUNCATE",
+      "dataApiAction": "preserve existing CRUD; ambiguity or legitimate contract",
+      "sourceReferences": [],
+      "categories": [
+        "authenticated",
+        "admin"
+      ]
+    },
+    {
+      "object": "public.kommo_client_configs",
+      "kind": "r",
+      "category": "authenticated",
+      "action": "revoke TRUNCATE",
+      "dataApiAction": "preserve existing CRUD; ambiguity or legitimate contract",
+      "sourceReferences": [
+        {
+          "file": "frontend/lib/kommoDb.ts",
+          "line": 23
+        },
+        {
+          "file": "frontend/lib/kommoDb.ts",
+          "line": 42
+        }
+      ],
+      "categories": [
+        "authenticated",
+        "admin"
+      ]
+    },
+    {
+      "object": "public.landing_phone_assignment_reservations",
+      "kind": "r",
+      "category": "sin consumidor",
+      "action": "preserve",
+      "dataApiAction": "preserve existing CRUD; ambiguity or legitimate contract",
+      "sourceReferences": [],
+      "categories": [
+        "sin consumidor"
+      ]
+    },
+    {
+      "object": "public.landing_phone_availability_demands",
+      "kind": "r",
+      "category": "authenticated",
+      "action": "deferred TRUNCATE exclusion",
+      "dataApiAction": "preserve existing CRUD; ambiguity or legitimate contract",
+      "sourceReferences": [],
+      "categories": [
+        "authenticated",
+        "admin"
+      ]
+    },
+    {
+      "object": "public.landing_phone_availability_demands_id_seq",
+      "kind": "S",
+      "category": "sin consumidor",
+      "action": "preserve",
+      "dataApiAction": "preserve existing CRUD; ambiguity or legitimate contract",
+      "sourceReferences": [],
+      "categories": [
+        "sin consumidor"
+      ]
+    },
+    {
+      "object": "public.landing_phone_cache",
+      "kind": "r",
+      "category": "backend/service_role",
+      "action": "deferred TRUNCATE exclusion",
+      "dataApiAction": "preserve existing CRUD; ambiguity or legitimate contract",
+      "sourceReferences": [
+        {
+          "file": "supabase/functions/landing-phone/index.ts",
+          "line": 219
+        }
+      ],
+      "categories": [
+        "backend/service_role"
+      ]
+    },
+    {
+      "object": "public.landings",
+      "kind": "r",
+      "category": "authenticated",
+      "action": "revoke TRUNCATE",
+      "dataApiAction": "preserve existing CRUD; ambiguity or legitimate contract",
+      "sourceReferences": [
+        {
+          "file": "frontend/app/(panel)/admin/clientes/[id]/administrar/page.tsx",
+          "line": 319
+        },
+        {
+          "file": "frontend/app/(panel)/admin/clientes/[id]/administrar/page.tsx",
+          "line": 323
+        },
+        {
+          "file": "frontend/app/(panel)/admin/clientes/[id]/administrar/page.tsx",
+          "line": 326
+        },
+        {
+          "file": "frontend/app/(panel)/admin/clientes/[id]/administrar/page.tsx",
+          "line": 397
+        },
+        {
+          "file": "frontend/app/(panel)/admin/clientes/[id]/administrar/page.tsx",
+          "line": 404
+        },
+        {
+          "file": "frontend/app/(panel)/admin/clientes/[id]/landings/page.tsx",
+          "line": 19
+        },
+        {
+          "file": "frontend/app/(panel)/admin/clientes/[id]/landings/page.tsx",
+          "line": 46
+        },
+        {
+          "file": "frontend/app/(panel)/admin/clientes/[id]/landings/page.tsx",
+          "line": 64
+        },
+        {
+          "file": "frontend/app/(panel)/admin/clientes/[id]/landings/page.tsx",
+          "line": 89
+        },
+        {
+          "file": "frontend/app/(panel)/admin/clientes/[id]/landings/page.tsx",
+          "line": 90
+        },
+        {
+          "file": "frontend/app/(panel)/admin/clientes/[id]/landings/page.tsx",
+          "line": 93
+        },
+        {
+          "file": "frontend/app/(panel)/admin/clientes/[id]/landings/page.tsx",
+          "line": 133
+        },
+        {
+          "file": "frontend/app/(panel)/admin/clientes/page.tsx",
+          "line": 231
+        },
+        {
+          "file": "frontend/app/(panel)/admin/conversiones/page.tsx",
+          "line": 905
+        },
+        {
+          "file": "frontend/app/(panel)/admin/conversiones/page.tsx",
+          "line": 909
+        },
+        {
+          "file": "frontend/app/(panel)/admin/conversiones/page.tsx",
+          "line": 910
+        },
+        {
+          "file": "frontend/app/(panel)/admin/conversiones/page.tsx",
+          "line": 1309
+        },
+        {
+          "file": "frontend/app/(panel)/admin/documentacion/page.tsx",
+          "line": 29
+        },
+        {
+          "file": "frontend/app/(panel)/admin/gerencias/page.tsx",
+          "line": 195
+        },
+        {
+          "file": "frontend/app/(panel)/admin/landing/page.tsx",
+          "line": 6
+        },
+        {
+          "file": "frontend/app/(panel)/admin/landing/page.tsx",
+          "line": 10
+        },
+        {
+          "file": "frontend/app/(panel)/admin/landings/[id]/editar/page.tsx",
+          "line": 55
+        },
+        {
+          "file": "frontend/app/(panel)/admin/landings/[id]/editar/page.tsx",
+          "line": 201
+        },
+        {
+          "file": "frontend/app/(panel)/admin/landings/[id]/preview/page.tsx",
+          "line": 11
+        },
+        {
+          "file": "frontend/app/(panel)/admin/landings/page.tsx",
+          "line": 19
+        },
+        {
+          "file": "frontend/app/(panel)/admin/landings/page.tsx",
+          "line": 80
+        },
+        {
+          "file": "frontend/app/(panel)/admin/landings/page.tsx",
+          "line": 128
+        },
+        {
+          "file": "frontend/app/(panel)/admin/landings/page.tsx",
+          "line": 132
+        },
+        {
+          "file": "frontend/app/(panel)/admin/landings/page.tsx",
+          "line": 158
+        },
+        {
+          "file": "frontend/app/(panel)/admin/landings/page.tsx",
+          "line": 183
+        },
+        {
+          "file": "frontend/app/(panel)/admin/landings/page.tsx",
+          "line": 193
+        },
+        {
+          "file": "frontend/app/(panel)/admin/landings/page.tsx",
+          "line": 197
+        },
+        {
+          "file": "frontend/app/(panel)/admin/landings/page.tsx",
+          "line": 213
+        },
+        {
+          "file": "frontend/app/(panel)/admin/landings/page.tsx",
+          "line": 219
+        },
+        {
+          "file": "frontend/app/(panel)/admin/layout.tsx",
+          "line": 57
+        },
+        {
+          "file": "frontend/app/(panel)/admin/layout.tsx",
+          "line": 78
+        },
+        {
+          "file": "frontend/app/(panel)/admin/layout.tsx",
+          "line": 572
+        },
+        {
+          "file": "frontend/app/(panel)/admin/layout.tsx",
+          "line": 573
+        },
+        {
+          "file": "frontend/app/(panel)/admin/layout.tsx",
+          "line": 575
+        },
+        {
+          "file": "frontend/app/(panel)/admin/layout.tsx",
+          "line": 581
+        },
+        {
+          "file": "frontend/app/(panel)/admin/layout.tsx",
+          "line": 582
+        },
+        {
+          "file": "frontend/app/(panel)/admin/plan/page.tsx",
+          "line": 10
+        },
+        {
+          "file": "frontend/app/(panel)/admin/plan/page.tsx",
+          "line": 24
+        },
+        {
+          "file": "frontend/app/(panel)/admin/plan/page.tsx",
+          "line": 39
+        },
+        {
+          "file": "frontend/app/(panel)/admin/plan/page.tsx",
+          "line": 54
+        },
+        {
+          "file": "frontend/app/(panel)/admin/plan/page.tsx",
+          "line": 69
+        },
+        {
+          "file": "frontend/app/(panel)/admin/plan/page.tsx",
+          "line": 84
+        },
+        {
+          "file": "frontend/app/(panel)/admin/plan/page.tsx",
+          "line": 116
+        },
+        {
+          "file": "frontend/app/(panel)/admin/settings/page.tsx",
+          "line": 170
+        },
+        {
+          "file": "frontend/app/(panel)/admin/settings/page.tsx",
+          "line": 174
+        },
+        {
+          "file": "frontend/app/(panel)/admin/tests/page.tsx",
+          "line": 243
+        },
+        {
+          "file": "frontend/app/(panel)/dashboard/conversiones/page.tsx",
+          "line": 1284
+        },
+        {
+          "file": "frontend/app/(panel)/dashboard/conversiones/page.tsx",
+          "line": 1289
+        },
+        {
+          "file": "frontend/app/(panel)/dashboard/conversiones/page.tsx",
+          "line": 1290
+        },
+        {
+          "file": "frontend/app/(panel)/dashboard/conversiones/page.tsx",
+          "line": 1708
+        },
+        {
+          "file": "frontend/app/(panel)/dashboard/gerencias/page.tsx",
+          "line": 269
+        },
+        {
+          "file": "frontend/app/(panel)/dashboard/landing/[id]/editar/page.tsx",
+          "line": 401
+        },
+        {
+          "file": "frontend/app/(panel)/dashboard/landings/page.tsx",
+          "line": 24
+        },
+        {
+          "file": "frontend/app/(panel)/dashboard/landings/page.tsx",
+          "line": 56
+        },
+        {
+          "file": "frontend/app/(panel)/dashboard/landings/page.tsx",
+          "line": 76
+        },
+        {
+          "file": "frontend/app/(panel)/dashboard/landings/page.tsx",
+          "line": 78
+        },
+        {
+          "file": "frontend/app/(panel)/dashboard/landings/page.tsx",
+          "line": 115
+        },
+        {
+          "file": "frontend/app/(panel)/dashboard/landings/page.tsx",
+          "line": 117
+        },
+        {
+          "file": "frontend/app/(panel)/dashboard/landings/page.tsx",
+          "line": 153
+        },
+        {
+          "file": "frontend/app/(panel)/dashboard/landings/page.tsx",
+          "line": 156
+        },
+        {
+          "file": "frontend/app/(panel)/dashboard/landings/page.tsx",
+          "line": 215
+        },
+        {
+          "file": "frontend/app/(panel)/dashboard/landings/page.tsx",
+          "line": 219
+        },
+        {
+          "file": "frontend/app/(panel)/dashboard/landings/page.tsx",
+          "line": 255
+        },
+        {
+          "file": "frontend/app/(panel)/dashboard/landings/page.tsx",
+          "line": 257
+        },
+        {
+          "file": "frontend/app/(panel)/dashboard/landings/page.tsx",
+          "line": 273
+        },
+        {
+          "file": "frontend/app/(panel)/dashboard/layout.tsx",
+          "line": 16
+        },
+        {
+          "file": "frontend/app/(panel)/dashboard/layout.tsx",
+          "line": 73
+        },
+        {
+          "file": "frontend/app/(panel)/dashboard/layout.tsx",
+          "line": 103
+        },
+        {
+          "file": "frontend/app/(panel)/dashboard/layout.tsx",
+          "line": 585
+        },
+        {
+          "file": "frontend/app/(panel)/dashboard/layout.tsx",
+          "line": 612
+        },
+        {
+          "file": "frontend/app/(panel)/dashboard/layout.tsx",
+          "line": 613
+        },
+        {
+          "file": "frontend/app/(panel)/dashboard/layout.tsx",
+          "line": 615
+        },
+        {
+          "file": "frontend/app/(panel)/dashboard/layout.tsx",
+          "line": 620
+        },
+        {
+          "file": "frontend/app/(panel)/dashboard/plan/page.tsx",
+          "line": 24
+        },
+        {
+          "file": "frontend/app/(panel)/dashboard/plan/page.tsx",
+          "line": 41
+        },
+        {
+          "file": "frontend/app/(panel)/dashboard/plan/page.tsx",
+          "line": 59
+        },
+        {
+          "file": "frontend/app/(panel)/dashboard/plan/page.tsx",
+          "line": 77
+        },
+        {
+          "file": "frontend/app/(panel)/dashboard/plan/page.tsx",
+          "line": 95
+        },
+        {
+          "file": "frontend/app/(panel)/dashboard/plan/page.tsx",
+          "line": 113
+        },
+        {
+          "file": "frontend/app/(panel)/dashboard/plan/page.tsx",
+          "line": 169
+        },
+        {
+          "file": "frontend/app/(panel)/dashboard/plan/page.tsx",
+          "line": 227
+        },
+        {
+          "file": "frontend/app/(panel)/layout.tsx",
+          "line": 8
+        },
+        {
+          "file": "frontend/app/(panel)/login/page.tsx",
+          "line": 59
+        },
+        {
+          "file": "frontend/app/(panel)/login/page.tsx",
+          "line": 71
+        },
+        {
+          "file": "frontend/app/(panel)/login/page.tsx",
+          "line": 88
+        },
+        {
+          "file": "frontend/app/(panel)/privacy-policy/page.tsx",
+          "line": 6
+        },
+        {
+          "file": "frontend/app/(panel)/privacy-policy/page.tsx",
+          "line": 19
+        },
+        {
+          "file": "frontend/app/(panel)/privacy-policy/page.tsx",
+          "line": 34
+        },
+        {
+          "file": "frontend/app/(panel)/privacy-policy/page.tsx",
+          "line": 88
+        },
+        {
+          "file": "frontend/app/api/journey-start/route.ts",
+          "line": 70
+        },
+        {
+          "file": "frontend/app/manifest.ts",
+          "line": 7
+        },
+        {
+          "file": "frontend/components/conversiones/ConversionConfigurationPanel.tsx",
+          "line": 66
+        },
+        {
+          "file": "frontend/components/conversiones/ConversionFiltersModal.tsx",
+          "line": 30
+        },
+        {
+          "file": "frontend/components/conversiones/ConversionFiltersModal.tsx",
+          "line": 295
+        },
+        {
+          "file": "frontend/components/conversiones/ConversionFiltersModal.tsx",
+          "line": 296
+        },
+        {
+          "file": "frontend/components/conversiones/GerenciasPerformancePanel.tsx",
+          "line": 491
+        },
+        {
+          "file": "frontend/components/conversiones/GerenciasPerformancePanel.tsx",
+          "line": 785
+        },
+        {
+          "file": "frontend/components/conversiones/HomeOverview.tsx",
+          "line": 61
+        },
+        {
+          "file": "frontend/components/conversiones/HomeOverview.tsx",
+          "line": 69
+        },
+        {
+          "file": "frontend/components/landing/AtrioRedirectSection.tsx",
+          "line": 94
+        },
+        {
+          "file": "frontend/components/onboarding/ConstructorSetupGuide.tsx",
+          "line": 71
+        },
+        {
+          "file": "frontend/components/onboarding/ConstructorSetupGuide.tsx",
+          "line": 72
+        },
+        {
+          "file": "frontend/components/telefonos/TelefonosPageContent.tsx",
+          "line": 1195
+        },
+        {
+          "file": "frontend/components/whatsapp-cloud-api/WhatsAppCloudApiPageContent.tsx",
+          "line": 60
+        },
+        {
+          "file": "frontend/lib/gerencias/gerenciasDb.ts",
+          "line": 336
+        },
+        {
+          "file": "frontend/lib/landing/helpers.ts",
+          "line": 19
+        },
+        {
+          "file": "frontend/lib/landing/helpers.ts",
+          "line": 29
+        },
+        {
+          "file": "frontend/lib/landing/helpers.ts",
+          "line": 66
+        },
+        {
+          "file": "frontend/lib/landing/helpers.ts",
+          "line": 81
+        },
+        {
+          "file": "frontend/lib/landing/helpers.ts",
+          "line": 83
+        },
+        {
+          "file": "frontend/lib/landing/helpers.ts",
+          "line": 88
+        },
+        {
+          "file": "frontend/lib/landing/landingsDb.ts",
+          "line": 11
+        },
+        {
+          "file": "frontend/lib/landing/landingsDb.ts",
+          "line": 68
+        },
+        {
+          "file": "frontend/lib/landing/landingsDb.ts",
+          "line": 81
+        },
+        {
+          "file": "frontend/lib/landing/landingsDb.ts",
+          "line": 88
+        },
+        {
+          "file": "frontend/lib/landing/landingsDb.ts",
+          "line": 102
+        },
+        {
+          "file": "frontend/lib/landing/landingsDb.ts",
+          "line": 103
+        },
+        {
+          "file": "frontend/lib/landing/landingsDb.ts",
+          "line": 113
+        },
+        {
+          "file": "frontend/lib/landing/landingsDb.ts",
+          "line": 140
+        },
+        {
+          "file": "frontend/lib/landing/landingsDb.ts",
+          "line": 194
+        },
+        {
+          "file": "frontend/lib/landing/landingsDb.ts",
+          "line": 286
+        },
+        {
+          "file": "frontend/lib/landing/landingsDb.ts",
+          "line": 297
+        },
+        {
+          "file": "frontend/lib/landing/types.ts",
+          "line": 21
+        },
+        {
+          "file": "frontend/lib/revalidation/client.ts",
+          "line": 14
+        },
+        {
+          "file": "frontend/lib/revalidation/supabase.server.ts",
+          "line": 39
+        },
+        {
+          "file": "supabase/functions/atrio-click/index.ts",
+          "line": 55
+        },
+        {
+          "file": "supabase/functions/builder-config/index.ts",
+          "line": 193
+        },
+        {
+          "file": "supabase/functions/builder-config/market_test.ts",
+          "line": 15
+        },
+        {
+          "file": "supabase/functions/conversions/index.ts",
+          "line": 2615
+        },
+        {
+          "file": "supabase/functions/conversions/index.ts",
+          "line": 2642
+        },
+        {
+          "file": "supabase/functions/conversions/index.ts",
+          "line": 2967
+        },
+        {
+          "file": "supabase/functions/conversions/index.ts",
+          "line": 2977
+        },
+        {
+          "file": "supabase/functions/conversions/pixel_attribution.ts",
+          "line": 266
+        },
+        {
+          "file": "supabase/functions/conversions/pixel_attribution.ts",
+          "line": 277
+        },
+        {
+          "file": "supabase/functions/landing-atrio/index.ts",
+          "line": 57
+        },
+        {
+          "file": "supabase/functions/landing-phone/index.ts",
+          "line": 181
+        },
+        {
+          "file": "supabase/functions/phone-click/index.ts",
+          "line": 88
+        }
+      ],
+      "categories": [
+        "authenticated",
+        "admin",
+        "backend/service_role"
+      ]
+    },
+    {
+      "object": "public.landings_atrio_clients",
+      "kind": "r",
+      "category": "authenticated",
+      "action": "preserve",
+      "dataApiAction": "preserve existing CRUD; ambiguity or legitimate contract",
+      "sourceReferences": [
+        {
+          "file": "frontend/lib/atrio/atrioDb.ts",
+          "line": 189
+        },
+        {
+          "file": "frontend/lib/atrio/atrioDb.ts",
+          "line": 205
+        },
+        {
+          "file": "frontend/lib/atrio/atrioDb.ts",
+          "line": 219
+        },
+        {
+          "file": "supabase/functions/atrio-click/index.ts",
+          "line": 66
+        }
+      ],
+      "categories": [
+        "authenticated",
+        "admin",
+        "backend/service_role"
+      ]
+    },
+    {
+      "object": "public.landings_gerencias",
+      "kind": "r",
+      "category": "authenticated",
+      "action": "deferred TRUNCATE exclusion",
+      "dataApiAction": "preserve existing CRUD; ambiguity or legitimate contract",
+      "sourceReferences": [
+        {
+          "file": "frontend/app/(panel)/admin/conversiones/page.tsx",
+          "line": 914
+        },
+        {
+          "file": "frontend/app/(panel)/dashboard/conversiones/page.tsx",
+          "line": 1294
+        },
+        {
+          "file": "frontend/lib/gerencias/gerenciasDb.ts",
+          "line": 381
+        },
+        {
+          "file": "frontend/lib/gerencias/gerenciasDb.ts",
+          "line": 418
+        },
+        {
+          "file": "frontend/lib/gerencias/gerenciasDb.ts",
+          "line": 446
+        },
+        {
+          "file": "supabase/functions/conversions/index.ts",
+          "line": 541
+        },
+        {
+          "file": "supabase/functions/phone-click/index.ts",
+          "line": 142
+        }
+      ],
+      "categories": [
+        "authenticated",
+        "admin",
+        "backend/service_role"
+      ]
+    },
+    {
+      "object": "public.meta_audience_configs",
+      "kind": "r",
+      "category": "authenticated",
+      "action": "preserve",
+      "dataApiAction": "preserve existing CRUD; ambiguity or legitimate contract",
+      "sourceReferences": [
+        {
+          "file": "frontend/lib/metaAudienceConfigDb.ts",
+          "line": 104
+        },
+        {
+          "file": "frontend/lib/metaAudienceConfigDb.ts",
+          "line": 117
+        },
+        {
+          "file": "frontend/lib/metaAudienceConfigDb.ts",
+          "line": 129
+        },
+        {
+          "file": "frontend/lib/metaAudienceConfigDb.ts",
+          "line": 136
+        },
+        {
+          "file": "frontend/lib/metaAudienceConfigDb.ts",
+          "line": 147
+        }
+      ],
+      "categories": [
+        "authenticated"
+      ]
+    },
+    {
+      "object": "public.notification_bot_config",
+      "kind": "r",
+      "category": "authenticated",
+      "action": "revoke TRUNCATE",
+      "dataApiAction": "preserve existing CRUD; ambiguity or legitimate contract",
+      "sourceReferences": [
+        {
+          "file": "frontend/lib/notificationsDb.ts",
+          "line": 57
+        },
+        {
+          "file": "frontend/lib/notificationsDb.ts",
+          "line": 82
+        },
+        {
+          "file": "frontend/lib/notificationsDb.ts",
+          "line": 89
+        },
+        {
+          "file": "supabase/functions/configure-telegram-webhook/index.ts",
+          "line": 31
+        },
+        {
+          "file": "supabase/functions/notify-inactive-contacts/index.ts",
+          "line": 124
+        },
+        {
+          "file": "supabase/functions/promotion-draw-due/index.ts",
+          "line": 312
+        },
+        {
+          "file": "supabase/functions/promotion-draw/index.ts",
+          "line": 369
+        },
+        {
+          "file": "supabase/functions/sync-telegram-connections/index.ts",
+          "line": 157
+        },
+        {
+          "file": "supabase/functions/sync-telegram-connections/index.ts",
+          "line": 247
+        },
+        {
+          "file": "supabase/functions/telegram-webhook/index.ts",
+          "line": 153
+        },
+        {
+          "file": "supabase/functions/whatsapp-cloud-sync-health/index.ts",
+          "line": 103
+        }
+      ],
+      "categories": [
+        "authenticated",
+        "admin",
+        "backend/service_role"
+      ]
+    },
+    {
+      "object": "public.notification_contact_alerts",
+      "kind": "r",
+      "category": "authenticated",
+      "action": "deferred TRUNCATE exclusion",
+      "dataApiAction": "preserve existing CRUD; ambiguity or legitimate contract",
+      "sourceReferences": [
+        {
+          "file": "frontend/app/(panel)/dashboard/seguimiento/page.tsx",
+          "line": 165
+        },
+        {
+          "file": "frontend/app/(panel)/dashboard/seguimiento/page.tsx",
+          "line": 170
+        },
+        {
+          "file": "supabase/functions/notify-inactive-contacts/index.ts",
+          "line": 191
+        },
+        {
+          "file": "supabase/functions/notify-inactive-contacts/index.ts",
+          "line": 347
+        }
+      ],
+      "categories": [
+        "authenticated",
+        "admin",
+        "backend/service_role"
+      ]
+    },
+    {
+      "object": "public.notification_settings",
+      "kind": "r",
+      "category": "authenticated",
+      "action": "revoke TRUNCATE",
+      "dataApiAction": "preserve existing CRUD; ambiguity or legitimate contract",
+      "sourceReferences": [
+        {
+          "file": "frontend/lib/notificationsDb.ts",
+          "line": 96
+        },
+        {
+          "file": "frontend/lib/notificationsDb.ts",
+          "line": 112
+        },
+        {
+          "file": "frontend/lib/notificationsDb.ts",
+          "line": 121
+        },
+        {
+          "file": "frontend/lib/notificationsDb.ts",
+          "line": 129
+        },
+        {
+          "file": "frontend/lib/notificationsDb.ts",
+          "line": 147
+        },
+        {
+          "file": "frontend/lib/notificationsDb.ts",
+          "line": 204
+        },
+        {
+          "file": "frontend/lib/notificationsDb.ts",
+          "line": 218
+        },
+        {
+          "file": "supabase/functions/notify-inactive-contacts/index.ts",
+          "line": 144
+        },
+        {
+          "file": "supabase/functions/promotion-draw-due/index.ts",
+          "line": 164
+        },
+        {
+          "file": "supabase/functions/promotion-draw/index.ts",
+          "line": 378
+        },
+        {
+          "file": "supabase/functions/sync-telegram-connections/index.ts",
+          "line": 198
+        },
+        {
+          "file": "supabase/functions/sync-telegram-connections/index.ts",
+          "line": 206
+        },
+        {
+          "file": "supabase/functions/telegram-webhook/index.ts",
+          "line": 117
+        },
+        {
+          "file": "supabase/functions/telegram-webhook/index.ts",
+          "line": 188
+        },
+        {
+          "file": "supabase/functions/whatsapp-cloud-sync-health/index.ts",
+          "line": 111
+        }
+      ],
+      "categories": [
+        "authenticated",
+        "admin",
+        "backend/service_role"
+      ]
+    },
+    {
+      "object": "public.notification_telegram_destinations",
+      "kind": "r",
+      "category": "authenticated",
+      "action": "revoke TRUNCATE",
+      "dataApiAction": "preserve existing CRUD; ambiguity or legitimate contract",
+      "sourceReferences": [
+        {
+          "file": "frontend/lib/notificationsDb.ts",
+          "line": 173
+        },
+        {
+          "file": "frontend/lib/notificationsDb.ts",
+          "line": 189
+        },
+        {
+          "file": "frontend/lib/notificationsDb.ts",
+          "line": 197
+        },
+        {
+          "file": "supabase/functions/notify-inactive-contacts/index.ts",
+          "line": 160
+        },
+        {
+          "file": "supabase/functions/promotion-draw-due/index.ts",
+          "line": 172
+        },
+        {
+          "file": "supabase/functions/promotion-draw/index.ts",
+          "line": 387
+        },
+        {
+          "file": "supabase/functions/sync-telegram-connections/index.ts",
+          "line": 112
+        },
+        {
+          "file": "supabase/functions/sync-telegram-connections/index.ts",
+          "line": 217
+        },
+        {
+          "file": "supabase/functions/sync-telegram-connections/index.ts",
+          "line": 228
+        },
+        {
+          "file": "supabase/functions/sync-telegram-connections/index.ts",
+          "line": 238
+        },
+        {
+          "file": "supabase/functions/sync-telegram-connections/index.ts",
+          "line": 253
+        },
+        {
+          "file": "supabase/functions/sync-telegram-connections/index.ts",
+          "line": 267
+        },
+        {
+          "file": "supabase/functions/telegram-webhook/index.ts",
+          "line": 89
+        },
+        {
+          "file": "supabase/functions/telegram-webhook/index.ts",
+          "line": 197
+        },
+        {
+          "file": "supabase/functions/telegram-webhook/index.ts",
+          "line": 213
+        },
+        {
+          "file": "supabase/functions/telegram-webhook/index.ts",
+          "line": 228
+        },
+        {
+          "file": "supabase/functions/telegram-webhook/index.ts",
+          "line": 238
+        },
+        {
+          "file": "supabase/functions/whatsapp-cloud-sync-health/index.ts",
+          "line": 127
+        }
+      ],
+      "categories": [
+        "authenticated",
+        "admin",
+        "backend/service_role"
+      ]
+    },
+    {
+      "object": "public.notification_telegram_destinations_id_seq",
+      "kind": "S",
+      "category": "sin consumidor",
+      "action": "preserve",
+      "dataApiAction": "preserve existing CRUD; ambiguity or legitimate contract",
+      "sourceReferences": [],
+      "categories": [
+        "sin consumidor"
+      ]
+    },
+    {
+      "object": "public.phone_assignment_scope_metrics",
+      "kind": "r",
+      "category": "authenticated",
+      "action": "preserve",
+      "dataApiAction": "preserve existing CRUD; ambiguity or legitimate contract",
+      "sourceReferences": [
+        {
+          "file": "supabase/functions/reset-phone-counters/index.ts",
+          "line": 162
+        }
+      ],
+      "categories": [
+        "authenticated",
+        "admin",
+        "backend/service_role"
+      ]
+    },
+    {
+      "object": "public.phone_metrics",
+      "kind": "r",
+      "category": "authenticated",
+      "action": "preserve",
+      "dataApiAction": "preserve existing CRUD; ambiguity or legitimate contract",
+      "sourceReferences": [
+        {
+          "file": "frontend/components/telefonos/TelefonosPageContent.tsx",
+          "line": 247
+        },
+        {
+          "file": "supabase/functions/reset-phone-messages/index.ts",
+          "line": 142
+        }
+      ],
+      "categories": [
+        "authenticated",
+        "admin",
+        "backend/service_role"
+      ]
+    },
+    {
+      "object": "public.profiles",
+      "kind": "r",
+      "category": "authenticated",
+      "action": "revoke TRUNCATE",
+      "dataApiAction": "preserve existing CRUD; ambiguity or legitimate contract",
+      "sourceReferences": [
+        {
+          "file": "frontend/app/(panel)/admin/clientes/[id]/landings/page.tsx",
+          "line": 37
+        },
+        {
+          "file": "frontend/app/(panel)/admin/conversiones/page.tsx",
+          "line": 860
+        },
+        {
+          "file": "frontend/app/(panel)/admin/landings/[id]/editar/page.tsx",
+          "line": 233
+        },
+        {
+          "file": "frontend/app/(panel)/admin/layout.tsx",
+          "line": 395
+        },
+        {
+          "file": "frontend/app/(panel)/admin/settings/page.tsx",
+          "line": 38
+        },
+        {
+          "file": "frontend/app/(panel)/admin/settings/page.tsx",
+          "line": 66
+        },
+        {
+          "file": "frontend/app/(panel)/admin/tests/page.tsx",
+          "line": 374
+        },
+        {
+          "file": "frontend/app/(panel)/admin/tests/page.tsx",
+          "line": 378
+        },
+        {
+          "file": "frontend/app/(panel)/dashboard/conversiones/page.tsx",
+          "line": 1234
+        },
+        {
+          "file": "frontend/app/(panel)/dashboard/landing/[id]/editar/page.tsx",
+          "line": 200
+        },
+        {
+          "file": "frontend/app/(panel)/dashboard/layout.tsx",
+          "line": 352
+        },
+        {
+          "file": "frontend/app/(panel)/login/page.tsx",
+          "line": 37
+        },
+        {
+          "file": "frontend/app/api/integrations/kommo/sync/route.ts",
+          "line": 53
+        },
+        {
+          "file": "frontend/components/integraciones/IntegracionesMetaCapi.tsx",
+          "line": 295
+        },
+        {
+          "file": "frontend/components/whatsapp-cloud-api/WhatsAppCloudApiPageContent.tsx",
+          "line": 534
+        },
+        {
+          "file": "frontend/lib/landing/landingsDb.ts",
+          "line": 182
+        },
+        {
+          "file": "frontend/lib/revalidation/supabase.server.ts",
+          "line": 33
+        },
+        {
+          "file": "supabase/functions/_shared/phone-administration.ts",
+          "line": 22
+        },
+        {
+          "file": "supabase/functions/builder-config/index.ts",
+          "line": 233
+        },
+        {
+          "file": "supabase/functions/conversions/index.ts",
+          "line": 7736
+        },
+        {
+          "file": "supabase/functions/conversions/index.ts",
+          "line": 7738
+        },
+        {
+          "file": "supabase/functions/create-client/index.ts",
+          "line": 175
+        },
+        {
+          "file": "supabase/functions/create-client/index.ts",
+          "line": 342
+        },
+        {
+          "file": "supabase/functions/delete-client/index.ts",
+          "line": 99
+        },
+        {
+          "file": "supabase/functions/landing-phone/index.ts",
+          "line": 180
+        },
+        {
+          "file": "supabase/functions/list-clients/index.ts",
+          "line": 116
+        },
+        {
+          "file": "supabase/functions/list-clients/index.ts",
+          "line": 174
+        },
+        {
+          "file": "supabase/functions/list-clients/index.ts",
+          "line": 175
+        },
+        {
+          "file": "supabase/functions/list-clients/index.ts",
+          "line": 193
+        },
+        {
+          "file": "supabase/functions/promotion-draw/index.ts",
+          "line": 239
+        },
+        {
+          "file": "supabase/functions/retry-failed-conversions/index.ts",
+          "line": 945
+        },
+        {
+          "file": "supabase/functions/retry-failed-conversions/index.ts",
+          "line": 946
+        },
+        {
+          "file": "supabase/functions/retry-failed-conversions/index.ts",
+          "line": 950
+        },
+        {
+          "file": "supabase/functions/retry-failed-conversions/index.ts",
+          "line": 1028
+        },
+        {
+          "file": "supabase/functions/retry-failed-conversions/index.ts",
+          "line": 1029
+        },
+        {
+          "file": "supabase/functions/retry-failed-conversions/index.ts",
+          "line": 1033
+        },
+        {
+          "file": "supabase/functions/retry-failed-conversions/index.ts",
+          "line": 1216
+        },
+        {
+          "file": "supabase/functions/retry-failed-conversions/index.ts",
+          "line": 1217
+        },
+        {
+          "file": "supabase/functions/retry-failed-conversions/index.ts",
+          "line": 1221
+        },
+        {
+          "file": "supabase/functions/telegram-webhook/index.ts",
+          "line": 124
+        },
+        {
+          "file": "supabase/functions/update-client/index.ts",
+          "line": 131
+        },
+        {
+          "file": "supabase/functions/update-client/index.ts",
+          "line": 329
+        },
+        {
+          "file": "supabase/functions/whatsapp-cloud-ensure-dataset/index.ts",
+          "line": 58
+        },
+        {
+          "file": "supabase/functions/whatsapp-cloud-redirect/index.ts",
+          "line": 124
+        },
+        {
+          "file": "supabase/functions/whatsapp-cloud-send-message/index.ts",
+          "line": 68
+        },
+        {
+          "file": "supabase/functions/whatsapp-cloud-sync-health/index.ts",
+          "line": 180
+        }
+      ],
+      "categories": [
+        "authenticated",
+        "backend/service_role"
+      ]
+    },
+    {
+      "object": "public.promotion_participants",
+      "kind": "r",
+      "category": "authenticated",
+      "action": "revoke TRUNCATE",
+      "dataApiAction": "preserve existing CRUD; ambiguity or legitimate contract",
+      "sourceReferences": [
+        {
+          "file": "frontend/app/(panel)/dashboard/promociones/page.tsx",
+          "line": 504
+        },
+        {
+          "file": "frontend/lib/promotionsDb.ts",
+          "line": 81
+        },
+        {
+          "file": "frontend/lib/promotionsDb.ts",
+          "line": 148
+        },
+        {
+          "file": "frontend/lib/promotionsDb.ts",
+          "line": 161
+        },
+        {
+          "file": "supabase/functions/promotion-draw-due/index.ts",
+          "line": 97
+        },
+        {
+          "file": "supabase/functions/promotion-draw/index.ts",
+          "line": 75
+        },
+        {
+          "file": "supabase/functions/promotion-match-backfill/index.ts",
+          "line": 65
+        },
+        {
+          "file": "supabase/functions/promotion-match-backfill/index.ts",
+          "line": 121
+        },
+        {
+          "file": "supabase/functions/promotion-participate/index.ts",
+          "line": 142
+        },
+        {
+          "file": "supabase/functions/promotion-participate/index.ts",
+          "line": 155
+        },
+        {
+          "file": "supabase/functions/promotion-participate/index.ts",
+          "line": 176
+        }
+      ],
+      "categories": [
+        "authenticated",
+        "admin",
+        "backend/service_role"
+      ]
+    },
+    {
+      "object": "public.promotions",
+      "kind": "r",
+      "category": "authenticated",
+      "action": "revoke TRUNCATE",
+      "dataApiAction": "preserve existing CRUD; ambiguity or legitimate contract",
+      "sourceReferences": [
+        {
+          "file": "frontend/app/(panel)/dashboard/promociones/page.tsx",
+          "line": 350
+        },
+        {
+          "file": "frontend/app/(panel)/dashboard/promociones/page.tsx",
+          "line": 409
+        },
+        {
+          "file": "frontend/app/(panel)/dashboard/promociones/page.tsx",
+          "line": 410
+        },
+        {
+          "file": "frontend/app/(panel)/dashboard/promociones/page.tsx",
+          "line": 449
+        },
+        {
+          "file": "frontend/app/(panel)/dashboard/promociones/page.tsx",
+          "line": 454
+        },
+        {
+          "file": "frontend/app/(panel)/dashboard/promociones/page.tsx",
+          "line": 455
+        },
+        {
+          "file": "frontend/app/(panel)/dashboard/promociones/page.tsx",
+          "line": 457
+        },
+        {
+          "file": "frontend/app/(panel)/dashboard/promociones/page.tsx",
+          "line": 489
+        },
+        {
+          "file": "frontend/app/(panel)/dashboard/promociones/page.tsx",
+          "line": 536
+        },
+        {
+          "file": "frontend/app/(panel)/dashboard/promociones/page.tsx",
+          "line": 939
+        },
+        {
+          "file": "frontend/app/(panel)/dashboard/promociones/page.tsx",
+          "line": 945
+        },
+        {
+          "file": "frontend/app/(panel)/dashboard/promociones/page.tsx",
+          "line": 1087
+        },
+        {
+          "file": "frontend/app/(panel)/dashboard/promociones/page.tsx",
+          "line": 1090
+        },
+        {
+          "file": "frontend/lib/promotionsDb.ts",
+          "line": 93
+        },
+        {
+          "file": "frontend/lib/promotionsDb.ts",
+          "line": 110
+        },
+        {
+          "file": "frontend/lib/promotionsDb.ts",
+          "line": 122
+        },
+        {
+          "file": "frontend/lib/promotionsDb.ts",
+          "line": 132
+        },
+        {
+          "file": "frontend/lib/promotionsDb.ts",
+          "line": 142
+        },
+        {
+          "file": "supabase/functions/promotion-draw-due/index.ts",
+          "line": 198
+        },
+        {
+          "file": "supabase/functions/promotion-draw-due/index.ts",
+          "line": 211
+        },
+        {
+          "file": "supabase/functions/promotion-draw-due/index.ts",
+          "line": 232
+        },
+        {
+          "file": "supabase/functions/promotion-draw-due/index.ts",
+          "line": 253
+        },
+        {
+          "file": "supabase/functions/promotion-draw-due/index.ts",
+          "line": 318
+        },
+        {
+          "file": "supabase/functions/promotion-draw-due/index.ts",
+          "line": 319
+        },
+        {
+          "file": "supabase/functions/promotion-draw-due/index.ts",
+          "line": 330
+        },
+        {
+          "file": "supabase/functions/promotion-draw/index.ts",
+          "line": 200
+        },
+        {
+          "file": "supabase/functions/promotion-draw/index.ts",
+          "line": 282
+        },
+        {
+          "file": "supabase/functions/promotion-draw/index.ts",
+          "line": 305
+        },
+        {
+          "file": "supabase/functions/promotion-draw/index.ts",
+          "line": 330
+        },
+        {
+          "file": "supabase/functions/promotion-draw/index.ts",
+          "line": 349
+        },
+        {
+          "file": "supabase/functions/promotion-draw/index.ts",
+          "line": 413
+        },
+        {
+          "file": "supabase/functions/promotion-participate/index.ts",
+          "line": 125
+        }
+      ],
+      "categories": [
+        "authenticated",
+        "admin",
+        "backend/service_role"
+      ]
+    },
+    {
+      "object": "public.purchase_event_claim_keys",
+      "kind": "r",
+      "category": "sin consumidor",
+      "action": "preserve",
+      "dataApiAction": "preserve existing CRUD; ambiguity or legitimate contract",
+      "sourceReferences": [],
+      "categories": [
+        "sin consumidor"
+      ]
+    },
+    {
+      "object": "public.purchase_event_claims",
+      "kind": "r",
+      "category": "sin consumidor",
+      "action": "preserve",
+      "dataApiAction": "preserve existing CRUD; ambiguity or legitimate contract",
+      "sourceReferences": [],
+      "categories": [
+        "sin consumidor"
+      ]
+    },
+    {
+      "object": "public.settings",
+      "kind": "r",
+      "category": "authenticated",
+      "action": "deferred TRUNCATE exclusion",
+      "dataApiAction": "preserve existing CRUD; ambiguity or legitimate contract",
+      "sourceReferences": [
+        {
+          "file": "frontend/app/(panel)/admin/landings/[id]/editar/page.tsx",
+          "line": 196
+        },
+        {
+          "file": "frontend/app/(panel)/admin/landings/[id]/editar/page.tsx",
+          "line": 212
+        },
+        {
+          "file": "frontend/app/(panel)/admin/landings/page.tsx",
+          "line": 49
+        },
+        {
+          "file": "frontend/app/(panel)/admin/landings/page.tsx",
+          "line": 55
+        },
+        {
+          "file": "frontend/app/(panel)/admin/layout.tsx",
+          "line": 68
+        },
+        {
+          "file": "frontend/app/(panel)/admin/layout.tsx",
+          "line": 350
+        },
+        {
+          "file": "frontend/app/(panel)/admin/layout.tsx",
+          "line": 713
+        },
+        {
+          "file": "frontend/app/(panel)/admin/layout.tsx",
+          "line": 714
+        },
+        {
+          "file": "frontend/app/(panel)/admin/layout.tsx",
+          "line": 716
+        },
+        {
+          "file": "frontend/app/(panel)/admin/layout.tsx",
+          "line": 722
+        },
+        {
+          "file": "frontend/app/(panel)/admin/layout.tsx",
+          "line": 723
+        },
+        {
+          "file": "frontend/app/(panel)/admin/notificaciones/page.tsx",
+          "line": 24
+        },
+        {
+          "file": "frontend/app/(panel)/admin/notificaciones/page.tsx",
+          "line": 55
+        },
+        {
+          "file": "frontend/app/(panel)/admin/settings/page.tsx",
+          "line": 28
+        },
+        {
+          "file": "frontend/app/(panel)/admin/settings/page.tsx",
+          "line": 29
+        },
+        {
+          "file": "frontend/app/(panel)/admin/settings/page.tsx",
+          "line": 31
+        },
+        {
+          "file": "frontend/app/(panel)/dashboard/landing/[id]/editar/page.tsx",
+          "line": 195
+        },
+        {
+          "file": "frontend/app/(panel)/dashboard/landing/[id]/editar/page.tsx",
+          "line": 220
+        },
+        {
+          "file": "frontend/app/(panel)/dashboard/landing/[id]/editar/page.tsx",
+          "line": 221
+        },
+        {
+          "file": "frontend/app/(panel)/dashboard/landings/page.tsx",
+          "line": 49
+        },
+        {
+          "file": "frontend/app/(panel)/dashboard/landings/page.tsx",
+          "line": 54
+        },
+        {
+          "file": "frontend/app/(panel)/dashboard/notificaciones/page.tsx",
+          "line": 23
+        },
+        {
+          "file": "frontend/app/(panel)/dashboard/notificaciones/page.tsx",
+          "line": 65
+        },
+        {
+          "file": "frontend/components/notificaciones/NotificationsPageContent.tsx",
+          "line": 66
+        },
+        {
+          "file": "frontend/components/notificaciones/NotificationsPageContent.tsx",
+          "line": 79
+        },
+        {
+          "file": "frontend/components/notificaciones/NotificationsPageContent.tsx",
+          "line": 90
+        },
+        {
+          "file": "frontend/components/notificaciones/NotificationsPageContent.tsx",
+          "line": 97
+        },
+        {
+          "file": "frontend/components/notificaciones/NotificationsPageContent.tsx",
+          "line": 113
+        },
+        {
+          "file": "frontend/components/notificaciones/NotificationsPageContent.tsx",
+          "line": 114
+        },
+        {
+          "file": "frontend/components/notificaciones/NotificationsPageContent.tsx",
+          "line": 115
+        },
+        {
+          "file": "frontend/components/whatsapp-cloud-api/WhatsAppCloudApiHubContent.tsx",
+          "line": 10
+        },
+        {
+          "file": "frontend/components/whatsapp-cloud-api/WhatsAppCloudApiHubContent.tsx",
+          "line": 11
+        },
+        {
+          "file": "frontend/components/whatsapp-cloud-api/WhatsAppCloudApiHubContent.tsx",
+          "line": 48
+        },
+        {
+          "file": "frontend/components/whatsapp-cloud-api/WhatsAppCloudApiHubContent.tsx",
+          "line": 86
+        },
+        {
+          "file": "frontend/lib/landing/publishLanding.ts",
+          "line": 13
+        },
+        {
+          "file": "frontend/lib/notificationsDb.ts",
+          "line": 144
+        },
+        {
+          "file": "frontend/lib/notificationsDb.ts",
+          "line": 145
+        },
+        {
+          "file": "frontend/lib/notificationsDb.ts",
+          "line": 150
+        },
+        {
+          "file": "frontend/lib/notificationsDb.ts",
+          "line": 151
+        },
+        {
+          "file": "frontend/lib/notificationsDb.ts",
+          "line": 152
+        },
+        {
+          "file": "frontend/lib/notificationsDb.ts",
+          "line": 154
+        },
+        {
+          "file": "frontend/lib/notificationsDb.ts",
+          "line": 156
+        },
+        {
+          "file": "frontend/lib/notificationsDb.ts",
+          "line": 158
+        },
+        {
+          "file": "frontend/lib/notificationsDb.ts",
+          "line": 159
+        },
+        {
+          "file": "frontend/lib/notificationsDb.ts",
+          "line": 160
+        },
+        {
+          "file": "frontend/lib/notificationsDb.ts",
+          "line": 203
+        },
+        {
+          "file": "frontend/lib/notificationsDb.ts",
+          "line": 209
+        },
+        {
+          "file": "frontend/lib/revalidation/supabase.server.ts",
+          "line": 48
+        },
+        {
+          "file": "frontend/lib/settingsDb.ts",
+          "line": 16
+        },
+        {
+          "file": "frontend/lib/settingsDb.ts",
+          "line": 48
+        },
+        {
+          "file": "supabase/functions/conversions/index.ts",
+          "line": 4048
+        },
+        {
+          "file": "supabase/functions/notify-inactive-contacts/index.ts",
+          "line": 149
+        },
+        {
+          "file": "supabase/functions/notify-inactive-contacts/index.ts",
+          "line": 151
+        },
+        {
+          "file": "supabase/functions/promotion-draw-due/index.ts",
+          "line": 163
+        },
+        {
+          "file": "supabase/functions/promotion-draw-due/index.ts",
+          "line": 169
+        }
+      ],
+      "categories": [
+        "authenticated",
+        "admin",
+        "backend/service_role"
+      ]
+    },
+    {
+      "object": "public.tracking_queue",
+      "kind": "r",
+      "category": "backend/service_role",
+      "action": "deferred TRUNCATE exclusion",
+      "dataApiAction": "preserve existing CRUD; ambiguity or legitimate contract",
+      "sourceReferences": [
+        {
+          "file": "frontend/lib/tracking/queue.ts",
+          "line": 64
+        },
+        {
+          "file": "frontend/lib/tracking/queue.ts",
+          "line": 98
+        },
+        {
+          "file": "frontend/lib/tracking/queue.ts",
+          "line": 145
+        },
+        {
+          "file": "frontend/lib/tracking/queue.ts",
+          "line": 159
+        },
+        {
+          "file": "frontend/lib/tracking/queue.ts",
+          "line": 178
+        },
+        {
+          "file": "frontend/lib/tracking/queue.ts",
+          "line": 190
+        },
+        {
+          "file": "frontend/lib/tracking/queue.ts",
+          "line": 213
+        },
+        {
+          "file": "frontend/lib/tracking/queue.ts",
+          "line": 234
+        }
+      ],
+      "categories": [
+        "backend/service_role"
+      ]
+    },
+    {
+      "object": "public.whatsapp_cloud_api_assignments",
+      "kind": "r",
+      "category": "authenticated",
+      "action": "preserve",
+      "dataApiAction": "preserve existing CRUD; ambiguity or legitimate contract",
+      "sourceReferences": [
+        {
+          "file": "frontend/lib/whatsappCloudApiDb.ts",
+          "line": 475
+        },
+        {
+          "file": "supabase/functions/conversions/index.ts",
+          "line": 574
+        },
+        {
+          "file": "supabase/functions/conversions/index.ts",
+          "line": 1062
+        },
+        {
+          "file": "supabase/functions/conversions/index.ts",
+          "line": 1220
+        },
+        {
+          "file": "supabase/functions/whatsapp-cloud-redirect/index.ts",
+          "line": 231
+        },
+        {
+          "file": "supabase/functions/whatsapp-cloud-worker/index.ts",
+          "line": 692
+        },
+        {
+          "file": "supabase/functions/whatsapp-cloud-worker/index.ts",
+          "line": 739
+        },
+        {
+          "file": "supabase/functions/whatsapp-cloud-worker/index.ts",
+          "line": 808
+        },
+        {
+          "file": "supabase/functions/whatsapp-cloud-worker/index.ts",
+          "line": 840
+        },
+        {
+          "file": "supabase/functions/whatsapp-cloud-worker/index.ts",
+          "line": 963
+        }
+      ],
+      "categories": [
+        "authenticated",
+        "admin",
+        "backend/service_role"
+      ]
+    },
+    {
+      "object": "public.whatsapp_cloud_api_attribution_sessions",
+      "kind": "r",
+      "category": "authenticated",
+      "action": "preserve",
+      "dataApiAction": "preserve existing CRUD; ambiguity or legitimate contract",
+      "sourceReferences": [
+        {
+          "file": "supabase/functions/conversions/index.ts",
+          "line": 1106
+        },
+        {
+          "file": "supabase/functions/whatsapp-cloud-worker/index.ts",
+          "line": 757
+        }
+      ],
+      "categories": [
+        "authenticated",
+        "admin",
+        "backend/service_role"
+      ]
+    },
+    {
+      "object": "public.whatsapp_cloud_api_configs",
+      "kind": "r",
+      "category": "authenticated",
+      "action": "preserve",
+      "dataApiAction": "preserve existing CRUD; ambiguity or legitimate contract",
+      "sourceReferences": [
+        {
+          "file": "frontend/lib/whatsappCloudApiDb.ts",
+          "line": 445
+        },
+        {
+          "file": "supabase/functions/conversions/index.ts",
+          "line": 1091
+        },
+        {
+          "file": "supabase/functions/conversions/index.ts",
+          "line": 3027
+        },
+        {
+          "file": "supabase/functions/retry-failed-conversions/index.ts",
+          "line": 214
+        },
+        {
+          "file": "supabase/functions/whatsapp-cloud-ensure-dataset/index.ts",
+          "line": 131
+        },
+        {
+          "file": "supabase/functions/whatsapp-cloud-send-message/index.ts",
+          "line": 195
+        },
+        {
+          "file": "supabase/functions/whatsapp-cloud-sync-health/index.ts",
+          "line": 300
+        },
+        {
+          "file": "supabase/functions/whatsapp-cloud-sync-health/index.ts",
+          "line": 332
+        },
+        {
+          "file": "supabase/functions/whatsapp-cloud-webhook/index.ts",
+          "line": 123
+        },
+        {
+          "file": "supabase/functions/whatsapp-cloud-webhook/index.ts",
+          "line": 171
+        },
+        {
+          "file": "supabase/functions/whatsapp-cloud-webhook/index.ts",
+          "line": 186
+        },
+        {
+          "file": "supabase/functions/whatsapp-cloud-webhook/index.ts",
+          "line": 206
+        },
+        {
+          "file": "supabase/functions/whatsapp-cloud-worker/index.ts",
+          "line": 379
+        },
+        {
+          "file": "supabase/functions/whatsapp-cloud-worker/index.ts",
+          "line": 644
+        }
+      ],
+      "categories": [
+        "authenticated",
+        "admin",
+        "backend/service_role"
+      ]
+    },
+    {
+      "object": "public.whatsapp_cloud_api_contacts",
+      "kind": "r",
+      "category": "authenticated",
+      "action": "preserve",
+      "dataApiAction": "preserve existing CRUD; ambiguity or legitimate contract",
+      "sourceReferences": [
+        {
+          "file": "supabase/functions/conversions/index.ts",
+          "line": 1099
+        },
+        {
+          "file": "supabase/functions/whatsapp-cloud-send-message/index.ts",
+          "line": 177
+        },
+        {
+          "file": "supabase/functions/whatsapp-cloud-worker/index.ts",
+          "line": 708
+        }
+      ],
+      "categories": [
+        "authenticated",
+        "admin",
+        "backend/service_role"
+      ]
+    },
+    {
+      "object": "public.whatsapp_cloud_api_gerencias",
+      "kind": "r",
+      "category": "authenticated",
+      "action": "deferred TRUNCATE exclusion",
+      "dataApiAction": "preserve existing CRUD; ambiguity or legitimate contract",
+      "sourceReferences": [
+        {
+          "file": "frontend/lib/whatsappCloudApiDb.ts",
+          "line": 265
+        },
+        {
+          "file": "frontend/lib/whatsappCloudApiDb.ts",
+          "line": 287
+        },
+        {
+          "file": "frontend/lib/whatsappCloudApiDb.ts",
+          "line": 304
+        }
+      ],
+      "categories": [
+        "authenticated",
+        "admin"
+      ]
+    },
+    {
+      "object": "public.whatsapp_cloud_api_outbound_messages",
+      "kind": "r",
+      "category": "authenticated",
+      "action": "preserve",
+      "dataApiAction": "preserve existing CRUD; ambiguity or legitimate contract",
+      "sourceReferences": [
+        {
+          "file": "frontend/components/whatsapp-cloud-api/WhatsAppCloudApiInboxPageContent.tsx",
+          "line": 945
+        },
+        {
+          "file": "frontend/components/whatsapp-cloud-api/WhatsAppCloudApiInboxPageContent.tsx",
+          "line": 962
+        },
+        {
+          "file": "frontend/lib/whatsappCloudApiDb.ts",
+          "line": 485
+        },
+        {
+          "file": "supabase/functions/whatsapp-cloud-retarget/index.ts",
+          "line": 351
+        },
+        {
+          "file": "supabase/functions/whatsapp-cloud-send-message/index.ts",
+          "line": 211
+        },
+        {
+          "file": "supabase/functions/whatsapp-cloud-send-message/index.ts",
+          "line": 224
+        },
+        {
+          "file": "supabase/functions/whatsapp-cloud-send-message/index.ts",
+          "line": 237
+        },
+        {
+          "file": "supabase/functions/whatsapp-cloud-worker/index.ts",
+          "line": 598
+        },
+        {
+          "file": "supabase/functions/whatsapp-cloud-worker/index.ts",
+          "line": 926
+        }
+      ],
+      "categories": [
+        "authenticated",
+        "admin",
+        "backend/service_role"
+      ]
+    },
+    {
+      "object": "public.whatsapp_cloud_api_redirects",
+      "kind": "r",
+      "category": "authenticated",
+      "action": "deferred TRUNCATE exclusion",
+      "dataApiAction": "preserve existing CRUD; ambiguity or legitimate contract",
+      "sourceReferences": [
+        {
+          "file": "supabase/functions/whatsapp-cloud-worker/index.ts",
+          "line": 886
+        }
+      ],
+      "categories": [
+        "authenticated",
+        "admin",
+        "backend/service_role"
+      ]
+    },
+    {
+      "object": "public.whatsapp_cloud_api_retarget_messages",
+      "kind": "r",
+      "category": "authenticated",
+      "action": "preserve",
+      "dataApiAction": "preserve existing CRUD; ambiguity or legitimate contract",
+      "sourceReferences": [
+        {
+          "file": "supabase/functions/whatsapp-cloud-retarget/index.ts",
+          "line": 260
+        }
+      ],
+      "categories": [
+        "authenticated",
+        "admin",
+        "backend/service_role"
+      ]
+    },
+    {
+      "object": "public.whatsapp_cloud_api_thread_reads",
+      "kind": "r",
+      "category": "authenticated",
+      "action": "deferred TRUNCATE exclusion",
+      "dataApiAction": "preserve existing CRUD; ambiguity or legitimate contract",
+      "sourceReferences": [],
+      "categories": [
+        "authenticated"
+      ]
+    },
+    {
+      "object": "public.whatsapp_cloud_api_webhook_events",
+      "kind": "r",
+      "category": "authenticated",
+      "action": "preserve",
+      "dataApiAction": "preserve existing CRUD; ambiguity or legitimate contract",
+      "sourceReferences": [
+        {
+          "file": "frontend/components/whatsapp-cloud-api/WhatsAppCloudApiInboxPageContent.tsx",
+          "line": 979
+        },
+        {
+          "file": "frontend/lib/whatsappCloudApiDb.ts",
+          "line": 322
+        },
+        {
+          "file": "frontend/lib/whatsappCloudApiDb.ts",
+          "line": 465
+        },
+        {
+          "file": "supabase/functions/whatsapp-cloud-send-message/index.ts",
+          "line": 83
+        },
+        {
+          "file": "supabase/functions/whatsapp-cloud-webhook/index.ts",
+          "line": 288
+        },
+        {
+          "file": "supabase/functions/whatsapp-cloud-worker/index.ts",
+          "line": 300
+        },
+        {
+          "file": "supabase/functions/whatsapp-cloud-worker/index.ts",
+          "line": 321
+        },
+        {
+          "file": "supabase/functions/whatsapp-cloud-worker/index.ts",
+          "line": 340
+        },
+        {
+          "file": "supabase/functions/whatsapp-cloud-worker/index.ts",
+          "line": 365
+        },
+        {
+          "file": "supabase/functions/whatsapp-cloud-worker/index.ts",
+          "line": 1008
+        },
+        {
+          "file": "supabase/functions/whatsapp-cloud-worker/index.ts",
+          "line": 1036
+        }
+      ],
+      "categories": [
+        "authenticated",
+        "admin",
+        "backend/service_role"
+      ]
+    },
+    {
+      "object": "public.whatsapp_cloud_api_webhook_request_logs",
+      "kind": "r",
+      "category": "authenticated",
+      "action": "preserve",
+      "dataApiAction": "preserve existing CRUD; ambiguity or legitimate contract",
+      "sourceReferences": [
+        {
+          "file": "frontend/lib/whatsappCloudApiDb.ts",
+          "line": 495
+        },
+        {
+          "file": "supabase/functions/whatsapp-cloud-webhook/index.ts",
+          "line": 256
+        }
+      ],
+      "categories": [
+        "authenticated",
+        "admin",
+        "backend/service_role"
+      ]
+    }
+  ],
+  "migration": {
+    "file": "supabase/migrations/20260918152656_restrict_internal_database_privileges.sql",
+    "number": 272,
+    "sha256": "0278468e552ea4053848f5b8f50a2f91234b6b6f29f7cb365e44081489c410d9",
+    "cliHelpConsulted": true,
+    "createdViaCli": true
+  },
+  "laterPhaseExcludedObjects": [
+    {
+      "object": "private.prevent_phone_owner_reassignment()",
+      "category": "postgres/cron",
+      "action": "excluded",
+      "source": "supabase/migrations/20260918140931_protect_phone_administration.sql",
+      "reason": "Phase 1B.3 invoker trigger; no public EXECUTE or phase 1B.4 change."
+    },
+    {
+      "object": "private.prevent_gerencia_owner_reassignment()",
+      "category": "postgres/cron",
+      "action": "excluded",
+      "source": "supabase/migrations/20260918140931_protect_phone_administration.sql",
+      "reason": "Phase 1B.3 invoker trigger; no public EXECUTE or phase 1B.4 change."
+    }
+  ]
+}
