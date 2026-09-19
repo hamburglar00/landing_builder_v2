@@ -1,0 +1,2417 @@
+{
+  "record": "Read-only pre-production audit",
+  "observedAt": "2026-09-19T16:41:16Z",
+  "local": {
+    "branch": "main",
+    "head": "6287c9ae0b22737f5e7df6fd95d85cf3c3bc6e12",
+    "initialWorkingTree": "clean",
+    "initialIndex": "empty",
+    "migrationCount": 274
+  },
+  "gitRemote": {
+    "host": "github.com",
+    "repository": "hamburglar00/landing_builder_v2",
+    "branch": "main",
+    "fetch": {
+      "command": "git fetch --no-tags origin main",
+      "passed": true,
+      "remoteWrite": false
+    },
+    "head": "a4e752cf58f628813d3979d598b60d480caaac8d"
+  },
+  "vercel": {
+    "projectId": "prj_Mwgk26w4BkZ1hhv2TBsSLlJShka8",
+    "projectName": "landing-builder-v2-k259",
+    "productionDeploymentId": "dpl_BWmUkha6NhVzCFwMZmfckC1fQXYq",
+    "commit": "a4e752cf58f628813d3979d598b60d480caaac8d",
+    "branch": "main",
+    "source": "git",
+    "state": "READY",
+    "deployedAt": "2026-09-15T19:14:31.742Z",
+    "productionDomains": [
+      "mkt.panelbotadmin.com",
+      "constructor.panelbotadmin.com",
+      "landing-builder-v2-k259.vercel.app"
+    ],
+    "primaryAliasVerifiedVia": "GET /v4/aliases/mkt.panelbotadmin.com",
+    "rootDirectory": "frontend",
+    "rootDirectoryEvidence": "current project settings; deployment settings omit this field",
+    "framework": "nextjs",
+    "nodeVersion": "24.x",
+    "buildCommand": "framework default",
+    "installCommand": "framework default",
+    "configurationReadVia": "GET project, GET deployment, GET alias; no environment values selected"
+  },
+  "supabase": {
+    "projectId": "fdkjkzpjqfbaavylapun",
+    "name": "landing-builder",
+    "region": "us-west-2",
+    "state": "ACTIVE_HEALTHY",
+    "postgres": "17.6.1.063",
+    "remoteMigrationCount": 268,
+    "lastMigration": {
+      "version": "20260915190657",
+      "name": "optimize_purchase_capi_retry_queue"
+    },
+    "remoteMigrations": [
+      {
+        "version": "0001",
+        "name": "base_schema"
+      },
+      {
+        "version": "20260227100000",
+        "name": "landings"
+      },
+      {
+        "version": "20260227110000",
+        "name": "storage_landing_images"
+      },
+      {
+        "version": "20260227120000",
+        "name": "landings_name_unique_index"
+      },
+      {
+        "version": "20260227130000",
+        "name": "settings"
+      },
+      {
+        "version": "20260227140000",
+        "name": "gerencias"
+      },
+      {
+        "version": "20260227150000",
+        "name": "landings_pixel_id_gerencias_gerencia_id"
+      },
+      {
+        "version": "20260227184152",
+        "name": "base_schema"
+      },
+      {
+        "version": "20260228000000",
+        "name": "add_nombre_to_profiles"
+      },
+      {
+        "version": "20260228110000",
+        "name": "require_pixel_id_and_gerencia_id"
+      },
+      {
+        "version": "20260228120000",
+        "name": "landings_gerencias_weight"
+      },
+      {
+        "version": "20260228130000",
+        "name": "landings_tracking_fields"
+      },
+      {
+        "version": "20260228131000",
+        "name": "phone_mode_and_gerencia_phones"
+      },
+      {
+        "version": "20260228132000",
+        "name": "phone_kind_and_phone_type"
+      },
+      {
+        "version": "20260228133000",
+        "name": "landings_phone_interval"
+      },
+      {
+        "version": "20260228134000",
+        "name": "landings_phone_interval_hours"
+      },
+      {
+        "version": "20260228135000",
+        "name": "landings_gerencias_phone_config"
+      },
+      {
+        "version": "20260304170000",
+        "name": "gerencias_gerencia_id_unique"
+      },
+      {
+        "version": "20260304173000",
+        "name": "gerencia_phones_select_policy"
+      },
+      {
+        "version": "20260304180000",
+        "name": "gerencias_id_equals_gerencia_id"
+      },
+      {
+        "version": "20260304181500",
+        "name": "clear_gerencias_for_testing"
+      },
+      {
+        "version": "20260305120000",
+        "name": "cron_sync_phones"
+      },
+      {
+        "version": "20260305130000",
+        "name": "landing_typography_config"
+      },
+      {
+        "version": "20260306120000",
+        "name": "add_landing_config_column"
+      },
+      {
+        "version": "20260306130000",
+        "name": "lock_landing_name"
+      },
+      {
+        "version": "20260307100000",
+        "name": "settings_preview_flag"
+      },
+      {
+        "version": "20260307110000",
+        "name": "settings_revalidate_secret"
+      },
+      {
+        "version": "20260323183000",
+        "name": "drop_test_event_code_from_conversions_config"
+      },
+      {
+        "version": "20260323201000",
+        "name": "conversions_add_test_event_code"
+      },
+      {
+        "version": "20260325190000",
+        "name": "add_meta_payload_response_to_conversion_logs"
+      },
+      {
+        "version": "20260325193000",
+        "name": "add_show_logs_to_conversions_config"
+      },
+      {
+        "version": "20260325193500",
+        "name": "backfill_conversions_config_show_logs"
+      },
+      {
+        "version": "20260325201000",
+        "name": "add_internal_id_to_conversions"
+      },
+      {
+        "version": "20260326121000",
+        "name": "add_tracking_ranking_config"
+      },
+      {
+        "version": "20260326133000",
+        "name": "notifications_module"
+      },
+      {
+        "version": "20260326183000",
+        "name": "notify_cron_every_5_min"
+      },
+      {
+        "version": "20260326193000",
+        "name": "notifications_bot_insert_policy"
+      },
+      {
+        "version": "20260326195500",
+        "name": "notification_welcome_sent_at"
+      },
+      {
+        "version": "20260326235900",
+        "name": "conversion_inbox"
+      },
+      {
+        "version": "20260327191000",
+        "name": "landings_external_mode"
+      },
+      {
+        "version": "20260327200000",
+        "name": "admins_can_update_delete_landings"
+      },
+      {
+        "version": "20260327210000",
+        "name": "get_phone_for_landing_rpc"
+      },
+      {
+        "version": "20260327220000",
+        "name": "cron_warm_landing_phone"
+      },
+      {
+        "version": "20260327220100",
+        "name": "notification_telegram_destinations"
+      },
+      {
+        "version": "20260327232000",
+        "name": "backfill_legacy_telegram_chats"
+      },
+      {
+        "version": "20260327234000",
+        "name": "cron_sync_telegram_connections"
+      },
+      {
+        "version": "20260327235500",
+        "name": "disable_sync_telegram_polling_cron"
+      },
+      {
+        "version": "20260328001000",
+        "name": "conversion_inbox_action_event_id"
+      },
+      {
+        "version": "20260330160000",
+        "name": "conversions_multi_pixel_configs"
+      },
+      {
+        "version": "20260330193000",
+        "name": "conversions_pixel_configs_add_delivery_flags"
+      },
+      {
+        "version": "20260330193500",
+        "name": "conversions_add_meta_pixel_id"
+      },
+      {
+        "version": "20260331213000",
+        "name": "kommo_client_configs"
+      },
+      {
+        "version": "20260331221000",
+        "name": "gerencias_source_type"
+      },
+      {
+        "version": "20260401093000",
+        "name": "gerencia_phones_comment"
+      },
+      {
+        "version": "20260401102000",
+        "name": "conversions_delete_policy"
+      },
+      {
+        "version": "20260403110000",
+        "name": "client_subscriptions_plans"
+      },
+      {
+        "version": "20260404000100",
+        "name": "rename_send_contact_pixel_to_sendContactPixel"
+      },
+      {
+        "version": "20260404000200",
+        "name": "restore_default_visible_columns_after_sendContactPixel"
+      },
+      {
+        "version": "20260405114411",
+        "name": "drop_wazzup_integration_tables"
+      },
+      {
+        "version": "20260406203000",
+        "name": "hidden_conversion_logs"
+      },
+      {
+        "version": "20260406235900",
+        "name": "logs_payload_received_result"
+      },
+      {
+        "version": "20260407000000",
+        "name": "phone_kind_add_mkt"
+      },
+      {
+        "version": "20260407001000",
+        "name": "backfill_latency_payload_received"
+      },
+      {
+        "version": "20260407190000",
+        "name": "get_phone_for_chatrace_client"
+      },
+      {
+        "version": "20260407203000",
+        "name": "chatrace_gerencia_selection_mode"
+      },
+      {
+        "version": "20260407205000",
+        "name": "get_phone_for_chatrace_client_with_selection_mode"
+      },
+      {
+        "version": "20260408200000",
+        "name": "lock_landing_tag"
+      },
+      {
+        "version": "20260408213000",
+        "name": "fair_gerencia_counter_include_inactive"
+      },
+      {
+        "version": "20260408220000",
+        "name": "fair_gerencia_messages_include_inactive"
+      },
+      {
+        "version": "20260415113000",
+        "name": "from_meta_ads_fbc_or_valid_promo_code"
+      },
+      {
+        "version": "20260416000000",
+        "name": "landing_tag_unique_alphanumeric"
+      },
+      {
+        "version": "20260416100000",
+        "name": "conversions_config"
+      },
+      {
+        "version": "20260416100001",
+        "name": "conversions"
+      },
+      {
+        "version": "20260416100002",
+        "name": "sync_pixel_trigger"
+      },
+      {
+        "version": "20260416100003",
+        "name": "cron_retry_conversions"
+      },
+      {
+        "version": "20260416200000",
+        "name": "conversion_logs"
+      },
+      {
+        "version": "20260416300000",
+        "name": "conversions_config_slug"
+      },
+      {
+        "version": "20260416400000",
+        "name": "conversions_update_policy"
+      },
+      {
+        "version": "20260416500000",
+        "name": "funnel_view"
+      },
+      {
+        "version": "20260416600000",
+        "name": "funnel_reached_indicators"
+      },
+      {
+        "version": "20260417090000",
+        "name": "conversions_visible_columns"
+      },
+      {
+        "version": "20260418000000",
+        "name": "backfill_landings_post_url"
+      },
+      {
+        "version": "20260418100000",
+        "name": "force_landings_post_url"
+      },
+      {
+        "version": "20260418200000",
+        "name": "hidden_conversions"
+      },
+      {
+        "version": "20260419000000",
+        "name": "funnel_contacts_telefono_asignado"
+      },
+      {
+        "version": "20260419100000",
+        "name": "revert_funnel_telefono_asignado"
+      },
+      {
+        "version": "20260420000000",
+        "name": "funnel_reached_repeat_by_purchase_count"
+      },
+      {
+        "version": "20260421000000",
+        "name": "funnel_only_leads_and_beyond"
+      },
+      {
+        "version": "20260422000000",
+        "name": "gerencias_fair_criterion"
+      },
+      {
+        "version": "20260423000000",
+        "name": "landing_gerencia_selection_mode"
+      },
+      {
+        "version": "20260424000000",
+        "name": "warm_landing_phone_every_2min"
+      },
+      {
+        "version": "20260424000100",
+        "name": "conversions_config_add_show_inbox"
+      },
+      {
+        "version": "20260424000200",
+        "name": "cleanup_backfill_merged_leads"
+      },
+      {
+        "version": "20260424000300",
+        "name": "backfill_created_new_lead_external_id_hash"
+      },
+      {
+        "version": "20260424003000",
+        "name": "warm_landing_phone_back_to_5min"
+      },
+      {
+        "version": "20260424222000",
+        "name": "sanitize_phone_prefix_localidad"
+      },
+      {
+        "version": "20260424224500",
+        "name": "backfill_inbox_conversion_id_for_leads"
+      },
+      {
+        "version": "20260424233000",
+        "name": "backfill_inbox_response_match_mode_promo"
+      },
+      {
+        "version": "20260425000000",
+        "name": "conversions_purchase_type"
+      },
+      {
+        "version": "20260425212000",
+        "name": "backfill_inbox_purchase_match_mode"
+      },
+      {
+        "version": "20260425235500",
+        "name": "backfill_inbox_created_new_message"
+      },
+      {
+        "version": "20260426000000",
+        "name": "backfill_conversions_config_for_clients"
+      },
+      {
+        "version": "20260426001000",
+        "name": "fill_empty_visible_columns"
+      },
+      {
+        "version": "20260426002000",
+        "name": "enforce_numeric_pixel_id"
+      },
+      {
+        "version": "20260426004000",
+        "name": "conversions_add_action_payload_raw"
+      },
+      {
+        "version": "20260426005000",
+        "name": "conversions_fix_observaciones_encoding"
+      },
+      {
+        "version": "20260426006000",
+        "name": "conversions_add_contact_payload_raw"
+      },
+      {
+        "version": "20260426007000",
+        "name": "conversions_add_pixel_id"
+      },
+      {
+        "version": "20260426008000",
+        "name": "conversions_add_send_contact_pixel"
+      },
+      {
+        "version": "20260426009000",
+        "name": "chatrace_client_configs"
+      },
+      {
+        "version": "20260426010000",
+        "name": "conversions_add_source_platform"
+      },
+      {
+        "version": "20260426011000",
+        "name": "chatrace_gerencias"
+      },
+      {
+        "version": "20260426120000",
+        "name": "conversions_add_from_meta_ads"
+      },
+      {
+        "version": "20260426130000",
+        "name": "create_ar_phone_area_codes"
+      },
+      {
+        "version": "20260426140000",
+        "name": "conversions_add_geo_source"
+      },
+      {
+        "version": "20260427110000",
+        "name": "conversions_add_cuit_cuil"
+      },
+      {
+        "version": "20260427120000",
+        "name": "conversions_add_inferred_sex"
+      },
+      {
+        "version": "20260427133000",
+        "name": "create_ar_name_inferred_sex"
+      },
+      {
+        "version": "20260427140000",
+        "name": "conversions_add_sex_source"
+      },
+      {
+        "version": "20260427143000",
+        "name": "backfill_sex_from_name_catalog"
+      },
+      {
+        "version": "20260427150000",
+        "name": "ai_assistant_monthly_quota"
+      },
+      {
+        "version": "20260427170000",
+        "name": "conversions_config_add_show_ai_assistant"
+      },
+      {
+        "version": "20260427180000",
+        "name": "tracking_queue"
+      },
+      {
+        "version": "20260427190000",
+        "name": "tracking_retry_scheduler"
+      },
+      {
+        "version": "20260427200000",
+        "name": "conversions_contact_dedupe_unique_indexes"
+      },
+      {
+        "version": "20260427201000",
+        "name": "cleanup_contact_dedupe_test_rows"
+      },
+      {
+        "version": "20260428120000",
+        "name": "phone_kind_add_assistant"
+      },
+      {
+        "version": "20260429100000",
+        "name": "from_meta_ads_promo_code_fallback"
+      },
+      {
+        "version": "20260430170000",
+        "name": "conversion_inbox_deferred_status"
+      },
+      {
+        "version": "20260430193000",
+        "name": "align_plan_limits"
+      },
+      {
+        "version": "20260430203000",
+        "name": "home_overview_stats"
+      },
+      {
+        "version": "20260502160000",
+        "name": "promotions_module"
+      },
+      {
+        "version": "20260502163000",
+        "name": "promotions_due_cron"
+      },
+      {
+        "version": "20260502170000",
+        "name": "promotions_due_cron_hourly"
+      },
+      {
+        "version": "20260502173000",
+        "name": "promotions_draw_status"
+      },
+      {
+        "version": "20260502180000",
+        "name": "promotions_background_image"
+      },
+      {
+        "version": "20260502223000",
+        "name": "promotions_public_design_fields"
+      },
+      {
+        "version": "20260503090000",
+        "name": "conversions_config_add_show_promotions"
+      },
+      {
+        "version": "20260504163000",
+        "name": "promotion_participants_delete_policy"
+      },
+      {
+        "version": "20260504174500",
+        "name": "home_overview_match_stats_logic"
+      },
+      {
+        "version": "20260505120000",
+        "name": "notification_promotions_toggle"
+      },
+      {
+        "version": "20260505131500",
+        "name": "from_meta_ads_include_utm_campaign"
+      },
+      {
+        "version": "20260506103000",
+        "name": "purchase_coelsa_id_dedupe"
+      },
+      {
+        "version": "20260507193000",
+        "name": "phone_messages_operational_reset"
+      },
+      {
+        "version": "20260512120000",
+        "name": "hidden_conversion_inbox"
+      },
+      {
+        "version": "20260512133000",
+        "name": "gerencia_phone_availability_snapshots"
+      },
+      {
+        "version": "20260513103000",
+        "name": "availability_snapshots_assignment_count"
+      },
+      {
+        "version": "20260514120000",
+        "name": "purchase_transaction_id_dedupe"
+      },
+      {
+        "version": "20260514183000",
+        "name": "home_overview_inferred_leads"
+      },
+      {
+        "version": "20260514193000",
+        "name": "phone_auto_daily_reset"
+      },
+      {
+        "version": "20260519143000",
+        "name": "gerencia_availability_summary_rpc"
+      },
+      {
+        "version": "20260519144500",
+        "name": "gerencia_availability_summary_auth_guard"
+      },
+      {
+        "version": "20260519160000",
+        "name": "gerencia_work_groups"
+      },
+      {
+        "version": "20260519172000",
+        "name": "conversions_assigned_gerencia_snapshot"
+      },
+      {
+        "version": "20260604120000",
+        "name": "gerencia_phones_source_available"
+      },
+      {
+        "version": "20260605100000",
+        "name": "conversions_pixel_configs_comment"
+      },
+      {
+        "version": "20260609120000",
+        "name": "lead_inbox_dedupe_by_promo"
+      },
+      {
+        "version": "20260609123000",
+        "name": "purchase_inbox_dedupe_by_promo_without_strong_ids"
+      },
+      {
+        "version": "20260609213000",
+        "name": "conversion_log_lead_backfill_replays"
+      },
+      {
+        "version": "20260610173000",
+        "name": "backfill_inbox_promo_code_from_conversion"
+      },
+      {
+        "version": "20260610203000",
+        "name": "conversions_main_promo_unique"
+      },
+      {
+        "version": "20260613090000",
+        "name": "public_landing_runtime_switch"
+      },
+      {
+        "version": "20260613120000",
+        "name": "contact_lead_capi_retry_flags"
+      },
+      {
+        "version": "20260614120000",
+        "name": "landings_publish_target"
+      },
+      {
+        "version": "20260614130000",
+        "name": "constructor_landing_phone_cache"
+      },
+      {
+        "version": "20260614133000",
+        "name": "cached_constructor_landing_phone_rpc"
+      },
+      {
+        "version": "20260627183000",
+        "name": "promotion_match_backfill_cron"
+      },
+      {
+        "version": "20260629190000",
+        "name": "constructor_tracking_queue"
+      },
+      {
+        "version": "20260710120000",
+        "name": "chatrace_meta_capi_switch"
+      },
+      {
+        "version": "20260722120000",
+        "name": "from_meta_ads_promo_only_chatrace"
+      },
+      {
+        "version": "20260722133000",
+        "name": "pixel_capi_event_switches"
+      },
+      {
+        "version": "20260724120000",
+        "name": "split_purchase_capi_switches"
+      },
+      {
+        "version": "20260725120000",
+        "name": "pixel_capi_geo_delivery_switch"
+      },
+      {
+        "version": "20260725170000",
+        "name": "chatrace_business_messaging_capi"
+      },
+      {
+        "version": "20260727183000",
+        "name": "purchase_capi_payload_modes"
+      },
+      {
+        "version": "20260727220000",
+        "name": "conversions_currency"
+      },
+      {
+        "version": "20260727223000",
+        "name": "currency_scoped_reporting"
+      },
+      {
+        "version": "20260728010000",
+        "name": "purchase_pixel_attribution"
+      },
+      {
+        "version": "20260728013000",
+        "name": "capi_meta_ads_only"
+      },
+      {
+        "version": "20260728120000",
+        "name": "conversion_view_preferences"
+      },
+      {
+        "version": "20260728163000",
+        "name": "purchase_event_atomic_claims"
+      },
+      {
+        "version": "20260731120000",
+        "name": "conversion_event_gerencia_attribution"
+      },
+      {
+        "version": "20260801163000",
+        "name": "conversion_player_username"
+      },
+      {
+        "version": "20260801190000",
+        "name": "workspace_currency_scope"
+      },
+      {
+        "version": "20260801203000",
+        "name": "complete_registration_capi_switch"
+      },
+      {
+        "version": "20260801213000",
+        "name": "contact_form_fields"
+      },
+      {
+        "version": "20260802143000",
+        "name": "backfill_event_agency_context"
+      },
+      {
+        "version": "20260802144500",
+        "name": "ensure_event_agency_context_backfill"
+      },
+      {
+        "version": "20260803110000",
+        "name": "phone_metrics_summary"
+      },
+      {
+        "version": "20260805210000",
+        "name": "constructor_landing_phone_cache_every_5min"
+      },
+      {
+        "version": "20260805211000",
+        "name": "phone_metrics_refresh_every_10min"
+      },
+      {
+        "version": "20260805212000",
+        "name": "optimize_message_based_phone_assignment"
+      },
+      {
+        "version": "20260805213000",
+        "name": "add_fk_and_inbox_hot_path_indexes"
+      },
+      {
+        "version": "20260805214000",
+        "name": "stagger_frequent_cron_jobs"
+      },
+      {
+        "version": "20260805215000",
+        "name": "optimize_pg_stat_top_queries"
+      },
+      {
+        "version": "20260806103000",
+        "name": "optimize_phone_metrics_refresh_30min"
+      },
+      {
+        "version": "20260808120000",
+        "name": "optimize_rls_auth_uid_initplan"
+      },
+      {
+        "version": "20260810172000",
+        "name": "whatsapp_cloud_api_module"
+      },
+      {
+        "version": "20260810181000",
+        "name": "whatsapp_cloud_api_increment_phone_usage"
+      },
+      {
+        "version": "20260811120000",
+        "name": "gerencia_phone_assignment_role"
+      },
+      {
+        "version": "20260811193000",
+        "name": "whatsapp_cloud_api_ui_credentials"
+      },
+      {
+        "version": "20260811223000",
+        "name": "whatsapp_cloud_api_inbox_rpc"
+      },
+      {
+        "version": "20260811224500",
+        "name": "whatsapp_cloud_api_inbox_premium_tag"
+      },
+      {
+        "version": "20260811230000",
+        "name": "whatsapp_cloud_api_inbox_inbound_and_labels"
+      },
+      {
+        "version": "20260812001000",
+        "name": "whatsapp_cloud_api_cta_and_manual_send"
+      },
+      {
+        "version": "20260812113000",
+        "name": "whatsapp_cloud_api_resilience_health"
+      },
+      {
+        "version": "20260812143000",
+        "name": "landing_phone_demand_availability"
+      },
+      {
+        "version": "20260812170000",
+        "name": "whatsapp_cloud_api_messaging_dataset"
+      },
+      {
+        "version": "20260812173000",
+        "name": "whatsapp_cloud_api_dataset_only"
+      },
+      {
+        "version": "20260812190000",
+        "name": "conversions_dataset_id"
+      },
+      {
+        "version": "20260812203000",
+        "name": "whatsapp_cloud_api_quality_update_events"
+      },
+      {
+        "version": "20260814020108",
+        "name": "scope_gerencia_work_groups_by_workspace"
+      },
+      {
+        "version": "20260815161719",
+        "name": "workspace_isolation_conversions_inbox"
+      },
+      {
+        "version": "20260815163940",
+        "name": "scope_conversion_logs_by_workspace"
+      },
+      {
+        "version": "20260815173613",
+        "name": "scope_whatsapp_cloud_api_config_by_workspace"
+      },
+      {
+        "version": "20260815205004",
+        "name": "whatsapp_cloud_api_webhook_request_audit"
+      },
+      {
+        "version": "20260815212157",
+        "name": "whatsapp_cloud_api_inbox_interactive_messages"
+      },
+      {
+        "version": "20260816012132",
+        "name": "conversion_workspace_resolution_source"
+      },
+      {
+        "version": "20260817233335",
+        "name": "availability_summary_workspace_ids"
+      },
+      {
+        "version": "20260818031119",
+        "name": "whatsapp_cloud_api_redirect_tracking"
+      },
+      {
+        "version": "20260818032740",
+        "name": "whatsapp_cloud_api_unread_state"
+      },
+      {
+        "version": "20260818134748",
+        "name": "whatsapp_cloud_api_contact_on_redirect"
+      },
+      {
+        "version": "20260818141444",
+        "name": "whatsapp_cloud_api_contact_phone_fallback_index"
+      },
+      {
+        "version": "20260818170134",
+        "name": "restrict_public_auth_signups"
+      },
+      {
+        "version": "20260818223130",
+        "name": "atrio_clients_module"
+      },
+      {
+        "version": "20260819013754",
+        "name": "atrio_conversion_identifiers"
+      },
+      {
+        "version": "20260819025607",
+        "name": "atrio_players_id_tracking"
+      },
+      {
+        "version": "20260819175021",
+        "name": "home_overview_stats_cache_hourly"
+      },
+      {
+        "version": "20260820015442",
+        "name": "home_overview_meta_ads_revenue"
+      },
+      {
+        "version": "20260820020527",
+        "name": "home_overview_meta_ads_load_rate"
+      },
+      {
+        "version": "20260820020830",
+        "name": "home_overview_meta_ads_full_summary"
+      },
+      {
+        "version": "20260821193606",
+        "name": "whatsapp_cloud_api_user_data_enrichment_switch"
+      },
+      {
+        "version": "20260821220917",
+        "name": "include_ctwa_in_meta_ads_origin"
+      },
+      {
+        "version": "20260821231132",
+        "name": "whatsapp_cloud_health_notifications_toggle"
+      },
+      {
+        "version": "20260821232500",
+        "name": "scoped_phone_assignment_metrics"
+      },
+      {
+        "version": "20260821232818",
+        "name": "scope_messages_received_for_phone_assignment"
+      },
+      {
+        "version": "20260821233000",
+        "name": "whatsapp_cloud_api_inbox_contacts_pagination"
+      },
+      {
+        "version": "20260821235015",
+        "name": "optimize_whatsapp_cloud_api_inbox_contacts_queries"
+      },
+      {
+        "version": "20260821235359",
+        "name": "add_wca_conversion_expression_indexes"
+      },
+      {
+        "version": "20260821235712",
+        "name": "optimize_wca_conversion_lateral_matches"
+      },
+      {
+        "version": "20260821235823",
+        "name": "add_wca_promo_first_conversion_index"
+      },
+      {
+        "version": "20260821235950",
+        "name": "drop_suboptimal_wca_conversion_indexes"
+      },
+      {
+        "version": "20260822000120",
+        "name": "optimize_wca_meta_capi_logs_query"
+      },
+      {
+        "version": "20260822004552",
+        "name": "whatsapp_cloud_api_business_messaging_purchase_type_switch"
+      },
+      {
+        "version": "20260822162110",
+        "name": "landing_atrio_redirect_assignments"
+      },
+      {
+        "version": "20260822172211",
+        "name": "whatsapp_cloud_api_retarget_cron"
+      },
+      {
+        "version": "20260822173226",
+        "name": "whatsapp_cloud_api_retarget_once_per_contact"
+      },
+      {
+        "version": "20260822192456",
+        "name": "whatsapp_cloud_api_retargeting_switch"
+      },
+      {
+        "version": "20260823202650",
+        "name": "fix_wca_retarget_inbox_filters"
+      },
+      {
+        "version": "20260823203423",
+        "name": "enforce_wca_retarget_min_age"
+      },
+      {
+        "version": "20260825172003",
+        "name": "whatsapp_cloud_api_retarget_config"
+      },
+      {
+        "version": "20260825180041",
+        "name": "conversion_journey_starts"
+      },
+      {
+        "version": "20260825192821",
+        "name": "whatsapp_cloud_api_inbox_date_filter"
+      },
+      {
+        "version": "20260825223328",
+        "name": "backfill_landing_journey_starts_from_contacts"
+      },
+      {
+        "version": "20260826011620",
+        "name": "landing_pageview_ttl_remove_backfill"
+      },
+      {
+        "version": "20260826150935",
+        "name": "whatsapp_cloud_api_inbox_realtime"
+      },
+      {
+        "version": "20260829013755",
+        "name": "reset_scoped_phone_counters"
+      },
+      {
+        "version": "20260902154745",
+        "name": "admin_signup_approvals"
+      },
+      {
+        "version": "20260905012831",
+        "name": "fair_message_assignment_reservations"
+      },
+      {
+        "version": "20260910192920",
+        "name": "purchase_capi_minimum_thresholds"
+      },
+      {
+        "version": "20260910200641",
+        "name": "restrict_purchase_capi_thresholds_to_workspaces"
+      },
+      {
+        "version": "20260911175635",
+        "name": "meta_audience_buyers_rpc"
+      },
+      {
+        "version": "20260911180151",
+        "name": "optimize_meta_audience_buyers_rpc"
+      },
+      {
+        "version": "20260911180712",
+        "name": "speed_up_meta_audience_buyers_rpc"
+      },
+      {
+        "version": "20260911200034",
+        "name": "meta_audience_buyers_v2"
+      },
+      {
+        "version": "20260911201101",
+        "name": "compact_meta_audience_buyers_v2_payload"
+      },
+      {
+        "version": "20260911213912",
+        "name": "meta_audience_configs"
+      },
+      {
+        "version": "20260915190657",
+        "name": "optimize_purchase_capi_retry_queue"
+      }
+    ],
+    "pendingIncrementalCount": 6,
+    "edgeFunctions": [
+      {
+        "slug": "create-client",
+        "version": 32,
+        "status": "ACTIVE",
+        "verifyJwt": false,
+        "updatedAt": "2026-09-02T15:52:19.365Z",
+        "bundleSha256": "d2d27fae1013acbf82c0a914315aafa06484b3c67fd132f01f06510823e54bf2"
+      },
+      {
+        "slug": "update-client",
+        "version": 20,
+        "status": "ACTIVE",
+        "verifyJwt": false,
+        "updatedAt": "2026-07-10T16:33:28.521Z",
+        "bundleSha256": "2165630cebba1665d0723da85ea4cc835dfbc50711b3998071e68b444d3932ad"
+      },
+      {
+        "slug": "delete-client",
+        "version": 12,
+        "status": "ACTIVE",
+        "verifyJwt": false,
+        "updatedAt": "2026-07-10T16:33:28.521Z",
+        "bundleSha256": "bbaca36ca26971c3844ce20c215484c8ce43939b9056e203b4cf30fa31efeeea"
+      },
+      {
+        "slug": "list-clients",
+        "version": 21,
+        "status": "ACTIVE",
+        "verifyJwt": false,
+        "updatedAt": "2026-08-18T02:54:05.074Z",
+        "bundleSha256": "c1e1fa00f941bb60faf57bfec5d08b4a0372f031ab251d74a24e759b0acdf642"
+      },
+      {
+        "slug": "builder-config",
+        "version": 25,
+        "status": "ACTIVE",
+        "verifyJwt": false,
+        "updatedAt": "2026-09-04T15:19:22.399Z",
+        "bundleSha256": "64692d35ca6ad11a915c4ee53bcd0420cfc8cee9144cd98c3f42b6424b1929e1"
+      },
+      {
+        "slug": "landing-phone",
+        "version": 21,
+        "status": "ACTIVE",
+        "verifyJwt": false,
+        "updatedAt": "2026-09-05T01:30:14.314Z",
+        "bundleSha256": "91989231e45c7cd72f02560d0182d1616ff226e4dea56f3238d507158b42517d"
+      },
+      {
+        "slug": "reset-phone-counters",
+        "version": 11,
+        "status": "ACTIVE",
+        "verifyJwt": false,
+        "updatedAt": "2026-08-29T01:39:11.861Z",
+        "bundleSha256": "f662f5134ae6deb896b333d8cb3014cb4d7c00ca3147e6edcb2fe1e04f70d99a"
+      },
+      {
+        "slug": "sync-phones",
+        "version": 27,
+        "status": "ACTIVE",
+        "verifyJwt": false,
+        "updatedAt": "2026-08-14T02:12:05.971Z",
+        "bundleSha256": "0da6f2c9f195091855db1c40f3e888191f5ae34d2a633deb99470773b2cf3084"
+      },
+      {
+        "slug": "bootstrap-cron-config",
+        "version": 9,
+        "status": "ACTIVE",
+        "verifyJwt": true,
+        "updatedAt": "2026-07-10T16:33:28.521Z",
+        "bundleSha256": "acbb20dd89981283feecbafa88e3d6ebe57b5a9c5ff5994a0e26c68d0c27911b"
+      },
+      {
+        "slug": "phone-click",
+        "version": 11,
+        "status": "ACTIVE",
+        "verifyJwt": false,
+        "updatedAt": "2026-09-05T01:30:12.687Z",
+        "bundleSha256": "6fdf240da779a9bd53ae1901816b6ef057eb3b0ad897c191015796439efec4ac"
+      },
+      {
+        "slug": "conversions",
+        "version": 158,
+        "status": "ACTIVE",
+        "verifyJwt": false,
+        "updatedAt": "2026-08-23T20:09:48.050Z",
+        "bundleSha256": "388bae74bcad8987e6b059bbcd919626a3f2b86136a8fcefaafd3703bf2f61fd"
+      },
+      {
+        "slug": "retry-failed-conversions",
+        "version": 44,
+        "status": "ACTIVE",
+        "verifyJwt": false,
+        "updatedAt": "2026-09-15T19:10:07.448Z",
+        "bundleSha256": "bb3dd97624f873543773a656686dc77419db5bd553f8da0707811a4bf538607b"
+      },
+      {
+        "slug": "conversions-test",
+        "version": 11,
+        "status": "ACTIVE",
+        "verifyJwt": false,
+        "updatedAt": "2026-07-26T00:46:57.279Z",
+        "bundleSha256": "c6c1593d65ce821d69e58396f99764db6ff0303bc5a3331d6530db1e9b098aef"
+      },
+      {
+        "slug": "notify-inactive-contacts",
+        "version": 19,
+        "status": "ACTIVE",
+        "verifyJwt": false,
+        "updatedAt": "2026-07-28T03:04:54.537Z",
+        "bundleSha256": "52199f1cd7c7b5ad3c066691aae37f757033c3d16f747ba030e9ebb3da27fc10"
+      },
+      {
+        "slug": "configure-telegram-webhook",
+        "version": 5,
+        "status": "ACTIVE",
+        "verifyJwt": true,
+        "updatedAt": "2026-07-10T16:33:28.521Z",
+        "bundleSha256": "5a3de6d6d80844a31cb9ce5c8a2e68564777b4e83725908e18e82a65385a3e40"
+      },
+      {
+        "slug": "telegram-webhook",
+        "version": 8,
+        "status": "ACTIVE",
+        "verifyJwt": false,
+        "updatedAt": "2026-07-10T16:33:28.521Z",
+        "bundleSha256": "4ae5c74ca8a4a0ecd69ec5bd1c3099ba2e1e22b4704f8ba87e68ad88fa4ef8a4"
+      },
+      {
+        "slug": "promotion-draw",
+        "version": 10,
+        "status": "ACTIVE",
+        "verifyJwt": false,
+        "updatedAt": "2026-07-10T16:33:28.521Z",
+        "bundleSha256": "200a173d9e38b93a0a241d55674447612b3ea7a1755e986caa5e3c894ed1367f"
+      },
+      {
+        "slug": "promotion-participate",
+        "version": 7,
+        "status": "ACTIVE",
+        "verifyJwt": false,
+        "updatedAt": "2026-07-10T16:33:28.521Z",
+        "bundleSha256": "bc68f4d8833f0cbfcd12306b3becd2b071b9ee9f131828f93eda9e7d13268cd8"
+      },
+      {
+        "slug": "promotion-draw-due",
+        "version": 7,
+        "status": "ACTIVE",
+        "verifyJwt": false,
+        "updatedAt": "2026-07-10T16:33:28.521Z",
+        "bundleSha256": "ae1c7df93ee9f91b2150db7509ae3446787519ae64085d14247d885fb9decc63"
+      },
+      {
+        "slug": "reset-phone-messages",
+        "version": 4,
+        "status": "ACTIVE",
+        "verifyJwt": true,
+        "updatedAt": "2026-08-20T00:02:48.204Z",
+        "bundleSha256": "5bd0116acbaf580a4cf29e2fa7d6f9fb00840876c6fe7725347e955443891089"
+      },
+      {
+        "slug": "promotion-match-backfill",
+        "version": 3,
+        "status": "ACTIVE",
+        "verifyJwt": false,
+        "updatedAt": "2026-07-10T16:33:28.521Z",
+        "bundleSha256": "99f3a11ef231e811494754fea27fca2c5bc31eef9fe0b053db87efd060785b53"
+      },
+      {
+        "slug": "sync-telegram-connections",
+        "version": 2,
+        "status": "ACTIVE",
+        "verifyJwt": true,
+        "updatedAt": "2026-07-10T16:33:28.521Z",
+        "bundleSha256": null
+      },
+      {
+        "slug": "whatsapp-cloud-webhook",
+        "version": 10,
+        "status": "ACTIVE",
+        "verifyJwt": false,
+        "updatedAt": "2026-08-15T21:01:32.265Z",
+        "bundleSha256": "9e0ac4c60af5eaf565678124e564a6ba7c3a515eb6d3fcc0636a66673aa65098"
+      },
+      {
+        "slug": "whatsapp-cloud-worker",
+        "version": 12,
+        "status": "ACTIVE",
+        "verifyJwt": false,
+        "updatedAt": "2026-09-15T19:10:07.448Z",
+        "bundleSha256": "4a697ad168614bb931edcd52e53c4cb53e32713c89a47f6f43bb9b24c6918e9d"
+      },
+      {
+        "slug": "whatsapp-cloud-send-message",
+        "version": 1,
+        "status": "ACTIVE",
+        "verifyJwt": true,
+        "updatedAt": "2026-08-12T00:54:39.801Z",
+        "bundleSha256": "ef1990ae2fa0ae2dc420a0decadff9aa7b5b5cf2b0645df42031743623d5eff5"
+      },
+      {
+        "slug": "whatsapp-cloud-sync-health",
+        "version": 6,
+        "status": "ACTIVE",
+        "verifyJwt": false,
+        "updatedAt": "2026-08-21T23:14:57.311Z",
+        "bundleSha256": "08681c438bdf31ae2a2c9d1cd03e1828bf4aea94f29c79537c05fd34f360c005"
+      },
+      {
+        "slug": "whatsapp-cloud-ensure-dataset",
+        "version": 4,
+        "status": "ACTIVE",
+        "verifyJwt": true,
+        "updatedAt": "2026-08-21T18:46:47.943Z",
+        "bundleSha256": "bf5211e15201b8f0e18591e11db29ec884ab4595d660fd87c410eb49355b2d30"
+      },
+      {
+        "slug": "whatsapp-cloud-redirect",
+        "version": 5,
+        "status": "ACTIVE",
+        "verifyJwt": false,
+        "updatedAt": "2026-08-23T20:37:13.513Z",
+        "bundleSha256": "7c13171b1e89d3739e74dd45b87e7c625a4dbdaaad77dd4899da764fdc290e86"
+      },
+      {
+        "slug": "atrio-click",
+        "version": 1,
+        "status": "ACTIVE",
+        "verifyJwt": true,
+        "updatedAt": "2026-08-22T16:32:02.711Z",
+        "bundleSha256": "7f35cdc4009a42e59c45a7a152fd134a23e14f94de4d2b3252bd615cac1f8b79"
+      },
+      {
+        "slug": "landing-atrio",
+        "version": 1,
+        "status": "ACTIVE",
+        "verifyJwt": true,
+        "updatedAt": "2026-08-22T16:32:03.108Z",
+        "bundleSha256": "89b2b6eab46e2375f4f078bb886508b50996acf32350b0bc9eb8b0459dca0496"
+      },
+      {
+        "slug": "whatsapp-cloud-retarget",
+        "version": 7,
+        "status": "ACTIVE",
+        "verifyJwt": false,
+        "updatedAt": "2026-08-25T17:30:11.639Z",
+        "bundleSha256": "5c16d92a1f37b9364771f6f5449c7beb315eee97fdf69cd867d0e424bcaf19b9"
+      }
+    ],
+    "changedEdgeSourceVerification": [
+      {
+        "slug": "sync-phones",
+        "version": 27,
+        "verifyJwt": false,
+        "sourceSha256": "6610774d1c436cd86c3914d8c4845e2b0825b2b43a64595592e245723f2f536c",
+        "normalizedSourceSha256": "6610774d1c436cd86c3914d8c4845e2b0825b2b43a64595592e245723f2f536c",
+        "usesNewAuthorization": false,
+        "requiresBodyUserId": true,
+        "sourceFile": "sync-phones/index.ts",
+        "matchesDeployedGitBaselineAfterLfNormalization": true
+      },
+      {
+        "slug": "reset-phone-counters",
+        "version": 11,
+        "verifyJwt": false,
+        "sourceSha256": "0a4fa1b24401790e70a9943dfe8e1f78421d4a361e93063b0d3c7e3ccbf1a0c5",
+        "normalizedSourceSha256": "b7a33bdaf4e2e29f6ca07b819c1b25805ceeb899429790c00e6641f33392519a",
+        "usesNewAuthorization": false,
+        "requiresBodyUserId": true,
+        "sourceFile": "reset-phone-counters/index.ts",
+        "matchesDeployedGitBaselineAfterLfNormalization": true
+      },
+      {
+        "slug": "reset-phone-messages",
+        "version": 4,
+        "verifyJwt": true,
+        "sourceSha256": "0b667d7a62417826c6993d3ede61160cd6f483e559933425954128b1d4a377c2",
+        "normalizedSourceSha256": "0b667d7a62417826c6993d3ede61160cd6f483e559933425954128b1d4a377c2",
+        "usesNewAuthorization": false,
+        "requiresBodyUserId": true,
+        "sourceFile": "reset-phone-messages/index.ts",
+        "matchesDeployedGitBaselineAfterLfNormalization": true
+      }
+    ],
+    "relations": [
+      {
+        "acl": "{postgres=arwdDxtm/postgres,anon=arwdDxtm/postgres,authenticated=arwdDxtm/postgres,service_role=arwdDxtm/postgres}",
+        "rls": true,
+        "name": "gerencia_phones",
+        "owner": "postgres",
+        "total_bytes": 368640,
+        "estimated_rows": 379
+      },
+      {
+        "acl": "{postgres=arwdDxtm/postgres,anon=arwdDxtm/postgres,authenticated=arwdDxtm/postgres,service_role=arwdDxtm/postgres}",
+        "rls": true,
+        "name": "gerencias",
+        "owner": "postgres",
+        "total_bytes": 114688,
+        "estimated_rows": 72
+      },
+      {
+        "acl": "{postgres=arwdDxtm/postgres,anon=arwdDxtm/postgres,authenticated=arwdDxtm/postgres,service_role=arwdDxtm/postgres}",
+        "rls": true,
+        "name": "profiles",
+        "owner": "postgres",
+        "total_bytes": 65536,
+        "estimated_rows": 15
+      },
+      {
+        "acl": "{postgres=arwdDxtm/postgres,anon=arwdDxtm/postgres,authenticated=arwdDxtm/postgres,service_role=arwdDxtm/postgres}",
+        "rls": true,
+        "name": "settings",
+        "owner": "postgres",
+        "total_bytes": 32768,
+        "estimated_rows": -1
+      }
+    ],
+    "settingsColumns": [
+      {
+        "acl": null,
+        "name": "id",
+        "type": "smallint"
+      },
+      {
+        "acl": null,
+        "name": "url_base",
+        "type": "text"
+      },
+      {
+        "acl": null,
+        "name": "show_client_landing_preview",
+        "type": "boolean"
+      },
+      {
+        "acl": null,
+        "name": "revalidate_secret",
+        "type": "text"
+      },
+      {
+        "acl": null,
+        "name": "public_landing_runtime",
+        "type": "text"
+      },
+      {
+        "acl": null,
+        "name": "public_landing_legacy_base_url",
+        "type": "text"
+      }
+    ],
+    "functions": [
+      {
+        "acl": "{=X/postgres,postgres=X/postgres,anon=X/postgres,authenticated=X/postgres,service_role=X/postgres}",
+        "owner": "postgres",
+        "config": [
+          "search_path=public"
+        ],
+        "definer": true,
+        "body_md5": "9584510e8dd56214c5b4e10c96078846",
+        "signature": "cron_sync_phones_all()"
+      },
+      {
+        "acl": "{=X/postgres,postgres=X/postgres,anon=X/postgres,authenticated=X/postgres,service_role=X/postgres}",
+        "owner": "postgres",
+        "config": [
+          "search_path=public"
+        ],
+        "definer": true,
+        "body_md5": "e70bcb929d325477032ed4253391e1e2",
+        "signature": "cron_reset_phone_operational_daily()"
+      },
+      {
+        "acl": "{postgres=X/postgres,anon=X/postgres,authenticated=X/postgres,service_role=X/postgres}",
+        "owner": "postgres",
+        "config": [
+          "search_path=public"
+        ],
+        "definer": true,
+        "body_md5": "bcb759814f209614c2538431f83b7dc7",
+        "signature": "verify_revalidate_secret(text)"
+      },
+      {
+        "acl": "{postgres=X/postgres,authenticated=X/postgres,service_role=X/postgres}",
+        "owner": "postgres",
+        "config": [
+          "search_path=public, pg_temp"
+        ],
+        "definer": true,
+        "body_md5": "64967808143dfc90ebec553744cf3f58",
+        "signature": "get_whatsapp_cloud_api_inbox_threads_page(integer,integer,text,text,boolean)"
+      },
+      {
+        "acl": "{postgres=X/postgres,authenticated=X/postgres,service_role=X/postgres}",
+        "owner": "postgres",
+        "config": [
+          "search_path=public, pg_temp"
+        ],
+        "definer": true,
+        "body_md5": "411507000b579833c0ce81268046c9ad",
+        "signature": "get_whatsapp_cloud_api_inbox_threads(integer,text)"
+      },
+      {
+        "acl": "{postgres=X/postgres,authenticated=X/postgres,service_role=X/postgres}",
+        "owner": "postgres",
+        "config": [
+          "search_path=public, pg_temp"
+        ],
+        "definer": true,
+        "body_md5": "ab346e501d0e9405703410d969225c1d",
+        "signature": "get_whatsapp_cloud_api_inbox_threads_page(integer,integer,text)"
+      },
+      {
+        "acl": "{postgres=X/postgres,authenticated=X/postgres,service_role=X/postgres}",
+        "owner": "postgres",
+        "config": [
+          "search_path=public, pg_temp"
+        ],
+        "definer": true,
+        "body_md5": "793e4ed5e583d31ce9c63857d83649d9",
+        "signature": "get_whatsapp_cloud_api_inbox_threads_page(integer,integer,text,text,boolean,timestamp with time zone,timestamp with time zone)"
+      }
+    ],
+    "statisticsRpc": {
+      "acl": "{=X/postgres,postgres=X/postgres,anon=X/postgres,authenticated=X/postgres,service_role=X/postgres}",
+      "owner": "postgres",
+      "body_md5": "316fe4cb3672f1a79c0eb1f74951be64",
+      "null_guard_present": false
+    },
+    "phonePolicies": [
+      {
+        "name": "Admins can read all gerencia phones",
+        "check_md5": null,
+        "using_md5": "3aaa7a9e7662891c44e71dee42905f28"
+      },
+      {
+        "name": "All users can select gerencia phones",
+        "check_md5": null,
+        "using_md5": "b326b5062b2f0e69046810717534cb09"
+      },
+      {
+        "name": "Users manage own gerencia phones",
+        "check_md5": "bf58b1cdf25d0306837813154bd5a065",
+        "using_md5": "bf58b1cdf25d0306837813154bd5a065"
+      }
+    ],
+    "profilesPolicies": [
+      {
+        "name": "Read own profile",
+        "check": null,
+        "using": "(( SELECT auth.uid() AS uid) = id)"
+      },
+      {
+        "name": "Update own profile",
+        "check": "(( SELECT auth.uid() AS uid) = id)",
+        "using": "(( SELECT auth.uid() AS uid) = id)"
+      }
+    ],
+    "privateSchema": {
+      "acl": "{postgres=UC/postgres,authenticated=U/postgres}",
+      "owner": "postgres"
+    },
+    "inboxPrivateSchemaExists": false,
+    "exposedSchemas": {
+      "localConfigured": [
+        "public",
+        "graphql_public"
+      ],
+      "remoteSettingFromSql": null,
+      "interpretation": "Not visible through current PostgreSQL session/role settings; null does not prove an empty exposed-schema list. Check the Data API dashboard before adding the private helpers."
+    },
+    "truncatePreflight": {
+      "found": 42,
+      "objects": [
+        {
+          "acl": "{postgres=arwdDxtm/postgres,anon=arwdDxtm/postgres,authenticated=arwdDxtm/postgres,service_role=arwdDxtm/postgres}",
+          "name": "profiles",
+          "bytes": 65536,
+          "owner": "postgres",
+          "estimated_rows": 15
+        },
+        {
+          "acl": "{postgres=arwdDxtm/postgres,anon=arwdDxtm/postgres,authenticated=arwdDxtm/postgres,service_role=arwdDxtm/postgres}",
+          "name": "notification_contact_alerts",
+          "bytes": 352256,
+          "owner": "postgres",
+          "estimated_rows": 1506
+        },
+        {
+          "acl": "{postgres=arwdDxtm/postgres,anon=arwdDxtm/postgres,authenticated=arwdDxtm/postgres,service_role=arwdDxtm/postgres}",
+          "name": "gerencia_phone_availability_snapshots",
+          "bytes": 331612160,
+          "owner": "postgres",
+          "estimated_rows": 1404120
+        },
+        {
+          "acl": "{postgres=arwdDxtm/postgres,anon=arwdDxtm/postgres,authenticated=arwdDxtm/postgres,service_role=arwdDxtm/postgres}",
+          "name": "hidden_conversion_logs",
+          "bytes": 114688,
+          "owner": "postgres",
+          "estimated_rows": 443
+        },
+        {
+          "acl": "{postgres=arwdDxtm/postgres,anon=arwdDxtm/postgres,authenticated=arwdDxtm/postgres,service_role=arwdDxtm/postgres}",
+          "name": "conversion_view_preferences",
+          "bytes": 24576,
+          "owner": "postgres",
+          "estimated_rows": -1
+        },
+        {
+          "acl": "{postgres=arwdDxtm/postgres,anon=arwdDxtm/postgres,authenticated=arwdDxtm/postgres,service_role=arwdDxtm/postgres}",
+          "name": "cron_config",
+          "bytes": 32768,
+          "owner": "postgres",
+          "estimated_rows": -1
+        },
+        {
+          "acl": "{postgres=arwdDxtm/postgres,anon=arwdDxtm/postgres,authenticated=arwdDxtm/postgres,service_role=arwdDxtm/postgres}",
+          "name": "notification_telegram_destinations",
+          "bytes": 65536,
+          "owner": "postgres",
+          "estimated_rows": -1
+        },
+        {
+          "acl": "{postgres=arwdDxtm/postgres,anon=arwdDxtm/postgres,authenticated=arwdDxtm/postgres,service_role=arwdDxtm/postgres}",
+          "name": "landings_gerencias",
+          "bytes": 98304,
+          "owner": "postgres",
+          "estimated_rows": 60
+        },
+        {
+          "acl": "{postgres=arwdDxtm/postgres,anon=arwdDxtm/postgres,authenticated=arwdDxtm/postgres,service_role=arwdDxtm/postgres}",
+          "name": "ar_phone_area_codes",
+          "bytes": 90112,
+          "owner": "postgres",
+          "estimated_rows": 300
+        },
+        {
+          "acl": "{postgres=arwdDxtm/postgres,anon=arwdDxtm/postgres,authenticated=arwdDxtm/postgres,service_role=arwdDxtm/postgres}",
+          "name": "conversion_log_lead_backfill_replays",
+          "bytes": 2179072,
+          "owner": "postgres",
+          "estimated_rows": 5340
+        },
+        {
+          "acl": "{postgres=arwdDxtm/postgres,anon=arwdDxtm/postgres,authenticated=arwdDxtm/postgres,service_role=arwdDxtm/postgres}",
+          "name": "promotion_participants",
+          "bytes": 581632,
+          "owner": "postgres",
+          "estimated_rows": 478
+        },
+        {
+          "acl": "{postgres=arwdDxtm/postgres,anon=arwdDxtm/postgres,authenticated=arwdDxtm/postgres,service_role=arwdDxtm/postgres}",
+          "name": "conversions_pixel_configs",
+          "bytes": 106496,
+          "owner": "postgres",
+          "estimated_rows": 15
+        },
+        {
+          "acl": "{postgres=arwdDxtm/postgres,anon=arwdDxtm/postgres,authenticated=arwdDxtm/postgres,service_role=arwdDxtm/postgres}",
+          "name": "promotions",
+          "bytes": 131072,
+          "owner": "postgres",
+          "estimated_rows": 3
+        },
+        {
+          "acl": "{postgres=arwdDxtm/postgres,anon=arwdDxtm/postgres,authenticated=arwdDxtm/postgres,service_role=arwdDxtm/postgres}",
+          "name": "kommo_client_configs",
+          "bytes": 49152,
+          "owner": "postgres",
+          "estimated_rows": -1
+        },
+        {
+          "acl": "{postgres=arwdDxtm/postgres,anon=arwdDxtm/postgres,authenticated=arwdDxtm/postgres,service_role=arwdDxtm/postgres}",
+          "name": "tracking_queue",
+          "bytes": 49840128,
+          "owner": "postgres",
+          "estimated_rows": 19769
+        },
+        {
+          "acl": "{postgres=arwdDxtm/postgres,anon=arwdDxtm/postgres,authenticated=arwdDxtm/postgres,service_role=arwdDxtm/postgres}",
+          "name": "hidden_conversion_inbox",
+          "bytes": 16384,
+          "owner": "postgres",
+          "estimated_rows": -1
+        },
+        {
+          "acl": "{postgres=arwdDxtm/postgres,anon=arwdDxtm/postgres,authenticated=arwdDxtm/postgres,service_role=arwdDxtm/postgres}",
+          "name": "landing_phone_cache",
+          "bytes": 65536,
+          "owner": "postgres",
+          "estimated_rows": 1
+        },
+        {
+          "acl": "{postgres=arwdDxtm/postgres,anon=arwdDxtm/postgres,authenticated=arwdDxtm/postgres,service_role=arwdDxtm/postgres}",
+          "name": "chatrace_gerencias",
+          "bytes": 65536,
+          "owner": "postgres",
+          "estimated_rows": 2
+        },
+        {
+          "acl": "{postgres=arwdDxtm/postgres,anon=arwdDxtm/postgres,authenticated=arwdDxtm/postgres,service_role=arwdDxtm/postgres}",
+          "name": "gerencias",
+          "bytes": 114688,
+          "owner": "postgres",
+          "estimated_rows": 72
+        },
+        {
+          "acl": "{postgres=arwdDxtm/postgres,anon=arwdDxtm/postgres,authenticated=arwdDxtm/postgres,service_role=arwdDxtm/postgres}",
+          "name": "notification_settings",
+          "bytes": 32768,
+          "owner": "postgres",
+          "estimated_rows": -1
+        },
+        {
+          "acl": "{postgres=arwdDxtm/postgres,anon=arwdDxtm/postgres,authenticated=arwdDxtm/postgres,service_role=arwdDxtm/postgres}",
+          "name": "gerencia_work_group_members",
+          "bytes": 73728,
+          "owner": "postgres",
+          "estimated_rows": 19
+        },
+        {
+          "acl": "{postgres=arwdDxtm/postgres,anon=arwdDxtm/postgres,authenticated=arwdDxtm/postgres,service_role=arwdDxtm/postgres}",
+          "name": "conversion_inbox",
+          "bytes": 263675904,
+          "owner": "postgres",
+          "estimated_rows": 132158
+        },
+        {
+          "acl": "{postgres=arwdDxtm/postgres,anon=arwdDxtm/postgres,authenticated=arwdDxtm/postgres,service_role=arwdDxtm/postgres}",
+          "name": "gerencia_work_groups",
+          "bytes": 65536,
+          "owner": "postgres",
+          "estimated_rows": 7
+        },
+        {
+          "acl": "{postgres=arwdDxtm/postgres,anon=arwdDxtm/postgres,authenticated=arwdDxtm/postgres,service_role=arwdDxtm/postgres}",
+          "name": "chatrace_client_configs",
+          "bytes": 49152,
+          "owner": "postgres",
+          "estimated_rows": -1
+        },
+        {
+          "acl": "{postgres=arwdDxtm/postgres,anon=arwdDxtm/postgres,authenticated=arwdDxtm/postgres,service_role=arwdDxtm/postgres}",
+          "name": "conversion_logs",
+          "bytes": 947830784,
+          "owner": "postgres",
+          "estimated_rows": 914450
+        },
+        {
+          "acl": "{postgres=arwdDxtm/postgres,anon=arwdDxtm/postgres,authenticated=arwdDxtm/postgres,service_role=arwdDxtm/postgres}",
+          "name": "settings",
+          "bytes": 32768,
+          "owner": "postgres",
+          "estimated_rows": -1
+        },
+        {
+          "acl": "{postgres=arwdDxtm/postgres,anon=arwdDxtm/postgres,authenticated=arwdDxtm/postgres,service_role=arwdDxtm/postgres}",
+          "name": "ar_name_inferred_sex",
+          "bytes": 6807552,
+          "owner": "postgres",
+          "estimated_rows": 52511
+        },
+        {
+          "acl": "{postgres=arwdDxtm/postgres,anon=arwdDxtm/postgres,authenticated=arwdDxtm/postgres,service_role=arwdDxtm/postgres}",
+          "name": "notification_bot_config",
+          "bytes": 32768,
+          "owner": "postgres",
+          "estimated_rows": -1
+        },
+        {
+          "acl": "{postgres=arwdDxtm/postgres,anon=arwdDxtm/postgres,authenticated=arwdDxtm/postgres,service_role=arwdDxtm/postgres}",
+          "name": "hidden_conversions",
+          "bytes": 573440,
+          "owner": "postgres",
+          "estimated_rows": 2544
+        },
+        {
+          "acl": "{postgres=arwdDxtm/postgres,anon=arwdDxtm/postgres,authenticated=arwdDxtm/postgres,service_role=arwdDxtm/postgres}",
+          "name": "hidden_contacts",
+          "bytes": 49152,
+          "owner": "postgres",
+          "estimated_rows": 31
+        },
+        {
+          "acl": "{postgres=arwdDxtm/postgres,anon=arwdDxtm/postgres,authenticated=arwdDxtm/postgres,service_role=arwdDxtm/postgres}",
+          "name": "client_subscriptions",
+          "bytes": 65536,
+          "owner": "postgres",
+          "estimated_rows": 8
+        },
+        {
+          "acl": "{postgres=arwdDxtm/postgres,anon=arwdDxtm/postgres,authenticated=arwdDxtm/postgres,service_role=arwdDxtm/postgres}",
+          "name": "ai_assistant_usage_monthly",
+          "bytes": 24576,
+          "owner": "postgres",
+          "estimated_rows": -1
+        },
+        {
+          "acl": "{postgres=arwdDxtm/postgres,anon=arwdDxtm/postgres,authenticated=arwdDxtm/postgres,service_role=arwdDxtm/postgres}",
+          "name": "gerencia_phones",
+          "bytes": 368640,
+          "owner": "postgres",
+          "estimated_rows": 379
+        },
+        {
+          "acl": "{postgres=arwdDxtm/postgres,anon=arwdDxtm/postgres,authenticated=arwdDxtm/postgres,service_role=arwdDxtm/postgres}",
+          "name": "home_overview_stats_cache",
+          "bytes": 65536,
+          "owner": "postgres",
+          "estimated_rows": 15
+        },
+        {
+          "acl": "{postgres=arwdDxtm/postgres,anon=arwdDxtm/postgres,authenticated=arwdDxtm/postgres,service_role=arwdDxtm/postgres}",
+          "name": "whatsapp_cloud_api_redirects",
+          "bytes": 376832,
+          "owner": "postgres",
+          "estimated_rows": 247
+        },
+        {
+          "acl": "{postgres=arwdDxtm/postgres,anon=arwdDxtm/postgres,authenticated=arwdDxtm/postgres,service_role=arwdDxtm/postgres}",
+          "name": "conversions",
+          "bytes": 495443968,
+          "owner": "postgres",
+          "estimated_rows": 81258
+        },
+        {
+          "acl": "{postgres=arwdDxtm/postgres,anon=arwdDxtm/postgres,authenticated=arwdDxtm/postgres,service_role=arwdDxtm/postgres}",
+          "name": "whatsapp_cloud_api_gerencias",
+          "bytes": 98304,
+          "owner": "postgres",
+          "estimated_rows": 10
+        },
+        {
+          "acl": "{postgres=arwdDxtm/postgres,anon=arwdDxtm/postgres,authenticated=arwdDxtm/postgres,service_role=arwdDxtm/postgres}",
+          "name": "atrio_clients",
+          "bytes": 81920,
+          "owner": "postgres",
+          "estimated_rows": -1
+        },
+        {
+          "acl": "{postgres=arwdDxtm/postgres,anon=arwdDxtm/postgres,authenticated=arwdDxtm/postgres,service_role=arwdDxtm/postgres}",
+          "name": "whatsapp_cloud_api_thread_reads",
+          "bytes": 155648,
+          "owner": "postgres",
+          "estimated_rows": 216
+        },
+        {
+          "acl": "{postgres=arwdDxtm/postgres,anon=arwdDxtm/postgres,authenticated=arwdDxtm/postgres,service_role=arwdDxtm/postgres}",
+          "name": "landing_phone_availability_demands",
+          "bytes": 29097984,
+          "owner": "postgres",
+          "estimated_rows": 68994
+        },
+        {
+          "acl": "{postgres=arwdDxtm/postgres,anon=arwdDxtm/postgres,authenticated=arwdDxtm/postgres,service_role=arwdDxtm/postgres}",
+          "name": "landings",
+          "bytes": 401408,
+          "owner": "postgres",
+          "estimated_rows": 22
+        },
+        {
+          "acl": "{postgres=arwdDxtm/postgres,anon=arwdDxtm/postgres,authenticated=arwdDxtm/postgres,service_role=arwdDxtm/postgres}",
+          "name": "conversions_config",
+          "bytes": 172032,
+          "owner": "postgres",
+          "estimated_rows": 7
+        }
+      ],
+      "expected": 42,
+      "anon_truncate": 42,
+      "postgres_owners": 42,
+      "public_truncate": 0,
+      "authenticated_truncate": 42
+    },
+    "remoteVersionsExactlyMatchLegacy268": true,
+    "reusedPhase0EdgeVersions": [
+      {
+        "slug": "builder-config",
+        "version": 25,
+        "unchanged": true
+      },
+      {
+        "slug": "landing-phone",
+        "version": 21,
+        "unchanged": true
+      },
+      {
+        "slug": "phone-click",
+        "version": 11,
+        "unchanged": true
+      },
+      {
+        "slug": "conversions",
+        "version": 158,
+        "unchanged": true
+      },
+      {
+        "slug": "retry-failed-conversions",
+        "version": 44,
+        "unchanged": true
+      },
+      {
+        "slug": "whatsapp-cloud-worker",
+        "version": 12,
+        "unchanged": true
+      }
+    ],
+    "existingInboxIndexes": [
+      {
+        "name": "idx_conversions_promo_code",
+        "valid": true,
+        "ready": true,
+        "definition_md5": "c0d2b36e4b2d54c86253d3d5a49b2d6d"
+      },
+      {
+        "name": "whatsapp_cloud_api_assignments_contact_latest_cover_idx",
+        "valid": true,
+        "ready": true,
+        "definition_md5": "80de6914480bf50d7740f884d426cca2"
+      },
+      {
+        "name": "whatsapp_cloud_api_redirects_contact_metrics_idx",
+        "valid": true,
+        "ready": true,
+        "definition_md5": "d16b4e292c9b54986dc55360394d336f"
+      },
+      {
+        "name": "whatsapp_cloud_api_attr_contact_latest_cover_idx",
+        "valid": true,
+        "ready": true,
+        "definition_md5": "133a56035edd322d90e0ea1ebf49c219"
+      },
+      {
+        "name": "whatsapp_cloud_api_outbound_contact_created_idx",
+        "valid": true,
+        "ready": true,
+        "definition_md5": "fe17441446240484eaec51319c064bea"
+      },
+      {
+        "name": "whatsapp_cloud_api_webhook_message_sender_created_idx",
+        "valid": true,
+        "ready": true,
+        "definition_md5": "22a2f33ba5cd2a03f521ec8ce8fe6bd9"
+      },
+      {
+        "name": "conversions_wca_external_match_idx",
+        "valid": true,
+        "ready": true,
+        "definition_md5": "9f561911c4f30c2cba0ef7120821b3f3"
+      },
+      {
+        "name": "conversions_wca_promo_match_idx",
+        "valid": true,
+        "ready": true,
+        "definition_md5": "7e77779093dc2493413754403518df76"
+      },
+      {
+        "name": "conversions_wca_contact_phone_fallback_idx",
+        "valid": true,
+        "ready": true,
+        "definition_md5": "1db43630961bebf42c5e401a64a2a043"
+      },
+      {
+        "name": "conversions_wca_user_promo_currency_expr_idx",
+        "valid": true,
+        "ready": true,
+        "definition_md5": "67d22772b2e1f35743ce7497202a8954"
+      },
+      {
+        "name": "conversions_wca_user_external_currency_expr_idx",
+        "valid": true,
+        "ready": true,
+        "definition_md5": "06de84cc2c7f5a61dc1b7b6f3c1e262d"
+      }
+    ]
+  },
+  "jobs": {
+    "source": "cron.job metadata; command bodies not returned",
+    "items": [
+      {
+        "id": 12,
+        "name": "promotion-draw-due-hourly",
+        "role": "postgres",
+        "active": true,
+        "schedule": "0 * * * *",
+        "command_md5": "c18bf4ecc0ff0b88d06e29d43da93176",
+        "calls_sync_all": false,
+        "calls_reset_daily": false
+      },
+      {
+        "id": 13,
+        "name": "reset-phone-operational-daily-argentina-midnight",
+        "role": "postgres",
+        "active": true,
+        "schedule": "0 3 * * *",
+        "command_md5": "71e93fdf07fb559434bd764f74aa71f3",
+        "calls_sync_all": false,
+        "calls_reset_daily": true
+      },
+      {
+        "id": 18,
+        "name": "promotion-match-backfill-hourly",
+        "role": "postgres",
+        "active": true,
+        "schedule": "17 * * * *",
+        "command_md5": "c5b762eb2e3787bfdd90f52e2ec85fa3",
+        "calls_sync_all": false,
+        "calls_reset_daily": false
+      },
+      {
+        "id": 2,
+        "name": "sync-phones-every-5min",
+        "role": "postgres",
+        "active": true,
+        "schedule": "*/5 * * * *",
+        "command_md5": "4545ebf0bc23c87a258531a89f3c0fb8",
+        "calls_sync_all": true,
+        "calls_reset_daily": false
+      },
+      {
+        "id": 8,
+        "name": "notify-inactive-contacts-every-5-min",
+        "role": "postgres",
+        "active": true,
+        "schedule": "1-59/5 * * * *",
+        "command_md5": "e4b11a77e9bc71ece2574707d271ee31",
+        "calls_sync_all": false,
+        "calls_reset_daily": false
+      },
+      {
+        "id": 6,
+        "name": "warm-landing-phone-8am-2am",
+        "role": "postgres",
+        "active": true,
+        "schedule": "2-59/5 0,1,2,8-23 * * *",
+        "command_md5": "5868c35978b373c12d69b22c2c9875b9",
+        "calls_sync_all": false,
+        "calls_reset_daily": false
+      },
+      {
+        "id": 19,
+        "name": "tracking-retry-every-5m",
+        "role": "postgres",
+        "active": true,
+        "schedule": "3-59/5 * * * *",
+        "command_md5": "78c10fc9054b449b8ee3a673f5ec51ba",
+        "calls_sync_all": false,
+        "calls_reset_daily": false
+      },
+      {
+        "id": 17,
+        "name": "refresh-constructor-landing-phone-cache-every-minute",
+        "role": "postgres",
+        "active": true,
+        "schedule": "4-59/5 * * * *",
+        "command_md5": "5bd037066749834612b355f5ed11dd6a",
+        "calls_sync_all": false,
+        "calls_reset_daily": false
+      },
+      {
+        "id": 4,
+        "name": "retry-failed-conversions",
+        "role": "postgres",
+        "active": true,
+        "schedule": "6-59/10 * * * *",
+        "command_md5": "3023f06f7e301979b3ae2f8e79ce66fc",
+        "calls_sync_all": false,
+        "calls_reset_daily": false
+      },
+      {
+        "id": 20,
+        "name": "refresh-phone-metrics-every-5min",
+        "role": "postgres",
+        "active": true,
+        "schedule": "7,37 * * * *",
+        "command_md5": "b6cd584049aefc7c10670ce1004752be",
+        "calls_sync_all": false,
+        "calls_reset_daily": false
+      },
+      {
+        "id": 21,
+        "name": "whatsapp-cloud-api-worker",
+        "role": "postgres",
+        "active": true,
+        "schedule": "*/2 * * * *",
+        "command_md5": "49a0de26483a33c18c0d33049c0ba78e",
+        "calls_sync_all": false,
+        "calls_reset_daily": false
+      },
+      {
+        "id": 22,
+        "name": "whatsapp-cloud-api-health",
+        "role": "postgres",
+        "active": true,
+        "schedule": "*/30 * * * *",
+        "command_md5": "cd83d226cd0f655cc55822a8bfaa4079",
+        "calls_sync_all": false,
+        "calls_reset_daily": false
+      },
+      {
+        "id": 23,
+        "name": "refresh-home-overview-stats-cache-hourly",
+        "role": "postgres",
+        "active": true,
+        "schedule": "7 * * * *",
+        "command_md5": "45e87b1891764e1368fa0beb9a889ec7",
+        "calls_sync_all": false,
+        "calls_reset_daily": false
+      },
+      {
+        "id": 24,
+        "name": "whatsapp-cloud-api-retarget",
+        "role": "postgres",
+        "active": true,
+        "schedule": "*/15 * * * *",
+        "command_md5": "aecdfeb43b7c0bc3ba570bfc2a464d77",
+        "calls_sync_all": false,
+        "calls_reset_daily": false
+      }
+    ],
+    "destinations": {
+      "destinations": [
+        {
+          "key": "sync_phones_url",
+          "path_md5": "35730052fe30a23158aa1f1f4c86db23",
+          "https_hostname": "fdkjkzpjqfbaavylapun.supabase.co",
+          "matches_this_project_sync": true
+        },
+        {
+          "key": "tracking_retry_url",
+          "path_md5": "b5d56ef288fa9b13e163c0d45144d711",
+          "https_hostname": "landing.panelbotadmin.com",
+          "matches_this_project_sync": false
+        }
+      ],
+      "function_path_references": [
+        {
+          "paths": [
+            "/functions/v1/sync-phones",
+            "/functions/v1/notify-inactive-contacts"
+          ],
+          "function": "cron_notify_inactive_contacts"
+        },
+        {
+          "paths": [
+            "/functions/v1/sync-phones",
+            "/functions/v1/retry-failed-conversions"
+          ],
+          "function": "cron_retry_failed_conversions"
+        },
+        {
+          "paths": [],
+          "function": "cron_retry_tracking_queue"
+        },
+        {
+          "paths": [
+            "/functions/v1/sync-phones",
+            "/functions/v1/sync-telegram-connections"
+          ],
+          "function": "cron_sync_telegram_connections"
+        },
+        {
+          "paths": [
+            "/functions/v1/sync-phones",
+            "/functions/v1/landing-phone"
+          ],
+          "function": "cron_warm_landing_phone"
+        }
+      ]
+    },
+    "runsLast24h": [
+      {
+        "count": 288,
+        "jobid": 2,
+        "status": "succeeded",
+        "latest_end": "2026-09-19T16:30:00.307619+00:00"
+      },
+      {
+        "count": 144,
+        "jobid": 4,
+        "status": "succeeded",
+        "latest_end": "2026-09-19T16:26:00.158197+00:00"
+      },
+      {
+        "count": 228,
+        "jobid": 6,
+        "status": "succeeded",
+        "latest_end": "2026-09-19T16:32:00.137296+00:00"
+      },
+      {
+        "count": 288,
+        "jobid": 8,
+        "status": "succeeded",
+        "latest_end": "2026-09-19T16:31:00.317521+00:00"
+      },
+      {
+        "count": 24,
+        "jobid": 12,
+        "status": "succeeded",
+        "latest_end": "2026-09-19T16:00:00.260669+00:00"
+      },
+      {
+        "count": 1,
+        "jobid": 13,
+        "status": "succeeded",
+        "latest_end": "2026-09-19T03:00:00.447264+00:00"
+      },
+      {
+        "count": 288,
+        "jobid": 17,
+        "status": "succeeded",
+        "latest_end": "2026-09-19T16:29:00.076668+00:00"
+      },
+      {
+        "count": 24,
+        "jobid": 18,
+        "status": "succeeded",
+        "latest_end": "2026-09-19T16:17:00.222123+00:00"
+      },
+      {
+        "count": 288,
+        "jobid": 19,
+        "status": "succeeded",
+        "latest_end": "2026-09-19T16:28:00.130976+00:00"
+      },
+      {
+        "count": 48,
+        "jobid": 20,
+        "status": "succeeded",
+        "latest_end": "2026-09-19T16:07:09.335861+00:00"
+      },
+      {
+        "count": 720,
+        "jobid": 21,
+        "status": "succeeded",
+        "latest_end": "2026-09-19T16:32:00.130621+00:00"
+      },
+      {
+        "count": 48,
+        "jobid": 22,
+        "status": "succeeded",
+        "latest_end": "2026-09-19T16:30:00.302384+00:00"
+      },
+      {
+        "count": 24,
+        "jobid": 23,
+        "status": "succeeded",
+        "latest_end": "2026-09-19T16:07:25.265833+00:00"
+      },
+      {
+        "count": 96,
+        "jobid": 24,
+        "status": "succeeded",
+        "latest_end": "2026-09-19T16:30:00.320321+00:00"
+      }
+    ],
+    "allRolesPostgres": true,
+    "sqlFailuresLast24h": 0,
+    "limitations": "Job succeeded means SQL execution/enqueue succeeded, not proof that the downstream HTTP receiver completed successfully.",
+    "unchangedByRelease": true
+  },
+  "advisors": {
+    "security": {
+      "type": "security",
+      "categories": 6,
+      "totalFindings": 104,
+      "findings": [
+        {
+          "name": "rls_enabled_no_policy",
+          "level": "INFO",
+          "count": 10,
+          "remediationUrl": "https://supabase.com/docs/guides/database/database-linter?lint=0008_rls_enabled_no_policy"
+        },
+        {
+          "name": "function_search_path_mutable",
+          "level": "WARN",
+          "count": 13,
+          "remediationUrl": "https://supabase.com/docs/guides/database/database-linter?lint=0011_function_search_path_mutable"
+        },
+        {
+          "name": "extension_in_public",
+          "level": "WARN",
+          "count": 1,
+          "remediationUrl": "https://supabase.com/docs/guides/database/database-linter?lint=0014_extension_in_public"
+        },
+        {
+          "name": "anon_security_definer_function_executable",
+          "level": "WARN",
+          "count": 33,
+          "remediationUrl": "https://supabase.com/docs/guides/database/database-linter?lint=0028_anon_security_definer_function_executable"
+        },
+        {
+          "name": "authenticated_security_definer_function_executable",
+          "level": "WARN",
+          "count": 46,
+          "remediationUrl": "https://supabase.com/docs/guides/database/database-linter?lint=0029_authenticated_security_definer_function_executable"
+        },
+        {
+          "name": "auth_leaked_password_protection",
+          "level": "WARN",
+          "count": 1,
+          "remediationUrl": "https://supabase.com/docs/guides/auth/password-security#password-strength-and-leaked-password-protection"
+        }
+      ],
+      "scope": "Current production before release; not all findings are in the authorized remediation scope."
+    },
+    "performance": {
+      "type": "performance",
+      "categories": 7,
+      "totalFindings": 427,
+      "findings": [
+        {
+          "name": "unindexed_foreign_keys",
+          "level": "INFO",
+          "count": 27,
+          "remediationUrl": "https://supabase.com/docs/guides/database/database-linter?lint=0001_unindexed_foreign_keys"
+        },
+        {
+          "name": "auth_rls_initplan",
+          "level": "WARN",
+          "count": 2,
+          "remediationUrl": "https://supabase.com/docs/guides/database/database-linter?lint=0003_auth_rls_initplan"
+        },
+        {
+          "name": "unused_index",
+          "level": "INFO",
+          "count": 90,
+          "remediationUrl": "https://supabase.com/docs/guides/database/database-linter?lint=0005_unused_index"
+        },
+        {
+          "name": "multiple_permissive_policies",
+          "level": "WARN",
+          "count": 305,
+          "remediationUrl": "https://supabase.com/docs/guides/database/database-linter?lint=0006_multiple_permissive_policies"
+        },
+        {
+          "name": "duplicate_index",
+          "level": "WARN",
+          "count": 1,
+          "remediationUrl": "https://supabase.com/docs/guides/database/database-linter?lint=0009_duplicate_index"
+        },
+        {
+          "name": "table_bloat",
+          "level": "INFO",
+          "count": 1,
+          "remediationUrl": null
+        },
+        {
+          "name": "auth_db_connections_absolute",
+          "level": "INFO",
+          "count": 1,
+          "remediationUrl": "https://supabase.com/docs/guides/deployment/going-into-prod"
+        }
+      ],
+      "scope": "Current production before release; not all findings are in the authorized remediation scope."
+    },
+    "changedDuringAudit": false
+  },
+  "liveSnapshot": {
+    "idleTransactions": 0,
+    "lockWaiters": 0,
+    "notALockDurationGuarantee": true
+  },
+  "differences": {
+    "localCommitsAhead": 10,
+    "remoteGitEqualsVercel": true,
+    "securityMigrationsApplied": false,
+    "inboxOptimizationApplied": false,
+    "phase1b5": "deferred, not implemented",
+    "edgeChangesPending": [
+      "sync-phones",
+      "reset-phone-counters",
+      "reset-phone-messages"
+    ]
+  },
+  "remoteOperations": {
+    "gitFetch": true,
+    "httpMethods": [
+      "GET"
+    ],
+    "sql": "BEGIN READ ONLY; statement_timeout=1500ms; lock_timeout=250ms; ROLLBACK",
+    "productionEndpointInvocations": 0,
+    "remoteWrites": 0,
+    "secretValuesPersisted": false
+  }
+}

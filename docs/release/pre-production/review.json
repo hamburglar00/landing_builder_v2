@@ -1,0 +1,436 @@
+{
+  "record": "Pre-checkpoint documentary audit; the local Git commit seals these nine documents.",
+  "completedAt": "2026-09-19T17:01:55.913Z",
+  "auditComplete": true,
+  "productionDeploymentReady": false,
+  "generalRisk": "high",
+  "applicationCandidate": "6287c9ae0b22737f5e7df6fd95d85cf3c3bc6e12",
+  "branch": "main",
+  "deployedCommit": "a4e752cf58f628813d3979d598b60d480caaac8d",
+  "localApplicationCommitsAhead": 10,
+  "documentaryCheckpointAddsCommits": 1,
+  "releaseFiles": 324,
+  "runtimeCodeAndIncrementalMigrationFiles": 29,
+  "remoteMigrationCount": 268,
+  "pendingMigrationCount": 6,
+  "pendingMigrations": [
+    {
+      "number": 269,
+      "file": "supabase/migrations/20260917183837_protect_profile_administrative_fields.sql",
+      "sha256": "119b70e25ffea319e4f4decbdf37c4b5681be1427f09e3ada93f07b6c7c9da87"
+    },
+    {
+      "number": 270,
+      "file": "supabase/migrations/20260918010532_protect_settings_revalidation_secret.sql",
+      "sha256": "865034edefb66e41155b724fc80ded7bf3894a7e04e8eeeee9b2121bf107cbff"
+    },
+    {
+      "number": 271,
+      "file": "supabase/migrations/20260918140931_protect_phone_administration.sql",
+      "sha256": "22e1c94a48888748d2e005d581f64145d88aa2e08e636ed69bb3f1fbc57f217c"
+    },
+    {
+      "number": 272,
+      "file": "supabase/migrations/20260918152656_restrict_internal_database_privileges.sql",
+      "sha256": "0278468e552ea4053848f5b8f50a2f91234b6b6f29f7cb365e44081489c410d9"
+    },
+    {
+      "number": 273,
+      "file": "supabase/migrations/20260918161631_remove_remaining_client_truncate_privileges.sql",
+      "sha256": "185dd457b0e709ab9db0c11fe05263be8be66926f7b54e80b2b79cd4922135e0"
+    },
+    {
+      "number": 274,
+      "file": "supabase/migrations/20260918194918_optimize_whatsapp_cloud_api_inbox_loading.sql",
+      "sha256": "75e6461e6a12d68f05b4620eb90a069dbeadcb29e3ff31cd5334fa1c9f38d087"
+    }
+  ],
+  "finalRemoteRecheck": {
+    "checkedAt": "2026-09-19T17:00:05.417Z",
+    "alias": "mkt.panelbotadmin.com",
+    "deploymentId": "dpl_BWmUkha6NhVzCFwMZmfckC1fQXYq",
+    "remoteMain": "a4e752cf58f628813d3979d598b60d480caaac8d",
+    "remoteWrites": 0,
+    "migrationCount": 268,
+    "lastVersion": "20260915190657",
+    "sameAsAuditBaseline": true
+  },
+  "blockers": [
+    {
+      "id": "B1",
+      "scope": "configuration",
+      "detail": "REVALIDATION_ENV is missing from Vercel Production. Configure production and build a new immutable deployment; values of existing credentials were not inspected."
+    },
+    {
+      "id": "B2",
+      "scope": "functional rollout decision",
+      "detail": "An approved coordinated panel maintenance window and old-tab reload are required. These exact artifacts have no zero-interruption sequence for revalidation and phone administration."
+    },
+    {
+      "id": "B3",
+      "scope": "deployment and recovery artifacts",
+      "detail": "Build and verify the candidate and compatible fallback under deployed Node 24.x. Existing local evidence is Node 22.12.0; no new build was performed. No compatible fallback deployment ID exists yet."
+    },
+    {
+      "id": "B4",
+      "scope": "classic receiver coordination",
+      "detail": "Accredit its deployed version, response/no-redirect contract and key agreement without revealing the value. Coordinate future rotation after old access is closed, or explicitly accept the residual risk while it is scheduled."
+    },
+    {
+      "id": "B5",
+      "scope": "final operational preflight",
+      "detail": "Confirm the remote Data API exposed schema list, excluding private/inbox_private; verify fresh ledger/ACL/hash and lock budgets; prepare controlled tenants and Meta test channel."
+    }
+  ],
+  "acceptedDeferredRisk": {
+    "phase": "1B.5",
+    "implementationStarted": false,
+    "status": "voluntarily_deferred_not_remediated",
+    "risk": "conversions continues to accept external requests without its own cryptographic authentication; no HMAC implementation is claimed.",
+    "blockerByItself": false
+  },
+  "evidenceReuse": {
+    "method": "Read and hash existing reports, validate their completion/resolved-failure state and source inventories; no functional suites were rerun.",
+    "pinnedReportHashesChecked": 12,
+    "globalUniqueTotalNotClaimed": true,
+    "summaries": [
+      {
+        "phase": "0",
+        "reconstructions": 2,
+        "migrations": 268,
+        "uniqueChecks": 446
+      },
+      {
+        "phase": "1B.1",
+        "reconstructions": 2,
+        "migrations": 269,
+        "uniqueChecks": 536,
+        "legacyProvenance": "Use the admitted v1 reports and evidence-validation.json. No invented execution-time harness stamp; abandoned attempts do not count as success."
+      },
+      {
+        "phase": "1B.2",
+        "migrations": 270,
+        "databaseChecks": 119,
+        "revalidationTests": 17,
+        "historicalSafety": 34,
+        "historicalLandingContracts": 16,
+        "typescript": 0,
+        "build": 0,
+        "eslintErrors": 0,
+        "preexistingEslintWarnings": 18
+      },
+      {
+        "phase": "1B.3",
+        "migrations": 271,
+        "databaseHandlerConcurrencyChecks": 185,
+        "frontendAndHandlerTests": 13,
+        "historicalSafety": 34,
+        "historicalLandingContracts": 16,
+        "originalFailure": "Original Data API upsert expectation remains in database-validation.json; pending-validation.json resolves it with persisted-row and identity assertions.",
+        "unresolvedFailures": 0
+      },
+      {
+        "phase": "1B.4",
+        "migrations": 272,
+        "checks": 82,
+        "pgTapIncludedAssertions": 8
+      },
+      {
+        "phase": "1B.4 continuation",
+        "migrations": 273,
+        "checks": 93,
+        "pgTapIncludedAssertions": 169,
+        "truncateTablesComplete": 42
+      },
+      {
+        "phase": "Inbox",
+        "migrations": 274,
+        "sqlAndDataApiChecks": 36,
+        "pgTapIncludedAssertions": 10,
+        "chromiumChecks": 12,
+        "frontendTests": 11,
+        "typescript": 0,
+        "build": 0,
+        "eslintErrors": 0,
+        "preexistingEslintWarnings": 18,
+        "clientAssetFiles": 125,
+        "privateSyntheticCanaryInClientAssets": false
+      }
+    ],
+    "limits": [
+      "Evidence is local/synthetic. It does not prove deployment or production smoke success.",
+      "Historical inventories describe their checkpoint, not the current Git index. Mixed Windows working-tree endings are distinguished from LF Git blobs.",
+      "Phase 1B.2 Admin Tests was superseded by the authorized phone changes in 1B.3; the later evidence is current.",
+      "The 1B.4 README and incremental manifest were legitimately extended later; prior snapshots are not silently overwritten.",
+      "The original six public Edge contracts match current deployed version/bundle metadata from Phase 0. Changed administrative handlers were compared separately.",
+      "No validation count sums repeated suites across phases as globally unique."
+    ],
+    "reports": [
+      {
+        "phase": "Phase 0",
+        "file": "docs/optimization/phase-0/final-summary.json",
+        "sha256": "4132dfb8e9d17cef8da774aacf36a2e3c27231a8b220d817343cf0b6f7f7842d",
+        "matchesTargetGitBlobAfterLfNormalization": true
+      },
+      {
+        "phase": "Phase 0",
+        "file": "docs/optimization/phase-0/artifact-audit.json",
+        "sha256": "ec1b675bdba976dfe6338411ad874b1245e397f36627cb87ada83de094211004",
+        "matchesTargetGitBlobAfterLfNormalization": true
+      },
+      {
+        "phase": "Phase 1A",
+        "file": "docs/security/phase-1a/review.json",
+        "sha256": "11999ebab2b67d449a958f9e1f101159df0fb64267880a8bcf6b062764c1ccdf",
+        "matchesTargetGitBlobAfterLfNormalization": true
+      },
+      {
+        "phase": "Phase 1B.1",
+        "file": "docs/security/phase-1b1/review.json",
+        "sha256": "8eccdad0a9ceaf0b9f9e4c413992c3e5f164443441014894c43b40671c9cb017",
+        "matchesTargetGitBlobAfterLfNormalization": true
+      },
+      {
+        "phase": "Phase 1B.1",
+        "file": "docs/security/phase-1b1/evidence-validation.json",
+        "sha256": "87083fb771eb4a4041007b2e39a3ecf5bb464d36439fbfabcd8493ff9795d870",
+        "matchesTargetGitBlobAfterLfNormalization": true
+      },
+      {
+        "phase": "Phase 1B.1",
+        "file": "docs/security/phase-1b1/reconstruction-diagnostic.json",
+        "sha256": "bb03aae86f7ea824958e42f72428e2f4b578fe448248b98854581809f46526a6",
+        "matchesTargetGitBlobAfterLfNormalization": true
+      },
+      {
+        "phase": "Phase 1B.1",
+        "file": "docs/security/phase-1b1/regression-validation.json",
+        "sha256": "9b4ea726a539cd7c825ac2fb92bd8ab68d0d04120967d96a94da14debeec2894",
+        "matchesTargetGitBlobAfterLfNormalization": true
+      },
+      {
+        "phase": "Phase 1B.2",
+        "file": "docs/security/phase-1b2/implementation-review.json",
+        "sha256": "56fb0e76f73d69df9eaf83b79eee5bbe55d44e9578b6f37b3aaa7e27a011277e",
+        "matchesTargetGitBlobAfterLfNormalization": true
+      },
+      {
+        "phase": "Phase 1B.2",
+        "file": "docs/security/phase-1b2/implementation-database-validation.json",
+        "sha256": "5aaa6cfe156dab3a22a48db8fcb2bd713c8b12887db0606f44c468271ee2357d",
+        "matchesTargetGitBlobAfterLfNormalization": true
+      },
+      {
+        "phase": "Phase 1B.2",
+        "file": "docs/security/phase-1b2/implementation-validation.json",
+        "sha256": "d92ccec094a88048787b6e4c4844bdf112266acbb84a4220c6f1916d3345af4f",
+        "matchesTargetGitBlobAfterLfNormalization": true
+      },
+      {
+        "phase": "Phase 1B.3",
+        "file": "docs/security/phase-1b3/implementation-review.json",
+        "sha256": "0a6d3bf7cbae165c560db945f2e55bf3408b55cfbe36fdd7249d36d1d16c2e51",
+        "matchesTargetGitBlobAfterLfNormalization": true
+      },
+      {
+        "phase": "Phase 1B.3",
+        "file": "docs/security/phase-1b3/database-validation.json",
+        "sha256": "920ad21da4726b0cde828a2af73e801c8164b2f35527497663b16b557e66b406",
+        "matchesTargetGitBlobAfterLfNormalization": true
+      },
+      {
+        "phase": "Phase 1B.3",
+        "file": "docs/security/phase-1b3/pending-validation.json",
+        "sha256": "1ea9a0b7c5b269e852718d9b8d1d1cd562cbe383cbe559d105643b00371ad8f8",
+        "matchesTargetGitBlobAfterLfNormalization": true
+      },
+      {
+        "phase": "Phase 1B.3",
+        "file": "docs/security/phase-1b3/validation.json",
+        "sha256": "0d1a5d3b041847a434392d3069bdc01f1d05c95ce91b2f8b9c06b24314ed1a5c",
+        "matchesTargetGitBlobAfterLfNormalization": true
+      },
+      {
+        "phase": "Phase 1B.4",
+        "file": "docs/security/phase-1b4/review.json",
+        "sha256": "13161ced04ab5ac65345f53e97247e02dfa8229825cd4ab96ef9e718a9a5872c",
+        "matchesTargetGitBlobAfterLfNormalization": true
+      },
+      {
+        "phase": "Phase 1B.4",
+        "file": "docs/security/phase-1b4/validation.json",
+        "sha256": "d70cfe6501886703ee714fdcce7758d868cd3d87178fce0ff3ca2d7ab3e26977",
+        "matchesTargetGitBlobAfterLfNormalization": true
+      },
+      {
+        "phase": "Phase 1B.4",
+        "file": "docs/security/phase-1b4/truncate-review.json",
+        "sha256": "cdcf82d0e9015c1348c69cccdee3f6ba814d4a7b4fecbf76853cb29500fa8141",
+        "matchesTargetGitBlobAfterLfNormalization": true
+      },
+      {
+        "phase": "Phase 1B.4",
+        "file": "docs/security/phase-1b4/truncate-validation.json",
+        "sha256": "3951b72a1f960a0f558c428b2c73323aa964ad1f61788b9aa6914477e66db258",
+        "matchesTargetGitBlobAfterLfNormalization": true
+      },
+      {
+        "phase": "Phase 1B.5",
+        "file": "docs/security/phase-1b5/README.md",
+        "sha256": "4c4b0a7c4525088e7b54dd9f5b8537ed9e129962c11ce70301832585ca111862",
+        "matchesTargetGitBlobAfterLfNormalization": true
+      },
+      {
+        "phase": "Inbox",
+        "file": "docs/optimization/inbox/inventory.json",
+        "sha256": "1604b9b74fcff60f98972edf7ebd96926ba9f4a07b629d5414eba2f86aa6e5e5",
+        "matchesTargetGitBlobAfterLfNormalization": true
+      },
+      {
+        "phase": "Inbox",
+        "file": "docs/optimization/inbox/tests.json",
+        "sha256": "5cf7ba12768d8a3613e432d8b1ba3ac5f59149fe42f4d480359b78faa21469fc",
+        "matchesTargetGitBlobAfterLfNormalization": true
+      },
+      {
+        "phase": "Inbox",
+        "file": "docs/optimization/inbox/browser.json",
+        "sha256": "b4d14b276c2c5661efd6ff0dae847434f7c252a48b507b3493c5f4a5a0362a8e",
+        "matchesTargetGitBlobAfterLfNormalization": true
+      },
+      {
+        "phase": "Inbox",
+        "file": "docs/optimization/inbox/frontend-validation.json",
+        "sha256": "959678f7432906c50fa8c565eb96e8bfcc27b31096172c26786067ae162661cc",
+        "matchesTargetGitBlobAfterLfNormalization": true
+      },
+      {
+        "phase": "Inbox",
+        "file": "docs/optimization/inbox/measurements.json",
+        "sha256": "35094373a699508a4dcfec0d68e66bddc14a361969d09b8728189c289a93c928",
+        "matchesTargetGitBlobAfterLfNormalization": true
+      }
+    ]
+  },
+  "integrity": {
+    "inventoryMatchesGitBaselineDelta": true,
+    "currentFilesHashed": 323,
+    "deletedFile": ".env",
+    "deletedEnvBlobRead": false,
+    "gitObjectIdsVerified": 323,
+    "worktreeContentMatchesCandidateAfterLfNormalization": true,
+    "historicalAndIncrementalMigrationsVerified": 274,
+    "migrationSeal": "c43af74d602e4d17774bf18e2bf0a69ccebd4867770a873bb10e72030b1757ba",
+    "migrationHashMethod": "SHA256 of ordered file:rawSHA256 lines joined with LF, without final newline",
+    "manifestValidation": "validateManifest() verified the approved frozen legacy manifest, all 274 file hashes and incremental ordering; no database runner was executed.",
+    "documentValidation": {
+      "complete": true,
+      "scope": "Only the nine new release documents",
+      "checkedAt": "2026-09-19T17:01:55.913Z",
+      "documentFiles": 9,
+      "jsonFiles": 4,
+      "internalMarkdownReferences": 23,
+      "evidenceReferences": 24,
+      "documentHashesChecked": 8,
+      "selfHashExcluded": true,
+      "findings": [],
+      "gitDiffCheckPassed": true,
+      "untrackedFileWhitespaceChecksPassed": true
+    },
+    "personalDataPolicy": "Only deployment/schema/configuration metadata, aggregate statistics and hashes; no messages, contact rows, secret values or machine-specific user paths.",
+    "scanCategories": [
+      "private keys",
+      "JWTs",
+      "provider-secret token shapes",
+      "credential-bearing URLs",
+      "personal email addresses",
+      "machine-specific personal paths"
+    ],
+    "productiveChangesInThisAudit": 0
+  },
+  "environmentFile": {
+    "present": true,
+    "ignored": true,
+    "tracked": false,
+    "staged": false,
+    "bytes": 307,
+    "modifiedAt": "2026-03-10T19:16:01.528Z",
+    "contentsRead": false
+  },
+  "boundaries": {
+    "remoteWrites": 0,
+    "pushes": 0,
+    "deployments": 0,
+    "environmentChanges": 0,
+    "secretRotations": 0,
+    "productionBusinessEndpointCalls": 0,
+    "applicationEdits": 0,
+    "migrationEdits": 0,
+    "siblingRepositoriesModified": 0,
+    "siblingRepositoriesInspected": false,
+    "realEnvFilesRead": false,
+    "secretValuesPersisted": false,
+    "reconstructionsRun": 0,
+    "functionalSuitesRun": 0,
+    "typescriptRuns": 0,
+    "buildRuns": 0,
+    "eslintRuns": 0,
+    "DockerMutations": 0,
+    "gitRemoteOperations": [
+      "fetch origin main",
+      "ls-remote origin refs/heads/main"
+    ],
+    "providerOperations": "GET metadata and bounded READ ONLY SQL transactions ending in ROLLBACK; schema listing queries expose no business rows."
+  },
+  "checkpoint": {
+    "authorized": true,
+    "message": "docs(release): prepare production rollout",
+    "documentCount": 9,
+    "onlyDocumentsInThisDirectory": true,
+    "conditions": "Final inventory/hashes/references/secret audit, git diff --check, exact staging, cached diff check and encoding hook must pass.",
+    "selfHashPolicy": "review.json SHA256 is null to avoid self-reference; its exact bytes are sealed by the resulting Git commit. All other eight files have raw SHA256 hashes."
+  },
+  "inventory": {
+    "count": 9,
+    "added": 9,
+    "modified": 0,
+    "files": [
+      {
+        "file": "docs/release/pre-production/deployed-baseline.json",
+        "sha256": "3d00f17311a5a37958d1ad38f04732078e8de60950f2ef5642417362b99e653c"
+      },
+      {
+        "file": "docs/release/pre-production/environment-check.json",
+        "sha256": "1321bfb5ff6df6040d511ec059956b9376eaa3ced781cd6cd9f2913c23ab46c6"
+      },
+      {
+        "file": "docs/release/pre-production/migration-plan.md",
+        "sha256": "a3340c10a4949ca10f853054f2850fd61c56123b7a813f8c835ad04e20b18ae6"
+      },
+      {
+        "file": "docs/release/pre-production/README.md",
+        "sha256": "563ce46a6e1c3ee77cb9cd9dd47550be23fe7082fc3c1b027a3597be864d69a6"
+      },
+      {
+        "file": "docs/release/pre-production/release-inventory.json",
+        "sha256": "1d78e6dab8c7a3b1b08f2f114165be02140aab0b7c98ee8690b63195c865a97b"
+      },
+      {
+        "file": "docs/release/pre-production/review.json",
+        "sha256": null
+      },
+      {
+        "file": "docs/release/pre-production/rollback.md",
+        "sha256": "a824463b729f7f0279438ce6e52a694e05e231c2a7d88198a16827a53338c45a"
+      },
+      {
+        "file": "docs/release/pre-production/rollout.md",
+        "sha256": "39ecfd25c6c8c01c4616dc01859cd6b3813b704fef2401b4d90ed365b8cbbb6e"
+      },
+      {
+        "file": "docs/release/pre-production/smoke-tests.md",
+        "sha256": "19f8e4684bccc62389807990a6d7232e1a260bee5824c45344e1345c30529f9e"
+      }
+    ]
+  }
+}

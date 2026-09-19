@@ -1,0 +1,215 @@
+{
+  "observedAt": "2026-09-19T16:41:16Z",
+  "method": "Vercel CLI env ls production/preview --format json and Supabase CLI secrets list --output json; selected names/targets/types only. No decrypted values, env pull or .env reads.",
+  "vercel": {
+    "project": "landing-builder-v2-k259",
+    "productionNames": [
+      "SUPABASE_SERVICE_ROLE_KEY",
+      "NEXT_PUBLIC_META_IP_COLLECTOR_URL",
+      "META_IP_PROOF_SECRET",
+      "OPENAI_API_KEY",
+      "OPENAI_STATS_MODEL",
+      "KOMMO_INTERMEDIARY_ADMIN_SECRET",
+      "KOMMO_INTERMEDIARY_BASE_URL",
+      "NEXT_PUBLIC_SUPABASE_URL",
+      "NEXT_PUBLIC_SUPABASE_ANON_KEY"
+    ],
+    "previewNames": [
+      "OPENAI_API_KEY",
+      "OPENAI_STATS_MODEL",
+      "KOMMO_INTERMEDIARY_ADMIN_SECRET",
+      "KOMMO_INTERMEDIARY_BASE_URL",
+      "NEXT_PUBLIC_SUPABASE_URL",
+      "NEXT_PUBLIC_SUPABASE_ANON_KEY"
+    ],
+    "readValues": false
+  },
+  "supabase": {
+    "project": "fdkjkzpjqfbaavylapun",
+    "edgeSecretNames": [
+      "BOOTSTRAP_SECRET",
+      "META_APP_SECRET",
+      "SERVICE_ROLE_KEY",
+      "SUPABASE_ANON_KEY",
+      "SUPABASE_DB_URL",
+      "SUPABASE_JWKS",
+      "SUPABASE_PUBLISHABLE_KEYS",
+      "SUPABASE_SECRET_KEYS",
+      "SUPABASE_SERVICE_ROLE_KEY",
+      "SUPABASE_URL",
+      "TELEGRAM_WEBHOOK_SECRET"
+    ],
+    "readValues": false
+  },
+  "requirements": [
+    {
+      "name": "REVALIDATION_ENV",
+      "change": "new",
+      "requiredIn": "Vercel Production",
+      "expectedNonSecretSetting": "production",
+      "productionPresent": false,
+      "previewPresent": false,
+      "status": "MISSING_BLOCKER",
+      "consumer": "frontend/lib/revalidation/catalog.server.ts",
+      "effectIfMissing": "Both revalidation routes fail closed; constructor returns 503.",
+      "activation": "New Vercel production deployment after configuration; do not enable Preview."
+    },
+    {
+      "name": "SUPABASE_SERVICE_ROLE_KEY",
+      "change": "existing name newly required by revalidation",
+      "requiredIn": "Vercel Production server only",
+      "productionPresent": true,
+      "previewPresent": false,
+      "status": "PRESENT_NAME_ONLY",
+      "consumer": "frontend/lib/revalidation/supabase.server.ts",
+      "activation": "Included in the new server deployment; no NEXT_PUBLIC alias."
+    },
+    {
+      "name": "NEXT_PUBLIC_SUPABASE_URL",
+      "change": "existing",
+      "requiredIn": "Vercel Production and frontend",
+      "productionPresent": true,
+      "previewPresent": true,
+      "status": "PRESENT_NAME_ONLY",
+      "consumer": "frontend/lib/supabaseClient.ts and revalidation backend fallback",
+      "activation": "Build-time public configuration; must identify the same approved Supabase project, value not inspected."
+    },
+    {
+      "name": "NEXT_PUBLIC_SUPABASE_ANON_KEY",
+      "change": "existing",
+      "requiredIn": "Vercel Production and frontend",
+      "productionPresent": true,
+      "previewPresent": true,
+      "status": "PRESENT_NAME_ONLY",
+      "consumer": "session verification and normal browser Data API",
+      "activation": "Build-time public key; not an administrative credential."
+    },
+    {
+      "name": "SUPABASE_URL",
+      "change": "optional server override",
+      "requiredIn": "Vercel only if overriding NEXT_PUBLIC_SUPABASE_URL",
+      "productionPresent": false,
+      "previewPresent": false,
+      "status": "OPTIONAL_ABSENT_WITH_DOCUMENTED_FALLBACK",
+      "consumer": "frontend/lib/revalidation/supabase.server.ts",
+      "activation": "Server deployment; not a missing requirement because the public URL name exists."
+    },
+    {
+      "name": "NODE_ENV",
+      "change": "platform supplied",
+      "requiredIn": "Vercel Production",
+      "expectedNonSecretSetting": "production",
+      "status": "SYSTEM_VARIABLE_NOT_USER_ENV_LIST",
+      "consumer": "revalidation catalog",
+      "activation": "Build/runtime supplied by Next/Vercel; not manually changed."
+    },
+    {
+      "name": "VERCEL_ENV",
+      "change": "platform supplied",
+      "requiredIn": "Vercel Production",
+      "expectedNonSecretSetting": "production",
+      "status": "SYSTEM_VARIABLE_NOT_USER_ENV_LIST",
+      "consumer": "revalidation catalog",
+      "activation": "Production deployment; preview/development explicitly rejected."
+    },
+    {
+      "name": "VERCEL",
+      "change": "platform supplied",
+      "requiredIn": "Vercel",
+      "status": "SYSTEM_VARIABLE_NOT_USER_ENV_LIST",
+      "consumer": "revalidation catalog",
+      "activation": "Do not fake or override for Preview."
+    },
+    {
+      "name": "REVALIDATION_LOCAL_SYNTHETIC",
+      "change": "new local-only",
+      "requiredIn": "isolated local revalidation tests only",
+      "expectedNonSecretSetting": "1 with REVALIDATION_ENV=local and non-production NODE_ENV",
+      "productionPresent": false,
+      "previewPresent": false,
+      "status": "CORRECTLY_NOT_CONFIGURED_REMOTELY",
+      "consumer": "revalidation catalog",
+      "activation": "Local development process; synthetic backend on 54321, classic 3000, constructor 3001."
+    },
+    {
+      "name": "SERVICE_ROLE_KEY",
+      "change": "unchanged",
+      "requiredIn": "three phone Edge Functions",
+      "edgePresent": true,
+      "status": "PRESENT_NAME_ONLY",
+      "consumer": "supabase/functions/{sync-phones,reset-phone-counters,reset-phone-messages}/index.ts",
+      "activation": "Already present; no variable change required by this release."
+    },
+    {
+      "name": "SUPABASE_URL",
+      "change": "unchanged",
+      "requiredIn": "Supabase Edge Functions",
+      "edgePresent": true,
+      "status": "PRESENT_NAME_ONLY",
+      "activation": "Already present."
+    },
+    {
+      "name": "CRON_SECRET",
+      "change": "optional unchanged",
+      "requiredIn": "sync-phones if using env instead of database fallback",
+      "edgePresent": false,
+      "status": "OPTIONAL_ABSENT_WITH_DATABASE_FALLBACK",
+      "fallbackKey": "cron_config.sync_phones_cron_secret",
+      "fallbackKeyExists": true,
+      "secretValueInspected": false,
+      "activation": "No change planned; cron branch remains byte-for-byte unchanged."
+    },
+    {
+      "name": "ASESADMIN_BASE_URL",
+      "change": "optional unchanged",
+      "requiredIn": "sync-phones optional provider override",
+      "edgePresent": false,
+      "status": "OPTIONAL_ABSENT_WITH_CODE_DEFAULT",
+      "consumer": "sync-phones/index.ts",
+      "activation": "No change planned."
+    },
+    {
+      "name": "REVALIDATE_SECRET",
+      "change": "unchanged external classic receiver setting",
+      "requiredIn": "classic receiver only",
+      "status": "OUTSIDE_BUILDER_VARIABLE_INVENTORY_NOT_REOPENED",
+      "builderNeedsThisEnv": false,
+      "coordination": "The classic operator must confirm receiver version and key agreement without disclosing the value. Rotate separately after closing old browser access."
+    }
+  ],
+  "destinations": {
+    "source": "server-only catalog; not configurable by browser or settings.url_base",
+    "production": {
+      "classic": "https://landing.panelbotadmin.com/api/revalidate",
+      "constructor": "https://mkt.panelbotadmin.com/api/revalidate"
+    },
+    "local": {
+      "classic": "http://localhost:3000/api/revalidate",
+      "constructor": "http://localhost:3001/api/revalidate"
+    },
+    "stagingSupported": false,
+    "previewSupported": false,
+    "redirectsAllowed": false
+  },
+  "localDocumentation": {
+    "exampleFile": ".env.example",
+    "exampleNames": [
+      "NEXT_PUBLIC_SUPABASE_URL",
+      "NEXT_PUBLIC_SUPABASE_ANON_KEY"
+    ],
+    "serverSettingsDocumentedIn": "frontend/README.md",
+    "privateValueSource": "settings.revalidate_secret, read only by the authorized server; no migration to environment variables",
+    "realEnvFilesRead": false
+  },
+  "missingRequiredProduction": [
+    "REVALIDATION_ENV"
+  ],
+  "missingRequiredEdge": [],
+  "limits": [
+    "Presence by name does not validate key value, project binding, validity or secret agreement.",
+    "No private NEXT_PUBLIC variable names appear in the listed project scopes; deployed values and existing unrelated integrations were not audited by decrypting secrets.",
+    "Changing a Vercel variable does not alter an immutable existing deployment; build/deploy the new artifact. Any optional future Edge secret change requires its normal deployment verification.",
+    "Preview remains unsupported for revalidation and lacks a service-role variable intentionally; do not use it as a substitute for the Production acceptance test."
+  ],
+  "remoteWrites": 0
+}
