@@ -1,0 +1,147 @@
+{
+  "record": "Deployed classic receiver accredited by GitHub and Vercel GET metadata",
+  "observedAt": "2026-09-19",
+  "domain": "landing.panelbotadmin.com",
+  "project": {
+    "name": "public-landing-bl",
+    "id": "prj_3U8gxeIt5zwVa7YPfPhiwtuUw6U2",
+    "team": "team_L0CiOSkayyIRPflOx9CkgWY1",
+    "rootDirectory": null,
+    "rootMeaning": "repository root"
+  },
+  "deployment": {
+    "id": "dpl_Arq65aY6wKMJiFhdHW4z992My6J1",
+    "repository": "hamburglar00/public_landing_bl",
+    "branch": "main",
+    "commit": "3322b634a06504ae469a4faee0383148707bc9b5",
+    "node": "24.x",
+    "createdAt": 1788896885059,
+    "readyAt": 1788896969965
+  },
+  "source": {
+    "file": "app/api/revalidate/route.ts",
+    "gitBlob": "fb70a6a867c59328388820db129677171829e7aa",
+    "sha256": "95ababcf9de45258cc70ea30665e3026c7539759ff693dd39971c7cea409b0d7",
+    "packageSha256": "4d47cec51bec180e0ee5de67ceca0a8089867e96928f3499f46b93dd0e92ad58"
+  },
+  "contract": {
+    "method": "POST",
+    "url": "https://landing.panelbotadmin.com/api/revalidate",
+    "contentType": "application/json",
+    "body": {
+      "name": "landing slug",
+      "secret": "server credential; value omitted"
+    },
+    "serverVariable": "REVALIDATE_SECRET",
+    "variablePresentInProduction": true,
+    "authorization": "Strict equality with server variable; missing value also denies. No session/JWT is required by the classic server-to-server contract.",
+    "responses": {
+      "200": [
+        "revalidated",
+        "path",
+        "warmedConfig",
+        "warmedPage",
+        "warmedPageRetry"
+      ],
+      "204": "OPTIONS",
+      "400": "Missing name after successful secret check",
+      "401": "Invalid secret",
+      "500": "Revalidate failed (upstream includes details; builder sanitizes)"
+    },
+    "cache": [
+      "revalidatePath(/name)",
+      "revalidateTag(landing-config:name)"
+    ],
+    "warmup": "Same-origin GET /api/config?name=... and /name?warm=1, each bounded to 5 seconds; one page retry after 250 ms. These calls were mocked locally, never invoked in production.",
+    "cors": "ALLOWED_ORIGINS by name; missing Origin on server requests is accepted.",
+    "redirects": {
+      "aliasRedirect": null,
+      "middlewarePresent": false,
+      "configuredRelevantRedirects": 0,
+      "codeRedirects": false,
+      "builderFetch": "redirect: error; does not follow redirects"
+    }
+  },
+  "compatibility": {
+    "newBuilderTransport": true,
+    "codeChangeRequired": false,
+    "configurationAgreementRequired": true,
+    "route": "frontend/app/api/landings/revalidate/route.ts",
+    "clientReceives": "Sanitized result and configured boolean only, no upstream path/details/secret.",
+    "localValidation": {
+      "complete": true,
+      "node": "v24.21.0",
+      "sourceSha256": "95ababcf9de45258cc70ea30665e3026c7539759ff693dd39971c7cea409b0d7",
+      "checks": [
+        {
+          "name": "exact deployed classic source accepts new local transport contract",
+          "passed": true
+        },
+        {
+          "name": "classic warm-page retry remains compatible",
+          "passed": true
+        },
+        {
+          "name": "wrong synthetic credential rejected with generic transport error",
+          "passed": true
+        },
+        {
+          "name": "missing name rejected without cache invalidation",
+          "passed": true
+        },
+        {
+          "name": "new panel route projects deployed classic response without secret",
+          "passed": true
+        },
+        {
+          "name": "configuration status exposes a boolean only",
+          "passed": true
+        },
+        {
+          "name": "classic OPTIONS and malformed JSON preserve documented status",
+          "passed": true
+        }
+      ],
+      "localHttpRequests": 4,
+      "realSecretsUsed": false,
+      "productionRequests": 0,
+      "platformMocks": [
+        "Next cache invalidation and warm-up GET results",
+        "verified actor/landing for joint panel projection test"
+      ],
+      "actualCode": [
+        "deployed classic POST/OPTIONS",
+        "candidate transport and panel service"
+      ]
+    }
+  },
+  "rotation": {
+    "owners": [
+      "Authorized Vercel operator of public-landing-bl",
+      "Authorized database operator of settings",
+      "Panel release coordinator"
+    ],
+    "namedPersonNotInMetadata": true,
+    "requiredSequence": [
+      "Close historical browser access with 270 and new panel; keep publication paused",
+      "Check intended settings-row/classic credential binding without emitting values",
+      "In a separately authorized rotation, generate a new credential in a secure server procedure, update the corresponding settings rows and classic server variable",
+      "Redeploy classic so its immutable deployment receives the new value",
+      "Controlled server-to-server publication smoke; reopen publication only when both engines pass"
+    ],
+    "valuesCompared": false,
+    "valuesRotated": false,
+    "limitation": "Classic has one global environment credential while builder reads a settings row. Do not rotate unrelated per-row secrets or assume they are all equal. Existing key agreement is an operational acceptance check requiring an authorized controlled revalidation; it cannot be proved from variable names.",
+    "rollback": "Do not restore the potentially exposed previous credential. Keep publication paused and complete a forward correction."
+  },
+  "evidenceLimits": [
+    "Source obtained for the effective deployed Git commit; no sibling working tree inspected or modified.",
+    "No business endpoint or real secret tested. Empty recent revalidation log results do not prove key agreement.",
+    "Next cache and warm-up transports were mocks around the exact deployed route bytes."
+  ],
+  "sources": [
+    "https://github.com/hamburglar00/public_landing_bl/blob/3322b634a06504ae469a4faee0383148707bc9b5/app/api/revalidate/route.ts",
+    "https://vercel.com/docs/environment-variables",
+    "https://vercel.com/docs/rest-api"
+  ]
+}

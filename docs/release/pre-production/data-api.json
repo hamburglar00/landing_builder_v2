@@ -1,0 +1,684 @@
+{
+  "record": "Actual remote exposure and local post-274 privileges",
+  "observedAt": "2026-09-19",
+  "project": "fdkjkzpjqfbaavylapun",
+  "configuration": {
+    "source": "GET /v1/projects/{project-ref}/postgrest; only selected non-secret fields retained",
+    "exposedSchemas": [
+      "public",
+      "graphql_public"
+    ],
+    "maxRows": 1000,
+    "extraSearchPath": [
+      "public",
+      "extensions"
+    ],
+    "poolAcquisitionTimeoutSeconds": 10,
+    "privateExposed": false,
+    "inboxPrivateExposed": false,
+    "searchPathIsNotExposure": true,
+    "configurationChangeRequired": false
+  },
+  "before": {
+    "migrations": 268,
+    "schemas": [
+      {
+        "owner": "supabase_admin",
+        "schema": "graphql_public",
+        "anonUsage": true,
+        "serviceUsage": true,
+        "authenticatedUsage": true
+      },
+      {
+        "owner": "postgres",
+        "schema": "private",
+        "anonUsage": false,
+        "serviceUsage": false,
+        "authenticatedUsage": true
+      },
+      {
+        "owner": "pg_database_owner",
+        "schema": "public",
+        "anonUsage": true,
+        "serviceUsage": true,
+        "authenticatedUsage": true
+      }
+    ],
+    "roleMemberships": [
+      {
+        "set": true,
+        "role": "anon",
+        "member": "authenticator",
+        "inherit": false
+      },
+      {
+        "set": true,
+        "role": "authenticated",
+        "member": "authenticator",
+        "inherit": false
+      },
+      {
+        "set": true,
+        "role": "service_role",
+        "member": "authenticator",
+        "inherit": false
+      }
+    ],
+    "relations": [
+      {
+        "rls": true,
+        "kind": "r",
+        "name": "ai_assistant_usage_monthly",
+        "owner": "postgres",
+        "aclHash": "46875263bd6598c4534e2df7d1847a5e"
+      },
+      {
+        "rls": true,
+        "kind": "r",
+        "name": "ar_name_inferred_sex",
+        "owner": "postgres",
+        "aclHash": "46875263bd6598c4534e2df7d1847a5e"
+      },
+      {
+        "rls": true,
+        "kind": "r",
+        "name": "ar_phone_area_codes",
+        "owner": "postgres",
+        "aclHash": "46875263bd6598c4534e2df7d1847a5e"
+      },
+      {
+        "rls": true,
+        "kind": "r",
+        "name": "atrio_assignment_scope_metrics",
+        "owner": "postgres",
+        "aclHash": "0382c9d760805ac4a3cfd8d6ca8a6951"
+      },
+      {
+        "rls": true,
+        "kind": "r",
+        "name": "atrio_clients",
+        "owner": "postgres",
+        "aclHash": "46875263bd6598c4534e2df7d1847a5e"
+      },
+      {
+        "rls": true,
+        "kind": "r",
+        "name": "auth_signup_approvals",
+        "owner": "postgres",
+        "aclHash": "e4425b6978962d6aa486d041d6e0fa5c"
+      },
+      {
+        "rls": true,
+        "kind": "r",
+        "name": "chatrace_client_configs",
+        "owner": "postgres",
+        "aclHash": "46875263bd6598c4534e2df7d1847a5e"
+      },
+      {
+        "rls": true,
+        "kind": "r",
+        "name": "chatrace_gerencias",
+        "owner": "postgres",
+        "aclHash": "46875263bd6598c4534e2df7d1847a5e"
+      },
+      {
+        "rls": true,
+        "kind": "r",
+        "name": "client_subscriptions",
+        "owner": "postgres",
+        "aclHash": "46875263bd6598c4534e2df7d1847a5e"
+      },
+      {
+        "rls": true,
+        "kind": "r",
+        "name": "conversion_inbox",
+        "owner": "postgres",
+        "aclHash": "46875263bd6598c4534e2df7d1847a5e"
+      },
+      {
+        "rls": true,
+        "kind": "r",
+        "name": "conversion_journey_starts",
+        "owner": "postgres",
+        "aclHash": "0382c9d760805ac4a3cfd8d6ca8a6951"
+      },
+      {
+        "rls": true,
+        "kind": "r",
+        "name": "conversion_log_lead_backfill_replays",
+        "owner": "postgres",
+        "aclHash": "46875263bd6598c4534e2df7d1847a5e"
+      },
+      {
+        "rls": true,
+        "kind": "r",
+        "name": "conversion_logs",
+        "owner": "postgres",
+        "aclHash": "46875263bd6598c4534e2df7d1847a5e"
+      },
+      {
+        "rls": true,
+        "kind": "r",
+        "name": "conversion_view_preferences",
+        "owner": "postgres",
+        "aclHash": "46875263bd6598c4534e2df7d1847a5e"
+      },
+      {
+        "rls": true,
+        "kind": "r",
+        "name": "conversions",
+        "owner": "postgres",
+        "aclHash": "46875263bd6598c4534e2df7d1847a5e"
+      },
+      {
+        "rls": true,
+        "kind": "r",
+        "name": "conversions_config",
+        "owner": "postgres",
+        "aclHash": "46875263bd6598c4534e2df7d1847a5e"
+      },
+      {
+        "rls": true,
+        "kind": "r",
+        "name": "conversions_pixel_configs",
+        "owner": "postgres",
+        "aclHash": "46875263bd6598c4534e2df7d1847a5e"
+      },
+      {
+        "rls": true,
+        "kind": "r",
+        "name": "cron_config",
+        "owner": "postgres",
+        "aclHash": "46875263bd6598c4534e2df7d1847a5e"
+      },
+      {
+        "rls": false,
+        "kind": "v",
+        "name": "funnel_contacts",
+        "owner": "postgres",
+        "aclHash": "46875263bd6598c4534e2df7d1847a5e"
+      },
+      {
+        "rls": true,
+        "kind": "r",
+        "name": "gerencia_phone_availability_snapshots",
+        "owner": "postgres",
+        "aclHash": "46875263bd6598c4534e2df7d1847a5e"
+      },
+      {
+        "rls": true,
+        "kind": "r",
+        "name": "gerencia_phones",
+        "owner": "postgres",
+        "aclHash": "46875263bd6598c4534e2df7d1847a5e"
+      },
+      {
+        "rls": true,
+        "kind": "r",
+        "name": "gerencia_work_group_members",
+        "owner": "postgres",
+        "aclHash": "46875263bd6598c4534e2df7d1847a5e"
+      },
+      {
+        "rls": true,
+        "kind": "r",
+        "name": "gerencia_work_groups",
+        "owner": "postgres",
+        "aclHash": "46875263bd6598c4534e2df7d1847a5e"
+      },
+      {
+        "rls": true,
+        "kind": "r",
+        "name": "gerencias",
+        "owner": "postgres",
+        "aclHash": "46875263bd6598c4534e2df7d1847a5e"
+      },
+      {
+        "rls": true,
+        "kind": "r",
+        "name": "hidden_contacts",
+        "owner": "postgres",
+        "aclHash": "46875263bd6598c4534e2df7d1847a5e"
+      },
+      {
+        "rls": true,
+        "kind": "r",
+        "name": "hidden_conversion_inbox",
+        "owner": "postgres",
+        "aclHash": "46875263bd6598c4534e2df7d1847a5e"
+      },
+      {
+        "rls": true,
+        "kind": "r",
+        "name": "hidden_conversion_logs",
+        "owner": "postgres",
+        "aclHash": "46875263bd6598c4534e2df7d1847a5e"
+      },
+      {
+        "rls": true,
+        "kind": "r",
+        "name": "hidden_conversions",
+        "owner": "postgres",
+        "aclHash": "46875263bd6598c4534e2df7d1847a5e"
+      },
+      {
+        "rls": true,
+        "kind": "r",
+        "name": "home_overview_stats_cache",
+        "owner": "postgres",
+        "aclHash": "46875263bd6598c4534e2df7d1847a5e"
+      },
+      {
+        "rls": true,
+        "kind": "r",
+        "name": "kommo_client_configs",
+        "owner": "postgres",
+        "aclHash": "46875263bd6598c4534e2df7d1847a5e"
+      },
+      {
+        "rls": true,
+        "kind": "r",
+        "name": "landing_phone_assignment_reservations",
+        "owner": "postgres",
+        "aclHash": "e4425b6978962d6aa486d041d6e0fa5c"
+      },
+      {
+        "rls": true,
+        "kind": "r",
+        "name": "landing_phone_availability_demands",
+        "owner": "postgres",
+        "aclHash": "46875263bd6598c4534e2df7d1847a5e"
+      },
+      {
+        "rls": true,
+        "kind": "r",
+        "name": "landing_phone_cache",
+        "owner": "postgres",
+        "aclHash": "46875263bd6598c4534e2df7d1847a5e"
+      },
+      {
+        "rls": true,
+        "kind": "r",
+        "name": "landings",
+        "owner": "postgres",
+        "aclHash": "46875263bd6598c4534e2df7d1847a5e"
+      },
+      {
+        "rls": true,
+        "kind": "r",
+        "name": "landings_atrio_clients",
+        "owner": "postgres",
+        "aclHash": "c1e488b30589fa3c45d7d80fe02ddcad"
+      },
+      {
+        "rls": true,
+        "kind": "r",
+        "name": "landings_gerencias",
+        "owner": "postgres",
+        "aclHash": "46875263bd6598c4534e2df7d1847a5e"
+      },
+      {
+        "rls": true,
+        "kind": "r",
+        "name": "meta_audience_configs",
+        "owner": "postgres",
+        "aclHash": "c1e488b30589fa3c45d7d80fe02ddcad"
+      },
+      {
+        "rls": true,
+        "kind": "r",
+        "name": "notification_bot_config",
+        "owner": "postgres",
+        "aclHash": "46875263bd6598c4534e2df7d1847a5e"
+      },
+      {
+        "rls": true,
+        "kind": "r",
+        "name": "notification_contact_alerts",
+        "owner": "postgres",
+        "aclHash": "46875263bd6598c4534e2df7d1847a5e"
+      },
+      {
+        "rls": true,
+        "kind": "r",
+        "name": "notification_settings",
+        "owner": "postgres",
+        "aclHash": "46875263bd6598c4534e2df7d1847a5e"
+      },
+      {
+        "rls": true,
+        "kind": "r",
+        "name": "notification_telegram_destinations",
+        "owner": "postgres",
+        "aclHash": "46875263bd6598c4534e2df7d1847a5e"
+      },
+      {
+        "rls": true,
+        "kind": "r",
+        "name": "phone_assignment_scope_metrics",
+        "owner": "postgres",
+        "aclHash": "0382c9d760805ac4a3cfd8d6ca8a6951"
+      },
+      {
+        "rls": true,
+        "kind": "r",
+        "name": "phone_metrics",
+        "owner": "postgres",
+        "aclHash": "0382c9d760805ac4a3cfd8d6ca8a6951"
+      },
+      {
+        "rls": true,
+        "kind": "r",
+        "name": "profiles",
+        "owner": "postgres",
+        "aclHash": "46875263bd6598c4534e2df7d1847a5e"
+      },
+      {
+        "rls": true,
+        "kind": "r",
+        "name": "promotion_participants",
+        "owner": "postgres",
+        "aclHash": "46875263bd6598c4534e2df7d1847a5e"
+      },
+      {
+        "rls": true,
+        "kind": "r",
+        "name": "promotions",
+        "owner": "postgres",
+        "aclHash": "46875263bd6598c4534e2df7d1847a5e"
+      },
+      {
+        "rls": true,
+        "kind": "r",
+        "name": "purchase_event_claim_keys",
+        "owner": "postgres",
+        "aclHash": "e4425b6978962d6aa486d041d6e0fa5c"
+      },
+      {
+        "rls": true,
+        "kind": "r",
+        "name": "purchase_event_claims",
+        "owner": "postgres",
+        "aclHash": "e4425b6978962d6aa486d041d6e0fa5c"
+      },
+      {
+        "rls": true,
+        "kind": "r",
+        "name": "settings",
+        "owner": "postgres",
+        "aclHash": "46875263bd6598c4534e2df7d1847a5e"
+      },
+      {
+        "rls": true,
+        "kind": "r",
+        "name": "tracking_queue",
+        "owner": "postgres",
+        "aclHash": "46875263bd6598c4534e2df7d1847a5e"
+      },
+      {
+        "rls": true,
+        "kind": "r",
+        "name": "whatsapp_cloud_api_assignments",
+        "owner": "postgres",
+        "aclHash": "0382c9d760805ac4a3cfd8d6ca8a6951"
+      },
+      {
+        "rls": true,
+        "kind": "r",
+        "name": "whatsapp_cloud_api_attribution_sessions",
+        "owner": "postgres",
+        "aclHash": "0382c9d760805ac4a3cfd8d6ca8a6951"
+      },
+      {
+        "rls": true,
+        "kind": "r",
+        "name": "whatsapp_cloud_api_configs",
+        "owner": "postgres",
+        "aclHash": "e4425b6978962d6aa486d041d6e0fa5c"
+      },
+      {
+        "rls": true,
+        "kind": "r",
+        "name": "whatsapp_cloud_api_contacts",
+        "owner": "postgres",
+        "aclHash": "0382c9d760805ac4a3cfd8d6ca8a6951"
+      },
+      {
+        "rls": true,
+        "kind": "r",
+        "name": "whatsapp_cloud_api_gerencias",
+        "owner": "postgres",
+        "aclHash": "46875263bd6598c4534e2df7d1847a5e"
+      },
+      {
+        "rls": true,
+        "kind": "r",
+        "name": "whatsapp_cloud_api_outbound_messages",
+        "owner": "postgres",
+        "aclHash": "0382c9d760805ac4a3cfd8d6ca8a6951"
+      },
+      {
+        "rls": true,
+        "kind": "r",
+        "name": "whatsapp_cloud_api_redirects",
+        "owner": "postgres",
+        "aclHash": "46875263bd6598c4534e2df7d1847a5e"
+      },
+      {
+        "rls": true,
+        "kind": "r",
+        "name": "whatsapp_cloud_api_retarget_messages",
+        "owner": "postgres",
+        "aclHash": "0382c9d760805ac4a3cfd8d6ca8a6951"
+      },
+      {
+        "rls": true,
+        "kind": "r",
+        "name": "whatsapp_cloud_api_thread_reads",
+        "owner": "postgres",
+        "aclHash": "46875263bd6598c4534e2df7d1847a5e"
+      },
+      {
+        "rls": true,
+        "kind": "r",
+        "name": "whatsapp_cloud_api_webhook_events",
+        "owner": "postgres",
+        "aclHash": "0382c9d760805ac4a3cfd8d6ca8a6951"
+      },
+      {
+        "rls": true,
+        "kind": "r",
+        "name": "whatsapp_cloud_api_webhook_request_logs",
+        "owner": "postgres",
+        "aclHash": "0382c9d760805ac4a3cfd8d6ca8a6951"
+      }
+    ],
+    "publicTableCount": 60,
+    "publicViewCount": 1,
+    "publicTablesWithoutRls": 0,
+    "functionsInExposedSchemas": 85,
+    "newInboxRpcsPresent": 0,
+    "rpcAcl": [
+      {
+        "anon": true,
+        "args": "",
+        "schema": "public",
+        "function": "cron_reset_phone_operational_daily",
+        "service_role": true,
+        "authenticated": true,
+        "securityDefiner": true
+      },
+      {
+        "anon": true,
+        "args": "",
+        "schema": "public",
+        "function": "cron_sync_phones_all",
+        "service_role": true,
+        "authenticated": true,
+        "securityDefiner": true
+      },
+      {
+        "anon": true,
+        "args": "p_user_id uuid, p_hidden_by uuid",
+        "schema": "public",
+        "function": "get_home_overview_stats",
+        "service_role": true,
+        "authenticated": true,
+        "securityDefiner": true
+      },
+      {
+        "anon": false,
+        "args": "p_limit integer, p_offset integer, p_workspace_currency text",
+        "schema": "public",
+        "function": "get_whatsapp_cloud_api_inbox_threads_page",
+        "service_role": true,
+        "authenticated": true,
+        "securityDefiner": true
+      },
+      {
+        "anon": false,
+        "args": "p_limit integer, p_offset integer, p_workspace_currency text, p_tag_filter text, p_unread_only boolean",
+        "schema": "public",
+        "function": "get_whatsapp_cloud_api_inbox_threads_page",
+        "service_role": true,
+        "authenticated": true,
+        "securityDefiner": true
+      },
+      {
+        "anon": false,
+        "args": "p_limit integer, p_offset integer, p_workspace_currency text, p_tag_filter text, p_unread_only boolean, p_from timestamp with time zone, p_to timestamp with time zone",
+        "schema": "public",
+        "function": "get_whatsapp_cloud_api_inbox_threads_page",
+        "service_role": true,
+        "authenticated": true,
+        "securityDefiner": true
+      },
+      {
+        "anon": true,
+        "args": "\"operationName\" text, query text, variables jsonb, extensions jsonb",
+        "schema": "graphql_public",
+        "function": "graphql",
+        "service_role": true,
+        "authenticated": true,
+        "securityDefiner": false
+      },
+      {
+        "anon": true,
+        "args": "p_secret text",
+        "schema": "public",
+        "function": "verify_revalidate_secret",
+        "service_role": true,
+        "authenticated": true,
+        "securityDefiner": true
+      }
+    ]
+  },
+  "inventoryComparison": {
+    "reference": "docs/security/phase-1a/evidence.json",
+    "publicRelationsCompared": 61,
+    "objects": {
+      "added": [],
+      "removed": []
+    },
+    "functionCountBefore": 84,
+    "functionCountNow": 85,
+    "functions": {
+      "publicSignaturesAdded": [],
+      "publicSignaturesRemoved": [],
+      "additionalSchemaSignature": "graphql_public.graphql",
+      "classification": "Already documented separately in Phase 1A functions.md; intentionally excluded from that public/private function census."
+    },
+    "limit": "61 public relations and 84 public function signatures match the Phase 1A census. graphql_public.graphql is the separately documented platform stub. No unexplained additional object was found in the checked exposed schemas. Existing Phase 1A risks are not declared remediated."
+  },
+  "after274Local": {
+    "rpcs": [
+      {
+        "anon": false,
+        "name": "get_whatsapp_cloud_api_inbox_messages",
+        "schema": "public",
+        "service": true,
+        "searchPath": [
+          "search_path=public, pg_temp"
+        ],
+        "authenticated": true,
+        "securityDefiner": false
+      },
+      {
+        "anon": false,
+        "name": "thread_summaries",
+        "schema": "inbox_private",
+        "service": false,
+        "searchPath": [
+          "search_path=public, pg_temp"
+        ],
+        "authenticated": true,
+        "securityDefiner": true
+      },
+      {
+        "anon": false,
+        "name": "get_whatsapp_cloud_api_inbox_summaries",
+        "schema": "public",
+        "service": true,
+        "searchPath": [
+          "search_path=public, pg_temp"
+        ],
+        "authenticated": true,
+        "securityDefiner": false
+      },
+      {
+        "anon": false,
+        "name": "thread_messages",
+        "schema": "inbox_private",
+        "service": false,
+        "searchPath": [
+          "search_path=public, pg_temp"
+        ],
+        "authenticated": true,
+        "securityDefiner": true
+      }
+    ],
+    "schemas": [
+      {
+        "schema": "inbox_private",
+        "anonUsage": false,
+        "serviceUsage": false,
+        "authenticatedUsage": true
+      },
+      {
+        "schema": "private",
+        "anonUsage": false,
+        "serviceUsage": false,
+        "authenticatedUsage": true
+      }
+    ]
+  },
+  "grantInterpretation": [
+    "Public wrappers are SECURITY INVOKER; authenticated can execute with its verified session. The two private helpers are SECURITY DEFINER with a fixed search_path and explicit auth/tenant checks.",
+    "authenticated has USAGE/EXECUTE needed inside SQL, not HTTP exposure of inbox_private. anon has neither.",
+    "service_role retains default EXECUTE on public wrappers but has neither USAGE nor EXECUTE on inbox_private helpers; this does not establish an end-to-end service-role Inbox RPC contract.",
+    "270 grants explicit safe settings columns to authenticated and backend read columns to service_role; select=* and explicit secret access fail closed for clients.",
+    "269 protects profile administrative columns; 271 applies phone ownership and revokes two public cron RPCs; 272/273 restrict internal EXECUTE/TRUNCATE without compensation.",
+    "graphql_public remains a configured schema. Existing GraphQL availability is not a new private helper endpoint; Postgres role/column grants still apply.",
+    "graphql_public is configured but pg_graphql is not installed. Its existing invoker stub returns only an extension-not-enabled error; no GraphQL data service was enabled or tested."
+  ],
+  "compatibility": {
+    "beforeRollout": "Old Inbox overloads exist; new wrappers do not. Do not promote candidate before 274.",
+    "afterRollout": "New and retained historical Inbox consumers pass local SQL/Data API checks. The old settings/browser revalidation flow is intentionally incompatible after 270."
+  },
+  "measurementBoundary": "Remote metadata only: READ ONLY, statement_timeout 1500 ms, lock_timeout 250 ms, ROLLBACK. No rows, secrets or production Data API mutation tests.",
+  "sources": [
+    "https://supabase.com/docs/guides/api/using-custom-schemas",
+    "https://supabase.com/docs/guides/api/securing-your-api",
+    "https://supabase.com/changelog",
+    "https://supabase.com/docs/guides/database/postgres/row-level-security"
+  ],
+  "graphql": {
+    "extensionInstalled": false,
+    "stubSecurityDefiner": false,
+    "definitionSha256": "62b09c65abb4755df514ce62bd736c05446d2644943b584ae2513334f44dbd08",
+    "behavior": "Returns a fixed error that pg_graphql is not enabled; no data query or write in its current body.",
+    "reference": "docs/security/phase-1a/functions.md",
+    "inspected": true,
+    "executed": false
+  }
+}

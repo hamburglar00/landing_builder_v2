@@ -1,93 +1,163 @@
 {
-  "record": "Pre-checkpoint documentary audit; the local Git commit seals these nine documents.",
-  "completedAt": "2026-09-19T17:01:55.913Z",
+  "record": "Resolved local rollout prerequisites; production execution requires separate authorization",
+  "completedAt": "2026-09-19T22:50:28.381Z",
   "auditComplete": true,
+  "localPreparationComplete": true,
+  "readyToRequestDeploymentAuthorization": true,
   "productionDeploymentReady": false,
-  "generalRisk": "high",
-  "applicationCandidate": "6287c9ae0b22737f5e7df6fd95d85cf3c3bc6e12",
+  "productionDeploymentAuthorized": false,
+  "generalRisk": "medium, conditional on coordinated administrative pause, bounded migration execution, Production artifacts and controlled acceptance; not a closure of unrelated security findings",
+  "applicationCandidate": "835fdc08a5940e72ae54db3b53c947a0786dc4db",
+  "unchangedApplicationSince": "6287c9ae0b22737f5e7df6fd95d85cf3c3bc6e12",
   "branch": "main",
   "deployedCommit": "a4e752cf58f628813d3979d598b60d480caaac8d",
-  "localApplicationCommitsAhead": 10,
-  "documentaryCheckpointAddsCommits": 1,
-  "releaseFiles": 324,
+  "commitsAheadBeforeCheckpoint": 11,
+  "checkpointAddsOneDocumentaryCommit": true,
+  "releaseFilesAtCandidate": 333,
+  "previousApplicationInventory": {
+    "file": "docs/release/pre-production/release-inventory.json",
+    "target": "6287c9ae0b22737f5e7df6fd95d85cf3c3bc6e12",
+    "fileCount": 324,
+    "unchanged": true,
+    "sha256": "1d78e6dab8c7a3b1b08f2f114165be02140aab0b7c98ee8690b63195c865a97b",
+    "candidateAddsNineDocuments": true
+  },
   "runtimeCodeAndIncrementalMigrationFiles": 29,
   "remoteMigrationCount": 268,
-  "pendingMigrationCount": 6,
+  "localMigrationCount": 274,
   "pendingMigrations": [
     {
       "number": 269,
-      "file": "supabase/migrations/20260917183837_protect_profile_administrative_fields.sql",
+      "file": "20260917183837_protect_profile_administrative_fields.sql",
       "sha256": "119b70e25ffea319e4f4decbdf37c4b5681be1427f09e3ada93f07b6c7c9da87"
     },
     {
       "number": 270,
-      "file": "supabase/migrations/20260918010532_protect_settings_revalidation_secret.sql",
+      "file": "20260918010532_protect_settings_revalidation_secret.sql",
       "sha256": "865034edefb66e41155b724fc80ded7bf3894a7e04e8eeeee9b2121bf107cbff"
     },
     {
       "number": 271,
-      "file": "supabase/migrations/20260918140931_protect_phone_administration.sql",
+      "file": "20260918140931_protect_phone_administration.sql",
       "sha256": "22e1c94a48888748d2e005d581f64145d88aa2e08e636ed69bb3f1fbc57f217c"
     },
     {
       "number": 272,
-      "file": "supabase/migrations/20260918152656_restrict_internal_database_privileges.sql",
+      "file": "20260918152656_restrict_internal_database_privileges.sql",
       "sha256": "0278468e552ea4053848f5b8f50a2f91234b6b6f29f7cb365e44081489c410d9"
     },
     {
       "number": 273,
-      "file": "supabase/migrations/20260918161631_remove_remaining_client_truncate_privileges.sql",
+      "file": "20260918161631_remove_remaining_client_truncate_privileges.sql",
       "sha256": "185dd457b0e709ab9db0c11fe05263be8be66926f7b54e80b2b79cd4922135e0"
     },
     {
       "number": 274,
-      "file": "supabase/migrations/20260918194918_optimize_whatsapp_cloud_api_inbox_loading.sql",
+      "file": "20260918194918_optimize_whatsapp_cloud_api_inbox_loading.sql",
       "sha256": "75e6461e6a12d68f05b4620eb90a069dbeadcb29e3ff31cd5334fa1c9f38d087"
     }
   ],
   "finalRemoteRecheck": {
-    "checkedAt": "2026-09-19T17:00:05.417Z",
-    "alias": "mkt.panelbotadmin.com",
-    "deploymentId": "dpl_BWmUkha6NhVzCFwMZmfckC1fQXYq",
-    "remoteMain": "a4e752cf58f628813d3979d598b60d480caaac8d",
-    "remoteWrites": 0,
-    "migrationCount": 268,
-    "lastVersion": "20260915190657",
-    "sameAsAuditBaseline": true
+    "observedAt": "2026-09-19T18:37:26.210Z",
+    "aliases": [
+      {
+        "domain": "mkt.panelbotadmin.com",
+        "id": "dpl_BWmUkha6NhVzCFwMZmfckC1fQXYq",
+        "gitSha": "a4e752cf58f628813d3979d598b60d480caaac8d",
+        "readyState": "READY"
+      },
+      {
+        "domain": "landing.panelbotadmin.com",
+        "id": "dpl_Arq65aY6wKMJiFhdHW4z992My6J1",
+        "gitSha": "3322b634a06504ae469a4faee0383148707bc9b5",
+        "readyState": "READY"
+      }
+    ],
+    "project": {
+      "name": "landing-builder-v2-k259",
+      "rootDirectory": "frontend",
+      "nodeVersion": "24.x"
+    },
+    "revalidationEnvPresent": false
   },
-  "blockers": [
+  "prerequisites": [
     {
       "id": "B1",
-      "scope": "configuration",
-      "detail": "REVALIDATION_ENV is missing from Vercel Production. Configure production and build a new immutable deployment; values of existing credentials were not inspected."
+      "preparation": "resolved",
+      "productionAction": "Configure REVALIDATION_ENV=production in landing-builder-v2-k259 Production and build a new deployment. Still absent; no env values read."
     },
     {
       "id": "B2",
-      "scope": "functional rollout decision",
-      "detail": "An approved coordinated panel maintenance window and old-tab reload are required. These exact artifacts have no zero-interruption sequence for revalidation and phone administration."
+      "preparation": "resolved",
+      "productionAction": "Authorize coordinated panel pause and reload; assign operators. No technical maintenance switch is claimed."
     },
     {
       "id": "B3",
-      "scope": "deployment and recovery artifacts",
-      "detail": "Build and verify the candidate and compatible fallback under deployed Node 24.x. Existing local evidence is Node 22.12.0; no new build was performed. No compatible fallback deployment ID exists yet."
+      "preparation": "resolved",
+      "evidence": [
+        "candidate.json",
+        "rollback-artifact.json"
+      ],
+      "productionAction": "Create READY candidate and compatible fallback Production deployments without domains. Old baseline is not a safe rollback after 270."
     },
     {
       "id": "B4",
-      "scope": "classic receiver coordination",
-      "detail": "Accredit its deployed version, response/no-redirect contract and key agreement without revealing the value. Coordinate future rotation after old access is closed, or explicitly accept the residual risk while it is scheduled."
+      "preparation": "resolved",
+      "evidence": [
+        "classic-receiver.json"
+      ],
+      "productionAction": "Perform authorized controlled credential-agreement/publication smoke. Schedule separate coordinated rotation or explicitly accept residual exposure until it occurs."
     },
     {
       "id": "B5",
-      "scope": "final operational preflight",
-      "detail": "Confirm the remote Data API exposed schema list, excluding private/inbox_private; verify fresh ledger/ACL/hash and lock budgets; prepare controlled tenants and Meta test channel."
+      "preparation": "resolved",
+      "evidence": [
+        "data-api.json",
+        "edge-functions.json",
+        "rollout-rehearsal.json"
+      ],
+      "productionAction": "Recheck live ledger/locks/configuration, apply six migrations and three handlers, promote, accept and observe."
     }
   ],
+  "unresolvedLocalResearchBlockers": [],
   "acceptedDeferredRisk": {
     "phase": "1B.5",
     "implementationStarted": false,
     "status": "voluntarily_deferred_not_remediated",
     "risk": "conversions continues to accept external requests without its own cryptographic authentication; no HMAC implementation is claimed.",
     "blockerByItself": false
+  },
+  "newEvidence": {
+    "candidateNode": "24.21.0",
+    "npm": "11.19.0",
+    "candidateTests": {
+      "passed": 57,
+      "failed": 0,
+      "skipped": 0
+    },
+    "classicTests": 7,
+    "builds": {
+      "candidateProduction": true,
+      "baselineProduction": true,
+      "compatibleProduction": true,
+      "additionalCandidateWebpack": true
+    },
+    "typescriptArtifacts": 3,
+    "candidateBrowserAssets": 80,
+    "candidateBrowserBytes": 3942658,
+    "syntheticPrivateCanaryAbsent": true,
+    "localRolloutRecords": 228,
+    "globalUniqueTestCountClaimed": false,
+    "full274Provisionings": 2,
+    "resolvedHarnessFailure": "Old historical Inbox reference exceeded 8 seconds; reference-only 30-second cap with identical SQL/results, all 15 comparisons passed. Candidate remained within 8 seconds.",
+    "reports": [
+      "candidate.json",
+      "rollback-artifact.json",
+      "classic-receiver.json",
+      "data-api.json",
+      "edge-functions.json",
+      "rollout-rehearsal.json"
+    ]
   },
   "evidenceReuse": {
     "method": "Read and hash existing reports, validate their completion/resolved-failure state and source inventories; no functional suites were rerun.",
@@ -313,40 +383,26 @@
     ]
   },
   "integrity": {
-    "inventoryMatchesGitBaselineDelta": true,
-    "currentFilesHashed": 323,
-    "deletedFile": ".env",
-    "deletedEnvBlobRead": false,
-    "gitObjectIdsVerified": 323,
-    "worktreeContentMatchesCandidateAfterLfNormalization": true,
-    "historicalAndIncrementalMigrationsVerified": 274,
     "migrationSeal": "c43af74d602e4d17774bf18e2bf0a69ccebd4867770a873bb10e72030b1757ba",
     "migrationHashMethod": "SHA256 of ordered file:rawSHA256 lines joined with LF, without final newline",
-    "manifestValidation": "validateManifest() verified the approved frozen legacy manifest, all 274 file hashes and incremental ordering; no database runner was executed.",
-    "documentValidation": {
-      "complete": true,
-      "scope": "Only the nine new release documents",
-      "checkedAt": "2026-09-19T17:01:55.913Z",
-      "documentFiles": 9,
-      "jsonFiles": 4,
-      "internalMarkdownReferences": 23,
-      "evidenceReferences": 24,
-      "documentHashesChecked": 8,
-      "selfHashExcluded": true,
-      "findings": [],
-      "gitDiffCheckPassed": true,
-      "untrackedFileWhitespaceChecksPassed": true
-    },
-    "personalDataPolicy": "Only deployment/schema/configuration metadata, aggregate statistics and hashes; no messages, contact rows, secret values or machine-specific user paths.",
-    "scanCategories": [
+    "historicalAndIncrementalMigrationsVerified": 274,
+    "currentSourceMatchesCandidate": true,
+    "jsonValid": true,
+    "internalReferencesValid": true,
+    "documentAuditCategories": [
       "private keys",
       "JWTs",
-      "provider-secret token shapes",
+      "provider credential token shapes",
       "credential-bearing URLs",
-      "personal email addresses",
-      "machine-specific personal paths"
+      "personal email/phone patterns",
+      "machine-dependent personal paths, except the exact user-requested external temporary root in recovery records",
+      "UTF-8 and whitespace"
     ],
-    "productiveChangesInThisAudit": 0
+    "auditFindings": [],
+    "documentHashesVerified": true,
+    "selfHashExcluded": true,
+    "retainedInventoryVerified": true,
+    "validationScope": "All 20 documentary files, preserved recovery evidence, retained 324-file inventory and 274 migrations. External temporary files are excluded from Git and not required by revalidation; user-authorized retention satisfies closure."
   },
   "environmentFile": {
     "present": true,
@@ -366,71 +422,215 @@
     "productionBusinessEndpointCalls": 0,
     "applicationEdits": 0,
     "migrationEdits": 0,
-    "siblingRepositoriesModified": 0,
     "siblingRepositoriesInspected": false,
+    "siblingRepositoriesModified": 0,
     "realEnvFilesRead": false,
     "secretValuesPersisted": false,
-    "reconstructionsRun": 0,
-    "functionalSuitesRun": 0,
-    "typescriptRuns": 0,
-    "buildRuns": 0,
     "eslintRuns": 0,
-    "DockerMutations": 0,
-    "gitRemoteOperations": [
-      "fetch origin main",
-      "ls-remote origin refs/heads/main"
-    ],
-    "providerOperations": "GET metadata and bounded READ ONLY SQL transactions ending in ROLLBACK; schema listing queries expose no business rows."
+    "remoteReads": "Vercel/GitHub/Supabase GET metadata, git ls-remote and bounded READ ONLY SQL; existing credentials used in memory only.",
+    "localWrites": "Owned synthetic database/build/test resources, temporary harnesses, this documentary directory and its authorized Git checkpoint."
+  },
+  "cleanup": {
+    "ownedDatabaseAndApiContainersRemoved": true,
+    "ownedBuildContainersRemoved": true,
+    "ownedNetworksAndVolumesRemoved": true,
+    "ownedNewNodeImageRemoved": true,
+    "ownTempDirectoryRemovalRequiredBeforeCommit": false,
+    "heavyArtifactsInGit": 0,
+    "foreignContainer": "codex-p8-mysql",
+    "foreignContainerId": "3fc4115f1539",
+    "foreignContainerState": "exited; not started, stopped or modified",
+    "foreignVolumesCount": 8,
+    "foreignVolumesModified": false,
+    "defaultNetworkObservation": "Only bridge/host/none remain. The default bridge ID changed between inventory snapshots; it is a Docker-global resource, not a runner residue. No explicit operation targeting that network or foreign container was performed. Cause is not attributed without evidence.",
+    "ownTempDirectoryRemoved": false,
+    "temporaryCleanupRejected": true,
+    "recoveryCleanupRejected": true,
+    "remainingTemporaryFiles": 44,
+    "remainingTemporaryBytes": 46106759,
+    "dockerEngineAvailable": true,
+    "externalRetentionAuthorized": true,
+    "closureCriteriaSatisfied": true,
+    "temporaryFilesInsideRepository": 0,
+    "temporaryFilesStagedOrCommitted": 0,
+    "deletionAttemptsAfterAuthorization": 0,
+    "permissionChanges": 0,
+    "policyBypassAttempts": 0,
+    "exceptionEvidence": "docs/release/pre-production/recovery.json"
   },
   "checkpoint": {
     "authorized": true,
-    "message": "docs(release): prepare production rollout",
-    "documentCount": 9,
-    "onlyDocumentsInThisDirectory": true,
-    "conditions": "Final inventory/hashes/references/secret audit, git diff --check, exact staging, cached diff check and encoding hook must pass.",
-    "selfHashPolicy": "review.json SHA256 is null to avoid self-reference; its exact bytes are sealed by the resulting Git commit. All other eight files have raw SHA256 hashes."
+    "message": "docs(release): resolve rollout prerequisites",
+    "documentsOnly": true,
+    "conditions": "Stage exactly inventory.files, validate cached bytes, encoding and diff checks; external temporary retention is explicitly authorized and does not block commit.",
+    "recordingPolicy": "The containing Git commit supplies the actual commit ID and seals this report; audit-recovery.mjs verifies its message, parent, scope and clean status after creation."
   },
   "inventory": {
-    "count": 9,
-    "added": 9,
-    "modified": 0,
+    "count": 19,
+    "modified": 8,
+    "added": 11,
+    "completeDirectoryFiles": 20,
     "files": [
       {
+        "file": "docs/release/pre-production/README.md",
+        "sha256": "39f5334c477209945ef00a1686a6fe447793b82c88f1a02d31add65d4c1006ed"
+      },
+      {
+        "file": "docs/release/pre-production/audit-recovery.mjs",
+        "sha256": "3dc692a9948879503c7e9f36df6dd7868044ba19a90d1efb6c1f25c4f6edfb94"
+      },
+      {
+        "file": "docs/release/pre-production/candidate.json",
+        "sha256": "69830b913445e5cbd4043d4fb2d4b4d4002d54deeec7eb4a0245ce457d473fbe"
+      },
+      {
+        "file": "docs/release/pre-production/classic-receiver.json",
+        "sha256": "a37e8034025574126c86537f7e01a883819a3c27d5b487fadea82babdf4ac8f2"
+      },
+      {
+        "file": "docs/release/pre-production/data-api.json",
+        "sha256": "c50acd23742bb8715bd87e105d51849b866caae0e5103f6e90c4e831653905d4"
+      },
+      {
         "file": "docs/release/pre-production/deployed-baseline.json",
-        "sha256": "3d00f17311a5a37958d1ad38f04732078e8de60950f2ef5642417362b99e653c"
+        "sha256": "3fcf5c0d2b891334950f6e9a7503ffb5ae64782ff4d9d9ff1f57c7f311c25373"
+      },
+      {
+        "file": "docs/release/pre-production/edge-functions.json",
+        "sha256": "6aa5a5d000949f23a8e3ef920609314f5ab82600b36ff9d6c674a8edaa76819f"
       },
       {
         "file": "docs/release/pre-production/environment-check.json",
-        "sha256": "1321bfb5ff6df6040d511ec059956b9376eaa3ced781cd6cd9f2913c23ab46c6"
+        "sha256": "410b755f19cc0a8144d82a3680955a802a8b8e88f14f6c4947d046da3d9ad867"
       },
       {
         "file": "docs/release/pre-production/migration-plan.md",
-        "sha256": "a3340c10a4949ca10f853054f2850fd61c56123b7a813f8c835ad04e20b18ae6"
+        "sha256": "cac467be150b9cd2394f0404b268596a0c71115f8779a49419318e612297de94"
       },
       {
-        "file": "docs/release/pre-production/README.md",
-        "sha256": "563ce46a6e1c3ee77cb9cd9dd47550be23fe7082fc3c1b027a3597be864d69a6"
+        "file": "docs/release/pre-production/operational-runbook.md",
+        "sha256": "8faa3ab73585b0b6a0355ad6291ccc76ae14136753c878305806f02b54772755"
       },
       {
-        "file": "docs/release/pre-production/release-inventory.json",
-        "sha256": "1d78e6dab8c7a3b1b08f2f114165be02140aab0b7c98ee8690b63195c865a97b"
+        "file": "docs/release/pre-production/recovered-evidence.json",
+        "sha256": "f8af18507e48286c37f7cdbadf1cf0daf5d915fc146a87ab2f86a69129339e95"
+      },
+      {
+        "file": "docs/release/pre-production/recovery.json",
+        "sha256": "96c041cf617ced1a7d33a3d53677016aa1f4c07a8e3a77756b38f3a31137eb6b"
+      },
+      {
+        "file": "docs/release/pre-production/recovery.md",
+        "sha256": "94b813664eebd5f6a1bd059964bb147004556076aa02885562f53059ffbde34b"
       },
       {
         "file": "docs/release/pre-production/review.json",
         "sha256": null
       },
       {
+        "file": "docs/release/pre-production/rollback-artifact.json",
+        "sha256": "868e96e62e9e5ac22d814c06deed08555664c8106e1555505479a27341a1dd9c"
+      },
+      {
         "file": "docs/release/pre-production/rollback.md",
-        "sha256": "a824463b729f7f0279438ce6e52a694e05e231c2a7d88198a16827a53338c45a"
+        "sha256": "267ff214ed990aa81c5beb2d4478b0a47ccfc4b6dbadcb02fe970fc1e8b6d14c"
+      },
+      {
+        "file": "docs/release/pre-production/rollout-rehearsal.json",
+        "sha256": "2770c4312fc43b0fc6408027123a3f1ef0e8f2ad1e8ca4c0626960f2b2b3abec"
       },
       {
         "file": "docs/release/pre-production/rollout.md",
-        "sha256": "39ecfd25c6c8c01c4616dc01859cd6b3813b704fef2401b4d90ed365b8cbbb6e"
+        "sha256": "688ad0a137a36ed52c8db59fb01fedb90df0de9ae266b8352931ae2914265303"
       },
       {
         "file": "docs/release/pre-production/smoke-tests.md",
-        "sha256": "19f8e4684bccc62389807990a6d7232e1a260bee5824c45344e1345c30529f9e"
+        "sha256": "1a3f6e255e2b7d42fa77f1ecaf4348f60f4490a23c8edb0ee5ee6cc150690222"
       }
-    ]
+    ],
+    "selfHashPolicy": "review.json excludes its own hash; the containing Git commit seals its bytes. The unchanged release-inventory.json hash is recorded separately."
+  },
+  "technicalValidationComplete": true,
+  "recovery": {
+    "report": "docs/release/pre-production/recovery.json",
+    "summary": "docs/release/pre-production/recovery.md",
+    "preservedEvidence": "docs/release/pre-production/recovered-evidence.json",
+    "audit": "docs/release/pre-production/audit-recovery.mjs",
+    "completedAt": "2026-09-19T22:50:28.381Z",
+    "technicalEvidenceRecovered": true,
+    "buildsRepeated": 0,
+    "functionalSuitesRepeated": 0,
+    "preExceptionAuditResult": {
+      "observedAt": "2026-09-19T19:31:19.744Z",
+      "documentAuditPassed": true,
+      "documents": 20,
+      "jsonFiles": 12,
+      "markdownReferences": 47,
+      "repositoryReferences": 756,
+      "sha256Checks": 792,
+      "migrationsVerified": 274,
+      "retainedInventoryEntriesVerified": 324,
+      "originalReportsPreserved": 17,
+      "originalHarnessesPreserved": 13,
+      "findings": [],
+      "gitDiffCheckPassed": true,
+      "gitCachedDiffCheckPassed": true,
+      "encodingGuardPassed": true,
+      "productFilesChanged": 0,
+      "environmentFileIgnoredUntracked": true,
+      "environmentFileContentsRead": false,
+      "indexSha256Unchanged": true,
+      "indexChanges": 0,
+      "conflicts": 0,
+      "worktrees": 1,
+      "functionalSuitesRerun": 0,
+      "buildsRerun": 0,
+      "ownedDockerResources": 0,
+      "foreignContainerAndVolumesUnchanged": true,
+      "ownedTemporaryFilesRemaining": 44,
+      "checkpointCreated": false
+    },
+    "auditResult": {
+      "observedAt": "2026-09-19T22:52:57.099Z",
+      "documentAuditPassed": true,
+      "documents": 20,
+      "commitDocuments": 19,
+      "jsonFiles": 12,
+      "markdownReferences": 52,
+      "repositoryReferences": 757,
+      "sha256Checks": 748,
+      "migrationsVerified": 274,
+      "retainedInventoryEntriesVerified": 324,
+      "originalReportsPreserved": 17,
+      "originalHarnessesPreserved": 13,
+      "findings": [],
+      "gitDiffCheckPassed": true,
+      "gitCachedDiffCheckPassed": true,
+      "encodingGuardPassed": true,
+      "productFilesChanged": 0,
+      "environmentFileIgnoredUntracked": true,
+      "environmentFileContentsRead": false,
+      "conflicts": 0,
+      "worktrees": 1,
+      "functionalSuitesRerun": 0,
+      "buildsRerun": 0,
+      "ownedDockerResources": 0,
+      "foreignContainerAndVolumesUnchanged": true,
+      "temporaryFilesInsideRepository": 0,
+      "temporaryFilesStagedOrInCommitInventory": 0,
+      "ownedTemporaryFilesRetainedOutsideRepository": 44,
+      "externalTemporaryReadsByRevalidation": 0,
+      "authorizedCleanupExceptionSatisfied": true,
+      "checkpointEvidence": "Containing Git commit; audit-recovery.mjs verifies after creation."
+    }
+  },
+  "previousCheckpointBlocker": {
+    "kind": "automatic approval rejection of owned temporary directory cleanup",
+    "reason": "blocked by policy",
+    "attempts": 2,
+    "remaining": "release-prereq-bRshc8 under operating-system Temp",
+    "requiredResolution": "Remove only this verified task-owned temporary directory, then repeat document/hash/index checks before creating the authorized documentary checkpoint.",
+    "recoveryAttempts": 2,
+    "recoveryLastAttempt": "Nonrecursive literal-path deletion of regenerated and hash-verified candidate.tar; blocked by policy"
   }
 }

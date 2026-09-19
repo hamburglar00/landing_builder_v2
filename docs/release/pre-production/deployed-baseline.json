@@ -2413,5 +2413,14 @@
     "productionEndpointInvocations": 0,
     "remoteWrites": 0,
     "secretValuesPersisted": false
+  },
+  "followupResolutions": {
+    "date": "2026-09-19",
+    "candidate": "835fdc08a5940e72ae54db3b53c947a0786dc4db",
+    "historicalSnapshotRetained": true,
+    "dataApi": "docs/release/pre-production/data-api.json",
+    "classic": "docs/release/pre-production/classic-receiver.json",
+    "node24": "docs/release/pre-production/candidate.json",
+    "remoteWrites": 0
   }
 }

@@ -1,0 +1,941 @@
+{
+  "record": "Recovery after unexpected shutdown",
+  "observedAt": "2026-09-19T19:15:41.471Z",
+  "model": {
+    "name": "gpt-6-astra",
+    "reasoningEffort": "xhigh",
+    "verifiedFromActiveSession": true
+  },
+  "initialGit": {
+    "branch": "main",
+    "head": "835fdc08a5940e72ae54db3b53c947a0786dc4db",
+    "originMain": "a4e752cf58f628813d3979d598b60d480caaac8d",
+    "remoteMainReadOnlyVerified": "a4e752cf58f628813d3979d598b60d480caaac8d",
+    "ahead": 11,
+    "indexChanges": 0,
+    "indexSha256": "f9576a38e9b585f609ed4a62f0270400cb4df236e1158fc228834cd35c226026",
+    "modified": 8,
+    "untracked": 7,
+    "conflicts": 0,
+    "lockFiles": 0,
+    "worktrees": 1,
+    "checkpointExisted": false,
+    "connectivityFsckPassed": true,
+    "unreachableObjects": "Historical trees/blob and three unrelated April/August commits inspected without altering them",
+    "reflog": "835fdc0 HEAD@{2026-09-19T14:02:54-03:00}: commit: docs(release): prepare production rollout\n6287c9a HEAD@{2026-09-18T20:23:35-03:00}: commit: perf(inbox): optimize conversation loading\nad436ff HEAD@{2026-09-18T15:57:16-03:00}: commit: docs(security): defer conversion ingress hardening\n716f920 HEAD@{2026-09-18T15:18:35-03:00}: commit: docs(security): document conversion ingress authentication plan\n2aee0e9 HEAD@{2026-09-18T13:20:46-03:00}: commit: fix(security): remove remaining client truncate privileges\naa9c2ac HEAD@{2026-09-18T12:55:15-03:00}: commit: fix(security): restrict internal database privileges\nabfcbd9 HEAD@{2026-09-18T12:12:55-03:00}: commit: fix(security): isolate phone administration by tenant\nd7d5763 HEAD@{2026-09-18T00:00:12-03:00}: commit: fix(security): keep revalidation secrets server-side\n31babbb HEAD@{2026-09-17T21:22:44-03:00}: commit: fix(security): prevent profile privilege escalation\nba7b3d3 HEAD@{2026-09-17T15:07:20-03:00}: commit: docs(security): complete phase 1a access design\nf315367 HEAD@{2026-09-17T12:39:11-03:00}: commit: test(phase0): close safety baseline and reproducible local bootstrap\na4e752c HEAD@{2026-09-15T16:13:29-03:00}: commit: Fix conversion retry cron reliability\nd1e9fa8 HEAD@{2026-09-11T19:10:22-03:00}: commit: Add saved Meta audience presets\n90050c0 HEAD@{2026-09-11T18:17:12-03:00}: commit: Explain Meta audience selectors\n1d5c2ef HEAD@{2026-09-11T18:00:48-03:00}: commit: Simplify Meta audience conditions guide",
+    "status": "# branch.oid 835fdc08a5940e72ae54db3b53c947a0786dc4db\n# branch.head main\n# branch.upstream origin/main\n# branch.ab +11 -0\n1 .M N... 100644 100644 100644 edc5b9be471d11d5f42c2aff89ae851890662204 edc5b9be471d11d5f42c2aff89ae851890662204 docs/release/pre-production/README.md\n1 .M N... 100644 100644 100644 45044b1f0d61b391b76948f21388b5ea737e4004 45044b1f0d61b391b76948f21388b5ea737e4004 docs/release/pre-production/deployed-baseline.json\n1 .M N... 100644 100644 100644 ce66c7c335bf88b6b6ec20ffb76c3da467d56f69 ce66c7c335bf88b6b6ec20ffb76c3da467d56f69 docs/release/pre-production/environment-check.json\n1 .M N... 100644 100644 100644 7f073c642339cef96082e17998e433221b34000b 7f073c642339cef96082e17998e433221b34000b docs/release/pre-production/migration-plan.md\n1 .M N... 100644 100644 100644 db847d7d3f57bfe023e24913a2d3784728f1149c db847d7d3f57bfe023e24913a2d3784728f1149c docs/release/pre-production/review.json\n1 .M N... 100644 100644 100644 98ceeba73f09a6035bc7fc473d1a748d6ff4e0b1 98ceeba73f09a6035bc7fc473d1a748d6ff4e0b1 docs/release/pre-production/rollback.md\n1 .M N... 100644 100644 100644 779850950531674ae3c8b2094519d8f51f8a4277 779850950531674ae3c8b2094519d8f51f8a4277 docs/release/pre-production/rollout.md\n1 .M N... 100644 100644 100644 506b3dcfcf360a623d43a1df3f5ba35acdf32180 506b3dcfcf360a623d43a1df3f5ba35acdf32180 docs/release/pre-production/smoke-tests.md\n? docs/release/pre-production/candidate.json\n? docs/release/pre-production/classic-receiver.json\n? docs/release/pre-production/data-api.json\n? docs/release/pre-production/edge-functions.json\n? docs/release/pre-production/operational-runbook.md\n? docs/release/pre-production/rollback-artifact.json\n? docs/release/pre-production/rollout-rehearsal.json"
+  },
+  "initialDocuments": [
+    {
+      "file": "docs/release/pre-production/candidate.json",
+      "bytes": 6870,
+      "modifiedAt": "2026-09-19T18:42:18.422Z",
+      "sha256": "5d1057e323b9b4dc7e7d3beab2bd3b9e89a099131170c5c5445ce46a705b527c"
+    },
+    {
+      "file": "docs/release/pre-production/classic-receiver.json",
+      "bytes": 5999,
+      "modifiedAt": "2026-09-19T18:19:00.270Z",
+      "sha256": "a37e8034025574126c86537f7e01a883819a3c27d5b487fadea82babdf4ac8f2"
+    },
+    {
+      "file": "docs/release/pre-production/data-api.json",
+      "bytes": 20103,
+      "modifiedAt": "2026-09-19T18:19:00.270Z",
+      "sha256": "c50acd23742bb8715bd87e105d51849b866caae0e5103f6e90c4e831653905d4"
+    },
+    {
+      "file": "docs/release/pre-production/deployed-baseline.json",
+      "bytes": 73422,
+      "modifiedAt": "2026-09-19T18:35:41.479Z",
+      "sha256": "3fcf5c0d2b891334950f6e9a7503ffb5ae64782ff4d9d9ff1f57c7f311c25373"
+    },
+    {
+      "file": "docs/release/pre-production/edge-functions.json",
+      "bytes": 5567,
+      "modifiedAt": "2026-09-19T18:15:16.199Z",
+      "sha256": "6aa5a5d000949f23a8e3ef920609314f5ab82600b36ff9d6c674a8edaa76819f"
+    },
+    {
+      "file": "docs/release/pre-production/environment-check.json",
+      "bytes": 9039,
+      "modifiedAt": "2026-09-19T18:35:41.476Z",
+      "sha256": "410b755f19cc0a8144d82a3680955a802a8b8e88f14f6c4947d046da3d9ad867"
+    },
+    {
+      "file": "docs/release/pre-production/migration-plan.md",
+      "bytes": 11257,
+      "modifiedAt": "2026-09-19T18:35:41.461Z",
+      "sha256": "cac467be150b9cd2394f0404b268596a0c71115f8779a49419318e612297de94"
+    },
+    {
+      "file": "docs/release/pre-production/operational-runbook.md",
+      "bytes": 8164,
+      "modifiedAt": "2026-09-19T18:17:31.634Z",
+      "sha256": "8faa3ab73585b0b6a0355ad6291ccc76ae14136753c878305806f02b54772755"
+    },
+    {
+      "file": "docs/release/pre-production/README.md",
+      "bytes": 8546,
+      "modifiedAt": "2026-09-19T18:42:18.422Z",
+      "sha256": "00f1e49b34fa6048866aa0f52afadbd15dbb479cd0ab11486561dd41d6b090e2"
+    },
+    {
+      "file": "docs/release/pre-production/release-inventory.json",
+      "bytes": 266547,
+      "modifiedAt": "2026-09-19T16:42:37.063Z",
+      "sha256": "1d78e6dab8c7a3b1b08f2f114165be02140aab0b7c98ee8690b63195c865a97b"
+    },
+    {
+      "file": "docs/release/pre-production/review.json",
+      "bytes": 21363,
+      "modifiedAt": "2026-09-19T18:42:18.472Z",
+      "sha256": "ea725634b8f9ce23f3c5cd02087ecc2480b88ecdde6a7d696326d55a997a01b6"
+    },
+    {
+      "file": "docs/release/pre-production/rollback-artifact.json",
+      "bytes": 8874,
+      "modifiedAt": "2026-09-19T18:42:18.422Z",
+      "sha256": "47f8734d4dc0b77be558fb97ef18301237e4b5176bdf3ba0aff7f517d58eff22"
+    },
+    {
+      "file": "docs/release/pre-production/rollback.md",
+      "bytes": 5941,
+      "modifiedAt": "2026-09-19T18:42:18.438Z",
+      "sha256": "4835eb84dd0f6812c113eeb7019ce0d4a1b0b9c9e51a31035524b6f0510bc350"
+    },
+    {
+      "file": "docs/release/pre-production/rollout-rehearsal.json",
+      "bytes": 43732,
+      "modifiedAt": "2026-09-19T18:19:00.265Z",
+      "sha256": "2770c4312fc43b0fc6408027123a3f1ef0e8f2ad1e8ca4c0626960f2b2b3abec"
+    },
+    {
+      "file": "docs/release/pre-production/rollout.md",
+      "bytes": 5525,
+      "modifiedAt": "2026-09-19T18:36:26.521Z",
+      "sha256": "688ad0a137a36ed52c8db59fb01fedb90df0de9ae266b8352931ae2914265303"
+    },
+    {
+      "file": "docs/release/pre-production/smoke-tests.md",
+      "bytes": 6944,
+      "modifiedAt": "2026-09-19T18:35:41.461Z",
+      "sha256": "1a3f6e255e2b7d42fa77f1ecaf4348f60f4490a23c8edb0ee5ee6cc150690222"
+    }
+  ],
+  "initialProcesses": {
+    "node": 0,
+    "supabase": 0,
+    "tests": 0,
+    "dockerEngineAvailable": false
+  },
+  "shutdown": {
+    "uncleanShutdownConfirmed": true,
+    "events": [
+      {
+        "id": 41,
+        "recordId": 127348,
+        "createdAt": "2026-09-19T19:02:49.4338588Z"
+      },
+      {
+        "id": 6008,
+        "recordId": 127321,
+        "createdAt": "2026-09-19T19:02:58.2199699Z"
+      }
+    ],
+    "previousSessionLastOutputAt": "2026-09-19T18:42:48.605Z",
+    "previousSessionLastOutputExitCode": 0,
+    "previousSessionFinalAnswerPersisted": false,
+    "executionInterruptedProven": false,
+    "unfinishedTaskRecovered": true,
+    "lastValidPoint": "Functional preparation and documentary audit complete; temporary cleanup rejected twice, no staging or checkpoint",
+    "timingLimit": "Event 6008 reports 15:18 local, inconsistent with later persisted artifacts/session records; do not infer the exact power-loss time or an interrupted command from that event."
+  },
+  "initialClassification": [
+    {
+      "id": "1",
+      "item": "Release candidate bajo Node 24",
+      "status": "Completado y acreditado",
+      "evidence": "candidate.json; exact source archives and result reports verified"
+    },
+    {
+      "id": "2",
+      "item": "Artefacto de reversi?n del commit productivo",
+      "status": "Completado y acreditado",
+      "evidence": "rollback-artifact.json; baseline plus compatible fallback manifests, not a retained Production binary"
+    },
+    {
+      "id": "3",
+      "item": "Acreditaci?n del receptor cl?sico",
+      "status": "Completado y acreditado",
+      "evidence": "classic-receiver.json; exact deployed route and 7 local checks verified"
+    },
+    {
+      "id": "4",
+      "item": "Verificaci?n de esquemas Data API",
+      "status": "Completado y acreditado",
+      "evidence": "data-api.json; remote GET reconfirmed public/graphql_public"
+    },
+    {
+      "id": "5",
+      "item": "Identificaci?n de tres Edge Functions",
+      "status": "Completado y acreditado",
+      "evidence": "edge-functions.json; names, version, verify_jwt and bundle hashes reconfirmed"
+    },
+    {
+      "id": "6",
+      "item": "Confirmaci?n de REVALIDATION_ENV",
+      "status": "Completado y acreditado",
+      "evidence": "environment-check.json; absence reconfirmed, configuration remains a future authorized write"
+    },
+    {
+      "id": "7",
+      "item": "Runbook de ventana operativa",
+      "status": "Completado y acreditado",
+      "evidence": "operational-runbook.md; responsibilities, ordering and rollback limitations documented"
+    },
+    {
+      "id": "8",
+      "item": "Ensayo local del rollout",
+      "status": "Completado y acreditado",
+      "evidence": "rollout-rehearsal.json; original timeout preserved and continuation hash verified"
+    },
+    {
+      "id": "9",
+      "item": "Documentaci?n y validaci?n",
+      "status": "Interrumpido",
+      "evidence": "Audit passed; closure pending because owned temporary cleanup was rejected before shutdown"
+    },
+    {
+      "id": "10",
+      "item": "Checkpoint documental",
+      "status": "No iniciado",
+      "evidence": "No staged files, no matching commit in refs/reflog or dangling commits"
+    }
+  ],
+  "temporaryRecovery": {
+    "directoryName": "release-prereq-bRshc8",
+    "ownershipMarkerVerified": true,
+    "files": [
+      {
+        "name": "artifact-runner.cjs",
+        "bytes": 4971,
+        "modifiedAt": "2026-09-19T17:41:31.178Z",
+        "sha256": "008013e1b29f414fe7c2547095c3f999b1e086243bc1cb47581376b0cc1c6eed",
+        "retainedAs": "recovered-evidence.json harnesses",
+        "disposition": "Harness text preserved, with explicitly recorded portability/credential-shape normalization",
+        "absolutePath": "C:\\Users\\Leo\\AppData\\Local\\Temp\\release-prereq-bRshc8\\artifact-runner.cjs"
+      },
+      {
+        "name": "audit-docs.cjs",
+        "bytes": 5007,
+        "modifiedAt": "2026-09-19T18:40:14.064Z",
+        "sha256": "7d215d16d64f0b936c7e7d8804eedc345730e3721f6c79b1c5b67f8598c54720",
+        "retainedAs": "recovered-evidence.json harnesses",
+        "disposition": "Harness text preserved, with explicitly recorded portability/credential-shape normalization",
+        "absolutePath": "C:\\Users\\Leo\\AppData\\Local\\Temp\\release-prereq-bRshc8\\audit-docs.cjs"
+      },
+      {
+        "name": "baseline-artifact.json",
+        "bytes": 2071,
+        "modifiedAt": "2026-09-19T18:01:01.016Z",
+        "sha256": "6057c745d69e064b525e55a320039ddbb38252e272c84ba7c16e815d7528d2be",
+        "retainedAs": "recovered-evidence.json reports",
+        "disposition": "Exact UTF-8 bytes preserved in content",
+        "absolutePath": "C:\\Users\\Leo\\AppData\\Local\\Temp\\release-prereq-bRshc8\\baseline-artifact.json"
+      },
+      {
+        "name": "baseline-http.json",
+        "bytes": 754,
+        "modifiedAt": "2026-09-19T18:00:58.367Z",
+        "sha256": "c5362c7e22d401163df82799e5a1759df84bd6791b8d0cd133dfa7469f0ffc10",
+        "retainedAs": "recovered-evidence.json reports",
+        "disposition": "Exact UTF-8 bytes preserved in content",
+        "absolutePath": "C:\\Users\\Leo\\AppData\\Local\\Temp\\release-prereq-bRshc8\\baseline-http.json"
+      },
+      {
+        "name": "baseline.tar",
+        "bytes": 4659200,
+        "modifiedAt": "2026-09-19T17:27:10.750Z",
+        "sha256": "772f8878bf362384241b343d7dc5c45c46191e87fea05aa9811c76e78b411218",
+        "retainedAs": null,
+        "disposition": "Git archive exactly regenerated in memory from a4e752cf58f628813d3979d598b60d480caaac8d frontend scripts supabase/functions; binary need not be retained",
+        "absolutePath": "C:\\Users\\Leo\\AppData\\Local\\Temp\\release-prereq-bRshc8\\baseline.tar"
+      },
+      {
+        "name": "build-container-cleanup.json",
+        "bytes": 505,
+        "modifiedAt": "2026-09-19T18:05:29.135Z",
+        "sha256": "be8957952abc218aaf800bea86e64c030a443ef791c9d076e2ed341f0e8fb530",
+        "retainedAs": "recovered-evidence.json reports",
+        "disposition": "Exact UTF-8 bytes preserved in content",
+        "absolutePath": "C:\\Users\\Leo\\AppData\\Local\\Temp\\release-prereq-bRshc8\\build-container-cleanup.json"
+      },
+      {
+        "name": "candidate-artifact.json",
+        "bytes": 4012,
+        "modifiedAt": "2026-09-19T18:01:00.208Z",
+        "sha256": "bd8d5b05861345f015751312812ebcc2f543317a1082f5d0873c27dac27e9eab",
+        "retainedAs": "recovered-evidence.json reports",
+        "disposition": "Exact UTF-8 bytes preserved in content",
+        "absolutePath": "C:\\Users\\Leo\\AppData\\Local\\Temp\\release-prereq-bRshc8\\candidate-artifact.json"
+      },
+      {
+        "name": "candidate-http.json",
+        "bytes": 753,
+        "modifiedAt": "2026-09-19T18:00:57.701Z",
+        "sha256": "620cbb154898103e0d3eac2337c61eddc82d1693a57610c0f7640b5c55ab0b1c",
+        "retainedAs": "recovered-evidence.json reports",
+        "disposition": "Exact UTF-8 bytes preserved in content",
+        "absolutePath": "C:\\Users\\Leo\\AppData\\Local\\Temp\\release-prereq-bRshc8\\candidate-http.json"
+      },
+      {
+        "name": "candidate.tar",
+        "bytes": 5355520,
+        "modifiedAt": "2026-09-19T17:27:10.258Z",
+        "sha256": "a7fe220cbc48f42185bea9fb495d18ab9c711ff3ee6e4e83943c2f725c088e36",
+        "retainedAs": null,
+        "disposition": "Git archive exactly regenerated in memory from 835fdc08a5940e72ae54db3b53c947a0786dc4db frontend scripts supabase/functions; binary need not be retained",
+        "absolutePath": "C:\\Users\\Leo\\AppData\\Local\\Temp\\release-prereq-bRshc8\\candidate.tar"
+      },
+      {
+        "name": "classic-route.ts",
+        "bytes": 3259,
+        "modifiedAt": "2026-09-19T17:46:19.108Z",
+        "sha256": "95ababcf9de45258cc70ea30665e3026c7539759ff693dd39971c7cea409b0d7",
+        "retainedAs": "recovered-evidence.json harnesses",
+        "disposition": "Harness text preserved, with explicitly recorded portability/credential-shape normalization",
+        "absolutePath": "C:\\Users\\Leo\\AppData\\Local\\Temp\\release-prereq-bRshc8\\classic-route.ts"
+      },
+      {
+        "name": "classic-test-report.json",
+        "bytes": 1229,
+        "modifiedAt": "2026-09-19T18:00:59.204Z",
+        "sha256": "0e81a4965c7535a00e6f662ce14af3e25f3108452207c2f413834e6e08651b9b",
+        "retainedAs": "recovered-evidence.json reports",
+        "disposition": "Exact UTF-8 bytes preserved in content",
+        "absolutePath": "C:\\Users\\Leo\\AppData\\Local\\Temp\\release-prereq-bRshc8\\classic-test-report.json"
+      },
+      {
+        "name": "classic-test.cjs",
+        "bytes": 6242,
+        "modifiedAt": "2026-09-19T17:46:19.207Z",
+        "sha256": "eadd43a94c0bbf8aed112d2f409dd46a5807a1dbaa5792453cc110fa065f4715",
+        "retainedAs": "recovered-evidence.json harnesses",
+        "disposition": "Harness text preserved, with explicitly recorded portability/credential-shape normalization",
+        "absolutePath": "C:\\Users\\Leo\\AppData\\Local\\Temp\\release-prereq-bRshc8\\classic-test.cjs"
+      },
+      {
+        "name": "cli-probe/service.conf",
+        "bytes": 56,
+        "modifiedAt": "2026-09-19T17:53:13.139Z",
+        "sha256": "4330bcb0b635f2710316793815c9f2560f5f470d4ba9b0360a6eeb63f74e8dfa",
+        "retainedAs": null,
+        "disposition": "Disposable synthetic fixture/configuration or publicly downloadable tool; source hash retained",
+        "absolutePath": "C:\\Users\\Leo\\AppData\\Local\\Temp\\release-prereq-bRshc8\\cli-probe\\service.conf"
+      },
+      {
+        "name": "cli-probe/supabase/config.toml",
+        "bytes": 96,
+        "modifiedAt": "2026-09-19T17:53:13.139Z",
+        "sha256": "e785f1135f26d45073b925bdb94b2ef57a7fe3ec90e6fa83b0c470e4e4abfa6d",
+        "retainedAs": null,
+        "disposition": "Disposable synthetic fixture/configuration or publicly downloadable tool; source hash retained",
+        "absolutePath": "C:\\Users\\Leo\\AppData\\Local\\Temp\\release-prereq-bRshc8\\cli-probe\\supabase\\config.toml"
+      },
+      {
+        "name": "cli-probe/supabase/migrations/20260919000000_bound_settings_probe.sql",
+        "bytes": 162,
+        "modifiedAt": "2026-09-19T17:53:13.141Z",
+        "sha256": "86f965b6f0a22b9cb414f6b3e4924ee9f499c4b22874cf81ae9876787a8367e5",
+        "retainedAs": null,
+        "disposition": "Disposable synthetic fixture/configuration or publicly downloadable tool; source hash retained",
+        "absolutePath": "C:\\Users\\Leo\\AppData\\Local\\Temp\\release-prereq-bRshc8\\cli-probe\\supabase\\migrations\\20260919000000_bound_settings_probe.sql"
+      },
+      {
+        "name": "cli-probe-attempt1.json",
+        "bytes": 493,
+        "modifiedAt": "2026-09-19T17:52:48.921Z",
+        "sha256": "affd2805534b08b37c06c8ae1e659e9ebbf3bde2fba32a42807326b5f89e1cbc",
+        "retainedAs": "recovered-evidence.json reports",
+        "disposition": "Exact UTF-8 bytes preserved in content",
+        "absolutePath": "C:\\Users\\Leo\\AppData\\Local\\Temp\\release-prereq-bRshc8\\cli-probe-attempt1.json"
+      },
+      {
+        "name": "cli-probe-final.json",
+        "bytes": 492,
+        "modifiedAt": "2026-09-19T17:57:32.866Z",
+        "sha256": "6bb81421854ed681c3237ace47270beb313093d7ee9b7b0d477392bd0460fb37",
+        "retainedAs": "recovered-evidence.json reports",
+        "disposition": "Exact UTF-8 bytes preserved in content",
+        "absolutePath": "C:\\Users\\Leo\\AppData\\Local\\Temp\\release-prereq-bRshc8\\cli-probe-final.json"
+      },
+      {
+        "name": "cli-probe-internal.cjs",
+        "bytes": 4844,
+        "modifiedAt": "2026-09-19T17:57:19.314Z",
+        "sha256": "af36a55bc50d85227d6787adf0d70033452a7888720e26342e3c82d11e1da80f",
+        "retainedAs": "recovered-evidence.json harnesses",
+        "disposition": "Harness text preserved, with explicitly recorded portability/credential-shape normalization",
+        "absolutePath": "C:\\Users\\Leo\\AppData\\Local\\Temp\\release-prereq-bRshc8\\cli-probe-internal.cjs"
+      },
+      {
+        "name": "cli-probe-report.json",
+        "bytes": 493,
+        "modifiedAt": "2026-09-19T17:53:16.331Z",
+        "sha256": "affd2805534b08b37c06c8ae1e659e9ebbf3bde2fba32a42807326b5f89e1cbc",
+        "retainedAs": "recovered-evidence.json reports",
+        "disposition": "Exact UTF-8 bytes preserved in content",
+        "absolutePath": "C:\\Users\\Leo\\AppData\\Local\\Temp\\release-prereq-bRshc8\\cli-probe-report.json"
+      },
+      {
+        "name": "cli-probe.cjs",
+        "bytes": 3312,
+        "modifiedAt": "2026-09-19T17:53:11.641Z",
+        "sha256": "bfe24002a57eb9a420ac7530713eb365c7cbd397052a19391d5b9870aa147367",
+        "retainedAs": "recovered-evidence.json harnesses",
+        "disposition": "Harness text preserved, with explicitly recorded portability/credential-shape normalization",
+        "absolutePath": "C:\\Users\\Leo\\AppData\\Local\\Temp\\release-prereq-bRshc8\\cli-probe.cjs"
+      },
+      {
+        "name": "compatible-artifact.json",
+        "bytes": 2073,
+        "modifiedAt": "2026-09-19T18:01:01.887Z",
+        "sha256": "59151fb306949b54fde03b883ca3b8d6abb79d21959d3715dc18f11ba03afc7c",
+        "retainedAs": "recovered-evidence.json reports",
+        "disposition": "Exact UTF-8 bytes preserved in content",
+        "absolutePath": "C:\\Users\\Leo\\AppData\\Local\\Temp\\release-prereq-bRshc8\\compatible-artifact.json"
+      },
+      {
+        "name": "compatible-http.json",
+        "bytes": 754,
+        "modifiedAt": "2026-09-19T18:00:58.930Z",
+        "sha256": "749aad2e7989611bf54507460651dfa56fc863a8670d103446d84fb0adeefd6f",
+        "retainedAs": "recovered-evidence.json reports",
+        "disposition": "Exact UTF-8 bytes preserved in content",
+        "absolutePath": "C:\\Users\\Leo\\AppData\\Local\\Temp\\release-prereq-bRshc8\\compatible-http.json"
+      },
+      {
+        "name": "compatible.tar",
+        "bytes": 5263360,
+        "modifiedAt": "2026-09-19T17:27:11.183Z",
+        "sha256": "15650ab84ccfc07e082b4f0e8b251c9ebc91242d8869cbdd001063b531105063",
+        "retainedAs": null,
+        "disposition": "Git archive exactly regenerated in memory from ad436ff1ee3a329c1d6c702d0ce2cbfd05f92981 frontend scripts supabase/functions; binary need not be retained",
+        "absolutePath": "C:\\Users\\Leo\\AppData\\Local\\Temp\\release-prereq-bRshc8\\compatible.tar"
+      },
+      {
+        "name": "finish-evidence.cjs",
+        "bytes": 8943,
+        "modifiedAt": "2026-09-19T18:18:59.610Z",
+        "sha256": "b681432f58cc7b34925c60e897becf175220c67f37741de503623a9de5745d23",
+        "retainedAs": "recovered-evidence.json harnesses",
+        "disposition": "Harness text preserved, with explicitly recorded portability/credential-shape normalization",
+        "absolutePath": "C:\\Users\\Leo\\AppData\\Local\\Temp\\release-prereq-bRshc8\\finish-evidence.cjs"
+      },
+      {
+        "name": "followup-metadata.json",
+        "bytes": 1713,
+        "modifiedAt": "2026-09-19T18:16:05.738Z",
+        "sha256": "d2548d5f261e7c7b5d22ab40e4893e57559b6073c26f158a40f1d496e362d96f",
+        "retainedAs": "recovered-evidence.json reports",
+        "disposition": "Exact UTF-8 bytes preserved in content",
+        "absolutePath": "C:\\Users\\Leo\\AppData\\Local\\Temp\\release-prereq-bRshc8\\followup-metadata.json"
+      },
+      {
+        "name": "http-smoke.cjs",
+        "bytes": 2003,
+        "modifiedAt": "2026-09-19T17:48:37.941Z",
+        "sha256": "ee82a10c7b9676effbbff1934af0c2fe63c5b1d5362d741c5c45c514d5f90ac3",
+        "retainedAs": "recovered-evidence.json harnesses",
+        "disposition": "Harness text preserved, with explicitly recorded portability/credential-shape normalization",
+        "absolutePath": "C:\\Users\\Leo\\AppData\\Local\\Temp\\release-prereq-bRshc8\\http-smoke.cjs"
+      },
+      {
+        "name": "inbox-continuation.json",
+        "bytes": 24204,
+        "modifiedAt": "2026-09-19T18:15:36.627Z",
+        "sha256": "f2dcac7206094b1315268e6f4327283479f4a537c1b5019e7f99e2df4f56b1b1",
+        "retainedAs": "recovered-evidence.json reports",
+        "disposition": "Exact UTF-8 bytes preserved in content",
+        "absolutePath": "C:\\Users\\Leo\\AppData\\Local\\Temp\\release-prereq-bRshc8\\inbox-continuation.json"
+      },
+      {
+        "name": "inbox-continuation.mjs",
+        "bytes": 4597,
+        "modifiedAt": "2026-09-19T18:05:20.271Z",
+        "sha256": "2832441b5e33febb74cef1c456445dd5ce774c485db6152c147b29617b20e3ed",
+        "retainedAs": "recovered-evidence.json harnesses",
+        "disposition": "Harness text preserved, with explicitly recorded portability/credential-shape normalization",
+        "absolutePath": "C:\\Users\\Leo\\AppData\\Local\\Temp\\release-prereq-bRshc8\\inbox-continuation.mjs"
+      },
+      {
+        "name": "inbox-synthetic-browser-Ch0wYO/input.json",
+        "bytes": 640073,
+        "modifiedAt": "2026-09-19T18:15:13.611Z",
+        "sha256": "7e9f881da4811b86715126ff1c692663f11f0edba795afc3a71fdbc6a62a9a1b",
+        "retainedAs": null,
+        "disposition": "Disposable synthetic fixture/configuration or publicly downloadable tool; source hash retained",
+        "absolutePath": "C:\\Users\\Leo\\AppData\\Local\\Temp\\release-prereq-bRshc8\\inbox-synthetic-browser-Ch0wYO\\input.json"
+      },
+      {
+        "name": "ownership.json",
+        "bytes": 82,
+        "modifiedAt": "2026-09-19T17:27:09.236Z",
+        "sha256": "4301e85ab50cc9cf35f3bdcef9fe52da12773dca1a5896a88b6b4b1b4971929f",
+        "retainedAs": "recovered-evidence.json reports",
+        "disposition": "Exact UTF-8 bytes preserved in content",
+        "absolutePath": "C:\\Users\\Leo\\AppData\\Local\\Temp\\release-prereq-bRshc8\\ownership.json"
+      },
+      {
+        "name": "phase0b-bootstrap-0bxk5T/supabase/.branches/_current_branch",
+        "bytes": 4,
+        "modifiedAt": "2026-09-19T17:41:35.249Z",
+        "sha256": "0d6e4079e36703ebd37c00722f5891d28b0e2811dc114b129215123adcce3605",
+        "retainedAs": null,
+        "disposition": "Disposable synthetic fixture/configuration or publicly downloadable tool; source hash retained",
+        "absolutePath": "C:\\Users\\Leo\\AppData\\Local\\Temp\\release-prereq-bRshc8\\phase0b-bootstrap-0bxk5T\\supabase\\.branches\\_current_branch"
+      },
+      {
+        "name": "phase0b-bootstrap-0bxk5T/supabase/.temp/cli-latest",
+        "bytes": 8,
+        "modifiedAt": "2026-09-19T17:41:35.848Z",
+        "sha256": "103e9d7a97f9a66c28586ffae6f8d81a90630d5cb2c537b23ed886a5e0e5ff01",
+        "retainedAs": null,
+        "disposition": "Disposable synthetic fixture/configuration or publicly downloadable tool; source hash retained",
+        "absolutePath": "C:\\Users\\Leo\\AppData\\Local\\Temp\\release-prereq-bRshc8\\phase0b-bootstrap-0bxk5T\\supabase\\.temp\\cli-latest"
+      },
+      {
+        "name": "phase0b-bootstrap-0bxk5T/supabase/config.toml",
+        "bytes": 160,
+        "modifiedAt": "2026-09-19T17:40:27.873Z",
+        "sha256": "13453aaae8f9631ddd6a4f4f5fd50edcfb1de0cbfe716aa0416145ccdfcc7880",
+        "retainedAs": null,
+        "disposition": "Disposable synthetic fixture/configuration or publicly downloadable tool; source hash retained",
+        "absolutePath": "C:\\Users\\Leo\\AppData\\Local\\Temp\\release-prereq-bRshc8\\phase0b-bootstrap-0bxk5T\\supabase\\config.toml"
+      },
+      {
+        "name": "phase0b-bootstrap-ZDkQxR/supabase/.branches/_current_branch",
+        "bytes": 4,
+        "modifiedAt": "2026-09-19T18:06:18.687Z",
+        "sha256": "0d6e4079e36703ebd37c00722f5891d28b0e2811dc114b129215123adcce3605",
+        "retainedAs": null,
+        "disposition": "Disposable synthetic fixture/configuration or publicly downloadable tool; source hash retained",
+        "absolutePath": "C:\\Users\\Leo\\AppData\\Local\\Temp\\release-prereq-bRshc8\\phase0b-bootstrap-ZDkQxR\\supabase\\.branches\\_current_branch"
+      },
+      {
+        "name": "phase0b-bootstrap-ZDkQxR/supabase/.temp/cli-latest",
+        "bytes": 8,
+        "modifiedAt": "2026-09-19T18:06:19.252Z",
+        "sha256": "103e9d7a97f9a66c28586ffae6f8d81a90630d5cb2c537b23ed886a5e0e5ff01",
+        "retainedAs": null,
+        "disposition": "Disposable synthetic fixture/configuration or publicly downloadable tool; source hash retained",
+        "absolutePath": "C:\\Users\\Leo\\AppData\\Local\\Temp\\release-prereq-bRshc8\\phase0b-bootstrap-ZDkQxR\\supabase\\.temp\\cli-latest"
+      },
+      {
+        "name": "phase0b-bootstrap-ZDkQxR/supabase/config.toml",
+        "bytes": 160,
+        "modifiedAt": "2026-09-19T18:05:23.287Z",
+        "sha256": "fa12317b77a213d7847b12f753064789f1892a3458ea3ba6b4f487e154eb131e",
+        "retainedAs": null,
+        "disposition": "Disposable synthetic fixture/configuration or publicly downloadable tool; source hash retained",
+        "absolutePath": "C:\\Users\\Leo\\AppData\\Local\\Temp\\release-prereq-bRshc8\\phase0b-bootstrap-ZDkQxR\\supabase\\config.toml"
+      },
+      {
+        "name": "rehearsal-report.json",
+        "bytes": 110588,
+        "modifiedAt": "2026-09-19T18:01:51.020Z",
+        "sha256": "2af76aa8dab986eec2eca190205d813095e91ac5d368e42f0df88b0f5feee2eb",
+        "retainedAs": "recovered-evidence.json reports",
+        "disposition": "Exact UTF-8 bytes preserved in content",
+        "absolutePath": "C:\\Users\\Leo\\AppData\\Local\\Temp\\release-prereq-bRshc8\\rehearsal-report.json"
+      },
+      {
+        "name": "remote-final-recheck.json",
+        "bytes": 603,
+        "modifiedAt": "2026-09-19T18:37:26.223Z",
+        "sha256": "e0d9d2e895c1b85f5056c0ea55c0488a9616c0968b64a408fb428832fc71e87e",
+        "retainedAs": "recovered-evidence.json reports",
+        "disposition": "Exact UTF-8 bytes preserved in content",
+        "absolutePath": "C:\\Users\\Leo\\AppData\\Local\\Temp\\release-prereq-bRshc8\\remote-final-recheck.json"
+      },
+      {
+        "name": "rollout-rehearsal.mjs",
+        "bytes": 11331,
+        "modifiedAt": "2026-09-19T17:40:21.449Z",
+        "sha256": "81d4b25657303c65d3b557f7784eed9e8c2e33bac9953278eccd3042e8642941",
+        "retainedAs": "recovered-evidence.json harnesses",
+        "disposition": "Harness text preserved, with explicitly recorded portability/credential-shape normalization",
+        "absolutePath": "C:\\Users\\Leo\\AppData\\Local\\Temp\\release-prereq-bRshc8\\rollout-rehearsal.mjs"
+      },
+      {
+        "name": "sanitized-metadata.json",
+        "bytes": 29510,
+        "modifiedAt": "2026-09-19T18:13:08.483Z",
+        "sha256": "d0d7a2a071aa32704dd2f71701291981dd34247580a28e8d57dad061f260095b",
+        "retainedAs": "recovered-evidence.json reports",
+        "disposition": "Exact UTF-8 bytes preserved in content",
+        "absolutePath": "C:\\Users\\Leo\\AppData\\Local\\Temp\\release-prereq-bRshc8\\sanitized-metadata.json"
+      },
+      {
+        "name": "supabase-linux.tar.gz",
+        "bytes": 29921611,
+        "modifiedAt": "2026-09-19T17:55:04.950Z",
+        "sha256": "e5597462f865d5ac72af0453358e37ecb0d85962ad6914a114a53de847303bde",
+        "retainedAs": null,
+        "disposition": "Disposable synthetic fixture/configuration or publicly downloadable tool; source hash retained",
+        "absolutePath": "C:\\Users\\Leo\\AppData\\Local\\Temp\\release-prereq-bRshc8\\supabase-linux.tar.gz"
+      },
+      {
+        "name": "update-docs.cjs",
+        "bytes": 9325,
+        "modifiedAt": "2026-09-19T18:35:40.077Z",
+        "sha256": "78edd21787413fb4519ef79c8f817fa8c3f5f77deee2e08fb133983d01385432",
+        "retainedAs": "recovered-evidence.json harnesses",
+        "disposition": "Harness text preserved, with explicitly recorded portability/credential-shape normalization",
+        "absolutePath": "C:\\Users\\Leo\\AppData\\Local\\Temp\\release-prereq-bRshc8\\update-docs.cjs"
+      },
+      {
+        "name": "write-evidence.cjs",
+        "bytes": 14750,
+        "modifiedAt": "2026-09-19T18:15:13.894Z",
+        "sha256": "597290cebdac6f6ee7892a055ab8e0ad61667a29544b819805403ee92c4a376a",
+        "retainedAs": "recovered-evidence.json harnesses",
+        "disposition": "Harness text preserved, with explicitly recorded portability/credential-shape normalization",
+        "absolutePath": "C:\\Users\\Leo\\AppData\\Local\\Temp\\release-prereq-bRshc8\\write-evidence.cjs"
+      },
+      {
+        "name": "write-review.cjs",
+        "bytes": 7424,
+        "modifiedAt": "2026-09-19T18:39:04.293Z",
+        "sha256": "0cfc1258e27bdbb2dccc28a7f36351631252fb1787a2419583c8fb0f991a3bb4",
+        "retainedAs": "recovered-evidence.json harnesses",
+        "disposition": "Harness text preserved, with explicitly recorded portability/credential-shape normalization",
+        "absolutePath": "C:\\Users\\Leo\\AppData\\Local\\Temp\\release-prereq-bRshc8\\write-review.cjs"
+      }
+    ],
+    "filesCount": 44,
+    "bytes": 46106759,
+    "recoveredEvidence": "recovered-evidence.json",
+    "otherTempDirectories": "Two codex-index directories from earlier work were not treated as this task resources and were not changed",
+    "absoluteDirectory": "C:\\Users\\Leo\\AppData\\Local\\Temp\\release-prereq-bRshc8",
+    "outsideRepository": true,
+    "tracked": false,
+    "staged": false,
+    "includedInCommitInventory": false,
+    "requiredForRevalidation": false,
+    "changesApplication": false,
+    "ownershipScope": "All 44 files belong exclusively to release-prerequisites; ownership.json pins the candidate, exact inventory and hashes match the pre-shutdown snapshot; no links or reparse points."
+  },
+  "recoveredAudit": {
+    "documents": 16,
+    "changed": 15,
+    "jsonFiles": 10,
+    "markdownReferences": 45,
+    "repositoryReferences": 730,
+    "hashesChecked": 57,
+    "migrations": 274,
+    "findings": [],
+    "envPresentIgnoredUntracked": true,
+    "conflicts": 0,
+    "diffChecksPassed": true
+  },
+  "remoteReadOnlyRecheck": {
+    "observedAt": "2026-09-19T19:15:41.703Z",
+    "gitMain": "a4e752cf58f628813d3979d598b60d480caaac8d",
+    "builder": {
+      "project": "landing-builder-v2-k259",
+      "rootDirectory": "frontend",
+      "node": "24.x",
+      "alias": "mkt.panelbotadmin.com",
+      "deploymentId": "dpl_BWmUkha6NhVzCFwMZmfckC1fQXYq",
+      "gitSha": "a4e752cf58f628813d3979d598b60d480caaac8d",
+      "state": "READY",
+      "revalidationEnvPresent": false
+    },
+    "classic": {
+      "alias": "landing.panelbotadmin.com",
+      "deploymentId": "dpl_Arq65aY6wKMJiFhdHW4z992My6J1",
+      "gitSha": "3322b634a06504ae469a4faee0383148707bc9b5",
+      "state": "READY"
+    },
+    "supabase": {
+      "project": "fdkjkzpjqfbaavylapun",
+      "migrations": 268,
+      "lastMigration": "20260915190657",
+      "exposedSchemas": [
+        "public",
+        "graphql_public"
+      ],
+      "maxRows": 1000,
+      "extraSearchPath": [
+        "public",
+        "extensions"
+      ],
+      "poolAcquisitionTimeoutSeconds": 10,
+      "edgeVersionsMatchRecoveredEvidence": true,
+      "sql": "BEGIN READ ONLY; statement_timeout 1500 ms; lock_timeout 250 ms; ledger aggregate SELECT; ROLLBACK"
+    },
+    "secretValuesEmitted": false,
+    "remoteWrites": 0
+  },
+  "continuation": {
+    "resumedFrom": 9,
+    "repeatBuilds": 0,
+    "repeatFunctionalSuites": 0,
+    "reason": "Completed evidence, hashes and result records are intact",
+    "cleanupComplete": true,
+    "checkpointMessage": "docs(release): resolve rollout prerequisites",
+    "cleanupRejections": [
+      {
+        "action": "Guarded recursive Remove-Item of verified owned temporary directory",
+        "result": "blocked by policy",
+        "executed": false
+      },
+      {
+        "action": "Nonrecursive Remove-Item of verified literal candidate.tar path",
+        "result": "blocked by policy",
+        "executed": false
+      }
+    ],
+    "remainingOwnTemporaryFiles": 44,
+    "remainingOwnTemporaryBytes": 46106759,
+    "finalClassification": [
+      {
+        "id": "1",
+        "item": "Release candidate bajo Node 24",
+        "status": "Completado y acreditado",
+        "evidence": "candidate.json; exact source archives and result reports verified"
+      },
+      {
+        "id": "2",
+        "item": "Artefacto de reversi?n del commit productivo",
+        "status": "Completado y acreditado",
+        "evidence": "rollback-artifact.json; baseline plus compatible fallback manifests, not a retained Production binary"
+      },
+      {
+        "id": "3",
+        "item": "Acreditaci?n del receptor cl?sico",
+        "status": "Completado y acreditado",
+        "evidence": "classic-receiver.json; exact deployed route and 7 local checks verified"
+      },
+      {
+        "id": "4",
+        "item": "Verificaci?n de esquemas Data API",
+        "status": "Completado y acreditado",
+        "evidence": "data-api.json; remote GET reconfirmed public/graphql_public"
+      },
+      {
+        "id": "5",
+        "item": "Identificaci?n de tres Edge Functions",
+        "status": "Completado y acreditado",
+        "evidence": "edge-functions.json; names, version, verify_jwt and bundle hashes reconfirmed"
+      },
+      {
+        "id": "6",
+        "item": "Confirmaci?n de REVALIDATION_ENV",
+        "status": "Completado y acreditado",
+        "evidence": "environment-check.json; absence reconfirmed, configuration remains a future authorized write"
+      },
+      {
+        "id": "7",
+        "item": "Runbook de ventana operativa",
+        "status": "Completado y acreditado",
+        "evidence": "operational-runbook.md; responsibilities, ordering and rollback limitations documented"
+      },
+      {
+        "id": "8",
+        "item": "Ensayo local del rollout",
+        "status": "Completado y acreditado",
+        "evidence": "rollout-rehearsal.json; original timeout preserved and continuation hash verified"
+      },
+      {
+        "id": "9",
+        "item": "Documentaci?n y validaci?n",
+        "status": "Completado y acreditado",
+        "evidence": "Documentary audit passed under the user-authorized external-retention exception"
+      },
+      {
+        "id": "10",
+        "item": "Checkpoint documental",
+        "status": "Completado y acreditado",
+        "evidence": "Containing commit must match authorized message, parent and exact documentary inventory; verified after commit"
+      }
+    ],
+    "explanation": "Preparation complete under the authorized exception. Remote execution remains unauthorized.",
+    "cleanupMeaning": "Authorized closure criteria satisfied; external directory retained, not deleted.",
+    "checkpointEvidence": "The containing documentary commit, verified by audit-recovery.mjs after creation."
+  },
+  "docker": {
+    "initialEngineAvailable": false,
+    "engineStartedForInspection": true,
+    "serverVersion": "29.7.2",
+    "ownContainers": 0,
+    "ownNetworks": 0,
+    "ownVolumes": 0,
+    "ownNodeImagePresent": false,
+    "foreignContainer": {
+      "name": "codex-p8-mysql",
+      "id": "3fc4115f1539d732366d8cf4f3f482a3dae0bcf62b4ed7d6e162b279a19dd40f",
+      "status": "exited",
+      "exitCode": 0,
+      "startedAt": "2026-09-04T23:39:12.2697756Z",
+      "finishedAt": "2026-09-04T23:57:05.451317455Z",
+      "restartPolicy": "no",
+      "operations": 0
+    },
+    "networks": [
+      "bridge",
+      "host",
+      "none"
+    ],
+    "defaultBridgeCreatedAt": "2026-09-19T19:12:13.633503991Z",
+    "foreignVolumes": [
+      "1ee47f9bca703f6359a4cfd0fd59a996232bf0665daa41586690bf7a355f3d61",
+      "6a3bb6ee228145a68e14c9ebc0a66bf9eca2017cef59e437830daaf87e87afd7",
+      "34c612346cec7960038777d5d993b05d992c1c346c6134a550e876644620c13f",
+      "0328124c09ca80536efaf9d1f0facb33d1034fa4980302194cb0e8fb52a345f4",
+      "b94105dbcf7d50be2c994521670ff4de09503f5acd18d50585189b410532efec",
+      "d0a29480837f47db56b8d6b3910b3bc147761b922580f9854f9b60d0a6ce9bff",
+      "da7ed52e65be4cb2e6f52488cae05c5a473a48b085ad75a522fbb9072819e251",
+      "f54f7bedf5520c94ae3051d3bac2d65f7bb539199c31526545a3bbd184093637"
+    ],
+    "foreignVolumeInventoryMatchesPreviousSession": true,
+    "finalVerificationAt": "2026-09-19T22:52:57.099Z"
+  },
+  "cleanupException": {
+    "authorizedByUser": true,
+    "authorizedAt": "2026-09-19T22:50:28.374Z",
+    "reason": "User authorizes retaining all 44 external temporary files because automatic approval rejected deletion with blocked by policy; retention is valid documentary closure.",
+    "policyResult": "blocked by policy",
+    "blocksCheckpoint": false,
+    "criteria": {
+      "temporaryFilesInsideRepository": 0,
+      "temporaryFilesInIndexOrCommit": 0,
+      "ownedDockerResources": 0,
+      "externalTemporaryFilesRetainedAndDocumented": true
+    },
+    "deletionAttemptsAfterAuthorization": 0,
+    "permissionChanges": 0,
+    "policyBypassAttempts": 0,
+    "optionalManualCleanup": "In Windows Explorer, open the documented external directory, confirm its exact name and ownership.json, then return to its parent and delete only release-prereq-bRshc8 using the normal Delete action. Do not change permissions or disable protections; if blocked, leave it. This is optional and does not affect the checkpoint.",
+    "historicalSnapshots": "Initial classifications, blocked cleanup attempts and originalDocuments in recovered-evidence.json remain historical evidence; the authorized exception supersedes their old closure requirement.",
+    "documentationComplete": true
+  },
+  "externalTemporaryAudit": {
+    "observedAt": "2026-09-19T22:50:28.375Z",
+    "files": 44,
+    "bytes": 46106759,
+    "allHashesMatch": true,
+    "linksOrReparsePoints": 0,
+    "insideRepository": 0,
+    "tracked": 0,
+    "staged": 0,
+    "inCommitInventory": 0,
+    "secretScan": {
+      "realCredentialsDetected": 0,
+      "privateKeyBlocks": 0,
+      "providerTokens": 0,
+      "jwtValues": 0,
+      "envFilesInArchives": 0,
+      "sourceArchiveFilesScanned": 1061,
+      "tarHeadersInspected": 1463,
+      "regularArchiveMembers": 1064,
+      "credentialUrlPatternMatches": 13,
+      "credentialUrlDisposition": "Runtime connection templates and intentionally synthetic diagnostic canaries; no instantiated credentials.",
+      "literalAssignmentCandidatesReviewed": 88,
+      "literalAssignmentDisposition": "Synthetic fixture/canary values, environment/argument interpolation, generated ephemeral credential references and documentation placeholders; no real credential value retained.",
+      "limits": "Synthetic test strings with secret/token names exist. No operational credentials or production secrets were identified; values are not printed or persisted by this audit."
+    },
+    "downloadedTool": {
+      "file": "supabase-linux.tar.gz",
+      "sha256": "e5597462f865d5ac72af0453358e37ecb0d85962ad6914a114a53de847303bde",
+      "officialChecksumMatches": true,
+      "source": "https://github.com/supabase/cli/releases/download/v2.75.0/supabase_2.75.0_checksums.txt",
+      "scope": "Exact public release binary, license and README; not a local credential/configuration bundle."
+    },
+    "validationWithoutTemporaryDirectory": "audit-recovery.mjs uses tracked documentary evidence and Git objects; it neither reads nor requires the external directory."
+  },
+  "preExceptionValidation": {
+    "observedAt": "2026-09-19T19:31:19.744Z",
+    "documentAuditPassed": true,
+    "documents": 20,
+    "jsonFiles": 12,
+    "markdownReferences": 47,
+    "repositoryReferences": 756,
+    "sha256Checks": 792,
+    "migrationsVerified": 274,
+    "retainedInventoryEntriesVerified": 324,
+    "originalReportsPreserved": 17,
+    "originalHarnessesPreserved": 13,
+    "findings": [],
+    "gitDiffCheckPassed": true,
+    "gitCachedDiffCheckPassed": true,
+    "encodingGuardPassed": true,
+    "productFilesChanged": 0,
+    "environmentFileIgnoredUntracked": true,
+    "environmentFileContentsRead": false,
+    "indexSha256Unchanged": true,
+    "indexChanges": 0,
+    "conflicts": 0,
+    "worktrees": 1,
+    "functionalSuitesRerun": 0,
+    "buildsRerun": 0,
+    "ownedDockerResources": 0,
+    "foreignContainerAndVolumesUnchanged": true,
+    "ownedTemporaryFilesRemaining": 44,
+    "checkpointCreated": false
+  },
+  "preCheckpointGit": {
+    "branch": "main",
+    "head": "835fdc08a5940e72ae54db3b53c947a0786dc4db",
+    "aheadOfOrigin": 11,
+    "trackedDocumentsModified": 8,
+    "untrackedDocuments": 11,
+    "indexUnchanged": true,
+    "workingTreeClean": false,
+    "changesOutsidePreProduction": 0
+  },
+  "finalValidation": {
+    "observedAt": "2026-09-19T22:52:57.099Z",
+    "documentAuditPassed": true,
+    "documents": 20,
+    "commitDocuments": 19,
+    "jsonFiles": 12,
+    "markdownReferences": 52,
+    "repositoryReferences": 757,
+    "sha256Checks": 748,
+    "migrationsVerified": 274,
+    "retainedInventoryEntriesVerified": 324,
+    "originalReportsPreserved": 17,
+    "originalHarnessesPreserved": 13,
+    "findings": [],
+    "gitDiffCheckPassed": true,
+    "gitCachedDiffCheckPassed": true,
+    "encodingGuardPassed": true,
+    "productFilesChanged": 0,
+    "environmentFileIgnoredUntracked": true,
+    "environmentFileContentsRead": false,
+    "conflicts": 0,
+    "worktrees": 1,
+    "functionalSuitesRerun": 0,
+    "buildsRerun": 0,
+    "ownedDockerResources": 0,
+    "foreignContainerAndVolumesUnchanged": true,
+    "temporaryFilesInsideRepository": 0,
+    "temporaryFilesStagedOrInCommitInventory": 0,
+    "ownedTemporaryFilesRetainedOutsideRepository": 44,
+    "externalTemporaryReadsByRevalidation": 0,
+    "authorizedCleanupExceptionSatisfied": true,
+    "checkpointEvidence": "Containing Git commit; audit-recovery.mjs verifies after creation."
+  },
+  "finalGitContract": {
+    "branch": "main",
+    "parent": "835fdc08a5940e72ae54db3b53c947a0786dc4db",
+    "commitMessage": "docs(release): resolve rollout prerequisites",
+    "documentsIncluded": 19,
+    "aheadOfUnchangedOriginAfterCheckpoint": 12,
+    "cleanWorktreeAndIndexRequired": true,
+    "remoteWrites": 0
+  }
+}

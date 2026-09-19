@@ -1,0 +1,1490 @@
+{
+  "record": "Combined local rollout evidence with resolved historical-reference harness timeout",
+  "complete": true,
+  "startedAt": "2026-09-19T17:40:25.779Z",
+  "finishedAt": "2026-09-19T18:15:36.625Z",
+  "candidate": "835fdc08a5940e72ae54db3b53c947a0786dc4db",
+  "baseline": "a4e752cf58f628813d3979d598b60d480caaac8d",
+  "fallback": "ad436ff1ee3a329c1d6c702d0ce2cbfd05f92981",
+  "localOnly": true,
+  "syntheticOnly": true,
+  "remoteWrites": 0,
+  "productionEndpointCalls": 0,
+  "runtime": {
+    "database": {
+      "cli": "2.75.0",
+      "image": "public.ecr.aws/supabase/postgres:17.6.1.075",
+      "imageId": "sha256:82a04ba6c05f60950a74ae46be3726abb18d06ee44da936276fd782e72e36855"
+    },
+    "harnessNode": "v22.12.0",
+    "applicationValidation": "Separate Node 24 artifacts in candidate.json and rollback-artifact.json",
+    "productionPostgres": "17.6.1.063",
+    "localPostgres": "17.6.1.075",
+    "platformParity": "Approved bootstrap compatibility after 268; native pg_net safety adapter is local only, not deployment SQL."
+  },
+  "reconstruction": {
+    "mainRun": 274,
+    "inboxContinuationProvisioning": 274,
+    "totalFullProvisionings": 2,
+    "migrationSeal": "c43af74d602e4d17774bf18e2bf0a69ccebd4867770a873bb10e72030b1757ba",
+    "firstRunAllMigrationsPassed": true,
+    "mainRunOutcome": "191 admitted controls passed, then the old reference query timed out. The first report was retained as incomplete, not relabeled.",
+    "continuationOutcome": "Only the affected Inbox suite rerun on a newly provisioned 274 database after disposing the first. All 36 controls passed.",
+    "pendingMigrationTimings": [
+      {
+        "number": 269,
+        "file": "20260917183837_protect_profile_administrative_fields.sql",
+        "sha256": "119b70e25ffea319e4f4decbdf37c4b5681be1427f09e3ada93f07b6c7c9da87",
+        "durationMs": 1142,
+        "passed": true
+      },
+      {
+        "number": 270,
+        "file": "20260918010532_protect_settings_revalidation_secret.sql",
+        "sha256": "865034edefb66e41155b724fc80ded7bf3894a7e04e8eeeee9b2121bf107cbff",
+        "durationMs": 1345,
+        "passed": true
+      },
+      {
+        "number": 271,
+        "file": "20260918140931_protect_phone_administration.sql",
+        "sha256": "22e1c94a48888748d2e005d581f64145d88aa2e08e636ed69bb3f1fbc57f217c",
+        "durationMs": 1283,
+        "passed": true
+      },
+      {
+        "number": 272,
+        "file": "20260918152656_restrict_internal_database_privileges.sql",
+        "sha256": "0278468e552ea4053848f5b8f50a2f91234b6b6f29f7cb365e44081489c410d9",
+        "durationMs": 1253,
+        "passed": true
+      },
+      {
+        "number": 273,
+        "file": "20260918161631_remove_remaining_client_truncate_privileges.sql",
+        "sha256": "185dd457b0e709ab9db0c11fe05263be8be66926f7b54e80b2b79cd4922135e0",
+        "durationMs": 974,
+        "passed": true
+      },
+      {
+        "number": 274,
+        "file": "20260918194918_optimize_whatsapp_cloud_api_inbox_loading.sql",
+        "sha256": "75e6461e6a12d68f05b4620eb90a069dbeadcb29e3ff31cd5334fa1c9f38d087",
+        "durationMs": 1311,
+        "passed": true
+      }
+    ],
+    "timingUnit": "Wall time including Docker/psql process overhead, not isolated DDL execution time or a production SLA."
+  },
+  "transitions": [
+    {
+      "migration": 268,
+      "oldSettings": {
+        "ok": true,
+        "hasSensitiveColumn": true,
+        "keys": [
+          "id",
+          "revalidate_secret",
+          "show_client_landing_preview",
+          "url_base"
+        ]
+      },
+      "newSettings": {
+        "ok": true,
+        "hasSensitiveColumn": false,
+        "keys": [
+          "id",
+          "show_client_landing_preview",
+          "url_base"
+        ]
+      },
+      "phones": {
+        "oldClientOldHandler": 200,
+        "newClientOldHandler": 400,
+        "oldClientNewHandler": 401,
+        "newClientNewHandler": 200
+      }
+    },
+    {
+      "migration": 269,
+      "oldSettings": {
+        "ok": true,
+        "hasSensitiveColumn": true,
+        "keys": [
+          "id",
+          "revalidate_secret",
+          "show_client_landing_preview",
+          "url_base"
+        ]
+      },
+      "newSettings": {
+        "ok": true,
+        "hasSensitiveColumn": false,
+        "keys": [
+          "id",
+          "show_client_landing_preview",
+          "url_base"
+        ]
+      }
+    },
+    {
+      "migration": 270,
+      "oldSettings": {
+        "ok": false,
+        "code": "42501"
+      },
+      "newSettings": {
+        "ok": true,
+        "hasSensitiveColumn": false,
+        "keys": [
+          "id",
+          "show_client_landing_preview",
+          "url_base"
+        ]
+      }
+    },
+    {
+      "migration": 271,
+      "oldSettings": {
+        "ok": false,
+        "code": "42501"
+      },
+      "newSettings": {
+        "ok": true,
+        "hasSensitiveColumn": false,
+        "keys": [
+          "id",
+          "show_client_landing_preview",
+          "url_base"
+        ]
+      },
+      "phones": {
+        "oldClientOldHandler": 200,
+        "newClientOldHandler": 400,
+        "oldClientNewHandler": 401,
+        "newClientNewHandler": 200
+      }
+    },
+    {
+      "migration": 272,
+      "oldSettings": {
+        "ok": false,
+        "code": "42501"
+      },
+      "newSettings": {
+        "ok": true,
+        "hasSensitiveColumn": false,
+        "keys": [
+          "id",
+          "show_client_landing_preview",
+          "url_base"
+        ]
+      }
+    },
+    {
+      "migration": 273,
+      "oldSettings": {
+        "ok": false,
+        "code": "42501"
+      },
+      "newSettings": {
+        "ok": true,
+        "hasSensitiveColumn": false,
+        "keys": [
+          "id",
+          "show_client_landing_preview",
+          "url_base"
+        ]
+      }
+    },
+    {
+      "migration": 274,
+      "oldSettings": {
+        "ok": false,
+        "code": "42501"
+      },
+      "newSettings": {
+        "ok": true,
+        "hasSensitiveColumn": false,
+        "keys": [
+          "id",
+          "show_client_landing_preview",
+          "url_base"
+        ]
+      },
+      "phones": {
+        "oldClientOldHandler": 200,
+        "newClientOldHandler": 400,
+        "oldClientNewHandler": 401,
+        "newClientNewHandler": 200
+      }
+    }
+  ],
+  "settingsSourceHashes": {
+    "oldSettings": "95f79129e1a1a003039c49a38743c97c8625f8e13d8f2ae4b7d014a5d250c4e2",
+    "newSettings": "344601e527c2db6eb694f4e45c9e9305b8dcd19324f24602526ca57bec01b474"
+  },
+  "transitionInterpretation": [
+    "Actual old and current settingsDb.ts readers were transpiled and invoked through Supabase SDK plus isolated PostgREST. The harness adapted object response negotiation; no application source changed.",
+    "At 268/269 old reader succeeds and includes the synthetic sensitive column; from 270 it fails with 42501. New explicit safe projection succeeds throughout.",
+    "The actual old/new reset-phone-counters handlers prove the client coexistence status matrix at 268, 271 and 274. Other handler authorization cases are in the 191 admitted controls.",
+    "After 274 the historical Inbox overload and the new summaries/detail functions preserve complete projected results. This validates the fallback consumer contract, not a real Vercel alias rollback."
+  ],
+  "checks": {
+    "transitionAndSecurity": [
+      {
+        "name": "SQL own nombre update",
+        "passed": true
+      },
+      {
+        "name": "SQL role escalation denied",
+        "passed": true
+      },
+      {
+        "name": "SQL identity id change denied",
+        "passed": true
+      },
+      {
+        "name": "SQL nonexistent user_id rejected",
+        "passed": true
+      },
+      {
+        "name": "SQL administrative created_at denied",
+        "passed": true
+      },
+      {
+        "name": "SQL other profile remains unchanged",
+        "passed": true
+      },
+      {
+        "name": "SQL anon update denied",
+        "passed": true
+      },
+      {
+        "name": "SQL mixed statement atomic failure",
+        "passed": true
+      },
+      {
+        "name": "SQL client insert admin denied",
+        "passed": true
+      },
+      {
+        "name": "SQL client delete denied",
+        "passed": true
+      },
+      {
+        "name": "SQL missing JWT subject updates zero rows",
+        "passed": true
+      },
+      {
+        "name": "SQL admin browser also restricted to own nombre",
+        "passed": true
+      },
+      {
+        "name": "SQL approved Auth creation keeps admin role",
+        "passed": true
+      },
+      {
+        "name": "SQL trusted app_metadata assigns client and admin; user_metadata ignored",
+        "passed": true
+      },
+      {
+        "name": "SQL user_metadata alone cannot authorize signup",
+        "passed": true
+      },
+      {
+        "name": "SQL create-client service upsert conflict path",
+        "passed": true
+      },
+      {
+        "name": "SQL create-client service upsert insertion path",
+        "passed": true
+      },
+      {
+        "name": "SQL service cannot supply created_at",
+        "passed": true
+      },
+      {
+        "name": "SQL service direct profile deletion unnecessary and denied",
+        "passed": true
+      },
+      {
+        "name": "SQL service_role direct Auth deletion denied",
+        "passed": true
+      },
+      {
+        "name": "Effective auth.users DELETE grant absent for service_role",
+        "passed": true
+      },
+      {
+        "name": "SQL authenticated direct Auth deletion denied",
+        "passed": true
+      },
+      {
+        "name": "Effective auth.users DELETE grant absent for authenticated",
+        "passed": true
+      },
+      {
+        "name": "SQL anon direct Auth deletion denied",
+        "passed": true
+      },
+      {
+        "name": "Effective auth.users DELETE grant absent for anon",
+        "passed": true
+      },
+      {
+        "name": "Effective insert grant anon.id",
+        "passed": true
+      },
+      {
+        "name": "Effective update grant anon.id",
+        "passed": true
+      },
+      {
+        "name": "Effective insert grant anon.role",
+        "passed": true
+      },
+      {
+        "name": "Effective update grant anon.role",
+        "passed": true
+      },
+      {
+        "name": "Effective insert grant anon.created_at",
+        "passed": true
+      },
+      {
+        "name": "Effective update grant anon.created_at",
+        "passed": true
+      },
+      {
+        "name": "Effective insert grant anon.nombre",
+        "passed": true
+      },
+      {
+        "name": "Effective update grant anon.nombre",
+        "passed": true
+      },
+      {
+        "name": "Effective insert grant authenticated.id",
+        "passed": true
+      },
+      {
+        "name": "Effective update grant authenticated.id",
+        "passed": true
+      },
+      {
+        "name": "Effective insert grant authenticated.role",
+        "passed": true
+      },
+      {
+        "name": "Effective update grant authenticated.role",
+        "passed": true
+      },
+      {
+        "name": "Effective insert grant authenticated.created_at",
+        "passed": true
+      },
+      {
+        "name": "Effective update grant authenticated.created_at",
+        "passed": true
+      },
+      {
+        "name": "Effective insert grant authenticated.nombre",
+        "passed": true
+      },
+      {
+        "name": "Effective update grant authenticated.nombre",
+        "passed": true
+      },
+      {
+        "name": "Effective insert grant service_role.id",
+        "passed": true
+      },
+      {
+        "name": "Effective update grant service_role.id",
+        "passed": true
+      },
+      {
+        "name": "Effective insert grant service_role.role",
+        "passed": true
+      },
+      {
+        "name": "Effective update grant service_role.role",
+        "passed": true
+      },
+      {
+        "name": "Effective insert grant service_role.created_at",
+        "passed": true
+      },
+      {
+        "name": "Effective update grant service_role.created_at",
+        "passed": true
+      },
+      {
+        "name": "Effective insert grant service_role.nombre",
+        "passed": true
+      },
+      {
+        "name": "Effective update grant service_role.nombre",
+        "passed": true
+      },
+      {
+        "name": "No table-level DML grant for anon",
+        "passed": true
+      },
+      {
+        "name": "No table-level DML grant for authenticated",
+        "passed": true
+      },
+      {
+        "name": "No table-level DML grant for service_role",
+        "passed": true
+      },
+      {
+        "name": "RLS USING and WITH CHECK scoped to authenticated",
+        "passed": true
+      },
+      {
+        "name": "anon cannot select secret",
+        "passed": true
+      },
+      {
+        "name": "anon cannot select star",
+        "passed": true
+      },
+      {
+        "name": "anon cannot select composite row",
+        "passed": true
+      },
+      {
+        "name": "anon cannot update secret",
+        "passed": true
+      },
+      {
+        "name": "anon cannot insert secret",
+        "passed": true
+      },
+      {
+        "name": "anon cannot delete settings",
+        "passed": true
+      },
+      {
+        "name": "anon cannot execute secret oracle",
+        "passed": true
+      },
+      {
+        "name": "effective anon secret SELECT denied",
+        "passed": true
+      },
+      {
+        "name": "effective anon secret UPDATE denied",
+        "passed": true
+      },
+      {
+        "name": "effective anon secret INSERT denied",
+        "passed": true
+      },
+      {
+        "name": "effective anon secret REFERENCES denied",
+        "passed": true
+      },
+      {
+        "name": "authenticated cannot select secret",
+        "passed": true
+      },
+      {
+        "name": "authenticated cannot select star",
+        "passed": true
+      },
+      {
+        "name": "authenticated cannot select composite row",
+        "passed": true
+      },
+      {
+        "name": "authenticated cannot update secret",
+        "passed": true
+      },
+      {
+        "name": "authenticated cannot insert secret",
+        "passed": true
+      },
+      {
+        "name": "authenticated cannot delete settings",
+        "passed": true
+      },
+      {
+        "name": "authenticated cannot execute secret oracle",
+        "passed": true
+      },
+      {
+        "name": "effective authenticated secret SELECT denied",
+        "passed": true
+      },
+      {
+        "name": "effective authenticated secret UPDATE denied",
+        "passed": true
+      },
+      {
+        "name": "effective authenticated secret INSERT denied",
+        "passed": true
+      },
+      {
+        "name": "effective authenticated secret REFERENCES denied",
+        "passed": true
+      },
+      {
+        "name": "PUBLIC has no direct sensitive column or table DML grant",
+        "passed": true
+      },
+      {
+        "name": "authenticated safe projection and admin update remain functional",
+        "passed": true
+      },
+      {
+        "name": "client reads safe columns",
+        "passed": true
+      },
+      {
+        "name": "backend can read synthetic secret",
+        "passed": true
+      },
+      {
+        "name": "backend revalidation cannot modify secret",
+        "passed": true
+      },
+      {
+        "name": "mixed SQL update fails atomically",
+        "passed": true
+      },
+      {
+        "name": "Data API anon explicit sensitive projection revalidate_secret",
+        "passed": true
+      },
+      {
+        "name": "Data API anon explicit sensitive projection leak:revalidate_secret",
+        "passed": true
+      },
+      {
+        "name": "Data API anon explicit sensitive projection id,url_base,show_client_landing_preview,revalidate_secret",
+        "passed": true
+      },
+      {
+        "name": "Data API anon star never returns secret",
+        "passed": true
+      },
+      {
+        "name": "Data API anon secret update denied",
+        "passed": true
+      },
+      {
+        "name": "Data API anon mixed payload atomic",
+        "passed": true
+      },
+      {
+        "name": "Data API anon secret filter denied",
+        "passed": true
+      },
+      {
+        "name": "Data API anon oracle unavailable",
+        "passed": true
+      },
+      {
+        "name": "Data API authenticated explicit sensitive projection revalidate_secret",
+        "passed": true
+      },
+      {
+        "name": "Data API authenticated explicit sensitive projection leak:revalidate_secret",
+        "passed": true
+      },
+      {
+        "name": "Data API authenticated explicit sensitive projection id,url_base,show_client_landing_preview,revalidate_secret",
+        "passed": true
+      },
+      {
+        "name": "Data API authenticated star never returns secret",
+        "passed": true
+      },
+      {
+        "name": "Data API authenticated secret update denied",
+        "passed": true
+      },
+      {
+        "name": "Data API authenticated mixed payload atomic",
+        "passed": true
+      },
+      {
+        "name": "Data API authenticated secret filter denied",
+        "passed": true
+      },
+      {
+        "name": "Data API authenticated oracle unavailable",
+        "passed": true
+      },
+      {
+        "name": "Data API safe projection admin",
+        "passed": true
+      },
+      {
+        "name": "Data API safe projection client",
+        "passed": true
+      },
+      {
+        "name": "Data API admin changes safe field with explicit return projection",
+        "passed": true
+      },
+      {
+        "name": "Data API client cannot change global safe settings",
+        "passed": true
+      },
+      {
+        "name": "Data API backend reads exact synthetic value without transforming it",
+        "passed": true
+      },
+      {
+        "name": "Data API backend revalidation cannot write secret",
+        "passed": true
+      },
+      {
+        "name": "Data API public routing RPC contains only its existing safe fields",
+        "passed": true
+      },
+      {
+        "name": "SQL client sees own phones even when local/external gerencia ids coincide",
+        "passed": true
+      },
+      {
+        "name": "SQL client creates own phone",
+        "passed": true
+      },
+      {
+        "name": "SQL client edits and deletes own phone",
+        "passed": true
+      },
+      {
+        "name": "SQL own upsert conflict key stays compatible",
+        "passed": true
+      },
+      {
+        "name": "SQL cannot create foreign phone",
+        "passed": true
+      },
+      {
+        "name": "SQL foreign update affects zero",
+        "passed": true
+      },
+      {
+        "name": "SQL foreign delete affects zero",
+        "passed": true
+      },
+      {
+        "name": "SQL mixed phone owner reassignment denied",
+        "passed": true
+      },
+      {
+        "name": "SQL same-owner gerencia reassignment denied",
+        "passed": true
+      },
+      {
+        "name": "SQL gerencia owner reassignment denied",
+        "passed": true
+      },
+      {
+        "name": "SQL cannot create gerencia for other client",
+        "passed": true
+      },
+      {
+        "name": "SQL anon denied SELECT",
+        "passed": true
+      },
+      {
+        "name": "SQL anon denied INSERT",
+        "passed": true
+      },
+      {
+        "name": "SQL anon denied UPDATE",
+        "passed": true
+      },
+      {
+        "name": "SQL anon denied DELETE",
+        "passed": true
+      },
+      {
+        "name": "SQL admin reads all phones",
+        "passed": true
+      },
+      {
+        "name": "SQL admin manages phone for another client",
+        "passed": true
+      },
+      {
+        "name": "SQL admin cannot reassign existing phone",
+        "passed": true
+      },
+      {
+        "name": "SQL admin cannot reassign existing gerencia",
+        "passed": true
+      },
+      {
+        "name": "SQL forged metadata retains client role and isolation",
+        "passed": true
+      },
+      {
+        "name": "SQL backend reads and updates operational fields",
+        "passed": true
+      },
+      {
+        "name": "grant anon INSERT id denied",
+        "passed": true
+      },
+      {
+        "name": "grant anon UPDATE id denied",
+        "passed": true
+      },
+      {
+        "name": "grant anon INSERT usage_count denied",
+        "passed": true
+      },
+      {
+        "name": "grant anon UPDATE usage_count denied",
+        "passed": true
+      },
+      {
+        "name": "grant anon INSERT created_at denied",
+        "passed": true
+      },
+      {
+        "name": "grant anon UPDATE created_at denied",
+        "passed": true
+      },
+      {
+        "name": "grant anon INSERT updated_at denied",
+        "passed": true
+      },
+      {
+        "name": "grant anon UPDATE updated_at denied",
+        "passed": true
+      },
+      {
+        "name": "grant anon INSERT messages_reset_at denied",
+        "passed": true
+      },
+      {
+        "name": "grant anon UPDATE messages_reset_at denied",
+        "passed": true
+      },
+      {
+        "name": "grant authenticated INSERT id denied",
+        "passed": true
+      },
+      {
+        "name": "grant authenticated UPDATE id denied",
+        "passed": true
+      },
+      {
+        "name": "grant authenticated INSERT usage_count denied",
+        "passed": true
+      },
+      {
+        "name": "grant authenticated UPDATE usage_count denied",
+        "passed": true
+      },
+      {
+        "name": "grant authenticated INSERT created_at denied",
+        "passed": true
+      },
+      {
+        "name": "grant authenticated UPDATE created_at denied",
+        "passed": true
+      },
+      {
+        "name": "grant authenticated INSERT updated_at denied",
+        "passed": true
+      },
+      {
+        "name": "grant authenticated UPDATE updated_at denied",
+        "passed": true
+      },
+      {
+        "name": "grant authenticated INSERT messages_reset_at denied",
+        "passed": true
+      },
+      {
+        "name": "grant authenticated UPDATE messages_reset_at denied",
+        "passed": true
+      },
+      {
+        "name": "RLS phone SELECT targets authenticated",
+        "passed": true
+      },
+      {
+        "name": "RLS phone INSERT targets authenticated",
+        "passed": true
+      },
+      {
+        "name": "RLS phone UPDATE targets authenticated",
+        "passed": true
+      },
+      {
+        "name": "RLS phone DELETE targets authenticated",
+        "passed": true
+      },
+      {
+        "name": "private invoker guard prevent_phone_owner_reassignment",
+        "passed": true
+      },
+      {
+        "name": "private invoker guard prevent_gerencia_owner_reassignment",
+        "passed": true
+      },
+      {
+        "name": "cron postgres results preserved",
+        "passed": true
+      },
+      {
+        "name": "backend statistics and public contracts preserved",
+        "passed": true
+      },
+      {
+        "name": "274 ledger complete",
+        "passed": true
+      },
+      {
+        "name": "cron jobs schedule command role unchanged",
+        "passed": true
+      },
+      {
+        "name": "client TRUNCATE absent from all 42 target tables",
+        "passed": true
+      },
+      {
+        "name": "Edge sync-phones rejects missing session before effects",
+        "passed": true
+      },
+      {
+        "name": "Edge sync-phones rejects synthetic-anon session before effects",
+        "passed": true
+      },
+      {
+        "name": "Edge sync-phones rejects synthetic-invalid session before effects",
+        "passed": true
+      },
+      {
+        "name": "Edge sync-phones denies forged owner [\"user_id\"]",
+        "passed": true
+      },
+      {
+        "name": "Edge sync-phones denies forged owner [\"gerencia_id\"]",
+        "passed": true
+      },
+      {
+        "name": "Edge sync-phones denies forged owner [\"user_id\",\"gerencia_id\"]",
+        "passed": true
+      },
+      {
+        "name": "Edge sync-phones rejects user_id URL without effects",
+        "passed": true
+      },
+      {
+        "name": "Edge sync-phones authorized synthetic-client target 7301 via gerencia_id preserves contract",
+        "passed": true
+      },
+      {
+        "name": "Edge sync-phones authorized synthetic-admin target 7302 via gerencia_id preserves contract",
+        "passed": true
+      },
+      {
+        "name": "Edge sync-phones authorized synthetic-admin target 7302 via user_id preserves contract",
+        "passed": true
+      },
+      {
+        "name": "Edge reset-phone-counters rejects missing session before effects",
+        "passed": true
+      },
+      {
+        "name": "Edge reset-phone-counters rejects synthetic-anon session before effects",
+        "passed": true
+      },
+      {
+        "name": "Edge reset-phone-counters rejects synthetic-invalid session before effects",
+        "passed": true
+      },
+      {
+        "name": "Edge reset-phone-counters denies forged owner [\"user_id\"]",
+        "passed": true
+      },
+      {
+        "name": "Edge reset-phone-counters denies forged owner [\"gerencia_id\"]",
+        "passed": true
+      },
+      {
+        "name": "Edge reset-phone-counters denies forged owner [\"user_id\",\"gerencia_id\"]",
+        "passed": true
+      },
+      {
+        "name": "Edge reset-phone-counters rejects user_id URL without effects",
+        "passed": true
+      },
+      {
+        "name": "Edge reset-phone-counters authorized synthetic-client target 7301 via gerencia_id preserves contract",
+        "passed": true
+      },
+      {
+        "name": "Edge reset-phone-counters authorized synthetic-admin target 7302 via gerencia_id preserves contract",
+        "passed": true
+      },
+      {
+        "name": "Edge reset-phone-counters authorized synthetic-admin target 7302 via user_id preserves contract",
+        "passed": true
+      },
+      {
+        "name": "Edge reset-phone-messages rejects missing session before effects",
+        "passed": true
+      },
+      {
+        "name": "Edge reset-phone-messages rejects synthetic-anon session before effects",
+        "passed": true
+      },
+      {
+        "name": "Edge reset-phone-messages rejects synthetic-invalid session before effects",
+        "passed": true
+      },
+      {
+        "name": "Edge reset-phone-messages denies forged owner [\"user_id\"]",
+        "passed": true
+      },
+      {
+        "name": "Edge reset-phone-messages denies forged owner [\"gerencia_id\"]",
+        "passed": true
+      },
+      {
+        "name": "Edge reset-phone-messages denies forged owner [\"user_id\",\"gerencia_id\"]",
+        "passed": true
+      },
+      {
+        "name": "Edge reset-phone-messages rejects user_id URL without effects",
+        "passed": true
+      },
+      {
+        "name": "Edge reset-phone-messages authorized synthetic-client target 7301 via gerencia_id preserves contract",
+        "passed": true
+      },
+      {
+        "name": "Edge reset-phone-messages authorized synthetic-admin target 7302 via gerencia_id preserves contract",
+        "passed": true
+      },
+      {
+        "name": "Edge reset-phone-messages authorized synthetic-admin target 7302 via user_id preserves contract",
+        "passed": true
+      },
+      {
+        "name": "Edge scheduled synchronization synthetic results equal historical handler",
+        "passed": true
+      },
+      {
+        "name": "concurrency eight assignments create eight reservations balanced 4/4",
+        "passed": true
+      },
+      {
+        "name": "concurrency warmup creates no extra reservations",
+        "passed": true
+      },
+      {
+        "name": "concurrency confirmation preserves one reservation identity",
+        "passed": true
+      },
+      {
+        "name": "concurrency counters retain all sixteen increments",
+        "passed": true
+      }
+    ],
+    "inbox": [
+      {
+        "name": "274/274 migration ledger",
+        "status": "passed"
+      },
+      {
+        "name": "new privileged helpers are unexposed and public wrappers are invokers",
+        "status": "passed"
+      },
+      {
+        "name": "complete historical projection equivalence case 1",
+        "status": "passed"
+      },
+      {
+        "name": "complete historical projection equivalence case 2",
+        "status": "passed"
+      },
+      {
+        "name": "complete historical projection equivalence case 3",
+        "status": "passed"
+      },
+      {
+        "name": "complete historical projection equivalence case 4",
+        "status": "passed"
+      },
+      {
+        "name": "complete historical projection equivalence case 5",
+        "status": "passed"
+      },
+      {
+        "name": "complete historical projection equivalence case 6",
+        "status": "passed"
+      },
+      {
+        "name": "complete historical projection equivalence case 7",
+        "status": "passed"
+      },
+      {
+        "name": "complete historical projection equivalence case 8",
+        "status": "passed"
+      },
+      {
+        "name": "complete historical projection equivalence case 9",
+        "status": "passed"
+      },
+      {
+        "name": "complete historical projection equivalence case 10",
+        "status": "passed"
+      },
+      {
+        "name": "complete historical projection equivalence case 11",
+        "status": "passed"
+      },
+      {
+        "name": "complete historical projection equivalence case 12",
+        "status": "passed"
+      },
+      {
+        "name": "complete historical projection equivalence case 13",
+        "status": "passed"
+      },
+      {
+        "name": "complete historical projection equivalence case 14",
+        "status": "passed"
+      },
+      {
+        "name": "complete historical projection equivalence case 15",
+        "status": "passed"
+      },
+      {
+        "name": "first page is bounded at 20 and excludes another tenant",
+        "status": "passed"
+      },
+      {
+        "name": "second tenant sees only its own rows",
+        "status": "passed"
+      },
+      {
+        "name": "protected admin role can read both tenants",
+        "status": "passed"
+      },
+      {
+        "name": "null auth uid exposes no summaries or history",
+        "status": "passed"
+      },
+      {
+        "name": "foreign contact id cannot read history",
+        "status": "passed"
+      },
+      {
+        "name": "first detail page equals historical latest 50 messages",
+        "status": "passed"
+      },
+      {
+        "name": "message cursor next and final page have no gaps or duplicates",
+        "status": "passed"
+      },
+      {
+        "name": "empty conversation has empty detail",
+        "status": "passed"
+      },
+      {
+        "name": "stable conversation pages including equal activity timestamps",
+        "status": "passed"
+      },
+      {
+        "name": "read state is preserved and calculated per authenticated reader",
+        "status": "passed"
+      },
+      {
+        "name": "positive Contacto filter retains redirect-derived state",
+        "status": "passed"
+      },
+      {
+        "name": "mixed stream timestamp ties paginate with no lost or duplicate messages",
+        "status": "passed"
+      },
+      {
+        "name": "pgTAP access contracts (10 assertions)",
+        "status": "passed"
+      },
+      {
+        "name": "existing authenticated RPC no longer times out",
+        "status": "passed"
+      },
+      {
+        "name": "Data API authenticated summary projection",
+        "status": "passed"
+      },
+      {
+        "name": "Data API selected history and cursor",
+        "status": "passed"
+      },
+      {
+        "name": "Data API anonymous cannot list or read messages",
+        "status": "passed"
+      },
+      {
+        "name": "Data API cannot inject tenant identity",
+        "status": "passed"
+      },
+      {
+        "name": "Data API foreign selected contact returns no messages",
+        "status": "passed"
+      }
+    ],
+    "rollbackConclusion": {
+      "name": "Old baseline after 274 is incompatible; new settings and handler remain functional",
+      "passed": true,
+      "method": "Final assertion against persisted transition 274, after completing Inbox suite"
+    },
+    "totalRecords": 228,
+    "globallyUniqueAcrossHistoricalPhases": false,
+    "pgTapAssertionsIncluded": 10
+  },
+  "harnessIncident": {
+    "class": "Historical reference/harness budget, not a candidate RPC failure",
+    "originalFailure": {
+      "stage": 274,
+      "code": "57014",
+      "message": "complete historical projection equivalence case 3: historical reference: Local command failed SQLSTATE 57014"
+    },
+    "exactChange": "For reference calls identified by SET LOCAL enable_nestloop=off; SET LOCAL jit=off; only, replace the local test statement_timeout from 8000ms to 30000ms. Query body, parameters, results and all candidate limits remain unchanged.",
+    "referenceCalls": [
+      {
+        "durationMs": 10072,
+        "timeoutMs": 30000,
+        "passed": true,
+        "querySha256": "81905d28fbdbf5cf6126dac948f931b126f87d4da67f09f0391e87d9081ba419"
+      },
+      {
+        "durationMs": 8977,
+        "timeoutMs": 30000,
+        "passed": true,
+        "querySha256": "1ed299bb89f9632ed1c1b2fc73e6a825130ff7df76851c6ff7a2580479cebc04"
+      },
+      {
+        "durationMs": 10882,
+        "timeoutMs": 30000,
+        "passed": true,
+        "querySha256": "634a675a1c4bfff241eff7885d8b703ec0e2dfd1128fdc67e94aeb0c45ef475c"
+      },
+      {
+        "durationMs": 8795,
+        "timeoutMs": 30000,
+        "passed": true,
+        "querySha256": "b5402cc7eaef43d56c61b8af6d6b6b4bc44cec02f73e49cec364df78f815c80a"
+      },
+      {
+        "durationMs": 9002,
+        "timeoutMs": 30000,
+        "passed": true,
+        "querySha256": "7cced05a08e4e899579cbdabc5c954ab7c2c2a8e26315f3d2dd7ce88390f068f"
+      },
+      {
+        "durationMs": 1371,
+        "timeoutMs": 30000,
+        "passed": true,
+        "querySha256": "2aa409a5ee7e64cbbebeed12955ac1026de05bd5c75a5eba1fa72834fc81ef5b"
+      },
+      {
+        "durationMs": 9166,
+        "timeoutMs": 30000,
+        "passed": true,
+        "querySha256": "a14d35ea5590f9082300ae8c59b929216b2ffe652115fc377fe95d28fd1132f5"
+      },
+      {
+        "durationMs": 8689,
+        "timeoutMs": 30000,
+        "passed": true,
+        "querySha256": "bd39f6184791bad2a9e4e3213d798a752e35698a65cab78641077b289669ed84"
+      },
+      {
+        "durationMs": 10168,
+        "timeoutMs": 30000,
+        "passed": true,
+        "querySha256": "bf354f6c5a9b02c7d860b7c6ecbdf9dbfa671394aae4b51944ba57a7f04d2dc5"
+      },
+      {
+        "durationMs": 8891,
+        "timeoutMs": 30000,
+        "passed": true,
+        "querySha256": "50971647b5bb2682b7c46d4b4d9706083efe64449ccd01d66cc10c4b87a773ed"
+      },
+      {
+        "durationMs": 8518,
+        "timeoutMs": 30000,
+        "passed": true,
+        "querySha256": "49a550e7dc155447ca7b999676b2a13ac9fe7d50f8df2c2f69e9f9d41a745f0c"
+      },
+      {
+        "durationMs": 10153,
+        "timeoutMs": 30000,
+        "passed": true,
+        "querySha256": "09556fd456f9ce1e90597d70d749eb33a2a8ee8010b2527dbbb754b1276983c1"
+      },
+      {
+        "durationMs": 8506,
+        "timeoutMs": 30000,
+        "passed": true,
+        "querySha256": "97907ecce7c2de6be0a2dd5cfad02e30b8c18bdd5a44751cccf63d44dca7e285"
+      },
+      {
+        "durationMs": 8515,
+        "timeoutMs": 30000,
+        "passed": true,
+        "querySha256": "c2d99d013a3aee59b1489070165ab75763f4dc599eac422e3723f41659a8a551"
+      },
+      {
+        "durationMs": 1193,
+        "timeoutMs": 30000,
+        "passed": true,
+        "querySha256": "b891c4961467e7ea95f76c4c65a8709edba60704c7fafeb2e990b941b8f90778"
+      },
+      {
+        "durationMs": 8646,
+        "timeoutMs": 30000,
+        "passed": true,
+        "querySha256": "e350badc3d70d048345ab82f6552baf8ed036dc2fd996406072b26ead5a5d786"
+      }
+    ],
+    "referenceMaxWallMs": 10882,
+    "candidatePreviouslyBlockedCase": {
+      "offset": 260,
+      "sqlMs": 96.981,
+      "rows": 9,
+      "timeoutMs": 8000
+    },
+    "applicationTimeoutMs": 8000,
+    "applicationOrMigrationChanges": 0,
+    "assertionPolicy": "No skipped case or loosened result expectation. Fifteen complete historical projection comparisons passed.",
+    "initialRawReportSha256": "2af76aa8dab986eec2eca190205d813095e91ac5d368e42f0df88b0f5feee2eb",
+    "continuationRawReportSha256": "f2dcac7206094b1315268e6f4327283479f4a537c1b5019e7f99e2df4f56b1b1"
+  },
+  "measurements": {
+    "optimizedHistoricalRpcMs": 107.336,
+    "rpcs": {
+      "summaries": {
+        "sqlMs": 111.397,
+        "planningMs": 0.48,
+        "rows": 20,
+        "hits": 22375,
+        "reads": 0,
+        "timeoutMs": 8000
+      },
+      "selectedDetail": {
+        "sqlMs": 14.638,
+        "planningMs": 0.757,
+        "rows": 1,
+        "hits": 1518,
+        "reads": 0,
+        "timeoutMs": 8000
+      }
+    },
+    "transfers": {
+      "oldRows": 20,
+      "oldMessages": 1000,
+      "oldJsonBytes": 257446,
+      "newRows": 20,
+      "newMessages": 0,
+      "newJsonBytes": 20987,
+      "selectedMessageRows": 50
+    },
+    "reusedHistoricalBenchmarks": "The four exploratory original/predicate benchmarks from docs/optimization/inbox/sql-measurements.json were reused, not executed or counted as new performance measurements."
+  },
+  "maintenance": {
+    "jobsBefore": "99d5cb60325205c0af69b467d6a4d38b",
+    "jobsAfter": "99d5cb60325205c0af69b467d6a4d38b",
+    "identical": true,
+    "truncateTablesChecked": 42,
+    "clientTruncateDenied": true,
+    "postgresTruncateRetained": true,
+    "cronResults": "Synthetic postgres execution with rollback identical before/after; external request transport disabled.",
+    "concurrency": [
+      "8 assignments produce 8 reservations balanced 4/4",
+      "Warmup does not create reservations",
+      "Confirmation retains one reservation identity",
+      "16 increments all retained"
+    ]
+  },
+  "boundedCliExecutor": {
+    "localOnly": true,
+    "cli": "2.75.0",
+    "method": "PGSERVICEFILE/PGSERVICE; Node container on existing isolated DB network",
+    "limits": {
+      "lockTimeout": "5s",
+      "statementTimeout": "45s"
+    },
+    "credentialInFile": false,
+    "remoteConnections": 0,
+    "limitsProbeExitCode": 0,
+    "limitsLedgerConfirmed": true,
+    "intentionalFailureExitCode": 1,
+    "atomicRollbackConfirmed": true,
+    "complete": true,
+    "localProbeDatabaseRemoved": true,
+    "temporaryNetworkAttachmentRemoved": true
+  },
+  "safety": {
+    "cronLaunchActiveJobs": false,
+    "outboundDatabaseNetwork": "isolated internal Docker network, guard checked by helper",
+    "publicPortsPublishedByDataApi": 0,
+    "fixtureContent": "Synthetic tenants, phones, messages and conversions only; none retained in release docs."
+  },
+  "modules": [
+    {
+      "file": "scripts/phase0/bootstrap-manifest.mjs",
+      "sha256": "1f1fa7a7801b24e269cb4bacf1939ad6d52756ed82d9c7561cf04561115be75a"
+    },
+    {
+      "file": "scripts/phase0/bootstrap-runtime.mjs",
+      "sha256": "ee287778bde22f9a1c1eda869123b49bd59b631967759e009bdc140ba04fbaa1"
+    },
+    {
+      "file": "scripts/phase0/bootstrap-compatibility.mjs",
+      "sha256": "cc1176da6cf08fc84b88fd1d816dbae96fb5e46ac62bfb4e839e435823085eef"
+    },
+    {
+      "file": "scripts/phase0/bootstrap-net.mjs",
+      "sha256": "37728359e3b6c6ceeb6eb13023d8fda2a5c0b0e3ff51b611d39d66a4ba609717"
+    },
+    {
+      "file": "scripts/security/phone-data-api.mjs",
+      "sha256": "97571707cdc5e6d576a8a548ef373f005795883b298f4749c7161e6bdeca3476"
+    },
+    {
+      "file": "scripts/security/phone-security-tests.mjs",
+      "sha256": "a9795b2dc8a85fcbf537c608a7077b6d2d66c3366ffa53407140cf27e3796b80"
+    },
+    {
+      "file": "scripts/security/profile-security-tests.mjs",
+      "sha256": "a2911ee85080a7b85725d6222536c36e5623d98b8bb6f722c46ab407c900938e"
+    },
+    {
+      "file": "scripts/security/settings-security-tests.mjs",
+      "sha256": "d4f6f57f3c63a4d68b1b3ecf1b9baad23a51a9e3ca294895bc180efa35dcac67"
+    },
+    {
+      "file": "scripts/security/phone-edge-tests.mjs",
+      "sha256": "81418fa267b7e3df051a76bbf7c5a05ebfa4f422284ca37ccb55b2b7c9f68337"
+    },
+    {
+      "file": "scripts/security/phone-concurrency-tests.mjs",
+      "sha256": "b7e4866142ef21ea69e259264a33b0452121d90898ff4748e573f2b48ba8ea30"
+    },
+    {
+      "file": "scripts/security/internal-privileges-tests.mjs",
+      "sha256": "53efadc903bd86a00cf8bdb98a542500be422cfe74675c767eb14d9c25883243"
+    },
+    {
+      "file": "scripts/optimization/inbox-tests.mjs",
+      "sha256": "ef12342f19a33fc2f917c4b063abbc9571c020fa2f3b659bc37cc63c93e3c304"
+    },
+    {
+      "file": "scripts/optimization/inbox-diagnostic-fixture.sql",
+      "sha256": "2ab917ffbb76a2c5fea397423b5ab8f067343a4e340b388fe01111b1256eef4f"
+    },
+    {
+      "file": "scripts/optimization/inbox-functional-fixture.sql",
+      "sha256": "9b5a6902880aa74a88820fe9c6f69ec936e5471265d2a35ac8ae2c9a72012161"
+    }
+  ],
+  "temporaryHarnessHashes": [
+    {
+      "name": "rollout-rehearsal.mjs",
+      "sha256": "81d4b25657303c65d3b557f7784eed9e8c2e33bac9953278eccd3042e8642941"
+    },
+    {
+      "name": "inbox-continuation.mjs",
+      "sha256": "2832441b5e33febb74cef1c456445dd5ce774c485db6152c147b29617b20e3ed"
+    },
+    {
+      "name": "artifact-runner.cjs",
+      "sha256": "008013e1b29f414fe7c2547095c3f999b1e086243bc1cb47581376b0cc1c6eed"
+    }
+  ],
+  "cleanup": {
+    "firstDatabase": {
+      "project": "phase0b-63518356",
+      "owned": {
+        "containers": [
+          "cb9f593660e9d5d3cedb3d1c21173174cf78fe777d896ac2f2cc046a2b886924"
+        ],
+        "networks": [
+          "027261e36de552498bd6d50d8aaa480998cb828c00bb046974e106c2827fe6f5",
+          "9b5719a21c268176e291ffbfed5dcfac477c6f302396aa6bb9fbc95089c7316c"
+        ],
+        "volumes": [
+          "supabase_db_phase0b-63518356"
+        ]
+      },
+      "remaining": {
+        "containers": [],
+        "networks": [],
+        "volumes": []
+      }
+    },
+    "firstDataApi": {
+      "container": "84d1ad511e23f1e696f5f067cb90c1b0c437a2439d2951cf524be0bae3872864",
+      "remaining": 0
+    },
+    "secondDatabase": {
+      "project": "phase0b-4d839d72",
+      "owned": {
+        "containers": [
+          "5e60291aa4978845349d048ce7ce44e18bbf18536a3da767c2addb0a48577c36"
+        ],
+        "networks": [
+          "64dbbc60de4851fe5360e2f15db276204fe34a4972be6dfc9f9ee1396113990f",
+          "aa2a4505123dd56f280c4e7c98fd8f0d71507a0c8c2ca5cbf8c6ad38cdbfdc50"
+        ],
+        "volumes": [
+          "supabase_db_phase0b-4d839d72"
+        ]
+      },
+      "remaining": {
+        "containers": [],
+        "networks": [],
+        "volumes": []
+      }
+    },
+    "secondDataApi": {
+      "container": "30defd84b1383acc8da55206aefde66804546ecca36abd63251ed946c9616003",
+      "remaining": 0
+    },
+    "buildContainers": {
+      "removed": [
+        {
+          "name": "release-prereq-brshc8-candidate",
+          "id": "f9b0041b5c5c06f85a56c6a62ae1de64a30c4d1b775f436765a310381c31a0af"
+        },
+        {
+          "name": "release-prereq-brshc8-baseline",
+          "id": "9ecc53f67fdb23ae99edef6daa8ecfb9ab1fd1ba6e818d3096d508408461e86d"
+        },
+        {
+          "name": "release-prereq-brshc8-compatible",
+          "id": "b1384758eada95a6eac09896ac6459ab0549bc2fbef0dc5d3944c1b259e9bed5"
+        }
+      ],
+      "ownedRemaining": 0,
+      "foreignResourcesModified": false
+    }
+  },
+  "limits": [
+    "Application host build/tests use Node 24; database orchestration used existing Node 22.12.0.",
+    "No complete productive session, Meta message, real credential equality or platform deployment asserted.",
+    "Existing Chromium 12-check evidence is reused with unchanged Inbox sources; it is not a new browser execution.",
+    "The CLI limit probe used a separate synthetic database and intentional failed migration, then removed it. No production CLI push or dry-run was run."
+  ]
+}

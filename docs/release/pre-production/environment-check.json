@@ -49,10 +49,14 @@
       "expectedNonSecretSetting": "production",
       "productionPresent": false,
       "previewPresent": false,
-      "status": "MISSING_BLOCKER",
+      "status": "MISSING_REMOTE_CONFIGURATION_AUTHORIZATION_REQUIRED",
       "consumer": "frontend/lib/revalidation/catalog.server.ts",
       "effectIfMissing": "Both revalidation routes fail closed; constructor returns 503.",
-      "activation": "New Vercel production deployment after configuration; do not enable Preview."
+      "activation": "New Vercel production deployment after configuration; do not enable Preview.",
+      "futureCommand": "vercel env add REVALIDATION_ENV production --value production --yes",
+      "project": "landing-builder-v2-k259",
+      "target": "production",
+      "requiresNewDeployment": true
     },
     {
       "name": "SUPABASE_SERVICE_ROLE_KEY",
@@ -172,9 +176,10 @@
       "name": "REVALIDATE_SECRET",
       "change": "unchanged external classic receiver setting",
       "requiredIn": "classic receiver only",
-      "status": "OUTSIDE_BUILDER_VARIABLE_INVENTORY_NOT_REOPENED",
+      "status": "CLASSIC_PRODUCTION_NAME_PRESENT_CONTRACT_ACCREDITED",
       "builderNeedsThisEnv": false,
-      "coordination": "The classic operator must confirm receiver version and key agreement without disclosing the value. Rotate separately after closing old browser access."
+      "coordination": "Effective classic source and POST contract accredited; existing key agreement and separate future rotation require authorized server-only acceptance.",
+      "productionPresent": true
     }
   ],
   "destinations": {
@@ -211,5 +216,12 @@
     "Changing a Vercel variable does not alter an immutable existing deployment; build/deploy the new artifact. Any optional future Edge secret change requires its normal deployment verification.",
     "Preview remains unsupported for revalidation and lacks a service-role variable intentionally; do not use it as a substitute for the Production acceptance test."
   ],
-  "remoteWrites": 0
+  "remoteWrites": 0,
+  "followup": {
+    "date": "2026-09-19",
+    "productionMissingRechecked": true,
+    "readValues": false,
+    "procedure": "docs/release/pre-production/operational-runbook.md",
+    "classicEvidence": "docs/release/pre-production/classic-receiver.json"
+  }
 }

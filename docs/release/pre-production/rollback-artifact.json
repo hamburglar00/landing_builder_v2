@@ -1,0 +1,220 @@
+{
+  "record": "Node 24 rollback preparation",
+  "observedAt": "2026-09-19",
+  "image": {
+    "tag": "node:24.21.0-bookworm-slim",
+    "imageId": "sha256:0e0ff40c39bc087845bfb27465a0df4ea419520094bc35842ff83dd8cbe6f9b6"
+  },
+  "deployedBaseline": {
+    "label": "baseline",
+    "node": "v24.21.0",
+    "npm": "11.19.0",
+    "platform": "linux",
+    "arch": "x64",
+    "sourceSnapshot": "Git archive; frontend/scripts/functions; no .env",
+    "packageSha256": "c59e1e922a031ac859feffef100dea68b27b17f20bd65562c433b1d034a92d09",
+    "lockfileSha256": "03de17209a42c034e86f049e384889c0d21d22b412706b8e2d45153dff3870fa",
+    "commands": [
+      {
+        "name": "npm-ci",
+        "command": "npm ci --no-audit --no-fund --cache /tmp/release-npm-cache",
+        "exitCode": 0,
+        "signal": null,
+        "durationMs": 98669,
+        "outputSha256": "dea141af51649438a746f5cd0010f962fe80b5fad68db4dde8d1ab0f08fab80b",
+        "outputPersisted": false
+      },
+      {
+        "name": "typescript",
+        "command": "node node_modules/typescript/bin/tsc --noEmit --incremental false",
+        "exitCode": 0,
+        "signal": null,
+        "durationMs": 85370,
+        "outputSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "outputPersisted": false
+      },
+      {
+        "name": "production-build",
+        "command": "npm run build",
+        "exitCode": 0,
+        "signal": null,
+        "durationMs": 232681,
+        "outputSha256": "4769a7d38ceca21a4cef5a2c6251a7e926c5450391ace9b3889dd6f1438add63",
+        "outputPersisted": false
+      }
+    ],
+    "complete": true,
+    "installed": true,
+    "bundle": {
+      "scope": ".next/static browser assets",
+      "serverArtifactsExcluded": ".next/server",
+      "files": 80,
+      "bytes": 3932974,
+      "manifestSha256": "13c10022bec5dc6b54ca941e8ed6ea2af59d17d0e0209b872321887722d06e4e",
+      "findings": [],
+      "syntheticSecretsOnly": true
+    },
+    "sourceLockfileUnchanged": true,
+    "buildIdSha256": "2228ed8bc043163d7894266065c209c36c59c2fc21807e1f328a172c0e43f7c1",
+    "finishedAt": "2026-09-19T17:52:22.945Z",
+    "commit": "a4e752cf58f628813d3979d598b60d480caaac8d",
+    "archiveSha256": "772f8878bf362384241b343d7dc5c45c46191e87fea05aa9811c76e78b411218",
+    "sourceManifestSha256": "60ab2099b4c46748e0277f6c6e6d2f0932d2d0bd8e2d8f3f0ceb2a455ec3daef",
+    "trackedSourcesChecked": 285,
+    "trackedSourceChanges": [],
+    "http": {
+      "complete": true,
+      "label": "baseline",
+      "node": "v24.21.0",
+      "checks": [
+        {
+          "route": "/login",
+          "status": 200,
+          "bytes": 13974,
+          "durationMs": 125,
+          "secretAbsent": true
+        },
+        {
+          "route": "/dashboard/whatsapp-cloud-api/inbox",
+          "status": 200,
+          "bytes": 11852,
+          "durationMs": 115,
+          "secretAbsent": true
+        },
+        {
+          "route": "/api/landings/revalidate",
+          "status": 404,
+          "bytes": 7531,
+          "durationMs": 74,
+          "secretAbsent": true
+        }
+      ],
+      "scope": "Built Next HTTP server; unauthenticated page shells and new authorization denial. Session/Data API and browser contracts are separate synthetic checks.",
+      "productionRequests": 0,
+      "rawBodiesPersisted": false
+    },
+    "compatibleAfter274": false,
+    "reason": "Migration 270 denies the old settings reader and verify_revalidate_secret RPC. Old phone buttons use a public credential/body contract incompatible with the new authenticated handlers.",
+    "validUse": "Only before applying migration 270; never restore broad grants or old handlers to make it compatible."
+  },
+  "compatibleFallback": {
+    "label": "compatible",
+    "node": "v24.21.0",
+    "npm": "11.19.0",
+    "platform": "linux",
+    "arch": "x64",
+    "sourceSnapshot": "Git archive; frontend/scripts/functions; no .env",
+    "packageSha256": "af1a151862809d644ed8cd8ef1bbc91efd13a9371961b97e484acb5c5d123d6b",
+    "lockfileSha256": "03de17209a42c034e86f049e384889c0d21d22b412706b8e2d45153dff3870fa",
+    "commands": [
+      {
+        "name": "npm-ci",
+        "command": "npm ci --no-audit --no-fund --cache /tmp/release-npm-cache",
+        "exitCode": 0,
+        "signal": null,
+        "durationMs": 83493,
+        "outputSha256": "2a78f9d30f4382bd9023bf96971e14a600e2f410d87987953763a9948b4cd9b7",
+        "outputPersisted": false
+      },
+      {
+        "name": "typescript",
+        "command": "node node_modules/typescript/bin/tsc --noEmit --incremental false",
+        "exitCode": 0,
+        "signal": null,
+        "durationMs": 86025,
+        "outputSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "outputPersisted": false
+      },
+      {
+        "name": "production-build",
+        "command": "npm run build",
+        "exitCode": 0,
+        "signal": null,
+        "durationMs": 225791,
+        "outputSha256": "b1c2a8ca6b0a14e384ec70bcfe33ad179109768d25eff8b37bb886032ec2222b",
+        "outputPersisted": false
+      }
+    ],
+    "complete": true,
+    "installed": true,
+    "bundle": {
+      "scope": ".next/static browser assets",
+      "serverArtifactsExcluded": ".next/server",
+      "files": 80,
+      "bytes": 3936628,
+      "manifestSha256": "fa18db62338f368fcab5dab80b2e71ac0dd2d8f856905edb83e22d7812bf4dc5",
+      "findings": [],
+      "syntheticSecretsOnly": true
+    },
+    "sourceLockfileUnchanged": true,
+    "buildIdSha256": "36f84bb7b1a72313cfd39725307a974746a80734a96aa391db771bf63211e14a",
+    "finishedAt": "2026-09-19T17:52:45.172Z",
+    "commit": "ad436ff1ee3a329c1d6c702d0ce2cbfd05f92981",
+    "archiveSha256": "15650ab84ccfc07e082b4f0e8b251c9ebc91242d8869cbdd001063b531105063",
+    "sourceManifestSha256": "2a72e547d300996d90de2b5bd4259501c5e2cf8d6d15bec8775880faa19960fe",
+    "trackedSourcesChecked": 382,
+    "trackedSourceChanges": [],
+    "http": {
+      "complete": true,
+      "label": "compatible",
+      "node": "v24.21.0",
+      "checks": [
+        {
+          "route": "/login",
+          "status": 200,
+          "bytes": 13974,
+          "durationMs": 87,
+          "secretAbsent": true
+        },
+        {
+          "route": "/dashboard/whatsapp-cloud-api/inbox",
+          "status": 200,
+          "bytes": 11852,
+          "durationMs": 143,
+          "secretAbsent": true
+        },
+        {
+          "route": "/api/landings/revalidate",
+          "status": 401,
+          "bytes": 55,
+          "durationMs": 161,
+          "secretAbsent": true
+        }
+      ],
+      "scope": "Built Next HTTP server; unauthenticated page shells and new authorization denial. Session/Data API and browser contracts are separate synthetic checks.",
+      "productionRequests": 0,
+      "rawBodiesPersisted": false
+    },
+    "compatibleAfter274": true,
+    "scope": "Inbox frontend rollback retaining all security changes. Migration 274 keeps and optimizes the historical Inbox RPC; verified in rollout-rehearsal.json.",
+    "limitation": "Shares revalidation/phone security code with candidate. An authorization or revalidation defect can require a forward fix, not this fallback.",
+    "futureVercelDeploymentId": null,
+    "productionConfigurationRequired": true
+  },
+  "irreversibleByVercelAlone": [
+    "Database ACL/RLS/function changes 269-274",
+    "Three administrative Edge handler publications",
+    "Credential rotation, if separately authorized",
+    "Any real post-release data and queue progress"
+  ],
+  "futureProcedure": "Build candidate and fallback as Production deployments without assigning domains; record IDs. Promote only after dependencies and acceptance checks. Never deploy the synthetic local bundle with --prebuilt.",
+  "limits": [
+    "Public dependency download only during npm ci. Build, tests and HTTP smokes ran without Internet connectivity.",
+    "Synthetic configuration only; no real .env file or historical .env Git blob read or exported.",
+    "Local .next/static manifests prove the synthetic build. They are not deployable Production artifacts: Vercel must build with its existing Production configuration.",
+    "Owned build containers, node_modules, .next artifacts and newly pulled Node image were removed. External source archives and harness files are retained with explicit user authorization after blocked by policy. They are outside Git, optional for revalidation and do not block the documentary checkpoint. No retained Production binary is claimed.",
+    "HTTP checks exercise built unauthenticated shells and auth denial. They do not prove real platform Auth, Meta sending or productive cache invalidation."
+  ],
+  "temporaryCleanup": {
+    "closureCriteriaSatisfied": true,
+    "directoryRemoved": false,
+    "externalFilesRetained": 44,
+    "externalBytesRetained": 46106759,
+    "retentionAuthorized": true,
+    "blocksCheckpoint": false,
+    "reason": "Prior automatic approval result blocked by policy; user explicitly permits external retention. No further deletion attempted.",
+    "evidence": "docs/release/pre-production/recovery.json",
+    "containersAndBuildsRemoved": true,
+    "requiredForRevalidation": false
+  }
+}

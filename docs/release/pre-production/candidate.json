@@ -1,0 +1,156 @@
+{
+  "record": "Node 24 release candidate",
+  "observedAt": "2026-09-19",
+  "label": "candidate",
+  "node": "v24.21.0",
+  "npm": "11.19.0",
+  "platform": "linux",
+  "arch": "x64",
+  "sourceSnapshot": "Git archive; frontend/scripts/functions; no .env",
+  "packageSha256": "af1a151862809d644ed8cd8ef1bbc91efd13a9371961b97e484acb5c5d123d6b",
+  "lockfileSha256": "03de17209a42c034e86f049e384889c0d21d22b412706b8e2d45153dff3870fa",
+  "commands": [
+    {
+      "name": "npm-ci",
+      "command": "npm ci --no-audit --no-fund --cache /tmp/release-npm-cache",
+      "exitCode": 0,
+      "signal": null,
+      "durationMs": 95408,
+      "outputSha256": "dea141af51649438a746f5cd0010f962fe80b5fad68db4dde8d1ab0f08fab80b",
+      "outputPersisted": false
+    },
+    {
+      "name": "typescript",
+      "command": "node node_modules/typescript/bin/tsc --noEmit --incremental false",
+      "exitCode": 0,
+      "signal": null,
+      "durationMs": 62057,
+      "outputSha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "outputPersisted": false
+    },
+    {
+      "name": "tests",
+      "command": "node --import tsx --import ./tests/revalidation-server-loader.mjs --test --test-concurrency=1 tests/revalidationSecurity.test.ts tests/revalidationClient.test.ts tests/phoneAdministrationClient.test.ts tests/phase0PhoneHandlers.test.ts tests/landingPhoneNormalization.test.ts tests/whatsappDisplayPhone.test.ts tests/phase0LandingContracts.test.ts tests/landingTemplateVariants.test.ts tests/publicLandingHtml.test.ts tests/inboxLoading.test.ts tests/supabaseRealtimeAuth.test.ts",
+      "exitCode": 0,
+      "signal": null,
+      "durationMs": 14047,
+      "outputSha256": "f1b9220ce1effc8b75188be1e3db5792d77feb4705650d05e65dc53696e06d01",
+      "outputPersisted": false,
+      "tests": 0,
+      "passed": 0,
+      "failed": 0,
+      "skipped": 0
+    },
+    {
+      "name": "production-build",
+      "command": "node node_modules/next/dist/bin/next build --webpack",
+      "exitCode": 0,
+      "signal": null,
+      "durationMs": 181778,
+      "outputSha256": "b4af81d4e36fb08f7abd40acb1d4e4bbcaabd2b801e1ffbf477dc6f5a8468bf0",
+      "outputPersisted": false
+    },
+    {
+      "name": "tests",
+      "command": "node --import tsx --import ./tests/revalidation-server-loader.mjs --test --test-reporter=tap --test-concurrency=1 tests/revalidationSecurity.test.ts tests/revalidationClient.test.ts tests/phoneAdministrationClient.test.ts tests/phase0PhoneHandlers.test.ts tests/landingPhoneNormalization.test.ts tests/whatsappDisplayPhone.test.ts tests/phase0LandingContracts.test.ts tests/landingTemplateVariants.test.ts tests/publicLandingHtml.test.ts tests/inboxLoading.test.ts tests/supabaseRealtimeAuth.test.ts",
+      "exitCode": 0,
+      "signal": null,
+      "durationMs": 19252,
+      "outputSha256": "e418aaa58bb1f34a2af76b034f4d87cde9a2acff6f447f1cccf5b0c530868d6e",
+      "outputPersisted": false,
+      "tests": 57,
+      "passed": 57,
+      "failed": 0,
+      "skipped": 0
+    },
+    {
+      "name": "production-build",
+      "command": "npm run build",
+      "exitCode": 0,
+      "signal": null,
+      "durationMs": 193184,
+      "outputSha256": "95403a7242c7c152ba63f6d6497fcd883d19b7ed299fbc3f12d8487c786f9cf3",
+      "outputPersisted": false
+    }
+  ],
+  "complete": true,
+  "installed": true,
+  "bundle": {
+    "scope": ".next/static browser assets",
+    "serverArtifactsExcluded": ".next/server",
+    "files": 80,
+    "bytes": 3942658,
+    "manifestSha256": "15208e511700f061066e10cd103b4e93594d1e263274ca926d1b233072d3d67c",
+    "findings": [],
+    "syntheticSecretsOnly": true
+  },
+  "sourceLockfileUnchanged": true,
+  "buildIdSha256": "4b1fdffb47b1590c8f96aa8115dd360ab0aa8e98856c50a66473286521ac6a57",
+  "finishedAt": "2026-09-19T17:45:05.640Z",
+  "commit": "835fdc08a5940e72ae54db3b53c947a0786dc4db",
+  "archiveSha256": "a7fe220cbc48f42185bea9fb495d18ab9c711ff3ee6e4e83943c2f725c088e36",
+  "sourceManifestSha256": "97356452738986aad65b6dbfb6bbe601b90589ad2953f7137b7d697fd6f25b86",
+  "trackedSourcesChecked": 394,
+  "trackedSourceChanges": [],
+  "image": {
+    "tag": "node:24.21.0-bookworm-slim",
+    "imageId": "sha256:0e0ff40c39bc087845bfb27465a0df4ea419520094bc35842ff83dd8cbe6f9b6"
+  },
+  "applicationSourceTree": "6b414cbff174450dcc77c691f1c02f56b2c55b4c",
+  "sameRuntimeSourceAsPreviousAudit": true,
+  "archiveCommand": "git archive --format=tar HEAD frontend scripts supabase/functions",
+  "workingDirectory": "frontend",
+  "installationLockfile": "frontend/package-lock.json",
+  "testCaptureCorrection": "First Node 24 default reporter was not TAP; zero parsed tests were not admitted as a pass count. Explicit TAP rerun completed 57/57, failed 0, skipped 0.",
+  "buildSelection": "Webpack was an additional successful build. The final admitted Production build is the actual npm run build command (Next 16 Turbopack).",
+  "http": {
+    "complete": true,
+    "label": "candidate",
+    "node": "v24.21.0",
+    "checks": [
+      {
+        "route": "/login",
+        "status": 200,
+        "bytes": 13974,
+        "durationMs": 118,
+        "secretAbsent": true
+      },
+      {
+        "route": "/dashboard/whatsapp-cloud-api/inbox",
+        "status": 200,
+        "bytes": 11852,
+        "durationMs": 74,
+        "secretAbsent": true
+      },
+      {
+        "route": "/api/landings/revalidate",
+        "status": 401,
+        "bytes": 55,
+        "durationMs": 115,
+        "secretAbsent": true
+      }
+    ],
+    "scope": "Built Next HTTP server; unauthenticated page shells and new authorization denial. Session/Data API and browser contracts are separate synthetic checks.",
+    "productionRequests": 0,
+    "rawBodiesPersisted": false
+  },
+  "limits": [
+    "Public dependency download only during npm ci. Build, tests and HTTP smokes ran without Internet connectivity.",
+    "Synthetic configuration only; no real .env file or historical .env Git blob read or exported.",
+    "Local .next/static manifests prove the synthetic build. They are not deployable Production artifacts: Vercel must build with its existing Production configuration.",
+    "Owned build containers, node_modules, .next artifacts and newly pulled Node image were removed. External source archives and harness files are retained with explicit user authorization after blocked by policy. They are outside Git, optional for revalidation and do not block the documentary checkpoint. No retained Production binary is claimed.",
+    "HTTP checks exercise built unauthenticated shells and auth denial. They do not prove real platform Auth, Meta sending or productive cache invalidation."
+  ],
+  "temporaryCleanup": {
+    "closureCriteriaSatisfied": true,
+    "directoryRemoved": false,
+    "externalFilesRetained": 44,
+    "externalBytesRetained": 46106759,
+    "retentionAuthorized": true,
+    "blocksCheckpoint": false,
+    "reason": "Prior automatic approval result blocked by policy; user explicitly permits external retention. No further deletion attempted.",
+    "evidence": "docs/release/pre-production/recovery.json",
+    "containersAndBuildsRemoved": true,
+    "requiredForRevalidation": false
+  }
+}

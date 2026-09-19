@@ -1,0 +1,118 @@
+{
+  "record": "Exactly three administrative functions to publish",
+  "project": "fdkjkzpjqfbaavylapun",
+  "cli": "2.75.0",
+  "deployHelpReviewed": true,
+  "functions": [
+    {
+      "name": "sync-phones",
+      "order": 1,
+      "local": {
+        "commit": "835fdc08a5940e72ae54db3b53c947a0786dc4db",
+        "file": "supabase/functions/sync-phones/index.ts",
+        "sha256": "31fff3ae2489e050e3c111282f42a9337eb96644857ab8da94dc8db9aa95892f",
+        "gitBlob": "15968ba8d2e94b200a9ae742322724d372070145"
+      },
+      "production": {
+        "version": 27,
+        "verifyJwt": false,
+        "bundleSha256": "0da6f2c9f195091855db1c40f3e888191f5ae34d2a633deb99470773b2cf3084"
+      },
+      "requiredMigration": 271,
+      "roleProtectionDependency": 269,
+      "requiredVariables": [
+        "SUPABASE_URL",
+        "SERVICE_ROLE_KEY"
+      ],
+      "optionalVariables": [
+        "CRON_SECRET (existing cron_config fallback)",
+        "ASESADMIN_BASE_URL (existing code default)"
+      ],
+      "futureDeploy": "supabase functions deploy sync-phones --project-ref fdkjkzpjqfbaavylapun --no-verify-jwt",
+      "syntheticSmoke": "Owner/admin manual sync with stub vendor, spoofed owner denied, cron branch uses unchanged synthetic secret; no vendor calls.",
+      "productionReadOnlySmoke": "GET function metadata/version and OPTIONS contract. Any POST smoke must target authorized synthetic fixtures; never run real resets or cron as a probe.",
+      "rollback": "No safe old handler rollback: suspend the affected manual operation and forward-fix while preserving session/role/tenant checks. Old remote version restores an insecure authorization contract."
+    },
+    {
+      "name": "reset-phone-counters",
+      "order": 2,
+      "local": {
+        "commit": "835fdc08a5940e72ae54db3b53c947a0786dc4db",
+        "file": "supabase/functions/reset-phone-counters/index.ts",
+        "sha256": "88e0967a51aa69adda71a6a531b85a19de2c46f1a46e4b886ae557d1e5b759b2",
+        "gitBlob": "6858318bf0bf30b6d2c76e59377b81340a10b693"
+      },
+      "production": {
+        "version": 11,
+        "verifyJwt": false,
+        "bundleSha256": "f662f5134ae6deb896b333d8cb3014cb4d7c00ca3147e6edcb2fe1e04f70d99a"
+      },
+      "requiredMigration": 271,
+      "roleProtectionDependency": 269,
+      "requiredVariables": [
+        "SUPABASE_URL",
+        "SERVICE_ROLE_KEY"
+      ],
+      "optionalVariables": [],
+      "futureDeploy": "supabase functions deploy reset-phone-counters --project-ref fdkjkzpjqfbaavylapun --no-verify-jwt",
+      "syntheticSmoke": "Owner/admin reset of synthetic rows, non-session denied, foreign owner denied.",
+      "productionReadOnlySmoke": "GET function metadata/version and OPTIONS contract. Any POST smoke must target authorized synthetic fixtures; never run real resets or cron as a probe.",
+      "rollback": "No safe old handler rollback: suspend the affected manual operation and forward-fix while preserving session/role/tenant checks. Old remote version restores an insecure authorization contract."
+    },
+    {
+      "name": "reset-phone-messages",
+      "order": 3,
+      "local": {
+        "commit": "835fdc08a5940e72ae54db3b53c947a0786dc4db",
+        "file": "supabase/functions/reset-phone-messages/index.ts",
+        "sha256": "2690d84a71abdbd2998119b662557334acbf31c459bda8b835cd01f46a7357c0",
+        "gitBlob": "46d1a0cff6dd8ccb79cc308b19a45a3aa25aff07"
+      },
+      "production": {
+        "version": 4,
+        "verifyJwt": true,
+        "bundleSha256": "5bd0116acbaf580a4cf29e2fa7d6f9fb00840876c6fe7725347e955443891089"
+      },
+      "requiredMigration": 271,
+      "roleProtectionDependency": 269,
+      "requiredVariables": [
+        "SUPABASE_URL",
+        "SERVICE_ROLE_KEY"
+      ],
+      "optionalVariables": [],
+      "futureDeploy": "supabase functions deploy reset-phone-messages --project-ref fdkjkzpjqfbaavylapun",
+      "syntheticSmoke": "Owner/admin reset of synthetic rows, non-session denied, foreign owner denied.",
+      "productionReadOnlySmoke": "GET function metadata/version and OPTIONS contract. Any POST smoke must target authorized synthetic fixtures; never run real resets or cron as a probe.",
+      "rollback": "No safe old handler rollback: suspend the affected manual operation and forward-fix while preserving session/role/tenant checks. Old remote version restores an insecure authorization contract."
+    }
+  ],
+  "sharedSource": {
+    "file": "supabase/functions/_shared/phone-administration.ts",
+    "sha256": "761617bd0d166fec7647494934eaeb666f15cb7035188aba2e71fc6d24c61bcc",
+    "gitBlob": "a3c193b7ac7dfa46121c2d038e1632b13684ce34"
+  },
+  "newRemoteVersions": null,
+  "coexistence": {
+    "oldClientOldHandler": 200,
+    "newClientOldHandler": 400,
+    "oldClientNewHandler": 401,
+    "newClientNewHandler": 200,
+    "evidence": "rollout-rehearsal.json; actual handler code and synthetic transport"
+  },
+  "order": "After migrations 269-274 and before panel promotion, while administrative operations remain paused.",
+  "unchanged": [
+    "verify_jwt setting per function",
+    "cron body, jobs, schedules, role and credentials",
+    "landing-phone and all other public functions",
+    "workers, conversions, reception, sends and queues"
+  ],
+  "requiredNewSecrets": [],
+  "deployExecuted": false,
+  "pruneAllowed": false,
+  "references": [
+    "docs/security/phase-1b3/implementation.md",
+    "docs/release/pre-production/environment-check.json",
+    "https://supabase.com/docs/guides/functions/auth",
+    "https://supabase.com/docs/reference/cli/supabase-functions-deploy"
+  ]
+}
