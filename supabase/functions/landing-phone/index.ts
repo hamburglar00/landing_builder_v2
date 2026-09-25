@@ -13,7 +13,12 @@ function jsonResponse(body: Record<string, unknown>, status: number): Response {
   });
 }
 
-type SupabaseClient = ReturnType<typeof createClient>;
+type SupabaseClient = {
+  rpc: (
+    name: string,
+    args?: Record<string, unknown>,
+  ) => PromiseLike<{ error: unknown }>;
+};
 
 type DemandRecordInput = {
   name: string;
@@ -41,17 +46,18 @@ function isFairAssignmentPayload(
     String(payload?.phoneMode ?? "").toLowerCase() === "fair";
 }
 
-function scheduleBackground(promise: Promise<unknown>) {
+function scheduleBackground(promise: PromiseLike<unknown>) {
+  const task = Promise.resolve(promise);
   const runtime = (globalThis as unknown as {
     EdgeRuntime?: { waitUntil?: (promise: Promise<unknown>) => void };
   }).EdgeRuntime;
 
   if (runtime?.waitUntil) {
-    runtime.waitUntil(promise);
+    runtime.waitUntil(task);
     return;
   }
 
-  promise.catch((error) => {
+  task.catch((error) => {
     console.error("Background task failed:", error);
   });
 }
@@ -66,13 +72,13 @@ function incrementChatraceScopeUsage(
   const phoneId = selectedPhoneId(input.payload);
   if (!phoneId || !input.ownerUserId) return Promise.resolve(null);
 
-  return supabase.rpc("increment_phone_assignment_scope_usage", {
+  return Promise.resolve(supabase.rpc("increment_phone_assignment_scope_usage", {
     p_phone_id: phoneId,
     p_scope_type: "chatrace",
     p_scope_id: input.ownerUserId,
     p_user_id: input.ownerUserId,
     p_gerencia_id: selectedGerenciaId(input.payload),
-  }).then(({ error }) => {
+  })).then(({ error }) => {
     if (error) {
       console.error("Error incrementing Chatrace scoped phone usage:", error);
     }
@@ -88,7 +94,7 @@ function recordDemandAvailability(
     return Promise.resolve(null);
   }
 
-  return supabase.rpc("record_landing_phone_availability_demand", {
+  return Promise.resolve(supabase.rpc("record_landing_phone_availability_demand", {
     p_landing_name: input.name,
     p_request_id: input.requestId,
     p_source: "landing-phone",
@@ -96,7 +102,7 @@ function recordDemandAvailability(
     p_selected_gerencia_id: selectedGerenciaId(input.payload),
     p_selected_phone_id: selectedPhoneId(input.payload),
     p_selected_phone: typeof input.payload?.phone === "string" ? input.payload.phone : null,
-  }).then(({ error }) => {
+  })).then(({ error }) => {
     if (error) {
       console.error("Error recording landing-phone demand availability:", error);
     }
@@ -215,25 +221,13 @@ Deno.serve(async (req) => {
       );
 
       if (publishTarget === "constructor") {
-        const { data: cacheRow } = await supabase
-          .from("landing_phone_cache")
-          .select("status,payload,refreshed_at")
-          .eq("landing_name", name)
-          .maybeSingle();
-
-        const refreshedAt = Date.parse(
-          String((cacheRow as { refreshed_at?: unknown } | null)?.refreshed_at ?? ""),
+        const { data: cachePayload } = await supabase.rpc(
+          "get_cached_constructor_landing_phone",
+          { p_landing_name: name },
         );
-        const isFresh =
-          Number.isFinite(refreshedAt) && Date.now() - refreshedAt <= 90_000;
-        const payload = (cacheRow as { payload?: unknown } | null)?.payload as
-          | Record<string, unknown>
-          | undefined;
+        const payload = cachePayload as Record<string, unknown> | null;
 
         if (
-          cacheRow &&
-          (cacheRow as { status?: unknown }).status === "ok" &&
-          isFresh &&
           payload &&
           typeof payload.phone === "string" &&
           payload.phone &&

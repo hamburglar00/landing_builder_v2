@@ -348,7 +348,12 @@ export function GerenciaRedirectSection({
                         )}
                         <th className="w-32 px-3 py-2 font-medium text-zinc-300">Modo</th>
                         <th className="min-w-[140px] px-3 py-2 font-medium text-zinc-300">Tipo</th>
-                        <th className="w-56 px-3 py-2 font-medium text-zinc-300">Intervalo</th>
+                        <th
+                          className="w-56 px-3 py-2 font-medium text-zinc-300"
+                          title="Hora de Buenos Aires. La hora inicial se incluye y la final se excluye."
+                        >
+                          Intervalo (Buenos Aires)
+                        </th>
                       </tr>
                     </thead>
                     <tbody className="divide-y divide-zinc-800">{renderRows(group.gerencias)}</tbody>

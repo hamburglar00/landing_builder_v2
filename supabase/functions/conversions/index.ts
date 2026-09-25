@@ -32,9 +32,12 @@ import {
   actionEventIdempotencyKey,
   canUsePromoForJourney,
   choosePurchaseJourney,
+  evaluateInboundTenantOwnership,
   evaluatePromoGerenciaCoherence,
   leadNoPromoDuplicateCandidateMatches,
   type PromoGerenciaCoherence,
+  type TenantOwnershipSignal,
+  type TenantOwnershipSignalKind,
 } from "./event_attribution.ts";
 
 const corsHeaders = {
@@ -2983,6 +2986,184 @@ async function resolveLandingForInbound(
   }
 
   return { id: landingId, name: landingName, user_id: userId };
+}
+
+type InboundTenantGuardResult =
+  | { allowed: true }
+  | {
+    allowed: false;
+    signal: TenantOwnershipSignalKind;
+    reason: "foreign_owner" | "unregistered" | "invalid_format";
+    unavailable?: false;
+  }
+  | {
+    allowed: false;
+    signal: "ownership_lookup";
+    reason: "lookup_failed";
+    unavailable: true;
+  };
+
+const UUID_PATTERN =
+  /^[0-9a-f]{8}-[0-9a-f]{4}-[1-8][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
+
+function ownerIdsFromRows(
+  rows: Array<Record<string, unknown>> | null | undefined,
+): string[] {
+  return Array.from(
+    new Set((rows ?? []).map((row) => norm(row.user_id)).filter(Boolean)),
+  );
+}
+
+async function validateInboundTenantOwnership(
+  db: SupabaseClient,
+  receiverUserId: string,
+  params: Params,
+): Promise<InboundTenantGuardResult> {
+  const promoCode = derivePromoCodeFromPayload(params);
+  if (promoCode && !isFullPromoCode(promoCode)) {
+    return {
+      allowed: false,
+      signal: "promo_code",
+      reason: "invalid_format",
+    };
+  }
+  const promoPrefix = promoCodePrefix(promoCode);
+
+  const agencyId = norm(params.agency_id);
+  const numericAgencyId = Number(agencyId);
+  if (
+    agencyId &&
+    (!Number.isInteger(numericAgencyId) || numericAgencyId <= 0)
+  ) {
+    return {
+      allowed: false,
+      signal: "gerencia",
+      reason: "invalid_format",
+    };
+  }
+
+  const botPhone = sanitizePhone(params.bot_phone);
+  const landingId = norm(params.landing_id ?? params.landingId);
+  if (landingId && !UUID_PATTERN.test(landingId)) {
+    return {
+      allowed: false,
+      signal: "landing_id",
+      reason: "invalid_format",
+    };
+  }
+  const landingName = norm(
+    params.landing_name ?? params.landingName,
+  );
+
+  const emptyLookup = Promise.resolve({ data: [], error: null });
+  const [promoLookup, gerenciaLookup, botLookup, landingIdLookup, nameLookup] =
+    await Promise.all([
+      promoPrefix
+        ? db.from("landings").select("user_id").ilike(
+          "landing_tag",
+          promoPrefix,
+        )
+        : emptyLookup,
+      agencyId
+        ? db.from("gerencias").select("user_id").eq(
+          "gerencia_id",
+          numericAgencyId,
+        )
+        : emptyLookup,
+      botPhone
+        ? db.from("gerencia_phones").select(
+          "gerencias!gerencia_phones_gerencia_id_fkey!inner(user_id)",
+        ).eq("phone", botPhone)
+        : emptyLookup,
+      landingId
+        ? db.from("landings").select("user_id").eq("id", landingId)
+        : emptyLookup,
+      landingName
+        ? db.from("landings").select("user_id").eq("name", landingName)
+        : emptyLookup,
+    ]);
+
+  const failedLookup = [
+    promoLookup,
+    gerenciaLookup,
+    botLookup,
+    landingIdLookup,
+    nameLookup,
+  ].find((lookup) => lookup.error);
+  if (failedLookup?.error) {
+    console.error("[conversions] inbound tenant ownership lookup failed", {
+      message: failedLookup.error.message,
+      code: failedLookup.error.code,
+    });
+    return {
+      allowed: false,
+      signal: "ownership_lookup",
+      reason: "lookup_failed",
+      unavailable: true,
+    };
+  }
+
+  const botOwnerIds = Array.from(
+    new Set(
+      ((botLookup.data ?? []) as Array<Record<string, unknown>>).flatMap(
+        (row) => {
+          const joined = Array.isArray(row.gerencias)
+            ? row.gerencias
+            : [row.gerencias];
+          return joined.map((gerencia) =>
+            norm((gerencia as Record<string, unknown> | null)?.user_id)
+          ).filter(Boolean);
+        },
+      ),
+    ),
+  );
+
+  const signals: TenantOwnershipSignal[] = [];
+  if (promoPrefix) {
+    signals.push({
+      kind: "promo_code",
+      ownerUserIds: ownerIdsFromRows(
+        promoLookup.data as Array<Record<string, unknown>>,
+      ),
+      rejectWhenUnregistered: false,
+    });
+  }
+  if (agencyId) {
+    signals.push({
+      kind: "gerencia",
+      ownerUserIds: ownerIdsFromRows(
+        gerenciaLookup.data as Array<Record<string, unknown>>,
+      ),
+      rejectWhenUnregistered: false,
+    });
+  }
+  if (landingId) {
+    signals.push({
+      kind: "landing_id",
+      ownerUserIds: ownerIdsFromRows(
+        landingIdLookup.data as Array<Record<string, unknown>>,
+      ),
+      rejectWhenUnregistered: true,
+    });
+  }
+  if (botPhone) {
+    signals.push({
+      kind: "bot_phone",
+      ownerUserIds: botOwnerIds,
+      rejectWhenUnregistered: false,
+    });
+  }
+  if (landingName) {
+    signals.push({
+      kind: "landing_name",
+      ownerUserIds: ownerIdsFromRows(
+        nameLookup.data as Array<Record<string, unknown>>,
+      ),
+      rejectWhenUnregistered: false,
+    });
+  }
+
+  return evaluateInboundTenantOwnership({ receiverUserId, signals });
 }
 
 function resolvePurchaseType(
@@ -7799,6 +7980,51 @@ Deno.serve(async (req) => {
 
     // landing_name can come from the payload (to track which landing sent this)
     const landingName = norm(params.landing_name || params.landingName || "");
+
+    const tenantGuard = await validateInboundTenantOwnership(
+      db,
+      userId,
+      params,
+    );
+    if (!tenantGuard.allowed) {
+      const unavailable = tenantGuard.unavailable === true;
+      await writeLog(
+        db,
+        userId,
+        "main",
+        unavailable ? "ERROR" : "WARN",
+        unavailable
+          ? "No se pudo validar pertenencia de identificadores del evento"
+          : "Evento rechazado por identificador ajeno al cliente receptor",
+        JSON.stringify({
+          action: canonicalInboundAction(params.action) || "CONTACT",
+          signal: tenantGuard.signal,
+          reason: tenantGuard.reason,
+          promo_prefix: isFullPromoCode(derivePromoCodeFromPayload(params))
+            ? promoCodePrefix(derivePromoCodeFromPayload(params))
+            : "",
+          agency_id: norm(params.agency_id),
+          landing_id_supplied: Boolean(
+            norm(params.landing_id ?? params.landingId),
+          ),
+          landing_name: landingName,
+          bot_phone_supplied: Boolean(sanitizePhone(params.bot_phone)),
+        }),
+        undefined,
+        undefined,
+        undefined,
+        undefined,
+        unavailable
+          ? "validacion de tenant no disponible; evento no procesado"
+          : "rechazado permanentemente por conflicto de tenant",
+      );
+      return textResponse(
+        unavailable
+          ? "No se pudo validar el cliente receptor; reintente mas tarde"
+          : "Evento rechazado: los identificadores no corresponden al cliente receptor",
+        unavailable ? 503 : 422,
+      );
+    }
 
     const landing = await resolveLandingForInbound(
       db,

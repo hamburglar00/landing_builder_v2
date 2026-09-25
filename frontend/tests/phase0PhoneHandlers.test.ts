@@ -18,7 +18,6 @@ function handler(name: "landing-phone" | "phone-click", options: {
         select: () => query, eq: () => query, limit: () => query,
         maybeSingle: async () => ({error:null,data:
           table === "landings" ? (options.ownerMissing ? null : {id:"landing",name:"synthetic",user_id:"owner",publish_target:"constructor"}) :
-          table === "landing_phone_cache" ? options.cache ?? null :
           table === "gerencia_phones" ? {id:1,phone:"000001",gerencia_id:2} :
           table === "landings_gerencias" ? {landing_id:"landing",gerencia_id:2} : {id:"owner"}}),
       }; return query;
@@ -27,6 +26,15 @@ function handler(name: "landing-phone" | "phone-click", options: {
       calls.push({name,params});
       if (name === options.rpcError) return {data:null,error:{message:"synthetic error"}};
       if (name === "is_client_access_blocked") return {data:options.blocked ?? false,error:null};
+      if (name === "get_cached_constructor_landing_phone") {
+        const cache = options.cache;
+        return {
+          data: cache?.status === "ok"
+            ? {...(cache.payload as Record<string, unknown>),cacheRefreshedAt:cache.refreshed_at}
+            : null,
+          error:null,
+        };
+      }
       return {data:options.result ?? {_status:"ok",phone:"000001",phoneId:1,gerencia:{id:2}},error:null};
     },
   };
@@ -75,6 +83,7 @@ test("Phase 0: fair cache must be bypassed; ordinary fresh cache can be reused",
   for(const fair of [false,true]) {
     const h=handler("landing-phone",{cache:{status:"ok",refreshed_at:new Date().toISOString(),payload:{phone:"000001",phoneMode:fair?"fair":"random"}}});
     assert.equal((await h.serve(new Request("https://example.invalid?name=synthetic"))).status,200);
+    assert.equal(h.calls.some(c=>c.name==="get_cached_constructor_landing_phone"),true);
     assert.equal(h.calls.some(c=>c.name==="get_phone_for_landing"),fair);
     if(fair) assert.equal(h.calls.find(c=>c.name==="get_phone_for_landing")?.params.p_create_reservation,true);
   }

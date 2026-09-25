@@ -193,7 +193,7 @@ function cellValue(
     case "pixel_attribution_source": return <td key={col} className={dim} title={tip(c.pixel_attribution_source)}>{view === "friendly" ? friendlyPixelAttributionSource(c.pixel_attribution_source) : (c.pixel_attribution_source || "-")}</td>;
     case "pixel_attribution_conversion_id": return <td key={col} className={dimMono} title={tip(c.pixel_attribution_conversion_id)}>{c.pixel_attribution_conversion_id ? truncateId(c.pixel_attribution_conversion_id) : "-"}</td>;
     case "source_platform": return <td key={col} className={dim} title={tip(c.source_platform)}>{view === "friendly" ? friendlySourcePlatform(c.source_platform) : (c.source_platform || "-")}</td>;
-    case "ctwa_clid": return <td key={col} className={dim} title={tip(c.ctwa_clid)}>{c.ctwa_clid || "-"}</td>;
+    case "ctwa_clid": return <td key={col} className={`${dimMono} max-w-[180px] truncate cursor-help`} title={tip(c.ctwa_clid)}>{c.ctwa_clid || "-"}</td>;
     case "atrio_id": return <td key={col} className={dimMono} title={tip(c.atrio_id)}>{c.atrio_id || "-"}</td>;
     case "atrio_client_id": return <td key={col} className={dimMono} title={tip(c.atrio_client_id)}>{c.atrio_client_id ? truncateId(c.atrio_client_id) : "-"}</td>;
     case "atrio_slug": return <td key={col} className={dim} title={tip(c.atrio_slug)}>{c.atrio_slug || "-"}</td>;

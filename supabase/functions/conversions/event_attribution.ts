@@ -27,6 +27,52 @@ export type LeadNoPromoDuplicateCandidate = {
   purchase_agency_id?: unknown;
 };
 
+export type TenantOwnershipSignalKind =
+  | "promo_code"
+  | "gerencia"
+  | "bot_phone"
+  | "landing_id"
+  | "landing_name";
+
+export type TenantOwnershipSignal = {
+  kind: TenantOwnershipSignalKind;
+  ownerUserIds: readonly string[];
+  /**
+   * When enabled, an identifier absent from the ownership registry is invalid.
+   * Every signal still rejects when it resolves only to another tenant.
+   */
+  rejectWhenUnregistered: boolean;
+};
+
+export type TenantOwnershipDecision =
+  | { allowed: true }
+  | {
+    allowed: false;
+    signal: TenantOwnershipSignalKind;
+    reason: "foreign_owner" | "unregistered";
+  };
+
+export function evaluateInboundTenantOwnership(input: {
+  receiverUserId: string;
+  signals: readonly TenantOwnershipSignal[];
+}): TenantOwnershipDecision {
+  for (const signal of input.signals) {
+    const owners = new Set(
+      signal.ownerUserIds.map((value) => String(value ?? "").trim()).filter(
+        Boolean,
+      ),
+    );
+    if (owners.has(input.receiverUserId)) continue;
+    if (owners.size > 0) {
+      return { allowed: false, signal: signal.kind, reason: "foreign_owner" };
+    }
+    if (signal.rejectWhenUnregistered) {
+      return { allowed: false, signal: signal.kind, reason: "unregistered" };
+    }
+  }
+  return { allowed: true };
+}
+
 function normalizePhone(value: unknown): string {
   return String(value ?? "").replace(/\D/g, "");
 }

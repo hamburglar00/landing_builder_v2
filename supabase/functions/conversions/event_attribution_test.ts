@@ -1,6 +1,7 @@
 import {
   actionEventIdempotencyKey,
   choosePurchaseJourney,
+  evaluateInboundTenantOwnership,
   evaluatePromoGerenciaCoherence,
   leadNoPromoDuplicateCandidateMatches,
 } from "./event_attribution.ts";
@@ -152,4 +153,80 @@ Deno.test("lead without promo does not deduplicate outside 24 hours", () => {
   });
 
   assert(!matched, "old rows must not suppress a new lead forever");
+});
+
+Deno.test("tenant guard rejects a promo or gerencia owned by another client", () => {
+  for (const kind of ["promo_code", "gerencia"] as const) {
+    const decision = evaluateInboundTenantOwnership({
+      receiverUserId: "golden",
+      signals: [{
+        kind,
+        ownerUserIds: ["elmueca"],
+        rejectWhenUnregistered: false,
+      }],
+    });
+
+    assert(!decision.allowed, `a foreign ${kind} must be rejected`);
+    assert(decision.signal === kind, `${kind} must explain rejection`);
+    assert(
+      decision.reason === "foreign_owner",
+      "the owner conflict must remain auditable",
+    );
+  }
+});
+
+Deno.test("tenant guard does not invent a foreign owner for unknown identifiers", () => {
+  for (const kind of ["promo_code", "gerencia"] as const) {
+    const decision = evaluateInboundTenantOwnership({
+      receiverUserId: "receiver",
+      signals: [{ kind, ownerUserIds: [], rejectWhenUnregistered: false }],
+    });
+    assert(
+      decision.allowed,
+      `${kind} without a known owner does not prove a tenant crossing`,
+    );
+  }
+});
+
+Deno.test("tenant guard accepts shared contextual identifiers owned by receiver", () => {
+  const decision = evaluateInboundTenantOwnership({
+    receiverUserId: "receiver",
+    signals: [
+      {
+        kind: "promo_code",
+        ownerUserIds: ["receiver", "legacy-owner"],
+        rejectWhenUnregistered: true,
+      },
+      {
+        kind: "bot_phone",
+        ownerUserIds: ["receiver", "shared-owner"],
+        rejectWhenUnregistered: false,
+      },
+      {
+        kind: "landing_name",
+        ownerUserIds: [],
+        rejectWhenUnregistered: false,
+      },
+    ],
+  });
+
+  assert(decision.allowed, "receiver ownership must permit shared identifiers");
+});
+
+Deno.test("tenant guard rejects a bot or landing positively owned elsewhere", () => {
+  for (const kind of ["bot_phone", "landing_name"] as const) {
+    const decision = evaluateInboundTenantOwnership({
+      receiverUserId: "receiver",
+      signals: [{
+        kind,
+        ownerUserIds: ["foreign"],
+        rejectWhenUnregistered: false,
+      }],
+    });
+    assert(!decision.allowed, `${kind} owned elsewhere must be rejected`);
+    assert(
+      decision.reason === "foreign_owner",
+      `${kind} must report owner conflict`,
+    );
+  }
 });

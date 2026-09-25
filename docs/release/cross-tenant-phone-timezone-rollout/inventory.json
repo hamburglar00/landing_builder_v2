@@ -1,0 +1,99 @@
+{
+  "schemaVersion": 1,
+  "base": "6b0f327093382f88d632948fe922dbca8ef8e645",
+  "scope": "cross-tenant-phone-timezone-rollout",
+  "fileCountIncludingInventory": 19,
+  "inventorySelfHashExcluded": true,
+  "entries": [
+    {
+      "path": "frontend/app/(panel)/admin/conversiones/page.tsx",
+      "bytes": 86100,
+      "sha256": "2aff93e22627433e4374ca2ccd35de83ca20d30f4aafa61d0e18849dbaa4f905"
+    },
+    {
+      "path": "frontend/app/(panel)/dashboard/conversiones/page.tsx",
+      "bytes": 111580,
+      "sha256": "e691ecbedd197342d2e0a6fd1bcda9824ca9fc6afe8246ddfb2e7aee11b363b9"
+    },
+    {
+      "path": "frontend/components/landing/GerenciaRedirectSection.tsx",
+      "bytes": 16031,
+      "sha256": "5e4de8235b4796784b98bccd6c1bb362d6438dc0c312ad8b014a216414f3eee0"
+    },
+    {
+      "path": "frontend/tests/phase0PhoneHandlers.test.ts",
+      "bytes": 6152,
+      "sha256": "71305e5e82a2d3b42cc856244631fb3fbfcee32f81ed0a38648b4ed54b5b4ccd"
+    },
+    {
+      "path": "supabase/bootstrap/incremental-manifest.json",
+      "bytes": 2621,
+      "sha256": "aac48caef9dc37018d187af464dc1980d1a9ccf7499d287c6fe4caa2286bc730"
+    },
+    {
+      "path": "supabase/functions/conversions/event_attribution.ts",
+      "bytes": 6695,
+      "sha256": "d964cdc0b318a99a4c91fb5729cdd380fb4cdcfee4297a1f3f9b4443430b2149"
+    },
+    {
+      "path": "supabase/functions/conversions/event_attribution_test.ts",
+      "bytes": 7455,
+      "sha256": "33418aa5f095d3b9b4d200a6bb4389d2c573b3703b7ac2e48ca6e9c3da7ef3b3"
+    },
+    {
+      "path": "supabase/functions/conversions/index.ts",
+      "bytes": 261002,
+      "sha256": "05374cc0b4463702e7b4e0169be2d76b6e68c0a3e4387dd20e9a1cb9b0b2dc9e"
+    },
+    {
+      "path": "supabase/functions/landing-phone/index.ts",
+      "bytes": 10765,
+      "sha256": "28ca385f7c60cdcdeb812f49c16baf27a908ef6c78a372c69fe6d3b71c9f0541"
+    },
+    {
+      "path": "supabase/migrations/20260920174320_optimize_conversions_read_models.sql",
+      "bytes": 85040,
+      "sha256": "1ea2e665fc133829e021b4ec1f0bbab250841f621d431afc923600662c913a8b"
+    },
+    {
+      "path": "supabase/migrations/20260921181600_optimize_conversion_stats_latency.sql",
+      "bytes": 75104,
+      "sha256": "62968cbc8b752de70f9a904ddc03941251a109ad3b0c1e35378d7398d4677680"
+    },
+    {
+      "path": "supabase/migrations/20260922034806_optimize_conversion_edge_lookup.sql",
+      "bytes": 1767,
+      "sha256": "a74f77b6a0b149798357a5642b0932ddcb7c9ec728c5c6488336bfa232082b77"
+    },
+    {
+      "path": "supabase/migrations/20260923001959_split_conversion_statistics_server.sql",
+      "bytes": 43896,
+      "sha256": "db4e784db2934f033bade0012a923c9bacc533f948fe1f711f58fadb07a8c32e"
+    },
+    {
+      "path": "supabase/migrations/20260924203252_use_buenos_aires_for_landing_phone_intervals.sql",
+      "bytes": 14987,
+      "sha256": "b6a3691d66172b11661edfd639ba4fee7aebca5d1713124e96dbd029c95aa245"
+    },
+    {
+      "path": "supabase/migrations/20260925023009_reconcile_deferred_conversion_statistics.sql",
+      "bytes": 880,
+      "sha256": "c4ac0d6a9b43f43ac8676afab2c61514feec9584e79b8190c05cc59fa0f8d889"
+    },
+    {
+      "path": "docs/release/cross-tenant-phone-timezone-rollout/README.md",
+      "bytes": 1934,
+      "sha256": "e82c8941e214d056b358a5ca36c147b61fe7d4a2748a0dabaccdc7ed2ecb52f5"
+    },
+    {
+      "path": "docs/release/cross-tenant-phone-timezone-rollout/rollback.sql",
+      "bytes": 13608,
+      "sha256": "d32987c0d1fb654ce522ba123c7cd232d1dc586b5b30b1e31137e0e73494d8de"
+    },
+    {
+      "path": "docs/release/cross-tenant-phone-timezone-rollout/validation.json",
+      "bytes": 2368,
+      "sha256": "e353ce17806bbcc8ed02847613ad7c2755b600bdc7713706dd9d90183d5c7959"
+    }
+  ]
+}

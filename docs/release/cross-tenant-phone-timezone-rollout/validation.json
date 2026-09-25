@@ -1,0 +1,70 @@
+{
+  "capturedAt": "2026-09-25T02:45:00-03:00",
+  "base": "6b0f327093382f88d632948fe922dbca8ef8e645",
+  "scope": [
+    "cross-tenant conversion routing protection already active as conversions v161",
+    "America/Argentina/Buenos_Aires assignment intervals",
+    "visual-only ctwa_clid truncation"
+  ],
+  "excluded": {
+    "statistics278ActiveObjects": true,
+    "statisticsFrontendOrRoutes": true,
+    "performanceCandidate280": true,
+    "commercialDataChanges": true
+  },
+  "local": {
+    "eventAttribution": {"passed": 12, "failed": 0},
+    "phoneHandlers": {"passed": 5, "failed": 0},
+    "denoCheck": "passed",
+    "typescript": "passed",
+    "node": "24",
+    "build": "passed",
+    "eslintFocal": "passed",
+    "migrationReplay": {"passed": true, "count": 280, "last": "20260925023009"},
+    "rollbackProbe": "passed",
+    "deferredStatisticsObjectsAbsent": true,
+    "timezoneFunctions": 3,
+    "timezoneContract": {
+      "iana": "America/Argentina/Buenos_Aires",
+      "january": "passed",
+      "july": "passed",
+      "normal": "start inclusive/end exclusive",
+      "overnight": "passed",
+      "equalEndpoints": "unrestricted"
+    },
+    "ctwa": {"fullValuePreserved": true, "titlePreserved": true, "visualTruncationOnly": true},
+    "secretScanHits": 0,
+    "residualResources": 0
+  },
+  "remoteBaseline": {
+    "originMain": "6b0f327093382f88d632948fe922dbca8ef8e645",
+    "supabaseLedgerCount": 278,
+    "supabaseLast": "20260923001959",
+    "statistics278ObjectsAbsent": true,
+    "index277": {
+      "name": "idx_conversions_user_promo_created",
+      "valid": true,
+      "ready": true,
+      "bytes": 5349376
+    },
+    "waitingLocks": 0,
+    "maintenanceLikeSessions": 0,
+    "conversions": {
+      "version": 161,
+      "status": "ACTIVE",
+      "packageSha256": "983feb28ff2d4093b993aefea6e696377d0b3aafcd69bc52f9adc252941a2fc3"
+    },
+    "landingPhone": {
+      "version": 21,
+      "status": "ACTIVE",
+      "packageSha256": "91989231e45c7cd72f02560d0182d1616ff226e4dea56f3238d507158b42517d"
+    },
+    "vercel": {
+      "deployment": "dpl_8rfPZoBhDusubWCRq3puHATWpTjM",
+      "status": "READY",
+      "node": "24.x",
+      "domains": ["mkt.panelbotadmin.com", "constructor.panelbotadmin.com"]
+    }
+  },
+  "pending": ["release commit", "release branch push", "protected preview", "remote rollout", "smoke tests", "20 minute observation"]
+}
