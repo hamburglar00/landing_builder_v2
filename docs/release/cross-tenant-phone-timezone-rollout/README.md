@@ -30,4 +30,25 @@ El archivo `rollback.sql` restaura únicamente esas tres definiciones, conserva 
 - ESLint focalizado: aprobado.
 - Reconstrucción: 280/280; objetos 278 ausentes; rollback aprobado; cero recursos residuales.
 
-La evidencia remota y la observación se completarán tras el rollout.
+## Resultado productivo
+
+Rollout completado sin rollback el 25 de septiembre de 2026. El commit productivo y `origin/main` son `f8ed2986ff584ee107f4f5ce18ce708b1548273d`.
+
+1. Se publicó primero la rama `release/cross-tenant-phone-timezone-20260925` y Vercel generó un Preview protegido del commit exacto.
+2. El dry-run de Supabase mostró únicamente 279 y 280. Ambas se aplicaron mediante `supabase db push`; el ledger terminó en 280.
+3. Las tres funciones conservan owner y ACL previos y ahora interpretan la hora con `America/Argentina/Buenos_Aires`. El índice 277 continúa válido. Los objetos diferidos de Estadísticas 278 continúan ausentes.
+4. `landing-phone` avanzó de v21 a v22. La descarga posterior coincide byte por byte con el fuente local, SHA-256 `28ca385f7c60cdcdeb812f49c16baf27a908ef6c78a372c69fe6d3b71c9f0541`.
+5. `conversions` permaneció en v161, paquete `983feb28ff2d4093b993aefea6e696377d0b3aafcd69bc52f9adc252941a2fc3`; no se volvió a desplegar.
+6. El deployment Production `dpl_989PRh3Z9dSo6GnkzoZUwEmPamFn` quedó READY para el commit exacto, y `mkt.panelbotadmin.com` y `constructor.panelbotadmin.com` apuntan a él.
+
+Los smokes públicos aprobaron login, Conversiones, Inbox, rutas de landings, `landing-phone` y la disponibilidad de `conversions`. El identificador sintético inexistente devolvió 404 y el GET no mutante a `conversions` devolvió 405. La ruta excluida `/api/conversions/statistics` devuelve 404. No se crearon filas, usuarios ni eventos de prueba, y no se llamó a Meta.
+
+La observación se extendió de `2026-09-25T00:13:44-03:00` a `2026-09-25T00:35:51-03:00`: 21 sondeos estables, cero errores de Vercel, cero locks y actividad natural continua en conversiones y demandas. No se activó ningún umbral de rollback. Los dos Previews y el bypass de protección generado por la CLI se eliminaron al cerrar; el proyecto quedó con cero bypasses.
+
+## Estado final y reversión
+
+- Supabase: ledger 280; 279 y 280 registradas; Estadísticas 278 sigue compensada.
+- Edge: `landing-phone` v22 y `conversions` v161, ambas ACTIVE.
+- Vercel: Production en `dpl_989PRh3Z9dSo6GnkzoZUwEmPamFn`; fallback conservado en `dpl_8rfPZoBhDusubWCRq3puHATWpTjM`.
+- Rollback no ejecutado. El artefacto SQL previo permanece disponible en `rollback.sql`; el orden seguro sigue siendo Vercel, `landing-phone` y luego SQL compensatorio.
+- Cero cambios de métricas, datos comerciales o lógica de negocio ajena al blindaje y a la interpretación horaria autorizada.

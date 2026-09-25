@@ -1,6 +1,6 @@
 {
   "schemaVersion": 1,
-  "base": "6b0f327093382f88d632948fe922dbca8ef8e645",
+  "base": "f8ed2986ff584ee107f4f5ce18ce708b1548273d",
   "scope": "cross-tenant-phone-timezone-rollout",
   "fileCountIncludingInventory": 19,
   "inventorySelfHashExcluded": true,
@@ -82,8 +82,8 @@
     },
     {
       "path": "docs/release/cross-tenant-phone-timezone-rollout/README.md",
-      "bytes": 1934,
-      "sha256": "e82c8941e214d056b358a5ca36c147b61fe7d4a2748a0dabaccdc7ed2ecb52f5"
+      "bytes": 4359,
+      "sha256": "b2eaec72ee576a32ba47cfc783654d086bd4437f231fe42dbc333ab9d09faa26"
     },
     {
       "path": "docs/release/cross-tenant-phone-timezone-rollout/rollback.sql",
@@ -92,8 +92,8 @@
     },
     {
       "path": "docs/release/cross-tenant-phone-timezone-rollout/validation.json",
-      "bytes": 2368,
-      "sha256": "e353ce17806bbcc8ed02847613ad7c2755b600bdc7713706dd9d90183d5c7959"
+      "bytes": 3833,
+      "sha256": "d3a023f4ff9b210bb2c7f5916d51fb52dd7cf1ed5585b7e3fc010b5a4460d413"
     }
   ]
 }

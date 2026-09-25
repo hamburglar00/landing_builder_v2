@@ -13,14 +13,24 @@
     "commercialDataChanges": true
   },
   "local": {
-    "eventAttribution": {"passed": 12, "failed": 0},
-    "phoneHandlers": {"passed": 5, "failed": 0},
+    "eventAttribution": {
+      "passed": 12,
+      "failed": 0
+    },
+    "phoneHandlers": {
+      "passed": 5,
+      "failed": 0
+    },
     "denoCheck": "passed",
     "typescript": "passed",
     "node": "24",
     "build": "passed",
     "eslintFocal": "passed",
-    "migrationReplay": {"passed": true, "count": 280, "last": "20260925023009"},
+    "migrationReplay": {
+      "passed": true,
+      "count": 280,
+      "last": "20260925023009"
+    },
     "rollbackProbe": "passed",
     "deferredStatisticsObjectsAbsent": true,
     "timezoneFunctions": 3,
@@ -32,7 +42,11 @@
       "overnight": "passed",
       "equalEndpoints": "unrestricted"
     },
-    "ctwa": {"fullValuePreserved": true, "titlePreserved": true, "visualTruncationOnly": true},
+    "ctwa": {
+      "fullValuePreserved": true,
+      "titlePreserved": true,
+      "visualTruncationOnly": true
+    },
     "secretScanHits": 0,
     "residualResources": 0
   },
@@ -63,8 +77,58 @@
       "deployment": "dpl_8rfPZoBhDusubWCRq3puHATWpTjM",
       "status": "READY",
       "node": "24.x",
-      "domains": ["mkt.panelbotadmin.com", "constructor.panelbotadmin.com"]
+      "domains": [
+        "mkt.panelbotadmin.com",
+        "constructor.panelbotadmin.com"
+      ]
     }
   },
-  "pending": ["release commit", "release branch push", "protected preview", "remote rollout", "smoke tests", "20 minute observation"]
+  "pending": [],
+  "completedAt": "2026-09-25T00:35:51-03:00",
+  "result": "SUCCESS",
+  "rollout": {
+    "releaseCommit": "f8ed2986ff584ee107f4f5ce18ce708b1548273d",
+    "originMain": "f8ed2986ff584ee107f4f5ce18ce708b1548273d",
+    "ledger": 280,
+    "migrations": [
+      "20260924203252",
+      "20260925023009"
+    ],
+    "landingPhone": {
+      "version": 22,
+      "status": "ACTIVE",
+      "sourceSha256": "28ca385f7c60cdcdeb812f49c16baf27a908ef6c78a372c69fe6d3b71c9f0541",
+      "packageSha256": "7d3f84de79576bb74ac2f908c7ddf58ed94670e7bf97cb00f31561f47a802c9b"
+    },
+    "conversions": {
+      "version": 161,
+      "status": "ACTIVE",
+      "packageSha256": "983feb28ff2d4093b993aefea6e696377d0b3aafcd69bc52f9adc252941a2fc3",
+      "redeployed": false
+    },
+    "vercel": {
+      "deployment": "dpl_989PRh3Z9dSo6GnkzoZUwEmPamFn",
+      "status": "READY",
+      "commit": "f8ed2986ff584ee107f4f5ce18ce708b1548273d",
+      "node": "24.x",
+      "domains": [
+        "mkt.panelbotadmin.com",
+        "constructor.panelbotadmin.com"
+      ],
+      "fallback": "dpl_8rfPZoBhDusubWCRq3puHATWpTjM"
+    },
+    "observation": {
+      "from": "2026-09-25T00:13:44-03:00",
+      "to": "2026-09-25T00:35:51-03:00",
+      "probes": 21,
+      "vercelErrors": 0,
+      "waitingLocks": 0,
+      "naturalTrafficObserved": true
+    },
+    "rollbackExecuted": false,
+    "previewsRemoved": 2,
+    "residualFixtures": 0,
+    "protectionBypassRevoked": true,
+    "remainingProtectionBypasses": 0
+  }
 }
