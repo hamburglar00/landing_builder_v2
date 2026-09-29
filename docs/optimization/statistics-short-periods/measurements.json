@@ -1,0 +1,443 @@
+{
+  "base": "f828a66c70879725bbabe8f4fa55de22c8317493",
+  "production": "f8ed2986ff584ee107f4f5ce18ce708b1548273d",
+  "startedAt": "2026-09-29T16:18:53.358Z",
+  "remoteOperations": 0,
+  "failures": [
+    {
+      "message": "Local Data API did not become ready",
+      "sqlstate": null
+    }
+  ],
+  "previousAttempts": [
+    {
+      "startedAt": "2026-09-25T17:45:12.748Z",
+      "finishedAt": "2026-09-25T18:32:24.852Z",
+      "failures": [
+        {
+          "message": "Local command failed SQLSTATE 42501",
+          "sqlstate": "42501"
+        }
+      ],
+      "samples": [],
+      "cleanup": {
+        "project": "phase0b-c0914e08",
+        "owned": {
+          "containers": [
+            "5de38d7b3e4ddd8f6c91e97b82c580ae0ddd1d09bb6a9f0f92d9fb7502135dfc"
+          ],
+          "networks": [
+            "814863a36ecc491b7d1029256f35704958e655ca06332dc33ca8f43e20168739",
+            "db4496fb6a69103f37466bcf37900bee79e20d0bf41629457bf0d8c3d7dda482"
+          ],
+          "volumes": [
+            "supabase_db_phase0b-c0914e08"
+          ]
+        },
+        "remaining": {
+          "containers": [],
+          "networks": [],
+          "volumes": []
+        }
+      },
+      "fixture": {
+        "ars": 81630,
+        "pyg": 40815,
+        "rows": 122445,
+        "idsMd5": "d92971781723225d2a5d47584ab36ef9",
+        "landings": 27,
+        "campaigns": 266,
+        "rawRegions": 95,
+        "fixtureVersion": 2,
+        "diverse": true,
+        "starts": 13836,
+        "anchor": "2026-09-25T03:00:00Z",
+        "generatorSha256": "6320a47eca5896d9e857fe9f9474518eefe417796366b0db1e858a9828541bc6",
+        "syntheticOnly": true
+      }
+    }
+  ],
+  "historyValidation": {
+    "entries": 280,
+    "source": "immutable Git blobs",
+    "manifestHashesMatch": true,
+    "forwardGuard": "Existing 278 EXECUTE grants and 279 dynamic definition patch reviewed as historical, not a new migration"
+  },
+  "provider": {
+    "cli": "2.75.0",
+    "image": "public.ecr.aws/supabase/postgres:17.6.1.075",
+    "imageId": "sha256:82a04ba6c05f60950a74ae46be3726abb18d06ee44da936276fd782e72e36855"
+  },
+  "resources": {
+    "containerId": "73a5483d53fe3573ce889c221e5571369625283827f2b8d49522daaa5637d09e",
+    "networkId": "04c9796db509b962739483631dc49b8b765baba6ab93ad2007d8f620e09d52fa"
+  },
+  "nativeCompatibility": {
+    "applied": true,
+    "version": "0.19.5",
+    "method": "Native DROP/CREATE EXTENSION on empty owned local database; transaction-local event_triggers=false; no extension file/function edits",
+    "remoteSecurityExact": true
+  },
+  "disk": {
+    "at": "2026-09-29T16:20:57.432Z",
+    "availableBytes": "16894218240",
+    "minimumBytes": "3221225472"
+  },
+  "tempSafety": {
+    "localOnly": true,
+    "tempFileLimit": "512MB",
+    "roles": [
+      "postgres",
+      "authenticated"
+    ],
+    "productionChanges": false
+  },
+  "migrationsApplied": 280,
+  "compatibility": {
+    "applied": true,
+    "afterHistoricalCount": 268,
+    "sourceSha256": "1ff365d11204bd8a20668b1d821df138a9310f05d94ed1b53c398f6762bb6f5c",
+    "referenceMatched": true
+  },
+  "catalogAlignment": {
+    "definitions": 35,
+    "sha256": "c448e184595b9f9fd38971400ad7627c605fa1d5c8640d7015967b15a656be59",
+    "localOnly": true
+  },
+  "fixture": {
+    "ars": 81630,
+    "pyg": 40815,
+    "rows": 122445,
+    "idsMd5": "d92971781723225d2a5d47584ab36ef9",
+    "landings": 27,
+    "campaigns": 266,
+    "rawRegions": 95,
+    "fixtureVersion": 2,
+    "diverse": true,
+    "starts": 13836,
+    "anchor": "2026-09-29T03:00:00Z",
+    "generatorSha256": "8789058075eef6b6f0b46df1d82a471972ed281094ed34cc44eaea2c81545966",
+    "syntheticOnly": true
+  },
+  "candidate": {
+    "function": "public.get_conversion_statistics_short(jsonb)",
+    "sha256": "79610c5dee5280cce641640ca9b6be4354473861ce7c951c0d4573254588b27a",
+    "implementation": "Bounded invoker wrapper of installed report",
+    "experimentalCeilingDays": 90,
+    "accreditedDays": null
+  },
+  "guards": [
+    {
+      "name": "maximum",
+      "code": "22023",
+      "ms": 45.3,
+      "rowsRead": 0
+    },
+    {
+      "name": "missing-to",
+      "code": "22023",
+      "ms": 24.5,
+      "rowsRead": 0
+    },
+    {
+      "name": "reversed",
+      "code": "22023",
+      "ms": 20.3,
+      "rowsRead": 0
+    },
+    {
+      "name": "over-ceiling",
+      "code": "22023",
+      "ms": 21.8,
+      "rowsRead": 0
+    }
+  ],
+  "samples": [
+    {
+      "preset": "Hoy",
+      "currency": "ARS",
+      "role": "admin-global",
+      "from": "2026-09-29T03:00:00.000Z",
+      "to": "2026-09-30T02:59:59.999Z",
+      "iteration": 1,
+      "httpStatus": 200,
+      "totalMs": 894,
+      "summaryMs": 894,
+      "queryBudgetMs": 8000,
+      "code": null,
+      "counts": {
+        "stats": 526,
+        "funnel": 290,
+        "starts": 0,
+        "visible": 526,
+        "unfilteredFunnel": 422
+      },
+      "responseSha256": "a40a0738776b5e4a08aca6c9d22803f599d59184e6a98d73c26b52b7b74e79c2",
+      "responseBytes": 53505,
+      "canonical": {
+        "baseline": "f8ed2986ff584ee107f4f5ce18ce708b1548273d",
+        "compared": 693,
+        "differences": [],
+        "scope": "Original scalars, chart buckets and dimensions; excludes raw contacts and derived display trend. Full UI admission still required."
+      },
+      "legacyRead": {
+        "requests": 2,
+        "conversionRows": 789,
+        "startRows": 461,
+        "fixtureHasNoHiddenOrVisibilityPreference": true
+      }
+    },
+    {
+      "preset": "Ayer",
+      "currency": "ARS",
+      "role": "admin-global",
+      "from": "2026-09-28T03:00:00.000Z",
+      "to": "2026-09-29T02:59:59.999Z",
+      "iteration": 1,
+      "httpStatus": 200,
+      "totalMs": 1600,
+      "summaryMs": 1600,
+      "queryBudgetMs": 8000,
+      "code": null,
+      "counts": {
+        "stats": 527,
+        "funnel": 290,
+        "starts": 462,
+        "visible": 527,
+        "unfilteredFunnel": 423
+      },
+      "responseSha256": "8c42521656da0760e3e60e6152c23bc6edbadf64f1ce8d7f2b12e1ff24e95a50",
+      "responseBytes": 50544,
+      "canonical": {
+        "baseline": "f8ed2986ff584ee107f4f5ce18ce708b1548273d",
+        "compared": 525,
+        "differences": [],
+        "scope": "Original scalars, chart buckets and dimensions; excludes raw contacts and derived display trend. Full UI admission still required."
+      },
+      "legacyRead": {
+        "requests": 2,
+        "conversionRows": 790,
+        "startRows": 462,
+        "fixtureHasNoHiddenOrVisibilityPreference": true
+      }
+    },
+    {
+      "preset": "Semana",
+      "currency": "ARS",
+      "role": "admin-global",
+      "from": "2026-09-28T03:00:00.000Z",
+      "to": "2026-09-30T02:59:59.999Z",
+      "iteration": 1,
+      "httpStatus": 200,
+      "totalMs": 1384.7,
+      "summaryMs": 1384.7,
+      "queryBudgetMs": 8000,
+      "code": null,
+      "counts": {
+        "stats": 1053,
+        "funnel": 580,
+        "starts": 462,
+        "visible": 1053,
+        "unfilteredFunnel": 756
+      },
+      "responseSha256": "3429e45796e27a0fd5edcc0a378344c4731a4e5788e73542a28198d423be7463",
+      "responseBytes": 57917,
+      "canonical": {
+        "baseline": "f8ed2986ff584ee107f4f5ce18ce708b1548273d",
+        "compared": 908,
+        "differences": [],
+        "scope": "Original scalars, chart buckets and dimensions; excludes raw contacts and derived display trend. Full UI admission still required."
+      },
+      "legacyRead": {
+        "requests": 3,
+        "conversionRows": 1579,
+        "startRows": 923,
+        "fixtureHasNoHiddenOrVisibilityPreference": true
+      }
+    },
+    {
+      "preset": "Mes",
+      "currency": "ARS",
+      "role": "admin-global",
+      "from": "2026-09-01T03:00:00.000Z",
+      "to": "2026-10-01T02:59:59.999Z",
+      "iteration": 1,
+      "httpStatus": 500,
+      "totalMs": 8415.2,
+      "summaryMs": null,
+      "queryBudgetMs": 8000,
+      "code": "57014",
+      "counts": null
+    }
+  ],
+  "apiCleanup": true,
+  "admissionFailure": {
+    "preset": "Mes",
+    "reason": "RPC failed",
+    "stopBeforeLongerRanges": true
+  },
+  "cleanup": {
+    "project": "phase0b-040a6e40",
+    "owned": {
+      "containers": [
+        "73a5483d53fe3573ce889c221e5571369625283827f2b8d49522daaa5637d09e"
+      ],
+      "networks": [
+        "04c9796db509b962739483631dc49b8b765baba6ab93ad2007d8f620e09d52fa",
+        "de20f7fc6623521c6b1300c07e6145e345818e8fd06079864fdd4f45032e0153"
+      ],
+      "volumes": [
+        "supabase_db_phase0b-040a6e40"
+      ]
+    },
+    "remaining": {
+      "containers": [],
+      "networks": [],
+      "volumes": []
+    }
+  },
+  "finishedAt": "2026-09-29T16:26:22.994Z",
+  "withdrawal": {
+    "reason": "Month failed the short-period admission gate; user required removal without another architecture",
+    "accreditedDays": null,
+    "fastPresets": [],
+    "artifactsRemoved": [
+      {
+        "path": "supabase/migrations/20260925174017_conversion_statistics_short_periods.sql",
+        "sha256": "79610c5dee5280cce641640ca9b6be4354473861ce7c951c0d4573254588b27a"
+      },
+      {
+        "path": "scripts/optimization/statistics-short-local.mjs",
+        "sha256": "2e7edfcae71ed4789707d5103f7f50c18bae880115ee5b37273f1c7a24c29be1"
+      },
+      {
+        "path": "scripts/optimization/statistics-short-measure.mjs",
+        "sha256": "e98f56234246e35c909e725a183e0ec5cfd925ed9da47c962a19d1311d60e372"
+      },
+      {
+        "path": "scripts/optimization/statistics-short-oracle.mjs",
+        "sha256": "1c54c084fd50845b2beee713d2a6265b83af77ebfd268a6f2d0f2d328009016b"
+      }
+    ],
+    "candidateSql": "-- Admission candidate only: do not apply until the measured bound is accredited.\n-- Ninety days is the experiment ceiling, not a production eligibility decision.\nCREATE OR REPLACE FUNCTION public.get_conversion_statistics_short(p_request jsonb)\nRETURNS jsonb\nLANGUAGE plpgsql\nSTABLE\nSECURITY INVOKER\nSET search_path = ''\nSET statement_timeout = '8s'\nAS $function$\nDECLARE\n  from_at timestamptz := (p_request->>'from')::timestamptz;\n  to_at timestamptz := (p_request->>'to')::timestamptz;\nBEGIN\n  IF (SELECT auth.uid()) IS NULL THEN\n    RAISE EXCEPTION 'Authentication required' USING ERRCODE = '42501';\n  END IF;\n  IF from_at IS NULL OR to_at IS NULL OR NOT isfinite(from_at) OR NOT isfinite(to_at)\n    OR to_at < from_at OR to_at - from_at >= interval '90 days'\n    OR coalesce(p_request->>'view', '') <> 'stats' THEN\n    RAISE EXCEPTION 'A bounded statistics period is required' USING ERRCODE = '22023';\n  END IF;\n  RETURN public.get_conversion_report(p_request);\nEND\n$function$;\nREVOKE ALL ON FUNCTION public.get_conversion_statistics_short(jsonb) FROM PUBLIC, anon;\nGRANT EXECUTE ON FUNCTION public.get_conversion_statistics_short(jsonb) TO authenticated;\n",
+    "remoteOperations": 0,
+    "uiChanged": false,
+    "newLedgerEntry": false
+  },
+  "notExecuted": [
+    "Mes pasado",
+    "Personalizado 7 dias",
+    "Personalizado 31 dias",
+    "Personalizado 60 dias",
+    "Personalizado 90 dias",
+    "PYG",
+    "normal user RLS and isolation",
+    "full UI",
+    "protected Preview",
+    "hosted validation",
+    "three samples at selected limit",
+    "new EXPLAIN or BUFFERS",
+    "unbounded candidate computation"
+  ],
+  "validation": {
+    "validatedAt": "2026-09-29T16:31:48.857491+00:00",
+    "inventory": [
+      "cross-join-review.md",
+      "measurements.json",
+      "result.md"
+    ],
+    "documentationHashes": {
+      "cross-join-review.md": "be8c8cbbf95ff3498a6a3f14ffb0f824085eb42e62a2051fec35d3aed7430734",
+      "result.md": "4f385b2a17144572e1421d518204b2441b26e3784c619ddc14b4ad83ff42ea59"
+    },
+    "manifestNote": "measurements.json excludes its own hash; compute from final bytes. Withdrawn artifact hashes identify executed local prototypes, not files to restore.",
+    "checkpointFiles": [
+      {
+        "file": "current-production-flow.md",
+        "sha256": "ec49049723ac55b73f31195a3099052448a53140a665a670609e88a62fd216db"
+      },
+      {
+        "file": "current-production.sql",
+        "sha256": "d6c9697b9a4a38582ebf639b9d63374bfddd5be123ad299124442e03571731b0"
+      },
+      {
+        "file": "date-presets.md",
+        "sha256": "2fbbc53b2d4cc7f7302bde09508576d9fb3f633f1bd8f2906804be5f3db85b54"
+      },
+      {
+        "file": "deferred-candidate.sql",
+        "sha256": "c9eac1b1ab9ec7997dbe5a2d9f745ec10a6cb78a4e1149110337f11b4e3267be"
+      },
+      {
+        "file": "execution-plan.json",
+        "sha256": "5c9a3b9e9d3207f0dfd88f10d8834cb56196385cc0e519b1d71eb9a8c2400871"
+      },
+      {
+        "file": "execution-plan.md",
+        "sha256": "129c58c6c55ac041620d4d6aea3ed0fee200df14680a33efbee4e934b70c2e1e"
+      },
+      {
+        "file": "schema-and-indexes.sql",
+        "sha256": "850de3ae05c6cada23d2f8241dbc73045267cc827a979a53c2d49b20b548320e"
+      }
+    ],
+    "checkpointBytesUnchanged": true,
+    "relativeLinks": [
+      {
+        "file": "cross-join-review.md",
+        "target": "../../review/conversion-statistics-dba-20260925/current-production.sql"
+      },
+      {
+        "file": "cross-join-review.md",
+        "target": "../../review/conversion-statistics-dba-20260925/deferred-candidate.sql"
+      },
+      {
+        "file": "cross-join-review.md",
+        "target": "../../review/conversion-statistics-dba-20260925/execution-plan.json"
+      },
+      {
+        "file": "result.md",
+        "target": "../../review/conversion-statistics-dba-20260925/current-production-flow.md"
+      },
+      {
+        "file": "result.md",
+        "target": "measurements.json"
+      },
+      {
+        "file": "result.md",
+        "target": "cross-join-review.md"
+      },
+      {
+        "file": "result.md",
+        "target": "measurements.json"
+      }
+    ],
+    "encoding": "UTF-8 without BOM or replacement characters",
+    "syntax": {
+      "json": true,
+      "withdrawnSqlStatements": 3,
+      "withdrawnPlpgsql": true,
+      "parser": "pglast v8.4"
+    },
+    "privacy": {
+      "secretPatterns": [
+        "jwt",
+        "private_key",
+        "credential",
+        "email_value",
+        "credential_uri",
+        "phone_value",
+        "personal_field_value"
+      ],
+      "findings": [],
+      "manualReview": "No credentials, tokens, JWT values, personal names, email addresses, phone values or production rows. Technical names, hashes, synthetic aggregate counts and execution metrics preserved."
+    },
+    "gitDiffCheck": true,
+    "newFilesNoIndexDiffCheck": true,
+    "trackedFilesChanged": [],
+    "stagedFiles": [],
+    "candidateFilesRemoved": true,
+    "ownedDatabaseCleanupVerified": true,
+    "apiCleanupVerified": true
+  }
+}
