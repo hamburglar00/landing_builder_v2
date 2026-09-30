@@ -9,3 +9,8 @@
 *.pdf binary
 *.woff binary
 *.woff2 binary
+
+# SQL catalog snapshots contain literal trailing whitespace and a source EOF.
+docs/review/conversion-statistics-dba-20260925/current-production.sql whitespace=-blank-at-eol,-blank-at-eof
+docs/review/conversion-statistics-dba-20260925/deferred-candidate.sql whitespace=-blank-at-eol,-blank-at-eof
+docs/review/conversion-statistics-dba-20260925/schema-and-indexes.sql whitespace=-blank-at-eof

@@ -17,7 +17,8 @@ export function checkFutureOrder(files, cutoff='20260915190657') {
   for(const [file,sql] of ordered) {
     if(file.split('_')[0]<=cutoff)continue;
     const text=clean(sql);
-    if(/\bexecute\b/i.test(text.replace(/\bexecute\s+(?:function|procedure)\b/gi,''))) violations.push({file,kind:'dynamic-SQL-requires-review'});
+    const withoutPrivilegeStatements=text.replace(/\b(?:grant|revoke)\b[^;]*\bexecute\b[^;]*;/gi,'');
+    if(/\bexecute\b/i.test(withoutPrivilegeStatements.replace(/\bexecute\s+(?:function|procedure)\b/gi,''))) violations.push({file,kind:'dynamic-SQL-requires-review'});
     if(/\bcreate\s+(?:or\s+replace\s+)?(?:table|view|sequence|type|function)\s+(?:if\s+not\s+exists\s+)?(?!if\b)[a-z_][a-z_0-9]*(?=\s|\(|;)/i.test(text) || /\b(?:public|private)\s*\.\s*"/.test(text)) violations.push({file,kind:'unresolved-object-declaration-requires-review'});
     for(const m of text.matchAll(/\b(?:public|private)\.[a-z_][a-z_0-9]*/gi)) {
       const provider=providers.get(m[0].toLowerCase());
