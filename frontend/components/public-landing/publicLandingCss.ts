@@ -2052,7 +2052,7 @@ body.public-lead-capture-open {
 .public-landing.template4 .template4__cta {
   justify-content: center;
   gap: 10px;
-  min-height: 48px;
+  min-height: 54px;
   padding: 8px 18px;
   color: #ffffff;
   background: #25d366;
@@ -2478,14 +2478,11 @@ body.public-lead-capture-open {
 }
 .public-landing .inline-email-capture__field {
   width: 100%;
-  min-height: 54px;
-  display: grid;
-  grid-template-columns: 15px minmax(0, 1fr);
-  grid-template-rows: auto 20px;
-  column-gap: 7px;
-  row-gap: 2px;
+  height: 40px;
+  display: flex;
   align-items: center;
-  padding: 5px 8px;
+  gap: 4px;
+  padding: 0 4px;
   border: 1px solid rgba(241, 205, 108, 0.72);
   border-radius: 10px;
   background: rgba(23, 24, 18, 0.96);
@@ -2496,35 +2493,24 @@ body.public-lead-capture-open {
   box-shadow: 0 0 0 2px rgba(37, 211, 102, 0.18);
 }
 .public-landing .inline-email-capture__icon {
-  width: 15px;
-  height: 15px;
-  grid-column: 1;
-  grid-row: 2;
+  width: 13px;
+  height: 13px;
+  flex: 0 0 13px;
   fill: none;
   stroke: #F1CD6C;
   stroke-width: 1.8;
   stroke-linecap: round;
   stroke-linejoin: round;
 }
-.public-landing .inline-email-capture__hint {
-  grid-column: 1 / -1;
-  color: rgba(255, 255, 255, 0.9);
-  font: 500 clamp(10.5px, 3vw, 11px)/1.1 system-ui, sans-serif;
-  text-align: left;
-  white-space: nowrap;
-  cursor: text;
-}
 .public-landing .inline-email-capture input {
-  grid-column: 2;
-  grid-row: 2;
   width: 100%;
   min-width: 0;
-  height: 20px;
+  height: 100%;
   padding: 0;
   border: 0;
   background: transparent;
   color: #fff;
-  font: 500 13px/1.2 system-ui, sans-serif;
+  font: 500 clamp(10px, 2.8vw, 13px)/1.2 system-ui, sans-serif;
   outline: none;
 }
 .public-landing .inline-email-capture input::placeholder {
