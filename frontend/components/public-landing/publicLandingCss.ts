@@ -2476,20 +2476,46 @@ body.public-lead-capture-open {
   text-align: center;
   flex: 0 0 auto;
 }
-.public-landing .inline-email-capture input {
+.public-landing .inline-email-capture__field {
   width: 100%;
   height: 40px;
-  padding: 0 clamp(6px, 1.7vw, 10px);
-  border: 1px solid rgba(255, 255, 255, 0.62);
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  padding: 0 9px;
+  border: 1px solid rgba(241, 205, 108, 0.72);
   border-radius: 10px;
-  background: rgba(0, 0, 0, 0.72);
+  background: rgba(23, 24, 18, 0.96);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.09);
+}
+.public-landing .inline-email-capture__field:focus-within {
+  border-color: #25D366;
+  box-shadow: 0 0 0 2px rgba(37, 211, 102, 0.18);
+}
+.public-landing .inline-email-capture__icon {
+  width: 15px;
+  height: 15px;
+  flex: 0 0 15px;
+  fill: none;
+  stroke: #F1CD6C;
+  stroke-width: 1.8;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+.public-landing .inline-email-capture input {
+  width: 100%;
+  min-width: 0;
+  height: 100%;
+  padding: 0;
+  border: 0;
+  background: transparent;
   color: #fff;
-  font: 400 clamp(10px, 3vw, 13px)/1.2 system-ui, sans-serif;
-  outline-offset: 2px;
+  font: 500 clamp(12px, 3vw, 13px)/1.2 system-ui, sans-serif;
+  outline: none;
 }
 .public-landing .inline-email-capture input::placeholder {
-  color: rgba(255, 255, 255, 0.8);
-  font-style: italic;
+  color: rgba(255, 255, 255, 0.88);
+  font-style: normal;
 }
 .public-landing .inline-email-capture small {
   display: block;
