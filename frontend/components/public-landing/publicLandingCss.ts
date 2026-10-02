@@ -2542,13 +2542,24 @@ body.public-lead-capture-open {
 .public-landing .container.background-image.has-inline-email .subtitle { margin-top: 10px; }
 .public-landing .container.background-image.has-inline-email .description { margin: 10px 0 8px; }
 .public-landing .container.background-image.has-inline-email.template1-bottom-layout { --cta-thumb-frame-height: 63svh; }
-.public-landing.lp .artboard.has-inline-email { --cta-thumb-frame-height: 63svh; }
+.public-landing.lp .artboard.has-inline-email .frame { flex-shrink: 0; }
 .public-landing.lp .artboard.has-inline-email .inline-email-capture { width: 80%; }
+.public-landing.lp .artboard.has-inline-email .social-proof { margin-top: 8px; padding-top: 4px; padding-bottom: 4px; }
+.public-landing.lp .artboard.has-inline-email .social-proof__progress { margin-top: 4px; }
 @media (max-height: 720px) {
-  .public-landing .container.background-image.has-inline-email.template1-bottom-layout,
-  .public-landing.lp .artboard.has-inline-email { --cta-thumb-frame-height: 55svh; }
+  .public-landing .container.background-image.has-inline-email.template1-bottom-layout { --cta-thumb-frame-height: 55svh; }
   .public-landing .container.background-image.has-inline-email .subtitle { margin-top: 5px; }
   .public-landing .container.background-image.has-inline-email .description { margin: 5px 0; }
+}
+@media (max-height: 780px), (min-width: 391px) and (max-height: 900px) {
+  .public-landing.lp .artboard.has-inline-email { position: relative; }
+  .public-landing.lp .artboard.has-inline-email .social-proof {
+    position: absolute;
+    top: 31svh;
+    left: 50%;
+    margin: 0;
+    transform: translateX(-50%);
+  }
 }
 
 @media (max-width: 420px) {
