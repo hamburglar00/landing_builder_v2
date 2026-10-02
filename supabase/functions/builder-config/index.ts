@@ -109,7 +109,7 @@ function resolveActiveTemplateRawConfig(
 
   if (!activeVariant) return rawConfig;
 
-  const merged = {
+  const merged: Record<string, unknown> = {
     ...rawConfig,
     ...activeVariant,
     template,
@@ -274,6 +274,10 @@ Deno.serve(async (req) => {
         (rawConfig.leadCapture as Record<string, unknown>) ?? {};
       const rawConfigLeadCaptureFields =
         (rawConfigLeadCapture.fields as Record<string, unknown>) ?? {};
+      const publishedTemplate = Number(
+        ((cfg.layout as Record<string, unknown> | undefined)?.template) ??
+          templateNumberForOption(rawConfig.template),
+      );
       const rawImages = Array.isArray(rawBackground.images)
         ? (rawBackground.images as string[])
         : [];
@@ -349,6 +353,11 @@ Deno.serve(async (req) => {
               ? rawConfigLeadCaptureFields.email
               : ((rawLeadCaptureFields.email as boolean | undefined) ?? true),
           },
+        },
+        emailCapture: {
+          enabled: (publishedTemplate === 1 || publishedTemplate === 2) && (typeof rawConfig.emailCaptureEnabled === "boolean"
+            ? rawConfig.emailCaptureEnabled
+            : ((cfg.emailCapture as Record<string, unknown> | undefined)?.enabled === true)),
         },
       };
       return new Response(JSON.stringify(merged), {
@@ -488,6 +497,9 @@ Deno.serve(async (req) => {
               ?.fields as Record<string, unknown> | undefined)
               ?.email as boolean | undefined) ?? true,
         },
+      },
+      emailCapture: {
+        enabled: (templateNumber === 1 || templateNumber === 2) && themeWithHex.emailCaptureEnabled === true,
       },
       layout: {
         ctaPosition: (themeWithHex.ctaPosition as

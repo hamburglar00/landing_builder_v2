@@ -2469,6 +2469,57 @@ body.public-lead-capture-open {
   }
 }
 
+.public-landing .inline-email-capture {
+  width: min(85vw, 340px);
+  max-width: 100%;
+  margin: 6px auto 0;
+  text-align: center;
+  flex: 0 0 auto;
+}
+.public-landing .inline-email-capture input {
+  width: 100%;
+  height: 40px;
+  padding: 0 12px;
+  border: 1px solid rgba(255, 255, 255, 0.4);
+  border-radius: 10px;
+  background: rgba(0, 0, 0, 0.72);
+  color: #fff;
+  font: 400 14px/1.2 system-ui, sans-serif;
+  outline-offset: 2px;
+}
+.public-landing .inline-email-capture input::placeholder {
+  color: rgba(255, 255, 255, 0.8);
+  font-style: italic;
+}
+.public-landing .inline-email-capture small {
+  display: block;
+  min-height: 14px;
+  color: #ffb4b4;
+  font-size: 10px;
+  line-height: 14px;
+}
+.public-landing .has-inline-email .whatsapp-button,
+.public-landing .has-inline-email .cta { margin-top: 2px; }
+.public-landing .template1-bottom-cta-slot { flex-direction: column; align-items: center; }
+.public-landing .container.background-image.has-inline-email { min-height: 100svh; height: 100svh; }
+.public-landing .container.background-image.has-inline-email .content { padding-top: 8px; padding-bottom: 8px; }
+.public-landing .container.background-image.has-inline-email .logo { width: min(35vw, 150px); height: min(16svh, 110px); margin-bottom: 4px; }
+.public-landing .container.background-image.has-inline-email .title { margin: 4px 0 6px; }
+.public-landing .container.background-image.has-inline-email .subtitle { margin-top: 10px; }
+.public-landing .container.background-image.has-inline-email .description { margin: 10px 0 8px; }
+.public-landing .container.background-image.has-inline-email.template1-bottom-layout { --cta-thumb-frame-height: 63svh; }
+.public-landing.lp .artboard.has-inline-email { --cta-thumb-frame-height: 63svh; }
+.public-landing.lp .artboard.has-inline-email .inline-email-capture { width: 100%; }
+@media (max-width: 390px) {
+  .public-landing .has-inline-email .inline-email-capture input { font-size: 12px; }
+}
+@media (max-height: 720px) {
+  .public-landing .container.background-image.has-inline-email.template1-bottom-layout,
+  .public-landing.lp .artboard.has-inline-email { --cta-thumb-frame-height: 55svh; }
+  .public-landing .container.background-image.has-inline-email .subtitle { margin-top: 5px; }
+  .public-landing .container.background-image.has-inline-email .description { margin: 5px 0; }
+}
+
 @media (max-width: 420px) {
   .public-landing.template3 .template3__card {
     min-height: 0;

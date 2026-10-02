@@ -102,6 +102,7 @@ export default function PublicLandingRuntimeScript({ slug, config }: Props) {
         email: config.leadCapture?.fields?.email === true,
       },
     },
+    emailCapture: { enabled: config.emailCapture?.enabled === true },
     supabaseUrl: process.env.NEXT_PUBLIC_SUPABASE_URL || "",
     supabaseAnonKey: process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || "",
     socialProofItems: SOCIAL_PROOF_ITEMS,
@@ -306,6 +307,28 @@ export default function PublicLandingRuntimeScript({ slug, config }: Props) {
           ln: lastName || identity.ln,
           externalId: identity.externalId
         };
+      }
+
+      function readInlineEmail() {
+        if (!cfg.emailCapture || cfg.emailCapture.enabled !== true) return "";
+        var input = document.querySelector("[data-inline-email-input]");
+        if (!input) return "";
+        var value = String(input.value || "").trim();
+        var valid = value.length <= 254 && /^[^\\s@]+@[^\\s@]+\\.[^\\s@]{2,}$/.test(value);
+        var error = document.querySelector("[data-inline-email-error]");
+        if (error) error.textContent = value && !valid
+          ? "Email inválido. Podés seguir a WhatsApp." : "";
+        return valid ? value.toLowerCase() : "";
+      }
+
+      function initInlineEmail() {
+        var input = document.querySelector("[data-inline-email-input]");
+        if (!input) return;
+        input.addEventListener("input", function () {
+          var error = document.querySelector("[data-inline-email-error]");
+          if (error) error.textContent = "";
+        });
+        input.addEventListener("blur", readInlineEmail);
       }
 
       function cookieValue(name) {
@@ -1099,6 +1122,9 @@ export default function PublicLandingRuntimeScript({ slug, config }: Props) {
           return;
         }
         pendingLeadCaptureButton = button;
+        var inlineEmail = readInlineEmail();
+        var modalEmail = leadCaptureModal.querySelector('input[name="email"]');
+        if (modalEmail && cfg.emailCapture && cfg.emailCapture.enabled === true) modalEmail.value = inlineEmail;
         leadCaptureModal.hidden = false;
         document.body.classList.add("public-lead-capture-open");
         window.setTimeout(function () {
@@ -1129,7 +1155,18 @@ export default function PublicLandingRuntimeScript({ slug, config }: Props) {
           var promoCode = context.promoCode;
           var message = context.message;
           var eventId = context.eventId;
-          var identity = applyLeadCaptureToIdentity(context.identity, leadCaptureValues);
+          var inlineEmail = readInlineEmail();
+          var safeCapture = leadCaptureValues;
+          if (safeCapture && cfg.emailCapture && cfg.emailCapture.enabled === true) {
+            var typedEmail = String(safeCapture.email || "").trim();
+            safeCapture = Object.assign({}, safeCapture, {
+              email: /^[^\\s@]+@[^\\s@]+\\.[^\\s@]{2,}$/.test(typedEmail) ? typedEmail : ""
+            });
+          }
+          var baseIdentity = inlineEmail
+            ? Object.assign({}, context.identity, { emailRaw: inlineEmail, email: normalizeEmail(inlineEmail) })
+            : context.identity;
+          var identity = applyLeadCaptureToIdentity(baseIdentity, safeCapture);
           var captureFields = (cfg.leadCapture && cfg.leadCapture.fields) || {};
           var hasLeadCaptureForm = !!leadCaptureValues;
           var formFn = hasLeadCaptureForm && captureFields.firstName
@@ -1139,7 +1176,7 @@ export default function PublicLandingRuntimeScript({ slug, config }: Props) {
             ? String(leadCaptureValues.lastName || "").trim()
             : "";
           var formEmail = hasLeadCaptureForm && captureFields.email
-            ? normalizeEmail(leadCaptureValues.email || "")
+            ? normalizeEmail(safeCapture.email || "")
             : "";
           var formPhoneRaw = hasLeadCaptureForm && captureFields.phone
             ? String(leadCaptureValues.phone || "").trim()
@@ -1514,6 +1551,7 @@ export default function PublicLandingRuntimeScript({ slug, config }: Props) {
         window.setTimeout(prearmContactContext, 700);
         initRotatingBackgrounds();
         initCtas();
+        initInlineEmail();
         initSocialProof();
         initTemplate4LiveDetails();
         initTemplate5LiveDetails();

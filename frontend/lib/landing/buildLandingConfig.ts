@@ -112,6 +112,7 @@ export interface LandingConfigPayload {
       email: boolean;
     };
   };
+  emailCapture?: { enabled: boolean };
 }
 
 interface BuildArgs {
@@ -184,6 +185,7 @@ export function buildLandingConfig({
           email: config.leadCapture?.fields?.email === true,
         },
       },
+      emailCapture: { enabled: false },
     };
   }
 
@@ -347,6 +349,9 @@ export function buildLandingConfig({
         phone: themeWithHex.leadCapture?.fields?.phone === true,
         email: themeWithHex.leadCapture?.fields?.email === true,
       },
+    },
+    emailCapture: {
+      enabled: !fixedVisualTemplate && themeWithHex.emailCaptureEnabled === true,
     },
   };
 }

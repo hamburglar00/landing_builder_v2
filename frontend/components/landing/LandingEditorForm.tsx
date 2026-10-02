@@ -1175,6 +1175,29 @@ export function LandingEditorForm({
         <section className="rounded-xl border border-zinc-800 bg-zinc-900/50 p-4">
           <div className="flex items-center justify-between gap-4">
             <div>
+              <h3 className="text-sm font-semibold text-zinc-100">Captura de email</h3>
+              <p className="mt-1 text-xs text-zinc-500">
+                Muestra un email encima del botón. Es opcional y no impide ir a WhatsApp.
+              </p>
+            </div>
+            <div className="flex items-center gap-3">
+              <span className="text-xs font-medium text-zinc-400">
+                {config.emailCaptureEnabled ? "Activada" : "Desactivada"}
+              </span>
+              <ToggleSwitch
+                checked={config.emailCaptureEnabled === true}
+                label="Activar captura de email"
+                onChange={(emailCaptureEnabled) => updateConfig(setConfig, { emailCaptureEnabled })}
+              />
+            </div>
+          </div>
+        </section>
+      )}
+
+      {!hidesVisualControls && (
+        <section className="rounded-xl border border-zinc-800 bg-zinc-900/50 p-4">
+          <div className="flex items-center justify-between gap-4">
+            <div>
               <h3 className="text-sm font-semibold text-zinc-100">
                 Captura opcional antes de WhatsApp
               </h3>

@@ -48,6 +48,7 @@ export const DEFAULT_CONFIG: LandingThemeConfig = {
   atrioId: "",
   atrioSlug: "",
   socialProofEnabled: false,
+  emailCaptureEnabled: false,
   interactionsEnabled: false,
   whatsappPrefillText: "",
   leadCapture: {

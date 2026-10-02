@@ -64,6 +64,7 @@ export function snapshotTemplateVariant(
     ctaBackgroundColor: config.ctaBackgroundColor,
     ctaGlowColor: config.ctaGlowColor,
     socialProofEnabled: config.socialProofEnabled,
+    emailCaptureEnabled: config.emailCaptureEnabled,
     interactionsEnabled: config.interactionsEnabled,
     whatsappPrefillText: config.whatsappPrefillText,
     leadCapture: cloneLeadCapture(config.leadCapture),

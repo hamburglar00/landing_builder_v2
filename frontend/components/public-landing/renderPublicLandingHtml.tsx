@@ -357,9 +357,12 @@ function renderTemplate1({ config }: RenderParams) {
   const badgeText = config.content?.footerBadgeText || "";
   const ctaPosition = normalizeCtaPosition(config);
   const isBottomCta = ctaPosition === "bottom";
+  const emailCaptureEnabled = config.emailCapture?.enabled === true;
+  const cta = `${emailCaptureEnabled ? `<div class="inline-email-capture"><input data-inline-email-input type="email" inputmode="email" autocomplete="email" maxlength="254" aria-label="Email para desbloquear tu bono" aria-describedby="inline-email-error" placeholder="Ingresá tu email para desbloquear tu bono"><small id="inline-email-error" data-inline-email-error role="status"></small></div>` : ""}${renderWhatsAppButton(config)}`;
 
   return `<main class="public-landing landing-shell"><section class="container background-image${
     isBottomCta ? " template1-bottom-layout" : ""
+  }${emailCaptureEnabled ? " has-inline-email" : ""
   }">${renderRotatingBackground(
     config,
     false,
@@ -369,7 +372,7 @@ function renderTemplate1({ config }: RenderParams) {
           config.name,
         )}" decoding="async" fetchpriority="high" width="200" height="150" data-public-landing-trigger style="cursor:pointer">`
       : ""
-  }${ctaPosition === "top" ? renderWhatsAppButton(config) : ""}<p class="title" data-public-landing-trigger${styleAttr(
+  }${ctaPosition === "top" ? cta : ""}<p class="title" data-public-landing-trigger${styleAttr(
     {
       color: config.colors?.title ?? "#FFFFFF",
       "font-size": `${config.typography?.title?.sizePx ?? 26}px`,
@@ -377,14 +380,14 @@ function renderTemplate1({ config }: RenderParams) {
       cursor: "pointer",
     },
   )}>${renderTextLines(titleLines)}</p>${
-    ctaPosition === "between_title_and_info" ? renderWhatsAppButton(config) : ""
+    ctaPosition === "between_title_and_info" ? cta : ""
   }<p class="subtitle" data-public-landing-trigger${styleAttr({
     color: config.colors?.subtitle ?? "#FFFFFF",
     "font-size": `${config.typography?.subtitle?.sizePx ?? 16}px`,
     "font-weight": config.typography?.subtitle?.weight ?? 400,
     cursor: "pointer",
   })}>${renderTextLines(subtitleLines)}</p>${
-    ctaPosition === "between_info_and_badge" ? renderWhatsAppButton(config) : ""
+    ctaPosition === "between_info_and_badge" ? cta : ""
   }${
     badgeText
       ? `<p class="description" data-public-landing-trigger${styleAttr({
@@ -396,7 +399,7 @@ function renderTemplate1({ config }: RenderParams) {
       : ""
   }</div>${
     isBottomCta
-      ? `<div class="template1-bottom-cta-slot">${renderWhatsAppButton(config)}</div>`
+      ? `<div class="template1-bottom-cta-slot">${cta}</div>`
       : ""
   }</section></main>`;
 }
@@ -411,7 +414,8 @@ function renderTemplate2({ config }: RenderParams) {
   const isSocialProofEnabled = config.socialProof?.enabled !== false;
   const activeSocialProof = SOCIAL_PROOF_ITEMS[0];
 
-  return `<main class="public-landing lp"><section class="phone-view"><div class="artboard"><div class="frame">${renderFrameBackgroundTemplate2(config)}${
+  const emailCaptureEnabled = config.emailCapture?.enabled === true;
+  return `<main class="public-landing lp"><section class="phone-view"><div class="artboard${emailCaptureEnabled ? " has-inline-email" : ""}"><div class="frame">${renderFrameBackgroundTemplate2(config)}${
     hasLogo
       ? `<img src="${escapeHtml(config.content?.logoUrl)}" alt="${escapeHtml(
           config.name,
@@ -431,7 +435,7 @@ function renderTemplate2({ config }: RenderParams) {
     "font-size": `${config.typography?.title?.sizePx ?? 26}px`,
     "font-weight": config.typography?.title?.weight ?? 700,
     cursor: "pointer",
-  })} data-public-landing-trigger>${renderTextLines(titleLines)}</h1></div></div>${renderWhatsAppButton(
+  })} data-public-landing-trigger>${renderTextLines(titleLines)}</h1></div></div>${emailCaptureEnabled ? `<div class="inline-email-capture"><input data-inline-email-input type="email" inputmode="email" autocomplete="email" maxlength="254" aria-label="Email para desbloquear tu bono" aria-describedby="inline-email-error" placeholder="Ingresá tu email para desbloquear tu bono"><small id="inline-email-error" data-inline-email-error role="status"></small></div>` : ""}${renderWhatsAppButton(
     config,
     "template2",
   )}${

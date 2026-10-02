@@ -213,6 +213,30 @@ test("Contact se dispara una sola vez y despues del formulario opcional", () => 
   assert.match(html, /form_phone: formPhone \|\| undefined/);
 });
 
+test("captura de email aparece una vez encima del CTA solo en templates 1 y 2", () => {
+  for (const template of [1, 2]) {
+    const positions = template === 1
+      ? ["top", "between_title_and_info", "between_info_and_badge", "bottom"]
+      : ["between_title_and_info"];
+    for (const ctaPosition of positions) {
+      const html = renderPublicLandingHtml({
+        slug: "oferta-test",
+        config: {
+          ...baseConfig,
+          emailCapture: { enabled: true },
+          layout: { template, ctaPosition },
+        },
+      });
+      assert.equal(occurrences(html, "<input data-inline-email-input"), 1);
+      assert.match(html, /data-inline-email-input[^>]*>[\s\S]*?whatsapp-button|data-inline-email-input[^>]*>[\s\S]*?class="cta/);
+      assert.match(html, /email: identity\.emailRaw/);
+      assert.match(html, /var inlineEmail = readInlineEmail\(\)/);
+    }
+  }
+  const off = renderPublicLandingHtml({ slug: "oferta-test", config: baseConfig });
+  assert.doesNotMatch(off, /<input data-inline-email-input/);
+});
+
 test("genera scripts públicos con JavaScript válido", () => {
   const html = renderPublicLandingHtml({
     slug: "oferta-test",

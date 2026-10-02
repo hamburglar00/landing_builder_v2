@@ -87,6 +87,7 @@ export type PublicLandingConfig = {
       email?: boolean;
     };
   };
+  emailCapture?: { enabled?: boolean };
   layout: {
     ctaPosition:
       | "top"

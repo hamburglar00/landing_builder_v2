@@ -178,6 +178,8 @@ export interface LandingThemeConfig {
    * Apagado por defecto para no agregar friccion.
    */
   leadCapture: LandingLeadCaptureConfig;
+  /** Campo de email visible encima del CTA en templates 1 y 2. */
+  emailCaptureEnabled?: boolean;
   template4Chat?: LandingTemplate4ChatConfig;
   template5Live?: LandingTemplate5LiveConfig;
   /**
