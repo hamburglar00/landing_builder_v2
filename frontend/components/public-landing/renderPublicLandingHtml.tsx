@@ -349,7 +349,7 @@ function normalizeCtaPosition(config: PublicLandingConfig) {
 }
 
 function renderInlineEmailCapture() {
-  return `<div class="inline-email-capture"><div class="inline-email-capture__field"><svg class="inline-email-capture__icon" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><rect x="2.5" y="5" width="19" height="14" rx="2"/><path d="m3.5 7 8.5 6 8.5-6"/></svg><label class="inline-email-capture__hint" for="inline-email-input">Ingresa tu email para desbloquear un bono especial</label><input data-inline-email-input id="inline-email-input" type="email" inputmode="email" autocomplete="email" maxlength="254" aria-describedby="inline-email-error" placeholder="Tu email"></div><small id="inline-email-error" data-inline-email-error role="status"></small></div>`;
+  return `<div class="inline-email-capture"><div class="inline-email-capture__field"><svg class="inline-email-capture__icon" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><rect x="2.5" y="5" width="19" height="14" rx="2"/><path d="m3.5 7 8.5 6 8.5-6"/></svg><label class="inline-email-capture__hint" for="inline-email-input">Ingresa tu email para desbloquear un bono</label><input data-inline-email-input id="inline-email-input" type="email" inputmode="email" autocomplete="email" maxlength="254" aria-describedby="inline-email-error" placeholder="Tu email"></div><small id="inline-email-error" data-inline-email-error role="status"></small></div>`;
 }
 
 function renderTemplate1({ config }: RenderParams) {

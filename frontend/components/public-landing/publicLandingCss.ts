@@ -2052,7 +2052,7 @@ body.public-lead-capture-open {
 .public-landing.template4 .template4__cta {
   justify-content: center;
   gap: 10px;
-  min-height: 54px;
+  min-height: 48px;
   padding: 8px 18px;
   color: #ffffff;
   background: #25d366;
@@ -2485,7 +2485,7 @@ body.public-lead-capture-open {
   column-gap: 7px;
   row-gap: 2px;
   align-items: center;
-  padding: 5px 9px;
+  padding: 5px 8px;
   border: 1px solid rgba(241, 205, 108, 0.72);
   border-radius: 10px;
   background: rgba(23, 24, 18, 0.96);
@@ -2498,7 +2498,8 @@ body.public-lead-capture-open {
 .public-landing .inline-email-capture__icon {
   width: 15px;
   height: 15px;
-  grid-row: 1 / 3;
+  grid-column: 1;
+  grid-row: 2;
   fill: none;
   stroke: #F1CD6C;
   stroke-width: 1.8;
@@ -2506,14 +2507,16 @@ body.public-lead-capture-open {
   stroke-linejoin: round;
 }
 .public-landing .inline-email-capture__hint {
-  grid-column: 2;
+  grid-column: 1 / -1;
   color: rgba(255, 255, 255, 0.9);
-  font: 500 11px/1.1 system-ui, sans-serif;
+  font: 500 clamp(10.5px, 3vw, 11px)/1.1 system-ui, sans-serif;
   text-align: left;
+  white-space: nowrap;
   cursor: text;
 }
 .public-landing .inline-email-capture input {
   grid-column: 2;
+  grid-row: 2;
   width: 100%;
   min-width: 0;
   height: 20px;
