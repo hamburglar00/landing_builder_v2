@@ -329,14 +329,14 @@ function LandingCard({
       key={landing.id}
       className="ui-card group relative aspect-[3/4] w-full overflow-hidden transition duration-200 hover:-translate-y-1 hover:border-[var(--color-border-strong)] hover:shadow-[var(--shadow-raised)]"
     >
-      <Link href={`/dashboard/landing/${landing.id}/editar`} className="absolute inset-0">
+      <Link href={`/dashboard/landing/${landing.id}/editar`} className="absolute inset-0 z-0">
         <div className="group/img absolute inset-0 overflow-hidden">
           <div className="h-full w-full transition-transform duration-500 ease-out group-hover/img:scale-[1.025]">
             <LandingPreview config={landing.config} compact gallery />
           </div>
         </div>
       </Link>
-      <div className="pointer-events-none absolute inset-x-0 bottom-0 flex flex-col gap-1 bg-gradient-to-t from-[#07090d] via-[#07090d]/95 to-transparent px-3 pb-3 pt-12">
+      <div className="pointer-events-none absolute inset-x-0 bottom-0 z-10 flex flex-col gap-1 bg-gradient-to-t from-[#07090d] via-[#07090d]/95 to-transparent px-3 pb-3 pt-12">
         <div className="space-y-0.5">
           <p className="truncate text-xs font-medium text-[var(--color-text-strong)]">
             {landing.name}

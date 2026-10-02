@@ -251,7 +251,7 @@ function LandingCard({ landing, urlBase }: { landing: Landing; urlBase: string |
     >
               <Link
                 href={`${BASE}/${landing.id}/editar`}
-                className="absolute inset-0"
+                 className="absolute inset-0 z-0"
               >
                 <div className="group/img absolute inset-0 overflow-hidden">
                   <div className="h-full w-full transition-transform duration-200 group-hover/img:scale-[1.02]">
@@ -259,7 +259,7 @@ function LandingCard({ landing, urlBase }: { landing: Landing; urlBase: string |
                   </div>
                 </div>
               </Link>
-              <div className="pointer-events-none absolute inset-x-0 bottom-0 flex flex-col gap-0.5 bg-gradient-to-t from-black/85 to-black/50 px-2.5 py-2">
+              <div className="pointer-events-none absolute inset-x-0 bottom-0 z-10 flex flex-col gap-0.5 bg-gradient-to-t from-black/85 to-black/50 px-2.5 py-2">
                 <div className="space-y-0.5">
                   <p className="truncate text-xs font-medium text-[var(--color-text-strong)]">
                     {landing.name}
