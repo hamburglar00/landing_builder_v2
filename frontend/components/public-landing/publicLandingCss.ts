@@ -2479,12 +2479,12 @@ body.public-lead-capture-open {
 .public-landing .inline-email-capture input {
   width: 100%;
   height: 40px;
-  padding: 0 12px;
-  border: 1px solid rgba(255, 255, 255, 0.4);
+  padding: 0 clamp(6px, 1.7vw, 10px);
+  border: 1px solid rgba(255, 255, 255, 0.62);
   border-radius: 10px;
   background: rgba(0, 0, 0, 0.72);
   color: #fff;
-  font: 400 14px/1.2 system-ui, sans-serif;
+  font: 400 clamp(10px, 3vw, 13px)/1.2 system-ui, sans-serif;
   outline-offset: 2px;
 }
 .public-landing .inline-email-capture input::placeholder {
@@ -2500,6 +2500,10 @@ body.public-lead-capture-open {
 }
 .public-landing .has-inline-email .whatsapp-button,
 .public-landing .has-inline-email .cta { margin-top: 2px; }
+.public-landing .container.background-image.has-inline-email .inline-email-capture,
+.public-landing .container.background-image.has-inline-email .whatsapp-button {
+  width: min(80vw, 320px);
+}
 .public-landing .template1-bottom-cta-slot { flex-direction: column; align-items: center; }
 .public-landing .container.background-image.has-inline-email { min-height: 100svh; height: 100svh; }
 .public-landing .container.background-image.has-inline-email .content { padding-top: 8px; padding-bottom: 8px; }
@@ -2509,10 +2513,7 @@ body.public-lead-capture-open {
 .public-landing .container.background-image.has-inline-email .description { margin: 10px 0 8px; }
 .public-landing .container.background-image.has-inline-email.template1-bottom-layout { --cta-thumb-frame-height: 63svh; }
 .public-landing.lp .artboard.has-inline-email { --cta-thumb-frame-height: 63svh; }
-.public-landing.lp .artboard.has-inline-email .inline-email-capture { width: 100%; }
-@media (max-width: 390px) {
-  .public-landing .has-inline-email .inline-email-capture input { font-size: 12px; }
-}
+.public-landing.lp .artboard.has-inline-email .inline-email-capture { width: 80%; }
 @media (max-height: 720px) {
   .public-landing .container.background-image.has-inline-email.template1-bottom-layout,
   .public-landing.lp .artboard.has-inline-email { --cta-thumb-frame-height: 55svh; }
