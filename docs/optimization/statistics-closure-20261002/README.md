@@ -8,6 +8,8 @@ El commit `3c514c5` cambia sólo `frontend/components/conversiones/StatsPanel.ts
 
 Validación antes del release: TypeScript con Node 24.21.0, 15 tests focalizados y ESLint del componente aprobados; ESLint emitió dos avisos preexistentes de dependencias de hooks y cero errores. `git diff --check` y el guard de encoding del commit aprobaron. No se ejecutó una suite amplia ni se modificó la base.
 
+Publicación acotada: el commit de aplicación `3c514c5` y el cierre documental `04c34c7` se integraron por fast-forward a `main` y se enviaron a `origin/main`. Vercel construyó `04c34c7e13ce02a8226f9d7aeae93ffd87c7e113` como deployment Production `dpl_F8LeLG2VeVM4QsDpVdEwoLXh9y1M`, estado `READY`, con los aliases `mkt.panelbotadmin.com` y `constructor.panelbotadmin.com`. Los GET públicos de login en ambos dominios y la ruta de Conversiones sin autenticar en el panel devolvieron 200. No se hizo una prueba autenticada de métricas productivas; estos smokes no acreditan mejora de latencia. El presente registro documental se agregó después de ese deployment y no cambia código de aplicación.
+
 ## Qué se intentó y retiró
 
 - [Ruta de hasta siete días](../statistics-seven-day/result.md): equivalencia y velocidad local aprobadas; falló el límite de latencia del endpoint en Preview hosted y se retiraron código, migración 281, objetos y usuarios temporales.
