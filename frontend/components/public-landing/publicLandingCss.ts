@@ -2513,12 +2513,13 @@ body.public-lead-capture-open {
   border: 0;
   background: transparent;
   color: #fff;
-  font: 500 clamp(10px, 2.8vw, 13px)/1.2 system-ui, sans-serif;
+  font: 500 16px/1.2 system-ui, sans-serif;
   text-align: center;
   outline: none;
 }
 .public-landing .inline-email-capture input::placeholder {
   color: rgba(255, 255, 255, 0.88);
+  font-size: clamp(10px, 2.8vw, 13px);
   font-style: normal;
 }
 .public-landing .inline-email-capture small {
