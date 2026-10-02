@@ -2481,6 +2481,7 @@ body.public-lead-capture-open {
   height: 40px;
   display: flex;
   align-items: center;
+  justify-content: center;
   gap: 4px;
   padding: 0 4px;
   border: 1px solid rgba(241, 205, 108, 0.72);
@@ -2503,14 +2504,17 @@ body.public-lead-capture-open {
   stroke-linejoin: round;
 }
 .public-landing .inline-email-capture input {
-  width: 100%;
+  width: 20.5em;
+  max-width: calc(100% - 17px);
   min-width: 0;
+  flex: 0 1 auto;
   height: 100%;
   padding: 0;
   border: 0;
   background: transparent;
   color: #fff;
   font: 500 clamp(10px, 2.8vw, 13px)/1.2 system-ui, sans-serif;
+  text-align: center;
   outline: none;
 }
 .public-landing .inline-email-capture input::placeholder {
