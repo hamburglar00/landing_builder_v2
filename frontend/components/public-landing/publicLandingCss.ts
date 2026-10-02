@@ -2478,11 +2478,14 @@ body.public-lead-capture-open {
 }
 .public-landing .inline-email-capture__field {
   width: 100%;
-  height: 40px;
-  display: flex;
+  min-height: 54px;
+  display: grid;
+  grid-template-columns: 15px minmax(0, 1fr);
+  grid-template-rows: auto 20px;
+  column-gap: 7px;
+  row-gap: 2px;
   align-items: center;
-  gap: 7px;
-  padding: 0 9px;
+  padding: 5px 9px;
   border: 1px solid rgba(241, 205, 108, 0.72);
   border-radius: 10px;
   background: rgba(23, 24, 18, 0.96);
@@ -2495,22 +2498,30 @@ body.public-lead-capture-open {
 .public-landing .inline-email-capture__icon {
   width: 15px;
   height: 15px;
-  flex: 0 0 15px;
+  grid-row: 1 / 3;
   fill: none;
   stroke: #F1CD6C;
   stroke-width: 1.8;
   stroke-linecap: round;
   stroke-linejoin: round;
 }
+.public-landing .inline-email-capture__hint {
+  grid-column: 2;
+  color: rgba(255, 255, 255, 0.9);
+  font: 500 11px/1.1 system-ui, sans-serif;
+  text-align: left;
+  cursor: text;
+}
 .public-landing .inline-email-capture input {
+  grid-column: 2;
   width: 100%;
   min-width: 0;
-  height: 100%;
+  height: 20px;
   padding: 0;
   border: 0;
   background: transparent;
   color: #fff;
-  font: 500 clamp(12px, 3vw, 13px)/1.2 system-ui, sans-serif;
+  font: 500 13px/1.2 system-ui, sans-serif;
   outline: none;
 }
 .public-landing .inline-email-capture input::placeholder {
