@@ -9,9 +9,8 @@ import type { Gerencia } from "@/lib/gerencias/types";
 import { fetchGerencias, fetchGerenciasForAdmin } from "@/lib/gerencias/gerenciasDb";
 import type { PhoneKind } from "@/lib/landing/types";
 import { DashboardSkeleton } from "@/components/ui/DashboardSkeleton";
-import { PageHeader } from "@/components/ui/PanelPrimitives";
+import { ModalShell, PageHeader } from "@/components/ui/PanelPrimitives";
 import { useAppConfirm } from "@/components/ui/AppConfirmDialog";
-import CustomSelect from "@/components/ui/CustomSelect";
 import ModalPortal from "@/components/ui/ModalPortal";
 import { CURRENCY_ALL } from "@/lib/currency";
 import { SingleCurrencyRequired, useCurrencyScope } from "@/components/currency/CurrencyScope";
@@ -35,7 +34,6 @@ export type GerenciaPhoneRow = {
 type FairCriterion = "usage_count" | "messages_received";
 type AssignmentRole = "acquisition" | "follow_up";
 
-const PHONE_KIND_OPTIONS: PhoneKind[] = ["carga", "assistant", "ads", "mkt"];
 const PHONE_KIND_LABELS: Record<PhoneKind, string> = {
   carga: "carga",
   ads: "ads",
@@ -118,6 +116,16 @@ const normalizePhoneForWorkspace = (raw: string, workspaceCurrency: string): str
 const phoneHelpForWorkspace = (workspaceCurrency: string) =>
   workspaceCurrency === "PYG" ? "595973123456" : "5493511234567";
 
+const manualPhoneSaveErrorMessage = (error: unknown): string => {
+  const details = error && typeof error === "object"
+    ? error as { code?: string; message?: string }
+    : null;
+  if (details?.code === "23505") return "Ya existe un teléfono con esos datos.";
+  if (details?.code === "23503") return "La gerencia ya no existe. Actualizá la página e intentá nuevamente.";
+  if (details?.code === "42501") return "No tenés permisos para guardar teléfonos en esta gerencia.";
+  return details?.message || "No se pudo guardar el teléfono. Intentá nuevamente.";
+};
+
 export function TelefonosPageContent({
   backLink,
   backLabel,
@@ -158,9 +166,9 @@ export function TelefonosPageContent({
   const [showOnlyActiveGerencias, setShowOnlyActiveGerencias] = useState(false);
   const [nextSyncCountdown, setNextSyncCountdown] = useState<string>("--:--");
   const [manualPhoneInput, setManualPhoneInput] = useState<Record<number, string>>({});
-  const [manualPhoneKind, setManualPhoneKind] = useState<Record<number, PhoneKind>>({});
   const [manualSavingGerenciaId, setManualSavingGerenciaId] = useState<number | null>(null);
   const [manualModalGerenciaId, setManualModalGerenciaId] = useState<number | null>(null);
+  const [manualSaveError, setManualSaveError] = useState<string | null>(null);
   const [maxPhonesAllowed, setMaxPhonesAllowed] = useState<number | null>(null);
   const [planCapModal, setPlanCapModal] = useState<{
     open: boolean;
@@ -534,13 +542,20 @@ export function TelefonosPageContent({
   };
 
   const handleAddManualPhone = async (gerenciaId: number) => {
-    if (!userId) return;
+    if (!userId) {
+      setManualSaveError("Tu sesión terminó. Volvé a iniciar sesión e intentá nuevamente.");
+      return;
+    }
+    if (!gerencias.some((g) => g.id === gerenciaId && g.source_type === "manual")) {
+      setManualSaveError("Esta gerencia no admite teléfonos manuales. Actualizá la página e intentá nuevamente.");
+      return;
+    }
     const phone = normalizePhoneForWorkspace(manualPhoneInput[gerenciaId] ?? "", workspaceCurrency);
     if (!phone) {
-      setError(
+      setManualSaveError(
         workspaceCurrency === "PYG"
-          ? "El telefono debe comenzar con 595 y tener 12 digitos."
-          : "El telefono debe comenzar con 549 y tener 13 digitos.",
+          ? "El teléfono debe comenzar con 595 y tener 12 dígitos."
+          : "El teléfono debe comenzar con 549 y tener 13 dígitos.",
       );
       return;
     }
@@ -550,23 +565,19 @@ export function TelefonosPageContent({
         (p) => onlyDigits(p.phone) === phone && p.status === "active",
       );
       if (!alreadyActive && currentActive >= maxPhonesAllowed) {
-        setPlanLimitModal({
-          open: true,
-          message: `No se puede activar/agregar el teléfono porque alcanzaste el límite de tu plan (${maxPhonesAllowed} teléfonos activos).`,
-        });
+        setManualSaveError(`Alcanzaste el límite de tu plan (${maxPhonesAllowed} teléfonos activos).`);
         return;
       }
     }
     setManualSavingGerenciaId(gerenciaId);
-    setError(null);
+    setManualSaveError(null);
     try {
-      const kind = manualPhoneKind[gerenciaId] ?? "carga";
       const rows = [{
         gerencia_id: gerenciaId,
         phone,
         status: "active",
         source_available: true,
-        kind,
+        kind: "mkt",
         assignment_role: "acquisition",
         comment: "",
         last_seen_at: new Date().toISOString(),
@@ -575,13 +586,18 @@ export function TelefonosPageContent({
         .from("gerencia_phones")
         .upsert(rows, { onConflict: "gerencia_id,phone" });
       if (upsertError) throw upsertError;
-      setManualPhoneInput((prev) => ({ ...prev, [gerenciaId]: "" }));
-      setManualModalGerenciaId(null);
-      await loadData(userId);
     } catch (e) {
-      setError(e instanceof Error ? e.message : "Error al cargar telefono manual.");
+      setManualSaveError(manualPhoneSaveErrorMessage(e));
+      return;
     } finally {
       setManualSavingGerenciaId(null);
+    }
+    setManualPhoneInput((prev) => ({ ...prev, [gerenciaId]: "" }));
+    setManualModalGerenciaId(null);
+    try {
+      await loadData(userId);
+    } catch {
+      setError("El teléfono se guardó, pero no se pudo actualizar la lista. Recargá la página para verlo.");
     }
   };
 
@@ -1057,7 +1073,10 @@ export function TelefonosPageContent({
                       <div className="mb-3 flex justify-end">
                         <button
                           type="button"
-                          onClick={() => setManualModalGerenciaId(g.id)}
+                          onClick={() => {
+                            setManualSaveError(null);
+                            setManualModalGerenciaId(g.id);
+                          }}
                           className="rounded-lg border border-emerald-700 bg-emerald-900/20 px-3 py-1.5 text-xs font-semibold text-emerald-300 transition hover:bg-emerald-900/35"
                         >
                           AÑADIR TELÉFONOS
@@ -1276,21 +1295,7 @@ export function TelefonosPageContent({
                 />
               </div>
 
-              <CustomSelect
-                label="Tipo"
-                value={manualPhoneKind[manualModalGerenciaId] ?? "carga"}
-                options={PHONE_KIND_OPTIONS.map((kind) => ({
-                  value: kind,
-                  label: PHONE_KIND_LABELS[kind],
-                }))}
-                onChange={(nextValue) =>
-                  setManualPhoneKind((prev) => ({
-                    ...prev,
-                    [manualModalGerenciaId]: nextValue as PhoneKind,
-                  }))
-                }
-                buttonClassName="h-10 px-3 py-2 text-sm"
-              />
+              <p className="text-xs text-zinc-400">Tipo: <span className="font-medium text-zinc-200">mkt</span></p>
 
               <div className="flex justify-end">
                 <button
@@ -1307,6 +1312,21 @@ export function TelefonosPageContent({
         </div>
         </ModalPortal>
       )}
+
+      <ModalShell
+        open={manualSaveError !== null}
+        title="No se pudo guardar el teléfono"
+        description={manualSaveError}
+        onClose={() => setManualSaveError(null)}
+        width="sm"
+        footer={
+          <button type="button" onClick={() => setManualSaveError(null)} className="ui-button ui-button-primary">
+            Entendido
+          </button>
+        }
+      >
+        {null}
+      </ModalShell>
 
       {planCapModal.open ? (
         <ModalPortal>

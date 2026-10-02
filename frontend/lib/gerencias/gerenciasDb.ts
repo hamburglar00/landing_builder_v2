@@ -414,6 +414,18 @@ export async function setLandingGerencias(
 ): Promise<void> {
   await assertLandingGerenciasWorkspaceCompatible(landingId, assignments);
 
+  const manualIds = new Set<number>();
+  if (assignments.length > 0) {
+    const { data: sources, error: sourcesError } = await supabase
+      .from("gerencias")
+      .select("id, source_type")
+      .in("id", assignments.map(({ gerencia_id }) => gerencia_id));
+    if (sourcesError) throw sourcesError;
+    for (const source of sources ?? []) {
+      if (source.source_type === "manual") manualIds.add(Number(source.id));
+    }
+  }
+
   const { error: deleteError } = await supabase
     .from("landings_gerencias")
     .delete()
@@ -436,7 +448,7 @@ export async function setLandingGerencias(
       gerencia_id,
       weight,
       phone_mode: phoneMode,
-      phone_kind: phoneKind,
+      phone_kind: manualIds.has(gerencia_id) ? "mkt" : phoneKind,
       interval_start_hour: intervalStartHour,
       interval_end_hour: intervalEndHour,
     }),

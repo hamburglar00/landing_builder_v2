@@ -82,7 +82,7 @@ export function GerenciaRedirectSection({
         gerencia_id: g.id,
         weight: 1,
         phoneMode: "random",
-        phoneKind: "carga",
+        phoneKind: g.source_type === "manual" ? "mkt" : "carga",
         intervalStartHour: null,
         intervalEndHour: null,
       },
@@ -105,7 +105,8 @@ export function GerenciaRedirectSection({
       const isAssigned = !!assignment;
       const weight = assignment?.weight ?? 0;
       const phoneMode = assignment?.phoneMode ?? "random";
-      const phoneKind = assignment?.phoneKind ?? "carga";
+      const isManual = g.source_type === "manual";
+      const phoneKind = isManual ? "mkt" : assignment?.phoneKind ?? "carga";
       const intervalStartHour = assignment?.intervalStartHour ?? null;
       const intervalEndHour = assignment?.intervalEndHour ?? null;
       return (
@@ -173,25 +174,31 @@ export function GerenciaRedirectSection({
             </div>
           </td>
           <td className="min-w-[190px] px-3 py-2">
-            <div className="inline-flex flex-shrink-0 rounded-lg border border-zinc-700 bg-zinc-900 text-[11px]">
-              {PHONE_KIND_OPTIONS.map(({ value: kind, label }, idx) => (
-                <button
-                  key={kind}
-                  type="button"
-                  onClick={() => {
-                    if (!isAssigned) return;
-                    setAssignments((prev) =>
-                      prev.map((a) => (a.gerencia_id === g.id ? { ...a, phoneKind: kind } : a)),
-                    );
-                  }}
-                  className={`cursor-pointer shrink-0 px-2 py-1 ${idx === 0 ? "rounded-l-lg" : ""} ${
-                    idx === PHONE_KIND_OPTIONS.length - 1 ? "rounded-r-lg" : "border-r border-zinc-700"
-                  } ${phoneKind === kind ? "bg-zinc-100 text-zinc-900" : "text-zinc-300 hover:bg-zinc-800"}`}
-                >
-                  {label}
-                </button>
-              ))}
-            </div>
+            {isManual ? (
+              <span className="inline-flex rounded-lg border border-zinc-700 bg-zinc-100 px-2 py-1 text-[11px] text-zinc-900" title="Las gerencias manuales usan teléfonos mkt">
+                Mkt
+              </span>
+            ) : (
+              <div className="inline-flex flex-shrink-0 rounded-lg border border-zinc-700 bg-zinc-900 text-[11px]">
+                {PHONE_KIND_OPTIONS.map(({ value: kind, label }, idx) => (
+                  <button
+                    key={kind}
+                    type="button"
+                    onClick={() => {
+                      if (!isAssigned) return;
+                      setAssignments((prev) =>
+                        prev.map((a) => (a.gerencia_id === g.id ? { ...a, phoneKind: kind } : a)),
+                      );
+                    }}
+                    className={`cursor-pointer shrink-0 px-2 py-1 ${idx === 0 ? "rounded-l-lg" : ""} ${
+                      idx === PHONE_KIND_OPTIONS.length - 1 ? "rounded-r-lg" : "border-r border-zinc-700"
+                    } ${phoneKind === kind ? "bg-zinc-100 text-zinc-900" : "text-zinc-300 hover:bg-zinc-800"}`}
+                  >
+                    {label}
+                  </button>
+                ))}
+              </div>
+            )}
           </td>
           <td className="px-3 py-2">
             <div className="flex flex-wrap items-center gap-2 text-[11px] text-zinc-300">
