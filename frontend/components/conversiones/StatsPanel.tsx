@@ -553,17 +553,41 @@ export default function StatsPanel({
       };
     };
 
+    // Keep the original input order within each slice.
+    const groupBy = <T,>(rows: T[], keyFor: (row: T) => string): Map<string, T[]> => {
+      const groups = new Map<string, T[]>();
+      for (const row of rows) {
+        const key = keyFor(row);
+        const group = groups.get(key);
+        if (group) group.push(row);
+        else groups.set(key, [row]);
+      }
+      return groups;
+    };
+    const campaignKey = (row: { utm_campaign?: string | null }) => row.utm_campaign || "Sin campaña";
+    const deviceKey = (row: { device_type?: string | null }) => row.device_type || "Desconocido";
+    const landingKey = (row: { landing_name?: string | null }) => row.landing_name || "Sin landing";
+    const campaignConversions = groupBy(conversions, campaignKey);
+    const campaignContacts = groupBy(funnelContacts, campaignKey);
+    const campaignAllConversions = groupBy(allConversions, campaignKey);
+    const deviceConversions = groupBy(conversions, deviceKey);
+    const deviceContacts = groupBy(funnelContacts, deviceKey);
+    const deviceAllConversions = groupBy(allConversions, deviceKey);
+    const landingConversions = groupBy(conversions, landingKey);
+    const landingContacts = groupBy(funnelContacts, landingKey);
+    const landingAllConversions = groupBy(allConversions, landingKey);
+
     // By campaign (same formulas, filtered universe)
     const campaignKeys = new Set<string>([
-      ...funnelContacts.map((c) => c.utm_campaign || "Sin campaña"),
-      ...conversions.map((c) => c.utm_campaign || "Sin campaña"),
-      ...allConversions.map((c) => c.utm_campaign || "Sin campaña"),
+      ...campaignContacts.keys(),
+      ...campaignConversions.keys(),
+      ...campaignAllConversions.keys(),
     ]);
     const byCampaign = [...campaignKeys]
       .map((campaign) => {
-        const convSlice = conversions.filter((c) => (c.utm_campaign || "Sin campaña") === campaign);
-        const contactsSlice = funnelContacts.filter((c) => (c.utm_campaign || "Sin campaña") === campaign);
-        const allConvSlice = allConversions.filter((c) => (c.utm_campaign || "Sin campaña") === campaign);
+        const convSlice = campaignConversions.get(campaign) ?? [];
+        const contactsSlice = campaignContacts.get(campaign) ?? [];
+        const allConvSlice = campaignAllConversions.get(campaign) ?? [];
         return { campaign, ...getSliceStats(convSlice, contactsSlice, allConvSlice) };
       })
       .sort((a, b) => b.revenue - a.revenue)
@@ -571,30 +595,30 @@ export default function StatsPanel({
 
     // By device (same formulas, filtered universe)
     const deviceKeys = new Set<string>([
-      ...funnelContacts.map((c) => c.device_type || "Desconocido"),
-      ...conversions.map((c) => c.device_type || "Desconocido"),
-      ...allConversions.map((c) => c.device_type || "Desconocido"),
+      ...deviceContacts.keys(),
+      ...deviceConversions.keys(),
+      ...deviceAllConversions.keys(),
     ]);
     const byDevice = [...deviceKeys]
       .map((device) => {
-        const convSlice = conversions.filter((c) => (c.device_type || "Desconocido") === device);
-        const contactsSlice = funnelContacts.filter((c) => (c.device_type || "Desconocido") === device);
-        const allConvSlice = allConversions.filter((c) => (c.device_type || "Desconocido") === device);
+        const convSlice = deviceConversions.get(device) ?? [];
+        const contactsSlice = deviceContacts.get(device) ?? [];
+        const allConvSlice = deviceAllConversions.get(device) ?? [];
         return { device, ...getSliceStats(convSlice, contactsSlice, allConvSlice) };
       })
       .sort((a, b) => b.revenue - a.revenue);
 
     // By landing (same formulas, filtered universe)
     const landingKeys = new Set<string>([
-      ...funnelContacts.map((c) => c.landing_name || "Sin landing"),
-      ...conversions.map((c) => c.landing_name || "Sin landing"),
-      ...allConversions.map((c) => c.landing_name || "Sin landing"),
+      ...landingContacts.keys(),
+      ...landingConversions.keys(),
+      ...landingAllConversions.keys(),
     ]);
     const byLanding = [...landingKeys]
       .map((landing) => {
-        const convSlice = conversions.filter((c) => (c.landing_name || "Sin landing") === landing);
-        const contactsSlice = funnelContacts.filter((c) => (c.landing_name || "Sin landing") === landing);
-        const allConvSlice = allConversions.filter((c) => (c.landing_name || "Sin landing") === landing);
+        const convSlice = landingConversions.get(landing) ?? [];
+        const contactsSlice = landingContacts.get(landing) ?? [];
+        const allConvSlice = landingAllConversions.get(landing) ?? [];
         return { landing, ...getSliceStats(convSlice, contactsSlice, allConvSlice) };
       })
       .sort((a, b) => b.revenue - a.revenue)
