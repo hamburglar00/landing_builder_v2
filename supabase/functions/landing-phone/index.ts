@@ -39,10 +39,12 @@ function selectedPhoneId(payload: Record<string, unknown> | null | undefined): n
   return Number.isFinite(value) ? value : null;
 }
 
-function isFairAssignmentPayload(
+function needsFreshAssignment(
   payload: Record<string, unknown> | null | undefined,
 ): boolean {
-  return String(payload?.gerenciaSelectionMode ?? "").toLowerCase() === "fair" ||
+  return ["fair", "weighted_quota"].includes(
+    String(payload?.gerenciaSelectionMode ?? "").toLowerCase(),
+  ) ||
     String(payload?.phoneMode ?? "").toLowerCase() === "fair";
 }
 
@@ -231,7 +233,7 @@ Deno.serve(async (req) => {
           payload &&
           typeof payload.phone === "string" &&
           payload.phone &&
-          !isFairAssignmentPayload(payload)
+          !needsFreshAssignment(payload)
         ) {
           scheduleBackground(recordDemandAvailability(supabase, {
             name,

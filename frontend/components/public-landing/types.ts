@@ -108,6 +108,8 @@ export type PublicLandingPhoneResponse = {
   cacheSource?: string;
   phoneId?: number;
   phoneMode: string;
+  gerenciaSelectionMode?: "weighted_random" | "weighted_quota" | "fair";
+  assignmentReservationId?: string | null;
   fairCriterion?: string;
   phoneKind: string;
   phoneSelection?: {

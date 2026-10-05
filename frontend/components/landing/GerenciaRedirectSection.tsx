@@ -69,6 +69,8 @@ export function GerenciaRedirectSection({
   createGerenciasHref,
 }: Props) {
   const displayGroups = buildDisplayGroups(gerencias, workGroups);
+  const usesWeight = landing.gerenciaSelectionMode === "weighted_random" ||
+    landing.gerenciaSelectionMode === "weighted_quota";
 
   const upsertAssignment = (g: Gerencia) => {
     const exists = assignments.some((a) => a.gerencia_id === g.id);
@@ -93,7 +95,7 @@ export function GerenciaRedirectSection({
     if (rows.length === 0) {
       return (
         <tr>
-          <td colSpan={landing.gerenciaSelectionMode === "weighted_random" ? 7 : 6} className="px-3 py-4 text-center text-xs text-zinc-500">
+          <td colSpan={usesWeight ? 7 : 6} className="px-3 py-4 text-center text-xs text-zinc-500">
             Este grupo todavía no tiene gerencias.
           </td>
         </tr>
@@ -121,7 +123,7 @@ export function GerenciaRedirectSection({
               className="rounded border-zinc-600"
             />
           </td>
-          {landing.gerenciaSelectionMode === "weighted_random" && (
+          {usesWeight && (
             <td className="px-3 py-2">
               <input
                 type="number"
@@ -279,9 +281,19 @@ export function GerenciaRedirectSection({
               className={`cursor-pointer rounded-l-lg border-r border-zinc-700 px-2 py-1 ${
                 landing.gerenciaSelectionMode === "weighted_random" ? "bg-zinc-100 text-zinc-900" : "text-zinc-300 hover:bg-zinc-800"
               }`}
-              title="Aleatorio por peso de gerencia"
+              title="Sorteo aleatorio según el peso de cada gerencia"
             >
-              Aleatoria (peso)
+              Por peso · Sorteo
+            </button>
+            <button
+              type="button"
+              onClick={() => setLanding((prev) => (prev ? { ...prev, gerenciaSelectionMode: "weighted_quota" } : prev))}
+              className={`cursor-pointer border-r border-zinc-700 px-2 py-1 ${
+                landing.gerenciaSelectionMode === "weighted_quota" ? "bg-zinc-100 text-zinc-900" : "text-zinc-300 hover:bg-zinc-800"
+              }`}
+              title="Aproxima las asignaciones a la cuota de cada gerencia"
+            >
+              Por peso · Cuota controlada
             </button>
             <button
               type="button"
@@ -294,7 +306,7 @@ export function GerenciaRedirectSection({
               Equitativa
             </button>
           </div>
-          {landing.gerenciaSelectionMode === "fair" && (
+          {(landing.gerenciaSelectionMode === "fair" || landing.gerenciaSelectionMode === "weighted_quota") && (
             <div className="inline-flex rounded-lg border border-zinc-700 bg-zinc-900 text-[11px]">
               <button
                 type="button"
@@ -319,6 +331,11 @@ export function GerenciaRedirectSection({
             </div>
           )}
         </div>
+        {landing.gerenciaSelectionMode === "weighted_quota" && (
+          <p className="mt-2 text-[11px] text-zinc-400">
+            Los pesos definen la proporción entre las gerencias disponibles. El reparto persigue la cuota según {landing.gerenciaFairCriterion === "messages_received" ? "mensajes confirmados" : "clics registrados"}; un número mostrado no garantiza un mensaje. Reiniciá el período con los botones de Teléfonos.
+          </p>
+        )}
       </div>
       <p className="mb-3 text-xs text-zinc-400">Configura a dónde redirigirá el CTA de tu landing page.</p>
       <p className="mb-3 text-xs text-zinc-500">
@@ -350,7 +367,7 @@ export function GerenciaRedirectSection({
                         <th className="px-3 py-2 font-medium text-zinc-300">Gerencia</th>
                         <th className="px-3 py-2 font-medium text-zinc-300">Nombre</th>
                         <th className="w-20 px-3 py-2 text-center font-medium text-zinc-300">Asignar</th>
-                        {landing.gerenciaSelectionMode === "weighted_random" && (
+                        {usesWeight && (
                           <th className="w-10 px-3 py-2 font-medium text-zinc-300">Peso</th>
                         )}
                         <th className="w-32 px-3 py-2 font-medium text-zinc-300">Modo</th>

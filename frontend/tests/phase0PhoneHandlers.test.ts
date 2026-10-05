@@ -8,7 +8,8 @@ import ts from "typescript";
 // It characterizes orchestration, not SQL locks, concurrency, or the Deno runtime.
 function handler(name: "landing-phone" | "phone-click", options: {
   result?: Record<string, unknown>; cache?: Record<string, unknown>; blocked?: boolean;
-  ownerMissing?: boolean; rpcError?: string;
+  ownerMissing?: boolean; rpcError?: string; landingMode?: string;
+  landingCriterion?: string;
 } = {}) {
   const calls: {name:string;params:Record<string,unknown>}[] = [];
   let serve!: (request: Request) => Promise<Response>;
@@ -17,7 +18,7 @@ function handler(name: "landing-phone" | "phone-click", options: {
       const query = {
         select: () => query, eq: () => query, limit: () => query,
         maybeSingle: async () => ({error:null,data:
-          table === "landings" ? (options.ownerMissing ? null : {id:"landing",name:"synthetic",user_id:"owner",publish_target:"constructor"}) :
+          table === "landings" ? (options.ownerMissing ? null : {id:"landing",name:"synthetic",user_id:"owner",publish_target:"constructor",gerencia_selection_mode:options.landingMode ?? "fair",gerencia_fair_criterion:options.landingCriterion ?? "usage_count"}) :
           table === "gerencia_phones" ? {id:1,phone:"000001",gerencia_id:2} :
           table === "landings_gerencias" ? {landing_id:"landing",gerencia_id:2} : {id:"owner"}}),
       }; return query;
@@ -35,6 +36,7 @@ function handler(name: "landing-phone" | "phone-click", options: {
           error:null,
         };
       }
+      if (name === "count_landing_controlled_click") return {data:true,error:null};
       return {data:options.result ?? {_status:"ok",phone:"000001",phoneId:1,gerencia:{id:2}},error:null};
     },
   };
@@ -89,13 +91,34 @@ test("Phase 0: fair cache must be bypassed; ordinary fresh cache can be reused",
   }
 });
 
+test("quota-controlled assignments bypass constructor cache and reserve a fresh selection", async () => {
+  const h=handler("landing-phone",{cache:{status:"ok",refreshed_at:new Date().toISOString(),payload:{phone:"000001",phoneMode:"random",gerenciaSelectionMode:"weighted_quota"}}});
+  assert.equal((await h.serve(new Request("https://example.invalid?name=synthetic"))).status,200);
+  assert.equal(h.calls.find(c=>c.name==="get_phone_for_landing")?.params.p_create_reservation,true);
+});
+
 test("Phase 0: phone-click validates input and preserves best-effort reservation semantics", async () => {
   const req=()=>new Request("https://example.invalid",{method:"POST",body:JSON.stringify({landingName:"synthetic",phoneId:1,phone:"000001",reservationId:"synthetic-reservation"})});
   assert.equal((await handler("phone-click").serve(new Request("https://example.invalid"))).status,405);
   assert.equal((await handler("phone-click").serve(new Request("https://example.invalid",{method:"POST",body:"{}"}))).status,400);
-  const h=handler("phone-click",{rpcError:"extend_landing_phone_assignment_reservation"});
+  const h=handler("phone-click",{landingMode:"weighted_random",rpcError:"extend_landing_phone_assignment_reservation"});
   assert.equal((await h.serve(req())).status,200);
   assert.equal(h.calls.filter(c=>c.name==="increment_phone_assignment_scope_usage").length,1);
   assert.equal(h.calls.find(c=>c.name==="extend_landing_phone_assignment_reservation")?.params.p_reservation_id,"synthetic-reservation");
-  assert.equal((await handler("phone-click",{rpcError:"increment_phone_assignment_scope_usage"}).serve(req())).status,500);
+  assert.equal((await handler("phone-click",{landingMode:"weighted_random",rpcError:"increment_phone_assignment_scope_usage"}).serve(req())).status,500);
+});
+
+test("fair counter and quota CTA clicks require a reservation and share the idempotent RPC", async () => {
+  const reservationId="00000000-0000-4000-8000-000000000001";
+  const req=(id?:string)=>new Request("https://example.invalid",{method:"POST",body:JSON.stringify({landingName:"synthetic",phoneId:1,phone:"000001",reservationId:id})});
+  for (const landingMode of ["weighted_quota","fair"]) {
+    assert.equal((await handler("phone-click",{landingMode}).serve(req())).status,400);
+    const h=handler("phone-click",{landingMode});
+    assert.equal((await h.serve(req(reservationId))).status,200);
+    assert.equal(h.calls.find(c=>c.name==="count_landing_controlled_click")?.params.p_reservation_id,reservationId);
+    assert.equal(h.calls.some(c=>c.name==="increment_phone_assignment_scope_usage"),false);
+  }
+  const fairMessages=handler("phone-click",{landingMode:"fair",landingCriterion:"messages_received"});
+  assert.equal((await fairMessages.serve(req())).status,200);
+  assert.equal(fairMessages.calls.some(c=>c.name==="increment_phone_assignment_scope_usage"),true);
 });

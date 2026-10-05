@@ -86,7 +86,7 @@ Deno.serve(async (req) => {
     // 1) Obtener landing por nombre
     const { data: landing, error: landingError } = await supabase
       .from("landings")
-      .select("id, name, user_id")
+      .select("id, name, user_id, gerencia_selection_mode, gerencia_fair_criterion")
       .eq("name", landingName)
       .maybeSingle();
 
@@ -168,6 +168,39 @@ Deno.serve(async (req) => {
           headers: { ...corsHeaders, "Content-Type": "application/json" },
         },
       );
+    }
+
+    // Both counter-based balanced modes use the same provisional reservation
+    // and count the CTA once, even if the browser retries its notification.
+    if (landing.gerencia_selection_mode === "weighted_quota" ||
+        (landing.gerencia_selection_mode === "fair" && landing.gerencia_fair_criterion === "usage_count")) {
+      if (!reservationId || !/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(reservationId)) {
+        return new Response(JSON.stringify({ error: "Falta una reserva válida para este reparto." }), {
+          status: 400,
+          headers: { ...corsHeaders, "Content-Type": "application/json" },
+        });
+      }
+
+      const { data: counted, error: countError } = await supabase.rpc(
+        "count_landing_controlled_click",
+        {
+          p_reservation_id: reservationId,
+          p_landing_id: landing.id,
+          p_phone_id: phoneRow.id,
+          p_phone: phoneRow.phone,
+        },
+      );
+      if (countError) {
+        console.error("Error al contar click de reparto controlado:", countError);
+        return new Response(JSON.stringify({ error: "No se pudo registrar el click." }), {
+          status: 500,
+          headers: { ...corsHeaders, "Content-Type": "application/json" },
+        });
+      }
+      return new Response(JSON.stringify({ ok: true, counted: counted === true }), {
+        status: 200,
+        headers: { ...corsHeaders, "Content-Type": "application/json", "Cache-Control": "no-store" },
+      });
     }
 
     // 4) Incrementar contadores y extender, sin bloquear el CTA, la reserva del prewarm.

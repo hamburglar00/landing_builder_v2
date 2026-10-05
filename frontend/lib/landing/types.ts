@@ -207,8 +207,8 @@ export interface Landing {
   externalDomain: string;
   name: string;
   pixelId: string;
-  /** Modo de seleccin de gerencias: 'weighted_random' (aleatorio por peso) o 'fair' (equitativo). */
-  gerenciaSelectionMode: "weighted_random" | "fair";
+  /** Gerencias: sorteo por peso, cuota controlada por peso o reparto equitativo. */
+  gerenciaSelectionMode: "weighted_random" | "weighted_quota" | "fair";
   /** Criterio para reparto equitativo de gerencias: por contador o por mensajes recibidos. */
   gerenciaFairCriterion: "usage_count" | "messages_received";
   /** Modo de seleccion de clientes Atrio: 'weighted_random' (aleatorio por peso) o 'fair' (equitativo). */

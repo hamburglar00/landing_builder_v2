@@ -18,7 +18,7 @@ export interface LandingRow {
   external_domain: string;
   name: string;
   pixel_id: string;
-  gerencia_selection_mode: "weighted_random" | "fair";
+  gerencia_selection_mode: "weighted_random" | "weighted_quota" | "fair";
   gerencia_fair_criterion: "usage_count" | "messages_received";
   atrio_selection_mode: "weighted_random" | "fair";
   atrio_fair_criterion: "usage_count" | "messages_received";
@@ -158,7 +158,7 @@ export async function createLanding(
     externalDomain?: string;
     name?: string;
     pixelId?: string;
-    gerenciaSelectionMode?: "weighted_random" | "fair";
+    gerenciaSelectionMode?: "weighted_random" | "weighted_quota" | "fair";
     gerenciaFairCriterion?: "usage_count" | "messages_received";
     atrioSelectionMode?: "weighted_random" | "fair";
     atrioFairCriterion?: "usage_count" | "messages_received";
@@ -233,7 +233,7 @@ export async function updateLanding(
     externalDomain?: string;
     name?: string;
     pixelId?: string;
-    gerenciaSelectionMode?: "weighted_random" | "fair";
+    gerenciaSelectionMode?: "weighted_random" | "weighted_quota" | "fair";
     gerenciaFairCriterion?: "usage_count" | "messages_received";
     atrioSelectionMode?: "weighted_random" | "fair";
     atrioFairCriterion?: "usage_count" | "messages_received";

@@ -141,9 +141,10 @@ Deno.serve(async (req) => {
       );
     }
 
+    const resetAt = new Date().toISOString();
     const { error: updateError } = await supabaseAdmin
       .from("gerencia_phones")
-      .update({ usage_count: 0 })
+      .update({ usage_count: 0, assignment_counter_reset_at: resetAt })
       .in("id", phoneIds);
 
     if (updateError) {

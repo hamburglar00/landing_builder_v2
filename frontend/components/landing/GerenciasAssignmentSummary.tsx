@@ -79,7 +79,7 @@ export function GerenciasAssignmentSummary({
                       ID {externalId}
                     </p>
                   </div>
-                  {selectionMode === "weighted_random" && (
+                  {(selectionMode === "weighted_random" || selectionMode === "weighted_quota") && (
                     <span className="shrink-0 rounded-md bg-zinc-950 px-2 py-0.5 text-[11px] text-zinc-400">
                       Peso {assignment.weight}
                     </span>
