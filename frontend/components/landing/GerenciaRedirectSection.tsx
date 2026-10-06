@@ -283,27 +283,27 @@ export function GerenciaRedirectSection({
               }`}
               title="Sorteo aleatorio según el peso de cada gerencia"
             >
-              Por peso · Sorteo
-            </button>
-            <button
-              type="button"
-              onClick={() => setLanding((prev) => (prev ? { ...prev, gerenciaSelectionMode: "weighted_quota" } : prev))}
-              className={`cursor-pointer border-r border-zinc-700 px-2 py-1 ${
-                landing.gerenciaSelectionMode === "weighted_quota" ? "bg-zinc-100 text-zinc-900" : "text-zinc-300 hover:bg-zinc-800"
-              }`}
-              title="Aproxima las asignaciones a la cuota de cada gerencia"
-            >
-              Por peso · Cuota controlada
+              Aleatoria
             </button>
             <button
               type="button"
               onClick={() => setLanding((prev) => (prev ? { ...prev, gerenciaSelectionMode: "fair" } : prev))}
-              className={`cursor-pointer rounded-r-lg px-2 py-1 ${
+              className={`cursor-pointer border-r border-zinc-700 px-2 py-1 ${
                 landing.gerenciaSelectionMode === "fair" ? "bg-zinc-100 text-zinc-900" : "text-zinc-300 hover:bg-zinc-800"
               }`}
               title="Equitativo entre gerencias (ignora peso)"
             >
               Equitativa
+            </button>
+            <button
+              type="button"
+              onClick={() => setLanding((prev) => (prev ? { ...prev, gerenciaSelectionMode: "weighted_quota" } : prev))}
+              className={`cursor-pointer rounded-r-lg px-2 py-1 ${
+                landing.gerenciaSelectionMode === "weighted_quota" ? "bg-zinc-100 text-zinc-900" : "text-zinc-300 hover:bg-zinc-800"
+              }`}
+              title="Busca la proporción configurada por peso de cada gerencia"
+            >
+              Equitativa por cuota
             </button>
           </div>
           {(landing.gerenciaSelectionMode === "fair" || landing.gerenciaSelectionMode === "weighted_quota") && (
@@ -314,7 +314,7 @@ export function GerenciaRedirectSection({
                 className={`cursor-pointer rounded-l-lg border-r border-zinc-700 px-2 py-1 ${
                   landing.gerenciaFairCriterion === "usage_count" ? "bg-zinc-100 text-zinc-900" : "text-zinc-300 hover:bg-zinc-800"
                 }`}
-                title="Equitativo por sumatoria de contador"
+                title="Distribución según clics registrados"
               >
                 Por contador
               </button>
@@ -324,18 +324,13 @@ export function GerenciaRedirectSection({
                 className={`cursor-pointer rounded-r-lg px-2 py-1 ${
                   landing.gerenciaFairCriterion === "messages_received" ? "bg-zinc-100 text-zinc-900" : "text-zinc-300 hover:bg-zinc-800"
                 }`}
-                title="Equitativo por sumatoria de mensajes recibidos"
+                title="Distribución según mensajes recibidos"
               >
                 Mensajes recibidos
               </button>
             </div>
           )}
         </div>
-        {landing.gerenciaSelectionMode === "weighted_quota" && (
-          <p className="mt-2 text-[11px] text-zinc-400">
-            Los pesos definen la proporción entre las gerencias disponibles. El reparto persigue la cuota según {landing.gerenciaFairCriterion === "messages_received" ? "mensajes confirmados" : "clics registrados"}; un número mostrado no garantiza un mensaje. Reiniciá el período con los botones de Teléfonos.
-          </p>
-        )}
       </div>
       <p className="mb-3 text-xs text-zinc-400">Configura a dónde redirigirá el CTA de tu landing page.</p>
       <p className="mb-3 text-xs text-zinc-500">
