@@ -26,6 +26,7 @@ import {
 import { GerenciaRedirectSection } from "@/components/landing/GerenciaRedirectSection";
 import { GerenciasAssignmentSummary } from "@/components/landing/GerenciasAssignmentSummary";
 import { LandingPreview } from "@/components/landing/LandingPreview";
+import { Template6AnalyticsSection } from "@/components/landing/Template6AnalyticsSection";
 import {
   CollapsibleSection,
   LandingEditorForm,
@@ -161,6 +162,7 @@ export default function DashboardLandingEditarPage() {
   const params = useParams();
   const id = params?.id as string | undefined;
   const [landing, setLanding] = useState<Landing | null>(null);
+  const [savedTemplate6, setSavedTemplate6] = useState(false);
   const [userId, setUserId] = useState<string | null>(null);
   const [ready, setReady] = useState(false);
   const [saveError, setSaveError] = useState<string | null>(null);
@@ -209,6 +211,7 @@ export default function DashboardLandingEditarPage() {
         ]);
         const clients = await fetchAtrioClients(user.id, found.workspaceCurrency);
         setLanding(found);
+        setSavedTemplate6(found.config.template === "template6");
         if (!initialName) {
           setInitialName(found.name);
         }
@@ -605,6 +608,10 @@ export default function DashboardLandingEditarPage() {
 
         {landing.landingType !== "external" && (
           <LandingTemplateSection config={landing.config} setConfig={setConfig} />
+        )}
+
+        {landing.landingType !== "external" && landing.config.template === "template6" && (
+          <Template6AnalyticsSection landingId={landing.id} config={landing.config} savedTemplate6={savedTemplate6} />
         )}
 
         {landing.landingType === "external" && (

@@ -408,6 +408,9 @@ verify_jwt = false
 [functions.landing-phone]
 verify_jwt = false
 
+[functions.landing-card-click]
+verify_jwt = false
+
 [functions.sync-phones]
 verify_jwt = false
 

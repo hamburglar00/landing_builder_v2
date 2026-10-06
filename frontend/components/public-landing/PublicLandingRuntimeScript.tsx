@@ -926,6 +926,24 @@ export default function PublicLandingRuntimeScript({ slug, config }: Props) {
         } catch (e) {}
       }
 
+      function notifyTemplate6CardClick(button) {
+        try {
+          if (cfg.template !== 6 || !cfg.landingId || !cfg.supabaseUrl || !cfg.supabaseAnonKey) return;
+          var cardIndex = Number(button.getAttribute("data-template6-card-index"));
+          if (!Number.isInteger(cardIndex) || cardIndex < 1 || cardIndex > 6) return;
+          fetch(cfg.supabaseUrl.replace(/\\/+$/, "") + "/functions/v1/landing-card-click", {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+              apikey: cfg.supabaseAnonKey,
+              Authorization: "Bearer " + cfg.supabaseAnonKey
+            },
+            body: JSON.stringify({ landingId: cfg.landingId, cardIndex: cardIndex, eventId: safeUUID() }),
+            keepalive: true
+          }).catch(function () {});
+        } catch (e) {}
+      }
+
       function notifyAtrioClick(atrioData) {
         try {
           var baseUrl = cfg.supabaseUrl;
@@ -1148,6 +1166,7 @@ export default function PublicLandingRuntimeScript({ slug, config }: Props) {
         clickLocked = true;
         button.disabled = true;
         setButtonText(button, getLoadingButtonText(button));
+        notifyTemplate6CardClick(button);
         var tapStartedAt = Date.now();
 
         window.requestAnimationFrame(function () {

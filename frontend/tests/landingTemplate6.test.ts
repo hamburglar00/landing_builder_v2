@@ -47,6 +47,10 @@ for (const [grid, count] of [["2x1", 2], ["2x2", 4], ["2x3", 6]] as const) {
     const html = renderPublicLandingHtml({ slug: "portada", config: config as PublicLandingConfig });
     assert.equal(html.split('class="template6__card"').length - 1, count);
     assert.equal(html.split('class="template6__cta"').length - 1, count);
+    for (let index = 1; index <= count; index++) {
+      assert.match(html, new RegExp(`data-template6-card-index="${index}"`));
+    }
+    assert.doesNotMatch(html, new RegExp(`data-template6-card-index="${count + 1}"`));
     assert.equal(html.split('class="template6__cta-icon"').length - 1, count);
     assert.match(html, /class="template6__background"/);
     assert.match(html, /class="public-landing template6 has-background"/);
