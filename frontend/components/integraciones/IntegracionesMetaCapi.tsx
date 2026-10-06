@@ -1,6 +1,7 @@
 ﻿"use client";
 
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useId, useMemo, useRef, useState } from "react";
+import { createPortal } from "react-dom";
 import { supabase } from "@/lib/supabaseClient";
 import {
   deletePixelConfig,
@@ -145,26 +146,96 @@ function ConstructorEndpointLogo() {
   );
 }
 
+function HelpTooltip({ label, text }: { label: string; text: string }) {
+  const tooltipId = useId();
+  const [open, setOpen] = useState(false);
+  const buttonRef = useRef<HTMLButtonElement>(null);
+  const tipRef = useRef<HTMLDivElement>(null);
+  const [position, setPosition] = useState({ top: 0, left: 0, above: false });
+
+  useEffect(() => {
+    if (!open) return;
+    const closeOutside = (event: PointerEvent) => {
+      if (!buttonRef.current?.contains(event.target as Node) && !tipRef.current?.contains(event.target as Node)) setOpen(false);
+    };
+    const closeOnEscape = (event: KeyboardEvent) => {
+      if (event.key === "Escape") setOpen(false);
+    };
+    const closeOnScroll = () => setOpen(false);
+    document.addEventListener("pointerdown", closeOutside);
+    document.addEventListener("keydown", closeOnEscape);
+    window.addEventListener("scroll", closeOnScroll, true);
+    window.addEventListener("resize", closeOnScroll);
+    return () => {
+      document.removeEventListener("pointerdown", closeOutside);
+      document.removeEventListener("keydown", closeOnEscape);
+      window.removeEventListener("scroll", closeOnScroll, true);
+      window.removeEventListener("resize", closeOnScroll);
+    };
+  }, [open]);
+
+  return (
+    <>
+      <button
+        ref={buttonRef}
+        type="button"
+        aria-label={`Ayuda: ${label}`}
+        aria-expanded={open}
+        aria-describedby={open ? tooltipId : undefined}
+        onClick={() => {
+          if (!open && buttonRef.current) {
+            const rect = buttonRef.current.getBoundingClientRect();
+            setPosition({
+              top: rect.top > 180 ? rect.top - 8 : rect.bottom + 8,
+              left: Math.max(12, Math.min(rect.left, window.innerWidth - 308)),
+              above: rect.top > 180,
+            });
+          }
+          setOpen((value) => !value);
+        }}
+        className="inline-flex h-5 w-5 shrink-0 items-center justify-center rounded-full border border-zinc-600 text-[11px] font-semibold text-zinc-400 transition hover:border-cyan-500 hover:text-cyan-300 focus-visible:outline focus-visible:outline-2 focus-visible:outline-cyan-400"
+      >
+        ?
+      </button>
+      {open && createPortal(
+        <div
+          id={tooltipId}
+          ref={tipRef}
+          role="tooltip"
+          style={{ top: position.top, left: position.left, transform: position.above ? "translateY(-100%)" : undefined }}
+          className="fixed z-[100] w-[min(296px,calc(100vw-24px))] rounded-lg border border-zinc-600 bg-zinc-800 px-3 py-2 text-xs leading-relaxed text-zinc-100 shadow-2xl"
+        >
+          {text}
+        </div>,
+        document.body,
+      )}
+    </>
+  );
+}
+
 function SettingsSwitch({
   checked,
   label,
-  description,
+  help,
   onChange,
 }: {
   checked: boolean;
   label: string;
-  description?: string;
+  help?: string;
   onChange: () => void;
 }) {
   return (
-    <div className="flex items-center justify-between gap-3 rounded-lg border border-zinc-800 bg-zinc-950/30 px-3 py-2">
-      <span>
-        <span className="block text-xs font-medium text-zinc-200">{label}</span>
-        {description ? <span className="mt-0.5 block text-[11px] text-zinc-500">{description}</span> : null}
+    <div className="flex min-h-11 items-center justify-between gap-3 rounded-lg border border-zinc-800 bg-zinc-900/50 px-3 py-2">
+      <span className="min-w-0">
+        <span className="flex items-center gap-1.5 text-xs font-medium text-zinc-200">
+          <span>{label}</span>
+          {help ? <HelpTooltip label={label} text={help} /> : null}
+        </span>
       </span>
       <button
         type="button"
         role="switch"
+        aria-label={label}
         aria-checked={checked}
         onClick={onChange}
         className={`relative inline-flex h-6 w-11 shrink-0 items-center rounded-full border transition ${
@@ -1850,94 +1921,34 @@ export default function IntegracionesMetaCapi() {
           ) : (
             <div className="space-y-1.5">
               {pixelConfigs.map((px) => {
-                const token = px.meta_access_token || "";
-                const tokenMasked = token.length > 14 ? `${token.slice(0, 8)}...${token.slice(-6)}` : token || "-";
                 const comment = String(px.comment ?? "").trim();
-                const eventBadges: Array<[string, boolean]> = [
-                  ["Contact", !!px.send_contact_capi],
-                  ["Lead", px.send_lead_capi !== false],
-                  ["CompleteRegistration", px.send_complete_registration_capi === true],
-                  ["Purchase", px.send_purchase_capi !== false],
-                ];
-                if (px.send_purchase_capi !== false) {
-                  eventBadges.push([
-                    px.include_purchase_type_capi !== false ? "Segmentado" : "Estándar",
-                    true,
-                  ]);
-                  if (px.include_purchase_type_capi !== false) {
-                    eventBadges.push(
-                      ["First", px.send_first_purchase_capi !== false],
-                      ["Repeat", px.send_repeat_purchase_capi !== false],
-                    );
-                  }
-                  if (px.purchase_capi_min_amount_enabled) {
-                    eventBadges.push([
-                      `Mín. ${px.meta_currency} ${px.purchase_capi_min_amount}`,
-                      true,
-                    ]);
-                  }
-                  if (px.include_purchase_type_capi !== false &&
-                      px.send_repeat_purchase_capi !== false &&
-                      px.repeat_purchase_capi_window_days !== null) {
-                    eventBadges.push([
-                      `Repeat ${px.repeat_purchase_capi_window_days} días`,
-                      true,
-                    ]);
-                  }
-                }
                 return (
-                  <div key={px.id} className="flex w-full items-center justify-between rounded-lg border border-zinc-800 bg-zinc-900/60 px-3 py-2">
-                    <div className="min-w-0">
-                      <p className="font-mono text-xs text-zinc-200">{px.pixel_id}</p>
-                      <p className="truncate text-[11px] text-zinc-500">{tokenMasked}</p>
-                      <p
-                        className="mt-1 inline-flex items-center gap-1 text-[10px] text-zinc-400"
-                        title="Se usa para Purchase CAPI únicamente cuando el evento o su workspace no tienen una moneda resuelta. No convierte el monto."
-                      >
-                        Moneda default: <span className="font-semibold text-zinc-300">{px.meta_currency || "ARS"}</span>
-                        <span
-                          aria-label="Información sobre la moneda default"
-                          tabIndex={0}
-                          className="inline-flex h-3.5 w-3.5 items-center justify-center rounded-full border border-zinc-700 text-[9px] text-zinc-500"
-                        >
-                          ?
-                        </span>
-                      </p>
-                      {comment ? (
-                        <p className="mt-0.5 truncate text-[11px] text-cyan-300/80">{comment}</p>
-                      ) : null}
-                      <p className="mt-1 flex flex-wrap gap-1 text-[10px]">
-                        {eventBadges.map(([label, enabled]) => (
-                          <span
-                            key={label}
-                            className={`rounded border px-1.5 py-0.5 ${
-                              enabled
-                                ? "border-emerald-700/60 bg-emerald-950/30 text-emerald-300"
-                                : "border-zinc-700 bg-zinc-950 text-zinc-500"
-                            }`}
-                          >
-                            {label} {enabled ? "ON" : "OFF"}
-                          </span>
-                        ))}
-                      </p>
+                  <div key={px.id} className="flex w-full items-center gap-2 rounded-lg border border-zinc-800 bg-zinc-900/60 px-2 py-2 sm:gap-3 sm:px-3">
+                    <div className="flex min-w-0 flex-1 items-center gap-2 sm:gap-3">
+                      <span className="shrink-0 font-mono text-[11px] font-semibold text-zinc-200 sm:text-xs">{px.pixel_id}</span>
+                      <span className="min-w-0 truncate text-[11px] text-cyan-300/80 sm:text-xs" title={comment || "Sin identificación"}>
+                        {comment || "Sin identificación"}
+                      </span>
                     </div>
-                    <div className="ml-3 flex items-center justify-end gap-2">
+                    <div className="flex shrink-0 items-center justify-end gap-1 sm:gap-2">
                       {px.is_default ? (
-                        <span className="rounded border border-emerald-700/70 bg-emerald-950/40 px-1.5 py-0.5 text-[10px] text-emerald-300">Default</span>
+                        <span aria-label="Píxel predeterminado" title="Píxel predeterminado" className="flex h-7 w-7 items-center justify-center rounded border border-emerald-700/70 bg-emerald-950/40 text-[11px] text-emerald-300 sm:h-auto sm:w-auto sm:px-1.5 sm:py-0.5 sm:text-[10px]"><span className="sm:hidden">★</span><span className="hidden sm:inline">Default</span></span>
                       ) : (
                         <button
                           type="button"
                           onClick={() => void handleSetDefault(px)}
-                          className="cursor-pointer rounded-lg border border-emerald-700/70 px-2 py-1 text-[10px] text-emerald-300 transition hover:bg-emerald-950/30"
+                          aria-label={`Establecer ${px.pixel_id} como predeterminado`}
+                          title="Establecer como predeterminado"
+                          className="flex h-7 w-7 cursor-pointer items-center justify-center rounded-lg border border-emerald-700/70 text-[11px] text-emerald-300 transition hover:bg-emerald-950/30 sm:h-auto sm:w-auto sm:px-2 sm:py-1 sm:text-[10px]"
                         >
-                          Default
+                          <span className="sm:hidden">☆</span><span className="hidden sm:inline">Default</span>
                         </button>
                       )}
-                      <button type="button" onClick={() => handleEdit(px)} className="cursor-pointer rounded-lg border border-zinc-700 px-2 py-1 text-[10px] text-zinc-300 transition hover:bg-zinc-800">
-                        Editar
+                      <button type="button" onClick={() => handleEdit(px)} aria-label={`Editar píxel ${px.pixel_id}`} title="Editar píxel" className="flex h-7 w-7 cursor-pointer items-center justify-center rounded-lg border border-zinc-700 text-[11px] text-zinc-300 transition hover:bg-zinc-800 sm:h-auto sm:w-auto sm:px-2 sm:py-1 sm:text-[10px]">
+                        <span className="sm:hidden">✎</span><span className="hidden sm:inline">Editar</span>
                       </button>
-                      <button type="button" onClick={() => void handleDelete(px)} className="cursor-pointer rounded-lg border border-red-700/80 px-2 py-1 text-[10px] text-red-300 transition hover:bg-red-950/30">
-                        Eliminar
+                      <button type="button" onClick={() => void handleDelete(px)} aria-label={`Eliminar píxel ${px.pixel_id}`} title="Eliminar píxel" className="flex h-7 w-7 cursor-pointer items-center justify-center rounded-lg border border-red-700/80 text-[11px] text-red-300 transition hover:bg-red-950/30 sm:h-auto sm:w-auto sm:px-2 sm:py-1 sm:text-[10px]">
+                        <span className="sm:hidden">×</span><span className="hidden sm:inline">Eliminar</span>
                       </button>
                     </div>
                   </div>
@@ -1981,7 +1992,7 @@ export default function IntegracionesMetaCapi() {
                 labelClassName="text-[11px] font-semibold uppercase tracking-wide text-zinc-500"
                 buttonClassName="h-9 px-3 text-sm"
               />
-              <input value={quickComment} onChange={(e) => setQuickComment(e.target.value)} placeholder="Comentario opcional" className="h-9 rounded-lg border border-zinc-700 bg-zinc-900 px-3 text-sm text-zinc-100 sm:col-span-2" />
+              <input value={quickComment} onChange={(e) => setQuickComment(e.target.value)} placeholder="Identificación (opcional)" className="h-9 rounded-lg border border-zinc-700 bg-zinc-900 px-3 text-sm text-zinc-100 sm:col-span-2" />
               <input value={quickToken} onChange={(e) => setQuickToken(e.target.value)} placeholder="Access token" className="h-9 rounded-lg border border-zinc-700 bg-zinc-900 px-3 text-sm text-zinc-100 sm:col-span-2" />
             </div>
             {quickErr && <p className="mt-2 text-xs text-red-400">{quickErr}</p>}
@@ -2000,19 +2011,10 @@ export default function IntegracionesMetaCapi() {
           <div className="ui-modal integration-edit-modal flex max-w-3xl flex-col overflow-hidden">
             <div className="flex shrink-0 items-start justify-between gap-3 border-b border-[var(--color-border-subtle)] px-3 py-3 sm:px-4">
               <div>
-                <h3 className="text-sm font-semibold text-zinc-100">Editar pixel</h3>
-                <p className="mt-1 text-xs text-zinc-500">
-                  Los datos sensibles quedan bloqueados para evitar cambios accidentales.
-                </p>
+                <h3 className="text-sm font-semibold text-zinc-100">Configurar píxel</h3>
+                <p className="mt-0.5 font-mono text-xs text-zinc-500">ID {draft.pixel_id}</p>
               </div>
               <div className="flex shrink-0 items-center gap-2">
-                <button
-                  type="button"
-                  onClick={() => setEditSensitiveFields((v) => !v)}
-                  className="ui-button ui-button-secondary h-8 min-h-8"
-                >
-                  {editSensitiveFields ? "Bloquear datos" : "Editar datos"}
-                </button>
                 <button
                   type="button"
                   aria-label="Cerrar configuración"
@@ -2030,122 +2032,102 @@ export default function IntegracionesMetaCapi() {
 
             <div className="min-h-0 flex-1 space-y-3 overflow-y-auto px-3 py-3 sm:px-4">
               <section className="rounded-xl border border-zinc-800 bg-zinc-950/40 p-3">
-                <h4 className="text-xs font-semibold uppercase tracking-wide text-zinc-400">Credenciales</h4>
-                <div className="mt-3 grid gap-3 sm:grid-cols-2">
-                  <label className="block">
-                    <span className="mb-1 block text-[11px] font-semibold uppercase tracking-wide text-zinc-500">
-                      Pixel ID
-                    </span>
-                    <input
-                      value={draft.pixel_id}
-                      disabled={!editSensitiveFields}
-                      onChange={(e) => setDraft((p) => (p ? { ...p, pixel_id: e.target.value.replace(/\D/g, "") } : p))}
-                      placeholder="Pixel ID"
-                      className="h-9 w-full rounded-lg border border-zinc-700 bg-zinc-900 px-3 text-sm text-zinc-100 disabled:cursor-not-allowed disabled:border-zinc-800 disabled:bg-zinc-950 disabled:text-zinc-500"
-                    />
+                <h4 className="text-sm font-semibold text-zinc-100">Identificación</h4>
+                <div className="mt-3 grid gap-3 sm:grid-cols-[minmax(0,1fr)_minmax(0,220px)]">
+                  <label className="block text-xs text-zinc-400">
+                    Nombre para reconocerlo
+                    <input value={draft.comment} onChange={(e) => setDraft((p) => (p ? { ...p, comment: e.target.value } : p))} placeholder="Ej.: campaña principal" className="mt-1 h-9 w-full rounded-lg border border-zinc-700 bg-zinc-900 px-3 text-sm text-zinc-100" />
                   </label>
-                  <div>
-                    <CustomSelect
-                      label="Moneda default CAPI del pixel"
-                      value={draft.meta_currency}
-                      disabled={!editSensitiveFields}
-                      options={META_CURRENCY_OPTIONS.map((currency) => ({
-                        value: currency,
-                        label: currency,
-                      }))}
-                      onChange={(nextValue) => setDraft((p) => (p ? {
-                        ...p,
-                        meta_currency: nextValue,
-                        purchase_capi_min_amount_enabled: false,
-                        purchase_capi_min_amount: "0",
-                      } : p))}
-                      labelClassName="text-[11px] font-semibold uppercase tracking-wide text-zinc-500"
-                      buttonClassName="h-9 px-3 text-sm"
-                    />
-                    <span className="block text-[10px] leading-relaxed text-zinc-500">
-                      Se usa solo como fallback para Purchase CAPI cuando el evento no trae workspace resuelto.
-                    </span>
-                  </div>
-                  <input
-                    value={draft.meta_access_token}
-                    disabled={!editSensitiveFields}
-                    onChange={(e) => setDraft((p) => (p ? { ...p, meta_access_token: e.target.value } : p))}
-                    placeholder="Access token"
-                    className="h-9 rounded-lg border border-zinc-700 bg-zinc-900 px-3 text-sm text-zinc-100 disabled:cursor-not-allowed disabled:border-zinc-800 disabled:bg-zinc-950 disabled:text-zinc-500 sm:col-span-2"
-                  />
-                </div>
-              </section>
-
-              <section className="rounded-xl border border-zinc-800 bg-zinc-950/40 p-3">
-                <h4 className="text-xs font-semibold uppercase tracking-wide text-zinc-400">Identificación</h4>
-                <div className="mt-3 grid gap-3 sm:grid-cols-2">
-                  <input value={draft.comment} onChange={(e) => setDraft((p) => (p ? { ...p, comment: e.target.value } : p))} placeholder="Comentario opcional" className="h-9 rounded-lg border border-zinc-700 bg-zinc-900 px-3 text-sm text-zinc-100 sm:col-span-2" />
-                  {isAdmin ? (
-                    <input
-                      value={draft.meta_api_version}
-                      onChange={(e) => setDraft((p) => (p ? { ...p, meta_api_version: e.target.value } : p))}
-                      placeholder="API Version"
-                      className="h-9 rounded-lg border border-zinc-700 bg-zinc-900 px-3 text-sm text-zinc-100"
-                    />
-                  ) : (
-                    <div className="rounded-lg border border-zinc-800 bg-zinc-950 px-3 py-2 text-xs text-zinc-400">
-                      API Version: <span className="font-mono text-zinc-300">{draft.meta_api_version || "v25.0"}</span>
-                    </div>
-                  )}
                   <SettingsSwitch
                     checked={draft.is_default}
-                    label="Pixel default"
-                    description="Se usa como fallback cuando una landing no trae pixel explicito."
+                    label="Píxel predeterminado"
+                    help="Se usa cuando una landing no tiene un píxel asignado explícitamente."
                     onChange={() => setDraft((p) => (p ? { ...p, is_default: !p.is_default } : p))}
                   />
                 </div>
               </section>
 
+              <details className="rounded-xl border border-zinc-800 bg-zinc-950/40 p-3">
+                <summary className="cursor-pointer text-sm font-semibold text-zinc-100">Conexión y credenciales <span className="ml-1 text-[11px] font-normal text-zinc-500">· {draft.meta_currency} · datos protegidos</span></summary>
+                <div className="mt-3 flex items-center justify-end gap-2">
+                  <HelpTooltip label="Datos protegidos" text="El ID, la moneda y el token están bloqueados para evitar cambios accidentales. Desbloquealos sólo cuando necesites modificarlos." />
+                  <button type="button" onClick={() => setEditSensitiveFields((v) => !v)} className="ui-button ui-button-secondary h-8 min-h-8">
+                    {editSensitiveFields ? "Bloquear datos" : "Editar datos"}
+                  </button>
+                </div>
+                <div className="mt-3 grid gap-3 sm:grid-cols-2">
+                  <label className="block text-xs text-zinc-400">
+                    Pixel ID
+                    <input value={draft.pixel_id} disabled={!editSensitiveFields} onChange={(e) => setDraft((p) => (p ? { ...p, pixel_id: e.target.value.replace(/\D/g, "") } : p))} className="mt-1 h-9 w-full rounded-lg border border-zinc-700 bg-zinc-900 px-3 text-sm text-zinc-100 disabled:cursor-not-allowed disabled:border-zinc-800 disabled:bg-zinc-950 disabled:text-zinc-500" />
+                  </label>
+                  <div>
+                    <div className="mb-1 flex items-center gap-1.5 text-xs text-zinc-400">Moneda de respaldo <HelpTooltip label="Moneda de respaldo" text="Se usa para Purchase CAPI cuando el evento y su workspace no tienen una moneda resuelta. No convierte el monto." /></div>
+                    <CustomSelect
+                      value={draft.meta_currency}
+                      disabled={!editSensitiveFields}
+                      options={META_CURRENCY_OPTIONS.map((currency) => ({ value: currency, label: currency }))}
+                      onChange={(nextValue) => setDraft((p) => (p ? { ...p, meta_currency: nextValue, purchase_capi_min_amount_enabled: false, purchase_capi_min_amount: "0" } : p))}
+                      buttonClassName="h-9 px-3 text-sm"
+                    />
+                  </div>
+                  <label className="block text-xs text-zinc-400 sm:col-span-2">
+                    Access token
+                    <input value={draft.meta_access_token} disabled={!editSensitiveFields} onChange={(e) => setDraft((p) => (p ? { ...p, meta_access_token: e.target.value } : p))} className="mt-1 h-9 w-full rounded-lg border border-zinc-700 bg-zinc-900 px-3 text-sm text-zinc-100 disabled:cursor-not-allowed disabled:border-zinc-800 disabled:bg-zinc-950 disabled:text-zinc-500" />
+                  </label>
+                  {isAdmin ? (
+                    <label className="block text-xs text-zinc-400">Versión de API
+                      <input value={draft.meta_api_version} onChange={(e) => setDraft((p) => (p ? { ...p, meta_api_version: e.target.value } : p))} className="mt-1 h-9 w-full rounded-lg border border-zinc-700 bg-zinc-900 px-3 text-sm text-zinc-100" />
+                    </label>
+                  ) : (
+                    <div className="text-xs text-zinc-400">Versión de API <span className="ml-1 font-mono text-zinc-300">{draft.meta_api_version || "v25.0"}</span></div>
+                  )}
+                </div>
+              </details>
+
               <section className="rounded-xl border border-zinc-800 bg-zinc-950/40 p-3">
-                <h4 className="text-xs font-semibold uppercase tracking-wide text-zinc-400">Eventos por CAPI</h4>
-                <div className="mt-3">
+                <h4 className="text-sm font-semibold text-zinc-100">Eventos enviados a Meta</h4>
+                <div className="mt-3 grid gap-2 sm:grid-cols-[minmax(0,1fr)_minmax(0,1fr)]">
                   <SettingsSwitch
                     checked={draft.meta_ads_only_capi}
                     label="Solo eventos de Meta Ads"
-                    description="Activado: CAPI solo envía conversiones con from_meta_ads = true. Desactivado: envía todos los orígenes."
+                    help="Activado: sólo envía conversiones con from_meta_ads = true. Se reconoce Meta Ads por fbc, utm_campaign o promo_code TAG-SUFIX de Chatrace, en ese orden. Desactivado: envía todos los orígenes."
                     onChange={() => setDraft((p) => (p ? { ...p, meta_ads_only_capi: !p.meta_ads_only_capi } : p))}
                   />
-                  <p className="mt-1.5 px-1 text-[10px] leading-relaxed text-zinc-500">
-                    Se considera Meta Ads al detectar, en este orden: fbc; utm_campaign; o un promo_code TAG-SUFIX cuando el origen es Chatrace.
-                  </p>
                 </div>
-                <div className="mt-2 grid gap-2 sm:grid-cols-2 lg:grid-cols-3">
+                <h5 className="mt-4 mb-2 text-xs font-semibold text-zinc-300">Tipos de evento</h5>
+                <div className="grid gap-2 sm:grid-cols-2">
                   <SettingsSwitch
                     checked={draft.send_contact_capi}
                     label="Contact"
-                    description="Envía el evento Contact mediante Meta CAPI."
+                    help="Envía el evento Contact mediante Meta CAPI."
                     onChange={() => setDraft((p) => (p ? { ...p, send_contact_capi: !p.send_contact_capi } : p))}
                   />
                   <SettingsSwitch
                     checked={draft.send_lead_capi}
                     label="Lead"
-                    description="Envía Lead por Meta CAPI."
+                    help="Envía el evento Lead mediante Meta CAPI."
                     onChange={() => setDraft((p) => (p ? { ...p, send_lead_capi: !p.send_lead_capi } : p))}
                   />
                   <SettingsSwitch
                     checked={draft.send_complete_registration_capi}
                     label="CompleteRegistration"
-                    description="Envía el registro completo por Meta CAPI. Por defecto queda apagado."
+                    help="Envía el registro completo por Meta CAPI. Por defecto está apagado."
                     onChange={() => setDraft((p) => (p ? { ...p, send_complete_registration_capi: !p.send_complete_registration_capi } : p))}
                   />
                   <SettingsSwitch
                     checked={draft.send_purchase_capi}
                     label="Purchase"
-                    description="Control maestro del envío de compras."
+                    help="Control general del envío de compras a Meta CAPI. Las conversiones internas se siguen registrando."
                     onChange={() => setDraft((p) => (p ? { ...p, send_purchase_capi: !p.send_purchase_capi } : p))}
                   />
                 </div>
                 {draft.send_purchase_capi ? (
-                  <div className="mt-2 rounded-lg border border-zinc-800 bg-zinc-950/60 p-2">
+                  <div className="mt-3 rounded-lg border border-emerald-900/40 bg-emerald-950/10 p-3">
+                    <h5 className="mb-2 text-xs font-semibold text-emerald-300">Opciones de Purchase</h5>
                     <SettingsSwitch
                       checked={draft.include_purchase_type_capi}
                       label="Clasificar Purchase (first/repeat)"
-                      description="Activado: agrega purchase_type al único evento Purchase y permite filtrar tipos. Desactivado: envía todas las compras sin clasificación."
+                      help="Agrega purchase_type al evento Purchase para distinguir first y repeat. Apagado: envía todas las compras una sola vez, sin clasificación."
                       onChange={() => setDraft((p) => (p ? { ...p, include_purchase_type_capi: !p.include_purchase_type_capi } : p))}
                     />
                     {draft.include_purchase_type_capi ? (
@@ -2153,13 +2135,13 @@ export default function IntegracionesMetaCapi() {
                         <SettingsSwitch
                           checked={draft.send_first_purchase_capi}
                           label="First Purchase"
-                          description="Envía las compras clasificadas como first."
+                          help="Envía a Meta las primeras cargas clasificadas como first."
                           onChange={() => setDraft((p) => (p ? { ...p, send_first_purchase_capi: !p.send_first_purchase_capi } : p))}
                         />
                         <SettingsSwitch
                           checked={draft.send_repeat_purchase_capi}
                           label="Repeat Purchase"
-                          description="Envía las compras clasificadas como repeat."
+                          help="Envía a Meta las recargas clasificadas como repeat."
                           onChange={() => setDraft((p) => (p ? { ...p, send_repeat_purchase_capi: !p.send_repeat_purchase_capi } : p))}
                         />
                       </div>
@@ -2169,7 +2151,7 @@ export default function IntegracionesMetaCapi() {
                         <SettingsSwitch
                           checked={draft.repeat_purchase_capi_window_days !== null}
                           label="Limitar envío de Repeat Purchase"
-                          description="Cuenta días de 24 horas desde la primera carga. Apagado: se envía siempre. Sólo afecta Meta CAPI."
+                          help="Cuenta días de 24 horas desde la primera carga. Apagado: las recargas se envían siempre. Sólo afecta el envío a Meta CAPI; las conversiones internas se siguen registrando."
                           onChange={() => setDraft((p) => (p ? {
                             ...p,
                             repeat_purchase_capi_window_days:
@@ -2200,20 +2182,14 @@ export default function IntegracionesMetaCapi() {
                     !draft.send_first_purchase_capi &&
                     !draft.send_repeat_purchase_capi ? (
                       <p className="mt-2 text-[11px] text-amber-400">
-                        Elegí First Purchase, Repeat Purchase o ambas. Cada compra seleccionada se envía una sola vez.
+                        Elegí First Purchase, Repeat Purchase o ambas para poder guardar.
                       </p>
-                    ) : (
-                      <p className="mt-2 text-[11px] text-zinc-500">
-                        {draft.include_purchase_type_capi
-                          ? "Sigue siendo el evento estándar Purchase; purchase_type solo permite crear conversiones personalizadas."
-                          : "Se enviarán todas las compras una sola vez como Purchase, sin purchase_type."}
-                      </p>
-                    )}
+                    ) : null}
                     <div className="mt-2 rounded-lg border border-zinc-800 bg-zinc-900/50 p-2">
                       <SettingsSwitch
                         checked={draft.purchase_capi_min_amount_enabled}
                         label="Filtrar Purchase por monto mínimo"
-                        description={`Aplica sólo a este píxel y a compras en ${draft.meta_currency}. No modifica Conversiones.`}
+                        help={`Aplica sólo a este píxel y a compras en ${draft.meta_currency}. No convierte monedas; las compras en otra moneda no usan el umbral. No modifica Conversiones.`}
                         onChange={() => setDraft((p) => (p ? {
                           ...p,
                           purchase_capi_min_amount_enabled: !p.purchase_capi_min_amount_enabled,
@@ -2234,21 +2210,18 @@ export default function IntegracionesMetaCapi() {
                           />
                         </label>
                       ) : null}
-                      <p className="mt-1 text-[10px] text-zinc-500">
-                        No convierte monedas. Las compras en otra moneda no usan este umbral.
-                      </p>
                     </div>
                   </div>
                 ) : null}
               </section>
 
               <section className="rounded-xl border border-zinc-800 bg-zinc-950/40 p-3">
-                <h4 className="text-xs font-semibold uppercase tracking-wide text-zinc-400">Geolocalización</h4>
+                <h4 className="text-sm font-semibold text-zinc-100">Datos de ubicación</h4>
                 <div className="mt-3 grid gap-2 sm:grid-cols-3">
                   <SettingsSwitch
                     checked={draft.send_geo_capi}
                     label="Enviar geo"
-                    description="Incluye la geo disponible en el payload de Meta CAPI."
+                    help="Incluye la ubicación disponible en el evento enviado a Meta CAPI."
                     onChange={() => setDraft((p) => (p ? { ...p, send_geo_capi: !p.send_geo_capi } : p))}
                   />
                   {draft.send_geo_capi ? (
@@ -2256,13 +2229,13 @@ export default function IntegracionesMetaCapi() {
                       <SettingsSwitch
                         checked={draft.geo_use_ipapi}
                         label="Geo por IP"
-                        description="Completa ciudad/provincia/país por IP."
+                        help="Completa ciudad, provincia y país a partir de la dirección IP."
                         onChange={() => setDraft((p) => (p ? { ...p, geo_use_ipapi: !p.geo_use_ipapi } : p))}
                       />
                       <SettingsSwitch
                         checked={draft.geo_fill_only_when_missing}
                         label="Solo geo faltante"
-                        description="No pisa datos que ya vienen en payload."
+                        help="Sólo completa la ubicación faltante; conserva los datos que ya vienen en el evento."
                         onChange={() => setDraft((p) => (p ? { ...p, geo_fill_only_when_missing: !p.geo_fill_only_when_missing } : p))}
                       />
                     </>
