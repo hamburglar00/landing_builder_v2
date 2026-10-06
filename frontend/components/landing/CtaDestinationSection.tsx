@@ -58,7 +58,6 @@ export function CtaDestinationSection({
     {
       value: "whatsapp" as const,
       title: "WhatsApp",
-      detail: "Usa el telefono ganador y abre wa.me.",
       icon: (
         <span className="flex h-10 w-10 items-center justify-center rounded-xl border border-emerald-400/20 bg-emerald-500/10">
           <Image
@@ -74,7 +73,6 @@ export function CtaDestinationSection({
     {
       value: "atrio" as const,
       title: "Atrio",
-      detail: "Conserva el Contact y redirige al webchat con promo_code.",
       icon: <AtrioLogo />,
     },
   ];
@@ -97,7 +95,7 @@ export function CtaDestinationSection({
                 }))
               }
               aria-pressed={active}
-              className={`flex min-h-[92px] items-center gap-3 rounded-xl border px-3 py-3 text-left transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-400/70 ${
+              className={`flex min-h-[72px] items-center gap-3 rounded-xl border px-3 py-3 text-left transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-400/70 ${
                 active
                   ? "border-emerald-500/70 bg-emerald-500/10"
                   : "border-zinc-800 bg-zinc-950/30 hover:bg-zinc-900/70"
@@ -115,9 +113,6 @@ export function CtaDestinationSection({
                     }`}
                     aria-hidden="true"
                   />
-                </span>
-                <span className="mt-1.5 block text-[11px] leading-4 text-zinc-500">
-                  {target.detail}
                 </span>
               </span>
             </button>

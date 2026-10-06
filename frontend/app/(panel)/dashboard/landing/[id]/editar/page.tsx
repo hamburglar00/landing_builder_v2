@@ -666,13 +666,6 @@ export default function DashboardLandingEditarPage() {
                   </option>
                 ))}
               </select>
-              <p className="mt-1 text-[11px] text-zinc-500">
-                Se configura desde{" "}
-                <a href="/dashboard/integraciones" className="text-zinc-300 underline hover:text-zinc-100">
-                  Integraciones
-                </a>
-                .
-              </p>
             </div>
             <div className="rounded-lg border border-zinc-800 bg-zinc-950/30 px-3 py-2">
               <div className="flex items-center justify-between gap-3">
@@ -747,9 +740,6 @@ export default function DashboardLandingEditarPage() {
                   )}
                 </button>
               </div>
-              <p className="mt-1 text-[11px] text-zinc-500">
-                URL a la cual enviara los eventos de conversion el Whatsapp que hayas integrado escaneando el QR.
-              </p>
             </div>
             <div>
               <label className="block text-xs font-medium text-zinc-400 mb-1">
@@ -775,9 +765,6 @@ export default function DashboardLandingEditarPage() {
                 placeholder="ej: miLanding123"
                 required
               />
-              <p className="mt-1 text-[11px] text-zinc-500">
-                Identificador único de la landing. Solo letras y números, sin espacios.
-              </p>
             </div>
           </div>
         </CollapsibleSection>
