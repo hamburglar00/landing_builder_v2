@@ -1,6 +1,7 @@
 import type { LandingThemeConfig, LandingWorkspaceCurrency } from "./types";
 import { COLOR_MAP } from "./constants";
 import { buildOptimizedImageUrl, buildResponsiveImageSet } from "./imageUrl";
+import { normalizeTemplate6Cover, TEMPLATE6_CARD_COUNT, template6Lines } from "./template6";
 
 function phoneCountryCodeForWorkspace(
   workspaceCurrency: LandingWorkspaceCurrency,
@@ -13,11 +14,12 @@ function templateNumberForOption(template: LandingThemeConfig["template"]) {
   if (template === "template3") return 3;
   if (template === "template4") return 4;
   if (template === "template5") return 5;
+  if (template === "template6") return 6;
   return 1;
 }
 
 function isFixedVisualTemplate(template: LandingThemeConfig["template"]) {
-  return template === "template4" || template === "template5";
+  return template === "template4" || template === "template5" || template === "template6";
 }
 
 export interface LandingConfigPayload {
@@ -70,6 +72,13 @@ export interface LandingConfigPayload {
       subtitleText: string;
       profileImageUrl: string;
       backgroundImageUrl: string;
+    };
+    template6?: {
+      grid: "2x1" | "2x2" | "2x3";
+      backgroundImageUrl: string;
+      headerText: string;
+      footerText: string;
+      cards: Array<{ imageUrl: string; text: string; ctaText: string }>;
     };
   };
   typography?: {
@@ -199,6 +208,7 @@ export function buildLandingConfig({
     ctaGlowColor: COLOR_MAP[config.ctaGlowColor],
   };
   const fixedVisualTemplate = isFixedVisualTemplate(themeWithHex.template);
+  const template6Cover = normalizeTemplate6Cover(themeWithHex.template6Cover);
   const isTemplate4 = themeWithHex.template === "template4";
   const effectiveCtaText =
     isTemplate4 && (!themeWithHex.ctaText.trim() || themeWithHex.ctaText === "Acceder")
@@ -225,7 +235,7 @@ export function buildLandingConfig({
       postUrl,
       landingTag,
       sendContactPixel: config.sendContactPixel,
-      ctaDestination: config.ctaDestination === "atrio" ? "atrio" : "whatsapp",
+      ctaDestination: config.template !== "template6" && config.ctaDestination === "atrio" ? "atrio" : "whatsapp",
       atrioRedirectUrl: config.atrioRedirectUrl.trim(),
       atrioClientId: (config.atrioClientId ?? "").trim(),
       atrioId: (config.atrioId ?? "").trim(),
@@ -293,6 +303,19 @@ export function buildLandingConfig({
         profileImageUrl: themeWithHex.template5Live?.profileImageUrl || "",
         backgroundImageUrl: themeWithHex.template5Live?.backgroundImageUrl || "",
       },
+      template6: {
+        grid: template6Cover.grid,
+        backgroundImageUrl: template6Cover.backgroundImageUrl
+          ? buildOptimizedImageUrl(template6Cover.backgroundImageUrl, { width: 960, quality: 65 })
+          : "",
+        headerText: template6Lines(template6Cover.headerText).map((line) => line.trim()).join("\n"),
+        footerText: template6Lines(template6Cover.footerText).map((line) => line.trim()).join("\n"),
+        cards: template6Cover.cards.slice(0, TEMPLATE6_CARD_COUNT[template6Cover.grid]).map((card) => ({
+          imageUrl: card.imageUrl ? buildOptimizedImageUrl(card.imageUrl, { width: 480, quality: 65 }) : "",
+          text: card.text.trim(),
+          ctaText: card.ctaText.trim(),
+        })),
+      },
     },
     typography: {
       fontFamily: "system",
@@ -355,4 +378,3 @@ export function buildLandingConfig({
     },
   };
 }
-

@@ -102,6 +102,12 @@ function buildImageSrcSet(image?: ResponsiveImage) {
 }
 
 function buildPreloadLinks(config: PublicLandingConfig) {
+  if (config.layout?.template === 6) {
+    const firstImage = config.content?.template6?.backgroundImageUrl || config.content?.template6?.cards?.[0]?.imageUrl || "";
+    return firstImage
+      ? `<link rel="preload" as="image" href="${escapeHtml(firstImage)}" fetchpriority="high">`
+      : "";
+  }
   const firstResponsiveBackground = config.background?.imagesResponsive?.[0];
   const firstBackground =
     firstResponsiveBackground?.mobile || config.background?.images?.[0] || "";
@@ -125,6 +131,14 @@ function buildPreloadLinks(config: PublicLandingConfig) {
 }
 
 function publicMetadata(config: PublicLandingConfig, slug: string) {
+  if (config.layout?.template === 6) {
+    const cover = config.content?.template6;
+    return {
+      title: cover?.headerText?.replace(/\s+/g, " ").trim() || config.name || slug,
+      description: cover?.footerText?.replace(/\s+/g, " ").trim() || "Contactanos por WhatsApp.",
+      image: cover?.cards?.[0]?.imageUrl || "",
+    };
+  }
   const contentTitle = (config.content?.title ?? [])
     .map((line) => String(line ?? "").trim())
     .filter(Boolean)
@@ -539,7 +553,42 @@ function renderTemplate5Configured({ config }: RenderParams) {
   return `<main class="public-landing template5"><section class="template5__phone" aria-label="Atencion en vivo"${backgroundStyle}><div class="template5__ambient" aria-hidden="true"></div><div class="template5__curtain"><span>EN VIVO</span><strong>Entrando...</strong></div><div class="template5__scroll"><div class="template5__topline"><div class="template5__live-badge"><span class="template5__live-dot"></span><strong>EN VIVO</strong><time data-template5-current-time>${currentTime}</time></div><span class="template5__viewers"><b data-template5-viewer-count>1.278</b> viendo</span></div><section class="template5__hero" data-public-landing-trigger><h1>${renderTemplate5Title(titleLines)}</h1><p>${subtitle}</p></section><section class="template5__advisor"><div class="template5__avatar-wrap">${renderTemplate5Avatar(profileImageUrl)}<i class="template5__advisor-dot"></i></div><div><strong>${name} · tu asesora designada</strong><span>En linea · responde en ~40 seg</span></div></section><div class="template5__progress" aria-hidden="true"><span></span></div><section class="template5__feed" aria-label="Actividad en vivo"><div><strong><span class="template5__feed-dot"></span> EN VIVO</strong></div><p data-template5-feed-row><span><b>Camilo A.</b><small data-template5-feed-time>hace 5 s</small></span><strong>$ 1.150.000</strong></p><p data-template5-feed-row><span><b>Sebastian G.</b><small data-template5-feed-time>hace 17 s</small></span><strong>$ 260.000</strong></p><p data-template5-feed-row><span><b>Laura P.</b><small data-template5-feed-time>hace 29 s</small></span><strong>$ 780.000</strong></p></section><section class="template5__activity" aria-label="Actividad de asesores"><article><span>Cuentas creadas</span><strong><b data-template5-created-count>1323</b></strong></article><article><span>Asesores disponibles</span><strong><b data-template5-advisor-count>6</b> en vivo</strong></article></section></div><footer class="template5__footer"><button type="button" class="template5__cta" data-public-landing-cta data-public-landing-rest-label="ENTRAR POR WHATSAPP" data-public-landing-loading-label="Abriendo..." data-public-landing-disabled-label="Sin numero disponible" aria-label="ENTRAR POR WHATSAPP">${renderWhatsAppIcon("template5__cta-icon")}<span data-public-landing-cta-label>ENTRAR POR WHATSAPP</span></button></footer></section></main>`;
 }
 
+function renderTemplate6({ config }: RenderParams) {
+  const cover = config.content?.template6;
+  const backgroundImageUrl = cover?.backgroundImageUrl?.trim() || "";
+  const grid = cover?.grid === "2x1" || cover?.grid === "2x3" ? cover.grid : "2x2";
+  const cardCount = grid === "2x1" ? 2 : grid === "2x3" ? 6 : 4;
+  const title = template5Lines(cover?.headerText, "Elegí tu opción", 2);
+  const footer = template5Lines(cover?.footerText, "Estamos para ayudarte", 2);
+  const cards = Array.from({ length: cardCount }, (_, index) => {
+    const card = cover?.cards?.[index];
+    const label = String(card?.ctaText || config.content?.ctaText || "Abrir WhatsApp").trim();
+    const image = String(card?.imageUrl || "").trim();
+    const caption = String(card?.text || `Opción ${index + 1}`).trim();
+    return `<article class="template6__card"><div class="template6__image">${
+      image
+        ? `<img src="${escapeHtml(image)}" alt="${escapeHtml(caption)}" width="480" height="480" loading="${index < 2 ? "eager" : "lazy"}" decoding="async"${index === 0 && !backgroundImageUrl ? ' fetchpriority="high"' : ""}>`
+        : `<span>Imagen ${index + 1}</span>`
+    }</div><p class="template6__caption">${escapeHtml(caption)}</p><button type="button" class="template6__cta" data-public-landing-cta data-public-landing-rest-label="${escapeHtml(label)}" data-public-landing-loading-label="Abriendo..." data-public-landing-disabled-label="Sin número disponible" aria-label="${escapeHtml(label)}"><span data-public-landing-cta-label>${escapeHtml(label)}</span>${renderWhatsAppIcon("template6__cta-icon")}</button></article>`;
+  }).join("");
+  const styles = styleAttr({
+    "--template6-title": config.colors?.title || "#FFFFFF",
+    "--template6-caption": config.colors?.subtitle || "#FFFFFF",
+    "--template6-footer": config.colors?.badge || "#FFD700",
+    "--template6-cta-text": config.colors?.ctaText || "#000000",
+    "--template6-cta-background": config.colors?.ctaBackground || "#FFD700",
+    "--template6-cta-glow": config.colors?.ctaGlow || "#FFD700",
+    "--template6-cta-size": `${Math.min(22, Math.max(11, config.typography?.cta?.sizePx || 14))}px`,
+    "--template6-cta-weight": config.typography?.cta?.weight || 700,
+  });
+  const background = backgroundImageUrl
+    ? `<div class="template6__background" aria-hidden="true"><img src="${escapeHtml(backgroundImageUrl)}" alt="" loading="eager" decoding="async" fetchpriority="high"></div>`
+    : "";
+  return `<main class="public-landing template6${backgroundImageUrl ? " has-background" : ""}"${styles}>${background}<div class="template6__shell"><header class="template6__header"><h1>${title.map((line) => `<span>${escapeHtml(line)}</span>`).join("")}</h1></header><section class="template6__grid" aria-label="Opciones disponibles">${cards}</section><footer class="template6__footer">${footer.map((line) => `<span>${escapeHtml(line)}</span>`).join("")}</footer></div></main>`;
+}
+
 function renderTemplate(params: RenderParams) {
+  if (params.config.layout?.template === 6) return renderTemplate6(params);
   if (params.config.layout?.template === 5) return renderTemplate5Configured(params);
   if (params.config.layout?.template === 4) return renderTemplate4(params);
   if (params.config.layout?.template === 3) return renderTemplate3(params);

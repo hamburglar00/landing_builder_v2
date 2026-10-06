@@ -53,7 +53,7 @@ export function CtaDestinationSection({
   setConfig,
   atrioClients = [],
 }: Props) {
-  const destination = config.ctaDestination === "atrio" ? "atrio" : "whatsapp";
+  const destination = config.template !== "template6" && config.ctaDestination === "atrio" ? "atrio" : "whatsapp";
   const targets = [
     {
       value: "whatsapp" as const,
@@ -75,12 +75,12 @@ export function CtaDestinationSection({
       title: "Atrio",
       icon: <AtrioLogo />,
     },
-  ];
+  ].filter((target) => config.template !== "template6" || target.value === "whatsapp");
 
   return (
     <div className="rounded-xl border border-zinc-800 bg-zinc-900/50 p-4">
       <p className="text-sm font-semibold text-zinc-200">Destino del CTA</p>
-      <div className="mt-4 grid gap-2 sm:grid-cols-2">
+      <div className={`mt-4 grid gap-2 ${config.template === "template6" ? "grid-cols-1" : "sm:grid-cols-2"}`}>
         {targets.map((target) => {
           const active = destination === target.value;
 

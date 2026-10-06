@@ -11,6 +11,7 @@ import type {
 import { ColorSelect } from "./ColorSelect";
 import { ImageUploader } from "./ImageUploader";
 import { buildLandingConfig } from "@/lib/landing/buildLandingConfig";
+import { normalizeTemplate6Cover, TEMPLATE6_CARD_COUNT, template6Lines } from "@/lib/landing/template6";
 import {
   switchLandingTemplate,
   withCurrentTemplateSnapshot,
@@ -112,6 +113,7 @@ const TEMPLATE_OPTIONS: { label: string; value: TemplateOption }[] = [
   { label: "Plantilla 3 (redirect)", value: "template3" },
   { label: "Plantilla 4 (chat)", value: "template4" },
   { label: "Plantilla 5 (live)", value: "template5" },
+  { label: "Plantilla 6 (portada)", value: "template6" },
 ];
 
 const LEAD_CAPTURE_DEFAULT_TITLE =
@@ -229,8 +231,9 @@ export function LandingEditorForm({
   const isTemplate3 = config.template === "template3";
   const isTemplate4 = config.template === "template4";
   const isTemplate5 = config.template === "template5";
+  const isTemplate6 = config.template === "template6";
   const isFixedVisualTemplate =
-    config.template === "template4" || config.template === "template5";
+    config.template === "template4" || config.template === "template5" || isTemplate6;
   const hidesVisualControls = isTemplate3 || isFixedVisualTemplate;
   const template4Chat = {
     ...TEMPLATE4_CHAT_DEFAULTS,
@@ -240,6 +243,7 @@ export function LandingEditorForm({
     ...TEMPLATE5_LIVE_DEFAULTS,
     ...(config.template5Live ?? {}),
   };
+  const template6Cover = normalizeTemplate6Cover(config.template6Cover);
   const template4CtaText =
     config.ctaText.trim() && config.ctaText !== "Acceder"
       ? config.ctaText
@@ -296,6 +300,37 @@ export function LandingEditorForm({
         ...template5Live,
         ...patch,
       },
+    });
+  };
+
+  const updateTemplate6Cover = (patch: Partial<typeof template6Cover>) => {
+    setConfig((current) => ({
+      ...current,
+      template6Cover: { ...normalizeTemplate6Cover(current.template6Cover), ...patch },
+    }));
+  };
+
+  const updateTemplate6Card = (index: number, patch: Partial<(typeof template6Cover.cards)[number]>) => {
+    setConfig((current) => {
+      const cover = normalizeTemplate6Cover(current.template6Cover);
+      return {
+        ...current,
+        template6Cover: {
+          ...cover,
+          cards: cover.cards.map((card, cardIndex) =>
+            cardIndex === index ? { ...card, ...patch } : card,
+          ),
+        },
+      };
+    });
+  };
+
+  const updateTemplate6Line = (field: "headerText" | "footerText", index: number, text: string) => {
+    setConfig((current) => {
+      const cover = normalizeTemplate6Cover(current.template6Cover);
+      const lines = template6Lines(cover[field]);
+      lines[index] = text.replace(/[\r\n]/g, "");
+      return { ...current, template6Cover: { ...cover, [field]: lines.join("\n") } };
     });
   };
 
@@ -367,7 +402,7 @@ export function LandingEditorForm({
         <LandingTemplateSection config={config} setConfig={setConfig} />
       )}
 
-      {!hidesVisualControls && (
+      {(!hidesVisualControls || isTemplate6) && (
         <CollapsibleSection title="CTA">
         <div className="space-y-3">
           <div>
@@ -430,7 +465,7 @@ export function LandingEditorForm({
               </label>
             </div>
           </div>
-          {config.template !== "template2" && (
+          {config.template !== "template2" && !isTemplate6 && (
             <div>
               <label
                 htmlFor={fieldId("cta-position")}
@@ -600,6 +635,101 @@ export function LandingEditorForm({
             />
           </div>
         </div>
+        </CollapsibleSection>
+      )}
+
+      {isTemplate6 && (
+        <CollapsibleSection title="Portada y tarjetas" defaultOpen>
+          <div className="space-y-5">
+            <div>
+              <label htmlFor={fieldId("template6-grid")} className="mb-1 block text-xs font-medium text-zinc-300">
+                Grilla
+              </label>
+              <select
+                id={fieldId("template6-grid")}
+                value={template6Cover.grid}
+                onChange={(event) => updateTemplate6Cover({ grid: event.target.value as typeof template6Cover.grid })}
+                className="w-full rounded-lg border border-zinc-700 bg-zinc-900 px-3 py-2 text-sm text-zinc-100"
+              >
+                <option value="2x1">2 columnas × 1 fila</option>
+                <option value="2x2">2 columnas × 2 filas</option>
+                <option value="2x3">2 columnas × 3 filas</option>
+              </select>
+            </div>
+
+            <ImageUploader
+              label="Imagen de fondo (.avif, opcional)"
+              value={template6Cover.backgroundImageUrl ? [template6Cover.backgroundImageUrl] : []}
+              onChange={(urls) => updateTemplate6Cover({ backgroundImageUrl: urls[0] ?? "" })}
+              onUpload={uploadImage}
+            />
+
+            {(["headerText", "footerText"] as const).map((field) => (
+              <div key={field} className="rounded-lg border border-zinc-800 bg-zinc-950/40 p-3">
+                <p className="mb-2 text-xs font-semibold text-zinc-200">
+                  {field === "headerText" ? "Título superior" : "Texto inferior"}
+                </p>
+                <div className="grid gap-2 sm:grid-cols-2">
+                  {[0, 1].map((index) => (
+                    <label key={index} className="block text-xs text-zinc-400">
+                      Línea {index + 1}
+                      <input
+                        type="text"
+                        maxLength={60}
+                        value={template6Lines(template6Cover[field])[index] ?? ""}
+                        onChange={(event) => updateTemplate6Line(field, index, event.target.value)}
+                        className="mt-1 w-full rounded-lg border border-zinc-700 bg-zinc-900 px-3 py-2 text-sm text-zinc-100"
+                      />
+                    </label>
+                  ))}
+                </div>
+              </div>
+            ))}
+
+            <div>
+              <h4 className="mb-2 text-xs font-semibold text-zinc-200">Tarjetas</h4>
+              <div className="grid gap-3 sm:grid-cols-2">
+                {template6Cover.cards.slice(0, TEMPLATE6_CARD_COUNT[template6Cover.grid]).map((card, index) => (
+                  <div key={index} className="space-y-3 rounded-xl border border-zinc-700 bg-zinc-950/40 p-3">
+                    <h5 className="text-xs font-semibold text-zinc-200">Tarjeta {index + 1}</h5>
+                    <ImageUploader
+                      label="Imagen cuadrada (.avif)"
+                      value={card.imageUrl ? [card.imageUrl] : []}
+                      onChange={(urls) => updateTemplate6Card(index, { imageUrl: urls[0] ?? "" })}
+                      onUpload={uploadImage}
+                    />
+                    <label className="block text-xs text-zinc-400">
+                      Texto bajo la imagen
+                      <textarea
+                        rows={2}
+                        maxLength={90}
+                        value={card.text}
+                        onChange={(event) => updateTemplate6Card(index, { text: event.target.value })}
+                        className="mt-1 w-full resize-none rounded-lg border border-zinc-700 bg-zinc-900 px-3 py-2 text-sm text-zinc-100"
+                      />
+                    </label>
+                    <label className="block text-xs text-zinc-400">
+                      Texto de este CTA (opcional)
+                      <input
+                        type="text"
+                        maxLength={32}
+                        value={card.ctaText}
+                        placeholder={`Usar «${config.ctaText || "Acceder"}»`}
+                        onChange={(event) => updateTemplate6Card(index, { ctaText: event.target.value })}
+                        className="mt-1 w-full rounded-lg border border-zinc-700 bg-zinc-900 px-3 py-2 text-sm text-zinc-100"
+                      />
+                    </label>
+                  </div>
+                ))}
+              </div>
+            </div>
+
+            <div className="grid gap-3 border-t border-zinc-800 pt-4 sm:grid-cols-3">
+              <ColorSelect label="Color del título" value={config.titleColor} onChange={(titleColor) => updateConfig(setConfig, { titleColor })} />
+              <ColorSelect label="Color del texto de tarjetas" value={config.subtitleColor} onChange={(subtitleColor) => updateConfig(setConfig, { subtitleColor })} />
+              <ColorSelect label="Color del texto inferior" value={config.footerBadgeColor} onChange={(footerBadgeColor) => updateConfig(setConfig, { footerBadgeColor })} />
+            </div>
+          </div>
         </CollapsibleSection>
       )}
 
@@ -1411,4 +1541,3 @@ export function LandingEditorForm({
     </form>
   );
 }
-

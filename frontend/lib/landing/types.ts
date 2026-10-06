@@ -42,13 +42,15 @@ export type CtaPositionOption =
  * template3: sin UI visual (redirect directo).
  * template4: chat visual fijo.
  * template5: live/urgencia visual fijo.
+ * template6: portada con tarjetas en grilla.
  */
 export type TemplateOption =
   | "template1"
   | "template2"
   | "template3"
   | "template4"
-  | "template5";
+  | "template5"
+  | "template6";
 
 /**
  * Motor que sirve la URL publica de una landing creada en el constructor.
@@ -101,6 +103,23 @@ export interface LandingTemplate5LiveConfig {
   subtitleText: string;
   profileImageUrl: string;
   backgroundImageUrl: string;
+}
+
+export type LandingTemplate6Grid = "2x1" | "2x2" | "2x3";
+
+export interface LandingTemplate6Card {
+  imageUrl: string;
+  text: string;
+  /** Vacío: usa el texto general del CTA. */
+  ctaText: string;
+}
+
+export interface LandingTemplate6CoverConfig {
+  grid: LandingTemplate6Grid;
+  backgroundImageUrl: string;
+  headerText: string;
+  footerText: string;
+  cards: LandingTemplate6Card[];
 }
 
 /**
@@ -182,6 +201,7 @@ export interface LandingThemeConfig {
   emailCaptureEnabled?: boolean;
   template4Chat?: LandingTemplate4ChatConfig;
   template5Live?: LandingTemplate5LiveConfig;
+  template6Cover?: LandingTemplate6CoverConfig;
   /**
    * Borradores visuales independientes por plantilla.
    * El constructor los usa para recordar como quedo cada template; la landing

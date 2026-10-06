@@ -3,10 +3,12 @@ import type {
   LandingLeadCaptureConfig,
   LandingTemplate4ChatConfig,
   LandingTemplate5LiveConfig,
+  LandingTemplate6CoverConfig,
   LandingTemplateVariantConfig,
   LandingThemeConfig,
   TemplateOption,
 } from "./types";
+import { normalizeTemplate6Cover } from "./template6";
 
 function cloneLeadCapture(
   value: LandingLeadCaptureConfig,
@@ -27,6 +29,12 @@ function cloneTemplate5Live(
   value: LandingTemplate5LiveConfig | undefined,
 ): LandingTemplate5LiveConfig | undefined {
   return value ? { ...value } : undefined;
+}
+
+function cloneTemplate6Cover(
+  value: LandingTemplate6CoverConfig | undefined,
+): LandingTemplate6CoverConfig {
+  return normalizeTemplate6Cover(value);
 }
 
 export function snapshotTemplateVariant(
@@ -70,6 +78,7 @@ export function snapshotTemplateVariant(
     leadCapture: cloneLeadCapture(config.leadCapture),
     template4Chat: cloneTemplate4Chat(config.template4Chat),
     template5Live: cloneTemplate5Live(config.template5Live),
+    template6Cover: cloneTemplate6Cover(config.template6Cover),
   };
 }
 
@@ -130,6 +139,7 @@ export function switchLandingTemplate(
     ...(savedNextVariant ?? {}),
     ...globalConfig(config),
     template: nextTemplate,
+    ...(nextTemplate === "template6" ? { ctaDestination: "whatsapp" as const } : {}),
     templateConfigs: withCurrentSnapshot.templateConfigs,
   };
 

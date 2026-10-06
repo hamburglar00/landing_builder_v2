@@ -1,4 +1,5 @@
 import type { LandingThemeConfig } from "./types";
+import { DEFAULT_TEMPLATE6_COVER } from "./template6";
 
 /**
  * Configuración por defecto de la landing.
@@ -79,4 +80,5 @@ export const DEFAULT_CONFIG: LandingThemeConfig = {
     profileImageUrl: "",
     backgroundImageUrl: "",
   },
+  template6Cover: DEFAULT_TEMPLATE6_COVER,
 };

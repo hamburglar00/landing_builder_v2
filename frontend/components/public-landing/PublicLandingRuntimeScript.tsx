@@ -79,6 +79,7 @@ export default function PublicLandingRuntimeScript({ slug, config }: Props) {
     phoneCountryCode: config.tracking?.phoneCountryCode || "54",
     workspaceCurrency: String(config.workspaceCurrency || config.tracking?.workspaceCurrency || config.tracking?.currency || "ARS").trim().toUpperCase(),
     ctaText: config.content?.ctaText || "¡Contactar ya!",
+    template: config.layout?.template || 1,
     phoneSelectionMode: config.phoneSelection?.mode || "",
     backgroundMode: config.background?.mode || "",
     metaIpCollectorUrl: process.env.NEXT_PUBLIC_META_IP_COLLECTOR_URL || "",
@@ -1312,6 +1313,20 @@ export default function PublicLandingRuntimeScript({ slug, config }: Props) {
         var ctas = Array.prototype.slice.call(document.querySelectorAll("[data-public-landing-cta]"));
         ctas.forEach(function (button) {
           button.addEventListener("click", function () { handleCtaClick(button); });
+        });
+
+        // Al volver de WhatsApp con la pagina restaurada desde bfcache, un CTA nuevo
+        // necesita una asignacion nueva; la deduplicacion de Contact sigue en storage.
+        window.addEventListener("pageshow", function (event) {
+          if (!event.persisted || cfg.template !== 6) return;
+          clickLocked = false;
+          ctas.forEach(function (button) {
+            button.disabled = false;
+            setButtonText(button, getRestButtonText(button));
+          });
+          clearPrewarmedPhonePromise();
+          if (!isAtrioDestination()) ensurePhonePromise();
+          prearmContactContext();
         });
 
         Array.prototype.slice.call(document.querySelectorAll("[data-public-landing-trigger]")).forEach(function (trigger) {
