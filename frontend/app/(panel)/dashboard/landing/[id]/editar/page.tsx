@@ -671,9 +671,6 @@ export default function DashboardLandingEditarPage() {
               <div className="flex items-center justify-between gap-3">
                 <div>
                   <p className="text-xs font-medium text-zinc-300">Enviar Contact via Pixel</p>
-                  <p className="mt-0.5 text-[11px] text-zinc-500">
-                    Controla si la landing publica envia el evento Contact por Pixel del navegador.
-                  </p>
                 </div>
                 <button
                   type="button"
