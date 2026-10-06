@@ -569,7 +569,7 @@ function renderTemplate6({ config }: RenderParams) {
       image
         ? `<img src="${escapeHtml(image)}" alt="${escapeHtml(caption)}" width="480" height="480" loading="${index < 2 ? "eager" : "lazy"}" decoding="async"${index === 0 && !backgroundImageUrl ? ' fetchpriority="high"' : ""}>`
         : `<span>Imagen ${index + 1}</span>`
-    }</div><p class="template6__caption">${escapeHtml(caption)}</p><button type="button" class="template6__cta" data-public-landing-cta data-public-landing-rest-label="${escapeHtml(label)}" data-public-landing-loading-label="Abriendo..." data-public-landing-disabled-label="Sin número disponible" aria-label="${escapeHtml(label)}"><span data-public-landing-cta-label>${escapeHtml(label)}</span>${renderWhatsAppIcon("template6__cta-icon")}</button></article>`;
+    }</div><p class="template6__caption">${escapeHtml(caption)}</p><button type="button" class="template6__cta" data-public-landing-cta data-public-landing-rest-label="${escapeHtml(label)}" data-public-landing-loading-label="Abriendo..." data-public-landing-disabled-label="Sin número disponible" aria-label="${escapeHtml(label)}"><span data-public-landing-cta-label>${escapeHtml(label)}</span>${cover?.showWhatsAppLogo === false ? "" : renderWhatsAppIcon("template6__cta-icon")}</button></article>`;
   }).join("");
   const styles = styleAttr({
     "--template6-title": config.colors?.title || "#FFFFFF",

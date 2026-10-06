@@ -116,6 +116,7 @@ export interface LandingTemplate6Card {
 
 export interface LandingTemplate6CoverConfig {
   grid: LandingTemplate6Grid;
+  showWhatsAppLogo: boolean;
   backgroundImageUrl: string;
   headerText: string;
   footerText: string;

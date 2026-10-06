@@ -4,6 +4,7 @@ import { renderPublicLandingHtml } from "../components/public-landing/renderPubl
 import type { PublicLandingConfig } from "../components/public-landing/types";
 import { buildLandingConfig } from "../lib/landing/buildLandingConfig";
 import { DEFAULT_CONFIG } from "../lib/landing/mocks";
+import { normalizeTemplate6Cover } from "../lib/landing/template6";
 import { switchLandingTemplate } from "../lib/landing/templateVariants";
 import type { LandingTemplate6Grid } from "../lib/landing/types";
 
@@ -23,6 +24,7 @@ for (const [grid, count] of [["2x1", 2], ["2x2", 4], ["2x3", 6]] as const) {
         leadCapture: { ...DEFAULT_CONFIG.leadCapture, enabled: true },
         template6Cover: {
           grid: grid as LandingTemplate6Grid,
+          showWhatsAppLogo: true,
           backgroundImageUrl: "https://cdn.example.com/cover.avif",
           headerText: "Primera línea\nSegunda línea\nIgnorada",
           footerText: "Pie uno\nPie dos",
@@ -39,11 +41,13 @@ for (const [grid, count] of [["2x1", 2], ["2x2", 4], ["2x3", 6]] as const) {
     assert.equal(config.tracking.ctaDestination, "whatsapp");
     assert.equal(config.leadCapture?.enabled, false);
     assert.equal(config.content?.template6?.cards.length, count);
+    assert.equal(config.content?.template6?.showWhatsAppLogo, true);
     assert.equal(config.content?.template6?.backgroundImageUrl, "https://cdn.example.com/cover.avif");
     assert.equal(config.content?.template6?.headerText, "Primera línea\nSegunda línea");
     const html = renderPublicLandingHtml({ slug: "portada", config: config as PublicLandingConfig });
     assert.equal(html.split('class="template6__card"').length - 1, count);
     assert.equal(html.split('class="template6__cta"').length - 1, count);
+    assert.equal(html.split('class="template6__cta-icon"').length - 1, count);
     assert.match(html, /class="template6__background"/);
     assert.match(html, /class="public-landing template6 has-background"/);
     assert.match(html, /Elegir esta/);
@@ -68,6 +72,36 @@ test("la portada conserva sus tarjetas al cambiar de plantilla", () => {
   assert.equal(restored.template6Cover?.grid, "2x3");
   assert.equal(restored.template6Cover?.cards[5]?.text, "Sexta opción");
   assert.equal(restored.ctaDestination, "whatsapp");
+});
+
+test("el checkbox oculta el SVG en todos los CTA sin cambiar textos ni redirección", () => {
+  const cover = normalizeTemplate6Cover(DEFAULT_CONFIG.template6Cover);
+  const config = buildLandingConfig({
+    id: "without-logo", name: "Portada", comment: "", pixelId: "", postUrl: "", landingTag: "COVER",
+    config: {
+      ...DEFAULT_CONFIG,
+      template: "template6",
+      ctaText: "Abrir WhatsApp",
+      template6Cover: {
+        ...cover,
+        showWhatsAppLogo: false,
+        cards: cover.cards.map((card, index) => index === 0 ? { ...card, ctaText: "Elegir opción" } : card),
+      },
+    },
+  });
+  const html = renderPublicLandingHtml({ slug: "portada", config: config as PublicLandingConfig });
+  assert.equal(config.content?.template6?.showWhatsAppLogo, false);
+  assert.equal(config.tracking.ctaDestination, "whatsapp");
+  assert.equal(html.split('class="template6__cta"').length - 1, 4);
+  assert.doesNotMatch(html, /class="template6__cta-icon"/);
+  assert.match(html, /Elegir opción/);
+  assert.match(html, /Abrir WhatsApp/);
+  assert.equal(normalizeTemplate6Cover(undefined).showWhatsAppLogo, true);
+  const restored = switchLandingTemplate(
+    switchLandingTemplate({ ...DEFAULT_CONFIG, template: "template6", template6Cover: { ...cover, showWhatsAppLogo: false } }, "template2"),
+    "template6",
+  );
+  assert.equal(restored.template6Cover?.showWhatsAppLogo, false);
 });
 
 test("la portada conserva el fondo opcional al cambiar de plantilla", () => {

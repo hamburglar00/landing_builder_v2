@@ -465,6 +465,17 @@ export function LandingEditorForm({
               </label>
             </div>
           </div>
+          {isTemplate6 && (
+            <label className="flex items-center gap-2 text-xs font-medium text-zinc-300">
+              <input
+                type="checkbox"
+                checked={template6Cover.showWhatsAppLogo}
+                onChange={(event) => updateTemplate6Cover({ showWhatsAppLogo: event.target.checked })}
+                className="h-4 w-4 rounded border-zinc-600 bg-zinc-900"
+              />
+              Incluir logo de WhatsApp en los CTA
+            </label>
+          )}
           {config.template !== "template2" && !isTemplate6 && (
             <div>
               <label

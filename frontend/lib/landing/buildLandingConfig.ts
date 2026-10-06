@@ -75,6 +75,7 @@ export interface LandingConfigPayload {
     };
     template6?: {
       grid: "2x1" | "2x2" | "2x3";
+      showWhatsAppLogo: boolean;
       backgroundImageUrl: string;
       headerText: string;
       footerText: string;
@@ -305,6 +306,7 @@ export function buildLandingConfig({
       },
       template6: {
         grid: template6Cover.grid,
+        showWhatsAppLogo: template6Cover.showWhatsAppLogo,
         backgroundImageUrl: template6Cover.backgroundImageUrl
           ? buildOptimizedImageUrl(template6Cover.backgroundImageUrl, { width: 960, quality: 65 })
           : "",

@@ -8,6 +8,7 @@ export const TEMPLATE6_CARD_COUNT: Record<LandingTemplate6Grid, number> = {
 
 export const DEFAULT_TEMPLATE6_COVER: LandingTemplate6CoverConfig = {
   grid: "2x2",
+  showWhatsAppLogo: true,
   backgroundImageUrl: "",
   headerText: "Elegí tu opción",
   footerText: "Estamos para ayudarte",
@@ -20,6 +21,7 @@ export function normalizeTemplate6Cover(
   const grid = value?.grid && value.grid in TEMPLATE6_CARD_COUNT ? value.grid : "2x2";
   return {
     grid,
+    showWhatsAppLogo: value?.showWhatsAppLogo !== false,
     backgroundImageUrl: value?.backgroundImageUrl ?? "",
     headerText: value?.headerText ?? DEFAULT_TEMPLATE6_COVER.headerText,
     footerText: value?.footerText ?? DEFAULT_TEMPLATE6_COVER.footerText,
