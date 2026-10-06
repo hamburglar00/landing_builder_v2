@@ -138,7 +138,9 @@ export function GerenciaRedirectSection({
                   );
                 }}
                 disabled={!isAssigned}
-                title={isAssigned ? "Peso de esta gerencia en esta landing" : "Marque Asignar para poder editar el peso"}
+                title={isAssigned
+                  ? (landing.gerenciaSelectionMode === "weighted_quota" ? "Cuota relativa de esta gerencia en esta landing" : "Peso de esta gerencia en esta landing")
+                  : "Marque Asignar para poder editar el valor"}
                 className="w-10 rounded border border-zinc-700 bg-zinc-900 px-2 py-1 text-zinc-100 disabled:cursor-not-allowed disabled:opacity-50 [appearance:textfield] [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:appearance-none"
               />
             </td>
@@ -363,7 +365,9 @@ export function GerenciaRedirectSection({
                         <th className="px-3 py-2 font-medium text-zinc-300">Nombre</th>
                         <th className="w-20 px-3 py-2 text-center font-medium text-zinc-300">Asignar</th>
                         {usesWeight && (
-                          <th className="w-10 px-3 py-2 font-medium text-zinc-300">Peso</th>
+                          <th className="w-10 px-3 py-2 font-medium text-zinc-300">
+                            {landing.gerenciaSelectionMode === "weighted_quota" ? "Cuota" : "Peso"}
+                          </th>
                         )}
                         <th className="w-32 px-3 py-2 font-medium text-zinc-300">Modo</th>
                         <th className="min-w-[140px] px-3 py-2 font-medium text-zinc-300">Tipo</th>
