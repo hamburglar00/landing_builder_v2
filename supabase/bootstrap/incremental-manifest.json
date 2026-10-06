@@ -71,6 +71,11 @@
       "version": "20261005154805",
       "file": "20261005154805_landing_weighted_quota.sql",
       "sha256": "3888b0f562027d0951658d68032c48aa504df80ee413f7e9125043f1ef3b2200"
+    },
+    {
+      "version": "20261006023524",
+      "file": "20261006023524_pixel_purchase_capi_controls.sql",
+      "sha256": "7f96a49227f09735de5d27b091b785ece48e9bd204a6f762a1ba73e0c937429b"
     }
   ]
 }

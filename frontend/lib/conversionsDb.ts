@@ -88,6 +88,9 @@ export interface PixelConfig {
   include_purchase_type_capi: boolean;
   send_first_purchase_capi: boolean;
   send_repeat_purchase_capi: boolean;
+  repeat_purchase_capi_window_days: number | null;
+  purchase_capi_min_amount_enabled: boolean;
+  purchase_capi_min_amount: number;
   send_geo_capi: boolean;
   geo_use_ipapi: boolean;
   geo_fill_only_when_missing: boolean;
@@ -744,6 +747,13 @@ export async function fetchPixelConfigs(userId: string): Promise<PixelConfig[]> 
         pixel.send_first_purchase_capi ?? legacyPurchaseEnabled,
       send_repeat_purchase_capi:
         pixel.send_repeat_purchase_capi ?? legacyPurchaseEnabled,
+      repeat_purchase_capi_window_days:
+        pixel.repeat_purchase_capi_window_days ?? null,
+      purchase_capi_min_amount_enabled:
+        pixel.purchase_capi_min_amount_enabled === true,
+      purchase_capi_min_amount: normalizeNonNegativeAmount(
+        pixel.purchase_capi_min_amount,
+      ),
       send_geo_capi: pixel.send_geo_capi !== false,
     };
   }) as PixelConfig[];
@@ -764,6 +774,9 @@ export async function upsertPixelConfig(input: {
   include_purchase_type_capi?: boolean;
   send_first_purchase_capi?: boolean;
   send_repeat_purchase_capi?: boolean;
+  repeat_purchase_capi_window_days?: number | null;
+  purchase_capi_min_amount_enabled?: boolean;
+  purchase_capi_min_amount?: number;
   send_geo_capi?: boolean;
   geo_use_ipapi?: boolean;
   geo_fill_only_when_missing?: boolean;
@@ -803,6 +816,23 @@ export async function upsertPixelConfig(input: {
   }
   if (input.send_geo_capi !== undefined) {
     body.send_geo_capi = input.send_geo_capi;
+  }
+  if (input.repeat_purchase_capi_window_days !== undefined) {
+    const days = input.repeat_purchase_capi_window_days;
+    if (days !== null && (!Number.isInteger(days) || days < 1 || days > 30)) {
+      throw new Error("El plazo de Repeat Purchase debe ser de 1 a 30 días.");
+    }
+    body.repeat_purchase_capi_window_days = days;
+  }
+  if (input.purchase_capi_min_amount_enabled !== undefined) {
+    body.purchase_capi_min_amount_enabled = input.purchase_capi_min_amount_enabled;
+  }
+  if (input.purchase_capi_min_amount !== undefined) {
+    const amount = input.purchase_capi_min_amount;
+    if (!Number.isFinite(amount) || amount < 0 || amount > 999999999999999999.99) {
+      throw new Error("El monto mínimo del píxel no es válido.");
+    }
+    body.purchase_capi_min_amount = amount;
   }
   const { error } = await supabase
     .from("conversions_pixel_configs")

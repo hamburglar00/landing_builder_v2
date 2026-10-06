@@ -52,12 +52,28 @@ El timestamp Unix es siempre UTC; la hora en Argentina es solo para visualizaci�
 
 ## Filtro opcional de Purchase por monto
 
-La configuración Meta CAPI de cada cliente permite activar un monto mínimo
-independiente para cada workspace monetario (ARS y PYG). El filtro está apagado
-por defecto. Cuando está activo, un `Purchase` se envía a Meta si su valor es
-mayor o igual al umbral de su moneda.
+Cada píxel tiene su propio switch y monto mínimo. El monto se expresa en la
+moneda configurada para ese píxel y sólo se compara con compras cuya moneda
+real coincide. No hay conversión entre monedas. El filtro está apagado por
+defecto para píxeles nuevos. La migración de este cambio copia a cada píxel
+existente el umbral global previo correspondiente a su moneda.
 
 El control se aplica únicamente antes de la llamada a Meta CAPI y no modifica
 el registro, la clasificación, la atribución ni los reportes internos. Aplica a
-compras de landing, Chatrace y WhatsApp Cloud API. Las monedas que no tienen un
-umbral configurable continúan enviándose.
+compras de landing, Chatrace y WhatsApp Cloud API. Las compras de otra moneda
+continúan enviándose sin ese umbral.
+
+## Plazo opcional de Repeat Purchase
+
+Cuando están activos Purchase, la clasificación first/repeat y Repeat Purchase,
+cada píxel puede limitar el envío de Repeat a Meta a 1–30 días de 24 horas
+desde la primera carga del mismo cliente, teléfono y moneda. `NULL` significa
+sin límite y es el valor por defecto. Se compara la fecha del evento original,
+también durante los reintentos; no se compara la fecha en que corre el retry.
+
+Las filas de `conversions`, sus montos y las métricas internas no se alteran.
+Fuera del plazo se guarda el estado `skipped_repeat_purchase_outside_window`.
+Para filas históricas sin `purchase_event_time`, se usa `created_at` como
+respaldo; si falta también esa fecha, el envío queda en error reintentable.
+Sin clasificación, la configuración actual
+continúa enviando Purchase estándar sin separar first/repeat.

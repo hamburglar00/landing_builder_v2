@@ -8,6 +8,7 @@ import {
   buildMetaRequest,
   type ConversionRow as SharedConversionRow,
   type ConversionsConfig as SharedConversionsConfig,
+  findFirstPurchaseEventTime,
   generateEventId as sharedGenerateEventId,
   normalizeCtwaClid,
   normalizeCurrencyCode,
@@ -16,6 +17,7 @@ import {
   resolvePurchaseCapiDecision,
   resolvePurchaseCapiMinimumDecision,
   resolvePurchaseCapiRoute,
+  resolveRepeatPurchaseCapiWindowDecision,
   shouldSkipCapiForNonMetaOrigin,
   toValidEventTime,
 } from "./shared.ts";
@@ -59,8 +61,10 @@ interface ConversionsConfig {
   include_purchase_type_capi?: boolean;
   send_first_purchase_capi?: boolean;
   send_repeat_purchase_capi?: boolean;
+  repeat_purchase_capi_window_days?: number | null;
   send_purchase_capi: boolean;
   purchase_capi_min_amount_enabled?: boolean;
+  purchase_capi_min_amount?: number;
   purchase_capi_min_amounts?: Record<string, number>;
   send_geo_capi: boolean;
   geo_use_ipapi: boolean;
@@ -80,7 +84,10 @@ interface PixelConfigRow {
   include_purchase_type_capi?: boolean;
   send_first_purchase_capi?: boolean;
   send_repeat_purchase_capi?: boolean;
+  repeat_purchase_capi_window_days?: number | null;
   send_purchase_capi: boolean;
+  purchase_capi_min_amount_enabled?: boolean;
+  purchase_capi_min_amount?: number;
   send_geo_capi: boolean;
   geo_use_ipapi: boolean;
   geo_fill_only_when_missing: boolean;
@@ -2516,6 +2523,11 @@ function resolveEffectiveConfigForPixel(
       legacyPurchaseEnabled,
     send_repeat_purchase_capi: picked.send_repeat_purchase_capi ??
       legacyPurchaseEnabled,
+    repeat_purchase_capi_window_days:
+      picked.repeat_purchase_capi_window_days ?? null,
+    purchase_capi_min_amount_enabled:
+      picked.purchase_capi_min_amount_enabled === true,
+    purchase_capi_min_amount: picked.purchase_capi_min_amount ?? 0,
     send_purchase_capi: legacyPurchaseEnabled,
     send_geo_capi: picked.send_geo_capi !== false,
     geo_use_ipapi: Boolean(picked.geo_use_ipapi),
@@ -3301,7 +3313,7 @@ async function sendToMetaCAPI(
 
   if (eventName === "Purchase") {
     const minimumDecision = resolvePurchaseCapiMinimumDecision(
-      config,
+      effectiveConfig,
       row.valor,
       row.currency,
     );
@@ -3702,6 +3714,64 @@ async function sendToMetaCAPI(
       purchaseType,
     )
     : null;
+  if (
+    purchaseCapiDecision?.enabled &&
+    purchaseCapiDecision.includePurchaseType &&
+    effectiveConfig.include_purchase_type_capi !== false &&
+    purchaseType === "repeat" &&
+    effectiveConfig.repeat_purchase_capi_window_days != null
+  ) {
+    let firstPurchaseEventTime: number | null = null;
+    try {
+      firstPurchaseEventTime = await findFirstPurchaseEventTime(
+        db,
+        row.user_id,
+        row.phone,
+        row.currency,
+        rowId,
+      );
+    } catch (error) {
+      await db.from("conversions").update({ purchase_status_capi: "error" })
+        .eq("id", rowId);
+      await writeLog(db, row.user_id, "sendToMetaCAPI", "ERROR",
+        `No se pudo consultar la primera carga para Repeat CAPI: ${String(error)}`,
+        JSON.stringify({ row_id: rowId }), rowId);
+      return false;
+    }
+    const windowDecision = resolveRepeatPurchaseCapiWindowDecision(
+      effectiveConfig.repeat_purchase_capi_window_days,
+      firstPurchaseEventTime,
+      eventTime,
+    );
+    if (!windowDecision.enabled) {
+      const outsideWindow = windowDecision.reason === "outside_window";
+      const skippedMsg = outsideWindow
+        ? "REPEAT PURCHASE CAPI OMITIDO FUERA DEL PLAZO"
+        : "REPEAT PURCHASE CAPI PENDIENTE POR FECHA INVALIDA";
+      const { data: current } = await db.from("conversions")
+        .select("observaciones").eq("id", rowId).single();
+      await db.from("conversions").update({
+        purchase_status_capi: outsideWindow
+          ? "skipped_repeat_purchase_outside_window"
+          : "error",
+        observaciones: appendObservation(
+          current?.observaciones ?? "",
+          skippedMsg,
+        ),
+      }).eq("id", rowId);
+      await writeLog(db, row.user_id, "sendToMetaCAPI",
+        outsideWindow ? "INFO" : "ERROR", skippedMsg,
+        JSON.stringify({
+          row_id: rowId,
+          pixel_id: effectiveConfig.pixel_id,
+          window_days: effectiveConfig.repeat_purchase_capi_window_days,
+          first_event_time: firstPurchaseEventTime,
+          repeat_event_time: eventTime,
+          reason: windowDecision.reason,
+        }), rowId);
+      return outsideWindow;
+    }
+  }
   const eventDisabledByPixelConfig =
     (eventName === "Lead" && effectiveConfig.send_lead_capi === false) ||
     (
@@ -7964,7 +8034,7 @@ Deno.serve(async (req) => {
     const { data: pixelConfigsData } = await db
       .from("conversions_pixel_configs")
       .select(
-        "user_id, pixel_id, meta_access_token, meta_currency, meta_api_version, send_contact_capi, send_lead_capi, send_complete_registration_capi, meta_ads_only_capi, send_purchase_capi, include_purchase_type_capi, send_first_purchase_capi, send_repeat_purchase_capi, send_geo_capi, geo_use_ipapi, geo_fill_only_when_missing, is_default",
+        "user_id, pixel_id, meta_access_token, meta_currency, meta_api_version, send_contact_capi, send_lead_capi, send_complete_registration_capi, meta_ads_only_capi, send_purchase_capi, include_purchase_type_capi, send_first_purchase_capi, send_repeat_purchase_capi, repeat_purchase_capi_window_days, purchase_capi_min_amount_enabled, purchase_capi_min_amount, send_geo_capi, geo_use_ipapi, geo_fill_only_when_missing, is_default",
       )
       .eq("user_id", userId);
     const pixelConfigs: PixelConfigRow[] =

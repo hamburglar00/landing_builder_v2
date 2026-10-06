@@ -25,6 +25,8 @@ export async function saveConversionPageConfig({
 
   const currency = String(config.meta_currency ?? "ARS").trim() || "ARS";
   const existing = pixelConfigs.find((item) => item.pixel_id === pixel);
+  const pixelCurrencyChanged = existing && existing.meta_currency !== currency;
+  const inheritedMinimum = Number(config.purchase_capi_min_amounts[currency] ?? 0);
 
   await upsertPixelConfig({
     user_id: userId,
@@ -40,6 +42,19 @@ export async function saveConversionPageConfig({
     include_purchase_type_capi: config.include_purchase_type_capi !== false,
     send_first_purchase_capi: config.send_first_purchase_capi !== false,
     send_repeat_purchase_capi: config.send_repeat_purchase_capi !== false,
+    ...(pixelCurrencyChanged
+      ? { purchase_capi_min_amount_enabled: false, purchase_capi_min_amount: 0 }
+      : !existing
+      ? {
+        purchase_capi_min_amount_enabled:
+          config.purchase_capi_min_amount_enabled &&
+          config.purchase_capi_min_amounts[currency] !== undefined,
+        purchase_capi_min_amount: Number.isFinite(inheritedMinimum) &&
+            inheritedMinimum >= 0
+          ? inheritedMinimum
+          : 0,
+      }
+      : {}),
     send_geo_capi: config.send_geo_capi !== false,
     geo_use_ipapi: !!config.geo_use_ipapi,
     geo_fill_only_when_missing: !!config.geo_fill_only_when_missing,

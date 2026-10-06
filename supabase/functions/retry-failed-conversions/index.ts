@@ -9,6 +9,7 @@ import {
   buildMetaRequest,
   type ConversionRow,
   type ConversionsConfig,
+  findFirstPurchaseEventTime,
   normalizeCtwaClid,
   normalizeCurrencyCode,
   normalizePurchaseAmount,
@@ -16,6 +17,7 @@ import {
   resolvePurchaseCapiDecision,
   resolvePurchaseCapiMinimumDecision,
   resolvePurchaseCapiRoute,
+  resolveRepeatPurchaseCapiWindowDecision,
   resolvePurchaseRetryIdentity,
   shouldSkipCapiForNonMetaOrigin,
 } from "../conversions/shared.ts";
@@ -155,7 +157,7 @@ Deno.serve(async (req) => {
     const { data: rows, error } = await db
       .from("conversions")
       .select(
-        "id, landing_id, user_id, phone, source_platform, ctwa_clid, pixel_id, dataset_id, meta_pixel_id, pixel_attribution_source, pixel_attribution_conversion_id, contact_event_id, contact_payload_raw, lead_payload_raw, purchase_payload_raw, promo_code, purchase_event_id, purchase_event_time, purchase_type, purchase_capi_route, purchase_capi_route_reason, valor, currency, event_source_url, email, fn, ln, ct, st, zip, country, fbp, fbc, from_meta_ads, client_ip, agent_user, external_id, observaciones",
+        "id, created_at, landing_id, user_id, phone, source_platform, ctwa_clid, pixel_id, dataset_id, meta_pixel_id, pixel_attribution_source, pixel_attribution_conversion_id, contact_event_id, contact_payload_raw, lead_payload_raw, purchase_payload_raw, promo_code, purchase_event_id, purchase_event_time, purchase_type, purchase_capi_route, purchase_capi_route_reason, valor, currency, event_source_url, email, fn, ln, ct, st, zip, country, fbp, fbc, from_meta_ads, client_ip, agent_user, external_id, observaciones",
       )
       .eq("estado", "purchase")
       .in("purchase_status_capi", PURCHASE_CAPI_RETRYABLE_STATUSES)
@@ -197,7 +199,7 @@ Deno.serve(async (req) => {
       ? await db
         .from("conversions_pixel_configs")
         .select(
-          "user_id, pixel_id, meta_access_token, meta_currency, meta_api_version, send_contact_capi, send_lead_capi, meta_ads_only_capi, send_purchase_capi, include_purchase_type_capi, send_first_purchase_capi, send_repeat_purchase_capi, send_geo_capi, is_default",
+          "user_id, pixel_id, meta_access_token, meta_currency, meta_api_version, send_contact_capi, send_lead_capi, meta_ads_only_capi, send_purchase_capi, include_purchase_type_capi, send_first_purchase_capi, send_repeat_purchase_capi, repeat_purchase_capi_window_days, purchase_capi_min_amount_enabled, purchase_capi_min_amount, send_geo_capi, is_default",
         )
         .in("user_id", userIds)
       : { data: [] };
@@ -263,46 +265,6 @@ Deno.serve(async (req) => {
     for (const row of purchaseRows) {
       const cfg = configMap.get(row.user_id);
       if (!cfg) continue;
-      const minimumDecision = resolvePurchaseCapiMinimumDecision(
-        {
-          purchase_capi_min_amount_enabled:
-            cfg.purchase_capi_min_amount_enabled === true,
-          purchase_capi_min_amounts: cfg.purchase_capi_min_amounts &&
-              typeof cfg.purchase_capi_min_amounts === "object" &&
-              !Array.isArray(cfg.purchase_capi_min_amounts)
-            ? cfg.purchase_capi_min_amounts as Record<string, number>
-            : {},
-        },
-        row.valor,
-        row.currency,
-      );
-      if (!minimumDecision.enabled) {
-        const obs = appendObs(
-          row.observaciones ?? "",
-          "PURCHASE CAPI OMITIDO POR MONTO MINIMO",
-        );
-        await db.from("conversions").update({
-          purchase_status_capi: "skipped_purchase_below_min_amount",
-          observaciones: obs,
-        }).eq("id", row.id);
-        await writeConversionLog(
-          db,
-          row.user_id,
-          row.id,
-          "INFO",
-          "Meta CAPI retry Purchase omitido por monto minimo",
-          JSON.stringify({
-            source_platform: row.source_platform ?? "",
-            amount: minimumDecision.amount,
-            currency: minimumDecision.currency,
-            threshold: minimumDecision.threshold,
-            reason: minimumDecision.reason,
-          }),
-          row.purchase_payload_raw ?? "",
-          "PURCHASE CAPI OMITIDO POR MONTO MINIMO",
-        );
-        continue;
-      }
       if (isChatraceMetaCapiDisabled(row, chatraceMetaCapiMap)) {
         const obs = appendObs(
           row.observaciones ?? "",
@@ -506,6 +468,47 @@ Deno.serve(async (req) => {
       const selected = useBusinessMessaging
         ? matchedPixelCfg ?? defaultPixelCfg ?? null
         : matchedPixelCfg ?? null;
+      const configuredCurrency = selected
+        ? String(selected.meta_currency ?? "ARS")
+        : String(cfg.meta_currency ?? "ARS");
+      const currency = normalizeCurrencyCode(row.currency, configuredCurrency);
+      const minimumDecision = resolvePurchaseCapiMinimumDecision(
+        selected
+          ? {
+            meta_currency: String(selected.meta_currency ?? "ARS"),
+            purchase_capi_min_amount_enabled:
+              selected.purchase_capi_min_amount_enabled === true,
+            purchase_capi_min_amount: Number(
+              selected.purchase_capi_min_amount ?? 0,
+            ),
+          }
+          : {
+            meta_currency: String(cfg.meta_currency ?? "ARS"),
+            purchase_capi_min_amount_enabled:
+              cfg.purchase_capi_min_amount_enabled === true,
+            purchase_capi_min_amounts:
+              cfg.purchase_capi_min_amounts as Record<string, number>,
+          },
+        row.valor,
+        currency,
+      );
+      if (!minimumDecision.enabled) {
+        const skippedMsg = "PURCHASE CAPI OMITIDO POR MONTO MINIMO";
+        await db.from("conversions").update({
+          purchase_status_capi: "skipped_purchase_below_min_amount",
+          observaciones: appendObs(row.observaciones ?? "", skippedMsg),
+        }).eq("id", row.id);
+        await writeConversionLog(db, row.user_id, row.id, "INFO",
+          "Meta CAPI retry Purchase omitido por monto minimo",
+          JSON.stringify({
+            pixel_id: selected?.pixel_id ?? cfg.pixel_id,
+            amount: minimumDecision.amount,
+            currency: minimumDecision.currency,
+            threshold: minimumDecision.threshold,
+            reason: minimumDecision.reason,
+          }), row.purchase_payload_raw ?? "", skippedMsg);
+        continue;
+      }
       const metaAdsOnlyCapi = selected
         ? selected.meta_ads_only_capi === true
         : cfg.meta_ads_only_capi === true;
@@ -547,10 +550,6 @@ Deno.serve(async (req) => {
       const apiVersion = selected
         ? String(selected.meta_api_version ?? "v25.0")
         : String(cfg.meta_api_version ?? "v25.0");
-      const configuredCurrency = selected
-        ? String(selected.meta_currency ?? "ARS")
-        : String(cfg.meta_currency ?? "ARS");
-      const currency = normalizeCurrencyCode(row.currency, configuredCurrency);
       let purchaseType: "first" | "repeat" | null =
         row.purchase_type === "repeat"
           ? "repeat"
@@ -558,14 +557,22 @@ Deno.serve(async (req) => {
           ? "first"
           : null;
       if (!purchaseType) {
-        const { count: prevCount } = await db
+        const { data: previousPurchase, error: previousPurchaseError } = await db
           .from("conversions")
-          .select("id", { count: "exact", head: true })
+          .select("id")
           .eq("user_id", row.user_id)
           .eq("phone", row.phone)
-          .eq("purchase_status_capi", "enviado")
-          .neq("id", row.id);
-        purchaseType = (prevCount ?? 0) > 0 ? "repeat" : "first";
+          .eq("currency", currency)
+          .eq("estado", "purchase")
+          .lt("created_at", row.created_at)
+          .limit(1).maybeSingle();
+        if (previousPurchaseError) {
+          await writeConversionLog(db, row.user_id, row.id, "ERROR",
+            "No se pudo clasificar Purchase para retry",
+            previousPurchaseError.message, "", "");
+          continue;
+        }
+        purchaseType = previousPurchase ? "repeat" : "first";
       }
 
       const purchaseSettings = resolvePurchaseCapiSettings(selected, cfg);
@@ -580,6 +587,61 @@ Deno.serve(async (req) => {
         },
         purchaseType,
       );
+
+      const repeatWindowDays = selected?.repeat_purchase_capi_window_days == null
+        ? null
+        : Number(selected.repeat_purchase_capi_window_days);
+      if (
+        purchaseDecision.enabled && purchaseDecision.includePurchaseType &&
+        purchaseSettings.includePurchaseType &&
+        purchaseType === "repeat" && repeatWindowDays !== null
+      ) {
+        let firstPurchaseEventTime: number | null = null;
+        try {
+          firstPurchaseEventTime = await findFirstPurchaseEventTime(
+            db,
+            row.user_id,
+            row.phone,
+            currency,
+            row.id,
+          );
+        } catch (error) {
+          await writeConversionLog(db, row.user_id, row.id, "ERROR",
+            "No se pudo consultar la primera carga para Repeat CAPI",
+            String(error), "", "");
+          continue;
+        }
+        const originalEventTime = Number(row.purchase_event_time) > 0
+          ? Number(row.purchase_event_time)
+          : Math.floor(Date.parse(String(row.created_at ?? "")) / 1000);
+        const windowDecision = resolveRepeatPurchaseCapiWindowDecision(
+          repeatWindowDays,
+          firstPurchaseEventTime,
+          originalEventTime,
+        );
+        if (!windowDecision.enabled) {
+          const outsideWindow = windowDecision.reason === "outside_window";
+          const note = outsideWindow
+            ? "REPEAT PURCHASE CAPI OMITIDO FUERA DEL PLAZO"
+            : "REPEAT PURCHASE CAPI PENDIENTE POR FECHA INVALIDA";
+          await db.from("conversions").update({
+            purchase_status_capi: outsideWindow
+              ? "skipped_repeat_purchase_outside_window"
+              : "error",
+            observaciones: appendObs(row.observaciones ?? "", note),
+          }).eq("id", row.id);
+          await writeConversionLog(db, row.user_id, row.id,
+            outsideWindow ? "INFO" : "ERROR", note,
+            JSON.stringify({
+              pixel_id: selected?.pixel_id ?? cfg.pixel_id,
+              window_days: repeatWindowDays,
+              first_event_time: firstPurchaseEventTime,
+              repeat_event_time: originalEventTime,
+              reason: windowDecision.reason,
+            }), "", "");
+          continue;
+        }
+      }
 
       if (!purchaseDecision.enabled) {
         const masterDisabled = purchaseDecision.reason === "purchase_disabled";

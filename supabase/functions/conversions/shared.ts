@@ -15,7 +15,9 @@ export interface ConversionsConfig {
   include_purchase_type_capi?: boolean;
   send_first_purchase_capi?: boolean;
   send_repeat_purchase_capi?: boolean;
+  repeat_purchase_capi_window_days?: number | null;
   purchase_capi_min_amount_enabled?: boolean;
+  purchase_capi_min_amount?: number;
   purchase_capi_min_amounts?: Record<string, number>;
   send_geo_capi: boolean;
   geo_use_ipapi: boolean;
@@ -118,15 +120,17 @@ export type PurchaseCapiMinimumDecision = {
 };
 
 /**
- * Applies the client-wide monetary gate only to Meta CAPI delivery. Unknown
- * currencies remain unfiltered because the client can configure ARS and PYG.
+ * Applies the destination pixel's monetary gate only to Meta CAPI delivery.
+ * Legacy configurations without a pixel row retain their currency map.
  */
 export function resolvePurchaseCapiMinimumDecision(
-  config: Pick<
+  config: Partial<Pick<
     ConversionsConfig,
     | "purchase_capi_min_amount_enabled"
+    | "purchase_capi_min_amount"
     | "purchase_capi_min_amounts"
-  >,
+    | "meta_currency"
+  >>,
   amountInput: unknown,
   currencyInput: unknown,
 ): PurchaseCapiMinimumDecision {
@@ -143,7 +147,10 @@ export function resolvePurchaseCapiMinimumDecision(
     };
   }
 
-  const configuredThreshold = config.purchase_capi_min_amounts?.[currency];
+  const pixelCurrency = String(config.meta_currency ?? "").trim().toUpperCase();
+  const configuredThreshold = config.purchase_capi_min_amount !== undefined
+    ? (pixelCurrency === currency ? config.purchase_capi_min_amount : undefined)
+    : config.purchase_capi_min_amounts?.[currency];
 
   if (configuredThreshold === undefined || configuredThreshold === null) {
     return {
@@ -168,6 +175,77 @@ export function resolvePurchaseCapiMinimumDecision(
     threshold,
     reason: enabled ? "meets_threshold" : "below_threshold",
   };
+}
+
+export type RepeatPurchaseCapiWindowDecision = {
+  enabled: boolean;
+  reason: "unlimited" | "within_window" | "outside_window" |
+    "invalid_window" | "missing_event_time" | "event_before_first";
+};
+
+/** The event timestamp, rather than the retry timestamp, determines eligibility. */
+export function resolveRepeatPurchaseCapiWindowDecision(
+  windowDays: number | null | undefined,
+  firstPurchaseEventTime: number | null,
+  repeatPurchaseEventTime: number | null,
+): RepeatPurchaseCapiWindowDecision {
+  if (windowDays == null) return { enabled: true, reason: "unlimited" };
+  if (!Number.isInteger(windowDays) || windowDays < 1 || windowDays > 30) {
+    return { enabled: false, reason: "invalid_window" };
+  }
+  if (
+    !Number.isFinite(firstPurchaseEventTime) ||
+    !Number.isFinite(repeatPurchaseEventTime) ||
+    (firstPurchaseEventTime ?? 0) <= 0 ||
+    (repeatPurchaseEventTime ?? 0) <= 0
+  ) {
+    return { enabled: false, reason: "missing_event_time" };
+  }
+  const elapsed = repeatPurchaseEventTime! - firstPurchaseEventTime!;
+  if (elapsed < 0) return { enabled: false, reason: "event_before_first" };
+  return {
+    enabled: elapsed <= windowDays * 24 * 60 * 60,
+    reason: elapsed <= windowDays * 24 * 60 * 60
+      ? "within_window"
+      : "outside_window",
+  };
+}
+
+/** Uses the same client, phone and currency scope as repeat classification. */
+export async function findFirstPurchaseEventTime(
+  db: SupabaseClient,
+  userId: string,
+  phone: string,
+  currency: string,
+  excludeRowId: string,
+): Promise<number | null> {
+  if (!userId || !phone || !currency) return null;
+  const base = () => db.from("conversions")
+    .select("purchase_event_time, created_at")
+    .eq("user_id", userId)
+    .eq("phone", phone)
+    .eq("currency", currency.trim().toUpperCase())
+    .eq("estado", "purchase")
+    .neq("id", excludeRowId);
+  const { data: first, error: firstError } = await base()
+    .eq("purchase_type", "first")
+    .order("created_at", { ascending: true })
+    .limit(1).maybeSingle();
+  if (firstError) throw firstError;
+  let anchor = first;
+  if (!anchor) {
+    const { data: oldest, error } = await base()
+      .order("created_at", { ascending: true })
+      .limit(1).maybeSingle();
+    if (error) throw error;
+    anchor = oldest;
+  }
+  const eventTime = Number(anchor?.purchase_event_time);
+  if (Number.isFinite(eventTime) && eventTime > 0) return eventTime;
+  const recordedTime = Date.parse(String(anchor?.created_at ?? ""));
+  return Number.isFinite(recordedTime) && recordedTime > 0
+    ? Math.floor(recordedTime / 1000)
+    : null;
 }
 
 export type PurchaseCapiDecision = {

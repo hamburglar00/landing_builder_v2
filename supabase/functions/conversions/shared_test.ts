@@ -4,6 +4,7 @@ import {
   buildMetaBusinessMessagingPurchaseRequest,
   buildMetaBusinessMessagingRequest,
   buildMetaRequest,
+  findFirstPurchaseEventTime,
   normalizeCtwaClid,
   normalizeCurrencyCode,
   normalizePurchaseAmount,
@@ -11,6 +12,7 @@ import {
   resolvePurchaseCapiDecision,
   resolvePurchaseCapiMinimumDecision,
   resolvePurchaseCapiRoute,
+  resolveRepeatPurchaseCapiWindowDecision,
   resolvePurchaseRetryIdentity,
   shouldSkipCapiForNonMetaOrigin,
 } from "./shared.ts";
@@ -135,6 +137,91 @@ Deno.test("Purchase CAPI minimum filter preserves unconfigured currencies", () =
     decision.reason === "currency_without_threshold",
     "the unconfigured currency decision must be explicit",
   );
+});
+
+Deno.test("Purchase minimum belongs to the selected pixel and its currency", () => {
+  const arsPixel = {
+    meta_currency: "ARS",
+    purchase_capi_min_amount_enabled: true,
+    purchase_capi_min_amount: 100,
+  };
+  const otherArsPixel = { ...arsPixel, purchase_capi_min_amount: 20 };
+  assert(!resolvePurchaseCapiMinimumDecision(arsPixel, 50, "ARS").enabled,
+    "the first pixel must reject 50 ARS");
+  assert(resolvePurchaseCapiMinimumDecision(otherArsPixel, 50, "ARS").enabled,
+    "another pixel may accept the same purchase");
+  const mismatch = resolvePurchaseCapiMinimumDecision(arsPixel, 1, "PYG");
+  assert(mismatch.enabled && mismatch.reason === "currency_without_threshold",
+    "amounts must not be compared across currencies");
+});
+
+Deno.test("Repeat Purchase CAPI window uses original event timestamps", () => {
+  const first = 1_700_000_000;
+  const day = 24 * 60 * 60;
+  assert(resolveRepeatPurchaseCapiWindowDecision(null, null, null).enabled,
+    "unlimited is the default");
+  assert(resolveRepeatPurchaseCapiWindowDecision(7, first, first + 7 * day).enabled,
+    "the final second of the configured window is inclusive");
+  assert(!resolveRepeatPurchaseCapiWindowDecision(7, first, first + 7 * day + 1).enabled,
+    "the next second must be omitted even if retried later");
+  assert(!resolveRepeatPurchaseCapiWindowDecision(1, first, first - 1).enabled,
+    "an event before the first purchase is not eligible");
+  assert(!resolveRepeatPurchaseCapiWindowDecision(31, first, first + day).enabled,
+    "out-of-range settings must fail closed");
+  assert(!resolveRepeatPurchaseCapiWindowDecision(7, null, first + day).enabled,
+    "missing first-purchase timestamps must not pass");
+});
+
+Deno.test("First Purchase lookup stays within client, phone and currency", async () => {
+  const filters: Array<[string, unknown]> = [];
+  const query = {
+    select: () => query,
+    eq: (name: string, value: unknown) => {
+      filters.push([name, value]);
+      return query;
+    },
+    neq: (name: string, value: unknown) => {
+      filters.push([`not:${name}`, value]);
+      return query;
+    },
+    order: () => query,
+    limit: () => query,
+    maybeSingle: async () => ({
+      data: { purchase_event_time: 1_700_000_000, created_at: "2023-01-01T00:00:00Z" },
+      error: null,
+    }),
+  };
+  const db = { from: () => query } as unknown as Parameters<typeof findFirstPurchaseEventTime>[0];
+  const timestamp = await findFirstPurchaseEventTime(db, "client", "phone", "ARS", "repeat-id");
+  assert(timestamp === 1_700_000_000, "the original purchase event time must anchor the window");
+  for (const expected of [
+    ["user_id", "client"], ["phone", "phone"], ["currency", "ARS"],
+    ["estado", "purchase"], ["purchase_type", "first"], ["not:id", "repeat-id"],
+  ] as Array<[string, unknown]>) {
+    assert(filters.some(([name, value]) => name === expected[0] && value === expected[1]),
+      `missing lookup filter ${expected[0]}`);
+  }
+});
+
+Deno.test("First Purchase lookup falls back to the oldest historical purchase", async () => {
+  let lookups = 0;
+  const query = {
+    select: () => query,
+    eq: () => query,
+    neq: () => query,
+    order: () => query,
+    limit: () => query,
+    maybeSingle: async () => ({
+      data: ++lookups === 1
+        ? null
+        : { purchase_event_time: null, created_at: "2023-01-01T00:00:00Z" },
+      error: null,
+    }),
+  };
+  const db = { from: () => query } as unknown as Parameters<typeof findFirstPurchaseEventTime>[0];
+  const timestamp = await findFirstPurchaseEventTime(db, "client", "phone", "ARS", "repeat-id");
+  assert(lookups === 2, "historical fallback must query only when no first row exists");
+  assert(timestamp === 1_672_531_200, "legacy rows use their recorded timestamp");
 });
 
 Deno.test("Meta Ads-only CAPI policy filters every non-Meta origin", () => {

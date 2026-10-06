@@ -28,10 +28,7 @@ import {
 } from "@/lib/gerencias/gerenciasDb";
 import type { PhoneKind } from "@/lib/landing/types";
 import type { Gerencia } from "@/lib/gerencias/types";
-import {
-  META_CURRENCY_OPTIONS,
-  REPORTING_CURRENCIES,
-} from "@/lib/currency";
+import { META_CURRENCY_OPTIONS } from "@/lib/currency";
 import { DashboardSkeleton } from "@/components/ui/DashboardSkeleton";
 import { PageHeader } from "@/components/ui/PanelPrimitives";
 import { useAppConfirm } from "@/components/ui/AppConfirmDialog";
@@ -92,6 +89,9 @@ type PixelEditDraft = {
   include_purchase_type_capi: boolean;
   send_first_purchase_capi: boolean;
   send_repeat_purchase_capi: boolean;
+  repeat_purchase_capi_window_days: number | null;
+  purchase_capi_min_amount_enabled: boolean;
+  purchase_capi_min_amount: string;
   send_geo_capi: boolean;
   geo_use_ipapi: boolean;
   geo_fill_only_when_missing: boolean;
@@ -190,12 +190,6 @@ function parsePurchaseMinimumAmount(value: string): number | null {
   return Number.isFinite(amount) && amount >= 0 ? amount : null;
 }
 
-function emptyPurchaseMinimumInputs(): Record<string, string> {
-  return Object.fromEntries(
-    REPORTING_CURRENCIES.map((currency) => [currency, "0"]),
-  );
-}
-
 export default function IntegracionesMetaCapi() {
   const confirmAction = useAppConfirm();
   const [userId, setUserId] = useState<string | null>(null);
@@ -206,10 +200,6 @@ export default function IntegracionesMetaCapi() {
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [saveMsg, setSaveMsg] = useState<string | null>(null);
-  const [purchaseMinimumEnabled, setPurchaseMinimumEnabled] = useState(false);
-  const [purchaseMinimumAmounts, setPurchaseMinimumAmounts] = useState<
-    Record<string, string>
-  >(emptyPurchaseMinimumInputs);
 
   const [quickOpen, setQuickOpen] = useState(false);
   const [quickPixelId, setQuickPixelId] = useState("");
@@ -304,13 +294,6 @@ export default function IntegracionesMetaCapi() {
       adminView ? fetchGerenciasForAdmin(uid) : fetchGerencias(uid),
     ]);
     setConfig(cfg);
-    setPurchaseMinimumEnabled(cfg.purchase_capi_min_amount_enabled);
-    setPurchaseMinimumAmounts(Object.fromEntries(
-      REPORTING_CURRENCIES.map((currency) => [
-        currency,
-        String(cfg.purchase_capi_min_amounts[currency] ?? 0),
-      ]),
-    ));
     setPixelConfigs(pixels);
     setKommoConfig(kommo);
     setKommoBaseUrl(kommo?.kommo_api_base_url ?? "");
@@ -347,55 +330,6 @@ export default function IntegracionesMetaCapi() {
     setClientName(String(p?.nombre ?? ""));
     setIsAdmin(adminView);
   }, []);
-
-  const handlePurchaseMinimumSave = useCallback(async () => {
-    if (!userId || !config) return;
-    const minimumAmounts: Record<string, number> = {};
-    for (const currency of REPORTING_CURRENCIES) {
-      const amount = parsePurchaseMinimumAmount(
-        purchaseMinimumAmounts[currency] ?? "",
-      );
-      if (amount === null) {
-        setSaveMsg(
-          `Ingresá un monto válido para ${currency}, positivo o cero, con hasta 2 decimales.`,
-        );
-        return;
-      }
-      minimumAmounts[currency] = amount;
-    }
-
-    setSaving(true);
-    setSaveMsg(null);
-    try {
-      const next: ConversionsConfig = {
-        ...config,
-        purchase_capi_min_amount_enabled: purchaseMinimumEnabled,
-        purchase_capi_min_amounts: minimumAmounts,
-      };
-      await upsertConversionsConfig(next);
-      setConfig(next);
-      setPurchaseMinimumAmounts(Object.fromEntries(
-        Object.entries(minimumAmounts).map(([currency, amount]) => [
-          currency,
-          String(amount),
-        ]),
-      ));
-      setSaveMsg(
-        purchaseMinimumEnabled
-          ? "Filtro de Purchase por monto guardado."
-          : "Filtro de Purchase por monto desactivado.",
-      );
-    } catch (e) {
-      setSaveMsg(e instanceof Error ? e.message : "Error al guardar el filtro");
-    } finally {
-      setSaving(false);
-    }
-  }, [
-    userId,
-    config,
-    purchaseMinimumEnabled,
-    purchaseMinimumAmounts,
-  ]);
 
   const maskToken = useCallback((value: string) => {
     const v = String(value ?? "");
@@ -751,6 +685,9 @@ export default function IntegracionesMetaCapi() {
       include_purchase_type_capi: px.include_purchase_type_capi !== false,
       send_first_purchase_capi: px.send_first_purchase_capi !== false,
       send_repeat_purchase_capi: px.send_repeat_purchase_capi !== false,
+      repeat_purchase_capi_window_days: px.repeat_purchase_capi_window_days,
+      purchase_capi_min_amount_enabled: px.purchase_capi_min_amount_enabled,
+      purchase_capi_min_amount: String(px.purchase_capi_min_amount),
       send_geo_capi: px.send_geo_capi !== false,
       geo_use_ipapi: !!px.geo_use_ipapi,
       geo_fill_only_when_missing: !!px.geo_fill_only_when_missing,
@@ -772,6 +709,10 @@ export default function IntegracionesMetaCapi() {
       !draft.send_repeat_purchase_capi
     ) {
       return setSaveMsg("Elegí First Purchase, Repeat Purchase o ambas. Para no enviar compras, apagá Purchase.");
+    }
+    const minimumAmount = parsePurchaseMinimumAmount(draft.purchase_capi_min_amount);
+    if (minimumAmount === null) {
+      return setSaveMsg(`Ingresá un monto mínimo válido para ${draft.meta_currency}, positivo o cero, con hasta 2 decimales.`);
     }
     setSaving(true);
     setSaveMsg(null);
@@ -796,6 +737,9 @@ export default function IntegracionesMetaCapi() {
         include_purchase_type_capi: !!draft.include_purchase_type_capi,
         send_first_purchase_capi: !!draft.send_first_purchase_capi,
         send_repeat_purchase_capi: !!draft.send_repeat_purchase_capi,
+        repeat_purchase_capi_window_days: draft.repeat_purchase_capi_window_days,
+        purchase_capi_min_amount_enabled: draft.purchase_capi_min_amount_enabled,
+        purchase_capi_min_amount: minimumAmount,
         send_geo_capi: !!draft.send_geo_capi,
         geo_use_ipapi: !!draft.geo_use_ipapi,
         geo_fill_only_when_missing: !!draft.geo_fill_only_when_missing,
@@ -1896,51 +1840,6 @@ export default function IntegracionesMetaCapi() {
             </button>
           </div>
         </div>
-        <div className="rounded-lg border border-zinc-800 bg-zinc-950/40 p-3">
-          <SettingsSwitch
-            checked={purchaseMinimumEnabled}
-            label="Filtrar Purchase por monto mínimo"
-            description="Configuración general del cliente para el envío a Meta CAPI. Aplica a landing, Chatrace y WhatsApp Cloud API; el procesamiento interno continúa igual."
-            onChange={() => setPurchaseMinimumEnabled((enabled) => !enabled)}
-          />
-          {purchaseMinimumEnabled ? (
-            <div className="mt-3 grid gap-3 sm:grid-cols-2">
-              {REPORTING_CURRENCIES.map((currency) => (
-                <label
-                  key={currency}
-                  className="text-[11px] font-semibold uppercase tracking-wide text-zinc-500"
-                >
-                  Monto mínimo {currency}
-                  <input
-                    type="text"
-                    inputMode="decimal"
-                    value={purchaseMinimumAmounts[currency] ?? "0"}
-                    onChange={(event) =>
-                      setPurchaseMinimumAmounts((current) => ({
-                        ...current,
-                        [currency]: event.target.value,
-                      }))}
-                    placeholder="0"
-                    className="mt-1 h-9 w-full rounded-lg border border-zinc-700 bg-zinc-900 px-3 text-sm font-normal text-zinc-100"
-                  />
-                </label>
-              ))}
-            </div>
-          ) : null}
-          <div className="mt-3 flex items-center justify-between gap-3">
-            <p className="text-[11px] text-zinc-500">
-              Se envía cuando el valor es igual o mayor al umbral de su moneda.
-            </p>
-            <button
-              type="button"
-              disabled={saving}
-              onClick={() => void handlePurchaseMinimumSave()}
-              className="rounded-lg bg-emerald-500 px-3 py-1.5 text-xs font-semibold text-zinc-900 disabled:opacity-60"
-            >
-              {saving ? "Guardando..." : "Guardar filtro"}
-            </button>
-          </div>
-        </div>
         <div className="mt-3 rounded-lg border border-zinc-800 bg-zinc-950/40 p-3">
           <div className="mb-2 flex items-center justify-between gap-2">
             <h4 className="text-xs font-semibold text-zinc-300">Pixeles configurados</h4>
@@ -1970,6 +1869,20 @@ export default function IntegracionesMetaCapi() {
                       ["First", px.send_first_purchase_capi !== false],
                       ["Repeat", px.send_repeat_purchase_capi !== false],
                     );
+                  }
+                  if (px.purchase_capi_min_amount_enabled) {
+                    eventBadges.push([
+                      `Mín. ${px.meta_currency} ${px.purchase_capi_min_amount}`,
+                      true,
+                    ]);
+                  }
+                  if (px.include_purchase_type_capi !== false &&
+                      px.send_repeat_purchase_capi !== false &&
+                      px.repeat_purchase_capi_window_days !== null) {
+                    eventBadges.push([
+                      `Repeat ${px.repeat_purchase_capi_window_days} días`,
+                      true,
+                    ]);
                   }
                 }
                 return (
@@ -2140,7 +2053,12 @@ export default function IntegracionesMetaCapi() {
                         value: currency,
                         label: currency,
                       }))}
-                      onChange={(nextValue) => setDraft((p) => (p ? { ...p, meta_currency: nextValue } : p))}
+                      onChange={(nextValue) => setDraft((p) => (p ? {
+                        ...p,
+                        meta_currency: nextValue,
+                        purchase_capi_min_amount_enabled: false,
+                        purchase_capi_min_amount: "0",
+                      } : p))}
                       labelClassName="text-[11px] font-semibold uppercase tracking-wide text-zinc-500"
                       buttonClassName="h-9 px-3 text-sm"
                     />
@@ -2246,6 +2164,38 @@ export default function IntegracionesMetaCapi() {
                         />
                       </div>
                     ) : null}
+                    {draft.include_purchase_type_capi && draft.send_repeat_purchase_capi ? (
+                      <div className="mt-2 rounded-lg border border-zinc-800 bg-zinc-900/50 p-2">
+                        <SettingsSwitch
+                          checked={draft.repeat_purchase_capi_window_days !== null}
+                          label="Limitar envío de Repeat Purchase"
+                          description="Cuenta días de 24 horas desde la primera carga. Apagado: se envía siempre. Sólo afecta Meta CAPI."
+                          onChange={() => setDraft((p) => (p ? {
+                            ...p,
+                            repeat_purchase_capi_window_days:
+                              p.repeat_purchase_capi_window_days === null ? 7 : null,
+                          } : p))}
+                        />
+                        {draft.repeat_purchase_capi_window_days !== null ? (
+                          <div className="mt-2 max-w-[220px]">
+                            <CustomSelect
+                              label="Días desde la primera carga"
+                              value={String(draft.repeat_purchase_capi_window_days)}
+                              options={Array.from({ length: 30 }, (_, index) => ({
+                                value: String(index + 1),
+                                label: `${index + 1} ${index === 0 ? "día" : "días"}`,
+                              }))}
+                              onChange={(value) => setDraft((p) => (p ? {
+                                ...p,
+                                repeat_purchase_capi_window_days: Number(value),
+                              } : p))}
+                              labelClassName="text-[11px] font-semibold text-zinc-400"
+                              buttonClassName="h-9 px-3 text-sm"
+                            />
+                          </div>
+                        ) : null}
+                      </div>
+                    ) : null}
                     {draft.include_purchase_type_capi &&
                     !draft.send_first_purchase_capi &&
                     !draft.send_repeat_purchase_capi ? (
@@ -2259,6 +2209,35 @@ export default function IntegracionesMetaCapi() {
                           : "Se enviarán todas las compras una sola vez como Purchase, sin purchase_type."}
                       </p>
                     )}
+                    <div className="mt-2 rounded-lg border border-zinc-800 bg-zinc-900/50 p-2">
+                      <SettingsSwitch
+                        checked={draft.purchase_capi_min_amount_enabled}
+                        label="Filtrar Purchase por monto mínimo"
+                        description={`Aplica sólo a este píxel y a compras en ${draft.meta_currency}. No modifica Conversiones.`}
+                        onChange={() => setDraft((p) => (p ? {
+                          ...p,
+                          purchase_capi_min_amount_enabled: !p.purchase_capi_min_amount_enabled,
+                        } : p))}
+                      />
+                      {draft.purchase_capi_min_amount_enabled ? (
+                        <label className="mt-2 block max-w-[220px] text-[11px] font-semibold text-zinc-400">
+                          Monto mínimo {draft.meta_currency}
+                          <input
+                            type="text"
+                            inputMode="decimal"
+                            value={draft.purchase_capi_min_amount}
+                            onChange={(event) => setDraft((p) => (p ? {
+                              ...p,
+                              purchase_capi_min_amount: event.target.value,
+                            } : p))}
+                            className="mt-1 h-9 w-full rounded-lg border border-zinc-700 bg-zinc-900 px-3 text-sm font-normal text-zinc-100"
+                          />
+                        </label>
+                      ) : null}
+                      <p className="mt-1 text-[10px] text-zinc-500">
+                        No convierte monedas. Las compras en otra moneda no usan este umbral.
+                      </p>
+                    </div>
                   </div>
                 ) : null}
               </section>
