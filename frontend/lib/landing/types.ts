@@ -43,6 +43,7 @@ export type CtaPositionOption =
  * template4: chat visual fijo.
  * template5: live/urgencia visual fijo.
  * template6: portada con tarjetas en grilla.
+ * template7: tarjeta con nombre obligatorio, asesor de Atrio y proveedor de cuenta configurable.
  */
 export type TemplateOption =
   | "template1"
@@ -50,7 +51,8 @@ export type TemplateOption =
   | "template3"
   | "template4"
   | "template5"
-  | "template6";
+  | "template6"
+  | "template7";
 
 /**
  * Motor que sirve la URL publica de una landing creada en el constructor.
@@ -74,6 +76,7 @@ export type BackgroundMode = "single" | "rotating";
 export type PhoneKind = "carga" | "ads" | "mkt" | "assistant";
 
 export type LandingCtaDestination = "whatsapp" | "atrio";
+export type TargetProvider = "rey_de_ases" | "multi_skin";
 
 export interface LandingLeadCaptureConfig {
   enabled: boolean;
@@ -180,6 +183,8 @@ export interface LandingThemeConfig {
    * Atrio conserva el tracking de Contact y redirige a un webchat con promo_code.
    */
   ctaDestination: LandingCtaDestination;
+  /** Proveedor de cuenta del Template 7; no lo decide el navegador. */
+  targetProvider: TargetProvider;
   atrioRedirectUrl: string;
   atrioClientId: string;
   atrioId: string;

@@ -146,7 +146,7 @@ function seedAtrioAssignments(
   clients: AtrioClient[],
   stored: LandingAtrioAssignment[],
 ): LandingAtrioAssignment[] {
-  if (stored.length > 0 || landing.config.ctaDestination !== "atrio") return stored;
+  if (stored.length > 0 || (landing.config.ctaDestination !== "atrio" && landing.config.template !== "template7")) return stored;
   const match = clients.find((client) =>
     client.id === landing.config.atrioClientId ||
     client.atrio_id === landing.config.atrioId ||
@@ -318,7 +318,7 @@ export default function DashboardLandingEditarPage() {
       setSaveError("Seleccioná un cliente Atrio válido para este workspace.");
       return;
     }
-    if (landing.config.ctaDestination === "atrio" && atrioAssignments.length === 0) {
+    if ((landing.config.ctaDestination === "atrio" || landing.config.template === "template7") && atrioAssignments.length === 0) {
       setSaveError("Selecciona al menos un cliente Atrio para la redireccion.");
       return;
     }
@@ -360,7 +360,7 @@ export default function DashboardLandingEditarPage() {
         updatedAt: undefined,
       });
 
-      if (configToSave.ctaDestination !== "atrio") {
+      if (configToSave.ctaDestination !== "atrio" && configToSave.template !== "template7") {
         await assertLandingGerenciasWorkspaceCompatible(
           landing.id,
           assignments,
@@ -773,7 +773,7 @@ export default function DashboardLandingEditarPage() {
           </div>
         </CollapsibleSection>
 
-        {landing.config.ctaDestination === "atrio" ? (
+        {landing.config.ctaDestination === "atrio" || landing.config.template === "template7" ? (
           <AtrioRedirectSection
             landing={landing}
             setLanding={setLanding}
@@ -812,7 +812,7 @@ export default function DashboardLandingEditarPage() {
             pixelId={landing.pixelId}
             postUrl={landing.postUrl}
             landingTag={landing.landingTag}
-            getPhoneForPreview={landing.config.ctaDestination === "atrio" ? undefined : async () => {
+            getPhoneForPreview={landing.config.ctaDestination === "atrio" || landing.config.template === "template7" ? undefined : async () => {
               try {
                 const base =
                   process.env.NEXT_PUBLIC_SUPABASE_URL?.replace(/\/$/, "") ?? "";

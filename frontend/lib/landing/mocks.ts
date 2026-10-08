@@ -44,6 +44,7 @@ export const DEFAULT_CONFIG: LandingThemeConfig = {
   ctaGlowColor: "gold",
   sendContactPixel: true,
   ctaDestination: "whatsapp",
+  targetProvider: "rey_de_ases",
   atrioRedirectUrl: "",
   atrioClientId: "",
   atrioId: "",

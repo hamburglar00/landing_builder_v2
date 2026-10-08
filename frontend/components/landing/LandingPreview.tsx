@@ -116,6 +116,7 @@ export function LandingPreview({
   const ctaBgHex = getColorHex(config.ctaBackgroundColor);
   const ctaGlowHex = getColorHex(config.ctaGlowColor);
   const fontFamily = SYSTEM_FONT_FAMILY;
+  const [template7PreviewName, setTemplate7PreviewName] = useState("");
   const [template4LiveCount, setTemplate4LiveCount] = useState(14);
   const template5NextFeedIndex = useRef(3);
   const [template5VisibleFeed, setTemplate5VisibleFeed] = useState(() =>
@@ -133,6 +134,8 @@ export function LandingPreview({
             ? 5
             : config.template === "template6"
               ? 6
+            : config.template === "template7"
+              ? 7
             : 1;
   const ctaPosition = config.ctaPosition ?? "between_title_and_info";
 
@@ -443,6 +446,63 @@ export function LandingPreview({
     );
   };
 
+  const renderTemplate7 = () => (
+    <div
+      className={compact
+        ? "relative h-full w-full overflow-hidden rounded-3xl bg-black"
+        : "relative mx-auto aspect-[9/16] w-full max-w-[380px] overflow-hidden rounded-3xl bg-black shadow-[0_18px_40px_rgba(0,0,0,.8)]"}
+      style={{ fontFamily }}
+    >
+      {bgImage ? (
+        // eslint-disable-next-line @next/next/no-img-element
+        <img
+          src={bgResponsive?.desktop ?? bgImage}
+          alt=""
+          className="absolute inset-0 h-full w-full object-cover"
+        />
+      ) : null}
+      <div className="absolute inset-0 bg-gradient-to-b from-black/65 to-black/85" />
+      <div className="relative flex h-full items-center justify-center p-4">
+        <div className="w-full rounded-[22px] border border-white/20 bg-black/75 px-5 py-7 text-center shadow-2xl backdrop-blur-sm">
+          {config.logoUrl ? (
+            // eslint-disable-next-line @next/next/no-img-element
+            <img src={config.logoUrl} alt="Logo" className="mx-auto mb-5 max-h-24 max-w-[48%] object-contain" />
+          ) : <div className="mx-auto mb-5 grid h-16 w-24 place-items-center rounded-lg border border-dashed border-white/40 text-xs text-white/70">Logo</div>}
+          <h2 className="leading-tight" style={{ color: titleHex, fontSize: gallery ? 18 : config.titleFontSize, fontWeight: config.titleBold ? 800 : 600 }}>
+            {[config.titleLine1, config.titleLine2, config.titleLine3].filter(Boolean).map((line, index) => <span key={index} className="block">{line}</span>)}
+          </h2>
+          {!gallery ? (
+            <>
+              <p className="mt-3 leading-snug" style={{ color: subtitleHex, fontSize: config.subtitleFontSize, fontWeight: config.subtitleBold ? 600 : 400 }}>
+                {[config.subtitleLine1, config.subtitleLine2, config.subtitleLine3].filter(Boolean).map((line, index) => <span key={index} className="block">{line}</span>)}
+              </p>
+              <div className="mt-6 text-left">
+                <label htmlFor="template7-preview-name" className="mb-2 block text-xs font-semibold text-white">Tu nombre</label>
+                <input
+                  id="template7-preview-name"
+                  type="text"
+                  maxLength={80}
+                  autoComplete="given-name"
+                  placeholder="Ej.: Martín"
+                  value={template7PreviewName}
+                  onChange={(event) => setTemplate7PreviewName(event.target.value)}
+                  className="h-12 w-full rounded-xl border border-white/25 bg-black/50 px-4 text-base text-white outline-none focus:border-yellow-400"
+                />
+              </div>
+              <button
+                type="button"
+                disabled={!template7PreviewName.trim()}
+                className="mt-3 min-h-12 w-full rounded-xl px-4 py-2 disabled:cursor-not-allowed disabled:opacity-50"
+                style={{ color: ctaTextHex, backgroundColor: ctaBgHex, fontSize: config.ctaFontSize, fontWeight: config.ctaBold ? 800 : 600 }}
+              >
+                {config.ctaText || "Continuar"}
+              </button>
+            </>
+          ) : null}
+        </div>
+      </div>
+    </div>
+  );
   const renderTemplate4 = () => {
     const outerClass = compact
       ? "relative h-full w-full overflow-hidden rounded-3xl bg-[#182629] shadow-[0_14px_32px_rgba(0,0,0,0.9)]"
@@ -944,6 +1004,9 @@ export function LandingPreview({
   // En modo galería y sin template especial, priorizamos la vista simple
   if (template === 2) {
     return renderTemplate2();
+  }
+  if (template === 7) {
+    return renderTemplate7();
   }
   if (template === 4) {
     return renderTemplate4();

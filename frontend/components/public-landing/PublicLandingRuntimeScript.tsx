@@ -1,5 +1,6 @@
 import type { PublicLandingConfig } from "./types";
 import { buildPhoneNormalizerScript } from "./trackingScriptHelpers";
+import { buildTemplate7HandoffRuntimeScript } from "./template7HandoffScript";
 
 type Props = {
   slug: string;
@@ -71,7 +72,8 @@ export default function PublicLandingRuntimeScript({ slug, config }: Props) {
     postUrl: config.tracking?.postUrl || "",
     landingTag: config.tracking?.landingTag || "LP",
     sendContactPixel: config.tracking?.sendContactPixel !== false,
-    ctaDestination: config.tracking?.ctaDestination === "atrio" ? "atrio" : "whatsapp",
+    ctaDestination: config.layout?.template === 7 || config.tracking?.ctaDestination === "atrio" ? "atrio" : "whatsapp",
+    targetProvider: config.tracking?.target_provider === "multi_skin" ? "multi_skin" : "rey_de_ases",
     atrioRedirectUrl: config.tracking?.atrioRedirectUrl || "",
     atrioClientId: config.tracking?.atrioClientId || "",
     atrioId: config.tracking?.atrioId || "",
@@ -113,6 +115,9 @@ export default function PublicLandingRuntimeScript({ slug, config }: Props) {
     (function () {
       var cfg = ${escapeScriptJson(runtimeConfig)};
       var clickLocked = false;
+      var template7ContactSent = false;
+      var template7AttemptContext = null;
+      var template7RetryTimer = null;
       var noPhoneTimer = null;
       var metaTracking = {
         fbp: "",
@@ -145,6 +150,69 @@ export default function PublicLandingRuntimeScript({ slug, config }: Props) {
       }
 
       ${buildPhoneNormalizerScript("normalizePhone")}
+      ${config.layout?.template === 7 ? buildTemplate7HandoffRuntimeScript() : ""}
+      function setTemplate7Error(message) {
+        var error = document.querySelector("[data-template7-error]");
+        if (!error) return;
+        error.textContent = message || "";
+        error.hidden = !message;
+      }
+
+      function failTemplate7(button) {
+        if (template7RetryTimer) window.clearTimeout(template7RetryTimer);
+        clickLocked = true;
+        button.disabled = true;
+        setButtonText(button, getRestButtonText(button));
+        setTemplate7Error("No pudimos abrir tu cuenta ahora. Podés reintentar en 45 segundos.");
+        template7RetryTimer = window.setTimeout(function () {
+          template7RetryTimer = null;
+          clickLocked = false;
+          var input = document.querySelector("[data-template7-name]");
+          button.disabled = !input || !String(input.value || "").trim();
+          setTemplate7Error("Podés volver a intentar. No se creará una cuenta duplicada.");
+        }, 45000);
+      }
+
+      function startTemplate7Gateway(name, promoCode, atrioData, tracking, params) {
+        var advisorId = firstNonEmpty([atrioData && atrioData.atrioId, atrioData && atrioData.atrio_id]);
+        var advisorSlug = firstNonEmpty([atrioData && atrioData.atrioSlug, atrioData && atrioData.atrio_slug]);
+        var atrioClientId = firstNonEmpty([atrioData && atrioData.atrioClientId, atrioData && atrioData.atrio_client_id]);
+        if (!advisorId || !advisorSlug || !atrioClientId) return Promise.reject(new Error("advisor unavailable"));
+        var controller = new AbortController();
+        var timer = window.setTimeout(function () { controller.abort(); }, 18000);
+        return fetch("/api/template7/start", {
+          method: "POST",
+          credentials: "same-origin",
+          cache: "no-store",
+          headers: { "Content-Type": "application/json" },
+          signal: controller.signal,
+          body: JSON.stringify({
+            landing_id: cfg.landingId,
+            landing_slug: cfg.slug,
+            name: name,
+            atrio_client_id: atrioClientId,
+            advisor_id: advisorId,
+            advisor_slug: advisorSlug,
+            promo_code: promoCode,
+            attribution: {
+              utm_source: params.get("utm_source") || "",
+              utm_medium: params.get("utm_medium") || "",
+              utm_campaign: params.get("utm_campaign") || "",
+              utm_content: params.get("utm_content") || "",
+              utm_term: params.get("utm_term") || "",
+              target_provider: cfg.targetProvider,
+              fbp: tracking.fbp || "",
+              fbc: tracking.fbc || ""
+            }
+          })
+        }).then(function (response) {
+          if (!response.ok) throw new Error("gateway unavailable");
+          return response.json();
+        }).then(function (data) {
+          if (!data || typeof data.handoff_url !== "string" || !data.handoff_url) throw new Error("handoff unavailable");
+          return data.handoff_url;
+        }).finally(function () { window.clearTimeout(timer); });
+      }
 
       function generatePromoCode(tag) {
         return String(tag || "LP") + "-" + Math.random().toString(16).slice(2, 14);
@@ -157,7 +225,7 @@ export default function PublicLandingRuntimeScript({ slug, config }: Props) {
       }
 
       function isAtrioDestination() {
-        return String(cfg.ctaDestination || "whatsapp").toLowerCase() === "atrio";
+        return cfg.template === 7 || String(cfg.ctaDestination || "whatsapp").toLowerCase() === "atrio";
       }
 
       function buildAtrioRedirectUrl(promoCode, atrioData) {
@@ -290,7 +358,7 @@ export default function PublicLandingRuntimeScript({ slug, config }: Props) {
       function applyLeadCaptureToIdentity(identity, capture) {
         if (!capture || typeof capture !== "object") return identity;
         var fields = (cfg.leadCapture && cfg.leadCapture.fields) || {};
-        var firstName = fields.firstName ? String(capture.firstName || "").trim() : "";
+        var firstName = (cfg.template === 7 || fields.firstName) ? String(capture.firstName || "").trim() : "";
         var lastName = fields.lastName ? String(capture.lastName || "").trim() : "";
         var emailRaw = fields.email ? String(capture.email || "").trim() : "";
         var phoneRaw = fields.phone ? String(capture.phone || "").trim() : "";
@@ -820,6 +888,7 @@ export default function PublicLandingRuntimeScript({ slug, config }: Props) {
           slug: cfg.slug,
           landing_id: cfg.landingId,
           landing_name: cfg.landingName,
+          target_provider: cfg.template === 7 ? cfg.targetProvider : undefined,
           workspace_currency: cfg.workspaceCurrency || undefined,
           external_id: identity.externalId,
           event_source_url: safeEventSourceUrl(),
@@ -1008,9 +1077,11 @@ export default function PublicLandingRuntimeScript({ slug, config }: Props) {
       }
 
       function consumeContactContext() {
+        if (cfg.template === 7 && template7AttemptContext) return template7AttemptContext;
         var context = prearmedContact || createContactPrearm();
         prearmedContact = null;
         window.setTimeout(prearmContactContext, 0);
+        if (cfg.template === 7) template7AttemptContext = context;
         return context;
       }
 
@@ -1022,6 +1093,7 @@ export default function PublicLandingRuntimeScript({ slug, config }: Props) {
       }
 
       function shouldShowLeadCapture(button) {
+        if (cfg.template === 7) return false;
         if (!hasLeadCaptureFields()) return false;
         return button.getAttribute("data-public-landing-auto-start") !== "true";
       }
@@ -1154,6 +1226,23 @@ export default function PublicLandingRuntimeScript({ slug, config }: Props) {
 
       function handleCtaClick(button) {
         if (clickLocked || button.disabled) return;
+        if (cfg.template === 7) {
+          var nameInput = document.querySelector("[data-template7-name]");
+          var firstName = nameInput ? String(nameInput.value || "").trim() : "";
+          if (!firstName) {
+            if (nameInput) nameInput.focus();
+            button.disabled = true;
+            return;
+          }
+          var ready = window.__LB_IDENTITY_READY__;
+          if (ready && typeof ready.then === "function") {
+            ready.then(function () { processCtaClick(button, { firstName: firstName }); },
+              function () { processCtaClick(button, { firstName: firstName }); });
+          } else {
+            processCtaClick(button, { firstName: firstName });
+          }
+          return;
+        }
         if (shouldShowLeadCapture(button)) {
           openLeadCaptureModal(button);
           return;
@@ -1163,6 +1252,8 @@ export default function PublicLandingRuntimeScript({ slug, config }: Props) {
 
       function processCtaClick(button, leadCaptureValues) {
         if (clickLocked || button.disabled) return;
+        if (cfg.template === 7 && !String(leadCaptureValues && leadCaptureValues.firstName || "").trim()) return;
+        if (cfg.template === 7) setTemplate7Error("");
         clickLocked = true;
         button.disabled = true;
         setButtonText(button, getLoadingButtonText(button));
@@ -1189,7 +1280,7 @@ export default function PublicLandingRuntimeScript({ slug, config }: Props) {
           var identity = applyLeadCaptureToIdentity(baseIdentity, safeCapture);
           var captureFields = (cfg.leadCapture && cfg.leadCapture.fields) || {};
           var hasLeadCaptureForm = !!leadCaptureValues;
-          var formFn = hasLeadCaptureForm && captureFields.firstName
+          var formFn = hasLeadCaptureForm && (cfg.template === 7 || captureFields.firstName)
             ? String(leadCaptureValues.firstName || "").trim()
             : "";
           var formLn = hasLeadCaptureForm && captureFields.lastName
@@ -1206,7 +1297,7 @@ export default function PublicLandingRuntimeScript({ slug, config }: Props) {
             : "";
           var tracking = context.tracking;
           var testEventCode = context.testEventCode;
-          var shouldSkipContact = context.shouldSkipContact;
+          var shouldSkipContact = context.shouldSkipContact || (cfg.template === 7 && template7ContactSent);
 
           refreshMetaTracking(params, tracking)
             .then(function (freshTracking) {
@@ -1216,7 +1307,9 @@ export default function PublicLandingRuntimeScript({ slug, config }: Props) {
             })
             .then(function (targetData) {
               if (isAtrioDestination()) {
-                if (targetData && (targetData.atrioRedirectUrl || targetData.atrio_redirect_url)) return targetData;
+                if (targetData && (cfg.template === 7
+                  ? firstNonEmpty([targetData.atrioClientId, targetData.atrio_client_id]) && firstNonEmpty([targetData.atrioId, targetData.atrio_id]) && firstNonEmpty([targetData.atrioSlug, targetData.atrio_slug])
+                  : (targetData.atrioRedirectUrl || targetData.atrio_redirect_url))) return targetData;
                 clearPrewarmedAtrioPromise();
                 return waitWithTimeout(ensureAtrioPromise(), 2500);
               }
@@ -1226,16 +1319,21 @@ export default function PublicLandingRuntimeScript({ slug, config }: Props) {
             })
             .then(function (targetData) {
               var atrioMode = isAtrioDestination();
+              var gatewayMode = cfg.template === 7;
               var atrioData = atrioMode ? (targetData || {}) : null;
               var phoneData = atrioMode ? null : targetData;
               var phone = atrioMode ? "" : normalizePhone(
                 (phoneData && phoneData.phone) || "",
                 cfg.phoneCountryCode
               );
-              var redirectUrl = atrioMode
+              var redirectUrl = gatewayMode ? "" : atrioMode
                 ? buildAtrioRedirectUrl(promoCode, atrioData)
                 : "https://wa.me/" + phone + "?text=" + encodeURIComponent(message);
-              if ((!atrioMode && !phone) || (atrioMode && !redirectUrl)) {
+              if (gatewayMode && (!firstNonEmpty([atrioData.atrioClientId, atrioData.atrio_client_id]) || !firstNonEmpty([atrioData.atrioId, atrioData.atrio_id]) || !firstNonEmpty([atrioData.atrioSlug, atrioData.atrio_slug]))) {
+                failTemplate7(button);
+                return;
+              }
+              if ((!atrioMode && !phone) || (atrioMode && !gatewayMode && !redirectUrl)) {
                 setNoPhoneState(button);
                 return;
               }
@@ -1253,6 +1351,7 @@ export default function PublicLandingRuntimeScript({ slug, config }: Props) {
               var assignedGerenciaSnapshot = atrioMode ? {} : extractAssignedGerenciaSnapshot(phoneData);
               var payload = {
                 event_name: "Contact",
+                target_provider: gatewayMode ? cfg.targetProvider : undefined,
                 meta_pixel_id: String(cfg.pixelId || "").trim() || undefined,
                 sendContactPixel: cfg.sendContactPixel,
                 event_id: eventId,
@@ -1291,7 +1390,8 @@ export default function PublicLandingRuntimeScript({ slug, config }: Props) {
                 source: "main_button",
                 source_platform: "landing",
                 cta_destination: atrioMode ? "atrio" : "whatsapp",
-                redirect_channel: atrioMode ? "atrio" : "whatsapp",
+                redirect_channel: gatewayMode ? (cfg.targetProvider === "multi_skin" ? "multi_skin_gateway" : "rey_de_ases_gateway") : atrioMode ? "atrio" : "whatsapp",
+                gateway_app_id: gatewayMode ? (cfg.targetProvider === "multi_skin" ? "multi_skin_gateway" : "reydeases_gateway") : undefined,
                 atrio_redirect_url: atrioMode ? firstNonEmpty([atrioData && atrioData.atrioRedirectUrl, atrioData && atrioData.atrio_redirect_url, cfg.atrioRedirectUrl]) : undefined,
                 atrio_client_id: atrioMode ? firstNonEmpty([atrioData && atrioData.atrioClientId, atrioData && atrioData.atrio_client_id, cfg.atrioClientId]) : undefined,
                 atrio_id: atrioMode ? firstNonEmpty([atrioData && atrioData.atrioId, atrioData && atrioData.atrio_id, cfg.atrioId]) : undefined,
@@ -1315,15 +1415,25 @@ export default function PublicLandingRuntimeScript({ slug, config }: Props) {
               } catch (e) {}
 
               if (!shouldSkipContact) markContactSent(cfg.slug, identity.externalId);
+              if (gatewayMode && !shouldSkipContact) template7ContactSent = true;
 
-              window.setTimeout(function () {
-                window.location.assign(redirectUrl);
-              }, 180);
+              if (gatewayMode) {
+                startTemplate7Gateway(formFn, promoCode, atrioData, tracking, params)
+                  .then(function (handoffUrl) { navigateTemplate7Handoff(handoffUrl); })
+                  .catch(function () { failTemplate7(button); });
+              } else {
+                window.setTimeout(function () {
+                  window.location.assign(redirectUrl);
+                }, 180);
+              }
             })
             .catch(function () {
-              clickLocked = false;
-              button.disabled = false;
-              setButtonText(button, getRestButtonText(button));
+              if (cfg.template === 7) failTemplate7(button);
+              else {
+                clickLocked = false;
+                button.disabled = false;
+                setButtonText(button, getRestButtonText(button));
+              }
             });
         });
       }
@@ -1359,6 +1469,27 @@ export default function PublicLandingRuntimeScript({ slug, config }: Props) {
         if (autoCta) {
           window.setTimeout(function () { autoCta.click(); }, 40);
         }
+      }
+
+      function initTemplate7Name() {
+        if (cfg.template !== 7) return;
+        var input = document.querySelector("[data-template7-name]");
+        var button = document.querySelector(".template7__cta[data-public-landing-cta]");
+        var form = document.querySelector("[data-template7-form]");
+        if (!input || !button || !form) return;
+        function sync() {
+          if (clickLocked) return;
+          button.disabled = !String(input.value || "").trim();
+        }
+        input.addEventListener("input", sync);
+        form.addEventListener("submit", function (event) {
+          event.preventDefault();
+          sync();
+          if (!button.disabled) button.click();
+          else input.focus();
+        });
+        window.addEventListener("pageshow", sync);
+        sync();
       }
 
       function initPrivacyDialog() {
@@ -1576,15 +1707,24 @@ export default function PublicLandingRuntimeScript({ slug, config }: Props) {
       }
 
       function init() {
-        recordLandingJourneyStart();
-        prearmContactContext();
+        if (cfg.template === 7 && window.__LB_IDENTITY_READY__) {
+          window.__LB_IDENTITY_READY__.then(function () {
+            recordLandingJourneyStart();
+            prearmContactContext();
+            window.setTimeout(prearmContactContext, 700);
+          });
+        } else {
+          recordLandingJourneyStart();
+          prearmContactContext();
+          window.setTimeout(prearmContactContext, 700);
+        }
         if (isAtrioDestination()) ensureAtrioPromise();
         else ensurePhonePromise();
         scheduleMetaClientIpCollection();
         scheduleOfficialMetaParamBuilder();
-        window.setTimeout(prearmContactContext, 700);
         initRotatingBackgrounds();
         initCtas();
+        initTemplate7Name();
         initInlineEmail();
         initSocialProof();
         initTemplate4LiveDetails();

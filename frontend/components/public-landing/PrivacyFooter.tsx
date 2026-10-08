@@ -41,6 +41,13 @@ export default function PrivacyFooter({ config }: Props) {
           <p>
             <strong>Responsable.</strong> Esta landing es gestionada por {businessName}.
           </p>
+          {config.layout?.template === 7 && (
+            <p>
+              <strong>Identidad técnica.</strong> Usamos la cookie propia necesaria <code>lb_cid</code> para
+              conservar su identidad técnica y evitar cuentas duplicadas. Dura dos años. Si elimina las
+              cookies del navegador, puede generarse una identidad nueva.
+            </p>
+          )}
           <p>
             <strong>Datos tratados.</strong> Al navegar o utilizar el botón de contacto
             pueden procesarse datos técnicos del dispositivo y la conexión, cookies e

@@ -28,7 +28,7 @@ test("solo templates 1 y 2 pueden publicar captura de email activada", () => {
   for (const template of ["template1", "template2"] as const) {
     assert.equal(published({ ...DEFAULT_CONFIG, template, emailCaptureEnabled: true }).emailCapture?.enabled, true);
   }
-  for (const template of ["template3", "template4", "template5", "template6"] as const) {
+  for (const template of ["template3", "template4", "template5", "template6", "template7"] as const) {
     assert.equal(published({ ...DEFAULT_CONFIG, template, emailCaptureEnabled: true }).emailCapture?.enabled, false);
   }
 });

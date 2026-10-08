@@ -79,6 +79,7 @@ function templateNumberForOption(template: unknown): number {
   if (value === "template3") return 3;
   if (value === "template4") return 4;
   if (value === "template5") return 5;
+  if (value === "template7") return 7;
   return 1;
 }
 
@@ -86,10 +87,15 @@ function isRecord(value: unknown): value is Record<string, unknown> {
   return typeof value === "object" && value !== null && !Array.isArray(value);
 }
 
+function targetProviderForTemplate7(rawConfig: Record<string, unknown>): "rey_de_ases" | "multi_skin" {
+  return rawConfig.targetProvider === "multi_skin" ? "multi_skin" : "rey_de_ases";
+}
+
 const GLOBAL_CONFIG_KEYS = [
   "marketCountry",
   "sendContactPixel",
   "ctaDestination",
+  "targetProvider",
   "atrioRedirectUrl",
   "atrioClientId",
   "atrioId",
@@ -274,7 +280,7 @@ Deno.serve(async (req) => {
         (rawConfig.leadCapture as Record<string, unknown>) ?? {};
       const rawConfigLeadCaptureFields =
         (rawConfigLeadCapture.fields as Record<string, unknown>) ?? {};
-      const publishedTemplate = Number(
+      const publishedTemplate = rawConfig.template === "template7" ? 7 : Number(
         ((cfg.layout as Record<string, unknown> | undefined)?.template) ??
           templateNumberForOption(rawConfig.template),
       );
@@ -286,6 +292,8 @@ Deno.serve(async (req) => {
         workspaceCurrency,
         tracking: {
           ...tracking,
+          ctaDestination: publishedTemplate === 7 ? "atrio" : tracking.ctaDestination,
+          ...(publishedTemplate === 7 ? { target_provider: targetProviderForTemplate7(rawConfig) } : {}),
           postUrl: effectivePostUrl,
           phoneCountryCode,
           currency: workspaceCurrency,
@@ -317,17 +325,17 @@ Deno.serve(async (req) => {
         },
         interactions: {
           ...rawInteractions,
-          enabled: typeof rawConfig.interactionsEnabled === "boolean"
+          enabled: publishedTemplate === 7 ? false : typeof rawConfig.interactionsEnabled === "boolean"
             ? rawConfig.interactionsEnabled
             : ((rawInteractions.enabled as boolean | undefined) ?? false),
-          whatsappPrefillText: typeof rawConfig.whatsappPrefillText === "string"
+          whatsappPrefillText: publishedTemplate === 7 ? "" : typeof rawConfig.whatsappPrefillText === "string"
             ? rawConfig.whatsappPrefillText
             : ((rawInteractions.whatsappPrefillText as string | undefined) ??
               ""),
         },
         leadCapture: {
           ...rawLeadCapture,
-          enabled: typeof rawConfigLeadCapture.enabled === "boolean"
+          enabled: publishedTemplate === 7 ? false : typeof rawConfigLeadCapture.enabled === "boolean"
             ? rawConfigLeadCapture.enabled
             : ((rawLeadCapture.enabled as boolean | undefined) ?? false),
           title: typeof rawConfigLeadCapture.title === "string"
@@ -359,6 +367,10 @@ Deno.serve(async (req) => {
             ? rawConfig.emailCaptureEnabled
             : ((cfg.emailCapture as Record<string, unknown> | undefined)?.enabled === true)),
         },
+        layout: {
+          ...((cfg.layout as Record<string, unknown> | undefined) ?? {}),
+          template: publishedTemplate,
+        },
       };
       return new Response(JSON.stringify(merged), {
         status: 200,
@@ -380,7 +392,7 @@ Deno.serve(async (req) => {
       ctaGlowColor: toHex(rawConfig.ctaGlowColor, "#000000"),
     } as Record<string, unknown>;
     const templateNumber = templateNumberForOption(themeWithHex.template);
-    const fixedVisualTemplate = templateNumber === 4 || templateNumber === 5;
+    const fixedVisualTemplate = templateNumber === 4 || templateNumber === 5 || templateNumber === 7;
     const rawImages = (themeWithHex.backgroundImages as string[]) ?? [];
 
     const payload = {
@@ -395,6 +407,12 @@ Deno.serve(async (req) => {
         pixelId: data.pixel_id ?? "",
         postUrl: effectivePostUrl,
         landingTag: data.landing_tag ?? "",
+        ctaDestination: templateNumber === 7 ? "atrio" : (themeWithHex.ctaDestination === "atrio" ? "atrio" : "whatsapp"),
+        ...(templateNumber === 7 ? { target_provider: targetProviderForTemplate7(rawConfig) } : {}),
+        atrioRedirectUrl: (themeWithHex.atrioRedirectUrl as string) ?? "",
+        atrioClientId: (themeWithHex.atrioClientId as string) ?? "",
+        atrioId: (themeWithHex.atrioId as string) ?? "",
+        atrioSlug: (themeWithHex.atrioSlug as string) ?? "",
         phoneCountryCode,
         currency: workspaceCurrency,
         workspaceCurrency,

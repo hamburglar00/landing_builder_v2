@@ -2744,4 +2744,52 @@ body.public-lead-capture-open {
   .template6__caption { font-size: 11px; }
   .template6__cta { font-size: min(var(--template6-cta-size, 14px), 12px); }
 }
+.public-landing.template7 {
+  position: relative;
+  display: grid;
+  min-height: 100svh;
+  place-items: center;
+  overflow: hidden;
+  isolation: isolate;
+  padding: 42px 18px 92px;
+  background: #080807;
+  font-family: Arial, Helvetica, sans-serif;
+}
+.template7__background-image,
+.template7__veil { position: absolute; inset: 0; width: 100%; height: 100%; }
+.template7__background-image { object-fit: cover; z-index: -2; }
+.template7__veil { z-index: -1; background: linear-gradient(180deg, rgba(0,0,0,.65), rgba(0,0,0,.76)), radial-gradient(circle at 50% 30%, rgba(255,215,0,.12), transparent 70%); }
+.template7__card {
+  width: min(100%, 490px);
+  padding: clamp(28px, 7vw, 48px) clamp(24px, 6vw, 42px);
+  border: 1px solid rgba(255,255,255,.2);
+  border-radius: 28px;
+  background: rgba(10,10,10,.76);
+  box-shadow: 0 26px 80px rgba(0,0,0,.55), inset 0 1px rgba(255,255,255,.08);
+  backdrop-filter: blur(14px);
+  text-align: center;
+}
+.template7__logo { display: block; width: auto; max-width: min(50%, 170px); max-height: 138px; margin: 0 auto 24px; object-fit: contain; }
+.template7__title { margin: 0; line-height: 1.14; overflow-wrap: anywhere; text-wrap: balance; }
+.template7__subtitle { margin: 16px 0 0; line-height: 1.4; overflow-wrap: anywhere; }
+.template7__form { display: grid; gap: 14px; margin-top: 32px; text-align: left; }
+.template7__label { color: #f3f3f3; font-size: 14px; font-weight: 600; }
+.template7__input { box-sizing: border-box; width: 100%; min-height: 58px; padding: 0 18px; border: 1px solid rgba(255,255,255,.26); border-radius: 14px; outline: none; background: rgba(0,0,0,.5); color: #fff; font: inherit; font-size: 18px; }
+.template7__input::placeholder { color: #a9a9a9; }
+.template7__input:focus { border-color: #ffd700; box-shadow: 0 0 0 3px rgba(255,215,0,.18); }
+.template7__cta { width: 100%; min-height: 60px; padding: 12px 18px; border: 0; border-radius: 14px; box-shadow: 0 10px 28px rgba(0,0,0,.3); cursor: pointer; line-height: 1.2; overflow-wrap: anywhere; transition: transform .15s ease, opacity .15s ease; }
+.template7__cta:not(:disabled):hover { transform: translateY(-2px); }
+.template7__cta:focus-visible { outline: 2px solid #fff; outline-offset: 3px; }
+.template7__cta:disabled { cursor: not-allowed; opacity: .52; box-shadow: none; }
+.template7__error { margin: 0; color: #ffd2d2; font-size: 13px; line-height: 1.4; text-align: center; }
+.template7__error[hidden] { display: none; }
+.template7__handoff-panel { position: fixed; inset: 0; z-index: 100; display: grid; place-items: center; padding: 20px; background: rgba(0,0,0,.8); }
+.template7__handoff-card { width: min(100%, 420px); display: grid; gap: 14px; padding: 28px; border: 1px solid rgba(255,215,0,.35); border-radius: 22px; background: #17121f; color: #fff; text-align: center; box-shadow: 0 20px 70px rgba(0,0,0,.6); }
+.template7__handoff-card h2 { margin: 0; font-size: 24px; }
+.template7__handoff-card p { margin: 0; line-height: 1.5; }
+.template7__handoff-card a, .template7__handoff-card button { display: block; min-height: 48px; padding: 12px; border: 0; border-radius: 12px; font: 700 15px/1.3 system-ui,sans-serif; text-decoration: none; cursor: pointer; }
+.template7__handoff-card a { color: #111; background: #ffd700; }
+.template7__handoff-card button { color: #fff; background: #363042; }
+.template7__handoff-card small { color: #c2bbc9; line-height: 1.4; }
+@media (max-width: 480px) { .public-landing.template7 { padding: 24px 16px 82px; } .template7__card { border-radius: 22px; } }
 `;

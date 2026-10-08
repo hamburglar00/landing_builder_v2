@@ -1,4 +1,4 @@
-import type { LandingThemeConfig, LandingWorkspaceCurrency } from "./types";
+import type { LandingThemeConfig, LandingWorkspaceCurrency, TargetProvider } from "./types";
 import { COLOR_MAP } from "./constants";
 import { buildOptimizedImageUrl, buildResponsiveImageSet } from "./imageUrl";
 import { normalizeTemplate6Cover, TEMPLATE6_CARD_COUNT, template6Lines } from "./template6";
@@ -15,6 +15,7 @@ function templateNumberForOption(template: LandingThemeConfig["template"]) {
   if (template === "template4") return 4;
   if (template === "template5") return 5;
   if (template === "template6") return 6;
+  if (template === "template7") return 7;
   return 1;
 }
 
@@ -35,6 +36,7 @@ export interface LandingConfigPayload {
     landingTag: string;
     sendContactPixel: boolean;
     ctaDestination?: "whatsapp" | "atrio";
+    target_provider?: TargetProvider;
     atrioRedirectUrl?: string;
     atrioClientId?: string;
     atrioId?: string;
@@ -236,7 +238,8 @@ export function buildLandingConfig({
       postUrl,
       landingTag,
       sendContactPixel: config.sendContactPixel,
-      ctaDestination: config.template !== "template6" && config.ctaDestination === "atrio" ? "atrio" : "whatsapp",
+      ctaDestination: config.template === "template7" || (config.template !== "template6" && config.ctaDestination === "atrio") ? "atrio" : "whatsapp",
+      ...(config.template === "template7" ? { target_provider: config.targetProvider === "multi_skin" ? "multi_skin" as const : "rey_de_ases" as const } : {}),
       atrioRedirectUrl: config.atrioRedirectUrl.trim(),
       atrioClientId: (config.atrioClientId ?? "").trim(),
       atrioId: (config.atrioId ?? "").trim(),
@@ -356,16 +359,16 @@ export function buildLandingConfig({
       template: templateNumberForOption(themeWithHex.template),
     },
     socialProof: {
-      enabled: themeWithHex.socialProofEnabled,
+      enabled: themeWithHex.template !== "template7" && themeWithHex.socialProofEnabled,
     },
     interactions: {
-      enabled: fixedVisualTemplate ? false : themeWithHex.interactionsEnabled,
-      whatsappPrefillText: fixedVisualTemplate
+      enabled: fixedVisualTemplate || themeWithHex.template === "template7" ? false : themeWithHex.interactionsEnabled,
+      whatsappPrefillText: fixedVisualTemplate || themeWithHex.template === "template7"
         ? ""
         : themeWithHex.whatsappPrefillText.trim(),
     },
     leadCapture: {
-      enabled: fixedVisualTemplate ? false : themeWithHex.leadCapture?.enabled === true,
+      enabled: fixedVisualTemplate || themeWithHex.template === "template7" ? false : themeWithHex.leadCapture?.enabled === true,
       title: themeWithHex.leadCapture?.title?.trim() || "",
       description: themeWithHex.leadCapture?.description?.trim() || "",
       fields: {
@@ -376,7 +379,7 @@ export function buildLandingConfig({
       },
     },
     emailCapture: {
-      enabled: !fixedVisualTemplate && themeWithHex.emailCaptureEnabled === true,
+      enabled: !fixedVisualTemplate && themeWithHex.template !== "template7" && themeWithHex.emailCaptureEnabled === true,
     },
   };
 }

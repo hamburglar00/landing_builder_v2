@@ -1,5 +1,7 @@
 import PhonePrewarmScript from "./PhonePrewarmScript";
 import PublicLandingRuntimeScript from "./PublicLandingRuntimeScript";
+import Template7DemoRuntimeScript from "./Template7DemoRuntimeScript";
+import { buildClientIdentityBootstrapScript } from "./clientIdentityBootstrapScript";
 import {
   buildPixelInitScript,
   buildPixelNoscript,
@@ -13,6 +15,7 @@ type RenderParams = {
   config: PublicLandingConfig;
   cachedPhone?: PublicLandingPhoneResponse | null;
   canonicalUrl?: string;
+  demoMode?: boolean;
 };
 
 type ResponsiveImage = {
@@ -113,7 +116,9 @@ function buildPreloadLinks(config: PublicLandingConfig) {
     firstResponsiveBackground?.mobile || config.background?.images?.[0] || "";
   const firstBackgroundSrcSet = buildImageSrcSet(firstResponsiveBackground);
   const firstBackgroundSizes =
-    config.layout?.template === 2 ? "(max-width: 430px) 100vw, 430px" : "100vw";
+    config.layout?.template === 2
+      ? "(max-width: 430px) 100vw, 430px"
+      : "100vw";
   const logoUrl = config.content?.logoUrl || "";
 
   return [
@@ -252,10 +257,20 @@ function renderTemplate5Avatar(profileImageUrl: string) {
 
 function renderPrivacyFooter(config: PublicLandingConfig) {
   const businessName = config.name || "el responsable de esta landing";
+  const template7IdentityNotice = config.layout?.template === 7
+    ? '<p><strong>Identidad técnica.</strong> Usamos la cookie propia necesaria <code>lb_cid</code> para conservar su identidad técnica y evitar cuentas duplicadas. Dura dos años. Si elimina las cookies del navegador, puede generarse una identidad nueva.</p>'
+    : "";
 
   return `<footer class="public-privacy-footer"><button type="button" class="public-privacy-link" data-public-privacy-open aria-haspopup="dialog">Política de privacidad</button></footer><dialog class="public-privacy-dialog" data-public-privacy-dialog aria-labelledby="public-privacy-title"><div class="public-privacy-dialog__header"><h2 id="public-privacy-title">Política de privacidad</h2><button type="button" class="public-privacy-dialog__close" data-public-privacy-close aria-label="Cerrar política de privacidad">×</button></div><div class="public-privacy-dialog__content"><p><strong>Responsable.</strong> Esta landing es gestionada por ${escapeHtml(
     businessName,
-  )}.</p><p><strong>Datos tratados.</strong> Al navegar o utilizar el botón de contacto pueden procesarse datos técnicos del dispositivo y la conexión, cookies e identificadores publicitarios, la procedencia de la visita y los datos que usted proporcione voluntariamente.</p><p><strong>Finalidades.</strong> Los datos se utilizan para atender consultas por WhatsApp, operar el servicio, medir resultados y atribuir conversiones publicitarias.</p><p><strong>Meta.</strong> Esta landing puede utilizar Meta Pixel y Conversions API. En consecuencia, cierta información puede compartirse con Meta Platforms para medición, atribución y publicidad, de acuerdo con sus políticas.</p><p><strong>Derechos y contacto.</strong> Puede solicitar información, actualización o supresión de sus datos mediante el canal de WhatsApp ofrecido en esta landing.</p><p>También puede administrar las cookies desde su navegador y revisar sus preferencias publicitarias en Meta.</p><div class="public-privacy-dialog__links"><a href="https://www.facebook.com/privacy/policy/" target="_blank" rel="noreferrer noopener">Política de privacidad de Meta</a><a href="https://www.facebook.com/adpreferences/ad_settings" target="_blank" rel="noreferrer noopener">Preferencias de anuncios de Meta</a></div></div></dialog>`;
+  )}.</p>${template7IdentityNotice}<p><strong>Datos tratados.</strong> Al navegar o utilizar el botón de contacto pueden procesarse datos técnicos del dispositivo y la conexión, cookies e identificadores publicitarios, la procedencia de la visita y los datos que usted proporcione voluntariamente.</p><p><strong>Finalidades.</strong> Los datos se utilizan para atender consultas por WhatsApp, operar el servicio, medir resultados y atribuir conversiones publicitarias.</p><p><strong>Meta.</strong> Esta landing puede utilizar Meta Pixel y Conversions API. En consecuencia, cierta información puede compartirse con Meta Platforms para medición, atribución y publicidad, de acuerdo con sus políticas.</p><p><strong>Derechos y contacto.</strong> Puede solicitar información, actualización o supresión de sus datos mediante el canal de WhatsApp ofrecido en esta landing.</p><p>También puede administrar las cookies desde su navegador y revisar sus preferencias publicitarias en Meta.</p><div class="public-privacy-dialog__links"><a href="https://www.facebook.com/privacy/policy/" target="_blank" rel="noreferrer noopener">Política de privacidad de Meta</a><a href="https://www.facebook.com/adpreferences/ad_settings" target="_blank" rel="noreferrer noopener">Preferencias de anuncios de Meta</a></div></div></dialog>`;
+}
+
+function pixelScriptForTemplate(pixelId: string, slug: string, phoneCountryCode: string, template: number): string {
+  const original = buildPixelInitScript(pixelId, slug, phoneCountryCode);
+  if (template !== 7 || !original) return original;
+  const body = original.slice("<script>".length, -"</script>".length);
+  return `<script>(function(){function init(){${body}}var ready=window.__LB_IDENTITY_READY__;if(ready&&typeof ready.then==="function")ready.then(init,init);else init();})();</script>`;
 }
 
 function renderTextLines(lines: string[]) {
@@ -315,6 +330,23 @@ function renderFrameBackgroundTemplate2(config: PublicLandingConfig) {
   )}" loading="eager" fetchpriority="high" decoding="async" width="430" height="780">`;
 }
 
+function renderFrameBackgroundTemplate7(config: PublicLandingConfig) {
+  const { currentImage, rotationImages, srcSet, rotateEveryHours } = getResponsiveBackgroundData(config);
+  if (!currentImage) return "";
+
+  return `<img src="${escapeHtml(currentImage)}"${attr(
+    "srcset",
+    srcSet,
+  )} sizes="100vw" alt="" class="template7__background-image"${attr(
+    "data-public-landing-rotating-image",
+    rotationImages.length > 0 ? "true" : "",
+  )} data-public-landing-images="${escapeHtml(
+    JSON.stringify(rotationImages),
+  )}" data-public-landing-rotate-hours="${escapeHtml(
+    rotateEveryHours,
+  )}" loading="eager" fetchpriority="high" decoding="async" width="1600" height="900">`;
+}
+
 function renderWhatsAppButton(
   config: PublicLandingConfig,
   templateVariant: "default" | "template2" | "template3" = "default",
@@ -330,8 +362,7 @@ function renderWhatsAppButton(
     )} data-public-landing-rest-label="haz clic aquí." data-public-landing-loading-label="conectando..." data-public-landing-disabled-label="reintenta en un momento" aria-label="Reintentar redirección a WhatsApp"><span data-public-landing-cta-label>haz clic aquí.</span></button>`;
   }
 
-  const isTemplate2Like =
-    templateVariant === "template2";
+  const isTemplate2Like = templateVariant === "template2";
   const buttonClass = isTemplate2Like ? "cta" : "whatsapp-button";
   const iconClass = isTemplate2Like ? "cta__icon" : "whatsapp-icon";
   const buttonStyle = {
@@ -474,6 +505,32 @@ function renderTemplate2({ config }: RenderParams) {
     .join("")}</div></div></section></main>`;
 }
 
+function renderTemplate7({ config }: RenderParams) {
+  const hasLogo = Boolean(config.content?.logoUrl);
+  const titleLines = (config.content?.title || []).map((line) => line.trim()).filter(Boolean);
+  const subtitleLines = (config.content?.subtitle || []).map((line) => line.trim()).filter(Boolean);
+  const ctaText = config.content?.ctaText || "Continuar";
+
+  return `<main class="public-landing template7">${renderFrameBackgroundTemplate7(config)}<div class="template7__veil"></div><section class="template7__card">${
+    hasLogo
+      ? `<img src="${escapeHtml(config.content?.logoUrl)}" alt="${escapeHtml(config.name)}" class="template7__logo" decoding="async" fetchpriority="high">`
+      : ""
+  }<h1 class="template7__title"${styleAttr({
+    color: config.colors?.title ?? "#FFFFFF",
+    "font-size": `${config.typography?.title?.sizePx ?? 26}px`,
+    "font-weight": config.typography?.title?.weight ?? 700,
+  })}>${renderTextLines(titleLines)}</h1>${subtitleLines.length ? `<p class="template7__subtitle"${styleAttr({
+    color: config.colors?.subtitle ?? "#FFFFFF",
+    "font-size": `${config.typography?.subtitle?.sizePx ?? 16}px`,
+    "font-weight": config.typography?.subtitle?.weight ?? 400,
+  })}>${renderTextLines(subtitleLines)}</p>` : ""}<form class="template7__form" data-template7-form><label class="template7__label" for="template7-name">Tu nombre</label><input id="template7-name" class="template7__input" data-template7-name type="text" name="firstName" autocomplete="given-name" maxlength="80" required placeholder="Ej.: Martín"><button type="button" class="template7__cta" data-public-landing-cta data-public-landing-rest-label="${escapeHtml(ctaText)}" data-public-landing-loading-label="Abriendo..." data-public-landing-disabled-label="No disponible"${styleAttr({
+    color: config.colors?.ctaText ?? "#111111",
+    background: config.colors?.ctaBackground ?? "#FFD700",
+    "font-size": `${config.typography?.cta?.sizePx ?? 18}px`,
+    "font-weight": config.typography?.cta?.weight ?? 700,
+  })} disabled><span data-public-landing-cta-label>${escapeHtml(ctaText)}</span></button><p class="template7__error" data-template7-error role="alert" hidden></p></form></section></main>`;
+}
+
 function renderTemplate3({ config }: RenderParams) {
   return `<main class="public-landing template3"><section class="template3__card" aria-live="polite"><svg class="template3__whatsapp" viewBox="0 0 32 32" role="img" aria-label="WhatsApp"><path fill="currentColor" d="M16.04 3A12.82 12.82 0 0 0 5.08 22.47L3 30l7.72-2.02A12.88 12.88 0 1 0 16.04 3Zm0 23.58a10.66 10.66 0 0 1-5.43-1.49l-.39-.23-4.58 1.2 1.22-4.46-.25-.4a10.68 10.68 0 1 1 9.43 5.38Zm5.85-7.99c-.32-.16-1.9-.94-2.2-1.05-.29-.11-.5-.16-.72.16-.21.32-.82 1.05-1.01 1.26-.19.21-.37.24-.69.08-.32-.16-1.35-.5-2.57-1.59a9.63 9.63 0 0 1-1.78-2.22c-.19-.32-.02-.49.14-.65.15-.14.32-.37.48-.56.16-.18.21-.32.32-.53.11-.21.06-.4-.03-.56-.08-.16-.72-1.73-.98-2.37-.26-.62-.52-.54-.72-.55h-.61c-.21 0-.56.08-.85.4-.29.32-1.12 1.1-1.12 2.67s1.15 3.1 1.31 3.31c.16.21 2.26 3.45 5.47 4.84.77.33 1.36.53 1.83.68.77.24 1.46.21 2.01.13.61-.09 1.9-.78 2.17-1.52.27-.75.27-1.39.19-1.52-.08-.14-.29-.22-.61-.38Z"></path></svg><h1 class="template3__title">Conectando...</h1><p class="template3__copy">Te estamos redirigiendo a nuestro chat de<br>WhatsApp para atenderte enseguida.</p><span class="template3__spinner" aria-hidden="true"></span><div class="template3__fallback"><span>Si no eres redirigido en unos segundos,</span>${renderWhatsAppButton(config, "template3", {
     autoStart: true,
@@ -588,6 +645,7 @@ function renderTemplate6({ config }: RenderParams) {
 }
 
 function renderTemplate(params: RenderParams) {
+  if (params.config.layout?.template === 7) return renderTemplate7(params);
   if (params.config.layout?.template === 6) return renderTemplate6(params);
   if (params.config.layout?.template === 5) return renderTemplate5Configured(params);
   if (params.config.layout?.template === 4) return renderTemplate4(params);
@@ -597,8 +655,8 @@ function renderTemplate(params: RenderParams) {
 }
 
 export function renderPublicLandingHtml(params: RenderParams) {
-  const { slug, config, cachedPhone, canonicalUrl } = params;
-  const pixelId = String(config.tracking?.pixelId || "").trim().replace(/\D+/g, "");
+  const { slug, config, cachedPhone, canonicalUrl, demoMode = false } = params;
+  const pixelId = demoMode ? "" : String(config.tracking?.pixelId || "").trim().replace(/\D+/g, "");
   const metadata = publicMetadata(config, slug);
   const supabaseOrigin = (() => {
     const raw = process.env.NEXT_PUBLIC_SUPABASE_URL || "";
@@ -608,10 +666,12 @@ export function renderPublicLandingHtml(params: RenderParams) {
       return "";
     }
   })();
-  const phonePrewarmScript = renderScriptElement(
+  const phonePrewarmScript = demoMode ? "" : renderScriptElement(
     PhonePrewarmScript({ slug, initialPhone: cachedPhone }),
   );
-  const runtimeScript = renderScriptElement(PublicLandingRuntimeScript({ slug, config }));
+  const runtimeScript = renderScriptElement(demoMode
+    ? Template7DemoRuntimeScript({ slug, config })
+    : PublicLandingRuntimeScript({ slug, config }));
 
   return `<!doctype html><html lang="es"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"><title>${escapeHtml(
     metadata.title,
@@ -627,10 +687,11 @@ export function renderPublicLandingHtml(params: RenderParams) {
     pixelId
       ? '<link rel="preconnect" href="https://www.facebook.com"><link rel="preconnect" href="https://connect.facebook.net">'
       : ""
-  }${buildPreloadLinks(config)}<style>${PUBLIC_LANDING_CSS}</style>${phonePrewarmScript}${buildPixelInitScript(
+  }${buildPreloadLinks(config)}<style>${PUBLIC_LANDING_CSS}</style>${phonePrewarmScript}${demoMode ? '<meta name="robots" content="noindex,nofollow">' : ""}${config.layout?.template === 7 ? buildClientIdentityBootstrapScript() : ""}${pixelScriptForTemplate(
     pixelId,
     slug,
     config.tracking?.phoneCountryCode || "54",
+    config.layout?.template || 0,
   )}</head><body>${buildPixelNoscript(pixelId)}${renderTemplate(params)}${renderPrivacyFooter(
     config,
   )}${runtimeScript}</body></html>`;

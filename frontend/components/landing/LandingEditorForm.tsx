@@ -114,6 +114,7 @@ const TEMPLATE_OPTIONS: { label: string; value: TemplateOption }[] = [
   { label: "Plantilla 4 (chat)", value: "template4" },
   { label: "Plantilla 5 (live)", value: "template5" },
   { label: "Plantilla 6 (portada)", value: "template6" },
+  { label: "Plantilla 7", value: "template7" },
 ];
 
 const LEAD_CAPTURE_DEFAULT_TITLE =
@@ -232,6 +233,7 @@ export function LandingEditorForm({
   const isTemplate4 = config.template === "template4";
   const isTemplate5 = config.template === "template5";
   const isTemplate6 = config.template === "template6";
+  const isTemplate7 = config.template === "template7";
   const isFixedVisualTemplate =
     config.template === "template4" || config.template === "template5" || isTemplate6;
   const hidesVisualControls = isTemplate3 || isFixedVisualTemplate;
@@ -476,7 +478,7 @@ export function LandingEditorForm({
               Incluir logo de WhatsApp en los CTA
             </label>
           )}
-          {config.template !== "template2" && !isTemplate6 && (
+          {config.template !== "template2" && config.template !== "template7" && !isTemplate6 && (
             <div>
               <label
                 htmlFor={fieldId("cta-position")}
@@ -516,7 +518,7 @@ export function LandingEditorForm({
               updateConfig(setConfig, { ctaBackgroundColor })
             }
           />
-          {config.template !== "template2" && (
+          {config.template !== "template2" && config.template !== "template7" && (
             <ColorSelect
               label="Color del brillo del CTA"
               value={config.ctaGlowColor}
@@ -1196,7 +1198,7 @@ export function LandingEditorForm({
             </div>
           </div>
 
-          <div className="space-y-3 border-t border-zinc-800 pt-4">
+          {!isTemplate7 && <div className="space-y-3 border-t border-zinc-800 pt-4">
             <span className="block text-xs font-medium text-zinc-400 mb-1">
               Texto final (3 líneas)
             </span>
@@ -1280,12 +1282,12 @@ export function LandingEditorForm({
                 }
               />
             </div>
-          </div>
+          </div>}
         </div>
         </CollapsibleSection>
       )}
 
-      {!hidesVisualControls && (
+      {!hidesVisualControls && !isTemplate7 && (
         <section className="rounded-xl border border-zinc-800 bg-zinc-900/50 p-4">
           <div className="flex items-center justify-between gap-4">
             <div>
@@ -1312,7 +1314,7 @@ export function LandingEditorForm({
         </section>
       )}
 
-      {!hidesVisualControls && (
+      {!hidesVisualControls && !isTemplate7 && (
         <section className="rounded-xl border border-zinc-800 bg-zinc-900/50 p-4">
           <div className="flex items-center justify-between gap-4">
             <div>
@@ -1335,7 +1337,7 @@ export function LandingEditorForm({
         </section>
       )}
 
-      {!hidesVisualControls && (
+      {!hidesVisualControls && !isTemplate7 && (
         <section className="rounded-xl border border-zinc-800 bg-zinc-900/50 p-4">
           <div className="flex items-center justify-between gap-4">
             <div>
@@ -1428,7 +1430,7 @@ export function LandingEditorForm({
         </section>
       )}
 
-      {!isFixedVisualTemplate && (
+      {!isFixedVisualTemplate && !isTemplate7 && (
       <section className="rounded-xl border border-zinc-800 bg-zinc-900/50 p-4">
         <div className="flex items-center justify-between gap-4">
           <div>

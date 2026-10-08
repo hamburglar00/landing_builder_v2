@@ -1,9 +1,10 @@
 "use client";
 
 import Image from "next/image";
-import type { SetStateAction } from "react";
+import { useEffect, type SetStateAction } from "react";
 import type { AtrioClient } from "@/lib/atrio/atrioDb";
 import type { LandingThemeConfig } from "@/lib/landing/types";
+import type { TargetProvider } from "@/lib/landing/types";
 
 type Props = {
   config: LandingThemeConfig;
@@ -12,7 +13,7 @@ type Props = {
 };
 
 export function isAtrioUrlValidForSave(config: LandingThemeConfig) {
-  return config.ctaDestination !== "atrio" || Boolean(config.ctaDestination);
+  return config.template !== "template7" || config.ctaDestination === "atrio";
 }
 
 function AtrioLogo() {
@@ -53,7 +54,12 @@ export function CtaDestinationSection({
   setConfig,
   atrioClients = [],
 }: Props) {
-  const destination = config.template !== "template6" && config.ctaDestination === "atrio" ? "atrio" : "whatsapp";
+  useEffect(() => {
+    if (config.template === "template7" && config.ctaDestination !== "atrio") {
+      setConfig((prev) => ({ ...prev, ctaDestination: "atrio" }));
+    }
+  }, [config.template, config.ctaDestination, setConfig]);
+  const destination = config.template === "template7" || (config.template !== "template6" && config.ctaDestination === "atrio") ? "atrio" : "whatsapp";
   const targets = [
     {
       value: "whatsapp" as const,
@@ -75,12 +81,13 @@ export function CtaDestinationSection({
       title: "Atrio",
       icon: <AtrioLogo />,
     },
-  ].filter((target) => config.template !== "template6" || target.value === "whatsapp");
+  ].filter((target) => config.template === "template7" ? target.value === "atrio" : config.template !== "template6" || target.value === "whatsapp");
 
   return (
     <div className="rounded-xl border border-zinc-800 bg-zinc-900/50 p-4">
-      <p className="text-sm font-semibold text-zinc-200">Destino del CTA</p>
-      <div className={`mt-4 grid gap-2 ${config.template === "template6" ? "grid-cols-1" : "sm:grid-cols-2"}`}>
+      <p className="text-sm font-semibold text-zinc-200">{config.template === "template7" ? "Asignación de asesor" : "Destino del CTA"}</p>
+      {config.template === "template7" ? <p className="mt-1 text-xs text-zinc-400">Atrio asigna el asesor; el proveedor de cuenta se elige abajo.</p> : null}
+      <div className={`mt-4 grid gap-2 ${config.template === "template6" || config.template === "template7" ? "grid-cols-1" : "sm:grid-cols-2"}`}>
         {targets.map((target) => {
           const active = destination === target.value;
 
@@ -122,11 +129,30 @@ export function CtaDestinationSection({
       {destination === "atrio" ? (
         <div className="mt-4 rounded-lg border border-zinc-800 bg-zinc-950/40 p-3">
           <p className="text-xs font-medium text-zinc-300">
-            Atrio usa la card Redireccion
+            La asignación de asesor Atrio se configura en la card Redirección.
           </p>
           <p className="mt-1 text-[11px] text-zinc-500">
             Hay {atrioClients.length} cliente(s) Atrio disponibles para este workspace. Selecciona los slugs y el modo de reparto en la card Redireccion.
           </p>
+        </div>
+      ) : null}
+      {config.template === "template7" ? (
+        <div className="mt-4">
+          <label htmlFor="template7-target-provider" className="block text-sm font-semibold text-zinc-200">
+            Proveedor de destino
+          </label>
+          <select
+            id="template7-target-provider"
+            value={config.targetProvider === "multi_skin" ? "multi_skin" : "rey_de_ases"}
+            onChange={(event) => setConfig((prev) => ({
+              ...prev,
+              targetProvider: event.target.value as TargetProvider,
+            }))}
+            className="mt-2 w-full rounded-lg border border-zinc-700 bg-zinc-950 px-3 py-2 text-sm text-zinc-100"
+          >
+            <option value="rey_de_ases">Rey de Ases</option>
+            <option value="multi_skin">Multi Skin</option>
+          </select>
         </div>
       ) : null}
     </div>

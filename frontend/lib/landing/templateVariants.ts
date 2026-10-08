@@ -55,6 +55,8 @@ export function snapshotTemplateVariant(
     footerBadgeLine2: config.footerBadgeLine2,
     footerBadgeLine3: config.footerBadgeLine3,
     ctaText: config.ctaText,
+    ctaDestination: config.ctaDestination,
+    targetProvider: config.targetProvider,
     fontFamily: config.fontFamily,
     titleFontSize: config.titleFontSize,
     subtitleFontSize: config.subtitleFontSize,
@@ -139,7 +141,16 @@ export function switchLandingTemplate(
     ...(savedNextVariant ?? {}),
     ...globalConfig(config),
     template: nextTemplate,
+    ...(config.template === "template7" && nextTemplate !== "template7" ? {
+      ctaDestination: savedNextVariant?.ctaDestination ?? DEFAULT_CONFIG.ctaDestination,
+    } : {}),
     ...(nextTemplate === "template6" ? { ctaDestination: "whatsapp" as const } : {}),
+    ...(nextTemplate === "template7" ? {
+      ctaDestination: "atrio" as const,
+      socialProofEnabled: false,
+      emailCaptureEnabled: false,
+      leadCapture: { ...config.leadCapture, enabled: false },
+    } : {}),
     templateConfigs: withCurrentSnapshot.templateConfigs,
   };
 
