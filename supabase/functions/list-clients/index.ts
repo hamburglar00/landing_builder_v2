@@ -182,6 +182,11 @@ Deno.serve(async (req) => {
         "user_id, visible_columns, show_logs, show_inbox, show_ai_assistant, show_promotions",
       )
       .in("user_id", ids);
+    const { data: templatePermissions, error: templatePermissionsError } = await supabaseAdmin
+      .from("client_template_permissions")
+      .select("user_id, template7_enabled")
+      .in("user_id", ids);
+    if (templatePermissionsError) throw templatePermissionsError;
     const { data: subsRows } = await supabaseAdmin
       .from("client_subscriptions")
       .select(
@@ -208,6 +213,9 @@ Deno.serve(async (req) => {
         show_promotions: r.show_promotions ?? false,
       }]),
     );
+    const template7ByUserId = new Map(
+      (templatePermissions ?? []).map((row) => [row.user_id, row.template7_enabled === true]),
+    );
     const subsByUserId = new Map(
       (subsRows ?? []).map((r) => [r.user_id, r]),
     );
@@ -224,6 +232,7 @@ Deno.serve(async (req) => {
           show_inbox: cfgByUserId.get(u.id)?.show_inbox ?? false,
           show_ai_assistant: cfgByUserId.get(u.id)?.show_ai_assistant ?? false,
           show_promotions: cfgByUserId.get(u.id)?.show_promotions ?? false,
+          template7_enabled: template7ByUserId.get(u.id) ?? false,
           plan_code: subsByUserId.get(u.id)?.plan_code ?? "starter",
           max_landings: subsByUserId.get(u.id)?.max_landings ?? 1,
           max_phones: subsByUserId.get(u.id)?.max_phones ?? 2,

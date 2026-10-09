@@ -145,9 +145,11 @@ const TEMPLATE5_LIVE_DEFAULTS: LandingTemplate5LiveConfig = {
 export function LandingTemplateSection({
   config,
   setConfig,
+  allowTemplate7 = true,
 }: {
   config: LandingThemeConfig;
   setConfig: React.Dispatch<React.SetStateAction<LandingThemeConfig>>;
+  allowTemplate7?: boolean;
 }) {
   return (
     <CollapsibleSection title="Plantilla" defaultOpen>
@@ -156,7 +158,7 @@ export function LandingTemplateSection({
           Elegí la plantilla de layout que define qué secciones se configuran.
         </p>
         <div className="flex flex-col gap-2 sm:flex-row">
-          {TEMPLATE_OPTIONS.map((opt) => (
+          {TEMPLATE_OPTIONS.filter((opt) => allowTemplate7 || opt.value !== "template7").map((opt) => (
             <label
               key={opt.value}
               className="flex flex-1 cursor-pointer items-center gap-2 rounded-lg border border-zinc-700 bg-zinc-900 px-3 py-2 text-xs text-zinc-200 hover:bg-zinc-800"
@@ -175,6 +177,11 @@ export function LandingTemplateSection({
             </label>
           ))}
         </div>
+        {!allowTemplate7 && config.template === "template7" ? (
+          <p className="text-xs text-amber-300" role="alert">
+            Plantilla 7 ya no está habilitada para esta cuenta. Elegí otra plantilla para guardar cambios.
+          </p>
+        ) : null}
       </div>
     </CollapsibleSection>
   );

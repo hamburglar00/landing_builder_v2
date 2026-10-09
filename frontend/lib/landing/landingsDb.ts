@@ -146,6 +146,17 @@ export async function fetchLandingById(
   return data ? rowToLanding(data as LandingRow) : null;
 }
 
+/** Permiso administrado por superadmin; sin fila, Template 7 permanece oculto. */
+export async function fetchTemplate7Permission(userId: string): Promise<boolean> {
+  const { data, error } = await supabase
+    .from("client_template_permissions")
+    .select("template7_enabled")
+    .eq("user_id", userId)
+    .maybeSingle();
+  if (error) throw error;
+  return data?.template7_enabled === true;
+}
+
 /**
  * Crea una nueva landing para el usuario. Devuelve el id asignado.
  */

@@ -8,6 +8,7 @@ import type { Landing, LandingThemeConfig } from "@/lib/landing/types";
 import { DEFAULT_CONFIG } from "@/lib/landing/mocks";
 import {
   fetchLandingById,
+  fetchTemplate7Permission,
   updateLanding,
   deleteLanding,
   UNIQUE_VIOLATION_CODE,
@@ -176,6 +177,7 @@ export default function DashboardLandingEditarPage() {
   const [showPreview, setShowPreview] = useState(true);
   const [urlBase, setUrlBase] = useState<string | null>(null);
   const [clientName, setClientName] = useState<string | null>(null);
+  const [template7Enabled, setTemplate7Enabled] = useState(false);
   const [pixelOptions, setPixelOptions] = useState<Array<{ pixel_id: string; comment: string }>>([]);
   const [atrioClients, setAtrioClients] = useState<AtrioClient[]>([]);
   const [atrioAssignments, setAtrioAssignments] = useState<LandingAtrioAssignment[]>([]);
@@ -195,12 +197,13 @@ export default function DashboardLandingEditarPage() {
 
       setUserId(user.id);
       try {
-        const [found, assigned, assignedAtrio, settings, profile] = await Promise.all([
+        const [found, assigned, assignedAtrio, settings, profile, canUseTemplate7] = await Promise.all([
           fetchLandingById(id),
           fetchLandingGerencias(id),
           fetchLandingAtrioAssignments(id),
           getSettings(),
           supabase.from("profiles").select("nombre").eq("id", user.id).maybeSingle(),
+          fetchTemplate7Permission(user.id),
         ]);
         if (!found) {
           router.replace("/dashboard");
@@ -224,6 +227,7 @@ export default function DashboardLandingEditarPage() {
         setShowPreview(settings.show_client_landing_preview ?? true);
         setUrlBase(settings.url_base ?? null);
         setClientName(profile.data?.nombre ?? null);
+        setTemplate7Enabled(canUseTemplate7);
         const { data: pixels } = await supabase
           .from("conversions_pixel_configs")
           .select("pixel_id,comment")
@@ -261,6 +265,17 @@ export default function DashboardLandingEditarPage() {
     if (!landing) return;
     if (saving) return;
     setSaveError(null);
+    if (landing.config.template === "template7") {
+      try {
+        if (!(await fetchTemplate7Permission(userId ?? ""))) {
+          setSaveError("Plantilla 7 no está habilitada para esta cuenta.");
+          return;
+        }
+      } catch {
+        setSaveError("No se pudo verificar el permiso de Plantilla 7. Intentá de nuevo.");
+        return;
+      }
+    }
     if (/\s/.test(landing.name)) {
       setSaveError("El nombre no debe contener espacios.");
       return;
@@ -608,7 +623,7 @@ export default function DashboardLandingEditarPage() {
         )}
 
         {landing.landingType !== "external" && (
-          <LandingTemplateSection config={landing.config} setConfig={setConfig} />
+          <LandingTemplateSection config={landing.config} setConfig={setConfig} allowTemplate7={template7Enabled} />
         )}
 
         {landing.landingType !== "external" && landing.config.template === "template6" && (

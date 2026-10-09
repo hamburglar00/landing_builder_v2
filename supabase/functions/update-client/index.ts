@@ -15,6 +15,7 @@ type UpdateClientPayload = {
   showInbox?: boolean;
   showAiAssistant?: boolean;
   showPromotions?: boolean;
+  showTemplate7?: boolean;
   planCode?: "starter" | "plus" | "pro" | "premium" | "scale";
   maxLandings?: number;
   maxPhones?: number;
@@ -180,6 +181,13 @@ Deno.serve(async (req) => {
     const showInbox = payload.showInbox === undefined ? undefined : Boolean(payload.showInbox);
     const showAiAssistant = payload.showAiAssistant === undefined ? undefined : Boolean(payload.showAiAssistant);
     const showPromotions = payload.showPromotions === undefined ? undefined : Boolean(payload.showPromotions);
+    if (payload.showTemplate7 !== undefined && typeof payload.showTemplate7 !== "boolean") {
+      return new Response(JSON.stringify({ error: "showTemplate7 debe ser booleano." }), {
+        status: 400,
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
+    const showTemplate7 = payload.showTemplate7;
     const planCode = payload.planCode;
     const maxLandings = Number.isFinite(Number(payload.maxLandings))
       ? Number(payload.maxLandings)
@@ -201,6 +209,7 @@ Deno.serve(async (req) => {
       showInbox === undefined &&
       showAiAssistant === undefined &&
       showPromotions === undefined &&
+      showTemplate7 === undefined &&
       planCode === undefined &&
       maxLandings === undefined &&
       maxPhones === undefined &&
@@ -276,6 +285,18 @@ Deno.serve(async (req) => {
               "Content-Type": "application/json",
             },
           },
+        );
+      }
+    }
+
+    if (showTemplate7 !== undefined) {
+      const { error: templatePermissionError } = await supabaseAdmin
+        .from("client_template_permissions")
+        .upsert({ user_id: userId, template7_enabled: showTemplate7, updated_at: new Date().toISOString() }, { onConflict: "user_id" });
+      if (templatePermissionError) {
+        return new Response(
+          JSON.stringify({ error: templatePermissionError.message || "No se pudo actualizar el permiso de Template 7." }),
+          { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } },
         );
       }
     }
