@@ -180,7 +180,7 @@ export default function PublicLandingRuntimeScript({ slug, config }: Props) {
         if (!advisorId || !advisorSlug || !atrioClientId) return Promise.reject(new Error("advisor unavailable"));
         var controller = new AbortController();
         var timer = window.setTimeout(function () { controller.abort(); }, 18000);
-        return fetch("/api/template7/start", {
+        return fetch("/api/template7/prepare", {
           method: "POST",
           credentials: "same-origin",
           cache: "no-store",
@@ -1234,13 +1234,7 @@ export default function PublicLandingRuntimeScript({ slug, config }: Props) {
             button.disabled = true;
             return;
           }
-          var ready = window.__LB_IDENTITY_READY__;
-          if (ready && typeof ready.then === "function") {
-            ready.then(function () { processCtaClick(button, { firstName: firstName }); },
-              function () { processCtaClick(button, { firstName: firstName }); });
-          } else {
-            processCtaClick(button, { firstName: firstName });
-          }
+          processCtaClick(button, { firstName: firstName });
           return;
         }
         if (shouldShowLeadCapture(button)) {

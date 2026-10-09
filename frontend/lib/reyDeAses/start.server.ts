@@ -40,7 +40,7 @@ function json(body: Record<string, string>, status: number): Response {
   });
 }
 
-function parsePayload(value: unknown): StartRequest | null {
+export function parseTemplate7StartPayload(value: unknown): StartRequest | null {
   if (!value || typeof value !== "object" || Array.isArray(value)) return null;
   const data = value as Record<string, unknown>;
   const name = typeof data.name === "string" ? data.name.trim().replace(/\s+/g, " ") : "";
@@ -101,7 +101,7 @@ async function handleTemplate7StartInner(request: Request, deps: StartDependenci
   try {
     const raw = await request.text();
     if (new TextEncoder().encode(raw).length > 4096) return json({ error: "invalid_request" }, 413);
-    payload = parsePayload(JSON.parse(raw));
+    payload = parseTemplate7StartPayload(JSON.parse(raw));
   } catch { return json({ error: "invalid_request" }, 400); }
   if (!payload) return json({ error: "invalid_request" }, 400);
 
@@ -164,6 +164,18 @@ async function handleTemplate7StartInner(request: Request, deps: StartDependenci
 
 export async function handleTemplate7Start(request: Request, deps: StartDependencies): Promise<Response> {
   const identity = getOrCreateClientIdentity(request);
+  return handleTemplate7StartWithIdentity(request, deps, identity);
+}
+
+/**
+ * Variante privada para recorridos servidor-a-servidor que ya resolvieron el
+ * identificador HttpOnly. No debe exponerse directamente al navegador.
+ */
+export async function handleTemplate7StartWithIdentity(
+  request: Request,
+  deps: StartDependencies,
+  identity: ClientIdentity,
+): Promise<Response> {
   const response = await handleTemplate7StartInner(request, deps, identity);
   // Una respuesta 429 sin cookie no puede pisar el CID de una solicitud concurrente exitosa.
   return withClientIdentityCookie(response,

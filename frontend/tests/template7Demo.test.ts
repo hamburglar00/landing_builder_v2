@@ -161,14 +161,14 @@ test("clic demo ejecuta solo landing-atrio, start real y navegación al handoff"
     fetch: async (url: string, init?: RequestInit) => {
       seen.push(String(url));
       if (String(url).includes("/landing-atrio")) return { ok: true, json: async () => ({ atrioClientId: "22222222-2222-4222-8222-222222222222", atrioId: advisorId, atrioSlug: "gera" }) };
-      assert.equal(url, "/api/template7/start");
+      assert.equal(url, "/api/template7/prepare");
       assert.equal(new Headers(init?.headers).get("X-Template7-Demo-Context"), "testing");
       const payload = JSON.parse(String(init?.body));
       assert.equal(payload.name, "Martín");
       assert.equal(payload.landing_id, landingId);
       assert.equal(payload.demo, undefined);
       assert.equal(payload.test_event_code, undefined);
-      return { ok: true, json: async () => ({ handoff_url: "https://gateway.example.com/start?t=demo" }) };
+      return { ok: true, json: async () => ({ handoff_url: "https://gateway.example.com/prepare?t=demo" }) };
     },
   };
   runInNewContext(runtime, context);
@@ -176,5 +176,5 @@ test("clic demo ejecuta solo landing-atrio, start real y navegación al handoff"
   listeners.click();
   await new Promise((resolve) => setTimeout(resolve, 25));
   assert.equal(seen.length, 2);
-  assert.equal(navigated, "https://gateway.example.com/start?t=demo");
+  assert.equal(navigated, "https://gateway.example.com/prepare?t=demo");
 });

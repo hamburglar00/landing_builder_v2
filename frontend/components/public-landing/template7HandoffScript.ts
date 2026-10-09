@@ -12,7 +12,7 @@ export function buildTemplate7HandoffRuntimeScript(): string {
     function template7CheckedHandoff(raw) {
       var url = new URL(String(raw || ""));
       if (url.protocol !== "https:" || url.username || url.password || url.hash ||
-          url.pathname !== "/start" || url.searchParams.size !== 1 ||
+          (url.pathname !== "/prepare" && url.pathname !== "/start") || url.searchParams.size !== 1 ||
           url.searchParams.getAll("t").length !== 1 || !url.searchParams.get("t")) {
         throw new Error("invalid handoff");
       }

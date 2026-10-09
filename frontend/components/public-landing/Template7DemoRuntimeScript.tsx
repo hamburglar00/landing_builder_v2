@@ -11,6 +11,7 @@ function escapeScriptJson(value: unknown): string {
 export default function Template7DemoRuntimeScript({ slug, config }: { slug: string; config: PublicLandingConfig }) {
   const runtime = {
     slug, landingId: config.id, landingTag: config.tracking?.landingTag || "LP",
+    targetProvider: config.tracking?.target_provider || "rey_de_ases",
     supabaseUrl: process.env.NEXT_PUBLIC_SUPABASE_URL || "",
     supabaseAnonKey: process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || "",
   };
@@ -75,14 +76,15 @@ export default function Template7DemoRuntimeScript({ slug, config }: { slug: str
         if (!atrioClientId || !advisorId || !advisorSlug) throw new Error("advisor unavailable");
         var controller = new AbortController();
         var timer = window.setTimeout(function () { controller.abort(); }, 18000);
-        return fetch("/api/template7/start", {
+        return fetch("/api/template7/prepare", {
           method: "POST", credentials: "same-origin", cache: "no-store",
           headers: { "Content-Type": "application/json", "X-Template7-Demo-Context": "testing" },
           signal: controller.signal,
           body: JSON.stringify({
             landing_id: cfg.landingId, landing_slug: cfg.slug, name: name,
             atrio_client_id: atrioClientId, advisor_id: advisorId, advisor_slug: advisorSlug,
-            promo_code: promoCode
+            promo_code: promoCode,
+            attribution: { target_provider: cfg.targetProvider }
           })
         }).then(function (response) {
           if (!response.ok) throw new Error("start unavailable");
@@ -102,8 +104,7 @@ export default function Template7DemoRuntimeScript({ slug, config }: { slug: str
         setError("");
         buttonLabel(button, true);
         if (!promoCode) promoCode = String(cfg.landingTag || "LP") + "-" + Math.random().toString(16).slice(2, 14);
-        var ready = window.__LB_IDENTITY_READY__;
-        Promise.resolve(ready).catch(function () {}).then(advisor).then(function (data) {
+        advisor().then(function (data) {
           return start(name, data);
         }).then(navigateTemplate7Handoff).catch(function () { fail(button); });
       }
@@ -118,6 +119,7 @@ export default function Template7DemoRuntimeScript({ slug, config }: { slug: str
         button.addEventListener("click", function () { handleClick(button, input); });
         form.addEventListener("submit", function (event) { event.preventDefault(); sync(); if (!button.disabled) handleClick(button, input); });
         window.addEventListener("pageshow", sync);
+        advisor().catch(function () {});
         sync();
 
         var privacy = document.querySelector("[data-public-privacy-dialog]");
