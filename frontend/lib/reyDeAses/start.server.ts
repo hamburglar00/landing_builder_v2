@@ -1,11 +1,11 @@
 import { createClient } from "@supabase/supabase-js";
 import type { TargetProvider } from "../landing/types";
-import type { AssignedAdvisor, Api2ResolveAccountRequest, HandoffResult, TargetAccount, ResolvedPlayer, StartRequest, PlayerResolveRequest } from "./contracts";
+import type { AssignedAdvisor, Api2ResolveAccountRequest, HandoffResult, LinkedProviderAccount, TargetAccount, ResolvedPlayer, StartRequest, PlayerResolveRequest } from "./contracts";
 import { getOrCreateClientIdentity, withClientIdentityCookie, type ClientIdentity } from "./clientIdentity.server";
 import { isDemoLandingAllowed, readDemoConfig, readDemoCookie, verifyDemoSession, type DemoConfig } from "./demo.server";
 import { logServerFlowTotal, timedServerStage } from "./performance.server";
 import { allowTemplate7Start, template7StartRateLimitKeys } from "./rateLimit.server";
-import { api2Readiness, createProviderHandoff, gatewayReadiness, resolveInternalChatPlayer, resolveTargetAccount, TargetIntegrationError, validateResolvedPlayer } from "./integrations.server";
+import { api2Readiness, createProviderHandoff, gatewayReadiness, linkInternalChatProviderAccount, resolveInternalChatPlayer, resolveTargetAccount, TargetIntegrationError, validateResolvedPlayer } from "./integrations.server";
 
 type LandingRow = { id: string; name: string; user_id: string; workspace_currency: string; config: unknown; landing_config: unknown };
 type AssignmentRow = { landing_id: string; atrio_client_id: string; user_id: string };
@@ -34,6 +34,7 @@ export type StartDependencies = {
   demoConfig(): DemoConfig | null;
   resolvePlayer(input: PlayerResolveRequest): Promise<ResolvedPlayer>;
   resolveAccount(request: Api2ResolveAccountRequest): Promise<TargetAccount>;
+  linkProviderAccount(advisor: AssignedAdvisor, player: ResolvedPlayer, account: TargetAccount): Promise<LinkedProviderAccount>;
   createHandoff(provider: TargetProvider, advisor: AssignedAdvisor, deviceId: string, player: ResolvedPlayer, account: TargetAccount): Promise<HandoffResult>;
 };
 
@@ -203,11 +204,18 @@ async function handleTemplate7StartInner(request: Request, deps: StartDependenci
       ? { username: demoConfig.username, password: demoConfig.password, platform: "rey_de_ases", created: false }
       : await timedServerStage("template7_start", "account_resolve", () => deps.resolveAccount({ external_user_id: player.player_id, name: payload.name, target_provider: provider, advisor_id: resolvedAdvisor.advisorId, advisor_slug: resolvedAdvisor.advisorSlug }));
     if (!account.username || !account.password || account.platform !== provider) throw new TargetIntegrationError("upstream_unavailable");
-    const handoff = await timedServerStage(
-      "template7_start",
-      "gateway_handoff",
-      () => deps.createHandoff(provider, resolvedAdvisor, effectiveDeviceId, player, account),
-    );
+    const [, handoff] = await Promise.all([
+      timedServerStage(
+        "template7_start",
+        "internal_chat_account_link",
+        () => deps.linkProviderAccount(resolvedAdvisor, player, account),
+      ),
+      timedServerStage(
+        "template7_start",
+        "gateway_handoff",
+        () => deps.createHandoff(provider, resolvedAdvisor, effectiveDeviceId, player, account),
+      ),
+    ]);
     return json({ handoff_url: handoff.handoff_url }, 200);
   } catch (error) {
     if (error instanceof TargetIntegrationError) return json({ error: error.code }, 503);
@@ -334,6 +342,7 @@ export function productionDependencies(): StartDependencies {
     demoConfig: readDemoConfig,
     resolvePlayer: resolveInternalChatPlayer,
     resolveAccount: resolveTargetAccount,
+    linkProviderAccount: linkInternalChatProviderAccount,
     createHandoff: createProviderHandoff,
   };
 }

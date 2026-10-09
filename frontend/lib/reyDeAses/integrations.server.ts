@@ -1,4 +1,4 @@
-import type { AssignedAdvisor, Api2ResolveAccountRequest, HandoffResult, TargetAccount, ResolvedPlayer, PlayerResolveRequest } from "./contracts";
+import type { AssignedAdvisor, Api2ResolveAccountRequest, HandoffResult, LinkedProviderAccount, TargetAccount, ResolvedPlayer, PlayerResolveRequest } from "./contracts";
 import type { TargetProvider } from "../landing/types";
 import { isDeviceId } from "./clientIdentity.server";
 
@@ -90,6 +90,53 @@ export async function resolveTargetAccount(_request: Api2ResolveAccountRequest):
   // PENDIENTE: API2 debe confirmar la ruta, autenticación e idempotencia de
   // external_user_id=player_id. Nunca fabricar usuario/contraseña de prueba.
   throw new TargetIntegrationError("integration_pending");
+}
+
+export async function linkInternalChatProviderAccount(
+  advisor: AssignedAdvisor,
+  player: ResolvedPlayer,
+  account: TargetAccount,
+): Promise<LinkedProviderAccount> {
+  if (
+    player.advisor_id !== advisor.advisorId ||
+    player.advisor_slug !== advisor.advisorSlug ||
+    player.target_provider !== account.platform ||
+    !isDeviceId(player.player_id) ||
+    !isDeviceId(player.player_provider_account_id) ||
+    !account.username
+  ) {
+    throw new TargetIntegrationError("upstream_unavailable");
+  }
+
+  const origin = configuredOrigin(process.env.INTERNAL_CHAT_ORIGIN);
+  const result = await postJson(
+    origin,
+    "/api/gateway/provider-accounts/link",
+    process.env.INTERNAL_CHAT_PLAYER_RESOLVE_KEY,
+    {
+      advisor_id: advisor.advisorId,
+      advisor_slug: advisor.advisorSlug,
+      player_id: player.player_id,
+      player_provider_account_id: player.player_provider_account_id,
+      target_provider: player.target_provider,
+      provider_username: account.username,
+      ...(account.externalAccountId
+        ? { provider_external_account_id: account.externalAccountId }
+        : {}),
+      source: "landing_builder",
+    },
+  );
+
+  if (
+    result.player_provider_account_id !== player.player_provider_account_id ||
+    result.target_provider !== player.target_provider ||
+    result.provider_username !== account.username ||
+    result.provider_external_account_id !== (account.externalAccountId ?? null)
+  ) {
+    throw new TargetIntegrationError("upstream_unavailable");
+  }
+
+  return result as LinkedProviderAccount;
 }
 
 export async function createProviderHandoff(provider: TargetProvider, advisor: AssignedAdvisor, deviceId: string, player: ResolvedPlayer, account: TargetAccount): Promise<HandoffResult> {

@@ -1,7 +1,7 @@
 import assert from "node:assert/strict";
 import test from "node:test";
 import { handleReyStart, type StartDependencies } from "../lib/reyDeAses/start.server";
-import { createProviderHandoff, gatewayReadiness, resolveInternalChatPlayer } from "../lib/reyDeAses/integrations.server";
+import { createProviderHandoff, gatewayReadiness, linkInternalChatProviderAccount, resolveInternalChatPlayer } from "../lib/reyDeAses/integrations.server";
 import { createDemoSession, readDemoConfig } from "../lib/reyDeAses/demo.server";
 import type { ResolvedPlayer } from "../lib/reyDeAses/contracts";
 import type { TargetProvider } from "../lib/landing/types";
@@ -80,6 +80,17 @@ function dependencies(status: ReturnType<StartDependencies["api2Status"]> = null
       assert.deepEqual(accountRequest, { external_user_id: playerId, name: "Martín", target_provider: provider, advisor_id: advisorId, advisor_slug: "gera" });
       return { username: "secret-user", password: "secret-pass", platform: provider as TargetProvider, created: true };
     },
+    async linkProviderAccount(_advisor, player, account) {
+      calls.push("internal-chat-link");
+      assert.equal(player.player_provider_account_id, provider === "multi_skin" ? multiSkinAccountId : providerAccountId);
+      assert.ok(account.username);
+      return {
+        player_provider_account_id: player.player_provider_account_id,
+        target_provider: player.target_provider,
+        provider_username: account.username,
+        provider_external_account_id: account.externalAccountId ?? null,
+      };
+    },
     async createHandoff(targetProvider, advisor, incomingDeviceId, player, account) {
       calls.push("gateway");
       assert.equal(targetProvider, provider ?? "rey_de_ases");
@@ -141,7 +152,7 @@ test("start optimizado resuelve validación, límites y asesor en una sola opera
   assert.equal(result.status, 200);
   assert.deepEqual(calls, [
     "context-transaction", "gateway-readiness:rey_de_ases", "api2-readiness",
-    "internal-chat", "api2", "gateway",
+    "internal-chat", "api2", "internal-chat-link", "gateway",
   ]);
 });
 
@@ -225,7 +236,7 @@ test("con toda la cadena disponible el navegador recibe solo handoff_url", async
   assert.equal(result.status, 200);
   const body = await result.text();
   assert.deepEqual(JSON.parse(body), { handoff_url: "https://gateway.example.com/start?t=token" });
-  assert.deepEqual(calls, ["landing", "plan", "rate-limit", "assignment", "advisor", "gateway-readiness:rey_de_ases", "api2-readiness", "internal-chat", "api2", "gateway"]);
+  assert.deepEqual(calls, ["landing", "plan", "rate-limit", "assignment", "advisor", "gateway-readiness:rey_de_ases", "api2-readiness", "internal-chat", "api2", "internal-chat-link", "gateway"]);
   assert.doesNotMatch(body, /secret-user|secret-pass|api_key/i);
 });
 
@@ -300,7 +311,7 @@ test("demo válida mantiene validaciones, limita con lb_cid y solo sustituye API
   }), deps);
   assert.equal(result.status, 200);
   assert.deepEqual(await result.json(), { handoff_url: "https://gateway.example.com/start?t=demo" });
-  assert.deepEqual(calls, ["landing", "demo-config", "plan", "rate-limit", "assignment", "advisor", "gateway-readiness:rey_de_ases", "internal-chat", "gateway"]);
+  assert.deepEqual(calls, ["landing", "demo-config", "plan", "rate-limit", "assignment", "advisor", "gateway-readiness:rey_de_ases", "internal-chat", "internal-chat-link", "gateway"]);
 });
 
 test("ruta normal ignora cookie demo; indicador sin sesión no autoriza", async () => {
@@ -439,6 +450,34 @@ test("adaptadores usan contrato servidor-servidor y no exponen credenciales", as
       resolveInternalChatPlayer({ advisor, deviceId, name: "Martín", landingId, landingSlug: "landing-7", promoCode: "LP-a1b2", targetProvider: "rey_de_ases" }),
       { code: "upstream_unavailable" },
     );
+    globalThis.fetch = async (input, init) => {
+      assert.equal(String(input), "https://chat.example.com/api/gateway/provider-accounts/link");
+      assert.equal(new Headers(init?.headers).get("Authorization"), "Bearer test-chat-key");
+      assert.deepEqual(JSON.parse(String(init?.body)), {
+        advisor_id: advisorId,
+        advisor_slug: "gera",
+        player_id: playerId,
+        player_provider_account_id: providerAccountId,
+        target_provider: "rey_de_ases",
+        provider_username: "test-user",
+        provider_external_account_id: "39557908",
+        source: "landing_builder",
+      });
+      return Response.json({
+        player_provider_account_id: providerAccountId,
+        target_provider: "rey_de_ases",
+        provider_username: "test-user",
+        provider_external_account_id: "39557908",
+      });
+    };
+    const linked = await linkInternalChatProviderAccount(advisor, player, {
+      username: "test-user",
+      password: "test-pass",
+      platform: "rey_de_ases",
+      created: true,
+      externalAccountId: "39557908",
+    });
+    assert.equal(linked.provider_username, "test-user");
     globalThis.fetch = async (input, init) => {
       assert.equal(String(input), "https://gateway.example.com/api/handoffs");
       assert.equal(new Headers(init?.headers).get("Authorization"), "Bearer test-gateway-key");

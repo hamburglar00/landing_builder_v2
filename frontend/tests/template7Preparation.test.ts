@@ -61,6 +61,14 @@ function deps(): StartDependencies {
       };
     },
     async resolveAccount() { return { username: "player", password: "secret", platform: "rey_de_ases", created: false }; },
+    async linkProviderAccount(_advisor, player, account) {
+      return {
+        player_provider_account_id: player.player_provider_account_id,
+        target_provider: player.target_provider,
+        provider_username: account.username,
+        provider_external_account_id: null,
+      };
+    },
     async createHandoff() {
       return { handoff_url: "https://gateway.example.com/start?t=handoff", expires_at: "2026-10-08T12:00:00Z", binding_created: false };
     },
@@ -111,7 +119,9 @@ test("complete rechaza autenticacion, adulteracion y vencimiento", async () => {
     }), env, deps(), instant,
   );
   assert.equal((await call(token, "Bearer wrong", now + 1000)).status, 401);
-  assert.equal((await call(token.slice(0, -1) + (token.endsWith("a") ? "b" : "a"), `Bearer ${env.TEMPLATE7_PREPARATION_API_KEY}`, now + 1000)).status, 410);
+  const tamperIndex = Math.floor(token.length / 2);
+  const tampered = token.slice(0, tamperIndex) + (token[tamperIndex] === "a" ? "b" : "a") + token.slice(tamperIndex + 1);
+  assert.equal((await call(tampered, `Bearer ${env.TEMPLATE7_PREPARATION_API_KEY}`, now + 1000)).status, 410);
   assert.equal((await call(token, `Bearer ${env.TEMPLATE7_PREPARATION_API_KEY}`, now + 301_000)).status, 410);
 });
 

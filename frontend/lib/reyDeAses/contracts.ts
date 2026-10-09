@@ -51,6 +51,14 @@ export type TargetAccount = {
   password: string;
   platform: TargetProvider;
   created: boolean;
+  externalAccountId?: string | null;
+};
+
+export type LinkedProviderAccount = {
+  player_provider_account_id: string;
+  target_provider: TargetProvider;
+  provider_username: string;
+  provider_external_account_id: string | null;
 };
 
 export type HandoffResult = {
