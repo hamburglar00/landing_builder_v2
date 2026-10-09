@@ -136,10 +136,12 @@ function sameSecret(supplied: string, expected: string): boolean {
   return left.length === right.length && timingSafeEqual(left, right);
 }
 
-function gatewayOrigin(env: PreparationEnvironment): string {
-  const raw = env.REY_GATEWAY_ORIGIN || "";
+function gatewayOrigin(payload: StartRequest, env: PreparationEnvironment): string {
+  const multiSkin = payload.attribution?.target_provider === "multi_skin" && payload.attribution?.skin_code === "ganamos_plus";
+  const raw = multiSkin ? env.MULTI_SKIN_GATEWAY_ORIGIN || "" : env.REY_GATEWAY_ORIGIN || "";
   const url = new URL(raw);
-  if (url.protocol !== "https:" || url.pathname !== "/" || url.search || url.hash || url.username || url.password) {
+  const local = url.protocol === "http:" && ["localhost", "127.0.0.1"].includes(url.hostname);
+  if ((!local && url.protocol !== "https:") || url.pathname !== "/" || url.search || url.hash || url.username || url.password) {
     throw new Error("gateway unavailable");
   }
   return url.origin;
@@ -172,7 +174,7 @@ export async function handleTemplate7Prepare(
       demo_cookie: demoCookie,
       client_ip: clientIp(request),
     }, env);
-    const destination = new URL("/prepare", gatewayOrigin(env));
+    const destination = new URL("/prepare", gatewayOrigin(payload, env));
     destination.searchParams.set("t", token);
     return withClientIdentityCookie(json({ handoff_url: destination.toString() }, 200), identity);
   } catch {

@@ -4,7 +4,7 @@ import Image from "next/image";
 import { useEffect, type SetStateAction } from "react";
 import type { AtrioClient } from "@/lib/atrio/atrioDb";
 import type { LandingThemeConfig } from "@/lib/landing/types";
-import type { TargetProvider } from "@/lib/landing/types";
+import type { MultiSkinCode, TargetProvider } from "@/lib/landing/types";
 import CustomSelect from "@/components/ui/CustomSelect";
 
 type Props = {
@@ -154,6 +154,28 @@ export function CtaDestinationSection({
             className="mt-2"
             buttonClassName="h-10 bg-zinc-950 px-3 text-sm"
           />
+          {config.targetProvider === "multi_skin" ? (
+            <>
+              <label htmlFor="template7-multi-skin-code" className="mt-4 block text-sm font-semibold text-zinc-200">
+                Sitio Multi Skin
+              </label>
+              <CustomSelect
+                portal
+                id="template7-multi-skin-code"
+                value={config.multiSkinCode || "ganamos_plus"}
+                onChange={(value) => setConfig((prev) => ({
+                  ...prev,
+                  multiSkinCode: value as MultiSkinCode,
+                }))}
+                options={[{ value: "ganamos_plus", label: "Ganamos+" }]}
+                className="mt-2"
+                buttonClassName="h-10 bg-zinc-950 px-3 text-sm"
+              />
+              <p className="mt-2 text-xs text-zinc-500">
+                La cuenta funciona en toda la red Multi Skin; esta opción define qué sitio verá el jugador.
+              </p>
+            </>
+          ) : null}
         </div>
       ) : null}
     </div>

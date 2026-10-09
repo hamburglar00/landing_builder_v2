@@ -1,4 +1,4 @@
-import type { LandingThemeConfig, LandingWorkspaceCurrency, TargetProvider } from "./types";
+import type { LandingThemeConfig, LandingWorkspaceCurrency, MultiSkinCode, TargetProvider } from "./types";
 import { COLOR_MAP } from "./constants";
 import { buildOptimizedImageUrl, buildResponsiveImageSet } from "./imageUrl";
 import { normalizeTemplate6Cover, TEMPLATE6_CARD_COUNT, template6Lines } from "./template6";
@@ -37,6 +37,7 @@ export interface LandingConfigPayload {
     sendContactPixel: boolean;
     ctaDestination?: "whatsapp" | "atrio";
     target_provider?: TargetProvider;
+    skin_code?: MultiSkinCode;
     atrioRedirectUrl?: string;
     atrioClientId?: string;
     atrioId?: string;
@@ -240,6 +241,9 @@ export function buildLandingConfig({
       sendContactPixel: config.sendContactPixel,
       ctaDestination: config.template === "template7" || (config.template !== "template6" && config.ctaDestination === "atrio") ? "atrio" : "whatsapp",
       ...(config.template === "template7" ? { target_provider: config.targetProvider === "multi_skin" ? "multi_skin" as const : "rey_de_ases" as const } : {}),
+      ...(config.template === "template7" && config.targetProvider === "multi_skin"
+        ? { skin_code: "ganamos_plus" as const }
+        : {}),
       atrioRedirectUrl: config.atrioRedirectUrl.trim(),
       atrioClientId: (config.atrioClientId ?? "").trim(),
       atrioId: (config.atrioId ?? "").trim(),

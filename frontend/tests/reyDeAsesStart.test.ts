@@ -35,6 +35,17 @@ function demoConfig() {
   return config;
 }
 
+function multiSkinDemoConfig() {
+  const config = readDemoConfig({
+    TEMPLATE7_DEMO_ENABLED: "true",
+    TEMPLATE7_DEMO_SESSION_SECRET: "s".repeat(32), TEMPLATE7_DEMO_LANDING_IDS: landingId,
+    TEMPLATE7_DEMO_ADVISOR_IDS: advisorId, TEMPLATE7_DEMO_DEVICE_ID: demoDeviceId,
+    TEMPLATE7_DEMO_MULTI_SKIN_ENABLED: "true",
+  });
+  assert.ok(config);
+  return config;
+}
+
 const validPayload = {
   landing_id: landingId, landing_slug: "landing-7", name: "Martín",
   atrio_client_id: clientId, advisor_id: advisorId, advisor_slug: "gera", promo_code: "LP-a1b2",
@@ -53,7 +64,10 @@ function dependencies(status: ReturnType<StartDependencies["api2Status"]> = null
     db: {
       async landing(id) { calls.push("landing"); return id === landingId ? {
         id: landingId, name: "landing-7", user_id: ownerId, workspace_currency: "ARS",
-        config: { template: "template7", ctaDestination: "atrio", targetProvider: provider }, landing_config: { layout: { template: 7 } },
+        config: {
+          template: "template7", ctaDestination: "atrio", targetProvider: provider,
+          ...(provider === "multi_skin" ? { multiSkinCode: "ganamos_plus" } : {}),
+        }, landing_config: { layout: { template: 7 } },
       } : null; },
       async blocked() { calls.push("plan"); return false; },
       async assignment(id, selectedClient) { calls.push("assignment"); return id === landingId && selectedClient === clientId
@@ -77,7 +91,11 @@ function dependencies(status: ReturnType<StartDependencies["api2Status"]> = null
     },
     async resolveAccount(accountRequest) {
       calls.push("api2");
-      assert.deepEqual(accountRequest, { external_user_id: playerId, name: "Martín", target_provider: provider, advisor_id: advisorId, advisor_slug: "gera" });
+      assert.deepEqual(accountRequest, {
+        external_user_id: playerId, name: "Martín", target_provider: provider,
+        advisor_id: advisorId, advisor_slug: "gera",
+        ...(provider === "multi_skin" ? { skin_code: "ganamos_plus" } : {}),
+      });
       return { username: "secret-user", password: "secret-pass", platform: provider as TargetProvider, created: true };
     },
     async linkProviderAccount(_advisor, player, account) {
@@ -375,17 +393,41 @@ test("demo no omite bloqueo del plan ni asignación real del asesor", async () =
   assert.ok(!unassigned.calls.includes("internal-chat"));
 });
 
-test("Multi Skin nunca usa la cuenta demo de Rey de Ases", async () => {
+test("Multi Skin usa el bypass propio del gateway y nunca las credenciales demo de Rey", async () => {
   const { deps, calls } = dependencies(null, "multi_skin");
-  const cfg = demoConfig();
+  const cfg = multiSkinDemoConfig();
   deps.demoConfig = () => cfg;
+  deps.api2Status = () => { throw Error("API2 must not be called"); };
+  deps.resolveAccount = async () => { throw Error("API2 must not be called"); };
+  deps.resolvePlayer = async (input) => {
+    calls.push("internal-chat");
+    return resolvedPlayer("multi_skin", input.deviceId);
+  };
+  deps.createHandoff = async (provider, _advisor, incomingDeviceId, player, account, skinCode, testing) => {
+    calls.push("gateway");
+    assert.equal(provider, "multi_skin");
+    assert.equal(incomingDeviceId, demoDeviceId);
+    assert.equal(player.target_provider, "multi_skin");
+    assert.equal(account.testingBypass, true);
+    assert.equal(account.username, "");
+    assert.equal(account.password, "");
+    assert.equal(skinCode, "ganamos_plus");
+    assert.equal(testing, true);
+    return {
+      handoff_url: "https://multi.example.com/start?t=demo",
+      expires_at: "",
+      binding_created: false,
+      provider_username: "multi-demo-user",
+    };
+  };
   const token = createDemoSession(landingId, "landing-7", cfg);
   const result = await handleReyStart(request(validPayload, {
     Cookie: `lb_cid=${deviceId}; t7_demo=${token}`, "X-Template7-Demo-Context": "testing",
   }), deps);
-  assert.equal(result.status, 503);
-  assert.deepEqual(await result.json(), { error: "integration_pending" });
-  assert.ok(!calls.includes("internal-chat") && !calls.includes("gateway") && !calls.includes("api2"));
+  assert.equal(result.status, 200);
+  assert.deepEqual(await result.json(), { handoff_url: "https://multi.example.com/start?t=demo" });
+  assert.ok(calls.includes("internal-chat") && calls.includes("gateway") && calls.includes("internal-chat-link"));
+  assert.ok(!calls.includes("api2"));
 });
 
 test("respuesta de internal-chat con device_id alterado produce upstream_unavailable", async () => {
@@ -506,5 +548,71 @@ test("adaptadores usan contrato servidor-servidor y no exponen credenciales", as
     if (oldChatKey === undefined) delete process.env.INTERNAL_CHAT_PLAYER_RESOLVE_KEY; else process.env.INTERNAL_CHAT_PLAYER_RESOLVE_KEY = oldChatKey;
     if (oldGatewayOrigin === undefined) delete process.env.REY_GATEWAY_ORIGIN; else process.env.REY_GATEWAY_ORIGIN = oldGatewayOrigin;
     if (oldGatewayKey === undefined) delete process.env.REY_GATEWAY_HANDOFF_API_KEY; else process.env.REY_GATEWAY_HANDOFF_API_KEY = oldGatewayKey;
+  }
+});
+
+test("adaptador Multi Skin separa handoff normal y bypass de prueba", async () => {
+  const originalFetch = globalThis.fetch;
+  const original = {
+    origin: process.env.MULTI_SKIN_GATEWAY_ORIGIN,
+    handoffKey: process.env.MULTI_SKIN_GATEWAY_HANDOFF_API_KEY,
+    testingKey: process.env.MULTI_SKIN_GATEWAY_TESTING_API_KEY,
+  };
+  process.env.MULTI_SKIN_GATEWAY_ORIGIN = "https://multi.example.com";
+  process.env.MULTI_SKIN_GATEWAY_HANDOFF_API_KEY = "multi-handoff-key";
+  process.env.MULTI_SKIN_GATEWAY_TESTING_API_KEY = "multi-testing-key";
+  const advisor = { atrioClientId: clientId, advisorId, advisorSlug: "gera" };
+  const player = resolvedPlayer("multi_skin");
+  try {
+    globalThis.fetch = async (input, init) => {
+      assert.equal(String(input), "https://multi.example.com/api/handoffs");
+      assert.equal(new Headers(init?.headers).get("Authorization"), "Bearer multi-handoff-key");
+      assert.deepEqual(JSON.parse(String(init?.body)), {
+        advisor_id: advisorId,
+        advisor_slug: "gera",
+        device_id: deviceId,
+        external_user_id: playerId,
+        player_provider_account_id: multiSkinAccountId,
+        target_provider: "multi_skin",
+        skin_code: "ganamos_plus",
+        username: "multi-user",
+        password: "multi-pass",
+      });
+      return Response.json({
+        handoff_url: "https://multi.example.com/start?t=normal",
+        expires_in: 120,
+      });
+    };
+    const normal = await createProviderHandoff(
+      "multi_skin", advisor, deviceId, player,
+      { username: "multi-user", password: "multi-pass", platform: "multi_skin", created: true },
+      "ganamos_plus", false,
+    );
+    assert.equal(normal.handoff_url, "https://multi.example.com/start?t=normal");
+
+    globalThis.fetch = async (input, init) => {
+      assert.equal(String(input), "https://multi.example.com/api/testing/handoffs");
+      assert.equal(new Headers(init?.headers).get("Authorization"), "Bearer multi-testing-key");
+      const body = JSON.parse(String(init?.body));
+      assert.equal(body.skin_code, "ganamos_plus");
+      assert.equal(body.username, undefined);
+      assert.equal(body.password, undefined);
+      return Response.json({
+        handoff_url: "https://multi.example.com/start?t=testing",
+        expires_in: 120,
+        provider_username: "demo-user",
+      });
+    };
+    const testing = await createProviderHandoff(
+      "multi_skin", advisor, deviceId, player,
+      { username: "", password: "", platform: "multi_skin", created: false, testingBypass: true },
+      "ganamos_plus", true,
+    );
+    assert.equal(testing.provider_username, "demo-user");
+  } finally {
+    globalThis.fetch = originalFetch;
+    if (original.origin === undefined) delete process.env.MULTI_SKIN_GATEWAY_ORIGIN; else process.env.MULTI_SKIN_GATEWAY_ORIGIN = original.origin;
+    if (original.handoffKey === undefined) delete process.env.MULTI_SKIN_GATEWAY_HANDOFF_API_KEY; else process.env.MULTI_SKIN_GATEWAY_HANDOFF_API_KEY = original.handoffKey;
+    if (original.testingKey === undefined) delete process.env.MULTI_SKIN_GATEWAY_TESTING_API_KEY; else process.env.MULTI_SKIN_GATEWAY_TESTING_API_KEY = original.testingKey;
   }
 });

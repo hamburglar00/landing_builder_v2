@@ -77,6 +77,7 @@ export type PhoneKind = "carga" | "ads" | "mkt" | "assistant";
 
 export type LandingCtaDestination = "whatsapp" | "atrio";
 export type TargetProvider = "rey_de_ases" | "multi_skin";
+export type MultiSkinCode = "ganamos_plus";
 
 export interface LandingLeadCaptureConfig {
   enabled: boolean;
@@ -185,6 +186,8 @@ export interface LandingThemeConfig {
   ctaDestination: LandingCtaDestination;
   /** Proveedor de cuenta del Template 7; no lo decide el navegador. */
   targetProvider: TargetProvider;
+  /** Sitio visual del proveedor Multi Skin. La cuenta subyacente es compartida. */
+  multiSkinCode: MultiSkinCode;
   atrioRedirectUrl: string;
   atrioClientId: string;
   atrioId: string;

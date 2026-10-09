@@ -1,5 +1,5 @@
 import type { AssignedAdvisor, Api2ResolveAccountRequest, HandoffResult, LinkedProviderAccount, TargetAccount, ResolvedPlayer, PlayerResolveRequest } from "./contracts";
-import type { TargetProvider } from "../landing/types";
+import type { MultiSkinCode, TargetProvider } from "../landing/types";
 import { isDeviceId } from "./clientIdentity.server";
 
 export class TargetIntegrationError extends Error {
@@ -53,7 +53,7 @@ export function api2Readiness(): "integration_pending" {
 }
 
 export function gatewayReadiness(provider: TargetProvider): "integration_pending" | null {
-  return provider === "multi_skin" ? "integration_pending" : null;
+  return provider === "multi_skin" && !process.env.MULTI_SKIN_GATEWAY_ORIGIN ? "integration_pending" : null;
 }
 
 export function validateResolvedPlayer(result: unknown, input: Pick<PlayerResolveRequest, "advisor" | "deviceId" | "targetProvider">): ResolvedPlayer {
@@ -139,24 +139,43 @@ export async function linkInternalChatProviderAccount(
   return result as LinkedProviderAccount;
 }
 
-export async function createProviderHandoff(provider: TargetProvider, advisor: AssignedAdvisor, deviceId: string, player: ResolvedPlayer, account: TargetAccount): Promise<HandoffResult> {
-  if (provider === "multi_skin") throw new TargetIntegrationError("integration_pending");
-  const origin = configuredOrigin(process.env.REY_GATEWAY_ORIGIN);
+export async function createProviderHandoff(
+  provider: TargetProvider,
+  advisor: AssignedAdvisor,
+  deviceId: string,
+  player: ResolvedPlayer,
+  account: TargetAccount,
+  skinCode: MultiSkinCode | null = null,
+  testing = false,
+): Promise<HandoffResult> {
+  const origin = configuredOrigin(provider === "multi_skin" ? process.env.MULTI_SKIN_GATEWAY_ORIGIN : process.env.REY_GATEWAY_ORIGIN);
   if (player.target_provider !== provider || !isDeviceId(player.player_provider_account_id) ||
-      account.platform !== provider || !account.username || !account.password) {
+      account.platform !== provider || (provider === "multi_skin" && !skinCode) ||
+      (!testing && (!account.username || !account.password)) || (testing && provider !== "multi_skin")) {
     throw new TargetIntegrationError("upstream_unavailable");
   }
-  const result = await postJson(origin, "/api/handoffs", process.env.REY_GATEWAY_HANDOFF_API_KEY, {
+  const result = await postJson(
+    origin,
+    provider === "multi_skin" && testing ? "/api/testing/handoffs" : "/api/handoffs",
+    provider === "multi_skin"
+      ? testing ? process.env.MULTI_SKIN_GATEWAY_TESTING_API_KEY : process.env.MULTI_SKIN_GATEWAY_HANDOFF_API_KEY
+      : process.env.REY_GATEWAY_HANDOFF_API_KEY,
+    {
     advisor_id: advisor.advisorId,
     advisor_slug: advisor.advisorSlug,
     device_id: deviceId,
     external_user_id: player.player_id,
     player_provider_account_id: player.player_provider_account_id,
     target_provider: player.target_provider,
-    platform: "rey_de_ases",
-    username: account.username,
-    password: account.password,
-    target_path: "/casino/list/home",
+    ...(provider === "rey_de_ases" ? {
+      platform: "rey_de_ases",
+      username: account.username,
+      password: account.password,
+      target_path: "/casino/list/home",
+    } : {
+      skin_code: skinCode,
+      ...(!testing ? { username: account.username, password: account.password } : {}),
+    }),
   });
   try {
     const url = new URL(String(result.handoff_url ?? ""));
@@ -164,8 +183,18 @@ export async function createProviderHandoff(provider: TargetProvider, advisor: A
         url.searchParams.size !== 1 || url.searchParams.getAll("t").length !== 1 || !url.searchParams.get("t")) {
       throw new Error("unexpected handoff");
     }
-    if (typeof result.expires_at !== "string" || typeof result.binding_created !== "boolean") throw new Error("invalid handoff");
-    return result as HandoffResult;
+    if (provider === "rey_de_ases") {
+      if (typeof result.expires_at !== "string" || typeof result.binding_created !== "boolean") throw new Error("invalid handoff");
+    } else {
+      if (!Number.isInteger(result.expires_in) || Number(result.expires_in) < 60 || Number(result.expires_in) > 300) throw new Error("invalid handoff");
+      if (testing && (typeof result.provider_username !== "string" || !result.provider_username.trim())) throw new Error("invalid handoff");
+    }
+    return {
+      handoff_url: String(result.handoff_url),
+      expires_at: typeof result.expires_at === "string" ? result.expires_at : "",
+      binding_created: result.binding_created === true,
+      ...(typeof result.provider_username === "string" ? { provider_username: result.provider_username } : {}),
+    };
   } catch {
     throw new TargetIntegrationError("upstream_unavailable");
   }

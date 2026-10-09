@@ -12,6 +12,7 @@ export type PublicLandingConfig = {
     sendContactPixel?: boolean;
     ctaDestination?: "whatsapp" | "atrio" | string;
     target_provider?: "rey_de_ases" | "multi_skin";
+    skin_code?: "ganamos_plus";
     atrioRedirectUrl?: string;
     atrioClientId?: string;
     atrioId?: string;

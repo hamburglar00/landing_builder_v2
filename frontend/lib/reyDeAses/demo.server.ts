@@ -13,6 +13,7 @@ export type DemoConfig = {
   deviceId: string;
   username: string;
   password: string;
+  multiSkinEnabled?: boolean;
 };
 
 export type DemoLanding = {
@@ -38,10 +39,12 @@ export function readDemoConfig(env: Record<string, string | undefined> = process
   const deviceId = env.TEMPLATE7_DEMO_DEVICE_ID || "";
   const username = env.TEMPLATE7_DEMO_REY_USERNAME || "";
   const password = env.TEMPLATE7_DEMO_REY_PASSWORD || "";
+  const multiSkinEnabled = env.TEMPLATE7_DEMO_MULTI_SKIN_ENABLED === "true";
+  const reyCredentialsComplete = Boolean(username && password);
   if (Buffer.byteLength(sessionSecret) < 32 ||
       !landingIds?.size || !advisorIds?.size || !isDeviceId(deviceId) ||
-      !username || !password) return null;
-  return { sessionSecret, landingIds, advisorIds, deviceId, username, password };
+      (!reyCredentialsComplete && !multiSkinEnabled) || Boolean(username) !== Boolean(password)) return null;
+  return { sessionSecret, landingIds, advisorIds, deviceId, username, password, multiSkinEnabled };
 }
 
 export function isDemoLandingAllowed(landing: DemoLanding, config: DemoConfig): boolean {
@@ -49,9 +52,12 @@ export function isDemoLandingAllowed(landing: DemoLanding, config: DemoConfig): 
   const published = landing.landing_config && typeof landing.landing_config === "object"
     ? landing.landing_config as Record<string, unknown> : {};
   const layout = published.layout && typeof published.layout === "object" ? published.layout as Record<string, unknown> : {};
+  const providerAllowed = raw.targetProvider === "rey_de_ases"
+    ? Boolean(config.username && config.password)
+    : raw.targetProvider === "multi_skin" && raw.multiSkinCode === "ganamos_plus" && config.multiSkinEnabled === true;
   return isDeviceId(landing.id) && config.landingIds.has(landing.id.toLowerCase()) &&
     raw.template === "template7" && layout.template === 7 && raw.ctaDestination === "atrio" &&
-    raw.targetProvider === "rey_de_ases";
+    providerAllowed;
 }
 
 type DemoClaims = {

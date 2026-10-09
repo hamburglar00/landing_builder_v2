@@ -12,6 +12,7 @@ export default function Template7DemoRuntimeScript({ slug, config }: { slug: str
   const runtime = {
     slug, landingId: config.id, landingTag: config.tracking?.landingTag || "LP",
     targetProvider: config.tracking?.target_provider || "rey_de_ases",
+    skinCode: config.tracking?.skin_code || "",
     supabaseUrl: process.env.NEXT_PUBLIC_SUPABASE_URL || "",
     supabaseAnonKey: process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || "",
   };
@@ -92,7 +93,10 @@ export default function Template7DemoRuntimeScript({ slug, config }: { slug: str
             landing_id: cfg.landingId, landing_slug: cfg.slug, name: name,
             atrio_client_id: atrioClientId, advisor_id: advisorId, advisor_slug: advisorSlug,
             promo_code: promoCode,
-            attribution: { target_provider: cfg.targetProvider }
+            attribution: Object.assign(
+              { target_provider: cfg.targetProvider },
+              cfg.targetProvider === "multi_skin" && cfg.skinCode ? { skin_code: cfg.skinCode } : {}
+            )
           })
         }).then(function (response) {
           if (!response.ok) throw new Error("start unavailable");

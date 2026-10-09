@@ -74,6 +74,7 @@ export default function PublicLandingRuntimeScript({ slug, config }: Props) {
     sendContactPixel: config.tracking?.sendContactPixel !== false,
     ctaDestination: config.layout?.template === 7 || config.tracking?.ctaDestination === "atrio" ? "atrio" : "whatsapp",
     targetProvider: config.tracking?.target_provider === "multi_skin" ? "multi_skin" : "rey_de_ases",
+    skinCode: config.tracking?.skin_code || "",
     atrioRedirectUrl: config.tracking?.atrioRedirectUrl || "",
     atrioClientId: config.tracking?.atrioClientId || "",
     atrioId: config.tracking?.atrioId || "",
@@ -201,6 +202,7 @@ export default function PublicLandingRuntimeScript({ slug, config }: Props) {
               utm_content: params.get("utm_content") || "",
               utm_term: params.get("utm_term") || "",
               target_provider: cfg.targetProvider,
+              skin_code: cfg.targetProvider === "multi_skin" ? cfg.skinCode : "",
               fbp: tracking.fbp || "",
               fbc: tracking.fbc || ""
             }
@@ -889,6 +891,7 @@ export default function PublicLandingRuntimeScript({ slug, config }: Props) {
           landing_id: cfg.landingId,
           landing_name: cfg.landingName,
           target_provider: cfg.template === 7 ? cfg.targetProvider : undefined,
+          skin_code: cfg.template === 7 && cfg.targetProvider === "multi_skin" ? cfg.skinCode : undefined,
           workspace_currency: cfg.workspaceCurrency || undefined,
           external_id: identity.externalId,
           event_source_url: safeEventSourceUrl(),
@@ -1346,6 +1349,7 @@ export default function PublicLandingRuntimeScript({ slug, config }: Props) {
               var payload = {
                 event_name: "Contact",
                 target_provider: gatewayMode ? cfg.targetProvider : undefined,
+                skin_code: gatewayMode && cfg.targetProvider === "multi_skin" ? cfg.skinCode : undefined,
                 meta_pixel_id: String(cfg.pixelId || "").trim() || undefined,
                 sendContactPixel: cfg.sendContactPixel,
                 event_id: eventId,

@@ -1,5 +1,5 @@
 import { createClient } from "@supabase/supabase-js";
-import type { TargetProvider } from "../landing/types";
+import type { MultiSkinCode, TargetProvider } from "../landing/types";
 import type { AssignedAdvisor, Api2ResolveAccountRequest, HandoffResult, LinkedProviderAccount, TargetAccount, ResolvedPlayer, StartRequest, PlayerResolveRequest } from "./contracts";
 import { getOrCreateClientIdentity, withClientIdentityCookie, type ClientIdentity } from "./clientIdentity.server";
 import { isDemoLandingAllowed, readDemoConfig, readDemoCookie, verifyDemoSession, type DemoConfig } from "./demo.server";
@@ -35,13 +35,13 @@ export type StartDependencies = {
   resolvePlayer(input: PlayerResolveRequest): Promise<ResolvedPlayer>;
   resolveAccount(request: Api2ResolveAccountRequest): Promise<TargetAccount>;
   linkProviderAccount(advisor: AssignedAdvisor, player: ResolvedPlayer, account: TargetAccount): Promise<LinkedProviderAccount>;
-  createHandoff(provider: TargetProvider, advisor: AssignedAdvisor, deviceId: string, player: ResolvedPlayer, account: TargetAccount): Promise<HandoffResult>;
+  createHandoff(provider: TargetProvider, advisor: AssignedAdvisor, deviceId: string, player: ResolvedPlayer, account: TargetAccount, skinCode: MultiSkinCode | null, testing: boolean): Promise<HandoffResult>;
 };
 
 const UUID_PATTERN = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-8][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
 const SLUG_PATTERN = /^[a-z0-9][a-z0-9_-]{0,159}$/i;
 const ADVISOR_SLUG_PATTERN = /^[a-z0-9][a-z0-9_-]{0,80}$/i;
-const ATTRIBUTION_KEYS = ["utm_source", "utm_medium", "utm_campaign", "utm_content", "utm_term", "fbp", "fbc", "referrer", "target_provider"] as const;
+const ATTRIBUTION_KEYS = ["utm_source", "utm_medium", "utm_campaign", "utm_content", "utm_term", "fbp", "fbc", "referrer", "target_provider", "skin_code"] as const;
 
 function json(body: Record<string, string>, status: number): Response {
   return new Response(JSON.stringify(body), {
@@ -90,6 +90,15 @@ function configuredTargetProvider(landing: LandingRow): TargetProvider | null {
   if (raw.targetProvider === undefined || raw.targetProvider === null) return "rey_de_ases";
   if (raw.targetProvider === "rey_de_ases" || raw.targetProvider === "multi_skin") return raw.targetProvider;
   return null;
+}
+
+function configuredSkinCode(landing: LandingRow, provider: TargetProvider): MultiSkinCode | null {
+  if (provider === "rey_de_ases") return null;
+  const raw = landing.config && typeof landing.config === "object" ? landing.config as Record<string, unknown> : {};
+  // Antes del selector solo existia Ganamos+, por lo que esa configuracion
+  // historica puede migrarse sin cambiar el destino del jugador.
+  if (raw.multiSkinCode === undefined || raw.multiSkinCode === null) return "ganamos_plus";
+  return raw.multiSkinCode === "ganamos_plus" ? "ganamos_plus" : null;
 }
 
 async function bounded<T>(promise: Promise<T>): Promise<T> {
@@ -152,9 +161,6 @@ async function handleTemplate7StartInner(request: Request, deps: StartDependenci
       if (!candidateProvider) return json({ error: "integration_pending" }, 503);
       provider = candidateProvider;
     }
-    if (provider === "multi_skin" && request.headers.get("x-template7-demo-context") === "testing") {
-      return json({ error: "integration_pending" }, 503);
-    }
     // El indicador selecciona el recorrido, pero jamás autoriza: eso exige
     // cookie firmada + configuración de servidor + allowlists.
     const demoRequested = request.headers.get("x-template7-demo-context") === "testing";
@@ -164,9 +170,14 @@ async function handleTemplate7StartInner(request: Request, deps: StartDependenci
         !verifyDemoSession(demoCookie, landing.id, landing.name, demoConfig))) {
       return json({ error: "demo_not_authorized" }, 403);
     }
-    if (demoConfig && provider !== "rey_de_ases") return json({ error: "integration_pending" }, 503);
+    const skinCode = configuredSkinCode(landing, provider);
+    if (provider === "multi_skin" && !skinCode) return json({ error: "integration_pending" }, 503);
     // La atribucion puede venir del navegador; esta dimension se fija desde la landing guardada.
-    payload.attribution = { ...payload.attribution, target_provider: provider };
+    payload.attribution = {
+      ...payload.attribution,
+      target_provider: provider,
+      ...(skinCode ? { skin_code: skinCode } : {}),
+    };
     if (!contextResolved) {
       if (await bounded(deps.db.blocked(landing.user_id))) return json({ error: "landing_unavailable" }, 403);
       if (!await bounded(deps.allowStart(request, landing.id, identity.deviceId, identity.needsCookie))) {
@@ -200,10 +211,36 @@ async function handleTemplate7StartInner(request: Request, deps: StartDependenci
       "internal_chat_resolve",
       () => deps.resolvePlayer(resolveInput),
     ), resolveInput);
-    const account: TargetAccount = demoConfig
-      ? { username: demoConfig.username, password: demoConfig.password, platform: "rey_de_ases", created: false }
-      : await timedServerStage("template7_start", "account_resolve", () => deps.resolveAccount({ external_user_id: player.player_id, name: payload.name, target_provider: provider, advisor_id: resolvedAdvisor.advisorId, advisor_slug: resolvedAdvisor.advisorSlug }));
-    if (!account.username || !account.password || account.platform !== provider) throw new TargetIntegrationError("upstream_unavailable");
+    let account: TargetAccount = demoConfig
+      ? provider === "rey_de_ases"
+        ? { username: demoConfig.username, password: demoConfig.password, platform: provider, created: false }
+        : { username: "", password: "", platform: provider, created: false, testingBypass: true }
+      : await timedServerStage("template7_start", "account_resolve", () => deps.resolveAccount({
+          external_user_id: player.player_id,
+          name: payload.name,
+          target_provider: provider,
+          advisor_id: resolvedAdvisor.advisorId,
+          advisor_slug: resolvedAdvisor.advisorSlug,
+          ...(skinCode ? { skin_code: skinCode } : {}),
+        }));
+    if (account.platform !== provider || (!account.testingBypass && (!account.username || !account.password))) {
+      throw new TargetIntegrationError("upstream_unavailable");
+    }
+    if (account.testingBypass) {
+      const handoff = await timedServerStage(
+        "template7_start",
+        "gateway_handoff",
+        () => deps.createHandoff(provider, resolvedAdvisor, effectiveDeviceId, player, account, skinCode, true),
+      );
+      if (!handoff.provider_username) throw new TargetIntegrationError("upstream_unavailable");
+      account = { ...account, username: handoff.provider_username };
+      await timedServerStage(
+        "template7_start",
+        "internal_chat_account_link",
+        () => deps.linkProviderAccount(resolvedAdvisor, player, account),
+      );
+      return json({ handoff_url: handoff.handoff_url }, 200);
+    }
     const [, handoff] = await Promise.all([
       timedServerStage(
         "template7_start",
@@ -213,7 +250,7 @@ async function handleTemplate7StartInner(request: Request, deps: StartDependenci
       timedServerStage(
         "template7_start",
         "gateway_handoff",
-        () => deps.createHandoff(provider, resolvedAdvisor, effectiveDeviceId, player, account),
+        () => deps.createHandoff(provider, resolvedAdvisor, effectiveDeviceId, player, account, skinCode, false),
       ),
     ]);
     return json({ handoff_url: handoff.handoff_url }, 200);

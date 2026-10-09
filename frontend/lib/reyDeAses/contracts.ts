@@ -1,4 +1,4 @@
-import type { TargetProvider } from "../landing/types";
+import type { MultiSkinCode, TargetProvider } from "../landing/types";
 
 export type StartRequest = {
   landing_id: string;
@@ -44,6 +44,7 @@ export type Api2ResolveAccountRequest = {
   target_provider: TargetProvider;
   advisor_id: string;
   advisor_slug: string;
+  skin_code?: MultiSkinCode;
 };
 
 export type TargetAccount = {
@@ -52,6 +53,7 @@ export type TargetAccount = {
   platform: TargetProvider;
   created: boolean;
   externalAccountId?: string | null;
+  testingBypass?: boolean;
 };
 
 export type LinkedProviderAccount = {
@@ -65,4 +67,5 @@ export type HandoffResult = {
   handoff_url: string;
   expires_at: string;
   binding_created: boolean;
+  provider_username?: string;
 };

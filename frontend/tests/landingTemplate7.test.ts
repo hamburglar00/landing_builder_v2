@@ -98,13 +98,21 @@ test("la plantilla 7 publica un formulario de nombre con asesor de Atrio", () =>
 });
 
 test("Template 7 publica Multi Skin como target_provider sin afectar otras plantillas", () => {
-  const config = { ...DEFAULT_CONFIG, template: "template7" as const, targetProvider: "multi_skin" as const };
+  const config = {
+    ...DEFAULT_CONFIG,
+    template: "template7" as const,
+    targetProvider: "multi_skin" as const,
+    multiSkinCode: "ganamos_plus" as const,
+  };
   const built = buildLandingConfig({ id: "landing-7", name: "Prueba 7", comment: "", pixelId: "", postUrl: "", landingTag: "TEST", config });
   assert.equal(built.tracking.target_provider, "multi_skin");
+  assert.equal(built.tracking.skin_code, "ganamos_plus");
   const html = renderPublicLandingHtml({ slug: "prueba-7", config: built as PublicLandingConfig });
   assert.match(html, /"targetProvider":"multi_skin"/);
+  assert.match(html, /"skinCode":"ganamos_plus"/);
   const other = buildLandingConfig({ id: "landing-2", name: "Prueba 2", comment: "", pixelId: "", postUrl: "", landingTag: "TEST", config: { ...config, template: "template2" } });
   assert.equal(other.tracking.target_provider, undefined);
+  assert.equal(other.tracking.skin_code, undefined);
 });
 
 test("Template 7 inicia bootstrap antes del Pixel y conserva Contact sin duplicarlo al reintentar", () => {
