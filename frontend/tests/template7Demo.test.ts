@@ -7,7 +7,6 @@ import type { PublicLandingConfig } from "../components/public-landing/types";
 import { renderPublicLandingHtml } from "../components/public-landing/renderPublicLandingHtml";
 import { handleDemoPage, type DemoPageDependencies } from "../lib/reyDeAses/demoRoute.server";
 import { createDemoSession, demoSessionCookie, readDemoConfig, verifyDemoSession } from "../lib/reyDeAses/demo.server";
-import { allowDemoKeyAttempt } from "../lib/reyDeAses/rateLimit.server";
 
 const landingId = "11111111-1111-4111-8111-111111111111";
 const advisorId = "33333333-3333-4333-8333-333333333333";
@@ -17,7 +16,6 @@ const pageUrl = "https://example.com/l/landing-7/testing";
 function config() {
   const result = readDemoConfig({
     TEMPLATE7_DEMO_ENABLED: "true",
-    TEMPLATE7_DEMO_ACCESS_KEY: "a".repeat(32),
     TEMPLATE7_DEMO_SESSION_SECRET: "s".repeat(32),
     TEMPLATE7_DEMO_LANDING_IDS: landingId,
     TEMPLATE7_DEMO_ADVISOR_IDS: advisorId,
@@ -38,7 +36,6 @@ function pageDeps(overrides: Partial<DemoPageDependencies> = {}): DemoPageDepend
     config,
     async landing() { return { id: landingId, name: "landing-7", config: { template: "template7", ctaDestination: "atrio", targetProvider: "rey_de_ases" }, landing_config: { layout: { template: 7 } } }; },
     async publicConfig() { return built as PublicLandingConfig; },
-    async allowKey() { return true; },
     ...overrides,
   };
 }
@@ -54,7 +51,7 @@ test("/testing deshabilitado, landing no permitida o no Template 7 responden 404
   assert.equal((await handleDemoPage(new Request(pageUrl), "landing-7", pageDeps({ landing: async () => ({
     id: landingId, name: "landing-7", config: { template: "template7", ctaDestination: "atrio" }, landing_config: { layout: { template: 7 } },
   }) }))).status, 404);
-  assert.equal(readDemoConfig({ TEMPLATE7_DEMO_ENABLED: "true", TEMPLATE7_DEMO_ACCESS_KEY: "short" }), null);
+  assert.equal(readDemoConfig({ TEMPLATE7_DEMO_ENABLED: "true", TEMPLATE7_DEMO_SESSION_SECRET: "short" }), null);
 });
 
 test("la opción demo no altera el HTML normal de las plantillas 1–6", () => {
@@ -68,48 +65,28 @@ test("la opción demo no altera el HTML normal de las plantillas 1–6", () => {
   }
 });
 
-test("la clave POST aplica rate limit, no acepta query string y no crea cookie si falla", async () => {
-  let limitCalls = 0;
-  const deps = pageDeps({ async allowKey() { limitCalls++; return true; } });
-  const wrong = await handleDemoPage(new Request(pageUrl, {
-    method: "POST", headers: { "Content-Type": "application/x-www-form-urlencoded", Origin: "https://example.com" },
-    body: "access_key=wrong",
-  }), "landing-7", deps);
-  assert.equal(wrong.status, 401);
-  assert.equal(wrong.headers.get("Set-Cookie"), null);
-  assert.equal(limitCalls, 1);
-  assert.equal(wrong.headers.get("Cache-Control"), "no-store");
-  assert.equal(wrong.headers.get("X-Robots-Tag"), "noindex, nofollow");
-  assert.equal(wrong.headers.get("Referrer-Policy"), "no-referrer");
-  const query = await handleDemoPage(new Request(`${pageUrl}?access_key=${"a".repeat(32)}`, {
-    method: "POST", headers: { "Content-Type": "application/x-www-form-urlencoded" }, body: "access_key=wrong",
-  }), "landing-7", deps);
-  assert.equal(query.status, 403);
-  assert.equal(query.headers.get("Set-Cookie"), null);
-  const getQuery = await handleDemoPage(new Request(`${pageUrl}?access_key=leaked`), "landing-7", deps);
-  assert.equal(getQuery.status, 303);
-  assert.equal(getQuery.headers.get("Location"), "/l/landing-7/testing");
-  const limited = await handleDemoPage(new Request(pageUrl, {
-    method: "POST", headers: { "Content-Type": "application/x-www-form-urlencoded" }, body: `access_key=${"a".repeat(32)}`,
-  }), "landing-7", pageDeps({ async allowKey() { return false; } }));
-  assert.equal(limited.status, 429);
-  assert.equal(limited.headers.get("Set-Cookie"), null);
-});
-
-test("clave correcta crea cookie firmada temporal y nunca devuelve credenciales", async () => {
-  const response = await handleDemoPage(new Request(pageUrl, {
-    method: "POST", headers: { "Content-Type": "application/x-www-form-urlencoded" }, body: `access_key=${"a".repeat(32)}`,
-  }), "landing-7", pageDeps());
-  assert.equal(response.status, 303);
-  assert.equal(response.headers.get("Location"), "/l/landing-7/testing");
+test("/testing abre directo, crea la sesión firmada y nunca devuelve credenciales", async () => {
+  const response = await handleDemoPage(new Request(pageUrl), "landing-7", pageDeps());
+  assert.equal(response.status, 200);
+  assert.match(await response.text(), /class="public-landing template7"/);
   const cookie = response.headers.get("Set-Cookie") || "";
   assert.match(cookie, /^t7_demo=[A-Za-z0-9_-]+\.[A-Za-z0-9_-]+; Max-Age=14400; Path=\/; HttpOnly; SameSite=Lax/);
   const encoded = cookie.match(/^t7_demo=([A-Za-z0-9_-]+)\./)?.[1] || "";
   assert.deepEqual(Object.keys(JSON.parse(Buffer.from(encoded, "base64url").toString("utf8"))).sort(),
     ["version", "landing_id", "landing_slug", "issued_at", "expires_at"].sort());
   assert.match(demoSessionCookie("token", true), /; Secure;/);
-  assert.doesNotMatch(cookie, /demo-user|demo-pass|a{32}|s{32}/);
-  assert.equal(await response.text(), "");
+  assert.doesNotMatch(cookie, /demo-user|demo-pass|s{32}/);
+});
+
+test("/testing limpia query strings, rechaza POST y reemplaza una cookie inválida", async () => {
+  const getQuery = await handleDemoPage(new Request(`${pageUrl}?access_key=leaked`), "landing-7", pageDeps());
+  assert.equal(getQuery.status, 303);
+  assert.equal(getQuery.headers.get("Location"), "/l/landing-7/testing");
+  const post = await handleDemoPage(new Request(pageUrl, { method: "POST" }), "landing-7", pageDeps());
+  assert.equal(post.status, 405);
+  const invalid = await handleDemoPage(new Request(pageUrl, { headers: { Cookie: "t7_demo=invalid" } }), "landing-7", pageDeps());
+  assert.equal(invalid.status, 200);
+  assert.match(invalid.headers.get("Set-Cookie") || "", /^t7_demo=[A-Za-z0-9_-]+\.[A-Za-z0-9_-]+;/);
 });
 
 test("sesión adulterada, vencida o de otra landing se rechaza", () => {
@@ -121,8 +98,7 @@ test("sesión adulterada, vencida o de otra landing se rechaza", () => {
 });
 
 test("/testing reutiliza el renderer sin Pixel, PageView, CAPI ni Contact", async () => {
-  const token = createDemoSession(landingId, "landing-7", config());
-  const response = await handleDemoPage(new Request(pageUrl, { headers: { Cookie: `t7_demo=${token}` } }), "landing-7", pageDeps());
+  const response = await handleDemoPage(new Request(pageUrl), "landing-7", pageDeps());
   assert.equal(response.status, 200);
   const html = await response.text();
   assert.match(html, /class="public-landing template7"/);
@@ -136,34 +112,6 @@ test("/testing reutiliza el renderer sin Pixel, PageView, CAPI ni Contact", asyn
   assert.equal(response.headers.get("Referrer-Policy"), "no-referrer");
 });
 
-test("el límite de claves usa la RPC durable y buckets HMAC, no memoria", async () => {
-  const previousFetch = globalThis.fetch;
-  const oldUrl = process.env.SUPABASE_URL;
-  const oldKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
-  const oldHmac = process.env.TEMPLATE7_RATE_LIMIT_HMAC_KEY;
-  process.env.SUPABASE_URL = "https://db.example.com";
-  process.env.SUPABASE_SERVICE_ROLE_KEY = "synthetic-server-key";
-  process.env.TEMPLATE7_RATE_LIMIT_HMAC_KEY = "rate-test-secret";
-  const buckets: string[] = [];
-  try {
-    globalThis.fetch = async (input, init) => {
-      assert.equal(String(input), "https://db.example.com/rest/v1/rpc/consume_template7_rate_limit");
-      const body = JSON.parse(String(init?.body));
-      assert.match(body.p_bucket_key, /^[0-9a-f]{64}$/);
-      buckets.push(body.p_bucket_key);
-      return Response.json(true);
-    };
-    assert.equal(await allowDemoKeyAttempt(new Request(pageUrl, { headers: { "x-vercel-forwarded-for": "203.0.113.10" } }), landingId), true);
-    assert.equal(buckets.length, 2);
-    assert.notEqual(buckets[0], buckets[1]);
-  } finally {
-    globalThis.fetch = previousFetch;
-    if (oldUrl === undefined) delete process.env.SUPABASE_URL; else process.env.SUPABASE_URL = oldUrl;
-    if (oldKey === undefined) delete process.env.SUPABASE_SERVICE_ROLE_KEY; else process.env.SUPABASE_SERVICE_ROLE_KEY = oldKey;
-    if (oldHmac === undefined) delete process.env.TEMPLATE7_RATE_LIMIT_HMAC_KEY; else process.env.TEMPLATE7_RATE_LIMIT_HMAC_KEY = oldHmac;
-  }
-});
-
 test("clic demo ejecuta solo landing-atrio, start real y navegación al handoff", async () => {
   const built = buildLandingConfig({
     id: landingId, name: "landing-7", comment: "", pixelId: "123456", postUrl: "https://example.com/post",
@@ -173,7 +121,7 @@ test("clic demo ejecuta solo landing-atrio, start real y navegación al handoff"
   const oldAnon = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
   process.env.NEXT_PUBLIC_SUPABASE_URL = "https://db.example.com";
   process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY = "public-test-key";
-  const response = await handleDemoPage(new Request(pageUrl, { headers: { Cookie: `t7_demo=${createDemoSession(landingId, "landing-7", config())}` } }),
+  const response = await handleDemoPage(new Request(pageUrl),
     "landing-7", pageDeps({ publicConfig: async () => built as PublicLandingConfig }));
   const html = await response.text();
   if (oldUrl === undefined) delete process.env.NEXT_PUBLIC_SUPABASE_URL; else process.env.NEXT_PUBLIC_SUPABASE_URL = oldUrl;

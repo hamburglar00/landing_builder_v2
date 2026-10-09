@@ -40,13 +40,6 @@ export async function allowBootstrap(request: Request): Promise<boolean> {
   return consume(`bootstrap-ip:${ip}`, 40, 60);
 }
 
-/** La misma RPC durable usada por bootstrap/start; nunca un contador por proceso. */
-export async function allowDemoKeyAttempt(request: Request, landingId: string): Promise<boolean> {
-  const ip = clientIp(request);
-  if (!await consume(`global-ip:${ip}`, 120, 60)) return false;
-  return consume(`demo-key:${landingId}:${ip}`, 5, 15 * 60);
-}
-
 export async function allowTemplate7Start(request: Request, landingId: string, deviceId: string, needsCookie: boolean): Promise<boolean> {
   const ip = clientIp(request);
   if (!await consume(`global-ip:${ip}`, 120, 60)) return false;

@@ -1,4 +1,4 @@
-import { createHash, createHmac, timingSafeEqual } from "node:crypto";
+import { createHmac, timingSafeEqual } from "node:crypto";
 import { createClient } from "@supabase/supabase-js";
 import { isDeviceId } from "./clientIdentity.server";
 
@@ -7,7 +7,6 @@ export const DEMO_MAX_AGE_SECONDS = 4 * 60 * 60;
 const SLUG_PATTERN = /^[a-z0-9][a-z0-9_-]{0,159}$/i;
 
 export type DemoConfig = {
-  accessKey: string;
   sessionSecret: string;
   landingIds: ReadonlySet<string>;
   advisorIds: ReadonlySet<string>;
@@ -33,17 +32,16 @@ function parseUuidAllowlist(raw: string | undefined): Set<string> | null {
 /** Fail closed: nunca activar una demo por una configuración parcial. */
 export function readDemoConfig(env: Record<string, string | undefined> = process.env): DemoConfig | null {
   if (env.TEMPLATE7_DEMO_ENABLED !== "true") return null;
-  const accessKey = env.TEMPLATE7_DEMO_ACCESS_KEY || "";
   const sessionSecret = env.TEMPLATE7_DEMO_SESSION_SECRET || "";
   const landingIds = parseUuidAllowlist(env.TEMPLATE7_DEMO_LANDING_IDS);
   const advisorIds = parseUuidAllowlist(env.TEMPLATE7_DEMO_ADVISOR_IDS);
   const deviceId = env.TEMPLATE7_DEMO_DEVICE_ID || "";
   const username = env.TEMPLATE7_DEMO_REY_USERNAME || "";
   const password = env.TEMPLATE7_DEMO_REY_PASSWORD || "";
-  if (Buffer.byteLength(accessKey) < 32 || Buffer.byteLength(sessionSecret) < 32 ||
+  if (Buffer.byteLength(sessionSecret) < 32 ||
       !landingIds?.size || !advisorIds?.size || !isDeviceId(deviceId) ||
       !username || !password) return null;
-  return { accessKey, sessionSecret, landingIds, advisorIds, deviceId, username, password };
+  return { sessionSecret, landingIds, advisorIds, deviceId, username, password };
 }
 
 export function isDemoLandingAllowed(landing: DemoLanding, config: DemoConfig): boolean {
@@ -54,12 +52,6 @@ export function isDemoLandingAllowed(landing: DemoLanding, config: DemoConfig): 
   return isDeviceId(landing.id) && config.landingIds.has(landing.id.toLowerCase()) &&
     raw.template === "template7" && layout.template === 7 && raw.ctaDestination === "atrio" &&
     raw.targetProvider === "rey_de_ases";
-}
-
-export function verifyDemoAccessKey(candidate: string, config: DemoConfig): boolean {
-  const received = createHash("sha256").update(candidate).digest();
-  const expected = createHash("sha256").update(config.accessKey).digest();
-  return timingSafeEqual(received, expected);
 }
 
 type DemoClaims = {

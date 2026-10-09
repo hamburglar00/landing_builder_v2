@@ -26,7 +26,7 @@ function resolvedPlayer(provider: TargetProvider = "rey_de_ases", resolvedDevice
 
 function demoConfig() {
   const config = readDemoConfig({
-    TEMPLATE7_DEMO_ENABLED: "true", TEMPLATE7_DEMO_ACCESS_KEY: "a".repeat(32),
+    TEMPLATE7_DEMO_ENABLED: "true",
     TEMPLATE7_DEMO_SESSION_SECRET: "s".repeat(32), TEMPLATE7_DEMO_LANDING_IDS: landingId,
     TEMPLATE7_DEMO_ADVISOR_IDS: advisorId, TEMPLATE7_DEMO_DEVICE_ID: demoDeviceId,
     TEMPLATE7_DEMO_REY_USERNAME: "demo-user", TEMPLATE7_DEMO_REY_PASSWORD: "demo-pass",
@@ -302,7 +302,7 @@ test("demo adulterada u otra landing y asesor no permitido no llegan a internal-
   }
   assert.ok(!calls.includes("internal-chat"));
   const noAdvisor = readDemoConfig({
-    TEMPLATE7_DEMO_ENABLED: "true", TEMPLATE7_DEMO_ACCESS_KEY: "a".repeat(32),
+    TEMPLATE7_DEMO_ENABLED: "true",
     TEMPLATE7_DEMO_SESSION_SECRET: "s".repeat(32), TEMPLATE7_DEMO_LANDING_IDS: landingId,
     TEMPLATE7_DEMO_ADVISOR_IDS: deviceId, TEMPLATE7_DEMO_DEVICE_ID: demoDeviceId,
     TEMPLATE7_DEMO_REY_USERNAME: "demo-user", TEMPLATE7_DEMO_REY_PASSWORD: "demo-pass",
