@@ -3,12 +3,20 @@ import type { TargetProvider } from "../landing/types";
 import type { AssignedAdvisor, Api2ResolveAccountRequest, HandoffResult, TargetAccount, ResolvedPlayer, StartRequest, PlayerResolveRequest } from "./contracts";
 import { getOrCreateClientIdentity, withClientIdentityCookie, type ClientIdentity } from "./clientIdentity.server";
 import { isDemoLandingAllowed, readDemoConfig, readDemoCookie, verifyDemoSession, type DemoConfig } from "./demo.server";
-import { allowTemplate7Start } from "./rateLimit.server";
+import { logServerFlowTotal, timedServerStage } from "./performance.server";
+import { allowTemplate7Start, template7StartRateLimitKeys } from "./rateLimit.server";
 import { api2Readiness, createProviderHandoff, gatewayReadiness, resolveInternalChatPlayer, resolveTargetAccount, TargetIntegrationError, validateResolvedPlayer } from "./integrations.server";
 
 type LandingRow = { id: string; name: string; user_id: string; workspace_currency: string; config: unknown; landing_config: unknown };
 type AssignmentRow = { landing_id: string; atrio_client_id: string; user_id: string };
 type AdvisorRow = { id: string; user_id: string; workspace_currency: string; slug: string; atrio_id: string };
+type StartContextStatus = "ok" | "landing_not_found" | "integration_pending" | "landing_unavailable" | "rate_limited" | "advisor_not_assigned";
+type ResolvedStartContext = {
+  status: StartContextStatus;
+  landing?: LandingRow;
+  provider?: TargetProvider;
+  advisor?: AdvisorRow;
+};
 
 export type StartDb = {
   landing(id: string): Promise<LandingRow | null>;
@@ -19,6 +27,7 @@ export type StartDb = {
 
 export type StartDependencies = {
   db: StartDb;
+  resolveContext?(request: Request, payload: StartRequest, identity: ClientIdentity): Promise<ResolvedStartContext>;
   api2Status(): "integration_pending" | null;
   gatewayStatus(provider: TargetProvider): "integration_pending" | null;
   allowStart(request: Request, landingId: string, deviceId: string, needsCookie: boolean): Promise<boolean>;
@@ -105,11 +114,43 @@ async function handleTemplate7StartInner(request: Request, deps: StartDependenci
   } catch { return json({ error: "invalid_request" }, 400); }
   if (!payload) return json({ error: "invalid_request" }, 400);
 
+  const flowStartedAt = performance.now();
   try {
-    const landing = await bounded(deps.db.landing(payload.landing_id));
-    if (!landing || landing.name !== payload.landing_slug || !isTemplate7Landing(landing)) return json({ error: "landing_not_found" }, 404);
-    const provider = configuredTargetProvider(landing);
-    if (!provider) return json({ error: "integration_pending" }, 503);
+    let landing: LandingRow;
+    let provider: TargetProvider;
+    let assigned: AssignedAdvisor | null = null;
+    const contextResolved = Boolean(deps.resolveContext);
+
+    if (deps.resolveContext) {
+      const context = await bounded(timedServerStage(
+        "template7_start",
+        "context_transaction",
+        () => deps.resolveContext!(request, payload!, identity),
+      ));
+      if (context.status !== "ok") {
+        const status = context.status === "landing_not_found" ? 404
+          : context.status === "landing_unavailable" || context.status === "advisor_not_assigned" ? 403
+            : context.status === "rate_limited" ? 429 : 503;
+        const response = json({ error: context.status }, status);
+        if (context.status === "rate_limited") response.headers.set("Retry-After", "45");
+        return response;
+      }
+      if (!context.landing || !context.provider || !context.advisor) throw new Error("invalid start context");
+      landing = context.landing;
+      provider = context.provider;
+      assigned = {
+        atrioClientId: context.advisor.id,
+        advisorId: context.advisor.atrio_id,
+        advisorSlug: context.advisor.slug,
+      };
+    } else {
+      const candidate = await bounded(deps.db.landing(payload.landing_id));
+      if (!candidate || candidate.name !== payload.landing_slug || !isTemplate7Landing(candidate)) return json({ error: "landing_not_found" }, 404);
+      landing = candidate;
+      const candidateProvider = configuredTargetProvider(landing);
+      if (!candidateProvider) return json({ error: "integration_pending" }, 503);
+      provider = candidateProvider;
+    }
     if (provider === "multi_skin" && request.headers.get("x-template7-demo-context") === "testing") {
       return json({ error: "integration_pending" }, 503);
     }
@@ -125,21 +166,25 @@ async function handleTemplate7StartInner(request: Request, deps: StartDependenci
     if (demoConfig && provider !== "rey_de_ases") return json({ error: "integration_pending" }, 503);
     // La atribucion puede venir del navegador; esta dimension se fija desde la landing guardada.
     payload.attribution = { ...payload.attribution, target_provider: provider };
-    if (await bounded(deps.db.blocked(landing.user_id))) return json({ error: "landing_unavailable" }, 403);
-    if (!await bounded(deps.allowStart(request, landing.id, identity.deviceId, identity.needsCookie))) {
-      const response = json({ error: "rate_limited" }, 429);
-      response.headers.set("Retry-After", "45");
-      return response;
+    if (!contextResolved) {
+      if (await bounded(deps.db.blocked(landing.user_id))) return json({ error: "landing_unavailable" }, 403);
+      if (!await bounded(deps.allowStart(request, landing.id, identity.deviceId, identity.needsCookie))) {
+        const response = json({ error: "rate_limited" }, 429);
+        response.headers.set("Retry-After", "45");
+        return response;
+      }
+      const assignment = await bounded(deps.db.assignment(landing.id, payload.atrio_client_id));
+      const advisor = assignment ? await bounded(deps.db.advisor(assignment.atrio_client_id)) : null;
+      if (!assignment || !advisor || assignment.user_id !== landing.user_id || advisor.user_id !== landing.user_id ||
+          advisor.workspace_currency !== landing.workspace_currency || advisor.id !== payload.atrio_client_id ||
+          advisor.atrio_id !== payload.advisor_id || advisor.slug !== payload.advisor_slug) {
+        return json({ error: "advisor_not_assigned" }, 403);
+      }
+      assigned = { atrioClientId: advisor.id, advisorId: advisor.atrio_id, advisorSlug: advisor.slug };
     }
-    const assignment = await bounded(deps.db.assignment(landing.id, payload.atrio_client_id));
-    const advisor = assignment ? await bounded(deps.db.advisor(assignment.atrio_client_id)) : null;
-    if (!assignment || !advisor || assignment.user_id !== landing.user_id || advisor.user_id !== landing.user_id ||
-        advisor.workspace_currency !== landing.workspace_currency || advisor.id !== payload.atrio_client_id ||
-        advisor.atrio_id !== payload.advisor_id || advisor.slug !== payload.advisor_slug) {
-      return json({ error: "advisor_not_assigned" }, 403);
-    }
-    const assigned: AssignedAdvisor = { atrioClientId: advisor.id, advisorId: advisor.atrio_id, advisorSlug: advisor.slug };
-    if (demoConfig && !demoConfig.advisorIds.has(advisor.atrio_id.toLowerCase())) return json({ error: "demo_not_authorized" }, 403);
+    if (!assigned) throw new Error("advisor resolution unavailable");
+    const resolvedAdvisor = assigned;
+    if (demoConfig && !demoConfig.advisorIds.has(resolvedAdvisor.advisorId.toLowerCase())) return json({ error: "demo_not_authorized" }, 403);
     const gatewayPending = deps.gatewayStatus(provider);
     if (gatewayPending) return json({ error: gatewayPending }, 503);
     if (!demoConfig) {
@@ -147,18 +192,28 @@ async function handleTemplate7StartInner(request: Request, deps: StartDependenci
       if (pending) return json({ error: pending }, 503);
     }
     const effectiveDeviceId = demoConfig ? demoConfig.deviceId : identity.deviceId;
-    const resolveInput: PlayerResolveRequest = { advisor: assigned, deviceId: effectiveDeviceId, name: payload.name,
+    const resolveInput: PlayerResolveRequest = { advisor: resolvedAdvisor, deviceId: effectiveDeviceId, name: payload.name,
       landingId: landing.id, landingSlug: landing.name, promoCode: payload.promo_code, targetProvider: provider };
-    const player = validateResolvedPlayer(await deps.resolvePlayer(resolveInput), resolveInput);
+    const player = validateResolvedPlayer(await timedServerStage(
+      "template7_start",
+      "internal_chat_resolve",
+      () => deps.resolvePlayer(resolveInput),
+    ), resolveInput);
     const account: TargetAccount = demoConfig
       ? { username: demoConfig.username, password: demoConfig.password, platform: "rey_de_ases", created: false }
-      : await deps.resolveAccount({ external_user_id: player.player_id, name: payload.name, target_provider: provider, advisor_id: assigned.advisorId, advisor_slug: assigned.advisorSlug });
+      : await timedServerStage("template7_start", "account_resolve", () => deps.resolveAccount({ external_user_id: player.player_id, name: payload.name, target_provider: provider, advisor_id: resolvedAdvisor.advisorId, advisor_slug: resolvedAdvisor.advisorSlug }));
     if (!account.username || !account.password || account.platform !== provider) throw new TargetIntegrationError("upstream_unavailable");
-    const handoff = await deps.createHandoff(provider, assigned, effectiveDeviceId, player, account);
+    const handoff = await timedServerStage(
+      "template7_start",
+      "gateway_handoff",
+      () => deps.createHandoff(provider, resolvedAdvisor, effectiveDeviceId, player, account),
+    );
     return json({ handoff_url: handoff.handoff_url }, 200);
   } catch (error) {
     if (error instanceof TargetIntegrationError) return json({ error: error.code }, 503);
     return json({ error: "service_unavailable" }, 503);
+  } finally {
+    logServerFlowTotal("template7_start", flowStartedAt);
   }
 }
 
@@ -215,9 +270,64 @@ function productionDb(): StartDb {
   };
 }
 
+function productionContextResolver() {
+  const url = process.env.SUPABASE_URL || process.env.NEXT_PUBLIC_SUPABASE_URL;
+  const key = process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.SERVICE_ROLE_KEY;
+  if (!url || !key) throw new Error("server database unavailable");
+  const supabase = createClient(url, key, { auth: { autoRefreshToken: false, persistSession: false } });
+
+  return async (request: Request, payload: StartRequest, identity: ClientIdentity): Promise<ResolvedStartContext> => {
+    const keys = template7StartRateLimitKeys(request, payload.landing_id, identity.deviceId, identity.needsCookie);
+    const { data, error } = await supabase.rpc("resolve_template7_start_context", {
+      p_landing_id: payload.landing_id,
+      p_landing_slug: payload.landing_slug,
+      p_atrio_client_id: payload.atrio_client_id,
+      p_advisor_id: payload.advisor_id,
+      p_advisor_slug: payload.advisor_slug,
+      p_global_bucket_key: keys.global,
+      p_start_bucket_key: keys.start,
+      p_unbound_bucket_key: keys.unbound,
+    });
+    if (error || !Array.isArray(data) || data.length !== 1) throw error || new Error("invalid start context response");
+    const row = data[0] as Record<string, unknown>;
+    const knownStatuses = new Set<StartContextStatus>([
+      "ok", "landing_not_found", "integration_pending", "landing_unavailable", "rate_limited", "advisor_not_assigned",
+    ]);
+    if (typeof row.status !== "string" || !knownStatuses.has(row.status as StartContextStatus)) throw new Error("invalid start context status");
+    if (row.status !== "ok") return { status: row.status as StartContextStatus };
+    const provider = row.target_provider;
+    if ((provider !== "rey_de_ases" && provider !== "multi_skin") ||
+        typeof row.landing_id !== "string" || typeof row.landing_name !== "string" ||
+        typeof row.owner_user_id !== "string" || typeof row.workspace_currency !== "string" ||
+        typeof row.atrio_client_id !== "string" || typeof row.advisor_id !== "string" || typeof row.advisor_slug !== "string") {
+      throw new Error("invalid start context response");
+    }
+    return {
+      status: "ok",
+      provider,
+      landing: {
+        id: row.landing_id,
+        name: row.landing_name,
+        user_id: row.owner_user_id,
+        workspace_currency: row.workspace_currency,
+        config: row.landing_config_raw,
+        landing_config: row.landing_config_published,
+      },
+      advisor: {
+        id: row.atrio_client_id,
+        user_id: row.owner_user_id,
+        workspace_currency: row.workspace_currency,
+        atrio_id: row.advisor_id,
+        slug: row.advisor_slug,
+      },
+    };
+  };
+}
+
 export function productionDependencies(): StartDependencies {
   return {
     db: productionDb(),
+    resolveContext: productionContextResolver(),
     api2Status: api2Readiness,
     gatewayStatus: gatewayReadiness,
     allowStart: allowTemplate7Start,

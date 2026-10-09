@@ -57,6 +57,14 @@ export default function Template7DemoRuntimeScript({ slug, config }: { slug: str
 
       function advisor() {
         if (advisorPromise) return advisorPromise;
+        var prewarmed = window.__PUBLIC_LANDING_ATRIO_PROMISES && window.__PUBLIC_LANDING_ATRIO_PROMISES[cfg.slug];
+        if (prewarmed) {
+          advisorPromise = prewarmed.then(function (data) {
+            if (!data) throw new Error("advisor unavailable");
+            return data;
+          }).catch(function (error) { advisorPromise = null; throw error; });
+          return advisorPromise;
+        }
         if (!cfg.supabaseUrl || !cfg.supabaseAnonKey) return Promise.reject(new Error("advisor unavailable"));
         var url = cfg.supabaseUrl.replace(/\\/+$/, "") + "/functions/v1/landing-atrio?name=" + encodeURIComponent(cfg.slug);
         advisorPromise = fetch(url, {

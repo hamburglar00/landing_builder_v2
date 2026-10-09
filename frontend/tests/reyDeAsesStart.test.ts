@@ -118,6 +118,33 @@ test("start verifica en servidor landing, plan y asignación exacta del asesor",
   assert.deepEqual(unassigned.calls, ["landing", "plan", "rate-limit", "assignment"]);
 });
 
+test("start optimizado resuelve validación, límites y asesor en una sola operación", async () => {
+  const { deps, calls } = dependencies();
+  deps.resolveContext = async () => {
+    calls.push("context-transaction");
+    return {
+      status: "ok",
+      provider: "rey_de_ases",
+      landing: {
+        id: landingId, name: "landing-7", user_id: ownerId, workspace_currency: "ARS",
+        config: { template: "template7", ctaDestination: "atrio", targetProvider: "rey_de_ases" },
+        landing_config: { layout: { template: 7 } },
+      },
+      advisor: {
+        id: clientId, user_id: ownerId, workspace_currency: "ARS", slug: "gera", atrio_id: advisorId,
+      },
+    };
+  };
+
+  const result = await handleReyStart(request(validPayload), deps);
+
+  assert.equal(result.status, 200);
+  assert.deepEqual(calls, [
+    "context-transaction", "gateway-readiness:rey_de_ases", "api2-readiness",
+    "internal-chat", "api2", "gateway",
+  ]);
+});
+
 test("sin API2 devuelve error controlado, no llama al gateway y no expone secretos", async () => {
   const { deps, calls } = dependencies("integration_pending");
   const result = await handleReyStart(request(validPayload), deps);

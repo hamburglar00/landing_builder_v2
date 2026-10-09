@@ -2,6 +2,7 @@ import PhonePrewarmScript from "./PhonePrewarmScript";
 import PublicLandingRuntimeScript from "./PublicLandingRuntimeScript";
 import Template7DemoRuntimeScript from "./Template7DemoRuntimeScript";
 import { buildClientIdentityBootstrapScript } from "./clientIdentityBootstrapScript";
+import AtrioPrewarmScript from "./AtrioPrewarmScript";
 import {
   buildPixelInitScript,
   buildPixelNoscript,
@@ -669,6 +670,9 @@ export function renderPublicLandingHtml(params: RenderParams) {
   const phonePrewarmScript = demoMode ? "" : renderScriptElement(
     PhonePrewarmScript({ slug, initialPhone: cachedPhone }),
   );
+  const atrioPrewarmScript = config.layout?.template === 7
+    ? renderScriptElement(AtrioPrewarmScript({ slug }))
+    : "";
   const runtimeScript = renderScriptElement(demoMode
     ? Template7DemoRuntimeScript({ slug, config })
     : PublicLandingRuntimeScript({ slug, config }));
@@ -687,7 +691,7 @@ export function renderPublicLandingHtml(params: RenderParams) {
     pixelId
       ? '<link rel="preconnect" href="https://www.facebook.com"><link rel="preconnect" href="https://connect.facebook.net">'
       : ""
-  }${buildPreloadLinks(config)}<style>${PUBLIC_LANDING_CSS}</style>${phonePrewarmScript}${demoMode ? '<meta name="robots" content="noindex,nofollow">' : ""}${config.layout?.template === 7 ? buildClientIdentityBootstrapScript() : ""}${pixelScriptForTemplate(
+  }${buildPreloadLinks(config)}<style>${PUBLIC_LANDING_CSS}</style>${phonePrewarmScript}${atrioPrewarmScript}${demoMode ? '<meta name="robots" content="noindex,nofollow">' : ""}${config.layout?.template === 7 ? buildClientIdentityBootstrapScript() : ""}${pixelScriptForTemplate(
     pixelId,
     slug,
     config.tracking?.phoneCountryCode || "54",

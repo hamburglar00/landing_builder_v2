@@ -23,6 +23,28 @@ function bucketKey(value: string): string {
   return createHmac("sha256", secret).update(value).digest("hex");
 }
 
+export type Template7StartRateLimitKeys = {
+  global: string;
+  start: string;
+  unbound: string | null;
+};
+
+/** Builds opaque keys once so the consolidated database function can consume
+ * every Template 7 start limit inside the same transaction. */
+export function template7StartRateLimitKeys(
+  request: Request,
+  landingId: string,
+  deviceId: string,
+  needsCookie: boolean,
+): Template7StartRateLimitKeys {
+  const ip = clientIp(request);
+  return {
+    global: bucketKey(`global-ip:${ip}`),
+    start: bucketKey(`start:${landingId}:${deviceId}`),
+    unbound: needsCookie ? bucketKey(`unbound-start:${landingId}:${ip}`) : null,
+  };
+}
+
 async function consume(value: string, maxHits: number, windowSeconds: number): Promise<boolean> {
   const url = process.env.SUPABASE_URL || process.env.NEXT_PUBLIC_SUPABASE_URL;
   if (!url) throw new Error("rate limit database unavailable");
