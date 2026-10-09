@@ -24,6 +24,7 @@ export function AtrioRedirectSection({
   createAtrioHref,
 }: Props) {
   const assignedIds = new Set(assignments.map((item) => item.atrioClientId));
+  const isTemplate7 = landing.config.template === "template7";
 
   const toggleAssignment = (client: AtrioClient) => {
     if (assignedIds.has(client.id)) {
@@ -103,12 +104,12 @@ export function AtrioRedirectSection({
         </p>
       ) : (
         <div className="overflow-x-auto rounded-lg border border-zinc-700">
-          <table className="min-w-[760px] text-left text-sm md:min-w-full">
+          <table className={`${isTemplate7 ? "min-w-[610px]" : "min-w-[760px]"} text-left text-sm md:min-w-full`}>
             <thead className="bg-zinc-800/80">
               <tr>
                 <th className="px-3 py-2 font-medium text-zinc-300">Slug</th>
                 <th className="px-3 py-2 font-medium text-zinc-300">URL</th>
-                <th className="px-3 py-2 font-medium text-zinc-300">ID Atrio</th>
+                {!isTemplate7 && <th className="px-3 py-2 font-medium text-zinc-300">ID Atrio</th>}
                 <th className="w-20 px-3 py-2 text-center font-medium text-zinc-300">Asignar</th>
                 {landing.atrioSelectionMode === "weighted_random" && (
                   <th className="w-20 px-3 py-2 font-medium text-zinc-300">Peso</th>
@@ -133,11 +134,13 @@ export function AtrioRedirectSection({
                         {buildAtrioUrl(client.slug)}
                       </a>
                     </td>
-                    <td className="px-3 py-2">
-                      <code className="rounded border border-zinc-800 bg-zinc-900 px-2 py-1 text-[11px] text-zinc-400">
-                        {client.atrio_id}
-                      </code>
-                    </td>
+                    {!isTemplate7 && (
+                      <td className="px-3 py-2">
+                        <code className="rounded border border-zinc-800 bg-zinc-900 px-2 py-1 text-[11px] text-zinc-400">
+                          {client.atrio_id}
+                        </code>
+                      </td>
+                    )}
                     <td className="px-3 py-2 text-center">
                       <input
                         type="checkbox"

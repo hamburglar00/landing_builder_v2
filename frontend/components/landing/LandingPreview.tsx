@@ -451,7 +451,7 @@ export function LandingPreview({
       className={compact
         ? "relative h-full w-full overflow-hidden rounded-3xl bg-black"
         : "relative mx-auto aspect-[9/16] w-full max-w-[380px] overflow-hidden rounded-3xl bg-black shadow-[0_18px_40px_rgba(0,0,0,.8)]"}
-      style={{ fontFamily }}
+      style={{ fontFamily, containerType: "size" }}
     >
       {bgImage ? (
         // eslint-disable-next-line @next/next/no-img-element
@@ -461,22 +461,22 @@ export function LandingPreview({
           className="absolute inset-0 h-full w-full object-cover"
         />
       ) : null}
-      <div className="absolute inset-0 bg-gradient-to-b from-black/65 to-black/85" />
-      <div className="relative flex h-full items-center justify-center p-4">
-        <div className="w-full rounded-[22px] border border-white/20 bg-black/75 px-5 py-7 text-center shadow-2xl backdrop-blur-sm">
+      <div className="absolute inset-0 bg-gradient-to-b from-black/[.28] to-black/[.42]" />
+      <div className="relative flex h-full items-center justify-center p-[clamp(8px,2cqh,16px)]">
+        <div className="max-h-full w-full overflow-y-auto rounded-[22px] border border-white/20 bg-black/[.64] text-center shadow-2xl backdrop-blur-sm" style={{ padding: "clamp(12px,3cqh,28px) clamp(12px,4cqw,20px)" }}>
           {config.logoUrl ? (
             // eslint-disable-next-line @next/next/no-img-element
-            <img src={config.logoUrl} alt="Logo" className="mx-auto mb-5 max-h-24 max-w-[48%] object-contain" />
-          ) : <div className="mx-auto mb-5 grid h-16 w-24 place-items-center rounded-lg border border-dashed border-white/40 text-xs text-white/70">Logo</div>}
-          <h2 className="leading-tight" style={{ color: titleHex, fontSize: gallery ? 18 : config.titleFontSize, fontWeight: config.titleBold ? 800 : 600 }}>
+            <img src={config.logoUrl} alt="Logo" className="mx-auto max-w-[48%] object-contain" style={{ maxHeight: "min(96px,16cqh)", marginBottom: "clamp(8px,2cqh,20px)" }} />
+          ) : <div className="mx-auto grid h-16 w-24 place-items-center rounded-lg border border-dashed border-white/40 text-xs text-white/70" style={{ marginBottom: "clamp(8px,2cqh,20px)" }}>Logo</div>}
+          <h2 className="leading-tight" style={{ color: titleHex, fontSize: `min(${gallery ? 18 : config.titleFontSize}px, 4cqh)`, fontWeight: config.titleBold ? 800 : 600 }}>
             {[config.titleLine1, config.titleLine2, config.titleLine3].filter(Boolean).map((line, index) => <span key={index} className="block">{line}</span>)}
           </h2>
           {!gallery ? (
             <>
-              <p className="mt-3 leading-snug" style={{ color: subtitleHex, fontSize: config.subtitleFontSize, fontWeight: config.subtitleBold ? 600 : 400 }}>
+              <p className="mt-3 leading-snug" style={{ color: subtitleHex, fontSize: `min(${config.subtitleFontSize}px, 2.7cqh)`, fontWeight: config.subtitleBold ? 600 : 400 }}>
                 {[config.subtitleLine1, config.subtitleLine2, config.subtitleLine3].filter(Boolean).map((line, index) => <span key={index} className="block">{line}</span>)}
               </p>
-              <div className="mt-6 text-left">
+              <div className="mt-[clamp(10px,3cqh,24px)] text-left">
                 <label htmlFor="template7-preview-name" className="mb-2 block text-xs font-semibold text-white">Tu nombre</label>
                 <input
                   id="template7-preview-name"
@@ -486,14 +486,14 @@ export function LandingPreview({
                   placeholder="Ej.: Martín"
                   value={template7PreviewName}
                   onChange={(event) => setTemplate7PreviewName(event.target.value)}
-                  className="h-12 w-full rounded-xl border border-white/25 bg-black/50 px-4 text-base text-white outline-none focus:border-yellow-400"
+                  className="h-[clamp(40px,7.5cqh,48px)] w-full rounded-xl border border-white/25 bg-black/50 px-4 text-base text-white outline-none focus:border-yellow-400"
                 />
               </div>
               <button
                 type="button"
                 disabled={!template7PreviewName.trim()}
-                className="mt-3 min-h-12 w-full rounded-xl px-4 py-2 disabled:cursor-not-allowed disabled:opacity-50"
-                style={{ color: ctaTextHex, backgroundColor: ctaBgHex, fontSize: config.ctaFontSize, fontWeight: config.ctaBold ? 800 : 600 }}
+                className="mt-3 min-h-[clamp(40px,7.5cqh,48px)] w-full rounded-xl px-4 py-2 disabled:cursor-not-allowed disabled:opacity-50"
+                style={{ color: ctaTextHex, backgroundColor: ctaBgHex, fontSize: `min(${config.ctaFontSize}px, 2.7cqh)`, fontWeight: config.ctaBold ? 800 : 600 }}
               >
                 {config.ctaText || "Continuar"}
               </button>

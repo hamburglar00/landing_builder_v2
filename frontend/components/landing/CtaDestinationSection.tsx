@@ -5,6 +5,7 @@ import { useEffect, type SetStateAction } from "react";
 import type { AtrioClient } from "@/lib/atrio/atrioDb";
 import type { LandingThemeConfig } from "@/lib/landing/types";
 import type { TargetProvider } from "@/lib/landing/types";
+import CustomSelect from "@/components/ui/CustomSelect";
 
 type Props = {
   config: LandingThemeConfig;
@@ -126,7 +127,7 @@ export function CtaDestinationSection({
           );
         })}
       </div>
-      {destination === "atrio" ? (
+      {destination === "atrio" && config.template !== "template7" ? (
         <div className="mt-4 rounded-lg border border-zinc-800 bg-zinc-950/40 p-3">
           <p className="text-xs font-medium text-zinc-300">
             La asignación de asesor Atrio se configura en la card Redirección.
@@ -141,18 +142,18 @@ export function CtaDestinationSection({
           <label htmlFor="template7-target-provider" className="block text-sm font-semibold text-zinc-200">
             Proveedor de destino
           </label>
-          <select
+          <CustomSelect
+            portal
             id="template7-target-provider"
             value={config.targetProvider === "multi_skin" ? "multi_skin" : "rey_de_ases"}
-            onChange={(event) => setConfig((prev) => ({
+            onChange={(value) => setConfig((prev) => ({
               ...prev,
-              targetProvider: event.target.value as TargetProvider,
+              targetProvider: value as TargetProvider,
             }))}
-            className="mt-2 w-full rounded-lg border border-zinc-700 bg-zinc-950 px-3 py-2 text-sm text-zinc-100"
-          >
-            <option value="rey_de_ases">Rey de Ases</option>
-            <option value="multi_skin">Multi Skin</option>
-          </select>
+            options={[{ value: "rey_de_ases", label: "Rey de Ases" }, { value: "multi_skin", label: "Multi Skin" }]}
+            className="mt-2"
+            buttonClassName="h-10 bg-zinc-950 px-3 text-sm"
+          />
         </div>
       ) : null}
     </div>

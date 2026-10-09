@@ -1,11 +1,32 @@
 import assert from "node:assert/strict";
 import test from "node:test";
 import { Script } from "node:vm";
+import { createElement } from "react";
+import { renderToStaticMarkup } from "react-dom/server";
+import { CtaDestinationSection } from "../components/landing/CtaDestinationSection";
 import { renderPublicLandingHtml } from "../components/public-landing/renderPublicLandingHtml";
 import type { PublicLandingConfig } from "../components/public-landing/types";
 import { buildLandingConfig } from "../lib/landing/buildLandingConfig";
 import { DEFAULT_CONFIG } from "../lib/landing/mocks";
 import { switchLandingTemplate } from "../lib/landing/templateVariants";
+
+test("el editor de Template 7 oculta el aviso de Atrio y usa un selector propio", () => {
+  const props = { setConfig: () => undefined, atrioClients: [] };
+  const template7 = renderToStaticMarkup(createElement(CtaDestinationSection, {
+    ...props,
+    config: { ...DEFAULT_CONFIG, template: "template7", ctaDestination: "atrio" },
+  }));
+  const template2 = renderToStaticMarkup(createElement(CtaDestinationSection, {
+    ...props,
+    config: { ...DEFAULT_CONFIG, template: "template2", ctaDestination: "atrio" },
+  }));
+
+  assert.doesNotMatch(template7, /cliente\(s\) Atrio disponibles/);
+  assert.match(template7, /Proveedor de destino/);
+  assert.match(template7, /aria-haspopup="listbox"/);
+  assert.doesNotMatch(template7, /<select\b/);
+  assert.match(template2, /cliente\(s\) Atrio disponibles/);
+});
 
 test("la plantilla 7 conserva su configuración separada de la 2", () => {
   const original = { ...DEFAULT_CONFIG, template: "template2" as const, titleLine1: "Título 2" };

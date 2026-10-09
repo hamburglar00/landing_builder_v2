@@ -6,6 +6,7 @@ import type {
   LandingThemeConfig,
   LandingWorkspaceCurrency,
 } from "@/lib/landing/types";
+import CustomSelect from "@/components/ui/CustomSelect";
 
 function countryForWorkspace(
   workspaceCurrency: LandingWorkspaceCurrency,
@@ -39,14 +40,14 @@ export function LandingMarketCountryField({
       <label htmlFor={id} className="mb-1 block text-xs font-medium text-zinc-400">
         País donde circulará la landing
       </label>
-      <select
+      <CustomSelect
         id={id}
         value={fixedCountry}
         disabled
-        className="w-full rounded-lg border border-zinc-700 bg-zinc-900 px-3 py-2 text-sm text-zinc-100 disabled:cursor-not-allowed disabled:opacity-80"
-      >
-        <option value={fixedCountry}>{countryLabel(fixedCountry)}</option>
-      </select>
+        onChange={() => undefined}
+        options={[{ value: fixedCountry, label: countryLabel(fixedCountry) }]}
+        buttonClassName="h-10 px-3 text-sm disabled:opacity-80"
+      />
       <p className="mt-1 text-[11px] text-zinc-500">
         Se define automáticamente por el workspace activo.
       </p>

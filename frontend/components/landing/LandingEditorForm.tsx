@@ -17,6 +17,7 @@ import {
   withCurrentTemplateSnapshot,
 } from "@/lib/landing/templateVariants";
 import ModalPortal from "@/components/ui/ModalPortal";
+import CustomSelect from "@/components/ui/CustomSelect";
 
 interface LandingEditorFormProps {
   config: LandingThemeConfig;
@@ -432,22 +433,17 @@ export function LandingEditorForm({
               >
                 Tamaño de letra del CTA
               </label>
-              <select
+              <CustomSelect
+                portal
                 id={fieldId("cta-font-size")}
-                value={config.ctaFontSize}
-                onChange={(e) =>
+                value={String(config.ctaFontSize)}
+                onChange={(value) =>
                   updateConfig(setConfig, {
-                    ctaFontSize: Number(e.target.value) || config.ctaFontSize,
+                    ctaFontSize: Number(value) || config.ctaFontSize,
                   })
                 }
-                className="w-full rounded-lg border border-zinc-700 bg-zinc-900 px-2 py-1.5 text-xs text-zinc-100"
-              >
-                {fontSizeOptions.map((opt) => (
-                  <option key={opt.value} value={opt.value}>
-                    {opt.label}
-                  </option>
-                ))}
-              </select>
+                options={fontSizeOptions.map((opt) => ({ value: String(opt.value), label: opt.label }))}
+              />
             </div>
             <div className="flex items-end gap-2 pt-1">
               <input
@@ -486,22 +482,17 @@ export function LandingEditorForm({
               >
                 Posici?n del CTA
               </label>
-              <select
+              <CustomSelect
+                portal
                 id={fieldId("cta-position")}
                 value={config.ctaPosition}
-                onChange={(e) =>
+                onChange={(value) =>
                   updateConfig(setConfig, {
-                    ctaPosition: e.target.value as CtaPositionOption,
+                    ctaPosition: value as CtaPositionOption,
                   })
                 }
-                className="w-full rounded-lg border border-zinc-700 bg-zinc-900 px-2 py-1.5 text-xs text-zinc-100"
-              >
-                {ctaPositionOptions.map((opt) => (
-                  <option key={opt.value} value={opt.value}>
-                    {opt.label}
-                  </option>
-                ))}
-              </select>
+                options={ctaPositionOptions}
+              />
             </div>
           )}
           <ColorSelect
@@ -658,16 +649,18 @@ export function LandingEditorForm({
               <label htmlFor={fieldId("template6-grid")} className="mb-1 block text-xs font-medium text-zinc-300">
                 Grilla
               </label>
-              <select
+              <CustomSelect
+                portal
                 id={fieldId("template6-grid")}
                 value={template6Cover.grid}
-                onChange={(event) => updateTemplate6Cover({ grid: event.target.value as typeof template6Cover.grid })}
-                className="w-full rounded-lg border border-zinc-700 bg-zinc-900 px-3 py-2 text-sm text-zinc-100"
-              >
-                <option value="2x1">2 columnas × 1 fila</option>
-                <option value="2x2">2 columnas × 2 filas</option>
-                <option value="2x3">2 columnas × 3 filas</option>
-              </select>
+                onChange={(value) => updateTemplate6Cover({ grid: value as typeof template6Cover.grid })}
+                options={[
+                  { value: "2x1", label: "2 columnas × 1 fila" },
+                  { value: "2x2", label: "2 columnas × 2 filas" },
+                  { value: "2x3", label: "2 columnas × 3 filas" },
+                ]}
+                buttonClassName="h-10 px-3 text-sm"
+              />
             </div>
 
             <ImageUploader
@@ -1066,23 +1059,18 @@ export function LandingEditorForm({
                   >
                     Tamaño
                   </label>
-                  <select
+                  <CustomSelect
+                    portal
                     id={fieldId("title-font-size")}
-                    value={config.titleFontSize}
-                    onChange={(e) =>
+                    value={String(config.titleFontSize)}
+                    onChange={(value) =>
                       updateConfig(setConfig, {
                         titleFontSize:
-                          Number(e.target.value) || config.titleFontSize,
+                          Number(value) || config.titleFontSize,
                       })
                     }
-                    className="w-full rounded-lg border border-zinc-700 bg-zinc-900 px-2 py-1.5 text-xs text-zinc-100"
-                  >
-                    {fontSizeOptions.map((opt) => (
-                      <option key={opt.value} value={opt.value}>
-                        {opt.label}
-                      </option>
-                    ))}
-                  </select>
+                    options={fontSizeOptions.map((opt) => ({ value: String(opt.value), label: opt.label }))}
+                  />
                 </div>
                 <div className="flex items-center gap-2">
                   <input
@@ -1150,23 +1138,18 @@ export function LandingEditorForm({
                   >
                     Tamaño
                   </label>
-                  <select
+                  <CustomSelect
+                    portal
                     id={fieldId("subtitle-font-size")}
-                    value={config.subtitleFontSize}
-                    onChange={(e) =>
+                    value={String(config.subtitleFontSize)}
+                    onChange={(value) =>
                       updateConfig(setConfig, {
                         subtitleFontSize:
-                          Number(e.target.value) || config.subtitleFontSize,
+                          Number(value) || config.subtitleFontSize,
                       })
                     }
-                    className="w-full rounded-lg border border-zinc-700 bg-zinc-900 px-2 py-1.5 text-xs text-zinc-100"
-                  >
-                    {fontSizeOptions.map((opt) => (
-                      <option key={opt.value} value={opt.value}>
-                        {opt.label}
-                      </option>
-                    ))}
-                  </select>
+                    options={fontSizeOptions.map((opt) => ({ value: String(opt.value), label: opt.label }))}
+                  />
                 </div>
                 <div className="flex items-end gap-2 pt-1">
                   <input
@@ -1236,23 +1219,18 @@ export function LandingEditorForm({
                   >
                     Tamaño
                   </label>
-                  <select
+                  <CustomSelect
+                    portal
                     id={fieldId("badge-font-size")}
-                    value={config.badgeFontSize}
-                    onChange={(e) =>
+                    value={String(config.badgeFontSize)}
+                    onChange={(value) =>
                       updateConfig(setConfig, {
                         badgeFontSize:
-                          Number(e.target.value) || config.badgeFontSize,
+                          Number(value) || config.badgeFontSize,
                       })
                     }
-                    className="w-full rounded-lg border border-zinc-700 bg-zinc-900 px-2 py-1.5 text-xs text-zinc-100"
-                  >
-                    {fontSizeOptions.map((opt) => (
-                      <option key={opt.value} value={opt.value}>
-                        {opt.label}
-                      </option>
-                    ))}
-                  </select>
+                    options={fontSizeOptions.map((opt) => ({ value: String(opt.value), label: opt.label }))}
+                  />
                 </div>
                 <div className="flex items-end gap-2 pt-1">
                   <input

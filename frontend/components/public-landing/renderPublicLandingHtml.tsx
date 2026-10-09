@@ -518,16 +518,16 @@ function renderTemplate7({ config }: RenderParams) {
       : ""
   }<h1 class="template7__title"${styleAttr({
     color: config.colors?.title ?? "#FFFFFF",
-    "font-size": `${config.typography?.title?.sizePx ?? 26}px`,
+    "--template7-title-size": `${config.typography?.title?.sizePx ?? 26}px`,
     "font-weight": config.typography?.title?.weight ?? 700,
   })}>${renderTextLines(titleLines)}</h1>${subtitleLines.length ? `<p class="template7__subtitle"${styleAttr({
     color: config.colors?.subtitle ?? "#FFFFFF",
-    "font-size": `${config.typography?.subtitle?.sizePx ?? 16}px`,
+    "--template7-subtitle-size": `${config.typography?.subtitle?.sizePx ?? 16}px`,
     "font-weight": config.typography?.subtitle?.weight ?? 400,
   })}>${renderTextLines(subtitleLines)}</p>` : ""}<form class="template7__form" data-template7-form><label class="template7__label" for="template7-name">Tu nombre</label><input id="template7-name" class="template7__input" data-template7-name type="text" name="firstName" autocomplete="given-name" maxlength="80" required placeholder="Ej.: Martín"><button type="button" class="template7__cta" data-public-landing-cta data-public-landing-rest-label="${escapeHtml(ctaText)}" data-public-landing-loading-label="Abriendo..." data-public-landing-disabled-label="No disponible"${styleAttr({
     color: config.colors?.ctaText ?? "#111111",
     background: config.colors?.ctaBackground ?? "#FFD700",
-    "font-size": `${config.typography?.cta?.sizePx ?? 18}px`,
+    "--template7-cta-size": `${config.typography?.cta?.sizePx ?? 18}px`,
     "font-weight": config.typography?.cta?.weight ?? 700,
   })} disabled><span data-public-landing-cta-label>${escapeHtml(ctaText)}</span></button><p class="template7__error" data-template7-error role="alert" hidden></p></form></section></main>`;
 }

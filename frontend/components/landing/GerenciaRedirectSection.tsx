@@ -6,6 +6,12 @@ import type { Gerencia, GerenciaWorkGroup } from "@/lib/gerencias/types";
 import type { LandingGerenciaAssignment } from "@/lib/gerencias/gerenciasDb";
 import type { Landing, PhoneKind } from "@/lib/landing/types";
 import { CollapsibleSection } from "@/components/landing/LandingEditorForm";
+import CustomSelect from "@/components/ui/CustomSelect";
+
+const HOUR_OPTIONS = Array.from({ length: 24 }, (_, hour) => ({
+  value: String(hour),
+  label: `${String(hour).padStart(2, "0")}:00`,
+}));
 
 const PHONE_KIND_OPTIONS: Array<{ value: PhoneKind; label: string }> = [
   { value: "carga", label: "Carga" },
@@ -231,37 +237,37 @@ export function GerenciaRedirectSection({
               {intervalStartHour !== null && intervalEndHour !== null && (
                 <div className="flex flex-wrap items-center gap-1">
                   <span>Dentro de</span>
-                  <select
-                    value={intervalStartHour}
-                    onChange={(e) => {
-                      const v = parseInt(e.target.value, 10);
+                  <CustomSelect
+                    portal
+                    ariaLabel={`Hora de inicio para ${g.nombre}`}
+                    value={String(intervalStartHour)}
+                    onChange={(value) => {
+                      const v = parseInt(value, 10);
                       const n = Number.isNaN(v) ? 0 : Math.max(0, Math.min(23, v));
                       setAssignments((prev) =>
                         prev.map((a) => (a.gerencia_id === g.id ? { ...a, intervalStartHour: n } : a)),
                       );
                     }}
-                    className="rounded-lg border border-zinc-700 bg-zinc-900 px-2 py-1 text-[11px] text-zinc-100"
-                  >
-                    {Array.from({ length: 24 }).map((_, h) => (
-                      <option key={h} value={h}>{h.toString().padStart(2, "0")}:00</option>
-                    ))}
-                  </select>
+                    options={HOUR_OPTIONS}
+                    className="w-[74px]"
+                    buttonClassName="h-7 px-2 text-[11px]"
+                  />
                   <span>a</span>
-                  <select
-                    value={intervalEndHour}
-                    onChange={(e) => {
-                      const v = parseInt(e.target.value, 10);
+                  <CustomSelect
+                    portal
+                    ariaLabel={`Hora de fin para ${g.nombre}`}
+                    value={String(intervalEndHour)}
+                    onChange={(value) => {
+                      const v = parseInt(value, 10);
                       const n = Number.isNaN(v) ? 0 : Math.max(0, Math.min(23, v));
                       setAssignments((prev) =>
                         prev.map((a) => (a.gerencia_id === g.id ? { ...a, intervalEndHour: n } : a)),
                       );
                     }}
-                    className="rounded-lg border border-zinc-700 bg-zinc-900 px-2 py-1 text-[11px] text-zinc-100"
-                  >
-                    {Array.from({ length: 24 }).map((_, h) => (
-                      <option key={h} value={h}>{h.toString().padStart(2, "0")}:00</option>
-                    ))}
-                  </select>
+                    options={HOUR_OPTIONS}
+                    className="w-[74px]"
+                    buttonClassName="h-7 px-2 text-[11px]"
+                  />
                 </div>
               )}
             </div>
