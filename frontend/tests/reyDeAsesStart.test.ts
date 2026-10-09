@@ -3,6 +3,7 @@ import test from "node:test";
 import { handleReyStart, type StartDependencies } from "../lib/reyDeAses/start.server";
 import { createProviderHandoff, gatewayReadiness, resolveInternalChatPlayer } from "../lib/reyDeAses/integrations.server";
 import { createDemoSession, readDemoConfig } from "../lib/reyDeAses/demo.server";
+import type { ResolvedPlayer } from "../lib/reyDeAses/contracts";
 import type { TargetProvider } from "../lib/landing/types";
 
 const landingId = "11111111-1111-4111-8111-111111111111";
@@ -10,8 +11,18 @@ const clientId = "22222222-2222-4222-8222-222222222222";
 const advisorId = "33333333-3333-4333-8333-333333333333";
 const deviceId = "44444444-4444-4444-8444-444444444444";
 const playerId = "55555555-5555-4555-8555-555555555555";
+const providerAccountId = "88888888-8888-4888-8888-888888888888";
+const multiSkinAccountId = "99999999-9999-4999-8999-999999999999";
 const ownerId = "66666666-6666-4666-8666-666666666666";
 const demoDeviceId = "77777777-7777-4777-8777-777777777777";
+
+function resolvedPlayer(provider: TargetProvider = "rey_de_ases", resolvedDeviceId = deviceId): ResolvedPlayer {
+  return {
+    advisor_id: advisorId, advisor_slug: "gera", player_id: playerId, device_id: resolvedDeviceId,
+    created: true, player_provider_account_id: provider === "multi_skin" ? multiSkinAccountId : providerAccountId,
+    target_provider: provider, provider_account_created: true,
+  };
+}
 
 function demoConfig() {
   const config = readDemoConfig({
@@ -58,10 +69,11 @@ function dependencies(status: ReturnType<StartDependencies["api2Status"]> = null
       calls.push("internal-chat");
       assert.equal(input.advisor.advisorId, advisorId);
       assert.equal(input.deviceId, deviceId);
+      assert.equal(input.targetProvider, provider ?? "rey_de_ases");
       assert.equal(input.name, "Martín");
       assert.deepEqual({ landingId: input.landingId, landingSlug: input.landingSlug, promoCode: input.promoCode },
         { landingId, landingSlug: "landing-7", promoCode: "LP-a1b2" });
-      return { advisor_id: advisorId, advisor_slug: "gera", player_id: playerId, device_id: input.deviceId, created: true };
+      return resolvedPlayer(input.targetProvider, input.deviceId);
     },
     async resolveAccount(accountRequest) {
       calls.push("api2");
@@ -74,6 +86,7 @@ function dependencies(status: ReturnType<StartDependencies["api2Status"]> = null
       assert.equal(advisor.advisorSlug, "gera");
       assert.equal(incomingDeviceId, deviceId);
       assert.equal(player.player_id, playerId);
+      assert.equal(player.player_provider_account_id, targetProvider === "multi_skin" ? multiSkinAccountId : providerAccountId);
       assert.equal(account.password, "secret-pass");
       return { handoff_url: "https://gateway.example.com/start?t=token", expires_at: "2026-10-08T12:00:00Z", binding_created: true };
     },
@@ -124,6 +137,23 @@ test("el proveedor lo decide la landing, no un valor adulterado del navegador", 
   }), deps);
   assert.equal(result.status, 200);
   assert.deepEqual(await result.json(), { handoff_url: "https://gateway.example.com/start?t=token" });
+});
+
+test("el mismo jugador conserva player_id y obtiene una relacion diferente por proveedor", async () => {
+  const accounts: string[] = [];
+  for (const provider of ["rey_de_ases", "multi_skin"] as const) {
+    const { deps } = dependencies(null, provider);
+    deps.createHandoff = async (_provider, _advisor, _deviceId, player) => {
+      assert.equal(player.player_id, playerId);
+      assert.equal(player.target_provider, provider);
+      accounts.push(player.player_provider_account_id);
+      return { handoff_url: "https://gateway.example.com/start?t=token", expires_at: "2026-10-08T12:00:00Z", binding_created: true };
+    };
+    const response = await handleReyStart(request(validPayload), deps);
+    assert.equal(response.status, 200);
+    assert.deepEqual(await response.json(), { handoff_url: "https://gateway.example.com/start?t=token" });
+  }
+  assert.deepEqual(accounts, [providerAccountId, multiSkinAccountId]);
 });
 
 test("proveedor invalido en la landing se rechaza antes de API2", async () => {
@@ -203,7 +233,7 @@ test("start sin bootstrap crea lb_cid en servidor y usa ese mismo UUID", async (
   let canonical = "";
   deps.resolvePlayer = async (input) => {
     canonical = input.deviceId;
-    return { advisor_id: advisorId, advisor_slug: "gera", player_id: playerId, device_id: input.deviceId, created: true };
+    return resolvedPlayer(input.targetProvider, input.deviceId);
   };
   deps.createHandoff = async (_provider, _advisor, cid) => {
     assert.equal(cid, canonical);
@@ -228,7 +258,8 @@ test("demo válida mantiene validaciones, limita con lb_cid y solo sustituye API
     calls.push("internal-chat");
     assert.equal(input.deviceId, demoDeviceId);
     assert.equal(input.landingId, landingId);
-    return { advisor_id: advisorId, advisor_slug: "gera", player_id: playerId, device_id: demoDeviceId, created: false };
+    assert.equal(input.targetProvider, "rey_de_ases");
+    return { ...resolvedPlayer(input.targetProvider, demoDeviceId), created: false, provider_account_created: false };
   };
   deps.createHandoff = async (provider, _advisor, cid, _player, account) => {
     calls.push("gateway");
@@ -321,10 +352,31 @@ test("Multi Skin nunca usa la cuenta demo de Rey de Ases", async () => {
 
 test("respuesta de internal-chat con device_id alterado produce upstream_unavailable", async () => {
   const { deps } = dependencies();
-  deps.resolvePlayer = async () => ({ advisor_id: advisorId, advisor_slug: "gera", player_id: playerId, device_id: demoDeviceId, created: true });
+  deps.resolvePlayer = async () => resolvedPlayer("rey_de_ases", demoDeviceId);
   const result = await handleReyStart(request(validPayload), deps);
   assert.equal(result.status, 503);
   assert.deepEqual(await result.json(), { error: "upstream_unavailable" });
+});
+
+test("respuesta inconsistente de internal-chat nunca llega a API2 ni al gateway", async () => {
+  const invalid: Array<[string, Record<string, unknown>]> = [
+    ["advisor_id", { advisor_id: clientId }],
+    ["advisor_slug", { advisor_slug: "otro" }],
+    ["device_id", { device_id: demoDeviceId }],
+    ["player_id", { player_id: "invalid" }],
+    ["player_provider_account_id", { player_provider_account_id: "invalid" }],
+    ["target_provider", { target_provider: "multi_skin" }],
+    ["created", { created: "true" }],
+    ["provider_account_created", { provider_account_created: null }],
+  ];
+  for (const [field, change] of invalid) {
+    const { deps, calls } = dependencies();
+    deps.resolvePlayer = async () => ({ ...resolvedPlayer(), ...change }) as ResolvedPlayer;
+    const response = await handleReyStart(request(validPayload), deps);
+    assert.equal(response.status, 503, field);
+    assert.deepEqual(await response.json(), { error: "upstream_unavailable" }, field);
+    assert.ok(!calls.includes("api2") && !calls.includes("gateway"), field);
+  }
 });
 
 test("adaptadores usan contrato servidor-servidor y no exponen credenciales", async () => {
@@ -339,20 +391,25 @@ test("adaptadores usan contrato servidor-servidor y no exponen credenciales", as
   process.env.REY_GATEWAY_HANDOFF_API_KEY = "test-gateway-key";
   const advisor = { atrioClientId: clientId, advisorId, advisorSlug: "gera" };
   try {
-    globalThis.fetch = async (input, init) => {
-      assert.equal(String(input), "https://chat.example.com/api/gateway/players/resolve");
-      assert.equal(new Headers(init?.headers).get("Authorization"), "Bearer test-chat-key");
-      assert.deepEqual(JSON.parse(String(init?.body)), {
-        advisor_id: advisorId, advisor_slug: "gera", device_id: deviceId, name: "Martín",
-        landing_id: landingId, landing_slug: "landing-7", atrio_client_id: clientId,
-        promo_code: "LP-a1b2", source: "landing_builder",
-      });
-      return Response.json({ advisor_id: advisorId, advisor_slug: "gera", player_id: playerId, device_id: deviceId, created: true });
-    };
-    const player = await resolveInternalChatPlayer({ advisor, deviceId, name: "Martín", landingId, landingSlug: "landing-7", promoCode: "LP-a1b2" });
-    globalThis.fetch = async () => Response.json({ advisor_id: advisorId, advisor_slug: "gera", player_id: playerId, device_id: demoDeviceId, created: true });
+    for (const provider of ["rey_de_ases", "multi_skin"] as const) {
+      globalThis.fetch = async (input, init) => {
+        assert.equal(String(input), "https://chat.example.com/api/gateway/players/resolve");
+        assert.equal(new Headers(init?.headers).get("Authorization"), "Bearer test-chat-key");
+        assert.deepEqual(JSON.parse(String(init?.body)), {
+          advisor_id: advisorId, advisor_slug: "gera", device_id: deviceId, name: "Martín",
+          landing_id: landingId, landing_slug: "landing-7", atrio_client_id: clientId,
+          promo_code: "LP-a1b2", target_provider: provider, source: "landing_builder",
+        });
+        return Response.json(resolvedPlayer(provider));
+      };
+      const result = await resolveInternalChatPlayer({ advisor, deviceId, name: "Martín", landingId, landingSlug: "landing-7", promoCode: "LP-a1b2", targetProvider: provider });
+      assert.equal(result.player_provider_account_id, provider === "rey_de_ases" ? providerAccountId : multiSkinAccountId);
+      assert.equal(result.target_provider, provider);
+    }
+    const player = resolvedPlayer();
+    globalThis.fetch = async () => Response.json(resolvedPlayer("rey_de_ases", demoDeviceId));
     await assert.rejects(
-      resolveInternalChatPlayer({ advisor, deviceId, name: "Martín", landingId, landingSlug: "landing-7", promoCode: "LP-a1b2" }),
+      resolveInternalChatPlayer({ advisor, deviceId, name: "Martín", landingId, landingSlug: "landing-7", promoCode: "LP-a1b2", targetProvider: "rey_de_ases" }),
       { code: "upstream_unavailable" },
     );
     globalThis.fetch = async (input, init) => {

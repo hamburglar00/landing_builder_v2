@@ -1,10 +1,10 @@
 import { createClient } from "@supabase/supabase-js";
 import type { TargetProvider } from "../landing/types";
 import type { AssignedAdvisor, Api2ResolveAccountRequest, HandoffResult, TargetAccount, ResolvedPlayer, StartRequest, PlayerResolveRequest } from "./contracts";
-import { getOrCreateClientIdentity, isDeviceId, withClientIdentityCookie, type ClientIdentity } from "./clientIdentity.server";
+import { getOrCreateClientIdentity, withClientIdentityCookie, type ClientIdentity } from "./clientIdentity.server";
 import { isDemoLandingAllowed, readDemoConfig, readDemoCookie, verifyDemoSession, type DemoConfig } from "./demo.server";
 import { allowTemplate7Start } from "./rateLimit.server";
-import { api2Readiness, createProviderHandoff, gatewayReadiness, resolveInternalChatPlayer, resolveTargetAccount, TargetIntegrationError } from "./integrations.server";
+import { api2Readiness, createProviderHandoff, gatewayReadiness, resolveInternalChatPlayer, resolveTargetAccount, TargetIntegrationError, validateResolvedPlayer } from "./integrations.server";
 
 type LandingRow = { id: string; name: string; user_id: string; workspace_currency: string; config: unknown; landing_config: unknown };
 type AssignmentRow = { landing_id: string; atrio_client_id: string; user_id: string };
@@ -147,10 +147,9 @@ async function handleTemplate7StartInner(request: Request, deps: StartDependenci
       if (pending) return json({ error: pending }, 503);
     }
     const effectiveDeviceId = demoConfig ? demoConfig.deviceId : identity.deviceId;
-    const player = await deps.resolvePlayer({ advisor: assigned, deviceId: effectiveDeviceId, name: payload.name,
-      landingId: landing.id, landingSlug: landing.name, promoCode: payload.promo_code });
-    if (player.advisor_id !== assigned.advisorId || player.advisor_slug !== assigned.advisorSlug ||
-        !isDeviceId(player.player_id) || player.device_id !== effectiveDeviceId) throw new TargetIntegrationError("upstream_unavailable");
+    const resolveInput: PlayerResolveRequest = { advisor: assigned, deviceId: effectiveDeviceId, name: payload.name,
+      landingId: landing.id, landingSlug: landing.name, promoCode: payload.promo_code, targetProvider: provider };
+    const player = validateResolvedPlayer(await deps.resolvePlayer(resolveInput), resolveInput);
     const account: TargetAccount = demoConfig
       ? { username: demoConfig.username, password: demoConfig.password, platform: "rey_de_ases", created: false }
       : await deps.resolveAccount({ external_user_id: player.player_id, name: payload.name, target_provider: provider, advisor_id: assigned.advisorId, advisor_slug: assigned.advisorSlug });

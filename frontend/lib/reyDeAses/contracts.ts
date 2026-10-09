@@ -23,6 +23,9 @@ export type ResolvedPlayer = {
   player_id: string;
   device_id: string;
   created: boolean;
+  player_provider_account_id: string;
+  target_provider: TargetProvider;
+  provider_account_created: boolean;
 };
 
 export type PlayerResolveRequest = {
@@ -32,6 +35,7 @@ export type PlayerResolveRequest = {
   landingId: string;
   landingSlug: string;
   promoCode: string;
+  targetProvider: TargetProvider;
 };
 
 export type Api2ResolveAccountRequest = {

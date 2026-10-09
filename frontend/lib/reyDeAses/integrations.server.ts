@@ -56,6 +56,18 @@ export function gatewayReadiness(provider: TargetProvider): "integration_pending
   return provider === "multi_skin" ? "integration_pending" : null;
 }
 
+export function validateResolvedPlayer(result: unknown, input: Pick<PlayerResolveRequest, "advisor" | "deviceId" | "targetProvider">): ResolvedPlayer {
+  if (!result || typeof result !== "object" || Array.isArray(result)) throw new TargetIntegrationError("upstream_unavailable");
+  const player = result as Record<string, unknown>;
+  if (player.advisor_id !== input.advisor.advisorId || player.advisor_slug !== input.advisor.advisorSlug ||
+      !isDeviceId(player.player_id) || !isDeviceId(player.device_id) || player.device_id !== input.deviceId ||
+      !isDeviceId(player.player_provider_account_id) || player.target_provider !== input.targetProvider ||
+      typeof player.created !== "boolean" || typeof player.provider_account_created !== "boolean") {
+    throw new TargetIntegrationError("upstream_unavailable");
+  }
+  return player as ResolvedPlayer;
+}
+
 export async function resolveInternalChatPlayer(input: PlayerResolveRequest): Promise<ResolvedPlayer> {
   const origin = configuredOrigin(process.env.INTERNAL_CHAT_ORIGIN);
   const result = await postJson(origin, "/api/gateway/players/resolve", process.env.INTERNAL_CHAT_PLAYER_RESOLVE_KEY, {
@@ -67,14 +79,10 @@ export async function resolveInternalChatPlayer(input: PlayerResolveRequest): Pr
     landing_slug: input.landingSlug,
     atrio_client_id: input.advisor.atrioClientId,
     promo_code: input.promoCode,
+    target_provider: input.targetProvider,
     source: "landing_builder",
   });
-  if (result.advisor_id !== input.advisor.advisorId || result.advisor_slug !== input.advisor.advisorSlug ||
-      !isDeviceId(result.player_id) || !isDeviceId(result.device_id) || result.device_id !== input.deviceId ||
-      typeof result.created !== "boolean") {
-    throw new TargetIntegrationError("upstream_unavailable");
-  }
-  return result as ResolvedPlayer;
+  return validateResolvedPlayer(result, input);
 }
 
 export async function resolveTargetAccount(_request: Api2ResolveAccountRequest): Promise<TargetAccount> {
