@@ -417,13 +417,22 @@ test("adaptadores usan contrato servidor-servidor y no exponen credenciales", as
       assert.equal(new Headers(init?.headers).get("Authorization"), "Bearer test-gateway-key");
       assert.deepEqual(JSON.parse(String(init?.body)), {
         advisor_id: advisorId, advisor_slug: "gera", device_id: deviceId,
-        external_user_id: playerId, platform: "rey_de_ases",
+        external_user_id: playerId, player_provider_account_id: providerAccountId,
+        target_provider: "rey_de_ases", platform: "rey_de_ases",
         username: "test-user", password: "test-pass", target_path: "/casino/list/home",
       });
       return Response.json({ handoff_url: "https://gateway.example.com/start?t=token", expires_at: "2026-10-08T12:00:00Z", binding_created: true });
     };
     const handoff = await createProviderHandoff("rey_de_ases", advisor, deviceId, player, { username: "test-user", password: "test-pass", platform: "rey_de_ases", created: true });
     assert.equal(handoff.handoff_url, "https://gateway.example.com/start?t=token");
+    await assert.rejects(createProviderHandoff("rey_de_ases", advisor, deviceId,
+      { ...player, target_provider: "multi_skin" },
+      { username: "test-user", password: "test-pass", platform: "rey_de_ases", created: true }),
+    { code: "upstream_unavailable" });
+    await assert.rejects(createProviderHandoff("rey_de_ases", advisor, deviceId,
+      { ...player, player_provider_account_id: "invalid" },
+      { username: "test-user", password: "test-pass", platform: "rey_de_ases", created: true }),
+    { code: "upstream_unavailable" });
     await assert.rejects(createProviderHandoff("multi_skin", advisor, deviceId, player, { username: "test-user", password: "test-pass", platform: "multi_skin", created: true }), { code: "integration_pending" });
   } finally {
     globalThis.fetch = originalFetch;

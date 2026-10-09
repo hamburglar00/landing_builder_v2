@@ -95,12 +95,17 @@ export async function resolveTargetAccount(_request: Api2ResolveAccountRequest):
 export async function createProviderHandoff(provider: TargetProvider, advisor: AssignedAdvisor, deviceId: string, player: ResolvedPlayer, account: TargetAccount): Promise<HandoffResult> {
   if (provider === "multi_skin") throw new TargetIntegrationError("integration_pending");
   const origin = configuredOrigin(process.env.REY_GATEWAY_ORIGIN);
-  if (account.platform !== provider || !account.username || !account.password) throw new TargetIntegrationError("upstream_unavailable");
+  if (player.target_provider !== provider || !isDeviceId(player.player_provider_account_id) ||
+      account.platform !== provider || !account.username || !account.password) {
+    throw new TargetIntegrationError("upstream_unavailable");
+  }
   const result = await postJson(origin, "/api/handoffs", process.env.REY_GATEWAY_HANDOFF_API_KEY, {
     advisor_id: advisor.advisorId,
     advisor_slug: advisor.advisorSlug,
     device_id: deviceId,
     external_user_id: player.player_id,
+    player_provider_account_id: player.player_provider_account_id,
+    target_provider: player.target_provider,
     platform: "rey_de_ases",
     username: account.username,
     password: account.password,
