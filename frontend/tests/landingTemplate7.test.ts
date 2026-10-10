@@ -97,6 +97,30 @@ test("la plantilla 7 publica un formulario de nombre con asesor de Atrio", () =>
   assert.doesNotMatch(html, /INTERNAL_CHAT_PLAYER_RESOLVE_KEY|API2_GATEWAY_API_KEY|REY_GATEWAY_HANDOFF_API_KEY/);
 });
 
+test("Template 7 varía el nombre de ejemplo por visita en ambos modos del constructor", () => {
+  const config = buildLandingConfig({
+    id: "landing-7", name: "Prueba 7", comment: "", pixelId: "", postUrl: "",
+    landingTag: "TEST", config: { ...DEFAULT_CONFIG, template: "template7" },
+  }) as PublicLandingConfig;
+
+  for (const demoMode of [false, true]) {
+    const html = renderPublicLandingHtml({ slug: "prueba-7", config, demoMode });
+    const script = html.match(/<script>(\(\(\)=>\{const input=document\.querySelector\('\[data-template7-name\]'\);[\s\S]*?\}\)\(\);)<\/script>/)?.[1];
+    assert.ok(script);
+
+    const placeholders: string[] = [];
+    for (const random of [0, 0.35]) {
+      const input = { placeholder: "" };
+      new Script(script).runInNewContext({
+        document: { querySelector: () => input },
+        Math: { floor: Math.floor, random: () => random },
+      });
+      placeholders.push(input.placeholder);
+    }
+    assert.deepEqual(placeholders, ["Ej.: Martín", "Ej.: Valentina"]);
+  }
+});
+
 test("Template 7 publica Multi Skin como target_provider sin afectar otras plantillas", () => {
   const config = {
     ...DEFAULT_CONFIG,

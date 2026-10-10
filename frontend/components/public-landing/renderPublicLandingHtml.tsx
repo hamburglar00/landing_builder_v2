@@ -33,6 +33,11 @@ type ScriptElement = {
   };
 };
 
+const TEMPLATE7_EXAMPLE_NAMES = [
+  "Martín", "Lucía", "Sofía", "Mateo", "Valentina", "Tomás",
+  "Camila", "Nicolás", "Julieta", "Benjamín", "Florencia", "Agustín",
+];
+
 const SOCIAL_PROOF_ITEMS = [
   { quote: "Muy buena atencion, me respondieron al toque 🙌", name: "Nico R." },
   { quote: "Me guiaron con paciencia y buena onda ✅", name: "Juan P." },
@@ -676,6 +681,9 @@ export function renderPublicLandingHtml(params: RenderParams) {
   const runtimeScript = renderScriptElement(demoMode
     ? Template7DemoRuntimeScript({ slug, config })
     : PublicLandingRuntimeScript({ slug, config }));
+  const template7PlaceholderScript = config.layout?.template === 7
+    ? `<script>(()=>{const input=document.querySelector('[data-template7-name]');if(!input)return;const names=${JSON.stringify(TEMPLATE7_EXAMPLE_NAMES)};input.placeholder='Ej.: '+names[Math.floor(Math.random()*names.length)];})();</script>`
+    : "";
 
   return `<!doctype html><html lang="es"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"><title>${escapeHtml(
     metadata.title,
@@ -696,7 +704,7 @@ export function renderPublicLandingHtml(params: RenderParams) {
     slug,
     config.tracking?.phoneCountryCode || "54",
     config.layout?.template || 0,
-  )}</head><body>${buildPixelNoscript(pixelId)}${renderTemplate(params)}${renderPrivacyFooter(
+  )}</head><body>${buildPixelNoscript(pixelId)}${renderTemplate(params)}${template7PlaceholderScript}${renderPrivacyFooter(
     config,
   )}${runtimeScript}</body></html>`;
 }
