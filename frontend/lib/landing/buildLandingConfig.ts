@@ -240,7 +240,7 @@ export function buildLandingConfig({
       landingTag,
       sendContactPixel: config.sendContactPixel,
       ctaDestination: config.template === "template7" || (config.template !== "template6" && config.ctaDestination === "atrio") ? "atrio" : "whatsapp",
-      ...(config.template === "template7" ? { target_provider: config.targetProvider === "multi_skin" ? "multi_skin" as const : "rey_de_ases" as const } : {}),
+      ...(config.template === "template7" ? { target_provider: config.targetProvider } : {}),
       ...(config.template === "template7" && config.targetProvider === "multi_skin"
         ? { skin_code: "ganamos_plus" as const }
         : {}),

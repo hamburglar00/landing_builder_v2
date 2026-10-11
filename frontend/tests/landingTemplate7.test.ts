@@ -90,7 +90,9 @@ test("la plantilla 7 publica un formulario de nombre con asesor de Atrio", () =>
   assert.match(html, /notifyAtrioClick\(atrioData\)/);
   assert.match(html, /template7ContactSent = true/);
   assert.match(html, /target_provider: gatewayMode \? cfg.targetProvider/);
-  assert.match(html, /cfg.targetProvider === "multi_skin" \? "multi_skin_gateway" : "rey_de_ases_gateway"/);
+  assert.match(html, /cfg\.targetProvider === "multi_skin"/);
+  assert.match(html, /"ases_del_norte_gateway"/);
+  assert.match(html, /"rey_de_ases_gateway"/);
   assert.match(html, /atrio_client_id: atrioMode/);
   assert.match(html, /atrio_id: atrioMode/);
   assert.match(html, /atrio_slug: atrioMode/);

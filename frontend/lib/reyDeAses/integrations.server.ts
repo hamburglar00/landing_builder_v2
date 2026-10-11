@@ -53,7 +53,9 @@ export function api2Readiness(): "integration_pending" {
 }
 
 export function gatewayReadiness(provider: TargetProvider): "integration_pending" | null {
-  return provider === "multi_skin" && !process.env.MULTI_SKIN_GATEWAY_ORIGIN ? "integration_pending" : null;
+  if (provider === "multi_skin" && !process.env.MULTI_SKIN_GATEWAY_ORIGIN) return "integration_pending";
+  if (provider === "ases_del_norte" && !process.env.ASES_DEL_NORTE_GATEWAY_ORIGIN) return "integration_pending";
+  return null;
 }
 
 export function validateResolvedPlayer(result: unknown, input: Pick<PlayerResolveRequest, "advisor" | "deviceId" | "targetProvider">): ResolvedPlayer {
@@ -148,18 +150,27 @@ export async function createProviderHandoff(
   skinCode: MultiSkinCode | null = null,
   testing = false,
 ): Promise<HandoffResult> {
-  const origin = configuredOrigin(provider === "multi_skin" ? process.env.MULTI_SKIN_GATEWAY_ORIGIN : process.env.REY_GATEWAY_ORIGIN);
+  const origin = configuredOrigin(
+    provider === "multi_skin"
+      ? process.env.MULTI_SKIN_GATEWAY_ORIGIN
+      : provider === "ases_del_norte"
+        ? process.env.ASES_DEL_NORTE_GATEWAY_ORIGIN
+        : process.env.REY_GATEWAY_ORIGIN,
+  );
   if (player.target_provider !== provider || !isDeviceId(player.player_provider_account_id) ||
       account.platform !== provider || (provider === "multi_skin" && !skinCode) ||
-      (!testing && (!account.username || !account.password)) || (testing && provider !== "multi_skin")) {
+      (!testing && (!account.username || !account.password)) ||
+      (testing && provider !== "multi_skin" && provider !== "ases_del_norte")) {
     throw new TargetIntegrationError("upstream_unavailable");
   }
   const result = await postJson(
     origin,
-    provider === "multi_skin" && testing ? "/api/testing/handoffs" : "/api/handoffs",
+    testing && (provider === "multi_skin" || provider === "ases_del_norte") ? "/api/testing/handoffs" : "/api/handoffs",
     provider === "multi_skin"
       ? testing ? process.env.MULTI_SKIN_GATEWAY_TESTING_API_KEY : process.env.MULTI_SKIN_GATEWAY_HANDOFF_API_KEY
-      : process.env.REY_GATEWAY_HANDOFF_API_KEY,
+      : provider === "ases_del_norte"
+        ? testing ? process.env.ASES_DEL_NORTE_GATEWAY_TESTING_API_KEY : process.env.ASES_DEL_NORTE_GATEWAY_HANDOFF_API_KEY
+        : process.env.REY_GATEWAY_HANDOFF_API_KEY,
     {
     advisor_id: advisor.advisorId,
     advisor_slug: advisor.advisorSlug,
@@ -172,8 +183,10 @@ export async function createProviderHandoff(
       username: account.username,
       password: account.password,
       target_path: "/casino/list/home",
-    } : {
+    } : provider === "multi_skin" ? {
       skin_code: skinCode,
+      ...(!testing ? { username: account.username, password: account.password } : {}),
+    } : {
       ...(!testing ? { username: account.username, password: account.password } : {}),
     }),
   });

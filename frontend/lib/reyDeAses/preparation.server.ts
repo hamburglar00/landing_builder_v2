@@ -137,8 +137,12 @@ function sameSecret(supplied: string, expected: string): boolean {
 }
 
 function gatewayOrigin(payload: StartRequest, env: PreparationEnvironment): string {
-  const multiSkin = payload.attribution?.target_provider === "multi_skin" && payload.attribution?.skin_code === "ganamos_plus";
-  const raw = multiSkin ? env.MULTI_SKIN_GATEWAY_ORIGIN || "" : env.REY_GATEWAY_ORIGIN || "";
+  const provider = payload.attribution?.target_provider;
+  const raw = provider === "multi_skin" && payload.attribution?.skin_code === "ganamos_plus"
+    ? env.MULTI_SKIN_GATEWAY_ORIGIN || ""
+    : provider === "ases_del_norte"
+      ? env.ASES_DEL_NORTE_GATEWAY_ORIGIN || ""
+      : env.REY_GATEWAY_ORIGIN || "";
   const url = new URL(raw);
   const local = url.protocol === "http:" && ["localhost", "127.0.0.1"].includes(url.hostname);
   if ((!local && url.protocol !== "https:") || url.pathname !== "/" || url.search || url.hash || url.username || url.password) {

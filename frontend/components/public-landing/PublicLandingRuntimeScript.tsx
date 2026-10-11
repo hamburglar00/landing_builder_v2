@@ -73,7 +73,11 @@ export default function PublicLandingRuntimeScript({ slug, config }: Props) {
     landingTag: config.tracking?.landingTag || "LP",
     sendContactPixel: config.tracking?.sendContactPixel !== false,
     ctaDestination: config.layout?.template === 7 || config.tracking?.ctaDestination === "atrio" ? "atrio" : "whatsapp",
-    targetProvider: config.tracking?.target_provider === "multi_skin" ? "multi_skin" : "rey_de_ases",
+    targetProvider: config.tracking?.target_provider === "multi_skin"
+      ? "multi_skin"
+      : config.tracking?.target_provider === "ases_del_norte"
+        ? "ases_del_norte"
+        : "rey_de_ases",
     skinCode: config.tracking?.skin_code || "",
     atrioRedirectUrl: config.tracking?.atrioRedirectUrl || "",
     atrioClientId: config.tracking?.atrioClientId || "",
@@ -1388,8 +1392,20 @@ export default function PublicLandingRuntimeScript({ slug, config }: Props) {
                 source: "main_button",
                 source_platform: "landing",
                 cta_destination: atrioMode ? "atrio" : "whatsapp",
-                redirect_channel: gatewayMode ? (cfg.targetProvider === "multi_skin" ? "multi_skin_gateway" : "rey_de_ases_gateway") : atrioMode ? "atrio" : "whatsapp",
-                gateway_app_id: gatewayMode ? (cfg.targetProvider === "multi_skin" ? "multi_skin_gateway" : "reydeases_gateway") : undefined,
+                redirect_channel: gatewayMode
+                  ? cfg.targetProvider === "multi_skin"
+                    ? "multi_skin_gateway"
+                    : cfg.targetProvider === "ases_del_norte"
+                      ? "ases_del_norte_gateway"
+                      : "rey_de_ases_gateway"
+                  : atrioMode ? "atrio" : "whatsapp",
+                gateway_app_id: gatewayMode
+                  ? cfg.targetProvider === "multi_skin"
+                    ? "multi_skin_gateway"
+                    : cfg.targetProvider === "ases_del_norte"
+                      ? "ases_del_norte_gateway"
+                      : "reydeases_gateway"
+                  : undefined,
                 atrio_redirect_url: atrioMode ? firstNonEmpty([atrioData && atrioData.atrioRedirectUrl, atrioData && atrioData.atrio_redirect_url, cfg.atrioRedirectUrl]) : undefined,
                 atrio_client_id: atrioMode ? firstNonEmpty([atrioData && atrioData.atrioClientId, atrioData && atrioData.atrio_client_id, cfg.atrioClientId]) : undefined,
                 atrio_id: atrioMode ? firstNonEmpty([atrioData && atrioData.atrioId, atrioData && atrioData.atrio_id, cfg.atrioId]) : undefined,

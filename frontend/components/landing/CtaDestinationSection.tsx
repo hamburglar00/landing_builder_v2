@@ -145,12 +145,16 @@ export function CtaDestinationSection({
           <CustomSelect
             portal
             id="template7-target-provider"
-            value={config.targetProvider === "multi_skin" ? "multi_skin" : "rey_de_ases"}
+            value={config.targetProvider}
             onChange={(value) => setConfig((prev) => ({
               ...prev,
               targetProvider: value as TargetProvider,
             }))}
-            options={[{ value: "rey_de_ases", label: "Rey de Ases" }, { value: "multi_skin", label: "Multi Skin" }]}
+            options={[
+              { value: "rey_de_ases", label: "Rey de Ases" },
+              { value: "multi_skin", label: "Multi Skin" },
+              { value: "ases_del_norte", label: "Ases del Norte" },
+            ]}
             className="mt-2"
             buttonClassName="h-10 bg-zinc-950 px-3 text-sm"
           />
