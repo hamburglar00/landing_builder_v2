@@ -26,7 +26,11 @@ export async function GET(_request: Request, context: RouteContext) {
     });
   }
 
-  const cachedPhone = await getCachedLandingPhone(slug);
+  // Template 7 always resolves an Atrio advisor and never redirects to WhatsApp.
+  // Avoid holding its first byte behind an RPC whose result cannot be consumed.
+  const cachedPhone = config.layout?.template === 7
+    ? null
+    : await getCachedLandingPhone(slug);
   const canonicalUrl = new URL(
     `/l/${encodeURIComponent(slug)}`,
     `${getConstructorLandingBaseUrl()}/`,

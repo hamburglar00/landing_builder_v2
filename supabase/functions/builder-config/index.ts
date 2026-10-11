@@ -33,9 +33,11 @@ function toHex(color: unknown, fallback: string): string {
 }
 
 const STORAGE_PUBLIC_SEGMENT = "/storage/v1/object/public/";
+const STORAGE_RENDER_PUBLIC_SEGMENT = "/storage/v1/render/image/public/";
 
 function isSupabaseStoragePublicUrl(url: string): boolean {
-  return url.includes(STORAGE_PUBLIC_SEGMENT);
+  return url.includes(STORAGE_PUBLIC_SEGMENT) ||
+    url.includes(STORAGE_RENDER_PUBLIC_SEGMENT);
 }
 
 function buildOptimizedImageUrl(
@@ -52,6 +54,11 @@ function buildOptimizedImageUrl(
   } catch {
     return rawUrl;
   }
+
+  parsed.pathname = parsed.pathname.replace(
+    STORAGE_PUBLIC_SEGMENT,
+    STORAGE_RENDER_PUBLIC_SEGMENT,
+  );
 
   if (Number.isFinite(width) && width > 0) {
     parsed.searchParams.set("width", String(Math.round(width)));

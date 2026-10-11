@@ -662,6 +662,7 @@ function renderTemplate(params: RenderParams) {
 
 export function renderPublicLandingHtml(params: RenderParams) {
   const { slug, config, cachedPhone, canonicalUrl, demoMode = false } = params;
+  const isTemplate7 = config.layout?.template === 7;
   const pixelId = demoMode ? "" : String(config.tracking?.pixelId || "").trim().replace(/\D+/g, "");
   const metadata = publicMetadata(config, slug);
   const supabaseOrigin = (() => {
@@ -672,16 +673,16 @@ export function renderPublicLandingHtml(params: RenderParams) {
       return "";
     }
   })();
-  const phonePrewarmScript = demoMode ? "" : renderScriptElement(
+  const phonePrewarmScript = demoMode || isTemplate7 ? "" : renderScriptElement(
     PhonePrewarmScript({ slug, initialPhone: cachedPhone }),
   );
-  const atrioPrewarmScript = config.layout?.template === 7
+  const atrioPrewarmScript = isTemplate7
     ? renderScriptElement(AtrioPrewarmScript({ slug }))
     : "";
   const runtimeScript = renderScriptElement(demoMode
     ? Template7DemoRuntimeScript({ slug, config })
     : PublicLandingRuntimeScript({ slug, config }));
-  const template7PlaceholderScript = config.layout?.template === 7
+  const template7PlaceholderScript = isTemplate7
     ? `<script>(()=>{const input=document.querySelector('[data-template7-name]');if(!input)return;const names=${JSON.stringify(TEMPLATE7_EXAMPLE_NAMES)};input.placeholder='Ej.: '+names[Math.floor(Math.random()*names.length)];})();</script>`
     : "";
 
@@ -699,7 +700,7 @@ export function renderPublicLandingHtml(params: RenderParams) {
     pixelId
       ? '<link rel="preconnect" href="https://www.facebook.com"><link rel="preconnect" href="https://connect.facebook.net">'
       : ""
-  }${buildPreloadLinks(config)}<style>${PUBLIC_LANDING_CSS}</style>${phonePrewarmScript}${atrioPrewarmScript}${demoMode ? '<meta name="robots" content="noindex,nofollow">' : ""}${config.layout?.template === 7 ? buildClientIdentityBootstrapScript() : ""}${pixelScriptForTemplate(
+  }${buildPreloadLinks(config)}<style>${PUBLIC_LANDING_CSS}</style>${phonePrewarmScript}${atrioPrewarmScript}${demoMode ? '<meta name="robots" content="noindex,nofollow">' : ""}${isTemplate7 ? buildClientIdentityBootstrapScript() : ""}${pixelScriptForTemplate(
     pixelId,
     slug,
     config.tracking?.phoneCountryCode || "54",

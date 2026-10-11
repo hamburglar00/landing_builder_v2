@@ -88,6 +88,7 @@ test("la plantilla 7 publica un formulario de nombre con asesor de Atrio", () =>
   assert.match(html, /template7AttemptContext = context/);
   assert.doesNotMatch(html, /device_id: deviceId|localStorage\.setItem\("lb_cid"/);
   assert.match(html, /notifyAtrioClick\(atrioData\)/);
+  assert.doesNotMatch(html, /landing-phone\?name=prueba-7/);
   assert.match(html, /template7ContactSent = true/);
   assert.match(html, /target_provider: gatewayMode \? cfg.targetProvider/);
   assert.match(html, /cfg\.targetProvider === "multi_skin"/);
