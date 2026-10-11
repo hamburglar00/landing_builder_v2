@@ -1,5 +1,7 @@
 import type { PublicLandingConfig } from "./types";
 
+const BUILDER_CONFIG_CACHE_VERSION = "2";
+
 export async function getPublicLandingConfig(
   name: string,
 ): Promise<PublicLandingConfig | null> {
@@ -12,6 +14,7 @@ export async function getPublicLandingConfig(
 
   const url = new URL("/functions/v1/builder-config", baseUrl);
   url.searchParams.set("name", name);
+  url.searchParams.set("v", BUILDER_CONFIG_CACHE_VERSION);
 
   const response = await fetch(url.toString(), {
     headers: {
