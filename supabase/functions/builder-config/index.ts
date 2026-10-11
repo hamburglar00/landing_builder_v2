@@ -1,5 +1,6 @@
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 import { phoneCountryCodeForWorkspace } from "./market.ts";
+import { targetProviderForTemplate7 } from "./provider.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -85,10 +86,6 @@ function templateNumberForOption(template: unknown): number {
 
 function isRecord(value: unknown): value is Record<string, unknown> {
   return typeof value === "object" && value !== null && !Array.isArray(value);
-}
-
-function targetProviderForTemplate7(rawConfig: Record<string, unknown>): "rey_de_ases" | "multi_skin" {
-  return rawConfig.targetProvider === "multi_skin" ? "multi_skin" : "rey_de_ases";
 }
 
 const GLOBAL_CONFIG_KEYS = [
