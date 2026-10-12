@@ -57,6 +57,7 @@ export function snapshotTemplateVariant(
     ctaText: config.ctaText,
     ctaDestination: config.ctaDestination,
     targetProvider: config.targetProvider,
+    template7WhatsappEnabled: config.template7WhatsappEnabled,
     multiSkinCode: config.multiSkinCode,
     fontFamily: config.fontFamily,
     titleFontSize: config.titleFontSize,

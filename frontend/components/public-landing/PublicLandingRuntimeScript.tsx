@@ -1,6 +1,7 @@
 import type { PublicLandingConfig } from "./types";
 import { buildPhoneNormalizerScript } from "./trackingScriptHelpers";
 import { buildTemplate7HandoffRuntimeScript } from "./template7HandoffScript";
+import { buildArgentinaWhatsappNormalizerScript } from "@/lib/landing/argentinaWhatsapp";
 
 type Props = {
   slug: string;
@@ -62,7 +63,7 @@ function escapeScriptJson(value: unknown) {
   });
 }
 
-export default function PublicLandingRuntimeScript({ slug, config }: Props) {
+function buildRuntimeConfig({ slug, config }: Props) {
   const runtimeConfig = {
     slug,
     landingId: config.id,
@@ -87,6 +88,7 @@ export default function PublicLandingRuntimeScript({ slug, config }: Props) {
     workspaceCurrency: String(config.workspaceCurrency || config.tracking?.workspaceCurrency || config.tracking?.currency || "ARS").trim().toUpperCase(),
     ctaText: config.content?.ctaText || "¡Contactar ya!",
     template: config.layout?.template || 1,
+    template7Whatsapp: config.template7Capture?.whatsapp === true,
     phoneSelectionMode: config.phoneSelection?.mode || "",
     backgroundMode: config.background?.mode || "",
     metaIpCollectorUrl: process.env.NEXT_PUBLIC_META_IP_COLLECTOR_URL || "",
@@ -116,9 +118,14 @@ export default function PublicLandingRuntimeScript({ slug, config }: Props) {
     socialProofItems: SOCIAL_PROOF_ITEMS,
   };
 
+  return runtimeConfig;
+}
+
+export function buildPublicLandingRuntimeSource() {
   const script = `
     (function () {
-      var cfg = ${escapeScriptJson(runtimeConfig)};
+      var cfg = window.__PUBLIC_LANDING_RUNTIME_CONFIG__ || {};
+      try { delete window.__PUBLIC_LANDING_RUNTIME_CONFIG__; } catch (e) {}
       var clickLocked = false;
       var template7ContactSent = false;
       var template7AttemptContext = null;
@@ -155,7 +162,8 @@ export default function PublicLandingRuntimeScript({ slug, config }: Props) {
       }
 
       ${buildPhoneNormalizerScript("normalizePhone")}
-      ${config.layout?.template === 7 ? buildTemplate7HandoffRuntimeScript() : ""}
+      ${buildArgentinaWhatsappNormalizerScript("normalizeArgentinaWhatsapp")}
+      ${buildTemplate7HandoffRuntimeScript()}
       function setTemplate7Error(message) {
         var error = document.querySelector("[data-template7-error]");
         if (!error) return;
@@ -178,7 +186,7 @@ export default function PublicLandingRuntimeScript({ slug, config }: Props) {
         }, 45000);
       }
 
-      function startTemplate7Gateway(name, promoCode, atrioData, tracking, params) {
+      function startTemplate7Gateway(name, phone, promoCode, atrioData, tracking, params) {
         var advisorId = firstNonEmpty([atrioData && atrioData.atrioId, atrioData && atrioData.atrio_id]);
         var advisorSlug = firstNonEmpty([atrioData && atrioData.atrioSlug, atrioData && atrioData.atrio_slug]);
         var atrioClientId = firstNonEmpty([atrioData && atrioData.atrioClientId, atrioData && atrioData.atrio_client_id]);
@@ -195,6 +203,7 @@ export default function PublicLandingRuntimeScript({ slug, config }: Props) {
             landing_id: cfg.landingId,
             landing_slug: cfg.slug,
             name: name,
+            phone: phone || undefined,
             atrio_client_id: atrioClientId,
             advisor_id: advisorId,
             advisor_slug: advisorSlug,
@@ -367,17 +376,22 @@ export default function PublicLandingRuntimeScript({ slug, config }: Props) {
         var firstName = (cfg.template === 7 || fields.firstName) ? String(capture.firstName || "").trim() : "";
         var lastName = fields.lastName ? String(capture.lastName || "").trim() : "";
         var emailRaw = fields.email ? String(capture.email || "").trim() : "";
-        var phoneRaw = fields.phone ? String(capture.phone || "").trim() : "";
+        var phoneRaw = (fields.phone || (cfg.template === 7 && cfg.template7Whatsapp))
+          ? String(capture.phone || "").trim()
+          : "";
+        var normalizedPhone = phoneRaw
+          ? (cfg.template === 7 ? normalizeArgentinaWhatsapp(phoneRaw) : normalizePhone(phoneRaw, cfg.phoneCountryCode))
+          : "";
 
         return {
           emailRaw: emailRaw || identity.emailRaw,
-          phoneRaw: phoneRaw || identity.phoneRaw,
+          phoneRaw: normalizedPhone ? phoneRaw : identity.phoneRaw,
           ct: identity.ct,
           st: identity.st,
           zip: identity.zip,
           country: identity.country,
           email: emailRaw ? normalizeEmail(emailRaw) : identity.email,
-          ph: phoneRaw ? normalizePhone(phoneRaw, cfg.phoneCountryCode) : identity.ph,
+          ph: normalizedPhone || identity.ph,
           fn: firstName || identity.fn,
           ln: lastName || identity.ln,
           externalId: identity.externalId
@@ -1235,13 +1249,23 @@ export default function PublicLandingRuntimeScript({ slug, config }: Props) {
         if (clickLocked || button.disabled) return;
         if (cfg.template === 7) {
           var nameInput = document.querySelector("[data-template7-name]");
+          var whatsappInput = document.querySelector("[data-template7-whatsapp]");
+          var whatsappWarning = document.querySelector("[data-template7-phone-warning]");
           var firstName = nameInput ? String(nameInput.value || "").trim() : "";
           if (!firstName) {
             if (nameInput) nameInput.focus();
             button.disabled = true;
             return;
           }
-          processCtaClick(button, { firstName: firstName });
+          var rawWhatsapp = whatsappInput ? String(whatsappInput.value || "").trim() : "";
+          var normalizedWhatsapp = rawWhatsapp ? normalizeArgentinaWhatsapp(rawWhatsapp) : "";
+          if (whatsappWarning) {
+            whatsappWarning.textContent = rawWhatsapp && !normalizedWhatsapp
+              ? "No parece un WhatsApp argentino válido. Continuaremos sin guardarlo."
+              : "";
+            whatsappWarning.hidden = !whatsappWarning.textContent;
+          }
+          processCtaClick(button, { firstName: firstName, phone: normalizedWhatsapp });
           return;
         }
         if (shouldShowLeadCapture(button)) {
@@ -1290,21 +1314,25 @@ export default function PublicLandingRuntimeScript({ slug, config }: Props) {
           var formEmail = hasLeadCaptureForm && captureFields.email
             ? normalizeEmail(safeCapture.email || "")
             : "";
-          var formPhoneRaw = hasLeadCaptureForm && captureFields.phone
+          var formPhoneRaw = hasLeadCaptureForm && (captureFields.phone || (cfg.template === 7 && cfg.template7Whatsapp))
             ? String(leadCaptureValues.phone || "").trim()
             : "";
           var formPhone = formPhoneRaw
-            ? normalizePhone(formPhoneRaw, cfg.phoneCountryCode)
+            ? (cfg.template === 7 ? normalizeArgentinaWhatsapp(formPhoneRaw) : normalizePhone(formPhoneRaw, cfg.phoneCountryCode))
             : "";
           var tracking = context.tracking;
           var testEventCode = context.testEventCode;
           var shouldSkipContact = context.shouldSkipContact || (cfg.template === 7 && template7ContactSent);
 
-          refreshMetaTracking(params, tracking)
-            .then(function (freshTracking) {
-              tracking = freshTracking;
-              if (isAtrioDestination()) return waitWithTimeout(ensureAtrioPromise(), 1500);
-              return waitWithTimeout(ensurePhonePromise(), 1500);
+          Promise.all([
+            refreshMetaTracking(params, tracking),
+            isAtrioDestination()
+              ? waitWithTimeout(ensureAtrioPromise(), 1500)
+              : waitWithTimeout(ensurePhonePromise(), 1500)
+          ])
+            .then(function (resolved) {
+              tracking = resolved[0];
+              return resolved[1];
             })
             .then(function (targetData) {
               if (isAtrioDestination()) {
@@ -1432,7 +1460,7 @@ export default function PublicLandingRuntimeScript({ slug, config }: Props) {
               if (gatewayMode && !shouldSkipContact) template7ContactSent = true;
 
               if (gatewayMode) {
-                startTemplate7Gateway(formFn, promoCode, atrioData, tracking, params)
+                startTemplate7Gateway(formFn, formPhone, promoCode, atrioData, tracking, params)
                   .then(function (handoffUrl) { navigateTemplate7Handoff(handoffUrl); })
                   .catch(function () { failTemplate7(button); });
               } else {
@@ -1488,6 +1516,8 @@ export default function PublicLandingRuntimeScript({ slug, config }: Props) {
       function initTemplate7Name() {
         if (cfg.template !== 7) return;
         var input = document.querySelector("[data-template7-name]");
+        var whatsappInput = document.querySelector("[data-template7-whatsapp]");
+        var whatsappWarning = document.querySelector("[data-template7-phone-warning]");
         var button = document.querySelector(".template7__cta[data-public-landing-cta]");
         var form = document.querySelector("[data-template7-form]");
         if (!input || !button || !form) return;
@@ -1496,6 +1526,21 @@ export default function PublicLandingRuntimeScript({ slug, config }: Props) {
           button.disabled = !String(input.value || "").trim();
         }
         input.addEventListener("input", sync);
+        if (whatsappInput && whatsappWarning) {
+          whatsappInput.addEventListener("input", function () {
+            if (!String(whatsappInput.value || "").trim() || normalizeArgentinaWhatsapp(whatsappInput.value)) {
+              whatsappWarning.textContent = "";
+              whatsappWarning.hidden = true;
+            }
+          });
+          whatsappInput.addEventListener("blur", function () {
+            var raw = String(whatsappInput.value || "").trim();
+            whatsappWarning.textContent = raw && !normalizeArgentinaWhatsapp(raw)
+              ? "No parece un WhatsApp argentino válido. Continuaremos sin guardarlo."
+              : "";
+            whatsappWarning.hidden = !whatsappWarning.textContent;
+          });
+        }
         form.addEventListener("submit", function (event) {
           event.preventDefault();
           sync();
@@ -1754,5 +1799,11 @@ export default function PublicLandingRuntimeScript({ slug, config }: Props) {
     })();
   `;
 
-  return <script dangerouslySetInnerHTML={{ __html: script }} />;
+  return script;
+}
+
+export default function PublicLandingRuntimeScript(props: Props) {
+  const runtimeConfig = buildRuntimeConfig(props);
+  const bootstrap = `window.__PUBLIC_LANDING_RUNTIME_CONFIG__=${escapeScriptJson(runtimeConfig)};`;
+  return <script dangerouslySetInnerHTML={{ __html: bootstrap }} />;
 }

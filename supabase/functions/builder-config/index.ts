@@ -366,6 +366,11 @@ Deno.serve(async (req) => {
               : ((rawLeadCaptureFields.email as boolean | undefined) ?? true),
           },
         },
+        ...(publishedTemplate === 7 ? {
+          template7Capture: {
+            whatsapp: rawConfig.template7WhatsappEnabled === true,
+          },
+        } : {}),
         emailCapture: {
           enabled: (publishedTemplate === 1 || publishedTemplate === 2) && (typeof rawConfig.emailCaptureEnabled === "boolean"
             ? rawConfig.emailCaptureEnabled
@@ -520,6 +525,11 @@ Deno.serve(async (req) => {
               ?.email as boolean | undefined) ?? true,
         },
       },
+      ...(templateNumber === 7 ? {
+        template7Capture: {
+          whatsapp: themeWithHex.template7WhatsappEnabled === true,
+        },
+      } : {}),
       emailCapture: {
         enabled: (templateNumber === 1 || templateNumber === 2) && themeWithHex.emailCaptureEnabled === true,
       },

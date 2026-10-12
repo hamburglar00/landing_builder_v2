@@ -2780,6 +2780,7 @@ body.public-lead-capture-open {
 .template7__subtitle { margin: clamp(8px, 1.8svh, 16px) 0 0; font-size: min(var(--template7-subtitle-size, 16px), clamp(14px, 2.7svh, 22px)); line-height: 1.35; overflow-wrap: anywhere; }
 .template7__form { display: grid; gap: clamp(8px, 1.8svh, 14px); margin-top: clamp(12px, 3svh, 32px); text-align: left; }
 .template7__label { color: #f3f3f3; font-size: 14px; font-weight: 600; }
+.template7__label span { color: #bdbdbd; font-weight: 400; }
 .template7__input { box-sizing: border-box; width: 100%; min-height: clamp(44px, 7.8svh, 58px); padding: 0 18px; border: 1px solid rgba(255,255,255,.26); border-radius: 14px; outline: none; background: rgba(0,0,0,.5); color: #fff; font: inherit; font-size: 18px; }
 .template7__input::placeholder { color: #a9a9a9; }
 .template7__input:focus { border-color: #ffd700; box-shadow: 0 0 0 3px rgba(255,215,0,.18); }
@@ -2789,6 +2790,8 @@ body.public-lead-capture-open {
 .template7__cta:disabled { cursor: not-allowed; opacity: .52; box-shadow: none; }
 .template7__error { margin: 0; color: #ffd2d2; font-size: 13px; line-height: 1.4; text-align: center; }
 .template7__error[hidden] { display: none; }
+.template7__phone-warning { margin: -3px 0 0; color: #ffe49a; font-size: 12px; line-height: 1.35; }
+.template7__phone-warning[hidden] { display: none; }
 .template7__handoff-panel { position: fixed; inset: 0; z-index: 100; display: grid; place-items: center; padding: 20px; background: rgba(0,0,0,.8); }
 .template7__handoff-card { width: min(100%, 420px); display: grid; gap: 14px; padding: 28px; border: 1px solid rgba(255,215,0,.35); border-radius: 22px; background: #17121f; color: #fff; text-align: center; box-shadow: 0 20px 70px rgba(0,0,0,.6); }
 .template7__handoff-card h2 { margin: 0; font-size: 24px; }

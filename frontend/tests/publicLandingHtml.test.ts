@@ -6,6 +6,7 @@ import {
   buildPixelNoscript,
 } from "../components/public-landing/metaPixelHtml";
 import { renderPublicLandingHtml } from "../components/public-landing/renderPublicLandingHtml";
+import { buildPublicLandingRuntimeSource } from "../components/public-landing/PublicLandingRuntimeScript";
 import type { PublicLandingConfig } from "../components/public-landing/types";
 
 const baseConfig: PublicLandingConfig = {
@@ -61,6 +62,7 @@ const baseConfig: PublicLandingConfig = {
     template: 1,
   },
 };
+const publicRuntime = buildPublicLandingRuntimeSource();
 
 function occurrences(value: string, search: string) {
   return value.split(search).length - 1;
@@ -148,30 +150,31 @@ test("conserva Contact con eventID y deduplicación local", () => {
     slug: "oferta-test",
     config: baseConfig,
   });
+  const source = html + publicRuntime;
 
   assert.equal(
     occurrences(
-      html,
+      source,
       'window.fbq("track", "Contact", { source: "main_button" }, { eventID: eventId })',
     ),
     1,
   );
-  assert.match(html, /CONTACT_DEDUP_TTL_MS = 5 \* 60 \* 1000/);
-  assert.match(html, /contact_sent:/);
-  assert.match(html, /scheduleMetaClientIpCollection/);
-  assert.match(html, /scheduleOfficialMetaParamBuilder/);
+  assert.match(source, /CONTACT_DEDUP_TTL_MS = 5 \* 60 \* 1000/);
+  assert.match(source, /contact_sent:/);
+  assert.match(source, /scheduleMetaClientIpCollection/);
+  assert.match(source, /scheduleOfficialMetaParamBuilder/);
   assert.match(
-    html,
+    source,
     /vendor\/meta-capi-param-builder\/1\.3\.1\/clientParamBuilder\.bundle\.js/,
   );
-  assert.match(html, /sdk\.processAndCollectAllParams\(window\.location\.href/);
-  assert.match(html, /window\.__PUBLIC_META_COLLECT_PARAMS/);
-  assert.match(html, /return officialMetaTracking/);
-  assert.match(html, /client_ip_issued_at: tracking\.clientIpIssuedAt/);
-  assert.match(html, /client_ip_proof: tracking\.clientIpProof/);
-  assert.match(html, /requestIdleCallback/);
+  assert.match(source, /sdk\.processAndCollectAllParams\(window\.location\.href/);
+  assert.match(source, /window\.__PUBLIC_META_COLLECT_PARAMS/);
+  assert.match(source, /return officialMetaTracking/);
+  assert.match(source, /client_ip_issued_at: tracking\.clientIpIssuedAt/);
+  assert.match(source, /client_ip_proof: tracking\.clientIpProof/);
+  assert.match(source, /requestIdleCallback/);
   assert.match(
-    html,
+    source,
     /reservationId: \(phoneData && phoneData\.assignmentReservationId\) \|\| undefined/,
   );
 });
@@ -194,23 +197,24 @@ test("Contact se dispara una sola vez y despues del formulario opcional", () => 
       },
     },
   });
+  const source = html + publicRuntime;
 
-  assert.equal(occurrences(html, "firePixelContact(eventId);"), 1);
-  assert.match(html, /return leadCapture\.enabled === true/);
-  assert.match(html, /if \(shouldShowLeadCapture\(button\)\) \{/);
-  assert.match(html, /openLeadCaptureModal\(button\);\s*return;/);
-  assert.match(html, /card\.addEventListener\("submit", function \(event\)/);
-  assert.match(html, /continueAfterLeadCapture\(readCaptureValues\(\)\)/);
+  assert.equal(occurrences(source, "firePixelContact(eventId);"), 1);
+  assert.match(source, /return leadCapture\.enabled === true/);
+  assert.match(source, /if \(shouldShowLeadCapture\(button\)\) \{/);
+  assert.match(source, /openLeadCaptureModal\(button\);\s*return;/);
+  assert.match(source, /card\.addEventListener\("submit", function \(event\)/);
+  assert.match(source, /continueAfterLeadCapture\(readCaptureValues\(\)\)/);
   assert.match(
-    html,
+    source,
     /skip\.addEventListener\("click", function \(\) \{ continueAfterLeadCapture\(null\); \}\)/,
   );
-  assert.match(html, /test_event_code: testEventCode \|\| undefined/);
-  assert.match(html, /lead_capture_form: hasLeadCaptureForm \|\| undefined/);
-  assert.match(html, /form_fn: formFn \|\| undefined/);
-  assert.match(html, /form_ln: formLn \|\| undefined/);
-  assert.match(html, /form_email: formEmail \|\| undefined/);
-  assert.match(html, /form_phone: formPhone \|\| undefined/);
+  assert.match(source, /test_event_code: testEventCode \|\| undefined/);
+  assert.match(source, /lead_capture_form: hasLeadCaptureForm \|\| undefined/);
+  assert.match(source, /form_fn: formFn \|\| undefined/);
+  assert.match(source, /form_ln: formLn \|\| undefined/);
+  assert.match(source, /form_email: formEmail \|\| undefined/);
+  assert.match(source, /form_phone: formPhone \|\| undefined/);
 });
 
 test("captura de email aparece una vez encima del CTA solo en templates 1 y 2", () => {
@@ -229,8 +233,8 @@ test("captura de email aparece una vez encima del CTA solo en templates 1 y 2", 
       });
       assert.equal(occurrences(html, "<input data-inline-email-input"), 1);
       assert.match(html, /data-inline-email-input[^>]*>[\s\S]*?whatsapp-button|data-inline-email-input[^>]*>[\s\S]*?class="cta/);
-      assert.match(html, /email: identity\.emailRaw/);
-      assert.match(html, /var inlineEmail = readInlineEmail\(\)/);
+      assert.match(publicRuntime, /email: identity\.emailRaw/);
+      assert.match(publicRuntime, /var inlineEmail = readInlineEmail\(\)/);
     }
   }
   const off = renderPublicLandingHtml({ slug: "oferta-test", config: baseConfig });
@@ -251,6 +255,11 @@ test("genera scripts públicos con JavaScript válido", () => {
   inlineScripts.forEach((script) => {
     assert.doesNotThrow(() => new Function(script));
   });
+  assert.doesNotThrow(() => new Function(publicRuntime));
+  assert.match(html, /<script src="\/public-assets\/landing-runtime-v3\.js" defer><\/script>/);
+  assert.match(html, /<link rel="stylesheet" href="\/public-assets\/landing-styles-v3\.css">/);
+  assert.doesNotMatch(html, /<style>/);
+  assert.ok(Buffer.byteLength(html) < 35_000, `HTML publico demasiado grande: ${Buffer.byteLength(html)} bytes`);
 });
 
 test("renderiza plantillas fijas 4 y 5 con CTA operativo", () => {
@@ -269,7 +278,7 @@ test("renderiza plantillas fijas 4 y 5 con CTA operativo", () => {
     assert.match(html, new RegExp(`public-landing template${template}`));
     assert.equal(occurrences(html, `class="template${template}__cta"`), 1);
     assert.match(html, /data-public-landing-cta-label/);
-    assert.match(html, /contact_sent:/);
+    assert.match(publicRuntime, /contact_sent:/);
   }
 });
 

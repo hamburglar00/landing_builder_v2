@@ -135,6 +135,19 @@ test("start rechaza formato, tipo y tamaño inválidos antes de consultar la bas
   assert.deepEqual(calls, []);
 });
 
+test("WhatsApp argentino se normaliza y un valor invalido no bloquea el start", async () => {
+  for (const [phone, expected] of [["011 15-2345-6789", "5491123456789"], ["numero-invalido", undefined]] as const) {
+    const { deps } = dependencies();
+    const originalResolve = deps.resolvePlayer;
+    deps.resolvePlayer = async (input) => {
+      assert.equal(input.phone, expected);
+      return originalResolve(input);
+    };
+    const result = await handleReyStart(request({ ...validPayload, phone }), deps);
+    assert.equal(result.status, 200);
+  }
+});
+
 test("start verifica en servidor landing, plan y asignación exacta del asesor", async () => {
   const { deps, calls } = dependencies();
   const result = await handleReyStart(request({ ...validPayload, advisor_id: deviceId }), deps);
@@ -477,12 +490,13 @@ test("adaptadores usan contrato servidor-servidor y no exponen credenciales", as
         assert.equal(new Headers(init?.headers).get("Authorization"), "Bearer test-chat-key");
         assert.deepEqual(JSON.parse(String(init?.body)), {
           advisor_id: advisorId, advisor_slug: "gera", device_id: deviceId, name: "Martín",
+          phone: "5491123456789",
           landing_id: landingId, landing_slug: "landing-7", atrio_client_id: clientId,
           promo_code: "LP-a1b2", target_provider: provider, source: "landing_builder",
         });
         return Response.json(resolvedPlayer(provider));
       };
-      const result = await resolveInternalChatPlayer({ advisor, deviceId, name: "Martín", landingId, landingSlug: "landing-7", promoCode: "LP-a1b2", targetProvider: provider });
+      const result = await resolveInternalChatPlayer({ advisor, deviceId, name: "Martín", phone: "5491123456789", landingId, landingSlug: "landing-7", promoCode: "LP-a1b2", targetProvider: provider });
       assert.equal(result.player_provider_account_id, provider === "rey_de_ases" ? providerAccountId : multiSkinAccountId);
       assert.equal(result.target_provider, provider);
     }

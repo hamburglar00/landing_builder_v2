@@ -45,6 +45,7 @@ export const DEFAULT_CONFIG: LandingThemeConfig = {
   sendContactPixel: true,
   ctaDestination: "whatsapp",
   targetProvider: "rey_de_ases",
+  template7WhatsappEnabled: false,
   multiSkinCode: "ganamos_plus",
   atrioRedirectUrl: "",
   atrioClientId: "",

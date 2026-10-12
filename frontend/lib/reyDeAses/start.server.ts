@@ -6,6 +6,7 @@ import { isDemoLandingAllowed, readDemoConfig, readDemoCookie, verifyDemoSession
 import { logServerFlowTotal, timedServerStage } from "./performance.server";
 import { allowTemplate7Start, template7StartRateLimitKeys } from "./rateLimit.server";
 import { api2Readiness, createProviderHandoff, gatewayReadiness, linkInternalChatProviderAccount, resolveInternalChatPlayer, resolveTargetAccount, TargetIntegrationError, validateResolvedPlayer } from "./integrations.server";
+import { normalizeArgentinaWhatsapp } from "../landing/argentinaWhatsapp";
 
 type LandingRow = { id: string; name: string; user_id: string; workspace_currency: string; config: unknown; landing_config: unknown };
 type AssignmentRow = { landing_id: string; atrio_client_id: string; user_id: string };
@@ -60,6 +61,8 @@ export function parseTemplate7StartPayload(value: unknown): StartRequest | null 
       !name || name.length > 80 || /[\x00-\x1f\x7f]/.test(name)) return null;
   const promo = typeof data.promo_code === "string" ? data.promo_code.trim() : "";
   if (!promo || promo.length > 128 || /[\x00-\x1f\x7f]/.test(promo)) return null;
+  if (data.phone !== undefined && (typeof data.phone !== "string" || data.phone.length > 32)) return null;
+  const phone = typeof data.phone === "string" ? normalizeArgentinaWhatsapp(data.phone) : "";
   const rawAttribution = data.attribution;
   if (rawAttribution !== undefined && (!rawAttribution || typeof rawAttribution !== "object" || Array.isArray(rawAttribution))) return null;
   const attribution: Record<string, string> = {};
@@ -72,7 +75,7 @@ export function parseTemplate7StartPayload(value: unknown): StartRequest | null 
     landing_id: String(data.landing_id), landing_slug: String(data.landing_slug), name,
     atrio_client_id: String(data.atrio_client_id),
     advisor_id: String(data.advisor_id), advisor_slug: String(data.advisor_slug),
-    promo_code: promo, attribution,
+    promo_code: promo, ...(phone ? { phone } : {}), attribution,
   };
 }
 
@@ -205,6 +208,7 @@ async function handleTemplate7StartInner(request: Request, deps: StartDependenci
     }
     const effectiveDeviceId = demoConfig ? demoConfig.deviceId : identity.deviceId;
     const resolveInput: PlayerResolveRequest = { advisor: resolvedAdvisor, deviceId: effectiveDeviceId, name: payload.name,
+      ...(payload.phone ? { phone: payload.phone } : {}),
       landingId: landing.id, landingSlug: landing.name, promoCode: payload.promo_code, targetProvider: provider };
     const player = validateResolvedPlayer(await timedServerStage(
       "template7_start",

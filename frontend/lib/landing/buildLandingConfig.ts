@@ -125,6 +125,9 @@ export interface LandingConfigPayload {
       email: boolean;
     };
   };
+  template7Capture?: {
+    whatsapp: boolean;
+  };
   emailCapture?: { enabled: boolean };
 }
 
@@ -382,6 +385,11 @@ export function buildLandingConfig({
         email: themeWithHex.leadCapture?.fields?.email === true,
       },
     },
+    ...(themeWithHex.template === "template7" ? {
+      template7Capture: {
+        whatsapp: themeWithHex.template7WhatsappEnabled === true,
+      },
+    } : {}),
     emailCapture: {
       enabled: !fixedVisualTemplate && themeWithHex.template !== "template7" && themeWithHex.emailCaptureEnabled === true,
     },

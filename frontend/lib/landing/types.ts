@@ -186,6 +186,8 @@ export interface LandingThemeConfig {
   ctaDestination: LandingCtaDestination;
   /** Proveedor de cuenta del Template 7; no lo decide el navegador. */
   targetProvider: TargetProvider;
+  /** Pide WhatsApp de forma opcional en Template 7 y lo envía a Atrio si es válido. */
+  template7WhatsappEnabled: boolean;
   /** Sitio visual del proveedor Multi Skin. La cuenta subyacente es compartida. */
   multiSkinCode: MultiSkinCode;
   atrioRedirectUrl: string;

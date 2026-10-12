@@ -46,7 +46,7 @@ export async function GET(_request: Request, context: RouteContext) {
     status: 200,
     headers: {
       "Content-Type": "text/html; charset=utf-8",
-      "Cache-Control": "public, max-age=0, s-maxage=15, stale-while-revalidate=60",
+      "Cache-Control": "public, max-age=0, s-maxage=15, stale-while-revalidate=86400",
     },
   });
 }

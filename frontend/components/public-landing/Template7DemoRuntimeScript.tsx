@@ -1,5 +1,6 @@
 import type { PublicLandingConfig } from "./types";
 import { buildTemplate7HandoffRuntimeScript } from "./template7HandoffScript";
+import { buildArgentinaWhatsappNormalizerScript } from "@/lib/landing/argentinaWhatsapp";
 
 function escapeScriptJson(value: unknown): string {
   return JSON.stringify(value).replace(/[<>&\u2028\u2029]/g, (character) => ({
@@ -13,6 +14,7 @@ export default function Template7DemoRuntimeScript({ slug, config }: { slug: str
     slug, landingId: config.id, landingTag: config.tracking?.landingTag || "LP",
     targetProvider: config.tracking?.target_provider || "rey_de_ases",
     skinCode: config.tracking?.skin_code || "",
+    captureWhatsapp: config.template7Capture?.whatsapp === true,
     supabaseUrl: process.env.NEXT_PUBLIC_SUPABASE_URL || "",
     supabaseAnonKey: process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || "",
   };
@@ -24,6 +26,7 @@ export default function Template7DemoRuntimeScript({ slug, config }: { slug: str
       var retryTimer = null;
       var advisorPromise = null;
       ${buildTemplate7HandoffRuntimeScript()}
+      ${buildArgentinaWhatsappNormalizerScript("normalizeArgentinaWhatsapp")}
 
       function firstNonEmpty(values) {
         for (var i = 0; i < values.length; i++) {
@@ -78,7 +81,7 @@ export default function Template7DemoRuntimeScript({ slug, config }: { slug: str
         return advisorPromise;
       }
 
-      function start(name, data) {
+      function start(name, phone, data) {
         var atrioClientId = firstNonEmpty([data.atrioClientId, data.atrio_client_id]);
         var advisorId = firstNonEmpty([data.atrioId, data.atrio_id]);
         var advisorSlug = firstNonEmpty([data.atrioSlug, data.atrio_slug]);
@@ -90,7 +93,7 @@ export default function Template7DemoRuntimeScript({ slug, config }: { slug: str
           headers: { "Content-Type": "application/json", "X-Template7-Demo-Context": "testing" },
           signal: controller.signal,
           body: JSON.stringify({
-            landing_id: cfg.landingId, landing_slug: cfg.slug, name: name,
+            landing_id: cfg.landingId, landing_slug: cfg.slug, name: name, phone: phone || undefined,
             atrio_client_id: atrioClientId, advisor_id: advisorId, advisor_slug: advisorSlug,
             promo_code: promoCode,
             attribution: Object.assign(
@@ -110,6 +113,14 @@ export default function Template7DemoRuntimeScript({ slug, config }: { slug: str
       function handleClick(button, input) {
         if (clickLocked || button.disabled) return;
         var name = String(input.value || "").trim();
+        var phoneInput = document.querySelector("[data-template7-whatsapp]");
+        var phoneWarning = document.querySelector("[data-template7-phone-warning]");
+        var rawPhone = phoneInput ? String(phoneInput.value || "").trim() : "";
+        var phone = rawPhone ? normalizeArgentinaWhatsapp(rawPhone) : "";
+        if (phoneWarning) {
+          phoneWarning.textContent = rawPhone && !phone ? "No parece un WhatsApp argentino válido. Continuaremos sin guardarlo." : "";
+          phoneWarning.hidden = !phoneWarning.textContent;
+        }
         if (!name) { button.disabled = true; input.focus(); return; }
         clickLocked = true;
         button.disabled = true;
@@ -117,7 +128,7 @@ export default function Template7DemoRuntimeScript({ slug, config }: { slug: str
         buttonLabel(button, true);
         if (!promoCode) promoCode = String(cfg.landingTag || "LP") + "-" + Math.random().toString(16).slice(2, 14);
         advisor().then(function (data) {
-          return start(name, data);
+          return start(name, phone, data);
         }).then(navigateTemplate7Handoff).catch(function () { fail(button); });
       }
 
@@ -128,6 +139,20 @@ export default function Template7DemoRuntimeScript({ slug, config }: { slug: str
         if (!input || !button || !form) return;
         function sync() { if (!clickLocked) button.disabled = !String(input.value || "").trim(); }
         input.addEventListener("input", sync);
+        var phoneInput = document.querySelector("[data-template7-whatsapp]");
+        var phoneWarning = document.querySelector("[data-template7-phone-warning]");
+        if (phoneInput && phoneWarning) {
+          phoneInput.addEventListener("input", function () {
+            if (!String(phoneInput.value || "").trim() || normalizeArgentinaWhatsapp(phoneInput.value)) {
+              phoneWarning.textContent = ""; phoneWarning.hidden = true;
+            }
+          });
+          phoneInput.addEventListener("blur", function () {
+            var raw = String(phoneInput.value || "").trim();
+            phoneWarning.textContent = raw && !normalizeArgentinaWhatsapp(raw) ? "No parece un WhatsApp argentino válido. Continuaremos sin guardarlo." : "";
+            phoneWarning.hidden = !phoneWarning.textContent;
+          });
+        }
         button.addEventListener("click", function () { handleClick(button, input); });
         form.addEventListener("submit", function (event) { event.preventDefault(); sync(); if (!button.disabled) handleClick(button, input); });
         window.addEventListener("pageshow", sync);

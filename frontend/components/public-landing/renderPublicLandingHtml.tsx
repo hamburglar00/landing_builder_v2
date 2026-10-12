@@ -7,7 +7,6 @@ import {
   buildPixelInitScript,
   buildPixelNoscript,
 } from "./metaPixelHtml";
-import { PUBLIC_LANDING_CSS } from "./publicLandingCss";
 import type { PublicLandingConfig, PublicLandingPhoneResponse } from "./types";
 import { WHATSAPP_GREEN_PATH, WHATSAPP_WHITE_PATH } from "./whatsAppBrandIcon";
 
@@ -139,6 +138,22 @@ function buildPreloadLinks(config: PublicLandingConfig) {
   ]
     .filter(Boolean)
     .join("");
+}
+
+function template7GatewayOrigin(config: PublicLandingConfig): string {
+  if (config.layout?.template !== 7) return "";
+  const provider = config.tracking?.target_provider;
+  const raw = provider === "multi_skin"
+    ? process.env.MULTI_SKIN_GATEWAY_ORIGIN
+    : provider === "ases_del_norte"
+      ? process.env.ASES_DEL_NORTE_GATEWAY_ORIGIN
+      : process.env.REY_GATEWAY_ORIGIN;
+  try {
+    const url = new URL(raw || "");
+    return url.protocol === "https:" ? url.origin : "";
+  } catch {
+    return "";
+  }
 }
 
 function publicMetadata(config: PublicLandingConfig, slug: string) {
@@ -516,6 +531,7 @@ function renderTemplate7({ config }: RenderParams) {
   const titleLines = (config.content?.title || []).map((line) => line.trim()).filter(Boolean);
   const subtitleLines = (config.content?.subtitle || []).map((line) => line.trim()).filter(Boolean);
   const ctaText = config.content?.ctaText || "Continuar";
+  const captureWhatsapp = config.template7Capture?.whatsapp === true;
 
   return `<main class="public-landing template7">${renderFrameBackgroundTemplate7(config)}<div class="template7__veil"></div><section class="template7__card">${
     hasLogo
@@ -529,7 +545,7 @@ function renderTemplate7({ config }: RenderParams) {
     color: config.colors?.subtitle ?? "#FFFFFF",
     "--template7-subtitle-size": `${config.typography?.subtitle?.sizePx ?? 16}px`,
     "font-weight": config.typography?.subtitle?.weight ?? 400,
-  })}>${renderTextLines(subtitleLines)}</p>` : ""}<form class="template7__form" data-template7-form><label class="template7__label" for="template7-name">Tu nombre</label><input id="template7-name" class="template7__input" data-template7-name type="text" name="firstName" autocomplete="given-name" maxlength="80" required placeholder="Ej.: Martín"><button type="button" class="template7__cta" data-public-landing-cta data-public-landing-rest-label="${escapeHtml(ctaText)}" data-public-landing-loading-label="Abriendo..." data-public-landing-disabled-label="No disponible"${styleAttr({
+  })}>${renderTextLines(subtitleLines)}</p>` : ""}<form class="template7__form" data-template7-form><label class="template7__label" for="template7-name">Tu nombre</label><input id="template7-name" class="template7__input" data-template7-name type="text" name="firstName" autocomplete="given-name" maxlength="80" required placeholder="Ej.: Martín">${captureWhatsapp ? '<label class="template7__label" for="template7-whatsapp">WhatsApp <span>(opcional)</span></label><input id="template7-whatsapp" class="template7__input" data-template7-whatsapp type="tel" name="phone" autocomplete="tel" inputmode="tel" maxlength="32" placeholder="Ej.: 11 2345-6789"><p class="template7__phone-warning" data-template7-phone-warning role="status" hidden></p>' : ""}<button type="button" class="template7__cta" data-public-landing-cta data-public-landing-rest-label="${escapeHtml(ctaText)}" data-public-landing-loading-label="Abriendo..." data-public-landing-disabled-label="No disponible"${styleAttr({
     color: config.colors?.ctaText ?? "#111111",
     background: config.colors?.ctaBackground ?? "#FFD700",
     "--template7-cta-size": `${config.typography?.cta?.sizePx ?? 18}px`,
@@ -673,15 +689,16 @@ export function renderPublicLandingHtml(params: RenderParams) {
       return "";
     }
   })();
+  const gatewayOrigin = template7GatewayOrigin(config);
   const phonePrewarmScript = demoMode || isTemplate7 ? "" : renderScriptElement(
     PhonePrewarmScript({ slug, initialPhone: cachedPhone }),
   );
   const atrioPrewarmScript = isTemplate7
     ? renderScriptElement(AtrioPrewarmScript({ slug }))
     : "";
-  const runtimeScript = renderScriptElement(demoMode
-    ? Template7DemoRuntimeScript({ slug, config })
-    : PublicLandingRuntimeScript({ slug, config }));
+  const runtimeScript = demoMode
+    ? renderScriptElement(Template7DemoRuntimeScript({ slug, config }))
+    : `${renderScriptElement(PublicLandingRuntimeScript({ slug, config }))}<script src="/public-assets/landing-runtime-v3.js" defer></script>`;
   const template7PlaceholderScript = isTemplate7
     ? `<script>(()=>{const input=document.querySelector('[data-template7-name]');if(!input)return;const names=${JSON.stringify(TEMPLATE7_EXAMPLE_NAMES)};input.placeholder='Ej.: '+names[Math.floor(Math.random()*names.length)];})();</script>`
     : "";
@@ -697,10 +714,14 @@ export function renderPublicLandingHtml(params: RenderParams) {
       ? `<link rel="preconnect" href="${escapeHtml(supabaseOrigin)}" crossorigin><link rel="dns-prefetch" href="${escapeHtml(supabaseOrigin)}">`
       : ""
   }${
+    gatewayOrigin
+      ? `<link rel="preconnect" href="${escapeHtml(gatewayOrigin)}"><link rel="dns-prefetch" href="${escapeHtml(gatewayOrigin)}">`
+      : ""
+  }${
     pixelId
       ? '<link rel="preconnect" href="https://www.facebook.com"><link rel="preconnect" href="https://connect.facebook.net">'
       : ""
-  }${buildPreloadLinks(config)}<style>${PUBLIC_LANDING_CSS}</style>${phonePrewarmScript}${atrioPrewarmScript}${demoMode ? '<meta name="robots" content="noindex,nofollow">' : ""}${isTemplate7 ? buildClientIdentityBootstrapScript() : ""}${pixelScriptForTemplate(
+  }${buildPreloadLinks(config)}<link rel="stylesheet" href="/public-assets/landing-styles-v3.css">${phonePrewarmScript}${atrioPrewarmScript}${demoMode ? '<meta name="robots" content="noindex,nofollow">' : ""}${isTemplate7 ? buildClientIdentityBootstrapScript() : ""}${pixelScriptForTemplate(
     pixelId,
     slug,
     config.tracking?.phoneCountryCode || "54",

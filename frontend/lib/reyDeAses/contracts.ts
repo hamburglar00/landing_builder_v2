@@ -4,6 +4,7 @@ export type StartRequest = {
   landing_id: string;
   landing_slug: string;
   name: string;
+  phone?: string;
   atrio_client_id: string;
   advisor_id: string;
   advisor_slug: string;
@@ -32,6 +33,7 @@ export type PlayerResolveRequest = {
   advisor: AssignedAdvisor;
   deviceId: string;
   name: string;
+  phone?: string;
   landingId: string;
   landingSlug: string;
   promoCode: string;

@@ -1299,6 +1299,33 @@ export function LandingEditorForm({
         </section>
       )}
 
+      {isTemplate7 && (
+        <section className="rounded-xl border border-zinc-800 bg-zinc-900/50 p-4">
+          <div className="flex items-center justify-between gap-4">
+            <div>
+              <h3 className="text-sm font-semibold text-zinc-100">
+                Pedir WhatsApp
+              </h3>
+              <p className="mt-1 text-xs text-zinc-500">
+                Agrega un campo opcional. Si el número argentino es válido, se completa el teléfono del contacto en Atrio.
+              </p>
+            </div>
+            <div className="flex items-center gap-3">
+              <span className="text-xs font-medium text-zinc-400">
+                {config.template7WhatsappEnabled ? "Activado" : "Desactivado"}
+              </span>
+              <ToggleSwitch
+                checked={config.template7WhatsappEnabled === true}
+                label="Pedir WhatsApp en Plantilla 7"
+                onChange={(template7WhatsappEnabled) =>
+                  updateConfig(setConfig, { template7WhatsappEnabled })
+                }
+              />
+            </div>
+          </div>
+        </section>
+      )}
+
       {!hidesVisualControls && !isTemplate7 && (
         <section className="rounded-xl border border-zinc-800 bg-zinc-900/50 p-4">
           <div className="flex items-center justify-between gap-4">
