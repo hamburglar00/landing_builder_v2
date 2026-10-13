@@ -109,7 +109,7 @@ function dependencies(status: ReturnType<StartDependencies["api2Status"]> = null
         provider_external_account_id: account.externalAccountId ?? null,
       };
     },
-    async createHandoff(targetProvider, advisor, incomingDeviceId, player, account) {
+    async createHandoff(targetProvider, advisor, incomingDeviceId, player, account, _skinCode, _testing, promoCode) {
       calls.push("gateway");
       assert.equal(targetProvider, provider ?? "rey_de_ases");
       assert.equal(advisor.advisorSlug, "gera");
@@ -117,6 +117,7 @@ function dependencies(status: ReturnType<StartDependencies["api2Status"]> = null
       assert.equal(player.player_id, playerId);
       assert.equal(player.player_provider_account_id, targetProvider === "multi_skin" ? multiSkinAccountId : providerAccountId);
       assert.equal(account.password, "secret-pass");
+      assert.equal(promoCode, "LP-a1b2");
       return { handoff_url: "https://gateway.example.com/start?t=token", expires_at: "2026-10-08T12:00:00Z", binding_created: true };
     },
   };
@@ -416,7 +417,7 @@ test("Multi Skin usa el bypass propio del gateway y nunca las credenciales demo 
     calls.push("internal-chat");
     return resolvedPlayer("multi_skin", input.deviceId);
   };
-  deps.createHandoff = async (provider, _advisor, incomingDeviceId, player, account, skinCode, testing) => {
+  deps.createHandoff = async (provider, _advisor, incomingDeviceId, player, account, skinCode, testing, promoCode) => {
     calls.push("gateway");
     assert.equal(provider, "multi_skin");
     assert.equal(incomingDeviceId, demoDeviceId);
@@ -426,6 +427,7 @@ test("Multi Skin usa el bypass propio del gateway y nunca las credenciales demo 
     assert.equal(account.password, "");
     assert.equal(skinCode, "ganamos_plus");
     assert.equal(testing, true);
+    assert.equal(promoCode, "LP-a1b2");
     return {
       handoff_url: "https://multi.example.com/start?t=demo",
       expires_at: "",

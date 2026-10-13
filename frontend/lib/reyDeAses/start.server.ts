@@ -36,7 +36,7 @@ export type StartDependencies = {
   resolvePlayer(input: PlayerResolveRequest): Promise<ResolvedPlayer>;
   resolveAccount(request: Api2ResolveAccountRequest): Promise<TargetAccount>;
   linkProviderAccount(advisor: AssignedAdvisor, player: ResolvedPlayer, account: TargetAccount): Promise<LinkedProviderAccount>;
-  createHandoff(provider: TargetProvider, advisor: AssignedAdvisor, deviceId: string, player: ResolvedPlayer, account: TargetAccount, skinCode: MultiSkinCode | null, testing: boolean): Promise<HandoffResult>;
+  createHandoff(provider: TargetProvider, advisor: AssignedAdvisor, deviceId: string, player: ResolvedPlayer, account: TargetAccount, skinCode: MultiSkinCode | null, testing: boolean, promoCode?: string): Promise<HandoffResult>;
 };
 
 const UUID_PATTERN = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-8][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
@@ -234,7 +234,7 @@ async function handleTemplate7StartInner(request: Request, deps: StartDependenci
       const handoff = await timedServerStage(
         "template7_start",
         "gateway_handoff",
-        () => deps.createHandoff(provider, resolvedAdvisor, effectiveDeviceId, player, account, skinCode, true),
+        () => deps.createHandoff(provider, resolvedAdvisor, effectiveDeviceId, player, account, skinCode, true, payload.promo_code),
       );
       if (!handoff.provider_username) throw new TargetIntegrationError("upstream_unavailable");
       account = { ...account, username: handoff.provider_username };
@@ -254,7 +254,7 @@ async function handleTemplate7StartInner(request: Request, deps: StartDependenci
       timedServerStage(
         "template7_start",
         "gateway_handoff",
-        () => deps.createHandoff(provider, resolvedAdvisor, effectiveDeviceId, player, account, skinCode, false),
+        () => deps.createHandoff(provider, resolvedAdvisor, effectiveDeviceId, player, account, skinCode, false, payload.promo_code),
       ),
     ]);
     return json({ handoff_url: handoff.handoff_url }, 200);

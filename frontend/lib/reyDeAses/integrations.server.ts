@@ -150,6 +150,7 @@ export async function createProviderHandoff(
   account: TargetAccount,
   skinCode: MultiSkinCode | null = null,
   testing = false,
+  promoCode?: string,
 ): Promise<HandoffResult> {
   const origin = configuredOrigin(
     provider === "multi_skin"
@@ -179,6 +180,7 @@ export async function createProviderHandoff(
     external_user_id: player.player_id,
     player_provider_account_id: player.player_provider_account_id,
     target_provider: player.target_provider,
+    ...(promoCode ? { promo_code: promoCode } : {}),
     ...(provider === "rey_de_ases" ? {
       platform: "rey_de_ases",
       username: account.username,

@@ -298,6 +298,9 @@ Deno.serve(async (req) => {
           ...tracking,
           ctaDestination: publishedTemplate === 7 ? "atrio" : tracking.ctaDestination,
           ...(publishedTemplate === 7 ? { target_provider: targetProviderForTemplate7(rawConfig) } : {}),
+          ...(publishedTemplate === 7 && targetProviderForTemplate7(rawConfig) === "multi_skin"
+            ? { skin_code: "ganamos_plus" }
+            : {}),
           postUrl: effectivePostUrl,
           phoneCountryCode,
           currency: workspaceCurrency,
@@ -418,6 +421,9 @@ Deno.serve(async (req) => {
         landingTag: data.landing_tag ?? "",
         ctaDestination: templateNumber === 7 ? "atrio" : (themeWithHex.ctaDestination === "atrio" ? "atrio" : "whatsapp"),
         ...(templateNumber === 7 ? { target_provider: targetProviderForTemplate7(rawConfig) } : {}),
+        ...(templateNumber === 7 && targetProviderForTemplate7(rawConfig) === "multi_skin"
+          ? { skin_code: "ganamos_plus" }
+          : {}),
         atrioRedirectUrl: (themeWithHex.atrioRedirectUrl as string) ?? "",
         atrioClientId: (themeWithHex.atrioClientId as string) ?? "",
         atrioId: (themeWithHex.atrioId as string) ?? "",

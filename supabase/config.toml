@@ -414,6 +414,9 @@ verify_jwt = false
 [functions.sync-phones]
 verify_jwt = false
 
+[functions.sync-atrio-directory]
+verify_jwt = false
+
 [functions.reset-phone-counters]
 verify_jwt = false
 

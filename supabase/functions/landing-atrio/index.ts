@@ -53,46 +53,11 @@ Deno.serve(async (req) => {
       auth: { autoRefreshToken: false, persistSession: false },
     });
 
-    const { data: ownerRow, error: ownerError } = await supabase
-      .from("landings")
-      .select("user_id")
-      .eq("name", name)
-      .limit(1)
-      .maybeSingle();
-
-    if (ownerError) {
-      return jsonResponse(
-        { error: "Error al validar el plan del cliente." },
-        500,
-      );
-    }
-
-    const ownerUserId = String(
-      (ownerRow as { user_id?: unknown } | null)?.user_id ?? "",
-    );
-    if (!ownerUserId) {
-      return jsonResponse({ error: "Landing no encontrada." }, 404);
-    }
-
-    const { data: isBlocked, error: planError } = await supabase.rpc(
-      "is_client_access_blocked",
-      { p_user_id: ownerUserId },
-    );
-    if (planError) {
-      return jsonResponse(
-        { error: "Error al validar el plan del cliente." },
-        500,
-      );
-    }
-    if (isBlocked === true) {
-      return jsonResponse({ error: "Plan vencido o inactivo." }, 403);
-    }
-
-    const { data, error } = await supabase.rpc("get_atrio_for_landing", {
+    const { data, error } = await supabase.rpc("resolve_landing_atrio_context", {
       p_landing_name: name,
     });
     if (error) {
-      console.error("[landing-atrio] get_atrio_for_landing failed", error);
+      console.error("[landing-atrio] resolve_landing_atrio_context failed", error);
       return jsonResponse({ error: "Error al obtener el cliente Atrio." }, 500);
     }
 
@@ -103,6 +68,9 @@ Deno.serve(async (req) => {
     }
     if (status === "not_atrio") {
       return jsonResponse({ error: "La landing no redirige a Atrio." }, 400);
+    }
+    if (status === "landing_unavailable") {
+      return jsonResponse({ error: "Plan vencido o inactivo." }, 403);
     }
     if (status === "no_atrio_clients") {
       return jsonResponse({
