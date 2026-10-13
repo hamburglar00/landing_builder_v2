@@ -39,7 +39,7 @@ test("Phase 0: landing transport preserves cache, empty/error and network contra
   });
   await t.test("configuration: force-cache and exact invalidation tag", async () => {
     globalThis.fetch = async (url, init) => {
-      assert.equal(new URL(String(url)).searchParams.get("v"), "2");
+      assert.equal(new URL(String(url)).searchParams.get("v"), "3");
       assert.equal(init?.cache, "force-cache");
       assert.deepEqual((init as RequestInit & { next: unknown }).next, { tags: ["landing-config:synthetic"] });
       return Response.json({ name: "synthetic", currency: "PYG" });
