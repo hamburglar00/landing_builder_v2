@@ -16,6 +16,10 @@ Deno.test("preserves every supported Template 7 provider", () => {
     targetProviderForTemplate7({ targetProvider: "ases_del_norte" }),
     "ases_del_norte",
   );
+  assertEquals(
+    targetProviderForTemplate7({ targetProvider: "ganamos_net" }),
+    "ganamos_net",
+  );
 });
 
 Deno.test("keeps Rey de Ases as the legacy fallback", () => {
