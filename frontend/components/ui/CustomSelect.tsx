@@ -93,19 +93,17 @@ export default function CustomSelect({
       if (event.key === "Escape") {
         setOpen(false);
         buttonRef.current?.focus();
+      } else if (event.key === "Tab") {
+        setOpen(false);
       }
     };
-    const onFocusIn = (event: FocusEvent) => {
-      if (!rootRef.current?.contains(event.target as Node) && !menuRef.current?.contains(event.target as Node)) setOpen(false);
-    };
-
+    // iOS Safari can move focus to the modal portal between mousedown and click
+    // on an option. Closing on focusin would remove the option before its click.
     document.addEventListener("mousedown", onPointerDown);
     document.addEventListener("keydown", onKeyDown);
-    document.addEventListener("focusin", onFocusIn);
     return () => {
       document.removeEventListener("mousedown", onPointerDown);
       document.removeEventListener("keydown", onKeyDown);
-      document.removeEventListener("focusin", onFocusIn);
     };
   }, [open]);
 
