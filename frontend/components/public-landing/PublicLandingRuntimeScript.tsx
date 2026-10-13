@@ -78,6 +78,8 @@ function buildRuntimeConfig({ slug, config }: Props) {
       ? "multi_skin"
       : config.tracking?.target_provider === "ases_del_norte"
         ? "ases_del_norte"
+        : config.tracking?.target_provider === "ganamos_net"
+          ? "ganamos_net"
         : "rey_de_ases",
     skinCode: config.tracking?.skin_code || "",
     atrioRedirectUrl: config.tracking?.atrioRedirectUrl || "",
@@ -1425,6 +1427,8 @@ export function buildPublicLandingRuntimeSource() {
                     ? "multi_skin_gateway"
                     : cfg.targetProvider === "ases_del_norte"
                       ? "ases_del_norte_gateway"
+                      : cfg.targetProvider === "ganamos_net"
+                        ? "ganamos_net_gateway"
                       : "rey_de_ases_gateway"
                   : atrioMode ? "atrio" : "whatsapp",
                 gateway_app_id: gatewayMode
@@ -1432,6 +1436,8 @@ export function buildPublicLandingRuntimeSource() {
                     ? "multi_skin_gateway"
                     : cfg.targetProvider === "ases_del_norte"
                       ? "ases_del_norte_gateway"
+                      : cfg.targetProvider === "ganamos_net"
+                        ? "ganamos_net_gateway"
                       : "reydeases_gateway"
                   : undefined,
                 atrio_redirect_url: atrioMode ? firstNonEmpty([atrioData && atrioData.atrioRedirectUrl, atrioData && atrioData.atrio_redirect_url, cfg.atrioRedirectUrl]) : undefined,

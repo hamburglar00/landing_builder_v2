@@ -46,6 +46,17 @@ function multiSkinDemoConfig() {
   return config;
 }
 
+function ganamosNetDemoConfig() {
+  const config = readDemoConfig({
+    TEMPLATE7_DEMO_ENABLED: "true",
+    TEMPLATE7_DEMO_SESSION_SECRET: "s".repeat(32), TEMPLATE7_DEMO_LANDING_IDS: landingId,
+    TEMPLATE7_DEMO_ADVISOR_IDS: advisorId, TEMPLATE7_DEMO_DEVICE_ID: demoDeviceId,
+    TEMPLATE7_DEMO_GANAMOS_NET_ENABLED: "true",
+  });
+  assert.ok(config);
+  return config;
+}
+
 const validPayload = {
   landing_id: landingId, landing_slug: "landing-7", name: "Martín",
   atrio_client_id: clientId, advisor_id: advisorId, advisor_slug: "gera", promo_code: "LP-a1b2",
@@ -445,6 +456,44 @@ test("Multi Skin usa el bypass propio del gateway y nunca las credenciales demo 
   assert.ok(!calls.includes("api2"));
 });
 
+test("Ganamos NET usa el bypass propio del gateway y vincula el usuario devuelto", async () => {
+  const { deps, calls } = dependencies(null, "ganamos_net");
+  const cfg = ganamosNetDemoConfig();
+  deps.demoConfig = () => cfg;
+  deps.api2Status = () => { throw Error("API2 must not be called"); };
+  deps.resolveAccount = async () => { throw Error("API2 must not be called"); };
+  deps.resolvePlayer = async (input) => {
+    calls.push("internal-chat");
+    return resolvedPlayer("ganamos_net", input.deviceId);
+  };
+  deps.createHandoff = async (provider, _advisor, incomingDeviceId, player, account, skinCode, testing, promoCode) => {
+    calls.push("gateway");
+    assert.equal(provider, "ganamos_net");
+    assert.equal(incomingDeviceId, demoDeviceId);
+    assert.equal(player.target_provider, "ganamos_net");
+    assert.equal(account.testingBypass, true);
+    assert.equal(account.username, "");
+    assert.equal(account.password, "");
+    assert.equal(skinCode, null);
+    assert.equal(testing, true);
+    assert.equal(promoCode, "LP-a1b2");
+    return {
+      handoff_url: "https://ganamos-net.example.com/start?t=demo",
+      expires_at: "",
+      binding_created: false,
+      provider_username: "ganamos-demo-user",
+    };
+  };
+  const token = createDemoSession(landingId, "landing-7", cfg);
+  const result = await handleReyStart(request(validPayload, {
+    Cookie: `lb_cid=${deviceId}; t7_demo=${token}`, "X-Template7-Demo-Context": "testing",
+  }), deps);
+  assert.equal(result.status, 200);
+  assert.deepEqual(await result.json(), { handoff_url: "https://ganamos-net.example.com/start?t=demo" });
+  assert.ok(calls.includes("internal-chat") && calls.includes("gateway") && calls.includes("internal-chat-link"));
+  assert.ok(!calls.includes("api2"));
+});
+
 test("respuesta de internal-chat con device_id alterado produce upstream_unavailable", async () => {
   const { deps } = dependencies();
   deps.resolvePlayer = async () => resolvedPlayer("rey_de_ases", demoDeviceId);
@@ -630,5 +679,70 @@ test("adaptador Multi Skin separa handoff normal y bypass de prueba", async () =
     if (original.origin === undefined) delete process.env.MULTI_SKIN_GATEWAY_ORIGIN; else process.env.MULTI_SKIN_GATEWAY_ORIGIN = original.origin;
     if (original.handoffKey === undefined) delete process.env.MULTI_SKIN_GATEWAY_HANDOFF_API_KEY; else process.env.MULTI_SKIN_GATEWAY_HANDOFF_API_KEY = original.handoffKey;
     if (original.testingKey === undefined) delete process.env.MULTI_SKIN_GATEWAY_TESTING_API_KEY; else process.env.MULTI_SKIN_GATEWAY_TESTING_API_KEY = original.testingKey;
+  }
+});
+
+test("adaptador Ganamos NET separa handoff normal y bypass de prueba", async () => {
+  const originalFetch = globalThis.fetch;
+  const original = {
+    origin: process.env.GANAMOS_NET_GATEWAY_ORIGIN,
+    handoffKey: process.env.GANAMOS_NET_GATEWAY_HANDOFF_API_KEY,
+    testingKey: process.env.GANAMOS_NET_GATEWAY_TESTING_API_KEY,
+  };
+  process.env.GANAMOS_NET_GATEWAY_ORIGIN = "https://ganamos.example.com";
+  process.env.GANAMOS_NET_GATEWAY_HANDOFF_API_KEY = "ganamos-handoff-key";
+  process.env.GANAMOS_NET_GATEWAY_TESTING_API_KEY = "ganamos-testing-key";
+  const advisor = { atrioClientId: clientId, advisorId, advisorSlug: "gera" };
+  const player = resolvedPlayer("ganamos_net");
+  try {
+    globalThis.fetch = async (input, init) => {
+      assert.equal(String(input), "https://ganamos.example.com/api/handoffs");
+      assert.equal(new Headers(init?.headers).get("Authorization"), "Bearer ganamos-handoff-key");
+      assert.deepEqual(JSON.parse(String(init?.body)), {
+        advisor_id: advisorId,
+        advisor_slug: "gera",
+        device_id: deviceId,
+        external_user_id: playerId,
+        player_provider_account_id: providerAccountId,
+        target_provider: "ganamos_net",
+        username: "ganamos-user",
+        password: "ganamos-pass",
+      });
+      return Response.json({
+        handoff_url: "https://ganamos.example.com/start?t=normal",
+        expires_in: 120,
+      });
+    };
+    const normal = await createProviderHandoff(
+      "ganamos_net", advisor, deviceId, player,
+      { username: "ganamos-user", password: "ganamos-pass", platform: "ganamos_net", created: true },
+      null, false,
+    );
+    assert.equal(normal.handoff_url, "https://ganamos.example.com/start?t=normal");
+
+    globalThis.fetch = async (input, init) => {
+      assert.equal(String(input), "https://ganamos.example.com/api/testing/handoffs");
+      assert.equal(new Headers(init?.headers).get("Authorization"), "Bearer ganamos-testing-key");
+      const body = JSON.parse(String(init?.body));
+      assert.equal(body.username, undefined);
+      assert.equal(body.password, undefined);
+      assert.equal(body.target_provider, "ganamos_net");
+      return Response.json({
+        handoff_url: "https://ganamos.example.com/start?t=testing",
+        expires_in: 120,
+        provider_username: "ganamos-demo-user",
+      });
+    };
+    const testing = await createProviderHandoff(
+      "ganamos_net", advisor, deviceId, player,
+      { username: "", password: "", platform: "ganamos_net", created: false, testingBypass: true },
+      null, true,
+    );
+    assert.equal(testing.provider_username, "ganamos-demo-user");
+  } finally {
+    globalThis.fetch = originalFetch;
+    if (original.origin === undefined) delete process.env.GANAMOS_NET_GATEWAY_ORIGIN; else process.env.GANAMOS_NET_GATEWAY_ORIGIN = original.origin;
+    if (original.handoffKey === undefined) delete process.env.GANAMOS_NET_GATEWAY_HANDOFF_API_KEY; else process.env.GANAMOS_NET_GATEWAY_HANDOFF_API_KEY = original.handoffKey;
+    if (original.testingKey === undefined) delete process.env.GANAMOS_NET_GATEWAY_TESTING_API_KEY; else process.env.GANAMOS_NET_GATEWAY_TESTING_API_KEY = original.testingKey;
   }
 });

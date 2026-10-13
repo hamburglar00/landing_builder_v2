@@ -15,6 +15,7 @@ export type DemoConfig = {
   password: string;
   multiSkinEnabled?: boolean;
   asesDelNorteEnabled?: boolean;
+  ganamosNetEnabled?: boolean;
 };
 
 export type DemoLanding = {
@@ -42,11 +43,12 @@ export function readDemoConfig(env: Record<string, string | undefined> = process
   const password = env.TEMPLATE7_DEMO_REY_PASSWORD || "";
   const multiSkinEnabled = env.TEMPLATE7_DEMO_MULTI_SKIN_ENABLED === "true";
   const asesDelNorteEnabled = env.TEMPLATE7_DEMO_ASES_DEL_NORTE_ENABLED === "true";
+  const ganamosNetEnabled = env.TEMPLATE7_DEMO_GANAMOS_NET_ENABLED === "true";
   const reyCredentialsComplete = Boolean(username && password);
   if (Buffer.byteLength(sessionSecret) < 32 ||
       !landingIds?.size || !advisorIds?.size || !isDeviceId(deviceId) ||
-      (!reyCredentialsComplete && !multiSkinEnabled && !asesDelNorteEnabled) || Boolean(username) !== Boolean(password)) return null;
-  return { sessionSecret, landingIds, advisorIds, deviceId, username, password, multiSkinEnabled, asesDelNorteEnabled };
+      (!reyCredentialsComplete && !multiSkinEnabled && !asesDelNorteEnabled && !ganamosNetEnabled) || Boolean(username) !== Boolean(password)) return null;
+  return { sessionSecret, landingIds, advisorIds, deviceId, username, password, multiSkinEnabled, asesDelNorteEnabled, ganamosNetEnabled };
 }
 
 export function isDemoLandingAllowed(landing: DemoLanding, config: DemoConfig): boolean {
@@ -58,7 +60,9 @@ export function isDemoLandingAllowed(landing: DemoLanding, config: DemoConfig): 
     ? Boolean(config.username && config.password)
     : raw.targetProvider === "multi_skin"
       ? raw.multiSkinCode === "ganamos_plus" && config.multiSkinEnabled === true
-      : raw.targetProvider === "ases_del_norte" && config.asesDelNorteEnabled === true;
+      : raw.targetProvider === "ases_del_norte"
+        ? config.asesDelNorteEnabled === true
+        : raw.targetProvider === "ganamos_net" && config.ganamosNetEnabled === true;
   return isDeviceId(landing.id) && config.landingIds.has(landing.id.toLowerCase()) &&
     raw.template === "template7" && layout.template === 7 && raw.ctaDestination === "atrio" &&
     providerAllowed;

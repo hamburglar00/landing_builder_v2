@@ -91,7 +91,7 @@ function configuredTargetProvider(landing: LandingRow): TargetProvider | null {
   const raw = landing.config && typeof landing.config === "object" ? landing.config as Record<string, unknown> : {};
   // Landings 7 antiguas no tenian selector: se conserva Rey de Ases.
   if (raw.targetProvider === undefined || raw.targetProvider === null) return "rey_de_ases";
-  if (raw.targetProvider === "rey_de_ases" || raw.targetProvider === "multi_skin" || raw.targetProvider === "ases_del_norte") return raw.targetProvider;
+  if (raw.targetProvider === "rey_de_ases" || raw.targetProvider === "multi_skin" || raw.targetProvider === "ases_del_norte" || raw.targetProvider === "ganamos_net") return raw.targetProvider;
   return null;
 }
 
@@ -345,7 +345,7 @@ function productionContextResolver() {
     if (typeof row.status !== "string" || !knownStatuses.has(row.status as StartContextStatus)) throw new Error("invalid start context status");
     if (row.status !== "ok") return { status: row.status as StartContextStatus };
     const provider = row.target_provider;
-    if ((provider !== "rey_de_ases" && provider !== "multi_skin" && provider !== "ases_del_norte") ||
+    if ((provider !== "rey_de_ases" && provider !== "multi_skin" && provider !== "ases_del_norte" && provider !== "ganamos_net") ||
         typeof row.landing_id !== "string" || typeof row.landing_name !== "string" ||
         typeof row.owner_user_id !== "string" || typeof row.workspace_currency !== "string" ||
         typeof row.atrio_client_id !== "string" || typeof row.advisor_id !== "string" || typeof row.advisor_slug !== "string") {

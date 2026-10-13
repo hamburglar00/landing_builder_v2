@@ -55,7 +55,28 @@ export function api2Readiness(): "integration_pending" {
 export function gatewayReadiness(provider: TargetProvider): "integration_pending" | null {
   if (provider === "multi_skin" && !process.env.MULTI_SKIN_GATEWAY_ORIGIN) return "integration_pending";
   if (provider === "ases_del_norte" && !process.env.ASES_DEL_NORTE_GATEWAY_ORIGIN) return "integration_pending";
+  if (provider === "ganamos_net" && !process.env.GANAMOS_NET_GATEWAY_ORIGIN) return "integration_pending";
   return null;
+}
+
+function gatewayOrigin(provider: TargetProvider): string | undefined {
+  if (provider === "multi_skin") return process.env.MULTI_SKIN_GATEWAY_ORIGIN;
+  if (provider === "ases_del_norte") return process.env.ASES_DEL_NORTE_GATEWAY_ORIGIN;
+  if (provider === "ganamos_net") return process.env.GANAMOS_NET_GATEWAY_ORIGIN;
+  return process.env.REY_GATEWAY_ORIGIN;
+}
+
+function gatewayApiKey(provider: TargetProvider, testing: boolean): string | undefined {
+  if (provider === "multi_skin") {
+    return testing ? process.env.MULTI_SKIN_GATEWAY_TESTING_API_KEY : process.env.MULTI_SKIN_GATEWAY_HANDOFF_API_KEY;
+  }
+  if (provider === "ases_del_norte") {
+    return testing ? process.env.ASES_DEL_NORTE_GATEWAY_TESTING_API_KEY : process.env.ASES_DEL_NORTE_GATEWAY_HANDOFF_API_KEY;
+  }
+  if (provider === "ganamos_net") {
+    return testing ? process.env.GANAMOS_NET_GATEWAY_TESTING_API_KEY : process.env.GANAMOS_NET_GATEWAY_HANDOFF_API_KEY;
+  }
+  return process.env.REY_GATEWAY_HANDOFF_API_KEY;
 }
 
 export function validateResolvedPlayer(result: unknown, input: Pick<PlayerResolveRequest, "advisor" | "deviceId" | "targetProvider">): ResolvedPlayer {
@@ -152,27 +173,17 @@ export async function createProviderHandoff(
   testing = false,
   promoCode?: string,
 ): Promise<HandoffResult> {
-  const origin = configuredOrigin(
-    provider === "multi_skin"
-      ? process.env.MULTI_SKIN_GATEWAY_ORIGIN
-      : provider === "ases_del_norte"
-        ? process.env.ASES_DEL_NORTE_GATEWAY_ORIGIN
-        : process.env.REY_GATEWAY_ORIGIN,
-  );
+  const origin = configuredOrigin(gatewayOrigin(provider));
   if (player.target_provider !== provider || !isDeviceId(player.player_provider_account_id) ||
       account.platform !== provider || (provider === "multi_skin" && !skinCode) ||
       (!testing && (!account.username || !account.password)) ||
-      (testing && provider !== "multi_skin" && provider !== "ases_del_norte")) {
+      (testing && provider !== "multi_skin" && provider !== "ases_del_norte" && provider !== "ganamos_net")) {
     throw new TargetIntegrationError("upstream_unavailable");
   }
   const result = await postJson(
     origin,
-    testing && (provider === "multi_skin" || provider === "ases_del_norte") ? "/api/testing/handoffs" : "/api/handoffs",
-    provider === "multi_skin"
-      ? testing ? process.env.MULTI_SKIN_GATEWAY_TESTING_API_KEY : process.env.MULTI_SKIN_GATEWAY_HANDOFF_API_KEY
-      : provider === "ases_del_norte"
-        ? testing ? process.env.ASES_DEL_NORTE_GATEWAY_TESTING_API_KEY : process.env.ASES_DEL_NORTE_GATEWAY_HANDOFF_API_KEY
-        : process.env.REY_GATEWAY_HANDOFF_API_KEY,
+    testing && provider !== "rey_de_ases" ? "/api/testing/handoffs" : "/api/handoffs",
+    gatewayApiKey(provider, testing),
     {
     advisor_id: advisor.advisorId,
     advisor_slug: advisor.advisorSlug,

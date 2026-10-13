@@ -6,7 +6,7 @@ import { DEFAULT_CONFIG } from "../lib/landing/mocks";
 import type { PublicLandingConfig } from "../components/public-landing/types";
 import { renderPublicLandingHtml } from "../components/public-landing/renderPublicLandingHtml";
 import { handleDemoPage, type DemoPageDependencies } from "../lib/reyDeAses/demoRoute.server";
-import { createDemoSession, demoSessionCookie, readDemoConfig, verifyDemoSession } from "../lib/reyDeAses/demo.server";
+import { createDemoSession, demoSessionCookie, isDemoLandingAllowed, readDemoConfig, verifyDemoSession } from "../lib/reyDeAses/demo.server";
 
 const landingId = "11111111-1111-4111-8111-111111111111";
 const advisorId = "33333333-3333-4333-8333-333333333333";
@@ -95,6 +95,34 @@ test("sesión adulterada, vencida o de otra landing se rechaza", () => {
   assert.equal(verifyDemoSession(token + "x", landingId, "landing-7", config(), 1_760_000_001_000), false);
   assert.equal(verifyDemoSession(token, landingId, "otra", config(), 1_760_000_001_000), false);
   assert.equal(verifyDemoSession(token, landingId, "landing-7", config(), 1_760_020_000_000), false);
+});
+
+test("Ganamos NET requiere su bypass explícito y una landing permitida", () => {
+  const disabled = readDemoConfig({
+    TEMPLATE7_DEMO_ENABLED: "true",
+    TEMPLATE7_DEMO_SESSION_SECRET: "s".repeat(32),
+    TEMPLATE7_DEMO_LANDING_IDS: landingId,
+    TEMPLATE7_DEMO_ADVISOR_IDS: advisorId,
+    TEMPLATE7_DEMO_DEVICE_ID: deviceId,
+    TEMPLATE7_DEMO_GANAMOS_NET_ENABLED: "false",
+  });
+  assert.equal(disabled, null);
+
+  const enabled = readDemoConfig({
+    TEMPLATE7_DEMO_ENABLED: "true",
+    TEMPLATE7_DEMO_SESSION_SECRET: "s".repeat(32),
+    TEMPLATE7_DEMO_LANDING_IDS: landingId,
+    TEMPLATE7_DEMO_ADVISOR_IDS: advisorId,
+    TEMPLATE7_DEMO_DEVICE_ID: deviceId,
+    TEMPLATE7_DEMO_GANAMOS_NET_ENABLED: "true",
+  });
+  assert.ok(enabled);
+  assert.equal(isDemoLandingAllowed({
+    id: landingId,
+    name: "ganamos-net-demo",
+    config: { template: "template7", ctaDestination: "atrio", targetProvider: "ganamos_net" },
+    landing_config: { layout: { template: 7 } },
+  }, enabled), true);
 });
 
 test("/testing reutiliza el renderer sin Pixel, PageView, CAPI ni Contact", async () => {

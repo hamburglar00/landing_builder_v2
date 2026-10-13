@@ -97,6 +97,7 @@ test("la plantilla 7 publica un formulario de nombre con asesor de Atrio", () =>
   assert.match(source, /target_provider: gatewayMode \? cfg.targetProvider/);
   assert.match(source, /cfg\.targetProvider === "multi_skin"/);
   assert.match(source, /"ases_del_norte_gateway"/);
+  assert.match(source, /"ganamos_net_gateway"/);
   assert.match(source, /"rey_de_ases_gateway"/);
   assert.match(source, /atrio_client_id: atrioMode/);
   assert.match(source, /atrio_id: atrioMode/);

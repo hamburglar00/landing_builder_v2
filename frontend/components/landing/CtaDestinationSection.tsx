@@ -154,6 +154,7 @@ export function CtaDestinationSection({
               { value: "rey_de_ases", label: "Rey de Ases" },
               { value: "multi_skin", label: "Multi Skin" },
               { value: "ases_del_norte", label: "Ases del Norte" },
+              { value: "ganamos_net", label: "Ganamos NET" },
             ]}
             className="mt-2"
             buttonClassName="h-10 bg-zinc-950 px-3 text-sm"

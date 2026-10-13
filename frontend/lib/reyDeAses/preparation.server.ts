@@ -142,6 +142,8 @@ function gatewayOrigin(payload: StartRequest, env: PreparationEnvironment): stri
     ? env.MULTI_SKIN_GATEWAY_ORIGIN || ""
     : provider === "ases_del_norte"
       ? env.ASES_DEL_NORTE_GATEWAY_ORIGIN || ""
+      : provider === "ganamos_net"
+        ? env.GANAMOS_NET_GATEWAY_ORIGIN || ""
       : env.REY_GATEWAY_ORIGIN || "";
   const url = new URL(raw);
   const local = url.protocol === "http:" && ["localhost", "127.0.0.1"].includes(url.hostname);

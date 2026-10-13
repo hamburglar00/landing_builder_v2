@@ -147,6 +147,8 @@ function template7GatewayOrigin(config: PublicLandingConfig): string {
     ? process.env.MULTI_SKIN_GATEWAY_ORIGIN
     : provider === "ases_del_norte"
       ? process.env.ASES_DEL_NORTE_GATEWAY_ORIGIN
+      : provider === "ganamos_net"
+        ? process.env.GANAMOS_NET_GATEWAY_ORIGIN
       : process.env.REY_GATEWAY_ORIGIN;
   try {
     const url = new URL(raw || "");
