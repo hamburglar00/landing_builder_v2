@@ -39,6 +39,22 @@ export type StartDependencies = {
   createHandoff(provider: TargetProvider, advisor: AssignedAdvisor, deviceId: string, player: ResolvedPlayer, account: TargetAccount, skinCode: MultiSkinCode | null, testing: boolean, promoCode?: string): Promise<HandoffResult>;
 };
 
+export type Template7PreparedStart = {
+  provider: TargetProvider;
+  advisor: AssignedAdvisor;
+  deviceId: string;
+  player: ResolvedPlayer;
+  account: TargetAccount;
+  skinCode: MultiSkinCode | null;
+  testing: boolean;
+  promoCode: string;
+  completedHandoff?: HandoffResult;
+};
+
+type AccountReadyResponder = (
+  prepared: Template7PreparedStart,
+) => Response | Promise<Response>;
+
 const UUID_PATTERN = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-8][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
 const SLUG_PATTERN = /^[a-z0-9][a-z0-9_-]{0,159}$/i;
 const ADVISOR_SLUG_PATTERN = /^[a-z0-9][a-z0-9_-]{0,80}$/i;
@@ -113,7 +129,70 @@ async function bounded<T>(promise: Promise<T>): Promise<T> {
   } finally { if (timer) clearTimeout(timer); }
 }
 
-async function handleTemplate7StartInner(request: Request, deps: StartDependencies, identity: ClientIdentity): Promise<Response> {
+export async function finalizeTemplate7PreparedStart(
+  prepared: Template7PreparedStart,
+  deps: StartDependencies,
+): Promise<HandoffResult> {
+  if (prepared.completedHandoff) return prepared.completedHandoff;
+  const [, handoff] = await Promise.all([
+    timedServerStage(
+      "template7_start",
+      "internal_chat_account_link",
+      () => deps.linkProviderAccount(prepared.advisor, prepared.player, prepared.account),
+    ),
+    timedServerStage(
+      "template7_start",
+      "gateway_handoff",
+      () => deps.createHandoff(
+        prepared.provider,
+        prepared.advisor,
+        prepared.deviceId,
+        prepared.player,
+        prepared.account,
+        prepared.skinCode,
+        prepared.testing,
+        prepared.promoCode,
+      ),
+    ),
+  ]);
+  return handoff;
+}
+
+async function makeTemplate7AccountDisplayable(
+  prepared: Template7PreparedStart,
+  deps: StartDependencies,
+): Promise<Template7PreparedStart> {
+  if (!prepared.account.testingBypass) return prepared;
+  const handoff = await timedServerStage(
+    "template7_start",
+    "gateway_handoff",
+    () => deps.createHandoff(
+      prepared.provider,
+      prepared.advisor,
+      prepared.deviceId,
+      prepared.player,
+      prepared.account,
+      prepared.skinCode,
+      true,
+      prepared.promoCode,
+    ),
+  );
+  if (!handoff.provider_username) throw new TargetIntegrationError("upstream_unavailable");
+  const account = { ...prepared.account, username: handoff.provider_username };
+  await timedServerStage(
+    "template7_start",
+    "internal_chat_account_link",
+    () => deps.linkProviderAccount(prepared.advisor, prepared.player, account),
+  );
+  return { ...prepared, account, completedHandoff: handoff };
+}
+
+async function handleTemplate7StartInner(
+  request: Request,
+  deps: StartDependencies,
+  identity: ClientIdentity,
+  accountReadyResponder?: AccountReadyResponder,
+): Promise<Response> {
   if (request.method !== "POST") return json({ error: "method_not_allowed" }, 405);
   if (!/^application\/json(?:\s*;|$)/i.test(request.headers.get("content-type") || "")) return json({ error: "invalid_request" }, 415);
   if (request.headers.get("origin") && request.headers.get("origin") !== new URL(request.url).origin) return json({ error: "invalid_request" }, 403);
@@ -215,7 +294,7 @@ async function handleTemplate7StartInner(request: Request, deps: StartDependenci
       "internal_chat_resolve",
       () => deps.resolvePlayer(resolveInput),
     ), resolveInput);
-    let account: TargetAccount = demoConfig
+    const account: TargetAccount = demoConfig
       ? provider === "rey_de_ases"
         ? { username: demoConfig.username, password: demoConfig.password, platform: provider, created: false }
         : { username: "", password: "", platform: provider, created: false, testingBypass: true }
@@ -230,33 +309,19 @@ async function handleTemplate7StartInner(request: Request, deps: StartDependenci
     if (account.platform !== provider || (!account.testingBypass && (!account.username || !account.password))) {
       throw new TargetIntegrationError("upstream_unavailable");
     }
-    if (account.testingBypass) {
-      const handoff = await timedServerStage(
-        "template7_start",
-        "gateway_handoff",
-        () => deps.createHandoff(provider, resolvedAdvisor, effectiveDeviceId, player, account, skinCode, true, payload.promo_code),
-      );
-      if (!handoff.provider_username) throw new TargetIntegrationError("upstream_unavailable");
-      account = { ...account, username: handoff.provider_username };
-      await timedServerStage(
-        "template7_start",
-        "internal_chat_account_link",
-        () => deps.linkProviderAccount(resolvedAdvisor, player, account),
-      );
-      return json({ handoff_url: handoff.handoff_url }, 200);
-    }
-    const [, handoff] = await Promise.all([
-      timedServerStage(
-        "template7_start",
-        "internal_chat_account_link",
-        () => deps.linkProviderAccount(resolvedAdvisor, player, account),
-      ),
-      timedServerStage(
-        "template7_start",
-        "gateway_handoff",
-        () => deps.createHandoff(provider, resolvedAdvisor, effectiveDeviceId, player, account, skinCode, false, payload.promo_code),
-      ),
-    ]);
+    let prepared: Template7PreparedStart = {
+      provider,
+      advisor: resolvedAdvisor,
+      deviceId: effectiveDeviceId,
+      player,
+      account,
+      skinCode,
+      testing: Boolean(demoConfig),
+      promoCode: payload.promo_code,
+    };
+    prepared = await makeTemplate7AccountDisplayable(prepared, deps);
+    if (accountReadyResponder) return accountReadyResponder(prepared);
+    const handoff = await finalizeTemplate7PreparedStart(prepared, deps);
     return json({ handoff_url: handoff.handoff_url }, 200);
   } catch (error) {
     if (error instanceof TargetIntegrationError) return json({ error: error.code }, 503);
@@ -282,6 +347,17 @@ export async function handleTemplate7StartWithIdentity(
 ): Promise<Response> {
   const response = await handleTemplate7StartInner(request, deps, identity);
   // Una respuesta 429 sin cookie no puede pisar el CID de una solicitud concurrente exitosa.
+  return withClientIdentityCookie(response,
+    response.status === 429 ? { ...identity, needsCookie: false } : identity);
+}
+
+export async function handleTemplate7AccountWithIdentity(
+  request: Request,
+  deps: StartDependencies,
+  identity: ClientIdentity,
+  responder: AccountReadyResponder,
+): Promise<Response> {
+  const response = await handleTemplate7StartInner(request, deps, identity, responder);
   return withClientIdentityCookie(response,
     response.status === 429 ? { ...identity, needsCookie: false } : identity);
 }

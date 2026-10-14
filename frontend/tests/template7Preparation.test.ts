@@ -2,7 +2,9 @@ import assert from "node:assert/strict";
 import test from "node:test";
 import type { StartDependencies } from "../lib/reyDeAses/start.server";
 import {
+  handleTemplate7PreparationAccount,
   handleTemplate7PreparationComplete,
+  handleTemplate7PreparationFinalize,
   handleTemplate7Prepare,
 } from "../lib/reyDeAses/preparation.server";
 
@@ -30,7 +32,9 @@ const payload = {
   attribution: { target_provider: "rey_de_ases" },
 };
 
-function deps(): StartDependencies {
+type DependencyTrace = { links: number; handoffs: number };
+
+function deps(trace?: DependencyTrace): StartDependencies {
   return {
     db: {
       async landing() {
@@ -62,6 +66,7 @@ function deps(): StartDependencies {
     },
     async resolveAccount() { return { username: "player", password: "secret", platform: "rey_de_ases", created: false }; },
     async linkProviderAccount(_advisor, player, account) {
+      if (trace) trace.links += 1;
       return {
         player_provider_account_id: player.player_provider_account_id,
         target_provider: player.target_provider,
@@ -70,6 +75,7 @@ function deps(): StartDependencies {
       };
     },
     async createHandoff() {
+      if (trace) trace.handoffs += 1;
       return { handoff_url: "https://gateway.example.com/start?t=handoff", expires_at: "2026-10-08T12:00:00Z", binding_created: false };
     },
   };
@@ -107,6 +113,64 @@ test("prepare responde de inmediato con un pase opaco y complete conserva identi
   }), env, deps(), now + 1000);
   assert.equal(response.status, 200);
   assert.deepEqual(await response.json(), { handoff_url: "https://gateway.example.com/start?t=handoff" });
+});
+
+test("account muestra solo el usuario y finalize completa el trabajo restante", async () => {
+  const token = await prepareToken();
+  const trace = { links: 0, handoffs: 0 };
+  const dependencies = deps(trace);
+  const account = await handleTemplate7PreparationAccount(new Request("https://mkt.example.com/api/template7/preparations/account", {
+    method: "POST",
+    headers: { "Content-Type": "application/json", Authorization: `Bearer ${env.TEMPLATE7_PREPARATION_API_KEY}` },
+    body: JSON.stringify({ token }),
+  }), env, dependencies, now + 1000);
+
+  assert.equal(account.status, 200);
+  const rawAccount = await account.text();
+  assert.doesNotMatch(rawAccount, /secret|password|clave/i);
+  const accountBody = JSON.parse(rawAccount) as { username: string; continuation_token: string };
+  assert.equal(accountBody.username, "player");
+  assert.match(accountBody.continuation_token, /^c1\.[A-Za-z0-9_-]+\.[A-Za-z0-9_-]+\.[A-Za-z0-9_-]+$/);
+  assert.doesNotMatch(accountBody.continuation_token, /player|secret/i);
+  assert.deepEqual(trace, { links: 0, handoffs: 0 });
+
+  const finalize = await handleTemplate7PreparationFinalize(new Request("https://mkt.example.com/api/template7/preparations/finalize", {
+    method: "POST",
+    headers: { "Content-Type": "application/json", Authorization: `Bearer ${env.TEMPLATE7_PREPARATION_API_KEY}` },
+    body: JSON.stringify({ continuation_token: accountBody.continuation_token }),
+  }), env, dependencies, now + 2000);
+  assert.equal(finalize.status, 200);
+  assert.deepEqual(await finalize.json(), { handoff_url: "https://gateway.example.com/start?t=handoff" });
+  assert.deepEqual(trace, { links: 1, handoffs: 1 });
+});
+
+test("account y finalize protegen autenticacion, integridad y vencimiento", async () => {
+  const token = await prepareToken();
+  const unauthorized = await handleTemplate7PreparationAccount(new Request("https://mkt.example.com/api/template7/preparations/account", {
+    method: "POST",
+    headers: { "Content-Type": "application/json", Authorization: "Bearer wrong" },
+    body: JSON.stringify({ token }),
+  }), env, deps(), now + 1000);
+  assert.equal(unauthorized.status, 401);
+
+  const account = await handleTemplate7PreparationAccount(new Request("https://mkt.example.com/api/template7/preparations/account", {
+    method: "POST",
+    headers: { "Content-Type": "application/json", Authorization: `Bearer ${env.TEMPLATE7_PREPARATION_API_KEY}` },
+    body: JSON.stringify({ token }),
+  }), env, deps(), now + 1000);
+  const { continuation_token: continuationToken } = await account.json() as { continuation_token: string };
+  const tamperIndex = Math.floor(continuationToken.length / 2);
+  const tampered = continuationToken.slice(0, tamperIndex) +
+    (continuationToken[tamperIndex] === "a" ? "b" : "a") + continuationToken.slice(tamperIndex + 1);
+  const finalize = (candidate: string, instant: number) => handleTemplate7PreparationFinalize(
+    new Request("https://mkt.example.com/api/template7/preparations/finalize", {
+      method: "POST",
+      headers: { "Content-Type": "application/json", Authorization: `Bearer ${env.TEMPLATE7_PREPARATION_API_KEY}` },
+      body: JSON.stringify({ continuation_token: candidate }),
+    }), env, deps(), instant,
+  );
+  assert.equal((await finalize(tampered, now + 2000)).status, 410);
+  assert.equal((await finalize(continuationToken, now + 302_000)).status, 410);
 });
 
 test("complete rechaza autenticacion, adulteracion y vencimiento", async () => {
