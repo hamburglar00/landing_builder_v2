@@ -42,6 +42,8 @@ import {
   type TenantOwnershipSignalKind,
 } from "./event_attribution.ts";
 
+import { urlAttribution } from "./url_attribution.ts";
+
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
   "Access-Control-Allow-Headers":
@@ -188,6 +190,10 @@ interface ConversionRow {
   purchase_status_capi: string;
   observaciones: string;
   external_id: string;
+  landing?: string | null;
+  campana?: string | null;
+  conjunto?: string | null;
+  anuncio?: string | null;
   utm_campaign: string;
   telefono_asignado: string;
   assigned_gerencia_id?: number | null;
@@ -4597,6 +4603,7 @@ async function handleContact(
     purchase_status_capi: "",
     observaciones: "",
     external_id: norm(p.external_id),
+    ...urlAttribution(p),
     utm_campaign: norm(p.utm_campaign),
     telefono_asignado: norm(p.telefono_asignado),
     ...snapshotPatch(assignedGerencia),
@@ -5390,6 +5397,7 @@ async function handleLead(
         promoIsConflicting ? `promo_conflict:${promoCoherence}` : "",
       ),
       external_id: generatedExternalId,
+      ...urlAttribution(p, trustedLineage),
       utm_campaign: norm(p.utm_campaign) || trustedLineage?.utm_campaign || "",
       telefono_asignado: norm(p.telefono_asignado) ||
         trustedLineage?.telefono_asignado || "",
@@ -5557,6 +5565,7 @@ async function handleLead(
       .eq("id", targetId)
       .single();
     const currentRow = cur as ConversionRow | null;
+    Object.assign(updates, urlAttribution(p, currentRow));
     updates.event_source_url = eventSourceUrl || currentRow?.event_source_url ||
       "";
     const guardedUpdateWorkspaceResolution =
@@ -5921,6 +5930,7 @@ async function handleCompleteRegistration(
     const updates: Record<string, unknown> = {
       phone: cleanPhone,
       estado: norm(targetRow.estado) === "purchase" ? "purchase" : "lead",
+      ...urlAttribution(p, targetRow),
       registration_event_id: registrationEventId,
       registration_event_time: registrationEventTime,
       registration_payload_raw: registrationPayloadRaw,
@@ -6098,6 +6108,7 @@ async function handleCompleteRegistration(
     purchase_status_capi: "",
     observaciones: "match_source:complete_registration_created_new",
     external_id: generatedExternalId,
+    ...urlAttribution(p),
     utm_campaign: norm(p.utm_campaign),
     telefono_asignado: norm(p.telefono_asignado),
     ...snapshotPatch(assignedGerencia),
@@ -6710,6 +6721,7 @@ async function handlePurchase(
 
     const updates: Record<string, unknown> = {
       phone: cleanPhone || existingRow?.phone || "",
+      ...urlAttribution(p, existingRow),
       estado: "purchase",
       valor: amount,
       currency: purchaseCurrency,
@@ -7091,6 +7103,7 @@ async function handlePurchase(
           : "",
       ),
       external_id: firstExternalId,
+      ...urlAttribution(p, firstSource),
       utm_campaign: firstSource?.utm_campaign || "",
       telefono_asignado: firstSource?.telefono_asignado || "",
       assigned_gerencia_id: firstSource?.assigned_gerencia_id ?? null,
@@ -7392,6 +7405,7 @@ async function handlePurchase(
     ),
     external_id: norm(p.external_id) || repeatSourceRow?.external_id ||
       await sha256(cleanPhone),
+    ...urlAttribution(p, repeatSourceRow),
     utm_campaign: repeatSourceRow?.utm_campaign ?? "",
     telefono_asignado: repeatSourceRow?.telefono_asignado ?? "",
     assigned_gerencia_id: repeatSourceRow?.assigned_gerencia_id ?? null,
@@ -7814,6 +7828,7 @@ async function handleSimplePurchase(
     observaciones: simpleWorkspaceGuard.observation,
     external_id: norm(p.external_id) || srcRow?.external_id ||
       await sha256(cleanPhone),
+    ...urlAttribution(p, srcRow),
     utm_campaign: srcRow?.utm_campaign ?? "",
     telefono_asignado: srcRow?.telefono_asignado ?? "",
     assigned_gerencia_id: srcRow?.assigned_gerencia_id ?? null,

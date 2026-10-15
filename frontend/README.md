@@ -8,6 +8,37 @@ La página **Admin → Documentación** muestra el contenido de este archivo par
 
 ## Arquitectura general
 
+### Parámetros de anuncios y selección de landing
+
+La aplicación clásica (`../landing-prueba-1`) admite `/?landing=bianca2` y
+`/otra?landing=bianca2`: el parámetro tiene prioridad sobre la ruta, mediante una
+reescritura interna que conserva UTM y `fbclid`. Si falta o está vacío, se usa la
+ruta. Un parámetro inválido o una landing inexistente devuelve 404.
+
+Al entrar a la raíz sin `landing`, se elige una landing clásica publicada de
+`goldencajeros` (configurable mediante `LANDING_FALLBACK_CLIENT`, solo servidor).
+La RPC `get_random_active_landing` exige un cliente único y selecciona destinos
+WhatsApp con un número activo de adquisición, del tipo y horario asignados.
+No crea reservas ni incrementa contadores. La selección no se cachea y redirige
+temporalmente conservando los parámetros; si no hay candidatos, se muestra que
+no hay atención disponible. Requiere la clave de servicio del runtime.
+
+Las conversiones guardan `landing` (slug mostrado), `campana`, `conjunto` y
+`anuncio`, y los conservan en lead, registro y compras vinculadas. Estos campos
+aparecen como columnas configurables, se pueden buscar y exportar. `utm_campaign`
+permanece independiente; los registros anteriores no reciben campañas inventadas.
+
+Ejemplo para “Parámetros de URL” de Meta, sin `?` inicial:
+
+```text
+landing=bianca2&campana={{campaign.name}}&conjunto={{adset.name}}&anuncio={{ad.name}}&utm_campaign={{campaign.name}}
+```
+
+Orden de publicación: migración `20261015172240_landing_url_attribution.sql`,
+Edge Function `conversions`, panel y runtime clásico. Para las pruebas de base
+local aislada: `node scripts/security/landing-url-attribution-tests.mjs` desde la
+raíz del repositorio. No usa filas ni credenciales del proyecto remoto.
+
 - **Frontend** (`frontend/`)
   - Framework: **Next.js 14+ (app router)**, TypeScript y Tailwind.
   - Zonas principales:

@@ -84,6 +84,10 @@ export interface ConversionRow {
   purchase_status_capi: string;
   observaciones: string;
   external_id: string;
+  landing?: string | null;
+  campana?: string | null;
+  conjunto?: string | null;
+  anuncio?: string | null;
   utm_campaign: string;
   telefono_asignado: string;
   assigned_gerencia_id?: number | null;

@@ -21,6 +21,7 @@ import {
   LandingTemplateSection,
 } from "@/components/landing/LandingEditorForm";
 import { PublishTargetSection } from "@/components/landing/PublishTargetSection";
+import { LandingUrlParametersCard } from "@/components/landing/LandingUrlParametersCard";
 import { LandingMarketCountryField } from "@/components/landing/LandingMarketCountryField";
 import {
   CtaDestinationSection,
@@ -616,7 +617,10 @@ export default function AdminLandingEditarPage() {
         )}
 
         {landing.landingType !== "external" && (
-          <LandingTemplateSection config={landing.config} setConfig={setConfig} />
+          <>
+            {landing.publishTarget === "classic" && <LandingUrlParametersCard landingName={landing.name} />}
+            <LandingTemplateSection config={landing.config} setConfig={setConfig} />
+          </>
         )}
 
         {landing.landingType !== "external" && landing.config.template === "template6" && (

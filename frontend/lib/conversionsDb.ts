@@ -196,6 +196,10 @@ export interface ConversionRow {
   purchase_status_capi: string;
   observaciones: string;
   external_id: string;
+  landing?: string | null;
+  campana?: string | null;
+  conjunto?: string | null;
+  anuncio?: string | null;
   utm_campaign: string;
   telefono_asignado: string;
   assigned_gerencia_id?: number | null;
@@ -883,7 +887,7 @@ const CONVERSIONS_SELECT = `
   estado, valor, currency, workspace_resolution_source,
   contact_status_capi, lead_status_capi, registration_status_capi, purchase_status_capi,
   observaciones,
-  external_id, utm_campaign, telefono_asignado,
+  external_id, landing, campana, conjunto, anuncio, utm_campaign, telefono_asignado,
   assigned_gerencia_id, assigned_gerencia_external_id, assigned_gerencia_name, assigned_gerencia_label,
   lead_bot_phone, lead_player_username, lead_agency_id, lead_gerencia_id, lead_gerencia_external_id, lead_gerencia_name, lead_gerencia_label,
   lead_incoming_promo_code, lead_atrio_id, lead_atrio_players_id, lead_attribution_status, lead_attribution_conversion_id,
