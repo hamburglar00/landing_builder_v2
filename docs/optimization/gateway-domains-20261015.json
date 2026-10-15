@@ -1,0 +1,1060 @@
+{
+  "date": "2026-10-15",
+  "verifiedAt": "2026-10-15T18:39:38.454Z",
+  "status": "complete",
+  "domains": {
+    "rey_de_ases": "https://www.reydeases.fun",
+    "ases_del_norte": "https://www.asesdelnorte.online",
+    "ganamos_net": "https://www.ganamosnet.icu",
+    "multi_skin": {
+      "ganamos_plus": "https://ganamosnet.global",
+      "sharedOrigin": "https://multi-skin-gateway.meta-ip-collector.workers.dev"
+    }
+  },
+  "configuration": {
+    "landingProjects": [
+      "landing-builder-v2-k259",
+      "public-landing-bl"
+    ],
+    "landingEnvironment": "production",
+    "landingVariables": {
+      "REY_GATEWAY_ORIGIN": "https://www.reydeases.fun",
+      "ASES_DEL_NORTE_GATEWAY_ORIGIN": "https://www.asesdelnorte.online",
+      "GANAMOS_NET_GATEWAY_ORIGIN": "https://www.ganamosnet.icu",
+      "GANAMOS_PLUS_GATEWAY_ORIGIN": "https://ganamosnet.global"
+    },
+    "multiSkinVariable": "GANAMOS_PLUS_PUBLIC_ORIGIN",
+    "multiSkinScope": "ganamos_plus only; other skins retain the shared origin",
+    "migration": "The three Vercel gateways accept their explicitly configured GATEWAY_LEGACY_ORIGIN for existing callers. Multi Skin keeps the shared origin for old callers. New landing accesses use custom domains."
+  },
+  "implementationCommits": {
+    "landing-builder": "82bbbaf92ce6b2c1a0835d9788ecfbbddc8bf207",
+    "landing-prueba-1": "95470aa114f7b29fd11357b97e76a2a5a317268e",
+    "landing-autologuin": "da3fb6b0acac29e6fe4b869d49b2abaf3109ae5e",
+    "ases-gateway": "9318222fbd71602a0cdf89a2b1278eb702e8cf0e",
+    "ganamos-gateway": "e45fbe7f22df298965e14b071e2429db35beb92c",
+    "multi-skin-gateway": "ebec20f74ff3a3f5b2aa216ad2456c619a0465f2"
+  },
+  "productionDeployments": [
+    {
+      "component": "landing-autologuin",
+      "host": "www.reydeases.fun",
+      "id": "dpl_F4SiTwAczeLynY5EvDdSUC8SFraC",
+      "state": "READY",
+      "url": "reydeases-gateway-lmc8w8kuh-juanclouds-projects.vercel.app"
+    },
+    {
+      "component": "ases-gateway",
+      "host": "www.asesdelnorte.online",
+      "id": "dpl_4vaYM2G9Zhk45os96VkWaZUTSwdZ",
+      "state": "READY",
+      "url": "ases-del-norte-gateway-lvx857ntq-juanclouds-projects.vercel.app"
+    },
+    {
+      "component": "ganamos-gateway",
+      "host": "www.ganamosnet.icu",
+      "id": "dpl_H6zU3UGtecqF5YuFJyi6hJ1mkgh3",
+      "state": "READY",
+      "url": "ganamos-net-gateway-es5ri2dcq-juanclouds-projects.vercel.app"
+    },
+    {
+      "component": "landing-prueba-1",
+      "host": "landing.panelbotadmin.com",
+      "id": "dpl_HsZ9bJJohRA2yYWnaMRQW1aw1MAV",
+      "state": "READY",
+      "url": "public-landing-3bf9n2ohb-juanclouds-projects.vercel.app"
+    },
+    {
+      "component": "landing-builder",
+      "host": "mkt.panelbotadmin.com",
+      "id": "dpl_5nBjAoRdSamMoxLAhL99SASW1sf5",
+      "state": "READY",
+      "url": "landing-builder-v2-k259-9jr57wpym-juanclouds-projects.vercel.app"
+    }
+  ],
+  "cloudflare": {
+    "worker": "multi-skin-gateway",
+    "version": "c73a6502-4f27-41c8-b8e6-191959b95f9e",
+    "customDomain": "ganamosnet.global"
+  },
+  "checks": {
+    "unitTests": {
+      "builder": 222,
+      "classic": 36,
+      "rey": 86,
+      "ases": 48,
+      "ganamos": 53,
+      "multi": 52,
+      "totalPassed": 497,
+      "skipped": 3
+    },
+    "syntheticBrowserCases": 9,
+    "templates1To6HtmlUnchanged": true,
+    "localGatewayBuildsPassed": 4,
+    "landingTypechecksPassed": 2,
+    "landingProductionBuildsPassed": 2,
+    "sourceParityPassed": true,
+    "productionAccessesPassed": 8,
+    "productionAccessesFailed": 0,
+    "allSessionCookiesSecureAndHttpOnly": true
+  },
+  "methodology": {
+    "profile": "390x844 DPR2, normal connection, browser cache disabled, cold cookies, analytics intercepted; existing demo accounts only; provider document intercepted before rendering",
+    "scope": "Existing demo accounts; provider document intercepted before rendering. Assertions cover /start and authenticated destination on the expected custom origin, plus Secure HttpOnly session cookies on that origin. No API2 account creation or real conversion events.",
+    "command": "T7_GATEWAY_DOMAIN_CHECK=true node scripts/phase0/template7-stage3-measure.mjs access OUTPUT_DIR 1"
+  },
+  "samples": [
+    {
+      "mode": "access",
+      "sample": 1,
+      "engine": "constructor",
+      "slug": "rey-de-ases-demo",
+      "formReadyMs": 1920,
+      "accessSentMs": 668,
+      "accountMs": 3139,
+      "sessionReadyMs": 6579,
+      "destinationMs": 7133,
+      "network": [
+        {
+          "origin": "https://fdkjkzpjqfbaavylapun.supabase.co",
+          "path": "/functions/v1/landing-atrio",
+          "method": "OPTIONS",
+          "status": 200,
+          "durationMs": 443,
+          "sinceClickMs": 137
+        },
+        {
+          "origin": "https://fdkjkzpjqfbaavylapun.supabase.co",
+          "path": "/functions/v1/landing-atrio",
+          "method": "GET",
+          "status": 200,
+          "durationMs": 956,
+          "sinceClickMs": 662
+        },
+        {
+          "origin": "https://mkt.panelbotadmin.com",
+          "path": "/api/client-identity/bootstrap",
+          "method": "POST",
+          "status": 200,
+          "durationMs": 1130,
+          "sinceClickMs": 795
+        },
+        {
+          "origin": "https://mkt.panelbotadmin.com",
+          "path": "/api/template7/prepare",
+          "method": "POST",
+          "status": 200,
+          "durationMs": 587,
+          "sinceClickMs": 1216
+        },
+        {
+          "origin": "https://www.reydeases.fun",
+          "path": "/api/preparations/complete",
+          "method": "POST",
+          "status": 200,
+          "durationMs": 1363,
+          "sinceClickMs": 3094
+        },
+        {
+          "origin": "https://www.reydeases.fun",
+          "path": "/api/preparations/finalize",
+          "method": "POST",
+          "status": 200,
+          "durationMs": 1322,
+          "sinceClickMs": 4415
+        },
+        {
+          "origin": "https://www.reydeases.fun",
+          "path": "/start",
+          "method": "GET",
+          "status": 200,
+          "durationMs": 2162,
+          "sinceClickMs": 6579
+        }
+      ],
+      "advisorResponses": [
+        {
+          "status": 200,
+          "valid": true
+        }
+      ],
+      "errors": [],
+      "beforeClick": {
+        "path": "/l/rey-de-ases-demo/testing",
+        "readyState": "interactive",
+        "buttonDisabled": false,
+        "buttonText": "INGRESAR AHORA",
+        "clickListeners": 1,
+        "namePresent": true,
+        "errorText": "",
+        "identityPending": true,
+        "inlineScripts": 0
+      },
+      "click": {
+        "disabledAtClick": false,
+        "namePresent": true,
+        "eventDispatched": true,
+        "hidden": false,
+        "trace": [
+          {
+            "at": "window",
+            "cancelBubble": false
+          },
+          {
+            "at": "document",
+            "cancelBubble": false
+          }
+        ],
+        "disabledAfterClick": true,
+        "textAfterClick": "Abriendo..."
+      },
+      "destinationPath": "/casino/list/home",
+      "destinationOrigin": "https://www.reydeases.fun",
+      "ok": true,
+      "customDomainOk": true,
+      "sessionCookies": [
+        {
+          "name": "gw_session",
+          "domain": "www.reydeases.fun",
+          "secure": true,
+          "httpOnly": true
+        }
+      ],
+      "afterClick": {
+        "path": "/casino/list/home",
+        "readyState": "complete",
+        "clickListeners": 0,
+        "namePresent": false,
+        "identityPending": false,
+        "inlineScripts": 0
+      },
+      "observedAt": "2026-10-15T18:38:10.321Z"
+    },
+    {
+      "mode": "access",
+      "sample": 1,
+      "engine": "constructor",
+      "slug": "ases-del-norte-demo",
+      "formReadyMs": 794,
+      "accessSentMs": 380,
+      "accountMs": 4076,
+      "sessionReadyMs": 5360,
+      "destinationMs": 8067,
+      "network": [
+        {
+          "origin": "https://fdkjkzpjqfbaavylapun.supabase.co",
+          "path": "/functions/v1/landing-atrio",
+          "method": "OPTIONS",
+          "status": 200,
+          "durationMs": 147,
+          "sinceClickMs": null
+        },
+        {
+          "origin": "https://mkt.panelbotadmin.com",
+          "path": "/api/client-identity/bootstrap",
+          "method": "POST",
+          "status": 200,
+          "durationMs": 499,
+          "sinceClickMs": 269
+        },
+        {
+          "origin": "https://fdkjkzpjqfbaavylapun.supabase.co",
+          "path": "/functions/v1/landing-atrio",
+          "method": "GET",
+          "status": 200,
+          "durationMs": 609,
+          "sinceClickMs": 378
+        },
+        {
+          "origin": "https://mkt.panelbotadmin.com",
+          "path": "/api/template7/prepare",
+          "method": "POST",
+          "status": 200,
+          "durationMs": 306,
+          "sinceClickMs": 685
+        },
+        {
+          "origin": "https://www.asesdelnorte.online",
+          "path": "/api/preparations/complete",
+          "method": "POST",
+          "status": 200,
+          "durationMs": 2855,
+          "sinceClickMs": 4043
+        },
+        {
+          "origin": "https://www.asesdelnorte.online",
+          "path": "/start",
+          "method": "GET",
+          "status": 200,
+          "durationMs": 1315,
+          "sinceClickMs": 5360
+        }
+      ],
+      "advisorResponses": [
+        {
+          "status": 200,
+          "valid": true
+        }
+      ],
+      "errors": [],
+      "beforeClick": {
+        "path": "/l/ases-del-norte-demo/testing",
+        "readyState": "interactive",
+        "buttonDisabled": false,
+        "buttonText": "INGRESAR AHORA",
+        "clickListeners": 1,
+        "namePresent": true,
+        "errorText": "",
+        "identityPending": true,
+        "inlineScripts": 0
+      },
+      "click": {
+        "disabledAtClick": false,
+        "namePresent": true,
+        "eventDispatched": true,
+        "hidden": false,
+        "trace": [
+          {
+            "at": "window",
+            "cancelBubble": false
+          },
+          {
+            "at": "document",
+            "cancelBubble": false
+          }
+        ],
+        "disabledAfterClick": true,
+        "textAfterClick": "Abriendo..."
+      },
+      "destinationPath": "/jugadores/home.php",
+      "destinationOrigin": "https://www.asesdelnorte.online",
+      "ok": true,
+      "customDomainOk": true,
+      "sessionCookies": [
+        {
+          "name": "ases_gateway_session",
+          "domain": "www.asesdelnorte.online",
+          "secure": true,
+          "httpOnly": true
+        }
+      ],
+      "afterClick": {
+        "path": "/jugadores/home.php",
+        "readyState": "complete",
+        "clickListeners": 0,
+        "namePresent": false,
+        "identityPending": false,
+        "inlineScripts": 0
+      },
+      "observedAt": "2026-10-15T18:38:19.573Z"
+    },
+    {
+      "mode": "access",
+      "sample": 1,
+      "engine": "constructor",
+      "slug": "ganamos-net-demo",
+      "formReadyMs": 705,
+      "accessSentMs": 701,
+      "accountMs": 3630,
+      "sessionReadyMs": 5039,
+      "destinationMs": 7610,
+      "network": [
+        {
+          "origin": "https://fdkjkzpjqfbaavylapun.supabase.co",
+          "path": "/functions/v1/landing-atrio",
+          "method": "OPTIONS",
+          "status": 200,
+          "durationMs": 171,
+          "sinceClickMs": 117
+        },
+        {
+          "origin": "https://mkt.panelbotadmin.com",
+          "path": "/api/client-identity/bootstrap",
+          "method": "POST",
+          "status": 200,
+          "durationMs": 459,
+          "sinceClickMs": 404
+        },
+        {
+          "origin": "https://fdkjkzpjqfbaavylapun.supabase.co",
+          "path": "/functions/v1/landing-atrio",
+          "method": "GET",
+          "status": 200,
+          "durationMs": 770,
+          "sinceClickMs": 699
+        },
+        {
+          "origin": "https://mkt.panelbotadmin.com",
+          "path": "/api/template7/prepare",
+          "method": "POST",
+          "status": 200,
+          "durationMs": 279,
+          "sinceClickMs": 980
+        },
+        {
+          "origin": "https://www.ganamosnet.icu",
+          "path": "/api/preparations/complete",
+          "method": "POST",
+          "status": 200,
+          "durationMs": 2049,
+          "sinceClickMs": 3597
+        },
+        {
+          "origin": "https://www.ganamosnet.icu",
+          "path": "/start",
+          "method": "GET",
+          "status": 200,
+          "durationMs": 1440,
+          "sinceClickMs": 5039
+        }
+      ],
+      "advisorResponses": [
+        {
+          "status": 200,
+          "valid": true
+        }
+      ],
+      "errors": [],
+      "beforeClick": {
+        "path": "/l/ganamos-net-demo/testing",
+        "readyState": "interactive",
+        "buttonDisabled": false,
+        "buttonText": "INGRESAR AHORA",
+        "clickListeners": 1,
+        "namePresent": true,
+        "errorText": "",
+        "identityPending": true,
+        "inlineScripts": 0
+      },
+      "click": {
+        "disabledAtClick": false,
+        "namePresent": true,
+        "eventDispatched": true,
+        "hidden": false,
+        "trace": [
+          {
+            "at": "window",
+            "cancelBubble": false
+          },
+          {
+            "at": "document",
+            "cancelBubble": false
+          }
+        ],
+        "disabledAfterClick": true,
+        "textAfterClick": "Abriendo..."
+      },
+      "destinationPath": "/home",
+      "destinationOrigin": "https://www.ganamosnet.icu",
+      "ok": true,
+      "customDomainOk": true,
+      "sessionCookies": [
+        {
+          "name": "ganamos_net_gateway_session",
+          "domain": "www.ganamosnet.icu",
+          "secure": true,
+          "httpOnly": true
+        }
+      ],
+      "afterClick": {
+        "path": "/home",
+        "readyState": "complete",
+        "clickListeners": 0,
+        "namePresent": false,
+        "identityPending": false,
+        "inlineScripts": 0
+      },
+      "observedAt": "2026-10-15T18:38:28.281Z"
+    },
+    {
+      "mode": "access",
+      "sample": 1,
+      "engine": "constructor",
+      "slug": "multi-skin-demo",
+      "formReadyMs": 543,
+      "accessSentMs": 573,
+      "accountMs": 3348,
+      "sessionReadyMs": 4557,
+      "destinationMs": 7371,
+      "network": [
+        {
+          "origin": "https://fdkjkzpjqfbaavylapun.supabase.co",
+          "path": "/functions/v1/landing-atrio",
+          "method": "OPTIONS",
+          "status": 200,
+          "durationMs": 162,
+          "sinceClickMs": 119
+        },
+        {
+          "origin": "https://mkt.panelbotadmin.com",
+          "path": "/api/client-identity/bootstrap",
+          "method": "POST",
+          "status": 200,
+          "durationMs": 453,
+          "sinceClickMs": 396
+        },
+        {
+          "origin": "https://fdkjkzpjqfbaavylapun.supabase.co",
+          "path": "/functions/v1/landing-atrio",
+          "method": "GET",
+          "status": 200,
+          "durationMs": 630,
+          "sinceClickMs": 571
+        },
+        {
+          "origin": "https://mkt.panelbotadmin.com",
+          "path": "/api/template7/prepare",
+          "method": "POST",
+          "status": 200,
+          "durationMs": 309,
+          "sinceClickMs": 882
+        },
+        {
+          "origin": "https://ganamosnet.global",
+          "path": "/api/preparations/complete",
+          "method": "POST",
+          "status": 200,
+          "durationMs": 2242,
+          "sinceClickMs": 3328
+        },
+        {
+          "origin": "https://ganamosnet.global",
+          "path": "/start",
+          "method": "GET",
+          "status": 200,
+          "durationMs": 1227,
+          "sinceClickMs": 4557
+        }
+      ],
+      "advisorResponses": [
+        {
+          "status": 200,
+          "valid": true
+        }
+      ],
+      "errors": [],
+      "beforeClick": {
+        "path": "/l/multi-skin-demo/testing",
+        "readyState": "interactive",
+        "buttonDisabled": false,
+        "buttonText": "INGRESAR AHORA",
+        "clickListeners": 1,
+        "namePresent": true,
+        "errorText": "",
+        "identityPending": true,
+        "inlineScripts": 0
+      },
+      "click": {
+        "disabledAtClick": false,
+        "namePresent": true,
+        "eventDispatched": true,
+        "hidden": false,
+        "trace": [
+          {
+            "at": "window",
+            "cancelBubble": false
+          },
+          {
+            "at": "document",
+            "cancelBubble": false
+          }
+        ],
+        "disabledAfterClick": true,
+        "textAfterClick": "Abriendo..."
+      },
+      "destinationPath": "/home",
+      "destinationOrigin": "https://ganamosnet.global",
+      "ok": true,
+      "customDomainOk": true,
+      "sessionCookies": [
+        {
+          "name": "multi_skin_gateway_session",
+          "domain": "ganamosnet.global",
+          "secure": true,
+          "httpOnly": true
+        }
+      ],
+      "afterClick": {
+        "path": "/home",
+        "readyState": "complete",
+        "clickListeners": 0,
+        "namePresent": false,
+        "identityPending": false,
+        "inlineScripts": 0
+      },
+      "observedAt": "2026-10-15T18:38:36.620Z"
+    },
+    {
+      "mode": "access",
+      "sample": 1,
+      "engine": "classic",
+      "slug": "rey-de-ases-demo",
+      "formReadyMs": 1397,
+      "accessSentMs": 508,
+      "accountMs": null,
+      "sessionReadyMs": 4649,
+      "destinationMs": 4649,
+      "network": [
+        {
+          "origin": "https://landing.panelbotadmin.com",
+          "path": "/api/journey-start",
+          "method": "POST",
+          "status": 200,
+          "durationMs": 50,
+          "sinceClickMs": null
+        },
+        {
+          "origin": "https://fdkjkzpjqfbaavylapun.supabase.co",
+          "path": "/functions/v1/landing-atrio",
+          "method": "OPTIONS",
+          "status": 200,
+          "durationMs": 142,
+          "sinceClickMs": 66
+        },
+        {
+          "origin": "https://fdkjkzpjqfbaavylapun.supabase.co",
+          "path": "/functions/v1/landing-atrio",
+          "method": "GET",
+          "status": 200,
+          "durationMs": 579,
+          "sinceClickMs": 502
+        },
+        {
+          "origin": "https://landing.panelbotadmin.com",
+          "path": "/api/track",
+          "method": "POST",
+          "status": 200,
+          "durationMs": 4,
+          "sinceClickMs": 509
+        },
+        {
+          "origin": "https://landing.panelbotadmin.com",
+          "path": "/api/template7/start",
+          "method": "POST",
+          "status": 200,
+          "durationMs": 2118,
+          "sinceClickMs": 2624
+        },
+        {
+          "origin": "https://www.reydeases.fun",
+          "path": "/start",
+          "method": "GET",
+          "status": 303,
+          "durationMs": 2011,
+          "sinceClickMs": 4649
+        }
+      ],
+      "advisorResponses": [
+        {
+          "status": 200,
+          "valid": true
+        }
+      ],
+      "errors": [],
+      "beforeClick": {
+        "path": "/rey-de-ases-demo",
+        "readyState": "loading",
+        "buttonDisabled": false,
+        "buttonText": "INGRESAR AHORA",
+        "clickListeners": 0,
+        "namePresent": true,
+        "errorText": "",
+        "identityPending": false,
+        "inlineScripts": 3
+      },
+      "click": {
+        "disabledAtClick": false,
+        "namePresent": true,
+        "eventDispatched": false,
+        "hidden": false,
+        "trace": [
+          {
+            "at": "window",
+            "cancelBubble": false
+          },
+          {
+            "at": "document",
+            "cancelBubble": true
+          }
+        ],
+        "disabledAfterClick": true,
+        "textAfterClick": "Abriendo..."
+      },
+      "destinationPath": "/casino/list/home",
+      "destinationOrigin": "https://www.reydeases.fun",
+      "ok": true,
+      "customDomainOk": true,
+      "sessionCookies": [
+        {
+          "name": "gw_session",
+          "domain": "www.reydeases.fun",
+          "secure": true,
+          "httpOnly": true
+        }
+      ],
+      "afterClick": {
+        "path": "/casino/list/home",
+        "readyState": "complete",
+        "clickListeners": 0,
+        "namePresent": false,
+        "identityPending": false,
+        "inlineScripts": 0
+      },
+      "observedAt": "2026-10-15T18:38:43.035Z"
+    },
+    {
+      "mode": "access",
+      "sample": 1,
+      "engine": "classic",
+      "slug": "ases-del-norte-demo",
+      "formReadyMs": 1209,
+      "accessSentMs": 423,
+      "accountMs": null,
+      "sessionReadyMs": 5721,
+      "destinationMs": 5721,
+      "network": [
+        {
+          "origin": "https://landing.panelbotadmin.com",
+          "path": "/api/journey-start",
+          "method": "POST",
+          "status": 200,
+          "durationMs": 51,
+          "sinceClickMs": null
+        },
+        {
+          "origin": "https://fdkjkzpjqfbaavylapun.supabase.co",
+          "path": "/functions/v1/landing-atrio",
+          "method": "OPTIONS",
+          "status": 200,
+          "durationMs": 145,
+          "sinceClickMs": 8
+        },
+        {
+          "origin": "https://fdkjkzpjqfbaavylapun.supabase.co",
+          "path": "/functions/v1/landing-atrio",
+          "method": "GET",
+          "status": 200,
+          "durationMs": 552,
+          "sinceClickMs": 413
+        },
+        {
+          "origin": "https://landing.panelbotadmin.com",
+          "path": "/api/track",
+          "method": "POST",
+          "status": 200,
+          "durationMs": 6,
+          "sinceClickMs": 424
+        },
+        {
+          "origin": "https://landing.panelbotadmin.com",
+          "path": "/api/template7/start",
+          "method": "POST",
+          "status": 200,
+          "durationMs": 1272,
+          "sinceClickMs": 1691
+        },
+        {
+          "origin": "https://www.asesdelnorte.online",
+          "path": "/start",
+          "method": "GET",
+          "status": 303,
+          "durationMs": 4016,
+          "sinceClickMs": 5721
+        }
+      ],
+      "advisorResponses": [
+        {
+          "status": 200,
+          "valid": true
+        }
+      ],
+      "errors": [],
+      "beforeClick": {
+        "path": "/ases-del-norte-demo",
+        "readyState": "interactive",
+        "buttonDisabled": false,
+        "buttonText": "INGRESAR AHORA",
+        "clickListeners": 0,
+        "namePresent": true,
+        "errorText": "",
+        "identityPending": false,
+        "inlineScripts": 3
+      },
+      "click": {
+        "disabledAtClick": false,
+        "namePresent": true,
+        "eventDispatched": true,
+        "hidden": false,
+        "trace": [
+          {
+            "at": "window",
+            "cancelBubble": false
+          },
+          {
+            "at": "document",
+            "cancelBubble": false
+          }
+        ],
+        "disabledAfterClick": true,
+        "textAfterClick": "Abriendo..."
+      },
+      "destinationPath": "/jugadores/home.php",
+      "destinationOrigin": "https://www.asesdelnorte.online",
+      "ok": true,
+      "customDomainOk": true,
+      "sessionCookies": [
+        {
+          "name": "ases_gateway_session",
+          "domain": "www.asesdelnorte.online",
+          "secure": true,
+          "httpOnly": true
+        }
+      ],
+      "afterClick": {
+        "path": "/jugadores/home.php",
+        "readyState": "complete",
+        "clickListeners": 0,
+        "namePresent": false,
+        "identityPending": false,
+        "inlineScripts": 0
+      },
+      "observedAt": "2026-10-15T18:38:50.378Z"
+    },
+    {
+      "mode": "access",
+      "sample": 1,
+      "engine": "classic",
+      "slug": "ganamos-net-demo",
+      "formReadyMs": 1271,
+      "accessSentMs": 439,
+      "accountMs": null,
+      "sessionReadyMs": 2695,
+      "destinationMs": 2696,
+      "network": [
+        {
+          "origin": "https://landing.panelbotadmin.com",
+          "path": "/api/journey-start",
+          "method": "POST",
+          "status": 200,
+          "durationMs": 55,
+          "sinceClickMs": null
+        },
+        {
+          "origin": "https://fdkjkzpjqfbaavylapun.supabase.co",
+          "path": "/functions/v1/landing-atrio",
+          "method": "OPTIONS",
+          "status": 200,
+          "durationMs": 127,
+          "sinceClickMs": null
+        },
+        {
+          "origin": "https://fdkjkzpjqfbaavylapun.supabase.co",
+          "path": "/functions/v1/landing-atrio",
+          "method": "GET",
+          "status": 200,
+          "durationMs": 568,
+          "sinceClickMs": 431
+        },
+        {
+          "origin": "https://landing.panelbotadmin.com",
+          "path": "/api/track",
+          "method": "POST",
+          "status": 200,
+          "durationMs": 5,
+          "sinceClickMs": 440
+        },
+        {
+          "origin": "https://landing.panelbotadmin.com",
+          "path": "/api/template7/start",
+          "method": "POST",
+          "status": 200,
+          "durationMs": 1254,
+          "sinceClickMs": 1690
+        },
+        {
+          "origin": "https://www.ganamosnet.icu",
+          "path": "/start",
+          "method": "GET",
+          "status": 303,
+          "durationMs": 992,
+          "sinceClickMs": 2695
+        }
+      ],
+      "advisorResponses": [
+        {
+          "status": 200,
+          "valid": true
+        }
+      ],
+      "errors": [],
+      "beforeClick": {
+        "path": "/ganamos-net-demo",
+        "readyState": "interactive",
+        "buttonDisabled": false,
+        "buttonText": "INGRESAR AHORA",
+        "clickListeners": 0,
+        "namePresent": true,
+        "errorText": "",
+        "identityPending": false,
+        "inlineScripts": 3
+      },
+      "click": {
+        "disabledAtClick": false,
+        "namePresent": true,
+        "eventDispatched": true,
+        "hidden": false,
+        "trace": [
+          {
+            "at": "window",
+            "cancelBubble": false
+          },
+          {
+            "at": "document",
+            "cancelBubble": false
+          }
+        ],
+        "disabledAfterClick": true,
+        "textAfterClick": "Abriendo..."
+      },
+      "destinationPath": "/home",
+      "destinationOrigin": "https://www.ganamosnet.icu",
+      "ok": true,
+      "customDomainOk": true,
+      "sessionCookies": [
+        {
+          "name": "ganamos_net_gateway_session",
+          "domain": "www.ganamosnet.icu",
+          "secure": true,
+          "httpOnly": true
+        }
+      ],
+      "afterClick": {
+        "path": "/home",
+        "readyState": "complete",
+        "clickListeners": 0,
+        "namePresent": false,
+        "identityPending": false,
+        "inlineScripts": 0
+      },
+      "observedAt": "2026-10-15T18:38:54.809Z"
+    },
+    {
+      "mode": "access",
+      "sample": 1,
+      "engine": "classic",
+      "slug": "multi-skin-demo",
+      "formReadyMs": 1047,
+      "accessSentMs": 433,
+      "accountMs": null,
+      "sessionReadyMs": 4128,
+      "destinationMs": 4128,
+      "network": [
+        {
+          "origin": "https://landing.panelbotadmin.com",
+          "path": "/api/journey-start",
+          "method": "POST",
+          "status": 200,
+          "durationMs": 50,
+          "sinceClickMs": null
+        },
+        {
+          "origin": "https://fdkjkzpjqfbaavylapun.supabase.co",
+          "path": "/functions/v1/landing-atrio",
+          "method": "OPTIONS",
+          "status": 200,
+          "durationMs": 127,
+          "sinceClickMs": 12
+        },
+        {
+          "origin": "https://fdkjkzpjqfbaavylapun.supabase.co",
+          "path": "/functions/v1/landing-atrio",
+          "method": "GET",
+          "status": 200,
+          "durationMs": 540,
+          "sinceClickMs": 424
+        },
+        {
+          "origin": "https://landing.panelbotadmin.com",
+          "path": "/api/track",
+          "method": "POST",
+          "status": 200,
+          "durationMs": 5,
+          "sinceClickMs": 433
+        },
+        {
+          "origin": "https://landing.panelbotadmin.com",
+          "path": "/api/template7/start",
+          "method": "POST",
+          "status": 200,
+          "durationMs": 1685,
+          "sinceClickMs": 2115
+        },
+        {
+          "origin": "https://ganamosnet.global",
+          "path": "/start",
+          "method": "GET",
+          "status": 303,
+          "durationMs": 1997,
+          "sinceClickMs": 4128
+        }
+      ],
+      "advisorResponses": [
+        {
+          "status": 200,
+          "valid": true
+        }
+      ],
+      "errors": [],
+      "beforeClick": {
+        "path": "/multi-skin-demo",
+        "readyState": "interactive",
+        "buttonDisabled": false,
+        "buttonText": "INGRESAR AHORA",
+        "clickListeners": 0,
+        "namePresent": true,
+        "errorText": "",
+        "identityPending": false,
+        "inlineScripts": 3
+      },
+      "click": {
+        "disabledAtClick": false,
+        "namePresent": true,
+        "eventDispatched": true,
+        "hidden": false,
+        "trace": [
+          {
+            "at": "window",
+            "cancelBubble": false
+          },
+          {
+            "at": "document",
+            "cancelBubble": false
+          }
+        ],
+        "disabledAfterClick": true,
+        "textAfterClick": "Abriendo..."
+      },
+      "destinationPath": "/home",
+      "destinationOrigin": "https://ganamosnet.global",
+      "ok": true,
+      "customDomainOk": true,
+      "sessionCookies": [
+        {
+          "name": "multi_skin_gateway_session",
+          "domain": "ganamosnet.global",
+          "secure": true,
+          "httpOnly": true
+        }
+      ],
+      "afterClick": {
+        "path": "/home",
+        "readyState": "complete",
+        "clickListeners": 0,
+        "namePresent": false,
+        "identityPending": false,
+        "inlineScripts": 0
+      },
+      "observedAt": "2026-10-15T18:39:00.408Z"
+    }
+  ]
+}
