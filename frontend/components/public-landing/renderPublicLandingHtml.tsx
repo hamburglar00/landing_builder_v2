@@ -6,6 +6,7 @@ import AtrioPrewarmScript from "./AtrioPrewarmScript";
 import { TEMPLATE7_CRITICAL_CSS } from "./publicLandingCss";
 import { buildTemplate7FastRuntime } from "./template7FastRuntime";
 import { optimizeTemplate7Images } from "../../lib/landing/template7Images";
+import { gatewayOriginFor } from "../../lib/reyDeAses/gatewayOrigins";
 import {
   buildPixelInitScript,
   buildPixelNoscript,
@@ -151,14 +152,7 @@ function buildPreloadLinks(config: PublicLandingConfig) {
 
 function template7GatewayOrigin(config: PublicLandingConfig): string {
   if (config.layout?.template !== 7) return "";
-  const provider = config.tracking?.target_provider;
-  const raw = provider === "multi_skin"
-    ? process.env.MULTI_SKIN_GATEWAY_ORIGIN
-    : provider === "ases_del_norte"
-      ? process.env.ASES_DEL_NORTE_GATEWAY_ORIGIN
-      : provider === "ganamos_net"
-        ? process.env.GANAMOS_NET_GATEWAY_ORIGIN
-      : process.env.REY_GATEWAY_ORIGIN;
+  const raw = gatewayOriginFor(config.tracking?.target_provider, config.tracking?.skin_code);
   try {
     const url = new URL(raw || "");
     return url.protocol === "https:" ? url.origin : "";

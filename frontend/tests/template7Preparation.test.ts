@@ -199,6 +199,16 @@ test("prepare valida formato y fija lb_cid HttpOnly cuando falta", async () => {
   assert.match(invalid.headers.get("Set-Cookie") || "", /^lb_cid=[0-9a-f-]+; Max-Age=63072000; Path=\/; HttpOnly;/);
 });
 
+test("prepare dirige Ganamos+ a su dominio y conserva el origen general de Multi Skin", async () => {
+  const response = await handleTemplate7Prepare(new Request("https://mkt.example.com/api/template7/prepare", {
+    method: "POST", headers: { "Content-Type": "application/json", Cookie: `lb_cid=${deviceId}` },
+    body: JSON.stringify({ ...payload, attribution: { target_provider: "multi_skin", skin_code: "ganamos_plus" } }),
+  }), { ...env, MULTI_SKIN_GATEWAY_ORIGIN: "https://shared.example.workers.dev", GANAMOS_PLUS_GATEWAY_ORIGIN: "https://ganamosnet.global" }, now);
+  assert.equal(response.status, 200);
+  const body = await response.json() as { handoff_url: string };
+  assert.equal(new URL(body.handoff_url).origin, "https://ganamosnet.global");
+});
+
 test("prepare dirige ganamos_net exclusivamente al gateway configurado", async () => {
   const response = await handleTemplate7Prepare(new Request("https://mkt.example.com/api/template7/prepare", {
     method: "POST",

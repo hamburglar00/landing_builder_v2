@@ -18,6 +18,12 @@ const pending = new Set(), requests = new Map(), results = [];
 let current;
 const pause = ms => new Promise(resolve => setTimeout(resolve, ms));
 const providers = ['rey-de-ases-demo', 'ases-del-norte-demo', 'ganamos-net-demo', 'multi-skin-demo'];
+const customOrigins = {
+  'rey-de-ases-demo': 'https://www.reydeases.fun',
+  'ases-del-norte-demo': 'https://www.asesdelnorte.online',
+  'ganamos-net-demo': 'https://www.ganamosnet.icu',
+  'multi-skin-demo': 'https://ganamosnet.global',
+};
 const probeProviders = (process.env.T7_PROBE_PROVIDERS || 'rey-de-ases-demo').split(',');
 assert.ok(probeProviders.every(slug=>providers.includes(slug)));
 const relevant = path => path.startsWith('/api/') || path === '/functions/v1/landing-atrio' || path === '/start';
@@ -48,6 +54,7 @@ browser.on('Fetch.requestPaused', event => task((async () => {
   if (destination) {
     snapshot.destinationMs = Date.now() - snapshot.clickedAt;
     snapshot.destinationPath = url.pathname;
+    snapshot.destinationOrigin = url.origin;
   }
   const intercept = telemetry || destination || event.resourceType === 'Subdocument'
     || (event.request.method === 'POST' && !access) || (mode === 'probe' && entry);
@@ -63,7 +70,7 @@ browser.on('Fetch.requestPaused', event => task((async () => {
   });
 })()));
 function recordResponse(request, response, timestamp) {
-  const row = { path: request.path, method: request.method, status: response.status,
+  const row = { origin: request.origin, path: request.path, method: request.method, status: response.status,
     durationMs: Math.round((timestamp - request.at) * 1000),
     sinceClickMs: request.snapshot.clickedAt ? Date.now() - request.snapshot.clickedAt : null };
   request.snapshot.network.push(row);
@@ -79,7 +86,7 @@ browser.on('Network.requestWillBeSent', event => {
   }
   const path = new URL(event.request.url).pathname;
   if (current && relevant(path)) requests.set(event.requestId, {
-    path, method: event.request.method, at: event.timestamp, snapshot: current,
+    origin: new URL(event.request.url).origin, path, method: event.request.method, at: event.timestamp, snapshot: current,
   });
 });
 browser.on('Network.responseReceived', event => {
@@ -189,6 +196,17 @@ try {
       const expected = slug === 'rey-de-ases-demo' ? '/casino/list/home' : slug === 'ases-del-norte-demo' ? '/jugadores/home.php' : '/home';
       current.ok = mode === 'probe' ? current.accessSentMs !== null
         : current.destinationPath === expected && current.sessionReadyMs !== null;
+      if (mode === 'access' && process.env.T7_GATEWAY_DOMAIN_CHECK === 'true') {
+        const expectedOrigin = customOrigins[slug];
+        const starts = current.network.filter(row => row.path === '/start');
+        current.customDomainOk = current.destinationOrigin === expectedOrigin && starts.length > 0
+          && starts.every(row => row.origin === expectedOrigin);
+        const { cookies } = await browser.send('Network.getCookies', { urls: [expectedOrigin] });
+        current.sessionCookies = cookies.filter(cookie => /gateway_session|^gw_session$/.test(cookie.name))
+          .map(cookie => ({ name: cookie.name, domain: cookie.domain, secure: cookie.secure, httpOnly: cookie.httpOnly }));
+        current.customDomainOk &&= current.sessionCookies.some(cookie => cookie.secure && cookie.httpOnly);
+        current.ok &&= current.customDomainOk;
+      }
       current.afterClick = await inspectForm();
       if (mode === 'probe' && current.ok) delete current.uiError; // expected injected 503
       current.observedAt = new Date().toISOString();

@@ -1,6 +1,7 @@
 import type { AssignedAdvisor, Api2ResolveAccountRequest, HandoffResult, LinkedProviderAccount, TargetAccount, ResolvedPlayer, PlayerResolveRequest } from "./contracts";
 import type { MultiSkinCode, TargetProvider } from "../landing/types";
 import { isDeviceId } from "./clientIdentity.server";
+import { gatewayOriginFor } from "./gatewayOrigins";
 
 export class TargetIntegrationError extends Error {
   constructor(public readonly code: "integration_pending" | "upstream_unavailable") {
@@ -69,13 +70,6 @@ export function gatewayReadiness(provider: TargetProvider): "integration_pending
   if (provider === "ases_del_norte" && !process.env.ASES_DEL_NORTE_GATEWAY_ORIGIN) return "integration_pending";
   if (provider === "ganamos_net" && !process.env.GANAMOS_NET_GATEWAY_ORIGIN) return "integration_pending";
   return null;
-}
-
-function gatewayOrigin(provider: TargetProvider): string | undefined {
-  if (provider === "multi_skin") return process.env.MULTI_SKIN_GATEWAY_ORIGIN;
-  if (provider === "ases_del_norte") return process.env.ASES_DEL_NORTE_GATEWAY_ORIGIN;
-  if (provider === "ganamos_net") return process.env.GANAMOS_NET_GATEWAY_ORIGIN;
-  return process.env.REY_GATEWAY_ORIGIN;
 }
 
 function gatewayApiKey(provider: TargetProvider, testing: boolean): string | undefined {
@@ -223,7 +217,7 @@ export async function createProviderHandoff(
   testing = false,
   promoCode?: string,
 ): Promise<HandoffResult> {
-  const origin = configuredOrigin(gatewayOrigin(provider));
+  const origin = configuredOrigin(gatewayOriginFor(provider, skinCode));
   const credentialsRequired = !testing || provider === "rey_de_ases";
   if (player.target_provider !== provider || !isDeviceId(player.player_provider_account_id) ||
       account.platform !== provider || (provider === "multi_skin" && !skinCode) ||
