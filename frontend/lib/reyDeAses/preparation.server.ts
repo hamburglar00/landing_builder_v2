@@ -377,6 +377,9 @@ export async function handleTemplate7PreparationAccount(
         return json({
           username: prepared.account.username,
           continuation_token: continuationToken,
+          // Bypass providers already issued and linked this handoff to obtain
+          // the username. Let capable gateways use it without another round trip.
+          ...(prepared.completedHandoff ? { handoff_url: prepared.completedHandoff.handoff_url } : {}),
         }, 200);
       },
     );
