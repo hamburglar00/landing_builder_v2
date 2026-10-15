@@ -1,6 +1,6 @@
 {
   "date": "2026-10-15",
-  "verifiedAt": "2026-10-15T18:39:38.454Z",
+  "verifiedAt": "2026-10-15T18:44:22.668Z",
   "status": "complete",
   "domains": {
     "rey_de_ases": "https://www.reydeases.fun",
@@ -33,7 +33,8 @@
     "landing-autologuin": "da3fb6b0acac29e6fe4b869d49b2abaf3109ae5e",
     "ases-gateway": "9318222fbd71602a0cdf89a2b1278eb702e8cf0e",
     "ganamos-gateway": "e45fbe7f22df298965e14b071e2429db35beb92c",
-    "multi-skin-gateway": "ebec20f74ff3a3f5b2aa216ad2456c619a0465f2"
+    "multi-skin-gateway": "ebec20f74ff3a3f5b2aa216ad2456c619a0465f2",
+    "internal-chat": "c2e7143340f2709b75c0d75aaf8c495976d080ff"
   },
   "productionDeployments": [
     {
@@ -70,6 +71,13 @@
       "id": "dpl_5nBjAoRdSamMoxLAhL99SASW1sf5",
       "state": "READY",
       "url": "landing-builder-v2-k259-9jr57wpym-juanclouds-projects.vercel.app"
+    },
+    {
+      "component": "internal-chat",
+      "host": "www.atrio.website",
+      "id": "dpl_Ft54vhqSiUF23biNJtTqNV195So2",
+      "state": "READY",
+      "url": "internal-chat-fsamf7m30-juanclouds-projects.vercel.app"
     }
   ],
   "cloudflare": {
@@ -1056,5 +1064,49 @@
       },
       "observedAt": "2026-10-15T18:39:00.408Z"
     }
-  ]
+  ],
+  "chatIntegration": {
+    "status": "complete",
+    "productionConfigurationVerified": true,
+    "credentialOrigin": "https://www.reydeases.fun",
+    "originValidation": {
+      "previous": [
+        "https://reydeases-gateway.vercel.app",
+        "https://multi-skin-gateway.vercel.app",
+        "https://multi-skin-gateway.meta-ip-collector.workers.dev",
+        "https://ases-del-norte-gateway.vercel.app",
+        "https://ganamos-net-gateway.vercel.app"
+      ],
+      "added": [
+        "https://www.reydeases.fun",
+        "https://reydeases.fun",
+        "https://www.asesdelnorte.online",
+        "https://asesdelnorte.online",
+        "https://www.ganamosnet.icu",
+        "https://ganamosnet.icu",
+        "https://ganamosnet.global"
+      ],
+      "allowed": [
+        "https://reydeases-gateway.vercel.app",
+        "https://multi-skin-gateway.vercel.app",
+        "https://multi-skin-gateway.meta-ip-collector.workers.dev",
+        "https://ases-del-norte-gateway.vercel.app",
+        "https://ganamos-net-gateway.vercel.app",
+        "https://www.reydeases.fun",
+        "https://reydeases.fun",
+        "https://www.asesdelnorte.online",
+        "https://asesdelnorte.online",
+        "https://www.ganamosnet.icu",
+        "https://ganamosnet.icu",
+        "https://ganamosnet.global"
+      ],
+      "allowedOrigins": 12,
+      "validEmbedTokens": 12,
+      "rejectedUntrustedOrigins": 2,
+      "rejectedTamperedToken": true,
+      "productionSecretUsed": false,
+      "verifiedAt": "2026-10-15T18:43:13.970Z"
+    },
+    "scope": "Verified the deployed origin allowlist and local signed embed-token contract against that exact configuration. Existing origins retained. No chat messages, database writes or real push subscriptions were sent by this check."
+  }
 }
