@@ -9,6 +9,7 @@ export type RevalidationBackend = {
   authenticate: (token: string) => Promise<Actor | null>;
   landing: (actor: Actor, token: string, id: string) => Promise<AuthorizedLanding | null>;
   secret: () => Promise<string>;
+  prepareAssets?: (actor: Actor, token: string, landing: AuthorizedLanding) => Promise<void>;
 };
 type Dependencies = {
   environment: RevalidationEnvironment;
@@ -76,6 +77,9 @@ export async function handlePanelRevalidation(request: Request, dependencies: De
     const secret = await dependencies.backend.secret();
     if (!secret) return denied(503, "not_configured");
     assertLocalSyntheticSecret(dependencies.environment, secret);
+    if (action.action === "publish" && dependencies.backend.prepareAssets) {
+      await dependencies.backend.prepareAssets(actor, token, landing);
+    }
     const result = await dependencies.send(destination, landing.name, secret);
     if (!result.ok || !result.revalidated) return denied(502, "upstream_failed");
     // Construct a fresh projection even if a transport accidentally returns extra fields.

@@ -3,6 +3,7 @@ import { createClient } from "@supabase/supabase-js";
 import { isIP } from "node:net";
 import type { RevalidationEnvironment } from "./catalog.server";
 import type { Actor, RevalidationBackend } from "./service.server";
+import { warmTemplate7Images } from "../landing/warmTemplate7Images.server";
 
 export function revalidationBackend(environment: RevalidationEnvironment, env: NodeJS.ProcessEnv): RevalidationBackend {
   const address = env.SUPABASE_URL || env.NEXT_PUBLIC_SUPABASE_URL;
@@ -43,6 +44,17 @@ export function revalidationBackend(environment: RevalidationEnvironment, env: N
       if (error || !data || typeof data.id !== "string" || typeof data.user_id !== "string"
         || typeof data.name !== "string" || !["classic", "constructor"].includes(data.publish_target)) return null;
       return { id: data.id, user_id: data.user_id, name: data.name, publish_target: data.publish_target };
+    },
+    async prepareAssets(actor, token, landing) {
+      // Use the caller's RLS scope, not the service role, for the saved image URLs.
+      let query = client(anon, token).from("landings").select("config, landing_config").eq("id", landing.id);
+      if (actor.role !== "admin") query = query.eq("user_id", actor.id);
+      const { data, error } = await query.maybeSingle();
+      if (error || !data) return;
+      const result = await warmTemplate7Images(data, url.origin);
+      if (result.total && result.ready !== result.total) {
+        console.warn("[template7_assets] partial prewarm", result);
+      }
     },
     async secret() {
       const { data, error } = await client(service).from("settings")

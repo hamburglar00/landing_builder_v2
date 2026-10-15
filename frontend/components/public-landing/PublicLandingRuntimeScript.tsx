@@ -63,7 +63,7 @@ function escapeScriptJson(value: unknown) {
   });
 }
 
-function buildRuntimeConfig({ slug, config }: Props) {
+export function buildRuntimeConfig({ slug, config }: Props) {
   const runtimeConfig = {
     slug,
     landingId: config.id,

@@ -2805,3 +2805,9 @@ body.public-lead-capture-open {
 .public-landing.template7:focus-within { height: auto; min-height: 100svh; overflow: visible; }
 .public-landing.template7:focus-within .template7__card { max-height: none; }
 `;
+
+// Use the exact existing rules, so the fast path cannot drift visually.
+// Templates 1-6 continue using their immutable stylesheet unchanged.
+export const TEMPLATE7_CRITICAL_CSS =
+  PUBLIC_LANDING_CSS.slice(0, PUBLIC_LANDING_CSS.indexOf("body.public-lead-capture-open")) +
+  PUBLIC_LANDING_CSS.slice(PUBLIC_LANDING_CSS.indexOf(".public-landing.template7 {"));

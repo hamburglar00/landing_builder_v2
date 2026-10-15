@@ -27,6 +27,7 @@ export type PublicLandingConfig = {
   background?: {
     mode: "single" | "rotating";
     images: string[];
+    imagesOriginal?: string[];
     imagesResponsive?: Array<{
       mobile: string;
       tablet: string;
@@ -36,6 +37,8 @@ export type PublicLandingConfig = {
   };
   content?: {
     logoUrl: string;
+    logoSrcSet?: string;
+    logoOriginalUrl?: string;
     title: string[];
     subtitle: string[];
     footerBadgeText?: string;

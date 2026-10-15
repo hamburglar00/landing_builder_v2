@@ -1,5 +1,26 @@
 # Template 7: integración y demo
 
+## Carga inicial: primera etapa de optimización
+
+Template 7 entrega el formulario, CSS crítico y runtime en el HTML inicial. No espera a un stylesheet o runtime externos ni a la hidratación de React para aceptar el nombre. El prewarm de asesor comienza antes de descubrir imágenes; el constructor inicia en paralelo su identidad HttpOnly. Si el CTA se toca antes de resolver esa identidad, espera la promesa existente antes de enviar, sin duplicar solicitudes. Los templates 1–6 conservan su renderer y recursos anteriores.
+
+Las imágenes públicas de `landing-images` usan derivados de Supabase Storage: logo en densidades 1x/2x/3x y fondos de 640/1024/1600 px. Se conserva la URL original en la configuración del editor, proporciones y transparencia. La publicación autorizada prepara los derivados con tres descargas simultáneas y un límite total de ocho segundos. Si falla una transformación, la página intenta el original. Las landings ya publicadas reciben este comportamiento cuando se regenera su HTML, sin volver a subir imágenes; no se modifican los límites de subida existentes ni URLs privadas o externas. No requiere migración.
+
+El motor clásico comparte el renderer público generado desde este repositorio, pero conserva `/api/template7/start` y su identidad de dispositivo. Después de cambiar el renderer, desde la raíz de `landing-builder` ejecutar:
+
+```sh
+node scripts/build-classic-template7.mjs --write
+node scripts/build-classic-template7.mjs
+```
+
+El segundo comando verifica paridad con `../landing-prueba-1/lib/template7/shared.cjs`. Ese archivo es código de servidor: no se descarga completo en el navegador. Ambas aplicaciones incluyen una copia local versionada del SDK público de parámetros de Meta.
+
+Validación: `npm test` y `npm run build` en ambos motores; desde `frontend`, `npx tsx scripts/template7-browser-check.ts` prueba los cuatro proveedores en ambos motores con red interceptada, una sola emisión de Contact y el mismo `event_id` de Pixel/CAPI. Desde la raíz, `node scripts/phase0/template7-classic-smoke.mjs` comprueba un build clásico local en el puerto 3093 con sus chunks demorados. Estas pruebas no crean jugadores ni envían conversiones reales.
+
+Esta etapa no cambia la creación de cuentas, los endpoints de los gateways ni el flag de API2. La reducción adicional de llamadas de orquestación y la comparación de tiempos reales de creación/ingreso quedan para las siguientes etapas. Los tiempos de las pruebas con demoras artificiales no son un benchmark de producción.
+
+## Flujo de creación e ingreso
+
 La landing normal usa `/l/{slug}`. El CTA llama primero a `/api/template7/prepare`, que solo crea un pase opaco de cinco minutos y redirige inmediatamente a la pantalla `/prepare` del gateway. Esa pantalla solicita la cuenta por el canal privado, muestra únicamente el nombre de usuario y dispara enseguida la finalización en segundo plano. Mientras la persona lee o copia el usuario, Landing Builder vincula la cuenta en Atrio, crea el handoff y el gateway inicia sesión contra el proveedor para instalar su cookie HttpOnly. El CTA `Continuar` entra de inmediato si la sesión ya está lista; si se toca antes, conserva la transición anterior hasta terminar. Sin interacción, ingresa automáticamente una vez que todo está listo y transcurrieron al menos cuatro segundos desde que apareció el usuario. La creación real queda detrás de `TEMPLATE7_API2_PLAYER_CREATION_ENABLED=true` y usa el endpoint idempotente de API2 identificado por `advisor_id`; con el flag apagado responde `integration_pending`. Nunca usa las credenciales demo por un error de API2.
 
 **Paridad obligatoria:** cualquier proveedor, contrato, campo de atribucion o comportamiento nuevo de Template 7 debe implementarse y probarse tanto en este motor constructor como en el motor clasico de `public_landing_bl`. La matriz vigente es `rey_de_ases`, `multi_skin`, `ases_del_norte` y `ganamos_net`; no se considera terminado un cambio si uno de los dos motores queda atrasado.

@@ -3,6 +3,9 @@ import PublicLandingRuntimeScript from "./PublicLandingRuntimeScript";
 import Template7DemoRuntimeScript from "./Template7DemoRuntimeScript";
 import { buildClientIdentityBootstrapScript } from "./clientIdentityBootstrapScript";
 import AtrioPrewarmScript from "./AtrioPrewarmScript";
+import { TEMPLATE7_CRITICAL_CSS } from "./publicLandingCss";
+import { buildTemplate7FastRuntime } from "./template7FastRuntime";
+import { optimizeTemplate7Images } from "../../lib/landing/template7Images";
 import {
   buildPixelInitScript,
   buildPixelNoscript,
@@ -110,6 +113,12 @@ function buildImageSrcSet(image?: ResponsiveImage) {
 }
 
 function buildPreloadLinks(config: PublicLandingConfig) {
+  if (config.layout?.template === 7) {
+    const logo = config.content;
+    return logo?.logoUrl
+      ? `<link rel="preload" as="image" href="${escapeHtml(logo.logoUrl)}"${attr("imagesrcset", logo.logoSrcSet)} fetchpriority="high">`
+      : "";
+  }
   if (config.layout?.template === 6) {
     const firstImage = config.content?.template6?.backgroundImageUrl || config.content?.template6?.cards?.[0]?.imageUrl || "";
     return firstImage
@@ -357,7 +366,7 @@ function renderFrameBackgroundTemplate7(config: PublicLandingConfig) {
   const { currentImage, rotationImages, srcSet, rotateEveryHours } = getResponsiveBackgroundData(config);
   if (!currentImage) return "";
 
-  return `<img src="${escapeHtml(currentImage)}"${attr(
+  return `<img src="${escapeHtml(currentImage)}"${attr("data-image-fallback", config.background?.imagesOriginal?.[0])} onerror="this.onerror=null;this.removeAttribute('srcset');if(this.dataset.imageFallback)this.src=this.dataset.imageFallback"${attr(
     "srcset",
     srcSet,
   )} sizes="100vw" alt="" class="template7__background-image"${attr(
@@ -367,7 +376,7 @@ function renderFrameBackgroundTemplate7(config: PublicLandingConfig) {
     JSON.stringify(rotationImages),
   )}" data-public-landing-rotate-hours="${escapeHtml(
     rotateEveryHours,
-  )}" loading="eager" fetchpriority="high" decoding="async" width="1600" height="900">`;
+  )}" loading="eager" fetchpriority="low" decoding="async" width="1600" height="900">`;
 }
 
 function renderWhatsAppButton(
@@ -537,7 +546,7 @@ function renderTemplate7({ config }: RenderParams) {
 
   return `<main class="public-landing template7">${renderFrameBackgroundTemplate7(config)}<div class="template7__veil"></div><section class="template7__card">${
     hasLogo
-      ? `<img src="${escapeHtml(config.content?.logoUrl)}" alt="${escapeHtml(config.name)}" class="template7__logo" decoding="async" fetchpriority="high">`
+      ? `<img src="${escapeHtml(config.content?.logoUrl)}"${attr("srcset", config.content?.logoSrcSet)}${attr("data-image-fallback", config.content?.logoOriginalUrl)} onerror="this.onerror=null;this.removeAttribute('srcset');if(this.dataset.imageFallback)this.src=this.dataset.imageFallback" alt="${escapeHtml(config.name)}" class="template7__logo" decoding="async" fetchpriority="high">`
       : ""
   }<h1 class="template7__title"${styleAttr({
     color: config.colors?.title ?? "#FFFFFF",
@@ -679,6 +688,7 @@ function renderTemplate(params: RenderParams) {
 }
 
 export function renderPublicLandingHtml(params: RenderParams) {
+  params = { ...params, config: optimizeTemplate7Images(params.config) };
   const { slug, config, cachedPhone, canonicalUrl, demoMode = false } = params;
   const isTemplate7 = config.layout?.template === 7;
   const pixelId = demoMode ? "" : String(config.tracking?.pixelId || "").trim().replace(/\D+/g, "");
@@ -700,7 +710,9 @@ export function renderPublicLandingHtml(params: RenderParams) {
     : "";
   const runtimeScript = demoMode
     ? renderScriptElement(Template7DemoRuntimeScript({ slug, config }))
-    : `${renderScriptElement(PublicLandingRuntimeScript({ slug, config }))}<script src="/public-assets/landing-runtime-v3.js" defer></script>`;
+    : isTemplate7
+      ? `<script>${buildTemplate7FastRuntime(slug, config)}</script>`
+      : `${renderScriptElement(PublicLandingRuntimeScript({ slug, config }))}<script src="/public-assets/landing-runtime-v3.js" defer></script>`;
   const template7PlaceholderScript = isTemplate7
     ? `<script>(()=>{const input=document.querySelector('[data-template7-name]');if(!input)return;const names=${JSON.stringify(TEMPLATE7_EXAMPLE_NAMES)};input.placeholder='Ej.: '+names[Math.floor(Math.random()*names.length)];})();</script>`
     : "";
@@ -723,7 +735,7 @@ export function renderPublicLandingHtml(params: RenderParams) {
     pixelId
       ? '<link rel="preconnect" href="https://www.facebook.com"><link rel="preconnect" href="https://connect.facebook.net">'
       : ""
-  }${buildPreloadLinks(config)}<link rel="stylesheet" href="/public-assets/landing-styles-v3.css">${phonePrewarmScript}${atrioPrewarmScript}${demoMode ? '<meta name="robots" content="noindex,nofollow">' : ""}${isTemplate7 ? buildClientIdentityBootstrapScript() : ""}${pixelScriptForTemplate(
+  }${isTemplate7 ? atrioPrewarmScript + buildClientIdentityBootstrapScript() : ""}${buildPreloadLinks(config)}${isTemplate7 ? `<style data-template7-critical>${TEMPLATE7_CRITICAL_CSS}</style>` : '<link rel="stylesheet" href="/public-assets/landing-styles-v3.css">'}${phonePrewarmScript}${demoMode ? '<meta name="robots" content="noindex,nofollow">' : ""}${pixelScriptForTemplate(
     pixelId,
     slug,
     config.tracking?.phoneCountryCode || "54",
@@ -731,4 +743,11 @@ export function renderPublicLandingHtml(params: RenderParams) {
   )}</head><body>${buildPixelNoscript(pixelId)}${renderTemplate(params)}${template7PlaceholderScript}${renderPrivacyFooter(
     config,
   )}${runtimeScript}</body></html>`;
+}
+
+/** Classic keeps its existing start endpoint/identity, but no longer waits for React. */
+export function renderClassicTemplate7InlineHtml(params: RenderParams, deviceIdScript: string) {
+  const config = optimizeTemplate7Images(params.config);
+  const pixelId = String(config.tracking?.pixelId || "").trim().replace(/\D+/g, "");
+  return `${renderScriptElement(AtrioPrewarmScript({ slug: params.slug }))}${buildPreloadLinks(config)}<style data-template7-critical>${TEMPLATE7_CRITICAL_CSS}</style>${pixelScriptForTemplate(pixelId, params.slug, config.tracking?.phoneCountryCode || "54", 7)}${buildPixelNoscript(pixelId)}${renderTemplate7({ ...params, config })}${renderPrivacyFooter({ ...config, layout: { ...config.layout, template: 0 } })}<script>${buildTemplate7FastRuntime(params.slug, config, deviceIdScript)}</script>`;
 }

@@ -80,7 +80,8 @@ test("la plantilla 7 publica un formulario de nombre con asesor de Atrio", () =>
   assert.doesNotMatch(main, /Badge siete/);
   assert.doesNotMatch(main, /data-inline-email-input/);
   assert.doesNotMatch(main, /data-public-landing-social-proof/);
-  assert.match(html, /imagesizes="100vw"/);
+  assert.match(html, /sizes="100vw"/);
+  assert.doesNotMatch(html, /rel="preload"[^>]+fondo\.jpg/);
   assert.match(source, /processCtaClick\(button, \{ firstName: firstName, phone: normalizedWhatsapp \}\)/);
   assert.match(source, /formFn = hasLeadCaptureForm && \(cfg.template === 7 \|\| captureFields.firstName\)/);
   assert.match(source, /var redirectUrl = gatewayMode \? "" : atrioMode/);
@@ -176,7 +177,7 @@ test("Template 7 inicia bootstrap antes del Pixel y conserva Contact sin duplica
   const html = renderPublicLandingHtml({ slug: "prueba-7", config: built as PublicLandingConfig });
   const bootstrapAt = html.indexOf('fetch("/api/client-identity/bootstrap"');
   const pixelAt = html.indexOf("fbq('track', 'PageView')");
-  const runtimeAt = html.indexOf('/public-assets/landing-runtime-v3.js');
+  const runtimeAt = html.indexOf('window.__PUBLIC_LANDING_RUNTIME_CONFIG__=');
   assert.ok(bootstrapAt > 0 && bootstrapAt < pixelAt && pixelAt < runtimeAt);
   assert.match(publicRuntime, /recordLandingJourneyStart\(\);/);
   assert.equal(html.match(/fbq\('track', 'PageView'\)/g)?.length, 1);
