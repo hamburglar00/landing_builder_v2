@@ -53,19 +53,33 @@ browser.on('Fetch.requestPaused', event => {
   pending.add(task); void task.finally(() => pending.delete(task));
 });
 const requests = new Map();
+function recordResponse(request, response, timestamp) {
+  request.snapshot?.stages.push({ path: request.path, status: response.status, durationMs: Math.round((timestamp-request.at)*1000) });
+  if (request.path === '/start' && (response.status === 200 || (response.status >= 300 && response.status < 400)) && request.snapshot?.clickedAt) {
+    request.snapshot.sessionReadyMs = Date.now()-request.snapshot.clickedAt;
+  }
+}
 browser.on('Network.requestWillBeSent', event => {
+  // Navigations report a redirect here, not through responseReceived. Record
+  // /start before the intercepted destination can finish the current sample.
+  const redirected = requests.get(event.requestId);
+  if (event.redirectResponse && redirected) {
+    recordResponse(redirected, event.redirectResponse, event.timestamp);
+    requests.delete(event.requestId);
+  }
   const url = new URL(event.request.url);
   if (/^\/api\/(template7\/(prepare|start)|preparations\/(complete|finalize))$/.test(url.pathname) || url.pathname === '/start') {
     requests.set(event.requestId, { path: url.pathname, at: event.timestamp, snapshot: current });
   }
 });
 browser.on('Network.responseReceived', event => {
+  const path = new URL(event.response.url).pathname;
+  if (current && path.startsWith('/api/')) {
+    (current.apiResponses ||= []).push({ path, status: event.response.status });
+  }
   const request = requests.get(event.requestId);
   if (!request) return;
-  request.snapshot?.stages.push({ path: request.path, status: event.response.status, durationMs: Math.round((event.timestamp-request.at)*1000) });
-  if (request.path === '/start' && event.response.status === 200 && request.snapshot?.clickedAt) {
-    request.snapshot.sessionReadyMs = Date.now()-request.snapshot.clickedAt;
-  }
+  recordResponse(request, event.response, event.timestamp);
   requests.delete(event.requestId);
 });
 try {
@@ -95,10 +109,19 @@ try {
       await browser.evaluate(`document.querySelector('.template7__cta').click()`);
       for(let i=0;i<450&&!current.destinationMs&&!current.failed;i++) await pause(100);
     } else current.failed = true;
-    current.ok = Boolean(current.destinationMs);
+    const expectedPath = slug === 'rey-de-ases-demo' ? '/casino/list/home'
+      : slug === 'ases-del-norte-demo' ? '/jugadores/home.php' : '/home';
+    current.ok = Boolean(current.destinationMs && current.sessionReadyMs && current.destinationPath === expectedPath && !current.errors.length);
+    if (!current.ok) {
+      try {
+        current.diagnostic = await browser.evaluate(`(()=>{var button=document.querySelector('.template7__cta');return {path:location.pathname,view:document.getElementById('state')?.dataset.view,buttonDisabled:button?.disabled,buttonText:button?.textContent,errorText:document.querySelector('[data-template7-error]')?.textContent,namePresent:Boolean(document.querySelector('[data-template7-name]')?.value),readyState:document.readyState};})()`);
+      } catch {}
+    }
     delete current.clickedAt;
     results.push(current);
     console.log(JSON.stringify(current));
     await writeFile(join(output, `${stage}.json`), JSON.stringify({stage, profile:'390x844 DPR2; normal connection; cold cookies; one existing-demo login per engine/provider; tracking and final destination intercepted', results},null,2));
   }
 } finally { await Promise.all([...pending]); await browser.close(); }
+assert.equal(results.length, 8, 'all engine/provider combinations must be measured');
+assert.ok(results.every(sample => sample.ok), 'every demo must establish a session and reach the expected destination');
