@@ -16,6 +16,7 @@ await mkdir(output, { recursive: true });
 const browser = await chromium();
 const pending = new Set(), requests = new Map(), results = [];
 let current;
+let mainFrameId;
 const pause = ms => new Promise(resolve => setTimeout(resolve, ms));
 const providers = ['rey-de-ases-demo', 'ases-del-norte-demo', 'ganamos-net-demo', 'multi-skin-demo'];
 const customOrigins = {
@@ -45,9 +46,10 @@ browser.on('Fetch.requestPaused', event => task((async () => {
   const url = new URL(event.request.url);
   const entry = accessPost(url.pathname);
   const access = entry || /^\/api\/preparations\/(complete|finalize)$/.test(url.pathname) || url.pathname === '/api/client-identity/bootstrap';
-  const telemetry = /facebook\.(com|net)$/.test(url.hostname) || /google-analytics|googletagmanager|vercel-insights/.test(url.hostname)
+  const telemetry = /facebook\.(com|net)$/.test(url.hostname) || /google-analytics|googletagmanager|vercel-insights|yandex/.test(url.hostname)
     || /\/api\/(track|journey-start)|\/_vercel\/(insights|speed-insights)/.test(url.pathname);
-  const destination = event.resourceType === 'Document' && snapshot?.clickedAt
+  const subframe = event.resourceType === 'Document' && event.frameId !== mainFrameId;
+  const destination = event.resourceType === 'Document' && !subframe && snapshot?.clickedAt
     && !['mkt.panelbotadmin.com', 'landing.panelbotadmin.com'].includes(url.hostname)
     && !['/prepare', '/start'].includes(url.pathname);
   if (entry && snapshot) snapshot.accessSentMs = Date.now() - snapshot.clickedAt;
@@ -56,7 +58,7 @@ browser.on('Fetch.requestPaused', event => task((async () => {
     snapshot.destinationPath = url.pathname;
     snapshot.destinationOrigin = url.origin;
   }
-  const intercept = telemetry || destination || event.resourceType === 'Subdocument'
+  const intercept = telemetry || destination || subframe
     || (event.request.method === 'POST' && !access) || (mode === 'probe' && entry);
   if (!intercept) return browser.send('Fetch.continueRequest', { requestId: event.requestId });
   const script = event.resourceType === 'Script';
@@ -126,8 +128,46 @@ async function inspectForm() {
     })()` });
   return response.result.value;
 }
+
+async function inspectSavedEntry(origin, expectedPath, cookies, slug) {
+  // Omit the public browser marker to verify that direct entry restores it.
+  // Session values stay in memory and are never included in the report.
+  const jar = new Map(cookies.filter(cookie => cookie.name !== 'session').map(cookie => [cookie.name, cookie.value]));
+  const header = () => [...jar].map(([name, value]) => `${name}=${value}`).join('; ');
+  const saved = await fetch(origin + '/', {
+    redirect: 'manual', headers: { accept: 'text/html', cookie: header() }, signal: AbortSignal.timeout(30000),
+  });
+  const location = saved.headers.get('location');
+  const redirected = location ? new URL(location, origin) : null;
+  const setCookies = saved.headers.getSetCookie();
+  for (const cookie of setCookies) {
+    const pair = cookie.split(';', 1)[0], at = pair.indexOf('=');
+    if (at > 0) jar.set(pair.slice(0, at), pair.slice(at + 1));
+  }
+  const markerRequired = ['rey-de-ases-demo', 'ganamos-net-demo'].includes(slug);
+  const markerRestored = setCookies.some(cookie => /^session=.+?;/.test(cookie));
+  const anonymous = await fetch(origin + '/', {
+    redirect: 'manual', headers: { accept: 'text/html' }, signal: AbortSignal.timeout(30000),
+  });
+  const result = {
+    savedStatus: saved.status, destinationOrigin: redirected?.origin, destinationPath: redirected?.pathname,
+    anonymousStatus: anonymous.status, markerRequired, markerRestored,
+  };
+  if (slug === 'rey-de-ases-demo') {
+    const check = await fetch(origin + '/api/user/check', {
+      headers: { cookie: header(), authorization: 'gateway' }, signal: AbortSignal.timeout(30000),
+    });
+    const body = await check.json();
+    result.authCheck = { httpStatus: check.status, providerStatus: body.status };
+  }
+  result.ok = saved.status === 303 && redirected?.origin === origin && redirected?.pathname === expectedPath
+    && anonymous.status === 401 && (!markerRequired || markerRestored)
+    && (!result.authCheck || result.authCheck.httpStatus === 200 && result.authCheck.providerStatus === 0);
+  return result;
+}
 try {
   await browser.send('Page.enable'); await browser.send('Runtime.enable'); await browser.send('Network.enable');
+  mainFrameId = (await browser.send('Page.getFrameTree')).frameTree.frame.id;
   await browser.send('Fetch.enable', { patterns: [{ urlPattern: '*' }] });
   await browser.send('Emulation.setDeviceMetricsOverride', { width: 390, height: 844, deviceScaleFactor: 2, mobile: true });
   await browser.send('Network.setCacheDisabled', { cacheDisabled: true });
@@ -206,6 +246,10 @@ try {
           .map(cookie => ({ name: cookie.name, domain: cookie.domain, secure: cookie.secure, httpOnly: cookie.httpOnly }));
         current.customDomainOk &&= current.sessionCookies.some(cookie => cookie.secure && cookie.httpOnly);
         current.ok &&= current.customDomainOk;
+        if (process.env.T7_REENTRY_CHECK === 'true' && current.customDomainOk) {
+          current.reentry = await inspectSavedEntry(expectedOrigin, expected, cookies, slug);
+          current.ok &&= current.reentry.ok;
+        }
       }
       current.afterClick = await inspectForm();
       if (mode === 'probe' && current.ok) delete current.uiError; // expected injected 503

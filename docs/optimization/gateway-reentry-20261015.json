@@ -1,0 +1,317 @@
+{
+  "observedAt": "2026-10-15T19:51:26.669Z",
+  "changes": [
+    "All four gateways redirect authenticated direct root entry to the saved provider home, preserving query parameters.",
+    "Rey and Ganamos NET restore the public browser session marker when a valid gateway session exists.",
+    "Rey rejects missing, invalid and expired gateway sessions consistently with the other gateways.",
+    "Rey retries GET /api/user/check once after server-side session renewal when the upstream rejects authentication early; POSTs and unrelated APIs are never replayed."
+  ],
+  "originalIncident": {
+    "userReportedRetestSuccessfulBeforeDeployment": true,
+    "exactHistoricalCauseConfirmed": false,
+    "independentObservation": "Before deployment, a demo upstream authentication check changed from status 0 to status 1 before the planned expiry. No conclusion about the cause of the historical user incident was established."
+  },
+  "deployments": [
+    {
+      "gateway": "rey",
+      "commit": "ae6abe8b793e5de7fbd092ebd1c2173063b32dea",
+      "platform": "vercel",
+      "deploymentId": "dpl_2jgGWSBobxH1VC7PzdXb1zpjqu5E",
+      "state": "READY",
+      "origin": "https://www.reydeases.fun"
+    },
+    {
+      "gateway": "ases",
+      "commit": "3983c123ea73705b5f4b05afcff487ddd3dff15d",
+      "platform": "vercel",
+      "deploymentId": "dpl_GufWoCheNL1intE6dxPyhzwrai3h",
+      "state": "READY",
+      "origin": "https://www.asesdelnorte.online"
+    },
+    {
+      "gateway": "ganamos_net",
+      "commit": "9714e4e60a334f99aec2144f301de1a7fdaefc9a",
+      "platform": "vercel",
+      "deploymentId": "dpl_PU2TZw5LRi6WJZwdy3b496ZR5FzL",
+      "state": "READY",
+      "origin": "https://www.ganamosnet.icu"
+    },
+    {
+      "gateway": "multi_skin",
+      "commit": "619112390cbed547c15d98877fe0458360bdbecb",
+      "platform": "cloudflare",
+      "versionId": "672d6dcc-ccbf-4fae-a4c6-bc2687b9e4e7",
+      "state": "DEPLOYED",
+      "origin": "https://ganamosnet.global"
+    }
+  ],
+  "unitTests": {
+    "rey": {
+      "passed": 103,
+      "skipped": 2
+    },
+    "ases": {
+      "passed": 54
+    },
+    "ganamos_net": {
+      "passed": 59
+    },
+    "multi_skin": {
+      "passed": 58
+    },
+    "totalPassed": 274,
+    "recovery": "Simulated HTTP 401/403 and provider status rejection, one retry limit, failed renewal, no POST replay and no unrelated API replay."
+  },
+  "builds": {
+    "rey": "passed",
+    "ases": "passed",
+    "ganamos_net": "passed",
+    "multi_skin": "OpenNext Cloudflare build passed"
+  },
+  "productionAccessAndReentry": [
+    {
+      "engine": "constructor",
+      "slug": "rey-de-ases-demo",
+      "ok": true,
+      "destinationOrigin": "https://www.reydeases.fun",
+      "destinationPath": "/casino/list/home",
+      "sessionCookies": [
+        {
+          "name": "gw_session",
+          "domain": "www.reydeases.fun",
+          "secure": true,
+          "httpOnly": true
+        }
+      ],
+      "reentry": {
+        "savedStatus": 303,
+        "destinationOrigin": "https://www.reydeases.fun",
+        "destinationPath": "/casino/list/home",
+        "anonymousStatus": 401,
+        "markerRequired": true,
+        "markerRestored": true,
+        "authCheck": {
+          "httpStatus": 200,
+          "providerStatus": 0
+        },
+        "ok": true
+      },
+      "observedAt": "2026-10-15T19:48:27.463Z"
+    },
+    {
+      "engine": "constructor",
+      "slug": "ases-del-norte-demo",
+      "ok": true,
+      "destinationOrigin": "https://www.asesdelnorte.online",
+      "destinationPath": "/jugadores/home.php",
+      "sessionCookies": [
+        {
+          "name": "ases_gateway_session",
+          "domain": "www.asesdelnorte.online",
+          "secure": true,
+          "httpOnly": true
+        }
+      ],
+      "reentry": {
+        "savedStatus": 303,
+        "destinationOrigin": "https://www.asesdelnorte.online",
+        "destinationPath": "/jugadores/home.php",
+        "anonymousStatus": 401,
+        "markerRequired": false,
+        "markerRestored": false,
+        "ok": true
+      },
+      "observedAt": "2026-10-15T19:48:42.350Z"
+    },
+    {
+      "engine": "constructor",
+      "slug": "ganamos-net-demo",
+      "ok": true,
+      "destinationOrigin": "https://www.ganamosnet.icu",
+      "destinationPath": "/home",
+      "sessionCookies": [
+        {
+          "name": "ganamos_net_gateway_session",
+          "domain": "www.ganamosnet.icu",
+          "secure": true,
+          "httpOnly": true
+        }
+      ],
+      "reentry": {
+        "savedStatus": 303,
+        "destinationOrigin": "https://www.ganamosnet.icu",
+        "destinationPath": "/home",
+        "anonymousStatus": 401,
+        "markerRequired": true,
+        "markerRestored": true,
+        "ok": true
+      },
+      "observedAt": "2026-10-15T19:48:58.483Z"
+    },
+    {
+      "engine": "constructor",
+      "slug": "multi-skin-demo",
+      "ok": true,
+      "destinationOrigin": "https://ganamosnet.global",
+      "destinationPath": "/home",
+      "sessionCookies": [
+        {
+          "name": "multi_skin_gateway_session",
+          "domain": "ganamosnet.global",
+          "secure": true,
+          "httpOnly": true
+        }
+      ],
+      "reentry": {
+        "savedStatus": 303,
+        "destinationOrigin": "https://ganamosnet.global",
+        "destinationPath": "/home",
+        "anonymousStatus": 401,
+        "markerRequired": false,
+        "markerRestored": false,
+        "ok": true
+      },
+      "observedAt": "2026-10-15T19:49:11.352Z"
+    },
+    {
+      "engine": "classic",
+      "slug": "rey-de-ases-demo",
+      "ok": true,
+      "destinationOrigin": "https://www.reydeases.fun",
+      "destinationPath": "/casino/list/home",
+      "sessionCookies": [
+        {
+          "name": "gw_session",
+          "domain": "www.reydeases.fun",
+          "secure": true,
+          "httpOnly": true
+        }
+      ],
+      "reentry": {
+        "savedStatus": 303,
+        "destinationOrigin": "https://www.reydeases.fun",
+        "destinationPath": "/casino/list/home",
+        "anonymousStatus": 401,
+        "markerRequired": true,
+        "markerRestored": true,
+        "authCheck": {
+          "httpStatus": 200,
+          "providerStatus": 0
+        },
+        "ok": true
+      },
+      "observedAt": "2026-10-15T19:49:22.591Z"
+    },
+    {
+      "engine": "classic",
+      "slug": "ases-del-norte-demo",
+      "ok": true,
+      "destinationOrigin": "https://www.asesdelnorte.online",
+      "destinationPath": "/jugadores/home.php",
+      "sessionCookies": [
+        {
+          "name": "ases_gateway_session",
+          "domain": "www.asesdelnorte.online",
+          "secure": true,
+          "httpOnly": true
+        }
+      ],
+      "reentry": {
+        "savedStatus": 303,
+        "destinationOrigin": "https://www.asesdelnorte.online",
+        "destinationPath": "/jugadores/home.php",
+        "anonymousStatus": 401,
+        "markerRequired": false,
+        "markerRestored": false,
+        "ok": true
+      },
+      "observedAt": "2026-10-15T19:49:29.506Z"
+    },
+    {
+      "engine": "classic",
+      "slug": "ganamos-net-demo",
+      "ok": true,
+      "destinationOrigin": "https://www.ganamosnet.icu",
+      "destinationPath": "/home",
+      "sessionCookies": [
+        {
+          "name": "ganamos_net_gateway_session",
+          "domain": "www.ganamosnet.icu",
+          "secure": true,
+          "httpOnly": true
+        }
+      ],
+      "reentry": {
+        "savedStatus": 303,
+        "destinationOrigin": "https://www.ganamosnet.icu",
+        "destinationPath": "/home",
+        "anonymousStatus": 401,
+        "markerRequired": true,
+        "markerRestored": true,
+        "ok": true
+      },
+      "observedAt": "2026-10-15T19:49:36.705Z"
+    },
+    {
+      "engine": "classic",
+      "slug": "multi-skin-demo",
+      "ok": true,
+      "destinationOrigin": "https://ganamosnet.global",
+      "destinationPath": "/home",
+      "sessionCookies": [
+        {
+          "name": "multi_skin_gateway_session",
+          "domain": "ganamosnet.global",
+          "secure": true,
+          "httpOnly": true
+        }
+      ],
+      "reentry": {
+        "savedStatus": 303,
+        "destinationOrigin": "https://ganamosnet.global",
+        "destinationPath": "/home",
+        "anonymousStatus": 401,
+        "markerRequired": false,
+        "markerRestored": false,
+        "ok": true
+      },
+      "observedAt": "2026-10-15T19:49:44.665Z"
+    }
+  ],
+  "reyBrowserRender": {
+    "url": "https://mkt.panelbotadmin.com/l/rey-de-ases-demo/testing",
+    "checks": [
+      {
+        "providerStatus": 0,
+        "userPresent": true
+      },
+      {
+        "providerStatus": 0,
+        "userPresent": true
+      }
+    ],
+    "errors": [],
+    "landed": {
+      "origin": "https://www.reydeases.fun",
+      "path": "/casino/list/home",
+      "userVisible": true,
+      "markerPresent": true
+    },
+    "reentry": {
+      "origin": "https://www.reydeases.fun",
+      "path": "/casino/list/home",
+      "userVisible": true,
+      "markerPresent": true
+    },
+    "ok": true,
+    "observedAt": "2026-10-15T19:50:48.740Z"
+  },
+  "reproduction": {
+    "command": "$env:T7_GATEWAY_DOMAIN_CHECK=\"true\"; $env:T7_REENTRY_CHECK=\"true\"; node scripts/phase0/template7-stage3-measure.mjs access OUTPUT_DIRECTORY 1",
+    "profile": "390x844 DPR2, normal connection, browser cache disabled, cold cookies, analytics intercepted; existing demo accounts only; provider document intercepted before rendering",
+    "directEntryChecks": "Saved gateway cookie supplied without the public browser marker; root must return 303 to the expected same-origin home. Anonymous root must return 401. Rey authentication check must return HTTP 200 and provider status 0.",
+    "browserRender": "Desktop Chromium, exact user-provided demo URL, authenticated user visible after Template 7 and after direct root navigation with the public session marker deleted. Two real upstream checks returned status 0. Iframes, analytics and non-access POSTs intercepted.",
+    "accountCreationTested": false,
+    "notes": "Existing demo accounts only. API2 account creation remains outside this validation. No session values or account identities are included in the report."
+  }
+}
