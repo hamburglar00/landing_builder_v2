@@ -54,6 +54,15 @@ export function buildTemplate7FastRuntime(
     "      init();",
   );
   if (classicDeviceIdScript) {
+    // React's document hydration root can stop early discrete events before
+    // they reach native button listeners. Capture above that root; the existing
+    // click lock and Contact deduplication still own submission.
+    source = replaceOnce(source,
+      '          button.addEventListener("click", function () { handleCtaClick(button); });',
+      `          window.addEventListener("click", function (event) {
+            if (event.target && event.target.nodeType && button.contains(event.target)) handleCtaClick(button);
+          }, true);`,
+    );
     source = replaceOnce(source, 'fetch("/api/template7/prepare", {', 'fetch("/api/template7/start", {');
     source = replaceOnce(source, "body: JSON.stringify({\n            landing_id: cfg.landingId,",
       "body: JSON.stringify({\n            device_id: getOrCreateDeviceId(),\n            landing_id: cfg.landingId,");

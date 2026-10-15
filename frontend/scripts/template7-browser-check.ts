@@ -108,6 +108,16 @@ async function main() {
         // Unrelated deferred work must not delay the new form. This is a fault
         // injection check, NOT a claim about real-world production latency.
         html = html.replace("</head>", '<script src="/audit/hydration.js" defer></script></head>');
+        if (engine === "classic") {
+          // React can stop a discrete event at its hydration root before the
+          // native button listener sees it. Reproduce that capture boundary.
+          html = html.replace("</head>", `<script>document.addEventListener("click",function(event){
+            if(!window.__hydrated&&event.target.closest("[data-public-landing-cta]")){
+              window.__blockedHydrationClicks=(window.__blockedHydrationClicks||0)+1;
+              event.stopPropagation();
+            }
+          },true);</script></head>`);
+        }
         current = { html, engine, calls: [], errors: [], pixel: [], startedAt: Date.now() };
         await browser.send("Page.navigate", { url: `https://audit.invalid/${engine}-${provider}?fbclid=synthetic&utm_campaign=audit` });
         const form = await browser.evaluate(`new Promise((resolve, reject) => {
@@ -129,7 +139,7 @@ async function main() {
         await pause(150);
         assert.deepEqual(current.errors, []);
         const starts = current.calls.filter(call => call.path === "/api/template7/prepare" || call.path === "/api/template7/start");
-        assert.equal(starts.length, 1, "Double click created multiple starts");
+        assert.equal(starts.length, 1, "Double click must issue exactly one start, including during hydration");
         const contacts = current.calls.filter(call => call.path === "/api/track" && call.body.payload?.event_name === "Contact");
         assert.equal(contacts.length, 1, "Contact lost or duplicated");
         assert.equal(starts[0].body.phone, "5491123456789");
