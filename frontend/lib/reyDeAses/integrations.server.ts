@@ -8,6 +8,13 @@ export class TargetIntegrationError extends Error {
   }
 }
 
+const API2_PLATFORM_BY_PROVIDER: Record<TargetProvider, number> = {
+  ases_del_norte: 1,
+  multi_skin: 2,
+  ganamos_net: 2,
+  rey_de_ases: 5,
+};
+
 function configuredOrigin(raw: string | undefined): URL {
   if (!raw) throw new TargetIntegrationError("integration_pending");
   try {
@@ -47,9 +54,14 @@ async function postJson(origin: URL, path: string, key: string | undefined, body
   }
 }
 
-export function api2Readiness(): "integration_pending" {
-  // API2 aún no publicó el endpoint idempotente ni su ruta contractual.
-  return "integration_pending";
+export function api2Readiness(): "integration_pending" | null {
+  if (process.env.TEMPLATE7_API2_PLAYER_CREATION_ENABLED !== "true") return "integration_pending";
+  try {
+    configuredOrigin(process.env.API2_ORIGIN);
+  } catch {
+    return "integration_pending";
+  }
+  return process.env.API2_API_KEY && process.env.API2_API_SECRET ? null : "integration_pending";
 }
 
 export function gatewayReadiness(provider: TargetProvider): "integration_pending" | null {
@@ -109,11 +121,49 @@ export async function resolveInternalChatPlayer(input: PlayerResolveRequest): Pr
   return validateResolvedPlayer(result, input);
 }
 
-export async function resolveTargetAccount(_request: Api2ResolveAccountRequest): Promise<TargetAccount> {
-  void _request;
-  // PENDIENTE: API2 debe confirmar la ruta, autenticación e idempotencia de
-  // external_user_id=player_id. Nunca fabricar usuario/contraseña de prueba.
-  throw new TargetIntegrationError("integration_pending");
+export async function resolveTargetAccount(request: Api2ResolveAccountRequest): Promise<TargetAccount> {
+  if (api2Readiness()) throw new TargetIntegrationError("integration_pending");
+  const origin = configuredOrigin(process.env.API2_ORIGIN);
+  const controller = new AbortController();
+  const timer = setTimeout(() => controller.abort(), 20_000);
+  try {
+    const response = await fetch(
+      new URL(`/api/v1/bot/atrio/advisors/${encodeURIComponent(request.advisor_id)}/players`, origin),
+      {
+        method: "POST",
+        headers: {
+          apikey: process.env.API2_API_KEY!,
+          apisecret: process.env.API2_API_SECRET!,
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ external_user_id: request.external_user_id, name: request.name }),
+        signal: controller.signal,
+        cache: "no-store",
+        redirect: "error",
+      },
+    );
+    if (!response.ok) throw new TargetIntegrationError("upstream_unavailable");
+    const result: unknown = await response.json();
+    if (!result || typeof result !== "object" || Array.isArray(result)) {
+      throw new TargetIntegrationError("upstream_unavailable");
+    }
+    const data = result as Record<string, unknown>;
+    const username = typeof data.username === "string" ? data.username.trim() : "";
+    const password = typeof data.password === "string" ? data.password : "";
+    const created = typeof data.is_new === "boolean" ? data.is_new
+      : typeof data.isNew === "boolean" ? data.isNew : null;
+    if (data.success !== true || !username || username.length > 256 || /[\x00-\x1f\x7f]/.test(username) ||
+        !password || password.length > 256 || /[\x00-\x1f\x7f]/.test(password) || created === null ||
+        data.platform !== API2_PLATFORM_BY_PROVIDER[request.target_provider]) {
+      throw new TargetIntegrationError("upstream_unavailable");
+    }
+    return { username, password, platform: request.target_provider, created };
+  } catch (error) {
+    if (error instanceof TargetIntegrationError) throw error;
+    throw new TargetIntegrationError("upstream_unavailable");
+  } finally {
+    clearTimeout(timer);
+  }
 }
 
 export async function linkInternalChatProviderAccount(
@@ -174,10 +224,10 @@ export async function createProviderHandoff(
   promoCode?: string,
 ): Promise<HandoffResult> {
   const origin = configuredOrigin(gatewayOrigin(provider));
+  const credentialsRequired = !testing || provider === "rey_de_ases";
   if (player.target_provider !== provider || !isDeviceId(player.player_provider_account_id) ||
       account.platform !== provider || (provider === "multi_skin" && !skinCode) ||
-      (!testing && (!account.username || !account.password)) ||
-      (testing && provider !== "multi_skin" && provider !== "ases_del_norte" && provider !== "ganamos_net")) {
+      (credentialsRequired && (!account.username || !account.password))) {
     throw new TargetIntegrationError("upstream_unavailable");
   }
   const result = await postJson(

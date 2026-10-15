@@ -1,7 +1,7 @@
 import assert from "node:assert/strict";
 import test from "node:test";
 import { handleReyStart, type StartDependencies } from "../lib/reyDeAses/start.server";
-import { createProviderHandoff, gatewayReadiness, linkInternalChatProviderAccount, resolveInternalChatPlayer } from "../lib/reyDeAses/integrations.server";
+import { api2Readiness, createProviderHandoff, gatewayReadiness, linkInternalChatProviderAccount, resolveInternalChatPlayer, resolveTargetAccount } from "../lib/reyDeAses/integrations.server";
 import { createDemoSession, readDemoConfig } from "../lib/reyDeAses/demo.server";
 import type { ResolvedPlayer } from "../lib/reyDeAses/contracts";
 import type { TargetProvider } from "../lib/landing/types";
@@ -52,6 +52,17 @@ function ganamosNetDemoConfig() {
     TEMPLATE7_DEMO_SESSION_SECRET: "s".repeat(32), TEMPLATE7_DEMO_LANDING_IDS: landingId,
     TEMPLATE7_DEMO_ADVISOR_IDS: advisorId, TEMPLATE7_DEMO_DEVICE_ID: demoDeviceId,
     TEMPLATE7_DEMO_GANAMOS_NET_ENABLED: "true",
+  });
+  assert.ok(config);
+  return config;
+}
+
+function asesDelNorteDemoConfig() {
+  const config = readDemoConfig({
+    TEMPLATE7_DEMO_ENABLED: "true",
+    TEMPLATE7_DEMO_SESSION_SECRET: "s".repeat(32), TEMPLATE7_DEMO_LANDING_IDS: landingId,
+    TEMPLATE7_DEMO_ADVISOR_IDS: advisorId, TEMPLATE7_DEMO_DEVICE_ID: demoDeviceId,
+    TEMPLATE7_DEMO_ASES_DEL_NORTE_ENABLED: "true",
   });
   assert.ok(config);
   return config;
@@ -456,6 +467,44 @@ test("Multi Skin usa el bypass propio del gateway y nunca las credenciales demo 
   assert.ok(!calls.includes("api2"));
 });
 
+test("Ases del Norte usa el bypass propio del gateway y vincula el usuario devuelto", async () => {
+  const { deps, calls } = dependencies(null, "ases_del_norte");
+  const cfg = asesDelNorteDemoConfig();
+  deps.demoConfig = () => cfg;
+  deps.api2Status = () => { throw Error("API2 must not be called"); };
+  deps.resolveAccount = async () => { throw Error("API2 must not be called"); };
+  deps.resolvePlayer = async (input) => {
+    calls.push("internal-chat");
+    return resolvedPlayer("ases_del_norte", input.deviceId);
+  };
+  deps.createHandoff = async (provider, _advisor, incomingDeviceId, player, account, skinCode, testing, promoCode) => {
+    calls.push("gateway");
+    assert.equal(provider, "ases_del_norte");
+    assert.equal(incomingDeviceId, demoDeviceId);
+    assert.equal(player.target_provider, "ases_del_norte");
+    assert.equal(account.testingBypass, true);
+    assert.equal(account.username, "");
+    assert.equal(account.password, "");
+    assert.equal(skinCode, null);
+    assert.equal(testing, true);
+    assert.equal(promoCode, "LP-a1b2");
+    return {
+      handoff_url: "https://ases.example.com/start?t=demo",
+      expires_at: "",
+      binding_created: false,
+      provider_username: "ases-demo-user",
+    };
+  };
+  const token = createDemoSession(landingId, "landing-7", cfg);
+  const result = await handleReyStart(request(validPayload, {
+    Cookie: `lb_cid=${deviceId}; t7_demo=${token}`, "X-Template7-Demo-Context": "testing",
+  }), deps);
+  assert.equal(result.status, 200);
+  assert.deepEqual(await result.json(), { handoff_url: "https://ases.example.com/start?t=demo" });
+  assert.ok(calls.includes("internal-chat") && calls.includes("gateway") && calls.includes("internal-chat-link"));
+  assert.ok(!calls.includes("api2"));
+});
+
 test("Ganamos NET usa el bypass propio del gateway y vincula el usuario devuelto", async () => {
   const { deps, calls } = dependencies(null, "ganamos_net");
   const cfg = ganamosNetDemoConfig();
@@ -520,6 +569,117 @@ test("respuesta inconsistente de internal-chat nunca llega a API2 ni al gateway"
     assert.equal(response.status, 503, field);
     assert.deepEqual(await response.json(), { error: "upstream_unavailable" }, field);
     assert.ok(!calls.includes("api2") && !calls.includes("gateway"), field);
+  }
+});
+
+test("API2 permanece apagado hasta configurar explícitamente el flag y ambos secretos", () => {
+  const original = {
+    enabled: process.env.TEMPLATE7_API2_PLAYER_CREATION_ENABLED,
+    origin: process.env.API2_ORIGIN,
+    apiKey: process.env.API2_API_KEY,
+    apiSecret: process.env.API2_API_SECRET,
+  };
+  try {
+    delete process.env.TEMPLATE7_API2_PLAYER_CREATION_ENABLED;
+    delete process.env.API2_ORIGIN;
+    delete process.env.API2_API_KEY;
+    delete process.env.API2_API_SECRET;
+    assert.equal(api2Readiness(), "integration_pending");
+
+    process.env.TEMPLATE7_API2_PLAYER_CREATION_ENABLED = "true";
+    process.env.API2_ORIGIN = "https://api2.example.com";
+    process.env.API2_API_KEY = "api-key";
+    assert.equal(api2Readiness(), "integration_pending");
+
+    process.env.API2_API_SECRET = "api-secret";
+    assert.equal(api2Readiness(), null);
+
+    process.env.API2_ORIGIN = "http://api2.example.com";
+    assert.equal(api2Readiness(), "integration_pending");
+  } finally {
+    for (const [key, value] of Object.entries({
+      TEMPLATE7_API2_PLAYER_CREATION_ENABLED: original.enabled,
+      API2_ORIGIN: original.origin,
+      API2_API_KEY: original.apiKey,
+      API2_API_SECRET: original.apiSecret,
+    })) {
+      if (value === undefined) delete process.env[key]; else process.env[key] = value;
+    }
+  }
+});
+
+test("adaptador API2 crea o recupera la cuenta por advisor_id y valida la plataforma", async () => {
+  const originalFetch = globalThis.fetch;
+  const original = {
+    enabled: process.env.TEMPLATE7_API2_PLAYER_CREATION_ENABLED,
+    origin: process.env.API2_ORIGIN,
+    apiKey: process.env.API2_API_KEY,
+    apiSecret: process.env.API2_API_SECRET,
+  };
+  process.env.TEMPLATE7_API2_PLAYER_CREATION_ENABLED = "true";
+  process.env.API2_ORIGIN = "https://api2.example.com";
+  process.env.API2_API_KEY = "api-key";
+  process.env.API2_API_SECRET = "api-secret";
+  const platformCodes: Record<TargetProvider, number> = {
+    ases_del_norte: 1, multi_skin: 2, ganamos_net: 2, rey_de_ases: 5,
+  };
+  try {
+    for (const provider of Object.keys(platformCodes) as TargetProvider[]) {
+      globalThis.fetch = async (input, init) => {
+        assert.equal(String(input), `https://api2.example.com/api/v1/bot/atrio/advisors/${advisorId}/players`);
+        const headers = new Headers(init?.headers);
+        assert.equal(headers.get("apikey"), "api-key");
+        assert.equal(headers.get("apisecret"), "api-secret");
+        assert.deepEqual(JSON.parse(String(init?.body)), {
+          external_user_id: playerId,
+          name: "Martín",
+        });
+        return Response.json({
+          success: true,
+          username: `${provider}-user`,
+          password: "provider-pass",
+          platform: platformCodes[provider],
+          ...(provider === "rey_de_ases" ? { isNew: true } : { is_new: false }),
+        });
+      };
+      const account = await resolveTargetAccount({
+        external_user_id: playerId,
+        name: "Martín",
+        target_provider: provider,
+        advisor_id: advisorId,
+        advisor_slug: "gera",
+        ...(provider === "multi_skin" ? { skin_code: "ganamos_plus" } : {}),
+      });
+      assert.deepEqual(account, {
+        username: `${provider}-user`, password: "provider-pass", platform: provider,
+        created: provider === "rey_de_ases",
+      });
+    }
+
+    globalThis.fetch = async () => Response.json({
+      success: true, username: "wrong-platform", password: "secret", platform: 1, is_new: true,
+    });
+    await assert.rejects(resolveTargetAccount({
+      external_user_id: playerId, name: "Martín", target_provider: "rey_de_ases",
+      advisor_id: advisorId, advisor_slug: "gera",
+    }), { code: "upstream_unavailable" });
+
+    process.env.TEMPLATE7_API2_PLAYER_CREATION_ENABLED = "false";
+    globalThis.fetch = async () => { throw new Error("API2 must not be called"); };
+    await assert.rejects(resolveTargetAccount({
+      external_user_id: playerId, name: "Martín", target_provider: "rey_de_ases",
+      advisor_id: advisorId, advisor_slug: "gera",
+    }), { code: "integration_pending" });
+  } finally {
+    globalThis.fetch = originalFetch;
+    for (const [key, value] of Object.entries({
+      TEMPLATE7_API2_PLAYER_CREATION_ENABLED: original.enabled,
+      API2_ORIGIN: original.origin,
+      API2_API_KEY: original.apiKey,
+      API2_API_SECRET: original.apiSecret,
+    })) {
+      if (value === undefined) delete process.env[key]; else process.env[key] = value;
+    }
   }
 });
 
@@ -598,6 +758,20 @@ test("adaptadores usan contrato servidor-servidor y no exponen credenciales", as
     };
     const handoff = await createProviderHandoff("rey_de_ases", advisor, deviceId, player, { username: "test-user", password: "test-pass", platform: "rey_de_ases", created: true });
     assert.equal(handoff.handoff_url, "https://gateway.example.com/start?t=token");
+    globalThis.fetch = async (input, init) => {
+      assert.equal(String(input), "https://gateway.example.com/api/handoffs");
+      assert.equal(new Headers(init?.headers).get("Authorization"), "Bearer test-gateway-key");
+      const body = JSON.parse(String(init?.body));
+      assert.equal(body.username, "demo-user");
+      assert.equal(body.password, "demo-pass");
+      return Response.json({ handoff_url: "https://gateway.example.com/start?t=demo", expires_at: "2026-10-08T12:00:00Z", binding_created: false });
+    };
+    const demoHandoff = await createProviderHandoff("rey_de_ases", advisor, demoDeviceId,
+      resolvedPlayer("rey_de_ases", demoDeviceId),
+      { username: "demo-user", password: "demo-pass", platform: "rey_de_ases", created: false },
+      null, true,
+    );
+    assert.equal(demoHandoff.handoff_url, "https://gateway.example.com/start?t=demo");
     await assert.rejects(createProviderHandoff("rey_de_ases", advisor, deviceId,
       { ...player, target_provider: "multi_skin" },
       { username: "test-user", password: "test-pass", platform: "rey_de_ases", created: true }),
