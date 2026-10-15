@@ -1,4 +1,5 @@
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
+import { CLIENT_MODULE_KEYS } from "../_shared/client-module-permissions.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -187,6 +188,11 @@ Deno.serve(async (req) => {
       .select("user_id, template7_enabled")
       .in("user_id", ids);
     if (templatePermissionsError) throw templatePermissionsError;
+    const { data: modulePermissions, error: modulePermissionsError } = await supabaseAdmin
+      .from("client_module_permissions")
+      .select("user_id,show_followups,show_whatsapp_api,show_atrio,show_kommo,show_chatrace")
+      .in("user_id", ids);
+    if (modulePermissionsError) throw modulePermissionsError;
     const { data: subsRows } = await supabaseAdmin
       .from("client_subscriptions")
       .select(
@@ -219,6 +225,9 @@ Deno.serve(async (req) => {
     const subsByUserId = new Map(
       (subsRows ?? []).map((r) => [r.user_id, r]),
     );
+    const modulesByUserId = new Map(
+      (modulePermissions ?? []).map((row) => [row.user_id, row]),
+    );
 
     return new Response(
       JSON.stringify({
@@ -233,6 +242,9 @@ Deno.serve(async (req) => {
           show_ai_assistant: cfgByUserId.get(u.id)?.show_ai_assistant ?? false,
           show_promotions: cfgByUserId.get(u.id)?.show_promotions ?? false,
           template7_enabled: template7ByUserId.get(u.id) ?? false,
+          module_visibility: Object.fromEntries(CLIENT_MODULE_KEYS.map((key) => [
+            key, modulesByUserId.get(u.id)?.[key] !== false,
+          ])),
           plan_code: subsByUserId.get(u.id)?.plan_code ?? "starter",
           max_landings: subsByUserId.get(u.id)?.max_landings ?? 1,
           max_phones: subsByUserId.get(u.id)?.max_phones ?? 2,

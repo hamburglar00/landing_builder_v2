@@ -6,18 +6,9 @@ import { useRouter } from "next/navigation";
 import { invokeFunction } from "@/lib/supabaseFunctions";
 import { supabase } from "@/lib/supabaseClient";
 import { PageHeader } from "@/components/ui/PanelPrimitives";
-
-const ALL_COLUMNS = [
-  "phone","email","form_fn","form_ln","form_email","form_phone","fn","ln","ct","st","zip","country","fbp","fbc","from_meta_ads","meta_pixel_id","pixel_id","source_platform",
-  "contact_event_id","contact_event_time","sendContactPixel","contact_payload_raw","lead_event_id","lead_event_time","lead_payload_raw",
-  "purchase_event_id","purchase_event_time","purchase_payload_raw","timestamp","clientIP","agentuser",
-  "estado","valor","currency","workspace_resolution_source","purchase_type","contact_status_capi","lead_status_capi","purchase_status_capi",
-  "observaciones","external_id","test_event_code","utm_campaign","telefono_asignado","promo_code",
-  "lead_bot_phone","lead_agency_id","lead_gerencia_label","lead_incoming_promo_code","lead_attribution_status","lead_attribution_conversion_id",
-  "purchase_bot_phone","purchase_agency_id","purchase_gerencia_label","purchase_incoming_promo_code","purchase_attribution_status","purchase_attribution_conversion_id",
-  "device_type","geo_city","geo_region","geo_country","geo_source",
-  "cuit_cuil","inferred_sex","sex_source",
-] as const;
+import { ALL_COLUMNS } from "@/components/conversiones/conversionPageShared";
+import { ClientModulePermissionsFields } from "@/components/clients/ClientModulePermissions";
+import { DEFAULT_CLIENT_MODULE_PERMISSIONS } from "@/lib/clientModules";
 
 type ColKey = (typeof ALL_COLUMNS)[number];
 
@@ -37,6 +28,10 @@ const DEFAULT_VISIBLE_COLUMNS: ColKey[] = [
   "workspace_resolution_source",
   "test_event_code",
   "utm_campaign",
+  "landing",
+  "campana",
+  "conjunto",
+  "anuncio",
   "telefono_asignado",
   "promo_code",
 ];
@@ -49,6 +44,7 @@ export default function NuevoClientePage() {
   const [showLogs, setShowLogs] = useState(true);
   const [showAiAssistant, setShowAiAssistant] = useState(false);
   const [showPromotions, setShowPromotions] = useState(false);
+  const [moduleVisibility, setModuleVisibility] = useState(DEFAULT_CLIENT_MODULE_PERMISSIONS);
   const [visibleCols, setVisibleCols] = useState<Set<ColKey>>(new Set(DEFAULT_VISIBLE_COLUMNS));
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -84,6 +80,7 @@ export default function NuevoClientePage() {
           showLogs,
           showAiAssistant,
           showPromotions,
+          moduleVisibility,
         },
       },
     );
@@ -175,6 +172,8 @@ export default function NuevoClientePage() {
               placeholder="Ingresa la contraseña"
             />
           </div>
+
+          <ClientModulePermissionsFields value={moduleVisibility} onChange={setModuleVisibility} />
 
           <div className="space-y-3 rounded-lg border border-zinc-800 bg-zinc-900/50 p-3">
             <div className="flex flex-wrap items-center gap-3">

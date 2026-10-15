@@ -1,4 +1,5 @@
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
+import { parseModuleVisibility } from "../_shared/client-module-permissions.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -16,6 +17,7 @@ type UpdateClientPayload = {
   showAiAssistant?: boolean;
   showPromotions?: boolean;
   showTemplate7?: boolean;
+  moduleVisibility?: unknown;
   planCode?: "starter" | "plus" | "pro" | "premium" | "scale";
   maxLandings?: number;
   maxPhones?: number;
@@ -188,6 +190,14 @@ Deno.serve(async (req) => {
       });
     }
     const showTemplate7 = payload.showTemplate7;
+    let moduleVisibility;
+    try {
+      moduleVisibility = parseModuleVisibility(payload.moduleVisibility);
+    } catch (error) {
+      return new Response(JSON.stringify({ error: (error as Error).message }), {
+        status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
     const planCode = payload.planCode;
     const maxLandings = Number.isFinite(Number(payload.maxLandings))
       ? Number(payload.maxLandings)
@@ -210,6 +220,7 @@ Deno.serve(async (req) => {
       showAiAssistant === undefined &&
       showPromotions === undefined &&
       showTemplate7 === undefined &&
+      moduleVisibility === undefined &&
       planCode === undefined &&
       maxLandings === undefined &&
       maxPhones === undefined &&
@@ -286,6 +297,17 @@ Deno.serve(async (req) => {
             },
           },
         );
+      }
+    }
+
+    if (moduleVisibility !== undefined) {
+      const { error: modulePermissionError } = await supabaseAdmin
+        .from("client_module_permissions")
+        .upsert({ user_id: userId, ...moduleVisibility, updated_at: new Date().toISOString() }, { onConflict: "user_id" });
+      if (modulePermissionError) {
+        return new Response(JSON.stringify({ error: "No se pudieron actualizar los permisos de módulos." }), {
+          status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" },
+        });
       }
     }
 

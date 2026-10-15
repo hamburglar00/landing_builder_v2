@@ -35,6 +35,9 @@ import { PageHeader } from "@/components/ui/PanelPrimitives";
 import { useAppConfirm } from "@/components/ui/AppConfirmDialog";
 import CustomSelect from "@/components/ui/CustomSelect";
 import ModalPortal from "@/components/ui/ModalPortal";
+import { useClientModulePermissions } from "@/components/clients/ClientModulePermissions";
+import { canViewClientIntegration } from "@/lib/clientModules";
+import { IntegrationMenu } from "./IntegrationMenu";
 
 const PHONE_KIND_OPTIONS: Array<{ value: PhoneKind; label: string }> = [
   { value: "carga", label: "Carga" },
@@ -262,6 +265,7 @@ function parsePurchaseMinimumAmount(value: string): number | null {
 }
 
 export default function IntegracionesMetaCapi() {
+  const modulePermissions = useClientModulePermissions();
   const confirmAction = useAppConfirm();
   const [userId, setUserId] = useState<string | null>(null);
   const [isAdmin, setIsAdmin] = useState(false);
@@ -282,7 +286,8 @@ export default function IntegracionesMetaCapi() {
   const [editOpen, setEditOpen] = useState(false);
   const [draft, setDraft] = useState<PixelEditDraft | null>(null);
   const [editSensitiveFields, setEditSensitiveFields] = useState(false);
-  const [activeIntegration, setActiveIntegration] = useState<ActiveIntegration>("menu");
+  const [selectedIntegration, setActiveIntegration] = useState<ActiveIntegration>("menu");
+  const activeIntegration = canViewClientIntegration(selectedIntegration, modulePermissions) ? selectedIntegration : "menu";
   const [constructorCopyMsg, setConstructorCopyMsg] = useState<string | null>(null);
   const [kommoConfig, setKommoConfig] = useState<KommoClientConfig | null>(null);
   const [kommoBaseUrl, setKommoBaseUrl] = useState("");
@@ -361,8 +366,8 @@ export default function IntegracionesMetaCapi() {
     const [cfg, pixels, kommo, gers] = await Promise.all([
       fetchConversionsConfig(uid),
       fetchPixelConfigs(uid),
-      fetchKommoClientConfig(uid),
-      adminView ? fetchGerenciasForAdmin(uid) : fetchGerencias(uid),
+      modulePermissions.show_kommo ? fetchKommoClientConfig(uid) : null,
+      modulePermissions.show_chatrace ? (adminView ? fetchGerenciasForAdmin(uid) : fetchGerencias(uid)) : [],
     ]);
     setConfig(cfg);
     setPixelConfigs(pixels);
@@ -372,7 +377,7 @@ export default function IntegracionesMetaCapi() {
     setKommoActive(kommo?.active ?? true);
     setEditKommoUrl(!kommo);
     setEditKommoToken(!kommo);
-    const chatrace = await fetchChatraceClientConfig(uid);
+    const chatrace = modulePermissions.show_chatrace ? await fetchChatraceClientConfig(uid) : null;
     setChatraceConfig(chatrace);
     setChatracePixelId(chatrace?.meta_pixel_id ?? "");
     setChatraceActive(chatrace?.active ?? true);
@@ -384,10 +389,10 @@ export default function IntegracionesMetaCapi() {
     setChatraceGerenciaSelectionMode(chatrace?.gerencia_selection_mode ?? "weighted_random");
     setChatraceGerenciaFairCriterion(chatrace?.gerencia_fair_criterion ?? "usage_count");
     setChatraceGerencias(gers);
-    const { data: chatraceAsg } = await supabase
+    const { data: chatraceAsg } = modulePermissions.show_chatrace ? await supabase
       .from("chatrace_gerencias")
       .select("gerencia_id, weight, phone_mode, phone_kind, interval_start_hour, interval_end_hour")
-      .eq("user_id", uid);
+      .eq("user_id", uid) : { data: [] };
     setChatraceAssignments(
       (chatraceAsg ?? []).map((r) => ({
         gerencia_id: r.gerencia_id,
@@ -400,7 +405,7 @@ export default function IntegracionesMetaCapi() {
     );
     setClientName(String(p?.nombre ?? ""));
     setIsAdmin(adminView);
-  }, []);
+  }, [modulePermissions.show_kommo, modulePermissions.show_chatrace]);
 
   const maskToken = useCallback((value: string) => {
     const v = String(value ?? "");
@@ -656,6 +661,10 @@ export default function IntegracionesMetaCapi() {
     const section = resolveIntegrationSection(new URLSearchParams(window.location.search).get("section"));
     if (section) setActiveIntegration(section);
   }, []);
+
+  useEffect(() => {
+    if (!canViewClientIntegration(selectedIntegration, modulePermissions)) setActiveIntegration("menu");
+  }, [selectedIntegration, modulePermissions]);
 
   useEffect(() => {
     const run = async () => {
@@ -969,81 +978,14 @@ export default function IntegracionesMetaCapi() {
       )}
 
       {activeIntegration === "menu" ? (
-        <div className="space-y-3">
-          <button
-            type="button"
-            onClick={() => setActiveIntegration("meta")}
-            className="ui-card ui-card-interactive w-full px-4 py-4 text-left active:scale-[0.995]"
-          >
-            <span className="flex items-center justify-between gap-3">
-              <span className="inline-flex items-center gap-3 text-sm font-semibold text-zinc-200">
-                <img
-                  src="/meta-logo.png"
-                  alt=""
-                  aria-hidden="true"
-                  className="h-8 w-8 shrink-0 rounded-sm object-contain"
-                />
-                Integración con Meta CAPI
-              </span>
-              <span className="text-xs text-zinc-400">Entrar</span>
-            </span>
-          </button>
-
-          <button
-            type="button"
-            onClick={() => setActiveIntegration("chatrace")}
-            className="ui-card ui-card-interactive w-full px-4 py-4 text-left active:scale-[0.995]"
-          >
-            <span className="flex items-center justify-between gap-3">
-              <span className="inline-flex items-center gap-3 text-sm font-semibold text-zinc-200">
-                <img
-                  src="/chatrace-logo.jpeg"
-                  alt=""
-                  aria-hidden="true"
-                  className="h-8 w-8 shrink-0 rounded-sm object-contain"
-                />
-                Integración con Chatrace
-              </span>
-              <span className="text-xs text-zinc-400">Entrar</span>
-            </span>
-          </button>
-
-          <button
-            type="button"
-            onClick={() => setActiveIntegration("kommo")}
-            className="ui-card ui-card-interactive w-full px-4 py-4 text-left active:scale-[0.995]"
-          >
-            <span className="flex items-center justify-between gap-3">
-              <span className="inline-flex items-center gap-3 text-sm font-semibold text-zinc-200">
-                <img
-                  src="/kommo-logo.jpeg"
-                  alt=""
-                  aria-hidden="true"
-                  className="h-8 w-8 shrink-0 rounded-sm object-contain"
-                />
-                Integración con CRM Kommo
-              </span>
-              <span className="text-xs text-zinc-400">Entrar</span>
-            </span>
-          </button>
-
-          <button
-            type="button"
-            onClick={() => {
-              setConstructorCopyMsg(null);
-              setActiveIntegration("constructor");
-            }}
-            className="ui-card ui-card-interactive w-full px-4 py-4 text-left active:scale-[0.995]"
-          >
-            <span className="flex items-center justify-between gap-3">
-              <span className="inline-flex items-center gap-3 text-sm font-semibold text-zinc-200">
-                <ConstructorEndpointLogo />
-                Endpoint de Conversiones del constructor
-              </span>
-              <span className="text-xs text-zinc-400">Entrar</span>
-            </span>
-          </button>
-        </div>
+        <IntegrationMenu
+          permissions={modulePermissions}
+          constructorLogo={<ConstructorEndpointLogo />}
+          onSelect={(section) => {
+            setConstructorCopyMsg(null);
+            setActiveIntegration(section);
+          }}
+        />
       ) : (
       activeIntegration === "constructor" ? (
       <section className="rounded-xl border border-zinc-800 bg-zinc-900/50 p-4">

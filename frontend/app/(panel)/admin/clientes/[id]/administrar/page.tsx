@@ -6,6 +6,9 @@ import { useParams, useRouter } from "next/navigation";
 import { invokeFunction } from "@/lib/supabaseFunctions";
 import { supabase } from "@/lib/supabaseClient";
 import { PageHeader } from "@/components/ui/PanelPrimitives";
+import { ALL_COLUMNS } from "@/components/conversiones/conversionPageShared";
+import { ClientModulePermissionsFields } from "@/components/clients/ClientModulePermissions";
+import { DEFAULT_CLIENT_MODULE_PERMISSIONS, normalizeClientModulePermissions, type ClientModulePermissions } from "@/lib/clientModules";
 
 type ClientUser = {
   id: string;
@@ -17,6 +20,7 @@ type ClientUser = {
   show_ai_assistant?: boolean;
   show_promotions?: boolean;
   template7_enabled?: boolean;
+  module_visibility?: ClientModulePermissions;
   plan_code?: "starter" | "plus" | "pro" | "premium" | "scale";
   max_landings?: number;
   max_phones?: number;
@@ -25,18 +29,6 @@ type ClientUser = {
   expires_at?: string | null;
   grace_days?: number;
 };
-
-const ALL_COLUMNS = [
-  "phone","email","form_fn","form_ln","form_email","form_phone","fn","ln","ct","st","zip","country","fbp","fbc","from_meta_ads","meta_pixel_id","pixel_id","source_platform",
-  "contact_event_id","contact_event_time","sendContactPixel","contact_payload_raw","lead_event_id","lead_event_time","lead_payload_raw",
-  "purchase_event_id","purchase_event_time","purchase_payload_raw","timestamp","clientIP","agentuser",
-  "estado","valor","currency","workspace_resolution_source","purchase_type","contact_status_capi","lead_status_capi","purchase_status_capi",
-  "observaciones","external_id","test_event_code","utm_campaign","telefono_asignado","promo_code",
-  "lead_bot_phone","lead_agency_id","lead_gerencia_label","lead_incoming_promo_code","lead_attribution_status","lead_attribution_conversion_id",
-  "purchase_bot_phone","purchase_agency_id","purchase_gerencia_label","purchase_incoming_promo_code","purchase_attribution_status","purchase_attribution_conversion_id",
-  "device_type","geo_city","geo_region","geo_country","geo_source",
-  "cuit_cuil","inferred_sex","sex_source",
-] as const;
 
 type ColKey = (typeof ALL_COLUMNS)[number];
 
@@ -89,6 +81,7 @@ export default function AdminClientManagePage() {
   const [showAiAssistant, setShowAiAssistant] = useState(false);
   const [showPromotions, setShowPromotions] = useState(false);
   const [template7Enabled, setTemplate7Enabled] = useState(false);
+  const [moduleVisibility, setModuleVisibility] = useState(DEFAULT_CLIENT_MODULE_PERMISSIONS);
   const [visibleCols, setVisibleCols] = useState<Set<ColKey>>(new Set(ALL_COLUMNS));
   const [planCode, setPlanCode] = useState<"starter" | "plus" | "pro" | "premium" | "scale">("starter");
   const [maxLandings, setMaxLandings] = useState(1);
@@ -130,6 +123,7 @@ export default function AdminClientManagePage() {
       setShowAiAssistant(typeof found.show_ai_assistant === "boolean" ? found.show_ai_assistant : false);
       setShowPromotions(typeof found.show_promotions === "boolean" ? found.show_promotions : false);
       setTemplate7Enabled(found.template7_enabled === true);
+      setModuleVisibility(normalizeClientModulePermissions(found.module_visibility));
       setPlanCode(found.plan_code ?? "starter");
       setMaxLandings(Number(found.max_landings ?? 1));
       setMaxPhones(Number(found.max_phones ?? 2));
@@ -178,6 +172,7 @@ export default function AdminClientManagePage() {
       showAiAssistant: boolean;
       showPromotions: boolean;
       showTemplate7: boolean;
+      moduleVisibility: ClientModulePermissions;
       planCode: "starter" | "plus" | "pro" | "premium" | "scale";
       maxLandings: number;
       maxPhones: number;
@@ -192,6 +187,7 @@ export default function AdminClientManagePage() {
       showAiAssistant,
       showPromotions,
       showTemplate7: template7Enabled,
+      moduleVisibility,
       planCode,
       maxLandings,
       maxPhones,
@@ -527,6 +523,8 @@ export default function AdminClientManagePage() {
             Habilitar Plantilla 7 para este cliente
           </label>
         </div>
+
+        <ClientModulePermissionsFields value={moduleVisibility} onChange={setModuleVisibility} />
 
         <section className="rounded-lg border border-zinc-800 p-3">
           <div className="mb-3 flex flex-wrap items-center justify-between gap-2">

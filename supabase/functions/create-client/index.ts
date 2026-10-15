@@ -2,6 +2,7 @@ import {
   createClient,
   type SupabaseClient,
 } from "https://esm.sh/@supabase/supabase-js@2";
+import { parseModuleVisibility } from "../_shared/client-module-permissions.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -17,6 +18,7 @@ type CreateClientPayload = {
   showLogs?: boolean;
   showAiAssistant?: boolean;
   showPromotions?: boolean;
+  moduleVisibility?: unknown;
 };
 
 type PlanCode = "starter" | "plus" | "pro" | "premium" | "scale";
@@ -58,6 +60,10 @@ const FALLBACK_VISIBLE_COLUMNS = [
   "currency",
   "test_event_code",
   "utm_campaign",
+  "landing",
+  "campana",
+  "conjunto",
+  "anuncio",
   "telefono_asignado",
   "promo_code",
 ];
@@ -225,6 +231,14 @@ Deno.serve(async (req) => {
     const requestedShowPromotions = typeof payload.showPromotions === "boolean"
       ? payload.showPromotions
       : null;
+    let moduleVisibility;
+    try {
+      moduleVisibility = parseModuleVisibility(payload.moduleVisibility);
+    } catch (error) {
+      return new Response(JSON.stringify({ error: (error as Error).message }), {
+        status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
 
     if (!email || !password) {
       return new Response(
@@ -440,6 +454,18 @@ Deno.serve(async (req) => {
           },
         },
       );
+    }
+
+    const { error: modulePermissionError } = await supabaseAdmin
+      .from("client_module_permissions")
+      .insert({ user_id: created.user.id, ...moduleVisibility });
+    if (modulePermissionError) {
+      console.error("Error inicializando permisos de módulos:", modulePermissionError);
+      await cleanupSignupApproval(supabaseAdmin, email);
+      await rollbackCreatedUser(supabaseAdmin, created.user.id);
+      return new Response(JSON.stringify({ error: "No se pudieron inicializar los permisos de módulos." }), {
+        status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
     }
 
     const defaults = getPlanDefaults("starter");

@@ -233,6 +233,32 @@ Ver **supabase/migrations/README.md** para el listado completo y pasos del cron 
 
 - Nuevas métricas en teléfonos: columnas en `gerencia_phones`; actualización desde `phone-click` o funciones específicas.
 - Mantener esta documentación actualizada al agregar tablas, políticas RLS, Edge Functions o flujos nuevos.
+## Visibilidad de módulos por cliente
+
+En **Clientes → Administrar** y al crear un cliente, el administrador puede
+mostrar u ocultar Seguimientos, WhatsApp API, Atrio y, dentro de Integraciones,
+Kommo y Chatrace de forma independiente. Meta CAPI y el endpoint del constructor
+siguen disponibles.
+
+Los permisos se guardan en `client_module_permissions`, separados de la
+configuración de conversiones que el cliente puede editar. Los clientes solo
+pueden leer su propia fila; `create-client`, `update-client` y `list-clients`
+administran los valores después de verificar el rol del administrador. Sin fila,
+los cinco módulos siguen visibles para conservar el comportamiento existente.
+
+El dashboard filtra el menú y sus precargas, bloquea las pantallas ocultas por
+URL (también las subpáginas de WhatsApp API) y filtra las tarjetas y secciones
+directas de Kommo/Chatrace. Los permisos se recargan al abrir el dashboard y al
+volver a enfocar la ventana. Un fallo de lectura permite reintentar sin abrir
+los módulos. Estos controles son de visibilidad: no desactivan integraciones,
+automatizaciones, webhooks ni conexiones existentes.
+
+Publicar primero `20261015181921_client_module_visibility.sql`, después las
+tres funciones administrativas y finalmente el frontend. Pruebas:
+`node scripts/security/client-module-visibility-tests.mjs` y
+`npx tsx --import ./tests/revalidation-server-loader.mjs --test tests/clientModules.test.ts`
+(la segunda desde `frontend`).
+
 # Destino del CTA
 
 El editor permite elegir el destino del CTA:

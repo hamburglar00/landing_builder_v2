@@ -5,6 +5,7 @@ import type { Dispatch, SetStateAction } from "react";
 import { buildAtrioUrl, type AtrioClient, type LandingAtrioAssignment } from "@/lib/atrio/atrioDb";
 import type { Landing } from "@/lib/landing/types";
 import { CollapsibleSection } from "@/components/landing/LandingEditorForm";
+import { useClientModulePermissions } from "@/components/clients/ClientModulePermissions";
 
 type Props = {
   landing: Landing;
@@ -23,6 +24,7 @@ export function AtrioRedirectSection({
   setAssignments,
   createAtrioHref,
 }: Props) {
+  const modulePermissions = useClientModulePermissions();
   const assignedIds = new Set(assignments.map((item) => item.atrioClientId));
   const isTemplate7 = landing.config.template === "template7";
 
@@ -98,9 +100,9 @@ export function AtrioRedirectSection({
       {atrioClients.length === 0 ? (
         <p className="text-sm text-zinc-500">
           No hay clientes Atrio cargados.{" "}
-          <Link href={createAtrioHref} className="text-zinc-300 underline hover:text-zinc-100">
+          {modulePermissions.show_atrio && <Link href={createAtrioHref} className="text-zinc-300 underline hover:text-zinc-100">
             Crear cliente Atrio
-          </Link>
+          </Link>}
         </p>
       ) : (
         <div className="overflow-x-auto rounded-lg border border-zinc-700">

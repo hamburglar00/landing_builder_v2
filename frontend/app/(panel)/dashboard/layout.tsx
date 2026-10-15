@@ -9,6 +9,9 @@ import ConstructorSetupGuide from "@/components/onboarding/ConstructorSetupGuide
 import { RouteProgress } from "@/components/ui/RouteProgress";
 import { CurrencyScopeSelector } from "@/components/currency/CurrencyScope";
 import { AppConfirmProvider } from "@/components/ui/AppConfirmDialog";
+import { ClientModulePermissionsContext } from "@/components/clients/ClientModulePermissions";
+import { canViewClientRoute, type ClientModulePermissions } from "@/lib/clientModules";
+import { fetchClientModulePermissions } from "@/lib/clientModulesDb";
 
 const SETUP_GUIDE_STORAGE_PREFIX = "constructor_setup_guide_hidden:";
 const DASHBOARD_PREFETCH_ROUTES = [
@@ -331,6 +334,8 @@ export default function DashboardLayout({
   const [planGraceDays, setPlanGraceDays] = useState<number>(5);
   const [planNowMs, setPlanNowMs] = useState<number | null>(null);
   const [promotionsEnabled, setPromotionsEnabled] = useState(false);
+  const [modulePermissions, setModulePermissions] = useState<ClientModulePermissions | null>(null);
+  const [modulePermissionsError, setModulePermissionsError] = useState<string | null>(null);
   const [showPlanExpiryWarning, setShowPlanExpiryWarning] = useState(true);
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [setupGuideOpen, setSetupGuideOpen] = useState(false);
@@ -400,6 +405,12 @@ export default function DashboardLayout({
         .maybeSingle();
       setPromotionsEnabled(conversionsConfig?.show_promotions === true);
 
+      try {
+        setModulePermissions(await fetchClientModulePermissions(data.user.id));
+      } catch (error) {
+        setModulePermissionsError((error as Error).message);
+      }
+
       setIsClient(true);
       setIsCheckingSession(false);
     };
@@ -408,11 +419,11 @@ export default function DashboardLayout({
   }, [router]);
 
   useEffect(() => {
-    if (isCheckingSession || !isClient) return;
+    if (isCheckingSession || !isClient || !modulePermissions) return;
 
     const prefetchRoutes = () => {
       for (const route of DASHBOARD_PREFETCH_ROUTES) {
-        router.prefetch(route);
+        if (canViewClientRoute(route, modulePermissions)) router.prefetch(route);
       }
       if (promotionsEnabled) {
         router.prefetch("/dashboard/promociones");
@@ -426,7 +437,38 @@ export default function DashboardLayout({
 
     const timeoutId = setTimeout(prefetchRoutes, 250);
     return () => clearTimeout(timeoutId);
-  }, [isCheckingSession, isClient, router, promotionsEnabled]);
+  }, [isCheckingSession, isClient, router, promotionsEnabled, modulePermissions]);
+
+  useEffect(() => {
+    if (!user?.id || isCheckingSession) return;
+    let active = true;
+    const refreshPermissions = async () => {
+      try {
+        const permissions = await fetchClientModulePermissions(user.id);
+        if (active) {
+          setModulePermissions(permissions);
+          setModulePermissionsError(null);
+        }
+      } catch (error) {
+        if (active) {
+          setModulePermissions(null);
+          setModulePermissionsError((error as Error).message);
+        }
+      }
+    };
+    window.addEventListener("focus", refreshPermissions);
+    return () => {
+      active = false;
+      window.removeEventListener("focus", refreshPermissions);
+    };
+  }, [user?.id, isCheckingSession]);
+
+  useEffect(() => {
+    if (!isCheckingSession && isClient && modulePermissions &&
+      !canViewClientRoute(pathname, modulePermissions)) {
+      router.replace("/dashboard/inicio");
+    }
+  }, [isCheckingSession, isClient, pathname, modulePermissions, router]);
 
   useEffect(() => {
     if (
@@ -497,6 +539,15 @@ export default function DashboardLayout({
     return null;
   }
 
+  if (!modulePermissions || modulePermissionsError) {
+    return (
+      <div className="flex min-h-screen flex-col items-center justify-center gap-4 bg-[var(--color-bg-0)] p-6">
+        <p className="text-sm text-zinc-400" role="alert">{modulePermissionsError ?? "Cargando permisos..."}</p>
+        <button type="button" onClick={() => window.location.reload()} className="ui-button ui-button-secondary">Reintentar</button>
+      </div>
+    );
+  }
+
   if (isPlanBlocked) {
     return (
       <div className="flex min-h-screen items-center justify-center bg-[var(--color-bg-0)] p-6">
@@ -517,7 +568,8 @@ export default function DashboardLayout({
     );
   }
 
-  if (!promotionsEnabled && pathname?.startsWith("/dashboard/promociones")) {
+  if ((!promotionsEnabled && pathname?.startsWith("/dashboard/promociones")) ||
+    !canViewClientRoute(pathname, modulePermissions)) {
     return (
       <div className="flex min-h-screen items-center justify-center bg-[var(--color-bg-0)]">
         <p className="text-sm text-[var(--color-text-muted)]">Redirigiendo...</p>
@@ -555,6 +607,7 @@ export default function DashboardLayout({
   })();
 
   return (
+    <ClientModulePermissionsContext.Provider value={modulePermissions}>
     <AppConfirmProvider>
     <div className="panel-shell flex min-h-screen text-[var(--color-text)]">
       <RouteProgress active={isNavigating} />
@@ -621,7 +674,7 @@ export default function DashboardLayout({
             <span>LANDINGS</span>
           </Link>
 
-          <Link
+          {modulePermissions.show_whatsapp_api && <Link
             href="/dashboard/whatsapp-cloud-api"
             onClick={(event) => handleNavClick("/dashboard/whatsapp-cloud-api", event)}
             className={`flex items-center gap-2 rounded-lg px-3 py-2 text-xs font-medium tracking-[0.18em] transition ${
@@ -635,9 +688,9 @@ export default function DashboardLayout({
               active={Boolean(pathname?.startsWith("/dashboard/whatsapp-cloud-api"))}
             />
             <span>WHATSAPP API</span>
-          </Link>
+          </Link>}
 
-          <Link
+          {modulePermissions.show_atrio && <Link
             href="/dashboard/atrio"
             onClick={(event) => handleNavClick("/dashboard/atrio", event)}
             className={`flex items-center gap-2 rounded-lg px-3 py-2 text-xs font-medium tracking-[0.18em] transition ${
@@ -648,7 +701,7 @@ export default function DashboardLayout({
           >
             <NavIcon variant="atrio" active={Boolean(pathname?.startsWith("/dashboard/atrio"))} />
             <span>ATRIO</span>
-          </Link>
+          </Link>}
 
           <Link
             href="/dashboard/conversiones"
@@ -684,7 +737,7 @@ export default function DashboardLayout({
             </Link>
           )}
 
-          <Link
+          {modulePermissions.show_followups && <Link
             href="/dashboard/seguimiento"
             onClick={(event) => handleNavClick("/dashboard/seguimiento", event)}
             className={`flex items-center gap-2 rounded-lg px-3 py-2 text-xs font-medium tracking-[0.18em] transition ${
@@ -698,7 +751,7 @@ export default function DashboardLayout({
               active={Boolean(pathname?.startsWith("/dashboard/seguimiento"))}
             />
             <span>SEGUIMIENTOS</span>
-          </Link>
+          </Link>}
 
           <Link
             href="/dashboard/gerencias"
@@ -848,6 +901,7 @@ export default function DashboardLayout({
       />
     </div>
     </AppConfirmProvider>
+    </ClientModulePermissionsContext.Provider>
   );
 }
 
