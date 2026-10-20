@@ -15,7 +15,21 @@ La aplicación clásica (`../landing-prueba-1`) admite `/?landing=bianca2` y
 reescritura interna que conserva UTM y `fbclid`. Si falta o está vacío, se usa la
 ruta. Un parámetro inválido o una landing inexistente devuelve 404.
 
-Al entrar a la raíz sin `landing`, se elige una landing clásica publicada de
+El motor constructor también admite `/?landing=bianca2`, `/l?landing=bianca2`
+y `/l/otra?landing=bianca2`. El proxy reescribe internamente a `/l/bianca2`
+antes de servir el HTML, conservando los parámetros de atribución y la caché
+por landing. No modifica el panel, las API, las promociones ni los recursos.
+Sin parámetro o con uno vacío conserva la ruta; en la raíz mantiene el acceso
+al login. Valores inválidos o repetidos devuelven 404. La tarjeta de parámetros
+del editor de administrador y cliente está disponible para ambos motores.
+
+Validación del constructor desde `frontend`: `npx tsx --test tests/constructorUrlRouting.test.ts`
+y `node scripts/check-constructor-url-routing.mjs`. La segunda compila y sirve
+el proyecto en producción local con datos sintéticos; comprueba selección,
+aislamiento de caché y Template 7 para los cuatro proveedores, sin crear cuentas
+ni enviar conversiones.
+
+En el motor clásico, al entrar a la raíz sin `landing`, se elige una landing publicada de
 `goldencajeros` (configurable mediante `LANDING_FALLBACK_CLIENT`, solo servidor).
 La RPC `get_random_active_landing` exige un cliente único y selecciona destinos
 WhatsApp con un número activo de adquisición, del tipo y horario asignados.
@@ -265,3 +279,48 @@ El editor permite elegir el destino del CTA:
 
 - `WhatsApp`: comportamiento historico, con asignacion de telefono por gerencia y redireccion a `wa.me`.
 - `Atrio`: redireccion al webchat configurado con `promo_code` en la URL. El tracking de `Contact` se conserva igual que en WhatsApp, pero no se solicita telefono ganador.
+
+## Origen publicitario en conversiones
+
+Templates 1 a 7, tanto clásico como constructor, leen `facebook`, `portofolio`
+y `cp` del enlace. Son valores proporcionados por el anunciante, no datos
+inferidos del visitante. Se admite un nombre o un ID; `cp` se trata como texto
+para conservar ceros iniciales e identificadores largos. Ejemplo:
+
+```text
+?landing=mi-landing&facebook=Facebook%20Norte&portofolio=Equipo%20A&cp=001234567890&campana=Octubre&conjunto=Grupo%201&anuncio=Video
+```
+
+`conversions.facebook`, `.portofolio` y `.cp` conservan la atribución del
+contacto en Lead, CompleteRegistration y Purchase, incluidas compras
+recurrentes. Un dato original conocido tiene prioridad; un campo faltante
+puede completarse. Se recortan espacios, controles y longitudes superiores a
+300 caracteres; los valores ausentes quedan NULL. No se atribuyen conversiones
+históricas sin evidencia.
+
+Las columnas de Admin y cliente quedan entre Landing y Campaña, en el orden
+Facebook, Portofolio, Cuenta publicitaria. Están disponibles en ambas vistas,
+búsqueda y exportación. Los IDs numéricos completos se pueden buscar sin
+alterar la coincidencia exacta de teléfonos.
+
+En el alta de clientes nuevos, estas tres columnas quedan desmarcadas por
+defecto. El administrador puede habilitarlas; tanto la vista reducida como la
+técnica del cliente respetan esa selección. La ayuda del editor conserva los
+parámetros y el ejemplo sin el texto de persistencia/compatibilidad con UTM.
+
+Para publicar este lote: aplicar primero
+`20261019212429_landing_advertising_origin_attribution.sql`, luego las funciones
+`conversions` y `create-client`, y publicar constructor y clásico con builds
+nuevos. El constructor referencia `landing-runtime-v4.js` para evitar la
+caché inmutable de v3; Template 7 conserva su runtime inline compartido.
+La ayuda de parámetros está disponible en los dos editores.
+
+Validación local: `npx tsx scripts/landing-advertising-attribution-check.ts`
+desde `frontend` ejecuta 20 casos de navegador con tráfico interceptado.
+Desde la raíz, `node scripts/phase0/atrio-builder-origin.mjs` comprueba el
+recorrido completo contra PostgreSQL/PostgREST temporales y
+`node scripts/security/landing-url-attribution-tests.mjs` valida migración,
+lectura, búsqueda, exportación y permisos tras reconstruir el historial.
+Este último runner conserva su referencia de bootstrap con Supabase CLI
+2.75.0; la versión 2.121.0 cambia la instalación inicial de `pg_net` y no
+cumple esa referencia. No cambiar las garantías del runner para omitirla.

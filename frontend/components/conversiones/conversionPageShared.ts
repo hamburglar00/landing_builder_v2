@@ -5,7 +5,7 @@ export const ALL_COLUMNS = [
   "contact_event_id","contact_event_time","sendContactPixel","contact_payload_raw","lead_event_id","lead_event_time","lead_payload_raw",
   "purchase_event_id","purchase_event_time","purchase_payload_raw","timestamp","clientIP","agentuser",
   "estado","valor","currency","workspace_resolution_source","purchase_type","purchase_capi_route","purchase_capi_route_reason","contact_status_capi","lead_status_capi","registration_status_capi","purchase_status_capi",
-  "observaciones","external_id","test_event_code","landing","campana","conjunto","anuncio","utm_campaign","telefono_asignado","assigned_gerencia_label","promo_code",
+  "observaciones","external_id","test_event_code","landing","facebook","portofolio","cp","campana","conjunto","anuncio","utm_campaign","telefono_asignado","assigned_gerencia_label","promo_code",
   "lead_bot_phone","lead_player_username","lead_agency_id","lead_gerencia_label","lead_incoming_promo_code","lead_atrio_id","lead_atrio_players_id","lead_attribution_status","lead_attribution_conversion_id",
   "registration_event_id","registration_event_time","registration_player_username","registration_payload_raw",
   "registration_bot_phone","registration_agency_id","registration_gerencia_label","registration_incoming_promo_code","registration_atrio_id","registration_atrio_players_id","registration_attribution_status","registration_attribution_conversion_id",
@@ -151,6 +151,9 @@ const FRIENDLY_COLUMN_LABELS: Record<ConversionColumnKey, string> = {
   external_id: "ID externo",
   test_event_code: "Test Event Code",
   landing: "Landing",
+  facebook: "Facebook",
+  portofolio: "Portofolio",
+  cp: "Cuenta publicitaria",
   campana: "Campaña",
   conjunto: "Conjunto de anuncios",
   anuncio: "Anuncio",
@@ -267,6 +270,9 @@ export const COLUMN_NOTES: Partial<Record<ConversionColumnKey | "id", string>> =
   external_id: "ID externo de usuario/contacto para matching en Meta (hasheado al enviar).",
   test_event_code: "Codigo de test de Meta (si se envio en modo prueba).",
   landing: "Landing que se mostró al visitante, seleccionada por parámetro, ruta o selección aleatoria.",
+  facebook: "Facebook desde el que se hizo la publicidad, recibido en el parámetro facebook del enlace.",
+  portofolio: "Portofolio desde el que se hizo la publicidad, recibido en el parámetro portofolio del enlace.",
+  cp: "Cuenta publicitaria desde la que se hizo la publicidad, recibida en el parámetro cp del enlace.",
   campana: "Campaña recibida en el parámetro campana del enlace.",
   conjunto: "Conjunto de anuncios recibido en el parámetro conjunto del enlace.",
   anuncio: "Anuncio recibido en el parámetro anuncio del enlace.",
@@ -373,6 +379,9 @@ const TABLE_SEARCH_TEXT_FIELDS = [
   "external_id",
   "utm_campaign",
   "landing",
+  "facebook",
+  "portofolio",
+  "cp",
   "campana",
   "conjunto",
   "anuncio",
@@ -413,7 +422,8 @@ export function conversionMatchesTableSearch(row: TableSearchRow, rawSearch: str
   const queryDigits = normalizePhone(query);
   const isPhoneSearch = queryDigits.length >= 8 && /^[\d\s()+.-]+$/.test(rawSearch.trim());
   if (isPhoneSearch) {
-    return normalizePhone(String(row.phone ?? "")) === queryDigits;
+    return normalizePhone(String(row.phone ?? "")) === queryDigits
+      || [row.facebook, row.portofolio, row.cp].some(value => String(value ?? "").trim().toLowerCase() === query);
   }
 
   const hay = TABLE_SEARCH_TEXT_FIELDS

@@ -43,9 +43,11 @@ async function main() {
   new Function("module", "exports", "require", baselineBundle.outputFiles[0].text)(baselineModule, baselineModule.exports, require);
   for (let template = 1; template <= 6; template++) {
     const config = { ...fixture("rey_de_ases"), layout: { template, ctaPosition: "bottom" } };
-    assert.equal(renderPublicLandingHtml({ slug: "test", config }), baselineModule.exports.renderPublicLandingHtml({ slug: "test", config }), `Template ${template} HTML changed`);
+    const baselineHtml = baselineModule.exports.renderPublicLandingHtml({ slug: "test", config })
+      .replace('/public-assets/landing-runtime-v3.js', '/public-assets/landing-runtime-v4.js');
+    assert.equal(renderPublicLandingHtml({ slug: "test", config }), baselineHtml, `Template ${template} HTML changed beyond the runtime version`);
   }
-  console.log("Templates 1-6: HTML identical to Git baseline.");
+  console.log("Templates 1-6: HTML identical to Git baseline except the attribution runtime version.");
   const { chromium } = await import(pathToFileURL(path.join(root, "scripts/phase0/browser-runtime.mjs")).href);
   const browser = await chromium();
   let current: { html: string; engine: string; calls: { path: string; method: string; body: Record<string, any>; at: number }[]; errors: string[]; pixel: any[]; startedAt: number; baseline?: boolean };
@@ -64,7 +66,7 @@ async function main() {
         type = "text/html";
       } else if (url.pathname === "/audit/hydration.js") {
         await pause(3000); content = "window.__hydrated=true"; type = "text/javascript";
-      } else if (url.pathname.endsWith("landing-runtime-v3.js")) {
+      } else if (/landing-runtime-v[34]\.js$/.test(url.pathname)) {
         await pause(1500); content = buildPublicLandingRuntimeSource(); type = "text/javascript";
       } else if (url.pathname.endsWith("landing-styles-v3.css")) {
         await pause(600); content = PUBLIC_LANDING_CSS; type = "text/css";

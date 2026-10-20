@@ -43,12 +43,12 @@ test("image derivatives preserve proportions/alpha and do not touch foreign/priv
   assert.equal(template7ImageUrl(original, 3000), original);
 });
 
-test("templates 1-6 retain their original image configuration and CSS/runtime URLs", () => {
+test("templates 1-6 retain image configuration and CSS, with the current attribution runtime", () => {
   for (let template = 1; template <= 6; template++) {
     const config = { ...fixture(), layout: { template, ctaPosition: "bottom" } };
     assert.equal(optimizeTemplate7Images(config), config);
     const html = renderPublicLandingHtml({ slug: "test", config });
-    assert.match(html, /src="\/public-assets\/landing-runtime-v3.js" defer/);
+    assert.match(html, /src="\/public-assets\/landing-runtime-v4.js" defer/);
     assert.match(html, /href="\/public-assets\/landing-styles-v3.css"/);
     assert.doesNotMatch(html, /data-template7-critical/);
   }

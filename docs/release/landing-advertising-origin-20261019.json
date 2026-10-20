@@ -1,0 +1,404 @@
+{
+  "at": "2026-10-19T21:57:53.597Z",
+  "status": "published and verified",
+  "scope": "facebook, portofolio and cp in templates 1-7 for both engines; URL landing selection in constructor; conversions table/export/search and editor help",
+  "requestedCorrections": {
+    "editorPersistenceCompatibilityTextRemoved": true,
+    "friendlyAndTechnicalViewsSupported": true,
+    "newClientColumnsHiddenByDefault": true,
+    "administratorCanEnableColumns": true
+  },
+  "deployments": [
+    {
+      "name": "landing-builder",
+      "id": "dpl_4BuCFQRNU6ciRnADfmANNPtAeZJX",
+      "url": "https://landing-builder-v2-k259-hjaio0r5w-juanclouds-projects.vercel.app",
+      "previous": "dpl_21CsQBkgPoKQ1njpgm1Ru8pU5osA",
+      "domains": [
+        "mkt.panelbotadmin.com",
+        "constructor.panelbotadmin.com",
+        "landing-builder-v2-k259.vercel.app"
+      ]
+    },
+    {
+      "name": "landing-prueba-1",
+      "id": "dpl_81BVTdSsHxNKX5ZoxRjJu9RiWYfr",
+      "url": "https://public-landing-g0piso1c2-juanclouds-projects.vercel.app",
+      "previous": "dpl_5gPfga6WFsWXt9kSbZ3jXTCkNpo7",
+      "domains": [
+        "landing.panelbotadmin.com",
+        "public-landing-bl.vercel.app"
+      ]
+    }
+  ],
+  "database": {
+    "project": "fdkjkzpjqfbaavylapun",
+    "migration": "20261019212429_landing_advertising_origin_attribution.sql",
+    "applied": true,
+    "ledgerVerified": true,
+    "pendingMigrations": 0,
+    "textColumns": [
+      "facebook",
+      "portofolio",
+      "cp"
+    ],
+    "rlsPreserved": true,
+    "reportProjectionVerified": true,
+    "numericIdentifierSearchVerified": true,
+    "tableAndExportReadOnlySmoke": true
+  },
+  "edgeFunctions": [
+    {
+      "name": "conversions",
+      "previousVersion": 165,
+      "version": 166,
+      "verifyJwt": false,
+      "published": true
+    },
+    {
+      "name": "create-client",
+      "version": 34,
+      "published": false,
+      "reason": "Deployed source already has the requested hidden defaults; verified unchanged source and unauthenticated 401 response."
+    }
+  ],
+  "checks": {
+    "productionBuilds": 2,
+    "focusedUnitTests": 12,
+    "syntheticBrowserCases": 20,
+    "syntheticUiViewports": [
+      {
+        "width": 390,
+        "height": 844,
+        "defaultsHidden": true,
+        "adminCanEnable": true,
+        "removedTextAbsent": true,
+        "noHorizontalOverflow": true
+      },
+      {
+        "width": 1365,
+        "height": 900,
+        "defaultsHidden": true,
+        "adminCanEnable": true,
+        "removedTextAbsent": true,
+        "noHorizontalOverflow": true
+      },
+      {
+        "width": 844,
+        "height": 390,
+        "defaultsHidden": true,
+        "adminCanEnable": true,
+        "removedTextAbsent": true,
+        "noHorizontalOverflow": true
+      }
+    ],
+    "publicPanelPages": 5,
+    "publicLandingHtmlCases": 10,
+    "runtimeV4": [
+      {
+        "path": "/public-assets/landing-runtime-v4.js",
+        "sha256": "27a0058bcf013fe80b0397891680c75e34b8b9a7bf1efb7eacca208655373f1d",
+        "status": 200
+      }
+    ],
+    "createClientUnauthenticatedStatus": 401
+  },
+  "casinoCoverage": [
+    {
+      "provider": "rey_de_ases",
+      "publicHtml": [
+        {
+          "engine": "constructor",
+          "slug": "rey-de-ases-demo",
+          "provider": "rey_de_ases",
+          "status": 200,
+          "template": 7,
+          "querySelection": true,
+          "attributionCapture": true
+        },
+        {
+          "engine": "classic",
+          "slug": "rey-de-ases-demo",
+          "provider": "rey_de_ases",
+          "status": 200,
+          "template": 7,
+          "querySelection": true,
+          "attributionCapture": true
+        }
+      ],
+      "syntheticContactAndStartPayloads": "passed for both engines",
+      "gatewayCodeChanges": false,
+      "gatewayDeploymentRequired": false
+    },
+    {
+      "provider": "ases_del_norte",
+      "publicHtml": [
+        {
+          "engine": "constructor",
+          "slug": "ases-del-norte-demo",
+          "provider": "ases_del_norte",
+          "status": 200,
+          "template": 7,
+          "querySelection": true,
+          "attributionCapture": true
+        },
+        {
+          "engine": "classic",
+          "slug": "ases-del-norte-demo",
+          "provider": "ases_del_norte",
+          "status": 200,
+          "template": 7,
+          "querySelection": true,
+          "attributionCapture": true
+        }
+      ],
+      "syntheticContactAndStartPayloads": "passed for both engines",
+      "gatewayCodeChanges": false,
+      "gatewayDeploymentRequired": false
+    },
+    {
+      "provider": "ganamos_net",
+      "publicHtml": [
+        {
+          "engine": "constructor",
+          "slug": "ganamos-net-demo",
+          "provider": "ganamos_net",
+          "status": 200,
+          "template": 7,
+          "querySelection": true,
+          "attributionCapture": true
+        },
+        {
+          "engine": "classic",
+          "slug": "ganamos-net-demo",
+          "provider": "ganamos_net",
+          "status": 200,
+          "template": 7,
+          "querySelection": true,
+          "attributionCapture": true
+        }
+      ],
+      "syntheticContactAndStartPayloads": "passed for both engines",
+      "gatewayCodeChanges": false,
+      "gatewayDeploymentRequired": false
+    },
+    {
+      "provider": "multi_skin",
+      "publicHtml": [
+        {
+          "engine": "constructor",
+          "slug": "multi-skin-demo",
+          "provider": "multi_skin",
+          "status": 200,
+          "template": 7,
+          "querySelection": true,
+          "attributionCapture": true
+        },
+        {
+          "engine": "classic",
+          "slug": "multi-skin-demo",
+          "provider": "multi_skin",
+          "status": 200,
+          "template": 7,
+          "querySelection": true,
+          "attributionCapture": true
+        }
+      ],
+      "syntheticContactAndStartPayloads": "passed for both engines",
+      "gatewayCodeChanges": false,
+      "gatewayDeploymentRequired": false
+    }
+  ],
+  "workerReview": "Ganamos+ public Cloudflare Worker remains unchanged. URL attribution is captured on the landing and inherited in the shared conversions backend before/after handoff; no Worker or gateway changes are required.",
+  "cache": "Constructor uses landing-runtime-v4.js to bypass immutable v3 caches. Template 7 remains inline and classic 1-6 use newly hashed Next.js chunks.",
+  "realAccountsCreated": 0,
+  "realConversionEventsSent": 0,
+  "api2ChangedOrPublished": false,
+  "notes": [
+    "All live landing checks fetched HTML/assets without executing visitor scripts. They do not certify new real casino accounts or native device behavior.",
+    "The browser harness now waits for the matching document/runtime and completed destination navigation, resolving fixture navigation races. This test-only correction does not change published application code."
+  ],
+  "rollback": {
+    "database": "Additive nullable columns can remain when restoring prior app/function; retain captured baseline sources.",
+    "deployments": [
+      {
+        "name": "landing-builder",
+        "previous": "dpl_21CsQBkgPoKQ1njpgm1Ru8pU5osA"
+      },
+      {
+        "name": "landing-prueba-1",
+        "previous": "dpl_5gPfga6WFsWXt9kSbZ3jXTCkNpo7"
+      }
+    ],
+    "privateEvidence": ".vercel/release-20261019-url-origin"
+  },
+  "sourceManifests": [
+    {
+      "name": "landing-builder",
+      "sha256": "e3cb326a7398dfecad3e08bd636bea9e73204352d6003ec3687decd8c0a184a5",
+      "changedFiles": [
+        {
+          "file": "frontend/README.md",
+          "before": "9c63266b36c7126ab861258a2d5be514a0309917e84c7bc9320ca90ec6c3cec2",
+          "after": "23e9dfef0c0c7adc5808286565dfa29d5344fd5675f9e9b827e1b127400f88ff"
+        },
+        {
+          "file": "frontend/proxy.ts",
+          "before": "5d7fd6f7f13f75289d8a70dd1e5b7a7b2cf19559ccccf0df6534387adc0c476e",
+          "after": "cf359306e48021541ae6c85b1ec651946e7ec81eb4ff3295768608d499f38cb1"
+        },
+        {
+          "file": "frontend/lib/landing/urlRouting.ts",
+          "before": null,
+          "after": "0683e9b54b38b4b955cdbe4900636d91c18cb00676e15da7172c2853230d0688"
+        },
+        {
+          "file": "frontend/app/(panel)/admin/conversiones/page.tsx",
+          "before": "5efe31b061ad3dbea38f206b92d6db1ffb4d89ba4459fa614d133c764aefd110",
+          "after": "f9e1d6e4dc2706071e0263facfd93d69d2166c62011aad5ba8d578b37f02595e"
+        },
+        {
+          "file": "frontend/app/(panel)/dashboard/conversiones/page.tsx",
+          "before": "ec589f6a5a95176040c57f9495df1d8dd4af804396b755f60dafbb899ff99900",
+          "after": "f4445a30c7de41f856a484c244fee1a30e0ccd18b9c6313edd1d688f010f0e91"
+        },
+        {
+          "file": "frontend/app/(panel)/admin/landings/[id]/editar/page.tsx",
+          "before": "81f89a89d8f3211c6fa03cb6a31d3097e3bfd5ce7de9ea335b692d60d451487f",
+          "after": "b9ce4f743a434a3590f947d53b6ca2032b5106bcd4a14b83adc9f92bb3f2bf70"
+        },
+        {
+          "file": "frontend/app/(panel)/dashboard/landing/[id]/editar/page.tsx",
+          "before": "c1a2ac0a79a1344ab535cf1d2b634b960bc69c22b27523e5e69ea15eb3a9425b",
+          "after": "a6680ef44e7f437120c07709438ec7275f7f9ee58985eeca14f255b68970d31a"
+        },
+        {
+          "file": "frontend/components/conversiones/conversionPageShared.ts",
+          "before": "d125b8a543fd32cb9422afeeb3870aaa807bf5bac6f14725f7cf753f382ef885",
+          "after": "eb76fe9327effbecc3818968015aa7accec213f6e52671ae5d16ddbea96b561e"
+        },
+        {
+          "file": "frontend/components/landing/LandingUrlParametersCard.tsx",
+          "before": "36485ef8021e0d91bef6e49a078cd5821a5461c6a85715146dfcc649ea8f0281",
+          "after": "1cf924cdaa17124245d93b7e6a30d03502944be7c832bf95225f425857923fe2"
+        },
+        {
+          "file": "frontend/components/public-landing/PublicLandingRuntimeScript.tsx",
+          "before": "61731f2577234d8d7ff61aa57c698ff6b42a6f795e9d85fb4621f76bf97d7e41",
+          "after": "eaa2bbd3dff1b0502b5d13211e3222206872c6d32439e030d6b419c8ccf80f0b"
+        },
+        {
+          "file": "frontend/components/public-landing/renderPublicLandingHtml.tsx",
+          "before": "5c816f8927b12abcb779713216699d7bac9a5ff35304f0d9d920077f3d023ad4",
+          "after": "54b82af1191e10117021048d05b19bd21193a317c49373b1a6618b2e26d8e672"
+        },
+        {
+          "file": "frontend/lib/conversionsDb.ts",
+          "before": "79577dc9c91bdc49b8ffb0fe58c14b88c4952546101ac3b3ceac991b5039d800",
+          "after": "b925fd7392982466fac9c8b9c1931b4325da3dc6f9f8e88d8444630b08c08fc0"
+        },
+        {
+          "file": "frontend/lib/reyDeAses/start.server.ts",
+          "before": "88790284cc702d8b367b965f3a80720d50e4b03b4fdfbbbdd34fbf00a65c2836",
+          "after": "c4c65ab2cc0e8bd4748666c412b4435dfe06830e78633d1f57f76ad22e2dd720"
+        },
+        {
+          "file": "frontend/app/public-assets/landing-runtime-v4.js/route.ts",
+          "before": null,
+          "after": "34cc6cfed5ceb714b29eb20d5cdcc4005046b09f25fcd1fed1973a2c66d8d7d7"
+        },
+        {
+          "file": "frontend/tests/conversionUrlAttribution.test.ts",
+          "before": "40e5884e3f3f242ee9137e2884752a1e63d523d8d75c980972724dea38cde885",
+          "after": "56f344ccb8efee656cbf02322e980411909a31a6b442e6e9206f50ee2c6fba77"
+        },
+        {
+          "file": "frontend/tests/constructorUrlRouting.test.ts",
+          "before": null,
+          "after": "ebd17146875fb2f6dbf8d2bddbb86f9c265a9a2eca4980428a5becc71c7b9c9c"
+        },
+        {
+          "file": "frontend/tests/publicLandingHtml.test.ts",
+          "before": "46f3e77e86e02a22fa5c574ef6b5e5eabcae70c64266ff6cb3d7b04b3827221e",
+          "after": "3c19657e6c59f1f3783c2404e92cc7517b216eead14efd856d54ee9abff4b4ce"
+        },
+        {
+          "file": "frontend/tests/template7Performance.test.ts",
+          "before": "342c7d072c68a825da3ea4a9e421807d3c40f0563c5cca95642446445a09db9c",
+          "after": "9ccc9374ea11d7b10528b0d288660335d80c952ce7ff88694063d9da0b4a34b0"
+        },
+        {
+          "file": "frontend/scripts/landing-advertising-attribution-check.ts",
+          "before": null,
+          "after": "6dda46c25b3c21f3d8e80327b0753f38930d8f990ac60dc81a3081b72d9925f5"
+        },
+        {
+          "file": "frontend/scripts/check-constructor-url-routing.mjs",
+          "before": null,
+          "after": "16c7114976f668d515e3a5fd80543f99665b1315e9b3855a8e6c62b23ed81817"
+        },
+        {
+          "file": "frontend/scripts/template7-browser-check.ts",
+          "before": "6c99e01a1f8749af961c32dc6cdcde74d30cb86fca12066e045d59d1c3e30b75",
+          "after": "86a6228a1c22a1f7c34036a89556a4572e41471c265813a7a52d248a606e2adc"
+        },
+        {
+          "file": "supabase/functions/conversions/index.ts",
+          "before": "e36300be55529de94ea718c0adfc86c47bd43f39de1d2ab32651d6c514fcf7cb",
+          "after": "f117f663dfe29935c2f63d81bad21b8eb42a4d14eb2f01470ce83d51decf70e1"
+        },
+        {
+          "file": "supabase/functions/conversions/shared.ts",
+          "before": "d11211d1e2d4bc4489b8ca69110b43842b9dc9602f29dcaa03592951d1c9979c",
+          "after": "e7b2c1cb9227397307b8a8313dc630601f927b49641ba90a974ad0577334624a"
+        },
+        {
+          "file": "supabase/functions/conversions/url_attribution.ts",
+          "before": "0020f07e74deff13a87c7dfdb93278a476ea67b435e9b2fcf557788e79a25124",
+          "after": "30acdf3d7795cd149f20660b67e6e9ce0e309b8f70a2155f38d51568b7260c8d"
+        },
+        {
+          "file": "supabase/functions/conversions/url_attribution_test.ts",
+          "before": "921bb659a28a205ae0c8dae4b1bf672394d84584332f77b896046df1552b6a3b",
+          "after": "a226eecfcda35c11c94daaf2cb03491e4c1c3c9a7f63d69243ff2b24d775acec"
+        },
+        {
+          "file": "supabase/migrations/20261019212429_landing_advertising_origin_attribution.sql",
+          "before": null,
+          "after": "a4a4c5dcbae459658803745a16090752c78fa22822299135d8a33c2ebd872b7f"
+        },
+        {
+          "file": "docs/DECISIONES_APROBADAS_ATRIO_TEMPLATE7_GATEWAYS.md",
+          "before": "449b6cc8435b0c93fa3249c1b126c83623a8e30a18a357374717d532331009c5",
+          "after": "207681601b35f2861e12ac45712efccbe0389171098b138df59073494ae91fd1"
+        }
+      ]
+    },
+    {
+      "name": "landing-prueba-1",
+      "sha256": "dbe2f3bc313a803b915b9bd8481a4357a769ea9bad3c9067e343f1ba38d3d403",
+      "changedFiles": [
+        {
+          "file": "components/LandingPageViewTracker.tsx",
+          "before": "5d56fe3a20752c87d40fdf061737e4f4380400c2b0b1c01ea7630ae944475718",
+          "after": "e72ec04dee621307d7d0e73e1f0e0d672ce929704d115f2734638ab68cee636c"
+        },
+        {
+          "file": "components/WhatsAppButton.tsx",
+          "before": "6becf8a9737659f7d76d82df9ef2c46aa4a67171e2cc33eb81c918b0dac699c9",
+          "after": "ce4bd67ea74172f3a73bc0e6f66f0a194d3660b318443a37a9e5a1e550425643"
+        },
+        {
+          "file": "lib/reyDeAses/start.server.ts",
+          "before": "a98647041b460bc824e4dfc794d8036a4eef6b77ad100778e8a9ddb727651395",
+          "after": "550d2381925721cf3d9e16181ad2dc62a68dffc420eda3a1e041a9696b887e66"
+        },
+        {
+          "file": "lib/template7/shared.cjs",
+          "before": "66580c526549fe166c4c98952993cac85c7ece10b9f4b9476288b759fe401852",
+          "after": "58418b1d34e7e8104b1a711549c003307caa4f3e06ca4c034b9fb80f83070cdd"
+        }
+      ]
+    }
+  ]
+}

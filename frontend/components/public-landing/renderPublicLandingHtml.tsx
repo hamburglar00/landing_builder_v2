@@ -704,7 +704,7 @@ export function renderPublicLandingHtml(params: RenderParams) {
     : "";
   const runtimeScript = isTemplate7
       ? `<script>${buildTemplate7FastRuntime(slug, config)}</script>`
-      : `${renderScriptElement(PublicLandingRuntimeScript({ slug, config }))}<script src="/public-assets/landing-runtime-v3.js" defer></script>`;
+      : `${renderScriptElement(PublicLandingRuntimeScript({ slug, config }))}<script src="/public-assets/landing-runtime-v4.js" defer></script>`;
   const template7PlaceholderScript = isTemplate7
     ? `<script>(()=>{const input=document.querySelector('[data-template7-name]');if(!input)return;const names=${JSON.stringify(TEMPLATE7_EXAMPLE_NAMES)};input.placeholder='Ej.: '+names[Math.floor(Math.random()*names.length)];})();</script>`
     : "";

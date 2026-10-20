@@ -256,7 +256,7 @@ test("genera scripts públicos con JavaScript válido", () => {
     assert.doesNotThrow(() => new Function(script));
   });
   assert.doesNotThrow(() => new Function(publicRuntime));
-  assert.match(html, /<script src="\/public-assets\/landing-runtime-v3\.js" defer><\/script>/);
+  assert.match(html, /<script src="\/public-assets\/landing-runtime-v4\.js" defer><\/script>/);
   assert.match(html, /<link rel="stylesheet" href="\/public-assets\/landing-styles-v3\.css">/);
   assert.doesNotMatch(html, /<style>/);
   assert.ok(Buffer.byteLength(html) < 35_000, `HTML publico demasiado grande: ${Buffer.byteLength(html)} bytes`);

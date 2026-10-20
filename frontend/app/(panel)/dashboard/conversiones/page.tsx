@@ -381,6 +381,9 @@ function cellValue(
     case "observaciones": return <td key={col} className={`${cell} text-zinc-500 max-w-[200px] truncate`} title={c.observaciones}>{c.observaciones || "-"}</td>;
     case "external_id": return <td key={col} className={dimMono} title={tip(c.external_id)}>{c.external_id ? truncateId(c.external_id) : "-"}</td>;
     case "landing":
+    case "facebook":
+    case "portofolio":
+    case "cp":
     case "campana":
     case "conjunto":
     case "anuncio": return <td key={col} className={dim} title={tip(c[col])}>{c[col] || "-"}</td>;

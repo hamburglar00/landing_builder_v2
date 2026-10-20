@@ -1,4 +1,5 @@
 import { NextResponse, type NextRequest } from "next/server";
+import { constructorLandingOverride } from "./lib/landing/urlRouting";
 
 const DEFAULT_PROMOTIONS_PUBLIC_HOST = "sorteosgolden.vercel.app";
 
@@ -25,8 +26,19 @@ export async function proxy(request: NextRequest) {
   const requestHost = request.headers.get("host")?.toLowerCase().split(":")[0] ?? "";
   const { pathname } = request.nextUrl;
 
-  if (requestHost === promotionsHost && !pathname.startsWith("/promo/") && !isAllowedAssetPath(pathname)) {
-    return new NextResponse("Not found", { status: 404 });
+  if (requestHost === promotionsHost) {
+    if (!pathname.startsWith("/promo/") && !isAllowedAssetPath(pathname)) {
+      return new NextResponse("Not found", { status: 404 });
+    }
+    return NextResponse.next();
+  }
+
+  const selection = constructorLandingOverride(request.nextUrl);
+  if (selection === "invalid") return new NextResponse("Landing no encontrada", { status: 404 });
+  if (selection) {
+    const destination = request.nextUrl.clone();
+    destination.pathname = selection.pathname;
+    return NextResponse.rewrite(destination);
   }
 
   return NextResponse.next();

@@ -618,7 +618,7 @@ export default function AdminLandingEditarPage() {
 
         {landing.landingType !== "external" && (
           <>
-            {landing.publishTarget === "classic" && <LandingUrlParametersCard landingName={landing.name} />}
+            <LandingUrlParametersCard landingName={landing.name} />
             <LandingTemplateSection config={landing.config} setConfig={setConfig} />
           </>
         )}

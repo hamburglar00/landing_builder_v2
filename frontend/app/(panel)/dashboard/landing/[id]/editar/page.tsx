@@ -625,7 +625,7 @@ export default function DashboardLandingEditarPage() {
 
         {landing.landingType !== "external" && (
           <>
-            {landing.publishTarget === "classic" && <LandingUrlParametersCard landingName={landing.name} />}
+            <LandingUrlParametersCard landingName={landing.name} />
             <LandingTemplateSection config={landing.config} setConfig={setConfig} allowTemplate7={template7Enabled} />
           </>
         )}

@@ -192,6 +192,9 @@ interface ConversionRow {
   observaciones: string;
   external_id: string;
   landing?: string | null;
+  facebook?: string | null;
+  portofolio?: string | null;
+  cp?: string | null;
   campana?: string | null;
   conjunto?: string | null;
   anuncio?: string | null;

@@ -1,5 +1,5 @@
 type AttributionSource = {
-  landing?: unknown; landing_name?: unknown; campana?: unknown;
+  landing?: unknown; landing_name?: unknown; facebook?: unknown; portofolio?: unknown; cp?: unknown; campana?: unknown;
   conjunto?: unknown; anuncio?: unknown; event_source_url?: unknown;
 };
 
@@ -15,6 +15,9 @@ export function urlAttribution(payload: AttributionSource, original?: Attributio
   return {
     landing: text(original?.landing, 160) || text(payload.landing, 160) ||
       text(params.get('landing'), 160) || text(original?.landing_name, 160) || text(payload.landing_name, 160),
+    facebook: text(original?.facebook) || text(payload.facebook) || text(params.get('facebook')),
+    portofolio: text(original?.portofolio) || text(payload.portofolio) || text(params.get('portofolio')),
+    cp: text(original?.cp) || text(payload.cp) || text(params.get('cp')),
     campana: text(original?.campana) || text(payload.campana) || text(params.get('campana')),
     conjunto: text(original?.conjunto) || text(payload.conjunto) || text(params.get('conjunto')),
     anuncio: text(original?.anuncio) || text(payload.anuncio) || text(params.get('anuncio')),

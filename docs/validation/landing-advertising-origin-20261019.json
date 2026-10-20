@@ -1,0 +1,71 @@
+{
+  "date": "2026-10-19",
+  "scope": "facebook, portofolio, cp: templates 1-7, classic and constructor",
+  "status": "local implementation validation completed; subsequently deployed as recorded in productionRelease",
+  "productionRelease": "../release/landing-advertising-origin-20261019.json",
+  "migration": "20261019212429_landing_advertising_origin_attribution.sql",
+  "storage": {
+    "table": "public.conversions",
+    "fields": ["facebook", "portofolio", "cp"],
+    "type": "nullable text",
+    "ingestionLimitCharacters": 300,
+    "precedence": "original journey value, explicit event value, event_source_url query",
+    "history": "no invented backfill",
+    "stagesVerified": ["Contact", "Lead", "CompleteRegistration", "first Purchase", "repeat Purchase", "purchase replay"]
+  },
+  "displayOrder": ["landing", "facebook", "portofolio", "cp", "campana", "conjunto", "anuncio"],
+  "publicRuntime": "/public-assets/landing-runtime-v4.js",
+  "checks": [
+    {
+      "command": "npx tsx scripts/landing-advertising-attribution-check.ts",
+      "cwd": "frontend",
+      "passed": 20,
+      "details": "Actual classic components 1-6, generated classic Template 7 bundle, constructor HTML and v4 asset handler, browser Contact and server start parsers. All network requests intercepted. Accents, spaces, plus signs and long IDs with initial zeroes preserved."
+    },
+    {
+      "command": "node scripts/phase0/atrio-builder-origin.mjs",
+      "passed": 9,
+      "details": "Actual Edge handlers with local PostgreSQL/PostgREST and mocked external IO; original attribution survives conflicting later events, registration, first/repeat purchase and replay."
+    },
+    {
+      "command": "node scripts/security/landing-url-attribution-tests.mjs",
+      "supabaseCliVersion": "2.75.0",
+      "migrationsReplayed": 294,
+      "result": "passed",
+      "details": "Full migration history, attribution storage, scoped table/export/search including numeric cp, RLS/permissions and existing fallback behavior. Disposable local database cleaned up by runner.",
+      "environmentNote": "Initial 2.121.0 bootstrap timed out downloading images; subsequent attempt failed its pinned pg_net baseline. Used already installed 2.75.0, matching the existing harness reference, without weakening checks."
+    },
+    {
+      "command": "deno test supabase/functions/conversions/url_attribution_test.ts",
+      "passed": 6
+    },
+    {
+      "frontendTestFiles": ["conversionUrlAttribution.test.ts", "conversionTableView.test.ts", "publicLandingHtml.test.ts", "constructorUrlRouting.test.ts", "reyDeAsesStart.test.ts", "template7Performance.test.ts"],
+      "result": "passed"
+    },
+    {
+      "command": "npx tsc --noEmit",
+      "repositories": ["landing-builder/frontend", "landing-prueba-1"],
+      "result": "passed"
+    },
+    {
+      "command": "node scripts/build-classic-template7.mjs",
+      "result": "shared bundle synchronized, 182201 bytes"
+    },
+    {
+      "command": "node scripts/sync-gateway-app-sdk.mjs --check",
+      "result": "four gateways synchronized"
+    }
+  ],
+  "casinoCoverage": [
+    { "provider": "rey_de_ases", "casino": "Rey de Ases", "enginesVerified": ["classic", "constructor"], "gatewayChanges": false, "published": false },
+    { "provider": "ases_del_norte", "casino": "Ases del Norte", "enginesVerified": ["classic", "constructor"], "gatewayChanges": false, "published": false },
+    { "provider": "ganamos_net", "casino": "Ganamos NET", "enginesVerified": ["classic", "constructor"], "gatewayChanges": false, "published": false },
+    { "provider": "multi_skin", "casino": "Ganamos+", "skinCode": "ganamos_plus", "enginesVerified": ["classic", "constructor"], "gatewayChanges": false, "published": false,
+      "workerReview": "wrangler.jsonc reviewed: public domain uses OpenNext worker. Attribution is captured before handoff and inherited by the shared conversions backend; no worker change required for this feature. No live Cloudflare deployment or account test performed." }
+  ],
+  "releaseOrder": ["database migration", "conversions and create-client Edge Functions", "fresh constructor and classic builds/deployments"],
+  "productionDatabaseWrites": 0,
+  "realConversionEvents": 0,
+  "api2Changes": false
+}
