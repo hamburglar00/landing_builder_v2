@@ -330,3 +330,12 @@ Evidencia: [operaciones manuales y navegación entre chats](validation/atrio-man
 - No ocultar respuestas genéricas de API2 según palabras del texto. La clasificación semántica completa y la política de entrega siguen pendientes de definir; conservar mensajes y avisos financieros actuales.
 
 Evidencia y conciliación pendiente de la operación 13: [widget y Full Carga](validation/atrio-widget-full-carga-20261020.md). API2 permanece local.
+
+### Clasificación compatible y mediciones locales (20/10/2026)
+
+- Las respuestas nuevas de API2 pueden incorporar un descriptor opcional y versionado: categoría, evento de origen y estado. Atrio lo valida y guarda como `metadata.api2_reply`, sin convertirlo en prueba financiera ni generar conversiones. La clasificación usa señales explícitas del origen, nunca palabras del mensaje.
+- Categorías iniciales: procesamiento de archivo, estado de carga, estado de retiro, cuenta, soporte, conversación, promoción y sin clasificar. Conservar todos los mensajes y los callers antiguos; esta etapa no habilita filtros de entrega. Las respuestas adicionales sin señal inequívoca no heredan un éxito financiero.
+- El outbox conserva el descriptor en su JSON y los reintentos conservan la misma clave de entrega. Un despliegue gradual puede recibir mensajes sin descriptor y no debe rechazarlos ni duplicarlos. No reescribir el historial ni modificar HG Cash u otros canales.
+- Para medir localmente se puede ejecutar el adaptador real contra las cuentas de prueba autorizadas, cargar una ficha, verificarla, retirarla con consulta previa y confirmar el saldo inicial. Persistir los intentos antes de ejecutarlos y detenerse ante un resultado incierto. La operación 13 pendiente queda excluida. Estos tiempos no incluyen el circuito HTTP completo desde Atrio.
+
+Evidencia: [clasificación y ciclos locales](validation/atrio-classification-and-local-cycles-20261020.json). API2 y Panel3 permanecen locales; el receptor compatible de Atrio se publica por su circuito habitual.

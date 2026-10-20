@@ -1,0 +1,109 @@
+{
+  "at": "2026-10-20T19:51:56.873Z",
+  "classification": {
+    "additiveOnly": true,
+    "filteredMessages": 0,
+    "categories": [
+      "file_processing",
+      "load_status",
+      "withdrawal_status",
+      "account",
+      "support",
+      "conversation",
+      "promotion",
+      "unclassified"
+    ],
+    "unknownMessagesStillDelivered": true,
+    "oldOutboxRowsStillDelivered": true,
+    "dedupeKeysUnchanged": true,
+    "descriptorIsNotFinancialProof": true,
+    "producerApi2LocalOnly": true,
+    "receiverProduction": {
+      "at": "2026-10-20T19:50:13.598Z",
+      "taggedMessageRoundTrip": true,
+      "legacyMessageRoundTrip": true,
+      "retryIsDuplicate": true,
+      "exactlyOneMessagePerId": true,
+      "messagesInserted": 2,
+      "financialOperations": 0,
+      "api2Deployment": false
+    }
+  },
+  "measurements": {
+    "scope": "Local optimized provider adapter against real test accounts; excludes complete API2 HTTP/DB and Atrio round trip",
+    "samplesPerFinalProvider": 1,
+    "final": [
+      {
+        "manager": 1041,
+        "username": "medici9015",
+        "phase": "completed",
+        "balanceMs": 2098,
+        "initialBalance": 0,
+        "loadMs": 2551,
+        "loadReportedSuccess": true,
+        "afterLoad": 1,
+        "withdrawalPrecheckMs": 2216,
+        "withdrawalExecuteMs": 3509,
+        "withdrawalTotalMs": 5725,
+        "withdrawReportedSuccess": true,
+        "finalBalance": 0
+      },
+      {
+        "manager": 1040,
+        "username": "medici3968",
+        "phase": "completed",
+        "balanceMs": 2246,
+        "initialBalance": 500,
+        "loadMs": 7295,
+        "loadReportedSuccess": true,
+        "afterLoad": 501,
+        "withdrawalPrecheckMs": 2247,
+        "withdrawalExecuteMs": 5188,
+        "withdrawalTotalMs": 7435,
+        "withdrawReportedSuccess": true,
+        "finalBalance": 500
+      }
+    ],
+    "asesBeforeNavigationChange": [
+      {
+        "manager": 1040,
+        "username": "medici3968",
+        "phase": "completed",
+        "balanceMs": 1902,
+        "initialBalance": 500,
+        "loadMs": 12888,
+        "loadReportedSuccess": true,
+        "afterLoad": 501,
+        "withdrawalPrecheckMs": 1271,
+        "withdrawalExecuteMs": 9459,
+        "withdrawalTotalMs": 10730,
+        "withdrawReportedSuccess": true,
+        "finalBalance": 500
+      }
+    ],
+    "allBalancesRestored": true,
+    "completedOneChipCycles": 3,
+    "bankTransfers": 0,
+    "api2ProductionDatabaseWrites": 0,
+    "automaticFinancialRetries": 0,
+    "pendingOperation13Touched": false,
+    "initialAsesBrowserLaunchFailureBeforeProviderRequest": true
+  },
+  "validation": {
+    "api2IsolatedTests": 38,
+    "api2ProviderTests": 4,
+    "api2RealIsolatedMysqlTest": 1,
+    "api2Typecheck": true,
+    "atrioTests": 25,
+    "atrioBuild": true
+  },
+  "publication": {
+    "atrioDeploymentId": "dpl_3kaHSavb1RS6o8U2voKj8DVFugmL",
+    "atrioUrl": "https://internal-chat-jxgjuhefe-juanclouds-projects.vercel.app",
+    "alias": "https://www.atrio.website",
+    "ready": true,
+    "api2Pushed": false,
+    "api2Deployed": false,
+    "panel3Modified": false
+  }
+}
