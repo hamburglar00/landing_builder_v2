@@ -1,0 +1,239 @@
+{
+  "at": "2026-10-20T19:08:16.254Z",
+  "productionEndpointBalanceSamples": [
+    {
+      "user": "medici4930",
+      "manager": 1035,
+      "ms": 2038,
+      "http": 200,
+      "keys": [
+        "success",
+        "balance",
+        "platform"
+      ],
+      "success": true,
+      "balance": 4000,
+      "code": null,
+      "errorType": "undefined"
+    },
+    {
+      "user": "medici3968",
+      "manager": 1040,
+      "ms": 7552,
+      "http": 200,
+      "keys": [
+        "success",
+        "balance",
+        "platform"
+      ],
+      "success": true,
+      "balance": 500,
+      "code": null,
+      "errorType": "undefined"
+    },
+    {
+      "user": "medici4384",
+      "manager": 1041,
+      "ms": 30650,
+      "http": 504,
+      "keys": [],
+      "code": null,
+      "errorType": "undefined"
+    }
+  ],
+  "providerReadOnlyOptimizationSamples": [
+    {
+      "provider": "ganamos",
+      "ms": 1994,
+      "success": true,
+      "balance": 0
+    },
+    {
+      "provider": "ases-adapter-http",
+      "ms": 2169,
+      "success": true,
+      "balance": 500
+    }
+  ],
+  "measuredUserOperations": [
+    {
+      "id": 17,
+      "manager_id": 1035,
+      "operation_type": "withdrawal",
+      "status": "succeeded",
+      "amount": "1000.0000",
+      "error_code": null,
+      "created_at": "2026-10-20T18:30:35.000Z",
+      "updated_at": "2026-10-20T18:30:37.000Z",
+      "balance_after": null,
+      "player_username": "medici4930",
+      "elapsedSecondsApprox": 2
+    },
+    {
+      "id": 16,
+      "manager_id": 1035,
+      "operation_type": "load",
+      "status": "succeeded",
+      "amount": "5000.0000",
+      "error_code": null,
+      "created_at": "2026-10-20T18:30:20.000Z",
+      "updated_at": "2026-10-20T18:30:21.000Z",
+      "balance_after": null,
+      "player_username": "medici4930",
+      "elapsedSecondsApprox": 1
+    },
+    {
+      "id": 15,
+      "manager_id": 1040,
+      "operation_type": "withdrawal",
+      "status": "succeeded",
+      "amount": "500.0000",
+      "error_code": null,
+      "created_at": "2026-10-20T18:28:52.000Z",
+      "updated_at": "2026-10-20T18:29:21.000Z",
+      "balance_after": null,
+      "player_username": "medici3968",
+      "elapsedSecondsApprox": 29
+    },
+    {
+      "id": 14,
+      "manager_id": 1040,
+      "operation_type": "load",
+      "status": "succeeded",
+      "amount": "1000.0000",
+      "error_code": null,
+      "created_at": "2026-10-20T18:27:07.000Z",
+      "updated_at": "2026-10-20T18:27:32.000Z",
+      "balance_after": null,
+      "player_username": "medici3968",
+      "elapsedSecondsApprox": 25
+    },
+    {
+      "id": 13,
+      "manager_id": 1041,
+      "operation_type": "load",
+      "status": "processing",
+      "amount": "1000.0000",
+      "error_code": null,
+      "created_at": "2026-10-20T18:23:37.000Z",
+      "updated_at": "2026-10-20T18:23:37.000Z",
+      "balance_after": null,
+      "player_username": null,
+      "elapsedSecondsApprox": 0
+    }
+  ],
+  "productionUi": {
+    "at": "2026-10-20T19:07:09.480Z",
+    "financialRequests": 0,
+    "emailSent": false,
+    "runs": [
+      {
+        "browser": "chromium",
+        "width": 1440,
+        "nextChatButtonsReadyWhilePreviousBalancePending": true,
+        "nextReadyMs": 1637,
+        "withdrawCopyCorrect": true,
+        "errors": []
+      },
+      {
+        "browser": "chromium",
+        "width": 390,
+        "nextChatButtonsReadyWhilePreviousBalancePending": true,
+        "nextReadyMs": 1189,
+        "withdrawCopyCorrect": true,
+        "errors": []
+      },
+      {
+        "browser": "webkit",
+        "width": 1440,
+        "nextChatButtonsReadyWhilePreviousBalancePending": true,
+        "nextReadyMs": 1408,
+        "withdrawCopyCorrect": true,
+        "errors": []
+      },
+      {
+        "browser": "webkit",
+        "width": 390,
+        "nextChatButtonsReadyWhilePreviousBalancePending": true,
+        "nextReadyMs": 1441,
+        "withdrawCopyCorrect": true,
+        "errors": []
+      }
+    ],
+    "sessionRevoked": true
+  },
+  "productionQueryApi": {
+    "at": "2026-10-20T19:01:46.090Z",
+    "financialRequests": 0,
+    "cases": [
+      {
+        "name": "anonymous_rejected",
+        "http": 401
+      },
+      {
+        "name": "owned_live_balance",
+        "http": 200,
+        "ms": 3292,
+        "balance": 4000,
+        "serverTiming": "atrio-player-query;dur=3050.5"
+      },
+      {
+        "name": "unknown_conversation_rejected",
+        "http": 200,
+        "code": "provider_account_missing"
+      }
+    ],
+    "sessionRevoked": true
+  },
+  "checks": {
+    "atrioTargetedTestsPassed": 27,
+    "atrioBuild": true,
+    "api2Typecheck": true,
+    "api2AdapterTests": 12,
+    "api2ProviderAndRegistrationTests": 12,
+    "api2RealIsolatedMySqlTests": 12,
+    "externalNetworkInMySqlTests": 0
+  },
+  "changes": {
+    "atrio": [
+      "Authenticated uncached GET reads for bot, balance and pending requests",
+      "Previous conversation read cancellation",
+      "Explicit manager query loading/error UI",
+      "Withdrawal copy no longer requests a receipt",
+      "Spanish 504 balance timeout feedback"
+    ],
+    "api2Local": [
+      "Explicit Atrio-only optimized dispatcher",
+      "Ganamos uses existing HTTP API with request-local proxy and transport disposal",
+      "Strict Ganamos balance shape and account check in Atrio mode",
+      "Ases HTTP balance preserving decimal values and exact account",
+      "Ases skips duplicated balance read only with server-verified pre-withdrawal balance",
+      "Ases retains actual successful confirmation while omitting transient-modal wait and informational manager balance lookup",
+      "One Ases financial dispatch per Atrio attempt, no retry after uncertainty"
+    ]
+  },
+  "limitations": {
+    "newFinancialOperationsExecuted": 0,
+    "optimizedLoadWithdrawalRealTimingsNotMeasured": true,
+    "api2Deployed": false,
+    "api2Pushed": false,
+    "hgCashModified": false,
+    "panel3Modified": false,
+    "pendingGanamosLoad": {
+      "operationId": 13,
+      "managerId": 1041,
+      "amount": 1000,
+      "status": "processing",
+      "providerBalanceRead": 0,
+      "repeated": false,
+      "reconciliationStillRequired": true
+    }
+  },
+  "atrioPublication": {
+    "deploymentId": "dpl_2DAGfkoo51QkNEpRVTF9fvMYoSrr",
+    "url": "https://internal-chat-5rg0t5szn-juanclouds-projects.vercel.app",
+    "state": "READY",
+    "alias": "https://www.atrio.website",
+    "api2Deployed": false
+  }
+}
