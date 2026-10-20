@@ -322,3 +322,11 @@ Validación y publicación: [reinicios de bots y selectores del 20/10](validatio
 - La consulta de saldo actual de Ganamos dio 504 a los 30,65 s. La operación 13 de carga por 1.000 sigue en processing: no repetirla ni marcarla como exitosa o fallida sin evidencia del proveedor. El saldo consultado por API fue 0; ese dato aislado no sustituye la conciliación del historial. La carga y retiro de Ases registrados por el usuario duraron aproximadamente 25 y 29 s; Rey, 1 y 2 s. Las nuevas pruebas reales de optimización solo consultan saldos y no acreditan tiempos de una carga o retiro optimizado.
 
 Evidencia: [operaciones manuales y navegación entre chats](validation/atrio-manual-operations-20261020.json). Chromium y WebKit, móvil y escritorio, abrieron los botones del segundo chat con la consulta del anterior retenida. La validación conserva su carácter simulado para esa demora; las lecturas del proveedor y los registros de operaciones se verificaron por separado, sin iniciar nuevas cargas ni retiros.
+
+### Widget y saldo de Full Carga (20/10/2026)
+
+- La X para cerrar el widget debe tener contraste y tamaño visibles en los tres temas. Los textos y enlaces largos deben permanecer dentro de la burbuja sin perder copia ni saltos de línea.
+- El asesor puede consultar saldo de las cuentas Full Carga vinculadas a sus conversaciones. Es una lectura autenticada; las cargas y retiros manuales siguen limitados a MKT y no se habilitan para Full Carga.
+- No ocultar respuestas genéricas de API2 según palabras del texto. La clasificación semántica completa y la política de entrega siguen pendientes de definir; conservar mensajes y avisos financieros actuales.
+
+Evidencia y conciliación pendiente de la operación 13: [widget y Full Carga](validation/atrio-widget-full-carga-20261020.md). API2 permanece local.

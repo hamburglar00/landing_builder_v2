@@ -1,0 +1,312 @@
+{
+  "at": "2026-10-20T19:25:17.073Z",
+  "publication": {
+    "id": "dpl_66oe2vSKsgz4SYnYvSrrPRuFBprA",
+    "url": "https://internal-chat-fgcxgin68-juanclouds-projects.vercel.app",
+    "state": "READY",
+    "alias": "https://www.atrio.website"
+  },
+  "widget": {
+    "at": "2026-10-20T19:21:04.981Z",
+    "financialRequests": 0,
+    "messagesSent": 0,
+    "productionConfigurationWrites": 0,
+    "cases": [
+      {
+        "browser": "chromium",
+        "width": 214,
+        "theme": "atrio",
+        "contained": true,
+        "scrollWidth": 214,
+        "closeWidth": 36,
+        "closeColor": "rgb(255, 255, 255)",
+        "closeBackground": "oklab(0 0 0 / 0.5)",
+        "iconSize": 20
+      },
+      {
+        "browser": "chromium",
+        "width": 214,
+        "theme": "whatsapp",
+        "contained": true,
+        "scrollWidth": 214,
+        "closeWidth": 36,
+        "closeColor": "rgb(255, 255, 255)",
+        "closeBackground": "oklab(0 0 0 / 0.5)",
+        "iconSize": 20
+      },
+      {
+        "browser": "chromium",
+        "width": 214,
+        "theme": "page",
+        "contained": true,
+        "scrollWidth": 214,
+        "closeWidth": 36,
+        "closeColor": "rgb(255, 255, 255)",
+        "closeBackground": "oklab(0 0 0 / 0.5)",
+        "iconSize": 20
+      },
+      {
+        "browser": "chromium",
+        "width": 276,
+        "theme": "atrio",
+        "contained": true,
+        "scrollWidth": 276,
+        "closeWidth": 36,
+        "closeColor": "rgb(255, 255, 255)",
+        "closeBackground": "oklab(0 0 0 / 0.5)",
+        "iconSize": 20
+      },
+      {
+        "browser": "chromium",
+        "width": 276,
+        "theme": "whatsapp",
+        "contained": true,
+        "scrollWidth": 276,
+        "closeWidth": 36,
+        "closeColor": "rgb(255, 255, 255)",
+        "closeBackground": "oklab(0 0 0 / 0.5)",
+        "iconSize": 20
+      },
+      {
+        "browser": "chromium",
+        "width": 276,
+        "theme": "page",
+        "contained": true,
+        "scrollWidth": 276,
+        "closeWidth": 36,
+        "closeColor": "rgb(255, 255, 255)",
+        "closeBackground": "oklab(0 0 0 / 0.5)",
+        "iconSize": 20
+      },
+      {
+        "browser": "chromium",
+        "width": 294,
+        "theme": "atrio",
+        "contained": true,
+        "scrollWidth": 294,
+        "closeWidth": 36,
+        "closeColor": "rgb(255, 255, 255)",
+        "closeBackground": "oklab(0 0 0 / 0.5)",
+        "iconSize": 20
+      },
+      {
+        "browser": "chromium",
+        "width": 294,
+        "theme": "whatsapp",
+        "contained": true,
+        "scrollWidth": 294,
+        "closeWidth": 36,
+        "closeColor": "rgb(255, 255, 255)",
+        "closeBackground": "oklab(0 0 0 / 0.5)",
+        "iconSize": 20
+      },
+      {
+        "browser": "chromium",
+        "width": 294,
+        "theme": "page",
+        "contained": true,
+        "scrollWidth": 294,
+        "closeWidth": 36,
+        "closeColor": "rgb(255, 255, 255)",
+        "closeBackground": "oklab(0 0 0 / 0.5)",
+        "iconSize": 20,
+        "closeSendsParentMessage": true
+      },
+      {
+        "browser": "webkit",
+        "width": 214,
+        "theme": "atrio",
+        "contained": true,
+        "scrollWidth": 214,
+        "closeWidth": 36,
+        "closeColor": "rgb(255, 255, 255)",
+        "closeBackground": "oklab(0 0 0 / 0.5)",
+        "iconSize": 20
+      },
+      {
+        "browser": "webkit",
+        "width": 214,
+        "theme": "whatsapp",
+        "contained": true,
+        "scrollWidth": 214,
+        "closeWidth": 36,
+        "closeColor": "rgb(255, 255, 255)",
+        "closeBackground": "oklab(0 0 0 / 0.5)",
+        "iconSize": 20
+      },
+      {
+        "browser": "webkit",
+        "width": 214,
+        "theme": "page",
+        "contained": true,
+        "scrollWidth": 214,
+        "closeWidth": 36,
+        "closeColor": "rgb(255, 255, 255)",
+        "closeBackground": "oklab(0 0 0 / 0.5)",
+        "iconSize": 20
+      },
+      {
+        "browser": "webkit",
+        "width": 276,
+        "theme": "atrio",
+        "contained": true,
+        "scrollWidth": 276,
+        "closeWidth": 36,
+        "closeColor": "rgb(255, 255, 255)",
+        "closeBackground": "oklab(0 0 0 / 0.5)",
+        "iconSize": 20
+      },
+      {
+        "browser": "webkit",
+        "width": 276,
+        "theme": "whatsapp",
+        "contained": true,
+        "scrollWidth": 276,
+        "closeWidth": 36,
+        "closeColor": "rgb(255, 255, 255)",
+        "closeBackground": "oklab(0 0 0 / 0.5)",
+        "iconSize": 20
+      },
+      {
+        "browser": "webkit",
+        "width": 276,
+        "theme": "page",
+        "contained": true,
+        "scrollWidth": 276,
+        "closeWidth": 36,
+        "closeColor": "rgb(255, 255, 255)",
+        "closeBackground": "oklab(0 0 0 / 0.5)",
+        "iconSize": 20
+      },
+      {
+        "browser": "webkit",
+        "width": 294,
+        "theme": "atrio",
+        "contained": true,
+        "scrollWidth": 294,
+        "closeWidth": 36,
+        "closeColor": "rgb(255, 255, 255)",
+        "closeBackground": "oklab(0 0 0 / 0.5)",
+        "iconSize": 20
+      },
+      {
+        "browser": "webkit",
+        "width": 294,
+        "theme": "whatsapp",
+        "contained": true,
+        "scrollWidth": 294,
+        "closeWidth": 36,
+        "closeColor": "rgb(255, 255, 255)",
+        "closeBackground": "oklab(0 0 0 / 0.5)",
+        "iconSize": 20
+      },
+      {
+        "browser": "webkit",
+        "width": 294,
+        "theme": "page",
+        "contained": true,
+        "scrollWidth": 294,
+        "closeWidth": 36,
+        "closeColor": "rgb(255, 255, 255)",
+        "closeBackground": "oklab(0 0 0 / 0.5)",
+        "iconSize": 20,
+        "closeSendsParentMessage": true
+      }
+    ]
+  },
+  "fullCarga": {
+    "at": "2026-10-20T19:21:58.340Z",
+    "financialRequests": 0,
+    "runs": [
+      {
+        "browser": "chromium",
+        "width": 1440,
+        "fullCargaBalanceVisible": true,
+        "manualMutationsHidden": true
+      },
+      {
+        "browser": "chromium",
+        "width": 390,
+        "fullCargaBalanceVisible": true,
+        "manualMutationsHidden": true
+      },
+      {
+        "browser": "webkit",
+        "width": 1440,
+        "fullCargaBalanceVisible": true,
+        "manualMutationsHidden": true
+      },
+      {
+        "browser": "webkit",
+        "width": 390,
+        "fullCargaBalanceVisible": true,
+        "manualMutationsHidden": true
+      }
+    ],
+    "actualFullCargaRead": {
+      "http": 200,
+      "ms": 1560,
+      "ok": false,
+      "code": "capability_not_allowed"
+    },
+    "sessionRevoked": true
+  },
+  "checks": {
+    "atrioTargetedTests": 16,
+    "atrioProductionBuild": true,
+    "api2Typecheck": true,
+    "api2AdapterTests": 13
+  },
+  "pendingLoad": {
+    "operation": {
+      "id": 13,
+      "manager_id": 1041,
+      "player_id": 31722,
+      "agency_id": 278,
+      "amount": "1000.0000",
+      "status": "processing",
+      "operation_type": "load",
+      "error_code": null,
+      "created_at": "2026-10-20T18:23:37.000Z",
+      "updated_at": "2026-10-20T18:23:37.000Z",
+      "username": "medici4384"
+    },
+    "balance": {
+      "success": true,
+      "balance": 0
+    },
+    "aggregate": {
+      "totals": {
+        "total_deposit": "0",
+        "total_withdraw": "0",
+        "delta_balance": "0"
+      },
+      "details": {
+        "last_calculate_time": "2026-10-20 18:40:00"
+      }
+    },
+    "completeTransactionHistoryObtained": false,
+    "databaseRecordChanged": false,
+    "financialRequestRepeated": false,
+    "reconciliationWriteStillPending": true
+  },
+  "api2LocalOnly": {
+    "deployed": false,
+    "pushed": false,
+    "newChanges": [
+      "Full Carga balanceRead permission, manual mutation permissions unchanged",
+      "Remove manager password from Ganamos balance failure log"
+    ]
+  },
+  "classification": {
+    "generalApi2RepliesHaveSemanticCategory": false,
+    "confirmedLoadsHaveSeparateVerifiedFlow": true,
+    "newMessageFiltersImplemented": false
+  },
+  "scope": {
+    "newFinancialRequests": 0,
+    "newPlayersCreated": 0,
+    "hgCashModified": false,
+    "trackingModified": false
+  }
+}
