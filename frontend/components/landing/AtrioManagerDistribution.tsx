@@ -60,17 +60,17 @@ export function AtrioManagerDistribution({ landingId, provider, clients, setAssi
     <div className="rounded-xl border border-[var(--color-border)] bg-[var(--color-bg-2)] p-3">
       <p className="font-medium text-sm">Destinos de {CASINO_NAMES[provider]}</p>
       <p className="mt-1 text-xs text-[var(--color-text-muted)]">Elegí cada bot que participará en la redirección de la landing.</p>
-      <div className="mt-3 flex flex-wrap gap-2">
-        {(["weighted_random", "fair"] as const).map(value => <div key={value} className="inline-flex items-center gap-1">
+      <div role="group" aria-label="Modo de reparto" className="mt-3 inline-flex rounded-lg border border-zinc-700 bg-zinc-900 text-[11px]">
+        {(["weighted_random", "fair"] as const).map((value, index) => <div key={value} className={`inline-flex items-center ${index === 0 ? "rounded-l-lg border-r border-zinc-700" : "rounded-r-lg"} ${mode === value ? "bg-zinc-100 text-zinc-900" : "text-zinc-300"}`}>
           <button type="button" disabled={busy} onClick={() => setMode(value)} aria-pressed={mode === value}
-            className={`ui-button h-8 min-h-8 px-3 text-xs ${mode === value ? "ui-button-primary" : "ui-button-secondary"}`}>
+            className={`cursor-pointer px-2 py-1 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-zinc-400 disabled:cursor-wait ${index === 0 ? "rounded-l-lg" : ""} ${mode !== value ? "hover:bg-zinc-800" : ""}`}>
             {DISTRIBUTION_MODES[value].label}
           </button>
           <button type="button" aria-label={`Información sobre ${DISTRIBUTION_MODES[value].label}`} aria-expanded={helpMode === value} aria-controls={helpId}
             onClick={() => setHelpMode(current => current === value ? null : value)}
             onKeyDown={event => { if (event.key === "Escape") setHelpMode(null); }}
-            className={`inline-flex size-7 shrink-0 items-center justify-center rounded-full text-[11px] font-semibold transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--color-primary)] ${helpMode === value ? "text-[var(--color-primary)]" : "text-[var(--color-text-muted)] hover:text-[var(--color-text)]"}`}>
-            <span aria-hidden="true" className="inline-flex size-4 items-center justify-center rounded-full border border-current">i</span>
+            className="mr-1 inline-flex size-6 shrink-0 cursor-pointer items-center justify-center rounded-full text-[10px] font-semibold opacity-70 hover:opacity-100 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-zinc-400">
+            <span aria-hidden="true" className="inline-flex size-3.5 items-center justify-center rounded-full border border-current">i</span>
           </button>
         </div>)}
       </div>
@@ -78,7 +78,7 @@ export function AtrioManagerDistribution({ landingId, provider, clients, setAssi
         <p><strong className="text-[var(--color-text)]">{DISTRIBUTION_MODES[helpMode].label}: </strong>{DISTRIBUTION_MODES[helpMode].description}</p>
         <p className="mt-1">MKT y Full Carga participan juntos solo si seleccionás ambos. Las cuentas existentes conservan su bot.</p>
       </div>}
-      {mode === "fair" && <div className="mt-3 flex gap-2">{(["usage_count", "messages_received"] as const).map(value => <button key={value} type="button" disabled={busy} onClick={() => setCriterion(value)} className={`ui-button h-8 min-h-8 px-3 text-xs ${criterion === value ? "ui-button-primary" : "ui-button-secondary"}`}>{value === "usage_count" ? "Por contador" : "Chats iniciados"}</button>)}</div>}
+      {mode === "fair" && <div role="group" aria-label="Criterio de reparto equitativo" className="mt-3 flex w-fit rounded-lg border border-zinc-700 bg-zinc-900 text-[11px]">{(["usage_count", "messages_received"] as const).map((value, index) => <button key={value} type="button" disabled={busy} onClick={() => setCriterion(value)} aria-pressed={criterion === value} className={`cursor-pointer px-2 py-1 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-zinc-400 ${index === 0 ? "rounded-l-lg border-r border-zinc-700" : "rounded-r-lg"} ${criterion === value ? "bg-zinc-100 text-zinc-900" : "text-zinc-300 hover:bg-zinc-800"}`}>{value === "usage_count" ? "Por contador" : "Chats iniciados"}</button>)}</div>}
     </div>
     {busy && !loaded && <p className="text-xs text-[var(--color-text-muted)]">Consultando bots…</p>}
     {loaded && !configured && <p className="text-xs text-amber-300">Elegí los bots y guardá los cambios de la landing. Las cuentas existentes conservan su destino.</p>}

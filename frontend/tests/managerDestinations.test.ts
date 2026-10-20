@@ -36,6 +36,22 @@ test("directory denies IDs filtered out by actor ownership", async () => {
   const response = await handleManagerDestinations(request({ action: "directory", clientIds: [ids.client] }), backend({ clients: async () => [], call: async () => { contacted = true; return {}; } }));
   assert.equal(response.status, 403); assert.equal(contacted, false);
 });
+
+test("metric resets derive advisor scope from owned clients and cannot reset another actor", async () => {
+  calls.length = 0;
+  const payload = { action: "reset", clientIds: [ids.client], metric: "messages_received", advisor_ids: [ids.otherAdvisor] };
+  assert.equal((await handleManagerDestinations(request(payload), backend())).status, 200);
+  assert.deepEqual(calls, [{ action: "reset", input: { advisor_ids: [ids.advisor], metric: "messages_received" } }]);
+  calls.length = 0;
+  assert.equal((await handleManagerDestinations(request(payload), backend({ clients: async () => [] }))).status, 403);
+  assert.equal((await handleManagerDestinations(request(payload), backend({ authenticate: async () => false }))).status, 401);
+  for (const invalid of [{ ...payload, metric: "messages" }, { ...payload, clientIds: [] }, { ...payload, clientIds: ["invalid"] }]) {
+    assert.equal((await handleManagerDestinations(request(invalid), backend())).status, 400);
+  }
+  const crossOrigin = request(payload); crossOrigin.headers.set("origin", "https://elsewhere.test");
+  assert.equal((await handleManagerDestinations(crossOrigin, backend())).status, 403);
+  assert.equal(calls.length, 0);
+});
 test("configuration rejects wrong landing casino and no backend write occurs", async () => {
   calls.length = 0;
   assert.equal((await handleManagerDestinations(request({ ...configure, targetProvider: "rey_de_ases" }), backend())).status, 409);

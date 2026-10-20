@@ -5,7 +5,7 @@ export type DestinationBackend = {
   clients(token: string, ids: string[]): Promise<DestinationClient[]>;
   landing(token: string, id: string): Promise<DestinationLanding | null>;
   workspaceClients(token: string, owner: string, workspace: string): Promise<DestinationClient[]>;
-  call(action: "directory" | "configuration" | "configure", input: object): Promise<unknown>;
+  call(action: "directory" | "configuration" | "configure" | "reset", input: object): Promise<unknown>;
   assign(token: string, landingId: string, clientIds: string[]): Promise<void>;
 };
 const uuid = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-8][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
@@ -23,12 +23,13 @@ export async function handleManagerDestinations(request: Request, backend: Desti
     if (new TextEncoder().encode(raw).length > 16384) return json({ error: "Solicitud demasiado grande." }, 413);
     const input = JSON.parse(raw);
     if (!input || typeof input !== "object" || Array.isArray(input)) return json({ error: "Solicitud no válida." }, 400);
-    if (input.action === "directory") {
-      if (!Array.isArray(input.clientIds) || input.clientIds.length > 100 || input.clientIds.some((id: unknown) => typeof id !== "string" || !uuid.test(id))) return json({ error: "Asesores no válidos." }, 400);
+    if (input.action === "directory" || input.action === "reset") {
+      if (!Array.isArray(input.clientIds) || !input.clientIds.length || input.clientIds.length > 100 || input.clientIds.some((id: unknown) => typeof id !== "string" || !uuid.test(id))) return json({ error: "Asesores no válidos." }, 400);
+      if (input.action === "reset" && !["usage_count", "messages_received"].includes(input.metric)) return json({ error: "Métrica no válida." }, 400);
       const ids = [...new Set<string>(input.clientIds)];
       const clients = await backend.clients(token, ids);
       if (clients.length !== ids.length || clients.some(client => !uuid.test(client.atrio_id))) return json({ error: "No tenés acceso a estos asesores." }, 403);
-      return json(await backend.call("directory", { advisor_ids: clients.map(client => client.atrio_id) }) as object);
+      return json(await backend.call(input.action, { advisor_ids: [...new Set(clients.map(client => client.atrio_id))], ...(input.action === "reset" ? { metric: input.metric } : {}) }) as object);
     }
     if (!["configuration", "configure"].includes(input.action) || !uuid.test(input.landingId) || !providers.includes(input.targetProvider)) return json({ error: "Destino no válido. Ganamos+ todavía no está integrado con PBAdmin." }, 400);
     const landing = await backend.landing(token, input.landingId);

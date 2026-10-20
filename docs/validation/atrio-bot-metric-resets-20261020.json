@@ -1,0 +1,221 @@
+{
+  "at": "2026-10-20T17:37:49.651Z",
+  "changes": [
+    "Workspace and advisor metric resets",
+    "Retained historic chat totals",
+    "Template 7 segmented distribution controls matching templates 1–6"
+  ],
+  "migration": {
+    "file": "internal-chat/supabase/migrations/20261020172854_builder_bot_metric_resets.sql",
+    "applied": true,
+    "localAndRemoteHistoryMatch": true
+  },
+  "checks": {
+    "builderContractTests": {
+      "passed": 21,
+      "failed": 0
+    },
+    "atrioContractAndIsolatedPostgresTests": {
+      "passed": 4,
+      "failed": 0,
+      "realPostgres": true,
+      "preservesAssignmentsAccountsAndHistory": true,
+      "restoresOldConversationWithoutRecounting": true,
+      "scopedFairnessUsesResets": true,
+      "rejectsAnonymousAndCrossActor": true
+    },
+    "typescript": {
+      "builder": true,
+      "atrio": true
+    },
+    "productionBuilds": {
+      "builder": true,
+      "atrio": true
+    },
+    "productionUi": {
+      "at": "2026-10-20T17:35:45.854Z",
+      "origin": "https://constructor.panelbotadmin.com",
+      "runs": [
+        {
+          "browser": "chromium",
+          "width": 1440,
+          "cancelledResetWrites": 0,
+          "simulatedResetCount": 2,
+          "retainedHistory": true,
+          "segmentedModesAndCriteria": true,
+          "layout": {
+            "width": 1440,
+            "scroll": 1440
+          },
+          "errors": []
+        },
+        {
+          "browser": "chromium",
+          "width": 390,
+          "cancelledResetWrites": 0,
+          "simulatedResetCount": 2,
+          "retainedHistory": true,
+          "segmentedModesAndCriteria": true,
+          "layout": {
+            "width": 390,
+            "scroll": 390
+          },
+          "errors": []
+        },
+        {
+          "browser": "webkit",
+          "width": 1440,
+          "cancelledResetWrites": 0,
+          "simulatedResetCount": 2,
+          "retainedHistory": true,
+          "segmentedModesAndCriteria": true,
+          "layout": {
+            "width": 1440,
+            "scroll": 1440
+          },
+          "errors": []
+        },
+        {
+          "browser": "webkit",
+          "width": 390,
+          "cancelledResetWrites": 0,
+          "simulatedResetCount": 2,
+          "retainedHistory": true,
+          "segmentedModesAndCriteria": true,
+          "layout": {
+            "width": 390,
+            "scroll": 390
+          },
+          "errors": []
+        }
+      ],
+      "simulatedResets": [
+        {
+          "browser": "chromium",
+          "width": 1440,
+          "metric": "usage_count",
+          "advisors": 1
+        },
+        {
+          "browser": "chromium",
+          "width": 1440,
+          "metric": "messages_received",
+          "advisors": 1
+        },
+        {
+          "browser": "chromium",
+          "width": 390,
+          "metric": "usage_count",
+          "advisors": 1
+        },
+        {
+          "browser": "chromium",
+          "width": 390,
+          "metric": "messages_received",
+          "advisors": 1
+        },
+        {
+          "browser": "webkit",
+          "width": 1440,
+          "metric": "usage_count",
+          "advisors": 1
+        },
+        {
+          "browser": "webkit",
+          "width": 1440,
+          "metric": "messages_received",
+          "advisors": 1
+        },
+        {
+          "browser": "webkit",
+          "width": 390,
+          "metric": "usage_count",
+          "advisors": 1
+        },
+        {
+          "browser": "webkit",
+          "width": 390,
+          "metric": "messages_received",
+          "advisors": 1
+        }
+      ],
+      "productionMetricWrites": 0,
+      "sessionRevoked": true
+    },
+    "productionApiRejections": [
+      {
+        "test": "anonymous_reset",
+        "status": 401,
+        "persistedWrites": 0
+      },
+      {
+        "test": "foreign_advisor_reset",
+        "status": 403,
+        "persistedWrites": 0
+      },
+      {
+        "test": "invalid_metric_reset",
+        "status": 400,
+        "persistedWrites": 0
+      }
+    ],
+    "migrationExecutionPrivileges": {
+      "anon": false,
+      "authenticated": false,
+      "service_role": true
+    },
+    "securityAdvisoriesUnchanged": true,
+    "productionMetricsPreserved": [
+      {
+        "bot": 1035,
+        "assignments": 3,
+        "chats": 5
+      },
+      {
+        "bot": 1040,
+        "assignments": 3,
+        "chats": 3
+      },
+      {
+        "bot": 1041,
+        "assignments": 4,
+        "chats": 2
+      },
+      {
+        "bot": 1042,
+        "assignments": 3,
+        "chats": 3
+      }
+    ],
+    "productionResetsExecuted": 0
+  },
+  "loadTagInspection": {
+    "inspectedChats": 6,
+    "taggedChats": 5,
+    "source": "quick_starter_gateway",
+    "clientMessages": 0,
+    "meaning": "The previous test flow requested the deposit details. This tag is not a confirmed load.",
+    "currentInitialBankCardDoesNotTagIntent": true,
+    "productionTagsModified": false
+  },
+  "deployments": [
+    {
+      "repo": "internal-chat",
+      "id": "9q7vjBzwrDWf3MZB54zstbkEJXBL",
+      "ready": true,
+      "url": "https://internal-chat-dv6t165x0-juanclouds-projects.vercel.app"
+    },
+    {
+      "repo": "landing-builder",
+      "id": "CH1Sm5F5RyA93cYEW3hc3SNwicRM",
+      "ready": true,
+      "url": "https://landing-builder-v2-k259-6km9ro9jv-juanclouds-projects.vercel.app"
+    }
+  ],
+  "scope": {
+    "api2Modified": false,
+    "panel3Modified": false,
+    "gatewaySourceModified": false,
+    "providerOrFinancialOperationsExecuted": false
+  }
+}

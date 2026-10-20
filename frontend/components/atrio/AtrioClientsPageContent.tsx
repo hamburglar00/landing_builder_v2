@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useState, type FormEvent } from "react";
+import { useEffect, useMemo, useRef, useState, type FormEvent } from "react";
 import { useRouter } from "next/navigation";
 import { SingleCurrencyRequired, useCurrencyScope } from "@/components/currency/CurrencyScope";
 import { useAppConfirm } from "@/components/ui/AppConfirmDialog";
@@ -22,8 +22,9 @@ import {
 } from "@/lib/atrio/atrioDb";
 import { CURRENCY_ALL, type ReportingCurrency } from "@/lib/currency";
 import { supabase } from "@/lib/supabaseClient";
-import { requestManagerDestinations, CASINO_NAMES, managerTypeLabel, type AdvisorDirectory } from "@/lib/atrio/managerDestinations";
+import { requestManagerDestinations, CASINO_NAMES, managerTypeLabel, type AdvisorDirectory, type BotResetMetric } from "@/lib/atrio/managerDestinations";
 import { AdvisorManagers } from "./AdvisorManagers";
+import { BotMetricResetButtons } from "./BotMetricResetButtons";
 
 type Mode = "dashboard" | "admin";
 
@@ -103,6 +104,8 @@ export default function AtrioClientsPageContent({ mode }: { mode: Mode }) {
   const [directoryError, setDirectoryError] = useState("");
   const [onlyActive, setOnlyActive] = useState(false);
   const [refreshDirectory, setRefreshDirectory] = useState(0);
+  const [resetting, setResetting] = useState<{ metric: BotResetMetric; clientId: string | null } | null>(null);
+  const resetInFlight = useRef(false);
   const directoryClientIds = clients.map(c => c.id).sort().join(",");
   useEffect(() => {
     const controller = new AbortController();
@@ -267,6 +270,31 @@ export default function AtrioClientsPageContent({ mode }: { mode: Mode }) {
     }
   };
 
+  const handleMetricReset = async (metric: BotResetMetric, client?: AtrioClient) => {
+    if (resetInFlight.current || !clients.length) return;
+    resetInFlight.current = true;
+    try {
+      const confirmed = await confirmAction({
+        title: metric === "usage_count" ? "Reiniciar contador" : "Reiniciar mensajes",
+        description: `Se reiniciará ${metric === "usage_count" ? "el contador de asignaciones" : "el conteo de chats iniciados"} ${client ? `de los bots de ${client.slug}` : "de todos los bots de este workspace"}. Se conserva el historial y cada cuenta mantiene su bot. El reparto equitativo usará el nuevo conteo.`,
+        confirmLabel: "Reiniciar",
+      });
+      if (!confirmed) return;
+      setResetting({ metric, clientId: client?.id ?? null });
+      setError(null); setSuccess(null);
+      const ids = client ? [client.id] : clients.map(row => row.id);
+      for (let index = 0; index < ids.length; index += 100) {
+        await requestManagerDestinations({ action: "reset", metric, clientIds: ids.slice(index, index + 100) });
+      }
+      setSuccess(metric === "usage_count" ? "Contadores reiniciados." : "Conteo de chats iniciados reiniciado.");
+    } catch {
+      setError("No se pudo completar el reinicio. Actualizá los datos y volvé a intentarlo.");
+    } finally {
+      setResetting(null); resetInFlight.current = false;
+      setRefreshDirectory(value => value + 1);
+    }
+  };
+
   if (!ready) return <DashboardSkeleton title="Cargando Atrio..." />;
 
   if (isAllCurrencies) {
@@ -322,7 +350,10 @@ export default function AtrioClientsPageContent({ mode }: { mode: Mode }) {
 
         <div className="flex flex-wrap items-center justify-between gap-3 border-b border-[var(--color-border-subtle)] px-4 py-3 text-xs">
           <label className="flex items-center gap-2"><input type="checkbox" checked={onlyActive} onChange={e => setOnlyActive(e.target.checked)} />Solo bots activos</label>
-          <button type="button" disabled={directoryBusy} onClick={() => setRefreshDirectory(v => v + 1)} className="ui-button ui-button-secondary h-8 min-h-8 px-3 text-xs">{directoryBusy ? "Actualizando…" : "Actualizar"}</button>
+          <div className="flex flex-wrap gap-2">
+            <button type="button" disabled={directoryBusy || !!resetting} onClick={() => setRefreshDirectory(v => v + 1)} className="ui-button ui-button-secondary h-8 min-h-8 px-3 text-xs">{directoryBusy ? "Actualizando…" : "Actualizar"}</button>
+            <BotMetricResetButtons global disabled={directoryBusy || !!resetting || !clients.length || !!directoryError} resetting={resetting?.clientId === null ? resetting.metric : null} onReset={metric => void handleMetricReset(metric)} />
+          </div>
         </div>
         {clients.length === 0 ? (
           <EmptyState
@@ -348,7 +379,8 @@ export default function AtrioClientsPageContent({ mode }: { mode: Mode }) {
                   <button type="button" onClick={() => void handleDelete(client)} disabled={deletingId === client.id} className="ui-button ui-button-danger h-8 min-h-8 px-3 text-xs">{deletingId === client.id ? "Eliminando…" : "Eliminar"}</button>
                 </div>
               </div>
-              <AdvisorManagers advisor={directory.find(advisor => advisor.id === client.atrio_id)} busy={directoryBusy} error={directoryError} onlyActive={onlyActive} />
+              <AdvisorManagers advisor={directory.find(advisor => advisor.id === client.atrio_id)} busy={directoryBusy} error={directoryError} onlyActive={onlyActive}
+                resetDisabled={!!resetting || !!directoryError} resetting={resetting?.clientId === client.id ? resetting.metric : null} onReset={metric => void handleMetricReset(metric, client)} />
             </section>)}
           </div>
         )}

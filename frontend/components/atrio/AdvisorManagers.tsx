@@ -1,8 +1,11 @@
 "use client";
 
 import { CASINO_NAMES, managerTypeLabel, type AdvisorDirectory } from "@/lib/atrio/managerDestinations";
-export function AdvisorManagers({ advisor, busy, error, onlyActive }: {
+import type { BotResetMetric } from "@/lib/atrio/managerDestinations";
+import { BotMetricResetButtons } from "./BotMetricResetButtons";
+export function AdvisorManagers({ advisor, busy, error, onlyActive, resetDisabled, resetting, onReset }: {
   advisor?: AdvisorDirectory; busy: boolean; error: string; onlyActive: boolean;
+  resetDisabled: boolean; resetting: BotResetMetric | null; onReset: (metric: BotResetMetric) => void;
 }) {
   const connections = (advisor?.connections || []).filter(row => !onlyActive || row.active);
   const totals = connections.reduce((sum, row) => ({ assignments: sum.assignments + row.usage_count, chats: sum.chats + row.chats_started }), { assignments: 0, chats: 0 });
@@ -13,7 +16,8 @@ export function AdvisorManagers({ advisor, busy, error, onlyActive }: {
     </summary>
     <div className="space-y-3 border-t border-[var(--color-border-subtle)] p-3">
       <div className="flex flex-wrap items-center justify-between gap-2 text-[11px] text-[var(--color-text-muted)]">
-        <p>Contador: nuevas asignaciones. Chats: conversaciones con mensajes del cliente. Totales históricos. El reparto equitativo se calcula dentro de cada landing.</p>
+        <p>Contador: nuevas asignaciones. Chats: conversaciones iniciadas desde el último reinicio. El historial se conserva.</p>
+        <BotMetricResetButtons disabled={resetDisabled || busy || !advisor?.connections.length} resetting={resetting} onReset={onReset} />
         {busy && <span role="status">Actualizando…</span>}
       </div>
       {error && <p role="alert" className="text-xs text-[var(--color-danger)]">{error}</p>}
@@ -21,7 +25,7 @@ export function AdvisorManagers({ advisor, busy, error, onlyActive }: {
       {!!connections.length && <div className="overflow-x-auto">
         <table className="min-w-[600px] w-full text-left text-xs">
           <thead className="bg-[var(--color-bg-3)] text-[var(--color-text-muted)]"><tr>
-            {["Casino / gerencia", "Bot", "Tipo", "Estado", "Contador", "Chats iniciados"].map(label => <th className="p-2 font-medium" key={label}>{label}</th>)}
+            {["Casino / gerencia", "Bot", "Tipo", "Estado", "Contador", "Chats iniciados", "Chats históricos"].map(label => <th className="p-2 font-medium" key={label}>{label}</th>)}
           </tr></thead>
           <tbody className="divide-y divide-[var(--color-border-subtle)]">{connections.map(connection => <tr key={connection.connection_id}>
             <td className="p-2"><strong>{CASINO_NAMES[connection.target_provider]}</strong><span className="mt-1 block text-[var(--color-text-muted)]">{connection.agency_name || `Gerencia ${connection.agency_id}`}</span></td>
@@ -29,6 +33,7 @@ export function AdvisorManagers({ advisor, busy, error, onlyActive }: {
             <td className="p-2"><span className="rounded-full border border-[var(--color-border)] px-2 py-1">{managerTypeLabel(connection.manager_type)}</span></td>
             <td className={`p-2 ${connection.active ? "text-[var(--color-primary)]" : "text-[var(--color-text-muted)]"}`}>{connection.active ? "Activo" : "Inactivo"}</td>
             <td className="p-2 tabular-nums">{connection.usage_count}</td><td className="p-2 tabular-nums">{connection.chats_started}</td>
+            <td className="p-2 tabular-nums text-[var(--color-text-muted)]">{connection.chats_started_total ?? connection.chats_started}</td>
           </tr>)}</tbody>
         </table>
       </div>}

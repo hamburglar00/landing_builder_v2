@@ -1,6 +1,6 @@
 # Decisiones aprobadas de Atrio Template 7 y gateways
 
-Actualizado el 19 de octubre de 2026. Este registro conserva los requisitos acordados con el usuario para que una mejora no elimine comportamientos ya aprobados. Se aplica a `landing-builder`, `landing-prueba-1`, `internal-chat`, `landing-autologuin`, `ases-gateway`, `ganamos-gateway` y `multi-skin-gateway`. API2 conserva su propio lote local.
+Actualizado el 20 de octubre de 2026. Este registro conserva los requisitos acordados con el usuario para que una mejora no elimine comportamientos ya aprobados. Se aplica a `landing-builder`, `landing-prueba-1`, `internal-chat`, `landing-autologuin`, `ases-gateway`, `ganamos-gateway` y `multi-skin-gateway`. API2 conserva su propio lote local.
 
 Una decisión nueva reemplaza una anterior solo cuando el usuario cambia explícitamente ese requisito. Registrar el cambio aquí y verificar los comportamientos relacionados antes de publicar. Un build correcto o una prueba con sesión insertada artificialmente no demuestran que el navegador real conserve la cuenta.
 
@@ -303,3 +303,13 @@ La concurrencia, aislamiento entre tenants, contadores independientes por landin
 El ingreso manual común vive en `landing-autologuin/src/lib/gateway-login.ts` y `gateway-login-page.ts`, con pruebas compartidas. Sincronizar los cuatro mediante `node scripts/sync-gateway-login.mjs` y comprobar `--check` antes de publicar; conservar los adaptadores de login propios del casino. No agregar estas dependencias al alta de Template 7.
 
 Ganamos+ tuvo validación del formulario, recursos y contrato compartido, pero no ingreso con cuenta real de PBAdmin porque esa integración no existe. API2 permanece local y Panel3/HG Cash no se modificaron.
+
+### Reinicios de métricas y presentación de redirección (20/10/2026)
+
+- En Atrio del constructor, ofrecer «Reiniciar contadores» y «Reiniciar mensajes» para el workspace, además de los mismos controles por asesor. El alcance incluye todos sus bots aunque la búsqueda o el filtro de activos oculten filas; describirlo en la confirmación. No reiniciar métricas reales al validar la interfaz.
+- «Reiniciar mensajes» reinicia la métrica de chats iniciados, no cuenta cada mensaje individual. Cada conversación participa una vez, desde su primer mensaje del cliente. Los mensajes posteriores de un chat previo al reinicio no lo convierten en un chat nuevo. Conservar y mostrar los chats históricos.
+- Guardar ventanas independientes para asignaciones y chats, sin borrar asignaciones, jugadores, cuentas, conversaciones, mensajes ni atribución. Los reingresos mantienen su bot. El reparto equitativo respeta estas ventanas y conserva su comparación por landing. Proteger los reinicios con la sesión del constructor, ownership de sus asesores y puente de servicio; ningún navegador puede aportar otro asesor por ID.
+- Los selectores Aleatoria/Equitativa y Por contador/Chats iniciados de Template 7 utilizan el control segmentado oscuro, selección clara y tamaño compacto de los templates 1–6. Conservar las ayudas «i», pesos y borrador del editor.
+- La etiqueta CARGA expresa una solicitud de carga, no una acreditación. El envío inicial automático de CBU no agrega esa intención. Los chats de medición antiguos pueden conservar etiquetas de la acción de carga ejecutada por el flujo anterior; no eliminar solicitudes reales ni modificar su historial al explicar ese estado.
+
+Validación y publicación: [reinicios de bots y selectores del 20/10](validation/atrio-bot-metric-resets-20261020.json). La migración `20261020172854_builder_bot_metric_resets.sql` está aplicada y su versión coincide entre local y remoto. Los reinicios funcionales se probaron en Postgres aislado; en las cuatro pruebas de interfaz productiva se interceptaron las escrituras para conservar los contadores reales.

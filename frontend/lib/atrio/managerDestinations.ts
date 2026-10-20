@@ -10,7 +10,9 @@ export type ManagerDestination = {
   manager_id: number; agency_id: number; agency_name: string | null; target_provider: TargetProvider;
   manager_type: string; active: boolean; verified_at: string | null;
   usage_count: number; chats_started: number; messages_received: number;
+  usage_count_total?: number; chats_started_total?: number;
 };
+export type BotResetMetric = "usage_count" | "messages_received";
 export type AdvisorDirectory = { id: string; slug: string; name: string | null; connections: ManagerDestination[] };
 export type DestinationConfiguration = {
   landing_id: string; target_provider: TargetProvider;
