@@ -1,0 +1,510 @@
+{
+  "at": "2026-10-20T05:12:01.935Z",
+  "scope": {
+    "api2": "New corrections remain local on fix/atrio-bot-form; no API2 deployment or push.",
+    "panel3": "Unchanged.",
+    "hgCash": "Unchanged. No bank transfers.",
+    "ganamosPlus": "Shared gateway improvements included; account-creation E2E unavailable because PBAdmin has no integration or manager."
+  },
+  "method": {
+    "browser": "Headless Chromium, 390x844, no artificial network throttle.",
+    "firstEntry": "New browser context, ordinary HTTP cache, immediate name submission after the form becomes available.",
+    "providerSessionInjected": false,
+    "clock": "Actual DOM click to authenticated casino, enabled chat composer and visible genuine CBU.",
+    "limitations": "Single samples, not averages; provider/cold-start variation remains visible. Not an iPhone/WhatsApp certification."
+  },
+  "withdrawal": {
+    "account": "prueba8339",
+    "amount": 100,
+    "originalOperation": 11,
+    "correctiveOperation": 12,
+    "providerTransaction": "237150568",
+    "financialRequests": 1,
+    "independentlyVerifiedBalance": 0,
+    "repeatedVerificationFinancialRequests": 0,
+    "originalAuditPreserved": true
+  },
+  "managerRouting": {
+    "advisorDirectory": true,
+    "casinoAgencyTypeStatusAndMetrics": true,
+    "modes": [
+      "fixed",
+      "weighted_random",
+      "fair_assignments",
+      "fair_received_messages"
+    ],
+    "explicitMktFullSelection": true,
+    "databasePersistence": true,
+    "atomicAssignment": true,
+    "returningUsersKeepAccountAndManager": true,
+    "constructorAndClassic": true,
+    "parallelDistributionTest": "12 assignments, 6/6 split, replay unchanged"
+  },
+  "baseline": {
+    "source": "atrio-corrections-20261020.json",
+    "clickToUsableChatAndWalletMs": {
+      "rey": 10684,
+      "ases": 9139,
+      "net": 9947,
+      "net-full": 9896
+    },
+    "comparisonCaution": "Individual samples from different runs, not a controlled statistical estimate."
+  },
+  "deployments": {
+    "atrio": "https://internal-chat-8d49jnzmk-juanclouds-projects.vercel.app",
+    "constructor": "https://landing-builder-v2-k259-7ovdzlifx-juanclouds-projects.vercel.app",
+    "classic": "https://public-landing-jhnw2hsoz-juanclouds-projects.vercel.app",
+    "rey": "https://reydeases-gateway-76w4evjxt-juanclouds-projects.vercel.app",
+    "ases": "https://ases-del-norte-gateway-os8f19ltk-juanclouds-projects.vercel.app",
+    "net": "https://ganamos-net-gateway-btlxkrg63-juanclouds-projects.vercel.app",
+    "plusVercel": "https://multi-skin-gateway-2xd5jgfu2-juanclouds-projects.vercel.app",
+    "plusPublicWorker": {
+      "domain": "ganamosnet.global",
+      "version": "4cf6ff64-0a7b-45b4-b23d-08ce52c4d105"
+    }
+  },
+  "publicAssetCache": {
+    "at": "2026-10-20T05:01:21.154Z",
+    "accountCreations": 0,
+    "financialRequests": 0,
+    "rows": [
+      {
+        "provider": "rey_de_ases",
+        "attempt": 0,
+        "status": 200,
+        "ttfbMs": 2065,
+        "totalMs": 2081,
+        "cdn": "MISS",
+        "workerCache": null,
+        "publicAsset": "hashed",
+        "cookieCount": 0,
+        "unchangedContent": true
+      },
+      {
+        "provider": "rey_de_ases",
+        "attempt": 1,
+        "status": 200,
+        "ttfbMs": 219,
+        "totalMs": 236,
+        "cdn": "HIT",
+        "workerCache": null,
+        "publicAsset": "hashed",
+        "cookieCount": 0,
+        "unchangedContent": true
+      },
+      {
+        "provider": "rey_de_ases",
+        "attempt": 2,
+        "status": 200,
+        "ttfbMs": 56,
+        "totalMs": 64,
+        "cdn": "HIT",
+        "workerCache": null,
+        "publicAsset": "hashed",
+        "cookieCount": 0,
+        "unchangedContent": true
+      },
+      {
+        "provider": "ganamos_net",
+        "attempt": 0,
+        "status": 200,
+        "ttfbMs": 1845,
+        "totalMs": 1874,
+        "cdn": "MISS",
+        "workerCache": null,
+        "publicAsset": "hashed",
+        "cookieCount": 0,
+        "unchangedContent": true
+      },
+      {
+        "provider": "ganamos_net",
+        "attempt": 1,
+        "status": 200,
+        "ttfbMs": 54,
+        "totalMs": 65,
+        "cdn": "HIT",
+        "workerCache": null,
+        "publicAsset": "hashed",
+        "cookieCount": 0,
+        "unchangedContent": true
+      },
+      {
+        "provider": "ganamos_net",
+        "attempt": 2,
+        "status": 200,
+        "ttfbMs": 209,
+        "totalMs": 217,
+        "cdn": "HIT",
+        "workerCache": null,
+        "publicAsset": "hashed",
+        "cookieCount": 0,
+        "unchangedContent": true
+      },
+      {
+        "provider": "ases_del_norte",
+        "attempt": 0,
+        "status": 200,
+        "ttfbMs": 1180,
+        "totalMs": 1201,
+        "cdn": "MISS",
+        "workerCache": null,
+        "publicAsset": "legacy",
+        "cookieCount": 0,
+        "unchangedContent": true
+      },
+      {
+        "provider": "ases_del_norte",
+        "attempt": 1,
+        "status": 200,
+        "ttfbMs": 226,
+        "totalMs": 228,
+        "cdn": "HIT",
+        "workerCache": null,
+        "publicAsset": "legacy",
+        "cookieCount": 0,
+        "unchangedContent": true
+      },
+      {
+        "provider": "ases_del_norte",
+        "attempt": 2,
+        "status": 200,
+        "ttfbMs": 58,
+        "totalMs": 61,
+        "cdn": "HIT",
+        "workerCache": null,
+        "publicAsset": "legacy",
+        "cookieCount": 0,
+        "unchangedContent": true
+      },
+      {
+        "provider": "ganamos_plus",
+        "attempt": 0,
+        "status": 200,
+        "ttfbMs": 919,
+        "totalMs": 925,
+        "cdn": null,
+        "workerCache": "miss",
+        "publicAsset": "hashed",
+        "cookieCount": 0,
+        "unchangedContent": true
+      },
+      {
+        "provider": "ganamos_plus",
+        "attempt": 1,
+        "status": 200,
+        "ttfbMs": 50,
+        "totalMs": 58,
+        "cdn": null,
+        "workerCache": "hit",
+        "publicAsset": "hashed",
+        "cookieCount": 0,
+        "unchangedContent": true
+      },
+      {
+        "provider": "ganamos_plus",
+        "attempt": 2,
+        "status": 200,
+        "ttfbMs": 37,
+        "totalMs": 42,
+        "cdn": null,
+        "workerCache": "hit",
+        "publicAsset": "hashed",
+        "cookieCount": 0,
+        "unchangedContent": true
+      }
+    ]
+  },
+  "measurements": [
+    {
+      "name": "first",
+      "cases": [
+        {
+          "casino": "Rey de Ases",
+          "managerId": 1035,
+          "managerType": "MKT",
+          "samples": 1,
+          "formVisibleMs": 2817,
+          "clickToCasinoMs": 25605,
+          "clickToUsableChatAndWalletMs": 36341,
+          "landingReentryToChatMs": 1997,
+          "directGatewayReentryToChatMs": 2056,
+          "stages": [
+            {
+              "path": "/api/preparations/complete",
+              "responseTtfbMs": 5945,
+              "serverTiming": "t7-account;dur=3631;desc=\"created\""
+            }
+          ],
+          "browserErrors": []
+        },
+        {
+          "casino": "Ases del Norte",
+          "managerId": 1040,
+          "managerType": "MKT",
+          "samples": 1,
+          "formVisibleMs": 1996,
+          "clickToCasinoMs": 7509,
+          "clickToUsableChatAndWalletMs": 9763,
+          "landingReentryToChatMs": 1810,
+          "directGatewayReentryToChatMs": 1298,
+          "stages": [
+            {
+              "path": "/api/preparations/complete",
+              "responseTtfbMs": 3495,
+              "serverTiming": "t7-account;dur=1654;desc=\"created\""
+            }
+          ],
+          "browserErrors": []
+        },
+        {
+          "casino": "Ganamos NET",
+          "managerId": 1041,
+          "managerType": "MKT",
+          "samples": 1,
+          "formVisibleMs": 3089,
+          "clickToCasinoMs": 9460,
+          "clickToUsableChatAndWalletMs": 12184,
+          "landingReentryToChatMs": 1821,
+          "directGatewayReentryToChatMs": 1626,
+          "stages": [
+            {
+              "path": "/api/preparations/complete",
+              "responseTtfbMs": 4398,
+              "serverTiming": "t7-account;dur=2237;desc=\"created\""
+            }
+          ],
+          "browserErrors": []
+        },
+        {
+          "casino": "Ganamos NET",
+          "managerId": 1042,
+          "managerType": "Full Carga",
+          "samples": 1,
+          "formVisibleMs": 1976,
+          "clickToCasinoMs": 8266,
+          "clickToUsableChatAndWalletMs": 10402,
+          "landingReentryToChatMs": 1359,
+          "directGatewayReentryToChatMs": 1520,
+          "stages": [
+            {
+              "path": "/api/preparations/complete",
+              "responseTtfbMs": 4205,
+              "serverTiming": "t7-account;dur=2550;desc=\"created\""
+            }
+          ],
+          "browserErrors": []
+        }
+      ]
+    },
+    {
+      "name": "second",
+      "cases": [
+        {
+          "casino": "Rey de Ases",
+          "managerId": 1035,
+          "managerType": "MKT",
+          "samples": 1,
+          "formVisibleMs": 2077,
+          "clickToCasinoMs": 8737,
+          "clickToUsableChatAndWalletMs": 11801,
+          "landingReentryToChatMs": 1625,
+          "directGatewayReentryToChatMs": 1111,
+          "stages": [
+            {
+              "path": "/api/preparations/complete",
+              "responseTtfbMs": 4390,
+              "serverTiming": "t7-account;dur=2170;desc=\"created\", t7-context;dur=711, t7-identity;dur=134, t7-link;dur=137, t7-handoff;dur=653, t7-finalize;dur=654, t7-total;dur=3670"
+            }
+          ],
+          "browserErrors": [
+            "Failed to fetch dynamically imported module: https://www.reydeases.fun/vite-assets/desktop-_rZz8e0-.js"
+          ]
+        },
+        {
+          "casino": "Ases del Norte",
+          "managerId": 1040,
+          "managerType": "MKT",
+          "samples": 1,
+          "formVisibleMs": 2229,
+          "clickToCasinoMs": 7517,
+          "clickToUsableChatAndWalletMs": 9624,
+          "landingReentryToChatMs": 1670,
+          "directGatewayReentryToChatMs": 1176,
+          "stages": [
+            {
+              "path": "/api/preparations/complete",
+              "responseTtfbMs": 4149,
+              "serverTiming": "t7-account;dur=2856;desc=\"created\", t7-context;dur=264, t7-identity;dur=133, t7-link;dur=123, t7-handoff;dur=405, t7-finalize;dur=406, t7-total;dur=3659"
+            }
+          ],
+          "browserErrors": []
+        },
+        {
+          "casino": "Ganamos NET",
+          "managerId": 1041,
+          "managerType": "MKT",
+          "samples": 1,
+          "formVisibleMs": 2666,
+          "clickToCasinoMs": 10599,
+          "clickToUsableChatAndWalletMs": 12731,
+          "landingReentryToChatMs": 2125,
+          "directGatewayReentryToChatMs": 1216,
+          "stages": [
+            {
+              "path": "/api/preparations/complete",
+              "responseTtfbMs": 5122,
+              "serverTiming": "t7-account;dur=2407;desc=\"created\", t7-context;dur=863, t7-identity;dur=522, t7-link;dur=120, t7-handoff;dur=267, t7-finalize;dur=268, t7-total;dur=4063"
+            }
+          ],
+          "browserErrors": []
+        },
+        {
+          "casino": "Ganamos NET",
+          "managerId": 1042,
+          "managerType": "Full Carga",
+          "samples": 1,
+          "formVisibleMs": 2153,
+          "clickToCasinoMs": 10824,
+          "clickToUsableChatAndWalletMs": 12935,
+          "landingReentryToChatMs": 1702,
+          "directGatewayReentryToChatMs": 1435,
+          "stages": [
+            {
+              "path": "/api/preparations/complete",
+              "responseTtfbMs": 7537,
+              "serverTiming": "t7-account;dur=5857;desc=\"created\", t7-context;dur=619, t7-identity;dur=120, t7-link;dur=128, t7-handoff;dur=251, t7-finalize;dur=251, t7-total;dur=6847"
+            }
+          ],
+          "browserErrors": []
+        }
+      ]
+    },
+    {
+      "name": "final",
+      "cases": [
+        {
+          "casino": "Rey de Ases",
+          "managerId": 1035,
+          "managerType": "MKT",
+          "samples": 1,
+          "formVisibleMs": 2579,
+          "clickToCasinoMs": 7877,
+          "clickToUsableChatAndWalletMs": 8879,
+          "landingReentryToChatMs": 2452,
+          "directGatewayReentryToChatMs": 2128,
+          "stages": [
+            {
+              "path": "/api/template7/destination",
+              "responseTtfbMs": 566,
+              "serverTiming": "t7-destination-scope;dur=310, t7-destination-resolve;dur=162, t7-destination-total;dur=472"
+            },
+            {
+              "path": "/api/preparations/complete",
+              "responseTtfbMs": 3853,
+              "serverTiming": "t7-account;dur=2015;desc=\"created\", t7-context;dur=402, t7-identity;dur=177, t7-link;dur=109, t7-handoff;dur=511, t7-finalize;dur=512, t7-total;dur=3107"
+            }
+          ],
+          "browserErrors": []
+        },
+        {
+          "casino": "Ases del Norte",
+          "managerId": 1040,
+          "managerType": "MKT",
+          "samples": 1,
+          "formVisibleMs": 2175,
+          "clickToCasinoMs": 5814,
+          "clickToUsableChatAndWalletMs": 7981,
+          "landingReentryToChatMs": 2009,
+          "directGatewayReentryToChatMs": 1206,
+          "stages": [
+            {
+              "path": "/api/template7/destination",
+              "responseTtfbMs": 610,
+              "serverTiming": "t7-destination-scope;dur=282, t7-destination-resolve;dur=135, t7-destination-total;dur=421"
+            },
+            {
+              "path": "/api/preparations/complete",
+              "responseTtfbMs": 3368,
+              "serverTiming": "t7-account;dur=1789;desc=\"created\", t7-context;dur=312, t7-identity;dur=148, t7-link;dur=121, t7-handoff;dur=460, t7-finalize;dur=461, t7-total;dur=2711"
+            }
+          ],
+          "browserErrors": []
+        },
+        {
+          "casino": "Ganamos NET",
+          "managerId": 1041,
+          "managerType": "MKT",
+          "samples": 1,
+          "formVisibleMs": 2197,
+          "clickToCasinoMs": 7968,
+          "clickToUsableChatAndWalletMs": 9135,
+          "landingReentryToChatMs": 1613,
+          "directGatewayReentryToChatMs": 1644,
+          "stages": [
+            {
+              "path": "/api/template7/destination",
+              "responseTtfbMs": 631,
+              "serverTiming": "t7-destination-scope;dur=380, t7-destination-resolve;dur=138, t7-destination-total;dur=519"
+            },
+            {
+              "path": "/api/preparations/complete",
+              "responseTtfbMs": 4755,
+              "serverTiming": "t7-account;dur=2801;desc=\"created\", t7-context;dur=257, t7-identity;dur=155, t7-link;dur=163, t7-handoff;dur=263, t7-finalize;dur=264, t7-total;dur=3477"
+            }
+          ],
+          "browserErrors": []
+        },
+        {
+          "casino": "Ganamos NET",
+          "managerId": 1042,
+          "managerType": "Full Carga",
+          "samples": 1,
+          "formVisibleMs": 2086,
+          "clickToCasinoMs": 6276,
+          "clickToUsableChatAndWalletMs": 7773,
+          "landingReentryToChatMs": 1289,
+          "directGatewayReentryToChatMs": 1199,
+          "stages": [
+            {
+              "path": "/api/template7/destination",
+              "responseTtfbMs": 679,
+              "serverTiming": "t7-destination-scope;dur=403, t7-destination-resolve;dur=143, t7-destination-total;dur=547"
+            },
+            {
+              "path": "/api/preparations/complete",
+              "responseTtfbMs": 3095,
+              "serverTiming": "t7-account;dur=2097;desc=\"created\", t7-context;dur=277, t7-identity;dur=137, t7-link;dur=126, t7-handoff;dur=57, t7-finalize;dur=126, t7-total;dur=2637"
+            }
+          ],
+          "browserErrors": []
+        }
+      ]
+    }
+  ],
+  "remainingLatency": {
+    "api2AccountResolution": "1.79–2.80 seconds in the final Rey/Ases/NET MKT samples; includes API2 coordination, not just provider creation.",
+    "gatewayLogin": "0.84–1.14 seconds in those samples.",
+    "chatAfterCasino": "1.00–2.17 seconds in those samples; casino document and iframe loading remain sequential dependencies.",
+    "unallocatedAccountRequestOverhead": "0.75–1.28 seconds observed outside t7-total; transport, function initialization and validation are not individually measured.",
+    "regionAudit": "No canonical redirect or PDX proxy detour demonstrated. Production account route confirmed in GRU; no speculative proxy change."
+  },
+  "knownIssues": [
+    "Ganamos sports provider iframe sport-iframe.wercdc.xyz/es/mini-iframe produced an inline JavaScript syntax error during return-path QA; casino authentication, Atrio chat and CBU remained usable. Final read-only QA records details.",
+    "Historical manager-1041 provision for prueba6274 remains uncertain and was not repeated or reassigned. New authorized test identities succeeded.",
+    "The original API2 withdrawal-11 false-success response remains in the audit. Corrective operation 12 is verified; preventive API2 code still needs deployment by the agreed process.",
+    "Second-wave Rey dynamic-module failure is preserved in evidence; the final cache fix and final browser journeys were subsequently validated."
+  ],
+  "verificationReports": [
+    "final-wave-identity-wallet-readonly-20261020.json",
+    "second-wave-identity-wallet-tracking-20261020.json",
+    "old-account-reentry-manager-pools-20261020.json",
+    "widget-readiness-profile-20261020.json"
+  ],
+  "research": [
+    "https://nextjs.org/docs/app/getting-started/fetching-data",
+    "https://web.dev/articles/optimize-lcp",
+    "https://supabase.com/docs/guides/database/query-optimization",
+    "https://vercel.com/docs/functions/configuring-functions/region",
+    "https://developers.cloudflare.com/workers/runtime-apis/cache/"
+  ]
+}

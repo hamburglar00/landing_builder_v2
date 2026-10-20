@@ -47,7 +47,7 @@ test("restaura la configuracion visual independiente de cada plantilla", () => {
   assert.equal(restoredTemplate2.titleLine1, "Titulo template 2");
   assert.equal(restoredTemplate2.ctaText, "CTA template 2");
   assert.equal(restoredTemplate2.emailCaptureEnabled, true);
-  assert.equal(restoredTemplate2.ctaDestination, "atrio");
+  assert.equal(restoredTemplate2.ctaDestination, "whatsapp");
   assert.equal(
     restoredTemplate2.templateConfigs?.template5?.template5Live?.titleText,
     "Titulo template 5",

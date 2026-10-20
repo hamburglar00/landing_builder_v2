@@ -1,0 +1,202 @@
+{
+  "at": "2026-10-20T04:44:41.375Z",
+  "scope": "Ganamos NET, existing test account, new Chromium context per case, 390x844, no network/CPU throttling",
+  "method": "CDP tracing with v8/cpu_profiler/devtools.timeline plus PerformanceObserver longtasks in every frame",
+  "operations": {
+    "newAccounts": 0,
+    "clientMessages": 0,
+    "financialOperations": 0,
+    "functionalCodeChanges": 0
+  },
+  "samples": [
+    {
+      "kind": "cold",
+      "casinoDocumentMs": 1329,
+      "walletSsrDomMs": 1947,
+      "widgetHydratedReadyMs": 3416,
+      "entryReadyMs": 3451,
+      "copyButtonVisibleObservedMs": 3556,
+      "walletDomToHydratedReadyMs": 1469,
+      "providerCss": {
+        "path": "/assets/index-GxrIUenO.css",
+        "ttfbMs": 1552.009,
+        "responseBodyBytes": 49322,
+        "finishedFromCasinoMs": 2917
+      },
+      "warmReuse": {
+        "reusedJsChunks": 0,
+        "requiredJsChunks": 10,
+        "reusedBytes": 0,
+        "uncachedJs": [
+          {
+            "path": "/_next/static/immutable/chunks/36s0t0o8ux5as.js",
+            "bytes": 3771
+          },
+          {
+            "path": "/_next/static/immutable/chunks/2v3cv0w2fww2x.js",
+            "bytes": 7597
+          },
+          {
+            "path": "/_next/static/immutable/chunks/2gq0-a9dy1oi7.js",
+            "bytes": 35381
+          },
+          {
+            "path": "/_next/static/immutable/chunks/3d57azh1ol2gw.js",
+            "bytes": 73143
+          },
+          {
+            "path": "/_next/static/immutable/chunks/31tcpybs-b989.js",
+            "bytes": 9961
+          },
+          {
+            "path": "/_next/static/immutable/chunks/turbopack-0ig6jgg5otaum.js",
+            "bytes": 4027
+          },
+          {
+            "path": "/_next/static/immutable/chunks/2hkt6gtszo760.js",
+            "bytes": 4199
+          },
+          {
+            "path": "/_next/static/immutable/chunks/32-q-tzf4b8cd.js",
+            "bytes": 1556
+          },
+          {
+            "path": "/_next/static/immutable/chunks/2nyppnuhxfhz_.js",
+            "bytes": 72425
+          },
+          {
+            "path": "/_next/static/immutable/chunks/1klhep0ipsb20.js",
+            "bytes": 32057
+          }
+        ]
+      },
+      "longTasksBeforeEntryReady": 0,
+      "largestScriptTaskBeforeReady": {
+        "type": "EvaluateScript",
+        "ms": 49.339,
+        "offsetMs": 1789.108,
+        "url": "https://scripts.clarity.ms/0.8.72/clarity.js",
+        "line": 1
+      }
+    },
+    {
+      "kind": "prepare-warmed",
+      "casinoDocumentMs": 439,
+      "walletSsrDomMs": 830,
+      "widgetHydratedReadyMs": 1856,
+      "entryReadyMs": 1890,
+      "copyButtonVisibleObservedMs": 1981,
+      "walletDomToHydratedReadyMs": 1026,
+      "providerCss": {
+        "path": "/assets/index-GxrIUenO.css",
+        "ttfbMs": 932.246,
+        "responseBodyBytes": 49326,
+        "finishedFromCasinoMs": 1403
+      },
+      "warmReuse": {
+        "reusedJsChunks": 9,
+        "requiredJsChunks": 10,
+        "reusedBytes": 242561,
+        "uncachedJs": [
+          {
+            "path": "/_next/static/immutable/chunks/32-q-tzf4b8cd.js",
+            "bytes": 1556
+          }
+        ]
+      },
+      "longTasksBeforeEntryReady": 0,
+      "largestScriptTaskBeforeReady": {
+        "type": "FunctionCall",
+        "ms": 40.545,
+        "offsetMs": 1778.066,
+        "url": "https://www.atrio.website/_next/static/immutable/chunks/3d57azh1ol2gw.js",
+        "functionName": "O",
+        "line": 1
+      }
+    },
+    {
+      "kind": "css-blocked-diagnostic",
+      "casinoDocumentMs": 1227,
+      "walletSsrDomMs": 2032,
+      "widgetHydratedReadyMs": 2669,
+      "entryReadyMs": 2693,
+      "copyButtonVisibleObservedMs": 2789,
+      "walletDomToHydratedReadyMs": 637,
+      "providerCss": {
+        "diagnosticBlocked": true
+      },
+      "warmReuse": {
+        "reusedJsChunks": 0,
+        "requiredJsChunks": 10,
+        "reusedBytes": 0,
+        "uncachedJs": [
+          {
+            "path": "/_next/static/immutable/chunks/36s0t0o8ux5as.js",
+            "bytes": 3771
+          },
+          {
+            "path": "/_next/static/immutable/chunks/2v3cv0w2fww2x.js",
+            "bytes": 7597
+          },
+          {
+            "path": "/_next/static/immutable/chunks/2gq0-a9dy1oi7.js",
+            "bytes": 35381
+          },
+          {
+            "path": "/_next/static/immutable/chunks/3d57azh1ol2gw.js",
+            "bytes": 73143
+          },
+          {
+            "path": "/_next/static/immutable/chunks/31tcpybs-b989.js",
+            "bytes": 9961
+          },
+          {
+            "path": "/_next/static/immutable/chunks/turbopack-0ig6jgg5otaum.js",
+            "bytes": 4027
+          },
+          {
+            "path": "/_next/static/immutable/chunks/2hkt6gtszo760.js",
+            "bytes": 4199
+          },
+          {
+            "path": "/_next/static/immutable/chunks/32-q-tzf4b8cd.js",
+            "bytes": 1556
+          },
+          {
+            "path": "/_next/static/immutable/chunks/2nyppnuhxfhz_.js",
+            "bytes": 72425
+          },
+          {
+            "path": "/_next/static/immutable/chunks/1klhep0ipsb20.js",
+            "bytes": 32057
+          }
+        ]
+      },
+      "longTasksBeforeEntryReady": 0,
+      "largestScriptTaskBeforeReady": {
+        "type": "EvaluateScript",
+        "ms": 48.429,
+        "offsetMs": 2033.883,
+        "url": "https://www.atrio.website/_next/static/immutable/chunks/3d57azh1ol2gw.js",
+        "line": 1
+      }
+    }
+  ],
+  "findings": [
+    "Real transition /embed/warm loaded 9 of the final embed's 10 JavaScript chunks. Those 9 were reused from browser cache (transferSize 0); the uncached route chunk was only 1,556 compressed bytes.",
+    "The casino hashed stylesheet took 932–1552 ms to first byte through the gateway in these samples. The SSR wallet HTML and Atrio scripts were present while rendering/hydration completion still waited.",
+    "An isolated local diagnostic blocked only provider CSS, leaving production unchanged. Wallet DOM to widget.ready fell from 1,469 ms to 637 ms. This supports provider render-blocking resources as a material contributor; removing CSS is not a proposed fix.",
+    "There were no long tasks above 50 ms before entry-ready. Later 61–102 ms tasks belonged to the casino parent frame, with the embedded frame reporting cross-origin-ancestor.",
+    "The residual hydration tail is not explained by one large synchronous optional component. Code splitting alone is not supported as a one-second fix by this trace."
+  ],
+  "candidateNextSteps": [
+    "Cache verified immutable public provider assets using anonymous upstream requests, strict paths/MIME and no account/API/HTML caching; gateway agent owns this.",
+    "Retain real wallet+hydration readiness and all tracking. Do not send entry-ready before controls can be used.",
+    "Optional later split: promotion games/modal in client-chat-shell.tsx lines 1137–2316. This removes unused initial code but needs bundle and interaction regression measurements before claiming a latency gain."
+  ],
+  "limitations": [
+    "Single sample per case, different network/server conditions; timings are diagnostic, not averages.",
+    "Tracing adds overhead. The transition warmup used the real prepare HTML with a non-resolvable profiling token; its preparation fetch was disabled locally so no account or preparation operation occurred.",
+    "Detailed traces remain private because browser trace metadata can include signed embed URLs. This report contains no tokens or player identifiers."
+  ]
+}

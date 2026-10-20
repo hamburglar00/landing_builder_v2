@@ -200,12 +200,15 @@ export async function fetchLandingAtrioAssignments(
 export async function setLandingAtrioAssignments(
   landingId: string,
   assignments: LandingAtrioAssignment[],
+  preserveExisting = false,
 ): Promise<void> {
-  const { error: deleteError } = await supabase
-    .from("landings_atrio_clients")
-    .delete()
-    .eq("landing_id", landingId);
-  if (deleteError) throw deleteError;
+  if (!preserveExisting) {
+    const { error: deleteError } = await supabase
+      .from("landings_atrio_clients")
+      .delete()
+      .eq("landing_id", landingId);
+    if (deleteError) throw deleteError;
+  }
 
   const rows = assignments
     .filter((assignment) => assignment.atrioClientId)
@@ -216,6 +219,8 @@ export async function setLandingAtrioAssignments(
     }));
 
   if (rows.length === 0) return;
-  const { error } = await supabase.from("landings_atrio_clients").insert(rows);
+  const { error } = preserveExisting
+    ? await supabase.from("landings_atrio_clients").upsert(rows, { onConflict: "landing_id,atrio_client_id" })
+    : await supabase.from("landings_atrio_clients").insert(rows);
   if (error) throw error;
 }

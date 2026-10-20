@@ -1,0 +1,465 @@
+{
+  "at": "2026-10-20T04:37:12.919Z",
+  "test": "Preexisting browser identities retain the same account after activating explicit manager pools",
+  "passed": true,
+  "methods": [
+    "Original pre-pool browser storage reused without modifying source artifacts",
+    "Landing reentry and direct gateway reentry; casino authentication and username checked",
+    "Visible bank card with copy button and enabled chat composer checked",
+    "Read-only database comparison before/after verifies identical player, account, username, manager and connection",
+    "No name submitted, no account manually created, no client messages and no financial operations"
+  ],
+  "timingNote": "One sample per route; normal Chromium cache, 390x844 viewport. Not an average or physical-device measurement.",
+  "cases": [
+    {
+      "key": "rey",
+      "managerId": 1035,
+      "originalBrowserStorageReused": true,
+      "newNameSubmitted": false,
+      "injectedProviderSession": false,
+      "errors": [],
+      "runs": [
+        {
+          "label": "landing-reentry",
+          "started": 1792470729473,
+          "requests": [
+            {
+              "path": "/embed/gera",
+              "status": 200,
+              "method": "GET",
+              "atMs": 2186,
+              "ttfbMs": 189,
+              "serverTiming": null
+            },
+            {
+              "path": "/api/gateway/chat",
+              "status": 200,
+              "method": "POST",
+              "atMs": 4338,
+              "ttfbMs": 319,
+              "serverTiming": null
+            },
+            {
+              "path": "/api/gateway/chat",
+              "status": 200,
+              "method": "GET",
+              "atMs": 4409,
+              "ttfbMs": 388,
+              "serverTiming": null
+            }
+          ],
+          "casinoMs": 1818,
+          "chatAndWalletMs": 4053,
+          "bankCardsVisible": 1,
+          "entryReadyMs": 4050,
+          "authenticated": true,
+          "sameUsername": true
+        },
+        {
+          "label": "direct-gateway-reentry",
+          "started": 1792470734167,
+          "requests": [
+            {
+              "path": "/embed/gera",
+              "status": 200,
+              "method": "GET",
+              "atMs": 664,
+              "ttfbMs": 114,
+              "serverTiming": null
+            },
+            {
+              "path": "/api/gateway/chat",
+              "status": 200,
+              "method": "POST",
+              "atMs": 1653,
+              "ttfbMs": 361,
+              "serverTiming": null
+            },
+            {
+              "path": "/api/gateway/chat",
+              "status": 200,
+              "method": "GET",
+              "atMs": 1756,
+              "ttfbMs": 495,
+              "serverTiming": null
+            },
+            {
+              "path": "/api/gateway/chat",
+              "status": 200,
+              "method": "GET",
+              "atMs": 2976,
+              "ttfbMs": 326,
+              "serverTiming": null
+            }
+          ],
+          "casinoMs": 425,
+          "chatAndWalletMs": 2662,
+          "bankCardsVisible": 1,
+          "entryReadyMs": 1186,
+          "authenticated": true,
+          "sameUsername": true
+        }
+      ],
+      "passed": true
+    },
+    {
+      "key": "ases",
+      "managerId": 1040,
+      "originalBrowserStorageReused": true,
+      "newNameSubmitted": false,
+      "injectedProviderSession": false,
+      "errors": [],
+      "runs": [
+        {
+          "label": "landing-reentry",
+          "started": 1792470846417,
+          "requests": [
+            {
+              "path": "/embed/gera",
+              "status": 200,
+              "method": "GET",
+              "atMs": 4001,
+              "ttfbMs": 202,
+              "serverTiming": null
+            },
+            {
+              "path": "/api/gateway/chat",
+              "status": 200,
+              "method": "POST",
+              "atMs": 5188,
+              "ttfbMs": 341,
+              "serverTiming": null
+            },
+            {
+              "path": "/api/gateway/chat",
+              "status": 200,
+              "method": "GET",
+              "atMs": 5224,
+              "ttfbMs": 380,
+              "serverTiming": null
+            }
+          ],
+          "casinoMs": 3684,
+          "casinoPath": "/home.php",
+          "chatAndWalletMs": 4858,
+          "bankCardsVisible": 1,
+          "entryReadyMs": 4851,
+          "authenticated": true,
+          "sameUsername": true
+        },
+        {
+          "label": "direct-gateway-reentry",
+          "started": 1792470852322,
+          "requests": [
+            {
+              "path": "/api/gateway/chat",
+              "status": 200,
+              "method": "GET",
+              "atMs": 229,
+              "ttfbMs": 294,
+              "serverTiming": null
+            },
+            {
+              "path": "/embed/gera",
+              "status": 200,
+              "method": "GET",
+              "atMs": 759,
+              "ttfbMs": 139,
+              "serverTiming": null
+            },
+            {
+              "path": "/api/gateway/chat",
+              "status": 200,
+              "method": "POST",
+              "atMs": 1553,
+              "ttfbMs": 375,
+              "serverTiming": null
+            },
+            {
+              "path": "/api/gateway/chat",
+              "status": 200,
+              "method": "GET",
+              "atMs": 1595,
+              "ttfbMs": 388,
+              "serverTiming": null
+            }
+          ],
+          "casinoMs": 336,
+          "casinoPath": "/jugadores/home.php",
+          "chatAndWalletMs": 1280,
+          "bankCardsVisible": 1,
+          "entryReadyMs": 1213,
+          "authenticated": true,
+          "sameUsername": true
+        }
+      ],
+      "passed": true
+    },
+    {
+      "key": "net",
+      "managerId": 1041,
+      "originalBrowserStorageReused": true,
+      "newNameSubmitted": false,
+      "injectedProviderSession": false,
+      "errors": [],
+      "runs": [
+        {
+          "label": "landing-reentry",
+          "started": 1792470798468,
+          "requests": [
+            {
+              "path": "/embed/gera",
+              "status": 200,
+              "method": "GET",
+              "atMs": 1936,
+              "ttfbMs": 208,
+              "serverTiming": null
+            },
+            {
+              "path": "/api/gateway/chat",
+              "status": 200,
+              "method": "POST",
+              "atMs": 3951,
+              "ttfbMs": 335,
+              "serverTiming": null
+            },
+            {
+              "path": "/api/gateway/chat",
+              "status": 200,
+              "method": "GET",
+              "atMs": 3996,
+              "ttfbMs": 377,
+              "serverTiming": null
+            },
+            {
+              "path": "/api/gateway/chat",
+              "status": 200,
+              "method": "GET",
+              "atMs": 5093,
+              "ttfbMs": 291,
+              "serverTiming": null
+            }
+          ],
+          "casinoMs": 1512,
+          "chatAndWalletMs": 3633,
+          "bankCardsVisible": 1,
+          "entryReadyMs": 3653,
+          "authenticated": true,
+          "sameUsername": true
+        },
+        {
+          "label": "direct-gateway-reentry",
+          "started": 1792470803787,
+          "requests": [
+            {
+              "path": "/embed/gera",
+              "status": 200,
+              "method": "GET",
+              "atMs": 767,
+              "ttfbMs": 108,
+              "serverTiming": null
+            },
+            {
+              "path": "/api/gateway/chat",
+              "status": 200,
+              "method": "POST",
+              "atMs": 1647,
+              "ttfbMs": 326,
+              "serverTiming": null
+            },
+            {
+              "path": "/api/gateway/chat",
+              "status": 200,
+              "method": "GET",
+              "atMs": 1711,
+              "ttfbMs": 360,
+              "serverTiming": null
+            }
+          ],
+          "casinoMs": 488,
+          "chatAndWalletMs": 1850,
+          "bankCardsVisible": 1,
+          "entryReadyMs": 1255,
+          "authenticated": true,
+          "sameUsername": true
+        }
+      ],
+      "passed": true
+    },
+    {
+      "key": "net-full",
+      "managerId": 1042,
+      "originalBrowserStorageReused": true,
+      "newNameSubmitted": false,
+      "injectedProviderSession": false,
+      "errors": [
+        "Unexpected token '<'",
+        "Unexpected token '<'"
+      ],
+      "runs": [
+        {
+          "label": "landing-reentry",
+          "started": 1792470806475,
+          "requests": [
+            {
+              "path": "/embed/gera",
+              "status": 200,
+              "method": "GET",
+              "atMs": 1142,
+              "ttfbMs": 190,
+              "serverTiming": null
+            },
+            {
+              "path": "/api/gateway/chat",
+              "status": 200,
+              "method": "POST",
+              "atMs": 2491,
+              "ttfbMs": 311,
+              "serverTiming": null
+            },
+            {
+              "path": "/api/gateway/chat",
+              "status": 200,
+              "method": "GET",
+              "atMs": 2531,
+              "ttfbMs": 363,
+              "serverTiming": null
+            },
+            {
+              "path": "/api/gateway/chat",
+              "status": 200,
+              "method": "GET",
+              "atMs": 3545,
+              "ttfbMs": 287,
+              "serverTiming": null
+            },
+            {
+              "path": "/api/gateway/chat",
+              "status": 200,
+              "method": "GET",
+              "atMs": 4526,
+              "ttfbMs": 296,
+              "serverTiming": null
+            },
+            {
+              "path": "/api/gateway/chat",
+              "status": 200,
+              "method": "GET",
+              "atMs": 5583,
+              "ttfbMs": 372,
+              "serverTiming": null
+            },
+            {
+              "path": "/api/gateway/chat",
+              "status": 200,
+              "method": "GET",
+              "atMs": 6880,
+              "ttfbMs": 446,
+              "serverTiming": null
+            }
+          ],
+          "casinoMs": 729,
+          "chatAndWalletMs": 2222,
+          "bankCardsVisible": 1,
+          "entryReadyMs": 2207,
+          "authenticated": true,
+          "sameUsername": true
+        },
+        {
+          "label": "direct-gateway-reentry",
+          "started": 1792470813366,
+          "requests": [
+            {
+              "path": "/embed/gera",
+              "status": 200,
+              "method": "GET",
+              "atMs": 905,
+              "ttfbMs": 107,
+              "serverTiming": null
+            },
+            {
+              "path": "/api/gateway/chat",
+              "status": 200,
+              "method": "POST",
+              "atMs": 2516,
+              "ttfbMs": 284,
+              "serverTiming": null
+            },
+            {
+              "path": "/api/gateway/chat",
+              "status": 200,
+              "method": "GET",
+              "atMs": 2516,
+              "ttfbMs": 381,
+              "serverTiming": null
+            }
+          ],
+          "casinoMs": 706,
+          "chatAndWalletMs": 2020,
+          "bankCardsVisible": 1,
+          "entryReadyMs": 2038,
+          "authenticated": true,
+          "sameUsername": true
+        }
+      ],
+      "passed": true
+    }
+  ],
+  "database": {
+    "at": "2026-10-20T04:34:32.629Z",
+    "readOnly": true,
+    "cases": [
+      {
+        "key": "rey",
+        "managerId": 1035,
+        "oneAccountBefore": true,
+        "oneAccountAfter": true,
+        "samePlayer": true,
+        "sameAccount": true,
+        "sameUsername": true,
+        "sameManager": true
+      },
+      {
+        "key": "ases",
+        "managerId": 1040,
+        "oneAccountBefore": true,
+        "oneAccountAfter": true,
+        "samePlayer": true,
+        "sameAccount": true,
+        "sameUsername": true,
+        "sameManager": true
+      },
+      {
+        "key": "net",
+        "managerId": 1041,
+        "oneAccountBefore": true,
+        "oneAccountAfter": true,
+        "samePlayer": true,
+        "sameAccount": true,
+        "sameUsername": true,
+        "sameManager": true
+      },
+      {
+        "key": "net-full",
+        "managerId": 1042,
+        "oneAccountBefore": true,
+        "oneAccountAfter": true,
+        "samePlayer": true,
+        "sameAccount": true,
+        "sameUsername": true,
+        "sameManager": true
+      }
+    ]
+  },
+  "observations": [
+    "Ases accepts both /home.php and /jugadores/home.php; an initial harness path expectation was corrected. The original diagnostic was preserved.",
+    "NET Full logged two transient Unexpected token '<' browser errors in the first run while authentication/chat remained usable. A separate repeat with CDP exception and script-response capture recorded zero errors, zero failed requests and a usable chat. Original messages are retained; their source was not conclusively identified."
+  ],
+  "diagnostic": {
+    "at": "2026-10-20T04:36:38.469Z",
+    "errors": [],
+    "unexpectedScriptResponses": [],
+    "failures": [],
+    "chatAndWalletReady": true
+  }
+}

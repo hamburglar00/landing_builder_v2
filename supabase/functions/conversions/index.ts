@@ -8380,14 +8380,13 @@ Deno.serve(async (req) => {
         }
       }
 
-      const hasIsValidReceipt =
-        Object.prototype.hasOwnProperty.call(params, "is_valid_receipt") ||
-        Object.prototype.hasOwnProperty.call(params, "isValidReceipt");
-      const isValidReceipt = toBool(
-        Object.prototype.hasOwnProperty.call(params, "is_valid_receipt")
-          ? params.is_valid_receipt
-          : params.isValidReceipt,
-      );
+      const receiptValue = Object.prototype.hasOwnProperty.call(params, "is_valid_receipt")
+        ? params.is_valid_receipt
+        : params.isValidReceipt;
+      // A confirmed manual load may have no receipt. Unknown is not invalid;
+      // retain the existing rejection for explicit false values from every channel.
+      const hasIsValidReceipt = receiptValue !== undefined && receiptValue !== null && receiptValue !== "";
+      const isValidReceipt = toBool(receiptValue);
       if (hasIsValidReceipt && !isValidReceipt) {
         return runAndFinalize(async (_ctx) => {
           await writeLog(

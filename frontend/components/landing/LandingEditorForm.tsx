@@ -83,10 +83,12 @@ function ToggleSwitch({
 export function CollapsibleSection({
   title,
   defaultOpen,
+  keepMounted = false,
   children,
 }: {
   title: string;
   defaultOpen?: boolean;
+  keepMounted?: boolean;
   children: React.ReactNode;
 }) {
   const [open, setOpen] = useState(defaultOpen ?? false);
@@ -103,7 +105,7 @@ export function CollapsibleSection({
           {open ? "▼" : "▶"}
         </span>
       </button>
-      {open && <div className="space-y-4 border-t border-zinc-800 p-4">{children}</div>}
+      {(open || keepMounted) && <div hidden={!open} className="space-y-4 border-t border-zinc-800 p-4">{children}</div>}
     </section>
   );
 }

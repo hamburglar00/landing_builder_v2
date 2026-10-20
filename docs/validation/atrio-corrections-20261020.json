@@ -1,0 +1,235 @@
+{
+  "at": "2026-10-20T03:30:12.454Z",
+  "status": "frontend_published_api2_corrections_local",
+  "scope": {
+    "api2": "local only; fix/atrio-bot-form; no commit, push or deployment by this correction task",
+    "panel3": "unchanged",
+    "hgCashEngine": "unchanged",
+    "newMigrations": 0,
+    "ganamosPlus": "No PBAdmin integration or manager; excluded from account-creation E2E. Never mapped to Ganamos NET."
+  },
+  "measurement": {
+    "browser": "Headless Chromium, mobile viewport 390x844",
+    "networkThrottle": false,
+    "cache": "normal HTTP cache; empty context on first entry",
+    "providerSessionInjected": false,
+    "submitClock": "trusted DOM click timestamp",
+    "claim": "single samples, not averages or physical iPhone/WhatsApp certification"
+  },
+  "cases": [
+    {
+      "casino": "Rey de Ases",
+      "managerId": 1035,
+      "agencyId": 272,
+      "managerType": "mkt",
+      "samples": 1,
+      "formVisibleMs": 1060,
+      "clickToCasinoMs": 7674,
+      "clickToUsableChatAndWalletMs": 10684,
+      "accountStageServerMs": 1699,
+      "landingReentryToChatMs": 1949,
+      "directGatewayReentryToChatMs": 1739,
+      "authenticatedExpectedCasinoUser": true,
+      "onePersistedProviderAccount": true,
+      "correctManagerAndAgency": true,
+      "conversationPersisted": true,
+      "clientTextSaved": true,
+      "lead": {
+        "atrioDeliveries": 1,
+        "atrioStatus": "sent",
+        "httpStatus": 200,
+        "builderState": "lead",
+        "builderOrigin": "landing",
+        "builderCapiStatus": "enviado"
+      }
+    },
+    {
+      "casino": "Ases del Norte",
+      "managerId": 1040,
+      "agencyId": 277,
+      "managerType": "mkt",
+      "samples": 1,
+      "formVisibleMs": 768,
+      "clickToCasinoMs": 6359,
+      "clickToUsableChatAndWalletMs": 9139,
+      "accountStageServerMs": 1883,
+      "landingReentryToChatMs": 1860,
+      "directGatewayReentryToChatMs": 1182,
+      "authenticatedExpectedCasinoUser": true,
+      "onePersistedProviderAccount": true,
+      "correctManagerAndAgency": true,
+      "conversationPersisted": true,
+      "clientTextSaved": true,
+      "lead": {
+        "atrioDeliveries": 1,
+        "atrioStatus": "sent",
+        "httpStatus": 200,
+        "builderState": "lead",
+        "builderOrigin": "landing",
+        "builderCapiStatus": "enviado"
+      }
+    },
+    {
+      "casino": "Ganamos NET",
+      "managerId": 1041,
+      "agencyId": 278,
+      "managerType": "mkt",
+      "samples": 1,
+      "formVisibleMs": 705,
+      "clickToCasinoMs": 6926,
+      "clickToUsableChatAndWalletMs": 9947,
+      "accountStageServerMs": 2506,
+      "landingReentryToChatMs": 1610,
+      "directGatewayReentryToChatMs": 1375,
+      "authenticatedExpectedCasinoUser": true,
+      "onePersistedProviderAccount": true,
+      "correctManagerAndAgency": true,
+      "conversationPersisted": true,
+      "clientTextSaved": true,
+      "lead": {
+        "atrioDeliveries": 1,
+        "atrioStatus": "sent",
+        "httpStatus": 200,
+        "builderState": "lead",
+        "builderOrigin": "landing",
+        "builderCapiStatus": "enviado"
+      }
+    },
+    {
+      "casino": "Ganamos NET",
+      "managerId": 1042,
+      "agencyId": 17,
+      "managerType": "full_carga",
+      "samples": 1,
+      "formVisibleMs": 646,
+      "clickToCasinoMs": 6418,
+      "clickToUsableChatAndWalletMs": 9896,
+      "accountStageServerMs": 2489,
+      "landingReentryToChatMs": 1814,
+      "directGatewayReentryToChatMs": 1290,
+      "authenticatedExpectedCasinoUser": true,
+      "onePersistedProviderAccount": true,
+      "correctManagerAndAgency": true,
+      "conversationPersisted": true,
+      "clientTextSaved": true,
+      "lead": {
+        "atrioDeliveries": 1,
+        "atrioStatus": "sent",
+        "httpStatus": 200,
+        "builderState": "lead",
+        "builderOrigin": "landing",
+        "builderCapiStatus": "enviado"
+      }
+    }
+  ],
+  "leadTimeoutRecovery": {
+    "originalDeliveryReused": true,
+    "originalPayloadAndActionEventIdPreserved": true,
+    "conversionAndMetaEventIdUnchanged": true,
+    "builderConversionCount": 1,
+    "result": "sent HTTP 200"
+  },
+  "changes": {
+    "frontend": [
+      "Stable Settings hydration for notification capability detection",
+      "Joined manager/account read plus parallel independent chat reads",
+      "Lightweight preparation issuer without DB/account modules, unchanged encrypted token and validation",
+      "Independent push, Telegram and tracking tasks; bounded requests and persistent leased LEAD retries",
+      "PBAdmin platform 2 maps only to Ganamos NET in Atrio, Builder and classic engine",
+      "Ases del Norte legacy chat removal and safe optional Placeholders initialization"
+    ],
+    "api2Local": [
+      "Explicit recovered-credentials DTO instead of Lucid model spread",
+      "Strict Rey financial receipt confirmation restricted to Atrio",
+      "Persist provider transaction and before/after balances; contradictory withdrawals remain in processing and cannot be reexecuted with a new key"
+    ]
+  },
+  "validation": {
+    "integrationSuites": [
+      {
+        "name": "API2 integration",
+        "passed": true,
+        "checks": 78,
+        "skipped": 0
+      },
+      {
+        "name": "Atrio contracts and workflows",
+        "passed": true,
+        "checks": 100,
+        "skipped": 0
+      }
+    ],
+    "builderStartAndPreparation": {
+      "passed": 26,
+      "failed": 0
+    },
+    "classicRuntime": {
+      "passed": 34,
+      "failed": 0
+    },
+    "asesGateway": {
+      "passed": 71,
+      "failed": 0
+    },
+    "realLocalMySql": {
+      "provisioning": 12,
+      "manualOperations": 12,
+      "automation": 1,
+      "externalProviderCalls": 0,
+      "productionDatabase": false
+    },
+    "hydrationModes": 4,
+    "sharedSdkDeferredReadiness": {
+      "checks": 32,
+      "browsers": [
+        "Chromium",
+        "WebKit"
+      ],
+      "gateways": 4
+    },
+    "prepareBundle": {
+      "modules": 6,
+      "bytes": 9205,
+      "dbAndAccountModules": 0
+    },
+    "typecheck": [
+      "API2",
+      "Atrio",
+      "Builder",
+      "classic engine",
+      "Ases gateway"
+    ]
+  },
+  "productionDeployments": {
+    "atrio": "https://internal-chat-hyq34ws2e-juanclouds-projects.vercel.app",
+    "builder": "https://landing-builder-v2-k259-2xo3fl5ex-juanclouds-projects.vercel.app",
+    "classic": "https://public-landing-2ws23e9gd-juanclouds-projects.vercel.app",
+    "ases": "https://ases-del-norte-gateway-2il9kd1p9-juanclouds-projects.vercel.app"
+  },
+  "outstanding": [
+    {
+      "item": "Original withdrawal on prueba8339",
+      "status": "Original operation record unchanged, balance remains 100 test chips. Controlled provider diagnostic withdrew 1, verified 99, restored 1, verified 100. Original provider response was not retained; exact cause cannot be certified. New strict API2 code still needs programmer deployment and live validation."
+    },
+    {
+      "item": "Original Ganamos 1041 uncertain provision",
+      "status": "Original identity prueba6274 remains unchanged and uncertain. Authenticated owner-scoped lookup returned not found; no repeated creation. Fresh identities completed full journeys."
+    },
+    {
+      "item": "Full Carga banking",
+      "status": "No new live bank transfer or HG engine changes. Text, login, chat, wallet and LEAD were verified; this does not certify an HG Cash transfer."
+    },
+    {
+      "item": "Performance",
+      "status": "New accounts still require 9–11 seconds to usable chat. Further savings are in cross-service coordination, login and chat bootstrap; do not describe as instantaneous."
+    },
+    {
+      "item": "NET third-party sports iframe",
+      "status": "Subsequent message smoke tests observed provider iframe JavaScript failures, including a sports identity 401 / Redux error. Atrio messages saved and LEAD delivered in both NET cases. These external failures were not changed or presented as resolved."
+    },
+    {
+      "item": "Classic live coverage",
+      "status": "Classic engine has 34 local passing checks, typecheck and production build. The four new-account timed E2E cases used the Builder domain; no claim of a separate classic live account-creation run."
+    }
+  ]
+}

@@ -2,9 +2,9 @@ import { buildTemplate7ResourceWarmup } from "./template7ResourceWarmup";
 import PhonePrewarmScript from "./PhonePrewarmScript";
 import PublicLandingRuntimeScript from "./PublicLandingRuntimeScript";
 import { buildClientIdentityBootstrapScript } from "./clientIdentityBootstrapScript";
-import AtrioPrewarmScript from "./AtrioPrewarmScript";
 import { TEMPLATE7_CRITICAL_CSS } from "./publicLandingCss";
 import { buildTemplate7FastRuntime } from "./template7FastRuntime";
+import AtrioPrewarmScript from "./AtrioPrewarmScript";
 import { buildTemplate7ReentryScript, guardTemplate7ReentryScripts } from "./template7ReentryScript";
 import { optimizeTemplate7Images } from "../../lib/landing/template7Images";
 import { gatewayOriginFor } from "../../lib/reyDeAses/gatewayOrigins";
@@ -699,9 +699,6 @@ export function renderPublicLandingHtml(params: RenderParams) {
   const phonePrewarmScript = isTemplate7 ? "" : renderScriptElement(
     PhonePrewarmScript({ slug, initialPhone: cachedPhone }),
   );
-  const atrioPrewarmScript = isTemplate7
-    ? renderScriptElement(AtrioPrewarmScript({ slug }))
-    : "";
   const runtimeScript = isTemplate7
       ? `<script>${buildTemplate7FastRuntime(slug, config)}</script>`
       : `${renderScriptElement(PublicLandingRuntimeScript({ slug, config }))}<script src="/public-assets/landing-runtime-v6.js" defer></script>`;
@@ -727,7 +724,7 @@ export function renderPublicLandingHtml(params: RenderParams) {
     pixelId
       ? '<link rel="preconnect" href="https://www.facebook.com"><link rel="preconnect" href="https://connect.facebook.net">'
       : ""
-  }${isTemplate7 ? atrioPrewarmScript + buildClientIdentityBootstrapScript() : ""}${buildPreloadLinks(config)}${isTemplate7 ? `<style data-template7-critical>${TEMPLATE7_CRITICAL_CSS}</style>` : '<link rel="stylesheet" href="/public-assets/landing-styles-v3.css">'}${phonePrewarmScript}${pixelScriptForTemplate(
+  }${isTemplate7 ? buildClientIdentityBootstrapScript({ slug, landingId: config.id || "" }) + renderScriptElement(AtrioPrewarmScript({ slug, landingId: config.id || "" })) : ""}${buildPreloadLinks(config)}${isTemplate7 ? `<style data-template7-critical>${TEMPLATE7_CRITICAL_CSS}</style>` : '<link rel="stylesheet" href="/public-assets/landing-styles-v3.css">'}${phonePrewarmScript}${pixelScriptForTemplate(
     pixelId,
     slug,
     config.tracking?.phoneCountryCode || "54",
@@ -744,7 +741,7 @@ export function renderPublicLandingHtml(params: RenderParams) {
 export function renderClassicTemplate7InlineHtml(params: RenderParams, deviceIdScript: string) {
   const config = optimizeTemplate7Images(params.config);
   const pixelId = String(config.tracking?.pixelId || "").trim().replace(/\D+/g, "");
-  const html = `${renderScriptElement(AtrioPrewarmScript({ slug: params.slug }))}${buildPreloadLinks(config)}<style data-template7-critical>${TEMPLATE7_CRITICAL_CSS}</style>${pixelScriptForTemplate(pixelId, params.slug, config.tracking?.phoneCountryCode || "54", 7)}${buildPixelNoscript(pixelId)}${renderTemplate7({ ...params, config })}${renderPrivacyFooter({ ...config, layout: { ...config.layout, template: 0 } })}<script>${buildTemplate7FastRuntime(params.slug, config, deviceIdScript)}</script>${buildTemplate7ResourceWarmup(template7GatewayOrigin(config))}`;
+  const html = `${renderScriptElement(AtrioPrewarmScript({ slug: params.slug, landingId: config.id || "", deviceIdScript }))}${buildPreloadLinks(config)}<style data-template7-critical>${TEMPLATE7_CRITICAL_CSS}</style>${pixelScriptForTemplate(pixelId, params.slug, config.tracking?.phoneCountryCode || "54", 7)}${buildPixelNoscript(pixelId)}${renderTemplate7({ ...params, config })}${renderPrivacyFooter({ ...config, layout: { ...config.layout, template: 0 } })}<script>${buildTemplate7FastRuntime(params.slug, config, deviceIdScript)}</script>${buildTemplate7ResourceWarmup(template7GatewayOrigin(config))}`;
   const reentry = buildTemplate7ReentryScript(template7GatewayOrigin(config), `/${encodeURIComponent(params.slug)}`);
   return reentry ? reentry + guardTemplate7ReentryScripts(html) : html;
 }

@@ -369,8 +369,8 @@ test("adaptador API2 crea o recupera la cuenta por advisor_id y valida la plataf
   process.env.API2_ORIGIN = "https://api2.example.com";
   process.env.API2_API_KEY = "api-key";
   process.env.API2_API_SECRET = "api-secret";
-  const platformCodes: Record<TargetProvider, number> = {
-    ases_del_norte: 1, multi_skin: 2, ganamos_net: 2, rey_de_ases: 5,
+  const platformCodes: Partial<Record<TargetProvider, number>> = {
+    ases_del_norte: 1, ganamos_net: 2, rey_de_ases: 5,
   };
   try {
     for (const provider of Object.keys(platformCodes) as TargetProvider[]) {
@@ -406,6 +406,12 @@ test("adaptador API2 crea o recupera la cuenta por advisor_id y valida la plataf
         externalAccountId: playerId,
       });
     }
+
+    globalThis.fetch = async () => { throw new Error("Ganamos+ must not reuse a NET manager"); };
+    await assert.rejects(resolveTargetAccount({
+      manager_id:1035, agency_id:272, external_user_id: playerId, name: "Prueba", target_provider: "multi_skin",
+      advisor_id: advisorId, advisor_slug: "gera",
+    }), { code: "integration_pending" });
 
     globalThis.fetch = async () => Response.json({
       success: true, username: "wrong-platform", password: "secret", platform: 1, is_new: true,

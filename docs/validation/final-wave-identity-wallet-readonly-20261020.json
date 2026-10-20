@@ -1,0 +1,258 @@
+{
+  "at": "2026-10-20T05:11:22.038Z",
+  "wave": "final-wave",
+  "passed": true,
+  "scope": "Latest production deployment; four authorized test accounts, managers 1035/1040/1041/1042",
+  "newAccountsCreatedByThisHarness": false,
+  "clientMessagesSent": 0,
+  "financialOperations": 0,
+  "cases": [
+    {
+      "key": "ases",
+      "managerId": 1040,
+      "passed": true,
+      "checks": {
+        "onePlayer": true,
+        "oneAccount": true,
+        "expectedManagerAndConnection": true,
+        "oneConversation": true,
+        "oneInitialWallet": true,
+        "oneValidWallet": true,
+        "walletMatchesManagerMode": true,
+        "onePersistedAssignment": true,
+        "trackingAttributionPresent": true,
+        "noPurchaseWithoutLoad": true,
+        "noClientMessageFabricated": true,
+        "noLeadFabricated": true,
+        "samePlayer": true,
+        "sameAccount": true,
+        "sameUsername": true,
+        "sameConnection": true,
+        "samePromo": true,
+        "casinoAndChatReentryPassed": true,
+        "noUnattributedOrFirstPartyBrowserErrors": true,
+        "oneContactDeliveredToMeta": true,
+        "noLeadOrPurchaseFabricatedInBuilder": true
+      },
+      "browserRuns": [
+        {
+          "path": "landing-reentry",
+          "casinoMs": 1031,
+          "chatAndWalletMs": 2564,
+          "authenticated": true,
+          "sameUsername": true,
+          "bankCardsVisible": 1
+        },
+        {
+          "path": "direct-gateway-reentry",
+          "casinoMs": 319,
+          "chatAndWalletMs": 1329,
+          "authenticated": true,
+          "sameUsername": true,
+          "bankCardsVisible": 1
+        }
+      ],
+      "browserErrors": [],
+      "providerErrors": []
+    },
+    {
+      "key": "net",
+      "managerId": 1041,
+      "passed": true,
+      "checks": {
+        "onePlayer": true,
+        "oneAccount": true,
+        "expectedManagerAndConnection": true,
+        "oneConversation": true,
+        "oneInitialWallet": true,
+        "oneValidWallet": true,
+        "walletMatchesManagerMode": true,
+        "onePersistedAssignment": true,
+        "trackingAttributionPresent": true,
+        "noPurchaseWithoutLoad": true,
+        "noClientMessageFabricated": true,
+        "noLeadFabricated": true,
+        "samePlayer": true,
+        "sameAccount": true,
+        "sameUsername": true,
+        "sameConnection": true,
+        "samePromo": true,
+        "casinoAndChatReentryPassed": true,
+        "noUnattributedOrFirstPartyBrowserErrors": true,
+        "oneContactDeliveredToMeta": true,
+        "noLeadOrPurchaseFabricatedInBuilder": true
+      },
+      "browserRuns": [
+        {
+          "path": "landing-reentry",
+          "casinoMs": 1547,
+          "chatAndWalletMs": 3207,
+          "authenticated": true,
+          "sameUsername": true,
+          "bankCardsVisible": 1
+        },
+        {
+          "path": "direct-gateway-reentry",
+          "casinoMs": 646,
+          "chatAndWalletMs": 1928,
+          "authenticated": true,
+          "sameUsername": true,
+          "bankCardsVisible": 1
+        }
+      ],
+      "browserErrors": [
+        "Unexpected token '<'"
+      ],
+      "providerErrors": [
+        {
+          "message": "SyntaxError: Unexpected token '<'",
+          "url": "https://sport-iframe.wercdc.xyz/es/mini-iframe",
+          "line": 165,
+          "column": 3091
+        },
+        {
+          "message": "SyntaxError: Unexpected token '<'",
+          "url": "https://sport-iframe.wercdc.xyz/es/mini-iframe",
+          "line": 165,
+          "column": 3091
+        },
+        {
+          "message": "SyntaxError: Unexpected token '<'",
+          "url": "https://sport-iframe.wercdc.xyz/es/mini-iframe",
+          "line": 165,
+          "column": 3091
+        }
+      ]
+    },
+    {
+      "key": "net-full",
+      "managerId": 1042,
+      "passed": true,
+      "checks": {
+        "onePlayer": true,
+        "oneAccount": true,
+        "expectedManagerAndConnection": true,
+        "oneConversation": true,
+        "oneInitialWallet": true,
+        "oneValidWallet": true,
+        "walletMatchesManagerMode": true,
+        "onePersistedAssignment": true,
+        "trackingAttributionPresent": true,
+        "noPurchaseWithoutLoad": true,
+        "noClientMessageFabricated": true,
+        "noLeadFabricated": true,
+        "samePlayer": true,
+        "sameAccount": true,
+        "sameUsername": true,
+        "sameConnection": true,
+        "samePromo": true,
+        "casinoAndChatReentryPassed": true,
+        "noUnattributedOrFirstPartyBrowserErrors": true,
+        "oneContactDeliveredToMeta": true,
+        "noLeadOrPurchaseFabricatedInBuilder": true
+      },
+      "browserRuns": [
+        {
+          "path": "landing-reentry",
+          "casinoMs": 873,
+          "chatAndWalletMs": 2512,
+          "authenticated": true,
+          "sameUsername": true,
+          "bankCardsVisible": 1
+        },
+        {
+          "path": "direct-gateway-reentry",
+          "casinoMs": 1170,
+          "chatAndWalletMs": 3317,
+          "authenticated": true,
+          "sameUsername": true,
+          "bankCardsVisible": 1
+        }
+      ],
+      "browserErrors": [
+        "Unexpected token '<'"
+      ],
+      "providerErrors": [
+        {
+          "message": "SyntaxError: Unexpected token '<'",
+          "url": "https://sport-iframe.wercdc.xyz/es/mini-iframe",
+          "line": 165,
+          "column": 3091
+        },
+        {
+          "message": "SyntaxError: Unexpected token '<'",
+          "url": "https://sport-iframe.wercdc.xyz/es/mini-iframe",
+          "line": 165,
+          "column": 3091
+        },
+        {
+          "message": "SyntaxError: Unexpected token '<'",
+          "url": "https://sport-iframe.wercdc.xyz/es/mini-iframe",
+          "line": 165,
+          "column": 3091
+        }
+      ]
+    },
+    {
+      "key": "rey",
+      "managerId": 1035,
+      "passed": true,
+      "checks": {
+        "onePlayer": true,
+        "oneAccount": true,
+        "expectedManagerAndConnection": true,
+        "oneConversation": true,
+        "oneInitialWallet": true,
+        "oneValidWallet": true,
+        "walletMatchesManagerMode": true,
+        "onePersistedAssignment": true,
+        "trackingAttributionPresent": true,
+        "noPurchaseWithoutLoad": true,
+        "noClientMessageFabricated": true,
+        "noLeadFabricated": true,
+        "samePlayer": true,
+        "sameAccount": true,
+        "sameUsername": true,
+        "sameConnection": true,
+        "samePromo": true,
+        "casinoAndChatReentryPassed": true,
+        "noUnattributedOrFirstPartyBrowserErrors": true,
+        "oneContactDeliveredToMeta": true,
+        "noLeadOrPurchaseFabricatedInBuilder": true
+      },
+      "browserRuns": [
+        {
+          "path": "landing-reentry",
+          "casinoMs": 2163,
+          "chatAndWalletMs": 3519,
+          "authenticated": true,
+          "sameUsername": true,
+          "bankCardsVisible": 1
+        },
+        {
+          "path": "direct-gateway-reentry",
+          "casinoMs": 854,
+          "chatAndWalletMs": 2237,
+          "authenticated": true,
+          "sameUsername": true,
+          "bankCardsVisible": 1
+        }
+      ],
+      "browserErrors": [],
+      "providerErrors": []
+    }
+  ],
+  "method": [
+    "Root-created final-wave identities reused without modifying source browser or identity checkpoints",
+    "Read-only database snapshots before and after landing/direct gateway reentry",
+    "Same unique player/account/username/manager connection/promo, persistent assignment and one conversation",
+    "Single persisted bank-details card, appropriate MKT/Full Carga wallet, authenticated casino and usable composer",
+    "No client message, LEAD or PURCHASE fabricated by automatic entry",
+    "Final CONTACT still confirmed in Builder and Meta HTTP200/events_received=1 without fabricated LEAD or PURCHASE"
+  ],
+  "notes": [
+    "Explicit LEAD delivery and notification retry deduplication were already validated in the second wave. No further message was sent in this wave.",
+    "Browser timings are individual reentry samples with normal cache, not new-account creation averages.",
+    "NET MKT/Full emitted Unexpected token '<'. CDP reproduced and attributed it to inline JavaScript at sport-iframe.wercdc.xyz/es/mini-iframe line 165, an external sports iframe. No gateway/Atrio script response was HTML or HTTP error; authentication and chat remained functional. The third-party error remains documented rather than reported as zero browser errors."
+  ]
+}

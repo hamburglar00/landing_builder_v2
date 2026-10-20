@@ -93,14 +93,16 @@ test("inline critical CSS is a small exact subset of existing styles", () => {
   assert.doesNotMatch(TEMPLATE7_CRITICAL_CSS, /template6__|template4__/);
 });
 
-test("prewarming starts before image discovery/CSS and is not duplicated", () => {
+test("destination prewarming starts after identity bootstrap, before image discovery/CSS, using a shared promise", () => {
   const previousUrl = process.env.NEXT_PUBLIC_SUPABASE_URL, previousKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
   process.env.NEXT_PUBLIC_SUPABASE_URL = "https://audit.supabase.co";
   process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY = "synthetic";
   try {
     const html = renderPublicLandingHtml({ slug: "test", config: fixture() });
-    assert.ok(html.indexOf("landing-atrio?name=test") < html.indexOf("<style data-template7-critical>"));
-    assert.equal(html.split("landing-atrio?name=test").length - 1, 1);
+    assert.ok(html.indexOf("/api/template7/destination") < html.indexOf("<style data-template7-critical>"));
+    assert.ok(html.indexOf("/api/client-identity/bootstrap") < html.indexOf("/api/template7/destination"));
+    assert.match(html, /if \(!window\.__PUBLIC_LANDING_ATRIO_PROMISES\[slug\]\)/);
+    assert.doesNotMatch(html, /landing-atrio\?name/);
   } finally {
     if (previousUrl === undefined) delete process.env.NEXT_PUBLIC_SUPABASE_URL; else process.env.NEXT_PUBLIC_SUPABASE_URL = previousUrl;
     if (previousKey === undefined) delete process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY; else process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY = previousKey;

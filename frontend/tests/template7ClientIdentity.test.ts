@@ -65,6 +65,58 @@ test("bootstrap limita peticiones y falla sin filtrar detalles", async () => {
   assert.deepEqual(await unavailable.json(), { error: "service_unavailable" });
 });
 
+async function runCombinedBootstrap(destinationStatus = 200, bootstrapOk = true) {
+  const calls: { path: string; body: Record<string, unknown> }[] = [];
+  const stored: Record<string, string> = {};
+  const browser = {
+    setTimeout, clearTimeout,
+  } as Record<string, unknown>;
+  const destination = { atrioClientId: "client", atrioId: "advisor", atrioSlug: "gera", preparationReady: true };
+  const source = buildClientIdentityBootstrapScript({ landingId: uuid, slug: "landing" }).replace(/^<script>|<\/script>$/g, "");
+  runInNewContext(source, {
+    window: browser, Promise, AbortController,
+    localStorage: { getItem: (key: string) => stored[key] || "", setItem: (key: string, value: string) => { stored[key] = value; } },
+    fetch: async (path: string, init: { body: string; credentials: string }) => {
+      assert.equal(init.credentials, "same-origin");
+      calls.push({ path, body: JSON.parse(init.body) });
+      if (path === "/api/client-identity/bootstrap") return { ok: bootstrapOk, json: async () => ({ ok: bootstrapOk, recovery_token: "ir1.encrypted" }) };
+      return { ok: destinationStatus === 200, json: async () => destination };
+    },
+  });
+  const ready = await browser.__LB_IDENTITY_READY__;
+  const selected = await (browser.__PUBLIC_LANDING_ATRIO_PROMISES as Record<string, Promise<unknown>>).landing;
+  return { ready, selected, calls, stored, browser, destination };
+}
+
+test("el destino verifica la cookie en la misma solicitud que prepara el manager", async () => {
+  const result = await runCombinedBootstrap();
+  assert.equal(result.ready, true);
+  assert.deepEqual(result.selected, result.destination);
+  assert.deepEqual(result.calls.map(call => call.path), ["/api/client-identity/bootstrap", "/api/template7/destination"]);
+  assert.deepEqual(result.calls[1].body, { landing_id: uuid, landing_slug: "landing" });
+  assert.equal(result.stored["template7:identity-recovery:v1"], "ir1.encrypted");
+  assert.ok(result.calls.every(call => call.body.verify !== true));
+});
+
+test("la cookie bloqueada o un destino no disponible impiden confirmar el ingreso", async () => {
+  for (const status of [409, 403, 503]) {
+    const result = await runCombinedBootstrap(status);
+    assert.equal(result.ready, false);
+    assert.equal(result.selected, null);
+  }
+  const failedIdentity = await runCombinedBootstrap(200, false);
+  assert.equal(failedIdentity.ready, false);
+  assert.deepEqual(failedIdentity.calls.map(call => call.path), ["/api/client-identity/bootstrap"]);
+});
+
+test("reintentar bootstrap reemplaza la promesa de destino sin crear otra identidad en el navegador", async () => {
+  const result = await runCombinedBootstrap();
+  const original = (result.browser.__PUBLIC_LANDING_ATRIO_PROMISES as Record<string, Promise<unknown>>).landing;
+  assert.equal(await (result.browser.__LB_BOOTSTRAP_IDENTITY__ as () => Promise<boolean>)(), true);
+  assert.notEqual((result.browser.__PUBLIC_LANDING_ATRIO_PROMISES as Record<string, Promise<unknown>>).landing, original);
+  assert.deepEqual(result.calls[2].body, { recovery_token: "ir1.encrypted" });
+});
+
 test("handoff no se precarga, valida token y crea intent Android con fallback", () => {
   const script = buildTemplate7HandoffRuntimeScript();
   const context = { URL, navigator: { userAgent: "Mozilla/5.0 (Linux; Android 14; wv) Instagram" } };

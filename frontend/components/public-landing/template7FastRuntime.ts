@@ -16,16 +16,54 @@ export function buildTemplate7FastRuntime(
   const bootstrap = JSON.stringify(settings).replace(/[<>&\u2028\u2029]/g,
     value => `\\u${value.charCodeAt(0).toString(16).padStart(4, "0")}`);
   let source = buildPublicLandingRuntimeSource();
+  const selectionStart = source.indexOf("      function ensureAtrioPromise() {");
+  const selectionEnd = source.indexOf("      function clearPrewarmedAtrioPromise() {", selectionStart);
+  if (selectionStart < 0 || selectionEnd < 0) throw new Error("Template 7 destination selection changed");
+  source = source.slice(0, selectionStart) + `
+      function ensureAtrioPromise() {
+        window.__PUBLIC_LANDING_ATRIO_PROMISES = window.__PUBLIC_LANDING_ATRIO_PROMISES || {};
+        var existing = window.__PUBLIC_LANDING_ATRIO_PROMISES[cfg.slug];
+        if (existing) return existing;
+        var promise = Promise.resolve(window.__LB_IDENTITY_READY__ || true).then(function (ready) {
+          if (ready !== true) return null;
+          return fetch("/api/template7/destination", {
+            method: "POST", credentials: "same-origin", cache: "no-store", keepalive: true,
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ landing_id: cfg.landingId, landing_slug: cfg.slug${classicDeviceIdScript ? ", device_id: getOrCreateDeviceId()" : ""} })
+          }).then(function (response) { return response.ok ? response.json() : null; });
+        }).catch(function () { return null; });
+        window.__PUBLIC_LANDING_ATRIO_PROMISES[cfg.slug] = promise;
+        return promise;
+      }
+
+` + source.slice(selectionEnd);
   {
     source = replaceOnce(source, '      function init() {', `
       function warmTemplate7Entry() {
         Promise.all([window.__LB_IDENTITY_READY__ || Promise.resolve(), ensureAtrioPromise()]).then(function (values) {
           var advisor = values[1];
           if (!advisor || (window.__LB_IDENTITY_READY__ && values[0] !== true)) return;
+          if (advisor.preparationReady) {
+            if (!advisor.existingName || !advisor.promoCode || window.__T7_ENTRY_STARTED__) return;
+            return fetch('${classicDeviceIdScript ? "/api/template7/start" : "/api/template7/prepare"}', {
+              method: 'POST', credentials: 'same-origin', cache: 'no-store',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({ ${classicDeviceIdScript ? "device_id: getOrCreateDeviceId(), " : ""}landing_id: cfg.landingId, landing_slug: cfg.slug,
+                atrio_client_id: advisor.atrioClientId, advisor_id: advisor.atrioId, advisor_slug: advisor.atrioSlug,
+                name: advisor.existingName, promo_code: advisor.promoCode,
+                attribution: { target_provider: cfg.targetProvider } })
+            }).then(function(response) { return response.ok ? response.json() : null; }).then(function(result) {
+              if (!result || typeof result.handoff_url !== 'string' || window.__T7_ENTRY_STARTED__) return;
+              var restored = new URL(result.handoff_url);
+              if (restored.protocol !== 'https:' || !restored.searchParams.has('t')) return;
+              window.__T7_ENTRY_STARTED__ = true;
+              window.location.replace(restored.href);
+            });
+          }
           return fetch('/api/template7/warm', {
             method: 'POST', credentials: 'same-origin', cache: 'no-store',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ landing_id: cfg.landingId, landing_slug: cfg.slug,
+            body: JSON.stringify({ ${classicDeviceIdScript ? "device_id: getOrCreateDeviceId(), " : ""}landing_id: cfg.landingId, landing_slug: cfg.slug,
               atrio_client_id: advisor.atrioClientId || advisor.atrio_client_id,
               advisor_id: advisor.atrioId || advisor.atrio_id,
               advisor_slug: advisor.atrioSlug || advisor.atrio_slug })
@@ -97,8 +135,6 @@ export function buildTemplate7FastRuntime(
     "      init();",
   );
   if (classicDeviceIdScript) {
-    source = replaceOnce(source, "body: JSON.stringify({ landing_id: cfg.landingId, landing_slug: cfg.slug,",
-      "body: JSON.stringify({ device_id: getOrCreateDeviceId(), landing_id: cfg.landingId, landing_slug: cfg.slug,");
     // React's document hydration root can stop early discrete events before
     // they reach native button listeners. Capture above that root; the existing
     // click lock and Contact deduplication still own submission.

@@ -1,0 +1,264 @@
+{
+  "at": "2026-10-20T01:55:15.278Z",
+  "status": "live_failures_remain",
+  "automatedLocal": {
+    "passed": 190,
+    "failed": 0,
+    "skipped": 0,
+    "suites": [
+      {
+        "name": "API2 integration",
+        "passed": true,
+        "checks": 71,
+        "skipped": 0
+      },
+      {
+        "name": "Atrio contracts and workflows",
+        "passed": true,
+        "checks": 93,
+        "skipped": 0
+      },
+      {
+        "name": "Manager isolation and concurrent SQL",
+        "passed": true,
+        "checks": 1,
+        "skipped": 0
+      },
+      {
+        "name": "Builder conversion handler and attribution",
+        "passed": true,
+        "checks": 12,
+        "skipped": 0
+      },
+      {
+        "name": "API2 real MySQL provisioning and Lucid recovery",
+        "passed": true,
+        "checks": 12
+      },
+      {
+        "name": "API2 real MySQL automation and HG collation compatibility",
+        "passed": true,
+        "checks": 1
+      }
+    ],
+    "metaCalls": "simulated",
+    "typecheckApi2": "passed",
+    "productionDatabaseUsedByLocalSuites": false
+  },
+  "realAccess": {
+    "casino": "Rey de Ases",
+    "samples": 1,
+    "viewport": "390x844",
+    "httpCache": "disabled by Playwright routing",
+    "networkThrottle": false,
+    "typingDelayMs": 0,
+    "runs": [
+      {
+        "case": "new-account",
+        "formVisibleMs": 2727,
+        "nameToCasinoMs": 11364,
+        "nameToChatAndCbuMs": 16473,
+        "entryToChatAndCbuMs": 19256,
+        "sdkAfterEntryReady": true
+      },
+      {
+        "case": "active-session-reentry",
+        "entryToChatAndCbuMs": 1876,
+        "sdkAfterEntryReady": true
+      },
+      {
+        "case": "direct-gateway-reentry",
+        "entryToChatAndCbuMs": 1440,
+        "sdkAfterEntryReady": true
+      }
+    ],
+    "authenticatedCasino": true,
+    "hydratedComposer": true,
+    "copyCbuControl": true,
+    "physicalIphoneOrWhatsappValidated": false
+  },
+  "providerCreation": [
+    {
+      "managerId": 1035,
+      "provider": "rey_de_ases",
+      "status": 201,
+      "elapsedMs": 2827,
+      "serverTiming": "atrio_database_lookup;dur=28.2, atrio_provider_create;dur=1461.1, atrio_local_finalize;dur=33.6, atrio_total;dur=1924",
+      "result": "created"
+    },
+    {
+      "managerId": 1040,
+      "provider": "ases_del_norte",
+      "status": 201,
+      "elapsedMs": 1550,
+      "serverTiming": "atrio_database_lookup;dur=9.6, atrio_provider_create;dur=1287.3, atrio_local_finalize;dur=29.5, atrio_total;dur=1376",
+      "result": "created"
+    },
+    {
+      "managerId": 1041,
+      "provider": "ganamos_net",
+      "status": 503,
+      "elapsedMs": 1811,
+      "serverTiming": null,
+      "result": "uncertain; same identity retained"
+    },
+    {
+      "managerId": 1042,
+      "provider": "ganamos_net",
+      "status": 201,
+      "elapsedMs": 1793,
+      "serverTiming": "atrio_database_lookup;dur=3.4, atrio_provider_create;dur=1556.2, atrio_local_finalize;dur=32.9, atrio_total;dur=1625",
+      "result": "created"
+    }
+  ],
+  "multiManager": {
+    "advisor": "Gera",
+    "persistedManagerIds": [
+      1035,
+      1040,
+      1041,
+      1042
+    ],
+    "checkedInSameInbox": [
+      1035,
+      1040,
+      1042
+    ],
+    "manualControls": [
+      1035,
+      1040
+    ],
+    "automaticControls": 1042,
+    "samePersonAcrossManagerAccounts": true,
+    "rlsAndEightConcurrentResolutions": "passed on disposable Postgres",
+    "temporaryFixtureRoutesRemoved": 4
+  },
+  "manualFinance": {
+    "amountPerLoad": 100,
+    "realConfirmedLoads": 3,
+    "tests": [
+      {
+        "case": "existing Rey test account",
+        "managerId": 1035,
+        "load": true,
+        "withdraw": true,
+        "finalBalance": 0
+      },
+      {
+        "case": "Ases del Norte test account",
+        "managerId": 1040,
+        "load": true,
+        "withdraw": true,
+        "finalBalance": 0,
+        "actionReplayDidNotDuplicateLoad": true,
+        "balanceCheckInitiallyTimedOut": true
+      },
+      {
+        "case": "new account created through real Template 7",
+        "managerId": 1035,
+        "username": "prueba8339",
+        "load": true,
+        "withdrawApiReportedSuccess": true,
+        "finalBalance": 100,
+        "result": "FAILED: reported withdrawal and available balance disagree",
+        "operationId": 11
+      }
+    ],
+    "noSecondWithdrawalAttemptOnUncertainAccount": true
+  },
+  "fullCarga": {
+    "managerId": 1042,
+    "checks": [
+      "advisor opens Full Carga account in the same inbox",
+      "Full Carga hides manual load and withdrawal controls",
+      "Full Carga returns the real configured deposit CBU",
+      "file ingestion and replay use one durable request",
+      "invalid withdrawal amount is rejected before processing",
+      "non-receipt produces one cancelled attempt, no confirmed load or withdrawal",
+      "API2 replies delivered to Atrio through the persistent outbox"
+    ],
+    "invalidReceiptCancelled": true,
+    "invalidAmountRejected": true,
+    "insufficientWithdrawalDidNotDebit": true,
+    "requests": 2,
+    "repliesDelivered": 4,
+    "confirmedLoads": 0,
+    "actualBankTransfers": 0,
+    "positiveBankDepositAndHgPayoutValidated": false
+  },
+  "tracking": {
+    "previousProductionFailure": "Builder treated is_valid_receipt:null as false and returned HTTP 200 without recording Purchase",
+    "fix": {
+      "deployed": true,
+      "function": "conversions",
+      "previousVersion": 167,
+      "version": 168,
+      "onlyReceiptPresenceCheckChanged": true,
+      "sourceMatchesTestedProductionSnapshot": true
+    },
+    "validatedEvent": "pbadmin-purchase:api2:manual:10",
+    "recordedAmount": 100,
+    "sourcePlatform": "landing",
+    "managerIdPreserved": 1035,
+    "originalStableEventIdReprocessedThroughExistingRetryProtocol": true,
+    "standaloneAsesFixtureWithoutPhoneOrPromo": "rejected by Builder validation; this fixture has no real landing attribution",
+    "successfulRealMetaCapiDeliveryCertified": false
+  },
+  "failures": [
+    {
+      "id": "api2_recovery_serializes_orm",
+      "scope": "API2",
+      "status": "fixed locally; not deployed",
+      "detail": "Recovered credential is a Lucid model; spreading it omits username/password and exposes ORM fields.",
+      "regression": "real MySQL row hydrated as a Lucid model; explicit credential DTO verified",
+      "newMigrationRequired": false
+    },
+    {
+      "id": "withdrawal_balance_mismatch",
+      "scope": "API2/provider",
+      "status": "unresolved",
+      "managerId": 1035,
+      "username": "prueba8339",
+      "operationId": 11,
+      "amount": 100,
+      "reportedStatus": "succeeded",
+      "observedBalance": 100,
+      "detail": "Do not submit another financial operation until provider outcome is reconciled."
+    },
+    {
+      "id": "ganamos_mkt_creation_uncertain",
+      "scope": "API2/provider",
+      "status": "unresolved",
+      "managerId": 1041,
+      "detail": "Creation and one reconciliation with the same original identity return player_creation_pending_reconciliation; no replacement identity requested."
+    },
+    {
+      "id": "cold_entry_latency",
+      "scope": "cross-service access",
+      "status": "not optimized to target",
+      "measuredNameToChatAndCbuMs": 16473
+    },
+    {
+      "id": "settings_hydration",
+      "scope": "Atrio configuration UI",
+      "status": "observed; not changed",
+      "detail": "React #418 during configuration screen; manager persistence still succeeded."
+    }
+  ],
+  "changes": {
+    "api2": "two local files; no deployment, migration, commit or push",
+    "panel3": "unchanged; original .env and tsconfig.tsbuildinfo preserved",
+    "builder": "targeted Edge Function deployed; tests and source changes left uncommitted"
+  },
+  "pending": [
+    "Deploy API2 credential DTO fix after review/commit/push.",
+    "Investigate the confirmed-withdrawal/balance discrepancy and manager 1041 provider provisioning.",
+    "Measure real Template 7 end-to-end on Ases and Ganamos after assigning test landings and resolving provisioning.",
+    "Positive Full Carga bank deposit and HG payout require a genuine controlled bank transaction.",
+    "Validate an actual Meta advertising journey and physical iPhone/WhatsApp storage separately."
+  ],
+  "rerun": {
+    "command": "node scripts/phase0/atrio-postdeploy-local-check.mjs --api2 <api2-repository> --with-databases",
+    "mysql": "Use the guarded local MySQL bootstrap and dedicated empty codex_atrio_provision_validation database; never boot Adonis or run production migrations."
+  }
+}

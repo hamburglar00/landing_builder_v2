@@ -1,5 +1,7 @@
 type Props = {
   slug: string;
+  landingId: string;
+  deviceIdScript?: string;
 };
 
 function escapeScriptJson(value: unknown) {
@@ -12,31 +14,30 @@ function escapeScriptJson(value: unknown) {
   })[character] || character);
 }
 
-/** Starts advisor selection in <head>, in parallel with rendering and identity. */
-export default function AtrioPrewarmScript({ slug }: Props) {
-  const baseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
-  const anonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
-  if (!baseUrl || !anonKey || !slug) return null;
-
-  const endpoint = `${baseUrl.replace(/\/+$/, "")}/functions/v1/landing-atrio?name=${encodeURIComponent(slug)}`;
+/** Starts persisted destination selection after identity, while the form renders. */
+export default function AtrioPrewarmScript({ slug, landingId, deviceIdScript = "" }: Props) {
+  if (!slug || !landingId) return null;
   const script = `
     (function () {
       try {
+        ${deviceIdScript}
         var slug = ${escapeScriptJson(slug)};
         window.__PUBLIC_LANDING_ATRIO_PROMISES = window.__PUBLIC_LANDING_ATRIO_PROMISES || {};
         if (!window.__PUBLIC_LANDING_ATRIO_PROMISES[slug]) {
-          window.__PUBLIC_LANDING_ATRIO_PROMISES[slug] = fetch(${escapeScriptJson(endpoint)}, {
-            method: "GET",
+          window.__PUBLIC_LANDING_ATRIO_PROMISES[slug] = Promise.resolve(window.__LB_IDENTITY_READY__ || true).then(function (ready) {
+            if (ready !== true) return null;
+            return fetch("/api/template7/destination", {
+            method: "POST", credentials: "same-origin",
             headers: {
-              apikey: ${escapeScriptJson(anonKey)},
-              Authorization: "Bearer " + ${escapeScriptJson(anonKey)}
+              "Content-Type": "application/json"
             },
+            body: JSON.stringify({ landing_id: ${escapeScriptJson(landingId)}, landing_slug: slug${deviceIdScript ? ", device_id: getOrCreateDeviceId()" : ""} }),
             cache: "no-store",
             keepalive: true
           }).then(function (response) {
             if (!response.ok) return null;
             return response.json();
-          }).catch(function () { return null; });
+          }); }).catch(function () { return null; });
         }
       } catch (e) {}
     })();

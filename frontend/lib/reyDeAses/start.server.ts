@@ -2,10 +2,11 @@ import { createClient } from "@supabase/supabase-js";
 import type { MultiSkinCode, TargetProvider } from "../landing/types";
 import type { AssignedAdvisor, Api2ResolveAccountRequest, HandoffResult, LinkedProviderAccount, TargetAccount, ResolvedPlayer, StartRequest, PlayerResolveRequest } from "./contracts";
 import { getOrCreateClientIdentity, withClientIdentityCookie, type ClientIdentity } from "./clientIdentity.server";
-import { logServerFlowTotal, timedServerStage } from "./performance.server";
+import { logServerFlowTotal, timedServerStage, template7ServerTiming, type Template7StageTimings } from "./performance.server";
 import { allowTemplate7Start, template7StartRateLimitKeys } from "./rateLimit.server";
 import { api2Readiness, createProviderHandoff, gatewayReadiness, linkInternalChatProviderAccount, resolveInternalChatPlayer, resolveTargetAccount, TargetIntegrationError, validateResolvedPlayer } from "./integrations.server";
-import { normalizeArgentinaWhatsapp } from "../landing/argentinaWhatsapp";
+import { parseTemplate7StartPayload } from "./start-payload.server";
+export { parseTemplate7StartPayload } from "./start-payload.server";
 
 type LandingRow = { id: string; name: string; user_id: string; workspace_currency: string; config: unknown; landing_config: unknown };
 type AssignmentRow = { landing_id: string; atrio_client_id: string; user_id: string };
@@ -47,51 +48,18 @@ export type Template7PreparedStart = {
   promoCode: string;
   completedHandoff?: HandoffResult;
   accountResolutionMs?: number;
+  stageTimings?: Template7StageTimings;
 };
 
 type AccountReadyResponder = (
   prepared: Template7PreparedStart,
 ) => Response | Promise<Response>;
 
-const UUID_PATTERN = /^[0-9a-f]{8}-[0-9a-f]{4}-[1-8][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
-const SLUG_PATTERN = /^[a-z0-9][a-z0-9_-]{0,159}$/i;
-const ADVISOR_SLUG_PATTERN = /^[a-z0-9][a-z0-9_-]{0,80}$/i;
-const ATTRIBUTION_KEYS = ["landing", "landing_resolution", "facebook", "portofolio", "cp", "campana", "conjunto", "anuncio", "utm_source", "utm_medium", "utm_campaign", "utm_content", "utm_term", "fbp", "fbc", "referrer", "target_provider", "skin_code"] as const;
-
 function json(body: Record<string, string>, status: number): Response {
   return new Response(JSON.stringify(body), {
     status,
     headers: { "Content-Type": "application/json", "Cache-Control": "no-store", "X-Content-Type-Options": "nosniff" },
   });
-}
-
-export function parseTemplate7StartPayload(value: unknown): StartRequest | null {
-  if (!value || typeof value !== "object" || Array.isArray(value)) return null;
-  const data = value as Record<string, unknown>;
-  const name = typeof data.name === "string" ? data.name.trim().replace(/\s+/g, " ") : "";
-  if (!UUID_PATTERN.test(String(data.landing_id ?? "")) || !SLUG_PATTERN.test(String(data.landing_slug ?? "")) ||
-      !UUID_PATTERN.test(String(data.atrio_client_id ?? "")) || !UUID_PATTERN.test(String(data.advisor_id ?? "")) ||
-      !ADVISOR_SLUG_PATTERN.test(String(data.advisor_slug ?? "")) ||
-      !name || name.length > 80 || /[\x00-\x1f\x7f]/.test(name)) return null;
-  const promo = typeof data.promo_code === "string" ? data.promo_code.trim() : "";
-  if (!promo || promo.length > 128 || /[\x00-\x1f\x7f]/.test(promo)) return null;
-  if (data.phone !== undefined && (typeof data.phone !== "string" || data.phone.length > 32)) return null;
-  const phone = typeof data.phone === "string" ? normalizeArgentinaWhatsapp(data.phone) : "";
-  const rawAttribution = data.attribution;
-  if (rawAttribution !== undefined && (!rawAttribution || typeof rawAttribution !== "object" || Array.isArray(rawAttribution))) return null;
-  const attribution: Record<string, string> = {};
-  for (const key of ATTRIBUTION_KEYS) {
-    const field = (rawAttribution as Record<string, unknown> | undefined)?.[key];
-    if (field !== undefined && (typeof field !== "string" || field.length > 500 || /[\x00-\x1f\x7f]/.test(field))) return null;
-    if (key === "landing_resolution" && field && !["url_parameter", "path", "automatic"].includes(String(field))) return null;
-    if (field) attribution[key] = field;
-  }
-  return {
-    landing_id: String(data.landing_id), landing_slug: String(data.landing_slug), name,
-    atrio_client_id: String(data.atrio_client_id),
-    advisor_id: String(data.advisor_id), advisor_slug: String(data.advisor_slug),
-    promo_code: promo, ...(phone ? { phone } : {}), attribution,
-  };
 }
 
 export function isTemplate7Landing(landing: LandingRow): boolean {
@@ -133,11 +101,14 @@ export async function finalizeTemplate7PreparedStart(
   deps: StartDependencies,
 ): Promise<HandoffResult> {
   if (prepared.completedHandoff) return prepared.completedHandoff;
+  const timings = prepared.stageTimings ??= {};
+  const startedAt = performance.now();
   const [, handoff] = await Promise.all([
     timedServerStage(
       "template7_start",
       "internal_chat_account_link",
       () => deps.linkProviderAccount(prepared.advisor, prepared.player, prepared.account),
+      ms => { timings.link = ms; },
     ),
     timedServerStage(
       "template7_start",
@@ -151,8 +122,10 @@ export async function finalizeTemplate7PreparedStart(
         prepared.skinCode,
         prepared.promoCode,
       ),
+      ms => { timings.handoff = ms; },
     ),
   ]);
+  timings.finalize = Math.round(performance.now() - startedAt);
   return handoff;
 }
 
@@ -176,6 +149,7 @@ async function handleTemplate7StartInner(
   if (!payload) return json({ error: "invalid_request" }, 400);
 
   const flowStartedAt = performance.now();
+  const stageTimings: Template7StageTimings = {};
   try {
     let landing: LandingRow;
     let provider: TargetProvider;
@@ -187,6 +161,7 @@ async function handleTemplate7StartInner(
         "template7_start",
         "context_transaction",
         () => deps.resolveContext!(request, payload!, identity),
+        ms => { stageTimings.context = ms; },
       ));
       if (context.status !== "ok") {
         const status = context.status === "landing_not_found" ? 404
@@ -250,6 +225,7 @@ async function handleTemplate7StartInner(
       "template7_start",
       "internal_chat_resolve",
       () => deps.resolvePlayer(resolveInput),
+      ms => { stageTimings.identity = ms; },
     ), resolveInput);
     const accountStartedAt = performance.now();
     const account = await timedServerStage("template7_start", "account_resolve", () => deps.resolveAccount({
@@ -269,10 +245,13 @@ async function handleTemplate7StartInner(
       skinCode,
       promoCode: payload.promo_code,
       accountResolutionMs: Math.round(performance.now() - accountStartedAt),
+      stageTimings,
     };
-    if (accountReadyResponder) return await accountReadyResponder(prepared);
-    const handoff = await finalizeTemplate7PreparedStart(prepared, deps);
-    return json({ handoff_url: handoff.handoff_url }, 200);
+    const response = accountReadyResponder ? await accountReadyResponder(prepared)
+      : json({ handoff_url: (await finalizeTemplate7PreparedStart(prepared, deps)).handoff_url }, 200);
+    stageTimings.total = Math.round(performance.now() - flowStartedAt);
+    response.headers.set("Server-Timing", template7ServerTiming(prepared.accountResolutionMs!, account.created, stageTimings));
+    return response;
   } catch (error) {
     if (error instanceof TargetIntegrationError) return json({ error: error.code }, 503);
     return json({ error: "service_unavailable" }, 503);

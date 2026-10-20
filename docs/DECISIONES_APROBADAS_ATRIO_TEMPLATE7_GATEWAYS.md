@@ -10,6 +10,24 @@ SDK y notificaciones pospuestos hasta los datos de carga, junto con la correcci�
 
 ## Regla obligatoria para mejoras compartidas en gateways
 
+### Alcance confirmado por el usuario el 19/10, durante las pruebas posteriores al despliegue
+
+Ganamos+ **no está integrado en PBAdmin y no tiene managers**. No equipararlo con Ganamos NET por el nombre o por una coincidencia de plataforma: la plataforma 2 de PBAdmin se vincula únicamente con Ganamos NET. No ofrecer Ganamos+ como elección de manager ni crear una cuenta de NET para ese destino. El recorrido real de alta por API2 se valida en Rey de Ases, Ases del Norte y Ganamos NET; el alta de Ganamos+ queda pendiente de una integración propia. Las mejoras comunes de UI, chat, instalación y notificaciones siguen aplicándose a los cuatro gateways.
+
+El botón «Usar en accesos directos al gateway» selecciona la ruta sin landing para cuentas nuevas de ese asesor y casino. No reasigna cuentas existentes ni reemplaza el destino explícito de una landing. Si no hay contexto que identifique al asesor, ese botón no habilita por sí solo un alta anónima desde el dominio del gateway.
+
+En las operaciones manuales de Atrio, un HTTP 2xx no constituye prueba de acreditación o descuento. Para Rey se exige el recibo del proveedor con transacción, jugador, tipo, importe y saldo posterior coincidentes. Un retiro con saldo posterior contradictorio queda en revisión, conserva su clave y bloquea otra operación sobre ese jugador. Persistir la evidencia; no repetir el POST ante una respuesta incierta. No modificar los métodos usados por los bots anteriores ni el motor de HG Cash. Estas correcciones de API2 quedan locales y no necesitan nuevas migraciones.
+
+Las mediciones del recorrido deben permitir reutilizar los recursos precargados con la caché normal del navegador. Si la automatización desactiva la caché al interceptar solicitudes, indicarlo y no atribuir sus tiempos al comportamiento normal del prewarm. Medir con contexto nuevo y conservar la identidad al reintentar una prueba.
+
+La pantalla de Configuración debe mostrar el mismo HTML inicial en servidor y navegador antes de consultar permisos de notificaciones. Leer capacidades del navegador después de hidratar; la comprobación no solicita permisos automáticamente.
+
+LEAD conserva su disparador de primer mensaje del cliente. Los avisos push y Telegram se ejecutan independientemente del envío de tracking; su lentitud o rechazo no pueden impedirlo. Si landing-builder procesa un LEAD pero la respuesta llega después del timeout, recuperar la misma entrega persistida con el mismo `action_event_id`, fecha y payload. No generar otro LEAD por el siguiente mensaje para reemplazar una entrega fallida. Usar una reserva en DB para impedir reintentos simultáneos, conservar la pertenencia al administrador y recuperar entregas pendientes abandonadas. El reintento inmediato corre después de responder; el cron existente conserva un respaldo acotado.
+
+La emisión del pase de transición comparte un módulo liviano para las páginas: criptografía, identidad, validación y selección del gateway, sin cargar servicios de DB o creación. El pase conserva el formato y las comprobaciones de integridad, expiración y ownership del flujo completo. Esta separación no habilita ningún bypass.
+
+Excepción del proveedor Ases del Norte: el HTML original invoca jQuery desde su LiveChat anterior antes de cargarlo; ese bloque ya reemplazado por Atrio se retira del gateway. Su `main.js` también llama una API de placeholders que el módulo actual no expone: conservar la llamada y sus opciones solo cuando esa API exista. No aplicar cambios de ese script PHP a los casinos con otro proveedor.
+
 Toda mejora compartida debe aplicarse y verificarse en los cuatro gateways en el mismo lote: Rey de Ases (`landing-autologuin`), Ases del Norte (`ases-gateway`), Ganamos NET (`ganamos-gateway`) y Ganamos+ (`multi-skin-gateway`). No darla por terminada tras actualizar un solo casino. Esto incluye ingreso y recuperación, transición, imágenes, instalación, permisos y notificaciones, chat y sus recursos/configuración.
 
 - Antes de editar, identificar qué parte es común y qué depende del proveedor. Priorizar módulos compartidos; no copiar contratos de autenticación incompatibles entre casinos.
@@ -120,7 +138,7 @@ La recuperación del navegador conserva HttpOnly como cookie principal y puede r
 | Contadores del inbox | El badge junto a Inbox cuenta conversaciones con mensajes del cliente sin leer, no mensajes ni conversaciones totales. El contador del chat se oculta en el mismo clic que lo abre; guardar la lectura en DB sin bloquear la UI y reconciliar con el servidor. |
 | Presencia en inbox | El círculo de conexión se ancla a la esquina del avatar con dimensiones fijas. Agregar o quitar etiquetas CARGA, RETIRO, SOPORTE o promociones no desplaza ese círculo, en móvil ni escritorio. |
 | Estados del mensaje | En ambos chats: un check para enviado, doble para recibido y doble azul para visto. Un read_at existente implica doble check aunque falte delivered_at en datos históricos. Registrar entrega y lectura también en el gateway y avisos enviados por el asesor. Una pestaña oculta no marca como visto; al volver al chat visible, persistir su lectura. |
-| Configuración | Conexión con PBAdmin y Managers de PBAdmin colapsables y cerradas inicialmente en móvil; abiertas en escritorio. Mantener tarjetas oscuras, íconos y acentos dorados y botones coherentes. Retirar muestra una vista representativa de la solicitud real, con ícono; Soporte también tiene ícono. |
+| Configuración | Conexión con PBAdmin y Bots de PBAdmin colapsables y cerradas inicialmente en móvil; abiertas en escritorio. Mantener tarjetas oscuras, íconos y acentos dorados y botones coherentes. Retirar muestra una vista representativa de la solicitud real, con ícono; Soporte también tiene ícono. |
 | Marca del panel | Duplicar el tamaño del logo superior izquierdo de Super Admin, Admin y Asesor (36 a 72 px), con nombre y rol acordes. No aplicar este cambio al logo de Template 7 ni a sus transiciones. |
 | Difusiones | Desplegables con estética propia, con teclado y cierre por Escape. Consultar contactos en DB de a 50 por página; cambiar de página pide el siguiente bloque y no acumula toda la agenda en el navegador. Mantener la selección de contactos al paginar. Mostrar foto de perfil o imagen del casino como en el inbox, y el emoji de nivel solo si existen cargas confirmadas, usando el mismo acumulado y escala. |
 | Textos de Datos y perfil | Total cargado: «Suma de cargas confirmadas». La comparación usa el período inmediatamente anterior de igual cantidad de días, calculado en servidor y aclarado con fechas. Variaciones positivas verdes y negativas rojas, incluida su flecha. El aviso de perfil varía según falte WhatsApp, email o ambos. |
@@ -165,6 +183,15 @@ La demora inicial de los botones fue comunicada por el usuario como observación
 
 ## Publicación y validación
 
+### Mensajes, comprobantes y entrega aprobados el 20/10
+
+- Los avisos de carga manual exitosa llevan emojis acordes (✅, 💰, 🎉), monto y usuario. La confirmación del premio/retiro manual lleva 🏆 y ✅ y se envía con su comprobante después del segundo paso; descontar fichas por sí solo no anuncia el pago bancario.
+- El loader dentro del widget hereda su paleta: fondo, superficie, texto, logo y anillo. WhatsApp usa sus tonos claros y verdes, y el modo página respeta la marca configurada. El panel conserva la identidad visual de Atrio.
+- Cerrar la revisión de un comprobante pendiente con X descarta persistentemente el aviso y la etiqueta CARGA cuando no queda otra solicitud activa. No carga fichas ni borra el archivo del historial. El asesor puede realizar luego la operación con Cargar. Una operación ya iniciada conserva su identidad y recuperación; cerrar no habilita otro débito/crédito sobre un resultado incierto.
+- Una carga confirmada vinculada a su comprobante agrega una marca sutil «Comprobante cargado» al archivo original, visible para cliente y asesor y persistente al recargar. Detectar un comprobante, cerrar el modal o fallar la carga nunca agrega esa marca. El navegador no puede falsificar la confirmación mediante metadata.
+- Enviado: un tick. Entregado: dos ticks neutros cuando el dispositivo receptor recibe el mensaje, también mediante push en segundo plano. Visto: dos ticks azules cuando abre el chat. Aceptar el envío en el servidor push no equivale a entrega; el service worker acusa recibo del mensaje exacto con prueba firmada, vencimiento y validación del destinatario. El acuse modifica únicamente `delivered_at`, sin marcar lectura ni cambiar etiquetas.
+- La recepción push comparte `internal-chat/public/atrio-push-delivery.js`, sincronizada a los cuatro gateways con `node scripts/sync-push-delivery.mjs` y comprobada con `--check`. Se ejecuta en segundo plano al recibir push y no se agrega a las dependencias de Template 7, login o chat listo.
+
 ### Instalación y notificaciones aprobadas el 17/10
 
 - Los cuatro gateways comparten `gateway-app-sdk.js` y la captura temprana `gateway-app-capture.ts`; las fuentes canónicas viven en `landing-autologuin` y se sincronizan con `scripts/sync-gateway-app-sdk.mjs` del constructor. Cada repositorio conserva su copia para desplegarse por separado. El cliente del chat carga asíncrono con precarga; el SDK no se precarga ni se descarga hasta la señal de entrada lista de Atrio, salvo una solicitud explícita del usuario. El SDK carga a baja prioridad y prepara instalación/push después. Conservar la captura de eventos tempranos y el gesto del CTA para los permisos nativos.
@@ -204,4 +231,75 @@ Para cambios visuales, revisar celular, escritorio y orientación horizontal; es
 
 ## Evidencia manual comunicada por el usuario
 
+### Validación y correcciones posteriores al despliegue del 20/10/2026
+
+El programador ya publicó el lote anterior de API2 y Panel3. La prohibición de publicar API2 sigue vigente para las correcciones nuevas: confirmación financiera estricta de Atrio/Rey y recuperación de credenciales Lucid. Este lote no agrega migraciones ni modifica el motor de HG Cash. El registro de publicación anterior es histórico; no ejecutar nuevamente sus migraciones por leerlo.
+
+Se verificó el recorrido real del constructor desde Template 7 hasta casino autenticado y chat hidratado con CBU para 1035/Rey, 1040/Ases del Norte, 1041/Ganamos NET MKT y 1042/Ganamos NET Full Carga. Se comprobó una cuenta persistida por identidad, manager/gerencia correctos y reingreso desde landing y dominio del gateway. Ganamos+ no tiene manager ni integración de altas en PBAdmin; no declarar esa prueba realizada.
+
+Las muestras nuevas duran aproximadamente 9–11 segundos desde el clic de confirmación hasta el chat con datos para cargar, sin limitación artificial de red y con caché normal del navegador. No equivalen a un promedio ni a validación en el navegador interno de WhatsApp/iPhone. No afirmar que el recorrido ya es instantáneo ni confundir creación de cuenta con disponibilidad completa del chat.
+
+La preparación de Template 7 emite el mismo pase cifrado sin cargar dependencias de DB o creación de cuentas. Mantener los controles de identidad, vencimiento, asesor y tracking. Las notificaciones y el SDK continúan sujetos al evento de recorrido utilizable, comprobado en los cuatro gateways con Chromium/WebKit.
+
+LEAD se entrega independientemente de los avisos push/Telegram. Un fallo o timeout conserva el payload y su `action_event_id`; reintentar esa misma entrega bajo una reserva atómica, sin generar otra conversión ni cambiar su fecha. La validación real confirmó los cuatro LEAD en builder con origen `landing` y estado CAPI `enviado`; un timeout se recuperó conservando el mismo evento. PURCHASE de una carga manual confirmada no necesita una imagen de comprobante; conservar `is_valid_receipt: null` si no existe.
+
+Referencia histórica del backend: el predeterminado es por asesor y casino para integraciones antiguas sin selección de landing. La UI que permitía elegirlo se retiró por la decisión posterior de simplificación; los gateways públicos recuperan la cuenta existente y no lo usan para crear otra. No reasigna cuentas existentes ni sobreescribe el manager configurado en una landing. Las cuentas mantienen su conexión persistida con manager y gerencia.
+
+El retiro histórico de `prueba8339` fue corregido el 20/10/2026 después de verificar el historial completo del proveedor: no existía el retiro original de 100. Se hizo una única corrección por el endpoint de API2, operación 12, con clave `reconcile-atrio-operation-11-prueba8339-20261020` y transacción del proveedor 237150568. Historial y consulta independiente confirmaron saldo 0. La operación 11 conserva su respuesta histórica incorrecta y queda vinculada documentalmente con la correctiva; no repetir ninguno de esos retiros. El intento original de alta de Ganamos 1041 permanece incierto; las altas nuevas de prueba sí funcionaron sin cambiar esa identidad.
+
+### Destinos por manager y optimización aprobados el 20/10
+
+- En Atrio del constructor, agrupar los managers por asesor y mostrar casino, gerencia, modalidad MKT/Full Carga, estado, asignaciones y chats iniciados. Las métricas se calculan en backend por bot. Un chat cuenta al recibir al menos un mensaje del cliente; sus mensajes posteriores no incrementan chats iniciados.
+- En el editor de Template 7, seleccionar explícitamente los managers habilitados del casino elegido: un bot seleccionado como destino único, reparto aleatorio con pesos o equitativo por asignaciones/chats iniciados de esta landing. MKT y Full Carga solo se mezclan si el usuario selecciona ambos. Ganamos+ continúa sin integración de managers en PBAdmin.
+- En Redirección, cada modalidad tiene un botón «i» accesible por toque y teclado con su explicación. Agrupar los managers por asesor en secciones colapsables inicialmente cerradas, con la cantidad seleccionada visible en el encabezado. El texto introductorio es «Elegí cada manager que participará en la redirección de la landing.»; quitar el párrafo general sobre contadores, mensajes y reingresos. La ayuda no cambia el modo ni guarda destinos.
+- Guardar reparto y asignación en DB. Resolver de forma atómica antes del alta mientras la persona escribe, sin bloquear la presentación inicial de la landing. Una identidad existente conserva asesor, cuenta y manager; cambiar el reparto no mueve jugadores ni crea otras cuentas. Constructor y motor clásico comparten la lógica de selección.
+- El contador del directorio representa asignaciones persistidas al bot, incluidas las de otras landings. Es informativo: la selección equitativa usa exclusivamente asignaciones o chats iniciados de la landing actual. Reabrir la misma landing con la misma identidad no vuelve a incrementar esa asignación. Preparar la entrada no crea una cuenta del casino ni un mensaje del cliente.
+- El casino debe recibir el chat con los datos iniciales ya disponibles: reutilizar el bootstrap validado en servidor y preparar la tarjeta de carga auténtica dentro de ese flujo. Conservar la comprobación de cuenta/manager, los estados de lectura y el seguimiento de conversiones. Full Carga obtiene su CBU de API2; MKT de las billeteras activas del asesor.
+- La acción inicial de carga viaja dentro del token firmado de los cuatro gateways. No aceptar acciones adulteradas ni marcar el chat utilizable antes de la hidratación. SDK, instalación y notificaciones siguen pospuestos hasta que el recorrido esté utilizable.
+
+### Rendimiento y recursos públicos verificados el 20/10
+
+- La comprobación de persistencia de la cookie y la selección del destino comparten la misma promesa del navegador. No iniciar una cuenta si la identidad no se pudo verificar. El formulario sigue disponible mientras se prepara la entrada.
+- El contexto del destino y sus límites se resuelven mediante una sola RPC interna. Conservar los límites existentes de 60 por IP y 6 por dispositivo por minuto, sus claves HMAC generadas en servidor y el comportamiento de constructor/clásico ante un límite agotado. La RPC sólo es ejecutable por `service_role`; no aceptar claves ni límites enviados por el navegador.
+- Builder conserva PDX para sus rutas generales. Sólo las rutas de destino, emisión de preparación y resolución de cuenta de Template 7 están configuradas en GRU. La comparación mostró mejora en muestras calientes y variabilidad al arrancar; no presentar un cambio de región como una garantía de latencia.
+- Medir separadamente contexto, identidad, resolución de cuenta por API2, vinculación, handoff y tiempo total mediante `Server-Timing`, sin identificadores ni credenciales. El tiempo de la llamada a API2 incluye su coordinación y no equivale exclusivamente al tiempo que tarda el proveedor en crear la cuenta.
+- Mantener las verificaciones del usuario autenticado y la activación inicial de contraseña al reducir pasos de login. Ganamos+ conserva su obtención de CSRF; no copiarle un protocolo de otra plataforma.
+- Los archivos públicos de construcción del casino usan un helper común: `landing-autologuin/src/lib/public-provider-assets.ts`, sincronizado con `node scripts/sync-public-provider-assets.mjs` y comprobado con `--check`. Solicitar esos archivos sin cookies ni credenciales del jugador y cachear únicamente respuestas públicas válidas. HTML, APIs, adjuntos privados y respuestas de sesión conservan su acceso autenticado.
+- Los archivos con hash tienen una vida máxima de un día, respetando un plazo menor del proveedor. Ases del Norte usa archivos sin hash: conservar su parche de JavaScript y una caché máxima de cinco minutos. No convertirlos en recursos inmutables.
+- El Worker público de Ganamos+ utiliza Cache API; los gateways de Vercel usan su caché CDN. Aumentar la versión del espacio de caché compartido cuando cambie una transformación o política para evitar conservar una reparación antigua. Verificar HIT, igualdad de contenido y ausencia de cookies en los cuatro dominios después de publicar.
+- Conservar todas las tandas de medición, incluidos los casos lentos. Informar muestras individuales como tales; no afirmar que el recorrido es instantáneo, que se probó Ganamos+ con un manager inexistente o que Chromium de escritorio certifica WhatsApp/iPhone.
+
+La última tanda, posterior a la publicación de estas optimizaciones, registró 8,879 s para Rey MKT, 7,981 s para Ases del Norte MKT, 9,135 s para Ganamos NET MKT y 7,773 s para Ganamos NET Full Carga desde confirmar el nombre hasta chat utilizable con CBU. Los reingresos de esa tanda conservaron la misma cuenta y demoraron entre 1,199 y 2,452 s. Son muestras individuales de Chromium, no promedios ni una garantía para WhatsApp/iPhone. Las tandas anteriores y sus casos lentos se conservan.
+
+La evidencia actualizada se conserva en `docs/validation/template7-manager-routing-20261020.json`. `atrio-corrections-20261020.json` es la referencia previa a esta última optimización; `atrio-postdeploy-20261020.json` es una medición todavía anterior. No presentar ninguno de ellos como resultado del despliegue final.
+
+La comprobación de seguimiento está en `docs/validation/second-wave-identity-wallet-tracking-20261020.json`: CONTACT y LEAD recibidos por Meta, una conversión por identidad y reintento sin duplicación; sin PURCHASE cuando no existe carga. La tarjeta inicial de CBU no genera un mensaje del cliente ni un LEAD artificial. Los reingresos finales incluyen un error JavaScript del iframe deportivo externo de Ganamos, documentado por separado del funcionamiento del chat; no declararlo corregido por este lote.
+
 El 17/10/2026 el usuario informó que abrió Template 7 directamente desde Safari y creó únicamente `probando3540`. Cerró la pestaña, volvió a abrir Template 7 y fue redirigido al gateway con la misma cuenta. Después ingresó directamente al gateway y también conservó esa cuenta. Esto valida esos dos reingresos en Safari según su prueba manual, sin demostrar conservación de identidad al cerrar y reabrir la ventana interna de WhatsApp. La diferencia entre ambos recorridos apunta al almacenamiento del navegador interno; no confirma por sí sola su mecanismo de borrado o aislamiento.
+
+
+### Simplificación de bots, canales y recuperación aprobada el 20/10
+
+Esta decisión reemplaza las referencias anteriores a predeterminados públicos, mensajes individuales y selección de canal de las plantillas.
+
+- En la UI de Atrio usar Bot/Bots; conservar los nombres técnicos de API y DB. Configuración muestra los bots vinculados al asesor con casino, gerencia, modalidad y badge de estado. Retirar el botón y la explicación del predeterminado para accesos directos; no reasignar cuentas existentes.
+- En el constructor, agrupar los bots por asesor. Mostrar contador y chats iniciados; no mostrar la suma de mensajes individuales. El reparto equitativo compara asignaciones o chats iniciados dentro de la landing, con desempate por asignaciones y selección atómica. Los totales del directorio son informativos y no mezclan la distribución de distintas landings.
+- Redirección de Template 7 sigue la presentación de WhatsApp: selección por asesor y bot, aleatoria con pesos o equitativa por contador/chats iniciados. Una sola selección equivale a destino único sin otro modo Fijo. Conservar las ayudas accesibles y la selección explícita de MKT/Full Carga. Guardar destinos desde el guardado general del editor.
+- Templates 1–6 usan WhatsApp y Template 7 usa Atrio. Retirar Destino del CTA y aplicar la regla también al guardar, cambiar plantilla y publicar en constructor y motor clásico. Conservar los accesos de soporte secundarios ya aprobados.
+- Los cuatro gateways intentan recuperar la sesión automáticamente. Sin recuperación muestran ingreso con usuario y contraseña: validar contra el casino y recuperar exclusivamente la cuenta de Atrio ya vinculada, su asesor, bot y conversación. No crear cuentas, no adivinar asesor ni reasignar por nombre. Rechazar cuentas no vinculadas o ambiguas y limitar intentos. Mantener cookies HttpOnly y respaldo cifrado; no publicar contraseñas ni identificadores privados en URLs o storage.
+- Ganamos+ conserva su protocolo y Worker público; sin integración PBAdmin no se declara probada un alta inexistente. API2 continúa solo local y no se modifica HG Cash.
+
+
+### Evidencia de la simplificación y recuperación manual
+
+El lote quedó publicado en Atrio, constructor, motor clásico y los cuatro gateways, incluido el Worker público de Ganamos+. La evidencia está en `docs/validation/bots-channels-and-manual-login-20261020.json`.
+
+Se probaron cuatro ingresos manuales reales desde navegadores vacíos, con las cuentas de prueba existentes de los bots 1035, 1040, 1041 y 1042. El casino validó sus credenciales y el chat usó el mismo jugador y cuenta firmados, conservó la conversación y no creó LEAD/PURCHASE. No se crearon cuentas del casino ni se movieron fichas. También se verificaron ocho reingresos desde landing/dominio directo con los mismos usuarios y CBU visible. Son pruebas de Chromium; no certifican WhatsApp/iPhone físico.
+
+Las interfaces de configuración y constructor se verificaron en Chromium/WebKit, móvil y escritorio. El guardado del editor se validó con escrituras interceptadas: dos bots, criterio de chats iniciados, pesos conservados y guardado con Redirección cerrada. No se modificaron los destinos de las landings productivas durante esa prueba. La sección conserva montado su borrador al colapsar y carga su configuración aun estando cerrada. Guardar Template 7 no reescribe las gerencias de WhatsApp.
+
+La concurrencia, aislamiento entre tenants, contadores independientes por landing, un chat con múltiples mensajes, recuperación ambigua y permisos de servicio se probaron en Postgres aislado. La migración aplicada es `internal-chat/supabase/migrations/20261020163516_landing_bot_chat_fairness.sql`; el lookup no puede ejecutarse por anon ni authenticated. No se agregaron hallazgos respecto de los avisos de seguridad preexistentes.
+
+El ingreso manual común vive en `landing-autologuin/src/lib/gateway-login.ts` y `gateway-login-page.ts`, con pruebas compartidas. Sincronizar los cuatro mediante `node scripts/sync-gateway-login.mjs` y comprobar `--check` antes de publicar; conservar los adaptadores de login propios del casino. No agregar estas dependencias al alta de Template 7.
+
+Ganamos+ tuvo validación del formulario, recursos y contrato compartido, pero no ingreso con cuenta real de PBAdmin porque esa integración no existe. API2 permanece local y Panel3/HG Cash no se modificaron.

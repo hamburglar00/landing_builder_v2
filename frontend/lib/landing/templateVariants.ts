@@ -120,6 +120,7 @@ export function withCurrentTemplateSnapshot(
 ): LandingThemeConfig {
   return {
     ...config,
+    ctaDestination: config.template === "template7" ? "atrio" : "whatsapp",
     templateConfigs: {
       ...(config.templateConfigs ?? {}),
       [config.template]: snapshotTemplateVariant(config),
@@ -146,7 +147,7 @@ export function switchLandingTemplate(
     ...(config.template === "template7" && nextTemplate !== "template7" ? {
       ctaDestination: savedNextVariant?.ctaDestination ?? DEFAULT_CONFIG.ctaDestination,
     } : {}),
-    ...(nextTemplate === "template6" ? { ctaDestination: "whatsapp" as const } : {}),
+    ...(nextTemplate !== "template7" ? { ctaDestination: "whatsapp" as const } : {}),
     ...(nextTemplate === "template7" ? {
       ctaDestination: "atrio" as const,
       socialProofEnabled: false,

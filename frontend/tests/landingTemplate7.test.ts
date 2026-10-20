@@ -25,10 +25,10 @@ test("el editor de Template 7 oculta el aviso de Atrio y usa un selector propio"
   }));
 
   assert.doesNotMatch(template7, /cliente\(s\) Atrio disponibles/);
-  assert.match(template7, /Proveedor de destino/);
+  assert.match(template7, /Casino/);
   assert.match(template7, /aria-haspopup="listbox"/);
   assert.doesNotMatch(template7, /<select\b/);
-  assert.match(template2, /cliente\(s\) Atrio disponibles/);
+  assert.equal(template2, "");
 });
 
 test("la plantilla 7 conserva su configuración separada de la 2", () => {

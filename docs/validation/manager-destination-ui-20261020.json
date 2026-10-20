@@ -1,0 +1,65 @@
+{
+  "at": "2026-10-20T14:35:00.542Z",
+  "runs": [
+    {
+      "browser": "chromium",
+      "width": 1440,
+      "helpModes": 3,
+      "initiallyCollapsed": true,
+      "keyboardToggle": true,
+      "selectionAndWeightPreserved": true,
+      "overflow": {
+        "document": 1440,
+        "viewport": 1440
+      },
+      "errors": []
+    },
+    {
+      "browser": "chromium",
+      "width": 390,
+      "helpModes": 3,
+      "initiallyCollapsed": true,
+      "keyboardToggle": true,
+      "selectionAndWeightPreserved": true,
+      "overflow": {
+        "document": 390,
+        "viewport": 390
+      },
+      "errors": []
+    },
+    {
+      "browser": "webkit",
+      "width": 1440,
+      "helpModes": 3,
+      "initiallyCollapsed": true,
+      "keyboardToggle": true,
+      "selectionAndWeightPreserved": true,
+      "overflow": {
+        "document": 1440,
+        "viewport": 1440
+      },
+      "errors": []
+    },
+    {
+      "browser": "webkit",
+      "width": 390,
+      "helpModes": 3,
+      "initiallyCollapsed": true,
+      "keyboardToggle": true,
+      "selectionAndWeightPreserved": true,
+      "overflow": {
+        "document": 390,
+        "viewport": 390
+      },
+      "errors": []
+    }
+  ],
+  "attemptedWrites": [],
+  "sessionRevoked": true,
+  "deployment": {
+    "id": "A4WfcXz7JCWbKsSJYzT352BMByXi",
+    "url": "https://landing-builder-v2-k259-3qqhmqxt6-juanclouds-projects.vercel.app",
+    "published": true
+  },
+  "scope": "Redirecci?n del editor: ayudas y agrupaci?n por asesor; comportamiento de asignaci?n y DB sin modificaciones."
+}

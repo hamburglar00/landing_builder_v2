@@ -125,6 +125,7 @@ test("account finaliza en el mismo viaje y finalize compatible no duplica la vin
   }), env, dependencies, now + 1000);
 
   assert.equal(account.status, 200);
+  assert.match(account.headers.get("Server-Timing") || "", /^t7-account;dur=\d+;desc="recovered", t7-identity;dur=\d+, t7-link;dur=\d+, t7-handoff;dur=\d+, t7-finalize;dur=\d+, t7-total;dur=\d+$/);
   const rawAccount = await account.text();
   assert.doesNotMatch(rawAccount, /secret|password|clave/i);
   const accountBody = JSON.parse(rawAccount) as { username: string; continuation_token: string };
@@ -142,6 +143,43 @@ test("account finaliza en el mismo viaje y finalize compatible no duplica la vin
   assert.equal(finalize.status, 200);
   assert.deepEqual(await finalize.json(), { handoff_url: "https://gateway.example.com/start?t=handoff" });
   assert.deepEqual(trace, { links: 1, handoffs: 1 });
+});
+
+test("stage timings preserve parallel link and handoff work and never expose identity or credentials", { timeout: 1000 }, async () => {
+  const token = await prepareToken();
+  const dependencies = deps();
+  dependencies.resolveContext = async () => ({
+    status: "ok",
+    landing: (await dependencies.db.landing(landingId))!,
+    provider: "rey_de_ases",
+    advisor: (await dependencies.db.advisor(clientId))!,
+  });
+  let releaseLink!: () => void;
+  const handoffStarted = new Promise<void>(resolve => { releaseLink = resolve; });
+  const originalLink = dependencies.linkProviderAccount;
+  const originalHandoff = dependencies.createHandoff;
+  let links = 0, handoffs = 0;
+  dependencies.linkProviderAccount = async (...args) => {
+    links++;
+    await handoffStarted;
+    return originalLink(...args);
+  };
+  dependencies.createHandoff = async (...args) => {
+    handoffs++;
+    releaseLink();
+    return originalHandoff(...args);
+  };
+  const response = await handleTemplate7PreparationAccount(new Request("https://mkt.example.com/api/template7/preparations/account", {
+    method: "POST",
+    headers: { "Content-Type": "application/json", Authorization: `Bearer ${env.TEMPLATE7_PREPARATION_API_KEY}` },
+    body: JSON.stringify({ token }),
+  }), env, dependencies, now + 1000);
+  assert.equal(response.status, 200);
+  assert.equal(links, 1);
+  assert.equal(handoffs, 1);
+  const timing = response.headers.get("Server-Timing") || "";
+  assert.match(timing, /^t7-account;dur=\d+;desc="recovered", t7-context;dur=\d+, t7-identity;dur=\d+, t7-link;dur=\d+, t7-handoff;dur=\d+, t7-finalize;dur=\d+, t7-total;dur=\d+$/);
+  assert.doesNotMatch(timing, /player|secret|gera|11111111|33333333/);
 });
 
 test("account y finalize protegen autenticacion, integridad y vencimiento", async () => {

@@ -7,7 +7,7 @@ import { readFileSync } from 'node:fs';
 import { root } from './local-runtime.mjs';
 const require=createRequire(join(root,'frontend/package.json')),ts=require('typescript');
 const {createClient}=require('@supabase/supabase-js');
-export async function handlerRuntime(api){
+export async function handlerRuntime(api,{sourceOverrides=new Map()}={}){
  const sent=[],dbErrors=[],blocked=[],logs=[];let mode='success',gate=null,readGate=null,base;
  const nativeFetch=globalThis.fetch;
  const mockFetch=async(input,init)=>{
@@ -39,7 +39,7 @@ export async function handlerRuntime(api){
     if(url!==api.url||key!==api.jwt)throw Error('Non-local database target');
     return createClient(url,key,{...opts,global:{fetch:mockFetch}});
    }}:id.startsWith('.')?load(resolve(dirname(file),id)):(()=>{throw Error('Unexpected module '+id);})();
-   const js=ts.transpileModule(readFileSync(file,'utf8'),{compilerOptions:{module:ts.ModuleKind.CommonJS,target:ts.ScriptTarget.ES2022}}).outputText;
+   const js=ts.transpileModule(sourceOverrides.get(file)??readFileSync(file,'utf8'),{compilerOptions:{module:ts.ModuleKind.CommonJS,target:ts.ScriptTarget.ES2022}}).outputText;
    runInNewContext(`(function(require,module,exports){${js}\n})`,{Deno:{env:{get:k=>({SUPABASE_URL:api.url,SERVICE_ROLE_KEY:api.jwt,CRON_SECRET:'synthetic-cron'})[k]},serve:fn=>handlers[entry]=fn},
     fetch:mockFetch,Request,Response,Headers,URL,URLSearchParams,crypto:globalThis.crypto,TextEncoder,TextDecoder,AbortController,AbortSignal,setTimeout,clearTimeout,
     console:{log:()=>{},warn:(...a)=>logs.push(a.map(String).join(' ')),error:(...a)=>logs.push(a.map(String).join(' '))}},

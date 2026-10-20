@@ -1,0 +1,744 @@
+{
+  "at": "2026-10-20T16:57:03.447Z",
+  "scope": {
+    "api2": "No changes, commit, push or deployment in this batch; credential verification used a read-only transaction.",
+    "panel3": "Unchanged",
+    "hgCash": "Unchanged; no financial operations",
+    "physicalDevice": "Not tested on a physical iPhone/WhatsApp browser",
+    "ganamosPlus": "Shared code and public form tested, including Cloudflare. No real PBAdmin account login test: provider integration is absent."
+  },
+  "manualLogin": {
+    "at": "2026-10-20T16:55:34.476Z",
+    "visual": [
+      {
+        "provider": "rey_de_ases",
+        "browser": "chromium",
+        "width": 1440,
+        "height": 900,
+        "layout": {
+          "width": 1440,
+          "scroll": 1440,
+          "logo": 192,
+          "font": "system-ui, -apple-system, BlinkMacSystemFont, \"Segoe UI\", Arial, sans-serif"
+        },
+        "passed": true
+      },
+      {
+        "provider": "rey_de_ases",
+        "browser": "chromium",
+        "width": 390,
+        "height": 844,
+        "layout": {
+          "width": 390,
+          "scroll": 390,
+          "logo": 192,
+          "font": "system-ui, -apple-system, BlinkMacSystemFont, \"Segoe UI\", Arial, sans-serif"
+        },
+        "passed": true
+      },
+      {
+        "provider": "rey_de_ases",
+        "browser": "chromium",
+        "width": 844,
+        "height": 390,
+        "layout": {
+          "width": 844,
+          "scroll": 844,
+          "logo": 192,
+          "font": "system-ui, -apple-system, BlinkMacSystemFont, \"Segoe UI\", Arial, sans-serif"
+        },
+        "passed": true
+      },
+      {
+        "provider": "ases_del_norte",
+        "browser": "chromium",
+        "width": 1440,
+        "height": 900,
+        "layout": {
+          "width": 1440,
+          "scroll": 1440,
+          "logo": 192,
+          "font": "system-ui, -apple-system, BlinkMacSystemFont, \"Segoe UI\", Arial, sans-serif"
+        },
+        "passed": true
+      },
+      {
+        "provider": "ases_del_norte",
+        "browser": "chromium",
+        "width": 390,
+        "height": 844,
+        "layout": {
+          "width": 390,
+          "scroll": 390,
+          "logo": 192,
+          "font": "system-ui, -apple-system, BlinkMacSystemFont, \"Segoe UI\", Arial, sans-serif"
+        },
+        "passed": true
+      },
+      {
+        "provider": "ases_del_norte",
+        "browser": "chromium",
+        "width": 844,
+        "height": 390,
+        "layout": {
+          "width": 844,
+          "scroll": 844,
+          "logo": 192,
+          "font": "system-ui, -apple-system, BlinkMacSystemFont, \"Segoe UI\", Arial, sans-serif"
+        },
+        "passed": true
+      },
+      {
+        "provider": "ganamos_net",
+        "browser": "chromium",
+        "width": 1440,
+        "height": 900,
+        "layout": {
+          "width": 1440,
+          "scroll": 1440,
+          "logo": 192,
+          "font": "system-ui, -apple-system, BlinkMacSystemFont, \"Segoe UI\", Arial, sans-serif"
+        },
+        "passed": true
+      },
+      {
+        "provider": "ganamos_net",
+        "browser": "chromium",
+        "width": 390,
+        "height": 844,
+        "layout": {
+          "width": 390,
+          "scroll": 390,
+          "logo": 192,
+          "font": "system-ui, -apple-system, BlinkMacSystemFont, \"Segoe UI\", Arial, sans-serif"
+        },
+        "passed": true
+      },
+      {
+        "provider": "ganamos_net",
+        "browser": "chromium",
+        "width": 844,
+        "height": 390,
+        "layout": {
+          "width": 844,
+          "scroll": 844,
+          "logo": 192,
+          "font": "system-ui, -apple-system, BlinkMacSystemFont, \"Segoe UI\", Arial, sans-serif"
+        },
+        "passed": true
+      },
+      {
+        "provider": "multi_skin",
+        "browser": "chromium",
+        "width": 1440,
+        "height": 900,
+        "layout": {
+          "width": 1440,
+          "scroll": 1440,
+          "logo": 192,
+          "font": "system-ui, -apple-system, BlinkMacSystemFont, \"Segoe UI\", Arial, sans-serif"
+        },
+        "passed": true
+      },
+      {
+        "provider": "multi_skin",
+        "browser": "chromium",
+        "width": 390,
+        "height": 844,
+        "layout": {
+          "width": 390,
+          "scroll": 390,
+          "logo": 192,
+          "font": "system-ui, -apple-system, BlinkMacSystemFont, \"Segoe UI\", Arial, sans-serif"
+        },
+        "passed": true
+      },
+      {
+        "provider": "multi_skin",
+        "browser": "chromium",
+        "width": 844,
+        "height": 390,
+        "layout": {
+          "width": 844,
+          "scroll": 844,
+          "logo": 192,
+          "font": "system-ui, -apple-system, BlinkMacSystemFont, \"Segoe UI\", Arial, sans-serif"
+        },
+        "passed": true
+      },
+      {
+        "provider": "rey_de_ases",
+        "browser": "webkit",
+        "width": 1440,
+        "height": 900,
+        "layout": {
+          "width": 1440,
+          "scroll": 1440,
+          "logo": 192,
+          "font": "system-ui, -apple-system, BlinkMacSystemFont, Segoe UI, Arial, sans-serif"
+        },
+        "passed": true
+      },
+      {
+        "provider": "rey_de_ases",
+        "browser": "webkit",
+        "width": 390,
+        "height": 844,
+        "layout": {
+          "width": 390,
+          "scroll": 390,
+          "logo": 192,
+          "font": "system-ui, -apple-system, BlinkMacSystemFont, Segoe UI, Arial, sans-serif"
+        },
+        "passed": true
+      },
+      {
+        "provider": "rey_de_ases",
+        "browser": "webkit",
+        "width": 844,
+        "height": 390,
+        "layout": {
+          "width": 844,
+          "scroll": 844,
+          "logo": 192,
+          "font": "system-ui, -apple-system, BlinkMacSystemFont, Segoe UI, Arial, sans-serif"
+        },
+        "passed": true
+      },
+      {
+        "provider": "ases_del_norte",
+        "browser": "webkit",
+        "width": 1440,
+        "height": 900,
+        "layout": {
+          "width": 1440,
+          "scroll": 1440,
+          "logo": 192,
+          "font": "system-ui, -apple-system, BlinkMacSystemFont, Segoe UI, Arial, sans-serif"
+        },
+        "passed": true
+      },
+      {
+        "provider": "ases_del_norte",
+        "browser": "webkit",
+        "width": 390,
+        "height": 844,
+        "layout": {
+          "width": 390,
+          "scroll": 390,
+          "logo": 192,
+          "font": "system-ui, -apple-system, BlinkMacSystemFont, Segoe UI, Arial, sans-serif"
+        },
+        "passed": true
+      },
+      {
+        "provider": "ases_del_norte",
+        "browser": "webkit",
+        "width": 844,
+        "height": 390,
+        "layout": {
+          "width": 844,
+          "scroll": 844,
+          "logo": 192,
+          "font": "system-ui, -apple-system, BlinkMacSystemFont, Segoe UI, Arial, sans-serif"
+        },
+        "passed": true
+      },
+      {
+        "provider": "ganamos_net",
+        "browser": "webkit",
+        "width": 1440,
+        "height": 900,
+        "layout": {
+          "width": 1440,
+          "scroll": 1440,
+          "logo": 192,
+          "font": "system-ui, -apple-system, BlinkMacSystemFont, Segoe UI, Arial, sans-serif"
+        },
+        "passed": true
+      },
+      {
+        "provider": "ganamos_net",
+        "browser": "webkit",
+        "width": 390,
+        "height": 844,
+        "layout": {
+          "width": 390,
+          "scroll": 390,
+          "logo": 192,
+          "font": "system-ui, -apple-system, BlinkMacSystemFont, Segoe UI, Arial, sans-serif"
+        },
+        "passed": true
+      },
+      {
+        "provider": "ganamos_net",
+        "browser": "webkit",
+        "width": 844,
+        "height": 390,
+        "layout": {
+          "width": 844,
+          "scroll": 844,
+          "logo": 192,
+          "font": "system-ui, -apple-system, BlinkMacSystemFont, Segoe UI, Arial, sans-serif"
+        },
+        "passed": true
+      },
+      {
+        "provider": "multi_skin",
+        "browser": "webkit",
+        "width": 1440,
+        "height": 900,
+        "layout": {
+          "width": 1440,
+          "scroll": 1440,
+          "logo": 192,
+          "font": "system-ui, -apple-system, BlinkMacSystemFont, Segoe UI, Arial, sans-serif"
+        },
+        "passed": true
+      },
+      {
+        "provider": "multi_skin",
+        "browser": "webkit",
+        "width": 390,
+        "height": 844,
+        "layout": {
+          "width": 390,
+          "scroll": 390,
+          "logo": 192,
+          "font": "system-ui, -apple-system, BlinkMacSystemFont, Segoe UI, Arial, sans-serif"
+        },
+        "passed": true
+      },
+      {
+        "provider": "multi_skin",
+        "browser": "webkit",
+        "width": 844,
+        "height": 390,
+        "layout": {
+          "width": 844,
+          "scroll": 844,
+          "logo": 192,
+          "font": "system-ui, -apple-system, BlinkMacSystemFont, Segoe UI, Arial, sans-serif"
+        },
+        "passed": true
+      }
+    ],
+    "logins": [
+      {
+        "key": "rey",
+        "manager": 1035,
+        "blankBrowser": true,
+        "errors": [],
+        "status": 200,
+        "chatUsableMs": 4304,
+        "sameAccount": true,
+        "httpOnlySession": true,
+        "automaticReentryMs": 1517,
+        "passed": true
+      },
+      {
+        "key": "ases",
+        "manager": 1040,
+        "blankBrowser": true,
+        "errors": [],
+        "status": 200,
+        "chatUsableMs": 4824,
+        "sameAccount": true,
+        "httpOnlySession": true,
+        "automaticReentryMs": 1674,
+        "passed": true
+      },
+      {
+        "key": "net",
+        "manager": 1041,
+        "blankBrowser": true,
+        "errors": [],
+        "status": 200,
+        "chatUsableMs": 4786,
+        "sameAccount": true,
+        "httpOnlySession": true,
+        "automaticReentryMs": 1321,
+        "passed": true
+      },
+      {
+        "key": "net-full",
+        "manager": 1042,
+        "blankBrowser": true,
+        "errors": [],
+        "status": 200,
+        "chatUsableMs": 3570,
+        "sameAccount": true,
+        "httpOnlySession": true,
+        "automaticReentryMs": 1611,
+        "passed": true
+      }
+    ],
+    "financialOperations": 0,
+    "newProviderAccounts": 0
+  },
+  "builderUI": {
+    "at": "2026-10-20T16:44:20.171Z",
+    "runs": [
+      {
+        "browser": "chromium",
+        "width": 1440,
+        "groupedDirectory": true,
+        "botSearch": true,
+        "chatCriterion": true,
+        "preservedDraftOnCollapse": true,
+        "unifiedSave": true,
+        "errors": [],
+        "layout": {
+          "width": 1440,
+          "scroll": 1440
+        }
+      },
+      {
+        "browser": "chromium",
+        "width": 390,
+        "groupedDirectory": true,
+        "botSearch": true,
+        "chatCriterion": true,
+        "preservedDraftOnCollapse": true,
+        "unifiedSave": true,
+        "errors": [],
+        "layout": {
+          "width": 390,
+          "scroll": 390
+        }
+      },
+      {
+        "browser": "webkit",
+        "width": 1440,
+        "groupedDirectory": true,
+        "botSearch": true,
+        "chatCriterion": true,
+        "preservedDraftOnCollapse": true,
+        "unifiedSave": true,
+        "errors": [],
+        "layout": {
+          "width": 1440,
+          "scroll": 1440
+        }
+      },
+      {
+        "browser": "webkit",
+        "width": 390,
+        "groupedDirectory": true,
+        "botSearch": true,
+        "chatCriterion": true,
+        "preservedDraftOnCollapse": true,
+        "unifiedSave": true,
+        "errors": [],
+        "layout": {
+          "width": 390,
+          "scroll": 390
+        }
+      }
+    ],
+    "simulatedWrites": [
+      {
+        "browser": "chromium",
+        "width": 1440,
+        "mode": "fair",
+        "criterion": "messages_received",
+        "destinations": 2
+      },
+      {
+        "browser": "chromium",
+        "width": 390,
+        "mode": "fair",
+        "criterion": "messages_received",
+        "destinations": 2
+      },
+      {
+        "browser": "webkit",
+        "width": 1440,
+        "mode": "fair",
+        "criterion": "messages_received",
+        "destinations": 2
+      },
+      {
+        "browser": "webkit",
+        "width": 390,
+        "mode": "fair",
+        "criterion": "messages_received",
+        "destinations": 2
+      }
+    ],
+    "productionWrites": 0,
+    "sessionRevoked": true
+  },
+  "atrioSettingsUI": {
+    "at": "2026-10-20T16:51:01.094Z",
+    "runs": [
+      {
+        "browser": "chromium",
+        "width": 1440,
+        "bots": 4,
+        "activeBadges": 4,
+        "removedDefault": true,
+        "layout": {
+          "width": 1440,
+          "scroll": 1440
+        },
+        "errors": []
+      },
+      {
+        "browser": "chromium",
+        "width": 390,
+        "bots": 4,
+        "activeBadges": 4,
+        "removedDefault": true,
+        "layout": {
+          "width": 390,
+          "scroll": 390
+        },
+        "errors": []
+      },
+      {
+        "browser": "webkit",
+        "width": 1440,
+        "bots": 4,
+        "activeBadges": 4,
+        "removedDefault": true,
+        "layout": {
+          "width": 1440,
+          "scroll": 1440
+        },
+        "errors": []
+      },
+      {
+        "browser": "webkit",
+        "width": 390,
+        "bots": 4,
+        "activeBadges": 4,
+        "removedDefault": true,
+        "layout": {
+          "width": 390,
+          "scroll": 390
+        },
+        "errors": []
+      }
+    ],
+    "sessionRevoked": true,
+    "emailSent": false
+  },
+  "returningAccounts": {
+    "at": "2026-10-20T16:49:26.782Z",
+    "cases": [
+      {
+        "key": "rey",
+        "managerId": 1035,
+        "passed": true,
+        "errors": [],
+        "runs": [
+          {
+            "label": "landing-reentry",
+            "sameUsername": true,
+            "authenticated": true,
+            "casinoMs": 4332,
+            "chatAndWalletMs": 5494,
+            "bankCardsVisible": 1
+          },
+          {
+            "label": "direct-gateway-reentry",
+            "sameUsername": true,
+            "authenticated": true,
+            "casinoMs": 1476,
+            "chatAndWalletMs": 3095,
+            "bankCardsVisible": 1
+          }
+        ]
+      },
+      {
+        "key": "ases",
+        "managerId": 1040,
+        "passed": true,
+        "errors": [],
+        "runs": [
+          {
+            "label": "landing-reentry",
+            "sameUsername": true,
+            "authenticated": true,
+            "casinoMs": 4603,
+            "chatAndWalletMs": 5856,
+            "bankCardsVisible": 1
+          },
+          {
+            "label": "direct-gateway-reentry",
+            "sameUsername": true,
+            "authenticated": true,
+            "casinoMs": 450,
+            "chatAndWalletMs": 1457,
+            "bankCardsVisible": 1
+          }
+        ]
+      },
+      {
+        "key": "net",
+        "managerId": 1041,
+        "passed": true,
+        "errors": [
+          "Unexpected token '<'"
+        ],
+        "runs": [
+          {
+            "label": "landing-reentry",
+            "sameUsername": true,
+            "authenticated": true,
+            "casinoMs": 2320,
+            "chatAndWalletMs": 3830,
+            "bankCardsVisible": 1
+          },
+          {
+            "label": "direct-gateway-reentry",
+            "sameUsername": true,
+            "authenticated": true,
+            "casinoMs": 769,
+            "chatAndWalletMs": 2203,
+            "bankCardsVisible": 1
+          }
+        ]
+      },
+      {
+        "key": "net-full",
+        "managerId": 1042,
+        "passed": true,
+        "errors": [
+          "Unexpected token '<'",
+          "Cannot read properties of undefined (reading 'map')",
+          "Unexpected token '<'"
+        ],
+        "runs": [
+          {
+            "label": "landing-reentry",
+            "sameUsername": true,
+            "authenticated": true,
+            "casinoMs": 1684,
+            "chatAndWalletMs": 4423,
+            "bankCardsVisible": 1
+          },
+          {
+            "label": "direct-gateway-reentry",
+            "sameUsername": true,
+            "authenticated": true,
+            "casinoMs": 2105,
+            "chatAndWalletMs": 3898,
+            "bankCardsVisible": 1
+          }
+        ]
+      }
+    ]
+  },
+  "publicLoginContracts": [
+    {
+      "origin": "https://www.reydeases.fun",
+      "csrfStatus": 403,
+      "invalidStatus": 400,
+      "oversizeStatus": 413,
+      "manualPageStatus": 401,
+      "fontFallback": true
+    },
+    {
+      "origin": "https://www.asesdelnorte.online",
+      "csrfStatus": 403,
+      "invalidStatus": 400,
+      "oversizeStatus": 413,
+      "manualPageStatus": 401,
+      "fontFallback": true
+    },
+    {
+      "origin": "https://www.ganamosnet.icu",
+      "csrfStatus": 403,
+      "invalidStatus": 400,
+      "oversizeStatus": 413,
+      "manualPageStatus": 401,
+      "fontFallback": true
+    },
+    {
+      "origin": "https://ganamosnet.global",
+      "csrfStatus": 403,
+      "invalidStatus": 400,
+      "oversizeStatus": 413,
+      "manualPageStatus": 401,
+      "fontFallback": true
+    }
+  ],
+  "internalLookupUnauthenticatedStatus": 401,
+  "database": {
+    "migration": "20261020163516_landing_bot_chat_fairness.sql",
+    "localPostgresPassed": true,
+    "checks": [
+      "Concurrent assignments are atomic and replays stable",
+      "Existing accounts retain advisor and bot",
+      "Counter and initiated-chat fairness are scoped per landing",
+      "One conversation with 50 messages counts once",
+      "Wrong tenant/casino rejected",
+      "Ambiguous username cannot select an arbitrary account",
+      "anon/authenticated cannot invoke login lookup; service_role can"
+    ],
+    "securityAdvisorFindings": "Unchanged from baseline; no new findings introduced"
+  },
+  "automated": {
+    "builderFull": {
+      "passed": 272,
+      "skipped": 1
+    },
+    "classic": {
+      "passed": 34
+    },
+    "sharedLogin": {
+      "passedPerGateway": 17,
+      "gateways": 4
+    },
+    "templateChannelPolicy": {
+      "passed": 7
+    },
+    "managerDirectoryAndRoutingContract": {
+      "passed": 20
+    },
+    "typescript": "Passed for builder, classic, Atrio and four gateways; all production builds passed"
+  },
+  "deployments": {
+    "atrio": {
+      "id": "AxfgnQLrGfCGsFdikWhxTUMwtZJM",
+      "url": "https://internal-chat-lnre8mwdd-juanclouds-projects.vercel.app"
+    },
+    "builder": {
+      "id": "8v2K3F9NmT1Gf1qoPvVc5CeCUBuc",
+      "url": "https://landing-builder-v2-k259-1skugonnf-juanclouds-projects.vercel.app"
+    },
+    "classic": {
+      "id": "AtEDSviUuseU8CEn2LJRxMnQqYsy",
+      "url": "https://public-landing-94a7bzu6h-juanclouds-projects.vercel.app"
+    },
+    "rey": {
+      "id": "ER2FuVintPrrLctMXpXCmm7x3BHG",
+      "url": "https://reydeases-gateway-cqv43mmqb-juanclouds-projects.vercel.app"
+    },
+    "ases": {
+      "id": "HVWqAVzrpmCp7JHrs2Ywr9RwrTvM",
+      "url": "https://ases-del-norte-gateway-qisaqip1x-juanclouds-projects.vercel.app"
+    },
+    "net": {
+      "id": "G23sHBePJQXV1MuuCit8nngELjTj",
+      "url": "https://ganamos-net-gateway-25uizm8wa-juanclouds-projects.vercel.app"
+    },
+    "plus": {
+      "id": "GC9V68oo7bf4CA5D5dgf4fmHMELn",
+      "url": "https://multi-skin-gateway-hzxs126vm-juanclouds-projects.vercel.app",
+      "cloudflareVersion": "93783f46-9b4d-45a6-a563-9b711cb6738a",
+      "publicOrigin": "https://ganamosnet.global"
+    }
+  },
+  "rollback": {
+    "atrio": "EmbLzqWruQDr52rB5AeSQCV9V5CL",
+    "builder": "A4WfcXz7JCWbKsSJYzT352BMByXi",
+    "classic": "9QHKYiDWjDvSe3CSM8dZ1DxQPpnV",
+    "rey": "QPio9xizxjnNAkNzYaNxZZPdJo9e",
+    "ases": "2SUdVbxRSrTbiaJ9bLCJQNTbJTgr",
+    "net": "94JJYjMdJkavQFhghAMt9ZxSfVSH",
+    "plusCloudflare": "fbe95d2b-b071-4a99-91ac-0380e1c747fc"
+  }
+}

@@ -1,4 +1,15 @@
 {
   "$schema": "https://openapi.vercel.sh/vercel.json",
-  "regions": ["pdx1"]
+  "regions": ["pdx1"],
+  "functions": {
+    "app/api/template7/destination/route.ts": {
+      "regions": ["gru1"]
+    },
+    "app/api/template7/prepare/route.ts": {
+      "regions": ["gru1"]
+    },
+    "app/api/template7/preparations/account/route.ts": {
+      "regions": ["gru1"]
+    }
+  }
 }

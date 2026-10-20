@@ -60,7 +60,7 @@ function rowToLanding(row: LandingRow): Landing {
     postUrl: row.post_url ?? "",
     landingTag: row.landing_tag ?? "",
     comment: row.comment,
-    config: merged,
+    config: { ...merged, ctaDestination: merged.template === "template7" ? "atrio" : "whatsapp" },
   };
 }
 
@@ -284,7 +284,7 @@ export async function updateLanding(
   if (payload.landingTag !== undefined) body.landing_tag = payload.landingTag;
   if (payload.comment !== undefined) body.comment = payload.comment;
   if (payload.config !== undefined)
-    body.config = payload.config as unknown as Record<string, unknown>;
+    body.config = { ...payload.config, ctaDestination: payload.config.template === "template7" ? "atrio" : "whatsapp" } as unknown as Record<string, unknown>;
   if (payload.landingConfig !== undefined)
     body.landing_config = payload.landingConfig as unknown as Record<
       string,

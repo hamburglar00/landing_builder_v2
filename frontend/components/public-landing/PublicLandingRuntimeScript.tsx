@@ -74,7 +74,7 @@ export function buildRuntimeConfig({ slug, config }: Props) {
     postUrl: config.tracking?.postUrl || "",
     landingTag: config.tracking?.landingTag || "LP",
     sendContactPixel: config.tracking?.sendContactPixel !== false,
-    ctaDestination: config.layout?.template === 7 || config.tracking?.ctaDestination === "atrio" ? "atrio" : "whatsapp",
+    ctaDestination: config.layout?.template === 7 ? "atrio" : "whatsapp",
     targetProvider: config.tracking?.target_provider === "multi_skin"
       ? "multi_skin"
       : config.tracking?.target_provider === "ases_del_norte"
@@ -252,7 +252,7 @@ export function buildPublicLandingRuntimeSource() {
       }
 
       function isAtrioDestination() {
-        return cfg.template === 7 || String(cfg.ctaDestination || "whatsapp").toLowerCase() === "atrio";
+        return cfg.template === 7;
       }
 
       function buildAtrioRedirectUrl(promoCode, atrioData) {

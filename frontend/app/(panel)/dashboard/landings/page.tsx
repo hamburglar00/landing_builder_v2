@@ -9,6 +9,7 @@ import { fetchLandings, createLanding } from "@/lib/landing/landingsDb";
 import { buildLandingPublicUrl } from "@/lib/landing/publicUrls";
 import { fetchLandingGerencias, setLandingGerencias } from "@/lib/gerencias/gerenciasDb";
 import { fetchLandingAtrioAssignments, setLandingAtrioAssignments } from "@/lib/atrio/atrioDb";
+import { copyTemplate7ManagerDestinations } from "@/lib/atrio/managerDestinations";
 import { DEFAULT_CONFIG } from "@/lib/landing/mocks";
 import { LandingPreview } from "@/components/landing/LandingPreview";
 import { getSettings } from "@/lib/settingsDb";
@@ -194,6 +195,9 @@ export default function DashboardLandingsPage() {
       const atrioAssignments = await fetchLandingAtrioAssignments(landing.id);
       if (atrioAssignments.length > 0) {
         await setLandingAtrioAssignments(id, atrioAssignments);
+      }
+      if (landing.config.template === "template7") {
+        await copyTemplate7ManagerDestinations(landing.id, id, landing.config.targetProvider || "rey_de_ases");
       }
       router.push(`/dashboard/landing/${id}/editar`);
     } catch (e) {

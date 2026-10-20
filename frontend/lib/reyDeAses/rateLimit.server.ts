@@ -29,6 +29,14 @@ export type Template7StartRateLimitKeys = {
   unbound: string | null;
 };
 
+/** Same durable namespaces as allowTemplate7Warm, derived only on the server. */
+export function template7WarmRateLimitKeys(request: Request, deviceId: string) {
+  return {
+    ip: bucketKey(`warm-ip:${clientIp(request)}`),
+    device: bucketKey(`warm-device:${deviceId}`),
+  };
+}
+
 /** Builds opaque keys once so the consolidated database function can consume
  * every Template 7 start limit inside the same transaction. */
 export function template7StartRateLimitKeys(
@@ -58,22 +66,31 @@ async function consume(value: string, maxHits: number, windowSeconds: number): P
 
 export async function allowBootstrap(request: Request): Promise<boolean> {
   const ip = clientIp(request);
-  if (!await consume(`global-ip:${ip}`, 120, 60)) return false;
-  return consume(`bootstrap-ip:${ip}`, 40, 60);
+  const results = await Promise.all([
+    consume(`global-ip:${ip}`, 120, 60),
+    consume(`bootstrap-ip:${ip}`, 40, 60),
+  ]);
+  return results.every(Boolean);
 }
 
 export async function allowTemplate7Warm(request: Request, deviceId: string): Promise<boolean> {
-  if (!await consume(`warm-ip:${clientIp(request)}`, 60, 60)) return false;
-  return consume(`warm-device:${deviceId}`, 6, 60);
+  const results = await Promise.all([
+    consume(`warm-ip:${clientIp(request)}`, 60, 60),
+    consume(`warm-device:${deviceId}`, 6, 60),
+  ]);
+  return results.every(Boolean);
 }
 
 export async function allowTemplate7Start(request: Request, landingId: string, deviceId: string, needsCookie: boolean): Promise<boolean> {
   const ip = clientIp(request);
-  if (!await consume(`global-ip:${ip}`, 120, 60)) return false;
   // Cuando bootstrap no llegó a fijar una cookie, serializar el primer start
   // por IP/landing para que dos clics simultáneos no creen dos identidades.
-  if (needsCookie && !await consume(`unbound-start:${landingId}:${ip}`, 1, 45)) return false;
   // El primer intento ocupa un lock durable de 45 s. Dos solicitudes concurrentes
   // con la misma landing y cookie no pueden avanzar a la creación de cuenta.
-  return consume(`start:${landingId}:${deviceId}`, 1, 45);
+  const results = await Promise.all([
+    consume(`global-ip:${ip}`, 120, 60),
+    ...(needsCookie ? [consume(`unbound-start:${landingId}:${ip}`, 1, 45)] : []),
+    consume(`start:${landingId}:${deviceId}`, 1, 45),
+  ]);
+  return results.every(Boolean);
 }

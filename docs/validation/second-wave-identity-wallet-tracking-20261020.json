@@ -1,0 +1,272 @@
+{
+  "at": "2026-10-20T04:53:39.325Z",
+  "passed": true,
+  "scope": "Four explicitly authorized test accounts for advisor Gera; managers 1035/1040/1041/1042",
+  "cases": [
+    {
+      "key": "ases",
+      "managerId": 1040,
+      "passed": true,
+      "checks": {
+        "onePlayer": true,
+        "oneAccount": true,
+        "expectedManagerAndConnection": true,
+        "oneConversation": true,
+        "oneInitialWallet": true,
+        "oneValidWallet": true,
+        "walletMatchesManagerMode": true,
+        "onePersistedAssignment": true,
+        "trackingAttributionPresent": true,
+        "noPurchaseWithoutLoad": true,
+        "samePlayer": true,
+        "sameAccount": true,
+        "sameUsername": true,
+        "sameConnection": true,
+        "samePromo": true,
+        "initialCardDidNotFabricateClientMessageOrLead": true,
+        "originalContactAlreadyDeliveredToMeta": true,
+        "exactlyOneClientText": true,
+        "exactlyOneAtrioLead": true,
+        "leadDeliveredHttp200": true,
+        "leadManagerAndUsernameCorrect": true,
+        "leadIdentifiersAndDatesPresent": true,
+        "leadInboxMatchesAtrioEvent": true,
+        "oneMergedBuilderConversion": true,
+        "leadDeliveredToMetaHttp200": true,
+        "replayCreatedNoNewAtrioEvent": true,
+        "replayCreatedNoNewBuilderConversionOrMetaDelivery": true,
+        "replayReturnedLeadSkipped": true,
+        "casinoAndChatReentryPassed": true,
+        "messageAndNotificationHttp200": true
+      },
+      "browserRuns": [
+        {
+          "path": "landing-reentry",
+          "casinoMs": 1086,
+          "chatAndWalletMs": 2339,
+          "authenticated": true,
+          "sameUsername": true,
+          "bankCardsVisible": 1
+        },
+        {
+          "path": "direct-gateway-reentry",
+          "casinoMs": 356,
+          "chatAndWalletMs": 797,
+          "authenticated": true,
+          "sameUsername": true,
+          "bankCardsVisible": 1
+        }
+      ],
+      "browserErrors": [],
+      "tracking": {
+        "contactFingerprint": "2aef2fc977e9",
+        "leadActionFingerprint": "bfb0aa128867",
+        "leadMetaFingerprint": "47b0a34e588e",
+        "contactMetaEventsReceived": 1,
+        "leadMetaEventsReceived": 1
+      }
+    },
+    {
+      "key": "net",
+      "managerId": 1041,
+      "passed": true,
+      "checks": {
+        "onePlayer": true,
+        "oneAccount": true,
+        "expectedManagerAndConnection": true,
+        "oneConversation": true,
+        "oneInitialWallet": true,
+        "oneValidWallet": true,
+        "walletMatchesManagerMode": true,
+        "onePersistedAssignment": true,
+        "trackingAttributionPresent": true,
+        "noPurchaseWithoutLoad": true,
+        "samePlayer": true,
+        "sameAccount": true,
+        "sameUsername": true,
+        "sameConnection": true,
+        "samePromo": true,
+        "initialCardDidNotFabricateClientMessageOrLead": true,
+        "originalContactAlreadyDeliveredToMeta": true,
+        "exactlyOneClientText": true,
+        "exactlyOneAtrioLead": true,
+        "leadDeliveredHttp200": true,
+        "leadManagerAndUsernameCorrect": true,
+        "leadIdentifiersAndDatesPresent": true,
+        "leadInboxMatchesAtrioEvent": true,
+        "oneMergedBuilderConversion": true,
+        "leadDeliveredToMetaHttp200": true,
+        "replayCreatedNoNewAtrioEvent": true,
+        "replayCreatedNoNewBuilderConversionOrMetaDelivery": true,
+        "replayReturnedLeadSkipped": true,
+        "casinoAndChatReentryPassed": true,
+        "messageAndNotificationHttp200": true
+      },
+      "browserRuns": [
+        {
+          "path": "landing-reentry",
+          "casinoMs": 1493,
+          "chatAndWalletMs": 3600,
+          "authenticated": true,
+          "sameUsername": true,
+          "bankCardsVisible": 1
+        },
+        {
+          "path": "direct-gateway-reentry",
+          "casinoMs": 401,
+          "chatAndWalletMs": 1477,
+          "authenticated": true,
+          "sameUsername": true,
+          "bankCardsVisible": 1
+        }
+      ],
+      "browserErrors": [],
+      "tracking": {
+        "contactFingerprint": "e26486468991",
+        "leadActionFingerprint": "e3309274c2de",
+        "leadMetaFingerprint": "04cdb98210bb",
+        "contactMetaEventsReceived": 1,
+        "leadMetaEventsReceived": 1
+      }
+    },
+    {
+      "key": "net-full",
+      "managerId": 1042,
+      "passed": true,
+      "checks": {
+        "onePlayer": true,
+        "oneAccount": true,
+        "expectedManagerAndConnection": true,
+        "oneConversation": true,
+        "oneInitialWallet": true,
+        "oneValidWallet": true,
+        "walletMatchesManagerMode": true,
+        "onePersistedAssignment": true,
+        "trackingAttributionPresent": true,
+        "noPurchaseWithoutLoad": true,
+        "samePlayer": true,
+        "sameAccount": true,
+        "sameUsername": true,
+        "sameConnection": true,
+        "samePromo": true,
+        "initialCardDidNotFabricateClientMessageOrLead": true,
+        "originalContactAlreadyDeliveredToMeta": true,
+        "exactlyOneClientText": true,
+        "exactlyOneAtrioLead": true,
+        "leadDeliveredHttp200": true,
+        "leadManagerAndUsernameCorrect": true,
+        "leadIdentifiersAndDatesPresent": true,
+        "leadInboxMatchesAtrioEvent": true,
+        "oneMergedBuilderConversion": true,
+        "leadDeliveredToMetaHttp200": true,
+        "replayCreatedNoNewAtrioEvent": true,
+        "replayCreatedNoNewBuilderConversionOrMetaDelivery": true,
+        "replayReturnedLeadSkipped": true,
+        "casinoAndChatReentryPassed": true,
+        "messageAndNotificationHttp200": true
+      },
+      "browserRuns": [
+        {
+          "path": "landing-reentry",
+          "casinoMs": 804,
+          "chatAndWalletMs": 2249,
+          "authenticated": true,
+          "sameUsername": true,
+          "bankCardsVisible": 1
+        },
+        {
+          "path": "direct-gateway-reentry",
+          "casinoMs": 427,
+          "chatAndWalletMs": 1861,
+          "authenticated": true,
+          "sameUsername": true,
+          "bankCardsVisible": 1
+        }
+      ],
+      "browserErrors": [],
+      "tracking": {
+        "contactFingerprint": "7eb48bb43a6f",
+        "leadActionFingerprint": "c156b99c3222",
+        "leadMetaFingerprint": "1c45065f8204",
+        "contactMetaEventsReceived": 1,
+        "leadMetaEventsReceived": 1
+      }
+    },
+    {
+      "key": "rey",
+      "managerId": 1035,
+      "passed": true,
+      "checks": {
+        "onePlayer": true,
+        "oneAccount": true,
+        "expectedManagerAndConnection": true,
+        "oneConversation": true,
+        "oneInitialWallet": true,
+        "oneValidWallet": true,
+        "walletMatchesManagerMode": true,
+        "onePersistedAssignment": true,
+        "trackingAttributionPresent": true,
+        "noPurchaseWithoutLoad": true,
+        "samePlayer": true,
+        "sameAccount": true,
+        "sameUsername": true,
+        "sameConnection": true,
+        "samePromo": true,
+        "initialCardDidNotFabricateClientMessageOrLead": true,
+        "originalContactAlreadyDeliveredToMeta": true,
+        "exactlyOneClientText": true,
+        "exactlyOneAtrioLead": true,
+        "leadDeliveredHttp200": true,
+        "leadManagerAndUsernameCorrect": true,
+        "leadIdentifiersAndDatesPresent": true,
+        "leadInboxMatchesAtrioEvent": true,
+        "oneMergedBuilderConversion": true,
+        "leadDeliveredToMetaHttp200": true,
+        "replayCreatedNoNewAtrioEvent": true,
+        "replayCreatedNoNewBuilderConversionOrMetaDelivery": true,
+        "replayReturnedLeadSkipped": true,
+        "casinoAndChatReentryPassed": true,
+        "messageAndNotificationHttp200": true
+      },
+      "browserRuns": [
+        {
+          "path": "landing-reentry",
+          "casinoMs": 1715,
+          "chatAndWalletMs": 4107,
+          "authenticated": true,
+          "sameUsername": true,
+          "bankCardsVisible": 1
+        },
+        {
+          "path": "direct-gateway-reentry",
+          "casinoMs": 464,
+          "chatAndWalletMs": 1247,
+          "authenticated": true,
+          "sameUsername": true,
+          "bankCardsVisible": 1
+        }
+      ],
+      "browserErrors": [],
+      "tracking": {
+        "contactFingerprint": "02bb5b40c0b3",
+        "leadActionFingerprint": "71f8edcf75fa",
+        "leadMetaFingerprint": "c870dde3a9c5",
+        "contactMetaEventsReceived": 1,
+        "leadMetaEventsReceived": 1
+      }
+    }
+  ],
+  "method": [
+    "Read-only database snapshots before and after landing/direct-gateway reentry",
+    "Reused original browser identity without injecting provider credentials or creating another account",
+    "Exactly one neutral client text per account; exclusive wx checkpoint saved before clicking Send",
+    "Retried only the existing message notification once per account, keeping the same messageId; no second chat text",
+    "Confirmed Atrio LEAD outbox, Builder CONTACT+LEAD merge/inbox and Meta HTTP200/events_received=1",
+    "No financial operations and no messages to other accounts or advisors"
+  ],
+  "notes": [
+    "The initial bank-details card remains an advisor message and creates neither LEAD nor PURCHASE.",
+    "The Meta Lead event ID and Atrio action_event_id use separate established representations; the matching action fingerprint in Builder inbox proves correlation, and both remain unchanged after retry.",
+    "Browser reentry timings are single samples with normal cache, not averages or new-account creation measurements."
+  ]
+}

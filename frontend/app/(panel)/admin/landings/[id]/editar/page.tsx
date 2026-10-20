@@ -50,6 +50,8 @@ import {
   type AtrioClient,
   type LandingAtrioAssignment,
 } from "@/lib/atrio/atrioDb";
+import { requestManagerDestinations } from "@/lib/atrio/managerDestinations";
+import type { ManagerDestinationDraft } from "@/components/landing/AtrioManagerDistribution";
 import { AtrioRedirectSection } from "@/components/landing/AtrioRedirectSection";
 import { useAppConfirm, useAppPrompt } from "@/components/ui/AppConfirmDialog";
 import { PageHeader } from "@/components/ui/PanelPrimitives";
@@ -180,6 +182,7 @@ export default function AdminLandingEditarPage() {
   const [ownerUserId, setOwnerUserId] = useState<string | null>(null);
   const [pixelOptions, setPixelOptions] = useState<Array<{ pixel_id: string; comment: string }>>([]);
   const [atrioClients, setAtrioClients] = useState<AtrioClient[]>([]);
+  const [managerDraft, setManagerDraft] = useState<ManagerDestinationDraft | null>(null);
   const [atrioAssignments, setAtrioAssignments] = useState<LandingAtrioAssignment[]>([]);
   const [postUrlCopied, setPostUrlCopied] = useState(false);
 
@@ -336,8 +339,8 @@ export default function AdminLandingEditarPage() {
       setSaveError("Seleccioná un cliente Atrio válido para este workspace.");
       return;
     }
-    if ((landing.config.ctaDestination === "atrio" || landing.config.template === "template7") && atrioAssignments.length === 0) {
-      setSaveError("Selecciona al menos un cliente Atrio para la redireccion.");
+    if (landing.config.template === "template7" && (!managerDraft?.loaded || managerDraft.provider !== landing.config.targetProvider || !managerDraft.destinations.length)) {
+      setSaveError("Elegí al menos un bot para la redirección y esperá a que termine de cargar.");
       return;
     }
     if (
@@ -411,8 +414,13 @@ export default function AdminLandingEditarPage() {
         config: configToSave,
         landingConfig,
       });
-      await setLandingGerencias(landing.id, assignments);
-      await setLandingAtrioAssignments(landing.id, atrioAssignments);
+      if (configToSave.template !== "template7") await setLandingGerencias(landing.id, assignments);
+      if (configToSave.template === "template7" && managerDraft) {
+        await requestManagerDestinations({ action: "configure", landingId: landing.id, targetProvider: managerDraft.provider,
+          mode: managerDraft.mode, criterion: managerDraft.criterion, destinations: managerDraft.destinations });
+      } else {
+        await setLandingAtrioAssignments(landing.id, atrioAssignments, false);
+      }
       await publishLandingChanges({
         landingId: landing.id,
         name: landing.name,
@@ -802,13 +810,14 @@ export default function AdminLandingEditarPage() {
           </div>
         </CollapsibleSection>
 
-        {landing.config.ctaDestination === "atrio" || landing.config.template === "template7" ? (
+        {landing.config.template === "template7" ? (
           <AtrioRedirectSection
             landing={landing}
             setLanding={setLanding}
             atrioClients={atrioClients}
             assignments={atrioAssignments}
             setAssignments={setAtrioAssignments}
+            onDraftChange={setManagerDraft}
             createAtrioHref="/admin/atrio"
           />
         ) : (
@@ -839,7 +848,7 @@ export default function AdminLandingEditarPage() {
             pixelId={landing.pixelId}
             postUrl={landing.postUrl}
             landingTag={landing.landingTag}
-            getPhoneForPreview={landing.config.ctaDestination === "atrio" || landing.config.template === "template7" ? undefined : async () => {
+            getPhoneForPreview={landing.config.template === "template7" ? undefined : async () => {
               try {
                 const base =
                   process.env.NEXT_PUBLIC_SUPABASE_URL?.replace(/\/$/, "") ?? "";

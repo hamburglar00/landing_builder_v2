@@ -22,6 +22,8 @@ import {
 } from "@/lib/atrio/atrioDb";
 import { CURRENCY_ALL, type ReportingCurrency } from "@/lib/currency";
 import { supabase } from "@/lib/supabaseClient";
+import { requestManagerDestinations, CASINO_NAMES, managerTypeLabel, type AdvisorDirectory } from "@/lib/atrio/managerDestinations";
+import { AdvisorManagers } from "./AdvisorManagers";
 
 type Mode = "dashboard" | "admin";
 
@@ -96,6 +98,26 @@ export default function AtrioClientsPageContent({ mode }: { mode: Mode }) {
   const [editingClient, setEditingClient] = useState<AtrioClient | null>(null);
   const [form, setForm] = useState<FormState>(EMPTY_FORM);
   const [search, setSearch] = useState("");
+  const [directory, setDirectory] = useState<AdvisorDirectory[]>([]);
+  const [directoryBusy, setDirectoryBusy] = useState(false);
+  const [directoryError, setDirectoryError] = useState("");
+  const [onlyActive, setOnlyActive] = useState(false);
+  const [refreshDirectory, setRefreshDirectory] = useState(0);
+  const directoryClientIds = clients.map(c => c.id).sort().join(",");
+  useEffect(() => {
+    const controller = new AbortController();
+    setDirectory([]); setDirectoryError("");
+    if (!directoryClientIds) return;
+    setDirectoryBusy(true);
+    const ids = directoryClientIds.split(",");
+    // Bound each authenticated request while keeping one directory snapshot per screen.
+    void Promise.all(Array.from({ length: Math.ceil(ids.length / 100) }, (_, i) =>
+      requestManagerDestinations<{ advisors: AdvisorDirectory[] }>({ action: "directory", clientIds: ids.slice(i*100, (i+1)*100) }, controller.signal)))
+      .then(results => { if (!controller.signal.aborted) setDirectory(results.flatMap(result => result.advisors)); })
+      .catch(error => { if (!controller.signal.aborted) setDirectoryError(error instanceof Error ? error.message : "No se pudieron consultar los bots."); })
+      .finally(() => { if (!controller.signal.aborted) setDirectoryBusy(false); });
+    return () => controller.abort();
+  }, [directoryClientIds, refreshDirectory]);
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState<string | null>(null);
 
@@ -159,10 +181,12 @@ export default function AtrioClientsPageContent({ mode }: { mode: Mode }) {
         client.slug.toLowerCase().includes(query) ||
         client.atrio_id.toLowerCase().includes(query) ||
         buildAtrioUrl(client.slug).toLowerCase().includes(query) ||
-        client.workspace_currency.toLowerCase().includes(query)
+        client.workspace_currency.toLowerCase().includes(query) ||
+        directory.some(advisor => advisor.id === client.atrio_id && ((advisor.name || "").toLowerCase().includes(query) ||
+          advisor.connections.some(bot => `${bot.manager_id} ${bot.agency_name || bot.agency_id} ${CASINO_NAMES[bot.target_provider]} ${managerTypeLabel(bot.manager_type)}`.toLowerCase().includes(query))))
       );
     });
-  }, [clients, search]);
+  }, [clients, search, directory]);
 
   const openCreateModal = () => {
     setEditingClient(null);
@@ -223,7 +247,7 @@ export default function AtrioClientsPageContent({ mode }: { mode: Mode }) {
 
   const handleDelete = async (client: AtrioClient) => {
     const confirmed = await confirmAction({
-      title: "Eliminar cliente Atrio",
+      title: "Eliminar asesor Atrio",
       description: `Se eliminara el slug ${client.slug} del workspace ${client.workspace_currency}.`,
       confirmLabel: "Eliminar",
       danger: true,
@@ -254,10 +278,10 @@ export default function AtrioClientsPageContent({ mode }: { mode: Mode }) {
       <PageHeader
         eyebrow="Integracion"
         title="Atrio"
-        description="Administra los clientes de Atrio disponibles como destino del CTA."
+        description="Asesores, bots y métricas de los destinos disponibles para tus landings."
         actions={
           <button type="button" onClick={openCreateModal} className="ui-button ui-button-primary">
-            AGREGAR CLIENTE
+            AGREGAR ASESOR
           </button>
         }
       />
@@ -277,9 +301,9 @@ export default function AtrioClientsPageContent({ mode }: { mode: Mode }) {
       <SurfaceCard className="overflow-hidden">
         <div className="flex flex-col gap-3 border-b border-[var(--color-border-subtle)] p-4 sm:flex-row sm:items-center sm:justify-between">
           <div className="min-w-0">
-            <h2 className="text-sm font-semibold text-[var(--color-text-strong)]">Clientes Atrio</h2>
+            <h2 className="text-sm font-semibold text-[var(--color-text-strong)]">Asesores Atrio</h2>
             <p className="mt-1 text-xs text-[var(--color-text-muted)]">
-              {filteredClients.length} de {clients.length} clientes en {workspaceCurrency}
+              {filteredClients.length} de {clients.length} asesores en {workspaceCurrency}
             </p>
           </div>
           <label className="relative w-full sm:max-w-sm">
@@ -290,91 +314,42 @@ export default function AtrioClientsPageContent({ mode }: { mode: Mode }) {
               type="search"
               value={search}
               onChange={(event) => setSearch(event.target.value)}
-              placeholder="Buscar por slug, URL o ID..."
+              placeholder="Buscar asesor, bot, casino o gerencia..."
               className="h-10 w-full rounded-xl border border-[var(--color-border)] bg-[var(--color-bg-2)] pl-9 pr-3 text-sm text-[var(--color-text-strong)] outline-none placeholder:text-[var(--color-text-disabled)] focus:border-[var(--color-primary)] focus:ring-2 focus:ring-[var(--color-ring-primary)]"
             />
           </label>
         </div>
 
+        <div className="flex flex-wrap items-center justify-between gap-3 border-b border-[var(--color-border-subtle)] px-4 py-3 text-xs">
+          <label className="flex items-center gap-2"><input type="checkbox" checked={onlyActive} onChange={e => setOnlyActive(e.target.checked)} />Solo bots activos</label>
+          <button type="button" disabled={directoryBusy} onClick={() => setRefreshDirectory(v => v + 1)} className="ui-button ui-button-secondary h-8 min-h-8 px-3 text-xs">{directoryBusy ? "Actualizando…" : "Actualizar"}</button>
+        </div>
         {clients.length === 0 ? (
           <EmptyState
             className="py-12"
             icon={<AtrioMark />}
-            title="No hay clientes Atrio cargados"
+            title="No hay asesores Atrio cargados"
             description="Agrega el slug publico y el ID unico de Atrio para preparar el destino del CTA."
             action={
               <button type="button" onClick={openCreateModal} className="ui-button ui-button-secondary">
-                Agregar cliente
+                Agregar asesor
               </button>
             }
           />
         ) : (
-          <div className="overflow-x-auto">
-            <table className="min-w-[840px] text-left text-sm md:min-w-full">
-              <thead className="bg-[var(--color-bg-3)] text-[10px] uppercase tracking-[0.12em] text-[var(--color-text-muted)]">
-                <tr>
-                  <th className="px-4 py-3 font-semibold">Slug</th>
-                  <th className="px-4 py-3 font-semibold">URL</th>
-                  <th className="px-4 py-3 font-semibold">ID de Atrio</th>
-                  <th className="px-4 py-3 font-semibold">Workspace</th>
-                  <th className="px-4 py-3 text-right font-semibold">Acciones</th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-[var(--color-border-subtle)]">
-                {filteredClients.length === 0 ? (
-                  <tr>
-                    <td colSpan={5} className="px-4 py-8 text-center text-sm text-[var(--color-text-muted)]">
-                      No hay clientes que coincidan con la busqueda.
-                    </td>
-                  </tr>
-                ) : (
-                  filteredClients.map((client) => (
-                    <tr key={client.id} className="bg-[rgba(255,255,255,0.012)]">
-                      <td className="px-4 py-3">
-                        <span className="font-semibold text-[var(--color-text-strong)]">{client.slug}</span>
-                      </td>
-                      <td className="px-4 py-3">
-                        <a
-                          href={buildAtrioUrl(client.slug)}
-                          target="_blank"
-                          rel="noreferrer"
-                          className="text-xs font-medium text-[var(--color-primary)] hover:underline"
-                        >
-                          {buildAtrioUrl(client.slug)}
-                        </a>
-                      </td>
-                      <td className="px-4 py-3">
-                        <code className="rounded-lg border border-[var(--color-border-subtle)] bg-[rgba(255,255,255,0.025)] px-2 py-1 text-[11px] text-[var(--color-text)]">
-                          {client.atrio_id}
-                        </code>
-                      </td>
-                      <td className="px-4 py-3">
-                        <WorkspaceBadge workspace={client.workspace_currency} />
-                      </td>
-                      <td className="px-4 py-3 text-right">
-                        <div className="flex justify-end gap-2">
-                          <button
-                            type="button"
-                            onClick={() => openEditModal(client)}
-                            className="ui-button ui-button-secondary h-8 min-h-8 px-3 text-xs"
-                          >
-                            Editar
-                          </button>
-                          <button
-                            type="button"
-                            onClick={() => void handleDelete(client)}
-                            disabled={deletingId === client.id}
-                            className="ui-button ui-button-danger h-8 min-h-8 px-3 text-xs"
-                          >
-                            {deletingId === client.id ? "Eliminando..." : "Eliminar"}
-                          </button>
-                        </div>
-                      </td>
-                    </tr>
-                  ))
-                )}
-              </tbody>
-            </table>
+          <div className="space-y-4 p-3 sm:p-4">
+            {!filteredClients.length && <p className="py-6 text-center text-sm text-[var(--color-text-muted)]">No hay asesores que coincidan con la búsqueda.</p>}
+            {filteredClients.map(client => <section key={client.id} className="rounded-xl border border-[var(--color-border)] bg-[var(--color-bg-2)]">
+              <div className="flex flex-wrap items-center justify-between gap-3 border-b border-[var(--color-border-subtle)] p-3">
+                <div className="min-w-0"><a href={buildAtrioUrl(client.slug)} target="_blank" rel="noreferrer" className="text-sm font-semibold text-[var(--color-text)]">{client.slug}</a>
+                  <p className="mt-1 break-all text-[10px] text-[var(--color-text-muted)]">UUID: {client.atrio_id}</p></div>
+                <div className="flex items-center gap-2"><WorkspaceBadge workspace={client.workspace_currency} />
+                  <button type="button" onClick={() => openEditModal(client)} className="ui-button ui-button-secondary h-8 min-h-8 px-3 text-xs">Editar</button>
+                  <button type="button" onClick={() => void handleDelete(client)} disabled={deletingId === client.id} className="ui-button ui-button-danger h-8 min-h-8 px-3 text-xs">{deletingId === client.id ? "Eliminando…" : "Eliminar"}</button>
+                </div>
+              </div>
+              <AdvisorManagers advisor={directory.find(advisor => advisor.id === client.atrio_id)} busy={directoryBusy} error={directoryError} onlyActive={onlyActive} />
+            </section>)}
           </div>
         )}
 
@@ -387,7 +362,7 @@ export default function AtrioClientsPageContent({ mode }: { mode: Mode }) {
 
       <ModalShell
         open={modalMode !== null}
-        title={modalMode === "edit" ? "Editar cliente Atrio" : "Agregar cliente Atrio"}
+        title={modalMode === "edit" ? "Editar asesor Atrio" : "Agregar asesor Atrio"}
         description="Carga el slug publico de Atrio y el UUID unico del cliente."
         onClose={closeModal}
         closeDisabled={saving}

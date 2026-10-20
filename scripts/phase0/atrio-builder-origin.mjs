@@ -1,6 +1,8 @@
 import assert from 'node:assert/strict';
 import {createHash} from 'node:crypto';
-import { localDatabase } from './local-runtime.mjs';
+import { localDatabase,root } from './local-runtime.mjs';
+import {readFile,readdir} from 'node:fs/promises';
+import {resolve,join} from 'node:path';
 import { localApi } from './local-api.mjs';
 import { handlerSchema } from './handler-schema.mjs';
 import { handlerRuntime } from './handler-runtime.mjs';
@@ -23,7 +25,15 @@ try {
  insert into public.conversions_config(user_id,pixel_id,meta_access_token,send_contact_capi,send_lead_capi,send_purchase_capi,send_first_purchase_capi,send_repeat_purchase_capi,send_geo_capi,geo_use_ipapi,meta_ads_only_capi)
  values('${owner}','19000001','synthetic-meta',true,true,true,true,true,false,false,false);
  grant all on public.atrio_clients to service_role;`);
- api=await localApi(db,'service_role',owner);app=await handlerRuntime(api);
+ const sourceOverrides=new Map();
+ if(process.env.PHASE0_FUNCTION_SNAPSHOT){
+  const folder=resolve(process.env.PHASE0_FUNCTION_SNAPSHOT,'conversions');
+  for(const name of await readdir(folder)){
+   if(!/^[a-z_]+\.ts$/.test(name))throw Error('Unexpected function snapshot file');
+   sourceOverrides.set(resolve(root,'supabase/functions/conversions',name),await readFile(join(folder,name),'utf8'));
+  }
+ }
+ api=await localApi(db,'service_role',owner);app=await handlerRuntime(api,{sourceOverrides});
  const base={landing_id:landing,landing_name:'synthetic-landing',phone:'5491112345678',meta_pixel_id:'19000001',pixel_id:'19000001',currency:'ARS',
   promo_code:'SYNTHETIC-ATRIO123456',atrio_id:advisor,atrio_client_id:client,players_id:player,event_source_url:'https://example.invalid/template7'};
  const contact=await app.request('conversions',{...base,...attribution,action:'CONTACT',event_id:'fixture-contact-atrio',source_platform:'landing'});
@@ -65,6 +75,17 @@ try {
  assert.equal(scalar('select sum(valor) from conversions'),'3000.25');assertAttribution();checks.push('repeat Purchase inherits Landing and advertising origin while preserving its Atrio payload');
  const before=app.sent.length;const replay=await app.request('conversions',purchase(1,1000.25));assert.equal(replay.status,200,JSON.stringify(replay));
  assert.equal(scalar('select count(*) from conversions'),'2');assert.equal(app.sent.length,before);checks.push('replayed confirmed operation does not duplicate CAPI or revenue');
+ const withoutReceipt={...purchase(3,1500),is_valid_receipt:null,coelsa_id:null,transaction_id:null,full_name:null};
+ const manual=await app.request('conversions',withoutReceipt);assert.equal(manual.status,200,JSON.stringify(manual));
+ assert.equal(scalar('select count(*) from conversions'),'3','a confirmed manual load with unknown receipt status must be recorded');
+ checks.push('confirmed manual load with no receipt is accepted without inventing receipt data');
+ const sentBeforeInvalid=app.sent.length;
+ const invalid=await app.request('conversions',{...purchase(4,900),is_valid_receipt:false});assert.equal(invalid.status,200);
+ assert.equal(scalar('select count(*) from conversions'),'3');assert.equal(app.sent.length,sentBeforeInvalid);
+ checks.push('an explicitly invalid receipt still produces no Purchase or CAPI event');
+ const absent={...purchase(5,400)};delete absent.is_valid_receipt;
+ assert.equal((await app.request('conversions',absent)).status,200);assert.equal(scalar('select count(*) from conversions'),'4');
+ checks.push('omitting receipt status retains the existing supported contract');
  assert.deepEqual(app.blocked,[]);assert.deepEqual(app.dbErrors,[]);
  console.log(JSON.stringify({builderHttpChecks:checks.length,checks,productionWrites:0,realMetaCalls:0},null,2));
 } finally {if(app)await app.close();if(api)api.close();db.close();}
