@@ -85,6 +85,7 @@ export interface ConversionRow {
   observaciones: string;
   external_id: string;
   landing?: string | null;
+  landing_resolution?: string | null;
   facebook?: string | null;
   portofolio?: string | null;
   cp?: string | null;

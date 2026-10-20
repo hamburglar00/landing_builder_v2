@@ -29,6 +29,7 @@ const DEFAULT_VISIBLE_COLUMNS: ColKey[] = [
   "test_event_code",
   "utm_campaign",
   "landing",
+  "landing_resolution",
   "campana",
   "conjunto",
   "anuncio",

@@ -1,13 +1,13 @@
 import assert from 'node:assert/strict';
 import test from 'node:test';
-import { ALL_COLUMNS, columnLabel, columnsForTableView, conversionMatchesTableSearch } from '../components/conversiones/conversionPageShared';
+import { ALL_COLUMNS, columnLabel, columnsForTableView, conversionMatchesTableSearch, landingResolutionLabel } from '../components/conversiones/conversionPageShared';
 
 test('new attribution columns are visible and searchable in friendly and technical views', () => {
-  const keys = ['landing', 'facebook', 'portofolio', 'cp', 'campana', 'conjunto', 'anuncio'] as const;
+  const keys = ['landing', 'landing_resolution', 'facebook', 'portofolio', 'cp', 'campana', 'conjunto', 'anuncio'] as const;
   for (const view of ['friendly', 'technical'] as const) {
     const columns = columnsForTableView([...ALL_COLUMNS], view);
     for (const key of keys) assert.ok(columns.includes(key));
-    assert.deepEqual(columns.slice(columns.indexOf('landing'), columns.indexOf('campana') + 1), ['landing', 'facebook', 'portofolio', 'cp', 'campana']);
+    assert.deepEqual(columns.slice(columns.indexOf('landing'), columns.indexOf('campana') + 1), ['landing', 'landing_resolution', 'facebook', 'portofolio', 'cp', 'campana']);
   }
   assert.equal(columnLabel('campana', 'friendly'), 'Campaña');
   assert.equal(columnLabel('facebook', 'friendly'), 'Facebook');
@@ -25,4 +25,11 @@ test('numeric advertising identifiers remain searchable without broadening phone
   }
   assert.equal(conversionMatchesTableSearch({ phone: '5491123456789' }, '+54 9 11 2345-6789'), true);
   assert.equal(conversionMatchesTableSearch({ phone: '5491123456789' }, '1123456789'), false);
+});
+
+test('landing resolution has human labels and searchable unknown values', () => {
+  for (const [value,label] of [['url_parameter','Parámetro URL'],['path','Ruta'],['automatic','Automática'],[null,'Sin dato']]) {
+    assert.equal(landingResolutionLabel(value),label);
+    assert.equal(conversionMatchesTableSearch({landing_resolution:value},label!),true);
+  }
 });

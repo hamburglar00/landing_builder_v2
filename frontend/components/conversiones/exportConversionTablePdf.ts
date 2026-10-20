@@ -8,6 +8,7 @@ import {
   friendlyPurchaseType,
   friendlySourcePlatform,
   friendlyWorkspaceResolutionSource,
+  landingResolutionLabel,
   formatIntegerWithThousands,
   truncateId,
   type ConversionColumnKey,
@@ -99,6 +100,8 @@ function valueForColumn(row: ConversionRow, column: ConversionColumnKey): string
       return normalizeCurrencyCode(row.currency);
     case "workspace_resolution_source":
       return friendlyWorkspaceResolutionSource(row.workspace_resolution_source);
+    case "landing_resolution":
+      return landingResolutionLabel(row.landing_resolution);
     case "purchase_type":
       return friendlyPurchaseType(row.purchase_type);
     case "contact_payload_raw":

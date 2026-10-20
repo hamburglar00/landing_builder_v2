@@ -61,6 +61,7 @@ const FALLBACK_VISIBLE_COLUMNS = [
   "test_event_code",
   "utm_campaign",
   "landing",
+  "landing_resolution",
   "campana",
   "conjunto",
   "anuncio",

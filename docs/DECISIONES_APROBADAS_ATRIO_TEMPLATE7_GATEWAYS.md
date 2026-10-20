@@ -53,7 +53,7 @@ un dato original ya conocido; puede completar un campo faltante. Valores
 ausentes permanecen NULL, sin inventar atribución histórica.
 
 En las tablas de conversiones de Admin y cliente, el orden es Landing,
-Facebook, Portofolio, Cuenta publicitaria, Campaña, Conjunto de anuncios y
+Resolución de landing, Facebook, Portofolio, Cuenta publicitaria, Campaña, Conjunto de anuncios y
 Anuncio. Incluir los tres campos en búsqueda y exportación y en la ayuda del
 editor. Template 7 usa la misma captura para Rey de Ases, Ases del Norte,
 Ganamos NET y Ganamos+, sin cambiar su identidad ni acceso.
@@ -63,6 +63,20 @@ desmarcadas por defecto; el administrador puede habilitarlas. Las vistas
 reducida y técnica incluyen estas columnas cuando están habilitadas para el
 cliente. La ayuda del editor no muestra la explicación de persistencia ni
 compatibilidad con `utm_campaign`.
+
+### Resolución de landing (19/10/2026)
+
+Registrar en `conversions.landing_resolution` cómo se eligió la landing original:
+`url_parameter` (Parámetro URL), `path` (Ruta) o `automatic` (Automática).
+El parámetro `landing` tiene prioridad, incluso desde la raíz. La selección
+automática corresponde exclusivamente al fallback del clásico; el constructor
+conserva el login en la raíz sin selección. Capturar el resultado antes de perder
+el origen en redirecciones y conservarlo en Lead, CompleteRegistration y Purchase.
+No inferir datos históricos desde la URL de un evento posterior: mostrar «Sin dato».
+La columna va inmediatamente después de Landing en ambas vistas y exportación.
+Su visibilidad inicial acompaña a Landing; el administrador puede configurarla.
+La marca interna del fallback clásico se consume al capturar el dato y no es un
+parámetro publicitario para configurar en los anuncios.
 
 | Decisión | Comportamiento que debe conservarse |
 | --- | --- |

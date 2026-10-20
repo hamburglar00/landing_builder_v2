@@ -46,6 +46,7 @@ import {
   friendlyPurchaseType,
   friendlySourcePlatform,
   friendlyWorkspaceResolutionSource,
+  landingResolutionLabel,
   isSameDateRange,
   normalizePhone,
   normalizeSexValue,
@@ -380,6 +381,7 @@ function cellValue(
     case "purchase_status_capi": return <td key={col} className={cell} title={tip(c.purchase_status_capi)}>{statusText(c.purchase_status_capi)}</td>;
     case "observaciones": return <td key={col} className={`${cell} text-zinc-500 max-w-[200px] truncate`} title={c.observaciones}>{c.observaciones || "-"}</td>;
     case "external_id": return <td key={col} className={dimMono} title={tip(c.external_id)}>{c.external_id ? truncateId(c.external_id) : "-"}</td>;
+    case "landing_resolution": return <td key={col} className={dim} title={landingResolutionLabel(c.landing_resolution)}>{landingResolutionLabel(c.landing_resolution)}</td>;
     case "landing":
     case "facebook":
     case "portofolio":

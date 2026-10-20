@@ -48,7 +48,7 @@ test("templates 1-6 retain image configuration and CSS, with the current attribu
     const config = { ...fixture(), layout: { template, ctaPosition: "bottom" } };
     assert.equal(optimizeTemplate7Images(config), config);
     const html = renderPublicLandingHtml({ slug: "test", config });
-    assert.match(html, /src="\/public-assets\/landing-runtime-v4.js" defer/);
+    assert.match(html, /src="\/public-assets\/landing-runtime-v6.js" defer/);
     assert.match(html, /href="\/public-assets\/landing-styles-v3.css"/);
     assert.doesNotMatch(html, /data-template7-critical/);
   }

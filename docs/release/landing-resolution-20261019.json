@@ -1,0 +1,411 @@
+{
+  "at": "2026-10-20T00:53:30.618Z",
+  "status": "published and verified",
+  "scope": "Landing resolution for templates 1-7 in classic and constructor; conversion lineage, both table views, search and export.",
+  "column": "landing_resolution",
+  "position": "Immediately after landing",
+  "values": {
+    "url_parameter": "Parámetro URL",
+    "path": "Ruta",
+    "automatic": "Automática",
+    "null": "Sin dato"
+  },
+  "selection": {
+    "parameterPrecedesRoute": true,
+    "classicRootRetainsCurrentEligibility": true,
+    "constructorRootRemainsLogin": true,
+    "automaticMarkerConsumed": true,
+    "historicalBackfill": false
+  },
+  "visibility": {
+    "initiallyFollowsLanding": true,
+    "administratorCanConfigure": true,
+    "advertisingColumnsStillHiddenForNewClients": true
+  },
+  "database": {
+    "project": "fdkjkzpjqfbaavylapun",
+    "migration": "20261020003440_landing_resolution_attribution.sql",
+    "applied": true,
+    "pendingMigrations": 0,
+    "checkConstraint": true,
+    "rlsPreserved": true,
+    "scopedTableAndExportVerified": true,
+    "labelSearchVerified": true
+  },
+  "edgeFunctions": [
+    {
+      "name": "conversions",
+      "version": 167,
+      "verifyJwt": false
+    },
+    {
+      "name": "create-client",
+      "version": 35,
+      "verifyJwt": false
+    }
+  ],
+  "deployments": [
+    {
+      "name": "landing-builder",
+      "id": "dpl_G81aC3SaT9pyy3ZzNYV9QzVnhjCT",
+      "url": "https://landing-builder-v2-k259-qdnf3lxzx-juanclouds-projects.vercel.app",
+      "previous": "dpl_4BuCFQRNU6ciRnADfmANNPtAeZJX",
+      "domains": [
+        "mkt.panelbotadmin.com",
+        "constructor.panelbotadmin.com",
+        "landing-builder-v2-k259.vercel.app"
+      ]
+    },
+    {
+      "name": "landing-prueba-1",
+      "id": "dpl_AQTPS7AqSD9FfHquxbRJS5uZ6RkW",
+      "url": "https://public-landing-1a7lyognb-juanclouds-projects.vercel.app",
+      "previous": "dpl_81BVTdSsHxNKX5ZoxRjJu9RiWYfr",
+      "domains": [
+        "landing.panelbotadmin.com",
+        "public-landing-bl.vercel.app"
+      ]
+    }
+  ],
+  "checks": {
+    "browserCases": 50,
+    "template7ReentryScenarios": 112,
+    "httpConversionJourneyChecks": 9,
+    "denoAttributionTests": 7,
+    "migrationsReplayed": 295,
+    "typecheckBothEngines": true,
+    "productionBuilds": 2,
+    "compiledCaptureBeforePromotion": true,
+    "compiledCaptureOnPublicDomains": true,
+    "panelPages": 5,
+    "publicLandingCases": 10,
+    "automaticRootRedirect": {
+      "status": 307,
+      "markerMatchesSelectedLanding": true
+    },
+    "uiViewports": [
+      {
+        "width": 390,
+        "height": 844,
+        "defaultsHidden": true,
+        "resolutionVisible": true,
+        "adminCanEnable": true,
+        "removedTextAbsent": true,
+        "noHorizontalOverflow": true
+      },
+      {
+        "width": 1365,
+        "height": 900,
+        "defaultsHidden": true,
+        "resolutionVisible": true,
+        "adminCanEnable": true,
+        "removedTextAbsent": true,
+        "noHorizontalOverflow": true
+      },
+      {
+        "width": 844,
+        "height": 390,
+        "defaultsHidden": true,
+        "resolutionVisible": true,
+        "adminCanEnable": true,
+        "removedTextAbsent": true,
+        "noHorizontalOverflow": true
+      }
+    ]
+  },
+  "casinoCoverage": [
+    {
+      "provider": "rey_de_ases",
+      "engines": [
+        "classic",
+        "constructor"
+      ],
+      "browserCaptureAndSessionRecovery": "passed",
+      "publicCompiledCapture": "passed",
+      "gatewayChanges": false,
+      "gatewayPublicationRequired": false
+    },
+    {
+      "provider": "ases_del_norte",
+      "engines": [
+        "classic",
+        "constructor"
+      ],
+      "browserCaptureAndSessionRecovery": "passed",
+      "publicCompiledCapture": "passed",
+      "gatewayChanges": false,
+      "gatewayPublicationRequired": false
+    },
+    {
+      "provider": "ganamos_net",
+      "engines": [
+        "classic",
+        "constructor"
+      ],
+      "browserCaptureAndSessionRecovery": "passed",
+      "publicCompiledCapture": "passed",
+      "gatewayChanges": false,
+      "gatewayPublicationRequired": false
+    },
+    {
+      "provider": "multi_skin",
+      "engines": [
+        "classic",
+        "constructor"
+      ],
+      "browserCaptureAndSessionRecovery": "passed",
+      "publicCompiledCapture": "passed",
+      "gatewayChanges": false,
+      "gatewayPublicationRequired": false
+    }
+  ],
+  "sharedSdk": {
+    "gateways": 4,
+    "sha256": "4bf6b1951ca4d7ec11aa455d26c8074e6c0a4add2cf726625e7b9d675f1b1738",
+    "check": "passed"
+  },
+  "workerReview": "Ganamos+ public Worker remains unchanged: selection is captured in each landing and persisted by the common conversions backend, without changes to the gateway protocol.",
+  "cache": {
+    "runtime": "/public-assets/landing-runtime-v6.js",
+    "reason": "Avoid immutable v5 caches; the serialized browser guard must not be folded to null by the server compiler."
+  },
+  "superseded": [
+    {
+      "name": "landing-builder",
+      "id": "dpl_HfrUSxHGRJeakSK8MB7VgPQzKyJv",
+      "url": "https://landing-builder-v2-k259-191bxlo2l-juanclouds-projects.vercel.app"
+    },
+    {
+      "name": "landing-prueba-1",
+      "id": "dpl_9aU5Nj8KLgYZHPf1UFpef5g45MrK",
+      "url": "https://public-landing-5deyt4c7u-juanclouds-projects.vercel.app"
+    }
+  ],
+  "notes": [
+    "The first compiled constructor capture returned null because Next optimized typeof window in the server bundle. The final guard uses globalThis.window; compiled production code was executed for parameter, path and automatic cases before final promotion.",
+    "Browser cases and conversion writes used synthetic local fixtures. Live public checks fetched HTML/assets and executed isolated capture code only; no real accounts or conversions were created.",
+    "Existing Supabase advisory warnings were reviewed; this migration preserves report permissions and tenant scope."
+  ],
+  "realAccountsCreated": 0,
+  "realConversionEventsSent": 0,
+  "api2ChangedOrPublished": false,
+  "sourceManifests": [
+    {
+      "name": "landing-builder",
+      "sha256": "7622a3d46d75e62c0af7b7f8c73e0a040c77f37cd264dccab68afd13a39edeeb",
+      "changedFiles": [
+        {
+          "file": "docs/DECISIONES_APROBADAS_ATRIO_TEMPLATE7_GATEWAYS.md",
+          "before": "207681601b35f2861e12ac45712efccbe0389171098b138df59073494ae91fd1",
+          "after": "15cbb7e90ae1904575d65957adc1b4cf0c1e579c1d0f32fcfcaa53a7bb839925"
+        },
+        {
+          "file": "docs/validation/template7-url-regression-20261019.json",
+          "before": null,
+          "after": "090cdf7202c8577e4fd79eaa8747addaf23113b531e9501f746dae3def4ec6e7"
+        },
+        {
+          "file": "frontend/README.md",
+          "before": "23e9dfef0c0c7adc5808286565dfa29d5344fd5675f9e9b827e1b127400f88ff",
+          "after": "f2ae94bdce274d101026808e4f7941aaf8782305628bc4d3a7b0b6c8701a52b7"
+        },
+        {
+          "file": "frontend/app/(panel)/admin/clientes/nuevo/page.tsx",
+          "before": "f1b7e63b3be1756b8e0281d20b8c67d9e2adaeb21b9382dcb0fc756e1e80abd9",
+          "after": "6afddff589e1c79e8bdf479cb5598fbc464efeb404ca550be203130974cfb3fc"
+        },
+        {
+          "file": "frontend/app/(panel)/admin/conversiones/page.tsx",
+          "before": "f9e1d6e4dc2706071e0263facfd93d69d2166c62011aad5ba8d578b37f02595e",
+          "after": "ddff5f5b9b9097fccdbade56b97f586d294db9265c9da3bda092b83120f72aed"
+        },
+        {
+          "file": "frontend/app/(panel)/dashboard/conversiones/page.tsx",
+          "before": "f4445a30c7de41f856a484c244fee1a30e0ccd18b9c6313edd1d688f010f0e91",
+          "after": "5a4373aecfe476ff4fae2b72ba9c3c89d1da3055371450264628cbe72658372a"
+        },
+        {
+          "file": "frontend/components/conversiones/conversionPageShared.ts",
+          "before": "eb76fe9327effbecc3818968015aa7accec213f6e52671ae5d16ddbea96b561e",
+          "after": "f380ff5cacde574992216d7923c717e263519eeda10075b9ea5f038dc8aebd5f"
+        },
+        {
+          "file": "frontend/components/conversiones/exportConversionTablePdf.ts",
+          "before": "e4ca1e515a6ba1f7224180a834104ee96986b51c2cf3c6bb905c698c4e30f277",
+          "after": "f23da3fe914499fdfa628034d89dbc04a564f5d532cab875fb853c38623f1c94"
+        },
+        {
+          "file": "frontend/components/public-landing/PublicLandingRuntimeScript.tsx",
+          "before": "eaa2bbd3dff1b0502b5d13211e3222206872c6d32439e030d6b419c8ccf80f0b",
+          "after": "f0642e36115f09f32ed7137df92c8ff5fe7985cf6c6fbe20b871b7c1ee3aab13"
+        },
+        {
+          "file": "frontend/components/public-landing/renderPublicLandingHtml.tsx",
+          "before": "54b82af1191e10117021048d05b19bd21193a317c49373b1a6618b2e26d8e672",
+          "after": "4ae468c2292a36fb23f91a6010d0e0b0b9d7bcf88658e1ea5f4293e846a3dbf4"
+        },
+        {
+          "file": "frontend/components/public-landing/template7FastRuntime.ts",
+          "before": "acc7a6b80e86257e7746c677915ac344acd0ea9617f050359c09b112662b1510",
+          "after": "3322b40758b9448906cd6aad4407c71ac45d5a69803fc64452e5ed09a4c66efa"
+        },
+        {
+          "file": "frontend/components/public-landing/template7ReentryScript.ts",
+          "before": "6ae1bd4876660b92d1be05c559344fbc68c7953ee080cf4da55c05f11f6b3c8b",
+          "after": "368df6339bdbb65557bf569cbd81cb023b4c0b0c7f6d97508b1d9fa82570f858"
+        },
+        {
+          "file": "frontend/lib/conversionsDb.ts",
+          "before": "b925fd7392982466fac9c8b9c1931b4325da3dc6f9f8e88d8444630b08c08fc0",
+          "after": "f87870d8e17662f25c4b750b38ec397aa621227f9e7c835aafa4ecad894743f7"
+        },
+        {
+          "file": "frontend/lib/reyDeAses/start.server.ts",
+          "before": "c4c65ab2cc0e8bd4748666c412b4435dfe06830e78633d1f57f76ad22e2dd720",
+          "after": "efe99957d3f5b370958e67c5d55dac2202d33748d68f44c8f29a1f5b77f78e8e"
+        },
+        {
+          "file": "frontend/scripts/landing-advertising-attribution-check.ts",
+          "before": "6dda46c25b3c21f3d8e80327b0753f38930d8f990ac60dc81a3081b72d9925f5",
+          "after": "d000c5caabb618a58cdabb51ee0cc1a025980ad298c68afc7817b2155373971d"
+        },
+        {
+          "file": "frontend/scripts/template7-local-flow-check.ts",
+          "before": "7ef615625174f68c2ae26e78d3ea8cd79d0517249fecf4394d68a59fff55bef0",
+          "after": "8dfb6feea446809e749049345603f29bacc4d1879b17181089ace33a2d9fb1fd"
+        },
+        {
+          "file": "frontend/scripts/template7-reentry-browser-check.ts",
+          "before": "7372d42383ff78db4bc09e7593e266e9d7574df03b2f3cd52b55b7efc039c790",
+          "after": "a7fb2803319245731fd0ec80407af76d6b6657f2448519e50cb96cd68b7d38f0"
+        },
+        {
+          "file": "frontend/tests/conversionUrlAttribution.test.ts",
+          "before": "56f344ccb8efee656cbf02322e980411909a31a6b442e6e9206f50ee2c6fba77",
+          "after": "565985d424be77b13f2acaad04b4ef3c4b477e3dc91cf6aa3be6bad72afe4543"
+        },
+        {
+          "file": "frontend/tests/publicLandingHtml.test.ts",
+          "before": "3c19657e6c59f1f3783c2404e92cc7517b216eead14efd856d54ee9abff4b4ce",
+          "after": "a56ce960ab82c02cea2c4978708eaf9d893c2af558fc57eba6497f87946e07dd"
+        },
+        {
+          "file": "frontend/tests/template7Performance.test.ts",
+          "before": "9ccc9374ea11d7b10528b0d288660335d80c952ce7ff88694063d9da0b4a34b0",
+          "after": "81e91add8cfd4af1391bc136e5fc973eb9826fe35044199f7e1d21e01f968484"
+        },
+        {
+          "file": "frontend/tests/template7Reentry.test.ts",
+          "before": "3468842b322b96e56e391ca114c3507ac84fffb52e25b15abade9ab7acb73c52",
+          "after": "ed8611ecf76eb8cc5ff048fd851da18e7ca132bccf4158eb730218b91788b1d7"
+        },
+        {
+          "file": "scripts/build-classic-template7.mjs",
+          "before": "af17aab0159a567dd4f857a9baa0aff3f985761e120ed2c57113a8c4da0ac482",
+          "after": "184f188296c6606358a8884eace05f9cb8641f1354162b5c99b6a584bc88f79b"
+        },
+        {
+          "file": "scripts/phase0/atrio-builder-origin.mjs",
+          "before": "c6b69d7df2e247895f9c33ff23a6b29bb55f21536c10d3854829f2f3eaad1f38",
+          "after": "37ef3af4fcc3897aeec113450e738a659b8d467752a3d1e1594027895a024df8"
+        },
+        {
+          "file": "scripts/security/landing-url-attribution-fixture.sql",
+          "before": "42f72448258a367c2c75bf5950c9387c9ad2c539272531163815269488a06bb6",
+          "after": "192bff92f1e0b0501b86dd476ae8888cc5eb2f5d41551af3939e63298e544c20"
+        },
+        {
+          "file": "supabase/functions/conversions/index.ts",
+          "before": "f117f663dfe29935c2f63d81bad21b8eb42a4d14eb2f01470ce83d51decf70e1",
+          "after": "0d4e43cbf18294d228b5a5f0251f2431250665644e3dc6e251cc02ff246dfe75"
+        },
+        {
+          "file": "supabase/functions/conversions/shared.ts",
+          "before": "e7b2c1cb9227397307b8a8313dc630601f927b49641ba90a974ad0577334624a",
+          "after": "9c549aba2965c3168b8a6e04aa4f4a00a227528830030c2fcb640ea78a7cf705"
+        },
+        {
+          "file": "supabase/functions/conversions/url_attribution.ts",
+          "before": "30acdf3d7795cd149f20660b67e6e9ce0e309b8f70a2155f38d51568b7260c8d",
+          "after": "9c8171c23a86772efcd70f76c1f613a74d07494523e54f14d042182deb9d4487"
+        },
+        {
+          "file": "supabase/functions/conversions/url_attribution_test.ts",
+          "before": "a226eecfcda35c11c94daaf2cb03491e4c1c3c9a7f63d69243ff2b24d775acec",
+          "after": "cc72e907e4375fe64a25dcaa5798d0e02539da20a389bdce96b89f156248f119"
+        },
+        {
+          "file": "supabase/functions/create-client/index.ts",
+          "before": "51fb600772f0c23b2b5b37147ddbca3143dfc20c91ebfbce799fd7ea2f1b8dff",
+          "after": "ead216d39ca2a14bbce3ffde0bf720308212c475c6ed5cb011d86ecc44cae5f2"
+        },
+        {
+          "file": "frontend/app/public-assets/landing-runtime-v5.js/route.ts",
+          "before": null,
+          "after": "34cc6cfed5ceb714b29eb20d5cdcc4005046b09f25fcd1fed1973a2c66d8d7d7"
+        },
+        {
+          "file": "frontend/lib/landing/resolution.ts",
+          "before": null,
+          "after": "342f13c5d2424682f4db12c92e5e26ca908685082290d62caf2d23359f1af3cd"
+        },
+        {
+          "file": "frontend/tests/landingResolution.test.ts",
+          "before": null,
+          "after": "01548839cc8648a2c9a49c15a174b49206ce6839a84be9f1ac914d4feca29607"
+        },
+        {
+          "file": "supabase/migrations/20261020003440_landing_resolution_attribution.sql",
+          "before": null,
+          "after": "b4d96d58f75840a7683d71ead50a093ced59d0b99cf57f5f171bf501c8e995a3"
+        },
+        {
+          "file": "frontend/app/public-assets/landing-runtime-v6.js/route.ts",
+          "before": null,
+          "after": "34cc6cfed5ceb714b29eb20d5cdcc4005046b09f25fcd1fed1973a2c66d8d7d7"
+        }
+      ]
+    },
+    {
+      "name": "landing-prueba-1",
+      "sha256": "6d330b87416f14a3b9a6ac7305b6be5d450eddc654ef88dee8eb201daa31243c",
+      "changedFiles": [
+        {
+          "file": "components/LandingPageViewTracker.tsx",
+          "before": "e72ec04dee621307d7d0e73e1f0e0d672ce929704d115f2734638ab68cee636c",
+          "after": "af6e0ada11b37953cf2a1e4ace45bbc21e7bf718702cbbaa4b2b82c23977e2c9"
+        },
+        {
+          "file": "components/WhatsAppButton.tsx",
+          "before": "ce4bd67ea74172f3a73bc0e6f66f0a194d3660b318443a37a9e5a1e550425643",
+          "after": "1b436d305bb400876dc2825f9cd643c8dac83c95b3b8b619933e83dd6fa68c61"
+        },
+        {
+          "file": "lib/landing/urlRouting.ts",
+          "before": "7638c6ddd63b5679e67121614467fffa712bc61632d748e6dc690414957b75ae",
+          "after": "fc3aa4bf3b83621cebb3fecc24c37f385d1da14ee3c451e69a3a7efcf866be33"
+        },
+        {
+          "file": "lib/reyDeAses/start.server.ts",
+          "before": "550d2381925721cf3d9e16181ad2dc62a68dffc420eda3a1e041a9696b887e66",
+          "after": "246a272c565c112404de9711c66633220e269e41f63ffa3438c2900d85534308"
+        },
+        {
+          "file": "lib/template7/shared.cjs",
+          "before": "58418b1d34e7e8104b1a711549c003307caa4f3e06ca4c034b9fb80f83070cdd",
+          "after": "08e15451631f7c0f86f63748894b4d0d6f1401ee99ecff0cf73380002ffb4be5"
+        },
+        {
+          "file": "tests/urlRouting.test.ts",
+          "before": "7da0e50f8b499d927489f94daf6505a825c3c6f7c25d59718570edf861d91fca",
+          "after": "06a6b289f3e849e2156c000fb13526c739a15e92984717a7975d1708a1b53e0d"
+        },
+        {
+          "file": "lib/landing/resolution.ts",
+          "before": null,
+          "after": "55fe7166598447fad335a16d169b25685d2b13fccaa356caa2ca0adc175fed5c"
+        }
+      ]
+    }
+  ]
+}

@@ -2,6 +2,7 @@ import type { PublicLandingConfig } from "./types";
 import { buildPhoneNormalizerScript } from "./trackingScriptHelpers";
 import { buildTemplate7HandoffRuntimeScript } from "./template7HandoffScript";
 import { buildArgentinaWhatsappNormalizerScript } from "@/lib/landing/argentinaWhatsapp";
+import { captureLandingResolution } from "@/lib/landing/resolution";
 
 type Props = {
   slug: string;
@@ -129,6 +130,7 @@ export function buildPublicLandingRuntimeSource() {
       var cfg = window.__PUBLIC_LANDING_RUNTIME_CONFIG__ || {};
       try { delete window.__PUBLIC_LANDING_RUNTIME_CONFIG__; } catch (e) {}
       var clickLocked = false;
+      var landingResolution = (${captureLandingResolution.toString()})(cfg.slug, cfg.automaticLandingSelection === true);
       var template7ContactSent = false;
       var template7AttemptContext = null;
       var template7RetryTimer = null;
@@ -214,6 +216,7 @@ export function buildPublicLandingRuntimeSource() {
               utm_source: params.get("utm_source") || "",
               utm_medium: params.get("utm_medium") || "",
               landing: cfg.slug,
+              landing_resolution: landingResolution || "",
               facebook: params.get("facebook") || "",
               portofolio: params.get("portofolio") || "",
               cp: params.get("cp") || "",
@@ -923,6 +926,7 @@ export function buildPublicLandingRuntimeSource() {
           external_id: identity.externalId,
           event_source_url: safeEventSourceUrl(),
           landing: cfg.slug,
+              landing_resolution: landingResolution || "",
           facebook: params.get("facebook") || "",
           portofolio: params.get("portofolio") || "",
           cp: params.get("cp") || "",
@@ -1420,6 +1424,7 @@ export function buildPublicLandingRuntimeSource() {
                 zip: identity.zip || undefined,
                 country: identity.country || undefined,
                 landing: cfg.slug,
+              landing_resolution: landingResolution || "",
                 facebook: params.get("facebook") || "",
                 portofolio: params.get("portofolio") || "",
                 cp: params.get("cp") || "",

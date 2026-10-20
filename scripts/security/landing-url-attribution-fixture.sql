@@ -65,10 +65,10 @@ do $$ begin
 end $$;
 update public.landings_gerencias set interval_start_hour=null,interval_end_hour=null;
 
-insert into public.conversions(user_id,landing_id,landing_name,landing,facebook,portofolio,cp,campana,conjunto,anuncio,utm_campaign,phone,contact_event_id)
- values ('91000000-0000-4000-8000-000000000001','91000000-0000-4000-8000-000000000011','url-a','url-a','Facebook Norte','Portofolio A','001234567890123456789','October campaign','set-A','ad-A','legacy','5491100000002','url-test-contact');
-insert into public.conversions(user_id,landing,facebook,portofolio,cp,campana)
- values ('91000000-0000-4000-8000-000000000002','foreign','Facebook Norte','Portofolio A','001234567890123456789','October campaign');
+insert into public.conversions(user_id,landing_id,landing_name,landing,landing_resolution,facebook,portofolio,cp,campana,conjunto,anuncio,utm_campaign,phone,contact_event_id)
+ values ('91000000-0000-4000-8000-000000000001','91000000-0000-4000-8000-000000000011','url-a','url-a','url_parameter','Facebook Norte','Portofolio A','001234567890123456789','October campaign','set-A','ad-A','legacy','5491100000002','url-test-contact');
+insert into public.conversions(user_id,landing,landing_resolution,facebook,portofolio,cp,campana)
+ values ('91000000-0000-4000-8000-000000000002','foreign','path','Facebook Norte','Portofolio A','001234567890123456789','October campaign');
 
 set local role authenticated;
 set local request.jwt.claim.sub = '91000000-0000-4000-8000-000000000001';
@@ -77,12 +77,13 @@ do $$
 declare report jsonb; row_data jsonb; kind text; needle text;
 begin
   foreach kind in array array['table','export'] loop
-    foreach needle in array array['url-a','Facebook Norte','Portofolio A','001234567890123456789','October campaign','set-A','ad-A'] loop
+    foreach needle in array array['Parámetro URL','url_parameter','url-a','Facebook Norte','Portofolio A','001234567890123456789','October campaign','set-A','ad-A'] loop
       report := public.get_conversion_report(jsonb_build_object('view',kind,'options',
-        jsonb_build_object('search',needle,'columns',jsonb_build_array('landing','facebook','portofolio','cp','campana','conjunto','anuncio','utm_campaign'))));
+        jsonb_build_object('search',needle,'columns',jsonb_build_array('landing','landing_resolution','facebook','portofolio','cp','campana','conjunto','anuncio','utm_campaign'))));
       if (report#>>'{table,total}')::int is distinct from 1 then raise exception 'Report search/RLS failed: %, %',kind,needle; end if;
       row_data := report#>'{table,rows,0}';
       if row_data->>'landing' is distinct from 'url-a' or row_data->>'campana' is distinct from 'October campaign'
+         or row_data->>'landing_resolution' is distinct from 'url_parameter'
          or row_data->>'facebook' is distinct from 'Facebook Norte' or row_data->>'portofolio' is distinct from 'Portofolio A'
          or row_data->>'cp' is distinct from '001234567890123456789'
          or row_data->>'conjunto' is distinct from 'set-A' or row_data->>'anuncio' is distinct from 'ad-A'
@@ -91,5 +92,18 @@ begin
   end loop;
 end $$;
 reset role;
+do $$
+begin
+  begin
+    update public.conversions set landing_resolution = 'guessed';
+    raise exception 'Invalid resolution was accepted';
+  exception when check_violation then null;
+  end;
+  if not conversions_read.table_search('{"landing_resolution":"automatic"}', 'Automática')
+     or not conversions_read.table_search('{"landing_resolution":"path"}', 'Ruta')
+     or not conversions_read.table_search('{}', 'Sin dato') then
+    raise exception 'Landing resolution label search failed';
+  end if;
+end $$;
 select 'ATTRIBUTION_TESTS_OK';
 rollback;

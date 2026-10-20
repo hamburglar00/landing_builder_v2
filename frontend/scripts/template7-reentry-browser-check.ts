@@ -166,6 +166,9 @@ async function main() {
           const contacts = current.calls.filter(call => new URL(call.url).pathname === "/api/track" && call.body.payload?.event_name === "Contact");
           assert.equal(starts.length, 1, "Double-click must keep one account request");
           assert.equal(starts[0].body.landing_slug, "reentry");
+          const expectedResolution = route === landingPath ? "path" : "url_parameter";
+          assert.equal(contacts[0].body.payload?.landing_resolution, expectedResolution);
+          assert.equal(starts[0].body.attribution?.landing_resolution, expectedResolution);
           assert.equal(starts[0].body.attribution?.target_provider, entry.provider);
           assert.equal(await browser.evaluate("location.origin"), entry.origin);
           assert.equal(contacts.length, 1, "Fallback must keep one Contact");

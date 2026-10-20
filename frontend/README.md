@@ -308,6 +308,19 @@ defecto. El administrador puede habilitarlas; tanto la vista reducida como la
 técnica del cliente respetan esa selección. La ayuda del editor conserva los
 parámetros y el ejemplo sin el texto de persistencia/compatibilidad con UTM.
 
+La columna **Resolución de landing**, después de Landing, muestra **Parámetro
+URL**, **Ruta**, **Automática** o **Sin dato**. El campo `landing_resolution`
+conserva el criterio inicial en Contact, Lead, CompleteRegistration y Purchase;
+no se completa retroactivamente a partir de URLs históricas. La selección
+automática mantiene el fallback actual del clásico. Su redirección añade una
+marca interna de un solo uso que se consume antes de compartir el enlace;
+el constructor conserva el login en la raíz sin `landing`. La columna está
+disponible en ambas vistas, búsqueda y exportación, y su visibilidad inicial
+acompaña a Landing. Publicar primero la migración
+`20261020003440_landing_resolution_attribution.sql` y las funciones `conversions`
+y `create-client`; ambos motores usan la misma captura, con runtime v6 en el
+constructor y bundle regenerado de Template 7 en el clásico.
+
 Para publicar este lote: aplicar primero
 `20261019212429_landing_advertising_origin_attribution.sql`, luego las funciones
 `conversions` y `create-client`, y publicar constructor y clásico con builds

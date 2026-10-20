@@ -8,9 +8,9 @@ const owner='19000000-0000-4000-8000-000000000001',landing='19000000-0000-4000-8
 const advisor='19817f1f-a0a4-4cd9-a8a9-d9c6733dda41',client='e000376d-b56e-452b-ad17-63f45d41658c',player='801bf600-575e-4348-8d04-98e031af30ae';
 const db=await localDatabase();let api,app;const checks=[];
 const scalar=q=>db.sql(q).trim().split(/\r?\n/).at(-1);
-const attribution={facebook:'Facebook Norte',portofolio:'Portofolio Córdoba',cp:'001234567890123456789',campana:'Campaña Octubre',conjunto:'Conjunto A',anuncio:'Anuncio 1'};
+const attribution={landing_resolution:'automatic',facebook:'Facebook Norte',portofolio:'Portofolio Córdoba',cp:'001234567890123456789',campana:'Campaña Octubre',conjunto:'Conjunto A',anuncio:'Anuncio 1'};
 const assertAttribution=()=>{
- const rows=JSON.parse(scalar('select json_agg(json_build_object(\'facebook\',facebook,\'portofolio\',portofolio,\'cp\',cp,\'campana\',campana,\'conjunto\',conjunto,\'anuncio\',anuncio)) from conversions'));
+ const rows=JSON.parse(scalar('select json_agg(json_build_object(\'landing_resolution\',landing_resolution,\'facebook\',facebook,\'portofolio\',portofolio,\'cp\',cp,\'campana\',campana,\'conjunto\',conjunto,\'anuncio\',anuncio)) from conversions'));
  assert.ok(rows.length);for(const row of rows)assert.deepEqual(row,attribution);
 };
 try {
@@ -30,7 +30,7 @@ try {
  assert.equal(contact.status,200,JSON.stringify(contact));
  assert.equal(scalar('select source_platform from conversions'),'landing');assertAttribution();checks.push('Template 7 Contact records Landing acquisition and advertising origin');
  const lead=await app.request('conversions',{...base,action:'LEAD',action_event_id:'fixture-lead-atrio',source_platform:'atrio',emitter_platform:'atrio',
-   facebook:'Later Facebook',portofolio:'Later portfolio',cp:'99999999',
+   landing_resolution:'path',facebook:'Later Facebook',portofolio:'Later portfolio',cp:'99999999',
    manager_id:1035,agency_id:21,player_username:'casino-user',email:'client@example.test',timestamp:Date.now(),dateTime:new Date().toISOString()});
  assert.equal(lead.status,200,JSON.stringify(lead));
  assert.equal(scalar('select source_platform from conversions'),'landing');

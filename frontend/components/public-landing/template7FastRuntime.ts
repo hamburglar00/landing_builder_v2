@@ -12,7 +12,7 @@ export function buildTemplate7FastRuntime(
   config: PublicLandingConfig,
   classicDeviceIdScript = "",
 ): string {
-  const settings = { ...buildRuntimeConfig({ slug, config }), socialProofItems: [] };
+  const settings = { ...buildRuntimeConfig({ slug, config }), socialProofItems: [], automaticLandingSelection: !!classicDeviceIdScript };
   const bootstrap = JSON.stringify(settings).replace(/[<>&\u2028\u2029]/g,
     value => `\\u${value.charCodeAt(0).toString(16).padStart(4, "0")}`);
   let source = buildPublicLandingRuntimeSource();

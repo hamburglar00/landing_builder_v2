@@ -3,7 +3,7 @@ import { urlAttribution } from './url_attribution.ts';
 
 Deno.test('captures all parameters while leaving legacy UTM independent', () => {
   const payload = { landing: 'served', event_source_url: 'https://landing.test/old?landing=query&facebook=Facebook+Norte&portofolio=Equipo%26A&cp=001234567890123456789&campana=Campaña+1&conjunto=A%26B&anuncio=123&utm_campaign=legacy' };
-  assertEquals(urlAttribution(payload), { landing: 'served', facebook: 'Facebook Norte', portofolio: 'Equipo&A', cp: '001234567890123456789', campana: 'Campaña 1', conjunto: 'A&B', anuncio: '123' });
+  assertEquals(urlAttribution(payload), { landing: 'served', landing_resolution: null, facebook: 'Facebook Norte', portofolio: 'Equipo&A', cp: '001234567890123456789', campana: 'Campaña 1', conjunto: 'A&B', anuncio: '123' });
   assertEquals(Object.hasOwn(urlAttribution(payload), 'utm_campaign'), false);
 });
 
@@ -15,13 +15,13 @@ Deno.test('preserves the original contact attribution on lead and repeat purchas
 });
 
 Deno.test('organic and legacy visitors do not invent campaign data', () => {
-  assertEquals(urlAttribution({ landing_name: 'organic' }), { landing: 'organic', facebook: null, portofolio: null, cp: null, campana: null, conjunto: null, anuncio: null });
-  assertEquals(urlAttribution({ event_source_url: 'invalid' }), { landing: null, facebook: null, portofolio: null, cp: null, campana: null, conjunto: null, anuncio: null });
+  assertEquals(urlAttribution({ landing_name: 'organic' }), { landing: 'organic', landing_resolution: null, facebook: null, portofolio: null, cp: null, campana: null, conjunto: null, anuncio: null });
+  assertEquals(urlAttribution({ event_source_url: 'invalid' }), { landing: null, landing_resolution: null, facebook: null, portofolio: null, cp: null, campana: null, conjunto: null, anuncio: null });
 });
 
 Deno.test('bounds and normalizes client-supplied values', () => {
   assertEquals(urlAttribution({ campana: ' \n test\u0000 ', conjunto: {}, anuncio: 'x'.repeat(500) }), {
-    landing: null, facebook: null, portofolio: null, cp: null, campana: 'test', conjunto: null, anuncio: 'x'.repeat(300),
+    landing: null, landing_resolution: null, facebook: null, portofolio: null, cp: null, campana: 'test', conjunto: null, anuncio: 'x'.repeat(300),
   });
 });
 
@@ -38,4 +38,15 @@ Deno.test('advertising origin rejects objects and bounds control characters and 
   assertEquals(result.facebook, null);
   assertEquals(result.portofolio, 'Team');
   assertEquals(result.cp, 'x'.repeat(300));
+});
+
+Deno.test('landing resolution preserves the original selection and never infers historical URL values', () => {
+  for (const value of ['url_parameter','path','automatic']) {
+    const contact = urlAttribution({landing_resolution:value});
+    assertEquals(contact.landing_resolution,value);
+    assertEquals(urlAttribution({landing_resolution:'path'},contact).landing_resolution,value);
+  }
+  for (const value of [undefined,null,'url','automatic ','','root',{},123]) {
+    assertEquals(urlAttribution({landing_resolution:value,event_source_url:'https://landing.test/?landing=chosen&landing_resolution=automatic'}).landing_resolution,null);
+  }
 });

@@ -4,7 +4,7 @@ import path from "node:path";
 import { pathToFileURL } from "node:url";
 import { build } from "esbuild";
 import { renderPublicLandingHtml } from "../components/public-landing/renderPublicLandingHtml";
-import { GET as publicRuntimeResponse } from "../app/public-assets/landing-runtime-v4.js/route";
+import { GET as publicRuntimeResponse } from "../app/public-assets/landing-runtime-v6.js/route";
 import { PUBLIC_LANDING_CSS } from "../components/public-landing/publicLandingCss";
 import type { PublicLandingConfig } from "../components/public-landing/types";
 import { parseTemplate7StartPayload } from "../lib/reyDeAses/start.server";
@@ -70,7 +70,7 @@ async function main() {
         type = "text/html";
       } else if (url.pathname === "/classic.js") {
         content = classicBundle.outputFiles[0].text; type = "text/javascript";
-      } else if (url.pathname.endsWith("landing-runtime-v4.js")) {
+      } else if (url.pathname.endsWith("landing-runtime-v6.js")) {
         content = await publicRuntimeResponse().text(); type = "text/javascript";
       } else if (url.pathname.endsWith("landing-styles-v3.css")) {
         content = PUBLIC_LANDING_CSS; type = "text/css";
@@ -98,23 +98,28 @@ async function main() {
     await browser.send("Page.enable"); await browser.send("Runtime.enable");
     await browser.send("Fetch.enable", { patterns: [{ urlPattern: "*" }] });
     for (const engine of ["constructor", "classic"]) {
+      for (const resolution of engine === "classic" ? ["url_parameter", "path", "automatic"] : ["url_parameter", "path"]) {
       for (let template = 1; template <= 7; template++) {
         for (const provider of template === 7 ? ["rey_de_ases", "ases_del_norte", "ganamos_net", "multi_skin"] as const : ["rey_de_ases"] as const) {
           await Promise.all([...pending]);
           await browser.send("Network.clearBrowserCookies");
           await browser.send("Storage.clearDataForOrigin", { origin: "https://audit.invalid", storageTypes: "all" });
           await browser.send("Emulation.setDeviceMetricsOverride", { width: engine === "classic" ? 1280 : 390, height: 844, deviceScaleFactor: 1, mobile: engine !== "classic" });
-          const slug = `attribution-${engine}-${template}-${provider}`;
+          const slug = `attribution-${engine}-${template}-${provider}-${resolution}`;
           const config = fixture(template, provider);
           const startPath = engine === "constructor" ? "/api/template7/prepare" : "/api/template7/start";
           const html = engine === "constructor" ? renderPublicLandingHtml({ slug, config })
             : template === 7 ? `<!doctype html><html><head></head><body>${renderClassicTemplate7InlineHtml({ slug, config }, 'function getOrCreateDeviceId(){return "a0000000-0000-4000-8000-000000000009";}')}</body></html>`
             : `<!doctype html><html><head></head><body><div id="root"></div><script>window.__slug=${JSON.stringify(slug)};window.__config=${JSON.stringify(config)}</script><script src="/classic.js"></script></body></html>`;
           current = { html, calls: [], errors: [], leftLanding: false };
-          await browser.send("Page.navigate", { url: `https://audit.invalid/${slug}?${new URLSearchParams({ landing: slug, ...expected })}` });
+          const entryPath = resolution === "url_parameter" ? "/" : `${engine === "constructor" ? "/l" : ""}/${slug}`;
+          const query = new URLSearchParams(expected);
+          if (resolution === "url_parameter") query.set("landing", slug);
+          if (resolution === "automatic") query.set("__landing_auto", slug);
+          await browser.send("Page.navigate", { url: `https://audit.invalid${entryPath}?${query}` });
           if (template !== 3) {
             await browser.evaluate(`new Promise((resolve,reject)=>{var end=Date.now()+12000;
-              function check(){if(location.pathname!==${JSON.stringify('/' + slug)}||document.readyState!=='complete'){
+              function check(){if(location.pathname!==${JSON.stringify(entryPath)}||document.readyState!=='complete'){
                   if(Date.now()>end)return reject(new Error('Document not ready'));setTimeout(check,30);return;}
                 var input=document.querySelector('[data-template7-name]');
                 if(input){input.value='Prueba';input.dispatchEvent(new Event('input',{bubbles:true}));}
@@ -127,7 +132,7 @@ async function main() {
           assert.deepEqual(current.errors, [], `${engine} ${template}: browser errors`);
           assert.equal(contacts().length, 1, `${engine} ${template}: Contact missing/duplicated; paths=${current.calls.map(c => c.path)}`);
           const payload = contacts()[0].body.payload;
-          for (const [key, value] of Object.entries({ landing: slug, ...expected })) assert.equal(payload[key], value, `${engine} ${template}: ${key}`);
+          for (const [key, value] of Object.entries({ landing: slug, landing_resolution: resolution, ...expected })) assert.equal(payload[key], value, `${engine} ${template}: ${key}`);
           if (template === 7) {
             const starts = current.calls.filter(call => call.path === startPath);
             assert.equal(starts.length, 1);
@@ -135,16 +140,17 @@ async function main() {
             assert.equal(starts[0].body.attribution.target_provider, provider);
             const parsed = engine === "constructor" ? parseTemplate7StartPayload(starts[0].body) : parseClassicPayload(starts[0].body);
             assert.ok(parsed, "Server must accept the actual browser payload");
-            for (const [key, value] of Object.entries(expected)) assert.equal(parsed.attribution[key], value);
+            for (const [key, value] of Object.entries({ ...expected, landing_resolution: resolution })) assert.equal(parsed.attribution[key], value);
           }
           cases++;
           // Contact can arrive before the old document's scheduled redirect.
           // Let that navigation finish before starting another fixture.
           for (let i = 0; i < 100 && !current.leftLanding; i++) await pause(50);
           assert.equal(current.leftLanding, true, `${engine} ${template}: destination navigation missing`);
-          console.log(`PASS: ${engine} template ${template}${template === 7 ? ` ${provider}` : ""}`);
+          console.log(`PASS: ${engine} template ${template}${template === 7 ? ` ${provider}` : ""} ${resolution}`);
         }
       }
+    }
     }
     console.log(`PASS: ${cases} browser cases; all outbound traffic intercepted, no real accounts/events.`);
   } finally { await Promise.all([...pending]); await browser.close(); }
