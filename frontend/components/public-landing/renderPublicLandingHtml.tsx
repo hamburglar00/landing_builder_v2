@@ -736,7 +736,7 @@ export function renderPublicLandingHtml(params: RenderParams) {
     config,
   )}${runtimeScript}${isTemplate7 ? buildTemplate7ResourceWarmup(gatewayOrigin) : ""}</body></html>`;
   if (!isTemplate7) return html;
-  const reentry = buildTemplate7ReentryScript(gatewayOrigin);
+  const reentry = buildTemplate7ReentryScript(gatewayOrigin, `/l/${encodeURIComponent(slug)}`);
   return reentry ? guardTemplate7ReentryScripts(html).replace("<head>", "<head>" + reentry) : html;
 }
 
@@ -745,6 +745,6 @@ export function renderClassicTemplate7InlineHtml(params: RenderParams, deviceIdS
   const config = optimizeTemplate7Images(params.config);
   const pixelId = String(config.tracking?.pixelId || "").trim().replace(/\D+/g, "");
   const html = `${renderScriptElement(AtrioPrewarmScript({ slug: params.slug }))}${buildPreloadLinks(config)}<style data-template7-critical>${TEMPLATE7_CRITICAL_CSS}</style>${pixelScriptForTemplate(pixelId, params.slug, config.tracking?.phoneCountryCode || "54", 7)}${buildPixelNoscript(pixelId)}${renderTemplate7({ ...params, config })}${renderPrivacyFooter({ ...config, layout: { ...config.layout, template: 0 } })}<script>${buildTemplate7FastRuntime(params.slug, config, deviceIdScript)}</script>${buildTemplate7ResourceWarmup(template7GatewayOrigin(config))}`;
-  const reentry = buildTemplate7ReentryScript(template7GatewayOrigin(config));
+  const reentry = buildTemplate7ReentryScript(template7GatewayOrigin(config), `/${encodeURIComponent(params.slug)}`);
   return reentry ? reentry + guardTemplate7ReentryScripts(html) : html;
 }

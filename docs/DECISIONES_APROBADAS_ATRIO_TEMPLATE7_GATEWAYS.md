@@ -32,6 +32,13 @@ recursos. Sin parámetro o con uno vacío, conservar el comportamiento anterior;
 valores inválidos, repetidos o una landing inexistente devuelven 404. Template 7
 conserva su identidad y el destino configurado en la landing seleccionada.
 
+La comprobación de sesión de Template 7 debe regresar a la ruta canónica de
+la landing que realmente se renderizó, también si el ingreso fue por la raíz,
+`/l` u otra ruta con `?landing=...`. El gateway recibe solo esa ruta y el nonce
+de retorno. Al volver sin sesión, restaurar la URL original y su atribución
+desde el almacenamiento del mismo origen, sin cambiar la landing, el asesor
+o el casino ni emitir otro Contact por la comprobación de sesión.
+
 ### Origen publicitario por URL (19/10/2026)
 
 Los templates 1 a 7, en clásico y constructor, admiten `facebook`, `portofolio`

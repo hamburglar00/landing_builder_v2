@@ -26,8 +26,8 @@ type Atrio = {
   ProviderAccountLinkFailure: new (code: string) => Error;
   verifyGatewayEmbedToken(token: string): Row | null;
 };
-type ApiContext = { request: { all(): Row; header(name: string): string | undefined; param(name: string): string | undefined };
-  response: { status(code: number): ApiContext["response"]; send(body: unknown): void } };
+type ApiContext = { request: { all(): Row; input(name: string): unknown; header(name: string): string | undefined; param(name: string): string | undefined };
+  response: { status(code: number): ApiContext["response"]; header(name: string, value: string): ApiContext["response"]; send(body: unknown): void } };
 type Api2 = { LocalPlayerController: new () => { apiExternalPlayerCreate(ctx: ApiContext): Promise<unknown> };
   LocalApiKeyMiddleware: new () => { handle(ctx: ApiContext, next: () => Promise<unknown>): Promise<unknown> } };
 const json = (body: unknown, status = 200, headers: HeadersInit = {}) => Response.json(body, { status, headers });
@@ -92,7 +92,12 @@ async function main() {
       linkProviderAccount: linkInternalChatProviderAccount, createHandoff: createProviderHandoff,
     };
     const resolve = atrio.createPlayerResolveHandler({ getSecret: () => secrets.resolve,
-      resolve: input => atrio.resolvePlayerIdentity(input, fixture.playerRepository) });
+      resolve: async input => ({
+        ...await atrio.resolvePlayerIdentity(input, fixture.playerRepository) as Row,
+        // Model the manager scope returned by Atrio's current transactional RPC.
+        // The local in-memory repository does not execute PostgreSQL functions.
+        manager_id: fixture.manager.id, agency_id: fixture.manager.operationalAgencyId,
+      }) });
     const link = atrio.createProviderAccountLinkHandler({ getSecret: () => secrets.resolve, link: async input => {
       const player = [...fixture.players.values()].find(row => row.id === input.playerId && row.advisor_id === input.advisorId);
       const account = fixture.providerAccounts.get(`${input.playerId}:${input.targetProvider}`);
@@ -126,15 +131,16 @@ async function main() {
       }
     }));
     await http.serve(origins.api2, traced("api2", async request => {
-      const match = new URL(request.url).pathname.match(/^\/api\/v1\/bot\/atrio\/advisors\/([^/]+)\/players$/);
+      const match = new URL(request.url).pathname.match(/^\/api\/v1\/bot\/managers\/([^/]+)\/players$/);
       if (!match) return json({ error: "not_found" }, 404);
       fixture.apiCalls++;
       const payload = await request.json() as Row;
       let status = 200;
       let body: unknown = null;
-      const response: ApiContext["response"] = { status(code) { status = code; return this; }, send(value) { body = value; } };
+      const response: ApiContext["response"] = { status(code) { status = code; return this; }, header() { return this; }, send(value) { body = value; } };
       const context: ApiContext = { response, request: { all: () => payload,
-        header: name => request.headers.get(name) ?? undefined, param: name => name === "atrio_advisor_id" ? match[1] : undefined } };
+        input: name => payload[name],
+        header: name => request.headers.get(name) ?? undefined, param: name => name === "manager_id" ? match[1] : undefined } };
       const controller = Object.assign(new api2.LocalPlayerController(), {
         managerService: fixture.managerService, playerService: fixture.playerService, credentialService: fixture.credentialService,
         reyDeAsesClient: { createPlayer: async (username: string, password: string) => {
@@ -198,8 +204,13 @@ async function main() {
     const complete = async (token: string) => {
       const response = await account(token);
       assert.equal(response.status, 200, "Account resolution must succeed");
-      const result = await response.json() as { username: string; continuation_token: string };
-      assert.deepEqual(Object.keys(result).sort(), ["continuation_token", "username"]);
+      const result = await response.json() as { username: string; continuation_token: string; handoff_url: string };
+      assert.deepEqual(Object.keys(result).sort(), ["continuation_token", "handoff_url", "username"]);
+      const handoff = new URL(result.handoff_url);
+      assert.equal(handoff.origin, origins.gateway);
+      assert.equal(handoff.pathname, "/start");
+      assert.equal(handoff.searchParams.size, 1);
+      assert.ok(handoff.searchParams.get("t"));
       return result;
     };
     const finalize = async (continuation: string) => {
@@ -218,8 +229,10 @@ async function main() {
       const handoff = await finalize(ready.continuation_token);
       const start = await fetch(handoff, { headers: { "X-Gateway-Preactivate": "1" } });
       assert.equal(start.status, 200, "Preparation page must be able to preactivate the gateway session");
-      const destination = await start.json() as { redirect_url: string };
-      assert.deepEqual(Object.keys(destination), ["redirect_url"]);
+      const destination = await start.json() as { redirect_url: string; recovery_token: string };
+      assert.deepEqual(Object.keys(destination).sort(), ["recovery_token", "redirect_url"]);
+      assert.equal(typeof destination.recovery_token, "string");
+      assert.ok(destination.recovery_token.length > 32, "Preactivation must preserve the opaque browser recovery credential");
       const cookie = start.headers.getSetCookie().find(value => value.startsWith("gw_session="));
       assert.ok(cookie && /HttpOnly/i.test(cookie) && /SameSite=Lax/i.test(cookie));
       const headers = { cookie: cookie.split(";")[0] };
@@ -252,14 +265,17 @@ async function main() {
       const resumeUrl = origins.gateway + "/resume?return_to=" + encodeURIComponent(returnTo);
       for (const invalidCookie of ["", "gw_session=gs1.invalid"]) {
         const fallback = await fetch(resumeUrl, { headers: new Headers(invalidCookie ? { cookie: invalidCookie } : {}) });
-        assert.equal(fallback.status, 303);
-        assert.equal(fallback.headers.get("location"), returnTo);
+        assert.equal(fallback.status, 200);
+        assert.equal(fallback.headers.get("cache-control"), "private, no-store");
+        const probe = await fallback.text();
+        assert.ok(probe.includes('fetch("/api/session/recover"'), "Try the browser recovery credential before falling back");
+        assert.ok(probe.includes(JSON.stringify(returnTo)), "Recovery failure must return to the same selected landing");
       }
       await fixture.drainBackground();
       for (const session of fixture.gateway.sessions.values()) session.expires_at = new Date(Date.now() - 1);
       const expired = await fetch(resumeUrl, { headers });
-      assert.equal(expired.status, 303);
-      assert.equal(expired.headers.get("location"), returnTo);
+      assert.equal(expired.status, 200);
+      assert.ok((await expired.text()).includes(JSON.stringify(returnTo)));
       assert.equal(fixture.apiCalls, before, "Reentry must not create/resolve another casino account");
       assertSingleAccount();
     });
@@ -280,9 +296,11 @@ async function main() {
       const ready = await complete(token); await finalize(ready.continuation_token); assertSingleAccount();
     });
     for (const fault of ["link-response", "handoff-response"] as const) await test("retry-after-" + fault, async () => {
-      const ready = await complete(await prepare()); fixture.faults.set(fault, 1);
-      const failed = await post(origins.gateway, "/api/preparations/finalize", { continuation_token: ready.continuation_token });
-      assert.equal(failed.status, 503);
+      // Link and handoff now finish in /account. Inject the lost response there,
+      // before the current optimized boundary, and retry the same preparation.
+      const token = await prepare(); fixture.faults.set(fault, 1);
+      assert.equal((await account(token)).status, 503);
+      const ready = await complete(token);
       await finalize(ready.continuation_token); assertSingleAccount();
     });
     await test("retry-after-provider-login-failure", async () => {
@@ -295,7 +313,7 @@ async function main() {
     await test("invalid-tokens-and-private-auth", async () => {
       assert.equal((await account("p1.invalid")).status, 503);
       assert.equal((await post(origins.builder, "/api/template7/preparations/account", { token: "p1.invalid" })).status, 401);
-      const unauthorized = await post(origins.api2, `/api/v1/bot/atrio/advisors/${ids.advisor}/players`, { external_user_id: randomUUID(), name: "Local Flow" }, { apikey: "wrong", apisecret: "wrong" });
+      const unauthorized = await post(origins.api2, `/api/v1/bot/managers/${fixture.manager.id}/players`, { external_user_id: randomUUID(), name: "Local Flow" }, { apikey: "wrong", apisecret: "wrong" });
       assert.equal(unauthorized.status, 401); assert.equal(fixture.providerCreations, 0);
     });
     await test("expired-preparation-creates-no-account", async () => {

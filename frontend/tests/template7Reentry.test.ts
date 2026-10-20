@@ -113,3 +113,52 @@ test("both rendering engines select the configured provider/skin while demos and
     for (const key of Object.keys(env)) { if (previous[key] === undefined) delete process.env[key]; else process.env[key] = previous[key]; }
   }
 });
+
+test("query-selected Template 7 returns to the rendered landing and restores the original attribution", () => {
+  const env = {
+    REY_GATEWAY_ORIGIN: "https://www.reydeases.fun", GANAMOS_PLUS_GATEWAY_ORIGIN: "https://ganamosnet.global",
+    ASES_DEL_NORTE_GATEWAY_ORIGIN: "https://www.asesdelnorte.online", GANAMOS_NET_GATEWAY_ORIGIN: "https://www.ganamosnet.icu",
+  };
+  const previous = { ...process.env };
+  Object.assign(process.env, env);
+  try {
+  for (const provider of ["rey_de_ases", "multi_skin", "ases_del_norte", "ganamos_net"] as const) {
+    const config: PublicLandingConfig = {
+      schemaVersion: 1, id: "landing", name: "Selected", updatedAt: "", comment: "",
+      layout: { template: 7, ctaPosition: "bottom" },
+      tracking: { pixelId: "", postUrl: "", landingTag: "LP", target_provider: provider, skin_code: "ganamos_plus" },
+    };
+    for (const engine of ["constructor", "classic"] as const) {
+      const origin = engine === "constructor" ? "https://mkt.panelbotadmin.com" : "https://landing.panelbotadmin.com";
+      const selectedPath = engine === "constructor" ? "/l/selected" : "/selected";
+      const paths = engine === "constructor" ? ["/", "/l", "/l/other", selectedPath] : ["/", "/other", selectedPath];
+      const html = engine === "constructor"
+        ? renderPublicLandingHtml({ slug: "selected", config })
+        : renderClassicTemplate7InlineHtml({ slug: "selected", config }, "");
+      const match = html.match(/<script data-template7-reentry>([\s\S]*?)<\/script>/);
+      assert.ok(match, `${engine} ${provider}: session check must be rendered`);
+      const script = match[0];
+      for (const pathname of paths) {
+        const url = new URL(pathname, origin);
+        url.search = new URLSearchParams({ landing: "selected", facebook: "Page A", portofolio: "Portfolio B", cp: "001234", campana: "Campaign C", fbclid: "click", phone: "123" }).toString();
+        url.hash = "form";
+        const first = browser(url.href);
+        execute(script, first);
+        const destination = new URL(first.navigations[0]);
+        const back = new URL(destination.searchParams.get("return_to")!);
+        assert.equal(back.pathname, selectedPath, `${engine} ${provider}: ${pathname}`);
+        assert.equal(back.searchParams.size, 1, "Only the loop guard may be sent to the gateway");
+        assert.equal(back.searchParams.get("__t7_resume"), nonce);
+        const returned = browser(back.href, first.storage);
+        execute(script, returned);
+        assert.deepEqual(returned.navigations, [], "Missing sessions must return to the selected form without a loop");
+        assert.deepEqual(returned.replacements, [url.pathname + url.search + url.hash]);
+        assert.equal(returned.storage.size, 0);
+        assert.equal(returned.window.__TEMPLATE7_REENTRY_PENDING__, false);
+      }
+    }
+  }
+  } finally {
+    for (const key of Object.keys(env)) { if (previous[key] === undefined) delete process.env[key]; else process.env[key] = previous[key]; }
+  }
+});

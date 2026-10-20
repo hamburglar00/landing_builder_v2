@@ -1,0 +1,123 @@
+{
+    "reviewedAtUtc":  "2026-10-20T00:31:43.5050578Z",
+    "result":  "Targeted regression reproduced and corrected locally",
+    "deploymentPerformed":  false,
+    "productionMutations":  false,
+    "realCasinoAccountsCreated":  0,
+    "api2SourceChanges":  false,
+    "databaseSchemaChanges":  false,
+    "defect":  {
+                   "entryPoints":  [
+                                       "/?landing=selected",
+                                       "/l?landing=selected",
+                                       "/l/other?landing=selected",
+                                       "/other?landing=selected"
+                                   ],
+                   "symptom":  "Without a valid gateway session, the return URL lost the landing selection and could reach login or another landing.",
+                   "reproducedBeforeFix":  "constructor rey_de_ases: expected /l/selected, actual /",
+                   "resolution":  "Return to the server-rendered canonical landing path, bind the nonce to that path, and restore the original URL and attribution from same-origin sessionStorage.",
+                   "sharedEngines":  [
+                                         "constructor",
+                                         "classic"
+                                     ],
+                   "providers":  [
+                                     "rey_de_ases",
+                                     "ases_del_norte",
+                                     "ganamos_net",
+                                     "multi_skin / ganamos_plus"
+                                 ],
+                   "additionalNetworkRequestsIntroduced":  0,
+                   "attributionSentToGateway":  false
+               },
+    "checks":  {
+                   "focusedUnitTests":  {
+                                            "passed":  91,
+                                            "failed":  0
+                                        },
+                   "reentryBrowserCases":  {
+                                               "contactEventsPerSubmit":  1,
+                                               "accountCreationCallsPerSubmit":  1,
+                                               "outboundTraffic":  "intercepted",
+                                               "sessions":  [
+                                                                "valid",
+                                                                "missing",
+                                                                "tampered",
+                                                                "expired"
+                                                            ],
+                                               "passed":  112
+                                           },
+                   "advertisingBrowserCases":  {
+                                                   "outboundTraffic":  "intercepted",
+                                                   "engines":  2,
+                                                   "templates":  "1-7",
+                                                   "fields":  [
+                                                                  "landing",
+                                                                  "facebook",
+                                                                  "portofolio",
+                                                                  "cp",
+                                                                  "campana",
+                                                                  "conjunto",
+                                                                  "anuncio"
+                                                              ],
+                                                   "passed":  20
+                                               },
+                   "localIntegrationScenarios":  {
+                                                     "excluded":  "PostgreSQL RPCs and real casino provider clients",
+                                                     "transport":  "loopback HTTP",
+                                                     "actualHandlers":  "builder, gateway, Atrio identity/link, API2 controller",
+                                                     "failed":  0,
+                                                     "passed":  13
+                                                 },
+                   "actualProductionRouter":  {
+                                                  "allFourTemplate7Providers":  "passed",
+                                                  "selectionAndCacheIsolation":  "passed",
+                                                  "build":  "passed",
+                                                  "malformedSelectionAndPanelBoundaries":  "passed"
+                                              },
+                   "widgetBrowserCases":  {
+                                              "chatStartsBeforeHeldResources":  true,
+                                              "heldResources":  [
+                                                                    "provider script",
+                                                                    "provider stylesheet"
+                                                                ],
+                                              "passed":  4
+                                          },
+                   "typecheck":  "passed",
+                   "focusedLint":  "passed",
+                   "generatedClassicRenderer":  "regenerated and synchronized"
+               },
+    "testHarnessUpdates":  [
+                               "Current persisted manager/agency scope and manager-scoped API2 route",
+                               "Ready handoff in account response and retry fault injection before account finalization",
+                               "Opaque recovery token and browser recovery probe response"
+                           ],
+    "limitations":  [
+                        "No real casino/account/banking or Meta event dispatch performed.",
+                        "No claim of physical iPhone/WhatsApp storage validation.",
+                        "Old template7-chat-bootstrap-check.ts fixture still models pre-RPC reads and cannot validate current bootstrap_gateway_chat; it failed on missing mock RPC and was not counted as a successful check.",
+                        "Live end-to-end checks after the programmer deploys API2 remain pending."
+                    ],
+    "evidenceDirectory":  ".vercel/template7-url-review-20261019",
+    "sourceHashes":  [
+                         {
+                             "sha256":  "368df6339bdbb65557bf569cbd81cb023b4c0b0c7f6d97508b1d9fa82570f858",
+                             "path":  "frontend/components/public-landing/template7ReentryScript.ts"
+                         },
+                         {
+                             "sha256":  "50dfaa81efb74c7d66484bdccfbdc1b1df91c4f17d97cd915bf2c76c821b0520",
+                             "path":  "frontend/components/public-landing/renderPublicLandingHtml.tsx"
+                         },
+                         {
+                             "sha256":  "ed8611ecf76eb8cc5ff048fd851da18e7ca132bccf4158eb730218b91788b1d7",
+                             "path":  "frontend/tests/template7Reentry.test.ts"
+                         },
+                         {
+                             "sha256":  "aa38ac7815a0c82529c29f5804a7635e16c716a6b820af160c54f9dca7bbc7ba",
+                             "path":  "frontend/scripts/template7-reentry-browser-check.ts"
+                         },
+                         {
+                             "sha256":  "8dfb6feea446809e749049345603f29bacc4d1879b17181089ace33a2d9fb1fd",
+                             "path":  "frontend/scripts/template7-local-flow-check.ts"
+                         }
+                     ]
+}
