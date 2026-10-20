@@ -1,0 +1,197 @@
+{
+  "measuredAt": "2026-10-17",
+  "casino": "rey_de_ases",
+  "managerId": 1035,
+  "agencyId": 272,
+  "newAccountCount": 3,
+  "api2Deployed": false,
+  "moneyOperations": 0,
+  "notes": [
+    "Initial form measured from first navigation. Casino/chat measured from name submission, or navigation for session reentry.",
+    "New-account samples waited for prewarm before submitting. Time before submit is excluded from click measurements.",
+    "Local Chromium mobile viewport, no CPU or network throttling. Small sample with variable caches.",
+    "prewarm-recovery is an initial recovery without observed warm call; do not compare as fully prewarmed.",
+    "Creation timings exclude identity resolution, linking, handoff and casino login."
+  ],
+  "samples": [
+    {
+      "sample": "prewarm-new-one-creation",
+      "startedAt": "2026-10-17T02:37:40.166Z",
+      "scenario": "creation",
+      "viewport": {
+        "width": 390,
+        "height": 844,
+        "networkThrottled": false
+      },
+      "runs": [
+        {
+          "label": "creation",
+          "formReadyMs": 878,
+          "waitedForPrewarm": true,
+          "casinoNavigationMs": 7222,
+          "chatFrameMountedMs": 8826,
+          "chatReadyMs": 9869,
+          "loginConfirmed": true,
+          "api2Account": {
+            "durationMs": 1841,
+            "kind": "created"
+          },
+          "accountVisibleMs": 4309,
+          "accountDisplayToCasinoMs": 2913
+        },
+        {
+          "label": "active-session-reentry",
+          "casinoNavigationMs": 1132,
+          "chatFrameMountedMs": 1410,
+          "chatReadyMs": 2014,
+          "loginConfirmed": true,
+          "accountVisibleMs": null,
+          "accountDisplayToCasinoMs": null
+        }
+      ]
+    },
+    {
+      "sample": "prewarm-new-two-creation",
+      "startedAt": "2026-10-17T02:38:28.340Z",
+      "scenario": "creation",
+      "viewport": {
+        "width": 390,
+        "height": 844,
+        "networkThrottled": false
+      },
+      "runs": [
+        {
+          "label": "creation",
+          "formReadyMs": 861,
+          "waitedForPrewarm": true,
+          "casinoNavigationMs": 6165,
+          "chatFrameMountedMs": 7796,
+          "chatReadyMs": 8690,
+          "loginConfirmed": true,
+          "api2Account": {
+            "durationMs": 1647,
+            "kind": "created"
+          },
+          "accountVisibleMs": 3847,
+          "accountDisplayToCasinoMs": 2318
+        },
+        {
+          "label": "active-session-reentry",
+          "casinoNavigationMs": 950,
+          "chatFrameMountedMs": 1279,
+          "chatReadyMs": 2022,
+          "loginConfirmed": true,
+          "accountVisibleMs": null,
+          "accountDisplayToCasinoMs": null
+        }
+      ]
+    },
+    {
+      "sample": "prewarm-new-three-creation",
+      "startedAt": "2026-10-17T02:39:21.267Z",
+      "scenario": "creation",
+      "viewport": {
+        "width": 390,
+        "height": 844,
+        "networkThrottled": false
+      },
+      "runs": [
+        {
+          "label": "creation",
+          "formReadyMs": 667,
+          "waitedForPrewarm": true,
+          "casinoNavigationMs": 5415,
+          "chatFrameMountedMs": 7130,
+          "chatReadyMs": 8073,
+          "loginConfirmed": true,
+          "api2Account": {
+            "durationMs": 1692,
+            "kind": "created"
+          },
+          "accountVisibleMs": 3646,
+          "accountDisplayToCasinoMs": 1769
+        },
+        {
+          "label": "active-session-reentry",
+          "casinoNavigationMs": 1446,
+          "chatFrameMountedMs": 1638,
+          "chatReadyMs": 2149,
+          "loginConfirmed": true,
+          "accountVisibleMs": null,
+          "accountDisplayToCasinoMs": null
+        }
+      ]
+    },
+    {
+      "sample": "prewarm-profile-recovery",
+      "startedAt": "2026-10-17T02:39:57.740Z",
+      "scenario": "recovery",
+      "viewport": {
+        "width": 390,
+        "height": 844,
+        "networkThrottled": false
+      },
+      "runs": [
+        {
+          "label": "recovery",
+          "formReadyMs": 626,
+          "waitedForPrewarm": true,
+          "casinoNavigationMs": 3832,
+          "chatFrameMountedMs": 4635,
+          "chatReadyMs": 5482,
+          "loginConfirmed": true,
+          "api2Account": {
+            "durationMs": 266,
+            "kind": "recovered"
+          },
+          "accountVisibleMs": 2050,
+          "accountDisplayToCasinoMs": 1782
+        },
+        {
+          "label": "active-session-reentry",
+          "casinoNavigationMs": 900,
+          "chatFrameMountedMs": 1146,
+          "chatReadyMs": 1707,
+          "loginConfirmed": true,
+          "accountVisibleMs": null,
+          "accountDisplayToCasinoMs": null
+        }
+      ]
+    },
+    {
+      "sample": "prewarm-recovery-recovery",
+      "startedAt": "2026-10-17T02:36:41.544Z",
+      "scenario": "recovery",
+      "viewport": {
+        "width": 390,
+        "height": 844,
+        "networkThrottled": false
+      },
+      "runs": [
+        {
+          "label": "recovery",
+          "formReadyMs": 3107,
+          "casinoNavigationMs": 8139,
+          "chatFrameMountedMs": 9738,
+          "chatReadyMs": 10696,
+          "loginConfirmed": true,
+          "api2Account": {
+            "durationMs": 300,
+            "kind": "recovered"
+          },
+          "accountVisibleMs": 4768,
+          "accountDisplayToCasinoMs": 3371
+        },
+        {
+          "label": "active-session-reentry",
+          "casinoNavigationMs": 1022,
+          "chatFrameMountedMs": 1321,
+          "chatReadyMs": 1844,
+          "loginConfirmed": true,
+          "accountVisibleMs": null,
+          "accountDisplayToCasinoMs": null
+        }
+      ]
+    }
+  ]
+}

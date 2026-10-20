@@ -1,0 +1,1527 @@
+{
+  "at": "2026-10-17T22:21:44.818Z",
+  "scope": {
+    "api2Modified": false,
+    "api2Deployed": false,
+    "panel3Modified": false,
+    "panel3Deployed": false,
+    "migrationsApplied": 0,
+    "commitsCreated": 0
+  },
+  "deployments": [
+    {
+      "repo": "internal-chat",
+      "id": "dpl_9aB9haFTM6MY3PFZagVXUj4qpamN",
+      "url": "internal-chat-c8ol55fmx-juanclouds-projects.vercel.app",
+      "ready": true,
+      "changedSincePublishedSnapshot": [],
+      "sourceManifestSha256": "d69d5f93b7be98ea9f08a5b9355b06d706d33123739120683bea3879a24f1a2b"
+    },
+    {
+      "repo": "landing-builder",
+      "id": "dpl_21CsQBkgPoKQ1njpgm1Ru8pU5osA",
+      "url": "landing-builder-v2-k259-18w7u7042-juanclouds-projects.vercel.app",
+      "ready": true,
+      "changedSincePublishedSnapshot": [],
+      "sourceManifestSha256": "02e78447bab1c3d7e165f365d8a3686fef90a3ab625a7b44723b5efc9e079664"
+    },
+    {
+      "repo": "landing-prueba-1",
+      "id": "dpl_5gPfga6WFsWXt9kSbZ3jXTCkNpo7",
+      "url": "public-landing-4f2gysrsn-juanclouds-projects.vercel.app",
+      "ready": true,
+      "changedSincePublishedSnapshot": [],
+      "sourceManifestSha256": "9055587c2af5b1b69ace811d51ceab9eb5e9408581e4da749a80bf0acd710365"
+    },
+    {
+      "repo": "landing-autologuin",
+      "id": "dpl_7NXZTneBbHWvyshUWHpbcRic4Thd",
+      "url": "reydeases-gateway-5frcthxxi-juanclouds-projects.vercel.app",
+      "ready": true,
+      "changedSincePublishedSnapshot": [],
+      "sourceManifestSha256": "b296de044eac122699f95b869c9c21636dda8057c67f047cd37b87af2e9ea942"
+    },
+    {
+      "repo": "ases-gateway",
+      "id": "dpl_wzp2Z2B43HGvvsUMmgnFriCNWuVX",
+      "url": "ases-del-norte-gateway-2vek78nm2-juanclouds-projects.vercel.app",
+      "ready": true,
+      "changedSincePublishedSnapshot": [],
+      "sourceManifestSha256": "40e82079003e8b10c6a0b60be096220cc543ff14b1b65b9ca9abd9499d053ab5"
+    },
+    {
+      "repo": "ganamos-gateway",
+      "id": "dpl_AmKyRLc3k5sFagThFNxFxepVNf3A",
+      "url": "ganamos-net-gateway-mq8i4e5mo-juanclouds-projects.vercel.app",
+      "ready": true,
+      "changedSincePublishedSnapshot": [],
+      "sourceManifestSha256": "264e1e4764ddf118853bddc70ca42ba42025e1514ee8eedecf4e4bbc41484284"
+    },
+    {
+      "repo": "multi-skin-gateway",
+      "id": "dpl_Coqd4iX8fwP8wz4f2asBo8tJdB6K",
+      "url": "multi-skin-gateway-ileu3n9r8-juanclouds-projects.vercel.app",
+      "ready": true,
+      "changedSincePublishedSnapshot": [],
+      "sourceManifestSha256": "67125a981680cedc111f933489c4f83915ef93f7400f9f93c55cd4f51b6febf8"
+    }
+  ],
+  "cloudflare": {
+    "domain": "https://ganamosnet.global",
+    "worker": "multi-skin-gateway",
+    "version": "a626b235-b48d-4606-92ec-8c2ff4d04644"
+  },
+  "sdkCanonicalSha256": "4bf6b1951ca4d7ec11aa455d26c8074e6c0a4add2cf726625e7b9d675f1b1738",
+  "captureInlineBytes": 483,
+  "tests": {
+    "gatewayTests": [
+      {
+        "repo": "landing-autologuin",
+        "passed": 126,
+        "skipped": 2
+      },
+      {
+        "repo": "ases-gateway",
+        "passed": 69,
+        "skipped": 0
+      },
+      {
+        "repo": "ganamos-gateway",
+        "passed": 78,
+        "skipped": 0
+      },
+      {
+        "repo": "multi-skin-gateway",
+        "passed": 71,
+        "skipped": 0
+      }
+    ],
+    "sdkPassed": 8,
+    "builderFocusedPassed": 10,
+    "allProductionBuildsPassed": true,
+    "atrioTypecheckPassed": true,
+    "atrioChangedFileLintPassed": true,
+    "browser": {
+      "at": "2026-10-17T21:58:12.962Z",
+      "checks": [
+        {
+          "repo": "landing-autologuin",
+          "engine": "Chromium",
+          "sdkLate": false,
+          "platform": "Android (simulated APIs)",
+          "nativePermissionFromCTA": true,
+          "persisted": true,
+          "noSdkOrWorkerBeforeWallet": true,
+          "sdkLoadedOnce": true,
+          "earlyInstallEventPreserved": true,
+          "horizontalOverflow": false
+        },
+        {
+          "repo": "landing-autologuin",
+          "engine": "Chromium",
+          "sdkLate": true,
+          "platform": "Android (simulated APIs)",
+          "nativePermissionFromCTA": true,
+          "persisted": true,
+          "noSdkOrWorkerBeforeWallet": true,
+          "sdkLoadedOnce": true,
+          "earlyInstallEventPreserved": true,
+          "horizontalOverflow": false
+        },
+        {
+          "repo": "landing-autologuin",
+          "engine": "Chromium",
+          "sdkLate": false,
+          "platform": "installed iOS (simulated APIs)",
+          "nativePermissionFromCTA": true,
+          "persisted": true,
+          "noSdkOrWorkerBeforeWallet": true,
+          "sdkLoadedOnce": true,
+          "earlyInstallEventPreserved": false,
+          "horizontalOverflow": false
+        },
+        {
+          "repo": "landing-autologuin",
+          "engine": "Chromium",
+          "sdkLate": true,
+          "platform": "installed iOS (simulated APIs)",
+          "nativePermissionFromCTA": true,
+          "persisted": true,
+          "noSdkOrWorkerBeforeWallet": true,
+          "sdkLoadedOnce": true,
+          "earlyInstallEventPreserved": false,
+          "horizontalOverflow": false
+        },
+        {
+          "repo": "landing-autologuin",
+          "engine": "WebKit",
+          "sdkLate": false,
+          "platform": "Android (simulated APIs)",
+          "nativePermissionFromCTA": true,
+          "persisted": true,
+          "noSdkOrWorkerBeforeWallet": true,
+          "sdkLoadedOnce": true,
+          "earlyInstallEventPreserved": true,
+          "horizontalOverflow": false
+        },
+        {
+          "repo": "landing-autologuin",
+          "engine": "WebKit",
+          "sdkLate": true,
+          "platform": "Android (simulated APIs)",
+          "nativePermissionFromCTA": true,
+          "persisted": true,
+          "noSdkOrWorkerBeforeWallet": true,
+          "sdkLoadedOnce": true,
+          "earlyInstallEventPreserved": true,
+          "horizontalOverflow": false
+        },
+        {
+          "repo": "landing-autologuin",
+          "engine": "WebKit",
+          "sdkLate": false,
+          "platform": "installed iOS (simulated APIs)",
+          "nativePermissionFromCTA": true,
+          "persisted": true,
+          "noSdkOrWorkerBeforeWallet": true,
+          "sdkLoadedOnce": true,
+          "earlyInstallEventPreserved": false,
+          "horizontalOverflow": false
+        },
+        {
+          "repo": "landing-autologuin",
+          "engine": "WebKit",
+          "sdkLate": true,
+          "platform": "installed iOS (simulated APIs)",
+          "nativePermissionFromCTA": true,
+          "persisted": true,
+          "noSdkOrWorkerBeforeWallet": true,
+          "sdkLoadedOnce": true,
+          "earlyInstallEventPreserved": false,
+          "horizontalOverflow": false
+        },
+        {
+          "repo": "ases-gateway",
+          "engine": "Chromium",
+          "sdkLate": false,
+          "platform": "Android (simulated APIs)",
+          "nativePermissionFromCTA": true,
+          "persisted": true,
+          "noSdkOrWorkerBeforeWallet": true,
+          "sdkLoadedOnce": true,
+          "earlyInstallEventPreserved": true,
+          "horizontalOverflow": false
+        },
+        {
+          "repo": "ases-gateway",
+          "engine": "Chromium",
+          "sdkLate": true,
+          "platform": "Android (simulated APIs)",
+          "nativePermissionFromCTA": true,
+          "persisted": true,
+          "noSdkOrWorkerBeforeWallet": true,
+          "sdkLoadedOnce": true,
+          "earlyInstallEventPreserved": true,
+          "horizontalOverflow": false
+        },
+        {
+          "repo": "ases-gateway",
+          "engine": "Chromium",
+          "sdkLate": false,
+          "platform": "installed iOS (simulated APIs)",
+          "nativePermissionFromCTA": true,
+          "persisted": true,
+          "noSdkOrWorkerBeforeWallet": true,
+          "sdkLoadedOnce": true,
+          "earlyInstallEventPreserved": false,
+          "horizontalOverflow": false
+        },
+        {
+          "repo": "ases-gateway",
+          "engine": "Chromium",
+          "sdkLate": true,
+          "platform": "installed iOS (simulated APIs)",
+          "nativePermissionFromCTA": true,
+          "persisted": true,
+          "noSdkOrWorkerBeforeWallet": true,
+          "sdkLoadedOnce": true,
+          "earlyInstallEventPreserved": false,
+          "horizontalOverflow": false
+        },
+        {
+          "repo": "ases-gateway",
+          "engine": "WebKit",
+          "sdkLate": false,
+          "platform": "Android (simulated APIs)",
+          "nativePermissionFromCTA": true,
+          "persisted": true,
+          "noSdkOrWorkerBeforeWallet": true,
+          "sdkLoadedOnce": true,
+          "earlyInstallEventPreserved": true,
+          "horizontalOverflow": false
+        },
+        {
+          "repo": "ases-gateway",
+          "engine": "WebKit",
+          "sdkLate": true,
+          "platform": "Android (simulated APIs)",
+          "nativePermissionFromCTA": true,
+          "persisted": true,
+          "noSdkOrWorkerBeforeWallet": true,
+          "sdkLoadedOnce": true,
+          "earlyInstallEventPreserved": true,
+          "horizontalOverflow": false
+        },
+        {
+          "repo": "ases-gateway",
+          "engine": "WebKit",
+          "sdkLate": false,
+          "platform": "installed iOS (simulated APIs)",
+          "nativePermissionFromCTA": true,
+          "persisted": true,
+          "noSdkOrWorkerBeforeWallet": true,
+          "sdkLoadedOnce": true,
+          "earlyInstallEventPreserved": false,
+          "horizontalOverflow": false
+        },
+        {
+          "repo": "ases-gateway",
+          "engine": "WebKit",
+          "sdkLate": true,
+          "platform": "installed iOS (simulated APIs)",
+          "nativePermissionFromCTA": true,
+          "persisted": true,
+          "noSdkOrWorkerBeforeWallet": true,
+          "sdkLoadedOnce": true,
+          "earlyInstallEventPreserved": false,
+          "horizontalOverflow": false
+        },
+        {
+          "repo": "ganamos-gateway",
+          "engine": "Chromium",
+          "sdkLate": false,
+          "platform": "Android (simulated APIs)",
+          "nativePermissionFromCTA": true,
+          "persisted": true,
+          "noSdkOrWorkerBeforeWallet": true,
+          "sdkLoadedOnce": true,
+          "earlyInstallEventPreserved": true,
+          "horizontalOverflow": false
+        },
+        {
+          "repo": "ganamos-gateway",
+          "engine": "Chromium",
+          "sdkLate": true,
+          "platform": "Android (simulated APIs)",
+          "nativePermissionFromCTA": true,
+          "persisted": true,
+          "noSdkOrWorkerBeforeWallet": true,
+          "sdkLoadedOnce": true,
+          "earlyInstallEventPreserved": true,
+          "horizontalOverflow": false
+        },
+        {
+          "repo": "ganamos-gateway",
+          "engine": "Chromium",
+          "sdkLate": false,
+          "platform": "installed iOS (simulated APIs)",
+          "nativePermissionFromCTA": true,
+          "persisted": true,
+          "noSdkOrWorkerBeforeWallet": true,
+          "sdkLoadedOnce": true,
+          "earlyInstallEventPreserved": false,
+          "horizontalOverflow": false
+        },
+        {
+          "repo": "ganamos-gateway",
+          "engine": "Chromium",
+          "sdkLate": true,
+          "platform": "installed iOS (simulated APIs)",
+          "nativePermissionFromCTA": true,
+          "persisted": true,
+          "noSdkOrWorkerBeforeWallet": true,
+          "sdkLoadedOnce": true,
+          "earlyInstallEventPreserved": false,
+          "horizontalOverflow": false
+        },
+        {
+          "repo": "ganamos-gateway",
+          "engine": "WebKit",
+          "sdkLate": false,
+          "platform": "Android (simulated APIs)",
+          "nativePermissionFromCTA": true,
+          "persisted": true,
+          "noSdkOrWorkerBeforeWallet": true,
+          "sdkLoadedOnce": true,
+          "earlyInstallEventPreserved": true,
+          "horizontalOverflow": false
+        },
+        {
+          "repo": "ganamos-gateway",
+          "engine": "WebKit",
+          "sdkLate": true,
+          "platform": "Android (simulated APIs)",
+          "nativePermissionFromCTA": true,
+          "persisted": true,
+          "noSdkOrWorkerBeforeWallet": true,
+          "sdkLoadedOnce": true,
+          "earlyInstallEventPreserved": true,
+          "horizontalOverflow": false
+        },
+        {
+          "repo": "ganamos-gateway",
+          "engine": "WebKit",
+          "sdkLate": false,
+          "platform": "installed iOS (simulated APIs)",
+          "nativePermissionFromCTA": true,
+          "persisted": true,
+          "noSdkOrWorkerBeforeWallet": true,
+          "sdkLoadedOnce": true,
+          "earlyInstallEventPreserved": false,
+          "horizontalOverflow": false
+        },
+        {
+          "repo": "ganamos-gateway",
+          "engine": "WebKit",
+          "sdkLate": true,
+          "platform": "installed iOS (simulated APIs)",
+          "nativePermissionFromCTA": true,
+          "persisted": true,
+          "noSdkOrWorkerBeforeWallet": true,
+          "sdkLoadedOnce": true,
+          "earlyInstallEventPreserved": false,
+          "horizontalOverflow": false
+        },
+        {
+          "repo": "multi-skin-gateway",
+          "engine": "Chromium",
+          "sdkLate": false,
+          "platform": "Android (simulated APIs)",
+          "nativePermissionFromCTA": true,
+          "persisted": true,
+          "noSdkOrWorkerBeforeWallet": true,
+          "sdkLoadedOnce": true,
+          "earlyInstallEventPreserved": true,
+          "horizontalOverflow": false
+        },
+        {
+          "repo": "multi-skin-gateway",
+          "engine": "Chromium",
+          "sdkLate": true,
+          "platform": "Android (simulated APIs)",
+          "nativePermissionFromCTA": true,
+          "persisted": true,
+          "noSdkOrWorkerBeforeWallet": true,
+          "sdkLoadedOnce": true,
+          "earlyInstallEventPreserved": true,
+          "horizontalOverflow": false
+        },
+        {
+          "repo": "multi-skin-gateway",
+          "engine": "Chromium",
+          "sdkLate": false,
+          "platform": "installed iOS (simulated APIs)",
+          "nativePermissionFromCTA": true,
+          "persisted": true,
+          "noSdkOrWorkerBeforeWallet": true,
+          "sdkLoadedOnce": true,
+          "earlyInstallEventPreserved": false,
+          "horizontalOverflow": false
+        },
+        {
+          "repo": "multi-skin-gateway",
+          "engine": "Chromium",
+          "sdkLate": true,
+          "platform": "installed iOS (simulated APIs)",
+          "nativePermissionFromCTA": true,
+          "persisted": true,
+          "noSdkOrWorkerBeforeWallet": true,
+          "sdkLoadedOnce": true,
+          "earlyInstallEventPreserved": false,
+          "horizontalOverflow": false
+        },
+        {
+          "repo": "multi-skin-gateway",
+          "engine": "WebKit",
+          "sdkLate": false,
+          "platform": "Android (simulated APIs)",
+          "nativePermissionFromCTA": true,
+          "persisted": true,
+          "noSdkOrWorkerBeforeWallet": true,
+          "sdkLoadedOnce": true,
+          "earlyInstallEventPreserved": true,
+          "horizontalOverflow": false
+        },
+        {
+          "repo": "multi-skin-gateway",
+          "engine": "WebKit",
+          "sdkLate": true,
+          "platform": "Android (simulated APIs)",
+          "nativePermissionFromCTA": true,
+          "persisted": true,
+          "noSdkOrWorkerBeforeWallet": true,
+          "sdkLoadedOnce": true,
+          "earlyInstallEventPreserved": true,
+          "horizontalOverflow": false
+        },
+        {
+          "repo": "multi-skin-gateway",
+          "engine": "WebKit",
+          "sdkLate": false,
+          "platform": "installed iOS (simulated APIs)",
+          "nativePermissionFromCTA": true,
+          "persisted": true,
+          "noSdkOrWorkerBeforeWallet": true,
+          "sdkLoadedOnce": true,
+          "earlyInstallEventPreserved": false,
+          "horizontalOverflow": false
+        },
+        {
+          "repo": "multi-skin-gateway",
+          "engine": "WebKit",
+          "sdkLate": true,
+          "platform": "installed iOS (simulated APIs)",
+          "nativePermissionFromCTA": true,
+          "persisted": true,
+          "noSdkOrWorkerBeforeWallet": true,
+          "sdkLoadedOnce": true,
+          "earlyInstallEventPreserved": false,
+          "horizontalOverflow": false
+        }
+      ],
+      "physicalDeviceValidated": false,
+      "realNotificationsSent": 0
+    },
+    "fallbackBrowser": {
+      "at": "2026-10-17T21:59:49.400Z",
+      "checks": [
+        {
+          "repo": "landing-autologuin",
+          "engine": "Chromium",
+          "sdkLate": false,
+          "platform": "Android (simulated APIs)",
+          "nativePermissionFromCTA": true,
+          "persisted": true,
+          "noSdkOrWorkerBeforeWallet": true,
+          "mode": "no-wallet",
+          "sdkRetryPreserved": false,
+          "earlyInstallEventPreserved": true,
+          "horizontalOverflow": false
+        },
+        {
+          "repo": "landing-autologuin",
+          "engine": "Chromium",
+          "sdkLate": false,
+          "platform": "Android (simulated APIs)",
+          "nativePermissionFromCTA": true,
+          "persisted": true,
+          "noSdkOrWorkerBeforeWallet": true,
+          "mode": "explicit",
+          "sdkRetryPreserved": false,
+          "earlyInstallEventPreserved": true,
+          "horizontalOverflow": false
+        },
+        {
+          "repo": "landing-autologuin",
+          "engine": "Chromium",
+          "sdkLate": false,
+          "platform": "Android (simulated APIs)",
+          "nativePermissionFromCTA": true,
+          "persisted": true,
+          "noSdkOrWorkerBeforeWallet": true,
+          "mode": "retry",
+          "sdkRetryPreserved": true,
+          "earlyInstallEventPreserved": true,
+          "horizontalOverflow": false
+        },
+        {
+          "repo": "landing-autologuin",
+          "engine": "WebKit",
+          "sdkLate": false,
+          "platform": "Android (simulated APIs)",
+          "nativePermissionFromCTA": true,
+          "persisted": true,
+          "noSdkOrWorkerBeforeWallet": true,
+          "mode": "no-wallet",
+          "sdkRetryPreserved": false,
+          "earlyInstallEventPreserved": true,
+          "horizontalOverflow": false
+        },
+        {
+          "repo": "landing-autologuin",
+          "engine": "WebKit",
+          "sdkLate": false,
+          "platform": "Android (simulated APIs)",
+          "nativePermissionFromCTA": true,
+          "persisted": true,
+          "noSdkOrWorkerBeforeWallet": true,
+          "mode": "explicit",
+          "sdkRetryPreserved": false,
+          "earlyInstallEventPreserved": true,
+          "horizontalOverflow": false
+        },
+        {
+          "repo": "landing-autologuin",
+          "engine": "WebKit",
+          "sdkLate": false,
+          "platform": "Android (simulated APIs)",
+          "nativePermissionFromCTA": true,
+          "persisted": true,
+          "noSdkOrWorkerBeforeWallet": true,
+          "mode": "retry",
+          "sdkRetryPreserved": true,
+          "earlyInstallEventPreserved": true,
+          "horizontalOverflow": false
+        },
+        {
+          "repo": "ases-gateway",
+          "engine": "Chromium",
+          "sdkLate": false,
+          "platform": "Android (simulated APIs)",
+          "nativePermissionFromCTA": true,
+          "persisted": true,
+          "noSdkOrWorkerBeforeWallet": true,
+          "mode": "no-wallet",
+          "sdkRetryPreserved": false,
+          "earlyInstallEventPreserved": true,
+          "horizontalOverflow": false
+        },
+        {
+          "repo": "ases-gateway",
+          "engine": "Chromium",
+          "sdkLate": false,
+          "platform": "Android (simulated APIs)",
+          "nativePermissionFromCTA": true,
+          "persisted": true,
+          "noSdkOrWorkerBeforeWallet": true,
+          "mode": "explicit",
+          "sdkRetryPreserved": false,
+          "earlyInstallEventPreserved": true,
+          "horizontalOverflow": false
+        },
+        {
+          "repo": "ases-gateway",
+          "engine": "Chromium",
+          "sdkLate": false,
+          "platform": "Android (simulated APIs)",
+          "nativePermissionFromCTA": true,
+          "persisted": true,
+          "noSdkOrWorkerBeforeWallet": true,
+          "mode": "retry",
+          "sdkRetryPreserved": true,
+          "earlyInstallEventPreserved": true,
+          "horizontalOverflow": false
+        },
+        {
+          "repo": "ases-gateway",
+          "engine": "WebKit",
+          "sdkLate": false,
+          "platform": "Android (simulated APIs)",
+          "nativePermissionFromCTA": true,
+          "persisted": true,
+          "noSdkOrWorkerBeforeWallet": true,
+          "mode": "no-wallet",
+          "sdkRetryPreserved": false,
+          "earlyInstallEventPreserved": true,
+          "horizontalOverflow": false
+        },
+        {
+          "repo": "ases-gateway",
+          "engine": "WebKit",
+          "sdkLate": false,
+          "platform": "Android (simulated APIs)",
+          "nativePermissionFromCTA": true,
+          "persisted": true,
+          "noSdkOrWorkerBeforeWallet": true,
+          "mode": "explicit",
+          "sdkRetryPreserved": false,
+          "earlyInstallEventPreserved": true,
+          "horizontalOverflow": false
+        },
+        {
+          "repo": "ases-gateway",
+          "engine": "WebKit",
+          "sdkLate": false,
+          "platform": "Android (simulated APIs)",
+          "nativePermissionFromCTA": true,
+          "persisted": true,
+          "noSdkOrWorkerBeforeWallet": true,
+          "mode": "retry",
+          "sdkRetryPreserved": true,
+          "earlyInstallEventPreserved": true,
+          "horizontalOverflow": false
+        },
+        {
+          "repo": "ganamos-gateway",
+          "engine": "Chromium",
+          "sdkLate": false,
+          "platform": "Android (simulated APIs)",
+          "nativePermissionFromCTA": true,
+          "persisted": true,
+          "noSdkOrWorkerBeforeWallet": true,
+          "mode": "no-wallet",
+          "sdkRetryPreserved": false,
+          "earlyInstallEventPreserved": true,
+          "horizontalOverflow": false
+        },
+        {
+          "repo": "ganamos-gateway",
+          "engine": "Chromium",
+          "sdkLate": false,
+          "platform": "Android (simulated APIs)",
+          "nativePermissionFromCTA": true,
+          "persisted": true,
+          "noSdkOrWorkerBeforeWallet": true,
+          "mode": "explicit",
+          "sdkRetryPreserved": false,
+          "earlyInstallEventPreserved": true,
+          "horizontalOverflow": false
+        },
+        {
+          "repo": "ganamos-gateway",
+          "engine": "Chromium",
+          "sdkLate": false,
+          "platform": "Android (simulated APIs)",
+          "nativePermissionFromCTA": true,
+          "persisted": true,
+          "noSdkOrWorkerBeforeWallet": true,
+          "mode": "retry",
+          "sdkRetryPreserved": true,
+          "earlyInstallEventPreserved": true,
+          "horizontalOverflow": false
+        },
+        {
+          "repo": "ganamos-gateway",
+          "engine": "WebKit",
+          "sdkLate": false,
+          "platform": "Android (simulated APIs)",
+          "nativePermissionFromCTA": true,
+          "persisted": true,
+          "noSdkOrWorkerBeforeWallet": true,
+          "mode": "no-wallet",
+          "sdkRetryPreserved": false,
+          "earlyInstallEventPreserved": true,
+          "horizontalOverflow": false
+        },
+        {
+          "repo": "ganamos-gateway",
+          "engine": "WebKit",
+          "sdkLate": false,
+          "platform": "Android (simulated APIs)",
+          "nativePermissionFromCTA": true,
+          "persisted": true,
+          "noSdkOrWorkerBeforeWallet": true,
+          "mode": "explicit",
+          "sdkRetryPreserved": false,
+          "earlyInstallEventPreserved": true,
+          "horizontalOverflow": false
+        },
+        {
+          "repo": "ganamos-gateway",
+          "engine": "WebKit",
+          "sdkLate": false,
+          "platform": "Android (simulated APIs)",
+          "nativePermissionFromCTA": true,
+          "persisted": true,
+          "noSdkOrWorkerBeforeWallet": true,
+          "mode": "retry",
+          "sdkRetryPreserved": true,
+          "earlyInstallEventPreserved": true,
+          "horizontalOverflow": false
+        },
+        {
+          "repo": "multi-skin-gateway",
+          "engine": "Chromium",
+          "sdkLate": false,
+          "platform": "Android (simulated APIs)",
+          "nativePermissionFromCTA": true,
+          "persisted": true,
+          "noSdkOrWorkerBeforeWallet": true,
+          "mode": "no-wallet",
+          "sdkRetryPreserved": false,
+          "earlyInstallEventPreserved": true,
+          "horizontalOverflow": false
+        },
+        {
+          "repo": "multi-skin-gateway",
+          "engine": "Chromium",
+          "sdkLate": false,
+          "platform": "Android (simulated APIs)",
+          "nativePermissionFromCTA": true,
+          "persisted": true,
+          "noSdkOrWorkerBeforeWallet": true,
+          "mode": "explicit",
+          "sdkRetryPreserved": false,
+          "earlyInstallEventPreserved": true,
+          "horizontalOverflow": false
+        },
+        {
+          "repo": "multi-skin-gateway",
+          "engine": "Chromium",
+          "sdkLate": false,
+          "platform": "Android (simulated APIs)",
+          "nativePermissionFromCTA": true,
+          "persisted": true,
+          "noSdkOrWorkerBeforeWallet": true,
+          "mode": "retry",
+          "sdkRetryPreserved": true,
+          "earlyInstallEventPreserved": true,
+          "horizontalOverflow": false
+        },
+        {
+          "repo": "multi-skin-gateway",
+          "engine": "WebKit",
+          "sdkLate": false,
+          "platform": "Android (simulated APIs)",
+          "nativePermissionFromCTA": true,
+          "persisted": true,
+          "noSdkOrWorkerBeforeWallet": true,
+          "mode": "no-wallet",
+          "sdkRetryPreserved": false,
+          "earlyInstallEventPreserved": true,
+          "horizontalOverflow": false
+        },
+        {
+          "repo": "multi-skin-gateway",
+          "engine": "WebKit",
+          "sdkLate": false,
+          "platform": "Android (simulated APIs)",
+          "nativePermissionFromCTA": true,
+          "persisted": true,
+          "noSdkOrWorkerBeforeWallet": true,
+          "mode": "explicit",
+          "sdkRetryPreserved": false,
+          "earlyInstallEventPreserved": true,
+          "horizontalOverflow": false
+        },
+        {
+          "repo": "multi-skin-gateway",
+          "engine": "WebKit",
+          "sdkLate": false,
+          "platform": "Android (simulated APIs)",
+          "nativePermissionFromCTA": true,
+          "persisted": true,
+          "noSdkOrWorkerBeforeWallet": true,
+          "mode": "retry",
+          "sdkRetryPreserved": true,
+          "earlyInstallEventPreserved": true,
+          "horizontalOverflow": false
+        }
+      ],
+      "physicalDeviceValidated": false,
+      "realNotificationsSent": 0
+    },
+    "hydrationComparison": {
+      "at": "2026-10-17T22:18:13.417Z",
+      "checks": [
+        {
+          "phase": "baseline",
+          "engine": "Chromium",
+          "zone": "America/Argentina/Buenos_Aires",
+          "hydrationMismatch": true,
+          "browserLocalTime": "09:03"
+        },
+        {
+          "phase": "baseline",
+          "engine": "Chromium",
+          "zone": "UTC",
+          "hydrationMismatch": false,
+          "browserLocalTime": "12:03"
+        },
+        {
+          "phase": "baseline",
+          "engine": "WebKit",
+          "zone": "America/Argentina/Buenos_Aires",
+          "hydrationMismatch": true,
+          "browserLocalTime": "09:03"
+        },
+        {
+          "phase": "baseline",
+          "engine": "WebKit",
+          "zone": "UTC",
+          "hydrationMismatch": false,
+          "browserLocalTime": "12:03"
+        },
+        {
+          "phase": "fixed",
+          "engine": "Chromium",
+          "zone": "America/Argentina/Buenos_Aires",
+          "hydrationMismatch": false,
+          "browserLocalTime": "09:03"
+        },
+        {
+          "phase": "fixed",
+          "engine": "Chromium",
+          "zone": "UTC",
+          "hydrationMismatch": false,
+          "browserLocalTime": "12:03"
+        },
+        {
+          "phase": "fixed",
+          "engine": "WebKit",
+          "zone": "America/Argentina/Buenos_Aires",
+          "hydrationMismatch": false,
+          "browserLocalTime": "09:03"
+        },
+        {
+          "phase": "fixed",
+          "engine": "WebKit",
+          "zone": "UTC",
+          "hydrationMismatch": false,
+          "browserLocalTime": "12:03"
+        }
+      ],
+      "externalNetwork": 0,
+      "accountsCreated": 0
+    },
+    "reproducibleHydration": {
+      "at": "2026-10-17T22:18:44.611Z",
+      "checks": [
+        {
+          "phase": "fixed",
+          "engine": "Chromium",
+          "zone": "America/Argentina/Buenos_Aires",
+          "hydrationMismatch": false,
+          "browserLocalTime": "09:03"
+        },
+        {
+          "phase": "fixed",
+          "engine": "Chromium",
+          "zone": "UTC",
+          "hydrationMismatch": false,
+          "browserLocalTime": "12:03"
+        },
+        {
+          "phase": "fixed",
+          "engine": "WebKit",
+          "zone": "America/Argentina/Buenos_Aires",
+          "hydrationMismatch": false,
+          "browserLocalTime": "09:03"
+        },
+        {
+          "phase": "fixed",
+          "engine": "WebKit",
+          "zone": "UTC",
+          "hydrationMismatch": false,
+          "browserLocalTime": "12:03"
+        }
+      ],
+      "externalNetwork": 0,
+      "accountsCreated": 0
+    },
+    "reproducibleBrowser": {
+      "at": "2026-10-17T22:12:19.377Z",
+      "checks": [
+        {
+          "repo": "landing-autologuin",
+          "engine": "Chromium",
+          "sdkLate": false,
+          "platform": "Android (simulated APIs)",
+          "nativePermissionFromCTA": true,
+          "persisted": true,
+          "noSdkOrWorkerBeforeWallet": true,
+          "sdkLoadedOnce": true,
+          "earlyInstallEventPreserved": true,
+          "horizontalOverflow": false
+        },
+        {
+          "repo": "landing-autologuin",
+          "engine": "Chromium",
+          "sdkLate": true,
+          "platform": "Android (simulated APIs)",
+          "nativePermissionFromCTA": true,
+          "persisted": true,
+          "noSdkOrWorkerBeforeWallet": true,
+          "sdkLoadedOnce": true,
+          "earlyInstallEventPreserved": true,
+          "horizontalOverflow": false
+        },
+        {
+          "repo": "landing-autologuin",
+          "engine": "Chromium",
+          "sdkLate": false,
+          "platform": "installed iOS (simulated APIs)",
+          "nativePermissionFromCTA": true,
+          "persisted": true,
+          "noSdkOrWorkerBeforeWallet": true,
+          "sdkLoadedOnce": true,
+          "earlyInstallEventPreserved": false,
+          "horizontalOverflow": false
+        },
+        {
+          "repo": "landing-autologuin",
+          "engine": "Chromium",
+          "sdkLate": true,
+          "platform": "installed iOS (simulated APIs)",
+          "nativePermissionFromCTA": true,
+          "persisted": true,
+          "noSdkOrWorkerBeforeWallet": true,
+          "sdkLoadedOnce": true,
+          "earlyInstallEventPreserved": false,
+          "horizontalOverflow": false
+        },
+        {
+          "repo": "landing-autologuin",
+          "engine": "WebKit",
+          "sdkLate": false,
+          "platform": "Android (simulated APIs)",
+          "nativePermissionFromCTA": true,
+          "persisted": true,
+          "noSdkOrWorkerBeforeWallet": true,
+          "sdkLoadedOnce": true,
+          "earlyInstallEventPreserved": true,
+          "horizontalOverflow": false
+        },
+        {
+          "repo": "landing-autologuin",
+          "engine": "WebKit",
+          "sdkLate": true,
+          "platform": "Android (simulated APIs)",
+          "nativePermissionFromCTA": true,
+          "persisted": true,
+          "noSdkOrWorkerBeforeWallet": true,
+          "sdkLoadedOnce": true,
+          "earlyInstallEventPreserved": true,
+          "horizontalOverflow": false
+        },
+        {
+          "repo": "landing-autologuin",
+          "engine": "WebKit",
+          "sdkLate": false,
+          "platform": "installed iOS (simulated APIs)",
+          "nativePermissionFromCTA": true,
+          "persisted": true,
+          "noSdkOrWorkerBeforeWallet": true,
+          "sdkLoadedOnce": true,
+          "earlyInstallEventPreserved": false,
+          "horizontalOverflow": false
+        },
+        {
+          "repo": "landing-autologuin",
+          "engine": "WebKit",
+          "sdkLate": true,
+          "platform": "installed iOS (simulated APIs)",
+          "nativePermissionFromCTA": true,
+          "persisted": true,
+          "noSdkOrWorkerBeforeWallet": true,
+          "sdkLoadedOnce": true,
+          "earlyInstallEventPreserved": false,
+          "horizontalOverflow": false
+        },
+        {
+          "repo": "ases-gateway",
+          "engine": "Chromium",
+          "sdkLate": false,
+          "platform": "Android (simulated APIs)",
+          "nativePermissionFromCTA": true,
+          "persisted": true,
+          "noSdkOrWorkerBeforeWallet": true,
+          "sdkLoadedOnce": true,
+          "earlyInstallEventPreserved": true,
+          "horizontalOverflow": false
+        },
+        {
+          "repo": "ases-gateway",
+          "engine": "Chromium",
+          "sdkLate": true,
+          "platform": "Android (simulated APIs)",
+          "nativePermissionFromCTA": true,
+          "persisted": true,
+          "noSdkOrWorkerBeforeWallet": true,
+          "sdkLoadedOnce": true,
+          "earlyInstallEventPreserved": true,
+          "horizontalOverflow": false
+        },
+        {
+          "repo": "ases-gateway",
+          "engine": "Chromium",
+          "sdkLate": false,
+          "platform": "installed iOS (simulated APIs)",
+          "nativePermissionFromCTA": true,
+          "persisted": true,
+          "noSdkOrWorkerBeforeWallet": true,
+          "sdkLoadedOnce": true,
+          "earlyInstallEventPreserved": false,
+          "horizontalOverflow": false
+        },
+        {
+          "repo": "ases-gateway",
+          "engine": "Chromium",
+          "sdkLate": true,
+          "platform": "installed iOS (simulated APIs)",
+          "nativePermissionFromCTA": true,
+          "persisted": true,
+          "noSdkOrWorkerBeforeWallet": true,
+          "sdkLoadedOnce": true,
+          "earlyInstallEventPreserved": false,
+          "horizontalOverflow": false
+        },
+        {
+          "repo": "ases-gateway",
+          "engine": "WebKit",
+          "sdkLate": false,
+          "platform": "Android (simulated APIs)",
+          "nativePermissionFromCTA": true,
+          "persisted": true,
+          "noSdkOrWorkerBeforeWallet": true,
+          "sdkLoadedOnce": true,
+          "earlyInstallEventPreserved": true,
+          "horizontalOverflow": false
+        },
+        {
+          "repo": "ases-gateway",
+          "engine": "WebKit",
+          "sdkLate": true,
+          "platform": "Android (simulated APIs)",
+          "nativePermissionFromCTA": true,
+          "persisted": true,
+          "noSdkOrWorkerBeforeWallet": true,
+          "sdkLoadedOnce": true,
+          "earlyInstallEventPreserved": true,
+          "horizontalOverflow": false
+        },
+        {
+          "repo": "ases-gateway",
+          "engine": "WebKit",
+          "sdkLate": false,
+          "platform": "installed iOS (simulated APIs)",
+          "nativePermissionFromCTA": true,
+          "persisted": true,
+          "noSdkOrWorkerBeforeWallet": true,
+          "sdkLoadedOnce": true,
+          "earlyInstallEventPreserved": false,
+          "horizontalOverflow": false
+        },
+        {
+          "repo": "ases-gateway",
+          "engine": "WebKit",
+          "sdkLate": true,
+          "platform": "installed iOS (simulated APIs)",
+          "nativePermissionFromCTA": true,
+          "persisted": true,
+          "noSdkOrWorkerBeforeWallet": true,
+          "sdkLoadedOnce": true,
+          "earlyInstallEventPreserved": false,
+          "horizontalOverflow": false
+        },
+        {
+          "repo": "ganamos-gateway",
+          "engine": "Chromium",
+          "sdkLate": false,
+          "platform": "Android (simulated APIs)",
+          "nativePermissionFromCTA": true,
+          "persisted": true,
+          "noSdkOrWorkerBeforeWallet": true,
+          "sdkLoadedOnce": true,
+          "earlyInstallEventPreserved": true,
+          "horizontalOverflow": false
+        },
+        {
+          "repo": "ganamos-gateway",
+          "engine": "Chromium",
+          "sdkLate": true,
+          "platform": "Android (simulated APIs)",
+          "nativePermissionFromCTA": true,
+          "persisted": true,
+          "noSdkOrWorkerBeforeWallet": true,
+          "sdkLoadedOnce": true,
+          "earlyInstallEventPreserved": true,
+          "horizontalOverflow": false
+        },
+        {
+          "repo": "ganamos-gateway",
+          "engine": "Chromium",
+          "sdkLate": false,
+          "platform": "installed iOS (simulated APIs)",
+          "nativePermissionFromCTA": true,
+          "persisted": true,
+          "noSdkOrWorkerBeforeWallet": true,
+          "sdkLoadedOnce": true,
+          "earlyInstallEventPreserved": false,
+          "horizontalOverflow": false
+        },
+        {
+          "repo": "ganamos-gateway",
+          "engine": "Chromium",
+          "sdkLate": true,
+          "platform": "installed iOS (simulated APIs)",
+          "nativePermissionFromCTA": true,
+          "persisted": true,
+          "noSdkOrWorkerBeforeWallet": true,
+          "sdkLoadedOnce": true,
+          "earlyInstallEventPreserved": false,
+          "horizontalOverflow": false
+        },
+        {
+          "repo": "ganamos-gateway",
+          "engine": "WebKit",
+          "sdkLate": false,
+          "platform": "Android (simulated APIs)",
+          "nativePermissionFromCTA": true,
+          "persisted": true,
+          "noSdkOrWorkerBeforeWallet": true,
+          "sdkLoadedOnce": true,
+          "earlyInstallEventPreserved": true,
+          "horizontalOverflow": false
+        },
+        {
+          "repo": "ganamos-gateway",
+          "engine": "WebKit",
+          "sdkLate": true,
+          "platform": "Android (simulated APIs)",
+          "nativePermissionFromCTA": true,
+          "persisted": true,
+          "noSdkOrWorkerBeforeWallet": true,
+          "sdkLoadedOnce": true,
+          "earlyInstallEventPreserved": true,
+          "horizontalOverflow": false
+        },
+        {
+          "repo": "ganamos-gateway",
+          "engine": "WebKit",
+          "sdkLate": false,
+          "platform": "installed iOS (simulated APIs)",
+          "nativePermissionFromCTA": true,
+          "persisted": true,
+          "noSdkOrWorkerBeforeWallet": true,
+          "sdkLoadedOnce": true,
+          "earlyInstallEventPreserved": false,
+          "horizontalOverflow": false
+        },
+        {
+          "repo": "ganamos-gateway",
+          "engine": "WebKit",
+          "sdkLate": true,
+          "platform": "installed iOS (simulated APIs)",
+          "nativePermissionFromCTA": true,
+          "persisted": true,
+          "noSdkOrWorkerBeforeWallet": true,
+          "sdkLoadedOnce": true,
+          "earlyInstallEventPreserved": false,
+          "horizontalOverflow": false
+        },
+        {
+          "repo": "multi-skin-gateway",
+          "engine": "Chromium",
+          "sdkLate": false,
+          "platform": "Android (simulated APIs)",
+          "nativePermissionFromCTA": true,
+          "persisted": true,
+          "noSdkOrWorkerBeforeWallet": true,
+          "sdkLoadedOnce": true,
+          "earlyInstallEventPreserved": true,
+          "horizontalOverflow": false
+        },
+        {
+          "repo": "multi-skin-gateway",
+          "engine": "Chromium",
+          "sdkLate": true,
+          "platform": "Android (simulated APIs)",
+          "nativePermissionFromCTA": true,
+          "persisted": true,
+          "noSdkOrWorkerBeforeWallet": true,
+          "sdkLoadedOnce": true,
+          "earlyInstallEventPreserved": true,
+          "horizontalOverflow": false
+        },
+        {
+          "repo": "multi-skin-gateway",
+          "engine": "Chromium",
+          "sdkLate": false,
+          "platform": "installed iOS (simulated APIs)",
+          "nativePermissionFromCTA": true,
+          "persisted": true,
+          "noSdkOrWorkerBeforeWallet": true,
+          "sdkLoadedOnce": true,
+          "earlyInstallEventPreserved": false,
+          "horizontalOverflow": false
+        },
+        {
+          "repo": "multi-skin-gateway",
+          "engine": "Chromium",
+          "sdkLate": true,
+          "platform": "installed iOS (simulated APIs)",
+          "nativePermissionFromCTA": true,
+          "persisted": true,
+          "noSdkOrWorkerBeforeWallet": true,
+          "sdkLoadedOnce": true,
+          "earlyInstallEventPreserved": false,
+          "horizontalOverflow": false
+        },
+        {
+          "repo": "multi-skin-gateway",
+          "engine": "WebKit",
+          "sdkLate": false,
+          "platform": "Android (simulated APIs)",
+          "nativePermissionFromCTA": true,
+          "persisted": true,
+          "noSdkOrWorkerBeforeWallet": true,
+          "sdkLoadedOnce": true,
+          "earlyInstallEventPreserved": true,
+          "horizontalOverflow": false
+        },
+        {
+          "repo": "multi-skin-gateway",
+          "engine": "WebKit",
+          "sdkLate": true,
+          "platform": "Android (simulated APIs)",
+          "nativePermissionFromCTA": true,
+          "persisted": true,
+          "noSdkOrWorkerBeforeWallet": true,
+          "sdkLoadedOnce": true,
+          "earlyInstallEventPreserved": true,
+          "horizontalOverflow": false
+        },
+        {
+          "repo": "multi-skin-gateway",
+          "engine": "WebKit",
+          "sdkLate": false,
+          "platform": "installed iOS (simulated APIs)",
+          "nativePermissionFromCTA": true,
+          "persisted": true,
+          "noSdkOrWorkerBeforeWallet": true,
+          "sdkLoadedOnce": true,
+          "earlyInstallEventPreserved": false,
+          "horizontalOverflow": false
+        },
+        {
+          "repo": "multi-skin-gateway",
+          "engine": "WebKit",
+          "sdkLate": true,
+          "platform": "installed iOS (simulated APIs)",
+          "nativePermissionFromCTA": true,
+          "persisted": true,
+          "noSdkOrWorkerBeforeWallet": true,
+          "sdkLoadedOnce": true,
+          "earlyInstallEventPreserved": false,
+          "horizontalOverflow": false
+        }
+      ],
+      "physicalDeviceValidated": false,
+      "realNotificationsSent": 0
+    },
+    "heldProviderScriptAndStylesheet": {
+      "gateways": 4,
+      "passed": true
+    }
+  },
+  "publicAssets": {
+    "at": "2026-10-17T22:05:19.577Z",
+    "gateways": [
+      {
+        "repo": "landing-autologuin",
+        "domain": "https://www.reydeases.fun",
+        "manifestName": "Rey de Ases",
+        "icons": [
+          {
+            "src": "/rey-de-ases-app-192.png",
+            "size": "192x192",
+            "purpose": "any",
+            "bytes": 10537
+          },
+          {
+            "src": "/rey-de-ases-app-512.png",
+            "size": "512x512",
+            "purpose": "any",
+            "bytes": 51098
+          },
+          {
+            "src": "/rey-de-ases-app-maskable-512.png",
+            "size": "512x512",
+            "purpose": "maskable",
+            "bytes": 28189
+          }
+        ],
+        "sharedSdkMatches": true,
+        "clientMatches": true,
+        "workerMatches": true,
+        "appleIconMatches": true
+      },
+      {
+        "repo": "ases-gateway",
+        "domain": "https://www.asesdelnorte.online",
+        "manifestName": "Ases del Norte",
+        "icons": [
+          {
+            "src": "/ases-del-norte-app-192.png",
+            "size": "192x192",
+            "purpose": "any",
+            "bytes": 6168
+          },
+          {
+            "src": "/ases-del-norte-app-512.png",
+            "size": "512x512",
+            "purpose": "any",
+            "bytes": 23376
+          },
+          {
+            "src": "/ases-del-norte-app-maskable-512.png",
+            "size": "512x512",
+            "purpose": "maskable",
+            "bytes": 14823
+          }
+        ],
+        "sharedSdkMatches": true,
+        "clientMatches": true,
+        "workerMatches": true,
+        "appleIconMatches": true
+      },
+      {
+        "repo": "ganamos-gateway",
+        "domain": "https://www.ganamosnet.icu",
+        "manifestName": "Ganamos NET",
+        "icons": [
+          {
+            "src": "/ganamos-net-app-192.png",
+            "size": "192x192",
+            "purpose": "any",
+            "bytes": 3648
+          },
+          {
+            "src": "/ganamos-net-app-512.png",
+            "size": "512x512",
+            "purpose": "any",
+            "bytes": 13752
+          },
+          {
+            "src": "/ganamos-net-app-maskable-512.png",
+            "size": "512x512",
+            "purpose": "maskable",
+            "bytes": 8380
+          }
+        ],
+        "sharedSdkMatches": true,
+        "clientMatches": true,
+        "workerMatches": true,
+        "appleIconMatches": true
+      },
+      {
+        "repo": "multi-skin-gateway",
+        "domain": "https://ganamosnet.global",
+        "manifestName": "Ganamos+",
+        "icons": [
+          {
+            "src": "/ganamos-plus-app-192.png",
+            "size": "192x192",
+            "purpose": "any",
+            "bytes": 13058
+          },
+          {
+            "src": "/ganamos-plus-app-512.png",
+            "size": "512x512",
+            "purpose": "any",
+            "bytes": 66615
+          },
+          {
+            "src": "/ganamos-plus-app-maskable-512.png",
+            "size": "512x512",
+            "purpose": "maskable",
+            "bytes": 36583
+          }
+        ],
+        "sharedSdkMatches": true,
+        "clientMatches": true,
+        "workerMatches": true,
+        "appleIconMatches": true
+      }
+    ],
+    "atrioUnauthenticatedBalanceStatus": 401,
+    "api2Deployed": false
+  },
+  "publicLandingHtml": [
+    {
+      "origin": "https://mkt.panelbotadmin.com",
+      "path": "/l/rey-de-ases-demo",
+      "status": 200,
+      "warmupPresent": true,
+      "noSdkPrefetch": true,
+      "criticalClientVersion": true
+    },
+    {
+      "origin": "https://landing.panelbotadmin.com",
+      "path": "/rey-de-ases-demo",
+      "status": 200,
+      "warmupPresent": true,
+      "noSdkPrefetch": true,
+      "criticalClientVersion": true
+    }
+  ],
+  "liveValidation": {
+    "at": "2026-10-17T22:20:32.722Z",
+    "runs": [
+      {
+        "label": "existing-account-login",
+        "casinoMs": 14048,
+        "walletUsableMs": 18251,
+        "entryReadySignalMs": 18112,
+        "sdkStartMs": 18146,
+        "workerRegistrationMs": 18215,
+        "sdkOnlyAfterWallet": true
+      },
+      {
+        "label": "active-session-reentry",
+        "casinoMs": 894,
+        "walletUsableMs": 3744,
+        "entryReadySignalMs": 3452,
+        "sdkStartMs": 3510,
+        "workerRegistrationMs": 3617,
+        "sdkOnlyAfterWallet": true
+      }
+    ],
+    "errors": [],
+    "blockedTracking": 2,
+    "financialRequests": 0,
+    "realAccountsCreated": 0,
+    "physicalDeviceValidated": false,
+    "api2Deployed": false
+  },
+  "clockValidationBeforeFix": {
+    "at": "2026-10-17T22:10:30.508Z",
+    "runs": [
+      {
+        "label": "existing-account-login",
+        "casinoMs": 15914,
+        "walletUsableMs": 16372,
+        "entryReadySignalMs": 13870,
+        "sdkStartMs": 13900,
+        "workerRegistrationMs": 13969,
+        "sdkOnlyAfterWallet": true
+      },
+      {
+        "label": "active-session-reentry",
+        "casinoMs": 3434,
+        "walletUsableMs": 3837,
+        "entryReadySignalMs": 2587,
+        "sdkStartMs": 2602,
+        "workerRegistrationMs": 2694,
+        "sdkOnlyAfterWallet": true
+      }
+    ],
+    "errors": [
+      {
+        "message": "Minified React error #418; visit https://react.dev/errors/418?args[]=text&args[]= for the full message or use the non-minified dev environment for full errors and additional helpful warnings."
+      },
+      {
+        "message": "Minified React error #418; visit https://react.dev/errors/418?args[]=text&args[]= for the full message or use the non-minified dev environment for full errors and additional helpful warnings."
+      }
+    ],
+    "blockedTracking": 2,
+    "financialRequests": 0,
+    "realAccountsCreated": 0,
+    "physicalDeviceValidated": false,
+    "api2Deployed": false
+  },
+  "tracking": {
+    "gatewayVisitDoesNotWaitForSdk": true,
+    "standaloneAndInstalledDoNotWaitForSdk": true,
+    "metaPayloadsAndDedupUnchanged": true,
+    "contactDedupRegressionPassed": true
+  },
+  "limits": [
+    "SDK/SW ordering is certified; single-run times do not establish a performance average or a controlled speed comparison.",
+    "Live test reused one existing Rey de Ases account; no new provider accounts or financial operations.",
+    "Physical Android/iOS notification and installation were not validated; browser APIs in synthetic cases are simulated.",
+    "Other casinos have code/publication and intercepted browser coverage, not new real signup tests.",
+    "Production domain checks covered actual Ganamos+ Cloudflare Worker as well as Vercel."
+  ]
+}

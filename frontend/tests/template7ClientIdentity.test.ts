@@ -31,7 +31,21 @@ test("segunda visita conserva exactamente el UUID y no lo expone al navegador", 
   assert.equal(response.headers.get("Set-Cookie"), null);
   const script = buildClientIdentityBootstrapScript();
   assert.match(script, /credentials: "same-origin", cache: "no-store"/);
-  assert.doesNotMatch(script, /lb_cid|randomUUID|localStorage|response\.json/);
+  assert.doesNotMatch(script, /lb_cid|randomUUID/);
+  assert.match(script, /template7:identity-recovery:v1/);
+});
+
+test("una cookie perdida se recupera con el mismo UUID sin exponerlo en el respaldo", async () => {
+  const deps = { ...allow, recoverySecret: "test-secret-".repeat(8) };
+  const first = await handleClientIdentityBootstrap(new Request(url,{method:"POST",headers:{Cookie:`lb_cid=${uuid}`}}),deps);
+  const {recovery_token} = await first.json();
+  assert.ok(recovery_token.startsWith('ir1.'));
+  assert.ok(!recovery_token.includes(uuid));
+  assert.ok(!Buffer.from(recovery_token.slice(4),'base64url').toString().includes(uuid));
+  const restored = await handleClientIdentityBootstrap(new Request(url,{method:"POST",headers:{'Content-Type':'application/json'},body:JSON.stringify({recovery_token})}),deps);
+  assert.match(restored.headers.get('set-cookie') || '',new RegExp('^lb_cid='+uuid+';'));
+  const otherOrigin = await handleClientIdentityBootstrap(new Request('https://other.test/api/client-identity/bootstrap',{method:'POST',body:JSON.stringify({recovery_token})}),deps);
+  assert.ok(!(otherOrigin.headers.get('set-cookie') || '').includes(uuid));
 });
 
 test("cookies inválidas o duplicadas nunca se adoptan como identidad", () => {

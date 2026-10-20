@@ -66,6 +66,11 @@ import {
   trackingFilterLabel,
   trackingFilterValue,
 } from "@/components/conversiones/trackingFilter";
+import {
+  conversionAttributionOptions,
+  journeyStartAttribution,
+  matchesConversionAttributionFilters,
+} from "@/components/conversiones/attributionFilters";
 import { useConversionStatsFilters } from "@/components/conversiones/useConversionStatsFilters";
 import {
   ConversionPagination,
@@ -375,6 +380,10 @@ function cellValue(
     case "purchase_status_capi": return <td key={col} className={cell} title={tip(c.purchase_status_capi)}>{statusText(c.purchase_status_capi)}</td>;
     case "observaciones": return <td key={col} className={`${cell} text-zinc-500 max-w-[200px] truncate`} title={c.observaciones}>{c.observaciones || "-"}</td>;
     case "external_id": return <td key={col} className={dimMono} title={tip(c.external_id)}>{c.external_id ? truncateId(c.external_id) : "-"}</td>;
+    case "landing":
+    case "campana":
+    case "conjunto":
+    case "anuncio": return <td key={col} className={dim} title={tip(c[col])}>{c[col] || "-"}</td>;
     case "utm_campaign": return <td key={col} className={dim} title={tip(c.utm_campaign)}>{c.utm_campaign || "-"}</td>;
     case "telefono_asignado": return <td key={col} className={dim} title={tip(c.telefono_asignado)}>{c.telefono_asignado || "-"}</td>;
     case "assigned_gerencia_label": return <td key={col} className={dim} title={tip(c.assigned_gerencia_label)}>{c.assigned_gerencia_label || "-"}</td>;
@@ -453,7 +462,11 @@ export default function DashboardConversionesPage() {
     statsSexoFilter,
     setStatsSexoFilter,
     statsCampaignFilter,
+    statsAdSetFilter,
+    statsAdFilter,
     setStatsCampaignFilter,
+    setStatsAdSetFilter,
+    setStatsAdFilter,
     statsDeviceFilter,
     setStatsDeviceFilter,
     statsFilterModalOpen,
@@ -473,7 +486,11 @@ export default function DashboardConversionesPage() {
     draftSexoFilter,
     setDraftSexoFilter,
     draftCampaignFilter,
+    draftAdSetFilter,
+    draftAdFilter,
     setDraftCampaignFilter,
+    setDraftAdSetFilter,
+    setDraftAdFilter,
     openStatsFilterModal,
     applyStatsFilters,
     clearAllStatsFilters,
@@ -706,18 +723,18 @@ export default function DashboardConversionesPage() {
     }
     return Array.from(set).sort((a, b) => a.localeCompare(b, "es"));
   }, [statsAllConversions]);
-  const statsCampaignOptions = useMemo(() => {
-    const set = new Set<string>();
-    for (const r of statsAllConversions) {
-      const campaign = String(r.utm_campaign ?? "").trim();
-      if (campaign) set.add(campaign);
-    }
-    for (const r of scopedJourneyStarts) {
-      const campaign = String(r.utm_campaign ?? "").trim();
-      if (campaign) set.add(campaign);
-    }
-    return Array.from(set).sort((a, b) => a.localeCompare(b, "es"));
-  }, [statsAllConversions, scopedJourneyStarts]);
+  const statsJourneyStartsWithAttribution = useMemo(
+    () => scopedJourneyStarts.map((row) => ({ ...row, ...journeyStartAttribution(row) })),
+    [scopedJourneyStarts],
+  );
+  const {
+    campaigns: statsCampaignOptions,
+    adSets: statsAdSetOptions,
+    ads: statsAdOptions,
+  } = useMemo(
+    () => conversionAttributionOptions([...statsAllConversions, ...statsJourneyStartsWithAttribution]),
+    [statsAllConversions, statsJourneyStartsWithAttribution],
+  );
   const statsDeviceOptions = useMemo(() => {
     const set = new Set<string>();
     for (const r of statsAllConversions) {
@@ -782,6 +799,18 @@ export default function DashboardConversionesPage() {
     }
   }, [statsCampaignFilter, statsCampaignOptions, setStatsCampaignFilter]);
   useEffect(() => {
+    const validAdSets = statsAdSetFilter.filter((value) => statsAdSetOptions.includes(value));
+    if (validAdSets.length !== statsAdSetFilter.length) {
+      setStatsAdSetFilter(validAdSets);
+    }
+  }, [statsAdSetFilter, statsAdSetOptions, setStatsAdSetFilter]);
+  useEffect(() => {
+    const validAds = statsAdFilter.filter((value) => statsAdOptions.includes(value));
+    if (validAds.length !== statsAdFilter.length) {
+      setStatsAdFilter(validAds);
+    }
+  }, [statsAdFilter, statsAdOptions, setStatsAdFilter]);
+  useEffect(() => {
     if (statsDeviceFilter !== "__all__" && !statsDeviceOptions.includes(statsDeviceFilter)) {
       setStatsDeviceFilter("__all__");
     }
@@ -803,9 +832,9 @@ export default function DashboardConversionesPage() {
       const bySexo =
         statsSexoFilter === "__all__" ||
         normalizeSexValue((r as { inferred_sex?: string | null }).inferred_sex) === statsSexoFilter;
-      const byCampaign = statsCampaignFilter.length === 0 || statsCampaignFilter.includes(String(r.utm_campaign ?? "").trim());
+      const byAttribution = matchesConversionAttributionFilters(r, statsCampaignFilter, statsAdSetFilter, statsAdFilter);
       const byDevice = statsDeviceFilter === "__all__" || String(r.device_type ?? "").trim().toLowerCase() === statsDeviceFilter;
-      return byLanding && byPixel && byGerencia && byTelefono && byFromMetaAds && bySourcePlatform && bySexo && byCampaign && byDevice;
+      return byLanding && byPixel && byGerencia && byTelefono && byFromMetaAds && bySourcePlatform && bySexo && byAttribution && byDevice;
     });
     if (statsGerenciaFilter.length === 0) return filtered;
     return filtered
@@ -815,7 +844,7 @@ export default function DashboardConversionesPage() {
         (labels) => gerenciaFilterMatchesLabels(statsGerenciaFilter, labels),
       ))
       .filter((row): row is ConversionRow => row !== null);
-  }, [statsConversions, effectiveStatsLandingFilter, statsPixelFilter, statsTrackingFilterKind, statsGerenciaFilter, statsTelefonoFilter, statsFromMetaAdsFilter, statsSourcePlatformFilter, statsSexoFilter, statsCampaignFilter, statsDeviceFilter, gerenciaByPhone]);
+  }, [statsConversions, effectiveStatsLandingFilter, statsPixelFilter, statsTrackingFilterKind, statsGerenciaFilter, statsTelefonoFilter, statsFromMetaAdsFilter, statsSourcePlatformFilter, statsSexoFilter, statsCampaignFilter, statsAdSetFilter, statsAdFilter, statsDeviceFilter, gerenciaByPhone]);
   const statsAllConversionsFiltered = useMemo(() => {
     const filtered = statsAllConversions.filter((r) => {
       const byLanding = effectiveStatsLandingFilter === "__all__" || String(r.landing_name ?? "").trim() === effectiveStatsLandingFilter;
@@ -833,9 +862,9 @@ export default function DashboardConversionesPage() {
       const bySexo =
         statsSexoFilter === "__all__" ||
         normalizeSexValue((r as { inferred_sex?: string | null }).inferred_sex) === statsSexoFilter;
-      const byCampaign = statsCampaignFilter.length === 0 || statsCampaignFilter.includes(String(r.utm_campaign ?? "").trim());
+      const byAttribution = matchesConversionAttributionFilters(r, statsCampaignFilter, statsAdSetFilter, statsAdFilter);
       const byDevice = statsDeviceFilter === "__all__" || String(r.device_type ?? "").trim().toLowerCase() === statsDeviceFilter;
-      return byLanding && byPixel && byGerencia && byTelefono && byFromMetaAds && bySourcePlatform && bySexo && byCampaign && byDevice;
+      return byLanding && byPixel && byGerencia && byTelefono && byFromMetaAds && bySourcePlatform && bySexo && byAttribution && byDevice;
     });
     if (statsGerenciaFilter.length === 0) return filtered;
     return filtered
@@ -845,9 +874,9 @@ export default function DashboardConversionesPage() {
         (labels) => gerenciaFilterMatchesLabels(statsGerenciaFilter, labels),
       ))
       .filter((row): row is ConversionRow => row !== null);
-  }, [statsAllConversions, effectiveStatsLandingFilter, statsPixelFilter, statsTrackingFilterKind, statsGerenciaFilter, statsTelefonoFilter, statsFromMetaAdsFilter, statsSourcePlatformFilter, statsSexoFilter, statsCampaignFilter, statsDeviceFilter, gerenciaByPhone]);
+  }, [statsAllConversions, effectiveStatsLandingFilter, statsPixelFilter, statsTrackingFilterKind, statsGerenciaFilter, statsTelefonoFilter, statsFromMetaAdsFilter, statsSourcePlatformFilter, statsSexoFilter, statsCampaignFilter, statsAdSetFilter, statsAdFilter, statsDeviceFilter, gerenciaByPhone]);
   const statsJourneyStartsFiltered = useMemo(() => {
-    return scopedJourneyStarts.filter((r) => {
+    return statsJourneyStartsWithAttribution.filter((r) => {
       const byLanding = effectiveStatsLandingFilter === "__all__" || String(r.landing_name ?? "").trim() === effectiveStatsLandingFilter;
       const byPixel = statsPixelFilter === "__all__" || trackingFilterValue(r, statsTrackingFilterKind) === statsPixelFilter;
       const assignedPhone = normalizePhone(r.telefono_asignado);
@@ -861,11 +890,11 @@ export default function DashboardConversionesPage() {
         statsSourcePlatformFilter === "__all__" ||
         String(r.source_platform ?? "").trim().toLowerCase() === statsSourcePlatformFilter;
       const bySexo = statsSexoFilter === "__all__";
-      const byCampaign = statsCampaignFilter.length === 0 || statsCampaignFilter.includes(String(r.utm_campaign ?? "").trim());
+      const byAttribution = matchesConversionAttributionFilters(r, statsCampaignFilter, statsAdSetFilter, statsAdFilter);
       const byDevice = statsDeviceFilter === "__all__" || String(r.device_type ?? "").trim().toLowerCase() === statsDeviceFilter;
-      return byLanding && byPixel && byGerencia && byTelefono && byFromMetaAds && bySourcePlatform && bySexo && byCampaign && byDevice;
+      return byLanding && byPixel && byGerencia && byTelefono && byFromMetaAds && bySourcePlatform && bySexo && byAttribution && byDevice;
     });
-  }, [scopedJourneyStarts, effectiveStatsLandingFilter, statsPixelFilter, statsTrackingFilterKind, statsGerenciaFilter, statsTelefonoFilter, statsFromMetaAdsFilter, statsSourcePlatformFilter, statsSexoFilter, statsCampaignFilter, statsDeviceFilter, gerenciaByPhone]);
+  }, [statsJourneyStartsWithAttribution, effectiveStatsLandingFilter, statsPixelFilter, statsTrackingFilterKind, statsGerenciaFilter, statsTelefonoFilter, statsFromMetaAdsFilter, statsSourcePlatformFilter, statsSexoFilter, statsCampaignFilter, statsAdSetFilter, statsAdFilter, statsDeviceFilter, gerenciaByPhone]);
   const showJourneyStartStats = statsSourcePlatformFilter === "landing" ||
     statsSourcePlatformFilter === "whatsapp_cloud_api";
   const filteredPhoneSet = useMemo(
@@ -919,11 +948,11 @@ export default function DashboardConversionesPage() {
       const bySexo =
         statsSexoFilter === "__all__" ||
         normalizeSexValue((r as { inferred_sex?: string | null }).inferred_sex) === statsSexoFilter;
-      const byCampaign = statsCampaignFilter.length === 0 || statsCampaignFilter.includes(String(r.utm_campaign ?? "").trim());
+      const byAttribution = matchesConversionAttributionFilters(r, statsCampaignFilter, statsAdSetFilter, statsAdFilter);
       const byDevice = statsDeviceFilter === "__all__" || String(r.device_type ?? "").trim().toLowerCase() === statsDeviceFilter;
-      return byLanding && byPixel && byGerencia && byTelefono && byFromMetaAds && bySourcePlatform && bySexo && byCampaign && byDevice;
+      return byLanding && byPixel && byGerencia && byTelefono && byFromMetaAds && bySourcePlatform && bySexo && byAttribution && byDevice;
     });
-  }, [activeConversions, effectiveStatsLandingFilter, statsPixelFilter, statsTrackingFilterKind, statsGerenciaFilter, statsTelefonoFilter, statsFromMetaAdsFilter, statsSourcePlatformFilter, statsSexoFilter, statsCampaignFilter, statsDeviceFilter, gerenciaByPhone]);
+  }, [activeConversions, effectiveStatsLandingFilter, statsPixelFilter, statsTrackingFilterKind, statsGerenciaFilter, statsTelefonoFilter, statsFromMetaAdsFilter, statsSourcePlatformFilter, statsSexoFilter, statsCampaignFilter, statsAdSetFilter, statsAdFilter, statsDeviceFilter, gerenciaByPhone]);
   const filteredConversions = useMemo(() => {
     const q = tableSearch.trim();
     if (!q) return tableConversionsFiltered;
@@ -989,6 +1018,12 @@ export default function DashboardConversionesPage() {
         related?.utm_campaign ||
         getPayloadString(payload, ["utm_campaign"])
       ).trim();
+      const attribution = {
+        campana: related?.campana || getPayloadString(payload, ["campana"]),
+        utm_campaign: campaign,
+        conjunto: related?.conjunto || getPayloadString(payload, ["conjunto"]),
+        anuncio: related?.anuncio || getPayloadString(payload, ["anuncio"]),
+      };
       const device = String(
         related?.device_type ||
         getPayloadString(payload, ["device_type"])
@@ -1012,12 +1047,12 @@ export default function DashboardConversionesPage() {
         (statsFromMetaAdsFilter === "true" ? hasMetaSignal : !hasMetaSignal);
       const bySourcePlatform = statsSourcePlatformFilter === "__all__" || sourcePlatform === statsSourcePlatformFilter;
       const bySexo = statsSexoFilter === "__all__" || sex === statsSexoFilter;
-      const byCampaign = statsCampaignFilter.length === 0 || statsCampaignFilter.includes(campaign);
+      const byAttribution = matchesConversionAttributionFilters(attribution, statsCampaignFilter, statsAdSetFilter, statsAdFilter);
       const byDevice = statsDeviceFilter === "__all__" || device === statsDeviceFilter;
 
-      return byLanding && byPixel && byTelefono && byGerencia && byFromMetaAds && bySourcePlatform && bySexo && byCampaign && byDevice;
+      return byLanding && byPixel && byTelefono && byGerencia && byFromMetaAds && bySourcePlatform && bySexo && byAttribution && byDevice;
     });
-  }, [activeInbox, conversionById, gerenciaByPhone, effectiveStatsLandingFilter, statsPixelFilter, statsTrackingFilterKind, statsGerenciaFilter, statsTelefonoFilter, statsFromMetaAdsFilter, statsSourcePlatformFilter, statsSexoFilter, statsCampaignFilter, statsDeviceFilter]);
+  }, [activeInbox, conversionById, gerenciaByPhone, effectiveStatsLandingFilter, statsPixelFilter, statsTrackingFilterKind, statsGerenciaFilter, statsTelefonoFilter, statsFromMetaAdsFilter, statsSourcePlatformFilter, statsSexoFilter, statsCampaignFilter, statsAdSetFilter, statsAdFilter, statsDeviceFilter]);
   const filteredInbox = useMemo(() => {
     const q = inboxSearch.trim().toLowerCase();
     const byAction = inboxFilteredByGlobalFilters.filter((r) =>
@@ -1050,7 +1085,7 @@ export default function DashboardConversionesPage() {
   }, [filteredConversions, tablePage]);
   useEffect(() => {
     setTablePage(1);
-  }, [tableSearch, dateRange, effectiveStatsLandingFilter, statsPixelFilter, statsGerenciaFilter, statsTelefonoFilter, statsFromMetaAdsFilter, statsSourcePlatformFilter, statsSexoFilter, statsCampaignFilter, statsDeviceFilter, currencyScope]);
+  }, [tableSearch, dateRange, effectiveStatsLandingFilter, statsPixelFilter, statsGerenciaFilter, statsTelefonoFilter, statsFromMetaAdsFilter, statsSourcePlatformFilter, statsSexoFilter, statsCampaignFilter, statsAdSetFilter, statsAdFilter, statsDeviceFilter, currencyScope]);
   useEffect(() => {
     if (tablePage > totalTablePages) setTablePage(totalTablePages);
   }, [tablePage, totalTablePages]);
@@ -1127,12 +1162,16 @@ export default function DashboardConversionesPage() {
     if (statsSourcePlatformFilter !== "__all__") filters.push(`Origen: ${friendlySourcePlatform(statsSourcePlatformFilter)}`);
     if (statsSexoFilter !== "__all__") filters.push(`Sexo: ${statsSexoFilter}`);
     if (statsCampaignFilter.length > 0) filters.push(`Campanas: ${statsCampaignFilter.join(", ")}`);
+    if (statsAdSetFilter.length > 0) filters.push(`Conjuntos: ${statsAdSetFilter.join(", ")}`);
+    if (statsAdFilter.length > 0) filters.push(`Anuncios: ${statsAdFilter.join(", ")}`);
     if (statsDeviceFilter !== "__all__") filters.push(`Dispositivo: ${statsDeviceFilter}`);
     return filters;
   }, [
     currencyScope,
     dateRange,
     statsCampaignFilter,
+    statsAdSetFilter,
+    statsAdFilter,
     statsDeviceFilter,
     statsFromMetaAdsFilter,
     statsGerenciaFilter,
@@ -1703,6 +1742,8 @@ export default function DashboardConversionesPage() {
             sourcePlatform: draftSourcePlatformFilter,
             sex: draftSexoFilter,
             campaigns: draftCampaignFilter,
+            adSets: draftAdSetFilter,
+            ads: draftAdFilter,
           }}
           options={{
             landings: statsLandingOptions,
@@ -1712,6 +1753,8 @@ export default function DashboardConversionesPage() {
             sourcePlatforms: statsSourcePlatformOptions,
             sexes: statsSexoOptions,
             campaigns: statsCampaignOptions,
+            adSets: statsAdSetOptions,
+            ads: statsAdOptions,
           }}
           onChange={{
             landing: setDraftLandingFilter,
@@ -1722,6 +1765,8 @@ export default function DashboardConversionesPage() {
             sourcePlatform: setDraftSourcePlatformFilter,
             sex: setDraftSexoFilter,
             campaigns: setDraftCampaignFilter,
+            adSets: setDraftAdSetFilter,
+            ads: setDraftAdFilter,
           }}
           onClose={() => setStatsFilterModalOpen(false)}
           onApply={applyStatsFilters}

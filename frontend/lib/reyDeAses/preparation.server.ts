@@ -15,7 +15,6 @@ import {
   withClientIdentityCookie,
   type ClientIdentity,
 } from "./clientIdentity.server";
-import { DEMO_COOKIE_NAME, readDemoCookie } from "./demo.server";
 import {
   finalizeTemplate7PreparedStart,
   handleTemplate7AccountWithIdentity,
@@ -40,8 +39,6 @@ type PreparationClaims = {
   expires_at: number;
   payload: StartRequest;
   identity: ClientIdentity;
-  demo_requested: boolean;
-  demo_cookie: string | null;
   client_ip: string | null;
 };
 
@@ -135,8 +132,7 @@ function decryptClaims(token: string, env: PreparationEnvironment, now: number):
       claims.expires_at - claims.issued_at !== TOKEN_TTL_SECONDS ||
       !parseTemplate7StartPayload(claims.payload) ||
       !claims.identity || !isDeviceId(claims.identity.deviceId) || typeof claims.identity.needsCookie !== "boolean" ||
-      typeof claims.demo_requested !== "boolean" ||
-      (claims.demo_cookie !== null && typeof claims.demo_cookie !== "string") ||
+      Reflect.get(claims, "demo_requested") === true ||
       (claims.client_ip !== null && !isIP(claims.client_ip))) {
     throw new Error("invalid token");
   }
@@ -160,11 +156,10 @@ function isPreparedStart(value: unknown, env: PreparationEnvironment): value is 
       !prepared.account || prepared.account.platform !== prepared.provider ||
       typeof prepared.account.username !== "string" || !prepared.account.username || prepared.account.username.length > 256 ||
       typeof prepared.account.password !== "string" || prepared.account.password.length > 1024 ||
-      typeof prepared.account.created !== "boolean" || typeof prepared.testing !== "boolean" ||
+      typeof prepared.account.created !== "boolean" || Reflect.get(prepared, "testing") === true ||
       typeof prepared.promoCode !== "string" || !prepared.promoCode || prepared.promoCode.length > 128 ||
       (prepared.provider === "multi_skin" ? prepared.skinCode !== "ganamos_plus" : prepared.skinCode !== null) ||
-      (!prepared.account.testingBypass && !prepared.account.password) ||
-      (prepared.account.testingBypass === true && !prepared.testing)) {
+      !prepared.account.password || Reflect.get(prepared.account, "testingBypass") === true) {
     return false;
   }
   if (!prepared.completedHandoff) return true;
@@ -268,11 +263,6 @@ export async function handleTemplate7Prepare(
   try {
     const payload = parseTemplate7StartPayload(await readJson(request));
     if (!payload) return withClientIdentityCookie(json({ error: "invalid_request" }, 400), identity);
-    const demoRequested = request.headers.get("x-template7-demo-context") === "testing";
-    const demoCookie = demoRequested ? readDemoCookie(request) : null;
-    if (demoCookie !== null && demoCookie.length > 2048) {
-      return withClientIdentityCookie(json({ error: "invalid_request" }, 400), identity);
-    }
     const issuedAt = Math.floor(now / 1000);
     const token = encryptClaims({
       version: 1,
@@ -280,8 +270,6 @@ export async function handleTemplate7Prepare(
       expires_at: issuedAt + TOKEN_TTL_SECONDS,
       payload,
       identity,
-      demo_requested: demoRequested,
-      demo_cookie: demoCookie,
       client_ip: clientIp(request),
     }, env);
     const destination = new URL("/prepare", gatewayOrigin(payload, env));
@@ -312,10 +300,6 @@ export async function handleTemplate7PreparationComplete(
     const claims = decryptClaims(data.token, env, now);
     const headers = new Headers({ "Content-Type": "application/json", Origin: "https://template7.internal" });
     const cookies = [`${CLIENT_ID_COOKIE_NAME}=${claims.identity.deviceId}`];
-    if (claims.demo_requested) {
-      headers.set("X-Template7-Demo-Context", "testing");
-      if (claims.demo_cookie !== null) cookies.push(`${DEMO_COOKIE_NAME}=${claims.demo_cookie}`);
-    }
     headers.set("Cookie", cookies.join("; "));
     if (claims.client_ip) headers.set("X-Vercel-Forwarded-For", claims.client_ip);
     const internalRequest = new Request("https://template7.internal/api/template7/start", {
@@ -351,10 +335,6 @@ export async function handleTemplate7PreparationAccount(
     const claims = decryptClaims(data.token, env, now);
     const headers = new Headers({ "Content-Type": "application/json", Origin: "https://template7.internal" });
     const cookies = [`${CLIENT_ID_COOKIE_NAME}=${claims.identity.deviceId}`];
-    if (claims.demo_requested) {
-      headers.set("X-Template7-Demo-Context", "testing");
-      if (claims.demo_cookie !== null) cookies.push(`${DEMO_COOKIE_NAME}=${claims.demo_cookie}`);
-    }
     headers.set("Cookie", cookies.join("; "));
     if (claims.client_ip) headers.set("X-Vercel-Forwarded-For", claims.client_ip);
     const internalRequest = new Request("https://template7.internal/api/template7/start", {
@@ -366,15 +346,20 @@ export async function handleTemplate7PreparationAccount(
       internalRequest,
       deps,
       claims.identity,
-      (prepared) => {
-        const continuationToken = encryptContinuation(prepared, env, now);
-        return json({
+      async (prepared) => {
+        // Complete the independent link + handoff work on the same server trip.
+        // All gateways already accept a ready handoff and skip /finalize.
+        const handoff = await finalizeTemplate7PreparedStart(prepared, deps);
+        const continuationToken = encryptContinuation({ ...prepared, completedHandoff: handoff }, env, now);
+        const response = json({
           username: prepared.account.username,
           continuation_token: continuationToken,
-          // Bypass providers already issued and linked this handoff to obtain
-          // the username. Let capable gateways use it without another round trip.
-          ...(prepared.completedHandoff ? { handoff_url: prepared.completedHandoff.handoff_url } : {}),
+          handoff_url: handoff.handoff_url,
         }, 200);
+        if (Number.isSafeInteger(prepared.accountResolutionMs) && Number(prepared.accountResolutionMs) >= 0) {
+          response.headers.set('Server-Timing', `t7-account;dur=${prepared.accountResolutionMs};desc="${prepared.account.created ? 'created' : 'recovered'}"`);
+        }
+        return response;
       },
     );
   } catch {

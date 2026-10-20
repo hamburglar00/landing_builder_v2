@@ -1,0 +1,279 @@
+{
+  "managerId": 1035,
+  "viewport": {
+    "width": 390,
+    "height": 844,
+    "networkThrottled": false,
+    "cpuThrottled": false
+  },
+  "chatReadyCriterion": "Enabled React-hydrated input in actual cross-origin iframe; first baseline predates this criterion",
+  "samples": [
+    {
+      "sample": "baseline-recovery",
+      "version": "pre-hydration-criterion",
+      "startedAt": "2026-10-17T00:00:13.278Z",
+      "runs": [
+        {
+          "label": "recovery",
+          "formReadyMs": 3626,
+          "accountVisibleMs": 3763,
+          "casinoNavigationMs": 9034,
+          "chatFrameMountedMs": 12040,
+          "chatReadyMs": 15139,
+          "loginConfirmed": null,
+          "chatMeasuredAsDocument": false
+        },
+        {
+          "label": "active-session-reentry",
+          "formReadyMs": null,
+          "accountVisibleMs": null,
+          "casinoNavigationMs": 763,
+          "chatFrameMountedMs": 1294,
+          "chatReadyMs": 2255,
+          "loginConfirmed": null,
+          "chatMeasuredAsDocument": false
+        }
+      ],
+      "blockedTracking": 3,
+      "blockedMoney": 0,
+      "realMoneyOperations": 0
+    },
+    {
+      "sample": "baseline-hydrated-recovery",
+      "version": "baseline",
+      "startedAt": "2026-10-17T00:03:20.970Z",
+      "runs": [
+        {
+          "label": "recovery",
+          "formReadyMs": 1007,
+          "accountVisibleMs": 2791,
+          "casinoNavigationMs": 7845,
+          "chatFrameMountedMs": 10035,
+          "chatReadyMs": 11516,
+          "loginConfirmed": null,
+          "chatMeasuredAsDocument": false
+        },
+        {
+          "label": "active-session-reentry",
+          "formReadyMs": null,
+          "accountVisibleMs": null,
+          "casinoNavigationMs": 1052,
+          "chatFrameMountedMs": 1784,
+          "chatReadyMs": 2951,
+          "loginConfirmed": null,
+          "chatMeasuredAsDocument": false
+        }
+      ],
+      "blockedTracking": 3,
+      "blockedMoney": 0,
+      "realMoneyOperations": 0
+    },
+    {
+      "sample": "baseline-creation",
+      "version": "baseline",
+      "startedAt": "2026-10-17T00:04:24.279Z",
+      "runs": [
+        {
+          "label": "creation",
+          "formReadyMs": 740,
+          "accountVisibleMs": 3591,
+          "casinoNavigationMs": 8624,
+          "chatFrameMountedMs": 10754,
+          "chatReadyMs": 12163,
+          "loginConfirmed": null,
+          "chatMeasuredAsDocument": false
+        },
+        {
+          "label": "active-session-reentry",
+          "formReadyMs": null,
+          "accountVisibleMs": null,
+          "casinoNavigationMs": 1216,
+          "chatFrameMountedMs": 1745,
+          "chatReadyMs": 2966,
+          "loginConfirmed": null,
+          "chatMeasuredAsDocument": false
+        }
+      ],
+      "blockedTracking": 3,
+      "blockedMoney": 0,
+      "realMoneyOperations": 0
+    },
+    {
+      "sample": "optimized-recovery",
+      "version": "no-fixed-delay-and-parallel-atrio",
+      "startedAt": "2026-10-17T00:14:35.636Z",
+      "runs": [
+        {
+          "label": "recovery",
+          "formReadyMs": 1637,
+          "accountVisibleMs": 4286,
+          "casinoNavigationMs": 8467,
+          "chatFrameMountedMs": 11734,
+          "chatReadyMs": 14322,
+          "loginConfirmed": true,
+          "chatMeasuredAsDocument": false
+        },
+        {
+          "label": "active-session-reentry",
+          "formReadyMs": null,
+          "accountVisibleMs": null,
+          "casinoNavigationMs": 1427,
+          "chatFrameMountedMs": 1919,
+          "chatReadyMs": 2992,
+          "loginConfirmed": true,
+          "chatMeasuredAsDocument": false
+        }
+      ],
+      "blockedTracking": 3,
+      "blockedMoney": 0,
+      "realMoneyOperations": 0
+    },
+    {
+      "sample": "optimized-diagnostic-recovery",
+      "version": "no-fixed-delay-and-parallel-atrio",
+      "startedAt": "2026-10-17T00:20:01.814Z",
+      "runs": [
+        {
+          "label": "recovery",
+          "formReadyMs": 1448,
+          "accountVisibleMs": 2843,
+          "casinoNavigationMs": 5983,
+          "chatFrameMountedMs": 8677,
+          "chatReadyMs": 10261,
+          "loginConfirmed": true,
+          "chatMeasuredAsDocument": false
+        },
+        {
+          "label": "active-session-reentry",
+          "formReadyMs": null,
+          "accountVisibleMs": null,
+          "casinoNavigationMs": 960,
+          "chatFrameMountedMs": 1732,
+          "chatReadyMs": 2649,
+          "loginConfirmed": true,
+          "chatMeasuredAsDocument": false
+        }
+      ],
+      "blockedTracking": 3,
+      "blockedMoney": 0,
+      "realMoneyOperations": 0
+    },
+    {
+      "sample": "final-recovery",
+      "version": "final-async",
+      "startedAt": "2026-10-17T00:20:59.513Z",
+      "runs": [
+        {
+          "label": "recovery",
+          "formReadyMs": 1037,
+          "accountVisibleMs": 2898,
+          "casinoNavigationMs": 6214,
+          "chatFrameMountedMs": 8506,
+          "chatReadyMs": 9641,
+          "loginConfirmed": true,
+          "chatMeasuredAsDocument": false
+        },
+        {
+          "label": "active-session-reentry",
+          "formReadyMs": null,
+          "accountVisibleMs": null,
+          "casinoNavigationMs": 1478,
+          "chatFrameMountedMs": 1768,
+          "chatReadyMs": 2897,
+          "loginConfirmed": true,
+          "chatMeasuredAsDocument": false
+        }
+      ],
+      "blockedTracking": 3,
+      "blockedMoney": 0,
+      "realMoneyOperations": 0
+    },
+    {
+      "sample": "final-created-account-recovery",
+      "version": "final-async",
+      "startedAt": "2026-10-17T00:22:52.661Z",
+      "runs": [
+        {
+          "label": "recovery",
+          "formReadyMs": 889,
+          "accountVisibleMs": 2591,
+          "casinoNavigationMs": 6478,
+          "chatFrameMountedMs": 7229,
+          "chatReadyMs": 8563,
+          "loginConfirmed": true,
+          "chatMeasuredAsDocument": false
+        },
+        {
+          "label": "active-session-reentry",
+          "formReadyMs": null,
+          "accountVisibleMs": null,
+          "casinoNavigationMs": 1041,
+          "chatFrameMountedMs": 1359,
+          "chatReadyMs": 2394,
+          "loginConfirmed": true,
+          "chatMeasuredAsDocument": false
+        }
+      ],
+      "blockedTracking": 3,
+      "blockedMoney": 0,
+      "realMoneyOperations": 0
+    }
+  ],
+  "failures": [
+    {
+      "sample": "optimized-repeat-recovery-failure",
+      "startedAt": "2026-10-17T00:15:10.583Z",
+      "result": "rejected_by_rate_limit",
+      "status": 429,
+      "error": "Timed out: casino navigation",
+      "documentState": null
+    },
+    {
+      "sample": "final-repeat-recovery-failure",
+      "startedAt": "2026-10-17T00:21:44.119Z",
+      "result": "rejected_by_rate_limit",
+      "status": 429,
+      "error": "Timed out: casino navigation",
+      "documentState": {
+        "path": "/prepare",
+        "ready": "complete",
+        "view": "error",
+        "status": "Preparando tu ingreso..."
+      }
+    }
+  ],
+  "preparationRequestStatuses": [
+    {
+      "timestamp": 1792196576368,
+      "path": "/api/preparations/complete",
+      "status": 200
+    },
+    {
+      "timestamp": 1792196507574,
+      "path": "/api/preparations/complete",
+      "status": 429
+    },
+    {
+      "timestamp": 1792196463709,
+      "path": "/api/preparations/complete",
+      "status": 200
+    },
+    {
+      "timestamp": 1792196405898,
+      "path": "/api/preparations/complete",
+      "status": 200
+    },
+    {
+      "timestamp": 1792196113721,
+      "path": "/api/preparations/complete",
+      "status": 429
+    },
+    {
+      "timestamp": 1792196081102,
+      "path": "/api/preparations/complete",
+      "status": 200
+    }
+  ],
+  "accountsCreated": 1,
+  "api2Deployed": false
+}

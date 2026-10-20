@@ -1,10 +1,11 @@
+import { buildTemplate7ResourceWarmup } from "./template7ResourceWarmup";
 import PhonePrewarmScript from "./PhonePrewarmScript";
 import PublicLandingRuntimeScript from "./PublicLandingRuntimeScript";
-import Template7DemoRuntimeScript from "./Template7DemoRuntimeScript";
 import { buildClientIdentityBootstrapScript } from "./clientIdentityBootstrapScript";
 import AtrioPrewarmScript from "./AtrioPrewarmScript";
 import { TEMPLATE7_CRITICAL_CSS } from "./publicLandingCss";
 import { buildTemplate7FastRuntime } from "./template7FastRuntime";
+import { buildTemplate7ReentryScript, guardTemplate7ReentryScripts } from "./template7ReentryScript";
 import { optimizeTemplate7Images } from "../../lib/landing/template7Images";
 import { gatewayOriginFor } from "../../lib/reyDeAses/gatewayOrigins";
 import {
@@ -19,7 +20,6 @@ type RenderParams = {
   config: PublicLandingConfig;
   cachedPhone?: PublicLandingPhoneResponse | null;
   canonicalUrl?: string;
-  demoMode?: boolean;
 };
 
 type ResponsiveImage = {
@@ -683,9 +683,9 @@ function renderTemplate(params: RenderParams) {
 
 export function renderPublicLandingHtml(params: RenderParams) {
   params = { ...params, config: optimizeTemplate7Images(params.config) };
-  const { slug, config, cachedPhone, canonicalUrl, demoMode = false } = params;
+  const { slug, config, cachedPhone, canonicalUrl } = params;
   const isTemplate7 = config.layout?.template === 7;
-  const pixelId = demoMode ? "" : String(config.tracking?.pixelId || "").trim().replace(/\D+/g, "");
+  const pixelId = String(config.tracking?.pixelId || "").trim().replace(/\D+/g, "");
   const metadata = publicMetadata(config, slug);
   const supabaseOrigin = (() => {
     const raw = process.env.NEXT_PUBLIC_SUPABASE_URL || "";
@@ -696,22 +696,20 @@ export function renderPublicLandingHtml(params: RenderParams) {
     }
   })();
   const gatewayOrigin = template7GatewayOrigin(config);
-  const phonePrewarmScript = demoMode || isTemplate7 ? "" : renderScriptElement(
+  const phonePrewarmScript = isTemplate7 ? "" : renderScriptElement(
     PhonePrewarmScript({ slug, initialPhone: cachedPhone }),
   );
   const atrioPrewarmScript = isTemplate7
     ? renderScriptElement(AtrioPrewarmScript({ slug }))
     : "";
-  const runtimeScript = demoMode
-    ? renderScriptElement(Template7DemoRuntimeScript({ slug, config }))
-    : isTemplate7
+  const runtimeScript = isTemplate7
       ? `<script>${buildTemplate7FastRuntime(slug, config)}</script>`
       : `${renderScriptElement(PublicLandingRuntimeScript({ slug, config }))}<script src="/public-assets/landing-runtime-v3.js" defer></script>`;
   const template7PlaceholderScript = isTemplate7
     ? `<script>(()=>{const input=document.querySelector('[data-template7-name]');if(!input)return;const names=${JSON.stringify(TEMPLATE7_EXAMPLE_NAMES)};input.placeholder='Ej.: '+names[Math.floor(Math.random()*names.length)];})();</script>`
     : "";
 
-  return `<!doctype html><html lang="es"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"><title>${escapeHtml(
+  const html = `<!doctype html><html lang="es"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"><title>${escapeHtml(
     metadata.title,
   )}</title>${buildPublicMetadataTags(
     config,
@@ -729,19 +727,24 @@ export function renderPublicLandingHtml(params: RenderParams) {
     pixelId
       ? '<link rel="preconnect" href="https://www.facebook.com"><link rel="preconnect" href="https://connect.facebook.net">'
       : ""
-  }${isTemplate7 ? atrioPrewarmScript + buildClientIdentityBootstrapScript() : ""}${buildPreloadLinks(config)}${isTemplate7 ? `<style data-template7-critical>${TEMPLATE7_CRITICAL_CSS}</style>` : '<link rel="stylesheet" href="/public-assets/landing-styles-v3.css">'}${phonePrewarmScript}${demoMode ? '<meta name="robots" content="noindex,nofollow">' : ""}${pixelScriptForTemplate(
+  }${isTemplate7 ? atrioPrewarmScript + buildClientIdentityBootstrapScript() : ""}${buildPreloadLinks(config)}${isTemplate7 ? `<style data-template7-critical>${TEMPLATE7_CRITICAL_CSS}</style>` : '<link rel="stylesheet" href="/public-assets/landing-styles-v3.css">'}${phonePrewarmScript}${pixelScriptForTemplate(
     pixelId,
     slug,
     config.tracking?.phoneCountryCode || "54",
     config.layout?.template || 0,
   )}</head><body>${buildPixelNoscript(pixelId)}${renderTemplate(params)}${template7PlaceholderScript}${renderPrivacyFooter(
     config,
-  )}${runtimeScript}</body></html>`;
+  )}${runtimeScript}${isTemplate7 ? buildTemplate7ResourceWarmup(gatewayOrigin) : ""}</body></html>`;
+  if (!isTemplate7) return html;
+  const reentry = buildTemplate7ReentryScript(gatewayOrigin);
+  return reentry ? guardTemplate7ReentryScripts(html).replace("<head>", "<head>" + reentry) : html;
 }
 
 /** Classic keeps its existing start endpoint/identity, but no longer waits for React. */
 export function renderClassicTemplate7InlineHtml(params: RenderParams, deviceIdScript: string) {
   const config = optimizeTemplate7Images(params.config);
   const pixelId = String(config.tracking?.pixelId || "").trim().replace(/\D+/g, "");
-  return `${renderScriptElement(AtrioPrewarmScript({ slug: params.slug }))}${buildPreloadLinks(config)}<style data-template7-critical>${TEMPLATE7_CRITICAL_CSS}</style>${pixelScriptForTemplate(pixelId, params.slug, config.tracking?.phoneCountryCode || "54", 7)}${buildPixelNoscript(pixelId)}${renderTemplate7({ ...params, config })}${renderPrivacyFooter({ ...config, layout: { ...config.layout, template: 0 } })}<script>${buildTemplate7FastRuntime(params.slug, config, deviceIdScript)}</script>`;
+  const html = `${renderScriptElement(AtrioPrewarmScript({ slug: params.slug }))}${buildPreloadLinks(config)}<style data-template7-critical>${TEMPLATE7_CRITICAL_CSS}</style>${pixelScriptForTemplate(pixelId, params.slug, config.tracking?.phoneCountryCode || "54", 7)}${buildPixelNoscript(pixelId)}${renderTemplate7({ ...params, config })}${renderPrivacyFooter({ ...config, layout: { ...config.layout, template: 0 } })}<script>${buildTemplate7FastRuntime(params.slug, config, deviceIdScript)}</script>${buildTemplate7ResourceWarmup(template7GatewayOrigin(config))}`;
+  const reentry = buildTemplate7ReentryScript(template7GatewayOrigin(config));
+  return reentry ? reentry + guardTemplate7ReentryScripts(html) : html;
 }

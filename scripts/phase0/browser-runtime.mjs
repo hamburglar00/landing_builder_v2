@@ -34,9 +34,9 @@ export async function chromium(){
   let sequence=0;const pending=new Map(),listeners=new Map();
   ws.onmessage=e=>{const m=JSON.parse(e.data);if(m.id){const p=pending.get(m.id);pending.delete(m.id);clearTimeout(p?.timer);m.error?p?.reject(new Error(m.error.message)):p?.resolve(m.result);}else{for(const cb of listeners.get(m.method)??[])cb(m.params);}};
   ws.onclose=()=>{for(const p of pending.values()){clearTimeout(p.timer);p.reject(new Error('Chromium debugger disconnected'));}pending.clear();};
-  const send=(method,params={})=>new Promise((resolveResult,reject)=>{const id=++sequence;
+  const send=(method,params={},sessionId)=>new Promise((resolveResult,reject)=>{const id=++sequence;
     const timer=setTimeout(()=>{pending.delete(id);reject(new Error(`Chromium debugger timeout: ${method}`));},30000);
-    pending.set(id,{resolve:resolveResult,reject,timer});ws.send(JSON.stringify({id,method,params}));});
+    pending.set(id,{resolve:resolveResult,reject,timer});ws.send(JSON.stringify({id,method,params,...(sessionId?{sessionId}:{})}));});
   const on=(name,fn)=>{if(!listeners.has(name))listeners.set(name,[]);listeners.get(name).push(fn);};
   const evaluate=async expression=>{const r=await send('Runtime.evaluate',{expression,awaitPromise:true,returnByValue:true});if(r.exceptionDetails)throw new Error(r.exceptionDetails.text);return r.result.value;};
   return {send,on,evaluate,close:async()=>{try{await Promise.race([send('Browser.close'),delay(1000)]);}catch{}ws.close();await delay(1000);if(proc.exitCode===null){

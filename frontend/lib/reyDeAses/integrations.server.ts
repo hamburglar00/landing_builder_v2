@@ -56,7 +56,6 @@ async function postJson(origin: URL, path: string, key: string | undefined, body
 }
 
 export function api2Readiness(): "integration_pending" | null {
-  if (process.env.TEMPLATE7_API2_PLAYER_CREATION_ENABLED !== "true") return "integration_pending";
   try {
     configuredOrigin(process.env.API2_ORIGIN);
   } catch {
@@ -72,15 +71,15 @@ export function gatewayReadiness(provider: TargetProvider): "integration_pending
   return null;
 }
 
-function gatewayApiKey(provider: TargetProvider, testing: boolean): string | undefined {
+function gatewayApiKey(provider: TargetProvider): string | undefined {
   if (provider === "multi_skin") {
-    return testing ? process.env.MULTI_SKIN_GATEWAY_TESTING_API_KEY : process.env.MULTI_SKIN_GATEWAY_HANDOFF_API_KEY;
+    return process.env.MULTI_SKIN_GATEWAY_HANDOFF_API_KEY;
   }
   if (provider === "ases_del_norte") {
-    return testing ? process.env.ASES_DEL_NORTE_GATEWAY_TESTING_API_KEY : process.env.ASES_DEL_NORTE_GATEWAY_HANDOFF_API_KEY;
+    return process.env.ASES_DEL_NORTE_GATEWAY_HANDOFF_API_KEY;
   }
   if (provider === "ganamos_net") {
-    return testing ? process.env.GANAMOS_NET_GATEWAY_TESTING_API_KEY : process.env.GANAMOS_NET_GATEWAY_HANDOFF_API_KEY;
+    return process.env.GANAMOS_NET_GATEWAY_HANDOFF_API_KEY;
   }
   return process.env.REY_GATEWAY_HANDOFF_API_KEY;
 }
@@ -111,18 +110,20 @@ export async function resolveInternalChatPlayer(input: PlayerResolveRequest): Pr
     promo_code: input.promoCode,
     target_provider: input.targetProvider,
     source: "landing_builder",
+
   });
   return validateResolvedPlayer(result, input);
 }
 
 export async function resolveTargetAccount(request: Api2ResolveAccountRequest): Promise<TargetAccount> {
+  if (!Number.isSafeInteger(request.agency_id) || Number(request.agency_id)<=0 || !Number.isSafeInteger(request.manager_id) || Number(request.manager_id)<=0) throw new TargetIntegrationError("integration_pending");
   if (api2Readiness()) throw new TargetIntegrationError("integration_pending");
   const origin = configuredOrigin(process.env.API2_ORIGIN);
   const controller = new AbortController();
   const timer = setTimeout(() => controller.abort(), 20_000);
   try {
     const response = await fetch(
-      new URL(`/api/v1/bot/atrio/advisors/${encodeURIComponent(request.advisor_id)}/players`, origin),
+      new URL(`/api/v1/bot/managers/${request.manager_id}/players`, origin),
       {
         method: "POST",
         headers: {
@@ -130,7 +131,9 @@ export async function resolveTargetAccount(request: Api2ResolveAccountRequest): 
           apisecret: process.env.API2_API_SECRET!,
           "Content-Type": "application/json",
         },
-        body: JSON.stringify({ external_user_id: request.external_user_id, name: request.name }),
+        body: JSON.stringify({ external_user_id: request.external_user_id, name: request.name, advisor_id: request.advisor_id, agency_id:request.agency_id,
+          ...(request.target_provider === "ganamos_net" ? {creation_mode: "create_only"} : {}),
+        }),
         signal: controller.signal,
         cache: "no-store",
         redirect: "error",
@@ -151,7 +154,7 @@ export async function resolveTargetAccount(request: Api2ResolveAccountRequest): 
         data.platform !== API2_PLATFORM_BY_PROVIDER[request.target_provider]) {
       throw new TargetIntegrationError("upstream_unavailable");
     }
-    return { username, password, platform: request.target_provider, created };
+    return { username, password, platform: request.target_provider, created, externalAccountId: request.external_user_id };
   } catch (error) {
     if (error instanceof TargetIntegrationError) throw error;
     throw new TargetIntegrationError("upstream_unavailable");
@@ -214,20 +217,18 @@ export async function createProviderHandoff(
   player: ResolvedPlayer,
   account: TargetAccount,
   skinCode: MultiSkinCode | null = null,
-  testing = false,
   promoCode?: string,
 ): Promise<HandoffResult> {
   const origin = configuredOrigin(gatewayOriginFor(provider, skinCode));
-  const credentialsRequired = !testing || provider === "rey_de_ases";
   if (player.target_provider !== provider || !isDeviceId(player.player_provider_account_id) ||
       account.platform !== provider || (provider === "multi_skin" && !skinCode) ||
-      (credentialsRequired && (!account.username || !account.password))) {
+      (!account.username || !account.password)) {
     throw new TargetIntegrationError("upstream_unavailable");
   }
   const result = await postJson(
     origin,
-    testing && provider !== "rey_de_ases" ? "/api/testing/handoffs" : "/api/handoffs",
-    gatewayApiKey(provider, testing),
+    "/api/handoffs",
+    gatewayApiKey(provider),
     {
     advisor_id: advisor.advisorId,
     advisor_slug: advisor.advisorSlug,
@@ -243,9 +244,9 @@ export async function createProviderHandoff(
       target_path: "/casino/list/home",
     } : provider === "multi_skin" ? {
       skin_code: skinCode,
-      ...(!testing ? { username: account.username, password: account.password } : {}),
+      username: account.username, password: account.password,
     } : {
-      ...(!testing ? { username: account.username, password: account.password } : {}),
+      username: account.username, password: account.password,
     }),
   });
   try {
@@ -258,7 +259,6 @@ export async function createProviderHandoff(
       if (typeof result.expires_at !== "string" || typeof result.binding_created !== "boolean") throw new Error("invalid handoff");
     } else {
       if (!Number.isInteger(result.expires_in) || Number(result.expires_in) < 60 || Number(result.expires_in) > 300) throw new Error("invalid handoff");
-      if (testing && (typeof result.provider_username !== "string" || !result.provider_username.trim())) throw new Error("invalid handoff");
     }
     return {
       handoff_url: String(result.handoff_url),

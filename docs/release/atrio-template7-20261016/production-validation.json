@@ -1,0 +1,201 @@
+{
+  "verifiedAt": "2026-10-16T20:48:44.179Z",
+  "managerId": 1035,
+  "advisorSlug": "gera",
+  "provider": "rey_de_ases",
+  "testAccountUsername": "prueba5584",
+  "publication": {
+    "method": "Vercel CLI source snapshots and Cloudflare OpenNext",
+    "gitCommitOrPushPerformed": false,
+    "deployments": [
+      {
+        "repository": "internal-chat",
+        "origin": "https://www.atrio.website",
+        "deploymentId": "dpl_ANPrfybUT47ydd6CnYExrw5cbhx1",
+        "status": "READY",
+        "sourceBaseCommit": "bf3d70c057695a6f47aea0e4ac1fd7003a2bf96e",
+        "sourceFileCount": 293,
+        "sourceManifestSha256": "dbd4cb820e6ca103c90f17a5199f0090d3d63670dc60421959b4ebf7e170e76b"
+      },
+      {
+        "repository": "landing-builder",
+        "origin": "https://mkt.panelbotadmin.com",
+        "deploymentId": "dpl_9EvA9Rtonb9nmSzsK3N88tYN9Jv5",
+        "status": "READY",
+        "sourceBaseCommit": "5372c88993198870a340ed20cc67e375aea2b0d4",
+        "sourceFileCount": 1038,
+        "sourceManifestSha256": "a880eb89b4c650eef8259786ed96fd3c7d7c3bf90c66590c17159f1ba528b385"
+      },
+      {
+        "repository": "landing-prueba-1",
+        "origin": "https://landing.panelbotadmin.com",
+        "deploymentId": "dpl_Fwgv3BC7WaiZGVRzFdYJgFt1XQim",
+        "status": "READY",
+        "sourceBaseCommit": "95470aa114f7b29fd11357b97e76a2a5a317268e",
+        "sourceFileCount": 82,
+        "sourceManifestSha256": "e6f5b3033b147a9d2da7c3bfe7e2fb257687e7e9128b3aec1ac4e717c6e299d0"
+      },
+      {
+        "repository": "landing-autologuin",
+        "origin": "https://www.reydeases.fun",
+        "deploymentId": "dpl_4EVqbu1QGVHigaMkxTjkkLY4tsak",
+        "status": "READY",
+        "sourceBaseCommit": "703e5a81e903818fdb456473ff5aff3d34c6c532",
+        "sourceFileCount": 101,
+        "sourceManifestSha256": "b5bbdd5a828a6f04f121a428f359a1bc185ea5aacee69bf0373da602e2c91d6d"
+      },
+      {
+        "repository": "multi-skin-gateway",
+        "origin": "https://multi-skin-gateway.vercel.app",
+        "deploymentId": "dpl_651Ve1TLx4LEC7uKVRh32Q6oP9WW",
+        "status": "READY",
+        "sourceBaseCommit": "db1300d198a1f2a2eccd77d78aff39a45a47eeee",
+        "sourceFileCount": 75,
+        "sourceManifestSha256": "55fdb09f887a49f07c3d44731793eb7cf4b3624623ef8cdd2d05ca1fd4088383"
+      },
+      {
+        "repository": "ases-gateway",
+        "origin": "https://www.asesdelnorte.online",
+        "deploymentId": "dpl_HUikndMosEnzmqS31dCdQkJU2yz5",
+        "status": "READY",
+        "sourceBaseCommit": "b045375c1be2b2e10f9d90d70ca5829924ce397f",
+        "sourceFileCount": 70,
+        "sourceManifestSha256": "8e6ebd46dbd2087e3bfd0f0b09a0ffce044e8740900abf5e65d9a164386f806e"
+      },
+      {
+        "repository": "ganamos-gateway",
+        "origin": "https://www.ganamosnet.icu",
+        "deploymentId": "dpl_3EfomZUZmki1F8ThsbLp4PtxJLa2",
+        "status": "READY",
+        "sourceBaseCommit": "ad6f989d8c0d65866a3749efdddb159d6303d042",
+        "sourceFileCount": 76,
+        "sourceManifestSha256": "70dfc0248ab690993fdb03f2937506e5ef501157548a062e828ddecf66d16a88"
+      }
+    ],
+    "cloudflare": {
+      "worker": "multi-skin-gateway",
+      "origin": "https://ganamosnet.global",
+      "version": "9bfdaf08-7c9e-4369-9168-4cc5a408c702",
+      "previousVersion": "7b2a1ba2-10f4-4c43-9e35-8ef1ea2e5907"
+    }
+  },
+  "flags": {
+    "builderPublicApi2Creation": true,
+    "classicPublicApi2Creation": true,
+    "atrioPlayerOperations": true
+  },
+  "productionChecks": [
+    "constructor-real-account-and-login",
+    "real-provider-account-linked-for-inbox",
+    "constructor-automatic-session-reentry",
+    "classic-real-account-recovery-and-login",
+    "existing-real-provider-account-confirmed",
+    "real-client-widget-and-conversation",
+    "real-client-message-persisted",
+    "advisor-inbox-real-balance",
+    "advisor-load-and-withdraw-forms-no-money-moved",
+    "advisor-load-form-no-money-moved",
+    "advisor-withdraw-form-no-money-moved",
+    "advisor-settings-full-uuid-and-token-reveal-hide",
+    "authenticated-reply-webhook-realtime-and-replay"
+  ],
+  "outboundPbAdminResponse": 202,
+  "realBalance": 0,
+  "realMoneyOperations": 0,
+  "newAccountsCreatedInThisBrowserFlow": 1,
+  "resumeWithoutSession": [
+    {
+      "origin": "https://www.reydeases.fun",
+      "status": 303,
+      "validFallback": true,
+      "privateNoStore": true,
+      "noReferrer": true
+    },
+    {
+      "origin": "https://www.asesdelnorte.online",
+      "status": 303,
+      "validFallback": true,
+      "privateNoStore": true,
+      "noReferrer": true
+    },
+    {
+      "origin": "https://www.ganamosnet.icu",
+      "status": 303,
+      "validFallback": true,
+      "privateNoStore": true,
+      "noReferrer": true
+    },
+    {
+      "origin": "https://ganamosnet.global",
+      "status": 303,
+      "validFallback": true,
+      "privateNoStore": true,
+      "noReferrer": true
+    },
+    {
+      "origin": "https://multi-skin-gateway.vercel.app",
+      "status": 303,
+      "validFallback": true,
+      "privateNoStore": true,
+      "noReferrer": true
+    }
+  ],
+  "manualUrls": {
+    "builder": "https://mkt.panelbotadmin.com/l/rey-de-ases-demo",
+    "classic": "https://landing.panelbotadmin.com/rey-de-ases-demo",
+    "advisor": "https://www.atrio.website/dashboard"
+  },
+  "limits": [
+    "Real load and withdrawal mutations were not executed; forms were opened and cancelled.",
+    "Real creation and provider login were verified only for Rey de Ases.",
+    "Meta Pixel/CAPI acceptance is not covered. Browser tracking was suppressed; the manually supplied QA promo received a tracking rejection (422).",
+    "Source snapshots were deployed directly; local feature branches remain uncommitted and were not pushed."
+  ],
+  "pendingApi2": {
+    "deployed": false,
+    "migrationApplied": false,
+    "newMigrationCount": 1,
+    "migration": "20261016000001_create_atrio_player_provisions",
+    "programmerReleaseRequired": true,
+    "panel3Deferred": true
+  },
+  "finalChecks": {
+    "sourceFilesMatchingSnapshot": 1480,
+    "publicChecks": [
+      {
+        "url": "https://mkt.panelbotadmin.com/l/rey-de-ases-demo",
+        "status": 200
+      },
+      {
+        "url": "https://landing.panelbotadmin.com/rey-de-ases-demo",
+        "status": 200
+      },
+      {
+        "url": "https://www.atrio.website/login",
+        "status": 200
+      }
+    ],
+    "negativeResumeChecks": [
+      {
+        "origin": "https://www.reydeases.fun",
+        "untrustedReturnRejected": true
+      },
+      {
+        "origin": "https://www.asesdelnorte.online",
+        "untrustedReturnRejected": true
+      },
+      {
+        "origin": "https://www.ganamosnet.icu",
+        "untrustedReturnRejected": true
+      },
+      {
+        "origin": "https://ganamosnet.global",
+        "untrustedReturnRejected": true
+      },
+      {
+        "origin": "https://multi-skin-gateway.vercel.app",
+        "untrustedReturnRejected": true
+      }
+    ]
+  }
+}

@@ -133,8 +133,8 @@ test("Template 7 varía el nombre de ejemplo por visita en ambos modos del const
     landingTag: "TEST", config: { ...DEFAULT_CONFIG, template: "template7" },
   }) as PublicLandingConfig;
 
-  for (const demoMode of [false, true]) {
-    const html = renderPublicLandingHtml({ slug: "prueba-7", config, demoMode });
+  {
+    const html = renderPublicLandingHtml({ slug: "prueba-7", config });
     const script = html.match(/<script>(\(\(\)=>\{const input=document\.querySelector\('\[data-template7-name\]'\);[\s\S]*?\}\)\(\);)<\/script>/)?.[1];
     assert.ok(script);
 

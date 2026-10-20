@@ -21,7 +21,7 @@ test("Ganamos+ uses its own domain without assigning it to other skins", () => {
 
 test("Ganamos+ sends the handoff to its domain and rejects a response on the shared origin", async () => {
   const saved = { ...process.env }, originalFetch = globalThis.fetch;
-  Object.assign(process.env, origins, { MULTI_SKIN_GATEWAY_TESTING_API_KEY: "testing-key" });
+  Object.assign(process.env, origins, { MULTI_SKIN_GATEWAY_HANDOFF_API_KEY: "testing-key" });
   const advisor = { atrioClientId: "11111111-1111-4111-8111-111111111111", advisorId: "22222222-2222-4222-8222-222222222222", advisorSlug: "demo" };
   const deviceId = "33333333-3333-4333-8333-333333333333";
   const player = { advisor_id: advisor.advisorId, advisor_slug: advisor.advisorSlug,
@@ -31,19 +31,19 @@ test("Ganamos+ sends the handoff to its domain and rejects a response on the sha
   let returnedOrigin = origins.GANAMOS_PLUS_GATEWAY_ORIGIN;
   try {
     globalThis.fetch = async (input, init) => {
-      assert.equal(String(input), origins.GANAMOS_PLUS_GATEWAY_ORIGIN + "/api/testing/handoffs");
+      assert.equal(String(input), origins.GANAMOS_PLUS_GATEWAY_ORIGIN + "/api/handoffs");
       assert.equal(new Headers(init?.headers).get("Authorization"), "Bearer testing-key");
       assert.equal(JSON.parse(String(init?.body)).skin_code, "ganamos_plus");
       return Response.json({ handoff_url: returnedOrigin + "/start?t=sealed", expires_in: 120, provider_username: "demo-user" });
     };
     const run = () => createProviderHandoff("multi_skin", advisor, deviceId, player,
-      { username: "", password: "", platform: "multi_skin", created: false, testingBypass: true }, "ganamos_plus", true);
+      { username: "fixture-user", password: "fixture-password", platform: "multi_skin", created: false }, "ganamos_plus");
     assert.equal((await run()).handoff_url, origins.GANAMOS_PLUS_GATEWAY_ORIGIN + "/start?t=sealed");
     returnedOrigin = origins.MULTI_SKIN_GATEWAY_ORIGIN;
     await assert.rejects(run(), { code: "upstream_unavailable" });
   } finally {
     globalThis.fetch = originalFetch;
-    for (const key of Object.keys(origins).concat("MULTI_SKIN_GATEWAY_TESTING_API_KEY")) {
+    for (const key of Object.keys(origins).concat("MULTI_SKIN_GATEWAY_HANDOFF_API_KEY")) {
       if (saved[key] === undefined) delete process.env[key]; else process.env[key] = saved[key];
     }
   }

@@ -2,7 +2,6 @@ import { createClient } from "@supabase/supabase-js";
 import type { MultiSkinCode, TargetProvider } from "../landing/types";
 import type { AssignedAdvisor, Api2ResolveAccountRequest, HandoffResult, LinkedProviderAccount, TargetAccount, ResolvedPlayer, StartRequest, PlayerResolveRequest } from "./contracts";
 import { getOrCreateClientIdentity, withClientIdentityCookie, type ClientIdentity } from "./clientIdentity.server";
-import { isDemoLandingAllowed, readDemoConfig, readDemoCookie, verifyDemoSession, type DemoConfig } from "./demo.server";
 import { logServerFlowTotal, timedServerStage } from "./performance.server";
 import { allowTemplate7Start, template7StartRateLimitKeys } from "./rateLimit.server";
 import { api2Readiness, createProviderHandoff, gatewayReadiness, linkInternalChatProviderAccount, resolveInternalChatPlayer, resolveTargetAccount, TargetIntegrationError, validateResolvedPlayer } from "./integrations.server";
@@ -32,11 +31,10 @@ export type StartDependencies = {
   api2Status(): "integration_pending" | null;
   gatewayStatus(provider: TargetProvider): "integration_pending" | null;
   allowStart(request: Request, landingId: string, deviceId: string, needsCookie: boolean): Promise<boolean>;
-  demoConfig(): DemoConfig | null;
   resolvePlayer(input: PlayerResolveRequest): Promise<ResolvedPlayer>;
   resolveAccount(request: Api2ResolveAccountRequest): Promise<TargetAccount>;
   linkProviderAccount(advisor: AssignedAdvisor, player: ResolvedPlayer, account: TargetAccount): Promise<LinkedProviderAccount>;
-  createHandoff(provider: TargetProvider, advisor: AssignedAdvisor, deviceId: string, player: ResolvedPlayer, account: TargetAccount, skinCode: MultiSkinCode | null, testing: boolean, promoCode?: string): Promise<HandoffResult>;
+  createHandoff(provider: TargetProvider, advisor: AssignedAdvisor, deviceId: string, player: ResolvedPlayer, account: TargetAccount, skinCode: MultiSkinCode | null, promoCode?: string): Promise<HandoffResult>;
 };
 
 export type Template7PreparedStart = {
@@ -46,9 +44,9 @@ export type Template7PreparedStart = {
   player: ResolvedPlayer;
   account: TargetAccount;
   skinCode: MultiSkinCode | null;
-  testing: boolean;
   promoCode: string;
   completedHandoff?: HandoffResult;
+  accountResolutionMs?: number;
 };
 
 type AccountReadyResponder = (
@@ -95,7 +93,7 @@ export function parseTemplate7StartPayload(value: unknown): StartRequest | null 
   };
 }
 
-function isTemplate7Landing(landing: LandingRow): boolean {
+export function isTemplate7Landing(landing: LandingRow): boolean {
   const raw = landing.config && typeof landing.config === "object" ? landing.config as Record<string, unknown> : {};
   const published = landing.landing_config && typeof landing.landing_config === "object"
     ? landing.landing_config as Record<string, unknown> : {};
@@ -103,7 +101,7 @@ function isTemplate7Landing(landing: LandingRow): boolean {
   return (raw.template === "template7" || layout.template === 7) && raw.ctaDestination === "atrio";
 }
 
-function configuredTargetProvider(landing: LandingRow): TargetProvider | null {
+export function configuredTargetProvider(landing: LandingRow): TargetProvider | null {
   const raw = landing.config && typeof landing.config === "object" ? landing.config as Record<string, unknown> : {};
   // Landings 7 antiguas no tenian selector: se conserva Rey de Ases.
   if (raw.targetProvider === undefined || raw.targetProvider === null) return "rey_de_ases";
@@ -150,41 +148,11 @@ export async function finalizeTemplate7PreparedStart(
         prepared.player,
         prepared.account,
         prepared.skinCode,
-        prepared.testing,
         prepared.promoCode,
       ),
     ),
   ]);
   return handoff;
-}
-
-async function makeTemplate7AccountDisplayable(
-  prepared: Template7PreparedStart,
-  deps: StartDependencies,
-): Promise<Template7PreparedStart> {
-  if (!prepared.account.testingBypass) return prepared;
-  const handoff = await timedServerStage(
-    "template7_start",
-    "gateway_handoff",
-    () => deps.createHandoff(
-      prepared.provider,
-      prepared.advisor,
-      prepared.deviceId,
-      prepared.player,
-      prepared.account,
-      prepared.skinCode,
-      true,
-      prepared.promoCode,
-    ),
-  );
-  if (!handoff.provider_username) throw new TargetIntegrationError("upstream_unavailable");
-  const account = { ...prepared.account, username: handoff.provider_username };
-  await timedServerStage(
-    "template7_start",
-    "internal_chat_account_link",
-    () => deps.linkProviderAccount(prepared.advisor, prepared.player, account),
-  );
-  return { ...prepared, account, completedHandoff: handoff };
 }
 
 async function handleTemplate7StartInner(
@@ -243,15 +211,6 @@ async function handleTemplate7StartInner(
       if (!candidateProvider) return json({ error: "integration_pending" }, 503);
       provider = candidateProvider;
     }
-    // El indicador selecciona el recorrido, pero jamás autoriza: eso exige
-    // cookie firmada + configuración de servidor + allowlists.
-    const demoRequested = request.headers.get("x-template7-demo-context") === "testing";
-    const demoCookie = demoRequested ? readDemoCookie(request) : null;
-    const demoConfig = demoCookie === null ? null : deps.demoConfig();
-    if (demoRequested && (demoCookie === null || !demoConfig || !isDemoLandingAllowed(landing, demoConfig) ||
-        !verifyDemoSession(demoCookie, landing.id, landing.name, demoConfig))) {
-      return json({ error: "demo_not_authorized" }, 403);
-    }
     const skinCode = configuredSkinCode(landing, provider);
     if (provider === "multi_skin" && !skinCode) return json({ error: "integration_pending" }, 503);
     // La atribucion puede venir del navegador; esta dimension se fija desde la landing guardada.
@@ -278,14 +237,11 @@ async function handleTemplate7StartInner(
     }
     if (!assigned) throw new Error("advisor resolution unavailable");
     const resolvedAdvisor = assigned;
-    if (demoConfig && !demoConfig.advisorIds.has(resolvedAdvisor.advisorId.toLowerCase())) return json({ error: "demo_not_authorized" }, 403);
     const gatewayPending = deps.gatewayStatus(provider);
     if (gatewayPending) return json({ error: gatewayPending }, 503);
-    if (!demoConfig) {
-      const pending = deps.api2Status();
-      if (pending) return json({ error: pending }, 503);
-    }
-    const effectiveDeviceId = demoConfig ? demoConfig.deviceId : identity.deviceId;
+    const pending = deps.api2Status();
+    if (pending) return json({ error: pending }, 503);
+    const effectiveDeviceId = identity.deviceId;
     const resolveInput: PlayerResolveRequest = { advisor: resolvedAdvisor, deviceId: effectiveDeviceId, name: payload.name,
       ...(payload.phone ? { phone: payload.phone } : {}),
       landingId: landing.id, landingSlug: landing.name, promoCode: payload.promo_code, targetProvider: provider };
@@ -294,33 +250,26 @@ async function handleTemplate7StartInner(
       "internal_chat_resolve",
       () => deps.resolvePlayer(resolveInput),
     ), resolveInput);
-    const account: TargetAccount = demoConfig
-      ? provider === "rey_de_ases"
-        ? { username: demoConfig.username, password: demoConfig.password, platform: provider, created: false }
-        : { username: "", password: "", platform: provider, created: false, testingBypass: true }
-      : await timedServerStage("template7_start", "account_resolve", () => deps.resolveAccount({
-          external_user_id: player.player_id,
-          name: payload.name,
-          target_provider: provider,
-          advisor_id: resolvedAdvisor.advisorId,
-          advisor_slug: resolvedAdvisor.advisorSlug,
-          ...(skinCode ? { skin_code: skinCode } : {}),
-        }));
-    if (account.platform !== provider || (!account.testingBypass && (!account.username || !account.password))) {
+    const accountStartedAt = performance.now();
+    const account = await timedServerStage("template7_start", "account_resolve", () => deps.resolveAccount({
+      external_user_id: player.player_id, manager_id: player.manager_id, agency_id: player.agency_id,
+      name: payload.name, target_provider: provider, advisor_id: resolvedAdvisor.advisorId,
+      advisor_slug: resolvedAdvisor.advisorSlug, ...(skinCode ? { skin_code: skinCode } : {}),
+    }));
+    if (account.platform !== provider || (!account.username || !account.password)) {
       throw new TargetIntegrationError("upstream_unavailable");
     }
-    let prepared: Template7PreparedStart = {
+    const prepared: Template7PreparedStart = {
       provider,
       advisor: resolvedAdvisor,
       deviceId: effectiveDeviceId,
       player,
       account,
       skinCode,
-      testing: Boolean(demoConfig),
       promoCode: payload.promo_code,
+      accountResolutionMs: Math.round(performance.now() - accountStartedAt),
     };
-    prepared = await makeTemplate7AccountDisplayable(prepared, deps);
-    if (accountReadyResponder) return accountReadyResponder(prepared);
+    if (accountReadyResponder) return await accountReadyResponder(prepared);
     const handoff = await finalizeTemplate7PreparedStart(prepared, deps);
     return json({ handoff_url: handoff.handoff_url }, 200);
   } catch (error) {
@@ -456,7 +405,6 @@ export function productionDependencies(): StartDependencies {
     api2Status: api2Readiness,
     gatewayStatus: gatewayReadiness,
     allowStart: allowTemplate7Start,
-    demoConfig: readDemoConfig,
     resolvePlayer: resolveInternalChatPlayer,
     resolveAccount: resolveTargetAccount,
     linkProviderAccount: linkInternalChatProviderAccount,

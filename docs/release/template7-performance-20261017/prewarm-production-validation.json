@@ -1,0 +1,137 @@
+{
+  "at": "2026-10-17T02:42:15.412Z",
+  "checks": [
+    {
+      "origin": "https://mkt.panelbotadmin.com",
+      "ready": true,
+      "replayStable": true,
+      "abandonedVisitHasNoPlayerOrChat": true,
+      "expiresInMinutes": 15,
+      "crossOriginRejected": true
+    },
+    {
+      "origin": "https://landing.panelbotadmin.com",
+      "ready": true,
+      "replayStable": true,
+      "abandonedVisitHasNoPlayerOrChat": true,
+      "expiresInMinutes": 15,
+      "crossOriginRejected": true
+    },
+    {
+      "origin": "https://www.reydeases.fun",
+      "healthy": true,
+      "chatAssetsWarmDuringPreparation": true
+    },
+    {
+      "origin": "https://www.asesdelnorte.online",
+      "healthy": true,
+      "chatAssetsWarmDuringPreparation": true
+    },
+    {
+      "origin": "https://www.ganamosnet.icu",
+      "healthy": true,
+      "chatAssetsWarmDuringPreparation": true
+    },
+    {
+      "origin": "https://ganamosnet.global",
+      "healthy": true,
+      "chatAssetsWarmDuringPreparation": true
+    },
+    {
+      "privatePreparationUnauthorizedStatus": 401
+    }
+  ],
+  "accounts": [
+    {
+      "sample": "prewarm-new-one",
+      "managerId": 1035,
+      "agencyId": 272
+    },
+    {
+      "sample": "prewarm-new-two",
+      "managerId": 1035,
+      "agencyId": 272
+    },
+    {
+      "sample": "prewarm-new-three",
+      "managerId": 1035,
+      "agencyId": 272
+    }
+  ],
+  "api2Deployed": false,
+  "deployments": [
+    {
+      "repo": "internal-chat",
+      "deploymentId": "dpl_4v8vh42CUp71FTD99jXwnzyZsuT4",
+      "origin": "https://www.atrio.website",
+      "manifestSha256": "6d6048acaa5fa2a4e838e5dee6bb9bd3c7a930dee1430c93a9e5a33183289128"
+    },
+    {
+      "repo": "landing-builder",
+      "deploymentId": "dpl_9noahFm5ktL4XKdLChcBppgqq5mi",
+      "origin": "https://mkt.panelbotadmin.com",
+      "manifestSha256": "57d00b4293f8328bffc46ce20574f12f656468fdffcda04e131f489d320bacd1"
+    },
+    {
+      "repo": "landing-prueba-1",
+      "deploymentId": "dpl_4nutgMwjnniFHZqxNAAuX2tyUPTh",
+      "origin": "https://landing.panelbotadmin.com",
+      "manifestSha256": "0047fecffd4832ff3c62ec1b603c2963c90a2430f991b04282b4c0d31d66c987"
+    },
+    {
+      "repo": "landing-autologuin",
+      "deploymentId": "dpl_4GERvTg7GLb9HrMQ6WHWQJK2zxJV",
+      "origin": "https://www.reydeases.fun",
+      "manifestSha256": "b012c85fe8a3bb410537ffbf3db390b2dbca97924afb0e43963b20a79f94731f"
+    },
+    {
+      "repo": "ases-gateway",
+      "deploymentId": "dpl_4FuZJzJyM5nSmMYrJ88ck4wZqccK",
+      "origin": "https://www.asesdelnorte.online",
+      "manifestSha256": "1e7a6b7cfdeb1c671a3b82b710c962d984c8aef4dafec7411f909930451a4324"
+    },
+    {
+      "repo": "ganamos-gateway",
+      "deploymentId": "dpl_FCB12wTj4Cpwjr4VeNGgkCBVzZ33",
+      "origin": "https://www.ganamosnet.icu",
+      "manifestSha256": "2af2eb523128a3eb0a2a1fb956e3504aa1d46748c091690eaf5de3ffb8cf726a"
+    },
+    {
+      "repo": "multi-skin-gateway",
+      "deploymentId": "dpl_ERehpNRLdhqvKkuoZxogfC74zope",
+      "origin": "https://multi-skin-gateway-a89nmugk7-juanclouds-projects.vercel.app",
+      "manifestSha256": "f7fc6a06770d6119ceebe1dbd5c1c2d9766a7f886656b39f59de6b4b8ef78b21"
+    }
+  ],
+  "cloudflare": {
+    "worker": "multi-skin-gateway",
+    "version": "d353f403-5000-486f-a11a-07b9b8ede559",
+    "origin": "https://ganamosnet.global"
+  },
+  "atrioMigrations": [
+    "20261017023054_gateway_entry_preparations.sql",
+    "20261017023104_schedule_gateway_preparation_cleanup.sql"
+  ],
+  "cron": {
+    "cleanup": "*/5 * * * *",
+    "reservationTtlMinutes": 15,
+    "succeededRuns": 3,
+    "failedRuns": 0
+  },
+  "securityAdvisors": {
+    "newWarnings": 0,
+    "newInformationalNotices": [
+      "RLS enabled without policies on private service-only gateway_entry_preparations table"
+    ],
+    "existingFindings": {
+      "anonSecurityDefiner": 11,
+      "authenticatedSecurityDefiner": 23,
+      "passwordProtection": 1
+    }
+  },
+  "pendingRealCreationMeasurements": [
+    "ases_del_norte",
+    "multi_skin",
+    "ganamos_net"
+  ]
+}

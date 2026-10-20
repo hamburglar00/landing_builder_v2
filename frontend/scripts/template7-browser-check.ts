@@ -71,7 +71,7 @@ async function main() {
       } else if (url.pathname.includes("landing-atrio")) {
         content = JSON.stringify({ atrioClientId: "a0000000-0000-4000-8000-000000000002", atrioId: "a0000000-0000-4000-8000-000000000003", atrioSlug: "synthetic" }); type = "application/json";
       } else if (url.pathname === "/api/client-identity/bootstrap") {
-        await pause(700); content = "{}"; type = "application/json";
+        await pause(700); content = JSON.stringify({ok:true}); type = "application/json";
       } else if (url.pathname === "/api/template7/prepare" || url.pathname === "/api/template7/start") {
         snapshot.pixel = await browser.evaluate("(window.fbq && window.fbq.queue || []).map(args => Array.from(args))");
         content = JSON.stringify({ handoff_url: "https://gateway.invalid/prepare?t=synthetic" }); type = "application/json";

@@ -1,0 +1,101 @@
+{
+  "validatedAt": "2026-10-16T23:21:22.381Z",
+  "scope": "Atrio published; API2 local only; builder receiver unchanged and compatible",
+  "production": {
+    "verifiedAt": "2026-10-16T23:20:40.589Z",
+    "deploymentId": "dpl_AnLPuC2nm8BAoDTt9N3PgmM6YoYJ",
+    "url": "internal-chat-gds4hwfo2-juanclouds-projects.vercel.app",
+    "customDomain": "www.atrio.website",
+    "readyState": "READY",
+    "unauthenticatedCron": 401,
+    "unauthenticatedConfirmedLoad": 401,
+    "authorizedCron": {
+      "status": 200,
+      "processed": 0,
+      "failed": false
+    },
+    "confirmedLedgerRows": 0,
+    "realMoneyOperations": 0,
+    "realMetaConversions": 0
+  },
+  "atrioMigration": "20261016231845_enrich_atrio_tracking_events",
+  "security": {
+    "newFindings": 0,
+    "advisorCanPreparePayload": false,
+    "serviceCanPreparePayload": true,
+    "ledgerRlsEnabled": true
+  },
+  "validation": {
+    "atrioUnitTests": 23,
+    "atrioApi2HttpScenarios": 19,
+    "inboxRegression": 58,
+    "regressionBrowserSubset": 12,
+    "postgresChecks": 22,
+    "mysqlChecks": 10,
+    "automaticFullCargaCases": 8,
+    "builderHttpChecks": 7,
+    "typecheck": [
+      "Atrio",
+      "API2"
+    ],
+    "scopedEslint": "passed",
+    "productionSmoke": "passed"
+  },
+  "features": {
+    "leadAndPurchaseExpanded": true,
+    "realAdvisorAndPlayerUuid": true,
+    "promoPrefixAndSuffix": true,
+    "phoneAndEmailWhenAvailable": true,
+    "actualCasinoUsername": true,
+    "managerAndOperationalAgency": true,
+    "botPhoneIncluded": false,
+    "fullNameMeansPayer": true,
+    "aiReceiptClassification": true,
+    "aiBankIds": true,
+    "authoritativeApi2BankMetadataPreserved": true,
+    "internalReferenceSeparatedAs": "pbadmin_transaction_id",
+    "stableActionEventId": true,
+    "timestampMilliseconds": true,
+    "dateTimeUtc": true,
+    "requiresConfirmedCredit": true,
+    "receiptAloneCannotAddMoney": true,
+    "receiptCorrelationByOriginalFileOrUniqueMatchingManualReceipt": true,
+    "receiptReusePrevented": true,
+    "ambiguousReceiptFieldsRemainNull": true,
+    "aiCompletionCanResumeExistingConfirmedDelivery": true,
+    "preparedPayloadFrozenAcrossRetries": true,
+    "fileUrlsNotForwardedToBuilder": true,
+    "builderHashesAvailableEmailAndPayerNameForMeta": true,
+    "initialJourneyOriginPreserved": true
+  },
+  "api2": {
+    "branch": "fix/atrio-bot-form",
+    "deployed": false,
+    "migrationsAppliedInProduction": false,
+    "pendingMigrations": [
+      "20261016000001_create_atrio_player_provisions.ts",
+      "20261016000002_create_atrio_confirmed_load_notifications.ts"
+    ],
+    "secondMigrationExtendedWith": "tracking_data JSON",
+    "pendingMigrationCount": 2,
+    "trackingContextRoute": "/api/v1/bot/atrio/advisors/:atrio_advisor_id/tracking-context",
+    "manualSuccessAndReplayExposeFrozenOperationContext": true,
+    "unavailableBackendFieldsRemainNullUntilRelease": true
+  },
+  "limits": {
+    "realMoneyOperations": 0,
+    "realMetaCalls": 0,
+    "liveAdToPurchaseToMetaCertified": false,
+    "api2ProductionReleaseStillRequired": true,
+    "historicalOperation1Reconciled": false
+  },
+  "release": {
+    "builderFunctionVersion": 165,
+    "builderRedeployedForThisChange": false,
+    "atrioManifestSha256": "a665545c15f08038c6619370942942acc78f0dda07cb11b9fc7260cb22c91380",
+    "snapshotAppSourceVerified": true,
+    "previousAtrioDeployment": "dpl_hsu38mdjC5m474hizRygfbjUSmEV",
+    "gitCommitCreated": false,
+    "gitPushPerformed": false
+  }
+}

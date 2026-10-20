@@ -32,6 +32,7 @@ import {
 } from "./inbound_tracking.ts";
 import {
   actionEventIdempotencyKey,
+  preserveJourneyOrigin,
   canUsePromoForJourney,
   choosePurchaseJourney,
   evaluateInboundTenantOwnership,
@@ -5350,9 +5351,7 @@ async function handleLead(
       dataset_id: inboundDatasetId || norm(trustedLineage?.dataset_id),
       pixel_attribution_source: trustedLineage ? "stored_attribution" : "",
       pixel_attribution_conversion_id: trustedLineage?.id ?? null,
-      source_platform: inboundSourcePlatform ||
-        trustedLineage?.source_platform ||
-        "",
+      source_platform: preserveJourneyOrigin(trustedLineage?.source_platform,inboundSourcePlatform),
       ctwa_clid: inboundCtwaClid || trustedLineage?.ctwa_clid || "",
       atrio_id: inboundAtrioId || trustedLineage?.atrio_id || "",
       atrio_client_id: trustedLineage?.atrio_client_id ?? null,
@@ -7048,8 +7047,7 @@ async function handlePurchase(
       dataset_id: inboundDatasetId || norm(firstSource?.dataset_id),
       pixel_attribution_source: firstSource ? "stored_attribution" : "",
       pixel_attribution_conversion_id: firstSource?.id ?? null,
-      source_platform: inboundSourcePlatform || firstSource?.source_platform ||
-        "",
+      source_platform: preserveJourneyOrigin(firstSource?.source_platform,inboundSourcePlatform),
       ctwa_clid: inboundCtwaClid || firstSource?.ctwa_clid || "",
       atrio_id: inboundAtrioId || firstSource?.atrio_id || "",
       atrio_client_id: firstSource?.atrio_client_id ?? null,
@@ -7283,8 +7281,7 @@ async function handlePurchase(
     configuredPixelIds: configuredPixelIds(config, pixelConfigs),
   });
   const repeatInheritedPixel = repeatAttribution?.pixelId ?? "";
-  const repeatOriginSource = inboundSourcePlatform ||
-    norm(repeatSourceRow?.source_platform);
+  const repeatOriginSource = preserveJourneyOrigin(repeatSourceRow?.source_platform,inboundSourcePlatform);
   const repeatCtwaClid = isClickToWhatsAppSource(repeatOriginSource)
     ? inboundCtwaClid || normalizeCtwaClid(repeatSourceRow?.ctwa_clid)
     : "";
@@ -7724,8 +7721,7 @@ async function handleSimplePurchase(
     configuredPixelIds: configuredPixelIds(config, pixelConfigs),
   });
   const simpleInheritedPixel = simpleAttribution?.pixelId ?? "";
-  const simpleOriginSource = inboundSourcePlatform ||
-    norm(srcRow?.source_platform);
+  const simpleOriginSource = preserveJourneyOrigin(srcRow?.source_platform,inboundSourcePlatform);
   const simpleCtwaClid = isClickToWhatsAppSource(simpleOriginSource)
     ? inboundCtwaClid || normalizeCtwaClid(srcRow?.ctwa_clid)
     : "";

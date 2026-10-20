@@ -1,7 +1,6 @@
 import assert from "node:assert/strict";
 import test from "node:test";
 import type { StartDependencies } from "../lib/reyDeAses/start.server";
-import { createDemoSession, type DemoConfig } from "../lib/reyDeAses/demo.server";
 import {
   handleTemplate7PreparationAccount,
   handleTemplate7PreparationComplete,
@@ -56,7 +55,6 @@ function deps(trace?: DependencyTrace): StartDependencies {
       assert.equal(needsCookie, false);
       return true;
     },
-    demoConfig() { return null; },
     async resolvePlayer(input) {
       assert.equal(input.deviceId, deviceId);
       return {
@@ -116,7 +114,7 @@ test("prepare responde de inmediato con un pase opaco y complete conserva identi
   assert.deepEqual(await response.json(), { handoff_url: "https://gateway.example.com/start?t=handoff" });
 });
 
-test("account muestra solo el usuario y finalize completa el trabajo restante", async () => {
+test("account finaliza en el mismo viaje y finalize compatible no duplica la vinculación", async () => {
   const token = await prepareToken();
   const trace = { links: 0, handoffs: 0 };
   const dependencies = deps(trace);
@@ -131,10 +129,10 @@ test("account muestra solo el usuario y finalize completa el trabajo restante", 
   assert.doesNotMatch(rawAccount, /secret|password|clave/i);
   const accountBody = JSON.parse(rawAccount) as { username: string; continuation_token: string };
   assert.equal(accountBody.username, "player");
-  assert.equal(Object.hasOwn(accountBody, "handoff_url"), false);
+  assert.equal(Object.hasOwn(accountBody, "handoff_url"), true);
   assert.match(accountBody.continuation_token, /^c1\.[A-Za-z0-9_-]+\.[A-Za-z0-9_-]+\.[A-Za-z0-9_-]+$/);
   assert.doesNotMatch(accountBody.continuation_token, /player|secret/i);
-  assert.deepEqual(trace, { links: 0, handoffs: 0 });
+  assert.deepEqual(trace, { links: 1, handoffs: 1 });
 
   const finalize = await handleTemplate7PreparationFinalize(new Request("https://mkt.example.com/api/template7/preparations/finalize", {
     method: "POST",
@@ -224,80 +222,4 @@ test("prepare dirige ganamos_net exclusivamente al gateway configurado", async (
 });
 
 for (const provider of ["multi_skin", "ases_del_norte", "ganamos_net"] as const) {
-  test(`account devuelve el pase ya vinculado de ${provider} y conserva finalize compatible`, async () => {
-    const trace = { links: 0, handoffs: 0 };
-    const dependencies = deps(trace);
-    const originalLanding = dependencies.db.landing;
-    dependencies.db.landing = async (...args) => {
-      const landing = await originalLanding(...args);
-      assert.ok(landing);
-      return { ...landing, config: {
-        template: "template7", ctaDestination: "atrio", targetProvider: provider,
-        ...(provider === "multi_skin" ? { multiSkinCode: "ganamos_plus" } : {}),
-      } };
-    };
-    const originalPlayer = dependencies.resolvePlayer;
-    dependencies.resolvePlayer = async input => ({ ...await originalPlayer(input), target_provider: provider });
-    const config: DemoConfig = {
-      sessionSecret: "s".repeat(32), landingIds: new Set([landingId]), advisorIds: new Set([advisorId]),
-      deviceId, username: "", password: "", multiSkinEnabled: true, asesDelNorteEnabled: true, ganamosNetEnabled: true,
-    };
-    dependencies.demoConfig = () => config;
-    dependencies.resolveAccount = async () => { throw new Error("API2 must not be called"); };
-    const originalHandoff = dependencies.createHandoff;
-    dependencies.createHandoff = async (...args) => ({
-      ...await originalHandoff(...args), provider_username: "gateway-demo",
-    });
-    let releaseLink!: () => void;
-    let linkStarted!: () => void;
-    const started = new Promise<void>(resolve => { linkStarted = resolve; });
-    const pendingLink = new Promise<void>(resolve => { releaseLink = resolve; });
-    const originalLink = dependencies.linkProviderAccount;
-    dependencies.linkProviderAccount = async (...args) => {
-      linkStarted();
-      await pendingLink;
-      return originalLink(...args);
-    };
-    const providerEnv = {
-      ...env, MULTI_SKIN_GATEWAY_ORIGIN: env.REY_GATEWAY_ORIGIN,
-      ASES_DEL_NORTE_GATEWAY_ORIGIN: env.REY_GATEWAY_ORIGIN, GANAMOS_NET_GATEWAY_ORIGIN: env.REY_GATEWAY_ORIGIN,
-    };
-    const instant = Date.now();
-    const prepared = await handleTemplate7Prepare(new Request("https://mkt.example.com/api/template7/prepare", {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json", "X-Template7-Demo-Context": "testing",
-        Cookie: `lb_cid=${deviceId}; t7_demo=${createDemoSession(landingId, payload.landing_slug, config)}`,
-      },
-      body: JSON.stringify({ ...payload, attribution: {
-        target_provider: provider, ...(provider === "multi_skin" ? { skin_code: "ganamos_plus" } : {}),
-      } }),
-    }), providerEnv, instant);
-    assert.equal(prepared.status, 200);
-    const { handoff_url } = await prepared.json();
-    const privateRequest = (body: unknown) => new Request("https://mkt.example.com/api/template7/preparations/account", {
-      method: "POST", headers: { "Content-Type": "application/json", Authorization: `Bearer ${env.TEMPLATE7_PREPARATION_API_KEY}` },
-      body: JSON.stringify(body),
-    });
-    let responded = false;
-    const responsePromise = handleTemplate7PreparationAccount(
-      privateRequest({ token: new URL(handoff_url).searchParams.get("t") }), providerEnv, dependencies, instant,
-    ).then(response => { responded = true; return response; });
-    await started;
-    assert.equal(responded, false, "must wait until the provider account is linked");
-    releaseLink();
-    const response = await responsePromise;
-    assert.equal(response.status, 200);
-    const body = await response.json();
-    assert.deepEqual(Object.keys(body).sort(), ["continuation_token", "handoff_url", "username"]);
-    assert.equal(body.username, "gateway-demo");
-    assert.equal(body.handoff_url, "https://gateway.example.com/start?t=handoff");
-    assert.deepEqual(trace, { links: 1, handoffs: 1 });
-    const legacy = await handleTemplate7PreparationFinalize(
-      privateRequest({ continuation_token: body.continuation_token }), providerEnv, dependencies, instant + 1000,
-    );
-    assert.equal(legacy.status, 200);
-    assert.deepEqual(await legacy.json(), { handoff_url: body.handoff_url });
-    assert.deepEqual(trace, { links: 1, handoffs: 1 }, "legacy finalize must not issue or link twice");
-  });
 }

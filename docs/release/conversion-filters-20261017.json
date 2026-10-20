@@ -1,0 +1,227 @@
+{
+  "at": "2026-10-17T17:58:36.220Z",
+  "production": {
+    "id": "dpl_GqNG6TwbRj1Cqqhw5nW3e8hPbGub",
+    "url": "landing-builder-v2-k259-c3h64luu2-juanclouds-projects.vercel.app",
+    "domains": [
+      "mkt.panelbotadmin.com",
+      "constructor.panelbotadmin.com",
+      "landing-builder-v2-k259.vercel.app"
+    ]
+  },
+  "previousDeployment": {
+    "id": "dpl_F1i7N7QcJz2WQ5nryZRkPW554wei",
+    "url": "landing-builder-v2-k259-necttk87c-juanclouds-projects.vercel.app",
+    "manifestSha256": "ed4b36881e15a6c03bca5c38d385724864865784634125a744bc5dfc1b348ff4"
+  },
+  "changedFiles": [
+    {
+      "file": "frontend/app/(panel)/admin/conversiones/page.tsx",
+      "beforeSha256": "4683275f93ae6e0b88040b1086db502eb0ac29bc34e7a56b776f003f822909ee",
+      "afterSha256": "5efe31b061ad3dbea38f206b92d6db1ffb4d89ba4459fa614d133c764aefd110"
+    },
+    {
+      "file": "frontend/app/(panel)/dashboard/conversiones/page.tsx",
+      "beforeSha256": "1ccfbb752a408efa361835ba875863418e6912c648bc61806bd5dbd7ce3b4ea6",
+      "afterSha256": "ec589f6a5a95176040c57f9495df1d8dd4af804396b755f60dafbb899ff99900"
+    },
+    {
+      "file": "frontend/components/conversiones/ConversionFiltersModal.tsx",
+      "beforeSha256": "c902ed0fd9dfe690bd38499075cb8a43c7833e35e0599d4f94e4bea7b45d30af",
+      "afterSha256": "63b576b1032fec2c72c4fd2beaeea819d040a08212bce41718fc686a0eac11e2"
+    },
+    {
+      "file": "frontend/components/conversiones/useConversionStatsFilters.ts",
+      "beforeSha256": "a9dfc9fa32891a602cb4577564abd1ec0c59697ee406a555033bc7c498356679",
+      "afterSha256": "acda0750608c79efb47d4c2300a5ff79f27f837efa88baf245d960ded0471243"
+    },
+    {
+      "file": "frontend/components/conversiones/attributionFilters.ts",
+      "beforeSha256": null,
+      "afterSha256": "ea0470106873cec38937258f06327953d8dd987e24998a5b4b04fa96978d3786"
+    },
+    {
+      "file": "frontend/tests/conversionAttributionFilters.test.ts",
+      "beforeSha256": null,
+      "afterSha256": "bc176b7685a67d1c4e70a46d148364361d10f85625b9754cb82ed8c525b83ca0"
+    },
+    {
+      "file": "frontend/scripts/conversion-filters-browser-check.ts",
+      "beforeSha256": null,
+      "afterSha256": "545fa8a23140e40de9f9d450d77fbd43858ea8402ab93059608115ed890b94c1"
+    }
+  ],
+  "validation": {
+    "productionBuild": true,
+    "unitAndRegressionTestsPassed": 25,
+    "typescript": true,
+    "eslint": true,
+    "isolatedBrowserViewports": [
+      [
+        1365,
+        900
+      ],
+      [
+        390,
+        844
+      ],
+      [
+        844,
+        390
+      ]
+    ],
+    "livePages": [
+      {
+        "route": "/dashboard/conversiones",
+        "status": 200,
+        "chunks": [
+          {
+            "src": "/_next/static/chunks/69ca64d72753068a.js",
+            "sha256": "226393df2f52d3d811cc85aea767c3b927fc11e72f8236f03e0e666d919508eb"
+          },
+          {
+            "src": "/_next/static/chunks/db4b7f5d78fac29b.js",
+            "sha256": "c93e91b993e7e0bd6822144a568beb015fc4ecb0bd67961ba815ebe2e5679fc2"
+          },
+          {
+            "src": "/_next/static/chunks/dbb2035b98714324.js",
+            "sha256": "88bf77efdfb45332d4add75b120e4ec986f84e4f3bdf473beb9f3333cf283f73"
+          },
+          {
+            "src": "/_next/static/chunks/a200072ca792a0a6.js",
+            "sha256": "68552477e87e883ede78c5e2fffbbacb2659e295cb0b4955bbb4d746379dfe97"
+          },
+          {
+            "src": "/_next/static/chunks/turbopack-0abd787a9900777c.js",
+            "sha256": "8a4023e168919f04e3c09e4bce371dfb7fde21dcba8be41cca6733e574464488"
+          },
+          {
+            "src": "/_next/static/chunks/6e9ac5b86215ad1c.js",
+            "sha256": "ea4abfaca8dbcf7e2a58ee73c8dfc5a8eae7eda251bb2c35c5cf8a023d0eb961"
+          },
+          {
+            "src": "/_next/static/chunks/4e23ab0c08513715.js",
+            "sha256": "382cc69f7527347d2c99e0bd39b1271bf59cad2761f0f417950ca6b14cf10d89"
+          },
+          {
+            "src": "/_next/static/chunks/9596464006de534c.js",
+            "sha256": "b546f48b9ba751f601092348d9e5d1184424398e0473ab8e1a6bc1fa102c2502"
+          },
+          {
+            "src": "/_next/static/chunks/7a1f54e501a02723.js",
+            "sha256": "63a023bfbe7ba4ab353e9ee06efbf682aa76b9569c8f9f826f49e7f2ba83b7ca"
+          },
+          {
+            "src": "/_next/static/chunks/fa3b140d575f334d.js",
+            "sha256": "bad04e9294446003d53cc7a916d445bb1d4bd937d11f91c04df9a22f57c375f3"
+          },
+          {
+            "src": "/_next/static/chunks/577f9d6b6af07f04.js",
+            "sha256": "1882a0cc13a40110357155887dea190595cee726826bc62dd6231c943bf22152"
+          },
+          {
+            "src": "/_next/static/chunks/0ea8d4ae4b025055.js",
+            "sha256": "565b3c3e1148d8b2a85b7fb1937137cdb0fb7e2ae82476778b12d6d479c26343"
+          },
+          {
+            "src": "/_next/static/chunks/8f6cc9a497d1042f.js",
+            "sha256": "c53a61daacca3269290a286192ea53f80d815d0b40dbf4b41375bca26ad036b7"
+          },
+          {
+            "src": "/_next/static/chunks/181d4a3a2418ab87.js",
+            "sha256": "716645a87fb2fac2723b76e1c0ac9ce01f175ecc9a1a4d2ad146bb29d172eba1"
+          },
+          {
+            "src": "/_next/static/chunks/a6dad97d9634a72d.js",
+            "sha256": "0973c1d64c88adc8e3c950410cb58b288f72118d5965b78049438deb8f2f9683"
+          },
+          {
+            "src": "/_next/static/chunks/f7281c1aca924357.js",
+            "sha256": "6e580a3022b8e2291b6f7e7116fbc3c35177a1a9e5d49f3dc77570f680756aac"
+          }
+        ],
+        "campaignCompatibility": true,
+        "adSetFilter": true,
+        "adFilter": true
+      },
+      {
+        "route": "/admin/conversiones",
+        "status": 200,
+        "chunks": [
+          {
+            "src": "/_next/static/chunks/69ca64d72753068a.js",
+            "sha256": "226393df2f52d3d811cc85aea767c3b927fc11e72f8236f03e0e666d919508eb"
+          },
+          {
+            "src": "/_next/static/chunks/db4b7f5d78fac29b.js",
+            "sha256": "c93e91b993e7e0bd6822144a568beb015fc4ecb0bd67961ba815ebe2e5679fc2"
+          },
+          {
+            "src": "/_next/static/chunks/dbb2035b98714324.js",
+            "sha256": "88bf77efdfb45332d4add75b120e4ec986f84e4f3bdf473beb9f3333cf283f73"
+          },
+          {
+            "src": "/_next/static/chunks/a200072ca792a0a6.js",
+            "sha256": "68552477e87e883ede78c5e2fffbbacb2659e295cb0b4955bbb4d746379dfe97"
+          },
+          {
+            "src": "/_next/static/chunks/turbopack-0abd787a9900777c.js",
+            "sha256": "8a4023e168919f04e3c09e4bce371dfb7fde21dcba8be41cca6733e574464488"
+          },
+          {
+            "src": "/_next/static/chunks/6e9ac5b86215ad1c.js",
+            "sha256": "ea4abfaca8dbcf7e2a58ee73c8dfc5a8eae7eda251bb2c35c5cf8a023d0eb961"
+          },
+          {
+            "src": "/_next/static/chunks/4e23ab0c08513715.js",
+            "sha256": "382cc69f7527347d2c99e0bd39b1271bf59cad2761f0f417950ca6b14cf10d89"
+          },
+          {
+            "src": "/_next/static/chunks/9596464006de534c.js",
+            "sha256": "b546f48b9ba751f601092348d9e5d1184424398e0473ab8e1a6bc1fa102c2502"
+          },
+          {
+            "src": "/_next/static/chunks/04dba9760a61bddf.js",
+            "sha256": "fbb62b27ad42c2b13a38ad1c2255851aa2c2254e382b9a50d062dd2b36233318"
+          },
+          {
+            "src": "/_next/static/chunks/fa3b140d575f334d.js",
+            "sha256": "bad04e9294446003d53cc7a916d445bb1d4bd937d11f91c04df9a22f57c375f3"
+          },
+          {
+            "src": "/_next/static/chunks/577f9d6b6af07f04.js",
+            "sha256": "1882a0cc13a40110357155887dea190595cee726826bc62dd6231c943bf22152"
+          },
+          {
+            "src": "/_next/static/chunks/87b09470673f2a3a.js",
+            "sha256": "960af31e03e7b483859db797ae6e27fb1f32c681c8d2d9deb497c8140abcaebd"
+          },
+          {
+            "src": "/_next/static/chunks/725bd8579b32a588.js",
+            "sha256": "a3b006fd174746a83d120efb5c8f772b0add4b9f9b761ff441c5b761fd901fd6"
+          },
+          {
+            "src": "/_next/static/chunks/181d4a3a2418ab87.js",
+            "sha256": "716645a87fb2fac2723b76e1c0ac9ce01f175ecc9a1a4d2ad146bb29d172eba1"
+          },
+          {
+            "src": "/_next/static/chunks/a6dad97d9634a72d.js",
+            "sha256": "0973c1d64c88adc8e3c950410cb58b288f72118d5965b78049438deb8f2f9683"
+          },
+          {
+            "src": "/_next/static/chunks/f7281c1aca924357.js",
+            "sha256": "6e580a3022b8e2291b6f7e7116fbc3c35177a1a9e5d49f3dc77570f680756aac"
+          }
+        ],
+        "campaignCompatibility": true,
+        "adSetFilter": true,
+        "adFilter": true
+      }
+    ],
+    "liveAuthenticatedDataTest": false
+  },
+  "metaAdsClassificationChanged": false,
+  "databaseMigrations": [],
+  "edgeFunctionsDeployed": [],
+  "privateEvidence": ".vercel/release-20261017-conversion-filters"
+}

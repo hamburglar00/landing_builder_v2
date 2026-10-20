@@ -1,0 +1,148 @@
+{
+  "validatedAt": "2026-10-16T22:55:39.133Z",
+  "scope": "API2 local; Atrio and builder conversions published",
+  "production": {
+    "atrio": {
+      "verifiedAt": "2026-10-16T22:54:35.923Z",
+      "deploymentId": "dpl_hsu38mdjC5m474hizRygfbjUSmEV",
+      "url": "internal-chat-ojpl5gr43-juanclouds-projects.vercel.app",
+      "customDomain": "www.atrio.website",
+      "readyState": "READY",
+      "unauthenticatedCron": 401,
+      "unauthenticatedConfirmedLoad": 401,
+      "authorizedCron": {
+        "status": 200,
+        "processed": 0,
+        "failed": false
+      },
+      "confirmedLedgerRows": 0,
+      "realMoneyOperations": 0
+    },
+    "builder": {
+      "function": "conversions",
+      "version": 165,
+      "status": "ACTIVE",
+      "project": "fdkjkzpjqfbaavylapun",
+      "sha256": "97721b671670b3ea2eda65d9d3dce116f374118b35ad33aa0345fd385ebb8b68",
+      "publishedFilesVerified": 6,
+      "frontendDeployedForThisChange": false
+    },
+    "atrioDatabase": {
+      "migration": "20261016224432_pbadmin_confirmed_loads",
+      "rlsEnabled": true,
+      "advisorCanRecordLoad": false,
+      "serviceCanRecordLoad": true,
+      "realtimeEnabled": true,
+      "confirmedLoadRowsAtRelease": 0
+    },
+    "ui": {
+      "managerId": 1035,
+      "username": "prueba5584",
+      "checks": [
+        "desktop-promo-directly-after-total",
+        "desktop-operations-accessible",
+        "desktop-no-horizontal-overflow",
+        "confirmed-load-total-description",
+        "desktop-user-and-contact-expanded",
+        "desktop-metadata-visible",
+        "mobile-both-sections-collapsed-by-default",
+        "mobile-collapsed-fields-hidden",
+        "mobile-390-promo-directly-after-total",
+        "mobile-390-operations-accessible",
+        "mobile-390-no-horizontal-overflow",
+        "mobile-metadata-hidden",
+        "mobile-user-expands-independently",
+        "mobile-contact-expands-with-keyboard",
+        "mobile-both-sections-can-collapse-again",
+        "mobile-reopened-contact-defaults-collapsed",
+        "mobile-768-promo-directly-after-total",
+        "mobile-768-operations-accessible",
+        "mobile-768-no-horizontal-overflow",
+        "mobile-768-metadata-hidden-and-sections-collapsed"
+      ],
+      "financialMutationsAttempted": 0,
+      "api2FixDeployed": false,
+      "viewports": [
+        {
+          "width": 1440,
+          "height": 1000,
+          "mobile": false
+        },
+        {
+          "width": 390,
+          "height": 980,
+          "mobile": true
+        },
+        {
+          "width": 768,
+          "height": 1024,
+          "mobile": true
+        }
+      ],
+      "totalLoadedDisplayed": "$ 0"
+    }
+  },
+  "validation": {
+    "atrioUnitTests": 20,
+    "confirmedLoadHttpIntegration": 17,
+    "inboxRegression": 58,
+    "inboxRegressionBrowserSubset": 12,
+    "postgresPersistenceAndTenancy": 12,
+    "mysqlPersistenceAndConcurrency": 9,
+    "automaticLoadFlow": 8,
+    "builderDenoUnitTests": 55,
+    "builderContactLeadFirstRepeatReplayHttp": 5,
+    "typecheck": [
+      "Atrio",
+      "API2",
+      "builder conversions Deno"
+    ],
+    "scopedEslint": "passed"
+  },
+  "semantics": {
+    "onlyApi2ConfirmedLoadsCount": true,
+    "manualAndAutomatic": true,
+    "receiptsAreInformational": true,
+    "withdrawalsDoNotSubtract": true,
+    "bonusExcludedFromPaidAmount": true,
+    "stableOperationAndEventIds": true,
+    "initialAcquisitionSourcePreserved": true,
+    "eventEmitterRecordedSeparately": true,
+    "advisorAndPlayerTrackingIdsCorrected": true,
+    "originalConversationFrozen": true,
+    "advisorTokenInsufficientToForgeMoney": true
+  },
+  "api2": {
+    "branch": "fix/atrio-bot-form",
+    "deployed": false,
+    "productionMigrationsApplied": false,
+    "pendingMigrations": [
+      "20261016000001_create_atrio_player_provisions.ts",
+      "20261016000002_create_atrio_confirmed_load_notifications.ts"
+    ],
+    "historicalOperation1": {
+      "managerId": 1035,
+      "username": "prueba5584",
+      "creditedAmount": 1000,
+      "status": "processing",
+      "reconciled": false,
+      "replayed": false,
+      "backfilled": false
+    }
+  },
+  "limits": {
+    "realMoneyOperations": 0,
+    "realMetaConversions": 0,
+    "liveMetaCapiEndToEndCertified": false,
+    "automaticLoadProductionRequiresApi2Release": true,
+    "noHistoricalReceiptBackfill": true
+  },
+  "release": {
+    "manifestFile": "internal-chat-source.json",
+    "manifestSha256": "c4c84e4c624240fc99043225453b49a6ee99e2b0272165b0f7d310ff78f4f53a",
+    "files": 302,
+    "appSourceMatchesPublishedSnapshot": true,
+    "gitCommitCreated": false,
+    "gitPushPerformed": false
+  }
+}

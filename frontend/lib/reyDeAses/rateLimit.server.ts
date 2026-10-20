@@ -62,6 +62,11 @@ export async function allowBootstrap(request: Request): Promise<boolean> {
   return consume(`bootstrap-ip:${ip}`, 40, 60);
 }
 
+export async function allowTemplate7Warm(request: Request, deviceId: string): Promise<boolean> {
+  if (!await consume(`warm-ip:${clientIp(request)}`, 60, 60)) return false;
+  return consume(`warm-device:${deviceId}`, 6, 60);
+}
+
 export async function allowTemplate7Start(request: Request, landingId: string, deviceId: string, needsCookie: boolean): Promise<boolean> {
   const ip = clientIp(request);
   if (!await consume(`global-ip:${ip}`, 120, 60)) return false;

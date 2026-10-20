@@ -1,0 +1,23 @@
+{
+  "at": "2026-10-17T17:13:48.878Z",
+  "deploymentId": "dpl_HspXi5q5ZqdM2BMQrgbbtwgwYVzb",
+  "previousDeploymentId": "dpl_GuLa6ScLa7o8cdwXiDFm478uxMi2",
+  "sourceManifestSha256": "713e3ea2e92171c75f023cb752f049513aad9abe81e91c886b1e7b42c9a2bb0e",
+  "loginStatus": 200,
+  "rule": "No emoji without positive lifetime API2-confirmed loads; existing thresholds retained.",
+  "surfaces": [
+    "mobile-inbox",
+    "mobile-chat-header",
+    "desktop-inbox",
+    "desktop-chat-header"
+  ],
+  "checks": {
+    "typecheck": true,
+    "eslint": true,
+    "inboxTestsPassed": 23,
+    "amountBoundaries": true,
+    "productionBuild": true
+  },
+  "api2Modified": false,
+  "newMigrations": 0
+}

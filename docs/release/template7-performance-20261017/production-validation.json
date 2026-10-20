@@ -1,0 +1,142 @@
+{
+  "checkedAt": "2026-10-17T00:24:35.817Z",
+  "deployments": {
+    "vercel": [
+      {
+        "name": "internal-chat",
+        "id": "dpl_3C6FLEeXzETcdKDiywKhZhDnAvNh",
+        "url": "internal-chat-6aq6qzobo-juanclouds-projects.vercel.app",
+        "readyState": "READY"
+      },
+      {
+        "name": "landing-autologuin",
+        "id": "dpl_ET1wjnuyMZGZeWFEACvmq3zHgwB4",
+        "url": "reydeases-gateway-20soxq00x-juanclouds-projects.vercel.app",
+        "readyState": "READY"
+      },
+      {
+        "name": "multi-skin-gateway",
+        "id": "dpl_6a89NCoUzaFYWueHWnQw982E39tH",
+        "url": "multi-skin-gateway-ra71hau68-juanclouds-projects.vercel.app",
+        "readyState": "READY"
+      },
+      {
+        "name": "ases-gateway",
+        "id": "dpl_HvcbJZDrBatHUKCcj7oSdvxVnCaF",
+        "url": "ases-del-norte-gateway-loppkksbg-juanclouds-projects.vercel.app",
+        "readyState": "READY"
+      },
+      {
+        "name": "ganamos-gateway",
+        "id": "dpl_Ea5EYjBW5bojQnFAoBYgjq6Jgwnf",
+        "url": "ganamos-net-gateway-nsrmk5364-juanclouds-projects.vercel.app",
+        "readyState": "READY"
+      }
+    ],
+    "worker": {
+      "name": "multi-skin-gateway",
+      "domain": "ganamosnet.global",
+      "version": "084ef410-0969-44d2-8cc7-3930eeb65560",
+      "previous": [
+        {
+          "version_id": "9bfdaf08-7c9e-4369-9168-4cc5a408c702",
+          "percentage": 100
+        }
+      ]
+    }
+  },
+  "manifests": [
+    {
+      "name": "internal-chat",
+      "baseCommit": "bf3d70c057695a6f47aea0e4ac1fd7003a2bf96e",
+      "sha256": "869fd2faf9189c9ef3d4f1ee2952b012dca6e93989f598cfa21cee826082c8db",
+      "files": 309
+    },
+    {
+      "name": "landing-autologuin",
+      "baseCommit": "703e5a81e903818fdb456473ff5aff3d34c6c532",
+      "sha256": "0aa1ca146b7c5401a49821840f0a9822dc131d525d729d987f43588f43101d5e",
+      "files": 101
+    },
+    {
+      "name": "multi-skin-gateway",
+      "baseCommit": "db1300d198a1f2a2eccd77d78aff39a45a47eeee",
+      "sha256": "0189aa15fb238983e6946bb9e851ffe89d3b1c41fd5999dee203ca61b6cdec12",
+      "files": 75
+    },
+    {
+      "name": "ases-gateway",
+      "baseCommit": "b045375c1be2b2e10f9d90d70ca5829924ce397f",
+      "sha256": "71a41ffe2ca2fddd8310626d175ac38879e3b0f01bd2fc9017656a5e7308d1ca",
+      "files": 70
+    },
+    {
+      "name": "ganamos-gateway",
+      "baseCommit": "ad6f989d8c0d65866a3749efdddb159d6303d042",
+      "sha256": "ed30619d5e4590ddcf00577ef42a4f9a5adfd9f8483403a71d5cbfa30b350b23",
+      "files": 76
+    }
+  ],
+  "smoke": {
+    "checkedAt": "2026-10-17T00:21:27.541Z",
+    "rows": [
+      {
+        "origin": "https://www.reydeases.fun",
+        "healthStatus": 200,
+        "prepareStatus": 200,
+        "noFixedDelay": true,
+        "immediateNavigation": true,
+        "resumeStatus": 303
+      },
+      {
+        "origin": "https://ganamosnet.global",
+        "healthStatus": 200,
+        "prepareStatus": 200,
+        "noFixedDelay": true,
+        "immediateNavigation": true,
+        "resumeStatus": 303
+      },
+      {
+        "origin": "https://www.asesdelnorte.online",
+        "healthStatus": 200,
+        "prepareStatus": 200,
+        "noFixedDelay": true,
+        "immediateNavigation": true,
+        "resumeStatus": 303
+      },
+      {
+        "origin": "https://www.ganamosnet.icu",
+        "healthStatus": 200,
+        "prepareStatus": 200,
+        "noFixedDelay": true,
+        "immediateNavigation": true,
+        "resumeStatus": 303
+      }
+    ]
+  },
+  "checks": {
+    "gatewayTestsPassed": 338,
+    "gatewayTestsSkipped": 2,
+    "gatewayTypechecks": true,
+    "atrioTypecheck": true,
+    "atrioScopedLint": true,
+    "atrioPlayerTestsPassed": 41,
+    "atrioBootstrapChecksPassed": 7,
+    "widgetParallelBrowserScenarios": 4,
+    "integratedLocalScenarios": 13,
+    "reentryBrowserScenarios": 32
+  },
+  "api2": {
+    "deployed": false,
+    "pushed": false,
+    "branch": "fix/atrio-bot-form",
+    "newMigrationsThisTask": 0,
+    "pendingMigrations": [
+      "20261016000001_create_atrio_player_provisions.ts",
+      "20261016000002_create_atrio_confirmed_load_notifications.ts"
+    ]
+  },
+  "commitsCreated": 0,
+  "gitPushes": 0,
+  "realMoneyOperations": 0
+}

@@ -1,0 +1,141 @@
+{
+  "at": "2026-10-17T20:28:25.563Z",
+  "api2": {
+    "branch": "fix/atrio-bot-form",
+    "committed": false,
+    "pushed": false,
+    "deployed": false,
+    "additionalMigrations": 0,
+    "pendingMigrations": 3,
+    "completeFlowRetained": true,
+    "defaultMode": "complete",
+    "dedicatedPath": "/api/v1/bot/managers/:manager_id/players/create-only",
+    "compatibleModeField": "creation_mode",
+    "controllerAndMiddlewareIsolatedChecks": 7,
+    "providerTests": 16,
+    "typecheck": true,
+    "previousValidatorIgnoresNewMode": true,
+    "files": [
+      {
+        "file": "app/clients/ganamos_api.client.ts",
+        "sha256": "ddd0a52d85a1974820f633735c862bc10fb9e0fab636a1b061b1c01f7f0f7896"
+      },
+      {
+        "file": "app/controllers/players.controller.ts",
+        "sha256": "2d1f5edf42fb3145ce75348e4da08810f865582951436f10acd9488ac7dbfc9f"
+      },
+      {
+        "file": "app/validators/player_create_external.validator.ts",
+        "sha256": "b0aad51633ca9f3b6d6c1d0dfa530e590fe90afefe1d12e85e297d3ce9ba9c59"
+      },
+      {
+        "file": "start/routes/api_bot.routes.ts",
+        "sha256": "80d4c82801fc2a20c9b5a088f2d8611b952e698a2f8e5cd335c20376cbc80230"
+      },
+      {
+        "file": "tests/isolated/ganamos_registration.test.ts",
+        "sha256": "9f6730de642d289603a84b0f63f0dc7179af065025ca00a7fd1a68dc95eac58c"
+      }
+    ]
+  },
+  "template7": {
+    "provider": "ganamos_net",
+    "mode": "create_only",
+    "originalEndpointRetained": true,
+    "tests": 62,
+    "typecheck": true,
+    "lint": true,
+    "fastModeAwaitsApi2Deployment": true
+  },
+  "gateway": {
+    "origin": "https://ganamosbet.net",
+    "focusedLoginTests": 8,
+    "fullSuiteBeforeFinalRetryTest": 78,
+    "typecheck": true,
+    "activatesOnlyWhenFlagFalse": true,
+    "verifiesUsername": true,
+    "retriesReuseActivatedAccount": true
+  },
+  "measurements": {
+    "scope": "One real provider account measured from Windows using API2 proxy settings. Individual stages, not complete Template 7 latency.",
+    "username": "qtb94522f3",
+    "agencyId": 193,
+    "managerId": 894,
+    "creationMilliseconds": 1179,
+    "firstGatewayLoginMilliseconds": 1813,
+    "returningGatewayLoginMilliseconds": 1617,
+    "originalPasswordVerified": true,
+    "ownershipVerified": true,
+    "initialPasswordFlag": false,
+    "activatedPasswordFlag": true,
+    "firstGatewayLogin": [
+      {
+        "path": "/api/user/check",
+        "httpStatus": 200,
+        "status": 1,
+        "milliseconds": 431
+      },
+      {
+        "path": "/api/user/login",
+        "httpStatus": 200,
+        "status": 0,
+        "milliseconds": 550
+      },
+      {
+        "path": "/api/user/check",
+        "httpStatus": 200,
+        "status": 0,
+        "milliseconds": 416
+      },
+      {
+        "path": "/api/user/required_change_password",
+        "httpStatus": 200,
+        "status": 0,
+        "milliseconds": 409
+      }
+    ],
+    "returningGatewayLogin": [
+      {
+        "path": "/api/user/check",
+        "httpStatus": 200,
+        "status": 1,
+        "milliseconds": 423
+      },
+      {
+        "path": "/api/user/login",
+        "httpStatus": 200,
+        "status": 0,
+        "milliseconds": 791
+      },
+      {
+        "path": "/api/user/check",
+        "httpStatus": 200,
+        "status": 0,
+        "milliseconds": 398
+      }
+    ]
+  },
+  "production": {
+    "at": "2026-10-17T20:27:30.793Z",
+    "deployments": [
+      {
+        "repo": "ganamos-gateway",
+        "id": "dpl_FZFo96bWGkeAEGZ8ox83GaRBU1at",
+        "url": "ganamos-net-gateway-6tyofcbu2-juanclouds-projects.vercel.app"
+      },
+      {
+        "repo": "landing-builder",
+        "id": "dpl_AbZUivXNQ2Dx29wkpr9ha1uAhxAL",
+        "url": "landing-builder-v2-k259-9bt5pb8tn-juanclouds-projects.vercel.app"
+      }
+    ],
+    "sourceMatchesSnapshots": true,
+    "netHealthStatus": 200,
+    "existingReyTemplate7Status": 200,
+    "api2Deployed": false
+  },
+  "realProviderAccountsCreated": 1,
+  "realMoneyOperations": 0,
+  "realMessagesSent": 0,
+  "productionApi2DatabaseWrites": 0
+}

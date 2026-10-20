@@ -2,7 +2,6 @@ import assert from "node:assert/strict";
 import test from "node:test";
 import { handleReyStart, type StartDependencies } from "../lib/reyDeAses/start.server";
 import { api2Readiness, createProviderHandoff, gatewayReadiness, linkInternalChatProviderAccount, resolveInternalChatPlayer, resolveTargetAccount } from "../lib/reyDeAses/integrations.server";
-import { createDemoSession, readDemoConfig } from "../lib/reyDeAses/demo.server";
 import type { ResolvedPlayer } from "../lib/reyDeAses/contracts";
 import type { TargetProvider } from "../lib/landing/types";
 
@@ -18,54 +17,10 @@ const demoDeviceId = "77777777-7777-4777-8777-777777777777";
 
 function resolvedPlayer(provider: TargetProvider = "rey_de_ases", resolvedDeviceId = deviceId): ResolvedPlayer {
   return {
-    advisor_id: advisorId, advisor_slug: "gera", player_id: playerId, device_id: resolvedDeviceId,
+    manager_id: 1035, agency_id:272, advisor_id: advisorId, advisor_slug: "gera", player_id: playerId, device_id: resolvedDeviceId,
     created: true, player_provider_account_id: provider === "multi_skin" ? multiSkinAccountId : providerAccountId,
     target_provider: provider, provider_account_created: true,
   };
-}
-
-function demoConfig() {
-  const config = readDemoConfig({
-    TEMPLATE7_DEMO_ENABLED: "true",
-    TEMPLATE7_DEMO_SESSION_SECRET: "s".repeat(32), TEMPLATE7_DEMO_LANDING_IDS: landingId,
-    TEMPLATE7_DEMO_ADVISOR_IDS: advisorId, TEMPLATE7_DEMO_DEVICE_ID: demoDeviceId,
-    TEMPLATE7_DEMO_REY_USERNAME: "demo-user", TEMPLATE7_DEMO_REY_PASSWORD: "demo-pass",
-  });
-  assert.ok(config);
-  return config;
-}
-
-function multiSkinDemoConfig() {
-  const config = readDemoConfig({
-    TEMPLATE7_DEMO_ENABLED: "true",
-    TEMPLATE7_DEMO_SESSION_SECRET: "s".repeat(32), TEMPLATE7_DEMO_LANDING_IDS: landingId,
-    TEMPLATE7_DEMO_ADVISOR_IDS: advisorId, TEMPLATE7_DEMO_DEVICE_ID: demoDeviceId,
-    TEMPLATE7_DEMO_MULTI_SKIN_ENABLED: "true",
-  });
-  assert.ok(config);
-  return config;
-}
-
-function ganamosNetDemoConfig() {
-  const config = readDemoConfig({
-    TEMPLATE7_DEMO_ENABLED: "true",
-    TEMPLATE7_DEMO_SESSION_SECRET: "s".repeat(32), TEMPLATE7_DEMO_LANDING_IDS: landingId,
-    TEMPLATE7_DEMO_ADVISOR_IDS: advisorId, TEMPLATE7_DEMO_DEVICE_ID: demoDeviceId,
-    TEMPLATE7_DEMO_GANAMOS_NET_ENABLED: "true",
-  });
-  assert.ok(config);
-  return config;
-}
-
-function asesDelNorteDemoConfig() {
-  const config = readDemoConfig({
-    TEMPLATE7_DEMO_ENABLED: "true",
-    TEMPLATE7_DEMO_SESSION_SECRET: "s".repeat(32), TEMPLATE7_DEMO_LANDING_IDS: landingId,
-    TEMPLATE7_DEMO_ADVISOR_IDS: advisorId, TEMPLATE7_DEMO_DEVICE_ID: demoDeviceId,
-    TEMPLATE7_DEMO_ASES_DEL_NORTE_ENABLED: "true",
-  });
-  assert.ok(config);
-  return config;
 }
 
 const validPayload = {
@@ -100,7 +55,6 @@ function dependencies(status: ReturnType<StartDependencies["api2Status"]> = null
     api2Status() { calls.push("api2-readiness"); return status; },
     gatewayStatus(targetProvider) { calls.push("gateway-readiness:" + targetProvider); return null; },
     async allowStart() { calls.push("rate-limit"); return true; },
-    demoConfig() { calls.push("demo-config"); return null; },
     async resolvePlayer(input) {
       calls.push("internal-chat");
       assert.equal(input.advisor.advisorId, advisorId);
@@ -114,7 +68,7 @@ function dependencies(status: ReturnType<StartDependencies["api2Status"]> = null
     async resolveAccount(accountRequest) {
       calls.push("api2");
       assert.deepEqual(accountRequest, {
-        external_user_id: playerId, name: "Martín", target_provider: provider,
+        manager_id:1035, agency_id:272, external_user_id: playerId, name: "Martín", target_provider: provider,
         advisor_id: advisorId, advisor_slug: "gera",
         ...(provider === "multi_skin" ? { skin_code: "ganamos_plus" } : {}),
       });
@@ -131,7 +85,7 @@ function dependencies(status: ReturnType<StartDependencies["api2Status"]> = null
         provider_external_account_id: account.externalAccountId ?? null,
       };
     },
-    async createHandoff(targetProvider, advisor, incomingDeviceId, player, account, _skinCode, _testing, promoCode) {
+    async createHandoff(targetProvider, advisor, incomingDeviceId, player, account, _skinCode, promoCode) {
       calls.push("gateway");
       assert.equal(targetProvider, provider ?? "rey_de_ases");
       assert.equal(advisor.advisorSlug, "gera");
@@ -338,211 +292,6 @@ test("start sin bootstrap crea lb_cid en servidor y usa ese mismo UUID", async (
   assert.deepEqual(await result.json(), { handoff_url: "https://gateway.example.com/start?t=token" });
 });
 
-test("demo válida mantiene validaciones, limita con lb_cid y solo sustituye API2", async () => {
-  const { deps, calls } = dependencies();
-  const cfg = demoConfig();
-  const token = createDemoSession(landingId, "landing-7", cfg);
-  deps.demoConfig = () => { calls.push("demo-config"); return cfg; };
-  deps.allowStart = async (_request, id, cid) => { calls.push("rate-limit"); assert.equal(id, landingId); assert.equal(cid, deviceId); return true; };
-  deps.api2Status = () => { throw Error("API2 must not be called"); };
-  deps.resolveAccount = async () => { throw Error("API2 must not be called"); };
-  deps.resolvePlayer = async (input) => {
-    calls.push("internal-chat");
-    assert.equal(input.deviceId, demoDeviceId);
-    assert.equal(input.landingId, landingId);
-    assert.equal(input.targetProvider, "rey_de_ases");
-    return { ...resolvedPlayer(input.targetProvider, demoDeviceId), created: false, provider_account_created: false };
-  };
-  deps.createHandoff = async (provider, _advisor, cid, _player, account) => {
-    calls.push("gateway");
-    assert.equal(provider, "rey_de_ases");
-    assert.equal(cid, demoDeviceId);
-    assert.deepEqual(account, { username: "demo-user", password: "demo-pass", platform: "rey_de_ases", created: false });
-    return { handoff_url: "https://gateway.example.com/start?t=demo", expires_at: "2026-10-08T12:00:00Z", binding_created: true };
-  };
-  const result = await handleReyStart(request(validPayload, {
-    Cookie: `lb_cid=${deviceId}; t7_demo=${token}`, "X-Template7-Demo-Context": "testing",
-  }), deps);
-  assert.equal(result.status, 200);
-  assert.deepEqual(await result.json(), { handoff_url: "https://gateway.example.com/start?t=demo" });
-  assert.deepEqual(calls, ["landing", "demo-config", "plan", "rate-limit", "assignment", "advisor", "gateway-readiness:rey_de_ases", "internal-chat", "internal-chat-link", "gateway"]);
-});
-
-test("ruta normal ignora cookie demo; indicador sin sesión no autoriza", async () => {
-  const { deps, calls } = dependencies("integration_pending");
-  const token = createDemoSession(landingId, "landing-7", demoConfig());
-  const normal = await handleReyStart(request(validPayload, { Cookie: `lb_cid=${deviceId}; t7_demo=${token}` }), deps);
-  assert.equal(normal.status, 503);
-  assert.deepEqual(await normal.json(), { error: "integration_pending" });
-  assert.ok(!calls.includes("demo-config"));
-  const spoofed = await handleReyStart(request({ ...validPayload, demo: true }, { "X-Template7-Demo-Context": "testing" }), deps);
-  assert.equal(spoofed.status, 403);
-  assert.deepEqual(await spoofed.json(), { error: "demo_not_authorized" });
-  assert.ok(!calls.includes("demo-config"));
-});
-
-test("demo adulterada u otra landing y asesor no permitido no llegan a internal-chat", async () => {
-  const cfg = demoConfig();
-  const token = createDemoSession(landingId, "landing-7", cfg);
-  const { deps, calls } = dependencies();
-  deps.demoConfig = () => cfg;
-  for (const cookie of [`${token}x`, createDemoSession(landingId, "otra-landing", cfg)]) {
-    const result = await handleReyStart(request(validPayload, {
-      Cookie: `lb_cid=${deviceId}; t7_demo=${cookie}`, "X-Template7-Demo-Context": "testing",
-    }), deps);
-    assert.equal(result.status, 403);
-  }
-  assert.ok(!calls.includes("internal-chat"));
-  const noAdvisor = readDemoConfig({
-    TEMPLATE7_DEMO_ENABLED: "true",
-    TEMPLATE7_DEMO_SESSION_SECRET: "s".repeat(32), TEMPLATE7_DEMO_LANDING_IDS: landingId,
-    TEMPLATE7_DEMO_ADVISOR_IDS: deviceId, TEMPLATE7_DEMO_DEVICE_ID: demoDeviceId,
-    TEMPLATE7_DEMO_REY_USERNAME: "demo-user", TEMPLATE7_DEMO_REY_PASSWORD: "demo-pass",
-  });
-  assert.ok(noAdvisor);
-  deps.demoConfig = () => noAdvisor;
-  const denied = await handleReyStart(request(validPayload, {
-    Cookie: `lb_cid=${deviceId}; t7_demo=${token}`, "X-Template7-Demo-Context": "testing",
-  }), deps);
-  assert.equal(denied.status, 403);
-  assert.ok(!calls.includes("internal-chat"));
-});
-
-test("demo no omite bloqueo del plan ni asignación real del asesor", async () => {
-  const cfg = demoConfig();
-  const headers = {
-    Cookie: `lb_cid=${deviceId}; t7_demo=${createDemoSession(landingId, "landing-7", cfg)}`,
-    "X-Template7-Demo-Context": "testing",
-  };
-  const blocked = dependencies();
-  blocked.deps.demoConfig = () => cfg;
-  blocked.deps.db.blocked = async () => true;
-  const blockedResult = await handleReyStart(request(validPayload, headers), blocked.deps);
-  assert.equal(blockedResult.status, 403);
-  assert.ok(!blocked.calls.includes("internal-chat"));
-
-  const unassigned = dependencies();
-  unassigned.deps.demoConfig = () => cfg;
-  const unassignedResult = await handleReyStart(request({ ...validPayload, atrio_client_id: demoDeviceId }, headers), unassigned.deps);
-  assert.equal(unassignedResult.status, 403);
-  assert.deepEqual(await unassignedResult.json(), { error: "advisor_not_assigned" });
-  assert.ok(!unassigned.calls.includes("internal-chat"));
-});
-
-test("Multi Skin usa el bypass propio del gateway y nunca las credenciales demo de Rey", async () => {
-  const { deps, calls } = dependencies(null, "multi_skin");
-  const cfg = multiSkinDemoConfig();
-  deps.demoConfig = () => cfg;
-  deps.api2Status = () => { throw Error("API2 must not be called"); };
-  deps.resolveAccount = async () => { throw Error("API2 must not be called"); };
-  deps.resolvePlayer = async (input) => {
-    calls.push("internal-chat");
-    return resolvedPlayer("multi_skin", input.deviceId);
-  };
-  deps.createHandoff = async (provider, _advisor, incomingDeviceId, player, account, skinCode, testing, promoCode) => {
-    calls.push("gateway");
-    assert.equal(provider, "multi_skin");
-    assert.equal(incomingDeviceId, demoDeviceId);
-    assert.equal(player.target_provider, "multi_skin");
-    assert.equal(account.testingBypass, true);
-    assert.equal(account.username, "");
-    assert.equal(account.password, "");
-    assert.equal(skinCode, "ganamos_plus");
-    assert.equal(testing, true);
-    assert.equal(promoCode, "LP-a1b2");
-    return {
-      handoff_url: "https://multi.example.com/start?t=demo",
-      expires_at: "",
-      binding_created: false,
-      provider_username: "multi-demo-user",
-    };
-  };
-  const token = createDemoSession(landingId, "landing-7", cfg);
-  const result = await handleReyStart(request(validPayload, {
-    Cookie: `lb_cid=${deviceId}; t7_demo=${token}`, "X-Template7-Demo-Context": "testing",
-  }), deps);
-  assert.equal(result.status, 200);
-  assert.deepEqual(await result.json(), { handoff_url: "https://multi.example.com/start?t=demo" });
-  assert.ok(calls.includes("internal-chat") && calls.includes("gateway") && calls.includes("internal-chat-link"));
-  assert.ok(!calls.includes("api2"));
-});
-
-test("Ases del Norte usa el bypass propio del gateway y vincula el usuario devuelto", async () => {
-  const { deps, calls } = dependencies(null, "ases_del_norte");
-  const cfg = asesDelNorteDemoConfig();
-  deps.demoConfig = () => cfg;
-  deps.api2Status = () => { throw Error("API2 must not be called"); };
-  deps.resolveAccount = async () => { throw Error("API2 must not be called"); };
-  deps.resolvePlayer = async (input) => {
-    calls.push("internal-chat");
-    return resolvedPlayer("ases_del_norte", input.deviceId);
-  };
-  deps.createHandoff = async (provider, _advisor, incomingDeviceId, player, account, skinCode, testing, promoCode) => {
-    calls.push("gateway");
-    assert.equal(provider, "ases_del_norte");
-    assert.equal(incomingDeviceId, demoDeviceId);
-    assert.equal(player.target_provider, "ases_del_norte");
-    assert.equal(account.testingBypass, true);
-    assert.equal(account.username, "");
-    assert.equal(account.password, "");
-    assert.equal(skinCode, null);
-    assert.equal(testing, true);
-    assert.equal(promoCode, "LP-a1b2");
-    return {
-      handoff_url: "https://ases.example.com/start?t=demo",
-      expires_at: "",
-      binding_created: false,
-      provider_username: "ases-demo-user",
-    };
-  };
-  const token = createDemoSession(landingId, "landing-7", cfg);
-  const result = await handleReyStart(request(validPayload, {
-    Cookie: `lb_cid=${deviceId}; t7_demo=${token}`, "X-Template7-Demo-Context": "testing",
-  }), deps);
-  assert.equal(result.status, 200);
-  assert.deepEqual(await result.json(), { handoff_url: "https://ases.example.com/start?t=demo" });
-  assert.ok(calls.includes("internal-chat") && calls.includes("gateway") && calls.includes("internal-chat-link"));
-  assert.ok(!calls.includes("api2"));
-});
-
-test("Ganamos NET usa el bypass propio del gateway y vincula el usuario devuelto", async () => {
-  const { deps, calls } = dependencies(null, "ganamos_net");
-  const cfg = ganamosNetDemoConfig();
-  deps.demoConfig = () => cfg;
-  deps.api2Status = () => { throw Error("API2 must not be called"); };
-  deps.resolveAccount = async () => { throw Error("API2 must not be called"); };
-  deps.resolvePlayer = async (input) => {
-    calls.push("internal-chat");
-    return resolvedPlayer("ganamos_net", input.deviceId);
-  };
-  deps.createHandoff = async (provider, _advisor, incomingDeviceId, player, account, skinCode, testing, promoCode) => {
-    calls.push("gateway");
-    assert.equal(provider, "ganamos_net");
-    assert.equal(incomingDeviceId, demoDeviceId);
-    assert.equal(player.target_provider, "ganamos_net");
-    assert.equal(account.testingBypass, true);
-    assert.equal(account.username, "");
-    assert.equal(account.password, "");
-    assert.equal(skinCode, null);
-    assert.equal(testing, true);
-    assert.equal(promoCode, "LP-a1b2");
-    return {
-      handoff_url: "https://ganamos-net.example.com/start?t=demo",
-      expires_at: "",
-      binding_created: false,
-      provider_username: "ganamos-demo-user",
-    };
-  };
-  const token = createDemoSession(landingId, "landing-7", cfg);
-  const result = await handleReyStart(request(validPayload, {
-    Cookie: `lb_cid=${deviceId}; t7_demo=${token}`, "X-Template7-Demo-Context": "testing",
-  }), deps);
-  assert.equal(result.status, 200);
-  assert.deepEqual(await result.json(), { handoff_url: "https://ganamos-net.example.com/start?t=demo" });
-  assert.ok(calls.includes("internal-chat") && calls.includes("gateway") && calls.includes("internal-chat-link"));
-  assert.ok(!calls.includes("api2"));
-});
-
 test("respuesta de internal-chat con device_id alterado produce upstream_unavailable", async () => {
   const { deps } = dependencies();
   deps.resolvePlayer = async () => resolvedPlayer("rey_de_ases", demoDeviceId);
@@ -626,13 +375,14 @@ test("adaptador API2 crea o recupera la cuenta por advisor_id y valida la plataf
   try {
     for (const provider of Object.keys(platformCodes) as TargetProvider[]) {
       globalThis.fetch = async (input, init) => {
-        assert.equal(String(input), `https://api2.example.com/api/v1/bot/atrio/advisors/${advisorId}/players`);
+        assert.equal(String(input), `https://api2.example.com/api/v1/bot/managers/1035/players`);
         const headers = new Headers(init?.headers);
         assert.equal(headers.get("apikey"), "api-key");
         assert.equal(headers.get("apisecret"), "api-secret");
         assert.deepEqual(JSON.parse(String(init?.body)), {
           external_user_id: playerId,
-          name: "Martín",
+          name: "Martín", advisor_id:advisorId, agency_id:272,
+          ...(provider === "ganamos_net" ? { creation_mode: "create_only" } : {}),
         });
         return Response.json({
           success: true,
@@ -643,7 +393,7 @@ test("adaptador API2 crea o recupera la cuenta por advisor_id y valida la plataf
         });
       };
       const account = await resolveTargetAccount({
-        external_user_id: playerId,
+        manager_id:1035, agency_id:272, external_user_id: playerId,
         name: "Martín",
         target_provider: provider,
         advisor_id: advisorId,
@@ -653,6 +403,7 @@ test("adaptador API2 crea o recupera la cuenta por advisor_id y valida la plataf
       assert.deepEqual(account, {
         username: `${provider}-user`, password: "provider-pass", platform: provider,
         created: provider === "rey_de_ases",
+        externalAccountId: playerId,
       });
     }
 
@@ -660,14 +411,14 @@ test("adaptador API2 crea o recupera la cuenta por advisor_id y valida la plataf
       success: true, username: "wrong-platform", password: "secret", platform: 1, is_new: true,
     });
     await assert.rejects(resolveTargetAccount({
-      external_user_id: playerId, name: "Martín", target_provider: "rey_de_ases",
+      manager_id:1035, agency_id:272, external_user_id: playerId, name: "Martín", target_provider: "rey_de_ases",
       advisor_id: advisorId, advisor_slug: "gera",
     }), { code: "upstream_unavailable" });
 
-    process.env.TEMPLATE7_API2_PLAYER_CREATION_ENABLED = "false";
+    delete process.env.API2_API_KEY;
     globalThis.fetch = async () => { throw new Error("API2 must not be called"); };
     await assert.rejects(resolveTargetAccount({
-      external_user_id: playerId, name: "Martín", target_provider: "rey_de_ases",
+      manager_id:1035, agency_id:272, external_user_id: playerId, name: "Martín", target_provider: "rey_de_ases",
       advisor_id: advisorId, advisor_slug: "gera",
     }), { code: "integration_pending" });
   } finally {
@@ -769,7 +520,7 @@ test("adaptadores usan contrato servidor-servidor y no exponen credenciales", as
     const demoHandoff = await createProviderHandoff("rey_de_ases", advisor, demoDeviceId,
       resolvedPlayer("rey_de_ases", demoDeviceId),
       { username: "demo-user", password: "demo-pass", platform: "rey_de_ases", created: false },
-      null, true,
+      null,
     );
     assert.equal(demoHandoff.handoff_url, "https://gateway.example.com/start?t=demo");
     await assert.rejects(createProviderHandoff("rey_de_ases", advisor, deviceId,
@@ -787,136 +538,5 @@ test("adaptadores usan contrato servidor-servidor y no exponen credenciales", as
     if (oldChatKey === undefined) delete process.env.INTERNAL_CHAT_PLAYER_RESOLVE_KEY; else process.env.INTERNAL_CHAT_PLAYER_RESOLVE_KEY = oldChatKey;
     if (oldGatewayOrigin === undefined) delete process.env.REY_GATEWAY_ORIGIN; else process.env.REY_GATEWAY_ORIGIN = oldGatewayOrigin;
     if (oldGatewayKey === undefined) delete process.env.REY_GATEWAY_HANDOFF_API_KEY; else process.env.REY_GATEWAY_HANDOFF_API_KEY = oldGatewayKey;
-  }
-});
-
-test("adaptador Multi Skin separa handoff normal y bypass de prueba", async () => {
-  const originalFetch = globalThis.fetch;
-  const original = {
-    origin: process.env.MULTI_SKIN_GATEWAY_ORIGIN,
-    handoffKey: process.env.MULTI_SKIN_GATEWAY_HANDOFF_API_KEY,
-    testingKey: process.env.MULTI_SKIN_GATEWAY_TESTING_API_KEY,
-  };
-  process.env.MULTI_SKIN_GATEWAY_ORIGIN = "https://multi.example.com";
-  process.env.MULTI_SKIN_GATEWAY_HANDOFF_API_KEY = "multi-handoff-key";
-  process.env.MULTI_SKIN_GATEWAY_TESTING_API_KEY = "multi-testing-key";
-  const advisor = { atrioClientId: clientId, advisorId, advisorSlug: "gera" };
-  const player = resolvedPlayer("multi_skin");
-  try {
-    globalThis.fetch = async (input, init) => {
-      assert.equal(String(input), "https://multi.example.com/api/handoffs");
-      assert.equal(new Headers(init?.headers).get("Authorization"), "Bearer multi-handoff-key");
-      assert.deepEqual(JSON.parse(String(init?.body)), {
-        advisor_id: advisorId,
-        advisor_slug: "gera",
-        device_id: deviceId,
-        external_user_id: playerId,
-        player_provider_account_id: multiSkinAccountId,
-        target_provider: "multi_skin",
-        skin_code: "ganamos_plus",
-        username: "multi-user",
-        password: "multi-pass",
-      });
-      return Response.json({
-        handoff_url: "https://multi.example.com/start?t=normal",
-        expires_in: 120,
-      });
-    };
-    const normal = await createProviderHandoff(
-      "multi_skin", advisor, deviceId, player,
-      { username: "multi-user", password: "multi-pass", platform: "multi_skin", created: true },
-      "ganamos_plus", false,
-    );
-    assert.equal(normal.handoff_url, "https://multi.example.com/start?t=normal");
-
-    globalThis.fetch = async (input, init) => {
-      assert.equal(String(input), "https://multi.example.com/api/testing/handoffs");
-      assert.equal(new Headers(init?.headers).get("Authorization"), "Bearer multi-testing-key");
-      const body = JSON.parse(String(init?.body));
-      assert.equal(body.skin_code, "ganamos_plus");
-      assert.equal(body.username, undefined);
-      assert.equal(body.password, undefined);
-      return Response.json({
-        handoff_url: "https://multi.example.com/start?t=testing",
-        expires_in: 120,
-        provider_username: "demo-user",
-      });
-    };
-    const testing = await createProviderHandoff(
-      "multi_skin", advisor, deviceId, player,
-      { username: "", password: "", platform: "multi_skin", created: false, testingBypass: true },
-      "ganamos_plus", true,
-    );
-    assert.equal(testing.provider_username, "demo-user");
-  } finally {
-    globalThis.fetch = originalFetch;
-    if (original.origin === undefined) delete process.env.MULTI_SKIN_GATEWAY_ORIGIN; else process.env.MULTI_SKIN_GATEWAY_ORIGIN = original.origin;
-    if (original.handoffKey === undefined) delete process.env.MULTI_SKIN_GATEWAY_HANDOFF_API_KEY; else process.env.MULTI_SKIN_GATEWAY_HANDOFF_API_KEY = original.handoffKey;
-    if (original.testingKey === undefined) delete process.env.MULTI_SKIN_GATEWAY_TESTING_API_KEY; else process.env.MULTI_SKIN_GATEWAY_TESTING_API_KEY = original.testingKey;
-  }
-});
-
-test("adaptador Ganamos NET separa handoff normal y bypass de prueba", async () => {
-  const originalFetch = globalThis.fetch;
-  const original = {
-    origin: process.env.GANAMOS_NET_GATEWAY_ORIGIN,
-    handoffKey: process.env.GANAMOS_NET_GATEWAY_HANDOFF_API_KEY,
-    testingKey: process.env.GANAMOS_NET_GATEWAY_TESTING_API_KEY,
-  };
-  process.env.GANAMOS_NET_GATEWAY_ORIGIN = "https://ganamos.example.com";
-  process.env.GANAMOS_NET_GATEWAY_HANDOFF_API_KEY = "ganamos-handoff-key";
-  process.env.GANAMOS_NET_GATEWAY_TESTING_API_KEY = "ganamos-testing-key";
-  const advisor = { atrioClientId: clientId, advisorId, advisorSlug: "gera" };
-  const player = resolvedPlayer("ganamos_net");
-  try {
-    globalThis.fetch = async (input, init) => {
-      assert.equal(String(input), "https://ganamos.example.com/api/handoffs");
-      assert.equal(new Headers(init?.headers).get("Authorization"), "Bearer ganamos-handoff-key");
-      assert.deepEqual(JSON.parse(String(init?.body)), {
-        advisor_id: advisorId,
-        advisor_slug: "gera",
-        device_id: deviceId,
-        external_user_id: playerId,
-        player_provider_account_id: providerAccountId,
-        target_provider: "ganamos_net",
-        username: "ganamos-user",
-        password: "ganamos-pass",
-      });
-      return Response.json({
-        handoff_url: "https://ganamos.example.com/start?t=normal",
-        expires_in: 120,
-      });
-    };
-    const normal = await createProviderHandoff(
-      "ganamos_net", advisor, deviceId, player,
-      { username: "ganamos-user", password: "ganamos-pass", platform: "ganamos_net", created: true },
-      null, false,
-    );
-    assert.equal(normal.handoff_url, "https://ganamos.example.com/start?t=normal");
-
-    globalThis.fetch = async (input, init) => {
-      assert.equal(String(input), "https://ganamos.example.com/api/testing/handoffs");
-      assert.equal(new Headers(init?.headers).get("Authorization"), "Bearer ganamos-testing-key");
-      const body = JSON.parse(String(init?.body));
-      assert.equal(body.username, undefined);
-      assert.equal(body.password, undefined);
-      assert.equal(body.target_provider, "ganamos_net");
-      return Response.json({
-        handoff_url: "https://ganamos.example.com/start?t=testing",
-        expires_in: 120,
-        provider_username: "ganamos-demo-user",
-      });
-    };
-    const testing = await createProviderHandoff(
-      "ganamos_net", advisor, deviceId, player,
-      { username: "", password: "", platform: "ganamos_net", created: false, testingBypass: true },
-      null, true,
-    );
-    assert.equal(testing.provider_username, "ganamos-demo-user");
-  } finally {
-    globalThis.fetch = originalFetch;
-    if (original.origin === undefined) delete process.env.GANAMOS_NET_GATEWAY_ORIGIN; else process.env.GANAMOS_NET_GATEWAY_ORIGIN = original.origin;
-    if (original.handoffKey === undefined) delete process.env.GANAMOS_NET_GATEWAY_HANDOFF_API_KEY; else process.env.GANAMOS_NET_GATEWAY_HANDOFF_API_KEY = original.handoffKey;
-    if (original.testingKey === undefined) delete process.env.GANAMOS_NET_GATEWAY_TESTING_API_KEY; else process.env.GANAMOS_NET_GATEWAY_TESTING_API_KEY = original.testingKey;
   }
 });

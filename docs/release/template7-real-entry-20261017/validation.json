@@ -1,0 +1,995 @@
+{
+  "at": "2026-10-17T21:39:41.834Z",
+  "scope": {
+    "projects": [
+      "internal-chat",
+      "landing-builder",
+      "landing-prueba-1",
+      "landing-autologuin",
+      "ases-gateway",
+      "ganamos-gateway",
+      "multi-skin-gateway"
+    ],
+    "api2Deployed": false,
+    "panel3Deployed": false,
+    "api2ChangedInThisBatch": false,
+    "panel3ChangedInThisBatch": false,
+    "gitCommitsCreated": false
+  },
+  "deployments": [
+    {
+      "repo": "internal-chat",
+      "deployment": "dpl_9PXJBRctCQydxxntB2cDhyKGeQS8",
+      "state": "READY",
+      "url": "internal-chat-ol36587lm-juanclouds-projects.vercel.app"
+    },
+    {
+      "repo": "landing-builder",
+      "deployment": "dpl_ALgLTkv4A7PnnUMvbk3jbyByv41Z",
+      "state": "READY",
+      "url": "landing-builder-v2-k259-5ijc9u4rh-juanclouds-projects.vercel.app"
+    },
+    {
+      "repo": "landing-prueba-1",
+      "deployment": "dpl_ES6AfztPPYnsP587xSSkHxnL1Kmg",
+      "state": "READY",
+      "url": "public-landing-bfcd20a7f-juanclouds-projects.vercel.app"
+    },
+    {
+      "repo": "landing-autologuin",
+      "deployment": "dpl_7sTAgKDGtpwaRe25yCxsTWPPaHCo",
+      "state": "READY",
+      "url": "reydeases-gateway-jmmyl1nev-juanclouds-projects.vercel.app"
+    },
+    {
+      "repo": "ases-gateway",
+      "deployment": "dpl_42ckUGjkm3cM4KHV4ktq1UUVMUum",
+      "state": "READY",
+      "url": "ases-del-norte-gateway-15qykkqeo-juanclouds-projects.vercel.app"
+    },
+    {
+      "repo": "ganamos-gateway",
+      "deployment": "dpl_56vhEFgU7KRAprFgseQUEgS5XipT",
+      "state": "READY",
+      "url": "ganamos-net-gateway-3zmmfgohi-juanclouds-projects.vercel.app"
+    },
+    {
+      "repo": "multi-skin-gateway",
+      "deployment": "dpl_R1wqf841NCwK1gUrXdZewbzdvVxQ",
+      "state": "READY",
+      "url": "multi-skin-gateway-6cusgkama-juanclouds-projects.vercel.app"
+    }
+  ],
+  "cloudflare": {
+    "worker": "multi-skin-gateway",
+    "domain": "https://ganamosnet.global",
+    "version": "7cc57d63-aa49-48af-8a6d-a6fc8fba581f"
+  },
+  "atrioMigration": "20261017212342_atomic_gateway_chat_bootstrap",
+  "sources": [
+    {
+      "repo": "internal-chat",
+      "sourceManifestSha256": "c9402d1f7f86e7fec80f34f59b5b5e064f23e147363b92e87d1c9b46823fd93e"
+    },
+    {
+      "repo": "landing-builder",
+      "sourceManifestSha256": "6b0d80c84e2b565bee1b1adb832df31ef9fb74644a9eb469664e839a09cf3cc1"
+    },
+    {
+      "repo": "landing-prueba-1",
+      "sourceManifestSha256": "6f452968fb0a1c811d84eb41f5378524f564cc8453ebcbf3ed34d6efc45f7e67"
+    },
+    {
+      "repo": "landing-autologuin",
+      "sourceManifestSha256": "a51d03195304859b516e272a16629cd6fe34540dcfc18e93a4808c3c839e7223"
+    },
+    {
+      "repo": "ases-gateway",
+      "sourceManifestSha256": "007787eb1eceb497f7b10f80ae3629c12c1d233194c68dff6d6bba9f85723166"
+    },
+    {
+      "repo": "ganamos-gateway",
+      "sourceManifestSha256": "3da5de98a39d69df3731e64dbdc9c6a2bf3bb59976202e3ee099f8eabef1f99e"
+    },
+    {
+      "repo": "multi-skin-gateway",
+      "sourceManifestSha256": "2f8cac284bb80c41b4baddd7c5503a15fb928fca4db6591d46ac278246435403"
+    }
+  ],
+  "tests": {
+    "gateways": {
+      "landing-autologuin": {
+        "passed": 126,
+        "skipped": 2
+      },
+      "ases-gateway": {
+        "passed": 69
+      },
+      "ganamos-gateway": {
+        "passed": 78
+      },
+      "multi-skin-gateway": {
+        "passed": 71
+      }
+    },
+    "builderFocusedPassed": 53,
+    "classicFocusedPassed": 8,
+    "atrioFocusedPassed": 45,
+    "sharedSdkPassed": 7,
+    "database": {
+      "at": "2026-10-17T21:15:17.664Z",
+      "passed": 7,
+      "checks": [
+        "Single bootstrap creates the scoped conversation/welcome and returns only required public fields",
+        "Repeated bootstrap preserves conversation and emits welcome once",
+        "All four casino accounts remain separated from each other and direct chat",
+        "Cross-advisor, account/provider, skin and incomplete identity inputs return no data",
+        "Eight concurrent boots share one conversation and one welcome",
+        "History is scoped and bounded to the most recent 50 messages",
+        "Anonymous and browser roles cannot call bootstrap directly"
+      ],
+      "externalMoneyOperations": 0,
+      "productionWrites": 0
+    },
+    "browser": {
+      "at": "2026-10-17T21:24:38.922Z",
+      "checks": [
+        {
+          "repo": "landing-autologuin",
+          "engine": "Chromium",
+          "sdkLate": false,
+          "platform": "Android (simulated APIs)",
+          "nativePermissionFromCTA": true,
+          "persisted": true,
+          "horizontalOverflow": false
+        },
+        {
+          "repo": "landing-autologuin",
+          "engine": "Chromium",
+          "sdkLate": true,
+          "platform": "Android (simulated APIs)",
+          "nativePermissionFromCTA": true,
+          "persisted": true,
+          "horizontalOverflow": false
+        },
+        {
+          "repo": "landing-autologuin",
+          "engine": "Chromium",
+          "sdkLate": false,
+          "platform": "installed iOS (simulated APIs)",
+          "nativePermissionFromCTA": true,
+          "persisted": true,
+          "horizontalOverflow": false
+        },
+        {
+          "repo": "landing-autologuin",
+          "engine": "Chromium",
+          "sdkLate": true,
+          "platform": "installed iOS (simulated APIs)",
+          "nativePermissionFromCTA": true,
+          "persisted": true,
+          "horizontalOverflow": false
+        },
+        {
+          "repo": "landing-autologuin",
+          "engine": "WebKit",
+          "sdkLate": false,
+          "platform": "Android (simulated APIs)",
+          "nativePermissionFromCTA": true,
+          "persisted": true,
+          "horizontalOverflow": false
+        },
+        {
+          "repo": "landing-autologuin",
+          "engine": "WebKit",
+          "sdkLate": true,
+          "platform": "Android (simulated APIs)",
+          "nativePermissionFromCTA": true,
+          "persisted": true,
+          "horizontalOverflow": false
+        },
+        {
+          "repo": "landing-autologuin",
+          "engine": "WebKit",
+          "sdkLate": false,
+          "platform": "installed iOS (simulated APIs)",
+          "nativePermissionFromCTA": true,
+          "persisted": true,
+          "horizontalOverflow": false
+        },
+        {
+          "repo": "landing-autologuin",
+          "engine": "WebKit",
+          "sdkLate": true,
+          "platform": "installed iOS (simulated APIs)",
+          "nativePermissionFromCTA": true,
+          "persisted": true,
+          "horizontalOverflow": false
+        },
+        {
+          "repo": "ases-gateway",
+          "engine": "Chromium",
+          "sdkLate": false,
+          "platform": "Android (simulated APIs)",
+          "nativePermissionFromCTA": true,
+          "persisted": true,
+          "horizontalOverflow": false
+        },
+        {
+          "repo": "ases-gateway",
+          "engine": "Chromium",
+          "sdkLate": true,
+          "platform": "Android (simulated APIs)",
+          "nativePermissionFromCTA": true,
+          "persisted": true,
+          "horizontalOverflow": false
+        },
+        {
+          "repo": "ases-gateway",
+          "engine": "Chromium",
+          "sdkLate": false,
+          "platform": "installed iOS (simulated APIs)",
+          "nativePermissionFromCTA": true,
+          "persisted": true,
+          "horizontalOverflow": false
+        },
+        {
+          "repo": "ases-gateway",
+          "engine": "Chromium",
+          "sdkLate": true,
+          "platform": "installed iOS (simulated APIs)",
+          "nativePermissionFromCTA": true,
+          "persisted": true,
+          "horizontalOverflow": false
+        },
+        {
+          "repo": "ases-gateway",
+          "engine": "WebKit",
+          "sdkLate": false,
+          "platform": "Android (simulated APIs)",
+          "nativePermissionFromCTA": true,
+          "persisted": true,
+          "horizontalOverflow": false
+        },
+        {
+          "repo": "ases-gateway",
+          "engine": "WebKit",
+          "sdkLate": true,
+          "platform": "Android (simulated APIs)",
+          "nativePermissionFromCTA": true,
+          "persisted": true,
+          "horizontalOverflow": false
+        },
+        {
+          "repo": "ases-gateway",
+          "engine": "WebKit",
+          "sdkLate": false,
+          "platform": "installed iOS (simulated APIs)",
+          "nativePermissionFromCTA": true,
+          "persisted": true,
+          "horizontalOverflow": false
+        },
+        {
+          "repo": "ases-gateway",
+          "engine": "WebKit",
+          "sdkLate": true,
+          "platform": "installed iOS (simulated APIs)",
+          "nativePermissionFromCTA": true,
+          "persisted": true,
+          "horizontalOverflow": false
+        },
+        {
+          "repo": "ganamos-gateway",
+          "engine": "Chromium",
+          "sdkLate": false,
+          "platform": "Android (simulated APIs)",
+          "nativePermissionFromCTA": true,
+          "persisted": true,
+          "horizontalOverflow": false
+        },
+        {
+          "repo": "ganamos-gateway",
+          "engine": "Chromium",
+          "sdkLate": true,
+          "platform": "Android (simulated APIs)",
+          "nativePermissionFromCTA": true,
+          "persisted": true,
+          "horizontalOverflow": false
+        },
+        {
+          "repo": "ganamos-gateway",
+          "engine": "Chromium",
+          "sdkLate": false,
+          "platform": "installed iOS (simulated APIs)",
+          "nativePermissionFromCTA": true,
+          "persisted": true,
+          "horizontalOverflow": false
+        },
+        {
+          "repo": "ganamos-gateway",
+          "engine": "Chromium",
+          "sdkLate": true,
+          "platform": "installed iOS (simulated APIs)",
+          "nativePermissionFromCTA": true,
+          "persisted": true,
+          "horizontalOverflow": false
+        },
+        {
+          "repo": "ganamos-gateway",
+          "engine": "WebKit",
+          "sdkLate": false,
+          "platform": "Android (simulated APIs)",
+          "nativePermissionFromCTA": true,
+          "persisted": true,
+          "horizontalOverflow": false
+        },
+        {
+          "repo": "ganamos-gateway",
+          "engine": "WebKit",
+          "sdkLate": true,
+          "platform": "Android (simulated APIs)",
+          "nativePermissionFromCTA": true,
+          "persisted": true,
+          "horizontalOverflow": false
+        },
+        {
+          "repo": "ganamos-gateway",
+          "engine": "WebKit",
+          "sdkLate": false,
+          "platform": "installed iOS (simulated APIs)",
+          "nativePermissionFromCTA": true,
+          "persisted": true,
+          "horizontalOverflow": false
+        },
+        {
+          "repo": "ganamos-gateway",
+          "engine": "WebKit",
+          "sdkLate": true,
+          "platform": "installed iOS (simulated APIs)",
+          "nativePermissionFromCTA": true,
+          "persisted": true,
+          "horizontalOverflow": false
+        },
+        {
+          "repo": "multi-skin-gateway",
+          "engine": "Chromium",
+          "sdkLate": false,
+          "platform": "Android (simulated APIs)",
+          "nativePermissionFromCTA": true,
+          "persisted": true,
+          "horizontalOverflow": false
+        },
+        {
+          "repo": "multi-skin-gateway",
+          "engine": "Chromium",
+          "sdkLate": true,
+          "platform": "Android (simulated APIs)",
+          "nativePermissionFromCTA": true,
+          "persisted": true,
+          "horizontalOverflow": false
+        },
+        {
+          "repo": "multi-skin-gateway",
+          "engine": "Chromium",
+          "sdkLate": false,
+          "platform": "installed iOS (simulated APIs)",
+          "nativePermissionFromCTA": true,
+          "persisted": true,
+          "horizontalOverflow": false
+        },
+        {
+          "repo": "multi-skin-gateway",
+          "engine": "Chromium",
+          "sdkLate": true,
+          "platform": "installed iOS (simulated APIs)",
+          "nativePermissionFromCTA": true,
+          "persisted": true,
+          "horizontalOverflow": false
+        },
+        {
+          "repo": "multi-skin-gateway",
+          "engine": "WebKit",
+          "sdkLate": false,
+          "platform": "Android (simulated APIs)",
+          "nativePermissionFromCTA": true,
+          "persisted": true,
+          "horizontalOverflow": false
+        },
+        {
+          "repo": "multi-skin-gateway",
+          "engine": "WebKit",
+          "sdkLate": true,
+          "platform": "Android (simulated APIs)",
+          "nativePermissionFromCTA": true,
+          "persisted": true,
+          "horizontalOverflow": false
+        },
+        {
+          "repo": "multi-skin-gateway",
+          "engine": "WebKit",
+          "sdkLate": false,
+          "platform": "installed iOS (simulated APIs)",
+          "nativePermissionFromCTA": true,
+          "persisted": true,
+          "horizontalOverflow": false
+        },
+        {
+          "repo": "multi-skin-gateway",
+          "engine": "WebKit",
+          "sdkLate": true,
+          "platform": "installed iOS (simulated APIs)",
+          "nativePermissionFromCTA": true,
+          "persisted": true,
+          "horizontalOverflow": false
+        }
+      ],
+      "physicalDeviceValidated": false,
+      "realNotificationsSent": 0
+    },
+    "legacy": {
+      "at": "2026-10-17T21:24:26.562Z",
+      "checks": [
+        {
+          "repo": "landing-autologuin",
+          "engine": "Chromium",
+          "sdkLate": true,
+          "platform": "Android (simulated APIs)",
+          "nativePermissionFromCTA": true,
+          "persisted": true,
+          "horizontalOverflow": false
+        },
+        {
+          "repo": "landing-autologuin",
+          "engine": "WebKit",
+          "sdkLate": true,
+          "platform": "Android (simulated APIs)",
+          "nativePermissionFromCTA": true,
+          "persisted": true,
+          "horizontalOverflow": false
+        }
+      ],
+      "physicalDeviceValidated": false,
+      "realNotificationsSent": 0
+    },
+    "presence": {
+      "at": "2026-10-17T21:22:46.940Z",
+      "passed": 12,
+      "checks": [
+        {
+          "engine": "WebKit",
+          "width": 393,
+          "tags": [],
+          "metrics": {
+            "height": 46,
+            "imageHeight": 46,
+            "dotOffset": 0
+          }
+        },
+        {
+          "engine": "WebKit",
+          "width": 393,
+          "tags": [
+            "intent:retiro"
+          ],
+          "metrics": {
+            "height": 46,
+            "imageHeight": 46,
+            "dotOffset": 0
+          }
+        },
+        {
+          "engine": "WebKit",
+          "width": 393,
+          "tags": [
+            "intent:carga",
+            "intent:retiro",
+            "intent:soporte"
+          ],
+          "metrics": {
+            "height": 46,
+            "imageHeight": 46,
+            "dotOffset": 0
+          }
+        },
+        {
+          "engine": "WebKit",
+          "width": 1365,
+          "tags": [],
+          "metrics": {
+            "height": 40,
+            "imageHeight": 40,
+            "dotOffset": 0
+          }
+        },
+        {
+          "engine": "WebKit",
+          "width": 1365,
+          "tags": [
+            "intent:retiro"
+          ],
+          "metrics": {
+            "height": 40,
+            "imageHeight": 40,
+            "dotOffset": 0
+          }
+        },
+        {
+          "engine": "WebKit",
+          "width": 1365,
+          "tags": [
+            "intent:carga",
+            "intent:retiro",
+            "intent:soporte"
+          ],
+          "metrics": {
+            "height": 40,
+            "imageHeight": 40,
+            "dotOffset": 0
+          }
+        },
+        {
+          "engine": "Chromium",
+          "width": 393,
+          "tags": [],
+          "metrics": {
+            "height": 46,
+            "imageHeight": 46,
+            "dotOffset": 0
+          }
+        },
+        {
+          "engine": "Chromium",
+          "width": 393,
+          "tags": [
+            "intent:retiro"
+          ],
+          "metrics": {
+            "height": 46,
+            "imageHeight": 46,
+            "dotOffset": 0
+          }
+        },
+        {
+          "engine": "Chromium",
+          "width": 393,
+          "tags": [
+            "intent:carga",
+            "intent:retiro",
+            "intent:soporte"
+          ],
+          "metrics": {
+            "height": 46,
+            "imageHeight": 46,
+            "dotOffset": 0
+          }
+        },
+        {
+          "engine": "Chromium",
+          "width": 1365,
+          "tags": [],
+          "metrics": {
+            "height": 40,
+            "imageHeight": 40,
+            "dotOffset": 0
+          }
+        },
+        {
+          "engine": "Chromium",
+          "width": 1365,
+          "tags": [
+            "intent:retiro"
+          ],
+          "metrics": {
+            "height": 40,
+            "imageHeight": 40,
+            "dotOffset": 0
+          }
+        },
+        {
+          "engine": "Chromium",
+          "width": 1365,
+          "tags": [
+            "intent:carga",
+            "intent:retiro",
+            "intent:soporte"
+          ],
+          "metrics": {
+            "height": 40,
+            "imageHeight": 40,
+            "dotOffset": 0
+          }
+        }
+      ]
+    },
+    "stylesheetDelayBefore": [
+      {
+        "repo": "landing-autologuin",
+        "engine": "Chromium",
+        "navigationMs": 1856
+      },
+      {
+        "repo": "ases-gateway",
+        "engine": "Chromium",
+        "navigationMs": 1831
+      },
+      {
+        "repo": "ganamos-gateway",
+        "engine": "Chromium",
+        "navigationMs": 1838
+      },
+      {
+        "repo": "multi-skin-gateway",
+        "engine": "Chromium",
+        "navigationMs": 1837
+      },
+      {
+        "repo": "landing-autologuin",
+        "engine": "WebKit",
+        "navigationMs": 1865
+      },
+      {
+        "repo": "ases-gateway",
+        "engine": "WebKit",
+        "navigationMs": 1851
+      },
+      {
+        "repo": "ganamos-gateway",
+        "engine": "WebKit",
+        "navigationMs": 1853
+      },
+      {
+        "repo": "multi-skin-gateway",
+        "engine": "WebKit",
+        "navigationMs": 1865
+      }
+    ],
+    "stylesheetDelayAfter": [
+      {
+        "repo": "landing-autologuin",
+        "engine": "Chromium",
+        "navigationMs": 170
+      },
+      {
+        "repo": "ases-gateway",
+        "engine": "Chromium",
+        "navigationMs": 166
+      },
+      {
+        "repo": "ganamos-gateway",
+        "engine": "Chromium",
+        "navigationMs": 152
+      },
+      {
+        "repo": "multi-skin-gateway",
+        "engine": "Chromium",
+        "navigationMs": 156
+      },
+      {
+        "repo": "landing-autologuin",
+        "engine": "WebKit",
+        "navigationMs": 169
+      },
+      {
+        "repo": "ases-gateway",
+        "engine": "WebKit",
+        "navigationMs": 167
+      },
+      {
+        "repo": "ganamos-gateway",
+        "engine": "WebKit",
+        "navigationMs": 182
+      },
+      {
+        "repo": "multi-skin-gateway",
+        "engine": "WebKit",
+        "navigationMs": 177
+      }
+    ],
+    "actualRewritersHeldScriptAndStylesheet": {
+      "passed": 4,
+      "externalRequests": 0,
+      "realAccountsCreated": 0
+    }
+  },
+  "productionAssets": {
+    "at": "2026-10-17T21:37:55.740Z",
+    "gateways": [
+      {
+        "repo": "landing-autologuin",
+        "domain": "https://www.reydeases.fun",
+        "manifestName": "Rey de Ases",
+        "icons": [
+          {
+            "src": "/rey-de-ases-app-192.png",
+            "size": "192x192",
+            "purpose": "any",
+            "bytes": 10537
+          },
+          {
+            "src": "/rey-de-ases-app-512.png",
+            "size": "512x512",
+            "purpose": "any",
+            "bytes": 51098
+          },
+          {
+            "src": "/rey-de-ases-app-maskable-512.png",
+            "size": "512x512",
+            "purpose": "maskable",
+            "bytes": 28189
+          }
+        ],
+        "sharedSdkMatches": true,
+        "clientMatches": true,
+        "workerMatches": true,
+        "appleIconMatches": true
+      },
+      {
+        "repo": "ases-gateway",
+        "domain": "https://www.asesdelnorte.online",
+        "manifestName": "Ases del Norte",
+        "icons": [
+          {
+            "src": "/ases-del-norte-app-192.png",
+            "size": "192x192",
+            "purpose": "any",
+            "bytes": 6168
+          },
+          {
+            "src": "/ases-del-norte-app-512.png",
+            "size": "512x512",
+            "purpose": "any",
+            "bytes": 23376
+          },
+          {
+            "src": "/ases-del-norte-app-maskable-512.png",
+            "size": "512x512",
+            "purpose": "maskable",
+            "bytes": 14823
+          }
+        ],
+        "sharedSdkMatches": true,
+        "clientMatches": true,
+        "workerMatches": true,
+        "appleIconMatches": true
+      },
+      {
+        "repo": "ganamos-gateway",
+        "domain": "https://www.ganamosnet.icu",
+        "manifestName": "Ganamos NET",
+        "icons": [
+          {
+            "src": "/ganamos-net-app-192.png",
+            "size": "192x192",
+            "purpose": "any",
+            "bytes": 3648
+          },
+          {
+            "src": "/ganamos-net-app-512.png",
+            "size": "512x512",
+            "purpose": "any",
+            "bytes": 13752
+          },
+          {
+            "src": "/ganamos-net-app-maskable-512.png",
+            "size": "512x512",
+            "purpose": "maskable",
+            "bytes": 8380
+          }
+        ],
+        "sharedSdkMatches": true,
+        "clientMatches": true,
+        "workerMatches": true,
+        "appleIconMatches": true
+      },
+      {
+        "repo": "multi-skin-gateway",
+        "domain": "https://ganamosnet.global",
+        "manifestName": "Ganamos+",
+        "icons": [
+          {
+            "src": "/ganamos-plus-app-192.png",
+            "size": "192x192",
+            "purpose": "any",
+            "bytes": 13058
+          },
+          {
+            "src": "/ganamos-plus-app-512.png",
+            "size": "512x512",
+            "purpose": "any",
+            "bytes": 66615
+          },
+          {
+            "src": "/ganamos-plus-app-maskable-512.png",
+            "size": "512x512",
+            "purpose": "maskable",
+            "bytes": 36583
+          }
+        ],
+        "sharedSdkMatches": true,
+        "clientMatches": true,
+        "workerMatches": true,
+        "appleIconMatches": true
+      }
+    ],
+    "atrioUnauthenticatedBalanceStatus": 401,
+    "api2Deployed": false
+  },
+  "productionEntry": {
+    "at": "2026-10-17T21:38:11.032Z",
+    "checks": [
+      {
+        "origin": "https://mkt.panelbotadmin.com",
+        "path": "/l/rey-de-ases-demo/testing",
+        "status": 404
+      },
+      {
+        "origin": "https://mkt.panelbotadmin.com",
+        "path": "/rey-de-ases-demo/testing",
+        "status": 404
+      },
+      {
+        "origin": "https://landing.panelbotadmin.com",
+        "path": "/l/rey-de-ases-demo/testing",
+        "status": 404
+      },
+      {
+        "origin": "https://landing.panelbotadmin.com",
+        "path": "/rey-de-ases-demo/testing",
+        "status": 404
+      },
+      {
+        "origin": "https://www.reydeases.fun",
+        "path": "/api/testing/handoffs",
+        "status": 401
+      },
+      {
+        "origin": "https://www.asesdelnorte.online",
+        "path": "/api/testing/handoffs",
+        "status": 401
+      },
+      {
+        "origin": "https://www.ganamosnet.icu",
+        "path": "/api/testing/handoffs",
+        "status": 401
+      },
+      {
+        "origin": "https://ganamosnet.global",
+        "path": "/api/testing/handoffs",
+        "status": 401
+      },
+      {
+        "origin": "https://www.atrio.website",
+        "path": "/embed/warm",
+        "status": 200,
+        "csp": "frame-ancestors 'self' https://reydeases-gateway.vercel.app https://multi-skin-gateway.vercel.app https://multi-skin-gateway.meta-ip-collector.workers.dev https://ases-del-norte-gateway.vercel.app https://ganamos-net-gateway.vercel.app https://www.reydeases.fun https://reydeases.fun https://www.asesdelnorte.online https://asesdelnorte.online https://www.ganamosnet.icu https://ganamosnet.icu https://ganamosnet.global https://mkt.panelbotadmin.com https://landing.panelbotadmin.com"
+      },
+      {
+        "origin": "https://www.atrio.website",
+        "path": "/embed/gera",
+        "status": 200,
+        "csp": "frame-ancestors 'self' https://reydeases-gateway.vercel.app https://multi-skin-gateway.vercel.app https://multi-skin-gateway.meta-ip-collector.workers.dev https://ases-del-norte-gateway.vercel.app https://ganamos-net-gateway.vercel.app https://www.reydeases.fun https://reydeases.fun https://www.asesdelnorte.online https://asesdelnorte.online https://www.ganamosnet.icu https://ganamosnet.icu https://ganamosnet.global"
+      }
+    ]
+  },
+  "measurements": [
+    {
+      "phase": "baseline",
+      "startedAt": "2026-10-17T21:10:27.829Z",
+      "managerId": 1035,
+      "viewport": {
+        "width": 390,
+        "height": 844,
+        "networkThrottled": false
+      },
+      "runs": [
+        {
+          "label": "creation",
+          "formReadyMs": 2443,
+          "accountVisibleMs": 6119,
+          "casinoNavigationMs": 9530,
+          "chatFrameMountedMs": 12770,
+          "chatReadyMs": 15024,
+          "api2Account": {
+            "durationMs": 2036,
+            "kind": "created"
+          },
+          "loginConfirmed": true,
+          "embeddedChatMeasured": true,
+          "waitedForPrewarm": true
+        },
+        {
+          "label": "active-session-reentry",
+          "accountVisibleMs": null,
+          "casinoNavigationMs": 1072,
+          "chatFrameMountedMs": 1297,
+          "chatReadyMs": 1960,
+          "loginConfirmed": true,
+          "embeddedChatMeasured": true
+        }
+      ],
+      "realMoneyOperations": 0
+    },
+    {
+      "phase": "optimized",
+      "startedAt": "2026-10-17T21:29:44.491Z",
+      "managerId": 1035,
+      "viewport": {
+        "width": 390,
+        "height": 844,
+        "networkThrottled": false
+      },
+      "runs": [
+        {
+          "label": "creation",
+          "formReadyMs": 2958,
+          "accountVisibleMs": 4993,
+          "casinoNavigationMs": 7960,
+          "chatFrameMountedMs": 9954,
+          "chatReadyMs": 11213,
+          "api2Account": {
+            "durationMs": 1806,
+            "kind": "created"
+          },
+          "loginConfirmed": true,
+          "embeddedChatMeasured": true,
+          "waitedForPrewarm": true
+        },
+        {
+          "label": "active-session-reentry",
+          "accountVisibleMs": null,
+          "casinoNavigationMs": 898,
+          "chatFrameMountedMs": 1333,
+          "chatReadyMs": 1946,
+          "loginConfirmed": true,
+          "embeddedChatMeasured": true
+        }
+      ],
+      "realMoneyOperations": 0
+    },
+    {
+      "phase": "optimized-final",
+      "startedAt": "2026-10-17T21:37:34.187Z",
+      "managerId": 1035,
+      "viewport": {
+        "width": 390,
+        "height": 844,
+        "networkThrottled": false
+      },
+      "runs": [
+        {
+          "label": "creation",
+          "formReadyMs": 1946,
+          "accountVisibleMs": 4941,
+          "casinoNavigationMs": 7792,
+          "chatFrameMountedMs": 8062,
+          "chatReadyMs": 8825,
+          "api2Account": {
+            "durationMs": 1686,
+            "kind": "created"
+          },
+          "loginConfirmed": true,
+          "embeddedChatMeasured": true,
+          "waitedForPrewarm": true
+        },
+        {
+          "label": "active-session-reentry",
+          "accountVisibleMs": null,
+          "casinoNavigationMs": 1057,
+          "chatFrameMountedMs": 1241,
+          "chatReadyMs": 1787,
+          "loginConfirmed": true,
+          "embeddedChatMeasured": true
+        }
+      ],
+      "realMoneyOperations": 0
+    }
+  ],
+  "limits": [
+    "One creation sample per phase; these are not averages or percentile estimates.",
+    "Unthrottled Chromium mobile viewport; production services and caches vary.",
+    "Notification and installation APIs simulated in browser checks; physical iOS/Android permission not certified by these tests.",
+    "Full production signup/login/chat measured for Rey de Ases manager 1035; other gateway code, branding, public assets and intercepted browser integration covered, but no new real full-flow accounts for their managers.",
+    "New API2 local optimizations and three pending API2 migrations were not published. Existing complete Ganamos API remains unchanged; creation-only mode is selected by both landing engines for when API2 supports it.",
+    "Automatic test-account welcome/attribution can execute on the server; no financial mutations were performed."
+  ]
+}

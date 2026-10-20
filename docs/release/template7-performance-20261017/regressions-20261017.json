@@ -1,0 +1,401 @@
+{
+  "at": "2026-10-17T16:52:37.091Z",
+  "deployments": [
+    {
+      "name": "internal-chat",
+      "id": "dpl_GuLa6ScLa7o8cdwXiDFm478uxMi2",
+      "url": "internal-chat-5tmn7785g-juanclouds-projects.vercel.app",
+      "manifestSha256": "2dbf6ab6228482d7d8b442e2716634a22b1497f022b88ba5e014f5357c7492bb"
+    },
+    {
+      "name": "landing-builder",
+      "id": "dpl_F1i7N7QcJz2WQ5nryZRkPW554wei",
+      "url": "landing-builder-v2-k259-necttk87c-juanclouds-projects.vercel.app",
+      "manifestSha256": "ed4b36881e15a6c03bca5c38d385724864865784634125a744bc5dfc1b348ff4"
+    },
+    {
+      "name": "landing-prueba-1",
+      "id": "dpl_7SDTDxGKodC3yPjS6eNN9DjWUKJt",
+      "url": "public-landing-irdr1wmnw-juanclouds-projects.vercel.app",
+      "manifestSha256": "94144fb555af94d071a952e21a468861ed128f210727ce88304014b9cb16986b"
+    },
+    {
+      "name": "landing-autologuin",
+      "id": "dpl_EGmTQ4AUDmcpqVwxUzRTBX28qNWm",
+      "url": "reydeases-gateway-pcibng3ps-juanclouds-projects.vercel.app",
+      "manifestSha256": "e12f532c21b972d3e822fa98647f7208d434bc951e1da26330199004982c4cc3"
+    },
+    {
+      "name": "ases-gateway",
+      "id": "dpl_DkYi2pz8oSEzCvVU6QedtQvDHfuP",
+      "url": "ases-del-norte-gateway-dl5reytxc-juanclouds-projects.vercel.app",
+      "manifestSha256": "7195f16c3da2ce80b6bf54934969eff55c50e4121f4ba79a8406a47cd282fab1"
+    },
+    {
+      "name": "ganamos-gateway",
+      "id": "dpl_4jf9Q3UpPbkHdm1DU8Y7vnTX88sH",
+      "url": "ganamos-net-gateway-c8hllojpa-juanclouds-projects.vercel.app",
+      "manifestSha256": "4a729640d02492f0bc5869c3146760f0e45ccff95674a7e27bdeb332a7071ddc"
+    },
+    {
+      "name": "multi-skin-gateway",
+      "id": "dpl_8YSXT7P4znrUwasWfZ1EwthvYiwE",
+      "url": "multi-skin-gateway-bvx59xxxq-juanclouds-projects.vercel.app",
+      "manifestSha256": "c02a1abeaa17a0331f7cc3a60f3334ab01d14a025ce7552069f39d903b9daf83"
+    }
+  ],
+  "checks": [
+    {
+      "name": "rey",
+      "health": 200,
+      "preparation": 200,
+      "largeLogo": true,
+      "darkSafeAreaMetadata": true,
+      "avifWithFallback": true,
+      "imageBytes": 82652,
+      "recovery": 200,
+      "foreignOrigin": 403
+    },
+    {
+      "name": "ases",
+      "health": 200,
+      "preparation": 200,
+      "largeLogo": true,
+      "darkSafeAreaMetadata": true,
+      "avifWithFallback": true,
+      "imageBytes": 22345,
+      "recovery": 200,
+      "foreignOrigin": 403
+    },
+    {
+      "name": "net",
+      "health": 200,
+      "preparation": 200,
+      "largeLogo": true,
+      "darkSafeAreaMetadata": true,
+      "avifWithFallback": false,
+      "imageBytes": 9242,
+      "recovery": 200,
+      "foreignOrigin": 403
+    },
+    {
+      "name": "plus",
+      "health": 200,
+      "preparation": 200,
+      "largeLogo": true,
+      "darkSafeAreaMetadata": true,
+      "avifWithFallback": true,
+      "imageBytes": 61434,
+      "recovery": 200,
+      "foreignOrigin": 403
+    }
+  ],
+  "landingRuntime": true,
+  "publicAvatarOptimization": {
+    "status": 200,
+    "type": "image/avif",
+    "bytes": 10118
+  },
+  "casinoPreloader": {
+    "status": 200,
+    "type": "image/avif",
+    "bytes": 47789
+  },
+  "api2Deployed": false,
+  "installationIconCompatibility": true,
+  "cloudflare": {
+    "worker": "multi-skin-gateway",
+    "domain": "ganamosnet.global",
+    "version": "2cf5d8f7-5663-4896-aafe-2af9b535ad61"
+  },
+  "productionBrowser": {
+    "at": "2026-10-17T16:43:57.313Z",
+    "engine": "WebKit Windows",
+    "physicalIphone": false,
+    "checks": [
+      {
+        "check": "automatic-account-recovery-without-name-or-gateway-cookie",
+        "passed": true
+      },
+      {
+        "check": "reopen-landing-1",
+        "passed": true
+      },
+      {
+        "check": "reopen-landing-2",
+        "passed": true
+      },
+      {
+        "check": "reopen-landing-3",
+        "passed": true
+      },
+      {
+        "check": "direct-apex-domain-reentry",
+        "passed": true
+      },
+      {
+        "check": "direct-entry-after-cookie-loss",
+        "passed": true
+      },
+      {
+        "check": "landing-identity-restored-from-encrypted-backup",
+        "passed": true
+      }
+    ],
+    "accountCreatedResponses": 0,
+    "moneyOperations": 0,
+    "api2Deployed": false,
+    "ok": true
+  },
+  "isolatedWebkit": {
+    "at": "2026-10-17T16:34:39.500Z",
+    "engine": "WebKit Windows",
+    "physicalIphone": false,
+    "checks": [
+      {
+        "repo": "landing-autologuin",
+        "check": "three-tab-reopens-preserve-session",
+        "passed": true
+      },
+      {
+        "repo": "landing-autologuin",
+        "check": "lost-cookie-recovered-from-encrypted-storage",
+        "passed": true,
+        "probes": 3
+      },
+      {
+        "repo": "ases-gateway",
+        "check": "three-tab-reopens-preserve-session",
+        "passed": true
+      },
+      {
+        "repo": "ases-gateway",
+        "check": "lost-cookie-recovered-from-encrypted-storage",
+        "passed": true,
+        "probes": 3
+      },
+      {
+        "repo": "ganamos-gateway",
+        "check": "three-tab-reopens-preserve-session",
+        "passed": true
+      },
+      {
+        "repo": "ganamos-gateway",
+        "check": "lost-cookie-recovered-from-encrypted-storage",
+        "passed": true,
+        "probes": 3
+      },
+      {
+        "repo": "multi-skin-gateway",
+        "check": "three-tab-reopens-preserve-session",
+        "passed": true
+      },
+      {
+        "repo": "multi-skin-gateway",
+        "check": "lost-cookie-recovered-from-encrypted-storage",
+        "passed": true,
+        "probes": 3
+      },
+      {
+        "check": "actual-atrio-balance-button-single-label-during-request",
+        "passed": true
+      }
+    ],
+    "moneyOperations": 0,
+    "accountsCreated": 0
+  },
+  "transitionVisual": [
+    {
+      "repo": "landing-autologuin",
+      "width": 306.53125,
+      "height": 289.671875,
+      "theme": "#080808",
+      "scheme": "dark",
+      "overflow": false,
+      "bytes": 91114
+    },
+    {
+      "repo": "ases-gateway",
+      "width": 306.53125,
+      "height": 137.9375,
+      "theme": "#000000",
+      "scheme": "dark",
+      "overflow": false,
+      "bytes": 41948
+    },
+    {
+      "repo": "ganamos-gateway",
+      "width": 306.53125,
+      "height": 76.328125,
+      "theme": "#11001f",
+      "scheme": "dark",
+      "overflow": false,
+      "bytes": 9242
+    },
+    {
+      "repo": "multi-skin-gateway",
+      "width": 306.53125,
+      "height": 289.671875,
+      "theme": "#121212",
+      "scheme": "dark",
+      "overflow": false,
+      "bytes": 79306
+    }
+  ],
+  "mobileButton": {
+    "at": "2026-10-17T16:25:17.735Z",
+    "engine": "WebKit Windows",
+    "physicalIphone": false,
+    "checks": [
+      {
+        "check": "actual-atrio-balance-button-single-label-during-request",
+        "passed": true
+      }
+    ],
+    "moneyOperations": 0,
+    "accountsCreated": 0
+  },
+  "images": {
+    "assets": [
+      {
+        "repo": "landing-autologuin",
+        "source": "rey-de-ases-logo-transparent.png",
+        "output": "rey-de-ases-logo-transparent.optimized.avif",
+        "before": 1349509,
+        "after": 82652,
+        "format": "avif",
+        "width": 720
+      },
+      {
+        "repo": "ases-gateway",
+        "source": "ases-del-norte-transition-logo.png",
+        "output": "ases-del-norte-transition-logo.optimized.avif",
+        "before": 946676,
+        "after": 22345,
+        "format": "avif",
+        "width": 720
+      },
+      {
+        "repo": "ganamos-gateway",
+        "source": "ganamos-net-transition-logo.webp",
+        "output": "ganamos-net-transition-logo.webp",
+        "before": 9242,
+        "after": 9242,
+        "format": "webp",
+        "width": 518
+      },
+      {
+        "repo": "multi-skin-gateway",
+        "source": "ganamos-plus-logo-transparent.png",
+        "output": "ganamos-plus-logo-transparent.optimized.avif",
+        "before": 1562513,
+        "after": 61434,
+        "format": "avif",
+        "width": 720
+      },
+      {
+        "repo": "landing-autologuin",
+        "source": "atrio-widget-logo.png",
+        "output": "atrio-widget-logo.optimized.avif",
+        "before": 16719,
+        "after": 3647,
+        "format": "avif",
+        "width": 191
+      },
+      {
+        "repo": "ases-gateway",
+        "source": "atrio-widget-logo.png",
+        "output": "atrio-widget-logo.optimized.avif",
+        "before": 16719,
+        "after": 3647,
+        "format": "avif",
+        "width": 191
+      },
+      {
+        "repo": "ganamos-gateway",
+        "source": "atrio-widget-logo.png",
+        "output": "atrio-widget-logo.optimized.avif",
+        "before": 16719,
+        "after": 3647,
+        "format": "avif",
+        "width": 191
+      },
+      {
+        "repo": "multi-skin-gateway",
+        "source": "atrio-widget-logo.png",
+        "output": "atrio-widget-logo.optimized.avif",
+        "before": 16719,
+        "after": 3647,
+        "format": "avif",
+        "width": 191
+      },
+      {
+        "repo": "internal-chat",
+        "source": "brands/ases-del-norte-player.webp",
+        "output": "brands/ases-del-norte-player.optimized.avif",
+        "before": 58582,
+        "after": 10914,
+        "format": "avif",
+        "width": 512
+      },
+      {
+        "repo": "internal-chat",
+        "source": "brands/ganamos-net-player.png",
+        "output": "brands/ganamos-net-player.optimized.avif",
+        "before": 27369,
+        "after": 5612,
+        "format": "avif",
+        "width": 225
+      },
+      {
+        "repo": "internal-chat",
+        "source": "brands/ganamos-plus-player.png",
+        "output": "brands/ganamos-plus-player.optimized.avif",
+        "before": 1000424,
+        "after": 9917,
+        "format": "avif",
+        "width": 512
+      },
+      {
+        "repo": "internal-chat",
+        "source": "brands/ganamosbet-player.webp",
+        "output": "brands/ganamosbet-player.optimized.avif",
+        "before": 181276,
+        "after": 27198,
+        "format": "avif",
+        "width": 512
+      },
+      {
+        "repo": "internal-chat",
+        "source": "brands/rey-de-ases-player-square.webp",
+        "output": "brands/rey-de-ases-player-square.optimized.avif",
+        "before": 88762,
+        "after": 15778,
+        "format": "avif",
+        "width": 512
+      },
+      {
+        "repo": "internal-chat",
+        "source": "brands/rey-de-ases-player.webp",
+        "output": "brands/rey-de-ases-player.optimized.avif",
+        "before": 55914,
+        "after": 36240,
+        "format": "avif",
+        "width": 512
+      }
+    ],
+    "before": 5347143,
+    "after": 295920,
+    "note": "Inventory of primary derivatives, not transferred page bytes; compressed WebP fallbacks and original installation icons retained."
+  },
+  "limitations": [
+    "No physical iPhone/WhatsApp window test.",
+    "Complete storage deletion or isolation cannot identify the phone automatically.",
+    "No real casino creation/login measurement for the other three providers without test managers."
+  ],
+  "api2": {
+    "localOnly": true,
+    "deployed": false,
+    "newMigrationsThisTask": 0
+  }
+}

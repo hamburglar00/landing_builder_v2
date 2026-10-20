@@ -24,6 +24,8 @@ export type ConversionFilterDraft = {
   sourcePlatform: string;
   sex: string;
   campaigns: string[];
+  adSets: string[];
+  ads: string[];
 };
 
 type ConversionFilterOptions = {
@@ -34,6 +36,8 @@ type ConversionFilterOptions = {
   sourcePlatforms: readonly string[];
   sexes: readonly string[];
   campaigns: readonly string[];
+  adSets: readonly string[];
+  ads: readonly string[];
 };
 
 type ConversionFilterChanges = {
@@ -45,6 +49,8 @@ type ConversionFilterChanges = {
   sourcePlatform: (value: string) => void;
   sex: (value: string) => void;
   campaigns: (value: string[]) => void;
+  adSets: (value: string[]) => void;
+  ads: (value: string[]) => void;
 };
 
 type ConversionFiltersModalProps = {
@@ -344,6 +350,24 @@ export default function ConversionFiltersModal({
                 selectedPluralLabel="campañas seleccionadas"
                 options={stringOptions(options.campaigns)}
                 onChange={onChange.campaigns}
+              />
+              <SearchableCheckboxField
+                id="conversion-filter-ad-set"
+                label="Conjunto de anuncios"
+                values={draft.adSets}
+                allLabel="Todos los conjuntos"
+                selectedPluralLabel="conjuntos seleccionados"
+                options={stringOptions(options.adSets)}
+                onChange={onChange.adSets}
+              />
+              <SearchableCheckboxField
+                id="conversion-filter-ad"
+                label="Anuncio"
+                values={draft.ads}
+                allLabel="Todos los anuncios"
+                selectedPluralLabel="anuncios seleccionados"
+                options={stringOptions(options.ads)}
+                onChange={onChange.ads}
               />
             </div>
     </ModalShell>

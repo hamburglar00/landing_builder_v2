@@ -19,6 +19,9 @@ export type AssignedAdvisor = {
 };
 
 export type ResolvedPlayer = {
+  manager_id?: number;
+  agency_id?: number;
+  manager_connection_id?: string;
   advisor_id: string;
   advisor_slug: string;
   player_id: string;
@@ -41,6 +44,8 @@ export type PlayerResolveRequest = {
 };
 
 export type Api2ResolveAccountRequest = {
+  agency_id?: number;
+  manager_id?: number;
   external_user_id: string;
   name: string;
   target_provider: TargetProvider;
@@ -55,7 +60,6 @@ export type TargetAccount = {
   platform: TargetProvider;
   created: boolean;
   externalAccountId?: string | null;
-  testingBypass?: boolean;
 };
 
 export type LinkedProviderAccount = {

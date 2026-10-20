@@ -5,6 +5,11 @@ export type PromoGerenciaCoherence =
   | "player_phone_conflict"
   | "gerencia_conflict";
 
+/** Acquisition origin belongs to the journey. The event payload records its emitter. */
+export function preserveJourneyOrigin(lineageSource: unknown, inboundSource: unknown): string {
+  return String(lineageSource ?? "").trim() || String(inboundSource ?? "").trim();
+}
+
 export type PurchaseJourneyDecision = {
   targetId: string | null;
   purchaseType: "first" | "repeat";

@@ -6,6 +6,7 @@ import { buildAtrioUrl, type AtrioClient, type LandingAtrioAssignment } from "@/
 import type { Landing } from "@/lib/landing/types";
 import { CollapsibleSection } from "@/components/landing/LandingEditorForm";
 import { useClientModulePermissions } from "@/components/clients/ClientModulePermissions";
+import { AtrioManagerSelector } from "./AtrioManagerSelector";
 
 type Props = {
   landing: Landing;
@@ -96,6 +97,7 @@ export function AtrioRedirectSection({
       <p className="mb-3 text-xs text-zinc-500">
         El reparto equitativo se calcula solo dentro de este subconjunto de slugs, independiente de telefonos u otras landings.
       </p>
+      {isTemplate7 && <p className="mb-3 text-xs text-zinc-400">El manager se guarda por asesor y casino al usar Guardar manager. Si hay uno solo se asigna automáticamente. Las cuentas existentes conservan su manager.</p>}
 
       {atrioClients.length === 0 ? (
         <p className="text-sm text-zinc-500">
@@ -112,6 +114,7 @@ export function AtrioRedirectSection({
                 <th className="px-3 py-2 font-medium text-zinc-300">Slug</th>
                 <th className="px-3 py-2 font-medium text-zinc-300">URL</th>
                 {!isTemplate7 && <th className="px-3 py-2 font-medium text-zinc-300">ID Atrio</th>}
+                {isTemplate7 && <th className="px-3 py-2 font-medium text-zinc-300">Manager de PBAdmin</th>}
                 <th className="w-20 px-3 py-2 text-center font-medium text-zinc-300">Asignar</th>
                 {landing.atrioSelectionMode === "weighted_random" && (
                   <th className="w-20 px-3 py-2 font-medium text-zinc-300">Peso</th>
@@ -143,6 +146,10 @@ export function AtrioRedirectSection({
                         </code>
                       </td>
                     )}
+                    {isTemplate7 && <td className="px-3 py-2">{isAssigned ? <AtrioManagerSelector
+                      key={`${landing.id}:${client.id}:${landing.config.targetProvider || "rey_de_ases"}`}
+                      landingId={landing.id} atrioClientId={client.id} provider={landing.config.targetProvider || "rey_de_ases"}
+                    /> : <span className="text-xs text-zinc-500">Asigná este asesor para elegir su manager.</span>}</td>}
                     <td className="px-3 py-2 text-center">
                       <input
                         type="checkbox"
