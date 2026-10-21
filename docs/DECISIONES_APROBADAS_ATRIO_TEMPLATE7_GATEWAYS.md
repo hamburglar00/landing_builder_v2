@@ -306,6 +306,7 @@ Ganamos+ tuvo validación del formulario, recursos y contrato compartido, pero n
 
 ### Reinicios de métricas y presentación de redirección (20/10/2026)
 
+- En Atrio del constructor, reunir título, buscador, filtro de bots activos y botones globales en una sola fila. Si no entra en el ancho disponible, permitir desplazamiento horizontal dentro de esa cabecera, sin mostrar la barra ni ensanchar la página (21/10/2026).
 - En Atrio del constructor, ofrecer «Reiniciar contadores» y «Reiniciar mensajes» para el workspace, además de los mismos controles por asesor. El alcance incluye todos sus bots aunque la búsqueda o el filtro de activos oculten filas; describirlo en la confirmación. No reiniciar métricas reales al validar la interfaz.
 - «Reiniciar mensajes» reinicia la métrica de chats iniciados, no cuenta cada mensaje individual. Cada conversación participa una vez, desde su primer mensaje del cliente. Los mensajes posteriores de un chat previo al reinicio no lo convierten en un chat nuevo. Conservar y mostrar los chats históricos.
 - Guardar ventanas independientes para asignaciones y chats, sin borrar asignaciones, jugadores, cuentas, conversaciones, mensajes ni atribución. Los reingresos mantienen su bot. El reparto equitativo respeta estas ventanas y conserva su comparación por landing. Proteger los reinicios con la sesión del constructor, ownership de sus asesores y puente de servicio; ningún navegador puede aportar otro asesor por ID.

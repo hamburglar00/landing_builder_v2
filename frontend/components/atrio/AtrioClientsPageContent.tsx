@@ -327,32 +327,31 @@ export default function AtrioClientsPageContent({ mode }: { mode: Mode }) {
       ) : null}
 
       <SurfaceCard className="overflow-hidden">
-        <div className="flex flex-col gap-3 border-b border-[var(--color-border-subtle)] p-4 sm:flex-row sm:items-center sm:justify-between">
-          <div className="min-w-0">
-            <h2 className="text-sm font-semibold text-[var(--color-text-strong)]">Asesores Atrio</h2>
-            <p className="mt-1 text-xs text-[var(--color-text-muted)]">
-              {filteredClients.length} de {clients.length} asesores en {workspaceCurrency}
-            </p>
-          </div>
-          <label className="relative w-full sm:max-w-sm">
-            <span className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-[var(--color-text-muted)]">
-              <SearchIcon />
-            </span>
-            <input
-              type="search"
-              value={search}
-              onChange={(event) => setSearch(event.target.value)}
-              placeholder="Buscar asesor, bot, casino o gerencia..."
-              className="h-10 w-full rounded-xl border border-[var(--color-border)] bg-[var(--color-bg-2)] pl-9 pr-3 text-sm text-[var(--color-text-strong)] outline-none placeholder:text-[var(--color-text-disabled)] focus:border-[var(--color-primary)] focus:ring-2 focus:ring-[var(--color-ring-primary)]"
-            />
-          </label>
-        </div>
-
-        <div className="flex flex-wrap items-center justify-between gap-3 border-b border-[var(--color-border-subtle)] px-4 py-3 text-xs">
-          <label className="flex items-center gap-2"><input type="checkbox" checked={onlyActive} onChange={e => setOnlyActive(e.target.checked)} />Solo bots activos</label>
-          <div className="flex flex-wrap gap-2">
-            <button type="button" disabled={directoryBusy || !!resetting} onClick={() => setRefreshDirectory(v => v + 1)} className="ui-button ui-button-secondary h-8 min-h-8 px-3 text-xs">{directoryBusy ? "Actualizando…" : "Actualizar"}</button>
-            <BotMetricResetButtons global disabled={directoryBusy || !!resetting || !clients.length || !!directoryError} resetting={resetting?.clientId === null ? resetting.metric : null} onReset={metric => void handleMetricReset(metric)} />
+        <div className="scrollbar-none overflow-x-auto border-b border-[var(--color-border-subtle)]">
+          <div className="flex min-w-max items-center gap-4 p-4" role="group" aria-label="Filtros y acciones de asesores Atrio">
+            <div className="shrink-0 whitespace-nowrap">
+              <h2 className="text-sm font-semibold text-[var(--color-text-strong)]">Asesores Atrio</h2>
+              <p className="mt-1 text-xs text-[var(--color-text-muted)]">
+                {filteredClients.length} de {clients.length} asesores en {workspaceCurrency}
+              </p>
+            </div>
+            <label className="relative ml-auto w-56 min-w-[200px] max-w-sm flex-1">
+              <span className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-[var(--color-text-muted)]">
+                <SearchIcon />
+              </span>
+              <input
+                type="search"
+                value={search}
+                onChange={(event) => setSearch(event.target.value)}
+                placeholder="Buscar asesor, bot, casino o gerencia..."
+                className="h-10 w-full rounded-xl border border-[var(--color-border)] bg-[var(--color-bg-2)] pl-9 pr-3 text-sm text-[var(--color-text-strong)] outline-none placeholder:text-[var(--color-text-disabled)] focus:border-[var(--color-primary)] focus:ring-2 focus:ring-[var(--color-ring-primary)]"
+              />
+            </label>
+            <label className="flex shrink-0 items-center gap-2 whitespace-nowrap text-xs"><input type="checkbox" checked={onlyActive} onChange={e => setOnlyActive(e.target.checked)} />Solo bots activos</label>
+            <div className="flex shrink-0 items-center gap-2 whitespace-nowrap [&>div]:flex-nowrap">
+              <button type="button" disabled={directoryBusy || !!resetting} onClick={() => setRefreshDirectory(v => v + 1)} className="ui-button ui-button-secondary h-8 min-h-8 px-3 text-xs">{directoryBusy ? "Actualizando…" : "Actualizar"}</button>
+              <BotMetricResetButtons global disabled={directoryBusy || !!resetting || !clients.length || !!directoryError} resetting={resetting?.clientId === null ? resetting.metric : null} onReset={metric => void handleMetricReset(metric)} />
+            </div>
           </div>
         </div>
         {clients.length === 0 ? (
