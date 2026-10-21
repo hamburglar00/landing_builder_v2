@@ -49,7 +49,7 @@ export default function LoginPage() {
 
   return (
     <div className="panel-shell relative flex min-h-screen items-center justify-center overflow-hidden px-4 py-8 sm:px-6">
-      <div className="grid w-full max-w-5xl overflow-hidden rounded-[1.5rem] border border-[var(--color-border)] bg-[rgba(11,15,21,0.86)] shadow-[var(--shadow-raised)] backdrop-blur-xl lg:grid-cols-[1.08fr_0.92fr]">
+      <div className="grid min-w-0 w-full max-w-5xl overflow-hidden rounded-[1.5rem] border border-[var(--color-border)] bg-[rgba(11,15,21,0.86)] shadow-[var(--shadow-raised)] backdrop-blur-xl lg:grid-cols-[minmax(0,1.08fr)_minmax(0,0.92fr)]">
         <section className="relative hidden min-h-[620px] overflow-hidden border-r border-[var(--color-border-subtle)] p-10 lg:flex lg:flex-col lg:justify-between">
           <div className="absolute inset-0 bg-[radial-gradient(circle_at_20%_18%,rgba(163,230,53,0.13),transparent_32rem),linear-gradient(145deg,rgba(255,255,255,0.025),transparent_48%)]" />
           <div className="relative z-10 flex items-center gap-3">
@@ -78,8 +78,8 @@ export default function LoginPage() {
           </div>
         </section>
 
-        <section className="flex min-h-[560px] items-center p-6 sm:p-10 lg:p-12">
-          <div className="mx-auto w-full max-w-sm">
+        <section className="flex min-h-[560px] min-w-0 items-center p-5 sm:p-10 lg:p-12">
+          <div className="mx-auto min-w-0 w-full max-w-sm">
             <div className="mb-8 lg:hidden">
               <div className="flex items-center gap-3">
                 <div className="panel-brand-mark flex h-10 w-10 items-center justify-center rounded-xl text-sm font-bold">PB</div>
@@ -156,7 +156,7 @@ export default function LoginPage() {
               </div>
 
               {error && (
-                <div className="ui-alert border-[rgba(251,113,133,0.25)] bg-[rgba(251,113,133,0.07)] text-xs text-[var(--color-danger)]" role="alert">
+                <div className="ui-alert break-words border-[rgba(251,113,133,0.25)] bg-[rgba(251,113,133,0.07)] text-xs text-[var(--color-danger)]" role="alert">
                   {error}
                 </div>
               )}

@@ -173,7 +173,7 @@ export function PublishTargetSection({
         Motor de publicación
       </h3>
 
-      <div className="mt-4 grid gap-2 sm:grid-cols-2">
+      <div className="mt-4 grid grid-cols-1 gap-2 sm:grid-cols-2">
         {TARGETS.map((target) => {
           const active = publishTarget === target.value;
           const targetUrl =
@@ -184,7 +184,7 @@ export function PublishTargetSection({
           return (
             <div
               key={target.value}
-              className={`relative rounded-xl border transition ${
+              className={`relative min-w-0 rounded-xl border transition ${
                 active
                   ? "border-emerald-500/70 bg-emerald-500/10"
                   : "border-zinc-800 bg-zinc-950/30"

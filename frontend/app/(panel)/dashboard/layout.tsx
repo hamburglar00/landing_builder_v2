@@ -886,7 +886,7 @@ export default function DashboardLayout({
           </div>
         </header>
         <main
-          className="panel-main-content min-h-0 flex-1 overflow-x-hidden overflow-y-auto px-3 py-5 sm:px-6 sm:py-8 lg:px-10"
+          className="panel-main-content min-h-0 flex-1 px-3 py-5 sm:px-6 sm:py-8 lg:px-10"
           aria-busy={isNavigating}
         >
           {children}

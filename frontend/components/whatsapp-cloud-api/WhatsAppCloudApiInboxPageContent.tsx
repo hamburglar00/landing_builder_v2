@@ -1298,8 +1298,8 @@ export default function WhatsAppCloudApiInboxPageContent({ mode }: Props) {
         <div className="ui-alert ui-alert-success text-sm">{sendNotice}</div>
       ) : null}
 
-      <SurfaceCard className="grid h-[38rem] overflow-hidden xl:grid-cols-[20rem_minmax(0,1fr)_18rem]">
-        <aside className="flex min-h-0 flex-col border-b border-[var(--color-border-subtle)] xl:border-b-0 xl:border-r">
+      <SurfaceCard className="grid grid-cols-1 overflow-hidden xl:h-[38rem] xl:grid-cols-[20rem_minmax(0,1fr)_18rem]">
+        <aside className="flex min-h-0 min-w-0 flex-col border-b border-[var(--color-border-subtle)] xl:border-b-0 xl:border-r">
           <div className="space-y-3 border-b border-[var(--color-border-subtle)] p-4">
             <div className="relative flex h-10 items-center gap-2 rounded-xl border border-[var(--color-border)] bg-[var(--color-bg-2)] px-3 text-[var(--color-text-muted)]">
               <SearchIcon />
@@ -1499,7 +1499,7 @@ export default function WhatsAppCloudApiInboxPageContent({ mode }: Props) {
           ) : null}
         </aside>
 
-        <section className="flex min-h-[34rem] flex-col border-b border-[var(--color-border-subtle)] xl:border-b-0 xl:border-r">
+        <section className="flex min-h-[34rem] min-w-0 flex-col border-b border-[var(--color-border-subtle)] xl:border-b-0 xl:border-r">
           {selectedThread ? (
             <>
               <div className="flex items-center justify-between border-b border-[#26343d] bg-[#111b21] px-4 py-3">

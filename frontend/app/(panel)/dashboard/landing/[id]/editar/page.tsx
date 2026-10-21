@@ -504,9 +504,9 @@ export default function DashboardLandingEditarPage() {
     : landing.postUrl;
 
   return (
-    <div className="lg:grid lg:grid-cols-[minmax(0,1fr)_360px] lg:items-start lg:gap-6">
+    <div className="xl:grid xl:grid-cols-[minmax(0,1fr)_360px] xl:items-start xl:gap-6">
       {/* Columna izquierda: scroll normal */}
-      <div className="min-w-0 flex-1 space-y-8 pb-8 lg:pr-4">
+      <div className="min-w-0 flex-1 space-y-8 pb-8 xl:pr-4">
         {saveError && (
           <p className="ui-alert border-[rgba(251,113,133,0.25)] bg-[rgba(251,113,133,0.07)] text-sm text-[var(--color-danger)]" role="alert">
             {saveError}
@@ -873,7 +873,7 @@ export default function DashboardLandingEditarPage() {
       {showPreview && landing.landingType !== "external" && (
         <>
           {/* Mobile / tablet: preview al final, con scroll normal */}
-          <div className="mt-8 w-full max-w-[380px] lg:hidden">
+          <div className="mt-8 w-full max-w-[380px] xl:hidden">
             <p className="mb-3 text-xs font-medium text-zinc-500">
               Vista previa
             </p>
@@ -889,7 +889,7 @@ export default function DashboardLandingEditarPage() {
           </div>
 
           {/* Desktop: preview fijo que acompaña el scroll y siempre queda visible */}
-          <aside className="sticky top-20 hidden h-fit w-[360px] self-start rounded-2xl border border-[var(--color-border)] bg-[rgba(11,15,21,0.72)] p-3 shadow-[var(--shadow-card)] lg:block">
+          <aside className="sticky top-20 hidden h-fit w-[360px] self-start rounded-2xl border border-[var(--color-border)] bg-[rgba(11,15,21,0.72)] p-3 shadow-[var(--shadow-card)] xl:block">
             <div className="mb-2 flex items-center justify-between">
               <p className="text-xs font-semibold text-[var(--color-text)]">Vista previa</p>
               <span className="ui-badge">En vivo</span>

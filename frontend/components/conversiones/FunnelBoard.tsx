@@ -410,7 +410,7 @@ export default function FunnelBoard({
     <div className="space-y-4">
       <div className="flex flex-wrap items-center justify-between gap-2">
         <div>{headerSlot}</div>
-        <div className="flex items-center gap-2">
+        <div className="flex flex-wrap items-center gap-2">
           <div className="mr-2 flex items-center gap-1">
             <button
               onClick={() => setSafePage((p) => p - 1)}

@@ -1645,7 +1645,7 @@ export default function DashboardConversionesPage() {
 
       {/* Date filter + global actions */}
       {(tab === "funnel" || tab === "seguimiento" || tab === "tabla" || tab === "estadisticas" || tab === "desempeno" || tab === "inbox" || tab === "logs") && (
-        <div className="flex flex-col gap-2 pt-1 sm:flex-row sm:items-center sm:justify-between">
+        <div className="flex flex-col gap-2 pt-1 sm:flex-row sm:flex-wrap sm:items-center sm:justify-between">
           <div className="grid grid-cols-2 gap-2 sm:flex sm:items-center">
             {(tab === "funnel" || tab === "tabla" || tab === "estadisticas" || tab === "inbox" || tab === "logs") && (
               <>
@@ -2020,13 +2020,13 @@ export default function DashboardConversionesPage() {
       {tab === "inbox" && (
         <section className="rounded-xl border border-zinc-800 bg-zinc-900/50 p-4">
           <div className="mb-4 flex flex-wrap items-center justify-between gap-2">
-            <h3 className="text-sm font-semibold text-zinc-200">
+            <h3 className="min-w-0 max-w-full break-words text-sm font-semibold text-zinc-200">
               Inbox de eventos (CONTACT/LEAD/COMPLETEREGISTRATION/PURCHASE){" "}
               <span className="font-normal text-zinc-500">
                 ({filteredInbox.length}{inboxHasNextPage ? "+" : ""})
               </span>
             </h3>
-            <div className="flex items-center gap-2">
+            <div className="flex w-full min-w-0 flex-wrap items-center gap-2 sm:w-auto">
               <CustomSelect
                 value={inboxActionFilter}
                 options={[
@@ -2047,7 +2047,7 @@ export default function DashboardConversionesPage() {
                 value={inboxSearch}
                 onChange={(e) => setInboxSearch(e.target.value)}
                 placeholder="Buscar por phone, promo, coelsa, transaction, status..."
-                className="h-8 w-72 rounded-lg border border-zinc-700 bg-zinc-900 px-3 text-xs text-zinc-100 placeholder:text-zinc-500"
+                className="h-8 min-w-0 w-full rounded-lg border border-zinc-700 bg-zinc-900 px-3 text-xs text-zinc-100 placeholder:text-zinc-500 sm:w-72"
               />
             </div>
           </div>

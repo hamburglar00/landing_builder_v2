@@ -116,7 +116,7 @@ export default function DateRangeFilter({
     : PRESET_LABELS[preset];
 
   return (
-    <div ref={ref} className="relative w-full sm:w-auto">
+    <div ref={ref} className="relative min-w-0 w-full max-w-full sm:w-auto">
       <CustomSelect
         value={preset}
         onChange={(nextValue) => handlePreset(nextValue as Preset)}
@@ -131,12 +131,12 @@ export default function DateRangeFilter({
         menuClassName="right-0"
         title="Seleccionar rango de fechas"
       />
-      <div className="hidden flex-wrap items-center gap-1 rounded-lg border border-zinc-800/50 bg-[#0d0d11] p-0.5 sm:flex sm:flex-nowrap">
+      <div className="hidden items-center gap-1 overflow-x-auto rounded-lg border border-zinc-800/50 bg-[#0d0d11] p-0.5 sm:flex">
         {(Object.keys(PRESET_LABELS) as Preset[]).map((p) => (
           <button
             key={p}
             onClick={() => handlePreset(p)}
-            className={`cursor-pointer rounded-md px-2 py-1 text-[10px] font-medium transition-all whitespace-nowrap sm:px-2.5 ${
+            className={`shrink-0 cursor-pointer rounded-md px-2 py-1 text-[10px] font-medium transition-all whitespace-nowrap sm:px-2.5 ${
               preset === p
                 ? "bg-zinc-800 text-zinc-200 shadow-sm"
                 : "text-zinc-600 hover:text-zinc-300"

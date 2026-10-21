@@ -172,6 +172,8 @@ a {
 /* Panel-only foundation. Public landings keep their configurable styles. */
 .panel-shell {
   isolation: isolate;
+  min-width: 0;
+  width: 100%;
   background:
     radial-gradient(circle at 84% -12%, rgba(163, 230, 53, 0.055), transparent 28rem),
     radial-gradient(circle at 32% 112%, rgba(56, 189, 248, 0.035), transparent 32rem),
@@ -245,12 +247,33 @@ a {
   background: rgba(7, 9, 13, 0.76);
   box-shadow: 0 1px 0 rgba(255, 255, 255, 0.018);
   backdrop-filter: blur(18px) saturate(135%);
+  flex-wrap: wrap;
 }
 
 .panel-main-content {
+  min-width: 0;
   width: 100%;
   max-width: 120rem;
   margin-inline: auto;
+}
+
+.panel-main-content > * {
+  min-width: 0;
+  max-width: 100%;
+}
+
+/* Wide content scrolls within its card instead of widening the document. */
+.panel-shell .overflow-x-auto,
+.app-modal-portal .overflow-x-auto {
+  min-width: 0;
+  max-width: 100%;
+  overscroll-behavior-x: contain;
+  scrollbar-width: none;
+}
+
+.panel-shell .overflow-x-auto::-webkit-scrollbar,
+.app-modal-portal .overflow-x-auto::-webkit-scrollbar {
+  display: none;
 }
 
 .panel-main-content h1 {
@@ -382,6 +405,7 @@ a {
 }
 
 .ui-card {
+  min-width: 0;
   border: 1px solid var(--color-border);
   border-radius: var(--radius-card);
   background:
@@ -515,7 +539,8 @@ a {
 
 .ui-tabs {
   display: flex;
-  min-width: max-content;
+  min-width: 0;
+  max-width: 100%;
   align-items: center;
   gap: 0.25rem;
   padding: 0.25rem;
@@ -526,6 +551,7 @@ a {
 
 .ui-tab {
   display: inline-flex;
+  flex-shrink: 0;
   min-height: 2rem;
   align-items: center;
   justify-content: center;
@@ -678,7 +704,6 @@ a {
 
 @media (max-width: 640px) {
   .panel-main-content {
-    overflow-x: clip;
     padding-bottom: max(1rem, env(safe-area-inset-bottom));
   }
 
@@ -713,6 +738,16 @@ a {
   .ui-modal {
     max-height: calc(100dvh - 1rem);
     border-radius: 1.15rem;
+  }
+}
+
+/* Safari zooms focused fields below 16px. Keep native page zoom available. */
+@media (max-width: 1023px), (hover: none) {
+  .panel-shell :is(input, select, textarea):not([type="checkbox"]):not([type="radio"]):not([type="range"]):not([type="color"]),
+  .app-modal-portal :is(input, select, textarea):not([type="checkbox"]):not([type="radio"]):not([type="range"]):not([type="color"]) {
+    min-width: 0;
+    max-width: 100%;
+    font-size: max(16px, 1em);
   }
 }
 
