@@ -1,6 +1,6 @@
 # Decisiones aprobadas de Atrio Template 7 y gateways
 
-Actualizado el 20 de octubre de 2026. Este registro conserva los requisitos acordados con el usuario para que una mejora no elimine comportamientos ya aprobados. Se aplica a `landing-builder`, `landing-prueba-1`, `internal-chat`, `landing-autologuin`, `ases-gateway`, `ganamos-gateway` y `multi-skin-gateway`. API2 conserva su propio lote local.
+Actualizado el 21 de octubre de 2026. Este registro conserva los requisitos acordados con el usuario para que una mejora no elimine comportamientos ya aprobados. Se aplica a `landing-builder`, `landing-prueba-1`, `internal-chat`, `landing-autologuin`, `ases-gateway`, `ganamos-gateway` y `multi-skin-gateway`. API2 conserva su propio lote local.
 
 Una decisión nueva reemplaza una anterior solo cuando el usuario cambia explícitamente ese requisito. Registrar el cambio aquí y verificar los comportamientos relacionados antes de publicar. Un build correcto o una prueba con sesión insertada artificialmente no demuestran que el navegador real conserve la cuenta.
 
@@ -331,6 +331,13 @@ Evidencia: [operaciones manuales y navegación entre chats](validation/atrio-man
 - No ocultar respuestas genéricas de API2 según palabras del texto. La clasificación semántica completa y la política de entrega siguen pendientes de definir; conservar mensajes y avisos financieros actuales.
 
 Evidencia y conciliación pendiente de la operación 13: [widget y Full Carga](validation/atrio-widget-full-carga-20261020.md). API2 permanece local.
+
+### Enlaces del chat y color del navegador (21/10/2026)
+
+- Reconocer enlaces HTTP/HTTPS, dominios sin protocolo y `wa.me` en los mensajes del cliente y del asesor. Los enlaces se distinguen con subrayado, heredan el color de texto del tema y abren su destino en otra pestaña o aplicación, conservando el chat. Mantener el texto completo, saltos de línea, copia y contención de direcciones largas. No interpretar HTML ni convertir protocolos ejecutables en enlaces.
+- La representación se comparte entre inbox, chat independiente y widget, incluidos los tres temas y los cuatro gateways. También aplicar enlaces a los textos de promociones e invitaciones del chat.
+- En los cuatro gateways, unificar `theme-color`, el manifest y el fondo real con el color de fondo de cada casino; reemplazar metadatos contradictorios del proveedor y declarar esquema oscuro. La implementación compartida vive en `landing-autologuin/src/lib/gateway-browser-appearance.ts`; sincronizar con `node scripts/sync-gateway-browser-appearance.mjs` y verificar con `--check`. Ganamos+ incluye su Worker público.
+- La interfaz nativa del navegador puede ignorar o adaptar el color indicado. Las pruebas de Chromium/WebKit de escritorio no certifican el color de la barra de Chrome en un iPhone físico.
 
 ### Clasificación compatible y mediciones locales (20/10/2026)
 

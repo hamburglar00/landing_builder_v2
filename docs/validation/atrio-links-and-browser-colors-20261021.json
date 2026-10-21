@@ -1,0 +1,387 @@
+{
+  "at": "2026-10-21T18:48:21.997Z",
+  "published": [
+    {
+      "repo": "internal-chat",
+      "commit": "c37c40d",
+      "deployment": "dpl_GongZa6XeVZsgBBQRkBoCoRidgGH",
+      "state": "READY",
+      "aliases": [
+        "www.atrio.website",
+        "internal-chat-bay.vercel.app",
+        "atrio.website",
+        "internal-chat-juanclouds-projects.vercel.app"
+      ]
+    },
+    {
+      "repo": "landing-autologuin",
+      "commit": "539cfca",
+      "deployment": "dpl_29jd2zFjHdCgr4up3yRKxqXMcTK8",
+      "state": "READY",
+      "aliases": [
+        "www.reydeases.fun",
+        "reydeases-gateway.vercel.app",
+        "reydeases.fun",
+        "reydeases-gateway-juanclouds-projects.vercel.app"
+      ]
+    },
+    {
+      "repo": "ases-gateway",
+      "commit": "86ad83e",
+      "deployment": "dpl_2xzPCtRWJ3MfughZoqpUciN7qGZK",
+      "state": "READY",
+      "aliases": [
+        "www.asesdelnorte.online",
+        "ases-del-norte-gateway.vercel.app",
+        "asesdelnorte.online",
+        "ases-del-norte-gateway-juanclouds-projects.vercel.app"
+      ]
+    },
+    {
+      "repo": "ganamos-gateway",
+      "commit": "abd4193",
+      "deployment": "dpl_7LpDDnJVu1dvzjUexov1HtsUKxrN",
+      "state": "READY",
+      "aliases": [
+        "www.ganamosnet.icu",
+        "ganamos-net-gateway.vercel.app",
+        "ganamosnet.icu",
+        "ganamos-net-gateway-juanclouds-projects.vercel.app"
+      ]
+    },
+    {
+      "repo": "multi-skin-gateway",
+      "commit": "fe2c83d",
+      "deployment": "dpl_ETE6C7P1cemSxondNKZH5Q5c1TqN",
+      "state": "READY",
+      "aliases": [
+        "multi-skin-gateway.vercel.app",
+        "multi-skin-gateway-juanclouds-projects.vercel.app"
+      ]
+    }
+  ],
+  "cloudflare": {
+    "worker": "multi-skin-gateway",
+    "version": "9c88e922-053b-4068-bb35-c686118a3cfe",
+    "publicOrigin": "https://ganamosnet.global"
+  },
+  "publicChecks": [
+    {
+      "provider": "rey_de_ases",
+      "origin": "https://www.reydeases.fun",
+      "manifestStatus": 200,
+      "loginStatus": 401,
+      "themeColor": "#0b0b0f",
+      "backgroundColor": "#0b0b0f",
+      "scheme": "dark"
+    },
+    {
+      "provider": "ases_del_norte",
+      "origin": "https://www.asesdelnorte.online",
+      "manifestStatus": 200,
+      "loginStatus": 401,
+      "themeColor": "#071b2c",
+      "backgroundColor": "#071b2c",
+      "scheme": "dark"
+    },
+    {
+      "provider": "ganamos_net",
+      "origin": "https://www.ganamosnet.icu",
+      "manifestStatus": 200,
+      "loginStatus": 401,
+      "themeColor": "#11001f",
+      "backgroundColor": "#11001f",
+      "scheme": "dark"
+    },
+    {
+      "provider": "multi_skin",
+      "origin": "https://ganamosnet.global",
+      "manifestStatus": 200,
+      "loginStatus": 401,
+      "themeColor": "#121212",
+      "backgroundColor": "#121212",
+      "scheme": "dark"
+    }
+  ],
+  "atrioLinkStylesPublished": true,
+  "atrioPublicAliasTlsVerified": true,
+  "unitChecks": 30,
+  "browserChecks": 30,
+  "browserMatrix": [
+    {
+      "engine": "Chromium",
+      "width": 390,
+      "provider": "rey_de_ases",
+      "template": "atrio",
+      "linkTapPassed": true,
+      "chatPreserved": true,
+      "overflow": false
+    },
+    {
+      "engine": "Chromium",
+      "width": 390,
+      "provider": "rey_de_ases",
+      "template": "whatsapp",
+      "linkTapPassed": true,
+      "chatPreserved": true,
+      "overflow": false
+    },
+    {
+      "engine": "Chromium",
+      "width": 390,
+      "provider": "rey_de_ases",
+      "template": "page",
+      "linkTapPassed": true,
+      "chatPreserved": true,
+      "overflow": false
+    },
+    {
+      "engine": "Chromium",
+      "width": 390,
+      "provider": "ases_del_norte",
+      "template": "atrio",
+      "linkTapPassed": true,
+      "chatPreserved": true,
+      "overflow": false
+    },
+    {
+      "engine": "Chromium",
+      "width": 390,
+      "provider": "ases_del_norte",
+      "template": "whatsapp",
+      "linkTapPassed": true,
+      "chatPreserved": true,
+      "overflow": false
+    },
+    {
+      "engine": "Chromium",
+      "width": 390,
+      "provider": "ases_del_norte",
+      "template": "page",
+      "linkTapPassed": true,
+      "chatPreserved": true,
+      "overflow": false
+    },
+    {
+      "engine": "Chromium",
+      "width": 390,
+      "provider": "ganamos_net",
+      "template": "atrio",
+      "linkTapPassed": true,
+      "chatPreserved": true,
+      "overflow": false
+    },
+    {
+      "engine": "Chromium",
+      "width": 390,
+      "provider": "ganamos_net",
+      "template": "whatsapp",
+      "linkTapPassed": true,
+      "chatPreserved": true,
+      "overflow": false
+    },
+    {
+      "engine": "Chromium",
+      "width": 390,
+      "provider": "ganamos_net",
+      "template": "page",
+      "linkTapPassed": true,
+      "chatPreserved": true,
+      "overflow": false
+    },
+    {
+      "engine": "Chromium",
+      "width": 390,
+      "provider": "multi_skin",
+      "template": "atrio",
+      "linkTapPassed": true,
+      "chatPreserved": true,
+      "overflow": false
+    },
+    {
+      "engine": "Chromium",
+      "width": 390,
+      "provider": "multi_skin",
+      "template": "whatsapp",
+      "linkTapPassed": true,
+      "chatPreserved": true,
+      "overflow": false
+    },
+    {
+      "engine": "Chromium",
+      "width": 390,
+      "provider": "multi_skin",
+      "template": "page",
+      "linkTapPassed": true,
+      "chatPreserved": true,
+      "overflow": false
+    },
+    {
+      "engine": "Chromium",
+      "width": 1366,
+      "provider": "ganamos_net",
+      "template": "atrio",
+      "linkTapPassed": true,
+      "chatPreserved": true,
+      "overflow": false
+    },
+    {
+      "engine": "Chromium",
+      "width": 1366,
+      "provider": "ganamos_net",
+      "template": "whatsapp",
+      "linkTapPassed": true,
+      "chatPreserved": true,
+      "overflow": false
+    },
+    {
+      "engine": "Chromium",
+      "width": 1366,
+      "provider": "ganamos_net",
+      "template": "page",
+      "linkTapPassed": true,
+      "chatPreserved": true,
+      "overflow": false
+    },
+    {
+      "engine": "WebKit",
+      "width": 390,
+      "provider": "rey_de_ases",
+      "template": "atrio",
+      "linkTapPassed": true,
+      "chatPreserved": true,
+      "overflow": false
+    },
+    {
+      "engine": "WebKit",
+      "width": 390,
+      "provider": "rey_de_ases",
+      "template": "whatsapp",
+      "linkTapPassed": true,
+      "chatPreserved": true,
+      "overflow": false
+    },
+    {
+      "engine": "WebKit",
+      "width": 390,
+      "provider": "rey_de_ases",
+      "template": "page",
+      "linkTapPassed": true,
+      "chatPreserved": true,
+      "overflow": false
+    },
+    {
+      "engine": "WebKit",
+      "width": 390,
+      "provider": "ases_del_norte",
+      "template": "atrio",
+      "linkTapPassed": true,
+      "chatPreserved": true,
+      "overflow": false
+    },
+    {
+      "engine": "WebKit",
+      "width": 390,
+      "provider": "ases_del_norte",
+      "template": "whatsapp",
+      "linkTapPassed": true,
+      "chatPreserved": true,
+      "overflow": false
+    },
+    {
+      "engine": "WebKit",
+      "width": 390,
+      "provider": "ases_del_norte",
+      "template": "page",
+      "linkTapPassed": true,
+      "chatPreserved": true,
+      "overflow": false
+    },
+    {
+      "engine": "WebKit",
+      "width": 390,
+      "provider": "ganamos_net",
+      "template": "atrio",
+      "linkTapPassed": true,
+      "chatPreserved": true,
+      "overflow": false
+    },
+    {
+      "engine": "WebKit",
+      "width": 390,
+      "provider": "ganamos_net",
+      "template": "whatsapp",
+      "linkTapPassed": true,
+      "chatPreserved": true,
+      "overflow": false
+    },
+    {
+      "engine": "WebKit",
+      "width": 390,
+      "provider": "ganamos_net",
+      "template": "page",
+      "linkTapPassed": true,
+      "chatPreserved": true,
+      "overflow": false
+    },
+    {
+      "engine": "WebKit",
+      "width": 390,
+      "provider": "multi_skin",
+      "template": "atrio",
+      "linkTapPassed": true,
+      "chatPreserved": true,
+      "overflow": false
+    },
+    {
+      "engine": "WebKit",
+      "width": 390,
+      "provider": "multi_skin",
+      "template": "whatsapp",
+      "linkTapPassed": true,
+      "chatPreserved": true,
+      "overflow": false
+    },
+    {
+      "engine": "WebKit",
+      "width": 390,
+      "provider": "multi_skin",
+      "template": "page",
+      "linkTapPassed": true,
+      "chatPreserved": true,
+      "overflow": false
+    },
+    {
+      "engine": "WebKit",
+      "width": 1366,
+      "provider": "ganamos_net",
+      "template": "atrio",
+      "linkTapPassed": true,
+      "chatPreserved": true,
+      "overflow": false
+    },
+    {
+      "engine": "WebKit",
+      "width": 1366,
+      "provider": "ganamos_net",
+      "template": "whatsapp",
+      "linkTapPassed": true,
+      "chatPreserved": true,
+      "overflow": false
+    },
+    {
+      "engine": "WebKit",
+      "width": 1366,
+      "provider": "ganamos_net",
+      "template": "page",
+      "linkTapPassed": true,
+      "chatPreserved": true,
+      "overflow": false
+    }
+  ],
+  "noFinancialRequests": true,
+  "noNewPlayers": true,
+  "physicalChromeIphoneVerified": false,
+  "nativeToolbarColorGuaranteed": false,
+  "api2Changed": false
+}
