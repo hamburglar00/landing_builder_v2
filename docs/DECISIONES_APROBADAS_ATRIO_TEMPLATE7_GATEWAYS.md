@@ -339,6 +339,12 @@ Evidencia y conciliación pendiente de la operación 13: [widget y Full Carga](v
 - En los cuatro gateways, unificar `theme-color`, el manifest y el fondo real con el color de fondo de cada casino; reemplazar metadatos contradictorios del proveedor y declarar esquema oscuro. La implementación compartida vive en `landing-autologuin/src/lib/gateway-browser-appearance.ts`; sincronizar con `node scripts/sync-gateway-browser-appearance.mjs` y verificar con `--check`. Ganamos+ incluye su Worker público.
 - La interfaz nativa del navegador puede ignorar o adaptar el color indicado. Las pruebas de Chromium/WebKit de escritorio no certifican el color de la barra de Chrome en un iPhone físico.
 
+### Separación de las burbujas del chat (21/10/2026)
+
+- Reducir a 6 px la separación vertical entre mensajes en el chat del cliente, el widget y el inbox del asesor, tanto en móvil como en escritorio. Conservar los separadores de fecha, el contenido, los horarios y las tildes. La implementación única de Atrio aplica a los tres temas y a los cuatro gateways.
+
+Validación y publicación: [separación de burbujas](validation/atrio-chat-spacing-20261021.json). Se verificó la geometría en Chromium y WebKit con mensajes simulados, y la configuración compartida y los accesos públicos de los cuatro gateways. No se enviaron mensajes ni operaciones financieras reales.
+
 ### Clasificación compatible y mediciones locales (20/10/2026)
 
 - Las respuestas nuevas de API2 pueden incorporar un descriptor opcional y versionado: categoría, evento de origen y estado. Atrio lo valida y guarda como `metadata.api2_reply`, sin convertirlo en prueba financiera ni generar conversiones. La clasificación usa señales explícitas del origen, nunca palabras del mensaje.

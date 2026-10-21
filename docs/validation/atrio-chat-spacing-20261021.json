@@ -1,0 +1,76 @@
+{
+  "at": "2026-10-21T18:59:36.542Z",
+  "atrio": {
+    "commit": "f488de8",
+    "deployment": "dpl_4NRhfU6ptGKgmMv2CLoTKd9i2w2E",
+    "state": "READY",
+    "aliases": [
+      "www.atrio.website",
+      "internal-chat-bay.vercel.app",
+      "atrio.website",
+      "internal-chat-juanclouds-projects.vercel.app"
+    ],
+    "publicLoginStatus": 200,
+    "publicStylesVerified": true
+  },
+  "gapPx": 6,
+  "previousGapPx": {
+    "client": 16,
+    "inboxMobile": 16,
+    "inboxDesktop": 18
+  },
+  "visual": {
+    "fixtureOnly": true,
+    "cases": 36,
+    "engines": [
+      "Chromium",
+      "WebKit"
+    ],
+    "widths": [
+      390,
+      1366
+    ],
+    "themes": [
+      "atrio",
+      "whatsapp",
+      "page"
+    ],
+    "views": [
+      "client",
+      "inbox-mobile",
+      "inbox-desktop"
+    ],
+    "financialRequests": 0
+  },
+  "gateways": [
+    {
+      "provider": "Rey de Ases",
+      "origin": "https://www.reydeases.fun",
+      "sharedAtrioOrigin": "https://www.atrio.website",
+      "manifestStatus": 200,
+      "changeInSharedAtrio": true
+    },
+    {
+      "provider": "Ases del Norte",
+      "origin": "https://www.asesdelnorte.online",
+      "sharedAtrioOrigin": "https://www.atrio.website",
+      "manifestStatus": 200,
+      "changeInSharedAtrio": true
+    },
+    {
+      "provider": "Ganamos NET",
+      "origin": "https://www.ganamosnet.icu",
+      "sharedAtrioOrigin": "https://www.atrio.website",
+      "manifestStatus": 200,
+      "changeInSharedAtrio": true
+    },
+    {
+      "provider": "Ganamos+",
+      "origin": "https://ganamosnet.global",
+      "sharedAtrioOrigin": "https://www.atrio.website",
+      "manifestStatus": 200,
+      "changeInSharedAtrio": true
+    }
+  ],
+  "typecheckPassed": true
+}
