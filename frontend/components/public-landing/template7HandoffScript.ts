@@ -37,7 +37,7 @@ export function buildTemplate7HandoffRuntimeScript(): string {
         panel.setAttribute("data-template7-handoff-panel", "");
         panel.setAttribute("role", "dialog");
         panel.setAttribute("aria-modal", "true");
-        panel.innerHTML = '<div class="template7__handoff-card"><h2>Tu cuenta está lista</h2>' +
+        panel.innerHTML = '<div class="template7__handoff-card"><h2>Continuá con tu acceso</h2>' +
           '<p data-template7-handoff-help></p><a data-template7-handoff-open>Continuar</a>' +
           '<button type="button" data-template7-handoff-copy>Copiar enlace</button>' +
           '<small>El enlace es temporal y de un solo uso. Abrilo una sola vez.</small></div>';

@@ -8,6 +8,7 @@ import AtrioPrewarmScript from "./AtrioPrewarmScript";
 import { buildTemplate7ReentryScript, guardTemplate7ReentryScripts } from "./template7ReentryScript";
 import { optimizeTemplate7Images } from "../../lib/landing/template7Images";
 import { gatewayOriginFor } from "../../lib/reyDeAses/gatewayOrigins";
+import { renderGatewayEntryTransition } from "../../lib/gateway-entry-transition";
 import {
   buildPixelInitScript,
   buildPixelNoscript,
@@ -555,7 +556,7 @@ function renderTemplate7({ config }: RenderParams) {
     background: config.colors?.ctaBackground ?? "#FFD700",
     "--template7-cta-size": `${config.typography?.cta?.sizePx ?? 18}px`,
     "font-weight": config.typography?.cta?.weight ?? 700,
-  })} disabled><span data-public-landing-cta-label>${escapeHtml(ctaText)}</span></button><p class="template7__error" data-template7-error role="alert" hidden></p></form></section></main>`;
+  })} disabled><span data-public-landing-cta-label>${escapeHtml(ctaText)}</span></button><p class="template7__error" data-template7-error role="alert" hidden></p></form></section></main>${renderGatewayEntryTransition(config.tracking?.target_provider || "rey_de_ases", { stage: "creating", gatewayOrigin: template7GatewayOrigin(config) })}`;
 }
 
 function renderTemplate3({ config }: RenderParams) {

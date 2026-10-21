@@ -1,5 +1,6 @@
 import { buildPublicLandingRuntimeSource, buildRuntimeConfig } from "./PublicLandingRuntimeScript";
 import type { PublicLandingConfig } from "./types";
+import { GATEWAY_ENTRY_TRANSITION_RUNTIME } from "../../lib/gateway-entry-transition";
 
 function replaceOnce(source: string, from: string, to: string): string {
   if (source.split(from).length !== 2) throw new Error("Template 7 runtime contract changed");
@@ -16,6 +17,19 @@ export function buildTemplate7FastRuntime(
   const bootstrap = JSON.stringify(settings).replace(/[<>&\u2028\u2029]/g,
     value => `\\u${value.charCodeAt(0).toString(16).padStart(4, "0")}`);
   let source = buildPublicLandingRuntimeSource();
+  source = replaceOnce(source, "      function failTemplate7(button) {", `${GATEWAY_ENTRY_TRANSITION_RUNTIME}
+      var template7Transition = createGatewayEntryTransition(document.getElementById("gateway-entry-transition"));
+      function template7TransitionUrl(raw) {
+        var url = template7CheckedHandoff(raw);
+        if (url.pathname === "/start") url.pathname = "/prepare";
+        return url.href;
+      }
+      function failTemplate7(button) {
+        if (template7Transition) template7Transition.finish();`);
+  source = replaceOnce(source, '        if (cfg.template === 7) setTemplate7Error("");', '        if (cfg.template === 7) { setTemplate7Error(""); if (template7Transition) template7Transition.start("creating"); }');
+  source = replaceOnce(source, "        setButtonText(button, getLoadingButtonText(button));", "        if (cfg.template !== 7) setButtonText(button, getLoadingButtonText(button));");
+  source = replaceOnce(source, "           return data.handoff_url;".trimStart(), "return template7TransitionUrl(data.handoff_url);");
+  source = replaceOnce(source, '      var panel = document.querySelector("[data-template7-handoff-panel]");', '      if (template7Transition) template7Transition.finish();\n      var panel = document.querySelector("[data-template7-handoff-panel]");');
   const selectionStart = source.indexOf("      function ensureAtrioPromise() {");
   const selectionEnd = source.indexOf("      function clearPrewarmedAtrioPromise() {", selectionStart);
   if (selectionStart < 0 || selectionEnd < 0) throw new Error("Template 7 destination selection changed");
@@ -23,7 +37,7 @@ export function buildTemplate7FastRuntime(
       function ensureAtrioPromise() {
         window.__PUBLIC_LANDING_ATRIO_PROMISES = window.__PUBLIC_LANDING_ATRIO_PROMISES || {};
         var existing = window.__PUBLIC_LANDING_ATRIO_PROMISES[cfg.slug];
-        if (existing) return existing;
+        if (existing) return observeTemplate7Destination(existing);
         var promise = Promise.resolve(window.__LB_IDENTITY_READY__ || true).then(function (ready) {
           if (ready !== true) return null;
           return fetch("/api/template7/destination", {
@@ -33,10 +47,25 @@ export function buildTemplate7FastRuntime(
           }).then(function (response) { return response.ok ? response.json() : null; });
         }).catch(function () { return null; });
         window.__PUBLIC_LANDING_ATRIO_PROMISES[cfg.slug] = promise;
+        return observeTemplate7Destination(promise);
+      }
+
+      function observeTemplate7Destination(promise) {
+        window.__T7_DESTINATION_STATES__ = window.__T7_DESTINATION_STATES__ || {};
+        var states = window.__T7_DESTINATION_STATES__;
+        if (!states[cfg.slug] || states[cfg.slug].promise !== promise) {
+          var state = { promise: promise, settled: false, value: null };
+          states[cfg.slug] = state;
+          promise.then(function(value) { state.settled = true; state.value = value; }, function() { state.settled = true; });
+        }
         return promise;
       }
 
 ` + source.slice(selectionEnd);
+  source = replaceOnce(source, "      function clearPrewarmedAtrioPromise() {", `      function clearPrewarmedAtrioPromise() {
+        var state = window.__T7_DESTINATION_STATES__ && window.__T7_DESTINATION_STATES__[cfg.slug];
+        if (state && (!state.settled || (state.value && (state.value.atrioClientId || state.value.atrio_client_id) &&
+            (state.value.atrioId || state.value.atrio_id) && (state.value.atrioSlug || state.value.atrio_slug)))) return;`);
   {
     source = replaceOnce(source, '      function init() {', `
       function warmTemplate7Entry() {
@@ -57,7 +86,7 @@ export function buildTemplate7FastRuntime(
               var restored = new URL(result.handoff_url);
               if (restored.protocol !== 'https:' || !restored.searchParams.has('t')) return;
               window.__T7_ENTRY_STARTED__ = true;
-              window.location.replace(restored.href);
+              window.location.replace(template7TransitionUrl(restored.href));
             });
           }
           return fetch('/api/template7/warm', {
@@ -72,7 +101,7 @@ export function buildTemplate7FastRuntime(
               var restored = new URL(result.handoff_url);
               if (restored.protocol === 'https:' && restored.pathname === '/prepare' && restored.searchParams.has('t')) {
                 window.__T7_ENTRY_STARTED__ = true;
-                window.location.replace(restored.href);
+                window.location.replace(template7TransitionUrl(restored.href));
                 return;
               }
             }
@@ -81,7 +110,9 @@ export function buildTemplate7FastRuntime(
             if (destination.protocol !== 'https:') return;
             var link = document.createElement('link'); link.rel = 'preconnect'; link.href = destination.origin;
             document.head.appendChild(link);
-            return fetch(destination.origin + '/api/preparations/warm', { mode: 'no-cors', credentials: 'omit', cache: 'no-store' });
+            window.__T7_GATEWAY_WARM__ = window.__T7_GATEWAY_WARM__ || {};
+            if (!window.__T7_GATEWAY_WARM__[destination.origin]) window.__T7_GATEWAY_WARM__[destination.origin] = fetch(destination.origin + '/api/preparations/warm', { mode: 'no-cors', credentials: 'omit', cache: 'no-store' }).catch(function () {});
+            return window.__T7_GATEWAY_WARM__[destination.origin];
           });
         }).catch(function () {});
       }
@@ -103,7 +134,7 @@ export function buildTemplate7FastRuntime(
           template7PendingIdentityClick = null;
           pending.disabled = false;
           if (template7IdentityReady) handleCtaClick(pending);
-          else setTemplate7Error("No pudimos recuperar tu acceso. Intentá nuevamente.");
+          else { if (template7Transition) template7Transition.finish(); setTemplate7Error("No pudimos recuperar tu acceso. Intentá nuevamente."); }
         }
       }
       if (!template7IdentityReady) window.__LB_IDENTITY_READY__.then(releaseTemplate7Identity, function () { releaseTemplate7Identity(false); });
@@ -111,7 +142,7 @@ export function buildTemplate7FastRuntime(
     source = replaceOnce(source, "      function handleCtaClick(button) {", `      function handleCtaClick(button) {
         window.__T7_ENTRY_STARTED__ = true;
         if (!template7IdentityReady) {
-          if (!template7PendingIdentityClick) { template7PendingIdentityClick = button; button.disabled = true; }
+          if (!template7PendingIdentityClick) { template7PendingIdentityClick = button; button.disabled = true; if (template7Transition) template7Transition.start("preparing"); }
           if (!template7IdentityWaiting && window.__LB_BOOTSTRAP_IDENTITY__) {
             template7IdentityWaiting = true;
             window.__LB_BOOTSTRAP_IDENTITY__().then(releaseTemplate7Identity, function () { releaseTemplate7Identity(false); });
@@ -149,5 +180,10 @@ export function buildTemplate7FastRuntime(
       "body: JSON.stringify({\n            device_id: getOrCreateDeviceId(),\n            landing_id: cfg.landingId,");
     source = replaceOnce(source, "      var clickLocked = false;", classicDeviceIdScript + "\n      var clickLocked = false;");
   }
+  source = replaceOnce(source, "      function handleCtaClick(button) {", `      function handleCtaClick(button) {
+        if (clickLocked || button.disabled) return;
+        var entryName = document.querySelector("[data-template7-name]");
+        if (!entryName || !String(entryName.value || "").trim()) return;
+        window.__T7_ENTRY_STARTED__ = true;`);
   return `window.__PUBLIC_LANDING_RUNTIME_CONFIG__=${bootstrap};${source}`;
 }
