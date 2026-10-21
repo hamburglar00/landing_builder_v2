@@ -41,7 +41,7 @@ export async function handlerRuntime(api,{sourceOverrides=new Map()}={}){
    }}:id.startsWith('.')?load(resolve(dirname(file),id)):(()=>{throw Error('Unexpected module '+id);})();
    const js=ts.transpileModule(sourceOverrides.get(file)??readFileSync(file,'utf8'),{compilerOptions:{module:ts.ModuleKind.CommonJS,target:ts.ScriptTarget.ES2022}}).outputText;
    runInNewContext(`(function(require,module,exports){${js}\n})`,{Deno:{env:{get:k=>({SUPABASE_URL:api.url,SERVICE_ROLE_KEY:api.jwt,CRON_SECRET:'synthetic-cron'})[k]},serve:fn=>handlers[entry]=fn},
-    fetch:mockFetch,Request,Response,Headers,URL,URLSearchParams,crypto:globalThis.crypto,TextEncoder,TextDecoder,AbortController,AbortSignal,setTimeout,clearTimeout,
+    fetch:mockFetch,Request,Response,Headers,URL,URLSearchParams,crypto:globalThis.crypto,performance:globalThis.performance,TextEncoder,TextDecoder,AbortController,AbortSignal,setTimeout,clearTimeout,
     console:{log:()=>{},warn:(...a)=>logs.push(a.map(String).join(' ')),error:(...a)=>logs.push(a.map(String).join(' '))}},
     {filename:relative(root,file)})(localRequire,mod,mod.exports);
    return mod.exports;

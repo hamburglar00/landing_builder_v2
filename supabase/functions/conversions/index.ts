@@ -44,11 +44,19 @@ import {
 } from "./event_attribution.ts";
 
 import { urlAttribution } from "./url_attribution.ts";
+import {
+  describeTrackingException,
+  observeTrackingRequest,
+  type TrackingDiagnostics,
+} from "./tracking_diagnostics.ts";
+
+// Each handler creates its own client; no request state is shared across tenants.
+const requestDiagnostics = new WeakMap<SupabaseClient, TrackingDiagnostics>();
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
   "Access-Control-Allow-Headers":
-    "authorization, x-client-info, apikey, content-type",
+    "authorization, x-client-info, apikey, content-type, x-request-id, x-tracking-attempt, x-tracking-diagnostics",
 };
 
 interface ConversionsConfig {
@@ -2189,6 +2197,8 @@ async function writeLog(
   payloadReceived?: string,
   result?: string,
 ): Promise<boolean> {
+  const diagnostics = requestDiagnostics.get(db);
+  if (diagnostics) detail = diagnostics.annotateDetail(detail);
   const workspaceCurrency = await resolveWorkspaceCurrencyForLog(
     db,
     userId,
@@ -7976,7 +7986,10 @@ async function handleSimplePurchase(
   );
 }
 
-Deno.serve(async (req) => {
+async function handleConversions(
+  req: Request,
+  diagnostics: TrackingDiagnostics,
+): Promise<Response> {
   if (req.method === "OPTIONS") {
     return new Response("ok", { status: 200, headers: corsHeaders });
   }
@@ -7998,6 +8011,7 @@ Deno.serve(async (req) => {
     const db = createClient(supabaseUrl, serviceRoleKey, {
       auth: { autoRefreshToken: false, persistSession: false },
     });
+    requestDiagnostics.set(db, diagnostics);
 
     // Lookup client by nombre in profiles.
     const { data: profile, error: profileError } = await db
@@ -8062,6 +8076,7 @@ Deno.serve(async (req) => {
       clientIpAddress: payloadClientIp(params),
       userAgent: inboundUserAgent(params),
     });
+    diagnostics.setEvent(params);
 
     // landing_name can come from the payload (to track which landing sent this)
     const landingName = norm(params.landing_name || params.landingName || "");
@@ -8073,6 +8088,16 @@ Deno.serve(async (req) => {
     );
     if (!tenantGuard.allowed) {
       const unavailable = tenantGuard.unavailable === true;
+      diagnostics.failure = {
+        error_code: unavailable
+          ? "tenant_validation_unavailable"
+          : "tenant_identifier_mismatch",
+        message: unavailable
+          ? "No se pudo validar el cliente receptor; reintente mas tarde"
+          : "Los identificadores no corresponden al cliente receptor",
+        retryable: unavailable,
+        details: { signal: tenantGuard.signal, reason: tenantGuard.reason },
+      };
       await writeLog(
         db,
         userId,
@@ -8491,7 +8516,11 @@ Deno.serve(async (req) => {
       handleContact(db, params, landing, cfg, pixelConfigs, ctx)
     );
   } catch (err) {
-    console.error("conversions error:", err);
+    const exception = describeTrackingException(err);
+    console.error("[conversions] unexpected handler error", {
+      ...diagnostics.reference(),
+      ...exception,
+    });
     try {
       const supabaseUrl = Deno.env.get("SUPABASE_URL");
       const serviceRoleKey = Deno.env.get("SERVICE_ROLE_KEY");
@@ -8499,16 +8528,24 @@ Deno.serve(async (req) => {
         const errDb = createClient(supabaseUrl, serviceRoleKey, {
           auth: { autoRefreshToken: false, persistSession: false },
         });
+        requestDiagnostics.set(errDb, diagnostics);
         await writeLog(
           errDb,
           "00000000-0000-0000-0000-000000000000",
           "main",
           "ERROR",
           "Error inesperado en handler",
-          String(err),
+          JSON.stringify({
+            error_code: "internal_error",
+            ...exception,
+          }),
         );
       }
     } catch { /* ignore */ }
     return textResponse("Error inesperado", 500);
   }
-});
+}
+
+Deno.serve((req) =>
+  observeTrackingRequest(req, (diagnostics) => handleConversions(req, diagnostics))
+);
