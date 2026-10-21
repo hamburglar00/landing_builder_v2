@@ -1,0 +1,266 @@
+{
+  "at": "2026-10-21T20:15:32.002Z",
+  "atrio": {
+    "commit": "e901bc27f021c25fd2e01d160d9b66d5b820bc2c",
+    "deployment": "dpl_2ioLiHEvsXDAWmGteUTdN72eCDZs",
+    "url": "internal-chat-klfljuqpq-juanclouds-projects.vercel.app",
+    "state": "READY",
+    "aliases": [
+      "www.atrio.website",
+      "internal-chat-bay.vercel.app",
+      "atrio.website",
+      "internal-chat-juanclouds-projects.vercel.app"
+    ],
+    "publicLoginStatus": 200
+  },
+  "gateways": [
+    {
+      "provider": "Rey de Ases",
+      "origin": "https://www.reydeases.fun",
+      "commit": "de98d70d471817716603a4ede400d0e264dfe5b6",
+      "deployment": "dpl_8HMGmDJrVGXSuLuLCn4U5x79yM25",
+      "url": "reydeases-gateway-r68zb1a0n-juanclouds-projects.vercel.app",
+      "state": "READY",
+      "aliases": [
+        "www.reydeases.fun",
+        "reydeases-gateway.vercel.app",
+        "reydeases.fun",
+        "reydeases-gateway-juanclouds-projects.vercel.app"
+      ],
+      "sharedAtrioOrigin": "https://www.atrio.website",
+      "assets": [
+        {
+          "file": "gateway-app-sdk.js",
+          "status": 200,
+          "sha256": "a6bc5790f665e785d6c25263a8e4c21fff5d719071e4a536941ce43d7fab41df"
+        },
+        {
+          "file": "gateway-client.js",
+          "status": 200,
+          "sha256": "fefd6b7d9d0f42933dec6cf792be74bec809b872ab92ed8b2f4ad6292d9339b3"
+        }
+      ],
+      "manifestStatus": 200,
+      "entryStatus": 401,
+      "clientVersion": "install-copy-1"
+    },
+    {
+      "provider": "Ases del Norte",
+      "origin": "https://www.asesdelnorte.online",
+      "commit": "731458245829efa89493b360ed5d5b8f30fdd427",
+      "deployment": "dpl_EN5hTFT5nMaR7WjaDwoFJUDCKp2E",
+      "url": "ases-del-norte-gateway-qyry8qux9-juanclouds-projects.vercel.app",
+      "state": "READY",
+      "aliases": [
+        "www.asesdelnorte.online",
+        "ases-del-norte-gateway.vercel.app",
+        "asesdelnorte.online",
+        "ases-del-norte-gateway-juanclouds-projects.vercel.app"
+      ],
+      "sharedAtrioOrigin": "https://www.atrio.website",
+      "assets": [
+        {
+          "file": "gateway-app-sdk.js",
+          "status": 200,
+          "sha256": "a6bc5790f665e785d6c25263a8e4c21fff5d719071e4a536941ce43d7fab41df"
+        },
+        {
+          "file": "gateway-client.js",
+          "status": 200,
+          "sha256": "efd0703f2129adf46d7271c3d6bee4111c7f80f635a749cab76be4317b104b06"
+        }
+      ],
+      "manifestStatus": 200,
+      "entryStatus": 401,
+      "clientVersion": "install-copy-1"
+    },
+    {
+      "provider": "Ganamos NET",
+      "origin": "https://www.ganamosnet.icu",
+      "commit": "d2ddca0f7da2dca08bc303accbf91ed5225b6d96",
+      "deployment": "dpl_61eNmX2YAi1tfiPxzT2xzQYfgSMD",
+      "url": "ganamos-net-gateway-g6w4p0xui-juanclouds-projects.vercel.app",
+      "state": "READY",
+      "aliases": [
+        "www.ganamosnet.icu",
+        "ganamos-net-gateway.vercel.app",
+        "ganamosnet.icu",
+        "ganamos-net-gateway-juanclouds-projects.vercel.app"
+      ],
+      "sharedAtrioOrigin": "https://www.atrio.website",
+      "assets": [
+        {
+          "file": "gateway-app-sdk.js",
+          "status": 200,
+          "sha256": "a6bc5790f665e785d6c25263a8e4c21fff5d719071e4a536941ce43d7fab41df"
+        },
+        {
+          "file": "gateway-client.js",
+          "status": 200,
+          "sha256": "7bd8a6e9d840054b816f92bfd41a877139961bfeaf9b5446d71e66f9dd6395c2"
+        }
+      ],
+      "manifestStatus": 200,
+      "entryStatus": 401,
+      "clientVersion": "install-copy-1"
+    },
+    {
+      "provider": "Ganamos+",
+      "origin": "https://ganamosnet.global",
+      "commit": "d74de7bf08b71ec116fb41c1bc41e14e58cb4839",
+      "deployment": "dpl_E5j6V4TaEYFYBj733yVrrdFGzLHy",
+      "url": "multi-skin-gateway-ldqfeuc3d-juanclouds-projects.vercel.app",
+      "state": "READY",
+      "aliases": [
+        "multi-skin-gateway.vercel.app",
+        "multi-skin-gateway-juanclouds-projects.vercel.app"
+      ],
+      "sharedAtrioOrigin": "https://www.atrio.website",
+      "assets": [
+        {
+          "file": "gateway-app-sdk.js",
+          "status": 200,
+          "sha256": "a6bc5790f665e785d6c25263a8e4c21fff5d719071e4a536941ce43d7fab41df"
+        },
+        {
+          "file": "gateway-client.js",
+          "status": 200,
+          "sha256": "5702de22ad68027d4f6755cc6fb4d730371b324eec27e35d0047e42bc6259609"
+        }
+      ],
+      "manifestStatus": 200,
+      "entryStatus": 401,
+      "clientVersion": "install-copy-1",
+      "cloudflareWorkerVersion": "0eb309c5-68a2-4b19-adfb-437e858f5d72",
+      "publicWorkerVerified": true
+    }
+  ],
+  "migration": {
+    "name": "advisor_balance_snapshots",
+    "version": "20261021200503",
+    "applied": true,
+    "rlsEnabled": true,
+    "anonRead": false,
+    "authenticatedWrites": false,
+    "authenticatedRpc": false,
+    "serviceRoleRpc": true,
+    "newTableSecurityWarnings": 0
+  },
+  "checks": {
+    "unitTestsPassed": 22,
+    "postgres17IsolationFixturePassed": true,
+    "balanceUi": {
+      "fixtureOnly": true,
+      "cases": [
+        {
+          "engine": "Chromium",
+          "width": 390,
+          "mode": "mkt",
+          "zeroBalance": true,
+          "restoredAfterSwitch": true,
+          "restoredAfterReload": true,
+          "timestampPreservedOnFailure": true,
+          "financialRequests": 0
+        },
+        {
+          "engine": "Chromium",
+          "width": 390,
+          "mode": "full_carga",
+          "zeroBalance": true,
+          "restoredAfterSwitch": true,
+          "restoredAfterReload": true,
+          "timestampPreservedOnFailure": true,
+          "financialRequests": 0
+        },
+        {
+          "engine": "Chromium",
+          "width": 1366,
+          "mode": "mkt",
+          "zeroBalance": true,
+          "restoredAfterSwitch": true,
+          "restoredAfterReload": true,
+          "timestampPreservedOnFailure": true,
+          "financialRequests": 0
+        },
+        {
+          "engine": "Chromium",
+          "width": 1366,
+          "mode": "full_carga",
+          "zeroBalance": true,
+          "restoredAfterSwitch": true,
+          "restoredAfterReload": true,
+          "timestampPreservedOnFailure": true,
+          "financialRequests": 0
+        },
+        {
+          "engine": "WebKit",
+          "width": 390,
+          "mode": "mkt",
+          "zeroBalance": true,
+          "restoredAfterSwitch": true,
+          "restoredAfterReload": true,
+          "timestampPreservedOnFailure": true,
+          "financialRequests": 0
+        },
+        {
+          "engine": "WebKit",
+          "width": 390,
+          "mode": "full_carga",
+          "zeroBalance": true,
+          "restoredAfterSwitch": true,
+          "restoredAfterReload": true,
+          "timestampPreservedOnFailure": true,
+          "financialRequests": 0
+        },
+        {
+          "engine": "WebKit",
+          "width": 1366,
+          "mode": "mkt",
+          "zeroBalance": true,
+          "restoredAfterSwitch": true,
+          "restoredAfterReload": true,
+          "timestampPreservedOnFailure": true,
+          "financialRequests": 0
+        },
+        {
+          "engine": "WebKit",
+          "width": 1366,
+          "mode": "full_carga",
+          "zeroBalance": true,
+          "restoredAfterSwitch": true,
+          "restoredAfterReload": true,
+          "timestampPreservedOnFailure": true,
+          "financialRequests": 0
+        }
+      ]
+    },
+    "installationCopyCasesPassed": 12,
+    "deferredGatewayLifecycleCasesPassed": 32,
+    "chatHydrationCasesPassed": 4,
+    "targetedLintPassed": true,
+    "typecheckPassed": true,
+    "sharedSdkParity": true
+  },
+  "behavior": {
+    "balanceStoredPerProviderAccount": true,
+    "zeroBalancePreserved": true,
+    "lastUpdateShown": true,
+    "failedRefreshKeepsHistory": true,
+    "lateQueryCannotOverwriteNewer": true,
+    "snapshotNeverAuthorizesFinancialOperation": true,
+    "loadRate": "unique writers with a confirmed load in selected period and casino / unique writers in that period and casino",
+    "loadRateIndependentOfLead": true,
+    "initialInstallationNoticeMatchesInvitation": true,
+    "customInvitationPreserved": true
+  },
+  "iosCase": {
+    "username": "kobe5483",
+    "userConfirmedAddedIconOnly": true,
+    "standaloneSignalObserved": false,
+    "installationStatus": "unknown",
+    "historicalInstallFabricated": false,
+    "nextConfirmation": "first open from Home Screen icon"
+  },
+  "financialOperationsExecutedDuringValidation": 0,
+  "api2UnchangedByThisTask": true
+}
