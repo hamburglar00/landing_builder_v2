@@ -345,6 +345,13 @@ Evidencia y conciliación pendiente de la operación 13: [widget y Full Carga](v
 
 Validación y publicación: [separación de burbujas](validation/atrio-chat-spacing-20261021.json). Se verificó la geometría en Chromium y WebKit con mensajes simulados, y la configuración compartida y los accesos públicos de los cuatro gateways. No se enviaron mensajes ni operaciones financieras reales.
 
+### Adjuntos y tarjeta de retiro en el chat (21/10/2026)
+
+- Los nombres e íconos de los adjuntos respetan el color del texto de su burbuja en los tres temas, tanto para el cliente como para el asesor. Conservar los enlaces al archivo, horarios y confirmaciones.
+- Mostrar la solicitud de retiro como una tarjeta dentro de la conversación del asesor, con monto y CBU/CVU/Alias para copiar, en MKT y Full Carga y en móvil y escritorio. Darle un ancho estable que se adapte a la burbuja. El usuario confirmó que Full Carga no debe abrir un aviso adicional; conserva su retiro automático y no recibe controles manuales nuevos.
+
+Validación y publicación: [adjuntos y tarjeta de retiro](validation/atrio-attachments-withdrawals-20261021.json). Se probaron los renderizadores reales de mensajes con datos simulados en Chromium y WebKit, los tres temas y anchos móvil/escritorio; copiar conserva monto y cuenta. La implementación compartida está publicada para los cuatro gateways. No se iniciaron retiros ni envíos financieros.
+
 ### Clasificación compatible y mediciones locales (20/10/2026)
 
 - Las respuestas nuevas de API2 pueden incorporar un descriptor opcional y versionado: categoría, evento de origen y estado. Atrio lo valida y guarda como `metadata.api2_reply`, sin convertirlo en prueba financiera ni generar conversiones. La clasificación usa señales explícitas del origen, nunca palabras del mensaje.

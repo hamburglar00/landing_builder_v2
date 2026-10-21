@@ -1,0 +1,222 @@
+{
+  "at": "2026-10-21T19:30:29.180Z",
+  "atrio": {
+    "commit": "b3a71fb",
+    "deployment": "dpl_9Jty5abJfNs93o9jJVY49yLKQ42y",
+    "state": "READY",
+    "aliases": [
+      "www.atrio.website",
+      "internal-chat-bay.vercel.app",
+      "atrio.website",
+      "internal-chat-juanclouds-projects.vercel.app"
+    ],
+    "publicLoginStatus": 200,
+    "attachmentStylesPublished": true
+  },
+  "visual": {
+    "fixtureOnly": true,
+    "financialRequests": 0,
+    "cases": [
+      {
+        "engine": "Chromium",
+        "width": 390,
+        "theme": "atrio",
+        "attachments": 6,
+        "advisorCards": [
+          "mkt",
+          "full_carga"
+        ],
+        "copyPassed": true,
+        "extraModal": false,
+        "overflow": false
+      },
+      {
+        "engine": "Chromium",
+        "width": 390,
+        "theme": "whatsapp",
+        "attachments": 6,
+        "advisorCards": [
+          "mkt",
+          "full_carga"
+        ],
+        "copyPassed": true,
+        "extraModal": false,
+        "overflow": false
+      },
+      {
+        "engine": "Chromium",
+        "width": 390,
+        "theme": "page",
+        "attachments": 6,
+        "advisorCards": [
+          "mkt",
+          "full_carga"
+        ],
+        "copyPassed": true,
+        "extraModal": false,
+        "overflow": false
+      },
+      {
+        "engine": "Chromium",
+        "width": 1366,
+        "theme": "atrio",
+        "attachments": 6,
+        "advisorCards": [
+          "mkt",
+          "full_carga"
+        ],
+        "copyPassed": true,
+        "extraModal": false,
+        "overflow": false
+      },
+      {
+        "engine": "Chromium",
+        "width": 1366,
+        "theme": "whatsapp",
+        "attachments": 6,
+        "advisorCards": [
+          "mkt",
+          "full_carga"
+        ],
+        "copyPassed": true,
+        "extraModal": false,
+        "overflow": false
+      },
+      {
+        "engine": "Chromium",
+        "width": 1366,
+        "theme": "page",
+        "attachments": 6,
+        "advisorCards": [
+          "mkt",
+          "full_carga"
+        ],
+        "copyPassed": true,
+        "extraModal": false,
+        "overflow": false
+      },
+      {
+        "engine": "WebKit",
+        "width": 390,
+        "theme": "atrio",
+        "attachments": 6,
+        "advisorCards": [
+          "mkt",
+          "full_carga"
+        ],
+        "copyPassed": true,
+        "extraModal": false,
+        "overflow": false
+      },
+      {
+        "engine": "WebKit",
+        "width": 390,
+        "theme": "whatsapp",
+        "attachments": 6,
+        "advisorCards": [
+          "mkt",
+          "full_carga"
+        ],
+        "copyPassed": true,
+        "extraModal": false,
+        "overflow": false
+      },
+      {
+        "engine": "WebKit",
+        "width": 390,
+        "theme": "page",
+        "attachments": 6,
+        "advisorCards": [
+          "mkt",
+          "full_carga"
+        ],
+        "copyPassed": true,
+        "extraModal": false,
+        "overflow": false
+      },
+      {
+        "engine": "WebKit",
+        "width": 1366,
+        "theme": "atrio",
+        "attachments": 6,
+        "advisorCards": [
+          "mkt",
+          "full_carga"
+        ],
+        "copyPassed": true,
+        "extraModal": false,
+        "overflow": false
+      },
+      {
+        "engine": "WebKit",
+        "width": 1366,
+        "theme": "whatsapp",
+        "attachments": 6,
+        "advisorCards": [
+          "mkt",
+          "full_carga"
+        ],
+        "copyPassed": true,
+        "extraModal": false,
+        "overflow": false
+      },
+      {
+        "engine": "WebKit",
+        "width": 1366,
+        "theme": "page",
+        "attachments": 6,
+        "advisorCards": [
+          "mkt",
+          "full_carga"
+        ],
+        "copyPassed": true,
+        "extraModal": false,
+        "overflow": false
+      }
+    ],
+    "usesActualMessageRenderers": true,
+    "tailwindSourceRoot": "internal-chat"
+  },
+  "gateways": [
+    {
+      "provider": "Rey de Ases",
+      "origin": "https://www.reydeases.fun",
+      "sharedAtrioOrigin": "https://www.atrio.website",
+      "manifestStatus": 200,
+      "changeInSharedAtrio": true
+    },
+    {
+      "provider": "Ases del Norte",
+      "origin": "https://www.asesdelnorte.online",
+      "sharedAtrioOrigin": "https://www.atrio.website",
+      "manifestStatus": 200,
+      "changeInSharedAtrio": true
+    },
+    {
+      "provider": "Ganamos NET",
+      "origin": "https://www.ganamosnet.icu",
+      "sharedAtrioOrigin": "https://www.atrio.website",
+      "manifestStatus": 200,
+      "changeInSharedAtrio": true
+    },
+    {
+      "provider": "Ganamos+",
+      "origin": "https://ganamosnet.global",
+      "sharedAtrioOrigin": "https://www.atrio.website",
+      "manifestStatus": 200,
+      "changeInSharedAtrio": true
+    }
+  ],
+  "typecheckPassed": true,
+  "behavior": {
+    "attachmentTextMatchesBubble": true,
+    "advisorWithdrawalCards": [
+      "mkt",
+      "full_carga"
+    ],
+    "copyAmountAndAccount": true,
+    "extraFullCargaPopup": false,
+    "financialActionsChanged": false
+  },
+  "api2UnchangedByThisUiTask": true
+}
