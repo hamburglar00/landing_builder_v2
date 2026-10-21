@@ -352,3 +352,13 @@ Evidencia: [clasificación y ciclos locales](validation/atrio-classification-and
 - No incorporar Redis por ahora: primero medir los procesos existentes. API2 y Panel3 siguen locales. La última muestra real del adaptador local dio carga 2,379 s y retiro 2,684 s incluida la consulta previa; terminó con las 500 fichas iniciales. No equivale al circuito completo de Atrio ni a un promedio o tiempo certificado de producción.
 
 Revisión de los cinco puntos del programador y validación: [transición, preferencias y Ases HTTP](validation/template7-transition-full-carga-and-ases-http-20261020.md).
+
+### Espera configurable antes del ingreso automático (21/10/2026)
+
+- En Integraciones del Super Admin, agregar una tarjeta «Ingreso desde Template 7» con switch global y segundos enteros entre 1 y 60. Comienza desactivada y propone 4 segundos al activarla. Admins y asesores no pueden cambiarla.
+- La espera es un tiempo mínimo de exposición de la tarjeta de usuario, contado desde que aparece. El autologin sigue en paralelo: esperar el mayor de los dos tiempos, sin sumar una pausa completa después de autenticar. Continuar permite adelantar la navegación una vez confirmada la cookie de sesión.
+- Aplicar el mismo comportamiento a constructor y clásico, y los cuatro gateways. El clásico puede mostrar el usuario obtenido del handoff autenticado; no vuelve a crear la cuenta ni transmite usuario/contraseña por URL. Conservar el protocolo de cada proveedor y el Worker de Ganamos+.
+- La configuración viaja en el JSON existente de preactivación. Su lectura privada comienza en paralelo con el login, tiene timeout acotado y ante un fallo conserva el acceso inmediato. No agregar un fetch del navegador ni bloquear el formulario inicial. La recuperación directa de sesiones y el login manual no incorporan esta espera.
+- Esta decisión reemplaza la ausencia de pausa mínima únicamente en la tarjeta de usuario; la capa posterior del casino/chat conserva sus etapas reales, sin otra demora artificial. No cambiar API2, Panel3, atribución, bots ni operaciones financieras.
+
+Evidencia y detalles: [espera de ingreso configurable](validation/template7-entry-wait-20261021.md).
