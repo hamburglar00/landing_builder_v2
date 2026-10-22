@@ -2,7 +2,7 @@ import { buildTemplate7ResourceWarmup } from "./template7ResourceWarmup";
 import PhonePrewarmScript from "./PhonePrewarmScript";
 import PublicLandingRuntimeScript from "./PublicLandingRuntimeScript";
 import { buildClientIdentityBootstrapScript } from "./clientIdentityBootstrapScript";
-import { TEMPLATE7_CRITICAL_CSS } from "./publicLandingCss";
+import { TEMPLATE7_CRITICAL_CSS, TEMPLATE8_CRITICAL_CSS } from "./publicLandingCss";
 import { buildTemplate7FastRuntime } from "./template7FastRuntime";
 import AtrioPrewarmScript from "./AtrioPrewarmScript";
 import { buildTemplate7ReentryScript, guardTemplate7ReentryScripts } from "./template7ReentryScript";
@@ -121,6 +121,10 @@ function buildPreloadLinks(config: PublicLandingConfig) {
       ? `<link rel="preload" as="image" href="${escapeHtml(logo.logoUrl)}"${attr("imagesrcset", logo.logoSrcSet)} fetchpriority="high">`
       : "";
   }
+  if (config.layout?.template === 8) {
+    const firstImage = config.content?.template8?.backgroundImageUrl || config.content?.template8?.cards?.[0]?.imageUrl || "";
+    return firstImage ? `<link rel="preload" as="image" href="${escapeHtml(firstImage)}" fetchpriority="high">` : "";
+  }
   if (config.layout?.template === 6) {
     const firstImage = config.content?.template6?.backgroundImageUrl || config.content?.template6?.cards?.[0]?.imageUrl || "";
     return firstImage
@@ -163,11 +167,12 @@ function template7GatewayOrigin(config: PublicLandingConfig): string {
 }
 
 function publicMetadata(config: PublicLandingConfig, slug: string) {
-  if (config.layout?.template === 6) {
-    const cover = config.content?.template6;
+  if (config.layout?.template === 6 || config.layout?.template === 8) {
+    const isTemplate8 = config.layout?.template === 8;
+  const cover = { ...config.content?.template6, ...(isTemplate8 ? { ...config.content?.template8, showWhatsAppLogo: false } : {}) };
     return {
       title: cover?.headerText?.replace(/\s+/g, " ").trim() || config.name || slug,
-      description: cover?.footerText?.replace(/\s+/g, " ").trim() || "Contactanos por WhatsApp.",
+      description: cover?.footerText?.replace(/\s+/g, " ").trim() || (isTemplate8 ? "Elegí tu página y conversá con tu asesor." : "Contactanos por WhatsApp."),
       image: cover?.cards?.[0]?.imageUrl || "",
     };
   }
@@ -639,10 +644,11 @@ function renderTemplate5Configured({ config }: RenderParams) {
 }
 
 function renderTemplate6({ config }: RenderParams) {
-  const cover = config.content?.template6;
+  const isTemplate8 = config.layout?.template === 8;
+  const cover = { ...config.content?.template6, ...(isTemplate8 ? { ...config.content?.template8, showWhatsAppLogo: false } : {}) };
   const backgroundImageUrl = cover?.backgroundImageUrl?.trim() || "";
   const grid = cover?.grid === "2x1" || cover?.grid === "2x3" ? cover.grid : "2x2";
-  const cardCount = grid === "2x1" ? 2 : grid === "2x3" ? 6 : 4;
+  const cardCount = isTemplate8 ? Math.min(6, Math.max(1, config.content?.template8?.cardCount || 4)) : grid === "2x1" ? 2 : grid === "2x3" ? 6 : 4;
   const title = template5Lines(cover?.headerText, "Elegí tu opción", 2);
   const footer = template5Lines(cover?.footerText, "Estamos para ayudarte", 2);
   const cards = Array.from({ length: cardCount }, (_, index) => {
@@ -654,9 +660,13 @@ function renderTemplate6({ config }: RenderParams) {
       image
         ? `<img src="${escapeHtml(image)}" alt="${escapeHtml(caption)}" width="480" height="480" loading="${index < 2 ? "eager" : "lazy"}" decoding="async"${index === 0 && !backgroundImageUrl ? ' fetchpriority="high"' : ""}>`
         : `<span>Imagen ${index + 1}</span>`
-    }</div><p class="template6__caption">${escapeHtml(caption)}</p><button type="button" class="template6__cta" data-public-landing-cta data-template6-card-index="${index + 1}" data-public-landing-rest-label="${escapeHtml(label)}" data-public-landing-loading-label="Abriendo..." data-public-landing-disabled-label="Sin número disponible" aria-label="${escapeHtml(label)}"><span data-public-landing-cta-label>${escapeHtml(label)}</span>${cover?.showWhatsAppLogo === false ? "" : renderWhatsAppIcon("template6__cta-icon")}</button></article>`;
+    }</div><p class="template6__caption">${escapeHtml(caption)}</p><button type="button" class="template6__cta" ${isTemplate8 ? `data-template8-card-index="${index + 1}" ${config.content?.template8?.cards[index]?.targetProvider === "multi_skin" ? 'disabled title="Integración pendiente"' : ""}` : "data-public-landing-cta"} data-template6-card-index="${index + 1}" data-public-landing-rest-label="${escapeHtml(label)}" data-public-landing-loading-label="Abriendo..." data-public-landing-disabled-label="Sin número disponible" aria-label="${escapeHtml(label)}"><span data-public-landing-cta-label>${escapeHtml(label)}</span>${cover?.showWhatsAppLogo === false ? "" : renderWhatsAppIcon("template6__cta-icon")}</button></article>`;
   }).join("");
   const styles = styleAttr({
+    ...(isTemplate8 ? {
+      "--template8-rows": Math.ceil(cardCount / 2),
+      "--template8-extra-copy": `${Math.max(0, title.length - 1) * 28 + Math.max(0, footer.length - 1) * 18}px`,
+    } : {}),
     "--template6-title": config.colors?.title || "#FFFFFF",
     "--template6-caption": config.colors?.subtitle || "#FFFFFF",
     "--template6-footer": config.colors?.badge || "#FFD700",
@@ -669,10 +679,26 @@ function renderTemplate6({ config }: RenderParams) {
   const background = backgroundImageUrl
     ? `<div class="template6__background" aria-hidden="true"><img src="${escapeHtml(backgroundImageUrl)}" alt="" loading="eager" decoding="async" fetchpriority="high"></div>`
     : "";
-  return `<main class="public-landing template6${backgroundImageUrl ? " has-background" : ""}"${styles}>${background}<div class="template6__shell"><header class="template6__header"><h1>${title.map((line) => `<span>${escapeHtml(line)}</span>`).join("")}</h1></header><section class="template6__grid" aria-label="Opciones disponibles">${cards}</section><footer class="template6__footer">${footer.map((line) => `<span>${escapeHtml(line)}</span>`).join("")}</footer></div></main>`;
+  return `<main class="public-landing template6${isTemplate8 ? " template8" : ""}${backgroundImageUrl ? " has-background" : ""}"${styles}>${background}<div class="template6__shell"><header class="template6__header"><h1>${title.map((line) => `<span>${escapeHtml(line)}</span>`).join("")}</h1></header><section class="template6__grid" aria-label="Opciones disponibles">${cards}</section><footer class="template6__footer">${footer.map((line) => `<span>${escapeHtml(line)}</span>`).join("")}</footer></div></main>`;
 }
 
+function resourceWarmup(config: PublicLandingConfig) {
+  if (config.layout?.template !== 8) return buildTemplate7ResourceWarmup(template7GatewayOrigin(config));
+  const origins = [...new Set((config.content?.template8?.cards || []).filter(card => card.targetProvider !== "multi_skin").map(card => gatewayOriginFor(card.targetProvider, "ganamos_plus") || "").filter(Boolean))];
+  return origins.length ? origins.map((origin, i) => buildTemplate7ResourceWarmup(origin, i ? "" : undefined)).join("") : buildTemplate7ResourceWarmup("");
+}
+function renderTemplate8(params: RenderParams) {
+  const entryConfig = { ...params.config,
+    content: params.config.content ? { ...params.config.content, logoUrl: "" } : undefined,
+    background: undefined,
+  };
+  const entry = renderTemplate7({ ...params, config: entryConfig })
+    .replace('</form>', '</form><p style="text-align:center;margin-top:16px"><a data-template8-login href="#" style="color:inherit;text-underline-offset:3px">Ya tengo cuenta · Ingresar</a></p>')
+    .replace('<h1 class="template7__title"', '<h1 data-template8-selected-page class="template7__title"');
+  return `<section data-template8-grid>${renderTemplate6(params)}<p data-template8-status role="status" class="template8__status"></p></section><section data-template8-entry hidden><button type="button" data-template8-back class="template8__back">← Cambiar página</button>${entry}</section>`;
+}
 function renderTemplate(params: RenderParams) {
+  if (params.config.layout?.template === 8) return renderTemplate8(params);
   if (params.config.layout?.template === 7) return renderTemplate7(params);
   if (params.config.layout?.template === 6) return renderTemplate6(params);
   if (params.config.layout?.template === 5) return renderTemplate5Configured(params);
@@ -685,7 +711,8 @@ function renderTemplate(params: RenderParams) {
 export function renderPublicLandingHtml(params: RenderParams) {
   params = { ...params, config: optimizeTemplate7Images(params.config) };
   const { slug, config, cachedPhone, canonicalUrl } = params;
-  const isTemplate7 = config.layout?.template === 7;
+  const isTemplate8 = config.layout?.template === 8;
+  const isTemplate7 = config.layout?.template === 7 || isTemplate8;
   const pixelId = String(config.tracking?.pixelId || "").trim().replace(/\D+/g, "");
   const metadata = publicMetadata(config, slug);
   const supabaseOrigin = (() => {
@@ -725,15 +752,15 @@ export function renderPublicLandingHtml(params: RenderParams) {
     pixelId
       ? '<link rel="preconnect" href="https://www.facebook.com"><link rel="preconnect" href="https://connect.facebook.net">'
       : ""
-  }${isTemplate7 ? buildClientIdentityBootstrapScript({ slug, landingId: config.id || "" }) + renderScriptElement(AtrioPrewarmScript({ slug, landingId: config.id || "" })) : ""}${buildPreloadLinks(config)}${isTemplate7 ? `<style data-template7-critical>${TEMPLATE7_CRITICAL_CSS}</style>` : '<link rel="stylesheet" href="/public-assets/landing-styles-v3.css">'}${phonePrewarmScript}${pixelScriptForTemplate(
+  }${isTemplate7 ? buildClientIdentityBootstrapScript(isTemplate8 ? undefined : { slug, landingId: config.id || "" }) + (isTemplate8 ? "" : renderScriptElement(AtrioPrewarmScript({ slug, landingId: config.id || "" }))) : ""}${buildPreloadLinks(config)}${isTemplate7 ? `<style data-template7-critical>${isTemplate8 ? TEMPLATE8_CRITICAL_CSS : TEMPLATE7_CRITICAL_CSS}</style>` : '<link rel="stylesheet" href="/public-assets/landing-styles-v3.css">'}${phonePrewarmScript}${pixelScriptForTemplate(
     pixelId,
     slug,
     config.tracking?.phoneCountryCode || "54",
     config.layout?.template || 0,
   )}</head><body>${buildPixelNoscript(pixelId)}${renderTemplate(params)}${template7PlaceholderScript}${renderPrivacyFooter(
     config,
-  )}${runtimeScript}${isTemplate7 ? buildTemplate7ResourceWarmup(gatewayOrigin) : ""}</body></html>`;
-  if (!isTemplate7) return html;
+  )}${runtimeScript}${isTemplate7 ? resourceWarmup(config) : ""}</body></html>`;
+  if (!isTemplate7 || isTemplate8) return html;
   const reentry = buildTemplate7ReentryScript(gatewayOrigin, `/l/${encodeURIComponent(slug)}`);
   return reentry ? guardTemplate7ReentryScripts(html).replace("<head>", "<head>" + reentry) : html;
 }
@@ -742,7 +769,9 @@ export function renderPublicLandingHtml(params: RenderParams) {
 export function renderClassicTemplate7InlineHtml(params: RenderParams, deviceIdScript: string) {
   const config = optimizeTemplate7Images(params.config);
   const pixelId = String(config.tracking?.pixelId || "").trim().replace(/\D+/g, "");
-  const html = `${renderScriptElement(AtrioPrewarmScript({ slug: params.slug, landingId: config.id || "", deviceIdScript }))}${buildPreloadLinks(config)}<style data-template7-critical>${TEMPLATE7_CRITICAL_CSS}</style>${pixelScriptForTemplate(pixelId, params.slug, config.tracking?.phoneCountryCode || "54", 7)}${buildPixelNoscript(pixelId)}${renderTemplate7({ ...params, config })}${renderPrivacyFooter({ ...config, layout: { ...config.layout, template: 0 } })}<script>${buildTemplate7FastRuntime(params.slug, config, deviceIdScript)}</script>${buildTemplate7ResourceWarmup(template7GatewayOrigin(config))}`;
+  const isTemplate8 = config.layout?.template === 8;
+  const html = `${isTemplate8 ? "" : renderScriptElement(AtrioPrewarmScript({ slug: params.slug, landingId: config.id || "", deviceIdScript }))}${buildPreloadLinks(config)}<style data-template7-critical>${isTemplate8 ? TEMPLATE8_CRITICAL_CSS : TEMPLATE7_CRITICAL_CSS}</style>${pixelScriptForTemplate(pixelId, params.slug, config.tracking?.phoneCountryCode || "54", 7)}${buildPixelNoscript(pixelId)}${renderTemplate({ ...params, config })}${renderPrivacyFooter({ ...config, layout: { ...config.layout, template: 0 } })}<script>${buildTemplate7FastRuntime(params.slug, config, deviceIdScript)}</script>${resourceWarmup(config)}`;
+  if (isTemplate8) return html;
   const reentry = buildTemplate7ReentryScript(template7GatewayOrigin(config), `/${encodeURIComponent(params.slug)}`);
   return reentry ? reentry + guardTemplate7ReentryScripts(html) : html;
 }

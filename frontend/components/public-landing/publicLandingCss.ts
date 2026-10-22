@@ -2811,3 +2811,16 @@ body.public-lead-capture-open {
 export const TEMPLATE7_CRITICAL_CSS =
   PUBLIC_LANDING_CSS.slice(0, PUBLIC_LANDING_CSS.indexOf("body.public-lead-capture-open")) +
   PUBLIC_LANDING_CSS.slice(PUBLIC_LANDING_CSS.indexOf(".public-landing.template7 {"));
+
+export const TEMPLATE8_CRITICAL_CSS = TEMPLATE7_CRITICAL_CSS + PUBLIC_LANDING_CSS.slice(PUBLIC_LANDING_CSS.indexOf(".public-landing.template6 {"), PUBLIC_LANDING_CSS.indexOf(".public-landing.template7 {")) + `
+[data-template8-grid][hidden],[data-template8-entry][hidden]{display:none!important}
+.template8 .template6__card:last-child:nth-child(odd){grid-column:1 / -1;width:calc((100% - var(--template8-gap,12px))/2);justify-self:center}
+.template8 .template6__shell{height:100svh;min-height:100svh;padding-top:12px;padding-bottom:60px}
+.template8 .template6__header{padding:6px 8px 10px}.template8 .template6__footer{padding:10px 6px 0}
+.template8 .template6__image{height:clamp(36px,calc((100svh - 200px - var(--template8-extra-copy,0px))/var(--template8-rows,2) - 84px),180px);aspect-ratio:auto}
+.template8 .template6__caption{min-height:30px;font-size:11px;line-height:1.3;margin:5px 2px}
+.template8 .template6__cta{min-height:36px}.template8 .template6__grid{align-content:start}
+@media(max-width:359px){.template8{--template8-gap:8px}}
+.template8__back{position:fixed;top:12px;left:12px;z-index:5;border:1px solid #ffffff40;border-radius:10px;background:#111;color:white;padding:10px 14px;font:inherit;cursor:pointer}
+.template8__status:empty{display:none}.template8__status{color:#ffd2d2;text-align:center;font:14px system-ui}
+`;

@@ -1,6 +1,8 @@
 import { buildPublicLandingRuntimeSource, buildRuntimeConfig } from "./PublicLandingRuntimeScript";
 import type { PublicLandingConfig } from "./types";
-import { GATEWAY_ENTRY_TRANSITION_RUNTIME } from "../../lib/gateway-entry-transition";
+import { GATEWAY_ENTRY_TRANSITION_RUNTIME, GATEWAY_ENTRY_BRANDS } from "../../lib/gateway-entry-transition";
+import { gatewayOriginFor } from "../../lib/reyDeAses/gatewayOrigins";
+import { adaptTemplate8Runtime } from "./template8Runtime";
 
 function replaceOnce(source: string, from: string, to: string): string {
   if (source.split(from).length !== 2) throw new Error("Template 7 runtime contract changed");
@@ -13,7 +15,14 @@ export function buildTemplate7FastRuntime(
   config: PublicLandingConfig,
   classicDeviceIdScript = "",
 ): string {
-  const settings = { ...buildRuntimeConfig({ slug, config }), socialProofItems: [], automaticLandingSelection: !!classicDeviceIdScript };
+  const isTemplate8 = config.layout?.template === 8;
+  const settings = { ...buildRuntimeConfig({ slug, config }), socialProofItems: [], automaticLandingSelection: !!classicDeviceIdScript,
+    ...(isTemplate8 ? { template: 7, template8: true, ctaDestination: "atrio", targetProvider: "", cardIndex: null,
+      template8Cards: (config.content?.template8?.cards || []).map((card, i) => {
+        const gatewayOrigin = gatewayOriginFor(card.targetProvider, "ganamos_plus") || "";
+        return { ...card, index: i + 1, gatewayOrigin, transitionLogo: gatewayOrigin + GATEWAY_ENTRY_BRANDS[card.targetProvider].logo.replace(/\.avif$/, ".webp") };
+      }) } : {}),
+  };
   const bootstrap = JSON.stringify(settings).replace(/[<>&\u2028\u2029]/g,
     value => `\\u${value.charCodeAt(0).toString(16).padStart(4, "0")}`);
   let source = buildPublicLandingRuntimeSource();
@@ -185,5 +194,6 @@ export function buildTemplate7FastRuntime(
         var entryName = document.querySelector("[data-template7-name]");
         if (!entryName || !String(entryName.value || "").trim()) return;
         window.__T7_ENTRY_STARTED__ = true;`);
+  if (isTemplate8) source = adaptTemplate8Runtime(source, !!classicDeviceIdScript);
   return `window.__PUBLIC_LANDING_RUNTIME_CONFIG__=${bootstrap};${source}`;
 }

@@ -17,6 +17,7 @@ type UpdateClientPayload = {
   showAiAssistant?: boolean;
   showPromotions?: boolean;
   showTemplate7?: boolean;
+  showTemplate8?: boolean;
   moduleVisibility?: unknown;
   planCode?: "starter" | "plus" | "pro" | "premium" | "scale";
   maxLandings?: number;
@@ -189,6 +190,8 @@ Deno.serve(async (req) => {
         headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
     }
+    if (payload.showTemplate8 !== undefined && typeof payload.showTemplate8 !== "boolean") return new Response(JSON.stringify({ error: "showTemplate8 debe ser booleano." }), { status: 400, headers: corsHeaders });
+    const showTemplate8 = payload.showTemplate8;
     const showTemplate7 = payload.showTemplate7;
     let moduleVisibility;
     try {
@@ -220,6 +223,7 @@ Deno.serve(async (req) => {
       showAiAssistant === undefined &&
       showPromotions === undefined &&
       showTemplate7 === undefined &&
+      showTemplate8 === undefined &&
       moduleVisibility === undefined &&
       planCode === undefined &&
       maxLandings === undefined &&
@@ -318,6 +322,17 @@ Deno.serve(async (req) => {
       if (templatePermissionError) {
         return new Response(
           JSON.stringify({ error: templatePermissionError.message || "No se pudo actualizar el permiso de Template 7." }),
+          { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } },
+        );
+      }
+    }
+    if (showTemplate8 !== undefined) {
+      const { error: templatePermissionError } = await supabaseAdmin
+        .from("client_template_permissions")
+        .upsert({ user_id: userId, template8_enabled: showTemplate8, updated_at: new Date().toISOString() }, { onConflict: "user_id" });
+      if (templatePermissionError) {
+        return new Response(
+          JSON.stringify({ error: templatePermissionError.message || "No se pudo actualizar el permiso de Template 8." }),
           { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } },
         );
       }

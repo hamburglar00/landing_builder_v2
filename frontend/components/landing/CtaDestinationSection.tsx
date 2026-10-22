@@ -4,13 +4,13 @@ import type { AtrioClient } from "@/lib/atrio/atrioDb";
 import type { LandingThemeConfig, TargetProvider } from "@/lib/landing/types";
 import CustomSelect from "@/components/ui/CustomSelect";
 export function isAtrioUrlValidForSave(config: LandingThemeConfig) {
-  return config.ctaDestination === (config.template === "template7" ? "atrio" : "whatsapp");
+  return config.ctaDestination === (["template7", "template8"].includes(config.template) ? "atrio" : "whatsapp");
 }
 export function CtaDestinationSection({ config, setConfig }: {
   config: LandingThemeConfig; setConfig: (updater: SetStateAction<LandingThemeConfig>) => void; atrioClients?: AtrioClient[];
 }) {
   useEffect(() => {
-    const channel = config.template === "template7" ? "atrio" : "whatsapp";
+    const channel = ["template7", "template8"].includes(config.template) ? "atrio" : "whatsapp";
     if (config.ctaDestination !== channel) setConfig(prev => ({ ...prev, ctaDestination: channel }));
   }, [config.template, config.ctaDestination, setConfig]);
   if (config.template !== "template7") return null;

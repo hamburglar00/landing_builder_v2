@@ -52,7 +52,8 @@ export type TemplateOption =
   | "template4"
   | "template5"
   | "template6"
-  | "template7";
+  | "template7"
+  | "template8";
 
 /**
  * Motor que sirve la URL publica de una landing creada en el constructor.
@@ -125,6 +126,11 @@ export interface LandingTemplate6CoverConfig {
   headerText: string;
   footerText: string;
   cards: LandingTemplate6Card[];
+}
+
+export interface LandingTemplate8CoverConfig extends Omit<LandingTemplate6CoverConfig, "grid" | "showWhatsAppLogo" | "cards"> {
+  cardCount: number;
+  cards: (LandingTemplate6Card & { targetProvider: TargetProvider })[];
 }
 
 /**
@@ -213,6 +219,7 @@ export interface LandingThemeConfig {
   template4Chat?: LandingTemplate4ChatConfig;
   template5Live?: LandingTemplate5LiveConfig;
   template6Cover?: LandingTemplate6CoverConfig;
+  template8Cover?: LandingTemplate8CoverConfig;
   /**
    * Borradores visuales independientes por plantilla.
    * El constructor los usa para recordar como quedo cada template; la landing

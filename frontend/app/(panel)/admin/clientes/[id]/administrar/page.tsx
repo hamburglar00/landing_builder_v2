@@ -20,6 +20,7 @@ type ClientUser = {
   show_ai_assistant?: boolean;
   show_promotions?: boolean;
   template7_enabled?: boolean;
+  template8_enabled?: boolean;
   module_visibility?: ClientModulePermissions;
   plan_code?: "starter" | "plus" | "pro" | "premium" | "scale";
   max_landings?: number;
@@ -80,6 +81,7 @@ export default function AdminClientManagePage() {
   const [showInbox, setShowInbox] = useState(false);
   const [showAiAssistant, setShowAiAssistant] = useState(false);
   const [showPromotions, setShowPromotions] = useState(false);
+  const [template8Enabled, setTemplate8Enabled] = useState(false);
   const [template7Enabled, setTemplate7Enabled] = useState(false);
   const [moduleVisibility, setModuleVisibility] = useState(DEFAULT_CLIENT_MODULE_PERMISSIONS);
   const [visibleCols, setVisibleCols] = useState<Set<ColKey>>(new Set(ALL_COLUMNS));
@@ -123,6 +125,7 @@ export default function AdminClientManagePage() {
       setShowAiAssistant(typeof found.show_ai_assistant === "boolean" ? found.show_ai_assistant : false);
       setShowPromotions(typeof found.show_promotions === "boolean" ? found.show_promotions : false);
       setTemplate7Enabled(found.template7_enabled === true);
+      setTemplate8Enabled(found.template8_enabled === true);
       setModuleVisibility(normalizeClientModulePermissions(found.module_visibility));
       setPlanCode(found.plan_code ?? "starter");
       setMaxLandings(Number(found.max_landings ?? 1));
@@ -172,6 +175,7 @@ export default function AdminClientManagePage() {
       showAiAssistant: boolean;
       showPromotions: boolean;
       showTemplate7: boolean;
+      showTemplate8: boolean;
       moduleVisibility: ClientModulePermissions;
       planCode: "starter" | "plus" | "pro" | "premium" | "scale";
       maxLandings: number;
@@ -187,6 +191,7 @@ export default function AdminClientManagePage() {
       showAiAssistant,
       showPromotions,
       showTemplate7: template7Enabled,
+      showTemplate8: template8Enabled,
       moduleVisibility,
       planCode,
       maxLandings,
@@ -521,6 +526,15 @@ export default function AdminClientManagePage() {
               className="h-4 w-4 rounded border-zinc-700 bg-zinc-900"
             />
             Habilitar Plantilla 7 para este cliente
+          </label>
+<label className="inline-flex items-center gap-2 text-xs text-zinc-200">
+            <input
+              type="checkbox"
+              checked={template8Enabled}
+              onChange={(e) => setTemplate8Enabled(e.target.checked)}
+              className="h-4 w-4 rounded border-zinc-700 bg-zinc-900"
+            />
+            Habilitar Plantilla 8 para este cliente
           </label>
         </div>
 

@@ -1,3 +1,5 @@
+import { normalizeTemplate8Cover } from "./template8";
+import type { LandingTemplate8CoverConfig } from "./types";
 import type { LandingThemeConfig, LandingWorkspaceCurrency, MultiSkinCode, TargetProvider } from "./types";
 import { COLOR_MAP } from "./constants";
 import { buildOptimizedImageUrl, buildResponsiveImageSet } from "./imageUrl";
@@ -16,6 +18,7 @@ function templateNumberForOption(template: LandingThemeConfig["template"]) {
   if (template === "template5") return 5;
   if (template === "template6") return 6;
   if (template === "template7") return 7;
+  if (template === "template8") return 8;
   return 1;
 }
 
@@ -76,6 +79,7 @@ export interface LandingConfigPayload {
       profileImageUrl: string;
       backgroundImageUrl: string;
     };
+    template8?: LandingTemplate8CoverConfig;
     template6?: {
       grid: "2x1" | "2x2" | "2x3";
       showWhatsAppLogo: boolean;
@@ -215,6 +219,7 @@ export function buildLandingConfig({
     ctaGlowColor: COLOR_MAP[config.ctaGlowColor],
   };
   const fixedVisualTemplate = isFixedVisualTemplate(themeWithHex.template);
+  const template8Cover = normalizeTemplate8Cover(themeWithHex.template8Cover);
   const template6Cover = normalizeTemplate6Cover(themeWithHex.template6Cover);
   const isTemplate4 = themeWithHex.template === "template4";
   const effectiveCtaText =
@@ -242,9 +247,9 @@ export function buildLandingConfig({
       postUrl,
       landingTag,
       sendContactPixel: config.sendContactPixel,
-      ctaDestination: config.template === "template7" ? "atrio" : "whatsapp",
-      ...(config.template === "template7" ? { target_provider: config.targetProvider } : {}),
-      ...(config.template === "template7" && config.targetProvider === "multi_skin"
+      ctaDestination: (config.template === "template7" || config.template === "template8") ? "atrio" : "whatsapp",
+      ...((config.template === "template7" || config.template === "template8") ? { target_provider: config.targetProvider } : {}),
+      ...((config.template === "template7" || config.template === "template8") && config.targetProvider === "multi_skin"
         ? { skin_code: "ganamos_plus" as const }
         : {}),
       atrioRedirectUrl: config.atrioRedirectUrl.trim(),
@@ -314,6 +319,10 @@ export function buildLandingConfig({
         profileImageUrl: themeWithHex.template5Live?.profileImageUrl || "",
         backgroundImageUrl: themeWithHex.template5Live?.backgroundImageUrl || "",
       },
+      ...(config.template === "template8" ? { template8: { ...template8Cover,
+        backgroundImageUrl: template8Cover.backgroundImageUrl ? buildOptimizedImageUrl(template8Cover.backgroundImageUrl, { width: 960, quality: 65 }) : "",
+        cards: template8Cover.cards.slice(0, template8Cover.cardCount).map(card => ({ ...card, imageUrl: card.imageUrl ? buildOptimizedImageUrl(card.imageUrl, { width: 480, quality: 65 }) : "" })),
+      } } : {}),
       template6: {
         grid: template6Cover.grid,
         showWhatsAppLogo: template6Cover.showWhatsAppLogo,
@@ -366,16 +375,16 @@ export function buildLandingConfig({
       template: templateNumberForOption(themeWithHex.template),
     },
     socialProof: {
-      enabled: themeWithHex.template !== "template7" && themeWithHex.socialProofEnabled,
+      enabled: (themeWithHex.template !== "template7" && themeWithHex.template !== "template8") && themeWithHex.socialProofEnabled,
     },
     interactions: {
-      enabled: fixedVisualTemplate || themeWithHex.template === "template7" ? false : themeWithHex.interactionsEnabled,
-      whatsappPrefillText: fixedVisualTemplate || themeWithHex.template === "template7"
+      enabled: fixedVisualTemplate || (themeWithHex.template === "template7" || themeWithHex.template === "template8") ? false : themeWithHex.interactionsEnabled,
+      whatsappPrefillText: fixedVisualTemplate || (themeWithHex.template === "template7" || themeWithHex.template === "template8")
         ? ""
         : themeWithHex.whatsappPrefillText.trim(),
     },
     leadCapture: {
-      enabled: fixedVisualTemplate || themeWithHex.template === "template7" ? false : themeWithHex.leadCapture?.enabled === true,
+      enabled: fixedVisualTemplate || (themeWithHex.template === "template7" || themeWithHex.template === "template8") ? false : themeWithHex.leadCapture?.enabled === true,
       title: themeWithHex.leadCapture?.title?.trim() || "",
       description: themeWithHex.leadCapture?.description?.trim() || "",
       fields: {
@@ -385,13 +394,13 @@ export function buildLandingConfig({
         email: themeWithHex.leadCapture?.fields?.email === true,
       },
     },
-    ...(themeWithHex.template === "template7" ? {
+    ...((themeWithHex.template === "template7" || themeWithHex.template === "template8") ? {
       template7Capture: {
         whatsapp: themeWithHex.template7WhatsappEnabled === true,
       },
     } : {}),
     emailCapture: {
-      enabled: !fixedVisualTemplate && themeWithHex.template !== "template7" && themeWithHex.emailCaptureEnabled === true,
+      enabled: !fixedVisualTemplate && (themeWithHex.template !== "template7" && themeWithHex.template !== "template8") && themeWithHex.emailCaptureEnabled === true,
     },
   };
 }

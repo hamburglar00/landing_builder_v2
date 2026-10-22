@@ -1,5 +1,8 @@
 import "server-only";
 import { template7ImageWarmUrls } from "./template7Images";
+import { normalizeTemplate8Cover } from "./template8";
+import { buildOptimizedImageUrl } from "./imageUrl";
+import type { LandingTemplate8CoverConfig } from "./types";
 
 type Row = { landing_config?: unknown; config?: unknown };
 const record = (value: unknown): Record<string, unknown> => value && typeof value === "object" && !Array.isArray(value) ? value as Record<string, unknown> : {};
@@ -23,8 +26,18 @@ export function imageConfigFromLanding(row: Row) {
 export async function warmTemplate7Images(row: Row, storageOrigin: string, fetcher: typeof fetch = fetch) {
   let origin: URL;
   try { origin = new URL(storageOrigin); } catch { return { total: 0, ready: 0 }; }
-  const urls = template7ImageWarmUrls(imageConfigFromLanding(row))
-    .filter(url => new URL(url).origin === origin.origin);
+  const saved = record(row.landing_config), raw = record(row.config);
+  const isTemplate8 = raw.template === "template8" || record(saved.layout).template === 8;
+  const cover = normalizeTemplate8Cover((record(record(saved.content).template8).cardCount
+    ? record(record(saved.content).template8) : record(raw.template8Cover)) as Partial<LandingTemplate8CoverConfig>);
+  const candidates = isTemplate8 ? [
+    ...(cover.backgroundImageUrl ? [buildOptimizedImageUrl(cover.backgroundImageUrl, { width: 960, quality: 65 })] : []),
+    ...cover.cards.slice(0, cover.cardCount).filter(card => card.imageUrl).map(card => buildOptimizedImageUrl(card.imageUrl, { width: 480, quality: 65 })),
+  ] : template7ImageWarmUrls(imageConfigFromLanding(row));
+  const urls = [...new Set(candidates)].filter(value => {
+    try { const url = new URL(value); return url.origin === origin.origin && url.pathname.startsWith("/storage/v1/render/image/public/landing-images/"); }
+    catch { return false; }
+  });
   const controller = new AbortController();
   const timeout = setTimeout(() => controller.abort(), 8000);
   let ready = 0;

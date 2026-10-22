@@ -7,11 +7,12 @@ const SLUG_PATTERN = /^[a-z0-9][a-z0-9_-]{0,159}$/i;
 
 const ADVISOR_SLUG_PATTERN = /^[a-z0-9][a-z0-9_-]{0,80}$/i;
 
-const ATTRIBUTION_KEYS = ["landing", "landing_resolution", "facebook", "portofolio", "cp", "campana", "conjunto", "anuncio", "utm_source", "utm_medium", "utm_campaign", "utm_content", "utm_term", "fbp", "fbc", "referrer", "target_provider", "skin_code"] as const;
+const ATTRIBUTION_KEYS = ["landing", "landing_resolution", "facebook", "portofolio", "cp", "campana", "conjunto", "anuncio", "utm_source", "utm_medium", "utm_campaign", "utm_content", "utm_term", "fbp", "fbc", "referrer", "target_provider", "skin_code", "card_index"] as const;
 
 export function parseTemplate7StartPayload(value: unknown): StartRequest | null {
   if (!value || typeof value !== "object" || Array.isArray(value)) return null;
   const data = value as Record<string, unknown>;
+  if (data.card_index !== undefined && (!Number.isInteger(data.card_index) || Number(data.card_index) < 1 || Number(data.card_index) > 6)) return null;
   const name = typeof data.name === "string" ? data.name.trim().replace(/\s+/g, " ") : "";
   if (!UUID_PATTERN.test(String(data.landing_id ?? "")) || !SLUG_PATTERN.test(String(data.landing_slug ?? "")) ||
       !UUID_PATTERN.test(String(data.atrio_client_id ?? "")) || !UUID_PATTERN.test(String(data.advisor_id ?? "")) ||
@@ -31,6 +32,7 @@ export function parseTemplate7StartPayload(value: unknown): StartRequest | null 
     if (field) attribution[key] = field;
   }
   return {
+    ...(data.card_index !== undefined ? { card_index: Number(data.card_index) } : {}),
     landing_id: String(data.landing_id), landing_slug: String(data.landing_slug), name,
     atrio_client_id: String(data.atrio_client_id),
     advisor_id: String(data.advisor_id), advisor_slug: String(data.advisor_slug),

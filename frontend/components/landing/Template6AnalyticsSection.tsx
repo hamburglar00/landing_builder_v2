@@ -4,6 +4,7 @@ import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { supabase } from "@/lib/supabaseClient";
 import { useAppConfirm } from "@/components/ui/AppConfirmDialog";
 import type { LandingThemeConfig } from "@/lib/landing/types";
+import { normalizeTemplate8Cover } from "@/lib/landing/template8";
 import { normalizeTemplate6Cover, TEMPLATE6_CARD_COUNT } from "@/lib/landing/template6";
 
 function buenosAiresDate(date: Date): string {
@@ -32,8 +33,8 @@ export function Template6AnalyticsSection({ landingId, config, savedTemplate6 }:
   const [resetting, setResetting] = useState(false);
   const [error, setError] = useState("");
   const requestId = useRef(0);
-  const cover = normalizeTemplate6Cover(config.template6Cover);
-  const cardCount = TEMPLATE6_CARD_COUNT[cover.grid];
+  const cover = config.template === "template8" ? { ...normalizeTemplate8Cover(config.template8Cover), grid: "2x3" as const } : normalizeTemplate6Cover(config.template6Cover);
+  const cardCount = config.template === "template8" ? normalizeTemplate8Cover(config.template8Cover).cardCount : TEMPLATE6_CARD_COUNT[cover.grid];
   const total = counts.slice(0, cardCount).reduce((sum, count) => sum + count, 0);
   const percent = useMemo(() => new Intl.NumberFormat("es-AR", { maximumFractionDigits: 1 }), []);
   const invalidRange = !from || !to || from > to;
@@ -111,7 +112,7 @@ export function Template6AnalyticsSection({ landingId, config, savedTemplate6 }:
         </label>
       </div>
 
-      {!savedTemplate6 ? <p className="text-xs text-zinc-400">Guardá la plantilla 6 para comenzar a medir.</p> : null}
+      {!savedTemplate6 ? <p className="text-xs text-zinc-400">Guardá la landing para comenzar a medir.</p> : null}
       {invalidRange ? <p className="text-xs text-amber-300">Elegí un rango de fechas válido.</p> : null}
       {error ? <p role="alert" className="text-xs text-red-300">{error}</p> : null}
       {savedTemplate6 && !invalidRange ? (

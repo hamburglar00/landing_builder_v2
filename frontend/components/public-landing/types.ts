@@ -1,3 +1,4 @@
+import type { LandingTemplate8CoverConfig } from "../../lib/landing/types";
 export type PublicLandingConfig = {
   schemaVersion: number;
   updatedAt: string;
@@ -58,6 +59,7 @@ export type PublicLandingConfig = {
       profileImageUrl?: string;
       backgroundImageUrl?: string;
     };
+    template8?: LandingTemplate8CoverConfig;
     template6?: {
       grid: "2x1" | "2x2" | "2x3";
       showWhatsAppLogo?: boolean;

@@ -410,3 +410,18 @@ Revisión de los cinco puntos del programador y validación: [transición, prefe
 - Esta decisión reemplaza la ausencia de pausa mínima únicamente en la tarjeta de usuario; la capa posterior del casino/chat conserva sus etapas reales, sin otra demora artificial. No cambiar API2, Panel3, atribución, bots ni operaciones financieras.
 
 Evidencia y detalles: [espera de ingreso configurable](validation/template7-entry-wait-20261021.md).
+
+### Template 8: selección de página antes del flujo de Atrio (22/10/2026)
+
+- El usuario autorizó su implementación E2E con pruebas. Es un permiso independiente por cliente, administrado por superadmin como el del 7.
+- Al publicarlo, Template 8 comienza deshabilitado para todos los clientes. También queda deshabilitado para clientes nuevos; el superadmin debe habilitarlo explícitamente por cuenta.
+- Reutilizar el editor de tarjetas del 6: entre una y seis tarjetas, dos columnas y última tarjeta impar centrada. Cada tarjeta elige una página y conserva sus imágenes, texto y CTA.
+- Es exclusivo de Atrio. Después de elegir una página se reutiliza el circuito del 7, con el mismo comportamiento en clásico y constructor. No crear otra landing para el paso intermedio ni duplicar el flujo hacia gateway/chat/CBU.
+- Mantener la grilla hasta una selección explícita, incluso si se reconoce una cuenta durante la preparación. Después de seleccionar se recupera la cuenta de esa página y su vinculación existente; se ofrece ingreso manual cuando haga falta.
+- Preparar por landing, página y visitante. Cada página utiliza sus bots y criterio de reparto; no se elige un asesor global para todas. Deduplicar recursos comunes y las tarjetas que apuntan a una misma página.
+- El prewarm no crea cuentas, chats ni conversiones y no incrementa asignaciones. Sólo reserva IDs con expiración. Confirmar una única asignación al seleccionar, y verificarla en el inicio sin volver a repartir.
+- Ganamos+ continúa pendiente de integración; no usar las conexiones ni la plataforma de Ganamos NET como reemplazo.
+- Analíticas por tarjeta como en el 6, con página y texto preservados en el evento. Conservar el tracking y la deduplicación del flujo existente de Meta; la preparación no es una conversión.
+- API2, Panel3 y las implementaciones de los gateways no cambian por Template 8. Las comprobaciones financieras siguen intactas.
+
+Implementación, migraciones y prueba repetible: [template8-e2e.txt](template8-e2e.txt).

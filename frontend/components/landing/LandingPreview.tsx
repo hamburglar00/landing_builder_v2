@@ -4,6 +4,7 @@ import { useEffect, useRef, useState } from "react";
 import type { LandingThemeConfig } from "@/lib/landing/types";
 import { getColorHex, SYSTEM_FONT_FAMILY } from "@/lib/landing/helpers";
 import { buildResponsiveImageSet } from "@/lib/landing/imageUrl";
+import { normalizeTemplate8Cover } from "@/lib/landing/template8";
 import { normalizeTemplate6Cover, TEMPLATE6_CARD_COUNT, template6Lines } from "@/lib/landing/template6";
 import { WHATSAPP_GREEN_PATH, WHATSAPP_WHITE_PATH } from "@/components/public-landing/whatsAppBrandIcon";
 
@@ -134,7 +135,7 @@ export function LandingPreview({
             ? 5
             : config.template === "template6"
               ? 6
-            : config.template === "template7"
+            : config.template === "template8" ? 8 : config.template === "template7"
               ? 7
             : 1;
   const ctaPosition = config.ctaPosition ?? "between_title_and_info";
@@ -1014,13 +1015,13 @@ export function LandingPreview({
   if (template === 5) {
     return renderTemplate5Configured();
   }
-  if (template === 6) {
-    const cover = normalizeTemplate6Cover(config.template6Cover);
-    const cards = cover.cards.slice(0, TEMPLATE6_CARD_COUNT[cover.grid]);
+  if (template === 6 || template === 8) {
+    const cover = { ...normalizeTemplate6Cover(config.template6Cover), ...(template === 8 ? { ...normalizeTemplate8Cover(config.template8Cover), showWhatsAppLogo: false } : {}) };
+    const cards = cover.cards.slice(0, template === 8 ? normalizeTemplate8Cover(config.template8Cover).cardCount : TEMPLATE6_CARD_COUNT[cover.grid]);
     const titleLines = template6Lines(cover.headerText).map((line) => line.trim()).filter(Boolean);
     const footerLines = template6Lines(cover.footerText).map((line) => line.trim()).filter(Boolean);
     return (
-      <div className={`relative mx-auto flex w-full max-w-[380px] flex-col overflow-hidden bg-[#080d11] shadow-[0_18px_40px_rgba(0,0,0,.65)] ${compact ? "h-full rounded-xl" : "aspect-[9/16] rounded-3xl"}`} style={{ fontFamily }}>
+      <div className={`relative mx-auto flex w-full max-w-[380px] flex-col overflow-hidden bg-[#080d11] shadow-[0_18px_40px_rgba(0,0,0,.65)] ${compact ? "h-full rounded-xl" : "aspect-[9/16] rounded-3xl"}`} style={{ fontFamily, ...(template === 8 ? { containerType: "size" } : {}) }}>
         {cover.backgroundImageUrl ? (
           <div className="pointer-events-none absolute inset-0">
             {/* eslint-disable-next-line @next/next/no-img-element */}
@@ -1036,8 +1037,8 @@ export function LandingPreview({
           </header>
           <div className={`grid grid-cols-2 content-center ${gallery ? "gap-1.5" : "gap-3"}`}>
             {cards.map((card, index) => (
-              <div key={index} className={`min-w-0 rounded-xl border border-white/10 bg-white/[.04] ${gallery ? "p-1" : "p-1.5"}`}>
-                <div className="aspect-square overflow-hidden rounded-lg bg-gradient-to-br from-zinc-700/60 to-zinc-950">
+              <div key={index} style={template === 8 && cards.length % 2 === 1 && index === cards.length - 1 ? { gridColumn: "1 / -1", width: "calc((100% - 12px)/2)", justifySelf: "center" } : undefined} className={`min-w-0 rounded-xl border border-white/10 bg-white/[.04] ${gallery ? "p-1" : "p-1.5"}`}>
+                <div className="aspect-square overflow-hidden rounded-lg bg-gradient-to-br from-zinc-700/60 to-zinc-950" style={template === 8 ? { aspectRatio: "auto", height: `clamp(20px,calc((100cqh - ${gallery ? 70 : 170 + Math.max(0, titleLines.length - 1) * 28 + Math.max(0, footerLines.length - 1) * 18}px) / ${Math.ceil(cards.length / 2)} - ${gallery ? 44 : 86}px),180px)` } : undefined}>
                   {card.imageUrl ? (
                     // eslint-disable-next-line @next/next/no-img-element
                     <img src={card.imageUrl} alt="" className="h-full w-full object-cover" />

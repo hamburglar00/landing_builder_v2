@@ -8,6 +8,7 @@ import type {
   LandingThemeConfig,
   TemplateOption,
 } from "./types";
+import { normalizeTemplate8Cover } from "./template8";
 import { normalizeTemplate6Cover } from "./template6";
 
 function cloneLeadCapture(
@@ -83,6 +84,7 @@ export function snapshotTemplateVariant(
     template4Chat: cloneTemplate4Chat(config.template4Chat),
     template5Live: cloneTemplate5Live(config.template5Live),
     template6Cover: cloneTemplate6Cover(config.template6Cover),
+    template8Cover: normalizeTemplate8Cover(config.template8Cover),
   };
 }
 
@@ -120,7 +122,7 @@ export function withCurrentTemplateSnapshot(
 ): LandingThemeConfig {
   return {
     ...config,
-    ctaDestination: config.template === "template7" ? "atrio" : "whatsapp",
+    ctaDestination: (config.template === "template7" || config.template === "template8") ? "atrio" : "whatsapp",
     templateConfigs: {
       ...(config.templateConfigs ?? {}),
       [config.template]: snapshotTemplateVariant(config),
@@ -144,11 +146,11 @@ export function switchLandingTemplate(
     ...(savedNextVariant ?? {}),
     ...globalConfig(config),
     template: nextTemplate,
-    ...(config.template === "template7" && nextTemplate !== "template7" ? {
+    ...((config.template === "template7" || config.template === "template8") && (nextTemplate !== "template7" && nextTemplate !== "template8") ? {
       ctaDestination: savedNextVariant?.ctaDestination ?? DEFAULT_CONFIG.ctaDestination,
     } : {}),
-    ...(nextTemplate !== "template7" ? { ctaDestination: "whatsapp" as const } : {}),
-    ...(nextTemplate === "template7" ? {
+    ...((nextTemplate !== "template7" && nextTemplate !== "template8") ? { ctaDestination: "whatsapp" as const } : {}),
+    ...((nextTemplate === "template7" || nextTemplate === "template8") ? {
       ctaDestination: "atrio" as const,
       socialProofEnabled: false,
       emailCaptureEnabled: false,

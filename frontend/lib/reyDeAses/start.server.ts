@@ -1,3 +1,5 @@
+import { confirmTemplate8Destination } from "../atrio/template7Destination.server";
+import { template8Provider } from "../landing/template8";
 import { createClient } from "@supabase/supabase-js";
 import type { MultiSkinCode, TargetProvider } from "../landing/types";
 import type { AssignedAdvisor, Api2ResolveAccountRequest, HandoffResult, LinkedProviderAccount, TargetAccount, ResolvedPlayer, StartRequest, PlayerResolveRequest } from "./contracts";
@@ -67,7 +69,7 @@ export function isTemplate7Landing(landing: LandingRow): boolean {
   const published = landing.landing_config && typeof landing.landing_config === "object"
     ? landing.landing_config as Record<string, unknown> : {};
   const layout = published.layout && typeof published.layout === "object" ? published.layout as Record<string, unknown> : {};
-  return (raw.template === "template7" || layout.template === 7) && raw.ctaDestination === "atrio";
+  return (raw.template === "template7" || raw.template === "template8" || layout.template === 7) && raw.ctaDestination === "atrio";
 }
 
 export function configuredTargetProvider(landing: LandingRow): TargetProvider | null {
@@ -183,7 +185,7 @@ async function handleTemplate7StartInner(
       const candidate = await bounded(deps.db.landing(payload.landing_id));
       if (!candidate || candidate.name !== payload.landing_slug || !isTemplate7Landing(candidate)) return json({ error: "landing_not_found" }, 404);
       landing = candidate;
-      const candidateProvider = configuredTargetProvider(landing);
+      const candidateProvider = (landing.config as { template?: string })?.template === "template8" ? template8Provider(landing.config, payload.card_index) : configuredTargetProvider(landing);
       if (!candidateProvider) return json({ error: "integration_pending" }, 503);
       provider = candidateProvider;
     }
@@ -193,6 +195,7 @@ async function handleTemplate7StartInner(
     payload.attribution = {
       ...payload.attribution,
       target_provider: provider,
+      ...(payload.card_index ? { card_index: String(payload.card_index) } : {}),
       ...(skinCode ? { skin_code: skinCode } : {}),
     };
     if (!contextResolved) {
@@ -332,7 +335,8 @@ function productionContextResolver() {
 
   return async (request: Request, payload: StartRequest, identity: ClientIdentity): Promise<ResolvedStartContext> => {
     const keys = template7StartRateLimitKeys(request, payload.landing_id, identity.deviceId, identity.needsCookie);
-    const { data, error } = await supabase.rpc("resolve_template7_start_context", {
+    const { data, error } = await supabase.rpc(payload.card_index ? "resolve_template8_start_context" : "resolve_template7_start_context", {
+      ...(payload.card_index ? { p_card_index: payload.card_index } : {}),
       p_landing_id: payload.landing_id,
       p_landing_slug: payload.landing_slug,
       p_atrio_client_id: payload.atrio_client_id,
@@ -349,6 +353,7 @@ function productionContextResolver() {
     ]);
     if (typeof row.status !== "string" || !knownStatuses.has(row.status as StartContextStatus)) throw new Error("invalid start context status");
     if (row.status !== "ok") return { status: row.status as StartContextStatus };
+    if (payload.card_index && !(await confirmTemplate8Destination(String(row.landing_id), String(row.target_provider), identity.deviceId, payload.advisor_id))) return { status: "advisor_not_assigned" };
     const provider = row.target_provider;
     if ((provider !== "rey_de_ases" && provider !== "multi_skin" && provider !== "ases_del_norte" && provider !== "ganamos_net") ||
         typeof row.landing_id !== "string" || typeof row.landing_name !== "string" ||

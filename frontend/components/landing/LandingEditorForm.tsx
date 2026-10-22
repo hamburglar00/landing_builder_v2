@@ -11,6 +11,7 @@ import type {
 import { ColorSelect } from "./ColorSelect";
 import { ImageUploader } from "./ImageUploader";
 import { buildLandingConfig } from "@/lib/landing/buildLandingConfig";
+import { normalizeTemplate8Cover, TEMPLATE8_PROVIDER_NAMES } from "@/lib/landing/template8";
 import { normalizeTemplate6Cover, TEMPLATE6_CARD_COUNT, template6Lines } from "@/lib/landing/template6";
 import {
   switchLandingTemplate,
@@ -118,6 +119,7 @@ const TEMPLATE_OPTIONS: { label: string; value: TemplateOption }[] = [
   { label: "Plantilla 5 (live)", value: "template5" },
   { label: "Plantilla 6 (portada)", value: "template6" },
   { label: "Plantilla 7", value: "template7" },
+  { label: "Plantilla 8 (Atrio por página)", value: "template8" },
 ];
 
 const LEAD_CAPTURE_DEFAULT_TITLE =
@@ -148,10 +150,12 @@ export function LandingTemplateSection({
   config,
   setConfig,
   allowTemplate7 = true,
+  allowTemplate8 = true,
 }: {
   config: LandingThemeConfig;
   setConfig: React.Dispatch<React.SetStateAction<LandingThemeConfig>>;
   allowTemplate7?: boolean;
+  allowTemplate8?: boolean;
 }) {
   return (
     <CollapsibleSection title="Plantilla" defaultOpen>
@@ -160,7 +164,7 @@ export function LandingTemplateSection({
           Elegí la plantilla de layout que define qué secciones se configuran.
         </p>
         <div className="grid grid-cols-1 gap-2 sm:grid-cols-2 2xl:grid-cols-3">
-          {TEMPLATE_OPTIONS.filter((opt) => allowTemplate7 || opt.value !== "template7").map((opt) => (
+          {TEMPLATE_OPTIONS.filter((opt) => (allowTemplate7 || opt.value !== "template7") && (allowTemplate8 || opt.value !== "template8")).map((opt) => (
             <label
               key={opt.value}
               className="flex flex-1 cursor-pointer items-center gap-2 rounded-lg border border-zinc-700 bg-zinc-900 px-3 py-2 text-xs text-zinc-200 hover:bg-zinc-800"
@@ -179,6 +183,9 @@ export function LandingTemplateSection({
             </label>
           ))}
         </div>
+        {!allowTemplate8 && config.template === "template8" ? (
+          <p className="text-xs text-amber-300" role="alert">Plantilla 8 ya no está habilitada para esta cuenta. Elegí otra plantilla para guardar cambios.</p>
+        ) : null}
         {!allowTemplate7 && config.template === "template7" ? (
           <p className="text-xs text-amber-300" role="alert">
             Plantilla 7 ya no está habilitada para esta cuenta. Elegí otra plantilla para guardar cambios.
@@ -242,8 +249,9 @@ export function LandingEditorForm({
   const isTemplate3 = config.template === "template3";
   const isTemplate4 = config.template === "template4";
   const isTemplate5 = config.template === "template5";
-  const isTemplate6 = config.template === "template6";
-  const isTemplate7 = config.template === "template7";
+  const isTemplate8 = config.template === "template8";
+  const isTemplate6 = config.template === "template6" || isTemplate8;
+  const isTemplate7 = config.template === "template7" || isTemplate8;
   const isFixedVisualTemplate =
     config.template === "template4" || config.template === "template5" || isTemplate6;
   const hidesVisualControls = isTemplate3 || isFixedVisualTemplate;
@@ -255,7 +263,9 @@ export function LandingEditorForm({
     ...TEMPLATE5_LIVE_DEFAULTS,
     ...(config.template5Live ?? {}),
   };
-  const template6Cover = normalizeTemplate6Cover(config.template6Cover);
+  const template6Cover = { ...normalizeTemplate6Cover(config.template6Cover), ...(isTemplate8 ? { ...normalizeTemplate8Cover(config.template8Cover), showWhatsAppLogo: false } : {}) };
+  const coverKey = isTemplate8 ? "template8Cover" : "template6Cover";
+  const readCover = (current: LandingThemeConfig) => isTemplate8 ? normalizeTemplate8Cover(current.template8Cover) : normalizeTemplate6Cover(current.template6Cover);
   const template4CtaText =
     config.ctaText.trim() && config.ctaText !== "Acceder"
       ? config.ctaText
@@ -318,16 +328,16 @@ export function LandingEditorForm({
   const updateTemplate6Cover = (patch: Partial<typeof template6Cover>) => {
     setConfig((current) => ({
       ...current,
-      template6Cover: { ...normalizeTemplate6Cover(current.template6Cover), ...patch },
+      [coverKey]: { ...readCover(current), ...patch },
     }));
   };
 
-  const updateTemplate6Card = (index: number, patch: Partial<(typeof template6Cover.cards)[number]>) => {
+  const updateTemplate6Card = (index: number, patch: Partial<(typeof template6Cover.cards)[number]> & { targetProvider?: LandingThemeConfig["targetProvider"] }) => {
     setConfig((current) => {
-      const cover = normalizeTemplate6Cover(current.template6Cover);
+      const cover = readCover(current);
       return {
         ...current,
-        template6Cover: {
+        [coverKey]: {
           ...cover,
           cards: cover.cards.map((card, cardIndex) =>
             cardIndex === index ? { ...card, ...patch } : card,
@@ -339,10 +349,10 @@ export function LandingEditorForm({
 
   const updateTemplate6Line = (field: "headerText" | "footerText", index: number, text: string) => {
     setConfig((current) => {
-      const cover = normalizeTemplate6Cover(current.template6Cover);
+      const cover = readCover(current);
       const lines = template6Lines(cover[field]);
       lines[index] = text.replace(/[\r\n]/g, "");
-      return { ...current, template6Cover: { ...cover, [field]: lines.join("\n") } };
+      return { ...current, [coverKey]: { ...cover, [field]: lines.join("\n") } };
     });
   };
 
@@ -472,7 +482,7 @@ export function LandingEditorForm({
               </label>
             </div>
           </div>
-          {isTemplate6 && (
+          {isTemplate6 && !isTemplate8 && (
             <label className="flex items-center gap-2 text-xs font-medium text-zinc-300">
               <input
                 type="checkbox"
@@ -483,7 +493,7 @@ export function LandingEditorForm({
               Incluir logo de WhatsApp en los CTA
             </label>
           )}
-          {config.template !== "template2" && config.template !== "template7" && !isTemplate6 && (
+          {config.template !== "template2" && config.template !== "template7" && !isTemplate8 && !isTemplate6 && (
             <div>
               <label
                 htmlFor={fieldId("cta-position")}
@@ -518,7 +528,7 @@ export function LandingEditorForm({
               updateConfig(setConfig, { ctaBackgroundColor })
             }
           />
-          {config.template !== "template2" && config.template !== "template7" && (
+          {config.template !== "template2" && config.template !== "template7" && !isTemplate8 && (
             <ColorSelect
               label="Color del brillo del CTA"
               value={config.ctaGlowColor}
@@ -656,14 +666,14 @@ export function LandingEditorForm({
           <div className="space-y-5">
             <div>
               <label htmlFor={fieldId("template6-grid")} className="mb-1 block text-xs font-medium text-zinc-300">
-                Grilla
+                {isTemplate8 ? "Cantidad de tarjetas" : "Grilla"}
               </label>
               <CustomSelect
                 portal
                 id={fieldId("template6-grid")}
-                value={template6Cover.grid}
-                onChange={(value) => updateTemplate6Cover({ grid: value as typeof template6Cover.grid })}
-                options={[
+                value={isTemplate8 ? String(template6Cover.cardCount) : template6Cover.grid}
+                onChange={(value) => updateTemplate6Cover(isTemplate8 ? { cardCount: Number(value) } : { grid: value as typeof template6Cover.grid })}
+                options={isTemplate8 ? Array.from({ length: 6 }, (_, i) => ({ value: String(i + 1), label: `${i + 1} tarjeta${i ? "s" : ""}` })) : [
                   { value: "2x1", label: "2 columnas × 1 fila" },
                   { value: "2x2", label: "2 columnas × 2 filas" },
                   { value: "2x3", label: "2 columnas × 3 filas" },
@@ -704,9 +714,10 @@ export function LandingEditorForm({
             <div>
               <h4 className="mb-2 text-xs font-semibold text-zinc-200">Tarjetas</h4>
               <div className="grid gap-3 sm:grid-cols-2">
-                {template6Cover.cards.slice(0, TEMPLATE6_CARD_COUNT[template6Cover.grid]).map((card, index) => (
+                {template6Cover.cards.slice(0, isTemplate8 ? template6Cover.cardCount : TEMPLATE6_CARD_COUNT[template6Cover.grid]).map((card, index) => (
                   <div key={index} className="space-y-3 rounded-xl border border-zinc-700 bg-zinc-950/40 p-3">
                     <h5 className="text-xs font-semibold text-zinc-200">Tarjeta {index + 1}</h5>
+                    {isTemplate8 && <label className="block text-xs text-zinc-400">Página<CustomSelect portal value={normalizeTemplate8Cover(config.template8Cover).cards[index].targetProvider} onChange={value => updateTemplate6Card(index, { targetProvider: value as LandingThemeConfig["targetProvider"] })} options={Object.entries(TEMPLATE8_PROVIDER_NAMES).map(([value, label]) => ({ value, label }))} /></label>}
                     <ImageUploader
                       label="Imagen cuadrada (.avif)"
                       value={card.imageUrl ? [card.imageUrl] : []}

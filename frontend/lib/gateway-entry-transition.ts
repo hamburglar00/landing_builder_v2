@@ -5,6 +5,7 @@ const brands = {
   ganamos_net: { name: "Ganamos NET", logo: "/ganamos-net-transition-logo.webp", background: "#11001f", glow: "#8d2db855" },
   multi_skin: { name: "Ganamos+", logo: "/ganamos-plus-logo-transparent.optimized.avif", background: "#121212", glow: "#9d20d966" },
 } as const;
+export { brands as GATEWAY_ENTRY_BRANDS };
 
 function escape(value: string) { return value.replaceAll("&", "&amp;").replaceAll('"', "&quot;").replaceAll("<", "&lt;").replaceAll(">", "&gt;"); }
 

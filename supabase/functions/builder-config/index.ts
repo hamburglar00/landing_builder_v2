@@ -88,11 +88,22 @@ function templateNumberForOption(template: unknown): number {
   if (value === "template4") return 4;
   if (value === "template5") return 5;
   if (value === "template7") return 7;
+  if (value === "template8") return 8;
   return 1;
 }
 
 function isRecord(value: unknown): value is Record<string, unknown> {
   return typeof value === "object" && value !== null && !Array.isArray(value);
+}
+
+function compileTemplate8Cover(value: unknown) {
+  const cover = isRecord(value) ? value : {};
+  const count = Number(cover.cardCount ?? 4);
+  const cardCount = Number.isInteger(count) ? Math.max(1,Math.min(6,count)) : 4;
+  const cards = Array.isArray(cover.cards) ? cover.cards : [];
+  return { cardCount, backgroundImageUrl: typeof cover.backgroundImageUrl === "string" ? buildOptimizedImageUrl(cover.backgroundImageUrl,960,65) : "",
+    headerText: String(cover.headerText ?? "Elegí tu página"),footerText: String(cover.footerText ?? "Te acompañamos en tu chat"),
+    cards: Array.from({length:cardCount},(_,i)=>{const card=isRecord(cards[i])?cards[i]:{};return {imageUrl:typeof card.imageUrl==="string"?buildOptimizedImageUrl(card.imageUrl,480,65):"",text:String(card.text||""),ctaText:String(card.ctaText||""),targetProvider:String(card.targetProvider||"")};}) };
 }
 
 const GLOBAL_CONFIG_KEYS = [
@@ -284,7 +295,7 @@ Deno.serve(async (req) => {
         (rawConfig.leadCapture as Record<string, unknown>) ?? {};
       const rawConfigLeadCaptureFields =
         (rawConfigLeadCapture.fields as Record<string, unknown>) ?? {};
-      const publishedTemplate = rawConfig.template === "template7" ? 7 : Number(
+      const publishedTemplate = rawConfig.template === "template8" ? 8 : rawConfig.template === "template7" ? 7 : Number(
         ((cfg.layout as Record<string, unknown> | undefined)?.template) ??
           templateNumberForOption(rawConfig.template),
       );
@@ -296,9 +307,9 @@ Deno.serve(async (req) => {
         workspaceCurrency,
         tracking: {
           ...tracking,
-          ctaDestination: publishedTemplate === 7 ? "atrio" : tracking.ctaDestination,
-          ...(publishedTemplate === 7 ? { target_provider: targetProviderForTemplate7(rawConfig) } : {}),
-          ...(publishedTemplate === 7 && targetProviderForTemplate7(rawConfig) === "multi_skin"
+          ctaDestination: (publishedTemplate === 7 || publishedTemplate === 8) ? "atrio" : tracking.ctaDestination,
+          ...((publishedTemplate === 7 || publishedTemplate === 8) ? { target_provider: targetProviderForTemplate7(rawConfig) } : {}),
+          ...((publishedTemplate === 7 || publishedTemplate === 8) && targetProviderForTemplate7(rawConfig) === "multi_skin"
             ? { skin_code: "ganamos_plus" }
             : {}),
           postUrl: effectivePostUrl,
@@ -332,17 +343,17 @@ Deno.serve(async (req) => {
         },
         interactions: {
           ...rawInteractions,
-          enabled: publishedTemplate === 7 ? false : typeof rawConfig.interactionsEnabled === "boolean"
+          enabled: (publishedTemplate === 7 || publishedTemplate === 8) ? false : typeof rawConfig.interactionsEnabled === "boolean"
             ? rawConfig.interactionsEnabled
             : ((rawInteractions.enabled as boolean | undefined) ?? false),
-          whatsappPrefillText: publishedTemplate === 7 ? "" : typeof rawConfig.whatsappPrefillText === "string"
+          whatsappPrefillText: (publishedTemplate === 7 || publishedTemplate === 8) ? "" : typeof rawConfig.whatsappPrefillText === "string"
             ? rawConfig.whatsappPrefillText
             : ((rawInteractions.whatsappPrefillText as string | undefined) ??
               ""),
         },
         leadCapture: {
           ...rawLeadCapture,
-          enabled: publishedTemplate === 7 ? false : typeof rawConfigLeadCapture.enabled === "boolean"
+          enabled: (publishedTemplate === 7 || publishedTemplate === 8) ? false : typeof rawConfigLeadCapture.enabled === "boolean"
             ? rawConfigLeadCapture.enabled
             : ((rawLeadCapture.enabled as boolean | undefined) ?? false),
           title: typeof rawConfigLeadCapture.title === "string"
@@ -369,7 +380,7 @@ Deno.serve(async (req) => {
               : ((rawLeadCaptureFields.email as boolean | undefined) ?? true),
           },
         },
-        ...(publishedTemplate === 7 ? {
+        ...((publishedTemplate === 7 || publishedTemplate === 8) ? {
           template7Capture: {
             whatsapp: rawConfig.template7WhatsappEnabled === true,
           },
@@ -404,7 +415,7 @@ Deno.serve(async (req) => {
       ctaGlowColor: toHex(rawConfig.ctaGlowColor, "#000000"),
     } as Record<string, unknown>;
     const templateNumber = templateNumberForOption(themeWithHex.template);
-    const fixedVisualTemplate = templateNumber === 4 || templateNumber === 5 || templateNumber === 7;
+    const fixedVisualTemplate = templateNumber === 4 || templateNumber === 5 || (templateNumber === 7 || templateNumber === 8);
     const rawImages = (themeWithHex.backgroundImages as string[]) ?? [];
 
     const payload = {
@@ -419,9 +430,9 @@ Deno.serve(async (req) => {
         pixelId: data.pixel_id ?? "",
         postUrl: effectivePostUrl,
         landingTag: data.landing_tag ?? "",
-        ctaDestination: templateNumber === 7 ? "atrio" : (themeWithHex.ctaDestination === "atrio" ? "atrio" : "whatsapp"),
-        ...(templateNumber === 7 ? { target_provider: targetProviderForTemplate7(rawConfig) } : {}),
-        ...(templateNumber === 7 && targetProviderForTemplate7(rawConfig) === "multi_skin"
+        ctaDestination: (templateNumber === 7 || templateNumber === 8) ? "atrio" : (themeWithHex.ctaDestination === "atrio" ? "atrio" : "whatsapp"),
+        ...((templateNumber === 7 || templateNumber === 8) ? { target_provider: targetProviderForTemplate7(rawConfig) } : {}),
+        ...((templateNumber === 7 || templateNumber === 8) && targetProviderForTemplate7(rawConfig) === "multi_skin"
           ? { skin_code: "ganamos_plus" }
           : {}),
         atrioRedirectUrl: (themeWithHex.atrioRedirectUrl as string) ?? "",
@@ -441,6 +452,7 @@ Deno.serve(async (req) => {
         rotateEveryHours: (themeWithHex.rotateEveryHours as number) ?? 24,
       },
       content: {
+        ...(templateNumber === 8 ? { template8: compileTemplate8Cover(themeWithHex.template8Cover) } : {}),
         logoUrl: (themeWithHex.logoUrl as string) ?? "",
         title: [
           (themeWithHex.titleLine1 as string) ?? "",
@@ -531,7 +543,7 @@ Deno.serve(async (req) => {
               ?.email as boolean | undefined) ?? true,
         },
       },
-      ...(templateNumber === 7 ? {
+      ...((templateNumber === 7 || templateNumber === 8) ? {
         template7Capture: {
           whatsapp: themeWithHex.template7WhatsappEnabled === true,
         },

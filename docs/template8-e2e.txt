@@ -1,0 +1,64 @@
+Template 8 / Atrio — implementación y validación local
+Fecha: 2026-10-22
+
+Comportamiento
+- Permiso independiente template8_enabled, administrado por superadmin.
+- Deshabilitado inicialmente en todos los clientes, incluidos los nuevos. No hay
+  habilitaciones automáticas; el superadmin decide cada cuenta explícitamente.
+- Editor con 1–6 tarjetas, dos columnas y última tarjeta impar centrada.
+- Cada tarjeta configura una página; las tarjetas de una misma página comparten
+  el reparto y la preparación. Las analíticas siguen contando cada CTA por separado.
+- Cada página conserva su pool de bots, con reparto fijo, aleatorio por peso o
+  equitativo por asignaciones/chats iniciados. No se aplica un asesor global.
+- Ganamos+ permanece visible como integración pendiente y no usa bots de NET.
+- La grilla se mantiene hasta elegir una página. Luego se reutilizan el formulario,
+  la identidad, la preparación, la transición y el tracking del Template 7.
+- Una cuenta reconocida se recupera después de elegir su página. El ingreso con
+  usuario/contraseña queda disponible desde «Ya tengo cuenta · Ingresar».
+- El prewarm no crea cuentas, jugadores, conversaciones, asignaciones ni conversiones.
+  Las reservas expiran con el mecanismo existente de gateway_entry_preparations.
+- Al seleccionar se confirma la asignación una sola vez. El inicio verifica esa
+  asignación mediante una lectura, sin repetir el reparto o la preparación.
+- Los límites de inicio son por landing/dispositivo/proveedor. El prewarm del 8
+  tiene un bucket propio de 24 solicitudes/dispositivo/minuto, conservando el
+  límite de IP; los límites y el comportamiento del Template 7 siguen separados.
+- El primer pintado no espera consultas de WhatsApp. Se precalientan imágenes al
+  publicar y se deduplican identidad, recursos compartidos y destinos por página.
+
+Prueba reproducible
+Requiere Node, Docker y los repositorios landing-builder, internal-chat y
+landing-prueba-1 como carpetas hermanas, con sus dependencias instaladas.
+En landing-builder/frontend:
+  npm ci
+  npx playwright install chromium
+  npm run test:template8:e2e
+
+El runner valida la sincronización del renderer compartido, crea un Postgres
+efímero sin red ni puertos publicados, aplica SQL real en bases de prueba y corre:
+- RLS, permisos independientes, validación de página/advisor, límites y analíticas.
+- Concurrencia, reservas, asignaciones únicas y verificación sin escrituras.
+- Contratos y compilación de configuración del Template 8.
+- Chromium: alta y recuperación en Rey de Ases, Ases del Norte y Ganamos NET,
+  tanto en constructor como en clásico (12 recorridos).
+- Grillas de 1–6 tarjetas en 320x568, 390x844 y 1440x900 (36 combinaciones).
+- Conservación de campaña/página, un CTA medido por selección y un Contact por alta.
+
+Casino, Meta y la entrega final del gateway se simulan: no se realizan operaciones
+financieras ni se envían conversiones/mensajes a producción. Atrio y la distribución
+sí se ejercitan sobre Postgres real. El runner elimina su contenedor al finalizar.
+Capturas y logs locales: frontend/test-results/template8 (ignorado por Git).
+
+Publicación pendiente
+1. Builder: supabase/migrations/20261022175337_template8_atrio_grid.sql.
+2. Atrio: supabase/migrations/20261022175339_builder_page_destination_reservations.sql.
+3. Desplegar Atrio con los endpoints reserve/verify, conservando los contratos del 7.
+4. Desplegar builder-config, list-clients y update-client en el proyecto de Builder.
+5. Desplegar Builder y clásico; el bundle compartido debe estar sincronizado:
+     node scripts/build-classic-template7.mjs --write
+     node scripts/build-classic-template7.mjs
+6. Habilitar Plantilla 8 al cliente, crear su landing, subir imágenes, configurar
+   bots por página y guardar/publicar. Comprobar un recorrido real en el entorno
+   desplegado y el flujo ya existente de gateway/chat/CBU.
+
+API2 y panel3 no requieren cambios por Template 8. No se cambiaron los SDK ni las
+implementaciones de los gateways: se reutiliza el contrato que ya usa Template 7.

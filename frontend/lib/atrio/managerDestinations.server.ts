@@ -35,7 +35,7 @@ export async function handleManagerDestinations(request: Request, backend: Desti
     const landing = await backend.landing(token, input.landingId);
     if (!landing) return json({ error: "No tenés acceso a esta landing." }, 403);
     const config = landing.config && typeof landing.config === "object" ? landing.config as Record<string, unknown> : {};
-    if (config.template !== "template7" || config.ctaDestination !== "atrio" || (input.action === "configure" && (config.targetProvider || "rey_de_ases") !== input.targetProvider)) return json({ error: "Guardá primero el casino de Template 7." }, 409);
+    if (!["template7", "template8"].includes(String(config.template)) || config.ctaDestination !== "atrio" || (input.action === "configure" && config.template === "template7" && (config.targetProvider || "rey_de_ases") !== input.targetProvider)) return json({ error: "Guardá primero el casino de Template 7." }, 409);
     const clients = await backend.workspaceClients(token, landing.user_id, landing.workspace_currency);
     if (!clients.length || clients.some(client => !uuid.test(client.atrio_id))) return json({ error: "No hay asesores válidos en este workspace." }, 409);
     const scope = { landing_id: landing.id, target_provider: input.targetProvider, allowed_advisor_ids: clients.map(client => client.atrio_id) };

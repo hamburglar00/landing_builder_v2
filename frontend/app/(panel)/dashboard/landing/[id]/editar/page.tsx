@@ -1,6 +1,6 @@
 ﻿"use client";
 
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { useRouter, useParams } from "next/navigation";
 import Link from "next/link";
 import { supabase } from "@/lib/supabaseClient";
@@ -9,6 +9,7 @@ import { DEFAULT_CONFIG } from "@/lib/landing/mocks";
 import {
   fetchLandingById,
   fetchTemplate7Permission,
+  fetchTemplate8Permission,
   updateLanding,
   deleteLanding,
   UNIQUE_VIOLATION_CODE,
@@ -53,6 +54,7 @@ import {
 } from "@/lib/atrio/atrioDb";
 import { requestManagerDestinations } from "@/lib/atrio/managerDestinations";
 import type { ManagerDestinationDraft } from "@/components/landing/AtrioManagerDistribution";
+import { normalizeTemplate8Cover } from "@/lib/landing/template8";
 import { AtrioRedirectSection } from "@/components/landing/AtrioRedirectSection";
 import { useAppConfirm, useAppPrompt } from "@/components/ui/AppConfirmDialog";
 import { PageHeader } from "@/components/ui/PanelPrimitives";
@@ -180,9 +182,12 @@ export default function DashboardLandingEditarPage() {
   const [showPreview, setShowPreview] = useState(true);
   const [urlBase, setUrlBase] = useState<string | null>(null);
   const [clientName, setClientName] = useState<string | null>(null);
+  const [template8Enabled, setTemplate8Enabled] = useState(false);
   const [template7Enabled, setTemplate7Enabled] = useState(false);
   const [pixelOptions, setPixelOptions] = useState<Array<{ pixel_id: string; comment: string }>>([]);
   const [atrioClients, setAtrioClients] = useState<AtrioClient[]>([]);
+  const [pageDrafts, setPageDrafts] = useState<Record<string, ManagerDestinationDraft>>({});
+  const savePageDraft = useCallback((draft: ManagerDestinationDraft) => setPageDrafts(current => ({ ...current, [draft.provider]: draft })), []);
   const [managerDraft, setManagerDraft] = useState<ManagerDestinationDraft | null>(null);
   const [atrioAssignments, setAtrioAssignments] = useState<LandingAtrioAssignment[]>([]);
   const [postUrlCopied, setPostUrlCopied] = useState(false);
@@ -219,7 +224,7 @@ export default function DashboardLandingEditarPage() {
         ]);
         const clients = await fetchAtrioClients(user.id, found.workspaceCurrency);
         setLanding(found);
-        setSavedTemplate6(found.config.template === "template6");
+        setSavedTemplate6(["template6", "template8"].includes(found.config.template));
         if (!initialName) {
           setInitialName(found.name);
         }
@@ -232,6 +237,7 @@ export default function DashboardLandingEditarPage() {
         setUrlBase(settings.url_base ?? null);
         setClientName(profile.data?.nombre ?? null);
         setTemplate7Enabled(canUseTemplate7);
+        setTemplate8Enabled(await fetchTemplate8Permission(user.id));
         const { data: pixels } = await supabase
           .from("conversions_pixel_configs")
           .select("pixel_id,comment")
@@ -269,6 +275,7 @@ export default function DashboardLandingEditarPage() {
     if (!landing) return;
     if (saving) return;
     setSaveError(null);
+    if (landing.config.template === "template8" && !(await fetchTemplate8Permission(userId ?? ""))) { setSaveError("Plantilla 8 no está habilitada para esta cuenta."); return; }
     if (landing.config.template === "template7") {
       try {
         if (!(await fetchTemplate7Permission(userId ?? ""))) {
@@ -338,6 +345,13 @@ export default function DashboardLandingEditarPage() {
       setSaveError("Seleccioná un cliente Atrio válido para este workspace.");
       return;
     }
+    if (landing.config.template === "template8") {
+      const cover = normalizeTemplate8Cover(landing.config.template8Cover);
+      const providers = [...new Set(cover.cards.slice(0, cover.cardCount).map(card => card.targetProvider))].filter(provider => provider !== "multi_skin");
+      if (providers.some(provider => !pageDrafts[provider]?.loaded || !pageDrafts[provider]?.destinations.length)) {
+        setSaveError("Elegí al menos un bot para cada página integrada y esperá a que termine de cargar."); return;
+      }
+    }
     if (landing.config.template === "template7" && (!managerDraft?.loaded || managerDraft.provider !== landing.config.targetProvider || !managerDraft.destinations.length)) {
       setSaveError("Elegí al menos un bot para la redirección y esperá a que termine de cargar.");
       return;
@@ -380,7 +394,7 @@ export default function DashboardLandingEditarPage() {
         updatedAt: undefined,
       });
 
-      if (configToSave.ctaDestination !== "atrio" && configToSave.template !== "template7") {
+      if (configToSave.ctaDestination !== "atrio" && !["template7", "template8"].includes(configToSave.template)) {
         await assertLandingGerenciasWorkspaceCompatible(
           landing.id,
           assignments,
@@ -413,8 +427,15 @@ export default function DashboardLandingEditarPage() {
         config: configToSave,
         landingConfig,
       });
-      if (configToSave.template !== "template7") await setLandingGerencias(landing.id, assignments);
-      if (configToSave.template === "template7" && managerDraft) {
+      if (!["template7", "template8"].includes(configToSave.template)) await setLandingGerencias(landing.id, assignments);
+      if (configToSave.template === "template8") {
+        const cover = normalizeTemplate8Cover(configToSave.template8Cover);
+        for (const provider of new Set(cover.cards.slice(0, cover.cardCount).map(card => card.targetProvider))) {
+          if (provider === "multi_skin") continue;
+          const draft = pageDrafts[provider];
+          await requestManagerDestinations({ action: "configure", landingId: landing.id, targetProvider: provider, mode: draft.mode, criterion: draft.criterion, destinations: draft.destinations });
+        }
+      } else if (configToSave.template === "template7" && managerDraft) {
         await requestManagerDestinations({ action: "configure", landingId: landing.id, targetProvider: managerDraft.provider,
           mode: managerDraft.mode, criterion: managerDraft.criterion, destinations: managerDraft.destinations });
       } else {
@@ -634,11 +655,11 @@ export default function DashboardLandingEditarPage() {
         {landing.landingType !== "external" && (
           <>
             <LandingUrlParametersCard landingName={landing.name} />
-            <LandingTemplateSection config={landing.config} setConfig={setConfig} allowTemplate7={template7Enabled} />
+            <LandingTemplateSection config={landing.config} setConfig={setConfig} allowTemplate7={template7Enabled} allowTemplate8={template8Enabled} />
           </>
         )}
 
-        {landing.landingType !== "external" && landing.config.template === "template6" && (
+        {landing.landingType !== "external" && ["template6", "template8"].includes(landing.config.template) && (
           <Template6AnalyticsSection landingId={landing.id} config={landing.config} savedTemplate6={savedTemplate6} />
         )}
 
@@ -800,7 +821,7 @@ export default function DashboardLandingEditarPage() {
           </div>
         </CollapsibleSection>
 
-        {landing.config.template === "template7" ? (
+        {["template7", "template8"].includes(landing.config.template) ? (
           <AtrioRedirectSection
             landing={landing}
             setLanding={setLanding}
@@ -808,6 +829,7 @@ export default function DashboardLandingEditarPage() {
             assignments={atrioAssignments}
             setAssignments={setAtrioAssignments}
             onDraftChange={setManagerDraft}
+            onPageDraftChange={savePageDraft}
             createAtrioHref="/dashboard/atrio"
           />
         ) : (
@@ -840,7 +862,7 @@ export default function DashboardLandingEditarPage() {
             pixelId={landing.pixelId}
             postUrl={landing.postUrl}
             landingTag={landing.landingTag}
-            getPhoneForPreview={landing.config.template === "template7" ? undefined : async () => {
+            getPhoneForPreview={["template7", "template8"].includes(landing.config.template) ? undefined : async () => {
               try {
                 const base =
                   process.env.NEXT_PUBLIC_SUPABASE_URL?.replace(/\/$/, "") ?? "";

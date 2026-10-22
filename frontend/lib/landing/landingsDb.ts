@@ -60,7 +60,7 @@ function rowToLanding(row: LandingRow): Landing {
     postUrl: row.post_url ?? "",
     landingTag: row.landing_tag ?? "",
     comment: row.comment,
-    config: { ...merged, ctaDestination: merged.template === "template7" ? "atrio" : "whatsapp" },
+    config: { ...merged, ctaDestination: (merged.template === "template7" || merged.template === "template8") ? "atrio" : "whatsapp" },
   };
 }
 
@@ -284,7 +284,7 @@ export async function updateLanding(
   if (payload.landingTag !== undefined) body.landing_tag = payload.landingTag;
   if (payload.comment !== undefined) body.comment = payload.comment;
   if (payload.config !== undefined)
-    body.config = { ...payload.config, ctaDestination: payload.config.template === "template7" ? "atrio" : "whatsapp" } as unknown as Record<string, unknown>;
+    body.config = { ...payload.config, ctaDestination: (payload.config.template === "template7" || payload.config.template === "template8") ? "atrio" : "whatsapp" } as unknown as Record<string, unknown>;
   if (payload.landingConfig !== undefined)
     body.landing_config = payload.landingConfig as unknown as Record<
       string,
@@ -312,3 +312,9 @@ export async function deleteLanding(landingId: string): Promise<void> {
 
 /** Código de error Postgres por violación de restricción única. */
 export const UNIQUE_VIOLATION_CODE = "23505";
+
+export async function fetchTemplate8Permission(userId: string): Promise<boolean> {
+  const { data, error } = await supabase.from("client_template_permissions").select("template8_enabled").eq("user_id", userId).maybeSingle();
+  if (error) throw error;
+  return data?.template8_enabled === true;
+}

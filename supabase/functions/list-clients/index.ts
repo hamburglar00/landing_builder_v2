@@ -185,7 +185,7 @@ Deno.serve(async (req) => {
       .in("user_id", ids);
     const { data: templatePermissions, error: templatePermissionsError } = await supabaseAdmin
       .from("client_template_permissions")
-      .select("user_id, template7_enabled")
+      .select("user_id, template7_enabled, template8_enabled")
       .in("user_id", ids);
     if (templatePermissionsError) throw templatePermissionsError;
     const { data: modulePermissions, error: modulePermissionsError } = await supabaseAdmin
@@ -219,6 +219,7 @@ Deno.serve(async (req) => {
         show_promotions: r.show_promotions ?? false,
       }]),
     );
+    const template8ByUserId = new Map((templatePermissions ?? []).map(row => [row.user_id, row.template8_enabled === true]));
     const template7ByUserId = new Map(
       (templatePermissions ?? []).map((row) => [row.user_id, row.template7_enabled === true]),
     );
@@ -241,6 +242,7 @@ Deno.serve(async (req) => {
           show_inbox: cfgByUserId.get(u.id)?.show_inbox ?? false,
           show_ai_assistant: cfgByUserId.get(u.id)?.show_ai_assistant ?? false,
           show_promotions: cfgByUserId.get(u.id)?.show_promotions ?? false,
+          template8_enabled: template8ByUserId.get(u.id) ?? false,
           template7_enabled: template7ByUserId.get(u.id) ?? false,
           module_visibility: Object.fromEntries(CLIENT_MODULE_KEYS.map((key) => [
             key, modulesByUserId.get(u.id)?.[key] !== false,

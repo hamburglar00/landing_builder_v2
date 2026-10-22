@@ -1,6 +1,6 @@
 ﻿"use client";
 
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { useRouter, useParams } from "next/navigation";
 import Link from "next/link";
 import { supabase } from "@/lib/supabaseClient";
@@ -52,6 +52,7 @@ import {
 } from "@/lib/atrio/atrioDb";
 import { requestManagerDestinations } from "@/lib/atrio/managerDestinations";
 import type { ManagerDestinationDraft } from "@/components/landing/AtrioManagerDistribution";
+import { normalizeTemplate8Cover } from "@/lib/landing/template8";
 import { AtrioRedirectSection } from "@/components/landing/AtrioRedirectSection";
 import { useAppConfirm, useAppPrompt } from "@/components/ui/AppConfirmDialog";
 import { PageHeader } from "@/components/ui/PanelPrimitives";
@@ -182,6 +183,8 @@ export default function AdminLandingEditarPage() {
   const [ownerUserId, setOwnerUserId] = useState<string | null>(null);
   const [pixelOptions, setPixelOptions] = useState<Array<{ pixel_id: string; comment: string }>>([]);
   const [atrioClients, setAtrioClients] = useState<AtrioClient[]>([]);
+  const [pageDrafts, setPageDrafts] = useState<Record<string, ManagerDestinationDraft>>({});
+  const savePageDraft = useCallback((draft: ManagerDestinationDraft) => setPageDrafts(current => ({ ...current, [draft.provider]: draft })), []);
   const [managerDraft, setManagerDraft] = useState<ManagerDestinationDraft | null>(null);
   const [atrioAssignments, setAtrioAssignments] = useState<LandingAtrioAssignment[]>([]);
   const [postUrlCopied, setPostUrlCopied] = useState(false);
@@ -212,7 +215,7 @@ export default function AdminLandingEditarPage() {
           return;
         }
         setLanding(found);
-        setSavedTemplate6(found.config.template === "template6");
+        setSavedTemplate6(["template6", "template8"].includes(found.config.template));
         if (!initialName) {
           setInitialName(found.name);
         }
@@ -339,6 +342,13 @@ export default function AdminLandingEditarPage() {
       setSaveError("Seleccioná un cliente Atrio válido para este workspace.");
       return;
     }
+    if (landing.config.template === "template8") {
+      const cover = normalizeTemplate8Cover(landing.config.template8Cover);
+      const providers = [...new Set(cover.cards.slice(0, cover.cardCount).map(card => card.targetProvider))].filter(provider => provider !== "multi_skin");
+      if (providers.some(provider => !pageDrafts[provider]?.loaded || !pageDrafts[provider]?.destinations.length)) {
+        setSaveError("Elegí al menos un bot para cada página integrada y esperá a que termine de cargar."); return;
+      }
+    }
     if (landing.config.template === "template7" && (!managerDraft?.loaded || managerDraft.provider !== landing.config.targetProvider || !managerDraft.destinations.length)) {
       setSaveError("Elegí al menos un bot para la redirección y esperá a que termine de cargar.");
       return;
@@ -381,7 +391,7 @@ export default function AdminLandingEditarPage() {
         updatedAt: undefined,
       });
 
-      if (configToSave.ctaDestination !== "atrio" && configToSave.template !== "template7") {
+      if (configToSave.ctaDestination !== "atrio" && !["template7", "template8"].includes(configToSave.template)) {
         await assertLandingGerenciasWorkspaceCompatible(
           landing.id,
           assignments,
@@ -414,8 +424,15 @@ export default function AdminLandingEditarPage() {
         config: configToSave,
         landingConfig,
       });
-      if (configToSave.template !== "template7") await setLandingGerencias(landing.id, assignments);
-      if (configToSave.template === "template7" && managerDraft) {
+      if (!["template7", "template8"].includes(configToSave.template)) await setLandingGerencias(landing.id, assignments);
+      if (configToSave.template === "template8") {
+        const cover = normalizeTemplate8Cover(configToSave.template8Cover);
+        for (const provider of new Set(cover.cards.slice(0, cover.cardCount).map(card => card.targetProvider))) {
+          if (provider === "multi_skin") continue;
+          const draft = pageDrafts[provider];
+          await requestManagerDestinations({ action: "configure", landingId: landing.id, targetProvider: provider, mode: draft.mode, criterion: draft.criterion, destinations: draft.destinations });
+        }
+      } else if (configToSave.template === "template7" && managerDraft) {
         await requestManagerDestinations({ action: "configure", landingId: landing.id, targetProvider: managerDraft.provider,
           mode: managerDraft.mode, criterion: managerDraft.criterion, destinations: managerDraft.destinations });
       } else {
@@ -631,7 +648,7 @@ export default function AdminLandingEditarPage() {
           </>
         )}
 
-        {landing.landingType !== "external" && landing.config.template === "template6" && (
+        {landing.landingType !== "external" && ["template6", "template8"].includes(landing.config.template) && (
           <Template6AnalyticsSection landingId={landing.id} config={landing.config} savedTemplate6={savedTemplate6} />
         )}
 
@@ -810,7 +827,7 @@ export default function AdminLandingEditarPage() {
           </div>
         </CollapsibleSection>
 
-        {landing.config.template === "template7" ? (
+        {["template7", "template8"].includes(landing.config.template) ? (
           <AtrioRedirectSection
             landing={landing}
             setLanding={setLanding}
@@ -818,6 +835,7 @@ export default function AdminLandingEditarPage() {
             assignments={atrioAssignments}
             setAssignments={setAtrioAssignments}
             onDraftChange={setManagerDraft}
+            onPageDraftChange={savePageDraft}
             createAtrioHref="/admin/atrio"
           />
         ) : (
@@ -848,7 +866,7 @@ export default function AdminLandingEditarPage() {
             pixelId={landing.pixelId}
             postUrl={landing.postUrl}
             landingTag={landing.landingTag}
-            getPhoneForPreview={landing.config.template === "template7" ? undefined : async () => {
+            getPhoneForPreview={["template7", "template8"].includes(landing.config.template) ? undefined : async () => {
               try {
                 const base =
                   process.env.NEXT_PUBLIC_SUPABASE_URL?.replace(/\/$/, "") ?? "";
