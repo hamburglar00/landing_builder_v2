@@ -140,5 +140,35 @@
     "productionMutationsExecuted": 0,
     "fixtureWrites": 0
   },
-  "deployment": null
+  "deployment": {
+    "at": "2026-10-22T15:26:18.663Z",
+    "commit": "a8bff803adec5278311fa381d74569738a3d61f7",
+    "deployment": "dpl_GDdQxvfKPkzJZRxRzBqRMGdLj4xE",
+    "state": "READY",
+    "url": "landing-builder-v2-k259-2g9upwxpt-juanclouds-projects.vercel.app",
+    "aliases": [
+      "mkt.panelbotadmin.com",
+      "constructor.panelbotadmin.com",
+      "landing-builder-v2-k259.vercel.app"
+    ],
+    "publicLoginStatus": 200,
+    "pages": [
+      {
+        "path": "/dashboard/atrio",
+        "status": 200,
+        "unauthenticatedRequest": true,
+        "newStylesPublished": true,
+        "newDirectoryLabelsPublished": true,
+        "publicAssetsChecked": 16
+      },
+      {
+        "path": "/admin/atrio",
+        "status": 200,
+        "unauthenticatedRequest": true,
+        "newStylesPublished": true,
+        "newDirectoryLabelsPublished": true,
+        "publicAssetsChecked": 16
+      }
+    ]
+  }
 }
