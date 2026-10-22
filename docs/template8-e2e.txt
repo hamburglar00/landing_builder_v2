@@ -1,4 +1,4 @@
-Template 8 / Atrio — implementación y validación local
+Template 8 / Atrio — implementación y validación
 Fecha: 2026-10-22
 
 Comportamiento
@@ -48,17 +48,17 @@ financieras ni se envían conversiones/mensajes a producción. Atrio y la distri
 sí se ejercitan sobre Postgres real. El runner elimina su contenedor al finalizar.
 Capturas y logs locales: frontend/test-results/template8 (ignorado por Git).
 
-Publicación pendiente
-1. Builder: supabase/migrations/20261022175337_template8_atrio_grid.sql.
-2. Atrio: supabase/migrations/20261022175339_builder_page_destination_reservations.sql.
-3. Desplegar Atrio con los endpoints reserve/verify, conservando los contratos del 7.
-4. Desplegar builder-config, list-clients y update-client en el proyecto de Builder.
-5. Desplegar Builder y clásico; el bundle compartido debe estar sincronizado:
-     node scripts/build-classic-template7.mjs --write
-     node scripts/build-classic-template7.mjs
-6. Habilitar Plantilla 8 al cliente, crear su landing, subir imágenes, configurar
-   bots por página y guardar/publicar. Comprobar un recorrido real en el entorno
-   desplegado y el flujo ya existente de gateway/chat/CBU.
+Publicación en producción: completada el 2026-10-22
+- Migración Builder 20261022175337 y migración Atrio 20261022175339 aplicadas.
+- builder-config, list-clients y update-client desplegadas.
+- Atrio, Builder y clásico publicados desde sus commits de implementación.
+- Verificación HTTP y Chromium sobre los dominios reales en ambos motores.
+- Cero clientes habilitados; template8_enabled conserva default false / NOT NULL.
+- Detalle de commits, despliegues y alcance: template8-production-20261022.txt.
+
+Para usarlo en una cuenta, el superadmin debe habilitar Plantilla 8 al cliente.
+Luego crear su landing, subir imágenes, configurar bots por página y publicar.
+La publicación no habilita automáticamente permisos ni modifica landings existentes.
 
 API2 y panel3 no requieren cambios por Template 8. No se cambiaron los SDK ni las
 implementaciones de los gateways: se reutiliza el contrato que ya usa Template 7.

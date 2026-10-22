@@ -1,0 +1,70 @@
+Template 8 — publicación y verificación en producción
+Fecha de cierre: 2026-10-22 20:34 UTC
+
+Estado
+Publicado en Builder, Atrio y motor clásico. Todos los clientes siguen con
+Template 8 deshabilitado. El permiso requiere habilitación explícita por superadmin.
+Comprobación en DB: 10 clientes, 0 permisos template8_enabled activos;
+columna NOT NULL con default false para los clientes nuevos.
+
+Commits de implementación, pusheados a las ramas de trabajo actuales
+- Builder: 2ba991319015d3eb6691b47008592f48d9bf330d
+  Rama: fix/template7-session-reentry
+- Atrio: a1c5242463b92b0bc7ec13806cbd6857092091a5
+  Rama: fix/atrio-inbox-validation
+- Clásico: ddc5d26575133561ff2f953bc4766bdfe1853575
+  Rama: fix/template7-session-reentry
+
+Base de datos y funciones
+- Builder (fdkjkzpjqfbaavylapun): 20261022175337_template8_atrio_grid.sql.
+- Atrio (didrpwkdqizivfbapofx): 20261022175339_builder_page_destination_reservations.sql.
+- Las dos migraciones constan en sus historiales remotos. Cada dry-run mostró
+  exactamente esa migración pendiente y no incluyó otras migraciones.
+- Edge Functions de Builder activas: builder-config v34, list-clients v25,
+  update-client v24. Se conservó verify_jwt=false y su autorización propia.
+- Sin avisos de seguridad nuevos frente al diagnóstico anterior a las migraciones.
+
+Despliegues READY promovidos a producción
+- Builder: dpl_3oHgbB4nT7Vya8iqGmBFswwA2DQC
+  constructor.panelbotadmin.com y mkt.panelbotadmin.com
+- Atrio: dpl_DT1KqjconJ4zqdnBvjANRR3pgeJ5
+  atrio.website
+- Clásico: dpl_BEGwPeJfLquAy9i1Kqi3GXGM5Cgz
+  landing.panelbotadmin.com
+La API de Vercel confirmó los tres commits y la asociación de cada dominio.
+Se publicaron archivos obtenidos de git archive de esos commits, excluyendo
+archivos de entorno locales. Orden de promoción: Atrio, clásico y Builder.
+
+Validación
+- Repetido npm run test:template8:e2e antes de publicar: SQL real aislado,
+  RLS/permisos, default false, cuotas, reservas concurrentes, reparto y tracking.
+- 12 recorridos de alta/recuperación: 3 proveedores por 2 motores.
+- 36 combinaciones de grilla: 1–6 tarjetas, 3 tamaños y 2 motores.
+- En producción, landing temporal de administración sin asesores vinculados:
+  builder-config respondió template 8 / 3 tarjetas / destino Atrio.
+- Los tres dominios públicos de landing respondieron HTTP 200 con las 3 tarjetas.
+- Chromium sobre mkt y landing: grilla visible, formulario inicialmente oculto,
+  tercera tarjeta centrada, sin desborde horizontal ni errores JavaScript en 390x844.
+- El nuevo endpoint privado /api/gateway/manager-destinations/verify de Atrio
+  respondió 401 a una solicitud sin autorización.
+- La landing temporal se eliminó; se comprobó que no queda su registro en DB.
+
+Alcance de las pruebas
+En los E2E se simulan casino, Meta y la entrega final del gateway. La verificación
+en los dominios publicados bloqueó las acciones externas del navegador. No se
+crearon jugadores, enviaron conversiones/mensajes ni realizaron operaciones
+financieras en producción. El recorrido con una cuenta real requiere habilitar
+explícitamente al cliente y configurar sus bots por página.
+API2, panel3 y los SDK/implementaciones de gateway no necesitaron cambios.
+
+Evidencia local (ignorada por Git)
+- frontend/test-results/template8/production-release-e2e.log
+- .vercel/template8-production-20261022/manifest.json
+- .vercel/template8-production-20261022/smoke-results.json
+- .vercel/template8-production-20261022/browser-results.json
+- .vercel/template8-production-20261022/*-production.png
+
+Despliegues anteriores conservados en Vercel
+- Builder: dpl_4yCHZwQufrjyEHhXjRrgDCKTKcU6
+- Atrio: dpl_E1m7XG2A7AbL5s3VnDEu2r2JpsEi
+- Clásico: dpl_5Gkx7Nvu1as1ziGWnpMHBy6AgxSP
