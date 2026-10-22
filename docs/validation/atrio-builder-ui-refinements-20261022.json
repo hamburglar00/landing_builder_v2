@@ -1,0 +1,568 @@
+{
+  "at": "2026-10-22T15:40:37.696Z",
+  "scope": [
+    "builder Atrio directory",
+    "Atrio inbox",
+    "Atrio client widget"
+  ],
+  "changes": {
+    "builderNamesAndTotalsMaxPx": 14,
+    "builderTableNumbersPx": 13,
+    "confirmedReceiptSubtleGreen": true,
+    "independentUserAndContactSections": true,
+    "desktopAndMobileInitiallyCollapsed": true,
+    "operationsOutsideCollapsedSections": true,
+    "invitationFont": {
+      "family": "Manrope",
+      "sizePx": 12.5,
+      "weight": 600,
+      "lineHeight": 1.4,
+      "heightPx": 40
+    }
+  },
+  "checks": {
+    "builder": {
+      "at": "2026-10-22T15:38:15.153Z",
+      "fixtureOnly": true,
+      "actualComponents": true,
+      "actualGlobalAndModuleStyles": true,
+      "cases": [
+        {
+          "engine": "Chromium",
+          "width": 390,
+          "documentWidth": 390,
+          "scale": 1,
+          "tableCount": 2,
+          "typography": [
+            {
+              "size": 14,
+              "heading": 20
+            },
+            {
+              "size": 14,
+              "heading": 20
+            },
+            {
+              "size": 14,
+              "heading": 20
+            },
+            {
+              "size": 14,
+              "heading": 20
+            },
+            {
+              "size": 14,
+              "heading": 20
+            },
+            {
+              "size": 14,
+              "heading": 20
+            }
+          ],
+          "noOverflow": true
+        },
+        {
+          "engine": "Chromium",
+          "width": 1366,
+          "documentWidth": 1366,
+          "scale": 1,
+          "tableCount": 2,
+          "typography": [
+            {
+              "size": 14,
+              "heading": 21.856
+            },
+            {
+              "size": 14,
+              "heading": 21.856
+            },
+            {
+              "size": 14,
+              "heading": 21.856
+            },
+            {
+              "size": 14,
+              "heading": 21.856
+            },
+            {
+              "size": 14,
+              "heading": 21.856
+            },
+            {
+              "size": 14,
+              "heading": 21.856
+            }
+          ],
+          "noOverflow": true
+        },
+        {
+          "engine": "WebKit",
+          "width": 390,
+          "documentWidth": 390,
+          "scale": 1,
+          "tableCount": 2,
+          "typography": [
+            {
+              "size": 14,
+              "heading": 20
+            },
+            {
+              "size": 14,
+              "heading": 20
+            },
+            {
+              "size": 14,
+              "heading": 20
+            },
+            {
+              "size": 14,
+              "heading": 20
+            },
+            {
+              "size": 14,
+              "heading": 20
+            },
+            {
+              "size": 14,
+              "heading": 20
+            }
+          ],
+          "noOverflow": true
+        },
+        {
+          "engine": "WebKit",
+          "width": 1366,
+          "documentWidth": 1366,
+          "scale": 1,
+          "tableCount": 2,
+          "typography": [
+            {
+              "size": 14,
+              "heading": 21.855999
+            },
+            {
+              "size": 14,
+              "heading": 21.855999
+            },
+            {
+              "size": 14,
+              "heading": 21.855999
+            },
+            {
+              "size": 14,
+              "heading": 21.855999
+            },
+            {
+              "size": 14,
+              "heading": 21.855999
+            },
+            {
+              "size": 14,
+              "heading": 21.855999
+            }
+          ],
+          "noOverflow": true
+        }
+      ]
+    },
+    "atrio": {
+      "at": "2026-10-22T15:38:24.049Z",
+      "fixtureOnly": true,
+      "actualJsxAndStyles": true,
+      "cases": [
+        {
+          "engine": "Chromium",
+          "width": 390,
+          "sectionsInitiallyClosed": true,
+          "sectionsResetOnChatSwitch": true,
+          "operationsVisible": true,
+          "keyboardAndEditingPassed": true,
+          "invitationControls": 16,
+          "invitationFont": {
+            "family": "Arial, Arial, Helvetica, sans-serif",
+            "size": "12.5px",
+            "weight": "600",
+            "lineHeight": "17.5px",
+            "height": 40
+          },
+          "receiptBadges": [
+            {
+              "color": "color(srgb 0.0870588 0.247059 0.160784)",
+              "rgb": [
+                22,
+                63,
+                41,
+                255
+              ],
+              "iconColor": "color(srgb 0.0870588 0.247059 0.160784)",
+              "widget": true
+            },
+            {
+              "color": "color(srgb 0.661177 0.821176 0.72549)",
+              "rgb": [
+                169,
+                209,
+                185,
+                255
+              ],
+              "iconColor": "color(srgb 0.661177 0.821176 0.72549)",
+              "widget": true
+            },
+            {
+              "color": "color(srgb 0.101176 0.284706 0.203137)",
+              "rgb": [
+                26,
+                73,
+                52,
+                255
+              ],
+              "iconColor": "color(srgb 0.101176 0.284706 0.203137)",
+              "widget": true
+            },
+            {
+              "color": "color(srgb 0.101176 0.284706 0.203137)",
+              "rgb": [
+                26,
+                73,
+                52,
+                255
+              ],
+              "iconColor": "color(srgb 0.101176 0.284706 0.203137)",
+              "widget": true
+            },
+            {
+              "color": "color(srgb 0.661177 0.821176 0.72549)",
+              "rgb": [
+                169,
+                209,
+                185,
+                255
+              ],
+              "iconColor": "color(srgb 0.661177 0.821176 0.72549)",
+              "widget": true
+            },
+            {
+              "color": "color(srgb 0.661177 0.821176 0.72549)",
+              "rgb": [
+                169,
+                209,
+                185,
+                255
+              ],
+              "iconColor": "color(srgb 0.661177 0.821176 0.72549)",
+              "widget": true
+            },
+            {
+              "color": "rgb(120, 185, 142)",
+              "rgb": [
+                120,
+                185,
+                142,
+                255
+              ],
+              "iconColor": "rgb(120, 185, 142)",
+              "widget": false
+            }
+          ],
+          "noOverflow": true,
+          "noRequests": true
+        },
+        {
+          "engine": "Chromium",
+          "width": 1366,
+          "sectionsInitiallyClosed": true,
+          "sectionsResetOnChatSwitch": true,
+          "operationsVisible": true,
+          "keyboardAndEditingPassed": true,
+          "invitationControls": 16,
+          "invitationFont": {
+            "family": "Arial, Arial, Helvetica, sans-serif",
+            "size": "12.5px",
+            "weight": "600",
+            "lineHeight": "17.5px",
+            "height": 40
+          },
+          "receiptBadges": [
+            {
+              "color": "color(srgb 0.0870588 0.247059 0.160784)",
+              "rgb": [
+                22,
+                63,
+                41,
+                255
+              ],
+              "iconColor": "color(srgb 0.0870588 0.247059 0.160784)",
+              "widget": true
+            },
+            {
+              "color": "color(srgb 0.661177 0.821176 0.72549)",
+              "rgb": [
+                169,
+                209,
+                185,
+                255
+              ],
+              "iconColor": "color(srgb 0.661177 0.821176 0.72549)",
+              "widget": true
+            },
+            {
+              "color": "color(srgb 0.101176 0.284706 0.203137)",
+              "rgb": [
+                26,
+                73,
+                52,
+                255
+              ],
+              "iconColor": "color(srgb 0.101176 0.284706 0.203137)",
+              "widget": true
+            },
+            {
+              "color": "color(srgb 0.101176 0.284706 0.203137)",
+              "rgb": [
+                26,
+                73,
+                52,
+                255
+              ],
+              "iconColor": "color(srgb 0.101176 0.284706 0.203137)",
+              "widget": true
+            },
+            {
+              "color": "color(srgb 0.661177 0.821176 0.72549)",
+              "rgb": [
+                169,
+                209,
+                185,
+                255
+              ],
+              "iconColor": "color(srgb 0.661177 0.821176 0.72549)",
+              "widget": true
+            },
+            {
+              "color": "color(srgb 0.661177 0.821176 0.72549)",
+              "rgb": [
+                169,
+                209,
+                185,
+                255
+              ],
+              "iconColor": "color(srgb 0.661177 0.821176 0.72549)",
+              "widget": true
+            },
+            {
+              "color": "rgb(120, 185, 142)",
+              "rgb": [
+                120,
+                185,
+                142,
+                255
+              ],
+              "iconColor": "rgb(120, 185, 142)",
+              "widget": false
+            }
+          ],
+          "noOverflow": true,
+          "noRequests": true
+        },
+        {
+          "engine": "WebKit",
+          "width": 390,
+          "sectionsInitiallyClosed": true,
+          "sectionsResetOnChatSwitch": true,
+          "operationsVisible": true,
+          "keyboardAndEditingPassed": true,
+          "invitationControls": 16,
+          "invitationFont": {
+            "family": "Arial, Arial, Helvetica, sans-serif",
+            "size": "12.5px",
+            "weight": "600",
+            "lineHeight": "17.5px",
+            "height": 40
+          },
+          "receiptBadges": [
+            {
+              "color": "color(srgb 0.087059 0.247059 0.160784)",
+              "rgb": [
+                22,
+                63,
+                41,
+                255
+              ],
+              "iconColor": "color(srgb 0.087059 0.247059 0.160784)",
+              "widget": true
+            },
+            {
+              "color": "color(srgb 0.661176 0.821176 0.72549)",
+              "rgb": [
+                169,
+                209,
+                185,
+                255
+              ],
+              "iconColor": "color(srgb 0.661176 0.821176 0.72549)",
+              "widget": true
+            },
+            {
+              "color": "color(srgb 0.101176 0.284706 0.203137)",
+              "rgb": [
+                26,
+                73,
+                52,
+                255
+              ],
+              "iconColor": "color(srgb 0.101176 0.284706 0.203137)",
+              "widget": true
+            },
+            {
+              "color": "color(srgb 0.101176 0.284706 0.203137)",
+              "rgb": [
+                26,
+                73,
+                52,
+                255
+              ],
+              "iconColor": "color(srgb 0.101176 0.284706 0.203137)",
+              "widget": true
+            },
+            {
+              "color": "color(srgb 0.661176 0.821176 0.72549)",
+              "rgb": [
+                169,
+                209,
+                185,
+                255
+              ],
+              "iconColor": "color(srgb 0.661176 0.821176 0.72549)",
+              "widget": true
+            },
+            {
+              "color": "color(srgb 0.661176 0.821176 0.72549)",
+              "rgb": [
+                169,
+                209,
+                185,
+                255
+              ],
+              "iconColor": "color(srgb 0.661176 0.821176 0.72549)",
+              "widget": true
+            },
+            {
+              "color": "rgb(120, 185, 142)",
+              "rgb": [
+                120,
+                185,
+                142,
+                255
+              ],
+              "iconColor": "rgb(120, 185, 142)",
+              "widget": false
+            }
+          ],
+          "noOverflow": true,
+          "noRequests": true
+        },
+        {
+          "engine": "WebKit",
+          "width": 1366,
+          "sectionsInitiallyClosed": true,
+          "sectionsResetOnChatSwitch": true,
+          "operationsVisible": true,
+          "keyboardAndEditingPassed": true,
+          "invitationControls": 16,
+          "invitationFont": {
+            "family": "Arial, Arial, Helvetica, sans-serif",
+            "size": "12.5px",
+            "weight": "600",
+            "lineHeight": "17.5px",
+            "height": 40
+          },
+          "receiptBadges": [
+            {
+              "color": "color(srgb 0.087059 0.247059 0.160784)",
+              "rgb": [
+                22,
+                63,
+                41,
+                255
+              ],
+              "iconColor": "color(srgb 0.087059 0.247059 0.160784)",
+              "widget": true
+            },
+            {
+              "color": "color(srgb 0.661176 0.821176 0.72549)",
+              "rgb": [
+                169,
+                209,
+                185,
+                255
+              ],
+              "iconColor": "color(srgb 0.661176 0.821176 0.72549)",
+              "widget": true
+            },
+            {
+              "color": "color(srgb 0.101176 0.284706 0.203137)",
+              "rgb": [
+                26,
+                73,
+                52,
+                255
+              ],
+              "iconColor": "color(srgb 0.101176 0.284706 0.203137)",
+              "widget": true
+            },
+            {
+              "color": "color(srgb 0.101176 0.284706 0.203137)",
+              "rgb": [
+                26,
+                73,
+                52,
+                255
+              ],
+              "iconColor": "color(srgb 0.101176 0.284706 0.203137)",
+              "widget": true
+            },
+            {
+              "color": "color(srgb 0.661176 0.821176 0.72549)",
+              "rgb": [
+                169,
+                209,
+                185,
+                255
+              ],
+              "iconColor": "color(srgb 0.661176 0.821176 0.72549)",
+              "widget": true
+            },
+            {
+              "color": "color(srgb 0.661176 0.821176 0.72549)",
+              "rgb": [
+                169,
+                209,
+                185,
+                255
+              ],
+              "iconColor": "color(srgb 0.661176 0.821176 0.72549)",
+              "widget": true
+            },
+            {
+              "color": "rgb(120, 185, 142)",
+              "rgb": [
+                120,
+                185,
+                142,
+                255
+              ],
+              "iconColor": "rgb(120, 185, 142)",
+              "widget": false
+            }
+          ],
+          "noOverflow": true,
+          "noRequests": true
+        }
+      ]
+    },
+    "atrioTypecheckPassed": true,
+    "atrioTargetedEslintPassed": true,
+    "financialOrMessageRequests": 0
+  },
+  "deployments": null
+}

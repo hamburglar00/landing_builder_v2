@@ -324,6 +324,15 @@ Validación y publicación: [reinicios de bots y selectores del 20/10](validatio
 
 Validación y publicación: [directorio Atrio con jerarquía visual](validation/builder-atrio-directory-ui-20261022.json). Se renderizaron los componentes y estilos reales con datos simulados en Chromium y WebKit, anchos 320/390/768/1366; se comprobaron búsqueda, filtro, UUID, colapsado con teclado, formularios y confirmaciones de reinicio global/individual sin escrituras.
 
+### Tipografía compacta, comprobantes e información del inbox (22/10/2026)
+
+- En el directorio Atrio del constructor, reducir nombres, iniciales y totales a 14 px como máximo, también en móvil. Los números de la tabla usan 13 px. Ningún nombre ni métrica supera el título de la pantalla; conservar la organización, filtros y acciones aprobados.
+- El check y el texto «Comprobante cargado» utilizan el mismo verde sutil en el inbox. En los widgets, adaptar el verde al color de texto de cada burbuja para mantener su lectura en los tres temas. Conservar las condiciones de confirmación existentes: el estilo no marca una carga como confirmada ni cambia el estado financiero.
+- «Info de usuario» e «Info de contacto» son secciones independientes, colapsables y cerradas por defecto tanto en escritorio como en móvil. Cambiar de conversación vuelve a cerrarlas. El saldo y las operaciones permanecen visibles fuera de esas secciones, sin consultar claves al desplegarlas ni modificar el guardado de contacto.
+- Los botones de promoción, perfil, instalación y activación de notificaciones comparten Manrope, tamaño de 12,5 px, peso 600 e interlineado 1,4, con altura de 40 px en ambos layouts. Una regla común evita heredar tamaños diferentes de las tarjetas; no cambiar textos, destinatarios ni flujos de invitación.
+
+Validación y publicación: [ajustes de tipografía e inbox](validation/atrio-builder-ui-refinements-20261022.json). Se verificaron los componentes y JSX reales con datos simulados en Chromium y WebKit, móvil y escritorio: tamaños bajo el título, apertura/cierre con teclado, edición sin guardar, cierre al cambiar de chat, operaciones visibles, tipografía idéntica de invitaciones y comprobantes en los tres temas. No se enviaron invitaciones, mensajes ni operaciones financieras reales. La implementación de Atrio es compartida por los cuatro gateways.
+
 ### Operaciones manuales y navegación entre chats (20/10/2026)
 
 - Las lecturas de bot, saldo y solicitudes pendientes del panel usan GET autenticado, sin caché y con ownership de la conversación. No ponerlas en la cola serial de Server Actions: una consulta o mutación lenta de un jugador no debe impedir preparar los botones del siguiente. Al salir del chat, cancelar sus lecturas, conservando siempre las operaciones financieras iniciadas y sus claves persistidas. Mostrar preparación o reintento si falla la consulta del bot, en lugar de ocultar indefinidamente los controles.
