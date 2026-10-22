@@ -20,6 +20,10 @@ export type DestinationConfiguration = {
   criterion: "usage_count" | "messages_received";
   destinations: { connection_id: string; weight: number }[];
 };
+export type DestinationEditorConfiguration = {
+  configurations: Partial<Record<TargetProvider, DestinationConfiguration | null>>;
+  directory: { advisors: AdvisorDirectory[] };
+};
 export const managerTypeLabel = (type: string) => type === "mkt" ? "MKT" : "Full Carga";
 
 export async function requestManagerDestinations<T>(payload: object, signal?: AbortSignal): Promise<T> {

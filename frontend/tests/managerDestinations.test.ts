@@ -67,6 +67,53 @@ test("an owned editor can read another casino's destinations before saving a cas
   assert.deepEqual((call.input as { allowed_advisor_ids: string[] }).allowed_advisor_ids, [ids.advisor]);
   assert.ok(calls.every(call => call.action !== "configure"));
 });
+
+test("a newly created Template 1 landing can load all Atrio destinations before its first save", async () => {
+  calls.length = 0;
+  let assignments = 0;
+  const fresh = { ...landing, config: { template: "template1", ctaDestination: "whatsapp" } };
+  const deps = backend({
+    landing: async () => fresh,
+    call: async (action, input) => { calls.push({ action, input }); return action === "configuration" ? { configuration: null } : { advisors: [] }; },
+    assign: async () => { assignments++; },
+  });
+  const targetProviders = ["ganamos_net", "rey_de_ases", "ases_del_norte"];
+  const response = await handleManagerDestinations(request({ action: "configurations", landingId: ids.landing, targetProviders, allowed_advisor_ids: [ids.otherAdvisor] }), deps);
+  assert.equal(response.status, 200);
+  assert.deepEqual(await response.json(), { configurations: Object.fromEntries(targetProviders.map(provider => [provider, null])), directory: { advisors: [] } });
+  assert.equal(calls.filter(call => call.action === "directory").length, 1);
+  assert.equal(calls.filter(call => call.action === "configuration").length, 3);
+  for (const call of calls.filter(call => call.action === "configuration")) {
+    assert.equal((call.input as { landing_id: string }).landing_id, ids.landing);
+    assert.deepEqual((call.input as { allowed_advisor_ids: string[] }).allowed_advisor_ids, [ids.advisor]);
+  }
+  assert.deepEqual((calls.find(call => call.action === "directory")!.input as { advisor_ids: string[] }).advisor_ids, [ids.advisor]);
+  assert.equal(assignments, 0);
+  calls.length = 0;
+  assert.equal((await handleManagerDestinations(request({ action: "configuration", landingId: ids.landing, targetProvider: "ganamos_net" }), deps)).status, 200);
+  calls.length = 0;
+  assert.equal((await handleManagerDestinations(request(configure), deps)).status, 409);
+  assert.equal(calls.length, 0);
+  assert.equal(assignments, 0);
+});
+
+test("batch configuration preserves saved pools and rejects invalid casinos or unavailable ownership scope", async () => {
+  const payload = { action: "configurations", landingId: ids.landing, targetProviders: ["ganamos_net", "rey_de_ases"] };
+  const saved = { target_provider: "ganamos_net", mode: "fair", criterion: "messages_received", destinations: [{ connection_id: ids.connection, weight: 3 }] };
+  const response = await handleManagerDestinations(request(payload), backend({ call: async (action, input) => action === "directory" ? { advisors: [client] } : (input as { target_provider: string }).target_provider === "ganamos_net" ? saved : { configuration: null } }));
+  assert.equal(response.status, 200);
+  assert.deepEqual(await response.json(), { configurations: { ganamos_net: saved, rey_de_ases: null }, directory: { advisors: [client] } });
+  calls.length = 0;
+  for (const targetProviders of [undefined, null, [], ["ganamos_net", "ganamos_net"], ["multi_skin"], ["unknown"], "ganamos_net"]) {
+    assert.equal((await handleManagerDestinations(request({ ...payload, targetProviders }), backend())).status, 400);
+  }
+  assert.equal((await handleManagerDestinations(request(payload), backend({ authenticate: async () => false }))).status, 401);
+  assert.equal((await handleManagerDestinations(request(payload), backend({ landing: async () => null }))).status, 403);
+  assert.equal((await handleManagerDestinations(request(payload), backend({ workspaceClients: async () => [] }))).status, 409);
+  const crossOrigin = request(payload); crossOrigin.headers.set("origin", "https://other.test");
+  assert.equal((await handleManagerDestinations(crossOrigin, backend())).status, 403);
+  assert.equal(calls.length, 0);
+});
 test("Ganamos+ is not offered the Ganamos NET manager pool", async () => {
   assert.equal((await handleManagerDestinations(request({ ...configure, targetProvider: "multi_skin" }), backend())).status, 400);
 });

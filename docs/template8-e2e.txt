@@ -10,6 +10,12 @@ Comportamiento
   el reparto y la preparación. Las analíticas siguen contando cada CTA por separado.
 - Cada página conserva su pool de bots, con reparto fijo, aleatorio por peso o
   equitativo por asignaciones/chats iniciados. No se aplica un asesor global.
+- El editor muestra una sola sección Redirección con los asesores y sus bots.
+  La selección y el criterio de reparto son comunes; cada tarjeta utiliza
+  solamente los bots seleccionados de su casino. Una sola consulta del directorio.
+- Se pueden consultar los bots antes del primer guardado de una landing creada
+  como Template 1. La lectura no modifica destinos ni asignaciones; configurar
+  sigue validando el acceso del cliente/workspace y la plantilla guardada.
 - Ganamos+ permanece visible como integración pendiente y no usa bots de NET.
 - La grilla se mantiene hasta elegir una página. Luego se reutilizan el formulario,
   la identidad, la preparación, la transición y el tracking del Template 7.
@@ -33,6 +39,9 @@ En landing-builder/frontend:
   npx playwright install chromium
   npm run test:template8:e2e
 
+Para repetir únicamente el recorrido del editor, sin Docker:
+  npm run test:template8:editor
+
 El runner valida la sincronización del renderer compartido, crea un Postgres
 efímero sin red ni puertos publicados, aplica SQL real en bases de prueba y corre:
 - RLS, permisos independientes, validación de página/advisor, límites y analíticas.
@@ -41,6 +50,9 @@ efímero sin red ni puertos publicados, aplica SQL real en bases de prueba y cor
 - Chromium: alta y recuperación en Rey de Ases, Ases del Norte y Ganamos NET,
   tanto en constructor como en clásico (12 recorridos).
 - Grillas de 1–6 tarjetas en 320x568, 390x844 y 1440x900 (36 combinaciones).
+- Editor real de cliente/admin: Template 1 recién creado → Template 8,
+  selección conjunta de bots, primer guardado y restauración de selección,
+  criterio y pesos. Regresión del primer guardado con Template 7.
 - Conservación de campaña/página, un CTA medido por selección y un Contact por alta.
 
 Casino, Meta y la entrega final del gateway se simulan: no se realizan operaciones

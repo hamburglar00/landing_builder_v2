@@ -17,15 +17,18 @@ try {
   created=true;
   let ready=false;
   for(let attempt=0;attempt<60;attempt++){
-    if(spawnSync("docker",["exec",container,"pg_isready","-U","supabase_admin","-d","validation"],{stdio:"ignore",windowsHide:true}).status===0){ready=true;break;}
+    // The image's temporary initialization server accepts Unix sockets before
+    // shutting down. TCP is enabled only by the final server used by the tests.
+    if(spawnSync("docker",["exec",container,"pg_isready","-h","127.0.0.1","-U","supabase_admin","-d","validation"],{stdio:"ignore",windowsHide:true}).status===0){ready=true;break;}
     await new Promise(done=>setTimeout(done,500));
   }
   if(!ready)throw Error("Isolated Postgres did not become ready");
   const env={...process.env,ATRIO_MANAGER_TEST_CONTAINER:container};
   await run(process.execPath,["--experimental-strip-types","--test","tests/builder-manager-database.test.mjs","tests/builder-manager-destinations.test.mjs"],atrio,env);
   await run(process.execPath,["--test","tests/template8Database.test.mjs"],frontend,env);
-  await run(process.execPath,["node_modules/tsx/dist/cli.mjs","--import","./tests/revalidation-server-loader.mjs","--test","tests/template8.test.ts"],frontend,env);
+  await run(process.execPath,["node_modules/tsx/dist/cli.mjs","--import","./tests/revalidation-server-loader.mjs","--test","tests/template8.test.ts","tests/managerDestinations.test.ts"],frontend,env);
   await run(process.execPath,["node_modules/tsx/dist/cli.mjs","scripts/template8-e2e.ts"],frontend,env);
+  await run(process.execPath,["node_modules/tsx/dist/cli.mjs","scripts/template8-editor-e2e.ts"],frontend,env);
   console.log("Template 8: database, permissions, distribution, tracking and browser journeys passed. Screenshots: frontend/test-results/template8.");
 } catch(error){console.error(error);process.exitCode=1;}
 finally{

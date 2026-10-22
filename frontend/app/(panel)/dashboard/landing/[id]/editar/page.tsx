@@ -349,7 +349,7 @@ export default function DashboardLandingEditarPage() {
       const cover = normalizeTemplate8Cover(landing.config.template8Cover);
       const providers = [...new Set(cover.cards.slice(0, cover.cardCount).map(card => card.targetProvider))].filter(provider => provider !== "multi_skin");
       if (providers.some(provider => !pageDrafts[provider]?.loaded || !pageDrafts[provider]?.destinations.length)) {
-        setSaveError("Elegí al menos un bot para cada página integrada y esperá a que termine de cargar."); return;
+        setSaveError("Elegí al menos un bot de cada casino integrado que usen las tarjetas y esperá a que termine de cargar."); return;
       }
     }
     if (landing.config.template === "template7" && (!managerDraft?.loaded || managerDraft.provider !== landing.config.targetProvider || !managerDraft.destinations.length)) {

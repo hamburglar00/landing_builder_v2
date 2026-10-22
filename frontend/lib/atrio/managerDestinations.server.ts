@@ -31,14 +31,35 @@ export async function handleManagerDestinations(request: Request, backend: Desti
       if (clients.length !== ids.length || clients.some(client => !uuid.test(client.atrio_id))) return json({ error: "No tenés acceso a estos asesores." }, 403);
       return json(await backend.call(input.action, { advisor_ids: [...new Set(clients.map(client => client.atrio_id))], ...(input.action === "reset" ? { metric: input.metric } : {}) }) as object);
     }
-    if (!["configuration", "configure"].includes(input.action) || !uuid.test(input.landingId) || !providers.includes(input.targetProvider)) return json({ error: "Destino no válido. Ganamos+ todavía no está integrado con PBAdmin." }, 400);
+    if (!["configuration", "configurations", "configure"].includes(input.action) || !uuid.test(input.landingId)) return json({ error: "Destino no válido." }, 400);
+    const requestedProviders: string[] = input.action === "configurations" ? input.targetProviders : [input.targetProvider];
+    if (!Array.isArray(requestedProviders) || !requestedProviders.length || requestedProviders.length > providers.length ||
+        requestedProviders.some(provider => !providers.includes(provider)) || new Set(requestedProviders).size !== requestedProviders.length) {
+      return json({ error: "Destino no válido. Ganamos+ todavía no está integrado con PBAdmin." }, 400);
+    }
     const landing = await backend.landing(token, input.landingId);
     if (!landing) return json({ error: "No tenés acceso a esta landing." }, 403);
     const config = landing.config && typeof landing.config === "object" ? landing.config as Record<string, unknown> : {};
-    if (!["template7", "template8"].includes(String(config.template)) || config.ctaDestination !== "atrio" || (input.action === "configure" && config.template === "template7" && (config.targetProvider || "rey_de_ases") !== input.targetProvider)) return json({ error: "Guardá primero el casino de Template 7." }, 409);
+    // An owned landing starts as Template 1. Reading the workspace's bots must
+    // work while editing its first Atrio configuration, before anything is saved.
+    // Writes still require the saved template and casino to match.
+    if (input.action === "configure") {
+      if (!["template7", "template8"].includes(String(config.template)) || config.ctaDestination !== "atrio") return json({ error: "Guardá la landing con destino Atrio antes de configurar los bots." }, 409);
+      if (config.template === "template7" && (config.targetProvider || "rey_de_ases") !== input.targetProvider) return json({ error: "El casino elegido no coincide con el guardado en la landing." }, 409);
+    }
     const clients = await backend.workspaceClients(token, landing.user_id, landing.workspace_currency);
     if (!clients.length || clients.some(client => !uuid.test(client.atrio_id))) return json({ error: "No hay asesores válidos en este workspace." }, 409);
     const scope = { landing_id: landing.id, target_provider: input.targetProvider, allowed_advisor_ids: clients.map(client => client.atrio_id) };
+    if (input.action === "configurations") {
+      const [configurations, directory] = await Promise.all([
+        Promise.all(requestedProviders.map(async provider => {
+          const result = await backend.call("configuration", { ...scope, target_provider: provider });
+          return [provider, (result as { configuration?: unknown })?.configuration === null ? null : result];
+        })),
+        backend.call("directory", { advisor_ids: scope.allowed_advisor_ids }),
+      ]);
+      return json({ configurations: Object.fromEntries(configurations), directory });
+    }
     if (input.action === "configuration") {
       const [configuration, directory] = await Promise.all([backend.call("configuration", scope), backend.call("directory", { advisor_ids: scope.allowed_advisor_ids })]);
       return json({ configuration: (configuration as { configuration?: unknown })?.configuration === null ? null : configuration, directory });

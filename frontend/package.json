@@ -12,7 +12,8 @@
     "postinstall": "npm run sync:meta-sdk",
     "check:encoding": "node ../scripts/check-encoding.js",
     "check:encoding:changed": "node ../scripts/check-encoding.js --changed",
-    "test:template8:e2e": "node ../scripts/test-template8-e2e.mjs"
+    "test:template8:e2e": "node ../scripts/test-template8-e2e.mjs",
+    "test:template8:editor": "tsx scripts/template8-editor-e2e.ts"
   },
   "dependencies": {
     "@supabase/supabase-js": "^2.98.0",
