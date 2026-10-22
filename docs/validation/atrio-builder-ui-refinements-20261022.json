@@ -564,5 +564,78 @@
     "atrioTargetedEslintPassed": true,
     "financialOrMessageRequests": 0
   },
-  "deployments": null
+  "deployments": {
+    "at": "2026-10-22T15:44:01.604Z",
+    "atrio": {
+      "commit": "eb5a5d5c4efe5ab7d48733e3316565c8440adb2b",
+      "deployment": "dpl_E1m7XG2A7AbL5s3VnDEu2r2JpsEi",
+      "state": "READY",
+      "url": "internal-chat-3z8pshha1-juanclouds-projects.vercel.app",
+      "aliases": [
+        "www.atrio.website",
+        "internal-chat-bay.vercel.app",
+        "atrio.website",
+        "internal-chat-juanclouds-projects.vercel.app"
+      ],
+      "publicLoginStatus": 200
+    },
+    "builder": {
+      "commit": "d0395a3c0dcb9852734558f8625b1efd12940065",
+      "deployment": "dpl_4yCHZwQufrjyEHhXjRrgDCKTKcU6",
+      "state": "READY",
+      "url": "landing-builder-v2-k259-fbz11ad53-juanclouds-projects.vercel.app",
+      "aliases": [
+        "mkt.panelbotadmin.com",
+        "constructor.panelbotadmin.com",
+        "landing-builder-v2-k259.vercel.app"
+      ],
+      "publicDirectoryStatus": 200
+    },
+    "publishedFonts": {
+      "names": [
+        "14px"
+      ],
+      "totals": [
+        "14px"
+      ],
+      "invitations": [
+        "12.5px"
+      ]
+    },
+    "receiptAndInvitationStylesPublished": true,
+    "gateways": [
+      {
+        "provider": "Rey de Ases",
+        "origin": "https://www.reydeases.fun",
+        "sharedAtrioOrigin": "https://www.atrio.website",
+        "manifestStatus": 200,
+        "usesSharedAtrioImplementation": true,
+        "gatewaySourceChanged": false
+      },
+      {
+        "provider": "Ases del Norte",
+        "origin": "https://www.asesdelnorte.online",
+        "sharedAtrioOrigin": "https://www.atrio.website",
+        "manifestStatus": 200,
+        "usesSharedAtrioImplementation": true,
+        "gatewaySourceChanged": false
+      },
+      {
+        "provider": "Ganamos NET",
+        "origin": "https://www.ganamosnet.icu",
+        "sharedAtrioOrigin": "https://www.atrio.website",
+        "manifestStatus": 200,
+        "usesSharedAtrioImplementation": true,
+        "gatewaySourceChanged": false
+      },
+      {
+        "provider": "Ganamos+",
+        "origin": "https://ganamosnet.global",
+        "sharedAtrioOrigin": "https://www.atrio.website",
+        "manifestStatus": 200,
+        "usesSharedAtrioImplementation": true,
+        "gatewaySourceChanged": false
+      }
+    ]
+  }
 }
