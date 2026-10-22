@@ -5,7 +5,7 @@ import { useRouter } from "next/navigation";
 import { SingleCurrencyRequired, useCurrencyScope } from "@/components/currency/CurrencyScope";
 import { useAppConfirm } from "@/components/ui/AppConfirmDialog";
 import { DashboardSkeleton } from "@/components/ui/DashboardSkeleton";
-import { EmptyState, ModalShell, PageHeader, SurfaceCard } from "@/components/ui/PanelPrimitives";
+import { EmptyState, ModalShell, PageHeader } from "@/components/ui/PanelPrimitives";
 import {
   buildAtrioUrl,
   createAtrioClient,
@@ -25,6 +25,7 @@ import { supabase } from "@/lib/supabaseClient";
 import { requestManagerDestinations, CASINO_NAMES, managerTypeLabel, type AdvisorDirectory, type BotResetMetric } from "@/lib/atrio/managerDestinations";
 import { AdvisorManagers } from "./AdvisorManagers";
 import { BotMetricResetButtons } from "./BotMetricResetButtons";
+import styles from "./AtrioDirectory.module.css";
 
 type Mode = "dashboard" | "admin";
 
@@ -78,7 +79,7 @@ function AtrioMark({ className = "h-5 w-5" }: { className?: string }) {
 
 function WorkspaceBadge({ workspace }: { workspace: ReportingCurrency }) {
   return (
-    <span className="inline-flex h-6 items-center rounded-full border border-[var(--color-primary-soft-border)] bg-[var(--color-primary-soft-bg)] px-2 text-[10px] font-semibold text-[var(--color-primary)]">
+    <span className={styles.workspace}>
       {workspace}
     </span>
   );
@@ -304,9 +305,9 @@ export default function AtrioClientsPageContent({ mode }: { mode: Mode }) {
   return (
     <div className="space-y-6">
       <PageHeader
-        eyebrow="Integracion"
+        eyebrow="Integración"
         title="Atrio"
-        description="Asesores, bots y métricas de los destinos disponibles para tus landings."
+        description="Tus asesores y sus bots. Consultá las asignaciones y los chats de cada destino."
         actions={
           <button type="button" onClick={openCreateModal} className="ui-button ui-button-primary">
             AGREGAR ASESOR
@@ -326,40 +327,43 @@ export default function AtrioClientsPageContent({ mode }: { mode: Mode }) {
         </p>
       ) : null}
 
-      <SurfaceCard className="overflow-hidden">
-        <div className="scrollbar-none overflow-x-auto border-b border-[var(--color-border-subtle)]">
-          <div className="flex min-w-max items-center gap-4 p-4" role="group" aria-label="Filtros y acciones de asesores Atrio">
-            <div className="shrink-0 whitespace-nowrap">
-              <h2 className="text-sm font-semibold text-[var(--color-text-strong)]">Asesores Atrio</h2>
-              <p className="mt-1 text-xs text-[var(--color-text-muted)]">
+      <div className={styles.toolbar}>
+        <div className={styles.toolbarScroll}>
+          <div className={styles.toolbarRow} role="group" aria-label="Filtros y acciones de asesores Atrio">
+            <div className={styles.toolbarTitle}>
+              <h2>Asesores</h2>
+              <p>
                 {filteredClients.length} de {clients.length} asesores en {workspaceCurrency}
               </p>
             </div>
-            <label className="relative ml-auto w-56 min-w-[200px] max-w-sm flex-1">
-              <span className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-[var(--color-text-muted)]">
+            <label className={styles.search}>
+              <span>
                 <SearchIcon />
               </span>
               <input
                 type="search"
                 value={search}
                 onChange={(event) => setSearch(event.target.value)}
-                placeholder="Buscar asesor, bot, casino o gerencia..."
-                className="h-10 w-full rounded-xl border border-[var(--color-border)] bg-[var(--color-bg-2)] pl-9 pr-3 text-sm text-[var(--color-text-strong)] outline-none placeholder:text-[var(--color-text-disabled)] focus:border-[var(--color-primary)] focus:ring-2 focus:ring-[var(--color-ring-primary)]"
+                placeholder="Buscar asesor, bot o casino…"
+                aria-label="Buscar asesor, bot, casino o gerencia"
               />
             </label>
-            <label className="flex shrink-0 items-center gap-2 whitespace-nowrap text-xs"><input type="checkbox" checked={onlyActive} onChange={e => setOnlyActive(e.target.checked)} />Solo bots activos</label>
-            <div className="flex shrink-0 items-center gap-2 whitespace-nowrap [&>div]:flex-nowrap">
+            <label className={styles.activeFilter}><input type="checkbox" checked={onlyActive} onChange={e => setOnlyActive(e.target.checked)} />Solo bots activos</label>
+            <div className={styles.toolbarActions}>
               <button type="button" disabled={directoryBusy || !!resetting} onClick={() => setRefreshDirectory(v => v + 1)} className="ui-button ui-button-secondary h-8 min-h-8 px-3 text-xs">{directoryBusy ? "Actualizando…" : "Actualizar"}</button>
-              <BotMetricResetButtons global disabled={directoryBusy || !!resetting || !clients.length || !!directoryError} resetting={resetting?.clientId === null ? resetting.metric : null} onReset={metric => void handleMetricReset(metric)} />
+              <div className={styles.globalResets} role="group" aria-label="Reiniciar métricas de todos los asesores del workspace">
+                <BotMetricResetButtons global disabled={directoryBusy || !!resetting || !clients.length || !!directoryError} resetting={resetting?.clientId === null ? resetting.metric : null} onReset={metric => void handleMetricReset(metric)} />
+              </div>
             </div>
           </div>
         </div>
+      </div>
         {clients.length === 0 ? (
           <EmptyState
             className="py-12"
             icon={<AtrioMark />}
             title="No hay asesores Atrio cargados"
-            description="Agrega el slug publico y el ID unico de Atrio para preparar el destino del CTA."
+            description="Vinculá tu primer asesor para consultar sus bots y usarlos en tus landings."
             action={
               <button type="button" onClick={openCreateModal} className="ui-button ui-button-secondary">
                 Agregar asesor
@@ -367,15 +371,28 @@ export default function AtrioClientsPageContent({ mode }: { mode: Mode }) {
             }
           />
         ) : (
-          <div className="space-y-4 p-3 sm:p-4">
+          <div className={styles.list}>
             {!filteredClients.length && <p className="py-6 text-center text-sm text-[var(--color-text-muted)]">No hay asesores que coincidan con la búsqueda.</p>}
-            {filteredClients.map(client => <section key={client.id} className="rounded-xl border border-[var(--color-border)] bg-[var(--color-bg-2)]">
-              <div className="flex flex-wrap items-center justify-between gap-3 border-b border-[var(--color-border-subtle)] p-3">
-                <div className="min-w-0"><a href={buildAtrioUrl(client.slug)} target="_blank" rel="noreferrer" className="text-sm font-semibold text-[var(--color-text)]">{client.slug}</a>
-                  <p className="mt-1 break-all text-[10px] text-[var(--color-text-muted)]">UUID: {client.atrio_id}</p></div>
-                <div className="flex items-center gap-2"><WorkspaceBadge workspace={client.workspace_currency} />
-                  <button type="button" onClick={() => openEditModal(client)} className="ui-button ui-button-secondary h-8 min-h-8 px-3 text-xs">Editar</button>
-                  <button type="button" onClick={() => void handleDelete(client)} disabled={deletingId === client.id} className="ui-button ui-button-danger h-8 min-h-8 px-3 text-xs">{deletingId === client.id ? "Eliminando…" : "Eliminar"}</button>
+            {filteredClients.map(client => <section key={client.id} className={styles.advisor} aria-label={`Asesor ${client.slug}`}>
+              <div className={styles.advisorHeader}>
+                <div className={styles.identity}>
+                  <span className={styles.avatar} aria-hidden="true">{(directory.find(advisor => advisor.id === client.atrio_id)?.name || client.slug).slice(0, 1)}</span>
+                  <div className="min-w-0">
+                    <h2><a href={buildAtrioUrl(client.slug)} target="_blank" rel="noreferrer" className={styles.advisorName}>
+                      {directory.find(advisor => advisor.id === client.atrio_id)?.name || client.slug}
+                      <svg aria-hidden="true" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round"><path d="M14 3h7v7M21 3 10 14M10 3H5a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-5" /></svg>
+                    </a></h2>
+                    <div className={styles.identityMeta}>
+                      <span>/{client.slug}</span><WorkspaceBadge workspace={client.workspace_currency} />
+                      <details className={styles.uuid}><summary>Ver UUID</summary><code>{client.atrio_id}</code></details>
+                    </div>
+                  </div>
+                </div>
+                <div className={styles.advisorActions}>
+                  <button type="button" onClick={() => openEditModal(client)} className={styles.edit} aria-label={`Editar asesor ${client.slug}`}>Editar</button>
+                  <button type="button" onClick={() => void handleDelete(client)} disabled={deletingId === client.id} className={styles.delete} aria-label={`Eliminar asesor ${client.slug}`} title={deletingId === client.id ? "Eliminando…" : "Eliminar asesor"}>
+                    <svg aria-hidden="true" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round"><path d="M3 6h18M9 6V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2M5 6l1 14a1 1 0 0 0 1 1h10a1 1 0 0 0 1-1l1-14M10 10v7M14 10v7" /></svg>
+                  </button>
                 </div>
               </div>
               <AdvisorManagers advisor={directory.find(advisor => advisor.id === client.atrio_id)} busy={directoryBusy} error={directoryError} onlyActive={onlyActive}
@@ -389,7 +406,6 @@ export default function AtrioClientsPageContent({ mode }: { mode: Mode }) {
             Actualizando...
           </div>
         ) : null}
-      </SurfaceCard>
 
       <ModalShell
         open={modalMode !== null}

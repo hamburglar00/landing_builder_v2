@@ -1,6 +1,6 @@
 # Decisiones aprobadas de Atrio Template 7 y gateways
 
-Actualizado el 21 de octubre de 2026. Este registro conserva los requisitos acordados con el usuario para que una mejora no elimine comportamientos ya aprobados. Se aplica a `landing-builder`, `landing-prueba-1`, `internal-chat`, `landing-autologuin`, `ases-gateway`, `ganamos-gateway` y `multi-skin-gateway`. API2 conserva su propio lote local.
+Actualizado el 22 de octubre de 2026. Este registro conserva los requisitos acordados con el usuario para que una mejora no elimine comportamientos ya aprobados. Se aplica a `landing-builder`, `landing-prueba-1`, `internal-chat`, `landing-autologuin`, `ases-gateway`, `ganamos-gateway` y `multi-skin-gateway`. API2 conserva su propio lote local.
 
 Una decisión nueva reemplaza una anterior solo cuando el usuario cambia explícitamente ese requisito. Registrar el cambio aquí y verificar los comportamientos relacionados antes de publicar. Un build correcto o una prueba con sesión insertada artificialmente no demuestran que el navegador real conserve la cuenta.
 
@@ -314,6 +314,15 @@ Ganamos+ tuvo validación del formulario, recursos y contrato compartido, pero n
 - La etiqueta CARGA expresa una solicitud de carga, no una acreditación. El envío inicial automático de CBU no agrega esa intención. Los chats de medición antiguos pueden conservar etiquetas de la acción de carga ejecutada por el flujo anterior; no eliminar solicitudes reales ni modificar su historial al explicar ese estado.
 
 Validación y publicación: [reinicios de bots y selectores del 20/10](validation/atrio-bot-metric-resets-20261020.json). La migración `20261020172854_builder_bot_metric_resets.sql` está aplicada y su versión coincide entre local y remoto. Los reinicios funcionales se probaron en Postgres aislado; en las cuatro pruebas de interfaz productiva se interceptaron las escrituras para conservar los contadores reales.
+
+### Jerarquía visual del directorio Atrio en el constructor (22/10/2026)
+
+- Separar las tarjetas de asesores del contenedor general para evitar recuadros anidados. Destacar el nombre y avatar de inicial, con la dirección pública y workspace como información secundaria; el UUID completo queda disponible en «Ver UUID».
+- Mantener la cabecera de búsqueda, filtro de activos y acciones globales en una sola fila con scroll interno sin barra cuando no entra. Distinguir Actualizar de los reinicios, que mantienen su alcance global y su confirmación.
+- Cada asesor conserva sus bots colapsables, totales de asignaciones y chats, columnas por bot y chats históricos. «Asignaciones» expresa el mismo contador de nuevas cuentas, sin cambiar su cálculo. Usar encabezados de tabla sobrios, nombres de casino destacados, modalidad con color, estado con texto y punto, y cifras alineadas para comparar.
+- Colocar los reinicios del asesor al pie de su tarjeta. Editar y eliminar mantienen sus funciones y confirmaciones; no ejecutar reinicios ni eliminar asesores durante la validación. Conservar búsqueda por asesor/bot/casino/gerencia, filtro, moneda, permisos y sincronización existentes. El cambio vive solo en el directorio del constructor, compartido por las vistas de cliente y admin; no modifica el runtime de Atrio, gateways ni API2.
+
+Validación y publicación: [directorio Atrio con jerarquía visual](validation/builder-atrio-directory-ui-20261022.json). Se renderizaron los componentes y estilos reales con datos simulados en Chromium y WebKit, anchos 320/390/768/1366; se comprobaron búsqueda, filtro, UUID, colapsado con teclado, formularios y confirmaciones de reinicio global/individual sin escrituras.
 
 ### Operaciones manuales y navegación entre chats (20/10/2026)
 
