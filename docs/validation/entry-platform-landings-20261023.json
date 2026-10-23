@@ -1,0 +1,71 @@
+{
+  "at": "2026-10-23T22:55:28.183Z",
+  "createdAccounts": 0,
+  "activatedTickets": 0,
+  "checks": [
+    {
+      "engine": "constructor",
+      "slug": "rey-de-ases-demo",
+      "status": 200,
+      "transition": true,
+      "platformDescription": true,
+      "oldDescription": false
+    },
+    {
+      "engine": "classic",
+      "slug": "rey-de-ases-demo",
+      "status": 200,
+      "transition": true,
+      "platformDescription": true,
+      "oldDescription": false
+    },
+    {
+      "engine": "constructor",
+      "slug": "ases-del-norte-demo",
+      "status": 200,
+      "transition": true,
+      "platformDescription": true,
+      "oldDescription": false
+    },
+    {
+      "engine": "classic",
+      "slug": "ases-del-norte-demo",
+      "status": 200,
+      "transition": true,
+      "platformDescription": true,
+      "oldDescription": false
+    },
+    {
+      "engine": "constructor",
+      "slug": "ganamos-net-demo",
+      "status": 200,
+      "transition": true,
+      "platformDescription": true,
+      "oldDescription": false
+    },
+    {
+      "engine": "classic",
+      "slug": "ganamos-net-demo",
+      "status": 200,
+      "transition": true,
+      "platformDescription": true,
+      "oldDescription": false
+    },
+    {
+      "engine": "constructor",
+      "slug": "multi-skin-demo",
+      "status": 200,
+      "transition": true,
+      "platformDescription": true,
+      "oldDescription": false
+    },
+    {
+      "engine": "classic",
+      "slug": "multi-skin-demo",
+      "status": 200,
+      "transition": true,
+      "platformDescription": true,
+      "oldDescription": false
+    }
+  ]
+}

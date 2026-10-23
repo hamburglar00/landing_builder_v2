@@ -34,3 +34,39 @@ Validación realizada:
 Las pruebas no crean jugadores, mensajes ni operaciones financieras productivas.
 Ganamos+ se valida en presentación y protocolo; su alta PBAdmin sigue pendiente
 de integración propia.
+
+Además pasaron seis pruebas del renderer clásico. Los seis builds de Vercel y
+el build OpenNext terminaron correctamente. La revisión visual usa charset UTF-8,
+igual que las páginas productivas, incluidos los textos con acentos del runtime.
+
+## Publicación confirmada
+
+| Proyecto | Commit | Despliegue activo |
+| --- | --- | --- |
+| Constructor | `0a128ac` | `dpl_4kpvJAYjBpryb96ThjSSjWTSjnU6` |
+| Clásico | `ff87462` | `dpl_BK2aCxM8t729ZGqthc4q9KKGoqme` |
+| Rey de Ases | `f9442aa` | `dpl_7VRvMMrTXUW9Kcf3MiFcT6hWa6hx` |
+| Ganamos NET | `f18b546` | `dpl_E9xAogSQwDpYZ7f3fba6g8USngVX` |
+| Ases del Norte | `b80a8c8` | `dpl_Bxi7vod3eoFvFWWErT6tcXSVVydi` |
+| Ganamos+ | `22dff78` | `dpl_9KvV2SGF2LHeCAbdANpgVw5jr22p` |
+
+Ganamos+ está publicado también en el Worker de `ganamosnet.global`, versión
+`a208f50f-8c29-492e-b9fa-7d432f193b81`, conservando configuración y secretos.
+
+Se verificaron los alias de los dominios públicos. Los cuatro gateways sirven
+el JS/CSS correspondiente, las dos variantes de preparación usan plataforma y
+el aviso fijo, y la consulta de credenciales sigue exigiendo sesión. Las ocho
+landings demo (cuatro marcas × dos motores) respondieron 200 con la transición
+actualizada. No se activaron tickets de acceso ni se crearon cuentas.
+
+Evidencia: [gateways públicos](entry-platform-gateways-20261023.json) y
+[landings públicas](entry-platform-landings-20261023.json).
+
+Rollback: los despliegues previos son Constructor
+`dpl_65s1fVCrbqk7DeRc4jhXVSF3k9FS`, Clásico
+`dpl_BEGwPeJfLquAy9i1Kqi3GXGM5Cgz`, Rey
+`dpl_mpTx7ftkSuN2JSNYR86KBt5bQMfu`, NET
+`dpl_HFna8z4okVQtAe3cFLeT3XH2xXGS`, Ases
+`dpl_3fwiHwkxiQbdacKM3EVGZ68ZpH8Q` y Ganamos+
+`dpl_5Ev3spe9pujtSrQjEBUtgcDUHM6r`. Worker anterior:
+`f0c95eb7-61c7-49c0-93f7-e985e33b3d34`. Este lote no requiere migraciones.
