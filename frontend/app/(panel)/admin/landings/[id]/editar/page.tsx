@@ -907,8 +907,8 @@ export default function AdminLandingEditarPage() {
           selectionMode={landing.gerenciaSelectionMode}
         />
       </div>}
-      {/* Desktop: preview sticky dentro de la grilla del editor */}
-      {landing.landingType !== "external" && <aside className="sticky top-20 hidden h-fit w-[360px] self-start rounded-2xl border border-[var(--color-border)] bg-[rgba(11,15,21,0.72)] p-3 shadow-[var(--shadow-card)] xl:block">
+      {/* Desktop: columna fija con scroll propio para alcanzar todo el resumen. */}
+      {landing.landingType !== "external" && <aside aria-label="Vista previa y gerencias asignadas" tabIndex={0} className="sticky top-20 hidden max-h-[calc(100dvh-6rem)] w-[360px] self-start overflow-y-auto overscroll-contain rounded-2xl border border-[var(--color-border)] bg-[rgba(11,15,21,0.72)] p-3 shadow-[var(--shadow-card)] xl:block">
         <div className="mb-2 flex items-center justify-between">
           <p className="text-xs font-semibold text-[var(--color-text)]">Vista previa</p>
           <span className="ui-badge">En vivo</span>
