@@ -72,3 +72,45 @@ entorno ni modificaciones de API2 o Panel3.
 El tinte de la barra nativa de Safari debe comprobarse en el iPhone del usuario.
 Las pruebas verifican la paleta y los bordes del documento, no la interfaz del
 navegador físico.
+
+## Publicación confirmada
+
+Cambios comiteados y pusheados a las ramas existentes. Los cuatro gateways y
+Atrio están publicados; Builder solo contiene documentación y verificaciones,
+por lo que no necesita un despliegue del frontend para esta entrega.
+
+| Proyecto | Commit | Despliegue Vercel activo |
+| --- | --- | --- |
+| Rey de Ases | `29ded19` | `dpl_6skYEqZjVnX99knximz61wSwSNxF` |
+| Ganamos NET | `58c6fa4` | `dpl_5EHaNuxoZn3fS3VhaeU5kpRDV5YY` |
+| Ases del Norte | `7d6e907` | `dpl_GQfJTS4Pu3asnsXXsyjyA9yDxfom` |
+| Ganamos+ | `0a338ff` | `dpl_8WLysFD7kjtZFNumbRYTEXGrY85m` |
+| Atrio | `2e81618` | `dpl_9Utpo9iR2epmb7uDzRZxRz4TYPR9` |
+
+Ganamos+ también está publicado en el Worker de `ganamosnet.global`, versión
+`d3fdfb84-f267-4ccb-8d61-9d6ca6c5494e`. Se conservaron sus variables y secretos.
+
+Los alias públicos de Rey, Ases, NET y Atrio apuntan a esos despliegues. El chequeo
+de los cuatro dominios comparó JS/CSS con las fuentes normalizando CRLF/LF,
+verificó las transiciones de ambos motores y el feedback anterior, y confirmó
+que `/api/session/credentials` devuelve 401 sin sesión y `private, no-store`.
+Atrio también rechazó con 401 el pedido de credenciales con sesión no firmada.
+No se activaron tickets ni se crearon cuentas o transacciones productivas.
+
+Validación final: 26 casos de perfil/chip/configuración en Chromium y WebKit,
+40 regresiones de ingreso/widget y cuatro de hidratación. Pasaron además 84
+pruebas unitarias de gateways, siete de Atrio, la suite de Postgres aislado,
+TypeScript y ESLint de las piezas modificadas. El build OpenNext pasó y los
+cinco builds de Vercel finalizaron en READY.
+
+Evidencia pública reproducible: [client-credentials-public-20261023.json](client-credentials-public-20261023.json).
+Los reportes y capturas locales están en `.vercel/validation-client-credentials/`.
+
+Para rollback, los despliegues anteriores son Rey
+`dpl_JCJENsTJnpinyWMxyDnVPWD7XJXg`, NET
+`dpl_8Bbw5PDp5oG4iiNkncJcZwxyf5GQ`, Ases
+`dpl_2NVLD77gmW7vwtQXTFZwgn1ZchH9`, Ganamos+
+`dpl_Hnf7KfYH4iUfk7o9dhkxtfbJcPSX` y Atrio
+`dpl_DT1KqjconJ4zqdnBvjANRR3pgeJ5`. El Worker anterior es
+`4ff1757d-a31d-473e-bf35-0314a97ac9b7`. La migración es aditiva y compatible con
+esas versiones anteriores; un rollback del código no requiere eliminarla.
