@@ -1,6 +1,6 @@
 # Decisiones aprobadas de Atrio Template 7 y gateways
 
-Actualizado el 22 de octubre de 2026. Este registro conserva los requisitos acordados con el usuario para que una mejora no elimine comportamientos ya aprobados. Se aplica a `landing-builder`, `landing-prueba-1`, `internal-chat`, `landing-autologuin`, `ases-gateway`, `ganamos-gateway` y `multi-skin-gateway`. API2 conserva su propio lote local.
+Actualizado el 23 de octubre de 2026. Este registro conserva los requisitos acordados con el usuario para que una mejora no elimine comportamientos ya aprobados. Se aplica a `landing-builder`, `landing-prueba-1`, `internal-chat`, `landing-autologuin`, `ases-gateway`, `ganamos-gateway` y `multi-skin-gateway`. API2 conserva su propio lote local.
 
 Una decisión nueva reemplaza una anterior solo cuando el usuario cambia explícitamente ese requisito. Registrar el cambio aquí y verificar los comportamientos relacionados antes de publicar. Un build correcto o una prueba con sesión insertada artificialmente no demuestran que el navegador real conserve la cuenta.
 
@@ -427,3 +427,13 @@ Evidencia y detalles: [espera de ingreso configurable](validation/template7-entr
 - API2, Panel3 y las implementaciones de los gateways no cambian por Template 8. Las comprobaciones financieras siguen intactas.
 
 Implementación, migraciones y prueba repetible: [template8-e2e.txt](template8-e2e.txt).
+
+### Feedback de ingreso y movimiento del widget (23/10/2026)
+
+- Al tocar Continuar después de crear la cuenta, mostrar inmediatamente un spinner y el estado en el propio botón, deshabilitado durante el ingreso. La navegación automática muestra el mismo feedback. Mantener la tarjeta, la espera configurable y su adelanto, la confirmación de cookie y el login único; no agregar demoras ni llamadas ni crear otra cuenta. El renderer común sirve clásico y constructor en los cuatro gateways.
+- El chat se expande desde la posición real del botón flotante y se contrae hacia él al cerrar. Mantener el iframe montado y reutilizarlo; los cierres y aperturas rápidos no deben ejecutar un timer viejo contra un chat abierto. Quitar interacción y foco del panel desde el cierre y reducir su superficie a cero al terminar la contracción, conservando el acceso a los controles del casino. Respetar reducción de movimiento.
+- Conservar una base oscura opaca en el borde inferior desde el HTML inicial, independiente del tema claro del widget y de los modales del proveedor. Reservar ese espacio en el chat móvil y mantener las zonas seguras. La capa no captura toques ni foco y no requiere SDK, cookies ni JavaScript. No cambiar el tema interior del chat.
+- La animación común tiene fuente canónica en Rey y se sincroniza mediante `scripts/sync-gateway-chat-motion.mjs`; comprobar `--check` junto con las sincronizaciones de transición, apariencia y SDK. Conservar las identidades y los adaptadores de cada proveedor.
+- Verificar CTA pendiente y recuperación de interacción con fixtures reales en navegador. El color de la barra nativa de Safari no se certifica con Playwright/WebKit: requiere la prueba física del iPhone del usuario. WebKit documenta que los paneles fijos pueden cambiar el tinte de su interfaz: https://bugs.webkit.org/show_bug.cgi?id=302272 y https://bugs.webkit.org/show_bug.cgi?id=301756.
+
+Validación y publicación: [feedback y movimiento del gateway](validation/gateway-entry-ux-20261023.md). No modificar API2, Panel3, Atrio ni las verificaciones financieras por este ajuste de presentación.

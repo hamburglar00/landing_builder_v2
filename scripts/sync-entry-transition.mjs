@@ -23,5 +23,7 @@ for (const repo of ["landing-autologuin", "ases-gateway", "ganamos-gateway", "mu
   if (without.split("  function initializeChat() {").length !== 2) throw Error("Gateway client changed");
   await sync(target, without.replace("  function initializeChat() {", fragment + "\n  function initializeChat() {"));
 }
-await sync(new URL("../frontend/lib/gateway-entry-transition.ts", import.meta.url), source);
+// Template 8 also reads the brand registry to prewarm the selected page.
+const builderSource = source.replace("} as const;", "} as const;\nexport { brands as GATEWAY_ENTRY_BRANDS };");
+await sync(new URL("../frontend/lib/gateway-entry-transition.ts", import.meta.url), builderSource);
 console.log("Transición compartida verificada: constructor, clásico y cuatro gateways.");

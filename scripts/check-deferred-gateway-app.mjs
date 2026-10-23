@@ -7,7 +7,7 @@ const require2 = createRequire(new URL("../frontend/package.json", import.meta.u
 const { build } = require2("esbuild");
 let browserModule;
 try {
-  browserModule = require2("playwright");
+  browserModule = require2(process.env.PLAYWRIGHT_MODULE_PATH || "playwright");
 } catch {
   const configured = process.env.PLAYWRIGHT_MODULE_PATH || process.env.APPDATA && path.join(process.env.APPDATA, "npm/node_modules/playwright");
   if (!configured) throw new Error("Install Playwright or set PLAYWRIGHT_MODULE_PATH; browser binaries are required.");
