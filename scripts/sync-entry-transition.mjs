@@ -15,7 +15,7 @@ for (const repo of ["landing-autologuin", "ases-gateway", "ganamos-gateway", "mu
   const root = new URL(`../../${repo}/`, import.meta.url);
   if (repo !== "landing-autologuin") {
     await sync(new URL("src/lib/gateway-entry-transition.ts", root), source);
-    for (const file of ["preparation-page.ts", "preparation-page.test.ts", "gateway-entry-transition.test.ts", "gateway-entry-settings.ts", "gateway-entry-settings.test.ts"]) await sync(new URL(`src/lib/${file}`, root), await readFile(new URL(`src/lib/${file}`, canonical), "utf8"));
+    for (const file of ["preparation-page.ts", "preparation-page.test.ts", "transition-layout.ts", "gateway-entry-transition.test.ts", "gateway-entry-settings.ts", "gateway-entry-settings.test.ts"]) await sync(new URL(`src/lib/${file}`, root), await readFile(new URL(`src/lib/${file}`, canonical), "utf8"));
   }
   const target = new URL("public/gateway-client.js", root);
   const client = await readFile(target, "utf8");

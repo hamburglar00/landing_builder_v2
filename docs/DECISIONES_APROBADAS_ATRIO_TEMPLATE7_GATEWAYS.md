@@ -454,3 +454,11 @@ Migración de Atrio: `20261023220427_manual_client_credentials.sql`. Pruebas y p
 - Mantener el iframe reutilizado, los controles del casino disponibles durante el cierre, la inversión rápida del movimiento y la preferencia de movimiento reducido. La paleta de cada página se conserva.
 
 Validación y publicación: [animación del chat a 520 ms](validation/chat-motion-520-20261023.md).
+
+### Transiciones sin cuenta regresiva (23/10/2026)
+
+- Conservar la espera configurable de ingreso automático, incluido Continuar para adelantarla, pero retirar los segundos visibles. Mientras espera, mostrar «Vas a ingresar automáticamente.». No anunciar actualizaciones periódicas del contador.
+- En las transiciones y el CTA usar «plataforma» en lugar de «casino», tanto en clásico como en constructor y en los cuatro gateways. Conservar las rutas técnicas y nombres propios.
+- Mantener el logo grande y su resplandor, paletas por marca y una jerarquía común de título, descripción y acción. Las descripciones y errores conservan al menos 12 px y pueden ocupar varias líneas centradas; no reducirlos a una tipografía diminuta para forzar una línea. Los títulos y nombres de usuario conservan el ajuste de ancho existente.
+
+Pruebas y publicación: [transiciones de acceso](validation/entry-platform-20261023.md).

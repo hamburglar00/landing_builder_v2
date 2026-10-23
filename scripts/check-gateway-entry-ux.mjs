@@ -39,7 +39,7 @@ for (const [engine, browserType] of [["Chromium", playwright.chromium], ["WebKit
           return route.fulfill({ contentType: "text/html", body: asset.renderPreparationPage(classic ? "classic-fixture" : "p1.fixture", theme) });
         });
         await page.goto("https://fixture.test/prepare");
-        await page.getByRole("button", { name: "Continuar al casino", exact: true }).waitFor();
+        await page.getByRole("button", { name: "Continuar a la plataforma", exact: true }).waitFor();
         const next = page.locator("#continue");
         try { await next.click({ timeout: 5000 }); }
         catch (error) { await page.screenshot({ path: path.join(artifact, engine + "-" + asset.repo + "-continue-error.png") }); console.log(JSON.stringify({ engine, repo: asset.repo, classic, html: await page.locator("main").innerHTML() })); throw error; }

@@ -11,7 +11,7 @@ const digest = bytes => createHash("sha256").update(bytes).digest("hex");
 const sourceDigest = bytes => digest(Buffer.from(bytes.toString("utf8").replaceAll("\r\n", "\n")));
 const checks = await Promise.all(targets.map(async ([repo, origin]) => {
   const [script, styles, login, constructor, classic] = await Promise.all([
-    fetch(origin + "/gateway-client.js?v=chat-motion-520-1"), fetch(origin + "/gateway-client.css?v=chat-motion-520-1"), fetch(origin + "/", { headers: { Accept: "text/html" } }),
+    fetch(origin + "/gateway-client.js?v=entry-platform-1"), fetch(origin + "/gateway-client.css?v=entry-platform-1"), fetch(origin + "/", { headers: { Accept: "text/html" } }),
     fetch(origin + "/prepare?t=p1.public-fixture"), fetch(origin + "/prepare?t=public-ready-fixture"),
   ]);
   assert.equal(script.status, 200); assert.equal(script.headers.has("set-cookie"), false);
@@ -23,12 +23,15 @@ const checks = await Promise.all(targets.map(async ([repo, origin]) => {
   const loginHtml = await login.text(), constructorHtml = await constructor.text(), classicHtml = await classic.text();
   assert.equal(login.status, 401); assert.ok(loginHtml.includes('data-eye')); assert.ok(!loginHtml.includes("Usá tu usuario y contraseña para volver al casino y a tu chat."));
   assert.ok(loginHtml.includes("text-align:center")); assert.equal(constructor.status, 200); assert.equal(classic.status, 200);
-  assert.ok(constructorHtml.includes('<h1 id="entry-stage">Creando tu cuenta</h1>')); assert.ok(classicHtml.includes('<h1 id="entry-stage">Ingresando al casino</h1>'));
+  assert.ok(constructorHtml.includes('<h1 id="entry-stage">Creando tu cuenta</h1>')); assert.ok(classicHtml.includes('<h1 id="entry-stage">Ingresando a la plataforma</h1>'));
   assert.ok(constructorHtml.includes('if(false){preactivate')); assert.ok(classicHtml.includes('if(true){preactivate'));
   for (const html of [constructorHtml, classicHtml]) {
     assert.ok(html.includes('function entryFeedback()'));
     assert.ok(html.includes('next.disabled=true'));
-    assert.ok(html.includes('aria-busy="false">Continuar al casino'));
+    assert.ok(html.includes('aria-busy="false">Continuar a la plataforma'));
+    assert.ok(html.includes('Vas a ingresar automáticamente.'));
+    assert.ok(!html.includes('Ingresando en '));
+    assert.ok(!html.includes('al casino'));
   }
   assert.ok(scriptBytes.toString("utf8").includes("replyWithClientCredentials"));
   assert.ok(styleBytes.toString("utf8").includes("--gateway-page-background"));
@@ -37,6 +40,6 @@ const checks = await Promise.all(targets.map(async ([repo, origin]) => {
   assert.ok(credentials.headers.get("cache-control").includes("no-store"));
   return { repo, origin, publicScriptMatchesSource: true, lineEndingsNormalized: true, sha256: hash, sourceSha256: sourceDigest(scriptBytes), publicStylesMatchSource: true, cssSha256: cssHash, cssSourceSha256: sourceDigest(styleBytes), login: "eye, compact copy and centered footer", constructorTransition: true, classicTransition: true, continueBusyFeedback: true, credentialsRequireSession: true, providerPaletteVariable: true };
 }));
-const directory = new URL("../.vercel/validation-chat-motion-520/", import.meta.url); await mkdir(directory, { recursive: true });
+const directory = new URL("../.vercel/validation-entry-platform/", import.meta.url); await mkdir(directory, { recursive: true });
 await writeFile(new URL("public-gateways.json", directory), JSON.stringify({ at: new Date().toISOString(), activatedTickets: 0, createdAccounts: 0, financialOperations: 0, checks }, null, 2) + "\n");
 console.log(JSON.stringify({ passed: checks.length, cloudflareIncluded: true, activatedTickets: 0, createdAccounts: 0 }));
