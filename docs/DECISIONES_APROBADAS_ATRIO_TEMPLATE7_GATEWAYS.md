@@ -447,3 +447,10 @@ Validación y publicación: [feedback y movimiento del gateway](validation/gatew
 - Conservar los protocolos de sesión de los cuatro gateways; Ganamos+ admite la consulta del perfil de una cuenta existente, sin inventar una integración MKT/PBAdmin. La configuración llega en el bootstrap existente, sin un viaje adicional al entrar.
 
 Migración de Atrio: `20261023220427_manual_client_credentials.sql`. Pruebas y publicación: [paleta, perfil y chip Usuario](validation/client-credentials-palette-20261023.md).
+
+### Movimiento del chat más pausado (23/10/2026)
+
+- Ampliar de 280 a 520 ms la expansión desde el botón y la contracción hacia él en los cuatro gateways, conservando el recorrido y la curva existentes. Acompañar la duración con el desvanecimiento del botón y el fondo; completar el cierre antes de mostrar avisos aplazados.
+- Mantener el iframe reutilizado, los controles del casino disponibles durante el cierre, la inversión rápida del movimiento y la preferencia de movimiento reducido. La paleta de cada página se conserva.
+
+Validación y publicación: [animación del chat a 520 ms](validation/chat-motion-520-20261023.md).
