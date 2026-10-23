@@ -437,3 +437,13 @@ Implementación, migraciones y prueba repetible: [template8-e2e.txt](template8-e
 - Verificar CTA pendiente y recuperación de interacción con fixtures reales en navegador. El color de la barra nativa de Safari no se certifica con Playwright/WebKit: requiere la prueba física del iPhone del usuario. WebKit documenta que los paneles fijos pueden cambiar el tinte de su interfaz: https://bugs.webkit.org/show_bug.cgi?id=302272 y https://bugs.webkit.org/show_bug.cgi?id=301756.
 
 Validación y publicación: [feedback y movimiento del gateway](validation/gateway-entry-ux-20261023.md). No modificar API2, Panel3, Atrio ni las verificaciones financieras por este ajuste de presentación.
+
+### Paleta de la página y credenciales del cliente (23/10/2026)
+
+- El borde y el fondo del navegador siguen el color propio de la página. Esta corrección reemplaza cualquier tono neutro fijo introducido en la mejora anterior. Usar una variable de paleta independiente del tema del widget, y conservarla desde el HTML inicial y al abrir/cerrar. El CSS común no debe sobrescribirla. Rey utiliza el gris de su página, Ases su azul y Ganamos sus tonos de marca. La barra nativa de Safari requiere validación en el iPhone real.
+- En Mi perfil, el cliente puede consultar el usuario y la clave de la cuenta con la que ingresó al casino, con la clave oculta inicialmente, ojo y copiar. Obtenerlos solo a pedido mediante la sesión HttpOnly del gateway y el iframe autorizado. No incorporarlos al bootstrap público, URLs, almacenamiento del navegador ni analytics.
+- En Configuración → Bots de PBAdmin, cada bot MKT/manual permite elegir Usuario o Soporte. Usuario comienza seleccionado, también para los bots existentes. Full Carga conserva sus chips y sus preferencias de respuestas de API2. No cambiar Cargar ni Retirar.
+- El chip Usuario devuelve un mensaje del asesor con «👤 Te paso tu usuario y clave», «🆔 Usuario: …» y «🔑 Clave: …», usando la vinculación existente. El servidor valida una prueba cifrada, con vencimiento y ligada al jugador, cuenta, asesor, casino, conversación e intento. El navegador no elige la cuenta ni puede aportar una clave sin validar. Un reintento del mismo pedido devuelve el mensaje ya guardado. No crear usuarios, mensajes ficticios del cliente, LEAD, PURCHASE ni operaciones financieras.
+- Conservar los protocolos de sesión de los cuatro gateways; Ganamos+ admite la consulta del perfil de una cuenta existente, sin inventar una integración MKT/PBAdmin. La configuración llega en el bootstrap existente, sin un viaje adicional al entrar.
+
+Migración de Atrio: `20261023220427_manual_client_credentials.sql`. Pruebas y publicación: [paleta, perfil y chip Usuario](validation/client-credentials-palette-20261023.md).

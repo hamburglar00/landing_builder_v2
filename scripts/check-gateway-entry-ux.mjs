@@ -61,7 +61,9 @@ for (const [engine, browserType] of [["Chromium", playwright.chromium], ["WebKit
         const page = await browser.newPage({ viewport });
         const errors = []; page.on("pageerror", error => errors.push(String(error)));
         let frameNavigations = 0, sdkRequests = 0;
-        const html = asset.applyGatewayBrowserAppearance(`<!doctype html><html><head><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"><style>${asset.css}</style></head><body><button id="provider" style="position:fixed;inset:0;background:#141414;color:white" onclick="window.providerClicks=(window.providerClicks||0)+1">Casino de prueba</button><script src="/gateway-client.js" data-chat-url="https://chat.test/embed"></script></body></html>`, "#0b0b0f");
+        const palette = { "landing-autologuin": "#141414", "ases-gateway": "#071b2c", "ganamos-gateway": "#11001f", "multi-skin-gateway": "#121212" }[asset.repo];
+        const paletteRgb = "rgb(" + [1,3,5].map(index => parseInt(palette.slice(index,index+2),16)).join(", ") + ")";
+        const html = asset.applyGatewayBrowserAppearance(`<!doctype html><html><head><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"><style>${asset.css}</style></head><body><button id="provider" style="position:fixed;inset:0;background:${palette};color:white" onclick="window.providerClicks=(window.providerClicks||0)+1">Casino de prueba</button><script src="/gateway-client.js" data-chat-url="https://chat.test/embed"></script></body></html>`, palette);
         await page.route("https://fixture.test/**", route => {
           const url = new URL(route.request().url());
           if (url.pathname === "/gateway-client.js") return route.fulfill({ contentType: "application/javascript", body: asset.js });
@@ -78,7 +80,8 @@ for (const [engine, browserType] of [["Chromium", playwright.chromium], ["WebKit
         await launcher.waitFor();
         const canvas = async () => page.locator("#gateway-browser-edge").evaluate(el => ({ background: getComputedStyle(el).backgroundColor, opacity: getComputedStyle(el).opacity, bottom: el.getBoundingClientRect().bottom, height: el.getBoundingClientRect().height, viewport: innerHeight, hitTarget: document.elementFromPoint(innerWidth / 2, innerHeight - 2)?.id }));
         for (let cycle = 0; cycle < 2; cycle++) {
-          const before = await canvas(); assert.equal(before.background, "rgb(11, 11, 15)"); assert.equal(before.opacity, "1"); assert.equal(before.bottom, before.viewport); assert.ok(before.height >= 8); assert.notEqual(before.hitTarget, "gateway-browser-edge");
+          const before = await canvas(); assert.equal(before.background, paletteRgb); assert.equal(before.opacity, "1"); assert.equal(before.bottom, before.viewport); assert.ok(before.height >= 8); assert.notEqual(before.hitTarget, "gateway-browser-edge");
+          assert.equal(await page.locator("body").evaluate(el => getComputedStyle(el).backgroundColor), paletteRgb);
           await launcher.click();
           const opening = await shell.evaluate(el => ({ width: el.getBoundingClientRect().width, layoutWidth: el.offsetWidth, opacity: Number(getComputedStyle(el).opacity), inert: el.inert }));
           assert.ok(opening.width > 0); assert.ok(opening.width < opening.layoutWidth); assert.equal(opening.inert, false);

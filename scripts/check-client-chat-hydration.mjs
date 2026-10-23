@@ -6,7 +6,7 @@ import { createRequire } from "node:module";
 const require2 = createRequire(new URL("../frontend/package.json", import.meta.url)), { build } = require2("esbuild");
 let browsers;
 try {
-  browsers = require2("playwright");
+  browsers = require2(process.env.PLAYWRIGHT_MODULE_PATH || "playwright");
 } catch {
   const entry = process.env.PLAYWRIGHT_MODULE_PATH || process.env.APPDATA && path.join(process.env.APPDATA, "npm/node_modules/playwright");
   if (!entry) throw Error("Install Playwright or set PLAYWRIGHT_MODULE_PATH");
