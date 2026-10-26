@@ -24,4 +24,8 @@ Interruptor por cliente/workspace en Integraciones → Meta CAPI y modal de píx
 - Migración aplicada en Builder (`fdkjkzpjqfbaavylapun`): `20261026202514_workspace_capi_control.sql`. Verificados SECURITY INVOKER, permiso authenticated, rechazo de anon y RLS existente sin cambios. Avisos de seguridad y rendimiento idénticos antes y después.
 - Edge Functions activas: conversions 170, retry-failed-conversions 47, conversions-test 13. Conservan `verify_jwt=false` previo y sus validaciones internas existentes. Comparación de código remoto anterior con HEAD: entrypoints sin diferencias funcionales; la copia compartida más antigua de conversions-test se actualiza a la versión canónica existente.
 - Verificado en DB: goldencajeros tiene `{"PYG":false}`, ARS sigue habilitado y cero otros clientes tienen overrides. No se modificaron flags de píxeles ni conversiones históricas.
-- Pendiente registrar commit y despliegue del frontend tras su verificación.
+- Commit publicado: `321e8976ac2d8c7b450eb43ac2f557d97837066f`, rama `fix/template7-session-reentry`.
+- Frontend compilado y promovido: `dpl_E2D8JuhJJCwL8jWCiUqXDLepT1hL`, estado READY, fuente 321e897. Snapshot del commit sin archivos `.env*` ni `.dev.vars*`. Producción anterior: `dpl_4kpvJAYjBpryb96ThjSSjWTSjnU6` (0a128ac).
+- `constructor.panelbotadmin.com` y `mkt.panelbotadmin.com`: HTTP 200 en Integraciones, bundle público contiene el interruptor y el RPC nuevos. Verificación de solo lectura, sin iniciar sesiones de clientes ni guardar ajustes desde la UI de producción.
+- Funciones desplegadas verificadas: las tres incluyen la política y el archivo compartido. GET conversions → 405, POST sin autorización a retry-failed-conversions y conversions-test → 401. Sin crear conversiones ni enviar eventos reales.
+- Árbol de trabajo limpio y rama sincronizada tras el registro de publicación. Sin cambios ni despliegues en API2, Panel3, Atrio o los gateways.
