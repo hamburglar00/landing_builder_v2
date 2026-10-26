@@ -29,7 +29,8 @@ const checks = await Promise.all(targets.map(async ([repo, origin]) => {
     assert.ok(html.includes('function entryFeedback()'));
     assert.ok(html.includes('next.disabled=true'));
     assert.ok(html.includes('aria-busy="false">Continuar a la plataforma'));
-    assert.ok(html.includes('Vas a ingresar automáticamente.'));
+    assert.ok(!html.includes('Vas a ingresar automáticamente.'));
+    assert.ok(html.includes('if(remaining>0){status.textContent="";'));
     assert.ok(!html.includes('Ingresando en '));
     assert.ok(!html.includes('al casino'));
   }
@@ -40,6 +41,6 @@ const checks = await Promise.all(targets.map(async ([repo, origin]) => {
   assert.ok(credentials.headers.get("cache-control").includes("no-store"));
   return { repo, origin, publicScriptMatchesSource: true, lineEndingsNormalized: true, sha256: hash, sourceSha256: sourceDigest(scriptBytes), publicStylesMatchSource: true, cssSha256: cssHash, cssSourceSha256: sourceDigest(styleBytes), login: "eye, compact copy and centered footer", constructorTransition: true, classicTransition: true, continueBusyFeedback: true, credentialsRequireSession: true, providerPaletteVariable: true };
 }));
-const directory = new URL("../.vercel/validation-entry-platform/", import.meta.url); await mkdir(directory, { recursive: true });
+const directory = new URL("../.vercel/validation-entry-silent-20261026/", import.meta.url); await mkdir(directory, { recursive: true });
 await writeFile(new URL("public-gateways.json", directory), JSON.stringify({ at: new Date().toISOString(), activatedTickets: 0, createdAccounts: 0, financialOperations: 0, checks }, null, 2) + "\n");
 console.log(JSON.stringify({ passed: checks.length, cloudflareIncluded: true, activatedTickets: 0, createdAccounts: 0 }));
