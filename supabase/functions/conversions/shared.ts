@@ -2,6 +2,7 @@ import type { SupabaseClient } from "https://esm.sh/@supabase/supabase-js@2";
 
 // Shared types kept in sync with conversions/index.ts
 export interface ConversionsConfig {
+  capi_workspace_settings?: Record<string, boolean>;
   user_id: string;
   pixel_id: string;
   meta_access_token: string;

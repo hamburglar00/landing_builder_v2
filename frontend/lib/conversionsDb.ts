@@ -42,6 +42,7 @@ function normalizePurchaseMinimumAmounts(
 // Types
 
 export interface ConversionsConfig {
+  capi_workspace_settings?: Record<string, boolean>;
   user_id: string;
   slug: string;
   pixel_id: string;
@@ -729,6 +730,13 @@ export async function upsertConversionsConfig(
       { onConflict: "user_id" },
     );
 
+  if (error) throw error;
+}
+
+export async function setWorkspaceCapiEnabled(userId: string, currency: ReportingCurrency, enabled: boolean): Promise<void> {
+  const { error } = await supabase.rpc("set_workspace_capi_enabled", {
+    p_user_id: userId, p_currency: currency, p_enabled: enabled,
+  });
   if (error) throw error;
 }
 

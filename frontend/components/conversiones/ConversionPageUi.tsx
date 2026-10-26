@@ -376,6 +376,7 @@ export function statusText(status: string) {
   if (status === "skipped_repeat_purchase_outside_window") return <span className="text-amber-300">omitido: repeat fuera del plazo CAPI</span>;
   if (status === "skipped_chatrace_capi_disabled") return <span className="text-amber-300">omitido: Chatrace desactivado</span>;
   if (status === "skipped_workspace_conflict") return <span className="text-red-300">omitido: workspace en conflicto</span>;
+  if (status === "skipped_workspace_capi_disabled") return <span className="text-amber-300">omitido: CAPI del workspace desactivado</span>;
   if (status.startsWith("skipped")) return <span className="text-zinc-400">omitido</span>;
   return <span className="text-zinc-600">-</span>;
 }

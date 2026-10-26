@@ -38,6 +38,8 @@ import ModalPortal from "@/components/ui/ModalPortal";
 import { useClientModulePermissions } from "@/components/clients/ClientModulePermissions";
 import { canViewClientIntegration } from "@/lib/clientModules";
 import { IntegrationMenu } from "./IntegrationMenu";
+import { useCurrencyScope } from "@/components/currency/CurrencyScope";
+import { WorkspaceCapiControl } from "./WorkspaceCapiControl";
 
 const PHONE_KIND_OPTIONS: Array<{ value: PhoneKind; label: string }> = [
   { value: "carga", label: "Carga" },
@@ -228,7 +230,7 @@ function SettingsSwitch({
   onChange: () => void;
 }) {
   return (
-    <div className="flex min-h-11 items-center justify-between gap-3 rounded-lg border border-zinc-800 bg-zinc-900/50 px-3 py-2">
+    <div className="flex min-h-11 items-center justify-between gap-3 border-b border-zinc-800/60 py-2 last:border-b-0">
       <span className="min-w-0">
         <span className="flex items-center gap-1.5 text-xs font-medium text-zinc-200">
           <span>{label}</span>
@@ -265,6 +267,7 @@ function parsePurchaseMinimumAmount(value: string): number | null {
 }
 
 export default function IntegracionesMetaCapi() {
+  const { currencyScope } = useCurrencyScope();
   const modulePermissions = useClientModulePermissions();
   const confirmAction = useAppConfirm();
   const [userId, setUserId] = useState<string | null>(null);
@@ -1833,7 +1836,7 @@ export default function IntegracionesMetaCapi() {
         </div>
       </section>
       ) : (
-      <section className="rounded-xl border border-zinc-800 bg-zinc-900/50 p-4">
+      <section className="space-y-4">
         <div className="mb-3 flex items-center justify-between gap-2">
           <h3 className="text-sm font-semibold text-zinc-200">Configuración Meta CAPI</h3>
           <div className="flex items-center gap-2">
@@ -1853,7 +1856,15 @@ export default function IntegracionesMetaCapi() {
             </button>
           </div>
         </div>
-        <div className="mt-3 rounded-lg border border-zinc-800 bg-zinc-950/40 p-3">
+        {userId && config && currencyScope !== "__all__" ? <WorkspaceCapiControl
+          key={`${userId}:${currencyScope}`}
+          userId={userId} currency={currencyScope}
+          enabled={config.capi_workspace_settings?.[currencyScope] !== false}
+          onSaved={(currency, enabled) => setConfig(previous => previous ? {
+            ...previous, capi_workspace_settings: { ...previous.capi_workspace_settings, [currency]: enabled },
+          } : previous)}
+        /> : null}
+        <div className="rounded-xl border border-zinc-800 bg-zinc-950/40 p-4">
           <div className="mb-2 flex items-center justify-between gap-2">
             <h4 className="text-xs font-semibold text-zinc-300">Pixeles configurados</h4>
             <span className="text-[11px] text-zinc-500">{pixelConfigs.length}</span>
@@ -1972,8 +1983,8 @@ export default function IntegracionesMetaCapi() {
               </div>
             </div>
 
-            <div className="min-h-0 flex-1 space-y-3 overflow-y-auto px-3 py-3 sm:px-4">
-              <section className="rounded-xl border border-zinc-800 bg-zinc-950/40 p-3">
+            <div className="min-h-0 flex-1 divide-y divide-zinc-800 overflow-y-auto px-4 sm:px-5">
+              <section className="py-4">
                 <h4 className="text-sm font-semibold text-zinc-100">Identificación</h4>
                 <div className="mt-3 grid gap-3 sm:grid-cols-[minmax(0,1fr)_minmax(0,220px)]">
                   <label className="block text-xs text-zinc-400">
@@ -1989,7 +2000,7 @@ export default function IntegracionesMetaCapi() {
                 </div>
               </section>
 
-              <details className="rounded-xl border border-zinc-800 bg-zinc-950/40 p-3">
+              <details className="py-4">
                 <summary className="cursor-pointer text-sm font-semibold text-zinc-100">Conexión y credenciales <span className="ml-1 text-[11px] font-normal text-zinc-500">· {draft.meta_currency} · datos protegidos</span></summary>
                 <div className="mt-3 flex items-center justify-end gap-2">
                   <HelpTooltip label="Datos protegidos" text="El ID, la moneda y el token están bloqueados para evitar cambios accidentales. Desbloquealos sólo cuando necesites modificarlos." />
@@ -2026,7 +2037,7 @@ export default function IntegracionesMetaCapi() {
                 </div>
               </details>
 
-              <section className="rounded-xl border border-zinc-800 bg-zinc-950/40 p-3">
+              <section className="py-4">
                 <h4 className="text-sm font-semibold text-zinc-100">Eventos enviados a Meta</h4>
                 <div className="mt-3 grid gap-2 sm:grid-cols-[minmax(0,1fr)_minmax(0,1fr)]">
                   <SettingsSwitch
@@ -2064,7 +2075,7 @@ export default function IntegracionesMetaCapi() {
                   />
                 </div>
                 {draft.send_purchase_capi ? (
-                  <div className="mt-3 rounded-lg border border-emerald-900/40 bg-emerald-950/10 p-3">
+                  <div className="mt-4 border-l-2 border-emerald-800/60 pl-3 sm:pl-4">
                     <h5 className="mb-2 text-xs font-semibold text-emerald-300">Opciones de Purchase</h5>
                     <SettingsSwitch
                       checked={draft.include_purchase_type_capi}
@@ -2089,7 +2100,7 @@ export default function IntegracionesMetaCapi() {
                       </div>
                     ) : null}
                     {draft.include_purchase_type_capi && draft.send_repeat_purchase_capi ? (
-                      <div className="mt-2 rounded-lg border border-zinc-800 bg-zinc-900/50 p-2">
+                      <div className="ml-2 mt-2 border-l border-zinc-700 pl-3">
                         <SettingsSwitch
                           checked={draft.repeat_purchase_capi_window_days !== null}
                           label="Limitar envío de Repeat Purchase"
@@ -2127,7 +2138,7 @@ export default function IntegracionesMetaCapi() {
                         Elegí First Purchase, Repeat Purchase o ambas para poder guardar.
                       </p>
                     ) : null}
-                    <div className="mt-2 rounded-lg border border-zinc-800 bg-zinc-900/50 p-2">
+                    <div className="mt-3 border-t border-zinc-800/60 pt-2">
                       <SettingsSwitch
                         checked={draft.purchase_capi_min_amount_enabled}
                         label="Filtrar Purchase por monto mínimo"
@@ -2157,9 +2168,9 @@ export default function IntegracionesMetaCapi() {
                 ) : null}
               </section>
 
-              <section className="rounded-xl border border-zinc-800 bg-zinc-950/40 p-3">
+              <section className="py-4">
                 <h4 className="text-sm font-semibold text-zinc-100">Datos de ubicación</h4>
-                <div className="mt-3 grid gap-2 sm:grid-cols-3">
+                <div className="mt-3">
                   <SettingsSwitch
                     checked={draft.send_geo_capi}
                     label="Enviar geo"
@@ -2167,7 +2178,7 @@ export default function IntegracionesMetaCapi() {
                     onChange={() => setDraft((p) => (p ? { ...p, send_geo_capi: !p.send_geo_capi } : p))}
                   />
                   {draft.send_geo_capi ? (
-                    <>
+                    <div className="ml-2 border-l border-zinc-700 pl-3 sm:grid sm:grid-cols-2 sm:gap-4">
                       <SettingsSwitch
                         checked={draft.geo_use_ipapi}
                         label="Geo por IP"
@@ -2180,7 +2191,7 @@ export default function IntegracionesMetaCapi() {
                         help="Sólo completa la ubicación faltante; conserva los datos que ya vienen en el evento."
                         onChange={() => setDraft((p) => (p ? { ...p, geo_fill_only_when_missing: !p.geo_fill_only_when_missing } : p))}
                       />
-                    </>
+                    </div>
                   ) : null}
                 </div>
               </section>

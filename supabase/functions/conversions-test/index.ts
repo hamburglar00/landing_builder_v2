@@ -1,4 +1,5 @@
 import { createClient, type SupabaseClient } from "https://esm.sh/@supabase/supabase-js@2";
+import { workspaceCapiEnabled } from "../conversions/workspace_capi.ts";
 import {
   buildFakeConversionRow,
   buildMetaRequest,
@@ -123,6 +124,9 @@ Deno.serve(async (req) => {
     usedFake = true;
   }
 
+  if (!workspaceCapiEnabled(config, row.currency)) {
+    return jsonResponse({ error: "El envío CAPI está desactivado para este workspace.", error_code: "workspace_capi_disabled" }, 409);
+  }
   const identity = deriveEventIdentity(row, event);
 
   let customData: Record<string, unknown> | undefined;

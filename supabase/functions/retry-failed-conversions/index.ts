@@ -24,6 +24,7 @@ import {
 import {
   resolvePurchasePixelAttribution,
 } from "../conversions/pixel_attribution.ts";
+import { workspaceCapiEnabled, WORKSPACE_CAPI_DISABLED_STATUS } from "../conversions/workspace_capi.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -265,6 +266,12 @@ Deno.serve(async (req) => {
     for (const row of purchaseRows) {
       const cfg = configMap.get(row.user_id);
       if (!cfg) continue;
+      if (!workspaceCapiEnabled(cfg, row.currency)) {
+        await db.from("conversions").update({ purchase_status_capi: WORKSPACE_CAPI_DISABLED_STATUS }).eq("id", row.id);
+        await writeConversionLog(db, row.user_id, row.id, "INFO", "Meta CAPI retry Purchase omitido",
+          JSON.stringify({ reason: "workspace_capi_disabled", workspace: row.currency }), "", "");
+        continue;
+      }
       if (isChatraceMetaCapiDisabled(row, chatraceMetaCapiMap)) {
         const obs = appendObs(
           row.observaciones ?? "",
@@ -1710,6 +1717,12 @@ async function retrySingleContactLeadCapiEvent(
   }
 
   const sourcePlatform = normalizeText(row.source_platform).toLowerCase();
+  if (!workspaceCapiEnabled(config, row.currency)) {
+    await skip(JSON.stringify({ reason: "workspace_capi_disabled", workspace: row.currency }), {
+      [statusField]: WORKSPACE_CAPI_DISABLED_STATUS,
+    });
+    return;
+  }
   const isWhatsappCloudApi = sourcePlatform === "whatsapp_cloud_api";
   if (isContact && isWhatsappCloudApi) {
     await skip(
@@ -1980,6 +1993,7 @@ function resolveRetryConfig(
 
   return {
     user_id: String(row.user_id),
+    capi_workspace_settings: cfg.capi_workspace_settings as Record<string, boolean> | undefined,
     pixel_id: pixelId,
     meta_access_token: accessToken,
     meta_currency: normalizeCurrencyCode(

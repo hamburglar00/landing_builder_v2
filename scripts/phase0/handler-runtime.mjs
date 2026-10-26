@@ -28,7 +28,7 @@ export async function handlerRuntime(api,{sourceOverrides=new Map()}={}){
   }
   blocked.push(url.hostname);throw Error('External IO forbidden by Phase 0 harness');
  };
- const handlers={};
+ const handlers={},modules={};
  for(const entry of ['conversions','retry-failed-conversions']){
   const cache=new Map();
   const load=file=>{
@@ -46,7 +46,7 @@ export async function handlerRuntime(api,{sourceOverrides=new Map()}={}){
     {filename:relative(root,file)})(localRequire,mod,mod.exports);
    return mod.exports;
   };
-  load(join(root,'supabase/functions',entry,'index.ts'));
+  modules[entry]=load(join(root,'supabase/functions',entry,'index.ts'));
   if(!handlers[entry])throw Error('Deno.serve callback was not registered');
  }
  const server=createServer(async(req,res)=>{
@@ -59,7 +59,7 @@ export async function handlerRuntime(api,{sourceOverrides=new Map()}={}){
   }catch{res.writeHead(500).end('Synthetic harness failure');}
  });
  await new Promise(r=>server.listen(0,'127.0.0.1',r));base=`http://127.0.0.1:${server.address().port}`;
- return {base,sent,dbErrors,blocked,logs,setMode:v=>mode=v,
+ return {base,sent,dbErrors,blocked,logs,modules,setMode:v=>mode=v,
   barrier:n=>{let arrived=0,release;const done=new Promise(r=>release=r);const timer=setTimeout(()=>release(),15000);gate={arrive:async()=>{if(++arrived===n){clearTimeout(timer);release();}await done;}};return ()=>{clearTimeout(timer);release();gate=null;return arrived;};},
   readBarrier:n=>{let arrived=0,release;const done=new Promise(r=>release=r);const timer=setTimeout(()=>release(),15000);readGate={arrive:async()=>{if(++arrived===n){clearTimeout(timer);release();}await done;}};return ()=>{clearTimeout(timer);release();readGate=null;return arrived;};},
   request:async(entry,body)=>{const r=await nativeFetch(`${base}/functions/v1/${entry}${entry==='conversions'?'?name=synthetic-client':''}`,{method:'POST',headers:{'Content-Type':'application/json',Connection:'close'},body:JSON.stringify(body)});return {status:r.status,body:await r.text()};},

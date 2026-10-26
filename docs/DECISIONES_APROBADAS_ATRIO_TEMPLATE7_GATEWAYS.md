@@ -464,3 +464,12 @@ Validación y publicación: [animación del chat a 520 ms](validation/chat-motio
 Pruebas y publicación: [transiciones de acceso](validation/entry-platform-20261023.md).
 
 Corrección del aviso de redirección: [espera sin aviso](validation/entry-silent-20261026.md).
+
+### CAPI por workspace y configuración del píxel (26/10/2026)
+
+- En Integraciones → Meta CAPI, el interruptor «Enviar eventos por CAPI» aplica al workspace seleccionado (ARS o PYG), por cliente, por encima de los píxeles. Guardar una moneda no cambia la otra; la configuración existente conserva CAPI activo por defecto.
+- Desactivar PYG de goldencajeros y conservar ARS. Los demás clientes conservan su estado. La pausa afecta Contact, Lead, CompleteRegistration y Purchase por servidor, incluidos reintentos y orígenes Atrio, Chatrace y WhatsApp. No modifica el píxel del navegador ni el registro interno de conversiones, valores, monedas o atribución.
+- Registrar la omisión como `skipped_workspace_capi_disabled`, sin presentarla como un fallo de Meta. Al reactivar, procesar eventos nuevos; no reenviar los que fueron omitidos durante la pausa. Los eventos ya enviados o en vuelo no se cancelan retroactivamente.
+- Mantener el modal del píxel como una superficie única, con secciones y separadores. Agrupar opciones dependientes de Purchase, Repeat Purchase y geo mediante sangría y líneas, sin tarjetas anidadas. Conservar las validaciones, credenciales protegidas, botones de ayuda y guardado/cancelación.
+
+Pruebas y publicación: [CAPI por workspace](validation/workspace-capi-20261026.md).

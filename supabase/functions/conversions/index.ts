@@ -21,6 +21,7 @@ import {
   shouldSkipCapiForNonMetaOrigin,
   toValidEventTime,
 } from "./shared.ts";
+import { workspaceCapiEnabled, WORKSPACE_CAPI_DISABLED_STATUS } from "./workspace_capi.ts";
 import {
   type PurchasePixelAttribution,
   resolvePurchasePixelAttribution,
@@ -60,6 +61,7 @@ const corsHeaders = {
 };
 
 interface ConversionsConfig {
+  capi_workspace_settings?: Record<string, boolean>;
   user_id: string;
   pixel_id: string;
   meta_access_token: string;
@@ -3279,6 +3281,17 @@ async function sendToMetaCAPI(
     pixelFallbackDisabledReason?: string;
   } = {},
 ): Promise<boolean> {
+  if (!workspaceCapiEnabled(config, row.currency)) {
+    const statusField = eventName === "Contact" ? "contact_status_capi"
+      : eventName === "Lead" ? "lead_status_capi"
+      : eventName === "CompleteRegistration" ? "registration_status_capi" : "purchase_status_capi";
+    const retryable = eventName === "Contact" ? { contact_capi_retryable: false }
+      : eventName === "Lead" ? { lead_capi_retryable: false } : {};
+    await db.from("conversions").update({ [statusField]: WORKSPACE_CAPI_DISABLED_STATUS, ...retryable }).eq("id", rowId);
+    await writeLog(db, row.user_id, "sendToMetaCAPI", "INFO", "Meta CAPI desactivado para el workspace",
+      JSON.stringify({ workspace: normalizeCurrencyCode(row.currency, config.meta_currency), event_name: eventName }), rowId);
+    return true; // An intentional skip is processed successfully, like other CAPI filters.
+  }
   const sourcePlatform = normalizedSourcePlatform(row.source_platform);
   const isChatrace = sourcePlatform === "chatrace";
   const isWhatsappCloudApi = sourcePlatform === "whatsapp_cloud_api";
