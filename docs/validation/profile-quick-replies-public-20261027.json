@@ -1,0 +1,29 @@
+{
+  "at": "2026-10-27T18:13:59.212Z",
+  "productionBusinessWrites": 0,
+  "checks": [
+    {
+      "repo": "landing-autologuin",
+      "publicGatewayUnchanged": true
+    },
+    {
+      "repo": "ases-gateway",
+      "publicGatewayUnchanged": true
+    },
+    {
+      "repo": "ganamos-gateway",
+      "publicGatewayUnchanged": true
+    },
+    {
+      "repo": "multi-skin-gateway",
+      "publicGatewayUnchanged": true
+    },
+    {
+      "atrioPublished": true,
+      "bundle": "https://www.atrio.website/_next/static/immutable/chunks/449xcmsmbuspo.js"
+    },
+    {
+      "privateReplyRouteRejectsAnonymous": true
+    }
+  ]
+}

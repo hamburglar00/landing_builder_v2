@@ -61,6 +61,11 @@ for (const [engine, type] of [["Chromium", chromium], ["WebKit", webkit]]) {
       const offer = chat.getByRole("complementary", { name: "Guardar acceso en este teléfono" });
       await chat.getByPlaceholder("Escribi un mensaje...").waitFor();
       await page.waitForFunction(() => !!window.GatewayApp);
+      for(const name of ["Mi perfil","Cerrar chat"]){
+        const button=chat.getByRole("button",{name,exact:true});
+        assert.equal(await button.evaluate(el=>getComputedStyle(el).borderTopColor),"rgb(255, 255, 255)");
+        assert.equal(await button.locator("svg").first().evaluate(el=>getComputedStyle(el).color),"rgb(255, 255, 255)");
+      }
       await page.waitForTimeout(1800);
       assert.equal(await offer.count(), 0);
       assert.equal(await page.getByRole("dialog").count(), 0, "No automatic install modal at entry");

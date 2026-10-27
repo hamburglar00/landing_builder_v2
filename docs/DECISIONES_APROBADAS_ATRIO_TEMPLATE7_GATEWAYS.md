@@ -502,3 +502,14 @@ Pruebas y publicación: [perfil e instalación contextual](validation/profile-co
 - Mantener el endpoint autenticado de Mi perfil y la compatibilidad con páginas anteriores. Aplicar a ambos motores y los cuatro gateways, incluido el Worker de Ganamos+. No habilita altas PBAdmin para Ganamos+, que aún no tiene esa integración.
 
 Pruebas y publicación: [clave reutilizada del autologin](validation/entry-credentials-20261027.md).
+
+### Teléfono, contraste y variables de respuestas (27/10/2026)
+
+- Mi perfil muestra «Tu teléfono» cuando falta WhatsApp. Los inputs móviles usan 16 px para evitar zoom automático; al cambiar el espacio disponible, el modal mantiene visible el campo enfocado mediante scroll interior. Conservar las tres paletas y las tarjetas de Usuario/Clave.
+- En el tema WhatsApp, Perfil y Cerrar tienen borde blanco; la silueta de Perfil también es blanca. Implementación compartida en Atrio para los cuatro gateways.
+- Respuestas rápidas, bienvenida y ausencia admiten `{{nombre}}` (nombre del cliente), `{{usuario}}` y `{{clave}}`. Se sustituyen al enviar, usando exclusivamente la cuenta vinculada a esa conversación. La sustitución es literal y de una sola pasada. Si faltan datos de acceso, mostrar «Disponible en Mi perfil»; nunca otra cuenta ni los marcadores sin completar.
+- La clave de cuentas PBAdmin necesita un endpoint privado de lectura en API2, con asesor, manager, agencia y jugador explícitos. No crea cuentas, no cambia claves ni consulta saldos/proveedores. API2 queda local; su despliegue corresponde al programador. No agregar una caché de claves.
+- Bienvenidas sin clave y chats existentes conservan un solo viaje de bootstrap; únicamente una bienvenida nueva con clave necesita la lectura privada y la segunda fase atómica. Mantener deduplicación, CBU inicial y las demás verificaciones.
+- Investigar el intento de Benja en `/diana` del 27/10 a las 14:35 sin crear/reintentar ni modificar su provisión. El estado incierto exige conciliación, no asumir éxito ni fracaso del proveedor.
+
+Validación y dependencia de API2: [perfil y respuestas rápidas](validation/profile-quick-replies-20261027.md).

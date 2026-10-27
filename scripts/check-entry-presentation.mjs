@@ -41,6 +41,17 @@ for(const[engine,type]of[["Chromium",chromium],["WebKit",webkit]]){
     assert.equal(await dialog.evaluate(el=>getComputedStyle(el).backgroundColor),rgb(template==="whatsapp"?"#ffffff":template==="page"?"#270538":"#1a1a1f"));
     assert.equal(await page.getByLabel("Usuario",{exact:true}).evaluate(el=>getComputedStyle(el).color),rgb(template==="whatsapp"?"#111b21":"#ffffff"));
     assert.equal(await page.getByLabel("Tu cuenta",{exact:true}).count(),1);
+    const phone=page.getByPlaceholder("Tu teléfono",{exact:true});
+    assert.equal(await phone.inputValue(),"");
+    if(viewport.width<640){
+      assert.ok(await phone.evaluate(el=>parseFloat(getComputedStyle(el).fontSize))>=16,"No iOS input zoom");
+      await phone.focus();
+      await page.setViewportSize({width:viewport.width,height:330});
+      await page.waitForTimeout(180);
+      const field=await phone.boundingBox(),modal=await dialog.boundingBox();
+      assert.ok(field.y>=modal.y && field.y+field.height<=modal.y+modal.height,"Focused phone remains in the resized modal");
+      await page.setViewportSize(viewport);
+    }
     assert.equal(await dialog.evaluate(el=>el.scrollWidth>el.clientWidth),false,"Profile fields must fit inside the modal");
     await page.getByRole("button",{name:"Mostrar clave"}).click();assert.equal(await page.getByLabel("Clave",{exact:true}).inputValue(),"fixture-password");
     assert.equal(await page.evaluate(()=>document.documentElement.scrollWidth>innerWidth),false);
