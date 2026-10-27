@@ -87,3 +87,42 @@ y `.vercel/validation-entry-ux/` (ignorados por Git). El tinte de las barras
 nativas de Safari/Chrome requiere validación física del iPhone; WebKit de
 escritorio no lo acredita. La captura de Chrome del usuario muestra incógnito,
 que puede conservar el tema propio del navegador.
+
+## Publicación verificada
+
+Los siete repositorios quedaron comiteados y pusheados a sus ramas existentes.
+Los siete builds de Vercel finalizaron READY y fueron promovidos. Se guardó el
+despliegue anterior de cada proyecto antes de promover, comprobando que nadie
+lo hubiera cambiado durante la preparación.
+
+| Proyecto | Commit publicado | Despliegue Vercel |
+| --- | --- | --- |
+| Rey | `644b610` | `dpl_EGaw86s2usGfzNLUC4PwQKU5N64m` |
+| Ases del Norte | `2a9e087` | `dpl_GM4ErwzKEVPahW7MF17SwMgrv9FZ` |
+| Ganamos NET | `3080e87` | `dpl_TYmUgioXn1yh1MvU2o2UutxQe5ke` |
+| Ganamos+ | `f1967c4` | `dpl_4LfY6mVSEuvRcDks8qUREPqycJUW` |
+| Atrio | `51fcb5e` | `dpl_9DZECRtu1ce8NegdaPBRbvUsiEYj` |
+| Builder | `4e1437d` | `dpl_4Bq8rCv4jYVktVzUyQ2vXU11o8Rg` |
+| Clásico | `343a0fc` | `dpl_HSD5SyxYDsC8ztxVWhxZCpVVrGUE` |
+
+Ganamos+ también quedó publicado en Cloudflare: versión
+`a5ce092c-97d7-4938-8220-be8298a3c14f`, conservando variables y secretos.
+Versión anterior del Worker: `5a196d9d-770f-43b4-98b7-d24d385d26fc`.
+
+La [verificación pública](entry-presentation-public-20261027.json) comparó los
+JS/CSS servidos por los cuatro dominios con las fuentes normalizando finales de
+línea; comprobó la tarjeta con clave de ambos motores mediante GET del HTML,
+sin ejecutarlo ni activar pases, y el rechazo 401 del endpoint sin sesión.
+En Diana se verificó la transición actualizada tanto en clásico como constructor.
+El bundle público del widget, descargado por `/embed/warm` sin montar el chat,
+contiene «Tu cuenta» y ya no contiene «Tu cuenta del casino».
+
+Resultado final local: 116 pruebas unitarias de gateways y 96 escenarios de
+navegador aprobados. Ninguna creación o transacción productiva durante las
+verificaciones. La validación física de barras nativas queda a cargo de la
+prueba del usuario en su iPhone.
+
+Despliegues anteriores para rollback: Rey `dpl_CUJVFgzEoZ1RhKfbZnBgugAxpMZf`,
+Ases `dpl_9dWoSAHiu782HVXp3qhqCYvSpsUT`, NET `dpl_4bNMx7HtRjkd1hovbgVgCvnwyrS3`,
+Ganamos+ `dpl_278fJtDA857BkWDXjn79UxP5UUBi`, Atrio `dpl_9Utpo9iR2epmb7uDzRZxRz4TYPR9`,
+Builder `dpl_9yNFw8gEzauYWhZqTRhL78eeCKdL`, clásico `dpl_BK2aCxM8t729ZGqthc4q9KKGoqme`.

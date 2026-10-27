@@ -1,0 +1,56 @@
+{
+  "at": "2026-10-27T16:53:52.157Z",
+  "createdAccounts": 0,
+  "activatedTickets": 0,
+  "financialOperations": 0,
+  "results": [
+    {
+      "repo": "landing-autologuin",
+      "origin": "https://www.reydeases.fun",
+      "gateway-client.js": true,
+      "gateway-client.css": true,
+      "constructor": true,
+      "classic": true,
+      "credentialsRequireSession": true
+    },
+    {
+      "repo": "ases-gateway",
+      "origin": "https://www.asesdelnorte.online",
+      "gateway-client.js": true,
+      "gateway-client.css": true,
+      "constructor": true,
+      "classic": true,
+      "credentialsRequireSession": true
+    },
+    {
+      "repo": "ganamos-gateway",
+      "origin": "https://www.ganamosnet.icu",
+      "gateway-client.js": true,
+      "gateway-client.css": true,
+      "constructor": true,
+      "classic": true,
+      "credentialsRequireSession": true
+    },
+    {
+      "repo": "multi-skin-gateway",
+      "origin": "https://ganamosnet.global",
+      "gateway-client.js": true,
+      "gateway-client.css": true,
+      "constructor": true,
+      "classic": true,
+      "credentialsRequireSession": true
+    },
+    {
+      "origin": "https://landing.panelbotadmin.com/diana",
+      "transitionPalettePublished": true
+    },
+    {
+      "origin": "https://mkt.panelbotadmin.com/l/diana",
+      "transitionPalettePublished": true
+    },
+    {
+      "origin": "https://www.atrio.website",
+      "profilePublished": true
+    }
+  ]
+}
