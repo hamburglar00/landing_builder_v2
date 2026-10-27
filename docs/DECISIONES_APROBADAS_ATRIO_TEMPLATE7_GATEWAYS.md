@@ -473,3 +473,13 @@ Corrección del aviso de redirección: [espera sin aviso](validation/entry-silen
 - El modal del píxel usa cuatro pestañas: General, Eventos, Purchase y Ubicación. Una opción por fila, con interruptores alineados a la derecha. Dentro de cada pestaña se permiten tarjetas para agrupar opciones relacionadas, evitando sucesivas capas de tarjetas; Purchase separa clasificación, plazo de recargas y monto mínimo. Conservar las validaciones, credenciales protegidas, botones de ayuda y guardado/cancelación. El borrador se conserva al cambiar de pestaña; abrir el modal comienza siempre en General. Guardar y Cancelar quedan visibles y el motivo de una selección de Purchase inválida se muestra desde cualquier pestaña.
 
 Pruebas y publicación: [CAPI por workspace](validation/workspace-capi-20261026.md).
+
+### Paleta, cuenta creada y perfil del cliente (27/10/2026)
+
+- Mientras se muestra la transición, el fondo raíz y el tema del navegador siguen la página seleccionada, tanto en clásico como en constructor. La creación usa fondo opaco sin blur; al cancelar o fallar y volver al formulario se recupera el tema anterior. Rey usa `#141414`, Ases `#071b2c`, NET `#11001f` y Ganamos+ `#121212`. Las barras nativas, especialmente Chrome/iOS en incógnito, pueden conservar su propio tinte: no afirmar que una prueba de WebKit de escritorio certifica el iPhone.
+- La tarjeta de cuenta creada muestra Usuario y Clave, visibles y con copia independiente. La clave se consulta exclusivamente desde la sesión HttpOnly ya autenticada, sin IDs elegidos por el cliente, sin guardarla en storage, URLs o tracking. La consulta no demora el ingreso ni altera la espera configurada o Continuar; si no responde, queda disponible desde Mi perfil. No mostrar un aviso de redirección automática.
+- Mi perfil conserva la paleta elegida por el asesor en sus tres temas y cambia «Tu cuenta del casino» por «Tu cuenta». Allí la clave sigue oculta inicialmente, con ojo y copia. Los campos deben caber dentro del modal.
+- Los avisos de invitaciones comparten logo centrado sobre el título en los cuatro gateways. Se conserva íntegro el instructivo de instalación.
+- No modificar todavía cuándo se ofrece instalar la app. El usuario pidió una explicación y propuesta; cambiar el disparador requiere una decisión posterior.
+
+Validación y textos del recorrido: [revisión de presentación](validation/entry-presentation-20261027.md).

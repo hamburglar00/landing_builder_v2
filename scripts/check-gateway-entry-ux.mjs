@@ -34,12 +34,15 @@ for (const [engine, browserType] of [["Chromium", playwright.chromium], ["WebKit
           if (url.pathname === "/api/preparations/complete") { accounts++; return route.fulfill({ json: { username: "fixtureplayer", continuation_token: "c1.fixture", handoff_url: "https://fixture.test/start?t=fixture" } }); }
           if (url.pathname === "/start") { starts++; return route.fulfill({ json: { username: "fixtureplayer", redirect_url: "https://fixture.test/home", entry_wait: { enabled: true, seconds: 60 } } }); }
           if (url.pathname === "/api/session/recover") { confirmations++; cookieRequested = true; await cookieGate; return route.fulfill({ json: { active: true } }); }
+          if (url.pathname === "/api/session/credentials") return route.fulfill({ json: { username: "fixtureplayer", password: "fixture-password" } });
           if (url.pathname === "/home") return route.fulfill({ contentType: "text/html", body: "<p>Ingreso confirmado</p>" });
           if (url.pathname === "/logo.webp") return route.fulfill({ contentType: "image/svg+xml", body: '<svg xmlns="http://www.w3.org/2000/svg" width="240" height="180" viewBox="0 0 240 180"><circle cx="120" cy="90" r="64" fill="none" stroke="#f6c84b" stroke-width="3"/><text x="120" y="100" fill="#f6c84b" font-size="24" text-anchor="middle">Fixture</text></svg>' });
           return route.fulfill({ contentType: "text/html", body: asset.renderPreparationPage(classic ? "classic-fixture" : "p1.fixture", theme) });
         });
         await page.goto("https://fixture.test/prepare");
         await page.getByRole("button", { name: "Continuar a la plataforma", exact: true }).waitFor();
+        await page.locator("#password").filter({hasText:"fixture-password"}).waitFor();
+        assert.equal(await page.getByRole("button", {name:"Copiar clave",exact:true}).isEnabled(), true);
         const next = page.locator("#continue");
         try { await next.click({ timeout: 5000 }); }
         catch (error) { await page.screenshot({ path: path.join(artifact, engine + "-" + asset.repo + "-continue-error.png") }); console.log(JSON.stringify({ engine, repo: asset.repo, classic, html: await page.locator("main").innerHTML() })); throw error; }
@@ -106,6 +109,14 @@ for (const [engine, browserType] of [["Chromium", playwright.chromium], ["WebKit
         await page.emulateMedia({ reducedMotion: "reduce" }); await page.keyboard.press("Escape");
         await page.waitForFunction(() => document.querySelector("#gateway-chat-shell").dataset.motion === "closed");
         assert.equal(await shell.getAttribute("data-motion"), "closed");
+        // The invitation uses the same centered brand header in every gateway.
+        await page.frameLocator("#gateway-chat-shell iframe").locator("body").evaluate(() => parent.postMessage({source:"atrio-widget",type:"atrio.widget.invitation",invitation:{id:"fixture-profile-20261027",action:"complete_profile",title:"COMPLETAR PERFIL",body:"Completá los datos que faltan en tu perfil."}},"https://fixture.test"));
+        await page.getByRole("dialog").waitFor();
+        const brand = await page.locator(".gateway-app-notice-brand").evaluate(el => {
+          const box=el.getBoundingClientRect(), mark=el.querySelector(".gateway-app-notice-mark").getBoundingClientRect();
+          return {center:box.x+box.width/2,logoCenter:mark.x+mark.width/2};
+        });
+        assert.ok(Math.abs(brand.center-brand.logoCenter)<1,"Invitation logo is centered");
         checks.push({ repo: asset.repo, engine, viewport, opensFromLauncher: true, contractsBeforeCollapsing: true, noProviderTouchBlock: true, rapidReversal: true, reducedMotion: true, darkEdgeInAllStates: true, frameNavigations, sdkRequests });
         await page.close();
       }
