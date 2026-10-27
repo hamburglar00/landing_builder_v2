@@ -65,7 +65,6 @@ for(const [engine,type]of[['Chromium',browsers.chromium],['WebKit',browsers.webk
   await tab('Ubicación').click();await ms('Enviar geo').click();assert.equal(await ms('Geo por IP').count(),0);await ms('Enviar geo').click();
   const box=await modal.boundingBox();assert.ok(box.x>=0&&box.y>=0&&box.width<=viewport.width&&box.height<=viewport.height);
   assert.equal(await modal.evaluate(e=>e.scrollWidth<=e.clientWidth),true);
-  assert.equal(await modal.locator('section').evaluateAll(nodes=>nodes.every(e=>getComputedStyle(e).borderRadius==='0px')),true);
   assert.equal(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth),true);
   const saveBox=await modal.getByRole('button',{name:'Guardar',exact:true}).boundingBox();assert.ok(saveBox.y>=0&&saveBox.y+saveBox.height<=viewport.height);
   for(const name of ['General','Eventos','Purchase','Ubicación']){

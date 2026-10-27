@@ -2023,7 +2023,7 @@ export default function IntegracionesMetaCapi() {
 
             <div ref={editBodyRef} role="tabpanel" id={`${pixelSettingsId}-panel`} aria-labelledby={`${pixelSettingsId}-${editTab}-tab`} className="min-h-0 flex-1 overflow-y-auto px-4 sm:px-5">
               {editTab === "general" ? <>
-              <section className="py-4">
+              <section className="pixel-settings-group my-4">
                 <h4 className="text-sm font-semibold text-zinc-100">Identificación</h4>
                 <div className="mt-3 space-y-3">
                   <label className="block text-xs text-zinc-400">
@@ -2039,7 +2039,7 @@ export default function IntegracionesMetaCapi() {
                 </div>
               </section>
 
-              <details className="border-t border-zinc-800 py-4">
+              <details className="pixel-settings-group mb-4">
                 <summary className="cursor-pointer text-sm font-semibold text-zinc-100">Conexión y credenciales <span className="ml-1 text-[11px] font-normal text-zinc-500">· {draft.meta_currency} · datos protegidos</span></summary>
                 <div className="mt-3 flex items-center justify-end gap-2">
                   <HelpTooltip label="Datos protegidos" text="El ID, la moneda y el token están bloqueados para evitar cambios accidentales. Desbloquealos sólo cuando necesites modificarlos." />
@@ -2080,7 +2080,7 @@ export default function IntegracionesMetaCapi() {
               {editTab === "events" ?
               <section className="py-4">
                 <h4 className="text-sm font-semibold text-zinc-100">Eventos enviados a Meta</h4>
-                <div className="mt-3">
+                <div className="pixel-settings-group mt-3">
                   <SettingsSwitch
                     checked={draft.meta_ads_only_capi}
                     label="Solo eventos de Meta Ads"
@@ -2088,8 +2088,8 @@ export default function IntegracionesMetaCapi() {
                     onChange={() => setDraft((p) => (p ? { ...p, meta_ads_only_capi: !p.meta_ads_only_capi } : p))}
                   />
                 </div>
-                <h5 className="mt-4 mb-2 text-xs font-semibold text-zinc-300">Tipos de evento</h5>
-                <div>
+                <div className="pixel-settings-group mt-3">
+                  <h5 className="mb-2 text-xs font-semibold text-zinc-300">Tipos de evento</h5>
                   <SettingsSwitch
                     checked={draft.send_contact_capi}
                     label="Contact"
@@ -2121,7 +2121,8 @@ export default function IntegracionesMetaCapi() {
               <section className="py-4">
                 <h4 className="text-sm font-semibold text-zinc-100">Opciones de Purchase</h4>
                 {draft.send_purchase_capi ? (
-                  <div className="mt-3">
+                  <div className="mt-3 space-y-3">
+                    <div className="pixel-settings-group">
                     <SettingsSwitch
                       checked={draft.include_purchase_type_capi}
                       label="Clasificar Purchase (first/repeat)"
@@ -2129,7 +2130,7 @@ export default function IntegracionesMetaCapi() {
                       onChange={() => setDraft((p) => (p ? { ...p, include_purchase_type_capi: !p.include_purchase_type_capi } : p))}
                     />
                     {draft.include_purchase_type_capi ? (
-                      <div className="border-l border-zinc-700 pl-3">
+                      <div>
                         <SettingsSwitch
                           checked={draft.send_first_purchase_capi}
                           label="First Purchase"
@@ -2144,8 +2145,9 @@ export default function IntegracionesMetaCapi() {
                         />
                       </div>
                     ) : null}
+                    </div>
                     {draft.include_purchase_type_capi && draft.send_repeat_purchase_capi ? (
-                      <div className="ml-2 mt-2 border-l border-zinc-700 pl-3">
+                      <div className="pixel-settings-group">
                         <SettingsSwitch
                           checked={draft.repeat_purchase_capi_window_days !== null}
                           label="Limitar envío de Repeat Purchase"
@@ -2176,7 +2178,7 @@ export default function IntegracionesMetaCapi() {
                         ) : null}
                       </div>
                     ) : null}
-                    <div className="mt-3 border-t border-zinc-800/60 pt-2">
+                    <div className="pixel-settings-group">
                       <SettingsSwitch
                         checked={draft.purchase_capi_min_amount_enabled}
                         label="Filtrar Purchase por monto mínimo"
@@ -2212,7 +2214,7 @@ export default function IntegracionesMetaCapi() {
               {editTab === "location" ?
               <section className="py-4">
                 <h4 className="text-sm font-semibold text-zinc-100">Datos de ubicación</h4>
-                <div className="mt-3">
+                <div className="pixel-settings-group mt-3">
                   <SettingsSwitch
                     checked={draft.send_geo_capi}
                     label="Enviar geo"
@@ -2220,7 +2222,7 @@ export default function IntegracionesMetaCapi() {
                     onChange={() => setDraft((p) => (p ? { ...p, send_geo_capi: !p.send_geo_capi } : p))}
                   />
                   {draft.send_geo_capi ? (
-                    <div className="border-l border-zinc-700 pl-3">
+                    <div>
                       <SettingsSwitch
                         checked={draft.geo_use_ipapi}
                         label="Geo por IP"
