@@ -493,3 +493,12 @@ Validación y textos del recorrido: [revisión de presentación](validation/entr
 - La consulta sobre aprovechar la clave devuelta al crear el usuario es una revisión técnica: no cambia todavía el contrato de credenciales ni la consulta autenticada existente.
 
 Pruebas y publicación: [perfil e instalación contextual](validation/profile-contextual-install-20261027.md).
+
+### Clave reutilizada del autologin (27/10/2026)
+
+- La pantalla de cuenta creada obtiene la clave del JSON privado de preactivación del gateway, usando las credenciales del mismo pase con el que acaba de autenticarse. Reemplaza la consulta adicional de entrada a `/api/session/credentials`; no agrega lecturas de base de datos.
+- Entregar la clave solo después del login y creación de sesión exitosos, en una petición JSON del mismo origen. La respuesta no admite caché ni CORS. No incluirla en redirecciones, HTML inicial, URLs, logs, tracking ni almacenamiento del navegador. La UI valida que corresponda al usuario mostrado y usa texto, nunca HTML.
+- Conservar la confirmación de cookie, recuperación cifrada, Continuar y la espera configurable. Una respuesta antigua, un origen no verificable o un reintento sin credenciales conserva el acceso y muestra «Disponible en Mi perfil», sin otra consulta.
+- Mantener el endpoint autenticado de Mi perfil y la compatibilidad con páginas anteriores. Aplicar a ambos motores y los cuatro gateways, incluido el Worker de Ganamos+. No habilita altas PBAdmin para Ganamos+, que aún no tiene esa integración.
+
+Pruebas y publicación: [clave reutilizada del autologin](validation/entry-credentials-20261027.md).

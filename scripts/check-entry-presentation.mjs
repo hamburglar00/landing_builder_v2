@@ -55,8 +55,8 @@ for(const[engine,type]of[["Chromium",chromium],["WebKit",webkit]]){
     await page.route("https://fixture.test/**",async route=>{
      const pathname=new URL(route.request().url()).pathname;
      if(pathname==="/api/preparations/complete")return route.fulfill({json:{username:"fixtureplayer",continuation_token:"c1.fixture",handoff_url:"https://fixture.test/start?t=fixture"}});
-     if(pathname==="/start")return route.fulfill({json:{username:"fixtureplayer",redirect_url:"https://fixture.test/home",entry_wait:{enabled:true,seconds:60}}});
-     if(pathname==="/api/session/credentials")return route.fulfill({json:{username:"fixtureplayer",password:"fixture-password"}});
+     if(pathname==="/start")return route.fulfill({json:{username:"fixtureplayer",password:"fixture-password",redirect_url:"https://fixture.test/home",entry_wait:{enabled:true,seconds:60}}});
+     if(pathname==="/api/session/credentials")throw Error("Entry must reuse /start credentials");
      if(pathname==="/api/session/recover")return route.fulfill({json:{active:true}});
      if(pathname.endsWith(".avif")||pathname.endsWith(".webp"))return route.fulfill({body:await readFile(path.join(asset.cwd,"public",pathname)),contentType:pathname.endsWith(".avif")?"image/avif":"image/webp"});
      if(pathname==="/overlay")return route.fulfill({contentType:"text/html",body:`<html><head><meta name="theme-color" content="#000000"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"><style>html,body{background:#000}</style></head><body>${asset.renderGatewayEntryTransition(asset.provider,{active:true,stage:"creating"})}<script>${asset.GATEWAY_ENTRY_TRANSITION_RUNTIME};window.transition=createGatewayEntryTransition(document.getElementById("gateway-entry-transition"));transition.start("creating");</script></body></html>`});

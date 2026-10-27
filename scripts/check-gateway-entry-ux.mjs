@@ -32,9 +32,9 @@ for (const [engine, browserType] of [["Chromium", playwright.chromium], ["WebKit
         await page.route("https://fixture.test/**", async route => {
           const url = new URL(route.request().url());
           if (url.pathname === "/api/preparations/complete") { accounts++; return route.fulfill({ json: { username: "fixtureplayer", continuation_token: "c1.fixture", handoff_url: "https://fixture.test/start?t=fixture" } }); }
-          if (url.pathname === "/start") { starts++; return route.fulfill({ json: { username: "fixtureplayer", redirect_url: "https://fixture.test/home", entry_wait: { enabled: true, seconds: 60 } } }); }
+          if (url.pathname === "/start") { starts++; assert.equal(route.request().headers().accept, "application/json"); return route.fulfill({ json: { username: "fixtureplayer", password: "fixture-password", redirect_url: "https://fixture.test/home", entry_wait: { enabled: true, seconds: 60 } } }); }
           if (url.pathname === "/api/session/recover") { confirmations++; cookieRequested = true; await cookieGate; return route.fulfill({ json: { active: true } }); }
-          if (url.pathname === "/api/session/credentials") return route.fulfill({ json: { username: "fixtureplayer", password: "fixture-password" } });
+          if (url.pathname === "/api/session/credentials") throw Error("Entry must reuse /start credentials");
           if (url.pathname === "/home") return route.fulfill({ contentType: "text/html", body: "<p>Ingreso confirmado</p>" });
           if (url.pathname === "/logo.webp") return route.fulfill({ contentType: "image/svg+xml", body: '<svg xmlns="http://www.w3.org/2000/svg" width="240" height="180" viewBox="0 0 240 180"><circle cx="120" cy="90" r="64" fill="none" stroke="#f6c84b" stroke-width="3"/><text x="120" y="100" fill="#f6c84b" font-size="24" text-anchor="middle">Fixture</text></svg>' });
           return route.fulfill({ contentType: "text/html", body: asset.renderPreparationPage(classic ? "classic-fixture" : "p1.fixture", theme) });
