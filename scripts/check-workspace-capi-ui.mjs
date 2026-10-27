@@ -70,6 +70,7 @@ for(const [engine,type]of[['Chromium',browsers.chromium],['WebKit',browsers.webk
   const saveBox=await modal.getByRole('button',{name:'Guardar',exact:true}).boundingBox();assert.ok(saveBox.y>=0&&saveBox.y+saveBox.height<=viewport.height);
   for(const name of ['General','Eventos','Purchase','Ubicación']){
    await tab(name).click();assert.equal(await modal.getByRole('tabpanel').getAttribute('aria-labelledby'),await tab(name).getAttribute('id'));
+   await page.waitForFunction(()=>getComputedStyle(document.querySelector('[role="tab"][aria-selected="true"]')).borderBottomColor!==getComputedStyle(document.querySelector('[role="tab"][aria-selected="false"]')).borderBottomColor);
    const rightEdges=await modal.getByRole('switch').evaluateAll(nodes=>nodes.map(e=>e.getBoundingClientRect().right));assert.ok(rightEdges.every(x=>Math.abs(x-rightEdges[0])<1));
    assert.equal(await modal.getByRole('tablist').evaluate(e=>e.scrollWidth<=e.clientWidth),true);
    if(engine==='Chromium'&&[390,1366].includes(viewport.width))await page.screenshot({path:path.join(artifacts,`pixel-${name}-${viewport.width}.png`),animations:'disabled'});

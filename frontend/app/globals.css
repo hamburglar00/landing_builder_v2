@@ -372,6 +372,10 @@ a {
   overflow: hidden !important;
 }
 
+.integration-edit-modal [role="tab"][aria-selected="true"] {
+  border-bottom-color: var(--color-primary);
+}
+
 .panel-main-content > * {
   animation: panel-enter 220ms cubic-bezier(0.22, 1, 0.36, 1) both;
 }
