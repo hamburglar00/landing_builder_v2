@@ -3,6 +3,38 @@ import test from "node:test";
 import { fetchWithEntryRecovery } from "../lib/reyDeAses/request-recovery";
 import { resolveTargetAccount, TargetIntegrationError } from "../lib/reyDeAses/integrations.server";
 
+test("partial JSON, body errors and body timeouts resume the same entry request", async () => {
+  const originalFetch = globalThis.fetch, originalTimer = globalThis.setTimeout;
+  globalThis.setTimeout = ((callback: () => void, ms: number) => originalTimer(callback, ms === 45000 ? 25 : 0)) as typeof setTimeout;
+  try {
+    for (const scenario of ["truncated", "stream-error", "body-timeout", "always-truncated"]) {
+      let calls = 0;
+      const bodies: unknown[] = [];
+      globalThis.fetch = async (_url, init) => {
+        calls++; bodies.push(init?.body);
+        if (calls > 1 && scenario !== "always-truncated") return Response.json({ username: "fixture" });
+        if (scenario === "truncated" || scenario === "always-truncated") return new Response('{"username":');
+        return new Response(new ReadableStream({ start(controller) {
+          controller.enqueue(new TextEncoder().encode('{"username":'));
+          if (scenario === "stream-error") controller.error(new TypeError("socket closed"));
+          else init?.signal?.addEventListener("abort", () => controller.error(new DOMException("timeout", "AbortError")), { once: true });
+        }}));
+      };
+      if (scenario === "always-truncated") await assert.rejects(fetchWithEntryRecovery("/entry", { body: "same-intent" }));
+      else assert.deepEqual(await (await fetchWithEntryRecovery("/entry", { body: "same-intent" })).json(), { username: "fixture" });
+      assert.equal(calls, scenario === "always-truncated" ? 4 : 2);
+      assert.deepEqual([...new Set(bodies)], ["same-intent"]);
+    }
+    let forbiddenCalls = 0;
+    globalThis.fetch = async () => {
+      forbiddenCalls++;
+      return new Response(new ReadableStream({ start(c) { c.error(new Error("body lost")); } }), { status: 403 });
+    };
+    assert.equal((await fetchWithEntryRecovery("/entry", { body: "same-intent" })).status, 403);
+    assert.equal(forbiddenCalls, 1, "Permanent HTTP failure never retries even if its body is broken");
+  } finally { globalThis.fetch = originalFetch; globalThis.setTimeout = originalTimer; }
+});
+
 test("entry recovery keeps the exact request, respects Retry-After and stops on permanent errors", async () => {
   const originalFetch = globalThis.fetch, originalTimer = globalThis.setTimeout;
   const body = JSON.stringify({ token: "p1.fixture-same-intent" });
