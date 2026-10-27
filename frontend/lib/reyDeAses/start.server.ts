@@ -57,7 +57,7 @@ type AccountReadyResponder = (
   prepared: Template7PreparedStart,
 ) => Response | Promise<Response>;
 
-function json(body: Record<string, string>, status: number): Response {
+function json(body: Record<string, unknown>, status: number): Response {
   return new Response(JSON.stringify(body), {
     status,
     headers: { "Content-Type": "application/json", "Cache-Control": "no-store", "X-Content-Type-Options": "nosniff" },
@@ -170,7 +170,7 @@ async function handleTemplate7StartInner(
           : context.status === "landing_unavailable" || context.status === "advisor_not_assigned" ? 403
             : context.status === "rate_limited" ? 429 : 503;
         const response = json({ error: context.status }, status);
-        if (context.status === "rate_limited") response.headers.set("Retry-After", "45");
+        if (context.status === "rate_limited") response.headers.set("Retry-After", "10");
         return response;
       }
       if (!context.landing || !context.provider || !context.advisor) throw new Error("invalid start context");
@@ -202,7 +202,7 @@ async function handleTemplate7StartInner(
       if (await bounded(deps.db.blocked(landing.user_id))) return json({ error: "landing_unavailable" }, 403);
       if (!await bounded(deps.allowStart(request, landing.id, identity.deviceId, identity.needsCookie))) {
         const response = json({ error: "rate_limited" }, 429);
-        response.headers.set("Retry-After", "45");
+        response.headers.set("Retry-After", "10");
         return response;
       }
       const assignment = await bounded(deps.db.assignment(landing.id, payload.atrio_client_id));
@@ -256,7 +256,7 @@ async function handleTemplate7StartInner(
     response.headers.set("Server-Timing", template7ServerTiming(prepared.accountResolutionMs!, account.created, stageTimings));
     return response;
   } catch (error) {
-    if (error instanceof TargetIntegrationError) return json({ error: error.code }, 503);
+    if (error instanceof TargetIntegrationError) return json({ error: error.code, retryable: error.retryable }, 503);
     return json({ error: "service_unavailable" }, 503);
   } finally {
     logServerFlowTotal("template7_start", flowStartedAt);

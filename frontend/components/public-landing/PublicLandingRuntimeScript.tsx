@@ -3,6 +3,7 @@ import { buildPhoneNormalizerScript } from "./trackingScriptHelpers";
 import { buildTemplate7HandoffRuntimeScript } from "./template7HandoffScript";
 import { buildArgentinaWhatsappNormalizerScript } from "@/lib/landing/argentinaWhatsapp";
 import { captureLandingResolution } from "@/lib/landing/resolution";
+import { ENTRY_REQUEST_RECOVERY_SCRIPT } from "@/lib/reyDeAses/request-recovery";
 
 type Props = {
   slug: string;
@@ -133,7 +134,6 @@ export function buildPublicLandingRuntimeSource() {
       var landingResolution = (${captureLandingResolution.toString()})(cfg.slug, cfg.automaticLandingSelection === true);
       var template7ContactSent = false;
       var template7AttemptContext = null;
-      var template7RetryTimer = null;
       var noPhoneTimer = null;
       var metaTracking = {
         fbp: "",
@@ -168,6 +168,7 @@ export function buildPublicLandingRuntimeSource() {
       ${buildPhoneNormalizerScript("normalizePhone")}
       ${buildArgentinaWhatsappNormalizerScript("normalizeArgentinaWhatsapp")}
       ${buildTemplate7HandoffRuntimeScript()}
+      ${ENTRY_REQUEST_RECOVERY_SCRIPT}
       function setTemplate7Error(message) {
         var error = document.querySelector("[data-template7-error]");
         if (!error) return;
@@ -176,18 +177,10 @@ export function buildPublicLandingRuntimeSource() {
       }
 
       function failTemplate7(button) {
-        if (template7RetryTimer) window.clearTimeout(template7RetryTimer);
-        clickLocked = true;
-        button.disabled = true;
+        clickLocked = false;
+        button.disabled = false;
         setButtonText(button, getRestButtonText(button));
-        setTemplate7Error("No pudimos abrir tu cuenta ahora. Podés reintentar en 45 segundos.");
-        template7RetryTimer = window.setTimeout(function () {
-          template7RetryTimer = null;
-          clickLocked = false;
-          var input = document.querySelector("[data-template7-name]");
-          button.disabled = !input || !String(input.value || "").trim();
-          setTemplate7Error("Podés volver a intentar. No se creará una cuenta duplicada.");
-        }, 45000);
+        setTemplate7Error("Tu acceso sigue pendiente. Tocá el botón para continuar con el mismo intento.");
       }
 
       function startTemplate7Gateway(name, phone, promoCode, atrioData, tracking, params) {
@@ -195,14 +188,11 @@ export function buildPublicLandingRuntimeSource() {
         var advisorSlug = firstNonEmpty([atrioData && atrioData.atrioSlug, atrioData && atrioData.atrio_slug]);
         var atrioClientId = firstNonEmpty([atrioData && atrioData.atrioClientId, atrioData && atrioData.atrio_client_id]);
         if (!advisorId || !advisorSlug || !atrioClientId) return Promise.reject(new Error("advisor unavailable"));
-        var controller = new AbortController();
-        var timer = window.setTimeout(function () { controller.abort(); }, 18000);
-        return fetch("/api/template7/prepare", {
+        return fetchWithEntryRecovery("/api/template7/prepare", {
           method: "POST",
           credentials: "same-origin",
           cache: "no-store",
           headers: { "Content-Type": "application/json" },
-          signal: controller.signal,
           body: JSON.stringify({
             landing_id: cfg.landingId,
             landing_slug: cfg.slug,
@@ -238,7 +228,7 @@ export function buildPublicLandingRuntimeSource() {
         }).then(function (data) {
           if (!data || typeof data.handoff_url !== "string" || !data.handoff_url) throw new Error("handoff unavailable");
           return data.handoff_url;
-        }).finally(function () { window.clearTimeout(timer); });
+        });
       }
 
       function generatePromoCode(tag) {

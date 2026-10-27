@@ -184,7 +184,7 @@ export function buildTemplate7FastRuntime(
             if (event.target && event.target.nodeType && button.contains(event.target)) handleCtaClick(button);
           }, true);`,
     );
-    source = replaceOnce(source, 'fetch("/api/template7/prepare", {', 'fetch("/api/template7/start", {');
+    source = replaceOnce(source, 'fetchWithEntryRecovery("/api/template7/prepare", {', 'fetchWithEntryRecovery("/api/template7/start", {');
     source = replaceOnce(source, "body: JSON.stringify({\n            landing_id: cfg.landingId,",
       "body: JSON.stringify({\n            device_id: getOrCreateDeviceId(),\n            landing_id: cfg.landingId,");
     source = replaceOnce(source, "      var clickLocked = false;", classicDeviceIdScript + "\n      var clickLocked = false;");

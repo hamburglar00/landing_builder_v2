@@ -297,7 +297,7 @@ test("respuesta de internal-chat con device_id alterado produce upstream_unavail
   deps.resolvePlayer = async () => resolvedPlayer("rey_de_ases", demoDeviceId);
   const result = await handleReyStart(request(validPayload), deps);
   assert.equal(result.status, 503);
-  assert.deepEqual(await result.json(), { error: "upstream_unavailable" });
+  assert.deepEqual(await result.json(), { error: "upstream_unavailable", retryable: false });
 });
 
 test("respuesta inconsistente de internal-chat nunca llega a API2 ni al gateway", async () => {
@@ -316,7 +316,7 @@ test("respuesta inconsistente de internal-chat nunca llega a API2 ni al gateway"
     deps.resolvePlayer = async () => ({ ...resolvedPlayer(), ...change }) as ResolvedPlayer;
     const response = await handleReyStart(request(validPayload), deps);
     assert.equal(response.status, 503, field);
-    assert.deepEqual(await response.json(), { error: "upstream_unavailable" }, field);
+    assert.deepEqual(await response.json(), { error: "upstream_unavailable", retryable: false }, field);
     assert.ok(!calls.includes("api2") && !calls.includes("gateway"), field);
   }
 });

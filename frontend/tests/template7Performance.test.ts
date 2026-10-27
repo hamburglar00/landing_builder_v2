@@ -77,9 +77,9 @@ for (const provider of ["rey_de_ases", "ases_del_norte", "ganamos_net", "multi_s
       assert.doesNotMatch(runtime, /addEventListener\("DOMContentLoaded"/);
       assert.doesNotMatch(runtime, /function initTemplate4LiveDetails/);
     }
-    assert.match(pages[0], /fetch\("\/api\/template7\/prepare"/);
+    assert.match(pages[0], /fetchWithEntryRecovery\("\/api\/template7\/prepare"/);
     assert.doesNotMatch(pages[0], /device_id: getOrCreateDeviceId/);
-    assert.match(pages[1], /fetch\("\/api\/template7\/start"/);
+    assert.match(pages[1], /fetchWithEntryRecovery\("\/api\/template7\/start"/);
     assert.match(pages[1], /device_id: getOrCreateDeviceId/);
     assert.doesNotMatch(pages[1], /client-identity\/bootstrap|<code>lb_cid<\/code>/);
   });

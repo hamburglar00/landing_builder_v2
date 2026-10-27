@@ -6,8 +6,8 @@ const request = new Request("https://landing.test/api/template7/start", { header
 const cases = [
   { name: "bootstrap", limits: [120, 40], run: () => allowBootstrap(request) },
   { name: "warm", limits: [60, 6], run: () => allowTemplate7Warm(request, "device") },
-  { name: "start with cookie", limits: [120, 1], run: () => allowTemplate7Start(request, "landing", "device", false) },
-  { name: "start without cookie", limits: [120, 1, 1], run: () => allowTemplate7Start(request, "landing", "device", true) },
+  { name: "start with cookie", limits: [120, 4], run: () => allowTemplate7Start(request, "landing", "device", false) },
+  { name: "start without cookie", limits: [120, 4, 4], run: () => allowTemplate7Start(request, "landing", "device", true) },
 ];
 for (const scenario of cases) {
   test(`${scenario.name}: independent durable limits run together and every limit must allow the request`, async () => {
