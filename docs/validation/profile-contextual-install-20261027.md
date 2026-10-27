@@ -34,4 +34,20 @@ Los escenarios de navegador usan respuestas aisladas. No se crean cuentas, carga
 
 ## Publicación
 
-Se completará aquí la evidencia de los despliegues activos y sus verificaciones públicas.
+Cambios comiteados/pusheados y despliegues activados después de compilar correctamente:
+
+| Proyecto | Commit | Despliegue Vercel |
+|---|---|---|
+| Atrio | `6a3c0de` | `dpl_Bj7MzDaWTkzTcnvxRjGjeN6EV8HB` |
+| Rey de Ases | `bbad06c` | `dpl_9eUP5ttRLQvF2wHxnrqXiaM9mNv9` |
+| Ases del Norte | `0c46d02` | `dpl_C9dXSkhn4WCKGrrKSxP52K5xUnvb` |
+| Ganamos NET | `05e7da3` | `dpl_8JDDJsxLfMZWi5fEX2uDpKfLDUMr` |
+| Ganamos+ | `678f58e` | `dpl_7g9MydxWEohCMfXKv1rfSQtoth7N` |
+
+Builder registra scripts y decisiones en `c78270c`; no requiere publicar su frontend. Ramas: `fix/atrio-inbox-validation` en Atrio, `fix/template7-session-reentry` en los demás.
+
+El Worker público `multi-skin-gateway` sirve `ganamosnet.global` con la versión `c88a29b6-e91e-4300-8d1f-a9c74831e03c`. Conservó variables/secretos mediante `--keep-vars`. Versión anterior para rollback: `a5ce092c-97d7-4938-8220-be8298a3c14f`.
+
+Despliegues Vercel anteriores para rollback: Atrio `dpl_9DZECRtu1ce8NegdaPBRbvUsiEYj`; Rey `dpl_EGaw86s2usGfzNLUC4PwQKU5N64m`; Ases `dpl_GM4ErwzKEVPahW7MF17SwMgrv9FZ`; NET `dpl_TYmUgioXn1yh1MvU2o2UutxQe5ke`; Ganamos+ `dpl_4LfY6mVSEuvRcDks8qUREPqycJUW`.
+
+[Verificación pública](profile-contextual-install-public-20261027.json): el JS publicado coincide con el código de los cuatro gateways, con y sin la nueva versión en la URL. El bundle real de Atrio contiene las tarjetas de credenciales y la sugerencia nueva. Se carga desde `/embed/warm`, sin montar conversaciones ni ejecutar operaciones. No se revalidó una instalación física en iPhone.

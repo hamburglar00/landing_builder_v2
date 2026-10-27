@@ -491,3 +491,5 @@ Validación y textos del recorrido: [revisión de presentación](validation/entr
 - Posponer la tarjeta durante el envío, un formulario de retiro abierto o estados de procesamiento/pago pendientes visibles en los mensajes. Usar exclusivamente los metadatos existentes; no inferir resultados financieros por palabras ni añadir consultas o eventos. Ante un estado pendiente sin resolución visible, conservar oculta la sugerencia.
 - El instructivo existente se abre al tocar Instalar app. Se puede ocultar la sugerencia; recordar esa decisión en el navegador del gateway. No ofrecerla en modo app o cuando el navegador ya registró la instalación. Mantener las invitaciones explícitas del asesor, las notificaciones y el arranque diferido del SDK. Aplicar a los cuatro gateways y a ambos motores mediante el chat compartido.
 - La consulta sobre aprovechar la clave devuelta al crear el usuario es una revisión técnica: no cambia todavía el contrato de credenciales ni la consulta autenticada existente.
+
+Pruebas y publicación: [perfil e instalación contextual](validation/profile-contextual-install-20261027.md).

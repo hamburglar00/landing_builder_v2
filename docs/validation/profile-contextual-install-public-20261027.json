@@ -1,0 +1,36 @@
+{
+  "at": "2026-10-27T17:28:12.840Z",
+  "productionBusinessWrites": 0,
+  "results": [
+    {
+      "repo": "landing-autologuin",
+      "origin": "https://www.reydeases.fun",
+      "publicScriptMatchesCommit": true,
+      "automaticInstallRemoved": true
+    },
+    {
+      "repo": "ases-gateway",
+      "origin": "https://www.asesdelnorte.online",
+      "publicScriptMatchesCommit": true,
+      "automaticInstallRemoved": true
+    },
+    {
+      "repo": "ganamos-gateway",
+      "origin": "https://www.ganamosnet.icu",
+      "publicScriptMatchesCommit": true,
+      "automaticInstallRemoved": true
+    },
+    {
+      "repo": "multi-skin-gateway",
+      "origin": "https://ganamosnet.global",
+      "publicScriptMatchesCommit": true,
+      "automaticInstallRemoved": true
+    },
+    {
+      "origin": "https://www.atrio.website",
+      "bundle": "https://www.atrio.website/_next/static/immutable/chunks/3yo4er2bi56a2.js",
+      "profileCardsPublished": true,
+      "contextualInstallPublished": true
+    }
+  ]
+}
